@@ -57,11 +57,11 @@
       "logout": "注销",
       "emailInvalid": "请输入有效的电子邮件地址。",
       "usernameRequired": "请输入用户名",
-      "usernameMustNotContainSpace": "The username must not contain spaces.",
-      "usernameMustNotLookLikeUrl": "The username must not look like a URL.",
+      "usernameMustNotContainSpace": "用户名不能包含空格。",
+      "usernameMustNotLookLikeUrl": "用户名不能像一个 URL。",
       "passwordRequired": "请提供密码",
-      "passwordNotMin": "Password must have at least 8 characters.",
-      "passwordNotMax": "Password must have at most 250 characters.",
+      "passwordNotMin": "密码至少有8个字符",
+      "passwordNotMax": "密码不能超过250个字符",
       "showPassword": "显示密码",
       "hidePassword": "隐藏密码",
       "noAccountYet": "还没有账号？",
@@ -248,7 +248,7 @@
       "text2": "这包括所有的任务，并且无法撤销!",
       "success": "项目已成功删除。",
       "tasksToDelete": "此操作无法撤消！将移除大约 {count} 个任务。",
-      "tasksAndChildProjectsToDelete": "This will irrevocably remove approx. {tasks} tasks and {projects} projects.",
+      "tasksAndChildProjectsToDelete": "删除将不可挽回。 {tasks} 任务和 {projects} 项目。",
       "noTasksToDelete": "此列表不包含任何任务，可以安全删除。"
     },
     "duplicate": {
@@ -386,7 +386,7 @@
   "filters": {
     "title": "筛选器",
     "clear": "清除筛选条件",
-    "showResults": "Show results",
+    "showResults": "显示结果",
     "attributes": {
       "title": "标题",
       "titlePlaceholder": "填写筛选器标题",
@@ -419,48 +419,48 @@
       "success": "过滤器保存成功。"
     },
     "query": {
-      "title": "Query",
-      "placeholder": "Type a search or filter query…",
+      "title": "查询",
+      "placeholder": "输入搜索或过滤查询…",
       "help": {
-        "intro": "To filter tasks, you can use a query syntax similar to SQL. The available fields for filtering include:",
-        "link": "How does this work?",
-        "canUseDatemath": "You can date math to set relative dates. Click on the date value in a query to find out more.",
+        "intro": "要过滤任务，您可以使用类似于SQL的查询语法。可用的过滤字段包括：",
+        "link": "这是如何运作的？",
+        "canUseDatemath": "您可以将数学日期设定为相对日期。点击查询中的日期值来查找更多信息。",
         "fields": {
-          "done": "Whether the task is completed or not",
-          "priority": "The priority level of the task (1-5)",
-          "percentDone": "The percentage of completion for the task (0-100)",
-          "dueDate": "The due date of the task",
-          "startDate": "The start date of the task",
-          "endDate": "The end date of the task",
-          "doneAt": "The date and time when the task was completed",
-          "assignees": "The assignees of the task",
-          "labels": "The labels associated with the task",
-          "project": "The project the task belongs to (only available for saved filters, not on a project level)"
+          "done": "任务是否完成",
+          "priority": "任务的优先级(1-5)",
+          "percentDone": "任务完成百分比 (0-100)",
+          "dueDate": "任务的截止日期",
+          "startDate": "任务的开始日期",
+          "endDate": "任务结束日期",
+          "doneAt": "任务完成的日期和时间",
+          "assignees": "任务的指派人",
+          "labels": "与任务相关的标签",
+          "project": "任务属于的项目 (仅适用于保存的过滤器，不适用于项目级别)"
         },
         "operators": {
-          "intro": "The available operators for filtering include:",
-          "notEqual": "Not equal to",
-          "equal": "Equal to",
-          "greaterThan": "Greater than",
-          "greaterThanOrEqual": "Greater than or equal to",
-          "lessThan": "Less than",
-          "lessThanOrEqual": "Less than or equal to",
-          "like": "Matches a pattern (using wildcard %)",
-          "in": "Matches any value in a comma-seperated list of values"
+          "intro": "可用的过滤操作员包括：",
+          "notEqual": "不等于",
+          "equal": "等于",
+          "greaterThan": "大于",
+          "greaterThanOrEqual": "大于或等于",
+          "lessThan": "小于",
+          "lessThanOrEqual": "小于或等于",
+          "like": "匹配模式 (使用通配符%)",
+          "in": "匹配任意一个逗号分隔的值列表"
         },
         "logicalOperators": {
-          "intro": "To combine multiple conditions, you can use the following logical operators:",
-          "and": "AND operator, matches if all conditions are true",
-          "or": "OR operator, matches if any of the conditions are true",
-          "parentheses": "Parentheses for grouping conditions"
+          "intro": "若要合并多个条件，您可以使用以下逻辑运算符：",
+          "and": "和操作者，如果所有条件都是真实的，匹配的",
+          "or": "或操作员，匹配任何条件都是正确的",
+          "parentheses": "分组条件的括号："
         },
         "examples": {
-          "intro": "Here are some examples of filter queries:",
-          "priorityEqual": "Matches tasks with priority level 4",
-          "dueDatePast": "Matches tasks with a due date in the past",
-          "undoneHighPriority": "Matches undone tasks with priority level 3 or higher",
-          "assigneesIn": "Matches tasks assigned to either \"user1\" or \"user2\"",
-          "priorityOneOrTwoPastDue": "Matches tasks with priority level 1 or 2 and a due date in the past"
+          "intro": "以下是一些过滤查询示例：",
+          "priorityEqual": "匹配任务优先级 4",
+          "dueDatePast": "匹配任务与过去到期日期",
+          "undoneHighPriority": "匹配取消优先级别3或更高的任务",
+          "assigneesIn": "匹配分配给\"user1\" 或 \"user2\" 的任务",
+          "priorityOneOrTwoPastDue": "匹配优先级别1或2以及过去到期的任务"
         }
       }
     }
@@ -632,7 +632,7 @@
       "to": "到",
       "from": "开始",
       "fromto": "{from} 到 {to}",
-      "date": "Date",
+      "date": "日期",
       "ranges": {
         "today": "今天",
         "thisWeek": "本周",
@@ -649,25 +649,25 @@
         "restOfThisYear": "本年度剩余时间"
       },
       "values": {
-        "now": "Now",
-        "startOfToday": "Start of today",
-        "endOfToday": "End of today",
-        "beginningOflastWeek": "Beginning of last week",
-        "endOfLastWeek": "End of last week",
-        "beginningOfThisWeek": "Beginning of this week",
-        "endOfThisWeek": "End of this week",
-        "startOfNextWeek": "Start of next week",
-        "endOfNextWeek": "End of next week",
-        "in7Days": "In 7 days",
-        "beginningOfLastMonth": "Beginning of last month",
-        "endOfLastMonth": "End of last month",
-        "startOfThisMonth": "Start of this month",
-        "endOfThisMonth": "End of this month",
-        "startOfNextMonth": "Start of next month",
-        "endOfNextMonth": "End of next month",
-        "in30Days": "In 30 days",
-        "startOfThisYear": "Beginning of this year",
-        "endOfThisYear": "End of this year"
+        "now": "现在",
+        "startOfToday": "今天开始",
+        "endOfToday": "今天结束",
+        "beginningOflastWeek": "上周开始",
+        "endOfLastWeek": "上周结束",
+        "beginningOfThisWeek": "本周开始",
+        "endOfThisWeek": "本周结束",
+        "startOfNextWeek": "下周开始",
+        "endOfNextWeek": "下周结束",
+        "in7Days": "7 天内",
+        "beginningOfLastMonth": "上月开始",
+        "endOfLastMonth": "上个月底",
+        "startOfThisMonth": "本月开始",
+        "endOfThisMonth": "这个月底",
+        "startOfNextMonth": "下月开始",
+        "endOfNextMonth": "下个月底",
+        "in30Days": "30 天内",
+        "startOfThisYear": "今年开始",
+        "endOfThisYear": "今年年底"
       }
     },
     "datemathHelp": {
@@ -783,7 +783,7 @@
       "startDate": "开始日期",
       "title": "标题",
       "updated": "已更新",
-      "doneAt": "Done At"
+      "doneAt": "完成于"
     },
     "subscription": {
       "subscribedTaskThroughParentProject": "你无法在此处取消订阅，因为你已通过其项目订阅了此任务。",
@@ -987,8 +987,8 @@
       "descriptionPlaceholder": "在此描述团队，点击'/'获取更多选项…",
       "admin": "管理员",
       "member": "成员",
-      "isPublic": "Public Team",
-      "isPublicDescription": "Make the team publicly discoverable. When enabled, anyone can share projects with this team even when not being a direct member."
+      "isPublic": "公开团队",
+      "isPublicDescription": "让团队公开发现。如果启用，任何人都可以与这个团队分享项目，即使不是直接成员。"
     }
   },
   "keyboardShortcuts": {
@@ -1047,8 +1047,8 @@
     "share": "共享",
     "newProject": "新项目",
     "createProject": "创建项目",
-    "cantArchiveIsDefault": "You cannot archive this because it is your default project.",
-    "cantDeleteIsDefault": "You cannot delete this because it is your default project."
+    "cantArchiveIsDefault": "您不能归档，因为这是您的默认项目。",
+    "cantDeleteIsDefault": "您不能删除这个项目，因为这是您的默认项目。"
   },
   "apiConfig": {
     "url": "Vikunja URL",
@@ -1096,10 +1096,10 @@
     "altFormatShort": "j M Y"
   },
   "reaction": {
-    "reactedWith": "{user} reacted with {value}",
-    "reactedWithAnd": "{users} and {lastUser} reacted with {value}",
-    "reactedWithAndMany": "{users} and {num} more reacted reacted with {value}",
-    "add": "Add your reaction"
+    "reactedWith": "{user} {value} 反应",
+    "reactedWithAnd": "{users} 和{lastUser} 的{value} 反应",
+    "reactedWithAndMany": "{users} 和{num} 的{value} 反应",
+    "add": "添加您的反应"
   },
   "error": {
     "error": "错误",
@@ -1174,7 +1174,7 @@
   },
   "about": {
     "title": "关于",
-    "version": "Version: {version}"
+    "version": "版本：{version}"
   },
   "time": {
     "units": {
