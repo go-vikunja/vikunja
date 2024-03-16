@@ -32,7 +32,7 @@ const NewLabelComponent = () => import('@/views/labels/NewLabel.vue')
 const MigrationComponent = () => import('@/views/migrate/Migration.vue')
 const MigrationHandlerComponent = () => import('@/views/migrate/MigrationHandler.vue')
 // Project View
-const ProjectView = () => import('@/views/project/ProjectView.vue')
+import ProjectView from '@/views/project/ProjectView.vue'
 const ProjectInfo = () => import('@/views/project/ProjectInfo.vue')
 
 // Project Settings

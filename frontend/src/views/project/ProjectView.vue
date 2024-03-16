@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import {computed, watch} from 'vue'
 import {useProjectStore} from '@/stores/projects'
+import {useRoute, useRouter} from 'vue-router'
 
 import ProjectList from '@/views/project/ProjectList.vue'
 import ProjectGantt from '@/views/project/ProjectGantt.vue'
 import ProjectTable from '@/views/project/ProjectTable.vue'
 import ProjectKanban from '@/views/project/ProjectKanban.vue'
-import {useRoute, useRouter} from 'vue-router'
 
 const {
 	projectId,
