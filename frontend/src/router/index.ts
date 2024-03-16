@@ -347,16 +347,18 @@ const router = createRouter({
 			path: '/projects/:projectId',
 			name: 'project.index',
 			redirect(to) {
-				// Redirect the user to list view by default
-				const savedProjectView = getProjectView(Number(to.params.projectId as string))
+				const viewId = getProjectView(Number(to.params.projectId as string))
 
-				if (savedProjectView) {
-					console.log('Replaced list view with', savedProjectView)
+				if (viewId) {
+					console.debug('Replaced list view with', viewId)
 				}
 
 				return {
-					name: savedProjectView || 'project.list',
-					params: {projectId: to.params.projectId},
+					name: 'project.view',
+					params: {
+						projectId: parseInt(to.params.projectId as string),
+						viewId: viewId ?? 0,
+					},
 				}
 			},
 		},
@@ -366,8 +368,8 @@ const router = createRouter({
 			component: ProjectView,
 			beforeEnter: (to) => saveProjectView(parseInt(to.params.projectId as string), parseInt(to.params.viewId as string)),
 			props: route => ({ 
-				projectId: Number(route.params.projectId as string),
-				viewId: Number(route.params.viewId as string),
+				projectId: parseInt(route.params.projectId as string),
+				viewId: route.params.viewId ? parseInt(route.params.viewId as string): undefined,
 			}),
 		},
 		{

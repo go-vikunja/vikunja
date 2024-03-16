@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import {computed} from 'vue'
+import {computed, watch} from 'vue'
 import {useProjectStore} from '@/stores/projects'
 
 import ProjectList from '@/views/project/ProjectList.vue'
 import ProjectGantt from '@/views/project/ProjectGantt.vue'
 import ProjectTable from '@/views/project/ProjectTable.vue'
 import ProjectKanban from '@/views/project/ProjectKanban.vue'
-import {useRoute} from 'vue-router'
+import {useRoute, useRouter} from 'vue-router'
 
 const {
 	projectId,
@@ -16,6 +16,7 @@ const {
 	viewId: number,
 }>()
 
+const router = useRouter()
 const projectStore = useProjectStore()
 
 const currentView = computed(() => {
@@ -23,6 +24,24 @@ const currentView = computed(() => {
 
 	return project?.views.find(v => v.id === viewId)
 })
+
+watch(
+	() => viewId,
+	() => {
+		if (viewId === 0) {
+			// Ideally, we would do that in the router redirect, but we can't access the project store there.
+			const viewId = projectStore.projects[projectId].views[0].id
+			router.replace({
+				name: 'project.view',
+				params: {
+					projectId,
+					viewId,
+				},
+			})
+		}
+	},
+	{immediate: true},
+)
 
 const route = useRoute()
 </script>
