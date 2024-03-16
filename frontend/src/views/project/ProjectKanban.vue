@@ -306,7 +306,7 @@ import TaskPositionService from '@/services/taskPosition'
 import TaskPositionModel from '@/models/taskPosition'
 
 const {
-	projectId = undefined,
+	projectId,
 	view,
 } = defineProps<{
 	projectId: number,

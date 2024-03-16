@@ -122,7 +122,7 @@ func getTaskFilterOptsFromCollection(tf *TaskCollection, projectView *ProjectVie
 func getTaskOrTasksInBuckets(s *xorm.Session, a web.Auth, projects []*Project, view *ProjectView, opts *taskSearchOptions) (tasks interface{}, resultCount int, totalItems int64, err error) {
 	if view != nil {
 		if view.BucketConfigurationMode != BucketConfigurationModeNone {
-			tasksInBuckets, err := GetTasksInBucketsForView(s, view, opts, a)
+			tasksInBuckets, err := GetTasksInBucketsForView(s, view, projects, opts, a)
 			return tasksInBuckets, len(tasksInBuckets), int64(len(tasksInBuckets)), err
 		}
 	}

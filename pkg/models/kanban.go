@@ -163,7 +163,7 @@ func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, search string, page int
 	return buckets, len(buckets), int64(len(buckets)), nil
 }
 
-func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, opts *taskSearchOptions, auth web.Auth) (bucketsWithTasks []*Bucket, err error) {
+func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, projects []*Project, opts *taskSearchOptions, auth web.Auth) (bucketsWithTasks []*Bucket, err error) {
 	// Get all buckets for this project
 	buckets := []*Bucket{}
 
@@ -255,7 +255,7 @@ func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, opts *taskSear
 			}
 		}
 
-		ts, _, total, err := getRawTasksForProjects(s, []*Project{{ID: view.ProjectID}}, auth, opts)
+		ts, _, total, err := getRawTasksForProjects(s, projects, auth, opts)
 		if err != nil {
 			return nil, err
 		}
