@@ -42,6 +42,8 @@ type TaskCollection struct {
 	// If set to true, the result will also include null values
 	FilterIncludeNulls bool `query:"filter_include_nulls" json:"filter_include_nulls"`
 
+	isSavedFilter bool
+
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`
 }
@@ -152,7 +154,7 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 
 	// If the project id is < -1 this means we're dealing with a saved filter - in that case we get and populate the filter
 	// -1 is the favorites project which works as intended
-	if tf.ProjectID < -1 {
+	if !tf.isSavedFilter && tf.ProjectID < -1 {
 		sf, err := getSavedFilterSimpleByID(s, getSavedFilterIDFromProjectID(tf.ProjectID))
 		if err != nil {
 			return nil, 0, 0, err
@@ -182,7 +184,12 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 			sf.Filters.FilterTimezone = u.Timezone
 		}
 
-		return sf.getTaskCollection().ReadAll(s, a, search, page, perPage)
+		tc := sf.getTaskCollection()
+		tc.ProjectViewID = tf.ProjectViewID
+		tc.ProjectID = tf.ProjectID
+		tc.isSavedFilter = true
+
+		return tc.ReadAll(s, a, search, page, perPage)
 	}
 
 	var view *ProjectView
@@ -230,7 +237,7 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 	// If the project ID is not set, we get all tasks for the user.
 	// This allows to use this function in Task.ReadAll with a possibility to deprecate the latter at some point.
 	var projects []*Project
-	if tf.ProjectID == 0 {
+	if tf.ProjectID == 0 || tf.isSavedFilter {
 		projects, _, _, err = getRawProjectsForUser(
 			s,
 			&projectOptions{
