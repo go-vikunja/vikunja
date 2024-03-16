@@ -17,6 +17,7 @@ import type {IProjectView} from '@/modelTypes/IProjectView'
 // convenient internal filter object
 export interface GanttFilters {
 	projectId: IProject['id']
+	viewId: IProjectView['id'],
 	dateFrom: DateISO
 	dateTo: DateISO
 	showTasksWithoutDates: boolean
@@ -42,6 +43,7 @@ function ganttRouteToFilters(route: Partial<RouteLocationNormalized>): GanttFilt
 	const ganttRoute = route
 	return {
 		projectId: Number(ganttRoute.params?.projectId),
+		viewId: Number(ganttRoute.params?.viewId),
 		dateFrom: parseDateProp(ganttRoute.query?.dateFrom as DateKebab) || getDefaultDateFrom(),
 		dateTo: parseDateProp(ganttRoute.query?.dateTo as DateKebab) || getDefaultDateTo(),
 		showTasksWithoutDates: parseBooleanProp(ganttRoute.query?.showTasksWithoutDates as string) || DEFAULT_SHOW_TASKS_WITHOUT_DATES,
@@ -70,8 +72,11 @@ function ganttFiltersToRoute(filters: GanttFilters): RouteLocationRaw {
 	}
 
 	return {
-		name: 'project.gantt',
-		params: {projectId: filters.projectId},
+		name: 'project.view',
+		params: {
+			projectId: filters.projectId,
+			viewId: filters.viewId,
+		},
 		query,
 	}
 }
@@ -99,7 +104,7 @@ export function useGanttFilters(route: Ref<RouteLocationNormalized>, view: IProj
 		ganttGetDefaultFilters,
 		ganttRouteToFilters,
 		ganttFiltersToRoute,
-		['project.gantt'],
+		['project.view'],
 	)
 
 	const {

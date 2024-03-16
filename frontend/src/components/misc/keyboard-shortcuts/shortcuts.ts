@@ -62,7 +62,7 @@ export const KEYBOARD_SHORTCUTS : ShortcutGroup[] = [
 	},
 	{
 		title: 'project.kanban.title',
-		available: (route) => route.name === 'project.kanban',
+		available: (route) => route.name === 'project.view',
 		shortcuts: [
 			{
 				title: 'keyboardShortcuts.task.done',
