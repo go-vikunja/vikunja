@@ -48,7 +48,7 @@ func (b *Bucket) canDoBucket(s *xorm.Session, a web.Auth) (bool, error) {
 	}
 	pv := &ProjectView{
 		ID:        bb.ProjectViewID,
-		ProjectID: bb.ProjectID,
+		ProjectID: b.ProjectID,
 	}
 	return pv.CanUpdate(s, a)
 }

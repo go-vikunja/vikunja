@@ -346,18 +346,6 @@ export const useKanbanStore = defineStore('kanban', () => {
 		}
 	}
 
-	async function updateBucketTitle({id, title}: { id: IBucket['id'], title: IBucket['title'] }) {
-		const bucket = findById(buckets.value, id)
-
-		if (bucket?.title === title) {
-			// bucket title has not changed
-			return
-		}
-
-		await updateBucket({id, title})
-		success({message: i18n.global.t('project.kanban.bucketTitleSavedSuccess')})
-	}
-
 	return {
 		buckets,
 		isLoading: readonly(isLoading),
@@ -376,7 +364,6 @@ export const useKanbanStore = defineStore('kanban', () => {
 		createBucket,
 		deleteBucket,
 		updateBucket,
-		updateBucketTitle,
 	}
 })
 

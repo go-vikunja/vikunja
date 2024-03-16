@@ -304,6 +304,7 @@ import type {TaskFilterParams} from '@/services/taskCollection'
 import type {IProjectView} from '@/modelTypes/IProjectView'
 import TaskPositionService from '@/services/taskPosition'
 import TaskPositionModel from '@/models/taskPosition'
+import {i18n} from '@/i18n'
 
 const {
 	projectId,
@@ -615,10 +616,19 @@ async function focusBucketTitle(e: Event) {
 }
 
 async function saveBucketTitle(bucketId: IBucket['id'], bucketTitle: string) {
-	await kanbanStore.updateBucketTitle({
+	
+	const bucket = kanbanStore.getBucketById(bucketId)
+	if (bucket?.title === bucketTitle) {
+		bucketTitleEditable.value = false
+		return
+	}
+	
+	await kanbanStore.updateBucket({
 		id: bucketId,
 		title: bucketTitle,
+		projectId,
 	})
+	success({message: i18n.global.t('project.kanban.bucketTitleSavedSuccess')})
 	bucketTitleEditable.value = false
 }
 
@@ -638,6 +648,7 @@ function updateBucketPosition(e: { newIndex: number }) {
 
 	kanbanStore.updateBucket({
 		id: bucket.id,
+		projectId,
 		position: calculateItemPosition(
 			bucketBefore !== null ? bucketBefore.position : null,
 			bucketAfter !== null ? bucketAfter.position : null,
@@ -652,6 +663,7 @@ async function saveBucketLimit(bucketId: IBucket['id'], limit: number) {
 
 	await kanbanStore.updateBucket({
 		...kanbanStore.getBucketById(bucketId),
+		projectId,
 		limit,
 	})
 	success({message: t('project.kanban.bucketLimitSavedSuccess')})
