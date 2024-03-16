@@ -261,7 +261,9 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	limit, start := getLimitFromPageIndex(opts.page, opts.perPage)
 	cond := builder.And(builder.Or(projectIDCond, favoritesCond), where, filterCond)
 
-	query := d.s.Where(cond)
+	query := d.s.
+		Distinct("tasks.*").
+		Where(cond)
 	if limit > 0 {
 		query = query.Limit(limit, start)
 	}

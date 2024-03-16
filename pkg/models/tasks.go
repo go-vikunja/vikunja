@@ -922,7 +922,7 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	buckets := make(map[int64]*Bucket)
-	err = s.In("project_project_id",
+	err = s.In("project_view_id",
 		builder.Select("id").
 			From("project_views").
 			Where(builder.Eq{"project_id": t.ProjectID}),
