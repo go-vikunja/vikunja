@@ -51,22 +51,22 @@ const route = useRoute()
 	<ProjectList
 		v-if="currentView?.viewKind === 'list'"
 		:project-id="projectId"
-		:view="currentView"
+		:viewId
 	/>
 	<ProjectGantt
 		v-if="currentView?.viewKind === 'gantt'"
 		:route
-		:view="currentView"
+		:viewId
 	/>
 	<ProjectTable
 		v-if="currentView?.viewKind === 'table'"
 		:project-id="projectId"
-		:view="currentView"
+		:viewId
 	/>
 	<ProjectKanban
 		v-if="currentView?.viewKind === 'kanban'"
 		:project-id="projectId"
-		:view="currentView"
+		:viewId
 	/>
 </template>
 

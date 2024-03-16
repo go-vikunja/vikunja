@@ -2,7 +2,7 @@
 	<ProjectWrapper
 		class="project-kanban"
 		:project-id="projectId"
-		:view
+		:viewId
 	>
 		<template #header>
 			<div class="filter-container">
@@ -307,10 +307,10 @@ import TaskPositionModel from '@/models/taskPosition'
 
 const {
 	projectId,
-	view,
+	viewId,
 } = defineProps<{
 	projectId: number,
-	view: IProjectView,
+	viewId: IProjectView['id'],
 }>()
 
 const DRAG_OPTIONS = {
@@ -399,14 +399,14 @@ watch(
 	() => ({
 		params: params.value,
 		projectId,
-		viewId: view.id,
+		viewId,
 	}),
 	({params}) => {
 		if (projectId === undefined || Number(projectId) === 0) {
 			return
 		}
 		collapsedBuckets.value = getCollapsedBucketState(projectId)
-		kanbanStore.loadBucketsForProject(projectId, view.id, params)
+		kanbanStore.loadBucketsForProject(projectId, viewId, params)
 	},
 	{
 		immediate: true,
@@ -431,7 +431,7 @@ function handleTaskContainerScroll(id: IBucket['id'], projectId: IProject['id'],
 
 	kanbanStore.loadNextTasksForBucket(
 		projectId,
-		view.id,
+		viewId,
 		params.value,
 		id,
 	)
@@ -511,7 +511,7 @@ async function updateTaskPosition(e) {
 	try {
 		const newPosition = new TaskPositionModel({
 			position,
-			projectViewId: view.id,
+			projectViewId: viewId,
 			taskId: newTask.id,
 		})
 		await taskPositionService.value.update(newPosition)

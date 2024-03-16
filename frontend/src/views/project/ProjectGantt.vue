@@ -98,7 +98,7 @@ type Options = Flatpickr.Options.Options
 
 const props = defineProps<{
 	route: RouteLocationNormalized
-	view: IProjectView
+	viewId: IProjectView['id']
 }>()
 
 const GanttChart = createAsyncComponent(() => import('@/components/tasks/GanttChart.vue'))
@@ -115,7 +115,7 @@ const {
 	isLoading,
 	addTask,
 	updateTask,
-} = useGanttFilters(route, props.view)
+} = useGanttFilters(route, props.viewId)
 
 const DEFAULT_DATE_RANGE_DAYS = 7
 

@@ -2,7 +2,7 @@
 	<ProjectWrapper
 		class="project-table"
 		:project-id="projectId"
-		:view
+		:viewId
 	>
 		<template #header>
 			<div class="filter-container">
@@ -293,10 +293,10 @@ import type {IProjectView} from '@/modelTypes/IProjectView'
 
 const {
 	projectId,
-	view,
+	viewId,
 } = defineProps<{
 	projectId: IProject['id'],
-	view: IProjectView,
+	viewId: IProjectView['id'],
 }>()
 
 const ACTIVE_COLUMNS_DEFAULT = {
@@ -323,7 +323,7 @@ const SORT_BY_DEFAULT: SortBy = {
 const activeColumns = useStorage('tableViewColumns', {...ACTIVE_COLUMNS_DEFAULT})
 const sortBy = useStorage<SortBy>('tableViewSortBy', {...SORT_BY_DEFAULT})
 
-const taskList = useTaskList(() => projectId, () => view.id, sortBy.value)
+const taskList = useTaskList(() => projectId, () => viewId, sortBy.value)
 
 const {
 	loading,

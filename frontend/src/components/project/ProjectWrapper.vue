@@ -12,7 +12,7 @@
 				<BaseButton
 					v-for="v in views"
 					class="switch-view-button"
-					:class="{'is-active': v.id === view.id}"
+					:class="{'is-active': v.id === viewId}"
 					:to="{ name: 'project.view', params: { projectId, viewId: v.id } }"
 				>
 					{{ getViewTitle(v) }}
@@ -57,10 +57,10 @@ import {useI18n} from 'vue-i18n'
 
 const {
 	projectId,
-	view,
+	viewId,
 } = defineProps<{
-	projectId: number,
-	view: IProjectView,
+	projectId: IProject['id'],
+	viewId: IProjectView['id'],
 }>()
 
 const route = useRoute()
@@ -109,7 +109,7 @@ watch(
 			return
 		}
 
-		console.debug(`Loading project, props.view = ${view}, $route.params =`, route.params, `, loadedProjectId = ${loadedProjectId.value}, currentProject = `, currentProject.value)
+		console.debug(`Loading project, $route.params =`, route.params, `, loadedProjectId = ${loadedProjectId.value}, currentProject = `, currentProject.value)
 
 		// Set the current project to the one we're about to load so that the title is already shown at the top
 		loadedProjectId.value = 0

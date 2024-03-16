@@ -2,7 +2,7 @@
 	<ProjectWrapper
 		class="project-list"
 		:project-id="projectId"
-		:view
+		:viewId
 	>
 		<template #header>
 			<div class="filter-container">
@@ -123,10 +123,10 @@ import TaskPositionModel from '@/models/taskPosition'
 
 const {
 	projectId,
-	view,
+	viewId,
 } = defineProps<{
 	projectId: IProject['id'],
-	view: IProjectView,
+	viewId: IProjectView['id'],
 }>()
 
 const ctaVisible = ref(false)
@@ -145,7 +145,7 @@ const {
 	loadTasks,
 	params,
 	sortByParam,
-} = useTaskList(() => projectId, () => view.id, {position: 'asc'})
+} = useTaskList(() => projectId, () => viewId, {position: 'asc'})
 
 const taskPositionService = ref(new TaskPositionService())
 
@@ -242,7 +242,7 @@ async function saveTaskPosition(e) {
 
 	await taskPositionService.value.update(new TaskPositionModel({
 		position,
-		projectViewId: view.id,
+		projectViewId: viewId,
 		taskId: task.id,
 	}))
 	tasks.value[e.newIndex] = {
