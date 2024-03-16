@@ -576,6 +576,7 @@ async function createNewBucket() {
 	await kanbanStore.createBucket(new BucketModel({
 		title: newBucketTitle.value,
 		projectId: project.value.id,
+		projectViewId: viewId,
 	}))
 	newBucketTitle.value = ''
 }
@@ -595,6 +596,7 @@ async function deleteBucket() {
 			bucket: new BucketModel({
 				id: bucketToDelete.value,
 				projectId: project.value.id,
+				projectViewId: viewId,
 			}),
 			params: params.value,
 		})
