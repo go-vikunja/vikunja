@@ -46,7 +46,10 @@ func (tp *TaskPosition) TableName() string {
 }
 
 func (tp *TaskPosition) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
-	pv := &ProjectView{ID: tp.ProjectViewID}
+	pv, err := GetProjectViewByID(s, tp.ProjectViewID)
+	if err != nil {
+		return false, err
+	}
 	return pv.CanUpdate(s, a)
 }
 

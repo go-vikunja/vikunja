@@ -302,6 +302,8 @@ import {success} from '@/message'
 import {useProjectStore} from '@/stores/projects'
 import type {TaskFilterParams} from '@/services/taskCollection'
 import type {IProjectView} from '@/modelTypes/IProjectView'
+import TaskPositionService from '@/services/taskPosition'
+import TaskPositionModel from '@/models/taskPosition'
 
 const {
 	projectId = undefined,
@@ -328,6 +330,7 @@ const baseStore = useBaseStore()
 const kanbanStore = useKanbanStore()
 const taskStore = useTaskStore()
 const projectStore = useProjectStore()
+const taskPositionService = ref(new TaskPositionService())
 
 const taskContainerRefs = ref<{ [id: IBucket['id']]: HTMLElement }>({})
 const bucketLimitInputRef = ref<HTMLInputElement | null>(null)
@@ -390,7 +393,7 @@ const project = computed(() => projectId ? projectStore.projects[projectId] : nu
 const buckets = computed(() => kanbanStore.buckets)
 const loading = computed(() => kanbanStore.isLoading)
 
-const taskLoading = computed(() => taskStore.isLoading)
+const taskLoading = computed(() => taskStore.isLoading || taskPositionService.value.loading)
 
 watch(
 	() => ({
@@ -478,7 +481,7 @@ async function updateTaskPosition(e) {
 
 	const newTask = klona(task) // cloning the task to avoid pinia store manipulation
 	newTask.bucketId = newBucket.id
-	newTask.kanbanPosition = calculateItemPosition(
+	const position = calculateItemPosition(
 		taskBefore !== null ? taskBefore.kanbanPosition : null,
 		taskAfter !== null ? taskAfter.kanbanPosition : null,
 	)
@@ -488,6 +491,8 @@ async function updateTaskPosition(e) {
 	) {
 		newTask.done = project.value?.doneBucketId === newBucket.id
 	}
+	
+	let bucketHasChanged = false
 	if (
 		oldBucket !== undefined && // This shouldn't actually be `undefined`, but let's play it safe.
 		newBucket.id !== oldBucket.id
@@ -500,10 +505,20 @@ async function updateTaskPosition(e) {
 			...newBucket,
 			count: newBucket.count + 1,
 		})
+		bucketHasChanged = true
 	}
 
 	try {
-		await taskStore.update(newTask)
+		const newPosition = new TaskPositionModel({
+			position,
+			projectViewId: view.id,
+			taskId: newTask.id,
+		})
+		await taskPositionService.value.update(newPosition)
+		
+		if(bucketHasChanged) {
+			await taskStore.update(newTask)
+		}
 
 		// Make sure the first and second task don't both get position 0 assigned
 		if (newTaskIndex === 0 && taskAfter !== null && taskAfter.kanbanPosition === 0) {

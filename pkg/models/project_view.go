@@ -306,6 +306,7 @@ func GetProjectViewByIDAndProject(s *xorm.Session, id, projectID int64) (view *P
 }
 
 func GetProjectViewByID(s *xorm.Session, id int64) (view *ProjectView, err error) {
+	view = &ProjectView{}
 	exists, err := s.
 		Where("id = ?", id).
 		NoAutoCondition().
