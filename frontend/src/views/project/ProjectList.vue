@@ -73,7 +73,7 @@
 							>
 								<template v-if="canWrite">
 									<span class="icon handle">
-										<icon icon="grip-lines" />
+										<icon icon="grip-lines"/>
 									</span>
 								</template>
 							</SingleTaskInProject>
@@ -118,6 +118,8 @@ import {useTaskStore} from '@/stores/tasks'
 
 import type {IProject} from '@/modelTypes/IProject'
 import type {IProjectView} from '@/modelTypes/IProjectView'
+import TaskPositionService from '@/services/taskPosition'
+import TaskPositionModel from '@/models/taskPosition'
 
 const {
 	projectId,
@@ -144,6 +146,8 @@ const {
 	params,
 	sortByParam,
 } = useTaskList(() => projectId, () => view.id, {position: 'asc'})
+
+const taskPositionService = ref(new TaskPositionService())
 
 const tasks = ref<ITask[]>([])
 watch(
@@ -234,13 +238,17 @@ async function saveTaskPosition(e) {
 	const taskBefore = tasks.value[e.newIndex - 1] ?? null
 	const taskAfter = tasks.value[e.newIndex + 1] ?? null
 
-	const newTask = {
-		...task,
-		position: calculateItemPosition(taskBefore !== null ? taskBefore.position : null, taskAfter !== null ? taskAfter.position : null),
-	}
+	const position = calculateItemPosition(taskBefore !== null ? taskBefore.position : null, taskAfter !== null ? taskAfter.position : null)
 
-	const updatedTask = await taskStore.update(newTask)
-	tasks.value[e.newIndex] = updatedTask
+	await taskPositionService.value.update(new TaskPositionModel({
+		position,
+		projectViewId: view.id,
+		taskId: task.id,
+	}))
+	tasks.value[e.newIndex] = {
+		...task,
+		position,
+	}
 }
 
 function prepareFiltersAndLoadTasks() {
