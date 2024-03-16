@@ -257,6 +257,55 @@ func (p *ProjectView) Create(s *xorm.Session, a web.Auth) (err error) {
 	return
 }
 
+func createProjectView(s *xorm.Session, p *ProjectView, a web.Auth, createBacklogBucket bool) (err error) {
+	_, err = s.Insert(p)
+	if err != nil {
+		return
+	}
+
+	if createBacklogBucket && p.BucketConfigurationMode == BucketConfigurationModeManual {
+		// Create a new first bucket for this project
+		b := &Bucket{
+			ProjectViewID: p.ID,
+			Title:         "Backlog",
+		}
+		err = b.Create(s, a)
+		if err != nil {
+			return
+		}
+
+		// Move all tasks into the new bucket when the project already has tasks
+		c := &TaskCollection{
+			ProjectID: p.ProjectID,
+		}
+		ts, _, _, err := c.ReadAll(s, a, "", 0, -1)
+		if err != nil {
+			return err
+		}
+		tasks := ts.([]*Task)
+
+		if len(tasks) == 0 {
+			return nil
+		}
+
+		taskBuckets := []*TaskBucket{}
+		for _, task := range tasks {
+			taskBuckets = append(taskBuckets, &TaskBucket{
+				TaskID:        task.ID,
+				BucketID:      b.ID,
+				ProjectViewID: p.ID,
+			})
+		}
+
+		_, err = s.Insert(&taskBuckets)
+		if err != nil {
+			return err
+		}
+	}
+
+	return RecalculateTaskPositions(s, p)
+}
+
 // Update is the handler to update a project view
 // @Summary Updates a project view
 // @Description Updates a project view.
@@ -331,7 +380,7 @@ func CreateDefaultViewsForProject(s *xorm.Session, project *Project, a web.Auth,
 		ViewKind:  ProjectViewKindList,
 		Position:  100,
 	}
-	err = list.Create(s, a)
+	err = createProjectView(s, list, a, createBacklogBucket)
 	if err != nil {
 		return
 	}
@@ -342,7 +391,7 @@ func CreateDefaultViewsForProject(s *xorm.Session, project *Project, a web.Auth,
 		ViewKind:  ProjectViewKindGantt,
 		Position:  200,
 	}
-	err = gantt.Create(s, a)
+	err = createProjectView(s, gantt, a, createBacklogBucket)
 	if err != nil {
 		return
 	}
@@ -353,7 +402,7 @@ func CreateDefaultViewsForProject(s *xorm.Session, project *Project, a web.Auth,
 		ViewKind:  ProjectViewKindTable,
 		Position:  300,
 	}
-	err = table.Create(s, a)
+	err = createProjectView(s, table, a, createBacklogBucket)
 	if err != nil {
 		return
 	}
@@ -365,18 +414,9 @@ func CreateDefaultViewsForProject(s *xorm.Session, project *Project, a web.Auth,
 		Position:                400,
 		BucketConfigurationMode: BucketConfigurationModeManual,
 	}
-	err = kanban.Create(s, a)
+	err = createProjectView(s, kanban, a, createBacklogBucket)
 	if err != nil {
 		return
-	}
-
-	if createBacklogBucket {
-		// Create a new first bucket for this project
-		b := &Bucket{
-			ProjectViewID: kanban.ID,
-			Title:         "Backlog",
-		}
-		err = b.Create(s, a)
 	}
 
 	return

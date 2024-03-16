@@ -110,6 +110,10 @@ func RecalculateTaskPositions(s *xorm.Session, view *ProjectView) (err error) {
 		return
 	}
 
+	if len(allTasks) == 0 {
+		return
+	}
+
 	maxPosition := math.Pow(2, 32)
 	newPositions := make([]*TaskPosition, 0, len(allTasks))
 
