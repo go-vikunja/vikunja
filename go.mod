@@ -20,7 +20,7 @@ require (
 	code.vikunja.io/web v0.0.0-20210706160506-d85def955bd3
 	dario.cat/mergo v1.0.0
 	github.com/ThreeDotsLabs/watermill v1.3.5
-	github.com/adlio/trello v1.10.0
+	github.com/adlio/trello v1.11.0
 	github.com/arran4/golang-ical v0.2.7
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/bbrks/go-blurhash v1.1.1
@@ -190,5 +190,3 @@ replace github.com/samedi/caldav-go => github.com/kolaente/caldav-go v3.0.1-0.20
 go 1.21
 
 toolchain go1.21.2
-
-replace github.com/adlio/trello => github.com/kolaente/trello v1.8.1-0.20240310152004-14ccae2ddc51
