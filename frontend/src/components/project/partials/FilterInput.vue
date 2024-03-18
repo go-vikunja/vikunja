@@ -21,13 +21,18 @@ import {
 	LABEL_FIELDS,
 } from '@/helpers/filters'
 import {useDebounceFn} from '@vueuse/core'
+import {useI18n} from 'vue-i18n'
+
+const {t} = useI18n()
 
 const {
 	modelValue,
 	projectId,
+	inputLabel = undefined,
 } = defineProps<{
 	modelValue: string,
 	projectId?: number,
+	inputLabel?: string,
 }>()
 
 const emit = defineEmits(['update:modelValue', 'blur'])
@@ -246,7 +251,11 @@ const blurDebounced = useDebounceFn(() => emit('blur'), 500)
 
 <template>
 	<div class="field">
-		<label class="label">{{ $t('filters.query.title') }}</label>
+		<label 
+			class="label"
+		>
+			{{ inputLabel ?? $t('filters.query.title') }}
+		</label>
 		<AutocompleteDropdown
 			:options="autocompleteResults"
 			@blur="filterInput?.blur()"
