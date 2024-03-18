@@ -167,8 +167,8 @@ dependencies:
     specifier: 4.1.2
     version: 4.1.2
   date-fns:
-    specifier: 3.5.0
-    version: 3.5.0
+    specifier: 3.6.0
+    version: 3.6.0
   dayjs:
     specifier: 1.11.10
     version: 1.11.10
@@ -5334,8 +5334,8 @@ packages:
       whatwg-url: 11.0.0
     dev: true
 
-  /date-fns@3.5.0:
-    resolution: {integrity: sha512-a+DwyXn7NOfdJireCzAA0B9p7jIXEu/Q9JKCyMYvH6+0vPUNbQceA0neXrdfJ/xzl3mhOh5vibQQ3936Tssm6A==}
+  /date-fns@3.6.0:
+    resolution: {integrity: sha512-fRHTG8g/Gif+kSh50gaGEdToemgfj74aRX3swtiouboip5JDLAyDE9F11nHMIcvOaXeOC6D7SpNhi7uFyB7Uww==}
     dev: false
 
   /dayjs@1.11.10:
