@@ -938,6 +938,9 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 		var targetBucketID int64
 		if t.BucketID != 0 {
 			bucket, has := buckets[t.BucketID]
+			if !has {
+				return ErrBucketDoesNotExist{BucketID: t.BucketID}
+			}
 			if has && bucket.ProjectViewID == view.ID {
 				targetBucketID = t.BucketID
 			}
