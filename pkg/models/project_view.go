@@ -422,5 +422,12 @@ func CreateDefaultViewsForProject(s *xorm.Session, project *Project, a web.Auth,
 		return
 	}
 
+	project.Views = []*ProjectView{
+		list,
+		gantt,
+		table,
+		kanban,
+	}
+
 	return
 }

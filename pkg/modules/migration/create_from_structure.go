@@ -126,6 +126,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 	originalBuckets := project.Buckets
 	originalBackgroundInformation := project.BackgroundInformation
 	needsDefaultBucket := false
+	oldViews := project.Views
 
 	// Saving the archived status to archive the project again after creating it
 	var wasArchived bool
@@ -182,6 +183,47 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		log.Debugf("[creating structure] Created bucket %d, old ID was %d", bucket.ID, oldID)
 	}
 
+	// Create all views, create default views if we don't have any
+	if len(oldViews) > 0 {
+		for _, view := range oldViews {
+			view.ID = 0
+
+			if view.DefaultBucketID != 0 {
+				bucket, has := buckets[view.DefaultBucketID]
+				if has {
+					view.DefaultBucketID = bucket.ID
+				}
+			}
+
+			if view.DoneBucketID != 0 {
+				bucket, has := buckets[view.DoneBucketID]
+				if has {
+					view.DoneBucketID = bucket.ID
+				}
+			}
+
+			err = view.Create(s, user)
+			if err != nil {
+				return
+			}
+		}
+	} else {
+		// Only using the default views
+		// Add all buckets to the default kanban view
+		for _, view := range project.Views {
+			if view.ViewKind == models.ProjectViewKindKanban {
+				for _, b := range buckets {
+					b.ProjectViewID = view.ID
+					err = b.Update(s, user)
+					if err != nil {
+						return
+					}
+				}
+				break
+			}
+		}
+	}
+
 	log.Debugf("[creating structure] Creating %d tasks", len(tasks))
 
 	setBucketOrDefault := func(task *models.Task) {
@@ -205,7 +247,6 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		oldid := t.ID
 		t.ProjectID = project.ID
 		err = t.Create(s, user)
-
 		if err != nil && models.IsErrTaskCannotBeEmpty(err) {
 			continue
 		}
@@ -332,6 +373,14 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 	// All tasks brought their own bucket with them, therefore the newly created default bucket is just extra space
 	if !needsDefaultBucket {
 		b := &models.Bucket{ProjectID: project.ID}
+
+		for _, view := range project.Views {
+			if view.ViewKind == models.ProjectViewKindKanban {
+				b.ProjectViewID = view.ID
+				break
+			}
+		}
+
 		bucketsIn, _, _, err := b.ReadAll(s, user, "", 1, 1)
 		if err != nil {
 			return err
@@ -341,6 +390,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		for _, b := range buckets {
 			if b.Title == "Backlog" {
 				newBacklogBucket = b
+				newBacklogBucket.ProjectID = project.ID
 				break
 			}
 		}

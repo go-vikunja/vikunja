@@ -142,12 +142,11 @@ func TestInsertFromStructure(t *testing.T) {
 			"title":       testStructure[1].Title,
 			"description": testStructure[1].Description,
 		}, false)
-		db.AssertExists(t, "tasks", map[string]interface{}{
-			"title":     testStructure[1].Tasks[5].Title,
+		db.AssertExists(t, "task_buckets", map[string]interface{}{
+			"task_id":   testStructure[1].Tasks[5].ID,
 			"bucket_id": testStructure[1].Buckets[0].ID,
 		}, false)
-		db.AssertMissing(t, "tasks", map[string]interface{}{
-			"title":     testStructure[1].Tasks[6].Title,
+		db.AssertMissing(t, "task_buckets", map[string]interface{}{
 			"bucket_id": 1111, // No task with that bucket should exist
 		})
 		db.AssertExists(t, "tasks", map[string]interface{}{

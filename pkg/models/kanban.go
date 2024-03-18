@@ -349,6 +349,7 @@ func (b *Bucket) Update(s *xorm.Session, _ web.Auth) (err error) {
 			"title",
 			"limit",
 			"position",
+			"project_view_id",
 		).
 		Update(b)
 	return
