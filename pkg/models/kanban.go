@@ -412,7 +412,7 @@ func (b *Bucket) Delete(s *xorm.Session, a web.Auth) (err error) {
 	_, err = s.
 		Where("bucket_id = ?", b.ID).
 		Cols("bucket_id").
-		Update(&Task{BucketID: defaultBucketID})
+		Update(&TaskBucket{BucketID: defaultBucketID})
 	if err != nil {
 		return
 	}
