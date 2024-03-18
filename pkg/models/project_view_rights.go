@@ -22,37 +22,25 @@ import (
 )
 
 func (p *ProjectView) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
-	pp, err := p.getProject(s)
-	if err != nil {
-		return false, 0, err
-	}
+	pp := p.getProject()
 	return pp.CanRead(s, a)
 }
 
 func (p *ProjectView) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
-	pp, err := p.getProject(s)
-	if err != nil {
-		return false, err
-	}
+	pp := p.getProject()
 	return pp.CanUpdate(s, a)
 }
 
 func (p *ProjectView) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
-	pp, err := p.getProject(s)
-	if err != nil {
-		return false, err
-	}
+	pp := p.getProject()
 	return pp.CanUpdate(s, a)
 }
 
 func (p *ProjectView) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
-	pp, err := p.getProject(s)
-	if err != nil {
-		return false, err
-	}
+	pp := p.getProject()
 	return pp.CanUpdate(s, a)
 }
 
-func (p *ProjectView) getProject(s *xorm.Session) (pp *Project, err error) {
-	return &Project{ID: p.ProjectID}, nil
+func (p *ProjectView) getProject() (pp *Project) {
+	return &Project{ID: p.ProjectID}
 }

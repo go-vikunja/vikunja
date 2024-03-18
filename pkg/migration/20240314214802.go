@@ -46,7 +46,7 @@ func (task20240314214802) TableName() string {
 func init() {
 	migrations = append(migrations, &xormigrate.Migration{
 		ID:          "20240314214802",
-		Description: "make task position seperate",
+		Description: "make task position separate",
 		Migrate: func(tx *xorm.Engine) error {
 			err := tx.Sync2(taskPositions20240314214802{})
 			if err != nil {

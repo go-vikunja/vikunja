@@ -17,8 +17,9 @@
 package models
 
 import (
-	"code.vikunja.io/web"
 	"math"
+
+	"code.vikunja.io/web"
 	"xorm.io/xorm"
 )
 

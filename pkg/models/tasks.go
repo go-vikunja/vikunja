@@ -932,6 +932,9 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 			Where(builder.Eq{"project_id": t.ProjectID}),
 	).
 		Find(&buckets)
+	if err != nil {
+		return err
+	}
 
 	for _, view := range views {
 		// Only update the bucket when the current view

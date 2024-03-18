@@ -121,7 +121,7 @@ func getDefaultBucketID(s *xorm.Session, view *ProjectView) (bucketID int64, err
 // @Success 200 {array} models.Bucket "The buckets"
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /projects/{id}/views/{view}/buckets [get]
-func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
+func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, _ string, _ int, _ int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 
 	view, err := GetProjectViewByIDAndProject(s, b.ProjectViewID, b.ProjectID)
 	if err != nil {

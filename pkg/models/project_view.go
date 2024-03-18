@@ -17,10 +17,11 @@
 package models
 
 import (
-	"code.vikunja.io/web"
 	"encoding/json"
 	"fmt"
 	"time"
+
+	"code.vikunja.io/web"
 	"xorm.io/xorm"
 )
 
@@ -58,7 +59,7 @@ func (p *ProjectViewKind) UnmarshalJSON(bytes []byte) error {
 	case "kanban":
 		*p = ProjectViewKindKanban
 	default:
-		return fmt.Errorf("unkown project view kind: %s", value)
+		return fmt.Errorf("unknown project view kind: %s", value)
 	}
 
 	return nil
@@ -107,7 +108,7 @@ func (p *BucketConfigurationModeKind) UnmarshalJSON(bytes []byte) error {
 	case "filter":
 		*p = BucketConfigurationModeFilter
 	default:
-		return fmt.Errorf("unkown bucket configuration mode kind: %s", value)
+		return fmt.Errorf("unknown bucket configuration mode kind: %s", value)
 	}
 
 	return nil
@@ -236,7 +237,7 @@ func (p *ProjectView) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the project view"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/views/{id} [delete]
-func (p *ProjectView) Delete(s *xorm.Session, a web.Auth) (err error) {
+func (p *ProjectView) Delete(s *xorm.Session, _ web.Auth) (err error) {
 	_, err = s.
 		Where("id = ? AND project_id = ?", p.ID, p.ProjectID).
 		Delete(&ProjectView{})

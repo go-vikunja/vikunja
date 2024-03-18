@@ -246,6 +246,7 @@ func duplicateViews(s *xorm.Session, pd *ProjectDuplicate, doer web.Auth, taskMa
 		})
 	}
 
+	_, err = s.Insert(&taskPositions)
 	return
 }
 
