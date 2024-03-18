@@ -18,6 +18,7 @@ import ProjectModel from '@/models/project'
 import {success} from '@/message'
 import {useBaseStore} from '@/stores/base'
 import {getSavedFilterIdFromProjectId} from '@/services/savedFilter'
+import type {IProjectView} from '@/modelTypes/IProjectView'
 
 const {add, remove, search, update} = createNewIndexer('projects', ['title', 'description'])
 
@@ -210,7 +211,24 @@ export const useProjectStore = defineStore('project', () => {
 			project,
 		]
 	}
-
+	
+	function setProjectView(view: IProjectView) {
+		const viewPos = projects.value[view.projectId].views.findIndex(v => v.id === view.id)
+		if (viewPos !== -1) {
+			projects.value[view.projectId].views[viewPos] = view
+			return
+		}
+		
+		projects.value[view.projectId].views.push(view)
+	}
+	
+	function removeProjectView(projectId: IProject['id'], viewId: IProjectView['id']) {
+		const viewPos = projects.value[projectId].views.findIndex(v => v.id === viewId)
+		if (viewPos !== -1) {
+			projects.value[projectId].views.splice(viewPos, 1)
+		}
+	}
+	
 	return {
 		isLoading: readonly(isLoading),
 		projects: readonly(projects),
@@ -235,6 +253,8 @@ export const useProjectStore = defineStore('project', () => {
 		updateProject,
 		deleteProject,
 		getAncestors,
+		setProjectView,
+		removeProjectView,
 	}
 })
 

@@ -44,6 +44,7 @@ const ProjectSettingShare = () => import('@/views/project/settings/share.vue')
 const ProjectSettingWebhooks = () => import('@/views/project/settings/webhooks.vue')
 const ProjectSettingDelete = () => import('@/views/project/settings/delete.vue')
 const ProjectSettingArchive = () => import('@/views/project/settings/archive.vue')
+const ProjectSettingViews = () =>  import('@/views/project/settings/views.vue')
 
 // Saved Filters
 const FilterNew = () => import('@/views/filters/FilterNew.vue')
@@ -305,6 +306,15 @@ const router = createRouter({
 			meta: {
 				showAsModal: true,
 			},
+		},
+		{
+			path: '/projects/:projectId/settings/views',
+			name: 'project.settings.views',
+			component: ProjectSettingViews,
+			meta: {
+				showAsModal: true,
+			},
+			props: route => ({ projectId: Number(route.params.projectId as string) }),
 		},
 		{
 			path: '/projects/:projectId/settings/edit',
