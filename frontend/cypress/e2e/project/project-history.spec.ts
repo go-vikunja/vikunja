@@ -2,6 +2,7 @@ import {createFakeUserAndLogin} from '../../support/authenticateUser'
 
 import {ProjectFactory} from '../../factories/project'
 import {prepareProjects} from './prepareProjects'
+import {ProjectViewFactory} from '../../factories/project_view'
 
 describe('Project History', () => {
 	createFakeUserAndLogin()
@@ -12,23 +13,28 @@ describe('Project History', () => {
 		cy.intercept(Cypress.env('API_URL') + '/projects/*').as('loadProject')
 		
 		const projects = ProjectFactory.create(6)
+		ProjectViewFactory.truncate()
+		projects.forEach(p => ProjectViewFactory.create(1, {
+			id: p.id,
+			project_id: p.id,
+		}, false))
 
 		cy.visit('/')
 		cy.wait('@loadProjectArray')
 		cy.get('body')
 			.should('not.contain', 'Last viewed')
 
-		cy.visit(`/projects/${projects[0].id}`)
+		cy.visit(`/projects/${projects[0].id}/${projects[0].id}`)
 		cy.wait('@loadProject')
-		cy.visit(`/projects/${projects[1].id}`)
+		cy.visit(`/projects/${projects[1].id}/${projects[1].id}`)
 		cy.wait('@loadProject')
-		cy.visit(`/projects/${projects[2].id}`)
+		cy.visit(`/projects/${projects[2].id}/${projects[2].id}`)
 		cy.wait('@loadProject')
-		cy.visit(`/projects/${projects[3].id}`)
+		cy.visit(`/projects/${projects[3].id}/${projects[3].id}`)
 		cy.wait('@loadProject')
-		cy.visit(`/projects/${projects[4].id}`)
+		cy.visit(`/projects/${projects[4].id}/${projects[4].id}`)
 		cy.wait('@loadProject')
-		cy.visit(`/projects/${projects[5].id}`)
+		cy.visit(`/projects/${projects[5].id}/${projects[5].id}`)
 		cy.wait('@loadProject')
 
 		// cy.visit('/')

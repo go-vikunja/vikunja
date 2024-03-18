@@ -31,7 +31,6 @@ watch(
 		if (viewId === 0) {
 			// Ideally, we would do that in the router redirect, but we the projects (and therefore, the views) 
 			// are not always loaded then.
-			console.log('views', projectId, projectStore.projects)
 			const viewId = projectStore.projects[projectId].views[0].id
 			router.replace({
 				name: 'project.view',
