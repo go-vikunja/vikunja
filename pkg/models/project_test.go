@@ -53,8 +53,25 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 				"description":       project.Description,
 				"parent_project_id": 0,
 			}, false)
-			db.AssertExists(t, "buckets", map[string]interface{}{
+			db.AssertExists(t, "project_views", map[string]interface{}{
 				"project_id": project.ID,
+				"view_kind":  ProjectViewKindList,
+			}, false)
+			db.AssertExists(t, "project_views", map[string]interface{}{
+				"project_id": project.ID,
+				"view_kind":  ProjectViewKindGantt,
+			}, false)
+			db.AssertExists(t, "project_views", map[string]interface{}{
+				"project_id": project.ID,
+				"view_kind":  ProjectViewKindTable,
+			}, false)
+			db.AssertExists(t, "project_views", map[string]interface{}{
+				"project_id":                project.ID,
+				"view_kind":                 ProjectViewKindKanban,
+				"bucket_configuration_mode": BucketConfigurationModeManual,
+			}, false)
+			db.AssertExists(t, "buckets", map[string]interface{}{
+				"project_view_id": project.ID * 4, // FIXME: Dirty hack to get the project view id
 			}, false)
 		})
 		t.Run("nonexistant parent project", func(t *testing.T) {

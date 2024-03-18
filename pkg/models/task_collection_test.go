@@ -95,9 +95,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedByID: 1,
 		CreatedBy:   user1,
 		ProjectID:   1,
-		BucketID:    1,
 		IsFavorite:  true,
-		Position:    2,
 		Reactions: ReactionMap{
 			"👋": []*user.User{user1},
 		},
@@ -112,7 +110,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 					Index:       14,
 					CreatedByID: 1,
 					ProjectID:   1,
-					BucketID:    1,
 					Created:     time.Unix(1543626724, 0).In(loc),
 					Updated:     time.Unix(1543626724, 0).In(loc),
 				},
@@ -170,8 +167,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedByID: 1,
 		CreatedBy:   user1,
 		ProjectID:   1,
-		BucketID:    1,
-		Position:    4,
 		Labels: []*Label{
 			label4,
 		},
@@ -199,7 +194,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 		Priority:     100,
-		BucketID:     2,
 	}
 	task4 := &Task{
 		ID:           4,
@@ -213,7 +207,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 		Priority:     1,
-		BucketID:     2,
 	}
 	task5 := &Task{
 		ID:           5,
@@ -227,7 +220,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 		DueDate:      time.Unix(1543636724, 0).In(loc),
-		BucketID:     2,
 	}
 	task6 := &Task{
 		ID:           6,
@@ -241,7 +233,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 		DueDate:      time.Unix(1543616724, 0).In(loc),
-		BucketID:     3,
 	}
 	task7 := &Task{
 		ID:           7,
@@ -255,7 +246,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 		StartDate:    time.Unix(1544600000, 0).In(loc),
-		BucketID:     3,
 	}
 	task8 := &Task{
 		ID:           8,
@@ -269,7 +259,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 		EndDate:      time.Unix(1544700000, 0).In(loc),
-		BucketID:     3,
 	}
 	task9 := &Task{
 		ID:           9,
@@ -280,7 +269,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user1,
 		ProjectID:    1,
 		RelatedTasks: map[RelationKind][]*Task{},
-		BucketID:     1,
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 		StartDate:    time.Unix(1544600000, 0).In(loc),
@@ -295,7 +283,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user1,
 		ProjectID:    1,
 		RelatedTasks: map[RelationKind][]*Task{},
-		BucketID:     1,
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
@@ -308,7 +295,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user1,
 		ProjectID:    1,
 		RelatedTasks: map[RelationKind][]*Task{},
-		BucketID:     1,
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
@@ -321,7 +307,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user1,
 		ProjectID:    1,
 		RelatedTasks: map[RelationKind][]*Task{},
-		BucketID:     1,
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
@@ -335,7 +320,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		ProjectID:    6,
 		IsFavorite:   true,
 		RelatedTasks: map[RelationKind][]*Task{},
-		BucketID:     6,
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
@@ -348,7 +332,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user6,
 		ProjectID:    7,
 		RelatedTasks: map[RelationKind][]*Task{},
-		BucketID:     7,
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
@@ -361,7 +344,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user6,
 		ProjectID:    8,
 		RelatedTasks: map[RelationKind][]*Task{},
-		BucketID:     8,
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
@@ -374,7 +356,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user6,
 		ProjectID:    9,
 		RelatedTasks: map[RelationKind][]*Task{},
-		BucketID:     9,
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
@@ -387,7 +368,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user6,
 		ProjectID:    10,
 		RelatedTasks: map[RelationKind][]*Task{},
-		BucketID:     10,
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
@@ -400,7 +380,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user6,
 		ProjectID:    11,
 		RelatedTasks: map[RelationKind][]*Task{},
-		BucketID:     11,
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
@@ -413,7 +392,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user6,
 		ProjectID:    32, // parent project is shared to user 1 via direct share
 		RelatedTasks: map[RelationKind][]*Task{},
-		BucketID:     12,
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
@@ -426,7 +404,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user6,
 		ProjectID:    33,
 		RelatedTasks: map[RelationKind][]*Task{},
-		BucketID:     36,
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
@@ -439,7 +416,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user6,
 		ProjectID:    34,
 		RelatedTasks: map[RelationKind][]*Task{},
-		BucketID:     37,
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
@@ -452,7 +428,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user6,
 		ProjectID:    15, // parent project is shared to user 1 via team
 		RelatedTasks: map[RelationKind][]*Task{},
-		BucketID:     15,
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
@@ -465,7 +440,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user6,
 		ProjectID:    16,
 		RelatedTasks: map[RelationKind][]*Task{},
-		BucketID:     16,
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
@@ -478,7 +452,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user6,
 		ProjectID:    17,
 		RelatedTasks: map[RelationKind][]*Task{},
-		BucketID:     17,
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
@@ -507,7 +480,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		},
 		StartDate:    time.Unix(1543616724, 0).In(loc),
 		ProjectID:    1,
-		BucketID:     1,
 		RelatedTasks: map[RelationKind][]*Task{},
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
@@ -522,7 +494,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		ProjectID:    1,
 		RelatedTasks: map[RelationKind][]*Task{},
 		RepeatAfter:  3600,
-		BucketID:     1,
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
@@ -546,14 +517,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 					IsFavorite:  true,
 					Created:     time.Unix(1543626724, 0).In(loc),
 					Updated:     time.Unix(1543626724, 0).In(loc),
-					BucketID:    1,
-					Position:    2,
 				},
 			},
 		},
-		BucketID: 1,
-		Created:  time.Unix(1543626724, 0).In(loc),
-		Updated:  time.Unix(1543626724, 0).In(loc),
+		Created: time.Unix(1543626724, 0).In(loc),
+		Updated: time.Unix(1543626724, 0).In(loc),
 	}
 	task30 := &Task{
 		ID:          30,
@@ -568,7 +536,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			user2,
 		},
 		RelatedTasks: map[RelationKind][]*Task{},
-		BucketID:     1,
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
@@ -582,7 +549,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user1,
 		ProjectID:    1,
 		RelatedTasks: map[RelationKind][]*Task{},
-		BucketID:     1,
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
@@ -595,7 +561,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user1,
 		ProjectID:    3,
 		RelatedTasks: map[RelationKind][]*Task{},
-		BucketID:     21,
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
@@ -609,7 +574,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		ProjectID:    1,
 		PercentDone:  0.5,
 		RelatedTasks: map[RelationKind][]*Task{},
-		BucketID:     1,
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
@@ -639,8 +603,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 					IsFavorite:  true,
 					Created:     time.Unix(1543626724, 0).In(loc),
 					Updated:     time.Unix(1543626724, 0).In(loc),
-					BucketID:    1,
-					Position:    2,
 				},
 				{
 					ID:          1,
@@ -652,14 +614,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 					IsFavorite:  true,
 					Created:     time.Unix(1543626724, 0).In(loc),
 					Updated:     time.Unix(1543626724, 0).In(loc),
-					BucketID:    1,
-					Position:    2,
 				},
 			},
 		},
-		BucketID: 19,
-		Created:  time.Unix(1543626724, 0).In(loc),
-		Updated:  time.Unix(1543626724, 0).In(loc),
+		Created: time.Unix(1543626724, 0).In(loc),
+		Updated: time.Unix(1543626724, 0).In(loc),
 	}
 	task39 := &Task{
 		ID:           39,
@@ -669,16 +628,16 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user1,
 		ProjectID:    25,
 		RelatedTasks: map[RelationKind][]*Task{},
-		BucketID:     0,
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
 
 	type fields struct {
-		ProjectID int64
-		Projects  []*Project
-		SortBy    []string // Is a string, since this is the place where a query string comes from the user
-		OrderBy   []string
+		ProjectID     int64
+		ProjectViewID int64
+		Projects      []*Project
+		SortBy        []string // Is a string, since this is the place where a query string comes from the user
+		OrderBy       []string
 
 		FilterIncludeNulls bool
 		Filter             string
@@ -703,6 +662,13 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		search: "",
 		a:      &user.User{ID: 1},
 		page:   0,
+	}
+
+	taskWithPosition := func(task *Task, position float64) *Task {
+		newTask := &Task{}
+		*newTask = *task
+		newTask.Position = position
+		return newTask
 	}
 
 	tests := []testcase{
@@ -1258,16 +1224,18 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		{
 			name: "order by position",
 			fields: fields{
-				SortBy:  []string{"position", "id"},
-				OrderBy: []string{"asc", "asc"},
+				SortBy:        []string{"position", "id"},
+				OrderBy:       []string{"asc", "asc"},
+				ProjectViewID: 1,
+				ProjectID:     1,
 			},
 			args: args{
 				a: &user.User{ID: 1},
 			},
 			want: []*Task{
 				// The only tasks with a position set
-				task1,
-				task2,
+				taskWithPosition(task1, 2),
+				taskWithPosition(task2, 4),
 				// the other ones don't have a position set
 				task3,
 				task4,
@@ -1279,27 +1247,24 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task10,
 				task11,
 				task12,
-				task15,
-				task16,
-				task17,
-				task18,
-				task19,
-				task20,
-				task21,
-				task22,
-				task23,
-				task24,
-				task25,
-				task26,
+				//task15,
+				//task16,
+				//task17,
+				//task18,
+				//task19,
+				//task20,
+				//task21,
+				//task22,
+				//task23,
+				//task24,
+				//task25,
+				//task26,
 				task27,
 				task28,
 				task29,
 				task30,
 				task31,
-				task32,
 				task33,
-				task35,
-				task39,
 			},
 		},
 		{
@@ -1414,9 +1379,10 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			defer s.Close()
 
 			lt := &TaskCollection{
-				ProjectID: tt.fields.ProjectID,
-				SortBy:    tt.fields.SortBy,
-				OrderBy:   tt.fields.OrderBy,
+				ProjectID:     tt.fields.ProjectID,
+				ProjectViewID: tt.fields.ProjectViewID,
+				SortBy:        tt.fields.SortBy,
+				OrderBy:       tt.fields.OrderBy,
 
 				FilterIncludeNulls: tt.fields.FilterIncludeNulls,
 

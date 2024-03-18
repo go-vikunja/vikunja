@@ -220,8 +220,8 @@ func TestBucket_Delete(t *testing.T) {
 		require.NoError(t, err)
 
 		db.AssertMissing(t, "project_views", map[string]interface{}{
-			"id":             4,
-			"done_bucket_id": 3,
+			"id":             b.ProjectViewID,
+			"done_bucket_id": 0,
 		})
 	})
 }

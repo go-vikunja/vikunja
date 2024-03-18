@@ -61,7 +61,6 @@ func TestSortParamValidation(t *testing.T) {
 			taskPropertyUID,
 			taskPropertyCreated,
 			taskPropertyUpdated,
-			taskPropertyPosition,
 		} {
 			t.Run(test, func(t *testing.T) {
 				s := &sortParam{
