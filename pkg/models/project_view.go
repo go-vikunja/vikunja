@@ -257,8 +257,7 @@ func (p *ProjectView) Delete(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/views [put]
 func (p *ProjectView) Create(s *xorm.Session, a web.Auth) (err error) {
-	_, err = s.Insert(p)
-	return
+	return createProjectView(s, p, a, true)
 }
 
 func createProjectView(s *xorm.Session, p *ProjectView, a web.Auth, createBacklogBucket bool) (err error) {
