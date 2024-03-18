@@ -57,9 +57,11 @@ func (p *ProjectViewKind) UnmarshalJSON(bytes []byte) error {
 		*p = ProjectViewKindTable
 	case "kanban":
 		*p = ProjectViewKindKanban
+	default:
+		return fmt.Errorf("unkown project view kind: %s", value)
 	}
 
-	return fmt.Errorf("unkown project view kind: %s", bytes)
+	return nil
 }
 
 const (
@@ -104,9 +106,11 @@ func (p *BucketConfigurationModeKind) UnmarshalJSON(bytes []byte) error {
 		*p = BucketConfigurationModeManual
 	case "filter":
 		*p = BucketConfigurationModeFilter
+	default:
+		return fmt.Errorf("unkown bucket configuration mode kind: %s", value)
 	}
 
-	return fmt.Errorf("unkown bucket configuration mode kind: %s", bytes)
+	return nil
 }
 
 type ProjectViewBucketConfiguration struct {
@@ -118,7 +122,7 @@ type ProjectView struct {
 	// The unique numeric id of this view
 	ID int64 `xorm:"autoincr not null unique pk" json:"id" param:"view"`
 	// The title of this view
-	Title string `xorm:"varchar(255) not null" json:"title" valid:"runelength(1|250)"`
+	Title string `xorm:"varchar(255) not null" json:"title" valid:"required,runelength(1|250)"`
 	// The project this view belongs to
 	ProjectID int64 `xorm:"not null index" json:"project_id" param:"project"`
 	// The kind of this view. Can be `list`, `gantt`, `table` or `kanban`.
