@@ -640,7 +640,7 @@ func checkBucketLimit(s *xorm.Session, t *Task, bucket *Bucket) (err error) {
 	if bucket.Limit > 0 {
 		taskCount, err := s.
 			Where("bucket_id = ?", bucket.ID).
-			Count(&Task{})
+			Count(&TaskBucket{})
 		if err != nil {
 			return err
 		}
