@@ -22,6 +22,7 @@ import {
 } from '@/helpers/filters'
 import {useDebounceFn} from '@vueuse/core'
 import {useI18n} from 'vue-i18n'
+import {createRandomID} from '@/helpers/randomId'
 
 const {t} = useI18n()
 
@@ -42,6 +43,8 @@ const {
 	textarea: filterInput,
 	height,
 } = useAutoHeightTextarea(filterQuery)
+
+const id = ref(createRandomID())
 
 watch(
 	() => modelValue,
@@ -253,6 +256,7 @@ const blurDebounced = useDebounceFn(() => emit('blur'), 500)
 	<div class="field">
 		<label 
 			class="label"
+			:for="id"
 		>
 			{{ inputLabel ?? $t('filters.query.title') }}
 		</label>
@@ -268,8 +272,8 @@ const blurDebounced = useDebounceFn(() => emit('blur'), 500)
 					<textarea
 						ref="filterInput"
 						v-model="filterQuery"
+						:id
 						autocomplete="off"
-
 						autocorrect="off"
 						autocapitalize="off"
 						spellcheck="false"
