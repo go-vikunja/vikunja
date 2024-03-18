@@ -7,8 +7,6 @@
   index: 1
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
-  bucket_id: 1
-  position: 2
 - id: 2
   title: 'task #2 done'
   done: true
@@ -17,8 +15,6 @@
   index: 2
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
-  bucket_id: 1
-  position: 4
 - id: 3
   title: 'task #3 high prio'
   done: false
@@ -28,7 +24,6 @@
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
   priority: 100
-  bucket_id: 2
 - id: 4
   title: 'task #4 low prio'
   done: false
@@ -38,7 +33,6 @@
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
   priority: 1
-  bucket_id: 2
 - id: 5
   title: 'task #5 higher due date'
   done: false
@@ -48,7 +42,6 @@
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
   due_date: 2018-12-01 03:58:44
-  bucket_id: 2
 - id: 6
   title: 'task #6 lower due date'
   done: false
@@ -58,7 +51,6 @@
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
   due_date: 2018-11-30 22:25:24
-  bucket_id: 3
 - id: 7
   title: 'task #7 with start date'
   done: false
@@ -68,7 +60,6 @@
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
   start_date: 2018-12-12 07:33:20
-  bucket_id: 3
 - id: 8
   title: 'task #8 with end date'
   done: false
@@ -78,7 +69,6 @@
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
   end_date: 2018-12-13 11:20:00
-  bucket_id: 3
 - id: 9
   title: 'task #9 with start and end date'
   done: false
@@ -89,14 +79,12 @@
   updated: 2018-12-01 01:12:04
   start_date: 2018-12-12 07:33:20
   end_date: 2018-12-13 11:20:00
-  bucket_id: 1
 - id: 10
   title: 'task #10 basic'
   done: false
   created_by_id: 1
   project_id: 1
   index: 10
-  bucket_id: 1
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
 - id: 11
@@ -105,7 +93,6 @@
   created_by_id: 1
   project_id: 1
   index: 11
-  bucket_id: 1
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
 - id: 12
@@ -114,7 +101,6 @@
   created_by_id: 1
   project_id: 1
   index: 12
-  bucket_id: 1
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
 - id: 13
@@ -123,7 +109,6 @@
   created_by_id: 1
   project_id: 2
   index: 1
-  bucket_id: 4
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
 - id: 14
@@ -132,7 +117,6 @@
   created_by_id: 5
   project_id: 5
   index: 1
-  bucket_id: 18
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
 - id: 15
@@ -141,7 +125,6 @@
   created_by_id: 6
   project_id: 6
   index: 1
-  bucket_id: 6
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
 - id: 16
@@ -150,7 +133,6 @@
   created_by_id: 6
   project_id: 7
   index: 1
-  bucket_id: 7
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
 - id: 17
@@ -159,7 +141,6 @@
   created_by_id: 6
   project_id: 8
   index: 1
-  bucket_id: 8
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
 - id: 18
@@ -168,7 +149,6 @@
   created_by_id: 6
   project_id: 9
   index: 1
-  bucket_id: 9
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
 - id: 19
@@ -177,7 +157,6 @@
   created_by_id: 6
   project_id: 10
   index: 1
-  bucket_id: 10
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
 - id: 20
@@ -186,7 +165,6 @@
   created_by_id: 6
   project_id: 11
   index: 1
-  bucket_id: 11
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
 - id: 21
@@ -195,7 +173,6 @@
   created_by_id: 6
   project_id: 32
   index: 1
-  bucket_id: 12
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
 - id: 22
@@ -204,7 +181,6 @@
   created_by_id: 6
   project_id: 33
   index: 1
-  bucket_id: 36
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
 - id: 23
@@ -213,7 +189,6 @@
   created_by_id: 6
   project_id: 34
   index: 1
-  bucket_id: 37
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
 - id: 24
@@ -222,7 +197,6 @@
   created_by_id: 6
   project_id: 15
   index: 1
-  bucket_id: 15
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
 - id: 25
@@ -231,7 +205,6 @@
   created_by_id: 6
   project_id: 16
   index: 1
-  bucket_id: 16
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
 - id: 26
@@ -240,7 +213,6 @@
   created_by_id: 6
   project_id: 17
   index: 1
-  bucket_id: 17
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
 - id: 27
@@ -249,7 +221,6 @@
   created_by_id: 1
   project_id: 1
   index: 12
-  bucket_id: 1
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
   start_date: 2018-11-30 22:25:24
@@ -260,7 +231,6 @@
   repeat_after: 3600
   project_id: 1
   index: 13
-  bucket_id: 1
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
 - id: 29
@@ -269,7 +239,6 @@
   created_by_id: 1
   project_id: 1
   index: 14
-  bucket_id: 1
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
 - id: 30
@@ -278,7 +247,6 @@
   created_by_id: 1
   project_id: 1
   index: 15
-  bucket_id: 1
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
 - id: 31
@@ -288,7 +256,6 @@
   project_id: 1
   index: 16
   hex_color: f0f0f0
-  bucket_id: 1
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
 - id: 32
@@ -297,7 +264,6 @@
   created_by_id: 1
   project_id: 3
   index: 1
-  bucket_id: 21
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
 - id: 33
@@ -307,7 +273,6 @@
   project_id: 1
   index: 17
   percent_done: 0.5
-  bucket_id: 1
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
   # This task is forbidden for user1
@@ -317,7 +282,6 @@
   created_by_id: 13
   project_id: 20
   index: 20
-  bucket_id: 5
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
 - id: 35
@@ -326,7 +290,6 @@
   created_by_id: 1
   project_id: 21
   index: 1
-  bucket_id: 19
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
 - id: 36
@@ -335,7 +298,6 @@
   created_by_id: 1
   project_id: 22
   index: 1
-  bucket_id: 20
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
   due_date: 2018-10-30 22:25:24
@@ -374,8 +336,6 @@
   due_date: 2023-03-01 15:00:00
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
-  bucket_id: 38
-  position: 39
 - id: 41
   uid: 'uid-caldav-test-parent-task'
   title: 'Parent task for Caldav Test'
@@ -388,8 +348,6 @@
   due_date: 2023-03-01 15:00:00
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
-  bucket_id: 38
-  position: 40
 - id: 42
   uid: 'uid-caldav-test-parent-task-2'
   title: 'Parent task for Caldav Test 2'
@@ -402,8 +360,6 @@
   due_date: 2023-03-01 15:00:00
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
-  bucket_id: 38
-  position: 41
 - id: 43
   uid: 'uid-caldav-test-child-task'
   title: 'Child task for Caldav Test'
@@ -416,8 +372,6 @@
   due_date: 2023-03-01 15:00:00
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
-  bucket_id: 38
-  position: 42
 - id: 44
   uid: 'uid-caldav-test-child-task-2'
   title: 'Child task for Caldav Test '
@@ -430,8 +384,6 @@
   due_date: 2023-03-01 15:00:00
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
-  bucket_id: 38
-  position: 43
 - id: 45
   uid: 'uid-caldav-test-parent-task-another-list'
   title: 'Parent task for Caldav Test'
@@ -444,8 +396,6 @@
   due_date: 2023-03-01 15:00:00
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
-  bucket_id: 38
-  position: 44
 - id: 46
   uid: 'uid-caldav-test-child-task-another-list'
   title: 'Child task for Caldav Test '
@@ -458,5 +408,3 @@
   due_date: 2023-03-01 15:00:00
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
-  bucket_id: 38
-  position: 45

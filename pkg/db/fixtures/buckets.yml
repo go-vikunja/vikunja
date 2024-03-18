@@ -1,6 +1,6 @@
 - id: 1
   title: testbucket1
-  project_id: 1
+  project_view_id: 4
   created_by_id: 1
   limit: 9999999 # This bucket has a limit we will never exceed in the tests to make sure the logic allows for buckets with limits
   position: 1
@@ -8,7 +8,7 @@
   updated: 2020-04-18 21:13:52
 - id: 2
   title: testbucket2
-  project_id: 1
+  project_view_id: 4
   created_by_id: 1
   limit: 3
   position: 2
@@ -16,14 +16,14 @@
   updated: 2020-04-18 21:13:52
 - id: 3
   title: testbucket3
-  project_id: 1
+  project_view_id: 4
   created_by_id: 1
   position: 3
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 4
   title: testbucket4 - other project
-  project_id: 2
+  project_view_id: 8
   created_by_id: 1
   position: 1
   created: 2020-04-18 21:13:52
@@ -31,221 +31,221 @@
 # The following are not or only partly owned by user 1
 - id: 5
   title: testbucket5
-  project_id: 20
+  project_view_id: 80
   created_by_id: 1
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 6
   title: testbucket6
-  project_id: 6
+  project_view_id: 24
   created_by_id: 1
   position: 1
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 7
   title: testbucket7
-  project_id: 7
+  project_view_id: 28
   created_by_id: 1
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 8
   title: testbucket8
-  project_id: 8
+  project_view_id: 32
   created_by_id: 1
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 9
   title: testbucket9
-  project_id: 9
+  project_view_id: 36
   created_by_id: 1
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 10
   title: testbucket10
-  project_id: 10
+  project_view_id: 40
   created_by_id: 1
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 11
   title: testbucket11
-  project_id: 11
+  project_view_id: 44
   created_by_id: 1
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 12
   title: testbucket13
-  project_id: 12
+  project_view_id: 48
   created_by_id: 1
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 13
   title: testbucket13
-  project_id: 13
+  project_view_id: 52
   created_by_id: 1
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 14
   title: testbucket14
-  project_id: 14
+  project_view_id: 56
   created_by_id: 1
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 15
   title: testbucket15
-  project_id: 15
+  project_view_id: 60
   created_by_id: 1
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 16
   title: testbucket16
-  project_id: 16
+  project_view_id: 64
   created_by_id: 1
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 17
   title: testbucket17
-  project_id: 17
+  project_view_id: 68
   created_by_id: 1
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 18
   title: testbucket18
-  project_id: 5
+  project_view_id: 20
   created_by_id: 1
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 19
   title: testbucket19
-  project_id: 21
+  project_view_id: 84
   created_by_id: 1
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 20
   title: testbucket20
-  project_id: 22
+  project_view_id: 88
   created_by_id: 1
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 21
   title: testbucket21
-  project_id: 3
+  project_view_id: 12
   created_by_id: 1
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 # Duplicate buckets to make deletion of one of them possible
 - id: 22
   title: testbucket22
-  project_id: 6
+  project_view_id: 24
   created_by_id: 1
   position: 2
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 23
   title: testbucket23
-  project_id: 7
+  project_view_id: 28
   created_by_id: 1
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 24
   title: testbucket24
-  project_id: 8
+  project_view_id: 32
   created_by_id: 1
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 25
   title: testbucket25
-  project_id: 9
+  project_view_id: 36
   created_by_id: 1
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 26
   title: testbucket26
-  project_id: 10
+  project_view_id: 40
   created_by_id: 1
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 27
   title: testbucket27
-  project_id: 11
+  project_view_id: 44
   created_by_id: 1
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 28
   title: testbucket28
-  project_id: 12
+  project_view_id: 48
   created_by_id: 1
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 29
   title: testbucket29
-  project_id: 13
+  project_view_id: 52
   created_by_id: 1
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 30
   title: testbucket30
-  project_id: 14
+  project_view_id: 56
   created_by_id: 1
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 31
   title: testbucket31
-  project_id: 15
+  project_view_id: 60
   created_by_id: 1
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 32
   title: testbucket32
-  project_id: 16
+  project_view_id: 64
   created_by_id: 1
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 33
   title: testbucket33
-  project_id: 17
+  project_view_id: 68
   created_by_id: 1
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 # This bucket is the last one in its project
 - id: 34
   title: testbucket34
-  project_id: 18
+  project_view_id: 72
   created_by_id: 1
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 35
   title: testbucket35
-  project_id: 23
+  project_view_id: 92
   created_by_id: -2
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 36
   title: testbucket36
-  project_id: 33
+  project_view_id: 132
   created_by_id: 6
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 37
   title: testbucket37
-  project_id: 34
+  project_view_id: 136
   created_by_id: 6
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 38
   title: testbucket36
-  project_id: 36
+  project_view_id: 144
   created_by_id: 15
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 39
   title: testbucket38
-  project_id: 38
+  project_view_id: 152
   created_by_id: 15
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 40
   title: testbucket40
-  project_id: 2
+  project_view_id: 8
   created_by_id: 1
   position: 10
   created: 2020-04-18 21:13:52

@@ -66,6 +66,9 @@ func SetupTests() {
 		"favorites",
 		"api_tokens",
 		"reactions",
+		"project_views",
+		"task_positions",
+		"task_buckets",
 	)
 	if err != nil {
 		log.Fatal(err)
