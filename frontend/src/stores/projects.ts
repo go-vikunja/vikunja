@@ -216,10 +216,13 @@ export const useProjectStore = defineStore('project', () => {
 		const viewPos = projects.value[view.projectId].views.findIndex(v => v.id === view.id)
 		if (viewPos !== -1) {
 			projects.value[view.projectId].views[viewPos] = view
+			setProject(projects.value[view.projectId])
 			return
 		}
 		
 		projects.value[view.projectId].views.push(view)
+		
+		setProject(projects.value[view.projectId])
 	}
 	
 	function removeProjectView(projectId: IProject['id'], viewId: IProjectView['id']) {
