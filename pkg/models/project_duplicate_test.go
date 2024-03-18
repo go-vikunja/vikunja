@@ -48,11 +48,11 @@ func TestProjectDuplicate(t *testing.T) {
 	require.NoError(t, err)
 
 	// assert the new project has the same number of buckets as the old one
-	numberOfOriginalBuckets, err := s.Where("project_id = ?", l.ProjectID).Count(&Bucket{})
+	numberOfOriginalViews, err := s.Where("project_id = ?", l.ProjectID).Count(&ProjectView{})
 	require.NoError(t, err)
-	numberOfDuplicatedBuckets, err := s.Where("project_id = ?", l.Project.ID).Count(&Bucket{})
+	numberOfDuplicatedViews, err := s.Where("project_id = ?", l.Project.ID).Count(&ProjectView{})
 	require.NoError(t, err)
-	assert.Equal(t, numberOfOriginalBuckets, numberOfDuplicatedBuckets, "duplicated project does not have the same amount of buckets as the original one")
+	assert.Equal(t, numberOfOriginalViews, numberOfDuplicatedViews, "duplicated project does not have the same amount of views as the original one")
 
 	// To make this test 100% useful, it would need to assert a lot more stuff, but it is good enough for now.
 	// Also, we're lacking utility functions to do all needed assertions.

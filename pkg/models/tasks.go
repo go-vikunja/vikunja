@@ -776,10 +776,10 @@ func getNextTaskIndex(s *xorm.Session, projectID int64) (nextIndex int64, err er
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/tasks [put]
 func (t *Task) Create(s *xorm.Session, a web.Auth) (err error) {
-	return createTask(s, t, a, true)
+	return createTask(s, t, a, true, true)
 }
 
-func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err error) {
+func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, updateBucket bool) (err error) {
 
 	t.ID = 0
 
@@ -827,10 +827,12 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
 
 	for _, view := range views {
 
-		// Get the default bucket and move the task there
-		err = setTaskBucket(s, t, nil, view, 0)
-		if err != nil {
-			return
+		if updateBucket {
+			// Get the default bucket and move the task there
+			err = setTaskBucket(s, t, nil, view, t.BucketID)
+			if err != nil {
+				return
+			}
 		}
 
 		positions = append(positions, &TaskPosition{
@@ -840,9 +842,11 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
 		})
 	}
 
-	_, err = s.Insert(&positions)
-	if err != nil {
-		return
+	if updateBucket {
+		_, err = s.Insert(&positions)
+		if err != nil {
+			return
+		}
 	}
 
 	t.CreatedBy = createdBy

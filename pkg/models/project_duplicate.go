@@ -81,7 +81,8 @@ func (pd *ProjectDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 	pd.Project.ParentProjectID = pd.ParentProjectID
 	// Set the owner to the current user
 	pd.Project.OwnerID = doer.GetID()
-	if err := CreateProject(s, pd.Project, doer, false); err != nil {
+	err = CreateProject(s, pd.Project, doer, false, false)
+	if err != nil {
 		// If there is no available unique project identifier, just reset it.
 		if IsErrProjectIdentifierIsNotUnique(err) {
 			pd.Project.Identifier = ""
@@ -92,31 +93,19 @@ func (pd *ProjectDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 
 	log.Debugf("Duplicated project %d into new project %d", pd.ProjectID, pd.Project.ID)
 
-	// Duplicate kanban buckets
-	// Old bucket ID as key, new id as value
-	// Used to map the newly created tasks to their new buckets
-	bucketMap := make(map[int64]int64)
-	buckets := []*Bucket{}
-	err = s.Where("project_id = ?", pd.ProjectID).Find(&buckets)
+	newTaskIDs, err := duplicateTasks(s, doer, pd)
 	if err != nil {
 		return
 	}
-	for _, b := range buckets {
-		oldID := b.ID
-		b.ID = 0
-		b.ProjectID = pd.Project.ID
-		if err := b.Create(s, doer); err != nil {
-			return err
-		}
-		bucketMap[oldID] = b.ID
-	}
 
-	log.Debugf("Duplicated all buckets from project %d into %d", pd.ProjectID, pd.Project.ID)
+	log.Debugf("Duplicated all tasks from project %d into %d", pd.ProjectID, pd.Project.ID)
 
-	err = duplicateTasks(s, doer, pd, bucketMap)
+	err = duplicateViews(s, pd, doer, newTaskIDs)
 	if err != nil {
 		return
 	}
+
+	log.Debugf("Duplicated all views, buckets and positions from project %d into %d", pd.ProjectID, pd.Project.ID)
 
 	err = duplicateProjectBackground(s, pd, doer)
 	if err != nil {
@@ -173,6 +162,93 @@ func (pd *ProjectDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 	return
 }
 
+func duplicateViews(s *xorm.Session, pd *ProjectDuplicate, doer web.Auth, taskMap map[int64]int64) (err error) {
+	// Duplicate Views
+	views := make(map[int64]*ProjectView)
+	err = s.Where("project_id = ?", pd.ProjectID).Find(&views)
+	if err != nil {
+		return
+	}
+
+	oldViewIDs := []int64{}
+	viewMap := make(map[int64]int64)
+	for _, view := range views {
+		oldID := view.ID
+		oldViewIDs = append(oldViewIDs, oldID)
+
+		view.ID = 0
+		view.ProjectID = pd.Project.ID
+		err = view.Create(s, doer)
+		if err != nil {
+			return
+		}
+
+		viewMap[oldID] = view.ID
+	}
+
+	buckets := []*Bucket{}
+	err = s.In("project_view_id", oldViewIDs).Find(&buckets)
+	if err != nil {
+		return
+	}
+
+	// Old bucket ID as key, new id as value
+	// Used to map the newly created tasks to their new buckets
+	bucketMap := make(map[int64]int64)
+
+	oldBucketIDs := []int64{}
+	for _, b := range buckets {
+		oldID := b.ID
+		oldBucketIDs = append(oldBucketIDs, oldID)
+
+		b.ID = 0
+		b.ProjectID = pd.Project.ID
+
+		err = b.Create(s, doer)
+		if err != nil {
+			return err
+		}
+
+		bucketMap[oldID] = b.ID
+	}
+
+	oldTaskBuckets := []*TaskBucket{}
+	err = s.In("bucket_id", oldBucketIDs).Find(&oldTaskBuckets)
+	if err != nil {
+		return err
+	}
+
+	taskBuckets := []*TaskBucket{}
+	for _, tb := range oldTaskBuckets {
+		taskBuckets = append(taskBuckets, &TaskBucket{
+			BucketID: bucketMap[tb.BucketID],
+			TaskID:   taskMap[tb.TaskID],
+		})
+	}
+
+	_, err = s.Insert(&taskBuckets)
+	if err != nil {
+		return err
+	}
+
+	oldTaskPositions := []*TaskPosition{}
+	err = s.In("project_view_id", oldViewIDs).Find(&oldTaskPositions)
+	if err != nil {
+		return
+	}
+
+	taskPositions := []*TaskPosition{}
+	for _, tp := range oldTaskPositions {
+		taskPositions = append(taskPositions, &TaskPosition{
+			ProjectViewID: viewMap[tp.ProjectViewID],
+			TaskID:        taskMap[tp.TaskID],
+			Position:      tp.Position,
+		})
+	}
+
+	return
+}
+
 func duplicateProjectBackground(s *xorm.Session, pd *ProjectDuplicate, doer web.Auth) (err error) {
 	if pd.Project.BackgroundFileID == 0 {
 		return
@@ -221,33 +297,32 @@ func duplicateProjectBackground(s *xorm.Session, pd *ProjectDuplicate, doer web.
 	return
 }
 
-func duplicateTasks(s *xorm.Session, doer web.Auth, ld *ProjectDuplicate, bucketMap map[int64]int64) (err error) {
+func duplicateTasks(s *xorm.Session, doer web.Auth, ld *ProjectDuplicate) (newTaskIDs map[int64]int64, err error) {
 	// Get all tasks + all task details
 	tasks, _, _, err := getTasksForProjects(s, []*Project{{ID: ld.ProjectID}}, doer, &taskSearchOptions{}, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if len(tasks) == 0 {
-		return nil
+		return
 	}
 
 	// This map contains the old task id as key and the new duplicated task id as value.
 	// It is used to map old task items to new ones.
-	taskMap := make(map[int64]int64)
+	newTaskIDs = make(map[int64]int64, len(tasks))
 	// Create + update all tasks (includes reminders)
 	oldTaskIDs := make([]int64, 0, len(tasks))
 	for _, t := range tasks {
 		oldID := t.ID
 		t.ID = 0
 		t.ProjectID = ld.Project.ID
-		t.BucketID = bucketMap[t.BucketID]
 		t.UID = ""
-		err := createTask(s, t, doer, false)
+		err = createTask(s, t, doer, false, false)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		taskMap[oldID] = t.ID
+		newTaskIDs[oldID] = t.ID
 		oldTaskIDs = append(oldTaskIDs, oldID)
 	}
 
@@ -258,14 +333,14 @@ func duplicateTasks(s *xorm.Session, doer web.Auth, ld *ProjectDuplicate, bucket
 	// file changes in the other project which is not something we want.
 	attachments, err := getTaskAttachmentsByTaskIDs(s, oldTaskIDs)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	for _, attachment := range attachments {
 		oldAttachmentID := attachment.ID
 		attachment.ID = 0
 		var exists bool
-		attachment.TaskID, exists = taskMap[attachment.TaskID]
+		attachment.TaskID, exists = newTaskIDs[attachment.TaskID]
 		if !exists {
 			log.Debugf("Error duplicating attachment %d from old task %d to new task: Old task <-> new task does not seem to exist.", oldAttachmentID, attachment.TaskID)
 			continue
@@ -276,15 +351,15 @@ func duplicateTasks(s *xorm.Session, doer web.Auth, ld *ProjectDuplicate, bucket
 				log.Debugf("Not duplicating attachment %d (file %d) because it does not exist from project %d into %d", oldAttachmentID, attachment.FileID, ld.ProjectID, ld.Project.ID)
 				continue
 			}
-			return err
+			return nil, err
 		}
 		if err := attachment.File.LoadFileByID(); err != nil {
-			return err
+			return nil, err
 		}
 
 		err := attachment.NewAttachment(s, attachment.File.File, attachment.File.Name, attachment.File.Size, doer)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		if attachment.File.File != nil {
@@ -305,9 +380,9 @@ func duplicateTasks(s *xorm.Session, doer web.Auth, ld *ProjectDuplicate, bucket
 
 	for _, lt := range labelTasks {
 		lt.ID = 0
-		lt.TaskID = taskMap[lt.TaskID]
+		lt.TaskID = newTaskIDs[lt.TaskID]
 		if _, err := s.Insert(lt); err != nil {
-			return err
+			return nil, err
 		}
 	}
 
@@ -322,14 +397,14 @@ func duplicateTasks(s *xorm.Session, doer web.Auth, ld *ProjectDuplicate, bucket
 	}
 	for _, a := range assignees {
 		t := &Task{
-			ID:        taskMap[a.TaskID],
+			ID:        newTaskIDs[a.TaskID],
 			ProjectID: ld.Project.ID,
 		}
 		if err := t.addNewAssigneeByID(s, a.UserID, ld.Project, doer); err != nil {
 			if IsErrUserDoesNotHaveAccessToProject(err) {
 				continue
 			}
-			return err
+			return nil, err
 		}
 	}
 
@@ -343,9 +418,9 @@ func duplicateTasks(s *xorm.Session, doer web.Auth, ld *ProjectDuplicate, bucket
 	}
 	for _, c := range comments {
 		c.ID = 0
-		c.TaskID = taskMap[c.TaskID]
+		c.TaskID = newTaskIDs[c.TaskID]
 		if _, err := s.Insert(c); err != nil {
-			return err
+			return nil, err
 		}
 	}
 
@@ -360,19 +435,19 @@ func duplicateTasks(s *xorm.Session, doer web.Auth, ld *ProjectDuplicate, bucket
 		return
 	}
 	for _, r := range relations {
-		otherTaskID, exists := taskMap[r.OtherTaskID]
+		otherTaskID, exists := newTaskIDs[r.OtherTaskID]
 		if !exists {
 			continue
 		}
 		r.ID = 0
 		r.OtherTaskID = otherTaskID
-		r.TaskID = taskMap[r.TaskID]
+		r.TaskID = newTaskIDs[r.TaskID]
 		if _, err := s.Insert(r); err != nil {
-			return err
+			return nil, err
 		}
 	}
 
 	log.Debugf("Duplicated all task relations from project %d into %d", ld.ProjectID, ld.Project.ID)
 
-	return nil
+	return
 }
