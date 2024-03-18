@@ -31,6 +31,7 @@ watch(
 		if (viewId === 0) {
 			// Ideally, we would do that in the router redirect, but we the projects (and therefore, the views) 
 			// are not always loaded then.
+			console.log('views', projectId, projectStore.projects)
 			const viewId = projectStore.projects[projectId].views[0].id
 			router.replace({
 				name: 'project.view',
@@ -51,25 +52,21 @@ const route = useRoute()
 	<ProjectList
 		v-if="currentView?.viewKind === 'list'"
 		:project-id="projectId"
-		:viewId
+		:view-id
 	/>
 	<ProjectGantt
 		v-if="currentView?.viewKind === 'gantt'"
 		:route
-		:viewId
+		:view-id
 	/>
 	<ProjectTable
 		v-if="currentView?.viewKind === 'table'"
 		:project-id="projectId"
-		:viewId
+		:view-id
 	/>
 	<ProjectKanban
 		v-if="currentView?.viewKind === 'kanban'"
 		:project-id="projectId"
-		:viewId
+		:view-id
 	/>
 </template>
-
-<style scoped lang="scss">
-
-</style>

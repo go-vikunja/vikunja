@@ -2,7 +2,7 @@
 	<ProjectWrapper
 		class="project-table"
 		:project-id="projectId"
-		:viewId
+		:view-id
 	>
 		<template #header>
 			<div class="filter-container">

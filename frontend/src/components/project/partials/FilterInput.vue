@@ -21,10 +21,7 @@ import {
 	LABEL_FIELDS,
 } from '@/helpers/filters'
 import {useDebounceFn} from '@vueuse/core'
-import {useI18n} from 'vue-i18n'
 import {createRandomID} from '@/helpers/randomId'
-
-const {t} = useI18n()
 
 const {
 	modelValue,
@@ -270,9 +267,9 @@ const blurDebounced = useDebounceFn(() => emit('blur'), 500)
 			>
 				<div class="control filter-input">
 					<textarea
+						:id
 						ref="filterInput"
 						v-model="filterQuery"
-						:id
 						autocomplete="off"
 						autocorrect="off"
 						autocapitalize="off"

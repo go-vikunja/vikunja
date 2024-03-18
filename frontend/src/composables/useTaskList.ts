@@ -58,7 +58,7 @@ const SORT_BY_DEFAULT: SortBy = {
 export function useTaskList(
 	projectIdGetter: ComputedGetter<IProject['id']>,
 	projectViewIdGetter: ComputedGetter<IProjectView['id']>,
-	sortByDefault: SortBy = SORT_BY_DEFAULT
+	sortByDefault: SortBy = SORT_BY_DEFAULT,
 ) {
 	
 	const projectId = computed(() => projectIdGetter())

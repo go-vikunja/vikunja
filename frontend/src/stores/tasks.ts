@@ -28,9 +28,8 @@ import {useKanbanStore} from '@/stores/kanban'
 import {useBaseStore} from '@/stores/base'
 import ProjectUserService from '@/services/projectUsers'
 import {useAuthStore} from '@/stores/auth'
-import TaskCollectionService, {type TaskFilterParams} from '@/services/taskCollection'
+import {type TaskFilterParams} from '@/services/taskCollection'
 import {getRandomColorHex} from '@/helpers/color/randomColor'
-import type {IProjectView} from '@/modelTypes/IProjectView'
 
 interface MatchedAssignee extends IUser {
 	match: string,

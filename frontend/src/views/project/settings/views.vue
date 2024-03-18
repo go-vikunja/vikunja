@@ -90,12 +90,12 @@ async function saveView() {
 			class="mb-4"
 		/>
 		<div class="is-flex is-justify-content-end">
-			<x-button
-				@click="createView"
+			<XButton
 				:loading="projectViewService.loading"
+				@click="createView"
 			>
 				{{ $t('project.views.create') }}
-			</x-button>
+			</XButton>
 		</div>
 
 		<table
@@ -103,59 +103,61 @@ async function saveView() {
 			class="table has-actions is-striped is-hoverable is-fullwidth"
 		>
 			<thead>
-			<tr>
-				<th>{{ $t('project.views.title') }}</th>
-				<th>{{ $t('project.views.kind') }}</th>
-				<th class="has-text-right">{{ $t('project.views.actions') }}</th>
-			</tr>
+				<tr>
+					<th>{{ $t('project.views.title') }}</th>
+					<th>{{ $t('project.views.kind') }}</th>
+					<th class="has-text-right">
+						{{ $t('project.views.actions') }}
+					</th>
+				</tr>
 			</thead>
 			<tbody>
-			<tr
-				v-for="v in views"
-				:key="v.id"
-			>
-				<template v-if="viewToEdit !== null && viewToEdit.id === v.id">
-					<td colspan="3">
-						<ViewEditForm
-							v-model="viewToEdit"
-							class="mb-4"
-						/>
-						<div class="is-flex is-justify-content-end">
-							<x-button
-								variant="tertiary"
-								@click="viewToEdit = null"
-								class="mr-2"
-							>
-								{{ $t('misc.cancel') }}
-							</x-button>
-							<x-button
-								@click="saveView"
-								:loading="projectViewService.loading"
-							>
-								{{ $t('misc.save') }}
-							</x-button>
-						</div>
-					</td>
-				</template>
-				<template v-else>
-					<td>{{ v.title }}</td>
-					<td>{{ v.viewKind }}</td>
-					<td class="has-text-right">
-						<x-button
-							class="is-danger mr-2"
-							icon="trash-alt"
-							@click="() => {
-							viewIdToDelete = v.id
-							showDeleteModal = true
-						}"
-						/>
-						<x-button
-							icon="pen"
-							@click="viewToEdit = {...v}"
-						/>
-					</td>
-				</template>
-			</tr>
+				<tr
+					v-for="v in views"
+					:key="v.id"
+				>
+					<template v-if="viewToEdit !== null && viewToEdit.id === v.id">
+						<td colspan="3">
+							<ViewEditForm
+								v-model="viewToEdit"
+								class="mb-4"
+							/>
+							<div class="is-flex is-justify-content-end">
+								<XButton
+									variant="tertiary"
+									class="mr-2"
+									@click="viewToEdit = null"
+								>
+									{{ $t('misc.cancel') }}
+								</XButton>
+								<XButton
+									:loading="projectViewService.loading"
+									@click="saveView"
+								>
+									{{ $t('misc.save') }}
+								</XButton>
+							</div>
+						</td>
+					</template>
+					<template v-else>
+						<td>{{ v.title }}</td>
+						<td>{{ v.viewKind }}</td>
+						<td class="has-text-right">
+							<XButton
+								class="is-danger mr-2"
+								icon="trash-alt"
+								@click="() => {
+									viewIdToDelete = v.id
+									showDeleteModal = true
+								}"
+							/>
+							<XButton
+								icon="pen"
+								@click="viewToEdit = {...v}"
+							/>
+						</td>
+					</template>
+				</tr>
 			</tbody>
 		</table>
 	</CreateEdit>
@@ -174,7 +176,3 @@ async function saveView() {
 		</template>
 	</modal>
 </template>
-
-<style scoped lang="scss">
-
-</style>

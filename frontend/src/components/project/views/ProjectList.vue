@@ -2,7 +2,7 @@
 	<ProjectWrapper
 		class="project-list"
 		:project-id="projectId"
-		:viewId
+		:view-id
 	>
 		<template #header>
 			<div class="filter-container">
@@ -73,7 +73,7 @@
 							>
 								<template v-if="canWrite">
 									<span class="icon handle">
-										<icon icon="grip-lines"/>
+										<icon icon="grip-lines" />
 									</span>
 								</template>
 							</SingleTaskInProject>
@@ -114,7 +114,6 @@ import type {ITask} from '@/modelTypes/ITask'
 import {isSavedFilter} from '@/services/savedFilter'
 
 import {useBaseStore} from '@/stores/base'
-import {useTaskStore} from '@/stores/tasks'
 
 import type {IProject} from '@/modelTypes/IProject'
 import type {IProjectView} from '@/modelTypes/IProjectView'
@@ -189,7 +188,6 @@ const firstNewPosition = computed(() => {
 	return calculateItemPosition(null, tasks.value[0].position)
 })
 
-const taskStore = useTaskStore()
 const baseStore = useBaseStore()
 const project = computed(() => baseStore.currentProject)
 

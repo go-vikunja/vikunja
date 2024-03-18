@@ -109,7 +109,7 @@ function useAuth() {
 				name: 'project.view',
 				params: {
 					projectId, 
-					viewId: route.query.view
+					viewId: route.query.view,
 				},
 				hash,
 			})

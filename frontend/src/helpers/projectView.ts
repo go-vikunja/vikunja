@@ -1,4 +1,3 @@
-import type { RouteRecordName } from 'vue-router'
 import router from '@/router'
 
 import type {IProject} from '@/modelTypes/IProject'

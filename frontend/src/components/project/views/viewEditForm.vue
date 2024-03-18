@@ -117,11 +117,14 @@ function validateTitle() {
 						class="is-danger"
 						@click.prevent="() => model.bucketConfiguration.splice(index, 1)"
 					>
-						<icon icon="trash-alt"/>
+						<icon icon="trash-alt" />
 					</button>
 					<div class="filter-bucket-form">
 						<div class="field">
-							<label class="label" :for="'bucket_'+index+'_title'">
+							<label
+								class="label"
+								:for="'bucket_'+index+'_title'"
+							>
 								{{ $t('project.views.title') }}
 							</label>
 							<div class="control">
@@ -136,18 +139,18 @@ function validateTitle() {
 
 						<FilterInput
 							v-model="model.bucketConfiguration[index].filter"
-							:inputLabel="$t('project.views.filter')"
+							:input-label="$t('project.views.filter')"
 						/>
 					</div>
 				</div>
 				<div class="is-flex is-justify-content-end">
-					<x-button
+					<XButton
 						variant="secondary"
 						icon="plus"
 						@click="() => model.bucketConfiguration.push({title: '', filter: ''})"
 					>
 						{{ $t('project.kanban.addBucket') }}
-					</x-button>
+					</XButton>
 				</div>
 			</div>
 		</div>
