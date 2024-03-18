@@ -35,7 +35,10 @@ func TestBucket_ReadAll(t *testing.T) {
 		defer s.Close()
 
 		testuser := &user.User{ID: 1}
-		b := &Bucket{ProjectID: 1}
+		b := &TaskCollection{
+			ProjectViewID: 4,
+			ProjectID:     1,
+		}
 		bucketsInterface, _, _, err := b.ReadAll(s, testuser, "", 0, 0)
 		require.NoError(t, err)
 
@@ -78,11 +81,10 @@ func TestBucket_ReadAll(t *testing.T) {
 		defer s.Close()
 
 		testuser := &user.User{ID: 1}
-		b := &Bucket{
-			ProjectID: 1,
-			TaskCollection: TaskCollection{
-				Filter: "title ~ 'done'",
-			},
+		b := &TaskCollection{
+			ProjectViewID: 4,
+			ProjectID:     1,
+			Filter:        "title ~ 'done'",
 		}
 		bucketsInterface, _, _, err := b.ReadAll(s, testuser, "", -1, 0)
 		require.NoError(t, err)
@@ -98,11 +100,10 @@ func TestBucket_ReadAll(t *testing.T) {
 		defer s.Close()
 
 		testuser := &user.User{ID: 1}
-		b := &Bucket{
-			ProjectID: 1,
-			TaskCollection: TaskCollection{
-				Filter: "title ~ 'task' && bucket_id = 2",
-			},
+		b := &TaskCollection{
+			ProjectViewID: 4,
+			ProjectID:     1,
+			Filter:        "title ~ 'task' && bucket_id = 2",
 		}
 		bucketsInterface, _, _, err := b.ReadAll(s, testuser, "", -1, 0)
 		require.NoError(t, err)
@@ -126,7 +127,10 @@ func TestBucket_ReadAll(t *testing.T) {
 			ProjectID: 1,
 			Right:     RightRead,
 		}
-		b := &Bucket{ProjectID: 1}
+		b := &TaskCollection{
+			ProjectID:     1,
+			ProjectViewID: 4,
+		}
 		result, _, _, err := b.ReadAll(s, linkShare, "", 0, 0)
 		require.NoError(t, err)
 		buckets, _ := result.([]*Bucket)
@@ -140,7 +144,10 @@ func TestBucket_ReadAll(t *testing.T) {
 		defer s.Close()
 
 		testuser := &user.User{ID: 12}
-		b := &Bucket{ProjectID: 23}
+		b := &TaskCollection{
+			ProjectID:     23,
+			ProjectViewID: 92,
+		}
 		result, _, _, err := b.ReadAll(s, testuser, "", 0, 0)
 		require.NoError(t, err)
 		buckets, _ := result.([]*Bucket)
@@ -151,7 +158,7 @@ func TestBucket_ReadAll(t *testing.T) {
 }
 
 func TestBucket_Delete(t *testing.T) {
-	user := &user.User{ID: 1}
+	u := &user.User{ID: 1}
 
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -159,22 +166,23 @@ func TestBucket_Delete(t *testing.T) {
 		defer s.Close()
 
 		b := &Bucket{
-			ID:        2, // The second bucket only has 3 tasks
-			ProjectID: 1,
+			ID:            2, // The second bucket only has 3 tasks
+			ProjectID:     1,
+			ProjectViewID: 4,
 		}
-		err := b.Delete(s, user)
+		err := b.Delete(s, u)
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
 
 		// Assert all tasks have been moved to bucket 1 as that one is the first
-		tasks := []*Task{}
+		tasks := []*TaskBucket{}
 		err = s.Where("bucket_id = ?", 1).Find(&tasks)
 		require.NoError(t, err)
 		assert.Len(t, tasks, 15)
 		db.AssertMissing(t, "buckets", map[string]interface{}{
-			"id":         2,
-			"project_id": 1,
+			"id":              2,
+			"project_view_id": 4,
 		})
 	})
 	t.Run("last bucket in project", func(t *testing.T) {
@@ -183,18 +191,19 @@ func TestBucket_Delete(t *testing.T) {
 		defer s.Close()
 
 		b := &Bucket{
-			ID:        34,
-			ProjectID: 18,
+			ID:            34,
+			ProjectID:     18,
+			ProjectViewID: 72,
 		}
-		err := b.Delete(s, user)
+		err := b.Delete(s, u)
 		require.Error(t, err)
 		assert.True(t, IsErrCannotRemoveLastBucket(err))
 		err = s.Commit()
 		require.NoError(t, err)
 
 		db.AssertExists(t, "buckets", map[string]interface{}{
-			"id":         34,
-			"project_id": 18,
+			"id":              34,
+			"project_view_id": 72,
 		}, false)
 	})
 	t.Run("done bucket should be reset", func(t *testing.T) {
@@ -203,14 +212,15 @@ func TestBucket_Delete(t *testing.T) {
 		defer s.Close()
 
 		b := &Bucket{
-			ID:        3,
-			ProjectID: 1,
+			ID:            3,
+			ProjectID:     1,
+			ProjectViewID: 4,
 		}
-		err := b.Delete(s, user)
+		err := b.Delete(s, u)
 		require.NoError(t, err)
 
-		db.AssertMissing(t, "projects", map[string]interface{}{
-			"id":             1,
+		db.AssertMissing(t, "project_views", map[string]interface{}{
+			"id":             4,
 			"done_bucket_id": 3,
 		})
 	})
@@ -238,9 +248,10 @@ func TestBucket_Update(t *testing.T) {
 		defer s.Close()
 
 		b := &Bucket{
-			ID:    1,
-			Title: "New Name",
-			Limit: 2,
+			ID:            1,
+			Title:         "New Name",
+			Limit:         2,
+			ProjectViewID: 4,
 		}
 
 		testAndAssertBucketUpdate(t, b, s)
@@ -251,9 +262,10 @@ func TestBucket_Update(t *testing.T) {
 		defer s.Close()
 
 		b := &Bucket{
-			ID:    1,
-			Title: "testbucket1",
-			Limit: 0,
+			ID:            1,
+			Title:         "testbucket1",
+			Limit:         0,
+			ProjectViewID: 4,
 		}
 
 		testAndAssertBucketUpdate(t, b, s)
