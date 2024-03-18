@@ -238,7 +238,7 @@ func (p *ProjectView) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
 // @Router /projects/{project}/views/{id} [delete]
 func (p *ProjectView) Delete(s *xorm.Session, a web.Auth) (err error) {
 	_, err = s.
-		Where("id = ? AND projec_id = ?", p.ID, p.ProjectID).
+		Where("id = ? AND project_id = ?", p.ID, p.ProjectID).
 		Delete(&ProjectView{})
 	return
 }
