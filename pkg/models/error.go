@@ -1568,7 +1568,7 @@ func IsErrCannotRemoveLastBucket(err error) bool {
 }
 
 func (err ErrCannotRemoveLastBucket) Error() string {
-	return fmt.Sprintf("Cannot remove last bucket of project [BucketID: %d, ProjectID: %d]", err.BucketID, err.ProjectViewID)
+	return fmt.Sprintf("Cannot remove last bucket of project view [BucketID: %d, ProjectViewID: %d]", err.BucketID, err.ProjectViewID)
 }
 
 // ErrCodeCannotRemoveLastBucket holds the unique world-error code of this error
@@ -1579,7 +1579,7 @@ func (err ErrCannotRemoveLastBucket) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusPreconditionFailed,
 		Code:     ErrCodeCannotRemoveLastBucket,
-		Message:  "You cannot remove the last bucket on this project.",
+		Message:  "You cannot remove the last bucket on this project view.",
 	}
 }
 
