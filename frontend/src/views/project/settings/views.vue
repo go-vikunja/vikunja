@@ -39,7 +39,11 @@ async function createView() {
 	}
 
 	try {
+		newView.value.bucketConfigurationMode = newView.value.viewKind === 'kanban'
+			? newView.value.bucketConfigurationMode
+			: 'none'
 		newView.value.projectId = projectId
+
 		const result: IProjectView = await projectViewService.value.create(newView.value)
 		success({message: t('project.views.createSuccess')})
 		showCreateForm.value = false
@@ -66,6 +70,9 @@ async function deleteView() {
 }
 
 async function saveView() {
+	if (viewToEdit.value?.viewKind !== 'kanban') {
+		viewToEdit.value.bucketConfigurationMode = 'none'
+	}
 	const result = await projectViewService.value.update(viewToEdit.value)
 	projectStore.setProjectView(result)
 	viewToEdit.value = null

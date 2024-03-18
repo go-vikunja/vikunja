@@ -22,7 +22,6 @@ export default class ProjectViewModel extends AbstractModel<IProjectView> implem
 		super()
 		this.assignData(data)
 		
-		
 		if (!this.bucketConfiguration) {
 			this.bucketConfiguration = []
 		}
