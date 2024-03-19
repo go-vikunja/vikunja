@@ -106,10 +106,9 @@ function useAuth() {
 			}
 
 			return router.push({
-				name: 'project.view',
+				name: 'project.index',
 				params: {
 					projectId, 
-					viewId: route.query.view,
 				},
 				hash,
 			})

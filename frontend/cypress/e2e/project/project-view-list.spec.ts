@@ -6,7 +6,7 @@ import {UserFactory} from '../../factories/user'
 import {ProjectFactory} from '../../factories/project'
 import {prepareProjects} from './prepareProjects'
 
-describe('Project View Project', () => {
+describe('Project View List', () => {
 	createFakeUserAndLogin()
 	prepareProjects()
 
