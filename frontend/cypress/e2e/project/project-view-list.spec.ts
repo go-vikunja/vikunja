@@ -24,9 +24,9 @@ describe('Project View List', () => {
 			.should('exist')
 	})
 	
-	it.only('Should create a new task', () => {
+	it('Should create a new task', () => {
 		BucketFactory.create(2, {
-			project_view_id: 1,
+			project_view_id: 4,
 		})
 		
 		const newTaskTitle = 'New task'
