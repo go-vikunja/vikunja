@@ -62,7 +62,7 @@ describe('Home Page Task Overview', () => {
 	})
 
 	it('Should show a new task with a very soon due date at the top', () => {
-		const {tasks} = seedTasks()
+		const {tasks} = seedTasks(49)
 		const newTaskTitle = 'New Task'
 		
 		cy.visit('/')
@@ -73,9 +73,8 @@ describe('Home Page Task Overview', () => {
 			due_date: new Date().toISOString(),
 		}, false)
 		
-		cy.visit(`/projects/${tasks[0].project_id}/list`)
+		cy.visit(`/projects/${tasks[0].project_id}/1`)
 		cy.get('.tasks .task')
-			.first()
 			.should('contain.text', newTaskTitle)
 		cy.visit('/')
 		cy.get('[data-cy="showTasks"] .card .task')
@@ -90,7 +89,7 @@ describe('Home Page Task Overview', () => {
 
 		cy.visit('/')
 
-		cy.visit(`/projects/${tasks[0].project_id}/list`)
+		cy.visit(`/projects/${tasks[0].project_id}/1`)
 		cy.get('.task-add textarea')
 			.type(newTaskTitle+'{enter}')
 		cy.visit('/')
