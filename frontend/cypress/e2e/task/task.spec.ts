@@ -115,7 +115,7 @@ describe('Task', () => {
 	})
 
 	it('Should show a task description icon if the task has a description', () => {
-		cy.intercept(Cypress.env('API_URL') + '/projects/1/tasks**').as('loadTasks')
+		cy.intercept(Cypress.env('API_URL') + '/projects/1/views/*/tasks**').as('loadTasks')
 		TaskFactory.create(1, {
 			description: 'Lorem Ipsum',
 		})
@@ -128,7 +128,7 @@ describe('Task', () => {
 	})
 
 	it('Should not show a task description icon if the task has an empty description', () => {
-		cy.intercept(Cypress.env('API_URL') + '/projects/1/tasks**').as('loadTasks')
+		cy.intercept(Cypress.env('API_URL') + '/projects/1/views/*/tasks**').as('loadTasks')
 		TaskFactory.create(1, {
 			description: '',
 		})
@@ -141,7 +141,7 @@ describe('Task', () => {
 	})
 
 	it('Should not show a task description icon if the task has a description containing only an empty p tag', () => {
-		cy.intercept(Cypress.env('API_URL') + '/projects/1/tasks**').as('loadTasks')
+		cy.intercept(Cypress.env('API_URL') + '/projects/1/views/*/tasks**').as('loadTasks')
 		TaskFactory.create(1, {
 			description: '<p></p>',
 		})
