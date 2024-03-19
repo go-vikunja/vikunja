@@ -19,6 +19,7 @@ package models
 import (
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
+	"strings"
 	"xorm.io/xorm"
 )
 
@@ -120,7 +121,7 @@ func getTaskFilterOptsFromCollection(tf *TaskCollection, projectView *ProjectVie
 }
 
 func getTaskOrTasksInBuckets(s *xorm.Session, a web.Auth, projects []*Project, view *ProjectView, opts *taskSearchOptions) (tasks interface{}, resultCount int, totalItems int64, err error) {
-	if view != nil {
+	if view != nil && !strings.Contains(opts.filter, "bucket_id") {
 		if view.BucketConfigurationMode != BucketConfigurationModeNone {
 			tasksInBuckets, err := GetTasksInBucketsForView(s, view, projects, opts, a)
 			return tasksInBuckets, len(tasksInBuckets), int64(len(tasksInBuckets)), err
