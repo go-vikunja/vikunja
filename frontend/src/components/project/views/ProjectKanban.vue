@@ -277,7 +277,6 @@ import {RIGHTS as Rights} from '@/constants/rights'
 import BucketModel from '@/models/bucket'
 
 import type {IBucket} from '@/modelTypes/IBucket'
-import type {IProject} from '@/modelTypes/IProject'
 import type {ITask} from '@/modelTypes/ITask'
 
 import {useBaseStore} from '@/stores/base'

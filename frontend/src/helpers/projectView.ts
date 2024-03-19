@@ -1,5 +1,3 @@
-import router from '@/router'
-
 import type {IProject} from '@/modelTypes/IProject'
 
 export type ProjectViewSettings = Record<IProject['id'], number>
