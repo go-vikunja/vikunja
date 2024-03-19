@@ -105,17 +105,14 @@ func TestBucket_ReadAll(t *testing.T) {
 			ProjectID:     1,
 			Filter:        "title ~ 'task' && bucket_id = 2",
 		}
-		bucketsInterface, _, _, err := b.ReadAll(s, testuser, "", -1, 0)
+		taskIn, _, _, err := b.ReadAll(s, testuser, "", -1, 0)
 		require.NoError(t, err)
 
-		buckets := bucketsInterface.([]*Bucket)
-		assert.Len(t, buckets, 3)
-		assert.Empty(t, buckets[0].Tasks, 0)
-		assert.Len(t, buckets[1].Tasks, 3)
-		assert.Empty(t, buckets[2].Tasks, 0)
-		assert.Equal(t, int64(3), buckets[1].Tasks[0].ID)
-		assert.Equal(t, int64(4), buckets[1].Tasks[1].ID)
-		assert.Equal(t, int64(5), buckets[1].Tasks[2].ID)
+		tasks := taskIn.([]*Task)
+		assert.Len(t, tasks, 3)
+		assert.Equal(t, int64(3), tasks[0].ID)
+		assert.Equal(t, int64(4), tasks[1].ID)
+		assert.Equal(t, int64(5), tasks[2].ID)
 	})
 	t.Run("accessed by link share", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
