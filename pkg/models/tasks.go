@@ -920,9 +920,6 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 	// Old task has the stored reminders
 	ot.Reminders = reminders
 
-	// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
-	updateDone(&ot, t)
-
 	// Update the assignees
 	if err := ot.updateTaskAssignees(s, t.Assignees, a); err != nil {
 		return err
@@ -996,6 +993,9 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 			return err
 		}
 	}
+
+	// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
+	updateDone(&ot, t)
 
 	// If a task attachment is being set as cover image, check if the attachment actually belongs to the task
 	if t.CoverImageAttachmentID != 0 {
