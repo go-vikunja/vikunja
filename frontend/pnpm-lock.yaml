@@ -35,8 +35,8 @@ dependencies:
     specifier: 3.0.1
     version: 3.0.1(rollup@4.13.0)(vue-i18n@9.10.2)
   '@kyvg/vue3-notification':
-    specifier: 3.2.0
-    version: 3.2.0(vue@3.4.21)
+    specifier: 3.2.1
+    version: 3.2.1(vue@3.4.21)
   '@sentry/tracing':
     specifier: 7.107.0
     version: 7.107.0
@@ -2967,8 +2967,8 @@ packages:
       '@jridgewell/sourcemap-codec': 1.4.15
     dev: true
 
-  /@kyvg/vue3-notification@3.2.0(vue@3.4.21):
-    resolution: {integrity: sha512-DKicfzxS6n7oMCkFoUqzb26Orjv8Oo3fhOgSDYM2I1mGDwBW+Tyb/yr2eauho0R+E5chNswZ3AUyAE9DqutXmg==}
+  /@kyvg/vue3-notification@3.2.1(vue@3.4.21):
+    resolution: {integrity: sha512-qn4bCBBCxW0Ya+RmHXu2SYBVwGXWsAGdlDKqCqyLryaZTbtFXi32iSSLnuKjSUVxFqQRToFc6g1zp1XLTyHrvw==}
     peerDependencies:
       vue: ^3.0.0
     dependencies:

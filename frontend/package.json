@@ -57,7 +57,7 @@
     "@github/hotkey": "3.1.0",
     "@infectoone/vue-ganttastic": "2.2.0",
     "@intlify/unplugin-vue-i18n": "3.0.1",
-    "@kyvg/vue3-notification": "3.2.0",
+    "@kyvg/vue3-notification": "3.2.1",
     "@sentry/tracing": "7.107.0",
     "@sentry/vue": "7.107.0",
     "@tiptap/core": "2.2.4",
