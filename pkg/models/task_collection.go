@@ -17,9 +17,11 @@
 package models
 
 import (
+	"strings"
+
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
-	"strings"
+
 	"xorm.io/xorm"
 )
 
