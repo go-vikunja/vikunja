@@ -13,7 +13,7 @@ describe('Project View Project', () => {
 	it('Should be an empty project', () => {
 		cy.visit('/projects/1')
 		cy.url()
-			.should('contain', '/projects/1/list')
+			.should('contain', '/projects/1/1')
 		cy.get('.project-title')
 			.should('contain', 'First Project')
 		cy.get('.project-title-dropdown')
@@ -38,7 +38,7 @@ describe('Project View Project', () => {
 			id: '{increment}',
 			project_id: 1,
 		})
-		cy.visit('/projects/1/list')
+		cy.visit('/projects/1/1')
 
 		cy.get('.tasks .task .tasktext')
 			.contains(tasks[0].title)
@@ -88,10 +88,10 @@ describe('Project View Project', () => {
 			title: i => `task${i}`,
 			project_id: 1,
 		})
-		cy.visit('/projects/1/list')
+		cy.visit('/projects/1/1')
 
 		cy.get('.tasks')
-			.should('contain', tasks[1].title)
+			.should('contain', tasks[20].title)
 		cy.get('.tasks')
 			.should('not.contain', tasks[99].title)
 
@@ -104,6 +104,6 @@ describe('Project View Project', () => {
 		cy.get('.tasks')
 			.should('contain', tasks[99].title)
 		cy.get('.tasks')
-			.should('not.contain', tasks[1].title)
+			.should('not.contain', tasks[20].title)
 	})
 })
