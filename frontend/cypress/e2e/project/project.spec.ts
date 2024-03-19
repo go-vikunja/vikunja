@@ -33,14 +33,14 @@ describe('Projects', () => {
 	})
 
 	it('Should redirect to a specific project view after visited', () => {
-		cy.intercept(Cypress.env('API_URL') + '/projects/*/buckets*').as('loadBuckets')
-		cy.visit('/projects/1/kanban')
+		cy.intercept(Cypress.env('API_URL') + '/projects/*/views/*/tasks**').as('loadBuckets')
+		cy.visit('/projects/1/4')
 		cy.url()
-			.should('contain', '/projects/1/kanban')
+			.should('contain', '/projects/1/4')
 		cy.wait('@loadBuckets')
 		cy.visit('/projects/1')
 		cy.url()
-			.should('contain', '/projects/1/kanban')
+			.should('contain', '/projects/1/4')
 	})
 
 	it('Should rename the project in all places', () => {

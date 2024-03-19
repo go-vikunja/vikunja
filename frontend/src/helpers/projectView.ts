@@ -13,7 +13,7 @@ export function saveProjectView(projectId: IProject['id'], viewId: number) {
 	if (!projectId || !viewId) {
 		return
 	}
-	
+
 	// We use local storage and not the store here to make it persistent across reloads.
 	const savedProjectView = localStorage.getItem(SETTINGS_KEY_PROJECT_VIEW)
 	let savedProjectViewSettings: ProjectViewSettings | false = false
@@ -30,19 +30,15 @@ export function saveProjectView(projectId: IProject['id'], viewId: number) {
 	localStorage.setItem(SETTINGS_KEY_PROJECT_VIEW, JSON.stringify(projectViewSettings))
 }
 
-export const getProjectView = (projectId: IProject['id']) => {
-	try {	
-		const projectViewSettingsString = localStorage.getItem(SETTINGS_KEY_PROJECT_VIEW)
-		if (!projectViewSettingsString) {
-			throw new Error()
-		}
-		
-		const projectViewSettings = JSON.parse(projectViewSettingsString) as ProjectViewSettings
-		if (!router.hasRoute(projectViewSettings[projectId])) {
-			throw new Error()
-		}
-		return projectViewSettings[projectId]
-	} catch (e) {
-		return
-	}	
+export function getProjectViewId(projectId: IProject['id']): number {
+	const projectViewSettingsString = localStorage.getItem(SETTINGS_KEY_PROJECT_VIEW)
+	if (!projectViewSettingsString) {
+		return 0
+	}
+
+	const projectViewSettings = JSON.parse(projectViewSettingsString) as ProjectViewSettings
+	if (isNaN(projectViewSettings[projectId])) {
+		return 0
+	}
+	return projectViewSettings[projectId]
 }
