@@ -29,8 +29,8 @@ dependencies:
     specifier: 3.1.0
     version: 3.1.0(patch_hash=c67tdk7qpd5grxd2zj6lsxfbou)
   '@infectoone/vue-ganttastic':
-    specifier: 2.2.0
-    version: 2.2.0(dayjs@1.11.10)(vue@3.4.21)
+    specifier: 2.3.1
+    version: 2.3.1(dayjs@1.11.10)(vue@3.4.21)
   '@intlify/unplugin-vue-i18n':
     specifier: 3.0.1
     version: 3.0.1(rollup@4.13.0)(vue-i18n@9.10.2)
@@ -2811,8 +2811,8 @@ packages:
     resolution: {integrity: sha512-6EwiSjwWYP7pTckG6I5eyFANjPhmPjUX9JRLUSfNPC7FX7zK9gyZAfUEaECL6ALTpGX5AjnBq3C9XmVWPitNpw==}
     dev: true
 
-  /@infectoone/vue-ganttastic@2.2.0(dayjs@1.11.10)(vue@3.4.21):
-    resolution: {integrity: sha512-XvYGHP8FOPBavNR/ujuIAP2BYU2yrL+l9Xjn10VQeZfwdAvmh7aKXoAu+ONsnE2mBCA6h9r0AsLjfv/LYtW/tQ==}
+  /@infectoone/vue-ganttastic@2.3.1(dayjs@1.11.10)(vue@3.4.21):
+    resolution: {integrity: sha512-2P53V2N3SagJhqDMogcfpm50qIhqxEINufJBdWUGGZutnEquLg4CQThHysJsNZ11tght8TUPlBM10wHnZAMGiQ==}
     peerDependencies:
       dayjs: ^1.11.5
       vue: ^3.2.40
@@ -4318,7 +4318,7 @@ packages:
       '@types/web-bluetooth': 0.0.16
       '@vueuse/metadata': 9.13.0
       '@vueuse/shared': 9.13.0(vue@3.4.21)
-      vue-demi: 0.14.6(vue@3.4.21)
+      vue-demi: 0.14.7(vue@3.4.21)
     transitivePeerDependencies:
       - '@vue/composition-api'
       - vue
