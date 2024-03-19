@@ -25,23 +25,32 @@ const currentView = computed(() => {
 	return project?.views.find(v => v.id === viewId)
 })
 
-watch(
-	() => viewId,
-	() => {
-		if (viewId === 0) {
-			// Ideally, we would do that in the router redirect, but we the projects (and therefore, the views) 
-			// are not always loaded then.
-			const viewId = projectStore.projects[projectId].views[0].id
+function redirectToFirstViewIfNecessary() {
+	if (viewId === 0) {
+		// Ideally, we would do that in the router redirect, but the projects (and therefore, the views) 
+		// are not always loaded then.
+		const firstViewId = projectStore.projects[projectId]?.views[0].id
+		if (firstViewId) {
 			router.replace({
 				name: 'project.view',
 				params: {
 					projectId,
-					viewId,
+					viewId: firstViewId,
 				},
 			})
 		}
-	},
+	}
+}
+
+watch(
+	() => viewId,
+	redirectToFirstViewIfNecessary,
 	{immediate: true},
+)
+
+watch(
+	() => projectStore.projects[projectId],
+	redirectToFirstViewIfNecessary,
 )
 
 const route = useRoute()
