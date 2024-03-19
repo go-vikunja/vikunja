@@ -5,15 +5,16 @@ import {TaskFactory} from '../../factories/task'
 import {UserFactory} from '../../factories/user'
 import {ProjectFactory} from '../../factories/project'
 import {prepareProjects} from './prepareProjects'
+import {BucketFactory} from '../../factories/bucket'
 
-describe('Project View Project', () => {
+describe('Project View List', () => {
 	createFakeUserAndLogin()
 	prepareProjects()
 
 	it('Should be an empty project', () => {
 		cy.visit('/projects/1')
 		cy.url()
-			.should('contain', '/projects/1/list')
+			.should('contain', '/projects/1/1')
 		cy.get('.project-title')
 			.should('contain', 'First Project')
 		cy.get('.project-title-dropdown')
@@ -24,6 +25,10 @@ describe('Project View Project', () => {
 	})
 	
 	it('Should create a new task', () => {
+		BucketFactory.create(2, {
+			project_view_id: 4,
+		})
+		
 		const newTaskTitle = 'New task'
 		
 		cy.visit('/projects/1')
@@ -38,7 +43,7 @@ describe('Project View Project', () => {
 			id: '{increment}',
 			project_id: 1,
 		})
-		cy.visit('/projects/1/list')
+		cy.visit('/projects/1/1')
 
 		cy.get('.tasks .task .tasktext')
 			.contains(tasks[0].title)
@@ -88,10 +93,10 @@ describe('Project View Project', () => {
 			title: i => `task${i}`,
 			project_id: 1,
 		})
-		cy.visit('/projects/1/list')
+		cy.visit('/projects/1/1')
 
 		cy.get('.tasks')
-			.should('contain', tasks[1].title)
+			.should('contain', tasks[20].title)
 		cy.get('.tasks')
 			.should('not.contain', tasks[99].title)
 
@@ -104,6 +109,6 @@ describe('Project View Project', () => {
 		cy.get('.tasks')
 			.should('contain', tasks[99].title)
 		cy.get('.tasks')
-			.should('not.contain', tasks[1].title)
+			.should('not.contain', tasks[20].title)
 	})
 })

@@ -1,12 +1,14 @@
-import {computed, shallowRef, watchEffect, h, type VNode} from 'vue'
+import {computed, h, shallowRef, type VNode, watchEffect} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {useBaseStore} from '@/stores/base'
+import {useProjectStore} from '@/stores/projects'
 
 export function useRouteWithModal() {
 	const router = useRouter()
 	const route = useRoute()
 	const backdropView = computed(() => route.fullPath && window.history.state.backdropView)
 	const baseStore = useBaseStore()
+	const projectStore = useProjectStore()
 
 	const routeWithModal = computed(() => {
 		return backdropView.value
@@ -29,7 +31,7 @@ export function useRouteWithModal() {
 			if (routePropsOption === true) {
 				routeProps = route.params
 			} else {
-				if(typeof routePropsOption === 'function') {
+				if (typeof routePropsOption === 'function') {
 					routeProps = routePropsOption(route)
 				} else {
 					routeProps = routePropsOption
@@ -52,7 +54,7 @@ export function useRouteWithModal() {
 		}
 		currentModal.value = h(component, routeProps)
 	})
-	
+
 	const historyState = computed(() => route.fullPath && window.history.state)
 
 	function closeModal() {
@@ -60,12 +62,23 @@ export function useRouteWithModal() {
 		// If the current project was changed because the user moved the currently opened task while coming from kanban,
 		// we need to reflect that change in the route when they close the task modal.
 		// The last route is only available as resolved string, therefore we need to use a regex for matching here
-		const kanbanRouteMatch = new RegExp('\\/projects\\/\\d+\\/kanban', 'g')
-		const kanbanRouter = {name: 'project.kanban', params: {projectId: baseStore.currentProject?.id}}
-		if (kanbanRouteMatch.test(historyState.value.back)
-			&& baseStore.currentProject
-			&& historyState.value.back !== router.resolve(kanbanRouter).fullPath) {
-			router.push(kanbanRouter)
+		const routeMatch = new RegExp('\\/projects\\/\\d+\\/(\\d+)', 'g')
+		const match = routeMatch.exec(historyState.value.back)
+		if (match !== null && baseStore.currentProject) {
+			let viewId: string | number = match[1]
+
+			if (!viewId) {
+				viewId = projectStore.projects[baseStore.currentProject?.id].views[0]?.id
+			}
+
+			const newRoute = {
+				name: 'project.view',
+				params: {
+					projectId: baseStore.currentProject?.id,
+					viewId,
+				},
+			}
+			router.push(newRoute)
 			return
 		}
 

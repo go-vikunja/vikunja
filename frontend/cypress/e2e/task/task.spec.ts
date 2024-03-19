@@ -12,6 +12,7 @@ import {BucketFactory} from '../../factories/bucket'
 
 import {TaskAttachmentFactory} from '../../factories/task_attachments'
 import {TaskReminderFactory} from '../../factories/task_reminders'
+import {createDefaultViews} from "../project/prepareProjects";
 
 function addLabelToTaskAndVerify(labelTitle: string) {
 	cy.get('.task-view .action-buttons .button')
@@ -53,15 +54,16 @@ describe('Task', () => {
 	beforeEach(() => {
 		// UserFactory.create(1)
 		projects = ProjectFactory.create(1)
+		const views = createDefaultViews(projects[0].id)
 		buckets = BucketFactory.create(1, {
-			project_id: projects[0].id,
+			project_view_id: views[3].id,
 		})
 		TaskFactory.truncate()
 		UserProjectFactory.truncate()
 	})
 
 	it('Should be created new', () => {
-		cy.visit('/projects/1/list')
+		cy.visit('/projects/1/1')
 		cy.get('.input[placeholder="Add a new task…"')
 			.type('New Task')
 		cy.get('.button')
@@ -75,7 +77,7 @@ describe('Task', () => {
 	it('Inserts new tasks at the top of the project', () => {
 		TaskFactory.create(1)
 
-		cy.visit('/projects/1/list')
+		cy.visit('/projects/1/1')
 		cy.get('.project-is-empty-notice')
 			.should('not.exist')
 		cy.get('.input[placeholder="Add a new task…"')
@@ -93,7 +95,7 @@ describe('Task', () => {
 	it('Marks a task as done', () => {
 		TaskFactory.create(1)
 
-		cy.visit('/projects/1/list')
+		cy.visit('/projects/1/1')
 		cy.get('.tasks .task .fancycheckbox')
 			.first()
 			.click()
@@ -104,7 +106,7 @@ describe('Task', () => {
 	it('Can add a task to favorites', () => {
 		TaskFactory.create(1)
 
-		cy.visit('/projects/1/list')
+		cy.visit('/projects/1/1')
 		cy.get('.tasks .task .favorite')
 			.first()
 			.click()
@@ -113,12 +115,12 @@ describe('Task', () => {
 	})
 
 	it('Should show a task description icon if the task has a description', () => {
-		cy.intercept(Cypress.env('API_URL') + '/projects/1/tasks**').as('loadTasks')
+		cy.intercept(Cypress.env('API_URL') + '/projects/1/views/*/tasks**').as('loadTasks')
 		TaskFactory.create(1, {
 			description: 'Lorem Ipsum',
 		})
 
-		cy.visit('/projects/1/list')
+		cy.visit('/projects/1/1')
 		cy.wait('@loadTasks')
 
 		cy.get('.tasks .task .project-task-icon')
@@ -126,12 +128,12 @@ describe('Task', () => {
 	})
 
 	it('Should not show a task description icon if the task has an empty description', () => {
-		cy.intercept(Cypress.env('API_URL') + '/projects/1/tasks**').as('loadTasks')
+		cy.intercept(Cypress.env('API_URL') + '/projects/1/views/*/tasks**').as('loadTasks')
 		TaskFactory.create(1, {
 			description: '',
 		})
 
-		cy.visit('/projects/1/list')
+		cy.visit('/projects/1/1')
 		cy.wait('@loadTasks')
 
 		cy.get('.tasks .task .project-task-icon')
@@ -139,12 +141,12 @@ describe('Task', () => {
 	})
 
 	it('Should not show a task description icon if the task has a description containing only an empty p tag', () => {
-		cy.intercept(Cypress.env('API_URL') + '/projects/1/tasks**').as('loadTasks')
+		cy.intercept(Cypress.env('API_URL') + '/projects/1/views/*/tasks**').as('loadTasks')
 		TaskFactory.create(1, {
 			description: '<p></p>',
 		})
 
-		cy.visit('/projects/1/list')
+		cy.visit('/projects/1/1')
 		cy.wait('@loadTasks')
 
 		cy.get('.tasks .task .project-task-icon')
@@ -314,8 +316,9 @@ describe('Task', () => {
 
 		it('Can move a task to another project', () => {
 			const projects = ProjectFactory.create(2)
+			const views = createDefaultViews(projects[0].id)
 			BucketFactory.create(2, {
-				project_id: '{increment}',
+				project_view_id: views[3].id,
 			})
 			const tasks = TaskFactory.create(1, {
 				id: 1,
@@ -469,7 +472,7 @@ describe('Task', () => {
 			const labels = LabelFactory.create(1)
 			LabelTaskFactory.truncate()
 
-			cy.visit(`/projects/${projects[0].id}/kanban`)
+			cy.visit(`/projects/${projects[0].id}/4`)
 
 			cy.get('.bucket .task')
 				.contains(tasks[0].title)
@@ -836,7 +839,7 @@ describe('Task', () => {
 			const labels = LabelFactory.create(1)
 			LabelTaskFactory.truncate()
 
-			cy.visit(`/projects/${projects[0].id}/kanban`)
+			cy.visit(`/projects/${projects[0].id}/4`)
 
 			cy.get('.bucket .task')
 				.contains(tasks[0].title)

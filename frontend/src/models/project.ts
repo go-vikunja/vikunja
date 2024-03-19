@@ -7,6 +7,7 @@ import type {IProject} from '@/modelTypes/IProject'
 import type {IUser} from '@/modelTypes/IUser'
 import type {ITask} from '@/modelTypes/ITask'
 import type {ISubscription} from '@/modelTypes/ISubscription'
+import ProjectViewModel from '@/models/projectView'
 
 export default class ProjectModel extends AbstractModel<IProject> implements IProject {
 	id = 0
@@ -25,6 +26,7 @@ export default class ProjectModel extends AbstractModel<IProject> implements IPr
 	parentProjectId = 0
 	doneBucketId = 0
 	defaultBucketId = 0
+	views = []
 	
 	created: Date = null
 	updated: Date = null
@@ -47,6 +49,8 @@ export default class ProjectModel extends AbstractModel<IProject> implements IPr
 		if (typeof this.subscription !== 'undefined' && this.subscription !== null) {
 			this.subscription = new SubscriptionModel(this.subscription)
 		}
+		
+		this.views = this.views.map(v => new ProjectViewModel(v))
 		
 		this.created = new Date(this.created)
 		this.updated = new Date(this.updated)

@@ -4,35 +4,65 @@ import {BucketFactory} from '../../factories/bucket'
 import {ProjectFactory} from '../../factories/project'
 import {TaskFactory} from '../../factories/task'
 import {prepareProjects} from './prepareProjects'
+import {ProjectViewFactory} from "../../factories/project_view";
+import {TaskBucketFactory} from "../../factories/task_buckets";
 
 function createSingleTaskInBucket(count = 1, attrs = {}) {
 	const projects = ProjectFactory.create(1)
-	const buckets = BucketFactory.create(2, {
+	const views = ProjectViewFactory.create(1, {
+		id: 1,
 		project_id: projects[0].id,
+		view_kind: 3,
+		bucket_configuration_mode: 1,
+	})
+	const buckets = BucketFactory.create(2, {
+		project_view_id: views[0].id,
 	})
 	const tasks = TaskFactory.create(count, {
 		project_id: projects[0].id,
 		bucket_id: buckets[0].id,
 		...attrs,
 	})
-	return tasks[0]
+	TaskBucketFactory.create(1, {
+		task_id: tasks[0].id,
+		bucket_id: buckets[0].id,
+		project_view_id: views[0].id,
+	})
+	return {
+		task: tasks[0],
+		view: views[0],
+		project: projects[0],
+	}
+}
+
+function createTaskWithBuckets(buckets, count = 1) {
+	const data = TaskFactory.create(10, {
+		project_id: 1,
+	})
+	TaskBucketFactory.truncate()
+	data.forEach(t => TaskBucketFactory.create(count, {
+		task_id: t.id,
+		bucket_id: buckets[0].id,
+		project_view_id: buckets[0].project_view_id,
+	}, false))
+
+	return data
 }
 
 describe('Project View Kanban', () => {
 	createFakeUserAndLogin()
 	prepareProjects()
-	
+
 	let buckets
 	beforeEach(() => {
-		buckets = BucketFactory.create(2)
+		buckets = BucketFactory.create(2, {
+			project_view_id: 4,
+		})
 	})
 
 	it('Shows all buckets with their tasks', () => {
-		const data = TaskFactory.create(10, {
-			project_id: 1,
-			bucket_id: 1,
-		})
-		cy.visit('/projects/1/kanban')
+		const data = createTaskWithBuckets(buckets, 10)
+		cy.visit('/projects/1/4')
 
 		cy.get('.kanban .bucket .title')
 			.contains(buckets[0].title)
@@ -46,11 +76,8 @@ describe('Project View Kanban', () => {
 	})
 
 	it('Can add a new task to a bucket', () => {
-		TaskFactory.create(2, {
-			project_id: 1,
-			bucket_id: 1,
-		})
-		cy.visit('/projects/1/kanban')
+		createTaskWithBuckets(buckets, 2)
+		cy.visit('/projects/1/4')
 
 		cy.get('.kanban .bucket')
 			.contains(buckets[0].title)
@@ -68,7 +95,7 @@ describe('Project View Kanban', () => {
 	})
 
 	it('Can create a new bucket', () => {
-		cy.visit('/projects/1/kanban')
+		cy.visit('/projects/1/4')
 
 		cy.get('.kanban .bucket.new-bucket .button')
 			.click()
@@ -82,7 +109,7 @@ describe('Project View Kanban', () => {
 	})
 
 	it('Can set a bucket limit', () => {
-		cy.visit('/projects/1/kanban')
+		cy.visit('/projects/1/4')
 
 		cy.get('.kanban .bucket .bucket-header .dropdown.options .dropdown-trigger')
 			.first()
@@ -103,7 +130,7 @@ describe('Project View Kanban', () => {
 	})
 
 	it('Can rename a bucket', () => {
-		cy.visit('/projects/1/kanban')
+		cy.visit('/projects/1/4')
 
 		cy.get('.kanban .bucket .bucket-header .title')
 			.first()
@@ -114,7 +141,7 @@ describe('Project View Kanban', () => {
 	})
 
 	it('Can delete a bucket', () => {
-		cy.visit('/projects/1/kanban')
+		cy.visit('/projects/1/4')
 
 		cy.get('.kanban .bucket .bucket-header .dropdown.options .dropdown-trigger')
 			.first()
@@ -137,17 +164,14 @@ describe('Project View Kanban', () => {
 	})
 
 	it('Can drag tasks around', () => {
-		const tasks = TaskFactory.create(2, {
-			project_id: 1,
-			bucket_id: 1,
-		})
-		cy.visit('/projects/1/kanban')
+		const tasks = createTaskWithBuckets(buckets, 2)
+		cy.visit('/projects/1/4')
 
 		cy.get('.kanban .bucket .tasks .task')
 			.contains(tasks[0].title)
 			.first()
 			.drag('.kanban .bucket:nth-child(2) .tasks')
-		
+
 		cy.get('.kanban .bucket:nth-child(2) .tasks')
 			.should('contain', tasks[0].title)
 		cy.get('.kanban .bucket:nth-child(1) .tasks')
@@ -155,12 +179,8 @@ describe('Project View Kanban', () => {
 	})
 
 	it('Should navigate to the task when the task card is clicked', () => {
-		const tasks = TaskFactory.create(5, {
-			id: '{increment}',
-			project_id: 1,
-			bucket_id: 1,
-		})
-		cy.visit('/projects/1/kanban')
+		const tasks = createTaskWithBuckets(buckets, 5)
+		cy.visit('/projects/1/4')
 
 		cy.get('.kanban .bucket .tasks .task')
 			.contains(tasks[0].title)
@@ -168,28 +188,33 @@ describe('Project View Kanban', () => {
 			.click()
 
 		cy.url()
-			.should('contain', `/tasks/${tasks[0].id}`, { timeout: 1000 })
+			.should('contain', `/tasks/${tasks[0].id}`, {timeout: 1000})
 	})
 
 	it('Should remove a task from the kanban board when moving it to another project', () => {
 		const projects = ProjectFactory.create(2)
-		BucketFactory.create(2, {
+		const views = ProjectViewFactory.create(2, {
 			project_id: '{increment}',
+			view_kind: 3,
+			bucket_configuration_mode: 1,
 		})
+		BucketFactory.create(2)
 		const tasks = TaskFactory.create(5, {
 			id: '{increment}',
 			project_id: 1,
-			bucket_id: 1,
+		})
+		TaskBucketFactory.create(5, {
+			project_view_id: 1,
 		})
 		const task = tasks[0]
-		cy.visit('/projects/1/kanban')
+		cy.visit('/projects/1/'+views[0].id)
 
 		cy.get('.kanban .bucket .tasks .task')
 			.contains(task.title)
 			.should('be.visible')
 			.click()
 
-		cy.get('.task-view .action-buttons .button', { timeout: 3000 })
+		cy.get('.task-view .action-buttons .button', {timeout: 3000})
 			.contains('Move')
 			.click()
 		cy.get('.task-view .content.details .field .multiselect.control .input-wrapper input')
@@ -201,27 +226,23 @@ describe('Project View Kanban', () => {
 			.first()
 			.click()
 
-		cy.get('.global-notification', { timeout: 1000 })
+		cy.get('.global-notification', {timeout: 1000})
 			.should('contain', 'Success')
 		cy.go('back')
 		cy.get('.kanban .bucket')
 			.should('not.contain', task.title)
 	})
-	
+
 	it('Shows a button to filter the kanban board', () => {
-		const data = TaskFactory.create(10, {
-			project_id: 1,
-			bucket_id: 1,
-		})
-		cy.visit('/projects/1/kanban')
-		
+		cy.visit('/projects/1/4')
+
 		cy.get('.project-kanban .filter-container .base-button')
 			.should('exist')
 	})
-	
+
 	it('Should remove a task from the board when deleting it', () => {
-		const task = createSingleTaskInBucket(5)
-		cy.visit('/projects/1/kanban')
+		const {task, view} = createSingleTaskInBucket(5)
+		cy.visit(`/projects/1/${view.id}`)
 
 		cy.get('.kanban .bucket .tasks .task')
 			.contains(task.title)
@@ -239,18 +260,18 @@ describe('Project View Kanban', () => {
 
 		cy.get('.global-notification')
 			.should('contain', 'Success')
-		
+
 		cy.get('.kanban .bucket .tasks')
 			.should('not.contain', task.title)
 	})
 
 	it('Should show a task description icon if the task has a description', () => {
-		cy.intercept(Cypress.env('API_URL') + '/projects/1/buckets**').as('loadTasks')
-		const task = createSingleTaskInBucket(1, {
+		cy.intercept(Cypress.env('API_URL') + '/projects/1/views/*/tasks**').as('loadTasks')
+		const {task, view} = createSingleTaskInBucket(1, {
 			description: 'Lorem Ipsum',
 		})
 
-		cy.visit(`/projects/${task.project_id}/kanban`)
+		cy.visit(`/projects/${task.project_id}/${view.id}`)
 		cy.wait('@loadTasks')
 
 		cy.get('.bucket .tasks .task .footer .icon svg')
@@ -258,12 +279,12 @@ describe('Project View Kanban', () => {
 	})
 
 	it('Should not show a task description icon if the task has an empty description', () => {
-		cy.intercept(Cypress.env('API_URL') + '/projects/1/buckets**').as('loadTasks')
-		const task = createSingleTaskInBucket(1, {
+		cy.intercept(Cypress.env('API_URL') + '/projects/1/views/*/tasks**').as('loadTasks')
+		const {task, view} = createSingleTaskInBucket(1, {
 			description: '',
 		})
 
-		cy.visit(`/projects/${task.project_id}/kanban`)
+		cy.visit(`/projects/${task.project_id}/${view.id}`)
 		cy.wait('@loadTasks')
 
 		cy.get('.bucket .tasks .task .footer .icon svg')
@@ -271,12 +292,12 @@ describe('Project View Kanban', () => {
 	})
 
 	it('Should not show a task description icon if the task has a description containing only an empty p tag', () => {
-		cy.intercept(Cypress.env('API_URL') + '/projects/1/buckets**').as('loadTasks')
-		const task = createSingleTaskInBucket(1, {
+		cy.intercept(Cypress.env('API_URL') + '/projects/1/views/*/tasks**').as('loadTasks')
+		const {task, view} = createSingleTaskInBucket(1, {
 			description: '<p></p>',
 		})
 
-		cy.visit(`/projects/${task.project_id}/kanban`)
+		cy.visit(`/projects/${task.project_id}/${view.id}`)
 		cy.wait('@loadTasks')
 
 		cy.get('.bucket .tasks .task .footer .icon svg')

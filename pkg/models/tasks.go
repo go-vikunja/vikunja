@@ -112,18 +112,15 @@ type Task struct {
 	// A timestamp when this task was last updated. You cannot change this value.
 	Updated time.Time `xorm:"updated not null" json:"updated"`
 
-	// BucketID is the ID of the kanban bucket this task belongs to.
-	BucketID int64 `xorm:"bigint null" json:"bucket_id"`
+	// The bucket id. Will only be populated when the task is accessed via a view with buckets.
+	// Can be used to move a task between buckets. In that case, the new bucket must be in the same view as the old one.
+	BucketID int64 `xorm:"<-" json:"bucket_id"`
 
 	// The position of the task - any task project can be sorted as usual by this parameter.
-	// When accessing tasks via kanban buckets, this is primarily used to sort them based on a range
-	// We're using a float64 here to make it possible to put any task within any two other tasks (by changing the number).
-	// You would calculate the new position between two tasks with something like task3.position = (task2.position - task1.position) / 2.
-	// A 64-Bit float leaves plenty of room to initially give tasks a position with 2^16 difference to the previous task
-	// which also leaves a lot of room for rearranging and sorting later.
-	Position float64 `xorm:"double null" json:"position"`
-	// The position of tasks in the kanban board. See the docs for the `position` property on how to use this.
-	KanbanPosition float64 `xorm:"double null" json:"kanban_position"`
+	// When accessing tasks via views with buckets, this is primarily used to sort them based on a range.
+	// Positions are always saved per view. They will automatically be set if you request the tasks through a view
+	// endpoint, otherwise they will always be 0. To update them, take a look at the Task Position endpoint.
+	Position float64 `xorm:"-" json:"position"`
 
 	// Reactions on that task.
 	Reactions ReactionMap `xorm:"-" json:"reactions"`
@@ -207,6 +204,9 @@ func (t *Task) ReadAll(_ *xorm.Session, _ web.Auth, _ string, _ int, _ int) (res
 
 func getFilterCond(f *taskFilter, includeNulls bool) (cond builder.Cond, err error) {
 	field := "`" + f.field + "`"
+	if f.field == taskPropertyBucketID {
+		field = "task_buckets.`bucket_id`"
+	}
 	switch f.comparator {
 	case taskFilterComparatorEquals:
 		cond = &builder.Eq{field: f.value}
@@ -261,7 +261,6 @@ func getTaskIndexFromSearchString(s string) (index int64) {
 	return
 }
 
-//nolint:gocyclo
 func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts *taskSearchOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {
 
 	// If the user does not have any projects, don't try to get any tasks
@@ -304,7 +303,7 @@ func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, op
 	return tasks, len(tasks), totalItems, err
 }
 
-func getTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts *taskSearchOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {
+func getTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts *taskSearchOptions, view *ProjectView) (tasks []*Task, resultCount int, totalItems int64, err error) {
 
 	tasks, resultCount, totalItems, err = getRawTasksForProjects(s, projects, a, opts)
 	if err != nil {
@@ -316,7 +315,7 @@ func getTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts 
 		taskMap[t.ID] = t
 	}
 
-	err = addMoreInfoToTasks(s, taskMap, a)
+	err = addMoreInfoToTasks(s, taskMap, a, view)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -393,7 +392,7 @@ func GetTasksByUIDs(s *xorm.Session, uids []string, a web.Auth) (tasks []*Task, 
 		taskMap[t.ID] = t
 	}
 
-	err = addMoreInfoToTasks(s, taskMap, a)
+	err = addMoreInfoToTasks(s, taskMap, a, nil)
 	return
 }
 
@@ -534,7 +533,7 @@ func addRelatedTasksToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]
 
 // This function takes a map with pointers and returns a slice with pointers to tasks
 // It adds more stuff like assignees/labels/etc to a bunch of tasks
-func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth) (err error) {
+func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, view *ProjectView) (err error) {
 
 	// No need to iterate over users and stuff if the project doesn't have tasks
 	if len(taskMap) == 0 {
@@ -592,6 +591,17 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth) (e
 		return
 	}
 
+	var positionsMap = make(map[int64]*TaskPosition)
+	if view != nil {
+		positions, err := getPositionsForView(s, view)
+		if err != nil {
+			return err
+		}
+		for _, position := range positions {
+			positionsMap[position.TaskID] = position
+		}
+	}
+
 	// Add all objects to their tasks
 	for _, task := range taskMap {
 
@@ -613,21 +623,15 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth) (e
 		if has {
 			task.Reactions = r
 		}
+
+		p, has := positionsMap[task.ID]
+		if has {
+			task.Position = p.Position
+		}
 	}
 
 	// Get all related tasks
 	err = addRelatedTasksToTasks(s, taskIDs, taskMap, a)
-	return
-}
-
-func checkBucketAndTaskBelongToSameProject(fullTask *Task, bucket *Bucket) (err error) {
-	if fullTask.ProjectID != bucket.ProjectID {
-		return ErrBucketDoesNotBelongToProject{
-			ProjectID: fullTask.ProjectID,
-			BucketID:  fullTask.BucketID,
-		}
-	}
-
 	return
 }
 
@@ -636,7 +640,7 @@ func checkBucketLimit(s *xorm.Session, t *Task, bucket *Bucket) (err error) {
 	if bucket.Limit > 0 {
 		taskCount, err := s.
 			Where("bucket_id = ?", bucket.ID).
-			Count(&Task{})
+			Count(&TaskBucket{})
 		if err != nil {
 			return err
 		}
@@ -648,62 +652,92 @@ func checkBucketLimit(s *xorm.Session, t *Task, bucket *Bucket) (err error) {
 }
 
 // Contains all the task logic to figure out what bucket to use for this task.
-func setTaskBucket(s *xorm.Session, task *Task, originalTask *Task, doCheckBucketLimit bool, project *Project) (targetBucket *Bucket, err error) {
-
-	if project == nil {
-		project, err = GetProjectSimpleByID(s, task.ProjectID)
-		if err != nil {
-			return nil, err
-		}
+func setTaskBucket(s *xorm.Session, task *Task, originalTask *Task, view *ProjectView, targetBucketID int64) (err error) {
+	if view.BucketConfigurationMode == BucketConfigurationModeNone {
+		return
 	}
 
-	var bucket *Bucket
+	var shouldChangeBucket = true
+	targetBucket := &TaskBucket{
+		BucketID:      targetBucketID,
+		TaskID:        task.ID,
+		ProjectViewID: view.ID,
+	}
+
+	oldTaskBucket := &TaskBucket{}
+	_, err = s.
+		Where("task_id = ? AND project_view_id = ?", task.ID, view.ID).
+		Get(oldTaskBucket)
+	if err != nil {
+		return
+	}
+
 	if task.Done && originalTask != nil &&
 		(!originalTask.Done || task.ProjectID != originalTask.ProjectID) {
-		task.BucketID = project.DoneBucketID
+		targetBucket.BucketID = view.DoneBucketID
 	}
 
-	if task.BucketID == 0 && originalTask != nil && originalTask.BucketID != 0 {
-		task.BucketID = originalTask.BucketID
+	if targetBucket.BucketID == 0 && oldTaskBucket.BucketID != 0 {
+		shouldChangeBucket = false
 	}
 
 	// Either no bucket was provided or the task was moved between projects
 	// But if the task was moved between projects, don't update the done bucket
 	// because then we have it already updated to the done bucket.
-	if task.BucketID == 0 ||
+	if targetBucket.BucketID == 0 ||
 		(originalTask != nil && task.ProjectID != 0 && originalTask.ProjectID != task.ProjectID && !task.Done) {
-		task.BucketID, err = getDefaultBucketID(s, project)
+		targetBucket.BucketID, err = getDefaultBucketID(s, view)
 		if err != nil {
 			return
 		}
 	}
 
-	if bucket == nil {
-		bucket, err = getBucketByID(s, task.BucketID)
-		if err != nil {
-			return
-		}
+	bucket, err := getBucketByID(s, targetBucket.BucketID)
+	if err != nil {
+		return err
 	}
 
 	// If there is a bucket set, make sure they belong to the same project as the task
-	err = checkBucketAndTaskBelongToSameProject(task, bucket)
-	if err != nil {
-		return
+	if view.ID != bucket.ProjectViewID {
+		return ErrBucketDoesNotBelongToProjectView{
+			ProjectViewID: view.ID,
+			BucketID:      bucket.ID,
+		}
 	}
 
 	// Check the bucket limit
 	// Only check the bucket limit if the task is being moved between buckets, allow reordering the task within a bucket
-	if doCheckBucketLimit {
-		if err := checkBucketLimit(s, task, bucket); err != nil {
-			return nil, err
+	if targetBucket.BucketID != 0 && targetBucket.BucketID != oldTaskBucket.BucketID {
+		err = checkBucketLimit(s, task, bucket)
+		if err != nil {
+			return err
 		}
 	}
 
-	if bucket.ID == project.DoneBucketID && originalTask != nil && !originalTask.Done {
+	if bucket.ID == view.DoneBucketID && originalTask != nil && !originalTask.Done {
 		task.Done = true
 	}
 
-	return bucket, nil
+	// If the task was moved into the done bucket and the task has a repeating cycle we should not update
+	// the bucket.
+	if bucket.ID == view.DoneBucketID && task.RepeatAfter > 0 {
+		task.Done = true // This will trigger the correct re-scheduling of the task (happening in updateDone later)
+		shouldChangeBucket = false
+	}
+
+	if shouldChangeBucket {
+		_, err = s.
+			Where("task_id = ? AND project_view_id = ?", task.ID, view.ID).
+			Delete(&TaskBucket{})
+		if err != nil {
+			return
+		}
+
+		targetBucket.BucketID = bucket.ID
+		_, err = s.Insert(targetBucket)
+	}
+
+	return
 }
 
 func calculateDefaultPosition(entityID int64, position float64) float64 {
@@ -742,10 +776,10 @@ func getNextTaskIndex(s *xorm.Session, projectID int64) (nextIndex int64, err er
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/tasks [put]
 func (t *Task) Create(s *xorm.Session, a web.Auth) (err error) {
-	return createTask(s, t, a, true)
+	return createTask(s, t, a, true, true)
 }
 
-func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err error) {
+func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, updateBucket bool) (err error) {
 
 	t.ID = 0
 
@@ -771,27 +805,48 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
 		t.UID = uuid.NewString()
 	}
 
-	// Get the default bucket and move the task there
-	_, err = setTaskBucket(s, t, nil, true, nil)
-	if err != nil {
-		return
-	}
-
 	// Get the index for this task
 	t.Index, err = getNextTaskIndex(s, t.ProjectID)
 	if err != nil {
 		return err
 	}
 
-	// If no position was supplied, set a default one
-	t.Position = calculateDefaultPosition(t.Index, t.Position)
-	t.KanbanPosition = calculateDefaultPosition(t.Index, t.KanbanPosition)
-
 	t.HexColor = utils.NormalizeHex(t.HexColor)
 
 	_, err = s.Insert(t)
 	if err != nil {
 		return err
+	}
+
+	views, err := getViewsForProject(s, t.ProjectID)
+	if err != nil {
+		return err
+	}
+
+	positions := []*TaskPosition{}
+
+	for _, view := range views {
+
+		if updateBucket {
+			// Get the default bucket and move the task there
+			err = setTaskBucket(s, t, nil, view, t.BucketID)
+			if err != nil {
+				return
+			}
+		}
+
+		positions = append(positions, &TaskPosition{
+			TaskID:        t.ID,
+			ProjectViewID: view.ID,
+			Position:      calculateDefaultPosition(t.Index, t.Position),
+		})
+	}
+
+	if updateBucket {
+		_, err = s.Insert(&positions)
+		if err != nil {
+			return
+		}
 	}
 
 	t.CreatedBy = createdBy
@@ -865,26 +920,6 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 	// Old task has the stored reminders
 	ot.Reminders = reminders
 
-	project, err := GetProjectSimpleByID(s, t.ProjectID)
-	if err != nil {
-		return err
-	}
-
-	targetBucket, err := setTaskBucket(s, t, &ot, t.BucketID != 0 && t.BucketID != ot.BucketID, project)
-	if err != nil {
-		return err
-	}
-
-	// If the task was moved into the done bucket and the task has a repeating cycle we should not update
-	// the bucket.
-	if targetBucket.ID == project.DoneBucketID && t.RepeatAfter > 0 {
-		t.Done = true // This will trigger the correct re-scheduling of the task (happening in updateDone later)
-		t.BucketID = ot.BucketID
-	}
-
-	// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
-	updateDone(&ot, t)
-
 	// Update the assignees
 	if err := ot.updateTaskAssignees(s, t.Assignees, a); err != nil {
 		return err
@@ -910,9 +945,7 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 		"percent_done",
 		"project_id",
 		"bucket_id",
-		"position",
 		"repeat_mode",
-		"kanban_position",
 		"cover_image_attachment_id",
 	}
 
@@ -922,8 +955,47 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 		if err != nil {
 			return err
 		}
+		t.BucketID = 0
 		colsToUpdate = append(colsToUpdate, "index")
 	}
+
+	views, err := getViewsForProject(s, t.ProjectID)
+	if err != nil {
+		return err
+	}
+
+	buckets := make(map[int64]*Bucket)
+	err = s.In("project_view_id",
+		builder.Select("id").
+			From("project_views").
+			Where(builder.Eq{"project_id": t.ProjectID}),
+	).
+		Find(&buckets)
+	if err != nil {
+		return err
+	}
+
+	for _, view := range views {
+		// Only update the bucket when the current view
+		var targetBucketID int64
+		if t.BucketID != 0 {
+			bucket, has := buckets[t.BucketID]
+			if !has {
+				return ErrBucketDoesNotExist{BucketID: t.BucketID}
+			}
+			if has && bucket.ProjectViewID == view.ID {
+				targetBucketID = t.BucketID
+			}
+		}
+
+		err = setTaskBucket(s, t, &ot, view, targetBucketID)
+		if err != nil {
+			return err
+		}
+	}
+
+	// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
+	updateDone(&ot, t)
 
 	// If a task attachment is being set as cover image, check if the attachment actually belongs to the task
 	if t.CoverImageAttachmentID != 0 {
@@ -1024,13 +1096,6 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 	if t.PercentDone == 0 {
 		ot.PercentDone = 0
 	}
-	// Position
-	if t.Position == 0 {
-		ot.Position = 0
-	}
-	if t.KanbanPosition == 0 {
-		ot.KanbanPosition = 0
-	}
 	// Repeat from current date
 	if t.RepeatMode == TaskRepeatModeDefault {
 		ot.RepeatMode = TaskRepeatModeDefault
@@ -1052,20 +1117,6 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	// Update all positions if the newly saved position is < 0.1
-	if ot.Position < 0.1 {
-		err = recalculateTaskPositions(s, t.ProjectID)
-		if err != nil {
-			return err
-		}
-	}
-	if ot.KanbanPosition < 0.1 {
-		err = recalculateTaskKanbanPositions(s, t.BucketID)
-		if err != nil {
-			return err
-		}
-	}
-
 	// Get the task updated timestamp in a new struct - if we'd just try to put it into t which we already have, it
 	// would still contain the old updated date.
 	nt := &Task{}
@@ -1074,8 +1125,6 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 	t.Updated = nt.Updated
-	t.Position = nt.Position
-	t.KanbanPosition = nt.KanbanPosition
 
 	doer, _ := user.GetFromAuth(a)
 	err = events.Dispatch(&TaskUpdatedEvent{
@@ -1087,72 +1136,6 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	return updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
-}
-
-func recalculateTaskKanbanPositions(s *xorm.Session, bucketID int64) (err error) {
-
-	allTasks := []*Task{}
-	err = s.
-		Where("bucket_id = ?", bucketID).
-		OrderBy("kanban_position asc").
-		Find(&allTasks)
-	if err != nil {
-		return
-	}
-
-	maxPosition := math.Pow(2, 32)
-
-	for i, task := range allTasks {
-
-		currentPosition := maxPosition / float64(len(allTasks)) * (float64(i + 1))
-
-		// Here we use "NoAutoTime() to prevent the ORM from updating column "updated" automatically.
-		// Otherwise, this signals to CalDAV clients that the task has changed, which is not the case.
-		// Consequence: when synchronizing a list of tasks, the first one immediately changes the date of all the
-		// following ones from the same batch, which are then unable to be updated.
-		_, err = s.Cols("kanban_position").
-			Where("id = ?", task.ID).
-			NoAutoTime().
-			Update(&Task{KanbanPosition: currentPosition})
-		if err != nil {
-			return
-		}
-	}
-
-	return
-}
-
-func recalculateTaskPositions(s *xorm.Session, projectID int64) (err error) {
-
-	allTasks := []*Task{}
-	err = s.
-		Where("project_id = ?", projectID).
-		OrderBy("position asc").
-		Find(&allTasks)
-	if err != nil {
-		return
-	}
-
-	maxPosition := math.Pow(2, 32)
-
-	for i, task := range allTasks {
-
-		currentPosition := maxPosition / float64(len(allTasks)) * (float64(i + 1))
-
-		// Here we use "NoAutoTime() to prevent the ORM from updating column "updated" automatically.
-		// Otherwise, this signals to CalDAV clients that the task has changed, which is not the case.
-		// Consequence: when synchronizing a list of tasks, the first one immediately changes the date of all the
-		// following ones from the same batch, which are then unable to be updated.
-		_, err = s.Cols("position").
-			Where("id = ?", task.ID).
-			NoAutoTime().
-			Update(&Task{Position: currentPosition})
-		if err != nil {
-			return
-		}
-	}
-
-	return
 }
 
 func addOneMonthToDate(d time.Time) time.Time {
@@ -1531,7 +1514,7 @@ func (t *Task) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 	taskMap := make(map[int64]*Task, 1)
 	taskMap[t.ID] = t
 
-	err = addMoreInfoToTasks(s, taskMap, a)
+	err = addMoreInfoToTasks(s, taskMap, a, nil)
 	if err != nil {
 		return
 	}

@@ -2,7 +2,7 @@
 	<ProjectWrapper
 		class="project-list"
 		:project-id="projectId"
-		view-name="project"
+		:view-id
 	>
 		<template #header>
 			<div class="filter-container">
@@ -114,14 +114,18 @@ import type {ITask} from '@/modelTypes/ITask'
 import {isSavedFilter} from '@/services/savedFilter'
 
 import {useBaseStore} from '@/stores/base'
-import {useTaskStore} from '@/stores/tasks'
 
 import type {IProject} from '@/modelTypes/IProject'
+import type {IProjectView} from '@/modelTypes/IProjectView'
+import TaskPositionService from '@/services/taskPosition'
+import TaskPositionModel from '@/models/taskPosition'
 
 const {
 	projectId,
+	viewId,
 } = defineProps<{
 	projectId: IProject['id'],
+	viewId: IProjectView['id'],
 }>()
 
 const ctaVisible = ref(false)
@@ -140,7 +144,9 @@ const {
 	loadTasks,
 	params,
 	sortByParam,
-} = useTaskList(() => projectId, {position: 'asc'})
+} = useTaskList(() => projectId, () => viewId, {position: 'asc'})
+
+const taskPositionService = ref(new TaskPositionService())
 
 const tasks = ref<ITask[]>([])
 watch(
@@ -182,7 +188,6 @@ const firstNewPosition = computed(() => {
 	return calculateItemPosition(null, tasks.value[0].position)
 })
 
-const taskStore = useTaskStore()
 const baseStore = useBaseStore()
 const project = computed(() => baseStore.currentProject)
 
@@ -231,13 +236,17 @@ async function saveTaskPosition(e) {
 	const taskBefore = tasks.value[e.newIndex - 1] ?? null
 	const taskAfter = tasks.value[e.newIndex + 1] ?? null
 
-	const newTask = {
-		...task,
-		position: calculateItemPosition(taskBefore !== null ? taskBefore.position : null, taskAfter !== null ? taskAfter.position : null),
-	}
+	const position = calculateItemPosition(taskBefore !== null ? taskBefore.position : null, taskAfter !== null ? taskAfter.position : null)
 
-	const updatedTask = await taskStore.update(newTask)
-	tasks.value[e.newIndex] = updatedTask
+	await taskPositionService.value.update(new TaskPositionModel({
+		position,
+		projectViewId: viewId,
+		taskId: task.id,
+	}))
+	tasks.value[e.newIndex] = {
+		...task,
+		position,
+	}
 }
 
 function prepareFiltersAndLoadTasks() {

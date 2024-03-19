@@ -2,7 +2,7 @@
 	<ProjectWrapper
 		class="project-table"
 		:project-id="projectId"
-		view-name="table"
+		:view-id
 	>
 		<template #header>
 			<div class="filter-container">
@@ -289,11 +289,14 @@ import {useTaskList} from '@/composables/useTaskList'
 import type {ITask} from '@/modelTypes/ITask'
 import type {IProject} from '@/modelTypes/IProject'
 import AssigneeList from '@/components/tasks/partials/assigneeList.vue'
+import type {IProjectView} from '@/modelTypes/IProjectView'
 
 const {
 	projectId,
+	viewId,
 } = defineProps<{
 	projectId: IProject['id'],
+	viewId: IProjectView['id'],
 }>()
 
 const ACTIVE_COLUMNS_DEFAULT = {
@@ -320,7 +323,7 @@ const SORT_BY_DEFAULT: SortBy = {
 const activeColumns = useStorage('tableViewColumns', {...ACTIVE_COLUMNS_DEFAULT})
 const sortBy = useStorage<SortBy>('tableViewSortBy', {...SORT_BY_DEFAULT})
 
-const taskList = useTaskList(() => projectId, sortBy.value)
+const taskList = useTaskList(() => projectId, () => viewId, sortBy.value)
 
 const {
 	loading,

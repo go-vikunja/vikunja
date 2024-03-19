@@ -412,6 +412,33 @@ func (err *ErrCannotArchiveDefaultProject) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrProjectViewDoesNotExist represents an error where the default project is being deleted
+type ErrProjectViewDoesNotExist struct {
+	ProjectViewID int64
+}
+
+// IsErrProjectViewDoesNotExist checks if an error is a project is archived error.
+func IsErrProjectViewDoesNotExist(err error) bool {
+	_, ok := err.(*ErrProjectViewDoesNotExist)
+	return ok
+}
+
+func (err *ErrProjectViewDoesNotExist) Error() string {
+	return fmt.Sprintf("Project view does not exist [ProjectViewID: %d]", err.ProjectViewID)
+}
+
+// ErrCodeProjectViewDoesNotExist holds the unique world-error code of this error
+const ErrCodeProjectViewDoesNotExist = 3014
+
+// HTTPError holds the http error description
+func (err *ErrProjectViewDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeProjectViewDoesNotExist,
+		Message:  "This project view does not exist.",
+	}
+}
+
 // ==============
 // Task errors
 // ==============
@@ -1087,6 +1114,25 @@ func (err ErrInvalidReactionEntityKind) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrMustHaveProjectViewToSortByPosition represents an error where no project view id was supplied
+type ErrMustHaveProjectViewToSortByPosition struct{}
+
+func (err ErrMustHaveProjectViewToSortByPosition) Error() string {
+	return "You must provide a project view ID when sorting by position"
+}
+
+// ErrCodeMustHaveProjectViewToSortByPosition holds the unique world-error code of this error
+const ErrCodeMustHaveProjectViewToSortByPosition = 4026
+
+// HTTPError holds the http error description
+func (err ErrMustHaveProjectViewToSortByPosition) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeMustHaveProjectViewToSortByPosition,
+		Message:  "You must provide a project view ID when sorting by position",
+	}
+}
+
 // ============
 // Team errors
 // ============
@@ -1481,27 +1527,27 @@ func (err ErrBucketDoesNotExist) HTTPError() web.HTTPError {
 	}
 }
 
-// ErrBucketDoesNotBelongToProject represents an error where a kanban bucket does not belong to a project
-type ErrBucketDoesNotBelongToProject struct {
-	BucketID  int64
-	ProjectID int64
+// ErrBucketDoesNotBelongToProjectView represents an error where a kanban bucket does not belong to a project
+type ErrBucketDoesNotBelongToProjectView struct {
+	BucketID      int64
+	ProjectViewID int64
 }
 
-// IsErrBucketDoesNotBelongToProject checks if an error is ErrBucketDoesNotBelongToProject.
+// IsErrBucketDoesNotBelongToProject checks if an error is ErrBucketDoesNotBelongToProjectView.
 func IsErrBucketDoesNotBelongToProject(err error) bool {
-	_, ok := err.(ErrBucketDoesNotBelongToProject)
+	_, ok := err.(ErrBucketDoesNotBelongToProjectView)
 	return ok
 }
 
-func (err ErrBucketDoesNotBelongToProject) Error() string {
-	return fmt.Sprintf("Bucket does not not belong to project [BucketID: %d, ProjectID: %d]", err.BucketID, err.ProjectID)
+func (err ErrBucketDoesNotBelongToProjectView) Error() string {
+	return fmt.Sprintf("Bucket does not not belong to project view [BucketID: %d, ProjectViewID: %d]", err.BucketID, err.ProjectViewID)
 }
 
 // ErrCodeBucketDoesNotBelongToProject holds the unique world-error code of this error
 const ErrCodeBucketDoesNotBelongToProject = 10002
 
 // HTTPError holds the http error description
-func (err ErrBucketDoesNotBelongToProject) HTTPError() web.HTTPError {
+func (err ErrBucketDoesNotBelongToProjectView) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusBadRequest,
 		Code:     ErrCodeBucketDoesNotBelongToProject,
@@ -1511,8 +1557,8 @@ func (err ErrBucketDoesNotBelongToProject) HTTPError() web.HTTPError {
 
 // ErrCannotRemoveLastBucket represents an error where a kanban bucket is the last on a project and thus cannot be removed.
 type ErrCannotRemoveLastBucket struct {
-	BucketID  int64
-	ProjectID int64
+	BucketID      int64
+	ProjectViewID int64
 }
 
 // IsErrCannotRemoveLastBucket checks if an error is ErrCannotRemoveLastBucket.
@@ -1522,7 +1568,7 @@ func IsErrCannotRemoveLastBucket(err error) bool {
 }
 
 func (err ErrCannotRemoveLastBucket) Error() string {
-	return fmt.Sprintf("Cannot remove last bucket of project [BucketID: %d, ProjectID: %d]", err.BucketID, err.ProjectID)
+	return fmt.Sprintf("Cannot remove last bucket of project view [BucketID: %d, ProjectViewID: %d]", err.BucketID, err.ProjectViewID)
 }
 
 // ErrCodeCannotRemoveLastBucket holds the unique world-error code of this error
@@ -1533,7 +1579,7 @@ func (err ErrCannotRemoveLastBucket) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusPreconditionFailed,
 		Code:     ErrCodeCannotRemoveLastBucket,
-		Message:  "You cannot remove the last bucket on this project.",
+		Message:  "You cannot remove the last bucket on this project view.",
 	}
 }
 

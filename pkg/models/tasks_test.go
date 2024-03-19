@@ -55,8 +55,6 @@ func TestTask_Create(t *testing.T) {
 		// Assert getting a new index
 		assert.NotEmpty(t, task.Index)
 		assert.Equal(t, int64(18), task.Index)
-		// Assert moving it into the default bucket
-		assert.Equal(t, int64(1), task.BucketID)
 		err = s.Commit()
 		require.NoError(t, err)
 
@@ -66,7 +64,10 @@ func TestTask_Create(t *testing.T) {
 			"description":   "Lorem Ipsum Dolor",
 			"project_id":    1,
 			"created_by_id": 1,
-			"bucket_id":     1,
+		}, false)
+		db.AssertExists(t, "task_buckets", map[string]interface{}{
+			"task_id":   task.ID,
+			"bucket_id": 1,
 		}, false)
 
 		events.AssertDispatched(t, &TaskCreatedEvent{})
@@ -183,8 +184,8 @@ func TestTask_Create(t *testing.T) {
 		}
 		err := task.Create(s, usr)
 		require.NoError(t, err)
-		db.AssertExists(t, "tasks", map[string]interface{}{
-			"id":        task.ID,
+		db.AssertExists(t, "task_buckets", map[string]interface{}{
+			"task_id":   task.ID,
 			"bucket_id": 22, // default bucket of project 6 but with a position of 2
 		}, false)
 	})
@@ -253,12 +254,11 @@ func TestTask_Update(t *testing.T) {
 		defer s.Close()
 
 		task := &Task{
-			ID:             4,
-			Title:          "test10000",
-			Description:    "Lorem Ipsum Dolor",
-			KanbanPosition: 10,
-			ProjectID:      1,
-			BucketID:       2, // Bucket 2 already has 3 tasks and a limit of 3
+			ID:          4,
+			Title:       "test10000",
+			Description: "Lorem Ipsum Dolor",
+			ProjectID:   1,
+			BucketID:    2, // Bucket 2 already has 3 tasks and a limit of 3
 		}
 		err := task.Update(s, u)
 		require.NoError(t, err)
@@ -277,7 +277,7 @@ func TestTask_Update(t *testing.T) {
 		}
 		err := task.Update(s, u)
 		require.Error(t, err)
-		assert.True(t, IsErrBucketDoesNotBelongToProject(err))
+		assert.True(t, IsErrBucketDoesNotExist(err))
 	})
 	t.Run("moving a task to the done bucket", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -297,11 +297,12 @@ func TestTask_Update(t *testing.T) {
 		assert.True(t, task.Done)
 
 		db.AssertExists(t, "tasks", map[string]interface{}{
-			"id":         1,
-			"done":       true,
-			"title":      "test",
-			"project_id": 1,
-			"bucket_id":  3,
+			"id":   1,
+			"done": true,
+		}, false)
+		db.AssertExists(t, "task_buckets", map[string]interface{}{
+			"task_id":   1,
+			"bucket_id": 3,
 		}, false)
 	})
 	t.Run("moving a repeating task to the done bucket", func(t *testing.T) {
@@ -321,14 +322,15 @@ func TestTask_Update(t *testing.T) {
 		err = s.Commit()
 		require.NoError(t, err)
 		assert.False(t, task.Done)
-		assert.Equal(t, int64(1), task.BucketID) // Bucket should not be updated
+		assert.Equal(t, int64(3), task.BucketID)
 
 		db.AssertExists(t, "tasks", map[string]interface{}{
-			"id":         28,
-			"done":       false,
-			"title":      "test updated",
-			"project_id": 1,
-			"bucket_id":  1,
+			"id":   1,
+			"done": false,
+		}, false)
+		db.AssertExists(t, "task_buckets", map[string]interface{}{
+			"task_id":   1,
+			"bucket_id": 1,
 		}, false)
 	})
 	t.Run("default bucket when moving a task between projects", func(t *testing.T) {
@@ -345,7 +347,11 @@ func TestTask_Update(t *testing.T) {
 		err = s.Commit()
 		require.NoError(t, err)
 
-		assert.Equal(t, int64(40), task.BucketID) // bucket 40 is the default bucket on project 2
+		db.AssertExists(t, "task_buckets", map[string]interface{}{
+			"task_id": task.ID,
+			// bucket 40 is the default bucket on project 2
+			"bucket_id": 40,
+		}, false)
 	})
 	t.Run("marking a task as done should move it to the done bucket", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -361,11 +367,13 @@ func TestTask_Update(t *testing.T) {
 		err = s.Commit()
 		require.NoError(t, err)
 		assert.True(t, task.Done)
-		assert.Equal(t, int64(3), task.BucketID)
 
 		db.AssertExists(t, "tasks", map[string]interface{}{
-			"id":        1,
-			"done":      true,
+			"id":   1,
+			"done": true,
+		}, false)
+		db.AssertExists(t, "task_buckets", map[string]interface{}{
+			"task_id":   1,
 			"bucket_id": 3,
 		}, false)
 	})
@@ -386,7 +394,10 @@ func TestTask_Update(t *testing.T) {
 		db.AssertExists(t, "tasks", map[string]interface{}{
 			"id":         1,
 			"project_id": 2,
-			"bucket_id":  40,
+		}, false)
+		db.AssertExists(t, "task_buckets", map[string]interface{}{
+			"task_id":   1,
+			"bucket_id": 40,
 		}, false)
 	})
 	t.Run("move done task to another project with a done bucket", func(t *testing.T) {
@@ -405,10 +416,13 @@ func TestTask_Update(t *testing.T) {
 		require.NoError(t, err)
 
 		db.AssertExists(t, "tasks", map[string]interface{}{
-			"id":         2,
+			"id":         task.ID,
 			"project_id": 2,
-			"bucket_id":  4, // 4 is the done bucket
 			"done":       true,
+		}, false)
+		db.AssertExists(t, "task_buckets", map[string]interface{}{
+			"task_id":   task.ID,
+			"bucket_id": 4, // 4 is the done bucket
 		}, false)
 	})
 	t.Run("repeating tasks should not be moved to the done bucket", func(t *testing.T) {
@@ -426,11 +440,13 @@ func TestTask_Update(t *testing.T) {
 		err = s.Commit()
 		require.NoError(t, err)
 		assert.False(t, task.Done)
-		assert.Equal(t, int64(1), task.BucketID)
 
 		db.AssertExists(t, "tasks", map[string]interface{}{
-			"id":        28,
-			"done":      false,
+			"id":   28,
+			"done": false,
+		}, false)
+		db.AssertExists(t, "task_buckets", map[string]interface{}{
+			"task_id":   28,
 			"bucket_id": 1,
 		}, false)
 	})

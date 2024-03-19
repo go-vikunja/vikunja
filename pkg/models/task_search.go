@@ -53,14 +53,19 @@ func getOrderByDBStatement(opts *taskSearchOptions) (orderby string, err error) 
 			return "", err
 		}
 
+		var prefix string
+		if param.sortBy == taskPropertyPosition {
+			prefix = "task_positions."
+		}
+
 		// Mysql sorts columns with null values before ones without null value.
 		// Because it does not have support for NULLS FIRST or NULLS LAST we work around this by
 		// first sorting for null (or not null) values and then the order we actually want to.
 		if db.Type() == schemas.MYSQL {
-			orderby += "`" + param.sortBy + "` IS NULL, "
+			orderby += prefix + "`" + param.sortBy + "` IS NULL, "
 		}
 
-		orderby += "`" + param.sortBy + "` " + param.orderBy.String()
+		orderby += prefix + "`" + param.sortBy + "` " + param.orderBy.String()
 
 		// Postgres and sqlite allow us to control how columns with null values are sorted.
 		// To make that consistent with the sort order we have and other dbms, we're adding a separate clause here.
@@ -204,6 +209,14 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		return nil, 0, err
 	}
 
+	var joinTaskBuckets bool
+	for _, filter := range opts.parsedFilters {
+		if filter.field == taskPropertyBucketID {
+			joinTaskBuckets = true
+			break
+		}
+	}
+
 	filterCond, err := convertFiltersToDBFilterCond(opts.parsedFilters, opts.filterIncludeNulls)
 	if err != nil {
 		return nil, 0, err
@@ -248,25 +261,43 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	limit, start := getLimitFromPageIndex(opts.page, opts.perPage)
 	cond := builder.And(builder.Or(projectIDCond, favoritesCond), where, filterCond)
 
-	query := d.s.Where(cond)
+	var distinct = "tasks.*"
+	if strings.Contains(orderby, "task_positions.") {
+		distinct += ", task_positions.position"
+	}
+
+	query := d.s.
+		Distinct(distinct).
+		Where(cond)
 	if limit > 0 {
 		query = query.Limit(limit, start)
 	}
 
+	for _, param := range opts.sortby {
+		if param.sortBy == taskPropertyPosition {
+			query = query.Join("LEFT", "task_positions", "task_positions.task_id = tasks.id AND task_positions.project_view_id = ?", param.projectViewID)
+			break
+		}
+	}
+
+	if joinTaskBuckets {
+		query = query.Join("LEFT", "task_buckets", "task_buckets.task_id = tasks.id")
+	}
+
 	tasks = []*Task{}
-	err = query.OrderBy(orderby).Find(&tasks)
+	err = query.
+		OrderBy(orderby).
+		Find(&tasks)
 	if err != nil {
 		return nil, totalCount, err
 	}
 
 	queryCount := d.s.Where(cond)
+	if joinTaskBuckets {
+		queryCount = queryCount.Join("LEFT", "task_buckets", "task_buckets.task_id = tasks.id")
+	}
 	totalCount, err = queryCount.
 		Count(&Task{})
-	if err != nil {
-		return nil, totalCount, err
-
-	}
-
 	return
 }
 
@@ -404,29 +435,6 @@ func convertParsedFilterToTypesense(rawFilters []*taskFilter) (filterBy string, 
 
 func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCount int64, err error) {
 
-	var sortbyFields []string
-	for i, param := range opts.sortby {
-		// Validate the params
-		if err := param.validate(); err != nil {
-			return nil, totalCount, err
-		}
-
-		// Typesense does not allow sorting by ID, so we sort by created timestamp instead
-		if param.sortBy == "id" {
-			param.sortBy = "created"
-		}
-
-		sortbyFields = append(sortbyFields, param.sortBy+"(missing_values:last):"+param.orderBy.String())
-
-		if i == 2 {
-			// Typesense supports up to 3 sorting parameters
-			// https://typesense.org/docs/0.25.0/api/search.html#ranking-and-sorting-parameters
-			break
-		}
-	}
-
-	sortby := strings.Join(sortbyFields, ",")
-
 	projectIDStrings := []string{}
 	for _, id := range opts.projectIDs {
 		projectIDStrings = append(projectIDStrings, strconv.FormatInt(id, 10))
@@ -441,6 +449,34 @@ func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, 
 		"project_id: [" + strings.Join(projectIDStrings, ", ") + "]",
 		"(" + filter + ")",
 	}
+
+	var sortbyFields []string
+	for i, param := range opts.sortby {
+		// Validate the params
+		if err := param.validate(); err != nil {
+			return nil, totalCount, err
+		}
+
+		// Typesense does not allow sorting by ID, so we sort by created timestamp instead
+		if param.sortBy == taskPropertyID {
+			param.sortBy = taskPropertyCreated
+		}
+
+		if param.sortBy == taskPropertyPosition {
+			param.sortBy = "positions.view_" + strconv.FormatInt(param.projectViewID, 10)
+			continue
+		}
+
+		sortbyFields = append(sortbyFields, param.sortBy+"(missing_values:last):"+param.orderBy.String())
+
+		if i == 2 {
+			// Typesense supports up to 3 sorting parameters
+			// https://typesense.org/docs/0.25.0/api/search.html#ranking-and-sorting-parameters
+			break
+		}
+	}
+
+	sortby := strings.Join(sortbyFields, ",")
 
 	////////////////
 	// Actual search

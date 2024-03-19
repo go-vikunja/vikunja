@@ -49,7 +49,6 @@ import {useI18n} from 'vue-i18n'
 import {useTitle} from '@vueuse/core'
 
 import Message from '@/components/misc/message.vue'
-import {PROJECT_VIEWS, type ProjectView} from '@/types/ProjectView'
 import {LINK_SHARE_HASH_PREFIX} from '@/constants/linkShareHash'
 
 import {useBaseStore} from '@/stores/base'
@@ -96,10 +95,6 @@ function useAuth() {
 				: true
 			baseStore.setLogoVisible(logoVisible)
 
-			const view = route.query.view && Object.values(PROJECT_VIEWS).includes(route.query.view as ProjectView)
-				? route.query.view
-				: 'list'
-
 			const hash = LINK_SHARE_HASH_PREFIX + route.params.share
 
 			const last = getLastVisitedRoute()
@@ -111,8 +106,10 @@ function useAuth() {
 			}
 
 			return router.push({
-				name: `project.${view}`,
-				params: {projectId},
+				name: 'project.index',
+				params: {
+					projectId, 
+				},
 				hash,
 			})
 		} catch (e) {

@@ -7,6 +7,7 @@ import type {ITask} from '@/modelTypes/ITask'
 import {error} from '@/message'
 import type {IProject} from '@/modelTypes/IProject'
 import {useAuthStore} from '@/stores/auth'
+import type {IProjectView} from '@/modelTypes/IProjectView'
 
 export type Order = 'asc' | 'desc' | 'none'
 
@@ -54,9 +55,14 @@ const SORT_BY_DEFAULT: SortBy = {
 /**
  * This mixin provides a base set of methods and properties to get tasks.
  */
-export function useTaskList(projectIdGetter: ComputedGetter<IProject['id']>, sortByDefault: SortBy = SORT_BY_DEFAULT) {
+export function useTaskList(
+	projectIdGetter: ComputedGetter<IProject['id']>,
+	projectViewIdGetter: ComputedGetter<IProjectView['id']>,
+	sortByDefault: SortBy = SORT_BY_DEFAULT,
+) {
 	
 	const projectId = computed(() => projectIdGetter())
+	const projectViewId = computed(() => projectViewIdGetter())
 	
 	const params = ref<TaskFilterParams>({...getDefaultTaskFilterParams()})
 	
@@ -87,7 +93,10 @@ export function useTaskList(projectIdGetter: ComputedGetter<IProject['id']>, sor
 	
 	const getAllTasksParams = computed(() => {
 		return [
-			{projectId: projectId.value},
+			{
+				projectId: projectId.value,
+				viewId: projectViewId.value,
+			},
 			{
 				...allParams.value,
 				filter_timezone: authStore.settings.timezone,

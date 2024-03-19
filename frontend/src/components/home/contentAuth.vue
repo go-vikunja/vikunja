@@ -37,7 +37,7 @@
 					v-slot="{ Component }"
 					:route="routeWithModal"
 				>
-					<keep-alive :include="['project.list', 'project.gantt', 'project.table', 'project.kanban']">
+					<keep-alive :include="['project.view']">
 						<component :is="Component" />
 					</keep-alive>
 				</router-view>

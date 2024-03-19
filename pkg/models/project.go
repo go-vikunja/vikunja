@@ -52,9 +52,7 @@ type Project struct {
 	ParentProjectID int64    `xorm:"bigint INDEX null" json:"parent_project_id"`
 	ParentProject   *Project `xorm:"-" json:"-"`
 
-	// The ID of the bucket where new tasks without a bucket are added to. By default, this is the leftmost bucket in a project.
-	DefaultBucketID int64 `xorm:"bigint INDEX null" json:"default_bucket_id"`
-	// If tasks are moved to the done bucket, they are marked as done. If they are marked as done individually, they are moved into the done bucket.
+	// Deprecated: If tasks are moved to the done bucket, they are marked as done. If they are marked as done individually, they are moved into the done bucket.
 	DoneBucketID int64 `xorm:"bigint INDEX null" json:"done_bucket_id"`
 
 	// The user who created this project.
@@ -79,6 +77,8 @@ type Project struct {
 
 	// The position this project has when querying all projects. See the tasks.position property on how to use this.
 	Position float64 `xorm:"double null" json:"position"`
+
+	Views []*ProjectView `xorm:"-" json:"views"`
 
 	// A timestamp when this project was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`
@@ -266,6 +266,9 @@ func (p *Project) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 		return nil
 	}
 
+	err = s.
+		Where("project_id = ?", p.ID).
+		Find(&p.Views)
 	return
 }
 
@@ -587,6 +590,23 @@ func addProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err er
 		subscriptions = make(map[int64][]*Subscription)
 	}
 
+	views := []*ProjectView{}
+	err = s.
+		In("project_id", projectIDs).
+		Find(&views)
+	if err != nil {
+		return
+	}
+
+	viewMap := make(map[int64][]*ProjectView)
+	for _, v := range views {
+		if _, has := viewMap[v.ProjectID]; !has {
+			viewMap[v.ProjectID] = []*ProjectView{}
+		}
+
+		viewMap[v.ProjectID] = append(viewMap[v.ProjectID], v)
+	}
+
 	for _, p := range projects {
 		if o, exists := owners[p.OwnerID]; exists {
 			p.Owner = o
@@ -603,6 +623,11 @@ func addProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err er
 
 		if subscription, exists := subscriptions[p.ID]; exists && len(subscription) > 0 {
 			p.Subscription = subscription[0]
+		}
+
+		vs, has := viewMap[p.ID]
+		if has {
+			p.Views = vs
 		}
 	}
 
@@ -713,7 +738,7 @@ func checkProjectBeforeUpdateOrDelete(s *xorm.Session, project *Project) (err er
 	return nil
 }
 
-func CreateProject(s *xorm.Session, project *Project, auth web.Auth, createBacklogBucket bool) (err error) {
+func CreateProject(s *xorm.Session, project *Project, auth web.Auth, createBacklogBucket bool, createDefaultViews bool) (err error) {
 	err = project.CheckIsArchived(s)
 	if err != nil {
 		return err
@@ -750,13 +775,8 @@ func CreateProject(s *xorm.Session, project *Project, auth web.Auth, createBackl
 		}
 	}
 
-	if createBacklogBucket {
-		// Create a new first bucket for this project
-		b := &Bucket{
-			ProjectID: project.ID,
-			Title:     "Backlog",
-		}
-		err = b.Create(s, auth)
+	if createDefaultViews {
+		err = CreateDefaultViewsForProject(s, project, auth, createBacklogBucket)
 		if err != nil {
 			return
 		}
@@ -969,7 +989,7 @@ func updateProjectByTaskID(s *xorm.Session, taskID int64) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects [put]
 func (p *Project) Create(s *xorm.Session, a web.Auth) (err error) {
-	err = CreateProject(s, p, a, true)
+	err = CreateProject(s, p, a, true, true)
 	if err != nil {
 		return
 	}

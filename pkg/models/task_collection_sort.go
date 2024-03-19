@@ -18,35 +18,36 @@ package models
 
 type (
 	sortParam struct {
-		sortBy  string
-		orderBy sortOrder // asc or desc
+		sortBy        string
+		orderBy       sortOrder // asc or desc
+		projectViewID int64
 	}
 
 	sortOrder string
 )
 
 const (
-	taskPropertyID             string = "id"
-	taskPropertyTitle          string = "title"
-	taskPropertyDescription    string = "description"
-	taskPropertyDone           string = "done"
-	taskPropertyDoneAt         string = "done_at"
-	taskPropertyDueDate        string = "due_date"
-	taskPropertyCreatedByID    string = "created_by_id"
-	taskPropertyProjectID      string = "project_id"
-	taskPropertyRepeatAfter    string = "repeat_after"
-	taskPropertyPriority       string = "priority"
-	taskPropertyStartDate      string = "start_date"
-	taskPropertyEndDate        string = "end_date"
-	taskPropertyHexColor       string = "hex_color"
-	taskPropertyPercentDone    string = "percent_done"
-	taskPropertyUID            string = "uid"
-	taskPropertyCreated        string = "created"
-	taskPropertyUpdated        string = "updated"
-	taskPropertyPosition       string = "position"
-	taskPropertyKanbanPosition string = "kanban_position"
-	taskPropertyBucketID       string = "bucket_id"
-	taskPropertyIndex          string = "index"
+	taskPropertyID            string = "id"
+	taskPropertyTitle         string = "title"
+	taskPropertyDescription   string = "description"
+	taskPropertyDone          string = "done"
+	taskPropertyDoneAt        string = "done_at"
+	taskPropertyDueDate       string = "due_date"
+	taskPropertyCreatedByID   string = "created_by_id"
+	taskPropertyProjectID     string = "project_id"
+	taskPropertyRepeatAfter   string = "repeat_after"
+	taskPropertyPriority      string = "priority"
+	taskPropertyStartDate     string = "start_date"
+	taskPropertyEndDate       string = "end_date"
+	taskPropertyHexColor      string = "hex_color"
+	taskPropertyPercentDone   string = "percent_done"
+	taskPropertyUID           string = "uid"
+	taskPropertyCreated       string = "created"
+	taskPropertyUpdated       string = "updated"
+	taskPropertyPosition      string = "position"
+	taskPropertyBucketID      string = "bucket_id"
+	taskPropertyIndex         string = "index"
+	taskPropertyProjectViewID string = "project_view_id"
 )
 
 const (
@@ -73,5 +74,10 @@ func (sp *sortParam) validate() error {
 	if sp.orderBy != orderDescending && sp.orderBy != orderAscending {
 		return ErrInvalidSortOrder{OrderBy: sp.orderBy}
 	}
+
+	if sp.sortBy == taskPropertyPosition && sp.projectViewID == 0 {
+		return ErrMustHaveProjectViewToSortByPosition{}
+	}
+
 	return validateTaskField(sp.sortBy)
 }

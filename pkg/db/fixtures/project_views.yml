@@ -1,0 +1,954 @@
+- id: 1
+  title: List
+  project_id: 1
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 2
+  title: Gantt
+  project_id: 1
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 3
+  title: Table
+  project_id: 1
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 4
+  title: Kanban
+  project_id: 1
+  view_kind: 3
+  done_bucket_id: 3
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 5
+  title: List
+  project_id: 2
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 6
+  title: Gantt
+  project_id: 2
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 7
+  title: Table
+  project_id: 2
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 8
+  title: Kanban
+  project_id: 2
+  view_kind: 3
+  done_bucket_id: 4
+  default_bucket_id: 40
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 9
+  title: List
+  project_id: 3
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 10
+  title: Gantt
+  project_id: 3
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 11
+  title: Table
+  project_id: 3
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 12
+  title: Kanban
+  project_id: 3
+  view_kind: 3
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 13
+  title: List
+  project_id: 4
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 14
+  title: Gantt
+  project_id: 4
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 15
+  title: Table
+  project_id: 4
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 16
+  title: Kanban
+  project_id: 4
+  view_kind: 3
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 17
+  title: List
+  project_id: 5
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 18
+  title: Gantt
+  project_id: 5
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 19
+  title: Table
+  project_id: 5
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 20
+  title: Kanban
+  project_id: 5
+  view_kind: 3
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 21
+  title: List
+  project_id: 6
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 22
+  title: Gantt
+  project_id: 6
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 23
+  title: Table
+  project_id: 6
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 24
+  title: Kanban
+  project_id: 6
+  view_kind: 3
+  default_bucket_id: 22
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 25
+  title: List
+  project_id: 7
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 26
+  title: Gantt
+  project_id: 7
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 27
+  title: Table
+  project_id: 7
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 28
+  title: Kanban
+  project_id: 7
+  view_kind: 3
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 29
+  title: List
+  project_id: 8
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 30
+  title: Gantt
+  project_id: 8
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 31
+  title: Table
+  project_id: 8
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 32
+  title: Kanban
+  project_id: 8
+  view_kind: 3
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 33
+  title: List
+  project_id: 9
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 34
+  title: Gantt
+  project_id: 9
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 35
+  title: Table
+  project_id: 9
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 36
+  title: Kanban
+  project_id: 9
+  view_kind: 3
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 37
+  title: List
+  project_id: 10
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 38
+  title: Gantt
+  project_id: 10
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 39
+  title: Table
+  project_id: 10
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 40
+  title: Kanban
+  project_id: 10
+  view_kind: 3
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 41
+  title: List
+  project_id: 11
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 42
+  title: Gantt
+  project_id: 11
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 43
+  title: Table
+  project_id: 11
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 44
+  title: Kanban
+  project_id: 11
+  view_kind: 3
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 45
+  title: List
+  project_id: 12
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 46
+  title: Gantt
+  project_id: 12
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 47
+  title: Table
+  project_id: 12
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 48
+  title: Kanban
+  project_id: 12
+  view_kind: 3
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 49
+  title: List
+  project_id: 13
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 50
+  title: Gantt
+  project_id: 13
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 51
+  title: Table
+  project_id: 13
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 52
+  title: Kanban
+  project_id: 13
+  view_kind: 3
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 53
+  title: List
+  project_id: 14
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 54
+  title: Gantt
+  project_id: 14
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 55
+  title: Table
+  project_id: 14
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 56
+  title: Kanban
+  project_id: 14
+  view_kind: 3
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 57
+  title: List
+  project_id: 15
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 58
+  title: Gantt
+  project_id: 15
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 59
+  title: Table
+  project_id: 15
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 60
+  title: Kanban
+  project_id: 15
+  view_kind: 3
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 61
+  title: List
+  project_id: 16
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 62
+  title: Gantt
+  project_id: 16
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 63
+  title: Table
+  project_id: 16
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 64
+  title: Kanban
+  project_id: 16
+  view_kind: 3
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 65
+  title: List
+  project_id: 17
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 66
+  title: Gantt
+  project_id: 17
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 67
+  title: Table
+  project_id: 17
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 68
+  title: Kanban
+  project_id: 17
+  view_kind: 3
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 69
+  title: List
+  project_id: 18
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 70
+  title: Gantt
+  project_id: 18
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 71
+  title: Table
+  project_id: 18
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 72
+  title: Kanban
+  project_id: 18
+  view_kind: 3
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 73
+  title: List
+  project_id: 19
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 74
+  title: Gantt
+  project_id: 19
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 75
+  title: Table
+  project_id: 19
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 76
+  title: Kanban
+  project_id: 19
+  view_kind: 3
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 77
+  title: List
+  project_id: 20
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 78
+  title: Gantt
+  project_id: 20
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 79
+  title: Table
+  project_id: 20
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 80
+  title: Kanban
+  project_id: 20
+  view_kind: 3
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 81
+  title: List
+  project_id: 21
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 82
+  title: Gantt
+  project_id: 21
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 83
+  title: Table
+  project_id: 21
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 84
+  title: Kanban
+  project_id: 21
+  view_kind: 3
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 85
+  title: List
+  project_id: 22
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 86
+  title: Gantt
+  project_id: 22
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 87
+  title: Table
+  project_id: 22
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 88
+  title: Kanban
+  project_id: 22
+  view_kind: 3
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 89
+  title: List
+  project_id: 23
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 90
+  title: Gantt
+  project_id: 23
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 91
+  title: Table
+  project_id: 23
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 92
+  title: Kanban
+  project_id: 23
+  view_kind: 3
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 93
+  title: List
+  project_id: 24
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 94
+  title: Gantt
+  project_id: 24
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 95
+  title: Table
+  project_id: 24
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 96
+  title: Kanban
+  project_id: 24
+  view_kind: 3
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 97
+  title: List
+  project_id: 25
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 98
+  title: Gantt
+  project_id: 25
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 99
+  title: Table
+  project_id: 25
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 100
+  title: Kanban
+  project_id: 25
+  view_kind: 3
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 101
+  title: List
+  project_id: 26
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 102
+  title: Gantt
+  project_id: 26
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 103
+  title: Table
+  project_id: 26
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 104
+  title: Kanban
+  project_id: 26
+  view_kind: 3
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 105
+  title: List
+  project_id: 27
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 106
+  title: Gantt
+  project_id: 27
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 107
+  title: Table
+  project_id: 27
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 108
+  title: Kanban
+  project_id: 27
+  view_kind: 3
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 109
+  title: List
+  project_id: 28
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 110
+  title: Gantt
+  project_id: 28
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 111
+  title: Table
+  project_id: 28
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 112
+  title: Kanban
+  project_id: 28
+  view_kind: 3
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 113
+  title: List
+  project_id: 29
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 114
+  title: Gantt
+  project_id: 29
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 115
+  title: Table
+  project_id: 29
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 116
+  title: Kanban
+  project_id: 29
+  view_kind: 3
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 117
+  title: List
+  project_id: 30
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 118
+  title: Gantt
+  project_id: 30
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 119
+  title: Table
+  project_id: 30
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 120
+  title: Kanban
+  project_id: 30
+  view_kind: 3
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 121
+  title: List
+  project_id: 31
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 122
+  title: Gantt
+  project_id: 31
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 123
+  title: Table
+  project_id: 31
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 124
+  title: Kanban
+  project_id: 31
+  view_kind: 3
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 125
+  title: List
+  project_id: 32
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 126
+  title: Gantt
+  project_id: 32
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 127
+  title: Table
+  project_id: 32
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 128
+  title: Kanban
+  project_id: 32
+  view_kind: 3
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 129
+  title: List
+  project_id: 33
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 130
+  title: Gantt
+  project_id: 33
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 131
+  title: Table
+  project_id: 33
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 132
+  title: Kanban
+  project_id: 33
+  view_kind: 3
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 133
+  title: List
+  project_id: 34
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 134
+  title: Gantt
+  project_id: 34
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 135
+  title: Table
+  project_id: 34
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 136
+  title: Kanban
+  project_id: 34
+  view_kind: 3
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 137
+  title: List
+  project_id: 35
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 138
+  title: Gantt
+  project_id: 35
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 139
+  title: Table
+  project_id: 35
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 140
+  title: Kanban
+  project_id: 35
+  view_kind: 3
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 141
+  title: List
+  project_id: 36
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 142
+  title: Gantt
+  project_id: 36
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 143
+  title: Table
+  project_id: 36
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 144
+  title: Kanban
+  project_id: 36
+  view_kind: 3
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 145
+  title: List
+  project_id: 37
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 146
+  title: Gantt
+  project_id: 37
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 147
+  title: Table
+  project_id: 37
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 148
+  title: Kanban
+  project_id: 37
+  view_kind: 3
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1
+- id: 149
+  title: List
+  project_id: 38
+  view_kind: 0
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 150
+  title: Gantt
+  project_id: 38
+  view_kind: 1
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 151
+  title: Table
+  project_id: 38
+  view_kind: 2
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+- id: 152
+  title: Kanban
+  project_id: 38
+  view_kind: 3
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
+  bucket_configuration_mode: 1

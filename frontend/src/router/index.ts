@@ -2,13 +2,11 @@ import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteLocation } from 'vue-router'
 import {saveLastVisited} from '@/helpers/saveLastVisited'
 
-import {saveProjectView, getProjectView} from '@/helpers/projectView'
+import {saveProjectView, getProjectViewId} from '@/helpers/projectView'
 import {parseDateOrString} from '@/helpers/time/parseDateOrString'
 import {getNextWeekDate} from '@/helpers/time/getNextWeekDate'
-import {setTitle} from '@/helpers/setTitle'
 import {LINK_SHARE_HASH_PREFIX} from '@/constants/linkShareHash'
 
-import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
 import {useBaseStore} from '@/stores/base'
 
@@ -33,15 +31,8 @@ const NewLabelComponent = () => import('@/views/labels/NewLabel.vue')
 // Migration
 const MigrationComponent = () => import('@/views/migrate/Migration.vue')
 const MigrationHandlerComponent = () => import('@/views/migrate/MigrationHandler.vue')
-// Project Views
-const ProjectList = () => import('@/views/project/ProjectList.vue')
-const ProjectGantt = () => import('@/views/project/ProjectGantt.vue')
-const ProjectTable = () => import('@/views/project/ProjectTable.vue')
-// If we load the component async, using it as a backdrop view will not work. Instead, everything explodes
-// with an error from the core saying "Cannot read properties of undefined (reading 'parentNode')"
-// Of course, with no clear indicator of where the problem comes from.
-// const ProjectKanban = () => import('@/views/project/ProjectKanban.vue')
-import ProjectKanban from '@/views/project/ProjectKanban.vue'
+// Project View
+import ProjectView from '@/views/project/ProjectView.vue'
 const ProjectInfo = () => import('@/views/project/ProjectInfo.vue')
 
 // Project Settings
@@ -53,6 +44,7 @@ const ProjectSettingShare = () => import('@/views/project/settings/share.vue')
 const ProjectSettingWebhooks = () => import('@/views/project/settings/webhooks.vue')
 const ProjectSettingDelete = () => import('@/views/project/settings/delete.vue')
 const ProjectSettingArchive = () => import('@/views/project/settings/archive.vue')
+const ProjectSettingViews = () =>  import('@/views/project/settings/views.vue')
 
 // Saved Filters
 const FilterNew = () => import('@/views/filters/FilterNew.vue')
@@ -316,6 +308,15 @@ const router = createRouter({
 			},
 		},
 		{
+			path: '/projects/:projectId/settings/views',
+			name: 'project.settings.views',
+			component: ProjectSettingViews,
+			meta: {
+				showAsModal: true,
+			},
+			props: route => ({ projectId: Number(route.params.projectId as string) }),
+		},
+		{
 			path: '/projects/:projectId/settings/edit',
 			name: 'filter.settings.edit',
 			component: FilterEdit,
@@ -346,55 +347,31 @@ const router = createRouter({
 			path: '/projects/:projectId',
 			name: 'project.index',
 			redirect(to) {
-				// Redirect the user to list view by default
-				const savedProjectView = getProjectView(Number(to.params.projectId as string))
+				const viewId = getProjectViewId(Number(to.params.projectId as string))
+				console.log(viewId)
 
-				if (savedProjectView) {
-					console.log('Replaced list view with', savedProjectView)
+				if (viewId) {
+					console.debug('Replaced list view with', viewId)
 				}
 
 				return {
-					name: savedProjectView || 'project.list',
-					params: {projectId: to.params.projectId},
+					name: 'project.view',
+					params: {
+						projectId: parseInt(to.params.projectId as string),
+						viewId: viewId ?? 0,
+					},
 				}
 			},
 		},
 		{
-			path: '/projects/:projectId/list',
-			name: 'project.list',
-			component: ProjectList,
-			beforeEnter: (to) => saveProjectView(to.params.projectId, to.name),
-			props: route => ({ projectId: Number(route.params.projectId as string) }),
-		},
-		{
-			path: '/projects/:projectId/gantt',
-			name: 'project.gantt',
-			component: ProjectGantt,
-			beforeEnter: (to) => saveProjectView(to.params.projectId, to.name),
-			// FIXME: test if `useRoute` would be the same. If it would use it instead.
-			props: route => ({route}),
-		},
-		{
-			path: '/projects/:projectId/table',
-			name: 'project.table',
-			component: ProjectTable,
-			beforeEnter: (to) => saveProjectView(to.params.projectId, to.name),
-			props: route => ({ projectId: Number(route.params.projectId as string) }),
-		},
-		{
-			path: '/projects/:projectId/kanban',
-			name: 'project.kanban',
-			component: ProjectKanban,
-			beforeEnter: (to) => {
-				saveProjectView(to.params.projectId, to.name)
-				// Properly set the page title when a task popup is closed
-				const projectStore = useProjectStore()
-				const projectFromStore = projectStore.projects[Number(to.params.projectId)]
-				if(projectFromStore) {
-					setTitle(projectFromStore.title)
-				}
-			},
-			props: route => ({ projectId: Number(route.params.projectId as string) }),
+			path: '/projects/:projectId/:viewId',
+			name: 'project.view',
+			component: ProjectView,
+			beforeEnter: (to) => saveProjectView(parseInt(to.params.projectId as string), parseInt(to.params.viewId as string)),
+			props: route => ({ 
+				projectId: parseInt(route.params.projectId as string),
+				viewId: route.params.viewId ? parseInt(route.params.viewId as string): undefined,
+			}),
 		},
 		{
 			path: '/teams',

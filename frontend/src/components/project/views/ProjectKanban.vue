@@ -2,7 +2,7 @@
 	<ProjectWrapper
 		class="project-kanban"
 		:project-id="projectId"
-		view-name="kanban"
+		:view-id
 	>
 		<template #header>
 			<div class="filter-container">
@@ -277,7 +277,6 @@ import {RIGHTS as Rights} from '@/constants/rights'
 import BucketModel from '@/models/bucket'
 
 import type {IBucket} from '@/modelTypes/IBucket'
-import type {IProject} from '@/modelTypes/IProject'
 import type {ITask} from '@/modelTypes/ITask'
 
 import {useBaseStore} from '@/stores/base'
@@ -301,11 +300,17 @@ import {isSavedFilter} from '@/services/savedFilter'
 import {success} from '@/message'
 import {useProjectStore} from '@/stores/projects'
 import type {TaskFilterParams} from '@/services/taskCollection'
+import type {IProjectView} from '@/modelTypes/IProjectView'
+import TaskPositionService from '@/services/taskPosition'
+import TaskPositionModel from '@/models/taskPosition'
+import {i18n} from '@/i18n'
 
 const {
-	projectId = undefined,
+	projectId,
+	viewId,
 } = defineProps<{
 	projectId: number,
+	viewId: IProjectView['id'],
 }>()
 
 const DRAG_OPTIONS = {
@@ -325,6 +330,7 @@ const baseStore = useBaseStore()
 const kanbanStore = useKanbanStore()
 const taskStore = useTaskStore()
 const projectStore = useProjectStore()
+const taskPositionService = ref(new TaskPositionService())
 
 const taskContainerRefs = ref<{ [id: IBucket['id']]: HTMLElement }>({})
 const bucketLimitInputRef = ref<HTMLInputElement | null>(null)
@@ -363,7 +369,7 @@ const params = ref<TaskFilterParams>({
 const getTaskDraggableTaskComponentData = computed(() => (bucket: IBucket) => {
 	return {
 		ref: (el: HTMLElement) => setTaskContainerRef(bucket.id, el),
-		onScroll: (event: Event) => handleTaskContainerScroll(bucket.id, bucket.projectId, event.target as HTMLElement),
+		onScroll: (event: Event) => handleTaskContainerScroll(bucket.id, event.target as HTMLElement),
 		type: 'transition-group',
 		name: !drag.value ? 'move-card' : null,
 		class: [
@@ -387,19 +393,20 @@ const project = computed(() => projectId ? projectStore.projects[projectId] : nu
 const buckets = computed(() => kanbanStore.buckets)
 const loading = computed(() => kanbanStore.isLoading)
 
-const taskLoading = computed(() => taskStore.isLoading)
+const taskLoading = computed(() => taskStore.isLoading || taskPositionService.value.loading)
 
 watch(
 	() => ({
 		params: params.value,
 		projectId,
+		viewId,
 	}),
 	({params}) => {
 		if (projectId === undefined || Number(projectId) === 0) {
 			return
 		}
 		collapsedBuckets.value = getCollapsedBucketState(projectId)
-		kanbanStore.loadBucketsForProject({projectId, params})
+		kanbanStore.loadBucketsForProject(projectId, viewId, params)
 	},
 	{
 		immediate: true,
@@ -412,7 +419,7 @@ function setTaskContainerRef(id: IBucket['id'], el: HTMLElement) {
 	taskContainerRefs.value[id] = el
 }
 
-function handleTaskContainerScroll(id: IBucket['id'], projectId: IProject['id'], el: HTMLElement) {
+function handleTaskContainerScroll(id: IBucket['id'], el: HTMLElement) {
 	if (!el) {
 		return
 	}
@@ -424,6 +431,7 @@ function handleTaskContainerScroll(id: IBucket['id'], projectId: IProject['id'],
 
 	kanbanStore.loadNextTasksForBucket(
 		projectId,
+		viewId,
 		params.value,
 		id,
 	)
@@ -473,7 +481,7 @@ async function updateTaskPosition(e) {
 
 	const newTask = klona(task) // cloning the task to avoid pinia store manipulation
 	newTask.bucketId = newBucket.id
-	newTask.kanbanPosition = calculateItemPosition(
+	const position = calculateItemPosition(
 		taskBefore !== null ? taskBefore.kanbanPosition : null,
 		taskAfter !== null ? taskAfter.kanbanPosition : null,
 	)
@@ -483,6 +491,8 @@ async function updateTaskPosition(e) {
 	) {
 		newTask.done = project.value?.doneBucketId === newBucket.id
 	}
+	
+	let bucketHasChanged = false
 	if (
 		oldBucket !== undefined && // This shouldn't actually be `undefined`, but let's play it safe.
 		newBucket.id !== oldBucket.id
@@ -495,10 +505,20 @@ async function updateTaskPosition(e) {
 			...newBucket,
 			count: newBucket.count + 1,
 		})
+		bucketHasChanged = true
 	}
 
 	try {
-		await taskStore.update(newTask)
+		const newPosition = new TaskPositionModel({
+			position,
+			projectViewId: viewId,
+			taskId: newTask.id,
+		})
+		await taskPositionService.value.update(newPosition)
+		
+		if(bucketHasChanged) {
+			await taskStore.update(newTask)
+		}
 
 		// Make sure the first and second task don't both get position 0 assigned
 		if (newTaskIndex === 0 && taskAfter !== null && taskAfter.kanbanPosition === 0) {
@@ -556,6 +576,7 @@ async function createNewBucket() {
 	await kanbanStore.createBucket(new BucketModel({
 		title: newBucketTitle.value,
 		projectId: project.value.id,
+		projectViewId: viewId,
 	}))
 	newBucketTitle.value = ''
 }
@@ -575,6 +596,7 @@ async function deleteBucket() {
 			bucket: new BucketModel({
 				id: bucketToDelete.value,
 				projectId: project.value.id,
+				projectViewId: viewId,
 			}),
 			params: params.value,
 		})
@@ -593,10 +615,19 @@ async function focusBucketTitle(e: Event) {
 }
 
 async function saveBucketTitle(bucketId: IBucket['id'], bucketTitle: string) {
-	await kanbanStore.updateBucketTitle({
+	
+	const bucket = kanbanStore.getBucketById(bucketId)
+	if (bucket?.title === bucketTitle) {
+		bucketTitleEditable.value = false
+		return
+	}
+	
+	await kanbanStore.updateBucket({
 		id: bucketId,
 		title: bucketTitle,
+		projectId,
 	})
+	success({message: i18n.global.t('project.kanban.bucketTitleSavedSuccess')})
 	bucketTitleEditable.value = false
 }
 
@@ -616,6 +647,7 @@ function updateBucketPosition(e: { newIndex: number }) {
 
 	kanbanStore.updateBucket({
 		id: bucket.id,
+		projectId,
 		position: calculateItemPosition(
 			bucketBefore !== null ? bucketBefore.position : null,
 			bucketAfter !== null ? bucketAfter.position : null,
@@ -630,6 +662,7 @@ async function saveBucketLimit(bucketId: IBucket['id'], limit: number) {
 
 	await kanbanStore.updateBucket({
 		...kanbanStore.getBucketById(bucketId),
+		projectId,
 		limit,
 	})
 	success({message: t('project.kanban.bucketLimitSavedSuccess')})

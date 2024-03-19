@@ -2,6 +2,7 @@ import AbstractService from '@/services/abstractService'
 import TaskModel from '@/models/task'
 
 import type {ITask} from '@/modelTypes/ITask'
+import BucketModel from '@/models/bucket'
 
 export interface TaskFilterParams {
 	sort_by: ('start_date' | 'end_date' | 'due_date' | 'done' | 'id' | 'position' | 'kanban_position')[],
@@ -27,11 +28,15 @@ export function getDefaultTaskFilterParams(): TaskFilterParams {
 export default class TaskCollectionService extends AbstractService<ITask> {
 	constructor() {
 		super({
-			getAll: '/projects/{projectId}/tasks',
+			getAll: '/projects/{projectId}/views/{viewId}/tasks',
 		})
 	}
 
 	modelFactory(data) {
+		// FIXME: There must be a better way for this…
+		if (typeof data.project_view_id !== 'undefined') {
+			return new BucketModel(data)
+		}
 		return new TaskModel(data)
 	}
 }

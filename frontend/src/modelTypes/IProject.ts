@@ -2,6 +2,7 @@ import type {IAbstract} from './IAbstract'
 import type {ITask} from './ITask'
 import type {IUser} from './IUser'
 import type {ISubscription} from './ISubscription'
+import type {IProjectView} from '@/modelTypes/IProjectView'
 
 
 export interface IProject extends IAbstract {
@@ -21,6 +22,7 @@ export interface IProject extends IAbstract {
 	parentProjectId: number
 	doneBucketId: number
 	defaultBucketId: number
+	views: IProjectView[]
 	
 	created: Date
 	updated: Date

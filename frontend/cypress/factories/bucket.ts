@@ -10,7 +10,7 @@ export class BucketFactory extends Factory {
 		return {
 			id: '{increment}',
 			title: faker.lorem.words(3),
-			project_id: 1,
+			project_view_id: '{increment}',
 			created_by_id: 1,
 			created: now.toISOString(),
 			updated: now.toISOString(),

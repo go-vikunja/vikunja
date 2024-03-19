@@ -317,7 +317,7 @@ func TestTask(t *testing.T) {
 			t.Run("Different Project", func(t *testing.T) {
 				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "1"}, `{"bucket_id":4}`)
 				require.Error(t, err)
-				assertHandlerErrorCode(t, err, models.ErrCodeBucketDoesNotBelongToProject)
+				assertHandlerErrorCode(t, err, models.ErrCodeBucketDoesNotExist)
 			})
 			t.Run("Nonexisting Bucket", func(t *testing.T) {
 				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "1"}, `{"bucket_id":9999}`)

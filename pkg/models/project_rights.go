@@ -118,6 +118,16 @@ func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err er
 		return false, nil
 	}
 
+	fid := getSavedFilterIDFromProjectID(p.ID)
+	if fid > 0 {
+		sf, err := getSavedFilterSimpleByID(s, fid)
+		if err != nil {
+			return false, err
+		}
+
+		return sf.CanUpdate(s, a)
+	}
+
 	// Get the project
 	ol, err := GetProjectSimpleByID(s, p.ID)
 	if err != nil {
@@ -135,16 +145,6 @@ func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err er
 		if !can {
 			return false, ErrGenericForbidden{}
 		}
-	}
-
-	fid := getSavedFilterIDFromProjectID(p.ID)
-	if fid > 0 {
-		sf, err := getSavedFilterSimpleByID(s, fid)
-		if err != nil {
-			return false, err
-		}
-
-		return sf.CanUpdate(s, a)
 	}
 
 	canUpdate, err = p.CanWrite(s, a)

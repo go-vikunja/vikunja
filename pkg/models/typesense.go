@@ -19,6 +19,7 @@ package models
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
@@ -154,11 +155,11 @@ func CreateTypesenseCollections() error {
 				Type: "float",
 			},
 			{
-				Name: "kanban_position",
-				Type: "float",
+				Name: "created_by_id",
+				Type: "int64",
 			},
 			{
-				Name: "created_by_id",
+				Name: "project_view_id",
 				Type: "int64",
 			},
 			{
@@ -248,7 +249,13 @@ func ReindexAllTasks() (err error) {
 }
 
 func getTypesenseTaskForTask(s *xorm.Session, task *Task, projectsCache map[int64]*Project) (ttask *typesenseTask, err error) {
-	ttask = convertTaskToTypesenseTask(task)
+	positions := []*TaskPosition{}
+	err = s.Where("task_id = ?", task.ID).Find(&positions)
+	if err != nil {
+		return
+	}
+
+	ttask = convertTaskToTypesenseTask(task, positions)
 
 	var p *Project
 	if projectsCache == nil {
@@ -284,14 +291,14 @@ func reindexTasksInTypesense(s *xorm.Session, tasks map[int64]*Task) (err error)
 		return
 	}
 
-	err = addMoreInfoToTasks(s, tasks, &user.User{ID: 1})
+	err = addMoreInfoToTasks(s, tasks, &user.User{ID: 1}, nil)
 	if err != nil {
 		return fmt.Errorf("could not fetch more task info: %s", err.Error())
 	}
 
 	projects := make(map[int64]*Project)
-
 	typesenseTasks := []interface{}{}
+
 	for _, task := range tasks {
 
 		ttask, err := getTypesenseTaskForTask(s, task, projects)
@@ -415,19 +422,18 @@ type typesenseTask struct {
 	CoverImageAttachmentID int64       `json:"cover_image_attachment_id"`
 	Created                int64       `json:"created"`
 	Updated                int64       `json:"updated"`
-	BucketID               int64       `json:"bucket_id"`
-	Position               float64     `json:"position"`
-	KanbanPosition         float64     `json:"kanban_position"`
 	CreatedByID            int64       `json:"created_by_id"`
 	Reminders              interface{} `json:"reminders"`
 	Assignees              interface{} `json:"assignees"`
 	Labels                 interface{} `json:"labels"`
 	//RelatedTasks           interface{} `json:"related_tasks"` // TODO
-	Attachments interface{} `json:"attachments"`
-	Comments    interface{} `json:"comments"`
+	Attachments interface{}        `json:"attachments"`
+	Comments    interface{}        `json:"comments"`
+	Positions   map[string]float64 `json:"positions"`
 }
 
-func convertTaskToTypesenseTask(task *Task) *typesenseTask {
+func convertTaskToTypesenseTask(task *Task, positions []*TaskPosition) *typesenseTask {
+
 	tt := &typesenseTask{
 		ID:                     fmt.Sprintf("%d", task.ID),
 		Title:                  task.Title,
@@ -449,9 +455,6 @@ func convertTaskToTypesenseTask(task *Task) *typesenseTask {
 		CoverImageAttachmentID: task.CoverImageAttachmentID,
 		Created:                task.Created.UTC().Unix(),
 		Updated:                task.Updated.UTC().Unix(),
-		BucketID:               task.BucketID,
-		Position:               task.Position,
-		KanbanPosition:         task.KanbanPosition,
 		CreatedByID:            task.CreatedByID,
 		Reminders:              task.Reminders,
 		Assignees:              task.Assignees,
@@ -471,6 +474,10 @@ func convertTaskToTypesenseTask(task *Task) *typesenseTask {
 	}
 	if task.EndDate.IsZero() {
 		tt.EndDate = nil
+	}
+
+	for _, position := range positions {
+		tt.Positions["view_"+strconv.FormatInt(position.ProjectViewID, 10)] = position.Position
 	}
 
 	return tt

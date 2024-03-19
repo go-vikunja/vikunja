@@ -21,13 +21,16 @@ import {
 	LABEL_FIELDS,
 } from '@/helpers/filters'
 import {useDebounceFn} from '@vueuse/core'
+import {createRandomID} from '@/helpers/randomId'
 
 const {
 	modelValue,
 	projectId,
+	inputLabel = undefined,
 } = defineProps<{
 	modelValue: string,
 	projectId?: number,
+	inputLabel?: string,
 }>()
 
 const emit = defineEmits(['update:modelValue', 'blur'])
@@ -37,6 +40,8 @@ const {
 	textarea: filterInput,
 	height,
 } = useAutoHeightTextarea(filterQuery)
+
+const id = ref(createRandomID())
 
 watch(
 	() => modelValue,
@@ -246,7 +251,12 @@ const blurDebounced = useDebounceFn(() => emit('blur'), 500)
 
 <template>
 	<div class="field">
-		<label class="label">{{ $t('filters.query.title') }}</label>
+		<label 
+			class="label"
+			:for="id"
+		>
+			{{ inputLabel ?? $t('filters.query.title') }}
+		</label>
 		<AutocompleteDropdown
 			:options="autocompleteResults"
 			@blur="filterInput?.blur()"
@@ -257,10 +267,10 @@ const blurDebounced = useDebounceFn(() => emit('blur'), 500)
 			>
 				<div class="control filter-input">
 					<textarea
+						:id
 						ref="filterInput"
 						v-model="filterQuery"
 						autocomplete="off"
-
 						autocorrect="off"
 						autocapitalize="off"
 						spellcheck="false"

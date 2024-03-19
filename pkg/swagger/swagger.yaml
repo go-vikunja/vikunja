@@ -123,8 +123,8 @@ definitions:
         description: The position this bucket has when querying all buckets. See the
           tasks.position property on how to use this.
         type: number
-      project_id:
-        description: The project this bucket belongs to.
+      project_view_id:
+        description: The project view this bucket belongs to.
         type: integer
       tasks:
         description: All tasks which belong to this bucket.
@@ -140,6 +140,16 @@ definitions:
           this value.
         type: string
     type: object
+  models.BucketConfigurationModeKind:
+    enum:
+    - 0
+    - 1
+    - 2
+    type: integer
+    x-enum-varnames:
+    - BucketConfigurationModeNone
+    - BucketConfigurationModeManual
+    - BucketConfigurationModeFilter
   models.BulkAssignees:
     properties:
       assignees:
@@ -161,7 +171,9 @@ definitions:
           $ref: '#/definitions/models.TaskAttachment'
         type: array
       bucket_id:
-        description: BucketID is the ID of the kanban bucket this task belongs to.
+        description: |-
+          The bucket id. Will only be populated when the task is accessed via a view with buckets.
+          Can be used to move a task between buckets. In that case, the new bucket must be in the same view as the old one.
         type: integer
       cover_image_attachment_id:
         description: If this task has a cover image, the field will return the id
@@ -209,10 +221,6 @@ definitions:
           a separate "Important" project. This value depends on the user making the
           call to the api.
         type: boolean
-      kanban_position:
-        description: The position of tasks in the kanban board. See the docs for the
-          `position` property on how to use this.
-        type: number
       labels:
         description: An array of labels which are associated with this task.
         items:
@@ -224,11 +232,9 @@ definitions:
       position:
         description: |-
           The position of the task - any task project can be sorted as usual by this parameter.
-          When accessing tasks via kanban buckets, this is primarily used to sort them based on a range
-          We're using a float64 here to make it possible to put any task within any two other tasks (by changing the number).
-          You would calculate the new position between two tasks with something like task3.position = (task2.position - task1.position) / 2.
-          A 64-Bit float leaves plenty of room to initially give tasks a position with 2^16 difference to the previous task
-          which also leaves a lot of room for rearranging and sorting later.
+          When accessing tasks via views with buckets, this is primarily used to sort them based on a range.
+          Positions are always saved per view. They will automatically be set if you request the tasks through a view
+          endpoint, otherwise they will always be 0. To update them, take a look at the Task Position endpoint.
         type: number
       priority:
         description: The task priority. Can be anything you want, it is possible to
@@ -422,16 +428,13 @@ definitions:
         description: A timestamp when this project was created. You cannot change
           this value.
         type: string
-      default_bucket_id:
-        description: The ID of the bucket where new tasks without a bucket are added
-          to. By default, this is the leftmost bucket in a project.
-        type: integer
       description:
         description: The description of the project.
         type: string
       done_bucket_id:
-        description: If tasks are moved to the done bucket, they are marked as done.
-          If they are marked as done individually, they are moved into the done bucket.
+        description: 'Deprecated: If tasks are moved to the done bucket, they are
+          marked as done. If they are marked as done individually, they are moved
+          into the done bucket.'
         type: integer
       hex_color:
         description: The hex color of this project
@@ -478,6 +481,10 @@ definitions:
         description: A timestamp when this project was last updated. You cannot change
           this value.
         type: string
+      views:
+        items:
+          $ref: '#/definitions/models.ProjectView'
+        type: array
     type: object
   models.ProjectDuplicate:
     properties:
@@ -513,6 +520,77 @@ definitions:
         description: The username.
         type: string
     type: object
+  models.ProjectView:
+    properties:
+      bucket_configuration:
+        description: When the bucket configuration mode is not `manual`, this field
+          holds the options of that configuration.
+        items:
+          $ref: '#/definitions/models.ProjectViewBucketConfiguration'
+        type: array
+      bucket_configuration_mode:
+        allOf:
+        - $ref: '#/definitions/models.BucketConfigurationModeKind'
+        description: The bucket configuration mode. Can be `none`, `manual` or `filter`.
+          `manual` allows to move tasks between buckets as you normally would. `filter`
+          creates buckets based on a filter for each bucket.
+      created:
+        description: A timestamp when this reaction was created. You cannot change
+          this value.
+        type: string
+      default_bucket_id:
+        description: The ID of the bucket where new tasks without a bucket are added
+          to. By default, this is the leftmost bucket in a view.
+        type: integer
+      done_bucket_id:
+        description: If tasks are moved to the done bucket, they are marked as done.
+          If they are marked as done individually, they are moved into the done bucket.
+        type: integer
+      filter:
+        description: The filter query to match tasks by. Check out https://vikunja.io/docs/filters
+          for a full explanation.
+        type: string
+      id:
+        description: The unique numeric id of this view
+        type: integer
+      position:
+        description: The position of this view in the list. The list of all views
+          will be sorted by this parameter.
+        type: number
+      project_id:
+        description: The project this view belongs to
+        type: integer
+      title:
+        description: The title of this view
+        type: string
+      updated:
+        description: A timestamp when this view was updated. You cannot change this
+          value.
+        type: string
+      view_kind:
+        allOf:
+        - $ref: '#/definitions/models.ProjectViewKind'
+        description: The kind of this view. Can be `list`, `gantt`, `table` or `kanban`.
+    type: object
+  models.ProjectViewBucketConfiguration:
+    properties:
+      filter:
+        type: string
+      title:
+        type: string
+    type: object
+  models.ProjectViewKind:
+    enum:
+    - 0
+    - 1
+    - 2
+    - 3
+    type: integer
+    x-enum-varnames:
+    - ProjectViewKindList
+    - ProjectViewKindGantt
+    - ProjectViewKindTable
+    - ProjectViewKindKanban
   models.Reaction:
     properties:
       created:
@@ -671,7 +749,9 @@ definitions:
           $ref: '#/definitions/models.TaskAttachment'
         type: array
       bucket_id:
-        description: BucketID is the ID of the kanban bucket this task belongs to.
+        description: |-
+          The bucket id. Will only be populated when the task is accessed via a view with buckets.
+          Can be used to move a task between buckets. In that case, the new bucket must be in the same view as the old one.
         type: integer
       cover_image_attachment_id:
         description: If this task has a cover image, the field will return the id
@@ -719,10 +799,6 @@ definitions:
           a separate "Important" project. This value depends on the user making the
           call to the api.
         type: boolean
-      kanban_position:
-        description: The position of tasks in the kanban board. See the docs for the
-          `position` property on how to use this.
-        type: number
       labels:
         description: An array of labels which are associated with this task.
         items:
@@ -734,11 +810,9 @@ definitions:
       position:
         description: |-
           The position of the task - any task project can be sorted as usual by this parameter.
-          When accessing tasks via kanban buckets, this is primarily used to sort them based on a range
-          We're using a float64 here to make it possible to put any task within any two other tasks (by changing the number).
-          You would calculate the new position between two tasks with something like task3.position = (task2.position - task1.position) / 2.
-          A 64-Bit float leaves plenty of room to initially give tasks a position with 2^16 difference to the previous task
-          which also leaves a lot of room for rearranging and sorting later.
+          When accessing tasks via views with buckets, this is primarily used to sort them based on a range.
+          Positions are always saved per view. They will automatically be set if you request the tasks through a view
+          endpoint, otherwise they will always be 0. To update them, take a look at the Task Position endpoint.
         type: number
       priority:
         description: The task priority. Can be anything you want, it is possible to
@@ -814,7 +888,7 @@ definitions:
     properties:
       filter:
         description: The filter query to match tasks by. Check out https://vikunja.io/docs/filters
-          for a full explanation of the feature.
+          for a full explanation.
         type: string
       filter_include_nulls:
         description: If set to true, the result will also include null values
@@ -846,6 +920,26 @@ definitions:
         $ref: '#/definitions/models.ReactionMap'
       updated:
         type: string
+    type: object
+  models.TaskPosition:
+    properties:
+      position:
+        description: |-
+          The position of the task - any task project can be sorted as usual by this parameter.
+          When accessing tasks via kanban buckets, this is primarily used to sort them based on a range
+          We're using a float64 here to make it possible to put any task within any two other tasks (by changing the number).
+          You would calculate the new position between two tasks with something like task3.position = (task2.position - task1.position) / 2.
+          A 64-Bit float leaves plenty of room to initially give tasks a position with 2^16 difference to the previous task
+          which also leaves a lot of room for rearranging and sorting later.
+          Positions are always saved per view. They will automatically be set if you request the tasks through a view
+          endpoint, otherwise they will always be 0. To update them, take a look at the Task Position endpoint.
+        type: number
+      project_view_id:
+        description: The project view this task is related to
+        type: integer
+      task_id:
+        description: The ID of the task this position is for
+        type: integer
     type: object
   models.TaskRelation:
     properties:
@@ -2850,107 +2944,6 @@ paths:
       summary: Upload a project background
       tags:
       - project
-  /projects/{id}/buckets:
-    get:
-      consumes:
-      - application/json
-      description: Returns all kanban buckets with belong to a project including their
-        tasks. Buckets are always sorted by their `position` in ascending order. Tasks
-        are sorted by their `kanban_position` in ascending order.
-      parameters:
-      - description: Project Id
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: The page number for tasks. Used for pagination. If not provided,
-          the first page of results is returned.
-        in: query
-        name: page
-        type: integer
-      - description: The maximum number of tasks per bucket per page. This parameter
-          is limited by the configured maximum of items per page.
-        in: query
-        name: per_page
-        type: integer
-      - description: Search tasks by task text.
-        in: query
-        name: s
-        type: string
-      - description: The filter query to match tasks by. Check out https://vikunja.io/docs/filters
-          for a full explanation of the feature.
-        in: query
-        name: filter
-        type: string
-      - description: 'The time zone which should be used for date match (statements
-          like '
-        in: query
-        name: filter_timezone
-        type: string
-      - description: If set to true the result will include filtered fields whose
-          value is set to `null`. Available values are `true` or `false`. Defaults
-          to `false`.
-        in: query
-        name: filter_include_nulls
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: The buckets with their tasks
-          schema:
-            items:
-              $ref: '#/definitions/models.Bucket'
-            type: array
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Get all kanban buckets of a project
-      tags:
-      - project
-    put:
-      consumes:
-      - application/json
-      description: Creates a new kanban bucket on a project.
-      parameters:
-      - description: Project Id
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: The bucket object
-        in: body
-        name: bucket
-        required: true
-        schema:
-          $ref: '#/definitions/models.Bucket'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: The created bucket object.
-          schema:
-            $ref: '#/definitions/models.Bucket'
-        "400":
-          description: Invalid bucket object provided.
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "404":
-          description: The project does not exist.
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "500":
-          description: Internal error
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Create a new bucket
-      tags:
-      - project
   /projects/{id}/projectusers:
     get:
       consumes:
@@ -2994,78 +2987,6 @@ paths:
       tags:
       - project
   /projects/{id}/tasks:
-    get:
-      consumes:
-      - application/json
-      description: Returns all tasks for the current project.
-      parameters:
-      - description: The project ID.
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: The page number. Used for pagination. If not provided, the first
-          page of results is returned.
-        in: query
-        name: page
-        type: integer
-      - description: The maximum number of items per page. Note this parameter is
-          limited by the configured maximum of items per page.
-        in: query
-        name: per_page
-        type: integer
-      - description: Search tasks by task text.
-        in: query
-        name: s
-        type: string
-      - description: The sorting parameter. You can pass this multiple times to get
-          the tasks ordered by multiple different parametes, along with `order_by`.
-          Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`,
-          `due_date`, `created_by_id`, `project_id`, `repeat_after`, `priority`, `start_date`,
-          `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default
-          is `id`.
-        in: query
-        name: sort_by
-        type: string
-      - description: The ordering parameter. Possible values to order by are `asc`
-          or `desc`. Default is `asc`.
-        in: query
-        name: order_by
-        type: string
-      - description: The filter query to match tasks by. Check out https://vikunja.io/docs/filters
-          for a full explanation of the feature.
-        in: query
-        name: filter
-        type: string
-      - description: 'The time zone which should be used for date match (statements
-          like '
-        in: query
-        name: filter_timezone
-        type: string
-      - description: If set to true the result will include filtered fields whose
-          value is set to `null`. Available values are `true` or `false`. Defaults
-          to `false`.
-        in: query
-        name: filter_include_nulls
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: The tasks
-          schema:
-            items:
-              $ref: '#/definitions/models.Task'
-            type: array
-        "500":
-          description: Internal error
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Get tasks in a project
-      tags:
-      - task
     put:
       consumes:
       - application/json
@@ -3288,6 +3209,165 @@ paths:
       summary: Add a user to a project
       tags:
       - sharing
+  /projects/{id}/views/{view}/buckets:
+    get:
+      consumes:
+      - application/json
+      description: Returns all kanban buckets which belong to that project. Buckets
+        are always sorted by their `position` in ascending order. To get all buckets
+        with their tasks, use the tasks endpoint with a kanban view.
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Project view ID
+        in: path
+        name: view
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The buckets
+          schema:
+            items:
+              $ref: '#/definitions/models.Bucket'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get all kanban buckets of a project
+      tags:
+      - project
+    put:
+      consumes:
+      - application/json
+      description: Creates a new kanban bucket on a project.
+      parameters:
+      - description: Project Id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Project view ID
+        in: path
+        name: view
+        required: true
+        type: integer
+      - description: The bucket object
+        in: body
+        name: bucket
+        required: true
+        schema:
+          $ref: '#/definitions/models.Bucket'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The created bucket object.
+          schema:
+            $ref: '#/definitions/models.Bucket'
+        "400":
+          description: Invalid bucket object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: The project does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Create a new bucket
+      tags:
+      - project
+  /projects/{id}/views/{view}/tasks:
+    get:
+      consumes:
+      - application/json
+      description: Returns all tasks for the current project.
+      parameters:
+      - description: The project ID.
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The project view ID.
+        in: path
+        name: view
+        required: true
+        type: integer
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: page
+        type: integer
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
+        in: query
+        name: per_page
+        type: integer
+      - description: Search tasks by task text.
+        in: query
+        name: s
+        type: string
+      - description: The sorting parameter. You can pass this multiple times to get
+          the tasks ordered by multiple different parametes, along with `order_by`.
+          Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`,
+          `due_date`, `created_by_id`, `project_id`, `repeat_after`, `priority`, `start_date`,
+          `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default
+          is `id`.
+        in: query
+        name: sort_by
+        type: string
+      - description: The ordering parameter. Possible values to order by are `asc`
+          or `desc`. Default is `asc`.
+        in: query
+        name: order_by
+        type: string
+      - description: The filter query to match tasks by. Check out https://vikunja.io/docs/filters
+          for a full explanation of the feature.
+        in: query
+        name: filter
+        type: string
+      - description: 'The time zone which should be used for date match (statements
+          like '
+        in: query
+        name: filter_timezone
+        type: string
+      - description: If set to true the result will include filtered fields whose
+          value is set to `null`. Available values are `true` or `false`. Defaults
+          to `false`.
+        in: query
+        name: filter_include_nulls
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The tasks
+          schema:
+            items:
+              $ref: '#/definitions/models.Task'
+            type: array
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get tasks in a project
+      tags:
+      - task
   /projects/{id}/webhooks:
     get:
       consumes:
@@ -3604,32 +3684,60 @@ paths:
       summary: Get one link shares for a project
       tags:
       - sharing
-  /projects/{projectID}/buckets/{bucketID}:
-    delete:
+  /projects/{project}/views:
+    get:
       consumes:
       - application/json
-      description: Deletes an existing kanban bucket and dissociates all of its task.
-        It does not delete any tasks. You cannot delete the last bucket on a project.
+      description: Returns all project views for a sepcific project
       parameters:
-      - description: Project Id
+      - description: Project ID
         in: path
-        name: projectID
-        required: true
-        type: integer
-      - description: Bucket Id
-        in: path
-        name: bucketID
+        name: project
         required: true
         type: integer
       produces:
       - application/json
       responses:
         "200":
-          description: Successfully deleted.
+          description: The project views
+          schema:
+            items:
+              $ref: '#/definitions/models.ProjectView'
+            type: array
+        "500":
+          description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-        "404":
-          description: The bucket does not exist.
+      security:
+      - JWTKeyAuth: []
+      summary: Get all project views for a project
+      tags:
+      - project
+    put:
+      consumes:
+      - application/json
+      description: Create a project view in a specific project.
+      parameters:
+      - description: Project ID
+        in: path
+        name: project
+        required: true
+        type: integer
+      - description: The project view you want to create.
+        in: body
+        name: view
+        required: true
+        schema:
+          $ref: '#/definitions/models.ProjectView'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The created project view
+          schema:
+            $ref: '#/definitions/models.ProjectView'
+        "403":
+          description: The user does not have access to create a project view
           schema:
             $ref: '#/definitions/web.HTTPError'
         "500":
@@ -3638,43 +3746,110 @@ paths:
             $ref: '#/definitions/models.Message'
       security:
       - JWTKeyAuth: []
-      summary: Deletes an existing bucket
+      summary: Create a project view
+      tags:
+      - project
+  /projects/{project}/views/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a project view.
+      parameters:
+      - description: Project ID
+        in: path
+        name: project
+        required: true
+        type: integer
+      - description: Project View ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The project view was successfully deleted.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "403":
+          description: The user does not have access to the project view
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Delete a project view
+      tags:
+      - project
+    get:
+      consumes:
+      - application/json
+      description: Returns a project view by its ID.
+      parameters:
+      - description: Project ID
+        in: path
+        name: project
+        required: true
+        type: integer
+      - description: Project View ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The project view
+          schema:
+            $ref: '#/definitions/models.ProjectView'
+        "403":
+          description: The user does not have access to this project view
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get one project view
       tags:
       - project
     post:
       consumes:
       - application/json
-      description: Updates an existing kanban bucket.
+      description: Updates a project view.
       parameters:
-      - description: Project Id
+      - description: Project ID
         in: path
-        name: projectID
+        name: project
         required: true
         type: integer
-      - description: Bucket Id
+      - description: Project View ID
         in: path
-        name: bucketID
+        name: id
         required: true
         type: integer
-      - description: The bucket object
+      - description: The project view with updated values you want to change.
         in: body
-        name: bucket
+        name: view
         required: true
         schema:
-          $ref: '#/definitions/models.Bucket'
+          $ref: '#/definitions/models.ProjectView'
       produces:
       - application/json
       responses:
         "200":
-          description: The created bucket object.
+          description: The updated project view.
           schema:
-            $ref: '#/definitions/models.Bucket'
+            $ref: '#/definitions/models.ProjectView'
         "400":
-          description: Invalid bucket object provided.
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "404":
-          description: The bucket does not exist.
+          description: Invalid project view object provided.
           schema:
             $ref: '#/definitions/web.HTTPError'
         "500":
@@ -3683,7 +3858,7 @@ paths:
             $ref: '#/definitions/models.Message'
       security:
       - JWTKeyAuth: []
-      summary: Update an existing bucket
+      summary: Updates a project view
       tags:
       - project
   /projects/{projectID}/duplicate:
@@ -3900,6 +4075,98 @@ paths:
       summary: Update a user <-> project relation
       tags:
       - sharing
+  /projects/{projectID}/views/{view}/buckets/{bucketID}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes an existing kanban bucket and dissociates all of its task.
+        It does not delete any tasks. You cannot delete the last bucket on a project.
+      parameters:
+      - description: Project Id
+        in: path
+        name: projectID
+        required: true
+        type: integer
+      - description: Bucket Id
+        in: path
+        name: bucketID
+        required: true
+        type: integer
+      - description: Project view ID
+        in: path
+        name: view
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully deleted.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "404":
+          description: The bucket does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Deletes an existing bucket
+      tags:
+      - project
+    post:
+      consumes:
+      - application/json
+      description: Updates an existing kanban bucket.
+      parameters:
+      - description: Project Id
+        in: path
+        name: projectID
+        required: true
+        type: integer
+      - description: Bucket Id
+        in: path
+        name: bucketID
+        required: true
+        type: integer
+      - description: Project view ID
+        in: path
+        name: view
+        required: true
+        type: integer
+      - description: The bucket object
+        in: body
+        name: bucket
+        required: true
+        schema:
+          $ref: '#/definitions/models.Bucket'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The created bucket object.
+          schema:
+            $ref: '#/definitions/models.Bucket'
+        "400":
+          description: Invalid bucket object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: The bucket does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Update an existing bucket
+      tags:
+      - project
   /register:
     post:
       consumes:
@@ -4332,6 +4599,43 @@ paths:
       security:
       - JWTKeyAuth: []
       summary: Get one attachment.
+      tags:
+      - task
+  /tasks/{id}/position:
+    post:
+      consumes:
+      - application/json
+      description: Updates a task position.
+      parameters:
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The task position with updated values you want to change.
+        in: body
+        name: view
+        required: true
+        schema:
+          $ref: '#/definitions/models.TaskPosition'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The updated task position.
+          schema:
+            $ref: '#/definitions/models.TaskPosition'
+        "400":
+          description: Invalid task position object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Updates a task position
       tags:
       - task
   /tasks/{task}/labels:

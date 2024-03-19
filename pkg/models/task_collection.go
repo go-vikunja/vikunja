@@ -17,14 +17,18 @@
 package models
 
 import (
+	"strings"
+
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
+
 	"xorm.io/xorm"
 )
 
 // TaskCollection is a struct used to hold filter details and not clutter the Task struct with information not related to actual tasks.
 type TaskCollection struct {
-	ProjectID int64 `param:"project" json:"-"`
+	ProjectID     int64 `param:"project" json:"-"`
+	ProjectViewID int64 `param:"view" json:"-"`
 
 	// The query parameter to sort by. This is for ex. done, priority, etc.
 	SortBy    []string `query:"sort_by" json:"sort_by"`
@@ -33,13 +37,15 @@ type TaskCollection struct {
 	OrderBy    []string `query:"order_by" json:"order_by"`
 	OrderByArr []string `query:"order_by[]" json:"-"`
 
-	// The filter query to match tasks by. Check out https://vikunja.io/docs/filters for a full explanation of the feature.
+	// The filter query to match tasks by. Check out https://vikunja.io/docs/filters for a full explanation.
 	Filter string `query:"filter" json:"filter"`
 	// The time zone which should be used for date match (statements like "now" resolve to different actual times)
 	FilterTimezone string `query:"filter_timezone" json:"-"`
 
 	// If set to true, the result will also include null values
 	FilterIncludeNulls bool `query:"filter_include_nulls" json:"filter_include_nulls"`
+
+	isSavedFilter bool
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`
@@ -66,7 +72,6 @@ func validateTaskField(fieldName string) error {
 		taskPropertyCreated,
 		taskPropertyUpdated,
 		taskPropertyPosition,
-		taskPropertyKanbanPosition,
 		taskPropertyBucketID,
 		taskPropertyIndex:
 		return nil
@@ -74,7 +79,7 @@ func validateTaskField(fieldName string) error {
 	return ErrInvalidTaskField{TaskField: fieldName}
 }
 
-func getTaskFilterOptsFromCollection(tf *TaskCollection) (opts *taskSearchOptions, err error) {
+func getTaskFilterOptsFromCollection(tf *TaskCollection, projectView *ProjectView) (opts *taskSearchOptions, err error) {
 	if len(tf.SortByArr) > 0 {
 		tf.SortBy = append(tf.SortBy, tf.SortByArr...)
 	}
@@ -95,6 +100,10 @@ func getTaskFilterOptsFromCollection(tf *TaskCollection) (opts *taskSearchOption
 			param.orderBy = getSortOrderFromString(tf.OrderBy[i])
 		}
 
+		if s == taskPropertyPosition && projectView != nil {
+			param.projectViewID = projectView.ID
+		}
+
 		// Param validation
 		if err := param.validate(); err != nil {
 			return nil, err
@@ -113,6 +122,45 @@ func getTaskFilterOptsFromCollection(tf *TaskCollection) (opts *taskSearchOption
 	return opts, err
 }
 
+func getTaskOrTasksInBuckets(s *xorm.Session, a web.Auth, projects []*Project, view *ProjectView, opts *taskSearchOptions) (tasks interface{}, resultCount int, totalItems int64, err error) {
+	if view != nil && !strings.Contains(opts.filter, "bucket_id") {
+		if view.BucketConfigurationMode != BucketConfigurationModeNone {
+			tasksInBuckets, err := GetTasksInBucketsForView(s, view, projects, opts, a)
+			return tasksInBuckets, len(tasksInBuckets), int64(len(tasksInBuckets)), err
+		}
+	}
+
+	return getTasksForProjects(s, projects, a, opts, view)
+}
+
+func getRelevantProjectsFromCollection(s *xorm.Session, a web.Auth, tf *TaskCollection) (projects []*Project, err error) {
+	if tf.ProjectID == 0 || tf.isSavedFilter {
+		projects, _, _, err = getRawProjectsForUser(
+			s,
+			&projectOptions{
+				user: &user.User{ID: a.GetID()},
+				page: -1,
+			},
+		)
+		return projects, err
+	}
+
+	// Check the project exists and the user has access on it
+	project := &Project{ID: tf.ProjectID}
+	canRead, _, err := project.CanRead(s, a)
+	if err != nil {
+		return nil, err
+	}
+	if !canRead {
+		return nil, ErrUserDoesNotHaveAccessToProject{
+			ProjectID: tf.ProjectID,
+			UserID:    a.GetID(),
+		}
+	}
+
+	return []*Project{{ID: tf.ProjectID}}, nil
+}
+
 // ReadAll gets all tasks for a collection
 // @Summary Get tasks in a project
 // @Description Returns all tasks for the current project.
@@ -120,6 +168,7 @@ func getTaskFilterOptsFromCollection(tf *TaskCollection) (opts *taskSearchOption
 // @Accept json
 // @Produce json
 // @Param id path int true "The project ID."
+// @Param view path int true "The project view ID."
 // @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
 // @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search tasks by task text."
@@ -131,12 +180,12 @@ func getTaskFilterOptsFromCollection(tf *TaskCollection) (opts *taskSearchOption
 // @Security JWTKeyAuth
 // @Success 200 {array} models.Task "The tasks"
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /projects/{id}/tasks [get]
+// @Router /projects/{id}/views/{view}/tasks [get]
 func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
 
 	// If the project id is < -1 this means we're dealing with a saved filter - in that case we get and populate the filter
 	// -1 is the favorites project which works as intended
-	if tf.ProjectID < -1 {
+	if !tf.isSavedFilter && tf.ProjectID < -1 {
 		sf, err := getSavedFilterSimpleByID(s, getSavedFilterIDFromProjectID(tf.ProjectID))
 		if err != nil {
 			return nil, 0, 0, err
@@ -166,17 +215,46 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 			sf.Filters.FilterTimezone = u.Timezone
 		}
 
-		return sf.getTaskCollection().ReadAll(s, a, search, page, perPage)
+		tc := sf.getTaskCollection()
+		tc.ProjectViewID = tf.ProjectViewID
+		tc.ProjectID = tf.ProjectID
+		tc.isSavedFilter = true
+
+		return tc.ReadAll(s, a, search, page, perPage)
 	}
 
-	taskopts, err := getTaskFilterOptsFromCollection(tf)
+	var view *ProjectView
+	if tf.ProjectViewID != 0 {
+		view, err = GetProjectViewByIDAndProject(s, tf.ProjectViewID, tf.ProjectID)
+		if err != nil {
+			return nil, 0, 0, err
+		}
+
+		if view.Filter != "" {
+			if tf.Filter != "" {
+				tf.Filter = "(" + tf.Filter + ") && (" + view.Filter + ")"
+			} else {
+				tf.Filter = view.Filter
+			}
+		}
+	}
+
+	opts, err := getTaskFilterOptsFromCollection(tf, view)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 
-	taskopts.search = search
-	taskopts.page = page
-	taskopts.perPage = perPage
+	opts.search = search
+	opts.page = page
+	opts.perPage = perPage
+
+	if view != nil {
+		opts.sortby = append(opts.sortby, &sortParam{
+			projectViewID: view.ID,
+			sortBy:        taskPropertyPosition,
+			orderBy:       orderAscending,
+		})
+	}
 
 	shareAuth, is := a.(*LinkSharing)
 	if is {
@@ -184,38 +262,13 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		if err != nil {
 			return nil, 0, 0, err
 		}
-		return getTasksForProjects(s, []*Project{project}, a, taskopts)
+		return getTaskOrTasksInBuckets(s, a, []*Project{project}, view, opts)
 	}
 
-	// If the project ID is not set, we get all tasks for the user.
-	// This allows to use this function in Task.ReadAll with a possibility to deprecate the latter at some point.
-	var projects []*Project
-	if tf.ProjectID == 0 {
-		projects, _, _, err = getRawProjectsForUser(
-			s,
-			&projectOptions{
-				user: &user.User{ID: a.GetID()},
-				page: -1,
-			},
-		)
-		if err != nil {
-			return nil, 0, 0, err
-		}
-	} else {
-		// Check the project exists and the user has access on it
-		project := &Project{ID: tf.ProjectID}
-		canRead, _, err := project.CanRead(s, a)
-		if err != nil {
-			return nil, 0, 0, err
-		}
-		if !canRead {
-			return nil, 0, 0, ErrUserDoesNotHaveAccessToProject{
-				ProjectID: tf.ProjectID,
-				UserID:    a.GetID(),
-			}
-		}
-		projects = []*Project{{ID: tf.ProjectID}}
+	projects, err := getRelevantProjectsFromCollection(s, a, tf)
+	if err != nil {
+		return nil, 0, 0, err
 	}
 
-	return getTasksForProjects(s, projects, a, taskopts)
+	return getTaskOrTasksInBuckets(s, a, projects, view, opts)
 }

@@ -355,6 +355,7 @@ func registerAPIRoutes(a *echo.Group) {
 			return &models.TaskCollection{}
 		},
 	}
+	a.GET("/projects/:project/views/:view/tasks", taskCollectionHandler.ReadAllWeb)
 	a.GET("/projects/:project/tasks", taskCollectionHandler.ReadAllWeb)
 
 	kanbanBucketHandler := &handler.WebHandler{
@@ -362,10 +363,10 @@ func registerAPIRoutes(a *echo.Group) {
 			return &models.Bucket{}
 		},
 	}
-	a.GET("/projects/:project/buckets", kanbanBucketHandler.ReadAllWeb)
-	a.PUT("/projects/:project/buckets", kanbanBucketHandler.CreateWeb)
-	a.POST("/projects/:project/buckets/:bucket", kanbanBucketHandler.UpdateWeb)
-	a.DELETE("/projects/:project/buckets/:bucket", kanbanBucketHandler.DeleteWeb)
+	a.GET("/projects/:project/views/:view/buckets", kanbanBucketHandler.ReadAllWeb)
+	a.PUT("/projects/:project/views/:view/buckets", kanbanBucketHandler.CreateWeb)
+	a.POST("/projects/:project/views/:view/buckets/:bucket", kanbanBucketHandler.UpdateWeb)
+	a.DELETE("/projects/:project/views/:view/buckets/:bucket", kanbanBucketHandler.DeleteWeb)
 
 	projectDuplicateHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
@@ -384,6 +385,13 @@ func registerAPIRoutes(a *echo.Group) {
 	a.GET("/tasks/all", taskCollectionHandler.ReadAllWeb)
 	a.DELETE("/tasks/:projecttask", taskHandler.DeleteWeb)
 	a.POST("/tasks/:projecttask", taskHandler.UpdateWeb)
+
+	taskPositionHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
+			return &models.TaskPosition{}
+		},
+	}
+	a.POST("/tasks/:task/position", taskPositionHandler.UpdateWeb)
 
 	bulkTaskHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
@@ -590,6 +598,7 @@ func registerAPIRoutes(a *echo.Group) {
 		a.GET("/webhooks/events", apiv1.GetAvailableWebhookEvents)
 	}
 
+	// Reactions
 	reactionProvider := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
 			return &models.Reaction{}
@@ -598,6 +607,19 @@ func registerAPIRoutes(a *echo.Group) {
 	a.GET("/:entitykind/:entityid/reactions", reactionProvider.ReadAllWeb)
 	a.POST("/:entitykind/:entityid/reactions/delete", reactionProvider.DeleteWeb)
 	a.PUT("/:entitykind/:entityid/reactions", reactionProvider.CreateWeb)
+
+	// Project views
+	projectViewProvider := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
+			return &models.ProjectView{}
+		},
+	}
+
+	a.GET("/projects/:project/views", projectViewProvider.ReadAllWeb)
+	a.GET("/projects/:project/views/:view", projectViewProvider.ReadOneWeb)
+	a.PUT("/projects/:project/views", projectViewProvider.CreateWeb)
+	a.DELETE("/projects/:project/views/:view", projectViewProvider.DeleteWeb)
+	a.POST("/projects/:project/views/:view", projectViewProvider.UpdateWeb)
 }
 
 func registerMigrations(m *echo.Group) {

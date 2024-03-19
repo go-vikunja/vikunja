@@ -28,7 +28,7 @@ import {useKanbanStore} from '@/stores/kanban'
 import {useBaseStore} from '@/stores/base'
 import ProjectUserService from '@/services/projectUsers'
 import {useAuthStore} from '@/stores/auth'
-import TaskCollectionService, {type TaskFilterParams} from '@/services/taskCollection'
+import {type TaskFilterParams} from '@/services/taskCollection'
 import {getRandomColorHex} from '@/helpers/color/randomColor'
 
 interface MatchedAssignee extends IUser {
@@ -124,21 +124,23 @@ export const useTaskStore = defineStore('task', () => {
 		})
 	}
 
-	async function loadTasks(params: TaskFilterParams, projectId: IProject['id'] | null = null) {
+	async function loadTasks(
+		params: TaskFilterParams, 
+		projectId: IProject['id'] | null = null,
+	) {
 		
 		if (!params.filter_timezone || params.filter_timezone === '') {
 			params.filter_timezone = authStore.settings.timezone
 		}
+		
+		if (projectId !== null) {
+			params.filter = 'project = '+projectId+' && (' + params.filter +')'
+		}
 
 		const cancel = setModuleLoading(setIsLoading)
 		try {
-			if (projectId === null) {
-				const taskService = new TaskService()
-				tasks.value = await taskService.getAll({}, params)
-			} else {
-				const taskCollectionService = new TaskCollectionService()
-				tasks.value = await taskCollectionService.getAll({projectId}, params)
-			}
+			const taskService = new TaskService()
+			tasks.value = await taskService.getAll({}, params)
 			baseStore.setHasTasks(tasks.value.length > 0)
 			return tasks.value
 		} finally {

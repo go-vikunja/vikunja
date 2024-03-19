@@ -6,10 +6,10 @@ import type { IBucket } from '@/modelTypes/IBucket'
 export default class BucketService extends AbstractService<IBucket> {
 	constructor() {
 		super({
-			getAll: '/projects/{projectId}/buckets',
-			create: '/projects/{projectId}/buckets',
-			update: '/projects/{projectId}/buckets/{id}',
-			delete: '/projects/{projectId}/buckets/{id}',
+			getAll: '/projects/{projectId}/views/{projectViewId}/buckets',
+			create: '/projects/{projectId}/views/{projectViewId}/buckets',
+			update: '/projects/{projectId}/views/{projectViewId}/buckets/{id}',
+			delete: '/projects/{projectId}/views/{projectViewId}/buckets/{id}',
 		})
 	}
 

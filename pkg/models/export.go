@@ -158,7 +158,7 @@ func exportProjectsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (task
 	tasks, _, _, err := getTasksForProjects(s, rawProjects, u, &taskSearchOptions{
 		page:    0,
 		perPage: -1,
-	})
+	}, nil)
 	if err != nil {
 		return taskIDs, err
 	}

@@ -3,8 +3,6 @@ import {acceptHMRUpdate, defineStore} from 'pinia'
 import {klona} from 'klona/lite'
 
 import {findById, findIndexById} from '@/helpers/utils'
-import {i18n} from '@/i18n'
-import {success} from '@/message'
 
 import BucketService from '@/services/bucket'
 import TaskCollectionService, {type TaskFilterParams} from '@/services/taskCollection'
@@ -15,6 +13,7 @@ import type {ITask} from '@/modelTypes/ITask'
 import type {IProject} from '@/modelTypes/IProject'
 import type {IBucket} from '@/modelTypes/IBucket'
 import {useAuthStore} from '@/stores/auth'
+import type {IProjectView} from '@/modelTypes/IProjectView'
 
 const TASKS_PER_BUCKET = 25
 
@@ -176,10 +175,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 		buckets.value[bucketIndex] = newBucket
 	}
 
-	function addTasksToBucket({tasks, bucketId}: {
-		tasks: ITask[];
-		bucketId: IBucket['id'];
-	}) {
+	function addTasksToBucket(tasks: ITask[], bucketId: IBucket['id']) {
 		const bucketIndex = findIndexById(buckets.value, bucketId)
 		const oldBucket = buckets.value[bucketIndex]
 		const newBucket = {
@@ -225,15 +221,15 @@ export const useKanbanStore = defineStore('kanban', () => {
 		allTasksLoadedForBucket.value[bucketId] = true
 	}
 
-	async function loadBucketsForProject({projectId, params}: { projectId: IProject['id'], params }) {
+	async function loadBucketsForProject(projectId: IProject['id'], viewId: IProjectView['id'], params) {
 		const cancel = setModuleLoading(setIsLoading)
 
 		// Clear everything to prevent having old buckets in the project if loading the buckets from this project takes a few moments
 		setBuckets([])
 
-		const bucketService = new BucketService()
+		const taskCollectionService = new TaskCollectionService()
 		try {
-			const newBuckets = await bucketService.getAll({projectId}, {
+			const newBuckets = await taskCollectionService.getAll({projectId, viewId}, {
 				...params,
 				per_page: TASKS_PER_BUCKET,
 			})
@@ -247,6 +243,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 
 	async function loadNextTasksForBucket(
 		projectId: IProject['id'],
+		viewId: IProjectView['id'],
 		ps: TaskFilterParams,
 		bucketId: IBucket['id'],
 	) {
@@ -267,7 +264,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 
 		const params: TaskFilterParams = JSON.parse(JSON.stringify(ps))
 
-		params.sort_by = ['kanban_position']
+		params.sort_by = ['position']
 		params.order_by = ['asc']
 		params.filter = `${params.filter === '' ? '' : params.filter + ' && '}bucket_id = ${bucketId}`
 		params.filter_timezone = authStore.settings.timezone
@@ -275,8 +272,8 @@ export const useKanbanStore = defineStore('kanban', () => {
 
 		const taskService = new TaskCollectionService()
 		try {
-			const tasks = await taskService.getAll({projectId}, params, page)
-			addTasksToBucket({tasks, bucketId: bucketId})
+			const tasks = await taskService.getAll({projectId, viewId}, params, page)
+			addTasksToBucket(tasks, bucketId)
 			setTasksLoadedForBucketPage({bucketId, page})
 			if (taskService.totalPages <= page) {
 				setAllTasksLoadedForBucket(bucketId)
@@ -309,7 +306,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 			const response = await bucketService.delete(bucket)
 			removeBucket(bucket)
 			// We reload all buckets because tasks are being moved from the deleted bucket
-			loadBucketsForProject({projectId: bucket.projectId, params})
+			loadBucketsForProject(bucket.projectId, bucket.projectViewId, params)
 			return response
 		} finally {
 			cancel()
@@ -344,18 +341,6 @@ export const useKanbanStore = defineStore('kanban', () => {
 		}
 	}
 
-	async function updateBucketTitle({id, title}: { id: IBucket['id'], title: IBucket['title'] }) {
-		const bucket = findById(buckets.value, id)
-
-		if (bucket?.title === title) {
-			// bucket title has not changed
-			return
-		}
-
-		await updateBucket({id, title})
-		success({message: i18n.global.t('project.kanban.bucketTitleSavedSuccess')})
-	}
-
 	return {
 		buckets,
 		isLoading: readonly(isLoading),
@@ -374,7 +359,6 @@ export const useKanbanStore = defineStore('kanban', () => {
 		createBucket,
 		deleteBucket,
 		updateBucket,
-		updateBucketTitle,
 	}
 })
 

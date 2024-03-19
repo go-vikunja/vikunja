@@ -173,11 +173,11 @@
 							<div class="select">
 								<select v-model="selectedView[s.id]">
 									<option
-										v-for="(title, key) in availableViews"
-										:key="key"
-										:value="key"
+										v-for="(view) in availableViews"
+										:key="view.id"
+										:value="view.id"
 									>
-										{{ title }}
+										{{ view.title }}
 									</option>
 								</select>
 							</div>
@@ -230,9 +230,9 @@ import LinkShareService from '@/services/linkShare'
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 import {success} from '@/message'
 import {getDisplayName} from '@/models/user'
-import type {ProjectView} from '@/types/ProjectView'
-import {PROJECT_VIEWS} from '@/types/ProjectView'
 import {useConfigStore} from '@/stores/config'
+import {useProjectStore} from '@/stores/projects'
+import type {IProjectView} from '@/modelTypes/IProjectView'
 
 const props = defineProps({
 	projectId: {
@@ -252,17 +252,13 @@ const showDeleteModal = ref(false)
 const linkIdToDelete = ref(0)
 const showNewForm = ref(false)
 
-type SelectedViewMapper = Record<IProject['id'], ProjectView>
+type SelectedViewMapper = Record<IProject['id'], IProjectView['id']>
 
 const selectedView = ref<SelectedViewMapper>({})
 
-const availableViews = computed<Record<ProjectView, string>>(() => ({
-	list: t('project.list.title'),
-	gantt: t('project.gantt.title'),
-	table: t('project.table.title'),
-	kanban: t('project.kanban.title'),
-}))
+const projectStore = useProjectStore()
 
+const availableViews = computed<IProjectView[]>(() => projectStore.projects[props.projectId]?.views || [])
 const copy = useCopyToClipboard()
 watch(
 	() => props.projectId,
@@ -281,7 +277,7 @@ async function load(projectId: IProject['id']) {
 
 	const links = await linkShareService.getAll({projectId})
 	links.forEach((l: ILinkShare) => {
-		selectedView.value[l.id] = 'list'
+		selectedView.value[l.id] = availableViews.value[0].id
 	})
 	linkShares.value = links
 }
@@ -315,8 +311,8 @@ async function remove(projectId: IProject['id']) {
 	}
 }
 
-function getShareLink(hash: string, view: ProjectView = PROJECT_VIEWS.LIST) {
-	return frontendUrl.value + 'share/' + hash + '/auth?view=' + view
+function getShareLink(hash: string, viewId: IProjectView['id']) {
+	return frontendUrl.value + 'share/' + hash + '/auth?view=' + viewId
 }
 </script>
 

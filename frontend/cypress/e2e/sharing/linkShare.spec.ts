@@ -1,9 +1,9 @@
 import {LinkShareFactory} from '../../factories/link_sharing'
-import {ProjectFactory} from '../../factories/project'
 import {TaskFactory} from '../../factories/task'
+import {createProjects} from '../project/prepareProjects'
 
 function prepareLinkShare() {
-	const projects = ProjectFactory.create(1)
+	const projects = createProjects()
 	const tasks = TaskFactory.create(10, {
 		project_id: projects[0].id
 	})
@@ -32,13 +32,13 @@ describe('Link shares', () => {
 		cy.get('.tasks')
 			.should('contain', tasks[0].title)
 		
-		cy.url().should('contain', `/projects/${project.id}/list#share-auth-token=${share.hash}`)
+		cy.url().should('contain', `/projects/${project.id}/1#share-auth-token=${share.hash}`)
 	})
 
 	it('Should work when directly viewing a project with share hash present', () => {
 		const {share, project, tasks} = prepareLinkShare()
 
-		cy.visit(`/projects/${project.id}/list#share-auth-token=${share.hash}`)
+		cy.visit(`/projects/${project.id}/1#share-auth-token=${share.hash}`)
 
 		cy.get('h1.title')
 			.should('contain', project.title)
