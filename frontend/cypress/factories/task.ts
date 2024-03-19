@@ -14,7 +14,6 @@ export class TaskFactory extends Factory {
 			project_id: 1,
 			created_by_id: 1,
 			index: '{increment}',
-			position: '{increment}',
 			created: now.toISOString(),
 			updated: now.toISOString()
 		}

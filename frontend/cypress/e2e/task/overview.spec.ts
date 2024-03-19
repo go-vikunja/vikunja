@@ -5,11 +5,13 @@ import {seed} from '../../support/seed'
 import {TaskFactory} from '../../factories/task'
 import {BucketFactory} from '../../factories/bucket'
 import {updateUserSettings} from '../../support/updateUserSettings'
+import {createDefaultViews} from "../project/prepareProjects";
 
 function seedTasks(numberOfTasks = 50, startDueDate = new Date()) {
 	const project = ProjectFactory.create()[0]
+	const views = createDefaultViews(project.id)
 	BucketFactory.create(1, {
-		project_id: project.id,
+		project_view_id: views[3].id,
 	})
 	const tasks = []
 	let dueDate = startDueDate

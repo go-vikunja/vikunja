@@ -12,6 +12,7 @@ import {BucketFactory} from '../../factories/bucket'
 
 import {TaskAttachmentFactory} from '../../factories/task_attachments'
 import {TaskReminderFactory} from '../../factories/task_reminders'
+import {createDefaultViews} from "../project/prepareProjects";
 
 function addLabelToTaskAndVerify(labelTitle: string) {
 	cy.get('.task-view .action-buttons .button')
@@ -53,8 +54,9 @@ describe('Task', () => {
 	beforeEach(() => {
 		// UserFactory.create(1)
 		projects = ProjectFactory.create(1)
+		const views = createDefaultViews(projects[0].id)
 		buckets = BucketFactory.create(1, {
-			project_id: projects[0].id,
+			project_view_id: views[3].id,
 		})
 		TaskFactory.truncate()
 		UserProjectFactory.truncate()
@@ -314,8 +316,9 @@ describe('Task', () => {
 
 		it('Can move a task to another project', () => {
 			const projects = ProjectFactory.create(2)
+			const views = createDefaultViews(projects[0].id)
 			BucketFactory.create(2, {
-				project_id: '{increment}',
+				project_view_id: views[3].id,
 			})
 			const tasks = TaskFactory.create(1, {
 				id: 1,

@@ -11,7 +11,7 @@ describe('Project View Gantt', () => {
 
 	it('Hides tasks with no dates', () => {
 		const tasks = TaskFactory.create(1)
-		cy.visit('/projects/1/gantt')
+		cy.visit('/projects/1/2')
 
 		cy.get('.g-gantt-rows-container')
 			.should('not.contain', tasks[0].title)
@@ -25,7 +25,7 @@ describe('Project View Gantt', () => {
 		nextMonth.setDate(1)
 		nextMonth.setMonth(9)
 
-		cy.visit('/projects/1/gantt')
+		cy.visit('/projects/1/2')
 
 		cy.get('.g-timeunits-container')
 			.should('contain', format(now, 'MMMM'))
@@ -38,7 +38,7 @@ describe('Project View Gantt', () => {
 			start_date: now.toISOString(),
 			end_date: new Date(new Date(now).setDate(now.getDate() + 4)).toISOString(),
 		})
-		cy.visit('/projects/1/gantt')
+		cy.visit('/projects/1/2')
 
 		cy.get('.g-gantt-rows-container')
 			.should('not.be.empty')
@@ -50,7 +50,7 @@ describe('Project View Gantt', () => {
 			start_date: null,
 			end_date: null,
 		})
-		cy.visit('/projects/1/gantt')
+		cy.visit('/projects/1/2')
 
 		cy.get('.gantt-options .fancycheckbox')
 			.contains('Show tasks which don\'t have dates set')
@@ -69,7 +69,7 @@ describe('Project View Gantt', () => {
 			start_date: now.toISOString(),
 			end_date: new Date(new Date(now).setDate(now.getDate() + 4)).toISOString(),
 		})
-		cy.visit('/projects/1/gantt')
+		cy.visit('/projects/1/2')
 
 		cy.get('.g-gantt-rows-container .g-gantt-row .g-gantt-row-bars-container div .g-gantt-bar')
 			.first()
@@ -83,7 +83,7 @@ describe('Project View Gantt', () => {
 		const now = Date.UTC(2022, 10, 9)
 		cy.clock(now, ['Date'])
 
-		cy.visit('/projects/1/gantt')
+		cy.visit('/projects/1/2')
 
 		cy.get('.project-gantt .gantt-options .field .control input.input.form-control')
 			.click()
@@ -99,7 +99,7 @@ describe('Project View Gantt', () => {
 	})
 
 	it('Should change the date range based on date query parameters', () => {
-		cy.visit('/projects/1/gantt?dateFrom=2022-09-25&dateTo=2022-11-05')
+		cy.visit('/projects/1/2?dateFrom=2022-09-25&dateTo=2022-11-05')
 
 		cy.get('.g-timeunits-container')
 			.should('contain', 'September 2022')
@@ -115,7 +115,7 @@ describe('Project View Gantt', () => {
 			start_date: formatISO(now),
 			end_date: formatISO(now.setDate(now.getDate() + 4)),
 		})
-		cy.visit('/projects/1/gantt')
+		cy.visit('/projects/1/2')
 
 		cy.get('.gantt-container .g-gantt-chart .g-gantt-row-bars-container .g-gantt-bar')
 			.dblclick()
