@@ -920,41 +920,6 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 	// Old task has the stored reminders
 	ot.Reminders = reminders
 
-	views, err := getViewsForProject(s, t.ProjectID)
-	if err != nil {
-		return err
-	}
-
-	buckets := make(map[int64]*Bucket)
-	err = s.In("project_view_id",
-		builder.Select("id").
-			From("project_views").
-			Where(builder.Eq{"project_id": t.ProjectID}),
-	).
-		Find(&buckets)
-	if err != nil {
-		return err
-	}
-
-	for _, view := range views {
-		// Only update the bucket when the current view
-		var targetBucketID int64
-		if t.BucketID != 0 {
-			bucket, has := buckets[t.BucketID]
-			if !has {
-				return ErrBucketDoesNotExist{BucketID: t.BucketID}
-			}
-			if has && bucket.ProjectViewID == view.ID {
-				targetBucketID = t.BucketID
-			}
-		}
-
-		err = setTaskBucket(s, t, &ot, view, targetBucketID)
-		if err != nil {
-			return err
-		}
-	}
-
 	// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
 	updateDone(&ot, t)
 
@@ -993,7 +958,43 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 		if err != nil {
 			return err
 		}
+		t.BucketID = 0
 		colsToUpdate = append(colsToUpdate, "index")
+	}
+
+	views, err := getViewsForProject(s, t.ProjectID)
+	if err != nil {
+		return err
+	}
+
+	buckets := make(map[int64]*Bucket)
+	err = s.In("project_view_id",
+		builder.Select("id").
+			From("project_views").
+			Where(builder.Eq{"project_id": t.ProjectID}),
+	).
+		Find(&buckets)
+	if err != nil {
+		return err
+	}
+
+	for _, view := range views {
+		// Only update the bucket when the current view
+		var targetBucketID int64
+		if t.BucketID != 0 {
+			bucket, has := buckets[t.BucketID]
+			if !has {
+				return ErrBucketDoesNotExist{BucketID: t.BucketID}
+			}
+			if has && bucket.ProjectViewID == view.ID {
+				targetBucketID = t.BucketID
+			}
+		}
+
+		err = setTaskBucket(s, t, &ot, view, targetBucketID)
+		if err != nil {
+			return err
+		}
 	}
 
 	// If a task attachment is being set as cover image, check if the attachment actually belongs to the task
