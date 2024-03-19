@@ -5,6 +5,7 @@ import {TaskFactory} from '../../factories/task'
 import {UserFactory} from '../../factories/user'
 import {ProjectFactory} from '../../factories/project'
 import {prepareProjects} from './prepareProjects'
+import {BucketFactory} from '../../factories/bucket'
 
 describe('Project View List', () => {
 	createFakeUserAndLogin()
@@ -23,7 +24,11 @@ describe('Project View List', () => {
 			.should('exist')
 	})
 	
-	it('Should create a new task', () => {
+	it.only('Should create a new task', () => {
+		BucketFactory.create(2, {
+			project_view_id: 1,
+		})
+		
 		const newTaskTitle = 'New task'
 		
 		cy.visit('/projects/1')
