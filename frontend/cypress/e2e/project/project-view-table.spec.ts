@@ -1,13 +1,15 @@
 import {createFakeUserAndLogin} from '../../support/authenticateUser'
 
 import {TaskFactory} from '../../factories/task'
+import {prepareProjects} from './prepareProjects'
 
 describe('Project View Table', () => {
 	createFakeUserAndLogin()
+	prepareProjects()
 
 	it('Should show a table with tasks', () => {
 		const tasks = TaskFactory.create(1)
-		cy.visit('/projects/1/table')
+		cy.visit('/projects/1/3')
 
 		cy.get('.project-table table.table')
 			.should('exist')
@@ -17,7 +19,7 @@ describe('Project View Table', () => {
 
 	it('Should have working column switches', () => {
 		TaskFactory.create(1)
-		cy.visit('/projects/1/table')
+		cy.visit('/projects/1/3')
 
 		cy.get('.project-table .filter-container .items .button')
 			.contains('Columns')
@@ -42,7 +44,7 @@ describe('Project View Table', () => {
 			id: '{increment}',
 			project_id: 1,
 		})
-		cy.visit('/projects/1/table')
+		cy.visit('/projects/1/3')
 
 		cy.get('.project-table table.table')
 			.contains(tasks[0].title)
