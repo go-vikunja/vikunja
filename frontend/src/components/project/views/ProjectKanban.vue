@@ -370,7 +370,7 @@ const params = ref<TaskFilterParams>({
 const getTaskDraggableTaskComponentData = computed(() => (bucket: IBucket) => {
 	return {
 		ref: (el: HTMLElement) => setTaskContainerRef(bucket.id, el),
-		onScroll: (event: Event) => handleTaskContainerScroll(bucket.id, bucket.projectId, event.target as HTMLElement),
+		onScroll: (event: Event) => handleTaskContainerScroll(bucket.id, event.target as HTMLElement),
 		type: 'transition-group',
 		name: !drag.value ? 'move-card' : null,
 		class: [
@@ -420,7 +420,7 @@ function setTaskContainerRef(id: IBucket['id'], el: HTMLElement) {
 	taskContainerRefs.value[id] = el
 }
 
-function handleTaskContainerScroll(id: IBucket['id'], projectId: IProject['id'], el: HTMLElement) {
+function handleTaskContainerScroll(id: IBucket['id'], el: HTMLElement) {
 	if (!el) {
 		return
 	}

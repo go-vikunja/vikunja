@@ -175,10 +175,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 		buckets.value[bucketIndex] = newBucket
 	}
 
-	function addTasksToBucket({tasks, bucketId}: {
-		tasks: ITask[];
-		bucketId: IBucket['id'];
-	}) {
+	function addTasksToBucket(tasks: ITask[], bucketId: IBucket['id']) {
 		const bucketIndex = findIndexById(buckets.value, bucketId)
 		const oldBucket = buckets.value[bucketIndex]
 		const newBucket = {
@@ -267,7 +264,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 
 		const params: TaskFilterParams = JSON.parse(JSON.stringify(ps))
 
-		params.sort_by = ['kanban_position']
+		params.sort_by = ['position']
 		params.order_by = ['asc']
 		params.filter = `${params.filter === '' ? '' : params.filter + ' && '}bucket_id = ${bucketId}`
 		params.filter_timezone = authStore.settings.timezone
@@ -276,7 +273,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 		const taskService = new TaskCollectionService()
 		try {
 			const tasks = await taskService.getAll({projectId, viewId}, params, page)
-			addTasksToBucket({tasks, bucketId: bucketId})
+			addTasksToBucket(tasks, bucketId)
 			setTasksLoadedForBucketPage({bucketId, page})
 			if (taskService.totalPages <= page) {
 				setAllTasksLoadedForBucket(bucketId)
