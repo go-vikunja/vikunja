@@ -70,8 +70,12 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 				"view_kind":                 ProjectViewKindKanban,
 				"bucket_configuration_mode": BucketConfigurationModeManual,
 			}, false)
+
+			kanbanView := &ProjectView{}
+			_, err = s.Where("project_id = ? AND view_kind = ?", project.ID, ProjectViewKindKanban).Get(kanbanView)
+			require.NoError(t, err)
 			db.AssertExists(t, "buckets", map[string]interface{}{
-				"project_view_id": project.ID * 4, // FIXME: Dirty hack to get the project view id
+				"project_view_id": kanbanView.ID,
 			}, false)
 		})
 		t.Run("nonexistant parent project", func(t *testing.T) {
