@@ -63,7 +63,7 @@ describe('Task', () => {
 	})
 
 	it('Should be created new', () => {
-		cy.visit('/projects/1/list')
+		cy.visit('/projects/1/1')
 		cy.get('.input[placeholder="Add a new task…"')
 			.type('New Task')
 		cy.get('.button')
@@ -77,7 +77,7 @@ describe('Task', () => {
 	it('Inserts new tasks at the top of the project', () => {
 		TaskFactory.create(1)
 
-		cy.visit('/projects/1/list')
+		cy.visit('/projects/1/1')
 		cy.get('.project-is-empty-notice')
 			.should('not.exist')
 		cy.get('.input[placeholder="Add a new task…"')
@@ -95,7 +95,7 @@ describe('Task', () => {
 	it('Marks a task as done', () => {
 		TaskFactory.create(1)
 
-		cy.visit('/projects/1/list')
+		cy.visit('/projects/1/1')
 		cy.get('.tasks .task .fancycheckbox')
 			.first()
 			.click()
@@ -106,7 +106,7 @@ describe('Task', () => {
 	it('Can add a task to favorites', () => {
 		TaskFactory.create(1)
 
-		cy.visit('/projects/1/list')
+		cy.visit('/projects/1/1')
 		cy.get('.tasks .task .favorite')
 			.first()
 			.click()
@@ -120,7 +120,7 @@ describe('Task', () => {
 			description: 'Lorem Ipsum',
 		})
 
-		cy.visit('/projects/1/list')
+		cy.visit('/projects/1/1')
 		cy.wait('@loadTasks')
 
 		cy.get('.tasks .task .project-task-icon')
@@ -133,7 +133,7 @@ describe('Task', () => {
 			description: '',
 		})
 
-		cy.visit('/projects/1/list')
+		cy.visit('/projects/1/1')
 		cy.wait('@loadTasks')
 
 		cy.get('.tasks .task .project-task-icon')
@@ -146,7 +146,7 @@ describe('Task', () => {
 			description: '<p></p>',
 		})
 
-		cy.visit('/projects/1/list')
+		cy.visit('/projects/1/1')
 		cy.wait('@loadTasks')
 
 		cy.get('.tasks .task .project-task-icon')
@@ -472,7 +472,7 @@ describe('Task', () => {
 			const labels = LabelFactory.create(1)
 			LabelTaskFactory.truncate()
 
-			cy.visit(`/projects/${projects[0].id}/kanban`)
+			cy.visit(`/projects/${projects[0].id}/4`)
 
 			cy.get('.bucket .task')
 				.contains(tasks[0].title)
@@ -839,7 +839,7 @@ describe('Task', () => {
 			const labels = LabelFactory.create(1)
 			LabelTaskFactory.truncate()
 
-			cy.visit(`/projects/${projects[0].id}/kanban`)
+			cy.visit(`/projects/${projects[0].id}/4`)
 
 			cy.get('.bucket .task')
 				.contains(tasks[0].title)
