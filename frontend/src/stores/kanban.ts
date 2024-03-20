@@ -30,15 +30,6 @@ function getTaskIndicesById(buckets: IBucket[], taskId: ITask['id']) {
 	}
 }
 
-const addTaskToBucketAndSort = (buckets: IBucket[], task: ITask) => {
-	const bucketIndex = findIndexById(buckets, task.bucketId)
-	if (typeof buckets[bucketIndex] === 'undefined') {
-		return
-	}
-	buckets[bucketIndex].tasks.push(task)
-	buckets[bucketIndex].tasks.sort((a, b) => a.kanbanPosition > b.kanbanPosition ? 1 : -1)
-}
-
 /**
  * This store is intended to hold the currently active kanban view.
  * It should hold only the current buckets.
