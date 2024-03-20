@@ -467,7 +467,6 @@ describe('Task', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
 				project_id: projects[0].id,
-				bucket_id: buckets[0].id,
 			})
 			const labels = LabelFactory.create(1)
 			LabelTaskFactory.truncate()
@@ -834,7 +833,6 @@ describe('Task', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
 				project_id: projects[0].id,
-				bucket_id: buckets[0].id,
 			})
 			const labels = LabelFactory.create(1)
 			LabelTaskFactory.truncate()

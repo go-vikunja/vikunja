@@ -20,7 +20,6 @@ function createSingleTaskInBucket(count = 1, attrs = {}) {
 	})
 	const tasks = TaskFactory.create(count, {
 		project_id: projects[0].id,
-		bucket_id: buckets[0].id,
 		...attrs,
 	})
 	TaskBucketFactory.create(1, {
