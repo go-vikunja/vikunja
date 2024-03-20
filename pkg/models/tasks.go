@@ -114,7 +114,7 @@ type Task struct {
 
 	// The bucket id. Will only be populated when the task is accessed via a view with buckets.
 	// Can be used to move a task between buckets. In that case, the new bucket must be in the same view as the old one.
-	BucketID int64 `xorm:"<-" json:"bucket_id"`
+	BucketID int64 `xorm:"-" json:"bucket_id"`
 
 	// The position of the task - any task project can be sorted as usual by this parameter.
 	// When accessing tasks via views with buckets, this is primarily used to sort them based on a range.
