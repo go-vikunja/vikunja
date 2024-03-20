@@ -341,7 +341,7 @@
       "title": "看板",
       "limit": "限制: {limit}",
       "noLimit": "未设置",
-      "doneBucket": "已完成的桶数",
+      "doneBucket": "已完成存储桶",
       "doneBucketHint": "移入此存储桶的所有任务将自动标记为已完成。",
       "doneBucketHintExtended": "所有移入已完成存储桶的任务都将自动标记为已完成。 从其他位置标记为已完成的任务也将被移动。",
       "doneBucketSavedSuccess": "已完成存储桶已保存成功。",
