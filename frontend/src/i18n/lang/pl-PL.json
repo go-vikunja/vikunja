@@ -57,11 +57,11 @@
       "logout": "Wyloguj",
       "emailInvalid": "Proszę podać poprawny adres e-mail.",
       "usernameRequired": "Proszę podać nazwę użytkownika.",
-      "usernameMustNotContainSpace": "The username must not contain spaces.",
-      "usernameMustNotLookLikeUrl": "The username must not look like a URL.",
+      "usernameMustNotContainSpace": "Nazwa użytkownika nie może zawierać spacji.",
+      "usernameMustNotLookLikeUrl": "Nazwa użytkownika nie może wyglądać jak adres URL.",
       "passwordRequired": "Proszę podać hasło.",
-      "passwordNotMin": "Password must have at least 8 characters.",
-      "passwordNotMax": "Password must have at most 250 characters.",
+      "passwordNotMin": "Hasło musi zawierać co najmniej 8 znaków.",
+      "passwordNotMax": "Hasło musi zawierać co najwyżej 250 znaków.",
       "showPassword": "Pokaż hasło",
       "hidePassword": "Ukryj hasło",
       "noAccountYet": "Nie masz jeszcze konta?",
@@ -248,7 +248,7 @@
       "text2": "Dotyczy to wszystkich zadań i tego NIE DA SIĘ COFNĄĆ!",
       "success": "Projekt został pomyślnie usunięty.",
       "tasksToDelete": "To nieodwracalnie usunie około {count} zadań.",
-      "tasksAndChildProjectsToDelete": "This will irrevocably remove approx. {tasks} tasks and {projects} projects.",
+      "tasksAndChildProjectsToDelete": "To nieodwracalnie usunie ok. {tasks} zadań i {projects} projektów.",
       "noTasksToDelete": "Ten projekt nie zawiera żadnych zadań, więc można go bezpiecznie usunąć."
     },
     "duplicate": {
@@ -386,7 +386,7 @@
   "filters": {
     "title": "Filtry",
     "clear": "Wyczyść filtry",
-    "showResults": "Show results",
+    "showResults": "Wyświetl wyniki",
     "attributes": {
       "title": "Tytuł",
       "titlePlaceholder": "Tu wpisz tytuł filtra stałego…",
@@ -419,48 +419,48 @@
       "success": "Filtr został pomyślnie zapisany."
     },
     "query": {
-      "title": "Query",
-      "placeholder": "Type a search or filter query…",
+      "title": "Zapytanie",
+      "placeholder": "Wpisz zapytanie wyszukiwania lub filtruj…",
       "help": {
-        "intro": "To filter tasks, you can use a query syntax similar to SQL. The available fields for filtering include:",
-        "link": "How does this work?",
-        "canUseDatemath": "You can date math to set relative dates. Click on the date value in a query to find out more.",
+        "intro": "Aby filtrować zadania, możesz użyć składni zapytań podobnej do SQL. Pola dostępne do filtrowania to:",
+        "link": "Jak to działa?",
+        "canUseDatemath": "Możesz użyć matematyki dat, aby ustawić daty względne. Kliknij wartość daty w zapytaniu, aby dowiedzieć się więcej.",
         "fields": {
-          "done": "Whether the task is completed or not",
-          "priority": "The priority level of the task (1-5)",
-          "percentDone": "The percentage of completion for the task (0-100)",
-          "dueDate": "The due date of the task",
-          "startDate": "The start date of the task",
-          "endDate": "The end date of the task",
-          "doneAt": "The date and time when the task was completed",
-          "assignees": "The assignees of the task",
-          "labels": "The labels associated with the task",
-          "project": "The project the task belongs to (only available for saved filters, not on a project level)"
+          "done": "Czy zadanie zostało zakończone, czy nie",
+          "priority": "Priorytet zadania (1-5)",
+          "percentDone": "Procent ukończenia zadania (0-100)",
+          "dueDate": "Termin wykonania zadania",
+          "startDate": "Data rozpoczęcia zadania",
+          "endDate": "Data zakończenia zadania",
+          "doneAt": "Data i czas ukończenia zadania",
+          "assignees": "Osoby przypisane do zadania",
+          "labels": "Etykiety przypisane do zadania",
+          "project": "Projekt, do którego należy zadanie (dostępne tylko dla zapisanych filtrów, nie na poziomie projektu)"
         },
         "operators": {
-          "intro": "The available operators for filtering include:",
-          "notEqual": "Not equal to",
-          "equal": "Equal to",
-          "greaterThan": "Greater than",
-          "greaterThanOrEqual": "Greater than or equal to",
-          "lessThan": "Less than",
-          "lessThanOrEqual": "Less than or equal to",
-          "like": "Matches a pattern (using wildcard %)",
-          "in": "Matches any value in a comma-seperated list of values"
+          "intro": "Dostępne operatory do filtrowania to:",
+          "notEqual": "Nie równa się",
+          "equal": "Równa się",
+          "greaterThan": "Większe niż",
+          "greaterThanOrEqual": "Większe niż lub równe",
+          "lessThan": "Mniejsze niż",
+          "lessThanOrEqual": "Mniejsze niż lub równe",
+          "like": "Pasuje do wzorca (używając symbolu %)",
+          "in": "Dopasuje dowolną wartość z listy wartości oddzielonych przecinkami"
         },
         "logicalOperators": {
-          "intro": "To combine multiple conditions, you can use the following logical operators:",
-          "and": "AND operator, matches if all conditions are true",
-          "or": "OR operator, matches if any of the conditions are true",
-          "parentheses": "Parentheses for grouping conditions"
+          "intro": "Aby połączyć wiele warunków, możesz użyć następujących operatorów logicznych:",
+          "and": "Operator AND, dopasowuje, jeśli wszystkie warunki są prawdziwe",
+          "or": "Operator OR, dopasowuje, jeśli którykolwiek z warunków jest spełniony",
+          "parentheses": "Nawiasy do grupowania warunków"
         },
         "examples": {
-          "intro": "Here are some examples of filter queries:",
-          "priorityEqual": "Matches tasks with priority level 4",
-          "dueDatePast": "Matches tasks with a due date in the past",
-          "undoneHighPriority": "Matches undone tasks with priority level 3 or higher",
-          "assigneesIn": "Matches tasks assigned to either \"user1\" or \"user2\"",
-          "priorityOneOrTwoPastDue": "Matches tasks with priority level 1 or 2 and a due date in the past"
+          "intro": "Oto kilka przykładów zapytań filtrujących:",
+          "priorityEqual": "Dopasowuje zadania z priorytetem 4",
+          "dueDatePast": "Dopasowuje zadania z terminem wykonania w przeszłości",
+          "undoneHighPriority": "Dopasowuje niewykonane zadania z poziomem 3 lub wyższym",
+          "assigneesIn": "Dopasowuje zadania przypisane do \"user1\" lub \"user2\"",
+          "priorityOneOrTwoPastDue": "Dopasowuje zadania z poziomem 1 lub 2 i terminem wykonania w przeszłości"
         }
       }
     }
@@ -632,7 +632,7 @@
       "to": "Do",
       "from": "Od",
       "fromto": "{from} do {to}",
-      "date": "Date",
+      "date": "Data",
       "ranges": {
         "today": "Dziś",
         "thisWeek": "W tym tygodniu",
@@ -649,25 +649,25 @@
         "restOfThisYear": "Reszta tego roku"
       },
       "values": {
-        "now": "Now",
-        "startOfToday": "Start of today",
-        "endOfToday": "End of today",
-        "beginningOflastWeek": "Beginning of last week",
-        "endOfLastWeek": "End of last week",
-        "beginningOfThisWeek": "Beginning of this week",
-        "endOfThisWeek": "End of this week",
-        "startOfNextWeek": "Start of next week",
-        "endOfNextWeek": "End of next week",
-        "in7Days": "In 7 days",
-        "beginningOfLastMonth": "Beginning of last month",
-        "endOfLastMonth": "End of last month",
-        "startOfThisMonth": "Start of this month",
-        "endOfThisMonth": "End of this month",
-        "startOfNextMonth": "Start of next month",
-        "endOfNextMonth": "End of next month",
-        "in30Days": "In 30 days",
-        "startOfThisYear": "Beginning of this year",
-        "endOfThisYear": "End of this year"
+        "now": "Teraz",
+        "startOfToday": "Początek dzisiejszego dnia",
+        "endOfToday": "Koniec dzisiejszego dnia",
+        "beginningOflastWeek": "Początek zeszłego tygodnia",
+        "endOfLastWeek": "Koniec zeszłego tygodnia",
+        "beginningOfThisWeek": "Początek tego tygodnia",
+        "endOfThisWeek": "Koniec tego tygodnia",
+        "startOfNextWeek": "Początek następnego tygodnia",
+        "endOfNextWeek": "Koniec następnego tygodnia",
+        "in7Days": "Za 7 dni",
+        "beginningOfLastMonth": "Początek zeszłego miesiąca",
+        "endOfLastMonth": "Koniec zeszłego miesiąca",
+        "startOfThisMonth": "Początek tego miesiąca",
+        "endOfThisMonth": "Koniec tego miesiąca",
+        "startOfNextMonth": "Początek następnego miesiąca",
+        "endOfNextMonth": "Koniec następnego miesiąca",
+        "in30Days": "Za 30 dni",
+        "startOfThisYear": "Początek tego roku",
+        "endOfThisYear": "Koniec tego roku"
       }
     },
     "datemathHelp": {
@@ -783,7 +783,7 @@
       "startDate": "Data rozpoczęcia",
       "title": "Tytuł",
       "updated": "Zaktualizowano",
-      "doneAt": "Done At"
+      "doneAt": "Wykonano"
     },
     "subscription": {
       "subscribedTaskThroughParentProject": "Nie możesz zrezygnować z subskrypcji, ponieważ subskrybujesz to zadanie poprzez jego projekt.",
@@ -987,8 +987,8 @@
       "descriptionPlaceholder": "Opisz tutaj zespół, naciśnij '/' aby uzyskać więcej opcji…",
       "admin": "Administrator",
       "member": "Członek",
-      "isPublic": "Public Team",
-      "isPublicDescription": "Make the team publicly discoverable. When enabled, anyone can share projects with this team even when not being a direct member."
+      "isPublic": "Publiczny zespół",
+      "isPublicDescription": "Udostępnij zespół publicznie. Gdy ta opcja jest włączona, każdy może udostępniać projekty temu zespołowi, nawet nie będąc jego bezpośrednim członkiem."
     }
   },
   "keyboardShortcuts": {
@@ -1047,8 +1047,8 @@
     "share": "Udostępnij",
     "newProject": "Nowy projekt",
     "createProject": "Utwórz projekt",
-    "cantArchiveIsDefault": "You cannot archive this because it is your default project.",
-    "cantDeleteIsDefault": "You cannot delete this because it is your default project."
+    "cantArchiveIsDefault": "Nie możesz tego zarchiwizować, ponieważ jest to twój domyślny projekt.",
+    "cantDeleteIsDefault": "Nie możesz tego usunąć, ponieważ jest to twój domyślny projekt."
   },
   "apiConfig": {
     "url": "URL Vikunji",
@@ -1096,10 +1096,10 @@
     "altFormatShort": "j M Y"
   },
   "reaction": {
-    "reactedWith": "{user} reacted with {value}",
-    "reactedWithAnd": "{users} and {lastUser} reacted with {value}",
-    "reactedWithAndMany": "{users} and {num} more reacted reacted with {value}",
-    "add": "Add your reaction"
+    "reactedWith": "{user} zareagował z {value}",
+    "reactedWithAnd": "{users} i {lastUser} zareagowali z {value}",
+    "reactedWithAndMany": "{users} i {num} innych osób zareagowali z {value}",
+    "add": "Dodaj swoją reakcję"
   },
   "error": {
     "error": "Błąd",
@@ -1174,7 +1174,7 @@
   },
   "about": {
     "title": "O aplikacji",
-    "version": "Version: {version}"
+    "version": "Wersja: {version}"
   },
   "time": {
     "units": {
