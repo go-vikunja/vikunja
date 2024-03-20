@@ -47,7 +47,6 @@
 					<ReminderPeriod
 						v-if="activeForm === 'relative'"
 						v-model="reminder"
-						@update:modelValue="updateDataAndMaybeClose(close)"
 					/>
 
 					<DatepickerInline
