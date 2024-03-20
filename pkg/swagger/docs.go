@@ -8178,10 +8178,6 @@ const docTemplate = `{
                     "description": "The description of the project.",
                     "type": "string"
                 },
-                "done_bucket_id": {
-                    "description": "Deprecated: If tasks are moved to the done bucket, they are marked as done. If they are marked as done individually, they are moved into the done bucket.",
-                    "type": "integer"
-                },
                 "hex_color": {
                     "description": "The hex color of this project",
                     "type": "string",
