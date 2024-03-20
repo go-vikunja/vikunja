@@ -47,7 +47,7 @@ import AddToHomeScreen from '@/components/home/AddToHomeScreen.vue'
 import DemoMode from '@/components/home/DemoMode.vue'
 
 const importAccountDeleteService = () => import('@/services/accountDelete')
-const importMessage = () => import('@/message')
+import {success} from '@/message'
 
 const baseStore = useBaseStore()
 const authStore = useAuthStore()
@@ -69,11 +69,9 @@ watch(accountDeletionConfirm, async (accountDeletionConfirm) => {
 		return
 	}
 
-	const messageP = importMessage()
 	const AccountDeleteService = (await importAccountDeleteService()).default
 	const accountDeletionService = new AccountDeleteService()
 	await accountDeletionService.confirm(accountDeletionConfirm)
-	const {success} = await messageP
 	success({message: t('user.deletion.confirmSuccess')})
 	authStore.refreshUserInfo()
 }, { immediate: true })
