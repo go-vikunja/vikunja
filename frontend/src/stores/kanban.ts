@@ -131,23 +131,9 @@ export const useKanbanStore = defineStore('kanban', () => {
 					const bucket = buckets.value[b]
 					bucket.tasks[t] = task
 
-					if (bucket.id !== task.bucketId) {
-						bucket.tasks.splice(t, 1)
-						addTaskToBucketAndSort(buckets.value, task)
-					}
-
 					buckets.value[b] = bucket
 
 					found = true
-					return
-				}
-			}
-		}
-
-		for (const b in buckets.value) {
-			if (buckets.value[b].id === task.bucketId) {
-				findAndUpdate(b)
-				if (found) {
 					return
 				}
 			}
@@ -198,7 +184,6 @@ export const useKanbanStore = defineStore('kanban', () => {
 
 		if (
 			bucketIndex === null ||
-			buckets.value[bucketIndex]?.id !== task.bucketId ||
 			taskIndex === null ||
 			(buckets.value[bucketIndex]?.tasks[taskIndex]?.id !== task.id)
 		) {

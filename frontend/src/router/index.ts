@@ -348,7 +348,6 @@ const router = createRouter({
 			name: 'project.index',
 			redirect(to) {
 				const viewId = getProjectViewId(Number(to.params.projectId as string))
-				console.log(viewId)
 
 				if (viewId) {
 					console.debug('Replaced list view with', viewId)
