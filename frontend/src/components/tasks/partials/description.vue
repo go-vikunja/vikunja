@@ -37,7 +37,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, watch} from 'vue'
+import {ref, computed, watch, onBeforeUnmount} from 'vue'
 
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import Editor from '@/components/input/AsyncEditor'
@@ -87,6 +87,12 @@ async function saveWithDelay() {
 		await save()
 	}, 5000)
 }
+
+onBeforeUnmount(() => {
+	if (changeTimeout.value !== null) {
+		clearTimeout(changeTimeout.value)
+	}
+})
 
 async function save() {
 	if (changeTimeout.value !== null) {
