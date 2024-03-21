@@ -381,6 +381,22 @@
       "secret": "密钥",
       "secretHint": "如果提供了 webhook 目标 URL 的所有请求都将使用 HMAC签名。",
       "secretDocs": "查看文档了解如何使用秘密的更多详情。"
+    },
+    "views": {
+      "header": "编辑视图",
+      "title": "标题",
+      "actions": "操作",
+      "kind": "类别",
+      "bucketConfigMode": "桶配置模式",
+      "bucketConfig": "桶配置",
+      "bucketConfigManual": "手册",
+      "filter": "过滤器",
+      "create": "创建视图",
+      "createSuccess": "视图创建成功。",
+      "titleRequired": "请提供标题。",
+      "delete": "删除此视图",
+      "deleteText": "您确定要删除此视图吗？它将不再可能使用它来查看此项目中的任务。 此操作不会删除任何任务。此操作不能撤销！",
+      "deleteSuccess": "视图已成功删除"
     }
   },
   "filters": {
@@ -1048,7 +1064,8 @@
     "newProject": "新项目",
     "createProject": "创建项目",
     "cantArchiveIsDefault": "您不能归档，因为这是您的默认项目。",
-    "cantDeleteIsDefault": "您不能删除这个项目，因为这是您的默认项目。"
+    "cantDeleteIsDefault": "您不能删除这个项目，因为这是您的默认项目。",
+    "views": "视图"
   },
   "apiConfig": {
     "url": "Vikunja URL",

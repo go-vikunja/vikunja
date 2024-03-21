@@ -381,6 +381,22 @@
       "secret": "Sekret",
       "secretHint": "Jeśli podane, wszystkie żądania do adresu docelowego webhooka zostaną podpisane przy użyciu HMAC.",
       "secretDocs": "Sprawdź dokumentację, aby uzyskać więcej informacji na temat korzystania z sekretów."
+    },
+    "views": {
+      "header": "Edytuj widoki",
+      "title": "Tytuł",
+      "actions": "Działania",
+      "kind": "Rodzaj",
+      "bucketConfigMode": "Tryb konfiguracji kolumny",
+      "bucketConfig": "Konfiguracja kolumny",
+      "bucketConfigManual": "Instrukcja",
+      "filter": "Filtr",
+      "create": "Utwórz widok",
+      "createSuccess": "Widok utworzony pomyślnie.",
+      "titleRequired": "Proszę podać tytuł.",
+      "delete": "Usuń ten widok",
+      "deleteText": "Czy na pewno chcesz usunąć ten widok? Nie będzie już możliwe wyświetlanie zadań w tym projekcie. Ta akcja nie usunie żadnych zadań. Tej operacji nie można cofnąć!",
+      "deleteSuccess": "Widok został pomyślnie usunięty"
     }
   },
   "filters": {
@@ -1048,7 +1064,8 @@
     "newProject": "Nowy projekt",
     "createProject": "Utwórz projekt",
     "cantArchiveIsDefault": "Nie możesz tego zarchiwizować, ponieważ jest to twój domyślny projekt.",
-    "cantDeleteIsDefault": "Nie możesz tego usunąć, ponieważ jest to twój domyślny projekt."
+    "cantDeleteIsDefault": "Nie możesz tego usunąć, ponieważ jest to twój domyślny projekt.",
+    "views": "Widoki"
   },
   "apiConfig": {
     "url": "URL Vikunji",

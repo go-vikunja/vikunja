@@ -381,6 +381,22 @@
       "secret": "Schlüssel",
       "secretHint": "Wenn angegeben, werden alle Anfragen an die Webhook Ziel-URL mit HMAC signiert.",
       "secretDocs": "In der Dokumentation findest du weitere Informationen zum Umgang mit Schlüsseln."
+    },
+    "views": {
+      "header": "Edit views",
+      "title": "Title",
+      "actions": "Actions",
+      "kind": "Kind",
+      "bucketConfigMode": "Bucket configuration mode",
+      "bucketConfig": "Bucket configuration",
+      "bucketConfigManual": "Manual",
+      "filter": "Filter",
+      "create": "Create view",
+      "createSuccess": "The view was created successfully.",
+      "titleRequired": "Please provide a title.",
+      "delete": "Delete this view",
+      "deleteText": "Are you sure you want to remove this view? It will no longer be possible to use it to view tasks in this project. This action won't delete any tasks. This cannot be undone!",
+      "deleteSuccess": "The view was successfully deleted"
     }
   },
   "filters": {
@@ -1048,7 +1064,8 @@
     "newProject": "Neues Projekt",
     "createProject": "Projekt erstellen",
     "cantArchiveIsDefault": "Du kannst dieses Projekt nicht archivieren, da es dein Standardprojekt ist.",
-    "cantDeleteIsDefault": "Du kannst dieses Projekt nicht löschen, da es dein Standardprojekt ist."
+    "cantDeleteIsDefault": "Du kannst dieses Projekt nicht löschen, da es dein Standardprojekt ist.",
+    "views": "Views"
   },
   "apiConfig": {
     "url": "Vikunja URL",
