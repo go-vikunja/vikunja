@@ -6,7 +6,7 @@
     "welcomeEvening": "Jó estét {username}!",
     "lastViewed": "Utoljára megtekintve",
     "addToHomeScreen": "Adja hozzá ezt az alkalmazást a kezdőképernyőhöz a gyorsabb hozzáférés és a jobb élmény érdekében.",
-    "goToOverview": "Go to overview",
+    "goToOverview": "Tovább az áttekintéshez",
     "project": {
       "importText": "Importálja projektjeit és feladatait más szolgáltatásokból a Vikunjába:",
       "import": "Importálja adatait a Vikunjába"
@@ -57,11 +57,11 @@
       "logout": "Kijelentkezés",
       "emailInvalid": "Kérjük, adjon meg egy valós email címet!",
       "usernameRequired": "Kérjük adjon meg egy felhasználónevet.",
-      "usernameMustNotContainSpace": "The username must not contain spaces.",
-      "usernameMustNotLookLikeUrl": "The username must not look like a URL.",
+      "usernameMustNotContainSpace": "A felhasználónév nem tartalmazhat szóközt.",
+      "usernameMustNotLookLikeUrl": "A felhasználónév nem nézhet ki URL-nek.",
       "passwordRequired": "Kérjük, adjon meg új jelszót.",
-      "passwordNotMin": "Password must have at least 8 characters.",
-      "passwordNotMax": "Password must have at most 250 characters.",
+      "passwordNotMin": "A jelszónak legalább 8 karakterből kell állnia.",
+      "passwordNotMax": "A jelszó legfeljebb 250 karakterből állhat.",
       "showPassword": "Jelszó megjelenítése",
       "hidePassword": "A jelszó elrejtése",
       "noAccountYet": "Még nincs fiókja?",
@@ -164,7 +164,7 @@
         "expired": "Ez a token lejárt {ago}.",
         "tokenCreatedSuccess": "Íme az új API tokenje: {token}",
         "tokenCreatedNotSeeAgain": "Tárolja el biztonságos helyen, többé nem fogja látni!",
-        "selectAll": "Select all",
+        "selectAll": "Összes kijelölése",
         "delete": {
           "header": "Token törlése",
           "text1": "Biztos benne, hogy törölni akarja ezt a tokent \"{token}\"?",
@@ -248,7 +248,7 @@
       "text2": "Ez magában foglalja az összes feladatot és NEM VISSZAVONHATÓ!",
       "success": "A projekt sikeresen törölve.",
       "tasksToDelete": "Ezzel visszavonhatatlanul eltávolítjuk kb. {count} feladatát.",
-      "tasksAndChildProjectsToDelete": "This will irrevocably remove approx. {tasks} tasks and {projects} projects.",
+      "tasksAndChildProjectsToDelete": "Ezzel visszavonhatatlanul eltávolítunk kb. {tasks} feladatot és {projects} projektet.",
       "noTasksToDelete": "Ez a projekt nem tartalmaz feladatokat, biztonságosan törölhető."
     },
     "duplicate": {
@@ -265,7 +265,7 @@
       "identifier": "Projektazonosító",
       "identifierPlaceholder": "Írja be a projekt projektazonosítót...",
       "description": "Leírás",
-      "descriptionPlaceholder": "Enter a description for this project, hit '/' for more options…",
+      "descriptionPlaceholder": "Adja meg a projekt leírását, a további lehetőségekért nyomja meg a „/” gombot…",
       "color": "Szín",
       "success": "A projekt sikeresen frissítve."
     },
@@ -368,46 +368,46 @@
       }
     },
     "webhooks": {
-      "title": "Webhooks",
-      "targetUrl": "Target URL",
-      "targetUrlInvalid": "Please provide a valid URL.",
-      "events": "Events",
-      "eventsHint": "Select all events this webhook should recieve updates for (within the current project).",
-      "mustSelectEvents": "You must select at least one event.",
-      "delete": "Delete this webhook",
-      "deleteText": "Are you sure you want to delete this webhook? External targets will not be notified of its events anymore.",
-      "deleteSuccess": "The webhook was successfully deleted.",
-      "create": "Create webhook",
-      "secret": "Secret",
-      "secretHint": "If provided, all requests to the webhook target URL will be signed using HMAC.",
-      "secretDocs": "Check out the docs for more details about how to use secrets."
+      "title": "Webhookok",
+      "targetUrl": "Cél URL",
+      "targetUrlInvalid": "Kérjük adjon meg egy érvényes URL-t.",
+      "events": "Események",
+      "eventsHint": "Válassza ki az összes olyan eseményt, amelyhez ez a webhook frissítéseket kap (az aktuális projekten belül).",
+      "mustSelectEvents": "Legalább egy eseményt ki kell választania.",
+      "delete": "Webhook törlése",
+      "deleteText": "Biztosan törli ezt a webhook-ot? A külső célpontok többé nem kapnak értesítést az eseményeiről.",
+      "deleteSuccess": "A webhook törlése sikeresen megtörtént.",
+      "create": "Webhook létrehozása",
+      "secret": "Kulcs",
+      "secretHint": "Amennyiben meg van adva, a webhook cél URL-címére irányuló összes kérés HMAC használatával lesz aláírva.",
+      "secretDocs": "Tekintse meg a dokumentációt a titkok használatának további részleteiért."
     },
     "views": {
-      "header": "Edit views",
-      "title": "Title",
-      "actions": "Actions",
-      "kind": "Kind",
-      "bucketConfigMode": "Bucket configuration mode",
-      "bucketConfig": "Bucket configuration",
-      "bucketConfigManual": "Manual",
-      "filter": "Filter",
-      "create": "Create view",
-      "createSuccess": "The view was created successfully.",
-      "titleRequired": "Please provide a title.",
-      "delete": "Delete this view",
-      "deleteText": "Are you sure you want to remove this view? It will no longer be possible to use it to view tasks in this project. This action won't delete any tasks. This cannot be undone!",
-      "deleteSuccess": "The view was successfully deleted"
+      "header": "Nézetek szerkesztése",
+      "title": "Cím",
+      "actions": "Műveletek",
+      "kind": "Fajta",
+      "bucketConfigMode": "Vödör konfigurációs mód",
+      "bucketConfig": "Vödör konfiguráció",
+      "bucketConfigManual": "Manuális",
+      "filter": "Szűrő",
+      "create": "Nézet létrehozása",
+      "createSuccess": "A nézet létrehozása sikeres volt.",
+      "titleRequired": "Kérjük, adjon meg egy címet.",
+      "delete": "Törölje ezt a nézetet",
+      "deleteText": "Biztosan eltávolítja ezt a nézetet? A továbbiakban nem lesz használható a projektben szereplő feladatok megtekintésére. Ez a művelet nem töröl semmilyen feladatot. Ezt nem lehet visszacsinálni!",
+      "deleteSuccess": "A nézet sikeresen törölve"
     }
   },
   "filters": {
     "title": "Szűrők",
     "clear": "Szűrők törlése",
-    "showResults": "Show results",
+    "showResults": "Eredmények megjelenítése",
     "attributes": {
       "title": "Cím",
       "titlePlaceholder": "A mentett szűrő címe ide kerül…",
       "description": "Leírás",
-      "descriptionPlaceholder": "Add a description for this filter here, hit '/' for more options…",
+      "descriptionPlaceholder": "Adjon hozzá leírást ehhez a szűrőhöz, nyomja meg a „/” gombot a további lehetőségekért…",
       "includeNulls": "Tartalmazza az olyan feladatokat, amelyeknek nincs beállított értéke",
       "requireAll": "A feladat megjelenítéséhez minden szűrőnek igaznak kell lennie",
       "showDoneTasks": "Elkészült feladatok megjelenítése",
@@ -435,48 +435,48 @@
       "success": "A szűrőt sikeresen mentette."
     },
     "query": {
-      "title": "Query",
-      "placeholder": "Type a search or filter query…",
+      "title": "Lekérdezés",
+      "placeholder": "Írjon be egy keresési, vagy szűrési lekérdezést…",
       "help": {
-        "intro": "To filter tasks, you can use a query syntax similar to SQL. The available fields for filtering include:",
-        "link": "How does this work?",
-        "canUseDatemath": "You can date math to set relative dates. Click on the date value in a query to find out more.",
+        "intro": "A feladatok szűréséhez az SQL-hez hasonló lekérdezési szintaxist használhat. A szűréshez rendelkezésre álló mezők a következők:",
+        "link": "Hogyan működik?",
+        "canUseDatemath": "A relatív dátumok beállításához a matematikai dátumokat is használhat. További információért kattintson a dátum értékére a lekérdezésben.",
         "fields": {
-          "done": "Whether the task is completed or not",
-          "priority": "The priority level of the task (1-5)",
-          "percentDone": "The percentage of completion for the task (0-100)",
-          "dueDate": "The due date of the task",
-          "startDate": "The start date of the task",
-          "endDate": "The end date of the task",
-          "doneAt": "The date and time when the task was completed",
-          "assignees": "The assignees of the task",
-          "labels": "The labels associated with the task",
-          "project": "The project the task belongs to (only available for saved filters, not on a project level)"
+          "done": "Akár befejeződött a feladat, akár nem",
+          "priority": "A feladat prioritási szintje (1-5)",
+          "percentDone": "A feladat teljesítésének százalékos aránya (0-100)",
+          "dueDate": "A feladat teljesítésének határideje",
+          "startDate": "A feladat kezdési dátuma",
+          "endDate": "A feladat befejezési dátuma",
+          "doneAt": "A feladat befejezésének dátuma és időpontja",
+          "assignees": "A feladattal megbízottak",
+          "labels": "A feladathoz társított címkék",
+          "project": "A projekt, amelyhez a feladat tartozik (csak a mentett szűrőkhöz érhető el, projekt szinten nem)"
         },
         "operators": {
-          "intro": "The available operators for filtering include:",
-          "notEqual": "Not equal to",
-          "equal": "Equal to",
-          "greaterThan": "Greater than",
-          "greaterThanOrEqual": "Greater than or equal to",
-          "lessThan": "Less than",
-          "lessThanOrEqual": "Less than or equal to",
-          "like": "Matches a pattern (using wildcard %)",
-          "in": "Matches any value in a comma-seperated list of values"
+          "intro": "A szűréshez elérhető operátorok a következők:",
+          "notEqual": "Nem egyenlő",
+          "equal": "Egyenlő",
+          "greaterThan": "Nagyobb, mint",
+          "greaterThanOrEqual": "Nagyobb, vagy egyenlő",
+          "lessThan": "Kevesebb, mint",
+          "lessThanOrEqual": "Kevesebb, vagy egyenlő mint",
+          "like": "Megfelel egy mintának (helyettesítő karakterrel %)",
+          "in": "A vesszővel elválasztott értéklistában szereplő bármely értéknek megfelel"
         },
         "logicalOperators": {
-          "intro": "To combine multiple conditions, you can use the following logical operators:",
-          "and": "AND operator, matches if all conditions are true",
-          "or": "OR operator, matches if any of the conditions are true",
-          "parentheses": "Parentheses for grouping conditions"
+          "intro": "Több feltétel kombinálásához a következő logikai operátorokat használhatja:",
+          "and": "ÉS operátor, akkor egyezik, ha minden feltétel igaz",
+          "or": "VAGY operátor, akkor felel meg, ha valamelyik feltétel igaz",
+          "parentheses": "Zárójelek a csoportosítási feltételekhez"
         },
         "examples": {
-          "intro": "Here are some examples of filter queries:",
-          "priorityEqual": "Matches tasks with priority level 4",
-          "dueDatePast": "Matches tasks with a due date in the past",
-          "undoneHighPriority": "Matches undone tasks with priority level 3 or higher",
-          "assigneesIn": "Matches tasks assigned to either \"user1\" or \"user2\"",
-          "priorityOneOrTwoPastDue": "Matches tasks with priority level 1 or 2 and a due date in the past"
+          "intro": "Íme néhány példa a szűrőlekérdezésekre:",
+          "priorityEqual": "4. prioritási szintű feladatokat egyezteti",
+          "dueDatePast": "A múltbeli esedékességgel rendelkező feladatokat egyezteti",
+          "undoneHighPriority": "Megfelel a 3-as, vagy magasabb prioritási szintű még nem elvégzett feladatoknak",
+          "assigneesIn": "Megfelel a \"felhasználó1\", vagy a \"felhasználó2\"-nek rendelt feladatoknak",
+          "priorityOneOrTwoPastDue": "Megfelel az 1-es, vagy 2-es prioritási szinttel és a múltbeli esedékességgel rendelkező feladatoknak"
         }
       }
     }
@@ -495,8 +495,8 @@
     "confirm": "Biztos vagyok benne, kezdje el a migrációt most!",
     "importUpload": "Ha adatokat szeretne importálni a(z) {name} webhelyről a Vikunjába, kattintson az alábbi gombra a fájl kiválasztásához.",
     "upload": "Fájl feltöltése",
-    "migrationStartedWillReciveEmail": "Vikunja will now import your lists/projects, tasks, notes, reminders and files from {service}. As this will take a while, we will send you an email once done. You can close this window now.",
-    "migrationInProgress": "A migration is currently in progress. Please wait until it is done."
+    "migrationStartedWillReciveEmail": "A Vikunja mostantól importálja listáit/projektjeit, feladatait, jegyzeteit, emlékeztetőit és fájljait a {service} szolgáltatásból. Mivel ez eltart egy ideig, amint elkészült, küldünk Önnek egy e-mailt. Most bezárhatja ezt az ablakot.",
+    "migrationInProgress": "A migráció folyamatban van. Kérjük várjon, amíg elkészül."
   },
   "label": {
     "title": "Címkék",
@@ -567,7 +567,7 @@
     "custom": "Egyéni",
     "id": "Azonosító",
     "created": "Létrehozva ekkor:",
-    "createdBy": "Created by {0}",
+    "createdBy": "Létrehozta: {0}",
     "actions": "Műveletek",
     "cannotBeUndone": "Ezt nem lehet visszavonni!"
   },
@@ -586,59 +586,59 @@
       "edit": "Szerkesztés",
       "done": "Befejezve",
       "heading1": "Címsor 1",
-      "heading1Tooltip": "Big section heading.",
+      "heading1Tooltip": "Nagy szakasz címsora.",
       "heading2": "Címsor 2",
-      "heading2Tooltip": "Medium section heading.",
+      "heading2Tooltip": "Közepes szakasz címsora.",
       "heading3": "Címsor 3",
-      "heading3Tooltip": "Smaller section header.",
+      "heading3Tooltip": "Kisebb szakasz címsora.",
       "headingSmaller": "Kisebb címsor",
       "headingBigger": "Nagyobb címsor",
       "bold": "Félkövér",
       "italic": "Dőlt",
       "strikethrough": "Áthúzott",
-      "underline": "Underline",
+      "underline": "Aláhúzott",
       "code": "Kód",
-      "codeTooltip": "Capture a code snippet.",
+      "codeTooltip": "Rögzítsen egy kódrészletet.",
       "quote": "Idézet",
-      "quoteTooltip": "Capture a quote.",
-      "bulletList": "Bullet list",
-      "bulletListTooltip": "Create a simple bullet list.",
-      "unorderedList": "Unordered list",
-      "orderedList": "Ordered list",
-      "orderedListTooltip": "Create a list with numbering.",
+      "quoteTooltip": "Rögzítsen egy idézetet.",
+      "bulletList": "Felsorolásos lista",
+      "bulletListTooltip": "Hozzon létre egy egyszerű felsoroláslistát.",
+      "unorderedList": "Rendezetlen lista",
+      "orderedList": "Rendezett lista",
+      "orderedListTooltip": "Készítsen listát számozással.",
       "cleanBlock": "Blokk kitisztítása",
       "link": "Hivatkozás",
       "image": "Kép",
-      "imageTooltip": "Upload an image from your computer.",
+      "imageTooltip": "Fájl feltöltése a számítógépről.",
       "table": {
-        "title": "Table",
-        "insert": "Insert table",
-        "addColumnBefore": "Add column before",
-        "addColumnAfter": "Add column after",
-        "deleteColumn": "Delete column",
-        "addRowBefore": "Add row before",
-        "addRowAfter": "Add row after",
-        "deleteRow": "Delete row",
-        "deleteTable": "Delete table",
-        "mergeCells": "Merge cells",
-        "splitCell": "Split cell",
-        "toggleHeaderColumn": "Toggle header column",
-        "toggleHeaderRow": "Toggle header row",
-        "toggleHeaderCell": "Toggle header cell",
-        "mergeOrSplit": "Merge or split",
-        "fixTables": "Fix tables"
+        "title": "Táblázat",
+        "insert": "Táblázat beszúrása",
+        "addColumnBefore": "Oszlop hozzáadása előtte",
+        "addColumnAfter": "Oszlop hozzáadása utána",
+        "deleteColumn": "Oszlop törlése",
+        "addRowBefore": "Sor hozzáadása előtte",
+        "addRowAfter": "Sor hozzáadása utána",
+        "deleteRow": "Sor törlése",
+        "deleteTable": "Táblázat törlése",
+        "mergeCells": "Cellák egyesítése",
+        "splitCell": "Cellák szétválasztása",
+        "toggleHeaderColumn": "A fejléc oszlopának váltása",
+        "toggleHeaderRow": "Váltás a fejlécsorra",
+        "toggleHeaderCell": "Kapcsolja be a fejléccellát",
+        "mergeOrSplit": "Egyesítés vagy felosztás",
+        "fixTables": "Táblázatok javítása"
       },
       "horizontalRule": "Vízszintes vonal",
-      "horizontalRuleTooltip": "Divide a section.",
+      "horizontalRuleTooltip": "Egy szakasz felosztása.",
       "sideBySide": "Egymás mellett",
       "guide": "Útmutató",
-      "text": "Text",
-      "textTooltip": "Just start typing with plain text.",
-      "taskList": "Task list",
-      "taskListTooltip": "Track tasks with a to-do list.",
-      "undo": "Undo",
-      "redo": "Redo",
-      "placeholder": "Type some text or hit '/' to see more options…"
+      "text": "Szöveg",
+      "textTooltip": "Csak kezdje el a gépelést egyszerű szöveggel.",
+      "taskList": "Feladatlista",
+      "taskListTooltip": "Kövesse nyomon a feladatokat egy teendőlistával.",
+      "undo": "Visszavonás",
+      "redo": "Újra",
+      "placeholder": "Írjon be egy szöveget, vagy nyomja meg a „/” gombot a további lehetőségek megtekintéséhez…"
     },
     "multiselect": {
       "createPlaceholder": "Új létrehozása",
@@ -648,7 +648,7 @@
       "to": "Eddig",
       "from": "Ettől",
       "fromto": "{from} - tól {to} - ig",
-      "date": "Date",
+      "date": "Dátum",
       "ranges": {
         "today": "Ma",
         "thisWeek": "Ezen a héten",
@@ -665,25 +665,25 @@
         "restOfThisYear": "Az év hátralévő része"
       },
       "values": {
-        "now": "Now",
-        "startOfToday": "Start of today",
-        "endOfToday": "End of today",
-        "beginningOflastWeek": "Beginning of last week",
-        "endOfLastWeek": "End of last week",
-        "beginningOfThisWeek": "Beginning of this week",
-        "endOfThisWeek": "End of this week",
-        "startOfNextWeek": "Start of next week",
-        "endOfNextWeek": "End of next week",
-        "in7Days": "In 7 days",
-        "beginningOfLastMonth": "Beginning of last month",
-        "endOfLastMonth": "End of last month",
-        "startOfThisMonth": "Start of this month",
-        "endOfThisMonth": "End of this month",
-        "startOfNextMonth": "Start of next month",
-        "endOfNextMonth": "End of next month",
-        "in30Days": "In 30 days",
-        "startOfThisYear": "Beginning of this year",
-        "endOfThisYear": "End of this year"
+        "now": "Most",
+        "startOfToday": "A mai nap kezdete",
+        "endOfToday": "A mai nap vége",
+        "beginningOflastWeek": "Múlt hét eleje",
+        "endOfLastWeek": "Múlt hét vége",
+        "beginningOfThisWeek": "E hét eleje",
+        "endOfThisWeek": "E hét vége",
+        "startOfNextWeek": "Jövő hét eleje",
+        "endOfNextWeek": "Jövő hét vége",
+        "in7Days": "7 napon belül",
+        "beginningOfLastMonth": "Múlt hónap eleje",
+        "endOfLastMonth": "Múlt hónap vége",
+        "startOfThisMonth": "E hónap eleje",
+        "endOfThisMonth": "E hónap vége",
+        "startOfNextMonth": "Jövő hónap eleje",
+        "endOfNextMonth": "Jövő hónap vége",
+        "in30Days": "30 napon belül",
+        "startOfThisYear": "Ez év eleje",
+        "endOfThisYear": "Ez év vége"
       }
     },
     "datemathHelp": {
@@ -799,7 +799,7 @@
       "startDate": "Kezdő dátum",
       "title": "Cím",
       "updated": "Frissítve",
-      "doneAt": "Done At"
+      "doneAt": "Befejezve ekkor"
     },
     "subscription": {
       "subscribedTaskThroughParentProject": "Itt nem iratkozhat le, mert a projektjén keresztül feliratkozott erre a feladatra.",
@@ -835,7 +835,7 @@
       "loading": "Hozzászólások betöltése…",
       "edited": "Szerkesztve: {date}",
       "creating": "Hozzászólás létrehozása…",
-      "placeholder": "Add your comment, hit '/' for more options…",
+      "placeholder": "Adja hozzá megjegyzését, nyomja meg a „/” gombot a további lehetőségekért…",
       "comment": "Hozzászólás",
       "delete": "Hozzászólás törlése",
       "deleteText1": "Biztos benne, hogy törölni akarja ezt a hozzászólást?",
@@ -849,7 +849,7 @@
       "1week": "1 hét"
     },
     "description": {
-      "placeholder": "Enter a description, hit '/' for more options…",
+      "placeholder": "Írja be a leírást, nyomja meg a '/' gombot a további lehetőségekért…",
       "empty": "Nem érhető el leírás."
     },
     "assignee": {
@@ -1000,11 +1000,11 @@
       "namePlaceholder": "A csapat nevét ide írja…",
       "nameRequired": "Kérjük, adjon meg egy nevet.",
       "description": "Leírás",
-      "descriptionPlaceholder": "Describe the team here, hit '/' for more options…",
+      "descriptionPlaceholder": "Jellemezze a csapatot itt, kattintson a '/' gombra a további lehetőségekért…",
       "admin": "Adminisztrátor",
       "member": "Tag",
-      "isPublic": "Public Team",
-      "isPublicDescription": "Make the team publicly discoverable. When enabled, anyone can share projects with this team even when not being a direct member."
+      "isPublic": "Nyilvános csapat",
+      "isPublicDescription": "Tedd nyilvánosan felfedezhetővé a csapatot. Ha engedélyezve van, bárki megoszthat projekteket ezzel a csapattal, még akkor is, ha nem közvetlen tagja."
     }
   },
   "keyboardShortcuts": {
@@ -1063,9 +1063,9 @@
     "share": "Megosztás",
     "newProject": "Új projekt",
     "createProject": "Projekt létrehozása",
-    "cantArchiveIsDefault": "You cannot archive this because it is your default project.",
-    "cantDeleteIsDefault": "You cannot delete this because it is your default project.",
-    "views": "Views"
+    "cantArchiveIsDefault": "Ezt nem archiválhatja, mert ez az alapértelmezett projektje.",
+    "cantDeleteIsDefault": "Ezt nem törölheti, mert ez az alapértelmezett projektje.",
+    "views": "Nézetek"
   },
   "apiConfig": {
     "url": "Vikunja URL",
@@ -1085,8 +1085,8 @@
     "title": "Értesítések",
     "none": "Nincsenek értesítései. Legyen szép napja!",
     "explainer": "Az értesítések itt jelennek meg, amikor olyan projektek vagy feladatok történnek, amelyekre feliratkozott.",
-    "markAllRead": "Mark all notifications as read",
-    "markAllReadSuccess": "Successfully marked all notifications as read."
+    "markAllRead": "Minden értesítés megjelölése olvasottként",
+    "markAllReadSuccess": "Az összes értesítést olvasottként jelölte meg."
   },
   "quickActions": {
     "commands": "Parancsok",
@@ -1113,10 +1113,10 @@
     "altFormatShort": "j M Y"
   },
   "reaction": {
-    "reactedWith": "{user} reacted with {value}",
-    "reactedWithAnd": "{users} and {lastUser} reacted with {value}",
-    "reactedWithAndMany": "{users} and {num} more reacted reacted with {value}",
-    "add": "Add your reaction"
+    "reactedWith": "{user} a következővel reagált: {value}",
+    "reactedWithAnd": "{users} és {lastUser} a következővel reagált: {value}",
+    "reactedWithAndMany": "{users} és további {num} felhasználó reagált a következővel: {value}",
+    "add": "Adja hozzá reakcióját"
   },
   "error": {
     "error": "Hiba",
@@ -1191,7 +1191,7 @@
   },
   "about": {
     "title": "Névjegy",
-    "version": "Version: {version}"
+    "version": "Verzió: {version}"
   },
   "time": {
     "units": {
