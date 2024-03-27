@@ -383,20 +383,20 @@
       "secretDocs": "Poglejte si dokumentacijo za več podrobnosti o uporabi skrite kode."
     },
     "views": {
-      "header": "Edit views",
-      "title": "Title",
-      "actions": "Actions",
-      "kind": "Kind",
-      "bucketConfigMode": "Bucket configuration mode",
-      "bucketConfig": "Bucket configuration",
-      "bucketConfigManual": "Manual",
+      "header": "Uredi pogled",
+      "title": "Naslov",
+      "actions": "Dejanja",
+      "kind": "Vrsta",
+      "bucketConfigMode": "Način nastavitve vedra",
+      "bucketConfig": "Nastavitev vedra",
+      "bucketConfigManual": "Ročno",
       "filter": "Filter",
-      "create": "Create view",
-      "createSuccess": "The view was created successfully.",
-      "titleRequired": "Please provide a title.",
-      "delete": "Delete this view",
-      "deleteText": "Are you sure you want to remove this view? It will no longer be possible to use it to view tasks in this project. This action won't delete any tasks. This cannot be undone!",
-      "deleteSuccess": "The view was successfully deleted"
+      "create": "Ustvari pogled",
+      "createSuccess": "Pogled je bil uspešno ustvarjen.",
+      "titleRequired": "Prosim navedite naslov.",
+      "delete": "Izbriši pogled",
+      "deleteText": "Ali ste prepričani, da želite odstraniti ta pogled? Ne bo ga več mogoče uporabljati za ogled nalog v tem projektu. To dejanje ne bo izbrisalo nobenih opravil. Tega ni mogoče razveljaviti!",
+      "deleteSuccess": "Pogled je bil uspešno izbrisan"
     }
   },
   "filters": {
@@ -1065,7 +1065,7 @@
     "createProject": "Ustvari projekt",
     "cantArchiveIsDefault": "Tega ne morete arhivirati, ker je to vaš privzeti projekt.",
     "cantDeleteIsDefault": "Tega ne morete izbrisati, ker je to vaš privzeti projekt.",
-    "views": "Views"
+    "views": "Pogledi"
   },
   "apiConfig": {
     "url": "Vikunja URL",
