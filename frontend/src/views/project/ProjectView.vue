@@ -26,7 +26,7 @@ const currentView = computed(() => {
 })
 
 function redirectToFirstViewIfNecessary() {
-	if (viewId === 0) {
+	if (viewId === 0 || !projectStore.projects[projectId]?.views.find(v => v.id === viewId)) {
 		// Ideally, we would do that in the router redirect, but the projects (and therefore, the views) 
 		// are not always loaded then.
 		const firstViewId = projectStore.projects[projectId]?.views[0].id
