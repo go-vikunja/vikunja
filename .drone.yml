@@ -461,7 +461,6 @@ steps:
       - cp -r dist-test dist-preview
       # Override the default api url used for preview
       - sed -i 's|http://localhost:3456|https://try.vikunja.io|g' dist-preview/index.html
-      - apk add --no-cache perl-utils
       # create via:
       # `shasum -a 384 ./scripts/deploy-preview-netlify.mjs > ./scripts/deploy-preview-netlify.mjs.sha384`
       - shasum -a 384 -c ./scripts/deploy-preview-netlify.mjs.sha384
@@ -1401,6 +1400,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: a5d31a6cb5eb6482e72bea619ee391ff2b8118b9865e3896a607b8a7e874a797
+hmac: c312afe632177a2d45f47c429bf6c7528af3c51a097430956558532ccdcc42b9
 
 ...
