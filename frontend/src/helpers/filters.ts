@@ -27,13 +27,13 @@ export const AUTOCOMPLETE_FIELDS = [
 ]
 
 export const AVAILABLE_FILTER_FIELDS = [
-	'done',
-	'priority',
-	'percentDone',
 	...DATE_FIELDS,
 	...ASSIGNEE_FIELDS,
 	...LABEL_FIELDS,
 	...PROJECT_FIELDS,
+	'done',
+	'priority',
+	'percentDone',
 ]
 
 export const FILTER_OPERATORS = [
