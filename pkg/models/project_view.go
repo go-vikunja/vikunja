@@ -331,7 +331,19 @@ func (p *ProjectView) Update(s *xorm.Session, _ web.Auth) (err error) {
 		return
 	}
 
-	_, err = s.ID(p.ID).Update(p)
+	_, err = s.
+		ID(p.ID).
+		Cols(
+			"title",
+			"view_kind",
+			"filter",
+			"position",
+			"bucket_configuration_mode",
+			"bucket_configuration",
+			"default_bucket_id",
+			"done_bucket_id",
+		).
+		Update(p)
 	if err != nil {
 		return
 	}
