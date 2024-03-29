@@ -89,7 +89,7 @@ async function saveView() {
 			v-model="newView"
 			class="mb-4"
 		/>
-		<div class="is-flex is-justify-content-end">
+		<div class="is-flex is-justify-content-end mb-4">
 			<XButton
 				:loading="projectViewService.loading"
 				@click="createView"
