@@ -991,7 +991,12 @@ func (p *Project) Create(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
-	return p.ReadOne(s, a)
+	fullProject, err := GetProjectSimpleByID(s, p.ID)
+	if err != nil {
+		return
+	}
+
+	return fullProject.ReadOne(s, a)
 }
 
 func (p *Project) isDefaultProject(s *xorm.Session) (is bool, err error) {
