@@ -379,6 +379,7 @@ const blurDebounced = useDebounceFn(() => emit('blur'), 500)
 	}
 
 	.filter-input-highlight {
+		background: var(--white);
 		height: 2.5em;
 		line-height: 1.5;
 		padding: .5em .75em;
