@@ -149,8 +149,14 @@ function getViewTitle(view: IProjectView) {
 
 <style lang="scss" scoped>
 .switch-view-container {
+	min-height: $switch-view-height;
+	margin-bottom: 1rem;
+	
+	display: flex;
+	justify-content: space-between;
+	align-items: center;	
+	
 	@media screen and (max-width: $tablet) {
-		display: flex;
 		justify-content: center;
 		flex-direction: column;
 	}
@@ -162,8 +168,6 @@ function getViewTitle(view: IProjectView) {
 	border-radius: $radius;
 	font-size: .75rem;
 	box-shadow: var(--shadow-sm);
-	height: $switch-view-height;
-	margin: 0 auto 1rem;
 	padding: .5rem;
 }
 

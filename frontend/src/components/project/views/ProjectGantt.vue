@@ -4,7 +4,7 @@
 		:project-id="filters.projectId"
 		:viewId
 	>
-		<template #header>
+		<template #default>
 			<card :has-content="false">
 				<div class="gantt-options">
 					<div class="field">
@@ -45,9 +45,7 @@
 					</Fancycheckbox>
 				</div>
 			</card>
-		</template>
 
-		<template #default>
 			<div class="gantt-chart-container">
 				<card
 					:has-content="false"
@@ -79,7 +77,7 @@ import {useI18n} from 'vue-i18n'
 import type {RouteLocationNormalized} from 'vue-router'
 
 import {useBaseStore} from '@/stores/base'
-import { getFlatpickrLanguage } from '@/helpers/flatpickrLanguage'
+import {getFlatpickrLanguage} from '@/helpers/flatpickrLanguage'
 
 import Foo from '@/components/misc/flatpickr/Flatpickr.vue'
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'

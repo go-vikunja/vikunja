@@ -13,7 +13,7 @@
 		}"
 	>
 		<template v-if="icon">
-			<icon 
+			<icon
 				v-if="showIconOnly"
 				:icon="icon"
 				:style="{'color': iconColor !== '' ? iconColor : undefined}"
@@ -22,32 +22,32 @@
 				v-else
 				class="icon is-small"
 			>
-				<icon 
+				<icon
 					:icon="icon"
 					:style="{'color': iconColor !== '' ? iconColor : undefined}"
 				/>
 			</span>
 		</template>
-		<slot />
+		<slot/>
 	</BaseButton>
 </template>
 
 <script lang="ts">
 const BUTTON_TYPES_MAP = {
-  primary: 'is-primary',
-  secondary: 'is-outlined',
-  tertiary: 'is-text is-inverted underline-none',
+	primary: 'is-primary',
+	secondary: 'is-outlined',
+	tertiary: 'is-text is-inverted underline-none',
 } as const
 
 export type ButtonTypes = keyof typeof BUTTON_TYPES_MAP
 
-export default { name: 'XButton' }
+export default {name: 'XButton'}
 </script>
 
 <script setup lang="ts">
 import {computed, useSlots} from 'vue'
 import BaseButton, {type BaseButtonProps} from '@/components/base/BaseButton.vue'
-import type { IconProp } from '@fortawesome/fontawesome-svg-core'
+import type {IconProp} from '@fortawesome/fontawesome-svg-core'
 
 // extending the props of the BaseButton
 export interface ButtonProps extends /* @vue-ignore */ BaseButtonProps {
@@ -76,37 +76,38 @@ const showIconOnly = computed(() => icon !== '' && typeof slots.default === 'und
 
 <style lang="scss" scoped>
 .button {
-  transition: all $transition;
-  border: 0;
-  text-transform: uppercase;
-  font-size: 0.85rem;
-  font-weight: bold;
-  height: auto;
-  min-height: $button-height;
-  box-shadow: var(--shadow-sm);
-  display: inline-flex;
-  white-space: var(--button-white-space);
+	transition: all $transition;
+	border: 0;
+	text-transform: uppercase;
+	font-size: 0.85rem;
+	font-weight: bold;
+	height: auto;
+	min-height: $button-height;
+	box-shadow: var(--shadow-sm);
+	display: inline-flex;
+	white-space: var(--button-white-space);
+	line-height: 1;
 
-  &:hover {
-    box-shadow: var(--shadow-md);
-  }
+	&:hover {
+		box-shadow: var(--shadow-md);
+	}
 
-  &.fullheight {
-    padding-right: 7px;
-    height: 100%;
-  }
+	&.fullheight {
+		padding-right: 7px;
+		height: 100%;
+	}
 
-  &.is-active,
-  &.is-focused,
-  &:active,
-  &:focus,
-  &:focus:not(:active) {
-    box-shadow: var(--shadow-xs) !important;
-  }
+	&.is-active,
+	&.is-focused,
+	&:active,
+	&:focus,
+	&:focus:not(:active) {
+		box-shadow: var(--shadow-xs) !important;
+	}
 
-  &.is-primary.is-outlined:hover {
-    color: var(--white);
-  }
+	&.is-primary.is-outlined:hover {
+		color: var(--white);
+	}
 }
 
 .is-small {
@@ -114,6 +115,6 @@ const showIconOnly = computed(() => icon !== '' && typeof slots.default === 'und
 }
 
 .underline-none {
-  text-decoration: none !important;
+	text-decoration: none !important;
 }
 </style>
