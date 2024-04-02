@@ -384,27 +384,27 @@ func (b *Bucket) Delete(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	// Get the default bucket
-	p, err := GetProjectViewByIDAndProject(s, b.ProjectViewID, b.ProjectID)
+	pv, err := GetProjectViewByIDAndProject(s, b.ProjectViewID, b.ProjectID)
 	if err != nil {
 		return
 	}
-	var updateProject bool
-	if b.ID == p.DefaultBucketID {
-		p.DefaultBucketID = 0
-		updateProject = true
+	var updateProjectView bool
+	if b.ID == pv.DefaultBucketID {
+		pv.DefaultBucketID = 0
+		updateProjectView = true
 	}
-	if b.ID == p.DoneBucketID {
-		p.DoneBucketID = 0
-		updateProject = true
+	if b.ID == pv.DoneBucketID {
+		pv.DoneBucketID = 0
+		updateProjectView = true
 	}
-	if updateProject {
-		err = p.Update(s, a)
+	if updateProjectView {
+		err = pv.Update(s, a)
 		if err != nil {
 			return
 		}
 	}
 
-	defaultBucketID, err := getDefaultBucketID(s, p)
+	defaultBucketID, err := getDefaultBucketID(s, pv)
 	if err != nil {
 		return err
 	}

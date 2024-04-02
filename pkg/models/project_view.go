@@ -344,10 +344,6 @@ func (p *ProjectView) Update(s *xorm.Session, _ web.Auth) (err error) {
 			"done_bucket_id",
 		).
 		Update(p)
-	if err != nil {
-		return
-	}
-
 	return
 }
 

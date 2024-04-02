@@ -216,10 +216,10 @@ func TestBucket_Delete(t *testing.T) {
 		err := b.Delete(s, u)
 		require.NoError(t, err)
 
-		db.AssertMissing(t, "project_views", map[string]interface{}{
+		db.AssertExists(t, "project_views", map[string]interface{}{
 			"id":             b.ProjectViewID,
 			"done_bucket_id": 0,
-		})
+		}, false)
 	})
 }
 
