@@ -170,7 +170,7 @@ function validateTitle() {
 						class="is-danger"
 						@click.prevent="() => view.bucketConfiguration.splice(index, 1)"
 					>
-						<icon icon="trash-alt"/>
+						<icon icon="trash-alt" />
 					</button>
 					<div class="filter-bucket-form">
 						<div class="field">

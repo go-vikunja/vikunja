@@ -28,7 +28,7 @@
 				/>
 			</span>
 		</template>
-		<slot/>
+		<slot />
 	</BaseButton>
 </template>
 

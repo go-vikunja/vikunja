@@ -7,8 +7,14 @@
 			{{ getProjectTitle(currentProject) }}
 		</h1>
 
-		<div class="switch-view-container d-print-none" :class="{'is-justify-content-flex-end': views.length === 1}">
-			<div class="switch-view" v-if="views.length > 1">
+		<div
+			class="switch-view-container d-print-none"
+			:class="{'is-justify-content-flex-end': views.length === 1}"
+		>
+			<div
+				v-if="views.length > 1"
+				class="switch-view"
+			>
 				<BaseButton
 					v-for="v in views"
 					:key="v.id"

@@ -2,7 +2,7 @@
 	<ProjectWrapper
 		class="project-gantt"
 		:project-id="filters.projectId"
-		:viewId
+		:view-id
 	>
 		<template #default>
 			<card :has-content="false">

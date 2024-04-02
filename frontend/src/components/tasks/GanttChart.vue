@@ -21,7 +21,7 @@
 			@dragendBar="updateGanttTask"
 			@dblclickBar="openTask"
 		>
-			<template #timeunit="{value, date}">
+			<template #timeunit="{date}">
 				<div
 					class="timeunit-wrapper"
 					:class="{'today': dateIsToday(date)}"
