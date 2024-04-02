@@ -26,7 +26,7 @@
 					class="timeunit-wrapper"
 					:class="{'today': dateIsToday(date)}"
 				>
-					<span>{{ value }}</span>
+					<span>{{ date.getDate() }}</span>
 					<span class="weekday">
 						{{ weekDayFromDate(date) }}
 					</span>
