@@ -391,6 +391,7 @@ func CreateDefaultViewsForProject(s *xorm.Session, project *Project, a web.Auth,
 		Title:     "List",
 		ViewKind:  ProjectViewKindList,
 		Position:  100,
+		Filter:    "done = false",
 	}
 	err = createProjectView(s, list, a, createBacklogBucket)
 	if err != nil {

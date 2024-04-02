@@ -18,7 +18,7 @@ export function getDefaultTaskFilterParams(): TaskFilterParams {
 	return {
 		sort_by: ['position', 'id'],
 		order_by: ['asc', 'desc'],
-		filter: 'done = false',
+		filter: '',
 		filter_include_nulls: false,
 		filter_timezone: '',
 		s: '',
