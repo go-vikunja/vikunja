@@ -16,7 +16,22 @@
 						:search-results="found"
 						:label="searchLabel"
 						@search="find"
-					/>
+					>
+						<template #searchResult="{option: result}">
+							<User
+								v-if="shareType === 'user'"
+								:avatar-size="24"
+								:show-username="true"
+								:user="result"
+							/>
+							<span 
+								v-else
+								class="search-result"
+							>
+								{{ result.name }}
+							</span>
+						</template>
+					</Multiselect>
 				</p>
 				<p class="control">
 					<x-button @click="add()">
@@ -173,6 +188,7 @@ import Nothing from '@/components/misc/nothing.vue'
 import {success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
+import User from '@/components/misc/user.vue'
 
 // FIXME: I think this whole thing can now only manage user/team sharing for projects? Maybe remove a little generalization?
 
