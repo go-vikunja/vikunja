@@ -21,7 +21,7 @@ describe('Project View Table', () => {
 		TaskFactory.create(1)
 		cy.visit('/projects/1/3')
 
-		cy.get('.project-table .filter-container .items .button')
+		cy.get('.project-table .filter-container .button')
 			.contains('Columns')
 			.click()
 		cy.get('.project-table .filter-container .card.columns-filter .card-content .fancycheckbox')
