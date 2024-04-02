@@ -2,12 +2,65 @@
 import type {IProjectView} from '@/modelTypes/IProjectView'
 import XButton from '@/components/input/button.vue'
 import FilterInput from '@/components/project/partials/FilterInput.vue'
-import {ref} from 'vue'
+import {ref, watch} from 'vue'
+import {transformFilterStringForApi, transformFilterStringFromApi} from '@/helpers/filters'
+import {useLabelStore} from '@/stores/labels'
+import {useProjectStore} from '@/stores/projects'
 
-const model = defineModel<IProjectView>()
+const {
+	modelValue,
+} = defineProps<{
+	modelValue: IProjectView,
+}>()
+
+const emit = defineEmits(['update:modelValue'])
+
+const view = ref<IProjectView>()
+
+const labelStore = useLabelStore()
+const projectStore = useProjectStore()
+
+watch(
+	() => modelValue,
+	newValue => {
+		const transformed = {
+			...newValue,
+			filter: transformFilterStringFromApi(
+				newValue.filter,
+				labelId => labelStore.getLabelById(labelId)?.title,
+				projectId => projectStore.projects[projectId]?.title || null,
+			),
+		}
+
+		if (JSON.stringify(view.value) !== JSON.stringify(transformed)) {
+			view.value = transformed
+		}
+	},
+	{immediate: true, deep: true},
+)
+
+watch(
+	() => view.value,
+	newView => {
+		emit('update:modelValue', {
+			...newView,
+			filter: transformFilterStringForApi(
+				newView.filter,
+				labelTitle => labelStore.filterLabelsByQuery([], labelTitle)[0]?.id || null,
+				projectTitle => {
+					const found = projectStore.findProjectByExactname(projectTitle)
+					return found?.id || null
+				},
+			),
+		})
+	},
+	{deep: true},
+)
+
 const titleValid = ref(true)
+
 function validateTitle() {
-	titleValid.value = model.value.title !== ''
+	titleValid.value = view.value?.title !== ''
 }
 </script>
 
@@ -23,14 +76,14 @@ function validateTitle() {
 			<div class="control">
 				<input
 					id="title"
-					v-model="model.title"
+					v-model="view.title"
 					v-focus
 					class="input"
 					:placeholder="$t('project.share.links.namePlaceholder')"
 					@blur="validateTitle"
 				>
 			</div>
-			<p 
+			<p
 				v-if="!titleValid"
 				class="help is-danger"
 			>
@@ -49,7 +102,7 @@ function validateTitle() {
 				<div class="select">
 					<select
 						id="kind"
-						v-model="model.viewKind"
+						v-model="view.viewKind"
 					>
 						<option value="list">
 							{{ $t('project.list.title') }}
@@ -69,12 +122,12 @@ function validateTitle() {
 		</div>
 
 		<FilterInput
-			v-model="model.filter"
+			v-model="view.filter"
 			:input-label="$t('project.views.filter')"
 		/>
 
 		<div
-			v-if="model.viewKind === 'kanban'"
+			v-if="view.viewKind === 'kanban'"
 			class="field"
 		>
 			<label
@@ -87,7 +140,7 @@ function validateTitle() {
 				<div class="select">
 					<select
 						id="configMode"
-						v-model="model.bucketConfigurationMode"
+						v-model="view.bucketConfigurationMode"
 					>
 						<option value="manual">
 							{{ $t('project.views.bucketConfigManual') }}
@@ -101,7 +154,7 @@ function validateTitle() {
 		</div>
 
 		<div
-			v-if="model.viewKind === 'kanban' && model.bucketConfigurationMode === 'filter'"
+			v-if="view.viewKind === 'kanban' && view.bucketConfigurationMode === 'filter'"
 			class="field"
 		>
 			<label class="label">
@@ -109,15 +162,15 @@ function validateTitle() {
 			</label>
 			<div class="control">
 				<div
-					v-for="(b, index) in model.bucketConfiguration"
+					v-for="(b, index) in view.bucketConfiguration"
 					:key="'bucket_'+index"
 					class="filter-bucket"
 				>
 					<button
 						class="is-danger"
-						@click.prevent="() => model.bucketConfiguration.splice(index, 1)"
+						@click.prevent="() => view.bucketConfiguration.splice(index, 1)"
 					>
-						<icon icon="trash-alt" />
+						<icon icon="trash-alt"/>
 					</button>
 					<div class="filter-bucket-form">
 						<div class="field">
@@ -130,7 +183,7 @@ function validateTitle() {
 							<div class="control">
 								<input
 									:id="'bucket_'+index+'_title'"
-									v-model="model.bucketConfiguration[index].title"
+									v-model="view.bucketConfiguration[index].title"
 									class="input"
 									:placeholder="$t('project.share.links.namePlaceholder')"
 								>
@@ -138,7 +191,7 @@ function validateTitle() {
 						</div>
 
 						<FilterInput
-							v-model="model.bucketConfiguration[index].filter"
+							v-model="view.bucketConfiguration[index].filter"
 							:input-label="$t('project.views.filter')"
 						/>
 					</div>
@@ -147,7 +200,7 @@ function validateTitle() {
 					<XButton
 						variant="secondary"
 						icon="plus"
-						@click="() => model.bucketConfiguration.push({title: '', filter: ''})"
+						@click="() => view.bucketConfiguration.push({title: '', filter: ''})"
 					>
 						{{ $t('project.kanban.addBucket') }}
 					</XButton>
