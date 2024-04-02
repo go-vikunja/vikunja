@@ -16,9 +16,11 @@ import {useColorScheme} from '@/composables/useColorScheme'
 const {
 	entityKind,
 	entityId,
+	disabled = false,
 } = defineProps<{
 	entityKind: ReactionKind,
 	entityId: number,
+	disabled?: boolean,
 }>()
 
 const authStore = useAuthStore()
@@ -143,11 +145,13 @@ async function toggleReaction(value: string) {
 			v-tooltip="getReactionTooltip(users, value)"
 			class="reaction-button"
 			:class="{'current-user-has-reacted': hasCurrentUserReactedWithEmoji(value)}"
+			:disabled
 			@click="toggleReaction(value)"
 		>
 			{{ value }} {{ users.length }}
 		</BaseButton>
 		<BaseButton
+			v-if="!disabled"
 			ref="emojiPickerButtonRef"
 			v-tooltip="$t('reaction.add')"
 			class="reaction-button"

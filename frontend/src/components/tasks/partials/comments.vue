@@ -102,6 +102,7 @@
 						class="mt-2" 
 						entity-kind="comments"
 						:entity-id="c.id"
+						:disabled="!canWrite"
 					/>
 				</div>
 			</div>

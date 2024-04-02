@@ -328,6 +328,7 @@
 						entity-kind="tasks"
 						:entity-id="task.id"
 						class="details"
+						:disabled="!canWrite"
 					/>
 
 					<!-- Attachments -->
