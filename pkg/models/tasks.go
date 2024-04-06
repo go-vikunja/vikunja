@@ -672,9 +672,21 @@ func setTaskBucket(s *xorm.Session, task *Task, originalTask *Task, view *Projec
 		return
 	}
 
+	// If the task was marked as done and the view has a done bucket, move the task to the done bucket
 	if task.Done && originalTask != nil &&
 		(!originalTask.Done || task.ProjectID != originalTask.ProjectID) {
 		targetBucket.BucketID = view.DoneBucketID
+		// …and also reset the position so that it shows up at the top
+		// Note: this might result in an "off-looking" position when there is already a task with position 0.
+		//       This is done by design, because recalculating all positions is really costly and will happen
+		//       later anyway.
+		_, err = s.
+			Where("task_id = ? AND project_view_id = ?", task.ID, view.ID).
+			Cols("position").
+			Update(&TaskPosition{Position: 0})
+		if err != nil {
+			return
+		}
 	}
 
 	if targetBucket.BucketID == 0 && oldTaskBucket.BucketID != 0 {
