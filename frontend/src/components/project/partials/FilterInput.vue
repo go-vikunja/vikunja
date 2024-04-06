@@ -317,6 +317,11 @@ const blurDebounced = useDebounceFn(() => emit('blur'), 500)
 
 <style lang="scss">
 .filter-input-highlight {
+	
+	&, button.filter-query__date_value {
+		color: var(--card-color);
+	}
+	
 	span {
 		&.filter-query__field {
 			color: var(--code-literal);
