@@ -24,10 +24,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ganigeorgiev/fexpr"
-
 	"code.vikunja.io/api/pkg/config"
 
+	"github.com/ganigeorgiev/fexpr"
 	"github.com/iancoleman/strcase"
 	"github.com/jszwedko/go-datemath"
 	"xorm.io/xorm/schemas"
@@ -155,15 +154,27 @@ func getTaskFiltersFromFilterString(filter string, filterTimezone string) (filte
 	filter = strings.ReplaceAll(filter, " in ", " ?= ")
 
 	// Replaces all occurrences with in with a string so that it passes the filter
-	pattern := `\?=\s+([^&|']+)`
+	pattern := `(\?=\s+([^&|']+))|(([<>]?=|[<>])[^&|')]+\/[^&|')]+([&|')]+))`
 	re := regexp.MustCompile(pattern)
 
 	filter = re.ReplaceAllStringFunc(filter, func(match string) string {
-		value := strings.TrimSpace(strings.TrimPrefix(match, "?="))
+
+		comparator := match[:2]
+		value := strings.TrimSpace(match[2:])
+		if match[1] == ' ' {
+			comparator = match[:1]
+		}
+
+		var end string
+		if value[len(value)-1:] == ")" {
+			end = ")"
+			value = value[0 : len(value)-1]
+		}
+
 		value = strings.ReplaceAll(value, "'", `\'`)
 		enclosedValue := "'" + value + "'"
 
-		return "?= " + enclosedValue
+		return comparator + " " + enclosedValue + end
 	})
 
 	parsedFilter, err := fexpr.Parse(filter)
