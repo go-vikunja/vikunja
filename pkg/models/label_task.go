@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/events"
 	"strconv"
 	"strings"
 	"time"
@@ -46,7 +47,7 @@ type LabelTask struct {
 }
 
 // TableName makes a pretty table name
-func (LabelTask) TableName() string {
+func (*LabelTask) TableName() string {
 	return "label_tasks"
 }
 
@@ -84,7 +85,7 @@ func (lt *LabelTask) Delete(s *xorm.Session, _ web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "The label does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{task}/labels [put]
-func (lt *LabelTask) Create(s *xorm.Session, _ web.Auth) (err error) {
+func (lt *LabelTask) Create(s *xorm.Session, auth web.Auth) (err error) {
 	// Check if the label is already added
 	exists, err := s.Exist(&LabelTask{LabelID: lt.LabelID, TaskID: lt.TaskID})
 	if err != nil {
@@ -96,6 +97,20 @@ func (lt *LabelTask) Create(s *xorm.Session, _ web.Auth) (err error) {
 
 	// Insert it
 	_, err = s.Insert(lt)
+	if err != nil {
+		return err
+	}
+
+	t, err := GetTaskByIDSimple(s, lt.TaskID)
+	if err != nil {
+		return err
+	}
+
+	doer, _ := user.GetFromAuth(auth)
+	err = events.Dispatch(&TaskUpdatedEvent{
+		Task: &t,
+		Doer: doer,
+	})
 	if err != nil {
 		return err
 	}

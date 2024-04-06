@@ -280,6 +280,13 @@ func (t *Task) addNewAssigneeByID(s *xorm.Session, newAssigneeID int64, project 
 	if err != nil {
 		return err
 	}
+	err = events.Dispatch(&TaskUpdatedEvent{
+		Task: t,
+		Doer: doer,
+	})
+	if err != nil {
+		return err
+	}
 
 	err = updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
 	return
