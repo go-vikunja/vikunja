@@ -91,7 +91,15 @@ const highlightedFilterQuery = computed(() => {
 					value = ''
 				}
 
-				return `${o}${spacesBefore}${token}${spacesAfter}<button class="is-primary filter-query__date_value" data-position="${position}">${value}</button><span class="filter-query__date_value_placeholder">${value}</span>`
+				let endPadding = ''
+				if(value.endsWith(' ')) {
+					const fullLength = value.length
+					value = value.trimEnd()
+					const numberOfRemovedSpaces = fullLength - value.length
+					endPadding = endPadding.padEnd(numberOfRemovedSpaces, ' ')
+				}
+
+				return `${o}${spacesBefore}${token}${spacesAfter}<button class="is-primary filter-query__date_value" data-position="${position}">${value}</button><span class="filter-query__date_value_placeholder">${value}</span>${endPadding}`
 			})
 		})
 	ASSIGNEE_FIELDS
