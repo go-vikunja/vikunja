@@ -107,7 +107,7 @@ describe('Filter Transformation', () => {
 
 			expect(transformed).toBe('project = 1')
 		})
-		
+
 		it('should resolve project and labels independently', () => {
 			const transformed = transformFilterStringForApi(
 				'project = lorem && labels = ipsum',
@@ -116,6 +116,16 @@ describe('Filter Transformation', () => {
 			)
 
 			expect(transformed).toBe('project = 1 && labels = 2')
+		})
+
+		it('should transform the same attribute multiple times', () => {
+			const transformed = transformFilterStringForApi(
+				'dueDate = now/d || dueDate > now/w+1w',
+				nullTitleToIdResolver,
+				nullTitleToIdResolver,
+			)
+			
+			expect(transformed).toBe('due_date = now/d || due_date > now/w+1w')
 		})
 	})
 
@@ -197,6 +207,16 @@ describe('Filter Transformation', () => {
 			)
 
 			expect(transformed).toBe('project in lorem, ipsum')
+		})
+		
+		it('should transform the same attribute multiple times', () => {
+			const transformed = transformFilterStringFromApi(
+				'due_date = now/d || due_date > now/w+1w', 
+				nullIdToTitleResolver,
+				nullIdToTitleResolver,
+			)
+
+			expect(transformed).toBe('dueDate = now/d || dueDate > now/w+1w')
 		})
 	})
 })

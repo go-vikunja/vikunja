@@ -127,7 +127,7 @@ export function transformFilterStringForApi(
 
 	// Transform all attributes to snake case
 	AVAILABLE_FILTER_FIELDS.forEach(f => {
-		filter = filter.replace(f, snakeCase(f))
+		filter = filter.replaceAll(f, snakeCase(f))
 	})
 
 	return filter
@@ -145,7 +145,7 @@ export function transformFilterStringFromApi(
 
 	// Transform all attributes from snake case
 	AVAILABLE_FILTER_FIELDS.forEach(f => {
-		filter = filter.replace(snakeCase(f), f)
+		filter = filter.replaceAll(snakeCase(f), f)
 	})
 
 	// Transform labels to their titles
