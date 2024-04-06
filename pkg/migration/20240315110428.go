@@ -78,8 +78,9 @@ func init() {
 					if view.ViewKind == 3 { // Kanban view
 
 						pos := taskBuckets20240315110428{
-							TaskID:   task.ID,
-							BucketID: task.BucketID,
+							TaskID:        task.ID,
+							BucketID:      task.BucketID,
+							ProjectViewID: view.ID,
 						}
 
 						_, err = tx.Insert(pos)
