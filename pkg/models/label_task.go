@@ -17,13 +17,12 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/events"
 	"strconv"
 	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
-
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
