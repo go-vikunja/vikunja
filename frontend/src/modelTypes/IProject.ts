@@ -20,8 +20,6 @@ export interface IProject extends IAbstract {
 	position: number
 	backgroundBlurHash: string
 	parentProjectId: number
-	doneBucketId: number
-	defaultBucketId: number
 	views: IProjectView[]
 	
 	created: Date

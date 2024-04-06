@@ -41,7 +41,7 @@
 									@click="() => unCollapseBucket(bucket)"
 								>
 									<span
-										v-if="project?.doneBucketId === bucket.id"
+										v-if="view?.doneBucketId === bucket.id"
 										v-tooltip="$t('project.kanban.doneBucketHint')"
 										class="icon is-small has-text-success mr-2"
 									>
@@ -109,7 +109,7 @@
 										</DropdownItem>
 										<DropdownItem
 											v-tooltip="$t('project.kanban.doneBucketHintExtended')"
-											:icon-class="{'has-text-success': bucket.id === project?.doneBucketId}"
+											:icon-class="{'has-text-success': bucket.id === view?.doneBucketId}"
 											icon="check-double"
 											@click.stop="toggleDoneBucket(bucket)"
 										>
@@ -117,7 +117,7 @@
 										</DropdownItem>
 										<DropdownItem
 											v-tooltip="$t('project.kanban.defaultBucketHint')"
-											:icon-class="{'has-text-primary': bucket.id === project.defaultBucketId}"
+											:icon-class="{'has-text-primary': bucket.id === view?.defaultBucketId}"
 											icon="th"
 											@click.stop="toggleDefaultBucket(bucket)"
 										>
@@ -304,6 +304,8 @@ import type {IProjectView} from '@/modelTypes/IProjectView'
 import TaskPositionService from '@/services/taskPosition'
 import TaskPositionModel from '@/models/taskPosition'
 import {i18n} from '@/i18n'
+import ProjectViewService from '@/services/projectViews'
+import ProjectViewModel from '@/models/projectView'
 
 const {
 	projectId,
@@ -392,6 +394,8 @@ const project = computed(() => projectId ? projectStore.projects[projectId] : nu
 
 const buckets = computed(() => kanbanStore.buckets)
 const loading = computed(() => kanbanStore.isLoading)
+
+const view = computed<IProjectView | null>(() => project.value?.views.find(v => v.id === viewId) || null)
 
 const taskLoading = computed(() => taskStore.isLoading || taskPositionService.value.loading)
 
@@ -701,26 +705,46 @@ function dragstart(bucket: IBucket) {
 }
 
 async function toggleDefaultBucket(bucket: IBucket) {
-	const defaultBucketId = project.value.defaultBucketId === bucket.id
+	const defaultBucketId = view.value?.defaultBucketId === bucket.id
 		? 0
 		: bucket.id
 
-	await projectStore.updateProject({
-		...project.value,
+	const projectViewService = new ProjectViewService()
+	const updatedView = await projectViewService.update(new ProjectViewModel({
+		...view.value,
 		defaultBucketId,
-	})
+	}))
+
+	const views = project.value.views.map(v => v.id === view.value?.id ? updatedView : v)
+	const updatedProject = {
+		...project.value,
+		views,
+	}
+
+	projectStore.setProject(updatedProject)
+
 	success({message: t('project.kanban.defaultBucketSavedSuccess')})
 }
 
 async function toggleDoneBucket(bucket: IBucket) {
-	const doneBucketId = project.value?.doneBucketId === bucket.id
+	const doneBucketId = view.value?.doneBucketId === bucket.id
 		? 0
 		: bucket.id
-
-	await projectStore.updateProject({
-		...project.value,
+	
+	const projectViewService = new ProjectViewService()
+	const updatedView = await projectViewService.update(new ProjectViewModel({
+		...view.value,
 		doneBucketId,
-	})
+	}))
+	
+	const views = project.value.views.map(v => v.id === view.value?.id ? updatedView : v)
+	const updatedProject = {
+		...project.value,
+		views,
+	}
+	
+	projectStore.setProject(updatedProject)
+	
 	success({message: t('project.kanban.doneBucketSavedSuccess')})
 }
 
