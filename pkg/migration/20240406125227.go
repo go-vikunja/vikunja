@@ -17,6 +17,7 @@
 package migration
 
 import (
+	"code.vikunja.io/api/pkg/log"
 	"src.techknowlogick.com/xormigrate"
 	"xorm.io/xorm"
 )
@@ -64,7 +65,12 @@ func init() {
 			}
 
 			for _, tb := range tbs {
-				tb.ProjectViewID = buckets[tb.BucketID].ProjectViewID
+				bucket, exists := buckets[tb.BucketID]
+				if !exists {
+					log.Debugf("Bucket %d does not exist but has task_buckets relation", tb.BucketID)
+					continue
+				}
+				tb.ProjectViewID = bucket.ProjectViewID
 				_, err = tx.
 					Where("task_id = ? AND bucket_id = ?", tb.TaskID, tb.BucketID).
 					Cols("project_view_id").
