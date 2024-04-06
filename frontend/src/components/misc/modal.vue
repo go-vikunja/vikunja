@@ -188,12 +188,6 @@ $modal-width: 1024px;
 		.info {
 			font-style: italic;
 		}
-
-		p {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-		}
 	}
 }
 
