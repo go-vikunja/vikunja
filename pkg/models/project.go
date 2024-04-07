@@ -368,7 +368,7 @@ type projectOptions struct {
 	getArchived bool
 }
 
-func getUserProjectsStatement(parentProjectIDs []int64, userID int64, search string, getArchived bool) *builder.Builder {
+func getUserProjectsStatement(userID int64, search string, getArchived bool) *builder.Builder {
 	dialect := db.GetDialect()
 
 	// Adding a 1=1 condition by default here because xorm always needs a condition and cannot handle nil conditions
@@ -413,18 +413,13 @@ func getUserProjectsStatement(parentProjectIDs []int64, userID int64, search str
 			),
 		)
 	}
-	projectCol := "id"
-	if len(parentProjectIDs) > 0 {
-		parentCondition = builder.In("l.parent_project_id", parentProjectIDs)
-		projectCol = "parent_project_id"
-	}
 
 	return builder.Dialect(dialect).
 		Select("l.*").
 		From("projects", "l").
-		Join("LEFT", "team_projects tl", "tl.project_id = l."+projectCol).
+		Join("LEFT", "team_projects tl", "tl.project_id = l.id").
 		Join("LEFT", "team_members tm2", "tm2.team_id = tl.team_id").
-		Join("LEFT", "users_projects ul", "ul.project_id = l."+projectCol).
+		Join("LEFT", "users_projects ul", "ul.project_id = l.id").
 		Where(builder.And(
 			builder.Or(
 				builder.Eq{"tm2.user_id": userID},
@@ -434,7 +429,6 @@ func getUserProjectsStatement(parentProjectIDs []int64, userID int64, search str
 			filterCond,
 			getArchivedCond,
 			parentCondition,
-			builder.NotIn("l.id", parentProjectIDs),
 		)).
 		GroupBy("l.id")
 }
@@ -442,7 +436,7 @@ func getUserProjectsStatement(parentProjectIDs []int64, userID int64, search str
 func getAllProjectsForUser(s *xorm.Session, userID int64, opts *projectOptions) (projects []*Project, totalCount int64, err error) {
 
 	limit, start := getLimitFromPageIndex(opts.page, opts.perPage)
-	query := getUserProjectsStatement(nil, userID, opts.search, opts.getArchived)
+	query := getUserProjectsStatement(userID, opts.search, opts.getArchived)
 
 	querySQLString, args, err := query.ToSQL()
 	if err != nil {
@@ -459,9 +453,26 @@ UNION ALL
 SELECT p.* FROM projects p
 INNER JOIN all_projects ap ON p.parent_project_id = ap.id`
 
+	columnStr := strings.Join([]string{
+		"all_projects.id",
+		"all_projects.title",
+		"all_projects.description",
+		"all_projects.identifier",
+		"all_projects.hex_color",
+		"all_projects.owner_id",
+		"CASE WHEN np.id IS NULL THEN 0 ELSE all_projects.parent_project_id END AS parent_project_id",
+		"all_projects.is_archived",
+		"all_projects.background_file_id",
+		"all_projects.background_blur_hash",
+		"all_projects.position",
+		"all_projects.created",
+		"all_projects.updated",
+	}, ", ")
 	currentProjects := []*Project{}
 	err = s.SQL(`WITH RECURSIVE all_projects as (`+baseQuery+`)
-SELECT DISTINCT * FROM all_projects ORDER BY position `+limitSQL, args...).Find(&currentProjects)
+SELECT DISTINCT `+columnStr+` FROM all_projects
+	LEFT JOIN all_projects np on all_projects.parent_project_id = np.id
+ORDER BY all_projects.position `+limitSQL, args...).Find(&currentProjects)
 	if err != nil {
 		return
 	}
