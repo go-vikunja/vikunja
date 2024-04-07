@@ -18,6 +18,7 @@ linters:
     - scopelint # Obsolete, using exportloopref instead
     - durationcheck
     - goconst
+    - musttag
   presets:
     - bugs
     - unused
