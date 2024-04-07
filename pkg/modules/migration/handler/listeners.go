@@ -51,7 +51,7 @@ func (s *MigrationListener) Handle(msg *message.Message) (err error) {
 	mstr := registeredMigrators[event.MigratorKind]
 	event.Migrator = mstr.MigrationStruct()
 
-	// unmarshaling again to make sure the migrator has the correct type now
+	// unmarshalling again to make sure the migrator has the correct type now
 	err = json.Unmarshal(msg.Payload, event)
 	if err != nil {
 		return

@@ -3,7 +3,7 @@
 		<h1>{{ $t('migrate.titleService', {name: migrator.name}) }}</h1>
 		<p>{{ $t('migrate.descriptionDo') }}</p>
 
-		<template v-if="message === '' && lastMigrationStartedAt === null">
+		<template v-if="message === '' && lastMigrationStartedAt === null && !migrationJustStarted">
 			<template v-if="isMigrating === false">
 				<template v-if="migrator.isFileMigrator">
 					<p>{{ $t('migrate.importUpload', {name: migrator.name}) }}</p>
