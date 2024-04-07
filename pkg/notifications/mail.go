@@ -31,7 +31,7 @@ type Mail struct {
 }
 
 type mailLine struct {
-	text   string
+	Text   string
 	isHTML bool
 }
 
@@ -71,7 +71,7 @@ func (m *Mail) Action(text, url string) *Mail {
 	return m
 }
 
-// Line adds a line of text to the mail
+// Line adds a line of Text to the mail
 func (m *Mail) Line(line string) *Mail {
 	return m.appendLine(line, false)
 }
@@ -83,14 +83,14 @@ func (m *Mail) HTML(line string) *Mail {
 func (m *Mail) appendLine(line string, isHTML bool) *Mail {
 	if m.actionURL == "" {
 		m.introLines = append(m.introLines, &mailLine{
-			text:   line,
+			Text:   line,
 			isHTML: isHTML,
 		})
 		return m
 	}
 
 	m.outroLines = append(m.outroLines, &mailLine{
-		text:   line,
+		Text:   line,
 		isHTML: isHTML,
 	})
 
