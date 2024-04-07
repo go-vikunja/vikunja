@@ -106,6 +106,12 @@ export const useProjectStore = defineStore('project', () => {
 	}
 
 	function removeProjectById(project: IProject) {
+		
+		// Remove child projects from state as well
+		projectsArray.value
+			.filter(p => p.parentProjectId === project.id)
+			.forEach(p => removeProjectById(p))
+		
 		remove(project)
 		delete projects.value[project.id]
 	}
