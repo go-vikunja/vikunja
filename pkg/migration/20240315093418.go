@@ -82,6 +82,7 @@ func init() {
 
 			if config.DatabaseType.GetString() == "sqlite" {
 				_, err = tx.Exec(`
+
 create table buckets_dg_tmp
 (
     id            INTEGER  not null
@@ -98,6 +99,8 @@ create table buckets_dg_tmp
 insert into buckets_dg_tmp(id, title, "limit", position, created, updated, created_by_id, project_view_id)
 select id, title, "limit", position, created, updated, created_by_id, project_view_id
 from buckets;
+
+drop index if exists buckets.UQE_buckets_id;
 
 drop table buckets;
 
