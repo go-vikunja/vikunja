@@ -12,7 +12,7 @@ describe('Project History', () => {
 		cy.intercept(Cypress.env('API_URL') + '/projects*').as('loadProjectArray')
 		cy.intercept(Cypress.env('API_URL') + '/projects/*').as('loadProject')
 		
-		const projects = ProjectFactory.create(6)
+		const projects = ProjectFactory.create(7)
 		ProjectViewFactory.truncate()
 		projects.forEach(p => ProjectViewFactory.create(1, {
 			id: p.id,
@@ -36,6 +36,8 @@ describe('Project History', () => {
 		cy.wait('@loadProject')
 		cy.visit(`/projects/${projects[5].id}/${projects[5].id}`)
 		cy.wait('@loadProject')
+		cy.visit(`/projects/${projects[6].id}/${projects[6].id}`)
+		cy.wait('@loadProject')
 
 		// cy.visit('/')
 		// Not using cy.visit here to work around the redirect issue fixed in #1337
@@ -52,5 +54,6 @@ describe('Project History', () => {
 			.should('contain', projects[3].title)
 			.should('contain', projects[4].title)
 			.should('contain', projects[5].title)
+			.should('contain', projects[6].title)
 	})
 })
