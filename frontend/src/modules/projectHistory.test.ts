@@ -26,7 +26,7 @@ test('store project in history', () => {
 	expect(saved).toBe('[{"id":1}]')
 })
 
-test('store only the last 5 projects in history', () => {
+test('store only the last 6 projects in history', () => {
 	let saved: string | null = null
 	vi.spyOn(localStorage, 'getItem').mockImplementation(() => saved)
 	vi.spyOn(localStorage, 'setItem').mockImplementation((key: string, projects: string) => {
@@ -39,7 +39,8 @@ test('store only the last 5 projects in history', () => {
 	saveProjectToHistory({id: 4})
 	saveProjectToHistory({id: 5})
 	saveProjectToHistory({id: 6})
-	expect(saved).toBe('[{"id":6},{"id":5},{"id":4},{"id":3},{"id":2}]')
+	saveProjectToHistory({id: 7})
+	expect(saved).toBe('[{"id":7},{"id":6},{"id":5},{"id":4},{"id":3},{"id":2}]')
 })
 
 test('don\'t store the same project twice', () => {

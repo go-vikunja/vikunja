@@ -63,6 +63,10 @@ const filteredProjects = computed(() => {
 
 	@media screen and (min-width: $widescreen) {
 		--project-grid-columns: 5;
+
+		.project-grid-item:nth-child(6) {
+			display: none;
+		}
 	}
 }
 
