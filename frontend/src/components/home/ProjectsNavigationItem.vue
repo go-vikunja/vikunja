@@ -58,7 +58,6 @@
 			<ProjectSettingsDropdown
 				class="menu-list-dropdown"
 				:project="project"
-				:level="level"
 			>
 				<template #trigger="{toggleOpen}">
 					<BaseButton
@@ -78,7 +77,6 @@
 			:model-value="childProjects"
 			:can-edit-order="true"
 			:can-collapse="canCollapse"
-			:level="level + 1"
 		/>
 	</li>
 </template>
@@ -101,12 +99,10 @@ const {
 	project,
 	isLoading,
 	canCollapse,
-	level = 0,
 } = defineProps<{
 	project: IProject,
 	isLoading?: boolean,
 	canCollapse?: boolean,
-	level?: number,
 }>()
 
 const projectStore = useProjectStore()

@@ -26,7 +26,6 @@
 				:project="project"
 				:is-loading="projectUpdating[project.id]"
 				:can-collapse="canCollapse"
-				:level="level"
 				:data-project-id="project.id"
 			/>
 		</template>
@@ -49,7 +48,6 @@ const props = defineProps<{
 	modelValue?: IProject[],
 	canEditOrder: boolean,
 	canCollapse?: boolean,
-	level?: number,
 }>()
 const emit = defineEmits<{
 	(e: 'update:modelValue', projects: IProject[]): void

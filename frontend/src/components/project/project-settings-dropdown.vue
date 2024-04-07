@@ -96,7 +96,6 @@
 				{{ $t('project.webhooks.title') }}
 			</DropdownItem>
 			<DropdownItem
-				v-if="level < 2"
 				:to="{ name: 'project.createFromParent', params: { parentProjectId: project.id } }"
 				icon="layer-group"
 			>
@@ -134,9 +133,6 @@ const props = defineProps({
 	project: {
 		type: Object as PropType<IProject>,
 		required: true,
-	},
-	level: {
-		type: Number,
 	},
 })
 
