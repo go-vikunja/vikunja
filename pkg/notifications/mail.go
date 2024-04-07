@@ -26,8 +26,13 @@ type Mail struct {
 	actionText string
 	actionURL  string
 	greeting   string
-	introLines []string
-	outroLines []string
+	introLines []*mailLine
+	outroLines []*mailLine
+}
+
+type mailLine struct {
+	text   string
+	isHTML bool
 }
 
 // NewMail creates a new mail object with a default greeting
@@ -68,12 +73,26 @@ func (m *Mail) Action(text, url string) *Mail {
 
 // Line adds a line of text to the mail
 func (m *Mail) Line(line string) *Mail {
+	return m.appendLine(line, false)
+}
+
+func (m *Mail) HTML(line string) *Mail {
+	return m.appendLine(line, true)
+}
+
+func (m *Mail) appendLine(line string, isHTML bool) *Mail {
 	if m.actionURL == "" {
-		m.introLines = append(m.introLines, line)
+		m.introLines = append(m.introLines, &mailLine{
+			text:   line,
+			isHTML: isHTML,
+		})
 		return m
 	}
 
-	m.outroLines = append(m.outroLines, line)
+	m.outroLines = append(m.outroLines, &mailLine{
+		text:   line,
+		isHTML: isHTML,
+	})
 
 	return m
 }

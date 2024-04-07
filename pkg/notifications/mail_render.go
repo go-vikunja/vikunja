@@ -23,6 +23,8 @@ import (
 	templatehtml "html/template"
 	templatetext "text/template"
 
+	"github.com/microcosm-cc/bluemonday"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/mail"
 	"code.vikunja.io/api/pkg/utils"
@@ -117,29 +119,43 @@ func RenderMail(m *Mail) (mailOpts *mail.Opts, err error) {
 	data["Boundary"] = boundary
 	data["FrontendURL"] = config.ServicePublicURL.GetString()
 
+	p := bluemonday.UGCPolicy()
+
 	var introLinesHTML []templatehtml.HTML
 	for _, line := range m.introLines {
-		md := []byte(templatehtml.HTMLEscapeString(line))
+		if line.isHTML {
+			// #nosec G203 -- the html is sanitized
+			introLinesHTML = append(introLinesHTML, templatehtml.HTML(p.Sanitize(line.text)))
+			continue
+		}
+
+		md := []byte(templatehtml.HTMLEscapeString(line.text))
 		var buf bytes.Buffer
 		err = goldmark.Convert(md, &buf)
 		if err != nil {
 			return nil, err
 		}
-		//#nosec - the html is escaped few lines before
-		introLinesHTML = append(introLinesHTML, templatehtml.HTML(buf.String()))
+		// #nosec G203 -- the html is sanitized
+		introLinesHTML = append(introLinesHTML, templatehtml.HTML(p.Sanitize(buf.String())))
 	}
 	data["IntroLinesHTML"] = introLinesHTML
 
 	var outroLinesHTML []templatehtml.HTML
 	for _, line := range m.outroLines {
-		md := []byte(templatehtml.HTMLEscapeString(line))
+		if line.isHTML {
+			// #nosec G203 -- the html is sanitized
+			outroLinesHTML = append(outroLinesHTML, templatehtml.HTML(p.Sanitize(line.text)))
+			continue
+		}
+
+		md := []byte(templatehtml.HTMLEscapeString(line.text))
 		var buf bytes.Buffer
 		err = goldmark.Convert(md, &buf)
 		if err != nil {
 			return nil, err
 		}
-		//#nosec - the html is escaped few lines before
-		outroLinesHTML = append(outroLinesHTML, templatehtml.HTML(buf.String()))
+		// #nosec G203 -- the html is sanitized
+		outroLinesHTML = append(outroLinesHTML, templatehtml.HTML(p.Sanitize(buf.String())))
 	}
 	data["OutroLinesHTML"] = outroLinesHTML
 

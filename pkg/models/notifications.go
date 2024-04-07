@@ -17,10 +17,8 @@
 package models
 
 import (
-	"bufio"
 	"sort"
 	"strconv"
-	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/utils"
@@ -77,20 +75,16 @@ func (n *TaskCommentNotification) SubjectID() int64 {
 func (n *TaskCommentNotification) ToMail() *notifications.Mail {
 
 	mail := notifications.NewMail().
-		From(n.Doer.GetNameAndFromEmail())
+		From(n.Doer.GetNameAndFromEmail()).
+		Subject("Re: " + n.Task.Title)
 
-	subject := "Re: " + n.Task.Title
 	if n.Mentioned {
-		subject = n.Doer.GetName() + ` mentioned you in a comment in "` + n.Task.Title + `"`
-		mail.Line("**" + n.Doer.GetName() + "** mentioned you in a comment:")
+		mail.
+			Line("**" + n.Doer.GetName() + "** mentioned you in a comment:").
+			Subject(n.Doer.GetName() + ` mentioned you in a comment in "` + n.Task.Title + `"`)
 	}
 
-	mail.Subject(subject)
-
-	lines := bufio.NewScanner(strings.NewReader(n.Comment.Comment))
-	for lines.Scan() {
-		mail.Line(lines.Text())
-	}
+	mail.HTML(n.Comment.Comment)
 
 	return mail.
 		Action("View Task", n.Task.GetFrontendURL())
@@ -306,12 +300,8 @@ func (n *UserMentionedInTaskNotification) ToMail() *notifications.Mail {
 	mail := notifications.NewMail().
 		From(n.Doer.GetNameAndFromEmail()).
 		Subject(subject).
-		Line("**" + n.Doer.GetName() + "** mentioned you in a task:")
-
-	lines := bufio.NewScanner(strings.NewReader(n.Task.Description))
-	for lines.Scan() {
-		mail.Line(lines.Text())
-	}
+		Line("**" + n.Doer.GetName() + "** mentioned you in a task:").
+		HTML(n.Task.Description)
 
 	return mail.
 		Action("View Task", n.Task.GetFrontendURL())
