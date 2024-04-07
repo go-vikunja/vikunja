@@ -143,6 +143,13 @@ func (bp *BackgroundProvider) SetBackground(c echo.Context) error {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
+
+	err = project.ReadOne(s, auth)
+	if err != nil {
+		_ = s.Rollback()
+		return handler.HandleHTTPError(err, c)
+	}
+
 	return c.JSON(http.StatusOK, project)
 }
 
