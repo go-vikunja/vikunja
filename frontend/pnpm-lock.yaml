@@ -29,8 +29,8 @@ dependencies:
     specifier: 3.1.0
     version: 3.1.0(patch_hash=c67tdk7qpd5grxd2zj6lsxfbou)
   '@infectoone/vue-ganttastic':
-    specifier: 2.3.1
-    version: 2.3.1(dayjs@1.11.10)(vue@3.4.21)
+    specifier: 2.3.2
+    version: 2.3.2(dayjs@1.11.10)(vue@3.4.21)
   '@intlify/unplugin-vue-i18n':
     specifier: 3.0.1
     version: 3.0.1(rollup@4.14.1)(vue-i18n@9.10.2)
@@ -2595,8 +2595,8 @@ packages:
     resolution: {integrity: sha512-6EwiSjwWYP7pTckG6I5eyFANjPhmPjUX9JRLUSfNPC7FX7zK9gyZAfUEaECL6ALTpGX5AjnBq3C9XmVWPitNpw==}
     dev: true
 
-  /@infectoone/vue-ganttastic@2.3.1(dayjs@1.11.10)(vue@3.4.21):
-    resolution: {integrity: sha512-2P53V2N3SagJhqDMogcfpm50qIhqxEINufJBdWUGGZutnEquLg4CQThHysJsNZ11tght8TUPlBM10wHnZAMGiQ==}
+  /@infectoone/vue-ganttastic@2.3.2(dayjs@1.11.10)(vue@3.4.21):
+    resolution: {integrity: sha512-krxHdlZvo4cdS4axQ99qb756RzwieI7LcyY2vAIehJ5Sxd/jz5Pu/vTplTC0Rxqj8T4v1knYPK9uvTMkQYWYng==}
     peerDependencies:
       dayjs: ^1.11.5
       vue: ^3.2.40
