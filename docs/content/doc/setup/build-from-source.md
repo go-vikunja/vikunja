@@ -35,7 +35,7 @@ That means compiling it boils down to these steps:
 
 1. Make sure [Go](https://golang.org/doc/install) is properly installed on your system. You'll need at least Go `1.21`.
 2. Make sure [Mage](https://magefile.org) is properly installed on your system.
-3. If you did not build the frontend in the steps before, you need to either do that or create a dummy index file with `mkdir -p frontend/dist && touch index.html`.
+3. If you did not build the frontend in the steps before, you need to either do that or create a dummy index file with `mkdir -p frontend/dist && touch frontend/dist/index.html`.
 4. Run `mage build` in the source of the main repo. This will build a binary in the root of the repo which will be able to run on your system.
 
 ### Build for different architectures
