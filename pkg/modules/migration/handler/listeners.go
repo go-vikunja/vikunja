@@ -17,16 +17,17 @@
 package handler
 
 import (
+	"encoding/json"
+	"fmt"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/notifications"
-	"encoding/json"
-	"fmt"
-	"github.com/getsentry/sentry-go"
 
 	"github.com/ThreeDotsLabs/watermill/message"
+	"github.com/getsentry/sentry-go"
 )
 
 func RegisterListeners() {
