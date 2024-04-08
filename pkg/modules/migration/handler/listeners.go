@@ -17,18 +17,30 @@
 package handler
 
 import (
-	"encoding/json"
-
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/notifications"
+	"encoding/json"
+	"fmt"
+	"github.com/getsentry/sentry-go"
 
 	"github.com/ThreeDotsLabs/watermill/message"
 )
 
 func RegisterListeners() {
 	events.RegisterListener((&MigrationRequestedEvent{}).Name(), &MigrationListener{})
+}
+
+// Only used for sentry
+type migrationFailedError struct {
+	MigratorKind  string
+	OriginalError error
+}
+
+func (m *migrationFailedError) Error() string {
+	return fmt.Sprintf("migration from %s failed, original error message was: %s", m.MigratorKind, m.OriginalError.Error())
 }
 
 // MigrationListener  represents a listener
@@ -59,13 +71,46 @@ func (s *MigrationListener) Handle(msg *message.Message) (err error) {
 
 	ms := event.Migrator.(migration.Migrator)
 
-	m, err := migration.StartMigration(ms, event.User)
+	m, err := migrateInListener(ms, event)
+	if err != nil {
+		log.Errorf("[Migration] Migration %d from %s for user %d failed. Error was: %s", m.ID, event.MigratorKind, event.User.ID, err.Error())
+
+		var nerr error
+		if config.SentryEnabled.GetBool() {
+			nerr = notifications.Notify(event.User, &MigrationFailedReportedNotification{
+				MigratorName: ms.Name(),
+			})
+			sentry.CaptureException(&migrationFailedError{
+				MigratorKind:  event.MigratorKind,
+				OriginalError: err,
+			})
+		} else {
+			nerr = notifications.Notify(event.User, &MigrationFailedNotification{
+				MigratorName: ms.Name(),
+				Error:        err,
+			})
+		}
+		if nerr != nil {
+			log.Errorf("[Migration] Could not sent failed migration notification for migration %d to user %d, error was: %s", m.ID, event.User.ID, err.Error())
+		}
+
+		// Still need to finish the migration, otherwise restarting will not work
+		err = migration.FinishMigration(m)
+		if err != nil {
+			log.Errorf("[Migration] Could not finish migration %d for user %d, error was: %s", m.ID, event.User.ID, err.Error())
+		}
+	}
+
+	return nil // We do not want the queue to restart this job as we've already handled the error.
+}
+
+func migrateInListener(ms migration.Migrator, event *MigrationRequestedEvent) (m *migration.Status, err error) {
+	m, err = migration.StartMigration(ms, event.User)
 	if err != nil {
 		return
 	}
 
 	log.Debugf("[Migration] Starting migration %d from %s for user %d", m.ID, event.MigratorKind, event.User.ID)
-
 	err = ms.Migrate(event.User)
 	if err != nil {
 		return
@@ -73,6 +118,7 @@ func (s *MigrationListener) Handle(msg *message.Message) (err error) {
 
 	err = migration.FinishMigration(m)
 	if err != nil {
+		log.Errorf("[Migration] Could not finish migration %d for user %d, error was: %s", m.ID, event.User.ID, err.Error())
 		return
 	}
 
@@ -80,6 +126,7 @@ func (s *MigrationListener) Handle(msg *message.Message) (err error) {
 		MigratorName: ms.Name(),
 	})
 	if err != nil {
+		log.Errorf("[Migration] Could not sent migration success notification for migration %d to user %d, error was: %s", m.ID, event.User.ID, err.Error())
 		return
 	}
 

@@ -49,3 +49,57 @@ func (n *MigrationDoneNotification) ToDB() interface{} {
 func (n *MigrationDoneNotification) Name() string {
 	return "migration.done"
 }
+
+// MigrationFailedReportedNotification represents a MigrationFailedReportedNotification notification
+type MigrationFailedReportedNotification struct {
+	MigratorName string
+}
+
+// ToMail returns the mail notification for MigrationFailedReportedNotification
+func (n *MigrationFailedReportedNotification) ToMail() *notifications.Mail {
+	kind := cases.Title(language.English).String(n.MigratorName)
+
+	return notifications.NewMail().
+		Subject("The migration from " + kind + " to Vikunja was has failed").
+		Line("Looks like the move from " + kind + " didn't go as planned this time.").
+		Line("No worries, though! Just give it another shot by starting over the same way you did before. Sometimes, these hiccups happen because of glitches on " + kind + "'s end, but trying again often does the trick.").
+		Line("We've got the error message on our radar and are on it to get it sorted out soon.")
+}
+
+// ToDB returns the MigrationFailedReportedNotification notification in a format which can be saved in the db
+func (n *MigrationFailedReportedNotification) ToDB() interface{} {
+	return nil
+}
+
+// Name returns the name of the notification
+func (n *MigrationFailedReportedNotification) Name() string {
+	return "migration.failed.reported"
+}
+
+// MigrationFailedNotification represents a MigrationFailedNotification notification
+type MigrationFailedNotification struct {
+	MigratorName string
+	Error        error
+}
+
+// ToMail returns the mail notification for MigrationFailedNotification
+func (n *MigrationFailedNotification) ToMail() *notifications.Mail {
+	kind := cases.Title(language.English).String(n.MigratorName)
+
+	return notifications.NewMail().
+		Subject("The migration from " + kind + " to Vikunja was has failed").
+		Line("Looks like the move from " + kind + " didn't go as planned this time.").
+		Line("No worries, though! Just give it another shot by starting over the same way you did before. Sometimes, these hiccups happen because of glitches on " + kind + "'s end, but trying again often does the trick.").
+		Line("We bumped into a little error along the way: `" + n.Error.Error() + "`.").
+		Line("Please drop us a note about this [in the forum](https://community.vikunja.io/) or any of the usual places so that we can take a look at why it failed.")
+}
+
+// ToDB returns the MigrationFailedNotification notification in a format which can be saved in the db
+func (n *MigrationFailedNotification) ToDB() interface{} {
+	return nil
+}
+
+// Name returns the name of the notification
+func (n *MigrationFailedNotification) Name() string {
+	return "migration.failed"
+}
