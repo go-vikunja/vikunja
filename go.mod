@@ -50,6 +50,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/magefile/mage v1.15.0
 	github.com/mattn/go-sqlite3 v1.14.22
+	github.com/microcosm-cc/bluemonday v1.0.26
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/pquerna/otp v1.4.0
@@ -66,7 +67,7 @@ require (
 	github.com/typesense/typesense-go v1.0.0
 	github.com/ulule/limiter/v3 v3.11.2
 	github.com/wneessen/go-mail v0.4.0
-	github.com/yuin/goldmark v1.7.0
+	github.com/yuin/goldmark v1.7.1
 	golang.org/x/crypto v0.22.0
 	golang.org/x/image v0.15.0
 	golang.org/x/oauth2 v0.18.0
@@ -139,7 +140,6 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
-	github.com/microcosm-cc/bluemonday v1.0.26 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
