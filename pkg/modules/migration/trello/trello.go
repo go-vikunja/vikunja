@@ -173,9 +173,11 @@ func fillCardData(client *trello.Client, board *trello.Board) (err error) {
 			continue
 		}
 
-		card.Attachments, err = card.GetAttachments(allArg)
-		if err != nil {
-			return
+		if card.Badges.Attachments > 0 {
+			card.Attachments, err = card.GetAttachments(allArg)
+			if err != nil {
+				return
+			}
 		}
 
 		if len(card.IDCheckLists) > 0 {
