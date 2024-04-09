@@ -180,6 +180,13 @@ func fillCardData(client *trello.Client, board *trello.Board) (err error) {
 			}
 		}
 
+		if card.Badges.Comments > 0 {
+			card.Actions, err = card.GetCommentActions()
+			if err != nil {
+				return
+			}
+		}
+
 		if len(card.IDCheckLists) > 0 {
 			for _, checkListID := range card.IDCheckLists {
 				checklist, err := client.GetChecklist(checkListID, allArg)
@@ -218,7 +225,7 @@ func convertMarkdownToHTML(input string) (output string, err error) {
 
 // Converts all previously obtained data from trello into the vikunja format.
 // `trelloData` should contain all boards with their projects and cards respectively.
-func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Board, token string) (fullVikunjaHierachie []*models.ProjectWithTasksAndBuckets, err error) {
+func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Board, token string, currentMember *trello.Member) (fullVikunjaHierachie []*models.ProjectWithTasksAndBuckets, err error) {
 
 	log.Debugf("[Trello Migration] ")
 
@@ -274,9 +281,11 @@ func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Bo
 				log.Debugf("[Trello Migration] Converting card %s", card.ID)
 
 				// The usual stuff: Title, description, position, bucket id
-				task := &models.Task{
-					Title:    card.Name,
-					BucketID: bucketID,
+				task := &models.TaskWithComments{
+					Task: models.Task{
+						Title:    card.Name,
+						BucketID: bucketID,
+					},
 				}
 
 				task.Description, err = convertMarkdownToHTML(card.Desc)
@@ -384,7 +393,32 @@ func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Bo
 					task.CoverImageAttachmentID = coverAttachment.ID
 				}
 
-				project.Tasks = append(project.Tasks, &models.TaskWithComments{Task: *task})
+				for _, action := range card.Actions {
+					if action.DidCommentCard() {
+						if task.Comments == nil {
+							task.Comments = []*models.TaskComment{}
+						}
+
+						comment := &models.TaskComment{
+							Comment: action.Data.Text,
+							Created: action.Date,
+							Updated: action.Date,
+						}
+
+						if currentMember == nil || action.IDMemberCreator != currentMember.ID {
+							comment.Comment = "*" + action.MemberCreator.FullName + "*:\n\n" + comment.Comment
+						}
+
+						comment.Comment, err = convertMarkdownToHTML(comment.Comment)
+						if err != nil {
+							return
+						}
+
+						task.Comments = append(task.Comments, comment)
+					}
+				}
+
+				project.Tasks = append(project.Tasks, task)
 			}
 
 			project.Buckets = append(project.Buckets, bucket)
@@ -449,7 +483,11 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 
 		log.Debugf("[Trello Migration] Start converting trello data for user %d for organization %s", u.ID, organizationID)
 
-		hierarchy, err := convertTrelloDataToVikunja(orgName, boards, m.Token)
+		currentMember, err := client.GetMyMember(trello.Defaults())
+		if err != nil {
+			return err
+		}
+		hierarchy, err := convertTrelloDataToVikunja(orgName, boards, client.Token, currentMember)
 		if err != nil {
 			return err
 		}
