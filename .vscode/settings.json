@@ -5,7 +5,7 @@
     "eslint.packageManager": "pnpm",
     "editor.formatOnSave": false,
     "editor.codeActionsOnSave": {
-        "source.fixAll": true
+        "source.fixAll": "explicit"
     },
     "eslint.format.enable": true,
     "[javascript]": {
