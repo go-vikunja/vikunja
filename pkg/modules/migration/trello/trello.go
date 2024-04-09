@@ -107,79 +107,99 @@ func (m *Migration) AuthURL() string {
 		"&return_url=" + config.MigrationTrelloRedirectURL.GetString()
 }
 
-func getTrelloData(token string) (trelloData []*trello.Board, err error) {
-	allArg := trello.Arguments{"fields": "all"}
-
-	client := trello.NewClient(config.MigrationTrelloKey.GetString(), token)
-	client.Logger = log.GetLogger()
-
+func getTrelloBoards(client *trello.Client) (trelloData []*trello.Board, err error) {
 	log.Debugf("[Trello Migration] Getting boards...")
 
 	trelloData, err = client.GetMyBoards(trello.Defaults())
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	log.Debugf("[Trello Migration] Got %d trello boards", len(trelloData))
 
-	for _, board := range trelloData {
-		log.Debugf("[Trello Migration] Getting projects for board %s", board.ID)
+	return
+}
 
-		board.Lists, err = board.GetLists(trello.Defaults())
+func getTrelloOrganizationsWithBoards(boards []*trello.Board) (boardsByOrg map[string][]*trello.Board) {
+
+	boardsByOrg = make(map[string][]*trello.Board)
+
+	for _, board := range boards {
+		// Trello boards without an organization are considered personal boards
+		if board.IDOrganization == "" {
+			board.IDOrganization = "Personal"
+		}
+
+		_, has := boardsByOrg[board.IDOrganization]
+		if !has {
+			boardsByOrg[board.IDOrganization] = []*trello.Board{}
+		}
+
+		boardsByOrg[board.IDOrganization] = append(boardsByOrg[board.IDOrganization], board)
+	}
+
+	return
+}
+
+func fillCardData(client *trello.Client, board *trello.Board) (err error) {
+	allArg := trello.Arguments{"fields": "all"}
+
+	log.Debugf("[Trello Migration] Getting projects for board %s", board.ID)
+
+	board.Lists, err = board.GetLists(trello.Defaults())
+	if err != nil {
+		return err
+	}
+
+	log.Debugf("[Trello Migration] Got %d projects for board %s", len(board.Lists), board.ID)
+
+	listMap := make(map[string]*trello.List, len(board.Lists))
+	for _, list := range board.Lists {
+		listMap[list.ID] = list
+	}
+
+	log.Debugf("[Trello Migration] Getting cards for board %s", board.ID)
+
+	cards, err := board.GetCards(allArg)
+	if err != nil {
+		return
+	}
+
+	log.Debugf("[Trello Migration] Got %d cards for board %s", len(cards), board.ID)
+
+	for _, card := range cards {
+		list, exists := listMap[card.IDList]
+		if !exists {
+			continue
+		}
+
+		card.Attachments, err = card.GetAttachments(allArg)
 		if err != nil {
 			return
 		}
 
-		log.Debugf("[Trello Migration] Got %d projects for board %s", len(board.Lists), board.ID)
-
-		listMap := make(map[string]*trello.List, len(board.Lists))
-		for _, list := range board.Lists {
-			listMap[list.ID] = list
-		}
-
-		log.Debugf("[Trello Migration] Getting cards for board %s", board.ID)
-
-		cards, err := board.GetCards(allArg)
-		if err != nil {
-			return nil, err
-		}
-
-		log.Debugf("[Trello Migration] Got %d cards for board %s", len(cards), board.ID)
-
-		for _, card := range cards {
-			list, exists := listMap[card.IDList]
-			if !exists {
-				continue
-			}
-
-			card.Attachments, err = card.GetAttachments(allArg)
-			if err != nil {
-				return nil, err
-			}
-
-			if len(card.IDCheckLists) > 0 {
-				for _, checkListID := range card.IDCheckLists {
-					checklist, err := client.GetChecklist(checkListID, allArg)
-					if err != nil {
-						return nil, err
-					}
-
-					checklist.CheckItems = []trello.CheckItem{}
-					err = client.Get("checklists/"+checkListID+"/checkItems", allArg, &checklist.CheckItems)
-					if err != nil {
-						return nil, err
-					}
-
-					card.Checklists = append(card.Checklists, checklist)
-					log.Debugf("Retrieved checklist %s for card %s", checkListID, card.ID)
+		if len(card.IDCheckLists) > 0 {
+			for _, checkListID := range card.IDCheckLists {
+				checklist, err := client.GetChecklist(checkListID, allArg)
+				if err != nil {
+					return err
 				}
-			}
 
-			list.Cards = append(list.Cards, card)
+				checklist.CheckItems = []trello.CheckItem{}
+				err = client.Get("checklists/"+checkListID+"/checkItems", allArg, &checklist.CheckItems)
+				if err != nil {
+					return err
+				}
+
+				card.Checklists = append(card.Checklists, checklist)
+				log.Debugf("Retrieved checklist %s for card %s", checkListID, card.ID)
+			}
 		}
 
-		log.Debugf("[Trello Migration] Looked for attachements on all cards of board %s", board.ID)
+		list.Cards = append(list.Cards, card)
 	}
+
+	log.Debugf("[Trello Migration] Looked for attachements on all cards of board %s", board.ID)
 
 	return
 }
@@ -196,7 +216,7 @@ func convertMarkdownToHTML(input string) (output string, err error) {
 
 // Converts all previously obtained data from trello into the vikunja format.
 // `trelloData` should contain all boards with their projects and cards respectively.
-func convertTrelloDataToVikunja(trelloData []*trello.Board, token string) (fullVikunjaHierachie []*models.ProjectWithTasksAndBuckets, err error) {
+func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Board, token string) (fullVikunjaHierachie []*models.ProjectWithTasksAndBuckets, err error) {
 
 	log.Debugf("[Trello Migration] ")
 
@@ -205,7 +225,7 @@ func convertTrelloDataToVikunja(trelloData []*trello.Board, token string) (fullV
 		{
 			Project: models.Project{
 				ID:    pseudoParentID,
-				Title: "Imported from Trello",
+				Title: organizationName,
 			},
 		},
 	}
@@ -392,29 +412,58 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 	log.Debugf("[Trello Migration] Starting migration for user %d", u.ID)
 	log.Debugf("[Trello Migration] Getting all trello data for user %d", u.ID)
 
-	trelloData, err := getTrelloData(m.Token)
+	client := trello.NewClient(config.MigrationTrelloKey.GetString(), m.Token)
+	client.Logger = log.GetLogger()
+
+	boards, err := getTrelloBoards(client)
 	if err != nil {
 		return
 	}
 
 	log.Debugf("[Trello Migration] Got all trello data for user %d", u.ID)
-	log.Debugf("[Trello Migration] Start converting trello data for user %d", u.ID)
 
-	fullVikunjaHierachie, err := convertTrelloDataToVikunja(trelloData, m.Token)
-	if err != nil {
-		return
+	organizationMap := getTrelloOrganizationsWithBoards(boards)
+	for organizationID, boards := range organizationMap {
+		log.Debugf("[Trello Migration] Getting organization with id %s for user %d", organizationID, u.ID)
+		orgName := organizationID
+		if organizationID != "Personal" {
+			organization, err := client.GetOrganization(organizationID, trello.Defaults())
+			if err != nil {
+				return err
+			}
+			orgName = organization.DisplayName
+		}
+
+		for _, board := range boards {
+			log.Debugf("[Trello Migration] Getting card data for board %s for user %d for organization %s", board.ID, u.ID, organizationID)
+
+			err = fillCardData(client, board)
+			if err != nil {
+				return err
+			}
+
+			log.Debugf("[Trello Migration] Got card data for board %s for user %d for organization %s", board.ID, u.ID, organizationID)
+		}
+
+		log.Debugf("[Trello Migration] Start converting trello data for user %d for organization %s", u.ID, organizationID)
+
+		hierarchy, err := convertTrelloDataToVikunja(orgName, boards, m.Token)
+		if err != nil {
+			return err
+		}
+
+		log.Debugf("[Trello Migration] Done migrating trello data for user %d for organization %s", u.ID, organizationID)
+		log.Debugf("[Trello Migration] Start inserting trello data for user %d for organization %s", u.ID, organizationID)
+
+		err = migration.InsertFromStructure(hierarchy, u)
+		if err != nil {
+			return err
+		}
+
+		log.Debugf("[Trello Migration] Done inserting trello data for user %d for organization %s", u.ID, organizationID)
 	}
 
-	log.Debugf("[Trello Migration] Done migrating trello data for user %d", u.ID)
-	log.Debugf("[Trello Migration] Start inserting trello data for user %d", u.ID)
+	log.Debugf("[Trello Migration] Done migrating all trello data for user %d", u.ID)
 
-	err = migration.InsertFromStructure(fullVikunjaHierachie, u)
-	if err != nil {
-		return
-	}
-
-	log.Debugf("[Trello Migration] Done inserting trello data for user %d", u.ID)
-	log.Debugf("[Trello Migration] Migration done for user %d", u.ID)
-
-	return nil
+	return
 }
