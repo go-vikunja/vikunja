@@ -10,7 +10,7 @@ menu:
 
 # Vikunja Versions
 
-The Vikunja api and frontend are available in two different release flavors.
+Vikunja api is available in two different release flavors.
 
 {{< table_of_contents >}}
 
@@ -29,6 +29,9 @@ There might be multiple new such builds a day.
 
 Versions contain the last stable version, the number of commits since then and the commit the currently running binary was built from.
 They look like this: `v0.18.1+269-5cc4927b9e`
+
+Since a release is also cut from the main branch at some point, features from unstable will eventually become available in stable releases.
+At the point in time of a new version release, the unstable build is the same exact thing.
 
 The demo instance at [try.vikunja.io](https://try.vikunja.io) automatically updates and always runs the last unstable build.
 
