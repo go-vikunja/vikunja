@@ -156,6 +156,7 @@ const savedFilterProjects = computed(() => projectStore.savedFilterProjects)
 	left: 0;
 	transform: translateX(-100%);
 	width: $navbar-width;
+	overflow-y: auto;
 
 	@media screen and (max-width: $tablet) {
 		top: 0;
