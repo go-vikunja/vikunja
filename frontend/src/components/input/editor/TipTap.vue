@@ -67,6 +67,7 @@
 			class="tiptap__editor"
 			:class="{'tiptap__editor-is-edit-enabled': isEditing}"
 			:editor="editor"
+			@dblclick="setEditIfApplicable()"
 			@click="focusIfEditing()"
 		/>
 
@@ -465,6 +466,13 @@ function bubbleSave() {
 	if (isEditing.value) {
 		internalMode.value = 'preview'
 	}
+}
+
+function setEditIfApplicable() {
+	if (!isEditEnabled) return
+	if (isEditing.value) return
+
+	setEdit()
 }
 
 function setEdit(focus: boolean = true) {
