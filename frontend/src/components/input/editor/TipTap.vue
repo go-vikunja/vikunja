@@ -190,7 +190,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import XButton from '@/components/input/button.vue'
 import {Placeholder} from '@tiptap/extension-placeholder'
 import {eventToHotkeyString} from '@github/hotkey'
-import {mergeAttributes} from '@tiptap/core'
+import {Extension, mergeAttributes} from '@tiptap/core'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import inputPrompt from '@/helpers/inputPrompt'
 import {setLinkInEditor} from '@/components/input/editor/setLinkInEditor'
@@ -312,6 +312,8 @@ const internalMode = ref<Mode>('preview')
 const isEditing = computed(() => internalMode.value === 'edit' && isEditEnabled)
 const contentHasChanged = ref<boolean>(false)
 
+let lastSavedState = modelValue
+
 watch(
 	() => internalMode.value,
 	mode => {
@@ -344,6 +346,19 @@ const editor = useEditor({
 						if (contentHasChanged.value) {
 							bubbleSave()
 						}
+						return true
+					},
+				}
+			},
+		}),
+		// Add a custom extension for the Escape key
+		Extension.create({
+			name: 'escapeKey',
+
+			addKeyboardShortcuts() {
+				return {
+					'Escape': () => {
+						exitEditMode()
 						return true
 					},
 				}
@@ -462,7 +477,15 @@ function bubbleNow() {
 
 function bubbleSave() {
 	bubbleNow()
-	emit('save', editor.value?.getHTML())
+	lastSavedState = editor.value?.getHTML() ?? ''
+	emit('save', lastSavedState)
+	if (isEditing.value) {
+		internalMode.value = 'preview'
+	}
+}
+
+function exitEditMode() {
+	editor.value?.commands.setContent(lastSavedState, false)
 	if (isEditing.value) {
 		internalMode.value = 'preview'
 	}
