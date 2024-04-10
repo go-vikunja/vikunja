@@ -28,12 +28,20 @@ All commands use the same standard [config file]({{< ref "../setup/config.md">}}
 
 ## Using the cli in docker
 
-When running Vikunja in docker, you'll need to execute all commands in the `api` container.
+When running Vikunja in docker, you'll need to execute all commands in the `vikunja` container.
 Instead of running the `vikunja` binary directly, run it like this:
 
 ```sh
-docker exec <name of the vikunja api container> /app/vikunja/vikunja <subcommand>
+docker exec <name of the vikunja container> /app/vikunja/vikunja <subcommand>
 ```
+
+If you need to run a bunch of Vikunja commands, you can also create a shell alias for it:
+
+```sh
+alias vikunja-docker='docker exec <name of the vikunja container> /app/vikunja/vikunja'
+```
+
+Then use it as `vikunja-docker <subcommand>`.
 
 ### `dump`
 
