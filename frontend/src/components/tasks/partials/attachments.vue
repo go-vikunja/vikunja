@@ -67,6 +67,12 @@
 							{{ a.file.mime }}
 						</span>
 					</p>
+					<img
+						v-if="canPreview(a)"
+						:src="blobUrls.get(a.id)"
+						style="height: 20vh; min-height: 100px"
+						alt=""
+					>
 					<p>
 						<BaseButton
 							v-tooltip="$t('task.attachment.downloadTooltip')"
@@ -168,7 +174,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, shallowReactive, computed} from 'vue'
+import {ref, shallowReactive, computed, onMounted} from 'vue'
 import {useDropZone} from '@vueuse/core'
 
 import User from '@/components/misc/user.vue'
@@ -222,6 +228,20 @@ function downloadAttachment(attachment: IAttachment) {
 
 const filesRef = ref<HTMLInputElement | null>(null)
 
+const blobUrls = ref<Map<number, string>>(new Map())
+
+onMounted(() => {
+	fetchBlobUrls(attachments.value as IAttachment[])
+})
+
+async function fetchBlobUrls(attachments: IAttachment[]) {
+	for (const attachment of attachments) {
+		const blobUrl = await attachmentService.getBlobUrl(attachment)
+		if (canPreview(attachment)) {
+			blobUrls.value.set(attachment.id, blobUrl)
+		}
+	}
+}
 function uploadNewAttachment() {
 	const files = filesRef.value?.files
 
@@ -260,11 +280,15 @@ async function deleteAttachment() {
 const attachmentImageBlobUrl = ref<string | null>(null)
 
 async function viewOrDownload(attachment: IAttachment) {
-	if (SUPPORTED_IMAGE_SUFFIX.some((suffix) => attachment.file.name.endsWith(suffix))) {
+	if (canPreview(attachment)) {
 		attachmentImageBlobUrl.value = await attachmentService.getBlobUrl(attachment)
 	} else {
 		downloadAttachment(attachment)
 	}
+}
+
+function canPreview(attachment: IAttachment): boolean {
+	return SUPPORTED_IMAGE_SUFFIX.some((suffix) => attachment.file.name.endsWith(suffix))
 }
 
 const copy = useCopyToClipboard()
