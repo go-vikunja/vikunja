@@ -78,6 +78,13 @@ func getTestBoard(t *testing.T) ([]*trello.Board, time.Time) {
 									MimeType: "image/jpg",
 									URL:      "https://vikunja.io/testimage.jpg",
 								},
+								{
+									ID:       "7cc71b16f0c7a57bed3c94e9",
+									Name:     "Website",
+									IsUpload: false,
+									MimeType: "",
+									URL:      "https://vikunja.io",
+								},
 							},
 						},
 						{
@@ -265,10 +272,11 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 				Tasks: []*models.TaskWithComments{
 					{
 						Task: models.Task{
-							Title:       "Test Card 1",
-							Description: "<p>Card Description <strong>bold</strong></p>\n",
-							BucketID:    1,
-							DueDate:     time1,
+							Title: "Test Card 1",
+							Description: "<p>Card Description <strong>bold</strong></p>\n" +
+								"<p><a href=\"https://vikunja.io\">Website</a></p>\n",
+							BucketID: 1,
+							DueDate:  time1,
 							Labels: []*models.Label{
 								{
 									Title:    "Label 1",
@@ -481,6 +489,6 @@ func TestCreateOrganizationMap(t *testing.T) {
 		},
 	}
 	if diff, equal := messagediff.PrettyDiff(organizationMap, expectedMap); !equal {
-		t.Errorf("converted trello data = %v,\nwant %v,\ndiff: %v", organizationMap, expectedMap, diff)
+		t.Errorf("converted organization map = %v,\nwant %v,\ndiff: %v", organizationMap, expectedMap, diff)
 	}
 }

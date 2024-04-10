@@ -336,37 +336,39 @@ func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Bo
 					log.Debugf("[Trello Migration] Downloading %d card attachments from card %s", len(card.Attachments), card.ID)
 				}
 				for _, attachment := range card.Attachments {
-					if !attachment.IsUpload { // There are other types of attachments which are not files. We can only handle files.
-						log.Debugf("[Trello Migration] Attachment %s does not have a mime type, not downloading", attachment.ID)
+					if attachment.IsUpload {
+						// Download file and add it as attachment
+						log.Debugf("[Trello Migration] Downloading card attachment %s", attachment.ID)
+
+						buf, err := migration.DownloadFileWithHeaders(attachment.URL, map[string][]string{
+							"Authorization": {`OAuth oauth_consumer_key="` + config.MigrationTrelloKey.GetString() + `", oauth_token="` + token + `"`},
+						})
+						if err != nil {
+							return nil, err
+						}
+
+						vikunjaAttachment := &models.TaskAttachment{
+							File: &files.File{
+								Name:        attachment.Name,
+								Mime:        attachment.MimeType,
+								Size:        uint64(buf.Len()),
+								FileContent: buf.Bytes(),
+							},
+						}
+
+						if card.IDAttachmentCover != "" && card.IDAttachmentCover == attachment.ID {
+							vikunjaAttachment.ID = 42
+							task.CoverImageAttachmentID = 42
+						}
+
+						task.Attachments = append(task.Attachments, vikunjaAttachment)
+
+						log.Debugf("[Trello Migration] Downloaded card attachment %s", attachment.ID)
 						continue
 					}
 
-					log.Debugf("[Trello Migration] Downloading card attachment %s", attachment.ID)
-
-					buf, err := migration.DownloadFileWithHeaders(attachment.URL, map[string][]string{
-						"Authorization": {`OAuth oauth_consumer_key="` + config.MigrationTrelloKey.GetString() + `", oauth_token="` + token + `"`},
-					})
-					if err != nil {
-						return nil, err
-					}
-
-					vikunjaAttachment := &models.TaskAttachment{
-						File: &files.File{
-							Name:        attachment.Name,
-							Mime:        attachment.MimeType,
-							Size:        uint64(buf.Len()),
-							FileContent: buf.Bytes(),
-						},
-					}
-
-					if card.IDAttachmentCover != "" && card.IDAttachmentCover == attachment.ID {
-						vikunjaAttachment.ID = 42
-						task.CoverImageAttachmentID = 42
-					}
-
-					task.Attachments = append(task.Attachments, vikunjaAttachment)
-
-					log.Debugf("[Trello Migration] Downloaded card attachment %s", attachment.ID)
+					// Other links are not attachments in Vikunja, but we can add them to the description
+					task.Description += `<p><a href="` + attachment.URL + `">` + attachment.Name + "</a></p>\n"
 				}
 
 				// When the cover image was set manually, we need to add it as an attachment
