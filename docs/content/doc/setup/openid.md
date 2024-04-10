@@ -103,7 +103,7 @@ auth:
 
 ## Automatically assign users to teams
 
-Vikunja is capable of automatically adding users to a team based on OIDC claims added by the identity provider.
+Starting with version 0.24.0, Vikunja is capable of automatically adding users to a team based on OIDC claims added by the identity provider.
 If configured, Vikunja will sync teams, automatically create new ones and make sure the members are part of the configured teams.
 Teams which exist only because they were created from oidc attributes are not editable in Vikunja.
 
