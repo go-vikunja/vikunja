@@ -891,8 +891,14 @@ ul[data-type='taskList'] {
 	padding: 0;
 	margin-left: 0;
 
+	li[data-checked='true'] {
+		color: var(--grey-500);
+		text-decoration: line-through;
+	}
+
 	li {
 		display: flex;
+		margin-top: 0.25rem;
 
 		> label {
 			flex: 0 0 auto;

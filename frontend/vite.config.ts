@@ -17,11 +17,11 @@ import postcssEasings from 'postcss-easings'
 import postcssEasingGradients from 'postcss-easing-gradients'
 
 
-const pathSrc = fileURLToPath(new URL('./src', import.meta.url))
+const pathSrc = fileURLToPath(new URL('./src', import.meta.url)).replaceAll('\\', '/')
 
 // the @use rules have to be the first in the compiled stylesheets
 const PREFIXED_SCSS_STYLES = `@use "sass:math";
-@import "${pathSrc}/styles/common-imports";`
+@import "${pathSrc}/styles/common-imports.scss";`
 
 const isModernBuild = Boolean(process.env.BUILD_MODERN_ONLY)
 const legacy = isModernBuild
