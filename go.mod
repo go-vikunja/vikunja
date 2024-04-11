@@ -21,7 +21,7 @@ require (
 	dario.cat/mergo v1.0.0
 	github.com/ThreeDotsLabs/watermill v1.3.5
 	github.com/adlio/trello v1.11.0
-	github.com/arran4/golang-ical v0.2.7
+	github.com/arran4/golang-ical v0.2.8
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/bbrks/go-blurhash v1.1.1
 	github.com/c2h5oh/datasize v0.0.0-20231215233829-aa82cc1e6500
