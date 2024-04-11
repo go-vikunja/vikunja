@@ -262,8 +262,8 @@ devDependencies:
     specifier: 0.17.17
     version: 0.17.17(histoire@0.17.17)(vite@5.2.8)(vue@3.4.21)
   '@rushstack/eslint-patch':
-    specifier: 1.10.1
-    version: 1.10.1
+    specifier: 1.10.2
+    version: 1.10.2
   '@tsconfig/node18':
     specifier: 18.2.4
     version: 18.2.4
@@ -3053,8 +3053,8 @@ packages:
     requiresBuild: true
     optional: true
 
-  /@rushstack/eslint-patch@1.10.1:
-    resolution: {integrity: sha512-S3Kq8e7LqxkA9s7HKLqXGTGck1uwis5vAXan3FnU5yw1Ec5hsSGnq4s/UCaSqABPOnOTg7zASLyst7+ohgWexg==}
+  /@rushstack/eslint-patch@1.10.2:
+    resolution: {integrity: sha512-hw437iINopmQuxWPSUEvqE56NCPsiU8N4AYtfHmJFckclktzK9YQJieD3XkDCDH4OjL+C7zgPUh73R/nrcHrqw==}
     dev: true
 
   /@sentry-internal/feedback@7.109.0:
