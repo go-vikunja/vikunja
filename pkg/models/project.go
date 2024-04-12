@@ -146,6 +146,9 @@ func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 		}
 		projects := []*Project{project}
 		err = addProjectDetails(s, projects, a)
+		if err == nil && len(projects) > 0 {
+			projects[0].ParentProjectID = 0
+		}
 		return projects, 0, 0, err
 	}
 
@@ -224,6 +227,11 @@ func (p *Project) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 		p.Created = sf.Created
 		p.Updated = sf.Updated
 		p.OwnerID = sf.OwnerID
+	}
+
+	_, isShareAuth := a.(*LinkSharing)
+	if isShareAuth {
+		p.ParentProjectID = 0
 	}
 
 	// Get project owner
