@@ -225,9 +225,12 @@ go install github.com/magefile/mage
 ```
 mkdir /mnt/GO/code.vikunja.io
 cd /mnt/GO/code.vikunja.io
-git clone https://code.vikunja.io/api
-cd /mnt/GO/code.vikunja.io/api
+git clone https://code.vikunja.io/vikunja
+cd vikunja
 ```
+
+**Note:** Ceck out the version you want to build with `git checkout VERSION` - replace `VERSION` with the version want to use.
+If you don't do this, you'll build the [latest unstable build]({{< ref "versions.md">}}), which might contain bugs.
 
 ### Compile binaries
 

@@ -18,6 +18,7 @@ To fully build Vikunja from source files, you need to build the api and frontend
 
 1. Make sure you have git installed
 2. Clone the repo with `git clone https://code.vikunja.io/vikunja` and switch into the directory.
+3. Check out the version you want to build with `git checkout VERSION` - replace `VERSION` with the version want to use. If you don't do this, you'll build the [latest unstable build]({{< ref "versions.md">}}), which might contain bugs.
 
 ## Frontend
 
