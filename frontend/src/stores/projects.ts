@@ -207,13 +207,17 @@ export const useProjectStore = defineStore('project', () => {
 	}
 
 	function getAncestors(project: IProject): IProject[] {
+		if (typeof project === 'undefined') {
+			return []
+		}
+
 		if (!project?.parentProjectId) {
 			return [project]
 		}
 
 		const parentProject = projects.value[project.parentProjectId]
 		return [
-			...getAncestors(parentProject),
+			...(parentProject ? getAncestors(parentProject) : []),
 			project,
 		]
 	}
