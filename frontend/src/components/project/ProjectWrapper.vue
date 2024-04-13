@@ -88,7 +88,7 @@ const currentProject = computed<IProject>(() => {
 })
 useTitle(() => currentProject.value?.id ? getProjectTitle(currentProject.value) : '')
 
-const views = computed(() => currentProject.value?.views || [])
+const views = computed(() => projectStore.projects[projectId]?.views)
 
 // watchEffect would be called every time the prop would get a value assigned, even if that value was the same as before.
 // This resulted in loading and setting the project multiple times, even when navigating away from it.
