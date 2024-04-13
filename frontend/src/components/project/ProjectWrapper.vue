@@ -161,6 +161,7 @@ function getViewTitle(view: IProjectView) {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;	
+	gap: 1rem;
 	
 	@media screen and (max-width: $tablet) {
 		justify-content: center;
