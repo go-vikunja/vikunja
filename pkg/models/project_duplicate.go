@@ -226,9 +226,11 @@ func duplicateViews(s *xorm.Session, pd *ProjectDuplicate, doer web.Auth, taskMa
 		})
 	}
 
-	_, err = s.Insert(&taskBuckets)
-	if err != nil {
-		return err
+	if len(taskBuckets) > 0 {
+		_, err = s.Insert(&taskBuckets)
+		if err != nil {
+			return err
+		}
 	}
 
 	oldTaskPositions := []*TaskPosition{}
@@ -246,7 +248,9 @@ func duplicateViews(s *xorm.Session, pd *ProjectDuplicate, doer web.Auth, taskMa
 		})
 	}
 
-	_, err = s.Insert(&taskPositions)
+	if len(taskPositions) > 0 {
+		_, err = s.Insert(&taskPositions)
+	}
 	return
 }
 
