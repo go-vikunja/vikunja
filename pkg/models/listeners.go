@@ -530,6 +530,28 @@ func (l *AddTaskToTypesense) Handle(msg *message.Message) (err error) {
 	s := db.NewSession()
 	defer s.Close()
 
+	positionsMap, err := getPositionsForTask(s, event)
+	if err != nil {
+		return err
+	}
+
+	bucketsMap, err := getBucketsForTask(s, event)
+	if err != nil {
+		return err
+	}
+
+	ttask, err := getTypesenseTaskForTask(s, event.Task, nil, positionsMap, bucketsMap)
+	if err != nil {
+		return err
+	}
+
+	_, err = typesenseClient.Collection("tasks").
+		Documents().
+		Create(context.Background(), ttask)
+	return
+}
+
+func getPositionsForTask(s *xorm.Session, event *TaskCreatedEvent) (positionsMap map[int64][]*TaskPositionWithView, err error) {
 	positions := []*TaskPositionWithView{}
 	err = s.
 		Table("project_views").
@@ -540,17 +562,22 @@ func (l *AddTaskToTypesense) Handle(msg *message.Message) (err error) {
 		return
 	}
 
-	positionsMap := make(map[int64][]*TaskPositionWithView, 1)
+	positionsMap = make(map[int64][]*TaskPositionWithView, 1)
 	positionsMap[event.Task.ID] = positions
+	return
+}
 
-	ttask, err := getTypesenseTaskForTask(s, event.Task, nil, positionsMap)
+func getBucketsForTask(s *xorm.Session, event *TaskCreatedEvent) (bucketsMap map[int64][]*TaskBucket, err error) {
+	buckets := []*TaskBucket{}
+	err = s.
+		Where("task_id = ?", event.Task.ID).
+		Find(&buckets)
 	if err != nil {
-		return err
+		return
 	}
 
-	_, err = typesenseClient.Collection("tasks").
-		Documents().
-		Create(context.Background(), ttask)
+	bucketsMap = make(map[int64][]*TaskBucket, 1)
+	bucketsMap[event.Task.ID] = buckets
 	return
 }
 

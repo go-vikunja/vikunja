@@ -379,6 +379,10 @@ func convertParsedFilterToTypesense(rawFilters []*taskFilter) (filterBy string, 
 			f.field = "project_id"
 		}
 
+		if f.field == "bucket_id" {
+			f.field = "buckets"
+		}
+
 		filter := f.field
 
 		switch f.comparator {
