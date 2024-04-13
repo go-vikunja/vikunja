@@ -32,9 +32,9 @@ The to-do app to organize your life.
 Also one of the two wild South American camelids which live in the high
 alpine areas of the Andes and a relative of the llama.
 
-Vikunja is a self-hosted To-Do list application with a web app and mobile apps for all platforms. It is licensed under the GPLv3.
+Vikunja is a self-hosted To-Do list application with a web app and mobile apps for all platforms. It is licensed under the AGPLv3.
 
-Find more info at vikunja.io.`,
+Find out more at vikunja.io.`,
 	PreRun: webCmd.PreRun,
 	Run:    webCmd.Run,
 }
