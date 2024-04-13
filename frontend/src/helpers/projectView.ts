@@ -8,6 +8,7 @@ const SETTINGS_KEY_PROJECT_VIEW = 'projectView'
  * Save the current project view to local storage
  */
 export function saveProjectView(projectId: IProject['id'], viewId: number) {
+	console.log({projectId, viewId})
 	if (!projectId || !viewId) {
 		return
 	}

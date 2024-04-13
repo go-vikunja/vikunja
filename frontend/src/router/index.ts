@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteLocation } from 'vue-router'
 import {saveLastVisited} from '@/helpers/saveLastVisited'
 
-import {saveProjectView, getProjectViewId} from '@/helpers/projectView'
+import {getProjectViewId} from '@/helpers/projectView'
 import {parseDateOrString} from '@/helpers/time/parseDateOrString'
 import {getNextWeekDate} from '@/helpers/time/getNextWeekDate'
 import {LINK_SHARE_HASH_PREFIX} from '@/constants/linkShareHash'
@@ -366,7 +366,6 @@ const router = createRouter({
 			path: '/projects/:projectId/:viewId',
 			name: 'project.view',
 			component: ProjectView,
-			beforeEnter: (to) => saveProjectView(parseInt(to.params.projectId as string), parseInt(to.params.viewId as string)),
 			props: route => ({ 
 				projectId: parseInt(route.params.projectId as string),
 				viewId: route.params.viewId ? parseInt(route.params.viewId as string): undefined,

@@ -2,6 +2,7 @@
 import {computed, watch} from 'vue'
 import {useProjectStore} from '@/stores/projects'
 import {useRoute, useRouter} from 'vue-router'
+import {saveProjectView} from '@/helpers/projectView'
 
 import ProjectList from '@/components/project/views/ProjectList.vue'
 import ProjectGantt from '@/components/project/views/ProjectGantt.vue'
@@ -51,6 +52,13 @@ watch(
 watch(
 	() => projectStore.projects[projectId],
 	redirectToFirstViewIfNecessary,
+)
+
+// using a watcher instead of beforeEnter because beforeEnter is not called when only the viewId changes
+watch(
+	() => [projectId, viewId],
+	() => saveProjectView(projectId, viewId),
+	{immediate: true},
 )
 
 const route = useRoute()
