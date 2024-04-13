@@ -1083,6 +1083,46 @@ func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 		}
 	}
 
+	// Delete related project entities
+	views, err := getViewsForProject(s, p.ID)
+	if err != nil {
+		return
+	}
+	viewIDs := []int64{}
+	for _, v := range views {
+		viewIDs = append(viewIDs, v.ID)
+	}
+
+	_, err = s.In("project_view_id", viewIDs).Delete(&Bucket{})
+	if err != nil {
+		return
+	}
+
+	_, err = s.In("id", viewIDs).Delete(&ProjectView{})
+	if err != nil {
+		return
+	}
+
+	err = removeFromFavorite(s, p.ID, a, FavoriteKindProject)
+	if err != nil {
+		return
+	}
+
+	_, err = s.Where("project_id = ?", p.ID).Delete(&LinkSharing{})
+	if err != nil {
+		return
+	}
+
+	_, err = s.Where("project_id = ?", p.ID).Delete(&ProjectUser{})
+	if err != nil {
+		return
+	}
+
+	_, err = s.Where("project_id = ?", p.ID).Delete(&TeamProject{})
+	if err != nil {
+		return
+	}
+
 	// Delete the project
 	_, err = s.ID(p.ID).Delete(&Project{})
 	if err != nil {

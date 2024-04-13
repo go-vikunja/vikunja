@@ -1486,6 +1486,18 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
+	// Delete all positions
+	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskPosition{})
+	if err != nil {
+		return
+	}
+
+	// Delete all bucket relations
+	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskBucket{})
+	if err != nil {
+		return
+	}
+
 	// Actually delete the task
 	_, err = s.ID(t.ID).Delete(Task{})
 	if err != nil {
