@@ -529,7 +529,21 @@ func (l *AddTaskToTypesense) Handle(msg *message.Message) (err error) {
 
 	s := db.NewSession()
 	defer s.Close()
-	ttask, err := getTypesenseTaskForTask(s, event.Task, nil)
+
+	positions := []*TaskPositionWithView{}
+	err = s.
+		Table("project_views").
+		Where("project_views.project_id = ?", event.Task.ProjectID).
+		Join("LEFT", "task_positions", "project_views.id = task_positions.project_view_id AND task_positions.task_id = ?", event.Task.ID).
+		Find(&positions)
+	if err != nil {
+		return
+	}
+
+	positionsMap := make(map[int64][]*TaskPositionWithView, 1)
+	positionsMap[event.Task.ID] = positions
+
+	ttask, err := getTypesenseTaskForTask(s, event.Task, nil, positionsMap)
 	if err != nil {
 		return err
 	}

@@ -240,23 +240,8 @@ func ReindexAllTasks() (err error) {
 	return
 }
 
-type TaskPositionWithView struct {
-	ProjectView  `xorm:"extends"`
-	TaskPosition `xorm:"extends"`
-}
-
-func getTypesenseTaskForTask(s *xorm.Session, task *Task, projectsCache map[int64]*Project) (ttask *typesenseTask, err error) {
-	positions := []*TaskPositionWithView{}
-	err = s.
-		Table("project_views").
-		Where("project_views.project_id = ?", task.ProjectID).
-		Join("LEFT", "task_positions", "project_views.id = task_positions.project_view_id AND task_positions.task_id = ?", task.ID).
-		Find(&positions)
-	if err != nil {
-		return
-	}
-
-	ttask = convertTaskToTypesenseTask(task, positions)
+func getTypesenseTaskForTask(s *xorm.Session, task *Task, projectsCache map[int64]*Project, taskPositionCache map[int64][]*TaskPositionWithView) (ttask *typesenseTask, err error) {
+	ttask = convertTaskToTypesenseTask(task, taskPositionCache[task.ID])
 
 	var p *Project
 	if projectsCache == nil {
@@ -285,6 +270,11 @@ func getTypesenseTaskForTask(s *xorm.Session, task *Task, projectsCache map[int6
 	return
 }
 
+type TaskPositionWithView struct {
+	ProjectView  `xorm:"extends"`
+	TaskPosition `xorm:"extends"`
+}
+
 func reindexTasksInTypesense(s *xorm.Session, tasks map[int64]*Task) (err error) {
 
 	if len(tasks) == 0 {
@@ -300,9 +290,27 @@ func reindexTasksInTypesense(s *xorm.Session, tasks map[int64]*Task) (err error)
 	projects := make(map[int64]*Project)
 	typesenseTasks := []interface{}{}
 
+	rawPositions := []*TaskPositionWithView{}
+	err = s.
+		Table("project_views").
+		Join("LEFT", "task_positions", "project_views.id = task_positions.project_view_id").
+		Find(&rawPositions)
+	if err != nil {
+		return
+	}
+
+	positionsByTask := make(map[int64][]*TaskPositionWithView, len(rawPositions))
+	for _, p := range rawPositions {
+		_, has := positionsByTask[p.TaskID]
+		if !has {
+			positionsByTask[p.TaskID] = []*TaskPositionWithView{}
+		}
+		positionsByTask[p.TaskID] = append(positionsByTask[p.TaskID], p)
+	}
+
 	for _, task := range tasks {
 
-		ttask, err := getTypesenseTaskForTask(s, task, projects)
+		ttask, err := getTypesenseTaskForTask(s, task, projects, positionsByTask)
 		if err != nil {
 			return err
 		}
