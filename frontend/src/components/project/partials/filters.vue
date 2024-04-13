@@ -5,7 +5,7 @@
 		role="search"
 	>
 		<FilterInput
-			v-model="params.filter"
+			v-model="filterQuery"
 			:project-id="projectId"
 			@blur="change()"
 		/>
@@ -28,7 +28,7 @@
 			<x-button
 				variant="secondary"
 				class="mr-2"
-				:disabled="params.filter === ''"
+				:disabled="filterQuery === ''"
 				@click.prevent.stop="clearFiltersAndEmit"
 			>
 				{{ $t('filters.clear') }}
@@ -87,6 +87,16 @@ const params = ref<TaskFilterParams>({
 	s: '',
 })
 
+const filterQuery = ref('')
+watch(
+	() => [params.value.filter, params.value.s],
+	() => {
+		const filter = params.value.filter || ''
+		const s = params.value.s || ''
+		filterQuery.value = filter || s
+	},
+)
+
 // Using watchDebounced to prevent the filter re-triggering itself.
 watch(
 	() => modelValue,
@@ -107,7 +117,7 @@ const projectStore = useProjectStore()
 
 function change() {
 	const filter = transformFilterStringForApi(
-		params.value.filter,
+		filterQuery.value,
 		labelTitle => labelStore.filterLabelsByQuery([], labelTitle)[0]?.id || null,
 		projectTitle => {
 			const found = projectStore.findProjectByExactname(projectTitle)
@@ -142,7 +152,7 @@ function changeAndEmitButton() {
 }
 
 function clearFiltersAndEmit() {
-	params.value.filter = ''
+	filterQuery.value = ''
 	changeAndEmitButton()
 }
 </script>

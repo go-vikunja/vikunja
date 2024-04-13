@@ -1,5 +1,5 @@
 import {ref, shallowReactive, watch, computed, type ComputedGetter} from 'vue'
-import {useRoute} from 'vue-router'
+import {useRoute, useRouter} from 'vue-router'
 import {useRouteQuery} from '@vueuse/router'
 
 import TaskCollectionService, {getDefaultTaskFilterParams, type TaskFilterParams} from '@/services/taskCollection'
@@ -66,17 +66,12 @@ export function useTaskList(
 	
 	const params = ref<TaskFilterParams>({...getDefaultTaskFilterParams()})
 	
-	const search = ref('')
 	const page = useRouteQuery('page', '1', { transform: Number })
 
 	const sortBy = ref({ ...sortByDefault })
 	
 	const allParams = computed(() => {
 		const loadParams = {...params.value}
-
-		if (search.value !== '') {
-			loadParams.s = search.value
-		}
 
 		return formatSortOrder(sortBy.value, loadParams)
 	})
@@ -122,16 +117,38 @@ export function useTaskList(
 
 	const route = useRoute()
 	watch(() => route.query, (query) => {
-		const { page: pageQueryValue, search: searchQuery } = query
-		if (searchQuery !== undefined) {
-			search.value = searchQuery as string
+		const { 
+			page: pageQueryValue,
+			s,
+			filter,
+		} = query
+		if (s !== undefined) {
+			params.value.s = s as string
 		}
 		if (pageQueryValue !== undefined) {
 			page.value = Number(pageQueryValue)
 		}
-
+		if (filter !== undefined) {
+			params.value.filter = filter
+		}
 	}, { immediate: true })
 
+	const router = useRouter()
+	watch(
+		() => [page.value, params.value.filter, params.value.s],
+		() => {
+			router.replace({
+				name: route.name,
+				params: route.params,
+				query: {
+					page: page.value,
+					filter: params.value.filter || undefined,
+					s: params.value.s || undefined,
+				},
+			})
+		},
+		{ deep: true },
+	)
 
 	// Only listen for query path changes
 	watch(() => JSON.stringify(getAllTasksParams.value), (newParams, oldParams) => {
@@ -148,7 +165,6 @@ export function useTaskList(
 		totalPages,
 		currentPage: page,
 		loadTasks,
-		searchTerm: search,
 		params,
 		sortByParam: sortBy,
 	}

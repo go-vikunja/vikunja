@@ -30,45 +30,27 @@ import {computed, ref, watch} from 'vue'
 
 import Filters from '@/components/project/partials/filters.vue'
 
-import {getDefaultTaskFilterParams, type TaskFilterParams} from '@/services/taskCollection'
-import {useRouteQuery} from '@vueuse/router'
+import {type TaskFilterParams} from '@/services/taskCollection'
 
-const modelValue = defineModel<TaskFilterParams>({})
+const props = defineProps(['modelValue'])
+const emit = defineEmits(['update:modelValue'])
 
 const value = ref<TaskFilterParams>({})
-const filter = useRouteQuery('filter')
 
 watch(
-	() => modelValue.value,
+	() => props.modelValue,
 	(modelValue: TaskFilterParams) => {
 		value.value = modelValue
-		if (value.value.filter !== '' && value.value.filter !== getDefaultTaskFilterParams().filter) {
-			filter.value = value.value.filter
-		}
-	},
-	{immediate: true},
-)
-
-watch(
-	() => filter.value,
-	val => {
-		if (modelValue.value?.filter === val || typeof val === 'undefined') {
-			return
-		}
-
-		modelValue.value.filter = val
 	},
 	{immediate: true},
 )
 
 function emitChanges(newValue: TaskFilterParams) {
-	filter.value = newValue.filter
-	if (modelValue.value?.filter === newValue.filter && modelValue.value?.s === newValue.s) {
-		return
-	}
-
-	modelValue.value.filter = newValue.filter
-	modelValue.value.s = newValue.s
+	emit('update:modelValue', {
+		...value.value,
+		filter: newValue.filter,
+		s: newValue.s,
+	})
 }
 
 const hasFilters = computed(() => {
