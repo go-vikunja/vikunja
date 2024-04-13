@@ -147,19 +147,7 @@ func CreateTypesenseCollections() error {
 				Type: "int64", // unix timestamp
 			},
 			{
-				Name: "bucket_id",
-				Type: "int64",
-			},
-			{
-				Name: "position",
-				Type: "float",
-			},
-			{
 				Name: "created_by_id",
-				Type: "int64",
-			},
-			{
-				Name: "project_view_id",
 				Type: "int64",
 			},
 			{
@@ -191,6 +179,10 @@ func CreateTypesenseCollections() error {
 				Name:     "comments",
 				Type:     "object[]", // TODO
 				Optional: pointer.True(),
+			},
+			{
+				Name: "positions",
+				Type: "object",
 			},
 		},
 	}
@@ -386,6 +378,12 @@ func indexDummyTask() (err error) {
 				},
 			},
 		},
+		Positions: map[string]float64{
+			"view_1": 10,
+			"view_2": 30,
+			"view_3": 5450,
+			"view_4": 42,
+		},
 	}
 
 	_, err = typesenseClient.Collection("tasks").
@@ -461,6 +459,7 @@ func convertTaskToTypesenseTask(task *Task, positions []*TaskPosition) *typesens
 		Labels:                 task.Labels,
 		//RelatedTasks:           task.RelatedTasks,
 		Attachments: task.Attachments,
+		Positions:   make(map[string]float64, len(positions)),
 	}
 
 	if task.DoneAt.IsZero() {
