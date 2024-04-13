@@ -270,7 +270,7 @@ func (tc *TaskComment) ReadAll(s *xorm.Session, auth web.Auth, search string, pa
 	query := s.
 		Where(builder.And(where...)).
 		Join("LEFT", "users", "users.id = task_comments.author_id").
-		OrderBy("task_comments.id asc")
+		OrderBy("task_comments.created asc")
 	if limit > 0 {
 		query = query.Limit(limit, start)
 	}
