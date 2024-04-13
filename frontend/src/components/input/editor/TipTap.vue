@@ -345,7 +345,7 @@ const editor = useEditor({
 						}
 						return true
 					},
-			    }
+				}
 			},
 		}),
 		Heading,

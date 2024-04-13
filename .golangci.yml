@@ -104,3 +104,7 @@ issues:
       text: "parameter 'tx' seems to be unused, consider removing or renaming it as"
       linters:
         - revive
+    - path: pkg/models/typesense.go
+      text: 'structtag: struct field Position repeats json tag "position" also at'
+      linters:
+        - govet
