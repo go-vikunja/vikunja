@@ -82,7 +82,6 @@ func init() {
 
 			if config.DatabaseType.GetString() == "sqlite" {
 				_, err = tx.Exec(`
-
 create table buckets_dg_tmp
 (
     id            INTEGER  not null
@@ -107,7 +106,7 @@ drop table buckets;
 alter table buckets_dg_tmp
     rename to buckets;
 
-create unique index UQE_buckets_id
+create unique index if not exists UQE_buckets_id
     on buckets (id);
 `)
 				return err
