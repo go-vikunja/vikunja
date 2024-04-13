@@ -249,11 +249,20 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 	opts.perPage = perPage
 
 	if view != nil {
-		opts.sortby = append(opts.sortby, &sortParam{
-			projectViewID: view.ID,
-			sortBy:        taskPropertyPosition,
-			orderBy:       orderAscending,
-		})
+		var hasOrderByPosition bool
+		for _, param := range opts.sortby {
+			if param.sortBy == taskPropertyPosition {
+				hasOrderByPosition = true
+				break
+			}
+		}
+		if !hasOrderByPosition {
+			opts.sortby = append(opts.sortby, &sortParam{
+				projectViewID: view.ID,
+				sortBy:        taskPropertyPosition,
+				orderBy:       orderAscending,
+			})
+		}
 	}
 
 	shareAuth, is := a.(*LinkSharing)

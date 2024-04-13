@@ -450,6 +450,7 @@ func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, 
 		"(" + filter + ")",
 	}
 
+	var projectViewIDForPosition int64
 	var sortbyFields []string
 	for i, param := range opts.sortby {
 		// Validate the params
@@ -457,17 +458,19 @@ func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, 
 			return nil, totalCount, err
 		}
 
+		sortBy := param.sortBy
+
 		// Typesense does not allow sorting by ID, so we sort by created timestamp instead
 		if param.sortBy == taskPropertyID {
-			param.sortBy = taskPropertyCreated
+			sortBy = taskPropertyCreated
 		}
 
 		if param.sortBy == taskPropertyPosition {
-			param.sortBy = "positions.view_" + strconv.FormatInt(param.projectViewID, 10)
-			continue
+			sortBy = "positions.view_" + strconv.FormatInt(param.projectViewID, 10)
+			projectViewIDForPosition = param.projectViewID
 		}
 
-		sortbyFields = append(sortbyFields, param.sortBy+"(missing_values:last):"+param.orderBy.String())
+		sortbyFields = append(sortbyFields, sortBy+"(missing_values:last):"+param.orderBy.String())
 
 		if i == 2 {
 			// Typesense supports up to 3 sorting parameters
@@ -525,9 +528,14 @@ func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, 
 		return nil, 0, err
 	}
 
-	err = t.s.
+	query := t.s.
 		In("id", taskIDs).
-		OrderBy(orderby).
-		Find(&tasks)
+		OrderBy(orderby)
+
+	if projectViewIDForPosition != 0 {
+		query = query.Join("LEFT", "task_positions", "task_positions.task_id = tasks.id AND task_positions.project_view_id = ?", projectViewIDForPosition)
+	}
+
+	err = query.Find(&tasks)
 	return tasks, int64(*result.Found), err
 }

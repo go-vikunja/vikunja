@@ -240,9 +240,18 @@ func ReindexAllTasks() (err error) {
 	return
 }
 
+type TaskPositionWithView struct {
+	ProjectView  `xorm:"extends"`
+	TaskPosition `xorm:"extends"`
+}
+
 func getTypesenseTaskForTask(s *xorm.Session, task *Task, projectsCache map[int64]*Project) (ttask *typesenseTask, err error) {
-	positions := []*TaskPosition{}
-	err = s.Where("task_id = ?", task.ID).Find(&positions)
+	positions := []*TaskPositionWithView{}
+	err = s.
+		Table("project_views").
+		Where("project_views.project_id = ?", task.ProjectID).
+		Join("LEFT", "task_positions", "project_views.id = task_positions.project_view_id AND task_positions.task_id = ?", task.ID).
+		Find(&positions)
 	if err != nil {
 		return
 	}
@@ -312,7 +321,7 @@ func reindexTasksInTypesense(s *xorm.Session, tasks map[int64]*Task) (err error)
 		return err
 	}
 
-	log.Debugf("Indexed tasks %v into Typesense", tasks)
+	log.Debugf("Indexed %d tasks into Typesense", len(tasks))
 
 	return nil
 }
@@ -430,7 +439,7 @@ type typesenseTask struct {
 	Positions   map[string]float64 `json:"positions"`
 }
 
-func convertTaskToTypesenseTask(task *Task, positions []*TaskPosition) *typesenseTask {
+func convertTaskToTypesenseTask(task *Task, positions []*TaskPositionWithView) *typesenseTask {
 
 	tt := &typesenseTask{
 		ID:                     fmt.Sprintf("%d", task.ID),
@@ -476,7 +485,11 @@ func convertTaskToTypesenseTask(task *Task, positions []*TaskPosition) *typesens
 	}
 
 	for _, position := range positions {
-		tt.Positions["view_"+strconv.FormatInt(position.ProjectViewID, 10)] = position.Position
+		pos := position.TaskPosition.Position
+		if pos == 0 {
+			pos = float64(task.ID)
+		}
+		tt.Positions["view_"+strconv.FormatInt(position.ProjectView.ID, 10)] = pos
 	}
 
 	return tt
