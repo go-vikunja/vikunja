@@ -93,8 +93,10 @@ type ProjectWithTasksAndBuckets struct {
 	// An array of tasks which belong to the project.
 	Tasks []*TaskWithComments `xorm:"-" json:"tasks"`
 	// Only used for migration.
-	Buckets          []*Bucket `xorm:"-" json:"buckets"`
-	BackgroundFileID int64     `xorm:"null" json:"background_file_id"`
+	Buckets          []*Bucket       `xorm:"-" json:"buckets"`
+	TaskBuckets      []*TaskBucket   `xorm:"-" json:"task_buckets"`
+	Positions        []*TaskPosition `xorm:"-" json:"positions"`
+	BackgroundFileID int64           `xorm:"null" json:"background_file_id"`
 }
 
 // TableName returns a better name for the projects table

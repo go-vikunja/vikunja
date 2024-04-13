@@ -155,6 +155,21 @@ func exportProjectsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (task
 		projectIDs = append(projectIDs, p.ID)
 	}
 
+	views := map[int64]*ProjectView{}
+	err = s.In("project_id", projectIDs).Find(&views)
+	if err != nil {
+		return
+	}
+
+	viewIDs := []int64{}
+	for _, v := range views {
+		if projectsMap[v.ProjectID].Views == nil {
+			projectsMap[v.ProjectID].Views = []*ProjectView{}
+		}
+		projectsMap[v.ProjectID].Views = append(projectsMap[v.ProjectID].Views, v)
+		viewIDs = append(viewIDs, v.ID)
+	}
+
 	tasks, _, _, err := getTasksForProjects(s, rawProjects, u, &taskSearchOptions{
 		page:    0,
 		perPage: -1,
@@ -194,17 +209,75 @@ func exportProjectsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (task
 	}
 
 	buckets := []*Bucket{}
-	err = s.In("project_id", projectIDs).Find(&buckets)
+	err = s.In("project_view_id", viewIDs).Find(&buckets)
 	if err != nil {
 		return
 	}
 
+	bucketIDs := []int64{}
 	for _, b := range buckets {
-		if _, exists := projectsMap[b.ProjectID]; !exists {
-			log.Debugf("[User Data Export] Project %d does not exist for bucket %d, omitting", b.ProjectID, b.ID)
+		view, exists := views[b.ProjectViewID]
+		if !exists {
+			log.Debugf("[User Data Export] Project view %d does not exist for bucket %d, omitting", b.ProjectViewID, b.ID)
 			continue
 		}
-		projectsMap[b.ProjectID].Buckets = append(projectsMap[b.ProjectID].Buckets, b)
+		_, exists = projectsMap[view.ProjectID]
+		if !exists {
+			log.Debugf("[User Data Export] Project %d does not exist for bucket %d, omitting", view.ProjectID, b.ID)
+			continue
+		}
+		projectsMap[view.ProjectID].Buckets = append(projectsMap[view.ProjectID].Buckets, b)
+		bucketIDs = append(bucketIDs, b.ID)
+	}
+
+	taskBuckets := []*TaskBucket{}
+	err = s.In("bucket_id", bucketIDs).Find(&taskBuckets)
+	if err != nil {
+		return
+	}
+
+	for _, tb := range taskBuckets {
+		view, exists := views[tb.ProjectViewID]
+		if !exists {
+			log.Debugf("[User Data Export] Project view %d does not exist, omitting", tb.ProjectViewID)
+			continue
+		}
+		_, exists = projectsMap[view.ProjectID]
+		if !exists {
+			log.Debugf("[User Data Export] Project %d does not exist, omitting", view.ProjectID)
+			continue
+		}
+
+		if projectsMap[view.ProjectID].TaskBuckets == nil {
+			projectsMap[view.ProjectID].TaskBuckets = []*TaskBucket{}
+		}
+
+		projectsMap[view.ProjectID].TaskBuckets = append(projectsMap[view.ProjectID].TaskBuckets, tb)
+	}
+
+	taskPositions := []*TaskPosition{}
+	err = s.In("project_view_id", viewIDs).Find(&taskPositions)
+	if err != nil {
+		return
+	}
+
+	for _, p := range taskPositions {
+		view, exists := views[p.ProjectViewID]
+		if !exists {
+			log.Debugf("[User Data Export] Project view %d does not exist, omitting", p.ProjectViewID)
+			continue
+		}
+		_, exists = projectsMap[view.ProjectID]
+		if !exists {
+			log.Debugf("[User Data Export] Project %d does not exist, omitting", view.ProjectID)
+			continue
+		}
+
+		if projectsMap[view.ProjectID].Positions == nil {
+			projectsMap[view.ProjectID].Positions = []*TaskPosition{}
+		}
+
+		projectsMap[view.ProjectID].Positions = append(projectsMap[view.ProjectID].Positions, p)
 	}
 
 	data, err := json.Marshal(projects)

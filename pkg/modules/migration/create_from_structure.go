@@ -64,6 +64,11 @@ func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBucke
 		}
 
 		p.ID = 0
+
+		for _, view := range p.Views {
+			view.ProjectID = 0
+		}
+
 		err = createProject(s, p, &archivedProjects, labels, user)
 		if err != nil {
 			return err
@@ -167,7 +172,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 	}
 
 	// Create all buckets
-	buckets := make(map[int64]*models.Bucket) // old bucket id is the key
+	bucketsByOldID := make(map[int64]*models.Bucket) // old bucket id is the key
 	if len(project.Buckets) > 0 {
 		log.Debugf("[creating structure] Creating %d buckets", len(project.Buckets))
 	}
@@ -179,40 +184,45 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		if err != nil {
 			return
 		}
-		buckets[oldID] = bucket
+		bucketsByOldID[oldID] = bucket
 		log.Debugf("[creating structure] Created bucket %d, old ID was %d", bucket.ID, oldID)
 	}
 
 	// Create all views, create default views if we don't have any
+	viewsByOldIDs := make(map[int64]*models.ProjectView, len(oldViews))
 	if len(oldViews) > 0 {
 		for _, view := range oldViews {
+			oldID := view.ID
 			view.ID = 0
 
 			if view.DefaultBucketID != 0 {
-				bucket, has := buckets[view.DefaultBucketID]
+				bucket, has := bucketsByOldID[view.DefaultBucketID]
 				if has {
 					view.DefaultBucketID = bucket.ID
 				}
 			}
 
 			if view.DoneBucketID != 0 {
-				bucket, has := buckets[view.DoneBucketID]
+				bucket, has := bucketsByOldID[view.DoneBucketID]
 				if has {
 					view.DoneBucketID = bucket.ID
 				}
 			}
 
+			view.ProjectID = project.ID
+
 			err = view.Create(s, user)
 			if err != nil {
 				return
 			}
+			viewsByOldIDs[oldID] = view
 		}
 	} else {
 		// Only using the default views
 		// Add all buckets to the default kanban view
 		for _, view := range project.Views {
 			if view.ViewKind == models.ProjectViewKindKanban {
-				for _, b := range buckets {
+				for _, b := range bucketsByOldID {
 					b.ProjectViewID = view.ID
 					err = b.Update(s, user)
 					if err != nil {
@@ -227,7 +237,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 	log.Debugf("[creating structure] Creating %d tasks", len(tasks))
 
 	setBucketOrDefault := func(task *models.Task) {
-		bucket, exists := buckets[task.BucketID]
+		bucket, exists := bucketsByOldID[task.BucketID]
 		if exists {
 			task.BucketID = bucket.ID
 		} else if task.BucketID > 0 {
@@ -240,6 +250,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 	}
 
 	tasksByOldID := make(map[int64]*models.TaskWithComments, len(tasks))
+	newTaskIDs := []int64{}
 	// Create all tasks
 	for i, t := range tasks {
 		setBucketOrDefault(&tasks[i].Task)
@@ -250,6 +261,8 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		if err != nil && models.IsErrTaskCannotBeEmpty(err) {
 			continue
 		}
+
+		newTaskIDs = append(newTaskIDs, t.ID)
 
 		if err != nil {
 			return
@@ -398,6 +411,58 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		err = newBacklogBucket.Delete(s, user)
 		if err != nil && !models.IsErrCannotRemoveLastBucket(err) {
 			return err
+		}
+	}
+
+	if len(viewsByOldIDs) > 0 {
+		newPositions := []*models.TaskPosition{}
+		for _, pos := range project.Positions {
+			_, hasTask := tasksByOldID[pos.TaskID]
+			_, hasView := viewsByOldIDs[pos.ProjectViewID]
+			if !hasTask || !hasView {
+				continue
+			}
+			newPositions = append(newPositions, &models.TaskPosition{
+				TaskID:        tasksByOldID[pos.TaskID].ID,
+				ProjectViewID: viewsByOldIDs[pos.ProjectViewID].ID,
+				Position:      pos.Position,
+			})
+		}
+
+		if len(newPositions) > 0 {
+			_, err = s.In("task_id", newTaskIDs).Delete(&models.TaskPosition{})
+			if err != nil {
+				return
+			}
+			_, err = s.Insert(newPositions)
+			if err != nil {
+				return
+			}
+		}
+
+		newTaskBuckets := make([]*models.TaskBucket, 0, len(project.TaskBuckets))
+		for _, tb := range project.TaskBuckets {
+			_, hasTask := tasksByOldID[tb.TaskID]
+			_, hasBucket := bucketsByOldID[tb.BucketID]
+			if !hasTask || !hasBucket {
+				continue
+			}
+			newTaskBuckets = append(newTaskBuckets, &models.TaskBucket{
+				TaskID:        tasksByOldID[tb.TaskID].ID,
+				BucketID:      bucketsByOldID[tb.BucketID].ID,
+				ProjectViewID: bucketsByOldID[tb.BucketID].ProjectViewID,
+			})
+		}
+
+		if len(newTaskBuckets) > 0 {
+			_, err = s.In("task_id", newTaskIDs).Delete(&models.TaskBucket{})
+			if err != nil {
+				return
+			}
+			_, err = s.Insert(newTaskBuckets)
+			if err != nil {
+				return
+			}
 		}
 	}
 
