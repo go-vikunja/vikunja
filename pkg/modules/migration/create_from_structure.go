@@ -359,10 +359,11 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 			log.Debugf("[creating structure] Associated task %d with label %d", t.ID, lb.ID)
 		}
 
+		// Comments
 		for _, comment := range t.Comments {
 			comment.TaskID = t.ID
 			comment.ID = 0
-			err = comment.Create(s, user)
+			err = comment.CreateWithTimestamps(s, user)
 			if err != nil {
 				return
 			}

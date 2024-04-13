@@ -65,6 +65,14 @@ func (tc *TaskComment) TableName() string {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/comments [put]
 func (tc *TaskComment) Create(s *xorm.Session, a web.Auth) (err error) {
+
+	tc.Created = time.Time{}
+	tc.Updated = time.Time{}
+
+	return tc.CreateWithTimestamps(s, a)
+}
+
+func (tc *TaskComment) CreateWithTimestamps(s *xorm.Session, a web.Auth) (err error) {
 	// Check if the task exists
 	task, err := GetTaskSimple(s, &Task{ID: tc.TaskID})
 	if err != nil {
@@ -77,9 +85,16 @@ func (tc *TaskComment) Create(s *xorm.Session, a web.Auth) (err error) {
 	}
 	tc.AuthorID = tc.Author.ID
 
-	_, err = s.Insert(tc)
-	if err != nil {
-		return
+	if !tc.Created.IsZero() && !tc.Updated.IsZero() {
+		_, err = s.NoAutoTime().Insert(tc)
+		if err != nil {
+			return
+		}
+	} else {
+		_, err = s.Insert(tc)
+		if err != nil {
+			return
+		}
 	}
 
 	return events.Dispatch(&TaskCommentCreatedEvent{
