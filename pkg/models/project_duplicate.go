@@ -159,6 +159,7 @@ func (pd *ProjectDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 
 	log.Debugf("Duplicated all link shares from project %d into %d", pd.ProjectID, pd.Project.ID)
 
+	err = pd.Project.ReadOne(s, doer)
 	return
 }
 
