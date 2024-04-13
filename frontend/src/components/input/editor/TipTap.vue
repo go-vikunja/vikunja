@@ -338,12 +338,14 @@ const editor = useEditor({
 		HardBreak.extend({
 			addKeyboardShortcuts() {
 				return {
+					'Shift-Enter': () => this.editor.commands.setHardBreak(),
 					'Mod-Enter': () => {
 						if (contentHasChanged.value) {
 							bubbleSave()
 						}
+						return true
 					},
-				}
+			    }
 			},
 		}),
 		Heading,
