@@ -162,7 +162,7 @@ projectStore.loadAllProjects()
 .app-content {
 	z-index: 10;
 	position: relative;
-	padding: 1.5rem 0.5rem 1rem;
+	padding: 1.5rem 0.5rem 0;
 	// TODO refactor: DRY `transition-timing-function` with `./navigation.vue`.
 	transition: margin-left $transition-duration;
 
@@ -172,7 +172,7 @@ projectStore.loadAllProjects()
 	}
 
 	@media screen and (min-width: $tablet) {
-		padding: $navbar-height + 1.5rem 1.5rem 1rem 1.5rem;
+		padding: $navbar-height + 1.5rem 1.5rem 0 1.5rem;
 	}
 
 	&.is-menu-enabled {
