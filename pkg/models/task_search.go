@@ -297,6 +297,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		queryCount = queryCount.Join("LEFT", "task_buckets", "task_buckets.task_id = tasks.id")
 	}
 	totalCount, err = queryCount.
+		Select("count(DISTINCT tasks.id)").
 		Count(&Task{})
 	return
 }
