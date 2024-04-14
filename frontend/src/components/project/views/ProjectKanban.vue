@@ -780,7 +780,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 	margin: 0 -1.5rem;
 	padding: 0 1.5rem;
 
-	&:focus {
+	&:focus, .bucket .tasks:focus {
 		box-shadow: none;
 	}
 
