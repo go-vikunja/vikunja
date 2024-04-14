@@ -785,6 +785,10 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 	margin: 0 -1.5rem;
 	padding: 0 1.5rem;
 
+	&:focus {
+		box-shadow: none;
+	}
+
 	@media screen and (max-width: $tablet) {
 		height: calc(#{$crazy-height-calculation} - #{$filter-container-height});
 		scroll-snap-type: x mandatory;
