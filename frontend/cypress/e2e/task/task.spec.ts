@@ -13,6 +13,7 @@ import {BucketFactory} from '../../factories/bucket'
 import {TaskAttachmentFactory} from '../../factories/task_attachments'
 import {TaskReminderFactory} from '../../factories/task_reminders'
 import {createDefaultViews} from "../project/prepareProjects";
+import { TaskBucketFactory } from '../../factories/task_buckets'
 
 function addLabelToTaskAndVerify(labelTitle: string) {
 	cy.get('.task-view .action-buttons .button')
@@ -48,7 +49,7 @@ function uploadAttachmentAndVerify(taskId: number) {
 describe('Task', () => {
 	createFakeUserAndLogin()
 
-	let projects
+	let projects: {}[]
 	let buckets
 
 	beforeEach(() => {
@@ -470,6 +471,10 @@ describe('Task', () => {
 			})
 			const labels = LabelFactory.create(1)
 			LabelTaskFactory.truncate()
+			TaskBucketFactory.create(1, {
+				task_id: tasks[0].id,
+				bucket_id: buckets[0].id,
+			})
 
 			cy.visit(`/projects/${projects[0].id}/4`)
 
