@@ -347,10 +347,22 @@ func (p *ProjectView) Update(s *xorm.Session, _ web.Auth) (err error) {
 	return
 }
 
-func GetProjectViewByIDAndProject(s *xorm.Session, id, projectID int64) (view *ProjectView, err error) {
+func GetProjectViewByIDAndProject(s *xorm.Session, viewID, projectID int64) (view *ProjectView, err error) {
+	if projectID == FavoritesPseudoProjectID && viewID < 0 {
+		for _, v := range FavoritesPseudoProject.Views {
+			if v.ID == viewID {
+				return v, nil
+			}
+		}
+
+		return nil, &ErrProjectViewDoesNotExist{
+			ProjectViewID: viewID,
+		}
+	}
+
 	view = &ProjectView{}
 	exists, err := s.
-		Where("id = ? AND project_id = ?", id, projectID).
+		Where("id = ? AND project_id = ?", viewID, projectID).
 		NoAutoCondition().
 		Get(view)
 	if err != nil {
@@ -359,7 +371,7 @@ func GetProjectViewByIDAndProject(s *xorm.Session, id, projectID int64) (view *P
 
 	if !exists {
 		return nil, &ErrProjectViewDoesNotExist{
-			ProjectViewID: id,
+			ProjectViewID: viewID,
 		}
 	}
 

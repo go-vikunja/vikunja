@@ -100,6 +100,10 @@ func getTaskFilterOptsFromCollection(tf *TaskCollection, projectView *ProjectVie
 			param.orderBy = getSortOrderFromString(tf.OrderBy[i])
 		}
 
+		if s == taskPropertyPosition && projectView != nil && projectView.ID < 0 {
+			continue
+		}
+
 		if s == taskPropertyPosition && projectView != nil {
 			param.projectViewID = projectView.ID
 		}

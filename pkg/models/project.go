@@ -112,15 +112,43 @@ type ProjectBackgroundType struct {
 // ProjectBackgroundUpload represents the project upload background type
 const ProjectBackgroundUpload string = "upload"
 
+const FavoritesPseudoProjectID = -1
+
 // FavoritesPseudoProject holds all tasks marked as favorites
 var FavoritesPseudoProject = Project{
-	ID:          -1,
+	ID:          FavoritesPseudoProjectID,
 	Title:       "Favorites",
 	Description: "This project has all tasks marked as favorites.",
 	IsFavorite:  true,
 	Position:    -1,
-	Created:     time.Now(),
-	Updated:     time.Now(),
+
+	Views: []*ProjectView{
+		{
+			ID:        -1,
+			ProjectID: FavoritesPseudoProjectID,
+			Title:     "List",
+			ViewKind:  ProjectViewKindList,
+			Position:  100,
+			Filter:    "done = false",
+		},
+		{
+			ID:        -2,
+			ProjectID: FavoritesPseudoProjectID,
+			Title:     "Gantt",
+			ViewKind:  ProjectViewKindGantt,
+			Position:  200,
+		},
+		{
+			ID:        -3,
+			ProjectID: FavoritesPseudoProjectID,
+			Title:     "Table",
+			ViewKind:  ProjectViewKindTable,
+			Position:  300,
+		},
+	},
+
+	Created: time.Now(),
+	Updated: time.Now(),
 }
 
 // ReadAll gets all projects a user has access to
@@ -212,6 +240,7 @@ func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 func (p *Project) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 
 	if p.ID == FavoritesPseudoProject.ID {
+		p.Views = FavoritesPseudoProject.Views
 		// Already "built" the project in CanRead
 		return nil
 	}
