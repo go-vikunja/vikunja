@@ -1,4 +1,3 @@
-import './polyfills'
 import {defineSetupVue3} from '@histoire/plugin-vue'
 import {i18n} from './i18n'
 
