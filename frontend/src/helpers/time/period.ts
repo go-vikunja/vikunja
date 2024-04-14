@@ -19,6 +19,13 @@ export function secondsToPeriod(seconds: number): { unit: PeriodUnit, amount: nu
 		}
 	}
 
+	if (seconds % SECONDS_A_MINUTE === 0) {
+		return {
+			unit: 'minutes',
+			amount: seconds / SECONDS_A_MINUTE,
+		}
+	}
+
 	return {
 		unit: 'hours',
 		amount: seconds / SECONDS_A_HOUR,
