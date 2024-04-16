@@ -20,7 +20,7 @@ require (
 	code.vikunja.io/web v0.0.0-20210706160506-d85def955bd3
 	dario.cat/mergo v1.0.0
 	github.com/ThreeDotsLabs/watermill v1.3.5
-	github.com/adlio/trello v1.11.0
+	github.com/adlio/trello v1.12.0
 	github.com/arran4/golang-ical v0.2.8
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/bbrks/go-blurhash v1.1.1
@@ -189,8 +189,6 @@ require (
 )
 
 replace github.com/samedi/caldav-go => github.com/kolaente/caldav-go v3.0.1-0.20190610114120-2a4eb8b5dcc9+incompatible // Branch: feature/dynamic-supported-components, PR: https://github.com/samedi/caldav-go/pull/6 and https://github.com/samedi/caldav-go/pull/7
-
-replace github.com/adlio/trello v1.11.0 => github.com/kolaente/trello v1.8.1-0.20240410214605-9314fa638eab // https://github.com/adlio/trello/pull/95
 
 go 1.21
 
