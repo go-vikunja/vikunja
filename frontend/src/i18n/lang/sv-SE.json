@@ -385,7 +385,7 @@
     "views": {
       "header": "Edit views",
       "title": "Title",
-      "actions": "Actions",
+      "actions": "Åtgärder",
       "kind": "Kind",
       "bucketConfigMode": "Bucket configuration mode",
       "bucketConfig": "Bucket configuration",
@@ -455,7 +455,7 @@
         },
         "operators": {
           "intro": "The available operators for filtering include:",
-          "notEqual": "Not equal to",
+          "notEqual": "Inte lika med",
           "equal": "Lika med",
           "greaterThan": "Större än",
           "greaterThanOrEqual": "Större än eller lika med",
@@ -777,7 +777,7 @@
         "moveProject": "Flytta",
         "color": "Set Color",
         "delete": "Radera",
-        "favorite": "Add to Favorites",
+        "favorite": "Lägg till i favoriter",
         "unfavorite": "Remove from Favorites"
       }
     },
