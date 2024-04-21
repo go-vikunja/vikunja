@@ -23,11 +23,13 @@ import (
 
 // CanCreate checks if a user can create a new bucket
 func (b *Bucket) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
-	pv := &ProjectView{
-		ID:        b.ProjectViewID,
-		ProjectID: b.ProjectID,
+	pv, err := GetProjectViewByIDAndProject(s, b.ProjectViewID, b.ProjectID)
+	if err != nil {
+		return false, err
 	}
-	return pv.CanUpdate(s, a)
+
+	p := &Project{ID: pv.ProjectID}
+	return p.CanUpdate(s, a)
 }
 
 // CanUpdate checks if a user can update an existing bucket
@@ -46,9 +48,11 @@ func (b *Bucket) canDoBucket(s *xorm.Session, a web.Auth) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	pv := &ProjectView{
-		ID:        bb.ProjectViewID,
-		ProjectID: b.ProjectID,
+	pv, err := GetProjectViewByIDAndProject(s, bb.ProjectViewID, b.ProjectID)
+	if err != nil {
+		return false, err
 	}
-	return pv.CanUpdate(s, a)
+
+	p := &Project{ID: pv.ProjectID}
+	return p.CanUpdate(s, a)
 }
