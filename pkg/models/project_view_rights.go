@@ -28,17 +28,17 @@ func (p *ProjectView) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
 
 func (p *ProjectView) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 	pp := p.getProject()
-	return pp.CanUpdate(s, a)
+	return pp.IsAdmin(s, a)
 }
 
 func (p *ProjectView) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 	pp := p.getProject()
-	return pp.CanUpdate(s, a)
+	return pp.IsAdmin(s, a)
 }
 
 func (p *ProjectView) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 	pp := p.getProject()
-	return pp.CanUpdate(s, a)
+	return pp.IsAdmin(s, a)
 }
 
 func (p *ProjectView) getProject() (pp *Project) {

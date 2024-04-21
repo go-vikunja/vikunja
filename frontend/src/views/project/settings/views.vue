@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import CreateEdit from '@/components/misc/create-edit.vue'
-import {computed, ref} from 'vue'
+import {watch, ref, computed} from 'vue'
 import {useProjectStore} from '@/stores/projects'
 import ProjectViewModel from '@/models/projectView'
 import type {IProjectView} from '@/modelTypes/IProjectView'
@@ -9,6 +9,10 @@ import ProjectViewService from '@/services/projectViews'
 import XButton from '@/components/input/button.vue'
 import {error, success} from '@/message'
 import {useI18n} from 'vue-i18n'
+import ProjectService from '@/services/project'
+import {RIGHTS} from '@/constants/rights'
+import ProjectModel from '@/models/project'
+import Message from '@/components/misc/message.vue'
 
 const {
 	projectId,
@@ -27,6 +31,17 @@ const newView = ref<IProjectView>(new ProjectViewModel({}))
 const viewIdToDelete = ref<number | null>(null)
 const showDeleteModal = ref(false)
 const viewToEdit = ref<IProjectView | null>(null)
+
+const isAdmin = ref<boolean>(false)
+watch(
+	() => projectId,
+	async () => {
+		const projectService = new ProjectService()
+		const project = await projectService.get(new ProjectModel({id: projectId}))
+		isAdmin.value = project.maxRight === RIGHTS.ADMIN
+	},
+	{immediate: true},
+)
 
 async function createView() {
 	if (!showCreateForm.value) {
@@ -83,13 +98,17 @@ async function saveView() {
 	<CreateEdit
 		:title="$t('project.views.header')"
 		:primary-label="$t('misc.save')"
+		:has-primary-action="false"
 	>
 		<ViewEditForm
 			v-if="showCreateForm"
 			v-model="newView"
 			class="mb-4"
 		/>
-		<div class="is-flex is-justify-content-end mb-4">
+		<div
+			v-if="isAdmin"
+			class="is-flex is-justify-content-end mb-4"
+		>
 			<XButton
 				:loading="projectViewService.loading"
 				@click="createView"
@@ -97,6 +116,10 @@ async function saveView() {
 				{{ $t('project.views.create') }}
 			</XButton>
 		</div>
+		
+		<Message v-if="!isAdmin">
+			{{ $t('project.views.onlyAdminsCanEdit') }}
+		</Message>
 
 		<table
 			v-if="views?.length > 0"
@@ -144,6 +167,7 @@ async function saveView() {
 						<td>{{ v.viewKind }}</td>
 						<td class="has-text-right">
 							<XButton
+								v-if="isAdmin"
 								class="is-danger mr-2"
 								icon="trash-alt"
 								@click="() => {
@@ -152,6 +176,7 @@ async function saveView() {
 								}"
 							/>
 							<XButton
+								v-if="isAdmin"
 								icon="pen"
 								@click="viewToEdit = {...v}"
 							/>
