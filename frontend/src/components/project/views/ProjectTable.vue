@@ -267,7 +267,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, type Ref} from 'vue'
+import {computed, type Ref, watch} from 'vue'
 
 import {useStorage} from '@vueuse/core'
 
@@ -337,6 +337,12 @@ Object.assign(params.value, {
 	filter: '',
 })
 
+watch(
+	() => activeColumns.value,
+	() => setActiveColumnsSortParam(),
+	{deep: true},
+)
+
 // FIXME: by doing this we can have multiple sort orders
 function sort(property: keyof SortBy) {
 	const order = sortBy.value[property]
@@ -347,7 +353,16 @@ function sort(property: keyof SortBy) {
 	} else {
 		delete sortBy.value[property]
 	}
-	sortByParam.value = sortBy.value
+	setActiveColumnsSortParam()
+}
+
+function setActiveColumnsSortParam() {
+	sortByParam.value = Object.keys(sortBy.value)
+		.filter(prop => activeColumns.value[prop])
+		.reduce((obj, key) => {
+			obj[key] = sortBy.value[key]
+			return obj
+		}, {})
 }
 
 // TODO: re-enable opening task detail in modal
