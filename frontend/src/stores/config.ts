@@ -1,5 +1,5 @@
 import {computed, reactive, toRefs} from 'vue'
-import {defineStore, acceptHMRUpdate} from 'pinia'
+import {acceptHMRUpdate, defineStore} from 'pinia'
 import {parseURL} from 'ufo'
 
 import {HTTPFactory} from '@/helpers/fetcher'
@@ -7,6 +7,7 @@ import {objectToCamelCase} from '@/helpers/case'
 
 import type {IProvider} from '@/types/IProvider'
 import type {MIGRATORS} from '@/views/migrate/migrators'
+import {InvalidApiUrlProvidedError} from '@/helpers/checkAndSetApiUrl'
 
 export interface ConfigState {
 	version: string,
@@ -83,15 +84,17 @@ export const useConfigStore = defineStore('config', () => {
 	function setConfig(config: ConfigState) {
 		Object.assign(state, config)
 	}
+
 	async function update(): Promise<boolean> {
 		const HTTP = HTTPFactory()
 		const {data: config} = await HTTP.get('info')
+		
 		if (typeof config.version === 'undefined') {
-			return false
+			throw new InvalidApiUrlProvidedError()
 		}
+		
 		setConfig(objectToCamelCase(config))
-		const success = !!config
-		return success
+		return !!config
 	}
 
 	return {
