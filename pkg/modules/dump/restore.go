@@ -150,36 +150,10 @@ func Restore(filename string) error {
 
 	delete(dbfiles, "migration")
 
-	// Restore all db data
-	for table, d := range dbfiles {
-		content, err := unmarshalFileToJSON(d)
-		if err != nil {
-			return fmt.Errorf("could not read table %s: %w", table, err)
-		}
-
-		// FIXME: There has to be a general way to do this but this works for now.
-		if table == "notifications" {
-			for i := range content {
-				var decoded []byte
-				decoded, err = base64.StdEncoding.DecodeString(content[i]["notification"].(string))
-				if err != nil && !errors.Is(err, base64.CorruptInputError(0)) {
-					return fmt.Errorf("could not decode notification %s: %w", content[i]["notification"], err)
-				}
-
-				if err != nil && errors.Is(err, base64.CorruptInputError(0)) {
-					decoded = []byte(content[i]["notification"].(string))
-				}
-
-				content[i]["notification"] = string(decoded)
-			}
-		}
-
-		if err := db.Restore(table, content); err != nil {
-			return fmt.Errorf("could not restore table data for table %s: %w", table, err)
-		}
-		log.Infof("Restored table %s", table)
+	err = restoreTableData(dbfiles)
+	if err != nil {
+		return err
 	}
-	log.Infof("Restored %d tables", len(dbfiles))
 
 	// Run migrations again to migrate a potentially outdated dump
 	migration.Migrate(nil)
@@ -212,6 +186,53 @@ func Restore(filename string) error {
 	// Done
 	log.Infof("Done restoring dump.")
 	log.Infof("Restart Vikunja to make sure the new configuration file is applied.")
+
+	return nil
+}
+
+func restoreTableData(tables map[string]*zip.File) error {
+	jsonFields := map[string][]string{
+		"notifications": {"notification"},
+		"users":         {"frontend_settings"},
+	}
+
+	// Restore all db data
+	for table, d := range tables {
+		content, err := unmarshalFileToJSON(d)
+		if err != nil {
+			return fmt.Errorf("could not read table %s: %w", table, err)
+		}
+
+		fields, hasJSONFields := jsonFields[table]
+		if hasJSONFields {
+			for i := range content {
+				for _, f := range fields {
+
+					if _, hasField := content[i][f]; !hasField {
+						continue
+					}
+
+					var decoded []byte
+					decoded, err = base64.StdEncoding.DecodeString(content[i][f].(string))
+					if err != nil && !errors.Is(err, base64.CorruptInputError(0)) {
+						return fmt.Errorf("could not decode field '%s' %s: %w", f, content[i][f], err)
+					}
+
+					if err != nil && errors.Is(err, base64.CorruptInputError(0)) {
+						decoded = []byte(content[i][f].(string))
+					}
+
+					content[i][f] = string(decoded)
+				}
+			}
+		}
+
+		if err := db.Restore(table, content); err != nil {
+			return fmt.Errorf("could not restore table data for table %s: %w", table, err)
+		}
+		log.Infof("Restored table %s", table)
+	}
+	log.Infof("Restored %d tables", len(tables))
 
 	return nil
 }
