@@ -148,23 +148,14 @@ func (l *Label) Delete(s *xorm.Session, _ web.Auth) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /labels [get]
 func (l *Label) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (ls interface{}, resultCount int, numberOfEntries int64, err error) {
-	if _, is := a.(*LinkSharing); is {
-		return nil, 0, 0, ErrGenericForbidden{}
-	}
-
-	u, err := user.GetUserByID(s, a.GetID())
-	if err != nil {
-		return nil, 0, 0, err
-	}
-
 	return GetLabelsByTaskIDs(s, &LabelByTaskIDsOptions{
 		Search:              []string{search},
-		User:                u,
-		GetForUser:          u.ID,
+		User:                a,
 		Page:                page,
 		PerPage:             perPage,
 		GetUnusedLabels:     true,
 		GroupByLabelIDsOnly: true,
+		GetForUser:          true,
 	})
 }
 

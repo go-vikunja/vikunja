@@ -34,6 +34,7 @@ import {useBaseStore} from '@/stores/base'
 import Logo from '@/components/home/Logo.vue'
 import PoweredByLink from './PoweredByLink.vue'
 import {useProjectStore} from '@/stores/projects'
+import {useLabelStore} from '@/stores/labels'
 
 const baseStore = useBaseStore()
 const currentProject = computed(() => baseStore.currentProject)
@@ -42,6 +43,9 @@ const logoVisible = computed(() => baseStore.logoVisible)
 
 const projectStore = useProjectStore()
 projectStore.loadAllProjects()
+
+const labelStore = useLabelStore()
+labelStore.loadAllLabels()
 </script>
 
 <style lang="scss" scoped>

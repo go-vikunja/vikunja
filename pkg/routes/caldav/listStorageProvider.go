@@ -419,7 +419,7 @@ func persistLabels(s *xorm.Session, a web.Auth, task *models.Task, labels []*mod
 	existingLabels, _, _, err := models.GetLabelsByTaskIDs(s, &models.LabelByTaskIDsOptions{
 		Search:              labelTitles,
 		User:                u,
-		GetForUser:          u.ID,
+		GetForUser:          true,
 		GetUnusedLabels:     true,
 		GroupByLabelIDsOnly: true,
 	})

@@ -309,6 +309,7 @@
 							v-model="task.labels"
 							:disabled="!canWrite"
 							:task-id="taskId"
+							:creatable="!authStore.isLinkShareAuth"
 						/>
 					</div>
 
@@ -653,6 +654,7 @@ const projectStore = useProjectStore()
 const attachmentStore = useAttachmentStore()
 const taskStore = useTaskStore()
 const kanbanStore = useKanbanStore()
+const authStore = useAuthStore()
 
 const task = ref<ITask>(new TaskModel())
 const taskTitle = computed(() => task.value.title)
@@ -877,7 +879,7 @@ function toggleTaskDone() {
 		done: !task.value.done,
 	}
 
-	if (newTask.done && useAuthStore().settings.frontendSettings.playSoundWhenDone) {
+	if (newTask.done && authStore.settings.frontendSettings.playSoundWhenDone) {
 		playPopSound()
 	}
 

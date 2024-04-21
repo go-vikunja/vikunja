@@ -17,7 +17,6 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"xorm.io/builder"
 	"xorm.io/xorm"
@@ -64,27 +63,29 @@ func (l *Label) isLabelOwner(s *xorm.Session, a web.Auth) (bool, error) {
 // Helper method to check if a user can see a specific label
 func (l *Label) hasAccessToLabel(s *xorm.Session, a web.Auth) (has bool, maxRight int, err error) {
 
-	if _, is := a.(*LinkSharing); is {
-		return false, 0, nil
-	}
+	linkShare, isLinkShare := a.(*LinkSharing)
 
-	u, err := user.GetUserByID(s, a.GetID())
-	if err != nil {
-		return false, 0, err
+	var where builder.Cond
+	var createdByID int64
+	if isLinkShare {
+		where = builder.Eq{"project_id": linkShare.ProjectID}
+	} else {
+		where = builder.In("project_id", getUserProjectsStatement(a.GetID(), "", false).Select("l.id"))
+		createdByID = a.GetID()
 	}
 
 	cond := builder.In("label_tasks.task_id",
 		builder.
 			Select("id").
 			From("tasks").
-			Where(builder.In("project_id", getUserProjectsStatement(u.ID, "", false).Select("l.id"))),
+			Where(where),
 	)
 
 	ll := &LabelTask{}
 	has, err = s.Table("labels").
 		Select("label_tasks.*").
 		Join("LEFT", "label_tasks", "label_tasks.label_id = labels.id").
-		Where("label_tasks.label_id is not null OR labels.created_by_id = ?", u.ID).
+		Where("label_tasks.label_id is not null OR labels.created_by_id = ?", createdByID).
 		Or(cond).
 		And("labels.id = ?", l.ID).
 		Exist(ll)

@@ -160,7 +160,6 @@ export const useLabelStore = defineStore('label', () => {
 		deleteLabel,
 		updateLabel,
 		createLabel,
-		
 	}
 })
 

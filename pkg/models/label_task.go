@@ -144,7 +144,7 @@ func (lt *LabelTask) ReadAll(s *xorm.Session, a web.Auth, search string, page in
 	}
 
 	return GetLabelsByTaskIDs(s, &LabelByTaskIDsOptions{
-		User:    &user.User{ID: a.GetID()},
+		User:    a,
 		Search:  []string{search},
 		Page:    page,
 		TaskIDs: []int64{lt.TaskID},
@@ -159,23 +159,26 @@ type LabelWithTaskID struct {
 
 // LabelByTaskIDsOptions is a struct to not clutter the function with too many optional parameters.
 type LabelByTaskIDsOptions struct {
-	User                *user.User
+	User                web.Auth
 	Search              []string
 	Page                int
 	PerPage             int
 	TaskIDs             []int64
 	GetUnusedLabels     bool
 	GroupByLabelIDsOnly bool
-	GetForUser          int64
+	GetForUser          bool
 }
 
 // GetLabelsByTaskIDs is a helper function to get all labels for a set of tasks
 // Used when getting all labels for one task as well when getting all lables
 func GetLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*LabelWithTaskID, resultCount int, totalEntries int64, err error) {
+
+	linkShare, isLinkShareAuth := opts.User.(*LinkSharing)
+
 	// We still need the task ID when we want to get all labels for a task, but because of this, we get the same label
 	// multiple times when it is associated to more than one task.
 	// Because of this whole thing, we need this extra switch here to only group by Task IDs if needed.
-	// Probably not the most ideal solution.
+	// Probably not the most ideataskdetaill solution.
 	var groupBy = "labels.id,label_tasks.task_id"
 	var selectStmt = "labels.*, label_tasks.task_id"
 	if opts.GroupByLabelIDsOnly {
@@ -186,20 +189,25 @@ func GetLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*Lab
 	// Get all labels associated with these tasks
 	var labels []*LabelWithTaskID
 	cond := builder.And(builder.NotNull{"label_tasks.label_id"})
-	if len(opts.TaskIDs) > 0 && opts.GetForUser == 0 {
+	if len(opts.TaskIDs) > 0 && !opts.GetForUser {
 		cond = builder.And(builder.In("label_tasks.task_id", opts.TaskIDs), cond)
 	}
-	if opts.GetForUser != 0 {
+	if opts.GetForUser {
 
-		projects, _, _, err := getRawProjectsForUser(s, &projectOptions{
-			user: &user.User{ID: opts.GetForUser},
-		})
-		if err != nil {
-			return nil, 0, 0, err
-		}
-		projectIDs := make([]int64, 0, len(projects))
-		for _, project := range projects {
-			projectIDs = append(projectIDs, project.ID)
+		var projectIDs []int64
+		if isLinkShareAuth {
+			projectIDs = []int64{linkShare.ProjectID}
+		} else {
+			projects, _, _, err := getRawProjectsForUser(s, &projectOptions{
+				user: &user.User{ID: opts.User.GetID()},
+			})
+			if err != nil {
+				return nil, 0, 0, err
+			}
+			projectIDs = make([]int64, 0, len(projects))
+			for _, project := range projects {
+				projectIDs = append(projectIDs, project.ID)
+			}
 		}
 
 		cond = builder.And(builder.In("label_tasks.task_id",
@@ -209,8 +217,8 @@ func GetLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*Lab
 				Where(builder.In("project_id", projectIDs)),
 		), cond)
 	}
-	if opts.GetUnusedLabels {
-		cond = builder.Or(cond, builder.Eq{"labels.created_by_id": opts.User.ID})
+	if opts.GetUnusedLabels && !isLinkShareAuth {
+		cond = builder.Or(cond, builder.Eq{"labels.created_by_id": opts.User.GetID()})
 	}
 
 	ids := []int64{}
