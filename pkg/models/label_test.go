@@ -62,7 +62,7 @@ func TestLabel_ReadAll(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		wantLs  interface{}
+		wantLs  []*LabelWithTaskID
 		wantErr bool
 	}{
 		{
@@ -143,7 +143,10 @@ func TestLabel_ReadAll(t *testing.T) {
 				t.Errorf("Label.ReadAll() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if diff, equal := messagediff.PrettyDiff(gotLs, tt.wantLs); !equal {
+
+			got := gotLs.([]*LabelWithTaskID)
+
+			if diff, equal := messagediff.PrettyDiff(got, tt.wantLs); !equal {
 				t.Errorf("Label.ReadAll() = %v, want %v, diff: %v", gotLs, tt.wantLs, diff)
 			}
 			s.Close()
