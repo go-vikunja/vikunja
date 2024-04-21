@@ -818,7 +818,7 @@ watch(
 		td,
 		th {
 			min-width: 1em;
-			border: 2px solid #ced4da;
+			border: 2px solid var(--grey-300) !important;
 			padding: 3px 5px;
 			vertical-align: top;
 			box-sizing: border-box;
@@ -832,7 +832,7 @@ watch(
 		th {
 			font-weight: bold;
 			text-align: left;
-			background-color: #f1f3f5;
+			background-color: var(--grey-200);
 		}
 
 		.selectedCell:after {
