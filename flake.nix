@@ -12,6 +12,8 @@
           nodePackages.pnpm cypress 
           # API tools
           go golangci-lint mage
+          # Desktop
+          electron
         ]; 
       };
     };
