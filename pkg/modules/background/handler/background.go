@@ -213,6 +213,12 @@ func (bp *BackgroundProvider) UploadBackground(c echo.Context) error {
 		return handler.HandleHTTPError(err, c)
 	}
 
+	err = project.ReadOne(s, auth)
+	if err != nil {
+		_ = s.Rollback()
+		return handler.HandleHTTPError(err, c)
+	}
+
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
