@@ -17,9 +17,12 @@
 package handler
 
 import (
+	"bytes"
 	_ "image/gif"  // To make sure the decoder used for generating blurHashes recognizes gifs
 	_ "image/jpeg" // To make sure the decoder used for generating blurHashes recognizes jpgs
 	_ "image/png"  // To make sure the decoder used for generating blurHashes recognizes pngs
+
+	"github.com/disintegration/imaging"
 
 	_ "golang.org/x/image/bmp"  // To make sure the decoder used for generating blurHashes recognizes bmps
 	_ "golang.org/x/image/tiff" // To make sure the decoder used for generating blurHashes recognizes tiffs
@@ -220,7 +223,30 @@ func (bp *BackgroundProvider) UploadBackground(c echo.Context) error {
 
 func SaveBackgroundFile(s *xorm.Session, auth web.Auth, project *models.Project, srcf io.ReadSeeker, filename string, filesize uint64) (err error) {
 	_, _ = srcf.Seek(0, io.SeekStart)
-	f, err := files.Create(srcf, filename, filesize, auth)
+	src, err := imaging.Decode(srcf)
+	if err != nil {
+		return err
+	}
+
+	_, _ = srcf.Seek(0, io.SeekStart)
+	imgConfig, _, err := image.DecodeConfig(srcf)
+	if err != nil {
+		return err
+	}
+
+	height := imgConfig.Height
+	if imgConfig.Height > background.MaxBackgroundImageHeight {
+		height = background.MaxBackgroundImageHeight
+	}
+
+	buf := bytes.Buffer{}
+	dst := imaging.Resize(src, 0, height, imaging.Lanczos)
+	err = imaging.Encode(&buf, dst, imaging.JPEG, imaging.JPEGQuality(80))
+	if err != nil {
+		return err
+	}
+
+	f, err := files.Create(&buf, filename, filesize, auth)
 	if err != nil {
 		return err
 	}

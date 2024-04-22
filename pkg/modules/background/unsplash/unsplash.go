@@ -256,7 +256,7 @@ func (p *Provider) Set(s *xorm.Session, image *background.Image, project *models
 
 	// Download the photo from unsplash
 	// The parameters crop the image to a max width of 2560 and a max height of 2048 to save bandwidth and storage.
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, photo.Urls.Raw+"&w=2560&h=2048&q=90", nil)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, photo.Urls.Raw+"&fm=jpg&h="+strconv.FormatInt(background.MaxBackgroundImageHeight, 10)+"&q=80", nil)
 	if err != nil {
 		return
 	}

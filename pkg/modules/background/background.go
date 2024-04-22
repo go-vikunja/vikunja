@@ -32,6 +32,8 @@ type Image struct {
 	Info interface{} `json:"info,omitempty"`
 }
 
+const MaxBackgroundImageHeight = 3840
+
 // Provider represents something that is able to get a project of images and set one of them as background
 type Provider interface {
 	// Search is used to either return a pre-defined project of Image or let the user search for an image
