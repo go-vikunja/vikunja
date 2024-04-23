@@ -396,7 +396,8 @@
       "titleRequired": "请提供标题。",
       "delete": "删除此视图",
       "deleteText": "您确定要删除此视图吗？它将不再可能使用它来查看此项目中的任务。 此操作不会删除任何任务。此操作不能撤销！",
-      "deleteSuccess": "视图已成功删除"
+      "deleteSuccess": "视图已成功删除",
+      "onlyAdminsCanEdit": "Only project admins can edit views."
     }
   },
   "filters": {

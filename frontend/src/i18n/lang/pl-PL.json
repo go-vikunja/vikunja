@@ -396,7 +396,8 @@
       "titleRequired": "Proszę podać tytuł.",
       "delete": "Usuń ten widok",
       "deleteText": "Czy na pewno chcesz usunąć ten widok? Nie będzie już możliwe wyświetlanie zadań w tym projekcie. Ta akcja nie usunie żadnych zadań. Tej operacji nie można cofnąć!",
-      "deleteSuccess": "Widok został pomyślnie usunięty"
+      "deleteSuccess": "Widok został pomyślnie usunięty",
+      "onlyAdminsCanEdit": "Tylko administratorzy projektu mogą edytować widoki."
     }
   },
   "filters": {

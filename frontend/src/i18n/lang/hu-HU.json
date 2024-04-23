@@ -396,7 +396,8 @@
       "titleRequired": "Kérjük, adjon meg egy címet.",
       "delete": "Törölje ezt a nézetet",
       "deleteText": "Biztosan eltávolítja ezt a nézetet? A továbbiakban nem lesz használható a projektben szereplő feladatok megtekintésére. Ez a művelet nem töröl semmilyen feladatot. Ezt nem lehet visszacsinálni!",
-      "deleteSuccess": "A nézet sikeresen törölve"
+      "deleteSuccess": "A nézet sikeresen törölve",
+      "onlyAdminsCanEdit": "Only project admins can edit views."
     }
   },
   "filters": {

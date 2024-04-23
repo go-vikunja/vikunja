@@ -396,7 +396,8 @@
       "titleRequired": "Prosim navedite naslov.",
       "delete": "Izbriši pogled",
       "deleteText": "Ali ste prepričani, da želite odstraniti ta pogled? Ne bo ga več mogoče uporabljati za ogled nalog v tem projektu. To dejanje ne bo izbrisalo nobenih opravil. Tega ni mogoče razveljaviti!",
-      "deleteSuccess": "Pogled je bil uspešno izbrisan"
+      "deleteSuccess": "Pogled je bil uspešno izbrisan",
+      "onlyAdminsCanEdit": "Only project admins can edit views."
     }
   },
   "filters": {
