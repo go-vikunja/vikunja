@@ -38,6 +38,10 @@ func RemoveEmptySSOTeams(s *xorm.Session) (err error) {
 		return err
 	}
 
+	if len(teams) == 0 {
+		return nil
+	}
+
 	teamIDs := make([]int64, 0, len(teams))
 	for _, team := range teams {
 		teamIDs = append(teamIDs, team.ID)
@@ -63,6 +67,6 @@ func RegisterEmptyOpenIDTeamCleanupCron() {
 		}
 	})
 	if err != nil {
-		log.Fatalf("Could not empty openid teams cleanup cron: %s", err)
+		log.Fatalf("Could not register empty openid teams cleanup cron: %s", err)
 	}
 }
