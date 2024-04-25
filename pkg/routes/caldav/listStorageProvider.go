@@ -636,7 +636,7 @@ func (vcls *VikunjaCaldavProjectStorage) getProjectRessource(isCollection bool) 
 		tk := models.TaskCollection{
 			ProjectID: vcls.project.ID,
 		}
-		iface, _, _, err := tk.ReadAll(s, vcls.user, "", 1, 1000)
+		iface, _, _, err := tk.ReadAll(s, vcls.user, "", 0, -1)
 		if err != nil {
 			_ = s.Rollback()
 			return rr, err
