@@ -95,6 +95,9 @@ func ParseTaskFromVTODO(content string) (vTask *models.Task, err error) {
 	if err != nil {
 		return nil, err
 	}
+	if len(parsed.Components) == 0 {
+		return nil, errors.New("VTODO element does seem not contain any components")
+	}
 	vTodo, ok := parsed.Components[0].(*ics.VTodo)
 	if !ok {
 		return nil, errors.New("VTODO element not found")
