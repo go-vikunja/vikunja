@@ -203,6 +203,7 @@ const {
 	showSave = false,
 	placeholder = '',
 	editShortcut = '',
+	discardShortcutEnabled = false,
 } = defineProps<{
 	modelValue: string,
 	uploadCallback?: UploadCallback,
@@ -211,6 +212,7 @@ const {
 	showSave?: boolean,
 	placeholder?: string,
 	editShortcut?: string,
+	discardShortcutEnabled?: boolean,
 }>()
 
 const emit = defineEmits(['update:modelValue', 'save'])
@@ -351,19 +353,6 @@ const editor = useEditor({
 				}
 			},
 		}),
-		// Add a custom extension for the Escape key
-		Extension.create({
-			name: 'escapeKey',
-
-			addKeyboardShortcuts() {
-				return {
-					'Escape': () => {
-						exitEditMode()
-						return true
-					},
-				}
-			},
-		}),
 		Heading,
 		History,
 		HorizontalRule,
@@ -438,6 +427,24 @@ const editor = useEditor({
 			suggestion: suggestionSetup(t),
 		}),
 		BubbleMenu,
+
+		// Add a custom extension for the Escape key
+		...(
+			discardShortcutEnabled 
+				?[discardShortcutEnabled && Extension.create({
+					name: 'escapeKey',
+
+					addKeyboardShortcuts() {
+						return {
+							'Escape': () => {
+								exitEditMode()
+								return true
+							},
+						}
+					},
+				})]
+				: []
+		),
 	],
 	onUpdate: () => {
 		bubbleNow()

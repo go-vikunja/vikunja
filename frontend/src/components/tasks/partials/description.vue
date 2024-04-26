@@ -30,6 +30,7 @@
 			:placeholder="$t('task.description.placeholder')"
 			:show-save="true"
 			edit-shortcut="e"
+			:discard-shortcut-enabled="true"
 			@update:modelValue="saveWithDelay"
 			@save="save"
 		/>
