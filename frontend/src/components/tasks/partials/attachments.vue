@@ -27,89 +27,91 @@
 			v-if="attachments.length > 0"
 			class="files"
 		>
-			<!-- FIXME: don't use a for element that wraps other links / buttons
-				Instead: overlay element with button that is inside.
-			-->
-			<a
-				v-for="a in attachments"
-				:key="a.id"
-				class="attachment"
-				@click="viewOrDownload(a)"
-			>
-				<div class="filename">
-					{{ a.file.name }}
-					<span
-						v-if="task.coverImageAttachmentId === a.id"
-						class="is-task-cover"
-					>
-						{{ $t('task.attachment.usedAsCover') }}
-					</span>
-				</div>
-				<div class="info">
-					<p class="attachment-info-meta">
-						<i18n-t
-							keypath="task.attachment.createdBy"
-							scope="global"
-						>
-							<span v-tooltip="formatDateLong(a.created)">
-								{{ formatDateSince(a.created) }}
+			<table class="table table-striped">
+				<tr
+					v-for="a in attachments"
+					:key="a.id"
+					class="clickable"
+					@click="viewOrDownload(a)"
+				>
+					<td class="preview-column">
+						<FilePreview
+							v-if="canPreview(a)"
+							class="attachment-preview"
+							:model-value="a"
+						/>
+					</td>
+					<td>
+						<div class="filename">
+							{{ a.file.name }}
+							<span
+								v-if="task.coverImageAttachmentId === a.id"
+								class="is-task-cover"
+							>
+								{{ $t('task.attachment.usedAsCover') }}
 							</span>
-							<User
-								:avatar-size="24"
-								:user="a.createdBy"
-								:is-inline="true"
-							/>
-						</i18n-t>
-						<span>
-							{{ getHumanSize(a.file.size) }}
-						</span>
-						<span v-if="a.file.mime">
-							{{ a.file.mime }}
-						</span>
-					</p>
-					<img
-						v-if="canPreview(a)"
-						:src="blobUrls.get(a.id)"
-						style="height: 20vh; min-height: 100px"
-						alt=""
-					>
-					<p>
-						<BaseButton
-							v-tooltip="$t('task.attachment.downloadTooltip')"
-							class="attachment-info-meta-button"
-							@click.prevent.stop="downloadAttachment(a)"
-						>
-							{{ $t('misc.download') }}
-						</BaseButton>
-						<BaseButton
-							v-tooltip="$t('task.attachment.copyUrlTooltip')"
-							class="attachment-info-meta-button"
-							@click.stop="copyUrl(a)"
-						>
-							{{ $t('task.attachment.copyUrl') }}
-						</BaseButton>
-						<BaseButton
-							v-if="editEnabled"
-							v-tooltip="$t('task.attachment.deleteTooltip')"
-							class="attachment-info-meta-button"
-							@click.prevent.stop="setAttachmentToDelete(a)"
-						>
-							{{ $t('misc.delete') }}
-						</BaseButton>
-						<BaseButton
-							v-if="editEnabled"
-							class="attachment-info-meta-button"
-							@click.prevent.stop="setCoverImage(task.coverImageAttachmentId === a.id ? null : a)"
-						>
-							{{
-								task.coverImageAttachmentId === a.id
-									? $t('task.attachment.unsetAsCover')
-									: $t('task.attachment.setAsCover')
-							}}
-						</BaseButton>
-					</p>
-				</div>
-			</a>
+						</div>
+						<div class="info">
+							<p class="attachment-info-meta">
+								<i18n-t
+									keypath="task.attachment.createdBy"
+									scope="global"
+								>
+									<span v-tooltip="formatDateLong(a.created)">
+										{{ formatDateSince(a.created) }}
+									</span>
+									<User
+										:avatar-size="24"
+										:user="a.createdBy"
+										:is-inline="true"
+									/>
+								</i18n-t>
+								<span>
+									{{ getHumanSize(a.file.size) }}
+								</span>
+								<span v-if="a.file.mime">
+									{{ a.file.mime }}
+								</span>
+							</p>
+							<p>
+								<BaseButton
+									v-tooltip="$t('task.attachment.downloadTooltip')"
+									class="attachment-info-meta-button"
+									@click.prevent.stop="downloadAttachment(a)"
+								>
+									{{ $t('misc.download') }}
+								</BaseButton>
+								<BaseButton
+									v-tooltip="$t('task.attachment.copyUrlTooltip')"
+									class="attachment-info-meta-button"
+									@click.stop="copyUrl(a)"
+								>
+									{{ $t('task.attachment.copyUrl') }}
+								</BaseButton>
+								<BaseButton
+									v-if="editEnabled"
+									v-tooltip="$t('task.attachment.deleteTooltip')"
+									class="attachment-info-meta-button"
+									@click.prevent.stop="setAttachmentToDelete(a)"
+								>
+									{{ $t('misc.delete') }}
+								</BaseButton>
+								<BaseButton
+									v-if="editEnabled"
+									class="attachment-info-meta-button"
+									@click.prevent.stop="setCoverImage(task.coverImageAttachmentId === a.id ? null : a)"
+								>
+									{{
+										task.coverImageAttachmentId === a.id
+											? $t('task.attachment.unsetAsCover')
+											: $t('task.attachment.setAsCover')
+									}}
+								</BaseButton>
+							</p>
+						</div>
+					</td>
+				</tr>
+			</table>
 		</div>
 
 		<x-button
@@ -174,7 +176,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, shallowReactive, computed, onMounted} from 'vue'
+import {ref, shallowReactive, computed} from 'vue'
 import {useDropZone} from '@vueuse/core'
 
 import User from '@/components/misc/user.vue'
@@ -194,6 +196,7 @@ import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 import {error, success} from '@/message'
 import {useTaskStore} from '@/stores/tasks'
 import {useI18n} from 'vue-i18n'
+import FilePreview from '@/components/tasks/partials/file-preview.vue'
 
 const {
 	task,
@@ -228,20 +231,6 @@ function downloadAttachment(attachment: IAttachment) {
 
 const filesRef = ref<HTMLInputElement | null>(null)
 
-const blobUrls = ref<Map<number, string>>(new Map())
-
-onMounted(() => {
-	fetchBlobUrls(attachments.value as IAttachment[])
-})
-
-async function fetchBlobUrls(attachments: IAttachment[]) {
-	for (const attachment of attachments) {
-		const blobUrl = await attachmentService.getBlobUrl(attachment)
-		if (canPreview(attachment)) {
-			blobUrls.value.set(attachment.id, blobUrl)
-		}
-	}
-}
 function uploadNewAttachment() {
 	const files = filesRef.value?.files
 
@@ -456,6 +445,18 @@ async function setCoverImage(attachment: IAttachment | null) {
 	90% {
 		transform: translate3d(0, -4px, 0);
 	}
+}
+
+.preview-column {
+	max-width: 75px;
+}
+
+.attachment-preview {
+	max-height: 75px;
+}
+
+.clickable {
+	cursor: pointer;
 }
 
 .is-task-cover {
