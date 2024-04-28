@@ -33,7 +33,7 @@ importers:
         version: 3.1.0(patch_hash=c67tdk7qpd5grxd2zj6lsxfbou)
       '@infectoone/vue-ganttastic':
         specifier: 2.3.2
-        version: 2.3.2(dayjs@1.11.10)(vue@3.4.25(typescript@5.4.5))
+        version: 2.3.2(dayjs@1.11.11)(vue@3.4.25(typescript@5.4.5))
       '@intlify/unplugin-vue-i18n':
         specifier: 4.0.0
         version: 4.0.0(rollup@4.17.0)(vue-i18n@9.13.1(vue@3.4.25(typescript@5.4.5)))
@@ -173,8 +173,8 @@ importers:
         specifier: 3.6.0
         version: 3.6.0
       dayjs:
-        specifier: 1.11.10
-        version: 1.11.10
+        specifier: 1.11.11
+        version: 1.11.11
       dompurify:
         specifier: 3.1.1
         version: 3.1.1
@@ -2991,8 +2991,8 @@ packages:
   date-fns@3.6.0:
     resolution: {integrity: sha512-fRHTG8g/Gif+kSh50gaGEdToemgfj74aRX3swtiouboip5JDLAyDE9F11nHMIcvOaXeOC6D7SpNhi7uFyB7Uww==}
 
-  dayjs@1.11.10:
-    resolution: {integrity: sha512-vjAczensTgRcqDERK0SR2XMwsF/tSvnvlv6VcF2GIhg6Sx4yOIt/irsr1RDJsKiIyBzJDpCoXiWWq28MqH2cnQ==}
+  dayjs@1.11.11:
+    resolution: {integrity: sha512-okzr3f11N6WuqYtZSvm+F776mB41wRZMhKP+hc34YdW+KmtYYK9iqvHSwo2k9FEH3fhGXvOPV6yz2IcSrfRUDg==}
 
   de-indent@1.0.2:
     resolution: {integrity: sha512-e/1zu3xH5MQryN2zdVaF0OrdNLUbvWxzMbi+iNA6Bky7l1RoP8a2fIbRocyHclXt/arDrrR6lL3TqFD9pMQTsg==}
@@ -7851,10 +7851,10 @@ snapshots:
 
   '@humanwhocodes/object-schema@2.0.2': {}
 
-  '@infectoone/vue-ganttastic@2.3.2(dayjs@1.11.10)(vue@3.4.25(typescript@5.4.5))':
+  '@infectoone/vue-ganttastic@2.3.2(dayjs@1.11.11)(vue@3.4.25(typescript@5.4.5))':
     dependencies:
       '@vueuse/core': 9.13.0(vue@3.4.25(typescript@5.4.5))
-      dayjs: 1.11.10
+      dayjs: 1.11.11
       vue: 3.4.25(typescript@5.4.5)
     transitivePeerDependencies:
       - '@vue/composition-api'
@@ -9454,7 +9454,7 @@ snapshots:
       cli-table3: 0.6.1
       commander: 6.2.1
       common-tags: 1.8.2
-      dayjs: 1.11.10
+      dayjs: 1.11.11
       debug: 4.3.4(supports-color@8.1.1)
       enquirer: 2.3.6
       eventemitter2: 6.4.7
@@ -9498,7 +9498,7 @@ snapshots:
 
   date-fns@3.6.0: {}
 
-  dayjs@1.11.10: {}
+  dayjs@1.11.11: {}
 
   de-indent@1.0.2: {}
 
