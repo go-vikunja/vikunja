@@ -2,7 +2,7 @@ import {calculateDayInterval} from './calculateDayInterval'
 import {calculateNearestHours} from './calculateNearestHours'
 import {replaceAll} from '../replaceAll'
 
-interface dateParseResult {
+export interface dateParseResult {
 	newText: string,
 	date: Date | null,
 }
@@ -12,7 +12,7 @@ interface dateFoundResult {
 	date: Date | null,
 }
 
-const monthsRegexGroup = '(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)'
+const monthsRegexGroup = '(january|february|march|april|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)'
 
 function matchesDateExpr(text: string, dateExpr: string): boolean {
 	return text.match(new RegExp('(^| )' + dateExpr, 'gi')) !== null
@@ -60,12 +60,12 @@ export const parseDate = (text: string, now: Date = new Date()): dateParseResult
 		return addTimeToDate(text, date, 'end of month')
 	}
 
-	let parsed = getDateFromWeekday(text)
+	let parsed = getDateFromWeekday(text, now)
 	if (parsed.date !== null) {
 		return addTimeToDate(text, parsed.date, parsed.foundText)
 	}
 
-	parsed = getDayFromText(text)
+	parsed = getDayFromText(text, now)
 	if (parsed.date !== null) {
 		const month = getMonthFromText(text, parsed.date)
 		return addTimeToDate(month.newText, month.date, parsed.foundText)
@@ -76,7 +76,7 @@ export const parseDate = (text: string, now: Date = new Date()): dateParseResult
 		return addTimeToDate(text, parsed.date, parsed.foundText)
 	}
 
-	parsed = getDateFromText(text)
+	parsed = getDateFromText(text, now)
 
 	if (parsed.date === null) {
 		return {
@@ -230,7 +230,7 @@ export const getDateFromTextIn = (text: string, now: Date = new Date()) => {
 	}
 }
 
-const getDateFromWeekday = (text: string): dateFoundResult => {
+const getDateFromWeekday = (text: string, date: Date = new Date()): dateFoundResult => {
 	const matcher = /(^| )(next )?(monday|mon|tuesday|tue|wednesday|wed|thursday|thu|friday|fri|saturday|sat|sunday|sun)($| )/g
 	const results: string[] | null = matcher.exec(text.toLowerCase()) // The i modifier does not seem to work.
 	if (results === null) {
@@ -240,7 +240,6 @@ const getDateFromWeekday = (text: string): dateFoundResult => {
 		}
 	}
 
-	const date: Date = new Date()
 	const currentDay: number = date.getDay()
 	let day = 0
 
@@ -296,7 +295,7 @@ const getDateFromWeekday = (text: string): dateFoundResult => {
 	}
 }
 
-const getDayFromText = (text: string) => {
+const getDayFromText = (text: string, now: Date = new Date()) => {
 	const matcher = /(^| )(([1-2][0-9])|(3[01])|(0?[1-9]))(st|nd|rd|th|\.)($| )/ig
 	const results = matcher.exec(text)
 	if (results === null) {
@@ -306,7 +305,6 @@ const getDayFromText = (text: string) => {
 		}
 	}
 
-	const now = new Date()
 	const date = new Date(now)
 	const day = parseInt(results[0])
 	date.setDate(day)

@@ -55,7 +55,7 @@ interface Prefixes {
  *
  * @param text
  */
-export const parseTaskText = (text: string, prefixesMode: PrefixMode = PrefixMode.Default): ParsedTaskText => {
+export const parseTaskText = (text: string, prefixesMode: PrefixMode = PrefixMode.Default, now: Date = new Date()): ParsedTaskText => {
 	const result: ParsedTaskText = {
 		text: text,
 		date: null,
@@ -86,7 +86,7 @@ export const parseTaskText = (text: string, prefixesMode: PrefixMode = PrefixMod
 	result.text = textWithoutMatched
 	result.repeats = repeats
 
-	const {newText, date} = parseDate(result.text)
+	const {newText, date} = parseDate(result.text, now)
 	result.text = newText
 	result.date = date
 
