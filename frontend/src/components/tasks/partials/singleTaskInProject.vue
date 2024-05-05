@@ -111,7 +111,7 @@
 						<icon icon="align-left" />
 					</span>
 					<span
-						v-if="task.repeatAfter.amount > 0"
+						v-if="task.repeatAfter.amount > 0 || (task.repeatAfter.amount === 0 && task.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH)"
 						class="project-task-icon"
 					>
 						<icon icon="history" />
@@ -207,6 +207,7 @@ import {useIntervalFn} from '@vueuse/core'
 import {playPopSound} from '@/helpers/playPop'
 import {useAuthStore} from '@/stores/auth'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
+import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 
 const {
 	theTask,
