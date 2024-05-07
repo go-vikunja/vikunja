@@ -323,9 +323,8 @@ async function setCoverImage(attachment: IAttachment | null) {
 		margin-bottom: 0;
 		display: flex;
 
-		> span:not(:last-child):after,
+		> span,
 		> button:not(:last-child):after {
-			content: '·';
 			padding: 0 .25rem;
 		}
 	}
