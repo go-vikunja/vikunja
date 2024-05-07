@@ -26,6 +26,15 @@ If you plan to do a bigger change, it is better to open an issue for discussion 
 
 The main repo is [`vikunja/vikunja`](https://kolaente.dev/vikunja/vikunja), it contains all code for the api, frontend and desktop applications.
 
+## Where to file issues
+
+You can file issues on [the Gitea repo](https://kolaente.dev/vikunja/vikunja) or [on the GitHub mirror](https://github.com/go-vikunja/vikunja), when you don't want to create an account on the Gitea instance.
+
+Please note that due to a spam problem, we need to manually enable accounts on Gitea after you've registered there.
+To get that started, please reach out on another channel with your username.
+
+Another option is [the community forum](https://community.vikunja.io), especially if you want to discuss a feature in more detail.
+
 ## API
 
 You'll need at least Go 1.21 to build Vikunja's api.
