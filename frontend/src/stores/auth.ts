@@ -37,6 +37,8 @@ function redirectToProviderIfNothingElseIsEnabled() {
 }
 
 export const useAuthStore = defineStore('auth', () => {
+	const configStore = useConfigStore()
+	
 	const authenticated = ref(false)
 	const isLinkShareAuth = ref(false)
 	const needsTotpPasscode = ref(false)
@@ -185,8 +187,7 @@ export const useAuthStore = defineStore('auth', () => {
 		const HTTP = HTTPFactory()
 		setIsLoading(true)
 
-		const {auth} = useConfigStore()
-		const fullProvider: IProvider = auth.openidConnect.providers.find((p: IProvider) => p.key === provider)
+		const fullProvider: IProvider = configStore.auth.openidConnect.providers.find((p: IProvider) => p.key === provider)
 
 		const data = {
 			code: code,
@@ -357,8 +358,15 @@ export const useAuthStore = defineStore('auth', () => {
 
 		const cancel = setModuleLoading(setIsLoadingGeneralSettings)
 		try {
-			const updateSettingsPromise = userSettingsService.update(settings)
-			setUserSettings({...settings})
+			let settingsUpdate = {...settings}
+			if (configStore.demoModeEnabled) {
+				settingsUpdate = {
+					...settingsUpdate,
+					language: null,
+				}
+			}
+			const updateSettingsPromise = userSettingsService.update(settingsUpdate)
+			setUserSettings(settingsUpdate)
 			await setLanguage(settings.language)
 			await updateSettingsPromise
 			if (showMessage) {
@@ -403,13 +411,12 @@ export const useAuthStore = defineStore('auth', () => {
 		await checkAuth()
 
 		// if configured, redirect to OIDC Provider on logout
-		const {auth} = useConfigStore()
 		if (
-			auth.local.enabled === false &&
-			auth.openidConnect.enabled &&
-			auth.openidConnect.providers?.length === 1)
+			configStore.auth.local.enabled === false &&
+			configStore.auth.openidConnect.enabled &&
+			configStore.auth.openidConnect.providers?.length === 1)
 		{
-			redirectToProviderOnLogout(auth.openidConnect.providers[0])
+			redirectToProviderOnLogout(configStore.auth.openidConnect.providers[0])
 		}
 	}
 
