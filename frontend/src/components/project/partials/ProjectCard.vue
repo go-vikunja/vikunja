@@ -30,7 +30,7 @@
 			>
 				<icon icon="filter" />
 			</span>
-			{{ project.title }}
+			{{ getProjectTitle(project) }}
 		</div>
 		<BaseButton
 			class="project-button"
@@ -59,6 +59,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 
 import {useProjectBackground} from './useProjectBackground'
 import {useProjectStore} from '@/stores/projects'
+import {getProjectTitle} from '@/helpers/getProjectTitle'
 
 const {
 	project,
