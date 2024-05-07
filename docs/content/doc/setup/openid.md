@@ -17,7 +17,7 @@ Vikunja allows for authentication with an external identity source such as Authe
 
 ## OpenID Connect Overview
 
-OpenID Connect is a standardized identity layer built on top of the more generic OAuth 2.0 specification, simplying interaction between the involved parties significantly.
+OpenID Connect is a standardized identity layer built on top of the more generic OAuth 2.0 specification, simplifying interaction between the involved parties significantly.
 While the [OpenID specification](https://openid.net/specs/openid-connect-core-1_0.html#Overview) is worth a read, we summarize the most important basics here.
 
 The involved parties are:

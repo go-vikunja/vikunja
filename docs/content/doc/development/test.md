@@ -16,7 +16,7 @@ menu:
 
 The following parts are about the kinds of tests in the API package and how to run them.
 
-### Prerequesites
+### Prerequisites
 
 To run any kind of test, you need to specify Vikunja's [root path](https://vikunja.io/docs/config-options/#rootpath).
 This is required to make sure all test fixtures are correctly loaded.
@@ -39,7 +39,7 @@ This definition is a bit blurry, but we haven't found a better one yet.
 All integration tests live in `pkg/integrations`.
 You can run them by executing `mage test:integration`.
 
-The integration tests use the same config and fixtures as the unit tests and therefor have the same options available,
+The integration tests use the same config and fixtures as the unit tests and therefore have the same options available,
 see at the beginning of this document.
 
 To run integration tests, use `mage test:integration`.

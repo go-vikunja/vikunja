@@ -24,7 +24,7 @@ In other packages, use the `db.NewSession()` method to get a new database sessio
 
 To add a new table to the database, create the struct and [add a migration for it]({{< ref "db-migrations.md" >}}).
 
-To learn more about how to configure your struct to create "good" tables, refer to [the xorm documentaion](https://xorm.io/docs/).
+To learn more about how to configure your struct to create "good" tables, refer to [the xorm documentation](https://xorm.io/docs/).
 
 In most cases you will also need to implement the `TableName() string` method on the new struct to make sure the table name matches the rest of the tables - plural.
 

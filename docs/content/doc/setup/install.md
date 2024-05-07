@@ -37,7 +37,7 @@ This document provides an overview and instructions for the different methods:
 * [FreeBSD](#freebsd--freenas)
 * [Kubernetes]({{< ref "k8s.md" >}})
 
-And after you installed Vikunja, you may want to check out these other ressources:
+And after you installed Vikunja, you may want to check out these other resources:
 
 * [Configuration]({{< ref "config.md">}})
 * [UTF-8 Settings]({{< ref "utf-8.md">}})
@@ -229,7 +229,7 @@ git clone https://code.vikunja.io/vikunja
 cd vikunja
 ```
 
-**Note:** Ceck out the version you want to build with `git checkout VERSION` - replace `VERSION` with the version want to use.
+**Note:** Check out the version you want to build with `git checkout VERSION` - replace `VERSION` with the version want to use.
 If you don't do this, you'll build the [latest unstable build]({{< ref "versions.md">}}), which might contain bugs.
 
 ### Compile binaries

@@ -51,7 +51,7 @@ This document describes the different errors Vikunja can return.
 | ErrorCode | HTTP Status Code | Description |
 |-----------|------------------|-------------|
 | 2001 | 400 | ID cannot be empty or 0. |
-| 2002 | 400 | Some of the request data was invalid. The response contains an aditional array with all invalid fields. |
+| 2002 | 400 | Some of the request data was invalid. The response contains an additional array with all invalid fields. |
 
 ## Project
 

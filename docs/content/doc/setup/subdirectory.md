@@ -17,7 +17,7 @@ However, you can still run it in a subdirectory but need to build the frontend y
 First, make sure you're able to build the frontend from source.
 Check [the guide about building from source]({{< ref "build-from-source.md">}}#frontend) about that.
 
-### Dynamicly set with build command
+### Dynamically set with build command
 
 Run the build with the `VIKUNJA_FRONTEND_BASE` variable specified.
 

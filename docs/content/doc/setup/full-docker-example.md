@@ -40,7 +40,7 @@ chown 1000 $PWD/files
 
 You'll need to do this before running any of the examples on this page.
 
-Vikunja will not try to aquire ownership of the files folder, as that would mean it had to run as root.
+Vikunja will not try to acquire ownership of the files folder, as that would mean it had to run as root.
 
 ## PostgreSQL
 
@@ -312,7 +312,7 @@ To do that, you can
 
 * Either activate SSH and paste the adapted compose file in a terminal (using Putty or similar)
 * Without activating SSH as a "custom script" (go to Control Panel / Task Scheduler / Create / Scheduled Task / User-defined script)
-* Without activating SSH, by using Portainer (you have to install first, check out [this tutorial](https://www.portainer.io/blog/how-to-install-portainer-on-a-synology-nas) for exmple):
+* Without activating SSH, by using Portainer (you have to install first, check out [this tutorial](https://www.portainer.io/blog/how-to-install-portainer-on-a-synology-nas) for example):
   1. Go to **Dashboard / Stacks** click the button **"Add Stack"**
   2. Give it the name Vikunja and paste the adapted docker compose file
   3. Deploy the Stack with the "Deploy Stack" button:

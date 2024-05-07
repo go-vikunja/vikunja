@@ -348,6 +348,7 @@ Environment path: `VIKUNJA_SERVICE_CUSTOMLOGOURL`
 
 ### enablepublicteams
 
+Enables the public team feature. If enabled, it is possible to configure teams to be public, which makes them
 discoverable when sharing a project, therefore not only showing teams the user is member of.
 
 Default: `false`
@@ -779,7 +780,7 @@ Environment path: `VIKUNJA_MAILER_PASSWORD`
 
 ### skiptlsverify
 
-Wether to skip verification of the tls certificate on the server
+Whether to skip verification of the tls certificate on the server
 
 Default: `false`
 
@@ -1222,7 +1223,7 @@ OpenID configuration will allow users to authenticate through a third-party Open
 The provider needs to support the `openid`, `profile` and `email` scopes.<br/>
 **Note:** Some openid providers (like Gitlab) only make the email of the user available through OpenID if they have set it to be publicly visible.
 If the email is not public in those cases, authenticating will fail.
-**Note 2:** The frontend expects the third party to rediect the user <frontend-url>/auth/openid/<auth key> after authentication. Please make sure to configure the redirect url in your third party auth service accordingly if you're using the default vikunja frontend.
++**Note 2:** The frontend expects the third party to redirect the user <frontend-url>/auth/openid/<auth key> after authentication. Please make sure to configure the redirect url in your third party auth service accordingly if you're using the default vikunja frontend.    
 The frontend will automatically provide the API with the redirect url, composed from the current url where it's hosted.
 If you want to use the desktop client with OpenID, make sure to allow redirects to `127.0.0.1`.
 Take a look at the [default config file](https://kolaente.dev/vikunja/vikunja/src/branch/main/config.yml.sample) for more information about how to configure openid authentication.
@@ -1421,15 +1422,15 @@ Full path: `webhooks.enabled`
 Environment path: `VIKUNJA_WEBHOOKS_ENABLED`
 
 
-### timoutseconds
+### timeoutseconds
 
-The timout in seconds until a webhook request fails when no response has been received.
+The timeout in seconds until a webhook request fails when no response has been received.
 
 Default: `30`
 
-Full path: `webhooks.timoutseconds`
+Full path: `webhooks.timeoutseconds`
 
-Environment path: `VIKUNJA_WEBHOOKS_TIMOUTSECONDS`
+Environment path: `VIKUNJA_WEBHOOKS_TIMEOUTSECONDS`
 
 
 ### proxyurl

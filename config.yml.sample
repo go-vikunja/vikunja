@@ -156,7 +156,7 @@ mailer:
   username: "user"
   # SMTP password
   password: ""
-  # Wether to skip verification of the tls certificate on the server
+  # Whether to skip verification of the tls certificate on the server
   skiptlsverify: false
   # The default from address when sending emails
   fromemail: "mail@vikunja"
@@ -306,7 +306,7 @@ auth:
   # The provider needs to support the `openid`, `profile` and `email` scopes.<br/>
   # **Note:** Some openid providers (like Gitlab) only make the email of the user available through OpenID if they have set it to be publicly visible.
   # If the email is not public in those cases, authenticating will fail.
-  # **Note 2:** The frontend expects the third party to rediect the user <frontend-url>/auth/openid/<auth key> after authentication. Please make sure to configure the redirect url in your third party auth service accordingly if you're using the default vikunja frontend.
+  # +**Note 2:** The frontend expects the third party to redirect the user <frontend-url>/auth/openid/<auth key> after authentication. Please make sure to configure the redirect url in your third party auth service accordingly if you're using the default vikunja frontend.    
   # The frontend will automatically provide the API with the redirect url, composed from the current url where it's hosted.
   # If you want to use the desktop client with OpenID, make sure to allow redirects to `127.0.0.1`.
   # Take a look at the [default config file](https://kolaente.dev/vikunja/vikunja/src/branch/main/config.yml.sample) for more information about how to configure openid authentication.
@@ -368,8 +368,8 @@ defaultsettings:
 webhooks:
   # Whether to enable support for webhooks
   enabled: true
-  # The timout in seconds until a webhook request fails when no response has been received.
-  timoutseconds: 30
+  # The timeout in seconds until a webhook request fails when no response has been received.
+  timeoutseconds: 30
   # The URL of [a mole instance](https://github.com/frain-dev/mole) to use to proxy outgoing webhook requests. You should use this and configure appropriately if you're not the only one using your Vikunja instance. More info about why: https://webhooks.fyi/best-practices/webhook-providers#implement-security-on-egress-communication. Must be used in combination with `webhooks.password` (see below).
   proxyurl:
   # The proxy password to use when authenticating against the proxy.

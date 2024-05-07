@@ -18,7 +18,7 @@ Starting with version 0.22.0, Vikunja allows you to define webhooks to notify ot
 
 To create a webhook, in the project options select "Webhooks". The form will allow you to create and modify webhooks.
 
-Check out [the api docs](https://try.vikunja.io/api/v1/docs#tag/webhooks) for information about how to create webhooks programatically.
+Check out [the api docs](https://try.vikunja.io/api/v1/docs#tag/webhooks) for information about how to create webhooks programmatically.
 
 ## Available events and their payload
 
