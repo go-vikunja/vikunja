@@ -306,4 +306,12 @@ function prepareFiltersAndLoadTasks() {
 		}
 	}
 }
+
+.list-view {
+	padding-bottom: 1rem;
+	
+	:deep(.card) {
+		margin-bottom: 0;
+	}
+}
 </style>
