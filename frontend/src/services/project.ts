@@ -52,12 +52,16 @@ export default class ProjectService extends AbstractService<IProject> {
 		return window.URL.createObjectURL(new Blob([response.data]))
 	}
 
-	async removeBackground(project: Pick<IProject, 'id'>) {
+	async removeBackground(project: IProject) {
 		const cancel = this.setLoading()
 
 		try {
-			const response = await this.http.delete(`/projects/${project.id}/background`, project)
-			return response.data
+			await this.http.delete(`/projects/${project.id}/background`)
+			return {
+				...project,
+				backgroundInformation: null,
+				backgroundBlurHash: '',
+			}
 		} finally {
 			cancel()
 		}
