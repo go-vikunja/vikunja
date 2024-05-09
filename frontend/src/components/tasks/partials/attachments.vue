@@ -27,91 +27,89 @@
 			v-if="attachments.length > 0"
 			class="files"
 		>
-			<table class="table table-striped">
-				<tr
-					v-for="a in attachments"
-					:key="a.id"
-					class="clickable"
-					@click="viewOrDownload(a)"
-				>
-					<td class="preview-column">
-						<FilePreview
-							v-if="canPreview(a)"
-							class="attachment-preview"
-							:model-value="a"
-						/>
-					</td>
-					<td>
-						<div class="filename">
-							{{ a.file.name }}
-							<span
-								v-if="task.coverImageAttachmentId === a.id"
-								class="is-task-cover"
+			<div
+				v-for="a in attachments"
+				:key="a.id"
+				class="grid-item clickable"
+				@click="viewOrDownload(a)"
+			>
+				<div class="preview-column">
+					<FilePreview
+						v-if="canPreview(a)"
+						class="attachment-preview"
+						:model-value="a"
+					/>
+				</div>
+				<div>
+					<div class="filename">
+						{{ a.file.name }}
+						<span
+							v-if="task.coverImageAttachmentId === a.id"
+							class="is-task-cover"
+						>
+							{{ $t('task.attachment.usedAsCover') }}
+						</span>
+					</div>
+					<div class="info">
+						<p class="attachment-info-meta">
+							<i18n-t
+								keypath="task.attachment.createdBy"
+								scope="global"
 							>
-								{{ $t('task.attachment.usedAsCover') }}
+								<span v-tooltip="formatDateLong(a.created)">
+									{{ formatDateSince(a.created) }}
+								</span>
+								<User
+									:avatar-size="24"
+									:user="a.createdBy"
+									:is-inline="true"
+								/>
+							</i18n-t>
+							<span>
+								{{ getHumanSize(a.file.size) }}
 							</span>
-						</div>
-						<div class="info">
-							<p class="attachment-info-meta">
-								<i18n-t
-									keypath="task.attachment.createdBy"
-									scope="global"
-								>
-									<span v-tooltip="formatDateLong(a.created)">
-										{{ formatDateSince(a.created) }}
-									</span>
-									<User
-										:avatar-size="24"
-										:user="a.createdBy"
-										:is-inline="true"
-									/>
-								</i18n-t>
-								<span>
-									{{ getHumanSize(a.file.size) }}
-								</span>
-								<span v-if="a.file.mime">
-									{{ a.file.mime }}
-								</span>
-							</p>
-							<p>
-								<BaseButton
-									v-tooltip="$t('task.attachment.downloadTooltip')"
-									class="attachment-info-meta-button"
-									@click.prevent.stop="downloadAttachment(a)"
-								>
-									{{ $t('misc.download') }}
-								</BaseButton>
-								<BaseButton
-									v-tooltip="$t('task.attachment.copyUrlTooltip')"
-									class="attachment-info-meta-button"
-									@click.stop="copyUrl(a)"
-								>
-									{{ $t('task.attachment.copyUrl') }}
-								</BaseButton>
-								<BaseButton
-									v-if="editEnabled"
-									v-tooltip="$t('task.attachment.deleteTooltip')"
-									class="attachment-info-meta-button"
-									@click.prevent.stop="setAttachmentToDelete(a)"
-								>
-									{{ $t('misc.delete') }}
-								</BaseButton>
-								<BaseButton
-									v-if="editEnabled"
-									class="attachment-info-meta-button"
-									@click.prevent.stop="setCoverImage(task.coverImageAttachmentId === a.id ? null : a)"
-								>
-									{{
-										task.coverImageAttachmentId === a.id
-											? $t('task.attachment.unsetAsCover')
-											: $t('task.attachment.setAsCover')
-									}}
-								</BaseButton>
-							</p>
-						</div>
-					</td>
-				</tr>
-			</table>
+							<span v-if="a.file.mime">
+								{{ a.file.mime }}
+							</span>
+						</p>
+						<p>
+							<BaseButton
+								v-tooltip="$t('task.attachment.downloadTooltip')"
+								class="attachment-info-meta-button"
+								@click.prevent.stop="downloadAttachment(a)"
+							>
+								{{ $t('misc.download') }}
+							</BaseButton>
+							<BaseButton
+								v-tooltip="$t('task.attachment.copyUrlTooltip')"
+								class="attachment-info-meta-button"
+								@click.stop="copyUrl(a)"
+							>
+								{{ $t('task.attachment.copyUrl') }}
+							</BaseButton>
+							<BaseButton
+								v-if="editEnabled"
+								v-tooltip="$t('task.attachment.deleteTooltip')"
+								class="attachment-info-meta-button"
+								@click.prevent.stop="setAttachmentToDelete(a)"
+							>
+								{{ $t('misc.delete') }}
+							</BaseButton>
+							<BaseButton
+								v-if="editEnabled"
+								class="attachment-info-meta-button"
+								@click.prevent.stop="setCoverImage(task.coverImageAttachmentId === a.id ? null : a)"
+							>
+								{{
+									task.coverImageAttachmentId === a.id
+										? $t('task.attachment.unsetAsCover')
+										: $t('task.attachment.setAsCover')
+								}}
+							</BaseButton>
+						</p>
+					</div>
+				</div>
+			</div>
 		</div>
 
 		<x-button
@@ -448,7 +446,7 @@ async function setCoverImage(attachment: IAttachment | null) {
 }
 
 .preview-column {
-	max-width: 75px;
+	max-width: 125px;
 }
 
 .attachment-preview {
@@ -457,6 +455,12 @@ async function setCoverImage(attachment: IAttachment | null) {
 
 .clickable {
 	cursor: pointer;
+}
+
+.grid-item {
+	display: grid;
+	grid-template-columns: 140px 1fr;
+	align-items: center;
 }
 
 .is-task-cover {
