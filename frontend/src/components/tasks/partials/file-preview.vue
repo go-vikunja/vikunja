@@ -2,6 +2,7 @@
 	<img
 		:src="blobUrl"
 		alt="Attachment preview"
+		style="object-fit: cover;"
 	>
 </template>
 
@@ -29,6 +30,6 @@ watchEffect(async () => {
 
 <style scoped lang="scss">
 img {
-	border-radius: 0.5rem;
+	border-radius: $radius;
 }
 </style>
