@@ -14,8 +14,8 @@ dependencies:
 
 devDependencies:
   electron:
-    specifier: 29.3.2
-    version: 29.3.2
+    specifier: 29.3.3
+    version: 29.3.3
   electron-builder:
     specifier: 24.13.3
     version: 24.13.3(electron-builder-squirrel-windows@24.13.3)
@@ -917,8 +917,8 @@ packages:
       - supports-color
     dev: true
 
-  /electron@29.3.2:
-    resolution: {integrity: sha512-pRWsaFtbd78kEHR0lg5aMhZDY6b5JykIEhZRtyTCaJpGFObB2NFIJDzR7mTia0cZp3pPq60n/SS4gRxvSM5WFQ==}
+  /electron@29.3.3:
+    resolution: {integrity: sha512-I/USTe9UsQUKb/iuiYnmt074vHxNHCJZWYiU4Xg6lNPKVBsPadAhZcc+g2gYLqC1rA7KT4AvKTmNsY8n7oEUCw==}
     engines: {node: '>= 12.20.55'}
     hasBin: true
     requiresBuild: true
