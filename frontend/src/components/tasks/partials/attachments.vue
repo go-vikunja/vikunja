@@ -446,11 +446,11 @@ async function setCoverImage(attachment: IAttachment | null) {
 }
 
 .preview-column {
-	max-width: 125px;
+	max-width: 8rem;
 }
 
 .attachment-preview {
-	max-height: 75px;
+	max-height: 4rem;
 }
 
 .clickable {
@@ -459,7 +459,7 @@ async function setCoverImage(attachment: IAttachment | null) {
 
 .grid-item {
 	display: grid;
-	grid-template-columns: 140px 1fr;
+	grid-template-columns: 9rem 1fr;
 	align-items: center;
 }
 
