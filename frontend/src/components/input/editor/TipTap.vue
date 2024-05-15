@@ -194,6 +194,7 @@ import {Extension, mergeAttributes} from '@tiptap/core'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import inputPrompt from '@/helpers/inputPrompt'
 import {setLinkInEditor} from '@/components/input/editor/setLinkInEditor'
+import {Extensions} from '@tiptap/core/src/types'
 
 const {
 	modelValue,
@@ -325,127 +326,127 @@ watch(
 	},
 )
 
+const extensions : Extensions = [
+	// Starterkit:
+	Blockquote,
+	Bold,
+	BulletList,
+	Code,
+	CodeBlockLowlight.configure({
+		lowlight,
+	}),
+	Document,
+	Dropcursor,
+	Gapcursor,
+	HardBreak.extend({
+		addKeyboardShortcuts() {
+			return {
+				'Shift-Enter': () => this.editor.commands.setHardBreak(),
+				'Mod-Enter': () => {
+					if (contentHasChanged.value) {
+						bubbleSave()
+					}
+					return true
+				},
+			}
+		},
+	}),
+	Heading,
+	History,
+	HorizontalRule,
+	Italic,
+	ListItem,
+	OrderedList,
+	Paragraph,
+	Strike,
+	Text,
+
+	Placeholder.configure({
+		placeholder: ({editor}) => {
+			if (!isEditing.value) {
+				return ''
+			}
+
+			if (editor.getText() !== '' && !editor.isFocused) {
+				return ''
+			}
+
+			return placeholder !== ''
+				? placeholder
+				: t('input.editor.placeholder')
+		},
+	}),
+	Typography,
+	Underline,
+	Link.configure({
+		openOnClick: false,
+		validate: (href: string) => /^https?:\/\//.test(href),
+	}),
+	Table.configure({
+		resizable: true,
+	}),
+	TableRow,
+	TableHeader,
+	// Custom TableCell with backgroundColor attribute
+	CustomTableCell,
+
+	CustomImage,
+
+	TaskList,
+	TaskItem.configure({
+		nested: true,
+		onReadOnlyChecked: (node: Node, checked: boolean): boolean => {
+			if (!isEditEnabled) {
+				return false
+			}
+
+			// The following is a workaround for this bug:
+			// https://github.com/ueberdosis/tiptap/issues/4521
+			// https://github.com/ueberdosis/tiptap/issues/3676
+
+			editor.value!.state.doc.descendants((subnode, pos) => {
+				if (node.eq(subnode)) {
+					const {tr} = editor.value!.state
+					tr.setNodeMarkup(pos, undefined, {
+						...node.attrs,
+						checked,
+					})
+					editor.value!.view.dispatch(tr)
+					bubbleSave()
+				}
+			})
+
+
+			return true
+		},
+	}),
+
+	Commands.configure({
+		suggestion: suggestionSetup(t),
+	}),
+	BubbleMenu,
+]
+
+// Add a custom extension for the Escape key
+if (discardShortcutEnabled) {
+	extensions.push(Extension.create({
+		name: 'escapeKey',
+
+		addKeyboardShortcuts() {
+			return {
+				'Escape': () => {
+					exitEditMode()
+					return true
+				},
+			}
+		},
+	}))
+}
+
 const editor = useEditor({
 	// eslint-disable-next-line vue/no-ref-object-destructure
 	editable: isEditing.value,
-	extensions: [
-		// Starterkit:
-		Blockquote,
-		Bold,
-		BulletList,
-		Code,
-		CodeBlockLowlight.configure({
-			lowlight,
-		}),
-		Document,
-		Dropcursor,
-		Gapcursor,
-		HardBreak.extend({
-			addKeyboardShortcuts() {
-				return {
-					'Shift-Enter': () => this.editor.commands.setHardBreak(),
-					'Mod-Enter': () => {
-						if (contentHasChanged.value) {
-							bubbleSave()
-						}
-						return true
-					},
-				}
-			},
-		}),
-		Heading,
-		History,
-		HorizontalRule,
-		Italic,
-		ListItem,
-		OrderedList,
-		Paragraph,
-		Strike,
-		Text,
-
-		Placeholder.configure({
-			placeholder: ({editor}) => {
-				if (!isEditing.value) {
-					return ''
-				}
-
-				if (editor.getText() !== '' && !editor.isFocused) {
-					return ''
-				}
-
-				return placeholder !== ''
-					? placeholder
-					: t('input.editor.placeholder')
-			},
-		}),
-		Typography,
-		Underline,
-		Link.configure({
-			openOnClick: false,
-			validate: (href: string) => /^https?:\/\//.test(href),
-		}),
-		Table.configure({
-			resizable: true,
-		}),
-		TableRow,
-		TableHeader,
-		// Custom TableCell with backgroundColor attribute
-		CustomTableCell,
-
-		CustomImage,
-
-		TaskList,
-		TaskItem.configure({
-			nested: true,
-			onReadOnlyChecked: (node: Node, checked: boolean): boolean => {
-				if (!isEditEnabled) {
-					return false
-				}
-
-				// The following is a workaround for this bug:
-				// https://github.com/ueberdosis/tiptap/issues/4521
-				// https://github.com/ueberdosis/tiptap/issues/3676
-
-				editor.value!.state.doc.descendants((subnode, pos) => {
-					if (node.eq(subnode)) {
-						const {tr} = editor.value!.state
-						tr.setNodeMarkup(pos, undefined, {
-							...node.attrs,
-							checked,
-						})
-						editor.value!.view.dispatch(tr)
-						bubbleSave()
-					}
-				})
-
-
-				return true
-			},
-		}),
-
-		Commands.configure({
-			suggestion: suggestionSetup(t),
-		}),
-		BubbleMenu,
-
-		// Add a custom extension for the Escape key
-		...(
-			discardShortcutEnabled 
-				?[discardShortcutEnabled && Extension.create({
-					name: 'escapeKey',
-
-					addKeyboardShortcuts() {
-						return {
-							'Escape': () => {
-								exitEditMode()
-								return true
-							},
-						}
-					},
-				})]
-				: []
-		),
-	],
+	extensions: extensions,
 	onUpdate: () => {
 		bubbleNow()
 	},
