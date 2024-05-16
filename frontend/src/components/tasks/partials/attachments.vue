@@ -30,7 +30,7 @@
 			<div
 				v-for="a in attachments"
 				:key="a.id"
-				class="grid-item clickable"
+				class="attachment clickable"
 				@click="viewOrDownload(a)"
 			>
 				<div class="preview-column">
@@ -457,7 +457,7 @@ async function setCoverImage(attachment: IAttachment | null) {
 	cursor: pointer;
 }
 
-.grid-item {
+.attachment {
 	display: grid;
 	grid-template-columns: 9rem 1fr;
 	align-items: center;
