@@ -27,10 +27,10 @@
 			v-if="attachments.length > 0"
 			class="files"
 		>
-			<div
+			<button
 				v-for="a in attachments"
 				:key="a.id"
-				class="attachment clickable"
+				class="attachment"
 				@click="viewOrDownload(a)"
 			>
 				<div class="preview-column">
@@ -109,7 +109,7 @@
 						</p>
 					</div>
 				</div>
-			</div>
+			</button>
 		</div>
 
 		<x-button
@@ -309,11 +309,18 @@ async function setCoverImage(attachment: IAttachment | null) {
 }
 
 .attachment {
+	display: grid;
+	grid-template-columns: 9rem 1fr;
+	align-items: center;
+	
 	margin-bottom: .5rem;
-	display: block;
-	transition: background-color $transition;
-	border-radius: $radius;
 	padding: .5rem;
+	
+	transition: background-color $transition;
+	background-color: transparent;
+	
+	border: transparent;
+	border-radius: $radius;
 
 	&:hover {
 		background-color: var(--grey-200);
@@ -451,16 +458,6 @@ async function setCoverImage(attachment: IAttachment | null) {
 
 .attachment-preview {
 	max-height: 4rem;
-}
-
-.clickable {
-	cursor: pointer;
-}
-
-.attachment {
-	display: grid;
-	grid-template-columns: 9rem 1fr;
-	align-items: center;
 }
 
 .is-task-cover {
