@@ -42,7 +42,7 @@ function uploadAttachmentAndVerify(taskId: number) {
 		.selectFile('cypress/fixtures/image.jpg', {force: true}) // The input is not visible, but on purpose
 	cy.wait('@uploadAttachment')
 
-	cy.get('.attachments .attachments .files a.attachment')
+	cy.get('.attachments .attachments .files div.attachment')
 		.should('exist')
 }
 
