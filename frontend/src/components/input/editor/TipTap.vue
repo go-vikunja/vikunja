@@ -172,7 +172,7 @@ import {OrderedList} from '@tiptap/extension-ordered-list'
 import {Paragraph} from '@tiptap/extension-paragraph'
 import {Strike} from '@tiptap/extension-strike'
 import {Text} from '@tiptap/extension-text'
-import {BubbleMenu, EditorContent, useEditor} from '@tiptap/vue-3'
+import {BubbleMenu, EditorContent, type Extensions, useEditor} from '@tiptap/vue-3'
 import {Node} from '@tiptap/pm/model'
 
 import Commands from './commands'
@@ -194,7 +194,6 @@ import {Extension, mergeAttributes} from '@tiptap/core'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import inputPrompt from '@/helpers/inputPrompt'
 import {setLinkInEditor} from '@/components/input/editor/setLinkInEditor'
-import {Extensions} from '@tiptap/core/src/types'
 
 const {
 	modelValue,
