@@ -57,7 +57,7 @@ const showDocs = ref(false)
 					<code>done = false &amp;&amp; priority &gt;= 3</code>:
 					{{ $t('filters.query.help.examples.undoneHighPriority') }}
 				</li>
-				<li><code>assignees in [user1, user2]</code>: {{ $t('filters.query.help.examples.assigneesIn') }}</li>
+				<li><code>assignees in user1, user2</code>: {{ $t('filters.query.help.examples.assigneesIn') }}</li>
 				<li>
 					<code>(priority = 1 || priority = 2) &amp;&amp; dueDate &lt;= now</code>:
 					{{ $t('filters.query.help.examples.priorityOneOrTwoPastDue') }}

@@ -61,7 +61,7 @@ Here are some examples of filter queries:
 *   `priority = 4`: Matches tasks with priority level 4
 *   `dueDate < now`: Matches tasks with a due date in the past
 *   `done = false && priority >= 3`: Matches undone tasks with priority level 3 or higher
-*   `assignees in [user1, user2]`: Matches tasks assigned to either "user1" or "user2
+*   `assignees in user1, user2`: Matches tasks assigned to either "user1" or "user2
 *   `(priority = 1 || priority = 2) && dueDate <= now`: Matches tasks with priority level 1 or 2 and a due date in the past
 
 
