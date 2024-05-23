@@ -1,9 +1,9 @@
-import {ref, unref, watch} from 'vue'
-import {debouncedWatch, tryOnMounted, useWindowSize, type MaybeRef} from '@vueuse/core'
+import {ref, toValue, watch, type MaybeRefOrGetter} from 'vue'
+import {debouncedWatch, tryOnMounted, useWindowSize} from '@vueuse/core'
 
 // TODO: also add related styles
 // OR: replace with vueuse function
-export function useAutoHeightTextarea(value: MaybeRef<string>) {
+export function useAutoHeightTextarea(value: MaybeRefOrGetter<string>) {
 	const textarea = ref<HTMLTextAreaElement | null>(null)
 	const minHeight = ref(0)
 	const height = ref('')
@@ -60,7 +60,7 @@ export function useAutoHeightTextarea(value: MaybeRef<string>) {
 	// It is not possible to get notified of a change of the value attribute of a textarea without workarounds (setTimeout) 
 	// So instead we watch the value that we bound to it.
 	watch(
-		() => [textarea.value, unref(value)],
+		() => [textarea.value, toValue(value)],
 		() => resize(textarea.value),
 		{
 			immediate: true, // calculate initial size

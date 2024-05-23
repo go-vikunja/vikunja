@@ -1,7 +1,6 @@
-import {computed, ref, shallowReactive, unref, watch} from 'vue'
+import {computed, ref, shallowReactive, toValue, watch, type MaybeRefOrGetter} from 'vue'
 import {useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
-import type {MaybeRef} from '@vueuse/core'
 import {useDebounceFn} from '@vueuse/core'
 
 import type {IProject} from '@/modelTypes/IProject'
@@ -75,7 +74,7 @@ export default class SavedFilterService extends AbstractService<ISavedFilter> {
 	}
 }
 
-export function useSavedFilter(projectId?: MaybeRef<IProject['id']>) {
+export function useSavedFilter(projectId?: MaybeRefOrGetter<IProject['id']>) {
 	const router = useRouter()
 	const {t} = useI18n({useScope:'global'})
 	const projectStore = useProjectStore()
@@ -91,7 +90,7 @@ export function useSavedFilter(projectId?: MaybeRef<IProject['id']>) {
 	})
 
 	// load SavedFilter
-	watch(() => unref(projectId), async (watchedProjectId) => {
+	watch(() => toValue(projectId), async (watchedProjectId) => {
 		if (watchedProjectId === undefined) {
 			return
 		}

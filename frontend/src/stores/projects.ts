@@ -1,4 +1,4 @@
-import {watch, reactive, shallowReactive, unref, readonly, ref, computed} from 'vue'
+import {watch, reactive, shallowReactive, toValue, readonly, ref, computed, type MaybeRefOrGetter} from 'vue'
 import {acceptHMRUpdate, defineStore} from 'pinia'
 import {useI18n} from 'vue-i18n'
 import {useRouter} from 'vue-router'
@@ -11,8 +11,6 @@ import {removeProjectFromHistory} from '@/modules/projectHistory'
 import {createNewIndexer} from '@/indexes'
 
 import type {IProject} from '@/modelTypes/IProject'
-
-import type {MaybeRef} from '@vueuse/core'
 
 import ProjectModel from '@/models/project'
 import {success} from '@/message'
@@ -271,7 +269,7 @@ export const useProjectStore = defineStore('project', () => {
 	}
 })
 
-export function useProject(projectId: MaybeRef<IProject['id']>) {
+export function useProject(projectId: MaybeRefOrGetter<IProject['id']>) {
 	const projectService = shallowReactive(new ProjectService())
 	const projectDuplicateService = shallowReactive(new ProjectDuplicateService())
 	
@@ -283,7 +281,7 @@ export function useProject(projectId: MaybeRef<IProject['id']>) {
 	const projectStore = useProjectStore()
 
 	watch(
-		() => unref(projectId),
+		() => toValue(projectId),
 		async (projectId) => {
 			const loadedProject = await projectService.get(new ProjectModel({id: projectId}))
 			Object.assign(project, loadedProject)
@@ -299,7 +297,7 @@ export function useProject(projectId: MaybeRef<IProject['id']>) {
 	
 	async function duplicateProject(parentProjectId: IProject['id']) {
 		const projectDuplicate = new ProjectDuplicateModel({
-			projectId: Number(unref(projectId)),
+			projectId: Number(toValue(projectId)),
 			parentProjectId,
 		})
 
