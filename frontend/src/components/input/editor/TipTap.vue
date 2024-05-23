@@ -203,7 +203,7 @@ const {
 	showSave = false,
 	placeholder = '',
 	editShortcut = '',
-	discardShortcutEnabled = false,
+	enableDiscardShortcut = false,
 } = defineProps<{
 	modelValue: string,
 	uploadCallback?: UploadCallback,
@@ -212,7 +212,7 @@ const {
 	showSave?: boolean,
 	placeholder?: string,
 	editShortcut?: string,
-	discardShortcutEnabled?: boolean,
+	enableDiscardShortcut?: boolean,
 }>()
 
 const emit = defineEmits(['update:modelValue', 'save'])
@@ -427,7 +427,7 @@ const extensions : Extensions = [
 ]
 
 // Add a custom extension for the Escape key
-if (discardShortcutEnabled) {
+if (enableDiscardShortcut) {
 	extensions.push(Extension.create({
 		name: 'escapeKey',
 
