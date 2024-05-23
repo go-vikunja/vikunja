@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import {logEvent} from 'histoire/client'
-import XButton from './button.vue'
+import XButton from './Button.vue'
 </script>
 
 <template>

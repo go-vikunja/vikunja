@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type {IProjectView} from '@/modelTypes/IProjectView'
-import XButton from '@/components/input/button.vue'
+import XButton from '@/components/input/Button.vue'
 import FilterInput from '@/components/project/partials/FilterInput.vue'
 import {ref, onBeforeMount} from 'vue'
 import {transformFilterStringForApi, transformFilterStringFromApi} from '@/helpers/filters'

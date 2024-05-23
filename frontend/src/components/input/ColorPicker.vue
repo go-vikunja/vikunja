@@ -68,7 +68,7 @@
 <script setup lang="ts">
 import {computed, ref, watch} from 'vue'
 import {createRandomID} from '@/helpers/randomId'
-import XButton from '@/components/input/button.vue'
+import XButton from '@/components/input/Button.vue'
 
 const {
 	modelValue,

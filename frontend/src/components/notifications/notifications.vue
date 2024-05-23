@@ -97,7 +97,7 @@ import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
 import {getDisplayName} from '@/models/user'
 import {useAuthStore} from '@/stores/auth'
-import XButton from '@/components/input/button.vue'
+import XButton from '@/components/input/Button.vue'
 import {success} from '@/message'
 import {useI18n} from 'vue-i18n'
 

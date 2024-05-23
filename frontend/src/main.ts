@@ -44,7 +44,7 @@ import cypress from '@/directives/cypress'
 
 // global components
 import FontAwesomeIcon from '@/components/misc/Icon'
-import Button from '@/components/input/button.vue'
+import Button from '@/components/input/Button.vue'
 import Modal from '@/components/misc/modal.vue'
 import Card from '@/components/misc/Card.vue'
 

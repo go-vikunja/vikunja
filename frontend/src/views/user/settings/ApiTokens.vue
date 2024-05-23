@@ -2,7 +2,7 @@
 import ApiTokenService from '@/services/apiToken'
 import {computed, onMounted, ref} from 'vue'
 import {formatDateShort, formatDateSince} from '@/helpers/time/formatDate'
-import XButton from '@/components/input/button.vue'
+import XButton from '@/components/input/Button.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import ApiTokenModel from '@/models/apiTokenModel'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
