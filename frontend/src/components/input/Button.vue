@@ -14,9 +14,9 @@
 	>
 		<template v-if="icon">
 			<Icon
-				v-if="showIconOnly"
+				v-if="!$slots.default"
 				:icon="icon"
-				:style="{'color': iconColor !== '' ? iconColor : undefined}"
+				:style="{color: iconColor}"
 			/>
 			<span
 				v-else
@@ -24,7 +24,7 @@
 			>
 				<Icon
 					:icon="icon"
-					:style="{'color': iconColor !== '' ? iconColor : undefined}"
+					:style="{color: iconColor}"
 				/>
 			</span>
 		</template>
@@ -32,24 +32,13 @@
 	</BaseButton>
 </template>
 
-<script lang="ts">
-const BUTTON_TYPES_MAP = {
-	primary: 'is-primary',
-	secondary: 'is-outlined',
-	tertiary: 'is-text is-inverted underline-none',
-} as const
-
-export type ButtonTypes = keyof typeof BUTTON_TYPES_MAP
-
-export default {name: 'XButton'}
-</script>
-
 <script setup lang="ts">
-import {computed, useSlots} from 'vue'
+import {computed} from 'vue'
 import BaseButton, {type BaseButtonProps} from '@/components/base/BaseButton.vue'
 import type {IconProp} from '@fortawesome/fontawesome-svg-core'
 
-// extending the props of the BaseButton
+export type ButtonTypes = keyof typeof VARIANT_CLASS_MAP
+
 export interface ButtonProps extends /* @vue-ignore */ BaseButtonProps {
 	variant?: ButtonTypes
 	icon?: IconProp
@@ -59,19 +48,24 @@ export interface ButtonProps extends /* @vue-ignore */ BaseButtonProps {
 	wrap?: boolean
 }
 
-const {
-	variant = 'primary',
-	icon = '',
-	iconColor = '',
-	loading = false,
-	shadow = true,
-	wrap = true,
-} = defineProps<ButtonProps>()
+const props = withDefaults(defineProps<ButtonProps>(), {
+	variant: 'primary',
+	icon: undefined,
+	iconColor: undefined,
+	loading: false,
+	shadow: true,
+	wrap: true,
+})
 
-const variantClass = computed(() => BUTTON_TYPES_MAP[variant])
+defineOptions({name: 'XButton'})
 
-const slots = useSlots()
-const showIconOnly = computed(() => icon !== '' && typeof slots.default === 'undefined')
+const VARIANT_CLASS_MAP = {
+	primary: 'is-primary',
+	secondary: 'is-outlined',
+	tertiary: 'is-text is-inverted underline-none',
+} as const
+
+const variantClass = computed(() => VARIANT_CLASS_MAP[props.variant])
 </script>
 
 <style lang="scss" scoped>
