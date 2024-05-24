@@ -328,8 +328,10 @@ async function setCoverImage(attachment: IAttachment | null) {
 }
 
 .filename {
+	display: flex;
+	align-items: center;
 	font-weight: bold;
-	margin-bottom: .25rem;
+	height: 2rem;
 	color: var(--text);
 }
 
@@ -463,6 +465,7 @@ async function setCoverImage(attachment: IAttachment | null) {
 .is-task-cover {
 	background: var(--primary);
 	color: var(--white);
+	margin-left: .25rem;
 	padding: .25rem .35rem;
 	border-radius: 4px;
 	font-size: .75rem;
