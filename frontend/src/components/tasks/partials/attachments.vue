@@ -35,7 +35,6 @@
 			>
 				<div class="preview-column">
 					<FilePreview
-						v-if="canPreview(a)"
 						class="attachment-preview"
 						:model-value="a"
 					/>
