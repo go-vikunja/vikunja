@@ -68,7 +68,7 @@ describe('Project View List', () => {
 
 		cy.get('.project-title-wrapper .icon')
 			.should('not.exist')
-		cy.get('input.input[placeholder="Add a new task..."')
+		cy.get('input.input[placeholder="Add a task..."')
 			.should('not.exist')
 	})
 

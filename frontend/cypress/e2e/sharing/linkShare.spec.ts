@@ -27,7 +27,7 @@ describe('Link shares', () => {
 
 		cy.get('h1.title')
 			.should('contain', project.title)
-		cy.get('input.input[placeholder="Add a new task..."')
+		cy.get('input.input[placeholder="Add a task..."')
 			.should('not.exist')
 		cy.get('.tasks')
 			.should('contain', tasks[0].title)
@@ -42,7 +42,7 @@ describe('Link shares', () => {
 
 		cy.get('h1.title')
 			.should('contain', project.title)
-		cy.get('input.input[placeholder="Add a new task..."')
+		cy.get('input.input[placeholder="Add a task..."')
 			.should('not.exist')
 		cy.get('.tasks')
 			.should('contain', tasks[0].title)

@@ -14,12 +14,12 @@ describe('Team', () => {
         const newTeamName = 'New Team'
 
         cy.get('a.button')
-            .contains('Create a new team')
+            .contains('Create a team')
             .click()
 		cy.url()
 			.should('contain', '/teams/new')
 		cy.get('.card-header-title')
-			.contains('Create a new team')
+			.contains('Create a team')
 		cy.get('input.input')
 			.type(newTeamName)
 		cy.get('.button')
