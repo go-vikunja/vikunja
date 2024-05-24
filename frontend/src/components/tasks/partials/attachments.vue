@@ -95,7 +95,7 @@
 								<icon icon="trash-alt" />
 							</BaseButton>
 							<BaseButton
-								v-if="editEnabled"
+								v-if="editEnabled && canPreview(a)"
 								class="attachment-info-meta-button"
 								@click.prevent.stop="setCoverImage(task.coverImageAttachmentId === a.id ? null : a)"
 							>
