@@ -85,7 +85,7 @@
 						:upload-enabled="true"
 						:bottom-actions="actions[c.id]"
 						:show-save="true"
-						:discard-shortcut-enabled="true"
+						:enable-discard-shortcut="true"
 						initial-mode="preview"
 						@update:modelValue="
 							() => {
