@@ -24,6 +24,8 @@ import {
 	faCocktail,
 	faCoffee,
 	faCog,
+	faCopy,
+	faDownload,
 	faEllipsisH,
 	faEllipsisV,
 	faExclamation,
@@ -130,6 +132,8 @@ library.add(faCocktail)
 library.add(faCoffee)
 library.add(faCog)
 library.add(faComments)
+library.add(faCopy)
+library.add(faDownload)
 library.add(faEllipsisH)
 library.add(faEllipsisV)
 library.add(faExclamation)

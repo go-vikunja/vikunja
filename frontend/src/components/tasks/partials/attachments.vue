@@ -77,14 +77,14 @@
 								class="attachment-info-meta-button"
 								@click.prevent.stop="downloadAttachment(a)"
 							>
-								{{ $t('misc.download') }}
+								<icon icon="download" />
 							</BaseButton>
 							<BaseButton
 								v-tooltip="$t('task.attachment.copyUrlTooltip')"
 								class="attachment-info-meta-button"
 								@click.stop="copyUrl(a)"
 							>
-								{{ $t('task.attachment.copyUrl') }}
+								<icon icon="copy" />
 							</BaseButton>
 							<BaseButton
 								v-if="editEnabled"
@@ -92,18 +92,14 @@
 								class="attachment-info-meta-button"
 								@click.prevent.stop="setAttachmentToDelete(a)"
 							>
-								{{ $t('misc.delete') }}
+								<icon icon="trash-alt" />
 							</BaseButton>
 							<BaseButton
 								v-if="editEnabled"
 								class="attachment-info-meta-button"
 								@click.prevent.stop="setCoverImage(task.coverImageAttachmentId === a.id ? null : a)"
 							>
-								{{
-									task.coverImageAttachmentId === a.id
-										? $t('task.attachment.unsetAsCover')
-										: $t('task.attachment.setAsCover')
-								}}
+								<icon :icon="task.coverImageAttachmentId === a.id ? 'eye-slash' : 'eye'" />
 							</BaseButton>
 						</p>
 					</div>
@@ -425,6 +421,7 @@ async function setCoverImage(attachment: IAttachment | null) {
 
 .attachment-info-meta-button {
 	color: var(--link);
+	padding: 0 .25rem;
 }
 
 @keyframes bounce {
