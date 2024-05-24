@@ -53,7 +53,7 @@
       "loginWith": "Log in with {provider}",
       "authenticating": "Authenticating…",
       "openIdStateError": "State does not match, refusing to continue!",
-      "openIdGeneralError": "An error occured while authenticating against the third party.",
+      "openIdGeneralError": "An error occurred while authenticating against the third party.",
       "logout": "Logout",
       "emailInvalid": "Please enter a valid email address.",
       "usernameRequired": "Please provide a username.",
@@ -528,7 +528,7 @@
   "sharing": {
     "authenticating": "Authenticating…",
     "passwordRequired": "This shared project requires a password. Please enter it below:",
-    "error": "An error occured.",
+    "error": "An error occurred.",
     "invalidPassword": "The password is invalid."
   },
   "navigation": {
