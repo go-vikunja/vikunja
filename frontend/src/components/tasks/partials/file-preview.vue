@@ -13,7 +13,7 @@
 	>
 		<icon
 			size="6x"
-			icon="file-image"
+			icon="file"
 		/>
 	</div>
 </template>

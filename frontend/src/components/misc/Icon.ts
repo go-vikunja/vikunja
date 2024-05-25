@@ -31,6 +31,7 @@ import {
 	faExclamation,
 	faEye,
 	faEyeSlash,
+	faFile,
 	faFileImage,
 	faFillDrip,
 	faFilter,
@@ -104,6 +105,7 @@ library.add(faUnlink)
 library.add(faParagraph)
 library.add(faSquareCheck)
 library.add(faTable)
+library.add(faFile)
 library.add(faFileImage)
 library.add(faCheckSquare)
 library.add(faStrikethrough)
