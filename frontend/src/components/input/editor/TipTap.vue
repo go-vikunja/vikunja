@@ -67,6 +67,7 @@
 			class="tiptap__editor"
 			:class="{'tiptap__editor-is-edit-enabled': isEditing}"
 			:editor="editor"
+			@dblclick="setEditIfApplicable()"
 			@click="focusIfEditing()"
 		/>
 
@@ -171,7 +172,7 @@ import {OrderedList} from '@tiptap/extension-ordered-list'
 import {Paragraph} from '@tiptap/extension-paragraph'
 import {Strike} from '@tiptap/extension-strike'
 import {Text} from '@tiptap/extension-text'
-import {BubbleMenu, EditorContent, useEditor} from '@tiptap/vue-3'
+import {BubbleMenu, EditorContent, type Extensions, useEditor} from '@tiptap/vue-3'
 import {Node} from '@tiptap/pm/model'
 
 import Commands from './commands'
@@ -189,7 +190,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import XButton from '@/components/input/button.vue'
 import {Placeholder} from '@tiptap/extension-placeholder'
 import {eventToHotkeyString} from '@github/hotkey'
-import {mergeAttributes} from '@tiptap/core'
+import {Extension, mergeAttributes} from '@tiptap/core'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import inputPrompt from '@/helpers/inputPrompt'
 import {setLinkInEditor} from '@/components/input/editor/setLinkInEditor'
@@ -202,6 +203,7 @@ const {
 	showSave = false,
 	placeholder = '',
 	editShortcut = '',
+	enableDiscardShortcut = false,
 } = defineProps<{
 	modelValue: string,
 	uploadCallback?: UploadCallback,
@@ -210,6 +212,7 @@ const {
 	showSave?: boolean,
 	placeholder?: string,
 	editShortcut?: string,
+	enableDiscardShortcut?: boolean,
 }>()
 
 const emit = defineEmits(['update:modelValue', 'save'])
@@ -311,6 +314,8 @@ const internalMode = ref<Mode>('preview')
 const isEditing = computed(() => internalMode.value === 'edit' && isEditEnabled)
 const contentHasChanged = ref<boolean>(false)
 
+let lastSavedState = modelValue
+
 watch(
 	() => internalMode.value,
 	mode => {
@@ -320,109 +325,127 @@ watch(
 	},
 )
 
+const extensions : Extensions = [
+	// Starterkit:
+	Blockquote,
+	Bold,
+	BulletList,
+	Code,
+	CodeBlockLowlight.configure({
+		lowlight,
+	}),
+	Document,
+	Dropcursor,
+	Gapcursor,
+	HardBreak.extend({
+		addKeyboardShortcuts() {
+			return {
+				'Shift-Enter': () => this.editor.commands.setHardBreak(),
+				'Mod-Enter': () => {
+					if (contentHasChanged.value) {
+						bubbleSave()
+					}
+					return true
+				},
+			}
+		},
+	}),
+	Heading,
+	History,
+	HorizontalRule,
+	Italic,
+	ListItem,
+	OrderedList,
+	Paragraph,
+	Strike,
+	Text,
+
+	Placeholder.configure({
+		placeholder: ({editor}) => {
+			if (!isEditing.value) {
+				return ''
+			}
+
+			if (editor.getText() !== '' && !editor.isFocused) {
+				return ''
+			}
+
+			return placeholder !== ''
+				? placeholder
+				: t('input.editor.placeholder')
+		},
+	}),
+	Typography,
+	Underline,
+	Link.configure({
+		openOnClick: false,
+		validate: (href: string) => /^https?:\/\//.test(href),
+	}),
+	Table.configure({
+		resizable: true,
+	}),
+	TableRow,
+	TableHeader,
+	// Custom TableCell with backgroundColor attribute
+	CustomTableCell,
+
+	CustomImage,
+
+	TaskList,
+	TaskItem.configure({
+		nested: true,
+		onReadOnlyChecked: (node: Node, checked: boolean): boolean => {
+			if (!isEditEnabled) {
+				return false
+			}
+
+			// The following is a workaround for this bug:
+			// https://github.com/ueberdosis/tiptap/issues/4521
+			// https://github.com/ueberdosis/tiptap/issues/3676
+
+			editor.value!.state.doc.descendants((subnode, pos) => {
+				if (node.eq(subnode)) {
+					const {tr} = editor.value!.state
+					tr.setNodeMarkup(pos, undefined, {
+						...node.attrs,
+						checked,
+					})
+					editor.value!.view.dispatch(tr)
+					bubbleSave()
+				}
+			})
+
+
+			return true
+		},
+	}),
+
+	Commands.configure({
+		suggestion: suggestionSetup(t),
+	}),
+	BubbleMenu,
+]
+
+// Add a custom extension for the Escape key
+if (enableDiscardShortcut) {
+	extensions.push(Extension.create({
+		name: 'escapeKey',
+
+		addKeyboardShortcuts() {
+			return {
+				'Escape': () => {
+					exitEditMode()
+					return true
+				},
+			}
+		},
+	}))
+}
+
 const editor = useEditor({
 	// eslint-disable-next-line vue/no-ref-object-destructure
 	editable: isEditing.value,
-	extensions: [
-		// Starterkit:
-		Blockquote,
-		Bold,
-		BulletList,
-		Code,
-		CodeBlockLowlight.configure({
-			lowlight,
-		}),
-		Document,
-		Dropcursor,
-		Gapcursor,
-		HardBreak.extend({
-			addKeyboardShortcuts() {
-				return {
-					'Shift-Enter': () => this.editor.commands.setHardBreak(),
-					'Mod-Enter': () => {
-						if (contentHasChanged.value) {
-							bubbleSave()
-						}
-						return true
-					},
-				}
-			},
-		}),
-		Heading,
-		History,
-		HorizontalRule,
-		Italic,
-		ListItem,
-		OrderedList,
-		Paragraph,
-		Strike,
-		Text,
-
-		Placeholder.configure({
-			placeholder: ({editor}) => {
-				if (!isEditing.value) {
-					return ''
-				}
-
-				if (editor.getText() !== '' && !editor.isFocused) {
-					return ''
-				}
-
-				return placeholder !== ''
-					? placeholder
-					: t('input.editor.placeholder')
-			},
-		}),
-		Typography,
-		Underline,
-		Link.configure({
-			openOnClick: false,
-			validate: (href: string) => /^https?:\/\//.test(href),
-		}),
-		Table.configure({
-			resizable: true,
-		}),
-		TableRow,
-		TableHeader,
-		// Custom TableCell with backgroundColor attribute
-		CustomTableCell,
-
-		CustomImage,
-
-		TaskList,
-		TaskItem.configure({
-			nested: true,
-			onReadOnlyChecked: (node: Node, checked: boolean): boolean => {
-				if (!isEditEnabled) {
-					return false
-				}
-
-				// The following is a workaround for this bug:
-				// https://github.com/ueberdosis/tiptap/issues/4521
-				// https://github.com/ueberdosis/tiptap/issues/3676
-
-				editor.value!.state.doc.descendants((subnode, pos) => {
-					if (node.eq(subnode)) {
-						const {tr} = editor.value!.state
-						tr.setNodeMarkup(pos, undefined, {
-							...node.attrs,
-							checked,
-						})
-						editor.value!.view.dispatch(tr)
-						bubbleSave()
-					}
-				})
-
-
-				return true
-			},
-		}),
-
-		Commands.configure({
-			suggestion: suggestionSetup(t),
-		}),
-		BubbleMenu,
-	],
+	extensions: extensions,
 	onUpdate: () => {
 		bubbleNow()
 	},
@@ -461,10 +484,25 @@ function bubbleNow() {
 
 function bubbleSave() {
 	bubbleNow()
-	emit('save', editor.value?.getHTML())
+	lastSavedState = editor.value?.getHTML() ?? ''
+	emit('save', lastSavedState)
 	if (isEditing.value) {
 		internalMode.value = 'preview'
 	}
+}
+
+function exitEditMode() {
+	editor.value?.commands.setContent(lastSavedState, false)
+	if (isEditing.value) {
+		internalMode.value = 'preview'
+	}
+}
+
+function setEditIfApplicable() {
+	if (!isEditEnabled) return
+	if (isEditing.value) return
+
+	setEdit()
 }
 
 function setEdit(focus: boolean = true) {
