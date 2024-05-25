@@ -1,14 +1,21 @@
 <template>
+	<!-- Preview image -->
 	<img
 		v-if="blobUrl"
 		:src="blobUrl"
 		alt="Attachment preview"
 	>
-	<icon
+
+	<!-- Fallback -->
+	<div
 		v-else
-		size="6x"
-		icon="file-image"
-	/>
+		class="icon-wrapper"
+	>
+		<icon
+			size="6x"
+			icon="file-image"
+		/>
+	</div>
 </template>
 
 <script setup lang="ts">
@@ -43,5 +50,9 @@ img {
 	width: 100%;
 	border-radius: $radius;
 	object-fit: cover;
+}
+
+.icon-wrapper {
+	color: var(--grey-500);
 }
 </style>
