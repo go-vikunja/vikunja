@@ -27,83 +27,87 @@
 			v-if="attachments.length > 0"
 			class="files"
 		>
-			<!-- FIXME: don't use a for element that wraps other links / buttons
-				Instead: overlay element with button that is inside.
-			-->
-			<a
+			<button
 				v-for="a in attachments"
 				:key="a.id"
 				class="attachment"
 				@click="viewOrDownload(a)"
 			>
-				<div class="filename">
-					{{ a.file.name }}
-					<span
-						v-if="task.coverImageAttachmentId === a.id"
-						class="is-task-cover"
-					>
-						{{ $t('task.attachment.usedAsCover') }}
-					</span>
+				<div class="preview-column">
+					<FilePreview
+						class="attachment-preview"
+						:model-value="a"
+					/>
 				</div>
-				<div class="info">
-					<p class="attachment-info-meta">
-						<i18n-t
-							keypath="task.attachment.createdBy"
-							scope="global"
+				<div class="attachment-info-column">
+					<div class="filename">
+						{{ a.file.name }}
+						<span
+							v-if="task.coverImageAttachmentId === a.id"
+							class="is-task-cover"
 						>
-							<span v-tooltip="formatDateLong(a.created)">
-								{{ formatDateSince(a.created) }}
+							{{ $t('task.attachment.usedAsCover') }}
+						</span>
+					</div>
+					<div class="info">
+						<p class="attachment-info-meta">
+							<i18n-t
+								keypath="task.attachment.createdBy"
+								scope="global"
+							>
+								<span v-tooltip="formatDateLong(a.created)">
+									{{ formatDateSince(a.created) }}
+								</span>
+								<User
+									:avatar-size="24"
+									:user="a.createdBy"
+									:is-inline="true"
+								/>
+							</i18n-t>
+							<span>
+								{{ getHumanSize(a.file.size) }}
 							</span>
-							<User
-								:avatar-size="24"
-								:user="a.createdBy"
-								:is-inline="true"
-							/>
-						</i18n-t>
-						<span>
-							{{ getHumanSize(a.file.size) }}
-						</span>
-						<span v-if="a.file.mime">
-							{{ a.file.mime }}
-						</span>
-					</p>
-					<p>
-						<BaseButton
-							v-tooltip="$t('task.attachment.downloadTooltip')"
-							class="attachment-info-meta-button"
-							@click.prevent.stop="downloadAttachment(a)"
-						>
-							{{ $t('misc.download') }}
-						</BaseButton>
-						<BaseButton
-							v-tooltip="$t('task.attachment.copyUrlTooltip')"
-							class="attachment-info-meta-button"
-							@click.stop="copyUrl(a)"
-						>
-							{{ $t('task.attachment.copyUrl') }}
-						</BaseButton>
-						<BaseButton
-							v-if="editEnabled"
-							v-tooltip="$t('task.attachment.deleteTooltip')"
-							class="attachment-info-meta-button"
-							@click.prevent.stop="setAttachmentToDelete(a)"
-						>
-							{{ $t('misc.delete') }}
-						</BaseButton>
-						<BaseButton
-							v-if="editEnabled"
-							class="attachment-info-meta-button"
-							@click.prevent.stop="setCoverImage(task.coverImageAttachmentId === a.id ? null : a)"
-						>
-							{{
-								task.coverImageAttachmentId === a.id
+							<span v-if="a.file.mime">
+								{{ a.file.mime }}
+							</span>
+						</p>
+						<p>
+							<BaseButton
+								v-tooltip="$t('task.attachment.downloadTooltip')"
+								class="attachment-info-meta-button"
+								@click.prevent.stop="downloadAttachment(a)"
+							>
+								<icon icon="download" />
+							</BaseButton>
+							<BaseButton
+								v-tooltip="$t('task.attachment.copyUrlTooltip')"
+								class="attachment-info-meta-button"
+								@click.stop="copyUrl(a)"
+							>
+								<icon icon="copy" />
+							</BaseButton>
+							<BaseButton
+								v-if="editEnabled"
+								v-tooltip="$t('task.attachment.deleteTooltip')"
+								class="attachment-info-meta-button"
+								@click.prevent.stop="setAttachmentToDelete(a)"
+							>
+								<icon icon="trash-alt" />
+							</BaseButton>
+							<BaseButton
+								v-if="editEnabled && canPreview(a)"
+								v-tooltip="task.coverImageAttachmentId === a.id
 									? $t('task.attachment.unsetAsCover')
-									: $t('task.attachment.setAsCover')
-							}}
-						</BaseButton>
-					</p>
+									: $t('task.attachment.setAsCover')"
+								class="attachment-info-meta-button"
+								@click.prevent.stop="setCoverImage(task.coverImageAttachmentId === a.id ? null : a)"
+							>
+								<icon :icon="task.coverImageAttachmentId === a.id ? 'eye-slash' : 'eye'" />
+							</BaseButton>
+						</p>
+					</div>
 				</div>
-			</a>
+			</button>
 		</div>
 
 		<x-button
@@ -188,6 +192,7 @@ import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 import {error, success} from '@/message'
 import {useTaskStore} from '@/stores/tasks'
 import {useI18n} from 'vue-i18n'
+import FilePreview from '@/components/tasks/partials/file-preview.vue'
 
 const {
 	task,
@@ -260,11 +265,15 @@ async function deleteAttachment() {
 const attachmentImageBlobUrl = ref<string | null>(null)
 
 async function viewOrDownload(attachment: IAttachment) {
-	if (SUPPORTED_IMAGE_SUFFIX.some((suffix) => attachment.file.name.endsWith(suffix))) {
+	if (canPreview(attachment)) {
 		attachmentImageBlobUrl.value = await attachmentService.getBlobUrl(attachment)
 	} else {
 		downloadAttachment(attachment)
 	}
+}
+
+function canPreview(attachment: IAttachment): boolean {
+	return SUPPORTED_IMAGE_SUFFIX.some((suffix) => attachment.file.name.endsWith(suffix))
 }
 
 const copy = useCopyToClipboard()
@@ -298,11 +307,18 @@ async function setCoverImage(attachment: IAttachment | null) {
 }
 
 .attachment {
-	margin-bottom: .5rem;
-	display: block;
-	transition: background-color $transition;
-	border-radius: $radius;
+	display: grid;
+	grid-template-columns: 9rem 1fr;
+	align-items: center;
+	width: 100%;
+	
 	padding: .5rem;
+	
+	transition: background-color $transition;
+	background-color: transparent;
+	
+	border: transparent;
+	border-radius: $radius;
 
 	&:hover {
 		background-color: var(--grey-200);
@@ -310,14 +326,18 @@ async function setCoverImage(attachment: IAttachment | null) {
 }
 
 .filename {
+	display: flex;
+	align-items: center;
 	font-weight: bold;
-	margin-bottom: .25rem;
+	height: 2rem;
 	color: var(--text);
 }
 
 .info {
 	color: var(--grey-500);
 	font-size: .9rem;
+	display: flex;
+	flex-direction: column;
 
 	p {
 		margin-bottom: 0;
@@ -375,6 +395,12 @@ async function setCoverImage(attachment: IAttachment | null) {
 	}
 }
 
+.attachment-info-column {
+	display: flex;
+	flex-flow: column wrap;
+	align-self: start;
+}
+
 .attachment-info-meta {
 	display: flex;
 	align-items: center;
@@ -406,6 +432,7 @@ async function setCoverImage(attachment: IAttachment | null) {
 
 .attachment-info-meta-button {
 	color: var(--link);
+	padding: 0 .25rem;
 }
 
 @keyframes bounce {
@@ -434,9 +461,19 @@ async function setCoverImage(attachment: IAttachment | null) {
 	}
 }
 
+.preview-column {
+	max-width: 8rem;
+	height: 5.2rem;
+}
+
+.attachment-preview {
+	height: 100%;
+}
+
 .is-task-cover {
 	background: var(--primary);
 	color: var(--white);
+	margin-left: .25rem;
 	padding: .25rem .35rem;
 	border-radius: 4px;
 	font-size: .75rem;

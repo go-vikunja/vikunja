@@ -24,11 +24,15 @@ import {
 	faCocktail,
 	faCoffee,
 	faCog,
+	faCopy,
+	faDownload,
 	faEllipsisH,
 	faEllipsisV,
 	faExclamation,
 	faEye,
 	faEyeSlash,
+	faFile,
+	faFileImage,
 	faFillDrip,
 	faFilter,
 	faForward,
@@ -81,7 +85,6 @@ import {
 	faCheckSquare,
 	faClock,
 	faComments,
-	faFileImage,
 	faSave,
 	faSquareCheck,
 	faStar,
@@ -102,6 +105,7 @@ library.add(faUnlink)
 library.add(faParagraph)
 library.add(faSquareCheck)
 library.add(faTable)
+library.add(faFile)
 library.add(faFileImage)
 library.add(faCheckSquare)
 library.add(faStrikethrough)
@@ -130,6 +134,8 @@ library.add(faCocktail)
 library.add(faCoffee)
 library.add(faCog)
 library.add(faComments)
+library.add(faCopy)
+library.add(faDownload)
 library.add(faEllipsisH)
 library.add(faEllipsisV)
 library.add(faExclamation)
