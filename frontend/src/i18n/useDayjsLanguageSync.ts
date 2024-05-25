@@ -23,6 +23,7 @@ export const DAYJS_LOCALE_MAPPING = {
 	'ar-SA': 'ar-sa',
 	'sl-SI': 'sl',
 	'pt-BR': 'pt',
+	'hr-HR': 'hr',
 } as Record<SupportedLocale, ISOLanguage>
 
 export const DAYJS_LANGUAGE_IMPORTS = {
