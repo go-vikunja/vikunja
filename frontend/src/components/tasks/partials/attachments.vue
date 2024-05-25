@@ -96,6 +96,9 @@
 							</BaseButton>
 							<BaseButton
 								v-if="editEnabled && canPreview(a)"
+								v-tooltip="task.coverImageAttachmentId === a.id
+									? $t('task.attachment.unsetAsCover')
+									: $t('task.attachment.setAsCover')"
 								class="attachment-info-meta-button"
 								@click.prevent.stop="setCoverImage(task.coverImageAttachmentId === a.id ? null : a)"
 							>
