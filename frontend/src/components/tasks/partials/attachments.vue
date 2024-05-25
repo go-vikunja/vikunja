@@ -310,6 +310,7 @@ async function setCoverImage(attachment: IAttachment | null) {
 	display: grid;
 	grid-template-columns: 9rem 1fr;
 	align-items: center;
+	width: 100%;
 	
 	padding: .5rem;
 	
