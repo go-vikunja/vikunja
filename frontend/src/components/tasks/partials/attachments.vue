@@ -39,7 +39,7 @@
 						:model-value="a"
 					/>
 				</div>
-				<div>
+				<div class="attachment-info-column">
 					<div class="filename">
 						{{ a.file.name }}
 						<span
@@ -311,7 +311,6 @@ async function setCoverImage(attachment: IAttachment | null) {
 	grid-template-columns: 9rem 1fr;
 	align-items: center;
 	
-	margin-bottom: .5rem;
 	padding: .5rem;
 	
 	transition: background-color $transition;
@@ -336,6 +335,8 @@ async function setCoverImage(attachment: IAttachment | null) {
 .info {
 	color: var(--grey-500);
 	font-size: .9rem;
+	display: flex;
+	flex-direction: column;
 
 	p {
 		margin-bottom: 0;
@@ -391,6 +392,12 @@ async function setCoverImage(attachment: IAttachment | null) {
 		width: 100%;
 		max-width: 300px;
 	}
+}
+
+.attachment-info-column {
+	display: flex;
+	flex-flow: column wrap;
+	align-self: start;
 }
 
 .attachment-info-meta {
@@ -455,10 +462,11 @@ async function setCoverImage(attachment: IAttachment | null) {
 
 .preview-column {
 	max-width: 8rem;
+	height: 5.2rem;
 }
 
 .attachment-preview {
-	max-height: 4rem;
+	height: 100%;
 }
 
 .is-task-cover {
