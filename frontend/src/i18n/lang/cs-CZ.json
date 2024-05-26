@@ -53,7 +53,7 @@
       "loginWith": "Přihlásit se pomocí {provider}",
       "authenticating": "Ověřování…",
       "openIdStateError": "Stav neodpovídá, odmítám pokračovat!",
-      "openIdGeneralError": "Došlo k chybě při ověřování proti třetí straně.",
+      "openIdGeneralError": "An error occurred while authenticating against the third party.",
       "logout": "Odhlásit se",
       "emailInvalid": "Prosím zadejte platnou emailovou adresu.",
       "usernameRequired": "Zadejte prosím uživatelské jméno.",
@@ -227,8 +227,8 @@
       "title": "Archivovat \"{project}\"",
       "archive": "Archivovat tento projekt",
       "unarchive": "Zrušit archivaci tohoto projektu",
-      "unarchiveText": "Budete moci vytvářet nové úkoly nebo je upravovat.",
-      "archiveText": "Tento projekt nebudete moci upravovat ani v něm vytvářet nové úkoly, dokud jej neodarchivujete.",
+      "unarchiveText": "You will be able to create tasks or edit it.",
+      "archiveText": "You won't be able to edit this project or create tasks until you un-archive it.",
       "success": "Projekt byl úspěšně archivován."
     },
     "background": {
@@ -277,7 +277,7 @@
         "title": "Sdílené odkazy",
         "what": "Co je to sdílený odkaz?",
         "explanation": "Sdílené odkazy vám umožní snadno sdílet projekt s ostatními uživateli, kteří nemají účet na Vikunja.",
-        "create": "Vytvořit sdílený odkaz",
+        "create": "Create a link share",
         "name": "Název (volitelné)",
         "namePlaceholder": "např. Lorem Ipsum",
         "nameExplanation": "Všechny akce provedené tímto sdíleným odkazem se zobrazí s tímto názvem.",
@@ -317,9 +317,9 @@
     "list": {
       "title": "Seznam",
       "add": "Přidat",
-      "addPlaceholder": "Přidat nový úkol…",
+      "addPlaceholder": "Add a task…",
       "empty": "Tento projekt je zatím prázdný.",
-      "newTaskCta": "Vytvořit nový úkol.",
+      "newTaskCta": "Create a task.",
       "editTask": "Upravit úkol"
     },
     "gantt": {
@@ -352,7 +352,7 @@
       "addTaskPlaceholder": "Zadejte nový název úkolu…",
       "addTask": "Přidat úkol",
       "addAnotherTask": "Přidat další úkol",
-      "addBucket": "Vytvořit nový sloupec",
+      "addBucket": "Create a bucket",
       "addBucketPlaceholder": "Zadejte název nového sloupce…",
       "deleteHeaderBucket": "Smazat sloupec",
       "deleteBucketText1": "Opravdu chcete smazat tento sloupec?",
@@ -423,7 +423,7 @@
     "create": {
       "title": "Nový uložený filtr",
       "description": "Uložený filtr je virtuální projekt, který se počítá ze sady filtrů pokaždé, když je k němu přistupováno.",
-      "action": "Vytvořit uložený filtr",
+      "action": "Create saved filter",
       "titleRequired": "Uveďte název filtru."
     },
     "delete": {
@@ -507,7 +507,7 @@
     "search": "Zadejte hledaný štítek…",
     "create": {
       "header": "Nový štítek",
-      "title": "Vytvořit nový štítek",
+      "title": "Create a label",
       "titleRequired": "Zadejte název prosím.",
       "success": "Štítek byl úspěšně vytvořen."
     },
@@ -528,7 +528,7 @@
   "sharing": {
     "authenticating": "Ověřování…",
     "passwordRequired": "Tento sdílený projekt vyžaduje heslo. Zadejte jej níže:",
-    "error": "Došlo k chybě.",
+    "error": "An error occurred.",
     "invalidPassword": "Neplatné heslo."
   },
   "navigation": {
@@ -642,7 +642,7 @@
       "placeholder": "Zadejte nějaký text nebo stiskněte '/' pro zobrazení více možností…"
     },
     "multiselect": {
-      "createPlaceholder": "Vytvořit nový",
+      "createPlaceholder": "Create",
       "selectPlaceholder": "Kliknutím nebo stisknutím klávesy Enter vyberte"
     },
     "datepickerRange": {
@@ -721,10 +721,10 @@
   },
   "task": {
     "task": "Úkol",
-    "new": "Vytvořit nový úkol",
+    "new": "Create a task",
     "delete": "Smazat tento úkol",
     "createSuccess": "Úkol byl úspěšně vytvořen.",
-    "addReminder": "Přidat novou připomínku…",
+    "addReminder": "Add a reminder…",
     "doneSuccess": "Úkol byl úspěšně označen jako dokončený.",
     "undoneSuccess": "Úkol byl úspěšně znovu otevřen.",
     "undo": "Vrátit zpět",
@@ -860,7 +860,7 @@
       "unassignSuccess": "Uživatel byl úspěšně vyloučen."
     },
     "label": {
-      "placeholder": "Zadejte pro přidání nového štítku…",
+      "placeholder": "Type to add a label…",
       "createPlaceholder": "Přidat toto jako nový štítek",
       "addSuccess": "Štítek byl úspěšně přidán.",
       "createSuccess": "Štítek byl úspěšně vytvořen.",
@@ -883,8 +883,8 @@
     "relation": {
       "add": "Přidat nový vztah úkolu",
       "new": "Nový vztah k úkolu",
-      "searchPlaceholder": "Hledejte nový úkol, který chcete přidat jako související…",
-      "createPlaceholder": "Přidat toto jako nový související úkol",
+      "searchPlaceholder": "Type search for a task to add as related…",
+      "createPlaceholder": "Add this as related task",
       "differentProject": "Tento úkol patří do jiného projektu.",
       "noneYet": "Zatím žádné vztahy mezi úkoly.",
       "delete": "Odstranit vztah k úloze",
@@ -962,7 +962,7 @@
     "title": "Týmy",
     "noTeams": "Momentálně nejste v žádném týmu.",
     "create": {
-      "title": "Vytvořit nový tým",
+      "title": "Create a team",
       "success": "Tým byl úspěšně vytvořen."
     },
     "edit": {

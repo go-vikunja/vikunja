@@ -53,7 +53,7 @@
       "loginWith": "Logg inn med {provider}",
       "authenticating": "Autentiserer…",
       "openIdStateError": "Staten samsvarer ikke, klikk ikke for å fortsette!",
-      "openIdGeneralError": "En feil oppstod under autentisering mot tredjepart.",
+      "openIdGeneralError": "An error occurred while authenticating against the third party.",
       "logout": "Logg ut",
       "emailInvalid": "Vennligst oppgi en gyldig e-postadresse.",
       "usernameRequired": "Angi et brukernavn.",
@@ -227,8 +227,8 @@
       "title": "Arkiver{project}\"",
       "archive": "Arkiver dette prosjektet",
       "unarchive": "Av-arkivere dette prosjektet",
-      "unarchiveText": "Du vil kunne opprette nye oppgaver eller redigere den.",
-      "archiveText": "Du vil ikke være i stand til å redigere denne listen eller opprette nye oppgaver før du fjerner arkiveringen.",
+      "unarchiveText": "You will be able to create tasks or edit it.",
+      "archiveText": "You won't be able to edit this project or create tasks until you un-archive it.",
       "success": "Prosjektet ble vellykket arkivert."
     },
     "background": {
@@ -277,7 +277,7 @@
         "title": "Del link",
         "what": "Hva er en lenke for deling?",
         "explanation": "Lenker lar deg enkelt dele et prosjekt med andre brukere som ikke har en konto på Vikunja.",
-        "create": "Opprett en ny lenkedeling",
+        "create": "Create a link share",
         "name": "Navn (valgfritt)",
         "namePlaceholder": "e.g. Lorem Ipsum",
         "nameExplanation": "Alle handlinger utført av denne koblingsdelingen vises med navnet.",
@@ -317,9 +317,9 @@
     "list": {
       "title": "Liste",
       "add": "Legg til",
-      "addPlaceholder": "Legg til ny oppgave…",
+      "addPlaceholder": "Add a task…",
       "empty": "Dette prosjektet er for øyeblikket tomt.",
-      "newTaskCta": "Lage en ny oppgave.",
+      "newTaskCta": "Create a task.",
       "editTask": "Endre oppgave"
     },
     "gantt": {
@@ -352,7 +352,7 @@
       "addTaskPlaceholder": "Angi den nye oppgavens tittel…",
       "addTask": "Legg til oppgave",
       "addAnotherTask": "Legg til en annen oppgave",
-      "addBucket": "Lag en ny bøtte",
+      "addBucket": "Create a bucket",
       "addBucketPlaceholder": "Angi den nye bøtte tittelen…",
       "deleteHeaderBucket": "Slett bøtte",
       "deleteBucketText1": "Er du sikker på at du vil slette denne bøtte?",
@@ -423,7 +423,7 @@
     "create": {
       "title": "Nytt lagret filter",
       "description": "A saved filter is a virtual project which is computed from a set of filters each time it is accessed.",
-      "action": "Opprett nytt filter",
+      "action": "Create saved filter",
       "titleRequired": "Skriv inn en tittel for filteret."
     },
     "delete": {
@@ -507,7 +507,7 @@
     "search": "Skriv for å søke etter en etikett…",
     "create": {
       "header": "Ny etikett",
-      "title": "Opprett ny etikett",
+      "title": "Create a label",
       "titleRequired": "Angi den nye tittelen.",
       "success": "Etiketten ble opprettet."
     },
@@ -528,7 +528,7 @@
   "sharing": {
     "authenticating": "Autentiserer…",
     "passwordRequired": "Denne delte listen krever et passord. Vennligst skriv det nedenfor:",
-    "error": "En feil oppsto.",
+    "error": "An error occurred.",
     "invalidPassword": "Det oppgitte passordet er ugyldig."
   },
   "navigation": {
@@ -642,7 +642,7 @@
       "placeholder": "Type some text or hit '/' to see more options…"
     },
     "multiselect": {
-      "createPlaceholder": "Opprett ny",
+      "createPlaceholder": "Create",
       "selectPlaceholder": "Klikk eller trykk enter for å velge denne listen"
     },
     "datepickerRange": {
@@ -721,10 +721,10 @@
   },
   "task": {
     "task": "Oppgave",
-    "new": "Lage en ny oppgave",
+    "new": "Create a task",
     "delete": "Slette denne oppgaven",
     "createSuccess": "Oppgaven ble opprettet.",
-    "addReminder": "Legg til en ny påminnelse…",
+    "addReminder": "Add a reminder…",
     "doneSuccess": "Oppgaven ble markert som ferdig.",
     "undoneSuccess": "Oppgaven ble fjernet som ferdig.",
     "undo": "Angre",
@@ -860,7 +860,7 @@
       "unassignSuccess": "Brukeren ble vellykket fjernet."
     },
     "label": {
-      "placeholder": "Skriv for å legge til en ny etikett…",
+      "placeholder": "Type to add a label…",
       "createPlaceholder": "Legg til som ny etikett",
       "addSuccess": "Etiketten er lagt til.",
       "createSuccess": "Denne etiketten har blitt opprettet.",
@@ -883,8 +883,8 @@
     "relation": {
       "add": "Legg til en ny oppgaveforbindelse",
       "new": "Ny oppgaveforbindelse",
-      "searchPlaceholder": "Skriv søk etter en ny oppgave å legge til som relatert…",
-      "createPlaceholder": "Legg til denne som ny relatert oppgave",
+      "searchPlaceholder": "Type search for a task to add as related…",
+      "createPlaceholder": "Add this as related task",
       "differentProject": "Denne oppgaven tilhører et annet prosjekt.",
       "noneYet": "Ingen arbeidsrelasjoner ennå.",
       "delete": "Slett relasjon",
@@ -962,7 +962,7 @@
     "title": "Grupper",
     "noTeams": "Du er for øyeblikket ikke en del av noen gurpper.",
     "create": {
-      "title": "Opprett en ny gruppe",
+      "title": "Create a team",
       "success": "Gruppen ble opprettet."
     },
     "edit": {

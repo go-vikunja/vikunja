@@ -53,7 +53,7 @@
       "loginWith": "Mit {provider} anmelden",
       "authenticating": "Authentifizierung…",
       "openIdStateError": "Zustand stimmt nicht überein, fahre nicht fort!",
-      "openIdGeneralError": "Es ist ein Fehler bei der externen Authentisierung aufgetreten.",
+      "openIdGeneralError": "Es ist ein Fehler bei der externen Authentifizierung aufgetreten.",
       "logout": "Abmelden",
       "emailInvalid": "Bitte gib eine gültige E-Mail-Adresse ein.",
       "usernameRequired": "Bitte gib einen Anmeldenamen ein.",
@@ -227,8 +227,8 @@
       "title": "„{project}“ archivieren",
       "archive": "Dieses Projekt archivieren",
       "unarchive": "Archivierung dieses Projekts aufheben",
-      "unarchiveText": "Du wirst neue Aufgaben erstellen oder sie bearbeiten können.",
-      "archiveText": "Du kannst dieses Projekt nicht bearbeiten oder neue Aufgaben erstellen, bis du die Archivierung aufhebst.",
+      "unarchiveText": "Du kannst Aufgaben erstellen oder diese bearbeiten.",
+      "archiveText": "Du kannst dieses Projekt nicht bearbeiten oder Aufgaben erstellen, bis du die Archivierung aufhebst.",
       "success": "Das Projekt wurde erfolgreich archiviert."
     },
     "background": {
@@ -277,7 +277,7 @@
         "title": "Linkfreigaben",
         "what": "Was ist eine Linkfreigabe?",
         "explanation": "Mit Linkfreigaben kannst Projekt du Listen mit Benutzer:innen ohne Vikunja-Account teilen.",
-        "create": "Erstelle ein neue Linkfreigabe",
+        "create": "Erstelle ein Linkfreigabe",
         "name": "Name (optional)",
         "namePlaceholder": "z.B. Lorem Ipsum",
         "nameExplanation": "Alle Aktionen, die mit dieser Linkfreigabe durchgeführt werden, werden mit diesem Namen angezeigt.",
@@ -317,9 +317,9 @@
     "list": {
       "title": "Liste",
       "add": "Hinzufügen",
-      "addPlaceholder": "Neue Aufgabe hinzufügen…",
+      "addPlaceholder": "Aufgabe hinzufügen…",
       "empty": "Dieses Project ist derzeit leer.",
-      "newTaskCta": "Eine neue Aufgabe erstellen.",
+      "newTaskCta": "Aufgabe erstellen.",
       "editTask": "Aufgabe bearbeiten"
     },
     "gantt": {
@@ -352,7 +352,7 @@
       "addTaskPlaceholder": "Gebe einen Aufgabentitel ein …",
       "addTask": "Eine Aufgabe hinzufügen",
       "addAnotherTask": "Weitere Aufgabe hinzufügen",
-      "addBucket": "Eine neue Spalte erstellen",
+      "addBucket": "Bucket erstellen",
       "addBucketPlaceholder": "Gebe einen Spaltentitel ein…",
       "deleteHeaderBucket": "Spalte löschen",
       "deleteBucketText1": "Bist du sicher, dass du diese Spalte löschen möchtest?",
@@ -423,7 +423,7 @@
     "create": {
       "title": "Neuer gespeicherter Filter",
       "description": "Ein gespeicherter Filter ist ein virtuelles Projekt, das bei jedem Zugriff aus einem Satz von Filtern errechnet wird.",
-      "action": "Neuen gespeicherten Filter erstellen",
+      "action": "Gespeicherten Filter erstellen",
       "titleRequired": "Bitte gib den Titel für den Filter an."
     },
     "delete": {
@@ -507,7 +507,7 @@
     "search": "Beginne zu schreiben, um nach einem Label zu suchen…",
     "create": {
       "header": "Neues Label",
-      "title": "Erstelle ein neues Label",
+      "title": "Label erstellen",
       "titleRequired": "Bitte gebe einen Titel an.",
       "success": "Das Label wurde erfolgreich erstellt."
     },
@@ -642,7 +642,7 @@
       "placeholder": "Gib Text ein, drücke '/' für mehr Optionen…"
     },
     "multiselect": {
-      "createPlaceholder": "Neu erstellen",
+      "createPlaceholder": "Erstellen",
       "selectPlaceholder": "Klicken oder Enter drücken zum Auswählen"
     },
     "datepickerRange": {
@@ -721,7 +721,7 @@
   },
   "task": {
     "task": "Aufgabe",
-    "new": "Eine neue Aufgabe erstellen",
+    "new": "Aufgabe erstellen",
     "delete": "Diese Aufgabe löschen",
     "createSuccess": "Die Aufgabe wurde erfolgreich erstellt.",
     "addReminder": "Eine Erinnerung hinzufügen…",
@@ -860,7 +860,7 @@
       "unassignSuccess": "Benutzer:innenzuweisung aufgehoben."
     },
     "label": {
-      "placeholder": "Tippen, um ein neues Label hinzuzufügen…",
+      "placeholder": "Beginne zu schreiben, um ein Label hinzuzufügen…",
       "createPlaceholder": "Dies als neues Label hinzufügen",
       "addSuccess": "Das Label wurde erfolgreich hinzugefügt.",
       "createSuccess": "Das Label wurde erfolgreich erstellt.",
@@ -883,8 +883,8 @@
     "relation": {
       "add": "Neue Aufgabenbeziehung hinzufügen",
       "new": "Neue Aufgabenbeziehung",
-      "searchPlaceholder": "Beginne zu schreiben, um eine Aufgabe zu suchen, die als Beziehung hinzugefügt werden soll…",
-      "createPlaceholder": "Füge diese Aufgabe als neue Aufgabenbeziehung hinzu",
+      "searchPlaceholder": "Suche nach einer Aufgabe für diese Beziehung…",
+      "createPlaceholder": "Füge diese Aufgabe als Aufgabenbeziehung hinzu",
       "differentProject": "Diese Aufgabe gehört zu einem anderen Projekt.",
       "noneYet": "Keine Aufgabenbeziehung vorhanden.",
       "delete": "Aufgabenbeziehung entfernen",
@@ -962,7 +962,7 @@
     "title": "Teams",
     "noTeams": "Du bist derzeit in keinem Team.",
     "create": {
-      "title": "Erstelle ein neues Team",
+      "title": "Team erstellen",
       "success": "Das Team wurde erfolgreich erstellt."
     },
     "edit": {

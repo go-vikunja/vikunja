@@ -53,7 +53,7 @@
       "loginWith": "以 {provider} 身份登录",
       "authenticating": "验证中",
       "openIdStateError": "状态不匹配，无法继续！",
-      "openIdGeneralError": "在验证第三方时出错。",
+      "openIdGeneralError": "An error occurred while authenticating against the third party.",
       "logout": "注销",
       "emailInvalid": "请输入有效的电子邮件地址。",
       "usernameRequired": "请输入用户名",
@@ -227,8 +227,8 @@
       "title": "存档 \"{project}\"",
       "archive": "存档此项目",
       "unarchive": "取消存档此项目",
-      "unarchiveText": "您将能够创建新任务或编辑此项目",
-      "archiveText": "在您取消归档之前，您将无法编辑此项目或创建新任务。",
+      "unarchiveText": "You will be able to create tasks or edit it.",
+      "archiveText": "You won't be able to edit this project or create tasks until you un-archive it.",
       "success": "项目已成功归档。"
     },
     "background": {
@@ -277,7 +277,7 @@
         "title": "共享链接",
         "what": "什么是共享链接？",
         "explanation": "共享链接使您能够轻松地与其他未注册账户的访客共享一个列表。",
-        "create": "创建一个新的共享链接",
+        "create": "Create a link share",
         "name": "共享链接名称 (可选)",
         "namePlaceholder": "例如：Lorem Ipsum",
         "nameExplanation": "此共享链接中的所有动作都将显示该名称。",
@@ -317,9 +317,9 @@
     "list": {
       "title": "列表",
       "add": "添加",
-      "addPlaceholder": "添加新任务",
+      "addPlaceholder": "Add a task…",
       "empty": "此项目目前为空。",
-      "newTaskCta": "新建任务。",
+      "newTaskCta": "Create a task.",
       "editTask": "编辑任务"
     },
     "gantt": {
@@ -352,7 +352,7 @@
       "addTaskPlaceholder": "输入新任务标题…",
       "addTask": "添加任务",
       "addAnotherTask": "添加另一个任务",
-      "addBucket": "创建一个新的存储桶。",
+      "addBucket": "Create a bucket",
       "addBucketPlaceholder": "输入新的存储桶标题…",
       "deleteHeaderBucket": "删除存储桶",
       "deleteBucketText1": "您确定要删除此存储桶吗？",
@@ -423,7 +423,7 @@
     "create": {
       "title": "新保存的过滤器",
       "description": "保存的过滤器是一个虚拟工程，每次访问时都从一组过滤器中计算。",
-      "action": "创建新保存的过滤器",
+      "action": "Create saved filter",
       "titleRequired": "请为该过滤器提供名称。"
     },
     "delete": {
@@ -507,7 +507,7 @@
     "search": "输入以搜索标签…",
     "create": {
       "header": "新建标记",
-      "title": "创建标签",
+      "title": "Create a label",
       "titleRequired": "请指定标题",
       "success": "已新建标签"
     },
@@ -528,7 +528,7 @@
   "sharing": {
     "authenticating": "验证中……",
     "passwordRequired": "此共享项目需要密码。请在下面输入：",
-    "error": "发生错误",
+    "error": "An error occurred.",
     "invalidPassword": "密码错误"
   },
   "navigation": {
@@ -642,7 +642,7 @@
       "placeholder": "输入一些文本或点击“/”查看更多选项…"
     },
     "multiselect": {
-      "createPlaceholder": "创建新的",
+      "createPlaceholder": "Create",
       "selectPlaceholder": "点击或按 Enter 选择"
     },
     "datepickerRange": {
@@ -721,10 +721,10 @@
   },
   "task": {
     "task": "任务",
-    "new": "新建任务",
+    "new": "Create a task",
     "delete": "删除此任务",
     "createSuccess": "成功创建任务",
-    "addReminder": "添加一个新的提醒…",
+    "addReminder": "Add a reminder…",
     "doneSuccess": "待办事项已标记为完成。",
     "undoneSuccess": "待办事项已标记为未完成。",
     "undo": "撤销",
@@ -860,7 +860,7 @@
       "unassignSuccess": "已成功取消分配用户。"
     },
     "label": {
-      "placeholder": "添加一个新标签…",
+      "placeholder": "Type to add a label…",
       "createPlaceholder": "将此添加为新标签",
       "addSuccess": "已成功添加标签。",
       "createSuccess": "已成功创建标签。",
@@ -883,8 +883,8 @@
     "relation": {
       "add": "添加新任务关系",
       "new": "新任务关系",
-      "searchPlaceholder": "输入以搜索要添加关联的新任务...",
-      "createPlaceholder": "添加为新的关联任务",
+      "searchPlaceholder": "Type search for a task to add as related…",
+      "createPlaceholder": "Add this as related task",
       "differentProject": "此任务属于另一个项目。",
       "noneYet": "还没有任务关联。",
       "delete": "删除关联",
@@ -962,7 +962,7 @@
     "title": "团队",
     "noTeams": "你目前不属于任何团队。",
     "create": {
-      "title": "创建一个新团队。",
+      "title": "Create a team",
       "success": "团队已成功创建。"
     },
     "edit": {

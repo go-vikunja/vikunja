@@ -53,7 +53,7 @@
       "loginWith": "{provider}로 로그인",
       "authenticating": "인증 처리 중...",
       "openIdStateError": "State does not match, refusing to continue!",
-      "openIdGeneralError": "외부 인증오류가 발생하였습니다.",
+      "openIdGeneralError": "An error occurred while authenticating against the third party.",
       "logout": "로그아웃",
       "emailInvalid": "유효한 이메일 주소를 입력하여 주십시오.",
       "usernameRequired": "사용자 이름을 입력하세요.",
@@ -227,8 +227,8 @@
       "title": "\"{project}\"보관",
       "archive": "프로젝트 보관하기",
       "unarchive": "Un-Archive this project",
-      "unarchiveText": "You will be able to create new tasks or edit it.",
-      "archiveText": "You won't be able to edit this project or create new tasks until you un-archive it.",
+      "unarchiveText": "You will be able to create tasks or edit it.",
+      "archiveText": "You won't be able to edit this project or create tasks until you un-archive it.",
       "success": "The project was successfully archived."
     },
     "background": {
@@ -277,7 +277,7 @@
         "title": "링크 공유",
         "what": "공유 링크가 무엇인가요?",
         "explanation": "Share Links allow you to easily share a project with other users who don't have an account on Vikunja.",
-        "create": "새 공유 링크 만들기",
+        "create": "Create a link share",
         "name": "이름 (선택 사항)",
         "namePlaceholder": "e.g. Lorem Ipsum",
         "nameExplanation": "All actions done by this link share will show up with the name.",
@@ -317,9 +317,9 @@
     "list": {
       "title": "List",
       "add": "Add",
-      "addPlaceholder": "Add a new task…",
+      "addPlaceholder": "Add a task…",
       "empty": "This project is currently empty.",
-      "newTaskCta": "새 할일 등록",
+      "newTaskCta": "Create a task.",
       "editTask": "할 일 편집"
     },
     "gantt": {
@@ -352,7 +352,7 @@
       "addTaskPlaceholder": "Enter the new task title…",
       "addTask": "작업 추가",
       "addAnotherTask": "Add another task",
-      "addBucket": "Create a new bucket",
+      "addBucket": "Create a bucket",
       "addBucketPlaceholder": "Enter the new bucket title…",
       "deleteHeaderBucket": "Delete the bucket",
       "deleteBucketText1": "Are you sure you want to delete this bucket?",
@@ -423,7 +423,7 @@
     "create": {
       "title": "New Saved Filter",
       "description": "A saved filter is a virtual project which is computed from a set of filters each time it is accessed.",
-      "action": "Create new saved filter",
+      "action": "Create saved filter",
       "titleRequired": "Please provide a title for the filter."
     },
     "delete": {
@@ -507,7 +507,7 @@
     "search": "Type to search for a label…",
     "create": {
       "header": "New label",
-      "title": "Create a new label",
+      "title": "Create a label",
       "titleRequired": "Please specify a title.",
       "success": "The label was successfully created."
     },
@@ -528,7 +528,7 @@
   "sharing": {
     "authenticating": "Authenticating…",
     "passwordRequired": "This shared project requires a password. Please enter it below:",
-    "error": "An error occured.",
+    "error": "An error occurred.",
     "invalidPassword": "The password is invalid."
   },
   "navigation": {
@@ -642,7 +642,7 @@
       "placeholder": "Type some text or hit '/' to see more options…"
     },
     "multiselect": {
-      "createPlaceholder": "새로 생성하기",
+      "createPlaceholder": "Create",
       "selectPlaceholder": "Click or press enter to select"
     },
     "datepickerRange": {
@@ -721,10 +721,10 @@
   },
   "task": {
     "task": "Task",
-    "new": "Create a new task",
+    "new": "Create a task",
     "delete": "Delete this task",
     "createSuccess": "The task was successfully created.",
-    "addReminder": "Add a new reminder…",
+    "addReminder": "Add a reminder…",
     "doneSuccess": "The task was successfully marked as done.",
     "undoneSuccess": "The task was successfully un-marked as done.",
     "undo": "Undo",
@@ -860,7 +860,7 @@
       "unassignSuccess": "The user has been unassigned successfully."
     },
     "label": {
-      "placeholder": "Type to add a new label…",
+      "placeholder": "Type to add a label…",
       "createPlaceholder": "Add this as new label",
       "addSuccess": "The label has been added successfully.",
       "createSuccess": "The label has been created successfully.",
@@ -883,8 +883,8 @@
     "relation": {
       "add": "Add a New Task Relation",
       "new": "New Task Relation",
-      "searchPlaceholder": "Type search for a new task to add as related…",
-      "createPlaceholder": "Add this as new related task",
+      "searchPlaceholder": "Type search for a task to add as related…",
+      "createPlaceholder": "Add this as related task",
       "differentProject": "This task belongs to a different project.",
       "noneYet": "No task relations yet.",
       "delete": "관계 삭제",
@@ -962,7 +962,7 @@
     "title": "Teams",
     "noTeams": "You are currently not part of any teams.",
     "create": {
-      "title": "Create a new team",
+      "title": "Create a team",
       "success": "The team was successfully created."
     },
     "edit": {

@@ -53,7 +53,7 @@
       "loginWith": "Prijava z {provider}",
       "authenticating": "Avtentikacija…",
       "openIdStateError": "Stanje se ne ujema, prekinjam!",
-      "openIdGeneralError": "Med preverjanjem pristnosti preko zunanje aplikacije je prišlo do napake.",
+      "openIdGeneralError": "An error occurred while authenticating against the third party.",
       "logout": "Odjava",
       "emailInvalid": "Prosim vnesite veljaven e-poštni naslov.",
       "usernameRequired": "Prosim vnesite uporabniško ime.",
@@ -227,8 +227,8 @@
       "title": "Arhiviraj \"{project}\"",
       "archive": "Arhiviraj projekt",
       "unarchive": "Odstrani projekt iz arhiva",
-      "unarchiveText": "Ustvarili boste lahko nove naloge ali jih uredili.",
-      "archiveText": "Dokler ga ne odstranite iz arhiva, tega projekta ne boste mogli urejati ali ustvarjati novih nalog.",
+      "unarchiveText": "You will be able to create tasks or edit it.",
+      "archiveText": "You won't be able to edit this project or create tasks until you un-archive it.",
       "success": "Projekt je bil uspešno arhiviran."
     },
     "background": {
@@ -277,7 +277,7 @@
         "title": "Deli povezave",
         "what": "Kaj je povezava za skupno rabo?",
         "explanation": "Povezave za skupno rabo omogočajo preprosto deljenje projekta z drugimi uporabniki, ki nimajo računa na Vikunji.",
-        "create": "Ustvari novo povezavo za skupno rabo",
+        "create": "Create a link share",
         "name": "Naziv (neobvezno)",
         "namePlaceholder": "npr. Lorem Ipsum",
         "nameExplanation": "Vsa dejanja, izvedena s to povezavo skupne rabe, bodo prikazana z imenom.",
@@ -317,9 +317,9 @@
     "list": {
       "title": "Seznam",
       "add": "Dodaj",
-      "addPlaceholder": "Dodaj novo nalogo…",
+      "addPlaceholder": "Add a task…",
       "empty": "Projekt je trenutno prazen.",
-      "newTaskCta": "Ustvari novo nalogo.",
+      "newTaskCta": "Create a task.",
       "editTask": "Uredi nalogo"
     },
     "gantt": {
@@ -352,7 +352,7 @@
       "addTaskPlaceholder": "Vnesite nov naslov naloge…",
       "addTask": "Dodaj nalogo",
       "addAnotherTask": "Dodaj še eno nalogo",
-      "addBucket": "Ustvari novo vedro",
+      "addBucket": "Create a bucket",
       "addBucketPlaceholder": "Vnesi nov naslov vedra…",
       "deleteHeaderBucket": "Izbriši vedro",
       "deleteBucketText1": "Ali ste prepričani, da želite izbrisati to vedro?",
@@ -423,7 +423,7 @@
     "create": {
       "title": "Nov shranjen filter",
       "description": "Shranjen filter je virtualni projekt, ki se izračuna iz nabora filtrov ob vsakem dostopu do njega.",
-      "action": "Ustvari nov shranjen filter",
+      "action": "Create saved filter",
       "titleRequired": "Navedi naslov filtra."
     },
     "delete": {
@@ -507,7 +507,7 @@
     "search": "Začni tipkati za iskanje oznake…",
     "create": {
       "header": "Nova oznaka",
-      "title": "Ustvari novo oznako",
+      "title": "Create a label",
       "titleRequired": "Prosim določite naslov.",
       "success": "Oznaka je bila uspešno ustvarjena."
     },
@@ -528,7 +528,7 @@
   "sharing": {
     "authenticating": "Avtentikacija…",
     "passwordRequired": "Ta skupni projekt zahteva geslo. Vnesite ga spodaj:",
-    "error": "Prišlo je do napake.",
+    "error": "An error occurred.",
     "invalidPassword": "Geslo ni veljavno."
   },
   "navigation": {
@@ -642,7 +642,7 @@
       "placeholder": "Začni tipkati besedilo ali pritisni '/', da vidiš več možnosti…"
     },
     "multiselect": {
-      "createPlaceholder": "Ustvari novo",
+      "createPlaceholder": "Create",
       "selectPlaceholder": "Za izbiro kliknite ali pritisnite enter"
     },
     "datepickerRange": {
@@ -721,10 +721,10 @@
   },
   "task": {
     "task": "Naloga",
-    "new": "Ustvari novo nalogo",
+    "new": "Create a task",
     "delete": "Izbriši nalogo",
     "createSuccess": "Naloga je bila uspešno ustvarjena.",
-    "addReminder": "Dodaj nov opomnik…",
+    "addReminder": "Add a reminder…",
     "doneSuccess": "Naloga je bila uspešno označena kot opravljena.",
     "undoneSuccess": "Naloga je bila uspešno odznačena kot opravljena.",
     "undo": "Razveljavi",
@@ -860,7 +860,7 @@
       "unassignSuccess": "Uporabnik je bil uspešno odstranjen."
     },
     "label": {
-      "placeholder": "Začni tipkati, če želiš dodati novo oznako…",
+      "placeholder": "Type to add a label…",
       "createPlaceholder": "Dodajte kot novo oznako",
       "addSuccess": "Oznaka je bila uspešno dodana.",
       "createSuccess": "Oznaka je bila uspešno ustvarjena.",
@@ -883,8 +883,8 @@
     "relation": {
       "add": "Dodajte novo povezavo naloge",
       "new": "Nova povezava naloge",
-      "searchPlaceholder": "Novo nalogo, ki jo želite dodati kot povezano, poiščite s tipkanjem…",
-      "createPlaceholder": "Dodaj kot novo povezavo naloge",
+      "searchPlaceholder": "Type search for a task to add as related…",
+      "createPlaceholder": "Add this as related task",
       "differentProject": "Ta naloga pripada drugemu projektu.",
       "noneYet": "Naloge še nimajo povezav.",
       "delete": "Izbriši povezavo nalog",
@@ -962,7 +962,7 @@
     "title": "Ekipe",
     "noTeams": "Trenutno niste del nobene ekipe.",
     "create": {
-      "title": "Ustvari novo ekipo",
+      "title": "Create a team",
       "success": "Ekipa je bila uspešno ustvarjena."
     },
     "edit": {

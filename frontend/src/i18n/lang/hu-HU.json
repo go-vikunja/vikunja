@@ -53,7 +53,7 @@
       "loginWith": "Bejelentkezés {provider}-profillal",
       "authenticating": "Hitelesítés…",
       "openIdStateError": "Állapot nem egyezik, nem lehet folytatni!",
-      "openIdGeneralError": "Hiba történt a harmadik féllel szembeni hitelesítés során.",
+      "openIdGeneralError": "An error occurred while authenticating against the third party.",
       "logout": "Kijelentkezés",
       "emailInvalid": "Kérjük, adjon meg egy valós email címet!",
       "usernameRequired": "Kérjük adjon meg egy felhasználónevet.",
@@ -227,8 +227,8 @@
       "title": "\"{project}\" archiválása.",
       "archive": "Archiválja ezt a projektet",
       "unarchive": "Projekt archiválásának visszaállítása",
-      "unarchiveText": "Új feladatokat hozhat létre, vagy szerkeszthet.",
-      "archiveText": "Addig nem szerkesztheti ezt a projektet, és nem hozhat létre új feladatokat, amíg nem állítja vissza az archiválást.",
+      "unarchiveText": "You will be able to create tasks or edit it.",
+      "archiveText": "You won't be able to edit this project or create tasks until you un-archive it.",
       "success": "A projekt sikeresen archiválva."
     },
     "background": {
@@ -277,7 +277,7 @@
         "title": "Hivatkozások megosztása",
         "what": "Mi az a megosztási link?",
         "explanation": "A Linkek megosztása segítségével egyszerűen megoszthat egy projektet más felhasználókkal, akik nem rendelkeznek fiókkal a Vikunján.",
-        "create": "Hozzon létre egy új linkmegosztást",
+        "create": "Create a link share",
         "name": "Név (nem kötelező)",
         "namePlaceholder": "Például: Kis Géza",
         "nameExplanation": "A link megosztása által végzett összes művelet a névvel együtt fog megjelenni.",
@@ -317,9 +317,9 @@
     "list": {
       "title": "Lista",
       "add": "Új hozzáadása",
-      "addPlaceholder": "Új feladat hozzáadása...",
+      "addPlaceholder": "Add a task…",
       "empty": "Ez a projekt jelenleg üres.",
-      "newTaskCta": "Új feladat létrehozása.",
+      "newTaskCta": "Create a task.",
       "editTask": "Feladat szerkesztése."
     },
     "gantt": {
@@ -352,7 +352,7 @@
       "addTaskPlaceholder": "Adja meg az új feladatcímet…",
       "addTask": "Feladat hozzáadása",
       "addAnotherTask": "Adjon hozzá egy másik feladatot",
-      "addBucket": "Új vödör létrehozása",
+      "addBucket": "Create a bucket",
       "addBucketPlaceholder": "Adja meg az új vödör címét…",
       "deleteHeaderBucket": "Vödör törlése",
       "deleteBucketText1": "Biztosan törli ezt az vödröt?",
@@ -423,7 +423,7 @@
     "create": {
       "title": "Új mentett szűrő",
       "description": "A mentett szűrő egy virtuális projekt, amely szűrőkészletből kerül kiszámításra minden alkalommal, amikor hozzáfér.",
-      "action": "Új mentett szűrő létrehozása",
+      "action": "Create saved filter",
       "titleRequired": "Adja meg a szűrő címét."
     },
     "delete": {
@@ -507,7 +507,7 @@
     "search": "Címke kereséséhez írja be…",
     "create": {
       "header": "Új címke",
-      "title": "Új címke létrehozása",
+      "title": "Create a label",
       "titleRequired": "Kérjük, adjon meg egy címet.",
       "success": "A címke sikeresen létrehozva."
     },
@@ -528,7 +528,7 @@
   "sharing": {
     "authenticating": "Hitelesítés…",
     "passwordRequired": "Ehhez a megosztott projekthez jelszó szükséges. Kérjük, írja be alább:",
-    "error": "Hiba lépett fel.",
+    "error": "An error occurred.",
     "invalidPassword": "A jelszó érvénytelen."
   },
   "navigation": {
@@ -642,7 +642,7 @@
       "placeholder": "Írjon be egy szöveget, vagy nyomja meg a „/” gombot a további lehetőségek megtekintéséhez…"
     },
     "multiselect": {
-      "createPlaceholder": "Új létrehozása",
+      "createPlaceholder": "Create",
       "selectPlaceholder": "Kattintson, vagy nyomja meg az Enter billentyűt a kiválasztáshoz"
     },
     "datepickerRange": {
@@ -721,10 +721,10 @@
   },
   "task": {
     "task": "Feladat",
-    "new": "Új feladat létrehozása",
+    "new": "Create a task",
     "delete": "Feladat törlése",
     "createSuccess": "A feladat sikeresen létrehozva.",
-    "addReminder": "Új emlékeztető hozzáadása...",
+    "addReminder": "Add a reminder…",
     "doneSuccess": "A feladat sikeresen meg lett jelölve elkészültként.",
     "undoneSuccess": "A feladat sikeresen meg lett jelölve nem elkészültként.",
     "undo": "Visszavonás",
@@ -860,7 +860,7 @@
       "unassignSuccess": "A felhasználó sikeresen leiratkozott!"
     },
     "label": {
-      "placeholder": "Új címke hozzáadásához írjon be…",
+      "placeholder": "Type to add a label…",
       "createPlaceholder": "Adja hozzá ezt új címkeként",
       "addSuccess": "A címke sikeresen hozzáadva.",
       "createSuccess": "A címke sikeresen létrehozva.",
@@ -883,8 +883,8 @@
     "relation": {
       "add": "Új feladatkapcsolat hozzáadása",
       "new": "Új feladatkapcsolat",
-      "searchPlaceholder": "A kapcsolódóként hozzáadandó új feladathoz írja be a keresést…",
-      "createPlaceholder": "Adja hozzá ezt új kapcsolódó feladatként",
+      "searchPlaceholder": "Type search for a task to add as related…",
+      "createPlaceholder": "Add this as related task",
       "differentProject": "Ez a feladat egy másik projekthez tartozik.",
       "noneYet": "Még nincsenek feladatkapcsolatok.",
       "delete": "Feladatkapcsolat törlése",
@@ -962,7 +962,7 @@
     "title": "Csapatok",
     "noTeams": "Jelenleg nem tagja egyetlen csapatnak sem.",
     "create": {
-      "title": "Új csapat létrehozása",
+      "title": "Create a team",
       "success": "A csapat sikeresen létrehozva."
     },
     "edit": {

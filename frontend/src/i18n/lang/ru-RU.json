@@ -53,7 +53,7 @@
       "loginWith": "Войти через {provider}",
       "authenticating": "Аутентификация…",
       "openIdStateError": "State does not match, refusing to continue!",
-      "openIdGeneralError": "Произошла ошибка при аутентификации с помощью третьей стороны.",
+      "openIdGeneralError": "An error occurred while authenticating against the third party.",
       "logout": "Выйти",
       "emailInvalid": "Введите корректный email адрес.",
       "usernameRequired": "Введите имя пользователя.",
@@ -227,8 +227,8 @@
       "title": "Архивирование «{project}»",
       "archive": "Архивирование проекта",
       "unarchive": "Возвращение проекта из архива",
-      "unarchiveText": "Вы сможете создавать новые задачи или изменять их.",
-      "archiveText": "Вы не сможете изменять этот проект или создавать в нём новые задачи, пока не вернёте его из архива.",
+      "unarchiveText": "You will be able to create tasks or edit it.",
+      "archiveText": "You won't be able to edit this project or create tasks until you un-archive it.",
       "success": "Проект архивирован."
     },
     "background": {
@@ -277,7 +277,7 @@
         "title": "Ссылки для обмена",
         "what": "Что такое ссылка для обмена?",
         "explanation": "Ссылка для обмена позволяет поделиться проектом с теми, у кого нет аккаунта в Vikunja.",
-        "create": "Создать новую ссылку для обмена",
+        "create": "Create a link share",
         "name": "Имя (необязательно)",
         "namePlaceholder": "напр. Lorem Ipsum",
         "nameExplanation": "Все действия, выполненные через эту ссылку, будут подписаны этим именем.",
@@ -317,9 +317,9 @@
     "list": {
       "title": "Список",
       "add": "Добавить",
-      "addPlaceholder": "Добавить новую задачу…",
+      "addPlaceholder": "Add a task…",
       "empty": "Проект сейчас пуст.",
-      "newTaskCta": "Создать новую задачу.",
+      "newTaskCta": "Create a task.",
       "editTask": "Изменить задачу"
     },
     "gantt": {
@@ -352,7 +352,7 @@
       "addTaskPlaceholder": "Введите название задачи…",
       "addTask": "Добавить задачу",
       "addAnotherTask": "Добавить ещё задачу",
-      "addBucket": "Создать новую колонку",
+      "addBucket": "Create a bucket",
       "addBucketPlaceholder": "Введите название новой колонки…",
       "deleteHeaderBucket": "Удаление колонки",
       "deleteBucketText1": "Удалить эту колонку?",
@@ -423,7 +423,7 @@
     "create": {
       "title": "Создать сохранённый фильтр",
       "description": "Сохранённый фильтр — это виртуальный проект, содержимое которого выбирается с помощью фильтров в момент его просмотра.",
-      "action": "Создать новый сохранённый фильтр",
+      "action": "Create saved filter",
       "titleRequired": "Укажите название фильтра."
     },
     "delete": {
@@ -507,7 +507,7 @@
     "search": "Введите запрос для поиска метки…",
     "create": {
       "header": "Новая метка",
-      "title": "Создать новую метку",
+      "title": "Create a label",
       "titleRequired": "Пожалуйста, укажите название.",
       "success": "Метка успешно создана."
     },
@@ -528,7 +528,7 @@
   "sharing": {
     "authenticating": "Аутентификация…",
     "passwordRequired": "Для доступа к этому проекту нужен пароль. Введите его сюда:",
-    "error": "Случилась ошибка.",
+    "error": "An error occurred.",
     "invalidPassword": "Неверный пароль."
   },
   "navigation": {
@@ -642,7 +642,7 @@
       "placeholder": "Type some text or hit '/' to see more options…"
     },
     "multiselect": {
-      "createPlaceholder": "Создать",
+      "createPlaceholder": "Create",
       "selectPlaceholder": "Кликните или нажмите Enter для выбора"
     },
     "datepickerRange": {
@@ -721,10 +721,10 @@
   },
   "task": {
     "task": "Задача",
-    "new": "Создать задачу",
+    "new": "Create a task",
     "delete": "Удалить задачу",
     "createSuccess": "Задача удалена.",
-    "addReminder": "Добавить напоминание…",
+    "addReminder": "Add a reminder…",
     "doneSuccess": "Задача отмечена как завершённая.",
     "undoneSuccess": "Задача отмечена как незавершённая.",
     "undo": "Отменить",
@@ -860,7 +860,7 @@
       "unassignSuccess": "Пользователь убран."
     },
     "label": {
-      "placeholder": "Введите новую метку…",
+      "placeholder": "Type to add a label…",
       "createPlaceholder": "Добавить как новую метку",
       "addSuccess": "Метка добавлена.",
       "createSuccess": "Метка создана.",
@@ -883,8 +883,8 @@
     "relation": {
       "add": "Добавить новую связанную задачу",
       "new": "Новая связанная задача",
-      "searchPlaceholder": "Введи запрос для поиска задачи, чтобы добавить связь…",
-      "createPlaceholder": "Добавить как связанную задачу",
+      "searchPlaceholder": "Type search for a task to add as related…",
+      "createPlaceholder": "Add this as related task",
       "differentProject": "Эта задача принадлежит другому проекту.",
       "noneYet": "Ещё нет связанных задач.",
       "delete": "Удалить связь",
@@ -962,7 +962,7 @@
     "title": "Команды",
     "noTeams": "Сейчас вы не являетесь участником ни одной команды.",
     "create": {
-      "title": "Создать команду",
+      "title": "Create a team",
       "success": "Команда создана."
     },
     "edit": {

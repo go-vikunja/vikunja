@@ -53,7 +53,7 @@
       "loginWith": "تسجيل الدخول باستخدام {provider}",
       "authenticating": "جاري التحقق…",
       "openIdStateError": "حالة التحقق غير متطابقة، لا يمكن المتابعة!",
-      "openIdGeneralError": "حدث خطأ أثناء التحقق مع الطرف الثالث.",
+      "openIdGeneralError": "An error occurred while authenticating against the third party.",
       "logout": "تسجيل الخروج",
       "emailInvalid": "الرجاء إدخال عنوان بريد إلكتروني صحيح.",
       "usernameRequired": "الرجاء إدخال اسم المستخدم.",
@@ -227,8 +227,8 @@
       "title": "أرشفة \"{project}\"",
       "archive": "أرشفة هذا المشروع",
       "unarchive": "إلغاء أرشفة هذا المشروع",
-      "unarchiveText": "ستتمكن من إنشاء مهام جديدة أو تعديلها.",
-      "archiveText": "لن تتمكن من تعديل هذا المشروع أو إنشاء مهام جديدة حتى تقوم بإلغاء أرشفته.",
+      "unarchiveText": "You will be able to create tasks or edit it.",
+      "archiveText": "You won't be able to edit this project or create tasks until you un-archive it.",
       "success": "تم أرشفة المشروع بنجاح."
     },
     "background": {
@@ -277,7 +277,7 @@
         "title": "روابط المشاركة",
         "what": "ما هو رابط المشاركة؟",
         "explanation": "تتيح لك روابط المشاركة سهولة مشاركة مشروع مع المستخدمين الآخرين الذين ليس لديهم حساب في Vikunja.",
-        "create": "إنشاء رابط مشاركة جديد",
+        "create": "Create a link share",
         "name": "الاسم (اختياري)",
         "namePlaceholder": "مثال: Lorem Ipsum",
         "nameExplanation": "ستظهر جميع الإجراءات التي يقوم بها رابط المشاركة مع الاسم.",
@@ -317,9 +317,9 @@
     "list": {
       "title": "القائمة",
       "add": "إضافة",
-      "addPlaceholder": "إضافة مهمة جديدة…",
+      "addPlaceholder": "Add a task…",
       "empty": "هذا المشروع فارغ حاليا.",
-      "newTaskCta": "إنشاء مهمة جديدة.",
+      "newTaskCta": "Create a task.",
       "editTask": "تعديل المهمة"
     },
     "gantt": {
@@ -352,7 +352,7 @@
       "addTaskPlaceholder": "أدخل عنوان المهمة الجديدة…",
       "addTask": "إضافة مهمة",
       "addAnotherTask": "إضافة مهمة أخرى",
-      "addBucket": "إنشاء حافظة جديدة",
+      "addBucket": "Create a bucket",
       "addBucketPlaceholder": "أدخل عنوان الحافظة الجديدة…",
       "deleteHeaderBucket": "حذف الحافظة",
       "deleteBucketText1": "هل أنت متأكد من رغبتك في حذف هذه الحافظة؟",
@@ -423,7 +423,7 @@
     "create": {
       "title": "فلتر جديد محفوظ",
       "description": "الفلتر المحفوظ هو مشروع افتراضي يتم حسابه من مجموعة من الفلاتر في كل مرة يتم الوصول إليها.",
-      "action": "إنشاء فلتر جديد محفوظ",
+      "action": "Create saved filter",
       "titleRequired": "يرجى تحديد عنوان للفلتر."
     },
     "delete": {
@@ -507,7 +507,7 @@
     "search": "اكتب للبحث عن تسمية…",
     "create": {
       "header": "تسمية جديدة",
-      "title": "إنشاء تسمية جديدة",
+      "title": "Create a label",
       "titleRequired": "الرجاء تحديد العنوان.",
       "success": "تم إنشاء التسمية بنجاح."
     },
@@ -528,7 +528,7 @@
   "sharing": {
     "authenticating": "جاري التحقق…",
     "passwordRequired": "هذا المشروع المشترك يتطلب كلمة مرور. الرجاء إدخالها أدناه:",
-    "error": "حدث خطأ.",
+    "error": "An error occurred.",
     "invalidPassword": "كلمة المرور غير صحيحة."
   },
   "navigation": {
@@ -642,7 +642,7 @@
       "placeholder": "Type some text or hit '/' to see more options…"
     },
     "multiselect": {
-      "createPlaceholder": "إنشاء جديد",
+      "createPlaceholder": "Create",
       "selectPlaceholder": "انقر أو اضغط على إدخال للاختيار"
     },
     "datepickerRange": {
@@ -721,10 +721,10 @@
   },
   "task": {
     "task": "مهمة",
-    "new": "إنشاء مهمة جديدة",
+    "new": "Create a task",
     "delete": "حذف هذه المهمة",
     "createSuccess": "تم إنشاء المهمة بنجاح.",
-    "addReminder": "إضافة تذكير جديد…",
+    "addReminder": "Add a reminder…",
     "doneSuccess": "تم بنجاح وضع علامة مكتملة على المهمة.",
     "undoneSuccess": "تم بنجاح إلغاء وضع علامة مكتملة على المهمة.",
     "undo": "تراجع",
@@ -860,7 +860,7 @@
       "unassignSuccess": "تم إلغاء تعيين المستخدم بنجاح."
     },
     "label": {
-      "placeholder": "اكتب لإضافة تسمية جديدة…",
+      "placeholder": "Type to add a label…",
       "createPlaceholder": "أضف هذا كتسمية جديدة",
       "addSuccess": "تمت إضافة التسمية بنجاح.",
       "createSuccess": "تم إنشاء التسمية بنجاح.",
@@ -883,8 +883,8 @@
     "relation": {
       "add": "أضف علاقة لمهمة جديدة",
       "new": "علاقة لمهمة جديدة",
-      "searchPlaceholder": "ابحث عن مهمة جديدة لإضافتها كـمهمة مرتبطة…",
-      "createPlaceholder": "إضافة هذه كمهمة ذات علاقة جديدة",
+      "searchPlaceholder": "Type search for a task to add as related…",
+      "createPlaceholder": "Add this as related task",
       "differentProject": "هذه المهمة تنتمي إلى مشروع آخر.",
       "noneYet": "لا توجد علاقات للمهام حتى الآن.",
       "delete": "حذف علاقة المهمة",
@@ -962,7 +962,7 @@
     "title": "الفِرق",
     "noTeams": "أنت حاليا لست جزءا من أي فريق.",
     "create": {
-      "title": "إنشاء فريق جديد",
+      "title": "Create a team",
       "success": "تم إنشاء الفريق بنجاح."
     },
     "edit": {

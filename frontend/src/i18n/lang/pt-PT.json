@@ -53,7 +53,7 @@
       "loginWith": "Iniciar sessão com {provider}",
       "authenticating": "A autenticar…",
       "openIdStateError": "O estado não coincide, a recusar continuar!",
-      "openIdGeneralError": "Ocorreu um erro na autenticação perante a entidade externa.",
+      "openIdGeneralError": "An error occurred while authenticating against the third party.",
       "logout": "Terminar Sessão",
       "emailInvalid": "Por favor, insire um endereço de e-mail válido.",
       "usernameRequired": "Por favor, fornece um nome de utilizador.",
@@ -227,8 +227,8 @@
       "title": "Arquivar \"{project}\"",
       "archive": "Arquivar este projeto",
       "unarchive": "Desarquivar este projeto",
-      "unarchiveText": "Vais ser capaz de criar novas tarefas ou editá-las.",
-      "archiveText": "Não poderás editar este projeto ou criar novas tarefas até o desarquivares.",
+      "unarchiveText": "You will be able to create tasks or edit it.",
+      "archiveText": "You won't be able to edit this project or create tasks until you un-archive it.",
       "success": "Este projeto foi arquivado com sucesso."
     },
     "background": {
@@ -277,7 +277,7 @@
         "title": "Links Partilhados",
         "what": "Como funcionam os links partilhados?",
         "explanation": "Links Partilhados permite-lhe partilhar facilmente um projeto com outros utilizadores que não têm uma conta no Vikunja.",
-        "create": "Criar um novo link partilhado",
+        "create": "Create a link share",
         "name": "Nome (opcional)",
         "namePlaceholder": "ex.: Lorem Ipsum",
         "nameExplanation": "Todas as ações realizadas através deste link partilhado vão aparecer com este nome.",
@@ -317,9 +317,9 @@
     "list": {
       "title": "Lista",
       "add": "Adicionar",
-      "addPlaceholder": "Adicionar uma nova tarefa…",
+      "addPlaceholder": "Add a task…",
       "empty": "Este projeto está atualmente vazio.",
-      "newTaskCta": "Cria uma nova tarefa.",
+      "newTaskCta": "Create a task.",
       "editTask": "Editar Tarefa"
     },
     "gantt": {
@@ -352,7 +352,7 @@
       "addTaskPlaceholder": "Introduz o título da nova tarefa…",
       "addTask": "Adicionar uma tarefa",
       "addAnotherTask": "Adicionar outra tarefa",
-      "addBucket": "Criar um novo conjunto",
+      "addBucket": "Create a bucket",
       "addBucketPlaceholder": "Introduz o título do novo conjunto…",
       "deleteHeaderBucket": "Eliminar o conjunto",
       "deleteBucketText1": "Tens a certeza que pretendes eliminar este conjunto?",
@@ -423,7 +423,7 @@
     "create": {
       "title": "Novo Filtro Memorizado",
       "description": "Um filtro memorizado é um projeto virtual que é compilado a partir de um conjunto de filtros de cada vez que é acedido.",
-      "action": "Criar novo filtro memorizado",
+      "action": "Create saved filter",
       "titleRequired": "Por favor, insere um título para o filtro."
     },
     "delete": {
@@ -507,7 +507,7 @@
     "search": "Escreve para pesquisar uma etiqueta…",
     "create": {
       "header": "Nova etiqueta",
-      "title": "Cria uma nova etiqueta",
+      "title": "Create a label",
       "titleRequired": "Por favor, especifica um título.",
       "success": "A etiqueta foi criada com sucesso."
     },
@@ -528,7 +528,7 @@
   "sharing": {
     "authenticating": "A autenticar…",
     "passwordRequired": "Este projeto partilhado requer uma palavra-passe. Por favor, introduz-a abaixo:",
-    "error": "Ocorreu um erro.",
+    "error": "An error occurred.",
     "invalidPassword": "A palavra-passe é inválida."
   },
   "navigation": {
@@ -642,7 +642,7 @@
       "placeholder": "Insere algum texto ou pressiona '/' para ver mais opções…"
     },
     "multiselect": {
-      "createPlaceholder": "Criar novo",
+      "createPlaceholder": "Create",
       "selectPlaceholder": "Clica ou pressiona Enter para selecionar"
     },
     "datepickerRange": {
@@ -721,10 +721,10 @@
   },
   "task": {
     "task": "Tarefa",
-    "new": "Criar uma nova tarefa",
+    "new": "Create a task",
     "delete": "Eliminar esta tarefa",
     "createSuccess": "A tarefa for criada com sucesso.",
-    "addReminder": "Adicionar um novo lembrete…",
+    "addReminder": "Add a reminder…",
     "doneSuccess": "A tarefa foi marcada como concluída.",
     "undoneSuccess": "A tarefa foi desmarcada como concluída.",
     "undo": "Desfazer",
@@ -860,7 +860,7 @@
       "unassignSuccess": "O utilizador foi desatribuido com sucesso."
     },
     "label": {
-      "placeholder": "Escreve para adicionar uma nova etiqueta…",
+      "placeholder": "Type to add a label…",
       "createPlaceholder": "Adicionar isto como nova etiqueta",
       "addSuccess": "A etiqueta foi adicionada com sucesso.",
       "createSuccess": "A etiqueta foi criada com sucesso.",
@@ -883,8 +883,8 @@
     "relation": {
       "add": "Adicionar Nova Relação Entre Tarefas",
       "new": "Nova Relação Entre Tarefas",
-      "searchPlaceholder": "Escreve para pesquisar uma tarefa a adicionar como relacionada…",
-      "createPlaceholder": "Adicionar como nova tarefa relacionada",
+      "searchPlaceholder": "Type search for a task to add as related…",
+      "createPlaceholder": "Add this as related task",
       "differentProject": "Esta tarefa pertence a um projeto diferente.",
       "noneYet": "Ainda sem tarefas relacionadas.",
       "delete": "Eliminar Relação Entre Tarefas",
@@ -962,7 +962,7 @@
     "title": "Equipas",
     "noTeams": "Atualmente não fazes parte de nenhuma equipa.",
     "create": {
-      "title": "Cria uma nova equipa",
+      "title": "Create a team",
       "success": "A equipa foi criada com sucesso."
     },
     "edit": {

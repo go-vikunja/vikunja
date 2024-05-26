@@ -53,7 +53,7 @@
       "loginWith": "{provider}でログイン",
       "authenticating": "認証中…",
       "openIdStateError": "stateパラメータが一致しないため処理を中断しました。",
-      "openIdGeneralError": "認証中にエラーが発生しました。",
+      "openIdGeneralError": "An error occurred while authenticating against the third party.",
       "logout": "ログアウト",
       "emailInvalid": "有効なメールアドレスを入力してください。",
       "usernameRequired": "ユーザー名を入力してください。",
@@ -227,8 +227,8 @@
       "title": "「{project}」のアーカイブ",
       "archive": "プロジェクトのアーカイブ",
       "unarchive": "プロジェクトのアーカイブの取り消し",
-      "unarchiveText": "新しいタスクの作成や編集を行えるようになります。",
-      "archiveText": "アーカイブを取り消すまで、このプロジェクトでは新しいタスクの作成や編集を行うことができません。",
+      "unarchiveText": "You will be able to create tasks or edit it.",
+      "archiveText": "You won't be able to edit this project or create tasks until you un-archive it.",
       "success": "プロジェクトは正常にアーカイブされました。"
     },
     "background": {
@@ -277,7 +277,7 @@
         "title": "リンクの共有",
         "what": "共有リンクとは何ですか？",
         "explanation": "共有リンクとは、Vikunjaのアカウントを持たない他のユーザーとプロジェクトを簡単に共有することができる機能です。",
-        "create": "新しい共有リンクの作成",
+        "create": "Create a link share",
         "name": "名前 (オプション)",
         "namePlaceholder": "例: Lorem Ipsum",
         "nameExplanation": "この共有リンクで行われた操作はすべてこの名前で表示されるようになります。",
@@ -317,9 +317,9 @@
     "list": {
       "title": "リスト",
       "add": "追加",
-      "addPlaceholder": "新しいタスクを追加…",
+      "addPlaceholder": "Add a task…",
       "empty": "このプロジェクトにはタスクが存在しません。",
-      "newTaskCta": "新しいタスクを作成してください。",
+      "newTaskCta": "Create a task.",
       "editTask": "タスクの編集"
     },
     "gantt": {
@@ -352,7 +352,7 @@
       "addTaskPlaceholder": "新しいタスク名を入力…",
       "addTask": "タスクの追加",
       "addAnotherTask": "他のタスクを追加",
-      "addBucket": "新しいバケットの作成",
+      "addBucket": "Create a bucket",
       "addBucketPlaceholder": "新しいバケット名を入力…",
       "deleteHeaderBucket": "バケットの削除",
       "deleteBucketText1": "このバケットを削除して本当によろしいですか？",
@@ -423,7 +423,7 @@
     "create": {
       "title": "新しい絞り込み条件の作成",
       "description": "絞り込み条件は、複数の条件を組み合わせて保存できる仮想のプロジェクトです。",
-      "action": "新しい絞り込み条件を作成",
+      "action": "Create saved filter",
       "titleRequired": "絞り込み条件名を入力してください。"
     },
     "delete": {
@@ -507,7 +507,7 @@
     "search": "ラベルのキーワードを入力…",
     "create": {
       "header": "新しいラベルの作成",
-      "title": "新しいラベルの作成",
+      "title": "Create a label",
       "titleRequired": "ラベル名を入力してください。",
       "success": "ラベルは正常に作成されました。"
     },
@@ -528,7 +528,7 @@
   "sharing": {
     "authenticating": "認証中…",
     "passwordRequired": "この共有プロジェクトにはパスワードが必要です。パスワードを入力してください:",
-    "error": "エラーが発生しました。",
+    "error": "An error occurred.",
     "invalidPassword": "無効なパスワードです。"
   },
   "navigation": {
@@ -642,7 +642,7 @@
       "placeholder": "Type some text or hit '/' to see more options…"
     },
     "multiselect": {
-      "createPlaceholder": "新規作成",
+      "createPlaceholder": "Create",
       "selectPlaceholder": "クリックするかEnterキーを押して選択"
     },
     "datepickerRange": {
@@ -721,10 +721,10 @@
   },
   "task": {
     "task": "タスク",
-    "new": "新しいタスクの作成",
+    "new": "Create a task",
     "delete": "タスクの削除",
     "createSuccess": "タスクは正常に作成されました。",
-    "addReminder": "新しいリマイダーを作成…",
+    "addReminder": "Add a reminder…",
     "doneSuccess": "タスクを完了にしました。",
     "undoneSuccess": "タスクを未完了に戻しました。",
     "undo": "元に戻す",
@@ -860,7 +860,7 @@
       "unassignSuccess": "担当者から正常に解除されました。"
     },
     "label": {
-      "placeholder": "追加するラベルを入力…",
+      "placeholder": "Type to add a label…",
       "createPlaceholder": "新しいラベルを追加",
       "addSuccess": "ラベルは正常に追加されました。",
       "createSuccess": "ラベルは正常に作成されました。",
@@ -883,8 +883,8 @@
     "relation": {
       "add": "新しい関連タスクの追加",
       "new": "新しい関連タスクの作成",
-      "searchPlaceholder": "追加する関連タスクのキーワードを入力…",
-      "createPlaceholder": "新しい関連タスクを追加",
+      "searchPlaceholder": "Type search for a task to add as related…",
+      "createPlaceholder": "Add this as related task",
       "differentProject": "This task belongs to a different project.",
       "noneYet": "関連タスクはまだありません。",
       "delete": "関連タスクの削除",
@@ -962,7 +962,7 @@
     "title": "チーム",
     "noTeams": "現在どのチームにも所属していません。",
     "create": {
-      "title": "新しいチームの作成",
+      "title": "Create a team",
       "success": "チームは正常に作成されました。"
     },
     "edit": {

@@ -53,7 +53,7 @@
       "loginWith": "Iihlogge mit {provider}",
       "authenticating": "Authentifiziere…",
       "openIdStateError": "Status stimmt nid überiih, ich verweigerä wiiter zmache!",
-      "openIdGeneralError": "Es ist ein Fehler bei der externen Authentisierung aufgetreten.",
+      "openIdGeneralError": "Es ist ein Fehler bei der externen Authentifizierung aufgetreten.",
       "logout": "Uuslogge",
       "emailInvalid": "Bitte gib eine gültige E-Mail-Adresse ein.",
       "usernameRequired": "Bitte gib einen Anmeldenamen ein.",
@@ -227,8 +227,8 @@
       "title": "„{project}“ archivieren",
       "archive": "Dieses Projekt archivieren",
       "unarchive": "Archivierung dieses Projekts aufheben",
-      "unarchiveText": "Du wirst neue Aufgaben erstellen oder sie bearbeiten können.",
-      "archiveText": "Du kannst dieses Projekt nicht bearbeiten oder neue Aufgaben erstellen, bis du die Archivierung aufhebst.",
+      "unarchiveText": "Du kannst Aufgaben erstellen oder diese bearbeiten.",
+      "archiveText": "Du kannst dieses Projekt nicht bearbeiten oder Aufgaben erstellen, bis du die Archivierung aufhebst.",
       "success": "Das Projekt wurde erfolgreich archiviert."
     },
     "background": {
@@ -277,7 +277,7 @@
         "title": "Linkfreigaben",
         "what": "Was ist eine Linkfreigabe?",
         "explanation": "Mit Linkfreigaben kannst Projekt du Listen mit Benutzer:innen ohne Vikunja-Account teilen.",
-        "create": "Erstelle ein neue Linkfreigabe",
+        "create": "Erstelle ein Linkfreigabe",
         "name": "Name (optional)",
         "namePlaceholder": "z.B. Lorem Ipsum",
         "nameExplanation": "Alle Aktionen, die mit dieser Linkfreigabe durchgeführt werden, werden mit diesem Namen angezeigt.",
@@ -317,9 +317,9 @@
     "list": {
       "title": "Liste",
       "add": "Hinzufügen",
-      "addPlaceholder": "Neue Aufgabe hinzufügen…",
+      "addPlaceholder": "Aufgabe hinzufügen…",
       "empty": "Dieses Project ist derzeit leer.",
-      "newTaskCta": "Eine neue Aufgabe erstellen.",
+      "newTaskCta": "Aufgabe erstellen.",
       "editTask": "Aufgabe bearbeiten"
     },
     "gantt": {
@@ -352,7 +352,7 @@
       "addTaskPlaceholder": "Gebe einen Aufgabentitel ein …",
       "addTask": "Eine Aufgabe hinzufügen",
       "addAnotherTask": "Weitere Aufgabe hinzufügen",
-      "addBucket": "Eine neue Spalte erstellen",
+      "addBucket": "Bucket erstellen",
       "addBucketPlaceholder": "Gebe einen Spaltentitel ein…",
       "deleteHeaderBucket": "Spalte löschen",
       "deleteBucketText1": "Bist du sicher, dass du diese Spalte löschen möchtest?",
@@ -423,7 +423,7 @@
     "create": {
       "title": "Neuer gespeicherter Filter",
       "description": "Ein gespeicherter Filter ist ein virtuelles Projekt, das bei jedem Zugriff aus einem Satz von Filtern errechnet wird.",
-      "action": "Neue gspeicherete Filter erstelle",
+      "action": "Gespeicherten Filter erstellen",
       "titleRequired": "Bitte gib den Titel für den Filter an."
     },
     "delete": {
@@ -507,7 +507,7 @@
     "search": "Schriib, um nachemne Label z'sueche…",
     "create": {
       "header": "Neus Label",
-      "title": "Neus Label erstelle",
+      "title": "Label erstellen",
       "titleRequired": "Bitte gib en Titl ah.",
       "success": "Da Label isch erfolgriich erstellt wore."
     },
@@ -528,7 +528,7 @@
   "sharing": {
     "authenticating": "Authentifiziere…",
     "passwordRequired": "Dieses geteilte Projekt benötigt ein Passwort. Bitte gebe es unten ein:",
-    "error": "Het en Fähler geh. :(",
+    "error": "Es ist ein Fehler aufgetreten.",
     "invalidPassword": "Da Passwort isch ungültig."
   },
   "navigation": {
@@ -642,7 +642,7 @@
       "placeholder": "Gib Text ein, drücke '/' für mehr Optionen…"
     },
     "multiselect": {
-      "createPlaceholder": "Neu erstelle",
+      "createPlaceholder": "Erstellen",
       "selectPlaceholder": "Druck uf Enter zum uuswähle"
     },
     "datepickerRange": {
@@ -721,10 +721,10 @@
   },
   "task": {
     "task": "Uufgab",
-    "new": "Neui Uufgab erstelle",
+    "new": "Aufgabe erstellen",
     "delete": "Die Uufgab chüble",
     "createSuccess": "Die Uufgab isch erfolgriich erstellt wordä.",
-    "addReminder": "Neui Errinnerig erstelle…",
+    "addReminder": "Eine Erinnerung hinzufügen…",
     "doneSuccess": "Die Uufgab isch erfolgriich als \"Fertig\" markiert wordä.",
     "undoneSuccess": "Die Uufgaab isch nüme als fertig markiert.",
     "undo": "Rückgängig",
@@ -860,7 +860,7 @@
       "unassignSuccess": "D'Zuewiisig vom Benutzer isch erfolgriich entfernt worde."
     },
     "label": {
-      "placeholder": "Schriib, um es neues Label hinzuezfüege…",
+      "placeholder": "Beginne zu schreiben, um ein Label hinzuzufügen…",
       "createPlaceholder": "Das als neues Label hinzuefüege",
       "addSuccess": "Das Label isch erfolgriich hinzuegfüegt worde.",
       "createSuccess": "Das Label isch erfolgriich erstellt worde.",
@@ -883,8 +883,8 @@
     "relation": {
       "add": "Neui Uufgabe Beziehig hinzuefüege",
       "new": "Neui Uufgabe Beziehig",
-      "searchPlaceholder": "Schriib, um e neui Uufgab als Zueghörigkeit hinzuezfüege…",
-      "createPlaceholder": "Das als en neui Zueghörigkeit hinzuefüege",
+      "searchPlaceholder": "Suche nach einer Aufgabe für diese Beziehung…",
+      "createPlaceholder": "Füge diese Aufgabe als Aufgabenbeziehung hinzu",
       "differentProject": "Diese Aufgabe gehört zu einem anderen Projekt.",
       "noneYet": "S'git kei Uufgabe Beziehige.",
       "delete": "Uufgabe Beziehig chüble",
@@ -962,7 +962,7 @@
     "title": "Teams",
     "noTeams": "Du hesch momentan kei Team Ahghörigkeit.",
     "create": {
-      "title": "E neus Team erstelle",
+      "title": "Team erstellen",
       "success": "Da Team isch erfolgriich erstellt wordä."
     },
     "edit": {
