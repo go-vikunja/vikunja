@@ -53,7 +53,7 @@
       "loginWith": "Přihlásit se pomocí {provider}",
       "authenticating": "Ověřování…",
       "openIdStateError": "Stav neodpovídá, odmítám pokračovat!",
-      "openIdGeneralError": "An error occurred while authenticating against the third party.",
+      "openIdGeneralError": "Došlo k chybě při ověřování proti třetí straně.",
       "logout": "Odhlásit se",
       "emailInvalid": "Prosím zadejte platnou emailovou adresu.",
       "usernameRequired": "Zadejte prosím uživatelské jméno.",
@@ -227,8 +227,8 @@
       "title": "Archivovat \"{project}\"",
       "archive": "Archivovat tento projekt",
       "unarchive": "Zrušit archivaci tohoto projektu",
-      "unarchiveText": "You will be able to create tasks or edit it.",
-      "archiveText": "You won't be able to edit this project or create tasks until you un-archive it.",
+      "unarchiveText": "Budete moci vytvářet úkoly nebo je upravovat.",
+      "archiveText": "Tento projekt nebudete moci upravovat ani v něm vytvářet nové úkoly, dokud jej neobnovíte z archivu.",
       "success": "Projekt byl úspěšně archivován."
     },
     "background": {
@@ -277,7 +277,7 @@
         "title": "Sdílené odkazy",
         "what": "Co je to sdílený odkaz?",
         "explanation": "Sdílené odkazy vám umožní snadno sdílet projekt s ostatními uživateli, kteří nemají účet na Vikunja.",
-        "create": "Create a link share",
+        "create": "Vytvořit sdílený odkaz",
         "name": "Název (volitelné)",
         "namePlaceholder": "např. Lorem Ipsum",
         "nameExplanation": "Všechny akce provedené tímto sdíleným odkazem se zobrazí s tímto názvem.",
@@ -317,9 +317,9 @@
     "list": {
       "title": "Seznam",
       "add": "Přidat",
-      "addPlaceholder": "Add a task…",
+      "addPlaceholder": "Přidat úkol…",
       "empty": "Tento projekt je zatím prázdný.",
-      "newTaskCta": "Create a task.",
+      "newTaskCta": "Vytvořit nový úkol.",
       "editTask": "Upravit úkol"
     },
     "gantt": {
@@ -352,7 +352,7 @@
       "addTaskPlaceholder": "Zadejte nový název úkolu…",
       "addTask": "Přidat úkol",
       "addAnotherTask": "Přidat další úkol",
-      "addBucket": "Create a bucket",
+      "addBucket": "Vytvořit nový sloupec",
       "addBucketPlaceholder": "Zadejte název nového sloupce…",
       "deleteHeaderBucket": "Smazat sloupec",
       "deleteBucketText1": "Opravdu chcete smazat tento sloupec?",
@@ -383,21 +383,21 @@
       "secretDocs": "Další podrobnosti o používání tajných klíčů naleznete v dokumentaci."
     },
     "views": {
-      "header": "Edit views",
-      "title": "Title",
-      "actions": "Actions",
-      "kind": "Kind",
-      "bucketConfigMode": "Bucket configuration mode",
-      "bucketConfig": "Bucket configuration",
-      "bucketConfigManual": "Manual",
-      "filter": "Filter",
-      "create": "Create view",
-      "createSuccess": "The view was created successfully.",
-      "titleRequired": "Please provide a title.",
-      "delete": "Delete this view",
-      "deleteText": "Are you sure you want to remove this view? It will no longer be possible to use it to view tasks in this project. This action won't delete any tasks. This cannot be undone!",
-      "deleteSuccess": "The view was successfully deleted",
-      "onlyAdminsCanEdit": "Only project admins can edit views."
+      "header": "Upravit pohled",
+      "title": "Název",
+      "actions": "Akce",
+      "kind": "Druh",
+      "bucketConfigMode": "Režim nastavení sloupce",
+      "bucketConfig": "Nastavení sloupce",
+      "bucketConfigManual": "Manuál",
+      "filter": "Filtr",
+      "create": "Vytvořit pohled",
+      "createSuccess": "Pohled byl úspěšně vytvořen.",
+      "titleRequired": "Zadejte prosím název.",
+      "delete": "Odstranit tento pohled",
+      "deleteText": "Jste si jisti, že chcete odstranit tento pohled? Nebude již možné jej použít k zobrazení úkolů v tomto projektu. Tato akce neodstraní žádné úkoly. Toto nelze vrátit zpět!",
+      "deleteSuccess": "Pohled byl úspěšně odstraněn",
+      "onlyAdminsCanEdit": "Pohledy mohou upravovat pouze správci projektu."
     }
   },
   "filters": {
@@ -423,7 +423,7 @@
     "create": {
       "title": "Nový uložený filtr",
       "description": "Uložený filtr je virtuální projekt, který se počítá ze sady filtrů pokaždé, když je k němu přistupováno.",
-      "action": "Create saved filter",
+      "action": "Vytvořit uložený filtr",
       "titleRequired": "Uveďte název filtru."
     },
     "delete": {
@@ -507,7 +507,7 @@
     "search": "Zadejte hledaný štítek…",
     "create": {
       "header": "Nový štítek",
-      "title": "Create a label",
+      "title": "Vytvořit štítek",
       "titleRequired": "Zadejte název prosím.",
       "success": "Štítek byl úspěšně vytvořen."
     },
@@ -528,7 +528,7 @@
   "sharing": {
     "authenticating": "Ověřování…",
     "passwordRequired": "Tento sdílený projekt vyžaduje heslo. Zadejte jej níže:",
-    "error": "An error occurred.",
+    "error": "Došlo k chybě.",
     "invalidPassword": "Neplatné heslo."
   },
   "navigation": {
@@ -642,7 +642,7 @@
       "placeholder": "Zadejte nějaký text nebo stiskněte '/' pro zobrazení více možností…"
     },
     "multiselect": {
-      "createPlaceholder": "Create",
+      "createPlaceholder": "Vytvořit",
       "selectPlaceholder": "Kliknutím nebo stisknutím klávesy Enter vyberte"
     },
     "datepickerRange": {
@@ -721,10 +721,10 @@
   },
   "task": {
     "task": "Úkol",
-    "new": "Create a task",
+    "new": "Vytvořit úkol",
     "delete": "Smazat tento úkol",
     "createSuccess": "Úkol byl úspěšně vytvořen.",
-    "addReminder": "Add a reminder…",
+    "addReminder": "Přidat připomínku…",
     "doneSuccess": "Úkol byl úspěšně označen jako dokončený.",
     "undoneSuccess": "Úkol byl úspěšně znovu otevřen.",
     "undo": "Vrátit zpět",
@@ -860,7 +860,7 @@
       "unassignSuccess": "Uživatel byl úspěšně vyloučen."
     },
     "label": {
-      "placeholder": "Type to add a label…",
+      "placeholder": "Pište pro přidání nového štítku…",
       "createPlaceholder": "Přidat toto jako nový štítek",
       "addSuccess": "Štítek byl úspěšně přidán.",
       "createSuccess": "Štítek byl úspěšně vytvořen.",
@@ -883,8 +883,8 @@
     "relation": {
       "add": "Přidat nový vztah úkolu",
       "new": "Nový vztah k úkolu",
-      "searchPlaceholder": "Type search for a task to add as related…",
-      "createPlaceholder": "Add this as related task",
+      "searchPlaceholder": "Hledejte úkol, který chcete přidat jako související…",
+      "createPlaceholder": "Přidat jako související úkol",
       "differentProject": "Tento úkol patří do jiného projektu.",
       "noneYet": "Zatím žádné vztahy mezi úkoly.",
       "delete": "Odstranit vztah k úloze",
@@ -922,7 +922,7 @@
       "every30d": "Každých 30 dní",
       "mode": "Režim opakování",
       "monthly": "Měsíčně",
-      "fromCurrentDate": "From completion date",
+      "fromCurrentDate": "Od data dokončení",
       "each": "Každý",
       "specifyAmount": "Zadejte množství…",
       "hours": "Hodin",
@@ -962,7 +962,7 @@
     "title": "Týmy",
     "noTeams": "Momentálně nejste v žádném týmu.",
     "create": {
-      "title": "Create a team",
+      "title": "Vytvořit tým",
       "success": "Tým byl úspěšně vytvořen."
     },
     "edit": {
@@ -1060,13 +1060,13 @@
     "duplicate": "Duplikovat",
     "delete": "Smazat",
     "unarchive": "Zrušit archivaci",
-    "setBackground": "Background settings",
+    "setBackground": "Nastavení pozadí",
     "share": "Sdílet",
     "newProject": "Nový projekt",
     "createProject": "Vytvořit projekt",
     "cantArchiveIsDefault": "Nemůžete archivovat svůj výchozí projekt.",
     "cantDeleteIsDefault": "Nemůžete smazat svůj výchozí projekt.",
-    "views": "Views"
+    "views": "Pohledy"
   },
   "apiConfig": {
     "url": "Vikunja URL",
@@ -1114,10 +1114,10 @@
     "altFormatShort": "j M Y"
   },
   "reaction": {
-    "reactedWith": "{user} reacted with {value}",
-    "reactedWithAnd": "{users} and {lastUser} reacted with {value}",
-    "reactedWithAndMany": "{users} and {num} more reacted reacted with {value}",
-    "add": "Add your reaction"
+    "reactedWith": "{user} zareagoval s {value}",
+    "reactedWithAnd": "{users} a {lastUser} zareagovali s {value}",
+    "reactedWithAndMany": "{users} a {num} zareagovali s {value}",
+    "add": "Přidejte svou reakci"
   },
   "error": {
     "error": "Chyba",

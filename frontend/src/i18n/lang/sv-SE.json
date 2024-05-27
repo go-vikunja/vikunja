@@ -642,7 +642,7 @@
       "placeholder": "Type some text or hit '/' to see more options…"
     },
     "multiselect": {
-      "createPlaceholder": "Create",
+      "createPlaceholder": "Skapa",
       "selectPlaceholder": "Klicka eller tryck på enter för att välja"
     },
     "datepickerRange": {
@@ -721,10 +721,10 @@
   },
   "task": {
     "task": "Uppgift",
-    "new": "Create a task",
+    "new": "Skapa en uppgift",
     "delete": "Delete this task",
     "createSuccess": "The task was successfully created.",
-    "addReminder": "Add a reminder…",
+    "addReminder": "Lägg till en påminnelse…",
     "doneSuccess": "The task was successfully marked as done.",
     "undoneSuccess": "The task was successfully un-marked as done.",
     "undo": "Ångra",
