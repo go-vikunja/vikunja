@@ -273,7 +273,7 @@ async function viewOrDownload(attachment: IAttachment) {
 }
 
 function canPreview(attachment: IAttachment): boolean {
-	return SUPPORTED_IMAGE_SUFFIX.some((suffix) => attachment.file.name.endsWith(suffix))
+	return SUPPORTED_IMAGE_SUFFIX.some((suffix) => attachment.file.name.toLowerCase().endsWith(suffix))
 }
 
 const copy = useCopyToClipboard()

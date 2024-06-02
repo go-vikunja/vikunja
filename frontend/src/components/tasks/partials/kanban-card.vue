@@ -162,7 +162,7 @@ async function maybeDownloadCoverImage() {
 	}
 
 	const attachment = task.attachments.find(a => a.id === task.coverImageAttachmentId)
-	if (!attachment || !SUPPORTED_IMAGE_SUFFIX.some((suffix) => attachment.file.name.endsWith(suffix))) {
+	if (!attachment || !SUPPORTED_IMAGE_SUFFIX.some((suffix) => attachment.file.name.toLowerCase().endsWith(suffix))) {
 		return
 	}
 
