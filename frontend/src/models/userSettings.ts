@@ -3,6 +3,7 @@ import AbstractModel from './abstractModel'
 import type {IFrontendSettings, IUserSettings} from '@/modelTypes/IUserSettings'
 import {getBrowserLanguage} from '@/i18n'
 import {PrefixMode} from '@/modules/parseTaskText'
+import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/modelTypes/IProjectView'
 
 export default class UserSettingsModel extends AbstractModel<IUserSettings> implements IUserSettings {
 	name = ''
@@ -19,6 +20,7 @@ export default class UserSettingsModel extends AbstractModel<IUserSettings> impl
 		playSoundWhenDone: true,
 		quickAddMagicMode: PrefixMode.Default,
 		colorSchema: 'auto',
+		defaultView: DEFAULT_PROJECT_VIEW_SETTINGS.FIRST,
 	}
 
 	constructor(data: Partial<IUserSettings> = {}) {

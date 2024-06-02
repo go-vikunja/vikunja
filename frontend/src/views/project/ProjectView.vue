@@ -8,6 +8,8 @@ import ProjectList from '@/components/project/views/ProjectList.vue'
 import ProjectGantt from '@/components/project/views/ProjectGantt.vue'
 import ProjectTable from '@/components/project/views/ProjectTable.vue'
 import ProjectKanban from '@/components/project/views/ProjectKanban.vue'
+import {useAuthStore} from '@/stores/auth'
+import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/modelTypes/IProjectView'
 
 const {
 	projectId,
@@ -19,6 +21,7 @@ const {
 
 const router = useRouter()
 const projectStore = useProjectStore()
+const authStore = useAuthStore()
 
 const currentView = computed(() => {
 	const project = projectStore.projects[projectId]
@@ -26,17 +29,27 @@ const currentView = computed(() => {
 	return project?.views.find(v => v.id === viewId)
 })
 
-function redirectToFirstViewIfNecessary() {
+function redirectToDefaultViewIfNecessary() {
 	if (viewId === 0 || !projectStore.projects[projectId]?.views.find(v => v.id === viewId)) {
 		// Ideally, we would do that in the router redirect, but the projects (and therefore, the views) 
 		// are not always loaded then.
-		const firstViewId = projectStore.projects[projectId]?.views[0].id
-		if (firstViewId) {
+
+		let view
+		if (authStore.settings.frontendSettings.defaultView !== DEFAULT_PROJECT_VIEW_SETTINGS.FIRST) {
+			view = projectStore.projects[projectId]?.views.find(v => v.viewKind === authStore.settings.frontendSettings.defaultView)
+		}
+
+		// Use the first view as fallback if the default view is not available
+		if (view === undefined && projectStore.projects[projectId]?.views?.length > 0) {
+			view = projectStore.projects[projectId]?.views[0]
+		}
+
+		if (view) {
 			router.replace({
 				name: 'project.view',
 				params: {
 					projectId,
-					viewId: firstViewId,
+					viewId: view.id,
 				},
 			})
 		}
@@ -45,13 +58,13 @@ function redirectToFirstViewIfNecessary() {
 
 watch(
 	() => viewId,
-	redirectToFirstViewIfNecessary,
+	redirectToDefaultViewIfNecessary,
 	{immediate: true},
 )
 
 watch(
 	() => projectStore.projects[projectId],
-	redirectToFirstViewIfNecessary,
+	redirectToDefaultViewIfNecessary,
 )
 
 // using a watcher instead of beforeEnter because beforeEnter is not called when only the viewId changes

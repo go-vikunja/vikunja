@@ -26,6 +26,22 @@
 			</label>
 			<ProjectSearch v-model="defaultProject" />
 		</div>
+		<div class="field">
+			<label class="label">
+				{{ $t('user.settings.general.defaultView') }}
+			</label>
+			<div class="select">
+				<select v-model="settings.frontendSettings.defaultView">
+					<option
+						v-for="view in DEFAULT_PROJECT_VIEW_SETTINGS"
+						:key="view"
+						:value="view"
+					>
+						{{ $t(`project.${view}.title`) }}
+					</option>
+				</select>
+			</div>
+		</div>
 		<div
 			v-if="hasFilters"
 			class="field"
@@ -221,6 +237,7 @@ import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
 import type {IUserSettings} from '@/modelTypes/IUserSettings'
 import {isSavedFilter} from '@/services/savedFilter'
+import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/modelTypes/IProjectView'
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.settings.general.title')} - ${t('user.settings.title')}`)
@@ -253,12 +270,15 @@ function useAvailableTimezones() {
 const availableTimezones = useAvailableTimezones()
 
 const authStore = useAuthStore()
+
 const settings = ref<IUserSettings>({
 	...authStore.settings,
 	frontendSettings: {
 		// Sub objects get exported as read only as well, so we need to 
 		// explicitly spread the object here to allow modification
 		...authStore.settings.frontendSettings,
+		// Add fallback for old settings that don't have the default view set
+		defaultView: authStore.settings.frontendSettings.defaultView ?? DEFAULT_PROJECT_VIEW_SETTINGS.FIRST,
 	},
 })
 const id = ref(createRandomID())

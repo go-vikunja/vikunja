@@ -4,12 +4,14 @@ import type {IProject} from './IProject'
 import type {PrefixMode} from '@/modules/parseTaskText'
 import type {BasicColorSchema} from '@vueuse/core'
 import type {SupportedLocale} from '@/i18n'
+import type {DefaultProjectViewKind} from '@/modelTypes/IProjectView'
 
 export interface IFrontendSettings {
 	playSoundWhenDone: boolean
 	quickAddMagicMode: PrefixMode
 	colorSchema: BasicColorSchema
 	filterIdUsedOnOverview: IProject['id'] | null
+	defaultView?: DefaultProjectViewKind
 }
 
 export interface IUserSettings extends IAbstract {
