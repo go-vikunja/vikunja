@@ -53,15 +53,15 @@
       "loginWith": "{provider}でログイン",
       "authenticating": "認証中…",
       "openIdStateError": "stateパラメータが一致しないため処理を中断しました。",
-      "openIdGeneralError": "An error occurred while authenticating against the third party.",
+      "openIdGeneralError": "認証中にエラーが発生しました。",
       "logout": "ログアウト",
       "emailInvalid": "有効なメールアドレスを入力してください。",
       "usernameRequired": "ユーザー名を入力してください。",
-      "usernameMustNotContainSpace": "The username must not contain spaces.",
+      "usernameMustNotContainSpace": "ユーザー名にスペースを含めてはいけません。",
       "usernameMustNotLookLikeUrl": "The username must not look like a URL.",
       "passwordRequired": "パスワードを入力してください。",
-      "passwordNotMin": "Password must have at least 8 characters.",
-      "passwordNotMax": "Password must have at most 250 characters.",
+      "passwordNotMin": "パスワードは8文字以上でなければなりません。",
+      "passwordNotMax": "パスワードは250文字以内でなければなりません。",
       "showPassword": "パスワードの表示",
       "hidePassword": "パスワードの非表示",
       "noAccountYet": "まだアカウントをお持ちでないですか？",
@@ -152,8 +152,8 @@
       },
       "apiTokens": {
         "title": "APIトークン",
-        "general": "API tokens allow you to use Vikunja's API without user credentials.",
-        "apiDocs": "Check out the api docs",
+        "general": "APIトークンは、認証されたVikunja APIのリクエストを行うことができます。",
+        "apiDocs": "詳しくはAPIドキュメントをご確認ください",
         "createAToken": "トークンの生成",
         "createToken": "トークンの生成",
         "30d": "30日",
@@ -227,8 +227,8 @@
       "title": "「{project}」のアーカイブ",
       "archive": "プロジェクトのアーカイブ",
       "unarchive": "プロジェクトのアーカイブの取り消し",
-      "unarchiveText": "You will be able to create tasks or edit it.",
-      "archiveText": "You won't be able to edit this project or create tasks until you un-archive it.",
+      "unarchiveText": "タスクの作成や編集を行えるようになります。",
+      "archiveText": "アーカイブを取り消すまで、このプロジェクトではタスクの作成や編集を行うことができません。",
       "success": "プロジェクトは正常にアーカイブされました。"
     },
     "background": {
@@ -277,7 +277,7 @@
         "title": "リンクの共有",
         "what": "共有リンクとは何ですか？",
         "explanation": "共有リンクとは、Vikunjaのアカウントを持たない他のユーザーとプロジェクトを簡単に共有することができる機能です。",
-        "create": "Create a link share",
+        "create": "共有リンクの作成",
         "name": "名前 (オプション)",
         "namePlaceholder": "例: Lorem Ipsum",
         "nameExplanation": "この共有リンクで行われた操作はすべてこの名前で表示されるようになります。",
@@ -317,9 +317,9 @@
     "list": {
       "title": "リスト",
       "add": "追加",
-      "addPlaceholder": "Add a task…",
+      "addPlaceholder": "タスクを追加…",
       "empty": "このプロジェクトにはタスクが存在しません。",
-      "newTaskCta": "Create a task.",
+      "newTaskCta": "タスクを作成してください。",
       "editTask": "タスクの編集"
     },
     "gantt": {
@@ -352,7 +352,7 @@
       "addTaskPlaceholder": "新しいタスク名を入力…",
       "addTask": "タスクの追加",
       "addAnotherTask": "他のタスクを追加",
-      "addBucket": "Create a bucket",
+      "addBucket": "バケットの作成",
       "addBucketPlaceholder": "新しいバケット名を入力…",
       "deleteHeaderBucket": "バケットの削除",
       "deleteBucketText1": "このバケットを削除して本当によろしいですか？",
@@ -369,18 +369,18 @@
     },
     "webhooks": {
       "title": "Webhook",
-      "targetUrl": "Target URL",
-      "targetUrlInvalid": "Please provide a valid URL.",
-      "events": "Events",
-      "eventsHint": "Select all events this webhook should recieve updates for (within the current project).",
-      "mustSelectEvents": "You must select at least one event.",
+      "targetUrl": "ターゲットURL",
+      "targetUrlInvalid": "有効なURLを入力してください。",
+      "events": "イベント",
+      "eventsHint": "Webhookが受信する (現在のプロジェクト内での) イベントを選択します。",
+      "mustSelectEvents": "イベントを少なくとも1つ選択する必要があります。",
       "delete": "Webhookの削除",
-      "deleteText": "Are you sure you want to delete this webhook? External targets will not be notified of its events anymore.",
+      "deleteText": "このWebhookを削除して本当によろしいですか？このWebhookのターゲットURLにはイベントは送信されなくなります。",
       "deleteSuccess": "Webhookは正常に削除されました。",
-      "create": "Create webhook",
-      "secret": "Secret",
-      "secretHint": "If provided, all requests to the webhook target URL will be signed using HMAC.",
-      "secretDocs": "Check out the docs for more details about how to use secrets."
+      "create": "Webhookを作成",
+      "secret": "シークレット",
+      "secretHint": "シークレットを指定した場合、WebhookターゲットURLへのリクエストはすべてHMAC署名されます。",
+      "secretDocs": "シークレットに関する詳細はドキュメントをご確認ください。"
     },
     "views": {
       "header": "Edit views",
@@ -423,7 +423,7 @@
     "create": {
       "title": "新しい絞り込み条件の作成",
       "description": "絞り込み条件は、複数の条件を組み合わせて保存できる仮想のプロジェクトです。",
-      "action": "Create saved filter",
+      "action": "絞り込み条件を作成",
       "titleRequired": "絞り込み条件名を入力してください。"
     },
     "delete": {
@@ -507,7 +507,7 @@
     "search": "ラベルのキーワードを入力…",
     "create": {
       "header": "新しいラベルの作成",
-      "title": "Create a label",
+      "title": "ラベルの作成",
       "titleRequired": "ラベル名を入力してください。",
       "success": "ラベルは正常に作成されました。"
     },
@@ -528,7 +528,7 @@
   "sharing": {
     "authenticating": "認証中…",
     "passwordRequired": "この共有プロジェクトにはパスワードが必要です。パスワードを入力してください:",
-    "error": "An error occurred.",
+    "error": "エラーが発生しました。",
     "invalidPassword": "無効なパスワードです。"
   },
   "navigation": {
@@ -642,7 +642,7 @@
       "placeholder": "Type some text or hit '/' to see more options…"
     },
     "multiselect": {
-      "createPlaceholder": "Create",
+      "createPlaceholder": "作成",
       "selectPlaceholder": "クリックするかEnterキーを押して選択"
     },
     "datepickerRange": {
@@ -721,10 +721,10 @@
   },
   "task": {
     "task": "タスク",
-    "new": "Create a task",
+    "new": "タスクの作成",
     "delete": "タスクの削除",
     "createSuccess": "タスクは正常に作成されました。",
-    "addReminder": "Add a reminder…",
+    "addReminder": "リマイダーを作成…",
     "doneSuccess": "タスクを完了にしました。",
     "undoneSuccess": "タスクを未完了に戻しました。",
     "undo": "元に戻す",
@@ -860,7 +860,7 @@
       "unassignSuccess": "担当者から正常に解除されました。"
     },
     "label": {
-      "placeholder": "Type to add a label…",
+      "placeholder": "追加するラベルを入力…",
       "createPlaceholder": "新しいラベルを追加",
       "addSuccess": "ラベルは正常に追加されました。",
       "createSuccess": "ラベルは正常に作成されました。",
@@ -883,8 +883,8 @@
     "relation": {
       "add": "新しい関連タスクの追加",
       "new": "新しい関連タスクの作成",
-      "searchPlaceholder": "Type search for a task to add as related…",
-      "createPlaceholder": "Add this as related task",
+      "searchPlaceholder": "追加する関連タスクのキーワードを入力…",
+      "createPlaceholder": "関連タスクを追加",
       "differentProject": "This task belongs to a different project.",
       "noneYet": "関連タスクはまだありません。",
       "delete": "関連タスクの削除",
@@ -922,7 +922,7 @@
       "every30d": "30日ごと",
       "mode": "繰り返しモード",
       "monthly": "毎月",
-      "fromCurrentDate": "From completion date",
+      "fromCurrentDate": "完了からの間隔",
       "each": "隔",
       "specifyAmount": "数字を入力…",
       "hours": "時間ごと",
@@ -962,7 +962,7 @@
     "title": "チーム",
     "noTeams": "現在どのチームにも所属していません。",
     "create": {
-      "title": "Create a team",
+      "title": "チームの作成",
       "success": "チームは正常に作成されました。"
     },
     "edit": {
@@ -1051,8 +1051,8 @@
     }
   },
   "update": {
-    "available": "There is an update available!",
-    "do": "Update Now"
+    "available": "アップデートがあります！",
+    "do": "アップデート"
   },
   "menu": {
     "edit": "編集",
@@ -1060,12 +1060,12 @@
     "duplicate": "複製",
     "delete": "削除",
     "unarchive": "アーカイブの取り消し",
-    "setBackground": "Background settings",
+    "setBackground": "背景画像の設定",
     "share": "共有",
     "newProject": "新しいプロジェクトの作成",
     "createProject": "プロジェクトの作成",
-    "cantArchiveIsDefault": "You cannot archive this because it is your default project.",
-    "cantDeleteIsDefault": "You cannot delete this because it is your default project.",
+    "cantArchiveIsDefault": "デフォルトのプロジェクトのためアーカイブできません。",
+    "cantDeleteIsDefault": "デフォルトのプロジェクトのため削除できません。",
     "views": "Views"
   },
   "apiConfig": {
@@ -1146,7 +1146,7 @@
     "3005": "The project title cannot be empty.",
     "3006": "その共有プロジェクトは存在しません。",
     "3007": "A project with this identifier already exists.",
-    "3008": "The project is archived and can therefore only be accessed read only. This is also true for all tasks associated with this project.",
+    "3008": "このプロジェクトはアーカイブ済みのため読み取り専用です。またプロジェクトに関連するタスクも同様です。",
     "4001": "The project task text cannot be empty.",
     "4002": "そのプロジェクトのタスクは存在しません。",
     "4003": "All bulk editing tasks must belong to the same project.",
@@ -1192,7 +1192,7 @@
   },
   "about": {
     "title": "Vikunjaについて",
-    "version": "Version: {version}"
+    "version": "バージョン: {version}"
   },
   "time": {
     "units": {
