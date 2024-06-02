@@ -23,7 +23,6 @@ export VIKUNJA_FIRST_CHILD=true
 is the same as defining it in a `config.yml` like so:
 
 ```yaml
-```yaml
 first:
     child: true
 ```
