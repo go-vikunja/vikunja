@@ -299,6 +299,8 @@ func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, op
 		}
 	}
 
+	opts.search = strings.TrimSpace(opts.search)
+
 	tasks, totalItems, err = searcher.Search(opts)
 	return tasks, len(tasks), totalItems, err
 }
