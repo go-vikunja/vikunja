@@ -656,7 +656,7 @@ func checkBucketLimit(s *xorm.Session, t *Task, bucket *Bucket) (err error) {
 
 // Contains all the task logic to figure out what bucket to use for this task.
 func setTaskBucket(s *xorm.Session, task *Task, originalTask *Task, view *ProjectView, targetBucketID int64) (err error) {
-	if view.BucketConfigurationMode == BucketConfigurationModeNone {
+	if view.BucketConfigurationMode != BucketConfigurationModeManual {
 		return
 	}
 
