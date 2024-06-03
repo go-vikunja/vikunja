@@ -111,6 +111,7 @@ async function saveView() {
 		>
 			<XButton
 				:loading="projectViewService.loading"
+				:disabled="showCreateForm && newView.title === ''"
 				@click="createView"
 			>
 				{{ $t('project.views.create') }}
@@ -144,22 +145,11 @@ async function saveView() {
 							<ViewEditForm
 								v-model="viewToEdit"
 								class="mb-4"
+								:loading="projectViewService.loading"
+								:show-save-buttons="true"
+								@cancel="viewToEdit = null"
+								@update:modelValue="saveView"
 							/>
-							<div class="is-flex is-justify-content-end">
-								<XButton
-									variant="tertiary"
-									class="mr-2"
-									@click="viewToEdit = null"
-								>
-									{{ $t('misc.cancel') }}
-								</XButton>
-								<XButton
-									:loading="projectViewService.loading"
-									@click="saveView"
-								>
-									{{ $t('misc.save') }}
-								</XButton>
-							</div>
 						</td>
 					</template>
 					<template v-else>

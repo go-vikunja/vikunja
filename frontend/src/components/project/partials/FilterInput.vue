@@ -35,6 +35,11 @@ const {
 
 const emit = defineEmits(['update:modelValue', 'blur'])
 
+const userService = new UserService()
+const projectUserService = new ProjectUserService()
+const labelStore = useLabelStore()
+const projectStore = useProjectStore()
+
 const filterQuery = ref<string>('')
 const {
 	textarea: filterInput,
@@ -59,9 +64,6 @@ watch(
 		}
 	},
 )
-
-const userService = new UserService()
-const projectUserService = new ProjectUserService()
 
 function escapeHtml(unsafe: string): string {
 	return unsafe
@@ -196,8 +198,6 @@ const autocompleteMatchText = ref('')
 const autocompleteResultType = ref<'labels' | 'assignees' | 'projects' | null>(null)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const autocompleteResults = ref<any[]>([])
-const labelStore = useLabelStore()
-const projectStore = useProjectStore()
 
 function handleFieldInput() {
 	const cursorPosition = filterInput.value.selectionStart

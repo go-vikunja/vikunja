@@ -2,77 +2,86 @@
 import type {IProjectView} from '@/modelTypes/IProjectView'
 import XButton from '@/components/input/button.vue'
 import FilterInput from '@/components/project/partials/FilterInput.vue'
-import {ref, watch} from 'vue'
+import {ref, onBeforeMount} from 'vue'
 import {transformFilterStringForApi, transformFilterStringFromApi} from '@/helpers/filters'
 import {useLabelStore} from '@/stores/labels'
 import {useProjectStore} from '@/stores/projects'
 
 const {
 	modelValue,
+	loading = false,
+	showSaveButtons = false,
 } = defineProps<{
 	modelValue: IProjectView,
+	loading?: bool,
+	showSaveButtons?: bool,
 }>()
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'cancel'])
 
 const view = ref<IProjectView>()
 
 const labelStore = useLabelStore()
 const projectStore = useProjectStore()
 
-watch(
-	() => modelValue,
-	newValue => {
-		
-		const transform = filterString => transformFilterStringFromApi(
-			filterString,
-			labelId => labelStore.getLabelById(labelId)?.title,
-			projectId => projectStore.projects[projectId]?.title || null,
-		)
-		
-		const transformed = {
-			...newValue,
-			filter: transform(newValue.filter),
-			bucketConfiguration: newValue.bucketConfiguration.map(bc => ({
-				title: bc.title,
-				filter: transform(bc.filter),
-			})),
-		}
+onBeforeMount(() => {
+	const transform = filterString => transformFilterStringFromApi(
+		filterString,
+		labelId => labelStore.getLabelById(labelId)?.title,
+		projectId => projectStore.projects[projectId]?.title || null,
+	)
 
-		if (JSON.stringify(view.value) !== JSON.stringify(transformed)) {
-			view.value = transformed
-		}
-	},
-	{immediate: true, deep: true},
-)
+	const transformed = {
+		...modelValue,
+		filter: transform(modelValue.filter),
+		bucketConfiguration: modelValue.bucketConfiguration.map(bc => ({
+			title: bc.title,
+			filter: transform(bc.filter),
+		})),
+	}
 
-watch(
-	() => view.value,
-	newView => {
-		emit('update:modelValue', {
-			...newView,
-			filter: transformFilterStringForApi(
-				newView.filter,
-				labelTitle => labelStore.filterLabelsByQuery([], labelTitle)[0]?.id || null,
-				projectTitle => {
-					const found = projectStore.findProjectByExactname(projectTitle)
-					return found?.id || null
-				},
-			),
-		})
-	},
-	{deep: true},
-)
+	if (JSON.stringify(view.value) !== JSON.stringify(transformed)) {
+		view.value = transformed
+	}
+})
+
+function save() {
+	const transformFilter = filterQuery => transformFilterStringForApi(
+		filterQuery,
+		labelTitle => labelStore.filterLabelsByQuery([], labelTitle)[0]?.id || null,
+		projectTitle => {
+			const found = projectStore.findProjectByExactname(projectTitle)
+			return found?.id || null
+		},
+	)
+
+	emit('update:modelValue', {
+		...view.value,
+		filter: transformFilter(view.value?.filter),
+		bucketConfiguration: view.value?.bucketConfiguration.map(bc => ({
+			title: bc.title,
+			filter: transformFilter(bc.filter),
+		})),
+	})
+}
 
 const titleValid = ref(true)
 
 function validateTitle() {
 	titleValid.value = view.value?.title !== ''
 }
+
+function handleBubbleSave() {
+	if (showSaveButtons) {
+		return
+	}
+
+	save()
+}
 </script>
 
 <template>
-	<form>
+	<form @focusout="handleBubbleSave">
 		<div class="field">
 			<label
 				class="label"
@@ -130,6 +139,7 @@ function validateTitle() {
 
 		<FilterInput
 			v-model="view.filter"
+			:project-id="view.projectId"
 			:input-label="$t('project.views.filter')"
 		/>
 
@@ -199,6 +209,7 @@ function validateTitle() {
 
 						<FilterInput
 							v-model="view.bucketConfiguration[index].filter"
+							:project-id="view.projectId"
 							:input-label="$t('project.views.filter')"
 						/>
 					</div>
@@ -213,6 +224,24 @@ function validateTitle() {
 					</XButton>
 				</div>
 			</div>
+		</div>
+		<div
+			v-if="showSaveButtons"
+			class="is-flex is-justify-content-end"
+		>
+			<XButton
+				variant="tertiary"
+				class="mr-2"
+				@click="emit('cancel')"
+			>
+				{{ $t('misc.cancel') }}
+			</XButton>
+			<XButton
+				:loading="loading"
+				@click="save"
+			>
+				{{ $t('misc.save') }}
+			</XButton>
 		</div>
 	</form>
 </template>
