@@ -23,13 +23,20 @@ const projectStore = useProjectStore()
 watch(
 	() => modelValue,
 	newValue => {
+		
+		const transform = filterString => transformFilterStringFromApi(
+			filterString,
+			labelId => labelStore.getLabelById(labelId)?.title,
+			projectId => projectStore.projects[projectId]?.title || null,
+		)
+		
 		const transformed = {
 			...newValue,
-			filter: transformFilterStringFromApi(
-				newValue.filter,
-				labelId => labelStore.getLabelById(labelId)?.title,
-				projectId => projectStore.projects[projectId]?.title || null,
-			),
+			filter: transform(newValue.filter),
+			bucketConfiguration: newValue.bucketConfiguration.map(bc => ({
+				title: bc.title,
+				filter: transform(bc.filter),
+			})),
 		}
 
 		if (JSON.stringify(view.value) !== JSON.stringify(transformed)) {
