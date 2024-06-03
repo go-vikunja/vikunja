@@ -211,8 +211,8 @@ func RegisterRoutes(e *echo.Echo) {
 
 	// API Routes
 	a := e.Group("/api/v1")
-	e.OnAddRouteHandler = func(_ string, route echo.Route, _ echo.HandlerFunc, _ []echo.MiddlewareFunc) {
-		models.CollectRoutesForAPITokenUsage(route)
+	e.OnAddRouteHandler = func(_ string, route echo.Route, _ echo.HandlerFunc, middlewares []echo.MiddlewareFunc) {
+		models.CollectRoutesForAPITokenUsage(route, middlewares)
 	}
 	registerAPIRoutes(a)
 }

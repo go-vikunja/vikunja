@@ -47,7 +47,17 @@ const flatPickerConfig = computed(() => ({
 
 onMounted(async () => {
 	tokens.value = await service.getAll()
-	availableRoutes.value = await service.getAvailableRoutes()
+	const allRoutes = await service.getAvailableRoutes()
+
+	const routesAvailable = {}
+	const keys = Object.keys(allRoutes)
+	keys.sort((a, b) => (a === 'other' ? 1 : b === 'other' ? -1 : 0))
+	keys.forEach(key => {
+		routesAvailable[key] = allRoutes[key]
+	})
+	
+	availableRoutes.value = routesAvailable
+	
 	resetPermissions()
 })
 

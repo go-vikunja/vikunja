@@ -18,6 +18,8 @@ package models
 
 import (
 	"net/http"
+	"reflect"
+	"runtime"
 	"strings"
 
 	"code.vikunja.io/api/pkg/log"
@@ -25,28 +27,22 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-var apiTokenRoutes = map[string]*APITokenRoute{}
+var apiTokenRoutes = map[string]APITokenRoute{}
 
 func init() {
-	apiTokenRoutes = make(map[string]*APITokenRoute)
+	apiTokenRoutes = make(map[string]APITokenRoute)
 }
 
-type APITokenRoute struct {
-	Create  *RouteDetail `json:"create,omitempty"`
-	ReadOne *RouteDetail `json:"read_one,omitempty"`
-	ReadAll *RouteDetail `json:"read_all,omitempty"`
-	Update  *RouteDetail `json:"update,omitempty"`
-	Delete  *RouteDetail `json:"delete,omitempty"`
-}
+type APITokenRoute map[string]*RouteDetail
 
 type RouteDetail struct {
 	Path   string `json:"path"`
 	Method string `json:"method"`
 }
 
-func getRouteGroupName(path string) string {
+func getRouteGroupName(path string) (finalName string, filteredParts []string) {
 	parts := strings.Split(strings.TrimPrefix(path, "/api/v1/"), "/")
-	filteredParts := []string{}
+	filteredParts = []string{}
 	for _, part := range parts {
 		if strings.HasPrefix(part, ":") {
 			continue
@@ -55,63 +51,116 @@ func getRouteGroupName(path string) string {
 		filteredParts = append(filteredParts, part)
 	}
 
-	finalName := strings.Join(filteredParts, "_")
+	finalName = strings.Join(filteredParts, "_")
 	switch finalName {
 	case "projects_tasks":
 		fallthrough
 	case "tasks_all":
-		return "tasks"
+		return "tasks", []string{"tasks"}
 	default:
-		return finalName
+		return finalName, filteredParts
 	}
 }
 
 // CollectRoutesForAPITokenUsage gets called for every added APITokenRoute and builds a list of all routes we can use for the api tokens.
-func CollectRoutesForAPITokenUsage(route echo.Route) {
+func CollectRoutesForAPITokenUsage(route echo.Route, middlewares []echo.MiddlewareFunc) {
 
-	if !strings.Contains(route.Name, "(*WebHandler)") && !strings.Contains(route.Name, "Attachment") {
+	if route.Method == "echo_route_not_found" {
 		return
 	}
 
-	routeGroupName := getRouteGroupName(route.Path)
+	seenJWT := false
+	for _, middleware := range middlewares {
+		if strings.Contains(runtime.FuncForPC(reflect.ValueOf(middleware).Pointer()).Name(), "github.com/labstack/echo-jwt/") {
+			seenJWT = true
+		}
+	}
 
-	if routeGroupName == "subscriptions" ||
+	if !seenJWT {
+		return
+	}
+
+	routeGroupName, routeParts := getRouteGroupName(route.Path)
+
+	if routeGroupName == "user" ||
+		routeGroupName == "tokenTest" ||
+		routeGroupName == "subscriptions" ||
 		routeGroupName == "tokens" ||
+		routeGroupName == "*" ||
+		strings.HasPrefix(routeGroupName, "user_") ||
 		strings.HasSuffix(routeGroupName, "_bulk") {
+		return
+	}
+
+	if !strings.Contains(route.Name, "(*WebHandler)") && !strings.Contains(route.Name, "Attachment") {
+		routeDetail := &RouteDetail{
+			Path:   route.Path,
+			Method: route.Method,
+		}
+		// We're trying to add routes to the routes of a matching "parent" - for
+		// example, projects_background should show up under "projects".
+		// To do this, we check if the route is a sub route of some other route
+		// and if that's the case, add it to its parent instead.
+		// Otherwise, we add it to the "other" key.
+		if len(routeParts) == 1 {
+			if _, has := apiTokenRoutes["other"]; !has {
+				apiTokenRoutes["other"] = make(APITokenRoute)
+			}
+
+			_, exists := apiTokenRoutes["other"][routeGroupName]
+			if exists {
+				routeGroupName += "_" + strings.ToLower(route.Method)
+			}
+			apiTokenRoutes["other"][routeGroupName] = routeDetail
+			return
+		}
+
+		subkey := strings.Join(routeParts[1:], "_")
+
+		if _, has := apiTokenRoutes[routeParts[0]]; !has {
+			apiTokenRoutes[routeParts[0]] = make(APITokenRoute)
+		}
+
+		if _, has := apiTokenRoutes[routeParts[0]][subkey]; has {
+			subkey += "_" + strings.ToLower(route.Method)
+		}
+
+		apiTokenRoutes[routeParts[0]][subkey] = routeDetail
+
 		return
 	}
 
 	_, has := apiTokenRoutes[routeGroupName]
 	if !has {
-		apiTokenRoutes[routeGroupName] = &APITokenRoute{}
+		apiTokenRoutes[routeGroupName] = make(APITokenRoute)
 	}
 
 	if strings.Contains(route.Name, "CreateWeb") {
-		apiTokenRoutes[routeGroupName].Create = &RouteDetail{
+		apiTokenRoutes[routeGroupName]["create"] = &RouteDetail{
 			Path:   route.Path,
 			Method: route.Method,
 		}
 	}
 	if strings.Contains(route.Name, "ReadOneWeb") {
-		apiTokenRoutes[routeGroupName].ReadOne = &RouteDetail{
+		apiTokenRoutes[routeGroupName]["read_one"] = &RouteDetail{
 			Path:   route.Path,
 			Method: route.Method,
 		}
 	}
 	if strings.Contains(route.Name, "ReadAllWeb") {
-		apiTokenRoutes[routeGroupName].ReadAll = &RouteDetail{
+		apiTokenRoutes[routeGroupName]["read_all"] = &RouteDetail{
 			Path:   route.Path,
 			Method: route.Method,
 		}
 	}
 	if strings.Contains(route.Name, "UpdateWeb") {
-		apiTokenRoutes[routeGroupName].Update = &RouteDetail{
+		apiTokenRoutes[routeGroupName]["update"] = &RouteDetail{
 			Path:   route.Path,
 			Method: route.Method,
 		}
 	}
 	if strings.Contains(route.Name, "DeleteWeb") {
-		apiTokenRoutes[routeGroupName].Delete = &RouteDetail{
+		apiTokenRoutes[routeGroupName]["delete"] = &RouteDetail{
 			Path:   route.Path,
 			Method: route.Method,
 		}
@@ -119,13 +168,13 @@ func CollectRoutesForAPITokenUsage(route echo.Route) {
 
 	if routeGroupName == "tasks_attachments" {
 		if strings.Contains(route.Name, "UploadTaskAttachment") {
-			apiTokenRoutes[routeGroupName].Create = &RouteDetail{
+			apiTokenRoutes[routeGroupName]["create"] = &RouteDetail{
 				Path:   route.Path,
 				Method: route.Method,
 			}
 		}
 		if strings.Contains(route.Name, "GetTaskAttachment") {
-			apiTokenRoutes[routeGroupName].ReadOne = &RouteDetail{
+			apiTokenRoutes[routeGroupName]["read_one"] = &RouteDetail{
 				Path:   route.Path,
 				Method: route.Method,
 			}
@@ -149,37 +198,44 @@ func GetAvailableAPIRoutesForToken(c echo.Context) error {
 func CanDoAPIRoute(c echo.Context, token *APIToken) (can bool) {
 	path := c.Path()
 	if path == "" {
-		// c.Path() is empty during testing, but returns the path which the route used during registration
-		// which is what we need.
+		// c.Path() is empty during testing, but returns the path which
+		// the route used during registration which is what we need.
 		path = c.Request().URL.Path
 	}
 
-	routeGroupName := getRouteGroupName(path)
+	routeGroupName, routeParts := getRouteGroupName(path)
 
 	group, hasGroup := token.Permissions[routeGroupName]
 	if !hasGroup {
-		return false
+		group, hasGroup = token.Permissions[routeParts[0]]
+		if !hasGroup {
+			return false
+		}
 	}
 
 	var route string
 	routes, has := apiTokenRoutes[routeGroupName]
 	if !has {
-		return false
+		routes, has = apiTokenRoutes[routeParts[0]]
+		if !has {
+			return false
+		}
+		route = strings.Join(routeParts[1:], "_")
 	}
 
-	if routes.Create != nil && routes.Create.Path == path && routes.Create.Method == c.Request().Method {
+	if routes["create"] != nil && routes["create"].Path == path && routes["create"].Method == c.Request().Method {
 		route = "create"
 	}
-	if routes.ReadOne != nil && routes.ReadOne.Path == path && routes.ReadOne.Method == c.Request().Method {
+	if routes["read_one"] != nil && routes["read_one"].Path == path && routes["read_one"].Method == c.Request().Method {
 		route = "read_one"
 	}
-	if routes.ReadAll != nil && routes.ReadAll.Path == path && routes.ReadAll.Method == c.Request().Method {
+	if routes["read_all"] != nil && routes["read_all"].Path == path && routes["read_all"].Method == c.Request().Method {
 		route = "read_all"
 	}
-	if routes.Update != nil && routes.Update.Path == path && routes.Update.Method == c.Request().Method {
+	if routes["update"] != nil && routes["update"].Path == path && routes["update"].Method == c.Request().Method {
 		route = "update"
 	}
-	if routes.Delete != nil && routes.Delete.Path == path && routes.Delete.Method == c.Request().Method {
+	if routes["delete"] != nil && routes["delete"].Path == path && routes["delete"].Method == c.Request().Method {
 		route = "delete"
 	}
 
@@ -210,31 +266,7 @@ func PermissionsAreValid(permissions APIPermissions) (err error) {
 		}
 
 		for _, method := range methods {
-			if method == "create" && routes.Create == nil {
-				return &ErrInvalidAPITokenPermission{
-					Group:      key,
-					Permission: method,
-				}
-			}
-			if method == "read_one" && routes.ReadOne == nil {
-				return &ErrInvalidAPITokenPermission{
-					Group:      key,
-					Permission: method,
-				}
-			}
-			if method == "read_all" && routes.ReadAll == nil {
-				return &ErrInvalidAPITokenPermission{
-					Group:      key,
-					Permission: method,
-				}
-			}
-			if method == "update" && routes.Update == nil {
-				return &ErrInvalidAPITokenPermission{
-					Group:      key,
-					Permission: method,
-				}
-			}
-			if method == "delete" && routes.Delete == nil {
+			if routes[method] == nil {
 				return &ErrInvalidAPITokenPermission{
 					Group:      key,
 					Permission: method,
