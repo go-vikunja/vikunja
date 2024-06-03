@@ -288,6 +288,7 @@ const blurDebounced = useDebounceFn(() => emit('blur'), 500)
 						@input="handleFieldInput"
 						@focus="onFocusField"
 						@keydown="onKeydown"
+						@keydown.enter.prevent="blurDebounced"
 						@blur="blurDebounced"
 					/>
 					<div
