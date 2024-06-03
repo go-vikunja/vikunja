@@ -1,4 +1,5 @@
 import {createI18n} from 'vue-i18n'
+import type {PluralizationRule} from 'vue-i18n'
 import langEN from './lang/en.json'
 
 export const SUPPORTED_LOCALES = {
@@ -36,6 +37,24 @@ export type ISOLanguage = string
 export const i18n = createI18n({
 	fallbackLocale: DEFAULT_LANGUAGE,
 	legacy: false,
+	pluralRules: {
+		'ru-RU': (choice: number, choicesLength: number, orgRule?: PluralizationRule) => {
+			if (choicesLength !== 3) {
+				return orgRule ? orgRule(choice, choicesLength) : 0
+			}
+			const n = Math.abs(choice) % 100
+			if (n > 10 && n < 20) {
+				return 2
+			}
+			if (n % 10 === 1) {
+				return 0
+			}
+			if (n % 10 >= 2 && n % 10 <= 4) {
+				return 1
+			}
+			return 2
+		},
+	},
 	messages: {
 		[DEFAULT_LANGUAGE]: langEN,
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
