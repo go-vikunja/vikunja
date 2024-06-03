@@ -7738,22 +7738,8 @@ const docTemplate = `{
         },
         "models.APITokenRoute": {
             "type": "object",
-            "properties": {
-                "create": {
-                    "$ref": "#/definitions/models.RouteDetail"
-                },
-                "delete": {
-                    "$ref": "#/definitions/models.RouteDetail"
-                },
-                "read_all": {
-                    "$ref": "#/definitions/models.RouteDetail"
-                },
-                "read_one": {
-                    "$ref": "#/definitions/models.RouteDetail"
-                },
-                "update": {
-                    "$ref": "#/definitions/models.RouteDetail"
-                }
+            "additionalProperties": {
+                "$ref": "#/definitions/models.RouteDetail"
             }
         },
         "models.Bucket": {
