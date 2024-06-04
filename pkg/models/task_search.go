@@ -266,6 +266,10 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		distinct += ", task_positions.position"
 	}
 
+	if opts.expand == TaskCollectionExpandSubtasks {
+		cond = builder.And(cond, builder.IsNull{"task_relations.id"})
+	}
+
 	query := d.s.
 		Distinct(distinct).
 		Where(cond)
@@ -283,6 +287,9 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	if joinTaskBuckets {
 		query = query.Join("LEFT", "task_buckets", "task_buckets.task_id = tasks.id")
 	}
+	if opts.expand == TaskCollectionExpandSubtasks {
+		query = query.Join("LEFT", "task_relations", "tasks.id = task_relations.task_id and task_relations.relation_kind = 'parenttask'")
+	}
 
 	tasks = []*Task{}
 	err = query.
@@ -292,9 +299,62 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		return nil, totalCount, err
 	}
 
+	// fetch subtasks when expanding
+	if opts.expand == TaskCollectionExpandSubtasks {
+		subtasks := []*Task{}
+
+		taskIDs := []int64{}
+		for _, task := range tasks {
+			taskIDs = append(taskIDs, task.ID)
+		}
+
+		inQuery := builder.Dialect(db.GetDialect()).
+			Select("*").
+			From("task_relations").
+			Where(builder.In("task_id", taskIDs))
+		inSQL, inArgs, err := inQuery.ToSQL()
+		if err != nil {
+			return nil, totalCount, err
+		}
+
+		inSQL = strings.TrimPrefix(inSQL, "SELECT * FROM task_relations WHERE")
+
+		err = d.s.SQL(`SELECT * FROM tasks WHERE id IN (WITH RECURSIVE sub_tasks AS (
+		SELECT task_id,
+			other_task_id,
+			relation_kind,
+			created_by_id,
+			created
+		FROM task_relations
+		WHERE `+inSQL+`
+		AND relation_kind = '`+string(RelationKindSubtask)+`'
+
+		UNION ALL
+
+		SELECT tr.task_id,
+			tr.other_task_id,
+			tr.relation_kind,
+			tr.created_by_id,
+			tr.created
+		FROM task_relations tr
+		INNER JOIN
+		sub_tasks st ON tr.task_id = st.other_task_id
+		WHERE tr.relation_kind = '`+string(RelationKindSubtask)+`')
+		SELECT other_task_id
+		FROM sub_tasks)`, inArgs...).Find(&subtasks)
+		if err != nil {
+			return nil, totalCount, err
+		}
+
+		tasks = append(tasks, subtasks...)
+	}
+
 	queryCount := d.s.Where(cond)
 	if joinTaskBuckets {
 		queryCount = queryCount.Join("LEFT", "task_buckets", "task_buckets.task_id = tasks.id")
+	}
+	if opts.expand == TaskCollectionExpandSubtasks {
+		queryCount = queryCount.Join("LEFT", "task_relations", "tasks.id = task_relations.task_id and task_relations.relation_kind = 'parenttask'")
 	}
 	totalCount, err = queryCount.
 		Select("count(DISTINCT tasks.id)").

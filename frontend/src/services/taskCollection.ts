@@ -12,6 +12,7 @@ export interface TaskFilterParams {
 	filter_timezone?: string,
 	s: string,
 	per_page?: number,
+	expand?: 'subtasks' | null,
 }
 
 export function getDefaultTaskFilterParams(): TaskFilterParams {
@@ -22,6 +23,7 @@ export function getDefaultTaskFilterParams(): TaskFilterParams {
 		filter_include_nulls: false,
 		filter_timezone: '',
 		s: '',
+		expand: 'subtasks',
 	}
 }
 

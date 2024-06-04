@@ -176,6 +176,7 @@ type taskSearchOptions struct {
 	filter             string
 	filterTimezone     string
 	projectIDs         []int64
+	expand             TaskCollectionExpandable
 }
 
 // ReadAll is a dummy function to still have that endpoint documented
