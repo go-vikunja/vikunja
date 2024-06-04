@@ -595,6 +595,7 @@ func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, 
 	}
 
 	query := t.s.
+		Distinct("tasks.*").
 		In("id", taskIDs).
 		OrderBy(orderby)
 
