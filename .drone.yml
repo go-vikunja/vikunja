@@ -1120,7 +1120,7 @@ steps:
       - sed -i 's/\\/api\\/v1//g' frontend/index.html
       - ./bumpp.sh
       - yarn install
-      - yarn dist --linux --windows
+      - yarn dist --linux zip
 
 #  - name: rebuild-cache
 #    image: meltwater/drone-cache:dev
@@ -1400,6 +1400,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: f2753482faf9e2a3d34a9111587a75dfb4519cb77002cc64a51266540fd2478e
+hmac: 16b8cd92b0c32f4821b45858464e645ba053f15e9eed85926589c4d9bc503864
 
 ...
