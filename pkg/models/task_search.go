@@ -510,9 +510,10 @@ func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, 
 		return nil, 0, err
 	}
 
-	filterBy := []string{
-		"project_id: [" + strings.Join(projectIDStrings, ", ") + "]",
-		"(" + filter + ")",
+	filterBy := []string{"project_id: [" + strings.Join(projectIDStrings, ", ") + "]"}
+
+	if filter != "" {
+		filterBy = append(filterBy, "("+filter+")")
 	}
 
 	var projectViewIDForPosition int64
