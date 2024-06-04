@@ -300,6 +300,7 @@ func convertTodoistToVikunja(sync *sync, doneItems map[string]*doneItem) (fullVi
 			Created: section.DateAdded,
 		})
 		sections[section.ID] = fabricatedSectionID
+		fabricatedSectionID++
 	}
 
 	for _, label := range sync.Labels {
@@ -364,8 +365,6 @@ func convertTodoistToVikunja(sync *sync, doneItems map[string]*doneItem) (fullVi
 		}
 
 		lists[i.ProjectID].Tasks = append(lists[i.ProjectID].Tasks, task)
-
-		fabricatedSectionID++
 	}
 
 	// If the parenId of a task is not 0, create a task relation
