@@ -23,7 +23,7 @@ import (
 )
 
 type buckets20240315093418 struct {
-	ID            int64 `xorm:"bigint autoincr not null unique pk"`
+	ID            int64 `xorm:"bigint autoincr not null"`
 	ProjectID     int64 `xorm:"bigint not null"`
 	ProjectViewID int64 `xorm:"bigint not null default 0"`
 }
