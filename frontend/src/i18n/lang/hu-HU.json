@@ -95,6 +95,7 @@
         "weekStartMonday": "Hétfő",
         "language": "Nyelv",
         "defaultProject": "Alapértelmezett projekt",
+        "defaultView": "Default View",
         "timezone": "Időzóna",
         "overdueTasksRemindersTime": "Esedékes feladatokra emlékeztető e-mail küldésének ideje",
         "filterUsedOnOverview": "Az áttekintő oldalon használt mentett szűrő"
@@ -313,6 +314,9 @@
         "link": "Hivatkozás",
         "delete": "Törlés"
       }
+    },
+    "first": {
+      "title": "First View"
     },
     "list": {
       "title": "Lista",

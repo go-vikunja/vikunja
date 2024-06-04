@@ -95,6 +95,7 @@
         "weekStartMonday": "Lunes",
         "language": "Idioma",
         "defaultProject": "Proyecto por defecto",
+        "defaultView": "Default View",
         "timezone": "Zona Horaria",
         "overdueTasksRemindersTime": "Hora de envío del correo electrónico de tareas pendientes",
         "filterUsedOnOverview": "Filtro guardado utilizado en la página de resumen"
@@ -313,6 +314,9 @@
         "link": "Enlace",
         "delete": "Eliminar"
       }
+    },
+    "first": {
+      "title": "First View"
     },
     "list": {
       "title": "Lista",

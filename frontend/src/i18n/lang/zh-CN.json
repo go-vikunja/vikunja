@@ -95,6 +95,7 @@
         "weekStartMonday": "星期一",
         "language": "语言设置",
         "defaultProject": "默认项目",
+        "defaultView": "Default View",
         "timezone": "时区",
         "overdueTasksRemindersTime": "逾期任务提醒邮件时间",
         "filterUsedOnOverview": "概述页面上使用已保存过滤器"
@@ -313,6 +314,9 @@
         "link": "链接",
         "delete": "删除"
       }
+    },
+    "first": {
+      "title": "First View"
     },
     "list": {
       "title": "列表",

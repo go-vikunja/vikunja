@@ -95,6 +95,7 @@
         "weekStartMonday": "月曜日",
         "language": "言語",
         "defaultProject": "デフォルトのプロジェクト",
+        "defaultView": "Default View",
         "timezone": "タイムゾーン",
         "overdueTasksRemindersTime": "期限切れタスクのリマインダー送信時間",
         "filterUsedOnOverview": "概要ページに使用される絞り込み条件を保存しました"
@@ -313,6 +314,9 @@
         "link": "リンク",
         "delete": "削除"
       }
+    },
+    "first": {
+      "title": "First View"
     },
     "list": {
       "title": "リスト",

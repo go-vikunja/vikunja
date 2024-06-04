@@ -95,6 +95,7 @@
         "weekStartMonday": "Lunedì",
         "language": "Lingua",
         "defaultProject": "Progetto Predefinito",
+        "defaultView": "Default View",
         "timezone": "Fuso Orario",
         "overdueTasksRemindersTime": "Orario email attività in scadute",
         "filterUsedOnOverview": "Saved filter used on the overview page"
@@ -313,6 +314,9 @@
         "link": "Link",
         "delete": "Delete"
       }
+    },
+    "first": {
+      "title": "First View"
     },
     "list": {
       "title": "List",

@@ -5,8 +5,8 @@
     "welcomeDay": "Привет, {username}!",
     "welcomeEvening": "Добрый вечер, {username}!",
     "lastViewed": "Последние просмотренные",
-    "addToHomeScreen": "Add this app to your home screen for faster access and improved experience.",
-    "goToOverview": "Go to overview",
+    "addToHomeScreen": "Добавьте это приложение на домашний экран для быстрого доступа и удобной работы.",
+    "goToOverview": "Перейти к обзору",
     "project": {
       "importText": "Импортировать проекты и задачи из других сервисов в Vikunja:",
       "import": "Импорт данных в Vikunja"
@@ -53,15 +53,15 @@
       "loginWith": "Войти через {provider}",
       "authenticating": "Аутентификация…",
       "openIdStateError": "State does not match, refusing to continue!",
-      "openIdGeneralError": "An error occurred while authenticating against the third party.",
+      "openIdGeneralError": "Произошла ошибка при аутентификации через сторонний сервис.",
       "logout": "Выйти",
       "emailInvalid": "Введите корректный email адрес.",
       "usernameRequired": "Введите имя пользователя.",
-      "usernameMustNotContainSpace": "The username must not contain spaces.",
-      "usernameMustNotLookLikeUrl": "The username must not look like a URL.",
+      "usernameMustNotContainSpace": "Имя пользователя не должно содержать пробелы.",
+      "usernameMustNotLookLikeUrl": "Имя пользователя не должно быть похожим на URL.",
       "passwordRequired": "Введите пароль.",
-      "passwordNotMin": "Password must have at least 8 characters.",
-      "passwordNotMax": "Password must have at most 250 characters.",
+      "passwordNotMin": "Пароль должен содержать не меньше 8 символов.",
+      "passwordNotMax": "Пароль должен содержать не больше 250 символов.",
       "showPassword": "Показать пароль",
       "hidePassword": "Скрыть пароль",
       "noAccountYet": "Ещё нет аккаунта?",
@@ -95,6 +95,7 @@
         "weekStartMonday": "Понедельник",
         "language": "Язык",
         "defaultProject": "Проект по умолчанию",
+        "defaultView": "Представление по умолчанию",
         "timezone": "Часовой пояс",
         "overdueTasksRemindersTime": "Время напоминания о невыполненных задачах",
         "filterUsedOnOverview": "Сохранённый фильтр, используемый на странице обзора"
@@ -172,7 +173,7 @@
         },
         "attributes": {
           "title": "Название",
-          "titlePlaceholder": "Enter a title you will recognize later",
+          "titlePlaceholder": "Введите название, по которому вы сможете узнать этот токен",
           "expiresAt": "Срок действия",
           "permissions": "Разрешения"
         }
@@ -213,9 +214,9 @@
     "parent": "Родительский проект",
     "search": "Введите запрос для поиска проекта…",
     "searchSelect": "Кликните или нажмите Enter для выбора этого проекта",
-    "shared": "Shared Projects",
+    "shared": "Общие проекты",
     "noDescriptionAvailable": "Описание проекта отсутствует.",
-    "inboxTitle": "Inbox",
+    "inboxTitle": "Входящие",
     "create": {
       "header": "Создать проект",
       "titlePlaceholder": "Введите название проекта…",
@@ -227,8 +228,8 @@
       "title": "Архивирование «{project}»",
       "archive": "Архивирование проекта",
       "unarchive": "Возвращение проекта из архива",
-      "unarchiveText": "You will be able to create tasks or edit it.",
-      "archiveText": "You won't be able to edit this project or create tasks until you un-archive it.",
+      "unarchiveText": "Вы сможете создавать задачи или изменять их.",
+      "archiveText": "Вы не сможете изменять этот проект или создавать в нём задачи, пока не вернёте его из архива.",
       "success": "Проект архивирован."
     },
     "background": {
@@ -248,7 +249,7 @@
       "text2": "Это включает в себя все задачи, и отменить это будет нельзя!",
       "success": "Проект успешно удалён.",
       "tasksToDelete": "Это безвозвратно удалит примерно {count} задач.",
-      "tasksAndChildProjectsToDelete": "This will irrevocably remove approx. {tasks} tasks and {projects} projects.",
+      "tasksAndChildProjectsToDelete": "Это безвозвратно удалит примерно {tasks} задач и {projects} проектов.",
       "noTasksToDelete": "В этом проекте нет никаких задач, можно спокойно удалять."
     },
     "duplicate": {
@@ -265,7 +266,7 @@
       "identifier": "Идентификатор проекта",
       "identifierPlaceholder": "Введите идентификатор проекта…",
       "description": "Описание",
-      "descriptionPlaceholder": "Enter a description for this project, hit '/' for more options…",
+      "descriptionPlaceholder": "Введите описание проекта, нажмите '/' для дополнительных параметров…",
       "color": "Цвет",
       "success": "Проект успешно обновлён."
     },
@@ -277,7 +278,7 @@
         "title": "Ссылки для обмена",
         "what": "Что такое ссылка для обмена?",
         "explanation": "Ссылка для обмена позволяет поделиться проектом с теми, у кого нет аккаунта в Vikunja.",
-        "create": "Create a link share",
+        "create": "Создать ссылку для обмена",
         "name": "Имя (необязательно)",
         "namePlaceholder": "напр. Lorem Ipsum",
         "nameExplanation": "Все действия, выполненные через эту ссылку, будут подписаны этим именем.",
@@ -314,12 +315,15 @@
         "delete": "Удалить"
       }
     },
+    "first": {
+      "title": "Первое представление"
+    },
     "list": {
       "title": "Список",
       "add": "Добавить",
-      "addPlaceholder": "Add a task…",
+      "addPlaceholder": "Добавить задачу…",
       "empty": "Проект сейчас пуст.",
-      "newTaskCta": "Create a task.",
+      "newTaskCta": "Создать задачу.",
       "editTask": "Изменить задачу"
     },
     "gantt": {
@@ -352,7 +356,7 @@
       "addTaskPlaceholder": "Введите название задачи…",
       "addTask": "Добавить задачу",
       "addAnotherTask": "Добавить ещё задачу",
-      "addBucket": "Create a bucket",
+      "addBucket": "Создать колонку",
       "addBucketPlaceholder": "Введите название новой колонки…",
       "deleteHeaderBucket": "Удаление колонки",
       "deleteBucketText1": "Удалить эту колонку?",
@@ -383,32 +387,32 @@
       "secretDocs": "Подробнее об использовании секретов в документации."
     },
     "views": {
-      "header": "Edit views",
-      "title": "Title",
-      "actions": "Actions",
-      "kind": "Kind",
-      "bucketConfigMode": "Bucket configuration mode",
-      "bucketConfig": "Bucket configuration",
-      "bucketConfigManual": "Manual",
-      "filter": "Filter",
-      "create": "Create view",
-      "createSuccess": "The view was created successfully.",
-      "titleRequired": "Please provide a title.",
-      "delete": "Delete this view",
-      "deleteText": "Are you sure you want to remove this view? It will no longer be possible to use it to view tasks in this project. This action won't delete any tasks. This cannot be undone!",
-      "deleteSuccess": "The view was successfully deleted",
-      "onlyAdminsCanEdit": "Only project admins can edit views."
+      "header": "Изменить представления",
+      "title": "Название",
+      "actions": "Действия",
+      "kind": "Вид",
+      "bucketConfigMode": "Режим конфигурации колонок",
+      "bucketConfig": "Конфигурация колонок",
+      "bucketConfigManual": "Ручная",
+      "filter": "По фильтрам",
+      "create": "Создать представление",
+      "createSuccess": "Представление создано.",
+      "titleRequired": "Пожалуйста, укажите название.",
+      "delete": "Удалить представление",
+      "deleteText": "Удалить это представление? После удаления его не получится использовать для просмотра задач в этом проекте. Сами задачи останутся. Это действие отменить нельзя!",
+      "deleteSuccess": "Представление удалено",
+      "onlyAdminsCanEdit": "Только администраторы проекта могут изменять задачи."
     }
   },
   "filters": {
     "title": "Фильтры",
     "clear": "Сбросить фильтры",
-    "showResults": "Show results",
+    "showResults": "Применить",
     "attributes": {
       "title": "Название",
       "titlePlaceholder": "Введите название сохранённого фильтра…",
       "description": "Описание",
-      "descriptionPlaceholder": "Add a description for this filter here, hit '/' for more options…",
+      "descriptionPlaceholder": "Введите описание фильтра, нажмите '/' для дополнительных параметров…",
       "includeNulls": "Включать задачи, у которых не установлено значение",
       "requireAll": "Для отображения задачи требовать истинность всех фильтров",
       "showDoneTasks": "Показывать завершённые задачи",
@@ -417,13 +421,13 @@
       "enablePercentDone": "Включить фильтр по прогрессу",
       "dueDateRange": "Диапазон срока",
       "startDateRange": "Диапазон даты начала",
-      "endDateRange": "Диапазон даты завершения",
+      "endDateRange": "Диапазон даты окончания",
       "reminderRange": "Диапазон даты напоминания"
     },
     "create": {
       "title": "Создать сохранённый фильтр",
       "description": "Сохранённый фильтр — это виртуальный проект, содержимое которого выбирается с помощью фильтров в момент его просмотра.",
-      "action": "Create saved filter",
+      "action": "Создать сохранённый фильтр",
       "titleRequired": "Укажите название фильтра."
     },
     "delete": {
@@ -436,48 +440,48 @@
       "success": "Фильтр сохранён."
     },
     "query": {
-      "title": "Query",
-      "placeholder": "Type a search or filter query…",
+      "title": "Запрос",
+      "placeholder": "Введите запрос для поиска или фильтрации…",
       "help": {
-        "intro": "To filter tasks, you can use a query syntax similar to SQL. The available fields for filtering include:",
-        "link": "How does this work?",
-        "canUseDatemath": "You can date math to set relative dates. Click on the date value in a query to find out more.",
+        "intro": "Для фильтрации задач можно использовать синтаксис, похожий на SQL. Можно фильтровать по следующим полям:",
+        "link": "Как это работает?",
+        "canUseDatemath": "Можно использовать математические выражения для указания относительных дат. Нажмите на значение даты в запросе для подробностей.",
         "fields": {
-          "done": "Whether the task is completed or not",
-          "priority": "The priority level of the task (1-5)",
-          "percentDone": "The percentage of completion for the task (0-100)",
-          "dueDate": "The due date of the task",
-          "startDate": "The start date of the task",
-          "endDate": "The end date of the task",
-          "doneAt": "The date and time when the task was completed",
-          "assignees": "The assignees of the task",
-          "labels": "The labels associated with the task",
-          "project": "The project the task belongs to (only available for saved filters, not on a project level)"
+          "done": "Выполнена ли задача или нет",
+          "priority": "Приоритет задачи (1-5)",
+          "percentDone": "Процент выполнения задачи (0-100)",
+          "dueDate": "Срок задачи",
+          "startDate": "Дата начала задачи",
+          "endDate": "Дата окончания задачи",
+          "doneAt": "Дата и время, когда задача была завершена",
+          "assignees": "Пользователи, которым назначена задача",
+          "labels": "Метки, связанные с задачей",
+          "project": "Проект, в котором находится задача (только для сохранённых фильтров, не на уровне проекта)"
         },
         "operators": {
-          "intro": "The available operators for filtering include:",
-          "notEqual": "Not equal to",
-          "equal": "Equal to",
-          "greaterThan": "Greater than",
-          "greaterThanOrEqual": "Greater than or equal to",
-          "lessThan": "Less than",
-          "lessThanOrEqual": "Less than or equal to",
-          "like": "Matches a pattern (using wildcard %)",
-          "in": "Matches any value in a comma-seperated list of values"
+          "intro": "Доступны следующие операторы:",
+          "notEqual": "Не равно",
+          "equal": "Равно",
+          "greaterThan": "Больше",
+          "greaterThanOrEqual": "Больше или равно",
+          "lessThan": "Меньше",
+          "lessThanOrEqual": "Меньше или равно",
+          "like": "Соответствует шаблону (знак подстановки %)",
+          "in": "Соответствует любому из перечисленных значений, разделённых запятой"
         },
         "logicalOperators": {
-          "intro": "To combine multiple conditions, you can use the following logical operators:",
-          "and": "AND operator, matches if all conditions are true",
-          "or": "OR operator, matches if any of the conditions are true",
-          "parentheses": "Parentheses for grouping conditions"
+          "intro": "Для объединения нескольких условий можно использовать логические операторы:",
+          "and": "Оператор И — должны выполниться все условия",
+          "or": "Оператор ИЛИ — должно выполниться любое условие",
+          "parentheses": "Скобки для группировки условий"
         },
         "examples": {
-          "intro": "Here are some examples of filter queries:",
-          "priorityEqual": "Matches tasks with priority level 4",
-          "dueDatePast": "Matches tasks with a due date in the past",
-          "undoneHighPriority": "Matches undone tasks with priority level 3 or higher",
-          "assigneesIn": "Matches tasks assigned to either \"user1\" or \"user2\"",
-          "priorityOneOrTwoPastDue": "Matches tasks with priority level 1 or 2 and a due date in the past"
+          "intro": "Примеры запросов:",
+          "priorityEqual": "Выбирает задачи с приоритетом 4",
+          "dueDatePast": "Выбирает задачи со сроком в прошлом (то есть просроченные)",
+          "undoneHighPriority": "Выбирает невыполненные задачи с приоритетом 3 или выше",
+          "assigneesIn": "Выбирает задачи, назначенные пользователям «user1» или «user2»",
+          "priorityOneOrTwoPastDue": "Выбирает задачи с приоритетом 1 или 2 и сроком в прошлом"
         }
       }
     }
@@ -496,8 +500,8 @@
     "confirm": "Я уверен, давай начнём миграцию!",
     "importUpload": "Чтобы импортировать данные из {name} в Vikunja, нажмите кнопку ниже для выбора файла.",
     "upload": "Загрузить файл",
-    "migrationStartedWillReciveEmail": "Vikunja will now import your lists/projects, tasks, notes, reminders and files from {service}. As this will take a while, we will send you an email once done. You can close this window now.",
-    "migrationInProgress": "A migration is currently in progress. Please wait until it is done."
+    "migrationStartedWillReciveEmail": "Vikunja импортирует списки/проекты, задачи, заметки, напоминания и файлы из {service}. Это займёт некоторое время, и после завершения вам придёт письмо. Это окно можно закрыть.",
+    "migrationInProgress": "Идёт процесс миграции. Пожалуйста, подождите до завершения."
   },
   "label": {
     "title": "Метки",
@@ -507,7 +511,7 @@
     "search": "Введите запрос для поиска метки…",
     "create": {
       "header": "Новая метка",
-      "title": "Create a label",
+      "title": "Создать метку",
       "titleRequired": "Пожалуйста, укажите название.",
       "success": "Метка успешно создана."
     },
@@ -528,7 +532,7 @@
   "sharing": {
     "authenticating": "Аутентификация…",
     "passwordRequired": "Для доступа к этому проекту нужен пароль. Введите его сюда:",
-    "error": "An error occurred.",
+    "error": "Произошла ошибка.",
     "invalidPassword": "Неверный пароль."
   },
   "navigation": {
@@ -549,7 +553,7 @@
     "copy": "Скопировать в буфер обмена",
     "copyError": "Скопировать в буфер обмена не удалось",
     "search": "Поиск",
-    "searchPlaceholder": "Введи запрос для поиска…",
+    "searchPlaceholder": "Введите запрос для поиска…",
     "previous": "Назад",
     "next": "Вперёд",
     "poweredBy": "При поддержке Vikunja",
@@ -568,7 +572,7 @@
     "custom": "Настраиваемый",
     "id": "ID",
     "created": "Дата создания",
-    "createdBy": "Created by {0}",
+    "createdBy": "Создатель {0}",
     "actions": "Действия",
     "cannotBeUndone": "Это действие отменить нельзя!"
   },
@@ -587,11 +591,11 @@
       "edit": "Изменить",
       "done": "Готово",
       "heading1": "Заголовок 1",
-      "heading1Tooltip": "Big section heading.",
+      "heading1Tooltip": "Большой заголовок.",
       "heading2": "Заголовок 2",
-      "heading2Tooltip": "Medium section heading.",
+      "heading2Tooltip": "Средний заголовок.",
       "heading3": "Заголовок 3",
-      "heading3Tooltip": "Smaller section header.",
+      "heading3Tooltip": "Маленький заголовок.",
       "headingSmaller": "Заголовок меньше",
       "headingBigger": "Заголовок больше",
       "bold": "Жирный",
@@ -599,57 +603,57 @@
       "strikethrough": "Зачёркнутый",
       "underline": "Подчёркнутый",
       "code": "Код",
-      "codeTooltip": "Capture a code snippet.",
+      "codeTooltip": "Фрагмент кода.",
       "quote": "Цитата",
-      "quoteTooltip": "Capture a quote.",
-      "bulletList": "Bullet list",
-      "bulletListTooltip": "Create a simple bullet list.",
-      "unorderedList": "Unordered list",
-      "orderedList": "Ordered list",
-      "orderedListTooltip": "Create a list with numbering.",
+      "quoteTooltip": "Цитата.",
+      "bulletList": "Маркированный список",
+      "bulletListTooltip": "Создать простой список.",
+      "unorderedList": "Неупорядоченный список",
+      "orderedList": "Нумерованный список",
+      "orderedListTooltip": "Создать нумерованный список.",
       "cleanBlock": "Очистить блок",
       "link": "Ссылка",
       "image": "Изображение",
-      "imageTooltip": "Upload an image from your computer.",
+      "imageTooltip": "Загрузить изображение с компьютера.",
       "table": {
         "title": "Таблица",
-        "insert": "Insert table",
-        "addColumnBefore": "Add column before",
-        "addColumnAfter": "Add column after",
-        "deleteColumn": "Delete column",
-        "addRowBefore": "Add row before",
-        "addRowAfter": "Add row after",
-        "deleteRow": "Delete row",
-        "deleteTable": "Delete table",
-        "mergeCells": "Merge cells",
-        "splitCell": "Split cell",
-        "toggleHeaderColumn": "Toggle header column",
-        "toggleHeaderRow": "Toggle header row",
-        "toggleHeaderCell": "Toggle header cell",
-        "mergeOrSplit": "Merge or split",
-        "fixTables": "Fix tables"
+        "insert": "Вставить таблицу",
+        "addColumnBefore": "Добавить столбец слева",
+        "addColumnAfter": "Добавить столбец справа",
+        "deleteColumn": "Удалить столбец",
+        "addRowBefore": "Добавить строку сверху",
+        "addRowAfter": "Добавить строку снизу",
+        "deleteRow": "Удалить строку",
+        "deleteTable": "Удалить таблицу",
+        "mergeCells": "Объединить ячейки",
+        "splitCell": "Разделить ячейки",
+        "toggleHeaderColumn": "Столбец заголовков",
+        "toggleHeaderRow": "Строка заголовков",
+        "toggleHeaderCell": "Ячейка с заголовком",
+        "mergeOrSplit": "Объединить или разделить",
+        "fixTables": "Исправить таблицы"
       },
       "horizontalRule": "Разделитель",
-      "horizontalRuleTooltip": "Divide a section.",
+      "horizontalRuleTooltip": "Разделитель текста.",
       "sideBySide": "Side By Side",
       "guide": "Руководство",
-      "text": "Text",
-      "textTooltip": "Just start typing with plain text.",
+      "text": "Текст",
+      "textTooltip": "Просто начните печатать для ввода обычного текста.",
       "taskList": "Список задач",
-      "taskListTooltip": "Track tasks with a to-do list.",
+      "taskListTooltip": "Отслеживаемые задачи в виде списка с галочками.",
       "undo": "Отменить",
       "redo": "Вернуть",
-      "placeholder": "Type some text or hit '/' to see more options…"
+      "placeholder": "Введите какой-нибудь текст или нажмите '/' для дополнительных параметров…"
     },
     "multiselect": {
-      "createPlaceholder": "Create",
+      "createPlaceholder": "Создать",
       "selectPlaceholder": "Кликните или нажмите Enter для выбора"
     },
     "datepickerRange": {
       "to": "По",
       "from": "С",
       "fromto": "С {from} по {to}",
-      "date": "Date",
+      "date": "Дата",
       "ranges": {
         "today": "Сегодня",
         "thisWeek": "Эта неделя",
@@ -666,33 +670,33 @@
         "restOfThisYear": "Остаток этого года"
       },
       "values": {
-        "now": "Now",
-        "startOfToday": "Start of today",
-        "endOfToday": "End of today",
-        "beginningOflastWeek": "Beginning of last week",
-        "endOfLastWeek": "End of last week",
-        "beginningOfThisWeek": "Beginning of this week",
-        "endOfThisWeek": "End of this week",
-        "startOfNextWeek": "Start of next week",
-        "endOfNextWeek": "End of next week",
-        "in7Days": "In 7 days",
-        "beginningOfLastMonth": "Beginning of last month",
-        "endOfLastMonth": "End of last month",
-        "startOfThisMonth": "Start of this month",
-        "endOfThisMonth": "End of this month",
-        "startOfNextMonth": "Start of next month",
-        "endOfNextMonth": "End of next month",
-        "in30Days": "In 30 days",
-        "startOfThisYear": "Beginning of this year",
-        "endOfThisYear": "End of this year"
+        "now": "Сейчас",
+        "startOfToday": "Начало дня",
+        "endOfToday": "Конец дня",
+        "beginningOflastWeek": "Начало прошлой недели",
+        "endOfLastWeek": "Конец прошлой недели",
+        "beginningOfThisWeek": "Начало этой недели",
+        "endOfThisWeek": "Конец этой недели",
+        "startOfNextWeek": "Начало следующей недели",
+        "endOfNextWeek": "Конец этой недели",
+        "in7Days": "Через 7 дней",
+        "beginningOfLastMonth": "Начало прошлого месяца",
+        "endOfLastMonth": "Конец прошлого месяца",
+        "startOfThisMonth": "Начало этого месяца",
+        "endOfThisMonth": "Конец этого месяца",
+        "startOfNextMonth": "Начало следующего месяца",
+        "endOfNextMonth": "Конец следующего месяца",
+        "in30Days": "Через 30 дней",
+        "startOfThisYear": "Начало этого года",
+        "endOfThisYear": "Конец этого года"
       }
     },
     "datemathHelp": {
-      "canuse": "You can use date math to filter for relative dates.",
+      "canuse": "Можно использовать математические выражения для фильтрации по относительным датам.",
       "learnhow": "Как это работает",
-      "title": "Date Math",
-      "intro": "Specify relative dates which are resolved on the fly by Vikunja when applying the filter.",
-      "expression": "Each Date Math expression starts with an anchor date, which can either be {0}, or a date string ending with {1}. This anchor date can optionally be followed by one or more maths expressions.",
+      "title": "Математика дат",
+      "intro": "Укажите относительные даты, которые Vikunja будет вычислять на лету в момент применения фильтра.",
+      "expression": "Каждое выражение начинается с опорной даты, которое может быть {0} или конкретной датой, оканчивающейся на {1}. Затем к опорной дате можно добавить одно или несколько математических выражений.",
       "similar": "Это похоже на выражения, которые используются в {0} и {1}.",
       "add1Day": "Добавить один день",
       "minus1Day": "Вычесть один день",
@@ -721,10 +725,10 @@
   },
   "task": {
     "task": "Задача",
-    "new": "Create a task",
+    "new": "Создать задачу",
     "delete": "Удалить задачу",
     "createSuccess": "Задача удалена.",
-    "addReminder": "Add a reminder…",
+    "addReminder": "Добавить напоминание…",
     "doneSuccess": "Задача отмечена как завершённая.",
     "undoneSuccess": "Задача отмечена как незавершённая.",
     "undo": "Отменить",
@@ -743,7 +747,7 @@
     "detail": {
       "chooseDueDate": "Нажмите для выбора срока",
       "chooseStartDate": "Нажмите для выбора даты начала",
-      "chooseEndDate": "Нажмите для выбора даты завершения",
+      "chooseEndDate": "Нажмите для выбора даты окончания",
       "move": "Переместить задачу в другой проект",
       "done": "Завершено!",
       "undone": "Не завершено",
@@ -769,7 +773,7 @@
         "priority": "Задать приоритет",
         "dueDate": "Задать срок",
         "startDate": "Задать дату начала",
-        "endDate": "Задать дату завершения",
+        "endDate": "Задать дату окончания",
         "reminders": "Добавить напоминания",
         "repeatAfter": "Задать интервал повтора",
         "percentDone": "Задать прогресс",
@@ -790,7 +794,7 @@
       "description": "Описание",
       "done": "Завершено",
       "dueDate": "Срок",
-      "endDate": "Дата завершения",
+      "endDate": "Дата окончания",
       "labels": "Метки",
       "percentDone": "Прогресс",
       "priority": "Приоритет",
@@ -800,7 +804,7 @@
       "startDate": "Дата начала",
       "title": "Название",
       "updated": "Дата изменения",
-      "doneAt": "Done At"
+      "doneAt": "Дата завершения"
     },
     "subscription": {
       "subscribedTaskThroughParentProject": "Вы не можете отписаться здесь, потому что вы подписаны эту задачу через её проект.",
@@ -836,7 +840,7 @@
       "loading": "Загрузка комментариев…",
       "edited": "изменено {date}",
       "creating": "Комментируем…",
-      "placeholder": "Add your comment, hit '/' for more options…",
+      "placeholder": "Введите комментарий, нажмите '/' для дополнительных параметров…",
       "comment": "Комментировать",
       "delete": "Удалить комментарий",
       "deleteText1": "Удалить этот комментарий?",
@@ -850,7 +854,7 @@
       "1week": "1 неделя"
     },
     "description": {
-      "placeholder": "Enter a description, hit '/' for more options…",
+      "placeholder": "Введите описание, нажмите '/' для дополнительных параметров…",
       "empty": "Описания ещё нет."
     },
     "assignee": {
@@ -860,7 +864,7 @@
       "unassignSuccess": "Пользователь убран."
     },
     "label": {
-      "placeholder": "Type to add a label…",
+      "placeholder": "Введите метку…",
       "createPlaceholder": "Добавить как новую метку",
       "addSuccess": "Метка добавлена.",
       "createSuccess": "Метка создана.",
@@ -883,8 +887,8 @@
     "relation": {
       "add": "Добавить новую связанную задачу",
       "new": "Новая связанная задача",
-      "searchPlaceholder": "Type search for a task to add as related…",
-      "createPlaceholder": "Add this as related task",
+      "searchPlaceholder": "Введите запрос для поиска задачи, чтобы добавить связь…",
+      "createPlaceholder": "Добавить как связанную задачу",
       "differentProject": "Эта задача принадлежит другому проекту.",
       "noneYet": "Ещё нет связанных задач.",
       "delete": "Удалить связь",
@@ -906,15 +910,15 @@
       }
     },
     "reminder": {
-      "before": "{amount} {unit} before {type}",
-      "after": "{amount} {unit} after {type}",
-      "beforeShort": "before",
-      "afterShort": "after",
-      "onDueDate": "On the due date",
-      "onStartDate": "On the start date",
-      "onEndDate": "On the end date",
-      "custom": "Custom",
-      "dateAndTime": "Date and time"
+      "before": "{amount} {unit} до {type}",
+      "after": "{amount} {unit} после {type}",
+      "beforeShort": "до",
+      "afterShort": "после",
+      "onDueDate": "По истечению срока",
+      "onStartDate": "В дату начала",
+      "onEndDate": "В дату окончания",
+      "custom": "Другой вариант",
+      "dateAndTime": "Конкретное время"
     },
     "repeat": {
       "everyDay": "Каждый день",
@@ -922,7 +926,7 @@
       "every30d": "Каждые 30 дней",
       "mode": "Режим повтора",
       "monthly": "Ежемесячно",
-      "fromCurrentDate": "From completion date",
+      "fromCurrentDate": "С даты завершения",
       "each": "Каждые",
       "specifyAmount": "Укажите количество…",
       "hours": "Часов",
@@ -933,7 +937,7 @@
       "invalidAmount": "Введите больше чем 0."
     },
     "quickAddMagic": {
-      "hint": "Use magic prefixes to define due dates, assignees and other task properties.",
+      "hint": "Используйте волшебные префиксы, чтобы указать срок, назначить пользователей или задать другие свойства задачи.",
       "title": "Волшебное Быстрое Добавление",
       "intro": "При создании задачи вы можете использовать специальные ключевые слова для непосредственного добавления атрибутов к создаваемой задаче. Это позволяет добавлять часто используемые атрибуты гораздо быстрее.",
       "multiple": "Вы можете использовать это несколько раз.",
@@ -962,7 +966,7 @@
     "title": "Команды",
     "noTeams": "Сейчас вы не являетесь участником ни одной команды.",
     "create": {
-      "title": "Create a team",
+      "title": "Создать команду",
       "success": "Команда создана."
     },
     "edit": {
@@ -1001,11 +1005,11 @@
       "namePlaceholder": "Имя команды здесь…",
       "nameRequired": "Пожалуйста, укажите имя.",
       "description": "Описание",
-      "descriptionPlaceholder": "Describe the team here, hit '/' for more options…",
+      "descriptionPlaceholder": "Введите описание команды, нажмите '/' для дополнительных параметров…",
       "admin": "Администратор",
       "member": "Участник",
-      "isPublic": "Public Team",
-      "isPublicDescription": "Make the team publicly discoverable. When enabled, anyone can share projects with this team even when not being a direct member."
+      "isPublic": "Публичная команда",
+      "isPublicDescription": "Сделать команду видимой публично. Если включено, кто угодно сможет поделиться проектами с этой командой, даже если он не является её участником."
     }
   },
   "keyboardShortcuts": {
@@ -1060,20 +1064,20 @@
     "duplicate": "Создать копию",
     "delete": "Удалить",
     "unarchive": "Вернуть из архива",
-    "setBackground": "Background settings",
+    "setBackground": "Настройки фона",
     "share": "Поделиться",
     "newProject": "Создать проект",
     "createProject": "Создать проект",
-    "cantArchiveIsDefault": "You cannot archive this because it is your default project.",
-    "cantDeleteIsDefault": "You cannot delete this because it is your default project.",
-    "views": "Views"
+    "cantArchiveIsDefault": "Нельзя архивировать проект по умолчанию.",
+    "cantDeleteIsDefault": "Нельзя удалять проект по умолчанию.",
+    "views": "Представления"
   },
   "apiConfig": {
     "url": "Vikunja URL",
     "urlPlaceholder": "напр. https://localhost:3456",
     "change": "изменить",
     "use": "Используется Vikunja на {0}",
-    "error": "Could not find or use Vikunja installation at \"{domain}\". Please check if the url has the correct format and you can reach it when accessing it directly and try again.",
+    "error": "Не удалось обратиться к Vikunja по адресу «{domain}». Проверьте, правильный ли адрес и можете ли вы открыть его напрямую, и попробуйте ещё раз.",
     "success": "Используется Vikunja на \"{domain}\".",
     "urlRequired": "Требуется url."
   },
@@ -1096,16 +1100,16 @@
     "tasks": "Задачи",
     "projects": "Проекты",
     "teams": "Команды",
-    "labels": "Labels",
+    "labels": "Метки",
     "newProject": "Введите название проекта…",
     "newTask": "Введите название задачи…",
     "newTeam": "Введите название новой команды…",
     "createTask": "Создать задачу в текущем проекте ({title})",
     "createProject": "Создать проект",
     "cmds": {
-      "newTask": "Новая задача",
+      "newTask": "Создать задачу",
       "newProject": "Создать проект",
-      "newTeam": "Новая команда"
+      "newTeam": "Создать команду"
     }
   },
   "date": {
@@ -1114,10 +1118,10 @@
     "altFormatShort": "j M Y"
   },
   "reaction": {
-    "reactedWith": "{user} reacted with {value}",
-    "reactedWithAnd": "{users} and {lastUser} reacted with {value}",
-    "reactedWithAndMany": "{users} and {num} more reacted reacted with {value}",
-    "add": "Add your reaction"
+    "reactedWith": "Реакция от {user}: {value}",
+    "reactedWithAnd": "Реакции от {users} и {lastUser}: {value}",
+    "reactedWithAndMany": "Реакции от {users} и ещё {num}: {value}",
+    "add": "Добавить реакцию"
   },
   "error": {
     "error": "Ошибка",
@@ -1192,17 +1196,17 @@
   },
   "about": {
     "title": "О Vikunja",
-    "version": "Version: {version}"
+    "version": "Версия: {version}"
   },
   "time": {
     "units": {
-      "seconds": "second|seconds",
-      "minutes": "minute|minutes",
-      "hours": "hour|hours",
-      "days": "day|days",
-      "weeks": "week|weeks",
-      "months": "month|months",
-      "years": "year|years"
+      "seconds": "секунда|секунды|секунд",
+      "minutes": "минута|минуты|минут",
+      "hours": "час|часа|часов",
+      "days": "день|дня|дней",
+      "weeks": "неделя|недели|недель",
+      "months": "месяц|месяца|месяцев",
+      "years": "год|года|лет"
     }
   }
 }

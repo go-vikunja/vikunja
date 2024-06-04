@@ -95,6 +95,7 @@
         "weekStartMonday": "Ponedeljek",
         "language": "Jezik",
         "defaultProject": "Privzeti projekt",
+        "defaultView": "Privzeti pogled",
         "timezone": "Časovni pas",
         "overdueTasksRemindersTime": "Ura e-poštnega opomnika za zapadla naloge",
         "filterUsedOnOverview": "Shranjen filter, ki bo uporabljen na strani s pregledom"
@@ -313,6 +314,9 @@
         "link": "Povezava",
         "delete": "Izbriši"
       }
+    },
+    "first": {
+      "title": "Prvi pogled"
     },
     "list": {
       "title": "Seznam",

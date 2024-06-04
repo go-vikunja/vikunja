@@ -53,7 +53,7 @@
       "loginWith": "Zaloguj się przez {provider}",
       "authenticating": "Uwierzytelnianie…",
       "openIdStateError": "Stan się nie zgadza, odmowa kontynuacji!",
-      "openIdGeneralError": "An error occurred while authenticating against the third party.",
+      "openIdGeneralError": "Wystąpił błąd podczas uwierzytelniania wobec aplikacji zewnętrznej.",
       "logout": "Wyloguj",
       "emailInvalid": "Proszę podać poprawny adres e-mail.",
       "usernameRequired": "Proszę podać nazwę użytkownika.",
@@ -95,6 +95,7 @@
         "weekStartMonday": "poniedziałku",
         "language": "Język",
         "defaultProject": "Domyślny projekt",
+        "defaultView": "Widok domyślny",
         "timezone": "Strefa czasowa",
         "overdueTasksRemindersTime": "Czas przypomnienia o zaległych zadaniach na e-mail",
         "filterUsedOnOverview": "Zapisany filtr używany na stronie przeglądania"
@@ -227,8 +228,8 @@
       "title": "Archiwizuj \"{project}\"",
       "archive": "Zarchiwizuj ten projekt",
       "unarchive": "Cofnij archiwizację tego projektu",
-      "unarchiveText": "You will be able to create tasks or edit it.",
-      "archiveText": "You won't be able to edit this project or create tasks until you un-archive it.",
+      "unarchiveText": "Będziesz mógł tworzyć nowe zadania lub edytować je.",
+      "archiveText": "Nie będziesz mógł edytować tego projektu ani tworzyć nowych zadań, dopóki nie cofniesz archiwizacji.",
       "success": "Projekt został pomyślnie zarchiwizowany."
     },
     "background": {
@@ -277,7 +278,7 @@
         "title": "Udostępnij linki",
         "what": "Co to jest udostępnianie linków?",
         "explanation": "Udostępnianie linków umożliwia łatwe udostępnianie projektów innym użytkownikom, którzy nie mają konta na Vikunja.",
-        "create": "Create a link share",
+        "create": "Utwórz nowy link do udostępnienia",
         "name": "Nazwa: (opcjonalnie)",
         "namePlaceholder": "np. Lorem Ipsum",
         "nameExplanation": "Wszystkie działania wykonane przez ten link udostępniający będą widoczne pod tą nazwą.",
@@ -314,12 +315,15 @@
         "delete": "Usuń"
       }
     },
+    "first": {
+      "title": "Pierwszy widok"
+    },
     "list": {
       "title": "Lista",
       "add": "Dodaj",
-      "addPlaceholder": "Add a task…",
+      "addPlaceholder": "Dodaj zadanie…",
       "empty": "Ten projekt jest obecnie pusty.",
-      "newTaskCta": "Create a task.",
+      "newTaskCta": "Utwórz zadanie.",
       "editTask": "Edytuj zadanie"
     },
     "gantt": {
@@ -352,7 +356,7 @@
       "addTaskPlaceholder": "Wprowadź tytuł nowego zadania…",
       "addTask": "Dodaj zadanie",
       "addAnotherTask": "Dodaj kolejne zadanie",
-      "addBucket": "Create a bucket",
+      "addBucket": "Utwórz nowy zasobnik",
       "addBucketPlaceholder": "Wprowadź tytuł nowej kolumny…",
       "deleteHeaderBucket": "Usuń kolumnę",
       "deleteBucketText1": "Czy na pewno chcesz usunąć tę kolumnę?",
@@ -507,7 +511,7 @@
     "search": "Wpisz, aby wyszukać etykietę…",
     "create": {
       "header": "Nowa etykieta",
-      "title": "Create a label",
+      "title": "Utwórz etykietę",
       "titleRequired": "Proszę, podaj tytuł.",
       "success": "Etykieta została pomyślnie utworzona."
     },
@@ -528,7 +532,7 @@
   "sharing": {
     "authenticating": "Uwierzytelnianie…",
     "passwordRequired": "Ten udostępniony projekt wymaga hasła. Proszę, wprowadź je poniżej:",
-    "error": "An error occurred.",
+    "error": "Wystąpił błąd.",
     "invalidPassword": "Hasło jest nieprawidłowe."
   },
   "navigation": {
@@ -642,7 +646,7 @@
       "placeholder": "Wpisz tekst lub naciśnij '/', aby zobaczyć więcej opcji…"
     },
     "multiselect": {
-      "createPlaceholder": "Create",
+      "createPlaceholder": "Utwórz",
       "selectPlaceholder": "Kliknij lub naciśnij Enter, aby wybrać"
     },
     "datepickerRange": {
@@ -721,10 +725,10 @@
   },
   "task": {
     "task": "Zadanie",
-    "new": "Create a task",
+    "new": "Utwórz zadanie",
     "delete": "Usuń to zadanie",
     "createSuccess": "Zadanie zostało pomyślnie utworzone.",
-    "addReminder": "Add a reminder…",
+    "addReminder": "Dodaj przypomnienie…",
     "doneSuccess": "Zadanie zostało pomyślnie oznaczone jako ukończone.",
     "undoneSuccess": "Zadanie zostało pomyślnie otwarte ponownie.",
     "undo": "Cofnij",
@@ -860,7 +864,7 @@
       "unassignSuccess": "Użytkownik został pomyślnie usunięty."
     },
     "label": {
-      "placeholder": "Type to add a label…",
+      "placeholder": "Wpisz, aby dodać etykietę…",
       "createPlaceholder": "Dodaj jako nową etykietę",
       "addSuccess": "Etykieta została pomyślnie dodana.",
       "createSuccess": "Etykieta została pomyślnie utworzona.",
@@ -883,8 +887,8 @@
     "relation": {
       "add": "Dodaj nowe powiązane zadanie",
       "new": "Nowe powiązane zadanie",
-      "searchPlaceholder": "Type search for a task to add as related…",
-      "createPlaceholder": "Add this as related task",
+      "searchPlaceholder": "Wpisz, aby wyszukać zadanie, które chcesz dodać jako powiązane…",
+      "createPlaceholder": "Dodaj jako nowe powiązane zadanie",
       "differentProject": "To zadanie należy do innego projektu.",
       "noneYet": "Nie ma jeszcze powiązanych zadań.",
       "delete": "Usuń powiązane zadanie",
@@ -922,7 +926,7 @@
       "every30d": "Co 30 dni",
       "mode": "Tryb powtarzania",
       "monthly": "Miesięczny",
-      "fromCurrentDate": "From completion date",
+      "fromCurrentDate": "Od daty zakończenia",
       "each": "Co",
       "specifyAmount": "Określ ilość…",
       "hours": "Godziny",
@@ -962,7 +966,7 @@
     "title": "Zespoły",
     "noTeams": "Obecnie nie należysz do żadnego zespołu.",
     "create": {
-      "title": "Create a team",
+      "title": "Utwórz zespół",
       "success": "Zespół został pomyślnie utworzony."
     },
     "edit": {
@@ -1060,7 +1064,7 @@
     "duplicate": "Duplikuj",
     "delete": "Usuń",
     "unarchive": "Cofnij archiwizację",
-    "setBackground": "Background settings",
+    "setBackground": "Ustawienie tła",
     "share": "Udostępnij",
     "newProject": "Nowy projekt",
     "createProject": "Utwórz projekt",

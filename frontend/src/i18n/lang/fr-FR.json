@@ -95,6 +95,7 @@
         "weekStartMonday": "lundi",
         "language": "Langue",
         "defaultProject": "Projet par défaut",
+        "defaultView": "Default View",
         "timezone": "Fuseau horaire",
         "overdueTasksRemindersTime": "Heure du courriel de rappel des tâches en retard",
         "filterUsedOnOverview": "Filtre enregistré utilisé sur la vue d’ensemble"
@@ -313,6 +314,9 @@
         "link": "Lien",
         "delete": "Supprimer"
       }
+    },
+    "first": {
+      "title": "First View"
     },
     "list": {
       "title": "Liste",

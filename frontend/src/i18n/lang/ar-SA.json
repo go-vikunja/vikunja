@@ -95,6 +95,7 @@
         "weekStartMonday": "الإثنين",
         "language": "اللّغة",
         "defaultProject": "المشروع الافتراضي",
+        "defaultView": "Default View",
         "timezone": "منطقة التوقيت",
         "overdueTasksRemindersTime": "وقت تذكير للمهام المتأخرة بالبريد الإلكتروني",
         "filterUsedOnOverview": "الفلتر المحفوظ والمستخدم في صفحة العرض العام"
@@ -313,6 +314,9 @@
         "link": "رابط",
         "delete": "حذف"
       }
+    },
+    "first": {
+      "title": "First View"
     },
     "list": {
       "title": "القائمة",

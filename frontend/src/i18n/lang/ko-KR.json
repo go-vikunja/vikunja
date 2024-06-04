@@ -95,6 +95,7 @@
         "weekStartMonday": "월요일",
         "language": "언어",
         "defaultProject": "기본 프로젝트",
+        "defaultView": "Default View",
         "timezone": "표준시간대",
         "overdueTasksRemindersTime": "Overdue tasks reminder email time",
         "filterUsedOnOverview": "Saved filter used on the overview page"
@@ -313,6 +314,9 @@
         "link": "Link",
         "delete": "Delete"
       }
+    },
+    "first": {
+      "title": "First View"
     },
     "list": {
       "title": "List",

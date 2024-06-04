@@ -95,6 +95,7 @@
         "weekStartMonday": "Montag",
         "language": "Sprache",
         "defaultProject": "Standard-Projekt",
+        "defaultView": "Standardansicht",
         "timezone": "Zeitzone",
         "overdueTasksRemindersTime": "Zeit der E-Mail-Zusammenfassung der überfälligen Aufgaben",
         "filterUsedOnOverview": "Gespeicherter Filter, der für die Startseite verwendet wird"
@@ -313,6 +314,9 @@
         "link": "Link",
         "delete": "Löschen"
       }
+    },
+    "first": {
+      "title": "Erste Ansicht"
     },
     "list": {
       "title": "Liste",

@@ -95,6 +95,7 @@
         "weekStartMonday": "Mandag",
         "language": "Sprog",
         "defaultProject": "Default Project",
+        "defaultView": "Default View",
         "timezone": "Tidszone",
         "overdueTasksRemindersTime": "Forfaldne opgaver påmindelse e-mail tidspunkt",
         "filterUsedOnOverview": "Saved filter used on the overview page"
@@ -313,6 +314,9 @@
         "link": "Link",
         "delete": "Delete"
       }
+    },
+    "first": {
+      "title": "First View"
     },
     "list": {
       "title": "List",

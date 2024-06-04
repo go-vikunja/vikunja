@@ -95,6 +95,7 @@
         "weekStartMonday": "Pondělí",
         "language": "Jazyk",
         "defaultProject": "Výchozí projekt",
+        "defaultView": "Default View",
         "timezone": "Časové pásmo",
         "overdueTasksRemindersTime": "Čas odeslání emailu o zpožděných úkolech",
         "filterUsedOnOverview": "Uložený filtr použitý na stránce přehledu"
@@ -313,6 +314,9 @@
         "link": "Odkaz",
         "delete": "Smazat"
       }
+    },
+    "first": {
+      "title": "First View"
     },
     "list": {
       "title": "Seznam",

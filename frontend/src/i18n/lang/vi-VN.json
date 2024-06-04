@@ -95,6 +95,7 @@
         "weekStartMonday": "Thứ hai",
         "language": "Ngôn ngữ",
         "defaultProject": "Default Project",
+        "defaultView": "Default View",
         "timezone": "Múi giờ",
         "overdueTasksRemindersTime": "Overdue tasks reminder email time",
         "filterUsedOnOverview": "Saved filter used on the overview page"
@@ -313,6 +314,9 @@
         "link": "Link",
         "delete": "Delete"
       }
+    },
+    "first": {
+      "title": "First View"
     },
     "list": {
       "title": "List",

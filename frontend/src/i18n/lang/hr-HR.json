@@ -95,6 +95,7 @@
         "weekStartMonday": "Ponedjeljak",
         "language": "Jezik",
         "defaultProject": "Zadani projekt",
+        "defaultView": "Default View",
         "timezone": "Vremenska Zona",
         "overdueTasksRemindersTime": "Vrijeme podsjetnika za zakašnjele zadatke putem e-pošte",
         "filterUsedOnOverview": "Spremljeni filtar korišten na stranici pregleda"
@@ -313,6 +314,9 @@
         "link": "Poveznica",
         "delete": "Obriši"
       }
+    },
+    "first": {
+      "title": "First View"
     },
     "list": {
       "title": "Lista",
