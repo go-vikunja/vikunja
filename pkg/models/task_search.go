@@ -516,7 +516,6 @@ func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, 
 		filterBy = append(filterBy, "("+filter+")")
 	}
 
-	var projectViewIDForPosition int64
 	var sortbyFields []string
 	for i, param := range opts.sortby {
 		// Validate the params
@@ -533,7 +532,6 @@ func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, 
 
 		if param.sortBy == taskPropertyPosition {
 			sortBy = "positions.view_" + strconv.FormatInt(param.projectViewID, 10)
-			projectViewIDForPosition = param.projectViewID
 		}
 
 		sortbyFields = append(sortbyFields, sortBy+"(missing_values:last):"+param.orderBy.String())
@@ -599,8 +597,11 @@ func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, 
 		In("id", taskIDs).
 		OrderBy(orderby)
 
-	if projectViewIDForPosition != 0 {
-		query = query.Join("LEFT", "task_positions", "task_positions.task_id = tasks.id AND task_positions.project_view_id = ?", projectViewIDForPosition)
+	for _, param := range opts.sortby {
+		if param.sortBy == taskPropertyPosition {
+			query = query.Join("LEFT", "task_positions", "task_positions.task_id = tasks.id AND task_positions.project_view_id = ?", param.projectViewID)
+			break
+		}
 	}
 
 	err = query.Find(&tasks)
