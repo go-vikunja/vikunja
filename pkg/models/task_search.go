@@ -517,7 +517,13 @@ func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, 
 	}
 
 	var sortbyFields []string
-	for i, param := range opts.sortby {
+	var usedParams int
+	for _, param := range opts.sortby {
+
+		if opts.isSavedFilter && param.sortBy == taskPropertyPosition {
+			continue
+		}
+
 		// Validate the params
 		if err := param.validate(); err != nil {
 			return nil, totalCount, err
@@ -536,11 +542,13 @@ func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, 
 
 		sortbyFields = append(sortbyFields, sortBy+"(missing_values:last):"+param.orderBy.String())
 
-		if i == 2 {
+		if usedParams == 2 {
 			// Typesense supports up to 3 sorting parameters
 			// https://typesense.org/docs/0.25.0/api/search.html#ranking-and-sorting-parameters
 			break
 		}
+
+		usedParams++
 	}
 
 	sortby := strings.Join(sortbyFields, ",")

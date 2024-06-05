@@ -262,6 +262,7 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 	opts.page = page
 	opts.perPage = perPage
 	opts.expand = tf.Expand
+	opts.isSavedFilter = tf.isSavedFilter
 
 	if view != nil {
 		var hasOrderByPosition bool

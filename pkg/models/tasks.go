@@ -175,6 +175,7 @@ type taskSearchOptions struct {
 	filterIncludeNulls bool
 	filter             string
 	filterTimezone     string
+	isSavedFilter      bool
 	projectIDs         []int64
 	expand             TaskCollectionExpandable
 }
