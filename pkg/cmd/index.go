@@ -21,13 +21,15 @@ import (
 	"code.vikunja.io/api/pkg/initialize"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+
 	"github.com/spf13/cobra"
 )
 
 func init() {
 	rootCmd.AddCommand(indexCmd)
-	rootCmd.AddCommand(partialReindexCmd)
 }
+
+var indexPartialFlag bool
 
 var indexCmd = &cobra.Command{
 	Use:   "index",
@@ -41,48 +43,31 @@ var indexCmd = &cobra.Command{
 			return
 		}
 
-		log.Infof("Indexing… This may take a while.")
-
 		err := models.CreateTypesenseCollections()
 		if err != nil {
 			log.Criticalf("Could not create Typesense collections: %s", err.Error())
 			return
 		}
-		err = models.ReindexAllTasks()
-		if err != nil {
-			log.Criticalf("Could not reindex all tasks into Typesense: %s", err.Error())
-			return
+		if indexPartialFlag {
+			log.Infof("Indexing changed tasks… This may take a while.")
+			err = models.SyncUpdatedTasksIntoTypesense()
+			if err != nil {
+				log.Criticalf("Could not reindex all changed tasks into Typesense: %s", err.Error())
+				return
+			}
+		} else {
+			log.Infof("Indexing all tasks… This may take a while.")
+			err = models.ReindexAllTasks()
+			if err != nil {
+				log.Criticalf("Could not reindex all tasks into Typesense: %s", err.Error())
+				return
+			}
 		}
 
 		log.Infof("Done!")
 	},
 }
 
-var partialReindexCmd = &cobra.Command{
-	Use:   "partial-index",
-	Short: "Reindex any tasks which were not indexed yet into Typesense. This will not remove any existing index.",
-	PreRun: func(_ *cobra.Command, _ []string) {
-		initialize.FullInitWithoutAsync()
-	},
-	Run: func(_ *cobra.Command, _ []string) {
-		if config.TypesenseURL.GetString() == "" {
-			log.Error("Typesense not configured")
-			return
-		}
-
-		log.Infof("Indexing… This may take a while.")
-
-		err := models.CreateTypesenseCollections()
-		if err != nil {
-			log.Criticalf("Could not create Typesense collections: %s", err.Error())
-			return
-		}
-		err = models.SyncUpdatedTasksIntoTypesense()
-		if err != nil {
-			log.Criticalf("Could not reindex all changed tasks into Typesense: %s", err.Error())
-			return
-		}
-
-		log.Infof("Done!")
-	},
+func init() {
+	indexCmd.Flags().BoolVarP(&indexPartialFlag, "partial", "p", false, "If provided, Vikunja will only index those tasks which are not present in the index. It will not remove any existing tasks.")
 }

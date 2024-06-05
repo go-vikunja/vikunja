@@ -10,17 +10,9 @@ menu:
 
 # Command line interface
 
-You can interact with Vikunja using its `cli` interface.<br />
-The following commands are available:
+You can interact with Vikunja using its `cli` interface.
 
-* [dump](#dump)
-* [help](#help)
-* [migrate](#migrate)
-* [restore](#restore)
-* [testmail](#testmail)
-* [user](#user)
-* [version](#version)
-* [web](#web)
+{{< table_of_contents >}}
 
 If you don't specify a command, the [`web`](#web) command will be executed.
 
@@ -43,7 +35,7 @@ alias vikunja-docker='docker exec <name of the vikunja container> /app/vikunja/v
 
 Then use it as `vikunja-docker <subcommand>`.
 
-### `dump`
+## `dump`
 
 Creates a zip file with all vikunja-related files.
 This includes config, version, all files and the full database.
@@ -53,7 +45,21 @@ Usage:
 $ vikunja dump
 ```
 
-### `help`
+## `index`
+
+Perform a full reindex of all tasks into Typesense. This will clear all tasks already present in the index unless the `--partial` flag is provided, see below.
+
+The command will only work if Typesense is enabled.
+
+Flags:
+* `-p`, `--partial`: If provided, Vikunja will only index tasks which are not present in the index yet.
+
+Usage:
+```
+$ vikunja index [flags]
+```
+
+## `help`
 
 Shows more detailed help about any command.
 
@@ -63,7 +69,7 @@ Usage:
 $ vikunja help [command]
 ```
 
-### `migrate`
+## `migrate`
 
 Run all database migrations which didn't already run.
 
@@ -73,7 +79,7 @@ $ vikunja migrate [flags]
 $ vikunja migrate [command]
 ```
 
-#### `migrate list`
+### `migrate list`
 
 Shows a list with all database migrations.
 
@@ -82,7 +88,7 @@ Usage:
 $ vikunja migrate list
 ```
 
-#### `migrate rollback`
+### `migrate rollback`
 
 Roll migrations back until a certain point.
 
@@ -94,42 +100,42 @@ $ vikunja migrate rollback [flags]
 Flags:
 * `-n`, `--name` string: The id of the migration you want to roll back until.
 
-### `restore`
+## `restore`
 
 Restores a previously created dump from a zip file, see `dump`.
 
 Usage:
 ```
-$ vikunja restore <path to dump zip file>
+$ vikunja restore [path to dump zip file]
 ```
 
-### `testmail`
+## `testmail`
 
 Sends a test mail using the configured smtp connection.
 
 Usage:
 ```
-$ vikunja testmail <email to send the test mail to>
+$ vikunja testmail [email to send the test mail to]
 ```
 
-### `user`
+## `user`
 
 Bundles a few commands to manage users.
 
-#### `user change-status`
+### `user change-status`
 
 Enable or disable a user. Will toggle the current status if no flag (`--enable` or `--disable`) is provided.
 
 Usage:
 ```
-$ vikunja user change-status <user id> <flags>
+$ vikunja user change-status [user id] [flags]
 ```
 
 Flags:
 * `-d`, `--disable`: Disable the user.
 * `-e`, `--enable`: Enable the user.
 
-#### `user create`
+### `user create`
 
 Create a new user.
 
@@ -144,7 +150,7 @@ Flags:
 * `-p`, `--password`: The password of the new user. You will be asked to enter it if not provided through the flag.
 * `-u`, `--username`: The username of the new user.
 
-#### `user delete`
+### `user delete`
 
 Start the user deletion process.
 If called without the `--now` flag, this command will only trigger an email to the user in order for them to confirm and start the deletion process (this is the same behavior as if the user requested their deletion via the web interface).
@@ -153,13 +159,13 @@ With the flag the user is deleted **immediately**.
 **USE WITH CAUTION.**
 
 ```
-$ vikunja user delete <id> <flags>
+$ vikunja user delete [id] [flags]
 ```
 
 Flags:
 * `-n`, `--now` If provided, deletes the user immediately instead of emailing them first.
 
-#### `user list`
+### `user list`
 
 Shows a list of all users.
 
@@ -168,26 +174,26 @@ Usage:
 $ vikunja user list
 ```
 
-#### `user reset-password`
+### `user reset-password`
 
 Reset a users password, either through mailing them a reset link or directly.
 
 Usage:
 ```
-$ vikunja user reset-password <flags>
+$ vikunja user reset-password [flags]
 ```
 
 Flags:
 * `-d`, `--direct`: If provided, reset the password directly instead of sending the user a reset mail.
 * `-p`, `--password`: The new password of the user. Only used in combination with --direct. You will be asked to enter it if not provided through the flag.
 
-#### `user update`
+### `user update`
 
 Update an existing user.
 
 Usage:
 ```
-$ vikunja user update <user id>
+$ vikunja user update [user id]
 ```
 
 Flags:
@@ -195,19 +201,19 @@ Flags:
 * `-e`, `--email`: The new email address of the user.
 * `-u`, `--username`: The new username of the user.
 
-### `version`
+## `version`
 
 Prints the version of Vikunja.
-This is either the semantic version (something like `0.7`) or version + git commit hash.
+This is either the semantic version (something like `0.24.0`) or version + git commit hash.
 
 Usage:
 ```
 $ vikunja version
 ```
 
-### `web`
+## `web`
 
-Starts Vikunja's REST api server.
+Starts Vikunja's web server, serving the api and frontend.
 
 Usage:
 ```
