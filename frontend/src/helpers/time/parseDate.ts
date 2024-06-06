@@ -79,6 +79,12 @@ export const parseDate = (text: string, now: Date = new Date()): dateParseResult
 	parsed = getDateFromText(text, now)
 
 	if (parsed.date === null) {
+		const time = addTimeToDate(text, new Date(now), parsed.foundText)
+		
+		if (time.date !== null && +now !== +time.date) {
+			return time
+		}
+		
 		return {
 			newText: replaceAll(text, parsed.foundText, ''),
 			date: parsed.date,
@@ -122,7 +128,7 @@ const addTimeToDate = (text: string, date: Date, previousMatch: string | null): 
 	const replace = results !== null ? results[0] : previousMatch
 	return {
 		newText: replaceAll(text, replace, '').trim(),
-		date: date,
+		date,
 	}
 }
 

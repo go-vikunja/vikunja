@@ -261,9 +261,14 @@ const getRepeats = (text: string): repeatParsedResult => {
 					break
 			}
 	}
+	
+	let matchedText = results[0]
+	if(matchedText.endsWith(' ')) {
+		matchedText = matchedText.substring(0, matchedText.length - 1)
+	}
 
 	return {
-		textWithoutMatched: text.replace(results[0], ''),
+		textWithoutMatched: text.replace(matchedText, ''),
 		repeats: {
 			amount,
 			type,

@@ -804,6 +804,17 @@ describe('Parse Task Text', () => {
 				expect(result?.repeats?.type).toBe(cases[c].type)
 				expect(result?.repeats?.amount).toBe(cases[c].amount)
 			})
+		 	
+			it(`should parse ${c} as recurring date every ${cases[c].amount} ${cases[c].type} at 11:42`, () => {
+				const result = parseTaskText(`Lorem Ipsum ${c} at 11:42`)
+
+				expect(result.text).toBe('Lorem Ipsum')
+				expect(result?.repeats?.type).toBe(cases[c].type)
+				expect(result?.repeats?.amount).toBe(cases[c].amount)
+				const now = new Date()
+				expect(`${result?.date?.getFullYear()}-${result?.date?.getMonth()}-${result?.date?.getDate()}`).toBe(`${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`)
+				expect(`${result?.date?.getHours()}:${result?.date?.getMinutes()}`).toBe('11:42')
+			})
 		}
 
 		const wordCases = [
