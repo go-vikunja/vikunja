@@ -1,5 +1,5 @@
 <template>
-	<div>
+	<div v-if="configStore.registrationEnabled">
 		<Message
 			v-if="errorMessage !== ''"
 			variant="danger"
@@ -107,6 +107,12 @@
 			</p>
 		</form>
 	</div>
+	<Message
+		v-else
+		variant="warning"
+	>
+		{{ $t('user.auth.registrationDisabled') }}
+	</Message>
 </template>
 
 <script setup lang="ts">
@@ -160,17 +166,17 @@ const validateUsername = useDebounceFn(() => {
 		usernameValid.value = t('user.auth.usernameRequired')
 		return
 	}
-	
-	if(credentials.username.indexOf(' ') !== -1) {
+
+	if (credentials.username.indexOf(' ') !== -1) {
 		usernameValid.value = t('user.auth.usernameMustNotContainSpace')
 		return
 	}
-	
-	if(credentials.username.indexOf('://') !== -1) {
+
+	if (credentials.username.indexOf('://') !== -1) {
 		usernameValid.value = t('user.auth.usernameMustNotLookLikeUrl')
 		return
 	}
-	
+
 	usernameValid.value = true
 }, DEBOUNCE_TIME)
 
