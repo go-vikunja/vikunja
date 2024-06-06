@@ -66,7 +66,7 @@
 							<SingleTaskInProject
 								:show-list-color="false"
 								:disabled="!canWrite"
-								:can-mark-as-done="canWrite || isSavedFilter(project)"
+								:can-mark-as-done="canWrite || isPseudoProject"
 								:the-task="t"
 								:all-tasks="allTasks"
 								@taskUpdated="updateTasks"
@@ -194,6 +194,8 @@ const project = computed(() => baseStore.currentProject)
 const canWrite = computed(() => {
 	return project.value.maxRight > Rights.READ && project.value.id > 0
 })
+
+const isPseudoProject = computed(() => (project.value && isSavedFilter(project.value)) || project.value?.id === -1)
 
 onMounted(async () => {
 	await nextTick()
