@@ -5,7 +5,7 @@ import type {ITask} from '@/modelTypes/ITask'
 import BucketModel from '@/models/bucket'
 
 export interface TaskFilterParams {
-	sort_by: ('start_date' | 'end_date' | 'due_date' | 'done' | 'id' | 'position' | 'kanban_position')[],
+	sort_by: ('start_date' | 'end_date' | 'due_date' | 'done' | 'id' | 'position')[],
 	order_by: ('asc' | 'desc')[],
 	filter: string,
 	filter_include_nulls: boolean,

@@ -486,8 +486,8 @@ async function updateTaskPosition(e) {
 	const newTask = klona(task) // cloning the task to avoid pinia store manipulation
 	newTask.bucketId = newBucket.id
 	const position = calculateItemPosition(
-		taskBefore !== null ? taskBefore.kanbanPosition : null,
-		taskAfter !== null ? taskAfter.kanbanPosition : null,
+		taskBefore !== null ? taskBefore.position : null,
+		taskAfter !== null ? taskAfter.position : null,
 	)
 	if (
 		oldBucket !== undefined && // This shouldn't actually be `undefined`, but let's play it safe.
@@ -525,13 +525,13 @@ async function updateTaskPosition(e) {
 		}
 
 		// Make sure the first and second task don't both get position 0 assigned
-		if (newTaskIndex === 0 && taskAfter !== null && taskAfter.kanbanPosition === 0) {
+		if (newTaskIndex === 0 && taskAfter !== null && taskAfter.position === 0) {
 			const taskAfterAfter = newBucket.tasks[newTaskIndex + 2] ?? null
 			const newTaskAfter = klona(taskAfter) // cloning the task to avoid pinia store manipulation
 			newTaskAfter.bucketId = newBucket.id
-			newTaskAfter.kanbanPosition = calculateItemPosition(
+			newTaskAfter.position = calculateItemPosition(
 				0,
-				taskAfterAfter !== null ? taskAfterAfter.kanbanPosition : null,
+				taskAfterAfter !== null ? taskAfterAfter.position : null,
 			)
 
 			await taskStore.update(newTaskAfter)

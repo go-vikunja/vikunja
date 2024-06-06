@@ -45,7 +45,6 @@ export interface ITask extends IAbstract {
 	subscription: ISubscription
 
 	position: number
-	kanbanPosition: number
 	
 	reactions: IReactionPerEntity
 
