@@ -255,7 +255,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 					builder.Eq{"kind": FavoriteKindTask},
 				))
 
-		favoritesCond = builder.In("id", favCond)
+		favoritesCond = builder.In("tasks.id", favCond)
 	}
 
 	limit, start := getLimitFromPageIndex(opts.page, opts.perPage)
