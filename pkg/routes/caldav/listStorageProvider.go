@@ -125,8 +125,8 @@ func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, _ bool) ([]d
 	return resources, nil
 }
 
-// GetResourcesByList fetches a project of resources from a slice of paths
-func (vcls *VikunjaCaldavProjectStorage) GetResourcesByList(rpaths []string) ([]data.Resource, error) {
+// GetResourcesByList fetches a list of resources from a slice of paths
+func (vcls *VikunjaCaldavProjectStorage) GetResourcesByList(rpaths []string) (resources []data.Resource, err error) {
 
 	// Parse the set of resourcepaths into usable uids
 	// A path looks like this: /dav/projects/10/a6eb526d5748a5c499da202fe74f36ed1aea2aef.ics
@@ -134,7 +134,14 @@ func (vcls *VikunjaCaldavProjectStorage) GetResourcesByList(rpaths []string) ([]
 	var uids []string
 	for _, path := range rpaths {
 		parts := strings.Split(path, "/")
+		if len(parts) < 5 {
+			continue
+		}
 		uids = append(uids, strings.TrimSuffix(parts[4], ".ics"))
+	}
+
+	if len(uids) == 0 {
+		return
 	}
 
 	s := db.NewSession()
@@ -145,13 +152,13 @@ func (vcls *VikunjaCaldavProjectStorage) GetResourcesByList(rpaths []string) ([]
 	tasks, err := models.GetTasksByUIDs(s, uids, vcls.user)
 	if err != nil {
 		_ = s.Rollback()
-		return nil, err
+		return
 	}
-	if err := s.Commit(); err != nil {
-		return nil, err
+	err = s.Commit()
+	if err != nil {
+		return
 	}
 
-	var resources []data.Resource
 	for _, t := range tasks {
 		rr := VikunjaProjectResourceAdapter{
 			task: t,
@@ -161,7 +168,7 @@ func (vcls *VikunjaCaldavProjectStorage) GetResourcesByList(rpaths []string) ([]
 		resources = append(resources, r)
 	}
 
-	return resources, nil
+	return
 }
 
 // GetResourcesByFilters fetches a project of resources with a filter
