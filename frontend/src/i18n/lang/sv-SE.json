@@ -66,7 +66,8 @@
       "hidePassword": "Hide the password",
       "noAccountYet": "Har du inget konto än?",
       "alreadyHaveAnAccount": "Har du redan ett konto?",
-      "remember": "Stay logged in"
+      "remember": "Stay logged in",
+      "registrationDisabled": "Registration is disabled."
     },
     "settings": {
       "title": "Inställningar",
@@ -1114,7 +1115,7 @@
   },
   "date": {
     "locale": "en",
-    "altFormatLong": "j M Y H:i",
+    "altFormatLong": "j M Y, H:i",
     "altFormatShort": "j M Y"
   },
   "reaction": {

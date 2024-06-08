@@ -66,7 +66,8 @@
       "hidePassword": "Passwort verbergen",
       "noAccountYet": "Noch kein Account?",
       "alreadyHaveAnAccount": "Hast du bereits einen Account?",
-      "remember": "Angemeldet bleiben"
+      "remember": "Angemeldet bleiben",
+      "registrationDisabled": "Registrierung ist deaktiviert."
     },
     "settings": {
       "title": "Einstellungen",
@@ -1114,7 +1115,7 @@
   },
   "date": {
     "locale": "de",
-    "altFormatLong": "j M Y H:i",
+    "altFormatLong": "j M Y, H:i",
     "altFormatShort": "j M Y"
   },
   "reaction": {

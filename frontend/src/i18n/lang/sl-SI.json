@@ -66,7 +66,8 @@
       "hidePassword": "Skrijte geslo",
       "noAccountYet": "Še nimate računa?",
       "alreadyHaveAnAccount": "Že imate račun?",
-      "remember": "Ostanite prijavljeni"
+      "remember": "Ostanite prijavljeni",
+      "registrationDisabled": "Registracija je onemogočena."
     },
     "settings": {
       "title": "Nastavitve",
@@ -1114,7 +1115,7 @@
   },
   "date": {
     "locale": "sl",
-    "altFormatLong": "j M Y H:i",
+    "altFormatLong": "j M Y, H:i",
     "altFormatShort": "j M Y"
   },
   "reaction": {

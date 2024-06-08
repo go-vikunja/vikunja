@@ -66,7 +66,8 @@
       "hidePassword": "Ocultar la contraseña",
       "noAccountYet": "¿Aún no tienes una cuenta?",
       "alreadyHaveAnAccount": "¿Ya tienes una cuenta?",
-      "remember": "Mantener la sesión abierta"
+      "remember": "Mantener la sesión abierta",
+      "registrationDisabled": "Registration is disabled."
     },
     "settings": {
       "title": "Ajustes",
@@ -1114,7 +1115,7 @@
   },
   "date": {
     "locale": "es",
-    "altFormatLong": "j M Y H:i",
+    "altFormatLong": "j M Y, H:i",
     "altFormatShort": "j M Y"
   },
   "reaction": {

@@ -66,7 +66,8 @@
       "hidePassword": "Скрыть пароль",
       "noAccountYet": "Ещё нет аккаунта?",
       "alreadyHaveAnAccount": "Уже есть аккаунт?",
-      "remember": "Оставаться в системе"
+      "remember": "Оставаться в системе",
+      "registrationDisabled": "Регистрация отключена."
     },
     "settings": {
       "title": "Настройки",
@@ -1114,7 +1115,7 @@
   },
   "date": {
     "locale": "en",
-    "altFormatLong": "j M Y H:i",
+    "altFormatLong": "j M Y, H:i",
     "altFormatShort": "j M Y"
   },
   "reaction": {

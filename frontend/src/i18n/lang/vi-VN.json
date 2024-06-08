@@ -66,7 +66,8 @@
       "hidePassword": "Ẩn mật khẩu",
       "noAccountYet": "Bạn chưa có tài khoản?",
       "alreadyHaveAnAccount": "Đã có tài khoản?",
-      "remember": "Duy trì đăng nhập"
+      "remember": "Duy trì đăng nhập",
+      "registrationDisabled": "Registration is disabled."
     },
     "settings": {
       "title": "Cài đặt",
@@ -1114,7 +1115,7 @@
   },
   "date": {
     "locale": "en",
-    "altFormatLong": "j M Y H:i",
+    "altFormatLong": "j M Y, H:i",
     "altFormatShort": "j M Y"
   },
   "reaction": {

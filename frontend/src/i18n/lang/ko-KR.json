@@ -66,7 +66,8 @@
       "hidePassword": "비밀번호 숨김",
       "noAccountYet": "아직 계정이 없으신가요?",
       "alreadyHaveAnAccount": "이미 계정이 있으신가요?",
-      "remember": "로그인 상태 유지"
+      "remember": "로그인 상태 유지",
+      "registrationDisabled": "Registration is disabled."
     },
     "settings": {
       "title": "환경설정",
@@ -1114,7 +1115,7 @@
   },
   "date": {
     "locale": "en",
-    "altFormatLong": "j M Y H:i",
+    "altFormatLong": "j M Y, H:i",
     "altFormatShort": "j M Y"
   },
   "reaction": {

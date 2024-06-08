@@ -66,7 +66,8 @@
       "hidePassword": "Skrýt heslo",
       "noAccountYet": "Ještě nemáte účet?",
       "alreadyHaveAnAccount": "Už máte svůj účet?",
-      "remember": "Zůstat trvale přihlášen"
+      "remember": "Zůstat trvale přihlášen",
+      "registrationDisabled": "Registration is disabled."
     },
     "settings": {
       "title": "Nastavení",
@@ -1114,7 +1115,7 @@
   },
   "date": {
     "locale": "cs",
-    "altFormatLong": "j M Y H:i",
+    "altFormatLong": "j M Y, H:i",
     "altFormatShort": "j M Y"
   },
   "reaction": {

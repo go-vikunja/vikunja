@@ -66,7 +66,8 @@
       "hidePassword": "隐藏密码",
       "noAccountYet": "还没有账号？",
       "alreadyHaveAnAccount": "已有账户？",
-      "remember": "保持登录状态"
+      "remember": "保持登录状态",
+      "registrationDisabled": "Registration is disabled."
     },
     "settings": {
       "title": "设置",
@@ -1114,7 +1115,7 @@
   },
   "date": {
     "locale": "中文",
-    "altFormatLong": "Y M d H:i",
+    "altFormatLong": "j M Y, H:i",
     "altFormatShort": "j M Y"
   },
   "reaction": {

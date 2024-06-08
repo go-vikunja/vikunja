@@ -66,7 +66,8 @@
       "hidePassword": "Skjul adgangskoden",
       "noAccountYet": "Har du ikke en konto endnu?",
       "alreadyHaveAnAccount": "Har du allerede en konto?",
-      "remember": "Forbliv logget ind"
+      "remember": "Forbliv logget ind",
+      "registrationDisabled": "Registration is disabled."
     },
     "settings": {
       "title": "Indstillinger",
@@ -1114,7 +1115,7 @@
   },
   "date": {
     "locale": "da",
-    "altFormatLong": "d m Y H:i",
+    "altFormatLong": "j M Y, H:i",
     "altFormatShort": "j M Y"
   },
   "reaction": {
