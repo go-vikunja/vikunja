@@ -9,6 +9,6 @@
     "mgmcdermott.vscode-language-babel",
     "mikestead.dotenv",
     "Syler.sass-indented",
-    "zixuanchen.vitest-explorer"
+    "vitest.explorer"
   ]
 }
