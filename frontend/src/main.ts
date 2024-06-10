@@ -77,7 +77,7 @@ setLanguage(browserLanguage).then(() => {
 	if (import.meta.env.DEV) {
 		app.config.warnHandler = (msg) => {
 			error(msg)
-			throw(msg)
+			throw msg
 		}
 
 		// https://stackoverflow.com/a/52076738/15522256
