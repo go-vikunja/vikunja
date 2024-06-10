@@ -2,7 +2,6 @@
     "go.testEnvVars": {
         "VIKUNJA_SERVICE_ROOTPATH": "${workspaceRoot}"
     },
-    "eslint.packageManager": "pnpm",
     "editor.formatOnSave": false,
     "editor.codeActionsOnSave": {
         "source.fixAll": "explicit"
@@ -21,11 +20,6 @@
         "javascriptreact",
         "vue"
     ],
-
-    "volar.completion.preferredTagNameCase": "pascal",
-
-    // disable vetur in case it is installed
-    "vetur.validation.template": false,
 
     // i18n ally
     "i18n-ally.localesPaths": [
