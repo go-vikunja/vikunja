@@ -19,9 +19,5 @@
       "vite-plugin-sentry/client"
     ],
     "ignoreDeprecations": "5.0"
-  },
-  "vueCompilerOptions": {
-    // "strictTemplates": true
-    "jsxTemplates": true
   }
 }
