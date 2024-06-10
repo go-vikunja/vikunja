@@ -96,7 +96,7 @@ defineExpose({
 </script>
 
 <style lang="scss">
-// NOTE: we do not use scoped styles to reduce specifity and make it easy to overwrite
+// NOTE: we do not use scoped styles to reduce specificity and make it easy to overwrite
 
 // We reset the default styles of a button element to enable easier styling
 :where(.base-button--type-button) {
