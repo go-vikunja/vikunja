@@ -3,5 +3,3 @@
  * same format as `new Date().toISOString()`
  */
 export type DateISO<T extends string = string> = T
-
-new Date().toISOString()
