@@ -1,5 +1,6 @@
 /// <reference types="vitest" />
 import {defineConfig, type PluginOption, loadEnv} from 'vite'
+import {configDefaults} from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
 import legacyFn from '@vitejs/plugin-legacy'
 import {URL, fileURLToPath} from 'node:url'
@@ -87,6 +88,7 @@ export default defineConfig(({mode}) => {
 		// https://vitest.dev/config/
 		test: {
 			environment: 'happy-dom',
+			exclude: [...configDefaults.exclude, 'e2e/**'],
 			'vitest.commandLine': 'pnpm test:unit',
 		},
 		css: {

@@ -7,6 +7,5 @@
     "target": "ES2015",
     "lib": ["ESNext", "dom"],
     "types": ["cypress"],
-    "ignoreDeprecations": "5.0"
   }
 }
