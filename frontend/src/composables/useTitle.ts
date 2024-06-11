@@ -1,15 +1,15 @@
 import {computed} from 'vue'
-import type {Ref} from 'vue'
 
-import {useTitle as useTitleVueUse, toRef} from '@vueuse/core'
+import {useTitle as useTitleVueUse, toValue, type UseTitleOptions, type ReadonlyRefOrGetter, type MaybeRef, type MaybeRefOrGetter} from '@vueuse/core'
 
-type UseTitleParameters = Parameters<typeof useTitleVueUse>
-
-export function useTitle(...args: UseTitleParameters) {
-
-	const [newTitle, ...restArgs] = args
-
-	const pageTitle = toRef(newTitle) as Ref<string>
+export function useTitle(
+	newTitle:
+		| ReadonlyRefOrGetter<string | null | undefined>
+		| MaybeRef<string | null | undefined>
+		| MaybeRefOrGetter<string | null | undefined> = null,
+	options?: UseTitleOptions,
+) {
+	const pageTitle = computed(() => toValue(newTitle))
 
 	const completeTitle = computed(() =>
 		(typeof pageTitle.value === 'undefined' || pageTitle.value === '')
@@ -17,5 +17,5 @@ export function useTitle(...args: UseTitleParameters) {
 			: `${pageTitle.value} | Vikunja`,
 	)
 
-	return useTitleVueUse(completeTitle, ...restArgs)
+	return useTitleVueUse(completeTitle, options)
 }
