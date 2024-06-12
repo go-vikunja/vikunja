@@ -7,7 +7,7 @@ import {dirname, resolve} from 'node:path'
 
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
 import {VitePWA} from 'vite-plugin-pwa'
-import VitePluginInjectPreload from 'vite-plugin-inject-preload'
+import UnpluginInjectPreload from 'unplugin-inject-preload/vite'
 import {visualizer} from 'rollup-plugin-visualizer'
 
 import viteSentry, {type ViteSentryPluginOptions} from 'vite-plugin-sentry'
@@ -123,10 +123,10 @@ export default defineConfig(({mode}) => {
 				fullInstall: true,
 				include: resolve(dirname(pathSrc), './src/i18n/lang/**'),
 			}),
-			// https://github.com/Applelo/vite-plugin-inject-preload
-			VitePluginInjectPreload({
+			// https://github.com/Applelo/unplugin-inject-preload
+			UnpluginInjectPreload({
 				files: [{
-					match: createFontMatcher(['Quicksand', 'OpenSans', 'OpenSans-Italic']),
+					outputMatch: createFontMatcher(['Quicksand', 'OpenSans', 'OpenSans-Italic']),
 					attributes: {crossorigin: 'anonymous'},
 				}],
 				injectTo: 'custom',
