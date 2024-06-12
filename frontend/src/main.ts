@@ -37,7 +37,7 @@ if (window.API_URL.endsWith('/')) {
 
 // directives
 import focus from '@/directives/focus'
-import {VTooltip} from 'floating-vue'
+import {vTooltip} from 'floating-vue'
 import 'floating-vue/dist/style.css'
 import shortcut from '@/directives/shortcut'
 import cypress from '@/directives/cypress'
@@ -57,7 +57,7 @@ setLanguage(browserLanguage).then(() => {
 	app.use(Notifications)
 
 	app.directive('focus', focus)
-	app.directive('tooltip', VTooltip)
+	app.directive('tooltip', vTooltip)
 	app.directive('shortcut', shortcut)
 	app.directive('cy', cypress)
 

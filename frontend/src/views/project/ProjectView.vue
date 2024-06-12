@@ -23,10 +23,10 @@ const router = useRouter()
 const projectStore = useProjectStore()
 const authStore = useAuthStore()
 
-const currentView = computed(() => {
-	const project = projectStore.projects[projectId]
+const currentProject = computed(() => projectStore.projects[projectId])
 
-	return project?.views.find(v => v.id === viewId)
+const currentView = computed(() => {
+	return currentProject.value?.views.find(v => v.id === viewId)
 })
 
 function redirectToDefaultViewIfNecessary() {

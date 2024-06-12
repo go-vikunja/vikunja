@@ -28,28 +28,23 @@
 </template>
 
 <script setup lang="ts">
-// the logic of this component is loosly based on this article
+// the logic of this component is loosely based on this article
 // https://gomakethings.com/how-to-add-transition-animations-to-vanilla-javascript-show-and-hide-methods/#putting-it-all-together
 
 import {computed, ref} from 'vue'
 import {getInheritedBackgroundColor} from '@/helpers/getInheritedBackgroundColor'
 
-const props = defineProps({
+const props = withDefaults(defineProps<{
   /** Whether the Expandable is open or not */
-  open: {
-    type: Boolean,
-    default: false,
-  },
+  open?: boolean,
   /** If there is too much content, content will be cut of here. */
-  initialHeight: {
-    type: Number,
-    default: undefined,
-  },
+  initialHeight?: number
   /** The hidden content is indicated by a gradient. This is the color that the gradient fades to.
-   * Makes only sense if `initialHeight` is set. */
-  backgroundColor: {
-    type: String,
-  },
+  * Makes only sense if `initialHeight` is set. */
+	backgroundColor: string
+}>(), {
+  open: false,
+  initialHeight: undefined,
 })
 
 const wrapper = ref<HTMLElement | null>(null)
@@ -82,7 +77,7 @@ function forceLayout(el: HTMLElement) {
 
 /* ######################################################################
 # The following functions are called by the js hooks of the transitions.
-# They follow the orignal hook order of the vue transition component
+# They follow the original hook order of the vue transition component
 # see: https://vuejs.org/guide/built-ins/transition.html#javascript-hooks
 ###################################################################### */
 
@@ -117,8 +112,8 @@ function beforeLeave(el: HTMLElement) {
 function leave(el: HTMLElement) {
   // Set the height back to 0
   el.style.height = '0'
-	el.style.willChange = ''
-	el.style.backfaceVisibility = ''
+  el.style.willChange = ''
+  el.style.backfaceVisibility = ''
 }
 
 function afterLeave(el: HTMLElement) {

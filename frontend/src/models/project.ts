@@ -2,12 +2,13 @@ import AbstractModel from './abstractModel'
 import TaskModel from '@/models/task'
 import UserModel from '@/models/user'
 import SubscriptionModel from '@/models/subscription'
+import ProjectViewModel from '@/models/projectView'
 
 import type {IProject} from '@/modelTypes/IProject'
 import type {IUser} from '@/modelTypes/IUser'
 import type {ITask} from '@/modelTypes/ITask'
 import type {ISubscription} from '@/modelTypes/ISubscription'
-import ProjectViewModel from '@/models/projectView'
+import type { IProjectView } from '@/modelTypes/IProjectView'
 
 export default class ProjectModel extends AbstractModel<IProject> implements IProject {
 	id = 0
@@ -24,7 +25,7 @@ export default class ProjectModel extends AbstractModel<IProject> implements IPr
 	position = 0
 	backgroundBlurHash = ''
 	parentProjectId = 0
-	views = []
+	views: IProjectView[] = []
 	
 	created: Date = null
 	updated: Date = null

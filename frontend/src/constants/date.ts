@@ -1,4 +1,4 @@
-export const DATEFNS_DATE_FORMAT_KEBAB = 'yyyy-LL-dd'
+export const DATEFNS_DATE_FORMAT_KEBAB = 'yyyy-LL-dd' as const
 
 export const SECONDS_A_MINUTE = 60
 export const SECONDS_A_HOUR = SECONDS_A_MINUTE * 60

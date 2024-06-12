@@ -17,12 +17,12 @@
 			class="teams box"
 		>
 			<li
-				v-for="t in teams"
-				:key="t.id"
+				v-for="team in teams"
+				:key="team.id"
 			>
-				<router-link :to="{name: 'teams.edit', params: {id: t.id}}">
+				<router-link :to="{name: 'teams.edit', params: {id: team.id}}">
 					<p>
-						{{ t.name }}
+						{{ team.name }}
 					</p>
 				</router-link>
 			</li>

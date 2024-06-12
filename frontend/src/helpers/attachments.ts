@@ -4,11 +4,11 @@ import type {IAttachment} from '@/modelTypes/IAttachment'
 import AttachmentService from '@/services/attachment'
 import {useTaskStore} from '@/stores/tasks'
 
-export function uploadFile(taskId: number, file: File, onSuccess?: (url: string) => void) {
+export async function uploadFile(taskId: number, file: File, onSuccess?: (url: string) => void) {
 	const attachmentService = new AttachmentService()
 	const files = [file]
 
-	return uploadFiles(attachmentService, taskId, files, onSuccess)
+	return await uploadFiles(attachmentService, taskId, files, onSuccess)
 }
 
 export async function uploadFiles(
