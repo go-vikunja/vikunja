@@ -39,7 +39,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/google/uuid v1.6.0
-	github.com/hashicorp/go-version v1.6.0
+	github.com/hashicorp/go-version v1.7.0
 	github.com/hhsnopek/etag v0.0.0-20171206181245-aea95f647346
 	github.com/iancoleman/strcase v0.3.0
 	github.com/jinzhu/copier v0.4.0
