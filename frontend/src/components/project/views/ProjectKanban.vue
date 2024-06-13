@@ -389,13 +389,11 @@ const bucketDraggableComponentData = computed(() => ({
 		{'dragging-disabled': !canWrite.value},
 	],
 }))
-const canWrite = computed(() => baseStore.currentProject?.maxRight > Rights.READ)
 const project = computed(() => projectId ? projectStore.projects[projectId] : null)
-
+const view = computed<IProjectView | null>(() => project.value?.views.find(v => v.id === viewId) || null)
+const canWrite = computed(() => baseStore.currentProject?.maxRight > Rights.READ && view.value.bucketConfigurationMode === 'manual')
 const buckets = computed(() => kanbanStore.buckets)
 const loading = computed(() => kanbanStore.isLoading)
-
-const view = computed<IProjectView | null>(() => project.value?.views.find(v => v.id === viewId) || null)
 
 const taskLoading = computed(() => taskStore.isLoading || taskPositionService.value.loading)
 
