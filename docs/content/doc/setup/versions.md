@@ -16,7 +16,7 @@ Vikunja api is available in two different release flavors.
 
 ## Stable
 
-Stable releases have a fixed version number like `0.18.2` and are published at irregular intervals whenever a new version is ready.
+Stable releases have a fixed version number like `0.20.2` and are published at irregular intervals whenever a new version is ready.
 They receive few bugfixes and security patches.
 
 We use [Semantic Versioning](https://semver.org) for these releases.
@@ -28,7 +28,7 @@ As such, they contain the current development code and are more likely to have b
 There might be multiple new such builds a day.
 
 Versions contain the last stable version, the number of commits since then and the commit the currently running binary was built from.
-They look like this: `v0.18.1+269-5cc4927b9e`
+They look like this: `v0.20.2-75-6049427322`
 
 Since a release is also cut from the main branch at some point, features from unstable will eventually become available in stable releases.
 At the point in time of a new version release, the unstable build is the same exact thing.

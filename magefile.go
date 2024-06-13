@@ -97,7 +97,6 @@ func setVersion() {
 		os.Exit(1)
 	}
 	VersionNumber = strings.Trim(string(version), "\n")
-	VersionNumber = strings.Replace(VersionNumber, "-", "+", 1)
 	VersionNumber = strings.Replace(VersionNumber, "-g", "-", 1)
 
 	if os.Getenv("DRONE_TAG") != "" {
