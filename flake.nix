@@ -9,7 +9,7 @@
           # General tools
           git-cliff 
           # Frontend tools
-          nodePackages.pnpm cypress 
+          pnpm cypress 
           # API tools
           go golangci-lint mage
           # Desktop
