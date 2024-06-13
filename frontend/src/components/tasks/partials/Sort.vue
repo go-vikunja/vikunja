@@ -1,31 +1,36 @@
 <template>
 	<BaseButton>
-		<icon
+		<Icon
 			v-if="order === 'asc'"
 			icon="sort-up"
+			class="sort__icon"
 		/>
-		<icon
+		<Icon
 			v-else-if="order === 'desc'"
 			icon="sort-up"
 			rotation="180"
+			class="sort__icon"
 		/>
-		<icon
+		<Icon
 			v-else
 			icon="sort"
+			class="sort__icon"
 		/>
 	</BaseButton>
 </template>
 
 <script setup lang="ts">
-import type {PropType} from 'vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
-type Order = 'asc' | 'desc' | 'none'
-
-defineProps({
-	order: {
-		type: String as PropType<Order>,
-		default: 'none',
-	},
+withDefaults(defineProps<{
+	order?: 'asc' | 'desc' | 'none'
+}>(), {
+	order: 'none',
 })
 </script>
+
+<style lang="scss" scoped>
+.sort__icon {
+	color: var(--grey-400);
+}
+</style>
