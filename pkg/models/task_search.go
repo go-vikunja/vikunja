@@ -58,6 +58,10 @@ func getOrderByDBStatement(opts *taskSearchOptions) (orderby string, err error) 
 			prefix = "task_positions."
 		}
 
+		if param.sortBy == taskPropertyID {
+			prefix = "tasks."
+		}
+
 		// Mysql sorts columns with null values before ones without null value.
 		// Because it does not have support for NULLS FIRST or NULLS LAST we work around this by
 		// first sorting for null (or not null) values and then the order we actually want to.
