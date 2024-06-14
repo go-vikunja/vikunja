@@ -64,7 +64,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/swaggo/swag v1.16.3
 	github.com/tkuchiki/go-timezone v0.2.3
-	github.com/typesense/typesense-go v1.0.0
+	github.com/typesense/typesense-go v1.1.0
 	github.com/ulule/limiter/v3 v3.11.2
 	github.com/wneessen/go-mail v0.4.0
 	github.com/yuin/goldmark v1.7.1
@@ -111,10 +111,10 @@ require (
 	github.com/go-faster/city v1.0.1 // indirect
 	github.com/go-faster/errors v0.7.1 // indirect
 	github.com/go-jose/go-jose/v4 v4.0.1 // indirect
-	github.com/go-openapi/jsonpointer v0.20.1 // indirect
+	github.com/go-openapi/jsonpointer v0.20.2 // indirect
 	github.com/go-openapi/jsonreference v0.20.3 // indirect
 	github.com/go-openapi/spec v0.20.4 // indirect
-	github.com/go-openapi/swag v0.22.5 // indirect
+	github.com/go-openapi/swag v0.22.8 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.15.1 // indirect
@@ -141,6 +141,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
+	github.com/oapi-codegen/runtime v1.1.1 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/onsi/ginkgo v1.16.4 // indirect
 	github.com/onsi/gomega v1.16.0 // indirect
@@ -166,7 +167,7 @@ require (
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	github.com/tj/assert v0.0.3 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
-	github.com/ugorji/go/codec v1.2.11 // indirect
+	github.com/ugorji/go/codec v1.2.12 // indirect
 	github.com/urfave/cli/v2 v2.3.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
