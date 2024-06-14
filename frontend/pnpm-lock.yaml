@@ -167,8 +167,8 @@ importers:
         specifier: 0.9.33
         version: 0.9.33
       camel-case:
-        specifier: 4.1.2
-        version: 4.1.2
+        specifier: 5.0.0
+        version: 5.0.0
       date-fns:
         specifier: 3.6.0
         version: 3.6.0
@@ -2665,6 +2665,10 @@ packages:
 
   camel-case@4.1.2:
     resolution: {integrity: sha512-gxGWBrTT1JuMx6R+o5PTXMmUnhnVzLQ9SNutD4YqKtI6ap897t3tKECYla6gCWEkplXnlNybEkZg9GEGxKFCgw==}
+
+  camel-case@5.0.0:
+    resolution: {integrity: sha512-AKcwhlfnTqKiYjkjZ0CSRjIGgUDEZQHqBBkdwrSxFPzRQDriAUxXNn+rFN7Qvb5nkPg6Hxncp44G1/zz88M5xw==}
+    deprecated: Use `change-case`
 
   camelcase-keys@6.2.2:
     resolution: {integrity: sha512-YrwaA0vEKazPBkn0ipTiMpSajYDSe+KjQfrjhcBMxJt/znbvlHd8Pw/Vamaz5EB4Wfhs3SUR3Z9mwRu/P3s3Yg==}
@@ -8583,6 +8587,10 @@ snapshots:
     dependencies:
       pascal-case: 3.1.2
       tslib: 2.6.3
+
+  camel-case@5.0.0:
+    dependencies:
+      no-case: 4.0.0
 
   camelcase-keys@6.2.2:
     dependencies:
