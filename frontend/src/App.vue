@@ -33,7 +33,7 @@ import KeyboardShortcuts from '@/components/misc/keyboard-shortcuts/index.vue'
 import TheNavigation from '@/components/home/TheNavigation.vue'
 import ContentAuth from '@/components/home/ContentAuth.vue'
 import ContentLinkShare from '@/components/home/ContentLinkShare.vue'
-import NoAuthWrapper from '@/components/misc/no-auth-wrapper.vue'
+import NoAuthWrapper from '@/components/misc/NoAuthWrapper.vue'
 import Ready from '@/components/misc/ready.vue'
 
 import {setLanguage} from '@/i18n'

@@ -64,7 +64,7 @@ import Logo from '@/assets/logo.svg?component'
 import ApiConfig from '@/components/misc/ApiConfig.vue'
 import Message from '@/components/misc/Message.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
-import NoAuthWrapper from '@/components/misc/no-auth-wrapper.vue'
+import NoAuthWrapper from '@/components/misc/NoAuthWrapper.vue'
 
 import {ERROR_NO_API_URL, InvalidApiUrlProvidedError, NoApiUrlProvidedError} from '@/helpers/checkAndSetApiUrl'
 import {useOnline} from '@/composables/useOnline'
