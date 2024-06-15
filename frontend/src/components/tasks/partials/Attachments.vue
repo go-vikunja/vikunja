@@ -192,7 +192,7 @@ import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 import {error, success} from '@/message'
 import {useTaskStore} from '@/stores/tasks'
 import {useI18n} from 'vue-i18n'
-import FilePreview from '@/components/tasks/partials/file-preview.vue'
+import FilePreview from '@/components/tasks/partials/FilePreview.vue'
 
 const {
 	task,
