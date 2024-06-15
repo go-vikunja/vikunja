@@ -5,18 +5,12 @@
 	/>
 </template>
 
-<script lang="ts">
-export default {
-	inheritAttrs: true,
-}
-</script>
-
 <script lang="ts" setup>
-const {
-	variant = 'default',
-} = defineProps<{
+withDefaults(defineProps<{
 	variant?: 'default' | 'small'
-}>()
+}>(), {
+	variant: 'default',
+})
 </script>
 
 <style scoped lang="scss">
