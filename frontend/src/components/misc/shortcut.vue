@@ -14,19 +14,13 @@
 </template>
 
 <script lang="ts" setup>
-defineProps({
-	keys: {
-		type: Array,
-		required: true,
-	},
-	combination: {
-		type: String,
-		default: '+',
-	},
-	is: {
-		type: String,
-		default: 'div',
-	},
+withDefaults(defineProps<{
+	keys: string[],
+	combination?: string,
+	is?: string
+}>(), {
+	combination: '+',
+	is: 'div',
 })
 </script>
 

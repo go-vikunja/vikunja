@@ -4,13 +4,13 @@ import {isAppleDevice} from '@/helpers/isAppleDevice'
 
 const ctrl = isAppleDevice() ? '⌘' : 'ctrl'
 
-interface Shortcut {
+export interface Shortcut {
 	title: string
 	keys: string[]
 	combination?: 'then'
 }
 
-interface ShortcutGroup {
+export interface ShortcutGroup {
 	title: string
 	available?: (route: RouteLocation) => boolean
 	shortcuts: Shortcut[]
@@ -158,4 +158,4 @@ export const KEYBOARD_SHORTCUTS : ShortcutGroup[] = [
 			},
 		],
 	},
-]
+] as const
