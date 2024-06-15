@@ -50,7 +50,7 @@
 <script lang="ts" setup>
 import {useBaseStore} from '@/stores/base'
 
-import Shortcut from '@/components/misc/shortcut.vue'
+import Shortcut from '@/components/misc/Shortcut.vue'
 import Message from '@/components/misc/Message.vue'
 
 import {KEYBOARD_SHORTCUTS as shortcuts} from './shortcuts'
