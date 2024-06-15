@@ -1,6 +1,6 @@
 import { defineAsyncComponent, type AsyncComponentLoader, type AsyncComponentOptions, type Component, type ComponentPublicInstance } from 'vue'
 
-import ErrorComponent from '@/components/misc/error.vue'
+import ErrorComponent from '@/components/misc/Error.vue'
 import LoadingComponent from '@/components/misc/loading.vue'
 
 const DEFAULT_TIMEOUT = 60000
