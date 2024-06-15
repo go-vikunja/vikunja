@@ -50,41 +50,25 @@
 </template>
 
 <script setup lang="ts">
-import type {PropType} from 'vue'
 import type {IconProp} from '@fortawesome/fontawesome-svg-core'
 
-defineProps({
-	title: {
-		type: String,
-		default: '',
-	},
-	primaryLabel: {
-		type: String,
-	},
-	primaryIcon: {
-		type: String as PropType<IconProp>,
-		default: 'plus',
-	},
-	primaryDisabled: {
-		type: Boolean,
-		default: false,
-	},
-	hasPrimaryAction: {
-		type: Boolean,
-		default: true,
-	},
-	tertiary: {
-		type: String,
-		default: '',
-	},
-	wide: {
-		type: Boolean,
-		default: false,
-	},
-	loading: {
-		type: Boolean,
-		default: false,
-	},
+withDefaults(defineProps<{
+	title: string,
+	primaryLabel?: string,
+	primaryIcon?: IconProp,
+	primaryDisabled?: boolean,
+	hasPrimaryAction?: boolean,
+	tertiary?: string,
+	wide?: boolean,
+	loading?: boolean
+}>(), {
+	primaryLabel: '',
+	primaryIcon: 'plus',
+	primaryDisabled: false,
+	hasPrimaryAction: true,
+	tertiary: '',
+	wide: false,
+	loading: false,
 })
 
 const emit = defineEmits(['create', 'primary', 'tertiary'])
