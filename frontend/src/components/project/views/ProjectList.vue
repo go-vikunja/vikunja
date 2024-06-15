@@ -104,7 +104,7 @@ import AddTask from '@/components/tasks/add-task.vue'
 import SingleTaskInProject from '@/components/tasks/partials/singleTaskInProject.vue'
 import FilterPopup from '@/components/project/partials/filter-popup.vue'
 import Nothing from '@/components/misc/nothing.vue'
-import Pagination from '@/components/misc/pagination.vue'
+import Pagination from '@/components/misc/Pagination.vue'
 import {ALPHABETICAL_SORT} from '@/components/project/partials/filters.vue'
 
 import {useTaskList} from '@/composables/useTaskList'

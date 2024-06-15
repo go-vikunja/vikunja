@@ -280,7 +280,7 @@ import DateTableCell from '@/components/tasks/partials/date-table-cell.vue'
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 import Sort from '@/components/tasks/partials/Sort.vue'
 import FilterPopup from '@/components/project/partials/filter-popup.vue'
-import Pagination from '@/components/misc/pagination.vue'
+import Pagination from '@/components/misc/Pagination.vue'
 import Popup from '@/components/misc/popup.vue'
 
 import type {SortBy} from '@/composables/useTaskList'
