@@ -105,7 +105,7 @@ import SingleTaskInProject from '@/components/tasks/partials/singleTaskInProject
 import FilterPopup from '@/components/project/partials/FilterPopup.vue'
 import Nothing from '@/components/misc/Nothing.vue'
 import Pagination from '@/components/misc/Pagination.vue'
-import {ALPHABETICAL_SORT} from '@/components/project/partials/filters.vue'
+import {ALPHABETICAL_SORT} from '@/components/project/partials/Filters.vue'
 
 import {useTaskList} from '@/composables/useTaskList'
 import {RIGHTS as Rights} from '@/constants/rights'

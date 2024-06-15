@@ -28,7 +28,7 @@
 <script setup lang="ts">
 import {computed, ref, watch} from 'vue'
 
-import Filters from '@/components/project/partials/filters.vue'
+import Filters from '@/components/project/partials/Filters.vue'
 
 import {type TaskFilterParams} from '@/services/taskCollection'
 
