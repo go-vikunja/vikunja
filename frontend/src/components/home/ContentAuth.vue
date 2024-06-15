@@ -67,7 +67,7 @@
 import {watch, computed} from 'vue'
 import {useRoute} from 'vue-router'
 
-import Navigation from '@/components/home/navigation.vue'
+import Navigation from '@/components/home/Navigation.vue'
 import QuickActions from '@/components/quick-actions/quick-actions.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
@@ -163,7 +163,7 @@ projectStore.loadAllProjects()
 	z-index: 10;
 	position: relative;
 	padding: 1.5rem 0.5rem 0;
-	// TODO refactor: DRY `transition-timing-function` with `./navigation.vue`.
+	// TODO refactor: DRY `transition-timing-function` with `./Navigation.vue`.
 	transition: margin-left $transition-duration;
 
 	@media screen and (max-width: $tablet) {
