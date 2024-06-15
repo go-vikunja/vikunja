@@ -99,7 +99,7 @@ import {useRouter} from 'vue-router'
 import PriorityLabel from '@/components/tasks/partials/priorityLabel.vue'
 import ProgressBar from '@/components/misc/ProgressBar.vue'
 import Done from '@/components/misc/Done.vue'
-import Labels from '@/components/tasks/partials/labels.vue'
+import Labels from '@/components/tasks/partials/Labels.vue'
 import ChecklistSummary from './ChecklistSummary.vue'
 
 import {getHexColor} from '@/models/task'
@@ -258,7 +258,7 @@ $task-background: var(--white);
 			}
 		}
 
-		// FIXME: should be in labels.vue
+		// FIXME: should be in Labels.vue
 		:deep(.tag) {
 			margin-left: 0;
 		}

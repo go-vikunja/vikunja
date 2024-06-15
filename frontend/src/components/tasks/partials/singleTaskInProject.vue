@@ -183,7 +183,7 @@ import TaskModel, {getHexColor} from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
 
 import PriorityLabel from '@/components/tasks/partials/priorityLabel.vue'
-import Labels from '@/components/tasks/partials//labels.vue'
+import Labels from '@/components/tasks/partials/Labels.vue'
 import DeferTask from '@/components/tasks/partials/DeferTask.vue'
 import ChecklistSummary from '@/components/tasks/partials/ChecklistSummary.vue'
 
