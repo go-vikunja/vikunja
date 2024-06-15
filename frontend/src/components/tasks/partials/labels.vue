@@ -12,7 +12,7 @@
 import type {PropType} from 'vue'
 import type {ILabel} from '@/modelTypes/ILabel'
 
-import XLabel from '@/components/tasks/partials/label.vue'
+import XLabel from '@/components/tasks/partials/Label.vue'
 
 defineProps({
 	labels: {
