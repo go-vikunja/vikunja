@@ -45,13 +45,13 @@
 						class="control is-expanded"
 						:class="{ 'is-loading': teamService.loading }"
 					>
-						<Fancycheckbox
+						<FancyCheckbox
 							v-model="team.isPublic"
 							:disabled="teamMemberService.loading || undefined"
 							:class="{ 'disabled': teamService.loading }"
 						>
 							{{ $t('team.attributes.isPublicDescription') }}
-						</Fancycheckbox>
+						</FancyCheckbox>
 					</div>
 				</div>
 				<div class="field">
@@ -263,7 +263,7 @@ import {useI18n} from 'vue-i18n'
 import {useRoute, useRouter} from 'vue-router'
 
 import Editor from '@/components/input/AsyncEditor'
-import Fancycheckbox from '@/components/input/fancycheckbox.vue'
+import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import Multiselect from '@/components/input/Multiselect.vue'
 import User from '@/components/misc/user.vue'
 

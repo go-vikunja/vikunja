@@ -21,7 +21,7 @@ import {formatDateShort} from '@/helpers/time/formatDate'
 import User from '@/components/misc/user.vue'
 import WebhookModel from '@/models/webhook'
 import BaseButton from '@/components/base/BaseButton.vue'
-import Fancycheckbox from '@/components/input/fancycheckbox.vue'
+import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import {success} from '@/message'
 import {isValidHttpUrl} from '@/helpers/isValidHttpUrl'
 
@@ -192,7 +192,7 @@ function validateSelectedEvents() {
 					{{ $t('project.webhooks.eventsHint') }}
 				</p>
 				<div class="control">
-					<Fancycheckbox
+					<FancyCheckbox
 						v-for="event in availableEvents"
 						:key="event"
 						v-model="newWebhookEvents[event]"
@@ -200,7 +200,7 @@ function validateSelectedEvents() {
 						@update:modelValue="validateSelectedEvents"
 					>
 						{{ event }}
-					</Fancycheckbox>
+					</FancyCheckbox>
 				</div>
 				<p
 					v-if="!selectedEventsValid"

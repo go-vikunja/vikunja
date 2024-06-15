@@ -37,12 +37,12 @@
 				class="control is-expanded"
 				:class="{ 'is-loading': teamService.loading }"
 			>
-				<Fancycheckbox
+				<FancyCheckbox
 					v-model="team.isPublic"
 					:class="{ 'disabled': teamService.loading }"
 				>
 					{{ $t('team.attributes.isPublicDescription') }}
-				</Fancycheckbox>
+				</FancyCheckbox>
 			</div>
 		</div>
 		<p
@@ -66,7 +66,7 @@ import TeamModel from '@/models/team'
 import TeamService from '@/services/team'
 
 import CreateEdit from '@/components/misc/CreateEdit.vue'
-import Fancycheckbox from '@/components/input/fancycheckbox.vue'
+import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 
 import {useTitle} from '@/composables/useTitle'
 import {useRouter} from 'vue-router'

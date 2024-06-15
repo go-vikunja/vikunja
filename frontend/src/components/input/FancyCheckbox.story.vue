@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import {ref} from 'vue'
 import {logEvent} from 'histoire/client'
-import FancyCheckbox from './fancycheckbox.vue'
+import FancyCheckbox from './FancyCheckbox.vue'
 
 const isDisabled = ref<boolean | undefined>()
 

@@ -11,12 +11,12 @@
 		/>
 
 		<div class="field is-flex is-flex-direction-column">
-			<Fancycheckbox
+			<FancyCheckbox
 				v-model="params.filter_include_nulls"
 				@blur="change()"
 			>
 				{{ $t('filters.attributes.includeNulls') }}
-			</Fancycheckbox>
+			</FancyCheckbox>
 		</div>
 
 		<FilterInputDocs />
@@ -49,7 +49,7 @@ export const ALPHABETICAL_SORT = 'title'
 
 <script setup lang="ts">
 import {computed, ref, watch} from 'vue'
-import Fancycheckbox from '@/components/input/fancycheckbox.vue'
+import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import FilterInput from '@/components/project/partials/FilterInput.vue'
 import {useRoute} from 'vue-router'
 import type {TaskFilterParams} from '@/services/taskCollection'

@@ -1,6 +1,6 @@
 <template>
 	<BaseCheckbox
-		class="fancycheckbox"
+		class="fancy-checkbox"
 		:class="{
 			'is-disabled': disabled,
 			'is-block': isBlock,
@@ -9,10 +9,10 @@
 		:model-value="modelValue"
 		@update:modelValue="value => emit('update:modelValue', value)"
 	>
-		<CheckboxIcon class="fancycheckbox__icon" />
+		<CheckboxIcon class="fancy-checkbox__icon" />
 		<span
 			v-if="$slots.default"
-			class="fancycheckbox__content"
+			class="fancy-checkbox__content"
 		>
 			<slot />
 		</span>
@@ -44,7 +44,7 @@ const emit = defineEmits<{
 
 
 <style lang="scss" scoped>
-.fancycheckbox {
+.fancy-checkbox {
   display: inline-block;
   padding-right: 5px;
   padding-top: 3px;
@@ -55,13 +55,13 @@ const emit = defineEmits<{
 	}
 }
 
-.fancycheckbox__content {
+.fancy-checkbox__content {
 	font-size: 0.8rem;
 	vertical-align: top;
 	padding-left: .5rem;
 }
 
-.fancycheckbox__icon:deep() {
+.fancy-checkbox__icon:deep() {
 	position: relative;
 	z-index: 1;
 	stroke: var(--stroke-color, #c8ccd4);
@@ -74,8 +74,8 @@ const emit = defineEmits<{
 	}
 }
 
-.fancycheckbox:not(:has(input:disabled)):hover .fancycheckbox__icon,
-.fancycheckbox:has(input:checked) .fancycheckbox__icon {
+.fancy-checkbox:not(:has(input:disabled)):hover .fancy-checkbox__icon,
+.fancy-checkbox:has(input:checked) .fancy-checkbox__icon {
 	--stroke-color: var(--primary);
 }
 </style>
@@ -84,13 +84,13 @@ const emit = defineEmits<{
 // Since css-has-pseudo doesn't work with deep classes,
 // the following rules can't be scoped
 
-.fancycheckbox:has(:not(input:checked)) .fancycheckbox__icon {
+.fancy-checkbox:has(:not(input:checked)) .fancy-checkbox__icon {
 	path {
 		transition-delay: 0.05s;
 	}
 }
 
-.fancycheckbox:has(input:checked) .fancycheckbox__icon {
+.fancy-checkbox:has(input:checked) .fancy-checkbox__icon {
 	path {
 		stroke-dashoffset: 60;
 	}

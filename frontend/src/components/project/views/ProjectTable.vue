@@ -22,48 +22,48 @@
 							class="columns-filter"
 							:class="{'is-open': isOpen}"
 						>
-							<Fancycheckbox v-model="activeColumns.index">
+							<FancyCheckbox v-model="activeColumns.index">
 								#
-							</Fancycheckbox>
-							<Fancycheckbox v-model="activeColumns.done">
+							</FancyCheckbox>
+							<FancyCheckbox v-model="activeColumns.done">
 								{{ $t('task.attributes.done') }}
-							</Fancycheckbox>
-							<Fancycheckbox v-model="activeColumns.title">
+							</FancyCheckbox>
+							<FancyCheckbox v-model="activeColumns.title">
 								{{ $t('task.attributes.title') }}
-							</Fancycheckbox>
-							<Fancycheckbox v-model="activeColumns.priority">
+							</FancyCheckbox>
+							<FancyCheckbox v-model="activeColumns.priority">
 								{{ $t('task.attributes.priority') }}
-							</Fancycheckbox>
-							<Fancycheckbox v-model="activeColumns.labels">
+							</FancyCheckbox>
+							<FancyCheckbox v-model="activeColumns.labels">
 								{{ $t('task.attributes.labels') }}
-							</Fancycheckbox>
-							<Fancycheckbox v-model="activeColumns.assignees">
+							</FancyCheckbox>
+							<FancyCheckbox v-model="activeColumns.assignees">
 								{{ $t('task.attributes.assignees') }}
-							</Fancycheckbox>
-							<Fancycheckbox v-model="activeColumns.dueDate">
+							</FancyCheckbox>
+							<FancyCheckbox v-model="activeColumns.dueDate">
 								{{ $t('task.attributes.dueDate') }}
-							</Fancycheckbox>
-							<Fancycheckbox v-model="activeColumns.startDate">
+							</FancyCheckbox>
+							<FancyCheckbox v-model="activeColumns.startDate">
 								{{ $t('task.attributes.startDate') }}
-							</Fancycheckbox>
-							<Fancycheckbox v-model="activeColumns.endDate">
+							</FancyCheckbox>
+							<FancyCheckbox v-model="activeColumns.endDate">
 								{{ $t('task.attributes.endDate') }}
-							</Fancycheckbox>
-							<Fancycheckbox v-model="activeColumns.percentDone">
+							</FancyCheckbox>
+							<FancyCheckbox v-model="activeColumns.percentDone">
 								{{ $t('task.attributes.percentDone') }}
-							</Fancycheckbox>
-							<Fancycheckbox v-model="activeColumns.doneAt">
+							</FancyCheckbox>
+							<FancyCheckbox v-model="activeColumns.doneAt">
 								{{ $t('task.attributes.doneAt') }}
-							</Fancycheckbox>
-							<Fancycheckbox v-model="activeColumns.created">
+							</FancyCheckbox>
+							<FancyCheckbox v-model="activeColumns.created">
 								{{ $t('task.attributes.created') }}
-							</Fancycheckbox>
-							<Fancycheckbox v-model="activeColumns.updated">
+							</FancyCheckbox>
+							<FancyCheckbox v-model="activeColumns.updated">
 								{{ $t('task.attributes.updated') }}
-							</Fancycheckbox>
-							<Fancycheckbox v-model="activeColumns.createdBy">
+							</FancyCheckbox>
+							<FancyCheckbox v-model="activeColumns.createdBy">
 								{{ $t('task.attributes.createdBy') }}
-							</Fancycheckbox>
+							</FancyCheckbox>
 						</card>
 					</template>
 				</Popup>
@@ -277,7 +277,7 @@ import User from '@/components/misc/user.vue'
 import PriorityLabel from '@/components/tasks/partials/priorityLabel.vue'
 import Labels from '@/components/tasks/partials/labels.vue'
 import DateTableCell from '@/components/tasks/partials/date-table-cell.vue'
-import Fancycheckbox from '@/components/input/fancycheckbox.vue'
+import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import Sort from '@/components/tasks/partials/Sort.vue'
 import FilterPopup from '@/components/project/partials/filter-popup.vue'
 import Pagination from '@/components/misc/Pagination.vue'

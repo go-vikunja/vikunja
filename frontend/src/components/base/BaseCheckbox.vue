@@ -45,7 +45,7 @@ const emit = defineEmits<{
   (event: 'update:modelValue', value: boolean): void
 }>()
 
-const checkboxId = ref(`fancycheckbox_${createRandomID()}`)
+const checkboxId = ref(`checkbox_${createRandomID()}`)
 </script>
 
 <style lang="scss" scoped>

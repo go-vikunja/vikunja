@@ -37,12 +37,12 @@
 							</x-button>
 						</div>
 					</div>
-					<Fancycheckbox
+					<FancyCheckbox
 						v-model="filters.showTasksWithoutDates"
 						is-block
 					>
 						{{ $t('project.gantt.showTasksWithoutDates') }}
-					</Fancycheckbox>
+					</FancyCheckbox>
 				</div>
 			</card>
 
@@ -81,7 +81,7 @@ import {getFlatpickrLanguage} from '@/helpers/flatpickrLanguage'
 
 import Foo from '@/components/misc/flatpickr/Flatpickr.vue'
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
-import Fancycheckbox from '@/components/input/fancycheckbox.vue'
+import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import TaskForm from '@/components/tasks/TaskForm.vue'
 
 import {createAsyncComponent} from '@/helpers/createAsyncComponent'

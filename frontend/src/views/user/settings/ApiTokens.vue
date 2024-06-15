@@ -5,7 +5,7 @@ import {formatDateShort, formatDateSince} from '@/helpers/time/formatDate'
 import XButton from '@/components/input/button.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import ApiTokenModel from '@/models/apiTokenModel'
-import Fancycheckbox from '@/components/input/fancycheckbox.vue'
+import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import {MILLISECONDS_A_DAY} from '@/constants/date'
 import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
@@ -299,26 +299,26 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 					<template
 						v-if="Object.keys(routes).length >= 1"
 					>
-						<Fancycheckbox
+						<FancyCheckbox
 							v-model="newTokenPermissionsGroup[group]"
 							class="mr-2 is-capitalized has-text-weight-bold"
 							@update:modelValue="checked => selectPermissionGroup(group, checked)"
 						>
 							{{ formatPermissionTitle(group) }}
-						</Fancycheckbox>
+						</FancyCheckbox>
 						<br>
 					</template>
 					<template
 						v-for="(paths, route) in routes"
 						:key="group+'-'+route"
 					>
-						<Fancycheckbox
+						<FancyCheckbox
 							v-model="newTokenPermissions[group][route]"
 							class="ml-4 mr-2 is-capitalized"
 							@update:modelValue="checked => toggleGroupPermissionsFromChild(group, checked)"
 						>
 							{{ formatPermissionTitle(route) }}
-						</Fancycheckbox>
+						</FancyCheckbox>
 						<br>
 					</template>
 				</div>

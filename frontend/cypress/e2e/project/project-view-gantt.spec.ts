@@ -52,7 +52,7 @@ describe('Project View Gantt', () => {
 		})
 		cy.visit('/projects/1/2')
 
-		cy.get('.gantt-options .fancycheckbox')
+		cy.get('.gantt-options .fancy-checkbox')
 			.contains('Show tasks which don\'t have dates set')
 			.click()
 

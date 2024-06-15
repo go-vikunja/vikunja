@@ -8,7 +8,7 @@
 			@mouseup.stop.self="openTaskDetail"
 			@mousedown.stop.self="focusTaskLink"
 		>
-			<Fancycheckbox
+			<FancyCheckbox
 				v-model="task.done"
 				:disabled="(isArchived || disabled) && !canMarkAsDone"
 				@update:modelValue="markAsDone"
@@ -189,7 +189,7 @@ import ChecklistSummary from '@/components/tasks/partials/checklist-summary.vue'
 
 import ProgressBar from '@/components/misc/ProgressBar.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
-import Fancycheckbox from '@/components/input/fancycheckbox.vue'
+import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import ColorBubble from '@/components/misc/ColorBubble.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 
@@ -472,7 +472,7 @@ function focusTaskLink() {
 		opacity: 1;
 	}
 
-	:deep(.fancycheckbox) {
+	:deep(.fancy-checkbox) {
 		height: 18px;
 		padding-top: 0;
 		padding-right: .5rem;

@@ -22,19 +22,19 @@
 					</x-button>
 				</template>
 			</DatepickerWithRange>
-			<Fancycheckbox
+			<FancyCheckbox
 				:model-value="showNulls"
 				class="mr-2"
 				@update:modelValue="setShowNulls"
 			>
 				{{ $t('task.show.noDates') }}
-			</Fancycheckbox>
-			<Fancycheckbox
+			</FancyCheckbox>
+			<FancyCheckbox
 				:model-value="showOverdue"
 				@update:modelValue="setShowOverdue"
 			>
 				{{ $t('task.show.overdue') }}
-			</Fancycheckbox>
+			</FancyCheckbox>
 		</p>
 		<template v-if="!loading && (!tasks || tasks.length === 0) && showNothingToDo">
 			<h3 class="has-text-centered mt-6">
@@ -76,7 +76,7 @@ import {useI18n} from 'vue-i18n'
 import {formatDate} from '@/helpers/time/formatDate'
 import {setTitle} from '@/helpers/setTitle'
 
-import Fancycheckbox from '@/components/input/fancycheckbox.vue'
+import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import SingleTaskInProject from '@/components/tasks/partials/singleTaskInProject.vue'
 import DatepickerWithRange from '@/components/date/DatepickerWithRange.vue'
 import {DATE_RANGES} from '@/components/date/dateRanges'

@@ -5,12 +5,12 @@
 		:class="{'is-loading': loading}"
 	>
 		<header class="project-header">
-			<Fancycheckbox
+			<FancyCheckbox
 				v-model="showArchived"
 				v-cy="'show-archived-check'"
 			>
 				{{ $t('project.showArchived') }}
-			</Fancycheckbox>
+			</FancyCheckbox>
 
 			<div class="action-buttons">
 				<x-button
@@ -40,7 +40,7 @@
 import {computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 
-import Fancycheckbox from '@/components/input/fancycheckbox.vue'
+import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import ProjectCardGrid from '@/components/project/partials/ProjectCardGrid.vue'
 
 import {useTitle} from '@/composables/useTitle'

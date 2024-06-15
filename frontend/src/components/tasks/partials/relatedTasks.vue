@@ -120,7 +120,7 @@
 					class="task"
 				>
 					<div class="is-flex is-align-items-center">
-						<Fancycheckbox
+						<FancyCheckbox
 							v-model="task.done"
 							class="task-done-checkbox"
 							@update:modelValue="toggleTaskDone(t)"
@@ -199,7 +199,7 @@ import TaskRelationModel from '@/models/taskRelation'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import Multiselect from '@/components/input/Multiselect.vue'
-import Fancycheckbox from '@/components/input/fancycheckbox.vue'
+import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 
 import {error, success} from '@/message'
 import {useTaskStore} from '@/stores/tasks'
@@ -469,7 +469,7 @@ async function toggleTaskDone(task: ITask) {
 	padding: 0.5rem;
 }
 
-// FIXME: The height of the actual checkbox in the <Fancycheckbox/> component is too much resulting in a 
+// FIXME: The height of the actual checkbox in the <FancyCheckbox/> component is too much resulting in a 
 //  weired positioning of the checkbox. Setting the height here is a workaround until we fix the styling 
 //  of the component.
 .task-done-checkbox {
