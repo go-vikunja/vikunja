@@ -44,7 +44,7 @@ import {useTaskStore} from '@/stores/tasks'
 
 import type {IUser} from '@/modelTypes/IUser'
 import {getDisplayName} from '@/models/user'
-import AssigneeList from '@/components/tasks/partials/assigneeList.vue'
+import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 
 const props = defineProps({
 	taskId: {

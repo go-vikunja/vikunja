@@ -111,7 +111,7 @@ import ColorBubble from '@/components/misc/ColorBubble.vue'
 import {formatDateSince, formatISO, formatDateLong} from '@/helpers/time/formatDate'
 
 import {useProjectStore} from '@/stores/projects'
-import AssigneeList from '@/components/tasks/partials/assigneeList.vue'
+import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 
 const {
 	task,
