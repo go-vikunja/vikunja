@@ -92,7 +92,7 @@ import type {IProject} from '@/modelTypes/IProject'
 import BaseButton from '@/components/base/BaseButton.vue'
 import ProjectSettingsDropdown from '@/components/project/project-settings-dropdown.vue'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
-import ColorBubble from '@/components/misc/colorBubble.vue'
+import ColorBubble from '@/components/misc/ColorBubble.vue'
 import ProjectsNavigation from '@/components/home/ProjectsNavigation.vue'
 
 const {

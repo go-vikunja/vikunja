@@ -190,7 +190,7 @@ import ChecklistSummary from '@/components/tasks/partials/checklist-summary.vue'
 import ProgressBar from '@/components/misc/ProgressBar.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
-import ColorBubble from '@/components/misc/colorBubble.vue'
+import ColorBubble from '@/components/misc/ColorBubble.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 
 import TaskService from '@/services/task'
