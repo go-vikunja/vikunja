@@ -599,7 +599,7 @@ import {RIGHTS} from '@/constants/rights'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 // partials
-import Attachments from '@/components/tasks/partials/attachments.vue'
+import Attachments from '@/components/tasks/partials/Attachments.vue'
 import ChecklistSummary from '@/components/tasks/partials/checklist-summary.vue'
 import ColorPicker from '@/components/input/ColorPicker.vue'
 import Comments from '@/components/tasks/partials/comments.vue'
