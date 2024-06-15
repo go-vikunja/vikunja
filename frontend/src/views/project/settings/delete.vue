@@ -37,7 +37,7 @@ import {useTitle} from '@/composables/useTitle'
 import {useI18n} from 'vue-i18n'
 import {useRoute, useRouter} from 'vue-router'
 import {success} from '@/message'
-import Loading from '@/components/misc/loading.vue'
+import Loading from '@/components/misc/Loading.vue'
 import {useProjectStore} from '@/stores/projects'
 import TaskService from '@/services/task'
 

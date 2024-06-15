@@ -118,7 +118,7 @@ import {computed} from 'vue'
 
 import PoweredByLink from '@/components/home/PoweredByLink.vue'
 import Logo from '@/components/home/Logo.vue'
-import Loading from '@/components/misc/loading.vue'
+import Loading from '@/components/misc/Loading.vue'
 
 import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'

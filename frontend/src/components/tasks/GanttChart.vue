@@ -63,7 +63,7 @@ import {
 	type GanttBarObject, type ColorScheme,
 } from '@infectoone/vue-ganttastic'
 
-import Loading from '@/components/misc/loading.vue'
+import Loading from '@/components/misc/Loading.vue'
 import {MILLISECONDS_A_DAY} from '@/constants/date'
 import {useWeekDayFromDate} from '@/helpers/time/formatDate'
 import dayjs from 'dayjs'
