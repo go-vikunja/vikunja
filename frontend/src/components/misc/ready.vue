@@ -61,7 +61,7 @@ import {ref, computed} from 'vue'
 import {useRouter, useRoute} from 'vue-router'
 
 import Logo from '@/assets/logo.svg?component'
-import ApiConfig from '@/components/misc/api-config.vue'
+import ApiConfig from '@/components/misc/ApiConfig.vue'
 import Message from '@/components/misc/message.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import NoAuthWrapper from '@/components/misc/no-auth-wrapper.vue'

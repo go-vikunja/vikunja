@@ -48,7 +48,7 @@ import {useI18n} from 'vue-i18n'
 import Logo from '@/components/home/Logo.vue'
 import Message from '@/components/misc/message.vue'
 import Legal from '@/components/misc/legal.vue'
-import ApiConfig from '@/components/misc/api-config.vue'
+import ApiConfig from '@/components/misc/ApiConfig.vue'
 
 import {useTitle} from '@/composables/useTitle'
 import {useConfigStore} from '@/stores/config'
