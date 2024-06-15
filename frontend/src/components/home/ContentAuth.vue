@@ -68,7 +68,7 @@ import {watch, computed} from 'vue'
 import {useRoute} from 'vue-router'
 
 import Navigation from '@/components/home/Navigation.vue'
-import QuickActions from '@/components/quick-actions/quick-actions.vue'
+import QuickActions from '@/components/quick-actions/QuickActions.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 import {useBaseStore} from '@/stores/base'
