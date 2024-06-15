@@ -69,7 +69,7 @@
 
 <script setup lang="ts">
 import Editor from '@/components/input/AsyncEditor'
-import CreateEdit from '@/components/misc/create-edit.vue'
+import CreateEdit from '@/components/misc/CreateEdit.vue'
 import Filters from '@/components/project/partials/filters.vue'
 
 import {useSavedFilter} from '@/services/savedFilter'

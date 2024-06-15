@@ -65,7 +65,7 @@ import {useI18n} from 'vue-i18n'
 import TeamModel from '@/models/team'
 import TeamService from '@/services/team'
 
-import CreateEdit from '@/components/misc/create-edit.vue'
+import CreateEdit from '@/components/misc/CreateEdit.vue'
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 
 import {useTitle} from '@/composables/useTitle'

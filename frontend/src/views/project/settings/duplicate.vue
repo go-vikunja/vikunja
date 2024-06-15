@@ -16,7 +16,7 @@ import {ref, watch} from 'vue'
 import {useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
-import CreateEdit from '@/components/misc/create-edit.vue'
+import CreateEdit from '@/components/misc/CreateEdit.vue'
 import ProjectSearch from '@/components/tasks/partials/projectSearch.vue'
 
 import {success} from '@/message'

@@ -130,7 +130,7 @@ import type BackgroundImageModel from '@/models/backgroundImage'
 import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'
 import {useTitle} from '@/composables/useTitle'
 
-import CreateEdit from '@/components/misc/create-edit.vue'
+import CreateEdit from '@/components/misc/CreateEdit.vue'
 import {success} from '@/message'
 
 const SEARCH_DEBOUNCE = 300

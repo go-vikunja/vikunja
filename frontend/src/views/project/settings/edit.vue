@@ -89,7 +89,7 @@ import {useI18n} from 'vue-i18n'
 
 import Editor from '@/components/input/AsyncEditor'
 import ColorPicker from '@/components/input/ColorPicker.vue'
-import CreateEdit from '@/components/misc/create-edit.vue'
+import CreateEdit from '@/components/misc/CreateEdit.vue'
 import ProjectSearch from '@/components/tasks/partials/projectSearch.vue'
 
 import type {IProject} from '@/modelTypes/IProject'

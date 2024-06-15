@@ -56,7 +56,7 @@ import {useI18n} from 'vue-i18n'
 
 import ProjectService from '@/services/project'
 import ProjectModel from '@/models/project'
-import CreateEdit from '@/components/misc/create-edit.vue'
+import CreateEdit from '@/components/misc/CreateEdit.vue'
 import ColorPicker from '@/components/input/ColorPicker.vue'
 
 import {success} from '@/message'

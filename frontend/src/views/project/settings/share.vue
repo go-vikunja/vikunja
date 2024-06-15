@@ -41,7 +41,7 @@ import ProjectModel from '@/models/project'
 import type {IProject} from '@/modelTypes/IProject'
 import {RIGHTS} from '@/constants/rights'
 
-import CreateEdit from '@/components/misc/create-edit.vue'
+import CreateEdit from '@/components/misc/CreateEdit.vue'
 import LinkSharing from '@/components/sharing/linkSharing.vue'
 import userTeam from '@/components/sharing/userTeam.vue'
 

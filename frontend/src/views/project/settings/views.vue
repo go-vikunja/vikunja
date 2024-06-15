@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import CreateEdit from '@/components/misc/create-edit.vue'
+import CreateEdit from '@/components/misc/CreateEdit.vue'
 import {watch, ref, computed} from 'vue'
 import {useProjectStore} from '@/stores/projects'
 import ProjectViewModel from '@/models/projectView'

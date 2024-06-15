@@ -12,7 +12,7 @@ import ProjectService from '@/services/project'
 import ProjectModel from '@/models/project'
 import type {IProject} from '@/modelTypes/IProject'
 
-import CreateEdit from '@/components/misc/create-edit.vue'
+import CreateEdit from '@/components/misc/CreateEdit.vue'
 
 import {useBaseStore} from '@/stores/base'
 import type {IWebhook} from '@/modelTypes/IWebhook'
