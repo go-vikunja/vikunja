@@ -31,7 +31,7 @@ import UpdateNotification from '@/components/home/UpdateNotification.vue'
 import KeyboardShortcuts from '@/components/misc/keyboard-shortcuts/index.vue'
 
 import TheNavigation from '@/components/home/TheNavigation.vue'
-import ContentAuth from '@/components/home/contentAuth.vue'
+import ContentAuth from '@/components/home/ContentAuth.vue'
 import ContentLinkShare from '@/components/home/contentLinkShare.vue'
 import NoAuthWrapper from '@/components/misc/no-auth-wrapper.vue'
 import Ready from '@/components/misc/ready.vue'
