@@ -184,7 +184,7 @@ import type {ITask} from '@/modelTypes/ITask'
 
 import PriorityLabel from '@/components/tasks/partials/priorityLabel.vue'
 import Labels from '@/components/tasks/partials//labels.vue'
-import DeferTask from '@/components/tasks/partials//defer-task.vue'
+import DeferTask from '@/components/tasks/partials/DeferTask.vue'
 import ChecklistSummary from '@/components/tasks/partials/ChecklistSummary.vue'
 
 import ProgressBar from '@/components/misc/ProgressBar.vue'
