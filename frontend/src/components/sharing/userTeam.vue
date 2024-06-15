@@ -188,7 +188,7 @@ import Nothing from '@/components/misc/Nothing.vue'
 import {success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
-import User from '@/components/misc/user.vue'
+import User from '@/components/misc/User.vue'
 
 // FIXME: I think this whole thing can now only manage user/team sharing for projects? Maybe remove a little generalization?
 

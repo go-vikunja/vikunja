@@ -265,7 +265,7 @@ import {useRoute, useRouter} from 'vue-router'
 import Editor from '@/components/input/AsyncEditor'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import Multiselect from '@/components/input/Multiselect.vue'
-import User from '@/components/misc/user.vue'
+import User from '@/components/misc/User.vue'
 
 import TeamService from '@/services/team'
 import TeamMemberService from '@/services/teamMember'

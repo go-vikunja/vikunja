@@ -6,7 +6,7 @@ import UserService from '@/services/user'
 import AutocompleteDropdown from '@/components/input/AutocompleteDropdown.vue'
 import {useLabelStore} from '@/stores/labels'
 import XLabel from '@/components/tasks/partials/label.vue'
-import User from '@/components/misc/user.vue'
+import User from '@/components/misc/User.vue'
 import ProjectUserService from '@/services/projectUsers'
 import {useProjectStore} from '@/stores/projects'
 import {

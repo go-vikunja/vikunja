@@ -175,7 +175,7 @@
 import {ref, shallowReactive, computed} from 'vue'
 import {useDropZone} from '@vueuse/core'
 
-import User from '@/components/misc/user.vue'
+import User from '@/components/misc/User.vue'
 import ProgressBar from '@/components/misc/ProgressBar.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 

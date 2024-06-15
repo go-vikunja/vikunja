@@ -273,7 +273,7 @@ import {useStorage} from '@vueuse/core'
 
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
 import Done from '@/components/misc/Done.vue'
-import User from '@/components/misc/user.vue'
+import User from '@/components/misc/User.vue'
 import PriorityLabel from '@/components/tasks/partials/priorityLabel.vue'
 import Labels from '@/components/tasks/partials/labels.vue'
 import DateTableCell from '@/components/tasks/partials/date-table-cell.vue'

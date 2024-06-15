@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type {IUser} from '@/modelTypes/IUser'
 import BaseButton from '@/components/base/BaseButton.vue'
-import User from '@/components/misc/user.vue'
+import User from '@/components/misc/User.vue'
 import {computed} from 'vue'
 
 const {
