@@ -33,7 +33,7 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, shallowRef, type PropType} from 'vue'
+import {computed, shallowReactive} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -46,28 +46,23 @@ import type {ISubscription} from '@/modelTypes/ISubscription'
 import {success} from '@/message'
 import type { IconProp } from '@fortawesome/fontawesome-svg-core'
 
-const props = defineProps({
-	entity: String as ISubscription['entity'],
-	entityId: Number,
-	isButton: {
-		type: Boolean,
-		default: true,
-	},
-	modelValue: {
-		type: Object as PropType<ISubscription>,
-		default: null,
-	},
-	type: {
-		type: String as PropType<'button' | 'dropdown' | 'null'>,
-		default: 'button',
-	},
+const props = withDefaults(defineProps<{
+	entity: ISubscription['entity'],
+	entityId: number,
+	isButton?: boolean,
+	modelValue?: ISubscription,
+	type?: 'button' | 'dropdown',
+}>(), {
+	isButton: true,
+	modelValue: null,
+	type: 'button',
 })
 
 const emit = defineEmits(['update:modelValue'])
 
 const subscriptionEntity = computed<string | null>(() => props.modelValue?.entity ?? null)
 
-const subscriptionService = shallowRef(new SubscriptionService())
+const subscriptionService = shallowReactive(new SubscriptionService())
 
 const {t} = useI18n({useScope: 'global'})
 
@@ -77,8 +72,8 @@ const tooltipText = computed(() => {
 			return t('task.subscription.subscribedTaskThroughParentProject')
 		}
 
-		return ''
-	}
+			return ''
+		}
 
 	switch (props.entity) {
 		case 'project':
@@ -115,7 +110,7 @@ async function subscribe() {
 		entity: props.entity,
 		entityId: props.entityId,
 	})
-	await subscriptionService.value.create(subscription)
+	await subscriptionService.create(subscription)
 	emit('update:modelValue', subscription)
 
 	let message = ''
@@ -135,7 +130,7 @@ async function unsubscribe() {
 		entity: props.entity,
 		entityId: props.entityId,
 	})
-	await subscriptionService.value.delete(subscription)
+	await subscriptionService.delete(subscription)
 	emit('update:modelValue', null)
 
 	let message = ''
