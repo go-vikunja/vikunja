@@ -26,7 +26,7 @@ import {useRoute, useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import isTouchDevice from 'is-touch-device'
 
-import Notification from '@/components/misc/notification.vue'
+import Notification from '@/components/misc/Notification.vue'
 import UpdateNotification from '@/components/home/UpdateNotification.vue'
 import KeyboardShortcuts from '@/components/misc/keyboard-shortcuts/index.vue'
 
