@@ -281,7 +281,7 @@ import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import Sort from '@/components/tasks/partials/Sort.vue'
 import FilterPopup from '@/components/project/partials/filter-popup.vue'
 import Pagination from '@/components/misc/Pagination.vue'
-import Popup from '@/components/misc/popup.vue'
+import Popup from '@/components/misc/Popup.vue'
 
 import type {SortBy} from '@/composables/useTaskList'
 import {useTaskList} from '@/composables/useTaskList'

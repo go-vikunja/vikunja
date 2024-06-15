@@ -85,7 +85,7 @@ import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
 import {parseDateOrString} from '@/helpers/time/parseDateOrString'
 
-import Popup from '@/components/misc/popup.vue'
+import Popup from '@/components/misc/Popup.vue'
 import {DATE_VALUES} from '@/components/date/dateRanges'
 import BaseButton from '@/components/base/BaseButton.vue'
 import DatemathHelp from '@/components/date/DatemathHelp.vue'
