@@ -285,7 +285,7 @@ import {useKanbanStore} from '@/stores/kanban'
 
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
 import FilterPopup from '@/components/project/partials/FilterPopup.vue'
-import KanbanCard from '@/components/tasks/partials/kanban-card.vue'
+import KanbanCard from '@/components/tasks/partials/KanbanCard.vue'
 import Dropdown from '@/components/misc/Dropdown.vue'
 import DropdownItem from '@/components/misc/DropdownItem.vue'
 
