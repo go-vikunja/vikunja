@@ -19,31 +19,20 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, type PropType} from 'vue'
+import {computed} from 'vue'
 
 import {getAvatarUrl, getDisplayName} from '@/models/user'
 import type {IUser} from '@/modelTypes/IUser'
 
-const props = defineProps({
-	user: {
-		type: Object as PropType<IUser>,
-		required: true,
-	},
-	showUsername: {
-		type: Boolean,
-		required: false,
-		default: true,
-	},
-	avatarSize: {
-		type: Number,
-		required: false,
-		default: 50,
-	},
-	isInline: {
-		type: Boolean,
-		required: false,
-		default: false,
-	},
+const props = withDefaults(defineProps<{
+	user: IUser,
+	showUsername?: boolean,
+	avatarSize?: number,
+	isInline?: boolean,
+}>(), {
+	showUsername: true,
+	avatarSize: 50,
+	isInline: false,
 })
 
 const displayName = computed(() => getDisplayName(props.user))
