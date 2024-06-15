@@ -29,7 +29,7 @@ import {useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
 import {getErrorText} from '@/message'
-import Message from '@/components/misc/message.vue'
+import Message from '@/components/misc/Message.vue'
 import {useRedirectToLastVisited} from '@/composables/useRedirectToLastVisited'
 
 import {useAuthStore} from '@/stores/auth'

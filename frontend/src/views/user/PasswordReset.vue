@@ -55,7 +55,7 @@ import {ref, reactive} from 'vue'
 
 import PasswordResetModel from '@/models/passwordReset'
 import PasswordResetService from '@/services/passwordReset'
-import Message from '@/components/misc/message.vue'
+import Message from '@/components/misc/Message.vue'
 import Password from '@/components/input/Password.vue'
 
 const credentials = reactive({

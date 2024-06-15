@@ -69,7 +69,7 @@ import {ref, shallowReactive} from 'vue'
 
 import PasswordResetModel from '@/models/passwordReset'
 import PasswordResetService from '@/services/passwordReset'
-import Message from '@/components/misc/message.vue'
+import Message from '@/components/misc/Message.vue'
 
 const passwordResetService = shallowReactive(new PasswordResetService())
 const passwordReset = ref(new PasswordResetModel())

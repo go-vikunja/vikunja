@@ -51,7 +51,7 @@
 import {useBaseStore} from '@/stores/base'
 
 import Shortcut from '@/components/misc/shortcut.vue'
-import Message from '@/components/misc/message.vue'
+import Message from '@/components/misc/Message.vue'
 
 import {KEYBOARD_SHORTCUTS as shortcuts} from './shortcuts'
 

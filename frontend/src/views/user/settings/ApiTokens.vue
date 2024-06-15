@@ -10,7 +10,7 @@ import {MILLISECONDS_A_DAY} from '@/constants/date'
 import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
 import {useI18n} from 'vue-i18n'
-import Message from '@/components/misc/message.vue'
+import Message from '@/components/misc/Message.vue'
 import type {IApiToken} from '@/modelTypes/IApiToken'
 import { getFlatpickrLanguage } from '@/helpers/flatpickrLanguage'
 

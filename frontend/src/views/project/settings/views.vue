@@ -12,7 +12,7 @@ import {useI18n} from 'vue-i18n'
 import ProjectService from '@/services/project'
 import {RIGHTS} from '@/constants/rights'
 import ProjectModel from '@/models/project'
-import Message from '@/components/misc/message.vue'
+import Message from '@/components/misc/Message.vue'
 
 const {
 	projectId,

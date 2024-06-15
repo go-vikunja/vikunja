@@ -55,7 +55,7 @@
 <script lang="ts" setup>
 import {ref, computed} from 'vue'
 
-import Message from '@/components/misc/message.vue'
+import Message from '@/components/misc/Message.vue'
 import ShowTasks from '@/views/tasks/ShowTasks.vue'
 import ProjectCardGrid from '@/components/project/partials/ProjectCardGrid.vue'
 import AddTask from '@/components/tasks/add-task.vue'

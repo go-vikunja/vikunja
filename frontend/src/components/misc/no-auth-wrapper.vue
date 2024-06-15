@@ -46,7 +46,7 @@ import {useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
 import Logo from '@/components/home/Logo.vue'
-import Message from '@/components/misc/message.vue'
+import Message from '@/components/misc/Message.vue'
 import Legal from '@/components/misc/Legal.vue'
 import ApiConfig from '@/components/misc/ApiConfig.vue'
 

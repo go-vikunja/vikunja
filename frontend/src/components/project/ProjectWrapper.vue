@@ -46,7 +46,7 @@ import {computed, ref, watch} from 'vue'
 import {useRoute} from 'vue-router'
 
 import BaseButton from '@/components/base/BaseButton.vue'
-import Message from '@/components/misc/message.vue'
+import Message from '@/components/misc/Message.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 
 import ProjectModel from '@/models/project'

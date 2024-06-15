@@ -21,7 +21,7 @@ export default {
 </script>
 
 <script lang="ts" setup>
-import Message from '@/components/misc/message.vue'
+import Message from '@/components/misc/Message.vue'
 import ButtonLink from '@/components/misc/ButtonLink.vue'
 
 function reload() {

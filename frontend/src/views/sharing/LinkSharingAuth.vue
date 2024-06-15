@@ -48,7 +48,7 @@ import {useRoute, useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import {useTitle} from '@vueuse/core'
 
-import Message from '@/components/misc/message.vue'
+import Message from '@/components/misc/Message.vue'
 import {LINK_SHARE_HASH_PREFIX} from '@/constants/linkShareHash'
 
 import {useBaseStore} from '@/stores/base'

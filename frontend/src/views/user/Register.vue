@@ -121,7 +121,7 @@ import {computed, onBeforeMount, reactive, ref, toRaw} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import router from '@/router'
-import Message from '@/components/misc/message.vue'
+import Message from '@/components/misc/Message.vue'
 import {isEmail} from '@/helpers/isEmail'
 import Password from '@/components/input/Password.vue'
 

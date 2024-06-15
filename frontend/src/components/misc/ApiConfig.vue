@@ -68,7 +68,7 @@ import {parseURL} from 'ufo'
 import {checkAndSetApiUrl} from '@/helpers/checkAndSetApiUrl'
 import {success} from '@/message'
 
-import Message from '@/components/misc/message.vue'
+import Message from '@/components/misc/Message.vue'
 import ButtonLink from '@/components/misc/ButtonLink.vue'
 
 const props = defineProps({
