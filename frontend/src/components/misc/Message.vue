@@ -10,29 +10,25 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, type PropType} from 'vue'
+import {computed} from 'vue'
 
-const props = defineProps({
-	variant: {
-		type: String,
-		default: 'info',
-	},
-	textAlign: {
-		type: String as PropType<textAlignVariants>,
-		default: 'left',
-	},
+const props = withDefaults(defineProps<{
+	variant?: 'info' | 'danger' | 'warning' | 'success',
+	textAlign?: TextAlignVariant
+}>(), {
+	variant: 'info',
+	textAlign: 'left',
 })
 
-const TEXT_ALIGN_MAP = Object.freeze({
+const TEXT_ALIGN_MAP = {
 	left: '',
 	center: 'has-text-centered',
 	right: 'has-text-right',
-})
+} as const
 
-type textAlignVariants = keyof typeof TEXT_ALIGN_MAP
+export type TextAlignVariant = keyof typeof TEXT_ALIGN_MAP
 
 const textAlignClass = computed(() => TEXT_ALIGN_MAP[props.textAlign])
-
 </script>
 
 <style lang="scss" scoped>
