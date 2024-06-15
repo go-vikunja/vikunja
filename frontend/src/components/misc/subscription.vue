@@ -37,7 +37,7 @@ import {computed, shallowRef, type PropType} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import BaseButton from '@/components/base/BaseButton.vue'
-import DropdownItem from '@/components/misc/dropdown-item.vue'
+import DropdownItem from '@/components/misc/DropdownItem.vue'
 
 import SubscriptionService from '@/services/subscription'
 import SubscriptionModel from '@/models/subscription'

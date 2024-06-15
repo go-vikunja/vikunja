@@ -286,8 +286,8 @@ import {useKanbanStore} from '@/stores/kanban'
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
 import FilterPopup from '@/components/project/partials/filter-popup.vue'
 import KanbanCard from '@/components/tasks/partials/kanban-card.vue'
-import Dropdown from '@/components/misc/dropdown.vue'
-import DropdownItem from '@/components/misc/dropdown-item.vue'
+import Dropdown from '@/components/misc/Dropdown.vue'
+import DropdownItem from '@/components/misc/DropdownItem.vue'
 
 import {
 	type CollapsedBuckets,
