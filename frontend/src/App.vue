@@ -34,7 +34,7 @@ import TheNavigation from '@/components/home/TheNavigation.vue'
 import ContentAuth from '@/components/home/ContentAuth.vue'
 import ContentLinkShare from '@/components/home/ContentLinkShare.vue'
 import NoAuthWrapper from '@/components/misc/NoAuthWrapper.vue'
-import Ready from '@/components/misc/ready.vue'
+import Ready from '@/components/misc/Ready.vue'
 
 import {setLanguage} from '@/i18n'
 
