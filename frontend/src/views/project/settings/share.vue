@@ -43,7 +43,7 @@ import {RIGHTS} from '@/constants/rights'
 
 import CreateEdit from '@/components/misc/CreateEdit.vue'
 import LinkSharing from '@/components/sharing/LinkSharing.vue'
-import userTeam from '@/components/sharing/userTeam.vue'
+import userTeam from '@/components/sharing/UserTeam.vue'
 
 import {useBaseStore} from '@/stores/base'
 import {useConfigStore} from '@/stores/config'
