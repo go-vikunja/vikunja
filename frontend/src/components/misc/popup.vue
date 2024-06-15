@@ -10,7 +10,7 @@
 		class="popup"
 		:class="{
 			'is-open': openValue,
-			'has-overflow': props.hasOverflow && openValue
+			'has-overflow': hasOverflow && openValue
 		}"
 	>
 		<slot
@@ -23,31 +23,23 @@
 </template>
 
 <script setup lang="ts">
-import {ref, watch} from 'vue'
+import {ref, watchEffect} from 'vue'
 import {onClickOutside} from '@vueuse/core'
 
-const props = defineProps({
-	hasOverflow: {
-		type: Boolean,
-		default: false,
-	},
-	open: {
-		type: Boolean,
-		default: false,
-	},
+const props = withDefaults(defineProps<{
+	hasOverflow?: boolean
+	open?: boolean
+}>(), {
+	hasOverflow: false,
+	open: false,
 })
 
 const emit = defineEmits(['close'])
 
-watch(
-	() => props.open,
-	nowOpen => {
-		openValue.value = nowOpen
-	},
-)
-
-const openValue = ref(false)
-const popup = ref<HTMLElement | null>(null)
+const openValue = ref(props.open)
+watchEffect(() => {
+	openValue.value = props.open
+})
 
 function close() {
 	openValue.value = false
@@ -57,6 +49,8 @@ function close() {
 function toggle() {
 	openValue.value = !openValue.value
 }
+
+const popup = ref<HTMLElement | null>(null)
 
 onClickOutside(popup, () => {
 	if (!openValue.value) {
