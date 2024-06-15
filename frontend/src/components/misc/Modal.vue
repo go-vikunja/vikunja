@@ -66,33 +66,31 @@
 	</Teleport>
 </template>
 
-<script lang="ts">
-export default {
-	inheritAttrs: false,
-}
-</script>
-
 <script lang="ts" setup>
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import {ref, useAttrs, watchEffect} from 'vue'
 import {useScrollLock} from '@vueuse/core'
 
-const {
-	enabled = true,
-	overflow,
-	wide,
-	transitionName = 'modal',
-	variant = 'default',
-} = defineProps<{
+const props = withDefaults(defineProps<{
 	enabled?: boolean,
 	overflow?: boolean,
 	wide?: boolean,
 	transitionName?: 'modal' | 'fade',
 	variant?: 'default' | 'hint-modal' | 'scrolling',
-}>()
+}>(), {
+	enabled: true,
+	overflow: false,
+	wide: false,
+	transitionName: 'modal',
+	variant: 'default',
+})
 
 defineEmits(['close', 'submit'])
+
+defineOptions({
+	inheritAttrs: false,
+})
 
 const attrs = useAttrs()
 
@@ -100,7 +98,7 @@ const modal = ref<HTMLElement | null>(null)
 const scrollLock = useScrollLock(modal)
 
 watchEffect(() => {
-	scrollLock.value = enabled
+	scrollLock.value = props.enabled
 })
 </script>
 
