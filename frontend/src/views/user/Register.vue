@@ -123,7 +123,7 @@ import {useI18n} from 'vue-i18n'
 import router from '@/router'
 import Message from '@/components/misc/message.vue'
 import {isEmail} from '@/helpers/isEmail'
-import Password from '@/components/input/password.vue'
+import Password from '@/components/input/Password.vue'
 
 import {useAuthStore} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'

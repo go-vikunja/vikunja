@@ -150,7 +150,7 @@ import {useI18n} from 'vue-i18n'
 import {useDebounceFn} from '@vueuse/core'
 
 import Message from '@/components/misc/message.vue'
-import Password from '@/components/input/password.vue'
+import Password from '@/components/input/Password.vue'
 
 import {getErrorText} from '@/message'
 import {redirectToProvider} from '@/helpers/redirectToProvider'
