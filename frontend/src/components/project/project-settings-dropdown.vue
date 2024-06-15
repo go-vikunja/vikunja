@@ -120,7 +120,7 @@ import {computed, type PropType, ref, watchEffect} from 'vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import Dropdown from '@/components/misc/Dropdown.vue'
 import DropdownItem from '@/components/misc/DropdownItem.vue'
-import Subscription from '@/components/misc/subscription.vue'
+import Subscription from '@/components/misc/Subscription.vue'
 import type {IProject} from '@/modelTypes/IProject'
 import type {ISubscription} from '@/modelTypes/ISubscription'
 

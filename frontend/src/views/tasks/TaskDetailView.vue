@@ -615,7 +615,7 @@ import PrioritySelect from '@/components/tasks/partials/prioritySelect.vue'
 import RelatedTasks from '@/components/tasks/partials/relatedTasks.vue'
 import Reminders from '@/components/tasks/partials/reminders.vue'
 import RepeatAfter from '@/components/tasks/partials/repeatAfter.vue'
-import TaskSubscription from '@/components/misc/subscription.vue'
+import TaskSubscription from '@/components/misc/Subscription.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 
 import {uploadFile} from '@/helpers/attachments'
