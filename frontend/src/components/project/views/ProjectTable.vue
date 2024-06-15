@@ -279,7 +279,7 @@ import Labels from '@/components/tasks/partials/labels.vue'
 import DateTableCell from '@/components/tasks/partials/date-table-cell.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import Sort from '@/components/tasks/partials/Sort.vue'
-import FilterPopup from '@/components/project/partials/filter-popup.vue'
+import FilterPopup from '@/components/project/partials/FilterPopup.vue'
 import Pagination from '@/components/misc/Pagination.vue'
 import Popup from '@/components/misc/Popup.vue'
 
