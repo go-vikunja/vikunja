@@ -84,7 +84,7 @@ import ReminderPeriod from '@/components/tasks/partials/reminder-period.vue'
 import Popup from '@/components/misc/popup.vue'
 
 import TaskReminderModel from '@/models/taskReminder'
-import Card from '@/components/misc/card.vue'
+import Card from '@/components/misc/Card.vue'
 import SimpleButton from '@/components/input/SimpleButton.vue'
 import {useDebounceFn} from '@vueuse/core'
 

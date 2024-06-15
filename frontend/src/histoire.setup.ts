@@ -11,7 +11,7 @@ import cypress from '@/directives/cypress'
 import FontAwesomeIcon from '@/components/misc/Icon'
 import XButton from '@/components/input/button.vue'
 import Modal from '@/components/misc/modal.vue'
-import Card from '@/components/misc/card.vue'
+import Card from '@/components/misc/Card.vue'
 
 export const setupVue3 = defineSetupVue3(({ app }) => {
 	// Add Pinia store

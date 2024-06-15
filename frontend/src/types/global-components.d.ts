@@ -4,7 +4,7 @@ import type { Notifications } from '@kyvg/vue3-notification'
 import type { FontAwesomeIcon as FontAwesomeIconFixedTypes } from './vue-fontawesome'
 import type XButton from '@/components/input/button.vue'
 import type Modal from '@/components/misc/modal.vue'
-import type Card from '@/components/misc/card.vue'
+import type Card from '@/components/misc/Card.vue'
 
 // Here we define globally imported components
 // See:

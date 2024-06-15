@@ -46,7 +46,7 @@ import cypress from '@/directives/cypress'
 import FontAwesomeIcon from '@/components/misc/Icon'
 import Button from '@/components/input/button.vue'
 import Modal from '@/components/misc/modal.vue'
-import Card from '@/components/misc/card.vue'
+import Card from '@/components/misc/Card.vue'
 
 // We're loading the language before creating the app so that it won't fail to load when the user's 
 // language file is not yet loaded.
