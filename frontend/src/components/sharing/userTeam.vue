@@ -184,7 +184,7 @@ import type {ITeam} from '@/modelTypes/ITeam'
 
 import {RIGHTS} from '@/constants/rights'
 import Multiselect from '@/components/input/Multiselect.vue'
-import Nothing from '@/components/misc/nothing.vue'
+import Nothing from '@/components/misc/Nothing.vue'
 import {success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'

@@ -103,7 +103,7 @@ import ButtonLink from '@/components/misc/ButtonLink.vue'
 import AddTask from '@/components/tasks/add-task.vue'
 import SingleTaskInProject from '@/components/tasks/partials/singleTaskInProject.vue'
 import FilterPopup from '@/components/project/partials/filter-popup.vue'
-import Nothing from '@/components/misc/nothing.vue'
+import Nothing from '@/components/misc/Nothing.vue'
 import Pagination from '@/components/misc/Pagination.vue'
 import {ALPHABETICAL_SORT} from '@/components/project/partials/filters.vue'
 
