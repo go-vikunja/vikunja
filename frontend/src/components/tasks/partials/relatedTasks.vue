@@ -198,7 +198,7 @@ import TaskRelationModel from '@/models/taskRelation'
 
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
-import Multiselect from '@/components/input/multiselect.vue'
+import Multiselect from '@/components/input/Multiselect.vue'
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 
 import {error, success} from '@/message'

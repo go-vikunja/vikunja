@@ -54,7 +54,7 @@ import LabelTaskService from '@/services/labelTask'
 import {success} from '@/message'
 
 import BaseButton from '@/components/base/BaseButton.vue'
-import Multiselect from '@/components/input/multiselect.vue'
+import Multiselect from '@/components/input/Multiselect.vue'
 import type {ILabel} from '@/modelTypes/ILabel'
 import {useLabelStore} from '@/stores/labels'
 import {useTaskStore} from '@/stores/tasks'

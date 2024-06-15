@@ -33,7 +33,7 @@ import {getProjectTitle} from '@/helpers/getProjectTitle'
 
 import ProjectModel from '@/models/project'
 
-import Multiselect from '@/components/input/multiselect.vue'
+import Multiselect from '@/components/input/Multiselect.vue'
 
 const props = defineProps({
 	modelValue: {

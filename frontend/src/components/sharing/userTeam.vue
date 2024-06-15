@@ -183,7 +183,7 @@ import type {ITeam} from '@/modelTypes/ITeam'
 
 
 import {RIGHTS} from '@/constants/rights'
-import Multiselect from '@/components/input/multiselect.vue'
+import Multiselect from '@/components/input/Multiselect.vue'
 import Nothing from '@/components/misc/nothing.vue'
 import {success} from '@/message'
 import {useAuthStore} from '@/stores/auth'

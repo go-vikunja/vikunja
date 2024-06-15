@@ -35,7 +35,7 @@ import {ref, shallowReactive, watch, nextTick, type PropType} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import User from '@/components/misc/user.vue'
-import Multiselect from '@/components/input/multiselect.vue'
+import Multiselect from '@/components/input/Multiselect.vue'
 
 import {includesById} from '@/helpers/utils'
 import ProjectUserService from '@/services/projectUsers'

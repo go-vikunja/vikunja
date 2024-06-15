@@ -13,7 +13,7 @@
 <script setup lang="ts">
 import {computed, ref, shallowReactive, watchEffect, type PropType} from 'vue'
 
-import Multiselect from '@/components/input/multiselect.vue'
+import Multiselect from '@/components/input/Multiselect.vue'
 
 import type {IUser} from '@/modelTypes/IUser'
 
