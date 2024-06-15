@@ -42,7 +42,7 @@ import type {IProject} from '@/modelTypes/IProject'
 import {RIGHTS} from '@/constants/rights'
 
 import CreateEdit from '@/components/misc/CreateEdit.vue'
-import LinkSharing from '@/components/sharing/linkSharing.vue'
+import LinkSharing from '@/components/sharing/LinkSharing.vue'
 import userTeam from '@/components/sharing/userTeam.vue'
 
 import {useBaseStore} from '@/stores/base'
