@@ -104,7 +104,7 @@ import type {ITask} from '@/modelTypes/ITask'
 
 import PriorityLabel from '@/components/tasks/partials/priorityLabel.vue'
 import Labels from '@/components/tasks/partials/labels.vue'
-import ChecklistSummary from '@/components/tasks/partials/checklist-summary.vue'
+import ChecklistSummary from '@/components/tasks/partials/ChecklistSummary.vue'
 
 import ColorBubble from '@/components/misc/ColorBubble.vue'
 

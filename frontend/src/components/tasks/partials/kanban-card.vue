@@ -100,7 +100,7 @@ import PriorityLabel from '@/components/tasks/partials/priorityLabel.vue'
 import ProgressBar from '@/components/misc/ProgressBar.vue'
 import Done from '@/components/misc/Done.vue'
 import Labels from '@/components/tasks/partials/labels.vue'
-import ChecklistSummary from './checklist-summary.vue'
+import ChecklistSummary from './ChecklistSummary.vue'
 
 import {getHexColor} from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'

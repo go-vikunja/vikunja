@@ -600,7 +600,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 
 // partials
 import Attachments from '@/components/tasks/partials/Attachments.vue'
-import ChecklistSummary from '@/components/tasks/partials/checklist-summary.vue'
+import ChecklistSummary from '@/components/tasks/partials/ChecklistSummary.vue'
 import ColorPicker from '@/components/input/ColorPicker.vue'
 import Comments from '@/components/tasks/partials/comments.vue'
 import CreatedUpdated from '@/components/tasks/partials/createdUpdated.vue'
