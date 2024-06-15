@@ -114,7 +114,7 @@ import { computed } from 'vue'
 
 import { RIGHTS as Rights } from '@/constants/rights'
 
-import ProjectSettingsDropdown from '@/components/project/project-settings-dropdown.vue'
+import ProjectSettingsDropdown from '@/components/project/ProjectSettingsDropdown.vue'
 import Dropdown from '@/components/misc/Dropdown.vue'
 import DropdownItem from '@/components/misc/DropdownItem.vue'
 import Notifications from '@/components/notifications/Notifications.vue'
