@@ -37,7 +37,7 @@ import {ref, watch, computed} from 'vue'
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 
 import BaseButton from '@/components/base/BaseButton.vue'
-import ReminderDetail from '@/components/tasks/partials/reminder-detail.vue'
+import ReminderDetail from '@/components/tasks/partials/ReminderDetail.vue'
 import type {ITask} from '@/modelTypes/ITask'
 import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 

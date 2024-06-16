@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import reminders from './reminders.vue'
 import {ref} from 'vue'
-import ReminderDetail from '@/components/tasks/partials/reminder-detail.vue'
+import ReminderDetail from '@/components/tasks/partials/ReminderDetail.vue'
 
 const reminderNow = ref({reminder: new Date(), relativePeriod: 0, relativeTo: null } )
 const relativeReminder = ref({reminder: null, relativePeriod: 1, relativeTo: 'due_date' } )
