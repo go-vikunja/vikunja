@@ -58,7 +58,7 @@ import {ref, computed} from 'vue'
 import Message from '@/components/misc/Message.vue'
 import ShowTasks from '@/views/tasks/ShowTasks.vue'
 import ProjectCardGrid from '@/components/project/partials/ProjectCardGrid.vue'
-import AddTask from '@/components/tasks/add-task.vue'
+import AddTask from '@/components/tasks/AddTask.vue'
 
 import {getHistory} from '@/modules/projectHistory'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
