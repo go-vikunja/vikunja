@@ -614,7 +614,7 @@ import PercentDoneSelect from '@/components/tasks/partials/PercentDoneSelect.vue
 import PrioritySelect from '@/components/tasks/partials/PrioritySelect.vue'
 import RelatedTasks from '@/components/tasks/partials/RelatedTasks.vue'
 import Reminders from '@/components/tasks/partials/Reminders.vue'
-import RepeatAfter from '@/components/tasks/partials/repeatAfter.vue'
+import RepeatAfter from '@/components/tasks/partials/RepeatAfter.vue'
 import TaskSubscription from '@/components/misc/Subscription.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 
