@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import reminders from './reminders.vue'
+import reminders from './Reminders.vue'
 import {ref} from 'vue'
 import ReminderDetail from '@/components/tasks/partials/ReminderDetail.vue'
 
