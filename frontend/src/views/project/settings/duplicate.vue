@@ -17,7 +17,7 @@ import {useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
 import CreateEdit from '@/components/misc/CreateEdit.vue'
-import ProjectSearch from '@/components/tasks/partials/projectSearch.vue'
+import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
 
 import {success} from '@/message'
 import {useTitle} from '@/composables/useTitle'

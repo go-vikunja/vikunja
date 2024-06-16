@@ -62,7 +62,7 @@ import ColorPicker from '@/components/input/ColorPicker.vue'
 import {success} from '@/message'
 import {useTitle} from '@/composables/useTitle'
 import {useProjectStore} from '@/stores/projects'
-import ProjectSearch from '@/components/tasks/partials/projectSearch.vue'
+import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
 import type {IProject} from '@/modelTypes/IProject'
 
 const props = defineProps<{

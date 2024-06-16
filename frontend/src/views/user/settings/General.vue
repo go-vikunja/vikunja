@@ -225,7 +225,7 @@ import {useI18n} from 'vue-i18n'
 
 import {PrefixMode} from '@/modules/parseTaskText'
 
-import ProjectSearch from '@/components/tasks/partials/projectSearch.vue'
+import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
 
 import {SUPPORTED_LOCALES} from '@/i18n'
 import {createRandomID} from '@/helpers/randomId'
