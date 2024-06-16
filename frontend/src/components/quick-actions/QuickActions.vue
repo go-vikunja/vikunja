@@ -98,7 +98,7 @@ import ProjectModel from '@/models/project'
 import BaseButton from '@/components/base/BaseButton.vue'
 import QuickAddMagic from '@/components/tasks/partials/QuickAddMagic.vue'
 import XLabel from '@/components/tasks/partials/Label.vue'
-import SingleTaskInlineReadonly from '@/components/tasks/partials/singleTaskInlineReadonly.vue'
+import SingleTaskInlineReadonly from '@/components/tasks/partials/SingleTaskInlineReadonly.vue'
 
 import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
