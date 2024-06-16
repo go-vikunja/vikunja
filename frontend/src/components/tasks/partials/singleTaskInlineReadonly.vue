@@ -102,7 +102,7 @@ import {computed} from 'vue'
 import {getHexColor} from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
 
-import PriorityLabel from '@/components/tasks/partials/priorityLabel.vue'
+import PriorityLabel from '@/components/tasks/partials/PriorityLabel.vue'
 import Labels from '@/components/tasks/partials/Labels.vue'
 import ChecklistSummary from '@/components/tasks/partials/ChecklistSummary.vue'
 

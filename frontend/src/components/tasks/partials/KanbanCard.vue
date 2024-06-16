@@ -96,7 +96,7 @@
 import {ref, computed, watch} from 'vue'
 import {useRouter} from 'vue-router'
 
-import PriorityLabel from '@/components/tasks/partials/priorityLabel.vue'
+import PriorityLabel from '@/components/tasks/partials/PriorityLabel.vue'
 import ProgressBar from '@/components/misc/ProgressBar.vue'
 import Done from '@/components/misc/Done.vue'
 import Labels from '@/components/tasks/partials/Labels.vue'
