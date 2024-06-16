@@ -56,7 +56,7 @@ import {RELATION_KIND} from '@/types/IRelationKind'
 import type {ITask} from '@/modelTypes/ITask'
 
 import Expandable from '@/components/base/Expandable.vue'
-import QuickAddMagic from '@/components/tasks/partials/quick-add-magic.vue'
+import QuickAddMagic from '@/components/tasks/partials/QuickAddMagic.vue'
 import {parseSubtasksViaIndention} from '@/helpers/parseSubtasksViaIndention'
 import TaskRelationService from '@/services/taskRelation'
 import TaskRelationModel from '@/models/taskRelation'
