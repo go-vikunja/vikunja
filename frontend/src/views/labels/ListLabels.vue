@@ -21,9 +21,9 @@
 				class="has-text-centered has-text-grey is-italic"
 			>
 				{{ $t('label.newCTA') }}
-				<router-link :to="{name:'labels.create'}">
+				<RouterLink :to="{name:'labels.create'}">
 					{{ $t('label.create.title') }}.
-				</router-link>
+				</RouterLink>
 			</p>
 		</div>
 

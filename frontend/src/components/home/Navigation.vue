@@ -4,7 +4,7 @@
 		class="menu-container"
 	>
 		<nav class="menu top-menu">
-			<router-link
+			<RouterLink
 				:to="{name: 'home'}"
 				class="logo"
 			>
@@ -12,10 +12,10 @@
 					width="164"
 					height="48"
 				/>
-			</router-link>
+			</RouterLink>
 			<menu class="menu-list other-menu-items">
 				<li>
-					<router-link
+					<RouterLink
 						v-shortcut="'g o'"
 						:to="{ name: 'home'}"
 					>
@@ -23,10 +23,10 @@
 							<icon icon="calendar" />
 						</span>
 						{{ $t('navigation.overview') }}
-					</router-link>
+					</RouterLink>
 				</li>
 				<li>
-					<router-link
+					<RouterLink
 						v-shortcut="'g u'"
 						:to="{ name: 'tasks.range'}"
 					>
@@ -34,10 +34,10 @@
 							<icon :icon="['far', 'calendar-alt']" />
 						</span>
 						{{ $t('navigation.upcoming') }}
-					</router-link>
+					</RouterLink>
 				</li>
 				<li>
-					<router-link
+					<RouterLink
 						v-shortcut="'g p'"
 						:to="{ name: 'projects.index'}"
 					>
@@ -45,10 +45,10 @@
 							<icon icon="layer-group" />
 						</span>
 						{{ $t('project.projects') }}
-					</router-link>
+					</RouterLink>
 				</li>
 				<li>
-					<router-link
+					<RouterLink
 						v-shortcut="'g a'"
 						:to="{ name: 'labels.index'}"
 					>
@@ -56,10 +56,10 @@
 							<icon icon="tags" />
 						</span>
 						{{ $t('label.title') }}
-					</router-link>
+					</RouterLink>
 				</li>
 				<li>
-					<router-link
+					<RouterLink
 						v-shortcut="'g m'"
 						:to="{ name: 'teams.index'}"
 					>
@@ -67,7 +67,7 @@
 							<icon icon="users" />
 						</span>
 						{{ $t('team.title') }}
-					</router-link>
+					</RouterLink>
 				</li>
 			</menu>
 		</nav>

@@ -7,17 +7,17 @@
 						v-for="({routeName, title }, index) in navigationItems"
 						:key="index"
 					>
-						<router-link
+						<RouterLink
 							class="navigation-link"
 							:to="{name: routeName}"
 						>
 							{{ title }}
-						</router-link>
+						</RouterLink>
 					</li>
 				</ul>
 			</nav>
 			<section class="view">
-				<router-view />
+				<RouterView />
 			</section>
 		</div>
 	</div>

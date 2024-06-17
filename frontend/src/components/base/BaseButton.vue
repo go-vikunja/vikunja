@@ -12,14 +12,14 @@
 	>
 		<slot />
 	</div>
-	<router-link
+	<RouterLink
 		v-else-if="to !== undefined"
 		ref="button"
 		:to="to"
 		class="base-button"
 	>
 		<slot />
-	</router-link>
+	</RouterLink>
 	<a
 		v-else-if="href !== undefined"
 		ref="button"

@@ -125,7 +125,7 @@
 							class="task-done-checkbox"
 							@update:modelValue="toggleTaskDone(t)"
 						/>
-						<router-link
+						<RouterLink
 							:to="{ name: route.name as string, params: { id: task.id } }"
 							:class="{ 'is-strikethrough': task.done}"
 						>
@@ -141,7 +141,7 @@
 								</span>
 							</span>
 							{{ task.title }}
-						</router-link>
+						</RouterLink>
 					</div>
 					<BaseButton
 						v-if="editEnabled"

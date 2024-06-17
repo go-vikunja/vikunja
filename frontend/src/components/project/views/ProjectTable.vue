@@ -178,14 +178,14 @@
 									:key="t.id"
 								>
 									<td v-if="activeColumns.index">
-										<router-link :to="taskDetailRoutes[t.id]">
+										<RouterLink :to="taskDetailRoutes[t.id]">
 											<template v-if="t.identifier === ''">
 												#{{ t.index }}
 											</template>
 											<template v-else>
 												{{ t.identifier }}
 											</template>
-										</router-link>
+										</RouterLink>
 									</td>
 									<td v-if="activeColumns.done">
 										<Done
@@ -194,9 +194,9 @@
 										/>
 									</td>
 									<td v-if="activeColumns.title">
-										<router-link :to="taskDetailRoutes[t.id]">
+										<RouterLink :to="taskDetailRoutes[t.id]">
 											{{ t.title }}
-										</router-link>
+										</RouterLink>
 									</td>
 									<td v-if="activeColumns.priority">
 										<PriorityLabel

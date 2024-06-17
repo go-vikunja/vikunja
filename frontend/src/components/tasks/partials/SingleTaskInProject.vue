@@ -27,7 +27,7 @@
 				@mousedown.stop.self="focusTaskLink"
 			>
 				<span>
-					<router-link
+					<RouterLink
 						v-if="showProject && typeof project !== 'undefined'"
 						v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
 						:to="{ name: 'project.index', params: { projectId: task.projectId } }"
@@ -35,7 +35,7 @@
 						:class="{'mr-2': task.hexColor !== ''}"
 					>
 						{{ project.title }}
-					</router-link>
+					</RouterLink>
 
 					<ColorBubble
 						v-if="task.hexColor !== ''"
@@ -49,14 +49,14 @@
 						class="pr-2"
 					/>
 				
-					<router-link
+					<RouterLink
 						ref="taskLink"
 						:to="taskDetailRoute"
 						class="task-link"
 						tabindex="-1"
 					>
 						{{ task.title }}
-					</router-link>
+					</RouterLink>
 				</span>
 
 				<Labels
@@ -133,14 +133,14 @@
 				class="mr-1"
 			/>
 
-			<router-link
+			<RouterLink
 				v-if="showProjectSeparately"
 				v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
 				:to="{ name: 'project.index', params: { projectId: task.projectId } }"
 				class="task-project"
 			>
 				{{ project.title }}
-			</router-link>
+			</RouterLink>
 
 			<BaseButton
 				:class="{'is-favorite': task.isFavorite}"

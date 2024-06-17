@@ -101,9 +101,9 @@
 
 			<p class="mt-2">
 				{{ $t('user.auth.alreadyHaveAnAccount') }}
-				<router-link :to="{ name: 'user.login' }">
+				<RouterLink :to="{ name: 'user.login' }">
 					{{ $t('user.auth.login') }}
-				</router-link>
+				</RouterLink>
 			</p>
 		</form>
 	</div>

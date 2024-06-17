@@ -4,7 +4,7 @@
 		aria-label="main navigation"
 		class="navbar d-print-none"
 	>
-		<router-link
+		<RouterLink
 			:to="{ name: 'home' }"
 			class="logo-link"
 		>
@@ -12,7 +12,7 @@
 				width="164"
 				height="48"
 			/>
-		</router-link>
+		</RouterLink>
 
 		<MenuButton class="menu-button" />
 

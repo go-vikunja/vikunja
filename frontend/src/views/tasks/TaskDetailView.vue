@@ -31,12 +31,12 @@
 					>
 						{{ getProjectTitle(p) }}
 					</a>
-					<router-link 
+					<RouterLink 
 						v-else
 						:to="{ name: 'project.index', params: { projectId: p.id } }"
 					>
 						{{ getProjectTitle(p) }}
-					</router-link>
+					</RouterLink>
 					<span
 						v-if="p.id !== project?.id"
 						class="has-text-grey-light"

@@ -15,9 +15,9 @@
 					dateSince: formatDateSince(deletionScheduledAt),
 				})
 			}}
-			<router-link :to="{name: 'user.settings', hash: '#deletion'}">
+			<RouterLink :to="{name: 'user.settings', hash: '#deletion'}">
 				{{ $t('user.deletion.scheduledCancel') }}
-			</router-link>
+			</RouterLink>
 		</Message>
 		<AddTask
 			class="is-max-width-desktop"

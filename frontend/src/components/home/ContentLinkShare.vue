@@ -20,7 +20,7 @@
 				{{ currentProject?.title === '' ? $t('misc.loading') : currentProject?.title }}
 			</h1>
 			<div class="box has-text-left view">
-				<router-view />
+				<RouterView />
 				<PoweredByLink />
 			</div>
 		</div>

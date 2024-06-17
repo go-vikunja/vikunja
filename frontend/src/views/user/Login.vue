@@ -54,13 +54,13 @@
 						class="label"
 						for="password"
 					>{{ $t('user.auth.password') }}</label>
-					<router-link
+					<RouterLink
 						:to="{ name: 'user.password-reset.request' }"
 						class="reset-password-link"
 						tabindex="6"
 					>
 						{{ $t('user.auth.forgotPassword') }}
-					</router-link>
+					</RouterLink>
 				</div>
 				<Password
 					v-model="password"
@@ -117,13 +117,13 @@
 				class="mt-2"
 			>
 				{{ $t('user.auth.noAccountYet') }}
-				<router-link
+				<RouterLink
 					:to="{ name: 'user.register' }"
 					type="secondary"
 					tabindex="5"
 				>
 					{{ $t('user.auth.createAccount') }}
-				</router-link>
+				</RouterLink>
 			</p>
 		</form>
 

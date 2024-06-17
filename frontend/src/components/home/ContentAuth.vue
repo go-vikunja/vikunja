@@ -33,14 +33,14 @@
 
 				<QuickActions />
 
-				<router-view
+				<RouterView
 					v-slot="{ Component }"
 					:route="routeWithModal"
 				>
 					<keep-alive :include="['project.view']">
 						<component :is="Component" />
 					</keep-alive>
-				</router-view>
+				</RouterView>
 
 				<modal
 					:enabled="typeof currentModal !== 'undefined'"

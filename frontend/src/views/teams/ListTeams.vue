@@ -20,11 +20,11 @@
 				v-for="team in teams"
 				:key="team.id"
 			>
-				<router-link :to="{name: 'teams.edit', params: {id: team.id}}">
+				<RouterLink :to="{name: 'teams.edit', params: {id: team.id}}">
 					<p>
 						{{ team.name }}
 					</p>
-				</router-link>
+				</RouterLink>
 			</li>
 		</ul>
 		<p
@@ -32,9 +32,9 @@
 			class="has-text-centered has-text-grey is-italic"
 		>
 			{{ $t('team.noTeams') }}
-			<router-link :to="{name: 'teams.create'}">
+			<RouterLink :to="{name: 'teams.create'}">
 				{{ $t('team.create.title') }}.
-			</router-link>
+			</RouterLink>
 		</p>
 	</div>
 </template>

@@ -23,7 +23,9 @@ module.exports = {
 
 		// uncategorized rules:
 		'vue/component-api-style': ['error', ['script-setup']],
-		'vue/component-name-in-template-casing': ['warn', 'PascalCase'],
+		'vue/component-name-in-template-casing': ['error', 'PascalCase', {
+			'globals': ['RouterView', 'RouterLink'],
+		}],
 		'vue/custom-event-name-casing': ['error', 'camelCase'],
 		'vue/define-macros-order': 'error',
 		'vue/match-component-file-name': ['error', {

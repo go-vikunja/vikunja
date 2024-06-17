@@ -60,14 +60,14 @@
 					</template>
 					<template v-if="shareType === 'team'">
 						<td>
-							<router-link
+							<RouterLink
 								:to="{
 									name: 'teams.edit',
 									params: { id: s.id },
 								}"
 							>
 								{{ s.name }}
-							</router-link>
+							</RouterLink>
 						</td>
 					</template>
 					<td class="type">

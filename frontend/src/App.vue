@@ -6,7 +6,7 @@
 		</template>
 		<ContentLinkShare v-else-if="authLinkShare" />
 		<NoAuthWrapper v-else>
-			<router-view />
+			<RouterView />
 		</NoAuthWrapper>
 		
 		<KeyboardShortcuts v-if="keyboardShortcutsActive" />

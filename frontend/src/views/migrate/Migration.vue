@@ -3,7 +3,7 @@
 		<h1>{{ $t('migrate.title') }}</h1>
 		<p>{{ $t('migrate.description') }}</p>
 		<div class="migration-services">
-			<router-link
+			<RouterLink
 				v-for="{name, id, icon} in availableMigrators"
 				:key="id"
 				class="migration-service-link"
@@ -15,7 +15,7 @@
 					:src="icon"
 				>
 				{{ name }}
-			</router-link>
+			</RouterLink>
 		</div>
 	</div>
 </template>

@@ -5,20 +5,20 @@
 		class="pagination is-centered p-4"
 		role="navigation"
 	>
-		<router-link
+		<RouterLink
 			:disabled="currentPage === 1 || undefined"
 			:to="getRouteForPagination(currentPage - 1)"
 			class="pagination-previous"
 		>
 			{{ $t('misc.previous') }}
-		</router-link>
-		<router-link
+		</RouterLink>
+		<RouterLink
 			:disabled="currentPage === totalPages || undefined"
 			:to="getRouteForPagination(currentPage + 1)"
 			class="pagination-next"
 		>
 			{{ $t('misc.next') }}
-		</router-link>
+		</RouterLink>
 		<ul class="pagination-list">
 			<li
 				v-for="(p, i) in pages"
@@ -28,7 +28,7 @@
 					v-if="p.isEllipsis"
 					class="pagination-ellipsis"
 				>&hellip;</span>
-				<router-link
+				<RouterLink
 					v-else
 					class="pagination-link"
 					:aria-label="'Goto page ' + p.number"
@@ -36,7 +36,7 @@
 					:to="getRouteForPagination(p.number)"
 				>
 					{{ p.number }}
-				</router-link>
+				</RouterLink>
 			</li>
 		</ul>
 	</nav>
