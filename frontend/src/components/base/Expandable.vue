@@ -41,10 +41,11 @@ const props = withDefaults(defineProps<{
   initialHeight?: number
   /** The hidden content is indicated by a gradient. This is the color that the gradient fades to.
   * Makes only sense if `initialHeight` is set. */
-	backgroundColor: string
+	backgroundColor?: string
 }>(), {
   open: false,
   initialHeight: undefined,
+	backgroundColor: undefined,
 })
 
 const wrapper = ref<HTMLElement | null>(null)
