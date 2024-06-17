@@ -30,15 +30,11 @@
 import {ref} from 'vue'
 import {createRandomID} from '@/helpers/randomId'
 
-defineProps({
-	modelValue: {
-		type: Boolean,
-		default: false,
-	},
-	disabled: {
-		type: Boolean,
-		default: false,
-	},
+withDefaults(defineProps<{
+	modelValue?: boolean,
+	disabled: boolean,
+}>(), {
+	modelValue: false,
 })
 
 const emit = defineEmits<{
