@@ -115,32 +115,32 @@
 			<span class="title">{{ rts.title }}</span>
 			<div class="tasks">
 				<div
-					v-for="t in rts.tasks"
-					:key="t.id"
+					v-for="task in rts.tasks"
+					:key="task.id"
 					class="task"
 				>
 					<div class="is-flex is-align-items-center">
 						<Fancycheckbox
-							v-model="t.done"
+							v-model="task.done"
 							class="task-done-checkbox"
 							@update:modelValue="toggleTaskDone(t)"
 						/>
 						<router-link
-							:to="{ name: route.name as string, params: { id: t.id } }"
-							:class="{ 'is-strikethrough': t.done}"
+							:to="{ name: route.name as string, params: { id: task.id } }"
+							:class="{ 'is-strikethrough': task.done}"
 						>
 							<span
-								v-if="t.projectId !== projectId"
+								v-if="task.projectId !== projectId"
 								class="different-project"
 							>
 								<span
-									v-if="t.differentProject !== null"
+									v-if="task.differentProject !== null"
 									v-tooltip="$t('task.relation.differentProject')"
 								>
-									{{ t.differentProject }} >
+									{{ task.differentProject }} >
 								</span>
 							</span>
-							{{ t.title }}
+							{{ task.title }}
 						</router-link>
 					</div>
 					<BaseButton
@@ -148,7 +148,7 @@
 						class="remove"
 						@click="setRelationToDelete({
 							relationKind: rts.kind,
-							otherTaskId: t.id
+							otherTaskId: task.id
 						})"
 					>
 						<icon icon="trash-alt" />
@@ -225,6 +225,7 @@ const props = defineProps({
 		default: 0,
 	},
 	editEnabled: {
+		type: Boolean,
 		default: true,
 	},
 })

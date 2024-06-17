@@ -50,6 +50,7 @@ const props = defineProps({
 		type: Number,
 	},
 	disabled: {
+		type: Boolean,
 		default: false,
 	},
 })

@@ -52,10 +52,10 @@
 		>
 			<div class="p-2">
 				<SingleTaskInProject
-					v-for="t in tasks"
-					:key="t.id"
+					v-for="task in tasks"
+					:key="task.id"
 					:show-project="true"
-					:the-task="t"
+					:the-task="task"
 					@taskUpdated="updateTasks"
 				/>
 			</div>

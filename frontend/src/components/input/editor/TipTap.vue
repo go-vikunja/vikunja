@@ -443,7 +443,7 @@ if (enableDiscardShortcut) {
 }
 
 const editor = useEditor({
-	// eslint-disable-next-line vue/no-ref-object-destructure
+	// eslint-disable-next-line vue/no-ref-object-reactivity-loss
 	editable: isEditing.value,
 	extensions: extensions,
 	onUpdate: () => {

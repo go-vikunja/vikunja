@@ -56,6 +56,7 @@ const props = defineProps({
 		required: true,
 	},
 	disabled: {
+		type: Boolean,
 		default: false,
 	},
 	modelValue: {

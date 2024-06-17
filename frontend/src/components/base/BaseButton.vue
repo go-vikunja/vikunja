@@ -73,14 +73,16 @@ export interface BaseButtonProps extends /* @vue-ignore */ HTMLAttributes {
 }
 
 export interface BaseButtonEmits {
-	(e: 'click', payload: MouseEvent): void
+	click: [payload: MouseEvent]
 }
 
-const {
-	type = BASE_BUTTON_TYPES_MAP.BUTTON,
-	disabled = false,
-	openExternalInNewTab = true,
-} = defineProps<BaseButtonProps>()
+withDefaults(defineProps<BaseButtonProps>(), {
+	type: BASE_BUTTON_TYPES_MAP.BUTTON,
+	disabled: false,
+	to: undefined,
+	href: undefined,
+	openExternalInNewTab: true,
+})
 
 const emit = defineEmits<BaseButtonEmits>()
 

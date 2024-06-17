@@ -46,7 +46,8 @@ module.exports = {
 		'vue/html-indent': ['error', 'tab'],
 
 		// vue3
-		'vue/no-ref-object-destructure': 'error',
+		'vue/no-ref-object-reactivity-loss': 'error',
+		'vue/no-setup-props-reactivity-loss': 'warn', // TODO: switch to error after vite `propsDestructure` is removed
 	},
 	'parser': 'vue-eslint-parser',
 	'parserOptions': {

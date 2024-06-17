@@ -206,6 +206,7 @@ const props = defineProps({
 		required: true,
 	},
 	canWrite: {
+		type: Boolean,
 		default: true,
 	},
 })

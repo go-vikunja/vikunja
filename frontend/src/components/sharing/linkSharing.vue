@@ -234,11 +234,10 @@ import {useConfigStore} from '@/stores/config'
 import {useProjectStore} from '@/stores/projects'
 import type {IProjectView} from '@/modelTypes/IProjectView'
 
-const props = defineProps({
-	projectId: {
-		default: 0,
-		required: false,
-	},
+const props = withDefaults(defineProps<{
+	projectId?: IProject['id'],
+}>(), {
+	projectId: 0,
 })
 
 const {t} = useI18n({useScope: 'global'})

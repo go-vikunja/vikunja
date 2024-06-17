@@ -126,7 +126,7 @@ import AbstractMigrationFileService from '@/services/migrator/abstractMigrationF
 import {formatDateLong} from '@/helpers/time/formatDate'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 
-import {MIGRATORS, Migrator} from './migrators'
+import {MIGRATORS, type Migrator} from './migrators'
 import {useTitle} from '@/composables/useTitle'
 import {useProjectStore} from '@/stores/projects'
 
@@ -150,9 +150,9 @@ const migrationJustStarted = ref(false)
 
 const migrator = computed<Migrator>(() => MIGRATORS[props.service])
 
-// eslint-disable-next-line vue/no-ref-object-destructure
+// eslint-disable-next-line vue/no-ref-object-reactivity-loss
 const migrationService = shallowReactive(new AbstractMigrationService(migrator.value.id))
-// eslint-disable-next-line vue/no-ref-object-destructure
+// eslint-disable-next-line vue/no-ref-object-reactivity-loss
 const migrationFileService = shallowReactive(new AbstractMigrationFileService(migrator.value.id))
 
 useTitle(() => t('migrate.titleService', {name: migrator.value.name}))
