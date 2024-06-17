@@ -111,7 +111,7 @@
 						<icon icon="align-left" />
 					</span>
 					<span
-						v-if="task.repeatAfter.amount > 0 || (task.repeatAfter.amount === 0 && task.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH)"
+						v-if="isRepeating"
 						class="project-task-icon"
 					>
 						<icon icon="history" />
@@ -132,7 +132,7 @@
 				:color="projectColor"
 				class="mr-1"
 			/>
-			
+
 			<router-link
 				v-if="showProjectSeparately"
 				v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
@@ -241,6 +241,8 @@ const taskService = shallowReactive(new TaskService())
 const task = ref<ITask>(new TaskModel())
 const showDefer = ref(false)
 
+const isRepeating = computed(() => task.value.repeatAfter.amount > 0 || (task.value.repeatAfter.amount === 0 && task.value.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH))
+
 watch(
 	() => theTask,
 	newVal => {
@@ -303,11 +305,13 @@ async function markAsDone(checked: boolean) {
 			playPopSound()
 		}
 		emit('taskUpdated', newTask)
-		success({
-			message: task.value.done ?
-				t('task.doneSuccess') :
-				t('task.undoneSuccess'),
-		}, [{
+
+		let message = t('task.doneSuccess')
+		if (!task.value.done && !isRepeating.value) {
+			message = t('task.undoneSuccess')
+		}
+
+		success({message}, [{
 			title: t('task.undo'),
 			callback: () => undoDone(checked),
 		}])
