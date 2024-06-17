@@ -18,7 +18,7 @@ export const DATE_RANGES = {
 	
 	'thisYear': ['now/y', 'now/y+1y'],
 	'restOfThisYear': ['now', 'now/y+1y'],
-}
+} as const
 
 export const DATE_VALUES = {
 	'now': 'now',
@@ -43,4 +43,4 @@ export const DATE_VALUES = {
 
 	'startOfThisYear': 'now/y',
 	'endOfThisYear': 'now/y+1y',
-}
+} as const

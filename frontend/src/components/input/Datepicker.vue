@@ -36,7 +36,7 @@
 import {ref, onMounted, onBeforeUnmount, toRef, watch, type PropType} from 'vue'
 
 import CustomTransition from '@/components/misc/CustomTransition.vue'
-import DatepickerInline from '@/components/input/datepickerInline.vue'
+import DatepickerInline from '@/components/input/DatepickerInline.vue'
 import SimpleButton from '@/components/input/SimpleButton.vue'
 
 import {formatDateShort} from '@/helpers/time/formatDate'

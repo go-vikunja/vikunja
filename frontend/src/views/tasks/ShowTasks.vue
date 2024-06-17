@@ -78,7 +78,7 @@ import {setTitle} from '@/helpers/setTitle'
 
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 import SingleTaskInProject from '@/components/tasks/partials/singleTaskInProject.vue'
-import DatepickerWithRange from '@/components/date/datepickerWithRange.vue'
+import DatepickerWithRange from '@/components/date/DatepickerWithRange.vue'
 import {DATE_RANGES} from '@/components/date/dateRanges'
 import LlamaCool from '@/assets/llama-cool.svg?component'
 import type {ITask} from '@/modelTypes/ITask'

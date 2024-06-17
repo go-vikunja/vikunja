@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import datemathHelp from './datemathHelp.vue'
+import DatemathHelp from './DatemathHelp.vue'
 </script>
 
 <template>
 	<Story>
 		<Variant title="Default">
-			<datemathHelp />
+			<DatemathHelp />
 		</Variant>
 	</Story>
 </template>

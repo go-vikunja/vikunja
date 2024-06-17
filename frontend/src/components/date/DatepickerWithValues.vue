@@ -1,13 +1,9 @@
 <template>
 	<div class="datepicker-with-range-container">
-		<Popup>
-			<template #trigger="{toggle}">
-				<slot
-					name="trigger"
-					:toggle="toggle"
-					:button-text="buttonText"
-				/>
-			</template>
+		<Popup
+			:open="open"
+			@close="() => emit('close')"
+		>
 			<template #content="{isOpen}">
 				<div
 					class="datepicker-with-range"
@@ -16,45 +12,26 @@
 					<div class="selections">
 						<BaseButton
 							:class="{'is-active': customRangeActive}"
-							@click="setDateRange(null)"
+							@click="setDate(null)"
 						>
 							{{ $t('misc.custom') }}
 						</BaseButton>
 						<BaseButton
-							v-for="(value, text) in DATE_RANGES"
+							v-for="(value, text) in DATE_VALUES"
 							:key="text"
-							:class="{'is-active': from === value[0] && to === value[1]}"
-							@click="setDateRange(value)"
+							:class="{'is-active': date === value}"
+							@click="setDate(value)"
 						>
-							{{ $t(`input.datepickerRange.ranges.${text}`) }}
+							{{ $t(`input.datepickerRange.values.${text}`) }}
 						</BaseButton>
 					</div>
 					<div class="flatpickr-container input-group">
 						<label class="label">
-							{{ $t('input.datepickerRange.from') }}
+							{{ $t('input.datepickerRange.date') }}
 							<div class="field has-addons">
 								<div class="control is-fullwidth">
 									<input
-										v-model="from"
-										class="input"
-										type="text"
-									>
-								</div>
-								<div class="control">
-									<x-button
-										icon="calendar"
-										variant="secondary"
-										data-toggle
-									/>
-								</div>
-							</div>
-						</label>
-						<label class="label">
-							{{ $t('input.datepickerRange.to') }}
-							<div class="field has-addons">
-								<div class="control is-fullwidth">
-									<input
-										v-model="to"
+										v-model="date"
 										class="input"
 										type="text"
 									>
@@ -69,7 +46,7 @@
 							</div>
 						</label>
 						<flat-pickr
-							v-model="flatpickrRange"
+							v-model="flatpickrDate"
 							:config="flatPickerConfig"
 						/>
 
@@ -109,18 +86,23 @@ import 'flatpickr/dist/flatpickr.css'
 import {parseDateOrString} from '@/helpers/time/parseDateOrString'
 
 import Popup from '@/components/misc/popup.vue'
-import {DATE_RANGES} from '@/components/date/dateRanges'
+import {DATE_VALUES} from '@/components/date/dateRanges'
 import BaseButton from '@/components/base/BaseButton.vue'
-import DatemathHelp from '@/components/date/datemathHelp.vue'
+import DatemathHelp from '@/components/date/DatemathHelp.vue'
 import {getFlatpickrLanguage} from '@/helpers/flatpickrLanguage'
 
 const props = defineProps({
 	modelValue: {
 		required: false,
+		default: null,
+	},
+	open: {
+		type: Boolean,
+		default: false,
 	},
 })
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'close'])
 
 const {t} = useI18n({useScope: 'global'})
 
@@ -130,87 +112,58 @@ const flatPickerConfig = computed(() => ({
 	dateFormat: 'Y-m-d H:i',
 	enableTime: false,
 	wrap: true,
-	mode: 'range',
 	locale: getFlatpickrLanguage(),
 }))
 
 const showHowItWorks = ref(false)
 
-const flatpickrRange = ref('')
+const flatpickrDate = ref('')
 
-const from = ref('')
-const to = ref('')
+const date = ref<string|Date>('')
 
 watch(
 	() => props.modelValue,
 	newValue => {
-		from.value = newValue.dateFrom
-		to.value = newValue.dateTo
+		date.value = newValue
 		// Only set the date back to flatpickr when it's an actual date.
 		// Otherwise flatpickr runs in an endless loop and slows down the browser.
-		const dateFrom = parseDateOrString(from.value, false)
-		const dateTo = parseDateOrString(to.value, false)
-		if (dateFrom instanceof Date && dateTo instanceof Date) {
-			flatpickrRange.value = `${from.value} to ${to.value}`
+		const parsed = parseDateOrString(date.value, false)
+		if (parsed instanceof Date) {
+			flatpickrDate.value = date.value
 		}
 	},
 )
 
 function emitChanged() {
-	const args = {
-		dateFrom: from.value === '' ? null : from.value,
-		dateTo: to.value === '' ? null : to.value,
-	}
-	emit('update:modelValue', args)
+	emit('update:modelValue', date.value === '' ? null : date.value)
 }
 
 watch(
-	() => flatpickrRange.value,
+	() => flatpickrDate.value,
 	(newVal: string | null) => {
 		if (newVal === null) {
 			return
 		}
 
-		const [fromDate, toDate] = newVal.split(' to ')
-
-		if (typeof fromDate === 'undefined' || typeof toDate === 'undefined') {
-			return
-		}
-
-		from.value = fromDate
-		to.value = toDate
+		date.value = newVal
 
 		emitChanged()
 	},
 )
-watch(() => from.value, emitChanged)
-watch(() => to.value, emitChanged)
+watch(() => date.value, emitChanged)
 
-function setDateRange(range: string[] | null) {
+function setDate(range: string | null) {
 	if (range === null) {
-		from.value = ''
-		to.value = ''
+		date.value = ''
 
 		return
 	}
 
-	from.value = range[0]
-	to.value = range[1]
+	date.value = range
 }
 
 const customRangeActive = computed<boolean>(() => {
-	return !Object.values(DATE_RANGES).some(range => from.value === range[0] && to.value === range[1])
-})
-
-const buttonText = computed<string>(() => {
-	if (from.value !== '' && to.value !== '') {
-		return t('input.datepickerRange.fromto', {
-			from: from.value,
-			to: to.value,
-		})
-	}
-
-	return t('task.show.select')
+	return !Object.values(DATE_VALUES).some(d => date.value === d)
 })
 </script>
 

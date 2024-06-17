@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {computed, nextTick, ref, watch} from 'vue'
 import {useAutoHeightTextarea} from '@/composables/useAutoHeightTextarea'
-import DatepickerWithValues from '@/components/date/datepickerWithValues.vue'
+import DatepickerWithValues from '@/components/date/DatepickerWithValues.vue'
 import UserService from '@/services/user'
 import AutocompleteDropdown from '@/components/input/AutocompleteDropdown.vue'
 import {useLabelStore} from '@/stores/labels'

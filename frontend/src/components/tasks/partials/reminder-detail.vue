@@ -79,7 +79,7 @@ import {type PeriodUnit, secondsToPeriod} from '@/helpers/time/period'
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 import {formatDateShort} from '@/helpers/time/formatDate'
 
-import DatepickerInline from '@/components/input/datepickerInline.vue'
+import DatepickerInline from '@/components/input/DatepickerInline.vue'
 import ReminderPeriod from '@/components/tasks/partials/reminder-period.vue'
 import Popup from '@/components/misc/popup.vue'
 
