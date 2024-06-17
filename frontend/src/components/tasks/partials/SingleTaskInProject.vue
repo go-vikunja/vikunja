@@ -296,11 +296,21 @@ useIntervalFn(updateDueDate, 60_000, {
 })
 onMounted(updateDueDate)
 
+let oldTask
 
-async function markAsDone(checked: boolean) {
+async function markAsDone(checked: boolean, wasReverted: boolean = false) {
 	const updateFunc = async () => {
+		oldTask = {...task.value}
 		const newTask = await taskStore.update(task.value)
 		task.value = newTask
+
+		updateDueDate()
+
+		if (wasReverted) {
+			success({message: t('task.revertSuccess')})
+			return
+		}
+
 		if (checked && useAuthStore().settings.frontendSettings.playSoundWhenDone) {
 			playPopSound()
 		}
@@ -315,7 +325,6 @@ async function markAsDone(checked: boolean) {
 			title: t('task.undo'),
 			callback: () => undoDone(checked),
 		}])
-		updateDueDate()
 	}
 
 	if (checked) {
@@ -326,8 +335,11 @@ async function markAsDone(checked: boolean) {
 }
 
 function undoDone(checked: boolean) {
+	if (isRepeating.value) {
+		task.value = {...oldTask}
+	}
 	task.value.done = !task.value.done
-	markAsDone(!checked)
+	markAsDone(!checked, true)
 }
 
 async function toggleFavorite() {
