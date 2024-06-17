@@ -1,5 +1,4 @@
-import {camelCase} from 'camel-case'
-import {snakeCase} from 'snake-case'
+import {camelCase, snakeCase} from 'change-case'
 
 /**
  * Transforms field names to camel case.

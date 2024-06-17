@@ -166,9 +166,9 @@ importers:
       bulma-css-variables:
         specifier: 0.9.33
         version: 0.9.33
-      camel-case:
-        specifier: 5.0.0
-        version: 5.0.0
+      change-case:
+        specifier: 5.4.4
+        version: 5.4.4
       date-fns:
         specifier: 3.6.0
         version: 3.6.0
@@ -208,9 +208,6 @@ importers:
       register-service-worker:
         specifier: 1.7.2
         version: 1.7.2
-      snake-case:
-        specifier: 4.0.0
-        version: 4.0.0
       sortablejs:
         specifier: 1.15.2
         version: 1.15.2
@@ -2681,10 +2678,6 @@ packages:
   camel-case@4.1.2:
     resolution: {integrity: sha512-gxGWBrTT1JuMx6R+o5PTXMmUnhnVzLQ9SNutD4YqKtI6ap897t3tKECYla6gCWEkplXnlNybEkZg9GEGxKFCgw==}
 
-  camel-case@5.0.0:
-    resolution: {integrity: sha512-AKcwhlfnTqKiYjkjZ0CSRjIGgUDEZQHqBBkdwrSxFPzRQDriAUxXNn+rFN7Qvb5nkPg6Hxncp44G1/zz88M5xw==}
-    deprecated: Use `change-case`
-
   camelcase-keys@6.2.2:
     resolution: {integrity: sha512-YrwaA0vEKazPBkn0ipTiMpSajYDSe+KjQfrjhcBMxJt/znbvlHd8Pw/Vamaz5EB4Wfhs3SUR3Z9mwRu/P3s3Yg==}
     engines: {node: '>=8'}
@@ -2724,6 +2717,9 @@ packages:
 
   change-case@4.1.2:
     resolution: {integrity: sha512-bSxY2ws9OtviILG1EiY5K7NNxkqg/JnRnFxLtKQ96JaviiIxi7djMrSd0ECT9AC+lttClmYwKw53BWpOMblo7A==}
+
+  change-case@5.4.4:
+    resolution: {integrity: sha512-HRQyTk2/YPEkt9TnUPbOpr64Uw3KOicFWPVBb+xiHvd6eBx/qPr9xqfBFDT8P2vWsvvz4jbEkfDe71W3VyNu2w==}
 
   chardet@0.7.0:
     resolution: {integrity: sha512-mT8iDcrh03qDGRRmoA2hmBJnxpllMR+0/0qlzjqZES6NdiWDcZkCNAk4rPFZ9Q85r27unkiNNg8ZOiwZXBHwcA==}
@@ -4328,10 +4324,6 @@ packages:
   no-case@3.0.4:
     resolution: {integrity: sha512-fgAN3jGAh+RoxUGZHTSOLJIqUc2wmoBwGR4tbpNAKmmovFoWq0OdRkb0VkldReO2a2iBT/OEulG9XSUc10r3zg==}
 
-  no-case@4.0.0:
-    resolution: {integrity: sha512-WmS3EUGw+vXHlTgiUPi3NzbZNwH6+uGX0QLGgqG+aFSJ5rkX/Ee0nuwHBJfZTfQwwR8lGO819NEIwQ7CGhkdEQ==}
-    deprecated: Use `change-case`
-
   node-domexception@1.0.0:
     resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
     engines: {node: '>=10.5.0'}
@@ -5178,10 +5170,6 @@ packages:
 
   snake-case@3.0.4:
     resolution: {integrity: sha512-LAOh4z89bGQvl9pFfNF8V146i7o7/CqFPbqzYgP+yYzDIDeS9HaNFtXABamRW+AQzEVODcvE79ljJ+8a9YSdMg==}
-
-  snake-case@4.0.0:
-    resolution: {integrity: sha512-slvG6efKZ3GYUUZdhPOq/lLIqutwQ4TdPViD1VKqsbf0u76U/aPRswPKjOaAS9T7fAPmRmXuN6C/nM0xsMaFLQ==}
-    deprecated: Use `change-case`
 
   sortablejs@1.14.0:
     resolution: {integrity: sha512-pBXvQCs5/33fdN1/39pPL0NZF20LeRbLQ5jtnheIPN9JQAaufGjKdWduZn4U7wCtVuzKhmRkI0DFYHYRbB2H1w==}
@@ -8636,10 +8624,6 @@ snapshots:
       pascal-case: 3.1.2
       tslib: 2.6.3
 
-  camel-case@5.0.0:
-    dependencies:
-      no-case: 4.0.0
-
   camelcase-keys@6.2.2:
     dependencies:
       camelcase: 5.3.1
@@ -8711,6 +8695,8 @@ snapshots:
       sentence-case: 3.0.4
       snake-case: 3.0.4
       tslib: 2.6.3
+
+  change-case@5.4.4: {}
 
   chardet@0.7.0: {}
 
@@ -10501,8 +10487,6 @@ snapshots:
       lower-case: 2.0.2
       tslib: 2.6.3
 
-  no-case@4.0.0: {}
-
   node-domexception@1.0.0: {}
 
   node-fetch@2.6.7:
@@ -11461,10 +11445,6 @@ snapshots:
     dependencies:
       dot-case: 3.0.4
       tslib: 2.6.3
-
-  snake-case@4.0.0:
-    dependencies:
-      no-case: 4.0.0
 
   sortablejs@1.14.0: {}
 
