@@ -37,14 +37,14 @@ const ProjectInfo = () => import('@/views/project/ProjectInfo.vue')
 
 // Project Settings
 const ListProjects = () => import('@/views/project/ListProjects.vue')
-const ProjectSettingEdit = () => import('@/views/project/settings/edit.vue')
-const ProjectSettingBackground = () => import('@/views/project/settings/background.vue')
-const ProjectSettingDuplicate = () => import('@/views/project/settings/duplicate.vue')
-const ProjectSettingShare = () => import('@/views/project/settings/share.vue')
-const ProjectSettingWebhooks = () => import('@/views/project/settings/webhooks.vue')
-const ProjectSettingDelete = () => import('@/views/project/settings/delete.vue')
-const ProjectSettingArchive = () => import('@/views/project/settings/archive.vue')
-const ProjectSettingViews = () =>  import('@/views/project/settings/views.vue')
+const ProjectSettingEdit = () => import('@/views/project/settings/ProjectSettingsEdit.vue')
+const ProjectSettingBackground = () => import('@/views/project/settings/ProjectSettingsBackground.vue')
+const ProjectSettingDuplicate = () => import('@/views/project/settings/ProjectSettingsDuplicate.vue')
+const ProjectSettingShare = () => import('@/views/project/settings/ProjectSettingsShare.vue')
+const ProjectSettingWebhooks = () => import('@/views/project/settings/ProjectSettingsWebhooks.vue')
+const ProjectSettingDelete = () => import('@/views/project/settings/ProjectSettingsDelete.vue')
+const ProjectSettingArchive = () => import('@/views/project/settings/ProjectSettingsArchive.vue')
+const ProjectSettingViews = () =>  import('@/views/project/settings/ProjectSettingsViews.vue')
 
 // Saved Filters
 const FilterNew = () => import('@/views/filters/FilterNew.vue')
