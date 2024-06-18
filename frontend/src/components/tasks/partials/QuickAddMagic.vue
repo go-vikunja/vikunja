@@ -88,9 +88,6 @@
 					<li>Every week</li>
 					<li>Every 2 weeks</li>
 					<li>Every month</li>
-					<li>Every 6 months</li>
-					<li>Every year</li>
-					<li>Every 2 years</li>
 				</ul>
 			</card>
 		</modal>

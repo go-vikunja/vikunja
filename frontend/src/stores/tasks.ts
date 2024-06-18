@@ -30,6 +30,8 @@ import ProjectUserService from '@/services/projectUsers'
 import {useAuthStore} from '@/stores/auth'
 import {type TaskFilterParams} from '@/services/taskCollection'
 import {getRandomColorHex} from '@/helpers/color/randomColor'
+import {REPEAT_TYPES} from '@/types/IRepeatAfter'
+import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 
 interface MatchedAssignee extends IUser {
 	match: string,
@@ -453,7 +455,11 @@ export const useTaskStore = defineStore('task', () => {
 			position,
 		})
 		task.repeatAfter = parsedTask.repeats
-	
+
+		if (parsedTask.repeats?.type === REPEAT_TYPES.Months && parsedTask.repeats?.amount === 1) {
+			task.repeatMode = TASK_REPEAT_MODES.REPEAT_MODE_MONTH
+		}
+
 		const taskService = new TaskService()
 		try {
 			const createdTask = await taskService.create(task)
