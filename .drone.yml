@@ -139,7 +139,7 @@ steps:
       event: [ push, tag, pull_request ]
 
   - name: api-lint
-    image: golangci/golangci-lint:v1.57.2
+    image: golangci/golangci-lint:v1.59.1
     pull: always
     environment:
       GOPROXY: 'https://goproxy.kolaente.de'
@@ -1400,6 +1400,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 51f45f4ec5841995b2e4104749f9484cb2a26e9bef84087f79032d2c09e2ec98
+hmac: 74414af8fe9d632c1620090f562b3acd32863b38da230fb1854b8bed45055feb
 
 ...

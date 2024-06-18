@@ -8,7 +8,7 @@ linters:
     - govet
     - gocritic
     - gocyclo
-    - goerr113
+    - err113
     - goheader
     - gofmt
     - goimports
@@ -55,7 +55,7 @@ issues:
     - path: pkg/migration/*
       linters:
         - exhaustive
-        - goerr113
+        - err113
     - path: pkg/models/task_collection_filter\.go
       linters:
         - exhaustive
@@ -65,11 +65,11 @@ issues:
         - gosec
     - path: pkg/modules/dump/*
       linters:
-        - goerr113
+        - err113
     - path: pkg/
-      text: "err113: do not define dynamic errors, use wrapped static errors instead:"
+      text: "do not define dynamic errors, use wrapped static errors instead:"
       linters:
-        - goerr113
+        - err113
     - text: "commentFormatting: put a space between `//` and comment text"
       linters:
         - gocritic
