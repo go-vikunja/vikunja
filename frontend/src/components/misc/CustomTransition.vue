@@ -6,9 +6,11 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{
-	name: 'flash-background' | 'fade' | 'width' | 'modal'
-}>()
+withDefaults(defineProps<{
+	name?: 'fade' | 'flash-background' | 'width' | 'modal'
+}>(), {
+	name: 'fade',
+})
 </script>
 
 <style scoped lang="scss">
