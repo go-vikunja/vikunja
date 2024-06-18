@@ -54,9 +54,9 @@ func TestBucket_ReadAll(t *testing.T) {
 		assert.Len(t, buckets, 3)
 
 		// Assert all tasks are in the right bucket
-		assert.Len(t, buckets[0].Tasks, 12)
+		assert.Len(t, buckets[0].Tasks, 11)
 		assert.Len(t, buckets[1].Tasks, 3)
-		assert.Len(t, buckets[2].Tasks, 3)
+		assert.Len(t, buckets[2].Tasks, 4)
 
 		// Assert we have bucket 1, 2, 3 but not 4 (that belongs to a different project) and their position
 		assert.Equal(t, int64(1), buckets[0].ID)
@@ -91,8 +91,8 @@ func TestBucket_ReadAll(t *testing.T) {
 
 		buckets := bucketsInterface.([]*Bucket)
 		assert.Len(t, buckets, 3)
-		assert.Equal(t, int64(2), buckets[0].Tasks[0].ID)
-		assert.Equal(t, int64(33), buckets[0].Tasks[1].ID)
+		assert.Equal(t, int64(33), buckets[0].Tasks[0].ID)
+		assert.Equal(t, int64(2), buckets[2].Tasks[0].ID)
 	})
 	t.Run("filtered by bucket", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -176,7 +176,7 @@ func TestBucket_Delete(t *testing.T) {
 		tasks := []*TaskBucket{}
 		err = s.Where("bucket_id = ?", 1).Find(&tasks)
 		require.NoError(t, err)
-		assert.Len(t, tasks, 15)
+		assert.Len(t, tasks, 14)
 		db.AssertMissing(t, "buckets", map[string]interface{}{
 			"id":              2,
 			"project_view_id": 4,
