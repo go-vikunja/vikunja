@@ -89,7 +89,10 @@ func getMessage(opts *Opts) *mail.Msg {
 	}
 
 	for name, content := range opts.Embeds {
-		m.EmbedReader(name, content)
+		err := m.EmbedReader(name, content)
+		if err != nil {
+			log.Errorf("Could not create reader to embet into mail: %s", err)
+		}
 	}
 
 	for name, fs := range opts.EmbedFS {

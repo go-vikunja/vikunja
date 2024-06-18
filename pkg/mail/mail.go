@@ -49,7 +49,7 @@ func getClient() (*mail.Client, error) {
 
 	opts := []mail.Option{
 		mail.WithPort(config.MailerPort.GetInt()),
-		mail.WithTLSPolicy(tlsPolicy),
+		mail.WithTLSPortPolicy(tlsPolicy),
 		mail.WithTLSConfig(&tls.Config{
 			//#nosec G402
 			InsecureSkipVerify: config.MailerSkipTLSVerify.GetBool(),
@@ -61,7 +61,7 @@ func getClient() (*mail.Client, error) {
 	}
 
 	if config.MailerForceSSL.GetBool() {
-		opts = append(opts, mail.WithSSL())
+		opts = append(opts, mail.WithSSLPort(true))
 	}
 
 	if config.MailerUsername.GetString() != "" && config.MailerPassword.GetString() != "" {

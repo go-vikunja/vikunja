@@ -21,19 +21,19 @@ import (
 	"time"
 
 	"github.com/op/go-logging"
-	"xorm.io/xorm/log"
+	"github.com/wneessen/go-mail/log"
 )
 
 type MailLogger struct {
 	logger *logging.Logger
-	level  log.LogLevel
+	level  log.Level
 }
 
 const mailFormat = `%{color}%{time:` + time.RFC3339Nano + `}: %{level}` + "\t" + `▶ [MAIL] %{id:03x}%{color:reset} %{message}`
 const mailLogModule = `vikunja_mail`
 
 // NewMailLogger creates and initializes a new mail logger
-func NewMailLogger(configLogEnabled bool, configLogMail string, configLogMailLevel string) *MailLogger {
+func NewMailLogger(configLogEnabled bool, configLogMail string, configLogMailLevel string) log.Logger {
 	lvl := strings.ToUpper(configLogMailLevel)
 	level, err := logging.LogLevel(lvl)
 	if err != nil {
@@ -59,33 +59,33 @@ func NewMailLogger(configLogEnabled bool, configLogMail string, configLogMailLev
 	switch level {
 	case logging.CRITICAL:
 	case logging.ERROR:
-		mailLogger.level = log.LOG_ERR
+		mailLogger.level = log.LevelError
 	case logging.WARNING:
-		mailLogger.level = log.LOG_WARNING
+		mailLogger.level = log.LevelWarn
 	case logging.NOTICE:
 	case logging.INFO:
-		mailLogger.level = log.LOG_INFO
+		mailLogger.level = log.LevelInfo
 	case logging.DEBUG:
-		mailLogger.level = log.LOG_DEBUG
+		mailLogger.level = log.LevelDebug
 	default:
-		mailLogger.level = log.LOG_OFF
+		mailLogger.level = 0
 	}
 
 	return mailLogger
 }
 
-func (m *MailLogger) Errorf(format string, v ...interface{}) {
-	m.logger.Errorf(format, v...)
+func (m *MailLogger) Debugf(l log.Log) {
+	m.logger.Debugf(l.Format, l.Messages...)
 }
 
-func (m *MailLogger) Warnf(format string, v ...interface{}) {
-	m.logger.Warningf(format, v...)
+func (m *MailLogger) Infof(l log.Log) {
+	m.logger.Infof(l.Format, l.Messages...)
 }
 
-func (m *MailLogger) Infof(format string, v ...interface{}) {
-	m.logger.Infof(format, v...)
+func (m *MailLogger) Warnf(l log.Log) {
+	m.logger.Warningf(l.Format, l.Messages...)
 }
 
-func (m *MailLogger) Debugf(format string, v ...interface{}) {
-	m.logger.Debugf(format, v...)
+func (m *MailLogger) Errorf(l log.Log) {
+	m.logger.Errorf(l.Format, l.Messages...)
 }
