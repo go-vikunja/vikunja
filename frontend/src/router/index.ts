@@ -186,6 +186,20 @@ const router = createRouter({
 					name: 'user.settings.apiTokens',
 					component: UserSettingsApiTokensComponent,
 				},
+				{
+					path: '/user/settings/migrate',
+					name: 'migrate.start',
+					component: MigrationComponent,
+				},
+				{
+					path: '/user/settings/migrate/:service',
+					name: 'migrate.service',
+					component: MigrationHandlerComponent,
+					props: route => ({
+						service: route.params.service as string,
+						code: route.query.code as string,
+					}),
+				},
 			],
 		},
 		{
@@ -401,20 +415,6 @@ const router = createRouter({
 			meta: {
 				showAsModal: true,
 			},
-		},
-		{
-			path: '/migrate',
-			name: 'migrate.start',
-			component: MigrationComponent,
-		},
-		{
-			path: '/migrate/:service',
-			name: 'migrate.service',
-			component: MigrationHandlerComponent,
-			props: route => ({
-				service: route.params.service as string,
-				code: route.query.code as string,
-			}),
 		},
 		{
 			path: '/filters/new',

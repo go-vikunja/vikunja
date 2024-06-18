@@ -9,6 +9,7 @@
 					>
 						<RouterLink
 							class="navigation-link"
+							:class="{'router-link-active': routeName === 'migrate.start' && route.name === 'migrate.service'}"
 							:to="{name: routeName}"
 						>
 							{{ title }}
@@ -29,12 +30,14 @@ import { useI18n } from 'vue-i18n'
 import { useTitle } from '@/composables/useTitle'
 import { useConfigStore } from '@/stores/config'
 import { useAuthStore } from '@/stores/auth'
+import {useRoute} from 'vue-router'
 
 const { t } = useI18n({useScope: 'global'})
 useTitle(() => t('user.settings.title'))
 
 const configStore = useConfigStore()
 const authStore = useAuthStore()
+const route = useRoute()
 
 const totpEnabled = computed(() => configStore.totpEnabled)
 const caldavEnabled = computed(() => configStore.caldavEnabled)
