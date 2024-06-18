@@ -55,6 +55,7 @@ module.exports = {
 	'parserOptions': {
 		'parser': '@typescript-eslint/parser',
 		'ecmaVersion': 'latest',
+		'tsconfigRootDir': __dirname,
 	},
 	'ignorePatterns': [
 		'*.test.*',
