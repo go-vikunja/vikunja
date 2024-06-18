@@ -1,0 +1,5 @@
+{
+    "parserOptions": {
+        "project": "./frontend/tsconfig.json",
+    },
+}
