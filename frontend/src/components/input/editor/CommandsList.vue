@@ -8,7 +8,7 @@
 				:class="{ 'is-selected': index === selectedIndex }"
 				@click="selectItem(index)"
 			>
-				<icon :icon="item.icon" />
+				<Icon :icon="item.icon" />
 				<div class="description">
 					<p>{{ item.title }}</p>
 					<p>{{ item.description }}</p>

@@ -19,7 +19,7 @@
 				:class="{ 'is-active': editor.isActive('bold') }"
 				@click="editor.chain().focus().toggleBold().run()"
 			>
-				<icon :icon="['fa', 'fa-bold']" />
+				<Icon :icon="['fa', 'fa-bold']" />
 			</BaseButton>
 			<BaseButton
 				v-tooltip="$t('input.editor.italic')"
@@ -27,7 +27,7 @@
 				:class="{ 'is-active': editor.isActive('italic') }"
 				@click="editor.chain().focus().toggleItalic().run()"
 			>
-				<icon :icon="['fa', 'fa-italic']" />
+				<Icon :icon="['fa', 'fa-italic']" />
 			</BaseButton>
 			<BaseButton
 				v-tooltip="$t('input.editor.underline')"
@@ -35,7 +35,7 @@
 				:class="{ 'is-active': editor.isActive('underline') }"
 				@click="editor.chain().focus().toggleUnderline().run()"
 			>
-				<icon :icon="['fa', 'fa-underline']" />
+				<Icon :icon="['fa', 'fa-underline']" />
 			</BaseButton>
 			<BaseButton
 				v-tooltip="$t('input.editor.strikethrough')"
@@ -43,7 +43,7 @@
 				:class="{ 'is-active': editor.isActive('strike') }"
 				@click="editor.chain().focus().toggleStrike().run()"
 			>
-				<icon :icon="['fa', 'fa-strikethrough']" />
+				<Icon :icon="['fa', 'fa-strikethrough']" />
 			</BaseButton>
 			<BaseButton
 				v-tooltip="$t('input.editor.code')"
@@ -51,7 +51,7 @@
 				:class="{ 'is-active': editor.isActive('code') }"
 				@click="editor.chain().focus().toggleCode().run()"
 			>
-				<icon :icon="['fa', 'fa-code']" />
+				<Icon :icon="['fa', 'fa-code']" />
 			</BaseButton>
 			<BaseButton
 				v-tooltip="$t('input.editor.link')"
@@ -59,7 +59,7 @@
 				:class="{ 'is-active': editor.isActive('link') }"
 				@click="setLink"
 			>
-				<icon :icon="['fa', 'fa-link']" />
+				<Icon :icon="['fa', 'fa-link']" />
 			</BaseButton>
 		</BubbleMenu>
 

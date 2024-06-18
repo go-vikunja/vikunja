@@ -35,6 +35,6 @@ function openQuickActions() {
 		:title="$t('keyboardShortcuts.quickSearch')"
 		@click="openQuickActions"
 	>
-		<icon icon="search" />
+		<Icon icon="search" />
 	</BaseButton>
 </template>

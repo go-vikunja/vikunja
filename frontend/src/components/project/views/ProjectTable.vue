@@ -18,7 +18,7 @@
 						</x-button>
 					</template>
 					<template #content="{isOpen}">
-						<card
+						<Card
 							class="columns-filter"
 							:class="{'is-open': isOpen}"
 						>
@@ -64,7 +64,7 @@
 							<FancyCheckbox v-model="activeColumns.createdBy">
 								{{ $t('task.attributes.createdBy') }}
 							</FancyCheckbox>
-						</card>
+						</Card>
 					</template>
 				</Popup>
 				<FilterPopup v-model="params" />
@@ -76,7 +76,7 @@
 				:class="{'is-loading': loading}"
 				class="loader-container"
 			>
-				<card
+				<Card
 					:padding="false"
 					:has-content="false"
 				>
@@ -260,7 +260,7 @@
 						:total-pages="totalPages"
 						:current-page="currentPage"
 					/>
-				</card>
+				</Card>
 			</div>
 		</template>
 	</ProjectWrapper>

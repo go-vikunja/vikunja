@@ -157,7 +157,7 @@ async function toggleReaction(value: string) {
 			class="reaction-button"
 			@click.stop="toggleEmojiPicker"
 		>
-			<icon :icon="['far', 'face-laugh']" />
+			<Icon :icon="['far', 'face-laugh']" />
 		</BaseButton>
 		<CustomTransition name="fade">
 			<VuemojiPicker

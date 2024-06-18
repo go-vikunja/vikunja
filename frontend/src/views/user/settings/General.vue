@@ -1,5 +1,5 @@
 <template>
-	<card
+	<Card
 		:title="$t('user.settings.general.title')"
 		class="general-settings"
 		:loading="loading"
@@ -212,7 +212,7 @@
 		>
 			{{ $t('misc.save') }}
 		</x-button>
-	</card>
+	</Card>
 </template>
 
 <script lang="ts">

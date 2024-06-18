@@ -4,7 +4,7 @@
 		class="datepicker__quick-select-date"
 		@click.stop="setDate('today')"
 	>
-		<span class="icon"><icon :icon="['far', 'calendar-alt']" /></span>
+		<span class="icon"><Icon :icon="['far', 'calendar-alt']" /></span>
 		<span class="text">
 			<span>{{ $t('input.datepicker.today') }}</span>
 			<span class="weekday">{{ getWeekdayFromStringInterval('today') }}</span>
@@ -14,7 +14,7 @@
 		class="datepicker__quick-select-date"
 		@click.stop="setDate('tomorrow')"
 	>
-		<span class="icon"><icon :icon="['far', 'sun']" /></span>
+		<span class="icon"><Icon :icon="['far', 'sun']" /></span>
 		<span class="text">
 			<span>{{ $t('input.datepicker.tomorrow') }}</span>
 			<span class="weekday">{{ getWeekdayFromStringInterval('tomorrow') }}</span>
@@ -24,7 +24,7 @@
 		class="datepicker__quick-select-date"
 		@click.stop="setDate('nextMonday')"
 	>
-		<span class="icon"><icon icon="coffee" /></span>
+		<span class="icon"><Icon icon="coffee" /></span>
 		<span class="text">
 			<span>{{ $t('input.datepicker.nextMonday') }}</span>
 			<span class="weekday">{{ getWeekdayFromStringInterval('nextMonday') }}</span>
@@ -34,7 +34,7 @@
 		class="datepicker__quick-select-date"
 		@click.stop="setDate('thisWeekend')"
 	>
-		<span class="icon"><icon icon="cocktail" /></span>
+		<span class="icon"><Icon icon="cocktail" /></span>
 		<span class="text">
 			<span>{{ $t('input.datepicker.thisWeekend') }}</span>
 			<span class="weekday">{{ getWeekdayFromStringInterval('thisWeekend') }}</span>
@@ -44,7 +44,7 @@
 		class="datepicker__quick-select-date"
 		@click.stop="setDate('laterThisWeek')"
 	>
-		<span class="icon"><icon icon="chess-knight" /></span>
+		<span class="icon"><Icon icon="chess-knight" /></span>
 		<span class="text">
 			<span>{{ $t('input.datepicker.laterThisWeek') }}</span>
 			<span class="weekday">{{ getWeekdayFromStringInterval('laterThisWeek') }}</span>
@@ -54,7 +54,7 @@
 		class="datepicker__quick-select-date"
 		@click.stop="setDate('nextWeek')"
 	>
-		<span class="icon"><icon icon="forward" /></span>
+		<span class="icon"><Icon icon="forward" /></span>
 		<span class="text">
 			<span>{{ $t('input.datepicker.nextWeek') }}</span>
 			<span class="weekday">{{ getWeekdayFromStringInterval('nextWeek') }}</span>

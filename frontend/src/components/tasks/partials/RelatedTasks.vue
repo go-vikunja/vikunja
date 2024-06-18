@@ -151,7 +151,7 @@
 							otherTaskId: task.id
 						})"
 					>
-						<icon icon="trash-alt" />
+						<Icon icon="trash-alt" />
 					</BaseButton>
 				</div>
 			</div>
@@ -163,7 +163,7 @@
 			{{ $t('task.relation.noneYet') }}
 		</p>
 
-		<modal
+		<Modal
 			:enabled="relationToDelete !== undefined"
 			@close="relationToDelete = undefined"
 			@submit="removeTaskRelation()"
@@ -178,7 +178,7 @@
 					<strong class="has-text-white">{{ $t('misc.cannotBeUndone') }}</strong>
 				</p>
 			</template>
-		</modal>
+		</Modal>
 	</div>
 </template>
 

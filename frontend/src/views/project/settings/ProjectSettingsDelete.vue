@@ -1,5 +1,5 @@
 <template>
-	<modal
+	<Modal
 		@close="$router.back()"
 		@submit="deleteProject()"
 	>
@@ -28,7 +28,7 @@
 				{{ $t('misc.cannotBeUndone') }}
 			</p>
 		</template>
-	</modal>
+	</Modal>
 </template>
 
 <script setup lang="ts">

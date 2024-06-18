@@ -150,7 +150,7 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 </script>
 
 <template>
-	<card :title="$t('user.settings.apiTokens.title')">
+	<Card :title="$t('user.settings.apiTokens.title')">
 		<Message
 			v-if="tokenCreatedSuccessMessage !== ''"
 			class="has-text-centered mb-4"
@@ -342,7 +342,7 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 			{{ $t('user.settings.apiTokens.createAToken') }}
 		</XButton>
 
-		<modal
+		<Modal
 			:enabled="showDeleteModal"
 			@close="showDeleteModal = false"
 			@submit="deleteToken()"
@@ -357,6 +357,6 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 					{{ $t('user.settings.apiTokens.delete.text2') }}
 				</p>
 			</template>
-		</modal>
-	</card>
+		</Modal>
+	</Card>
 </template>

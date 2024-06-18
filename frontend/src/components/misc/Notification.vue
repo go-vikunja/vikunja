@@ -1,5 +1,5 @@
 <template>
-	<notifications
+	<Notifications
 		position="bottom left"
 		:max="2"
 		class="global-notification"
@@ -44,7 +44,7 @@
 				</div>
 			</div>
 		</template>
-	</notifications>
+	</Notifications>
 </template>
 
 <style scoped>

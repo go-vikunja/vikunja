@@ -8,7 +8,7 @@
 				@click="editor.chain().focus().toggleHeading({ level: 1 }).run()"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-header']" />
+					<Icon :icon="['fa', 'fa-header']" />
 					<span class="icon__lower-text">1</span>
 				</span>
 			</BaseButton>
@@ -19,7 +19,7 @@
 				@click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-header']" />
+					<Icon :icon="['fa', 'fa-header']" />
 					<span class="icon__lower-text">2</span>
 				</span>
 			</BaseButton>
@@ -30,7 +30,7 @@
 				@click="editor.chain().focus().toggleHeading({ level: 3 }).run()"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-header']" />
+					<Icon :icon="['fa', 'fa-header']" />
 					<span class="icon__lower-text">3</span>
 				</span>
 			</BaseButton>
@@ -44,7 +44,7 @@
 				@click="editor.chain().focus().toggleBold().run()"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-bold']" />
+					<Icon :icon="['fa', 'fa-bold']" />
 				</span>
 			</BaseButton>
 			<BaseButton
@@ -54,7 +54,7 @@
 				@click="editor.chain().focus().toggleItalic().run()"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-italic']" />
+					<Icon :icon="['fa', 'fa-italic']" />
 				</span>
 			</BaseButton>
 			<BaseButton
@@ -64,7 +64,7 @@
 				@click="editor.chain().focus().toggleUnderline().run()"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-underline']" />
+					<Icon :icon="['fa', 'fa-underline']" />
 				</span>
 			</BaseButton>
 			<BaseButton
@@ -74,7 +74,7 @@
 				@click="editor.chain().focus().toggleStrike().run()"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-strikethrough']" />
+					<Icon :icon="['fa', 'fa-strikethrough']" />
 				</span>
 			</BaseButton>
 		</div>
@@ -87,7 +87,7 @@
 				@click="editor.chain().focus().toggleCodeBlock().run()"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-code']" />
+					<Icon :icon="['fa', 'fa-code']" />
 				</span>
 			</BaseButton>
 			<BaseButton
@@ -97,7 +97,7 @@
 				@click="editor.chain().focus().toggleBlockquote().run()"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-quote-right']" />
+					<Icon :icon="['fa', 'fa-quote-right']" />
 				</span>
 			</BaseButton>
 		</div>
@@ -110,7 +110,7 @@
 				@click="editor.chain().focus().toggleBulletList().run()"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-list-ul']" />
+					<Icon :icon="['fa', 'fa-list-ul']" />
 				</span>
 			</BaseButton>
 			<BaseButton
@@ -120,7 +120,7 @@
 				@click="editor.chain().focus().toggleOrderedList().run()"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-list-ol']" />
+					<Icon :icon="['fa', 'fa-list-ol']" />
 				</span>
 			</BaseButton>
 			<BaseButton
@@ -130,7 +130,7 @@
 				@click="editor.chain().focus().toggleTaskList().run()"
 			>
 				<span class="icon">
-					<icon icon="fa-list-check" />
+					<Icon icon="fa-list-check" />
 				</span>
 			</BaseButton>
 		</div>
@@ -142,7 +142,7 @@
 				@click="e => emit('imageUploadClicked', e)"
 			>
 				<span class="icon">
-					<icon icon="fa-image" />
+					<Icon icon="fa-image" />
 				</span>
 			</BaseButton>
 		</div>
@@ -156,7 +156,7 @@
 				@click="setLink"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-link']" />
+					<Icon :icon="['fa', 'fa-link']" />
 				</span>
 			</BaseButton>
 			<BaseButton
@@ -167,7 +167,7 @@
 				@click="editor.chain().focus().setParagraph().run()"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-paragraph']" />
+					<Icon :icon="['fa', 'fa-paragraph']" />
 				</span>
 			</BaseButton>
 
@@ -177,7 +177,7 @@
 				@click="editor.chain().focus().setHorizontalRule().run()"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-ruler-horizontal']" />
+					<Icon :icon="['fa', 'fa-ruler-horizontal']" />
 				</span>
 			</BaseButton>
 		</div>
@@ -189,7 +189,7 @@
 				@click="editor.chain().focus().undo().run()"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-undo']" />
+					<Icon :icon="['fa', 'fa-undo']" />
 				</span>
 			</BaseButton>
 			<BaseButton
@@ -198,7 +198,7 @@
 				@click="editor.chain().focus().redo().run()"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-redo']" />
+					<Icon :icon="['fa', 'fa-redo']" />
 				</span>
 			</BaseButton>
 		</div>
@@ -212,7 +212,7 @@
 				@click="toggleTableMode"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-table']" />
+					<Icon :icon="['fa', 'fa-table']" />
 				</span>
 			</BaseButton>
 			<div

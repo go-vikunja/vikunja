@@ -1,5 +1,5 @@
 <template>
-	<card
+	<Card
 		v-if="isLocalUser"
 		:title="$t('user.settings.updateEmailTitle')"
 	>
@@ -45,7 +45,7 @@
 		>
 			{{ $t('misc.save') }}
 		</x-button>
-	</card>
+	</Card>
 </template>
 
 <script lang="ts">

@@ -18,7 +18,7 @@
 				class="remove"
 				@click="removeReminderByIndex(index)"
 			>
-				<icon icon="times" />
+				<Icon icon="times" />
 			</BaseButton>
 		</div>
 

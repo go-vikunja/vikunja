@@ -18,7 +18,7 @@
 				@click="$emit('close')"
 			>	
 				<span class="icon">
-					<icon :icon="closeIcon" />
+					<Icon :icon="closeIcon" />
 				</span>
 			</BaseButton>
 		</header>

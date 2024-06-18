@@ -13,7 +13,7 @@
 					v-if="unreadNotifications > 0"
 					class="unread-indicator"
 				/>
-				<icon icon="bell" />
+				<Icon icon="bell" />
 			</BaseButton>
 		</slot>
 

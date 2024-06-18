@@ -129,19 +129,19 @@
 							<p class="mb-2">
 								<template v-if="s.right === RIGHTS.ADMIN">
 									<span class="icon is-small">
-										<icon icon="lock" />
+										<Icon icon="lock" />
 									</span>&nbsp;
 									{{ $t('project.share.right.admin') }}
 								</template>
 								<template v-else-if="s.right === RIGHTS.READ_WRITE">
 									<span class="icon is-small">
-										<icon icon="pen" />
+										<Icon icon="pen" />
 									</span>&nbsp;
 									{{ $t('project.share.right.readWrite') }}
 								</template>
 								<template v-else>
 									<span class="icon is-small">
-										<icon icon="users" />
+										<Icon icon="users" />
 									</span>&nbsp;
 									{{ $t('project.share.right.read') }}
 								</template>
@@ -163,7 +163,7 @@
 										@click="copy(getShareLink(s.hash, selectedView[s.id]))"
 									>
 										<span class="icon">
-											<icon icon="paste" />
+											<Icon icon="paste" />
 										</span>
 									</x-button>
 								</div>
@@ -199,7 +199,7 @@
 			</table>
 		</div>
 
-		<modal
+		<Modal
 			:enabled="showDeleteModal"
 			@close="showDeleteModal = false"
 			@submit="remove(projectId)"
@@ -211,7 +211,7 @@
 			<template #text>
 				<p>{{ $t('project.share.links.removeText') }}</p>
 			</template>
-		</modal>
+		</Modal>
 	</div>
 </template>
 

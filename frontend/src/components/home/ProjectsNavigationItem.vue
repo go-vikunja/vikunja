@@ -9,7 +9,7 @@
 				class="collapse-project-button"
 				@click="childProjectsOpen = !childProjectsOpen"
 			>
-				<icon
+				<Icon
 					icon="chevron-down"
 					:class="{ 'project-is-collapsed': !childProjectsOpen }"
 				/>
@@ -35,14 +35,14 @@
 						v-else-if="project.id < -1"
 						class="saved-filter-icon icon menu-item-icon"
 					>
-						<icon icon="filter" />
+						<Icon icon="filter" />
 					</span>
 					<span
 						v-if="project.id > 0"
 						class="icon menu-item-icon handle"
 						:class="{'has-color-bubble': project.hexColor !== ''}"
 					>
-						<icon icon="grip-lines" />
+						<Icon icon="grip-lines" />
 					</span>
 				</div>
 				<span class="project-menu-title">{{ getProjectTitle(project) }}</span>
@@ -53,7 +53,7 @@
 				:class="{'is-favorite': project.isFavorite}"
 				@click="projectStore.toggleProjectFavorite(project)"
 			>
-				<icon :icon="project.isFavorite ? 'star' : ['far', 'star']" />
+				<Icon :icon="project.isFavorite ? 'star' : ['far', 'star']" />
 			</BaseButton>
 			<ProjectSettingsDropdown
 				class="menu-list-dropdown"
@@ -64,7 +64,7 @@
 						class="menu-list-dropdown-trigger"
 						@click="toggleOpen"
 					>
-						<icon
+						<Icon
 							icon="ellipsis-h"
 							class="icon"
 						/>

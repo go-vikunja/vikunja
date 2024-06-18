@@ -1,5 +1,5 @@
 <template>
-	<card :title="$t('user.settings.avatar.title')">
+	<Card :title="$t('user.settings.avatar.title')">
 		<div class="control mb-4">
 			<label
 				v-for="(label, providerId) in AVATAR_PROVIDERS"
@@ -62,7 +62,7 @@
 				{{ $t('misc.save') }}
 			</x-button>
 		</div>
-	</card>
+	</Card>
 </template>
 
 <script lang="ts">

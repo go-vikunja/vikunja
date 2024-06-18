@@ -256,7 +256,7 @@ function validateSelectedEvents() {
 			</tbody>
 		</table>
 
-		<modal
+		<Modal
 			:enabled="showDeleteModal"
 			@close="showDeleteModal = false"
 			@submit="deleteWebhook()"
@@ -268,7 +268,7 @@ function validateSelectedEvents() {
 			<template #text>
 				<p>{{ $t('project.webhooks.deleteText') }}</p>
 			</template>
-		</modal>
+		</Modal>
 	</CreateEdit>
 </template>
 

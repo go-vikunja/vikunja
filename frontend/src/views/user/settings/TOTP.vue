@@ -1,5 +1,5 @@
 <template>
-	<card
+	<Card
 		v-if="totpEnabled"
 		:title="$t('user.settings.totp.title')"
 	>
@@ -90,7 +90,7 @@
 				</x-button>
 			</div>
 		</template>
-	</card>
+	</Card>
 </template>
 
 <script lang="ts">

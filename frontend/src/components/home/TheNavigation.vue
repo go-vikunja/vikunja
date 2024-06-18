@@ -28,7 +28,7 @@
 				:to="{ name: 'project.info', params: { projectId: currentProject.id } }"
 				class="project-title-button"
 			>
-				<icon icon="circle-info" />
+				<Icon icon="circle-info" />
 			</BaseButton>
 
 			<ProjectSettingsDropdown
@@ -41,7 +41,7 @@
 						class="project-title-button"
 						@click="toggleOpen"
 					>
-						<icon
+						<Icon
 							icon="ellipsis-h"
 							class="icon"
 						/>
@@ -75,7 +75,7 @@
 								transform: open ? 'rotate(180deg)' : 'rotate(0)',
 							}"
 						>
-							<icon icon="chevron-down" />
+							<Icon icon="chevron-down" />
 						</span>
 					</BaseButton>
 				</template>

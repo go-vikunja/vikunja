@@ -60,7 +60,7 @@
 						>
 							<!-- Assignees -->
 							<div class="detail-title">
-								<icon icon="users" />
+								<Icon icon="users" />
 								{{ $t('task.attributes.assignees') }}
 							</div>
 							<EditAssignees
@@ -86,7 +86,7 @@
 							>
 								<!-- Priority -->
 								<div class="detail-title">
-									<icon icon="exclamation" />
+									<Icon icon="exclamation" />
 									{{ $t('task.attributes.priority') }}
 								</div>
 								<PrioritySelect
@@ -107,7 +107,7 @@
 							>
 								<!-- Due Date -->
 								<div class="detail-title">
-									<icon icon="calendar" />
+									<Icon icon="calendar" />
 									{{ $t('task.attributes.dueDate') }}
 								</div>
 								<div class="date-input">
@@ -124,7 +124,7 @@
 										@click="() => {task.dueDate = null;saveTask()}"
 									>
 										<span class="icon is-small">
-											<icon icon="times" />
+											<Icon icon="times" />
 										</span>
 									</BaseButton>
 								</div>
@@ -140,7 +140,7 @@
 							>
 								<!-- Progress -->
 								<div class="detail-title">
-									<icon icon="percent" />
+									<Icon icon="percent" />
 									{{ $t('task.attributes.percentDone') }}
 								</div>
 								<PercentDoneSelect
@@ -161,7 +161,7 @@
 							>
 								<!-- Start Date -->
 								<div class="detail-title">
-									<icon icon="play" />
+									<Icon icon="play" />
 									{{ $t('task.attributes.startDate') }}
 								</div>
 								<div class="date-input">
@@ -178,7 +178,7 @@
 										@click="() => {task.startDate = null;saveTask()}"
 									>
 										<span class="icon is-small">
-											<icon icon="times" />
+											<Icon icon="times" />
 										</span>
 									</BaseButton>
 								</div>
@@ -194,7 +194,7 @@
 							>
 								<!-- End Date -->
 								<div class="detail-title">
-									<icon icon="stop" />
+									<Icon icon="stop" />
 									{{ $t('task.attributes.endDate') }}
 								</div>
 								<div class="date-input">
@@ -211,7 +211,7 @@
 										@click="() => {task.endDate = null;saveTask()}"
 									>
 										<span class="icon is-small">
-											<icon icon="times" />
+											<Icon icon="times" />
 										</span>
 									</BaseButton>
 								</div>
@@ -227,7 +227,7 @@
 							>
 								<!-- Reminders -->
 								<div class="detail-title">
-									<icon :icon="['far', 'clock']" />
+									<Icon :icon="['far', 'clock']" />
 									{{ $t('task.attributes.reminders') }}
 								</div>
 								<Reminders
@@ -249,7 +249,7 @@
 								<!-- Repeat after -->
 								<div class="is-flex is-justify-content-space-between">
 									<div class="detail-title">
-										<icon icon="history" />
+										<Icon icon="history" />
 										{{ $t('task.attributes.repeat') }}
 									</div>
 									<BaseButton
@@ -258,7 +258,7 @@
 										@click="removeRepeatAfter"
 									>
 										<span class="icon is-small">
-											<icon icon="times" />
+											<Icon icon="times" />
 										</span>
 									</BaseButton>
 								</div>
@@ -280,7 +280,7 @@
 							>
 								<!-- Color -->
 								<div class="detail-title">
-									<icon icon="fill-drip" />
+									<Icon icon="fill-drip" />
 									{{ $t('task.attributes.color') }}
 								</div>
 								<ColorPicker
@@ -300,7 +300,7 @@
 					>
 						<div class="detail-title">
 							<span class="icon is-grey">
-								<icon icon="tags" />
+								<Icon icon="tags" />
 							</span>
 							{{ $t('task.attributes.labels') }}
 						</div>
@@ -352,7 +352,7 @@
 					>
 						<h3>
 							<span class="icon is-grey">
-								<icon icon="sitemap" />
+								<Icon icon="sitemap" />
 							</span>
 							{{ $t('task.attributes.relatedTasks') }}
 						</h3>
@@ -373,7 +373,7 @@
 					>
 						<h3>
 							<span class="icon is-grey">
-								<icon icon="list" />
+								<Icon icon="list" />
 							</span>
 							{{ $t('task.detail.move') }}
 						</h3>
@@ -560,7 +560,7 @@
 			/>
 		</div>
 
-		<modal
+		<Modal
 			:enabled="showDeleteModal"
 			@close="showDeleteModal = false"
 			@submit="deleteTask()"
@@ -575,7 +575,7 @@
 					{{ $t('task.detail.delete.text2') }}
 				</p>
 			</template>
-		</modal>
+		</Modal>
 	</div>
 </template>
 

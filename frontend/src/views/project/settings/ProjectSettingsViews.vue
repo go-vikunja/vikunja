@@ -205,7 +205,7 @@ async function saveViewPosition(e) {
 									@click="viewToEdit = {...v}"
 								/>
 								<span class="icon handle">
-									<icon icon="grip-lines" />
+									<Icon icon="grip-lines" />
 								</span>
 							</td>
 						</template>
@@ -215,7 +215,7 @@ async function saveViewPosition(e) {
 		</table>
 	</CreateEdit>
 
-	<modal
+	<Modal
 		:enabled="showDeleteModal"
 		@close="showDeleteModal = false"
 		@submit="deleteView"
@@ -227,7 +227,7 @@ async function saveViewPosition(e) {
 		<template #text>
 			<p>{{ $t('project.views.deleteText') }}</p>
 		</template>
-	</modal>
+	</Modal>
 </template>
 
 <style scoped>

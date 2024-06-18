@@ -7,16 +7,16 @@
 			:class="{'is-highlighted': highlightHintIcon}"
 			@click="() => visible = true"
 		>
-			<icon :icon="['far', 'circle-question']" />
+			<Icon :icon="['far', 'circle-question']" />
 		</BaseButton>
-		<modal
+		<Modal
 			:enabled="visible"
 			transition-name="fade"
 			:overflow="true"
 			variant="hint-modal"
 			@close="() => visible = false"
 		>
-			<card
+			<Card
 				class="has-no-shadow"
 				:title="$t('task.quickAddMagic.title')"
 			>
@@ -89,8 +89,8 @@
 					<li>Every 2 weeks</li>
 					<li>Every month</li>
 				</ul>
-			</card>
-		</modal>
+			</Card>
+		</Modal>
 	</template>
 </template>
 

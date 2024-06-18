@@ -57,7 +57,7 @@
 					class="removal-button"
 					@click="resetSelectedValue"
 				>
-					<icon icon="times" />
+					<Icon icon="times" />
 				</BaseButton>
 			</div>
 		</div>

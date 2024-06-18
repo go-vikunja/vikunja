@@ -26,7 +26,7 @@
 		@click="changeSubscription"
 	>
 		<span class="icon">
-			<icon :icon="iconName" />
+			<Icon :icon="iconName" />
 		</span>
 		{{ buttonText }}
 	</BaseButton>

@@ -1,5 +1,5 @@
 <template>
-	<card
+	<Card
 		v-if="userDeletionEnabled"
 		:title="$t('user.deletion.title')"
 	>
@@ -107,7 +107,7 @@
 				{{ $t('user.deletion.confirm') }}
 			</x-button>
 		</template>
-	</card>
+	</Card>
 </template>
 
 <script lang="ts">

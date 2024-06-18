@@ -7,7 +7,7 @@
 	>
 		{{ $t('filters.title') }}
 	</x-button>
-	<modal
+	<Modal
 		:enabled="modalOpen"
 		transition-name="fade"
 		:overflow="true"
@@ -22,7 +22,7 @@
 			@update:modelValue="emitChanges"
 			@showResultsButtonClicked="() => modalOpen = false"
 		/>
-	</modal>
+	</Modal>
 </template>
 
 <script setup lang="ts">

@@ -13,7 +13,7 @@
 				class="dropdown-trigger is-flex"
 				@click="toggleOpen"
 			>
-				<icon
+				<Icon
 					:icon="triggerIcon"
 					class="icon"
 				/>

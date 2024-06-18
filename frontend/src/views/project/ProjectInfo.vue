@@ -1,8 +1,8 @@
 <template>
-	<modal
+	<Modal
 		@close="$router.back()"
 	>
-		<card
+		<Card
 			:title="project?.title"
 		>
 			<div
@@ -16,8 +16,8 @@
 			>
 				{{ $t('project.noDescriptionAvailable') }}
 			</p>
-		</card>
-	</modal>
+		</Card>
+	</Modal>
 </template>
 
 <script lang="ts" setup>

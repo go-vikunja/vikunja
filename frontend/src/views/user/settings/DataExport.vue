@@ -1,5 +1,5 @@
 <template>
-	<card :title="$t('user.export.title')">
+	<Card :title="$t('user.export.title')">
 		<p>
 			{{ $t('user.export.description') }}
 		</p>
@@ -42,7 +42,7 @@
 		>
 			{{ $t('user.export.request') }}
 		</x-button>
-	</card>
+	</Card>
 </template>
 
 <script lang="ts">

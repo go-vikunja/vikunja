@@ -44,7 +44,7 @@ const hasDelete = computed(() => typeof remove !== 'undefined' && !disabled)
 				class="remove-assignee"
 				@click="remove(user)"
 			>
-				<icon icon="times" />
+				<Icon icon="times" />
 			</BaseButton>
 		</span>
 	</div>

@@ -1,5 +1,5 @@
 <template>
-	<card
+	<Card
 		class="has-no-shadow how-it-works-modal"
 		:title="$t('input.datemathHelp.title')"
 	>
@@ -118,7 +118,7 @@
 				</tr>
 			</tbody>
 		</table>
-	</card>
+	</Card>
 </template>
 
 <script lang="ts" setup>

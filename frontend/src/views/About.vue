@@ -1,10 +1,10 @@
 <template>
-	<modal
+	<Modal
 		transition-name="fade"
 		variant="hint-modal"
 		@close="$router.back()"
 	>
-		<card
+		<Card
 			class="has-no-shadow"
 			:title="$t('about.title')"
 			:has-close="true"
@@ -24,8 +24,8 @@
 					{{ $t('misc.close') }}
 				</x-button>
 			</template>
-		</card>
-	</modal>
+		</Card>
+	</Modal>
 </template>
 
 <script setup lang="ts">

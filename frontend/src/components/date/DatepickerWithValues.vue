@@ -61,7 +61,7 @@
 							{{ $t('input.datemathHelp.learnhow') }}
 						</BaseButton>
 
-						<modal
+						<Modal
 							:enabled="showHowItWorks"
 							transition-name="fade"
 							:overflow="true"
@@ -69,7 +69,7 @@
 							@close="() => showHowItWorks = false"
 						>
 							<DatemathHelp />
-						</modal>
+						</Modal>
 					</div>
 				</div>
 			</template>

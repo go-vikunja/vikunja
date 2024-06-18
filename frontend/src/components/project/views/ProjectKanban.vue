@@ -45,7 +45,7 @@
 										v-tooltip="$t('project.kanban.doneBucketHint')"
 										class="icon is-small has-text-success mr-2"
 									>
-										<icon icon="check-double" />
+										<Icon icon="check-double" />
 									</span>
 									<h2
 										class="title input"
@@ -246,7 +246,7 @@
 					</div>
 				</div>
 
-				<modal
+				<Modal
 					:enabled="showBucketDeleteModal"
 					@close="showBucketDeleteModal = false"
 					@submit="deleteBucket()"
@@ -261,7 +261,7 @@
 							{{ $t('project.kanban.deleteBucketText2') }}
 						</p>
 					</template>
-				</modal>
+				</Modal>
 			</div>
 		</template>
 	</ProjectWrapper>

@@ -8,7 +8,7 @@
 			v-if="priority >= priorities.HIGH"
 			class="icon"
 		>
-			<icon icon="exclamation" />
+			<Icon icon="exclamation" />
 		</span>
 		<span>
 			<template v-if="priority === priorities.UNSET">{{ $t('task.priority.unset') }}</template>
@@ -22,7 +22,7 @@
 			v-if="priority === priorities.DO_NOW"
 			class="icon pr-0"
 		>
-			<icon icon="exclamation" />
+			<Icon icon="exclamation" />
 		</span>
 	</span>
 </template>

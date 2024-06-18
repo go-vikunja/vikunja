@@ -38,7 +38,7 @@
 				v-else-if="!loading && showSavedMessage"
 				class="has-text-success is-inline-flex is-align-content-center"
 			>
-				<icon
+				<Icon
 					icon="check"
 					class="mr-2"
 				/>

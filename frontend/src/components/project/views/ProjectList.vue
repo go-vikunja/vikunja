@@ -19,7 +19,7 @@
 				:class="{ 'is-loading': loading }"
 				class="loader-container is-max-width-desktop list-view"
 			>
-				<card
+				<Card
 					:padding="false"
 					:has-content="false"
 					class="has-overflow"
@@ -73,7 +73,7 @@
 							>
 								<template v-if="canWrite">
 									<span class="icon handle">
-										<icon icon="grip-lines" />
+										<Icon icon="grip-lines" />
 									</span>
 								</template>
 							</SingleTaskInProject>
@@ -84,7 +84,7 @@
 						:total-pages="totalPages"
 						:current-page="currentPage"
 					/>
-				</card>
+				</Card>
 			</div>
 		</template>
 	</ProjectWrapper>

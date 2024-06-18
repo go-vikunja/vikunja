@@ -1,10 +1,10 @@
 <template>
-	<modal
+	<Modal
 		:overflow="true"
 		:wide="wide"
 		@close="$router.back()"
 	>
-		<card
+		<Card
 			:title="title"
 			:shadow="false"
 			:padding="false"
@@ -45,8 +45,8 @@
 					</x-button>
 				</slot>
 			</template>
-		</card>
-	</modal>
+		</Card>
+	</Modal>
 </template>
 
 <script setup lang="ts">

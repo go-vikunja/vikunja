@@ -3,7 +3,7 @@
 		class="loader-container is-max-width-desktop"
 		:class="{ 'is-loading': teamService.loading }"
 	>
-		<card
+		<Card
 			v-if="userIsAdmin && !team.oidcId"
 			class="is-fullwidth"
 			:title="title"
@@ -90,9 +90,9 @@
 					/>
 				</div>
 			</div>
-		</card>
+		</Card>
 
-		<card
+		<Card
 			class="is-fullwidth has-overflow"
 			:title="$t('team.edit.members')"
 			:padding="false"
@@ -157,13 +157,13 @@
 						<td class="type">
 							<template v-if="m.admin">
 								<span class="icon is-small">
-									<icon icon="lock" />
+									<Icon icon="lock" />
 								</span>
 								{{ $t('team.attributes.admin') }}
 							</template>
 							<template v-else>
 								<span class="icon is-small">
-									<icon icon="user" />
+									<Icon icon="user" />
 								</span>
 								{{ $t('team.attributes.member') }}
 							</template>
@@ -191,7 +191,7 @@
 					</tr>
 				</tbody>
 			</table>
-		</card>
+		</Card>
 
 		<x-button
 			v-if="team && !team.oidcId"
@@ -202,7 +202,7 @@
 		</x-button>
 
 		<!-- Leave team modal -->
-		<modal
+		<Modal
 			v-if="showLeaveModal"
 			@close="showLeaveModal = false"
 			@submit="leave()"
@@ -217,10 +217,10 @@
 					{{ $t('team.edit.leave.text2') }}
 				</p>
 			</template>
-		</modal>
+		</Modal>
 
 		<!-- Team delete modal -->
-		<modal
+		<Modal
 			:enabled="showDeleteModal"
 			@close="showDeleteModal = false"
 			@submit="deleteTeam()"
@@ -235,10 +235,10 @@
 					{{ $t('team.edit.delete.text2') }}
 				</p>
 			</template>
-		</modal>
+		</Modal>
 
 		<!-- User delete modal -->
-		<modal
+		<Modal
 			:enabled="showUserDeleteModal"
 			@close="showUserDeleteModal = false"
 			@submit="deleteMember()"
@@ -253,7 +253,7 @@
 					{{ $t('team.edit.deleteUser.text2') }}
 				</p>
 			</template>
-		</modal>
+		</Modal>
 	</div>
 </template>
 

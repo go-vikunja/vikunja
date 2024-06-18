@@ -1,6 +1,6 @@
 <template>
-	<modal @close="close()">
-		<card
+	<Modal @close="close()">
+		<Card
 			class="has-background-white keyboard-shortcuts"
 			:shadow="false"
 			:title="$t('keyboardShortcuts.title')"
@@ -43,8 +43,8 @@
 					</template>
 				</dl>
 			</template>
-		</card>
-	</modal>
+		</Card>
+	</Modal>
 </template>
 
 <script lang="ts" setup>

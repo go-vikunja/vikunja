@@ -39,7 +39,7 @@
 				class="due-date"
 			>
 				<span class="icon">
-					<icon :icon="['far', 'calendar-alt']" />
+					<Icon :icon="['far', 'calendar-alt']" />
 				</span>
 				<time :datetime="formatISO(task.dueDate)">
 					{{ formatDateSince(task.dueDate) }}
@@ -73,19 +73,19 @@
 					v-if="task.attachments.length > 0"
 					class="icon"
 				>
-					<icon icon="paperclip" />	
+					<Icon icon="paperclip" />	
 				</span>
 				<span
 					v-if="!isEditorContentEmpty(task.description)"
 					class="icon"
 				>
-					<icon icon="align-left" />
+					<Icon icon="align-left" />
 				</span>
 				<span
 					v-if="task.repeatAfter.amount > 0"
 					class="icon"
 				>
-					<icon icon="history" />
+					<Icon icon="history" />
 				</span>
 			</div>
 		</div>

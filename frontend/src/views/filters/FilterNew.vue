@@ -1,9 +1,9 @@
 <template>
-	<modal
+	<Modal
 		variant="hint-modal"
 		@close="$router.back()"
 	>
-		<card
+		<Card
 			class="has-no-shadow"
 			:title="$t('filters.create.title')"
 		>
@@ -77,8 +77,8 @@
 					{{ $t('filters.create.action') }}
 				</x-button>
 			</template>
-		</card>
-	</modal>
+		</Card>
+	</Modal>
 </template>
 
 <script setup lang="ts">

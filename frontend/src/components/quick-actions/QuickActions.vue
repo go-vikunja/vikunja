@@ -1,5 +1,5 @@
 <template>
-	<modal
+	<Modal
 		:enabled="active"
 		:overflow="isNewTaskCommand"
 		@close="closeQuickActions"
@@ -81,7 +81,7 @@
 				</div>
 			</div>
 		</div>
-	</modal>
+	</Modal>
 </template>
 
 <script setup lang="ts">

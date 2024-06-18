@@ -2,7 +2,7 @@
 	<div class="attachments">
 		<h3>
 			<span class="icon is-grey">
-				<icon icon="paperclip" />
+				<Icon icon="paperclip" />
 			</span>
 			{{ $t('task.attachment.title') }}
 		</h3>
@@ -77,14 +77,14 @@
 								class="attachment-info-meta-button"
 								@click.prevent.stop="downloadAttachment(a)"
 							>
-								<icon icon="download" />
+								<Icon icon="download" />
 							</BaseButton>
 							<BaseButton
 								v-tooltip="$t('task.attachment.copyUrlTooltip')"
 								class="attachment-info-meta-button"
 								@click.stop="copyUrl(a)"
 							>
-								<icon icon="copy" />
+								<Icon icon="copy" />
 							</BaseButton>
 							<BaseButton
 								v-if="editEnabled"
@@ -92,7 +92,7 @@
 								class="attachment-info-meta-button"
 								@click.prevent.stop="setAttachmentToDelete(a)"
 							>
-								<icon icon="trash-alt" />
+								<Icon icon="trash-alt" />
 							</BaseButton>
 							<BaseButton
 								v-if="editEnabled && canPreview(a)"
@@ -102,7 +102,7 @@
 								class="attachment-info-meta-button"
 								@click.prevent.stop="setCoverImage(task.coverImageAttachmentId === a.id ? null : a)"
 							>
-								<icon :icon="task.coverImageAttachmentId === a.id ? 'eye-slash' : 'eye'" />
+								<Icon :icon="task.coverImageAttachmentId === a.id ? 'eye-slash' : 'eye'" />
 							</BaseButton>
 						</p>
 					</div>
@@ -131,7 +131,7 @@
 			>
 				<div class="drop-hint">
 					<div class="icon">
-						<icon icon="cloud-upload-alt" />
+						<Icon icon="cloud-upload-alt" />
 					</div>
 					<div class="hint">
 						{{ $t('task.attachment.drop') }}
@@ -141,7 +141,7 @@
 		</Teleport>
 
 		<!-- Delete modal -->
-		<modal
+		<Modal
 			:enabled="attachmentToDelete !== null"
 			@close="setAttachmentToDelete(null)"
 			@submit="deleteAttachment()"
@@ -156,10 +156,10 @@
 					<strong class="has-text-white">{{ $t('misc.cannotBeUndone') }}</strong>
 				</p>
 			</template>
-		</modal>
+		</Modal>
 
 		<!-- Attachment image modal -->
-		<modal
+		<Modal
 			:enabled="attachmentImageBlobUrl !== null"
 			@close="attachmentImageBlobUrl = null"
 		>
@@ -167,7 +167,7 @@
 				:src="attachmentImageBlobUrl"
 				alt=""
 			>
-		</modal>
+		</Modal>
 	</div>
 </template>
 

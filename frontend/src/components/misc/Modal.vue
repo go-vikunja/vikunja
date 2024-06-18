@@ -31,7 +31,7 @@
 							class="close"
 							@click="$emit('close')"
 						>
-							<icon icon="times" />
+							<Icon icon="times" />
 						</BaseButton>
 
 						<slot>

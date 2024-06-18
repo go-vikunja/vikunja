@@ -5,7 +5,7 @@
 			class="menu-hide-button d-print-none"
 			@click="baseStore.setMenuActive(false)"
 		>
-			<icon icon="times" />
+			<Icon icon="times" />
 		</BaseButton>
 		<div
 			class="app-container"
@@ -42,21 +42,21 @@
 					</keep-alive>
 				</RouterView>
 
-				<modal
+				<Modal
 					:enabled="typeof currentModal !== 'undefined'"
 					variant="scrolling"
 					class="task-detail-view-modal"
 					@close="closeModal()"
 				>
 					<component :is="currentModal" />
-				</modal>
+				</Modal>
 
 				<BaseButton
 					v-shortcut="'?'"
 					class="keyboard-shortcuts-button d-print-none"
 					@click="showKeyboardShortcuts()"
 				>
-					<icon icon="keyboard" />
+					<Icon icon="keyboard" />
 				</BaseButton>
 			</main>
 		</div>

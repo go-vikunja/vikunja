@@ -1,5 +1,5 @@
 <template>
-	<modal
+	<Modal
 		@close="$router.back()"
 		@submit="deleteFilter()"
 	>
@@ -10,7 +10,7 @@
 		<template #text>
 			<p>{{ $t('filters.delete.text') }}</p>
 		</template>
-	</modal>
+	</Modal>
 </template>
 
 <script setup lang="ts">

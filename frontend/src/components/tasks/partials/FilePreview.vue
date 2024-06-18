@@ -11,7 +11,7 @@
 		v-else
 		class="icon-wrapper"
 	>
-		<icon
+		<Icon
 			size="6x"
 			icon="file"
 		/>

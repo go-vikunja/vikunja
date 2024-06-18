@@ -4,7 +4,7 @@
 		class="add-to-home-screen"
 		:class="{'has-update-available': hasUpdateAvailable}"
 	>
-		<icon
+		<Icon
 			icon="arrow-up-from-bracket"
 			class="add-icon"
 		/>
@@ -15,7 +15,7 @@
 			class="hide-button"
 			@click="() => hideMessage = true"
 		>
-			<icon icon="x" />
+			<Icon icon="x" />
 		</BaseButton>
 	</div>
 </template>

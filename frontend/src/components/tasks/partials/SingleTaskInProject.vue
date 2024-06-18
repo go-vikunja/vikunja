@@ -102,19 +102,19 @@
 						v-if="task.attachments.length > 0"
 						class="project-task-icon"
 					>
-						<icon icon="paperclip" />
+						<Icon icon="paperclip" />
 					</span>
 					<span
 						v-if="!isEditorContentEmpty(task.description)"
 						class="project-task-icon"
 					>
-						<icon icon="align-left" />
+						<Icon icon="align-left" />
 					</span>
 					<span
 						v-if="isRepeating"
 						class="project-task-icon"
 					>
-						<icon icon="history" />
+						<Icon icon="history" />
 					</span>
 				</span>
 
@@ -147,11 +147,11 @@
 				class="favorite"
 				@click="toggleFavorite"
 			>
-				<icon
+				<Icon
 					v-if="task.isFavorite"
 					icon="star"
 				/>
-				<icon
+				<Icon
 					v-else
 					:icon="['far', 'star']"
 				/>

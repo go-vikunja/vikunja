@@ -21,7 +21,7 @@ const enabled = computed(() => configStore.demoModeEnabled && !hide.value)
 			class="hide-button"
 			@click="() => hide = true"
 		>
-			<icon icon="times" />
+			<Icon icon="times" />
 		</BaseButton>
 	</div>
 </template>

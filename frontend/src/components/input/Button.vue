@@ -13,7 +13,7 @@
 		}"
 	>
 		<template v-if="icon">
-			<icon
+			<Icon
 				v-if="showIconOnly"
 				:icon="icon"
 				:style="{'color': iconColor !== '' ? iconColor : undefined}"
@@ -22,7 +22,7 @@
 				v-else
 				class="icon is-small"
 			>
-				<icon
+				<Icon
 					:icon="icon"
 					:style="{'color': iconColor !== '' ? iconColor : undefined}"
 				/>

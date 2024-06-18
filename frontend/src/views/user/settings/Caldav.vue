@@ -1,5 +1,5 @@
 <template>
-	<card
+	<Card
 		v-if="caldavEnabled"
 		:title="$t('user.settings.caldav.title')"
 	>
@@ -95,7 +95,7 @@
 				{{ $t('user.settings.caldav.more') }}
 			</BaseButton>
 		</p>
-	</card>
+	</Card>
 </template>
 
 <script lang="ts" setup>

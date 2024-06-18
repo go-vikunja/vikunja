@@ -60,7 +60,7 @@
 				v-if="isLabelEdit"
 				class="column is-4"
 			>
-				<card
+				<Card
 					:title="$t('label.edit.header')"
 					:has-close="true"
 					@close="() => isLabelEdit = false"
@@ -112,10 +112,10 @@
 							</div>
 						</div>
 					</form>
-				</card>
+				</Card>
 			</div>
 
-			<modal
+			<Modal
 				:enabled="showDeleteModal"
 				@close="showDeleteModal = false"
 				@submit="deleteLabel(labelToDelete)"
@@ -130,7 +130,7 @@
 						{{ $t('task.label.delete.text2') }}
 					</p>
 				</template>
-			</modal>
+			</Modal>
 		</div>
 	</div>
 </template>

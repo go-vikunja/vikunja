@@ -5,7 +5,7 @@
 		:view-id
 	>
 		<template #default>
-			<card :has-content="false">
+			<Card :has-content="false">
 				<div class="gantt-options">
 					<div class="field">
 						<label
@@ -44,10 +44,10 @@
 						{{ $t('project.gantt.showTasksWithoutDates') }}
 					</FancyCheckbox>
 				</div>
-			</card>
+			</Card>
 
 			<div class="gantt-chart-container">
-				<card
+				<Card
 					:has-content="false"
 					:padding="false"
 					class="has-overflow"
@@ -64,7 +64,7 @@
 						v-if="canWrite"
 						@createTask="addGanttTask"
 					/>
-				</card>
+				</Card>
 			</div>
 		</template>
 	</ProjectWrapper>

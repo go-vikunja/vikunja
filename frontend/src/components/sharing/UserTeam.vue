@@ -73,19 +73,19 @@
 					<td class="type">
 						<template v-if="s.right === RIGHTS.ADMIN">
 							<span class="icon is-small">
-								<icon icon="lock" />
+								<Icon icon="lock" />
 							</span>
 							{{ $t('project.share.right.admin') }}
 						</template>
 						<template v-else-if="s.right === RIGHTS.READ_WRITE">
 							<span class="icon is-small">
-								<icon icon="pen" />
+								<Icon icon="pen" />
 							</span>
 							{{ $t('project.share.right.readWrite') }}
 						</template>
 						<template v-else>
 							<span class="icon is-small">
-								<icon icon="users" />
+								<Icon icon="users" />
 							</span>
 							{{ $t('project.share.right.read') }}
 						</template>
@@ -139,7 +139,7 @@
 			{{ $t('project.share.userTeam.notShared', {type: shareTypeNames}) }}
 		</Nothing>
 
-		<modal
+		<Modal
 			:enabled="showDeleteModal"
 			@close="showDeleteModal = false"
 			@submit="deleteSharable()"
@@ -152,7 +152,7 @@
 			<template #text>
 				<p>{{ $t('project.share.userTeam.removeText', {type: shareTypeName, sharable: sharableName}) }}</p>
 			</template>
-		</modal>
+		</Modal>
 	</div>
 </template>
 

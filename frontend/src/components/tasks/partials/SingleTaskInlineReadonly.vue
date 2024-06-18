@@ -67,19 +67,19 @@
 				v-if="task.attachments.length > 0"
 				class="project-task-icon"
 			>
-				<icon icon="paperclip" />
+				<Icon icon="paperclip" />
 			</span>
 			<span
 				v-if="task.description"
 				class="project-task-icon"
 			>
-				<icon icon="align-left" />
+				<Icon icon="align-left" />
 			</span>
 			<span
 				v-if="task.repeatAfter.amount > 0"
 				class="project-task-icon"
 			>
-				<icon icon="history" />
+				<Icon icon="history" />
 			</span>
 		</span>
 

@@ -1,5 +1,5 @@
 <template>
-	<modal
+	<Modal
 		@close="$router.back()"
 		@submit="archiveProject()"
 	>
@@ -10,7 +10,7 @@
 		<template #text>
 			<p>{{ project.isArchived ? $t('project.archive.unarchiveText') : $t('project.archive.archiveText') }}</p>
 		</template>
-	</modal>
+	</Modal>
 </template>
 
 <script lang="ts">

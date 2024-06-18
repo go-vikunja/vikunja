@@ -8,7 +8,7 @@
 			:class="{'d-print-none': comments.length === 0}"
 		>
 			<span class="icon is-grey">
-				<icon :icon="['far', 'comments']" />
+				<Icon :icon="['far', 'comments']" />
 			</span>
 			{{ $t('task.comment.title') }}
 		</h3>
@@ -160,7 +160,7 @@
 			</div>
 		</div>
 
-		<modal
+		<Modal
 			:enabled="showDeleteModal"
 			@close="showDeleteModal = false"
 			@submit="() => deleteComment(commentToDelete)"
@@ -175,7 +175,7 @@
 					<strong class="has-text-white">{{ $t('misc.cannotBeUndone') }}</strong>
 				</p>
 			</template>
-		</modal>
+		</Modal>
 	</div>
 </template>
 

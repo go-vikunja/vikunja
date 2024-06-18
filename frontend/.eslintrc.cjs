@@ -24,7 +24,7 @@ module.exports = {
 		// uncategorized rules:
 		'vue/component-api-style': ['error', ['script-setup']],
 		'vue/component-name-in-template-casing': ['error', 'PascalCase', {
-			'globals': ['RouterView', 'RouterLink'],
+			'globals': ['RouterView', 'RouterLink', 'Icon', 'Notifications', 'Modal', 'Card'],
 		}],
 		'vue/custom-event-name-casing': ['error', 'camelCase'],
 		'vue/define-macros-order': 'error',

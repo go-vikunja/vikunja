@@ -9,7 +9,7 @@
 					class="dropdown-trigger"
 					@click="triggerProps.toggleOpen"
 				>
-					<icon
+					<Icon
 						icon="ellipsis-h"
 						class="icon"
 					/>

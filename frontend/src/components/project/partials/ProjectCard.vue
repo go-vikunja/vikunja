@@ -28,7 +28,7 @@
 				v-if="project.id < -1"
 				class="saved-filter-icon icon"
 			>
-				<icon icon="filter" />
+				<Icon icon="filter" />
 			</span>
 			{{ getProjectTitle(project) }}
 		</div>
@@ -47,7 +47,7 @@
 			:class="{'is-favorite': project.isFavorite}"
 			@click.prevent.stop="projectStore.toggleProjectFavorite(project)"
 		>
-			<icon :icon="project.isFavorite ? 'star' : ['far', 'star']" />
+			<Icon :icon="project.isFavorite ? 'star' : ['far', 'star']" />
 		</BaseButton>
 	</div>
 </template>

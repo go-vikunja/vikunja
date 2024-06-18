@@ -1,5 +1,5 @@
 <template>
-	<card
+	<Card
 		class="filters has-overflow"
 		:title="hasTitle ? $t('filters.title') : ''"
 		role="search"
@@ -40,7 +40,7 @@
 				{{ $t('filters.showResults') }}
 			</x-button>
 		</template>
-	</card>
+	</Card>
 </template>
 
 <script lang="ts">

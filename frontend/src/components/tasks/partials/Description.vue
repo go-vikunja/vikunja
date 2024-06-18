@@ -2,7 +2,7 @@
 	<div>
 		<h3>
 			<span class="icon is-grey">
-				<icon icon="align-left" />
+				<Icon icon="align-left" />
 			</span>
 			{{ $t('task.attributes.description') }}
 			<CustomTransition name="fade">
@@ -17,7 +17,7 @@
 					v-else-if="!loading && saved"
 					class="is-small has-text-success"
 				>
-					<icon icon="check" />
+					<Icon icon="check" />
 					{{ $t('misc.saved') }}
 				</span>
 			</CustomTransition>

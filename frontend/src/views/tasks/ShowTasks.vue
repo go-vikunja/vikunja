@@ -43,7 +43,7 @@
 			<LlamaCool class="llama-cool" />
 		</template>
 
-		<card
+		<Card
 			v-if="hasTasks"
 			:padding="false"
 			class="has-overflow"
@@ -59,7 +59,7 @@
 					@taskUpdated="updateTasks"
 				/>
 			</div>
-		</card>
+		</Card>
 		<div
 			v-else
 			:class="{ 'is-loading': loading}"

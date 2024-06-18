@@ -17,7 +17,7 @@
 					@keydown.enter="handleEnter"
 				/>
 				<span class="icon is-small is-left">
-					<icon icon="tasks" />
+					<Icon icon="tasks" />
 				</span>
 				<QuickAddMagic :highlight-hint-icon="taskAddHovered" />
 			</p>

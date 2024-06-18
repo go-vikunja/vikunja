@@ -20,7 +20,7 @@
 						:to="{ name: 'home'}"
 					>
 						<span class="menu-item-icon icon">
-							<icon icon="calendar" />
+							<Icon icon="calendar" />
 						</span>
 						{{ $t('navigation.overview') }}
 					</RouterLink>
@@ -31,7 +31,7 @@
 						:to="{ name: 'tasks.range'}"
 					>
 						<span class="menu-item-icon icon">
-							<icon :icon="['far', 'calendar-alt']" />
+							<Icon :icon="['far', 'calendar-alt']" />
 						</span>
 						{{ $t('navigation.upcoming') }}
 					</RouterLink>
@@ -42,7 +42,7 @@
 						:to="{ name: 'projects.index'}"
 					>
 						<span class="menu-item-icon icon">
-							<icon icon="layer-group" />
+							<Icon icon="layer-group" />
 						</span>
 						{{ $t('project.projects') }}
 					</RouterLink>
@@ -53,7 +53,7 @@
 						:to="{ name: 'labels.index'}"
 					>
 						<span class="menu-item-icon icon">
-							<icon icon="tags" />
+							<Icon icon="tags" />
 						</span>
 						{{ $t('label.title') }}
 					</RouterLink>
@@ -64,7 +64,7 @@
 						:to="{ name: 'teams.index'}"
 					>
 						<span class="menu-item-icon icon">
-							<icon icon="users" />
+							<Icon icon="users" />
 						</span>
 						{{ $t('team.title') }}
 					</RouterLink>

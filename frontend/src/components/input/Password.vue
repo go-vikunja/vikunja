@@ -20,7 +20,7 @@
 			:aria-label="passwordFieldType === 'password' ? $t('user.auth.showPassword') : $t('user.auth.hidePassword')"
 			@click="togglePasswordFieldType"
 		>
-			<icon :icon="passwordFieldType === 'password' ? 'eye' : 'eye-slash'" />
+			<Icon :icon="passwordFieldType === 'password' ? 'eye' : 'eye-slash'" />
 		</BaseButton>
 	</div>
 	<p
