@@ -3,7 +3,7 @@
   bucket_id: 1
 - task_id: 2
   project_view_id: 4
-  bucket_id: 1
+  bucket_id: 3 # done bucket
 - task_id: 3
   project_view_id: 4
   bucket_id: 2
