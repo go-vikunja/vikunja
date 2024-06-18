@@ -6,6 +6,7 @@ import {ref, onBeforeMount} from 'vue'
 import {transformFilterStringForApi, transformFilterStringFromApi} from '@/helpers/filters'
 import {useLabelStore} from '@/stores/labels'
 import {useProjectStore} from '@/stores/projects'
+import FilterInputDocs from '@/components/project/partials/FilterInputDocs.vue'
 
 const {
 	modelValue,
@@ -141,7 +142,12 @@ function handleBubbleSave() {
 			v-model="view.filter"
 			:project-id="view.projectId"
 			:input-label="$t('project.views.filter')"
+			class="mb-1"
 		/>
+
+		<div class="is-size-7 mb-3">
+			<FilterInputDocs />
+		</div>
 
 		<div
 			v-if="view.viewKind === 'kanban'"
@@ -211,7 +217,12 @@ function handleBubbleSave() {
 							v-model="view.bucketConfiguration[index].filter"
 							:project-id="view.projectId"
 							:input-label="$t('project.views.filter')"
+							class="mb-2"
 						/>
+
+						<div class="is-size-7">
+							<FilterInputDocs />
+						</div>
 					</div>
 				</div>
 				<div class="is-flex is-justify-content-end">
