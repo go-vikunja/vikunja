@@ -160,6 +160,7 @@ func getViewsForProject(s *xorm.Session, projectID int64) (views []*ProjectView,
 	views = []*ProjectView{}
 	err = s.
 		Where("project_id = ?", projectID).
+		OrderBy("position asc").
 		Find(&views)
 	return
 }

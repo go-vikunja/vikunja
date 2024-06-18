@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import CreateEdit from '@/components/misc/CreateEdit.vue'
-import {watch, ref, computed} from 'vue'
+import {watch, ref} from 'vue'
 import {useProjectStore} from '@/stores/projects'
 import ProjectViewModel from '@/models/projectView'
 import type {IProjectView} from '@/modelTypes/IProjectView'
@@ -13,6 +13,8 @@ import ProjectService from '@/services/project'
 import {RIGHTS} from '@/constants/rights'
 import ProjectModel from '@/models/project'
 import Message from '@/components/misc/Message.vue'
+import draggable from 'zhyswan-vuedraggable'
+import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 
 const {
 	projectId,
@@ -23,7 +25,19 @@ const {
 const projectStore = useProjectStore()
 const {t} = useI18n()
 
-const views = computed(() => projectStore.projects[projectId]?.views)
+const views = ref<IProjectView[]>([])
+watch(
+	projectStore.projects[projectId]?.views,
+	allViews => {
+		if (!allViews) {
+			views.value = []
+			return
+		}
+		views.value = [...allViews]
+	},
+	{immediate: true},
+)
+
 const showCreateForm = ref(false)
 
 const projectViewService = ref(new ProjectViewService())
@@ -91,6 +105,21 @@ async function saveView() {
 	const result = await projectViewService.value.update(viewToEdit.value)
 	projectStore.setProjectView(result)
 	viewToEdit.value = null
+	success({message: t('project.views.updateSuccess')})
+}
+
+async function saveViewPosition(e) {
+	const view = views.value[e.newIndex]
+	const viewBefore = views.value[e.newIndex - 1] ?? null
+	const viewAfter = views.value[e.newIndex + 1] ?? null
+	
+	const position = calculateItemPosition(viewBefore !== null ? viewBefore.position : null, viewAfter !== null ? viewAfter.position : null)
+	const result = await projectViewService.value.update({
+		...view,
+		position,
+	})
+	projectStore.setProjectView(result)
+	success({message: t('project.views.updateSuccess')})
 }
 </script>
 
@@ -117,7 +146,7 @@ async function saveView() {
 				{{ $t('project.views.create') }}
 			</XButton>
 		</div>
-		
+
 		<Message v-if="!isAdmin">
 			{{ $t('project.views.onlyAdminsCanEdit') }}
 		</Message>
@@ -135,45 +164,54 @@ async function saveView() {
 					</th>
 				</tr>
 			</thead>
-			<tbody>
-				<tr
-					v-for="v in views"
-					:key="v.id"
-				>
-					<template v-if="viewToEdit !== null && viewToEdit.id === v.id">
-						<td colspan="3">
-							<ViewEditForm
-								v-model="viewToEdit"
-								class="mb-4"
-								:loading="projectViewService.loading"
-								:show-save-buttons="true"
-								@cancel="viewToEdit = null"
-								@update:modelValue="saveView"
-							/>
-						</td>
-					</template>
-					<template v-else>
-						<td>{{ v.title }}</td>
-						<td>{{ v.viewKind }}</td>
-						<td class="has-text-right">
-							<XButton
-								v-if="isAdmin"
-								class="is-danger mr-2"
-								icon="trash-alt"
-								@click="() => {
-									viewIdToDelete = v.id
-									showDeleteModal = true
-								}"
-							/>
-							<XButton
-								v-if="isAdmin"
-								icon="pen"
-								@click="viewToEdit = {...v}"
-							/>
-						</td>
-					</template>
-				</tr>
-			</tbody>
+			<draggable
+				v-model="views"
+				tag="tbody"
+				item-key="id"
+				handle=".handle"
+				:animation="100"
+				@end="saveViewPosition"
+			>
+				<template #item="{element: v}">
+					<tr>
+						<template v-if="viewToEdit !== null && viewToEdit.id === v.id">
+							<td colspan="3">
+								<ViewEditForm
+									v-model="viewToEdit"
+									class="mb-4"
+									:loading="projectViewService.loading"
+									:show-save-buttons="true"
+									@cancel="viewToEdit = null"
+									@update:modelValue="saveView"
+								/>
+							</td>
+						</template>
+						<template v-else>
+							<td>{{ v.title }}</td>
+							<td>{{ v.viewKind }}</td>
+							<td class="has-text-right actions">
+								<XButton
+									v-if="isAdmin"
+									class="is-danger mr-2"
+									icon="trash-alt"
+									@click="() => {
+										viewIdToDelete = v.id
+										showDeleteModal = true
+									}"
+								/>
+								<XButton
+									v-if="isAdmin"
+									icon="pen"
+									@click="viewToEdit = {...v}"
+								/>
+								<span class="icon handle">
+									<icon icon="grip-lines" />
+								</span>
+							</td>
+						</template>
+					</tr>
+				</template>
+			</draggable>
 		</table>
 	</CreateEdit>
 
@@ -191,3 +229,16 @@ async function saveView() {
 		</template>
 	</modal>
 </template>
+
+<style scoped>
+.handle {
+	cursor: grab;
+	margin-left: .25rem;
+}
+
+.actions {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+}
+</style>

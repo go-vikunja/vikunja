@@ -302,9 +302,7 @@ func (p *Project) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 		return nil
 	}
 
-	err = s.
-		Where("project_id = ?", p.ID).
-		Find(&p.Views)
+	p.Views, err = getViewsForProject(s, p.ID)
 	return
 }
 
@@ -640,6 +638,7 @@ func addProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err er
 	views := []*ProjectView{}
 	err = s.
 		In("project_id", projectIDs).
+		OrderBy("position asc").
 		Find(&views)
 	if err != nil {
 		return
