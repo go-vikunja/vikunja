@@ -62,6 +62,44 @@ func getRouteGroupName(path string) (finalName string, filteredParts []string) {
 	}
 }
 
+func getRouteDetail(route echo.Route) (method string, detail *RouteDetail) {
+	if strings.Contains(route.Name, "CreateWeb") {
+		return "create", &RouteDetail{
+			Path:   route.Path,
+			Method: route.Method,
+		}
+	}
+	if strings.Contains(route.Name, "ReadOneWeb") {
+		return "read_one", &RouteDetail{
+			Path:   route.Path,
+			Method: route.Method,
+		}
+	}
+	if strings.Contains(route.Name, "ReadAllWeb") {
+		return "read_all", &RouteDetail{
+			Path:   route.Path,
+			Method: route.Method,
+		}
+	}
+	if strings.Contains(route.Name, "UpdateWeb") {
+		return "update", &RouteDetail{
+			Path:   route.Path,
+			Method: route.Method,
+		}
+	}
+	if strings.Contains(route.Name, "DeleteWeb") {
+		return "delete", &RouteDetail{
+			Path:   route.Path,
+			Method: route.Method,
+		}
+	}
+
+	return "", &RouteDetail{
+		Path:   route.Path,
+		Method: route.Method,
+	}
+}
+
 // CollectRoutesForAPITokenUsage gets called for every added APITokenRoute and builds a list of all routes we can use for the api tokens.
 func CollectRoutesForAPITokenUsage(route echo.Route, middlewares []echo.MiddlewareFunc) {
 
@@ -87,8 +125,7 @@ func CollectRoutesForAPITokenUsage(route echo.Route, middlewares []echo.Middlewa
 		routeGroupName == "subscriptions" ||
 		routeGroupName == "tokens" ||
 		routeGroupName == "*" ||
-		strings.HasPrefix(routeGroupName, "user_") ||
-		strings.HasSuffix(routeGroupName, "_bulk") {
+		strings.HasPrefix(routeGroupName, "user_") {
 		return
 	}
 
@@ -130,40 +167,26 @@ func CollectRoutesForAPITokenUsage(route echo.Route, middlewares []echo.Middlewa
 		return
 	}
 
+	if strings.HasSuffix(routeGroupName, "_bulk") {
+		parent := strings.TrimSuffix(routeGroupName, "_bulk")
+		_, has := apiTokenRoutes[parent]
+		if !has {
+			apiTokenRoutes[parent] = make(APITokenRoute)
+		}
+
+		method, routeDetail := getRouteDetail(route)
+		apiTokenRoutes[parent][method+"_bulk"] = routeDetail
+		return
+	}
+
 	_, has := apiTokenRoutes[routeGroupName]
 	if !has {
 		apiTokenRoutes[routeGroupName] = make(APITokenRoute)
 	}
 
-	if strings.Contains(route.Name, "CreateWeb") {
-		apiTokenRoutes[routeGroupName]["create"] = &RouteDetail{
-			Path:   route.Path,
-			Method: route.Method,
-		}
-	}
-	if strings.Contains(route.Name, "ReadOneWeb") {
-		apiTokenRoutes[routeGroupName]["read_one"] = &RouteDetail{
-			Path:   route.Path,
-			Method: route.Method,
-		}
-	}
-	if strings.Contains(route.Name, "ReadAllWeb") {
-		apiTokenRoutes[routeGroupName]["read_all"] = &RouteDetail{
-			Path:   route.Path,
-			Method: route.Method,
-		}
-	}
-	if strings.Contains(route.Name, "UpdateWeb") {
-		apiTokenRoutes[routeGroupName]["update"] = &RouteDetail{
-			Path:   route.Path,
-			Method: route.Method,
-		}
-	}
-	if strings.Contains(route.Name, "DeleteWeb") {
-		apiTokenRoutes[routeGroupName]["delete"] = &RouteDetail{
-			Path:   route.Path,
-			Method: route.Method,
-		}
+	method, routeDetail := getRouteDetail(route)
+	if method != "" {
+		apiTokenRoutes[routeGroupName][method] = routeDetail
 	}
 
 	if routeGroupName == "tasks_attachments" {
@@ -205,6 +228,8 @@ func CanDoAPIRoute(c echo.Context, token *APIToken) (can bool) {
 
 	routeGroupName, routeParts := getRouteGroupName(path)
 
+	routeGroupName = strings.TrimSuffix(routeGroupName, "_bulk")
+
 	group, hasGroup := token.Permissions[routeGroupName]
 	if !hasGroup {
 		group, hasGroup = token.Permissions[routeParts[0]]
@@ -223,29 +248,16 @@ func CanDoAPIRoute(c echo.Context, token *APIToken) (can bool) {
 		route = strings.Join(routeParts[1:], "_")
 	}
 
-	if routes["create"] != nil && routes["create"].Path == path && routes["create"].Method == c.Request().Method {
-		route = "create"
-	}
-	if routes["read_one"] != nil && routes["read_one"].Path == path && routes["read_one"].Method == c.Request().Method {
-		route = "read_one"
-	}
-	if routes["read_all"] != nil && routes["read_all"].Path == path && routes["read_all"].Method == c.Request().Method {
-		route = "read_all"
-	}
-	if routes["update"] != nil && routes["update"].Path == path && routes["update"].Method == c.Request().Method {
-		route = "update"
-	}
-	if routes["delete"] != nil && routes["delete"].Path == path && routes["delete"].Method == c.Request().Method {
-		route = "delete"
-	}
-
 	// The tasks read_all route is available as /:project/tasks and /tasks/all - therefore we need this workaround here.
 	if routeGroupName == "tasks" && path == "/api/v1/projects/:project/tasks" && c.Request().Method == http.MethodGet {
 		route = "read_all"
 	}
 
 	for _, p := range group {
-		if p == route {
+		if route == "" && routes[p] != nil && routes[p].Path == path && routes[p].Method == c.Request().Method {
+			return true
+		}
+		if route != "" && p == route {
 			return true
 		}
 	}
