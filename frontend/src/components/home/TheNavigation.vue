@@ -266,7 +266,6 @@ $user-dropdown-width-mobile: 5rem;
 	padding-left: 1rem;
 	display: inline-flex;
 	align-items: center;
-	text-transform: uppercase;
 	font-size: .85rem;
 	font-weight: 700;
 }
