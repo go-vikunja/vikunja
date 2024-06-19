@@ -329,7 +329,6 @@
     },
     "gantt": {
       "title": "Gantt",
-      "showTasksWithoutDates": "Aufgaben anzeigen, für die keine Daten festgelegt sind",
       "size": "Größe",
       "default": "Standard",
       "month": "Monat",

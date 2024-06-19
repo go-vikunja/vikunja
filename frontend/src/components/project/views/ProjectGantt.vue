@@ -41,7 +41,7 @@
 						v-model="filters.showTasksWithoutDates"
 						is-block
 					>
-						{{ $t('project.gantt.showTasksWithoutDates') }}
+						{{ $t('task.show.noDates') }}
 					</FancyCheckbox>
 				</div>
 			</Card>
