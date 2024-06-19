@@ -43,7 +43,7 @@
 							height="20"
 							width="20"
 						>
-						<strong>{{ getDisplayName(c.author) }}</strong>&nbsp;
+						<strong>{{ getDisplayName(c.author) }}</strong>
 						<span
 							v-tooltip="formatDateLong(c.created)"
 							class="has-text-grey"
