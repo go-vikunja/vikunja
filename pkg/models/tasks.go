@@ -245,7 +245,7 @@ func getFilterCond(f *taskFilter, includeNulls bool) (cond builder.Cond, err err
 
 func getFilterCondForSeparateTable(table string, cond builder.Cond) builder.Cond {
 	return builder.In(
-		"id",
+		"tasks.id",
 		builder.
 			Select("task_id").
 			From(table).
