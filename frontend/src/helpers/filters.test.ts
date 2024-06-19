@@ -127,6 +127,16 @@ describe('Filter Transformation', () => {
 			
 			expect(transformed).toBe('due_date = now/d || due_date > now/w+1w')
 		})
+		
+		it('should only transform one label occurrence at a time', () => {
+			const transformed = transformFilterStringForApi(
+				'labels in ipsum || labels in l',
+				multipleDummyResolver,
+				nullTitleToIdResolver,
+			)
+
+			expect(transformed).toBe('labels in 2 || labels in l')
+		})
 	})
 
 	describe('To API', () => {

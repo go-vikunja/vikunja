@@ -97,6 +97,9 @@ watch(
 	},
 )
 
+const labelStore = useLabelStore()
+const projectStore = useProjectStore()
+
 // Using watchDebounced to prevent the filter re-triggering itself.
 watch(
 	() => modelValue,
@@ -112,13 +115,10 @@ watch(
 	{immediate: true},
 )
 
-const labelStore = useLabelStore()
-const projectStore = useProjectStore()
-
 function change() {
 	const filter = transformFilterStringForApi(
 		filterQuery.value,
-		labelTitle => labelStore.filterLabelsByQuery([], labelTitle)[0]?.id || null,
+		labelTitle => labelStore.getLabelByExactTitle(labelTitle)?.id || null,
 		projectTitle => {
 			const found = projectStore.findProjectByExactname(projectTitle)
 			return found?.id || null

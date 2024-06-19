@@ -84,6 +84,10 @@ function unEscapeHtml(unsafe: string): string {
 }
 
 const highlightedFilterQuery = computed(() => {
+	if (filterQuery.value === '') {
+		return ''
+	}
+
 	let highlighted = escapeHtml(filterQuery.value)
 	DATE_FIELDS
 		.forEach(o => {
@@ -94,7 +98,7 @@ const highlightedFilterQuery = computed(() => {
 				}
 
 				let endPadding = ''
-				if(value.endsWith(' ')) {
+				if (value.endsWith(' ')) {
 					const fullLength = value.length
 					value = value.trimEnd()
 					const numberOfRemovedSpaces = fullLength - value.length
@@ -208,36 +212,38 @@ function handleFieldInput() {
 		const pattern = new RegExp('(' + field + '\\s*' + FILTER_OPERATORS_REGEX + '\\s*)([\'"]?)([^\'"&|()]+\\1?)?$', 'ig')
 		const match = pattern.exec(textUpToCursor)
 
-		if (match !== null) {
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-			const [matched, prefix, operator, space, keyword] = match
-			if (keyword) {
-				let search = keyword
-				if (operator === 'in' || operator === '?=') {
-					const keywords = keyword.split(',')
-					search = keywords[keywords.length - 1].trim()
-				}
-				if (matched.startsWith('label')) {
-					autocompleteResultType.value = 'labels'
-					autocompleteResults.value = labelStore.filterLabelsByQuery([], search)
-				}
-				if (matched.startsWith('assignee')) {
-					autocompleteResultType.value = 'assignees'
-					if (projectId) {
-						projectUserService.getAll({projectId}, {s: search})
-							.then(users => autocompleteResults.value = users.length > 1 ? users : [])
-					} else {
-						userService.getAll({}, {s: search})
-							.then(users => autocompleteResults.value = users.length > 1 ? users : [])
-					}
-				}
-				if (!projectId && matched.startsWith('project')) {
-					autocompleteResultType.value = 'projects'
-					autocompleteResults.value = projectStore.searchProject(search)
-				}
-				autocompleteMatchText.value = keyword
-				autocompleteMatchPosition.value = match.index + prefix.length - 1 + keyword.replace(search, '').length
+		if (match === null) {
+			return
+		}
+
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		const [matched, prefix, operator, space, keyword] = match
+		if (keyword) {
+			let search = keyword
+			if (operator === 'in' || operator === '?=') {
+				const keywords = keyword.split(',')
+				search = keywords[keywords.length - 1].trim()
 			}
+			if (matched.startsWith('label')) {
+				autocompleteResultType.value = 'labels'
+				autocompleteResults.value = labelStore.filterLabelsByQuery([], search)
+			}
+			if (matched.startsWith('assignee')) {
+				autocompleteResultType.value = 'assignees'
+				if (projectId) {
+					projectUserService.getAll({projectId}, {s: search})
+						.then(users => autocompleteResults.value = users.length > 1 ? users : [])
+				} else {
+					userService.getAll({}, {s: search})
+						.then(users => autocompleteResults.value = users.length > 1 ? users : [])
+				}
+			}
+			if (!projectId && matched.startsWith('project')) {
+				autocompleteResultType.value = 'projects'
+				autocompleteResults.value = projectStore.searchProject(search)
+			}
+			autocompleteMatchText.value = keyword
+			autocompleteMatchPosition.value = match.index + prefix.length - 1 + keyword.replace(search, '').length
 		}
 	})
 }
@@ -259,7 +265,7 @@ const blurDebounced = useDebounceFn(() => emit('blur'), 500)
 
 <template>
 	<div class="field">
-		<label 
+		<label
 			class="label"
 			:for="id"
 		>
@@ -326,11 +332,11 @@ const blurDebounced = useDebounceFn(() => emit('blur'), 500)
 
 <style lang="scss">
 .filter-input-highlight {
-	
+
 	&, button.filter-query__date_value {
 		color: var(--card-color);
 	}
-	
+
 	span {
 		&.filter-query__field {
 			color: var(--code-literal);
