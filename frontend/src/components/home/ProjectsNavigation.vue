@@ -71,6 +71,8 @@ watch(
 const projectUpdating = ref<{ [id: IProject['id']]: boolean }>({})
 
 async function saveProjectPosition(e: SortableEvent) {
+	drag.value = false
+
 	if (!e.newIndex && e.newIndex !== 0) return
 
 	const projectsActive = availableProjects.value
