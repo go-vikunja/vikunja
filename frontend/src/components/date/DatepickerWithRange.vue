@@ -114,13 +114,19 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import DatemathHelp from '@/components/date/DatemathHelp.vue'
 import {getFlatpickrLanguage} from '@/helpers/flatpickrLanguage'
 
-const props = defineProps({
+const props = defineProps<{
 	modelValue: {
-		required: false,
+		dateFrom: Date | string,
+		dateTo: Date | string,
 	},
-})
+}>()
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits<{
+	'update:modelValue': [value: {
+		dateFrom: Date | string,
+		dateTo: Date | string
+	}]
+}>()
 
 const {t} = useI18n({useScope: 'global'})
 
