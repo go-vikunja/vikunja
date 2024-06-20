@@ -401,8 +401,9 @@
       "titleRequired": "Unesite naslov.",
       "delete": "Izbriši ovaj prikaz",
       "deleteText": "Jeste li sigurni da želite ukloniti ovaj prikaz? Više ga neće biti moguće koristiti za pregled zadataka u ovom projektu. Ova radnja neće izbrisati nijedan zadatak. To se ne može poništiti!",
-      "deleteSuccess": "Prikaz je uspješno izbrisan",
-      "onlyAdminsCanEdit": "Samo administratori projekta mogu uređivati ​​prikaze."
+      "deleteSuccess": "The view was deleted successfully.",
+      "onlyAdminsCanEdit": "Samo administratori projekta mogu uređivati ​​prikaze.",
+      "updateSuccess": "The view was updated successfully."
     }
   },
   "filters": {
@@ -616,6 +617,17 @@
       "link": "Poveznica",
       "image": "Slika",
       "imageTooltip": "Učitajte sliku sa svog računala.",
+      "horizontalRule": "Vodoravno pravilo",
+      "horizontalRuleTooltip": "Podijelite sekciju.",
+      "sideBySide": "Usporedno",
+      "guide": "Vodič",
+      "text": "Tekst",
+      "textTooltip": "Samo počnite tipkati tekst.",
+      "taskList": "Lista zadataka",
+      "taskListTooltip": "Pratite zadatke pomoću todo liste.",
+      "undo": "Poništi",
+      "redo": "Ponovi",
+      "placeholder": "Upišite tekst ili pritisnite '/' da vidite više opcija…",
       "table": {
         "title": "Tablica",
         "insert": "Insert table",
@@ -633,18 +645,7 @@
         "toggleHeaderCell": "Promjena ćelije zaglavlja",
         "mergeOrSplit": "Spajanje ili razdvajanje",
         "fixTables": "Popravite tablice"
-      },
-      "horizontalRule": "Vodoravno pravilo",
-      "horizontalRuleTooltip": "Podijelite sekciju.",
-      "sideBySide": "Usporedno",
-      "guide": "Vodič",
-      "text": "Tekst",
-      "textTooltip": "Samo počnite tipkati tekst.",
-      "taskList": "Lista zadataka",
-      "taskListTooltip": "Pratite zadatke pomoću todo liste.",
-      "undo": "Poništi",
-      "redo": "Ponovi",
-      "placeholder": "Upišite tekst ili pritisnite '/' da vidite više opcija…"
+      }
     },
     "multiselect": {
       "createPlaceholder": "Create",
@@ -732,6 +733,7 @@
     "addReminder": "Add a reminder…",
     "doneSuccess": "Zadatak je uspješno označen kao obavljen.",
     "undoneSuccess": "Zadatak je uspješno uklonjen iz izvršenih.",
+    "revertSuccess": "The task change was successfully undone.",
     "undo": "Poništi",
     "openDetail": "Otvorite prikaz detalja zadatka",
     "checklistTotal": "{checked} od {total} zadataka",

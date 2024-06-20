@@ -401,8 +401,9 @@
       "titleRequired": "Please provide a title.",
       "delete": "Delete this view",
       "deleteText": "Are you sure you want to remove this view? It will no longer be possible to use it to view tasks in this project. This action won't delete any tasks. This cannot be undone!",
-      "deleteSuccess": "The view was successfully deleted",
-      "onlyAdminsCanEdit": "Only project admins can edit views."
+      "deleteSuccess": "The view was deleted successfully.",
+      "onlyAdminsCanEdit": "Only project admins can edit views.",
+      "updateSuccess": "The view was updated successfully."
     }
   },
   "filters": {
@@ -616,6 +617,17 @@
       "link": "Liên kết",
       "image": "Ảnh",
       "imageTooltip": "Upload an image from your computer.",
+      "horizontalRule": "Dòng kẻ ngang",
+      "horizontalRuleTooltip": "Divide a section.",
+      "sideBySide": "Chia đôi cửa sổ",
+      "guide": "Hướng dẫn",
+      "text": "Text",
+      "textTooltip": "Just start typing with plain text.",
+      "taskList": "Task list",
+      "taskListTooltip": "Track tasks with a to-do list.",
+      "undo": "Undo",
+      "redo": "Redo",
+      "placeholder": "Type some text or hit '/' to see more options…",
       "table": {
         "title": "Table",
         "insert": "Insert table",
@@ -633,18 +645,7 @@
         "toggleHeaderCell": "Toggle header cell",
         "mergeOrSplit": "Merge or split",
         "fixTables": "Fix tables"
-      },
-      "horizontalRule": "Dòng kẻ ngang",
-      "horizontalRuleTooltip": "Divide a section.",
-      "sideBySide": "Chia đôi cửa sổ",
-      "guide": "Hướng dẫn",
-      "text": "Text",
-      "textTooltip": "Just start typing with plain text.",
-      "taskList": "Task list",
-      "taskListTooltip": "Track tasks with a to-do list.",
-      "undo": "Undo",
-      "redo": "Redo",
-      "placeholder": "Type some text or hit '/' to see more options…"
+      }
     },
     "multiselect": {
       "createPlaceholder": "Create",
@@ -732,6 +733,7 @@
     "addReminder": "Add a reminder…",
     "doneSuccess": "Công việc đã được đánh dấu Hoàn thành.",
     "undoneSuccess": "Công việc đã được bỏ đánh dấu Hoàn thành.",
+    "revertSuccess": "The task change was successfully undone.",
     "undo": "Undo",
     "openDetail": "Xem chi tiết công việc",
     "checklistTotal": "{checked} trong số {total} công việc",

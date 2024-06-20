@@ -401,8 +401,9 @@
       "titleRequired": "Proszę podać tytuł.",
       "delete": "Usuń ten widok",
       "deleteText": "Czy na pewno chcesz usunąć ten widok? Nie będzie już możliwe wyświetlanie zadań w tym projekcie. Ta akcja nie usunie żadnych zadań. Tej operacji nie można cofnąć!",
-      "deleteSuccess": "Widok został pomyślnie usunięty",
-      "onlyAdminsCanEdit": "Tylko administratorzy projektu mogą edytować widoki."
+      "deleteSuccess": "The view was deleted successfully.",
+      "onlyAdminsCanEdit": "Tylko administratorzy projektu mogą edytować widoki.",
+      "updateSuccess": "The view was updated successfully."
     }
   },
   "filters": {
@@ -616,6 +617,17 @@
       "link": "Link",
       "image": "Obraz",
       "imageTooltip": "Prześlij obraz ze swojego komputera.",
+      "horizontalRule": "Linia pozioma",
+      "horizontalRuleTooltip": "Podziel sekcję.",
+      "sideBySide": "Obok siebie",
+      "guide": "Przewodnik",
+      "text": "Tekst",
+      "textTooltip": "Po prostu zacznij pisać.",
+      "taskList": "Lista zadań",
+      "taskListTooltip": "Śledź zadania za pomocą listy do zrobienia.",
+      "undo": "Cofnij",
+      "redo": "Ponów",
+      "placeholder": "Wpisz tekst lub naciśnij '/', aby zobaczyć więcej opcji…",
       "table": {
         "title": "Tabela",
         "insert": "Wstaw tabelę",
@@ -633,18 +645,7 @@
         "toggleHeaderCell": "Przełącz nagłówek komórki",
         "mergeOrSplit": "Połącz lub podziel",
         "fixTables": "Napraw tabele"
-      },
-      "horizontalRule": "Linia pozioma",
-      "horizontalRuleTooltip": "Podziel sekcję.",
-      "sideBySide": "Obok siebie",
-      "guide": "Przewodnik",
-      "text": "Tekst",
-      "textTooltip": "Po prostu zacznij pisać.",
-      "taskList": "Lista zadań",
-      "taskListTooltip": "Śledź zadania za pomocą listy do zrobienia.",
-      "undo": "Cofnij",
-      "redo": "Ponów",
-      "placeholder": "Wpisz tekst lub naciśnij '/', aby zobaczyć więcej opcji…"
+      }
     },
     "multiselect": {
       "createPlaceholder": "Utwórz",
@@ -732,6 +733,7 @@
     "addReminder": "Dodaj przypomnienie…",
     "doneSuccess": "Zadanie zostało pomyślnie oznaczone jako ukończone.",
     "undoneSuccess": "Zadanie zostało pomyślnie otwarte ponownie.",
+    "revertSuccess": "The task change was successfully undone.",
     "undo": "Cofnij",
     "openDetail": "Otwórz szczegółowy widok zadania",
     "checklistTotal": "{checked} z {total} zadań",

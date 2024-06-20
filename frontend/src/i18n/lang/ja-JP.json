@@ -401,8 +401,9 @@
       "titleRequired": "Please provide a title.",
       "delete": "Delete this view",
       "deleteText": "Are you sure you want to remove this view? It will no longer be possible to use it to view tasks in this project. This action won't delete any tasks. This cannot be undone!",
-      "deleteSuccess": "The view was successfully deleted",
-      "onlyAdminsCanEdit": "Only project admins can edit views."
+      "deleteSuccess": "The view was deleted successfully.",
+      "onlyAdminsCanEdit": "Only project admins can edit views.",
+      "updateSuccess": "The view was updated successfully."
     }
   },
   "filters": {
@@ -616,6 +617,17 @@
       "link": "リンク",
       "image": "画像",
       "imageTooltip": "Upload an image from your computer.",
+      "horizontalRule": "横罫",
+      "horizontalRuleTooltip": "Divide a section.",
+      "sideBySide": "Side By Side",
+      "guide": "説明書",
+      "text": "テキスト",
+      "textTooltip": "Just start typing with plain text.",
+      "taskList": "タスクリスト",
+      "taskListTooltip": "Track tasks with a to-do list.",
+      "undo": "元に戻す",
+      "redo": "やり直す",
+      "placeholder": "Type some text or hit '/' to see more options…",
       "table": {
         "title": "テーブル",
         "insert": "テーブルの挿入",
@@ -633,18 +645,7 @@
         "toggleHeaderCell": "Toggle header cell",
         "mergeOrSplit": "Merge or split",
         "fixTables": "テーブルの修正"
-      },
-      "horizontalRule": "横罫",
-      "horizontalRuleTooltip": "Divide a section.",
-      "sideBySide": "Side By Side",
-      "guide": "説明書",
-      "text": "テキスト",
-      "textTooltip": "Just start typing with plain text.",
-      "taskList": "タスクリスト",
-      "taskListTooltip": "Track tasks with a to-do list.",
-      "undo": "元に戻す",
-      "redo": "やり直す",
-      "placeholder": "Type some text or hit '/' to see more options…"
+      }
     },
     "multiselect": {
       "createPlaceholder": "作成",
@@ -732,6 +733,7 @@
     "addReminder": "リマイダーを作成…",
     "doneSuccess": "タスクを完了にしました。",
     "undoneSuccess": "タスクを未完了に戻しました。",
+    "revertSuccess": "The task change was successfully undone.",
     "undo": "元に戻す",
     "openDetail": "タスクの詳細を表示",
     "checklistTotal": "{total}件中{checked}件のタスク",

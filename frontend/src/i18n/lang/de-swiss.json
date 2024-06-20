@@ -401,8 +401,9 @@
       "titleRequired": "Please provide a title.",
       "delete": "Delete this view",
       "deleteText": "Are you sure you want to remove this view? It will no longer be possible to use it to view tasks in this project. This action won't delete any tasks. This cannot be undone!",
-      "deleteSuccess": "The view was successfully deleted",
-      "onlyAdminsCanEdit": "Nur Projektadministrator:innen können Ansichten bearbeiten."
+      "deleteSuccess": "Diese Ansicht wurde erfolgreich gelöscht.",
+      "onlyAdminsCanEdit": "Nur Projektadministrator:innen können Ansichten bearbeiten.",
+      "updateSuccess": "Die Ansicht wurde erfolgreich aktualisiert."
     }
   },
   "filters": {
@@ -616,6 +617,17 @@
       "link": "Link",
       "image": "Bild",
       "imageTooltip": "Lade ein Bild von deinem PC hoch.",
+      "horizontalRule": "Horizontalä Strich",
+      "horizontalRuleTooltip": "Teile einen Bereich.",
+      "sideBySide": "Nebedenand",
+      "guide": "Hilfsliniä",
+      "text": "Text",
+      "textTooltip": "Einfach einen Text tippen.",
+      "taskList": "Aufgabenliste",
+      "taskListTooltip": "Aufgaben mit einer To-do-Liste verfolgen.",
+      "undo": "Rückgängig",
+      "redo": "Wiederholen",
+      "placeholder": "Gib Text ein, drücke '/' für mehr Optionen…",
       "table": {
         "title": "Tabelle",
         "insert": "Tabelle einfügen",
@@ -633,18 +645,7 @@
         "toggleHeaderCell": "Headerzelle ein/aus",
         "mergeOrSplit": "Verbinden oder teilen",
         "fixTables": "Tabellen reparieren"
-      },
-      "horizontalRule": "Horizontalä Strich",
-      "horizontalRuleTooltip": "Teile einen Bereich.",
-      "sideBySide": "Nebedenand",
-      "guide": "Hilfsliniä",
-      "text": "Text",
-      "textTooltip": "Einfach einen Text tippen.",
-      "taskList": "Aufgabenliste",
-      "taskListTooltip": "Aufgaben mit einer To-do-Liste verfolgen.",
-      "undo": "Rückgängig",
-      "redo": "Wiederholen",
-      "placeholder": "Gib Text ein, drücke '/' für mehr Optionen…"
+      }
     },
     "multiselect": {
       "createPlaceholder": "Erstellen",
@@ -732,6 +733,7 @@
     "addReminder": "Eine Erinnerung hinzufügen…",
     "doneSuccess": "Die Uufgab isch erfolgriich als \"Fertig\" markiert wordä.",
     "undoneSuccess": "Die Uufgaab isch nüme als fertig markiert.",
+    "revertSuccess": "Die Änderung der Aufgabe wurde erfolgreich rückgängig gemacht.",
     "undo": "Rückgängig",
     "openDetail": "Uufgab i de Detailaahsicht öffne",
     "checklistTotal": "{checked} von {total} Aufgaben",

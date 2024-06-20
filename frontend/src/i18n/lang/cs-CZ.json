@@ -401,8 +401,9 @@
       "titleRequired": "Zadejte prosím název.",
       "delete": "Odstranit tento pohled",
       "deleteText": "Jste si jisti, že chcete odstranit tento pohled? Nebude již možné jej použít k zobrazení úkolů v tomto projektu. Tato akce neodstraní žádné úkoly. Toto nelze vrátit zpět!",
-      "deleteSuccess": "Pohled byl úspěšně odstraněn",
-      "onlyAdminsCanEdit": "Pohledy mohou upravovat pouze správci projektu."
+      "deleteSuccess": "The view was deleted successfully.",
+      "onlyAdminsCanEdit": "Pohledy mohou upravovat pouze správci projektu.",
+      "updateSuccess": "The view was updated successfully."
     }
   },
   "filters": {
@@ -616,6 +617,17 @@
       "link": "Odkaz",
       "image": "Obrázek",
       "imageTooltip": "Nahrát obrázek z vašeho počítače.",
+      "horizontalRule": "Vodorovná čára",
+      "horizontalRuleTooltip": "Rozdělit sekci.",
+      "sideBySide": "Vedle sebe",
+      "guide": "Průvodce",
+      "text": "Text",
+      "textTooltip": "Stačí začít psát prostý text.",
+      "taskList": "Seznam úkolů",
+      "taskListTooltip": "Sledovat úkoly se seznamem úkolů.",
+      "undo": "Vrátit zpět",
+      "redo": "Opakovat akci",
+      "placeholder": "Zadejte nějaký text nebo stiskněte '/' pro zobrazení více možností…",
       "table": {
         "title": "Tabulka",
         "insert": "Vložit tabulku",
@@ -633,18 +645,7 @@
         "toggleHeaderCell": "Přepnout hlavičku",
         "mergeOrSplit": "Sloučit nebo rozdělit",
         "fixTables": "Opravit tabulky"
-      },
-      "horizontalRule": "Vodorovná čára",
-      "horizontalRuleTooltip": "Rozdělit sekci.",
-      "sideBySide": "Vedle sebe",
-      "guide": "Průvodce",
-      "text": "Text",
-      "textTooltip": "Stačí začít psát prostý text.",
-      "taskList": "Seznam úkolů",
-      "taskListTooltip": "Sledovat úkoly se seznamem úkolů.",
-      "undo": "Vrátit zpět",
-      "redo": "Opakovat akci",
-      "placeholder": "Zadejte nějaký text nebo stiskněte '/' pro zobrazení více možností…"
+      }
     },
     "multiselect": {
       "createPlaceholder": "Vytvořit",
@@ -732,6 +733,7 @@
     "addReminder": "Přidat připomínku…",
     "doneSuccess": "Úkol byl úspěšně označen jako dokončený.",
     "undoneSuccess": "Úkol byl úspěšně znovu otevřen.",
+    "revertSuccess": "The task change was successfully undone.",
     "undo": "Vrátit zpět",
     "openDetail": "Otevřít zobrazení detailu úkolu",
     "checklistTotal": "{checked} z {total} úkolů",

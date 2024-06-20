@@ -401,8 +401,9 @@
       "titleRequired": "请提供标题。",
       "delete": "删除此视图",
       "deleteText": "您确定要删除此视图吗？它将不再可能使用它来查看此项目中的任务。 此操作不会删除任何任务。此操作不能撤销！",
-      "deleteSuccess": "视图已成功删除",
-      "onlyAdminsCanEdit": "Only project admins can edit views."
+      "deleteSuccess": "The view was deleted successfully.",
+      "onlyAdminsCanEdit": "Only project admins can edit views.",
+      "updateSuccess": "The view was updated successfully."
     }
   },
   "filters": {
@@ -616,6 +617,17 @@
       "link": "链接",
       "image": "图片",
       "imageTooltip": "从您的计算机上传图片",
+      "horizontalRule": "水平线",
+      "horizontalRuleTooltip": "分割一节。",
+      "sideBySide": "并排",
+      "guide": "指南",
+      "text": "文本",
+      "textTooltip": "只需开始用纯文本键入。",
+      "taskList": "任务列表",
+      "taskListTooltip": "用待办事宜列表跟踪任务。",
+      "undo": "撤销",
+      "redo": "恢复",
+      "placeholder": "输入一些文本或点击“/”查看更多选项…",
       "table": {
         "title": "表格",
         "insert": "插入表格",
@@ -633,18 +645,7 @@
         "toggleHeaderCell": "切换头部单元格",
         "mergeOrSplit": "合并或拆分",
         "fixTables": "修复表格"
-      },
-      "horizontalRule": "水平线",
-      "horizontalRuleTooltip": "分割一节。",
-      "sideBySide": "并排",
-      "guide": "指南",
-      "text": "文本",
-      "textTooltip": "只需开始用纯文本键入。",
-      "taskList": "任务列表",
-      "taskListTooltip": "用待办事宜列表跟踪任务。",
-      "undo": "撤销",
-      "redo": "恢复",
-      "placeholder": "输入一些文本或点击“/”查看更多选项…"
+      }
     },
     "multiselect": {
       "createPlaceholder": "Create",
@@ -732,6 +733,7 @@
     "addReminder": "Add a reminder…",
     "doneSuccess": "待办事项已标记为完成。",
     "undoneSuccess": "待办事项已标记为未完成。",
+    "revertSuccess": "The task change was successfully undone.",
     "undo": "撤销",
     "openDetail": "查看任务详细信息",
     "checklistTotal": "{checked} 项任务，共 {total} 项。",

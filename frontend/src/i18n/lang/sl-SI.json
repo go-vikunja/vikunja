@@ -401,8 +401,9 @@
       "titleRequired": "Prosim navedite naslov.",
       "delete": "Izbriši pogled",
       "deleteText": "Ali ste prepričani, da želite odstraniti ta pogled? Ne bo ga več mogoče uporabljati za ogled nalog v tem projektu. To dejanje ne bo izbrisalo nobenih opravil. Tega ni mogoče razveljaviti!",
-      "deleteSuccess": "Pogled je bil uspešno izbrisan",
-      "onlyAdminsCanEdit": "Samo skrbniki projekta lahko urejajo poglede."
+      "deleteSuccess": "The view was deleted successfully.",
+      "onlyAdminsCanEdit": "Samo skrbniki projekta lahko urejajo poglede.",
+      "updateSuccess": "The view was updated successfully."
     }
   },
   "filters": {
@@ -616,6 +617,17 @@
       "link": "Povezava",
       "image": "Slika",
       "imageTooltip": "Naloži sliko iz računalnika.",
+      "horizontalRule": "Horizontalno ravnilo",
+      "horizontalRuleTooltip": "Razdeli sekcijo.",
+      "sideBySide": "Drug ob drugem",
+      "guide": "Vodič",
+      "text": "Besedilo",
+      "textTooltip": "Začnite tipkati z navadnim besedilom.",
+      "taskList": "Seznam nalog",
+      "taskListTooltip": "Seznam nalog s to-do seznamom.",
+      "undo": "Razveljavi",
+      "redo": "Obnovi",
+      "placeholder": "Začni tipkati besedilo ali pritisni '/', da vidiš več možnosti…",
       "table": {
         "title": "Tabela",
         "insert": "Vstavi tabelo",
@@ -633,18 +645,7 @@
         "toggleHeaderCell": "Preklop celice glave",
         "mergeOrSplit": "Spoji ali razdeli",
         "fixTables": "Popravi tabele"
-      },
-      "horizontalRule": "Horizontalno ravnilo",
-      "horizontalRuleTooltip": "Razdeli sekcijo.",
-      "sideBySide": "Drug ob drugem",
-      "guide": "Vodič",
-      "text": "Besedilo",
-      "textTooltip": "Začnite tipkati z navadnim besedilom.",
-      "taskList": "Seznam nalog",
-      "taskListTooltip": "Seznam nalog s to-do seznamom.",
-      "undo": "Razveljavi",
-      "redo": "Obnovi",
-      "placeholder": "Začni tipkati besedilo ali pritisni '/', da vidiš več možnosti…"
+      }
     },
     "multiselect": {
       "createPlaceholder": "Ustvari",
@@ -732,6 +733,7 @@
     "addReminder": "Dodaj nov opomnik…",
     "doneSuccess": "Naloga je bila uspešno označena kot opravljena.",
     "undoneSuccess": "Naloga je bila uspešno odznačena kot opravljena.",
+    "revertSuccess": "Sprememba opravila je bila uspešno razveljavljena.",
     "undo": "Razveljavi",
     "openDetail": "Odpri pogled podrobnosti nalog",
     "checklistTotal": "{checked} od {total} nalog",

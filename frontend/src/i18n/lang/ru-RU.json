@@ -401,8 +401,9 @@
       "titleRequired": "Пожалуйста, укажите название.",
       "delete": "Удалить представление",
       "deleteText": "Удалить это представление? После удаления его не получится использовать для просмотра задач в этом проекте. Сами задачи останутся. Это действие отменить нельзя!",
-      "deleteSuccess": "Представление удалено",
-      "onlyAdminsCanEdit": "Только администраторы проекта могут изменять представления."
+      "deleteSuccess": "The view was deleted successfully.",
+      "onlyAdminsCanEdit": "Только администраторы проекта могут изменять представления.",
+      "updateSuccess": "The view was updated successfully."
     }
   },
   "filters": {
@@ -616,6 +617,17 @@
       "link": "Ссылка",
       "image": "Изображение",
       "imageTooltip": "Загрузить изображение с компьютера.",
+      "horizontalRule": "Разделитель",
+      "horizontalRuleTooltip": "Разделитель текста.",
+      "sideBySide": "Side By Side",
+      "guide": "Руководство",
+      "text": "Текст",
+      "textTooltip": "Просто начните печатать для ввода обычного текста.",
+      "taskList": "Список задач",
+      "taskListTooltip": "Отслеживаемые задачи в виде списка с галочками.",
+      "undo": "Отменить",
+      "redo": "Вернуть",
+      "placeholder": "Введите какой-нибудь текст или нажмите '/' для дополнительных параметров…",
       "table": {
         "title": "Таблица",
         "insert": "Вставить таблицу",
@@ -633,18 +645,7 @@
         "toggleHeaderCell": "Ячейка с заголовком",
         "mergeOrSplit": "Объединить или разделить",
         "fixTables": "Исправить таблицы"
-      },
-      "horizontalRule": "Разделитель",
-      "horizontalRuleTooltip": "Разделитель текста.",
-      "sideBySide": "Side By Side",
-      "guide": "Руководство",
-      "text": "Текст",
-      "textTooltip": "Просто начните печатать для ввода обычного текста.",
-      "taskList": "Список задач",
-      "taskListTooltip": "Отслеживаемые задачи в виде списка с галочками.",
-      "undo": "Отменить",
-      "redo": "Вернуть",
-      "placeholder": "Введите какой-нибудь текст или нажмите '/' для дополнительных параметров…"
+      }
     },
     "multiselect": {
       "createPlaceholder": "Создать",
@@ -732,6 +733,7 @@
     "addReminder": "Добавить напоминание…",
     "doneSuccess": "Задача отмечена как завершённая.",
     "undoneSuccess": "Задача отмечена как незавершённая.",
+    "revertSuccess": "The task change was successfully undone.",
     "undo": "Отменить",
     "openDetail": "Открыть подробный просмотр задачи",
     "checklistTotal": "{checked} из {total} задач",

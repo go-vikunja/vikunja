@@ -401,8 +401,9 @@
       "titleRequired": "Kérjük, adjon meg egy címet.",
       "delete": "Törölje ezt a nézetet",
       "deleteText": "Biztosan eltávolítja ezt a nézetet? A továbbiakban nem lesz használható a projektben szereplő feladatok megtekintésére. Ez a művelet nem töröl semmilyen feladatot. Ezt nem lehet visszacsinálni!",
-      "deleteSuccess": "A nézet sikeresen törölve",
-      "onlyAdminsCanEdit": "Only project admins can edit views."
+      "deleteSuccess": "The view was deleted successfully.",
+      "onlyAdminsCanEdit": "Only project admins can edit views.",
+      "updateSuccess": "The view was updated successfully."
     }
   },
   "filters": {
@@ -616,6 +617,17 @@
       "link": "Hivatkozás",
       "image": "Kép",
       "imageTooltip": "Fájl feltöltése a számítógépről.",
+      "horizontalRule": "Vízszintes vonal",
+      "horizontalRuleTooltip": "Egy szakasz felosztása.",
+      "sideBySide": "Egymás mellett",
+      "guide": "Útmutató",
+      "text": "Szöveg",
+      "textTooltip": "Csak kezdje el a gépelést egyszerű szöveggel.",
+      "taskList": "Feladatlista",
+      "taskListTooltip": "Kövesse nyomon a feladatokat egy teendőlistával.",
+      "undo": "Visszavonás",
+      "redo": "Újra",
+      "placeholder": "Írjon be egy szöveget, vagy nyomja meg a „/” gombot a további lehetőségek megtekintéséhez…",
       "table": {
         "title": "Táblázat",
         "insert": "Táblázat beszúrása",
@@ -633,18 +645,7 @@
         "toggleHeaderCell": "Kapcsolja be a fejléccellát",
         "mergeOrSplit": "Egyesítés vagy felosztás",
         "fixTables": "Táblázatok javítása"
-      },
-      "horizontalRule": "Vízszintes vonal",
-      "horizontalRuleTooltip": "Egy szakasz felosztása.",
-      "sideBySide": "Egymás mellett",
-      "guide": "Útmutató",
-      "text": "Szöveg",
-      "textTooltip": "Csak kezdje el a gépelést egyszerű szöveggel.",
-      "taskList": "Feladatlista",
-      "taskListTooltip": "Kövesse nyomon a feladatokat egy teendőlistával.",
-      "undo": "Visszavonás",
-      "redo": "Újra",
-      "placeholder": "Írjon be egy szöveget, vagy nyomja meg a „/” gombot a további lehetőségek megtekintéséhez…"
+      }
     },
     "multiselect": {
       "createPlaceholder": "Create",
@@ -732,6 +733,7 @@
     "addReminder": "Add a reminder…",
     "doneSuccess": "A feladat sikeresen meg lett jelölve elkészültként.",
     "undoneSuccess": "A feladat sikeresen meg lett jelölve nem elkészültként.",
+    "revertSuccess": "The task change was successfully undone.",
     "undo": "Visszavonás",
     "openDetail": "A feladat részletes nézetének megnyitása",
     "checklistTotal": "{checked} / {total} feladatok",

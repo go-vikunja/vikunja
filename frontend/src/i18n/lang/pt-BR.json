@@ -401,8 +401,9 @@
       "titleRequired": "Please provide a title.",
       "delete": "Delete this view",
       "deleteText": "Are you sure you want to remove this view? It will no longer be possible to use it to view tasks in this project. This action won't delete any tasks. This cannot be undone!",
-      "deleteSuccess": "The view was successfully deleted",
-      "onlyAdminsCanEdit": "Only project admins can edit views."
+      "deleteSuccess": "The view was deleted successfully.",
+      "onlyAdminsCanEdit": "Only project admins can edit views.",
+      "updateSuccess": "The view was updated successfully."
     }
   },
   "filters": {
@@ -616,6 +617,17 @@
       "link": "Link",
       "image": "Imagem",
       "imageTooltip": "Carregar uma imagem do computador.",
+      "horizontalRule": "Linha horizontal",
+      "horizontalRuleTooltip": "Divida uma seção.",
+      "sideBySide": "Lado a Lado",
+      "guide": "Guia",
+      "text": "Texto",
+      "textTooltip": "Apenas comece a escrever.",
+      "taskList": "Lista de tarefas",
+      "taskListTooltip": "Rastrear tarefas com uma lista de tarefas.",
+      "undo": "Desfazer",
+      "redo": "Refazer",
+      "placeholder": "Digite algum texto ou toque em '/' para ver mais opções…",
       "table": {
         "title": "Tabela",
         "insert": "Inserir tabela",
@@ -633,18 +645,7 @@
         "toggleHeaderCell": "Ativar/Desativar cabeçalho de célula",
         "mergeOrSplit": "Mesclar ou dividir",
         "fixTables": "Corrigir tabelas"
-      },
-      "horizontalRule": "Linha horizontal",
-      "horizontalRuleTooltip": "Divida uma seção.",
-      "sideBySide": "Lado a Lado",
-      "guide": "Guia",
-      "text": "Texto",
-      "textTooltip": "Apenas comece a escrever.",
-      "taskList": "Lista de tarefas",
-      "taskListTooltip": "Rastrear tarefas com uma lista de tarefas.",
-      "undo": "Desfazer",
-      "redo": "Refazer",
-      "placeholder": "Digite algum texto ou toque em '/' para ver mais opções…"
+      }
     },
     "multiselect": {
       "createPlaceholder": "Create",
@@ -732,6 +733,7 @@
     "addReminder": "Add a reminder…",
     "doneSuccess": "A tarefa foi marcada como feita com sucesso.",
     "undoneSuccess": "A tarefa foi desmarcada como feita com sucesso.",
+    "revertSuccess": "The task change was successfully undone.",
     "undo": "Desfazer",
     "openDetail": "Abrir detalhes da tarefa",
     "checklistTotal": "{checked} de {total} tarefas",
