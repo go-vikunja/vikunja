@@ -66,7 +66,7 @@
 <script setup lang="ts">
 import {ref, watch} from 'vue'
 
-import {periodToSeconds, PeriodUnit, secondsToPeriod} from '@/helpers/time/period'
+import {periodToSeconds, type PeriodUnit, secondsToPeriod} from '@/helpers/time/period'
 
 import TaskReminderModel from '@/models/taskReminder'
 
