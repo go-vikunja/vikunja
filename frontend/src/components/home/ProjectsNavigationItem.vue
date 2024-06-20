@@ -95,11 +95,7 @@ import {getProjectTitle} from '@/helpers/getProjectTitle'
 import ColorBubble from '@/components/misc/ColorBubble.vue'
 import ProjectsNavigation from '@/components/home/ProjectsNavigation.vue'
 
-const {
-	project,
-	isLoading,
-	canCollapse,
-} = defineProps<{
+const props = defineProps<{
 	project: IProject,
 	isLoading?: boolean,
 	canCollapse?: boolean,
@@ -109,21 +105,21 @@ const projectStore = useProjectStore()
 const baseStore = useBaseStore()
 const currentProject = computed(() => baseStore.currentProject)
 
-// Persist open state across browser reloads. Using a seperate ref for the state 
+// Persist open state across browser reloads. Using a separate ref for the state 
 // allows us to use only one entry in local storage instead of one for every project id.
-type openState = { [key: number]: boolean }
-const childProjectsOpenState = useStorage<openState>('navigation-child-projects-open', {})
+type OpenState = { [key: number]: boolean }
+const childProjectsOpenState = useStorage<OpenState>('navigation-child-projects-open', {})
 const childProjectsOpen = computed({
 	get() {
-		return childProjectsOpenState.value[project.id] ?? true
+		return childProjectsOpenState.value[props.project.id] ?? true
 	},
 	set(open) {
-		childProjectsOpenState.value[project.id] = open
+		childProjectsOpenState.value[props.project.id] = open
 	},
 })
 
 const childProjects = computed(() => {
-	return projectStore.getChildProjects(project.id)
+	return projectStore.getChildProjects(props.project.id)
 		.filter(p => !p.isArchived)
 		.sort((a, b) => a.position - b.position)
 })
