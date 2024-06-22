@@ -329,7 +329,6 @@
     },
     "gantt": {
       "title": "Gantt",
-      "showTasksWithoutDates": "Prikaži naloge, ki nimajo nastavljenih datumov",
       "size": "Velikost",
       "default": "Privzeto",
       "month": "Mesec",

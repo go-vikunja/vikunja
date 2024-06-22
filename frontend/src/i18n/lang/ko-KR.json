@@ -329,7 +329,6 @@
     },
     "gantt": {
       "title": "Gantt",
-      "showTasksWithoutDates": "Show tasks which don't have dates set",
       "size": "Size",
       "default": "기본값",
       "month": "월",

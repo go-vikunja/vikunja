@@ -329,7 +329,6 @@
     },
     "gantt": {
       "title": "مخطط Gantt",
-      "showTasksWithoutDates": "إظهار المهام التي ليس لها تواريخ محددة",
       "size": "الحجم",
       "default": "افتراضي",
       "month": "شهر",

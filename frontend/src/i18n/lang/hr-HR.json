@@ -329,7 +329,6 @@
     },
     "gantt": {
       "title": "Gantt",
-      "showTasksWithoutDates": "Prikaži zadatke koji nemaju postavljene datume",
       "size": "Veličina",
       "default": "Zadano",
       "month": "Mjesec",

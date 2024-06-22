@@ -329,7 +329,6 @@
     },
     "gantt": {
       "title": "Gantt",
-      "showTasksWithoutDates": "Olyan feladatok megjelenítése, amelyekhez nincs beállítva dátum",
       "size": "Méret",
       "default": "Alapértelmezett",
       "month": "Hónap",

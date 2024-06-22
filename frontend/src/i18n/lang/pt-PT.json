@@ -329,7 +329,6 @@
     },
     "gantt": {
       "title": "Gantt",
-      "showTasksWithoutDates": "Mostrar tarefas que não têm datas atríbuidas",
       "size": "Tamanho",
       "default": "Padrão",
       "month": "Mês",

@@ -329,7 +329,6 @@
     },
     "gantt": {
       "title": "Gantt",
-      "showTasksWithoutDates": "Afficher les tâches pour lesquelles aucune date n’a été fixée",
       "size": "Taille",
       "default": "Par défaut",
       "month": "Mois",

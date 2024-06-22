@@ -329,7 +329,6 @@
     },
     "gantt": {
       "title": "Gantt",
-      "showTasksWithoutDates": "Vis oppgaver som ikke har datoer angitt",
       "size": "Størrelse",
       "default": "Standard",
       "month": "Måned",

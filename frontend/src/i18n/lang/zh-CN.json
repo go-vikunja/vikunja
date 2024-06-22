@@ -329,7 +329,6 @@
     },
     "gantt": {
       "title": "甘特图",
-      "showTasksWithoutDates": "显示未设定日期的任务",
       "size": "时间粒度",
       "default": "默认",
       "month": "月",

@@ -329,7 +329,6 @@
     },
     "gantt": {
       "title": "Gantt",
-      "showTasksWithoutDates": "Zobrazit úkoly, které nemají nastavené datum",
       "size": "Velikost",
       "default": "Výchozí",
       "month": "Měsíc",

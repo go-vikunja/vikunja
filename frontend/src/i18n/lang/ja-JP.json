@@ -329,7 +329,6 @@
     },
     "gantt": {
       "title": "ガント",
-      "showTasksWithoutDates": "指定日が未設定のタスクを表示",
       "size": "大きさ",
       "default": "デフォルト",
       "month": "月",
