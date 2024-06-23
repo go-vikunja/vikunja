@@ -140,7 +140,7 @@
     "@types/flexsearch": "0.7.6",
     "@types/is-touch-device": "1.0.2",
     "@types/lodash.debounce": "4.0.9",
-    "@types/node": "20.14.7",
+    "@types/node": "20.14.8",
     "@types/sortablejs": "1.15.8",
     "@typescript-eslint/eslint-plugin": "7.13.1",
     "@typescript-eslint/parser": "7.13.1",
@@ -174,7 +174,7 @@
     "vite-plugin-sentry": "1.4.0",
     "vite-svg-loader": "5.1.0",
     "vitest": "1.6.0",
-    "vue-tsc": "2.0.21",
+    "vue-tsc": "2.0.22",
     "wait-on": "7.2.0",
     "workbox-cli": "7.1.0"
   },
