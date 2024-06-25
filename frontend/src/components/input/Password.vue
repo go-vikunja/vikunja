@@ -8,7 +8,7 @@
 			required
 			:type="passwordFieldType"
 			autocomplete="current-password"
-			:tabindex="props.tabindex"
+			:tabindex="tabindex"
 			@keyup.enter="e => $emit('submit', e)"
 			@focusout="() => {validate(); validateAfterFirst = true}"
 			@keyup="() => {validateAfterFirst ? validate() : null}"
