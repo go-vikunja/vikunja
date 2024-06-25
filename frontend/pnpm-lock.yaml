@@ -145,12 +145,6 @@ importers:
       '@tiptap/vue-3':
         specifier: 2.4.0
         version: 2.4.0(@tiptap/core@2.4.0(@tiptap/pm@2.4.0))(@tiptap/pm@2.4.0)(vue@3.4.30(typescript@5.5.2))
-      '@types/is-touch-device':
-        specifier: 1.0.2
-        version: 1.0.2
-      '@types/lodash.clonedeep':
-        specifier: 4.5.9
-        version: 4.5.9
       '@vueuse/core':
         specifier: 10.11.0
         version: 10.11.0(vue@3.4.30(typescript@5.5.2))
@@ -275,6 +269,12 @@ importers:
       '@types/flexsearch':
         specifier: 0.7.6
         version: 0.7.6
+      '@types/is-touch-device':
+        specifier: 1.0.2
+        version: 1.0.2
+      '@types/lodash.clonedeep':
+        specifier: 4.5.9
+        version: 4.5.9
       '@types/lodash.debounce':
         specifier: 4.0.9
         version: 4.0.9
