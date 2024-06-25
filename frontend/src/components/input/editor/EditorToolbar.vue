@@ -336,7 +336,7 @@
 
 <script setup lang="ts">
 import {ref} from 'vue'
-import {Editor} from '@tiptap/vue-3'
+import type {Editor} from '@tiptap/vue-3'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import {setLinkInEditor} from '@/components/input/editor/setLinkInEditor'
