@@ -341,9 +341,7 @@ import type {Editor} from '@tiptap/vue-3'
 import BaseButton from '@/components/base/BaseButton.vue'
 import {setLinkInEditor} from '@/components/input/editor/setLinkInEditor'
 
-const {
-	editor = null,
-} = defineProps<{
+const props = defineProps<{
 	editor: Editor,
 }>()
 
@@ -356,7 +354,7 @@ function toggleTableMode() {
 }
 
 function setLink(event) {
-	setLinkInEditor(event.target.getBoundingClientRect(), editor)
+	setLinkInEditor(event.target.getBoundingClientRect(), props.editor)
 }
 </script>
 
