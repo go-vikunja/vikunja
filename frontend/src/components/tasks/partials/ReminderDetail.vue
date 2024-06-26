@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<Popup @close="showFormSwitch = null">
+		<Popup @update:open="showFormSwitch = null">
 			<template #trigger="{toggle}">
 				<SimpleButton
 					v-tooltip="reminder.reminder && reminder.relativeTo !== null ? formatDateShort(reminder.reminder) : null"
@@ -50,7 +50,7 @@
 					/>
 
 					<DatepickerInline
-						v-if="activeForm === 'absolute'"
+						v-else-if="activeForm === 'absolute'"
 						v-model="reminderDate"
 						@update:modelValue="setReminderDateAndClose(close)"
 					/>
@@ -88,38 +88,38 @@ import Card from '@/components/misc/Card.vue'
 import SimpleButton from '@/components/input/SimpleButton.vue'
 import {useDebounceFn} from '@vueuse/core'
 
-const {
-	modelValue,
-	clearAfterUpdate = false,
-	defaultRelativeTo = REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE,
-} = defineProps<{
-	modelValue?: ITaskReminder,
+const props = withDefaults(defineProps<{
+	modelValue: ITaskReminder | undefined,
 	clearAfterUpdate?: boolean,
-	defaultRelativeTo?: null | IReminderPeriodRelativeTo,
-}>()
+	defaultRelativeTo?: IReminderPeriodRelativeTo | null,
+}>(), {
+	modelValue: new TaskReminderModel() as ITaskReminder,
+	clearAfterUpdate: false,
+	defaultRelativeTo: REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE,
+})
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits<{
+	'update:modelValue': [value: ITaskReminder | undefined],
+}>()
 
 const {t} = useI18n({useScope: 'global'})
 
 const reminder = ref<ITaskReminder>(new TaskReminderModel())
 
-const presets = computed<TaskReminderModel[]>(() => [
-	{reminder: null, relativePeriod: 0, relativeTo: defaultRelativeTo},
-	{reminder: null, relativePeriod: -2 * SECONDS_A_HOUR, relativeTo: defaultRelativeTo},
-	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY, relativeTo: defaultRelativeTo},
-	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY * 3, relativeTo: defaultRelativeTo},
-	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY * 7, relativeTo: defaultRelativeTo},
-	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY * 30, relativeTo: defaultRelativeTo},
-])
+const presets = computed(() => [
+	{reminder: null, relativePeriod: 0, relativeTo: props.defaultRelativeTo},
+	{reminder: null, relativePeriod: -2 * SECONDS_A_HOUR, relativeTo: props.defaultRelativeTo},
+	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY, relativeTo: props.defaultRelativeTo},
+	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY * 3, relativeTo: props.defaultRelativeTo},
+	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY * 7, relativeTo: props.defaultRelativeTo},
+	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY * 30, relativeTo: props.defaultRelativeTo},
+] as ITaskReminder[])
 const reminderDate = ref<Date | null>(null)
 
-type availableForms = null | 'relative' | 'absolute'
+const showFormSwitch = ref<null | 'relative' | 'absolute'>(null)
 
-const showFormSwitch = ref<availableForms>(null)
-
-const activeForm = computed<availableForms>(() => {
-	if (defaultRelativeTo === null) {
+const activeForm = computed(() => {
+	if (props.defaultRelativeTo === null) {
 		return 'absolute'
 	}
 
@@ -127,7 +127,6 @@ const activeForm = computed<availableForms>(() => {
 })
 
 const reminderText = computed(() => {
-
 	if (reminder.value.relativeTo !== null) {
 		return formatReminder(reminder.value)
 	}
@@ -140,7 +139,7 @@ const reminderText = computed(() => {
 })
 
 watch(
-	() => modelValue,
+	() => props.modelValue,
 	(newReminder) => {
 		if (newReminder) {
 			reminder.value = newReminder
@@ -160,12 +159,12 @@ watch(
 function updateData() {
 	emit('update:modelValue', reminder.value)
 
-	if (clearAfterUpdate) {
+	if (props.clearAfterUpdate) {
 		reminder.value = new TaskReminderModel()
 	}
 }
 
-function setReminderDateAndClose(close) {
+function setReminderDateAndClose(close: () => void) {
 	reminder.value.reminder = reminderDate.value === null
 		? null
 		: new Date(reminderDate.value)
@@ -175,7 +174,7 @@ function setReminderDateAndClose(close) {
 }
 
 
-function setReminderFromPreset(preset, close) {
+function setReminderFromPreset(preset: ITaskReminder, close: () => void) {
 	reminder.value = preset
 	updateData()
 	close()
@@ -183,14 +182,14 @@ function setReminderFromPreset(preset, close) {
 
 const updateDataAndMaybeClose = useDebounceFn(updateDataAndMaybeCloseNow, 500)
 
-function updateDataAndMaybeCloseNow(close) {
+function updateDataAndMaybeCloseNow(close: () => void) {
 	updateData()
-	if (clearAfterUpdate) {
+	if (props.clearAfterUpdate) {
 		close()
 	}
 }
 
-function formatReminder(reminder: TaskReminderModel) {
+function formatReminder(reminder: ITaskReminder) {
 	const period = secondsToPeriod(reminder.relativePeriod)
 
 	if (period.amount === 0) {
@@ -248,6 +247,8 @@ function translateUnit(amount: number, unit: PeriodUnit): string {
 			return t('time.units.weeks', amount)
 		case 'years':
 			return t('time.units.years', amount)
+		default:
+			throw new Error(`Unknown unit: ${unit}`)
 	}
 }
 </script>

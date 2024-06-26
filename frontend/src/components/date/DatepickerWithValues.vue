@@ -2,7 +2,7 @@
 	<div class="datepicker-with-range-container">
 		<Popup
 			:open="open"
-			@close="() => emit('close')"
+			@update:open="(open) => !open && emit('close')"
 		>
 			<template #content="{isOpen}">
 				<div

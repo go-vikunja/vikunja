@@ -34,7 +34,22 @@ const props = withDefaults(defineProps<{
 	open: false,
 })
 
-const emit = defineEmits(['close'])
+const emit = defineEmits<{
+	'update:open': [open: boolean]
+}>()
+
+defineSlots<{
+	trigger(props: {
+		isOpen: boolean,
+		toggle: () => boolean,
+		close: () => void,
+	}) : void
+	content(props: {
+		isOpen: boolean,
+		toggle: () => boolean,
+		close: () => void
+	}): void
+}>()
 
 const openValue = ref(props.open)
 watchEffect(() => {
@@ -43,11 +58,13 @@ watchEffect(() => {
 
 function close() {
 	openValue.value = false
-	emit('close')
+	emit('update:open', false)
 }
 
 function toggle() {
 	openValue.value = !openValue.value
+	emit('update:open', openValue.value)
+	return openValue.value
 }
 
 const popup = ref<HTMLElement | null>(null)
