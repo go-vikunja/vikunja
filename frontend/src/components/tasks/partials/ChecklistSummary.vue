@@ -30,18 +30,15 @@
 </template>
 
 <script setup lang="ts">
-import {computed, type PropType} from 'vue'
+import {computed} from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import {getChecklistStatistics} from '@/helpers/checklistFromText'
 import type {ITask} from '@/modelTypes/ITask'
 
-const props = defineProps({
-	task: {
-		type: Object as PropType<ITask>,
-		required: true,
-	},
-})
+const props = defineProps<{
+	task: ITask
+}>()
 
 const checklist = computed(() => getChecklistStatistics(props.task.description))
 
