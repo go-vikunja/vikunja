@@ -11,24 +11,19 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, type PropType} from 'vue'
+import {computed} from 'vue'
 import type {IProject} from '@/modelTypes/IProject'
 
 import ProjectCard from './ProjectCard.vue'
 
-const props = defineProps({
-	projects: {
-		type: Array as PropType<IProject[]>,
-		default: () => [],
-	},
-	showArchived: {
-		default: false,
-		type: Boolean,
-	},
-	itemLimit: {
-		type: Boolean,
-		default: false,
-	},
+const props = withDefaults(defineProps<{
+	projects: IProject[],
+	showArchived?: boolean,
+	itemLimit?: boolean
+}>(), {
+	projects: () => [],
+	showArchived: false,
+	itemLimit: false,
 })
 
 const filteredProjects = computed(() => {
