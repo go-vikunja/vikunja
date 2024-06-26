@@ -1,19 +1,20 @@
-import {ref, watch, type ShallowReactive} from 'vue'
+import {ref, toValue, watch, type MaybeRefOrGetter} from 'vue'
 import ProjectService from '@/services/project'
 import type {IProject} from '@/modelTypes/IProject'
 import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'
 
-export function useProjectBackground(project: ShallowReactive<IProject>) {
+export function useProjectBackground(project: MaybeRefOrGetter<IProject>) {
 	const background = ref<string | null>(null)
 	const backgroundLoading = ref(false)
 	const blurHashUrl = ref('')
 
 	watch(
-		() => [project.id, project.backgroundBlurHash] as [IProject['id'], IProject['backgroundBlurHash']],
+		() => [toValue(project).id, toValue(project)?.backgroundBlurHash] as [IProject['id'], IProject['backgroundBlurHash']],
 		async ([projectId, blurHash], oldValue) => {
+			const projectValue = toValue(project)
 			if (
-				project === null ||
-				!project.backgroundInformation ||
+				projectValue === null ||
+				!projectValue.backgroundInformation ||
 				backgroundLoading.value
 			) {
 				return
@@ -36,7 +37,7 @@ export function useProjectBackground(project: ShallowReactive<IProject>) {
 				})
 
 				const projectService = new ProjectService()
-				const backgroundPromise = projectService.background(project).then((result) => {
+				const backgroundPromise = projectService.background(projectValue).then((result) => {
 					background.value = result
 				})
 				await Promise.all([blurHashPromise, backgroundPromise])
