@@ -115,7 +115,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, type PropType, ref, watchEffect} from 'vue'
+import {computed, ref, watchEffect} from 'vue'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import Dropdown from '@/components/misc/Dropdown.vue'
@@ -129,12 +129,9 @@ import {useConfigStore} from '@/stores/config'
 import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
 
-const props = defineProps({
-	project: {
-		type: Object as PropType<IProject>,
-		required: true,
-	},
-})
+const props = defineProps<{
+	project: IProject
+}>()
 
 const projectStore = useProjectStore()
 const subscription = ref<ISubscription | null>(null)
