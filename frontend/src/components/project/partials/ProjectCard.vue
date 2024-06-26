@@ -61,13 +61,11 @@ import {useProjectBackground} from './useProjectBackground'
 import {useProjectStore} from '@/stores/projects'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 
-const {
-	project,
-} = defineProps<{
+const props = defineProps<{
 	project: IProject,
 }>()
 
-const {background, blurHashUrl} = useProjectBackground(project)
+const {background, blurHashUrl} = useProjectBackground(() => props.project)
 
 const projectStore = useProjectStore()
 </script>
