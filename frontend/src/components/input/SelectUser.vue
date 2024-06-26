@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, shallowReactive, watchEffect, type PropType} from 'vue'
+import {computed, ref, shallowReactive, watchEffect} from 'vue'
 
 import Multiselect from '@/components/input/Multiselect.vue'
 
@@ -20,14 +20,14 @@ import type {IUser} from '@/modelTypes/IUser'
 import UserService from '@/services/user'
 import {includesById} from '@/helpers/utils'
 
-const props = defineProps({
-	modelValue: {
-		type: Array as PropType<IUser[]>,
-		default: () => [],
-	},
+const props = withDefaults(defineProps<{
+	modelValue: IUser[] | undefined
+}>(), {
+	modelValue: () => [],
 })
+
 const emit = defineEmits<{
-	(e: 'update:modelValue', value: IUser[]): void
+	'update:modelValue': [value: IUser[]]
 }>()
 
 const users = ref<IUser[]>([])
