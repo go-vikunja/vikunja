@@ -67,11 +67,10 @@ import {useTaskStore} from '@/stores/tasks'
 
 import {useAutoHeightTextarea} from '@/composables/useAutoHeightTextarea'
 
-const props = defineProps({
-	defaultPosition: {
-		type: Number,
-		required: false,
-	},
+const props = withDefaults(defineProps<{
+	defaultPosition?: number,
+}>(), {
+	defaultPosition: undefined,
 })
 
 const emit = defineEmits(['taskAdded'])
