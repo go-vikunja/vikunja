@@ -113,17 +113,16 @@ import {formatDateSince, formatISO, formatDateLong} from '@/helpers/time/formatD
 import {useProjectStore} from '@/stores/projects'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 
-const {
-	task,
-	showProject = false,
-} = defineProps<{
+const props = withDefaults(defineProps<{
 	task: ITask,
 	showProject?: boolean,
-}>()
+}>(), {
+	showProject: false,
+})
 
 const projectStore = useProjectStore()
 
-const project = computed(() => projectStore.projects[task.projectId])
+const project = computed(() => projectStore.projects[props.task.projectId])
 </script>
 
 <style lang="scss" scoped>
