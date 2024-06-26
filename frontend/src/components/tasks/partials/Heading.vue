@@ -49,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, type PropType} from 'vue'
+import {ref, computed} from 'vue'
 import {useRouter} from 'vue-router'
 
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -63,15 +63,11 @@ import {useTaskStore} from '@/stores/tasks'
 import type {ITask} from '@/modelTypes/ITask'
 import {getHexColor, getTaskIdentifier} from '@/models/task'
 
-const props = defineProps({
-	task: {
-		type: Object as PropType<ITask>,
-		required: true,
-	},
-	canWrite: {
-		type: Boolean,
-		default: false,
-	},
+const props = withDefaults(defineProps<{
+	task: ITask,
+	canWrite: boolean | undefined,
+}>(), {
+	canWrite: false,
 })
 
 const emit = defineEmits(['update:task'])
