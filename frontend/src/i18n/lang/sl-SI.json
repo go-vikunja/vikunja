@@ -400,9 +400,9 @@
       "titleRequired": "Prosim navedite naslov.",
       "delete": "Izbriši pogled",
       "deleteText": "Ali ste prepričani, da želite odstraniti ta pogled? Ne bo ga več mogoče uporabljati za ogled nalog v tem projektu. To dejanje ne bo izbrisalo nobenih opravil. Tega ni mogoče razveljaviti!",
-      "deleteSuccess": "The view was deleted successfully.",
+      "deleteSuccess": "Pogled je bil uspešno izbrisan.",
       "onlyAdminsCanEdit": "Samo skrbniki projekta lahko urejajo poglede.",
-      "updateSuccess": "The view was updated successfully."
+      "updateSuccess": "Pogled je bil uspešno posodobljen."
     }
   },
   "filters": {

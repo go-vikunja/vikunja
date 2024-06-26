@@ -13,8 +13,8 @@
     }
   },
   "demo": {
-    "title": "Це випробувальний зразок. Не використовуйте для справжніх відомостей!",
-    "everythingWillBeDeleted": "Все буде стерто!",
+    "title": "Це зразок для показу. Не використовуйте для справжніх відомостей!",
+    "everythingWillBeDeleted": "Все стирається постійно!",
     "accountWillBeDeleted": "Обліковку буде стерто, разом з усіма справами, завданнями та вкладеннями, які Ви могли створити."
   },
   "404": {
@@ -129,11 +129,11 @@
       },
       "avatar": {
         "title": "Світлина",
-        "initials": "Initials",
-        "gravatar": "Gravatar",
-        "marble": "Marble",
-        "upload": "Upload",
-        "uploadAvatar": "Upload Avatar",
+        "initials": "Ініціали",
+        "gravatar": "Сіра людинка",
+        "marble": "Мармур",
+        "upload": "Додати",
+        "uploadAvatar": "Вибрати/Додати",
         "statusUpdateSuccess": "Стан світлини успішно оновлено!",
         "setSuccess": "Світлину успішно встановлено!"
       },
@@ -800,7 +800,7 @@
       "labels": "Позначки",
       "percentDone": "Поступ",
       "priority": "Першість",
-      "relatedTasks": "Related Tasks",
+      "relatedTasks": "Супутні завдання",
       "reminders": "Reminders",
       "repeat": "Repeat",
       "startDate": "День початку",
@@ -887,10 +887,10 @@
       "doNow": "ЗРОБИТИ ЗАРАЗ"
     },
     "relation": {
-      "add": "Додати відголос для нового завдання",
-      "new": "Відголос для нового завдання",
+      "add": "Додати нову прив'язку",
+      "new": "Нова прив'язка завдання",
       "searchPlaceholder": "Type search for a task to add as related…",
-      "createPlaceholder": "Add this as related task",
+      "createPlaceholder": "Додайте це як супутнє завдання",
       "differentProject": "This task belongs to a different project.",
       "noneYet": "No task relations yet.",
       "delete": "Delete Task Relation",
@@ -899,8 +899,8 @@
       "taskRequired": "Please select a task or enter a new task title.",
       "kinds": {
         "subtask": "Підзавдання | Підзавдання",
-        "parenttask": "Parent Task | Parent Tasks",
-        "related": "Related Task | Related Tasks",
+        "parenttask": "Головне завдання | Головні завдання",
+        "related": "Пов'язане завдання | Пов'язані завдання",
         "duplicateof": "Duplicate Of | Duplicates Of",
         "duplicates": "Duplicates | Duplicates",
         "blocking": "Blocking | Blocking",
