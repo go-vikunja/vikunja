@@ -9,18 +9,12 @@
 </template>
 
 <script lang="ts" setup>
-import type {PropType} from 'vue'
-type Variants = 'default' | 'small'
-
-defineProps({
-	isDone: {
-		type: Boolean,
-		default: false,
-	},
-	variant: {
-		type: String as PropType<Variants>,
-		default: 'default',
-	},
+withDefaults(defineProps<{
+	isDone?: boolean
+	variant?: 'default' | 'small'
+}>(), {
+	isDone: false,
+	variant: 'default',
 })
 </script>
 
