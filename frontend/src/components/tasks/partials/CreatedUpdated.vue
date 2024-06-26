@@ -14,7 +14,6 @@
 		</time>
 		<template v-if="+new Date(task.created) !== +new Date(task.updated)">
 			<br>
-			<!-- Computed properties to show the actual date every time it gets updated -->
 			<time
 				v-tooltip="updatedFormatted"
 				:datetime="formatISO(task.updated)"
@@ -45,24 +44,20 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, toRefs, type PropType} from 'vue'
+import {computed} from 'vue'
 import type {ITask} from '@/modelTypes/ITask'
 import {formatISO, formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
 import {getDisplayName} from '@/models/user'
 
-const props = defineProps({
-	task: {
-		type: Object as PropType<ITask>,
-		required: true,
-	},
-})
+const props = defineProps<{
+	task: ITask,
+}>()
 
-const {task} = toRefs(props)
-
-const updatedSince = computed(() => formatDateSince(task.value.updated))
-const updatedFormatted = computed(() => formatDateLong(task.value.updated))
-const doneSince = computed(() => formatDateSince(task.value.doneAt))
-const doneFormatted = computed(() => formatDateLong(task.value.doneAt))
+// Computed properties to show the actual date every time it gets updated
+const updatedSince = computed(() => formatDateSince(props.task.updated))
+const updatedFormatted = computed(() => formatDateLong(props.task.updated))
+const doneSince = computed(() => formatDateSince(props.task.doneAt))
+const doneFormatted = computed(() => formatDateLong(props.task.doneAt))
 </script>
 
 <style lang="scss" scoped>
