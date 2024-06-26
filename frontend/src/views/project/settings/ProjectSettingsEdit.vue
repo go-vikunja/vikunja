@@ -112,14 +112,14 @@ const projectStore = useProjectStore()
 
 const {t} = useI18n({useScope: 'global'})
 
-const {project, save: saveProject, isLoading} = useProject(props.projectId)
+const {project, save: saveProject, isLoading} = useProject(() => props.projectId)
 
 const parentProject = ref<IProject | null>(null)
 watch(
 	() => project.parentProjectId,
-	projectId => {
-		if (project.parentProjectId) {
-			parentProject.value = projectStore.projects[project.parentProjectId]
+	parentProjectId => {
+		if (parentProjectId) {
+			parentProject.value = projectStore.projects[parentProjectId]
 		}
 	},
 	{immediate: true},
