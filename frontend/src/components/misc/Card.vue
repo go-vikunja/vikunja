@@ -44,40 +44,26 @@
 </template>
 
 <script setup lang="ts">
-import type {PropType} from 'vue'
 import type {IconProp} from '@fortawesome/fontawesome-svg-core'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 
-defineProps({
-	title: {
-		type: String,
-		default: '',
-	},
-	padding: {
-		type: Boolean,
-		default: true,
-	},
-	hasClose: {
-		type: Boolean,
-		default: false,
-	},
-	closeIcon: {
-		type: String as PropType<IconProp>,
-		default: 'times',
-	},
-	shadow: {
-		type: Boolean,
-		default: true,
-	},
-	hasContent: {
-		type: Boolean,
-		default: true,
-	},
-	loading: {
-		type: Boolean,
-		default: false,
-	},
+withDefaults(defineProps<{
+	title?: string
+	padding?: boolean
+	hasClose?: boolean
+	closeIcon?: IconProp
+	shadow?: boolean
+	hasContent?: boolean
+	loading?: boolean
+}>(), {
+	title: '',
+	padding: true,
+	hasClose: false,
+	closeIcon: 'times',
+	shadow: true,
+	hasContent: true,
+	loading: false,
 })
 
 defineEmits(['close'])
