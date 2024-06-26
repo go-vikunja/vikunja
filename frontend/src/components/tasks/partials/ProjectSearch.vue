@@ -24,7 +24,6 @@
 
 <script lang="ts" setup>
 import {reactive, ref, watch} from 'vue'
-import type {PropType} from 'vue'
 
 import type {IProject} from '@/modelTypes/IProject'
 
@@ -35,16 +34,13 @@ import ProjectModel from '@/models/project'
 
 import Multiselect from '@/components/input/Multiselect.vue'
 
-const props = defineProps({
-	modelValue: {
-		type: Object as PropType<IProject>,
-		required: false,
-	},
-	savedFiltersOnly: {
-		type: Boolean,
-		default: false,
-	},
+const props = withDefaults(defineProps<{
+	modelValue: IProject | null
+	savedFiltersOnly?: boolean
+}>(), {
+	savedFiltersOnly: false,
 })
+
 const emit = defineEmits(['update:modelValue'])
 
 const project: IProject = reactive(new ProjectModel())
