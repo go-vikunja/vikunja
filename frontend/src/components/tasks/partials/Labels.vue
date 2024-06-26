@@ -9,17 +9,13 @@
 </template>
 
 <script setup lang="ts">
-import type {PropType} from 'vue'
 import type {ILabel} from '@/modelTypes/ILabel'
 
 import XLabel from '@/components/tasks/partials/Label.vue'
 
-defineProps({
-	labels: {
-		type: Array as PropType<ILabel[]>,
-		required: true,
-	},
-})
+defineProps<{
+	labels: ILabel[],
+}>()
 </script>
 
 <style lang="scss" scoped>
