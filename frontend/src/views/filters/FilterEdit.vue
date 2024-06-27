@@ -76,9 +76,7 @@ import {useSavedFilter} from '@/services/savedFilter'
 
 import type {IProject} from '@/modelTypes/IProject'
 
-const {
-	projectId,
-} = defineProps<{
+const props = defineProps<{
 	projectId: IProject['id'],
 }>()
 
@@ -89,5 +87,5 @@ const {
 	filterService,
 	titleValid,
 	validateTitleField,
-} = useSavedFilter(projectId)
+} = useSavedFilter(() => props.projectId)
 </script>
