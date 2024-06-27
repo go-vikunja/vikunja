@@ -17,11 +17,9 @@
 import type {IProject} from '@/modelTypes/IProject'
 import {useSavedFilter} from '@/services/savedFilter'
 
-const {
-	projectId,
-} = defineProps<{
+const props = defineProps<{
 	projectId: IProject['id'],
 }>()
 
-const {deleteFilter} = useSavedFilter(projectId)
+const {deleteFilter} = useSavedFilter(() => props.projectId)
 </script>
