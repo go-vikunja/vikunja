@@ -16,9 +16,7 @@ import Message from '@/components/misc/Message.vue'
 import draggable from 'zhyswan-vuedraggable'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 
-const {
-	projectId,
-} = defineProps<{
+const props = defineProps<{
 	projectId: number
 }>()
 
@@ -27,7 +25,7 @@ const {t} = useI18n()
 
 const views = ref<IProjectView[]>([])
 watch(
-	projectStore.projects[projectId]?.views,
+	projectStore.projects[props.projectId]?.views,
 	allViews => {
 		if (!allViews) {
 			views.value = []
@@ -48,10 +46,10 @@ const viewToEdit = ref<IProjectView | null>(null)
 
 const isAdmin = ref<boolean>(false)
 watch(
-	() => projectId,
+	() => props.projectId,
 	async () => {
 		const projectService = new ProjectService()
-		const project = await projectService.get(new ProjectModel({id: projectId}))
+		const project = await projectService.get(new ProjectModel({id: props.projectId}))
 		isAdmin.value = project.maxRight === RIGHTS.ADMIN
 	},
 	{immediate: true},
@@ -71,7 +69,7 @@ async function createView() {
 		newView.value.bucketConfigurationMode = newView.value.viewKind === 'kanban'
 			? newView.value.bucketConfigurationMode
 			: 'none'
-		newView.value.projectId = projectId
+		newView.value.projectId = props.projectId
 
 		const result: IProjectView = await projectViewService.value.create(newView.value)
 		success({message: t('project.views.createSuccess')})
@@ -90,10 +88,10 @@ async function deleteView() {
 
 	await projectViewService.value.delete(new ProjectViewModel({
 		id: viewIdToDelete.value,
-		projectId,
+		projectId: props.projectId,
 	}))
 
-	projectStore.removeProjectView(projectId, viewIdToDelete.value)
+	projectStore.removeProjectView(props.projectId, viewIdToDelete.value)
 
 	showDeleteModal.value = false
 }
