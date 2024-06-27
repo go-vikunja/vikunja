@@ -16,13 +16,13 @@
 				class="switch-view"
 			>
 				<BaseButton
-					v-for="v in views"
-					:key="v.id"
+					v-for="view in views"
+					:key="view.id"
 					class="switch-view-button"
-					:class="{'is-active': v.id === viewId}"
-					:to="{ name: 'project.view', params: { projectId, viewId: v.id } }"
+					:class="{'is-active': view.id === viewId}"
+					:to="{ name: 'project.view', params: { projectId, viewId: view.id } }"
 				>
-					{{ getViewTitle(v) }}
+					{{ getViewTitle(view) }}
 				</BaseButton>
 			</div>
 			<slot name="header" />
@@ -62,10 +62,7 @@ import type {IProject} from '@/modelTypes/IProject'
 import type {IProjectView} from '@/modelTypes/IProjectView'
 import {useI18n} from 'vue-i18n'
 
-const {
-	projectId,
-	viewId,
-} = defineProps<{
+const props = defineProps<{
 	projectId: IProject['id'],
 	viewId: IProjectView['id'],
 }>()
@@ -88,7 +85,7 @@ const currentProject = computed<IProject>(() => {
 })
 useTitle(() => currentProject.value?.id ? getProjectTitle(currentProject.value) : '')
 
-const views = computed(() => projectStore.projects[projectId]?.views)
+const views = computed(() => projectStore.projects[props.projectId]?.views)
 
 // watchEffect would be called every time the prop would get a value assigned, even if that value was the same as before.
 // This resulted in loading and setting the project multiple times, even when navigating away from it.
@@ -96,7 +93,7 @@ const views = computed(() => projectStore.projects[projectId]?.views)
 // project background and then navigating to home. It also highlighted the project in the menu and didn't allow changing any
 // of it, most likely due to the rights not being properly populated.
 watch(
-	() => projectId,
+	() => props.projectId,
 	// loadProject
 	async (projectIdToLoad: number) => {
 		const projectData = {id: projectIdToLoad}
@@ -112,7 +109,7 @@ watch(
 			)
 			&& typeof currentProject.value !== 'undefined' && currentProject.value.maxRight !== null
 		) {
-			loadedProjectId.value = projectId
+			loadedProjectId.value = projectIdToLoad
 			return
 		}
 
@@ -131,7 +128,7 @@ watch(
 			const loadedProject = await projectService.value.get(project)
 			baseStore.handleSetCurrentProject({project: loadedProject})
 		} finally {
-			loadedProjectId.value = projectId
+			loadedProjectId.value = projectIdToLoad
 		}
 	},
 	{immediate: true},
