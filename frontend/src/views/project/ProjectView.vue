@@ -11,10 +11,7 @@ import ProjectKanban from '@/components/project/views/ProjectKanban.vue'
 import {useAuthStore} from '@/stores/auth'
 import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/modelTypes/IProjectView'
 
-const {
-	projectId,
-	viewId,
-} = defineProps<{
+const props = defineProps<{
 	projectId: number,
 	viewId: number,
 }>()
@@ -23,32 +20,32 @@ const router = useRouter()
 const projectStore = useProjectStore()
 const authStore = useAuthStore()
 
-const currentProject = computed(() => projectStore.projects[projectId])
+const currentProject = computed(() => projectStore.projects[props.projectId])
 
 const currentView = computed(() => {
-	return currentProject.value?.views.find(v => v.id === viewId)
+	return currentProject.value?.views.find(v => v.id === props.viewId)
 })
 
 function redirectToDefaultViewIfNecessary() {
-	if (viewId === 0 || !projectStore.projects[projectId]?.views.find(v => v.id === viewId)) {
+	if (props.viewId === 0 || !projectStore.projects[props.projectId]?.views.find(v => v.id === props.viewId)) {
 		// Ideally, we would do that in the router redirect, but the projects (and therefore, the views) 
 		// are not always loaded then.
 
 		let view
 		if (authStore.settings.frontendSettings.defaultView !== DEFAULT_PROJECT_VIEW_SETTINGS.FIRST) {
-			view = projectStore.projects[projectId]?.views.find(v => v.viewKind === authStore.settings.frontendSettings.defaultView)
+			view = projectStore.projects[props.projectId]?.views.find(v => v.viewKind === authStore.settings.frontendSettings.defaultView)
 		}
 
 		// Use the first view as fallback if the default view is not available
-		if (view === undefined && projectStore.projects[projectId]?.views?.length > 0) {
-			view = projectStore.projects[projectId]?.views[0]
+		if (view === undefined && projectStore.projects[props.projectId]?.views?.length > 0) {
+			view = projectStore.projects[props.projectId]?.views[0]
 		}
 
 		if (view) {
 			router.replace({
 				name: 'project.view',
 				params: {
-					projectId,
+					projectId: props.projectId,
 					viewId: view.id,
 				},
 			})
@@ -57,20 +54,20 @@ function redirectToDefaultViewIfNecessary() {
 }
 
 watch(
-	() => viewId,
+	() => props.viewId,
 	redirectToDefaultViewIfNecessary,
 	{immediate: true},
 )
 
 watch(
-	() => projectStore.projects[projectId],
+	() => projectStore.projects[props.projectId],
 	redirectToDefaultViewIfNecessary,
 )
 
 // using a watcher instead of beforeEnter because beforeEnter is not called when only the viewId changes
 watch(
-	() => [projectId, viewId],
-	() => saveProjectView(projectId, viewId),
+	() => [props.projectId, props.viewId],
+	() => saveProjectView(props.projectId, props.viewId),
 	{immediate: true},
 )
 
