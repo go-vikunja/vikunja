@@ -120,10 +120,7 @@ import type {IProjectView} from '@/modelTypes/IProjectView'
 import TaskPositionService from '@/services/taskPosition'
 import TaskPositionModel from '@/models/taskPosition'
 
-const {
-	projectId,
-	viewId,
-} = defineProps<{
+const props = defineProps<{
 	projectId: IProject['id'],
 	viewId: IProjectView['id'],
 }>()
@@ -144,7 +141,7 @@ const {
 	loadTasks,
 	params,
 	sortByParam,
-} = useTaskList(() => projectId, () => viewId, {position: 'asc'})
+} = useTaskList(() => props.projectId, () => props.viewId, {position: 'asc'})
 
 const taskPositionService = ref(new TaskPositionService())
 
@@ -153,7 +150,7 @@ watch(
 	allTasks,
 	() => {
 		tasks.value = [...allTasks.value]
-		if (projectId < 0) {
+		if (props.projectId < 0) {
 			return
 		}
 		const tasksById = {}
@@ -242,7 +239,7 @@ async function saveTaskPosition(e) {
 
 	await taskPositionService.value.update(new TaskPositionModel({
 		position,
-		projectViewId: viewId,
+		projectViewId: props.viewId,
 		taskId: task.id,
 	}))
 	tasks.value[e.newIndex] = {
