@@ -168,7 +168,7 @@
     "start-server-and-test": "2.0.4",
     "typescript": "5.5.2",
     "unplugin-inject-preload": "2.0.4",
-    "vite": "5.3.1",
+    "vite": "5.3.2",
     "vite-plugin-pwa": "0.20.0",
     "vite-plugin-sentry": "1.4.0",
     "vite-svg-loader": "5.1.0",
