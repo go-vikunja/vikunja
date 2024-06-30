@@ -1,7 +1,7 @@
 service:
   # This token is used to verify issued JWT tokens.
-  # Default is a random token which will be generated at each startup of vikunja.
-  # (This means all already issued tokens will be invalid once you restart vikunja)
+  # Default is a random token which will be generated at each startup of Vikunja.
+  # (This means all already issued tokens will be invalid once you restart Vikunja)
   JWTSecret: "<jwt-secret>"
   # The duration of the issued JWT tokens in seconds.
   # The default is 259200 seconds (3 Days).
@@ -45,7 +45,7 @@ service:
   # each request made to this endpoint needs to provide an `Authorization: <token>` header with the token from below. <br/>
   # **You should never use this unless you know exactly what you're doing**
   testingtoken: ''
-  # If enabled, vikunja will send an email to everyone who is either assigned to a task or created it when a task reminder
+  # If enabled, Vikunja will send an email to everyone who is either assigned to a task or created it when a task reminder
   # is due.
   enableemailreminders: true
   # If true, will allow users to request the complete deletion of their account. When using external authentication methods
@@ -164,7 +164,7 @@ mailer:
   queuelength: 100
   # The timeout in seconds after which the current open connection to the mailserver will be closed.
   queuetimeout: 30
-  # By default, vikunja will try to connect with starttls, use this option to force it to use ssl.
+  # By default, Vikunja will try to connect with starttls, use this option to force it to use ssl.
   forcessl: false
 
 log:
@@ -223,7 +223,7 @@ migration:
     # Wheter to enable the todoist migrator or not
     enable: false
     # The client id, required for making requests to the todoist api
-    # You need to register your vikunja instance at https://developer.todoist.com/appconsole.html to get this
+    # You need to register your Vikunja instance at https://developer.todoist.com/appconsole.html to get this
     clientid:
     # The client secret, also required for making requests to the todoist api
     clientsecret:
@@ -231,19 +231,19 @@ migration:
     # This needs to match the url you entered when registering your Vikunja instance at todoist.
     # This is usually the frontend url where the frontend then makes a request to /migration/todoist/migrate
     # with the code obtained from the todoist api.
-    # Note that the vikunja frontend expects this to be /migrate/todoist
+    # Note that the Vikunja frontend expects this to be /migrate/todoist
     redirecturl: <frontend url>/migrate/todoist
   trello:
     # Whether to enable the trello migrator or not
     enable: false
     # The client id, required for making requests to the trello api
-    # You need to register your vikunja instance at https://trello.com/app-key (log in before you visit that link) to get this
+    # You need to register your Vikunja instance at https://trello.com/app-key (log in before you visit that link) to get this
     key:
     # The url where clients are redirected after they authorized Vikunja to access their trello cards.
     # This needs to match the url you entered when registering your Vikunja instance at trello.
     # This is usually the frontend url where the frontend then makes a request to /migration/trello/migrate
     # with the code obtained from the trello api.
-    # Note that the vikunja frontend expects this to end on /migrate/trello.
+    # Note that the Vikunja frontend expects this to end on /migrate/trello.
     redirecturl: <frontend url>/migrate/trello
   microsofttodo:
     # Wheter to enable the microsoft todo migrator or not
@@ -258,7 +258,7 @@ migration:
     # This needs to match the url you entered when registering your Vikunja instance at microsoft.
     # This is usually the frontend url where the frontend then makes a request to /migration/microsoft-todo/migrate
     # with the code obtained from the microsoft graph api.
-    # Note that the vikunja frontend expects this to be /migrate/microsoft-todo
+    # Note that the Vikunja frontend expects this to be /migrate/microsoft-todo
     redirecturl: <frontend url>/migrate/microsoft-todo
 
 avatar:
@@ -306,7 +306,7 @@ auth:
   # The provider needs to support the `openid`, `profile` and `email` scopes.<br/>
   # **Note:** Some openid providers (like Gitlab) only make the email of the user available through OpenID if they have set it to be publicly visible.
   # If the email is not public in those cases, authenticating will fail.
-  # +**Note 2:** The frontend expects the third party to redirect the user <frontend-url>/auth/openid/<auth key> after authentication. Please make sure to configure the redirect url in your third party auth service accordingly if you're using the default vikunja frontend.    
+  # +**Note 2:** The frontend expects the third party to redirect the user <frontend-url>/auth/openid/<auth key> after authentication. Please make sure to configure the redirect url in your third party auth service accordingly if you're using the default Vikunja frontend.    
   # The frontend will automatically provide the API with the redirect url, composed from the current url where it's hosted.
   # If you want to use the desktop client with OpenID, make sure to allow redirects to `127.0.0.1`.
   # Take a look at the [default config file](https://kolaente.dev/vikunja/vikunja/src/branch/main/config.yml.sample) for more information about how to configure openid authentication.
@@ -327,7 +327,7 @@ auth:
         # The client secret used to authenticate Vikunja at the OpenID Connect provider.
         clientsecret:
         # The scope necessary to use oidc.
-        # If you want to use the Feature to create and assign to vikunja teams via oidc, you have to add the custom "vikunja_scope" and check [openid.md](https://vikunja.io/docs/openid/).
+        # If you want to use the Feature to create and assign to Vikunja teams via oidc, you have to add the custom "vikunja_scope" and check [openid.md](https://vikunja.io/docs/openid/).
         # e.g. scope: openid email profile vikunja_scope
         scope: openid email profile
 
