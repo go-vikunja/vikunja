@@ -13,7 +13,7 @@
     }
   },
   "demo": {
-    "title": "Це зразок для показу. Не використовуйте для справжніх відомостей!",
+    "title": "Цей зразок для показу та випробувань. Не використовуйте для справжніх відомостей!",
     "everythingWillBeDeleted": "Все стирається постійно!",
     "accountWillBeDeleted": "Обліковку буде стерто, разом з усіма справами, завданнями та вкладеннями, які Ви могли створити."
   },
@@ -45,7 +45,7 @@
       "resetPasswordAction": "Надішліть мені посиланку для скидання пароля",
       "resetPasswordSuccess": "Перевірте е-скриньку! Ви повинні мати лист з вказівками як відновити пароль.",
       "passwordsDontMatch": "Паролі не збігаються",
-      "confirmEmailSuccess": "Ви успішно підтвердили свою е-скриньку! Тепер можете увійти в систему.",
+      "confirmEmailSuccess": "Е-скриньку успішно підтверджено! Тепер можете увійти.",
       "totpTitle": "Код дворівневої перевірки",
       "totpPlaceholder": "напр. 123456",
       "login": "Увійти",
@@ -66,7 +66,7 @@
       "hidePassword": "Сховати пароль",
       "noAccountYet": "Ще немає обліковки?",
       "alreadyHaveAnAccount": "Маєте обліковку?",
-      "remember": "Залишатися в системі",
+      "remember": "Запам'ятати та не виходити",
       "registrationDisabled": "Створення обліковок вимкнено."
     },
     "settings": {
@@ -77,10 +77,10 @@
       "currentPassword": "Чинний пароль",
       "currentPasswordPlaceholder": "Ваш чинний пароль",
       "passwordsDontMatch": "Новий пароль та його підтвердження не збігаються.",
-      "passwordUpdateSuccess": "Пароль успішно оновлений.",
+      "passwordUpdateSuccess": "Пароль успішно оновлено.",
       "updateEmailTitle": "Оновіть Вашу е-скриньку",
       "updateEmailNew": "Нова е-скринька",
-      "updateEmailSuccess": "Вашу е-скриньку успішно оновлено. Вам надіслано посиланку для підтвердження.",
+      "updateEmailSuccess": "Е-скриньку успішно оновлено. Вам надіслано посиланку для підтвердження.",
       "general": {
         "title": "Загальні відомості",
         "name": "Ім'я",
@@ -109,17 +109,17 @@
         "scanQR": "Крім того, ви можете сканувати цей QR-код:",
         "passcode": "Пароль код",
         "passcodePlaceholder": "Код, який створено Вашим прикладком",
-        "setupSuccess": "Ви успішно встановили дворівневу перевірку!",
+        "setupSuccess": "Дворівневу перевірку успішно встановлено!",
         "enterPassword": "Будь ласка, введіть ваш пароль",
         "disable": "Вимкнути дворівневу перевірку",
-        "confirmSuccess": "You've successfully confirmed your totp setup and can use it from now on!",
-        "disableSuccess": "Дворівнева перевірка вимкнена."
+        "confirmSuccess": "Налагодження totp успішне. Можете використовувати його відтепер!",
+        "disableSuccess": "Дворівневу перевірку вимкнено."
       },
       "caldav": {
         "title": "CalDAV",
         "howTo": "You can connect Vikunja to CalDAV clients to view and manage all tasks from different clients. Enter this url into your client:",
         "more": "Дізнатися більше про CalDAV у Vikunja",
-        "tokens": "CalDAV Tokens",
+        "tokens": "CalDAV Ключі",
         "tokensHowTo": "You can use a CalDAV token to use instead of a password to log in the above endpoint.",
         "createToken": "Створити токен",
         "tokenCreated": "Ось ваш токен: {token}",
@@ -138,7 +138,7 @@
         "setSuccess": "Світлину успішно встановлено!"
       },
       "quickAddMagic": {
-        "title": "Quick Add Magic Mode",
+        "title": "Скоре Чарівне Додавання Режим",
         "disabled": "Вимкнено",
         "todoist": "Todoist",
         "vikunja": "Vikunja"
@@ -155,7 +155,7 @@
       "apiTokens": {
         "title": "Ключі API",
         "general": "API ключі дозволяють використовувати Vikunja's API без облікових відомостей.",
-        "apiDocs": "Check out the api docs",
+        "apiDocs": "Перегляньте довідку про api",
         "createAToken": "Створити ключ",
         "createToken": "Створити ключ",
         "30d": "30 днів",
@@ -165,7 +165,7 @@
         "titleRequired": "Слід вказати заголовок",
         "expired": "Цей ключ закінчився {ago}.",
         "tokenCreatedSuccess": "Ось Ваш новий Api токен: {token}",
-        "tokenCreatedNotSeeAgain": "Store it in a secure location, you won't see it again!",
+        "tokenCreatedNotSeeAgain": "Зберігайте його в безпечному розташуванні, ви не побачите його знову!",
         "selectAll": "Обрати все",
         "delete": {
           "header": "Видалити ключ",
@@ -188,7 +188,7 @@
       "confirm": "Стерти обліковку",
       "requestSuccess": "Запит успішний. Ви одержите лист з подальшими вказівками на е-скриньку.",
       "passwordRequired": "Будь ласка, введіть Ваш пароль.",
-      "confirmSuccess": "Стирання обліковки успішно підтверджено. Ваша обліковка буде стерта впродовж 3-х днів.",
+      "confirmSuccess": "Стирання обліковки успішно підтверджено. Вашу обліковку буде стерта впродовж 3-х днів.",
       "scheduled": "Ми видалимо Вашу обліковку Vikunja в {date} ({dateSince}).",
       "scheduledCancel": "Щоб спинити стирання Вашої обліковки, натисніть тут.",
       "scheduledCancelText": "Щоб спинити стирання Вашої обліковки, будь ласка, введіть Ваш пароль нижче:",
@@ -201,7 +201,7 @@
       "description": "Можете запитати подвійку усіх Ваших відомостей з Vikunja. Сюди входять Справи, Завдання і все, що пов'язано з ними. Ви зможете додати ці відомості в будь-який примірник Vikunja, використавши можливості переміщення.",
       "descriptionPasswordRequired": "Будь ласка, введіть свій пароль, щоб продовжити:",
       "request": "Запит подвійки моїх відомостей Vikunja",
-      "success": "Запит щодо подвійки Ваших відомостей з Vikunja подано успішно. Ми надішлемо Вам лист на е-скриньку, як тільки вони будуть готові для витягування.",
+      "success": "Запит щодо подвійки Ваших відомостей з Vikunja подано успішно. Ми надішлемо Вам лист на е-скриньку, як тільки відомості будуть готові для витягування.",
       "downloadTitle": "Витягти Ваші відомості Vikunja"
     }
   },
@@ -231,7 +231,7 @@
       "unarchive": "Поновити цю справу",
       "unarchiveText": "Ви зможете створювати завдання або змінювати його.",
       "archiveText": "Неможливо змінювати цю справу або створювати завдання, коли вона у сховищі.",
-      "success": "Справу успішно сховковано."
+      "success": "Справу успішно схововано."
     },
     "background": {
       "title": "Встановити тло справи",
@@ -247,17 +247,17 @@
       "title": "Стерти \"{project}\"",
       "header": "Стерти цю справу",
       "text1": "Дійсно хочете видалити цю справу, та усі її завдання?",
-      "text2": "Ця дія містить всі завдання і є НЕЗВОРОТНЬОЮ!",
+      "text2": "Це містить всі завдання і дія НЕЗВОРОТНА!",
       "success": "Справу успішно стерто.",
       "tasksToDelete": "This will irrevocably remove approx. {count} tasks.",
       "tasksAndChildProjectsToDelete": "This will irrevocably remove approx. {tasks} tasks and {projects} projects.",
-      "noTasksToDelete": "This project does not contain any tasks, it should be safe to delete."
+      "noTasksToDelete": "Справа не містить завдань та є безпечною для стирання."
     },
     "duplicate": {
       "title": "Подвоїти цю справу",
       "label": "Подвоїти",
       "text": "Оберіть батьківську справу, яка має складатися з подвоєних справ:",
-      "success": "Цю справу успішно подвоєно."
+      "success": "Справу успішно подвоєно."
     },
     "edit": {
       "header": "Змінити цю справу",
@@ -282,14 +282,14 @@
         "create": "Створити посиланку для поширення",
         "name": "Name (optional)",
         "namePlaceholder": "напр. Lorem Ipsum",
-        "nameExplanation": "All actions done by this link share will show up with the name.",
-        "password": "Password (optional)",
+        "nameExplanation": "Всі дії, виконані цим посиланням будуть показані з іменем.",
+        "password": "Пароль (необов'язково)",
         "passwordExplanation": "При вході, користувачеві слід ввести цей пароль.",
         "noName": "Не вказано ім'я",
         "remove": "Стерти поширену посиланку",
-        "removeText": "Ви дійсно хочете видалити цей розділ? Він більше не зможе отримати доступ до справи з цією часткою. Це не можна скасувати!",
+        "removeText": "Дійсно хочете видалити цей розділ? Більше неможливо буде одержати доступ за цією посиланкою. Дія незворотна!",
         "createSuccess": "Поширення посилання успішно створено.",
-        "deleteSuccess": "Запрошення через посилання успішно видалено",
+        "deleteSuccess": "Запрошення через посиланку успішно видалено",
         "view": "Перегляд",
         "sharedBy": "Доступ через {0}"
       },
@@ -300,8 +300,8 @@
         "you": "Ви",
         "notShared": "Not shared with any {type} yet.",
         "removeHeader": "Стерти {type} з {sharable}",
-        "removeText": "Are you sure you want to remove this {sharable} from the {type}? This cannot be undone!",
-        "removeSuccess": "The {sharable} was successfully removed from the {type}.",
+        "removeText": "Дійсно стерти це {sharable} з {type}? Дія незворотна!",
+        "removeSuccess": "{sharable} успішно стерто з {type}.",
         "addedSuccess": "{type} успішно додано.",
         "updatedSuccess": "{type} успішно додано."
       },
@@ -361,8 +361,8 @@
       "deleteHeaderBucket": "Стерти стрічку",
       "deleteBucketText1": "Дійсно стерти цю стрічку?",
       "deleteBucketText2": "Завдання не зітруться, але перемістяться до основної стрічки.",
-      "deleteBucketSuccess": "Стрічку стерто успішно.",
-      "bucketTitleSavedSuccess": "Назву стрічки збережено успішно.",
+      "deleteBucketSuccess": "Стрічку успішно стерто.",
+      "bucketTitleSavedSuccess": "Назву стрічки успішно збережено.",
       "bucketLimitSavedSuccess": "Межу стрічки успішно збережено.",
       "collapse": "Згорнути стрічку"
     },
@@ -391,15 +391,15 @@
       "title": "Заголовок",
       "actions": "Дії",
       "kind": "Вид",
-      "bucketConfigMode": "Bucket configuration mode",
+      "bucketConfigMode": "Налагодження стрічок",
       "bucketConfig": "Налагодження стрічок",
       "bucketConfigManual": "Вручну",
       "filter": "Вибірка",
       "create": "Створити представлення",
-      "createSuccess": "The view was created successfully.",
+      "createSuccess": "Перегляд успішно створено.",
       "titleRequired": "Будь ласка, напишіть заголовок.",
       "delete": "Стерти це представлення",
-      "deleteText": "Are you sure you want to remove this view? It will no longer be possible to use it to view tasks in this project. This action won't delete any tasks. This cannot be undone!",
+      "deleteText": "Дійсно бажаєте видалити цей вид? Це буде більше не можливо використовувати його для перегляду завдань у цій справі. Ця дія не видаляє будь-які завдання. Ця дія незворотна!",
       "deleteSuccess": "Перегляд успішно стерто.",
       "onlyAdminsCanEdit": "Лише адміністратори справи можуть змінювати перегляди.",
       "updateSuccess": "Перегляд успішно оновлено."
@@ -413,17 +413,17 @@
       "title": "Заголовок",
       "titlePlaceholder": "Заголовок збереженої вибірки введіть тут…",
       "description": "Опис",
-      "descriptionPlaceholder": "Add a description for this filter here, hit '/' for more options…",
+      "descriptionPlaceholder": "Введіть опис для вибірки, натисніть '/' для додаткових можливостей…",
       "includeNulls": "Включати задачі, які не мають набору значень",
-      "requireAll": "Require all filters to be true for a task to show up",
+      "requireAll": "Вимагати щоб всі вибірки були правдивими для завдань, які показуватимуться",
       "showDoneTasks": "Показати завершені завдання",
       "sortAlphabetically": "Впорядкувати за абеткою",
       "enablePriority": "Увімкнути вибірку за Першістю",
       "enablePercentDone": "Увімкнути вибірку за Поступом",
       "dueDateRange": "Проміжок строку",
-      "startDateRange": "Start Date Range",
-      "endDateRange": "End Date Range",
-      "reminderRange": "Reminder Date Range"
+      "startDateRange": "Проміжок дня початку",
+      "endDateRange": "Проміжок дня закінчення",
+      "reminderRange": "Проміжок Дня Нагадування"
     },
     "create": {
       "title": "Постійна вибірка",
@@ -433,12 +433,12 @@
     },
     "delete": {
       "header": "Стерти постійну вибірку",
-      "text": "Дійсно хочете стерти збережену вибірку?",
-      "success": "Вибірка успішно стерта."
+      "text": "Дійсно стерти постійну вибірку?",
+      "success": "Вибірку успішно стерто."
     },
     "edit": {
       "title": "Змінити збережену вибірку",
-      "success": "Вибірку збережено успішно."
+      "success": "Вибірку успішно збережено."
     },
     "query": {
       "title": "Запит",
@@ -448,26 +448,26 @@
         "link": "Як це діє?",
         "canUseDatemath": "You can date math to set relative dates. Click on the date value in a query to find out more.",
         "fields": {
-          "done": "Whether the task is completed or not",
+          "done": "Завдання закінчене чи ні",
           "priority": "Рівень першості у завданні (1-5)",
           "percentDone": "Відсоток закінчення завдання (0-100)",
           "dueDate": "Строк завдання",
-          "startDate": "The start date of the task",
-          "endDate": "The end date of the task",
+          "startDate": "День початку у завданні",
+          "endDate": "День закінчення у завданні",
           "doneAt": "The date and time when the task was completed",
           "assignees": "Виконавці завдання",
-          "labels": "The labels associated with the task",
-          "project": "The project the task belongs to (only available for saved filters, not on a project level)"
+          "labels": "Позначки, пов'язані з завданням",
+          "project": "Справа, якій це завдання належить (доступно тільки для постійних вибірок, а не на рівні справи)"
         },
         "operators": {
-          "intro": "The available operators for filtering include:",
+          "intro": "Доступні оператори для вибірки такі:",
           "notEqual": "Не дорівнює",
           "equal": "Дорівнює",
           "greaterThan": "Більше ніж",
           "greaterThanOrEqual": "Більше ніж або дорівнює",
           "lessThan": "Менше ніж",
           "lessThanOrEqual": "Менше ніж або дорівнює",
-          "like": "Matches a pattern (using wildcard %)",
+          "like": "Відповідає зразку (використовуючи знак %)",
           "in": "Відповідає будь-якому значенню у списку значень комою"
         },
         "logicalOperators": {
@@ -477,7 +477,7 @@
           "parentheses": "Parentheses for grouping conditions"
         },
         "examples": {
-          "intro": "Here are some examples of filter queries:",
+          "intro": "Деякі приклади запитів для вибірок:",
           "priorityEqual": "Matches tasks with priority level 4",
           "dueDatePast": "Matches tasks with a due date in the past",
           "undoneHighPriority": "Matches undone tasks with priority level 3 or higher",
@@ -491,7 +491,7 @@
     "title": "Додати з инших місць",
     "titleService": "Додати Ваші відомості з {name} до Vikunja",
     "import": "Додати відомості до Vikunja",
-    "description": "Click on the logo of one of the third-party services below to get started.",
+    "description": "Клацніть на логотип одного з сервісів, наведених нижче, щоб розпочати.",
     "descriptionDo": "Vikunja will import all lists, tasks, notes, reminders and files you have access to.",
     "authorize": "To authorize Vikunja to access your {name} Account, click the button below.",
     "getStarted": "Почати",
@@ -507,7 +507,7 @@
   "label": {
     "title": "Позначки",
     "manage": "Управління позначками",
-    "description": "Click on a label to edit it. You can edit all labels you created, you can use all labels which are associated with a task to whose project you have access.",
+    "description": "Натисніть на позначку, щоб змінити. Ви можете змінити усі створені Вами позначки, Ви можете використовувати всі позначки, які пов'язані з завданням до Вашої справи.",
     "newCTA": "У вас немає позначок.",
     "search": "Введіть щоб знайти позначку…",
     "create": {
@@ -575,7 +575,7 @@
     "created": "Створено о",
     "createdBy": "Автор: {0}",
     "actions": "Дії",
-    "cannotBeUndone": "Це неможливо спинити!"
+    "cannotBeUndone": "Дія незворотна!"
   },
   "input": {
     "resetColor": "Скинути цвіт",
@@ -590,7 +590,7 @@
     },
     "editor": {
       "edit": "Змінити",
-      "done": "Готово",
+      "done": "Закінчено",
       "heading1": "Заголовок 1",
       "heading1Tooltip": "Великий заголовок розділу.",
       "heading2": "Заголовок 2",
@@ -608,22 +608,22 @@
       "quote": "Цитата",
       "quoteTooltip": "Capture a quote.",
       "bulletList": "Список з мітками",
-      "bulletListTooltip": "Create a simple bullet list.",
+      "bulletListTooltip": "Створити список з позначками.",
       "unorderedList": "Невпорядкований список",
       "orderedList": "Числовий список",
-      "orderedListTooltip": "Create a list with numbering.",
+      "orderedListTooltip": "Створіть числовий список.",
       "cleanBlock": "Очистити блок",
       "link": "Посиланка",
       "image": "Зображення",
-      "imageTooltip": "Upload an image from your computer.",
+      "imageTooltip": "Оберіть зображення з Вашого комп'ютера.",
       "horizontalRule": "Черть",
-      "horizontalRuleTooltip": "Divide a section.",
+      "horizontalRuleTooltip": "Розділити розділ.",
       "sideBySide": "Пліч-о-пліч",
       "guide": "Настанова",
       "text": "Текст",
       "textTooltip": "Just start typing with plain text.",
       "taskList": "Список завдань",
-      "taskListTooltip": "Track tasks with a to-do list.",
+      "taskListTooltip": "Наглядайте за завданнями з робочим листом.",
       "undo": "Повторити",
       "redo": "Повернути",
       "placeholder": "Type some text or hit '/' to see more options…",
@@ -700,8 +700,8 @@
       "expression": "Each Date Math expression starts with an anchor date, which can either be {0}, or a date string ending with {1}. This anchor date can optionally be followed by one or more maths expressions.",
       "similar": "These expressions are similar to the ones provided by {0} and {1}.",
       "add1Day": "Додати один день",
-      "minus1Day": "Subtract one day",
-      "roundDay": "Round down to the nearest day",
+      "minus1Day": "Відняти один день",
+      "roundDay": "Заокруглити до найближчого дня",
       "supportedUnits": "Підтримувані одиниці часу",
       "someExamples": "Приклади значень часу",
       "units": {
@@ -732,7 +732,7 @@
     "addReminder": "Додати нагадування…",
     "doneSuccess": "Завдання успішно закінчено.",
     "undoneSuccess": "Завдання успішно поновлено.",
-    "revertSuccess": "The task change was successfully undone.",
+    "revertSuccess": "Зміну завдання успішно повернуто.",
     "undo": "Повторити",
     "openDetail": "Відкрити подробиці завдання",
     "checklistTotal": "{checked} з {total} завдань",
@@ -767,7 +767,7 @@
       "delete": {
         "header": "Стерти це завдання",
         "text1": "Дійсно хочете стерти це завдання?",
-        "text2": "Це також зітре всі вкладення, нагадування та залежності, пов'язані з цим завданням і ця дія незворотня!"
+        "text2": "Це також зітре всі вкладення, нагадування та залежності, пов'язані з цим завданням і ця дія незворотна!"
       },
       "actions": {
         "assign": "Доручити",
@@ -801,25 +801,25 @@
       "percentDone": "Поступ",
       "priority": "Першість",
       "relatedTasks": "Супутні завдання",
-      "reminders": "Reminders",
-      "repeat": "Repeat",
+      "reminders": "Нагадування",
+      "repeat": "Повторення",
       "startDate": "День початку",
       "title": "Заголовок",
-      "updated": "Updated",
+      "updated": "Оновлення",
       "doneAt": "Виконано в"
     },
     "subscription": {
-      "subscribedTaskThroughParentProject": "You can't unsubscribe here because you are subscribed to this task through its project.",
-      "subscribedProject": "You are currently subscribed to this project and will receive notifications for changes.",
-      "notSubscribedProject": "You are not subscribed to this project and won't receive notifications for changes.",
-      "subscribedTask": "You are currently subscribed to this task and will receive notifications for changes.",
-      "notSubscribedTask": "You are not subscribed to this task and won't receive notifications for changes.",
+      "subscribedTaskThroughParentProject": "Ви не можете відписатися, бо підписані на завдання через справу.",
+      "subscribedProject": "Ви підписані на цю справу та одержуватимете сповіщення про зміни.",
+      "notSubscribedProject": "Ви не підписані на цю справу і не одержуватимете сповіщень про зміни.",
+      "subscribedTask": "Ви підписані на це завдання та одержуватиме сповіщення про зміни.",
+      "notSubscribedTask": "Ви не підписані на це завдання та не одержуватимете сповіщень про зміни.",
       "subscribe": "Підписатися",
       "unsubscribe": "Відписатися",
-      "subscribeSuccessProject": "Тепер Ви підписані на цю справу",
-      "unsubscribeSuccessProject": "Тепер Ви відписані від цієї справи",
-      "subscribeSuccessTask": "Тепер Ви підписані на цю справу",
-      "unsubscribeSuccessTask": "Тепер Ви відписані від цієї справи"
+      "subscribeSuccessProject": "Ви підписалися на цю справу",
+      "unsubscribeSuccessProject": "Ви відписалися від цієї справи",
+      "subscribeSuccessTask": "Ви підписалися на цю справу",
+      "unsubscribeSuccessTask": "Ви відписалися від цієї справи"
     },
     "attachment": {
       "title": "Вкладення",
@@ -842,7 +842,7 @@
       "loading": "Ладнаю відгуки…",
       "edited": "змінено: {date}",
       "creating": "Створюю відгук…",
-      "placeholder": "Введіть Ваш відгук, поставте '/' щоб одержати більше можливостей…",
+      "placeholder": "Введіть відгук, натисніть '/' для додаткових можливостей…",
       "comment": "Відгукнутися",
       "delete": "Стерти цей відгук",
       "deleteText1": "Ви точно хочете стерти цей відгук?",
@@ -851,12 +851,12 @@
     },
     "deferDueDate": {
       "title": "Defer due date",
-      "1day": "1 день",
+      "1day": "1 день",
       "3days": "3 дні",
       "1week": "1 тиждень"
     },
     "description": {
-      "placeholder": "Введіть опис, натисніть '/' для більших можливостей…",
+      "placeholder": "Введіть опис, натисніть '/' для додаткових можливостей…",
       "empty": "Немає опису."
     },
     "assignee": {
@@ -868,14 +868,14 @@
     "label": {
       "placeholder": "Введіть щоб додати позначку…",
       "createPlaceholder": "Додати це як нову позначку",
-      "addSuccess": "Познака додана успішно.",
-      "createSuccess": "Позначка створена успішно.",
-      "removeSuccess": "Позначка стерта успішно.",
+      "addSuccess": "Позначку успішно додано.",
+      "createSuccess": "Позначку успішно створено.",
+      "removeSuccess": "Позначку успішно стерто.",
       "addCreateSuccess": "Позначку створено і додано успішно.",
       "delete": {
         "header": "Стерти позначку",
         "text1": "Дійсно хочете стерти позначку?",
-        "text2": "Це зітре її з усіх завдань без можливості відновлення."
+        "text2": "Це зітре її з усіх завдань без можливості відновити."
       }
     },
     "priority": {
@@ -889,9 +889,9 @@
     "relation": {
       "add": "Додати нову прив'язку",
       "new": "Нова прив'язка завдання",
-      "searchPlaceholder": "Type search for a task to add as related…",
+      "searchPlaceholder": "Введіть щось, щоб знайти завдання та пов'язати…",
       "createPlaceholder": "Додати як супутнє завдання",
-      "differentProject": "This task belongs to a different project.",
+      "differentProject": "Завдання належить до іншої справи.",
       "noneYet": "Немає пов'язаностей.",
       "delete": "Стерти залежність завдання",
       "deleteText1": "Дійсно стерти залежність завдання?",
@@ -940,59 +940,59 @@
     },
     "quickAddMagic": {
       "hint": "Use magic prefixes to define due dates, assignees and other task properties.",
-      "title": "Quick Add Magic",
-      "intro": "When creating a task, you can use special keywords to directly add attributes to the newly created task. This allows to add commonly used attributes to tasks much faster.",
-      "multiple": "You can use this multiple times.",
-      "label1": "To add a label, simply prefix the name of the label with {prefix}.",
-      "label2": "Vikunja will first check if the label already exist and create it if not.",
-      "label3": "To use spaces, simply add a \" or ' around the label name.",
-      "label4": "For example: {prefix}\"Label with spaces\".",
-      "priority1": "To set a task's priority, add a number 1-5, prefixed with a {prefix}.",
-      "priority2": "Чим вище число, тим вищий пріоритет.",
-      "assignees": "To directly assign the task to a user, add their username prefixed with {prefix} to the task.",
-      "project1": "To set a project for the task to appear in, enter its name prefixed with {prefix}.",
-      "project2": "This will return an error if the project does not exist.",
-      "project3": "To use spaces, simply add a \" or ' around the project name.",
-      "project4": "For example: {prefix}\"Project with spaces\".",
+      "title": "Скоре Чарівне Додавання",
+      "intro": "Створюючи завдання, Ви можете використовувати особливі ключові слова, щоб одразу додати властивості нового завдання. Це дозволяє скоро додавати часто використані властивості.",
+      "multiple": "Можна використати кілька разів.",
+      "label1": "Щоб додати позначку, просто введіть назву позначки з {prefix}.",
+      "label2": "Vikunja перевірить наявність позначки та створить, якщо вона відсутня.",
+      "label3": "Щоб використати пробіли, додайте \" або ' навколо назви.",
+      "label4": "Наприклад: {prefix}\"Позначка з пробілами\".",
+      "priority1": "Щоб встановити першість завдання, додайте число від 1-5, з {prefix}.",
+      "priority2": "Чим вище число, тим вища першість.",
+      "assignees": "Щоб призначити завдання користувачеві, додайте ім'я користувача з {prefix} до завдання.",
+      "project1": "Щоб визначити справу для завдання, введіть її назву з {prefix}.",
+      "project2": "Якщо справу не знайдено то повернеться помилка.",
+      "project3": "Щоб використати пробіли, додайте \" або ' навколо назви.",
+      "project4": "Наприклад: {prefix}\"Справа з пробілами\".",
       "dateAndTime": "Днина та час",
-      "date": "Any date will be used as the due date of the new task. You can use dates in any of these formats:",
+      "date": "Будь-яка день буде використаний, як строк. Ви можете використати дні будь-якого виду:",
       "dateWeekday": "у будні буде наступного дня на цю дату",
       "dateCurrentYear": "використовуватиметься поточний рік",
-      "dateNth": "буде використовувати {day}від поточного місяця",
-      "dateTime": "Combine any of the date formats with \"{time}\" (or {timePM}) to set a time.",
-      "repeats": "Repeating tasks",
+      "dateNth": "використовуватиметься {day} поточного місяця",
+      "dateTime": "Для встановки часу об'єднайте будь-який з видів дня з \"{time}\" (або {timePM}).",
+      "repeats": "Завдання що повторюються",
       "repeatsDescription": "To set a task as repeating in an interval, simply add '{suffix}' to the task text. The amount needs to be a number and can be omitted to use just the type (see examples)."
     }
   },
   "team": {
-    "title": "Спілки",
-    "noTeams": "Зараз ви не є учасником хоча б якоїсь спілки.",
+    "title": "Спільноти",
+    "noTeams": "Ви ще не учасник спільнот.",
     "create": {
-      "title": "Створити спілку",
-      "success": "Спілку успішно створено."
+      "title": "Створити спільноту",
+      "success": "Спільноту успішно створено."
     },
     "edit": {
-      "title": "Змінити спілку \"{team}\"",
-      "members": "Учасники спілки",
+      "title": "Змінити Спільноту \"{team}\"",
+      "members": "Учасники Спільноти",
       "search": "Введіть щоб знайти користувача…",
       "addUser": "Додати до спільноти",
       "makeMember": "Зробити учасником",
       "makeAdmin": "Зробити адміністратором",
-      "success": "Спільноту успішно оновлено.",
-      "userAddedSuccess": "The team member was successfully added.",
-      "madeMember": "The team member was successfully made member.",
-      "madeAdmin": "The team member was successfully made admin.",
+      "success": "Спільноту оновлено успішно.",
+      "userAddedSuccess": "Учасника додано успішно.",
+      "madeMember": "Учасника успішно зроблено учасником.",
+      "madeAdmin": "Учасника успішно зроблено адміном.",
       "mustSelectUser": "Будь ласка, оберіть користувача.",
       "delete": {
         "header": "Стерти спільноту",
-        "text1": "Дійсно слід стерти цю спільноту і всі її згадки?",
-        "text2": "All team members will lose access to projects shared with this team. This CANNOT BE UNDONE!",
+        "text1": "Дійсно стерти спільноту і всі її згадки?",
+        "text2": "Всі учасники спільноти втратять доступ до справ спільних з цією спільнотою. ДІЯ НЕЗВОРОТНА!",
         "success": "Спільноту успішно стерто."
       },
       "deleteUser": {
         "header": "Видалити користувача зі спільноти",
         "text1": "Справді вилучити цього учасника зі спільноти?",
-        "text2": "They will lose access to all projects this team has access to. This CANNOT BE UNDONE!",
+        "text2": "Вони втратять доступ до всіх справ цієї спільноти. ДІЯ НЕЗВОРОТНА!",
         "success": "Користувача успішно видалено зі спільноти."
       },
       "leave": {
@@ -1081,10 +1081,10 @@
     "use": "Using Vikunja installation at {0}",
     "error": "Could not find or use Vikunja installation at \"{domain}\". Please check if the url has the correct format and you can reach it when accessing it directly and try again.",
     "success": "Using Vikunja installation at \"{domain}\".",
-    "urlRequired": "A url is required."
+    "urlRequired": "Посиланка обов'язкова."
   },
   "loadingError": {
-    "failed": "Loading failed, please {0}. If the error persists, please {1}.",
+    "failed": "Запуск невдалий, будь ласка {0}. При повторній помилці, будь ласка {1}.",
     "tryAgain": "повторити",
     "contact": "зв'язатися з нами"
   },
@@ -1093,7 +1093,7 @@
     "none": "Сповіщень немає. Приємного дня!",
     "explainer": "Сповіщення з'являтимуться тут, коли зі справами та завданнями відбуватимуться співдії.",
     "markAllRead": "Позначити усі сповіщення як прочитані",
-    "markAllReadSuccess": "Успішно позначено всі сповіщення як прочитані."
+    "markAllReadSuccess": "Всі сповіщення успішно позначено прочитаними."
   },
   "quickActions": {
     "commands": "Команди",
@@ -1120,20 +1120,20 @@
     "altFormatShort": "j M Y"
   },
   "reaction": {
-    "reactedWith": "{user} reacted with {value}",
+    "reactedWith": "{user} відреагував {value}",
     "reactedWithAnd": "{users} and {lastUser} reacted with {value}",
     "reactedWithAndMany": "{users} and {num} more reacted reacted with {value}",
-    "add": "Add your reaction"
+    "add": "Додайте вашу реакцію"
   },
   "error": {
     "error": "Помилка",
-    "success": "Успішно",
+    "success": "Успіх",
     "0001": "Вам заборонено це робити.",
     "1001": "Користувач з таким ім'ям вже існує.",
     "1002": "Користувач з цією е-скринькою вже існує.",
     "1004": "Не вказано ім'я користувача і пароль.",
     "1005": "Користувача не знайдено.",
-    "1006": "Could not get the user id.",
+    "1006": "Неможливо отримати id користувача.",
     "1008": "No password reset token provided.",
     "1009": "Invalid password reset token.",
     "1010": "Invalid email confirm token.",
@@ -1150,14 +1150,14 @@
     "3001": "Справи немає.",
     "3004": "You need to have read permissions on that project to perform that action.",
     "3005": "Заголовок справи не може бути порожній.",
-    "3006": "The project share does not exist.",
+    "3006": "Поширення справи немає.",
     "3007": "A project with this identifier already exists.",
     "3008": "The project is archived and can therefore only be accessed read only. This is also true for all tasks associated with this project.",
     "4001": "The project task text cannot be empty.",
     "4002": "The project task does not exist.",
     "4003": "All bulk editing tasks must belong to the same project.",
     "4004": "Need at least one task when bulk editing tasks.",
-    "4005": "You do not have the right to see the task.",
+    "4005": "У Вас немає прав дивитися завдання.",
     "4006": "You can't set a parent task as the task itself.",
     "4007": "You can't create a task relation with an invalid kind of relation.",
     "4008": "You can't create a task relation which already exists.",
@@ -1173,22 +1173,22 @@
     "4018": "Invalid task filter concatenator.",
     "4019": "Invalid task filter value.",
     "6001": "Назва спільноти не може бути порожньою.",
-    "6002": "Спільноти не знайдено.",
-    "6004": "The team already has access to that project.",
-    "6005": "The user is already a member of that team.",
-    "6006": "Cannot delete the last team member.",
+    "6002": "Спільноту не знайдено.",
+    "6004": "Спільнота вже має доступ до цієї справи.",
+    "6005": "Користувач вже є учасником цієї спільноти.",
+    "6006": "Неможливо видалити останнього учасника спільноти.",
     "6007": "The team does not have access to the project to perform that action.",
-    "7002": "The user already has access to that project.",
-    "7003": "You do not have access to that project.",
+    "7002": "Користувач вже має доступ до справи.",
+    "7003": "У Вас немає доступу до цієї справи.",
     "8001": "Ця позначка вже існує для цього завдання.",
     "8002": "The label does not exist.",
-    "8003": "You do not have access to this label.",
+    "8003": "У Вас немає доступу до цієї позначки.",
     "9001": "The right is invalid.",
     "10001": "Стрічки немає.",
     "10002": "The bucket does not belong to that project.",
-    "10003": "You cannot remove the last bucket on a project.",
+    "10003": "Неможливо стерти останню стрічку.",
     "10004": "You cannot add the task to this bucket as it already exceeded the limit of tasks it can hold.",
-    "10005": "There can be only one done bucket per project.",
+    "10005": "У справі може бути тільки одна стрічка для закінчення.",
     "11001": "The saved filter does not exist.",
     "11002": "Saved filters are not available for link shares.",
     "12001": "The subscription entity type is invalid.",
