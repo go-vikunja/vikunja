@@ -24,6 +24,7 @@ export const DAYJS_LOCALE_MAPPING = {
 	'sl-SI': 'sl',
 	'pt-BR': 'pt',
 	'hr-HR': 'hr',
+	'uk-UA': 'uk',
 } as Record<SupportedLocale, ISOLanguage>
 
 export const DAYJS_LANGUAGE_IMPORTS = {
@@ -46,6 +47,7 @@ export const DAYJS_LANGUAGE_IMPORTS = {
 	'ar-sa': () => import('dayjs/locale/ar-sa'),
 	'sl-si': () => import('dayjs/locale/sl'),
 	'pt-br': () => import('dayjs/locale/pt-br'),
+	'uk-ua': () => import('dayjs/locale/uk'),
 } as Record<SupportedLocale, () => Promise<ILocale>>
 
 export function useDayjsLanguageSync(dayjsGlobal: typeof dayjs) {

@@ -24,6 +24,7 @@ export const SUPPORTED_LOCALES = {
 	'sl-SI': 'Slovenščina',
 	'pt-BR': 'Português Brasileiro',
 	'hr-HR': 'Hrvatski',
+	'uk-UA': 'українська',
 	// IMPORTANT: Also add new languages to useDayjsLanguageSync
 } as const
 
