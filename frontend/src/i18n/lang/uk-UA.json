@@ -9,11 +9,11 @@
     "goToOverview": "До огляду",
     "project": {
       "importText": "Втягніть Ваші справи та завдання з инших місць до Vikunja:",
-      "import": "Додати відомості до Vikunja"
+      "import": "Втягнути відомості до Vikunja"
     }
   },
   "demo": {
-    "title": "Цей зразок для показу та випробувань. Не використовуйте для справжніх відомостей!",
+    "title": "Цей зразок слугує для показу. Не вживайте для справжніх відомостей!",
     "everythingWillBeDeleted": "Все стирається постійно!",
     "accountWillBeDeleted": "Обліковку буде стерто, разом з усіма справами, завданнями та вкладеннями, які Ви могли створити."
   },
@@ -29,7 +29,7 @@
   },
   "offline": {
     "title": "Ви не в мережі.",
-    "text": "Будь ласка, перевірте підключення до мережі та спробуйте знову."
+    "text": "Будь ласка, перевірте під'єднання до мережі та повторіть."
   },
   "user": {
     "auth": {
@@ -42,7 +42,7 @@
       "passwordPlaceholder": "напр. •••••••••••",
       "forgotPassword": "Відновити пароль?",
       "resetPassword": "Скинути пароль",
-      "resetPasswordAction": "Надішліть мені посиланку для скидання пароля",
+      "resetPasswordAction": "Надіслати посиланку",
       "resetPasswordSuccess": "Перевірте е-скриньку! Ви повинні мати лист з вказівками як відновити пароль.",
       "passwordsDontMatch": "Паролі не збігаються",
       "confirmEmailSuccess": "Е-скриньку успішно підтверджено! Тепер можете увійти.",
@@ -99,12 +99,12 @@
         "defaultView": "Основне Подання",
         "timezone": "Часовий Пояс",
         "overdueTasksRemindersTime": "Нагадувати про завдання на е-скриньку",
-        "filterUsedOnOverview": "Збережена вибірка, яка використовується на сторінці огляду"
+        "filterUsedOnOverview": "Постійна вибірка, яка вживатиметься на сторінці огляду"
       },
       "totp": {
         "title": "Дворівнева перевірка",
         "enroll": "Почати",
-        "finishSetupPart1": "Щоб закінчити налагодження, використайте цю таємницю у Вашому прикладку (Google Authenticator або подібному):",
+        "finishSetupPart1": "Щоб закінчити налагодження, вживайте цю таємницю у Вашому прикладку (Google Authenticator або подібному):",
         "finishSetupPart2": "Після цього введіть код із вашого додатку нижче.",
         "scanQR": "Крім того, ви можете сканувати цей QR-код:",
         "passcode": "Пароль код",
@@ -112,7 +112,7 @@
         "setupSuccess": "Дворівневу перевірку успішно встановлено!",
         "enterPassword": "Будь ласка, введіть ваш пароль",
         "disable": "Вимкнути дворівневу перевірку",
-        "confirmSuccess": "Налагодження totp успішне. Можете використовувати його відтепер!",
+        "confirmSuccess": "Налагодження totp успішне. Можете вжити його відтепер!",
         "disableSuccess": "Дворівневу перевірку вимкнено."
       },
       "caldav": {
@@ -120,7 +120,7 @@
         "howTo": "You can connect Vikunja to CalDAV clients to view and manage all tasks from different clients. Enter this url into your client:",
         "more": "Дізнатися більше про CalDAV у Vikunja",
         "tokens": "CalDAV Ключі",
-        "tokensHowTo": "You can use a CalDAV token to use instead of a password to log in the above endpoint.",
+        "tokensHowTo": "Ви можете вжити ключ CalDAV замість пароля для входу в кінцеву точку.",
         "createToken": "Створити токен",
         "tokenCreated": "Ось ваш токен: {token}",
         "wontSeeItAgain": "Запишіть це нижче, щоб воно не з'являлося знову.",
@@ -128,14 +128,14 @@
         "usernameIs": "Ваше ім'я користувача: {0}"
       },
       "avatar": {
-        "title": "Світлина",
+        "title": "Облікове зображення",
         "initials": "Ініціали",
-        "gravatar": "Сіра людинка",
+        "gravatar": "Сіре облікове зображення",
         "marble": "Мармур",
-        "upload": "Додати",
-        "uploadAvatar": "Вибрати/Додати",
-        "statusUpdateSuccess": "Стан світлини успішно оновлено!",
-        "setSuccess": "Світлину успішно встановлено!"
+        "upload": "Втягти",
+        "uploadAvatar": "Обрати/Втягти",
+        "statusUpdateSuccess": "Стан облікового зображення успішно оновлено!",
+        "setSuccess": "Облікове зображення успішно встановлено!"
       },
       "quickAddMagic": {
         "title": "Скоре Чарівне Додавання Режим",
@@ -154,7 +154,7 @@
       },
       "apiTokens": {
         "title": "Ключі API",
-        "general": "API ключі дозволяють використовувати Vikunja's API без облікових відомостей.",
+        "general": "API ключі дозволяють вживати Vikunja's API без облікових відомостей.",
         "apiDocs": "Перегляньте довідку про api",
         "createAToken": "Створити ключ",
         "createToken": "Створити ключ",
@@ -174,7 +174,7 @@
         },
         "attributes": {
           "title": "Заголовок",
-          "titlePlaceholder": "Enter a title you will recognize later",
+          "titlePlaceholder": "Введіть назву, яку зможете впізнати",
           "expiresAt": "Закінчується о",
           "permissions": "Дозволи"
         }
@@ -198,10 +198,10 @@
     },
     "export": {
       "title": "Витягти Ваші відомості з Vikunja",
-      "description": "Можете запитати подвійку усіх Ваших відомостей з Vikunja. Сюди входять Справи, Завдання і все, що пов'язано з ними. Ви зможете додати ці відомості в будь-який примірник Vikunja, використавши можливості переміщення.",
+      "description": "Можете запитати подвійку усіх Ваших відомостей з Vikunja. Сюди входять Справи, Завдання і все, що пов'язано з ними. Ви зможете додати ці відомості в будь-який примірник Vikunja, вживши способи перенесення.",
       "descriptionPasswordRequired": "Будь ласка, введіть свій пароль, щоб продовжити:",
       "request": "Запит подвійки моїх відомостей Vikunja",
-      "success": "Запит щодо подвійки Ваших відомостей з Vikunja подано успішно. Ми надішлемо Вам лист на е-скриньку, як тільки відомості будуть готові для витягування.",
+      "success": "Запит щодо подвійки Ваших відомостей з Vikunja успішно подано. Ми надішлемо Вам лист на е-скриньку, як тільки відомості будуть готові для витягування.",
       "downloadTitle": "Витягти Ваші відомості Vikunja"
     }
   },
@@ -209,18 +209,18 @@
     "archivedMessage": "Ця справа у сховищі. Створювати або змінювати завдання - неможливо.",
     "archived": "Схововано",
     "showArchived": "Показати схововані",
-    "title": "Заголовок справи",
+    "title": "Заголовок Справи",
     "color": "Цвіт",
     "projects": "Справи",
-    "parent": "Первинна Справа",
+    "parent": "Головна Справа",
     "search": "Введіть щоб знайти справу…",
-    "searchSelect": "Клацніть або натисніть Enter, щоб вибрати цю справу",
+    "searchSelect": "Клацніть або натисніть Enter, щоб обрати цю справу",
     "shared": "Доступні Справи",
     "noDescriptionAvailable": "Опису справи немає.",
     "inboxTitle": "Вхідні",
     "create": {
       "header": "Нова справа",
-      "titlePlaceholder": "Назву справи введіть тут…",
+      "titlePlaceholder": "Назву введіть тут…",
       "addTitleRequired": "Будь ласка, вкажіть заголовок.",
       "createdSuccess": "Справу успішно заведено.",
       "addProjectRequired": "Будь ласка, вкажіть справу або встановіть основну справу в налагодженнях."
@@ -228,9 +228,9 @@
     "archive": {
       "title": "Сховувати \"{project}\"",
       "archive": "Сховувати цю справу",
-      "unarchive": "Поновити цю справу",
-      "unarchiveText": "Ви зможете створювати завдання або змінювати його.",
-      "archiveText": "Неможливо змінювати цю справу або створювати завдання, коли вона у сховищі.",
+      "unarchive": "Поновити справу",
+      "unarchiveText": "Ви зможете створювати завдання або змінювати їх.",
+      "archiveText": "Неможливо буде змінювати справу або створювати завдання, доки вона у сховищі.",
       "success": "Справу успішно схововано."
     },
     "background": {
@@ -246,7 +246,7 @@
     "delete": {
       "title": "Стерти \"{project}\"",
       "header": "Стерти цю справу",
-      "text1": "Дійсно хочете видалити цю справу, та усі її завдання?",
+      "text1": "Дійсно хочете видалити справу, та усі її завдання?",
       "text2": "Це містить всі завдання і дія НЕЗВОРОТНА!",
       "success": "Справу успішно стерто.",
       "tasksToDelete": "This will irrevocably remove approx. {count} tasks.",
@@ -256,18 +256,18 @@
     "duplicate": {
       "title": "Подвоїти цю справу",
       "label": "Подвоїти",
-      "text": "Оберіть батьківську справу, яка має складатися з подвоєних справ:",
+      "text": "Оберіть головну справу, яка має складатися з подвоєних справ:",
       "success": "Справу успішно подвоєно."
     },
     "edit": {
       "header": "Змінити цю справу",
       "title": "Змінити \"{project}\"",
-      "titlePlaceholder": "Назву справи введіть тут…",
+      "titlePlaceholder": "Назву введіть тут…",
       "identifierTooltip": "Ідентифікатор справи може бути використаний для унікального визначення завдання в різних справах. Для вимкнення його можна встановити порожнім.",
       "identifier": "Ідентифікатор справи",
       "identifierPlaceholder": "Ідентифікатор справи введіть тут…",
       "description": "Опис",
-      "descriptionPlaceholder": "Введіть опис для цієї справи, натисніть '/' для додаткових можливостей…",
+      "descriptionPlaceholder": "Введіть опис справи, натисніть '/' для виклику особливостей…",
       "color": "Цвіт",
       "success": "Справу успішно оновлено."
     },
@@ -280,7 +280,7 @@
         "what": "Що таке посиланки для поширення?",
         "explanation": "Share Links allow you to easily share a project with other users who don't have an account on Vikunja.",
         "create": "Створити посиланку для поширення",
-        "name": "Name (optional)",
+        "name": "Назва (необов'язково)",
         "namePlaceholder": "напр. Lorem Ipsum",
         "nameExplanation": "Всі дії, виконані цим посиланням будуть показані з іменем.",
         "password": "Пароль (необов'язково)",
@@ -290,13 +290,13 @@
         "removeText": "Дійсно хочете видалити цей розділ? Більше неможливо буде одержати доступ за цією посиланкою. Дія незворотна!",
         "createSuccess": "Поширення посилання успішно створено.",
         "deleteSuccess": "Запрошення через посиланку успішно видалено",
-        "view": "Перегляд",
+        "view": "Вид",
         "sharedBy": "Доступ через {0}"
       },
       "userTeam": {
         "typeUser": "користувач | користувачі",
         "typeTeam": "спільнота | спільноти",
-        "shared": "Shared with these {type}",
+        "shared": "Поділилися з {type}",
         "you": "Ви",
         "notShared": "Not shared with any {type} yet.",
         "removeHeader": "Стерти {type} з {sharable}",
@@ -323,7 +323,7 @@
       "title": "Список",
       "add": "Додати",
       "addPlaceholder": "Додати завдання…",
-      "empty": "Цей замисел порожній.",
+      "empty": "Ця справа порожня.",
       "newTaskCta": "Створити.",
       "editTask": "Змінити завдання"
     },
@@ -334,12 +334,12 @@
       "month": "Місяць",
       "day": "День",
       "hour": "Година",
-      "range": "Проміжок днин",
-      "noDates": "Завдання не має вказаних днин."
+      "range": "Проміжок днів",
+      "noDates": "Завдання не має вказаних днів."
     },
     "table": {
       "title": "Таблиця",
-      "columns": "Стовпчики"
+      "columns": "Стовпи"
     },
     "kanban": {
       "title": "Дошка",
@@ -353,11 +353,11 @@
       "defaultBucketHint": "Коли завдання створені без вказання стрічки, вони будуть додані до цієї стрічки.",
       "defaultBucketSavedSuccess": "Основну стрічку збережено успішно.",
       "deleteLast": "Неможливо стерти останню стрічку.",
-      "addTaskPlaceholder": "Введіть нову назву завдання…",
-      "addTask": "Додати завдання",
+      "addTaskPlaceholder": "Введіть назву завдання…",
+      "addTask": "Додати",
       "addAnotherTask": "Додати",
       "addBucket": "Додати",
-      "addBucketPlaceholder": "Введіть новий заголовок стрічки…",
+      "addBucketPlaceholder": "Введіть заголовок стрічки…",
       "deleteHeaderBucket": "Стерти стрічку",
       "deleteBucketText1": "Дійсно стерти цю стрічку?",
       "deleteBucketText2": "Завдання не зітруться, але перемістяться до основної стрічки.",
@@ -384,7 +384,7 @@
       "create": "Створити веб-перехоплювач",
       "secret": "Таємниця",
       "secretHint": "If provided, all requests to the webhook target URL will be signed using HMAC.",
-      "secretDocs": "Загляньте у довідку щоб краще порозумітися з використанням таємниць."
+      "secretDocs": "Загляньте у довідку щоб краще порозумітися з вживанням таємниць."
     },
     "views": {
       "header": "Змінити вид",
@@ -399,7 +399,7 @@
       "createSuccess": "Перегляд успішно створено.",
       "titleRequired": "Будь ласка, напишіть заголовок.",
       "delete": "Стерти це представлення",
-      "deleteText": "Дійсно бажаєте видалити цей вид? Це буде більше не можливо використовувати його для перегляду завдань у цій справі. Ця дія не видаляє будь-які завдання. Ця дія незворотна!",
+      "deleteText": "Дійсно видалити цей вид? Це буде більше не можливо вживати його для перегляду завдань у цій справі. Ця дія не видаляє будь-які завдання. Ця дія незворотна!",
       "deleteSuccess": "Перегляд успішно стерто.",
       "onlyAdminsCanEdit": "Лише адміністратори справи можуть змінювати перегляди.",
       "updateSuccess": "Перегляд успішно оновлено."
@@ -413,7 +413,7 @@
       "title": "Заголовок",
       "titlePlaceholder": "Заголовок збереженої вибірки введіть тут…",
       "description": "Опис",
-      "descriptionPlaceholder": "Введіть опис для вибірки, натисніть '/' для додаткових можливостей…",
+      "descriptionPlaceholder": "Введіть опис вибірки, натисніть '/' для виклику особливостей…",
       "includeNulls": "Включати задачі, які не мають набору значень",
       "requireAll": "Вимагати щоб всі вибірки були правдивими для завдань, які показуватимуться",
       "showDoneTasks": "Показати завершені завдання",
@@ -442,7 +442,7 @@
     },
     "query": {
       "title": "Запит",
-      "placeholder": "Type a search or filter query…",
+      "placeholder": "Введіть щоб знайти або запит вибірки…",
       "help": {
         "intro": "To filter tasks, you can use a query syntax similar to SQL. The available fields for filtering include:",
         "link": "Як це діє?",
@@ -454,7 +454,7 @@
           "dueDate": "Строк завдання",
           "startDate": "День початку у завданні",
           "endDate": "День закінчення у завданні",
-          "doneAt": "The date and time when the task was completed",
+          "doneAt": "День та час, коли завдання закінчене",
           "assignees": "Виконавці завдання",
           "labels": "Позначки, пов'язані з завданням",
           "project": "Справа, якій це завдання належить (доступно тільки для постійних вибірок, а не на рівні справи)"
@@ -467,14 +467,14 @@
           "greaterThanOrEqual": "Більше ніж або дорівнює",
           "lessThan": "Менше ніж",
           "lessThanOrEqual": "Менше ніж або дорівнює",
-          "like": "Відповідає зразку (використовуючи знак %)",
+          "like": "Відповідає зразку (вживаючи знак %)",
           "in": "Відповідає будь-якому значенню у списку значень комою"
         },
         "logicalOperators": {
           "intro": "To combine multiple conditions, you can use the following logical operators:",
           "and": "AND operator, matches if all conditions are true",
           "or": "OR оператор відповідає тому, що будь-яка з умов є істинною",
-          "parentheses": "Parentheses for grouping conditions"
+          "parentheses": "Дужки для спілкування умов"
         },
         "examples": {
           "intro": "Деякі приклади запитів для вибірок:",
@@ -488,26 +488,26 @@
     }
   },
   "migrate": {
-    "title": "Додати з инших місць",
-    "titleService": "Додати Ваші відомості з {name} до Vikunja",
-    "import": "Додати відомості до Vikunja",
+    "title": "Втягнути з инших місць",
+    "titleService": "Втягнути Ваші відомості з {name} у Vikunja",
+    "import": "Втягнути відомості до Vikunja",
     "description": "Клацніть на логотип одного з сервісів, наведених нижче, щоб розпочати.",
-    "descriptionDo": "Vikunja will import all lists, tasks, notes, reminders and files you have access to.",
+    "descriptionDo": "Vikunja втягне всі списки, завдання, записки, нагадування і вкладення до яких був доступ.",
     "authorize": "To authorize Vikunja to access your {name} Account, click the button below.",
     "getStarted": "Почати",
-    "inProgress": "Додаю…",
-    "alreadyMigrated1": "It looks like you've already imported your stuff from {name} at {date}.",
-    "alreadyMigrated2": "Повторне імпортування можливе, але може створити дублікати. Ви впевнені?",
+    "inProgress": "Втягую…",
+    "alreadyMigrated1": "Схоже, Ви вже втягнули свої відомості з {name} в {date}.",
+    "alreadyMigrated2": "Повторне втягування можливе, але може створити подвійки. Продовжити?",
     "confirm": "Дійсно, почнімо перенесення зараз!",
-    "importUpload": "Для імпорту даних з {name} в Vikunja натисніть на кнопку нижче, щоб вибрати файл.",
-    "upload": "Завантажити файл",
-    "migrationStartedWillReciveEmail": "Vikunja will now import your lists/projects, tasks, notes, reminders and files from {service}. As this will take a while, we will send you an email once done. You can close this window now.",
+    "importUpload": "Для втягування відомостей з {name} у Vikunja натисніть кнопку нижче, щоб обрати файл.",
+    "upload": "Втягти файл",
+    "migrationStartedWillReciveEmail": "Vikunja зараз втягне Ваші списки/справи, записки, нагадування та вкладення з {service}. Це займе деякий час, ми надішлемо Вам електронного листа після закінчення. Можете закрити це вікно.",
     "migrationInProgress": "Відбувається перенесення. Будь ласка, зачекайте завершення."
   },
   "label": {
     "title": "Позначки",
     "manage": "Управління позначками",
-    "description": "Натисніть на позначку, щоб змінити. Ви можете змінити усі створені Вами позначки, Ви можете використовувати всі позначки, які пов'язані з завданням до Вашої справи.",
+    "description": "Натисніть на позначку, щоб змінити. Можете змінити усі створені Вами позначки, вживати всі позначки, які пов'язані з завданням до Вашої справи.",
     "newCTA": "У вас немає позначок.",
     "search": "Введіть щоб знайти позначку…",
     "create": {
@@ -524,7 +524,7 @@
     "deleteSuccess": "Позначку успішно стерто.",
     "attributes": {
       "title": "Заголовок",
-      "titlePlaceholder": "Заголовок позначки введіть тут…",
+      "titlePlaceholder": "Заголовок введіть тут…",
       "description": "Опис",
       "descriptionPlaceholder": "Опис позначки",
       "color": "Цвіт"
@@ -540,7 +540,7 @@
     "overview": "Огляд",
     "upcoming": "Прийдешні",
     "settings": "Налагодження",
-    "imprint": "Imprint",
+    "imprint": "Наша адреса",
     "privacy": "Політика негласности"
   },
   "misc": {
@@ -565,7 +565,7 @@
     "saved": "Збережено!",
     "default": "Початково",
     "close": "Закрити",
-    "download": "Стягнути",
+    "download": "Витягти",
     "showMenu": "Показати список",
     "hideMenu": "Приховати список",
     "forExample": "Наприклад:",
@@ -578,15 +578,15 @@
     "cannotBeUndone": "Дія незворотна!"
   },
   "input": {
-    "resetColor": "Скинути цвіт",
+    "resetColor": "Скинути",
     "datepicker": {
       "today": "Сьогодні",
       "tomorrow": "Завтра",
       "nextMonday": "Наступний понеділок",
-      "thisWeekend": "У ці вихідні",
+      "thisWeekend": "У цю неділю",
       "laterThisWeek": "Пізніше цього тижня",
       "nextWeek": "Наступного тижня",
-      "chooseDate": "Оберіть днину"
+      "chooseDate": "Оберіть день"
     },
     "editor": {
       "edit": "Змінити",
@@ -597,78 +597,78 @@
       "heading2Tooltip": "Середній заголовок розділу.",
       "heading3": "Заголовок 3",
       "heading3Tooltip": "Smaller section header.",
-      "headingSmaller": "Heading Smaller",
-      "headingBigger": "Heading Bigger",
+      "headingSmaller": "Менший Заголовок",
+      "headingBigger": "Більший Заголовок",
       "bold": "Грубий",
       "italic": "Скорописний",
-      "strikethrough": "Зачеркнуто",
-      "underline": "Підчеркнуто",
+      "strikethrough": "Зачеркнутий",
+      "underline": "Підчеркнутий",
       "code": "Код",
       "codeTooltip": "Capture a code snippet.",
-      "quote": "Цитата",
-      "quoteTooltip": "Capture a quote.",
+      "quote": "Переповідь",
+      "quoteTooltip": "Переповідь.",
       "bulletList": "Список з мітками",
       "bulletListTooltip": "Створити список з позначками.",
       "unorderedList": "Невпорядкований список",
-      "orderedList": "Числовий список",
+      "orderedList": "Список з числами",
       "orderedListTooltip": "Створіть числовий список.",
       "cleanBlock": "Очистити блок",
       "link": "Посиланка",
       "image": "Зображення",
-      "imageTooltip": "Оберіть зображення з Вашого комп'ютера.",
+      "imageTooltip": "Втягніть Ваше зображення.",
       "horizontalRule": "Черть",
       "horizontalRuleTooltip": "Розділити розділ.",
       "sideBySide": "Пліч-о-пліч",
       "guide": "Настанова",
-      "text": "Текст",
-      "textTooltip": "Just start typing with plain text.",
-      "taskList": "Список завдань",
+      "text": "Письмо",
+      "textTooltip": "Просто почніть вводити щось.",
+      "taskList": "Список з завданнями",
       "taskListTooltip": "Наглядайте за завданнями з робочим листом.",
-      "undo": "Повторити",
-      "redo": "Повернути",
-      "placeholder": "Type some text or hit '/' to see more options…",
+      "undo": "Повернути",
+      "redo": "Повторити",
+      "placeholder": "Введіть щось, або натисніть '/' для виклику особливостей…",
       "table": {
         "title": "Таблиця",
         "insert": "Вставити таблицю",
-        "addColumnBefore": "Add column before",
-        "addColumnAfter": "Add column after",
-        "deleteColumn": "Delete column",
-        "addRowBefore": "Add row before",
-        "addRowAfter": "Add row after",
-        "deleteRow": "Delete row",
-        "deleteTable": "Delete table",
-        "mergeCells": "Merge cells",
-        "splitCell": "Split cell",
-        "toggleHeaderColumn": "Toggle header column",
-        "toggleHeaderRow": "Toggle header row",
-        "toggleHeaderCell": "Toggle header cell",
-        "mergeOrSplit": "Merge or split",
-        "fixTables": "Fix tables"
+        "addColumnBefore": "Додати стовп зліва",
+        "addColumnAfter": "Додати стовп справа",
+        "deleteColumn": "Видалити стовп",
+        "addRowBefore": "Додати рядок зверху",
+        "addRowAfter": "Додати рядок знизу",
+        "deleteRow": "Видалити рядок",
+        "deleteTable": "Стерти таблицю",
+        "mergeCells": "Об'єднати клітинки",
+        "splitCell": "Розділити клітинку",
+        "toggleHeaderColumn": "Перемкнути заголовок стовпа",
+        "toggleHeaderRow": "Перемкнути заголовок рядка",
+        "toggleHeaderCell": "Перемкнути заголовок клітинки",
+        "mergeOrSplit": "Об'єднати або розділити",
+        "fixTables": "Виправлення таблиць"
       }
     },
     "multiselect": {
       "createPlaceholder": "Створити",
-      "selectPlaceholder": "Клацніть або натисніть Enter, щоб вибрати"
+      "selectPlaceholder": "Клацніть або натисніть Enter, щоб обрати"
     },
     "datepickerRange": {
       "to": "До",
       "from": "Від",
       "fromto": "{from} до {to}",
-      "date": "Днина",
+      "date": "День",
       "ranges": {
         "today": "Сьогодні",
         "thisWeek": "Цей тиждень",
-        "restOfThisWeek": "The Rest of This Week",
+        "restOfThisWeek": "Залишок Цього Тижня",
         "nextWeek": "Наступний тиждень",
         "next7Days": "Наступні 7 днів",
         "lastWeek": "Минулий тиждень",
         "thisMonth": "Цей місяць",
-        "restOfThisMonth": "The Rest of This Month",
+        "restOfThisMonth": "Залишок Цього Місяця",
         "nextMonth": "Наступний місяць",
         "next30Days": "Наступні 30 днів",
         "lastMonth": "Останній місяць",
         "thisYear": "Цей рік",
-        "restOfThisYear": "The Rest of This Year"
+        "restOfThisYear": "Залишок Цього Року"
       },
       "values": {
         "now": "Зараз",
@@ -720,7 +720,7 @@
         "beginningOfThisWeek": "Початок цього тижня о 00:00",
         "endOfThisWeek": "Кінець цього тижня",
         "in30Days": "За 30 днів",
-        "datePlusMonth": "{0} plus one month at 00:00 of that day"
+        "datePlusMonth": "{0} додати один місяць об 00:00 від цього дня"
       }
     }
   },
@@ -733,14 +733,14 @@
     "doneSuccess": "Завдання успішно закінчено.",
     "undoneSuccess": "Завдання успішно поновлено.",
     "revertSuccess": "Зміну завдання успішно повернуто.",
-    "undo": "Повторити",
+    "undo": "Повернути",
     "openDetail": "Відкрити подробиці завдання",
     "checklistTotal": "{checked} з {total} завдань",
     "checklistAllDone": "{total} завдань",
     "show": {
       "titleCurrent": "Поточні Завдання",
       "titleDates": "Завдання з {from} до {to}",
-      "noDates": "Показувати завдання без днини",
+      "noDates": "Показувати завдання без днів",
       "overdue": "Показувати прострочені завдання",
       "fromuntil": "Завдання з {from} до {until}",
       "select": "Обрати проміжок",
@@ -763,7 +763,7 @@
       "closePopup": "Закрити спливне вікно",
       "organization": "Уточнення",
       "management": "Управління",
-      "dateAndTime": "Date and time",
+      "dateAndTime": "День та час",
       "delete": {
         "header": "Стерти це завдання",
         "text1": "Дійсно хочете стерти це завдання?",
@@ -774,8 +774,8 @@
         "label": "Позначки",
         "priority": "Першість",
         "dueDate": "Строк",
-        "startDate": "Set Start Date",
-        "endDate": "Set End Date",
+        "startDate": "День початку",
+        "endDate": "День закінчення",
         "reminders": "Нагадувати",
         "repeatAfter": "Повторювати",
         "percentDone": "Поступ",
@@ -796,7 +796,7 @@
       "description": "Опис",
       "done": "Готово",
       "dueDate": "Строк",
-      "endDate": "End Date",
+      "endDate": "День закінчення",
       "labels": "Позначки",
       "percentDone": "Поступ",
       "priority": "Першість",
@@ -824,14 +824,14 @@
     "attachment": {
       "title": "Вкладення",
       "createdBy": "створено {0} з {1}",
-      "downloadTooltip": "Стягнути це вкладення",
-      "upload": "Викласти вкладення",
-      "drop": "Перетягніть файл сюди, щоб викласти",
+      "downloadTooltip": "Витягти вкладення",
+      "upload": "Обрати",
+      "drop": "Перетягніть файл сюди, щоб втягти",
       "delete": "Стерти вкладення",
-      "deleteTooltip": "Стерти це вкладення",
+      "deleteTooltip": "Стерти вкладення",
       "deleteText1": "Дійсно стерти вкладення {filename}?",
       "copyUrl": "Подвоїти посиланку",
-      "copyUrlTooltip": "Подвоїти посиланку для використання в тексті",
+      "copyUrlTooltip": "Подвоїти посиланку для використання в письмі",
       "setAsCover": "Зробити обгорткою",
       "unsetAsCover": "Стерти обгортку",
       "successfullyChangedCoverImage": "Обгортку успішно змінено.",
@@ -842,7 +842,7 @@
       "loading": "Ладнаю відгуки…",
       "edited": "змінено: {date}",
       "creating": "Створюю відгук…",
-      "placeholder": "Введіть відгук, натисніть '/' для додаткових можливостей…",
+      "placeholder": "Введіть відгук, натисніть '/' для виклику особливостей…",
       "comment": "Відгукнутися",
       "delete": "Стерти цей відгук",
       "deleteText1": "Ви точно хочете стерти цей відгук?",
@@ -850,17 +850,17 @@
       "addedSuccess": "Відгук успішно додано."
     },
     "deferDueDate": {
-      "title": "Defer due date",
+      "title": "Перенести строк",
       "1day": "1 день",
       "3days": "3 дні",
       "1week": "1 тиждень"
     },
     "description": {
-      "placeholder": "Введіть опис, натисніть '/' для додаткових можливостей…",
+      "placeholder": "Введіть опис, натисніть '/' для виклику особливостей…",
       "empty": "Немає опису."
     },
     "assignee": {
-      "placeholder": "Введіть щоб доручити користувачу…",
+      "placeholder": "Введіть щоб доручити…",
       "selectPlaceholder": "Доручити",
       "assignSuccess": "Доручено успішно.",
       "unassignSuccess": "З користувача знято дорученість."
@@ -879,7 +879,7 @@
       }
     },
     "priority": {
-      "unset": "Нічого",
+      "unset": "Немає",
       "low": "Низько",
       "medium": "Середньо",
       "high": "Високо",
@@ -887,7 +887,7 @@
       "doNow": "ЗАРАЗ"
     },
     "relation": {
-      "add": "Додати нову прив'язку",
+      "add": "Додати прив'язку",
       "new": "Нова прив'язка завдання",
       "searchPlaceholder": "Введіть щось, щоб знайти завдання та пов'язати…",
       "createPlaceholder": "Додати як супутнє завдання",
@@ -900,7 +900,7 @@
       "kinds": {
         "subtask": "Підзавдання | Підзавдання",
         "parenttask": "Головне завдання | Головні завдання",
-        "related": "Супутнє завдання | Супутнє завдання",
+        "related": "Супутнє завдання | Супутні завдання",
         "duplicateof": "Duplicate Of | Duplicates Of",
         "duplicates": "Duplicates | Duplicates",
         "blocking": "Blocking | Blocking",
@@ -912,25 +912,25 @@
       }
     },
     "reminder": {
-      "before": "{amount} {unit} before {type}",
-      "after": "{amount} {unit} after {type}",
+      "before": "{amount} {unit} перед {type}",
+      "after": "{amount} {unit} після {type}",
       "beforeShort": "до",
       "afterShort": "після",
-      "onDueDate": "On the due date",
-      "onStartDate": "On the start date",
-      "onEndDate": "On the end date",
+      "onDueDate": "У день строку",
+      "onStartDate": "У день початку",
+      "onEndDate": "У день закінчення",
       "custom": "Вибірно",
-      "dateAndTime": "Днина та час"
+      "dateAndTime": "День та час"
     },
     "repeat": {
       "everyDay": "Щодня",
       "everyWeek": "Щотижня",
       "every30d": "Що 30 днів",
-      "mode": "Repeat mode",
-      "monthly": "Monthly",
-      "fromCurrentDate": "From completion date",
+      "mode": "Повторення",
+      "monthly": "Місячний",
+      "fromCurrentDate": "З дня закінчення",
       "each": "Кожен",
-      "specifyAmount": "Specify an amount…",
+      "specifyAmount": "Вкажіть величину…",
       "hours": "Годин",
       "days": "Днів",
       "weeks": "Тижнів",
@@ -941,24 +941,24 @@
     "quickAddMagic": {
       "hint": "Use magic prefixes to define due dates, assignees and other task properties.",
       "title": "Скоре Чарівне Додавання",
-      "intro": "Створюючи завдання, Ви можете використовувати особливі ключові слова, щоб одразу додати властивості нового завдання. Це дозволяє скоро додавати часто використані властивості.",
-      "multiple": "Можна використати кілька разів.",
+      "intro": "Створюючи завдання, Ви можете вживати особливі ключові слова, щоб одразу додати особливості нового завдання. Це дозволяє скоро додавати часто вжиті особливості.",
+      "multiple": "Можна вжити кілька разів.",
       "label1": "Щоб додати позначку, просто введіть назву позначки з {prefix}.",
       "label2": "Vikunja перевірить наявність позначки та створить, якщо вона відсутня.",
-      "label3": "Щоб використати пробіли, додайте \" або ' навколо назви.",
+      "label3": "Щоб вжити пробіли, додайте \" або ' навколо назви.",
       "label4": "Наприклад: {prefix}\"Позначка з пробілами\".",
       "priority1": "Щоб встановити першість завдання, додайте число від 1-5, з {prefix}.",
       "priority2": "Чим вище число, тим вища першість.",
       "assignees": "Щоб призначити завдання користувачеві, додайте ім'я користувача з {prefix} до завдання.",
       "project1": "Щоб визначити справу для завдання, введіть її назву з {prefix}.",
       "project2": "Якщо справу не знайдено то повернеться помилка.",
-      "project3": "Щоб використати пробіли, додайте \" або ' навколо назви.",
+      "project3": "Щоб вжити пробіли, додайте \" або ' навколо назви.",
       "project4": "Наприклад: {prefix}\"Справа з пробілами\".",
-      "dateAndTime": "Днина та час",
-      "date": "Будь-яка день буде використаний, як строк. Ви можете використати дні будь-якого виду:",
+      "dateAndTime": "День та час",
+      "date": "Будь-який день буде вжитий, як строк. Ви можете вживати дні будь-якого виду:",
       "dateWeekday": "у будні буде наступного дня на цю дату",
       "dateCurrentYear": "використовуватиметься поточний рік",
-      "dateNth": "використовуватиметься {day} поточного місяця",
+      "dateNth": "вживатиметься {day} поточного місяця",
       "dateTime": "Для встановки часу об'єднайте будь-який з видів дня з \"{time}\" (або {timePM}).",
       "repeats": "Завдання що повторюються",
       "repeatsDescription": "To set a task as repeating in an interval, simply add '{suffix}' to the task text. The amount needs to be a number and can be omitted to use just the type (see examples)."
@@ -968,7 +968,7 @@
     "title": "Спільноти",
     "noTeams": "Ви ще не учасник спільнот.",
     "create": {
-      "title": "Створити спільноту",
+      "title": "Створити",
       "success": "Спільноту успішно створено."
     },
     "edit": {
@@ -1004,10 +1004,10 @@
     },
     "attributes": {
       "name": "Назва спільноти",
-      "namePlaceholder": "Назва спільноти вводиться тут…",
+      "namePlaceholder": "Назву введіть тут…",
       "nameRequired": "Будь ласка, вкажіть ім'я.",
       "description": "Опис",
-      "descriptionPlaceholder": "Опишіть спільноту тут, натисніть '/' для додаткових можливостей…",
+      "descriptionPlaceholder": "Опишіть спільноту тут, натисніть '/' для виклику особливостей…",
       "admin": "Адмін",
       "member": "Учасник",
       "isPublic": "Загальна спільнота",
@@ -1021,29 +1021,29 @@
     "currentPageOnly": "Сполучення діють тільки на поточній сторінці.",
     "somePagesOnly": "Сполучення діють тільки не деяких сторінках.",
     "toggleMenu": "Toggle The Menu",
-    "quickSearch": "Open the search/quick action bar",
+    "quickSearch": "Відрити вікно знаходження/скорих дій",
     "then": "тоді",
     "task": {
       "title": "Сторінка завдання",
       "done": "Закінчити / поновити",
       "assign": "Доручити",
-      "labels": "Додати позначку до цього завдання",
+      "labels": "Додати позначку до завдання",
       "dueDate": "Змінити строк завдання",
       "attachment": "Додати вкладення до цього завдання",
       "related": "Modify related tasks of this task",
       "color": "Змінити цвіт завдання",
-      "move": "Перенести це завдання до іншої справи",
-      "reminder": "Manage reminders of this task",
+      "move": "Перенести завдання до іншої справи",
+      "reminder": "Управляти нагадуваннями цього завдання",
       "description": "Toggle editing of the task description",
       "delete": "Стерти завдання",
       "priority": "Змінити першість в цьому завданні",
-      "favorite": "Позначити це завдання як вибране/видалити з обраного",
+      "favorite": "Додати завдання до обраних, вилучити з обраних",
       "save": "Зберегти поточне завдання"
     },
     "project": {
-      "title": "Перегляд справи",
+      "title": "Перегляд Cправи",
       "switchToListView": "Перемикнути до вигляду списку",
-      "switchToGanttView": "Перемкнути в режим перегляду gantt",
+      "switchToGanttView": "Перемкнути до виду розпорядку",
       "switchToKanbanView": "Перемкнути на вигляд дошки",
       "switchToTableView": "Перемкнути в режим таблиць"
     },
@@ -1075,12 +1075,12 @@
     "views": "Перегляди"
   },
   "apiConfig": {
-    "url": "Vikunja URL",
+    "url": "Посиланка до Vikunja",
     "urlPlaceholder": "нап. https://localhost:3456",
     "change": "змінити",
-    "use": "Using Vikunja installation at {0}",
+    "use": "Вжити Vikunja в {0}",
     "error": "Could not find or use Vikunja installation at \"{domain}\". Please check if the url has the correct format and you can reach it when accessing it directly and try again.",
-    "success": "Using Vikunja installation at \"{domain}\".",
+    "success": "Вжити Vikunja з {domain}\".",
     "urlRequired": "Посиланка обов'язкова."
   },
   "loadingError": {
@@ -1097,7 +1097,7 @@
   },
   "quickActions": {
     "commands": "Команди",
-    "placeholder": "Введіть команду або текст для пошуку…",
+    "placeholder": "Введіть вказівку або письмо, щоб знайти…",
     "hint": "You can use {project} to limit the search to a project. Combine {project} or {label} (labels) with a search query to search for a task with these labels or on that project. Use {assignee} to only search for teams.",
     "tasks": "Завдання",
     "projects": "Справи",
@@ -1120,10 +1120,10 @@
     "altFormatShort": "j M Y"
   },
   "reaction": {
-    "reactedWith": "{user} відреагував {value}",
-    "reactedWithAnd": "{users} and {lastUser} reacted with {value}",
-    "reactedWithAndMany": "{users} and {num} more reacted reacted with {value}",
-    "add": "Додайте вашу реакцію"
+    "reactedWith": "{user} лишив відголос {value}",
+    "reactedWithAnd": "{users} та {lastUser} лишили відголос разом з {value}",
+    "reactedWithAndMany": "{users} та {num} найбільш лишали відголос з {value}",
+    "add": "Додайте відголос"
   },
   "error": {
     "error": "Помилка",
@@ -1132,7 +1132,7 @@
     "1001": "Користувач з таким ім'ям вже існує.",
     "1002": "Користувач з цією е-скринькою вже існує.",
     "1004": "Не вказано ім'я користувача і пароль.",
-    "1005": "Користувача не знайдено.",
+    "1005": "Такого користувача немає.",
     "1006": "Неможливо отримати id користувача.",
     "1008": "No password reset token provided.",
     "1009": "Invalid password reset token.",
@@ -1141,39 +1141,39 @@
     "1012": "Email address of the user not confirmed.",
     "1013": "Новий пароль не заповнений.",
     "1014": "Старий пароль не заповнений.",
-    "1015": "Totp is already enabled for this user.",
-    "1016": "Totp is not enabled for this user.",
+    "1015": "Totp увімкнено для цього користувача.",
+    "1016": "Totp не увімкнено для цього користувача.",
     "1017": "Хибний пароль код.",
-    "1018": "Неприпустима настройка типу аватару користувача.",
+    "1018": "Хибний вид облікової світлини користувача.",
     "2001": "ID не може бути порожнім або 0.",
-    "2002": "Some of the request data was invalid.",
-    "3001": "Справи немає.",
+    "2002": "Деякі відомості запиту були хибні.",
+    "3001": "Такої справи немає.",
     "3004": "You need to have read permissions on that project to perform that action.",
     "3005": "Заголовок справи не може бути порожній.",
-    "3006": "Поширення справи немає.",
-    "3007": "A project with this identifier already exists.",
-    "3008": "The project is archived and can therefore only be accessed read only. This is also true for all tasks associated with this project.",
-    "4001": "The project task text cannot be empty.",
-    "4002": "The project task does not exist.",
+    "3006": "Такого поширення справи немає.",
+    "3007": "Справа з таким ідентифікатором вже є.",
+    "3008": "Справа у сховищі, тому доступна тільки для читання. Це діє для усіх завдань пов'язаних з цією справою.",
+    "4001": "Письмо завдання не може бути пустим.",
+    "4002": "Такого завдання у справі немає.",
     "4003": "All bulk editing tasks must belong to the same project.",
-    "4004": "Need at least one task when bulk editing tasks.",
+    "4004": "Має бути хоча б одне завдання при зміні завдань.",
     "4005": "У Вас немає прав дивитися завдання.",
-    "4006": "You can't set a parent task as the task itself.",
+    "4006": "Ви не можете встановити головне завдання як особисте завдання.",
     "4007": "You can't create a task relation with an invalid kind of relation.",
     "4008": "You can't create a task relation which already exists.",
-    "4009": "The task relation does not exist.",
-    "4010": "Cannot relate a task with itself.",
-    "4011": "The task attachment does not exist.",
-    "4012": "The task attachment is too large.",
-    "4013": "The task sort param is invalid.",
+    "4009": "У цього завдання немає зв'язків.",
+    "4010": "Неможливо пов'язати завдання з самим собою.",
+    "4011": "Такого вкладення у завданні немає.",
+    "4012": "Вкладення у завданні завелике.",
+    "4013": "Хибний вимір упорядкування завдань.",
     "4014": "The task sort order is invalid.",
-    "4015": "Відгук до завдання не знайдено.",
-    "4016": "Invalid task field.",
+    "4015": "Такого відгуку завдання немає.",
+    "4016": "Хибне поле завдання.",
     "4017": "Invalid task filter comparator.",
     "4018": "Invalid task filter concatenator.",
     "4019": "Invalid task filter value.",
     "6001": "Назва спільноти не може бути порожньою.",
-    "6002": "Спільноту не знайдено.",
+    "6002": "Такої спільноти немає.",
     "6004": "Спільнота вже має доступ до цієї справи.",
     "6005": "Користувач вже є учасником цієї спільноти.",
     "6006": "Неможливо видалити останнього учасника спільноти.",
@@ -1181,18 +1181,18 @@
     "7002": "Користувач вже має доступ до справи.",
     "7003": "У Вас немає доступу до цієї справи.",
     "8001": "Ця позначка вже існує для цього завдання.",
-    "8002": "The label does not exist.",
+    "8002": "Такої позначки немає.",
     "8003": "У Вас немає доступу до цієї позначки.",
     "9001": "The right is invalid.",
-    "10001": "Стрічки немає.",
+    "10001": "Такої стрічки немає.",
     "10002": "The bucket does not belong to that project.",
     "10003": "Неможливо стерти останню стрічку.",
     "10004": "You cannot add the task to this bucket as it already exceeded the limit of tasks it can hold.",
     "10005": "У справі може бути тільки одна стрічка для закінчення.",
-    "11001": "The saved filter does not exist.",
+    "11001": "Такої постійної вибірки немає.",
     "11002": "Saved filters are not available for link shares.",
     "12001": "The subscription entity type is invalid.",
-    "12002": "You are already subscribed to the entity itself or a parent entity.",
+    "12002": "Ви підписані на саму суть або головну частину.",
     "13001": "This link share requires a password for authentication, but none was provided.",
     "13002": "The provided link share password was invalid."
   },
