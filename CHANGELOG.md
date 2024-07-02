@@ -7,6 +7,946 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 All releases can be found on https://code.vikunja.io/api/releases.
 
+## [0.24.0] - 2024-07-02
+
+### Bug Fixes
+
+* *(BaseButton)* Comment spelling (#2348)
+* *(assignees)* Spacing of users
+* *(attachment)* Correct spacing around creation date
+* *(auth)* Test assertion
+* *(auth)* Use (issuer, name) to check for uniqueness of oidc teams (#2152)
+* *(auth)* Log user out when the current account does not exist
+* *(backgrounds)* Return full project after uploading image
+* *(buckets)* Return correct task count for tasks in buckets
+* *(caldav)* Return more than 1000 tasks
+* *(caldav)* Check if vtodo contains any components
+* *(caldav)* Do not crash for wrong parameters
+* *(ci)* Enable cors for api testing
+* *(ci)* Use correct docker image for frontend testing
+* *(ci)* Use correct docker image
+* *(ci)* Use correct docker image for desktop rename
+* *(ci)* Correctly set shell for rename command
+* *(ci)* Escape bash script for drone variable substitution
+* *(ci)* Run test db in memory
+* *(ci)* Sign drone config
+* *(ci)* Exclude tasks from cron runs
+* *(comments)* Order comments by created timestamp instead of id
+* *(comments)* Do not use whitespace as gap
+* *(datepicker)* Emit date value changes as soon as they happen
+* *(datepicker)* Make the date format in the picker consistent with the input field
+* *(db migration)* Do not try to create a unique index
+* *(docker)* Don't install cypress in docker image
+* *(docs)* Openid docs whitespace formatting (#2186)
+* *(docs)* Typos
+* *(docs)* Correctly document filter query usage
+* *(dump)* Do not export files which do not exist in storage
+* *(dump)* Only allow imports from the same version they were dumped on
+* *(editor)* Ensure task list clicks are only fired once
+* *(editor)* Set default id of tasklist items
+* *(editor)* Revert task list dependence on ids
+* *(editor)* Don't allow image upload when it's not possible to do it
+* *(editor)* Do not use Tiptap to open links when clicking on them, use the browser native attributes instead
+* *(editor)* Do not prevent shift+enter to add a line break in text
+* *(editor)* Use colors from color scheme to render table cells
+* *(export)* Make export work with project views and new task positions
+* *(extensions)* Remove typescript-vue-plugin from recommendations (#2353)
+* *(favorites)* Make favorites work with configurable views
+* *(favorites)* Allow marking favorite tasks as done from favorites pseudo project
+* *(filter)* Make sure single filter condition works
+* *(filter)* Don't crash on empty filter
+* *(filter)* Allow filtering on "in" condition
+* *(filter)* Allow filtering for "project"
+* *(filter)* Translate all tests
+* *(filter)* Correctly filter for buckets
+* *(filter)* Add role=search to filter card
+* *(filter)* Correctly pass down options
+* *(filter)* Bubble filter query changes up on blur only
+* *(filter)* Don't transform anything when input is empty
+* *(filter)* Correctly replace project title in filter query
+* *(filter)* Do not match join operator
+* *(filter)* Do not show filter footer when creating a filter
+* *(filter)* Add white background to filter input
+* *(filter)* Make sure highlight works for doneAt attribute
+* *(filter)* Move spaces out of button to after the matched filter value to prevent removal of spaces
+* *(filter)* Clarify `in` filter syntax
+* *(filter)* Trim search term before searching
+* *(filter)* Do not add enter in input field
+* *(filters)* Lint
+* *(filters)* Use readable colors for dark and light mode
+* *(filters)* Date filter value not populated
+* *(filters)* Make the button look less like a button to avoid spacing problems
+* *(filters)* Color
+* *(filters)* Make sure spaces before and after are not removed
+* *(filters)* Pass correct filter query to kanban and gantt loading
+* *(filters)* Swagger docs for kanban buckets
+* *(filters)* Correctly use filter in saved filter
+* *(filters)* Remove footer when editing a saved filter
+* *(filters)* Layout problems with assignee user avatar
+* *(filters)* Lint
+* *(filters)* Close filter popup when clicking on show results
+* *(filters)* Test fixture
+* *(filters)* Correctly use date filters in gantt chart
+* *(filters)* Do not require string for in comparator
+* *(filters)* Parse labels and projects correctly when using `in` filter operator
+* *(filters)* Label highlighting and autocomplete fields now work with in operator
+* *(filters)* Don't escape valid escaped in queries
+* *(filters)* Invalid filter range when converting dates to strings
+* *(filters)* Replace project titles at the match position, not anywhere in the filter string
+* *(filters)* Set default filter value to only undone tasks
+* *(filters)* Rework filter popup button
+* *(filters)* Lint
+* *(filters)* Persist filters in url
+* *(filters)* Do not fire filter change immediately
+* *(filters)* Do not watch debounced
+* *(filters)* Correctly return project from filter
+* *(filters)* Correctly replace values when clicking on an autocomplete result
+* *(filters)* Clear autocomplete results when starting the next character
+* *(filters)* Make sure the same filter attribute is transformed in all instances
+* *(filters)* Enclose values with a slash in them as strings so that date math values work
+* *(filters)* Always show filter values in a readable color
+* *(filters)* Always persist filter or search in query path and load it correctly into filter query input when loading the page
+* *(filters)* Explicitly use `tasks.id` as task id filter column
+* *(filters)* Do not match partial labels
+* *(filters)* Allow managing views for saved filters
+* *(gantt)* Use color variables for gantt header so that it works in dark mode
+* *(gantt)* Correctly show day in chart
+* *(i18n)* Use correct title for background settings menu
+* *(i18n)* Clarify from current date string
+* *(i18n)* Typo
+* *(i18n)* Adjust tests from 34780daab0af0c088d6484d5fa0ddfba01471e8b
+* *(i18n)* Remove duplicate key
+* *(kanban)* Pass active filters down to task lazy loading
+* *(kanban)* Reset done and default bucket when the bucket itself is deleted
+* *(kanban)* Do not use the bucket id saved on the task
+* *(kanban)* Remove unused function
+* *(kanban)* Make sure all saved taskBucket positions are saved with their project view id
+* *(kanban)* Save done and default bucket on the view and not on the project
+* *(kanban)* Do not focus kanban board
+* *(kanban)* Do not add bottom spacing to view
+* *(kanban)* Do not focus on task list in bucket when clicking on a task
+* *(kanban)* Fetch project and view when checking permissions
+* *(kanban)* Remove leftovers of kanban_position property
+* *(labels)* Make sure labels are aligned in the middle
+* *(labels)* Allow link shares to add existing labels to a task
+* *(logo)* Use correct month for pride logo change
+* *(logo)* Add width and height to pride logo svg
+* *(metrics)* Typo
+* *(migration)* Make sure to correctly check if a migration was already running
+* *(migration)* Do not halt the whole migration when copying a background file failed
+* *(migration)* Show correct help message when a migration was started
+* *(migration)* Do not expire trello token
+* *(migration)* Convert trello card descriptions from markdown to html
+* *(migration)* Trello checklists (#2140)
+* *(migration)* Updated Trello color map to import all labels (#2178)
+* *(migration)* Import card covers when migrating from Trello
+* *(migration)* Only download uploaded attachments
+* *(migration)* Show correct message after starting a migration
+* *(migration)* Trello: only fetch attachments when the card actually has attachments
+* *(migration)* Import card comments from Trello when migrating
+* *(migration)* Invalid field in organization struct
+* *(migration)* Import task comments with original timestamps
+* *(migration)* Remove buckets table name when dropping index
+* *(migration)* Ensure tasks are put into the correct bucket when migrating from todoist
+* *(migration)* Put "Import from other services" in settings
+* *(modal)* Do not set p in modal card as flex
+* *(navigation)* Do not hide shadows of dropdown menu
+* *(navigation)* Scrolling when many projects are present
+* *(notifications)* Only sanitze html content in notifications, do not convert it to markdown
+* *(notifications)* Rendering of plaintext mails
+* *(openid)* OIDC teams should not have admins (#2161)
+* *(password)* Don't validate password min length on login page
+* *(pnpm)* Remove obsolete settings
+* *(project)* Don't allow archival or deletion of default projects in UI
+* *(project)* Check for project nesting cycles with a single recursive cte instead of a loop
+* *(project)* Typo in table name
+* *(project)* Correctly show the number of tasks and projects when deleting a project
+* *(project)* Load full project after creating a project
+* *(project)* Save the last 6 projects in history, show only 5 on desktop
+* *(project)* Return the full project when setting a background
+* *(project)* Remove child projects from state when deleting a project
+* *(project)* Do not crash when views were not loaded yet
+* *(project)* Delete all related entities when deleting a project
+* *(project)* Do not crash when duplicating a project with no tasks
+* *(project)* Return full project after duplicating it
+* *(project)* Add more spacing between filter button and view switcher on mobile
+* *(project)* Bottom spacing in list view
+* *(project)* Make sure gantt and kanban views shared with link share are full width
+* *(project)* Do not remove project from navigation after removing background image
+* *(project)* Show "remove background" button only when the project has a background set
+* *(projects)* Return correct project pagination count
+* *(projects)* Load all projects when first opening Vikunja
+* *(projects)* Load projects only one when fetching subscriptions for a bunch of projects at once
+* *(projects)* Remove done bucket id field from projects struct
+* *(projects)* Allow arbitrary nesting of new projects
+* *(projects)* Do not return parent project id of parents where the user does not have access
+* *(projects)* Do not return parent project id when authenticating as link share
+* *(quick actions)* Do not allow creating a task when the current project is a saved filter
+* *(quick add magic)* Parse full month name as month, do not replace only the abbreviation
+* *(quick add magic)* Assume today when no date was specified with time
+* *(reactions)* Do not enable reaction picker when the current user does not have write access
+* *(reminder)* Do not close the popup directly after changing the value
+* *(reminders)* Emit reminder changes at the correct time (and make sure they are actually emitted)
+* *(reminders)* Make debounce logic actually work
+* *(reminders)* Do not fall back to hours when the reminder interval is minutes
+* *(reminders)* Do not show relative reminders as minutes when they round to hours
+* *(restore)* Transform json fields during restore
+* *(semver)* Fix produced version number (#2378)
+* *(sentry)* Send unwrapped error to sentry instead of http error
+* *(sentry)* Do not send api errors to sentry
+* *(sharing)* Show user display name and avatar when displaying search results
+* *(table view)* Do not sort table column fields when the field in question is hidden
+* *(task)* Move done tasks to the done bucket when they are moved between projects and the new project has a done bucket
+* *(task)* Navigate back to project when the project was the last page in the history the user visited
+* *(task)* Clear timeout for description save when closing the task detail
+* *(task)* Do not crash when loading a task if parent projects are not loaded
+* *(task)* Show repeating indicator in task list for monthly repeating tasks
+* *(task)* Only count unique tasks in a bucket when checking bucket limit
+* *(task)* Do not require admin permission to move tasks between buckets
+* *(task)* Do not try to set bucket for filtered bucket configuration
+* *(task)* Show correct success message when marking a repeating task as done
+* *(task)* Do not move task dates when undoing a repeated task
+* *(tasklist)* Migrate old tasklist format
+* *(tasks)* Sort done tasks last in relations
+* *(tasks)* Correctly show different project in related tasks
+* *(tasks)* Use correct filter query when filtering
+* *(tasks)* Index and order by task position when using typesense
+* *(tasks)* Make fetching tasks in buckets via typesense work
+* *(tasks)* Ambiguous column name error when fetching favorite tasks
+* *(tasks)* Do not crash when order by id and position
+* *(tasks)* Tests
+* *(tasks)* Clarify usage of repeating modes available in quick add magic.
+* *(teams)* Use the same color for border between teams in list
+* *(teams)* Do not show leave button for OIDC teams (#2181)
+* *(teams)* Fix duplicate teams being shown when new public team visibility feature is enabled (#2187)
+* *(test)* Use correct selector in Cypress test
+* *(test)* Correctly mock localstorage in unit tests
+* *(test)* Visit one more project in project history test
+* *(test)* Add task to bucket in test
+* *(test)* Cast result before comparing
+* *(tests)* Make filter tests work again
+* *(tests)* Do not try to create tasks with bucket_id
+* *(ts)* Align with create-vue setup
+* *(typesense)* Fix reindexing views and positions in typesense
+* *(typesense)* Make fetching task positions per view more efficient
+* *(typesense)* Correctly incorporate existing filter when it is empty
+* *(typesense)* Only return distinct tasks once
+* *(typesense)* Correctly join task position table when sorting by it
+* *(typesense)* Do not try to sort by position when searching in a saved filter
+* *(typesense)* Correctly index assignee changes on tasks
+* *(views)* Correctly fetch project when fetching tasks
+* *(views)* Do not break filters when combining them with view filters
+* *(views)* Make gantt view load tasks again
+* *(views)* Make table view load tasks again
+* *(views)* Make fetching tasks in kanban buckets through view actually work
+* *(views)* Fetch buckets through view
+* *(views)* Return tasks in their buckets
+* *(views)* Return buckets when fetching tasks via kanban view
+* *(views)* Return tasks directly or in buckets, no matter if accessing via user or link share
+* *(views)* Make no initial view work in the frontend
+* *(views)* Move to new project view when moving tasks
+* *(views)* Do not load views async
+* *(views)* Get tasks in saved filter
+* *(views)* Make setting task position in saved filters work
+* *(views)* Make bucket creation work again
+* *(views)* Make bucket edit work
+* *(views)* Do not return kanban tasks multiple times
+* *(views)* Make parsing work
+* *(views)* View deletion
+* *(views)* Create view
+* *(views)* Set correct default view
+* *(views)* Set current project after modifying views
+* *(views)* Make kanban tests work again
+* *(views)* Move all tasks to the default bucket when deleting a bucket
+* *(views)* Duplicate all views and related entities when duplicating a project
+* *(views)* Update test fixtures for new structure
+* *(views)* Test assertions
+* *(views)* Count task buckets
+* *(views)* Return correct error
+* *(views)* Integration tests
+* *(views)* Import
+* *(views)* Lint
+* *(views)* Lint
+* *(views)* Make tests for project history kind of work again
+* *(views)* Tests for kanban and gantt views
+* *(views)* Correctly pass project id when loading more tasks in kanban views
+* *(views)* Return only tasks when the bucket id was already specified
+* *(views)* Reset bucket when moving tasks between projects
+* *(views)* Make kanban cypress tests work again
+* *(views)* Make list cypress tests work again
+* *(views)* Always redirect to the first view when none was specified
+* *(views)* Make table view cypress tests work again
+* *(views)* Correctly save and retrieve last accessed project views
+* *(views)* Make link share cypress tests work again
+* *(views)* Make overview cypress tests work again
+* *(views)* Make task cypress tests work again
+* *(views)* Kanban test assertions
+* *(views)* Update done status of recurring tasks
+* *(views)* Include order by fields in distinct clause when sorting by task position
+* *(views)* Stable assertion for bucket in tests
+* *(views)* Redirect to project after authenticating with a link share
+* *(views)* Intercept request
+* *(views)* Create bucket in test
+* *(views)* Create default bucket
+* *(views)* Do not map bucket id from xorm
+* *(views)* Add bottom spacing
+* *(views)* Update all fields when updating a view
+* *(views)* Use correct assertion in test
+* *(views)* Correctly pass view id to wrapper when gantt view is active
+* *(views)* Transform view filter before and after loading it from the api
+* *(views)* Refactor filter button slot in wrapper
+* *(views)* Remove default filter from frontend, apply by default to new list views instead (#2240)
+* *(views)* Check if bucket index already exists before creating new index
+* *(views)* Make sure the view is saved properly in localStorage
+* *(views)* Make sure view changes are reflected in switcher
+* *(views)* Only allow project admins to manage views
+* *(views)* Transform bucket configurations
+* *(views)* Edit views with filters
+* *(views)* Do not allow moving tasks or editing board when bucket mode is filter
+* *(views)* Move bucket update to extra endpoint
+	- **BREAKING**: The bucket id of the task model is now only used internally and will not trigger a change in buckets when updating the task.
+* *(vue)* ToValue instead of unref
+* *(webhook)* Log errors in webhook response
+* *(webhooks)* Fire webhooks set on parent projects as well* Never return frontend on routes starting with /api ([641fec1](641fec12157504b8ed2935ba9943828662a725f9))
+* Do not send etag when serving the frontend index file ([a12c169](a12c169ce88c5cf6711a3239f1687a1dad24a241))
+* Lint ([162741e](162741e94064ee199cd5ff021d1ed05f7f5d5ff1))
+* Lint ([cc5f48e](cc5f48eb7411f2afa1b0bfb0fc975356b330399a))
+* Lint ([ff1730e](ff1730e323b61c8c5ab6f9955bb067bc04e72c8f))
+* Clarify preview deployment text and fix typo ([1ffb93b](1ffb93b63c6a57202c7154d09c1db749779b2fbd))
+* Lint ([1275dfc](1275dfc260cfd3be98ebed652ef449f182ca42ff))
+* Usage of limit and order by usage in recursive cte ([5b70609](5b70609ba760ea68b43f6d42a69a1b32eeb2abec))
+* Open external migration service in current tab ([178cd8c](178cd8c3927759a5ca553b3ae76be5ff23e23d83))
+* Add root ca to final docker image ([e42a605](e42a605597335507c71ac038f51a775df2775ebd))
+* Lint ([6fc3d1e](6fc3d1e98fe28d7e561a4ebe1d00938f8346fae1))
+* Lint ([49ab90f](49ab90fc19f9da7d1308c923d6dd99b8a6a355ef))
+* Lint ([5e9edef](5e9edef3b36f6a4be5002b8aef4bc02c7649f7b6))
+* Lint ([6f51b56](6f51b565895edd75ca26d96c08af26d85ce38f3a))
+* Pick first available view if currently configured view got deleted (#2235) ([c4d3d99](c4d3d99cd49aa65d602327abcc5f848d81d6da4e))
+* Do not try to fetch nonexistant bucket ([037022e](037022e8570f9b7b0d3053e2b20057b8f5630803))
+* Update task in typesense when adding a label or assignee to them ([5213006](521300613f24f2ed585ca7da49a02b58f7d77fb8))
+* Lint ([1cd5dd2](1cd5dd2b2fc06731c70721a42ca93966449fa3d2))
+* Drop bucket index before recreating it ([ca33c0b](ca33c0b2bcaf9de018cecca1051bc4c3b176ce61))
+* Lint ([af3b0bb](af3b0bbea1f31725910011a57bf8db81b8d73e43))
+* Lint ([7d755fc](7d755fcb89bbdbbb4f5fe7f329903f1ffba96a29))
+* License in cmd help text ([9a16f6f](9a16f6f817157316ce40c8c76f83a8e0d8c0e669))
+* Do not push nil errors to sentry ([1460d21](1460d212ee4a0e2baddb297d52d91af69d58c881))
+* Correctly return error and bubble up when the api could not be reached ([84197dd](84197dd9c14b7f016bad452f8d529b32f593683c))
+* Do not remove empty openid teams when none are present ([66e9632](66e96322eabf009b25a1f7b9c4b2750b9cb47817))
+* Use correct project title in project card ([d3a7d79](d3a7d79eb95595f7154b9fbf05e369941189cf5c))
+* Ignore casing to check if file extensions can be previewed (#2341) ([81bdad4](81bdad4bebdc8ee19c01d8b44012e89daef6930b))
+* Recommended vitest extension (#2351) ([d3d5df5](d3d5df5f62cbb61dd8bb9166500203b212173f28))
+* Remove obsolete vscode plugin settings (#2354) ([666eef2](666eef248b5b328f51bda430098d4a6fa625e9db))
+* Throw in warnHandler ([81bb49f](81bb49f83aa7878963bb21a436f96d766464188c))
+* Use node20 typescript types ([abf912f](abf912f93f86f98855fd141d8c9e4deb447390c1))
+* Remove jsxTemplates ([9fa8c54](9fa8c5429b1191e9705caf06d113ec196755e0ae))
+* Remove wrong expression ([fe2c390](fe2c3906cabce98fe4dbe1bb7240424fc58e6a05))
+* Remove obsolete types ([97a11d2](97a11d2e120f7819be8eed31765ab152fd69da35))
+* UseTitle types (#2369) ([9fd17ac](9fd17aca1813087e98b4d5e5a758b7e62482d3d9))
+* Remove obsolete vite reactivityTransform option (#2349) ([3718d09](3718d09f3573cfd122ccff92576ee4e03abdd0b6))
+* Missing required prop BackgroundColor ([47143af](47143af9d1716dac8b75c29c5c26066a96ddc2e6))
+* Use button icon prop ([18e23bf](18e23bf371ef2a6067bde0a976ddc546d0a7d73a))
+* Remove uppercase transformation from username (#2445) ([ff5ee51](ff5ee515f9da78b506f8be124b9e803b494df49c))
+* Disable vetur in case it's installed ([abdec17](abdec17d366b7dbfc2565a6e354e065256a7451e))
+* Import PeriodUnit as type ([baaf612](baaf612239e4e53631c9148f2f3735d8a10ca1b4))
+* Reset drag.value ([c90ee01](c90ee0142a959135546d5821f03f4615b5020f07))
+* Import type in EditorToolbar ([9f375ec](9f375ecd7d8fb36ac74e4d45af19a271b4272551))
+* Remove props prefix from template ([b224b33](b224b331f5df94a9a976bccd18d9a905298b9e54))
+* Move types to dev dependencies ([7979884](79798847b2a095c3c89931cb3d0354441bee80d4))
+* Typecheck ([142443c](142443c0a757968a9c8b2caeb7fddb6c6bc6dc76))
+* Align spelling in config.yml.sample (#2499) ([6d79eb0](6d79eb00885c7f597e681ab2af339cdd4a11b807))
+
+### Dependencies
+
+* *(deps)* Update dependency vue to v3.4.18
+* *(deps)* Update module golang.org/x/sys to v0.17.0
+* *(deps)* Update module github.com/getsentry/sentry-go to v0.27.0
+* *(deps)* Update module xorm.io/xorm to v1.3.8
+* *(deps)* Pin dependencies
+* *(deps)* Update module golang.org/x/oauth2 to v0.17.0
+* *(deps)* Update tiptap to v2.2.2
+* *(deps)* Update dev-dependencies to v7
+* *(deps)* Update pnpm to v8.15.2
+* *(deps)* Update dependency vue to v3.4.19
+* *(deps)* Update sentry-javascript monorepo to v7.101.0
+* *(deps)* Update module github.com/arran4/golang-ical to v0.2.5
+* *(deps)* Update pnpm to v8.15.3
+* *(deps)* Update module github.com/arran4/golang-ical to v0.2.6
+* *(deps)* Update dependency vue-flatpickr-component to v11.0.4
+* *(deps)* Update sentry-javascript monorepo to v7.101.1
+* *(deps)* Update dependency @kyvg/vue3-notification to v3.2.0
+* *(deps)* Update module github.com/go-testfixtures/testfixtures/v3 to v3.10.0
+* *(deps)* Update tiptap to v2.2.3
+* *(deps)* Update module github.com/redis/go-redis/v9 to v9.5.0
+* *(deps)* Update vueuse to v10.8.0
+* *(deps)* Update sentry-javascript monorepo to v7.102.0
+* *(deps)* Update module github.com/redis/go-redis/v9 to v9.5.1
+* *(deps)* Update dependency electron to v29
+* *(deps)* Update dependency dompurify to v3.0.9
+* *(deps)* Update dependency vue-router to v4.3.0
+* *(deps)* Update tiptap to v2.2.4
+* *(deps)* Update pnpm to v8.15.4
+* *(deps)* Update sentry-javascript monorepo to v7.102.1
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dependency vue to v3.4.21
+* *(deps)* Update module github.com/prometheus/client_golang to v1.19.0
+* *(deps)* Update module golang.org/x/crypto to v0.20.0
+* *(deps)* Update sentry-javascript monorepo to v7.103.0
+* *(deps)* Update vueuse to v10.9.0
+* *(deps)* Update dependency express to v4.18.3
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dependency vue-tsc to v2
+* *(deps)* Update sentry-javascript monorepo to v7.105.0
+* *(deps)* Update module github.com/stretchr/testify to v1.9.0
+* *(deps)* Update dependency vue-i18n to v9.10.1
+* *(deps)* Update module golang.org/x/sys to v0.18.0
+* *(deps)* Update module github.com/arran4/golang-ical to v0.2.7
+* *(deps)* Update module golang.org/x/term to v0.18.0
+* *(deps)* Update module golang.org/x/crypto to v0.21.0
+* *(deps)* Update dependency vue-flatpickr-component to v11.0.5
+* *(deps)* Update module golang.org/x/oauth2 to v0.18.0
+* *(deps)* Update dev-dependencies
+* *(deps)* Update src.techknowlogick.com/xgo digest to 770b8ea
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dependency @intlify/unplugin-vue-i18n to v3
+* *(deps)* Update dependency @intlify/unplugin-vue-i18n to v3.0.1
+* *(deps)* Update dependency electron to v29.1.1
+* *(deps)* Update github.com/go-jose/go-jose to 3.0.3
+* *(deps)* Update sentry-javascript monorepo to v7.106.0
+* *(deps)* Update module github.com/golang-jwt/jwt/v5 to v5.2.1
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dependency @vue/eslint-config-typescript to v13
+* *(deps)* Update module github.com/go-sql-driver/mysql to v1.8.0
+* *(deps)* Update dependency happy-dom to v13.7.1
+* *(deps)* Go mod tidy
+* *(deps)* Update dependency node to v20.11.1
+* *(deps)* Sign drone config
+* *(deps)* Update golangci/golangci-lint docker tag to v1.56.2 (#2099)
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dependency date-fns to v3.4.0
+* *(deps)* Update sentry-javascript monorepo to v7.106.1
+* *(deps)* Pin dependency vuemoji-picker to 0.2.1
+* *(deps)* Update dependency happy-dom to v13.8.2
+* *(deps)* Update dev-dependencies
+* *(deps)* Update google.golang.org/protobuf from 1.32.0 to 1.33.0
+* *(deps)* Update dev-dependencies
+* *(deps)* Update sentry-javascript monorepo to v7.107.0
+* *(deps)* Update dependency axios to v1.6.8
+* *(deps)* Update dependency ufo to v1.5.0
+* *(deps)* Update dependency vue-i18n to v9.10.2
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dependency ufo to v1.5.1
+* *(deps)* Update dependency date-fns to v3.5.0
+* *(deps)* Update module github.com/adlio/trello to v1.11.0
+* *(deps)* Update dependency date-fns to v3.6.0
+* *(deps)* Update dev-dependencies
+* *(deps)* Update pnpm to v8.15.5
+* *(deps)* Update module xorm.io/xorm to v1.3.9
+* *(deps)* Update dependency happy-dom to v14
+* *(deps)* Update dependency ufo to v1.5.2
+* *(deps)* Update dependency @kyvg/vue3-notification to v3.2.1
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dependency dompurify to v3.0.10
+* *(deps)* Update module github.com/coreos/go-oidc/v3 to v3.10.0
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dependency @infectoone/vue-ganttastic to v2.3.1
+* *(deps)* Update dependency express to v4.19.0
+* *(deps)* Update dependency ufo to v1.5.3
+* *(deps)* Update sentry-javascript monorepo to v7.108.0
+* *(deps)* Update dependency dompurify to v3.0.11
+* *(deps)* Update dependency express to v4.19.2
+* *(deps)* Update module github.com/go-sql-driver/mysql to v1.8.1
+* *(deps)* Sign drone config
+* *(deps)* Update sentry-javascript monorepo to v7.109.0
+* *(deps)* Update dev-dependencies (#2229)
+* *(deps)* Update dev-dependencies
+* *(deps)* Update src.techknowlogick.com/xgo digest to e01c4fb
+* *(deps)* Update golangci/golangci-lint docker tag to v1.57.2 (#2225)
+* *(deps)* Update dev-dependencies
+* *(deps)* Update pnpm to v8.15.6
+* *(deps)* Update dependency @infectoone/vue-ganttastic to v2.3.2
+* *(deps)* Update goreleaser/nfpm docker tag to v2.36.1
+* *(deps)* Update font awesome to v6.5.2
+* *(deps)* Update module github.com/yuin/goldmark to v1.7.1
+* *(deps)* Update tiptap to v2.2.6
+* *(deps)* Update dependency dompurify to v3.1.0
+* *(deps)* Update dependency vue-i18n to v9.11.0
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dependency vue-i18n to v9.11.1
+* *(deps)* Update tiptap to v2.3.0
+* *(deps)* Update dev-dependencies
+* *(deps)* Update module github.com/arran4/golang-ical to v0.2.8
+* *(deps)* Update github.com/adlio/trello to v1.12.0
+* *(deps)* Update sentry-javascript monorepo to v7.110.1
+* *(deps)* Update pnpm to v8.15.7
+* *(deps)* Update dependency vue to v3.4.23
+* *(deps)* Update dependency @intlify/unplugin-vue-i18n to v4
+* *(deps)* Update module golang.org/x/sync to v0.7.0 (#2258)
+* *(deps)* Update dependency vue-router to v4.3.2
+* *(deps)* Update module github.com/tkuchiki/go-timezone to v0.2.3
+* *(deps)* Update module golang.org/x/oauth2 to v0.19.0
+* *(deps)* Update sentry-javascript monorepo to v7.111.0
+* *(deps)* Update module github.com/labstack/echo/v4 to v4.12.0
+* *(deps)* Update dependency vue-i18n to v9.13.0
+* *(deps)* Update pnpm to v9
+* *(deps)* Update dependency node to v20.12.2 (#2238)
+* *(deps)* Update dev-dependencies
+* *(deps)* Update pnpm to v9.0.4
+* *(deps)* Update dev-dependencies
+* *(deps)* Update pnpm to v9.0.5
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dependency vue to v3.4.24
+* *(deps)* Update dependency vue-i18n to v9.13.1
+* *(deps)* Update github.com/dustinkirkland/golang-petname digest to 76c06c4
+* *(deps)* Update dev-dependencies
+* *(deps)* Update sentry-javascript monorepo to v7.112.0
+* *(deps)* Update sentry-javascript monorepo to v7.112.1
+* *(deps)* Update dependency workbox-precaching to v7.1.0
+* *(deps)* Update dev-dependencies
+* *(deps)* Update sentry-javascript monorepo to v7.112.2
+* *(deps)* Update dependency vue to v3.4.25
+* *(deps)* Update dependency vitest to v1.5.1
+* *(deps)* Update pnpm to v9.0.6
+* *(deps)* Update dependency vitest to v1.5.2
+* *(deps)* Update dependency dompurify to v3.1.1
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dependency dayjs to v1.11.11
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dependency vue to v3.4.26
+* *(deps)* Update tiptap to v2.3.1
+* *(deps)* Update dependency dompurify to v3.1.2
+* *(deps)* Update dev-dependencies
+* *(deps)* Update sentry-javascript monorepo to v7.113.0
+* *(deps)* Update dependency vite to v5.2.11
+* *(deps)* Update dev-dependencies
+* *(deps)* Update module golang.org/x/oauth2 to v0.20.0
+* *(deps)* Update module golang.org/x/sys to v0.20.0
+* *(deps)* Update module golang.org/x/text to v0.15.0
+* *(deps)* Update dev-dependencies
+* *(deps)* Update module golang.org/x/term to v0.20.0
+* *(deps)* Update module golang.org/x/image to v0.16.0
+* *(deps)* Update pnpm to v9.1.0
+* *(deps)* Update module golang.org/x/crypto to v0.23.0
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dependency vue to v3.4.27
+* *(deps)* Update dependency node to v20.13.0
+* *(deps)* Update dependency go to v1.22.3
+* *(deps)* Update dev-dependencies
+* *(deps)* Update sentry-javascript monorepo to v7.114.0
+* *(deps)* Update tiptap to v2.3.2
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dependency node to v20.14.0 (#2334)
+* *(deps)* Update dependency go to v1.22.4
+* *(deps)* Update dependency @fortawesome/vue-fontawesome to v3.0.8
+* *(deps)* Update dependency dompurify to v3.1.5
+* *(deps)* Update dependency vue-advanced-cropper to v2.8.9
+* *(deps)* Update dependency vue-router to v4.3.3
+* *(deps)* Update module github.com/gabriel-vasile/mimetype to v1.4.4
+* *(deps)* Update module github.com/ganigeorgiev/fexpr to v0.4.1
+* *(deps)* Update module github.com/prometheus/client_golang to v1.19.1
+* *(deps)* Update module github.com/redis/go-redis/v9 to v9.5.3
+* *(deps)* Update pnpm to v9.3.0
+* *(deps)* Update dev-dependencies
+* *(deps)* Update tiptap to v2.4.0
+* *(deps)* Update vueuse to v10.10.1
+* *(deps)* Update dependency @sentry/vue to v7.117.0
+* *(deps)* Update dependency axios to v1.7.2
+* *(deps)* Update module github.com/arran4/golang-ical to v0.3.0
+* *(deps)* Update module github.com/hashicorp/go-version to v1.7.0
+* *(deps)* Update module github.com/go-testfixtures/testfixtures/v3 to v3.11.0
+* *(deps)* Update module golang.org/x/oauth2 to v0.21.0
+* *(deps)* Update module golang.org/x/sys to v0.21.0
+* *(deps)* Update module github.com/spf13/viper to v1.19.0
+* *(deps)* Update module golang.org/x/text to v0.16.0
+* *(deps)* Update module golang.org/x/image to v0.17.0
+* *(deps)* Update dependency @sentry/vue to v8
+* *(deps)* Update module github.com/getsentry/sentry-go to v0.28.1
+* *(deps)* Update dependency snake-case to v4
+* *(deps)* Update flake
+* *(deps)* Update dev-dependencies
+* *(deps)* Update module golang.org/x/term to v0.21.0
+* *(deps)* Update vueuse to v10.11.0
+* *(deps)* Update dependency camel-case to v5
+* *(deps)* Update dependency vue to v3.4.29
+* *(deps)* Update module golang.org/x/crypto to v0.24.0
+* *(deps)* Update module github.com/typesense/typesense-go to v1.1.0
+* *(deps)* Update module github.com/yuin/goldmark to v1.7.2
+* *(deps)* Update module github.com/spf13/cobra to v1.8.1
+* *(deps)* Update pnpm to v9.4.0
+* *(deps)* Update dev-dependencies
+* *(deps)* Update goreleaser/nfpm docker tag to v2.37.1
+* *(deps)* Update golangci-lint to 1.59.1
+* *(deps)* Update module github.com/wneessen/go-mail to v0.4.1
+* *(deps)* Update dependency @sentry/vue to v8.10.0
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dependency @types/node to v20.14.6
+* *(deps)* Update dependency node to v20.15.0
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dependency vue-router to v4.4.0
+* *(deps)* Update dependency @sentry/vue to v8.11.0
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dependency vue to v3.4.30
+* *(deps)* Update module github.com/yuin/goldmark to v1.7.3
+* *(deps)* Update dev-dependencies to v7.14.1
+* *(deps)* Update dependency @sentry/vue to v8.12.0
+* *(deps)* Update module github.com/yuin/goldmark to v1.7.4
+* *(deps)* Update module golang.org/x/image to v0.18.0
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dependency caniuse-lite to v1.0.30001638
+* *(deps)* Update module github.com/wneessen/go-mail to v0.4.2
+* *(deps)* Update dependency vue to v3.4.31
+* *(deps)* Update dependency @sentry/vue to v8.13.0
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dev-dependencies
+
+### Documentation
+
+* *(filter)* Add filter query explanation* Mention installation of rpm packages ([eec53e8](eec53e8a5451143eefc53c861a26e601aed3e636))
+* Add missing traefik label ([99856b2](99856b2031b8811ac08acfc773e1df294465cd9e))
+* Add desktop packages ([1255bdc](1255bdc4abc57aa2a30eb6ced138a70ea94fcd08))
+* Add healthcheck to docker compose examples ([001268a](001268a33eefa7dd2b14f401d6fb7bfbee04c21c))
+* Fix healthcheck and mariadb password ([18374c2](18374c2e52a78d48698945981fb59ea3a86eff12))
+* Fix database healthcheck command ([89e349f](89e349f2fd3c57674b3645ac682582b52e5c398f))
+* Fix postgres example healthcheck ([7ae38c5](7ae38c5ac1e3eaa845753cfcbd2d06fd83418070))
+* Remove outdated information ([5ab720d](5ab720d7093d14f1b57bf7317e16131e8ec766c0))
+* Clarify public url usage in installation ([e532979](e532979101287eda13a479382432129bba85bf43))
+* Mention how to support the project in readme ([4d11dd0](4d11dd0383ef4e4e0dc78d01eb24febee7661f96))
+* Update publiccode.yml [skip ci] ([2e5c193](2e5c19352ec5abdf0c7281637066e96243f413ff))
+* Update config docs ([09d4467](09d446765d9bb287084322b8a22977fe4355aaca))
+* Add missing front matter ([6db8728](6db8728420296f2c76320b3efe71c38e848cefc9))
+* Improve OpenID documentation (#2151) ([92d9c31](92d9c31101e5d3bc0d9d726c5075f0ca6b99f2d2))
+* Clarify what to use for authurl ([6e52db7](6e52db76dcc020f4492731f1823bf7a94b4cb951))
+* Add migrations setup doc (#2183) ([1d5517b](1d5517b53a4649bbe2e6aec8ae07687b0288cfd4))
+* Fix broken link in migration docs (#2185) ([4b4a7f3](4b4a7f3c0afa2344e72e695918fdad20d97ddb2d))
+* Add details about supported and required OIDC claims (#2201) ([be54a36](be54a361fd680e7bd63309db5338980badea86de))
+* Add Korganizer to supported caldav clients ([e0417c8](e0417c8bdaa398f718f1f16522ff512276753201))
+* Fix build-from-sources docs mistake (#2251) ([1adaa73](1adaa7314172e6c8dfa239a328c5899d58a842cf))
+* Clarify transitioning from unstable to release ([0557d4b](0557d4b5bba1a111ed70a484f88cec1636e29371))
+* Clarify automatic openid team creation ([4e49ec9](4e49ec9e16ba5176ce8596e88f96d4a8983922f9))
+* Clarify vikunja cli usage in docker ([75fd17c](75fd17c7503b6a1189a3ede1c45be03a69b1fd72))
+* Clarify version checkout when building from source ([73bf119](73bf119409acdd474999fe9a513691da61bbe429))
+* Fix typo in README.md (#2271) ([aceaccb](aceaccbf117216a5127d88f78add575cd6ed6dcd))
+* Clarify where to file issues ([8d1fc08](8d1fc08de628d721234cb22a230e04e3d037fb44))
+* Remove superfluous yaml code block (#2342) ([8bc23b3](8bc23b3a54068da2d3cdd1aa7ace0d9e21bb72b4))
+* Remove docs files ([7a29011](7a290116e86f73149f22a1443d4867a363c96580))
+
+### Features
+
+* *(FilterInput)* Use expandable
+* *(XButton)* Merge script blocks
+* *(api)* All usable routes behind authentication now have permissions
+* *(api)* Add bulk endpoints to api tokens
+* *(api tokens)* Add task attachment to api scopes
+* *(auth)* Update team name in Vikunja when it was changed in the openid provider
+* *(backgrounds)* Resize images to a maximum of 4K
+* *(ci)* Rename unstable desktop packages
+* *(ci)* Automatically create a gitea release when tagging
+* *(components)* Align component name casing datemath (#2405)
+* *(components)* Align component name casing ContentAuth
+* *(components)* Align component name casing multiselect
+* *(components)* Align component name casing apiconfig
+* *(components)* Align component name casing CreateEdit
+* *(components)* Align component name casing password
+* *(components)* Align component name casing card
+* *(components)* Align component name casing color-bubble
+* *(components)* Align component name casing Error
+* *(components)* Align component name casing Pagination
+* *(components)* Align component name casing Dropdown
+* *(components)* Align component name casing ContentLinkShare
+* *(components)* Align component name casing Navigation
+* *(components)* Align component name casing fancycheckbox
+* *(components)* Align component name casing Legal
+* *(components)* Align component name casing Loading
+* *(components)* Align component name casing Message
+* *(components)* Align component name casing NoAuthWrapper
+* *(components)* Align component name casing Nothing
+* *(components)* Align component name casing Button
+* *(components)* Align component name casing Modal
+* *(components)* Align component name casing Notification
+* *(components)* Align component name casing Popup
+* *(components)* Align component name casing Ready
+* *(components)* Align component name casing Shortcut
+* *(components)* Align component name casing Subscription
+* *(components)* Align component name casing User
+* *(components)* Align component name casing Notifications
+* *(components)* Align component name casing FilterPopup
+* *(components)* Align component name casing Filter
+* *(components)* Align component name casing ViewEditForm
+* *(components)* Align component name casing ProjectSettingsDropdown
+* *(components)* Align component name casing QuickActions
+* *(components)* Align component name casing LinkSharing
+* *(components)* Align component name casing UserTeam
+* *(components)* Align component name casing AssigneeList
+* *(components)* Align component name casing Attachments
+* *(components)* Align component name casing ChecklistSummary
+* *(components)* Align component name casing Comments
+* *(components)* Align component name casing CreatedUpdated
+* *(components)* Align component name casing DateTableCell
+* *(components)* Align component name casing DeferTask
+* *(components)* Align component name casing Description
+* *(components)* Align component name casing EditAssignees
+* *(components)* Align component name casing EditLabels
+* *(components)* Align component name casing FilePreview
+* *(components)* Align component name casing Heading
+* *(components)* Align component name casing KanbanCard
+* *(components)* Align component name casing Label
+* *(components)* Align component name casing Labels
+* *(components)* Align component name casing PercentDoneSelect
+* *(components)* Align component name casing PriorityLabel
+* *(components)* Align component name casing PrioritySelect
+* *(components)* Align component name casing ProjectSearch
+* *(components)* Align component name casing QuickAddMagic
+* *(components)* Align component name casing RelatedTasks
+* *(components)* Align component name casing ReminderDetail
+* *(components)* Align component name casing ReminderPeriod
+* *(components)* Align component name casing Reminders
+* *(components)* Align component name casing RepeatAfter
+* *(components)* Align component name casing SingleTaskInlineReadonly
+* *(components)* Align component name casing SingleTaskInProject
+* *(components)* Align component name casing AddTask
+* *(components)* Align component name casing ProjectSettings
+* *(docker)* Use scratch as base image
+	- **BREAKING**: use scratch as base image
+* *(editor)* Checklist visual improvements (#2264)
+* *(editor)* Add hotkeys to quickly edit and discard (#2265)
+* *(filter)* More tests
+* *(filter)* Nesting
+* *(filter)* Migrate existing saved filters
+* *(filter)* Add better error message when passing an invalid filter expression
+* *(filter)* Add in keyword
+* *(filter)* Add basic highlighting filter query component
+* *(filter)* Add auto resize for filter query input
+* *(filter)* Add autocompletion poc for labels
+* *(filter)* Make the autocomplete look pretty
+* *(filter)* Add actual label search when autocompleting
+* *(filter)* Autocomplete for assignees
+* *(filter)* Autocomplete for projects
+* *(filter)* Emit filter query
+* *(filter)* Remove now unused code
+* *(filter)* Add button to show filter results
+* *(filter)* Resolve labels and projects to ids before filtering
+* *(filter)* Resolve label and project ids back to titles when loading a filter
+* *(filter)* Fall back to simple search when filter query does not contain any filter inputs
+* *(filter)* Make filter input label configurable
+* *(filter)* Add unique id to filter input
+* *(filters)* Very basic filter parsing
+* *(filters)* Basic text filter works now
+* *(filters)* Make new filter syntax work with Typesense
+* *(filters)* Parse date properties to enable datepicker button
+* *(filters)* Make date values in filter query editable
+* *(filters)* Add date values
+* *(filters)* Show user name and avatar for assignee filters
+* *(filters)* Add basic autocomplete component
+* *(filters)* Highlight label colors in filter
+* *(filters)* Query-based filter logic (#2177)
+* *(filters)* Pass timezone down when filtering with relative date math
+* *(filters)* Make clear filters button less obvious
+* *(i18n)* Add pt-br as selectable language in the frontend
+* *(i18n)* Add Croatian to selectable languages
+* *(i18n)* Add Ukrainian for language selection in UI
+* *(kanban)* Debounce bucket limit setting
+* *(kanban)* Do not remove focus from the input after creating a new bucket
+* *(kanban)* Set task position to 0 (top) when it is moved into the done bucket automatically after marking it done
+* *(migration)* Notify the user when a migration failed
+* *(migration)* Trello organization based migration (#2211)
+* *(migration)* Include non upload attachments from Trello (#2261)
+* *(navigation)* Persist project open state in navigation
+* *(registration)* Improve username and password validation
+* *(subscription)* Use a recursive cte to fetch subscriptions of parent projects
+* *(task)* Show attachment preview for image attachments (#2266)
+* *(tasks)* Make done at column available for selection in table view
+* *(tasks)* Expand subtasks (#2345)
+* *(tasks)* Add tests for moving a task out of the done bucket
+* *(teams)* Add public flags to teams to allow easier sharing with other teams (#2179)
+* *(typesense)* Move partial reindex to a flag instead of a separate command
+* *(views)* Add new model and migration
+* *(views)* Add crud handlers and routes for views
+* *(views)* Add new default views for filters
+* *(views)* Return views with their projects
+* *(views)* Create default 4 default view for projects
+* *(views)* Return tasks in a view
+* *(views)* Create default views when creating a filter
+* *(views)* Do not override filters in view
+* *(views)* Use project id when fetching views
+* *(views)* Add bucket configuration mode
+* *(views)* (un)marshal custom project view mode types
+* *(views)* Return tasks in buckets by view
+	- **BREAKING**: tasks in their bucket are now only retrievable via their view. The /project/:id/buckets endpoint now only returns the buckets for that project, which is more in line with the other endpoints
+* *(views)* Move task position handling to its own crud entity
+	- **BREAKING**: the position of tasks now can't be updated anymore via the task update endpoint. Instead, there is a new endpoint which takes the project view into account as well.
+* *(views)* Sort tasks by their position relative to the view they're in
+* *(views)* Decouple buckets from projects
+* *(views)* Decouple bucket CRUD from projects
+	- **BREAKING**: decouple bucket CRUD from projects
+* *(views)* Move done and default bucket setting to view
+	- **BREAKING**: move done and default bucket setting to view
+* *(views)* Decouple bucket <-> task relationship
+	- **BREAKING**: decouple bucket <-> task relationship
+* *(views)* Make updating a bucket work again
+	- **BREAKING**: make updating a bucket work again
+* *(views)* Only update the bucket when necessary
+* *(views)* Recalculate all positions when updating
+* *(views)* Set default position
+* *(views)* Save position in Typesense
+* *(views)* Save view and position in Typesense
+* *(views)* Sort by position
+* *(views)* Fetch tasks via view context when accessing them through views
+* *(views)* Generate swagger docs
+* *(views)* Save task position
+* *(views)* Return position when retriving tasks
+* *(views)* Save task position in list view
+* *(views)* Load views when navigating with link share
+* *(views)* Create task bucket relation when creating a new bucket
+* *(views)* Show tasks on kanban board in saved filter
+* *(views)* Crud in frontend
+* *(views)* Hide view switcher when there is only one view
+* *(views)* Lint
+* *(views)* Allow reordering views
+* *(views)* Add filter syntax docs to filter input in views* Allow using sqlite in memory database ([2dab2cc](2dab2ccedde96b2363e69ed14d026922c8883705))
+* *(other)* Enter edit mode when double clicking
+* Run frontend tests with api build from the same branch (#2137) ([5d127c2](5d127c28973fa58dfd97db055dcd215c4c9e30ed))
+* Fetch all projects with a recursive cte instead of recursive query ([6b1e674](6b1e67485bda84e9229fc57bac3782aa598240ef))
+* Assign users to teams via OIDC claims (#1393) ([ed4da96](ed4da96ab15fe11ced9383f7e7a25329207472ab))
+* Nest api token permissions under their parents ([67f5551](67f55510bf70afbd0c82477004428549dfc35df9))
+* Emoji reactions for tasks and comments (#2196) ([a5c51d4](a5c51d4b1ebf0a6bde33c0004c00eca5e0321038))
+* Decouple views from projects (#2217) ([7230db1](7230db160355c6b67c3586bf7bf6da57444c76cb))
+* New login image ([2d084c0](2d084c091ef759964ad31b19fc4bc7ac17b12d60))
+* Do not save language on the server when in demo mode ([e1dcf2e](e1dcf2e8591c3a7482ba35b243ef1b2c88505420))
+* Default view setting (#2306) ([aac01c7](aac01c7a35836421c17882b4f77334fc14bfeaec))
+* Add pluralization rules for Russian (#2344) ([73780e4](73780e4b5007d3dfbd3b4f92d9cb1c38d603fe27))
+* Update pnpm (#2355) ([50cf952](50cf952b011d97c792fe296b4b54888c13555e2e))
+* Remove polyfills ([19a7605](19a760506cdd19eb465a202d2d4cb149e0ef4da7))
+* Update packages (#2367) ([0523350](0523350f395067ca26ebd4cd920ec9e12d10f53b))
+* Migrate to unplugin-inject-preload (#2357) ([50d6987](50d698794b1f4f9c55d7f9f00a80a87fe56ae400))
+* Improve types (#2368) ([bc897a4](bc897a45037e1834adefba56bab229cf03238f57))
+* Reduce eslint warnings (#2396) ([2004d12](2004d129c39b9d84abf79806822a1dbfb451eca5))
+* Align sort icon color ([0061ec0](0061ec03f57b10ec83970c46f79d8e9b247e4d1a))
+* Improve shortcut types ([6c113ea](6c113eaca1add681b8bcad74dbb4a537f29458e8))
+* Improve popup ([92f2e0e](92f2e0e214e7d611820354e107ba6411e549d959))
+* Improve user component ([fe21a2c](fe21a2c3daf193ac0381d6c84dd271cac835a8e2))
+* Use withDefaults and defineOptions in Modal ([b1a8bbe](b1a8bbe760026d135baf8a84b054bfdde4381660))
+* Improve subscription ([341b8d2](341b8d20450a339fc31f916e565084941821eb61))
+* Eslint enforce vue/component-name-in-template-casing ([23707fc](23707fc493b0a335b0ddb4d3737b9be67fc0242d))
+* Switch to change-case lib ([1268145](1268145f713dcb8b94bde5462382366c3913a623))
+* Use withDefaults in CreateEdit ([5e4b9e3](5e4b9e38a64a73b44e9d4c5dc80931898b39e63f))
+* Add default to custom transition ([1977a7b](1977a7bee0837b3c3c8b89055cebb255fcc16708))
+* Camelcase global components ([f361158](f36115871c52ed6a9b733df06f530968cea94251))
+* Add root tsconfig ([4546bd6](4546bd6986e360edc8eb222ad7ed28a8e8e58d5d))
+* Set add tsconfigRootDir option ([9b43c13](9b43c130616ac1e08fc74bdda4b9d6e1e377c15d))
+* Improve message types ([4c5bb3f](4c5bb3f114084b2ab14ef06da1893e5d1f92b4e2))
+* Improve gantt filter label ([66be016](66be016a7f3737e6b8130a18464950cb38b96727))
+* Use withDefaults for BaseCheckbox ([94a907b](94a907b009b2b78c6a1942380ab7f4e3cf9090a5))
+* Remove props destructuring ProjectsNavigationItem ([4bd9c79](4bd9c79912dea02a2766134ad763e48106784e7d))
+* Use defineOptions for Loadings.vue ([ff2644d](ff2644d1c516c31b3a90c95f3b71d25394ae2c13))
+* Use withDefaults for ProjectSearch ([bd32f7a](bd32f7aef58fddedd7cffb864719c51038f94ea3))
+* Remove props destructuring from SingleTaskInlineReadonly ([7c9f0b8](7c9f0b8ada6aeb3a06e5a7a6ccc754cffbe13f0b))
+* Use withDefaults for Card ([5b0ce4e](5b0ce4e01c98feff5636a0fbad1b5c6457b31493))
+* Use defineProps types for ProjectSettingsDropdown ([9e266f1](9e266f1e36dc1dab7ecab684f15177378bbb888b))
+* Use defineProps types for ChecklistSummary ([1dbd8b6](1dbd8b6c3748fe4684f8ed716fb5e51f47e0108c))
+* Use withDefaults for Labels ([dea0510](dea051010d724614a7f5568d0645397ffc3f431f))
+* Use defineProps types in CreatedUpdated ([c81649c](c81649c139b310e31206d62aef7c2c24d7dab788))
+* Use withDefaults for Done ([01a4ad9](01a4ad99ab5234530fdf15f8982f201f81992fad))
+* Add getter support to useProjectBackground ([914fe09](914fe092e5858fdaaa7002b70b6e91f7c0143be3))
+* Improve ProjectSettingsEdit reactivity ([fb449d7](fb449d7b29de9b5281368beab6f12d57b7f74901))
+* Remove props destructuring EditorToolbar ([516f507](516f507ac42ec831189cd5b367ccd22c676401ae))
+* Remove props destructuring from ProjectCard ([8a2c74a](8a2c74a702492d496d331f3bb8f9e2e1161667d4))
+* Use withDefaults for AddTask ([7db9e64](7db9e64053d27de408a307637986e41ed6359508))
+
+
+### Miscellaneous Tasks
+
+* *(auth)* Refactor openid team creation
+* *(auth)* Add oidc suffix to openid team name in db
+* *(auth)* Refactor removing empty openid teams to cron job
+* *(auth)* Show registration disabled message when registration is disabled
+* *(desktop)* Switch from yarn to pnpm
+* *(desktop)* Only build zip in ci to speed up smoke test builds
+* *(dev)* Move nix flake to top level, add api tooling
+* *(filter)* Cleanup
+* *(filters)* Cleanup old variables
+* *(filters)* Add histoire story file
+* *(filters)* Copy datepicker
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Remove "new" from creation strings
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(magefile)* Add aliases for lint
+* *(mail)* Update logger to new interface
+* *(views)* Add fixme
+* *(views)* Remove old view routes
+* *(views)* Use view id instead of passing whole view object
+* *(views)* Move actual project views into their own folder* Don't send http errors with a status < 500 to sentry ([d4a3892](d4a389279c24dfdd860a0a90af5778bde64cb66c))
+* Add publiccode.yml ([837360f](837360f1226bd63234eb8b0a51465ff68c180863))
+* Remove unused docker entrypoint script ([f18cde2](f18cde269b8b2beaa99645517bf18b7ec550a62f))
+* Update lockfile ([3548709](35487093c6ac7372f1a37195a0233f0d1b9c5016))
+* Format ([356399f](356399f8539da43cedf085a7917a40705f9d2d09))
+* Generate swagger docs ([32e1a20](32e1a2018a9607e13efbd55a91b463e041c65520))
+* Cleanup leftover console.log ([cf6b476](cf6b476b7d750265026fde462128eb65a8cbff78))
+* Remove old saved views migration ([337d289](337d289a396cea592e25f6118fea4e91df53e0cc))
+* Do not import message dynamically ([6ad83c0](6ad83c06858bf7c1e115d82dd69f538418026738))
+* UseDefineOptions for inheritAttrs in Error.vue ([2d358a5](2d358a57cc23ed0f188fe418de4cdc4a4fc4ecc7))
+
+### Other
+
+* *(other)* Cancel current edits and exit edit mode with escape
+* *(other)* Add discardShortcutEnabled setting to opt into this feature
+* *(other)* Use if to conditionally add escape hotkey
+* *(other)* Merge import
+* *(other)* Rename discardShortcutEnabled to enableDiscardShortcut
+* *(other)* Rename discardShortcutEnabled to enableDiscardShortcut
+* *(other)* Proof of concept for image preview
+* *(other)* Extract img to FilePreview component
+* *(other)* Replace table with grid
+* *(other)* Adjust file preview style
+* *(other)* Replace px with rem
+* *(other)* Move object-fit to styles
+* *(other)* Rename grid-item class to attachment
+* *(other)* Attempt to fix attachment verification
+* *(other)* Change attachment div to button
+* *(other)* Fix test again
+* *(other)* Add width: 100%
+* *(other)* File name and cover label styling improvement
+* *(other)* Add file image as fallback preview
+* *(other)* Replace cover text links with icons
+* *(other)* Only allow cover if a preview is available
+* *(other)* Make fallback icon grey
+* *(other)* Use file fallback icon
+* *(other)* Add cover tooltips
+* *(other)* Improve preview spacing
+* *(other)* Set attachment width to 100%
+* *(other)* [skip ci] Updated swagger docs
+
 ## [0.23.0] - 2024-02-10
 
 ### Bug Fixes
