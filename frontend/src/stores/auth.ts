@@ -307,7 +307,7 @@ export const useAuthStore = defineStore('auth', () => {
 
 			return newUser
 		} catch (e) {
-			if(e?.response?.status === 401 ||
+			if((e?.response?.status >= 400 && e?.response?.status < 500) ||
 				e?.response?.data?.message === 'missing, malformed, expired or otherwise invalid token provided') {
 				await logout()
 				return
