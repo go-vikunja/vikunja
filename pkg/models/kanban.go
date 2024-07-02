@@ -70,16 +70,6 @@ func (b *Bucket) TableName() string {
 	return "buckets"
 }
 
-type TaskBucket struct {
-	BucketID      int64 `xorm:"bigint not null index"`
-	TaskID        int64 `xorm:"bigint not null index"`
-	ProjectViewID int64 `xorm:"bigint not null index"`
-}
-
-func (b *TaskBucket) TableName() string {
-	return "task_buckets"
-}
-
 func getBucketByID(s *xorm.Session, id int64) (b *Bucket, err error) {
 	b = &Bucket{}
 	exists, err := s.Where("id = ?", id).Get(b)

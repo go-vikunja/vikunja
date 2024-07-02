@@ -3728,6 +3728,78 @@
                 }
             }
         },
+        "/projects/{project}/views/{view}/buckets/{bucket}/tasks": {
+            "post": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Updates a task in a bucket",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "Update a task bucket",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "project",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Project View ID",
+                        "name": "view",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Bucket ID",
+                        "name": "bucket",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "The id of the task you want to move into the bucket.",
+                        "name": "taskBucket",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.TaskBucket"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The updated task bucket.",
+                        "schema": {
+                            "$ref": "#/definitions/models.TaskBucket"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid task bucket object provided.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
         "/register": {
             "post": {
                 "description": "Creates a new user account.",
@@ -8737,6 +8809,23 @@
                 },
                 "id": {
                     "type": "integer"
+                },
+                "task_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.TaskBucket": {
+            "type": "object",
+            "properties": {
+                "bucket_id": {
+                    "type": "integer"
+                },
+                "project_view_id": {
+                    "type": "integer"
+                },
+                "task_done": {
+                    "type": "boolean"
                 },
                 "task_id": {
                     "type": "integer"

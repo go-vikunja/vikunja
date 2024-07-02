@@ -189,6 +189,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 	}
 
 	// Create all views, create default views if we don't have any
+	var kanbanView *models.ProjectView
 	viewsByOldIDs := make(map[int64]*models.ProjectView, len(oldViews))
 	if len(oldViews) > 0 {
 		for _, view := range oldViews {
@@ -216,12 +217,16 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 				return
 			}
 			viewsByOldIDs[oldID] = view
+			if view.ViewKind == models.ProjectViewKindKanban {
+				kanbanView = view
+			}
 		}
 	} else {
 		// Only using the default views
 		// Add all buckets to the default kanban view
 		for _, view := range project.Views {
 			if view.ViewKind == models.ProjectViewKindKanban {
+				kanbanView = view
 				for _, b := range bucketsByOldID {
 					b.ProjectViewID = view.ID
 					err = b.Update(s, user)
@@ -236,30 +241,46 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 
 	log.Debugf("[creating structure] Creating %d tasks", len(tasks))
 
-	setBucketOrDefault := func(task *models.Task) {
-		bucket, exists := bucketsByOldID[task.BucketID]
+	setBucketOrDefault := func(task *models.Task) (err error) {
+		var bucketID = task.BucketID
+		bucket, exists := bucketsByOldID[bucketID]
 		if exists {
-			task.BucketID = bucket.ID
-		} else if task.BucketID > 0 {
+			bucketID = bucket.ID
+			tb := &models.TaskBucket{
+				TaskID:        task.ID,
+				BucketID:      bucketID,
+				ProjectID:     task.ProjectID,
+				ProjectViewID: kanbanView.ID,
+			}
+			err = tb.Update(s, user)
+			if err != nil {
+				return
+			}
+		} else if bucketID > 0 {
 			log.Debugf("[creating structure] No bucket created for original bucket id %d", task.BucketID)
-			task.BucketID = 0
+			bucketID = 0
 		}
-		if !exists || task.BucketID == 0 {
+		if !exists || bucketID == 0 {
 			needsDefaultBucket = true
 		}
+
+		return
 	}
 
 	tasksByOldID := make(map[int64]*models.TaskWithComments, len(tasks))
 	newTaskIDs := []int64{}
 	// Create all tasks
 	for i, t := range tasks {
-		setBucketOrDefault(&tasks[i].Task)
-
 		oldid := t.ID
 		t.ProjectID = project.ID
 		err = t.Create(s, user)
 		if err != nil && models.IsErrTaskCannotBeEmpty(err) {
 			continue
+		}
+
+		err = setBucketOrDefault(&tasks[i].Task)
+		if err != nil {
+			return
 		}
 
 		newTaskIDs = append(newTaskIDs, t.ID)
@@ -285,7 +306,10 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 				// First create the related tasks if they do not exist
 				if _, exists := tasksByOldID[rt.ID]; !exists || rt.ID == 0 {
 					oldid := rt.ID
-					setBucketOrDefault(rt)
+					err = setBucketOrDefault(rt)
+					if err != nil {
+						return
+					}
 					rt.ProjectID = t.ProjectID
 					err = rt.Create(s, user)
 					if err != nil {

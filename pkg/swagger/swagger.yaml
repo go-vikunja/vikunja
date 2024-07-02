@@ -870,6 +870,17 @@ definitions:
       task_id:
         type: integer
     type: object
+  models.TaskBucket:
+    properties:
+      bucket_id:
+        type: integer
+      project_view_id:
+        type: integer
+      task_done:
+        type: boolean
+      task_id:
+        type: integer
+    type: object
   models.TaskCollection:
     properties:
       filter:
@@ -3855,6 +3866,53 @@ paths:
       summary: Updates a project view
       tags:
       - project
+  /projects/{project}/views/{view}/buckets/{bucket}/tasks:
+    post:
+      consumes:
+      - application/json
+      description: Updates a task in a bucket
+      parameters:
+      - description: Project ID
+        in: path
+        name: project
+        required: true
+        type: integer
+      - description: Project View ID
+        in: path
+        name: view
+        required: true
+        type: integer
+      - description: Bucket ID
+        in: path
+        name: bucket
+        required: true
+        type: integer
+      - description: The id of the task you want to move into the bucket.
+        in: body
+        name: taskBucket
+        required: true
+        schema:
+          $ref: '#/definitions/models.TaskBucket'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The updated task bucket.
+          schema:
+            $ref: '#/definitions/models.TaskBucket'
+        "400":
+          description: Invalid task bucket object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Update a task bucket
+      tags:
+      - task
   /projects/{projectID}/duplicate:
     put:
       consumes:

@@ -622,12 +622,19 @@ func registerAPIRoutes(a *echo.Group) {
 			return &models.ProjectView{}
 		},
 	}
-
 	a.GET("/projects/:project/views", projectViewProvider.ReadAllWeb)
 	a.GET("/projects/:project/views/:view", projectViewProvider.ReadOneWeb)
 	a.PUT("/projects/:project/views", projectViewProvider.CreateWeb)
 	a.DELETE("/projects/:project/views/:view", projectViewProvider.DeleteWeb)
 	a.POST("/projects/:project/views/:view", projectViewProvider.UpdateWeb)
+
+	// Kanban Task Bucket Relation
+	taskBucketProvider := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
+			return &models.TaskBucket{}
+		},
+	}
+	a.POST("/projects/:project/views/:view/buckets/:bucket/tasks", taskBucketProvider.UpdateWeb)
 }
 
 func registerMigrations(m *echo.Group) {

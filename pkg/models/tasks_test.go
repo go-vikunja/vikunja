@@ -157,21 +157,6 @@ func TestTask_Create(t *testing.T) {
 		require.Error(t, err)
 		assert.True(t, user.IsErrUserDoesNotExist(err))
 	})
-	t.Run("full bucket", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		task := &Task{
-			Title:       "Lorem",
-			Description: "Lorem Ipsum Dolor",
-			ProjectID:   1,
-			BucketID:    2, // Bucket 2 already has 3 tasks and a limit of 3
-		}
-		err := task.Create(s, usr)
-		require.Error(t, err)
-		assert.True(t, IsErrBucketLimitExceeded(err))
-	})
 	t.Run("default bucket different", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -232,137 +217,6 @@ func TestTask_Update(t *testing.T) {
 		require.Error(t, err)
 		assert.True(t, IsErrTaskDoesNotExist(err))
 	})
-	t.Run("full bucket", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		task := &Task{
-			ID:          1,
-			Title:       "test10000",
-			Description: "Lorem Ipsum Dolor",
-			ProjectID:   1,
-			BucketID:    2, // Bucket 2 already has 3 tasks and a limit of 3
-		}
-		err := task.Update(s, u)
-		require.Error(t, err)
-		assert.True(t, IsErrBucketLimitExceeded(err))
-	})
-	t.Run("full bucket but not changing the bucket", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		task := &Task{
-			ID:          4,
-			Title:       "test10000",
-			Description: "Lorem Ipsum Dolor",
-			ProjectID:   1,
-			BucketID:    2, // Bucket 2 already has 3 tasks and a limit of 3
-		}
-		err := task.Update(s, u)
-		require.NoError(t, err)
-	})
-	t.Run("bucket on other project", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		task := &Task{
-			ID:          1,
-			Title:       "test10000",
-			Description: "Lorem Ipsum Dolor",
-			ProjectID:   1,
-			BucketID:    4, // Bucket 4 belongs to project 2
-		}
-		err := task.Update(s, u)
-		require.Error(t, err)
-		assert.True(t, IsErrBucketDoesNotExist(err))
-	})
-	t.Run("moving a task to the done bucket", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		task := &Task{
-			ID:        1,
-			Title:     "test",
-			ProjectID: 1,
-			BucketID:  3, // Bucket 3 is the done bucket
-		}
-		err := task.Update(s, u)
-		require.NoError(t, err)
-		err = s.Commit()
-		require.NoError(t, err)
-		assert.True(t, task.Done)
-
-		db.AssertExists(t, "tasks", map[string]interface{}{
-			"id":   1,
-			"done": true,
-		}, false)
-		db.AssertExists(t, "task_buckets", map[string]interface{}{
-			"task_id":   1,
-			"bucket_id": 3,
-		}, false)
-	})
-	t.Run("move done task out of done bucket", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		task := &Task{
-			ID:        2,
-			Title:     "test",
-			ProjectID: 1,
-			BucketID:  1, // Bucket 1 is the default bucket
-		}
-		err := task.Update(s, u)
-		require.NoError(t, err)
-		err = s.Commit()
-		require.NoError(t, err)
-		assert.False(t, task.Done)
-
-		db.AssertExists(t, "tasks", map[string]interface{}{
-			"id":   task.ID,
-			"done": false,
-		}, false)
-		db.AssertExists(t, "task_buckets", map[string]interface{}{
-			"task_id":   task.ID,
-			"bucket_id": 1,
-		}, false)
-		db.AssertMissing(t, "task_buckets", map[string]interface{}{
-			"task_id":   task.ID,
-			"bucket_id": 3,
-		})
-	})
-	t.Run("moving a repeating task to the done bucket", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		task := &Task{
-			ID:          28,
-			Title:       "test updated",
-			ProjectID:   1,
-			BucketID:    3, // Bucket 3 is the done bucket
-			RepeatAfter: 3600,
-		}
-		err := task.Update(s, u)
-		require.NoError(t, err)
-		err = s.Commit()
-		require.NoError(t, err)
-		assert.False(t, task.Done)
-		assert.Equal(t, int64(3), task.BucketID)
-
-		db.AssertExists(t, "tasks", map[string]interface{}{
-			"id":   1,
-			"done": false,
-		}, false)
-		db.AssertExists(t, "task_buckets", map[string]interface{}{
-			"task_id":   1,
-			"bucket_id": 1,
-		}, false)
-	})
 	t.Run("default bucket when moving a task between projects", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -407,7 +261,7 @@ func TestTask_Update(t *testing.T) {
 			"bucket_id": 3,
 		}, false)
 	})
-	t.Run("move task to another project", func(t *testing.T) {
+	t.Run("move task to another project should use the default bucket", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()

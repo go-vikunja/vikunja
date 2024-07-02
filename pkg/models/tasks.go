@@ -655,107 +655,6 @@ func checkBucketLimit(s *xorm.Session, t *Task, bucket *Bucket) (err error) {
 	return nil
 }
 
-// Contains all the task logic to figure out what bucket to use for this task.
-func setTaskBucket(s *xorm.Session, task *Task, originalTask *Task, view *ProjectView, targetBucketID int64) (err error) {
-	if view.BucketConfigurationMode != BucketConfigurationModeManual {
-		return
-	}
-
-	var shouldChangeBucket = true
-	targetBucket := &TaskBucket{
-		BucketID:      targetBucketID,
-		TaskID:        task.ID,
-		ProjectViewID: view.ID,
-	}
-
-	oldTaskBucket := &TaskBucket{}
-	_, err = s.
-		Where("task_id = ? AND project_view_id = ?", task.ID, view.ID).
-		Get(oldTaskBucket)
-	if err != nil {
-		return
-	}
-
-	// If the task was marked as done and the view has a done bucket, move the task to the done bucket
-	if task.Done && originalTask != nil &&
-		(!originalTask.Done || task.ProjectID != originalTask.ProjectID) {
-		targetBucket.BucketID = view.DoneBucketID
-		// …and also reset the position so that it shows up at the top
-		// Note: this might result in an "off-looking" position when there is already a task with position 0.
-		//       This is done by design, because recalculating all positions is really costly and will happen
-		//       later anyway.
-		_, err = s.
-			Where("task_id = ? AND project_view_id = ?", task.ID, view.ID).
-			Cols("position").
-			Update(&TaskPosition{Position: 0})
-		if err != nil {
-			return
-		}
-	}
-
-	if targetBucket.BucketID == 0 && oldTaskBucket.BucketID != 0 {
-		shouldChangeBucket = false
-	}
-
-	// Either no bucket was provided or the task was moved between projects
-	// But if the task was moved between projects, don't update the done bucket
-	// because then we have it already updated to the done bucket.
-	if targetBucket.BucketID == 0 ||
-		(originalTask != nil && task.ProjectID != 0 && originalTask.ProjectID != task.ProjectID && !task.Done) {
-		targetBucket.BucketID, err = getDefaultBucketID(s, view)
-		if err != nil {
-			return
-		}
-	}
-
-	bucket, err := getBucketByID(s, targetBucket.BucketID)
-	if err != nil {
-		return err
-	}
-
-	// If there is a bucket set, make sure they belong to the same project as the task
-	if view.ID != bucket.ProjectViewID {
-		return ErrBucketDoesNotBelongToProjectView{
-			ProjectViewID: view.ID,
-			BucketID:      bucket.ID,
-		}
-	}
-
-	// Check the bucket limit
-	// Only check the bucket limit if the task is being moved between buckets, allow reordering the task within a bucket
-	if targetBucket.BucketID != 0 && targetBucket.BucketID != oldTaskBucket.BucketID {
-		err = checkBucketLimit(s, task, bucket)
-		if err != nil {
-			return err
-		}
-	}
-
-	if bucket.ID == view.DoneBucketID && originalTask != nil && !originalTask.Done {
-		task.Done = true
-	}
-
-	// If the task was moved into the done bucket and the task has a repeating cycle we should not update
-	// the bucket.
-	if bucket.ID == view.DoneBucketID && task.RepeatAfter > 0 {
-		task.Done = true // This will trigger the correct re-scheduling of the task (happening in updateDone later)
-		shouldChangeBucket = false
-	}
-
-	if shouldChangeBucket {
-		_, err = s.
-			Where("task_id = ? AND project_view_id = ?", task.ID, view.ID).
-			Delete(&TaskBucket{})
-		if err != nil {
-			return
-		}
-
-		targetBucket.BucketID = bucket.ID
-		_, err = s.Insert(targetBucket)
-	}
-
-	return
-}
-
 func calculateDefaultPosition(entityID int64, position float64) float64 {
 	if position == 0 {
 		return float64(entityID) * math.Pow(2, 16)
@@ -795,7 +694,7 @@ func (t *Task) Create(s *xorm.Session, a web.Auth) (err error) {
 	return createTask(s, t, a, true, true)
 }
 
-func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, updateBucket bool) (err error) {
+func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setBucket bool) (err error) {
 
 	t.ID = 0
 
@@ -840,15 +739,26 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, upda
 	}
 
 	positions := []*TaskPosition{}
+	taskBuckets := []*TaskBucket{}
 
 	for _, view := range views {
+		if setBucket &&
+			view.ViewKind == ProjectViewKindKanban &&
+			view.BucketConfigurationMode == BucketConfigurationModeManual {
 
-		if updateBucket {
-			// Get the default bucket and move the task there
-			err = setTaskBucket(s, t, nil, view, t.BucketID)
-			if err != nil {
-				return
+			bucketID := view.DoneBucketID
+			if !t.Done || view.DoneBucketID == 0 {
+				bucketID, err = getDefaultBucketID(s, view)
+				if err != nil {
+					return err
+				}
 			}
+
+			taskBuckets = append(taskBuckets, &TaskBucket{
+				BucketID:      bucketID,
+				TaskID:        t.ID,
+				ProjectViewID: view.ID,
+			})
 		}
 
 		positions = append(positions, &TaskPosition{
@@ -858,8 +768,15 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, upda
 		})
 	}
 
-	if updateBucket {
+	if len(positions) > 0 {
 		_, err = s.Insert(&positions)
+		if err != nil {
+			return
+		}
+	}
+
+	if len(taskBuckets) > 0 {
+		_, err = s.Insert(&taskBuckets)
 		if err != nil {
 			return
 		}
@@ -941,11 +858,6 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	// Update the reminders
-	if err := ot.updateReminders(s, t); err != nil {
-		return err
-	}
-
 	// All columns to update in a separate variable to be able to add to them
 	colsToUpdate := []string{
 		"title",
@@ -975,43 +887,61 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 		colsToUpdate = append(colsToUpdate, "index")
 	}
 
-	views, err := getViewsForProject(s, t.ProjectID)
-	if err != nil {
-		return err
-	}
-
-	buckets := make(map[int64]*Bucket)
-	err = s.In("project_view_id",
-		builder.Select("id").
-			From("project_views").
-			Where(builder.Eq{"project_id": t.ProjectID}),
-	).
-		Find(&buckets)
-	if err != nil {
-		return err
-	}
-
-	for _, view := range views {
-		// Only update the bucket when the current view
-		var targetBucketID int64
-		if t.BucketID != 0 {
-			bucket, has := buckets[t.BucketID]
-			if !has {
-				return ErrBucketDoesNotExist{BucketID: t.BucketID}
-			}
-			if has && bucket.ProjectViewID == view.ID {
-				targetBucketID = t.BucketID
-			}
-		}
-
-		err = setTaskBucket(s, t, &ot, view, targetBucketID)
+	// When a task was marked done or moved between projects, make sure it is in the correct bucket
+	if t.Done != ot.Done || t.ProjectID != ot.ProjectID {
+		views, err := getViewsForProject(s, t.ProjectID)
 		if err != nil {
 			return err
+		}
+
+		for _, view := range views {
+			if view.ViewKind != ProjectViewKindKanban && view.BucketConfigurationMode != BucketConfigurationModeManual {
+				continue
+			}
+
+			var bucketID = view.DoneBucketID
+			if bucketID == 0 || t.ProjectID != ot.ProjectID {
+				bucketID, err = getDefaultBucketID(s, view)
+				if err != nil {
+					return err
+				}
+			}
+
+			// Task is done and was moved between projects, should go into the done bucket of the new project
+			if t.Done && t.ProjectID != ot.ProjectID {
+				bucketID = view.DoneBucketID
+			}
+
+			tb := &TaskBucket{
+				BucketID:      bucketID,
+				TaskID:        t.ID,
+				ProjectViewID: view.ID,
+				ProjectID:     t.ProjectID,
+			}
+			err = tb.Update(s, a)
+			if err != nil {
+				return err
+			}
+
+			tp := TaskPosition{
+				TaskID:        t.ID,
+				ProjectViewID: view.ID,
+				Position:      calculateDefaultPosition(t.Index, t.Position),
+			}
+			err = tp.Update(s, a)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
 	// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
 	updateDone(&ot, t)
+
+	// Update the reminders
+	if err := ot.updateReminders(s, t); err != nil {
+		return err
+	}
 
 	// If a task attachment is being set as cover image, check if the attachment actually belongs to the task
 	if t.CoverImageAttachmentID != 0 {

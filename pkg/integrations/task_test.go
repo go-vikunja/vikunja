@@ -307,24 +307,6 @@ func TestTask(t *testing.T) {
 				assertHandlerErrorCode(t, err, models.ErrorCodeGenericForbidden)
 			})
 		})
-		t.Run("Bucket", func(t *testing.T) {
-			t.Run("Normal", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "1"}, `{"bucket_id":3}`)
-				require.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"bucket_id":3`)
-				assert.NotContains(t, rec.Body.String(), `"bucket_id":1`)
-			})
-			t.Run("Different Project", func(t *testing.T) {
-				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "1"}, `{"bucket_id":4}`)
-				require.Error(t, err)
-				assertHandlerErrorCode(t, err, models.ErrCodeBucketDoesNotExist)
-			})
-			t.Run("Nonexisting Bucket", func(t *testing.T) {
-				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "1"}, `{"bucket_id":9999}`)
-				require.Error(t, err)
-				assertHandlerErrorCode(t, err, models.ErrCodeBucketDoesNotExist)
-			})
-		})
 	})
 	t.Run("Delete", func(t *testing.T) {
 		t.Run("Normal", func(t *testing.T) {
@@ -488,24 +470,6 @@ func TestTask(t *testing.T) {
 				rec, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "17"}, `{"title":"Lorem Ipsum"}`)
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Lorem Ipsum"`)
-			})
-		})
-		t.Run("Bucket", func(t *testing.T) {
-			t.Run("Normal", func(t *testing.T) {
-				rec, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "1"}, `{"title":"Lorem Ipsum","bucket_id":3}`)
-				require.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"bucket_id":3`)
-				assert.NotContains(t, rec.Body.String(), `"bucket_id":1`)
-			})
-			t.Run("Different Project", func(t *testing.T) {
-				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "1"}, `{"title":"Lorem Ipsum","bucket_id":4}`)
-				require.Error(t, err)
-				assertHandlerErrorCode(t, err, models.ErrCodeBucketDoesNotBelongToProject)
-			})
-			t.Run("Nonexisting Bucket", func(t *testing.T) {
-				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "1"}, `{"title":"Lorem Ipsum","bucket_id":9999}`)
-				require.Error(t, err)
-				assertHandlerErrorCode(t, err, models.ErrCodeBucketDoesNotExist)
 			})
 		})
 		t.Run("Link Share", func(t *testing.T) {

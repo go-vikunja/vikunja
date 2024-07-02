@@ -306,6 +306,8 @@ import TaskPositionModel from '@/models/taskPosition'
 import {i18n} from '@/i18n'
 import ProjectViewService from '@/services/projectViews'
 import ProjectViewModel from '@/models/projectView'
+import TaskBucketService from '@/services/taskBucket'
+import TaskBucketModel from '@/models/taskBucket'
 
 const {
 	projectId,
@@ -333,6 +335,7 @@ const kanbanStore = useKanbanStore()
 const taskStore = useTaskStore()
 const projectStore = useProjectStore()
 const taskPositionService = ref(new TaskPositionService())
+const taskBucketService = ref(new TaskBucketService())
 
 const taskContainerRefs = ref<{ [id: IBucket['id']]: HTMLElement }>({})
 const bucketLimitInputRef = ref<HTMLInputElement | null>(null)
@@ -519,7 +522,12 @@ async function updateTaskPosition(e) {
 		await taskPositionService.value.update(newPosition)
 		
 		if(bucketHasChanged) {
-			await taskStore.update(newTask)
+			await taskBucketService.value.update(new TaskBucketModel({
+				taskId: newTask.id,
+				bucketId: newTask.bucketId,
+				projectViewId: viewId,
+				projectId: project.value.id,
+			}))
 		}
 
 		// Make sure the first and second task don't both get position 0 assigned

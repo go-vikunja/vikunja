@@ -53,6 +53,8 @@ func (b *Bucket) canDoBucket(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, err
 	}
 
+	// TODO saved filter check
+
 	p := &Project{ID: pv.ProjectID}
 	return p.CanUpdate(s, a)
 }
