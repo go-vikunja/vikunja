@@ -25,8 +25,15 @@
 				{{ $t('menu.edit') }}
 			</DropdownItem>
 			<DropdownItem
+				:to="{ name: 'project.settings.views', params: { projectId: project.id } }"
+				icon="eye"
+			>
+				{{ $t('menu.views') }}
+			</DropdownItem>
+			<DropdownItem
 				:to="{ name: 'filter.settings.delete', params: { projectId: project.id } }"
 				icon="trash-alt"
+				class="has-text-danger"
 			>
 				{{ $t('misc.delete') }}
 			</DropdownItem>
