@@ -1320,53 +1320,6 @@ steps:
 ---
 kind: pipeline
 type: docker
-name: deploy-docs
-
-workspace:
-  base: /go
-  path: src/code.vikunja.io/api
-
-clone:
-  depth: 50
-
-trigger:
-  event:
-    - push
-  branch:
-    - main
-
-steps:
-  - name: theme
-    image: kolaente/toolbox
-    pull: always
-    commands:
-      - mkdir docs/themes/vikunja -p
-      - cd docs/themes/vikunja
-      - wget https://dl.vikunja.io/theme/vikunja-theme.tar.gz
-      - tar -xzf vikunja-theme.tar.gz
-
-  - name: build
-    image: klakegg/hugo:0.111.3
-    pull: always
-    commands:
-      - cd docs
-      - hugo
-      - mv public/docs/* public # Hugo seems to be not capable of setting a different theme for a home page, so we do this ugly hack to fix it.
-
-  - name: docker
-    image: plugins/docker
-    pull: always
-    settings:
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-      repo: vikunja/docs
-      context: docs/
-      dockerfile: docs/Dockerfile
----
-kind: pipeline
-type: docker
 name: notify
 
 trigger:
@@ -1380,7 +1333,6 @@ trigger:
 depends_on:
   - build-and-test
   - release
-  - deploy-docs
   - docker-release
   - desktop-release
 
@@ -1400,6 +1352,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 74414af8fe9d632c1620090f562b3acd32863b38da230fb1854b8bed45055feb
+hmac: 3cc4b45fcbbab5ccee14e5532b2d35f5db54cde29a8f6e854b563462e3bbb509
 
 ...
