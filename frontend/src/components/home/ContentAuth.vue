@@ -160,6 +160,7 @@ projectStore.loadAllProjects()
 }
 
 .app-content {
+	display: flow-root;
 	z-index: 10;
 	position: relative;
 	padding: 1.5rem 0.5rem 0;
