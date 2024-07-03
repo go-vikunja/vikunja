@@ -109,7 +109,7 @@
 			</nav>
 		</template>
 
-		<PoweredByLink />
+		<PoweredByLink class="mt-auto" />
 	</aside>
 </template>
 
@@ -146,6 +146,8 @@ const savedFilterProjects = computed(() => projectStore.savedFilterProjects)
 }
 
 .menu-container {
+	display: flex;
+	flex-direction: column;
 	background: var(--site-background);
 	color: $vikunja-nav-color;
 	padding: 1rem 0;
