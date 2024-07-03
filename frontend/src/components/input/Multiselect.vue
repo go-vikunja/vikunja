@@ -324,7 +324,7 @@ const hasMultiple = computed(() => {
 	return props.multiple && Array.isArray(internalValue.value) && internalValue.value.length > 0
 })
 
-const removalAvailable = computed(() => !props.multiple && internalValue.value !== null && query.value !== '')
+const removalAvailable = computed(() => !props.multiple && internalValue.value !== null && query.value !== '' && !(props.loading || localLoading.value))
 function resetSelectedValue() {
 	select(null)
 }
