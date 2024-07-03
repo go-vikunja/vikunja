@@ -70,7 +70,7 @@
 						>
 						<span class="username">{{ authStore.userDisplayName }}</span>
 						<span
-							class="icon is-small"
+							class="ml-1 dropdown-icon icon is-small"
 							:style="{
 								transform: open ? 'rotate(180deg)' : 'rotate(0)',
 							}"
@@ -161,13 +161,8 @@ $user-dropdown-width-mobile: 5rem;
 
 	background: var(--site-background);
 
-	@media screen and (max-width: $tablet) {
-		padding-right: .5rem;
-	}
-
 	@media screen and (min-width: $tablet) {
 		padding-left: 2rem;
-		padding-right: 1rem;
 		align-items: stretch;
 	}
 
@@ -263,11 +258,19 @@ $user-dropdown-width-mobile: 5rem;
 }
 
 .username-dropdown-trigger {
-	padding-left: 1rem;
+	padding-left: .75rem;
 	display: inline-flex;
 	align-items: center;
 	font-size: .85rem;
 	font-weight: 700;
+
+	@media screen and (max-width: $tablet) {
+		padding-right: .5rem;
+	}
+
+	@media screen and (min-width: $tablet) {
+		padding-right: .75rem;
+	}
 }
 
 .username {
@@ -276,6 +279,10 @@ $user-dropdown-width-mobile: 5rem;
 	@media screen and (max-width: $tablet) {
 		display: none;
 	}
+}
+
+.dropdown-icon {
+	transition: transform $transition;
 }
 
 .avatar {

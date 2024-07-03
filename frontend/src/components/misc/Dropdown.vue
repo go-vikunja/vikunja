@@ -22,7 +22,7 @@
 
 		<CustomTransition name="fade">
 			<div
-				v-if="open"
+				v-show="open"
 				class="dropdown-menu"
 			>
 				<div class="dropdown-content">
