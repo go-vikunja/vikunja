@@ -45,6 +45,7 @@ export interface ButtonProps extends /* @vue-ignore */ BaseButtonProps {
 	icon?: IconProp
 	iconColor?: string
 	loading?: boolean
+	disabled?: boolean
 	shadow?: boolean
 	wrap?: boolean
 }
@@ -54,6 +55,7 @@ const props = withDefaults(defineProps<ButtonProps>(), {
 	icon: undefined,
 	iconColor: undefined,
 	loading: false,
+	disabled: false,
 	shadow: true,
 	wrap: true,
 })
