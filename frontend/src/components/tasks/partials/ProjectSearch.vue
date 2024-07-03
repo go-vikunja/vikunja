@@ -31,19 +31,19 @@ import {useProjectStore} from '@/stores/projects'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 
 import ProjectModel from '@/models/project'
-
 import Multiselect from '@/components/input/Multiselect.vue'
 
 const props = withDefaults(defineProps<{
-	modelValue: IProject | null
+	modelValue?: IProject
 	savedFiltersOnly?: boolean
 }>(), {
+	modelValue: new ProjectModel(),
 	savedFiltersOnly: false,
 })
 
 const emit = defineEmits(['update:modelValue'])
 
-const project: IProject = reactive(new ProjectModel())
+const project = reactive<IProject>(new ProjectModel())
 
 watch(
 	() => props.modelValue,
