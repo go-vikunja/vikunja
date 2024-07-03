@@ -8,6 +8,7 @@
 				'has-no-shadow': !shadow || variant === 'tertiary',
 			}
 		]"
+		:disabled="disabled || loading"
 		:style="{
 			'--button-white-space': wrap ? 'break-spaces' : 'nowrap',
 		}"
