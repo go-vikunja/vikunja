@@ -114,19 +114,18 @@ import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import {playPopSound} from '@/helpers/playPop'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 
-const {
-	task,
-	loading = false,
-} = defineProps<{
+const props = withDefaults(defineProps<{
 	task: ITask,
 	loading: boolean,
-}>()
+}>(), {
+	loading: false,
+})
 
 const router = useRouter()
 
 const loadingInternal = ref(false)
 
-const color = computed(() => getHexColor(task.hexColor))
+const color = computed(() => getHexColor(props.task.hexColor))
 
 async function toggleTaskDone(task: ITask) {
 	loadingInternal.value = true
@@ -147,7 +146,7 @@ async function toggleTaskDone(task: ITask) {
 function openTaskDetail() {
 	router.push({
 		name: 'task.detail',
-		params: {id: task.id},
+		params: {id: props.task.id},
 		state: {backdropView: router.currentRoute.value.fullPath},
 	})
 }
@@ -155,12 +154,12 @@ function openTaskDetail() {
 const coverImageBlobUrl = ref<string | null>(null)
 
 async function maybeDownloadCoverImage() {
-	if (!task.coverImageAttachmentId) {
+	if (!props.task.coverImageAttachmentId) {
 		coverImageBlobUrl.value = null
 		return
 	}
 
-	const attachment = task.attachments.find(a => a.id === task.coverImageAttachmentId)
+	const attachment = props.task.attachments.find(a => a.id === props.task.coverImageAttachmentId)
 	if (!attachment || !SUPPORTED_IMAGE_SUFFIX.some((suffix) => attachment.file.name.toLowerCase().endsWith(suffix))) {
 		return
 	}
@@ -170,7 +169,7 @@ async function maybeDownloadCoverImage() {
 }
 
 watch(
-	() => task.coverImageAttachmentId,
+	() => props.task.coverImageAttachmentId,
 	maybeDownloadCoverImage,
 	{immediate: true},
 )
