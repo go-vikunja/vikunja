@@ -71,7 +71,7 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, onBeforeUnmount, onMounted, type PropType, ref, toRef, watch} from 'vue'
+import {computed, onBeforeUnmount, onMounted, ref, toRef, watch} from 'vue'
 import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
 
@@ -84,15 +84,15 @@ import {createDateFromString} from '@/helpers/time/createDateFromString'
 import {useI18n} from 'vue-i18n'
 import {getFlatpickrLanguage} from '@/helpers/flatpickrLanguage'
 
-const props = defineProps({
-	modelValue: {
-		type: [Date, null, String] as PropType<Date | null | string>,
-		validator: prop => prop instanceof Date || prop === null || typeof prop === 'string',
-		default: null,
-	},
+const props = withDefaults(defineProps<{
+	modelValue: Date | null | string
+}>(), {
+	modelValue: null,
 })
 
-const emit = defineEmits(['update:modelValue', 'close-on-change'])
+const emit = defineEmits<{
+	'update:modelValue': [Date | null],
+}>()
 
 const {t} = useI18n({useScope: 'global'})
 
