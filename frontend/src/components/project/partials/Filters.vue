@@ -58,17 +58,19 @@ import {useProjectStore} from '@/stores/projects'
 import {FILTER_OPERATORS, transformFilterStringForApi, transformFilterStringFromApi} from '@/helpers/filters'
 import FilterInputDocs from '@/components/project/partials/FilterInputDocs.vue'
 
-const {
-	hasTitle = false,
-	hasFooter = true,
-	modelValue,
-} = defineProps<{
+const props = withDefaults(defineProps<{
+	modelValue: TaskFilterParams,
 	hasTitle?: boolean,
 	hasFooter?: boolean,
-	modelValue: TaskFilterParams,
-}>()
+}>(), {
+	hasTitle: false,
+	hasFooter: true,
+})
 
-const emit = defineEmits(['update:modelValue', 'showResultsButtonClicked'])
+const emit = defineEmits<{
+	'update:modelValue': [value: TaskFilterParams],
+	'showResults': [],
+}>()
 
 const route = useRoute()
 const projectId = computed(() => {
@@ -102,7 +104,7 @@ const projectStore = useProjectStore()
 
 // Using watchDebounced to prevent the filter re-triggering itself.
 watch(
-	() => modelValue,
+	() => props.modelValue,
 	(value: TaskFilterParams) => {
 		const val = {...value}
 		val.filter = transformFilterStringFromApi(
@@ -112,7 +114,10 @@ watch(
 		)
 		params.value = val
 	},
-	{immediate: true},
+	{
+		immediate: true,
+		deep: true,
+	},
 )
 
 function change() {
@@ -139,7 +144,7 @@ function change() {
 		s,
 	}
 
-	if (JSON.stringify(modelValue) === JSON.stringify(newParams)) {
+	if (JSON.stringify(props.modelValue) === JSON.stringify(newParams)) {
 		return
 	}
 
@@ -148,7 +153,7 @@ function change() {
 
 function changeAndEmitButton() {
 	change()
-	emit('showResultsButtonClicked')
+	emit('showResults')
 }
 
 function clearFiltersAndEmit() {

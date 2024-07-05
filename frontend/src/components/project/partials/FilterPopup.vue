@@ -20,7 +20,7 @@
 			:has-title="true"
 			class="filter-popup"
 			@update:modelValue="emitChanges"
-			@showResultsButtonClicked="() => modalOpen = false"
+			@showResults="() => modalOpen = false"
 		/>
 	</Modal>
 </template>
