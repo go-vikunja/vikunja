@@ -22,9 +22,6 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "types": [
-      // https://github.com/ikenfin/vite-plugin-sentry#typescript
-      "vite-plugin-sentry/client"
-    ],
+    "types": [],
   }
 }
