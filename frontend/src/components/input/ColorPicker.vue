@@ -70,13 +70,7 @@ import {computed, ref, watch} from 'vue'
 import {createRandomID} from '@/helpers/randomId'
 import XButton from '@/components/input/Button.vue'
 
-const {
-	modelValue,
-} = defineProps<{
-	modelValue: string,
-}>()
-
-const emit = defineEmits(['update:modelValue'])
+const model = defineModel<string>({ required: true })
 
 const DEFAULT_COLORS = [
 	'#1973ff',
@@ -93,7 +87,7 @@ const defaultColors = ref(DEFAULT_COLORS)
 const colorListID = ref(createRandomID())
 
 watch(
-	() => modelValue,
+	model,
 	(newValue) => {
 		if (newValue === '' || newValue.startsWith('var(')) {
 			color.value = ''
@@ -123,7 +117,7 @@ function update(force = false) {
 	}
 
 	lastChangeTimeout.value = setTimeout(() => {
-		emit('update:modelValue', color.value)
+		model.value = color.value
 	}, 500)
 }
 
