@@ -208,30 +208,31 @@ import {playPopSound} from '@/helpers/playPop'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 
-const {
-	theTask,
-	isArchived = false,
-	showProject = false,
-	disabled = false,
-	canMarkAsDone = true,
-	allTasks = [],
-} = defineProps<{
+const props = withDefaults(defineProps<{
 	theTask: ITask,
 	isArchived?: boolean,
 	showProject?: boolean,
 	disabled?: boolean,
 	canMarkAsDone?: boolean,
 	allTasks?: ITask[],
+}>(), {
+	isArchived: false,
+	showProject: false,
+	disabled: false,
+	canMarkAsDone: true,
+	allTasks: () => [],
+})
+
+const emit = defineEmits<{
+	'taskUpdated': [task: ITask],
 }>()
 
-const emit = defineEmits(['taskUpdated'])
-
 function getTaskById(taskId: number): ITask | undefined {
-	if (typeof allTasks === 'undefined' || allTasks.length === 0) {
+	if (typeof props.allTasks === 'undefined' || props.allTasks.length === 0) {
 		return null
 	}
 
-	return allTasks.find(t => t.id === taskId)
+	return props.allTasks.find(t => t.id === taskId)
 }
 
 const {t} = useI18n({useScope: 'global'})
@@ -243,14 +244,17 @@ const showDefer = ref(false)
 const isRepeating = computed(() => task.value.repeatAfter.amount > 0 || (task.value.repeatAfter.amount === 0 && task.value.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH))
 
 watch(
-	() => theTask,
+	() => props.theTask,
 	newVal => {
 		task.value = newVal
+	},
+	{
+		immediate: true,
+		deep: true,
 	},
 )
 
 onMounted(() => {
-	task.value = theTask
 	document.addEventListener('click', hideDeferDueDatePopup)
 })
 
@@ -265,7 +269,7 @@ const taskStore = useTaskStore()
 const project = computed(() => projectStore.projects[task.value.projectId])
 const projectColor = computed(() => project.value ? project.value?.hexColor : '')
 
-const showProjectSeparately = computed(() => !showProject && currentProject.value?.id !== task.value.projectId && project.value)
+const showProjectSeparately = computed(() => !props.showProject && currentProject.value?.id !== task.value.projectId && project.value)
 
 const currentProject = computed(() => {
 	return typeof baseStore.currentProject === 'undefined' ? {
