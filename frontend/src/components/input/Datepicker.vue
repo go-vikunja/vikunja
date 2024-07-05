@@ -33,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, onMounted, onBeforeUnmount, toRef, watch, type PropType} from 'vue'
+import {ref, onMounted, onBeforeUnmount, toRef, watch} from 'vue'
 
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import DatepickerInline from '@/components/input/DatepickerInline.vue'
@@ -44,26 +44,24 @@ import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {createDateFromString} from '@/helpers/time/createDateFromString'
 import {useI18n} from 'vue-i18n'
 
-const props = defineProps({
-	modelValue: {
-		type: [Date, null, String] as PropType<Date | null | string>,
-		validator: prop => prop instanceof Date || prop === null || typeof prop === 'string',
-		default: null,
+const props = withDefaults(defineProps<{
+	modelValue: Date | null | string,
+	chooseDateLabel: string,
+	disabled?: boolean,
+}>(), {
+	modelValue: null,
+	chooseDateLabel: () => {
+		const {t} = useI18n({useScope: 'global'})
+		return t('input.datepicker.chooseDate')
 	},
-	chooseDateLabel: {
-		type: String,
-		default() {
-			const {t} = useI18n({useScope: 'global'})
-			return t('input.datepicker.chooseDate')
-		},
-	},
-	disabled: {
-		type: Boolean,
-		default: false,
-	},
+	disabled: false,
 })
 
-const emit = defineEmits(['update:modelValue', 'close', 'closeOnChange'])
+const emit = defineEmits<{
+	'update:modelValue': [value: Date | null],
+	'close': [value: boolean],
+	'closeOnChange': [value: boolean],
+}>()
 
 const date = ref<Date | null>()
 const show = ref(false)
