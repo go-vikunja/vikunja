@@ -73,13 +73,13 @@ import TaskReminderModel from '@/models/taskReminder'
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 import {type IReminderPeriodRelativeTo, REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 
-const {
-	modelValue,
-} = defineProps<{
-	modelValue?: ITaskReminder,
+const props = defineProps<{
+	modelValue: ITaskReminder,
 }>()
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits<{
+	'update:modelValue': [ITaskReminder]
+}>()
 
 const reminder = ref<ITaskReminder>(new TaskReminderModel())
 
@@ -98,14 +98,17 @@ const period = ref<PeriodInput>({
 })
 
 watch(
-	() => modelValue,
+	() => props.modelValue,
 	(value) => {
 		const p = secondsToPeriod(value?.relativePeriod)
 		period.value.durationUnit = p.unit
 		period.value.duration = Math.abs(p.amount)
 		period.value.relativeTo = value?.relativeTo || REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE
 	},
-	{immediate: true},
+	{
+		immediate: true,
+		deep: true,
+	},
 )
 
 watch(
