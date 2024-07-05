@@ -290,10 +290,7 @@ import type {IProject} from '@/modelTypes/IProject'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import type {IProjectView} from '@/modelTypes/IProjectView'
 
-const {
-	projectId,
-	viewId,
-} = defineProps<{
+const props = defineProps<{
 	projectId: IProject['id'],
 	viewId: IProjectView['id'],
 }>()
@@ -322,7 +319,7 @@ const SORT_BY_DEFAULT: SortBy = {
 const activeColumns = useStorage('tableViewColumns', {...ACTIVE_COLUMNS_DEFAULT})
 const sortBy = useStorage<SortBy>('tableViewSortBy', {...SORT_BY_DEFAULT})
 
-const taskList = useTaskList(() => projectId, () => viewId, sortBy.value)
+const taskList = useTaskList(() => props.projectId, () => props.viewId, sortBy.value)
 
 const {
 	loading,
