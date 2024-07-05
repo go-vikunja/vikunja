@@ -46,13 +46,13 @@ import TaskService from '@/services/task'
 import type {ITask} from '@/modelTypes/ITask'
 import { getFlatpickrLanguage } from '@/helpers/flatpickrLanguage'
 
-const {
-	modelValue,
-} = defineProps<{
+const props = defineProps<{
 	modelValue: ITask,
 }>()
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits<{
+	'update:modelValue': [value: ITask]
+}>()
 
 const {t} = useI18n({useScope: 'global'})
 
@@ -65,7 +65,7 @@ const lastValue = ref<Date | null>()
 const changeInterval = ref<ReturnType<typeof setInterval>>()
 
 watch(
-	() => modelValue,
+	() => props.modelValue,
 	(value) => {
 		task.value = { ...value }
 		dueDate.value = value.dueDate
