@@ -308,10 +308,7 @@ import ProjectViewModel from '@/models/projectView'
 import TaskBucketService from '@/services/taskBucket'
 import TaskBucketModel from '@/models/taskBucket'
 
-const {
-	projectId,
-	viewId,
-} = defineProps<{
+const props = defineProps<{
 	projectId: number,
 	viewId: IProjectView['id'],
 }>()
@@ -391,8 +388,8 @@ const bucketDraggableComponentData = computed(() => ({
 		{'dragging-disabled': !canWrite.value},
 	],
 }))
-const project = computed(() => projectId ? projectStore.projects[projectId] : null)
-const view = computed<IProjectView | null>(() => project.value?.views.find(v => v.id === viewId) || null)
+const project = computed(() => props.projectId ? projectStore.projects[props.projectId] : null)
+const view = computed(() => project.value?.views.find(v => v.id === props.viewId) as IProjectView || null)
 const canWrite = computed(() => baseStore.currentProject?.maxRight > Rights.READ && view.value.bucketConfigurationMode === 'manual')
 const buckets = computed(() => kanbanStore.buckets)
 const loading = computed(() => kanbanStore.isLoading)
@@ -402,10 +399,10 @@ const taskLoading = computed(() => taskStore.isLoading || taskPositionService.va
 watch(
 	() => ({
 		params: params.value,
-		projectId,
-		viewId,
+		projectId: props.projectId,
+		viewId: props.viewId,
 	}),
-	({params}) => {
+	({params, projectId, viewId}) => {
 		if (projectId === undefined || Number(projectId) === 0) {
 			return
 		}
@@ -434,8 +431,8 @@ function handleTaskContainerScroll(id: IBucket['id'], el: HTMLElement) {
 	}
 
 	kanbanStore.loadNextTasksForBucket(
-		projectId,
-		viewId,
+		props.projectId,
+		props.viewId,
 		params.value,
 		id,
 	)
@@ -509,7 +506,7 @@ async function updateTaskPosition(e) {
 	try {
 		const newPosition = new TaskPositionModel({
 			position,
-			projectViewId: viewId,
+			projectViewId: props.viewId,
 			taskId: newTask.id,
 		})
 		await taskPositionService.value.update(newPosition)
@@ -518,7 +515,7 @@ async function updateTaskPosition(e) {
 			const updatedTaskBucket = await taskBucketService.value.update(new TaskBucketModel({
 				taskId: newTask.id,
 				bucketId: newTask.bucketId,
-				projectViewId: viewId,
+				projectViewId: props.viewId,
 				projectId: project.value.id,
 			}))
 			newTask.done = updatedTaskBucket.taskDone
@@ -586,7 +583,7 @@ async function createNewBucket() {
 	await kanbanStore.createBucket(new BucketModel({
 		title: newBucketTitle.value,
 		projectId: project.value.id,
-		projectViewId: viewId,
+		projectViewId: props.viewId,
 	}))
 	newBucketTitle.value = ''
 }
@@ -606,7 +603,7 @@ async function deleteBucket() {
 			bucket: new BucketModel({
 				id: bucketToDelete.value,
 				projectId: project.value.id,
-				projectViewId: viewId,
+				projectViewId: props.viewId,
 			}),
 			params: params.value,
 		})
@@ -635,7 +632,7 @@ async function saveBucketTitle(bucketId: IBucket['id'], bucketTitle: string) {
 	await kanbanStore.updateBucket({
 		id: bucketId,
 		title: bucketTitle,
-		projectId,
+		projectId: props.projectId,
 	})
 	success({message: i18n.global.t('project.kanban.bucketTitleSavedSuccess')})
 	bucketTitleEditable.value = false
@@ -657,7 +654,7 @@ function updateBucketPosition(e: { newIndex: number }) {
 
 	kanbanStore.updateBucket({
 		id: bucket.id,
-		projectId,
+		projectId: props.projectId,
 		position: calculateItemPosition(
 			bucketBefore !== null ? bucketBefore.position : null,
 			bucketAfter !== null ? bucketAfter.position : null,
@@ -672,7 +669,7 @@ async function saveBucketLimit(bucketId: IBucket['id'], limit: number) {
 
 	await kanbanStore.updateBucket({
 		...kanbanStore.getBucketById(bucketId),
-		projectId,
+		projectId: props.projectId,
 		limit,
 	})
 	success({message: t('project.kanban.bucketLimitSavedSuccess')})
