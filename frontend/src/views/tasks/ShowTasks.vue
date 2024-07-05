@@ -87,19 +87,16 @@ import {useTaskStore} from '@/stores/tasks'
 import {useProjectStore} from '@/stores/projects'
 import type {TaskFilterParams} from '@/services/taskCollection'
 
-// Linting disabled because we explicitely enabled destructuring in vite's config, this will work.
-// eslint-disable-next-line vue/no-setup-props-destructure
-const {
-	dateFrom,
-	dateTo,
-	showNulls = false,
-	showOverdue = false,
-} = defineProps<{
+const props = withDefaults(defineProps<{
 	dateFrom?: Date | string,
 	dateTo?: Date | string,
 	showNulls?: boolean,
 	showOverdue?: boolean,
-}>()
+}>(), {
+	showNulls: false,
+	showOverdue: false,
+})
+
 const authStore = useAuthStore()
 const taskStore = useTaskStore()
 const route = useRoute()
@@ -113,13 +110,13 @@ const projectStore = useProjectStore()
 
 setTimeout(() => showNothingToDo.value = true, 100)
 
-const showAll = computed(() => typeof dateFrom === 'undefined' || typeof dateTo === 'undefined')
+const showAll = computed(() => typeof props.dateFrom === 'undefined' || typeof props.dateTo === 'undefined')
 
 const pageTitle = computed(() => {
 	// We need to define "key" because it is the first parameter in the array and we need the second
 	const predefinedRange = Object.entries(DATE_RANGES)
 		// eslint-disable-next-line no-unused-vars
-		.find(([, value]) => dateFrom === value[0] && dateTo === value[1])
+		.find(([, value]) => props.dateFrom === value[0] && props.dateTo === value[1])
 		?.[0]
 	if (typeof predefinedRange !== 'undefined') {
 		return t(`input.datepickerRange.ranges.${predefinedRange}`)
@@ -128,8 +125,8 @@ const pageTitle = computed(() => {
 	return showAll.value
 		? t('task.show.titleCurrent')
 		: t('task.show.fromuntil', {
-			from: formatDate(dateFrom, 'PPP'),
-			until: formatDate(dateTo, 'PPP'),
+			from: formatDate(props.dateFrom, 'PPP'),
+			until: formatDate(props.dateTo, 'PPP'),
 		})
 })
 const hasTasks = computed(() => tasks.value && tasks.value.length > 0)
@@ -145,10 +142,10 @@ function setDate(dates: dateStrings) {
 	router.push({
 		name: route.name as string,
 		query: {
-			from: dates.dateFrom ?? dateFrom,
-			to: dates.dateTo ?? dateTo,
-			showOverdue: showOverdue ? 'true' : 'false',
-			showNulls: showNulls ? 'true' : 'false',
+			from: dates.dateFrom ?? props.dateFrom,
+			to: dates.dateTo ?? props.dateTo,
+			showOverdue: props.showOverdue ? 'true' : 'false',
+			showNulls: props.showNulls ? 'true' : 'false',
 		},
 	})
 }
@@ -186,7 +183,7 @@ async function loadPendingTasks(from: Date|string, to: Date|string) {
 		sort_by: ['due_date', 'id'],
 		order_by: ['asc', 'desc'],
 		filter: 'done = false',
-		filter_include_nulls: showNulls,
+		filter_include_nulls: props.showNulls,
 		s: '',
 	}
 
@@ -197,7 +194,7 @@ async function loadPendingTasks(from: Date|string, to: Date|string) {
 		// NOTE: Ideally we could also show tasks with a start or end date in the specified range, but the api
 		//       is not capable (yet) of combining multiple filters with 'and' and 'or'.
 
-		if (!showOverdue) {
+		if (!props.showOverdue) {
 			params.filter += ` && due_date > '${from instanceof Date ? from.toISOString() : from}'`
 		}
 	}
@@ -225,7 +222,7 @@ function updateTasks(updatedTask: ITask) {
 	}
 }
 
-watchEffect(() => loadPendingTasks(dateFrom as string, dateTo as string))
+watchEffect(() => loadPendingTasks(props.dateFrom, props.dateTo))
 watchEffect(() => setTitle(pageTitle.value))
 </script>
 
