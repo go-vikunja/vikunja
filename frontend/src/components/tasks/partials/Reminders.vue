@@ -3,7 +3,7 @@
 		<div
 			v-for="(r, index) in reminders"
 			:key="index"
-			:class="{ 'overdue': r.reminder < new Date() }"
+			:class="{ 'overdue': r.reminder < now }"
 			class="reminder-input"
 		>
 			<ReminderDetail
@@ -40,21 +40,25 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import ReminderDetail from '@/components/tasks/partials/ReminderDetail.vue'
 import type {ITask} from '@/modelTypes/ITask'
 import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
+import { useNow } from '@vueuse/core'
 
-const {
-	modelValue,
-	disabled = false,
-} = defineProps<{
+const props = withDefaults(defineProps<{
 	modelValue: ITask,
 	disabled?: boolean,
-}>()
+}>(), {
+	disabled: false,
+})
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits<{
+	'update:modelValue': [ITask]
+}>()
 
 const reminders = ref<ITaskReminder[]>([])
 
+const now = useNow({interval: 1000})
+
 watch(
-	() => modelValue.reminders,
+	() => props.modelValue.reminders,
 	(newVal) => {
 		reminders.value = newVal
 	},
@@ -62,19 +66,19 @@ watch(
 )
 
 const defaultRelativeTo = computed(() => {
-	if (typeof modelValue === 'undefined') {
+	if (typeof props.modelValue === 'undefined') {
 		return null
 	}
 	
-	if (modelValue?.dueDate) {
+	if (props.modelValue?.dueDate) {
 		return REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE
 	}
 	
-	if (modelValue.dueDate === null && modelValue.startDate !== null) {
+	if (props.modelValue.dueDate === null && props.modelValue.startDate !== null) {
 		return REMINDER_PERIOD_RELATIVE_TO_TYPES.STARTDATE
 	}
 	
-	if (modelValue.dueDate === null && modelValue.startDate === null && modelValue.endDate !== null) {
+	if (props.modelValue.dueDate === null && props.modelValue.startDate === null && props.modelValue.endDate !== null) {
 		return REMINDER_PERIOD_RELATIVE_TO_TYPES.ENDDATE
 	}
 	
@@ -83,7 +87,7 @@ const defaultRelativeTo = computed(() => {
 
 function updateData() {
 	emit('update:modelValue', {
-		...modelValue,
+		...props.modelValue,
 		reminders: reminders.value,
 	})
 }
