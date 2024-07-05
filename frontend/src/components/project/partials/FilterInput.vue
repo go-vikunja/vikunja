@@ -23,17 +23,16 @@ import {
 import {useDebounceFn} from '@vueuse/core'
 import {createRandomID} from '@/helpers/randomId'
 
-const {
-	modelValue,
-	projectId,
-	inputLabel = undefined,
-} = defineProps<{
+const props = defineProps<{
 	modelValue: string,
 	projectId?: number,
 	inputLabel?: string,
 }>()
 
-const emit = defineEmits(['update:modelValue', 'blur'])
+const emit = defineEmits<{
+	'update:modelValue': [value: string],
+	'blur': [],
+}>()
 
 const userService = new UserService()
 const projectUserService = new ProjectUserService()
@@ -49,9 +48,9 @@ const {
 const id = ref(createRandomID())
 
 watch(
-	() => modelValue,
+	() => props.modelValue,
 	() => {
-		filterQuery.value = modelValue
+		filterQuery.value = props.modelValue
 	},
 	{immediate: true},
 )
@@ -59,7 +58,7 @@ watch(
 watch(
 	() => filterQuery.value,
 	() => {
-		if (filterQuery.value !== modelValue) {
+		if (filterQuery.value !== props.modelValue) {
 			emit('update:modelValue', filterQuery.value)
 		}
 	},
@@ -204,6 +203,7 @@ const autocompleteResultType = ref<'labels' | 'assignees' | 'projects' | null>(n
 const autocompleteResults = ref<any[]>([])
 
 function handleFieldInput() {
+	if (!filterInput.value) return
 	const cursorPosition = filterInput.value.selectionStart
 	const textUpToCursor = filterQuery.value.substring(0, cursorPosition)
 	autocompleteResults.value = []
@@ -230,15 +230,15 @@ function handleFieldInput() {
 			}
 			if (matched.startsWith('assignee')) {
 				autocompleteResultType.value = 'assignees'
-				if (projectId) {
-					projectUserService.getAll({projectId}, {s: search})
+				if (props.projectId) {
+					projectUserService.getAll({projectId: props.projectId}, {s: search})
 						.then(users => autocompleteResults.value = users.length > 1 ? users : [])
 				} else {
 					userService.getAll({}, {s: search})
 						.then(users => autocompleteResults.value = users.length > 1 ? users : [])
 				}
 			}
-			if (!projectId && matched.startsWith('project')) {
+			if (!props.projectId && matched.startsWith('project')) {
 				autocompleteResultType.value = 'projects'
 				autocompleteResults.value = projectStore.searchProject(search)
 			}
