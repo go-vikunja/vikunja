@@ -194,15 +194,17 @@ import {useTaskStore} from '@/stores/tasks'
 import {useI18n} from 'vue-i18n'
 import FilePreview from '@/components/tasks/partials/FilePreview.vue'
 
-const {
-	task,
-	editEnabled = true,
-} = defineProps<{
+const props = withDefaults(defineProps<{
 	task: ITask,
 	editEnabled: boolean,
-}>()
+}>(), {
+	editEnabled: true,
+})
+
 // FIXME: this should go through the store
-const emit = defineEmits(['taskChanged'])
+const emit = defineEmits<{
+	'taskChanged': [ITask],
+}>()
 const taskStore = useTaskStore()
 const {t} = useI18n({useScope: 'global'})
 
@@ -238,7 +240,7 @@ function uploadNewAttachment() {
 }
 
 function uploadFilesToTask(files: File[] | FileList) {
-	uploadFiles(attachmentService, task.id, files)
+	uploadFiles(attachmentService, props.task.id, files)
 }
 
 const attachmentToDelete = ref<IAttachment | null>(null)
@@ -279,11 +281,11 @@ function canPreview(attachment: IAttachment): boolean {
 const copy = useCopyToClipboard()
 
 function copyUrl(attachment: IAttachment) {
-	copy(generateAttachmentUrl(task.id, attachment.id))
+	copy(generateAttachmentUrl(props.task.id, attachment.id))
 }
 
 async function setCoverImage(attachment: IAttachment | null) {
-	const updatedTask = await taskStore.setCoverImage(task, attachment)
+	const updatedTask = await taskStore.setCoverImage(props.task, attachment)
 	emit('taskChanged', updatedTask)
 	success({message: t('task.attachment.successfullyChangedCoverImage')})
 }
