@@ -42,7 +42,6 @@ module.exports = {
 			'error',
 			{ 'script': { 'lang': 'ts' } },
 		],
-		'vue/no-required-prop-with-default': ['error', { 'autofix': true }],
 		'vue/no-duplicate-attr-inheritance': 'error',
 		'vue/no-empty-component-block': 'error',
 		'vue/html-indent': ['error', 'tab'],
