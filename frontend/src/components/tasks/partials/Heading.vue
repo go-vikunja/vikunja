@@ -70,7 +70,9 @@ const props = withDefaults(defineProps<{
 	canWrite: false,
 })
 
-const emit = defineEmits(['update:task'])
+const emit = defineEmits<{
+	'update:task': [task: ITask]
+}>()
 
 const router = useRouter()
 const copy = useCopyToClipboard()
