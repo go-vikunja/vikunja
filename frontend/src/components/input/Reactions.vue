@@ -13,27 +13,25 @@ import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {useAuthStore} from '@/stores/auth'
 import {useColorScheme} from '@/composables/useColorScheme'
 
-const {
-	entityKind,
-	entityId,
-	disabled = false,
-} = defineProps<{
+const props = withDefaults(defineProps<{
 	entityKind: ReactionKind,
 	entityId: number,
 	disabled?: boolean,
-}>()
+}>(), {
+	disabled: false,
+})
+
+const model = defineModel<IReactionPerEntity>()
 
 const authStore = useAuthStore()
 const {t} = useI18n()
 const reactionService = new ReactionService()
 const {isDark} = useColorScheme()
 
-const model = defineModel<IReactionPerEntity>()
-
 async function addReaction(value: string) {
 	const reaction = new ReactionModel({
-		id: entityId,
-		kind: entityKind,
+		id: props.entityId,
+		kind: props.entityKind,
 		value,
 	})
 	await reactionService.create(reaction)
@@ -52,8 +50,8 @@ async function addReaction(value: string) {
 
 async function removeReaction(value: string) {
 	const reaction = new ReactionModel({
-		id: entityId,
-		kind: entityKind,
+		id: props.entityId,
+		kind: props.entityKind,
 		value,
 	})
 	await reactionService.delete(reaction)
