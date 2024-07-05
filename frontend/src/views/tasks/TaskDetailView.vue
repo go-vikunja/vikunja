@@ -879,7 +879,7 @@ function toggleTaskDone() {
 		done: !task.value.done,
 	}
 
-	if (newTask.done && authStore.settings.frontendSettings.playSoundWhenDone) {
+	if (newTask.done) {
 		playPopSound()
 	}
 

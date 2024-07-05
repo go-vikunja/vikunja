@@ -111,7 +111,6 @@ import {formatDateLong, formatISO, formatDateSince} from '@/helpers/time/formatD
 import {colorIsDark} from '@/helpers/color/colorIsDark'
 import {useTaskStore} from '@/stores/tasks'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
-import {useAuthStore} from '@/stores/auth'
 import {playPopSound} from '@/helpers/playPop'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 
@@ -137,7 +136,7 @@ async function toggleTaskDone(task: ITask) {
 			done: !task.done,
 		})
 
-		if (updatedTask.done && useAuthStore().settings.frontendSettings.playSoundWhenDone) {
+		if (updatedTask.done) {
 			playPopSound()
 		}
 	} finally {

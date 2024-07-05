@@ -205,7 +205,6 @@ import {useTaskStore} from '@/stores/tasks'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import {useIntervalFn} from '@vueuse/core'
 import {playPopSound} from '@/helpers/playPop'
-import {useAuthStore} from '@/stores/auth'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 
@@ -311,7 +310,7 @@ async function markAsDone(checked: boolean, wasReverted: boolean = false) {
 			return
 		}
 
-		if (checked && useAuthStore().settings.frontendSettings.playSoundWhenDone) {
+		if (checked) {
 			playPopSound()
 		}
 		emit('taskUpdated', newTask)
