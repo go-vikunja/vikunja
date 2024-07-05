@@ -53,11 +53,11 @@ import ApiConfig from '@/components/misc/ApiConfig.vue'
 import {useTitle} from '@/composables/useTitle'
 import {useConfigStore} from '@/stores/config'
 
-const {
-	showApiConfig = true,
-} = defineProps<{
+withDefaults(defineProps<{
 	showApiConfig?: boolean
-}>()
+}>(), {
+	showApiConfig: true,
+})
 const configStore = useConfigStore()
 const motd = computed(() => configStore.motd)
 
