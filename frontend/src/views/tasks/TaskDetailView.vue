@@ -637,15 +637,14 @@ import {playPopSound} from '@/helpers/playPop'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import Reactions from '@/components/input/Reactions.vue'
 
-const {
-	taskId,
-	backdropView,
-} = defineProps<{
+const props = defineProps<{
 	taskId: ITask['id'],
 	backdropView?: RouteLocation['fullPath'],
 }>()
 
-defineEmits(['close'])
+defineEmits<{
+	'close': [],
+}>()
 
 const router = useRouter()
 const {t} = useI18n({useScope: 'global'})
@@ -709,7 +708,7 @@ const hasAttachments = computed(() => attachmentStore.attachments.length > 0)
 const isModal = computed(() => Boolean(backdropView))
 
 function attachmentUpload(file: File, onSuccess?: (url: string) => void) {
-	return uploadFile(taskId, file, onSuccess)
+	return uploadFile(props.taskId, file, onSuccess)
 }
 
 const heading = ref<HTMLElement | null>(null)
@@ -722,7 +721,7 @@ const taskService = shallowReactive(new TaskService())
 
 // load task
 watch(
-	() => taskId,
+	() => props.taskId,
 	async (id) => {
 		if (id === undefined) {
 			return
