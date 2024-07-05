@@ -55,6 +55,14 @@ const browserLanguage = getBrowserLanguage()
 setLanguage(browserLanguage).then(() => {
 	const app = createApp(App)
 
+	if (window.SENTRY_ENABLED) {
+		try {
+			import('./sentry').then(sentry => sentry.default(app, router))
+		} catch (e) {
+			console.error('Could not enable Sentry tracking', e)
+		}
+	}
+
 	app.use(Notifications)
 
 	app.directive('focus', focus)
@@ -98,14 +106,6 @@ setLanguage(browserLanguage).then(() => {
 	app.config.globalProperties.$message = {
 		error,
 		success,
-	}
-
-	if (window.SENTRY_ENABLED) {
-		try {
-			import('./sentry').then(sentry => sentry.default(app, router))
-		} catch (e) {
-			console.error('Could not enable Sentry tracking', e)
-		}
 	}
 
 	app.use(pinia)
