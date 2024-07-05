@@ -64,6 +64,7 @@ func initMigration(x *xorm.Engine) *xormigrate.Xormigrate {
 
 // Migrate runs all migrations
 func Migrate(x *xorm.Engine) {
+	log.Info("Running migrations…")
 	m := initMigration(x)
 	err := m.Migrate()
 	if err != nil {
