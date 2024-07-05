@@ -8,17 +8,19 @@ import {useLabelStore} from '@/stores/labels'
 import {useProjectStore} from '@/stores/projects'
 import FilterInputDocs from '@/components/project/partials/FilterInputDocs.vue'
 
-const {
-	modelValue,
-	loading = false,
-	showSaveButtons = false,
-} = defineProps<{
+const props = withDefaults(defineProps<{
 	modelValue: IProjectView,
-	loading?: bool,
-	showSaveButtons?: bool,
-}>()
+	loading?: boolean,
+	showSaveButtons?: boolean,
+}>(), {
+	loading: false,
+	showSaveButtons: false,
+})
 
-const emit = defineEmits(['update:modelValue', 'cancel'])
+const emit = defineEmits<{
+	'update:modelValue': [value: IProjectView],
+	'cancel': [],
+}>()
 
 const view = ref<IProjectView>()
 
@@ -26,16 +28,16 @@ const labelStore = useLabelStore()
 const projectStore = useProjectStore()
 
 onBeforeMount(() => {
-	const transform = filterString => transformFilterStringFromApi(
+	const transform = (filterString: string) => transformFilterStringFromApi(
 		filterString,
 		labelId => labelStore.getLabelById(labelId)?.title,
 		projectId => projectStore.projects[projectId]?.title || null,
 	)
 
 	const transformed = {
-		...modelValue,
-		filter: transform(modelValue.filter),
-		bucketConfiguration: modelValue.bucketConfiguration.map(bc => ({
+		...props.modelValue,
+		filter: transform(props.modelValue.filter),
+		bucketConfiguration: props.modelValue.bucketConfiguration.map(bc => ({
 			title: bc.title,
 			filter: transform(bc.filter),
 		})),
@@ -47,7 +49,7 @@ onBeforeMount(() => {
 })
 
 function save() {
-	const transformFilter = filterQuery => transformFilterStringForApi(
+	const transformFilter = (filterQuery: string) => transformFilterStringForApi(
 		filterQuery,
 		labelTitle => labelStore.filterLabelsByQuery([], labelTitle)[0]?.id || null,
 		projectTitle => {
@@ -73,7 +75,7 @@ function validateTitle() {
 }
 
 function handleBubbleSave() {
-	if (showSaveButtons) {
+	if (props.showSaveButtons) {
 		return
 	}
 
