@@ -64,7 +64,9 @@ withDefaults(defineProps<{
 	loading: false,
 })
 
-defineEmits(['close'])
+defineEmits<{
+	'close': []
+}>()
 </script>
 
 <style lang="scss" scoped>
