@@ -21,24 +21,20 @@
 
 <script setup lang="ts">
 import CheckboxIcon from '@/assets/checkbox.svg?component'
-
 import BaseCheckbox from '@/components/base/BaseCheckbox.vue'
 
-defineProps({
-	modelValue: {
-		type: Boolean,
-	},
-	disabled: {
-		type: Boolean,
-	},
-	isBlock: {
-		type: Boolean,
-		default: false,
-	},
+withDefaults(defineProps<{
+	modelValue: boolean,
+	disabled?: boolean,
+	isBlock?: boolean
+}>(), {
+	modelValue: false,
+	disabled: false,
+	isBlock: false,
 })
 
 const emit = defineEmits<{
-  (event: 'update:modelValue', value: boolean): void
+	'update:modelValue': [value: boolean]
 }>()
 </script>
 
