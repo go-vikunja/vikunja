@@ -37,11 +37,13 @@ const props = withDefaults(defineProps<{
 	modelValue?: IProject
 	savedFiltersOnly?: boolean
 }>(), {
-	modelValue: new ProjectModel(),
+	modelValue: () => new ProjectModel(),
 	savedFiltersOnly: false,
 })
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits<{
+	'update:modelValue': [value: IProject]
+}>()
 
 const project = reactive<IProject>(new ProjectModel())
 
@@ -55,6 +57,7 @@ watch(
 )
 
 const projectStore = useProjectStore()
+
 const foundProjects = ref<IProject[]>([])
 function findProjects(query: string) {
 	if (query === '') {
