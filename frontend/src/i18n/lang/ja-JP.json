@@ -5,7 +5,7 @@
     "welcomeDay": "こんにちは、{username}さん",
     "welcomeEvening": "こんばんは、{username}さん",
     "lastViewed": "最近の表示",
-    "addToHomeScreen": "Add this app to your home screen for faster access and improved experience.",
+    "addToHomeScreen": "ホーム画面に追加することで、よりすばやくアクセスでき操作性が向上します。",
     "goToOverview": "概要に移動",
     "project": {
       "importText": "他のサービスからVikunjaにプロジェクトやタスクをインポートします:",
@@ -96,10 +96,10 @@
         "weekStartMonday": "月曜日",
         "language": "言語",
         "defaultProject": "デフォルトのプロジェクト",
-        "defaultView": "Default View",
+        "defaultView": "デフォルトのビュー",
         "timezone": "タイムゾーン",
         "overdueTasksRemindersTime": "期限切れタスクのリマインダー送信時間",
-        "filterUsedOnOverview": "概要ページに使用される絞り込み条件を保存しました"
+        "filterUsedOnOverview": "概要ページに使用される絞り込み条件"
       },
       "totp": {
         "title": "2要素認証",
@@ -162,11 +162,11 @@
         "60d": "60日",
         "90d": "90日",
         "permissionExplanation": "Permissions allow you to scope what an api token is allowed to do.",
-        "titleRequired": "The title is required",
+        "titleRequired": "トークン名を入力してください。",
         "expired": "This token has expired {ago}.",
         "tokenCreatedSuccess": "Here is your new api token: {token}",
         "tokenCreatedNotSeeAgain": "このトークンは二度と表示されません。安全な場所に保管してください。",
-        "selectAll": "Select all",
+        "selectAll": "すべて選択",
         "delete": {
           "header": "トークンの削除",
           "text1": "Are you sure you want to delete the token \"{token}\"?",
@@ -290,7 +290,7 @@
         "removeText": "この共有リンクを削除して本当によろしいですか？この共有リンクを使ってプロジェクトにアクセスすることができなくなります。この操作は元に戻せません。",
         "createSuccess": "共有リンクは正常に作成されました。",
         "deleteSuccess": "共有リンクは正常に削除されました。",
-        "view": "表示",
+        "view": "ビュー",
         "sharedBy": "{0}によって共有されました"
       },
       "userTeam": {
@@ -387,22 +387,22 @@
       "secretDocs": "シークレットに関する詳細はドキュメントをご確認ください。"
     },
     "views": {
-      "header": "Edit views",
-      "title": "Title",
+      "header": "ビューの編集",
+      "title": "ビュー名",
       "actions": "Actions",
       "kind": "Kind",
       "bucketConfigMode": "Bucket configuration mode",
       "bucketConfig": "Bucket configuration",
       "bucketConfigManual": "Manual",
       "filter": "Filter",
-      "create": "Create view",
-      "createSuccess": "The view was created successfully.",
-      "titleRequired": "Please provide a title.",
-      "delete": "Delete this view",
+      "create": "ビューの作成",
+      "createSuccess": "ビューは正常に作成されました。",
+      "titleRequired": "ビュー名を入力してください。",
+      "delete": "ビューの削除",
       "deleteText": "Are you sure you want to remove this view? It will no longer be possible to use it to view tasks in this project. This action won't delete any tasks. This cannot be undone!",
-      "deleteSuccess": "The view was deleted successfully.",
+      "deleteSuccess": "ビューは正常に削除されました。",
       "onlyAdminsCanEdit": "Only project admins can edit views.",
-      "updateSuccess": "The view was updated successfully."
+      "updateSuccess": "ビューは正常に更新されました。"
     }
   },
   "filters": {
@@ -626,7 +626,7 @@
       "taskListTooltip": "Track tasks with a to-do list.",
       "undo": "元に戻す",
       "redo": "やり直す",
-      "placeholder": "Type some text or hit '/' to see more options…",
+      "placeholder": "テキストを入力するか「/」を押して選択肢から選ぶ…",
       "table": {
         "title": "テーブル",
         "insert": "テーブルの挿入",
@@ -732,7 +732,7 @@
     "addReminder": "リマイダーを作成…",
     "doneSuccess": "タスクを完了にしました。",
     "undoneSuccess": "タスクを未完了に戻しました。",
-    "revertSuccess": "The task change was successfully undone.",
+    "revertSuccess": "タスクは正常に未完了へ戻されました。",
     "undo": "元に戻す",
     "openDetail": "タスクの詳細を表示",
     "checklistTotal": "{total}件中{checked}件のタスク",
@@ -744,7 +744,7 @@
       "overdue": "期限切れタスクを表示",
       "fromuntil": "{from} 〜 {until} までのタスク",
       "select": "期間の選択",
-      "noTasks": "タスクはありません — それではよい一日を！"
+      "noTasks": "タスクはありません — よい一日を！"
     },
     "detail": {
       "chooseDueDate": "期日を設定…",
@@ -1005,7 +1005,7 @@
     "attributes": {
       "name": "チーム名",
       "namePlaceholder": "The team's name goes here…",
-      "nameRequired": "Please specify a name.",
+      "nameRequired": "チーム名を入力してください。",
       "description": "説明",
       "descriptionPlaceholder": "Describe the team here, hit '/' for more options…",
       "admin": "管理者",
@@ -1019,7 +1019,7 @@
     "general": "一般",
     "allPages": "これらのショートカットはすべてのページで機能します。",
     "currentPageOnly": "これらのショートカットはこのページで機能します。",
-    "somePagesOnly": "これらのショートカットは一部のページでのみ機能します。",
+    "somePagesOnly": "これらのショートカットは一部のページで動作します。",
     "toggleMenu": "メニューの表示/非表示",
     "quickSearch": "Open the search/quick action bar",
     "then": " ",
@@ -1072,7 +1072,7 @@
     "createProject": "プロジェクトの作成",
     "cantArchiveIsDefault": "デフォルトのプロジェクトのためアーカイブできません。",
     "cantDeleteIsDefault": "デフォルトのプロジェクトのため削除できません。",
-    "views": "Views"
+    "views": "ビュー"
   },
   "apiConfig": {
     "url": "Vikunja URL",
@@ -1081,7 +1081,7 @@
     "use": "{0} に設置されたVikunjaを使用します。",
     "error": "\"{domain}\" にはVikunjaは存在しないか使用できない状態です。URLの形式が正しいかどうか、そして直接アクセスして到達できるかどうかを確認し、もう一度お試しください。",
     "success": "\"{domain}\" に設置されたVikunjaを使用します。",
-    "urlRequired": "URLは必須です。"
+    "urlRequired": "URLを入力してください。"
   },
   "loadingError": {
     "failed": "Loading failed, please {0}. If the error persists, please {1}.",
@@ -1090,7 +1090,7 @@
   },
   "notification": {
     "title": "通知",
-    "none": "通知はありません。それではよい一日を！",
+    "none": "通知はありません。よい一日を！",
     "explainer": "購読しているプロジェクトやタスクが変更されると通知されます。",
     "markAllRead": "Mark all notifications as read",
     "markAllReadSuccess": "Successfully marked all notifications as read."
@@ -1116,7 +1116,7 @@
   },
   "date": {
     "locale": "ja",
-    "altFormatLong": "j M Y, H:i",
+    "altFormatLong": "Y/n/j H:i",
     "altFormatShort": "Y/n/j"
   },
   "reaction": {
@@ -1126,8 +1126,8 @@
     "add": "Add your reaction"
   },
   "error": {
-    "error": "Error",
-    "success": "Success",
+    "error": "エラー",
+    "success": "成功",
     "0001": "You're not allowed to do that.",
     "1001": "A user with this username already exists.",
     "1002": "A user with this email address already exists.",
