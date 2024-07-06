@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, shallowReactive, watchEffect, type PropType} from 'vue'
+import {computed, ref, shallowReactive, watchEffect} from 'vue'
 
 import Multiselect from '@/components/input/Multiselect.vue'
 
@@ -20,23 +20,16 @@ import type {IProject} from '@/modelTypes/IProject'
 import ProjectService from '@/services/project'
 import {includesById} from '@/helpers/utils'
 
-type ProjectFilterFunc = (p: IProject) => boolean
-
-const props = defineProps({
-	modelValue: {
-		type: Array as PropType<IProject[]>,
-		default: () => [],
-	},
-	projectFilter: {
-		type: Function as PropType<ProjectFilterFunc>,
-		default: () => {
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-			return (_: IProject) => true
-		},
-	},
+const props = withDefaults(defineProps<{
+	modelValue: IProject[],
+	projectFilter: (p: IProject) => boolean
+}>(), {
+	modelValue: () => [],
+	projectFilter: () => () => true,
 })
+
 const emit = defineEmits<{
-	(e: 'update:modelValue', value: IProject[]): void
+	'update:modelValue': [value: IProject[]]
 }>()
 
 const projects = ref<IProject[]>([])
