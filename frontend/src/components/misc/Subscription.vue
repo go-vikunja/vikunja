@@ -47,18 +47,20 @@ import {success} from '@/message'
 import type { IconProp } from '@fortawesome/fontawesome-svg-core'
 
 const props = withDefaults(defineProps<{
+	modelValue: ISubscription | null,
 	entity: ISubscription['entity'],
 	entityId: number,
 	isButton?: boolean,
-	modelValue?: ISubscription,
 	type?: 'button' | 'dropdown',
 }>(), {
-	isButton: true,
 	modelValue: null,
+	isButton: true,
 	type: 'button',
 })
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits<{
+	'update:modelValue': [subscription: ISubscription | null]
+}>()
 
 const subscriptionEntity = computed<string | null>(() => props.modelValue?.entity ?? null)
 
@@ -91,7 +93,7 @@ const tooltipText = computed(() => {
 
 const buttonText = computed(() => props.modelValue ? t('task.subscription.unsubscribe') : t('task.subscription.subscribe'))
 const iconName = computed<IconProp>(() => props.modelValue ? ['far', 'bell-slash'] : 'bell')
-const disabled = computed(() => props.modelValue && subscriptionEntity.value !== props.entity)
+const disabled = computed(() => props.modelValue && subscriptionEntity.value !== props.entity || false)
 
 function changeSubscription() {
 	if (disabled.value) {
