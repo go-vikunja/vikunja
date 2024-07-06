@@ -94,7 +94,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, reactive, watch, type PropType} from 'vue'
+import {ref, reactive, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import {error} from '@/message'
@@ -104,19 +104,17 @@ import type {IRepeatAfter} from '@/types/IRepeatAfter'
 import type {ITask} from '@/modelTypes/ITask'
 import TaskModel from '@/models/task'
 
-const props = defineProps({
-	modelValue: {
-		type: Object as PropType<ITask>,
-		default: () => ({}),
-		required: false,
-	},
-	disabled: {
-		type: Boolean,
-		default: false,
-	},
+const props = withDefaults(defineProps<{
+	modelValue: ITask | undefined,
+	disabled: boolean
+}>(), {
+	modelValue: () => {},
+	disabled: false,
 })
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits<{
+	'update:modelValue': [value: ITask | undefined],
+}>()
 
 const {t} = useI18n({useScope: 'global'})
 
@@ -134,7 +132,10 @@ watch(
 			Object.assign(repeatAfter, value.repeatAfter)
 		}
 	},
-	{immediate: true},
+	{
+		immediate: true,
+		deep: true,
+	},
 )
 
 function updateData() {
