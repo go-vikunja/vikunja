@@ -19,17 +19,14 @@
 </template>
 
 <script setup lang="ts">
-import {type PropType, ref, shallowReactive, watchEffect} from 'vue'
+import {ref, shallowReactive, watchEffect} from 'vue'
 import AttachmentService from '@/services/attachment'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import {SUPPORTED_IMAGE_SUFFIX} from '@/models/attachment'
 
-const props = defineProps({
-	modelValue: {
-		type: Object as PropType<IAttachment>,
-		default: undefined,
-	},
-})
+const props = defineProps<{
+	modelValue?: IAttachment
+}>()
 
 const attachmentService = shallowReactive(new AttachmentService())
 const blobUrl = ref<string | undefined>(undefined)
