@@ -31,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, shallowReactive, watch, nextTick, type PropType} from 'vue'
+import {ref, shallowReactive, watch, nextTick} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import User from '@/components/misc/User.vue'
@@ -46,25 +46,19 @@ import type {IUser} from '@/modelTypes/IUser'
 import {getDisplayName} from '@/models/user'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 
-const props = defineProps({
-	taskId: {
-		type: Number,
-		required: true,
-	},
-	projectId: {
-		type: Number,
-		required: true,
-	},
-	disabled: {
-		type: Boolean,
-		default: false,
-	},
-	modelValue: {
-		type: Array as PropType<IUser[]>,
-		default: () => [],
-	},
+const props = withDefaults(defineProps<{
+	modelValue: IUser[] | undefined,
+	taskId: number,
+	projectId: number,
+	disabled?: boolean,
+}>(), {
+	modelValue: () => [],
+	disabled: false,
 })
-const emit = defineEmits(['update:modelValue'])
+
+const emit = defineEmits<{
+	'update:modelValue': [value: IUser[] | undefined],
+}>()
 
 const taskStore = useTaskStore()
 const {t} = useI18n({useScope: 'global'})
