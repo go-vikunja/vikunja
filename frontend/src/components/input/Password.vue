@@ -32,33 +32,32 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, watch} from 'vue'
+import {ref, watchEffect} from 'vue'
 import {useDebounceFn} from '@vueuse/core'
 import {useI18n} from 'vue-i18n'
 import BaseButton from '@/components/base/BaseButton.vue'
 
-const props = defineProps({
-	tabindex: String,
-	modelValue: String,
+const props = withDefaults(defineProps<{
+	modelValue: string,
+	tabindex?: string,
 	// This prop is a workaround to trigger validation from the outside when the user never had focus in the input.
-	validateInitially: Boolean,
-	validateMinLength: {
-		type: Boolean,
-		default: true,
-	},
+	validateInitially?: boolean,
+	validateMinLength?: boolean,
+}>(), {
+	validateMinLength: true,
 })
-const emit = defineEmits(['submit', 'update:modelValue'])
+
+const emit = defineEmits<{
+	'update:modelValue': [value: string],
+	'submit': [event: Event],
+}>()
 const {t} = useI18n()
 const passwordFieldType = ref('password')
 const password = ref('')
 const isValid = ref<true | string>(props.validateInitially === true ? true : '')
 const validateAfterFirst = ref(false)
 
-watch(
-	() => props.validateInitially,
-	() => props.validateInitially && validate(),
-	{immediate: true},
-)
+watchEffect(() => props.validateInitially && validate())
 
 const validate = useDebounceFn(() => {
 	if (password.value === '') {
