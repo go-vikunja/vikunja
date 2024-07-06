@@ -10,7 +10,7 @@ stats.html
 
 node_modules
 .DS_Store
-/dist*
+dist
 coverage
 *.zip
 
