@@ -1,6 +1,7 @@
 <template>
 	<BaseButton
 		class="dropdown-item"
+		:disabled="disabled"
 		:class="{'is-disabled': disabled}"
 	>
 		<span
