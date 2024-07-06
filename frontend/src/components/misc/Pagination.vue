@@ -45,15 +45,11 @@
 <script lang="ts" setup>
 import {computed} from 'vue'
 
-const props = defineProps({
-	totalPages: {
-		type: Number,
-		required: true,
-	},
-	currentPage: {
-		type: Number,
-		default: 0,
-	},
+const props = withDefaults(defineProps<{
+	totalPages: number,
+	currentPage?: number
+}>(), {
+	currentPage: 0,
 })
 
 function createPagination(totalPages: number, currentPage: number) {
