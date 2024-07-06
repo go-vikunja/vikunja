@@ -22,7 +22,7 @@
 						v-if="tertiary !== ''"
 						:shadow="false"
 						variant="tertiary"
-						@click.prevent.stop="$emit('tertiary')"
+						@click.prevent.stop="$emit('tertiary', $event)"
 					>
 						{{ tertiary }}
 					</x-button>
@@ -38,7 +38,7 @@
 						:icon="primaryIcon"
 						:disabled="primaryDisabled || loading"
 						class="ml-2"
-						@click.prevent.stop="primary()"
+						@click.prevent.stop="primary"
 					>
 						{{ primaryLabel || $t('misc.create') }}
 					</x-button>
@@ -70,10 +70,14 @@ withDefaults(defineProps<{
 	loading: false,
 })
 
-const emit = defineEmits(['create', 'primary', 'tertiary'])
+const emit = defineEmits<{
+	'create': [event: MouseEvent],
+	'primary': [event: MouseEvent],
+	'tertiary': [event: MouseEvent]
+}>()
 
-function primary() {
-	emit('create')
-	emit('primary')
+function primary(event: MouseEvent) {
+	emit('create', event)
+	emit('primary', event)
 }
 </script>
