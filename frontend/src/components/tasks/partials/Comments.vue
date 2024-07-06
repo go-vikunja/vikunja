@@ -200,15 +200,11 @@ import {useConfigStore} from '@/stores/config'
 import {useAuthStore} from '@/stores/auth'
 import Reactions from '@/components/input/Reactions.vue'
 
-const props = defineProps({
-	taskId: {
-		type: Number,
-		required: true,
-	},
-	canWrite: {
-		type: Boolean,
-		default: true,
-	},
+const props = withDefaults(defineProps<{
+	taskId: number,
+	canWrite?: boolean
+}>(), {
+	canWrite: true,
 })
 
 const {t} = useI18n({useScope: 'global'})
