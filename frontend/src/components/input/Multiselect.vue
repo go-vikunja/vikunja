@@ -119,9 +119,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-	computed, onBeforeUnmount, onMounted, ref, toRefs, watch, type ComponentPublicInstance, type PropType,
-} from 'vue'
+import {computed, onBeforeUnmount, onMounted, ref, toRefs, watch, type ComponentPublicInstance} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
@@ -129,132 +127,75 @@ import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import BaseButton from '@/components/base/BaseButton.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 
-const props = defineProps({
-	/**
-	 * When true, shows a loading spinner
-	 */
-	loading: {
-		type: Boolean,
-		default: false,
-	},
-	/**
-	 * The placeholder of the search input
-	 */
-	placeholder: {
-		type: String,
-		default: '',
-	},
-	/**
-	 * The search results where the @search listener needs to put the results into
-	 */
-	searchResults: {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		type: Array as PropType<{ [id: string]: any }>,
-		default: () => [],
-	},
-	/**
-	 * The name of the property of the searched object to show the user.
-	 * If empty the component will show all raw data of an entry.
-	 */
-	label: {
-		type: String,
-		default: '',
-	},
-	/**
-	 * The object with the value, updated every time an entry is selected.
-	 */
-	modelValue: {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		type: [Object] as PropType<{ [key: string]: any }>,
-		default: null,
-	},
-	/**
-	 * If true, will provide an "add this as a new value" entry which fires an @create event when clicking on it.
-	 */
-	creatable: {
-		type: Boolean,
-		default: false,
-	},
-	/**
-	 * The text shown next to the new value option.
-	 */
-	createPlaceholder: {
-		type: String,
-		default() {
-			const {t} = useI18n({useScope: 'global'})
-			return t('input.multiselect.createPlaceholder')
-		},
-	},
-	/**
-	 * The text shown next to an option.
-	 */
-	selectPlaceholder: {
-		type: String,
-		default() {
-			const {t} = useI18n({useScope: 'global'})
-			return t('input.multiselect.selectPlaceholder')
-		},
-	},
-	/**
-	 * If true, allows for selecting multiple items. v-model will be an array with all selected values in that case.
-	 */
-	multiple: {
-		type: Boolean,
-		default: false,
-	},
-	/**
-	 * If true, displays the search results inline instead of using a dropdown.
-	 */
-	inline: {
-		type: Boolean,
-		default: false,
-	},
-	/**
-	 * If true, shows search results when no query is specified.
-	 */
-	showEmpty: {
-		type: Boolean,
-		default: true,
-	},
-	/**
-	 * The delay in ms after which the search event will be fired. Used to avoid hitting the network on every keystroke.
-	 */
-	searchDelay: {
-		type: Number,
-		default: 200,
-	},
-	closeAfterSelect: {
-		type: Boolean,
-		default: true,
-	},
-	/**
-	 * If false, the search input will get the autocomplete="off" attributes attached to it.
-	 */
-	autocompleteEnabled: {
-		type: Boolean,
-		default: true,
-	},
+const props = withDefaults(defineProps<{
+	/** When true, shows a loading spinner */
+	loading: boolean
+	/** The placeholder of the search input */
+	placeholder: string
+	/** The search results where the @search listener needs to put the results into */
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	searchResults: { [id: string]: any }[]
+	/** The name of the property of the searched object to show the user. If empty the component will show all raw data of an entry */
+	label: string
+	/** The object with the value, updated every time an entry is selected */
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	modelValue: { [id: string]: any }
+	/** If true, will provide an 'add this as a new value' entry which  fires an @create event when clicking on it. */
+	creatable: boolean
+	/** The text shown next to the new value option. */
+	createPlaceholder: string
+	/** The text shown next to an option. */
+	selectPlaceholder: string
+	/** If true, allows for selecting multiple items. v-model will be an array with all selected values in that case. */
+	multiple: boolean
+	/** If true, displays the search results inline instead of using a dropdown. */
+	inline: boolean
+	/** If true, shows search results when no query is specified. */
+	showEmpty: boolean
+	/** The delay in ms after which the search event will be fired. Used to avoid hitting the network on every keystroke. */
+	searchDelay: number
+	/** If true, closes the dropdown after an entry is selected */
+	closeAfterSelect: boolean
+	/** If false, the search input will get the autocomplete="off" attributes attached to it. */
+	autocompleteEnabled: boolean
+}>(), {
+	loading: false,
+	placeholder: '',
+	searchResults: () => [],
+	label: '',
+	modelValue: null,
+	creatable: false,
+	createPlaceholder: () => useI18n().t('input.multiselect.createPlaceholder'),
+	selectPlaceholder: () => useI18n().t('input.multiselect.selectPlaceholder'),
+	multiple: false,
+	inline: false,
+	showEmpty: false,
+	searchDelay: 200,
+	closeAfterSelect: true,
+	autocompleteEnabled: true,
 })
 
 const emit = defineEmits<{
-	(e: 'update:modelValue', value: null): void
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	'update:modelValue': [value: { [key: string]: any }[] | null],
 	/**
 	 * Triggered every time the search query input changes
 	 */
-	(e: 'search', query: string): void
+	'search': [query: string],
 	/**
 	 * Triggered every time an option from the search results is selected. Also triggers a change in v-model.
 	 */
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	(e: 'select', value: { [key: string]: any }): void
+	'select': [value: { [key: string]: any }],
 	/**
 	 * If nothing or no exact match was found and `creatable` is true, this event is triggered with the current value of the search query.
 	 */
-	(e: 'create', query: string): void
+	'create': [query: string],
 	/**
 	 * If `multiple` is enabled, this will be fired every time an item is removed from the array of selected items.
 	 */
-	(e: 'remove', value: null): void
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	'remove': [value: { [key: string]: any }],
 }>()
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
