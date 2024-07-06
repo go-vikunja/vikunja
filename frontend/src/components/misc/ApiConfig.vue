@@ -71,14 +71,14 @@ import {success} from '@/message'
 import Message from '@/components/misc/Message.vue'
 import ButtonLink from '@/components/misc/ButtonLink.vue'
 
-const props = defineProps({
-	configureOpen: {
-		type: Boolean,
-		required: false,
-		default: false,
-	},
+const props = withDefaults(defineProps<{
+	configureOpen?: boolean
+}>(), {
+	configureOpen: false,
 })
-const emit = defineEmits(['foundApi'])
+const emit = defineEmits<{
+	'foundApi': [url: string],
+}>()
 
 const apiUrl = ref(window.API_URL)
 const configureApi = ref(window.API_URL === '')
