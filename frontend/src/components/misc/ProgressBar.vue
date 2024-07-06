@@ -13,19 +13,13 @@
 </template>
 
 <script setup lang="ts">
-defineProps({
-	value: {
-		type: Number,
-		required: true,
-	},
-	isSmall: {
-		type: Boolean,
-		default: false,
-	},
-	isPrimary: {
-		type: Boolean,
-		required: false,
-	},
+withDefaults(defineProps<{
+	value: number
+	isSmall?: boolean
+	isPrimary?: boolean
+}>(), {
+	isSmall: false,
+	isPrimary: false,
 })
 </script>
 
