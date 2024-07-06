@@ -36,20 +36,31 @@
 </template>
 
 <script setup lang="ts">
-import {ref, type PropType} from 'vue'
+import {ref} from 'vue'
 import {onClickOutside} from '@vueuse/core'
 import type {IconProp} from '@fortawesome/fontawesome-svg-core'
 
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
-defineProps({
-	triggerIcon: {
-		type: String as PropType<IconProp>,
-		default: 'ellipsis-h',
-	},
+withDefaults(defineProps<{
+	triggerIcon?: IconProp
+}>(), {
+	triggerIcon: 'ellipsis-h',
 })
-const emit = defineEmits(['close'])
+
+const emit = defineEmits<{
+	'close': [event: PointerEvent]
+}>()
+
+defineSlots<{
+	'trigger': (props: {
+		close: () => void,
+		toggleOpen: () => void, 
+		open: boolean
+	}) => void,
+	'default': () => void
+}>()
 
 
 const initialMount = ref(false)
@@ -64,7 +75,7 @@ function toggleOpen() {
 }
 
 const dropdown = ref()
-onClickOutside(dropdown, (e: Event) => {
+onClickOutside(dropdown, (e) => {
 	if (!open.value) {
 		return
 	}
