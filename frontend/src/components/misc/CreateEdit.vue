@@ -9,7 +9,6 @@
 			:shadow="false"
 			:padding="false"
 			class="has-text-left"
-			:has-close="true"
 			:loading="loading"
 			@close="$router.back()"
 		>

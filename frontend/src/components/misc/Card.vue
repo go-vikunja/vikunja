@@ -11,7 +11,7 @@
 				{{ title }}
 			</p>
 			<BaseButton
-				v-if="hasClose"
+				v-if="$attrs.onClose"
 				v-tooltip="$t('misc.close')"
 				class="card-header-icon"
 				:aria-label="$t('misc.close')"
@@ -51,7 +51,6 @@ import BaseButton from '@/components/base/BaseButton.vue'
 withDefaults(defineProps<{
 	title?: string
 	padding?: boolean
-	hasClose?: boolean
 	closeIcon?: IconProp
 	shadow?: boolean
 	hasContent?: boolean
@@ -59,7 +58,6 @@ withDefaults(defineProps<{
 }>(), {
 	title: '',
 	padding: true,
-	hasClose: false,
 	closeIcon: 'times',
 	shadow: true,
 	hasContent: true,

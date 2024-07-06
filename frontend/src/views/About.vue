@@ -7,7 +7,6 @@
 		<Card
 			class="has-no-shadow"
 			:title="$t('about.title')"
-			:has-close="true"
 			:padding="false"
 			@close="$router.back()"
 		>
