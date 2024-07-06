@@ -83,7 +83,7 @@ export default {name: 'ProjectSettingEdit'}
 </script>
 
 <script setup lang="ts">
-import {watch, ref, type PropType} from 'vue'
+import {watch, ref} from 'vue'
 import {useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
@@ -100,12 +100,9 @@ import {useProject} from '@/stores/projects'
 
 import {useTitle} from '@/composables/useTitle'
 
-const props = defineProps({
-	projectId: {
-		type: Number as PropType<IProject['id']>,
-		required: true,
-	},
-})
+const props = defineProps<{
+	projectId: IProject['id'],
+}>()
 
 const router = useRouter()
 const projectStore = useProjectStore()
