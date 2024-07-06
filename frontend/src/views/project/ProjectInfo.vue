@@ -25,12 +25,9 @@ import {computed} from 'vue'
 import DOMPurify from 'dompurify'
 import {useProjectStore} from '@/stores/projects'
 
-const props = defineProps({
-	projectId: {
-		type: Number,
-		required: true,
-	},
-})
+const props = defineProps<{
+	projectId: number
+}>()
 
 const projectStore = useProjectStore()
 const project = computed(() => projectStore.projects[props.projectId])
