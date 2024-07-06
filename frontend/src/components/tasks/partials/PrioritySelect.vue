@@ -3,7 +3,6 @@
 		<select
 			v-model="priority"
 			:disabled="disabled || undefined"
-			@change="updateData"
 		>
 			<option :value="PRIORITIES.UNSET">
 				{{ $t('task.priority.unset') }}
@@ -28,32 +27,17 @@
 </template>
 
 <script setup lang="ts">
-import {ref, watch} from 'vue'
 import {PRIORITIES} from '@/constants/priorities'
 
-const props = defineProps({
-	modelValue: {
-		type: Number,
-		default: 0,
-	},
-	disabled: {
-		type: Boolean,
-		default: false,
-	},
+withDefaults(defineProps<{
+	disabled?: boolean
+}>(), {
+	disabled: false,
 })
-const emit = defineEmits(['update:modelValue'])
 
-const priority = ref(0)
+const priority = defineModel<number>({
+	required: true,
+	default: 0,
+})
 
-watch(
-	() => props.modelValue,
-	(value) => {
-		priority.value = value
-	},
-	{immediate: true},
-)
-
-function updateData() {
-	emit('update:modelValue', priority.value)
-}
 </script>
