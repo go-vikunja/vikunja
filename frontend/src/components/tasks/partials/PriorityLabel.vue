@@ -30,19 +30,14 @@
 <script setup lang="ts">
 import {PRIORITIES as priorities} from '@/constants/priorities'
 	
-defineProps({
-	priority: {
-		default: 0,
-		type: Number,
-	},
-	showAll: {
-		type: Boolean,
-		default: false,
-	},
-	done: {
-		type: Boolean,
-		default: false,
-	},
+withDefaults(defineProps<{
+	priority: number,
+	showAll?: boolean,
+	done?: boolean
+}>(), {
+	priority: priorities.UNSET,
+	showAll: false,
+	done: false,
 })
 </script>
 
