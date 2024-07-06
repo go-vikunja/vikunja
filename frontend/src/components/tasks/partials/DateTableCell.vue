@@ -9,10 +9,9 @@
 <script setup lang="ts">
 import {formatISO, formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
 
-defineProps({
-	date: {
-		type: Date,
-		default: 0,
-	},
+withDefaults(defineProps<{
+	date?: Date
+}>(), {
+	date: 0,
 })
 </script>
