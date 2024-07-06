@@ -1,7 +1,7 @@
 <template>
 	<Ready>
 		<template v-if="authUser">
-			<TheNavigation />
+			<AppHeader />
 			<ContentAuth />
 		</template>
 		<ContentLinkShare v-else-if="authLinkShare" />
@@ -30,7 +30,7 @@ import Notification from '@/components/misc/Notification.vue'
 import UpdateNotification from '@/components/home/UpdateNotification.vue'
 import KeyboardShortcuts from '@/components/misc/keyboard-shortcuts/index.vue'
 
-import TheNavigation from '@/components/home/TheNavigation.vue'
+import AppHeader from '@/components/home/AppHeader.vue'
 import ContentAuth from '@/components/home/ContentAuth.vue'
 import ContentLinkShare from '@/components/home/ContentLinkShare.vue'
 import NoAuthWrapper from '@/components/misc/NoAuthWrapper.vue'
