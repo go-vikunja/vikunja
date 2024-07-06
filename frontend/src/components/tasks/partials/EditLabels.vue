@@ -46,7 +46,7 @@
 </template>
 
 <script setup lang="ts">
-import {type PropType, ref, computed, shallowReactive, watch} from 'vue'
+import {ref, computed, shallowReactive, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import LabelModel from '@/models/label'
@@ -60,27 +60,21 @@ import {useLabelStore} from '@/stores/labels'
 import {useTaskStore} from '@/stores/tasks'
 import {getRandomColorHex} from '@/helpers/color/randomColor'
 
-const props = defineProps({
-	modelValue: {
-		type: Array as PropType<ILabel[]>,
-		default: () => [],
-	},
-	taskId: {
-		type: Number,
-		required: false,
-		default: 0,
-	},
-	disabled: {
-		type: Boolean,
-		default: false,
-	},
-	creatable: {
-		type: Boolean,
-		default: true,
-	},
+const props = withDefaults(defineProps<{
+	modelValue: ILabel[] | undefined
+	taskId?: number
+	disabled?: boolean
+	creatable?: boolean
+}>(), {
+	modelValue: () => [],
+	taskId: 0,
+	disabled: false,
+	creatable: true,
 })
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits<{
+	'update:modelValue': [labels: ILabel[]],
+}>()
 
 const {t} = useI18n({useScope: 'global'})
 
