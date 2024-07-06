@@ -72,7 +72,7 @@ export interface BaseButtonProps extends /* @vue-ignore */ HTMLAttributes {
 	openExternalInNewTab?: boolean
 }
 
-export interface BaseButtonEmits {
+export type BaseButtonEmits = {
 	click: [payload: MouseEvent]
 }
 
