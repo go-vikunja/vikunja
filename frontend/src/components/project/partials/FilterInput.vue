@@ -304,8 +304,7 @@ const blurDebounced = useDebounceFn(() => emit('blur'), 500)
 					/>
 					<DatepickerWithValues
 						v-model="currentDatepickerValue"
-						:open="datePickerPopupOpen"
-						@close="() => datePickerPopupOpen = false"
+						v-model:open="datePickerPopupOpen"
 						@update:modelValue="updateDateInQuery"
 					/>
 				</div>
