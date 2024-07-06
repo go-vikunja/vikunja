@@ -32,8 +32,12 @@ import Filters from '@/components/project/partials/Filters.vue'
 
 import {type TaskFilterParams} from '@/services/taskCollection'
 
-const props = defineProps(['modelValue'])
-const emit = defineEmits(['update:modelValue'])
+const props = defineProps<{
+	modelValue: TaskFilterParams,
+}>()
+const emit = defineEmits<{
+	'update:modelValue': [value: TaskFilterParams]
+}>()
 
 const value = ref<TaskFilterParams>({})
 
@@ -42,7 +46,10 @@ watch(
 	(modelValue: TaskFilterParams) => {
 		value.value = modelValue
 	},
-	{immediate: true},
+	{
+		immediate: true,
+		deep: true,
+	},
 )
 
 function emitChanges(newValue: TaskFilterParams) {
