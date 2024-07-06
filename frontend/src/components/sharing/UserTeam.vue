@@ -162,7 +162,6 @@ export default {name: 'UserTeamShare'}
 
 <script setup lang="ts">
 import {ref, reactive, computed, shallowReactive, type Ref} from 'vue'
-import type {PropType} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import UserProjectService from '@/services/userProject'
@@ -192,23 +191,16 @@ import User from '@/components/misc/User.vue'
 
 // FIXME: I think this whole thing can now only manage user/team sharing for projects? Maybe remove a little generalization?
 
-const props = defineProps({
-	type: {
-		type: String as PropType<'project'>,
-		default: '',
-	},
-	shareType: {
-		type: String as PropType<'user' | 'team'>,
-		default: '',
-	},
-	id: {
-		type: Number,
-		default: 0,
-	},
-	userIsAdmin: {
-		type: Boolean,
-		default: false,
-	},
+const props = withDefaults(defineProps<{
+	type: 'project',
+	shareType: 'user' | 'team',
+	id: number,
+	userIsAdmin?: boolean
+}>(), {
+	type: '',
+	shareType: '',
+	id: 0,
+	userIsAdmin: false,
 })
 
 const {t} = useI18n({useScope: 'global'})
