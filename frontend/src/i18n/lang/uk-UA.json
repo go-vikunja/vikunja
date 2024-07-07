@@ -25,7 +25,7 @@
     "loading": "Запускаюся...",
     "errorOccured": "Сталася помилка:",
     "checkApiUrl": "Будь ласка, перевірте правильність посилання api.",
-    "noApiUrlConfigured": "Не налагоджено АРІ посиланок. Будь ласка, встановіть адресу нижче:"
+    "noApiUrlConfigured": "Не наладжено АРІ посиланок. Будь ласка, встановіть адресу нижче:"
   },
   "offline": {
     "title": "Ви не в мережі.",
@@ -70,7 +70,7 @@
       "registrationDisabled": "Створення обліковок вимкнено."
     },
     "settings": {
-      "title": "Налагодження",
+      "title": "Наладження",
       "newPasswordTitle": "Змінити пароль",
       "newPassword": "Новий пароль",
       "newPasswordConfirm": "Підтвердження нового паролю",
@@ -85,7 +85,7 @@
         "title": "Загальні відомості",
         "name": "Моє ім'я",
         "newName": "Нове ім'я",
-        "savedSuccess": "Налагодження оновлено.",
+        "savedSuccess": "Наладження оновлено.",
         "emailReminders": "Надсилати нагадування на е-скриньку",
         "overdueReminders": "Надсилати звіт про мої невиконані завдання щодня",
         "discoverableByName": "Дозволити користувачам додавати мене до спільнот або замислів, знаходячи за ім'ям",
@@ -223,7 +223,7 @@
       "titlePlaceholder": "Назву введіть тут…",
       "addTitleRequired": "Будь ласка, вкажіть заголовок.",
       "createdSuccess": "Спра́ву заведено.",
-      "addProjectRequired": "Будь ласка, вкажіть справу або встановіть основну справу в налагодженнях."
+      "addProjectRequired": "Будь ласка, вкажіть справу або встановіть основну справу в наладженнях."
     },
     "archive": {
       "title": "Сховувати \"{project}\"",
@@ -391,8 +391,8 @@
       "title": "Заголовок",
       "actions": "Дії",
       "kind": "Подання",
-      "bucketConfigMode": "Налагодження стрічок",
-      "bucketConfig": "Налагодження стрічок",
+      "bucketConfigMode": "Наладження стрічок",
+      "bucketConfig": "Наладження стрічок",
       "bucketConfigManual": "Вручну",
       "filter": "Вибірка",
       "create": "Створити",
@@ -539,7 +539,7 @@
   "navigation": {
     "overview": "Огляд",
     "upcoming": "Прийдешні",
-    "settings": "Налагодження",
+    "settings": "Наладження",
     "imprint": "Наша адреса",
     "privacy": "Політика негласности"
   },
@@ -563,14 +563,14 @@
     "doit": "Зробити!",
     "saving": "Зберігаю…",
     "saved": "Збережено!",
-    "default": "Основний",
+    "default": "Припис",
     "close": "Закрити",
     "download": "Витягти",
     "showMenu": "Показати список",
     "hideMenu": "Приховати список",
     "forExample": "Наприклад:",
     "welcomeBack": "З Поверненням!",
-    "custom": "Вибірно",
+    "custom": "Вручну",
     "id": "ID",
     "created": "Створено о",
     "createdBy": "Автор: {0}",
@@ -658,17 +658,17 @@
       "ranges": {
         "today": "Сьогодні",
         "thisWeek": "Цей тиждень",
-        "restOfThisWeek": "Залишок Цього Тижня",
+        "restOfThisWeek": "Залишок цього тижня",
         "nextWeek": "Наступний тиждень",
         "next7Days": "Наступні 7 днів",
         "lastWeek": "Минулий тиждень",
         "thisMonth": "Цей місяць",
-        "restOfThisMonth": "Залишок Цього Місяця",
+        "restOfThisMonth": "Залишок цього місяця",
         "nextMonth": "Наступний місяць",
         "next30Days": "Наступні 30 днів",
         "lastMonth": "Останній місяць",
         "thisYear": "Цей рік",
-        "restOfThisYear": "Залишок Цього Року"
+        "restOfThisYear": "Залишок цього року"
       },
       "values": {
         "now": "Зараз",
@@ -693,34 +693,34 @@
       }
     },
     "datemathHelp": {
-      "canuse": "You can use date math to filter for relative dates.",
-      "learnhow": "Подивіться, як це працює",
-      "title": "Date Math",
+      "canuse": "Можете вжити обчислення, щоб визначити приблизні дні.",
+      "learnhow": "Подивіться, як це діє",
+      "title": "Обчислення днів",
       "intro": "Specify relative dates which are resolved on the fly by Vikunja when applying the filter.",
       "expression": "Each Date Math expression starts with an anchor date, which can either be {0}, or a date string ending with {1}. This anchor date can optionally be followed by one or more maths expressions.",
-      "similar": "These expressions are similar to the ones provided by {0} and {1}.",
+      "similar": "Ці вирази подібні до наданих {0} та {1}.",
       "add1Day": "Додати один день",
       "minus1Day": "Відняти один день",
       "roundDay": "Заокруглити до найближчого дня",
       "supportedUnits": "Підтримувані одиниці часу",
       "someExamples": "Приклади значень часу",
       "units": {
-        "seconds": "Секунд",
-        "minutes": "Хвилин",
-        "hours": "Годин",
-        "days": "Днів",
-        "weeks": "Тижнів",
+        "seconds": "Секунди",
+        "minutes": "Хвилини",
+        "hours": "Години",
+        "days": "Дні",
+        "weeks": "Тижні",
         "months": "Місяці",
         "years": "Роки"
       },
       "examples": {
-        "now": "Зараз",
+        "now": "Сьогодні",
         "in24h": "Встяж доби",
         "today": "Сьогодні о 00:00",
         "beginningOfThisWeek": "Початок цього тижня о 00:00",
         "endOfThisWeek": "Кінець цього тижня",
-        "in30Days": "За 30 днів",
-        "datePlusMonth": "{0} додати один місяць об 00:00 від цього дня"
+        "in30Days": "Встяж 30 днів",
+        "datePlusMonth": "{0} додати один місяць о 00:00 цього дня"
       }
     }
   },
@@ -729,7 +729,7 @@
     "new": "Створити",
     "delete": "Вилучити завдання",
     "createSuccess": "Завдання створено.",
-    "addReminder": "Встановити…",
+    "addReminder": "Обрати…",
     "doneSuccess": "Завдання закінчено.",
     "undoneSuccess": "Завдання поновлено.",
     "revertSuccess": "Зміну завдання повернуто.",
@@ -747,9 +747,9 @@
       "noTasks": "Як без діла сидіти, то можна одубіти!"
     },
     "detail": {
-      "chooseDueDate": "Встановити",
-      "chooseStartDate": "Встановити",
-      "chooseEndDate": "Встановити",
+      "chooseDueDate": "Обрати",
+      "chooseStartDate": "Обрати",
+      "chooseEndDate": "Обрати",
       "move": "Перенести завдання в іншу справу",
       "done": "Закінчити!",
       "undone": "Поновити",
@@ -802,7 +802,7 @@
       "priority": "Першість",
       "relatedTasks": "Пов'язані завдання",
       "reminders": "Нагадування",
-      "repeat": "Повторення",
+      "repeat": "Повтор",
       "startDate": "День початку",
       "title": "Заголовок",
       "updated": "Оновлено",
@@ -824,14 +824,14 @@
     "attachment": {
       "title": "Вкладення",
       "createdBy": "створено {0} з {1}",
-      "downloadTooltip": "Витягти вкладення",
+      "downloadTooltip": "Одержати",
       "upload": "Обрати",
-      "drop": "Перетягніть файл сюди, щоб втягти",
+      "drop": "Перетягніть файл сюди, щоб вкласти",
       "delete": "Вилучити вкладення",
       "deleteTooltip": "Вилучається вкладення",
       "deleteText1": "Справді вилучити {filename}?",
       "copyUrl": "Подвоїти посилання",
-      "copyUrlTooltip": "Одержати посилання",
+      "copyUrlTooltip": "Посилання",
       "setAsCover": "Зробити обгорткою",
       "unsetAsCover": "Вилучити обгортку",
       "successfullyChangedCoverImage": "Обгортку змінено.",
@@ -880,10 +880,10 @@
     },
     "priority": {
       "unset": "Немає",
-      "low": "Низька",
-      "medium": "Середня",
-      "high": "Висока",
-      "urgent": "Негайна",
+      "low": "Мала",
+      "medium": "Пересічна",
+      "high": "Впливова",
+      "urgent": "Нагальна",
       "doNow": "ЗАРАЗ"
     },
     "relation": {
@@ -919,20 +919,20 @@
       "onDueDate": "У день строку",
       "onStartDate": "У день початку",
       "onEndDate": "У день закінчення",
-      "custom": "Вибірно",
+      "custom": "Вручну",
       "dateAndTime": "День та час"
     },
     "repeat": {
       "everyDay": "Щодня",
       "everyWeek": "Щотижня",
-      "every30d": "Що 30 днів",
+      "every30d": "Щомісяця",
       "mode": "Спосіб",
-      "monthly": "Місячний",
-      "fromCurrentDate": "З дня закінчення",
+      "monthly": "Щомісяця",
+      "fromCurrentDate": "Щодень закінчення",
       "each": "Що",
       "specifyAmount": "Вкажіть величину…",
       "hours": "Годин",
-      "days": "Днів",
+      "days": "День",
       "weeks": "Тижнів",
       "months": "Місяців",
       "years": "Років",
