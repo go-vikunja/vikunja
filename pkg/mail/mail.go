@@ -48,13 +48,13 @@ func getClient() (*mail.Client, error) {
 	}
 
 	opts := []mail.Option{
-		mail.WithPort(config.MailerPort.GetInt()),
 		mail.WithTLSPortPolicy(tlsPolicy),
 		mail.WithTLSConfig(&tls.Config{
 			//#nosec G402
 			InsecureSkipVerify: config.MailerSkipTLSVerify.GetBool(),
 			ServerName:         config.MailerHost.GetString(),
 		}),
+		mail.WithPort(config.MailerPort.GetInt()),
 		mail.WithTimeout((config.MailerQueueTimeout.GetDuration() + 3) * time.Second), // 3s more for us to close before mail server timeout
 		mail.WithLogger(log.NewMailLogger(config.LogEnabled.GetBool(), config.LogMail.GetString(), config.LogMailLevel.GetString())),
 		mail.WithDebugLog(),
