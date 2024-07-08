@@ -44,6 +44,8 @@
 					v-model="query"
 					type="text"
 					class="input"
+					:id="id"
+					:name="name"
 					:placeholder="placeholder"
 					:autocomplete="autocompleteEnabled ? undefined : 'off'"
 					:spellcheck="autocompleteEnabled ? undefined : 'false'"
@@ -128,42 +130,46 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 
 const props = withDefaults(defineProps<{
-	/** When true, shows a loading spinner */
-	loading: boolean
-	/** The placeholder of the search input */
-	placeholder: string
-	/** The search results where the @search listener needs to put the results into */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	searchResults: { [id: string]: any }[]
-	/** The name of the property of the searched object to show the user. If empty the component will show all raw data of an entry */
-	label: string
 	/** The object with the value, updated every time an entry is selected */
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	modelValue: { [id: string]: any }
+	modelValue: { [id: string]: any } | null
+	/** When true, shows a loading spinner */
+	loading?: boolean
+	/** The placeholder of the search input */
+	placeholder?: string
+	/** The search results where the @search listener needs to put the results into */
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	searchResults?: { [id: string]: any }[]
+	/** The name of the property of the searched object to show the user. If empty the component will show all raw data of an entry */
+	label?: string
+	/** The id attribute of the input element */
+	id?: string
+	/** The name attribute of the input element */
+	name?: string
 	/** If true, will provide an 'add this as a new value' entry which  fires an @create event when clicking on it. */
-	creatable: boolean
+	creatable?: boolean
 	/** The text shown next to the new value option. */
-	createPlaceholder: string
+	createPlaceholder?: string
 	/** The text shown next to an option. */
 	selectPlaceholder: string
 	/** If true, allows for selecting multiple items. v-model will be an array with all selected values in that case. */
-	multiple: boolean
+	multiple?: boolean
 	/** If true, displays the search results inline instead of using a dropdown. */
-	inline: boolean
+	inline?: boolean
 	/** If true, shows search results when no query is specified. */
-	showEmpty: boolean
+	showEmpty?: boolean
 	/** The delay in ms after which the search event will be fired. Used to avoid hitting the network on every keystroke. */
-	searchDelay: number
+	searchDelay?: number
 	/** If true, closes the dropdown after an entry is selected */
-	closeAfterSelect: boolean
+	closeAfterSelect?: boolean
 	/** If false, the search input will get the autocomplete="off" attributes attached to it. */
-	autocompleteEnabled: boolean
+	autocompleteEnabled?: boolean
 }>(), {
+	modelValue: null,
 	loading: false,
 	placeholder: '',
 	searchResults: () => [],
 	label: '',
-	modelValue: null,
 	creatable: false,
 	createPlaceholder: () => useI18n().t('input.multiselect.createPlaceholder'),
 	selectPlaceholder: () => useI18n().t('input.multiselect.selectPlaceholder'),
