@@ -71,41 +71,41 @@
 										trigger-icon="ellipsis-v"
 										@close="() => showSetLimitInput = false"
 									>
+
+										<div
+											v-if="showSetLimitInput"
+											class="field has-addons"
+										>
+											<div class="control">
+												<input
+													ref="bucketLimitInputRef"
+													v-focus.always
+													:value="bucket.limit"
+													class="input"
+													type="number"
+													min="0"
+													@keyup.esc="() => showSetLimitInput = false"
+													@keyup.enter="() => {setBucketLimit(bucket.id, true); showSetLimitInput = false}"
+													@input="setBucketLimit(bucket.id)"
+												>
+											</div>
+											<div class="control">
+												<x-button
+													v-cy="'setBucketLimit'"
+													:disabled="bucket.limit < 0"
+													:icon="['far', 'save']"
+													:shadow="false"
+													@click="() => {setBucketLimit(bucket.id, true); showSetLimitInput = false}"
+												/>
+											</div>
+										</div>
 										<DropdownItem
+											v-else
 											@click.stop="showSetLimitInput = true"
 										>
-											<div
-												v-if="showSetLimitInput"
-												class="field has-addons"
-											>
-												<div class="control">
-													<input
-														ref="bucketLimitInputRef"
-														v-focus.always
-														:value="bucket.limit"
-														class="input"
-														type="number"
-														min="0"
-														@keyup.esc="() => showSetLimitInput = false"
-														@keyup.enter="() => {setBucketLimit(bucket.id, true); showSetLimitInput = false}"
-														@input="setBucketLimit(bucket.id)"
-													>
-												</div>
-												<div class="control">
-													<x-button
-														v-cy="'setBucketLimit'"
-														:disabled="bucket.limit < 0"
-														:icon="['far', 'save']"
-														:shadow="false"
-														@click="setBucketLimit(bucket.id, true)"
-													/>
-												</div>
-											</div>
-											<template v-else>
-												{{
-													$t('project.kanban.limit', {limit: bucket.limit > 0 ? bucket.limit : $t('project.kanban.noLimit')})
-												}}
-											</template>
+											{{
+												$t('project.kanban.limit', {limit: bucket.limit > 0 ? bucket.limit : $t('project.kanban.noLimit')})
+											}}
 										</DropdownItem>
 										<DropdownItem
 											v-tooltip="$t('project.kanban.doneBucketHintExtended')"

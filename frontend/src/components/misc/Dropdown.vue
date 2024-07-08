@@ -2,6 +2,7 @@
 	<div
 		ref="dropdown"
 		class="dropdown"
+		@pointerenter="initialMount = true"
 	>
 		<slot
 			name="trigger"
@@ -22,6 +23,7 @@
 
 		<CustomTransition name="fade">
 			<div
+				v-if="initialMount || open"
 				v-show="open"
 				class="dropdown-menu"
 			>
@@ -49,6 +51,8 @@ defineProps({
 })
 const emit = defineEmits(['close'])
 
+
+const initialMount = ref(false)
 const open = ref(false)
 
 function close() {
