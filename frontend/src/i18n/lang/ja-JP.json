@@ -671,7 +671,7 @@
         "restOfThisYear": "今から年末まで"
       },
       "values": {
-        "now": "Now",
+        "now": "現在",
         "startOfToday": "Start of today",
         "endOfToday": "今日の終わり",
         "beginningOflastWeek": "Beginning of last week",
@@ -761,8 +761,8 @@
       "belongsToProject": "このタスクはプロジェクト「{project}」に含まれています。",
       "due": "Due {at}",
       "closePopup": "閉じる",
-      "organization": "Organization",
-      "management": "Management",
+      "organization": "組織",
+      "management": "管理",
       "dateAndTime": "日付と時刻",
       "delete": {
         "header": "タスクの削除",
