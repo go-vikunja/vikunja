@@ -604,8 +604,13 @@ func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, 
 		return nil, 0, err
 	}
 
+	var distinct = "tasks.*"
+	if strings.Contains(orderby, "task_positions.") {
+		distinct += ", task_positions.position"
+	}
+
 	query := t.s.
-		Distinct("tasks.*").
+		Distinct(distinct).
 		In("id", taskIDs).
 		OrderBy(orderby)
 
