@@ -152,29 +152,30 @@ func getTaskFiltersFromFilterString(filter string, filterTimezone string) (filte
 	}
 
 	filter = strings.ReplaceAll(filter, " in ", " ?= ")
+	filter = strings.ReplaceAll(filter, " like ", " ~ ")
 
-	// Replaces all occurrences with in with a string so that it passes the filter
-	pattern := `(\?=\s+([^&|']+))|(([<>]?=|[<>])[^&|')]+\/[^&|')]+([&|')]+))`
-	re := regexp.MustCompile(pattern)
+	// Regex pattern to match filter expressions
+	re := regexp.MustCompile(`(\w+)\s*(>=|<=|!=|~|\?=|=|>|<)\s*([^&|()]+)`)
 
 	filter = re.ReplaceAllStringFunc(filter, func(match string) string {
-
-		comparator := match[:2]
-		value := strings.TrimSpace(match[2:])
-		if match[1] == ' ' {
-			comparator = match[:1]
+		parts := re.FindStringSubmatch(match)
+		if len(parts) != 4 {
+			return match
 		}
 
-		var end string
-		if value[len(value)-1:] == ")" {
-			end = ")"
-			value = value[0 : len(value)-1]
+		field := parts[1]
+		comparator := parts[2]
+		value := strings.TrimSpace(parts[3])
+
+		// Check if the value is already quoted
+		if (strings.HasPrefix(value, "'") && strings.HasSuffix(value, "'")) ||
+			(strings.HasPrefix(value, "\"") && strings.HasSuffix(value, "\"")) {
+			return field + " " + comparator + " " + value
 		}
 
-		value = strings.ReplaceAll(value, "'", `\'`)
-		enclosedValue := "'" + value + "'"
-
-		return comparator + " " + enclosedValue + end
+		// Quote the value
+		quotedValue := "'" + strings.ReplaceAll(value, "'", "\\'") + "'"
+		return field + " " + comparator + " " + quotedValue
 	})
 
 	parsedFilter, err := fexpr.Parse(filter)
