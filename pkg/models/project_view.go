@@ -398,13 +398,15 @@ func GetProjectViewByID(s *xorm.Session, id int64) (view *ProjectView, err error
 	return
 }
 
-func CreateDefaultViewsForProject(s *xorm.Session, project *Project, a web.Auth, createBacklogBucket bool) (err error) {
+func CreateDefaultViewsForProject(s *xorm.Session, project *Project, a web.Auth, createBacklogBucket bool, createDefaultListFilter bool) (err error) {
 	list := &ProjectView{
 		ProjectID: project.ID,
 		Title:     "List",
 		ViewKind:  ProjectViewKindList,
 		Position:  100,
-		Filter:    "done = false",
+	}
+	if createDefaultListFilter {
+		list.Filter = "done = false"
 	}
 	err = createProjectView(s, list, a, createBacklogBucket)
 	if err != nil {
