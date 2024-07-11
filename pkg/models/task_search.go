@@ -573,6 +573,10 @@ func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, 
 	}
 
 	if opts.perPage > 0 {
+		if opts.perPage > 250 {
+			log.Warningf("Typesense only supports up to 250 results per page, requested %d.", opts.perPage)
+			opts.perPage = 250
+		}
 		params.PerPage = pointer.Int(opts.perPage)
 	}
 
