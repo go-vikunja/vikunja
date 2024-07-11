@@ -18,6 +18,7 @@ package models
 
 import (
 	"errors"
+	clone "github.com/huandu/go-clone/generic"
 	"math"
 	"regexp"
 	"sort"
@@ -303,14 +304,14 @@ func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, op
 		var tsSearcher taskSearcher = &typesenseTaskSearcher{
 			s: s,
 		}
-		origOpts := *opts
+		origOpts := clone.Clone(opts)
 		tasks, totalItems, err = tsSearcher.Search(opts)
 		// It is possible that project views are not yet in Typesnse's index. This causes the query here to fail.
 		// To avoid crashing everything, we fall back to the db search in that case.
 		var tsErr = &typesense.HTTPError{}
 		if err != nil && errors.As(err, &tsErr) && tsErr.Status == 404 {
 			log.Warningf("Unable to fetch tasks from Typesense, error was '%v'. Falling back to db.", err)
-			tasks, totalItems, err = dbSearcher.Search(&origOpts)
+			tasks, totalItems, err = dbSearcher.Search(origOpts)
 		}
 	} else {
 		tasks, totalItems, err = dbSearcher.Search(opts)
