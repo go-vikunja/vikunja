@@ -19,6 +19,7 @@ package models
 import (
 	"math"
 
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/web"
 	"xorm.io/xorm"
 )
@@ -137,7 +138,7 @@ func RecalculateTaskPositions(s *xorm.Session, view *ProjectView, a web.Auth) (e
 
 	allTasks, _, _, err := getRawTasksForProjects(s, projects, a, opts)
 	if err != nil {
-		return err
+		return
 	}
 	if len(allTasks) == 0 {
 		return

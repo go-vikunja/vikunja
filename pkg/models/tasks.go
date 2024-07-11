@@ -17,12 +17,15 @@
 package models
 
 import (
+	"errors"
 	"math"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/typesense/typesense-go/typesense"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/events"
@@ -289,20 +292,29 @@ func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, op
 		})
 	}
 
-	var searcher taskSearcher = &dbTaskSearcher{
+	opts.search = strings.TrimSpace(opts.search)
+
+	var dbSearcher taskSearcher = &dbTaskSearcher{
 		s:                   s,
 		a:                   a,
 		hasFavoritesProject: hasFavoritesProject,
 	}
 	if config.TypesenseEnabled.GetBool() {
-		searcher = &typesenseTaskSearcher{
+		var tsSearcher taskSearcher = &typesenseTaskSearcher{
 			s: s,
 		}
+		tasks, totalItems, err = tsSearcher.Search(opts)
+		// It is possible that project views are not yet in Typesnse's index. This causes the query here to fail.
+		// To avoid crashing everything, we fall back to the db search in that case.
+		var tsErr = &typesense.HTTPError{}
+		if err != nil && errors.As(err, &tsErr) && tsErr.Status == 404 {
+			log.Warningf("Unable to fetch tasks from Typesense, error was '%v'. Falling back to db.", err)
+			tasks, totalItems, err = dbSearcher.Search(opts)
+		}
+	} else {
+		tasks, totalItems, err = dbSearcher.Search(opts)
 	}
 
-	opts.search = strings.TrimSpace(opts.search)
-
-	tasks, totalItems, err = searcher.Search(opts)
 	return tasks, len(tasks), totalItems, err
 }
 
