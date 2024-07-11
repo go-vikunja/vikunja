@@ -134,8 +134,8 @@ func parseFilterFromExpression(f fexpr.ExprGroup, loc *time.Location) (filter *t
 	reflectValue, filter.value, err = getNativeValueForTaskField(filter.field, filter.comparator, value, loc)
 	if err != nil {
 		return nil, ErrInvalidTaskFilterValue{
-			Value: filter.field,
-			Field: value,
+			Field: filter.field,
+			Value: value,
 		}
 	}
 	if reflectValue != nil {
@@ -255,6 +255,8 @@ func getValueForField(field reflect.StructField, rawValue string, loc *time.Loca
 	if loc == nil {
 		loc = config.GetTimeZone()
 	}
+
+	rawValue = strings.TrimSpace(rawValue)
 
 	switch field.Type.Kind() {
 	case reflect.Int64:
