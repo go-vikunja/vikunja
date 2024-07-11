@@ -490,12 +490,6 @@ async function updateTaskPosition(e) {
 		taskBefore !== null ? taskBefore.position : null,
 		taskAfter !== null ? taskAfter.position : null,
 	)
-	if (
-		oldBucket !== undefined && // This shouldn't actually be `undefined`, but let's play it safe.
-		newBucket.id !== oldBucket.id
-	) {
-		newTask.done = project.value?.doneBucketId === newBucket.id
-	}
 	
 	let bucketHasChanged = false
 	if (
@@ -522,12 +516,14 @@ async function updateTaskPosition(e) {
 		await taskPositionService.value.update(newPosition)
 		
 		if(bucketHasChanged) {
-			await taskBucketService.value.update(new TaskBucketModel({
+			const updatedTaskBucket = await taskBucketService.value.update(new TaskBucketModel({
 				taskId: newTask.id,
 				bucketId: newTask.bucketId,
 				projectViewId: viewId,
 				projectId: project.value.id,
 			}))
+			newTask.done = updatedTaskBucket.taskDone
+			kanbanStore.setTaskInBucket(newTask)
 		}
 
 		// Make sure the first and second task don't both get position 0 assigned
