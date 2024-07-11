@@ -70,6 +70,7 @@ func RegisterListeners() {
 		events.RegisterListener((&TaskDeletedEvent{}).Name(), &RemoveTaskFromTypesense{})
 		events.RegisterListener((&TaskCreatedEvent{}).Name(), &AddTaskToTypesense{})
 		events.RegisterListener((&TaskUpdatedEvent{}).Name(), &UpdateTaskInTypesense{})
+		events.RegisterListener((&TaskPositionsRecalculatedEvent{}).Name(), &UpdateTaskPositionsInTypesense{})
 	}
 	if config.WebhooksEnabled.GetBool() {
 		RegisterEventForWebhook(&TaskCreatedEvent{})
@@ -605,6 +606,41 @@ func (l *UpdateTaskInTypesense) Handle(msg *message.Message) (err error) {
 	task[event.Task.ID] = event.Task // Will be filled with all data by the Typesense connector
 
 	return reindexTasksInTypesense(s, task)
+}
+
+// UpdateTaskPositionsInTypesense  represents a listener
+type UpdateTaskPositionsInTypesense struct {
+}
+
+// Name defines the name for the UpdateTaskPositionsInTypesense listener
+func (l *UpdateTaskPositionsInTypesense) Name() string {
+	return "typesense.task.position.update"
+}
+
+// Handle is executed when the event UpdateTaskPositionsInTypesense listens on is fired
+func (l *UpdateTaskPositionsInTypesense) Handle(msg *message.Message) (err error) {
+	event := &TaskPositionsRecalculatedEvent{}
+	err = json.Unmarshal(msg.Payload, event)
+	if err != nil {
+		return err
+	}
+
+	taskIDs := []int64{}
+	for _, position := range event.NewTaskPositions {
+		taskIDs = append(taskIDs, position.TaskID)
+	}
+
+	s := db.NewSession()
+	defer s.Close()
+
+	tasks, err := GetTasksSimpleByIDs(s, taskIDs)
+
+	taskMap := make(map[int64]*Task, 1)
+	for _, task := range tasks {
+		taskMap[task.ID] = task
+	}
+
+	return reindexTasksInTypesense(s, taskMap)
 }
 
 // IncreaseAttachmentCounter  represents a listener

@@ -166,7 +166,12 @@ func RecalculateTaskPositions(s *xorm.Session, view *ProjectView, a web.Auth) (e
 	}
 
 	_, err = s.Insert(newPositions)
-	return
+	if err != nil {
+		return
+	}
+	return events.Dispatch(&TaskPositionsRecalculatedEvent{
+		NewTaskPositions: newPositions,
+	})
 }
 
 func getPositionsForView(s *xorm.Session, view *ProjectView) (positions []*TaskPosition, err error) {

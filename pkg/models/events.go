@@ -166,6 +166,16 @@ func (t *TaskRelationDeletedEvent) Name() string {
 	return "task.relation.deleted"
 }
 
+// TaskPositionsRecalculatedEvent represents a TaskPositionsRecalculatedEvent event
+type TaskPositionsRecalculatedEvent struct {
+	NewTaskPositions []*TaskPosition
+}
+
+// Name defines the name for TaskPositionsRecalculatedEvent
+func (t *TaskPositionsRecalculatedEvent) Name() string {
+	return "task.positions.recalculated"
+}
+
 ////////////////////
 // Project Events //
 ////////////////////
