@@ -47,6 +47,24 @@ func (b *TaskBucket) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 	return bucket.canDoBucket(s, a)
 }
 
+func (b *TaskBucket) upsert(s *xorm.Session) (err error) {
+	count, err := s.Where("task_id = ? AND project_view_id = ?", b.TaskID, b.ProjectViewID).
+		Cols("bucket_id").
+		Update(b)
+	if err != nil {
+		return
+	}
+
+	if count == 0 {
+		_, err = s.Insert(b)
+		if err != nil {
+			return
+		}
+	}
+
+	return
+}
+
 // Update is the handler to update a task bucket
 // @Summary Update a task bucket
 // @Description Updates a task in a bucket
@@ -147,21 +165,35 @@ func (b *TaskBucket) Update(s *xorm.Session, a web.Auth) (err error) {
 		if err != nil {
 			return err
 		}
+
+		// Since the done state of the task was changed, we need to move the task into all done buckets everywhere
+		if task.Done {
+			viewsWithDoneBucket := []*ProjectView{}
+			err = s.
+				Where("project_id = ? AND view_kind = ? AND bucket_configuration_mode = ? AND id != ? AND done_bucket_id != 0",
+					view.ProjectID, ProjectViewKindKanban, BucketConfigurationModeManual, view.ID).
+				Find(&viewsWithDoneBucket)
+			if err != nil {
+				return
+			}
+			for _, v := range viewsWithDoneBucket {
+				newBucket := &TaskBucket{
+					TaskID:        task.ID,
+					ProjectViewID: v.ID,
+					BucketID:      v.DoneBucketID,
+				}
+				err = newBucket.upsert(s)
+				if err != nil {
+					return
+				}
+			}
+		}
 	}
 
 	if updateBucket {
-		count, err := s.Where("task_id = ? AND project_view_id = ?", b.TaskID, b.ProjectViewID).
-			Cols("bucket_id").
-			Update(b)
+		err = b.upsert(s)
 		if err != nil {
-			return err
-		}
-
-		if count == 0 {
-			_, err = s.Insert(b)
-			if err != nil {
-				return err
-			}
+			return
 		}
 	}
 
