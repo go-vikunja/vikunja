@@ -162,6 +162,11 @@ func (t *Task) GetFrontendURL() string {
 	return config.ServicePublicURL.GetString() + "tasks/" + strconv.FormatInt(t.ID, 10)
 }
 
+func (t *Task) isRepeating() bool {
+	return t.RepeatAfter > 0 ||
+		t.RepeatMode == TaskRepeatModeMonth
+}
+
 type taskFilterConcatinator string
 
 const (
@@ -901,7 +906,7 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	// When a task was marked done or moved between projects, make sure it is in the correct bucket
-	if t.Done != ot.Done || t.ProjectID != ot.ProjectID {
+	if (!t.isRepeating() && t.Done != ot.Done) || t.ProjectID != ot.ProjectID {
 		views, err := getViewsForProject(s, t.ProjectID)
 		if err != nil {
 			return err
