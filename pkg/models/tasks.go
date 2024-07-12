@@ -18,15 +18,12 @@ package models
 
 import (
 	"errors"
-	clone "github.com/huandu/go-clone/generic"
 	"math"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/typesense/typesense-go/typesense"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/events"
@@ -37,7 +34,9 @@ import (
 
 	"dario.cat/mergo"
 	"github.com/google/uuid"
+	clone "github.com/huandu/go-clone/generic"
 	"github.com/jinzhu/copier"
+	"github.com/typesense/typesense-go/typesense"
 	"xorm.io/builder"
 	"xorm.io/xorm"
 )
