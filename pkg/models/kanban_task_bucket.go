@@ -28,7 +28,7 @@ type TaskBucket struct {
 	TaskID        int64 `xorm:"bigint not null index" json:"task_id"`
 	ProjectViewID int64 `xorm:"bigint not null index" json:"project_view_id" param:"view"`
 	ProjectID     int64 `xorm:"-" json:"-" param:"project"`
-	TaskDone      bool  `xorm:"-" json:"task_done,omitempty"`
+	TaskDone      bool  `xorm:"-" json:"task_done"`
 
 	web.Rights   `xorm:"-" json:"-"`
 	web.CRUDable `xorm:"-" json:"-"`
@@ -147,14 +147,6 @@ func (b *TaskBucket) Update(s *xorm.Session, a web.Auth) (err error) {
 			return err
 		}
 
-		doer, _ := user.GetFromAuth(a)
-		err = events.Dispatch(&TaskUpdatedEvent{
-			Task: &task,
-			Doer: doer,
-		})
-		if err != nil {
-			return err
-		}
 	}
 
 	if updateBucket {
@@ -175,5 +167,9 @@ func (b *TaskBucket) Update(s *xorm.Session, a web.Auth) (err error) {
 
 	b.TaskDone = task.Done
 
-	return
+	doer, _ := user.GetFromAuth(a)
+	return events.Dispatch(&TaskUpdatedEvent{
+		Task: &task,
+		Doer: doer,
+	})
 }
