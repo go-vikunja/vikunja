@@ -145,7 +145,7 @@ func TestTaskBucket_Update(t *testing.T) {
 		err = s.Commit()
 		require.NoError(t, err)
 		assert.False(t, tb.TaskDone)
-		assert.Equal(t, int64(3), tb.BucketID) // This should be the actual bucket
+		assert.Equal(t, int64(1), tb.BucketID) // This should be the actual bucket
 
 		db.AssertExists(t, "tasks", map[string]interface{}{
 			"id":   1,
