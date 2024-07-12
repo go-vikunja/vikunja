@@ -116,11 +116,12 @@ func (b *TaskBucket) Update(s *xorm.Session, a web.Auth) (err error) {
 	if view.DoneBucketID == b.BucketID {
 		doneChanged = true
 		task.Done = true
-		if task.RepeatAfter > 0 {
+		if task.isRepeating() {
 			oldTask := task
 			task.Done = false
 			updateDone(&oldTask, &task)
 			updateBucket = false
+			b.BucketID = oldTaskBucket.BucketID
 		}
 	}
 
@@ -146,7 +147,6 @@ func (b *TaskBucket) Update(s *xorm.Session, a web.Auth) (err error) {
 		if err != nil {
 			return err
 		}
-
 	}
 
 	if updateBucket {

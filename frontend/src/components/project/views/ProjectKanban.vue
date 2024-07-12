@@ -71,7 +71,6 @@
 										trigger-icon="ellipsis-v"
 										@close="() => showSetLimitInput = false"
 									>
-
 										<div
 											v-if="showSetLimitInput"
 											class="field has-addons"
@@ -523,6 +522,11 @@ async function updateTaskPosition(e) {
 				projectId: project.value.id,
 			}))
 			newTask.done = updatedTaskBucket.taskDone
+			if (updatedTaskBucket.bucketId !== newTask.bucketId) {
+				kanbanStore.removeTaskInBucket(newTask)
+				newTask.bucketId = updatedTaskBucket.bucketId
+				kanbanStore.addTaskToBucket(newTask)
+			}
 			kanbanStore.setTaskInBucket(newTask)
 		}
 

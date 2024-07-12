@@ -40,11 +40,11 @@
 				</slot>
 				
 				<input
+					:id="id"
 					ref="searchInput"
 					v-model="query"
 					type="text"
 					class="input"
-					:id="id"
 					:name="name"
 					:placeholder="placeholder"
 					:autocomplete="autocompleteEnabled ? undefined : 'off'"
