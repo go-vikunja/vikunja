@@ -192,7 +192,7 @@ const router = createRouter({
 					component: MigrationComponent,
 				},
 				{
-					path: '/user/settings/migrate/:service',
+					path: '/migrate/:service',
 					name: 'migrate.service',
 					component: MigrationHandlerComponent,
 					props: route => ({
