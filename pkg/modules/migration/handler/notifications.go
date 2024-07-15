@@ -60,7 +60,7 @@ func (n *MigrationFailedReportedNotification) ToMail() *notifications.Mail {
 	kind := cases.Title(language.English).String(n.MigratorName)
 
 	return notifications.NewMail().
-		Subject("The migration from " + kind + " to Vikunja was has failed").
+		Subject("The migration from " + kind + " to Vikunja has failed").
 		Line("Looks like the move from " + kind + " didn't go as planned this time.").
 		Line("No worries, though! Just give it another shot by starting over the same way you did before. Sometimes, these hiccups happen because of glitches on " + kind + "'s end, but trying again often does the trick.").
 		Line("We've got the error message on our radar and are on it to get it sorted out soon.")
@@ -87,7 +87,7 @@ func (n *MigrationFailedNotification) ToMail() *notifications.Mail {
 	kind := cases.Title(language.English).String(n.MigratorName)
 
 	return notifications.NewMail().
-		Subject("The migration from " + kind + " to Vikunja was has failed").
+		Subject("The migration from " + kind + " to Vikunja has failed").
 		Line("Looks like the move from " + kind + " didn't go as planned this time.").
 		Line("No worries, though! Just give it another shot by starting over the same way you did before. Sometimes, these hiccups happen because of glitches on " + kind + "'s end, but trying again often does the trick.").
 		Line("We bumped into a little error along the way: `" + n.Error.Error() + "`.").
