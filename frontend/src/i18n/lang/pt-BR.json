@@ -43,7 +43,7 @@
       "forgotPassword": "Esqueceu sua senha?",
       "resetPassword": "Redefinir sua senha",
       "resetPasswordAction": "Envie-me um link para redefinir a senha",
-      "resetPasswordSuccess": "Verifique sua caixa de entrada! Você deve ter um e-mail com instruções sobre como redefinir sua senha.",
+      "resetPasswordSuccess": "Check your inbox! You should have an email with instructions on how to reset your password.",
       "passwordsDontMatch": "As senhas não correspondem",
       "confirmEmailSuccess": "Você confirmou com sucesso seu e-mail! Você pode fazer o login agora.",
       "totpTitle": "Código de Autenticação de Dois Fatores",

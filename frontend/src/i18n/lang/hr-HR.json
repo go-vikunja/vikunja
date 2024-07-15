@@ -43,7 +43,7 @@
       "forgotPassword": "Zaboravili ste lozinku?",
       "resetPassword": "Ponovno postavite lozinku",
       "resetPasswordAction": "Pošalji mi vezu za ponovno postavljanje lozinke",
-      "resetPasswordSuccess": "Provjerite svoj inbox! Trebali ste dobiti e-poštu s uputama kako poništiti lozinku.",
+      "resetPasswordSuccess": "Check your inbox! You should have an email with instructions on how to reset your password.",
       "passwordsDontMatch": "Lozinke se ne podudaraju",
       "confirmEmailSuccess": "Uspješno ste potvrdili svoju e-poštu! Sada se možete prijaviti.",
       "totpTitle": "Dvostruki kod za provjeru autentifikacije",

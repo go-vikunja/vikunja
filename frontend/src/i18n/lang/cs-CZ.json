@@ -43,7 +43,7 @@
       "forgotPassword": "Zapomenuté heslo?",
       "resetPassword": "Obnovit heslo",
       "resetPasswordAction": "Poslat odkaz na obnovení hesla",
-      "resetPasswordSuccess": "Zkontrolujte doručenou poštu! Měli byste mít e-mail s pokyny, jak obnovit své heslo.",
+      "resetPasswordSuccess": "Check your inbox! You should have an email with instructions on how to reset your password.",
       "passwordsDontMatch": "Hesla se neshodují",
       "confirmEmailSuccess": "Úspěšně jste potvrdili svůj e-mail! Nyní se můžete přihlásit.",
       "totpTitle": "Kód dvoufaktorového ověření",

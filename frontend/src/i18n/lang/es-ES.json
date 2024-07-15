@@ -43,7 +43,7 @@
       "forgotPassword": "¿Olvidaste tu contraseña?",
       "resetPassword": "Restablecer tu contraseña",
       "resetPasswordAction": "Envíame un enlace para restablecer la contraseña",
-      "resetPasswordSuccess": "¡Revisa tu bandeja de entrada! Debes tener un correo electrónico con instrucciones para restablecer tu contraseña.",
+      "resetPasswordSuccess": "Check your inbox! You should have an email with instructions on how to reset your password.",
       "passwordsDontMatch": "Las contraseñas no coinciden",
       "confirmEmailSuccess": "¡Has confirmado correctamente tu correo electrónico! Ya puedes conectarte.",
       "totpTitle": "Código de autenticación de dos factores",

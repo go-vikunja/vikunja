@@ -43,7 +43,7 @@
       "forgotPassword": "Поновити пароль?",
       "resetPassword": "Скинути пароль",
       "resetPasswordAction": "Надіслати лист",
-      "resetPasswordSuccess": "Check your inbox! You should have an email with instructions on how to reset your password.",
+      "resetPasswordSuccess": "Перевірте е-скриньку! У ній має бути лист з вказівками щодо поновлення паролю.",
       "passwordsDontMatch": "Паролі не збігаються",
       "confirmEmailSuccess": "Е-скриньку підтверджено! Тепер можете увійти.",
       "totpTitle": "Код дворівневої перевірки",
@@ -117,14 +117,14 @@
       },
       "caldav": {
         "title": "CalDAV",
-        "howTo": "You can connect Vikunja to CalDAV clients to view and manage all tasks from different clients. Enter this url into your client:",
+        "howTo": "Можете під'єднати Vikunja до CalDAV, щоб оглядати та змінювати завдання з инших сервісів. Введіть посилання у підхожому сервісі:",
         "more": "Дізнатися більше про CalDAV у Vikunja",
         "tokens": "CalDAV Ключі",
-        "tokensHowTo": "Ви можете вжити ключ CalDAV замість пароля для входу в кінцеву точку.",
-        "createToken": "Створити токен",
-        "tokenCreated": "Ось ваш токен: {token}",
-        "wontSeeItAgain": "Запишіть це нижче, щоб воно не з'являлося знову.",
-        "mustUseToken": "You need to create a CalDAV token if you want to use CalDAV with a third party client. Use the token as the password.",
+        "tokensHowTo": "Ви можете вжити CalDAV ключ замість пароля для входу за одержаним посиланням вище.",
+        "createToken": "Створити ключ",
+        "tokenCreated": "Ваш ключ: {token}",
+        "wontSeeItAgain": "Запишіть його та збережіть в надійному місці, бо він зникне і не з'явиться знову.",
+        "mustUseToken": "Слід створити CalDAV ключ, якщо хочете вживати CalDAV зі сторонніх сервісів. Вживайте ключ як пароль.",
         "usernameIs": "Ваше ім'я вживача: {0}"
       },
       "avatar": {
@@ -153,9 +153,9 @@
         }
       },
       "apiTokens": {
-        "title": "Ключі API",
-        "general": "API ключі дозволяють вживати Vikunja's API без облікових відомостей.",
-        "apiDocs": "Перегляньте довідку про api",
+        "title": "API",
+        "general": "API ключі дозволяють вживати Vikunja's API без облікових відомостей вживача.",
+        "apiDocs": "Подивіться довідку про api",
         "createAToken": "Створити ключ",
         "createToken": "Створити ключ",
         "30d": "30 днів",
@@ -164,8 +164,8 @@
         "permissionExplanation": "Дозволи визначають, що може робити api ключ.",
         "titleRequired": "Слід вказати заголовок",
         "expired": "Цей ключ закінчився {ago}.",
-        "tokenCreatedSuccess": "Ось Ваш новий Api токен: {token}",
-        "tokenCreatedNotSeeAgain": "Зберігайте його в безпечному розташуванні, ви не побачите його знову!",
+        "tokenCreatedSuccess": "Ось Ваш новий api ключ: {token}",
+        "tokenCreatedNotSeeAgain": "Збережіть його в надійному місці, бо він зникне і не з'явиться знову!",
         "selectAll": "Обрати все",
         "delete": {
           "header": "Вилучається ключ",
@@ -173,9 +173,9 @@
           "text2": "Це призведе до втрати доступу до програм або інтеграцій, які його вживають. Годі спинити."
         },
         "attributes": {
-          "title": "Заголовок",
+          "title": "Назва",
           "titlePlaceholder": "Введіть назву, яку зможете впізнати",
-          "expiresAt": "Закінчується через",
+          "expiresAt": "Строк",
           "permissions": "Дозволи"
         }
       }
@@ -237,7 +237,7 @@
       "title": "Встановити тло справи",
       "remove": "Прибрати тло",
       "upload": "Обрати тло з ПК",
-      "searchPlaceholder": "Введіть щоб знайти тло…",
+      "searchPlaceholder": "Введіть щось, щоб знайти тло…",
       "poweredByUnsplash": "Розробка Unsplash",
       "loadMore": "Підтягнути більше світлин",
       "success": "Тло встановлено!",
@@ -838,16 +838,16 @@
       "usedAsCover": "Обгортка"
     },
     "comment": {
-      "title": "Відгуки",
-      "loading": "Ладнаю відгуки…",
+      "title": "Приписки",
+      "loading": "Ладнаю приписки…",
       "edited": "змінено: {date}",
-      "creating": "Створюю відгук…",
-      "placeholder": "Введіть відгук, натисніть '/' для виклику особливостей…",
+      "creating": "Створюю приписку…",
+      "placeholder": "Введіть приписку, натисніть '/' для виклику особливостей…",
       "comment": "Залишити",
-      "delete": "Вилучається відгук",
+      "delete": "Вилучається приписка",
       "deleteText1": "Справді впровадити?",
-      "deleteSuccess": "Відгук вилучено.",
-      "addedSuccess": "Відгук додано."
+      "deleteSuccess": "Приписку вилучено.",
+      "addedSuccess": "Приписку додано."
     },
     "deferDueDate": {
       "title": "Перенести строк",
@@ -866,7 +866,7 @@
       "unassignSuccess": "З вживача знято дорученість."
     },
     "label": {
-      "placeholder": "Введіть щоб знайти позначку…",
+      "placeholder": "Введіть щось, щоб знайти позначку…",
       "createPlaceholder": "Додати це як нову позначку",
       "addSuccess": "Позначку додано.",
       "createSuccess": "Позначку створено.",
@@ -946,7 +946,7 @@
       "label1": "Щоб додати позначку, просто введіть назву позначки з {prefix}.",
       "label2": "Vikunja перевірить наявність позначки та створить, якщо вона відсутня.",
       "label3": "Щоб вжити пропуски, додайте \" або ' навколо назви.",
-      "label4": "Напри́клад: {prefix}\"По́значка з про́пусками\".",
+      "label4": "Наприклад: {prefix}\"Позначка з пропусками\".",
       "priority1": "Щоб встановити першість завдання, додайте число від 1-5, з {prefix}.",
       "priority2": "Чим вище число, тим вища першість.",
       "assignees": "Щоб призначити завдання вживачеві, додайте його ім'я з {prefix} до завдання.",
@@ -1011,7 +1011,7 @@
       "admin": "Очільник",
       "member": "Учасник",
       "isPublic": "Загальна спільнота",
-      "isPublicDescription": "Make the team publicly discoverable. When enabled, anyone can share projects with this team even when not being a direct member."
+      "isPublicDescription": "Зробити спільноту видимою усім. Коли увімкнено, кожен може поширити справи з цією спільнотою й тоді, коли він не є учасником спільноти."
     }
   },
   "keyboardShortcuts": {
@@ -1123,7 +1123,7 @@
     "reactedWith": "{user} лишив відголос {value}",
     "reactedWithAnd": "{users} та {lastUser} лишили відголос разом з {value}",
     "reactedWithAndMany": "{users} та {num} найбільш лишали відголос з {value}",
-    "add": "Додайте відголос"
+    "add": "Відголос"
   },
   "error": {
     "error": "Помилка",
@@ -1167,7 +1167,7 @@
     "4012": "Вкладення у завданні завелике.",
     "4013": "Хибний вимір упорядкування завдань.",
     "4014": "The task sort order is invalid.",
-    "4015": "Такого відгуку завдання немає.",
+    "4015": "Такої приписки немає.",
     "4016": "Хибне поле завдання.",
     "4017": "Invalid task filter comparator.",
     "4018": "Invalid task filter concatenator.",

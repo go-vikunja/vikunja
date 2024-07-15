@@ -43,7 +43,7 @@
       "forgotPassword": "Har du glömt ditt lösenord?",
       "resetPassword": "Återställ ditt lösenord",
       "resetPasswordAction": "Send me a password reset link",
-      "resetPasswordSuccess": "Check your inbox! You should have an e-mail with instructions on how to reset your password.",
+      "resetPasswordSuccess": "Check your inbox! You should have an email with instructions on how to reset your password.",
       "passwordsDontMatch": "Lösenorden matchar inte",
       "confirmEmailSuccess": "You successfully confirmed your email! You can log in now.",
       "totpTitle": "Tvåfaktorsautentiseringskod",

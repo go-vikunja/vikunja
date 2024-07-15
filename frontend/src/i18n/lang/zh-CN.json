@@ -43,7 +43,7 @@
       "forgotPassword": "忘记密码",
       "resetPassword": "重置密码",
       "resetPasswordAction": "发送密码重置链接",
-      "resetPasswordSuccess": "请检查收件箱！您应该会收到一封邮件，告知您如何重置密码。",
+      "resetPasswordSuccess": "Check your inbox! You should have an email with instructions on how to reset your password.",
       "passwordsDontMatch": "两次输入的密码不一致",
       "confirmEmailSuccess": "已成功确认您的电子邮件！现在可以登录。",
       "totpTitle": "两步验证码",

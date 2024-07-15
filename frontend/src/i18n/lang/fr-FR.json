@@ -43,7 +43,7 @@
       "forgotPassword": "Mot de passe oublié ?",
       "resetPassword": "Réinitialiser votre mot de passe",
       "resetPasswordAction": "M’envoyer un lien de réinitialisation du mot de passe",
-      "resetPasswordSuccess": "Vérifiez votre boîte de réception ! Vous devriez y trouver un courriel contenant les instructions pour réinitialiser votre mot de passe.",
+      "resetPasswordSuccess": "Check your inbox! You should have an email with instructions on how to reset your password.",
       "passwordsDontMatch": "Les mots de passe ne correspondent pas",
       "confirmEmailSuccess": "Vous avez bien confirmé votre adresse ! Vous pouvez maintenant vous connecter.",
       "totpTitle": "Code d’authentification à deux facteurs",

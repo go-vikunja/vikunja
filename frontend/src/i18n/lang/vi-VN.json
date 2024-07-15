@@ -43,7 +43,7 @@
       "forgotPassword": "Bạn quên mật khẩu?",
       "resetPassword": "Reset mật khẩu của bạn",
       "resetPasswordAction": "Gửi cho tôi liên kết reset mật khẩu",
-      "resetPasswordSuccess": "Kiểm tra hộp thư của bạn! Bạn sẽ nhận một e-mail với hướng dẫn reset mật khẩu của mình.",
+      "resetPasswordSuccess": "Check your inbox! You should have an email with instructions on how to reset your password.",
       "passwordsDontMatch": "Mật khẩu không trùng khớp",
       "confirmEmailSuccess": "Bạn đã xác nhận thành công email của mình! Bạn có thể đăng nhập ngay bây giờ.",
       "totpTitle": "Mã xác thực hai lớp",

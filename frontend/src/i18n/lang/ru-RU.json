@@ -43,7 +43,7 @@
       "forgotPassword": "Забыли пароль?",
       "resetPassword": "Сбросить пароль",
       "resetPasswordAction": "Отправить ссылку на сброс пароля",
-      "resetPasswordSuccess": "Проверьте почту! Там должно быть письмо с инструкциями, как сбросить пароль.",
+      "resetPasswordSuccess": "Check your inbox! You should have an email with instructions on how to reset your password.",
       "passwordsDontMatch": "Пароли не совпадают",
       "confirmEmailSuccess": "Теперь вы можете войти, используя свой e-mail.",
       "totpTitle": "Код двухфакторной аутентификации",

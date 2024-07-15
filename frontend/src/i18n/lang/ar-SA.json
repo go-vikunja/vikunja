@@ -43,7 +43,7 @@
       "forgotPassword": "نسيت كلمة المرور؟",
       "resetPassword": "إعادة تعيين كلمة المرور",
       "resetPasswordAction": "أرسل لي رابط إعادة تعيين كلمة المرور",
-      "resetPasswordSuccess": "تحقق من صندوق الوارد الخاص بك! يجب أن تصلك رسالة مع إرشادات حول كيفية إعادة تعيين كلمة المرور الخاصة بك.",
+      "resetPasswordSuccess": "Check your inbox! You should have an email with instructions on how to reset your password.",
       "passwordsDontMatch": "كلمتي المرور غير متطابقتين",
       "confirmEmailSuccess": "تم تأكيد بريدك الإلكتروني بنجاح! يمكنك تسجيل الدخول الآن.",
       "totpTitle": "رمز المصادقة الثنائية 2FA",

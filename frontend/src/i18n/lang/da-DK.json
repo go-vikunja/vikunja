@@ -43,7 +43,7 @@
       "forgotPassword": "Har du glemt din adgangskode?",
       "resetPassword": "Nulstil din adgangskode",
       "resetPasswordAction": "Send mig et link til nulstilling af adgangskode",
-      "resetPasswordSuccess": "Tjek din indbakke! Du bør have en e-mail med instruktioner om, hvordan du nulstiller din adgangskode.",
+      "resetPasswordSuccess": "Check your inbox! You should have an email with instructions on how to reset your password.",
       "passwordsDontMatch": "Adgangskoderne er ikke ens",
       "confirmEmailSuccess": "Du har bekræftet din e-mail! Du kan logge ind nu.",
       "totpTitle": "To Faktor Godkendelseskode",

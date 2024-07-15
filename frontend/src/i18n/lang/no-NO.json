@@ -43,7 +43,7 @@
       "forgotPassword": "Glemt ditt passord?",
       "resetPassword": "Tilbakestill passordet ditt",
       "resetPasswordAction": "Send lenke for tilbakestilling av passord",
-      "resetPasswordSuccess": "Sjekk innboksen! Du skal ha en e-post med instruksjoner om hvordan du tilbakestiller passordet ditt.",
+      "resetPasswordSuccess": "Check your inbox! You should have an email with instructions on how to reset your password.",
       "passwordsDontMatch": "Passordene samsvarer ikke",
       "confirmEmailSuccess": "Du har bekreftet e-posten din! Du kan logge inn nå.",
       "totpTitle": "2FA (2-Faktorautentisering)",

@@ -43,7 +43,7 @@
       "forgotPassword": "Zapomniałeś hasła?",
       "resetPassword": "Zresetuj swoje hasło",
       "resetPasswordAction": "Wyślij mi link do resetowania hasła",
-      "resetPasswordSuccess": "Sprawdź swoją skrzynkę odbiorczą! Powinieneś otrzymać e-mail z instrukcją, jak zresetować hasło.",
+      "resetPasswordSuccess": "Check your inbox! You should have an email with instructions on how to reset your password.",
       "passwordsDontMatch": "Hasła nie są takie same",
       "confirmEmailSuccess": "Pomyślnie zatwierdzono e-mail! Możesz się teraz zalogować.",
       "totpTitle": "Kod uwierzytelniania dwuskładnikowego",

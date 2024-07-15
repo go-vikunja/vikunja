@@ -43,7 +43,7 @@
       "forgotPassword": "Elfelejtette a jelszavát?",
       "resetPassword": "Jelszó visszaállítása",
       "resetPasswordAction": "Jelszó-visszaállítási linket kérek",
-      "resetPasswordSuccess": "Ellenőrizze postaládáját! Kapnia kell egy e-mailt a jelszó visszaállításához szükséges utasításokkal.",
+      "resetPasswordSuccess": "Check your inbox! You should have an email with instructions on how to reset your password.",
       "passwordsDontMatch": "Jelszavak nem egyeznek",
       "confirmEmailSuccess": "Sikeresen megerősítette e-mail címét! Most már bejelentkezhet.",
       "totpTitle": "Kétlépcsős hitelesítő kód",

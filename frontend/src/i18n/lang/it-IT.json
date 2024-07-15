@@ -43,7 +43,7 @@
       "forgotPassword": "Password dimenticata?",
       "resetPassword": "Reimposta la tua password",
       "resetPasswordAction": "Inviami il link per reimpostare la password",
-      "resetPasswordSuccess": "Controlla la tua casella di posta! Dovresti avere un'e-mail con le istruzioni su come reimpostare la password.",
+      "resetPasswordSuccess": "Check your inbox! You should have an email with instructions on how to reset your password.",
       "passwordsDontMatch": "Le password non corrispondono",
       "confirmEmailSuccess": "Hai confermato con successo la tua e-mail! Ora puoi accedere.",
       "totpTitle": "Codice di autenticazione a due fattori",

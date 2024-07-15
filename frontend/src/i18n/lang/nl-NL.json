@@ -43,7 +43,7 @@
       "forgotPassword": "Wachtwoord vergeten?",
       "resetPassword": "Je wachtwoord opnieuw instellen",
       "resetPasswordAction": "Stuur me een wachtwoord reset link",
-      "resetPasswordSuccess": "Check je inbox! Je zou een e-mail moeten hebben met instructies om je wachtwoord te resetten.",
+      "resetPasswordSuccess": "Check your inbox! You should have an email with instructions on how to reset your password.",
       "passwordsDontMatch": "Wachtwoorden komen niet overeen",
       "confirmEmailSuccess": "Je hebt met succes je e-mailadres bevestigd! Je kunt nu inloggen.",
       "totpTitle": "Twee-factor-authenticatie code",

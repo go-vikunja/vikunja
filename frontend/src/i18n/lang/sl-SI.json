@@ -43,7 +43,7 @@
       "forgotPassword": "Ste pozabili svoje geslo?",
       "resetPassword": "Ponastavite geslo",
       "resetPasswordAction": "Pošljite mi povezavo za ponastavitev gesla",
-      "resetPasswordSuccess": "Preverite vaš poštni predal! Prejeli bi morali e-pošto z navodili za ponastavitev gesla.",
+      "resetPasswordSuccess": "Check your inbox! You should have an email with instructions on how to reset your password.",
       "passwordsDontMatch": "Vneseni gesli se ne ujemata",
       "confirmEmailSuccess": "Uspešno ste potrdili svoj e-poštni naslov! Sedaj se lahko prijavite.",
       "totpTitle": "Koda za dvofaktorsko avtentikacijo",

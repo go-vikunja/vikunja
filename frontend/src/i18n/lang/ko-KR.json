@@ -43,7 +43,7 @@
       "forgotPassword": "비밀번호를 잊으셨나요?",
       "resetPassword": "비밀번호 재설정",
       "resetPasswordAction": "비밀번호 재설정 링크 보내기",
-      "resetPasswordSuccess": "받은 편지함을 확인하세요! 암호를 재설정하는 방법에 대한 지침이 포함된 이메일을 발송했습니다.",
+      "resetPasswordSuccess": "Check your inbox! You should have an email with instructions on how to reset your password.",
       "passwordsDontMatch": "비밀번호가 일치하지 않습니다",
       "confirmEmailSuccess": "인증이 완료되었습니다. 해당 이메일로 로그인 할 수 있습니다.",
       "totpTitle": "2단계 인증 코드",
