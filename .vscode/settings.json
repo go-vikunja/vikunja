@@ -26,7 +26,7 @@
 
     // i18n ally
     "i18n-ally.localesPaths": [
-        "src/i18n/lang"
+        "frontend/src/i18n/lang"
     ],
     "i18n-ally.sortKeys": true,
     "i18n-ally.keepFulfilled": true,
