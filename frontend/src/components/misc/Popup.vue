@@ -57,6 +57,9 @@ watchEffect(() => {
 })
 
 function close() {
+	if (!openValue.value) {
+		return
+	}
 	openValue.value = false
 	emit('update:open', false)
 }
@@ -69,12 +72,7 @@ function toggle() {
 
 const popup = ref<HTMLElement | null>(null)
 
-onClickOutside(popup, () => {
-	if (!openValue.value) {
-		return
-	}
-	close()
-})
+onClickOutside(popup, () => close())
 </script>
 
 <style scoped lang="scss">
