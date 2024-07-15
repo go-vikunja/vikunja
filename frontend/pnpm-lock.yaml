@@ -5,9 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 patchedDependencies:
-  '@github/hotkey@3.1.0':
+  '@github/hotkey@3.1.1':
     hash: c67tdk7qpd5grxd2zj6lsxfbou
-    path: patches/@github__hotkey@3.1.0.patch
+    path: patches/@github__hotkey@3.1.1.patch
   flexsearch@0.7.31:
     hash: bfn3sngfuhktmdj7jgl3ejl35y
     path: patches/flexsearch@0.7.31.patch
@@ -29,8 +29,8 @@ importers:
         specifier: 3.0.8
         version: 3.0.8(@fortawesome/fontawesome-svg-core@6.5.2)(vue@3.4.31(typescript@5.5.3))
       '@github/hotkey':
-        specifier: 3.1.0
-        version: 3.1.0(patch_hash=c67tdk7qpd5grxd2zj6lsxfbou)
+        specifier: 3.1.1
+        version: 3.1.1(patch_hash=c67tdk7qpd5grxd2zj6lsxfbou)
       '@infectoone/vue-ganttastic':
         specifier: 2.3.2
         version: 2.3.2(dayjs@1.11.11)(vue@3.4.31(typescript@5.5.3))
@@ -1622,8 +1622,8 @@ packages:
       '@fortawesome/fontawesome-svg-core': ~1 || ~6
       vue: '>= 3.0.0 < 4'
 
-  '@github/hotkey@3.1.0':
-    resolution: {integrity: sha512-Lj9QjYa+b+Nk5U1nZtlXLdx3HI8/EeM6ZNwBjpYcGVYqpwHdM2ScRH0p7+5zh28JG6SPbTM9+Rb1dFd742qMTw==}
+  '@github/hotkey@3.1.1':
+    resolution: {integrity: sha512-H30I6XDO3gFSgLuEuHoMBRZG9c3uCKNdAcYklL1FaZDPdU1bXfgjnpzGDPcUr0U6eGQ+T3XLY9slatwZYWL1dA==}
 
   '@hapi/hoek@9.3.0':
     resolution: {integrity: sha512-/c6rf4UJlmHlC9b5BaNvzAcFv7HZ2QHaV0D4/HNlBdvFnvQq8RI4kYdhyPCl7Xj+oWvTWQ8ujhqS53LIgAe6KQ==}
@@ -7508,7 +7508,7 @@ snapshots:
       '@fortawesome/fontawesome-svg-core': 6.5.2
       vue: 3.4.31(typescript@5.5.3)
 
-  '@github/hotkey@3.1.0(patch_hash=c67tdk7qpd5grxd2zj6lsxfbou)': {}
+  '@github/hotkey@3.1.1(patch_hash=c67tdk7qpd5grxd2zj6lsxfbou)': {}
 
   '@hapi/hoek@9.3.0': {}
 

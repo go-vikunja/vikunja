@@ -54,7 +54,7 @@
     "@fortawesome/free-regular-svg-icons": "6.5.2",
     "@fortawesome/free-solid-svg-icons": "6.5.2",
     "@fortawesome/vue-fontawesome": "3.0.8",
-    "@github/hotkey": "3.1.0",
+    "@github/hotkey": "3.1.1",
     "@infectoone/vue-ganttastic": "2.3.2",
     "@intlify/unplugin-vue-i18n": "4.0.0",
     "@kyvg/vue3-notification": "3.2.1",
@@ -180,7 +180,7 @@
   "pnpm": {
     "patchedDependencies": {
       "flexsearch@0.7.31": "patches/flexsearch@0.7.31.patch",
-      "@github/hotkey@3.1.0": "patches/@github__hotkey@3.1.0.patch"
+      "@github/hotkey@3.1.1": "patches/@github__hotkey@3.1.1.patch"
     }
   }
 }
