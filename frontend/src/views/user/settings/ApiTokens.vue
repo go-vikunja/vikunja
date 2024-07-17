@@ -25,6 +25,7 @@ const newTokenExpiryCustom = ref(new Date())
 const newTokenPermissions = ref({})
 const newTokenPermissionsGroup = ref({})
 const newTokenTitleValid = ref(true)
+const newTokenPermissionValid = ref(true)
 const apiTokenTitle = ref()
 const tokenCreatedSuccessMessage = ref('')
 
@@ -88,14 +89,8 @@ async function createToken() {
 		apiTokenTitle.value.focus()
 		return
 	}
-
-	const expiry = Number(newTokenExpiry.value)
-	if (!isNaN(expiry)) {
-		// if it's a number, we assume it's the number of days in the future
-		newToken.value.expiresAt = new Date((+new Date()) + expiry * MILLISECONDS_A_DAY)
-	} else {
-		newToken.value.expiresAt = new Date(newTokenExpiryCustom.value)
-	}
+	
+	let hasPermissions = false
 
 	newToken.value.permissions = {}
 	Object.entries(newTokenPermissions.value).forEach(([key, ps]) => {
@@ -105,8 +100,22 @@ async function createToken() {
 			.map(p => p[0])
 		if (all.length > 0) {
 			newToken.value.permissions[key] = all
+			hasPermissions = true
 		}
 	})
+	
+	if(!hasPermissions) {
+		newTokenPermissionValid.value = false
+		return
+	}
+	
+	const expiry = Number(newTokenExpiry.value)
+	if (!isNaN(expiry)) {
+		// if it's a number, we assume it's the number of days in the future
+		newToken.value.expiresAt = new Date((+new Date()) + expiry * MILLISECONDS_A_DAY)
+	} else {
+		newToken.value.expiresAt = new Date(newTokenExpiryCustom.value)
+	}
 
 	const token = await service.create(newToken.value)
 	tokenCreatedSuccessMessage.value = t('user.settings.apiTokens.tokenCreatedSuccess', {token: token.token})
@@ -324,6 +333,12 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 				</div>
 			</div>
 
+			<p
+				v-if="!newTokenPermissionValid"
+				class="help is-danger"
+			>
+				{{ $t('user.settings.apiTokens.permissionRequired') }}
+			</p>
 			<XButton
 				:loading="service.loading"
 				@click="createToken"
