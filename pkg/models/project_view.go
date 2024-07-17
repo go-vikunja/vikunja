@@ -280,35 +280,40 @@ func createProjectView(s *xorm.Session, p *ProjectView, a web.Auth, createBacklo
 		}
 
 		// Move all tasks into the new bucket when the project already has tasks
-		c := &TaskCollection{
-			ProjectID: p.ProjectID,
-		}
-		ts, _, _, err := c.ReadAll(s, a, "", 0, -1)
+		err = addTasksToView(s, a, p, b)
 		if err != nil {
-			return err
-		}
-		tasks := ts.([]*Task)
-
-		if len(tasks) == 0 {
-			return nil
-		}
-
-		taskBuckets := []*TaskBucket{}
-		for _, task := range tasks {
-			taskBuckets = append(taskBuckets, &TaskBucket{
-				TaskID:        task.ID,
-				BucketID:      b.ID,
-				ProjectViewID: p.ID,
-			})
-		}
-
-		_, err = s.Insert(&taskBuckets)
-		if err != nil {
-			return err
+			return
 		}
 	}
 
 	return RecalculateTaskPositions(s, p, a)
+}
+
+func addTasksToView(s *xorm.Session, a web.Auth, pv *ProjectView, b *Bucket) (err error) {
+	c := &TaskCollection{
+		ProjectID: pv.ProjectID,
+	}
+	ts, _, _, err := c.ReadAll(s, a, "", 0, -1)
+	if err != nil {
+		return err
+	}
+	tasks := ts.([]*Task)
+
+	if len(tasks) == 0 {
+		return nil
+	}
+
+	taskBuckets := []*TaskBucket{}
+	for _, task := range tasks {
+		taskBuckets = append(taskBuckets, &TaskBucket{
+			TaskID:        task.ID,
+			BucketID:      b.ID,
+			ProjectViewID: pv.ID,
+		})
+	}
+
+	_, err = s.Insert(&taskBuckets)
+	return err
 }
 
 // Update is the handler to update a project view

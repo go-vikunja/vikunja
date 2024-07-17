@@ -18,12 +18,12 @@ package models
 
 import (
 	"time"
-	"xorm.io/builder"
 
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
 
 	"code.vikunja.io/web"
+	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
@@ -195,7 +195,78 @@ func (sf *SavedFilter) Update(s *xorm.Session, _ web.Auth) error {
 			"is_favorite",
 		).
 		Update(sf)
-	return err
+	if err != nil {
+		return err
+	}
+
+	// Add all tasks which are not already in a bucket to the default bucket
+	kanbanFilterViews := []*ProjectView{}
+	err = s.Where("project_id = ? and view_kind = ? and bucket_configuration_mode = ?", getProjectIDFromSavedFilterID(sf.ID), ProjectViewKindKanban, BucketConfigurationModeManual).
+		Find(&kanbanFilterViews)
+	if err != nil || len(kanbanFilterViews) == 0 {
+		return err
+	}
+
+	parsedFilters, err := getTaskFiltersFromFilterString(sf.Filters.Filter, sf.Filters.FilterTimezone)
+	if err != nil {
+		return err
+	}
+
+	filterCond, err := convertFiltersToDBFilterCond(parsedFilters, sf.Filters.FilterIncludeNulls)
+	if err != nil {
+		return err
+	}
+
+	taskBuckets := []*TaskBucket{}
+	taskPositions := []*TaskPosition{}
+
+	for _, view := range kanbanFilterViews {
+		// Fetch all tasks in the filter but not in task_bucket
+		// select * from tasks where id not in (select task_id from task_buckets where project_view_id = ?) and FILTER_COND
+		tasksToAdd := []*Task{}
+		err = s.Where(builder.And(
+			builder.NotIn("id",
+				builder.
+					Select("task_id").
+					From("task_buckets").
+					Where(builder.Eq{"project_view_id": view.ID})),
+			filterCond,
+		)).
+			Find(&tasksToAdd)
+		if err != nil {
+			return err
+		}
+
+		bucketID, err := getDefaultBucketID(s, view)
+		if err != nil {
+			return err
+		}
+
+		for _, task := range tasksToAdd {
+			taskBuckets = append(taskBuckets, &TaskBucket{
+				TaskID:        task.ID,
+				BucketID:      bucketID,
+				ProjectViewID: view.ID,
+			})
+
+			taskPositions = append(taskPositions, &TaskPosition{
+				TaskID:        task.ID,
+				ProjectViewID: view.ID,
+				Position:      0,
+			})
+		}
+	}
+
+	_, err = s.Insert(taskBuckets)
+	if err != nil {
+		return err
+	}
+	_, err = s.Insert(taskPositions)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Delete removes a saved filter
