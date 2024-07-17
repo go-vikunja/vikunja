@@ -4,7 +4,9 @@ run:
 
 linters:
   enable:
-    - megacheck
+    - gosimple
+    - staticcheck
+    - unused
     - govet
     - gocritic
     - gocyclo
@@ -15,7 +17,6 @@ linters:
     - revive
     - misspell
   disable:
-    - scopelint # Obsolete, using exportloopref instead
     - durationcheck
     - goconst
     - musttag
