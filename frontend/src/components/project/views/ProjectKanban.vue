@@ -130,7 +130,8 @@
 										</DropdownItem>
 										<DropdownItem
 											v-tooltip="buckets.length <= 1 ? $t('project.kanban.deleteLast') : ''"
-											:class="{'is-disabled': buckets.length <= 1, 'has-text-danger': true}"
+											class="has-text-danger"
+											:class="{'is-disabled': buckets.length <= 1}"
 											icon-class="has-text-danger"
 											icon="trash-alt"
 											@click.stop="() => deleteBucketModal(bucket.id)"
@@ -520,9 +521,7 @@ async function updateTaskPosition(e) {
 			}))
 			newTask.done = updatedTaskBucket.taskDone
 			if (updatedTaskBucket.bucketId !== newTask.bucketId) {
-				kanbanStore.removeTaskInBucket(newTask)
-				newTask.bucketId = updatedTaskBucket.bucketId
-				kanbanStore.addTaskToBucket(newTask)
+				kanbanStore.moveTaskToBucket(newTask, updatedTaskBucket.bucketId)
 			}
 			kanbanStore.setTaskInBucket(newTask)
 		}

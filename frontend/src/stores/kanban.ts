@@ -137,6 +137,12 @@ export const useKanbanStore = defineStore('kanban', () => {
 			}
 		}
 	}
+	
+	function moveTaskToBucket(task: ITask, bucketId: IBucket['id']) {
+		removeTaskInBucket(task)
+		task.bucketId = bucketId
+		addTaskToBucket(task)
+	}
 
 	function addTaskToBucket(task: ITask) {
 		const bucketIndex = findIndexById(buckets.value, task.bucketId)
@@ -330,6 +336,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 		setTaskInBucket,
 		addTaskToBucket,
 		removeTaskInBucket,
+		moveTaskToBucket,
 		loadBucketsForProject,
 		loadNextTasksForBucket,
 		createBucket,
