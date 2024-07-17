@@ -152,7 +152,7 @@ type ProjectView struct {
 	web.Rights   `xorm:"-" json:"-"`
 }
 
-func (p *ProjectView) TableName() string {
+func (pv *ProjectView) TableName() string {
 	return "project_views"
 }
 
@@ -176,9 +176,9 @@ func getViewsForProject(s *xorm.Session, projectID int64) (views []*ProjectView,
 // @Success 200 {array} models.ProjectView "The project views"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/views [get]
-func (p *ProjectView) ReadAll(s *xorm.Session, a web.Auth, _ string, _ int, _ int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
+func (pv *ProjectView) ReadAll(s *xorm.Session, a web.Auth, _ string, _ int, _ int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 
-	pp := &Project{ID: p.ProjectID}
+	pp := &Project{ID: pv.ProjectID}
 	can, _, err := pp.CanRead(s, a)
 	if err != nil {
 		return nil, 0, 0, err
@@ -187,13 +187,13 @@ func (p *ProjectView) ReadAll(s *xorm.Session, a web.Auth, _ string, _ int, _ in
 		return nil, 0, 0, ErrGenericForbidden{}
 	}
 
-	projectViews, err := getViewsForProject(s, p.ProjectID)
+	projectViews, err := getViewsForProject(s, pv.ProjectID)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 
 	totalCount, err := s.
-		Where("project_id = ?", p.ProjectID).
+		Where("project_id = ?", pv.ProjectID).
 		Count(&ProjectView{})
 	if err != nil {
 		return
@@ -215,13 +215,13 @@ func (p *ProjectView) ReadAll(s *xorm.Session, a web.Auth, _ string, _ int, _ in
 // @Failure 403 {object} web.HTTPError "The user does not have access to this project view"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/views/{id} [get]
-func (p *ProjectView) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
-	view, err := GetProjectViewByIDAndProject(s, p.ID, p.ProjectID)
+func (pv *ProjectView) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
+	view, err := GetProjectViewByIDAndProject(s, pv.ID, pv.ProjectID)
 	if err != nil {
 		return err
 	}
 
-	*p = *view
+	*pv = *view
 	return
 }
 
@@ -238,9 +238,9 @@ func (p *ProjectView) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the project view"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/views/{id} [delete]
-func (p *ProjectView) Delete(s *xorm.Session, _ web.Auth) (err error) {
+func (pv *ProjectView) Delete(s *xorm.Session, _ web.Auth) (err error) {
 	_, err = s.
-		Where("id = ? AND project_id = ?", p.ID, p.ProjectID).
+		Where("id = ? AND project_id = ?", pv.ID, pv.ProjectID).
 		Delete(&ProjectView{})
 	return
 }
@@ -258,8 +258,8 @@ func (p *ProjectView) Delete(s *xorm.Session, _ web.Auth) (err error) {
 // @Failure 403 {object} web.HTTPError "The user does not have access to create a project view"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/views [put]
-func (p *ProjectView) Create(s *xorm.Session, a web.Auth) (err error) {
-	return createProjectView(s, p, a, true)
+func (pv *ProjectView) Create(s *xorm.Session, a web.Auth) (err error) {
+	return createProjectView(s, pv, a, true)
 }
 
 func createProjectView(s *xorm.Session, p *ProjectView, a web.Auth, createBacklogBucket bool) (err error) {
@@ -325,15 +325,15 @@ func createProjectView(s *xorm.Session, p *ProjectView, a web.Auth, createBacklo
 // @Failure 400 {object} web.HTTPError "Invalid project view object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/views/{id} [post]
-func (p *ProjectView) Update(s *xorm.Session, _ web.Auth) (err error) {
+func (pv *ProjectView) Update(s *xorm.Session, _ web.Auth) (err error) {
 	// Check if the project view exists
-	_, err = GetProjectViewByIDAndProject(s, p.ID, p.ProjectID)
+	_, err = GetProjectViewByIDAndProject(s, pv.ID, pv.ProjectID)
 	if err != nil {
 		return
 	}
 
 	_, err = s.
-		ID(p.ID).
+		ID(pv.ID).
 		Cols(
 			"title",
 			"view_kind",
@@ -344,7 +344,7 @@ func (p *ProjectView) Update(s *xorm.Session, _ web.Auth) (err error) {
 			"default_bucket_id",
 			"done_bucket_id",
 		).
-		Update(p)
+		Update(pv)
 	return
 }
 
