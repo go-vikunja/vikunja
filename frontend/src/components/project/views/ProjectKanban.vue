@@ -156,7 +156,7 @@
 								>
 									<template #footer>
 										<div
-											v-if="canWrite"
+											v-if="canCreateTasks"
 											class="bucket-footer"
 										>
 											<div
@@ -392,6 +392,7 @@ const bucketDraggableComponentData = computed(() => ({
 const project = computed(() => props.projectId ? projectStore.projects[props.projectId] : null)
 const view = computed(() => project.value?.views.find(v => v.id === props.viewId) as IProjectView || null)
 const canWrite = computed(() => baseStore.currentProject?.maxRight > Rights.READ && view.value.bucketConfigurationMode === 'manual')
+const canCreateTasks = computed(() => canWrite.value && props.projectId > 0)
 const buckets = computed(() => kanbanStore.buckets)
 const loading = computed(() => kanbanStore.isLoading)
 
