@@ -322,3 +322,9 @@ async function updateSettings() {
 	})
 }
 </script>
+
+<style scoped>
+.select select {
+	width: 100%;
+}
+</style>
