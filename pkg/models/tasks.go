@@ -751,6 +751,11 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setB
 		return err
 	}
 
+	var providedBucket *Bucket
+	if t.BucketID != 0 {
+		providedBucket, err = getBucketByID(s, t.BucketID)
+	}
+
 	views, err := getViewsForProject(s, t.ProjectID)
 	if err != nil {
 		return err
@@ -766,9 +771,13 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setB
 
 			bucketID := view.DoneBucketID
 			if !t.Done || view.DoneBucketID == 0 {
-				bucketID, err = getDefaultBucketID(s, view)
-				if err != nil {
-					return err
+				if providedBucket != nil && view.ID == providedBucket.ProjectViewID {
+					bucketID = providedBucket.ID
+				} else {
+					bucketID, err = getDefaultBucketID(s, view)
+					if err != nil {
+						return err
+					}
 				}
 			}
 
