@@ -218,25 +218,30 @@ export const useProjectStore = defineStore('project', () => {
 	}
 	
 	function setProjectView(view: IProjectView) {
-		const viewPos = projects.value[view.projectId].views.findIndex(v => v.id === view.id)
+		const views = [...projects.value[view.projectId].views]
+		const viewPos = views.findIndex(v => v.id === view.id)
+
 		if (viewPos !== -1) {
-			projects.value[view.projectId].views[viewPos] = view
-			projects.value[view.projectId].views.sort((a, b) => a.position < b.position ? -1 : 1)
-			setProject(projects.value[view.projectId])
-			return
+			views[viewPos] = view
+		} else {
+			views.push(view)
 		}
+		views.sort((a, b) => a.position < b.position ? -1 : 1)
 		
-		projects.value[view.projectId].views.push(view)
-		projects.value[view.projectId].views.sort((a, b) => a.position < b.position ? -1 : 1)
-		
-		setProject(projects.value[view.projectId])
+		setProject({
+			...projects.value[view.projectId],
+			views,
+		})
 	}
 	
 	function removeProjectView(projectId: IProject['id'], viewId: IProjectView['id']) {
-		const viewPos = projects.value[projectId].views.findIndex(v => v.id === viewId)
-		if (viewPos !== -1) {
-			projects.value[projectId].views.splice(viewPos, 1)
-		}
+		const project = projects.value[projectId]
+		const updatedViews = project.views.filter(v => v.id !== viewId)
+	
+		setProject({
+			...project,
+			views: updatedViews,
+		})
 	}
 	
 	return {
