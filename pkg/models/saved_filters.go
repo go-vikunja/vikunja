@@ -18,8 +18,11 @@ package models
 
 import (
 	"time"
+	"xorm.io/builder"
 
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
+
 	"code.vikunja.io/web"
 	"xorm.io/xorm"
 )
@@ -213,4 +216,55 @@ func (sf *SavedFilter) Delete(s *xorm.Session, _ web.Auth) error {
 		Where("id = ?", sf.ID).
 		Delete(sf)
 	return err
+}
+
+func addTaskToFilter(s *xorm.Session, filter *SavedFilter, view *ProjectView, fallbackTimezone string, task *Task) (taskBucket *TaskBucket, taskPosition *TaskPosition, err error) {
+
+	filterString := filter.Filters.Filter
+
+	if filter.Filters.FilterTimezone == "" {
+		filter.Filters.FilterTimezone = fallbackTimezone
+	}
+
+	parsedFilters, err := getTaskFiltersFromFilterString(filterString, filter.Filters.FilterTimezone)
+	if err != nil {
+		log.Errorf("Could not parse filter string '%s' from view %d and saved filter %d: %v", filterString, view.ID, filter.ID, err)
+		return
+	}
+
+	filterCond, err := convertFiltersToDBFilterCond(parsedFilters, filter.Filters.FilterIncludeNulls)
+	if err != nil {
+		log.Errorf("Could not convert filter string '%s' from view %d and saved filter %d to db conditions: %v", filterString, view.ID, filter.ID, err)
+		return
+	}
+
+	taskIsInCurrentFilterAndView, err := s.Where(builder.And(
+		filterCond,
+		builder.Eq{"id": task.ID},
+	)).Exist(&Task{})
+	if !taskIsInCurrentFilterAndView {
+		return
+	}
+	if err != nil {
+		return nil, nil, err
+	}
+
+	bucketID, err := getDefaultBucketID(s, view)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	taskBucket = &TaskBucket{
+		BucketID:      bucketID,
+		TaskID:        task.ID,
+		ProjectViewID: view.ID,
+	}
+
+	taskPosition = &TaskPosition{
+		TaskID:        task.ID,
+		ProjectViewID: view.ID,
+		Position:      calculateDefaultPosition(task.Index, task.Position),
+	}
+
+	return
 }

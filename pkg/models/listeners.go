@@ -23,7 +23,6 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
-
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
@@ -66,6 +65,7 @@ func RegisterListeners() {
 	events.RegisterListener((&TaskAttachmentDeletedEvent{}).Name(), &HandleTaskUpdateLastUpdated{})
 	events.RegisterListener((&TaskRelationCreatedEvent{}).Name(), &HandleTaskUpdateLastUpdated{})
 	events.RegisterListener((&TaskRelationDeletedEvent{}).Name(), &HandleTaskUpdateLastUpdated{})
+	events.RegisterListener((&TaskCreatedEvent{}).Name(), &UpdateTaskInSavedFilterViews{})
 	if config.TypesenseEnabled.GetBool() {
 		events.RegisterListener((&TaskDeletedEvent{}).Name(), &RemoveTaskFromTypesense{})
 		events.RegisterListener((&TaskCreatedEvent{}).Name(), &AddTaskToTypesense{})
@@ -669,6 +669,91 @@ func (s *DecreaseAttachmentCounter) Name() string {
 // Handle is executed when the event DecreaseAttachmentCounter listens on is fired
 func (s *DecreaseAttachmentCounter) Handle(_ *message.Message) (err error) {
 	return keyvalue.DecrBy(metrics.AttachmentsCountKey, 1)
+}
+
+// UpdateTaskInSavedFilterViews  represents a listener
+type UpdateTaskInSavedFilterViews struct {
+}
+
+// Name defines the name for the UpdateTaskInSavedFilterViews listener
+func (l *UpdateTaskInSavedFilterViews) Name() string {
+	return "task.set.saved.filter.views"
+}
+
+// Handle is executed when the event UpdateTaskInSavedFilterViews listens on is fired
+func (l *UpdateTaskInSavedFilterViews) Handle(msg *message.Message) (err error) {
+	event := &TaskCreatedEvent{}
+	err = json.Unmarshal(msg.Payload, event)
+	if err != nil {
+		return err
+	}
+
+	// This operation is potentially very resource-heavy, because we don't know if a task is included
+	// in a filter until we evaluate that filter. We need to evaluate each filter individually - since
+	// there can be many filters, this can take a while to execute.
+	// For this reason, we do this in an asynchronous event listener.
+
+	s := db.NewSession()
+	defer s.Close()
+
+	// Get all saved filters with a manual kanban view
+	kanbanFilterViews := []*ProjectView{}
+	err = s.Where("project_id < 0 and view_kind = ? and bucket_configuration_mode = ?", ProjectViewKindKanban, BucketConfigurationModeManual).
+		Find(&kanbanFilterViews)
+	if err != nil {
+		return err
+	}
+
+	filterIDs := []int64{}
+	for _, view := range kanbanFilterViews {
+		filterIDs = append(filterIDs, getSavedFilterIDFromProjectID(view.ProjectID))
+	}
+
+	filters := map[int64]*SavedFilter{}
+	err = s.In("id", filterIDs).Find(&filters)
+	if err != nil {
+		return err
+	}
+
+	u, err := user.GetUserByID(s, event.Doer.GetID())
+	if err != nil {
+		return err
+	}
+	doerTimezone := u.Timezone
+
+	taskBuckets := []*TaskBucket{}
+	taskPositions := []*TaskPosition{}
+
+	for _, view := range kanbanFilterViews {
+		filter, exists := filters[getSavedFilterIDFromProjectID(view.ProjectID)]
+		if !exists {
+			log.Debugf("Did not find filter for view %d", view.ID)
+			continue
+		}
+
+		taskBucket, taskPosition, err := addTaskToFilter(s, filter, view, doerTimezone, event.Task)
+		if err != nil {
+			return err
+		}
+
+		if taskBucket != nil && taskPosition != nil {
+			taskBuckets = append(taskBuckets, taskBucket)
+			taskPositions = append(taskPositions, taskPosition)
+		}
+	}
+
+	if len(taskBuckets) > 0 || len(taskPositions) > 0 {
+		_, err = s.Insert(taskBuckets)
+		if err != nil {
+			return
+		}
+		_, err = s.Insert(taskPositions)
+		if err != nil {
+			return
+		}
+	}
+
+	return nil
 }
 
 ///////
