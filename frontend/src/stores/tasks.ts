@@ -408,7 +408,7 @@ export const useTaskStore = defineStore('task', () => {
 	
 		return foundProjectId
 	}
-
+	
 	async function createNewTask({
 		title,
 		bucketId,
@@ -420,6 +420,20 @@ export const useTaskStore = defineStore('task', () => {
 		const cancel = setModuleLoading(setIsLoading)
 		const quickAddMagicMode = authStore.settings.frontendSettings.quickAddMagicMode
 		const parsedTask = parseTaskText(title, quickAddMagicMode)
+		console.log(parsedTask)
+		if(parsedTask.text === '') {
+			const taskService = new TaskService()
+			try {
+				return taskService.create(new TaskModel({
+					title,
+					projectId,
+					bucketId,
+					position,
+				}))
+			} finally {
+				cancel()
+			}
+		}
 	
 		const foundProjectId = await findProjectId({
 			project: parsedTask.project,
