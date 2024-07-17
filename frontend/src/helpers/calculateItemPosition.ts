@@ -1,4 +1,7 @@
-export const calculateItemPosition = (positionBefore: number | null, positionAfter: number | null): number => {
+export const calculateItemPosition = (
+	positionBefore: number | null = null,
+	positionAfter: number | null = null,
+): number => {
 	if (positionBefore === null) {
 		if (positionAfter === null) {
 			return 0
@@ -13,6 +16,6 @@ export const calculateItemPosition = (positionBefore: number | null, positionAft
 		return positionBefore + Math.pow(2, 16)
 	}
 	
-	// If we have both a task before and after it, we acually calculate the position
+	// If we have both a task before and after it, we actually calculate the position
 	return positionBefore + (positionAfter - positionBefore) / 2
 }
