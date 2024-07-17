@@ -180,7 +180,7 @@ func duplicateViews(s *xorm.Session, pd *ProjectDuplicate, doer web.Auth, taskMa
 
 		view.ID = 0
 		view.ProjectID = pd.Project.ID
-		err = view.Create(s, doer)
+		err = createProjectView(s, view, doer, false)
 		if err != nil {
 			return
 		}
