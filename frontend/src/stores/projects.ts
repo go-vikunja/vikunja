@@ -20,10 +20,6 @@ import type {IProjectView} from '@/modelTypes/IProjectView'
 
 const {add, remove, search, update} = createNewIndexer('projects', ['title', 'description'])
 
-export interface ProjectState {
-	[id: IProject['id']]: IProject
-}
-
 export const useProjectStore = defineStore('project', () => {
 	const baseStore = useBaseStore()
 	const router = useRouter()
@@ -31,9 +27,10 @@ export const useProjectStore = defineStore('project', () => {
 	const isLoading = ref(false)
 
 	// The projects are stored as an object which has the project ids as keys.
-	const projects = ref<ProjectState>({})
+	const projects = ref<{ [id: IProject['id']]: IProject }>({})
 	const projectsArray = computed(() => Object.values(projects.value)
 		.sort((a, b) => a.position - b.position))
+
 	const notArchivedRootProjects = computed(() => projectsArray.value
 		.filter(p => p.parentProjectId === 0 && !p.isArchived && p.id > 0))
 	const favoriteProjects = computed(() => projectsArray.value
@@ -48,7 +45,7 @@ export const useProjectStore = defineStore('project', () => {
 
 	const findProjectByExactname = computed(() => {
 		return (name: string) => {
-			const project = Object.values(projects.value).find(l => {
+			const project = projectsArray.value.find(l => {
 				return l.title.toLowerCase() === name.toLowerCase()
 			})
 			return typeof project === 'undefined' ? null : project
@@ -57,7 +54,7 @@ export const useProjectStore = defineStore('project', () => {
 	
 	const findProjectByIdentifier = computed(() => {
 		return (identifier: string) => {
-			const project = Object.values(projects.value).find(p => {
+			const project = projectsArray.value.find(p => {
 				return p.identifier.toLowerCase() === identifier.toLowerCase()
 			})
 			return typeof project === 'undefined' ? null : project
