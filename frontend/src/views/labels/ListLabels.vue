@@ -13,7 +13,7 @@
 
 		<div class="content">
 			<h1>{{ $t('label.manage') }}</h1>
-			<p v-if="Object.entries(labels).length > 0">
+			<p v-if="labelStore.labelsArray.length > 0">
 				{{ $t('label.description') }}
 			</p>
 			<p
@@ -30,29 +30,29 @@
 		<div class="columns">
 			<div class="labels-list column">
 				<span
-					v-for="l in labels"
-					:key="l.id"
-					:class="{'disabled': userInfo.id !== l.createdBy.id}"
-					:style="{'background': l.hexColor, 'color': l.textColor}"
+					v-for="label in labelStore.labelsArray"
+					:key="label.id"
+					:class="{'disabled': userInfo.id !== label.createdBy.id}"
+					:style="{'background': label.hexColor, 'color': label.textColor}"
 					class="tag"
 				>
 					<span
-						v-if="userInfo.id !== l.createdBy.id"
+						v-if="userInfo.id !== label.createdBy.id"
 						v-tooltip.bottom="$t('label.edit.forbidden')"
 					>
-						{{ l.title }}
+						{{ label.title }}
 					</span>
 					<BaseButton
 						v-else
-						:style="{'color': l.textColor}"
-						@click="editLabel(l)"
+						:style="{'color': label.textColor}"
+						@click="editLabel(label)"
 					>
-						{{ l.title }}
+						{{ label.title }}
 					</BaseButton>
 					<BaseButton
-						v-if="userInfo.id === l.createdBy.id"
+						v-if="userInfo.id === label.createdBy.id"
 						class="delete is-small"
-						@click="showDeleteDialoge(l)"
+						@click="showDeleteDialoge(label)"
 					/>
 				</span>
 			</div>
@@ -155,7 +155,7 @@ const labelEditLabel = ref<ILabel>(new LabelModel())
 const isLabelEdit = ref(false)
 const editorActive = ref(false)
 const showDeleteModal = ref(false)
-const labelToDelete = ref<ILabel>(null)
+const labelToDelete = ref<ILabel | undefined>(undefined)
 
 useTitle(() => t('label.title'))
 
@@ -165,11 +165,13 @@ const userInfo = computed(() => authStore.info)
 const labelStore = useLabelStore()
 labelStore.loadAllLabels()
 
-// Alphabetically sort the labels
-const labels = computed(() => Object.values(labelStore.labels).sort((f, s) => f.title > s.title ? 1 : -1))
 const loading = computed(() => labelStore.isLoading)
 
-function deleteLabel(label: ILabel) {
+function deleteLabel(label?: ILabel) {
+	if (!label) {
+		return
+	}
+
 	showDeleteModal.value = false
 	isLabelEdit.value = false
 	return labelStore.deleteLabel(label)

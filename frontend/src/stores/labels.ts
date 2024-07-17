@@ -1,4 +1,4 @@
-import {computed, ref} from 'vue'
+import {computed, readonly, ref} from 'vue'
 import {acceptHMRUpdate, defineStore} from 'pinia'
 
 import LabelService from '@/services/label'
@@ -21,22 +21,27 @@ async function getAllLabels(page = 1): Promise<ILabel[]> {
 	}
 }
 
-export interface LabelState {
-	[id: ILabel['id']]: ILabel
-}
-
 export const useLabelStore = defineStore('label', () => {
-	// The labels are stored as an object which has the label ids as keys.
-	const labels = ref<LabelState>({})
-	const isLoading = ref(false)
+	const labels = ref<{ [id: ILabel['id']]: ILabel }>({})
 
-	const getLabelsByIds = computed(() => {
-		return (ids: ILabel['id'][]) => Object.values(labels.value).filter(({id}) => ids.includes(id))
-	})
+	// Alphabetically sort the labels
+	const labelsArray = computed(() => Object.values(labels.value)
+		.sort((a, b) => a.title.localeCompare(
+			b.title, i18n.global.locale.value,
+			{ ignorePunctuation: true },
+		)),
+	)
+
+	const isLoading = ref(false)
 	
 	const getLabelById = computed(() => {
-		return (labelId: ILabel['id']) => Object.values(labels.value).find(({id}) => id === labelId)
+		return (labelId: ILabel['id']) => labels.value[labelId]
 	})
+
+	const getLabelsByIds = computed(() => (ids: ILabel['id'][]) =>
+		ids.map(id => labels.value[id]).filter(Boolean),
+	)
+
 
 	// **
 	// * Checks if a project of labels is available in the store and filters them then query
@@ -53,14 +58,12 @@ export const useLabelStore = defineStore('label', () => {
 	})
 
 	const getLabelsByExactTitles = computed(() => {
-		return (labelTitles: string[]) => Object
-			.values(labels.value)
+		return (labelTitles: string[]) => labelsArray.value
 			.filter(({title}) => labelTitles.some(l => l.toLowerCase() === title.toLowerCase()))
 	})
 	
 	const getLabelByExactTitle = computed(() => {
-		return (labelTitle: string) => Object
-			.values(labels.value)
+		return (labelTitle: string) => labelsArray.value
 			.find(l => l.title.toLowerCase() === labelTitle.toLowerCase())
 	})
 
@@ -144,11 +147,12 @@ export const useLabelStore = defineStore('label', () => {
 	}
 
 	return {
-		labels,
+		labels: readonly(labels),
+		labelsArray: readonly(labelsArray),
 		isLoading,
 
-		getLabelsByIds,
 		getLabelById,
+		getLabelsByIds,
 		filterLabelsByQuery,
 		getLabelsByExactTitles,
 		getLabelByExactTitle,
