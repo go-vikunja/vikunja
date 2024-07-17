@@ -696,6 +696,9 @@ watch(
 
 <style lang="scss">
 .tiptap__editor {
+	transition: box-shadow $transition;
+	border-radius: $radius;
+	
 	&.tiptap__editor-is-edit-enabled {
 		min-height: 10rem;
 
@@ -711,9 +714,6 @@ watch(
 			cursor: text;
 		}
 	}
-
-	transition: box-shadow $transition;
-	border-radius: $radius;
 }
 
 .tiptap p::before {
