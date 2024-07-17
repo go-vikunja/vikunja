@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import CreateEdit from '@/components/misc/CreateEdit.vue'
-import {watch, ref} from 'vue'
+import {watch, ref, shallowReactive} from 'vue'
 import {useProjectStore} from '@/stores/projects'
 import ProjectViewModel from '@/models/projectView'
 import type {IProjectView} from '@/modelTypes/IProjectView'
@@ -25,20 +25,19 @@ const {t} = useI18n()
 
 const views = ref<IProjectView[]>([])
 watch(
-	projectStore.projects[props.projectId]?.views,
+	() => projectStore.projects[props.projectId]?.views || [],
 	allViews => {
-		if (!allViews) {
-			views.value = []
-			return
-		}
 		views.value = [...allViews]
 	},
-	{immediate: true},
+	{
+		deep: true,
+		immediate: true,
+	},
 )
 
 const showCreateForm = ref(false)
 
-const projectViewService = ref(new ProjectViewService())
+const projectViewService = shallowReactive(new ProjectViewService())
 const newView = ref<IProjectView>(new ProjectViewModel({}))
 const viewIdToDelete = ref<number | null>(null)
 const showDeleteModal = ref(false)
@@ -71,7 +70,7 @@ async function createView() {
 			: 'none'
 		newView.value.projectId = props.projectId
 
-		const result: IProjectView = await projectViewService.value.create(newView.value)
+		const result: IProjectView = await projectViewService.create(newView.value)
 		success({message: t('project.views.createSuccess')})
 		showCreateForm.value = false
 		projectStore.setProjectView(result)
@@ -81,26 +80,26 @@ async function createView() {
 	}
 }
 
-async function deleteView() {
-	if (!viewIdToDelete.value) {
+async function deleteView(viewId: number) {
+	if (!viewId) {
 		return
 	}
 
-	await projectViewService.value.delete(new ProjectViewModel({
-		id: viewIdToDelete.value,
+	await projectViewService.delete(new ProjectViewModel({
+		id: viewId,
 		projectId: props.projectId,
 	}))
 
-	projectStore.removeProjectView(props.projectId, viewIdToDelete.value)
+	projectStore.removeProjectView(props.projectId, viewId)
 
 	showDeleteModal.value = false
 }
 
-async function saveView() {
-	if (viewToEdit.value?.viewKind !== 'kanban') {
-		viewToEdit.value.bucketConfigurationMode = 'none'
+async function saveView(view: IProjectView) {
+	if (view?.viewKind !== 'kanban') {
+		view.bucketConfigurationMode = 'none'
 	}
-	const result = await projectViewService.value.update(viewToEdit.value)
+	const result = await ProjectViewService.update(view)
 	projectStore.setProjectView(result)
 	viewToEdit.value = null
 	success({message: t('project.views.updateSuccess')})
@@ -108,11 +107,14 @@ async function saveView() {
 
 async function saveViewPosition(e) {
 	const view = views.value[e.newIndex]
-	const viewBefore = views.value[e.newIndex - 1] ?? null
-	const viewAfter = views.value[e.newIndex + 1] ?? null
+	const viewBefore = views.value[e.newIndex - 1]
+	const viewAfter = views.value[e.newIndex + 1]
 	
-	const position = calculateItemPosition(viewBefore !== null ? viewBefore.position : null, viewAfter !== null ? viewAfter.position : null)
-	const result = await projectViewService.value.update({
+	const position = calculateItemPosition(
+		viewBefore?.position,
+		viewAfter?.position,
+	)
+	const result = await projectViewService.update({
 		...view,
 		position,
 	})
@@ -180,7 +182,7 @@ async function saveViewPosition(e) {
 									:loading="projectViewService.loading"
 									:show-save-buttons="true"
 									@cancel="viewToEdit = null"
-									@update:modelValue="saveView"
+									@update:modelValue="saveView(viewToEdit)"
 								/>
 							</td>
 						</template>
@@ -216,7 +218,7 @@ async function saveViewPosition(e) {
 	<Modal
 		:enabled="showDeleteModal"
 		@close="showDeleteModal = false"
-		@submit="deleteView"
+		@submit="deleteView(viewIdToDelete)"
 	>
 		<template #header>
 			<span>{{ $t('project.views.delete') }}</span>
