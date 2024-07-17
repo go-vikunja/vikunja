@@ -705,7 +705,7 @@ const color = computed(() => {
 
 const hasAttachments = computed(() => attachmentStore.attachments.length > 0)
 
-const isModal = computed(() => Boolean(backdropView))
+const isModal = computed(() => Boolean(props.backdropView))
 
 function attachmentUpload(file: File, onSuccess?: (url: string) => void) {
 	return uploadFile(props.taskId, file, onSuccess)
