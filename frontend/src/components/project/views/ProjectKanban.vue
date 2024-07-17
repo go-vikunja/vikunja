@@ -130,7 +130,7 @@
 										</DropdownItem>
 										<DropdownItem
 											v-tooltip="buckets.length <= 1 ? $t('project.kanban.deleteLast') : ''"
-											:class="{'is-disabled': buckets.length <= 1}"
+											:class="{'is-disabled': buckets.length <= 1, 'has-text-danger': true}"
 											icon-class="has-text-danger"
 											icon="trash-alt"
 											@click.stop="() => deleteBucketModal(bucket.id)"
