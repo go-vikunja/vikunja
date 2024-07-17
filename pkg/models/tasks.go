@@ -754,6 +754,9 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setB
 	var providedBucket *Bucket
 	if t.BucketID != 0 {
 		providedBucket, err = getBucketByID(s, t.BucketID)
+		if err != nil {
+			return err
+		}
 	}
 
 	views, err := getViewsForProject(s, t.ProjectID)
