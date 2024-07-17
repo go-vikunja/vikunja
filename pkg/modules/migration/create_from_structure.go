@@ -285,9 +285,6 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 
 		newTaskIDs = append(newTaskIDs, t.ID)
 
-		if err != nil {
-			return
-		}
 		tasksByOldID[oldid] = t
 
 		log.Debugf("[creating structure] Created task %d", t.ID)
@@ -306,12 +303,12 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 				// First create the related tasks if they do not exist
 				if _, exists := tasksByOldID[rt.ID]; !exists || rt.ID == 0 {
 					oldid := rt.ID
-					err = setBucketOrDefault(rt)
+					rt.ProjectID = t.ProjectID
+					err = rt.Create(s, user)
 					if err != nil {
 						return
 					}
-					rt.ProjectID = t.ProjectID
-					err = rt.Create(s, user)
+					err = setBucketOrDefault(rt)
 					if err != nil {
 						return
 					}
