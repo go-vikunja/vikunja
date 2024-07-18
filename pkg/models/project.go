@@ -346,7 +346,7 @@ func GetProjectSimplByTaskID(s *xorm.Session, taskID int64) (l *Project, err err
 	}
 
 	if !exists {
-		return &Project{}, ErrProjectDoesNotExist{ID: l.ID}
+		return nil, ErrProjectDoesNotExist{}
 	}
 
 	return &project, nil
