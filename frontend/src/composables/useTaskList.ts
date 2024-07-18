@@ -105,8 +105,10 @@ export function useTaskList(
 	const totalPages = computed(() => taskCollectionService.totalPages)
 
 	const tasks = ref<ITask[]>([])
-	async function loadTasks() {
-		tasks.value = []
+	async function loadTasks(resetBeforeLoad: boolean = true) {
+		if(resetBeforeLoad) {
+			tasks.value = []
+		}
 		try {
 			tasks.value = await taskCollectionService.getAll(...getAllTasksParams.value)
 		} catch (e) {

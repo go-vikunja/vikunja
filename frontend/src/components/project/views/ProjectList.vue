@@ -73,7 +73,7 @@
 							>
 								<template v-if="canWrite">
 									<span class="icon handle">
-										<Icon icon="grip-lines" />
+										<Icon icon="grip-lines"/>
 									</span>
 								</template>
 							</SingleTaskInProject>
@@ -220,6 +220,13 @@ function updateTaskList(task: ITask) {
 }
 
 function updateTasks(updatedTask: ITask) {
+	if (props.projectId < 0) {
+		// In the case of a filter, we'll reload the filter in the background to avoid tasks which do 
+		// not match the filter show up here
+		loadTasks(false)
+		return
+	}
+
 	for (const t in tasks.value) {
 		if (tasks.value[t].id === updatedTask.id) {
 			tasks.value[t] = updatedTask
@@ -308,7 +315,7 @@ function prepareFiltersAndLoadTasks() {
 
 .list-view {
 	padding-bottom: 1rem;
-	
+
 	:deep(.card) {
 		margin-bottom: 0;
 	}
