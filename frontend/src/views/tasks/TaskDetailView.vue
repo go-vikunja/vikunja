@@ -86,7 +86,7 @@
 							>
 								<!-- Priority -->
 								<div class="detail-title">
-									<Icon icon="exclamation" />
+									<Icon icon="exclamation-circle" />
 									{{ $t('task.attributes.priority') }}
 								</div>
 								<PrioritySelect
@@ -441,7 +441,7 @@
 						<x-button
 							v-shortcut="'p'"
 							variant="secondary"
-							icon="exclamation"
+							icon="exclamation-circle"
 							@click="setFieldActive('priority')"
 						>
 							{{ $t('task.detail.actions.priority') }}

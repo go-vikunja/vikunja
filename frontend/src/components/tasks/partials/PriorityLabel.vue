@@ -1,14 +1,17 @@
 <template>
 	<span
 		v-if="!done && (showAll || priority >= priorities.HIGH)"
-		:class="{'not-so-high': priority === priorities.HIGH, 'high-priority': priority >= priorities.HIGH}"
+		:class="{
+			'not-so-high': priority === priorities.HIGH,
+			'high-priority': priority >= priorities.HIGH
+		}"
 		class="priority-label"
 	>
 		<span
 			v-if="priority >= priorities.HIGH"
 			class="icon"
 		>
-			<Icon icon="exclamation" />
+			<Icon icon="exclamation-circle" />
 		</span>
 		<span>
 			<template v-if="priority === priorities.UNSET">{{ $t('task.priority.unset') }}</template>
@@ -17,12 +20,6 @@
 			<template v-if="priority === priorities.HIGH">{{ $t('task.priority.high') }}</template>
 			<template v-if="priority === priorities.URGENT">{{ $t('task.priority.urgent') }}</template>
 			<template v-if="priority === priorities.DO_NOW">{{ $t('task.priority.doNow') }}</template>
-		</span>
-		<span
-			v-if="priority === priorities.DO_NOW"
-			class="icon pr-0"
-		>
-			<Icon icon="exclamation" />
 		</span>
 	</span>
 </template>
@@ -42,18 +39,18 @@ withDefaults(defineProps<{
 </script>
 
 <style lang="scss" scoped>
-span.high-priority {
+.high-priority {
 	color: var(--danger);
 	width: auto !important; // To override the width set in tasks
+}
 
-	.icon {
-		vertical-align: top;
-		width: auto !important;
-		padding: 0 .5rem;
-	}
+.not-so-high {
+	color: var(--warning);
+}
 
-	&.not-so-high {
-		color: var(--warning);
-	}
+.icon {
+	vertical-align: top;
+	width: auto !important;
+	padding-right: .5rem;
 }
 </style>
