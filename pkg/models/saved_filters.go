@@ -257,13 +257,15 @@ func (sf *SavedFilter) Update(s *xorm.Session, _ web.Auth) error {
 		}
 	}
 
-	_, err = s.Insert(taskBuckets)
-	if err != nil {
-		return err
-	}
-	_, err = s.Insert(taskPositions)
-	if err != nil {
-		return err
+	if len(taskBuckets) > 0 && len(taskPositions) > 0 {
+		_, err = s.Insert(taskBuckets)
+		if err != nil {
+			return err
+		}
+		_, err = s.Insert(taskPositions)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
