@@ -137,6 +137,16 @@ describe('Filter Transformation', () => {
 
 			expect(transformed).toBe('labels in 2 || labels in l')
 		})
+		
+		it('should correctly transform the cases of fields', () => {
+			const transformed = transformFilterStringForApi(
+				'startdate > now',
+				nullTitleToIdResolver,
+				nullTitleToIdResolver,
+			)
+
+			expect(transformed).toBe('start_date > now')
+		})
 	})
 
 	describe('To API', () => {

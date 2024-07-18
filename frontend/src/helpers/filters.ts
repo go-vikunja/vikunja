@@ -66,10 +66,16 @@ export function transformFilterStringForApi(
 	labelResolver: (title: string) => number | null,
 	projectResolver: (title: string) => number | null,
 ): string {
+	
+	filter = filter.trim()
 
-	if (filter.trim() === '') {
+	if (filter === '') {
 		return ''
 	}
+	
+	AVAILABLE_FILTER_FIELDS.forEach(f => {
+		filter = filter.replace(new RegExp(f, 'ig'), f)
+	})
 
 	// Transform labels to ids
 	LABEL_FIELDS.forEach(field => {
