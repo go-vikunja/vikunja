@@ -7,6 +7,167 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 All releases can be found on https://code.vikunja.io/api/releases.
 
+## [0.24.1] - 2024-07-18
+
+### Bug Fixes
+
+* *(api tokens)* Show error message when the user tries to create an api token without at least one permission selected
+* *(filter)* Make sure filter values are properly escaped before executing them
+* *(filters)* Add task to buckets of saved filters when creating the task
+* *(filters)* Add tasks to filter buckets when updating the filter
+* *(filters)* Do not create a default filter for list view when creating a saved filter
+* *(filters)* Immediately emit filter query when editing saved filter
+* *(filters)* Make sure filters are replaced case-insensitively before filtering on the server
+* *(filters)* Only insert task buckets and positions when there are any
+* *(filters)* Reload tasks silently when marking one done in the list
+* *(filters)* Show actual error message from api when the filter query is invalid
+* *(filters)* Trim spaces when parsing filter values
+* *(kanban)* Dispatch task updated event when task is moved between buckets
+* *(kanban)* Dispatch task updated event when task position is updated
+* *(kanban)* Do not allow to create new tasks in saved filter
+* *(kanban)* Do not move repeating task into a different bucket
+* *(kanban)* Make sure tasks which changed their done status are moved around in buckets
+* *(kanban)* Move repeating task back to old bucket when moved to the done bucket
+* *(kanban)* Move task to done bucket in all views when moved to done bucket in one view
+* *(kanban)* Move task to done bucket when it was marked done from the task detail view
+* *(kanban)* Put task into correct bucket when creating via kanban board
+* *(kanban)* Update task done status after moving it into done bucket
+* *(kanban)* Use correct assertion in the test
+* *(kanban)* Use correct text color for deletion button
+* *(migration)* Correctly set bucket for related tasks
+* *(migration)* Failed migration typo
+* *(migration)* Revert to old path for migration routing
+* *(project)* Do not use project id of nil project in error
+* *(projects)* Do not create backlog bucket when duplicating views
+* *(projects)* Do not create buckets in the original project when duplicating a project
+* *(quick add magic)* Create the task even when it only contains quick add magic keywords
+* *(settings)* Overflow of select on mobile
+* *(task)* Use backdropView prop
+* *(tasks)* Do not use typesense modified options to search with database
+* *(tasks)* Explicitly add task position to select statement when looking up tasks with Typesense
+* *(tasks)* Limit to max 250 entries when using typesense
+* *(translation)* TOTP casing
+* *(typesense)* Do not crash after creating a project when tasks are not yet indexed
+* *(typesense)* Do not use modified opts for db fallback search
+* *(typesense)* Reindex tasks when their position changed
+* *(vscode)* I18n-ally locales path* ProjectSearch default value ([f08039b](f08039b23c1ff8ca208f5c5911f788780ecc80ee))
+* Add info log message when starting to run migrations ([5e36bf7](5e36bf797e99d99f83cb084f8c1707d994d0559f))
+* Add missing disabled prop ([ed0ef38](ed0ef385e9ba34524d3309bec87eeb44d9dba471))
+* App bottom padding ([51660f7](51660f76779e189bca2a24f1e4fca34b8a1a2898))
+* Disable button if loading ([a721d92](a721d9286bbb26e0a182992af6b2128e03d5670f))
+* Dropdown item disabled prop ([3317280](3317280062c8506d092d5121b92eb4992177f9c2))
+* Gitignore dist path ([7ef6ddf](7ef6ddf8f7630e6370bed762779b4ebabbf8962b))
+* Lint ([7c42fb5](7c42fb5d75fd9a5aa01abaa852452875f07a1f61))
+* Missing error handling ([744b40e](744b40e7f780851d5ce8a288271f78acc462ed14))
+* Muliselect optional props ([0a81855](0a81855bc1b403233dec18f036c80f3cad70edee))
+* Reorder mail options (#2533) ([136ef58](136ef58820b8e2d27ad0ca50bdd9adabd8e4a95d))
+* Scss deprecation warning ([db81701](db81701d3841e12c39b751e919d70fdafc1869d6))
+* Spelling mail ([2dc5415](2dc541571cbecc02a178182217d1e4596e4a62aa))
+* Wrapped button ([af639a1](af639a180cf56519e9a3a31710da6fee5b305735))
+
+### Dependencies
+
+* *(deps)* Update dependency @github/hotkey to v3.1.1 (#2329)
+* *(deps)* Update dependency @sentry/vue to v8.14.0
+* *(deps)* Update dependency @sentry/vue to v8.15.0
+* *(deps)* Update dependency @sentry/vue to v8.17.0
+* *(deps)* Update dependency @sentry/vue to v8.18.0
+* *(deps)* Update dependency dayjs to v1.11.12
+* *(deps)* Update dependency dompurify to v3.1.6
+* *(deps)* Update dependency ufo to v1.5.4
+* *(deps)* Update dependency vue to v3.4.32
+* *(deps)* Update dependency vue-tsc to v2.0.26
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dev-dependencies
+* *(deps)* Update flake
+* *(deps)* Update font awesome to v6.6.0
+* *(deps)* Update goreleaser/nfpm docker tag to v2.38.0
+* *(deps)* Update module github.com/arran4/golang-ical to v0.3.1 (#2606)
+* *(deps)* Update module github.com/microcosm-cc/bluemonday to v1.0.27
+* *(deps)* Update module golang.org/x/crypto to v0.25.0
+* *(deps)* Update module golang.org/x/term to v0.22.0
+* *(deps)* Update pnpm to v9.5.0
+* *(deps)* Update tiptap to v2.5.4
+
+### Features
+
+* *(Multiselect)* Hide multiselect during loading
+* *(project)* Add " - duplicate" suffix to duplicated projects title* Move powered by to bottom ([f9e0b43](f9e0b4370700b4cc9c8e99923737bb5aa022a1d0))
+* Add withDefaults and emit types to PrioritySelect ([aaa2abc](aaa2abced4258645a9a47b228cece21741bfea25))
+* Add withDefaults, defineEmits and defineSlots types for Dropdown ([5545b0e](5545b0e447d406837324186c765cf2e8c8ed47c4))
+* Define prop and emit types DatepickerWithRange ([daeefeb](daeefeb487966bfc6535b3d5c8e1dd07ec8a0951))
+* Define prop and emit types for FilterPopup ([9d2e79f](9d2e79f7253006d504bd916ab8d820187d50700b))
+* DefineModel and withDefaults for PercentDoneSelect ([8ac0eb4](8ac0eb4aa4fbe5a3b147e7f31a29aa2c2f84a1ca))
+* Improve BaseButtonEmits type ([c37fe49](c37fe4989015ee18b38bd89b9470c14484759cc8))
+* Improve main nav spacing and open speed ([faa797f](faa797f461a57e8a9e115b760af92ab0024f6eed))
+* Improve settings label casing ([20efacf](20efacfa59a7f7ff81fd17c2c3b3c9a1d5528e5d))
+* Remove PropTypes helper from FilePreview ([0bc1832](0bc18320509e6db7ae484f7336282b7e8e5e841e))
+* Remove PropTypes helper from ProjectInfo ([8ad7e7c](8ad7e7c9055e50768ea5b0ad5798d395bb5d3514))
+* Remove PropTypes helper from ProjectSettingsEdit ([85889ff](85889fff5603f0b7c7a0f833cae7c32610eeede4))
+* Remove eslint rule vue/no-required-prop-with-default ([df1f805](df1f805294e34f8bfaaf60ea65f18cabbd932d9c))
+* Remove props destructuring ProjectSettingsViews ([20bdb01](20bdb011877fe17fe5c266eafe77b96dce1646d9))
+* Remove props destructuring for DeferTask ([46aa2ff](46aa2fff0f01bf233e4edd39e6675c358c488794))
+* Remove props destructuring for Filters ([3ff56d7](3ff56d79874d013ad97c8635fd580edf95290b39))
+* Remove props destructuring for ProjectView ([553a97f](553a97f03de3e16593c006ca4a9043fadf5d6a6f))
+* Remove props destructuring for ProjectWrapper ([38744df](38744dfd5db0acb53ae03db5e2021265876df2f7))
+* Remove props destructuring from Attachments ([07130bd](07130bdc3a65bfb4ed1775e61312b68c62521a4a))
+* Remove props destructuring from ColorPicker ([eb07be1](eb07be1a62a9af377b044a7e0268d9d7a8bab77c))
+* Remove props destructuring from FilterDelete ([825d1ad](825d1add49595184593ff6fb3ab228cf3fbde9cb))
+* Remove props destructuring from FilterEdit ([449e9a9](449e9a911c2fcca7712479cd78dbfe80d5a4bde2))
+* Remove props destructuring from FilterInput ([fd6692e](fd6692ea1afce3950c2295a4e8fb551af80e52aa))
+* Remove props destructuring from KanbanCard ([ddc18aa](ddc18aa17739963afa5d156241aa07b7100374f4))
+* Remove props destructuring from NoAuthWrapper ([c9591fe](c9591fe464e24f38126d5562ef7d0e6060f14b39))
+* Remove props destructuring from ProjectKanban ([5af908b](5af908b2e5508712004ee1c702915e4def0ca007))
+* Remove props destructuring from ProjectList ([0c70aed](0c70aedeb1a5ca05db3cc2b87138d28427eac959))
+* Remove props destructuring from ProjectTable ([99e90c0](99e90c0b02561f1c7b8f49b93ece11b878137e48))
+* Remove props destructuring from ShowTasks ([d02c349](d02c349231f29326511755dcae5003d3b3c01ca0))
+* Remove props destructuring from SingleTaskInProject ([a15831e](a15831eb33b5104e19f0b85b882dd8ec5336ba62))
+* Remove props destructuring from TaskDetailView ([a10f9ca](a10f9ca22580f6fcc435f152776867b380d5be6c))
+* Remove props destructuring from ViewEditForm ([2f92e40](2f92e407ccf42892675dc1583dfa057474cb2489))
+* Remove unnecessary prop from Card ([1eb1aa2](1eb1aa257574733894f865913a4bb173e22774ea))
+* Rename TheNavigation to AppHeader ([43e38fa](43e38fae17d987d96820dcdfd936fcf8d11899ff))
+* Simplify playPopSound setting check ([42c458a](42c458a736d88bf4b0f18fa23c08273ddf9c7ca5))
+* Type defineEmits for ApiConfig ([1966cc3](1966cc3c0e7a590651db2a5bd0acdcd83e948aa7))
+* Type defineEmits for Card ([043a6dd](043a6dd049ba22fa1c87ed88aa0b2f8dba4f2593))
+* Type defineEmits for CreateEdit ([098c99f](098c99fd2ede44ddf231e1b504b9cf6d8c0ed17b))
+* Type defineEmits for Heading ([fd3f1de](fd3f1de861ac593c0f780c3f341a4b0c5d7b2f1b))
+* Type defineEmits for ProjectSearch ([f38a5c9](f38a5c9220c6404152e261a78e4829e52cef5d1b))
+* Use withDefaults for Comments ([f19f19b](f19f19bb75a457dc2073d8a06f064eae04a3b772))
+* Use withDefaults for DateTableCell ([f586e51](f586e51aad5194043fec37e3b0af94a30c95f3a3))
+* Use withDefaults for Datepicker ([78811d9](78811d916aeaa105560c5b7c091290f3b2e38683))
+* Use withDefaults for DatepickerInline ([df6a9b6](df6a9b67fd2a462e5027538e521da174ecd24bc6))
+* Use withDefaults for DatepickerWithValues ([cb70641](cb706416c61ba31d1fd54d8b9bd8549cc9a33528))
+* Use withDefaults for EditLabels ([6e72606](6e72606d7454fbb3b17302d3ef1d2cdf186873ae))
+* Use withDefaults for FancyCheckbox ([b4e9d94](b4e9d9437e4fb4b8e5e56c633fc4c74ee45a6225))
+* Use withDefaults for Heading ([5cf57a5](5cf57a520cd7048aba0656ce00333cc7cfcc14f9))
+* Use withDefaults for Pagination ([1083216](10832165c3798bef63590c292426feb67e178f15))
+* Use withDefaults for Password ([577f5ae](577f5ae69a31e14cdff6e0aed5f3091d07484faa))
+* Use withDefaults for PriorityLabel ([871e0ac](871e0acd8aa8ba6a9ad7fb08bda8badf20104f94))
+* Use withDefaults for ProgressBar ([2f63384](2f6338484bda4670133f3db6c122dbaa6a231c15))
+* Use withDefaults for ProjectCardGrid ([479b786](479b786761948b0a0427676c42e082e75579029c))
+* Use withDefaults for Reactions ([d6c3b5a](d6c3b5a9a10a04c8fac47ad998ebf434e93dfa71))
+* Use withDefaults for ReminderPeriod ([4b9b9da](4b9b9da122a2d085dcff8fbb8dd2693062689fd4))
+* Use withDefaults for RepeatAfter ([c8585d1](c8585d1a691403e6331cd9aff852873c0f7771d3))
+* Use withDefaults for SelectProject ([fd12c87](fd12c8705ea9b28db6947fd98f2d34ce46fc15b2))
+* Use withDefaults for SelectUser ([b500981](b50098143474be8d86e0ae0543bab1787585dfe7))
+* Use withDefaults for Subscription ([30769fb](30769fb6eadb21d45629dcf2c67cc1174d26e828))
+* Use withDefaults for UserTeam ([f2fdbad](f2fdbad7d4bde5880694a611a4f9d68fe2017367))
+* Use withDefaults in ReminderDetail ([a56331d](a56331d39d12c65838b13987fe2096c4ca2a703f))
+* WithDefaults for EditAssignees ([f1481d7](f1481d702cc426cddfeda0edae6a6cd06d9f3380))
+* WithDefaults for Multiselect ([413d1f9](413d1f9ad7e9ba0234d81a1564745cd03d9f1044))
+
+### Miscellaneous Tasks
+
+* *(i18n)* Update translations via Crowdin
+* *(popup)* Trigger close function directly
+* *(project)* Rename receiver
+* 0.24.0 release preparations ([0b14c31](0b14c311b4d344aecf974489eee19ab939c676ad))
+* Go mod tidy ([e640149](e640149a23c931838a93b737804287a9ed570268))
+* Update golangci lint config ([d2602a7](d2602a7629ee3d8cd67beb8ef1a44ca3cd2dd7f9))
+* *(other)* [skip ci] Updated swagger docs
+
 ## [0.24.0] - 2024-07-02
 
 ### Bug Fixes
