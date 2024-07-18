@@ -917,29 +917,84 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 		colsToUpdate = append(colsToUpdate, "index")
 	}
 
-	// When a task was marked done or moved between projects, make sure it is in the correct bucket
+	viewsWithDoneBucket := []*ProjectView{}
 	if (!t.isRepeating() && t.Done != ot.Done) || t.ProjectID != ot.ProjectID {
-		views, err := getViewsForProject(s, t.ProjectID)
+		err = s.
+			Where("project_id = ? AND view_kind = ? AND bucket_configuration_mode = ? AND done_bucket_id != 0",
+				t.ProjectID, ProjectViewKindKanban, BucketConfigurationModeManual).
+			Find(&viewsWithDoneBucket)
 		if err != nil {
-			return err
+			return
 		}
+	}
 
-		for _, view := range views {
-			if view.ViewKind != ProjectViewKindKanban && view.BucketConfigurationMode != BucketConfigurationModeManual {
-				continue
-			}
-
+	// When a task was moved between projects, ensure it is in the correct bucket
+	if t.ProjectID != ot.ProjectID {
+		for _, view := range viewsWithDoneBucket {
 			var bucketID = view.DoneBucketID
-			if bucketID == 0 || t.ProjectID != ot.ProjectID {
+			if bucketID == 0 || !t.Done {
 				bucketID, err = getDefaultBucketID(s, view)
 				if err != nil {
 					return err
 				}
 			}
 
-			// Task is done and was moved between projects, should go into the done bucket of the new project
-			if t.Done && t.ProjectID != ot.ProjectID {
+			tb := &TaskBucket{
+				BucketID:      bucketID,
+				TaskID:        t.ID,
+				ProjectViewID: view.ID,
+				ProjectID:     t.ProjectID,
+			}
+			err = tb.Update(s, a)
+			if err != nil {
+				return err
+			}
+
+			tp := TaskPosition{
+				TaskID:        t.ID,
+				ProjectViewID: view.ID,
+				Position:      calculateDefaultPosition(t.Index, t.Position),
+			}
+			err = tp.Update(s, a)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// When a task changed its done status, make sure it is in the correct bucket
+	if t.ProjectID == ot.ProjectID && !t.isRepeating() && t.Done != ot.Done {
+		for _, view := range viewsWithDoneBucket {
+			currentTaskBucket := &TaskBucket{}
+			_, err := s.Where("task_id = ? AND project_view_id = ?", t.ID, view.ID).
+				Get(currentTaskBucket)
+			if err != nil {
+				return err
+			}
+
+			var bucketID = currentTaskBucket.BucketID
+
+			// Task done, but no done bucket? Do nothing
+			if t.Done && view.DoneBucketID == 0 {
+				continue
+			}
+
+			// Task not done, currently not in done bucket? Do nothing
+			if !t.Done && bucketID != view.DoneBucketID {
+				continue
+			}
+
+			// Task done? Done bucket
+			if t.Done && view.DoneBucketID != 0 {
 				bucketID = view.DoneBucketID
+			}
+
+			// Task not done, currently in done bucket? Move to default
+			if !t.Done && bucketID == view.DoneBucketID {
+				bucketID, err = getDefaultBucketID(s, view)
+				if err != nil {
+					return err
+				}
 			}
 
 			tb := &TaskBucket{

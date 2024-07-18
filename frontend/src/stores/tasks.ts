@@ -156,7 +156,7 @@ export const useTaskStore = defineStore('task', () => {
 		const taskService = new TaskService()
 		try {
 			const updatedTask = await taskService.update(task)
-			kanbanStore.setTaskInBucket(updatedTask)
+			kanbanStore.ensureTaskIsInCorrectBucket(updatedTask)
 			return updatedTask
 		} finally {
 			cancel()

@@ -12,6 +12,7 @@ import {useMenuActive} from '@/composables/useMenuActive'
 import {useAuthStore} from '@/stores/auth'
 import type {IProject} from '@/modelTypes/IProject'
 import type {Right} from '@/constants/rights'
+import type {IProjectView} from '@/modelTypes/IProjectView'
 
 export const useBaseStore = defineStore('base', () => {
 	const loading = ref(false)
@@ -22,6 +23,7 @@ export const useBaseStore = defineStore('base', () => {
 		id: 0,
 		isArchived: false,
 	}))
+	const currentProjectViewId = ref<IProjectView['id'] | undefined>(undefined)
 	const background = ref('')
 	const blurHash = ref('')
 
@@ -35,7 +37,7 @@ export const useBaseStore = defineStore('base', () => {
 		loading.value = newLoading
 	}
 
-	function setCurrentProject(newCurrentProject: IProject | null) {
+	function setCurrentProject(newCurrentProject: IProject | null, currentViewId?: IProjectView['id']) {
 		// Server updates don't return the right. Therefore, the right is reset after updating the project which is
 		// confusing because all the buttons will disappear in that case. To prevent this, we're keeping the right
 		// when updating the project in global state.
@@ -58,6 +60,11 @@ export const useBaseStore = defineStore('base', () => {
 			...newCurrentProject,
 			maxRight,
 		}
+		setCurrentProjectViewId(currentViewId)
+	}
+	
+	function setCurrentProjectViewId(viewId?: IProjectView['id']) {
+		currentProjectViewId.value = viewId
 	}
 
 	function setHasTasks(newHasTasks: boolean) {
@@ -93,7 +100,7 @@ export const useBaseStore = defineStore('base', () => {
 	}
 
 	async function handleSetCurrentProject(
-		{project, forceUpdate = false}: {project: IProject | null, forceUpdate?: boolean},
+		{project, forceUpdate = false, currentProjectViewId = undefined}: {project: IProject | null, forceUpdate?: boolean, currentProjectViewId?: IProjectView['id']},
 	) {
 		if (project === null || typeof project === 'undefined') {
 			setCurrentProject({})
@@ -129,7 +136,7 @@ export const useBaseStore = defineStore('base', () => {
 			setBlurHash('')
 		}
 
-		setCurrentProject(project)
+		setCurrentProject(project, currentProjectViewId)
 	}
 
 	const authStore = useAuthStore()
@@ -143,6 +150,7 @@ export const useBaseStore = defineStore('base', () => {
 		loading: readonly(loading),
 		ready: readonly(ready),
 		currentProject: readonly(currentProject),
+		currentProjectViewId: readonly(currentProjectViewId),
 		background: readonly(background),
 		blurHash: readonly(blurHash),
 		hasTasks: readonly(hasTasks),
@@ -154,6 +162,7 @@ export const useBaseStore = defineStore('base', () => {
 		setLoading,
 		setReady,
 		setCurrentProject,
+		setCurrentProjectViewId,
 		setHasTasks,
 		setKeyboardShortcutsActive,
 		setQuickActionsActive,

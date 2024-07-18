@@ -119,17 +119,25 @@ watch(
 		loadedProjectId.value = 0
 		const projectFromStore = projectStore.projects[projectData.id]
 		if (projectFromStore) {
-			baseStore.handleSetCurrentProject({project: projectFromStore})
+			baseStore.handleSetCurrentProject({project: projectFromStore, currentProjectViewId: props.viewId})
 		}
 
 		// We create an extra project object instead of creating it in project.value because that would trigger a ui update which would result in bad ux.
 		const project = new ProjectModel(projectData)
 		try {
 			const loadedProject = await projectService.value.get(project)
-			baseStore.handleSetCurrentProject({project: loadedProject})
+			baseStore.handleSetCurrentProject({project: loadedProject, currentProjectViewId: props.viewId})
 		} finally {
 			loadedProjectId.value = projectIdToLoad
 		}
+	},
+	{immediate: true},
+)
+
+watch(
+	() => props.viewId,
+	() => {
+		baseStore.setCurrentProjectViewId(props.viewId)
 	},
 	{immediate: true},
 )

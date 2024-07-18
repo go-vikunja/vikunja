@@ -625,7 +625,6 @@ import {scrollIntoView} from '@/helpers/scrollIntoView'
 import {useAttachmentStore} from '@/stores/attachments'
 import {useTaskStore} from '@/stores/tasks'
 import {useKanbanStore} from '@/stores/kanban'
-import {useBaseStore} from '@/stores/base'
 
 import {useTitle} from '@/composables/useTitle'
 
@@ -651,7 +650,6 @@ const router = useRouter()
 const {t} = useI18n({useScope: 'global'})
 
 const projectStore = useProjectStore()
-const baseStore = useBaseStore()
 const attachmentStore = useAttachmentStore()
 const taskStore = useTaskStore()
 const kanbanStore = useKanbanStore()
@@ -888,14 +886,6 @@ async function toggleTaskDone() {
 		newTask,
 		toggleTaskDone,
 	)
-	
-	if(task.value.done) {
-		baseStore.currentProject?.views.forEach(v => {
-			if (v.doneBucketId !== 0) {
-				kanbanStore.moveTaskToBucket(task.value, v.doneBucketId)
-			}
-		})
-	}
 }
 
 async function changeProject(project: IProject) {
