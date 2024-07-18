@@ -476,7 +476,7 @@ func IsErrTaskDoesNotExist(err error) bool {
 }
 
 func (err ErrTaskDoesNotExist) Error() string {
-	return fmt.Sprintf("Project task does not exist. [ID: %d]", err.ID)
+	return fmt.Sprintf("The task does not exist. [ID: %d]", err.ID)
 }
 
 // ErrCodeTaskDoesNotExist holds the unique world-error code of this error
