@@ -28,7 +28,7 @@ import {
 	faDownload,
 	faEllipsisH,
 	faEllipsisV,
-	faExclamation,
+	faExclamationCircle,
 	faEye,
 	faEyeSlash,
 	faFile,
@@ -138,7 +138,7 @@ library.add(faCopy)
 library.add(faDownload)
 library.add(faEllipsisH)
 library.add(faEllipsisV)
-library.add(faExclamation)
+library.add(faExclamationCircle)
 library.add(faEye)
 library.add(faEyeSlash)
 library.add(faFillDrip)
