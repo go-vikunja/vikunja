@@ -7,13 +7,14 @@
 		<FilterInput
 			v-model="filterQuery"
 			:project-id="projectId"
-			@blur="change()"
+			@update:modelValue="() => change('modelValue')"
+			@blur="() => change('blur')"
 		/>
 
 		<div class="field is-flex is-flex-direction-column">
 			<FancyCheckbox
 				v-model="params.filter_include_nulls"
-				@blur="change()"
+				@change="() => change('always')"
 			>
 				{{ $t('filters.attributes.includeNulls') }}
 			</FancyCheckbox>
@@ -62,9 +63,11 @@ const props = withDefaults(defineProps<{
 	modelValue: TaskFilterParams,
 	hasTitle?: boolean,
 	hasFooter?: boolean,
+	changeImmediately?: boolean,
 }>(), {
 	hasTitle: false,
 	hasFooter: true,
+	changeImmediately: false,
 })
 
 const emit = defineEmits<{
@@ -120,7 +123,22 @@ watch(
 	},
 )
 
-function change() {
+function change(event: 'blur' | 'modelValue' | 'always') {
+	if (event !== 'always') {
+		// The filter edit setting needs to save immediately, but the filter query edit in project views should 
+		// only change on blur, or it will show the filter replaced for api when the query is not yet complete. 
+		// This is highly confusing UX, hence we want to avoid that.
+		// The approach taken here allows us to either toggle on blur or immediately, depending on the prop
+		// value provided. This probably is a hacky way to do this, but it is also the most effective.
+		if (props.changeImmediately && event === 'blur') {
+			return
+		}
+
+		if (!props.changeImmediately && event === 'modelValue') {
+			return
+		}
+	}
+
 	const filter = transformFilterStringForApi(
 		filterQuery.value,
 		labelTitle => labelStore.getLabelByExactTitle(labelTitle)?.id || null,

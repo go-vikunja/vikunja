@@ -19,8 +19,8 @@
 			v-model="value"
 			:has-title="true"
 			class="filter-popup"
-			@update:modelValue="emitChanges"
-			@showResults="() => modalOpen = false"
+			:change-immediately="false"
+			@showResults="showResults"
 		/>
 	</Modal>
 </template>
@@ -52,20 +52,21 @@ watch(
 	},
 )
 
-function emitChanges(newValue: TaskFilterParams) {
-	emit('update:modelValue', {
-		...value.value,
-		filter: newValue.filter,
-		s: newValue.s,
-	})
-}
-
 const hasFilters = computed(() => {
 	return value.value.filter !== '' ||
 		value.value.s !== ''
 })
 
 const modalOpen = ref(false)
+
+function showResults() {
+	emit('update:modelValue', {
+		...value.value,
+		filter: value.value.filter,
+		s: value.value.s,
+	})
+	modalOpen.value = false
+}
 </script>
 
 <style scoped lang="scss">
