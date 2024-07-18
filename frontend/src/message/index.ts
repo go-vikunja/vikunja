@@ -6,7 +6,11 @@ export function getErrorText(r): string {
 
 	if (data?.code) {
 		const path = `error.${data.code}`
-		const message = i18n.global.t(path)
+		let message = i18n.global.t(path)
+
+		if (data?.code && data?.message && (data.code === 4016 || data.code === 4017 || data.code === 4018 || data.code === 4019 || data.code === 4024)) {
+			message += '\n' + data.message
+		}
 
 		// If message and path are equal no translation exists for that error code
 		if (path !== message) {
