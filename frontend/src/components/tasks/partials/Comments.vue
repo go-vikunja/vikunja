@@ -22,6 +22,7 @@
 			</span>
 			<div
 				v-for="c in comments"
+				:id="`comment-${c.id}`"
 				:key="c.id"
 				class="media comment"
 			>
@@ -56,6 +57,13 @@
 						>
 							· {{ $t('task.comment.edited', {date: formatDateSince(c.updated)}) }}
 						</span>
+						<a
+							v-tooltip="$t('task.comment.permalink')"
+							:href="`#comment-${c.id}`"
+							class="comment-permalink"
+							:title="$t('task.comment.permalink')"
+							@click.prevent.stop="copy(getCommentUrl(`${c.id}`))"
+						><Icon icon="link" /></a>
 						<CustomTransition name="fade">
 							<span
 								v-if="
@@ -199,6 +207,7 @@ import {getAvatarUrl, getDisplayName} from '@/models/user'
 import {useConfigStore} from '@/stores/config'
 import {useAuthStore} from '@/stores/auth'
 import Reactions from '@/components/input/Reactions.vue'
+import { useCopyToClipboard } from '@/composables/useCopyToClipboard'
 
 const props = withDefaults(defineProps<{
 	taskId: number,
@@ -206,6 +215,8 @@ const props = withDefaults(defineProps<{
 }>(), {
 	canWrite: true,
 })
+
+const copy = useCopyToClipboard()
 
 const {t} = useI18n({useScope: 'global'})
 const configStore = useConfigStore()
@@ -241,6 +252,8 @@ const actions = computed(() => {
 			: [],
 	])))
 })
+
+const frontendUrl = computed(() => configStore.frontendUrl)
 
 async function attachmentUpload(files: File[] | FileList): (Promise<string[]>) {
 
@@ -364,6 +377,10 @@ async function deleteComment(commentToDelete: ITaskComment) {
 		showDeleteModal.value = false
 	}
 }
+
+function getCommentUrl(commentId: string) {
+	return `${frontendUrl.value}${location.pathname}${location.search}#comment-${commentId}`
+}
 </script>
 
 <style lang="scss" scoped>
@@ -391,9 +408,22 @@ async function deleteComment(commentToDelete: ITaskComment) {
 	}
 
 
-	span {
+	span,
+	.comment-permalink {
 		font-size: .75rem;
 		line-height: 1;
+	}
+
+	.comment-permalink {
+		font-size: 1rem;
+		border: 1px solid transparent;
+		padding: 0.25rem;
+		border-radius: 1rem;
+		color: var(--grey, hsl(0, 0%, 48%));
+	}
+	.comment-permalink:hover {
+		color: var(--grey-dark, hsl(0, 0%, 29%));
+		border-color: var(--grey-dark, hsl(0, 0%, 29%));
 	}
 }
 
