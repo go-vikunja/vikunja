@@ -16,7 +16,7 @@ import svgLoader from 'vite-svg-loader'
 import postcssPresetEnv from 'postcss-preset-env'
 import postcssEasings from 'postcss-easings'
 import postcssEasingGradients from 'postcss-easing-gradients'
-
+import tailwindcss from 'tailwindcss'
 
 const pathSrc = fileURLToPath(new URL('./src', import.meta.url)).replaceAll('\\', '/')
 
@@ -100,6 +100,7 @@ export default defineConfig(({mode}) => {
 			},
 			postcss: {
 				plugins: [
+					tailwindcss(),
 					postcssEasings(),
 					postcssEasingGradients(),
 					postcssPresetEnv(),

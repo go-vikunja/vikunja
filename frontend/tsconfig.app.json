@@ -1,6 +1,13 @@
 {
   "extends": "@vue/tsconfig/tsconfig.dom.json",
-  "include": ["env.d.ts", "src/**/*.d.ts", "src/**/*", "src/**/*.vue", "src/**/*.json"],
+  "include": [
+    "env.d.ts",
+    "src/**/*.d.ts",
+    "src/**/*",
+    "src/**/*.vue",
+    "src/**/*.json",
+    "tailwind.config.js"
+  ],
   "exclude": ["src/**/__tests__/*"],
   "compilerOptions": {
     "composite": true,
