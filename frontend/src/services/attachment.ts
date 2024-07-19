@@ -5,6 +5,13 @@ import type { IAttachment } from '@/modelTypes/IAttachment'
 
 import {downloadBlob} from '@/helpers/downloadBlob'
 
+export enum PREVIEW_SIZE {
+	SM = 'sm',
+	MD = 'md',
+	LG = 'lg',
+	XL = 'xl',
+}
+
 export default class AttachmentService extends AbstractService<IAttachment> {
 	constructor() {
 		super({
@@ -37,8 +44,13 @@ export default class AttachmentService extends AbstractService<IAttachment> {
 		return data
 	}
 
-	getBlobUrl(model: IAttachment) {
-		return AbstractService.prototype.getBlobUrl.call(this, '/tasks/' + model.taskId + '/attachments/' + model.id)
+	getBlobUrl(model: IAttachment, size?: PREVIEW_SIZE) {
+		let mainUrl = '/tasks/' + model.taskId + '/attachments/' + model.id
+		if (size !== undefined) {
+			mainUrl += `?preview=true&size=${size}`
+		}
+
+		return AbstractService.prototype.getBlobUrl.call(this, mainUrl)
 	}
 
 	async download(model: IAttachment) {

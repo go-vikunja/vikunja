@@ -93,7 +93,7 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, computed, watch} from 'vue'
+import {computed, ref, watch} from 'vue'
 import {useRouter} from 'vue-router'
 
 import PriorityLabel from '@/components/tasks/partials/PriorityLabel.vue'
@@ -105,9 +105,9 @@ import ChecklistSummary from './ChecklistSummary.vue'
 import {getHexColor} from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
 import {SUPPORTED_IMAGE_SUFFIX} from '@/models/attachment'
-import AttachmentService from '@/services/attachment'
+import AttachmentService, {PREVIEW_SIZE} from '@/services/attachment'
 
-import {formatDateLong, formatISO, formatDateSince} from '@/helpers/time/formatDate'
+import {formatDateLong, formatDateSince, formatISO} from '@/helpers/time/formatDate'
 import {colorIsDark} from '@/helpers/color/colorIsDark'
 import {useTaskStore} from '@/stores/tasks'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
@@ -165,7 +165,7 @@ async function maybeDownloadCoverImage() {
 	}
 
 	const attachmentService = new AttachmentService()
-	coverImageBlobUrl.value = await attachmentService.getBlobUrl(attachment)
+	coverImageBlobUrl.value = await attachmentService.getBlobUrl(attachment, PREVIEW_SIZE.MD)
 }
 
 watch(
