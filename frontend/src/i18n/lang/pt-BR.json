@@ -163,6 +163,7 @@
         "90d": "90 Dias",
         "permissionExplanation": "As permissões controlam as ações que um token de API pode realizar.",
         "titleRequired": "O título é obrigatório",
+        "permissionRequired": "Please select at least one permission from the list.",
         "expired": "Este token venceu {ago}.",
         "tokenCreatedSuccess": "Aqui está seu novo token de API: {token}",
         "tokenCreatedNotSeeAgain": "Guarde em um local seguro, você não poderá visualizá-lo novamente!",

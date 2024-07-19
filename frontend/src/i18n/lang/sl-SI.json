@@ -163,6 +163,7 @@
         "90d": "90 dni",
         "permissionExplanation": "Dovoljenja vam omogočajo, da določite, kaj vse vam API žeton dovoli.",
         "titleRequired": "Naslov je obvezen",
+        "permissionRequired": "Please select at least one permission from the list.",
         "expired": "Žeton je potekel pred {ago}.",
         "tokenCreatedSuccess": "Tu je vaš novi API žeton: {token}",
         "tokenCreatedNotSeeAgain": "Shranite ga na varno mesto, ker ga ne boste več videli!",

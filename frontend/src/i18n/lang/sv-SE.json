@@ -163,6 +163,7 @@
         "90d": "90 dagar",
         "permissionExplanation": "Permissions allow you to scope what an api token is allowed to do.",
         "titleRequired": "The title is required",
+        "permissionRequired": "Please select at least one permission from the list.",
         "expired": "This token has expired {ago}.",
         "tokenCreatedSuccess": "Here is your new api token: {token}",
         "tokenCreatedNotSeeAgain": "Förvara den på en säker plats, du kommer aldrig att se den igen!",

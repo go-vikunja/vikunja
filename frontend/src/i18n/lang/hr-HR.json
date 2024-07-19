@@ -163,6 +163,7 @@
         "90d": "90 dana",
         "permissionExplanation": "Dopuštenja vam omogućuju da odredite što api token smije raditi.",
         "titleRequired": "Naslov je obavezan",
+        "permissionRequired": "Please select at least one permission from the list.",
         "expired": "Ovaj je token istekao {ago}.",
         "tokenCreatedSuccess": "Evo vašeg novog api tokena: {token}",
         "tokenCreatedNotSeeAgain": "Čuvajte ga na sigurnom mjestu, nećete ga više vidjeti!",

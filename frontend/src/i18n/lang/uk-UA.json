@@ -163,6 +163,7 @@
         "90d": "90 днів",
         "permissionExplanation": "Дозволи визначають, що може робити api ключ.",
         "titleRequired": "Слід вказати заголовок",
+        "permissionRequired": "Please select at least one permission from the list.",
         "expired": "Цей ключ закінчився {ago}.",
         "tokenCreatedSuccess": "Ось Ваш новий api ключ: {token}",
         "tokenCreatedNotSeeAgain": "Збережіть його в надійному місці, бо він зникне і не з'явиться знову!",

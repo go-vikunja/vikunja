@@ -163,6 +163,7 @@
         "90d": "90 dní",
         "permissionExplanation": "Oprávnění vám umožní nastavit, k čemu lze api token použít.",
         "titleRequired": "Je vyžadován název",
+        "permissionRequired": "Please select at least one permission from the list.",
         "expired": "Platnost tohoto tokenu vypršela {ago}.",
         "tokenCreatedSuccess": "Zde je tvůj nový api token: {token}",
         "tokenCreatedNotSeeAgain": "Ulož jej na zabezpečeném místě, už ho znovu neuvidíš!",
