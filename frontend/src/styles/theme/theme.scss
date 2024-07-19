@@ -23,6 +23,15 @@
   --body-overflow-y: auto;
 }
 
+// The LanguageTool browser plugin creates a custom element with shadow root for textareas.
+// Since shadow root doesn't inherit styles, we have to set `box-sizing` to `border-box` instead of `inherit`.
+// https://dev.to/konnorrogers/revisiting-box-sizing-best-practices-3del
+*,
+*::after,
+*::before {
+  box-sizing: border-box;
+}
+
 body {
   background: var(--site-background);
   min-height: 100vh;
