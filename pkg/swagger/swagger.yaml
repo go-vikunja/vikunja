@@ -4629,6 +4629,16 @@ paths:
         name: attachmentID
         required: true
         type: integer
+      - description: If set to true, a preview image will be returned if the attachment
+          is an image.
+        in: query
+        name: preview
+        type: string
+      - description: The size of the preview image. Can be sm = 100px, md = 200px,
+          lg = 400px or xl = 800px.
+        in: query
+        name: size
+        type: string
       produces:
       - application/octet-stream
       responses:

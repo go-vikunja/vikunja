@@ -4519,6 +4519,18 @@
                         "name": "attachmentID",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "If set to true, a preview image will be returned if the attachment is an image.",
+                        "name": "preview",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The size of the preview image. Can be sm = 100px, md = 200px, lg = 400px or xl = 800px.",
+                        "name": "size",
+                        "in": "query"
                     }
                 ],
                 "responses": {
