@@ -163,6 +163,7 @@
         "90d": "90 يوماً",
         "permissionExplanation": "نطاق الصلاحيات المسموح به هو ما يسمح لك القيام به رمز Api.",
         "titleRequired": "العنوان إجباري",
+        "permissionRequired": "Please select at least one permission from the list.",
         "expired": "انتهت صلاحية هذا الرمز {ago}.",
         "tokenCreatedSuccess": "إليك رمز Api الجديد: {token}",
         "tokenCreatedNotSeeAgain": "قم بتخزينه في مكان آمن، لن تتمكن من عرضه مرة أخرى!",

@@ -163,6 +163,7 @@
         "90d": "90 天",
         "permissionExplanation": "权限允许您限制 api 令牌被允许做什么。",
         "titleRequired": "需要指定标题",
+        "permissionRequired": "Please select at least one permission from the list.",
         "expired": "Token {ago} 前到期",
         "tokenCreatedSuccess": "这是您的令牌: {token}",
         "tokenCreatedNotSeeAgain": "将其存储在一个安全的位置，你不会再看到它了！",

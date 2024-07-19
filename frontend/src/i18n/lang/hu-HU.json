@@ -163,6 +163,7 @@
         "90d": "90 nap",
         "permissionExplanation": "Az engedélyek lehetővé teszik annak hatókörét, hogy egy API Token mire jogosult.",
         "titleRequired": "A cím kötelező",
+        "permissionRequired": "Please select at least one permission from the list.",
         "expired": "Ez a token lejárt {ago}.",
         "tokenCreatedSuccess": "Íme az új API tokenje: {token}",
         "tokenCreatedNotSeeAgain": "Tárolja el biztonságos helyen, többé nem fogja látni!",

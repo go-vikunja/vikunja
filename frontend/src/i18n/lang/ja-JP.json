@@ -163,6 +163,7 @@
         "90d": "90日",
         "permissionExplanation": "Permissions allow you to scope what an api token is allowed to do.",
         "titleRequired": "トークン名を入力してください。",
+        "permissionRequired": "Please select at least one permission from the list.",
         "expired": "This token has expired {ago}.",
         "tokenCreatedSuccess": "Here is your new api token: {token}",
         "tokenCreatedNotSeeAgain": "このトークンは二度と表示されません。安全な場所に保管してください。",
