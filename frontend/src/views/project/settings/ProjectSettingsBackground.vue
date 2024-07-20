@@ -113,7 +113,7 @@ export default { name: 'ProjectSettingBackground' }
 import {ref, computed, shallowReactive} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useRoute, useRouter} from 'vue-router'
-import debounce from 'lodash.debounce'
+import {useDebounceFn} from '@vueuse/core'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
@@ -150,9 +150,7 @@ const backgroundBlurHashes = ref<Record<string, string>>({})
 const currentPage = ref(1)
 
 // We're using debounce to not search on every keypress but with a delay.
-const debounceNewBackgroundSearch = debounce(newBackgroundSearch, SEARCH_DEBOUNCE, {
-	trailing: true,
-})
+const debounceNewBackgroundSearch = useDebounceFn(newBackgroundSearch, SEARCH_DEBOUNCE)
 
 const backgroundUploadService = ref(new BackgroundUploadService())
 const projectService = ref(new ProjectService())
