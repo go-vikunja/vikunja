@@ -193,9 +193,6 @@ importers:
       klona:
         specifier: 2.0.6
         version: 2.0.6
-      lodash.debounce:
-        specifier: 4.0.8
-        version: 4.0.8
       lowlight:
         specifier: 2.9.0
         version: 2.9.0
@@ -281,9 +278,6 @@ importers:
       '@types/lodash.clonedeep':
         specifier: 4.5.9
         version: 4.5.9
-      '@types/lodash.debounce':
-        specifier: 4.0.9
-        version: 4.0.9
       '@types/node':
         specifier: 20.14.11
         version: 20.14.11
@@ -2327,9 +2321,6 @@ packages:
 
   '@types/lodash.clonedeep@4.5.9':
     resolution: {integrity: sha512-19429mWC+FyaAhOLzsS8kZUsI+/GmBAQ0HFiCPsKGU+7pBXOQWhyrY6xNNDwUSX8SMZMJvuFVMF9O5dQOlQK9Q==}
-
-  '@types/lodash.debounce@4.0.9':
-    resolution: {integrity: sha512-Ma5JcgTREwpLRwMM+XwBR7DaWe96nC38uCBDFKZWbNKD+osjVzdpnUSwBcqCptrp16sSOLBAUb50Car5I0TCsQ==}
 
   '@types/lodash@4.17.5':
     resolution: {integrity: sha512-MBIOHVZqVqgfro1euRDWX7OO0fBVUUMrN6Pwm8LQsz8cWhEpihlvR70ENj3f40j58TNxZaWv2ndSkInykNBBJw==}
@@ -8311,10 +8302,6 @@ snapshots:
   '@types/linkify-it@5.0.0': {}
 
   '@types/lodash.clonedeep@4.5.9':
-    dependencies:
-      '@types/lodash': 4.17.5
-
-  '@types/lodash.debounce@4.0.9':
     dependencies:
       '@types/lodash': 4.17.5
 
