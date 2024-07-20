@@ -65,6 +65,7 @@
     "@tiptap/extension-bold": "2.5.4",
     "@tiptap/extension-bullet-list": "2.5.4",
     "@tiptap/extension-code": "2.5.4",
+    "@tiptap/extension-code-block": "2.5.4",
     "@tiptap/extension-code-block-lowlight": "2.5.4",
     "@tiptap/extension-document": "2.5.4",
     "@tiptap/extension-dropcursor": "2.5.4",
