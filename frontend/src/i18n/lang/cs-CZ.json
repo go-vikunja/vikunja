@@ -848,7 +848,8 @@
       "delete": "Smazat tento komentář",
       "deleteText1": "Opravdu chcete smazat tento komentář?",
       "deleteSuccess": "Komentář byl úspěšně odstraněn.",
-      "addedSuccess": "Komentář byl úspěšně přidán."
+      "addedSuccess": "Komentář byl úspěšně přidán.",
+      "permalink": "Copy permalink to this comment"
     },
     "deferDueDate": {
       "title": "Odložit datum dokončení",

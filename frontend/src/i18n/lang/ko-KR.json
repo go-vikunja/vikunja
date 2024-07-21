@@ -848,7 +848,8 @@
       "delete": "의견 삭제",
       "deleteText1": "의견을 삭제하시겠습니까?",
       "deleteSuccess": "의견이 성공적으로 삭제되었습니다!",
-      "addedSuccess": "The comment was added successfully."
+      "addedSuccess": "The comment was added successfully.",
+      "permalink": "Copy permalink to this comment"
     },
     "deferDueDate": {
       "title": "Defer due date",

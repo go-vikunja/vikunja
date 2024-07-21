@@ -848,7 +848,8 @@
       "delete": "حذف هذا التعليق",
       "deleteText1": "هل أنت متأكد من رغبتك بحذف هذا التعليق؟",
       "deleteSuccess": "تم حذف التعليق بنجاح.",
-      "addedSuccess": "تمت إضافة التعليق بنجاح."
+      "addedSuccess": "تمت إضافة التعليق بنجاح.",
+      "permalink": "Copy permalink to this comment"
     },
     "deferDueDate": {
       "title": "تأجيل تاريخ الاستحقاق",

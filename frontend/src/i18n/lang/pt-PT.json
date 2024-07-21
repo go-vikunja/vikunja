@@ -848,7 +848,8 @@
       "delete": "Eliminar este comentário",
       "deleteText1": "Tens a certeza que pretendes eliminar este comentário?",
       "deleteSuccess": "O comentário foi eliminado com sucesso.",
-      "addedSuccess": "O comentário foi adicionada com sucesso."
+      "addedSuccess": "O comentário foi adicionada com sucesso.",
+      "permalink": "Copy permalink to this comment"
     },
     "deferDueDate": {
       "title": "Adiar data de vencimento",

@@ -848,7 +848,8 @@
       "delete": "コメントの削除",
       "deleteText1": "このコメントを削除して本当によろしいですか？",
       "deleteSuccess": "コメントは正常に削除されました。",
-      "addedSuccess": "コメントは正常に追加されました。"
+      "addedSuccess": "コメントは正常に追加されました。",
+      "permalink": "コメントへのリンクをコピー"
     },
     "deferDueDate": {
       "title": "延期",

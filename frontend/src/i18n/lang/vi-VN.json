@@ -848,7 +848,8 @@
       "delete": "Xóa bình luận này",
       "deleteText1": "Bạn có chắc muốn xóa bình luận này không?",
       "deleteSuccess": "The comment was deleted successfully.",
-      "addedSuccess": "Bình luận đã được thêm vào."
+      "addedSuccess": "Bình luận đã được thêm vào.",
+      "permalink": "Copy permalink to this comment"
     },
     "deferDueDate": {
       "title": "Trì hoãn ngày đến hạn",
