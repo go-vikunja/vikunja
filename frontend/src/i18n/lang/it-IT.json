@@ -848,7 +848,8 @@
       "delete": "Elimina questo commento",
       "deleteText1": "Sei sicuro di voler eliminare questo commento?",
       "deleteSuccess": "Commento cancellato con successo.",
-      "addedSuccess": "Il commento è stato aggiunto correttamente."
+      "addedSuccess": "Il commento è stato aggiunto correttamente.",
+      "permalink": "Copy permalink to this comment"
     },
     "deferDueDate": {
       "title": "Rinvia data di scadenza",

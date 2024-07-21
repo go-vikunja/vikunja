@@ -848,7 +848,8 @@
       "delete": "Slet denne kommentar",
       "deleteText1": "Er du sikker på du vil slette denne kommentar?",
       "deleteSuccess": "Kommentaren blev slettet.",
-      "addedSuccess": "Din kommentar blev tilføjet."
+      "addedSuccess": "Din kommentar blev tilføjet.",
+      "permalink": "Copy permalink to this comment"
     },
     "deferDueDate": {
       "title": "Udsæt forfaldsdato",

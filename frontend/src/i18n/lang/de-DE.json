@@ -848,7 +848,8 @@
       "delete": "Diesen Kommentar löschen",
       "deleteText1": "Bist du sicher, dass du diesen Kommentar löschen willst?",
       "deleteSuccess": "Der Kommentar wurde erfolgreich gelöscht.",
-      "addedSuccess": "Der Kommentar wurde erfolgreich hinzugefügt."
+      "addedSuccess": "Der Kommentar wurde erfolgreich hinzugefügt.",
+      "permalink": "Permalink zu diesem Kommentar kopieren"
     },
     "deferDueDate": {
       "title": "Fälligkeitsdatum verschieben",

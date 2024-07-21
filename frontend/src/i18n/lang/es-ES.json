@@ -848,7 +848,8 @@
       "delete": "Eliminar este comentario",
       "deleteText1": "¿Está seguro que desea eliminar este comentario?",
       "deleteSuccess": "El comentario fue eliminado con éxito.",
-      "addedSuccess": "El comentario fue añadido con éxito."
+      "addedSuccess": "El comentario fue añadido con éxito.",
+      "permalink": "Copy permalink to this comment"
     },
     "deferDueDate": {
       "title": "Aplazar fecha de vencimiento",

@@ -848,7 +848,8 @@
       "delete": "Hozzászólás törlése",
       "deleteText1": "Biztos benne, hogy törölni akarja ezt a hozzászólást?",
       "deleteSuccess": "A hozzászólás sikeresen törlődött.",
-      "addedSuccess": "A hozzászólás sikeresen hozzáadva."
+      "addedSuccess": "A hozzászólás sikeresen hozzáadva.",
+      "permalink": "Copy permalink to this comment"
     },
     "deferDueDate": {
       "title": "A határidő elhalasztása",

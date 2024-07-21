@@ -848,7 +848,8 @@
       "delete": "Supprimer ce commentaire",
       "deleteText1": "Supprimer ce commentaire ?",
       "deleteSuccess": "Le commentaire a bien été supprimé.",
-      "addedSuccess": "Commentaire ajouté."
+      "addedSuccess": "Commentaire ajouté.",
+      "permalink": "Copy permalink to this comment"
     },
     "deferDueDate": {
       "title": "Reporter la date d’échéance",

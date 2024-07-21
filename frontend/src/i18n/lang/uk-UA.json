@@ -848,7 +848,8 @@
       "delete": "Вилучається приписка",
       "deleteText1": "Справді впровадити?",
       "deleteSuccess": "Приписку вилучено.",
-      "addedSuccess": "Приписку додано."
+      "addedSuccess": "Приписку додано.",
+      "permalink": "Copy permalink to this comment"
     },
     "deferDueDate": {
       "title": "Перенести строк",

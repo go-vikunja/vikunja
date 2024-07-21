@@ -848,7 +848,8 @@
       "delete": "Izbriši ta komentar",
       "deleteText1": "Ali ste prepričani, da želite izbrisati ta komentar?",
       "deleteSuccess": "Komentar je bil uspešno izbrisan.",
-      "addedSuccess": "Komentar je bil uspešno dodan."
+      "addedSuccess": "Komentar je bil uspešno dodan.",
+      "permalink": "Copy permalink to this comment"
     },
     "deferDueDate": {
       "title": "Odloži datum zapadlosti",

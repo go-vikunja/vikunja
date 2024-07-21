@@ -848,7 +848,8 @@
       "delete": "Удалить комментарий",
       "deleteText1": "Удалить этот комментарий?",
       "deleteSuccess": "Комментарий удалён.",
-      "addedSuccess": "Комментарий добавлен."
+      "addedSuccess": "Комментарий добавлен.",
+      "permalink": "Copy permalink to this comment"
     },
     "deferDueDate": {
       "title": "Отложить срок",

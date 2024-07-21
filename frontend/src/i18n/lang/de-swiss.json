@@ -848,7 +848,8 @@
       "delete": "De Kommentar chüble",
       "deleteText1": "Bisch du dir sicher, dass du de Kommentar chüble wetsch?",
       "deleteSuccess": "Der Kommentar wurde erfolgreich gelöscht.",
-      "addedSuccess": "Din Kommentar isch erfolgriich hinzuegfüegt worde."
+      "addedSuccess": "Din Kommentar isch erfolgriich hinzuegfüegt worde.",
+      "permalink": "Permalink zu diesem Kommentar kopieren"
     },
     "deferDueDate": {
       "title": "Fälligkeitsdatum verschiebe",

@@ -848,7 +848,8 @@
       "delete": "删除此评论",
       "deleteText1": "确实要删除此评论吗?",
       "deleteSuccess": "评论已删除。",
-      "addedSuccess": "评论已添加。"
+      "addedSuccess": "评论已添加。",
+      "permalink": "Copy permalink to this comment"
     },
     "deferDueDate": {
       "title": "推迟截止时间",
