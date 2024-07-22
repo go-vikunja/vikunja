@@ -420,7 +420,7 @@ export const useTaskStore = defineStore('task', () => {
 		const cancel = setModuleLoading(setIsLoading)
 		const quickAddMagicMode = authStore.settings.frontendSettings.quickAddMagicMode
 		const parsedTask = parseTaskText(title, quickAddMagicMode)
-		console.log(parsedTask)
+
 		if(parsedTask.text === '') {
 			const taskService = new TaskService()
 			try {
