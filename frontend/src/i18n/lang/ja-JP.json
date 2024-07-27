@@ -99,7 +99,7 @@
         "defaultView": "デフォルトのビュー",
         "timezone": "タイムゾーン",
         "overdueTasksRemindersTime": "期限切れタスクのリマインダー送信時間",
-        "filterUsedOnOverview": "概要ページに使用される絞り込み条件"
+        "filterUsedOnOverview": "概要ページの絞り込み条件"
       },
       "totp": {
         "title": "2要素認証",
@@ -154,7 +154,7 @@
       },
       "apiTokens": {
         "title": "APIトークン",
-        "general": "APIトークンは、認証されたVikunja APIのリクエストを行うことができます。",
+        "general": "APIトークンを使うとログインせずにVikunjaのAPIを利用できます。",
         "apiDocs": "詳しくはAPIドキュメントをご確認ください",
         "createAToken": "トークンの生成",
         "createToken": "トークンの生成",
