@@ -43,7 +43,7 @@
       "forgotPassword": "Ste pozabili svoje geslo?",
       "resetPassword": "Ponastavite geslo",
       "resetPasswordAction": "Pošljite mi povezavo za ponastavitev gesla",
-      "resetPasswordSuccess": "Check your inbox! You should have an email with instructions on how to reset your password.",
+      "resetPasswordSuccess": "Preverite vaš poštni predal! Prejeti bi morali e-pošto z navodili za ponastavitev gesla.",
       "passwordsDontMatch": "Vneseni gesli se ne ujemata",
       "confirmEmailSuccess": "Uspešno ste potrdili svoj e-poštni naslov! Sedaj se lahko prijavite.",
       "totpTitle": "Koda za dvofaktorsko avtentikacijo",
@@ -163,7 +163,7 @@
         "90d": "90 dni",
         "permissionExplanation": "Dovoljenja vam omogočajo, da določite, kaj vse vam API žeton dovoli.",
         "titleRequired": "Naslov je obvezen",
-        "permissionRequired": "Please select at least one permission from the list.",
+        "permissionRequired": "Prosim izberite vsaj eno dovoljenje iz seznama.",
         "expired": "Žeton je potekel pred {ago}.",
         "tokenCreatedSuccess": "Tu je vaš novi API žeton: {token}",
         "tokenCreatedNotSeeAgain": "Shranite ga na varno mesto, ker ga ne boste več videli!",
@@ -849,7 +849,7 @@
       "deleteText1": "Ali ste prepričani, da želite izbrisati ta komentar?",
       "deleteSuccess": "Komentar je bil uspešno izbrisan.",
       "addedSuccess": "Komentar je bil uspešno dodan.",
-      "permalink": "Copy permalink to this comment"
+      "permalink": "Kopiraj trajno povezavo do tega komentarja"
     },
     "deferDueDate": {
       "title": "Odloži datum zapadlosti",
@@ -1155,8 +1155,8 @@
     "3006": "Skupna raba projekta ne obstaja.",
     "3007": "Projekt s tem identifikatorjem že obstaja.",
     "3008": "Projekt je arhiviran in je zato možen samo za branje. To velja tudi za vse naloge, povezane s tem projektom.",
-    "4001": "The task title cannot be empty.",
-    "4002": "The task does not exist.",
+    "4001": "Naslov naloge ne sme biti prazen.",
+    "4002": "Naloga ne obstaja.",
     "4003": "Vse naloge množičnega urejanja morajo pripadati istemu projektu.",
     "4004": "Pri množičnem urejanju nalog potrebujete vsaj eno nalogo.",
     "4005": "Nimate pravic do vpogleda v nalogo.",
