@@ -227,12 +227,13 @@ migration:
     clientid:
     # The client secret, also required for making requests to the todoist api
     clientsecret:
-    # The url where clients are redirected after they authorized Vikunja to access their todoist items.
-    # This needs to match the url you entered when registering your Vikunja instance at todoist.
-    # This is usually the frontend url where the frontend then makes a request to /migration/todoist/migrate
+    # The url where clients are redirected after they authorized Vikunja to access their Todoist items. 
+    # In Todoist, this is called `OAuth redirect URL` and it needs to match the url you entered when registering 
+    # your Vikunja instance at the Todoist developer console.
+    # When using the official Vikunja frontend, set this to <service.publicurl>/migrate/todoist.
+    # Otherwise, set this to an url which then makes a request to /api/v1/migration/todoist/migrate 
     # with the code obtained from the todoist api.
-    # Note that the Vikunja frontend expects this to be /migrate/todoist
-    redirecturl: <frontend url>/migrate/todoist
+    redirecturl: <service.publicurl>/migrate/todoist
   trello:
     # Whether to enable the trello migrator or not
     enable: false
