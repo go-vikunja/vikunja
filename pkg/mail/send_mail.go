@@ -18,6 +18,7 @@ package mail
 
 import (
 	"embed"
+	"fmt"
 	"io"
 
 	"code.vikunja.io/api/pkg/config"
@@ -60,8 +61,7 @@ type header struct {
 // It works without a queue.
 func SendTestMail(opts *Opts) error {
 	if config.MailerHost.GetString() == "" {
-		log.Warning("Mailer seems to be not configured! Please see the config docs for more details.")
-		return nil
+		return fmt.Errorf("mailer is not configured! Please see the config docs for more details")
 	}
 
 	c, err := getClient()
