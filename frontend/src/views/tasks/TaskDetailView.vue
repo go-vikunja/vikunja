@@ -381,6 +381,7 @@
 							<div class="control is-expanded">
 								<ProjectSearch
 									:ref="e => setFieldRef('moveProject', e)"
+									:filter="project => project.id !== task.projectId"
 									@update:modelValue="changeProject"
 								/>
 							</div>
