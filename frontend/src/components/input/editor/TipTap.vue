@@ -325,6 +325,13 @@ watch(
 	},
 )
 
+const additionalLinkProtocols = [
+	'ftp',
+	'git',
+	'obsidian',
+	'notion',
+]
+
 const extensions : Extensions = [
 	// Starterkit:
 	Blockquote,
@@ -379,7 +386,11 @@ const extensions : Extensions = [
 	Underline,
 	Link.configure({
 		openOnClick: false,
-		validate: (href: string) => /^https?:\/\//.test(href),
+		validate: (href: string) => (new RegExp(
+			`^(https?|${additionalLinkProtocols.join('|')}):\\/\\/`,
+			'i',
+		)).test(href),
+		protocols: additionalLinkProtocols,
 	}),
 	Table.configure({
 		resizable: true,
