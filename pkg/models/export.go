@@ -147,6 +147,11 @@ func exportProjectsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (task
 	projectsMap := make(map[int64]*ProjectWithTasksAndBuckets, len(rawProjects))
 	projectIDs := []int64{}
 	for _, p := range rawProjects {
+		if p.BackgroundFileID > 0 {
+			p.BackgroundInformation = &files.File{
+				ID: p.BackgroundFileID,
+			}
+		}
 		pp := &ProjectWithTasksAndBuckets{
 			Project: *p,
 		}
