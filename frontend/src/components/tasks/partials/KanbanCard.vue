@@ -16,7 +16,7 @@
 			v-if="coverImageBlobUrl"
 			:src="coverImageBlobUrl"
 			alt=""
-			class="cover-image"
+			class="tw-w-full"
 		>
 		<div class="p-2">
 			<span class="task-id">
