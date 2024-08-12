@@ -17,6 +17,7 @@ in {
   languages = {
     javascript = {
       enable = true;
+      package = pkgs-unstable.nodejs-slim;
       pnpm = {
         enable = true;
         package = pkgs-unstable.pnpm;
