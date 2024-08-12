@@ -259,10 +259,10 @@ func (pv *ProjectView) Delete(s *xorm.Session, _ web.Auth) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/views [put]
 func (pv *ProjectView) Create(s *xorm.Session, a web.Auth) (err error) {
-	return createProjectView(s, pv, a, true)
+	return createProjectView(s, pv, a, true, true)
 }
 
-func createProjectView(s *xorm.Session, p *ProjectView, a web.Auth, createBacklogBucket bool) (err error) {
+func createProjectView(s *xorm.Session, p *ProjectView, a web.Auth, createBacklogBucket bool, addExistingTasksToView bool) (err error) {
 	_, err = s.Insert(p)
 	if err != nil {
 		return
@@ -280,13 +280,19 @@ func createProjectView(s *xorm.Session, p *ProjectView, a web.Auth, createBacklo
 		}
 
 		// Move all tasks into the new bucket when the project already has tasks
-		err = addTasksToView(s, a, p, b)
-		if err != nil {
-			return
+		if addExistingTasksToView {
+			err = addTasksToView(s, a, p, b)
+			if err != nil {
+				return
+			}
 		}
 	}
 
-	return RecalculateTaskPositions(s, p, a)
+	if addExistingTasksToView {
+		return RecalculateTaskPositions(s, p, a)
+	}
+
+	return
 }
 
 func addTasksToView(s *xorm.Session, a web.Auth, pv *ProjectView, b *Bucket) (err error) {
@@ -413,7 +419,7 @@ func CreateDefaultViewsForProject(s *xorm.Session, project *Project, a web.Auth,
 	if createDefaultListFilter {
 		list.Filter = "done = false"
 	}
-	err = createProjectView(s, list, a, createBacklogBucket)
+	err = createProjectView(s, list, a, createBacklogBucket, true)
 	if err != nil {
 		return
 	}
@@ -424,7 +430,7 @@ func CreateDefaultViewsForProject(s *xorm.Session, project *Project, a web.Auth,
 		ViewKind:  ProjectViewKindGantt,
 		Position:  200,
 	}
-	err = createProjectView(s, gantt, a, createBacklogBucket)
+	err = createProjectView(s, gantt, a, createBacklogBucket, true)
 	if err != nil {
 		return
 	}
@@ -435,7 +441,7 @@ func CreateDefaultViewsForProject(s *xorm.Session, project *Project, a web.Auth,
 		ViewKind:  ProjectViewKindTable,
 		Position:  300,
 	}
-	err = createProjectView(s, table, a, createBacklogBucket)
+	err = createProjectView(s, table, a, createBacklogBucket, true)
 	if err != nil {
 		return
 	}
@@ -447,7 +453,7 @@ func CreateDefaultViewsForProject(s *xorm.Session, project *Project, a web.Auth,
 		Position:                400,
 		BucketConfigurationMode: BucketConfigurationModeManual,
 	}
-	err = createProjectView(s, kanban, a, createBacklogBucket)
+	err = createProjectView(s, kanban, a, createBacklogBucket, true)
 	if err != nil {
 		return
 	}
