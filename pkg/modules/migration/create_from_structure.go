@@ -56,6 +56,10 @@ func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBucke
 	projectsByOldID := make(map[int64]*models.Project) // old id is the key
 	// Create all projects
 	for i, p := range str {
+		if p.ID == models.FavoritesPseudoProjectID {
+			continue
+		}
+
 		oldID := p.ID
 
 		if p.ParentProjectID != 0 {
@@ -141,10 +145,10 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 	}
 
 	project.ID = 0
-	err = project.Create(s, user)
+	err = models.CreateProject(s, &project.Project, user, false, false)
 	if err != nil && models.IsErrProjectIdentifierIsNotUnique(err) {
 		project.Identifier = ""
-		err = project.Create(s, user)
+		err = models.CreateProject(s, &project.Project, user, false, false)
 	}
 	if err != nil {
 		return
@@ -189,7 +193,6 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 	}
 
 	// Create all views, create default views if we don't have any
-	var kanbanView *models.ProjectView
 	viewsByOldIDs := make(map[int64]*models.ProjectView, len(oldViews))
 	if len(oldViews) > 0 {
 		for _, view := range oldViews {
@@ -217,16 +220,37 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 				return
 			}
 			viewsByOldIDs[oldID] = view
-			if view.ViewKind == models.ProjectViewKindKanban {
-				kanbanView = view
+		}
+
+		for oldID, bucket := range bucketsByOldID {
+			newView, has := viewsByOldIDs[bucket.ProjectViewID]
+			if !has {
+				err = bucket.Delete(s, user)
+				if err != nil {
+					return
+				}
+				delete(bucketsByOldID, oldID)
+				continue
+			}
+
+			bucket.ProjectViewID = newView.ID
+			err = bucket.Update(s, user)
+			if err != nil {
+				return
 			}
 		}
 	} else {
+		if len(project.Views) == 0 {
+			err = models.CreateDefaultViewsForProject(s, &project.Project, user, true, true)
+			if err != nil {
+				return
+			}
+		}
+
 		// Only using the default views
 		// Add all buckets to the default kanban view
 		for _, view := range project.Views {
 			if view.ViewKind == models.ProjectViewKindKanban {
-				kanbanView = view
 				for _, b := range bucketsByOldID {
 					b.ProjectViewID = view.ID
 					err = b.Update(s, user)
@@ -237,6 +261,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 				break
 			}
 		}
+
 	}
 
 	log.Debugf("[creating structure] Creating %d tasks", len(tasks))
@@ -250,7 +275,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 				TaskID:        task.ID,
 				BucketID:      bucketID,
 				ProjectID:     task.ProjectID,
-				ProjectViewID: kanbanView.ID,
+				ProjectViewID: bucket.ProjectViewID,
 			}
 			err = tb.Update(s, user)
 			if err != nil {
