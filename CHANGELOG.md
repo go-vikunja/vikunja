@@ -5,7 +5,58 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-All releases can be found on https://code.vikunja.io/api/releases.
+All releases can be found on https://code.vikunja.io/vikunja/releases.
+
+## [0.24.2] - 2024-08-12
+
+### Bug Fixes
+
+* *(i18n)* Change casing of Ukrainian language in selector
+* *(kanban)* Always make cover image full width
+* *(mail)* Do not fail testmail command when the connection could not be closed.
+* *(migration)* Make sure tasks are associated to the correct view and bucket for data imported from Vikunja dump
+* *(migration)* Ensure project background gets exported and imported
+* *(projects)* Trigger only single mutation
+* *(task)* Do not allow moving a task to the project the task already belongs to
+* *(task)* Set current project after moving a task
+* *(task)* Move task into new kanban bucket when moving between projects
+* *(views)* Do not create task bucket and task position entries when duplicating a project* Emit for DatepickerWithValues ([3aaf363](3aaf3634134a6989337bad02ac99a9329d33b17f))
+* Textarea autosize for LanguageTool ([d9f5555](d9f555554e5ecfa9d1243c565e2f42c77f7a7597))
+* Remove console log ([0ca43dc](0ca43dc147acd04d9f9b566325ccde0a5782680f))
+
+### Dependencies
+
+* *(deps)* Update module github.com/coreos/go-oidc/v3 to v3.11.0
+* *(deps)* Update flake
+* *(deps)* Update go toolchain to 1.22.5
+* *(deps)* Update dependency node to v20.16.0
+
+### Documentation
+
+* Clarify Todoist redirect url ([7117303](7117303d5705199bb39fb6661b20deebea96959f))
+
+### Features
+
+* *(editor)* Support custom protocol for links* Use withDefaults for Reminders ([8729c24](8729c24e1d2bdc783e750dc1166a8ab31a716107))
+* Improve projects store ([d707e15](d707e1576a006baa73c529b432e694dee237db76))
+* Improve label store ([a0e3efe](a0e3efe2d12521e773334a19ac985a2011575c3c))
+* Improve priority visibility ([dddba4d](dddba4d64a9ddddd6f442c8180661d2d498de994))
+* Add tailwind with prefix (#2513) ([d7c5451](d7c54517297e750d92618376f52045b11da6e82c))
+* Improve ProjectSettingsViews ([811ccc1](811ccc1baa2fe1fb9fcc8b5515c8c3f3b591e96a))
+* Add missing peer dependency ([d586f69](d586f691b7a245bbffd5df4e7a4937f0527047e0))
+* Switch from nix flakes to devenv ([73f923b](73f923bc47d32a6a9a689e461901295b07646ebf))
+
+
+### Miscellaneous Tasks
+
+* *(i18n)* Update translations via Crowdin
+* Remove lodash.debounce ([fc780a9](fc780a90ae856038db73d3ad63fcdd5627211c36))
+* Improve error message ([6e38bcf](6e38bcf3498a15a1dc1f6fbef254c08513b408b3))
+* Use nixpkgs unstable for more recent packages ([f5040ad](f5040ad2f4996fe1ccf03172b1a1ee6007068ee7))
+
+### Other
+
+* *(other)* [skip ci] Updated swagger docs
 
 ## [0.24.1] - 2024-07-18
 
