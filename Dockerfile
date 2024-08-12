@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM --platform=$BUILDPLATFORM node:20.14.0-alpine AS frontendbuilder
+FROM --platform=$BUILDPLATFORM node:20.16.0-alpine AS frontendbuilder
 
 WORKDIR /build
 
