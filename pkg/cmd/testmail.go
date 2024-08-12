@@ -17,6 +17,8 @@
 package cmd
 
 import (
+	"strings"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/initialize"
 	"code.vikunja.io/api/pkg/log"
@@ -51,10 +53,11 @@ var testmailCmd = &cobra.Command{
 
 		opts, err := notifications.RenderMail(message)
 		if err != nil {
-			log.Errorf("Error sending test mail: %s", err.Error())
+			log.Errorf("Error rendering test mail: %s", err.Error())
 			return
 		}
-		if err := mail.SendTestMail(opts); err != nil {
+		if err := mail.SendTestMail(opts); err != nil &&
+			strings.HasPrefix(err.Error(), "failed to close connction: not connected to SMTP server") {
 			log.Errorf("Error sending test mail: %s", err.Error())
 			return
 		}
