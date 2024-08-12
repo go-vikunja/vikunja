@@ -177,6 +177,6 @@ require (
 
 replace github.com/samedi/caldav-go => github.com/kolaente/caldav-go v3.0.1-0.20190610114120-2a4eb8b5dcc9+incompatible // Branch: feature/dynamic-supported-components, PR: https://github.com/samedi/caldav-go/pull/6 and https://github.com/samedi/caldav-go/pull/7
 
-go 1.21
+go 1.22
 
-toolchain go1.22.4
+toolchain go1.22.5
