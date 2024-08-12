@@ -3,7 +3,7 @@
 let
   pkgs-unstable = import inputs.nixpkgs-unstable { system = pkgs.stdenv.system; };
 in {
-  packages = with pkgs; [
+  packages = with pkgs-unstable; [
     # General tools
 	git-cliff 
     # Frontend tools
