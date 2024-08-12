@@ -917,12 +917,12 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 		colsToUpdate = append(colsToUpdate, "index")
 	}
 
-	viewsWithDoneBucket := []*ProjectView{}
+	views := []*ProjectView{}
 	if (!t.isRepeating() && t.Done != ot.Done) || t.ProjectID != ot.ProjectID {
 		err = s.
-			Where("project_id = ? AND view_kind = ? AND bucket_configuration_mode = ? AND done_bucket_id != 0",
+			Where("project_id = ? AND view_kind = ? AND bucket_configuration_mode = ?",
 				t.ProjectID, ProjectViewKindKanban, BucketConfigurationModeManual).
-			Find(&viewsWithDoneBucket)
+			Find(&views)
 		if err != nil {
 			return
 		}
@@ -930,7 +930,12 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 
 	// When a task was moved between projects, ensure it is in the correct bucket
 	if t.ProjectID != ot.ProjectID {
-		for _, view := range viewsWithDoneBucket {
+		_, err = s.Where("task_id = ?", t.ID).Delete(&TaskBucket{})
+		if err != nil {
+			return err
+		}
+
+		for _, view := range views {
 			var bucketID = view.DoneBucketID
 			if bucketID == 0 || !t.Done {
 				bucketID, err = getDefaultBucketID(s, view)
@@ -964,7 +969,7 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 
 	// When a task changed its done status, make sure it is in the correct bucket
 	if t.ProjectID == ot.ProjectID && !t.isRepeating() && t.Done != ot.Done {
-		for _, view := range viewsWithDoneBucket {
+		for _, view := range views {
 			currentTaskBucket := &TaskBucket{}
 			_, err := s.Where("task_id = ? AND project_view_id = ?", t.ID, view.ID).
 				Get(currentTaskBucket)
