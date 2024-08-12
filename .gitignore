@@ -28,4 +28,13 @@ vendor/
 os-packages/
 mage_output_file.go
 mage-static
-.direnv/
+
+# Devenv
+.devenv*
+devenv.local.nix
+
+# direnv
+.direnv
+
+# pre-commit
+.pre-commit-config.yaml
