@@ -228,7 +228,15 @@ func addDetailsToProjectAndChildren(p *models.ProjectWithTasksAndBuckets, stored
 }
 
 func addDetailsToProject(l *models.ProjectWithTasksAndBuckets, storedFiles map[int64]*zip.File) (err error) {
-	if b, exists := storedFiles[l.BackgroundFileID]; exists {
+	var backgroundFileID int64
+	bginfo, is := l.BackgroundInformation.(map[string]interface{})
+	if is {
+		bgid, has := bginfo["id"]
+		if has {
+			backgroundFileID = int64(bgid.(float64))
+		}
+	}
+	if b, exists := storedFiles[backgroundFileID]; exists {
 		bf, err := b.Open()
 		if err != nil {
 			return fmt.Errorf("could not open project background file %d for reading: %w", l.BackgroundFileID, err)
