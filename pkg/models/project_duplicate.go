@@ -180,7 +180,7 @@ func duplicateViews(s *xorm.Session, pd *ProjectDuplicate, doer web.Auth, taskMa
 
 		view.ID = 0
 		view.ProjectID = pd.Project.ID
-		err = createProjectView(s, view, doer, false)
+		err = createProjectView(s, view, doer, false, false)
 		if err != nil {
 			return
 		}
@@ -225,8 +225,9 @@ func duplicateViews(s *xorm.Session, pd *ProjectDuplicate, doer web.Auth, taskMa
 	taskBuckets := []*TaskBucket{}
 	for _, tb := range oldTaskBuckets {
 		taskBuckets = append(taskBuckets, &TaskBucket{
-			BucketID: bucketMap[tb.BucketID],
-			TaskID:   taskMap[tb.TaskID],
+			BucketID:      bucketMap[tb.BucketID],
+			TaskID:        taskMap[tb.TaskID],
+			ProjectViewID: viewMap[tb.ProjectViewID],
 		})
 	}
 
