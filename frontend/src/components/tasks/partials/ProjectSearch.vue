@@ -36,9 +36,11 @@ import Multiselect from '@/components/input/Multiselect.vue'
 const props = withDefaults(defineProps<{
 	modelValue?: IProject
 	savedFiltersOnly?: boolean
+	filter?: (project: IProject) => boolean,
 }>(), {
 	modelValue: () => new ProjectModel(),
 	savedFiltersOnly: false,
+	filter: () => true,
 })
 
 const emit = defineEmits<{
@@ -65,11 +67,13 @@ function findProjects(query: string) {
 	}
 	
 	if (props.savedFiltersOnly) {
-		foundProjects.value = projectStore.searchSavedFilter(query)
+		const found = projectStore.searchSavedFilter(query)
+		foundProjects.value = found.filter(props.filter)
 		return
 	}
 	
-	foundProjects.value = projectStore.searchProject(query)
+	const found = projectStore.searchProject(query)
+	foundProjects.value = found.filter(props.filter)
 }
 
 function select(p: IProject | null) {

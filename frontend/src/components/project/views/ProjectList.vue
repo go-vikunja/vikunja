@@ -73,7 +73,7 @@
 							>
 								<template v-if="canWrite">
 									<span class="icon handle">
-										<Icon icon="grip-lines"/>
+										<Icon icon="grip-lines" />
 									</span>
 								</template>
 							</SingleTaskInProject>
