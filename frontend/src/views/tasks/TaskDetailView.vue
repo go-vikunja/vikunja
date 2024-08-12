@@ -618,25 +618,26 @@ import Reminders from '@/components/tasks/partials/Reminders.vue'
 import RepeatAfter from '@/components/tasks/partials/RepeatAfter.vue'
 import TaskSubscription from '@/components/misc/Subscription.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
+import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
+import Reactions from '@/components/input/Reactions.vue'
 
 import {uploadFile} from '@/helpers/attachments'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 import {scrollIntoView} from '@/helpers/scrollIntoView'
+import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
+import {playPopSound} from '@/helpers/playPop'
 
 import {useAttachmentStore} from '@/stores/attachments'
 import {useTaskStore} from '@/stores/tasks'
 import {useKanbanStore} from '@/stores/kanban'
+import {useProjectStore} from '@/stores/projects'
+import {useAuthStore} from '@/stores/auth'
+import {useBaseStore} from '@/stores/base'
 
 import {useTitle} from '@/composables/useTitle'
 
 import {success} from '@/message'
 import type {Action as MessageAction} from '@/message'
-import {useProjectStore} from '@/stores/projects'
-import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
-import {useAuthStore} from '@/stores/auth'
-import {playPopSound} from '@/helpers/playPop'
-import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
-import Reactions from '@/components/input/Reactions.vue'
 
 const props = defineProps<{
 	taskId: ITask['id'],
@@ -655,6 +656,7 @@ const attachmentStore = useAttachmentStore()
 const taskStore = useTaskStore()
 const kanbanStore = useKanbanStore()
 const authStore = useAuthStore()
+const baseStore = useBaseStore()
 
 const task = ref<ITask>(new TaskModel())
 const taskTitle = computed(() => task.value.title)
@@ -895,6 +897,7 @@ async function changeProject(project: IProject) {
 		...task.value,
 		projectId: project.id,
 	})
+	baseStore.setCurrentProject(project)
 }
 
 async function toggleFavorite() {
