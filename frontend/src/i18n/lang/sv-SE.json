@@ -74,7 +74,7 @@
       "newPasswordTitle": "Uppdatera ditt lösenord",
       "newPassword": "Nytt lösenord",
       "newPasswordConfirm": "New password confirmation",
-      "currentPassword": "Current password",
+      "currentPassword": "Nuvarande lösenord",
       "currentPasswordPlaceholder": "Ditt nuvarande lösenord",
       "passwordsDontMatch": "The new password and its confirmation don't match.",
       "passwordUpdateSuccess": "The password was successfully updated.",
@@ -83,7 +83,7 @@
       "updateEmailSuccess": "Your email address was successfully updated. We've sent you a link to confirm it.",
       "general": {
         "title": "General Settings",
-        "name": "My Name",
+        "name": "Mitt namn",
         "newName": "The new name",
         "savedSuccess": "The settings were successfully updated.",
         "emailReminders": "Send me reminders for tasks via email",
@@ -396,7 +396,7 @@
       "bucketConfig": "Bucket configuration",
       "bucketConfigManual": "Manual",
       "filter": "Filter",
-      "create": "Create view",
+      "create": "Skapa vy",
       "createSuccess": "The view was created successfully.",
       "titleRequired": "Please provide a title.",
       "delete": "Delete this view",
@@ -575,7 +575,7 @@
     "id": "ID",
     "created": "Created at",
     "createdBy": "Created by {0}",
-    "actions": "Actions",
+    "actions": "Åtgärder",
     "cannotBeUndone": "This cannot be undone!"
   },
   "input": {
