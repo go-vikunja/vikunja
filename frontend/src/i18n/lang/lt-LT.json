@@ -772,9 +772,9 @@
       },
       "actions": {
         "assign": "Assign to User",
-        "label": "Add Labels",
-        "priority": "Set Priority",
-        "dueDate": "Set Due Date",
+        "label": "Pridėti etiketes",
+        "priority": "Nustatyti prioritetą",
+        "dueDate": "Nustatyto termino datą",
         "startDate": "Set Start Date",
         "endDate": "Set End Date",
         "reminders": "Set Reminders",
@@ -783,9 +783,9 @@
         "attachments": "Add Attachments",
         "relatedTasks": "Add Relation",
         "moveProject": "Move",
-        "color": "Set Color",
-        "delete": "Delete",
-        "favorite": "Add to Favorites",
+        "color": "Nustatyto spalvą",
+        "delete": "Ištrinti",
+        "favorite": "Pridėti prie mėgstamiausių",
         "unfavorite": "Remove from Favorites"
       }
     },
@@ -798,7 +798,7 @@
       "done": "Done",
       "dueDate": "Due Date",
       "endDate": "End Date",
-      "labels": "Labels",
+      "labels": "Etiketės",
       "percentDone": "Progress",
       "priority": "Priority",
       "relatedTasks": "Related Tasks",
@@ -820,7 +820,7 @@
       "subscribeSuccessProject": "You are now subscribed to this project",
       "unsubscribeSuccessProject": "You are now unsubscribed to this project",
       "subscribeSuccessTask": "You are now subscribed to this task",
-      "unsubscribeSuccessTask": "You are now unsubscribed to this task"
+      "unsubscribeSuccessTask": "Užsiprenumeravai užduoties naujienas"
     },
     "attachment": {
       "title": "Attachments",
@@ -1186,7 +1186,7 @@
     "8002": "The label does not exist.",
     "8003": "You do not have access to this label.",
     "9001": "The right is invalid.",
-    "10001": "The bucket does not exist.",
+    "10001": "Šaltinis neegzistuoja.",
     "10002": "The bucket does not belong to that project.",
     "10003": "You cannot remove the last bucket on a project.",
     "10004": "You cannot add the task to this bucket as it already exceeded the limit of tasks it can hold.",
@@ -1195,22 +1195,22 @@
     "11002": "Saved filters are not available for link shares.",
     "12001": "The subscription entity type is invalid.",
     "12002": "You are already subscribed to the entity itself or a parent entity.",
-    "13001": "This link share requires a password for authentication, but none was provided.",
-    "13002": "The provided link share password was invalid."
+    "13001": "Šis dalinimasis nuoroda reikalauja slaptažodžio identifikavimuisi, bet jis nebuvo pateiktas.",
+    "13002": "Pateikta slaptažodžio dalinimosi nuoroda negalioja."
   },
   "about": {
-    "title": "About",
-    "version": "Version: {version}"
+    "title": "Apie",
+    "version": "Versija: {version}"
   },
   "time": {
     "units": {
-      "seconds": "second|seconds",
-      "minutes": "minute|minutes",
-      "hours": "hour|hours",
-      "days": "day|days",
-      "weeks": "week|weeks",
-      "months": "month|months",
-      "years": "year|years"
+      "seconds": "sekundė|sekundės",
+      "minutes": "minutė|minutės",
+      "hours": "valanda|valandos",
+      "days": "diena|dienos",
+      "weeks": "savaitė|savaitės",
+      "months": "mėnesis|mėnesiai",
+      "years": "metai|metai"
     }
   }
 }
