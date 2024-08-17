@@ -121,7 +121,7 @@
         "more": "More information about CalDAV in Vikunja",
         "tokens": "CalDAV Tokens",
         "tokensHowTo": "You can use a CalDAV token to use instead of a password to log in the above endpoint.",
-        "createToken": "Create a token",
+        "createToken": "Sukurti prieigos raktą",
         "tokenCreated": "Here is your token: {token}",
         "wontSeeItAgain": "Write it down, you won't be able to see it again.",
         "mustUseToken": "You need to create a CalDAV token if you want to use CalDAV with a third party client. Use the token as the password.",
@@ -167,14 +167,14 @@
         "expired": "This token has expired {ago}.",
         "tokenCreatedSuccess": "Here is your new api token: {token}",
         "tokenCreatedNotSeeAgain": "Store it in a secure location, you won't see it again!",
-        "selectAll": "Select all",
+        "selectAll": "Pažymėti viską",
         "delete": {
           "header": "Delete this token",
           "text1": "Are you sure you want to delete the token \"{token}\"?",
           "text2": "This will revoke access to all applications or integrations using it. You cannot undo this."
         },
         "attributes": {
-          "title": "Title",
+          "title": "Pavadinimas",
           "titlePlaceholder": "Enter a title you will recognize later",
           "expiresAt": "Expires at",
           "permissions": "Permissions"
@@ -184,22 +184,22 @@
     "deletion": {
       "title": "Delete your Vikunja Account",
       "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your projects, tasks and everything associated with it.",
-      "text2": "To proceed, please enter your password. You will receive an email with further instructions.",
+      "text2": "Norėdama -s tęsti, įvesk savo slaptažodį. Gausi email'ą su tolimesnėmis instrukcijomis.",
       "text3": "To proceed, please press the button below. You will receive an email with further instructions.",
       "confirm": "Delete my account",
-      "requestSuccess": "The request was successful. You'll receive an email with further instructions.",
-      "passwordRequired": "Please enter your password.",
+      "requestSuccess": "Tavo užklausa sėkminga. Gausi email'ą su tolimesnėmis instrukcijomis.",
+      "passwordRequired": "Prašome įvesti savo slaptažodį.",
       "confirmSuccess": "You've successfully confirmed the deletion of your account. We will delete your account in three days.",
       "scheduled": "We will delete your Vikunja account at {date} ({dateSince}).",
-      "scheduledCancel": "To cancel the deletion of your account, click here.",
-      "scheduledCancelText": "To cancel the deletion of your account, please enter your password below:",
+      "scheduledCancel": "Norėdama -s nutraukti paskyros ištrynimą, spausk čia.",
+      "scheduledCancelText": "Norėdama -s nutraukti paskyros ištrynimą, įveskite slaptažodį žemiau:",
       "scheduledCancelButton": "To cancel the deletion of your account, please press the button below:",
-      "scheduledCancelConfirm": "Cancel the deletion of my account",
+      "scheduledCancelConfirm": "Atšaukti mano paskyros ištrynimą",
       "scheduledCancelSuccess": "We will not delete your account."
     },
     "export": {
       "title": "Export your Vikunja data",
-      "description": "You can request a copy of all your Vikunja data. This includes Projects, Tasks and everything associated to them. You can import this data in any Vikunja instance through the migration function.",
+      "description": "Tu gali prašyti gauti visus Vikunja duomenis. Į tai įeina, Projektai, Užduotys ir viskas, kas su jais susiję. Tu gali savo duomenis vėliau įkelti į bet kurią Vikunja aplinką naudojantis migracijos funkcija.",
       "descriptionPasswordRequired": "Please enter your password to proceed:",
       "request": "Request a copy of my Vikunja Data",
       "success": "You've successfully requested your Vikunja Data! We will send you an email once it's ready to download.",
@@ -265,9 +265,9 @@
       "title": "Edit \"{project}\"",
       "titlePlaceholder": "The project title goes here…",
       "identifierTooltip": "The project identifier can be used to uniquely identify a task across projects. You can set it to empty to disable it.",
-      "identifier": "Project Identifier",
+      "identifier": "Projekto identifikatorius",
       "identifierPlaceholder": "The project identifier goes here…",
-      "description": "Description",
+      "description": "Aprašymas",
       "descriptionPlaceholder": "Enter a description for this project, hit '/' for more options…",
       "color": "Color",
       "success": "The project was successfully updated."
@@ -283,21 +283,21 @@
         "create": "Create a link share",
         "name": "Name (optional)",
         "namePlaceholder": "e.g. Lorem Ipsum",
-        "nameExplanation": "All actions done by this link share will show up with the name.",
-        "password": "Password (optional)",
-        "passwordExplanation": "When signing in, the user will be required to enter this password.",
-        "noName": "No name set",
+        "nameExplanation": "Visi veiksmai atlikti po pasidalinta nuoroda matysis šiuo pavadinimu.",
+        "password": "Slaptažodis (pasirinktinai)",
+        "passwordExplanation": "Prisijungiant, vartotojas privalės įvesti savo slaptažodį.",
+        "noName": "Vardas nenustatytas",
         "remove": "Remove a link share",
         "removeText": "Are you sure you want to remove this link share? It will no longer be possible to access this project with this link share. This cannot be undone!",
         "createSuccess": "The link share was successfully created.",
         "deleteSuccess": "The link share was successfully deleted",
-        "view": "View",
-        "sharedBy": "Shared by {0}"
+        "view": "Peržiūra",
+        "sharedBy": "Pasidalino {0}"
       },
       "userTeam": {
-        "typeUser": "user | users",
-        "typeTeam": "team | teams",
-        "shared": "Shared with these {type}",
+        "typeUser": "vartotojas | vartotojai",
+        "typeTeam": "komanda | komandos",
+        "shared": "Pasidalinta su šiais {type}",
         "you": "You",
         "notShared": "Not shared with any {type} yet.",
         "removeHeader": "Remove a {type} from the {sharable}",
@@ -332,11 +332,11 @@
       "title": "Gantt",
       "size": "Size",
       "default": "Default",
-      "month": "Month",
-      "day": "Day",
-      "hour": "Hour",
+      "month": "Mėnuo",
+      "day": "Diena",
+      "hour": "Valanda",
       "range": "Date Range",
-      "noDates": "This task has no dates set."
+      "noDates": "Ši užduotis dar neturi nurodytos datos."
     },
     "table": {
       "title": "Table",
@@ -373,17 +373,17 @@
       }
     },
     "webhooks": {
-      "title": "Webhooks",
-      "targetUrl": "Target URL",
-      "targetUrlInvalid": "Please provide a valid URL.",
-      "events": "Events",
+      "title": "„Webhook“'ai",
+      "targetUrl": "Tikslinė nuoroda",
+      "targetUrlInvalid": "Prašome nurodyti veikiančia nuorodą.",
+      "events": "Įvykiai",
       "eventsHint": "Select all events this webhook should recieve updates for (within the current project).",
       "mustSelectEvents": "You must select at least one event.",
-      "delete": "Delete this webhook",
+      "delete": "Ištrinti šį webhook'ą",
       "deleteText": "Are you sure you want to delete this webhook? External targets will not be notified of its events anymore.",
       "deleteSuccess": "The webhook was successfully deleted.",
-      "create": "Create webhook",
-      "secret": "Secret",
+      "create": "Sukurti ryšį",
+      "secret": "Paslaptis",
       "secretHint": "If provided, all requests to the webhook target URL will be signed using HMAC.",
       "secretDocs": "Check out the docs for more details about how to use secrets."
     },
@@ -393,13 +393,13 @@
       "actions": "Actions",
       "kind": "Kind",
       "bucketConfigMode": "Bucket configuration mode",
-      "bucketConfig": "Bucket configuration",
+      "bucketConfig": "Telkinio konfigūracija",
       "bucketConfigManual": "Manual",
       "filter": "Filter",
-      "create": "Create view",
+      "create": "Sukurti atvaizdavimą",
       "createSuccess": "The view was created successfully.",
       "titleRequired": "Please provide a title.",
-      "delete": "Delete this view",
+      "delete": "Ištrinti šį atvaizdavimą",
       "deleteText": "Are you sure you want to remove this view? It will no longer be possible to use it to view tasks in this project. This action won't delete any tasks. This cannot be undone!",
       "deleteSuccess": "The view was deleted successfully.",
       "onlyAdminsCanEdit": "Only project admins can edit views.",
@@ -413,8 +413,8 @@
     "attributes": {
       "title": "Title",
       "titlePlaceholder": "The saved filter title goes here…",
-      "description": "Description",
-      "descriptionPlaceholder": "Add a description for this filter here, hit '/' for more options…",
+      "description": "Aprašymas",
+      "descriptionPlaceholder": "Įvesti filtro aprašymą, spausti '/' norint gauti daugiau pasirinkčių…",
       "includeNulls": "Include Tasks which don't have a value set",
       "requireAll": "Require all filters to be true for a task to show up",
       "showDoneTasks": "Show Done Tasks",
@@ -490,17 +490,17 @@
   },
   "migrate": {
     "title": "Import from other services",
-    "titleService": "Import your data from {name} into Vikunja",
+    "titleService": "Importuoti duomenis iš {name} į Vikunja",
     "import": "Import your data into Vikunja",
-    "description": "Click on the logo of one of the third-party services below to get started.",
-    "descriptionDo": "Vikunja will import all lists, tasks, notes, reminders and files you have access to.",
-    "authorize": "To authorize Vikunja to access your {name} Account, click the button below.",
+    "description": "Paspauskite ant trečiosios šalies logotipo norint pradėti.",
+    "descriptionDo": "Vikunja importuos visus sąrašus, užduotis, užrašus, priminimus ir dokumentus prie kurių tu turi prieigą.",
+    "authorize": "Autorizuoti Vikunja prieigą prie tavo {name} paskyros, spauskite mygtuką žemiau.",
     "getStarted": "Get Started",
     "inProgress": "Importing in progress…",
-    "alreadyMigrated1": "It looks like you've already imported your stuff from {name} at {date}.",
+    "alreadyMigrated1": "Atrodo, kad jau importavai savo info is {name} {date}.",
     "alreadyMigrated2": "Importing again is possible, but might create duplicates. Are you sure?",
     "confirm": "I am sure, please start migrating now!",
-    "importUpload": "To import data from {name} into Vikunja, click the button below to select a file.",
+    "importUpload": "Importuoti duomenis iš {name} į Vikunja, spausk mygtuką žemiau, norėdamas pasirinkti failą.",
     "upload": "Upload file",
     "migrationStartedWillReciveEmail": "Vikunja will now import your lists/projects, tasks, notes, reminders and files from {service}. As this will take a while, we will send you an email once done. You can close this window now.",
     "migrationInProgress": "A migration is currently in progress. Please wait until it is done."
@@ -508,7 +508,7 @@
   "label": {
     "title": "Labels",
     "manage": "Manage labels",
-    "description": "Click on a label to edit it. You can edit all labels you created, you can use all labels which are associated with a task to whose project you have access.",
+    "description": "Paspausk ant etiketės norėdamas ją redaguoti. Tu gali keisti etiketes, kurias pats sukūrei, tu gali naudoti visas etiketes, kurios yra susietos su užduotimis, projektų, prie kurių tu turi prieigą.",
     "newCTA": "You currently do not have any labels.",
     "search": "Type to search for a label…",
     "create": {
@@ -526,16 +526,16 @@
     "attributes": {
       "title": "Title",
       "titlePlaceholder": "The label title goes here…",
-      "description": "Description",
-      "descriptionPlaceholder": "Label description",
+      "description": "Aprašymas",
+      "descriptionPlaceholder": "Etiketės aprašas",
       "color": "Color"
     }
   },
   "sharing": {
     "authenticating": "Authenticating…",
-    "passwordRequired": "This shared project requires a password. Please enter it below:",
+    "passwordRequired": "Šis pasidalintas projektas reikalauja slaptažodžio. Įveskite jį žemiau:",
     "error": "An error occurred.",
-    "invalidPassword": "The password is invalid."
+    "invalidPassword": "Slaptažodis neteisingas."
   },
   "navigation": {
     "overview": "Overview",
@@ -830,7 +830,7 @@
       "drop": "Drop files here to upload",
       "delete": "Delete attachment",
       "deleteTooltip": "Delete this attachment",
-      "deleteText1": "Are you sure you want to delete the attachment {filename}?",
+      "deleteText1": "Ar esi tikra -s, kad nori ištrinti šį prisegtuką {filename}?",
       "copyUrl": "Copy URL",
       "copyUrlTooltip": "Copy the url of this attachment for usage in text",
       "setAsCover": "Make cover",
@@ -858,8 +858,8 @@
       "1week": "1 week"
     },
     "description": {
-      "placeholder": "Enter a description, hit '/' for more options…",
-      "empty": "No description available yet."
+      "placeholder": "Įvesti aprašą, spausti '/' norint gauti daugiau pasirinkčių…",
+      "empty": "Aprašo kol kas nėra."
     },
     "assignee": {
       "placeholder": "Type to assign a user…",
@@ -945,13 +945,13 @@
       "title": "Quick Add Magic",
       "intro": "When creating a task, you can use special keywords to directly add attributes to the newly created task. This allows to add commonly used attributes to tasks much faster.",
       "multiple": "You can use this multiple times.",
-      "label1": "To add a label, simply prefix the name of the label with {prefix}.",
+      "label1": "Norėdama -s pridėti etiketę, paprasčiausiai naudoti etiketės prefikso pavadinimą su {prefix}.",
       "label2": "Vikunja will first check if the label already exist and create it if not.",
-      "label3": "To use spaces, simply add a \" or ' around the label name.",
+      "label3": "Norint naudoti tarpus, paprasčiausiai pridėkite \" ar ' prieš etiketės pavadinimą.",
       "label4": "For example: {prefix}\"Label with spaces\".",
       "priority1": "To set a task's priority, add a number 1-5, prefixed with a {prefix}.",
       "priority2": "The higher the number, the higher the priority.",
-      "assignees": "To directly assign the task to a user, add their username prefixed with {prefix} to the task.",
+      "assignees": "Norint tiesiogiai priskirti užduotį vartotojui, pridėkite vartotojo vardą kaip prefiksą su {prefix} prie užduoties.",
       "project1": "To set a project for the task to appear in, enter its name prefixed with {prefix}.",
       "project2": "This will return an error if the project does not exist.",
       "project3": "To use spaces, simply add a \" or ' around the project name.",
@@ -963,7 +963,7 @@
       "dateNth": "will use the {day}th of the current month",
       "dateTime": "Combine any of the date formats with \"{time}\" (or {timePM}) to set a time.",
       "repeats": "Repeating tasks",
-      "repeatsDescription": "To set a task as repeating in an interval, simply add '{suffix}' to the task text. The amount needs to be a number and can be omitted to use just the type (see examples)."
+      "repeatsDescription": "Norėdama -s nustatyti, kad užduotis kartotųsi tam tikru intervalu, paprasčiausiai pridėk '{suffix}' prie užduoties teksto. Kiekis turi būti išreikštas skaičiumi, tačiau gali būti ir praleistas (žr. pavyzdžius)."
     }
   },
   "team": {
@@ -1006,14 +1006,14 @@
     },
     "attributes": {
       "name": "Team Name",
-      "namePlaceholder": "The team's name goes here…",
+      "namePlaceholder": "Komandos pavadinimas rašomas čia…",
       "nameRequired": "Please specify a name.",
-      "description": "Description",
-      "descriptionPlaceholder": "Describe the team here, hit '/' for more options…",
+      "description": "Aprašymas",
+      "descriptionPlaceholder": "Aprašykite komandą čia, spauskite '/' dėl daugiau opcijų…",
       "admin": "Admin",
       "member": "Member",
       "isPublic": "Public Team",
-      "isPublicDescription": "Make the team publicly discoverable. When enabled, anyone can share projects with this team even when not being a direct member."
+      "isPublicDescription": "Padaryk komandą viešai randamą. Kai įgalinta, bet kas gali pasidalinti projektu su komanda, net nebūdama -s tiesioginiu komandos nariu."
     }
   },
   "keyboardShortcuts": {
@@ -1036,7 +1036,7 @@
       "color": "Change the color of this task",
       "move": "Move this task to another project",
       "reminder": "Manage reminders of this task",
-      "description": "Toggle editing of the task description",
+      "description": "Praskleisti redagavimą užduoties apraše",
       "delete": "Delete this task",
       "priority": "Change the priority of this task",
       "favorite": "Mark this task as favorite / unfavorite",
@@ -1174,7 +1174,7 @@
     "4017": "Invalid task filter comparator.",
     "4018": "Invalid task filter concatenator.",
     "4019": "Invalid task filter value.",
-    "6001": "The team name cannot be empty.",
+    "6001": "Komandos pavadinimas negali būti tuščias.",
     "6002": "The team does not exist.",
     "6004": "The team already has access to that project.",
     "6005": "The user is already a member of that team.",
