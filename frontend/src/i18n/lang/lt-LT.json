@@ -954,7 +954,7 @@
       "assignees": "Norint tiesiogiai priskirti užduotį vartotojui, pridėkite vartotojo vardą kaip prefiksą su {prefix} prie užduoties.",
       "project1": "To set a project for the task to appear in, enter its name prefixed with {prefix}.",
       "project2": "This will return an error if the project does not exist.",
-      "project3": "To use spaces, simply add a \" or ' around the project name.",
+      "project3": "Norint naudoti tarpus, paprasčiausiai pridėkite \" ar ' apie projekto pavadinimą.",
       "project4": "For example: {prefix}\"Project with spaces\".",
       "dateAndTime": "Date and time",
       "date": "Any date will be used as the due date of the new task. You can use dates in any of these formats:",
