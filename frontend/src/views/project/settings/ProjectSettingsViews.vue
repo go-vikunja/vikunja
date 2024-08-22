@@ -99,7 +99,7 @@ async function saveView(view: IProjectView) {
 	if (view?.viewKind !== 'kanban') {
 		view.bucketConfigurationMode = 'none'
 	}
-	const result = await ProjectViewService.update(view)
+	const result = await projectViewService.update(view)
 	projectStore.setProjectView(result)
 	viewToEdit.value = null
 	success({message: t('project.views.updateSuccess')})
