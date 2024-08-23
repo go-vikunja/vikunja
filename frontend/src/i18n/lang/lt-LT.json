@@ -408,11 +408,11 @@
   },
   "filters": {
     "title": "Filters",
-    "clear": "Clear Filters",
-    "showResults": "Show results",
+    "clear": "Anuliuoti filtrus",
+    "showResults": "Rodyti rezultatus",
     "attributes": {
-      "title": "Title",
-      "titlePlaceholder": "The saved filter title goes here…",
+      "title": "Pavadinimas",
+      "titlePlaceholder": "Išsaugoto filtro pavadinimas rašomas čia…",
       "description": "Aprašymas",
       "descriptionPlaceholder": "Įvesti filtro aprašymą, spausti '/' norint gauti daugiau pasirinkčių…",
       "includeNulls": "Include Tasks which don't have a value set",
