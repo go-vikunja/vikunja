@@ -390,7 +390,7 @@ func TestListUsers(t *testing.T) {
 
 		all, err := ListUsers(s, "uSEr1", nil)
 		require.NoError(t, err)
-		assert.NotEmpty(t, len(all))
+		assert.NotEmpty(t, all)
 		assert.Equal(t, "user1", all[0].Username)
 	})
 	t.Run("all users", func(t *testing.T) {

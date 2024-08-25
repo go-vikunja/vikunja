@@ -109,3 +109,7 @@ issues:
       text: 'structtag: struct field Position repeats json tag "position" also at'
       linters:
         - govet
+    - path: pkg/cmd/user.go
+      text: 'G115: integer overflow conversion uintptr -> int'
+      linters:
+        - gosec
