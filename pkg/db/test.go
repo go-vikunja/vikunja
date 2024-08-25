@@ -94,16 +94,16 @@ func AssertExists(t *testing.T, table string, values map[string]interface{}, cus
 	} else {
 		exists, err = x.Table(table).Where(values).Get(&v)
 	}
-	require.NoError(t, err, fmt.Sprintf("Failed to assert entries exist in db, error was: %s", err))
+	require.NoError(t, err, "Failed to assert entries exist in db")
 	if !exists {
 
 		all := []map[string]interface{}{}
 		err = x.Table(table).Find(&all)
-		require.NoError(t, err, fmt.Sprintf("Failed to assert entries exist in db, error was: %s", err))
+		require.NoErrorf(t, err, "Failed to assert entries exist in db, error was: %s", err)
 		pretty, err := json.MarshalIndent(all, "", "    ")
-		require.NoError(t, err, fmt.Sprintf("Failed to assert entries exist in db, error was: %s", err))
+		require.NoErrorf(t, err, "Failed to assert entries exist in db, error was: %s", err)
 
-		t.Errorf(fmt.Sprintf("Entries %v do not exist in table %s\n\nFound entries instead: %v", values, table, string(pretty)))
+		t.Errorf("Entries %v do not exist in table %s\n\nFound entries instead: %v", values, table, string(pretty))
 	}
 }
 
@@ -111,13 +111,13 @@ func AssertExists(t *testing.T, table string, values map[string]interface{}, cus
 func AssertMissing(t *testing.T, table string, values map[string]interface{}) {
 	v := make(map[string]interface{})
 	exists, err := x.Table(table).Where(values).Exist(&v)
-	require.NoError(t, err, fmt.Sprintf("Failed to assert entries don't exist in db, error was: %s", err))
-	assert.False(t, exists, fmt.Sprintf("Entries %v exist in table %s", values, table))
+	require.NoErrorf(t, err, "Failed to assert entries don't exist in db, error was: %s", err)
+	assert.Falsef(t, exists, "Entries %v exist in table %s", values, table)
 }
 
 // AssertCount checks if a number of entries exists in the database
 func AssertCount(t *testing.T, table string, where builder.Cond, count int64) {
 	dbCount, err := x.Table(table).Where(where).Count()
-	require.NoError(t, err, fmt.Sprintf("Failed to assert count in db, error was: %s", err))
-	assert.Equal(t, count, dbCount, fmt.Sprintf("Found %d entries instead of expected %d in table %s", dbCount, count, table))
+	require.NoErrorf(t, err, "Failed to assert count in db, error was: %s", err)
+	assert.Equalf(t, count, dbCount, "Found %d entries instead of expected %d in table %s", dbCount, count, table)
 }
