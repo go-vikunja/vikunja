@@ -24,13 +24,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/asaskevich/govalidator"
-
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/initialize"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
+
+	"github.com/asaskevich/govalidator"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
