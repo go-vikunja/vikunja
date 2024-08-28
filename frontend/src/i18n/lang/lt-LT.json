@@ -35,7 +35,7 @@
     "auth": {
       "username": "Username",
       "usernameEmail": "Username Or Email Address",
-      "usernamePlaceholder": "e.g. frederick",
+      "usernamePlaceholder": "pvz.: frederick",
       "email": "Email address",
       "emailPlaceholder": "e.g. frederic{'@'}vikunja.io",
       "password": "Password",
