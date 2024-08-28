@@ -192,3 +192,39 @@ func getPositionsForView(s *xorm.Session, view *ProjectView) (positions []*TaskP
 		Find(&positions)
 	return
 }
+
+func calculateNewPositionForTask(s *xorm.Session, a web.Auth, t *Task, view *ProjectView) (*TaskPosition, error) {
+	if t.Position == 0 {
+		lowestPosition := &TaskPosition{}
+		exists, err := s.Where("project_view_id = ?", view.ID).
+			OrderBy("position asc").
+			Get(lowestPosition)
+		if err != nil {
+			return nil, err
+		}
+		if exists {
+			if lowestPosition.Position == 0 {
+				err = RecalculateTaskPositions(s, view, a)
+				if err != nil {
+					return nil, err
+				}
+
+				lowestPosition = &TaskPosition{}
+				_, err = s.Where("project_view_id = ?", view.ID).
+					OrderBy("position asc").
+					Get(lowestPosition)
+				if err != nil {
+					return nil, err
+				}
+			}
+
+			t.Position = lowestPosition.Position / 2
+		}
+	}
+
+	return &TaskPosition{
+		TaskID:        t.ID,
+		ProjectViewID: view.ID,
+		Position:      calculateDefaultPosition(t.Index, t.Position),
+	}, nil
+}

@@ -564,15 +564,15 @@ async function addTaskToBucket(bucketId: IBucket['id']) {
 	})
 	newTaskText.value = ''
 	kanbanStore.addTaskToBucket(task)
-	scrollTaskContainerToBottom(bucketId)
+	scrollTaskContainerToTop(bucketId)
 }
 
-function scrollTaskContainerToBottom(bucketId: IBucket['id']) {
+function scrollTaskContainerToTop(bucketId: IBucket['id']) {
 	const bucketEl = taskContainerRefs.value[bucketId]
 	if (!bucketEl) {
 		return
 	}
-	bucketEl.scrollTop = bucketEl.scrollHeight
+	bucketEl.scrollTop = 0
 }
 
 async function createNewBucket() {

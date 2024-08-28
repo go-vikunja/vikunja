@@ -791,11 +791,12 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setB
 			})
 		}
 
-		positions = append(positions, &TaskPosition{
-			TaskID:        t.ID,
-			ProjectViewID: view.ID,
-			Position:      calculateDefaultPosition(t.Index, t.Position),
-		})
+		newPosition, err := calculateNewPositionForTask(s, a, t, view)
+		if err != nil {
+			return err
+		}
+
+		positions = append(positions, newPosition)
 	}
 
 	if len(positions) > 0 {
@@ -955,11 +956,11 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 				return err
 			}
 
-			tp := TaskPosition{
-				TaskID:        t.ID,
-				ProjectViewID: view.ID,
-				Position:      calculateDefaultPosition(t.Index, t.Position),
+			tp, err := calculateNewPositionForTask(s, a, t, view)
+			if err != nil {
+				return err
 			}
+
 			err = tp.Update(s, a)
 			if err != nil {
 				return err
