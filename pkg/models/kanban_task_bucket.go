@@ -17,6 +17,8 @@
 package models
 
 import (
+	"time"
+
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
@@ -149,12 +151,18 @@ func (b *TaskBucket) Update(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	if doneChanged {
+		if task.Done {
+			task.DoneAt = time.Now()
+		} else {
+			task.DoneAt = time.Time{}
+		}
 		_, err = s.Where("id = ?", task.ID).
 			Cols(
 				"done",
 				"due_date",
 				"start_date",
 				"end_date",
+				"done_at",
 			).
 			Update(task)
 		if err != nil {
