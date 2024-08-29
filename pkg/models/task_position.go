@@ -20,8 +20,6 @@ import (
 	"math"
 
 	"code.vikunja.io/api/pkg/events"
-	"code.vikunja.io/api/pkg/user"
-
 	"code.vikunja.io/web"
 	"xorm.io/xorm"
 )
@@ -110,16 +108,7 @@ func (tp *TaskPosition) Update(s *xorm.Session, a web.Auth) (err error) {
 		return RecalculateTaskPositions(s, view, a)
 	}
 
-	task, err := GetTaskByIDSimple(s, tp.TaskID)
-	if err != nil {
-		return
-	}
-
-	doer, _ := user.GetFromAuth(a)
-	return events.Dispatch(&TaskUpdatedEvent{
-		Task: &task,
-		Doer: doer,
-	})
+	return triggerTaskUpdatedEventForTaskID(s, a, tp.TaskID)
 }
 
 func RecalculateTaskPositions(s *xorm.Session, view *ProjectView, a web.Auth) (err error) {
