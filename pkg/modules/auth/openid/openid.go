@@ -24,7 +24,7 @@ import (
 	"strconv"
 	"strings"
 
-	"code.vikunja.io/web/handler"
+	"code.vikunja.io/api/pkg/web/handler"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"

@@ -25,7 +25,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 
-	"code.vikunja.io/web"
+	"code.vikunja.io/api/pkg/web"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 	"xorm.io/builder"

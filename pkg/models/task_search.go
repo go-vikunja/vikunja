@@ -24,7 +24,7 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/web"
+	"code.vikunja.io/api/pkg/web"
 	"github.com/typesense/typesense-go/typesense/api"
 	"github.com/typesense/typesense-go/typesense/api/pointer"
 

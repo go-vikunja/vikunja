@@ -25,7 +25,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	user2 "code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/web/handler"
+	"code.vikunja.io/api/pkg/web/handler"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"

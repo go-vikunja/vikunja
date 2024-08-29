@@ -42,8 +42,8 @@ import (
 	"code.vikunja.io/api/pkg/modules/background"
 	"code.vikunja.io/api/pkg/modules/background/unsplash"
 	"code.vikunja.io/api/pkg/modules/background/upload"
-	"code.vikunja.io/web"
-	"code.vikunja.io/web/handler"
+	"code.vikunja.io/api/pkg/web"
+	"code.vikunja.io/api/pkg/web/handler"
 
 	"github.com/bbrks/go-blurhash"
 	"github.com/gabriel-vasile/mimetype"

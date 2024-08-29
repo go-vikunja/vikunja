@@ -22,7 +22,7 @@ import (
 
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
-	"code.vikunja.io/web"
+	"code.vikunja.io/api/pkg/web"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )

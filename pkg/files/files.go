@@ -29,7 +29,7 @@ import (
 	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 
-	"code.vikunja.io/web"
+	"code.vikunja.io/api/pkg/web"
 	"github.com/c2h5oh/datasize"
 	"github.com/spf13/afero"
 	"xorm.io/xorm"

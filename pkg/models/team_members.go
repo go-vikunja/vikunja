@@ -19,7 +19,7 @@ package models
 import (
 	"code.vikunja.io/api/pkg/events"
 	user2 "code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/web"
+	"code.vikunja.io/api/pkg/web"
 	"xorm.io/xorm"
 )
 

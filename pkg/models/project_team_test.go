@@ -24,7 +24,7 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/web"
+	"code.vikunja.io/api/pkg/web"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

@@ -29,7 +29,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/avatar/marble"
 	"code.vikunja.io/api/pkg/modules/avatar/upload"
 	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/web/handler"
+	"code.vikunja.io/api/pkg/web/handler"
 
 	"bytes"
 	"image"

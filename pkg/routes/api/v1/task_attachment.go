@@ -23,7 +23,8 @@ import (
 
 	"code.vikunja.io/api/pkg/models"
 	auth2 "code.vikunja.io/api/pkg/modules/auth"
-	"code.vikunja.io/web/handler"
+	"code.vikunja.io/api/pkg/web/handler"
+
 	"github.com/labstack/echo/v4"
 )
 

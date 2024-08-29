@@ -24,7 +24,7 @@ import (
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/background"
-	"code.vikunja.io/web"
+	"code.vikunja.io/api/pkg/web"
 )
 
 // Provider represents an upload provider

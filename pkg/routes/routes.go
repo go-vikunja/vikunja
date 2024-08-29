@@ -77,8 +77,8 @@ import (
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/api/pkg/routes/caldav"
 	"code.vikunja.io/api/pkg/version"
-	"code.vikunja.io/web"
-	"code.vikunja.io/web/handler"
+	"code.vikunja.io/api/pkg/web"
+	"code.vikunja.io/api/pkg/web/handler"
 
 	"github.com/getsentry/sentry-go"
 	sentryecho "github.com/getsentry/sentry-go/echo"

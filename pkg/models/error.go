@@ -22,7 +22,7 @@ import (
 	"strings"
 
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/web"
+	"code.vikunja.io/api/pkg/web"
 )
 
 // Generic

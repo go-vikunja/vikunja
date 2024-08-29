@@ -24,7 +24,7 @@ import (
 	"code.vikunja.io/api/pkg/events"
 
 	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/web"
+	"code.vikunja.io/api/pkg/web"
 	"xorm.io/xorm"
 )
 

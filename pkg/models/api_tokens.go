@@ -27,7 +27,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/utils"
 
-	"code.vikunja.io/web"
+	"code.vikunja.io/api/pkg/web"
 	"golang.org/x/crypto/pbkdf2"
 	"xorm.io/xorm"
 )

@@ -35,8 +35,8 @@ import (
 	"code.vikunja.io/api/pkg/routes"
 	"code.vikunja.io/api/pkg/routes/caldav"
 	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/web"
-	"code.vikunja.io/web/handler"
+	"code.vikunja.io/api/pkg/web"
+	"code.vikunja.io/api/pkg/web/handler"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"

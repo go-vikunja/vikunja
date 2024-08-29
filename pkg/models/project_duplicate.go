@@ -20,7 +20,7 @@ import (
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/utils"
-	"code.vikunja.io/web"
+	"code.vikunja.io/api/pkg/web"
 	"xorm.io/xorm"
 )
 

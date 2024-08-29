@@ -18,7 +18,8 @@ package integrations
 
 import (
 	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/web/handler"
+	"code.vikunja.io/api/pkg/web/handler"
+
 	"github.com/labstack/echo"
 	"github.com/stretchr/testify/assert"
 	"net/url"
