@@ -42,7 +42,7 @@ func UserResetPassword(c echo.Context) error {
 	// Check for Request Content
 	var pwReset user.PasswordReset
 	if err := c.Bind(&pwReset); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "No password provided.")
+		return echo.NewHTTPError(http.StatusBadRequest, "No password provided.").SetInternal(err)
 	}
 
 	s := db.NewSession()
@@ -77,11 +77,11 @@ func UserRequestResetPasswordToken(c echo.Context) error {
 	// Check for Request Content
 	var pwTokenReset user.PasswordTokenRequest
 	if err := c.Bind(&pwTokenReset); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "No username provided.")
+		return echo.NewHTTPError(http.StatusBadRequest, "No username provided.").SetInternal(err)
 	}
 
 	if err := c.Validate(pwTokenReset); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return echo.NewHTTPError(http.StatusBadRequest, err).SetInternal(err)
 	}
 
 	s := db.NewSession()

@@ -83,7 +83,7 @@ func (mw *MigrationWeb) Migrate(c echo.Context) error {
 	// Bind user request stuff
 	err = c.Bind(ms)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided: "+err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided: "+err.Error()).SetInternal(err)
 	}
 
 	err = events.Dispatch(&MigrationRequestedEvent{

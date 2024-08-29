@@ -65,18 +65,18 @@ func UserRequestDeletion(c echo.Context) error {
 	if u.IsLocalUser() {
 		var deletionRequest UserPasswordConfirmation
 		if err := c.Bind(&deletionRequest); err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "No password provided.")
+			return echo.NewHTTPError(http.StatusBadRequest, "No password provided.").SetInternal(err)
 		}
 
 		err = c.Validate(deletionRequest)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, err)
+			return echo.NewHTTPError(http.StatusBadRequest, err).SetInternal(err)
 		}
 
 		err = user.CheckUserPassword(u, deletionRequest.Password)
 		if err != nil {
 			_ = s.Rollback()
-			return handler.HandleHTTPError(err, c)
+			return handler.HandleHTTPError(err, c).SetInternal(err)
 		}
 	}
 
@@ -109,12 +109,12 @@ func UserRequestDeletion(c echo.Context) error {
 func UserConfirmDeletion(c echo.Context) error {
 	var deleteConfirmation UserDeletionRequestConfirm
 	if err := c.Bind(&deleteConfirmation); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "No token provided.")
+		return echo.NewHTTPError(http.StatusBadRequest, "No token provided.").SetInternal(err)
 	}
 
 	err := c.Validate(deleteConfirmation)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return echo.NewHTTPError(http.StatusBadRequest, err).SetInternal(err)
 	}
 
 	s := db.NewSession()
@@ -176,12 +176,12 @@ func UserCancelDeletion(c echo.Context) error {
 	if u.IsLocalUser() {
 		var deletionRequest UserPasswordConfirmation
 		if err := c.Bind(&deletionRequest); err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "No password provided.")
+			return echo.NewHTTPError(http.StatusBadRequest, "No password provided.").SetInternal(err)
 		}
 
 		err = c.Validate(deletionRequest)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, err)
+			return echo.NewHTTPError(http.StatusBadRequest, err).SetInternal(err)
 		}
 
 		err = user.CheckUserPassword(u, deletionRequest.Password)
