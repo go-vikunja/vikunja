@@ -56,7 +56,7 @@ func unsplashImage(url string, c echo.Context) error {
 func ProxyUnsplashImage(c echo.Context) error {
 	photo, err := getUnsplashPhotoInfoByID(c.Param("image"))
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 	pingbackByPhotoID(photo.ID)
 	return unsplashImage(photo.Urls.Raw, c)
@@ -76,7 +76,7 @@ func ProxyUnsplashImage(c echo.Context) error {
 func ProxyUnsplashThumb(c echo.Context) error {
 	photo, err := getUnsplashPhotoInfoByID(c.Param("image"))
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 	pingbackByPhotoID(photo.ID)
 	return unsplashImage("https://images.unsplash.com/"+getImageID(photo.Urls.Raw)+"?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=200&fit=max&ixid=eyJhcHBfaWQiOjcyODAwfQ", c)

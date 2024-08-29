@@ -129,7 +129,7 @@ func (bp *BackgroundProvider) SetBackground(c echo.Context) error {
 	project, auth, err := bp.setBackgroundPreparations(s, c)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	p := bp.Provider()
@@ -144,13 +144,13 @@ func (bp *BackgroundProvider) SetBackground(c echo.Context) error {
 	err = p.Set(s, image, project, auth)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	err = project.ReadOne(s, auth)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	return c.JSON(http.StatusOK, project)
@@ -176,7 +176,7 @@ func (bp *BackgroundProvider) UploadBackground(c echo.Context) error {
 	project, auth, err := bp.setBackgroundPreparations(s, c)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	// Get + upload the image
@@ -196,7 +196,7 @@ func (bp *BackgroundProvider) UploadBackground(c echo.Context) error {
 	mime, err := mimetype.DetectReader(srcf)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 	if !strings.HasPrefix(mime.String(), "image") {
 		_ = s.Rollback()
@@ -210,18 +210,18 @@ func (bp *BackgroundProvider) UploadBackground(c echo.Context) error {
 			return echo.ErrBadRequest
 		}
 
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	err = project.ReadOne(s, auth)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	return c.JSON(http.StatusOK, project)
@@ -287,7 +287,7 @@ func checkProjectBackgroundRights(s *xorm.Session, c echo.Context) (project *mod
 	can, _, err := project.CanRead(s, auth)
 	if err != nil {
 		_ = s.Rollback()
-		return nil, auth, handler.HandleHTTPError(err, c)
+		return nil, auth, handler.HandleHTTPError(err)
 	}
 	if !can {
 		_ = s.Rollback()
@@ -332,12 +332,12 @@ func GetProjectBackground(c echo.Context) error {
 	}
 	if err := bgFile.LoadFileByID(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 	stat, err := bgFile.File.Stat()
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	// Unsplash requires pingbacks as per their api usage guidelines.
@@ -347,7 +347,7 @@ func GetProjectBackground(c echo.Context) error {
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	// Set Last-Modified header if we have the file stat, so clients can decide whether to use cached files

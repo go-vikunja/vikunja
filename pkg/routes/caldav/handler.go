@@ -176,7 +176,7 @@ func getIntParam(c echo.Context, paramName string) (intParam int64, err error) {
 
 	intParam, err = strconv.ParseInt(param, 10, 64)
 	if err != nil {
-		return 0, handler.HandleHTTPError(err, c)
+		return 0, handler.HandleHTTPError(err)
 	}
 	return
 }

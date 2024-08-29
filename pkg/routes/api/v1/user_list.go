@@ -50,12 +50,12 @@ func UserList(c echo.Context) error {
 	users, err := user.ListUsers(s, search, nil)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	// Obfuscate the mailadresses
@@ -83,13 +83,13 @@ func UserList(c echo.Context) error {
 func ListUsersForProject(c echo.Context) error {
 	projectID, err := strconv.ParseInt(c.Param("project"), 10, 64)
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	project := models.Project{ID: projectID}
 	auth, err := auth2.GetAuthFromClaims(c)
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	s := db.NewSession()
@@ -98,7 +98,7 @@ func ListUsersForProject(c echo.Context) error {
 	canRead, _, err := project.CanRead(s, auth)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 	if !canRead {
 		return echo.ErrForbidden
@@ -108,12 +108,12 @@ func ListUsersForProject(c echo.Context) error {
 	users, err := models.ListUsersFromProject(s, &project, search)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	return c.JSON(http.StatusOK, users)

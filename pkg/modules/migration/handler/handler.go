@@ -65,12 +65,12 @@ func (mw *MigrationWeb) Migrate(c echo.Context) error {
 	// Get the user from context
 	user, err := user2.GetCurrentUser(c)
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	stats, err := migration.GetMigrationStatus(ms, user)
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	if !stats.StartedAt.IsZero() && stats.FinishedAt.IsZero() {
@@ -92,7 +92,7 @@ func (mw *MigrationWeb) Migrate(c echo.Context) error {
 		User:         user,
 	})
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	return c.JSON(http.StatusOK, models.Message{Message: "Migration was started successfully."})

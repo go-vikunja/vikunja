@@ -61,7 +61,7 @@ func (c *WebHandler) UpdateWeb(ctx echo.Context) error {
 	canUpdate, err := currentStruct.CanUpdate(s, currentAuth)
 	if err != nil {
 		_ = s.Rollback()
-		return HandleHTTPError(err, ctx)
+		return HandleHTTPError(err)
 	}
 	if !canUpdate {
 		_ = s.Rollback()
@@ -73,17 +73,17 @@ func (c *WebHandler) UpdateWeb(ctx echo.Context) error {
 	err = currentStruct.Update(s, currentAuth)
 	if err != nil {
 		_ = s.Rollback()
-		return HandleHTTPError(err, ctx)
+		return HandleHTTPError(err)
 	}
 
 	err = s.Commit()
 	if err != nil {
-		return HandleHTTPError(err, ctx)
+		return HandleHTTPError(err)
 	}
 
 	err = ctx.JSON(http.StatusOK, currentStruct)
 	if err != nil {
-		return HandleHTTPError(err, ctx)
+		return HandleHTTPError(err)
 	}
 	return err
 }

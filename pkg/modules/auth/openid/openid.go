@@ -101,7 +101,7 @@ func HandleCallback(c echo.Context) error {
 	log.Debugf("Provider: %v", provider)
 	if err != nil {
 		log.Error(err)
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 	if provider == nil {
 		return c.JSON(http.StatusBadRequest, models.Message{Message: "Provider does not exist"})
@@ -119,7 +119,7 @@ func HandleCallback(c echo.Context) error {
 			details := make(map[string]interface{})
 			if err := json.Unmarshal(rerr.Body, &details); err != nil {
 				log.Errorf("Error unmarshalling token for provider %s: %v", provider.Name, err)
-				return handler.HandleHTTPError(err, c)
+				return handler.HandleHTTPError(err)
 			}
 
 			return c.JSON(http.StatusBadRequest, map[string]interface{}{
@@ -128,7 +128,7 @@ func HandleCallback(c echo.Context) error {
 			})
 		}
 
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	// Extract the ID Token from OAuth2 token.
@@ -143,7 +143,7 @@ func HandleCallback(c echo.Context) error {
 	idToken, err := verifier.Verify(context.Background(), rawIDToken)
 	if err != nil {
 		log.Errorf("Error verifying token for provider %s: %v", provider.Name, err)
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	// Extract custom claims
@@ -152,21 +152,21 @@ func HandleCallback(c echo.Context) error {
 	err = idToken.Claims(cl)
 	if err != nil {
 		log.Errorf("Error getting token claims for provider %s: %v", provider.Name, err)
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	if cl.Email == "" || cl.Name == "" || cl.PreferredUsername == "" {
 		info, err := provider.openIDProvider.UserInfo(context.Background(), provider.Oauth2Config.TokenSource(context.Background(), oauth2Token))
 		if err != nil {
 			log.Errorf("Error getting userinfo for provider %s: %v", provider.Name, err)
-			return handler.HandleHTTPError(err, c)
+			return handler.HandleHTTPError(err)
 		}
 
 		cl2 := &claims{}
 		err = info.Claims(cl2)
 		if err != nil {
 			log.Errorf("Error parsing userinfo claims for provider %s: %v", provider.Name, err)
-			return handler.HandleHTTPError(err, c)
+			return handler.HandleHTTPError(err)
 		}
 
 		if cl.Email == "" {
@@ -187,7 +187,7 @@ func HandleCallback(c echo.Context) error {
 
 		if cl.Email == "" {
 			log.Errorf("Claim does not contain an email address for provider %s", provider.Name)
-			return handler.HandleHTTPError(&user.ErrNoOpenIDEmailProvided{}, c)
+			return handler.HandleHTTPError(&user.ErrNoOpenIDEmailProvided{})
 		}
 	}
 
@@ -199,7 +199,7 @@ func HandleCallback(c echo.Context) error {
 	if err != nil {
 		_ = s.Rollback()
 		log.Errorf("Error creating new user for provider %s: %v", provider.Name, err)
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	// does the oidc token contain well formed "vikunja_groups" through vikunja_scope
@@ -229,7 +229,7 @@ func HandleCallback(c echo.Context) error {
 	if err != nil {
 		_ = s.Rollback()
 		log.Errorf("Error creating new team for provider %s: %v", provider.Name, err)
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 	// Create token
 	return auth.NewUserAuthTokenResponse(u, c, false)

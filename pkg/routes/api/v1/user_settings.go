@@ -78,7 +78,7 @@ func GetUserAvatarProvider(c echo.Context) error {
 
 	u, err := user2.GetCurrentUser(c)
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	s := db.NewSession()
@@ -87,12 +87,12 @@ func GetUserAvatarProvider(c echo.Context) error {
 	user, err := user2.GetUserWithEmail(s, &user2.User{ID: u.ID})
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	uap := &UserAvatarProvider{AvatarProvider: user.AvatarProvider}
@@ -121,7 +121,7 @@ func ChangeUserAvatarProvider(c echo.Context) error {
 
 	u, err := user2.GetCurrentUser(c)
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	s := db.NewSession()
@@ -130,7 +130,7 @@ func ChangeUserAvatarProvider(c echo.Context) error {
 	user, err := user2.GetUserWithEmail(s, &user2.User{ID: u.ID})
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	user.AvatarProvider = uap.AvatarProvider
@@ -138,12 +138,12 @@ func ChangeUserAvatarProvider(c echo.Context) error {
 	_, err = user2.UpdateUser(s, user, false)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	return c.JSON(http.StatusOK, &models.Message{Message: "Avatar was changed successfully."})
@@ -178,7 +178,7 @@ func UpdateGeneralUserSettings(c echo.Context) error {
 
 	u, err := user2.GetCurrentUser(c)
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	s := db.NewSession()
@@ -187,7 +187,7 @@ func UpdateGeneralUserSettings(c echo.Context) error {
 	user, err := user2.GetUserWithEmail(s, &user2.User{ID: u.ID})
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	user.Name = us.Name
@@ -205,12 +205,12 @@ func UpdateGeneralUserSettings(c echo.Context) error {
 	_, err = user2.UpdateUser(s, user, true)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	return c.JSON(http.StatusOK, &models.Message{Message: "The settings were updated successfully."})

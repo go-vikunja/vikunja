@@ -53,7 +53,7 @@ func UploadTaskAttachment(c echo.Context) error {
 	// Rights check
 	auth, err := auth2.GetAuthFromClaims(c)
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	s := db.NewSession()
@@ -62,7 +62,7 @@ func UploadTaskAttachment(c echo.Context) error {
 	can, err := taskAttachment.CanCreate(s, auth)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 	if !can {
 		return echo.ErrForbidden
@@ -72,7 +72,7 @@ func UploadTaskAttachment(c echo.Context) error {
 	form, err := c.MultipartForm()
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	type result struct {
@@ -89,14 +89,14 @@ func UploadTaskAttachment(c echo.Context) error {
 
 		f, err := file.Open()
 		if err != nil {
-			r.Errors = append(r.Errors, handler.HandleHTTPError(err, c))
+			r.Errors = append(r.Errors, handler.HandleHTTPError(err))
 			continue
 		}
 		defer f.Close()
 
 		err = ta.NewAttachment(s, f, file.Filename, uint64(file.Size), auth)
 		if err != nil {
-			r.Errors = append(r.Errors, handler.HandleHTTPError(err, c))
+			r.Errors = append(r.Errors, handler.HandleHTTPError(err))
 			continue
 		}
 		r.Success = append(r.Success, ta)
@@ -104,7 +104,7 @@ func UploadTaskAttachment(c echo.Context) error {
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	return c.JSON(http.StatusOK, r)
@@ -135,7 +135,7 @@ func GetTaskAttachment(c echo.Context) error {
 	// Rights check
 	auth, err := auth2.GetAuthFromClaims(c)
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	s := db.NewSession()
@@ -144,7 +144,7 @@ func GetTaskAttachment(c echo.Context) error {
 	can, _, err := taskAttachment.CanRead(s, auth)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 	if !can {
 		return echo.ErrForbidden
@@ -154,7 +154,7 @@ func GetTaskAttachment(c echo.Context) error {
 	err = taskAttachment.ReadOne(s, auth)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	// Reading the 'preview' query parameter
@@ -178,12 +178,12 @@ func GetTaskAttachment(c echo.Context) error {
 	err = taskAttachment.File.LoadFileByID()
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	// If a preview is requested and the preview was not cached, we create the preview and cache it

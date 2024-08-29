@@ -53,13 +53,13 @@ func UserRequestDeletion(c echo.Context) error {
 
 	err := s.Begin()
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	u, err := user.GetCurrentUserFromDB(s, c)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	if u.IsLocalUser() {
@@ -76,20 +76,20 @@ func UserRequestDeletion(c echo.Context) error {
 		err = user.CheckUserPassword(u, deletionRequest.Password)
 		if err != nil {
 			_ = s.Rollback()
-			return handler.HandleHTTPError(err, c).SetInternal(err)
+			return handler.HandleHTTPError(err).SetInternal(err)
 		}
 	}
 
 	err = user.RequestDeletion(s, u)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	err = s.Commit()
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	return c.JSON(http.StatusOK, models.Message{Message: "Successfully requested deletion."})
@@ -122,25 +122,25 @@ func UserConfirmDeletion(c echo.Context) error {
 
 	err = s.Begin()
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	u, err := user.GetCurrentUserFromDB(s, c)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	err = user.ConfirmDeletion(s, u, deleteConfirmation.Token)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	err = s.Commit()
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	return c.JSON(http.StatusNoContent, models.Message{Message: "Successfully confirmed the deletion request."})
@@ -164,13 +164,13 @@ func UserCancelDeletion(c echo.Context) error {
 
 	err := s.Begin()
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	u, err := user.GetCurrentUserFromDB(s, c)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	if u.IsLocalUser() {
@@ -187,20 +187,20 @@ func UserCancelDeletion(c echo.Context) error {
 		err = user.CheckUserPassword(u, deletionRequest.Password)
 		if err != nil {
 			_ = s.Rollback()
-			return handler.HandleHTTPError(err, c)
+			return handler.HandleHTTPError(err)
 		}
 	}
 
 	err = user.CancelDeletion(s, u)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	err = s.Commit()
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	return c.JSON(http.StatusNoContent, models.Message{Message: "Successfully confirmed the deletion request."})

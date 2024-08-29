@@ -60,7 +60,7 @@ func UserShow(c echo.Context) error {
 
 	u, err := models.GetUserOrLinkShareUser(s, a)
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	us := &userWithSettings{

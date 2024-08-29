@@ -55,7 +55,7 @@ func RegisterUser(c echo.Context) error {
 			return c.JSON(e.HTTPCode, e)
 		}
 
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 	if userIn == nil {
 		return c.JSON(http.StatusBadRequest, models.Message{Message: "No or invalid user model provided."})
@@ -68,19 +68,19 @@ func RegisterUser(c echo.Context) error {
 	newUser, err := user.CreateUser(s, userIn.APIFormat())
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	// Create their initial project
 	err = models.CreateNewProjectForUser(s, newUser)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	return c.JSON(http.StatusOK, newUser)

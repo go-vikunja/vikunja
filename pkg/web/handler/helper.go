@@ -36,7 +36,7 @@ type CObject interface {
 }
 
 // HandleHTTPError does what it says
-func HandleHTTPError(err error, ctx echo.Context) *echo.HTTPError {
+func HandleHTTPError(err error) *echo.HTTPError {
 	config.LoggingProvider.Error(err.Error())
 	if a, has := err.(web.HTTPErrorProcessor); has {
 		errDetails := a.HTTPError()

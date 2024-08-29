@@ -60,7 +60,7 @@ func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
 	canDelete, err := currentStruct.CanDelete(s, currentAuth)
 	if err != nil {
 		_ = s.Rollback()
-		return HandleHTTPError(err, ctx)
+		return HandleHTTPError(err)
 	}
 	if !canDelete {
 		_ = s.Rollback()
@@ -71,17 +71,17 @@ func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
 	err = currentStruct.Delete(s, currentAuth)
 	if err != nil {
 		_ = s.Rollback()
-		return HandleHTTPError(err, ctx)
+		return HandleHTTPError(err)
 	}
 
 	err = s.Commit()
 	if err != nil {
-		return HandleHTTPError(err, ctx)
+		return HandleHTTPError(err)
 	}
 
 	err = ctx.JSON(http.StatusOK, message{"Successfully deleted."})
 	if err != nil {
-		return HandleHTTPError(err, ctx)
+		return HandleHTTPError(err)
 	}
 	return err
 }
