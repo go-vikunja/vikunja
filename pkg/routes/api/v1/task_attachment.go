@@ -47,7 +47,7 @@ func UploadTaskAttachment(c echo.Context) error {
 
 	var taskAttachment models.TaskAttachment
 	if err := c.Bind(&taskAttachment); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "No task ID provided")
+		return echo.NewHTTPError(http.StatusBadRequest, "No task ID provided").SetInternal(err)
 	}
 
 	// Rights check
@@ -129,7 +129,7 @@ func GetTaskAttachment(c echo.Context) error {
 
 	var taskAttachment models.TaskAttachment
 	if err := c.Bind(&taskAttachment); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "No task ID provided")
+		return echo.NewHTTPError(http.StatusBadRequest, "No task ID provided").SetInternal(err)
 	}
 
 	// Rights check

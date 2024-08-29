@@ -42,7 +42,7 @@ func UserConfirmEmail(c echo.Context) error {
 	// Check for Request Content
 	var emailConfirm user.EmailConfirm
 	if err := c.Bind(&emailConfirm); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "No token provided.")
+		return echo.NewHTTPError(http.StatusBadRequest, "No token provided.").SetInternal(err)
 	}
 
 	s := db.NewSession()

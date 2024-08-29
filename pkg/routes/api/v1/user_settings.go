@@ -116,7 +116,7 @@ func ChangeUserAvatarProvider(c echo.Context) error {
 	uap := &UserAvatarProvider{}
 	err := c.Bind(uap)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Bad avatar type provided.")
+		return echo.NewHTTPError(http.StatusBadRequest, "Bad avatar type provided.").SetInternal(err)
 	}
 
 	u, err := user2.GetCurrentUser(c)
@@ -166,14 +166,14 @@ func UpdateGeneralUserSettings(c echo.Context) error {
 	if err != nil {
 		var he *echo.HTTPError
 		if errors.As(err, &he) {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid model provided. Error was: %s", he.Message))
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid model provided. Error was: %s", he.Message)).SetInternal(err)
 		}
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid model provided.")
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid model provided.").SetInternal(err)
 	}
 
 	err = c.Validate(us)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return echo.NewHTTPError(http.StatusBadRequest, err).SetInternal(err)
 	}
 
 	u, err := user2.GetCurrentUser(c)

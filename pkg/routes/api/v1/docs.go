@@ -34,12 +34,12 @@ func DocsJSON(c echo.Context) error {
 	doc, err := swag.ReadDoc()
 	if err != nil {
 		log.Error(err.Error())
-		return echo.NewHTTPError(http.StatusInternalServerError)
+		return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
 	}
 	_, err = c.Response().Write([]byte(doc))
 	if err != nil {
 		log.Error(err.Error())
-		return echo.NewHTTPError(http.StatusInternalServerError)
+		return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
 	}
 
 	return nil

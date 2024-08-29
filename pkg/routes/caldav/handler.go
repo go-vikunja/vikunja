@@ -51,8 +51,7 @@ func ProjectHandler(c echo.Context) error {
 
 	u, err := getBasicAuthUserFromContext(c)
 	if err != nil {
-		log.Error(err)
-		return echo.ErrInternalServerError
+		return echo.ErrInternalServerError.SetInternal(err)
 	}
 
 	storage := &VikunjaCaldavProjectStorage{
@@ -69,8 +68,7 @@ func ProjectHandler(c echo.Context) error {
 	if vtodo != "" && strings.HasPrefix(vtodo, `BEGIN:VCALENDAR`) {
 		storage.task, err = caldav2.ParseTaskFromVTODO(vtodo)
 		if err != nil {
-			log.Error(err)
-			return echo.ErrInternalServerError
+			return echo.ErrInternalServerError.SetInternal(err)
 		}
 	}
 
@@ -94,8 +92,7 @@ func TaskHandler(c echo.Context) error {
 
 	u, err := getBasicAuthUserFromContext(c)
 	if err != nil {
-		log.Error(err)
-		return echo.ErrInternalServerError
+		return echo.ErrInternalServerError.SetInternal(err)
 	}
 
 	// Get the task uid
@@ -117,8 +114,7 @@ func TaskHandler(c echo.Context) error {
 func PrincipalHandler(c echo.Context) error {
 	u, err := getBasicAuthUserFromContext(c)
 	if err != nil {
-		log.Error(err)
-		return echo.ErrInternalServerError
+		return echo.ErrInternalServerError.SetInternal(err)
 	}
 
 	storage := &VikunjaCaldavProjectStorage{
@@ -147,8 +143,7 @@ func PrincipalHandler(c echo.Context) error {
 func EntryHandler(c echo.Context) error {
 	u, err := getBasicAuthUserFromContext(c)
 	if err != nil {
-		log.Error(err)
-		return echo.ErrInternalServerError
+		return echo.ErrInternalServerError.SetInternal(err)
 	}
 
 	storage := &VikunjaCaldavProjectStorage{

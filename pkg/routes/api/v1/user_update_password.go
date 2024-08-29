@@ -50,13 +50,13 @@ func UserChangePassword(c echo.Context) error {
 	// Check if the user is itself
 	doer, err := user.GetCurrentUser(c)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Error getting current user.")
+		return echo.NewHTTPError(http.StatusInternalServerError, "Error getting current user.").SetInternal(err)
 	}
 
 	// Check for Request Content
 	var newPW UserPassword
 	if err := c.Bind(&newPW); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "No password provided.")
+		return echo.NewHTTPError(http.StatusBadRequest, "No password provided.").SetInternal(err)
 	}
 
 	if newPW.OldPassword == "" {
