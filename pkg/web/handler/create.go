@@ -61,7 +61,7 @@ func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 	canCreate, err := currentStruct.CanCreate(s, currentAuth)
 	if err != nil {
 		_ = s.Rollback()
-		return HandleHTTPError(err, ctx)
+		return HandleHTTPError(err)
 	}
 	if !canCreate {
 		_ = s.Rollback()
@@ -73,17 +73,17 @@ func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 	err = currentStruct.Create(s, currentAuth)
 	if err != nil {
 		_ = s.Rollback()
-		return HandleHTTPError(err, ctx)
+		return HandleHTTPError(err)
 	}
 
 	err = s.Commit()
 	if err != nil {
-		return HandleHTTPError(err, ctx)
+		return HandleHTTPError(err)
 	}
 
 	err = ctx.JSON(http.StatusCreated, currentStruct)
 	if err != nil {
-		return HandleHTTPError(err, ctx)
+		return HandleHTTPError(err)
 	}
 	return err
 }

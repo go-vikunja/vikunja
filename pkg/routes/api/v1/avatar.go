@@ -66,7 +66,7 @@ func GetAvatar(c echo.Context) error {
 	u, err := user.GetUserWithEmail(s, &user.User{Username: username})
 	if err != nil && !user.IsErrUserDoesNotExist(err) {
 		log.Errorf("Error getting user for avatar: %v", err)
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	found := !(err != nil && user.IsErrUserDoesNotExist(err))
@@ -95,7 +95,7 @@ func GetAvatar(c echo.Context) error {
 		sizeInt, err = strconv.ParseInt(size, 10, 64)
 		if err != nil {
 			log.Errorf("Error parsing size: %v", err)
-			return handler.HandleHTTPError(err, c)
+			return handler.HandleHTTPError(err)
 		}
 	}
 	if sizeInt > config.ServiceMaxAvatarSize.GetInt64() {
@@ -106,7 +106,7 @@ func GetAvatar(c echo.Context) error {
 	a, mimeType, err := avatarProvider.GetAvatar(u, sizeInt)
 	if err != nil {
 		log.Errorf("Error getting avatar for user %d: %v", u.ID, err)
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	return c.Blob(http.StatusOK, mimeType, a)
@@ -132,12 +132,12 @@ func UploadAvatar(c echo.Context) (err error) {
 
 	uc, err := user.GetCurrentUser(c)
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 	u, err := user.GetUserByID(s, uc.ID)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	// Get + upload the image
@@ -157,7 +157,7 @@ func UploadAvatar(c echo.Context) (err error) {
 	mime, err := mimetype.DetectReader(src)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 	if !strings.HasPrefix(mime.String(), "image") {
 		return c.JSON(http.StatusBadRequest, models.Message{Message: "Uploaded file is no image."})
@@ -170,7 +170,7 @@ func UploadAvatar(c echo.Context) (err error) {
 		if err := f.Delete(); err != nil {
 			if !files.IsErrFileDoesNotExist(err) {
 				_ = s.Rollback()
-				return handler.HandleHTTPError(err, c)
+				return handler.HandleHTTPError(err)
 			}
 		}
 		u.AvatarFileID = 0
@@ -180,13 +180,13 @@ func UploadAvatar(c echo.Context) (err error) {
 	img, _, err := image.Decode(src)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 	resizedImg := imaging.Resize(img, 0, 1024, imaging.Lanczos)
 	buf := &bytes.Buffer{}
 	if err := png.Encode(buf, resizedImg); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	upload.InvalidateCache(u)
@@ -199,7 +199,7 @@ func UploadAvatar(c echo.Context) (err error) {
 			return echo.ErrBadRequest
 		}
 
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	u.AvatarFileID = f.ID
@@ -207,12 +207,12 @@ func UploadAvatar(c echo.Context) (err error) {
 
 	if _, err := user.UpdateUser(s, u, false); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	return c.JSON(http.StatusOK, models.Message{Message: "Avatar was uploaded successfully."})

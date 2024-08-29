@@ -56,7 +56,7 @@ func (c *WebHandler) ReadOneWeb(ctx echo.Context) error {
 	canRead, maxRight, err := currentStruct.CanRead(s, currentAuth)
 	if err != nil {
 		_ = s.Rollback()
-		return HandleHTTPError(err, ctx)
+		return HandleHTTPError(err)
 	}
 	if !canRead {
 		_ = s.Rollback()
@@ -68,7 +68,7 @@ func (c *WebHandler) ReadOneWeb(ctx echo.Context) error {
 	err = currentStruct.ReadOne(s, currentAuth)
 	if err != nil {
 		_ = s.Rollback()
-		return HandleHTTPError(err, ctx)
+		return HandleHTTPError(err)
 	}
 
 	// Set the headers
@@ -79,12 +79,12 @@ func (c *WebHandler) ReadOneWeb(ctx echo.Context) error {
 
 	err = s.Commit()
 	if err != nil {
-		return HandleHTTPError(err, ctx)
+		return HandleHTTPError(err)
 	}
 
 	err = ctx.JSON(http.StatusOK, currentStruct)
 	if err != nil {
-		return HandleHTTPError(err, ctx)
+		return HandleHTTPError(err)
 	}
 	return err
 }

@@ -56,7 +56,7 @@ func AuthenticateLinkShare(c echo.Context) error {
 	sh := &LinkShareAuth{}
 	err := c.Bind(sh)
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	s := db.NewSession()
@@ -64,19 +64,19 @@ func AuthenticateLinkShare(c echo.Context) error {
 
 	share, err := models.GetLinkShareByHash(s, sh.Hash)
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	if share.SharingType == models.SharingTypeWithPassword {
 		err := models.VerifyLinkSharePassword(share, sh.Password)
 		if err != nil {
-			return handler.HandleHTTPError(err, c)
+			return handler.HandleHTTPError(err)
 		}
 	}
 
 	t, err := auth.NewLinkShareJWTAuthtoken(share)
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	share.Password = ""

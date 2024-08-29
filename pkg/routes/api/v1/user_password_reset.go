@@ -51,12 +51,12 @@ func UserResetPassword(c echo.Context) error {
 	err := user.ResetPassword(s, &pwReset)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	return c.JSON(http.StatusOK, models.Message{Message: "The password was updated successfully."})
@@ -90,12 +90,12 @@ func UserRequestResetPasswordToken(c echo.Context) error {
 	err := user.RequestUserPasswordResetTokenByEmail(s, &pwTokenReset)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	return c.JSON(http.StatusOK, models.Message{Message: "Token was sent."})

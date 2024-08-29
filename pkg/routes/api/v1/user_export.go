@@ -35,13 +35,13 @@ func checkExportRequest(c echo.Context) (s *xorm.Session, u *user.User, err erro
 
 	err = s.Begin()
 	if err != nil {
-		return nil, nil, handler.HandleHTTPError(err, c)
+		return nil, nil, handler.HandleHTTPError(err)
 	}
 
 	u, err = user.GetCurrentUserFromDB(s, c)
 	if err != nil {
 		_ = s.Rollback()
-		return nil, nil, handler.HandleHTTPError(err, c)
+		return nil, nil, handler.HandleHTTPError(err)
 	}
 
 	// Users authenticated with a third-party are unable to provide their password.
@@ -62,7 +62,7 @@ func checkExportRequest(c echo.Context) (s *xorm.Session, u *user.User, err erro
 	err = user.CheckUserPassword(u, pass.Password)
 	if err != nil {
 		_ = s.Rollback()
-		return nil, nil, handler.HandleHTTPError(err, c)
+		return nil, nil, handler.HandleHTTPError(err)
 	}
 
 	return
@@ -90,13 +90,13 @@ func RequestUserDataExport(c echo.Context) error {
 	})
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	err = s.Commit()
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	return c.JSON(http.StatusOK, models.Message{Message: "Successfully requested data export. We will send you an email when it's ready."})
@@ -122,18 +122,18 @@ func DownloadUserDataExport(c echo.Context) error {
 	err = s.Commit()
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	// Download
 	exportFile := &files.File{ID: u.ExportFileID}
 	err = exportFile.LoadFileMetaByID()
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 	err = exportFile.LoadFileByID()
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	http.ServeContent(c.Response(), c.Request(), exportFile.Name, exportFile.Created, exportFile.File)

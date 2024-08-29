@@ -61,19 +61,19 @@ func Login(c echo.Context) error {
 
 	if user.Status == user2.StatusDisabled {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(&user2.ErrAccountDisabled{UserID: user.ID}, c)
+		return handler.HandleHTTPError(&user2.ErrAccountDisabled{UserID: user.ID})
 	}
 
 	totpEnabled, err := user2.TOTPEnabledForUser(s, user)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	if totpEnabled {
 		if u.TOTPPasscode == "" {
 			_ = s.Rollback()
-			return handler.HandleHTTPError(user2.ErrInvalidTOTPPasscode{}, c)
+			return handler.HandleHTTPError(user2.ErrInvalidTOTPPasscode{})
 		}
 
 		_, err = user2.ValidateTOTPPasscode(s, &user2.TOTPPasscode{
@@ -85,7 +85,7 @@ func Login(c echo.Context) error {
 				user2.HandleFailedTOTPAuth(s, user)
 			}
 			_ = s.Rollback()
-			return handler.HandleHTTPError(err, c)
+			return handler.HandleHTTPError(err)
 		}
 	}
 
@@ -98,7 +98,7 @@ func Login(c echo.Context) error {
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	// Create token
@@ -129,12 +129,12 @@ func RenewToken(c echo.Context) (err error) {
 		err := share.ReadOne(s, share)
 		if err != nil {
 			_ = s.Rollback()
-			return handler.HandleHTTPError(err, c)
+			return handler.HandleHTTPError(err)
 		}
 		t, err := auth.NewLinkShareJWTAuthtoken(share)
 		if err != nil {
 			_ = s.Rollback()
-			return handler.HandleHTTPError(err, c)
+			return handler.HandleHTTPError(err)
 		}
 		return c.JSON(http.StatusOK, auth.Token{Token: t})
 	}
@@ -142,18 +142,18 @@ func RenewToken(c echo.Context) (err error) {
 	u, err := user2.GetUserFromClaims(claims)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	user, err := user2.GetUserWithEmail(s, &user2.User{ID: u.ID})
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	var long bool

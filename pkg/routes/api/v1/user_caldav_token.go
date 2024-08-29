@@ -43,12 +43,12 @@ func GenerateCaldavToken(c echo.Context) (err error) {
 
 	u, err := user.GetCurrentUser(c)
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	token, err := user.GenerateNewCaldavToken(u)
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	return c.JSON(http.StatusCreated, token)
@@ -69,12 +69,12 @@ func GenerateCaldavToken(c echo.Context) (err error) {
 func GetCaldavTokens(c echo.Context) error {
 	u, err := user.GetCurrentUser(c)
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	tokens, err := user.GetCaldavTokens(u)
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	return c.JSON(http.StatusCreated, tokens)
@@ -95,17 +95,17 @@ func GetCaldavTokens(c echo.Context) error {
 func DeleteCaldavToken(c echo.Context) error {
 	u, err := user.GetCurrentUser(c)
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	err = user.DeleteCaldavTokenByID(u, id)
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	return c.JSON(http.StatusOK, &models.Message{Message: "The token was deleted successfully."})

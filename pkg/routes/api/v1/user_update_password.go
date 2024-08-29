@@ -60,7 +60,7 @@ func UserChangePassword(c echo.Context) error {
 	}
 
 	if newPW.OldPassword == "" {
-		return handler.HandleHTTPError(user.ErrEmptyOldPassword{}, c)
+		return handler.HandleHTTPError(user.ErrEmptyOldPassword{})
 	}
 
 	s := db.NewSession()
@@ -69,18 +69,18 @@ func UserChangePassword(c echo.Context) error {
 	// Check the current password
 	if _, err = user.CheckUserCredentials(s, &user.Login{Username: doer.Username, Password: newPW.OldPassword}); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	// Update the password
 	if err = user.UpdateUserPassword(s, doer, newPW.NewPassword); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	return c.JSON(http.StatusOK, models.Message{Message: "The password was updated successfully."})

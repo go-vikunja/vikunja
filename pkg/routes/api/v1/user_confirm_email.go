@@ -51,12 +51,12 @@ func UserConfirmEmail(c echo.Context) error {
 	err := user.ConfirmEmail(s, &emailConfirm)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	return c.JSON(http.StatusOK, models.Message{Message: "The email was confirmed successfully."})

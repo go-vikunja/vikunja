@@ -44,7 +44,7 @@ func (fw *FileMigratorWeb) Migrate(c echo.Context) error {
 	// Get the user from context
 	user, err := user2.GetCurrentUser(c)
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	file, err := c.FormFile("import")
@@ -59,18 +59,18 @@ func (fw *FileMigratorWeb) Migrate(c echo.Context) error {
 
 	m, err := migration.StartMigration(ms, user)
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	// Do the migration
 	err = ms.Migrate(user, src, file.Size)
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	err = migration.FinishMigration(m)
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	return c.JSON(http.StatusOK, models.Message{Message: "Everything was migrated successfully."})

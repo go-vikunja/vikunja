@@ -47,7 +47,7 @@ import (
 func UserTOTPEnroll(c echo.Context) error {
 	u, err := user.GetCurrentUser(c)
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	s := db.NewSession()
@@ -56,12 +56,12 @@ func UserTOTPEnroll(c echo.Context) error {
 	t, err := user.EnrollTOTP(s, u)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	return c.JSON(http.StatusOK, t)
@@ -84,7 +84,7 @@ func UserTOTPEnroll(c echo.Context) error {
 func UserTOTPEnable(c echo.Context) error {
 	u, err := user.GetCurrentUser(c)
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	passcode := &user.TOTPPasscode{
@@ -105,12 +105,12 @@ func UserTOTPEnable(c echo.Context) error {
 	err = user.EnableTOTP(s, passcode)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	return c.JSON(http.StatusOK, models.Message{Message: "TOTP was enabled successfully."})
@@ -142,7 +142,7 @@ func UserTOTPDisable(c echo.Context) error {
 
 	u, err := user.GetCurrentUser(c)
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	s := db.NewSession()
@@ -151,24 +151,24 @@ func UserTOTPDisable(c echo.Context) error {
 	u, err = user.GetUserByID(s, u.ID)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	err = user.CheckUserPassword(u, login.Password)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	err = user.DisableTOTP(s, u)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	return c.JSON(http.StatusOK, models.Message{Message: "TOTP was enabled successfully."})
@@ -187,7 +187,7 @@ func UserTOTPDisable(c echo.Context) error {
 func UserTOTPQrCode(c echo.Context) error {
 	u, err := user.GetCurrentUser(c)
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	s := db.NewSession()
@@ -196,19 +196,19 @@ func UserTOTPQrCode(c echo.Context) error {
 	qrcode, err := user.GetTOTPQrCodeForUser(s, u)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	buff := &bytes.Buffer{}
 	err = jpeg.Encode(buff, qrcode, nil)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	return c.Blob(http.StatusOK, "image/jpeg", buff.Bytes())
@@ -227,7 +227,7 @@ func UserTOTPQrCode(c echo.Context) error {
 func UserTOTP(c echo.Context) error {
 	u, err := user.GetCurrentUser(c)
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	s := db.NewSession()
@@ -236,12 +236,12 @@ func UserTOTP(c echo.Context) error {
 	t, err := user.GetTOTPForUser(s, u)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	return c.JSON(http.StatusOK, t)

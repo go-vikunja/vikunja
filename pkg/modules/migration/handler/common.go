@@ -28,12 +28,12 @@ import (
 func status(ms migration.MigratorName, c echo.Context) error {
 	user, err := user2.GetCurrentUser(c)
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	status, err := migration.GetMigrationStatus(ms, user)
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	return c.JSON(http.StatusOK, status)
