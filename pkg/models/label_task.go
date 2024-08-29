@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
@@ -100,16 +99,7 @@ func (lt *LabelTask) Create(s *xorm.Session, auth web.Auth) (err error) {
 		return err
 	}
 
-	t, err := GetTaskByIDSimple(s, lt.TaskID)
-	if err != nil {
-		return err
-	}
-
-	doer, _ := user.GetFromAuth(auth)
-	err = events.Dispatch(&TaskUpdatedEvent{
-		Task: &t,
-		Doer: doer,
-	})
+	err = triggerTaskUpdatedEventForTaskID(s, auth, lt.TaskID)
 	if err != nil {
 		return err
 	}

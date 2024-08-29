@@ -1580,3 +1580,17 @@ func (t *Task) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 
 	return
 }
+
+func triggerTaskUpdatedEventForTaskID(s *xorm.Session, auth web.Auth, taskID int64) error {
+	t, err := GetTaskByIDSimple(s, taskID)
+	if err != nil {
+		return err
+	}
+
+	doer, _ := user.GetFromAuth(auth)
+	err = events.Dispatch(&TaskUpdatedEvent{
+		Task: &t,
+		Doer: doer,
+	})
+	return err
+}
