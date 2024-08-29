@@ -17,6 +17,7 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -36,7 +37,8 @@ func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
 	// Bind params to struct
 	if err := ctx.Bind(currentStruct); err != nil {
 		config.LoggingProvider.Debugf("Invalid model error. Internal error was: %s", err.Error())
-		if he, is := err.(*echo.HTTPError); is {
+		var he *echo.HTTPError
+		if errors.As(err, &he) {
 			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid model provided. Error was: %s", he.Message))
 		}
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid model provided."))

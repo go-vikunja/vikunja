@@ -56,7 +56,7 @@ func Login(c echo.Context) error {
 	user, err := user2.CheckUserCredentials(s, &u)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return handler.HandleHTTPError(err)
 	}
 
 	if user.Status == user2.StatusDisabled {
