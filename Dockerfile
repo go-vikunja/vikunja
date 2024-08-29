@@ -35,7 +35,14 @@ RUN export PATH=$PATH:$GOPATH/bin && \
 
 # The actual image
 FROM scratch
-LABEL maintainer="maintainers@vikunja.io"
+
+LABEL org.opencontainers.image.authors='maintainers@vikunja.io'
+LABEL org.opencontainers.image.url='https://vikunja.io'
+LABEL org.opencontainers.image.documentation='https://vikunja.io/docs'
+LABEL org.opencontainers.image.source='https://code.vikunja.io/vikunja'
+LABEL org.opencontainers.image.licenses='AGPLv3'
+LABEL org.opencontainers.image.title='Vikunja'
+
 WORKDIR /app/vikunja
 ENTRYPOINT [ "/app/vikunja/vikunja" ]
 EXPOSE 3456

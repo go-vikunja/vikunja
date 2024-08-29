@@ -464,6 +464,26 @@ func (Build) Build() {
 	runAndStreamOutput("go", "build", Goflags[0], "-tags", Tags, "-ldflags", "-s -w "+Ldflags, "-o", Executable)
 }
 
+func (Build) SaveVersionToFile() error {
+	// Open the file for writing. If the file doesn't exist, create it.
+	// If it exists, truncate it.
+	file, err := os.Create("VERSION")
+	if err != nil {
+		return fmt.Errorf("error creating VERSION file: %w", err)
+	}
+	defer file.Close()
+
+	// Write the version number to the file
+	_, err = file.WriteString(VersionNumber)
+	if err != nil {
+		return fmt.Errorf("error writing to VERSION file: %w", err)
+	}
+
+	fmt.Println("Version number saved successfully to VERSION file")
+
+	return nil
+}
+
 type Release mg.Namespace
 
 // Runs all steps in the right order to create release packages for various platforms
