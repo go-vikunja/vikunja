@@ -41,6 +41,13 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 
 			for _, s := range authHeader {
 				if strings.HasPrefix(s, "Bearer "+models.APITokenPrefix) {
+					// If the route does not exist, skip the current handling and let the rest of echo's logic handle it
+					findCtx := c.Echo().NewContext(c.Request(), c.Response())
+					c.Echo().Router().Find(c.Request().Method, echo.GetPath(c.Request()), findCtx)
+					if findCtx.Path() == "/api/v1/*" {
+						return true
+					}
+
 					err := checkAPITokenAndPutItInContext(s, c)
 					return err == nil
 				}
