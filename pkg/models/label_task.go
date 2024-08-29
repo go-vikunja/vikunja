@@ -24,7 +24,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/web"
+	"code.vikunja.io/api/pkg/web"
 
 	"xorm.io/builder"
 	"xorm.io/xorm"

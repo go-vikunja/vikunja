@@ -20,7 +20,7 @@ import (
 	"errors"
 
 	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/web"
+	"code.vikunja.io/api/pkg/web"
 	"xorm.io/builder"
 	"xorm.io/xorm"
 )

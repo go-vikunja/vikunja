@@ -30,7 +30,7 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
-	"code.vikunja.io/web"
+	"code.vikunja.io/api/pkg/web"
 
 	"dario.cat/mergo"
 	"github.com/google/uuid"

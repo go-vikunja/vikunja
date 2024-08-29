@@ -27,7 +27,7 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	user2 "code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/web"
+	"code.vikunja.io/api/pkg/web"
 	"github.com/samedi/caldav-go/data"
 	"github.com/samedi/caldav-go/errs"
 	"xorm.io/xorm"

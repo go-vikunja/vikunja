@@ -34,7 +34,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/background"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
-	"code.vikunja.io/web"
+	"code.vikunja.io/api/pkg/web"
 )
 
 const (

@@ -27,7 +27,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	user2 "code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/web/handler"
+	"code.vikunja.io/api/pkg/web/handler"
 )
 
 // UserAvatarProvider holds the user avatar provider type

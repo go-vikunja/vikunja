@@ -26,7 +26,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 	"gopkg.in/d4l3k/messagediff.v1"
 
-	"code.vikunja.io/web"
+	"code.vikunja.io/api/pkg/web"
 )
 
 func TestLabelTask_ReadAll(t *testing.T) {

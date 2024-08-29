@@ -21,7 +21,7 @@ import (
 	"net/http"
 	"strings"
 
-	"code.vikunja.io/web/handler"
+	"code.vikunja.io/api/pkg/web/handler"
 	"github.com/labstack/echo/v4"
 )
 

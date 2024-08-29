@@ -23,7 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
 
-	"code.vikunja.io/web"
+	"code.vikunja.io/api/pkg/web"
 )
 
 func TestTeam_CanDoSomething(t *testing.T) {

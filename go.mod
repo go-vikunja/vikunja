@@ -1,23 +1,22 @@
 // Vikunja is a to-do list application to facilitate your life.
-// Copyright 2018 Vikunja and contributors. All rights reserved.
+// Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
+// it under the terms of the GNU Affero General Public Licensee as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
+// GNU Affero General Public Licensee for more details.
 //
-// You should have received a copy of the GNU General Public License
+// You should have received a copy of the GNU Affero General Public Licensee
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 module code.vikunja.io/api
 
 require (
-	code.vikunja.io/web v0.0.0-20210706160506-d85def955bd3
 	dario.cat/mergo v1.0.0
 	github.com/ThreeDotsLabs/watermill v1.3.5
 	github.com/adlio/trello v1.12.0

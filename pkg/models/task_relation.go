@@ -25,7 +25,7 @@ import (
 	"xorm.io/xorm"
 
 	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/web"
+	"code.vikunja.io/api/pkg/web"
 )
 
 // RelationKind represents a kind of relation between to tasks
