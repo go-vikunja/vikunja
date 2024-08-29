@@ -234,23 +234,12 @@ func GetSubscriptions(s *xorm.Session, entityType SubscriptionEntityType, entity
 			return nil, err
 		}
 
-		// If the task does not have a subscription directly or from its project, get the one
-		// from the parent and return it instead.
-		var taskIDsWithoutSubscription []int64
-		for _, eID := range entityIDs {
-			if _, has := subs[eID]; has {
-				continue
-			}
-
-			taskIDsWithoutSubscription = append(taskIDsWithoutSubscription, eID)
-		}
-
-		projects, err := GetProjectsSimplByTaskIDs(s, taskIDsWithoutSubscription)
+		projects, err := GetProjectsSimplByTaskIDs(s, entityIDs)
 		if err != nil {
 			return nil, err
 		}
 
-		tasks, err := GetTasksSimpleByIDs(s, taskIDsWithoutSubscription)
+		tasks, err := GetTasksSimpleByIDs(s, entityIDs)
 		if err != nil {
 			return nil, err
 		}
@@ -261,9 +250,17 @@ func GetSubscriptions(s *xorm.Session, entityType SubscriptionEntityType, entity
 		}
 
 		for _, task := range tasks {
-			sub, has := projectSubscriptions[task.ProjectID]
-			if has {
-				subs[task.ID] = sub
+			// If a task is already subscribed through the parent project,
+			// remove the task subscription since that's a duplicate.
+			// But if the user is not subscribed to the task but a parent project is, add that to the subscriptions
+			psub, hasProjectSub := projectSubscriptions[task.ProjectID]
+			_, hasTaskSub := subs[task.ID]
+			if hasProjectSub && hasTaskSub {
+				delete(subs, task.ID)
+			}
+
+			if !hasTaskSub {
+				subs[task.ID] = psub
 			}
 		}
 
