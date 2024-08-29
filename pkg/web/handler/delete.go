@@ -41,7 +41,7 @@ func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
 		if errors.As(err, &he) {
 			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid model provided. Error was: %s", he.Message))
 		}
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid model provided."))
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid model provided.")
 	}
 
 	// Check if the user has the right to delete

@@ -43,7 +43,7 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 		if errors.As(err, &he) {
 			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid model provided. Error was: %s", he.Message))
 		}
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid model provided."))
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid model provided.")
 	}
 
 	// Pagination
