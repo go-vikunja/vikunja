@@ -125,7 +125,6 @@ func NewEcho() *echo.Echo {
 	})
 	handler.SetLoggingProvider(log.GetLogger())
 	handler.SetMaxItemsPerPage(config.ServiceMaxItemsPerPage.GetInt())
-	handler.SetSessionFactory(db.NewSession)
 
 	return e
 }

@@ -19,7 +19,6 @@ package handler
 import (
 	"code.vikunja.io/api/pkg/web"
 	"github.com/op/go-logging"
-	"xorm.io/xorm"
 )
 
 // Config contains the config for the web handler
@@ -27,7 +26,6 @@ type Config struct {
 	AuthProvider    *web.Auths
 	LoggingProvider *logging.Logger
 	MaxItemsPerPage int
-	SessionFactory  func() *xorm.Session
 }
 
 var config *Config
@@ -49,9 +47,4 @@ func SetLoggingProvider(logger *logging.Logger) {
 // SetMaxItemsPerPage sets the max number of items per page in the config
 func SetMaxItemsPerPage(maxItemsPerPage int) {
 	config.MaxItemsPerPage = maxItemsPerPage
-}
-
-// SetSessionFactory sets the session factory
-func SetSessionFactory(sessionFactory func() *xorm.Session) {
-	config.SessionFactory = sessionFactory
 }

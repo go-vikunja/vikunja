@@ -23,6 +23,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"code.vikunja.io/api/pkg/db"
+
 	"github.com/labstack/echo/v4"
 )
 
@@ -84,7 +86,7 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 	}
 
 	// Create the db session
-	s := config.SessionFactory()
+	s := db.NewSession()
 	defer func() {
 		err = s.Close()
 		if err != nil {
