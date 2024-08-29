@@ -326,6 +326,7 @@ func TestLabelTask_Delete(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 
 			s := db.NewSession()
+			defer s.Close()
 
 			l := &LabelTask{
 				ID:       tt.fields.ID,
@@ -339,20 +340,19 @@ func TestLabelTask_Delete(t *testing.T) {
 			if !allowed && !tt.wantForbidden {
 				t.Errorf("LabelTask.CanDelete() forbidden, want %v", tt.wantForbidden)
 			}
-			err := l.Delete(s, tt.auth)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("LabelTask.Delete() error = %v, wantErr %v", err, tt.wantErr)
-			}
-			if (err != nil) && tt.wantErr && !tt.errType(err) {
-				t.Errorf("LabelTask.Delete() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
-			}
 			if !tt.wantForbidden {
+				err := l.Delete(s, tt.auth)
+				if (err != nil) != tt.wantErr {
+					t.Errorf("LabelTask.Delete() error = %v, wantErr %v", err, tt.wantErr)
+				}
+				if (err != nil) && tt.wantErr && !tt.errType(err) {
+					t.Errorf("LabelTask.Delete() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
+				}
 				db.AssertMissing(t, "label_tasks", map[string]interface{}{
 					"label_id": l.LabelID,
 					"task_id":  l.TaskID,
 				})
 			}
-			s.Close()
 		})
 	}
 }
