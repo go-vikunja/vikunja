@@ -63,9 +63,13 @@ func (*LabelTask) TableName() string {
 // @Failure 404 {object} web.HTTPError "Label not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{task}/labels/{label} [delete]
-func (lt *LabelTask) Delete(s *xorm.Session, _ web.Auth) (err error) {
+func (lt *LabelTask) Delete(s *xorm.Session, auth web.Auth) (err error) {
 	_, err = s.Delete(&LabelTask{LabelID: lt.LabelID, TaskID: lt.TaskID})
-	return err
+	if err != nil {
+		return err
+	}
+
+	return triggerTaskUpdatedEventForTaskID(s, auth, lt.TaskID)
 }
 
 // Create adds a label to a task
