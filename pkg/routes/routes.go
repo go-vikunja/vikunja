@@ -58,7 +58,6 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
@@ -124,7 +123,6 @@ func NewEcho() *echo.Echo {
 		AuthObject: auth.GetAuthFromClaims,
 	})
 	handler.SetLoggingProvider(log.GetLogger())
-	handler.SetMaxItemsPerPage(config.ServiceMaxItemsPerPage.GetInt())
 
 	return e
 }

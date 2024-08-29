@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"strconv"
 
+	vconfig "code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 
 	"github.com/labstack/echo/v4"
@@ -76,13 +77,13 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 	}
 	// Set default page count
 	if perPageNumber == 0 {
-		perPageNumber = config.MaxItemsPerPage
+		perPageNumber = vconfig.ServiceMaxItemsPerPage.GetInt()
 	}
 	if perPageNumber < 1 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Per page amount cannot be negative.")
 	}
-	if perPageNumber > config.MaxItemsPerPage {
-		perPageNumber = config.MaxItemsPerPage
+	if perPageNumber > vconfig.ServiceMaxItemsPerPage.GetInt() {
+		perPageNumber = vconfig.ServiceMaxItemsPerPage.GetInt()
 	}
 
 	// Create the db session

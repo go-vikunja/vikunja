@@ -25,7 +25,6 @@ import (
 type Config struct {
 	AuthProvider    *web.Auths
 	LoggingProvider *logging.Logger
-	MaxItemsPerPage int
 }
 
 var config *Config
@@ -42,9 +41,4 @@ func SetAuthProvider(provider *web.Auths) {
 // SetLoggingProvider sets the logging provider in the config
 func SetLoggingProvider(logger *logging.Logger) {
 	config.LoggingProvider = logger
-}
-
-// SetMaxItemsPerPage sets the max number of items per page in the config
-func SetMaxItemsPerPage(maxItemsPerPage int) {
-	config.MaxItemsPerPage = maxItemsPerPage
 }
