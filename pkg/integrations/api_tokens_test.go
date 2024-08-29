@@ -111,4 +111,20 @@ func TestAPIToken(t *testing.T) {
 		req.Header.Set(echo.HeaderAuthorization, "Bearer "+jwt)
 		require.NoError(t, h(c))
 	})
+	t.Run("nonexisting route", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		req := httptest.NewRequest(http.MethodGet, "/api/v1/nonexisting", nil)
+		res := httptest.NewRecorder()
+		c := e.NewContext(req, res)
+		h := routes.SetupTokenMiddleware()(func(c echo.Context) error {
+			return c.String(http.StatusNotFound, "test")
+		})
+
+		req.Header.Set(echo.HeaderAuthorization, "Bearer tk_a5e6f92ddbad68f49ee2c63e52174db0235008c8") // Token 2
+
+		err = h(c)
+		require.NoError(t, err)
+		assert.Equal(t, 404, c.Response().Status)
+	})
 }
