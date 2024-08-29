@@ -3,9 +3,9 @@ FROM --platform=$BUILDPLATFORM node:20.16.0-alpine AS frontendbuilder
 
 WORKDIR /build
 
-ENV PNPM_CACHE_FOLDER .cache/pnpm/
-ENV PUPPETEER_SKIP_DOWNLOAD true
-ENV CYPRESS_INSTALL_BINARY 0
+ENV PNPM_CACHE_FOLDER=.cache/pnpm/
+ENV PUPPETEER_SKIP_DOWNLOAD=true
+ENV CYPRESS_INSTALL_BINARY=0
 
 COPY frontend/ ./
 
@@ -24,7 +24,7 @@ COPY --from=frontendbuilder /build/dist ./frontend/dist
 
 ARG TARGETOS TARGETARCH TARGETVARIANT
 
-ENV GOPROXY https://goproxy.kolaente.de
+ENV GOPROXY=https://goproxy.kolaente.de
 RUN export PATH=$PATH:$GOPATH/bin && \
 	mage build:clean && \
     mage release:xgo "${TARGETOS}/${TARGETARCH}/${TARGETVARIANT}"
