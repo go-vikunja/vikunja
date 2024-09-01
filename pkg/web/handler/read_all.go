@@ -25,6 +25,7 @@ import (
 
 	vconfig "code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/modules/auth"
 
 	"github.com/labstack/echo/v4"
 )
@@ -34,7 +35,7 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 	// Get our model
 	currentStruct := c.EmptyStruct()
 
-	currentAuth, err := config.AuthProvider.AuthObject(ctx)
+	currentAuth, err := auth.GetAuthFromClaims(ctx)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.")
 	}
