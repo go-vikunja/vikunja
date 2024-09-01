@@ -22,6 +22,7 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/auth"
 
 	"github.com/labstack/echo/v4"
@@ -35,7 +36,7 @@ func (c *WebHandler) UpdateWeb(ctx echo.Context) error {
 
 	// Get the object & bind params to struct
 	if err := ctx.Bind(currentStruct); err != nil {
-		config.LoggingProvider.Debugf("Invalid model error. Internal error was: %s", err.Error())
+		log.Debugf("Invalid model error. Internal error was: %s", err.Error())
 		var he *echo.HTTPError
 		if errors.As(err, &he) {
 			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid model provided. Error was: %s", he.Message))
@@ -59,7 +60,7 @@ func (c *WebHandler) UpdateWeb(ctx echo.Context) error {
 	defer func() {
 		err = s.Close()
 		if err != nil {
-			config.LoggingProvider.Errorf("Could not close session: %s", err)
+			log.Errorf("Could not close session: %s", err)
 		}
 	}()
 
@@ -70,7 +71,7 @@ func (c *WebHandler) UpdateWeb(ctx echo.Context) error {
 	}
 	if !canUpdate {
 		_ = s.Rollback()
-		config.LoggingProvider.Noticef("Tried to update while not having the rights for it (User: %v)", currentAuth)
+		log.Warningf("Tried to update while not having the rights for it (User: %v)", currentAuth)
 		return echo.NewHTTPError(http.StatusForbidden)
 	}
 
