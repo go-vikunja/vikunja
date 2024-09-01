@@ -23,6 +23,7 @@ import (
 	"strconv"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/modules/auth"
 
 	"github.com/labstack/echo/v4"
 )
@@ -43,7 +44,7 @@ func (c *WebHandler) ReadOneWeb(ctx echo.Context) error {
 	}
 
 	// Check rights
-	currentAuth, err := config.AuthProvider.AuthObject(ctx)
+	currentAuth, err := auth.GetAuthFromClaims(ctx)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.")
 	}

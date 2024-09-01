@@ -60,7 +60,6 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/modules/background"
 	backgroundHandler "code.vikunja.io/api/pkg/modules/background/handler"
@@ -76,7 +75,6 @@ import (
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/api/pkg/routes/caldav"
 	"code.vikunja.io/api/pkg/version"
-	"code.vikunja.io/api/pkg/web"
 	"code.vikunja.io/api/pkg/web/handler"
 
 	"github.com/getsentry/sentry-go"
@@ -119,9 +117,6 @@ func NewEcho() *echo.Echo {
 	e.Validator = &CustomValidator{}
 
 	// Handler config
-	handler.SetAuthProvider(&web.Auths{
-		AuthObject: auth.GetAuthFromClaims,
-	})
 	handler.SetLoggingProvider(log.GetLogger())
 
 	return e
