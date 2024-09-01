@@ -19,7 +19,9 @@ package handler
 import (
 	"net/http"
 
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/web"
+
 	"github.com/labstack/echo/v4"
 )
 
@@ -37,7 +39,7 @@ type CObject interface {
 
 // HandleHTTPError does what it says
 func HandleHTTPError(err error) *echo.HTTPError {
-	config.LoggingProvider.Error(err.Error())
+	log.Error(err.Error())
 	if a, has := err.(web.HTTPErrorProcessor); has {
 		errDetails := a.HTTPError()
 		return echo.NewHTTPError(errDetails.HTTPCode, errDetails)

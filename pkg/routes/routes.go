@@ -116,9 +116,6 @@ func NewEcho() *echo.Echo {
 	// Validation
 	e.Validator = &CustomValidator{}
 
-	// Handler config
-	handler.SetLoggingProvider(log.GetLogger())
-
 	return e
 }
 
