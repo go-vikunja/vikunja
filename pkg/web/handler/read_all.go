@@ -38,7 +38,7 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 
 	currentAuth, err := auth.GetAuthFromClaims(ctx)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.")
+		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.").SetInternal(err)
 	}
 
 	// Get the object & bind params to struct
@@ -46,9 +46,9 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 		log.Debugf("Invalid model error. Internal error was: %s", err.Error())
 		var he *echo.HTTPError
 		if errors.As(err, &he) {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid model provided. Error was: %s", he.Message))
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid model provided. Error was: %s", he.Message)).SetInternal(err)
 		}
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid model provided.")
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid model provided.").SetInternal(err)
 	}
 
 	// Pagination
@@ -59,7 +59,7 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
 		log.Error(err.Error())
-		return echo.NewHTTPError(http.StatusBadRequest, "Bad page requested.")
+		return echo.NewHTTPError(http.StatusBadRequest, "Bad page requested.").SetInternal(err)
 	}
 	if pageNumber < 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Page number cannot be negative.")
@@ -74,7 +74,7 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 		perPageNumber, err = strconv.Atoi(perPage)
 		if err != nil {
 			log.Error(err.Error())
-			return echo.NewHTTPError(http.StatusBadRequest, "Bad per page amount requested.")
+			return echo.NewHTTPError(http.StatusBadRequest, "Bad per page amount requested.").SetInternal(err)
 		}
 	}
 	// Set default page count

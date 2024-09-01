@@ -42,7 +42,7 @@ func HandleHTTPError(err error) *echo.HTTPError {
 	log.Error(err.Error())
 	if a, has := err.(web.HTTPErrorProcessor); has {
 		errDetails := a.HTTPError()
-		return echo.NewHTTPError(errDetails.HTTPCode, errDetails)
+		return echo.NewHTTPError(errDetails.HTTPCode, errDetails).SetInternal(err)
 	}
-	return echo.NewHTTPError(http.StatusInternalServerError)
+	return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
 }
