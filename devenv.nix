@@ -28,4 +28,9 @@ in {
       enable = true;
     };
   };
+  
+  services.mailpit = {
+    enable = true;
+    package = pkgs-unstable.mailpit;
+  };
 }
