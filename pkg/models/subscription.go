@@ -259,7 +259,7 @@ func GetSubscriptions(s *xorm.Session, entityType SubscriptionEntityType, entity
 				delete(subs, task.ID)
 			}
 
-			if !hasTaskSub {
+			if !hasTaskSub && !hasProjectSub {
 				subs[task.ID] = psub
 			}
 		}
