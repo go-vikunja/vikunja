@@ -28,3 +28,13 @@
   entity_id: 32
   user_id: 6
   created: 2021-02-01 15:13:12
+- id: 9
+  entity_type: 3 # Task
+  entity_id: 18
+  user_id: 6
+  created: 2021-02-01 15:13:12
+- id: 10
+  entity_type: 2 # Project
+  entity_id: 9
+  user_id: 6
+  created: 2021-02-01 15:13:12

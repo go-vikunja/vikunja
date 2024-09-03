@@ -313,4 +313,13 @@ func TestSubscriptionGet(t *testing.T) {
 		require.Error(t, err)
 		assert.True(t, IsErrUnknownSubscriptionEntityType(err))
 	})
+	t.Run("double subscription should be returned once", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		sub, err := GetSubscription(s, SubscriptionEntityTask, 18, u)
+		require.NoError(t, err)
+		assert.Equal(t, int64(9), sub.ID)
+	})
 }
