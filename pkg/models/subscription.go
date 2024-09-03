@@ -242,6 +242,15 @@ func GetSubscriptions(s *xorm.Session, entityType SubscriptionEntityType, entity
 			return nil, err
 		}
 
+		for _, sub := range subs {
+			// The subscriptions might also contain the immediate parent subscription, if that exists.
+			// This loop makes sure to only return the task subscription if it exists. The fallback
+			// happens in the next if after the loop.
+			if sub.EntityID == entityID && sub.EntityType == SubscriptionEntityTask {
+				return []*Subscription{sub}, nil
+			}
+		}
+
 		if len(subs) > 0 {
 			return subs, nil
 		}
