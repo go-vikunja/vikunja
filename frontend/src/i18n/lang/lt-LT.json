@@ -256,7 +256,7 @@
     },
     "duplicate": {
       "title": "Duplicate this project",
-      "label": "Duplicate",
+      "label": "Dubliuoti",
       "text": "Select a parent project which should hold the duplicated project:",
       "success": "The project was successfully duplicated."
     },
@@ -266,7 +266,7 @@
       "titlePlaceholder": "The project title goes here…",
       "identifierTooltip": "The project identifier can be used to uniquely identify a task across projects. You can set it to empty to disable it.",
       "identifier": "Projekto identifikatorius",
-      "identifierPlaceholder": "The project identifier goes here…",
+      "identifierPlaceholder": "Projekto identifikatorius bus čia…",
       "description": "Aprašymas",
       "descriptionPlaceholder": "Enter a description for this project, hit '/' for more options…",
       "color": "Color",
@@ -289,7 +289,7 @@
         "noName": "Vardas nenustatytas",
         "remove": "Pašalinti pasidalinimo nuorodą",
         "removeText": "Are you sure you want to remove this link share? It will no longer be possible to access this project with this link share. This cannot be undone!",
-        "createSuccess": "The link share was successfully created.",
+        "createSuccess": "Pasidalinimo nuoroda buvo sėkmingai sukurta.",
         "deleteSuccess": "The link share was successfully deleted",
         "view": "Peržiūra",
         "sharedBy": "Pasidalino {0}"
@@ -378,17 +378,17 @@
       "targetUrlInvalid": "Prašome nurodyti veikiančia nuorodą.",
       "events": "Įvykiai",
       "eventsHint": "Select all events this webhook should recieve updates for (within the current project).",
-      "mustSelectEvents": "You must select at least one event.",
+      "mustSelectEvents": "Turi pasirinkti bent vieną įvykį.",
       "delete": "Ištrinti šį webhook'ą",
       "deleteText": "Are you sure you want to delete this webhook? External targets will not be notified of its events anymore.",
-      "deleteSuccess": "The webhook was successfully deleted.",
+      "deleteSuccess": "Webhook'as buvo sėkmingai ištrintas.",
       "create": "Sukurti ryšį",
       "secret": "Paslaptis",
       "secretHint": "If provided, all requests to the webhook target URL will be signed using HMAC.",
       "secretDocs": "Check out the docs for more details about how to use secrets."
     },
     "views": {
-      "header": "Edit views",
+      "header": "Keisti vaizdo nustatymus",
       "title": "Title",
       "actions": "Actions",
       "kind": "Kind",
@@ -397,13 +397,13 @@
       "bucketConfigManual": "Manual",
       "filter": "Filtras",
       "create": "Sukurti atvaizdavimą",
-      "createSuccess": "The view was created successfully.",
+      "createSuccess": "Atvaizdavimas buvo sėkmingai sukurtas.",
       "titleRequired": "Please provide a title.",
       "delete": "Ištrinti šį atvaizdavimą",
       "deleteText": "Are you sure you want to remove this view? It will no longer be possible to use it to view tasks in this project. This action won't delete any tasks. This cannot be undone!",
       "deleteSuccess": "The view was deleted successfully.",
-      "onlyAdminsCanEdit": "Only project admins can edit views.",
-      "updateSuccess": "The view was updated successfully."
+      "onlyAdminsCanEdit": "Tik projekto administratoriai gali keisti atvaizdavimą.",
+      "updateSuccess": "Atvaizdavimas buvo sėkmingai atnaujintas."
     }
   },
   "filters": {
@@ -457,7 +457,7 @@
           "endDate": "Užduoties pabaigos data",
           "doneAt": "Data ir laikas, kada užduotis buvo atlikta",
           "assignees": "Užduočiai priskirti vartotojai",
-          "labels": "The labels associated with the task",
+          "labels": "Etiketės sietinos su užduotimi",
           "project": "The project the task belongs to (only available for saved filters, not on a project level)"
         },
         "operators": {
@@ -495,40 +495,40 @@
     "description": "Paspauskite ant trečiosios šalies logotipo norint pradėti.",
     "descriptionDo": "Vikunja importuos visus sąrašus, užduotis, užrašus, priminimus ir dokumentus prie kurių tu turi prieigą.",
     "authorize": "Autorizuoti Vikunja prieigą prie tavo {name} paskyros, spauskite mygtuką žemiau.",
-    "getStarted": "Get Started",
-    "inProgress": "Importing in progress…",
+    "getStarted": "Pradėti",
+    "inProgress": "Importavimas progrese…",
     "alreadyMigrated1": "Atrodo, kad jau importavai savo info is {name} {date}.",
     "alreadyMigrated2": "Importing again is possible, but might create duplicates. Are you sure?",
     "confirm": "I am sure, please start migrating now!",
     "importUpload": "Importuoti duomenis iš {name} į Vikunja, spausk mygtuką žemiau, norėdamas pasirinkti failą.",
-    "upload": "Upload file",
+    "upload": "Įkelti failą",
     "migrationStartedWillReciveEmail": "Vikunja will now import your lists/projects, tasks, notes, reminders and files from {service}. As this will take a while, we will send you an email once done. You can close this window now.",
     "migrationInProgress": "A migration is currently in progress. Please wait until it is done."
   },
   "label": {
-    "title": "Labels",
-    "manage": "Manage labels",
+    "title": "Etiketės",
+    "manage": "Tvarkyti etiketes",
     "description": "Paspausk ant etiketės norėdamas ją redaguoti. Tu gali keisti etiketes, kurias pats sukūrei, tu gali naudoti visas etiketes, kurios yra susietos su užduotimis, projektų, prie kurių tu turi prieigą.",
-    "newCTA": "You currently do not have any labels.",
-    "search": "Type to search for a label…",
+    "newCTA": "Šiuo metu nėra jokių etikečių.",
+    "search": "Rašykite čia norėdami ieškoti etikečių…",
     "create": {
-      "header": "New label",
-      "title": "Create a label",
-      "titleRequired": "Please specify a title.",
-      "success": "The label was successfully created."
+      "header": "Nauja etiketė",
+      "title": "Sukurti etiketę",
+      "titleRequired": "Prašau nurodyti pavadinimą.",
+      "success": "Etiketė buvo sėkmingai sukurta."
     },
     "edit": {
-      "header": "Edit Label",
-      "forbidden": "You are not allowed to edit this label because you don't own it.",
-      "success": "The label was successfully updated."
+      "header": "Redaguoti etiketę",
+      "forbidden": "Tau neleidžiama redaguoti šios etiketės, kadangi ji tau nepriklauso.",
+      "success": "Etiketė buvo sėkmingai atnaujinta."
     },
-    "deleteSuccess": "The label was successfully deleted.",
+    "deleteSuccess": "Etiketė buvo sėkmingai ištrinta.",
     "attributes": {
-      "title": "Title",
-      "titlePlaceholder": "The label title goes here…",
+      "title": "Pavadinimas",
+      "titlePlaceholder": "Etiketės pavadinimas rašomas čia…",
       "description": "Aprašymas",
       "descriptionPlaceholder": "Etiketės aprašas",
-      "color": "Color"
+      "color": "Spalva"
     }
   },
   "sharing": {
@@ -538,21 +538,21 @@
     "invalidPassword": "Slaptažodis neteisingas."
   },
   "navigation": {
-    "overview": "Overview",
+    "overview": "Apžvalga",
     "upcoming": "Upcoming",
-    "settings": "Settings",
+    "settings": "Nustatymai",
     "imprint": "Imprint",
     "privacy": "Privacy Policy"
   },
   "misc": {
-    "loading": "Loading…",
-    "save": "Save",
-    "delete": "Delete",
-    "confirm": "Confirm",
-    "cancel": "Cancel",
-    "refresh": "Refresh",
-    "disable": "Disable",
-    "copy": "Copy to clipboard",
+    "loading": "Kraunama…",
+    "save": "Išsaugoti",
+    "delete": "Ištrinti",
+    "confirm": "Patvirtinti",
+    "cancel": "Atšaukti",
+    "refresh": "Atnaujinti",
+    "disable": "Išjungti",
+    "copy": "Kopijuoti į iškarpinę",
     "copyError": "Copy to clipboard failed",
     "search": "Search",
     "searchPlaceholder": "Type to search…",
@@ -565,33 +565,33 @@
     "saving": "Saving…",
     "saved": "Saved!",
     "default": "Default",
-    "close": "Close",
-    "download": "Download",
-    "showMenu": "Show the menu",
-    "hideMenu": "Hide the menu",
-    "forExample": "For example:",
-    "welcomeBack": "Welcome Back!",
-    "custom": "Custom",
+    "close": "Uždaryti",
+    "download": "Atsisiųsti",
+    "showMenu": "Rodyti meniu",
+    "hideMenu": "Paslėpti meniu",
+    "forExample": "Pavyzdžiui:",
+    "welcomeBack": "Sveiki sugrįžę!",
+    "custom": "Pasirinktinai",
     "id": "ID",
-    "created": "Created at",
-    "createdBy": "Created by {0}",
-    "actions": "Actions",
-    "cannotBeUndone": "This cannot be undone!"
+    "created": "Sukurta",
+    "createdBy": "Sukurta {0}",
+    "actions": "Veiksmai",
+    "cannotBeUndone": "Atšaukti negalėsite!"
   },
   "input": {
-    "resetColor": "Reset Color",
+    "resetColor": "Atstatyti spalvas",
     "datepicker": {
-      "today": "Today",
-      "tomorrow": "Tomorrow",
-      "nextMonday": "Next Monday",
-      "thisWeekend": "This Weekend",
-      "laterThisWeek": "Later This Week",
-      "nextWeek": "Next Week",
+      "today": "Šiandien",
+      "tomorrow": "Rytoj",
+      "nextMonday": "Kitą pirmadienį",
+      "thisWeekend": "Šį savaitgalį",
+      "laterThisWeek": "Vėliau šią savaitę",
+      "nextWeek": "Kitą savaitę",
       "chooseDate": "Choose a date"
     },
     "editor": {
       "edit": "Edit",
-      "done": "Done",
+      "done": "Atlikta",
       "heading1": "Heading 1",
       "heading1Tooltip": "Big section heading.",
       "heading2": "Heading 2",
@@ -868,16 +868,16 @@
       "unassignSuccess": "The user has been unassigned successfully."
     },
     "label": {
-      "placeholder": "Type to add a label…",
-      "createPlaceholder": "Add this as new label",
-      "addSuccess": "The label has been added successfully.",
-      "createSuccess": "The label has been created successfully.",
-      "removeSuccess": "The label has been removed successfully.",
-      "addCreateSuccess": "The label has been created and added successfully.",
+      "placeholder": "Rašykite noredami pridėti etiketę…",
+      "createPlaceholder": "Pridėti tai, kaip naują etiketę",
+      "addSuccess": "Etiketė buvo sėkmingai pridėta.",
+      "createSuccess": "Etiketė buvo sėkmingai sukurta.",
+      "removeSuccess": "Etiketė buvo sėkmingai anuliuota.",
+      "addCreateSuccess": "Etiketė buvo sėkmingai sukurta ir pridėta.",
       "delete": {
-        "header": "Delete this label",
-        "text1": "Are you sure you want to delete this label?",
-        "text2": "This will remove it from all tasks and cannot be restored."
+        "header": "Ištrinti šią etiketę",
+        "text1": "Ar esi tikra(-s), kad nori ištrinti šią etiketę?",
+        "text2": "Šis veiksmas ištins tai iš visų užduočių ir nebus galima atkurti."
       }
     },
     "priority": {
@@ -946,9 +946,9 @@
       "intro": "When creating a task, you can use special keywords to directly add attributes to the newly created task. This allows to add commonly used attributes to tasks much faster.",
       "multiple": "You can use this multiple times.",
       "label1": "Norėdama -s pridėti etiketę, paprasčiausiai naudoti etiketės prefikso pavadinimą su {prefix}.",
-      "label2": "Vikunja will first check if the label already exist and create it if not.",
+      "label2": "Vikunja pirmiausiai patikrins ar etiketė egzistuoja, ir sukurs, jei neegzistuoja.",
       "label3": "Norint naudoti tarpus, paprasčiausiai pridėkite \" ar ' prieš etiketės pavadinimą.",
-      "label4": "For example: {prefix}\"Label with spaces\".",
+      "label4": "Pavyzdžiui: {prefix} \"Etiketė su tarpais\".",
       "priority1": "To set a task's priority, add a number 1-5, prefixed with a {prefix}.",
       "priority2": "The higher the number, the higher the priority.",
       "assignees": "Norint tiesiogiai priskirti užduotį vartotojui, pridėkite vartotojo vardą kaip prefiksą su {prefix} prie užduoties.",
@@ -1029,7 +1029,7 @@
       "title": "Task Page",
       "done": "Mark task done / undone",
       "assign": "Assign this task to a user",
-      "labels": "Add labels to this task",
+      "labels": "Pridėti etiketes šiai užduočiai",
       "dueDate": "Change the due date of this task",
       "attachment": "Add an attachment to this task",
       "related": "Modify related tasks of this task",
@@ -1053,7 +1053,7 @@
       "title": "Navigation",
       "overview": "Navigate to overview",
       "upcoming": "Navigate to upcoming tasks",
-      "labels": "Navigate to labels",
+      "labels": "Eiti į etiketes",
       "teams": "Navigate to teams",
       "projects": "Navigate to projects"
     }
@@ -1100,11 +1100,11 @@
   "quickActions": {
     "commands": "Commands",
     "placeholder": "Type a command or search…",
-    "hint": "You can use {project} to limit the search to a project. Combine {project} or {label} (labels) with a search query to search for a task with these labels or on that project. Use {assignee} to only search for teams.",
+    "hint": "Gai naudoti {project} sutrumpinti projektų paiešką. Sujungti {project} ar {label} (etiketes) paieškos užklausoje norint ieškoti užduoties su tomis etiketėmis ar tame projekte. Naudok {assignee} norėdama(-s) ieškoti komandu.",
     "tasks": "Tasks",
     "projects": "Projects",
     "teams": "Teams",
-    "labels": "Labels",
+    "labels": "Etiketės",
     "newProject": "Enter the title of the new project…",
     "newTask": "Enter the title of the new task…",
     "newTeam": "Įveskite naujos komandos pavadinimą…",
@@ -1182,8 +1182,8 @@
     "6007": "The team does not have access to the project to perform that action.",
     "7002": "The user already has access to that project.",
     "7003": "You do not have access to that project.",
-    "8001": "This label already exists on that task.",
-    "8002": "The label does not exist.",
+    "8001": "Ši etiketė jau yra prie šios užduoties.",
+    "8002": "Etiketė neegzistuoja.",
     "8003": "You do not have access to this label.",
     "9001": "The right is invalid.",
     "10001": "Šaltinis neegzistuoja.",
