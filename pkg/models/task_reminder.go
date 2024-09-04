@@ -124,6 +124,39 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64, cond builder.Cond) (
 		})
 	}
 
+	subscriptions, err := GetSubscriptionsForEntities(s, SubscriptionEntityTask, taskIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	subscriberIDs := []int64{}
+	for _, subs := range subscriptions {
+		for _, sub := range subs {
+			subscriberIDs = append(subscriberIDs, sub.UserID)
+		}
+	}
+
+	subscribers, err := user.GetUsersByCond(s, builder.And(
+		builder.In("id", subscriberIDs),
+		cond,
+	))
+	if err != nil {
+		return nil, err
+	}
+
+	for taskID, subs := range subscriptions {
+		for _, sub := range subs {
+			u, has := subscribers[sub.UserID]
+			if !has {
+				continue
+			}
+			taskUsers = append(taskUsers, &taskUser{
+				Task: taskMap[taskID],
+				User: u,
+			})
+		}
+	}
+
 	return
 }
 
