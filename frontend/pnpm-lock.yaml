@@ -155,8 +155,8 @@ importers:
         specifier: 10.11.0
         version: 10.11.0(vue-router@4.4.0(vue@3.4.32(typescript@5.5.3)))(vue@3.4.32(typescript@5.5.3))
       axios:
-        specifier: 1.7.2
-        version: 1.7.2(debug@4.3.5)
+        specifier: 1.7.7
+        version: 1.7.7(debug@4.3.5)
       blurhash:
         specifier: 2.0.5
         version: 2.0.5
@@ -2715,8 +2715,8 @@ packages:
   aws4@1.13.1:
     resolution: {integrity: sha512-u5w79Rd7SU4JaIlA/zFqG+gOiuq25q5VLyZ8E+ijJeILuTxVzZgp2CaGw/UTw6pXYN9XMO9yiqj/nEHmhTG5CA==}
 
-  axios@1.7.2:
-    resolution: {integrity: sha512-2A8QhOMrbomlDuiLeK9XibIBzuHeRcqqNOHp0Cyp5EoJ1IFDh+XZH3A6BkXtv0K4gFGCI0Y4BM7B1wOEi0Rmgw==}
+  axios@1.7.7:
+    resolution: {integrity: sha512-S4kL7XrjgBmvdGut0sN3yJxqYzrDOnivkBiN0OFs6hLiUam3UPvswUo0kqGyhqUZGEOytHyumEdXsAkgCOUf3Q==}
 
   babel-plugin-polyfill-corejs2@0.4.11:
     resolution: {integrity: sha512-sMEJ27L0gRHShOh5G54uAAPaiCOygY/5ratXuiyb2G46FmlSpc9eFCzYVyDiPxfNbwzA7mYahmjQc5q+CZQ09Q==}
@@ -8837,7 +8837,7 @@ snapshots:
 
   aws4@1.13.1: {}
 
-  axios@1.7.2(debug@4.3.5):
+  axios@1.7.7(debug@4.3.5):
     dependencies:
       follow-redirects: 1.15.6(debug@4.3.5)
       form-data: 4.0.0
@@ -12610,7 +12610,7 @@ snapshots:
 
   wait-on@7.2.0(debug@4.3.5):
     dependencies:
-      axios: 1.7.2(debug@4.3.5)
+      axios: 1.7.7(debug@4.3.5)
       joi: 17.13.3
       lodash: 4.17.21
       minimist: 1.2.8
