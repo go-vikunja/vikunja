@@ -17,6 +17,7 @@
 package models
 
 import (
+	"encoding/json"
 	"strconv"
 	"time"
 
@@ -37,6 +38,56 @@ const (
 	SubscriptionEntityTask
 )
 
+func (st *SubscriptionEntityType) UnmarshalJSON(bytes []byte) error {
+	var value string
+	err := json.Unmarshal(bytes, &value)
+	if err != nil {
+		return err
+	}
+
+	switch value {
+	case "project":
+		*st = SubscriptionEntityProject
+	case "task":
+		*st = SubscriptionEntityTask
+	default:
+		return &ErrUnknownSubscriptionEntityType{EntityType: *st}
+	}
+
+	return nil
+}
+
+func (st SubscriptionEntityType) MarshalJSON() ([]byte, error) {
+	switch st {
+	case SubscriptionEntityProject:
+		return []byte(`"project"`), nil
+	case SubscriptionEntityTask:
+		return []byte(`"task"`), nil
+	}
+
+	return []byte(`nil`), nil
+}
+
+func getEntityTypeFromString(entityType string) SubscriptionEntityType {
+	switch entityType {
+	case entityProject:
+		return SubscriptionEntityProject
+	case entityTask:
+		return SubscriptionEntityTask
+	}
+
+	return SubscriptionEntityUnknown
+}
+
+func (st SubscriptionEntityType) validate() error {
+	if st == SubscriptionEntityProject ||
+		st == SubscriptionEntityTask {
+		return nil
+	}
+
+	return &ErrUnknownSubscriptionEntityType{EntityType: st}
+}
+
 const (
 	entityProject = `project`
 	entityTask    = `task`
@@ -47,8 +98,8 @@ type Subscription struct {
 	// The numeric ID of the subscription
 	ID int64 `xorm:"autoincr not null unique pk" json:"id"`
 
-	EntityType SubscriptionEntityType `xorm:"index not null" json:"-"`
-	Entity     string                 `xorm:"-" json:"entity" param:"entity"`
+	EntityType SubscriptionEntityType `xorm:"index not null" json:"entity"`
+	Entity     string                 `xorm:"-" json:"-" param:"entity"`
 	// The id of the entity to subscribe to.
 	EntityID int64 `xorm:"bigint index not null" json:"entity_id" param:"entityID"`
 
@@ -76,38 +127,6 @@ type subscriptionResolved struct {
 // TableName gives us a better table name for the subscriptions table
 func (sb *Subscription) TableName() string {
 	return "subscriptions"
-}
-
-func getEntityTypeFromString(entityType string) SubscriptionEntityType {
-	switch entityType {
-	case entityProject:
-		return SubscriptionEntityProject
-	case entityTask:
-		return SubscriptionEntityTask
-	}
-
-	return SubscriptionEntityUnknown
-}
-
-// String returns a human-readable string of an entity
-func (et SubscriptionEntityType) String() string {
-	switch et {
-	case SubscriptionEntityProject:
-		return entityProject
-	case SubscriptionEntityTask:
-		return entityTask
-	}
-
-	return ""
-}
-
-func (et SubscriptionEntityType) validate() error {
-	if et == SubscriptionEntityProject ||
-		et == SubscriptionEntityTask {
-		return nil
-	}
-
-	return &ErrUnknownSubscriptionEntityType{EntityType: et}
 }
 
 // Create subscribes the current user to an entity
