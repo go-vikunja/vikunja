@@ -52,7 +52,6 @@ func TestSubscription_Create(t *testing.T) {
 		sb := &Subscription{
 			Entity:   "task",
 			EntityID: 1,
-			UserID:   u.ID,
 		}
 
 		can, err := sb.CanCreate(s, u)
@@ -61,13 +60,32 @@ func TestSubscription_Create(t *testing.T) {
 
 		err = sb.Create(s, u)
 		require.NoError(t, err)
-		assert.NotNil(t, sb.User)
 
 		db.AssertExists(t, "subscriptions", map[string]interface{}{
 			"entity_type": 3,
 			"entity_id":   1,
 			"user_id":     u.ID,
 		}, false)
+	})
+	t.Run("already exists", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		sb := &Subscription{
+			Entity:   "task",
+			EntityID: 2,
+			UserID:   u.ID,
+		}
+
+		can, err := sb.CanCreate(s, u)
+		require.NoError(t, err)
+		assert.True(t, can)
+
+		err = sb.Create(s, u)
+		require.Error(t, err)
+		terr := &ErrSubscriptionAlreadyExists{}
+		assert.ErrorAs(t, err, &terr)
 	})
 	t.Run("forbidden for link shares", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -86,7 +104,7 @@ func TestSubscription_Create(t *testing.T) {
 		require.Error(t, err)
 		assert.False(t, can)
 	})
-	t.Run("noneixsting project", func(t *testing.T) {
+	t.Run("nonexisting project", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
@@ -240,7 +258,7 @@ func TestSubscriptionGet(t *testing.T) {
 			s := db.NewSession()
 			defer s.Close()
 
-			sub, err := GetSubscription(s, SubscriptionEntityProject, 12, u)
+			sub, err := GetSubscriptionForUser(s, SubscriptionEntityProject, 12, u)
 			require.NoError(t, err)
 			assert.NotNil(t, sub)
 			assert.Equal(t, int64(3), sub.ID)
@@ -250,7 +268,7 @@ func TestSubscriptionGet(t *testing.T) {
 			s := db.NewSession()
 			defer s.Close()
 
-			sub, err := GetSubscription(s, SubscriptionEntityTask, 22, u)
+			sub, err := GetSubscriptionForUser(s, SubscriptionEntityTask, 22, u)
 			require.NoError(t, err)
 			assert.NotNil(t, sub)
 			assert.Equal(t, int64(4), sub.ID)
@@ -263,7 +281,7 @@ func TestSubscriptionGet(t *testing.T) {
 			defer s.Close()
 
 			// Project 25 belongs to project 12 where user 6 has subscribed to
-			sub, err := GetSubscription(s, SubscriptionEntityProject, 25, u)
+			sub, err := GetSubscriptionForUser(s, SubscriptionEntityProject, 25, u)
 			require.NoError(t, err)
 			assert.NotNil(t, sub)
 			assert.Equal(t, int64(12), sub.EntityID)
@@ -275,7 +293,7 @@ func TestSubscriptionGet(t *testing.T) {
 			defer s.Close()
 
 			// Project 26 belongs to project 25 which belongs to project 12 where user 6 has subscribed to
-			sub, err := GetSubscription(s, SubscriptionEntityProject, 26, u)
+			sub, err := GetSubscriptionForUser(s, SubscriptionEntityProject, 26, u)
 			require.NoError(t, err)
 			assert.NotNil(t, sub)
 			assert.Equal(t, int64(12), sub.EntityID)
@@ -287,7 +305,7 @@ func TestSubscriptionGet(t *testing.T) {
 			defer s.Close()
 
 			// Task 39 belongs to project 25 which belongs to project 12 where the user has subscribed
-			sub, err := GetSubscription(s, SubscriptionEntityTask, 39, u)
+			sub, err := GetSubscriptionForUser(s, SubscriptionEntityTask, 39, u)
 			require.NoError(t, err)
 			assert.NotNil(t, sub)
 			// assert.Equal(t, int64(2), sub.ID) TODO
@@ -298,7 +316,7 @@ func TestSubscriptionGet(t *testing.T) {
 			defer s.Close()
 
 			// Task 21 belongs to project 32 which the user has subscribed to
-			sub, err := GetSubscription(s, SubscriptionEntityTask, 21, u)
+			sub, err := GetSubscriptionForUser(s, SubscriptionEntityTask, 21, u)
 			require.NoError(t, err)
 			assert.NotNil(t, sub)
 			assert.Equal(t, int64(8), sub.ID)
@@ -309,7 +327,7 @@ func TestSubscriptionGet(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		_, err := GetSubscription(s, 2342, 21, u)
+		_, err := GetSubscriptionForUser(s, 2342, 21, u)
 		require.Error(t, err)
 		assert.True(t, IsErrUnknownSubscriptionEntityType(err))
 	})
@@ -318,7 +336,7 @@ func TestSubscriptionGet(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		sub, err := GetSubscription(s, SubscriptionEntityTask, 18, u)
+		sub, err := GetSubscriptionForUser(s, SubscriptionEntityTask, 18, u)
 		require.NoError(t, err)
 		assert.Equal(t, int64(9), sub.ID)
 	})

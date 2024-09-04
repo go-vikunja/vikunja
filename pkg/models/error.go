@@ -1745,7 +1745,7 @@ func IsErrSubscriptionAlreadyExists(err error) bool {
 }
 
 func (err *ErrSubscriptionAlreadyExists) Error() string {
-	return fmt.Sprintf("Subscription for this (entity_id, entity_type, user_id) already exists [EntityType: %d, EntityID: %d, ID: %d]", err.EntityType, err.EntityID, err.UserID)
+	return fmt.Sprintf("Subscription for this (entity_id, entity_type, user_id) already exists [EntityType: %d, EntityID: %d, UserID: %d]", err.EntityType, err.EntityID, err.UserID)
 }
 
 // ErrCodeSubscriptionAlreadyExists holds the unique world-error code of this error
@@ -1757,6 +1757,32 @@ func (err ErrSubscriptionAlreadyExists) HTTPError() web.HTTPError {
 		HTTPCode: http.StatusPreconditionFailed,
 		Code:     ErrCodeSubscriptionAlreadyExists,
 		Message:  "You're already subscribed.",
+	}
+}
+
+// ErrMustProvideUser represents an error where you need to provide a user to fetch subscriptions
+type ErrMustProvideUser struct {
+}
+
+// IsErrMustProvideUser checks if an error is ErrMustProvideUser.
+func IsErrMustProvideUser(err error) bool {
+	_, ok := err.(*ErrMustProvideUser)
+	return ok
+}
+
+func (err *ErrMustProvideUser) Error() string {
+	return "no user provided while fetching subscriptions"
+}
+
+// ErrCodeMustProvideUser holds the unique world-error code of this error
+const ErrCodeMustProvideUser = 12003
+
+// HTTPError holds the http error description
+func (err ErrMustProvideUser) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeMustProvideUser,
+		Message:  "You must provide a user to fetch subscriptions",
 	}
 }
 
