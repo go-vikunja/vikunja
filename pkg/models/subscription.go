@@ -171,7 +171,7 @@ func (sb *Subscription) Delete(s *xorm.Session, auth web.Auth) (err error) {
 
 func GetSubscriptionForUser(s *xorm.Session, entityType SubscriptionEntityType, entityID int64, a web.Auth) (subscription *SubscriptionWithUser, err error) {
 	u, is := a.(*user.User)
-	if u != nil && !is {
+	if !is || u == nil {
 		return
 	}
 
