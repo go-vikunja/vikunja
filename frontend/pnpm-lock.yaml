@@ -197,8 +197,8 @@ importers:
         specifier: 2.9.0
         version: 2.9.0
       pinia:
-        specifier: 2.1.7
-        version: 2.1.7(typescript@5.5.3)(vue@3.4.32(typescript@5.5.3))
+        specifier: 2.2.2
+        version: 2.2.2(typescript@5.5.3)(vue@3.4.32(typescript@5.5.3))
       register-service-worker:
         specifier: 1.7.2
         version: 1.7.2
@@ -4781,8 +4781,8 @@ packages:
     resolution: {integrity: sha512-udgsAY+fTnvv7kI7aaxbqwWNb0AHiB0qBO89PZKPkoTmGOgdbrHDKD+0B2X4uTfJ/FT1R09r9gTsjUjNJotuog==}
     engines: {node: '>=0.10.0'}
 
-  pinia@2.1.7:
-    resolution: {integrity: sha512-+C2AHFtcFqjPih0zpYuvof37SFxMQ7OEG2zV9jRI12i9BOy3YQVAHwdKtyyc8pDcDyIc33WCIsZaCFWU7WWxGQ==}
+  pinia@2.2.2:
+    resolution: {integrity: sha512-ja2XqFWZC36mupU4z1ZzxeTApV7DOw44cV4dhQ9sGwun+N89v/XP7+j7q6TanS1u1tdbK4r+1BUx7heMaIdagA==}
     peerDependencies:
       '@vue/composition-api': ^1.4.0
       typescript: '>=4.4.4'
@@ -11133,7 +11133,7 @@ snapshots:
 
   pify@2.3.0: {}
 
-  pinia@2.1.7(typescript@5.5.3)(vue@3.4.32(typescript@5.5.3)):
+  pinia@2.2.2(typescript@5.5.3)(vue@3.4.32(typescript@5.5.3)):
     dependencies:
       '@vue/devtools-api': 6.6.3
       vue: 3.4.32(typescript@5.5.3)
