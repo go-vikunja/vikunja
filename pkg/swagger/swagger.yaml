@@ -710,17 +710,13 @@ definitions:
           this value.
         type: string
       entity:
-        type: string
+        type: integer
       entity_id:
         description: The id of the entity to subscribe to.
         type: integer
       id:
         description: The numeric ID of the subscription
         type: integer
-      user:
-        allOf:
-        - $ref: '#/definitions/user.User'
-        description: The user who made this subscription
     type: object
   models.Task:
     properties:
