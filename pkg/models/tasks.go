@@ -1577,7 +1577,9 @@ func (t *Task) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 	if err != nil && IsErrProjectDoesNotExist(err) {
 		return nil
 	}
-	t.Subscription = &subs.Subscription
+	if subs != nil {
+		t.Subscription = &subs.Subscription
+	}
 
 	return
 }
