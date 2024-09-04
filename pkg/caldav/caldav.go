@@ -92,7 +92,8 @@ func getCaldavColor(color string) (caldavcolor string) {
 	return `
 X-APPLE-CALENDAR-COLOR:` + color + `
 X-OUTLOOK-COLOR:` + color + `
-X-FUNAMBOL-COLOR:` + color
+X-FUNAMBOL-COLOR:` + color + `
+COLOR:` + color
 }
 
 func formatDuration(duration time.Duration) string {

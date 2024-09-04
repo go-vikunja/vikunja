@@ -353,6 +353,142 @@ END:VCALENDAR`,
 				},
 			},
 		},
+		{
+			name: "with apple hex color",
+			args: args{content: `BEGIN:VCALENDAR
+VERSION:2.0
+METHOD:PUBLISH
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+X-APPLE-CALENDAR-COLOR:#affffeFF
+END:VTODO
+END:VCALENDAR`,
+			},
+			wantVTask: &models.Task{
+				HexColor: "affffe",
+			},
+		},
+		{
+			name: "with apple css color",
+			args: args{content: `BEGIN:VCALENDAR
+VERSION:2.0
+METHOD:PUBLISH
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+X-APPLE-CALENDAR-COLOR:mediumslateblue
+END:VTODO
+END:VCALENDAR`,
+			},
+			wantVTask: &models.Task{
+				HexColor: "7b68ee",
+			},
+		},
+		{
+			name: "with outlook hex color",
+			args: args{content: `BEGIN:VCALENDAR
+VERSION:2.0
+METHOD:PUBLISH
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+X-OUTLOOK-COLOR:#affffeFF
+END:VTODO
+END:VCALENDAR`,
+			},
+			wantVTask: &models.Task{
+				HexColor: "affffe",
+			},
+		},
+		{
+			name: "with outlook css color",
+			args: args{content: `BEGIN:VCALENDAR
+VERSION:2.0
+METHOD:PUBLISH
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+X-OUTLOOK-COLOR:mediumslateblue
+END:VTODO
+END:VCALENDAR`,
+			},
+			wantVTask: &models.Task{
+				HexColor: "7b68ee",
+			},
+		},
+		{
+			name: "with funambol hex color",
+			args: args{content: `BEGIN:VCALENDAR
+VERSION:2.0
+METHOD:PUBLISH
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+X-FUNAMBOL-COLOR:#affffeFF
+END:VTODO
+END:VCALENDAR`,
+			},
+			wantVTask: &models.Task{
+				HexColor: "affffe",
+			},
+		},
+		{
+			name: "with funambol css color",
+			args: args{content: `BEGIN:VCALENDAR
+VERSION:2.0
+METHOD:PUBLISH
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+X-FUNAMBOL-COLOR:mediumslateblue
+END:VTODO
+END:VCALENDAR`,
+			},
+			wantVTask: &models.Task{
+				HexColor: "7b68ee",
+			},
+		},
+		{
+			name: "with hex color",
+			args: args{content: `BEGIN:VCALENDAR
+VERSION:2.0
+METHOD:PUBLISH
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+COLOR:#affffeFF
+END:VTODO
+END:VCALENDAR`,
+			},
+			wantVTask: &models.Task{
+				HexColor: "affffe",
+			},
+		},
+		{
+			name: "with css color",
+			args: args{content: `BEGIN:VCALENDAR
+VERSION:2.0
+METHOD:PUBLISH
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+COLOR:mediumslateblue
+END:VTODO
+END:VCALENDAR`,
+			},
+			wantVTask: &models.Task{
+				HexColor: "7b68ee",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
