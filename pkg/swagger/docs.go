@@ -8625,7 +8625,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "entity": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "entity_id": {
                     "description": "The id of the entity to subscribe to.",
@@ -8634,14 +8634,6 @@ const docTemplate = `{
                 "id": {
                     "description": "The numeric ID of the subscription",
                     "type": "integer"
-                },
-                "user": {
-                    "description": "The user who made this subscription",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/user.User"
-                        }
-                    ]
                 }
             }
         },
