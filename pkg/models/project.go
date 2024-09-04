@@ -297,9 +297,12 @@ func (p *Project) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
-	p.Subscription, err = GetSubscription(s, SubscriptionEntityProject, p.ID, a)
+	subs, err := GetSubscriptionForUser(s, SubscriptionEntityProject, p.ID, a)
 	if err != nil && IsErrProjectDoesNotExist(err) && isFilter {
 		return nil
+	}
+	if subs != nil {
+		p.Subscription = &subs.Subscription
 	}
 
 	p.Views, err = getViewsForProject(s, p.ID)
@@ -629,10 +632,23 @@ func addProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err er
 		return err
 	}
 
-	subscriptions, err := GetSubscriptionsForProjects(s, projects, a)
-	if err != nil {
-		log.Errorf("An error occurred while getting project subscriptions for a project: %s", err.Error())
-		subscriptions = make(map[int64][]*Subscription)
+	var subscriptions = make(map[int64][]*Subscription)
+	u, is := a.(*user.User)
+	if is {
+		subscriptionsWithUser, err := GetSubscriptionsForEntitiesAndUser(s, SubscriptionEntityProject, projectIDs, u)
+		if err != nil {
+			log.Errorf("An error occurred while getting project subscriptions for a project: %s", err.Error())
+		}
+		if err == nil {
+			for pID, subs := range subscriptionsWithUser {
+				for _, sub := range subs {
+					if _, has := subscriptions[pID]; !has {
+						subscriptions[pID] = []*Subscription{}
+					}
+					subscriptions[pID] = append(subscriptions[pID], &sub.Subscription)
+				}
+			}
+		}
 	}
 
 	views := []*ProjectView{}

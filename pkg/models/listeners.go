@@ -199,7 +199,7 @@ func (s *SendTaskCommentNotification) Handle(msg *message.Message) (err error) {
 		return err
 	}
 
-	subscribers, err := getSubscribersForEntity(sess, SubscriptionEntityTask, event.Task.ID)
+	subscribers, err := GetSubscriptionsForEntity(sess, SubscriptionEntityTask, event.Task.ID)
 	if err != nil {
 		return err
 	}
@@ -279,7 +279,7 @@ func (s *SendTaskAssignedNotification) Handle(msg *message.Message) (err error) 
 	sess := db.NewSession()
 	defer sess.Close()
 
-	subscribers, err := getSubscribersForEntity(sess, SubscriptionEntityTask, event.Task.ID)
+	subscribers, err := GetSubscriptionsForEntity(sess, SubscriptionEntityTask, event.Task.ID)
 	if err != nil {
 		return err
 	}
@@ -340,12 +340,12 @@ func (s *SendTaskDeletedNotification) Handle(msg *message.Message) (err error) {
 	sess := db.NewSession()
 	defer sess.Close()
 
-	var subscribers []*Subscription
-	subscribers, err = getSubscribersForEntity(sess, SubscriptionEntityTask, event.Task.ID)
+	var subscribers []*SubscriptionWithUser
+	subscribers, err = GetSubscriptionsForEntity(sess, SubscriptionEntityTask, event.Task.ID)
 	// If the task does not exist and no one has explicitly subscribed to it, we won't find any subscriptions for it.
 	// Hence, we need to check for subscriptions to the parent project manually.
 	if err != nil && (IsErrTaskDoesNotExist(err) || IsErrProjectDoesNotExist(err)) {
-		subscribers, err = getSubscribersForEntity(sess, SubscriptionEntityProject, event.Task.ProjectID)
+		subscribers, err = GetSubscriptionsForEntity(sess, SubscriptionEntityProject, event.Task.ProjectID)
 	}
 	if err != nil {
 		return err
@@ -801,7 +801,7 @@ func (s *SendProjectCreatedNotification) Handle(msg *message.Message) (err error
 	sess := db.NewSession()
 	defer sess.Close()
 
-	subscribers, err := getSubscribersForEntity(sess, SubscriptionEntityProject, event.Project.ID)
+	subscribers, err := GetSubscriptionsForEntity(sess, SubscriptionEntityProject, event.Project.ID)
 	if err != nil {
 		return err
 	}
