@@ -17,17 +17,22 @@
 package cmd
 
 import (
+	"path/filepath"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/initialize"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/dump"
+
 	"github.com/spf13/cobra"
 )
 
 func init() {
 	rootCmd.AddCommand(dumpCmd)
 }
+
+var dumpPathFlag string
 
 var dumpCmd = &cobra.Command{
 	Use:   "dump",
@@ -37,8 +42,18 @@ var dumpCmd = &cobra.Command{
 	},
 	Run: func(_ *cobra.Command, _ []string) {
 		filename := "vikunja-dump_" + time.Now().Format("2006-01-02_15-03-05") + ".zip"
-		if err := dump.Dump(filename); err != nil {
+
+		path := config.ServiceRootpath.GetString()
+		if dumpPathFlag != "" {
+			path = dumpPathFlag
+		}
+
+		if err := dump.Dump(filepath.Join(path, filename)); err != nil {
 			log.Critical(err.Error())
 		}
 	},
+}
+
+func init() {
+	dumpCmd.Flags().StringVarP(&dumpPathFlag, "path", "p", "", "The folder path where the dump file should be saved. Vikunja will use the configured root path or the binary location if the flag is not provided.")
 }
