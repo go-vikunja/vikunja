@@ -813,7 +813,7 @@ func init() {
 		ID:          "` + date + `",
 		Description: "",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(` + str + date + `{})
+			return tx.Sync(` + str + date + `{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil
