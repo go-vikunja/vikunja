@@ -512,6 +512,7 @@ async function updateTaskPosition(e) {
 			taskId: newTask.id,
 		})
 		await taskPositionService.value.update(newPosition)
+		newTask.position = position
 		
 		if(bucketHasChanged) {
 			const updatedTaskBucket = await taskBucketService.value.update(new TaskBucketModel({
@@ -524,8 +525,8 @@ async function updateTaskPosition(e) {
 			if (updatedTaskBucket.bucketId !== newTask.bucketId) {
 				kanbanStore.moveTaskToBucket(newTask, updatedTaskBucket.bucketId)
 			}
-			kanbanStore.setTaskInBucket(newTask)
 		}
+		kanbanStore.setTaskInBucket(newTask)
 
 		// Make sure the first and second task don't both get position 0 assigned
 		if (newTaskIndex === 0 && taskAfter !== null && taskAfter.position === 0) {
