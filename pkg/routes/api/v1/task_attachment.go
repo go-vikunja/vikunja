@@ -174,7 +174,7 @@ func GetTaskAttachment(c echo.Context) error {
 		}
 	}
 
-	// Open an send the file to the client
+	// Open and send the file to the client
 	err = taskAttachment.File.LoadFileByID()
 	if err != nil {
 		_ = s.Rollback()

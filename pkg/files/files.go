@@ -20,6 +20,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -52,17 +53,21 @@ type File struct {
 }
 
 // TableName is the table name for the files table
-func (File) TableName() string {
+func (*File) TableName() string {
 	return "files"
 }
 
-func (f *File) getFileName() string {
-	return config.FilesBasePath.GetString() + "/" + strconv.FormatInt(f.ID, 10)
+func (f *File) getAbsoluteFilePath() string {
+	return filepath.Join(
+		config.ServiceRootpath.GetString(),
+		config.FilesBasePath.GetString(),
+		strconv.FormatInt(f.ID, 10),
+	)
 }
 
 // LoadFileByID returns a file by its ID
 func (f *File) LoadFileByID() (err error) {
-	f.File, err = afs.Open(f.getFileName())
+	f.File, err = afs.Open(f.getAbsoluteFilePath())
 	return
 }
 
@@ -137,7 +142,7 @@ func (f *File) Delete() (err error) {
 		return ErrFileDoesNotExist{FileID: f.ID}
 	}
 
-	err = afs.Remove(f.getFileName())
+	err = afs.Remove(f.getAbsoluteFilePath())
 	if err != nil {
 		var perr *os.PathError
 		if errors.As(err, &perr) {
@@ -155,7 +160,7 @@ func (f *File) Delete() (err error) {
 
 // Save saves a file to storage
 func (f *File) Save(fcontent io.Reader) (err error) {
-	err = afs.WriteReader(f.getFileName(), fcontent)
+	err = afs.WriteReader(f.getAbsoluteFilePath(), fcontent)
 	if err != nil {
 		return
 	}
