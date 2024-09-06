@@ -19,7 +19,7 @@ package models
 import (
 	"io"
 	"os"
-	"strconv"
+	"path/filepath"
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
@@ -51,7 +51,7 @@ func TestTaskAttachment_ReadOne(t *testing.T) {
 		// Load the actual attachment file and check its content
 		err = ta.File.LoadFileByID()
 		require.NoError(t, err)
-		assert.Equal(t, config.FilesBasePath.GetString()+"/1", ta.File.File.Name())
+		assert.Equal(t, filepath.Join(config.ServiceRootpath.GetString(), config.FilesBasePath.GetString(), "/1"), ta.File.File.Name())
 		content := make([]byte, 9)
 		read, err := ta.File.File.Read(content)
 		require.NoError(t, err)
@@ -122,7 +122,7 @@ func TestTaskAttachment_NewAttachment(t *testing.T) {
 	err := ta.NewAttachment(s, tf, "testfile", 100, testuser)
 	require.NoError(t, err)
 	assert.NotEqual(t, 0, ta.FileID)
-	_, err = files.FileStat("files/" + strconv.FormatInt(ta.FileID, 10))
+	_, err = files.FileStat(ta.File)
 	require.NoError(t, err)
 	assert.False(t, os.IsNotExist(err))
 	assert.Equal(t, testuser.ID, ta.CreatedByID)
@@ -158,23 +158,28 @@ func TestTaskAttachment_ReadAll(t *testing.T) {
 }
 
 func TestTaskAttachment_Delete(t *testing.T) {
-	db.LoadAndAssertFixtures(t)
-	s := db.NewSession()
-	defer s.Close()
-
 	u := &user.User{ID: 1}
 
-	files.InitTestFileFixtures(t)
 	t.Run("Normal", func(t *testing.T) {
+		files.InitTestFileFixtures(t)
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		ta := &TaskAttachment{ID: 1}
 		err := ta.Delete(s, u)
 		require.NoError(t, err)
 		// Check if the file itself was deleted
-		_, err = files.FileStat("/1") // The new file has the id 2 since it's the second attachment
+		_, err = files.FileStat(ta.File) // The new file has the id 2 since it's the second attachment
+		require.Error(t, err)
 		assert.True(t, os.IsNotExist(err))
 	})
 	t.Run("Nonexisting", func(t *testing.T) {
 		files.InitTestFileFixtures(t)
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		ta := &TaskAttachment{ID: 9999}
 		err := ta.Delete(s, u)
 		require.Error(t, err)
@@ -182,6 +187,10 @@ func TestTaskAttachment_Delete(t *testing.T) {
 	})
 	t.Run("Existing attachment, nonexisting file", func(t *testing.T) {
 		files.InitTestFileFixtures(t)
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		ta := &TaskAttachment{ID: 2}
 		err := ta.Delete(s, u)
 		require.NoError(t, err)

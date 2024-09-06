@@ -1204,8 +1204,11 @@ func (p *Project) DeleteBackgroundFileIfExists() (err error) {
 		return
 	}
 
+	s := db.NewSession()
+	defer s.Close()
+
 	file := files.File{ID: p.BackgroundFileID}
-	err = file.Delete()
+	err = file.Delete(s)
 	if err != nil && files.IsErrFileDoesNotExist(err) {
 		return nil
 	}

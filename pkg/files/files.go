@@ -128,11 +128,8 @@ func CreateWithMimeAndSession(s *xorm.Session, f io.Reader, realname string, rea
 }
 
 // Delete removes a file from the DB and the file system
-func (f *File) Delete() (err error) {
-	s := db.NewSession()
-	defer s.Close()
-
-	deleted, err := s.Where("id = ?", f.ID).Delete(f)
+func (f *File) Delete(s *xorm.Session) (err error) {
+	deleted, err := s.Where("id = ?", f.ID).Delete(&File{})
 	if err != nil {
 		_ = s.Rollback()
 		return err
