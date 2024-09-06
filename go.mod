@@ -33,7 +33,7 @@ require (
 	github.com/ganigeorgiev/fexpr v0.4.1
 	github.com/getsentry/sentry-go v0.28.1
 	github.com/go-sql-driver/mysql v1.8.1
-	github.com/go-testfixtures/testfixtures/v3 v3.11.0
+	github.com/go-testfixtures/testfixtures/v3 v3.12.0
 	github.com/gocarina/gocsv v0.0.0-20231116093920-b87c2d0e983a
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
@@ -88,7 +88,7 @@ require (
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/ClickHouse/ch-go v0.61.5 // indirect
-	github.com/ClickHouse/clickhouse-go/v2 v2.24.0 // indirect
+	github.com/ClickHouse/clickhouse-go/v2 v2.26.0 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect

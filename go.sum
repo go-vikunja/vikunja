@@ -15,6 +15,8 @@ github.com/ClickHouse/ch-go v0.61.5 h1:zwR8QbYI0tsMiEcze/uIMK+Tz1D3XZXLdNrlaOpeE
 github.com/ClickHouse/ch-go v0.61.5/go.mod h1:s1LJW/F/LcFs5HJnuogFMta50kKDO0lf9zzfrbl0RQg=
 github.com/ClickHouse/clickhouse-go/v2 v2.24.0 h1:L/n/pVVpk95KtkHOiKuSnO7cu2ckeW4gICbbOh5qs74=
 github.com/ClickHouse/clickhouse-go/v2 v2.24.0/go.mod h1:iDTViXk2Fgvf1jn2dbJd1ys+fBkdD1UMRnXlwmhijhQ=
+github.com/ClickHouse/clickhouse-go/v2 v2.26.0 h1:j4/y6NYaCcFkJwN/TU700ebW+nmsIy34RmUAAcZKy9w=
+github.com/ClickHouse/clickhouse-go/v2 v2.26.0/go.mod h1:iDTViXk2Fgvf1jn2dbJd1ys+fBkdD1UMRnXlwmhijhQ=
 github.com/KyleBanks/depth v1.2.1 h1:5h8fQADFrWtarTdtDudMmGsC7GPbOAu6RVB3ffsVFHc=
 github.com/KyleBanks/depth v1.2.1/go.mod h1:jzSb9d0L43HxTQfT+oSA1EEp2q+ne2uh6XgeJcm8brE=
 github.com/Masterminds/semver/v3 v3.1.1/go.mod h1:VPu/7SZ7ePZ3QOrcuXROw5FAcLl4a0cBrbBpGY/8hQs=
@@ -139,6 +141,8 @@ github.com/go-stack/stack v1.8.0/go.mod h1:v0f6uXyyMGvRgIKkXu+yp6POWl0qKG85gN/me
 github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0/go.mod h1:fyg7847qk6SyHyPtNmDHnmrv/HOrqktSC+C9fM+CJOE=
 github.com/go-testfixtures/testfixtures/v3 v3.11.0 h1:XxQr8AnPORcZkyNd7go5UNLPD3dULN8ixYISlzrlfEQ=
 github.com/go-testfixtures/testfixtures/v3 v3.11.0/go.mod h1:THmudHF1Ixq++J2/UodcJpxUphfyEd77m83TvDtryqE=
+github.com/go-testfixtures/testfixtures/v3 v3.12.0 h1:Ew0+c2o1mXSUqMwjuNup3MK/vw1HkLS3ILljX5C6lVE=
+github.com/go-testfixtures/testfixtures/v3 v3.12.0/go.mod h1:13F0m6/DtqqSDso9IAVuhbZ4I7AiRAHrolmDMu9v5vY=
 github.com/gocarina/gocsv v0.0.0-20231116093920-b87c2d0e983a h1:RYfmiM0zluBJOiPDJseKLEN4BapJ42uSi9SZBQ2YyiA=
 github.com/gocarina/gocsv v0.0.0-20231116093920-b87c2d0e983a/go.mod h1:5YoVOkjYAQumqlV356Hj3xeYh4BdZuLE0/nRkf2NKkI=
 github.com/goccy/go-json v0.8.1/go.mod h1:6MelG93GURQebXPDq3khkgXZkazVtN9CRI+MGFi0w8I=
