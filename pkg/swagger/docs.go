@@ -4530,14 +4530,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "If set to true, a preview image will be returned if the attachment is an image.",
-                        "name": "preview",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "The size of the preview image. Can be sm = 100px, md = 200px, lg = 400px or xl = 800px.",
-                        "name": "size",
+                        "description": "The size of the preview image. Can be sm = 100px, md = 200px, lg = 400px or xl = 800px. If provided, a preview image will be returned if the attachment is an image.",
+                        "name": "preview_size",
                         "in": "query"
                     }
                 ],
@@ -7916,7 +7910,7 @@ const docTemplate = `{
                     }
                 },
                 "attachments": {
-                    "description": "All attachments this task has",
+                    "description": "All attachments this task has. This property is read-onlym, you must use the separate endpoint to add attachments to a task.",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/models.TaskAttachment"
@@ -7984,7 +7978,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "labels": {
-                    "description": "An array of labels which are associated with this task.",
+                    "description": "An array of labels which are associated with this task. This property is read-only, you must use the separate endpoint to add labels to a task.",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/models.Label"
@@ -8648,7 +8642,7 @@ const docTemplate = `{
                     }
                 },
                 "attachments": {
-                    "description": "All attachments this task has",
+                    "description": "All attachments this task has. This property is read-onlym, you must use the separate endpoint to add attachments to a task.",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/models.TaskAttachment"
@@ -8716,7 +8710,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "labels": {
-                    "description": "An array of labels which are associated with this task.",
+                    "description": "An array of labels which are associated with this task. This property is read-only, you must use the separate endpoint to add labels to a task.",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/models.Label"
