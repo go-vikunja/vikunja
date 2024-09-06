@@ -167,7 +167,7 @@ func UploadAvatar(c echo.Context) (err error) {
 	// Remove the old file if one exists
 	if u.AvatarFileID != 0 {
 		f := &files.File{ID: u.AvatarFileID}
-		if err := f.Delete(); err != nil {
+		if err := f.Delete(s); err != nil {
 			if !files.IsErrFileDoesNotExist(err) {
 				_ = s.Rollback()
 				return handler.HandleHTTPError(err)

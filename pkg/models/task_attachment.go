@@ -77,7 +77,7 @@ func (ta *TaskAttachment) NewAttachment(s *xorm.Session, f io.ReadCloser, realna
 	ta.CreatedBy, err = GetUserOrLinkShareUser(s, a)
 	if err != nil {
 		// remove the  uploaded file if adding it to the db fails
-		if err2 := file.Delete(); err2 != nil {
+		if err2 := file.Delete(s); err2 != nil {
 			return err2
 		}
 		return err
@@ -87,7 +87,7 @@ func (ta *TaskAttachment) NewAttachment(s *xorm.Session, f io.ReadCloser, realna
 	_, err = s.Insert(ta)
 	if err != nil {
 		// remove the  uploaded file if adding it to the db fails
-		if err2 := file.Delete(); err2 != nil {
+		if err2 := file.Delete(s); err2 != nil {
 			return err2
 		}
 		return err
@@ -326,7 +326,7 @@ func (ta *TaskAttachment) Delete(s *xorm.Session, a web.Auth) error {
 	}
 
 	// Delete the underlying file
-	err = ta.File.Delete()
+	err = ta.File.Delete(s)
 	// If the file does not exist, we don't want to error out
 	if err != nil && files.IsErrFileDoesNotExist(err) {
 		return nil

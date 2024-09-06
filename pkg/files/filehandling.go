@@ -20,7 +20,6 @@ import (
 	"os"
 	"testing"
 
-	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
@@ -54,9 +53,8 @@ func initFixtures(t *testing.T) {
 
 // InitTestFileFixtures initializes file fixtures
 func InitTestFileFixtures(t *testing.T) {
-	// Init fixture files
-	filename := config.FilesBasePath.GetString() + "/1"
-	err := afero.WriteFile(afs, filename, []byte("testfile1"), 0644)
+	testfile := &File{ID: 1}
+	err := afero.WriteFile(afs, testfile.getAbsoluteFilePath(), []byte("testfile1"), 0644)
 	require.NoError(t, err)
 }
 
@@ -84,6 +82,6 @@ func InitTests() {
 }
 
 // FileStat stats a file. This is an exported function to be able to test this from outide of the package
-func FileStat(filename string) (os.FileInfo, error) {
-	return afs.Stat(filename)
+func FileStat(file *File) (os.FileInfo, error) {
+	return afs.Stat(file.getAbsoluteFilePath())
 }

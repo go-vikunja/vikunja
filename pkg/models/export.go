@@ -398,7 +398,7 @@ func RegisterOldExportCleanupCron() {
 		log.Debugf(logPrefix+"Removing %d old user data exports...", len(fs))
 
 		for _, f := range fs {
-			err = f.Delete()
+			err = f.Delete(s)
 			if err != nil {
 				log.Errorf(logPrefix+"Could not remove user export file %d: %s", f.ID, err)
 				return

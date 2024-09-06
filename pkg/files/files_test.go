@@ -21,6 +21,8 @@ import (
 	"os"
 	"testing"
 
+	"code.vikunja.io/api/pkg/db"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -84,15 +86,20 @@ func TestCreate(t *testing.T) {
 
 func TestFile_Delete(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
 		initFixtures(t)
 		f := &File{ID: 1}
-		err := f.Delete()
+		err := f.Delete(s)
 		require.NoError(t, err)
 	})
 	t.Run("Nonexisting", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
 		initFixtures(t)
 		f := &File{ID: 9999}
-		err := f.Delete()
+
+		err := f.Delete(s)
 		require.Error(t, err)
 		assert.True(t, IsErrFileDoesNotExist(err))
 	})
