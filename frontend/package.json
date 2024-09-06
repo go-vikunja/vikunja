@@ -120,7 +120,7 @@
     "vue-advanced-cropper": "2.8.9",
     "vue-flatpickr-component": "11.0.5",
     "vue-i18n": "9.14.0",
-    "vue-router": "4.4.0",
+    "vue-router": "4.4.3",
     "vuemoji-picker": "0.2.1",
     "workbox-precaching": "7.1.0",
     "zhyswan-vuedraggable": "4.1.3"
