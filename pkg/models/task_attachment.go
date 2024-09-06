@@ -213,10 +213,11 @@ func (ta *TaskAttachment) GetPreviewFromCache(previewSize PreviewSize) []byte {
 type PreviewSize string
 
 const (
-	PreviewSmall      PreviewSize = "sm"
-	PreviewMedium     PreviewSize = "md"
-	PreviewLarge      PreviewSize = "lg"
-	PreviewExtraLarge PreviewSize = "xl"
+	PreviewSizeUnknown PreviewSize = "unknown"
+	PreviewSmall       PreviewSize = "sm"
+	PreviewMedium      PreviewSize = "md"
+	PreviewLarge       PreviewSize = "lg"
+	PreviewExtraLarge  PreviewSize = "xl"
 )
 
 func (previewSize PreviewSize) GetSize() int {
@@ -229,22 +230,37 @@ func (previewSize PreviewSize) GetSize() int {
 		return 400
 	case PreviewExtraLarge:
 		return 800
+	case PreviewSizeUnknown:
+		return 0
 	default:
 		return 200
 	}
 }
 
-func resize(img image.Image, size int) *image.NRGBA {
-	x := img.Bounds().Size().X
-	y := img.Bounds().Size().Y
-	heightSmaller := x > y
-	var resizedImg *image.NRGBA
-	if heightSmaller {
-		resizedImg = imaging.Resize(img, 0, size, imaging.Lanczos)
-	} else {
-		resizedImg = imaging.Resize(img, size, 0, imaging.Lanczos)
+func GetPreviewSizeFromString(size string) PreviewSize {
+	switch size {
+	case "sm":
+		return PreviewSmall
+	case "md":
+		return PreviewMedium
+	case "lg":
+		return PreviewLarge
+	case "xl":
+		return PreviewExtraLarge
 	}
-	log.Debugf("Resized attachment image from %vx%v to %vx%v for a preview", x, y, resizedImg.Bounds().Size().X, resizedImg.Bounds().Size().Y)
+
+	return PreviewSizeUnknown
+}
+
+func resizeImage(img image.Image, width int) *image.NRGBA {
+	resizedImg := imaging.Resize(img, width, 0, imaging.Lanczos)
+	log.Debugf(
+		"Resized attachment image from %vx%v to %vx%v for a preview",
+		img.Bounds().Size().X,
+		img.Bounds().Size().Y,
+		resizedImg.Bounds().Size().X,
+		resizedImg.Bounds().Size().Y,
+	)
 
 	return resizedImg
 }
@@ -256,7 +272,7 @@ func (ta *TaskAttachment) GenerateAndSavePreviewToCache(previewSize PreviewSize)
 	}
 
 	// Scale down the image to a minimum size
-	resizedImg := resize(img, previewSize.GetSize())
+	resizedImg := resizeImage(img, previewSize.GetSize())
 
 	// Get the raw bytes of the resized image
 	buf := &bytes.Buffer{}

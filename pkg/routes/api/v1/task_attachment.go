@@ -117,8 +117,7 @@ func UploadTaskAttachment(c echo.Context) error {
 // @Produce octet-stream
 // @Param id path int true "Task ID"
 // @Param attachmentID path int true "Attachment ID"
-// @Param preview query string false "If set to true, a preview image will be returned if the attachment is an image."
-// @Param size query string false "The size of the preview image. Can be sm = 100px, md = 200px, lg = 400px or xl = 800px."
+// @Param preview_size query string false "The size of the preview image. Can be sm = 100px, md = 200px, lg = 400px or xl = 800px. If provided, a preview image will be returned if the attachment is an image."
 // @Security JWTKeyAuth
 // @Success 200 {file} blob "The attachment file."
 // @Failure 403 {object} models.Message "No access to this task."
@@ -157,15 +156,9 @@ func GetTaskAttachment(c echo.Context) error {
 		return handler.HandleHTTPError(err)
 	}
 
-	// Reading the 'preview' query parameter
-	preview := c.QueryParam("preview") == "true"
-	previewSize := models.PreviewSize(c.QueryParam("size"))
-	if previewSize == "" {
-		previewSize = models.PreviewMedium
-	}
-
 	// If the preview query parameter is set and the preview was already generated and cached, return the cached preview image
-	if preview && strings.HasPrefix(taskAttachment.File.Mime, "image") {
+	previewSize := models.GetPreviewSizeFromString(c.QueryParam("preview_size"))
+	if previewSize != models.PreviewSizeUnknown && strings.HasPrefix(taskAttachment.File.Mime, "image") {
 		previewFileBytes := taskAttachment.GetPreviewFromCache(previewSize)
 		if previewFileBytes != nil {
 			log.Debugf("Cached attachment image preview found for task attachment %v", taskAttachment.ID)
@@ -187,7 +180,7 @@ func GetTaskAttachment(c echo.Context) error {
 	}
 
 	// If a preview is requested and the preview was not cached, we create the preview and cache it
-	if preview {
+	if previewSize != models.PreviewSizeUnknown {
 		previewFileBytes := taskAttachment.GenerateAndSavePreviewToCache(previewSize)
 		if previewFileBytes != nil {
 			return c.Blob(http.StatusOK, "image/png", previewFileBytes)

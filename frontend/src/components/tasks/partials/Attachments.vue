@@ -180,7 +180,7 @@ import ProgressBar from '@/components/misc/ProgressBar.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 import AttachmentService from '@/services/attachment'
-import {SUPPORTED_IMAGE_SUFFIX} from '@/models/attachment'
+import {canPreview} from '@/models/attachment'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {ITask} from '@/modelTypes/ITask'
 
@@ -272,10 +272,6 @@ async function viewOrDownload(attachment: IAttachment) {
 	} else {
 		downloadAttachment(attachment)
 	}
-}
-
-function canPreview(attachment: IAttachment): boolean {
-	return SUPPORTED_IMAGE_SUFFIX.some((suffix) => attachment.file.name.toLowerCase().endsWith(suffix))
 }
 
 const copy = useCopyToClipboard()
