@@ -79,7 +79,7 @@ type Task struct {
 	EndDate time.Time `xorm:"DATETIME INDEX null 'end_date'" json:"end_date" query:"-"`
 	// An array of users who are assigned to this task
 	Assignees []*user.User `xorm:"-" json:"assignees"`
-	// An array of labels which are associated with this task.
+	// An array of labels which are associated with this task. This property is read-only, you must use the seperate endpoint to add labels to a task.
 	Labels []*Label `xorm:"-" json:"labels"`
 	// The task color in hex
 	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|7)" maxLength:"7"`
@@ -97,7 +97,7 @@ type Task struct {
 	// All related tasks, grouped by their relation kind
 	RelatedTasks RelatedTaskMap `xorm:"-" json:"related_tasks"`
 
-	// All attachments this task has
+	// All attachments this task has. This property is read-onlym, you must use the separate endpoint to add attachments to a task.
 	Attachments []*TaskAttachment `xorm:"-" json:"attachments"`
 
 	// If this task has a cover image, the field will return the id of the attachment that is the cover image.
