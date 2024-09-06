@@ -22,7 +22,7 @@
 import {ref, shallowReactive, watchEffect} from 'vue'
 import AttachmentService from '@/services/attachment'
 import type {IAttachment} from '@/modelTypes/IAttachment'
-import {SUPPORTED_IMAGE_SUFFIX} from '@/models/attachment'
+import {canPreview} from '@/models/attachment'
 
 const props = defineProps<{
 	modelValue?: IAttachment
@@ -33,13 +33,9 @@ const blobUrl = ref<string | undefined>(undefined)
 
 watchEffect(async () => {
 	if (props.modelValue && canPreview(props.modelValue)) {
-		blobUrl.value = await attachmentService.getBlobUrl(props.modelValue)
+		blobUrl.value = await attachmentService.getBlobUrl(props.modelValue, PREVIEW_SIZE.MD)
 	}
 })
-
-function canPreview(attachment: IAttachment): boolean {
-	return SUPPORTED_IMAGE_SUFFIX.some((suffix) => attachment.file.name.toLowerCase().endsWith(suffix))
-}
 </script>
 
 <style scoped lang="scss">

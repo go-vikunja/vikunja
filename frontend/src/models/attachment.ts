@@ -7,6 +7,10 @@ import type { IAttachment } from '@/modelTypes/IAttachment'
 
 export const SUPPORTED_IMAGE_SUFFIX = ['.jpg', '.png', '.bmp', '.gif']
 
+export function canPreview(attachment: IAttachment): boolean {
+	return SUPPORTED_IMAGE_SUFFIX.some((suffix) => attachment.file.name.toLowerCase().endsWith(suffix))
+}
+
 export default class AttachmentModel extends AbstractModel<IAttachment> implements IAttachment {
 	id = 0
 	taskId = 0
