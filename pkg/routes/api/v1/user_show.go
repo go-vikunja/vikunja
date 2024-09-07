@@ -31,21 +31,21 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type userWithSettings struct {
+type UserWithSettings struct {
 	user.User
 	Settings            *UserSettings `json:"settings"`
 	DeletionScheduledAt time.Time     `json:"deletion_scheduled_at"`
 	IsLocalUser         bool          `json:"is_local_user"`
 }
 
-// UserShow gets all informations about the current user
+// UserShow gets all information about the current user
 // @Summary Get user information
-// @Description Returns the current user object.
+// @Description Returns the current user object with their settings.
 // @tags user
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
-// @Success 200 {object} user.User
+// @Success 200 {object} v1.UserWithSettings
 // @Failure 404 {object} web.HTTPError "User does not exist."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user [get]
@@ -63,7 +63,7 @@ func UserShow(c echo.Context) error {
 		return handler.HandleHTTPError(err)
 	}
 
-	us := &userWithSettings{
+	us := &UserWithSettings{
 		User: *u,
 		Settings: &UserSettings{
 			Name:                         u.Name,
