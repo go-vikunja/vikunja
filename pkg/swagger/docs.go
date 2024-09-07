@@ -6202,7 +6202,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Returns the current user object.",
+                "description": "Returns the current user object with their settings.",
                 "consumes": [
                     "application/json"
                 ],
@@ -6217,7 +6217,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/user.User"
+                            "$ref": "#/definitions/v1.UserWithSettings"
                         }
                     },
                     "404": {
@@ -9579,6 +9579,47 @@ const docTemplate = `{
                 "week_start": {
                     "description": "The day when the week starts for this user. 0 = sunday, 1 = monday, etc.",
                     "type": "integer"
+                }
+            }
+        },
+        "v1.UserWithSettings": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "description": "A timestamp when this task was created. You cannot change this value.",
+                    "type": "string"
+                },
+                "deletion_scheduled_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "description": "The user's email address.",
+                    "type": "string",
+                    "maxLength": 250
+                },
+                "id": {
+                    "description": "The unique, numeric id of this user.",
+                    "type": "integer"
+                },
+                "is_local_user": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "description": "The full name of the user.",
+                    "type": "string"
+                },
+                "settings": {
+                    "$ref": "#/definitions/v1.UserSettings"
+                },
+                "updated": {
+                    "description": "A timestamp when this task was last updated. You cannot change this value.",
+                    "type": "string"
+                },
+                "username": {
+                    "description": "The username of the user. Is always unique.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 1
                 }
             }
         },

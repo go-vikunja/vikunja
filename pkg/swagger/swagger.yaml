@@ -1455,6 +1455,38 @@ definitions:
           etc.
         type: integer
     type: object
+  v1.UserWithSettings:
+    properties:
+      created:
+        description: A timestamp when this task was created. You cannot change this
+          value.
+        type: string
+      deletion_scheduled_at:
+        type: string
+      email:
+        description: The user's email address.
+        maxLength: 250
+        type: string
+      id:
+        description: The unique, numeric id of this user.
+        type: integer
+      is_local_user:
+        type: boolean
+      name:
+        description: The full name of the user.
+        type: string
+      settings:
+        $ref: '#/definitions/v1.UserSettings'
+      updated:
+        description: A timestamp when this task was last updated. You cannot change
+          this value.
+        type: string
+      username:
+        description: The username of the user. Is always unique.
+        maxLength: 250
+        minLength: 1
+        type: string
+    type: object
   v1.authInfo:
     properties:
       local:
@@ -5819,14 +5851,14 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns the current user object.
+      description: Returns the current user object with their settings.
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/user.User'
+            $ref: '#/definitions/v1.UserWithSettings'
         "404":
           description: User does not exist.
           schema:
