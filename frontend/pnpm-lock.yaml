@@ -156,7 +156,7 @@ importers:
         version: 11.0.3(vue-router@4.4.3(vue@3.5.3(typescript@5.5.4)))(vue@3.5.3(typescript@5.5.4))
       axios:
         specifier: 1.7.7
-        version: 1.7.7(debug@4.3.6)
+        version: 1.7.7(debug@4.3.7)
       blurhash:
         specifier: 2.0.5
         version: 2.0.5
@@ -312,8 +312,8 @@ importers:
         specifier: 4.23.3
         version: 4.23.3
       caniuse-lite:
-        specifier: 1.0.30001658
-        version: 1.0.30001658
+        specifier: 1.0.30001659
+        version: 1.0.30001659
       csstype:
         specifier: 3.1.3
         version: 3.1.3
@@ -357,8 +357,8 @@ importers:
         specifier: 1.78.0
         version: 1.78.0
       start-server-and-test:
-        specifier: 2.0.5
-        version: 2.0.5
+        specifier: 2.0.6
+        version: 2.0.6
       typescript:
         specifier: 5.5.4
         version: 5.5.4
@@ -385,7 +385,7 @@ importers:
         version: 2.1.6(typescript@5.5.4)
       wait-on:
         specifier: 7.2.0
-        version: 7.2.0(debug@4.3.6)
+        version: 7.2.0(debug@4.3.7)
       workbox-cli:
         specifier: 7.1.0
         version: 7.1.0
@@ -2845,8 +2845,8 @@ packages:
     resolution: {integrity: sha512-L28STB170nwWS63UjtlEOE3dldQApaJXZkOI1uMFfzf3rRuPegHaHesyee+YxQ+W6SvRDQV6UrdOdRiR153wJg==}
     engines: {node: '>=6'}
 
-  caniuse-lite@1.0.30001658:
-    resolution: {integrity: sha512-N2YVqWbJELVdrnsW5p+apoQyYt51aBMSsBZki1XZEfeBCexcM/sf4xiAHcXQBkuOwJBXtWF7aW1sYX6tKebPHw==}
+  caniuse-lite@1.0.30001659:
+    resolution: {integrity: sha512-Qxxyfv3RdHAfJcXelgf0hU4DFUVXBGTjqrBUZLUh8AtlGnsDo+CnncYtTd95+ZKfnANUOzxyIQCuU/UeBZBYoA==}
 
   capital-case@1.0.4:
     resolution: {integrity: sha512-ds37W8CytHgwnhGGTi88pcPyR15qoNkOpYwmMMfnWqqWgESapLqvDx6huFjQ5vqWSn2Z06173XNA7LtMOeUh1A==}
@@ -3170,6 +3170,15 @@ packages:
 
   debug@4.3.6:
     resolution: {integrity: sha512-O/09Bd4Z1fBrU4VzkhFqVgpPzaGbw6Sm9FEkBT1A/YBXQFGuuSxa1dN2nxgxS34JmKXqYx8CZAwEVoJFImUXIg==}
+    engines: {node: '>=6.0'}
+    peerDependencies:
+      supports-color: '*'
+    peerDependenciesMeta:
+      supports-color:
+        optional: true
+
+  debug@4.3.7:
+    resolution: {integrity: sha512-Er2nc/H7RrMXZBFCEim6TCmMk02Z8vLC2Rbi1KEBggpo0fS6l0S1nnapwmIi3yW/+GOJap1Krg4w0Hg80oCqgQ==}
     engines: {node: '>=6.0'}
     peerDependencies:
       supports-color: '*'
@@ -5473,8 +5482,8 @@ packages:
   stackback@0.0.2:
     resolution: {integrity: sha512-1XMJE5fQo1jGH6Y/7ebnwPOBEkIEnT4QF32d5R1+VXdXveM0IBMJt8zfaxX1P3QhVwrYe+576+jkANtSS2mBbw==}
 
-  start-server-and-test@2.0.5:
-    resolution: {integrity: sha512-2CV4pz69NJVJKQmJeSr+O+SPtOreu0yxvhPmSXclzmAKkPREuMabyMh+Txpzemjx0RDzXOcG2XkhiUuxjztSQw==}
+  start-server-and-test@2.0.6:
+    resolution: {integrity: sha512-r6XGRjCcNIOnoaDtbOPxbvY23OscL5cIm2HmzTMfRE8/c0+vIDEaupnSbdJmAe6DpNuXaiRkxQ1W7VifyC+aAA==}
     engines: {node: '>=16'}
     hasBin: true
 
@@ -8825,7 +8834,7 @@ snapshots:
   autoprefixer@10.4.20(postcss@8.4.45):
     dependencies:
       browserslist: 4.23.3
-      caniuse-lite: 1.0.30001658
+      caniuse-lite: 1.0.30001659
       fraction.js: 4.3.7
       normalize-range: 0.1.2
       picocolors: 1.0.1
@@ -8840,9 +8849,9 @@ snapshots:
 
   aws4@1.13.1: {}
 
-  axios@1.7.7(debug@4.3.6):
+  axios@1.7.7(debug@4.3.7):
     dependencies:
-      follow-redirects: 1.15.6(debug@4.3.6)
+      follow-redirects: 1.15.6(debug@4.3.7)
       form-data: 4.0.0
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
@@ -8929,7 +8938,7 @@ snapshots:
 
   browserslist@4.23.3:
     dependencies:
-      caniuse-lite: 1.0.30001658
+      caniuse-lite: 1.0.30001659
       electron-to-chromium: 1.5.13
       node-releases: 2.0.18
       update-browserslist-db: 1.1.0(browserslist@4.23.3)
@@ -8986,7 +8995,7 @@ snapshots:
 
   camelcase@5.3.1: {}
 
-  caniuse-lite@1.0.30001658: {}
+  caniuse-lite@1.0.30001659: {}
 
   capital-case@1.0.4:
     dependencies:
@@ -9372,6 +9381,10 @@ snapshots:
       ms: 2.1.2
     optionalDependencies:
       supports-color: 8.1.1
+
+  debug@4.3.7:
+    dependencies:
+      ms: 2.1.3
 
   decamelize-keys@1.1.1:
     dependencies:
@@ -9956,9 +9969,9 @@ snapshots:
       vue: 3.5.3(typescript@5.5.4)
       vue-resize: 2.0.0-alpha.1(vue@3.5.3(typescript@5.5.4))
 
-  follow-redirects@1.15.6(debug@4.3.6):
+  follow-redirects@1.15.6(debug@4.3.7):
     optionalDependencies:
-      debug: 4.3.6(supports-color@8.1.1)
+      debug: 4.3.7
 
   for-each@0.3.3:
     dependencies:
@@ -11945,16 +11958,16 @@ snapshots:
 
   stackback@0.0.2: {}
 
-  start-server-and-test@2.0.5:
+  start-server-and-test@2.0.6:
     dependencies:
       arg: 5.0.2
       bluebird: 3.7.2
       check-more-types: 2.24.0
-      debug: 4.3.6(supports-color@8.1.1)
+      debug: 4.3.7
       execa: 5.1.1
       lazy-ass: 1.6.0
       ps-tree: 1.2.0
-      wait-on: 7.2.0(debug@4.3.6)
+      wait-on: 7.2.0(debug@4.3.7)
     transitivePeerDependencies:
       - supports-color
 
@@ -12596,9 +12609,9 @@ snapshots:
     dependencies:
       xml-name-validator: 4.0.0
 
-  wait-on@7.2.0(debug@4.3.6):
+  wait-on@7.2.0(debug@4.3.7):
     dependencies:
-      axios: 1.7.7(debug@4.3.6)
+      axios: 1.7.7(debug@4.3.7)
       joi: 17.13.3
       lodash: 4.17.21
       minimist: 1.2.8
