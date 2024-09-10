@@ -127,6 +127,7 @@ import Password from '@/components/input/Password.vue'
 
 import {useAuthStore} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
+import {validatePassword} from '@/helpers/validatePasswort'
 
 const {t} = useI18n()
 const authStore = useAuthStore()
@@ -183,7 +184,7 @@ const validateUsername = useDebounceFn(() => {
 const everythingValid = computed(() => {
 	return credentials.username !== '' &&
 		credentials.email !== '' &&
-		credentials.password !== '' &&
+		validatePassword(credentials.password) === true &&
 		emailValid.value &&
 		usernameValid.value
 })

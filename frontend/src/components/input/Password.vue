@@ -36,6 +36,7 @@ import {ref, watchEffect} from 'vue'
 import {useDebounceFn} from '@vueuse/core'
 import {useI18n} from 'vue-i18n'
 import BaseButton from '@/components/base/BaseButton.vue'
+import {validatePassword} from '@/helpers/validatePasswort';
 
 const props = withDefaults(defineProps<{
 	modelValue: string,
@@ -60,22 +61,8 @@ const validateAfterFirst = ref(false)
 watchEffect(() => props.validateInitially && validate())
 
 const validate = useDebounceFn(() => {
-	if (password.value === '') {
-		isValid.value = t('user.auth.passwordRequired')
-		return
-	}
-
-	if (props.validateMinLength && password.value.length < 8) {
-		isValid.value = t('user.auth.passwordNotMin')
-		return
-	}
-	
-	if (props.validateMinLength && password.value.length > 250) {
-		isValid.value = t('user.auth.passwordNotMax')
-		return
-	}
-	
-	isValid.value = true
+	const valid = validatePassword(password.value, props.validateMinLength)
+	isValid.value = valid === true ? true : t(valid)
 }, 100)
 
 function togglePasswordFieldType() {
