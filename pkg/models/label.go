@@ -51,7 +51,7 @@ type Label struct {
 }
 
 // TableName makes a pretty table name
-func (Label) TableName() string {
+func (*Label) TableName() string {
 	return "labels"
 }
 
@@ -73,6 +73,7 @@ func (l *Label) Create(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
+	l.ID = 0
 	l.HexColor = utils.NormalizeHex(l.HexColor)
 	l.CreatedBy = u
 	l.CreatedByID = u.ID
