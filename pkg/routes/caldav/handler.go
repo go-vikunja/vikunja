@@ -18,6 +18,7 @@ package caldav
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"reflect"
@@ -46,6 +47,9 @@ func getBasicAuthUserFromContext(c echo.Context) (*user.User, error) {
 func ProjectHandler(c echo.Context) error {
 	projectID, err := getIntParam(c, "project")
 	if err != nil {
+		if errors.Is(err, &strconv.NumError{}) {
+			return echo.ErrBadRequest
+		}
 		return err
 	}
 
