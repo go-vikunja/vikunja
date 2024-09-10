@@ -16,7 +16,9 @@
 
 package user
 
-import "github.com/asaskevich/govalidator"
+import (
+	"github.com/asaskevich/govalidator"
+)
 
 func init() {
 	govalidator.TagMap["username"] = func(i string) bool {
@@ -32,5 +34,13 @@ func init() {
 		}
 
 		return true
+	}
+
+	govalidator.TagMap["bcrypt_password"] = func(str string) bool {
+		if len(str) < 8 {
+			return false
+		}
+
+		return len([]byte(str)) < 72
 	}
 }

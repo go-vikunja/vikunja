@@ -7,7 +7,7 @@ export function validatePassword(password: string, validateMinLength: boolean = 
 		return 'user.auth.passwordNotMin'
 	}
 	
-	if (validateMinLength && password.length > 250) {
+	if (validateMinLength && password.length > 72) {
 		return 'user.auth.passwordNotMax'
 	}
 	
