@@ -197,8 +197,8 @@ type APIUserPassword struct {
 	ID int64 `json:"id"`
 	// The user's username. Cannot contain anything that looks like an url or whitespaces.
 	Username string `json:"username" valid:"length(3|250),username" minLength:"3" maxLength:"250"`
-	// The user's password in clear text. Only used when registering the user.
-	Password string `json:"password" valid:"length(8|250)" minLength:"8" maxLength:"250"`
+	// The user's password in clear text. Only used when registering the user. The maximum limi is 72 bytes, which may be less than 72 characters. This is due to the limit in the bcrypt hashing algorithm used to store passwords in Vikunja.
+	Password string `json:"password" valid:"bcrypt_password" minLength:"8" maxLength:"72"`
 	// The user's email address
 	Email string `json:"email" valid:"email,length(0|250)" maxLength:"250"`
 }
@@ -213,7 +213,7 @@ func (apiUser *APIUserPassword) APIFormat() *User {
 	}
 }
 
-// GetUserByID gets informations about a user by its ID
+// GetUserByID returns user by its ID
 func GetUserByID(s *xorm.Session, id int64) (user *User, err error) {
 	// Apparently xorm does otherwise look for all users but return only one, which leads to returning one even if the ID is 0
 	if id < 1 {
@@ -223,7 +223,7 @@ func GetUserByID(s *xorm.Session, id int64) (user *User, err error) {
 	return getUser(s, &User{ID: id}, false)
 }
 
-// GetUserByUsername gets a user from its user name. This is an extra function to be able to add an extra error check.
+// GetUserByUsername gets a user from its username. This is an extra function to be able to add an extra error check.
 func GetUserByUsername(s *xorm.Session, username string) (user *User, err error) {
 	if username == "" {
 		return &User{}, ErrUserDoesNotExist{}
