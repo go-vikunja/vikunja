@@ -51,6 +51,7 @@
 import {computed, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useElementHover} from '@vueuse/core'
+import { useRouter } from 'vue-router'
 
 import {RELATION_KIND} from '@/types/IRelationKind'
 import type {ITask} from '@/modelTypes/ITask'
@@ -66,6 +67,8 @@ import {useAuthStore} from '@/stores/auth'
 import {useTaskStore} from '@/stores/tasks'
 
 import {useAutoHeightTextarea} from '@/composables/useAutoHeightTextarea'
+import TaskService from '@/services/task'
+import TaskModel from '@/models/task'
 
 const props = withDefaults(defineProps<{
 	defaultPosition?: number,
@@ -81,6 +84,7 @@ const {textarea: newTaskInput} = useAutoHeightTextarea(newTaskTitle)
 const {t} = useI18n({useScope: 'global'})
 const authStore = useAuthStore()
 const taskStore = useTaskStore()
+const router = useRouter()
 
 // enable only if we don't have a modal
 // onStartTyping(() => {
@@ -129,21 +133,56 @@ async function addTask() {
 	const allLabels = tasksToCreate.map(({title}) => getLabelsFromPrefix(title, authStore.settings.frontendSettings.quickAddMagicMode) ?? [])
 	await taskStore.ensureLabelsExist(allLabels.flat())
 
-	const newTasks = tasksToCreate.map(async ({title, project}) => {
+	const taskCollectionService = new TaskService()
+	const projectIndices = new Map<number, number>()
+	
+	let currentProjectId = authStore.settings.defaultProjectId
+	if (typeof router.currentRoute.value.params.projectId !== 'undefined') {
+		currentProjectId = Number(router.currentRoute.value.params.projectId)
+	}
+
+	// Create a map of project indices before creating tasks
+	if (tasksToCreate.length > 1) {
+	for (const {project} of tasksToCreate) {
+		const projectId = project !== null
+			? await taskStore.findProjectId({project, projectId: 0})
+			: currentProjectId
+
+		if (!projectIndices.has(projectId)) {
+			const newestTask = await taskCollectionService.getAll(new TaskModel({}), {
+				sort_by: ['id'],
+				order_by: ['desc'],
+				per_page: 1,
+				filter: `project_id = ${projectId}`,
+			})
+			projectIndices.set(projectId, newestTask[0]?.index || 0)
+		}
+	}
+}
+
+	const newTasks = tasksToCreate.map(async ({title, project}, index) => {
 		if (title === '') {
 			return
 		}
 
 		// If the task has a project specified, make sure to use it
-		let projectId = null
-		if (project !== null) {
-			projectId = await taskStore.findProjectId({project, projectId: 0})
+		const projectId = project !== null
+			? await taskStore.findProjectId({project, projectId: 0})
+			: currentProjectId
+		
+		// Calculate new index for this task per project
+		let taskIndex: number | undefined
+		if (tasksToCreate.length > 1) {
+			const lastIndex = projectIndices.get(projectId)
+			taskIndex = lastIndex + index + 1
 		}
 
+		console.log('many tasks to create', taskIndex)
 		const task = await taskStore.createNewTask({
 			title,
 			projectId: projectId || authStore.settings.defaultProjectId,
 			position: props.defaultPosition,
+			index: taskIndex,
 		})
 		createdTasks[title] = task
 		return task

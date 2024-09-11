@@ -414,6 +414,7 @@ export const useTaskStore = defineStore('task', () => {
 		bucketId,
 		projectId,
 		position,
+		index,
 	} : 
 		Partial<ITask>,
 	) {
@@ -429,6 +430,7 @@ export const useTaskStore = defineStore('task', () => {
 					projectId,
 					bucketId,
 					position,
+					index,
 				}))
 			} finally {
 				cancel()
@@ -467,6 +469,7 @@ export const useTaskStore = defineStore('task', () => {
 			assignees,
 			bucketId: bucketId || 0,
 			position,
+			index,
 		})
 		task.repeatAfter = parsedTask.repeats
 
