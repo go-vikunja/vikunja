@@ -51,7 +51,7 @@
 import {computed, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useElementHover} from '@vueuse/core'
-import { useRouter } from 'vue-router'
+import {useRouter} from 'vue-router'
 
 import {RELATION_KIND} from '@/types/IRelationKind'
 import type {ITask} from '@/modelTypes/ITask'
@@ -177,7 +177,6 @@ async function addTask() {
 			taskIndex = lastIndex + index + 1
 		}
 
-		console.log('many tasks to create', taskIndex)
 		const task = await taskStore.createNewTask({
 			title,
 			projectId: projectId || authStore.settings.defaultProjectId,
