@@ -42,6 +42,7 @@
 			<ProjectCardGrid
 				v-cy="'projectCardGrid'"
 				:projects="projectHistory"
+				:show-even-number-of-projects="true"
 			/>
 		</div>
 		<ShowTasks
