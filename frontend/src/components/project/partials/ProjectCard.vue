@@ -35,7 +35,7 @@
 		<BaseButton
 			class="project-button"
 			:aria-label="project.title"
-			:title="project.description"
+			:title="textOnlyDescription"
 			:to="{
 				name: 'project.index',
 				params: { projectId: project.id}
@@ -53,6 +53,7 @@
 </template>
 
 <script lang="ts" setup>
+import {computed} from 'vue'
 import type {IProject} from '@/modelTypes/IProject'
 
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -68,6 +69,10 @@ const props = defineProps<{
 const {background, blurHashUrl} = useProjectBackground(() => props.project)
 
 const projectStore = useProjectStore()
+
+const textOnlyDescription = computed(() => {
+	return props.project.description ? props.project.description.replace(/<[^>]*>/g, '') : ''
+})
 </script>
 
 <style lang="scss" scoped>
