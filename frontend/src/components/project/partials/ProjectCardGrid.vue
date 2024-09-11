@@ -1,5 +1,8 @@
 <template>
-	<ul class="project-grid">
+	<ul
+		class="project-grid"
+		:class="{ 'show-even-number-of-projects': showEvenNumberOfProjects }"
+	>
 		<li
 			v-for="(item, index) in filteredProjects"
 			:key="`project_${item.id}_${index}`"
@@ -19,11 +22,13 @@ import ProjectCard from './ProjectCard.vue'
 const props = withDefaults(defineProps<{
 	projects: IProject[],
 	showArchived?: boolean,
-	itemLimit?: boolean
+	itemLimit?: boolean,
+	showEvenNumberOfProjects?: boolean,
 }>(), {
 	projects: () => [],
 	showArchived: false,
 	itemLimit: false,
+	showEvenNumberOfProjects: false,
 })
 
 const filteredProjects = computed(() => {
@@ -58,9 +63,13 @@ const filteredProjects = computed(() => {
 
 	@media screen and (min-width: $widescreen) {
 		--project-grid-columns: 5;
+	}
 
-		.project-grid-item:nth-child(6) {
-			display: none;
+	&.show-even-number-of-projects {
+		@media screen and (min-width: $widescreen) {
+			.project-grid-item:nth-child(5) {
+				display: none;
+			}
 		}
 	}
 }
