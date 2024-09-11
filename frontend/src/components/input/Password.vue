@@ -36,7 +36,7 @@ import {ref, watchEffect} from 'vue'
 import {useDebounceFn} from '@vueuse/core'
 import {useI18n} from 'vue-i18n'
 import BaseButton from '@/components/base/BaseButton.vue'
-import {validatePassword} from '@/helpers/validatePasswort';
+import {validatePassword} from '@/helpers/validatePasswort'
 
 const props = withDefaults(defineProps<{
 	modelValue: string,

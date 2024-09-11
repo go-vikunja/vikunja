@@ -738,10 +738,25 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setB
 		t.UID = uuid.NewString()
 	}
 
-	// Get the index for this task
-	t.Index, err = getNextTaskIndex(s, t.ProjectID)
-	if err != nil {
-		return err
+	// Check if an index was provided, otherwise calculate a new one
+	if t.Index == 0 {
+		t.Index, err = getNextTaskIndex(s, t.ProjectID)
+		if err != nil {
+			return err
+		}
+	} else {
+		// Check if the provided index is already taken
+		exists, err := s.Where("project_id = ? AND `index` = ?", t.ProjectID, t.Index).Exist(&Task{})
+		if err != nil {
+			return err
+		}
+		if exists {
+			// If the index is taken, calculate a new one
+			t.Index, err = getNextTaskIndex(s, t.ProjectID)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	t.HexColor = utils.NormalizeHex(t.HexColor)
