@@ -811,6 +811,7 @@ func CreateProject(s *xorm.Session, project *Project, auth web.Auth, createBackl
 		return err
 	}
 
+	project.ID = 0
 	project.OwnerID = doer.ID
 	project.Owner = doer
 
