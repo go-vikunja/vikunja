@@ -1273,8 +1273,10 @@ definitions:
         type: integer
       password:
         description: The user's password in clear text. Only used when registering
-          the user.
-        maxLength: 250
+          the user. The maximum limi is 72 bytes, which may be less than 72 characters.
+          This is due to the limit in the bcrypt hashing algorithm used to store passwords
+          in Vikunja.
+        maxLength: 72
         minLength: 8
         type: string
       username:
