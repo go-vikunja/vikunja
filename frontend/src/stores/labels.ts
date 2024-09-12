@@ -44,12 +44,12 @@ export const useLabelStore = defineStore('label', () => {
 
 
 	// **
-	// * Checks if a project of labels is available in the store and filters them then query
+	// * Checks if a list of labels is available in the store and filters them then query
 	// **
 	const filterLabelsByQuery = computed(() => {
 		return (labelsToHide: ILabel[], query: string) => {
 			const labelIdsToHide: number[] = labelsToHide.map(({id}) => id)
-		
+
 			return search(query)
 					?.filter(value => !labelIdsToHide.includes(value))
 					.map(id => labels.value[id])
