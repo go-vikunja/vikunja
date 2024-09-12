@@ -151,7 +151,7 @@ const props = withDefaults(defineProps<{
 	/** The text shown next to the new value option. */
 	createPlaceholder?: string
 	/** The text shown next to an option. */
-	selectPlaceholder: string
+	selectPlaceholder?: string
 	/** If true, allows for selecting multiple items. v-model will be an array with all selected values in that case. */
 	multiple?: boolean
 	/** If true, displays the search results inline instead of using a dropdown. */
