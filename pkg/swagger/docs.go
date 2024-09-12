@@ -9342,9 +9342,9 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "password": {
-                    "description": "The user's password in clear text. Only used when registering the user.",
+                    "description": "The user's password in clear text. Only used when registering the user. The maximum limi is 72 bytes, which may be less than 72 characters. This is due to the limit in the bcrypt hashing algorithm used to store passwords in Vikunja.",
                     "type": "string",
-                    "maxLength": 250,
+                    "maxLength": 72,
                     "minLength": 8
                 },
                 "username": {
