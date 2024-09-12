@@ -20,6 +20,12 @@
 					class="modal-container"
 					@mousedown.self.prevent.stop="$emit('close')"
 				>
+					<BaseButton
+						class="close"
+						@click="$emit('close')"
+					>
+						<Icon icon="times" />
+					</BaseButton>
 					<div
 						class="modal-content"
 						:class="{
@@ -27,13 +33,6 @@
 							'is-wide': wide
 						}"
 					>
-						<BaseButton
-							class="close"
-							@click="$emit('close')"
-						>
-							<Icon icon="times" />
-						</BaseButton>
-
 						<slot>
 							<div class="header">
 								<slot name="header" />
@@ -137,8 +136,8 @@ $modal-width: 1024px;
 
 	@media screen and (max-width: $tablet) {
 		margin: 0;
-		top: 25%;
-		transform: translate(-50%, -25%);
+		position: static;
+		transform: none;
 	}
 
 	.header {
@@ -197,7 +196,7 @@ $modal-width: 1024px;
 	position: fixed;
 	top: .5rem;
 	right: $close-button-padding;
-	color: var(--grey-900);
+	color: var(--white);
 	font-size: 2rem;
 
 	@media screen and (min-width: $desktop) and (max-width: calc(#{$desktop	} + #{$close-button-min-space})) {
@@ -206,18 +205,13 @@ $modal-width: 1024px;
 		// we align the close button to the modal until there is enough space outside for it
 		transform: translateX(calc((#{$modal-width} / 2) - #{$close-button-padding}));
 	}
-	// we can only use light color when there is enough space for the close button next to the modal
-	@media screen and (min-width: calc(#{$desktop	} + #{$close-button-min-space})) {
-		color: var(--white);
-	}
 
 	@media screen and (min-width: $tablet) and (max-width: #{$desktop + $close-button-min-space}) {
 		top: .75rem;
 	}
-
 }
 
-@media print {
+@media print, screen and (max-width: $tablet) {
   .modal-mask {
     position: static;
     overflow: visible !important;
@@ -226,6 +220,7 @@ $modal-width: 1024px;
   .modal-container {
     height: auto;
     overflow: visible;
+	min-height: 100vh;
   }
 
   .modal-content {
@@ -236,6 +231,14 @@ $modal-width: 1024px;
     display: none;
   }
 
+  :deep(.card) {
+	border: none !important; 
+	border-radius: 0 !important;
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+  }
 }
 </style>
 
@@ -245,7 +248,7 @@ $modal-width: 1024px;
 	color: var(--grey-900);
 }
 
-@media print {
+@media print, screen and (max-width: $tablet) {
   body:has(.modal-mask) {
     height: auto;
     overflow: visible;
