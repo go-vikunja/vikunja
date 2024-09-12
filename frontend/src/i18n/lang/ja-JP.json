@@ -61,7 +61,7 @@
       "usernameMustNotLookLikeUrl": "The username must not look like a URL.",
       "passwordRequired": "パスワードを入力してください。",
       "passwordNotMin": "パスワードは8文字以上でなければなりません。",
-      "passwordNotMax": "パスワードは250文字以内でなければなりません。",
+      "passwordNotMax": "Password must have at most 72 characters.",
       "showPassword": "パスワードの表示",
       "hidePassword": "パスワードの非表示",
       "noAccountYet": "まだアカウントをお持ちでないですか？",

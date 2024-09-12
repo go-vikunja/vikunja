@@ -61,7 +61,7 @@
       "usernameMustNotLookLikeUrl": "用户名不能像一个 URL。",
       "passwordRequired": "请提供密码",
       "passwordNotMin": "密码至少有8个字符",
-      "passwordNotMax": "密码不能超过250个字符",
+      "passwordNotMax": "Password must have at most 72 characters.",
       "showPassword": "显示密码",
       "hidePassword": "隐藏密码",
       "noAccountYet": "还没有账号？",

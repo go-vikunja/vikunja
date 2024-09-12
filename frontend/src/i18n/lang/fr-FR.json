@@ -61,7 +61,7 @@
       "usernameMustNotLookLikeUrl": "The username must not look like a URL.",
       "passwordRequired": "Veuillez fournir un mot de passe.",
       "passwordNotMin": "Password must have at least 8 characters.",
-      "passwordNotMax": "Password must have at most 250 characters.",
+      "passwordNotMax": "Password must have at most 72 characters.",
       "showPassword": "Afficher le mot de passe",
       "hidePassword": "Masquer le mot de passe",
       "noAccountYet": "Vous n'avez pas encore de compte ?",

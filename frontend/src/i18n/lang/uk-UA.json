@@ -61,7 +61,7 @@
       "usernameMustNotLookLikeUrl": "Ім'я вживача не має виглядати як посилання.",
       "passwordRequired": "Будь ласка, введіть пароль.",
       "passwordNotMin": "Пароль має містити принаймні 8 знаків.",
-      "passwordNotMax": "Пароль має містити не більше 250 знаків.",
+      "passwordNotMax": "Password must have at most 72 characters.",
       "showPassword": "Показати пароль",
       "hidePassword": "Сховати пароль",
       "noAccountYet": "Досі немає обліковки?",

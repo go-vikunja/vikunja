@@ -61,7 +61,7 @@
       "usernameMustNotLookLikeUrl": "The username must not look like a URL.",
       "passwordRequired": "Angiv venligst en adgangskode.",
       "passwordNotMin": "Password must have at least 8 characters.",
-      "passwordNotMax": "Password must have at most 250 characters.",
+      "passwordNotMax": "Password must have at most 72 characters.",
       "showPassword": "Vis adgangskoden",
       "hidePassword": "Skjul adgangskoden",
       "noAccountYet": "Har du ikke en konto endnu?",

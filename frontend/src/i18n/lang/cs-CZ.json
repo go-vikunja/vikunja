@@ -61,7 +61,7 @@
       "usernameMustNotLookLikeUrl": "Uživatelské jméno nesmí vypadat jako adresa URL.",
       "passwordRequired": "Zadejte prosím heslo.",
       "passwordNotMin": "Heslo musí mít nejméně 8 znaků.",
-      "passwordNotMax": "Heslo může mít maximálně 250 znaků.",
+      "passwordNotMax": "Password must have at most 72 characters.",
       "showPassword": "Ukázat heslo",
       "hidePassword": "Skrýt heslo",
       "noAccountYet": "Ještě nemáte účet?",
