@@ -681,7 +681,7 @@ func calculateDefaultPosition(entityID int64, position float64) float64 {
 	return position
 }
 
-func getNextTaskIndex(s *xorm.Session, projectID int64) (nextIndex int64, err error) {
+func calculateNextTaskIndex(s *xorm.Session, projectID int64) (nextIndex int64, err error) {
 	latestTask := &Task{}
 	_, err = s.
 		Where("project_id = ?", projectID).
@@ -692,6 +692,29 @@ func getNextTaskIndex(s *xorm.Session, projectID int64) (nextIndex int64, err er
 	}
 
 	return latestTask.Index + 1, nil
+}
+
+func setNewTaskIndex(s *xorm.Session, t *Task) (err error) {
+	// Check if an index was provided, otherwise calculate a new one
+	if t.Index == 0 {
+		t.Index, err = calculateNextTaskIndex(s, t.ProjectID)
+		return
+	}
+
+	// Check if the provided index is already taken
+	exists, err := s.Where("project_id = ? AND `index` = ?", t.ProjectID, t.Index).Exist(&Task{})
+	if err != nil {
+		return err
+	}
+	if exists {
+		// If the index is taken, calculate a new one
+		t.Index, err = calculateNextTaskIndex(s, t.ProjectID)
+		if err != nil {
+			return err
+		}
+	}
+
+	return
 }
 
 // Create is the implementation to create a project task
@@ -738,25 +761,9 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setB
 		t.UID = uuid.NewString()
 	}
 
-	// Check if an index was provided, otherwise calculate a new one
-	if t.Index == 0 {
-		t.Index, err = getNextTaskIndex(s, t.ProjectID)
-		if err != nil {
-			return err
-		}
-	} else {
-		// Check if the provided index is already taken
-		exists, err := s.Where("project_id = ? AND `index` = ?", t.ProjectID, t.Index).Exist(&Task{})
-		if err != nil {
-			return err
-		}
-		if exists {
-			// If the index is taken, calculate a new one
-			t.Index, err = getNextTaskIndex(s, t.ProjectID)
-			if err != nil {
-				return err
-			}
-		}
+	err = setNewTaskIndex(s, t)
+	if err != nil {
+		return err
 	}
 
 	t.HexColor = utils.NormalizeHex(t.HexColor)
@@ -925,7 +932,7 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 
 	// If the task is being moved between projects, make sure to move the bucket + index as well
 	if t.ProjectID != 0 && ot.ProjectID != t.ProjectID {
-		t.Index, err = getNextTaskIndex(s, t.ProjectID)
+		t.Index, err = calculateNextTaskIndex(s, t.ProjectID)
 		if err != nil {
 			return err
 		}
