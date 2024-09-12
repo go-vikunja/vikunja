@@ -153,7 +153,7 @@ importers:
         version: 11.0.3(vue@3.5.4(typescript@5.5.4))
       '@vueuse/router':
         specifier: 11.0.3
-        version: 11.0.3(vue-router@4.4.3(vue@3.5.4(typescript@5.5.4)))(vue@3.5.4(typescript@5.5.4))
+        version: 11.0.3(vue-router@4.4.4(vue@3.5.4(typescript@5.5.4)))(vue@3.5.4(typescript@5.5.4))
       axios:
         specifier: 1.7.7
         version: 1.7.7(debug@4.3.7)
@@ -227,8 +227,8 @@ importers:
         specifier: 10.0.1
         version: 10.0.1(vue@3.5.4(typescript@5.5.4))
       vue-router:
-        specifier: 4.4.3
-        version: 4.4.3(vue@3.5.4(typescript@5.5.4))
+        specifier: 4.4.4
+        version: 4.4.4(vue@3.5.4(typescript@5.5.4))
       vuemoji-picker:
         specifier: 0.2.1
         version: 0.2.1(vue@3.5.4(typescript@5.5.4))
@@ -2513,6 +2513,9 @@ packages:
 
   '@vue/devtools-api@6.6.3':
     resolution: {integrity: sha512-0MiMsFma/HqA6g3KLKn+AGpL1kgKhFWszC9U29NfpWK5LE7bjeXxySWJrOJ77hBz+TBrBQ7o4QJqbPbqbs8rJw==}
+
+  '@vue/devtools-api@6.6.4':
+    resolution: {integrity: sha512-sGhTPMuXqZ1rVOk32RylztWkfXTRhuS7vgAKv0zjqk8gbsHkJ7xfFf+jbySxt7tWObEJwyKaHMikV/WGDiQm8g==}
 
   '@vue/eslint-config-typescript@13.0.0':
     resolution: {integrity: sha512-MHh9SncG/sfqjVqjcuFLOLD6Ed4dRAis4HNt0dXASeAuLqIAx4YMB1/m2o4pUKK1vCt8fUvYG8KKX2Ot3BVZTg==}
@@ -6056,8 +6059,8 @@ packages:
     peerDependencies:
       vue: ^3.0.0
 
-  vue-router@4.4.3:
-    resolution: {integrity: sha512-sv6wmNKx2j3aqJQDMxLFzs/u/mjA9Z5LCgy6BE0f7yFWMjrPLnS/sPNn8ARY/FXw6byV18EFutn5lTO6+UsV5A==}
+  vue-router@4.4.4:
+    resolution: {integrity: sha512-3MlnDqwRwZwCQVbtVfpsU+nrNymNjnXSsQtXName5925NVC1+326VVfYH9vSrA0N13teGEo8z5x7gbRnGjCDiQ==}
     peerDependencies:
       vue: ^3.2.0
 
@@ -8640,6 +8643,8 @@ snapshots:
 
   '@vue/devtools-api@6.6.3': {}
 
+  '@vue/devtools-api@6.6.4': {}
+
   '@vue/eslint-config-typescript@13.0.0(eslint-plugin-vue@9.28.0(eslint@8.57.0))(eslint@8.57.0)(typescript@5.5.4)':
     dependencies:
       '@typescript-eslint/eslint-plugin': 7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.0)(typescript@5.5.4))(eslint@8.57.0)(typescript@5.5.4)
@@ -8724,11 +8729,11 @@ snapshots:
 
   '@vueuse/metadata@9.13.0': {}
 
-  '@vueuse/router@11.0.3(vue-router@4.4.3(vue@3.5.4(typescript@5.5.4)))(vue@3.5.4(typescript@5.5.4))':
+  '@vueuse/router@11.0.3(vue-router@4.4.4(vue@3.5.4(typescript@5.5.4)))(vue@3.5.4(typescript@5.5.4))':
     dependencies:
       '@vueuse/shared': 11.0.3(vue@3.5.4(typescript@5.5.4))
       vue-demi: 0.14.10(vue@3.5.4(typescript@5.5.4))
-      vue-router: 4.4.3(vue@3.5.4(typescript@5.5.4))
+      vue-router: 4.4.4(vue@3.5.4(typescript@5.5.4))
     transitivePeerDependencies:
       - '@vue/composition-api'
       - vue
@@ -12614,9 +12619,9 @@ snapshots:
     dependencies:
       vue: 3.5.4(typescript@5.5.4)
 
-  vue-router@4.4.3(vue@3.5.4(typescript@5.5.4)):
+  vue-router@4.4.4(vue@3.5.4(typescript@5.5.4)):
     dependencies:
-      '@vue/devtools-api': 6.6.3
+      '@vue/devtools-api': 6.6.4
       vue: 3.5.4(typescript@5.5.4)
 
   vue-tsc@2.1.6(typescript@5.5.4):
