@@ -2,8 +2,9 @@
 	<div
 		ref="multiselectRoot"
 		class="multiselect"
-		:class="{'has-search-results': searchResultsVisible}"
+		:class="{'has-search-results': searchResultsVisible, 'is-disabled': disabled}"
 		tabindex="-1"
+		:aria-disabled="disabled"
 		@focus="focus"
 	>
 		<div
@@ -12,7 +13,7 @@
 		>
 			<div
 				class="input-wrapper input"
-				:class="{'has-multiple': hasMultiple, 'has-removal-button': removalAvailable}"
+				:class="{'has-multiple': hasMultiple, 'has-removal-button': removalAvailable && !disabled}"
 			>
 				<slot
 					v-if="Array.isArray(internalValue)"
@@ -31,6 +32,7 @@
 							>
 								{{ label !== '' ? item[label] : item }}
 								<BaseButton
+									v-if="!disabled"
 									class="delete is-small"
 									@click="() => remove(item)"
 								/>
@@ -40,6 +42,7 @@
 				</slot>
 				
 				<input
+					v-if="!disabled"
 					:id="id"
 					ref="searchInput"
 					v-model="query"
@@ -55,7 +58,7 @@
 					@focus="handleFocus"
 				>
 				<BaseButton 
-					v-if="removalAvailable"
+					v-if="removalAvailable && !disabled"
 					class="removal-button"
 					@click="resetSelectedValue"
 				>
@@ -164,6 +167,8 @@ const props = withDefaults(defineProps<{
 	closeAfterSelect?: boolean
 	/** If false, the search input will get the autocomplete="off" attributes attached to it. */
 	autocompleteEnabled?: boolean
+	/** If true, disables the multiselect input */
+	disabled?: boolean
 }>(), {
 	modelValue: null,
 	loading: false,
@@ -179,6 +184,7 @@ const props = withDefaults(defineProps<{
 	searchDelay: 200,
 	closeAfterSelect: true,
 	autocompleteEnabled: true,
+	disabled: false,
 })
 
 const emit = defineEmits<{
@@ -447,6 +453,18 @@ function focus() {
 
 	.control.is-loading::after {
 		top: .75rem;
+	}
+
+	&.is-disabled {
+		.input-wrapper, .input, & {
+			cursor: default !important;
+
+			&:focus-within,&:focus-visible, &:hover, &:focus {
+				border-color: transparent !important;
+				background: transparent !important;
+				box-shadow: none;
+			}
+		}
 	}
 }
 
