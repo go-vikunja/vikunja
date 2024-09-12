@@ -547,6 +547,9 @@ async function updateTaskPosition(e) {
 }
 
 function toggleShowNewTaskInput(bucketId: IBucket['id']) {
+	if (loading.value || taskLoading.value) {
+		return
+	}
 	showNewTaskInput.value[bucketId] = !showNewTaskInput.value[bucketId]
 	newTaskInputFocused.value = false
 }
@@ -563,6 +566,7 @@ async function addTaskToBucket(bucketId: IBucket['id']) {
 		bucketId,
 		projectId: project.value.id,
 	})
+	toggleShowNewTaskInput(bucketId)
 	newTaskText.value = ''
 	kanbanStore.addTaskToBucket(task)
 	scrollTaskContainerToTop(bucketId)
@@ -766,6 +770,18 @@ function unCollapseBucket(bucket: IBucket) {
 	saveCollapsedBucketState(project.value.id, collapsedBuckets.value)
 }
 </script>
+
+<style lang="scss" scoped>
+.control.is-loading {
+  &::after {
+    top: 30%;
+    right: 50%;
+    transform: translate(-50%, 0);
+	--loader-border-color: var(--grey-500);
+  }
+}
+</style>
+
 
 <style lang="scss">
 $ease-out: all .3s cubic-bezier(0.23, 1, 0.32, 1);
