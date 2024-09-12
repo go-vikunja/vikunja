@@ -113,3 +113,9 @@ issues:
       text: 'G115: integer overflow conversion uintptr -> int'
       linters:
         - gosec
+    - text: 'G115: integer overflow conversion int64 -> uint64'
+      linters:
+        - gosec
+    - text: 'G115: integer overflow conversion int -> uint64'
+      linters:
+        - gosec
