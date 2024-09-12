@@ -805,8 +805,9 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 	}
 
 	@media screen and (max-width: $tablet) {
-		height: calc(#{$crazy-height-calculation} - #{$filter-container-height});
+		height: calc(#{$crazy-height-calculation} - #{$filter-container-height} + 9px);
 		scroll-snap-type: x mandatory;
+		margin: 0 -0.5rem;
 	}
 
 	&-bucket-container {
@@ -884,7 +885,6 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 			// to hide the fact we just made the button smaller.
 			min-width: calc(#{$bucket-width} + 1rem);
 			background: transparent;
-			padding-right: 1rem;
 
 			.button {
 				background: var(--grey-100);
