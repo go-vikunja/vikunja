@@ -61,7 +61,7 @@
       "usernameMustNotLookLikeUrl": "The username must not look like a URL.",
       "passwordRequired": "Vui lòng cung cấp một mật khẩu.",
       "passwordNotMin": "Password must have at least 8 characters.",
-      "passwordNotMax": "Password must have at most 250 characters.",
+      "passwordNotMax": "Password must have at most 72 characters.",
       "showPassword": "Hiển thị mật khẩu",
       "hidePassword": "Ẩn mật khẩu",
       "noAccountYet": "Bạn chưa có tài khoản?",

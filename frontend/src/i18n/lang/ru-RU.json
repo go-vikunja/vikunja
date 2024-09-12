@@ -61,7 +61,7 @@
       "usernameMustNotLookLikeUrl": "Имя пользователя не должно быть похожим на URL.",
       "passwordRequired": "Введите пароль.",
       "passwordNotMin": "Пароль должен содержать не меньше 8 символов.",
-      "passwordNotMax": "Пароль должен содержать не больше 250 символов.",
+      "passwordNotMax": "Password must have at most 72 characters.",
       "showPassword": "Показать пароль",
       "hidePassword": "Скрыть пароль",
       "noAccountYet": "Ещё нет аккаунта?",

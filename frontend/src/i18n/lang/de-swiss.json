@@ -61,7 +61,7 @@
       "usernameMustNotLookLikeUrl": "Der Anmeldename darf nicht wie eine URL aussehen.",
       "passwordRequired": "Bitte gib ein Passwort ein.",
       "passwordNotMin": "Das Passwort muss aus mindestens 8 Zeichen bestehen.",
-      "passwordNotMax": "Das Passwort darf höchstens 250 Zeichen lang sein.",
+      "passwordNotMax": "Das Passwort darf höchstens 72 Zeichen lang sein.",
       "showPassword": "Passwort anzeigen",
       "hidePassword": "Passwort verbergen",
       "noAccountYet": "Noch kein Account?",

@@ -61,7 +61,7 @@
       "usernameMustNotLookLikeUrl": "A felhasználónév nem nézhet ki URL-nek.",
       "passwordRequired": "Kérjük, adjon meg új jelszót.",
       "passwordNotMin": "A jelszónak legalább 8 karakterből kell állnia.",
-      "passwordNotMax": "A jelszó legfeljebb 250 karakterből állhat.",
+      "passwordNotMax": "Password must have at most 72 characters.",
       "showPassword": "Jelszó megjelenítése",
       "hidePassword": "A jelszó elrejtése",
       "noAccountYet": "Még nincs fiókja?",

@@ -61,7 +61,7 @@
       "usernameMustNotLookLikeUrl": "Nazwa użytkownika nie może wyglądać jak adres URL.",
       "passwordRequired": "Proszę podać hasło.",
       "passwordNotMin": "Hasło musi zawierać co najmniej 8 znaków.",
-      "passwordNotMax": "Hasło musi zawierać co najwyżej 250 znaków.",
+      "passwordNotMax": "Password must have at most 72 characters.",
       "showPassword": "Pokaż hasło",
       "hidePassword": "Ukryj hasło",
       "noAccountYet": "Nie masz jeszcze konta?",

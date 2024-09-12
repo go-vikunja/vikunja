@@ -61,7 +61,7 @@
       "usernameMustNotLookLikeUrl": "The username must not look like a URL.",
       "passwordRequired": "비밀번호를 입력하세요.",
       "passwordNotMin": "Password must have at least 8 characters.",
-      "passwordNotMax": "Password must have at most 250 characters.",
+      "passwordNotMax": "Password must have at most 72 characters.",
       "showPassword": "비밀번호 표시",
       "hidePassword": "비밀번호 숨김",
       "noAccountYet": "아직 계정이 없으신가요?",

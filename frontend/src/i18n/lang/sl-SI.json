@@ -61,7 +61,7 @@
       "usernameMustNotLookLikeUrl": "Uporabniško ime ne sme izgledati kot URL.",
       "passwordRequired": "Prosim vnesite geslo.",
       "passwordNotMin": "Geslo mora imeti vsaj 8 znakov.",
-      "passwordNotMax": "Geslo mora imeti največ 250 znakov.",
+      "passwordNotMax": "Geslo mora imeti največ 72 znakov.",
       "showPassword": "Prikažite geslo",
       "hidePassword": "Skrijte geslo",
       "noAccountYet": "Še nimate računa?",
