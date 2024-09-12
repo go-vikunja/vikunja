@@ -10,6 +10,7 @@
 		:create-placeholder="$t('task.label.createPlaceholder')"
 		:search-delay="10"
 		:close-after-select="false"
+		:disabled="disabled"
 		@search="findLabel"
 		@select="addLabel"
 		@create="createAndAddLabel"
@@ -21,6 +22,7 @@
 			>
 				<span>{{ label.title }}</span>
 				<BaseButton
+					v-if="!disabled"
 					v-cy="'taskDetail.removeLabel'"
 					class="delete is-small"
 					@click="removeLabel(label)"
