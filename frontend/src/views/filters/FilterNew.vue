@@ -63,6 +63,7 @@
 						:disabled="filterService.loading"
 						class="has-no-shadow has-no-border"
 						:has-footer="false"
+						:change-immediately="true"
 					/>
 				</div>
 			</div>
