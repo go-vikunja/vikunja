@@ -154,12 +154,15 @@ $modal-width: 1024px;
 // scrolling-content
 // used e.g. for <TaskDetailViewModal>
 .scrolling .modal-content {
-	max-width: $modal-width;
 	width: 100%;
 	margin: $modal-margin auto;
 
 	max-height: none; // reset bulma
 	overflow: visible; // reset bulma
+	
+	@media not print {
+		max-width: $modal-width;
+	}
 
 	@media screen and (min-width: $tablet) {
 		max-height: none; // reset bulma
@@ -167,7 +170,7 @@ $modal-width: 1024px;
 		width: 100%;
 	}
 
-	@media screen and (max-width: $desktop) {
+	@media screen and (max-width: $desktop), print {
 		margin: 0;
 	}
 }
@@ -211,6 +214,28 @@ $modal-width: 1024px;
 	@media screen and (min-width: $tablet) and (max-width: #{$desktop + $close-button-min-space}) {
 		top: .75rem;
 	}
+
+}
+
+@media print {
+  .modal-mask {
+    position: static;
+    overflow: visible !important;
+  }
+
+  .modal-container {
+    height: auto;
+    overflow: visible;
+  }
+
+  .modal-content {
+    position: static;
+  }
+
+  .close {
+    display: none;
+  }
+
 }
 </style>
 
@@ -218,5 +243,16 @@ $modal-width: 1024px;
 // Close icon SVG uses currentColor, change the color to keep it visible
 .dark .close {
 	color: var(--grey-900);
+}
+
+@media print {
+  body:has(.modal-mask) {
+    height: auto;
+    overflow: visible;
+
+	#app {
+		display: none;
+	}
+  }
 }
 </style>

@@ -69,6 +69,10 @@ const shouldShowMessage = computed(() => {
 	@media screen and (min-width: $tablet) {
 		display: none;
 	}
+
+	@media print {
+		display: none;
+	}
 	
 	&.has-update-available {
 		bottom: 5rem;
