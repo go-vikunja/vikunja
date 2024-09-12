@@ -86,6 +86,7 @@ import {useAuthStore} from '@/stores/auth'
 import {useTaskStore} from '@/stores/tasks'
 import {useProjectStore} from '@/stores/projects'
 import type {TaskFilterParams} from '@/services/taskCollection'
+import TaskCollectionService from '@/services/taskCollection'
 
 const props = withDefaults(defineProps<{
 	dateFrom?: Date | string,
@@ -105,6 +106,7 @@ const {t} = useI18n({useScope: 'global'})
 
 const tasks = ref<ITask[]>([])
 const showNothingToDo = ref<boolean>(false)
+const taskCollectionService = ref(new TaskCollectionService())
 
 const projectStore = useProjectStore()
 
@@ -131,7 +133,7 @@ const pageTitle = computed(() => {
 })
 const hasTasks = computed(() => tasks.value && tasks.value.length > 0)
 const userAuthenticated = computed(() => authStore.authenticated)
-const loading = computed(() => taskStore.isLoading)
+const loading = computed(() => taskStore.isLoading || taskCollectionService.value.loading)
 
 interface dateStrings {
 	dateFrom: string,
@@ -199,8 +201,9 @@ async function loadPendingTasks(from: Date|string, to: Date|string) {
 		}
 	}
 	
-	if (showAll.value && authStore.settings.frontendSettings.filterIdUsedOnOverview && typeof projectStore.projects[authStore.settings.frontendSettings.filterIdUsedOnOverview] !== 'undefined') {
-		tasks.value = await taskStore.loadTasks(params, authStore.settings.frontendSettings.filterIdUsedOnOverview)
+	const filterId = authStore.settings.frontendSettings.filterIdUsedOnOverview
+	if (showAll.value && filterId && typeof projectStore.projects[filterId] !== 'undefined') {
+		tasks.value = await taskCollectionService.value.getAll({projectId: filterId}, params)
 		return
 	}
 

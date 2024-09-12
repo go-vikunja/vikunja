@@ -66,7 +66,7 @@ export const useProjectStore = defineStore('project', () => {
 			return search(query)
 				?.filter(value => value > 0)
 				.map(id => projects.value[id])
-				.filter(project => project.isArchived === includeArchived)
+				.filter(project => project?.isArchived === includeArchived)
 			|| []
 		}
 	})
@@ -76,7 +76,7 @@ export const useProjectStore = defineStore('project', () => {
 			return search(query)
 					?.filter(value => getSavedFilterIdFromProjectId(value) > 0)
 					.map(id => projects.value[id])
-					.filter(project => project.isArchived === includeArchived)
+					.filter(project => project?.isArchived === includeArchived)
 				|| []
 		}
 	})
