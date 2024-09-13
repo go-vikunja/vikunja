@@ -115,8 +115,8 @@ func (p *BucketConfigurationModeKind) UnmarshalJSON(bytes []byte) error {
 }
 
 type ProjectViewBucketConfiguration struct {
-	Title  string
-	Filter string
+	Title  string `json:"title"`
+	Filter string `json:"filter"`
 }
 
 type ProjectView struct {

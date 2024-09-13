@@ -41,7 +41,7 @@
 									@click="() => unCollapseBucket(bucket)"
 								>
 									<span
-										v-if="view?.doneBucketId === bucket.id"
+										v-if="bucket.id !== 0 && view?.doneBucketId === bucket.id"
 										v-tooltip="$t('project.kanban.doneBucketHint')"
 										class="icon is-small has-text-success mr-2"
 									>
