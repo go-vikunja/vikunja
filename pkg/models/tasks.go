@@ -325,7 +325,6 @@ func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, op
 }
 
 func getTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts *taskSearchOptions, view *ProjectView) (tasks []*Task, resultCount int, totalItems int64, err error) {
-
 	tasks, resultCount, totalItems, err = getRawTasksForProjects(s, projects, a, opts)
 	if err != nil {
 		return nil, 0, 0, err
