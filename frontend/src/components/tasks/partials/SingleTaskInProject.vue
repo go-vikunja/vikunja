@@ -73,29 +73,32 @@
 					:inline="true"
 				/>
 
-				<!-- FIXME: use popup -->
-				<BaseButton
+				<Popup
 					v-if="+new Date(task.dueDate) > 0"
-					v-tooltip="formatDateLong(task.dueDate)"
-					class="dueDate"
-					@click.prevent.stop="showDefer = !showDefer"
 				>
-					<time
-						:datetime="formatISO(task.dueDate)"
-						:class="{'overdue': task.dueDate <= new Date() && !task.done}"
-						class="is-italic"
-						:aria-expanded="showDefer ? 'true' : 'false'"
-					>
-						– {{ $t('task.detail.due', {at: dueDateFormatted}) }}
-					</time>
-				</BaseButton>
-				<CustomTransition name="fade">
-					<DeferTask
-						v-if="+new Date(task.dueDate) > 0 && showDefer"
-						ref="deferDueDate"
-						v-model="task"
-					/>
-				</CustomTransition>
+					<template #trigger="{toggle, isOpen}">
+						<BaseButton
+							v-tooltip="formatDateLong(task.dueDate)"
+							class="dueDate"
+							@click.prevent.stop="toggle()"
+						>	
+							<time
+								:datetime="formatISO(task.dueDate)"
+								:class="{'overdue': task.dueDate <= new Date() && !task.done}"
+								class="is-italic"
+								:aria-expanded="isOpen ? 'true' : 'false'"
+							>
+								– {{ $t('task.detail.due', {at: dueDateFormatted}) }}
+							</time>
+						</BaseButton>
+					</template>
+					<template #content>
+						<DeferTask
+							v-model="task"
+						/>
+					</template>
+				</Popup>
+
 
 				<span>
 					<span
@@ -176,7 +179,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, watch, shallowReactive, onMounted, onBeforeUnmount, computed} from 'vue'
+import {ref, watch, shallowReactive, onMounted, computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import TaskModel, {getHexColor} from '@/models/task'
@@ -191,11 +194,10 @@ import ProgressBar from '@/components/misc/ProgressBar.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import ColorBubble from '@/components/misc/ColorBubble.vue'
-import CustomTransition from '@/components/misc/CustomTransition.vue'
+import Popup from '@/components/misc/Popup.vue'
 
 import TaskService from '@/services/task'
 
-import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {formatDateSince, formatISO, formatDateLong} from '@/helpers/time/formatDate'
 import {success} from '@/message'
 
@@ -239,7 +241,6 @@ const {t} = useI18n({useScope: 'global'})
 
 const taskService = shallowReactive(new TaskService())
 const task = ref<ITask>(new TaskModel())
-const showDefer = ref(false)
 
 const isRepeating = computed(() => task.value.repeatAfter.amount > 0 || (task.value.repeatAfter.amount === 0 && task.value.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH))
 
@@ -253,14 +254,6 @@ watch(
 		deep: true,
 	},
 )
-
-onMounted(() => {
-	document.addEventListener('click', hideDeferDueDatePopup)
-})
-
-onBeforeUnmount(() => {
-	document.removeEventListener('click', hideDeferDueDatePopup)
-})
 
 const baseStore = useBaseStore()
 const projectStore = useProjectStore()
@@ -348,17 +341,6 @@ function undoDone(checked: boolean) {
 async function toggleFavorite() {
 	task.value = await taskStore.toggleFavorite(task.value)
 	emit('taskUpdated', task.value)
-}
-
-const deferDueDate = ref<typeof DeferTask | null>(null)
-
-function hideDeferDueDatePopup(e) {
-	if (!showDefer.value) {
-		return
-	}
-	closeWhenClickedOutside(e, deferDueDate.value.$el, () => {
-		showDefer.value = false
-	})
 }
 
 const taskLink = ref<HTMLElement | null>(null)
@@ -541,5 +523,18 @@ function focusTaskLink() {
 
 .subtask-nested {
 	margin-left: 1.75rem;
+}
+
+:deep(.popup) {
+	border-radius: $radius;
+	background-color: var(--white);
+	box-shadow: var(--shadow-lg);
+	color: var(--text);
+	top: unset;
+	
+	&.is-open {
+		padding: 1rem;
+		border: 1px solid var(--grey-200);
+	}
 }
 </style>
