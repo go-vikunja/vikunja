@@ -289,6 +289,7 @@ import type {ITask} from '@/modelTypes/ITask'
 import type {IProject} from '@/modelTypes/IProject'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import type {IProjectView} from '@/modelTypes/IProjectView'
+import { camelCase } from 'change-case'
 
 const props = defineProps<{
 	projectId: IProject['id'],
@@ -355,7 +356,7 @@ function sort(property: keyof SortBy) {
 
 function setActiveColumnsSortParam() {
 	sortByParam.value = Object.keys(sortBy.value)
-		.filter(prop => activeColumns.value[prop])
+		.filter(prop => activeColumns.value[camelCase(prop)])
 		.reduce((obj, key) => {
 			obj[key] = sortBy.value[key]
 			return obj
