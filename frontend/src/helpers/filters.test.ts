@@ -199,6 +199,26 @@ describe('Filter Transformation', () => {
 			expect(transformed).toBe('labels in lorem, ipsum')
 		})
 
+		it('should not touch the label value when it is undefined', () => {
+			const transformed = transformFilterStringFromApi(
+				'labels = one',
+				(id: number) => undefined,
+				nullIdToTitleResolver,
+			)
+
+			expect(transformed).toBe('labels = one')
+		})
+
+		it('should not touch the label value when it is null', () => {
+			const transformed = transformFilterStringFromApi(
+				'labels = one',
+				(id: number) => null,
+				nullIdToTitleResolver,
+			)
+
+			expect(transformed).toBe('labels = one')
+		})
+
 		it('should correctly resolve projects', () => {
 			const transformed = transformFilterStringFromApi(
 				'project = 1',
@@ -227,6 +247,26 @@ describe('Filter Transformation', () => {
 			)
 
 			expect(transformed).toBe('project in lorem, ipsum')
+		})
+
+		it('should not touch the project value when it is undefined', () => {
+			const transformed = transformFilterStringFromApi(
+				'project = one',
+				nullIdToTitleResolver,
+				(id: number) => undefined,
+			)
+
+			expect(transformed).toBe('project = one')
+		})
+
+		it('should not touch the project value when it is null', () => {
+			const transformed = transformFilterStringFromApi(
+				'project = one',
+				nullIdToTitleResolver,
+				(id: number) => null,
+			)
+
+			expect(transformed).toBe('project = one')
 		})
 		
 		it('should transform the same attribute multiple times', () => {
