@@ -17,6 +17,8 @@
 package models
 
 import (
+	"regexp"
+	"strconv"
 	"strings"
 
 	"code.vikunja.io/api/pkg/user"
@@ -174,6 +176,28 @@ func getRelevantProjectsFromCollection(s *xorm.Session, a web.Auth, tf *TaskColl
 	return []*Project{{ID: tf.ProjectID}}, nil
 }
 
+func getFilterValueForBucketFilter(filter string, view *ProjectView) (newFilter string, err error) {
+	re := regexp.MustCompile(`bucket_id\s*=\s*(\d+)`)
+
+	match := re.FindStringSubmatch(filter)
+	if len(match) < 2 {
+		return filter, nil
+	}
+
+	bucketID, err := strconv.Atoi(match[1])
+	if err != nil {
+		return "", err
+	}
+
+	for id, bucket := range view.BucketConfiguration {
+		if id == bucketID {
+			return re.ReplaceAllString(filter, `(`+bucket.Filter+`)`), nil
+		}
+	}
+
+	return filter, nil
+}
+
 // ReadAll gets all tasks for a collection
 // @Summary Get tasks in a project
 // @Description Returns all tasks for the current project.
@@ -249,6 +273,13 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 				tf.Filter = "(" + tf.Filter + ") && (" + view.Filter + ")"
 			} else {
 				tf.Filter = view.Filter
+			}
+		}
+
+		if view.BucketConfigurationMode == BucketConfigurationModeFilter && strings.Contains(tf.Filter, "bucket_id") {
+			tf.Filter, err = getFilterValueForBucketFilter(tf.Filter, view)
+			if err != nil {
+				return nil, 0, 0, err
 			}
 		}
 	}
