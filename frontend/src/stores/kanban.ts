@@ -266,6 +266,15 @@ export const useKanbanStore = defineStore('kanban', () => {
 		}
 	}
 
+	function getPaginatedTaskResult(result: IBucket[], bucketId: IBucket['id']): ITask[] {
+		const bucket = result.find(b => b.id === bucketId)
+		if (!bucket) {
+			return []
+		}
+
+		return bucket.tasks
+	}
+
 	async function loadNextTasksForBucket(
 		projectId: IProject['id'],
 		viewId: IProjectView['id'],
@@ -297,7 +306,8 @@ export const useKanbanStore = defineStore('kanban', () => {
 
 		const taskService = new TaskCollectionService()
 		try {
-			const tasks = await taskService.getAll({projectId, viewId}, params, page)
+			const result = await taskService.getAll({projectId, viewId}, params, page)
+			const tasks = getPaginatedTaskResult(result as unknown as IBucket[], bucketId)
 			addTasksToBucket(tasks, bucketId)
 			setTasksLoadedForBucketPage({bucketId, page})
 			if (taskService.totalPages <= page) {
