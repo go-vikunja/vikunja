@@ -484,7 +484,7 @@ describe('Task', () => {
 
 			addLabelToTaskAndVerify(labels[0].title)
 
-			cy.get('.modal-content .close')
+			cy.get('.modal-container .close')
 				.click()
 
 			cy.get('.bucket .task')
@@ -850,7 +850,7 @@ describe('Task', () => {
 
 			uploadAttachmentAndVerify(tasks[0].id)
 
-			cy.get('.modal-content .close')
+			cy.get('.modal-container .close')
 				.click()
 
 			cy.get('.bucket .task .footer .icon svg.fa-paperclip')
