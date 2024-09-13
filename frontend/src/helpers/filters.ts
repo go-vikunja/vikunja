@@ -141,8 +141,8 @@ export function transformFilterStringForApi(
 
 export function transformFilterStringFromApi(
 	filter: string,
-	labelResolver: (id: number) => string | null,
-	projectResolver: (id: number) => string | null,
+	labelResolver: (id: number) => string | null | undefined,
+	projectResolver: (id: number) => string | null | undefined,
 ): string {
 
 	if (filter.trim() === '') {
@@ -170,7 +170,7 @@ export function transformFilterStringFromApi(
 
 				keywords.forEach(k => {
 					const labelTitle = labelResolver(parseInt(k))
-					if (labelTitle !== null) {
+					if (labelTitle) {
 						filter = filter.replace(k, labelTitle)
 					}
 				})
@@ -194,7 +194,7 @@ export function transformFilterStringFromApi(
 
 				keywords.forEach(k => {
 					const project = projectResolver(parseInt(k))
-					if (project !== null) {
+					if (project) {
 						filter = filter.replace(k, project)
 					}
 				})

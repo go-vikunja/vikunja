@@ -112,7 +112,7 @@ watch(
 		const val = {...value}
 		val.filter = transformFilterStringFromApi(
 			val?.filter || '',
-			labelId => labelStore.getLabelById(labelId)?.title,
+			labelId => labelStore.getLabelById(labelId)?.title || null,
 			projectId => projectStore.projects[projectId]?.title || null,
 		)
 		params.value = val

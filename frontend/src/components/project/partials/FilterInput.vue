@@ -218,33 +218,35 @@ function handleFieldInput() {
 
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		const [matched, prefix, operator, space, keyword] = match
-		if (keyword) {
-			let search = keyword
-			if (operator === 'in' || operator === '?=') {
-				const keywords = keyword.split(',')
-				search = keywords[keywords.length - 1].trim()
-			}
-			if (matched.startsWith('label')) {
-				autocompleteResultType.value = 'labels'
-				autocompleteResults.value = labelStore.filterLabelsByQuery([], search)
-			}
-			if (matched.startsWith('assignee')) {
-				autocompleteResultType.value = 'assignees'
-				if (props.projectId) {
-					projectUserService.getAll({projectId: props.projectId}, {s: search})
-						.then(users => autocompleteResults.value = users.length > 1 ? users : [])
-				} else {
-					userService.getAll({}, {s: search})
-						.then(users => autocompleteResults.value = users.length > 1 ? users : [])
-				}
-			}
-			if (!props.projectId && matched.startsWith('project')) {
-				autocompleteResultType.value = 'projects'
-				autocompleteResults.value = projectStore.searchProject(search)
-			}
-			autocompleteMatchText.value = keyword
-			autocompleteMatchPosition.value = match.index + prefix.length - 1 + keyword.replace(search, '').length
+		if(!keyword) {
+			return
 		}
+
+		let search = keyword
+		if (operator === 'in' || operator === '?=') {
+			const keywords = keyword.split(',')
+			search = keywords[keywords.length - 1].trim()
+		}
+		if (matched.startsWith('label')) {
+			autocompleteResultType.value = 'labels'
+			autocompleteResults.value = labelStore.filterLabelsByQuery([], search)
+		}
+		if (matched.startsWith('assignee')) {
+			autocompleteResultType.value = 'assignees'
+			if (props.projectId) {
+				projectUserService.getAll({projectId: props.projectId}, {s: search})
+					.then(users => autocompleteResults.value = users.length > 1 ? users : [])
+			} else {
+				userService.getAll({}, {s: search})
+					.then(users => autocompleteResults.value = users.length > 1 ? users : [])
+			}
+		}
+		if (!props.projectId && matched.startsWith('project')) {
+			autocompleteResultType.value = 'projects'
+			autocompleteResults.value = projectStore.searchProject(search)
+		}
+		autocompleteMatchText.value = keyword
+		autocompleteMatchPosition.value = match.index + prefix.length - 1 + keyword.replace(search, '').length
 	})
 }
 
