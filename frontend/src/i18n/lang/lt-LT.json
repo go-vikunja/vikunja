@@ -478,7 +478,7 @@
           "parentheses": "Skliausteliai sąlygų grupavimui"
         },
         "examples": {
-          "intro": "Here are some examples of filter queries:",
+          "intro": "Čia pateikiami keli filtravimo užklausos pavyzdžiai:",
           "priorityEqual": "Atitinka užduotis su 4 lygio prioritetu",
           "dueDatePast": "Matches tasks with a due date in the past",
           "undoneHighPriority": "Matches undone tasks with priority level 3 or higher",
