@@ -30,7 +30,7 @@ const projectStore = useProjectStore()
 onBeforeMount(() => {
 	const transform = (filterString: string) => transformFilterStringFromApi(
 		filterString,
-		labelId => labelStore.getLabelById(labelId)?.title,
+		labelId => labelStore.getLabelById(labelId)?.title || null,
 		projectId => projectStore.projects[projectId]?.title || null,
 	)
 
@@ -51,7 +51,7 @@ onBeforeMount(() => {
 function save() {
 	const transformFilter = (filterQuery: string) => transformFilterStringForApi(
 		filterQuery,
-		labelTitle => labelStore.filterLabelsByQuery([], labelTitle)[0]?.id || null,
+		labelTitle => labelStore.getLabelByExactTitle(labelTitle)?.id || null,
 		projectTitle => {
 			const found = projectStore.findProjectByExactname(projectTitle)
 			return found?.id || null
