@@ -55,6 +55,7 @@ func CreateUser(s *xorm.Session, user *User) (newUser *User, err error) {
 		}
 	}
 
+	user.ID = 0
 	user.Status = StatusActive
 	user.AvatarProvider = config.DefaultSettingsAvatarProvider.GetString()
 	user.AvatarFileID = config.DefaultSettingsAvatarFileID.GetInt64()
