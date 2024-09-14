@@ -81,7 +81,7 @@ export function transformFilterStringForApi(
 	function transformFieldToIds(
 		fields: string[],
 		resolver: (title: string) => number | null,
-		filter: string
+		filter: string,
 	): string {
 		fields.forEach(field => {
 			const pattern = getFilterFieldRegexPattern(field)
@@ -149,7 +149,7 @@ export function transformFilterStringFromApi(
 	// Function to transform fields to their titles
 	function transformFieldsToTitles(
 		fields: string[],
-		resolver: (id: number) => string | null | undefined
+		resolver: (id: number) => string | null | undefined,
 	) {
 		fields.forEach(field => {
 			const pattern = getFilterFieldRegexPattern(field)
