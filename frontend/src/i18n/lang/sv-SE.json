@@ -60,7 +60,7 @@
       "usernameMustNotContainSpace": "The username must not contain spaces.",
       "usernameMustNotLookLikeUrl": "The username must not look like a URL.",
       "passwordRequired": "Vänligen ange ett lösenord.",
-      "passwordNotMin": "Password must have at least 8 characters.",
+      "passwordNotMin": "Lösenord måste innehålla minst 8 tecken.",
       "passwordNotMax": "Password must have at most 72 characters.",
       "showPassword": "Show the password",
       "hidePassword": "Hide the password",
@@ -325,7 +325,7 @@
       "add": "Lägg till",
       "addPlaceholder": "Add a task…",
       "empty": "This project is currently empty.",
-      "newTaskCta": "Create a task.",
+      "newTaskCta": "Skapa en uppgift.",
       "editTask": "Redigera uppgift"
     },
     "gantt": {
@@ -1111,7 +1111,7 @@
     "createTask": "Create a task in the current project ({title})",
     "createProject": "Skapa ett projekt",
     "cmds": {
-      "newTask": "New task",
+      "newTask": "Ny uppgift",
       "newProject": "Nytt projekt",
       "newTeam": "Nytt team"
     }
@@ -1122,10 +1122,10 @@
     "altFormatShort": "j M Y"
   },
   "reaction": {
-    "reactedWith": "{user} reacted with {value}",
-    "reactedWithAnd": "{users} and {lastUser} reacted with {value}",
+    "reactedWith": "{user} reagerade med {value}",
+    "reactedWithAnd": "{users} och {lastUser} reagerade med {value}",
     "reactedWithAndMany": "{users} and {num} more reacted reacted with {value}",
-    "add": "Add your reaction"
+    "add": "Lägg till din reaktion"
   },
   "error": {
     "error": "Error",
