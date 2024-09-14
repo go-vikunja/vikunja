@@ -77,49 +77,34 @@ export function transformFilterStringForApi(
 		filter = filter.replace(new RegExp(f, 'ig'), f)
 	})
 
-	// Transform labels to ids
-	LABEL_FIELDS.forEach(field => {
-		const pattern = getFilterFieldRegexPattern(field)
+	// Transform labels and projects to ids
+	function transformFieldToIds(
+		fields: string[],
+		resolver: (title: string) => number | null,
+		filter: string
+	): string {
+		fields.forEach(field => {
+			const pattern = getFilterFieldRegexPattern(field)
 
-		let match: RegExpExecArray | null
-		while ((match = pattern.exec(filter)) !== null) {
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-			const [matched, prefix, operator, space, keyword] = match
-			if (keyword) {
+			let match: RegExpExecArray | null
+			while ((match = pattern.exec(filter)) !== null) {
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
+				const [matched, prefix, operator, space, keyword] = match
+				if (!keyword) {
+					continue
+				}
+
 				let keywords = [keyword.trim()]
 				if (operator === 'in' || operator === '?=') {
 					keywords = keyword.trim().split(',').map(k => k.trim())
 				}
-
-				keywords.forEach(k => {
-					const labelId = labelResolver(k)
-					if (labelId !== null) {
-						filter = filter.replace(k, String(labelId))
-					}
-				})
-			}
-		}
-	})
-	// Transform projects to ids
-	PROJECT_FIELDS.forEach(field => {
-		const pattern = getFilterFieldRegexPattern(field)
-
-		let match: RegExpExecArray | null
-		while ((match = pattern.exec(filter)) !== null) {
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-			const [matched, prefix, operator, space, keyword] = match
-			if (keyword) {
-				let keywords = [keyword.trim()]
-				if (operator === 'in' || operator === '?=') {
-					keywords = keyword.trim().split(',').map(k => k.trim())
-				}
-
+				
 				let replaced = keyword
 
 				keywords.forEach(k => {
-					const projectId = projectResolver(k)
-					if (projectId !== null) {
-						replaced = replaced.replace(k, String(projectId))
+					const id = resolver(k)
+					if (id !== null) {
+						replaced = replaced.replace(k, String(id))
 					}
 				})
 
@@ -128,8 +113,15 @@ export function transformFilterStringForApi(
 					replaced +
 					filter.substring(actualKeywordStart + keyword.length)
 			}
-		}
-	})
+		})
+		return filter
+	}
+
+	// Transform labels to ids
+	filter = transformFieldToIds(LABEL_FIELDS, labelResolver, filter)
+
+	// Transform projects to ids
+	filter = transformFieldToIds(PROJECT_FIELDS, projectResolver, filter)
 
 	// Transform all attributes to snake case
 	AVAILABLE_FILTER_FIELDS.forEach(f => {
@@ -154,53 +146,40 @@ export function transformFilterStringFromApi(
 		filter = filter.replaceAll(snakeCase(f), f)
 	})
 
+	// Function to transform fields to their titles
+	function transformFieldsToTitles(
+		fields: string[],
+		resolver: (id: number) => string | null | undefined
+	) {
+		fields.forEach(field => {
+			const pattern = getFilterFieldRegexPattern(field)
+
+			let match: RegExpExecArray | null
+			while ((match = pattern.exec(filter)) !== null) {
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
+				const [matched, prefix, operator, space, keyword] = match
+				if (keyword) {
+					let keywords = [keyword.trim()]
+					if (operator === 'in' || operator === '?=') {
+						keywords = keyword.trim().split(',').map(k => k.trim())
+					}
+
+					keywords.forEach(k => {
+						const title = resolver(parseInt(k))
+						if (title) {
+							filter = filter.replace(k, title)
+						}
+					})
+				}
+			}
+		})
+	}
+
 	// Transform labels to their titles
-	LABEL_FIELDS.forEach(field => {
-		const pattern = getFilterFieldRegexPattern(field)
+	transformFieldsToTitles(LABEL_FIELDS, labelResolver)
 
-		let match: RegExpExecArray | null
-		while ((match = pattern.exec(filter)) !== null) {
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-			const [matched, prefix, operator, space, keyword] = match
-			if (keyword) {
-				let keywords = [keyword.trim()]
-				if (operator === 'in' || operator === '?=') {
-					keywords = keyword.trim().split(',').map(k => k.trim())
-				}
-
-				keywords.forEach(k => {
-					const labelTitle = labelResolver(parseInt(k))
-					if (labelTitle) {
-						filter = filter.replace(k, labelTitle)
-					}
-				})
-			}
-		}
-	})
-
-	// Transform projects to ids
-	PROJECT_FIELDS.forEach(field => {
-		const pattern = getFilterFieldRegexPattern(field)
-
-		let match: RegExpExecArray | null
-		while ((match = pattern.exec(filter)) !== null) {
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-			const [matched, prefix, operator, space, keyword] = match
-			if (keyword) {
-				let keywords = [keyword.trim()]
-				if (operator === 'in' || operator === '?=') {
-					keywords = keyword.trim().split(',').map(k => k.trim())
-				}
-
-				keywords.forEach(k => {
-					const project = projectResolver(parseInt(k))
-					if (project) {
-						filter = filter.replace(k, project)
-					}
-				})
-			}
-		}
-	})
+	// Transform projects to their titles
+	transformFieldsToTitles(PROJECT_FIELDS, projectResolver)
 
 	return filter
 }

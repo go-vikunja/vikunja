@@ -147,6 +147,26 @@ describe('Filter Transformation', () => {
 
 			expect(transformed).toBe('start_date > now')
 		})
+
+		it('should correctly resolve label when the label is called label', () => {
+			const transformed = transformFilterStringForApi(
+				'labels = label',
+				(title: string) => 1,
+				nullTitleToIdResolver,
+			)
+
+			expect(transformed).toBe('labels = 1')
+		})
+
+		it('should correctly resolve project when the project is called project', () => {
+			const transformed = transformFilterStringForApi(
+				'project = project',
+				nullTitleToIdResolver,
+				(title: string) => 1,
+			)
+
+			expect(transformed).toBe('project = 1')
+		})
 	})
 
 	describe('To API', () => {
