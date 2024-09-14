@@ -137,7 +137,11 @@ func getTaskFilterOptsFromCollection(tf *TaskCollection, projectView *ProjectVie
 	return opts, err
 }
 
-func getTaskOrTasksInBuckets(s *xorm.Session, a web.Auth, projects []*Project, view *ProjectView, opts *taskSearchOptions) (tasks interface{}, resultCount int, totalItems int64, err error) {
+func getTaskOrTasksInBuckets(s *xorm.Session, a web.Auth, projects []*Project, view *ProjectView, opts *taskSearchOptions, filteringForBucket bool) (tasks interface{}, resultCount int, totalItems int64, err error) {
+	if filteringForBucket {
+		return getTasksForProjects(s, projects, a, opts, view)
+	}
+
 	if view != nil && !strings.Contains(opts.filter, "bucket_id") {
 		if view.BucketConfigurationMode != BucketConfigurationModeNone {
 			tasksInBuckets, err := GetTasksInBucketsForView(s, view, projects, opts, a)
@@ -262,6 +266,7 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 	}
 
 	var view *ProjectView
+	var filteringForBucket bool
 	if tf.ProjectViewID != 0 {
 		view, err = GetProjectViewByIDAndProject(s, tf.ProjectViewID, tf.ProjectID)
 		if err != nil {
@@ -277,6 +282,7 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		}
 
 		if view.BucketConfigurationMode == BucketConfigurationModeFilter && strings.Contains(tf.Filter, "bucket_id") {
+			filteringForBucket = true
 			tf.Filter, err = getFilterValueForBucketFilter(tf.Filter, view)
 			if err != nil {
 				return nil, 0, 0, err
@@ -318,7 +324,7 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		if err != nil {
 			return nil, 0, 0, err
 		}
-		return getTaskOrTasksInBuckets(s, a, []*Project{project}, view, opts)
+		return getTaskOrTasksInBuckets(s, a, []*Project{project}, view, opts, filteringForBucket)
 	}
 
 	projects, err := getRelevantProjectsFromCollection(s, a, tf)
@@ -326,5 +332,5 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		return nil, 0, 0, err
 	}
 
-	return getTaskOrTasksInBuckets(s, a, projects, view, opts)
+	return getTaskOrTasksInBuckets(s, a, projects, view, opts, filteringForBucket)
 }
