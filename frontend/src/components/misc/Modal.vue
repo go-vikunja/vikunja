@@ -249,13 +249,8 @@ $modal-width: 1024px;
 }
 
 @media print, screen and (max-width: $tablet) {
-  body:has(.modal-mask) {
-    height: auto;
-    overflow: visible;
-
-	#app {
-		display: none;
-	}
+  body:has(.modal-mask) #app {
+	display: none;
   }
 }
 </style>
