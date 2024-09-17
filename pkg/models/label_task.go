@@ -97,7 +97,7 @@ func (lt *LabelTask) Create(s *xorm.Session, auth web.Auth) (err error) {
 		return ErrLabelIsAlreadyOnTask{lt.LabelID, lt.TaskID}
 	}
 
-	// Insert it
+	lt.ID = 0
 	_, err = s.Insert(lt)
 	if err != nil {
 		return err
@@ -386,7 +386,10 @@ func (t *Task) UpdateTaskLabels(s *xorm.Session, creator web.Auth, labels []*Lab
 		}
 
 		// Insert it
-		_, err = s.Insert(&LabelTask{LabelID: l.ID, TaskID: t.ID})
+		_, err = s.Insert(&LabelTask{
+			LabelID: l.ID,
+			TaskID:  t.ID,
+		})
 		if err != nil {
 			return err
 		}

@@ -110,7 +110,7 @@ func (lu *ProjectUser) Create(s *xorm.Session, a web.Auth) (err error) {
 		return ErrUserAlreadyHasAccess{UserID: lu.UserID, ProjectID: lu.ProjectID}
 	}
 
-	// Insert user <-> project relation
+	lu.ID = 0
 	_, err = s.Insert(lu)
 	if err != nil {
 		return err

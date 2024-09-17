@@ -154,6 +154,7 @@ func (share *LinkSharing) Create(s *xorm.Session, a web.Auth) (err error) {
 		share.SharingType = SharingTypeWithoutPassword
 	}
 
+	share.ID = 0
 	_, err = s.Insert(share)
 	share.Password = ""
 	share.SharedBy, _ = user.GetFromAuth(a)

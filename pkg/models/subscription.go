@@ -147,6 +147,7 @@ func (sb *Subscription) TableName() string {
 func (sb *Subscription) Create(s *xorm.Session, auth web.Auth) (err error) {
 	// Rights method already does the validation of the entity type, so we don't need to do that here
 
+	sb.ID = 0
 	sb.UserID = auth.GetID()
 
 	sub, err := GetSubscriptionForUser(s, sb.EntityType, sb.EntityID, auth)

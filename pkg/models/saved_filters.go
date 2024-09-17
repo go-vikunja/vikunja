@@ -121,6 +121,7 @@ func (sf *SavedFilter) toProject() *Project {
 // @Router /filters [put]
 func (sf *SavedFilter) Create(s *xorm.Session, auth web.Auth) (err error) {
 	sf.OwnerID = auth.GetID()
+	sf.ID = 0
 	_, err = s.Insert(sf)
 	if err != nil {
 		return

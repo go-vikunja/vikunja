@@ -306,6 +306,7 @@ func (b *Bucket) Create(s *xorm.Session, a web.Auth) (err error) {
 	}
 	b.CreatedByID = b.CreatedBy.ID
 
+	b.ID = 0
 	_, err = s.Insert(b)
 	if err != nil {
 		return

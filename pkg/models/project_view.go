@@ -263,6 +263,7 @@ func (pv *ProjectView) Create(s *xorm.Session, a web.Auth) (err error) {
 }
 
 func createProjectView(s *xorm.Session, p *ProjectView, a web.Auth, createBacklogBucket bool, addExistingTasksToView bool) (err error) {
+	p.ID = 0
 	_, err = s.Insert(p)
 	if err != nil {
 		return

@@ -104,6 +104,7 @@ func (tl *TeamProject) Create(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	// Insert the new team
+	tl.ID = 0
 	_, err = s.Insert(tl)
 	if err != nil {
 		return err

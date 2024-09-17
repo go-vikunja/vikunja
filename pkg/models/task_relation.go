@@ -230,6 +230,7 @@ func (rel *TaskRelation) Create(s *xorm.Session, a web.Auth) error {
 		return err
 	}
 	rel.CreatedByID = rel.CreatedBy.ID
+	rel.ID = 0
 
 	// Build up the other relation (see the comment above for explanation)
 	otherRelation := &TaskRelation{

@@ -127,6 +127,7 @@ func (w *Webhook) Create(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	w.CreatedByID = a.GetID()
+	w.ID = 0
 	_, err = s.Insert(w)
 	if err != nil {
 		return err

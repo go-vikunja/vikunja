@@ -186,6 +186,7 @@ func (r *Reaction) Create(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
+	r.ID = 0
 	_, err = s.Insert(r)
 	return
 }
