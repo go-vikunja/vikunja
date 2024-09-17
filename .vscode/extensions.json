@@ -1,13 +1,15 @@
 {
-  "recommendations": [
-    "codezombiech.gitignore",
-    "dbaeumer.vscode-eslint",
-    "editorconfig.editorconfig",
-    "vue.volar",
-    "lokalise.i18n-ally",
-    "mgmcdermott.vscode-language-babel",
-    "mikestead.dotenv",
-    "Syler.sass-indented",
-    "vitest.explorer"
-  ]
+    "recommendations": [
+        "codezombiech.gitignore",
+        "dbaeumer.vscode-eslint",
+        "editorconfig.editorconfig",
+        "vue.volar",
+        "lokalise.i18n-ally",
+        "mgmcdermott.vscode-language-babel",
+        "mikestead.dotenv",
+        "Syler.sass-indented",
+        "vitest.explorer",
+        "mkhl.direnv",
+        "golang.Go"
+    ]
 }
