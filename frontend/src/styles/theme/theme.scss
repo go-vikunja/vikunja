@@ -5,17 +5,16 @@
   outline: none;
 }
 
-:focus {
-  box-shadow: 0 0 0 2px hsla(var(--primary-hsl), 0.5);
-}
+a, button {
+  &:focus-visible {
+    box-shadow: 0 0 0 2px hsla(var(--primary-hsl), 0.5);
+  }
 
-:focus:not(:focus-visible) {
-  outline: 0;
-}
-
-:focus-visible,
-:-moz-focusring {
-  box-shadow: 0 0 0 2px hsla(var(--primary-hsl), 0.5);
+  @supports not selector(:focus-visible) {
+    &:focus {
+      box-shadow: 0 0 0 2px hsla(var(--primary-hsl), 0.5);
+    }
+  }
 }
 
 :root {
