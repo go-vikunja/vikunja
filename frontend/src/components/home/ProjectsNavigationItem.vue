@@ -3,7 +3,7 @@
 		class="list-menu loader-container is-loading-small"
 		:class="{'is-loading': isLoading}"
 	>
-		<div>
+		<div class="navigation-item">
 			<BaseButton
 				v-if="canCollapse && childProjects?.length > 0"
 				class="collapse-project-button"
@@ -192,5 +192,19 @@ const childProjects = computed(() => {
 
 .is-touch .handle.has-color-bubble {
 	display: none !important;
+}
+
+.navigation-item:has(*:focus-visible) {
+	box-shadow: 0 0 0 2px hsla(var(--primary-hsl), 0.5);
+	background-color: var(--white);
+
+	.favorite, .menu-list-dropdown {
+		opacity: 1;
+	}
+}
+
+.navigation-item a:focus-visible {
+	// The focus ring is already added to the navigation-item, so we don't need to add it again.
+	box-shadow: none;
 }
 </style>
