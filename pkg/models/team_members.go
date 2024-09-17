@@ -62,7 +62,7 @@ func (tm *TeamMember) Create(s *xorm.Session, a web.Auth) (err error) {
 		return ErrUserIsMemberOfTeam{tm.TeamID, tm.UserID}
 	}
 
-	// Insert the user
+	tm.ID = 0
 	_, err = s.Insert(tm)
 	if err != nil {
 		return err

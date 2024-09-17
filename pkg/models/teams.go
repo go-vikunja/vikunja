@@ -236,6 +236,7 @@ func (t *Team) CreateNewTeam(s *xorm.Session, a web.Auth, firstUserShouldBeAdmin
 		return ErrTeamNameCannotBeEmpty{}
 	}
 
+	t.ID = 0
 	t.CreatedByID = doer.ID
 	t.CreatedBy = doer
 

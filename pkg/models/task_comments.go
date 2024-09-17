@@ -66,6 +66,7 @@ func (tc *TaskComment) TableName() string {
 // @Router /tasks/{taskID}/comments [put]
 func (tc *TaskComment) Create(s *xorm.Session, a web.Auth) (err error) {
 
+	tc.ID = 0
 	tc.Created = time.Time{}
 	tc.Updated = time.Time{}
 
