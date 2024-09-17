@@ -377,11 +377,21 @@ function openTaskDetail(event: MouseEvent | KeyboardEvent) {
 		background-color: var(--grey-100);
 	}
 
-	&:focus-within, &:focus {
+	&:focus-within {
 		box-shadow: 0 0 0 2px hsla(var(--primary-hsl), 0.5);
 
 		a.task-link {
 			box-shadow: none;
+		}
+	}
+
+	@supports not selector(:focus-within) {
+		:focus {
+		box-shadow: 0 0 0 2px hsla(var(--primary-hsl), 0.5);
+
+			a.task-link {
+				box-shadow: none;
+			}
 		}
 	}
 
