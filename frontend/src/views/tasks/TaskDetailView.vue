@@ -16,6 +16,7 @@
 				:task="task"
 				:can-write="canWrite"
 				@update:task="Object.assign(task, $event)"
+				@close="$emit('close')"
 			/>
 			<h6
 				v-if="project?.id"
@@ -970,9 +971,8 @@ function setRelatedTasksActive() {
 	color: var(--text);
 	background-color: var(--site-background) !important;
 
-	@media screen and (max-width: 800px) {
+	@media screen and (max-width: calc(#{$desktop} + 1px)) {
 		border-radius: 0;
-		padding-top: 2rem;
 	}
 }
 

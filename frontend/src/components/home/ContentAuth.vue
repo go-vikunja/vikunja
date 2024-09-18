@@ -48,7 +48,10 @@
 					class="task-detail-view-modal"
 					@close="closeModal()"
 				>
-					<component :is="currentModal" />
+					<component
+						:is="currentModal"
+						@close="closeModal()"
+					/>
 				</Modal>
 
 				<BaseButton

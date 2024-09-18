@@ -1,20 +1,26 @@
 <template>
 	<div class="heading">
-		<div class="flex is-align-items-center">
-			<BaseButton @click="copyUrl">
-				<h1 class="title task-id">
-					{{ textIdentifier }}
-				</h1>
-			</BaseButton>
+		<div class="tw-flex tw-items-center md:tw-items-stretch tw-flex-col tw-gap-1 task-properties">
+			<div class="tw-flex tw-items-center tw-gap-2">
+				<ColorBubble
+					v-if="task.hexColor !== ''"
+					:color="getHexColor(task.hexColor)"
+				/>
+				<BaseButton @click="copyUrl">
+					<h1 class="title task-id">
+						{{ textIdentifier }}
+					</h1>
+				</BaseButton>
+			</div>
 			<Done
-				class="heading__done"
 				:is-done="task.done"
 			/>
-			<ColorBubble
-				v-if="task.hexColor !== ''"
-				:color="getHexColor(task.hexColor)"
-				class="ml-2"
-			/>
+			<BaseButton
+				class="close"
+				@click="$emit('close')"
+			>
+				<Icon icon="times" />
+			</BaseButton>
 		</div>
 		<h1
 			class="title input"
@@ -26,6 +32,12 @@
 		>
 			{{ task.title.trim() }}
 		</h1>
+		<BaseButton
+			class="close"
+			@click="$emit('close')"
+		>
+			<Icon icon="times" />
+		</BaseButton>
 		<CustomTransition name="fade">
 			<span
 				v-if="loading && saving"
@@ -71,7 +83,8 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-	'update:task': [task: ITask]
+	'update:task': [task: ITask],
+	'close': [],
 }>()
 
 const router = useRouter()
@@ -138,13 +151,10 @@ async function save(title: string) {
 .title.input {
 	// 1.8rem is the font-size, 1.125 is the line-height, .3rem padding everywhere, 1px border around the whole thing.
 	min-height: calc(1.8rem * 1.125 + .6rem + 2px);
+	margin-right: 0;
 
 	@media screen and (max-width: $tablet) {
 		margin: 0 -.3rem .5rem -.3rem; // the title has 0.3rem padding - this make the text inside of it align with the rest
-	}
-
-	@media screen and (min-width: $tablet) and (max-width: #{$desktop + $close-button-min-space}) {
-		width: calc(100% - 6.5rem);
 	}
 }
 
@@ -153,12 +163,39 @@ async function save(title: string) {
 	white-space: nowrap;
 }
 
-.heading__done {
-	margin-left: .5rem;
-}
-
 .color-bubble {
 	height: .75rem;
 	width: .75rem;
+}
+
+.close {
+	font-size: 2rem;
+	margin-left: 0.5rem;
+	line-height: 1;
+
+	@media screen and (max-width: $tablet) {
+		display: none;
+	}
+	
+	@media screen and (min-width: #{$desktop + 1px}) {
+		display: none;
+	}
+}
+
+.task-properties .close {
+	display: none;
+	position: absolute;
+	right: 1.25rem;
+	top: 1.1rem;
+
+	@media screen and (max-width: $tablet) {
+		display: block;
+	}
+}
+
+.task-properties {
+	@media screen and (max-width: $tablet) {
+		flex-direction: row;
+	}
 }
 </style>
