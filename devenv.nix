@@ -5,13 +5,14 @@ let
 in {
   packages = with pkgs-unstable; [
     # General tools
-	git-cliff 
-    # Frontend tools
-    cypress 
+    git-cliff 
     # API tools
     golangci-lint mage
     # Desktop
     electron
+  ] ++ lib.optionals (!pkgs.stdenv.isDarwin) [
+    # Frontend tools (exclude on Darwin)
+    cypress
   ];
   
   languages = {
