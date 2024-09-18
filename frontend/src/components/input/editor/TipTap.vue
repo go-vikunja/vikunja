@@ -314,7 +314,17 @@ const internalMode = ref<Mode>('preview')
 const isEditing = computed(() => internalMode.value === 'edit' && isEditEnabled)
 const contentHasChanged = ref<boolean>(false)
 
-let lastSavedState = modelValue
+let lastSavedState = ''
+
+watch(
+	() => modelValue,
+	(newValue) => {
+		if (!contentHasChanged.value) {
+			lastSavedState = newValue
+		}
+	},
+	{ immediate: true },
+)
 
 watch(
 	() => internalMode.value,
@@ -576,6 +586,8 @@ function setLink(event) {
 }
 
 onMounted(async () => {
+	console.log('Component has mounted')
+
 	if (editShortcut !== '') {
 		document.addEventListener('keydown', setFocusToEditor)
 	}
