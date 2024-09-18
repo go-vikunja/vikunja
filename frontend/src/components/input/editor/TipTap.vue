@@ -586,8 +586,6 @@ function setLink(event) {
 }
 
 onMounted(async () => {
-	console.log('Component has mounted')
-
 	if (editShortcut !== '') {
 		document.addEventListener('keydown', setFocusToEditor)
 	}
