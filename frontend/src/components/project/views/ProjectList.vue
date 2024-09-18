@@ -45,7 +45,6 @@
 
 					<draggable
 						v-if="tasks && tasks.length > 0"
-						v-bind="DRAG_OPTIONS"
 						v-model="tasks"
 						group="tasks"
 						handle=".handle"
@@ -59,6 +58,8 @@
 							},
 							type: 'transition-group'
 						}"
+						:animation="100"
+						ghost-class="task-ghost"
 						@start="() => drag = true"
 						@end="saveTaskPosition"
 					>
@@ -128,10 +129,6 @@ const props = defineProps<{
 const ctaVisible = ref(false)
 
 const drag = ref(false)
-const DRAG_OPTIONS = {
-	animation: 100,
-	ghostClass: 'task-ghost',
-} as const
 
 const {
 	tasks: allTasks,
