@@ -1,17 +1,17 @@
 <template>
 	<div>
 		<div
-			ref="taskContainerRef"
 			:class="{'is-loading': taskService.loading}"
 			class="task loader-container single-task"
 			tabindex="-1"
-			@mouseup.stop.self="openTaskDetail"
-			@mousedown.stop.self="focusTaskLink"
+			@click="openTaskDetail"
+			@keyup.enter="openTaskDetail"
 		>
 			<FancyCheckbox
 				v-model="task.done"
 				:disabled="(isArchived || disabled) && !canMarkAsDone"
 				@update:modelValue="markAsDone"
+				@click.stop
 			/>
 
 			<ColorBubble
@@ -23,8 +23,6 @@
 			<div
 				:class="{ 'done': task.done, 'show-project': showProject && project}"
 				class="tasktext"
-				@mouseup.stop.self="openTaskDetail"
-				@mousedown.stop.self="focusTaskLink"
 			>
 				<span>
 					<RouterLink
@@ -33,6 +31,7 @@
 						:to="{ name: 'project.index', params: { projectId: task.projectId } }"
 						class="task-project mr-1"
 						:class="{'mr-2': task.hexColor !== ''}"
+						@click.stop
 					>
 						{{ project.title }}
 					</RouterLink>
@@ -42,15 +41,15 @@
 						:color="getHexColor(task.hexColor)"
 						class="mr-1"
 					/>
-			
+	
 					<PriorityLabel
 						:priority="task.priority"
 						:done="task.done"
 						class="pr-2"
 					/>
-				
+
 					<RouterLink
-						ref="taskLink"
+						ref="taskLinkRef"
 						:to="taskDetailRoute"
 						class="task-link"
 						tabindex="-1"
@@ -141,6 +140,7 @@
 				v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
 				:to="{ name: 'project.index', params: { projectId: task.projectId } }"
 				class="task-project"
+				@click.stop
 			>
 				{{ project.title }}
 			</RouterLink>
@@ -148,7 +148,7 @@
 			<BaseButton
 				:class="{'is-favorite': task.isFavorite}"
 				class="favorite"
-				@click="toggleFavorite"
+				@click.stop="toggleFavorite"
 			>
 				<Icon
 					v-if="task.isFavorite"
@@ -343,24 +343,22 @@ async function toggleFavorite() {
 	emit('taskUpdated', task.value)
 }
 
-const taskLink = ref<HTMLElement | null>(null)
-const taskContainerRef = ref<HTMLElement | null>(null)
+const taskLinkRef = ref<HTMLElement | null>(null)
 
 function hasTextSelected() {
 	const isTextSelected = window.getSelection().toString()
 	return !(typeof isTextSelected === 'undefined' || isTextSelected === '' || isTextSelected === '\n')
 }
 
-function openTaskDetail() {
-	if (!hasTextSelected()) {
-		taskLink.value.$el.click()
+function openTaskDetail(event: MouseEvent | KeyboardEvent) {
+	if (event.target instanceof HTMLElement) {
+		const isInteractiveElement = event.target.closest('a, button, input, .favorite, [role="button"]')
+		if (isInteractiveElement || hasTextSelected()) {
+			return
+		}
 	}
-}
 
-function focusTaskLink() {
-	if (!hasTextSelected()) {
-		taskContainerRef.value.focus()
-	}
+	taskLinkRef.value?.$el.click()
 }
 </script>
 
