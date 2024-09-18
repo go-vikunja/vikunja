@@ -219,7 +219,6 @@ $modal-width: 1024px;
 
   .modal-container {
     height: auto;
-    overflow: visible;
 	min-height: 100vh;
   }
 
