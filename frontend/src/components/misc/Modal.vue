@@ -225,6 +225,7 @@ $modal-width: 1024px;
 
   .modal-content {
     position: static;
+	max-height: none;
   }
 
   .close {
@@ -238,6 +239,7 @@ $modal-width: 1024px;
 	display: flex;
 	flex-direction: column;
 	justify-content: space-between;
+	margin-bottom: 0 !important;
   }
 }
 </style>
