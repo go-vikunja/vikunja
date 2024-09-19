@@ -32,6 +32,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/ThreeDotsLabs/watermill/message"
+	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
@@ -725,6 +726,8 @@ func (l *UpdateTaskInSavedFilterViews) Handle(msg *message.Message) (err error) 
 	taskBuckets := []*TaskBucket{}
 	taskPositions := []*TaskPosition{}
 
+	viewIDToCleanUp := []int64{}
+
 	for _, view := range kanbanFilterViews {
 		filter, exists := filters[getSavedFilterIDFromProjectID(view.ProjectID)]
 		if !exists {
@@ -740,10 +743,27 @@ func (l *UpdateTaskInSavedFilterViews) Handle(msg *message.Message) (err error) 
 		if taskBucket != nil && taskPosition != nil {
 			taskBuckets = append(taskBuckets, taskBucket)
 			taskPositions = append(taskPositions, taskPosition)
+			viewIDToCleanUp = append(viewIDToCleanUp, view.ID)
 		}
 	}
 
 	if len(taskBuckets) > 0 || len(taskPositions) > 0 {
+		_, err = s.And(
+			builder.Eq{"task_id": event.Task.ID},
+			builder.In("project_view_id", viewIDToCleanUp),
+		).
+			Delete(&TaskBucket{})
+		if err != nil {
+			return
+		}
+		_, err = s.And(
+			builder.Eq{"task_id": event.Task.ID},
+			builder.In("project_view_id", viewIDToCleanUp),
+		).
+			Delete(&TaskPosition{})
+		if err != nil {
+			return
+		}
 		_, err = s.Insert(taskBuckets)
 		if err != nil {
 			return
