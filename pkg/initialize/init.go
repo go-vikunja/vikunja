@@ -90,13 +90,13 @@ func FullInit() {
 	cron.Init()
 	models.RegisterReminderCron()
 	models.RegisterOverdueReminderCron()
-	user.RegisterTokenCleanupCron()
-	user.RegisterDeletionNotificationCron()
 	models.RegisterUserDeletionCron()
 	models.RegisterOldExportCleanupCron()
+	models.RegisterAddTaskToFilterViewCron()
+	user.RegisterTokenCleanupCron()
+	user.RegisterDeletionNotificationCron()
 	openid.CleanupSavedOpenIDProviders()
 	openid.RegisterEmptyOpenIDTeamCleanupCron()
-	models.RegisterAddTaskToFilterViewCron()
 
 	// Start processing events
 	go func() {
