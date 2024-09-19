@@ -19,10 +19,12 @@ package models
 import (
 	"time"
 
+	"code.vikunja.io/api/pkg/cron"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
-
 	"code.vikunja.io/api/pkg/web"
+
 	"xorm.io/builder"
 	"xorm.io/xorm"
 )
@@ -346,4 +348,167 @@ func addTaskToFilter(s *xorm.Session, filter *SavedFilter, view *ProjectView, fa
 	}
 
 	return
+}
+
+func RegisterAddTaskToFilterViewCron() {
+	const logPrefix = "[Add Task To Filter View Cron] "
+
+	err := cron.Schedule("* * * * *", func() {
+		s := db.NewSession()
+		defer s.Close()
+
+		// Get all filters with a date clause and a manual kanban view
+		filters := map[int64]*SavedFilter{}
+		err := s.Where("filters LIKE '%_date%'").Find(&filters)
+		if err != nil {
+			log.Errorf("%sError fetching filters: %s", logPrefix, err)
+			return
+		}
+
+		if len(filters) == 0 {
+			return
+		}
+
+		filterProjectIDs := []int64{}
+		for _, f := range filters {
+			filterProjectIDs = append(filterProjectIDs, getProjectIDFromSavedFilterID(f.ID))
+		}
+
+		kanbanFilterViews := []*ProjectView{}
+		err = s.And(
+			builder.Eq{"view_kind": ProjectViewKindKanban},
+			builder.Eq{"bucket_configuration_mode": BucketConfigurationModeManual},
+			builder.In("project_id", filterProjectIDs),
+		).
+			Find(&kanbanFilterViews)
+		if err != nil {
+			log.Errorf("%sError fetching kanban filter views: %s", logPrefix, err)
+			return
+		}
+
+		if len(kanbanFilterViews) == 0 {
+			return
+		}
+
+		log.Debugf("%sFound %d kanban filter views with dates", logPrefix, len(kanbanFilterViews))
+
+		filterTasksCache := make(map[int64][]*Task)
+		newTaskBuckets := []*TaskBucket{}
+		newTaskPositions := []*TaskPosition{}
+		deleteCond := []builder.Cond{}
+		for _, view := range kanbanFilterViews {
+			filterID := getSavedFilterIDFromProjectID(view.ProjectID)
+			filter, exists := filters[filterID]
+			if !exists {
+				log.Debugf("%sDid not find filter for view %d", logPrefix, view.ID)
+				continue
+			}
+
+			// currently saved
+			tasks, has := filterTasksCache[filterID]
+			if !has {
+				tc := &TaskCollection{
+					ProjectID: view.ProjectID,
+				}
+				resultTasks, _, _, err := tc.ReadAll(s, &user.User{ID: filter.OwnerID}, "", 1, -1)
+				if err != nil {
+					log.Errorf("%sError fetching tasks for filter %d: %s", logPrefix, filterID, err)
+					return
+				}
+				tasks = resultTasks.([]*Task)
+			}
+
+			// Get saved tasks in task_buckets and task_positions
+			savedTaskBuckets := []*TaskBucket{}
+			err = s.Where("project_view_id = ?", view.ID).Find(&savedTaskBuckets)
+			if err != nil {
+				log.Errorf("%sError fetching saved task buckets: %s", logPrefix, err)
+				continue
+			}
+			savedTaskBucketMap := make(map[int64]*TaskBucket)
+			for _, tb := range savedTaskBuckets {
+				savedTaskBucketMap[tb.TaskID] = tb
+			}
+
+			savedTaskPositions := []*TaskPosition{}
+			err = s.Where("project_view_id = ?", view.ID).Find(&savedTaskPositions)
+			if err != nil {
+				log.Errorf("%sError fetching saved task positions: %s", logPrefix, err)
+				continue
+			}
+			savedTaskPositionMap := make(map[int64]*TaskPosition)
+			for _, tp := range savedTaskPositions {
+				savedTaskPositionMap[tp.TaskID] = tp
+			}
+
+			// Collect new tasks to task_buckets and task_positions
+			for _, task := range tasks {
+				if _, exists := savedTaskBucketMap[task.ID]; !exists {
+					view.DefaultBucketID, err = getDefaultBucketID(s, view)
+					if err != nil {
+						log.Errorf("%sError fetching default bucket for view %d: %s", logPrefix, view.ID, err)
+						continue
+					}
+					tb := &TaskBucket{
+						TaskID:        task.ID,
+						ProjectViewID: view.ID,
+						BucketID:      view.DefaultBucketID,
+					}
+					newTaskBuckets = append(newTaskBuckets, tb)
+				}
+				if _, exists := savedTaskPositionMap[task.ID]; !exists {
+					tp := &TaskPosition{
+						TaskID:        task.ID,
+						ProjectViewID: view.ID,
+						Position:      task.Position,
+					}
+					newTaskPositions = append(newTaskPositions, tp)
+				}
+			}
+
+			// Remove tasks that should not be there
+			for taskID := range savedTaskBucketMap {
+				found := false
+				for _, task := range tasks {
+					if task.ID == taskID {
+						found = true
+						break
+					}
+				}
+				if !found {
+					deleteCond = append(deleteCond, builder.And(
+						builder.Eq{"task_id": taskID},
+						builder.Eq{"project_view_id": view.ID},
+					))
+				}
+			}
+		}
+
+		if len(newTaskBuckets) > 0 {
+			_, err = s.Insert(newTaskBuckets)
+			if err != nil {
+				log.Errorf("%sError inserting task buckets: %s", logPrefix, err)
+			}
+		}
+		if len(newTaskPositions) > 0 {
+			_, err = s.Insert(newTaskPositions)
+			if err != nil {
+				log.Errorf("%sError inserting task positions: %s", logPrefix, err)
+			}
+		}
+
+		if len(deleteCond) > 0 {
+			_, err = s.Where(builder.Or(deleteCond...)).Delete(&TaskBucket{})
+			if err != nil {
+				log.Errorf("%sError deleting task buckets: %s", logPrefix, err)
+			}
+			_, err = s.Where(builder.Or(deleteCond...)).Delete(&TaskPosition{})
+			if err != nil {
+				log.Errorf("%sError deleting task positions: %s", logPrefix, err)
+			}
+		}
+	})
+	if err != nil {
+		log.Fatalf("Could register add task to filter view cron: %s", err)
+	}
 }

@@ -96,6 +96,7 @@ func FullInit() {
 	models.RegisterOldExportCleanupCron()
 	openid.CleanupSavedOpenIDProviders()
 	openid.RegisterEmptyOpenIDTeamCleanupCron()
+	models.RegisterAddTaskToFilterViewCron()
 
 	// Start processing events
 	go func() {

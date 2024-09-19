@@ -415,6 +415,6 @@ func RegisterOldExportCleanupCron() {
 
 	})
 	if err != nil {
-		log.Fatalf("Could not old export cleanup cron: %s", err)
+		log.Fatalf("Could not register old export cleanup cron: %s", err)
 	}
 }
