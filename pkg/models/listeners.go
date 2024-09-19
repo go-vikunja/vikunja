@@ -533,28 +533,10 @@ func (l *AddTaskToTypesense) Handle(msg *message.Message) (err error) {
 	s := db.NewSession()
 	defer s.Close()
 
-	positionsMap, err := getPositionsForTask(s, event)
-	if err != nil {
-		return err
-	}
+	task := make(map[int64]*Task, 1)
+	task[event.Task.ID] = event.Task // Will be filled with all data by the Typesense connector
 
-	bucketsMap, err := getBucketsForTask(s, event)
-	if err != nil {
-		return err
-	}
-
-	ttask, err := getTypesenseTaskForTask(s, event.Task, nil, positionsMap, bucketsMap)
-	if err != nil {
-		return err
-	}
-	if ttask == nil {
-		return
-	}
-
-	_, err = typesenseClient.Collection("tasks").
-		Documents().
-		Create(context.Background(), ttask)
-	return
+	return reindexTasksInTypesense(s, task)
 }
 
 func getPositionsForTask(s *xorm.Session, event *TaskCreatedEvent) (positionsMap map[int64][]*TaskPositionWithView, err error) {
