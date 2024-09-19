@@ -378,7 +378,7 @@ function openTaskDetail(event: MouseEvent | KeyboardEvent) {
 		background-color: var(--grey-100);
 	}
 
-	&:focus-within {
+	&:has(*:focus-visible) {
 		box-shadow: 0 0 0 2px hsla(var(--primary-hsl), 0.5);
 
 		a.task-link {
@@ -388,7 +388,7 @@ function openTaskDetail(event: MouseEvent | KeyboardEvent) {
 
 	@supports not selector(:focus-within) {
 		:focus {
-		box-shadow: 0 0 0 2px hsla(var(--primary-hsl), 0.5);
+			box-shadow: 0 0 0 2px hsla(var(--primary-hsl), 0.5);
 
 			a.task-link {
 				box-shadow: none;
@@ -412,6 +412,15 @@ function openTaskDetail(event: MouseEvent | KeyboardEvent) {
 		.dueDate {
 			display: inline-block;
 			margin-left: 5px;
+
+			&:focus-visible {
+				box-shadow: none;
+
+				time {
+					box-shadow: 0 0 0 1px hsla(var(--primary-hsl), 0.5);
+					border-radius: 3px;
+				}
+			}
 		}
 
 		.overdue {
@@ -457,6 +466,7 @@ function openTaskDetail(event: MouseEvent | KeyboardEvent) {
 		text-align: center;
 		width: 27px;
 		transition: opacity $transition, color $transition;
+		border-radius: $radius;
 
 		&:hover {
 			color: var(--warning);
