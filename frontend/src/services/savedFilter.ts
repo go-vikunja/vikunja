@@ -13,7 +13,6 @@ import SavedFilterModel from '@/models/savedFilter'
 import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
 
-import {objectToSnakeCase, objectToCamelCase} from '@/helpers/case'
 import {success} from '@/message'
 import ProjectModel from '@/models/project'
 
@@ -55,23 +54,6 @@ export default class SavedFilterService extends AbstractService<ISavedFilter> {
 	modelFactory(data) {
 		return new SavedFilterModel(data)
 	}
-
-	processModel(model) {
-		// Make filters from this.filters camelCase and set them to the model property:
-		// That's easier than making the whole filter component configurable since that still needs to provide
-		// the filter values in snake_sćase for url parameters.
-		model.filters = objectToCamelCase(model.filters)
-
-		return model
-	}
-
-	beforeUpdate(model) {
-		return this.processModel(model)
-	}
-
-	beforeCreate(model) {
-		return this.processModel(model)
-	}
 }
 
 export function useSavedFilter(projectId?: MaybeRefOrGetter<IProject['id']>) {
@@ -98,10 +80,7 @@ export function useSavedFilter(projectId?: MaybeRefOrGetter<IProject['id']>) {
 		// We assume the projectId in the route is the pseudoproject
 		const savedFilterId = getSavedFilterIdFromProjectId(watchedProjectId)
 
-		filter.value = new SavedFilterModel({id: savedFilterId})
-		const response = await filterService.get(filter.value)
-		response.filters = objectToSnakeCase(response.filters)
-		filter.value = response
+		filter.value = await filterService.get(new SavedFilterModel({id: savedFilterId}))
 		await validateTitleField()
 	}, {immediate: true})
 
@@ -115,7 +94,6 @@ export function useSavedFilter(projectId?: MaybeRefOrGetter<IProject['id']>) {
 		const response = await filterService.update(filter.value)
 		await projectStore.loadAllProjects()
 		success({message: t('filters.edit.success')})
-		response.filters = objectToSnakeCase(response.filters)
 		filter.value = response
 		await useBaseStore().setCurrentProject(new ProjectModel({
 			id: getProjectId(filter.value),
