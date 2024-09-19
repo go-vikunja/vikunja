@@ -396,6 +396,11 @@ func (t *Task) UpdateTaskLabels(s *xorm.Session, creator web.Auth, labels []*Lab
 		t.Labels = append(t.Labels, label)
 	}
 
+	err = triggerTaskUpdatedEventForTaskID(s, creator, t.ID)
+	if err != nil {
+		return
+	}
+
 	err = updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
 	return
 }
