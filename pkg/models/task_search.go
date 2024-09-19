@@ -25,9 +25,9 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/web"
-	"github.com/typesense/typesense-go/typesense/api"
-	"github.com/typesense/typesense-go/typesense/api/pointer"
 
+	"github.com/typesense/typesense-go/v2/typesense/api"
+	"github.com/typesense/typesense-go/v2/typesense/api/pointer"
 	"xorm.io/builder"
 	"xorm.io/xorm"
 	"xorm.io/xorm/schemas"
@@ -565,8 +565,8 @@ func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, 
 	}
 
 	params := &api.SearchCollectionParams{
-		Q:                opts.search,
-		QueryBy:          "title, identifier, description, comments.comment",
+		Q:                pointer.String(opts.search),
+		QueryBy:          pointer.String("title, identifier, description, comments.comment"),
 		Page:             pointer.Int(opts.page),
 		ExhaustiveSearch: pointer.True(),
 		FilterBy:         pointer.String(strings.Join(filterBy, " && ")),
