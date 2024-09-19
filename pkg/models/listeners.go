@@ -547,6 +547,9 @@ func (l *AddTaskToTypesense) Handle(msg *message.Message) (err error) {
 	if err != nil {
 		return err
 	}
+	if ttask == nil {
+		return
+	}
 
 	_, err = typesenseClient.Collection("tasks").
 		Documents().
