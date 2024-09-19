@@ -202,7 +202,12 @@ func (sf *SavedFilter) Update(s *xorm.Session, _ web.Auth) error {
 
 	// Add all tasks which are not already in a bucket to the default bucket
 	kanbanFilterViews := []*ProjectView{}
-	err = s.Where("project_id = ? and view_kind = ? and bucket_configuration_mode = ?", getProjectIDFromSavedFilterID(sf.ID), ProjectViewKindKanban, BucketConfigurationModeManual).
+	err = s.Where(
+		"project_id = ? and view_kind = ? and bucket_configuration_mode = ?",
+		getProjectIDFromSavedFilterID(sf.ID),
+		ProjectViewKindKanban,
+		BucketConfigurationModeManual,
+	).
 		Find(&kanbanFilterViews)
 	if err != nil || len(kanbanFilterViews) == 0 {
 		return err
