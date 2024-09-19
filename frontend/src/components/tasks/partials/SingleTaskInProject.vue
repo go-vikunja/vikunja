@@ -91,8 +91,9 @@
 							</time>
 						</BaseButton>
 					</template>
-					<template #content>
+					<template #content="{isOpen}">
 						<DeferTask
+							v-if="isOpen"
 							v-model="task"
 						/>
 					</template>
