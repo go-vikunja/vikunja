@@ -123,7 +123,7 @@
 						<FancyCheckbox
 							v-model="task.done"
 							class="task-done-checkbox"
-							@update:modelValue="toggleTaskDone(t)"
+							@update:modelValue="toggleTaskDone(task)"
 						/>
 						<RouterLink
 							:to="{ name: route.name as string, params: { id: task.id } }"
