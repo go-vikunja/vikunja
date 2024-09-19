@@ -181,10 +181,6 @@ func CreateTypesenseCollections() error {
 				Optional: pointer.True(),
 			},
 			{
-				Name: "positions",
-				Type: "object",
-			},
-			{
 				Name: "buckets",
 				Type: "int64[]",
 			},
@@ -195,6 +191,32 @@ func CreateTypesenseCollections() error {
 	_, _ = typesenseClient.Collection("tasks").Delete(context.Background())
 
 	_, err := typesenseClient.Collections().Create(context.Background(), taskSchema)
+	if err != nil {
+		return err
+	}
+
+	taskPositionSchema := &api.CollectionSchema{
+		Name: "task_positions",
+		Fields: []api.Field{
+			{
+				Name:      "task_id",
+				Type:      "string",
+				Reference: pointer.String("tasks.id"),
+			},
+			{
+				Name: "project_view_id",
+				Type: "int64",
+			},
+			{
+				Name: "position",
+				Type: "float",
+			},
+		},
+	}
+
+	_, _ = typesenseClient.Collection("task_positions").Delete(context.Background())
+
+	_, err = typesenseClient.Collections().Create(context.Background(), taskPositionSchema)
 	return err
 }
 
@@ -244,8 +266,8 @@ func ReindexAllTasks() (err error) {
 	return
 }
 
-func getTypesenseTaskForTask(s *xorm.Session, task *Task, projectsCache map[int64]*Project, taskPositionCache map[int64][]*TaskPositionWithView, taskBucketCache map[int64][]*TaskBucket) (ttask *typesenseTask, err error) {
-	ttask = convertTaskToTypesenseTask(task, taskPositionCache[task.ID], taskBucketCache[task.ID])
+func getTypesenseTaskForTask(s *xorm.Session, task *Task, projectsCache map[int64]*Project, taskBucketCache map[int64][]*TaskBucket) (ttask *typesenseTask, err error) {
+	ttask = convertTaskToTypesenseTask(task, taskBucketCache[task.ID])
 
 	var p *Project
 	if projectsCache == nil {
@@ -295,19 +317,15 @@ func reindexTasksInTypesense(s *xorm.Session, tasks map[int64]*Task) (err error)
 	projects := make(map[int64]*Project)
 	typesenseTasks := []interface{}{}
 
-	positionsByTask, err := getPositionsByTask(s)
-	if err != nil {
-		return err
-	}
-
 	bucketsByTask, err := getBucketsByTask(s)
 	if err != nil {
 		return err
 	}
 
+	taskIDs := []int64{}
 	for _, task := range tasks {
 
-		ttask, err := getTypesenseTaskForTask(s, task, projects, positionsByTask, bucketsByTask)
+		ttask, err := getTypesenseTaskForTask(s, task, projects, bucketsByTask)
 		if err != nil {
 			return err
 		}
@@ -316,6 +334,7 @@ func reindexTasksInTypesense(s *xorm.Session, tasks map[int64]*Task) (err error)
 		}
 
 		typesenseTasks = append(typesenseTasks, ttask)
+		taskIDs = append(taskIDs, task.ID)
 	}
 
 	_, err = typesenseClient.Collection("tasks").
@@ -325,39 +344,43 @@ func reindexTasksInTypesense(s *xorm.Session, tasks map[int64]*Task) (err error)
 			BatchSize: pointer.Int(100),
 		})
 	if err != nil {
-		log.Errorf("Could not upsert task into Typesense", err)
+		log.Errorf("Could not upsert task into Typesense: %s", err)
+		return err
+	}
+
+	positions := []*TaskPosition{}
+	err = s.In("task_id", taskIDs).Find(&positions)
+	if err != nil {
+		return
+	}
+
+	typesensePositions := []interface{}{}
+	for _, p := range positions {
+		typesensePositions = append(typesensePositions, &typesenseTaskPosition{
+			TaskID:        strconv.FormatInt(p.TaskID, 10),
+			ProjectViewID: p.ProjectViewID,
+			Position:      p.Position,
+		})
+	}
+	_, err = typesenseClient.Collection("task_positions").
+		Documents().
+		Import(context.Background(), typesensePositions, &api.ImportDocumentsParams{
+			Action:    pointer.String("upsert"),
+			BatchSize: pointer.Int(100),
+		})
+	if err != nil {
+		log.Errorf("Could not upsert task positions into Typesense: %s", err)
 		return err
 	}
 
 	log.Debugf("Indexed %d tasks into Typesense", len(tasks))
 
-	return nil
+	return
 }
 
 type TaskPositionWithView struct {
 	ProjectView  `xorm:"extends"`
 	TaskPosition `xorm:"extends"`
-}
-
-func getPositionsByTask(s *xorm.Session) (positionsByTask map[int64][]*TaskPositionWithView, err error) {
-	rawPositions := []*TaskPositionWithView{}
-	err = s.
-		Table("project_views").
-		Join("LEFT", "task_positions", "project_views.id = task_positions.project_view_id").
-		Find(&rawPositions)
-	if err != nil {
-		return
-	}
-
-	positionsByTask = make(map[int64][]*TaskPositionWithView, len(rawPositions))
-	for _, p := range rawPositions {
-		_, has := positionsByTask[p.TaskID]
-		if !has {
-			positionsByTask[p.TaskID] = []*TaskPositionWithView{}
-		}
-		positionsByTask[p.TaskID] = append(positionsByTask[p.TaskID], p)
-	}
-	return positionsByTask, nil
 }
 
 func getBucketsByTask(s *xorm.Session) (positionsByTask map[int64][]*TaskBucket, err error) {
@@ -439,12 +462,6 @@ func indexDummyTask() (err error) {
 				},
 			},
 		},
-		Positions: map[string]float64{
-			"view_1": 10,
-			"view_2": 30,
-			"view_3": 5450,
-			"view_4": 42,
-		},
 		Buckets: []int64{42},
 	}
 
@@ -487,13 +504,18 @@ type typesenseTask struct {
 	Assignees              interface{} `json:"assignees"`
 	Labels                 interface{} `json:"labels"`
 	//RelatedTasks           interface{} `json:"related_tasks"` // TODO
-	Attachments interface{}        `json:"attachments"`
-	Comments    interface{}        `json:"comments"`
-	Positions   map[string]float64 `json:"positions"`
-	Buckets     []int64            `json:"buckets"`
+	Attachments interface{} `json:"attachments"`
+	Comments    interface{} `json:"comments"`
+	Buckets     []int64     `json:"buckets"`
 }
 
-func convertTaskToTypesenseTask(task *Task, positions []*TaskPositionWithView, buckets []*TaskBucket) *typesenseTask {
+type typesenseTaskPosition struct {
+	TaskID        string  `json:"task_id"`
+	ProjectViewID int64   `json:"project_view_id"`
+	Position      float64 `json:"position"`
+}
+
+func convertTaskToTypesenseTask(task *Task, buckets []*TaskBucket) *typesenseTask {
 
 	tt := &typesenseTask{
 		ID:                     fmt.Sprintf("%d", task.ID),
@@ -522,7 +544,6 @@ func convertTaskToTypesenseTask(task *Task, positions []*TaskPositionWithView, b
 		Labels:                 task.Labels,
 		//RelatedTasks:           task.RelatedTasks,
 		Attachments: task.Attachments,
-		Positions:   make(map[string]float64, len(positions)),
 		Buckets:     make([]int64, 0, len(buckets)),
 	}
 
@@ -537,14 +558,6 @@ func convertTaskToTypesenseTask(task *Task, positions []*TaskPositionWithView, b
 	}
 	if task.EndDate.IsZero() {
 		tt.EndDate = nil
-	}
-
-	for _, position := range positions {
-		pos := position.TaskPosition.Position
-		if pos == 0 {
-			pos = float64(task.ID)
-		}
-		tt.Positions["view_"+strconv.FormatInt(position.ProjectView.ID, 10)] = pos
 	}
 
 	for _, bucket := range buckets {
