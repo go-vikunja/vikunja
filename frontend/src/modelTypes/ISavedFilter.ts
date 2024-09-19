@@ -1,11 +1,12 @@
 import type {IAbstract} from './IAbstract'
 import type {IUser} from './IUser'
 
+// FIXME: what makes this different from TaskFilterParams?
 interface Filters {
-	sortBy: ('start_date' | 'done' | 'id' | 'position')[],
-	orderBy: ('asc' | 'desc')[],
+	sort_by: ('start_date' | 'done' | 'id' | 'position')[],
+	order_by: ('asc' | 'desc')[],
 	filter: string,
-	filterIncludeNulls: boolean,
+	filter_include_nulls: boolean,
 	s: string,
 }
 
