@@ -539,36 +539,6 @@ func (l *AddTaskToTypesense) Handle(msg *message.Message) (err error) {
 	return reindexTasksInTypesense(s, task)
 }
 
-func getPositionsForTask(s *xorm.Session, event *TaskCreatedEvent) (positionsMap map[int64][]*TaskPositionWithView, err error) {
-	positions := []*TaskPositionWithView{}
-	err = s.
-		Table("project_views").
-		Where("project_views.project_id = ?", event.Task.ProjectID).
-		Join("LEFT", "task_positions", "project_views.id = task_positions.project_view_id AND task_positions.task_id = ?", event.Task.ID).
-		Find(&positions)
-	if err != nil {
-		return
-	}
-
-	positionsMap = make(map[int64][]*TaskPositionWithView, 1)
-	positionsMap[event.Task.ID] = positions
-	return
-}
-
-func getBucketsForTask(s *xorm.Session, event *TaskCreatedEvent) (bucketsMap map[int64][]*TaskBucket, err error) {
-	buckets := []*TaskBucket{}
-	err = s.
-		Where("task_id = ?", event.Task.ID).
-		Find(&buckets)
-	if err != nil {
-		return
-	}
-
-	bucketsMap = make(map[int64][]*TaskBucket, 1)
-	bucketsMap[event.Task.ID] = buckets
-	return
-}
-
 // UpdateTaskInTypesense  represents a listener
 type UpdateTaskInTypesense struct {
 }
@@ -757,6 +727,11 @@ func (l *UpdateTaskInSavedFilterViews) Handle(msg *message.Message) (err error) 
 		if err != nil {
 			return
 		}
+
+		task := make(map[int64]*Task, 1)
+		task[event.Task.ID] = event.Task // Will be filled with all data by the Typesense connector
+
+		return reindexTasksInTypesense(s, task)
 	}
 
 	return nil
