@@ -19,6 +19,8 @@ package models
 import (
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
+
 	"code.vikunja.io/api/pkg/cron"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
@@ -396,6 +398,7 @@ func RegisterAddTaskToFilterViewCron() {
 		newTaskBuckets := []*TaskBucket{}
 		newTaskPositions := []*TaskPosition{}
 		deleteCond := []builder.Cond{}
+		taskIDsToRemove := []int64{}
 		for _, view := range kanbanFilterViews {
 			filterID := getSavedFilterIDFromProjectID(view.ProjectID)
 			filter, exists := filters[filterID]
@@ -480,35 +483,64 @@ func RegisterAddTaskToFilterViewCron() {
 						builder.Eq{"task_id": taskID},
 						builder.Eq{"project_view_id": view.ID},
 					))
+					taskIDsToRemove = append(taskIDsToRemove, taskID)
 				}
 			}
 		}
 
-		if len(newTaskBuckets) > 0 {
-			_, err = s.Insert(newTaskBuckets)
-			if err != nil {
-				log.Errorf("%sError inserting task buckets: %s", logPrefix, err)
-			}
-		}
-		if len(newTaskPositions) > 0 {
-			_, err = s.Insert(newTaskPositions)
-			if err != nil {
-				log.Errorf("%sError inserting task positions: %s", logPrefix, err)
-			}
-		}
-
-		if len(deleteCond) > 0 {
-			_, err = s.Where(builder.Or(deleteCond...)).Delete(&TaskBucket{})
-			if err != nil {
-				log.Errorf("%sError deleting task buckets: %s", logPrefix, err)
-			}
-			_, err = s.Where(builder.Or(deleteCond...)).Delete(&TaskPosition{})
-			if err != nil {
-				log.Errorf("%sError deleting task positions: %s", logPrefix, err)
-			}
-		}
+		upsertRelatedTaskProperties(s, logPrefix, newTaskBuckets, newTaskPositions, deleteCond, taskIDsToRemove)
 	})
 	if err != nil {
 		log.Fatalf("Could register add task to filter view cron: %s", err)
+	}
+}
+
+func upsertRelatedTaskProperties(s *xorm.Session, logPrefix string, newTaskBuckets []*TaskBucket, newTaskPositions []*TaskPosition, deleteCond []builder.Cond, taskIDsToRemove []int64) {
+	var err error
+	if len(newTaskBuckets) > 0 {
+		_, err = s.Insert(newTaskBuckets)
+		if err != nil {
+			log.Errorf("%sError inserting task buckets: %s", logPrefix, err)
+		}
+	}
+	if len(newTaskPositions) > 0 {
+		_, err = s.Insert(newTaskPositions)
+		if err != nil {
+			log.Errorf("%sError inserting task positions: %s", logPrefix, err)
+		}
+	}
+
+	if len(deleteCond) > 0 {
+		_, err = s.Where(builder.Or(deleteCond...)).Delete(&TaskBucket{})
+		if err != nil {
+			log.Errorf("%sError deleting task buckets: %s", logPrefix, err)
+		}
+		_, err = s.Where(builder.Or(deleteCond...)).Delete(&TaskPosition{})
+		if err != nil {
+			log.Errorf("%sError deleting task positions: %s", logPrefix, err)
+		}
+	}
+
+	if config.TypesenseEnabled.GetBool() && (len(newTaskPositions) > 0 || len(taskIDsToRemove) > 0) {
+		taskIDs := []int64{}
+		for _, position := range newTaskPositions {
+			taskIDs = append(taskIDs, position.TaskID)
+		}
+		taskIDs = append(taskIDs, taskIDsToRemove...)
+		tasks, err := GetTasksSimpleByIDs(s, taskIDs)
+		if err != nil {
+			log.Errorf("%sError fetching tasks: %s", logPrefix, err)
+			return
+		}
+		taskMap := make(map[int64]*Task)
+		for _, t := range tasks {
+			taskMap[t.ID] = t
+		}
+
+		err = reindexTasksInTypesense(s, taskMap)
+		if err != nil {
+			log.Errorf("%sError reindexing tasks into Typesense: %s", logPrefix, err)
+			return
+		}
 	}
 }
