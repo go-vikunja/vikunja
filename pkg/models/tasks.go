@@ -36,7 +36,7 @@ import (
 	"github.com/google/uuid"
 	clone "github.com/huandu/go-clone/generic"
 	"github.com/jinzhu/copier"
-	"github.com/typesense/typesense-go/typesense"
+	"github.com/typesense/typesense-go/v2/typesense"
 	"xorm.io/builder"
 	"xorm.io/xorm"
 )
