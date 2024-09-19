@@ -251,6 +251,9 @@ func getTypesenseTaskForTask(s *xorm.Session, task *Task, projectsCache map[int6
 	if projectsCache == nil {
 		p, err = GetProjectSimpleByID(s, task.ProjectID)
 		if err != nil {
+			if IsErrProjectDoesNotExist(err) {
+				return nil, nil
+			}
 			return nil, fmt.Errorf("could not fetch project %d: %s", task.ProjectID, err.Error())
 		}
 	} else {
@@ -259,6 +262,9 @@ func getTypesenseTaskForTask(s *xorm.Session, task *Task, projectsCache map[int6
 		if !has {
 			p, err = GetProjectSimpleByID(s, task.ProjectID)
 			if err != nil {
+				if IsErrProjectDoesNotExist(err) {
+					return nil, nil
+				}
 				return nil, fmt.Errorf("could not fetch project %d: %s", task.ProjectID, err.Error())
 			}
 			projectsCache[task.ProjectID] = p
@@ -304,6 +310,9 @@ func reindexTasksInTypesense(s *xorm.Session, tasks map[int64]*Task) (err error)
 		ttask, err := getTypesenseTaskForTask(s, task, projects, positionsByTask, bucketsByTask)
 		if err != nil {
 			return err
+		}
+		if ttask == nil {
+			continue
 		}
 
 		typesenseTasks = append(typesenseTasks, ttask)
