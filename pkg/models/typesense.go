@@ -311,6 +311,7 @@ func reindexTasksInTypesense(s *xorm.Session, tasks map[int64]*Task) (err error)
 			return err
 		}
 		if ttask == nil {
+			log.Debugf("Converted typesense task %d is nil, not indexing", task.ID)
 			continue
 		}
 
@@ -324,11 +325,11 @@ func reindexTasksInTypesense(s *xorm.Session, tasks map[int64]*Task) (err error)
 			BatchSize: pointer.Int(100),
 		})
 	if err != nil {
-		log.Errorf("Could not upsert task into Typesense", err)
+		log.Errorf("Could not upsert task into Typesense: %s", err)
 		return err
 	}
 
-	log.Debugf("Indexed %d tasks into Typesense", len(tasks))
+	log.Debugf("Indexed %d tasks into Typesense", len(typesenseTasks))
 
 	return nil
 }
