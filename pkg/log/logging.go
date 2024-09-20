@@ -26,13 +26,13 @@ import (
 )
 
 // ErrFmt holds the format for all the console logging
-const ErrFmt = `${time_rfc3339_nano}: ${level} ` + "\t" + `▶ ${prefix} ${short_file}:${line}`
+const ErrFmt = `${time_rfc3339}: ${level} ` + "\t" + `▶ ${prefix} ${short_file}:${line}`
 
 // WebFmt holds the format for all logging related to web requests
-const WebFmt = `${time_rfc3339_nano}: WEB ` + "\t" + `▶ ${remote_ip} ${id} ${method} ${status} ${uri} ${latency_human} - ${user_agent}`
+const WebFmt = `${time_rfc3339}: WEB ` + "\t" + `▶ ${remote_ip} ${id} ${method} ${status} ${uri} ${latency_human} - ${user_agent}`
 
 // Fmt is the general log format
-const Fmt = `%{color}%{time:` + time.RFC3339Nano + `}: %{level}` + "\t" + `▶ %{shortpkg}/%{shortfunc} %{id:03x}%{color:reset} %{message}`
+const Fmt = `%{color}%{time:` + time.RFC3339 + `}: %{level}` + "\t" + `▶ %{id:03x}%{color:reset} %{message}`
 
 const logModule = `vikunja`
 
