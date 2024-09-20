@@ -292,7 +292,6 @@ func reindexTasksInTypesense(s *xorm.Session, tasks map[int64]*Task) (err error)
 	}
 
 	projects := make(map[int64]*Project)
-	typesenseTasks := []interface{}{}
 
 	positionsByTask, err := getPositionsByTask(s)
 	if err != nil {
@@ -304,6 +303,7 @@ func reindexTasksInTypesense(s *xorm.Session, tasks map[int64]*Task) (err error)
 		return err
 	}
 
+	indexedTasks := 0
 	for _, task := range tasks {
 
 		ttask, err := getTypesenseTaskForTask(s, task, projects, positionsByTask, bucketsByTask)
@@ -315,21 +315,17 @@ func reindexTasksInTypesense(s *xorm.Session, tasks map[int64]*Task) (err error)
 			continue
 		}
 
-		typesenseTasks = append(typesenseTasks, ttask)
+		_, err = typesenseClient.Collection("tasks").
+			Documents().
+			Upsert(context.Background(), ttask)
+		if err != nil {
+			log.Errorf("Could not upsert task into Typesense: %s", err)
+			return err
+		}
+		indexedTasks++
 	}
 
-	_, err = typesenseClient.Collection("tasks").
-		Documents().
-		Import(context.Background(), typesenseTasks, &api.ImportDocumentsParams{
-			Action:    pointer.String("emplace"),
-			BatchSize: pointer.Int(100),
-		})
-	if err != nil {
-		log.Errorf("Could not upsert task into Typesense: %s", err)
-		return err
-	}
-
-	log.Debugf("Indexed %d tasks into Typesense", len(typesenseTasks))
+	log.Debugf("Indexed %d tasks into Typesense", indexedTasks)
 
 	return nil
 }
