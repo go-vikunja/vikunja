@@ -185,6 +185,10 @@ func CreateTypesenseCollections() error {
 				Type: "object",
 			},
 			{
+				Name: "positions.view_.*",
+				Type: "float",
+			},
+			{
 				Name: "buckets",
 				Type: "int64[]",
 			},
