@@ -121,7 +121,7 @@
     "vue-flatpickr-component": "11.0.5",
     "vue-i18n": "10.0.1",
     "vue-router": "4.4.5",
-    "vuemoji-picker": "0.2.1",
+    "vuemoji-picker": "0.3.1",
     "workbox-precaching": "7.1.0",
     "zhyswan-vuedraggable": "4.1.3"
   },
