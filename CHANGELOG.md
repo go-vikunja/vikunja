@@ -7,6 +7,194 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 All releases can be found on https://code.vikunja.io/vikunja/releases.
 
+## [0.24.3] - 2024-09-20
+
+### Bug Fixes
+
+* *(a11y)* Hide unfocusable buttons
+* *(api)* Return 404 response when using a token and the route does not exist
+* *(auth)* Restrict max password length to 72 bytes
+* *(caldav)* Make sure colors are correctly saved and returned
+* *(caldav)* Reject invalid project id with error 400
+* *(editor)* Restore the current value, not the one from a previous task
+* *(files)* Use absolute path everywhere
+* *(filter)* Do not replace labels keyword when the value is 'label'
+* *(filter)* Make sure tasks are in a correct bucket and position when they are part of a date filter
+* *(filters)* Immediately propagate changes
+* *(filters)* Do not replace filter or project values when the id value resolves to undefined
+* *(filters)* Correctly transform and populate saved filter when creating and editing
+* *(home)* Explicitly use filter for tasks on home page when one is set
+* *(kanban)* Save updated position to store
+* *(kanban)* Make task creation loading spinner actually visible
+* *(kanban)* Make kanban full width on mobile
+* *(kanban)* Do not mark first bucked as done bucket in filter bucket mode
+* *(kanban)* Correctly paginate filtered kanban buckets
+* *(label)* Ignore existing ID during creation
+* *(labels)* Trigger task.updated event when removing a label from a task
+* *(labels)* Test error assertion
+* *(labels)* Remove input interactivity when label edit is disabled
+* *(labels)* Trigger task updated for bulk label task update
+* *(modal)* Make sure modal and its content scrolls properly on mobile
+* *(modal)* Do not prevent scrolling on mobile
+* *(modal)* Make scrolling on iOS Safari work
+* *(multiselect)* Make selectPlaceholder optional
+* *(notifications)* Only add project subscription as task subscription when the user is not already subscribed to the task
+* *(password)* Validate password before sending request to api
+* *(project)* Show description in title attribute without html
+* *(project)* Reset id before creating
+* *(projects)* Do not hide 6th project on project overview
+* *(projects)* Description not visible on mobile
+* *(reminders)* Notify subscribed users as well
+* *(service worker)* Use correct workbox version
+* *(subscription)* Always return task subscription when subscribed to task and project
+* *(subscriptions)* Ignore task subscription when the user is subscribed to the project
+* *(subscriptions)* Correctly inherit subscriptions
+* *(subscriptions)* Cleanup and simplify fetching subscribers for tasks and projects logic
+* *(subscriptions)* Do not panic when a task does not have a subscription
+* *(table)* Make sorting for two-word properties work
+* *(task)* Set done at date when moving a task to the done bucket
+* *(task)* Specify task index when creating multiple tasks at once
+* *(task)* Cyclomatic complexity
+* *(task)* Make print styles work when printing task detail view from kanban
+* *(task)* Multiple overlapping defer due date popups
+* *(task)* Align task title on mobile popup
+* *(task)* Dragging and dropping on mobile
+* *(task)* Add task to filter view after it was updated
+* *(task)* Cleanup old task positions and task buckets when adding an updated or created task to filter
+* *(task)* Mark related task as done from the task detail view
+* *(task)* Open focused task when pressing enter
+* *(test)* Cypress test selector
+* *(typesense)* Only fail silently when a project was not found during indexing
+* *(typesense)* Add new tasks to typesense properly
+* *(typesense)* Make sure task positions are recreated properly when updating them
+* *(typesense)* Use emplace instead of upsert to update documents
+* *(typesense)* Index tasks one by one
+* *(typesense)* Force position to always be float instead of auto-inferring
+* *(typesense)* Use typesense bulk insert, log all errors
+* *(user)* Do not create user with existing id
+* *(view)* Do not crash when saving a view
+* *(view)* Correctly resolve label for filtered views or buckets
+* *(view)* Correctly resolve bucket filter when paginating
+* *(view)* Correctly get paginated task results
+* *(views)* Add migration for filtered kanban buckets* Lint ([53d62d3](53d62d35f4488940a96d755de93ded64b8ac34a3))
+* Reset id before creating ([93f7dd6](93f7dd611ad288a149f5da5463867d224334815f))
+* Test selector ([063aa7a](063aa7afec717c3ed05be9d2ca73bde3d0bd8d35))
+
+### Dependencies
+
+* *(deps)* Update dependency @intlify/unplugin-vue-i18n to v5
+* *(deps)* Update dependency @kyvg/vue3-notification to v3.3.0
+* *(deps)* Update dependency @sentry/vue to v8.28.0
+* *(deps)* Update dependency @sentry/vue to v8.29.0
+* *(deps)* Update dependency @sentry/vue to v8.30.0
+* *(deps)* Update dependency axios to v1.7.7
+* *(deps)* Update dependency date-fns to v4
+* *(deps)* Update dependency dayjs to v1.11.13
+* *(deps)* Update dependency express to v4.20.0
+* *(deps)* Update dependency express to v4.21.0
+* *(deps)* Update dependency go to v1.23.1
+* *(deps)* Update dependency pinia to v2.2.2
+* *(deps)* Update dependency sortablejs to v1.15.3
+* *(deps)* Update dependency tailwindcss to v3.4.10
+* *(deps)* Update dependency tailwindcss to v3.4.11
+* *(deps)* Update dependency tailwindcss to v3.4.12
+* *(deps)* Update dependency vue to v3.5.3
+* *(deps)* Update dependency vue to v3.5.4
+* *(deps)* Update dependency vue to v3.5.5
+* *(deps)* Update dependency vue to v3.5.6
+* *(deps)* Update dependency vue-i18n to v10
+* *(deps)* Update dependency vue-i18n to v10.0.1
+* *(deps)* Update dependency vue-i18n to v9.14.0
+* *(deps)* Update dependency vue-router to v4.4.3
+* *(deps)* Update dependency vue-router to v4.4.4
+* *(deps)* Update dependency vue-router to v4.4.5
+* *(deps)* Update dependency vuemoji-picker to v0.3.1* Chore(deps): update goreleaser/nfpm docker tag to v2.40.0 (#2647)
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dev-dependencies
+* *(deps)* Update github.com/wneessen/go-mail to v0.4.4
+* *(deps)* Update golangci
+* *(deps)* Update module dario.cat/mergo to v1.0.1
+* *(deps)* Update module github.com/gabriel-vasile/mimetype to v1.4.5
+* *(deps)* Update module github.com/getsentry/sentry-go to v0.29.0
+* *(deps)* Update module github.com/mattn/go-sqlite3 to v1.14.23
+* *(deps)* Update module github.com/prometheus/client_golang to v1.20.3
+* *(deps)* Update module github.com/prometheus/client_golang to v1.20.4
+* *(deps)* Update module github.com/redis/go-redis/v9 to v9.6.1
+* *(deps)* Update module github.com/threedotslabs/watermill to v1.3.7
+* *(deps)* Update module github.com/typesense/typesense-go to v2
+* *(deps)* Update module github.com/typesense/typesense-go to v2
+* *(deps)* Update module golang.org/x/crypto to v0.27.0
+* *(deps)* Update module golang.org/x/image to v0.20.0
+* *(deps)* Update module golang.org/x/oauth2 to v0.23.0
+* *(deps)* Update module golang.org/x/term to v0.24.0
+* *(deps)* Update module golang.org/x/text to v0.18.0
+* *(deps)* Update pnpm to v9.10.0
+* *(deps)* Update tiptap to 2.6.6
+* *(deps)* Update tiptap to v2.7.0
+* *(deps)* Update tiptap to v2.7.1
+* *(deps)* Update tiptap to v2.7.2
+* *(deps)* Update vueuse to v11
+* *(deps)* Update vueuse to v11.1.0
+* *(deps)*: update dependency flexsearch to v0.7.43 (#2095)
+* *(deps)*: update golangci/golangci-lint docker tag to v1.61.0 (#2678)
+
+### Documentation
+
+* *(api)* Use correct return type for the /user endpoint
+
+### Features
+
+* *(event)* Simplify dispatching task updated event from only a task id
+* *(navigation)* Use focus-visible for nav items
+* *(task)* Use focus-visible for task focus styles
+
+### Miscellaneous Tasks
+
+* *(attachments)* Refactor building image preview
+* *(devenv)* Do not install cypress on darwin
+* *(docker)* Use new env format
+* *(docs)* Clarify usage of related model creation
+* *(errors)* Always add internal error to echo error
+* *(files)* Use absolute file path to retrieve and save files
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(logging)* Simplify log template string
+* *(magefile)* Use tx.Sync instead of Sync2
+* *(subscription)* Return subscription entity type using json Marshaler
+* *(tasks)* Move drag options to direct attributes instead of v-bind
+* *(typesense)* Add more debug logging
+* *(web)* Move web handler package to Vikunja
+* *(web)* Remove unused echo context
+* *(web)* Use errors.As instead of type assertion
+* *(web)* Remove redundant use of fmt.Sprintf
+* *(web)* Directly use new db session
+* *(web)* Use config directly
+* *(web)* Use web auth factory directly
+* *(web)* Use logger directly
+* *(web)* Always set internal error* Remove console.log ([40105ee](40105ee4ced980f52565baec4c3219b0ddd4f6ec))
+* Fix comment ([1df4a4e](1df4a4ea2e2ca4332347468e8973a2dcbab06ed7))
+* Add go and direnv to recommended vscode extensions ([6ab12b9](6ab12b9dd133b52ed7267b6e9334081c2f9719ca))
+* Remove console.log ([1e7d9c9](1e7d9c982d3d472e9b4082991b41e6567556f2b2))
+* Rearrange cron registers ([4857bfb](4857bfbbdb8401b6ef02b1dc8de93f2a09e8bc3a))
+
+### Other
+
+* *(other)* [skip ci] Updated swagger docs
+
 ## [0.24.2] - 2024-08-12
 
 ### Bug Fixes
