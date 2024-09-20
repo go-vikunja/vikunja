@@ -199,8 +199,6 @@ func CreateTypesenseCollections() error {
 }
 
 func ReindexAllTasks() (err error) {
-	tasks := make(map[int64]*Task)
-
 	s := db.NewSession()
 	defer s.Close()
 
@@ -218,6 +216,7 @@ func ReindexAllTasks() (err error) {
 		return fmt.Errorf("could not update last sync: %s", err.Error())
 	}
 
+	tasks := make(map[int64]*Task)
 	err = s.Find(tasks)
 	if err != nil {
 		return fmt.Errorf("could not get all tasks: %s", err.Error())
@@ -321,7 +320,7 @@ func reindexTasksInTypesense(s *xorm.Session, tasks map[int64]*Task) (err error)
 	_, err = typesenseClient.Collection("tasks").
 		Documents().
 		Import(context.Background(), typesenseTasks, &api.ImportDocumentsParams{
-			Action:    pointer.String("upsert"),
+			Action:    pointer.String("emplace"),
 			BatchSize: pointer.Int(100),
 		})
 	if err != nil {
