@@ -645,7 +645,7 @@
         },
         {
           "key": "openid",
-          "comment": "OpenID configuration will allow users to authenticate through a third-party OpenID Connect compatible provider.\u003cbr/\u003e\nThe provider needs to support the `openid`, `profile` and `email` scopes.\u003cbr/\u003e\n**Note:** Some openid providers (like Gitlab) only make the email of the user available through OpenID if they have set it to be publicly visible.\nIf the email is not public in those cases, authenticating will fail.\n+**Note 2:** The frontend expects the third party to redirect the user \u003cfrontend-url\u003e/auth/openid/\u003cauth key\u003e after authentication. Please make sure to configure the redirect url in your third party auth service accordingly if you're using the default Vikunja frontend.\nThe frontend will automatically provide the API with the redirect url, composed from the current url where it's hosted.\nIf you want to use the desktop client with OpenID, make sure to allow redirects to `127.0.0.1`.",
+          "comment": "OpenID configuration will allow users to authenticate through a third-party OpenID Connect compatible provider.\u003cbr/\u003e\nThe provider needs to support the `openid`, `profile` and `email` scopes.\u003cbr/\u003e\n**Note:** Some openid providers (like Gitlab) only make the email of the user available through OpenID if they have set it to be publicly visible.\nIf the email is not public in those cases, authenticating will fail.\u003cbr/\u003e\n**Note 2:** The frontend expects the third party to redirect the user \u003cfrontend-url\u003e/auth/openid/\u003cauth key\u003e after authentication. Please make sure to configure the redirect url in your third party auth service accordingly if you're using the default Vikunja frontend.\nThe frontend will automatically provide the API with the redirect url, composed from the current url where it's hosted.\nIf you want to use the desktop client with OpenID, make sure to allow redirects to `127.0.0.1`.",
           "children": [
             {
               "key": "enabled",
@@ -657,11 +657,11 @@
               "comment": "A list of enabled providers",
               "children": [
                 {
-                  "comment": "The name of the provider as it will appear in the frontend.",
                   "children": [
                     {
                       "key": "name",
-                      "default_value": ""
+                      "default_value": "",
+                        "comment": "The name of the provider as it will appear in the frontend."
                     },
                     {
                       "key": "authurl",
