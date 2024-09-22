@@ -1,0 +1,807 @@
+{
+  "children": [
+    {
+      "key": "service",
+      "children": [
+        {
+          "key": "JWTSecret",
+          "default_value": "\u003cjwt-secret\u003e",
+          "comment": "This token is used to verify issued JWT tokens.\nDefault is a random token which will be generated at each startup of Vikunja.\n(This means all already issued tokens will be invalid once you restart Vikunja)"
+        },
+        {
+          "key": "jwtttl",
+          "default_value": "259200",
+          "comment": "The duration of the issued JWT tokens in seconds.\nThe default is 259200 seconds (3 Days)."
+        },
+        {
+          "key": "jwtttllong",
+          "default_value": "2592000",
+          "comment": "The duration of the \"remember me\" time in seconds. When the login request is made with\nthe long param set, the token returned will be valid for this period.\nThe default is 2592000 seconds (30 Days)."
+        },
+        {
+          "key": "interface",
+          "default_value": ":3456",
+          "comment": "The interface on which to run the webserver"
+        },
+        {
+          "key": "unixsocket",
+          "default_value": "",
+          "comment": "Path to Unix socket. If set, it will be created and used instead of tcp"
+        },
+        {
+          "key": "unixsocketmode",
+          "default_value": "",
+          "comment": "Permission bits for the Unix socket. Note that octal values must be prefixed by \"0o\", e.g. 0o660"
+        },
+        {
+          "key": "publicurl",
+          "default_value": "",
+          "comment": "The public facing URL where your users can reach Vikunja. Used in emails and for the communication between api and frontend."
+        },
+        {
+          "key": "rootpath",
+          "default_value": "\u003crootpath\u003e",
+          "comment": "The base path on the file system where the binary and assets are.\nVikunja will also look in this path for a config file, so you could provide only this variable to point to a folder\nwith a config file which will then be used."
+        },
+        {
+          "key": "maxitemsperpage",
+          "default_value": "50",
+          "comment": "The max number of items which can be returned per page"
+        },
+        {
+          "key": "enablecaldav",
+          "default_value": "true",
+          "comment": "Enable the caldav endpoint, see the docs for more details"
+        },
+        {
+          "key": "motd",
+          "default_value": "",
+          "comment": "Set the motd message, available from the /info endpoint"
+        },
+        {
+          "key": "enablelinksharing",
+          "default_value": "true",
+          "comment": "Enable sharing of project via a link"
+        },
+        {
+          "key": "enableregistration",
+          "default_value": "true",
+          "comment": "Whether to let new users registering themselves or not"
+        },
+        {
+          "key": "enabletaskattachments",
+          "default_value": "true",
+          "comment": "Whether to enable task attachments or not"
+        },
+        {
+          "key": "timezone",
+          "default_value": "GMT",
+          "comment": "The time zone all timestamps are in. Please note that time zones have to use [the official tz database names](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones). UTC or GMT offsets won't work."
+        },
+        {
+          "key": "enabletaskcomments",
+          "default_value": "true",
+          "comment": "Whether task comments should be enabled or not"
+        },
+        {
+          "key": "enabletotp",
+          "default_value": "true",
+          "comment": "Whether totp is enabled. In most cases you want to leave that enabled."
+        },
+        {
+          "key": "testingtoken",
+          "default_value": "",
+          "comment": "If not empty, this will enable `/test/{table}` endpoints which allow to put any content in the database.\nUsed to reset the db before frontend tests. Because this is quite a dangerous feature allowing for lots of harm,\neach request made to this endpoint needs to provide an `Authorization: \u003ctoken\u003e` header with the token from below. \u003cbr/\u003e\n**You should never use this unless you know exactly what you're doing**"
+        },
+        {
+          "key": "enableemailreminders",
+          "default_value": "true",
+          "comment": "If enabled, Vikunja will send an email to everyone who is either assigned to a task or created it when a task reminder\nis due."
+        },
+        {
+          "key": "enableuserdeletion",
+          "default_value": "true",
+          "comment": "If true, will allow users to request the complete deletion of their account. When using external authentication methods\nit may be required to coordinate with them in order to delete the account. This setting will not affect the cli commands\nfor user deletion."
+        },
+        {
+          "key": "maxavatarsize",
+          "default_value": "1024",
+          "comment": "The maximum size clients will be able to request for user avatars.\nIf clients request a size bigger than this, it will be changed on the fly."
+        },
+        {
+          "key": "demomode",
+          "default_value": "false",
+          "comment": "If set to true, the frontend will show a big red warning not to use this instance for real data as it will be cleared out.\nYou probably don't need to set this value, it was created specifically for usage on [try](https://try.vikunja.io)."
+        },
+        {
+          "key": "allowiconchanges",
+          "default_value": "true",
+          "comment": "Allow changing the logo and other icons based on various occasions throughout the year."
+        },
+        {
+          "key": "customlogourl",
+          "default_value": "",
+          "comment": "Allow using a custom logo via external URL."
+        },
+        {
+          "key": "enablepublicteams",
+          "default_value": "false",
+          "comment": "Enables the public team feature. If enabled, it is possible to configure teams to be public, which makes them\ndiscoverable when sharing a project, therefore not only showing teams the user is member of."
+        }
+      ]
+    },
+    {
+      "key": "sentry",
+      "children": [
+        {
+          "key": "enabled",
+          "default_value": "false",
+          "comment": "If set to true, enables anonymous error tracking of api errors via Sentry. This allows us to gather more\ninformation about errors in order to debug and fix it."
+        },
+        {
+          "key": "dsn",
+          "default_value": "https://440eedc957d545a795c17bbaf477497c@o1047380.ingest.sentry.io/4504254983634944",
+          "comment": "Configure the Sentry dsn used for api error tracking. Only used when Sentry is enabled for the api."
+        },
+        {
+          "key": "frontendenabled",
+          "default_value": "false",
+          "comment": "If set to true, enables anonymous error tracking of frontend errors via Sentry. This allows us to gather more\ninformation about errors in order to debug and fix it."
+        },
+        {
+          "key": "frontenddsn",
+          "default_value": "https://85694a2d757547cbbc90cd4b55c5a18d@o1047380.ingest.sentry.io/6024480",
+          "comment": "Configure the Sentry dsn used for frontend error tracking. Only used when Sentry is enabled for the frontend."
+        }
+      ]
+    },
+    {
+      "key": "database",
+      "children": [
+        {
+          "key": "type",
+          "default_value": "sqlite",
+          "comment": "Database type to use. Supported values are mysql, postgres and sqlite. Vikunja is able to run with MySQL 8.0+, Mariadb 10.2+, PostgreSQL 12+, and sqlite."
+        },
+        {
+          "key": "user",
+          "default_value": "vikunja",
+          "comment": "Database user which is used to connect to the database."
+        },
+        {
+          "key": "password",
+          "default_value": "",
+          "comment": "Database password"
+        },
+        {
+          "key": "host",
+          "default_value": "localhost",
+          "comment": "Database host"
+        },
+        {
+          "key": "database",
+          "default_value": "vikunja",
+          "comment": "Database to use"
+        },
+        {
+          "key": "path",
+          "default_value": "./vikunja.db",
+          "comment": "When using sqlite, this is the path where to store the data"
+        },
+        {
+          "key": "maxopenconnections",
+          "default_value": "100",
+          "comment": "Sets the max open connections to the database. Only used when using mysql and postgres."
+        },
+        {
+          "key": "maxidleconnections",
+          "default_value": "50",
+          "comment": "Sets the maximum number of idle connections to the db."
+        },
+        {
+          "key": "maxconnectionlifetime",
+          "default_value": "10000",
+          "comment": "The maximum lifetime of a single db connection in milliseconds."
+        },
+        {
+          "key": "sslmode",
+          "default_value": "disable",
+          "comment": "Secure connection mode. Only used with postgres.\n(see https://pkg.go.dev/github.com/lib/pq?tab=doc#hdr-Connection_String_Parameters)"
+        },
+        {
+          "key": "sslcert",
+          "default_value": "",
+          "comment": "The path to the client cert. Only used with postgres."
+        },
+        {
+          "key": "sslkey",
+          "default_value": "",
+          "comment": "The path to the client key. Only used with postgres."
+        },
+        {
+          "key": "sslrootcert",
+          "default_value": "",
+          "comment": "The path to the ca cert. Only used with postgres."
+        },
+        {
+          "key": "tls",
+          "default_value": "false",
+          "comment": "Enable SSL/TLS for mysql connections. Options: false, true, skip-verify, preferred"
+        }
+      ]
+    },
+    {
+      "key": "typesense",
+      "children": [
+        {
+          "key": "enabled",
+          "default_value": "false",
+          "comment": "Whether to enable the Typesense integration. If true, all tasks will be synced to the configured Typesense\ninstance and all search and filtering will run through Typesense instead of only through the database.\nTypesense allows fast fulltext search including fuzzy matching support. It may return different results than\nwhat you'd get with a database-only search."
+        },
+        {
+          "key": "url",
+          "default_value": "",
+          "comment": "The url to the Typesense instance you want to use. Can be hosted locally or in Typesense Cloud as long\nas Vikunja is able to reach it."
+        },
+        {
+          "key": "apikey",
+          "default_value": "",
+          "comment": "The Typesense API key you want to use."
+        }
+      ]
+    },
+    {
+      "key": "redis",
+      "children": [
+        {
+          "key": "enabled",
+          "default_value": "false",
+          "comment": "Whether to enable redis or not"
+        },
+        {
+          "key": "host",
+          "default_value": "localhost:6379",
+          "comment": "The host of the redis server including its port."
+        },
+        {
+          "key": "password",
+          "default_value": "",
+          "comment": "The password used to authenticate against the redis server"
+        },
+        {
+          "key": "db",
+          "default_value": "0",
+          "comment": "0 means default database"
+        }
+      ]
+    },
+    {
+      "key": "cors",
+      "children": [
+        {
+          "key": "enable",
+          "default_value": "false",
+          "comment": "Whether to enable or disable cors headers.\nNote: If you want to put the frontend and the api on separate domains or ports, you will need to enable this.\nOtherwise the frontend won't be able to make requests to the api through the browser."
+        },
+        {
+          "key": "origins",
+          "comment": "A list of origins which may access the api. These need to include the protocol (`http://` or `https://`) and port, if any.",
+          "children": [
+            {
+              "default_value": "*"
+            }
+          ]
+        },
+        {
+          "key": "maxage",
+          "default_value": "0",
+          "comment": "How long (in seconds) the results of a preflight request can be cached."
+        }
+      ]
+    },
+    {
+      "key": "mailer",
+      "children": [
+        {
+          "key": "enabled",
+          "default_value": "false",
+          "comment": "Whether to enable the mailer or not. If it is disabled, all users are enabled right away and password reset is not possible."
+        },
+        {
+          "key": "host",
+          "default_value": "",
+          "comment": "SMTP Host"
+        },
+        {
+          "key": "port",
+          "default_value": "587",
+          "comment": "SMTP Host port.\n**NOTE:** If you're unable to send mail and the only error you see in the logs is an `EOF`, try setting the port to `25`."
+        },
+        {
+          "key": "authtype",
+          "default_value": "plain",
+          "comment": "SMTP Auth Type. Can be either `plain`, `login` or `cram-md5`."
+        },
+        {
+          "key": "username",
+          "default_value": "user",
+          "comment": "SMTP username"
+        },
+        {
+          "key": "password",
+          "default_value": "",
+          "comment": "SMTP password"
+        },
+        {
+          "key": "skiptlsverify",
+          "default_value": "false",
+          "comment": "Whether to skip verification of the tls certificate on the server"
+        },
+        {
+          "key": "fromemail",
+          "default_value": "mail@vikunja",
+          "comment": "The default from address when sending emails"
+        },
+        {
+          "key": "queuelength",
+          "default_value": "100",
+          "comment": "The length of the mail queue."
+        },
+        {
+          "key": "queuetimeout",
+          "default_value": "30",
+          "comment": "The timeout in seconds after which the current open connection to the mailserver will be closed."
+        },
+        {
+          "key": "forcessl",
+          "default_value": "false",
+          "comment": "By default, Vikunja will try to connect with starttls, use this option to force it to use ssl."
+        }
+      ]
+    },
+    {
+      "key": "log",
+      "children": [
+        {
+          "key": "path",
+          "default_value": "\u003crootpath\u003elogs",
+          "comment": "A folder where all the logfiles should go."
+        },
+        {
+          "key": "enabled",
+          "default_value": "true",
+          "comment": "Whether to show any logging at all or none"
+        },
+        {
+          "key": "standard",
+          "default_value": "stdout",
+          "comment": "Where the normal log should go. Possible values are stdout, stderr, file or off to disable standard logging."
+        },
+        {
+          "key": "level",
+          "default_value": "INFO",
+          "comment": "Change the log level. Possible values (case-insensitive) are CRITICAL, ERROR, WARNING, NOTICE, INFO, DEBUG."
+        },
+        {
+          "key": "database",
+          "default_value": "off",
+          "comment": "Whether or not to log database queries. Useful for debugging. Possible values are stdout, stderr, file or off to disable database logging."
+        },
+        {
+          "key": "databaselevel",
+          "default_value": "WARNING",
+          "comment": "The log level for database log messages. Possible values (case-insensitive) are CRITICAL, ERROR, WARNING, NOTICE, INFO, DEBUG."
+        },
+        {
+          "key": "http",
+          "default_value": "stdout",
+          "comment": "Whether to log http requests or not. Possible values are stdout, stderr, file or off to disable http logging."
+        },
+        {
+          "key": "echo",
+          "default_value": "off",
+          "comment": "Echo has its own logging which usually is unnecessary, which is why it is disabled by default. Possible values are stdout, stderr, file or off to disable standard logging."
+        },
+        {
+          "key": "events",
+          "default_value": "off",
+          "comment": "Whether or not to log events. Useful for debugging. Possible values are stdout, stderr, file or off to disable events logging."
+        },
+        {
+          "key": "eventslevel",
+          "default_value": "info",
+          "comment": "The log level for event log messages. Possible values (case-insensitive) are ERROR, INFO, DEBUG."
+        },
+        {
+          "key": "mail",
+          "default_value": "off",
+          "comment": "Whether or not to log mail log messages. This will not log mail contents. Possible values are stdout, stderr, file or off to disable mail-related logging."
+        },
+        {
+          "key": "maillevel",
+          "default_value": "info",
+          "comment": "The log level for mail log messages. Possible values (case-insensitive) are ERROR, WARNING, INFO, DEBUG."
+        }
+      ]
+    },
+    {
+      "key": "ratelimit",
+      "children": [
+        {
+          "key": "enabled",
+          "default_value": "false",
+          "comment": "whether or not to enable the rate limit"
+        },
+        {
+          "key": "kind",
+          "default_value": "user",
+          "comment": "The kind on which rates are based. Can be either \"user\" for a rate limit per user or \"ip\" for an ip-based rate limit."
+        },
+        {
+          "key": "period",
+          "default_value": "60",
+          "comment": "The time period in seconds for the limit"
+        },
+        {
+          "key": "limit",
+          "default_value": "100",
+          "comment": "The max number of requests a user is allowed to do in the configured time period"
+        },
+        {
+          "key": "store",
+          "default_value": "keyvalue",
+          "comment": "The store where the limit counter for each user is stored.\nPossible values are \"keyvalue\", \"memory\" or \"redis\".\nWhen choosing \"keyvalue\" this setting follows the one configured in the \"keyvalue\" section."
+        },
+        {
+          "key": "noauthlimit",
+          "default_value": "10",
+          "comment": "The number of requests a user can make from the same IP to all unauthenticated routes (login, register,\npassword confirmation, email verification, password reset request) per minute. This limit cannot be disabled.\nYou should only change this if you know what you're doing."
+        }
+      ]
+    },
+    {
+      "key": "files",
+      "children": [
+        {
+          "key": "basepath",
+          "default_value": "./files",
+          "comment": "The path where files are stored"
+        },
+        {
+          "key": "maxsize",
+          "default_value": "20MB",
+          "comment": "The maximum size of a file, as a human-readable string.\nWarning: The max size is limited 2^64-1 bytes due to the underlying datatype"
+        }
+      ]
+    },
+    {
+      "key": "migration",
+      "children": [
+        {
+          "key": "todoist",
+          "children": [
+            {
+              "key": "enable",
+              "default_value": "false",
+              "comment": "Wheter to enable the todoist migrator or not"
+            },
+            {
+              "key": "clientid",
+              "default_value": "",
+              "comment": "The client id, required for making requests to the todoist api\nYou need to register your Vikunja instance at https://developer.todoist.com/appconsole.html to get this"
+            },
+            {
+              "key": "clientsecret",
+              "default_value": "",
+              "comment": "The client secret, also required for making requests to the todoist api"
+            },
+            {
+              "key": "redirecturl",
+              "default_value": "\u003cservice.publicurl\u003e/migrate/todoist",
+              "comment": "The url where clients are redirected after they authorized Vikunja to access their Todoist items.\nIn Todoist, this is called `OAuth redirect URL` and it needs to match the url you entered when registering\nyour Vikunja instance at the Todoist developer console.\nWhen using the official Vikunja frontend, set this to \u003cservice.publicurl\u003e/migrate/todoist.\nOtherwise, set this to an url which then makes a request to /api/v1/migration/todoist/migrate\nwith the code obtained from the todoist api."
+            }
+          ]
+        },
+        {
+          "key": "trello",
+          "children": [
+            {
+              "key": "enable",
+              "default_value": "false",
+              "comment": "Whether to enable the trello migrator or not"
+            },
+            {
+              "key": "key",
+              "default_value": "",
+              "comment": "The client id, required for making requests to the trello api\nYou need to register your Vikunja instance at https://trello.com/app-key (log in before you visit that link) to get this"
+            },
+            {
+              "key": "redirecturl",
+              "default_value": "\u003cfrontend url\u003e/migrate/trello",
+              "comment": "The url where clients are redirected after they authorized Vikunja to access their trello cards.\nThis needs to match the url you entered when registering your Vikunja instance at trello.\nThis is usually the frontend url where the frontend then makes a request to /migration/trello/migrate\nwith the code obtained from the trello api.\nNote that the Vikunja frontend expects this to end on /migrate/trello."
+            }
+          ]
+        },
+        {
+          "key": "microsofttodo",
+          "children": [
+            {
+              "key": "enable",
+              "default_value": "false",
+              "comment": "Wheter to enable the microsoft todo migrator or not"
+            },
+            {
+              "key": "clientid",
+              "default_value": "",
+              "comment": "The client id, required for making requests to the microsoft graph api\nSee https://docs.microsoft.com/en-us/azure/active-directory/develop/quickstart-register-app#register-an-application\nfor information about how to register your Vikunja instance."
+            },
+            {
+              "key": "clientsecret",
+              "default_value": "",
+              "comment": "The client secret, also required for making requests to the microsoft graph api"
+            },
+            {
+              "key": "redirecturl",
+              "default_value": "\u003cfrontend url\u003e/migrate/microsoft-todo",
+              "comment": "The url where clients are redirected after they authorized Vikunja to access their microsoft todo tasks.\nThis needs to match the url you entered when registering your Vikunja instance at microsoft.\nThis is usually the frontend url where the frontend then makes a request to /migration/microsoft-todo/migrate\nwith the code obtained from the microsoft graph api.\nNote that the Vikunja frontend expects this to be /migrate/microsoft-todo"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "avatar",
+      "children": [
+        {
+          "key": "gravatarexpiration",
+          "default_value": "3600",
+          "comment": "When using gravatar, this is the duration in seconds until a cached gravatar user avatar expires"
+        }
+      ]
+    },
+    {
+      "key": "backgrounds",
+      "children": [
+        {
+          "key": "enabled",
+          "default_value": "true",
+          "comment": "Whether to enable backgrounds for projects at all."
+        },
+        {
+          "key": "providers",
+          "children": [
+            {
+              "key": "upload",
+              "children": [
+                {
+                  "key": "enabled",
+                  "default_value": "true",
+                  "comment": "Whether to enable uploaded project backgrounds"
+                }
+              ]
+            },
+            {
+              "key": "unsplash",
+              "children": [
+                {
+                  "key": "enabled",
+                  "default_value": "false",
+                  "comment": "Whether to enable setting backgrounds from unsplash as project backgrounds"
+                },
+                {
+                  "key": "accesstoken",
+                  "default_value": "",
+                  "comment": "You need to create an application for your installation at https://unsplash.com/oauth/applications/new\nand set the access token below."
+                },
+                {
+                  "key": "applicationid",
+                  "default_value": "",
+                  "comment": "The unsplash application id is only used for pingback and required as per their api guidelines.\nYou can find the Application ID in the dashboard for your API application. It should be a numeric ID.\nIt will only show in the UI if your application has been approved for Enterprise usage, therefore if\nyou’re in Demo mode, you can also find the ID in the URL at the end: https://unsplash.com/oauth/applications/:application_id"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "legal",
+      "comment": "Legal urls\nWill be shown in the frontend if configured here",
+      "children": [
+        {
+          "key": "imprinturl",
+          "default_value": ""
+        },
+        {
+          "key": "privacyurl",
+          "default_value": ""
+        }
+      ]
+    },
+    {
+      "key": "keyvalue",
+      "comment": "Key Value Storage settings\nThe Key Value Storage is used for different kinds of things like metrics and a few cache systems.",
+      "children": [
+        {
+          "key": "type",
+          "default_value": "memory",
+          "comment": "The type of the storage backend. Can be either \"memory\" or \"redis\". If \"redis\" is chosen it needs to be configured separately."
+        }
+      ]
+    },
+    {
+      "key": "auth",
+      "children": [
+        {
+          "key": "local",
+          "comment": "Local authentication will let users log in and register (if enabled) through the db.\nThis is the default auth mechanism and does not require any additional configuration.",
+          "children": [
+            {
+              "key": "enabled",
+              "default_value": "true",
+              "comment": "Enable or disable local authentication"
+            }
+          ]
+        },
+        {
+          "key": "openid",
+          "comment": "OpenID configuration will allow users to authenticate through a third-party OpenID Connect compatible provider.\u003cbr/\u003e\nThe provider needs to support the `openid`, `profile` and `email` scopes.\u003cbr/\u003e\n**Note:** Some openid providers (like Gitlab) only make the email of the user available through OpenID if they have set it to be publicly visible.\nIf the email is not public in those cases, authenticating will fail.\n+**Note 2:** The frontend expects the third party to redirect the user \u003cfrontend-url\u003e/auth/openid/\u003cauth key\u003e after authentication. Please make sure to configure the redirect url in your third party auth service accordingly if you're using the default Vikunja frontend.\nThe frontend will automatically provide the API with the redirect url, composed from the current url where it's hosted.\nIf you want to use the desktop client with OpenID, make sure to allow redirects to `127.0.0.1`.",
+          "children": [
+            {
+              "key": "enabled",
+              "default_value": "false",
+              "comment": "Enable or disable OpenID Connect authentication"
+            },
+            {
+              "key": "providers",
+              "comment": "A list of enabled providers",
+              "children": [
+                {
+                  "comment": "The name of the provider as it will appear in the frontend.",
+                  "children": [
+                    {
+                      "key": "name",
+                      "default_value": ""
+                    },
+                    {
+                      "key": "authurl",
+                      "default_value": "",
+                      "comment": "The auth url to send users to if they want to authenticate using OpenID Connect."
+                    },
+                    {
+                      "key": "logouturl",
+                      "default_value": "",
+                      "comment": "The oidc logouturl that users will be redirected to on logout.\nLeave empty or delete key, if you do not want to be redirected."
+                    },
+                    {
+                      "key": "clientid",
+                      "default_value": "",
+                      "comment": "The client ID used to authenticate Vikunja at the OpenID Connect provider."
+                    },
+                    {
+                      "key": "clientsecret",
+                      "default_value": "",
+                      "comment": "The client secret used to authenticate Vikunja at the OpenID Connect provider."
+                    },
+                    {
+                      "key": "scope",
+                      "default_value": "openid email profile",
+                      "comment": "The scope necessary to use oidc.\nIf you want to use the Feature to create and assign to Vikunja teams via oidc, you have to add the custom \"vikunja_scope\" and check [openid.md](https://vikunja.io/docs/openid/).\ne.g. scope: openid email profile vikunja_scope"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "metrics",
+      "comment": "Prometheus metrics endpoint",
+      "children": [
+        {
+          "key": "enabled",
+          "default_value": "false",
+          "comment": "If set to true, enables a /metrics endpoint for prometheus to collect metrics about Vikunja. You can query it from `/api/v1/metrics`."
+        },
+        {
+          "key": "username",
+          "default_value": "",
+          "comment": "If set to a non-empty value the /metrics endpoint will require this as a username via basic auth in combination with the password below."
+        },
+        {
+          "key": "password",
+          "default_value": "",
+          "comment": "If set to a non-empty value the /metrics endpoint will require this as a password via basic auth in combination with the username below."
+        }
+      ]
+    },
+    {
+      "key": "defaultsettings",
+      "comment": "Provide default settings for new users. When a new user is created, these settings will automatically be set for the user. If you change them in the config file afterwards they will not be changed back for existing users.",
+      "children": [
+        {
+          "key": "avatar_provider",
+          "default_value": "initials",
+          "comment": "The avatar source for the user. Can be `gravatar`, `initials`, `upload` or `marble`. If you set this to `upload` you'll also need to specify `defaultsettings.avatar_file_id`."
+        },
+        {
+          "key": "avatar_file_id",
+          "default_value": "0",
+          "comment": "The id of the file used as avatar."
+        },
+        {
+          "key": "email_reminders_enabled",
+          "default_value": "false",
+          "comment": "If set to true users will get task reminders via email."
+        },
+        {
+          "key": "discoverable_by_name",
+          "default_value": "false",
+          "comment": "If set to true will allow other users to find this user when searching for parts of their name."
+        },
+        {
+          "key": "discoverable_by_email",
+          "default_value": "false",
+          "comment": "If set to true will allow other users to find this user when searching for their exact email."
+        },
+        {
+          "key": "overdue_tasks_reminders_enabled",
+          "default_value": "true",
+          "comment": "If set to true will send an email every day with all overdue tasks at a configured time."
+        },
+        {
+          "key": "overdue_tasks_reminders_time",
+          "default_value": "9:00",
+          "comment": "When to send the overdue task reminder email."
+        },
+        {
+          "key": "default_project_id",
+          "default_value": "0",
+          "comment": "The id of the default project. Make sure users actually have access to this project when setting this value."
+        },
+        {
+          "key": "week_start",
+          "default_value": "0",
+          "comment": "Start of the week for the user. `0` is sunday, `1` is monday and so on."
+        },
+        {
+          "key": "language",
+          "default_value": "\u003cunset\u003e",
+          "comment": "The language of the user interface. Must be an ISO 639-1 language code followed by an ISO 3166-1 alpha-2 country code. Check https://kolaente.dev/vikunja/vikunja/frontend/src/branch/main/src/i18n/lang for a list of possible languages. Will default to the browser language the user uses when signing up."
+        },
+        {
+          "key": "timezone",
+          "default_value": "\u003ctime zone set at service.timezone\u003e",
+          "comment": "The time zone of each individual user. This will affect when users get reminders and overdue task emails."
+        }
+      ]
+    },
+    {
+      "key": "webhooks",
+      "children": [
+        {
+          "key": "enabled",
+          "default_value": "true",
+          "comment": "Whether to enable support for webhooks"
+        },
+        {
+          "key": "timeoutseconds",
+          "default_value": "30",
+          "comment": "The timeout in seconds until a webhook request fails when no response has been received."
+        },
+        {
+          "key": "proxyurl",
+          "default_value": "",
+          "comment": "The URL of [a mole instance](https://github.com/frain-dev/mole) to use to proxy outgoing webhook requests. You should use this and configure appropriately if you're not the only one using your Vikunja instance. More info about why: https://webhooks.fyi/best-practices/webhook-providers#implement-security-on-egress-communication. Must be used in combination with `webhooks.password` (see below)."
+        },
+        {
+          "key": "proxypassword",
+          "default_value": "",
+          "comment": "The proxy password to use when authenticating against the proxy."
+        }
+      ]
+    }
+  ]
+}

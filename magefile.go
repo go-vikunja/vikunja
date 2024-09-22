@@ -24,12 +24,15 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -37,7 +40,6 @@ import (
 
 	"github.com/magefile/mage/mg"
 	"golang.org/x/sync/errgroup"
-	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -63,7 +65,6 @@ var (
 	// Aliases are mage aliases of targets
 	Aliases = map[string]interface{}{
 		"build":                 Build.Build,
-		"do-the-swag":           DoTheSwag,
 		"check:got-swag":        Check.GotSwag,
 		"release":               Release.Release,
 		"release:os-package":    Release.OsPackage,
@@ -71,9 +72,10 @@ var (
 		"dev:make-event":        Dev.MakeEvent,
 		"dev:make-listener":     Dev.MakeListener,
 		"dev:make-notification": Dev.MakeNotification,
-		"generate-docs":         GenerateDocs,
 		"lint":                  Check.Golangci,
 		"lint:fix":              Check.GolangciFix,
+		"generate:config-yaml":  Generate.ConfigYAML,
+		"generate:swagger-docs": Generate.SwaggerDocs,
 	}
 )
 
@@ -343,16 +345,6 @@ func Fmt() {
 	runAndStreamOutput("gofmt", args...)
 }
 
-const swaggerDocsFolderLocation = `./pkg/swagger/`
-
-// Generates the swagger docs from the code annotations
-func DoTheSwag() {
-	mg.Deps(initVars)
-
-	checkAndInstallGoTool("swag", "github.com/swaggo/swag/cmd/swag")
-	runAndStreamOutput("swag", "init", "-g", "./pkg/routes/routes.go", "--parseDependency", "-d", RootPath, "-o", RootPath+"/pkg/swagger")
-}
-
 type Test mg.Namespace
 
 // Runs all tests except integration tests
@@ -395,7 +387,7 @@ func (Check) GotSwag() {
 		os.Exit(1)
 	}
 
-	DoTheSwag()
+	(Generate{}).SwaggerDocs()
 
 	newHash, err := calculateSha256FileHash(RootPath + "/pkg/swagger/swagger.json")
 	if err != nil {
@@ -405,7 +397,7 @@ func (Check) GotSwag() {
 
 	if oldHash != newHash {
 		fmt.Println("Swagger docs are not up to date.")
-		fmt.Println("Please run 'mage do-the-swag' and commit the result.")
+		fmt.Println("Please run 'mage generate:swagger-docs' and commit the result.")
 		os.Exit(1)
 	}
 }
@@ -676,6 +668,8 @@ func (Release) OsPackage() error {
 		return err
 	}
 
+	generateConfigYAMLFromJSON(RootPath+"/"+DefaultConfigYAMLSamplePath, true)
+
 	for path, info := range bins {
 		folder := p + info.Name() + "-full/"
 		if err := os.Mkdir(folder, 0755); err != nil {
@@ -687,7 +681,7 @@ func (Release) OsPackage() error {
 		if err := moveFile(path, folder+info.Name()); err != nil {
 			return err
 		}
-		if err := copyFile(RootPath+"/config.yml.sample", folder+"config.yml.sample"); err != nil {
+		if err := copyFile(RootPath+"/"+DefaultConfigYAMLSamplePath, folder+DefaultConfigYAMLSamplePath); err != nil {
 			return err
 		}
 		if err := copyFile(RootPath+"/LICENSE", folder+"LICENSE"); err != nil {
@@ -758,6 +752,8 @@ func (Release) Packages() error {
 	if err := os.MkdirAll(releasePath, 0755); err != nil {
 		return err
 	}
+
+	generateConfigYAMLFromJSON(DefaultConfigYAMLSamplePath, true)
 
 	runAndStreamOutput(binpath, "pkg", "--packager", "deb", "--target", releasePath)
 	runAndStreamOutput(binpath, "pkg", "--packager", "rpm", "--target", releasePath)
@@ -992,183 +988,142 @@ func (n *` + name + `) Name() string {
 	return nil
 }
 
-type configOption struct {
-	key          string
-	description  string
-	defaultValue string
+type Generate mg.Namespace
 
-	children []*configOption
+const DefaultConfigYAMLSamplePath = "config.yml.sample"
+
+// Generates the swagger docs from the code annotations
+func (Generate) SwaggerDocs() {
+	mg.Deps(initVars)
+
+	checkAndInstallGoTool("swag", "github.com/swaggo/swag/cmd/swag")
+	runAndStreamOutput("swag", "init", "-g", "./pkg/routes/routes.go", "--parseDependency", "-d", RootPath, "-o", RootPath+"/pkg/swagger")
 }
 
-func parseYamlConfigNode(node *yaml.Node) (config *configOption) {
-	config = &configOption{
-		key:         node.Value,
-		description: strings.ReplaceAll(node.HeadComment, "# ", ""),
+type ConfigNode struct {
+	Key      string        `json:"key,omitempty"`
+	Value    interface{}   `json:"default_value,omitempty"`
+	Comment  string        `json:"comment,omitempty"`
+	Children []*ConfigNode `json:"children,omitempty"`
+}
+
+func convertConfigJSONToYAML(node *ConfigNode, indent int, isTopLevel bool, parentKey string, commentOut bool) string {
+	var result strings.Builder
+
+	writeComment := func(comment string, indent int) {
+		indent = int(math.Max(float64(indent), 0))
+		if comment != "" {
+			commentLines := strings.Split(comment, "\n")
+			for _, line := range commentLines {
+				result.WriteString(strings.Repeat("  ", indent))
+				result.WriteString("# " + line + "\n")
+			}
+		}
 	}
 
-	valMap := make(map[string]*configOption)
-
-	var lastOption *configOption
-
-	for i, n2 := range node.Content {
-		coo := &configOption{
-			key:         n2.Value,
-			description: strings.ReplaceAll(n2.HeadComment, "# ", ""),
-		}
-
-		// If there's a key in valMap for the current key we should use that to append etc
-		// Else we just create a new configobject
-		co, exists := valMap[n2.Value]
-		if exists {
-			co.description = coo.description
+	writeLine := func(line string, indent int) {
+		indent = int(math.Max(float64(indent), 0))
+		if commentOut {
+			result.WriteString(strings.Repeat("  ", indent) + "# " + line + "\n")
 		} else {
-			valMap[n2.Value] = coo
-			config.children = append(config.children, coo)
+			result.WriteString(strings.Repeat("  ", indent) + line + "\n")
 		}
+	}
 
-		//		fmt.Println(i, coo.key, coo.description, n2.Value)
+	if isTopLevel {
+		writeComment(node.Comment, indent)
+	}
 
-		if i%2 == 0 {
-			lastOption = coo
-			continue
-		} else {
-			lastOption.defaultValue = n2.Value
+	if node.Key != "" {
+		if !isTopLevel {
+			writeComment(node.Comment, indent)
 		}
-
-		if i-1 >= 0 && i-1 <= len(node.Content) && node.Content[i-1].Value != "" {
-			coo.defaultValue = n2.Value
-			coo.key = node.Content[i-1].Value
+		line := node.Key + ":"
+		if node.Value != nil {
+			value := node.Value
+			if value == nil {
+				value = node.Value
+			}
+			line += " " + formatValue(value)
 		}
+		writeLine(line, indent)
+	}
 
-		if len(n2.Content) > 0 {
-			for _, n := range n2.Content {
-				coo.children = append(coo.children, parseYamlConfigNode(n))
+	if len(node.Children) > 0 {
+		isProviders := node.Key == "providers" && parentKey == "openid"
+		isArray := len(node.Children) > 0 && node.Children[0].Key == ""
+		for i, child := range node.Children {
+			if isProviders {
+				writeComment(child.Comment, indent+1)
+				writeLine("-", indent+1)
+				result.WriteString(convertConfigJSONToYAML(child, indent+1, false, node.Key, commentOut))
+			} else if isArray {
+				writeComment(child.Comment, indent+1)
+				writeLine("- "+formatValue(child.Value), indent+1)
+			} else {
+				result.WriteString(convertConfigJSONToYAML(child, indent+1, false, node.Key, commentOut))
+			}
+			if i == len(node.Children)-1 && !isProviders && !isArray {
+				writeLine("", indent)
 			}
 		}
 	}
 
-	return config
+	return result.String()
 }
 
-func printConfig(config []*configOption, level int, parent string) (rendered string) {
-
-	// Keep track of what we already printed to prevent printing things twice
-	printed := make(map[string]bool)
-
-	for _, option := range config {
-
-		// FIXME: Not a good solution. Ideally this would work without the level check, but since generating config
-		// for more than two levels is currently broken anyway, I'll fix this after moving the config generation
-		// to a better format than yaml.
-		if level == 0 && option.key != "" {
-			parent = option.key
+func formatValue(value interface{}) string {
+	switch v := value.(type) {
+	case string:
+		if intValue, err := strconv.Atoi(v); err == nil {
+			return fmt.Sprintf("%d", intValue)
 		}
-
-		if option.key != "" {
-
-			// Filter out all config objects where the default value == key
-			// Yaml is weired: It gives you a slice with an entry each for the key and their value.
-			if printed[option.key] {
-				continue
-			}
-
-			if level == 0 {
-				rendered += "---\n\n"
-			}
-
-			rendered += "#"
-			for i := 0; i <= level; i++ {
-				rendered += "#"
-			}
-			rendered += " " + option.key + "\n\n"
-
-			if option.description != "" {
-				rendered += option.description + "\n\n"
-			}
-
-			// Top level config values never have a default value
-			if level > 0 {
-				rendered += "Default: `" + option.defaultValue
-				if option.defaultValue == "" {
-					rendered += "<empty>"
-				}
-				rendered += "`\n\n"
-
-				fullPath := parent + "." + option.key
-
-				rendered += "Full path: `" + fullPath + "`\n\n"
-				rendered += "Environment path: `VIKUNJA_" + strcase.ToScreamingSnake(strings.ToUpper(fullPath)) + "`\n\n"
-			}
+		if floatValue, err := strconv.ParseFloat(v, 64); err == nil {
+			return fmt.Sprintf("%g", floatValue)
 		}
-
-		printed[option.key] = true
-		rendered += "\n" + printConfig(option.children, level+1, parent)
+		if boolValue, err := strconv.ParseBool(v); err == nil {
+			return fmt.Sprintf("%v", boolValue)
+		}
+		return fmt.Sprintf("%q", v)
+	case float64:
+		return fmt.Sprintf("%g", v)
+	case int:
+		return fmt.Sprintf("%d", v)
+	case bool:
+		return fmt.Sprintf("%v", v)
+	case nil:
+		return ""
+	default:
+		return fmt.Sprintf("%v", v)
 	}
-
-	return
 }
 
-const (
-	configDocPath       = `docs/content/doc/setup/config.md`
-	configInjectComment = `<!-- Generated config will be injected here -->`
-)
-
-// Generates the config docs from a commented config.yml.sample file in the repo root.
-func GenerateDocs() error {
-
-	config, err := os.ReadFile("config.yml.sample")
+func generateConfigYAMLFromJSON(yamlPath string, commented bool) {
+	jsonData, err := os.ReadFile("config-raw.json")
 	if err != nil {
-		return err
+		fmt.Println("Error reading JSON file:", err)
+		return
 	}
 
-	var d yaml.Node
-	err = yaml.Unmarshal(config, &d)
+	var root ConfigNode
+	err = json.Unmarshal(jsonData, &root)
 	if err != nil {
-		return err
+		fmt.Println("Error parsing JSON:", err)
+		return
 	}
 
-	conf := []*configOption{}
+	yamlData := convertConfigJSONToYAML(&root, -1, true, "", commented)
 
-	for _, node := range d.Content {
-		for _, n := range node.Content {
-			co := parseYamlConfigNode(n)
-			conf = append(conf, co)
-		}
-	}
-
-	renderedConfig := printConfig(conf, 0, "")
-
-	// Rebuild the config
-	file, err := os.OpenFile(configDocPath, os.O_RDWR, 0)
+	err = os.WriteFile(yamlPath, []byte(yamlData), 0644)
 	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	// We read the config doc up until the marker, then stop and append our generated config
-	fullConfig := ""
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		t := scanner.Text()
-		fullConfig += t + "\n"
-
-		if t == configInjectComment {
-			break
-		}
+		fmt.Println("Error writing YAML file:", err)
+		return
 	}
 
-	if err := scanner.Err(); err != nil {
-		return err
-	}
+	fmt.Println("Successfully generated " + yamlPath)
+}
 
-	fullConfig += "\n" + renderedConfig
-
-	// We write the full file to prevent old content leftovers at the end
-	// I know, there are probably better ways to do this.
-	if err := os.WriteFile(configDocPath, []byte(fullConfig), 0); err != nil {
-		return err
-	}
-
-	return nil
+// Create a yaml config file from the config-raw.json definition
+func (Generate) ConfigYAML(commented bool) {
+	generateConfigYAMLFromJSON(DefaultConfigYAMLSamplePath, false)
 }

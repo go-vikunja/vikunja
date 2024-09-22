@@ -40,7 +40,6 @@ volumes:
   - name: tmp-postgres-migration
     temp:
       medium: memory
-      
 
 services:
   - name: test-mysql-unit
@@ -161,7 +160,7 @@ steps:
   - name: test-migration-sqlite
     image: vikunja/golang-build:latest
     pull: always
-    depends_on: 
+    depends_on:
       - test-migration-prepare
       - api-build
     environment:
@@ -444,7 +443,7 @@ steps:
     depends_on:
       - frontend-build-prod
       - test-api-run
-  
+
   - name: frontend-deploy-preview
     image: williamjackson/netlify-cli
     pull: always
@@ -499,7 +498,7 @@ steps:
     environment:
       GOPROXY: 'https://goproxy.kolaente.de'
     commands:
-      - mage do-the-swag
+      - mage generate:swagger-docs
 
   - name: push
     pull: always
@@ -579,6 +578,53 @@ steps:
     when:
       event: [ push, tag, pull_request ]
 
+  - name: generate-config-yaml
+    image: vikunja/golang-build:latest
+    pull: always
+    commands:
+      - ./mage-static generate:config-yaml
+    depends_on: [ mage ]
+
+  - name: upload-config-yaml-unstable
+    image: plugins/s3
+    pull: always
+    settings:
+      bucket: vikunja-releases
+      access_key:
+        from_secret: aws_access_key_id
+      secret_key:
+        from_secret: aws_secret_access_key
+      endpoint: https://s3.fr-par.scw.cloud
+      region: fr-par
+      path_style: true
+      source: config.yml.sample
+      target: /vikunja/unstable/
+    when:
+      branch:
+        - main
+      event:
+        - push
+    depends_on: [ generate-config-yaml ]
+
+  - name: upload-config-yaml-version
+    image: plugins/s3
+    pull: always
+    settings:
+      bucket: vikunja-releases
+      access_key:
+        from_secret: aws_access_key_id
+      secret_key:
+        from_secret: aws_secret_access_key
+      endpoint: https://s3.fr-par.scw.cloud
+      region: fr-par
+      path_style: true
+      source: config.yml.sample
+      target: /vikunja/${DRONE_TAG##v}/
+    when:
+      event:
+        - tag
+    depends_on: [ generate-config-yaml ]
+
   - name: before-static-build
     image: techknowlogick/xgo:latest
     pull: always
@@ -653,6 +699,7 @@ steps:
       - after-build-compress
     commands:
       - go install github.com/magefile/mage
+      - ./mage-static generate:config-yaml 1
       - ./mage-static release:copy
       - ./mage-static release:check
       - ./mage-static release:os-package
@@ -797,7 +844,7 @@ steps:
       base_url: https://kolaente.dev
       files: dist/zip/*
       prerelease: true
-      title: ${DRONE_TAG##v} 
+      title: ${DRONE_TAG##v}
     when:
       event:
         - tag
@@ -899,7 +946,7 @@ steps:
     image: docker:git
     commands:
       - git fetch --tags
-  
+
   - name: build
     image: node:20.16.0-alpine
     pull: always
@@ -960,7 +1007,7 @@ steps:
     image: docker:git
     commands:
       - git fetch --tags
-  
+
   - name: build
     image: node:20.16.0-alpine
     pull: always
@@ -1083,24 +1130,24 @@ steps:
     image: docker:git
     commands:
       - git fetch --tags
-#
-#  - name: restore-cache
-#    image: meltwater/drone-cache:dev
-#    pull: true
-#    environment:
-#      AWS_ACCESS_KEY_ID:
-#        from_secret: cache_aws_access_key_id
-#      AWS_SECRET_ACCESS_KEY:
-#        from_secret: cache_aws_secret_access_key
-#    settings:
-#      restore: true
-#      bucket: kolaente.dev-drone-dependency-cache
-#      endpoint: https://s3.fr-par.scw.cloud
-#      region: fr-par
-#      path_style: true
-#      cache_key: '{{ .Repo.Name }}_{{ checksum "desktop/yarn.lock" }}_{{ arch }}_{{ os }}'
-#      mount:
-#        - '.cache'
+  #
+  #  - name: restore-cache
+  #    image: meltwater/drone-cache:dev
+  #    pull: true
+  #    environment:
+  #      AWS_ACCESS_KEY_ID:
+  #        from_secret: cache_aws_access_key_id
+  #      AWS_SECRET_ACCESS_KEY:
+  #        from_secret: cache_aws_secret_access_key
+  #    settings:
+  #      restore: true
+  #      bucket: kolaente.dev-drone-dependency-cache
+  #      endpoint: https://s3.fr-par.scw.cloud
+  #      region: fr-par
+  #      path_style: true
+  #      cache_key: '{{ .Repo.Name }}_{{ checksum "desktop/yarn.lock" }}_{{ arch }}_{{ os }}'
+  #      mount:
+  #        - '.cache'
 
   - name: build
     image: electronuserland/builder:wine-mono
@@ -1109,7 +1156,7 @@ steps:
       YARN_CACHE_FOLDER: .cache/yarn/
     depends_on:
       - fetch-tags
-#      - restore-cache
+    #      - restore-cache
     commands:
       - cd desktop
       - export VERSION=${DRONE_TAG##v}
@@ -1164,24 +1211,24 @@ steps:
     image: docker:git
     commands:
       - git fetch --tags
-
-#  - name: restore-cache
-#    image: meltwater/drone-cache:dev
-#    pull: true
-#    environment:
-#      AWS_ACCESS_KEY_ID:
-#        from_secret: cache_aws_access_key_id
-#      AWS_SECRET_ACCESS_KEY:
-#        from_secret: cache_aws_secret_access_key
-#    settings:
-#      restore: true
-#      bucket: kolaente.dev-drone-dependency-cache
-#      endpoint: https://s3.fr-par.scw.cloud
-#      region: fr-par
-#      path_style: true
-#      cache_key: '{{ .Repo.Name }}_{{ checksum "desktop/yarn.lock" }}_{{ arch }}_{{ os }}'
-#      mount:
-#        - '.cache'
+  
+  #  - name: restore-cache
+  #    image: meltwater/drone-cache:dev
+  #    pull: true
+  #    environment:
+  #      AWS_ACCESS_KEY_ID:
+  #        from_secret: cache_aws_access_key_id
+  #      AWS_SECRET_ACCESS_KEY:
+  #        from_secret: cache_aws_secret_access_key
+  #    settings:
+  #      restore: true
+  #      bucket: kolaente.dev-drone-dependency-cache
+  #      endpoint: https://s3.fr-par.scw.cloud
+  #      region: fr-par
+  #      path_style: true
+  #      cache_key: '{{ .Repo.Name }}_{{ checksum "desktop/yarn.lock" }}_{{ arch }}_{{ os }}'
+  #      mount:
+  #        - '.cache'
 
   - name: build
     image: electronuserland/builder:wine-mono
@@ -1190,7 +1237,7 @@ steps:
       YARN_CACHE_FOLDER: .cache/yarn/
     depends_on:
       - fetch-tags
-#      - restore-cache
+    #      - restore-cache
     commands:
       - cd desktop
       - export VERSION=${DRONE_TAG##v}
@@ -1203,27 +1250,27 @@ steps:
       - yarn install
       - cat package.json
       - yarn dist --linux --windows
-
-#  - name: rebuild-cache
-#    image: meltwater/drone-cache:dev
-#    pull: true
-#    environment:
-#      AWS_ACCESS_KEY_ID:
-#        from_secret: cache_aws_access_key_id
-#      AWS_SECRET_ACCESS_KEY:
-#        from_secret: cache_aws_secret_access_key
-#    settings:
-#      rebuild: true
-#      bucket: kolaente.dev-drone-dependency-cache
-#      endpoint: https://s3.fr-par.scw.cloud
-#      region: fr-par
-#      path_style: true
-#      cache_key: '{{ .Repo.Name }}_{{ checksum "desktop/yarn.lock" }}_{{ arch }}_{{ os }}'
-#      mount:
-#        - '.cache'
-#    depends_on:
-#      - build
   
+  #  - name: rebuild-cache
+  #    image: meltwater/drone-cache:dev
+  #    pull: true
+  #    environment:
+  #      AWS_ACCESS_KEY_ID:
+  #        from_secret: cache_aws_access_key_id
+  #      AWS_SECRET_ACCESS_KEY:
+  #        from_secret: cache_aws_secret_access_key
+  #    settings:
+  #      rebuild: true
+  #      bucket: kolaente.dev-drone-dependency-cache
+  #      endpoint: https://s3.fr-par.scw.cloud
+  #      region: fr-par
+  #      path_style: true
+  #      cache_key: '{{ .Repo.Name }}_{{ checksum "desktop/yarn.lock" }}_{{ arch }}_{{ os }}'
+  #      mount:
+  #        - '.cache'
+  #    depends_on:
+  #      - build
+
   - name: rename-unstable
     image: bash
     pull: true
@@ -1352,6 +1399,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: eff6e40dc763fa1395078daaabcbef2aaa74fe0a36818a87e89015dbc4e9dae4
+hmac: f043e24fd9d90e4fd2aa1c4b6b1947e91f8f2b2efeab13ed21380780adf72411
 
 ...
