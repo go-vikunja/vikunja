@@ -475,7 +475,8 @@
       ]
     },
     {
-      "key": "migration",
+      "key": "migration", 
+      "comment": "To use any of the available migrators, you usually need to configure credentials for the appropriate service and enable it. Find instructions below on how to do this for the provided migrators.",
       "children": [
         {
           "key": "todoist",
@@ -513,7 +514,7 @@
             {
               "key": "key",
               "default_value": "",
-              "comment": "The client id, required for making requests to the trello api.\nYou need to register your Vikunja instance at https://trello.com/app-key (log in before you visit that link) to get one. Save your `Personal Key` for later and add your Vikunja domain to the Allowed Origins list."
+              "comment": "The client id, required for making requests to the trello api.\nYou need to register your Vikunja instance at https://trello.com/app-key (log in before you visit that link) to get one. Copy the `Personal Key` and set it as the client id. Add your Vikunja domain to the Allowed Origins list."
             },
             {
               "key": "redirecturl",
