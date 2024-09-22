@@ -582,7 +582,7 @@ steps:
     image: vikunja/golang-build:latest
     pull: always
     commands:
-      - ./mage-static generate:config-yaml
+      - ./mage-static generate:config-yaml 1
     depends_on: [ mage ]
 
   - name: upload-config-yaml-unstable
@@ -1399,6 +1399,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: f043e24fd9d90e4fd2aa1c4b6b1947e91f8f2b2efeab13ed21380780adf72411
+hmac: 238b49df4dc578830b9635081692b4243333996ca36496b2589b51a973be63d6
 
 ...
