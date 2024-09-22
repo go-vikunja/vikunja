@@ -654,7 +654,7 @@
             },
             {
               "key": "providers",
-              "comment": "A list of enabled providers",
+              "comment": "A list of enabled providers. This expects an array, which means you cannot use enviroment variables.",
               "children": [
                 {
                   "children": [
