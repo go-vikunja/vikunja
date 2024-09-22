@@ -35,8 +35,8 @@ importers:
         specifier: 2.3.2
         version: 2.3.2(dayjs@1.11.13)(vue@3.5.8(typescript@5.6.2))
       '@intlify/unplugin-vue-i18n':
-        specifier: 5.0.0
-        version: 5.0.0(@vue/compiler-dom@3.5.8)(eslint@8.57.1)(rollup@4.22.4)(typescript@5.6.2)(vue-i18n@10.0.2(vue@3.5.8(typescript@5.6.2)))(vue@3.5.8(typescript@5.6.2))
+        specifier: 5.1.0
+        version: 5.1.0(@vue/compiler-dom@3.5.8)(eslint@8.57.1)(rollup@4.22.4)(typescript@5.6.2)(vue-i18n@10.0.2(vue@3.5.8(typescript@5.6.2)))(vue@3.5.8(typescript@5.6.2))
       '@kyvg/vue3-notification':
         specifier: 3.3.0
         version: 3.3.0(vue@3.5.8(typescript@5.6.2))
@@ -1707,8 +1707,8 @@ packages:
     resolution: {integrity: sha512-sIF9cqB0CwUWLtDb1QDnl4PlTggE4GSnR1aA44thT9Y18rUVdWO2z4w2Ow6O60tsdNzC0WnUd6fU0VXyKQ6WBA==}
     engines: {node: '>= 16'}
 
-  '@intlify/unplugin-vue-i18n@5.0.0':
-    resolution: {integrity: sha512-bIK9DGirnD4lrcTB8aVRIfjafJuXtsRO4uisMC+AmkoQCyFgtgG5eUxzKZ7SCwLd81Y0iWbr2FdSeHJfby369w==}
+  '@intlify/unplugin-vue-i18n@5.1.0':
+    resolution: {integrity: sha512-jbKGR+qRirLhT/j+jvI3z/Y8RVnrnKDAjYNcz/yBefdCQUT64iRaFgelAWB7tlzj8BD7OdtcOKOsGhyiRruR+w==}
     engines: {node: '>= 18'}
     peerDependencies:
       petite-vue-i18n: '*'
@@ -5465,10 +5465,6 @@ packages:
   sortablejs@1.15.3:
     resolution: {integrity: sha512-zdK3/kwwAK1cJgy1rwl1YtNTbRmc8qW/+vgXf75A7NHag5of4pyI6uK86ktmQETyWRH7IGaE73uZOOBcGxgqZg==}
 
-  source-map-js@1.2.0:
-    resolution: {integrity: sha512-itJW8lvSA0TXEphiRoawsCksnlf8SyvmFzIhltqAHluXd88pkCd+cXJVHTDwdCr0IzwptSm035IHQktUu1QUMg==}
-    engines: {node: '>=0.10.0'}
-
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
     engines: {node: '>=0.10.0'}
@@ -7794,7 +7790,7 @@ snapshots:
 
   '@intlify/shared@10.0.2': {}
 
-  '@intlify/unplugin-vue-i18n@5.0.0(@vue/compiler-dom@3.5.8)(eslint@8.57.1)(rollup@4.22.4)(typescript@5.6.2)(vue-i18n@10.0.2(vue@3.5.8(typescript@5.6.2)))(vue@3.5.8(typescript@5.6.2))':
+  '@intlify/unplugin-vue-i18n@5.1.0(@vue/compiler-dom@3.5.8)(eslint@8.57.1)(rollup@4.22.4)(typescript@5.6.2)(vue-i18n@10.0.2(vue@3.5.8(typescript@5.6.2)))(vue@3.5.8(typescript@5.6.2))':
     dependencies:
       '@eslint-community/eslint-utils': 4.4.0(eslint@8.57.1)
       '@intlify/bundle-utils': 9.0.0-beta.0(vue-i18n@10.0.2(vue@3.5.8(typescript@5.6.2)))
@@ -7807,10 +7803,9 @@ snapshots:
       fast-glob: 3.3.2
       js-yaml: 4.1.0
       json5: 2.2.3
-      mlly: 1.7.1
       pathe: 1.1.2
-      picocolors: 1.0.1
-      source-map-js: 1.2.0
+      picocolors: 1.1.0
+      source-map-js: 1.2.1
       unplugin: 1.12.2
       vue: 3.5.8(typescript@5.6.2)
     optionalDependencies:
@@ -11964,8 +11959,6 @@ snapshots:
   sortablejs@1.14.0: {}
 
   sortablejs@1.15.3: {}
-
-  source-map-js@1.2.0: {}
 
   source-map-js@1.2.1: {}
 
