@@ -483,22 +483,22 @@
             {
               "key": "enable",
               "default_value": "false",
-              "comment": "Wheter to enable the todoist migrator or not"
+              "comment": "Wheter to enable the Todoist migrator."
             },
             {
               "key": "clientid",
               "default_value": "",
-              "comment": "The client id, required for making requests to the todoist api\nYou need to register your Vikunja instance at https://developer.todoist.com/appconsole.html to get this"
+              "comment": "The client id, required for making requests to the Todoist api\nYou need to register your Vikunja instance at https://developer.todoist.com/appconsole.html to get this."
             },
             {
               "key": "clientsecret",
               "default_value": "",
-              "comment": "The client secret, also required for making requests to the todoist api"
+              "comment": "The client secret, also required for making requests to the Todoist api. Obtain it at https://developer.todoist.com/appconsole.html after registering your Vikunja instance."
             },
             {
               "key": "redirecturl",
               "default_value": "\u003cservice.publicurl\u003e/migrate/todoist",
-              "comment": "The url where clients are redirected after they authorized Vikunja to access their Todoist items.\nIn Todoist, this is called `OAuth redirect URL` and it needs to match the url you entered when registering\nyour Vikunja instance at the Todoist developer console.\nWhen using the official Vikunja frontend, set this to \u003cservice.publicurl\u003e/migrate/todoist.\nOtherwise, set this to an url which then makes a request to /api/v1/migration/todoist/migrate\nwith the code obtained from the todoist api."
+              "comment": "The url where clients are redirected after they authorized Vikunja to access their Todoist items.\nIn Todoist, this is called `OAuth redirect URL` and it needs to match the url you entered when registering\nyour Vikunja instance at the Todoist developer console.\nWhen using the official Vikunja frontend, set this to `\u003cservice.publicurl\u003e/migrate/todoist` (the default value).\nOtherwise, set this to an url which then makes a request to /api/v1/migration/todoist/migrate\nwith the code obtained from the Todoist api."
             }
           ]
         },
@@ -508,17 +508,17 @@
             {
               "key": "enable",
               "default_value": "false",
-              "comment": "Whether to enable the trello migrator or not"
+              "comment": "Whether to enable the Trello migrator."
             },
             {
               "key": "key",
               "default_value": "",
-              "comment": "The client id, required for making requests to the trello api\nYou need to register your Vikunja instance at https://trello.com/app-key (log in before you visit that link) to get this"
+              "comment": "The client id, required for making requests to the trello api.\nYou need to register your Vikunja instance at https://trello.com/app-key (log in before you visit that link) to get one. Save your `Personal Key` for later and add your Vikunja domain to the Allowed Origins list."
             },
             {
               "key": "redirecturl",
               "default_value": "\u003cfrontend url\u003e/migrate/trello",
-              "comment": "The url where clients are redirected after they authorized Vikunja to access their trello cards.\nThis needs to match the url you entered when registering your Vikunja instance at trello.\nThis is usually the frontend url where the frontend then makes a request to /migration/trello/migrate\nwith the code obtained from the trello api.\nNote that the Vikunja frontend expects this to end on /migrate/trello."
+              "comment": "The url where clients are redirected after they authorized Vikunja to access their trello cards.\nThis needs to match the url you entered when registering your Vikunja instance at trello.\nWhen using the official Vikunja frontend, set this to `\u003cservice.publicurl\u003e/migrate/trello` (the default value).\nOtherwise, set this to an url which then makes a request to /api/v1/migration/trello/migrate\nwith the code obtained from the Trello api."
             }
           ]
         },
@@ -528,22 +528,22 @@
             {
               "key": "enable",
               "default_value": "false",
-              "comment": "Wheter to enable the microsoft todo migrator or not"
+              "comment": "Wheter to enable the Microsoft Todo migrator."
             },
             {
               "key": "clientid",
               "default_value": "",
-              "comment": "The client id, required for making requests to the microsoft graph api\nSee https://docs.microsoft.com/en-us/azure/active-directory/develop/quickstart-register-app#register-an-application\nfor information about how to register your Vikunja instance."
+              "comment": "The client id, required for making requests to the Microsoft graph api.\nSee https://docs.microsoft.com/en-us/azure/active-directory/develop/quickstart-register-app#register-an-application\nfor information about how to register your Vikunja instance."
             },
             {
               "key": "clientsecret",
               "default_value": "",
-              "comment": "The client secret, also required for making requests to the microsoft graph api"
+              "comment": "The client secret, also required for making requests to the Microsoft graph api"
             },
             {
               "key": "redirecturl",
               "default_value": "\u003cfrontend url\u003e/migrate/microsoft-todo",
-              "comment": "The url where clients are redirected after they authorized Vikunja to access their microsoft todo tasks.\nThis needs to match the url you entered when registering your Vikunja instance at microsoft.\nThis is usually the frontend url where the frontend then makes a request to /migration/microsoft-todo/migrate\nwith the code obtained from the microsoft graph api.\nNote that the Vikunja frontend expects this to be /migrate/microsoft-todo"
+              "comment": "The url where clients are redirected after they authorized Vikunja to access their Microsoft todo tasks.\nThis needs to match the url you entered when registering your Vikunja instance at Microsoft.\nWhen using the official Vikunja frontend, set this to `\u003cservice.publicurl\u003e/migrate/microsoft-todo` (the default value).\nOtherwise, set this to an url which then makes a request to /api/v1/migration/microsoft-todo/migrate\nwith the code obtained from the Microsoft Todo api."
             }
           ]
         }
