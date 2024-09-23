@@ -22,6 +22,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
@@ -58,8 +59,12 @@ func (*File) TableName() string {
 }
 
 func (f *File) getAbsoluteFilePath() string {
+	base := ""
+	if !strings.HasPrefix(config.FilesBasePath.GetString(), "/") {
+		base = config.ServiceRootpath.GetString()
+	}
 	return filepath.Join(
-		config.ServiceRootpath.GetString(),
+		base,
 		config.FilesBasePath.GetString(),
 		strconv.FormatInt(f.ID, 10),
 	)
