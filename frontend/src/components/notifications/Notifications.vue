@@ -124,15 +124,20 @@ let interval: ReturnType<typeof setInterval>
 onMounted(() => {
 	loadNotifications()
 	document.addEventListener('click', hidePopup)
+	document.addEventListener('visibilitychange', loadNotifications)
 	interval = setInterval(loadNotifications, LOAD_NOTIFICATIONS_INTERVAL)
 })
 
 onUnmounted(() => {
 	document.removeEventListener('click', hidePopup)
+	document.removeEventListener('visibilitychange', loadNotifications)
 	clearInterval(interval)
 })
 
 async function loadNotifications() {
+	if (document.visibilityState !== 'visible') {
+		return
+	}
 	// We're recreating the notification service here to make sure it uses the latest api user token
 	const notificationService = new NotificationService()
 	allNotifications.value = await notificationService.getAll()
