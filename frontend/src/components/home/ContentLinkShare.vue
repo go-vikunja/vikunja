@@ -21,7 +21,7 @@
 			</h1>
 			<div class="box has-text-left view">
 				<RouterView />
-				<PoweredByLink />
+				<PoweredByLink utm-medium="link_share" />
 			</div>
 		</div>
 	</div>

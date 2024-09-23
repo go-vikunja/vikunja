@@ -109,7 +109,10 @@
 			</nav>
 		</template>
 
-		<PoweredByLink class="mt-auto" />
+		<PoweredByLink
+			class="mt-auto"
+			utm-medium="navigation"
+		/>
 	</aside>
 </template>
 

@@ -1,7 +1,7 @@
 <template>
 	<BaseButton
 		class="menu-bottom-link"
-		:href="poweredByUrl"
+		:href="computedUrl"
 		target="_blank"
 	>
 		{{ $t('misc.poweredBy') }}
@@ -9,8 +9,15 @@
 </template>
 
 <script setup lang="ts">
+import {computed, defineProps} from 'vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import {POWERED_BY as poweredByUrl} from '@/urls'
+
+const props = defineProps<{
+	utmMedium: string;
+}>()
+
+const computedUrl = computed(() => `${poweredByUrl}&utm_medium=${props.utmMedium}`)
 </script>
 
 <style lang="scss">
