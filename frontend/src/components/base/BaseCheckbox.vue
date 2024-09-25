@@ -3,33 +3,22 @@
 		v-cy="'checkbox'"
 		class="base-checkbox"
 	>
-		<input
-			:id="checkboxId"
-			type="checkbox"
-			class="is-sr-only"
-			:checked="modelValue"
-			:disabled="disabled || undefined"
-			@change="(event) => emit('update:modelValue', (event.target as HTMLInputElement).checked)"
+		<label
+			class="base-checkbox__label"
 		>
-
-		<slot
-			name="label"
-			:checkbox-id="checkboxId"
-		>
-			<label
-				:for="checkboxId"
-				class="base-checkbox__label"
+			<input
+				type="checkbox"
+				class="is-sr-only"
+				:checked="modelValue"
+				:disabled="disabled || undefined"
+				@change="(event) => emit('update:modelValue', (event.target as HTMLInputElement).checked)"
 			>
-				<slot />
-			</label>
-		</slot>
+			<slot />
+		</label>
 	</div>
 </template>
 
 <script setup lang="ts">
-import {ref} from 'vue'
-import {createRandomID} from '@/helpers/randomId'
-
 withDefaults(defineProps<{
 	modelValue?: boolean,
 	disabled: boolean,
@@ -38,10 +27,8 @@ withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-  (event: 'update:modelValue', value: boolean): void
+	(event: 'update:modelValue', value: boolean): void
 }>()
-
-const checkboxId = ref(`checkbox_${createRandomID()}`)
 </script>
 
 <style lang="scss" scoped>
@@ -53,7 +40,7 @@ const checkboxId = ref(`checkbox_${createRandomID()}`)
 }
 
 .base-checkbox:has(input:disabled) .base-checkbox__label {
-	cursor:not-allowed;
+	cursor: not-allowed;
 	pointer-events: none;
 }
 </style>
