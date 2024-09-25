@@ -38,7 +38,6 @@ const emit = defineEmits<{
 }>()
 </script>
 
-
 <style lang="scss" scoped>
 .fancy-checkbox {
   display: inline-block;
@@ -70,8 +69,8 @@ const emit = defineEmits<{
 	}
 }
 
-.fancy-checkbox:not(:has(input:disabled)):hover .fancy-checkbox__icon,
-.fancy-checkbox:has(input:checked) .fancy-checkbox__icon {
+.fancy-checkbox:hover input:not(:disabled) + .fancy-checkbox__icon,
+.fancy-checkbox input:checked + .fancy-checkbox__icon {
 	--stroke-color: var(--primary);
 }
 </style>
@@ -80,13 +79,13 @@ const emit = defineEmits<{
 // Since css-has-pseudo doesn't work with deep classes,
 // the following rules can't be scoped
 
-.fancy-checkbox:has(:not(input:checked)) .fancy-checkbox__icon {
+.fancy-checkbox :not(input:checked) + .fancy-checkbox__icon {
 	path {
 		transition-delay: 0.05s;
 	}
 }
 
-.fancy-checkbox:has(input:checked) .fancy-checkbox__icon {
+.fancy-checkbox input:checked + .fancy-checkbox__icon {
 	path {
 		stroke-dashoffset: 60;
 	}
