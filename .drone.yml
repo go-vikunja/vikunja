@@ -67,7 +67,7 @@ services:
       - name: tmp-mysql-migration
         path: /var/lib/mysql
   - name: test-postgres-unit
-    image: postgres:16
+    image: postgres:17
     environment:
       POSTGRES_PASSWORD: vikunjatest
       POSTGRES_DB: vikunjatest
@@ -77,7 +77,7 @@ services:
     commands:
       - docker-entrypoint.sh -c fsync=off -c full_page_writes=off # turns of wal
   - name: test-postgres-integration
-    image: postgres:16
+    image: postgres:17
     environment:
       POSTGRES_PASSWORD: vikunjatest
       POSTGRES_DB: vikunjatest
@@ -87,7 +87,7 @@ services:
     commands:
       - docker-entrypoint.sh -c fsync=off -c full_page_writes=off # turns of wal
   - name: test-postgres-migration
-    image: postgres:16
+    image: postgres:17
     environment:
       POSTGRES_PASSWORD: vikunjatest
       POSTGRES_DB: vikunjatest
