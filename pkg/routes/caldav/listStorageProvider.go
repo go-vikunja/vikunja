@@ -52,7 +52,7 @@ type VikunjaCaldavProjectStorage struct {
 }
 
 // GetResources returns either all projects, links to the principal, or only one project, depending on the request
-func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, _ bool) ([]data.Resource, error) {
+func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, withChildren bool) ([]data.Resource, error) {
 
 	// It looks like we need to have the same handler for returning both the calendar home set and the user principal
 	// Since the client seems to ignore the whatever is being returned in the first request and just makes a second one
@@ -92,6 +92,24 @@ func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, _ bool) ([]d
 		}
 		r := data.NewResource(rpath, &rr)
 		r.Name = vcls.project.Title
+
+		// If the request is withChildren (Depth: 1), we need to return all tasks of the project
+		if withChildren {
+			resources := []data.Resource{r}
+
+			// Check if there are tasks to iterate over
+			if vcls.project.Tasks != nil {
+				for i := range vcls.project.Tasks {
+					taskResource := VikunjaProjectResourceAdapter{
+						project:      vcls.project,
+						task:         &vcls.project.Tasks[i].Task,
+						isCollection: false,
+					}
+					addTaskResource(&vcls.project.Tasks[i].Task, &taskResource, &resources)
+				}
+			}
+			return resources, nil
+		}
 		return []data.Resource{r}, nil
 	}
 
@@ -163,9 +181,7 @@ func (vcls *VikunjaCaldavProjectStorage) GetResourcesByList(rpaths []string) (re
 		rr := VikunjaProjectResourceAdapter{
 			task: t,
 		}
-		r := data.NewResource(getTaskURL(t), &rr)
-		r.Name = t.Title
-		resources = append(resources, r)
+		addTaskResource(t, &rr, &resources)
 	}
 
 	return
@@ -670,4 +686,10 @@ func (vcls *VikunjaCaldavProjectStorage) getProjectRessource(isCollection bool) 
 	}
 
 	return
+}
+
+func addTaskResource(task *models.Task, rr *VikunjaProjectResourceAdapter, resources *[]data.Resource) {
+	taskResourceInstance := data.NewResource(getTaskURL(task), rr)
+	taskResourceInstance.Name = task.Title
+	*resources = append(*resources, taskResourceInstance)
 }
