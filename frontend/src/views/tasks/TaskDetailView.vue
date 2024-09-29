@@ -573,8 +573,10 @@
 			</template>
 
 			<template #text>
-				<p>
-					{{ $t('task.detail.delete.text1') }}<br>
+				<p class="tw-text-balance !tw-mb-0">
+					{{ $t('task.detail.delete.text1') }}
+				</p>
+				<p class="tw-text-balance">
 					{{ $t('task.detail.delete.text2') }}
 				</p>
 			</template>
