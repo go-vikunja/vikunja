@@ -1125,5 +1125,5 @@ func generateConfigYAMLFromJSON(yamlPath string, commented bool) {
 
 // Create a yaml config file from the config-raw.json definition
 func (Generate) ConfigYAML(commented bool) {
-	generateConfigYAMLFromJSON(DefaultConfigYAMLSamplePath, false)
+	generateConfigYAMLFromJSON(DefaultConfigYAMLSamplePath, commented)
 }
