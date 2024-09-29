@@ -18,6 +18,7 @@ package models
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -300,7 +301,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		OrderBy(orderby).
 		Find(&tasks)
 	if err != nil {
-		return nil, totalCount, err
+		return nil, totalCount, fmt.Errorf("could not fetch tasks: %w", err)
 	}
 
 	// fetch subtasks when expanding
@@ -363,6 +364,10 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	totalCount, err = queryCount.
 		Select("count(DISTINCT tasks.id)").
 		Count(&Task{})
+	if err != nil {
+		sql, vals := queryCount.LastSQL()
+		return nil, 0, fmt.Errorf("could not fetch task count, error was '%w', sql: '%v', vaues: %v", err, sql, vals)
+	}
 	return
 }
 
