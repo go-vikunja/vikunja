@@ -34,7 +34,7 @@
 						}"
 					>
 						<slot>
-							<div class="header">
+							<div class="modal-header">
 								<slot name="header" />
 							</div>
 							<div class="content">
@@ -140,7 +140,7 @@ $modal-width: 1024px;
 		transform: none;
 	}
 
-	.header {
+	.modal-header {
 		font-size: 2rem;
 		font-weight: 700;
 	}
@@ -240,6 +240,14 @@ $modal-width: 1024px;
 	justify-content: space-between;
 	margin-bottom: 0 !important;
   }
+}
+
+.modal-content:has(.modal-header) {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	padding: 0 1rem;
+	min-height: 100vh
 }
 </style>
 
