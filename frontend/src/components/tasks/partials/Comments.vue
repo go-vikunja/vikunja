@@ -1,7 +1,8 @@
 <template>
 	<div
 		v-if="enabled"
-		class="content details"
+		ref="commentsRef"
+		class="content details comments-container"
 	>
 		<h3
 			v-if="canWrite || comments.length > 0"
@@ -15,7 +16,7 @@
 		<div class="comments">
 			<span
 				v-if="taskCommentService.loading && saving === null && !creating"
-				class="is-inline-flex is-align-items-center"
+				class="is-flex is-align-items-center my-4 ml-2"
 			>
 				<span class="loader is-inline-block mr-2" />
 				{{ $t('task.comment.loading') }}
@@ -107,6 +108,14 @@
 					/>
 				</div>
 			</div>
+
+			<PaginationEmit
+				v-if="taskCommentService.totalPages > 1"
+				:total-pages="taskCommentService.totalPages"
+				:current-page="currentPage"
+				@pageChanged="changePage"
+			/>
+
 			<div
 				v-if="canWrite"
 				class="media comment d-print-none"
@@ -160,6 +169,7 @@
 			</div>
 		</div>
 
+
 		<Modal
 			:enabled="showDeleteModal"
 			@close="showDeleteModal = false"
@@ -185,6 +195,7 @@ import {useI18n} from 'vue-i18n'
 
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import Editor from '@/components/input/AsyncEditor'
+import PaginationEmit from '@/components/misc/PaginationEmit.vue'
 
 import TaskCommentService from '@/services/taskComment'
 import TaskCommentModel from '@/models/taskComment'
@@ -242,6 +253,12 @@ const actions = computed(() => {
 	])))
 })
 
+const frontendUrl = computed(() => configStore.frontendUrl)
+
+const currentPage = ref(1)
+
+const commentsRef = ref<HTMLElement | null>(null)
+
 async function attachmentUpload(files: File[] | FileList): (Promise<string[]>) {
 
 	const uploadPromises: Promise<string>[] = []
@@ -267,12 +284,21 @@ async function loadComments(taskId: ITask['id']) {
 	newComment.taskId = taskId
 	commentEdit.taskId = taskId
 	commentToDelete.taskId = taskId
-	comments.value = await taskCommentService.getAll({taskId})
+	comments.value = await taskCommentService.getAll({taskId}, {}, currentPage.value)
+}
+
+async function changePage(page: number) {
+	commentsRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' })
+	currentPage.value = page
+	await loadComments(props.taskId)
 }
 
 watch(
 	() => props.taskId,
-	loadComments,
+	() => {
+		currentPage.value = 1 // Reset to first page when task changes
+		loadComments(props.taskId)
+	},
 	{immediate: true},
 )
 
@@ -403,5 +429,9 @@ async function deleteComment(commentToDelete: ITaskComment) {
 
 .media-content {
 	width: calc(100% - 48px - 2rem);
+}
+
+.comments-container {
+	scroll-margin-top: 4rem;
 }
 </style>

@@ -4,55 +4,52 @@
 		:current-page="currentPage"
 	>
 		<template #previous="{ disabled }">
-			<RouterLink
-				:disabled="disabled || undefined"
-				:to="getRouteForPagination(currentPage - 1)"
+			<BaseButton
+				:disabled="disabled"
 				class="pagination-previous"
+				@click="changePage(currentPage - 1)"
 			>
 				{{ $t('misc.previous') }}
-			</RouterLink>
+			</BaseButton>
 		</template>
 		<template #next="{ disabled }">
-			<RouterLink
-				:disabled="disabled || undefined"
-				:to="getRouteForPagination(currentPage + 1)"
+			<BaseButton
+				:disabled="disabled"
 				class="pagination-next"
+				@click="changePage(currentPage + 1)"
 			>
 				{{ $t('misc.next') }}
-			</RouterLink>
+			</BaseButton>
 		</template>
 		<template #page-link="{ page, isCurrent }">
-			<RouterLink
+			<BaseButton
 				class="pagination-link"
 				:aria-label="'Goto page ' + page.number"
 				:class="{ 'is-current': isCurrent }"
-				:to="getRouteForPagination(page.number)"
+				@click="changePage(page.number)"
 			>
 				{{ page.number }}
-			</RouterLink>
+			</BaseButton>
 		</template>
 	</BasePagination>
 </template>
 
 <script lang="ts" setup>
 import BasePagination from '@/components/base/BasePagination.vue'
+import BaseButton from '@/components/base/BaseButton.vue'
 
-withDefaults(defineProps<{
+const props = withDefaults(defineProps<{
 	totalPages: number,
-	currentPage?: number
+	currentPage: number
 }>(), {
-	currentPage: 0,
+	currentPage: 1,
 })
 
-function getRouteForPagination(page = 1, type = null) {
-	return {
-		name: type,
-		params: {
-			type: type,
-		},
-		query: {
-			page: page,
-		},
+const emit = defineEmits(['pageChanged'])
+
+function changePage(page: number) {
+	if (page >= 1 && page <= props.totalPages) {
+		emit('pageChanged', page)
 	}
 }
 </script>
