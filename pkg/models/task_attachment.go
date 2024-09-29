@@ -17,21 +17,14 @@
 package models
 
 import (
-	"bytes"
-	"image"
-	"image/png"
 	"io"
-	"strconv"
 	"time"
 
 	"code.vikunja.io/api/pkg/events"
+
 	"code.vikunja.io/api/pkg/files"
-	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
-
-	"github.com/disintegration/imaging"
 	"xorm.io/xorm"
 )
 
@@ -190,110 +183,6 @@ func (ta *TaskAttachment) ReadAll(s *xorm.Session, _ web.Auth, _ string, page in
 		Where("task_id = ?", ta.TaskID).
 		Count(&TaskAttachment{})
 	return attachments, len(attachments), numberOfTotalItems, err
-}
-
-func cacheKeyForTaskAttachmentPreview(id int64, size PreviewSize) string {
-	return "task_attachment_preview_" + strconv.FormatInt(id, 10) + "_size_" + string(size)
-}
-
-func (ta *TaskAttachment) GetPreviewFromCache(previewSize PreviewSize) []byte {
-	cacheKey := cacheKeyForTaskAttachmentPreview(ta.ID, previewSize)
-
-	var cached []byte
-	exists, err := keyvalue.GetWithValue(cacheKey, &cached)
-
-	// If the preview is not cached, return nil
-	if err != nil || !exists || cached == nil {
-		return nil
-	}
-
-	return cached
-}
-
-type PreviewSize string
-
-const (
-	PreviewSizeUnknown PreviewSize = "unknown"
-	PreviewSmall       PreviewSize = "sm"
-	PreviewMedium      PreviewSize = "md"
-	PreviewLarge       PreviewSize = "lg"
-	PreviewExtraLarge  PreviewSize = "xl"
-)
-
-func (previewSize PreviewSize) GetSize() int {
-	switch previewSize {
-	case PreviewSmall:
-		return 100
-	case PreviewMedium:
-		return 200
-	case PreviewLarge:
-		return 400
-	case PreviewExtraLarge:
-		return 800
-	case PreviewSizeUnknown:
-		return 0
-	default:
-		return 200
-	}
-}
-
-func GetPreviewSizeFromString(size string) PreviewSize {
-	switch size {
-	case "sm":
-		return PreviewSmall
-	case "md":
-		return PreviewMedium
-	case "lg":
-		return PreviewLarge
-	case "xl":
-		return PreviewExtraLarge
-	}
-
-	return PreviewSizeUnknown
-}
-
-func resizeImage(img image.Image, width int) *image.NRGBA {
-	resizedImg := imaging.Resize(img, width, 0, imaging.Lanczos)
-	log.Debugf(
-		"Resized attachment image from %vx%v to %vx%v for a preview",
-		img.Bounds().Size().X,
-		img.Bounds().Size().Y,
-		resizedImg.Bounds().Size().X,
-		resizedImg.Bounds().Size().Y,
-	)
-
-	return resizedImg
-}
-
-func (ta *TaskAttachment) GenerateAndSavePreviewToCache(previewSize PreviewSize) []byte {
-	img, _, err := image.Decode(ta.File.File)
-	if err != nil {
-		return nil
-	}
-
-	// Scale down the image to a minimum size
-	resizedImg := resizeImage(img, previewSize.GetSize())
-
-	// Get the raw bytes of the resized image
-	buf := &bytes.Buffer{}
-	if err := png.Encode(buf, resizedImg); err != nil {
-		return nil
-	}
-	previewImage, err := io.ReadAll(buf)
-	if err != nil {
-		return nil
-	}
-
-	// Store the preview image in the cache
-	cacheKey := cacheKeyForTaskAttachmentPreview(ta.ID, previewSize)
-	err = keyvalue.Put(cacheKey, previewImage)
-	if err != nil {
-		return nil
-	}
-
-	log.Infof("Attachment image preview for task attachment %v of size %v created and cached", ta.ID, previewSize)
-
-	return previewImage
 }
 
 // Delete removes an attachment
