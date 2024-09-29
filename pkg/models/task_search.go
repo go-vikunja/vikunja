@@ -301,7 +301,8 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		OrderBy(orderby).
 		Find(&tasks)
 	if err != nil {
-		return nil, totalCount, fmt.Errorf("could not fetch tasks: %w", err)
+		sql, vals := query.LastSQL()
+		return nil, 0, fmt.Errorf("could not fetch task count, error was '%w', sql: '%v', vaues: %v", err, sql, vals)
 	}
 
 	// fetch subtasks when expanding
