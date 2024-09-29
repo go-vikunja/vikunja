@@ -183,6 +183,10 @@ const (
 	WebhooksTimeoutSeconds Key = `webhooks.timeoutseconds`
 	WebhooksProxyURL       Key = `webhooks.proxyurl`
 	WebhooksProxyPassword  Key = `webhooks.proxypassword`
+
+	AutoTLSEnabled     Key = `autotls.enabled`
+	AutoTLSEmail       Key = `autotls.email`
+	AutoTLSRenewBefore Key = `autotls.renewbefore`
 )
 
 // GetString returns a string config value
@@ -407,6 +411,8 @@ func InitDefaultConfig() {
 	// Webhook
 	WebhooksEnabled.setDefault(true)
 	WebhooksTimeoutSeconds.setDefault(30)
+	// AutoTLS
+	AutoTLSRenewBefore.setDefault("720h") // 30days in hours
 }
 
 // InitConfig initializes the config, sets defaults etc.
@@ -480,6 +486,13 @@ func InitConfig() {
 	if ServiceEnableMetrics.GetBool() {
 		log.Warning("service.enablemetrics is deprecated and will be removed in a future release. Please use metrics.enable.")
 		MetricsEnabled.Set(true)
+	}
+
+	if !strings.HasPrefix(FilesBasePath.GetString(), "/") {
+		FilesBasePath.Set(filepath.Join(
+			ServiceRootpath.GetString(),
+			FilesBasePath.GetString(),
+		))
 	}
 }
 

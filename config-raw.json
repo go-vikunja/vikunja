@@ -803,6 +803,26 @@
                     "comment": "The proxy password to use when authenticating against the proxy."
                 }
             ]
+        },
+        {
+            "key": "autotls",
+            "children": [
+                {
+                    "key": "enabled",
+                    "default_value": "false",
+                    "comment": "If set to true, Vikunja will automatically request a TLS certificate from Let's Encrypt and use it to serve Vikunja over TLS. By enabling this option, you agree to Let's Encrypt's TOS.\nYou must configure a `service.publicurl` with a valid TLD where Vikunja is reachable to make this work. Furthermore, it is reccomened to set `service.interface` to `:443` if you're using this."
+                },
+                {
+                    "key": "email",
+                    "default_value": "",
+                    "comment": "A valid email address which will be used to register certificates with Let's Encrypt. You must provide this value in order to use autotls."
+                },
+                {
+                    "key": "renewbefore",
+                    "default_value": "30d",
+                    "comment": "A duration when certificates should be renewed before they expire. Valid time units are `ns`, `us` (or `µs`), `ms`, `s`, `m`, `h`."
+                }
+            ]
         }
     ]
 }

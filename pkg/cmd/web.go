@@ -19,8 +19,11 @@ package cmd
 import (
 	"context"
 	"net"
+	"net/url"
 	"os"
 	"os/signal"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
@@ -33,6 +36,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/cobra"
+	"golang.org/x/crypto/acme/autocert"
 )
 
 func init() {
@@ -64,6 +68,52 @@ func setupUnixSocket(e *echo.Echo) error {
 	return nil
 }
 
+func setupAutoTLS(e *echo.Echo) {
+	if config.ServiceUnixSocket.GetString() != "" {
+		log.Warning("Auto tls is enabled but listening on a unix socket is enabled as well. The latter will be ignored.")
+	}
+	if config.ServicePublicURL.GetString() == "" {
+		log.Fatal("You must configure a publicurl to use autotls.")
+	}
+	parsed, err := url.Parse(config.ServicePublicURL.GetString())
+	if err != nil {
+		log.Fatalf("Could not parse hostname from publicurl: %s", err)
+	}
+	domain := parsed.Hostname()
+	if domain == "" {
+		log.Fatalf("The hostname cannot be empty. Please make sure the configured publicurl contains a hostname.")
+	}
+	if !strings.Contains(domain, ".") {
+		log.Fatalf("The hostname must be a valid TLD. Please make sure the configured publicurl contains a valid TLD.")
+	}
+	renew, err := time.ParseDuration(config.AutoTLSRenewBefore.GetString())
+	if err != nil {
+		log.Fatalf("autotls.renewbefore must be a valid duration: %s", err)
+	}
+	if config.AutoTLSEmail.GetString() == "" {
+		log.Fatalf("You must provide an email address to use autotls.")
+	}
+	e.AutoTLSManager = autocert.Manager{
+		Prompt: autocert.AcceptTOS,
+		Cache: autocert.DirCache(filepath.Join(
+			config.FilesBasePath.GetString(),
+			".certs",
+		)),
+		HostPolicy:  autocert.HostWhitelist(domain),
+		RenewBefore: renew,
+		Email:       config.AutoTLSEmail.GetString(),
+	}
+
+	if config.ServiceInterface.GetString() != ":443" {
+		log.Warningf("Vikunja's interface is set to %s, with tls it is recommended to set this to :443", config.ServiceInterface.GetString())
+	}
+
+	err = e.StartAutoTLS(config.ServiceInterface.GetString())
+	if err != nil {
+		e.Logger.Info("shutting down...")
+	}
+}
+
 var webCmd = &cobra.Command{
 	Use:   "web",
 	Short: "Starts the rest api web server",
@@ -80,18 +130,26 @@ var webCmd = &cobra.Command{
 		routes.RegisterRoutes(e)
 		// Start server
 		go func() {
+			if config.AutoTLSEnabled.GetBool() {
+				setupAutoTLS(e)
+				return
+			}
+
 			// Listen unix socket if needed (ServiceInterface will be ignored)
 			if config.ServiceUnixSocket.GetString() != "" {
 				if err := setupUnixSocket(e); err != nil {
 					e.Logger.Fatal(err)
 				}
+				return
 			}
-			if err := e.Start(config.ServiceInterface.GetString()); err != nil {
+
+			err := e.Start(config.ServiceInterface.GetString())
+			if err != nil {
 				e.Logger.Info("shutting down...")
 			}
 		}()
 
-		// Wait for interrupt signal to gracefully shutdown the server with
+		// Wait for interrupt signal to gracefully shut down the server with
 		// a timeout of 10 seconds.
 		quit := make(chan os.Signal, 1)
 		signal.Notify(quit, os.Interrupt)
