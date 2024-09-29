@@ -7,6 +7,45 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 All releases can be found on https://code.vikunja.io/vikunja/releases.
 
+## [0.24.4] - 2024-09-29
+
+### Bug Fixes
+
+* *(attachment)* Do not use image previews
+* *(checkbox)* Use sibling css selector instead of has
+* *(files)* Only use service rootpath for files when the files path is not absolute
+* *(filters)* Explicitly search in json when using postgres
+* *(task)* Paginate task comments
+* *(task)* Do not show close button when the task was not opened via modal
+* *(task)* Improve task delete modal on mobile
+* *(test)* Use correct selector for modal header
+* Partial fix to allow list tasks in ios reminders app (#2717)
+* *(attachments)* Revert "chore(attachments): refactor building image preview"
+
+### Dependencies
+
+* *(deps)* Update desktop lockfile
+* *(deps)* Update dependency vue to v3.5.7
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dependency vue-i18n to v10.0.2
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dependency vue to v3.5.8
+* *(deps)* Update dependency @intlify/unplugin-vue-i18n to v5.1.0
+* *(deps)* Update dependency vue-i18n to v10.0.3
+* *(deps)* Update dependency @intlify/unplugin-vue-i18n to v5.2.0
+* *(deps)* Update dependency @sentry/vue to v8.31.0
+* *(deps)* Update dependency tailwindcss to v3.4.13
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dependency @sentry/vue to v8.32.0
+* *(deps)* Update tiptap to v2.7.3
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dependency vue to v3.5.9
+* *(deps)* Update dependency dompurify to v3.1.7
+* *(deps)* Update tiptap to v2.7.4
+* *(deps)* Update dependency vue to v3.5.10
+* *(deps)* Update dev-dependencies
+
 ## [0.24.3] - 2024-09-20
 
 ### Bug Fixes
