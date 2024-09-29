@@ -255,4 +255,12 @@ func TestParseFilter(t *testing.T) {
 		sevenDaysAgo := time.Now().Add(-7 * 24 * time.Hour)
 		assert.Equal(t, sevenDaysAgo.Unix(), result[0].value.(time.Time).Unix())
 	})
+	t.Run("date filter with 0000-01-01", func(t *testing.T) {
+		result, err := getTaskFiltersFromFilterString("due_date > 0000-01-01", "UTC")
+
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		date := result[0].value.(time.Time)
+		assert.Equal(t, 1, date.Year())
+	})
 }

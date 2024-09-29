@@ -276,6 +276,15 @@ func getValueForField(field reflect.StructField, rawValue string, loc *time.Loca
 			} else {
 				value, err = parseTimeFromUserInput(rawValue)
 			}
+			if err != nil {
+				return
+			}
+			// Mariadb does not support date values where the year is 0. To make this edge-case work,
+			// we're setting the year to 1 in that case.
+			tt := value.(time.Time)
+			if tt.Year() == 0 {
+				value = tt.AddDate(1, 0, 0)
+			}
 		}
 	case reflect.Slice:
 		// If this is a slice of pointers we're dealing with some property which is a relation
