@@ -1153,7 +1153,7 @@ steps:
     image: electronuserland/builder:wine-mono
     pull: true
     environment:
-      YARN_CACHE_FOLDER: .cache/yarn/
+      PNPM_CACHE_FOLDER: .cache/pnpm
     depends_on:
       - fetch-tags
     #      - restore-cache
@@ -1166,8 +1166,9 @@ steps:
       - unzip vikunja-frontend-$$VERSION.zip -d frontend
       - sed -i 's/\\/api\\/v1//g' frontend/index.html
       - ./bumpp.sh
-      - yarn install
-      - yarn dist --linux zip
+      - corepack enable && pnpm config set store-dir .cache/pnpm
+      - pnpm install --fetch-timeout 100000
+      - pnpm dist --linux zip
 
 #  - name: rebuild-cache
 #    image: meltwater/drone-cache:dev
@@ -1234,7 +1235,7 @@ steps:
     image: electronuserland/builder:wine-mono
     pull: true
     environment:
-      YARN_CACHE_FOLDER: .cache/yarn/
+      PNPM_CACHE_FOLDER: .cache/pnpm
     depends_on:
       - fetch-tags
     #      - restore-cache
@@ -1247,9 +1248,9 @@ steps:
       - unzip vikunja-frontend-$$VERSION.zip -d frontend
       - sed -i 's/\\/api\\/v1//g' frontend/index.html
       - ./bumpp.sh
-      - yarn install
-      - cat package.json
-      - yarn dist --linux --windows
+      - corepack enable && pnpm config set store-dir .cache/pnpm
+      - pnpm install --fetch-timeout 100000
+      - pnpm dist --linux --windows
   
   #  - name: rebuild-cache
   #    image: meltwater/drone-cache:dev
@@ -1399,6 +1400,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 238b49df4dc578830b9635081692b4243333996ca36496b2589b51a973be63d6
+hmac: 804713cb1e91adcbf32b18dbc0ca05b84d2c29b463e2d89b1ab3e5b678fdaf3a
 
 ...
