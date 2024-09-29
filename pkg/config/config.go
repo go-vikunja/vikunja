@@ -487,13 +487,6 @@ func InitConfig() {
 		log.Warning("service.enablemetrics is deprecated and will be removed in a future release. Please use metrics.enable.")
 		MetricsEnabled.Set(true)
 	}
-
-	if !strings.HasPrefix(FilesBasePath.GetString(), "/") {
-		FilesBasePath.Set(filepath.Join(
-			ServiceRootpath.GetString(),
-			FilesBasePath.GetString(),
-		))
-	}
 }
 
 func random(length int) (string, error) {

@@ -18,8 +18,11 @@ package files
 
 import (
 	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
@@ -32,16 +35,27 @@ import (
 var fs afero.Fs
 var afs *afero.Afero
 
+func setDefaultConfig() {
+	if !strings.HasPrefix(config.FilesBasePath.GetString(), "/") {
+		config.FilesBasePath.Set(filepath.Join(
+			config.ServiceRootpath.GetString(),
+			config.FilesBasePath.GetString(),
+		))
+	}
+}
+
 // InitFileHandler creates a new file handler for the file backend we want to use
 func InitFileHandler() {
 	fs = afero.NewOsFs()
 	afs = &afero.Afero{Fs: fs}
+	setDefaultConfig()
 }
 
 // InitTestFileHandler initializes a new memory file system for testing
 func InitTestFileHandler() {
 	fs = afero.NewMemMapFs()
 	afs = &afero.Afero{Fs: fs}
+	setDefaultConfig()
 }
 
 func initFixtures(t *testing.T) {

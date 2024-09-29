@@ -51,7 +51,7 @@ func TestTaskAttachment_ReadOne(t *testing.T) {
 		// Load the actual attachment file and check its content
 		err = ta.File.LoadFileByID()
 		require.NoError(t, err)
-		assert.Equal(t, filepath.Join(config.ServiceRootpath.GetString(), config.FilesBasePath.GetString(), "/1"), ta.File.File.Name())
+		assert.Equal(t, filepath.Join(config.ServiceRootpath.GetString(), "files", "1"), ta.File.File.Name())
 		content := make([]byte, 9)
 		read, err := ta.File.File.Read(content)
 		require.NoError(t, err)
