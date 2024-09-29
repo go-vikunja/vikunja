@@ -356,7 +356,7 @@ describe('Task', () => {
 				.should('be.visible')
 				.contains('Delete')
 				.click()
-			cy.get('.modal-mask .modal-container .modal-content .header')
+			cy.get('.modal-mask .modal-container .modal-content .modal-header')
 				.should('contain', 'Delete this task')
 			cy.get('.modal-mask .modal-container .modal-content .actions .button')
 				.contains('Do it!')
