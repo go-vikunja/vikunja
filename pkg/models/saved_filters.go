@@ -360,8 +360,13 @@ func RegisterAddTaskToFilterViewCron() {
 		defer s.Close()
 
 		// Get all filters with a date clause and a manual kanban view
+		where := "filters LIKE '%_date%'"
+		if db.GetDialect() == builder.POSTGRES {
+			where = "filters::jsonb ?| array['due_date', 'start_date', 'end_date']"
+		}
+
 		filters := map[int64]*SavedFilter{}
-		err := s.Where("filters LIKE '%_date%'").Find(&filters)
+		err := s.Where(where).Find(&filters)
 		if err != nil {
 			log.Errorf("%sError fetching filters: %s", logPrefix, err)
 			return
