@@ -16,6 +16,7 @@
 				:is-done="task.done"
 			/>
 			<BaseButton
+				v-if="hasClose"
 				class="close"
 				@click="$emit('close')"
 			>
@@ -33,6 +34,7 @@
 			{{ task.title.trim() }}
 		</h1>
 		<BaseButton
+			v-if="hasClose"
 			class="close"
 			@click="$emit('close')"
 		>
@@ -78,8 +80,10 @@ import {getHexColor, getTaskIdentifier} from '@/models/task'
 const props = withDefaults(defineProps<{
 	task: ITask,
 	canWrite: boolean | undefined,
+	hasClose: boolean | undefined,
 }>(), {
 	canWrite: false,
+	hasClose: false,
 })
 
 const emit = defineEmits<{

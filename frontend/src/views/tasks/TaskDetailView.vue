@@ -15,6 +15,7 @@
 				ref="heading"
 				:task="task"
 				:can-write="canWrite"
+				:has-close="isModal"
 				@update:task="Object.assign(task, $event)"
 				@close="$emit('close')"
 			/>
