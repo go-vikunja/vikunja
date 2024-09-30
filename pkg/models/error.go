@@ -121,6 +121,34 @@ func InvalidFieldError(fields []string) error {
 	}
 }
 
+// ErrInvalidTimezone represents a "InvalidTimezone" kind of error.
+type ErrInvalidTimezone struct {
+	Name      string
+	LoadError error
+}
+
+// IsErrInvalidTimezone checks if an error is a ErrInvalidTimezone.
+func IsErrInvalidTimezone(err error) bool {
+	_, ok := err.(ErrInvalidTimezone)
+	return ok
+}
+
+func (err ErrInvalidTimezone) Error() string {
+	return fmt.Sprintf("invalid timezone: %s, err: %v", err.Name, err.LoadError)
+}
+
+// ErrCodeInvalidTimezone holds the unique world-error code of this error
+const ErrCodeInvalidTimezone = 2003
+
+// HTTPError holds the http error description
+func (err ErrInvalidTimezone) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidTimezone,
+		Message:  fmt.Sprintf("The timezone '%s' is invalid", err.Name),
+	}
+}
+
 // ===========
 // Project errors
 // ===========

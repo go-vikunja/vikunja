@@ -192,7 +192,10 @@ func getTaskFiltersFromFilterString(filter string, filterTimezone string) (filte
 	if filterTimezone != "" {
 		loc, err = time.LoadLocation(filterTimezone)
 		if err != nil {
-			return
+			return nil, &ErrInvalidTimezone{
+				Name:      filterTimezone,
+				LoadError: err,
+			}
 		}
 	}
 
