@@ -17,8 +17,10 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/db"
 	"testing"
 	"time"
+	"xorm.io/builder"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -261,6 +263,10 @@ func TestParseFilter(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, result, 1)
 		date := result[0].value.(time.Time)
-		assert.Equal(t, 1, date.Year())
+		if db.GetDialect() == builder.MYSQL {
+			assert.Equal(t, 1, date.Year())
+		} else {
+			assert.Equal(t, 0, date.Year())
+		}
 	})
 }
