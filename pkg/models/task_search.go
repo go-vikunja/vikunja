@@ -302,7 +302,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		Find(&tasks)
 	if err != nil {
 		sql, vals := query.LastSQL()
-		return nil, 0, fmt.Errorf("could not fetch task count, error was '%w', sql: '%v', vaues: %v", err, sql, vals)
+		return nil, 0, fmt.Errorf("could not fetch tasks, error was '%w', sql: '%v', values: %v", err, sql, vals)
 	}
 
 	// fetch subtasks when expanding
@@ -367,7 +367,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		Count(&Task{})
 	if err != nil {
 		sql, vals := queryCount.LastSQL()
-		return nil, 0, fmt.Errorf("could not fetch task count, error was '%w', sql: '%v', vaues: %v", err, sql, vals)
+		return nil, 0, fmt.Errorf("could not fetch task count, error was '%w', sql: '%v', values: %v", err, sql, vals)
 	}
 	return
 }

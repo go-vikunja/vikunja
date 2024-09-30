@@ -25,10 +25,12 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 
 	"github.com/ganigeorgiev/fexpr"
 	"github.com/iancoleman/strcase"
 	"github.com/jszwedko/go-datemath"
+	"xorm.io/builder"
 	"xorm.io/xorm/schemas"
 )
 
@@ -270,21 +272,22 @@ func getValueForField(field reflect.StructField, rawValue string, loc *time.Loca
 	case reflect.Struct:
 		if field.Type == schemas.TimeType {
 			var t datemath.Expression
+			var tt time.Time
 			t, err = datemath.Parse(rawValue)
 			if err == nil {
-				value = t.Time(datemath.WithLocation(config.GetTimeZone())).In(loc)
+				tt = t.Time(datemath.WithLocation(config.GetTimeZone())).In(loc)
 			} else {
-				value, err = parseTimeFromUserInput(rawValue)
+				tt, err = parseTimeFromUserInput(rawValue)
 			}
 			if err != nil {
 				return
 			}
-			// Mariadb does not support date values where the year is 0. To make this edge-case work,
+			// Mysql/Mariadb does not support date values where the year < 1. To make this edge-case work,
 			// we're setting the year to 1 in that case.
-			tt := value.(time.Time)
-			if tt.Year() == 0 {
-				value = tt.AddDate(1, 0, 0)
+			if db.GetDialect() == builder.MYSQL && tt.Year() < 1 {
+				tt = tt.AddDate(1-tt.Year(), 0, 0)
 			}
+			value = tt
 		}
 	case reflect.Slice:
 		// If this is a slice of pointers we're dealing with some property which is a relation
