@@ -17,13 +17,14 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/db"
 	"testing"
 	"time"
-	"xorm.io/builder"
+
+	"code.vikunja.io/api/pkg/db"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/builder"
 )
 
 func TestParseFilter(t *testing.T) {

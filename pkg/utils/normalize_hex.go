@@ -19,8 +19,10 @@ package utils
 import "strings"
 
 func NormalizeHex(hex string) string {
-	if strings.HasPrefix(hex, "#") {
-		return strings.TrimPrefix(hex, "#")
+	hex = strings.TrimPrefix(hex, "#")
+
+	if len(hex) > 6 {
+		return hex[:6]
 	}
 
 	return hex
