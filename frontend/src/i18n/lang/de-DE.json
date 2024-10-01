@@ -458,7 +458,8 @@
           "doneAt": "Datum und Uhrzeit, an dem die Aufgabe als erledigt markiert wurde",
           "assignees": "Die der Aufgabe Zugewiesenen",
           "labels": "Die der Aufgabe zugeordneten Labels",
-          "project": "Das Projekt, zu dem die Aufgabe gehört (nur verfügbar für gespeicherte Filter, nicht auf Projektebene)"
+          "project": "Das Projekt, zu dem die Aufgabe gehört (nur verfügbar für gespeicherte Filter, nicht auf Projektebene)",
+          "reminders": "Die Erinnerungen einer Aufgabe als Datumsfeld, gibt alle Aufgaben mit mindestens einer Erinnerung zurück, die dem Filter entspricht"
         },
         "operators": {
           "intro": "Die verfügbaren Operatoren für die Filterung sind:",

@@ -458,7 +458,8 @@
           "doneAt": "The date and time when the task was completed",
           "assignees": "The assignees of the task",
           "labels": "The labels associated with the task",
-          "project": "The project the task belongs to (only available for saved filters, not on a project level)"
+          "project": "The project the task belongs to (only available for saved filters, not on a project level)",
+          "reminders": "The reminders of the task as a date field, will return all tasks with at least one reminder matching the query"
         },
         "operators": {
           "intro": "The available operators for filtering include:",

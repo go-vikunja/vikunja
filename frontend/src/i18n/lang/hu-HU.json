@@ -458,7 +458,8 @@
           "doneAt": "A feladat befejezésének dátuma és időpontja",
           "assignees": "A feladattal megbízottak",
           "labels": "A feladathoz társított címkék",
-          "project": "A projekt, amelyhez a feladat tartozik (csak a mentett szűrőkhöz érhető el, projekt szinten nem)"
+          "project": "A projekt, amelyhez a feladat tartozik (csak a mentett szűrőkhöz érhető el, projekt szinten nem)",
+          "reminders": "The reminders of the task as a date field, will return all tasks with at least one reminder matching the query"
         },
         "operators": {
           "intro": "A szűréshez elérhető operátorok a következők:",

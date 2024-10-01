@@ -458,7 +458,8 @@
           "doneAt": "任务完成的日期和时间",
           "assignees": "任务的指派人",
           "labels": "与任务相关的标签",
-          "project": "任务属于的项目 (仅适用于保存的过滤器，不适用于项目级别)"
+          "project": "任务属于的项目 (仅适用于保存的过滤器，不适用于项目级别)",
+          "reminders": "The reminders of the task as a date field, will return all tasks with at least one reminder matching the query"
         },
         "operators": {
           "intro": "可用的过滤操作员包括：",

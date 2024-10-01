@@ -458,7 +458,8 @@
           "doneAt": "День та час закінчення",
           "assignees": "Виконавці",
           "labels": "Позначки",
-          "project": "Справа, якій це завдання належить (доступно тільки для постійних вибірок, а не на рівні справи)"
+          "project": "Справа, якій це завдання належить (доступно тільки для постійних вибірок, а не на рівні справи)",
+          "reminders": "The reminders of the task as a date field, will return all tasks with at least one reminder matching the query"
         },
         "operators": {
           "intro": "Доступні оператори для вибірки такі:",

@@ -458,7 +458,8 @@
           "doneAt": "Data i czas ukończenia zadania",
           "assignees": "Osoby przypisane do zadania",
           "labels": "Etykiety przypisane do zadania",
-          "project": "Projekt, do którego należy zadanie (dostępne tylko dla zapisanych filtrów, nie na poziomie projektu)"
+          "project": "Projekt, do którego należy zadanie (dostępne tylko dla zapisanych filtrów, nie na poziomie projektu)",
+          "reminders": "The reminders of the task as a date field, will return all tasks with at least one reminder matching the query"
         },
         "operators": {
           "intro": "Dostępne operatory do filtrowania to:",
