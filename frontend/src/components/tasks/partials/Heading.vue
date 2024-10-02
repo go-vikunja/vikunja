@@ -30,6 +30,7 @@
 			:spellcheck="false"
 			@blur="save(($event.target as HTMLInputElement).textContent as string)"
 			@keydown.enter.prevent.stop="($event.target as HTMLInputElement).blur()"
+			@keydown.esc.prevent.stop="cancel($event.target as HTMLInputElement)"
 		>
 			{{ task.title.trim() }}
 		</h1>
@@ -132,6 +133,11 @@ async function save(title: string) {
 	} finally {
 		saving.value = false
 	}
+}
+
+async function cancel(element: HTMLInputElement) {
+  element.textContent = props.task.title
+  element.blur()
 }
 </script>
 
