@@ -206,6 +206,22 @@ func convertFiltersToDBFilterCond(rawFilters []*taskFilter, includeNulls bool) (
 	return filterCond, nil
 }
 
+func hasBucketIDInParsedFilter(filters []*taskFilter) bool {
+	for _, filter := range filters {
+		if subfilters, is := filter.value.([]*taskFilter); is {
+			has := hasBucketIDInParsedFilter(subfilters)
+			if has {
+				return true
+			}
+		}
+		if filter.field == taskPropertyBucketID {
+			return true
+		}
+	}
+
+	return false
+}
+
 //nolint:gocyclo
 func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCount int64, err error) {
 
@@ -214,13 +230,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		return nil, 0, err
 	}
 
-	var joinTaskBuckets bool
-	for _, filter := range opts.parsedFilters {
-		if filter.field == taskPropertyBucketID {
-			joinTaskBuckets = true
-			break
-		}
-	}
+	joinTaskBuckets := hasBucketIDInParsedFilter(opts.parsedFilters)
 
 	filterCond, err := convertFiltersToDBFilterCond(opts.parsedFilters, opts.filterIncludeNulls)
 	if err != nil {

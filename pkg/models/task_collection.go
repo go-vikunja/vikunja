@@ -262,6 +262,10 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		tc.ProjectID = tf.ProjectID
 		tc.isSavedFilter = true
 
+		if tf.Filter != "" {
+			tc.Filter = "(" + tf.Filter + ") && (" + tc.Filter + ")"
+		}
+
 		return tc.ReadAll(s, a, search, page, perPage)
 	}
 
@@ -281,11 +285,13 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 			}
 		}
 
-		if view.BucketConfigurationMode == BucketConfigurationModeFilter && strings.Contains(tf.Filter, "bucket_id") {
+		if strings.Contains(tf.Filter, "bucket_id") {
 			filteringForBucket = true
-			tf.Filter, err = getFilterValueForBucketFilter(tf.Filter, view)
-			if err != nil {
-				return nil, 0, 0, err
+			if view.BucketConfigurationMode == BucketConfigurationModeFilter {
+				tf.Filter, err = getFilterValueForBucketFilter(tf.Filter, view)
+				if err != nil {
+					return nil, 0, 0, err
+				}
 			}
 		}
 	}
