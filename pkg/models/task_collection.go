@@ -142,7 +142,7 @@ func getTaskOrTasksInBuckets(s *xorm.Session, a web.Auth, projects []*Project, v
 		return getTasksForProjects(s, projects, a, opts, view)
 	}
 
-	if view != nil && !strings.Contains(opts.filter, "bucket_id") {
+	if view != nil && !strings.Contains(opts.filter, taskPropertyBucketID) {
 		if view.BucketConfigurationMode != BucketConfigurationModeNone {
 			tasksInBuckets, err := GetTasksInBucketsForView(s, view, projects, opts, a)
 			return tasksInBuckets, len(tasksInBuckets), int64(len(tasksInBuckets)), err
@@ -285,7 +285,7 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 			}
 		}
 
-		if strings.Contains(tf.Filter, "bucket_id") {
+		if strings.Contains(tf.Filter, taskPropertyBucketID) {
 			filteringForBucket = true
 			if view.BucketConfigurationMode == BucketConfigurationModeFilter {
 				tf.Filter, err = getFilterValueForBucketFilter(tf.Filter, view)

@@ -460,7 +460,7 @@ func convertParsedFilterToTypesense(rawFilters []*taskFilter) (filterBy string, 
 			f.field = "project_id"
 		}
 
-		if f.field == "bucket_id" {
+		if f.field == taskPropertyBucketID {
 			f.field = "buckets"
 		}
 

@@ -226,9 +226,9 @@ func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, projects []*Pr
 	originalFilter := opts.filter
 	for id, bucket := range bucketMap {
 
-		if !strings.Contains(originalFilter, "bucket_id") {
+		if !strings.Contains(originalFilter, taskPropertyBucketID) {
 
-			var bucketFilter = "bucket_id = " + strconv.FormatInt(id, 10)
+			var bucketFilter = taskPropertyBucketID + " = " + strconv.FormatInt(id, 10)
 			if view.BucketConfigurationMode == BucketConfigurationModeFilter {
 				bucketFilter = "(" + view.BucketConfiguration[id].Filter + ")"
 			}
