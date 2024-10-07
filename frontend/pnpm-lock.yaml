@@ -38,8 +38,8 @@ importers:
         specifier: 5.2.0
         version: 5.2.0(@vue/compiler-dom@3.5.11)(eslint@8.57.1)(rollup@4.24.0)(typescript@5.6.2)(vue-i18n@10.0.4(vue@3.5.11(typescript@5.6.2)))(vue@3.5.11(typescript@5.6.2))
       '@kyvg/vue3-notification':
-        specifier: 3.3.0
-        version: 3.3.0(vue@3.5.11(typescript@5.6.2))
+        specifier: 3.4.0
+        version: 3.4.0(vue@3.5.11(typescript@5.6.2))
       '@sentry/tracing':
         specifier: 7.114.0
         version: 7.114.0
@@ -1767,8 +1767,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.25':
     resolution: {integrity: sha512-vNk6aEwybGtawWmy/PzwnGDOjCkLWSD2wqvjGGAgOAwCGWySYXfYoxt00IJkTF+8Lb57DwOb3Aa0o9CApepiYQ==}
 
-  '@kyvg/vue3-notification@3.3.0':
-    resolution: {integrity: sha512-8kv8jfGgK/1F2L+BzojUEWCaWkLOICui4y4SsxwZeTnWA7ZAZrc9r+OL8gM2F9D/UzDNoB9dNEqi8B8bgsmoVA==}
+  '@kyvg/vue3-notification@3.4.0':
+    resolution: {integrity: sha512-SFa5jPMVySj118LVGMFkPLpZVfFpLR/aTXJM90paS2LJZpwFqJnh9asJYPZ+wfJc1kXm3aOlluLoGw1OP4BnoA==}
     peerDependencies:
       vue: ^3.0.0
 
@@ -7867,7 +7867,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
 
-  '@kyvg/vue3-notification@3.3.0(vue@3.5.11(typescript@5.6.2))':
+  '@kyvg/vue3-notification@3.4.0(vue@3.5.11(typescript@5.6.2))':
     dependencies:
       vue: 3.5.11(typescript@5.6.2)
 
