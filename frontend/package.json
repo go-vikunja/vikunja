@@ -139,7 +139,7 @@
     "@types/flexsearch": "0.7.6",
     "@types/is-touch-device": "1.0.3",
     "@types/lodash.clonedeep": "4.5.9",
-    "@types/node": "20.16.10",
+    "@types/node": "20.16.11",
     "@types/sortablejs": "1.15.8",
     "@typescript-eslint/eslint-plugin": "7.18.0",
     "@typescript-eslint/parser": "7.18.0",
