@@ -332,21 +332,37 @@ func addTaskToFilter(s *xorm.Session, filter *SavedFilter, view *ProjectView, fa
 		return nil, nil, err
 	}
 
-	bucketID, err := getDefaultBucketID(s, view)
+	taskHasBucketInView, err := s.Where(builder.And(
+		builder.Eq{"task_id": task.ID},
+		builder.Eq{"project_view_id": view.ID},
+	)).Exist(&TaskBucket{})
+	if !taskHasBucketInView {
+		bucketID, err := getDefaultBucketID(s, view)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		taskBucket = &TaskBucket{
+			BucketID:      bucketID,
+			TaskID:        task.ID,
+			ProjectViewID: view.ID,
+		}
+	}
+
+	// Check if a position for this task already exists
+	existingTaskPosition, err := s.Where(builder.And(
+		builder.Eq{"task_id": task.ID},
+		builder.Eq{"project_view_id": view.ID},
+	)).Exist(&TaskPosition{})
 	if err != nil {
 		return nil, nil, err
 	}
-
-	taskBucket = &TaskBucket{
-		BucketID:      bucketID,
-		TaskID:        task.ID,
-		ProjectViewID: view.ID,
-	}
-
-	taskPosition = &TaskPosition{
-		TaskID:        task.ID,
-		ProjectViewID: view.ID,
-		Position:      calculateDefaultPosition(task.Index, task.Position),
+	if !existingTaskPosition {
+		taskPosition = &TaskPosition{
+			TaskID:        task.ID,
+			ProjectViewID: view.ID,
+			Position:      calculateDefaultPosition(task.Index, task.Position),
+		}
 	}
 
 	return
