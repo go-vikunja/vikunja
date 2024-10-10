@@ -285,6 +285,10 @@ func getTypesenseTaskForTask(s *xorm.Session, task *Task, projectsCache map[int6
 
 func reindexTasksInTypesense(s *xorm.Session, tasks map[int64]*Task) (err error) {
 
+	if !config.TypesenseEnabled.GetBool() {
+		return
+	}
+
 	if len(tasks) == 0 {
 		log.Infof("No tasks to index")
 		return
