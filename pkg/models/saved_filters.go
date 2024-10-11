@@ -336,6 +336,9 @@ func addTaskToFilter(s *xorm.Session, filter *SavedFilter, view *ProjectView, fa
 		builder.Eq{"task_id": task.ID},
 		builder.Eq{"project_view_id": view.ID},
 	)).Exist(&TaskBucket{})
+	if err != nil {
+		return nil, nil, err
+	}
 	if !taskHasBucketInView {
 		bucketID, err := getDefaultBucketID(s, view)
 		if err != nil {
