@@ -401,7 +401,7 @@
       "titleRequired": "Please provide a title.",
       "delete": "Ištrinti šį atvaizdavimą",
       "deleteText": "Are you sure you want to remove this view? It will no longer be possible to use it to view tasks in this project. This action won't delete any tasks. This cannot be undone!",
-      "deleteSuccess": "The view was deleted successfully.",
+      "deleteSuccess": "Atvaizdavimas buvo sėkmingai ištrintas.",
       "onlyAdminsCanEdit": "Tik projekto administratoriai gali keisti atvaizdavimą.",
       "updateSuccess": "Atvaizdavimas buvo sėkmingai atnaujintas."
     }
@@ -490,7 +490,7 @@
     }
   },
   "migrate": {
-    "title": "Import from other services",
+    "title": "Importuoti iš kitų paslaugų tiekėjų",
     "titleService": "Importuoti duomenis iš {name} į Vikunja",
     "import": "Import your data into Vikunja",
     "description": "Paspauskite ant trečiosios šalies logotipo norint pradėti.",
@@ -555,11 +555,11 @@
     "disable": "Išjungti",
     "copy": "Kopijuoti į iškarpinę",
     "copyError": "Copy to clipboard failed",
-    "search": "Search",
-    "searchPlaceholder": "Type to search…",
-    "previous": "Previous",
-    "next": "Next",
-    "poweredBy": "Powered by Vikunja",
+    "search": "Paieška",
+    "searchPlaceholder": "Rašykite čia norėdami ieškoti…",
+    "previous": "Ankstesnis",
+    "next": "Toliau",
+    "poweredBy": "Sukurta Vikunja",
     "info": "Info",
     "create": "Sukurti",
     "doit": "Atlikt!",
