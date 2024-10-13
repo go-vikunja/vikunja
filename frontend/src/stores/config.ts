@@ -77,8 +77,12 @@ export const useConfigStore = defineStore('config', () => {
 
 	const migratorsEnabled = computed(() => state.availableMigrators?.length > 0)
 	const apiBase = computed(() => {
-		const {host, protocol} = parseURL(window.API_URL)
-		return protocol + '//' + host
+		const {host, protocol, href} = parseURL(window.API_URL)
+
+		const cleanHref = href ? (href.endsWith('/') 
+			? href.slice(0, -1) 
+			: href) : ''
+		return `${protocol}//${host}${cleanHref ? `/${cleanHref}` : ''}`
 	})
 
 	function setConfig(config: ConfigState) {
@@ -88,11 +92,11 @@ export const useConfigStore = defineStore('config', () => {
 	async function update(): Promise<boolean> {
 		const HTTP = HTTPFactory()
 		const {data: config} = await HTTP.get('info')
-		
+
 		if (typeof config.version === 'undefined') {
 			throw new InvalidApiUrlProvidedError()
 		}
-		
+
 		setConfig(objectToCamelCase(config))
 		return !!config
 	}
@@ -110,5 +114,5 @@ export const useConfigStore = defineStore('config', () => {
 
 // support hot reloading
 if (import.meta.hot) {
-  import.meta.hot.accept(acceptHMRUpdate(useConfigStore, import.meta.hot))
+	import.meta.hot.accept(acceptHMRUpdate(useConfigStore, import.meta.hot))
 }
