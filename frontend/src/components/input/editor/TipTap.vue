@@ -495,7 +495,8 @@ watch(
 )
 
 function bubbleNow() {
-	if (editor.value?.getHTML() === modelValue) {
+	if (editor.value?.getHTML() === modelValue ||
+		(editor.value?.getHTML() === '<p></p>') && modelValue === '') {
 		return
 	}
 
