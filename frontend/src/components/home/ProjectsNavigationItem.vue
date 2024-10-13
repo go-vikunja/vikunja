@@ -25,7 +25,7 @@
 				/>
 				<div
 					class="color-bubble-handle-wrapper"
-					:class="{'is-draggable': project.id > 0}"
+					:class="{'is-draggable': project.id > 0 && project.maxRight > RIGHTS.READ}"
 				>
 					<ColorBubble
 						v-if="project.hexColor !== ''"
@@ -38,7 +38,7 @@
 						<Icon icon="filter" />
 					</span>
 					<span
-						v-if="project.id > 0"
+						v-if="project.id > 0 && project.maxRight > RIGHTS.READ"
 						class="icon menu-item-icon handle"
 						:class="{'has-color-bubble': project.hexColor !== ''}"
 					>
@@ -48,7 +48,7 @@
 				<span class="project-menu-title">{{ getProjectTitle(project) }}</span>
 			</BaseButton>
 			<BaseButton
-				v-if="project.id > 0"
+				v-if="project.id > 0 && project.maxRight > RIGHTS.READ"
 				class="favorite"
 				:class="{'is-favorite': project.isFavorite}"
 				@click="projectStore.toggleProjectFavorite(project)"
@@ -56,6 +56,7 @@
 				<Icon :icon="project.isFavorite ? 'star' : ['far', 'star']" />
 			</BaseButton>
 			<ProjectSettingsDropdown
+				v-if="project.maxRight > RIGHTS.READ"
 				class="menu-list-dropdown"
 				:project="project"
 			>
@@ -94,6 +95,7 @@ import ProjectSettingsDropdown from '@/components/project/ProjectSettingsDropdow
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 import ColorBubble from '@/components/misc/ColorBubble.vue'
 import ProjectsNavigation from '@/components/home/ProjectsNavigation.vue'
+import {RIGHTS} from '@/constants/rights'
 
 const props = defineProps<{
 	project: IProject,

@@ -109,6 +109,7 @@
 				{{ $t('menu.createProject') }}
 			</DropdownItem>
 			<DropdownItem
+				v-if="project.maxRight === RIGHTS.ADMIN"
 				v-tooltip="isDefaultProject ? $t('menu.cantDeleteIsDefault') : ''"
 				:to="{ name: 'project.settings.delete', params: { projectId: project.id } }"
 				icon="trash-alt"
@@ -135,6 +136,7 @@ import {isSavedFilter} from '@/services/savedFilter'
 import {useConfigStore} from '@/stores/config'
 import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
+import {RIGHTS} from '@/constants/rights'
 
 const props = defineProps<{
 	project: IProject

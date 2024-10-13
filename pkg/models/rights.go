@@ -16,18 +16,20 @@
 
 package models
 
+import (
+	"encoding/json"
+	"fmt"
+	"strconv"
+)
+
 // Right defines the rights users/teams can have for projects
 type Right int
 
 // define unknown right
 const (
 	RightUnknown = -1
-)
-
-// Enumerate all the team rights
-const (
 	// Can read projects in a
-	RightRead Right = iota
+	RightRead Right = iota - 1
 	// Can write in a like projects and tasks. Cannot create new projects.
 	RightWrite
 	// Can manage a project, can do everything
@@ -39,5 +41,35 @@ func (r Right) isValid() error {
 		return ErrInvalidRight{r}
 	}
 
+	return nil
+}
+
+// MarshalJSON marshals the enum as a quoted json string
+func (r Right) MarshalJSON() ([]byte, error) {
+	if r == RightUnknown {
+		return []byte(`null`), nil
+	}
+	return []byte(strconv.Itoa(int(r))), nil
+}
+
+// UnmarshalJSON unmarshals a quoted json string to the enum value
+func (r *Right) UnmarshalJSON(data []byte) error {
+	var s int
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+
+	switch s {
+	case -1:
+		*r = RightUnknown
+	case 0:
+		*r = RightRead
+	case 1:
+		*r = RightWrite
+	case 2:
+		*r = RightAdmin
+	default:
+		return fmt.Errorf("invalid Right %q", s)
+	}
 	return nil
 }

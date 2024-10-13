@@ -3,7 +3,7 @@
 		:title="$t('project.edit.header')"
 		primary-icon=""
 		:primary-label="$t('misc.save')"
-		:tertiary="$t('misc.delete')"
+		:tertiary="project.maxRight === RIGHTS.ADMIN ? $t('misc.delete') : undefined"
 		@primary="save"
 		@tertiary="$router.push({ name: 'project.settings.delete', params: { id: projectId } })"
 	>
@@ -99,6 +99,7 @@ import {useProjectStore} from '@/stores/projects'
 import {useProject} from '@/stores/projects'
 
 import {useTitle} from '@/composables/useTitle'
+import {RIGHTS} from '@/constants/rights'
 
 const props = defineProps<{
 	projectId: IProject['id'],

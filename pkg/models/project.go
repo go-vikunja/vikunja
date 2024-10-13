@@ -77,6 +77,9 @@ type Project struct {
 
 	Views []*ProjectView `xorm:"-" json:"views"`
 
+	Expand   ProjectExpandable `xorm:"-" json:"-" query:"expand"`
+	MaxRight Right             `xorm:"-" json:"max_right"`
+
 	// A timestamp when this project was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`
 	// A timestamp when this project was last updated. You cannot change this value.
@@ -85,6 +88,10 @@ type Project struct {
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`
 }
+
+type ProjectExpandable string
+
+const ProjectExpandableRights = `rights`
 
 type ProjectWithTasksAndBuckets struct {
 	Project
@@ -161,6 +168,7 @@ var FavoritesPseudoProject = Project{
 // @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search projects by title."
 // @Param is_archived query bool false "If true, also returns all archived projects."
+// @Param expand query string false "If set to `rights`, Vikunja will return the max right the current user has on this project. You can currently only set this to `rights`."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.Project "The projects"
 // @Failure 403 {object} web.HTTPError "The user does not have access to the project"
@@ -217,6 +225,17 @@ func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 	err = addProjectDetails(s, prs, a)
 	if err != nil {
 		return
+	}
+
+	if p.Expand == ProjectExpandableRights {
+		err = addMaxRightToProjects(s, prs, a)
+		if err != nil {
+			return
+		}
+	} else {
+		for _, pr := range prs {
+			pr.MaxRight = RightUnknown
+		}
 	}
 
 	//////////////////////////
@@ -713,6 +732,31 @@ func addProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err er
 		// Only override the file info if we have info for unsplash backgrounds
 		if _, exists := unsplashPhotos[l.BackgroundFileID]; exists {
 			l.BackgroundInformation = unsplashPhotos[l.BackgroundFileID]
+		}
+	}
+
+	return
+}
+
+func addMaxRightToProjects(s *xorm.Session, projects []*Project, a web.Auth) (err error) {
+	projectIDs := make([]int64, 0, len(projects))
+	for _, project := range projects {
+		if getSavedFilterIDFromProjectID(project.ID) > 0 {
+			project.MaxRight = RightAdmin
+			continue
+		}
+		projectIDs = append(projectIDs, project.ID)
+	}
+
+	rights, err := checkRightsForProjects(s, a, projectIDs)
+	if err != nil {
+		return err
+	}
+
+	for _, project := range projects {
+		right, has := rights[project.ID]
+		if has {
+			project.MaxRight = right.MaxRight
 		}
 	}
 

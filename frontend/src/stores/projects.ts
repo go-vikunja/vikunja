@@ -185,7 +185,7 @@ export const useProjectStore = defineStore('project', () => {
 		let page = 1
 		try {
 			do {
-				const newProjects = await projectService.getAll({}, {is_archived: true}, page) as IProject[]
+				const newProjects = await projectService.getAll({}, {is_archived: true, expand: 'rights'}, page) as IProject[]
 				loadedProjects.push(...newProjects)
 				page++
 			} while (page <= projectService.totalPages)
