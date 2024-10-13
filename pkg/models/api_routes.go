@@ -120,8 +120,7 @@ func CollectRoutesForAPITokenUsage(route echo.Route, middlewares []echo.Middlewa
 
 	routeGroupName, routeParts := getRouteGroupName(route.Path)
 
-	if routeGroupName == "user" ||
-		routeGroupName == "tokenTest" ||
+	if routeGroupName == "tokenTest" ||
 		routeGroupName == "subscriptions" ||
 		routeGroupName == "tokens" ||
 		routeGroupName == "*" ||
@@ -229,6 +228,10 @@ func CanDoAPIRoute(c echo.Context, token *APIToken) (can bool) {
 	routeGroupName, routeParts := getRouteGroupName(path)
 
 	routeGroupName = strings.TrimSuffix(routeGroupName, "_bulk")
+
+	if routeGroupName == "user" {
+		routeGroupName = "other"
+	}
 
 	group, hasGroup := token.Permissions[routeGroupName]
 	if !hasGroup {
