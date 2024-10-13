@@ -31,7 +31,7 @@ func TestLogin(t *testing.T) {
 	t.Run("Normal login", func(t *testing.T) {
 		rec, err := newTestRequest(t, http.MethodPost, apiv1.Login, `{
   "username": "user1",
-  "password": "1234"
+  "password": "12345678"
 }`, nil, nil)
 		require.NoError(t, err)
 		assert.Contains(t, rec.Body.String(), "token")
@@ -44,7 +44,7 @@ func TestLogin(t *testing.T) {
 	t.Run("Not existing user", func(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.Login, `{
   "username": "userWichDoesNotExist",
-  "password": "1234"
+  "password": "12345678"
 }`, nil, nil)
 		require.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrCodeWrongUsernameOrPassword)
@@ -60,7 +60,7 @@ func TestLogin(t *testing.T) {
 	t.Run("user with unconfirmed email", func(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.Login, `{
   "username": "user5",
-  "password": "1234"
+  "password": "12345678"
 }`, nil, nil)
 		require.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrCodeEmailNotConfirmed)

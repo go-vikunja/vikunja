@@ -127,6 +127,11 @@
                     "key": "enablepublicteams",
                     "default_value": "false",
                     "comment": "Enables the public team feature. If enabled, it is possible to configure teams to be public, which makes them\ndiscoverable when sharing a project, therefore not only showing teams the user is member of."
+                },
+                {
+                    "key": "bcryptrounds",
+                    "default_value": "11",
+                    "comment": "The number of bcrypt rounds to use during registration. Each increment of this number doubles the computational cost. You probably don't need to change this value."
                 }
             ]
         },

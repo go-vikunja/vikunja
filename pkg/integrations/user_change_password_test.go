@@ -30,8 +30,8 @@ import (
 func TestUserChangePassword(t *testing.T) {
 	t.Run("Normal test", func(t *testing.T) {
 		rec, err := newTestRequestWithUser(t, http.MethodPost, apiv1.UserChangePassword, &testuser1, `{
-  "new_password": "12345",
-  "old_password": "1234"
+  "new_password": "123456789",
+  "old_password": "12345678"
 }`, nil, nil)
 		require.NoError(t, err)
 		assert.Contains(t, rec.Body.String(), `The password was updated successfully.`)
@@ -55,7 +55,7 @@ func TestUserChangePassword(t *testing.T) {
 	t.Run("Empty new password", func(t *testing.T) {
 		_, err := newTestRequestWithUser(t, http.MethodPost, apiv1.UserChangePassword, &testuser1, `{
   "new_password": "",
-  "old_password": "1234"
+  "old_password": "12345678"
 }`, nil, nil)
 		require.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrCodeEmptyNewPassword)

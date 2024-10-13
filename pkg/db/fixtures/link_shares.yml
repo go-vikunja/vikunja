@@ -26,7 +26,7 @@
   hash: testWithPassword
   project_id: 1
   right: 0
-  password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
+  password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6' # 12345678
   sharing_type: 2
   shared_by_id: 1
   created: 2018-12-01 15:13:12

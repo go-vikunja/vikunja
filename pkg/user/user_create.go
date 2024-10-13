@@ -119,7 +119,7 @@ func CreateUser(s *xorm.Session, user *User) (newUser *User, err error) {
 
 // HashPassword hashes a password
 func HashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 11)
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), config.ServiceBcryptRounds.GetInt())
 	return string(bytes), err
 }
 

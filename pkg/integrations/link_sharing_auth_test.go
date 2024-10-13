@@ -48,7 +48,7 @@ func TestLinkSharingAuth(t *testing.T) {
 		assertHandlerErrorCode(t, err, models.ErrCodeLinkSharePasswordRequired)
 	})
 	t.Run("With Password, Password Provided", func(t *testing.T) {
-		rec, err := newTestRequest(t, http.MethodPost, apiv1.AuthenticateLinkShare, `{"password":"1234"}`, nil, map[string]string{"share": "testWithPassword"})
+		rec, err := newTestRequest(t, http.MethodPost, apiv1.AuthenticateLinkShare, `{"password":"12345678"}`, nil, map[string]string{"share": "testWithPassword"})
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Contains(t, rec.Body.String(), `"token":"`)

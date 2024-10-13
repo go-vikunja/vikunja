@@ -30,7 +30,7 @@ func TestCreateUser(t *testing.T) {
 	// Our dummy user for testing
 	dummyuser := &User{
 		Username: "testuser",
-		Password: "1234",
+		Password: "12345678",
 		Email:    "noone@example.com",
 	}
 
@@ -238,7 +238,7 @@ func TestCheckUserCredentials(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		_, err := CheckUserCredentials(s, &Login{Username: "user1", Password: "1234"})
+		_, err := CheckUserCredentials(s, &Login{Username: "user1", Password: "12345678"})
 		require.NoError(t, err)
 	})
 	t.Run("unverified email", func(t *testing.T) {
@@ -246,7 +246,7 @@ func TestCheckUserCredentials(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		_, err := CheckUserCredentials(s, &Login{Username: "user5", Password: "1234"})
+		_, err := CheckUserCredentials(s, &Login{Username: "user5", Password: "12345678"})
 		require.Error(t, err)
 		assert.True(t, IsErrEmailNotConfirmed(err))
 	})
@@ -264,7 +264,7 @@ func TestCheckUserCredentials(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		_, err := CheckUserCredentials(s, &Login{Username: "dfstestuu", Password: "1234"})
+		_, err := CheckUserCredentials(s, &Login{Username: "dfstestuu", Password: "12345678"})
 		require.Error(t, err)
 		assert.True(t, IsErrWrongUsernameOrPassword(err))
 	})
@@ -282,7 +282,7 @@ func TestCheckUserCredentials(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		_, err := CheckUserCredentials(s, &Login{Password: "1234"})
+		_, err := CheckUserCredentials(s, &Login{Password: "12345678"})
 		require.Error(t, err)
 		assert.True(t, IsErrNoUsernamePassword(err))
 	})
@@ -291,7 +291,7 @@ func TestCheckUserCredentials(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		_, err := CheckUserCredentials(s, &Login{Username: "user1@example.com", Password: "1234"})
+		_, err := CheckUserCredentials(s, &Login{Username: "user1@example.com", Password: "12345678"})
 		require.NoError(t, err)
 	})
 }
@@ -308,7 +308,7 @@ func TestUpdateUser(t *testing.T) {
 			Email:    "testing@example.com",
 		}, false)
 		require.NoError(t, err)
-		assert.Equal(t, "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.", uuser.Password) // Password should not change
+		assert.Equal(t, "$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6", uuser.Password) // Password should not change
 		assert.Equal(t, "user1", uuser.Username)                                                        // Username should not change either
 	})
 	t.Run("change username", func(t *testing.T) {
@@ -321,7 +321,7 @@ func TestUpdateUser(t *testing.T) {
 			Username: "changedname",
 		}, false)
 		require.NoError(t, err)
-		assert.Equal(t, "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.", uuser.Password) // Password should not change
+		assert.Equal(t, "$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6", uuser.Password) // Password should not change
 		assert.Equal(t, "changedname", uuser.Username)
 	})
 	t.Run("nonexistant", func(t *testing.T) {

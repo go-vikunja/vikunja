@@ -39,7 +39,7 @@ func TestLabelTask_ReadAll(t *testing.T) {
 		CreatedBy: &user.User{
 			ID:                           2,
 			Username:                     "user2",
-			Password:                     "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+			Password:                     "$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6",
 			Issuer:                       "local",
 			EmailRemindersEnabled:        true,
 			OverdueTasksRemindersEnabled: true,

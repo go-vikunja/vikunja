@@ -160,7 +160,7 @@ func newCaldavTestRequestWithUser(t *testing.T, e *echo.Echo, method string, han
 	c, rec = createRequest(e, method, payload, queryParams, urlParams)
 	c.Request().Header.Set(echo.HeaderContentType, echo.MIMETextPlain)
 
-	result, _ := caldav.BasicAuth(user.Username, "1234", c)
+	result, _ := caldav.BasicAuth(user.Username, "12345678", c)
 	if !result {
 		t.Error("BasicAuth for caldav failed")
 		t.FailNow()

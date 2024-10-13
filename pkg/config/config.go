@@ -65,6 +65,7 @@ const (
 	ServiceAllowIconChanges      Key = `service.allowiconchanges`
 	ServiceCustomLogoURL         Key = `service.customlogourl`
 	ServiceEnablePublicTeams     Key = `service.enablepublicteams`
+	ServiceBcryptRounds          Key = `service.bcryptrounds`
 
 	SentryEnabled         Key = `sentry.enabled`
 	SentryDsn             Key = `sentry.dsn`
@@ -318,6 +319,7 @@ func InitDefaultConfig() {
 	ServiceDemoMode.setDefault(false)
 	ServiceAllowIconChanges.setDefault(true)
 	ServiceEnablePublicTeams.setDefault(false)
+	ServiceBcryptRounds.setDefault(11)
 
 	// Sentry
 	SentryDsn.setDefault("https://440eedc957d545a795c17bbaf477497c@o1047380.ingest.sentry.io/4504254983634944")

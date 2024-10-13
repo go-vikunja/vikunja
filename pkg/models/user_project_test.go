@@ -28,7 +28,7 @@ func TestListUsersFromProject(t *testing.T) {
 	testuser1 := &user.User{
 		ID:                           1,
 		Username:                     "user1",
-		Password:                     "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+		Password:                     "$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6",
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,
@@ -39,7 +39,7 @@ func TestListUsersFromProject(t *testing.T) {
 	testuser2 := &user.User{
 		ID:                           2,
 		Username:                     "user2",
-		Password:                     "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+		Password:                     "$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6",
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,
@@ -51,7 +51,7 @@ func TestListUsersFromProject(t *testing.T) {
 	testuser3 := &user.User{
 		ID:                           3,
 		Username:                     "user3",
-		Password:                     "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+		Password:                     "$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6",
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,
@@ -63,7 +63,7 @@ func TestListUsersFromProject(t *testing.T) {
 	testuser4 := &user.User{
 		ID:                           4,
 		Username:                     "user4",
-		Password:                     "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+		Password:                     "$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6",
 		Status:                       user.StatusEmailConfirmationRequired,
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
@@ -75,7 +75,7 @@ func TestListUsersFromProject(t *testing.T) {
 	testuser5 := &user.User{
 		ID:                           5,
 		Username:                     "user5",
-		Password:                     "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+		Password:                     "$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6",
 		Status:                       user.StatusEmailConfirmationRequired,
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
@@ -87,7 +87,7 @@ func TestListUsersFromProject(t *testing.T) {
 	testuser6 := &user.User{
 		ID:                           6,
 		Username:                     "user6",
-		Password:                     "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+		Password:                     "$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6",
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,
@@ -98,7 +98,7 @@ func TestListUsersFromProject(t *testing.T) {
 	testuser7 := &user.User{
 		ID:                           7,
 		Username:                     "user7",
-		Password:                     "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+		Password:                     "$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6",
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		DiscoverableByEmail:          true,
@@ -110,7 +110,7 @@ func TestListUsersFromProject(t *testing.T) {
 	testuser8 := &user.User{
 		ID:                           8,
 		Username:                     "user8",
-		Password:                     "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+		Password:                     "$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6",
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,
@@ -121,7 +121,7 @@ func TestListUsersFromProject(t *testing.T) {
 	testuser9 := &user.User{
 		ID:                           9,
 		Username:                     "user9",
-		Password:                     "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+		Password:                     "$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6",
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,
@@ -132,7 +132,7 @@ func TestListUsersFromProject(t *testing.T) {
 	testuser10 := &user.User{
 		ID:                           10,
 		Username:                     "user10",
-		Password:                     "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+		Password:                     "$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6",
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,
@@ -144,7 +144,7 @@ func TestListUsersFromProject(t *testing.T) {
 		ID:                           11,
 		Username:                     "user11",
 		Name:                         "Some one else",
-		Password:                     "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+		Password:                     "$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6",
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,
@@ -156,7 +156,7 @@ func TestListUsersFromProject(t *testing.T) {
 		ID:                           12,
 		Username:                     "user12",
 		Name:                         "Name with spaces",
-		Password:                     "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+		Password:                     "$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6",
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		DiscoverableByName:           true,
@@ -168,7 +168,7 @@ func TestListUsersFromProject(t *testing.T) {
 	testuser13 := &user.User{
 		ID:                           13,
 		Username:                     "user13",
-		Password:                     "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+		Password:                     "$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6",
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,

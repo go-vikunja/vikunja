@@ -1,7 +1,7 @@
 -
   id: 1
   username: 'user1'
-  password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
+  password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6' # 12345678
   email: 'user1@example.com'
   issuer: local
   updated: 2018-12-02 15:13:12
@@ -9,7 +9,7 @@
 -
   id: 2
   username: 'user2'
-  password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
+  password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6' # 12345678
   email: 'user2@example.com'
   issuer: local
   default_project_id: 4
@@ -18,7 +18,7 @@
 -
   id: 3
   username: 'user3'
-  password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
+  password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6' # 12345678
   email: 'user3@example.com'
   issuer: local
   default_project_id: 4
@@ -27,7 +27,7 @@
 -
   id: 4
   username: 'user4'
-  password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
+  password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6' # 12345678
   email: 'user4@example.com'
   status: 1
   issuer: local
@@ -36,7 +36,7 @@
 -
   id: 5
   username: 'user5'
-  password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
+  password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6' # 12345678
   email: 'user5@example.com'
   status: 1
   issuer: local
@@ -45,14 +45,14 @@
 # This use is used to create a whole bunch of projects which are then shared directly with a user
 - id: 6
   username: 'user6'
-  password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
+  password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6' # 12345678
   email: 'user6@example.com'
   issuer: local
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 - id: 7
   username: 'user7'
-  password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
+  password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6' # 12345678
   email: 'user7@example.com'
   issuer: local
   discoverable_by_email: true
@@ -60,21 +60,21 @@
   created: 2018-12-01 15:13:12
 - id: 8
   username: 'user8'
-  password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
+  password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6' # 12345678
   email: 'user8@example.com'
   issuer: local
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 - id: 9
   username: 'user9'
-  password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
+  password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6' # 12345678
   email: 'user9@example.com'
   issuer: local
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 - id: 10
   username: 'user10'
-  password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
+  password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6' # 12345678
   email: 'user10@example.com'
   issuer: local
   updated: 2018-12-02 15:13:12
@@ -82,7 +82,7 @@
 - id: 11
   username: 'user11'
   name: 'Some one else'
-  password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
+  password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6' # 12345678
   email: 'user11@example.com'
   issuer: local
   updated: 2018-12-02 15:13:12
@@ -90,7 +90,7 @@
 - id: 12
   username: 'user12'
   name: 'Name with spaces'
-  password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
+  password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6' # 12345678
   email: 'user12@example.com'
   issuer: local
   discoverable_by_name: true
@@ -98,14 +98,14 @@
   created: 2018-12-01 15:13:12
 - id: 13
   username: 'user13'
-  password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
+  password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6' # 12345678
   email: 'user14@example.com'
   issuer: local
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 - id: 14
   username: 'user14'
-  password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
+  password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6' # 12345678
   email: 'user15@some.service.com'
   issuer: 'https://some.service.com'
   subject: '12345'
@@ -113,14 +113,14 @@
   created: 2018-12-01 15:13:12
 - id: 15
   username: 'user15'
-  password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
+  password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6' # 12345678
   email: 'user15@example.com'
   issuer: local
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 - id: 16
   username: 'user16'
-  password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
+  password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6' # 12345678
   email: 'user16@example.com'
   issuer: local
   default_project_id: 37

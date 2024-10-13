@@ -31,7 +31,7 @@ import (
 func TestUserPasswordReset(t *testing.T) {
 	t.Run("Normal password reset test", func(t *testing.T) {
 		rec, err := newTestRequest(t, http.MethodPost, apiv1.UserResetPassword, `{
-	"new_password": "1234",
+	"new_password": "12345678",
 	"token": "passwordresettesttoken"
 }`, nil, nil)
 		require.NoError(t, err)
@@ -52,7 +52,7 @@ func TestUserPasswordReset(t *testing.T) {
 	})
 	t.Run("Invalid password reset token", func(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.UserResetPassword, `{
-	"new_password": "1234",
+	"new_password": "12345678",
 	"token": "invalidtoken"
 }`, nil, nil)
 		require.Error(t, err)
