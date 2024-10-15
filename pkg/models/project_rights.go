@@ -17,10 +17,11 @@
 package models
 
 import (
+	"errors"
+
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web"
-	"errors"
 	"xorm.io/xorm"
 )
 
