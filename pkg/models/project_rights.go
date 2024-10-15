@@ -17,12 +17,10 @@
 package models
 
 import (
-	"errors"
-	"strings"
-
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web"
-
+	"errors"
 	"xorm.io/xorm"
 )
 
@@ -234,60 +232,61 @@ type projectRight struct {
 
 func checkRightsForProjects(s *xorm.Session, a web.Auth, projectIDs []int64) (projectRightMap map[int64]*projectRight, err error) {
 	projectRightMap = make(map[int64]*projectRight)
-	whereIDIn := strings.Repeat("?,", len(projectIDs))[:len(projectIDs)*2-1]
 	args := []interface{}{
 		a.GetID(),
 		a.GetID(),
 		a.GetID(),
-		int64(0),
-	}
-	for _, id := range projectIDs {
-		args = append(args, id)
+		a.GetID(),
+		a.GetID(),
 	}
 
-	err = s.SQL(`WITH RECURSIVE
-    all_projects AS (SELECT p.id,
-                            p.parent_project_id,
-                            CASE
-                                WHEN p.owner_id = 1 THEN 2
-                                WHEN COALESCE(ul.right, 0) > COALESCE(tl.right, 0) THEN ul.right
-                                ELSE COALESCE(tl.right, 0)
-                                END AS initial_right
-                     FROM projects p
-                              LEFT JOIN team_projects tl ON tl.project_id = p.id
-                              LEFT JOIN team_members tm2 ON tm2.team_id = tl.team_id
-                              LEFT JOIN users_projects ul ON ul.project_id = p.id
-                     WHERE (tm2.user_id = ? OR ul.user_id = ? OR p.owner_id = ?)
-                       AND (p.parent_project_id IS NULL OR p.parent_project_id = ? OR
-                            ((tm2.user_id IS NOT NULL OR ul.user_id IS NOT NULL) AND
-                             p.parent_project_id IS NOT NULL))
-                       AND p.id in (`+whereIDIn+`)
-                     GROUP BY p.id
+	err = s.SQL(`
+WITH RECURSIVE
+    project_hierarchy AS (
+        -- Base case: Start with the specified projects
+        SELECT id,
+               parent_project_id,
+               0  AS level,
+               id AS original_project_id
+        FROM projects
+        WHERE id IN (`+utils.JoinInt64Slice(projectIDs, ", ")+`)
 
-                     UNION ALL
+        UNION ALL
 
-                     SELECT p.id, p.parent_project_id, ap.initial_right
-                     FROM projects p
-                              INNER JOIN all_projects ap ON p.parent_project_id = ap.id),
+        -- Recursive case: Traverse up the hierarchy
+        SELECT p.id,
+               p.parent_project_id,
+               ph.level + 1,
+               ph.original_project_id
+        FROM projects p
+                 INNER JOIN project_hierarchy ph ON p.id = ph.parent_project_id),
 
-    project_max_rights AS (SELECT id, MAX(initial_right) AS max_right
-                           FROM all_projects
-                           GROUP BY id),
+    project_permissions AS (SELECT ph.id,
+                                   ph.original_project_id,
+                                   CASE
+                                       WHEN p.owner_id = 1 THEN 2
+                                       WHEN COALESCE(ul.right, 0) > COALESCE(tl.right, 0) THEN ul.right
+                                       ELSE COALESCE(tl.right, 0)
+                                       END AS right,
+            CASE
+                WHEN p.owner_id = 1 THEN 1  -- Direct project ownership
+                ELSE ph.level + 1  -- Derived from parent project
+            END AS priority
+                            FROM project_hierarchy ph
+                                LEFT JOIN projects p
+                            ON ph.id = p.id
+                                LEFT JOIN users_projects ul ON ul.project_id = ph.id AND ul.user_id = ?
+                                LEFT JOIN team_projects tl ON tl.project_id = ph.id
+                                LEFT JOIN team_members tm ON tm.team_id = tl.team_id AND tm.user_id = ?
+                            WHERE p.owner_id = ? OR ul.user_id = ? OR tm.user_id = ?)
 
-    inherited_rights AS (SELECT ap.id,
-                                CASE
-                                    WHEN COALESCE(pmr.max_right, 0) > COALESCE(parent.max_right, 0)
-                                        THEN COALESCE(pmr.max_right, 0)
-                                    ELSE COALESCE(parent.max_right, 0)
-                                    END AS inherited_right
-                         FROM all_projects ap
-                                  LEFT JOIN project_max_rights pmr ON ap.id = pmr.id
-                                  LEFT JOIN project_max_rights parent ON ap.parent_project_id = parent.id)
-
-SELECT DISTINCT ap.id,
-                ir.inherited_right AS max_right
-FROM all_projects ap
-         LEFT JOIN all_projects np ON ap.parent_project_id = np.id
-         LEFT JOIN inherited_rights ir ON ap.id = ir.id`, args...).Find(&projectRightMap)
+SELECT ph.original_project_id AS id,
+       COALESCE(MAX(pp.right), -1) AS max_right
+FROM project_hierarchy ph
+         LEFT JOIN (SELECT *,
+                           ROW_NUMBER() OVER (PARTITION BY original_project_id ORDER BY priority) AS rn
+                    FROM project_permissions) pp ON ph.id = pp.id AND pp.rn = 1
+GROUP BY ph.original_project_id`, args...).
+		Find(&projectRightMap)
 	return
 }
