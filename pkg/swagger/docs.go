@@ -1414,6 +1414,12 @@ const docTemplate = `{
                         "description": "If true, also returns all archived projects.",
                         "name": "is_archived",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "If set to ` + "`" + `rights` + "`" + `, Vikunja will return the max right the current user has on this project. You can currently only set this to ` + "`" + `rights` + "`" + `.",
+                        "name": "expand",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -8264,6 +8270,9 @@ const docTemplate = `{
                 "is_favorite": {
                     "description": "True if a project is a favorite. Favorite projects show up in a separate parent project. This value depends on the user making the call to the api.",
                     "type": "boolean"
+                },
+                "max_right": {
+                    "$ref": "#/definitions/models.Right"
                 },
                 "owner": {
                     "description": "The user who created this project.",

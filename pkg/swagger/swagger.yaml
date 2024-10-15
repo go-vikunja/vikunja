@@ -445,6 +445,8 @@ definitions:
           a separate parent project. This value depends on the user making the call
           to the api.
         type: boolean
+      max_right:
+        $ref: '#/definitions/models.Right'
       owner:
         allOf:
         - $ref: '#/definitions/user.User'
@@ -2663,6 +2665,11 @@ paths:
         in: query
         name: is_archived
         type: boolean
+      - description: If set to `rights`, Vikunja will return the max right the current
+          user has on this project. You can currently only set this to `rights`.
+        in: query
+        name: expand
+        type: string
       produces:
       - application/json
       responses:
