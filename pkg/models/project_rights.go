@@ -268,7 +268,7 @@ WITH RECURSIVE
                                        WHEN p.owner_id = 1 THEN 2
                                        WHEN COALESCE(ul.right, 0) > COALESCE(tl.right, 0) THEN ul.right
                                        ELSE COALESCE(tl.right, 0)
-                                       END AS right,
+                                       END AS project_right,
             CASE
                 WHEN p.owner_id = 1 THEN 1  -- Direct project ownership
                 ELSE ph.level + 1  -- Derived from parent project
@@ -282,7 +282,7 @@ WITH RECURSIVE
                             WHERE p.owner_id = ? OR ul.user_id = ? OR tm.user_id = ?)
 
 SELECT ph.original_project_id AS id,
-       COALESCE(MAX(pp.right), -1) AS max_right
+       COALESCE(MAX(pp.project_right), -1) AS max_right
 FROM project_hierarchy ph
          LEFT JOIN (SELECT *,
                            ROW_NUMBER() OVER (PARTITION BY original_project_id ORDER BY priority) AS rn
