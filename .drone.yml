@@ -589,7 +589,7 @@ steps:
     image: plugins/s3
     pull: always
     settings:
-      bucket: vikunja-releases
+      bucket: vikunja
       access_key:
         from_secret: hetzner_access_key_id
       secret_key:
@@ -610,7 +610,7 @@ steps:
     image: plugins/s3
     pull: always
     settings:
-      bucket: vikunja-releases
+      bucket: vikunja
       access_key:
         from_secret: hetzner_access_key_id
       secret_key:
@@ -723,7 +723,7 @@ steps:
     image: plugins/s3
     pull: always
     settings:
-      bucket: vikunja-releases
+      bucket: vikunja
       access_key:
         from_secret: hetzner_access_key_id
       secret_key:
@@ -745,7 +745,7 @@ steps:
     image: plugins/s3
     pull: always
     settings:
-      bucket: vikunja-releases
+      bucket: vikunja
       access_key:
         from_secret: hetzner_access_key_id
       secret_key:
@@ -797,7 +797,7 @@ steps:
     image: plugins/s3
     pull: always
     settings:
-      bucket: vikunja-releases
+      bucket: vikunja
       access_key:
         from_secret: hetzner_access_key_id
       secret_key:
@@ -819,7 +819,7 @@ steps:
     image: plugins/s3
     pull: always
     settings:
-      bucket: vikunja-releases
+      bucket: vikunja
       access_key:
         from_secret: hetzner_access_key_id
       secret_key:
@@ -978,7 +978,7 @@ steps:
     image: plugins/s3
     pull: always
     settings:
-      bucket: vikunja-releases
+      bucket: vikunja
       access_key:
         from_secret: hetzner_access_key_id
       secret_key:
@@ -1037,7 +1037,7 @@ steps:
     image: plugins/s3
     pull: always
     settings:
-      bucket: vikunja-releases
+      bucket: vikunja
       access_key:
         from_secret: hetzner_access_key_id
       secret_key:
@@ -1289,7 +1289,7 @@ steps:
     image: plugins/s3
     pull: true
     settings:
-      bucket: vikunja-releases
+      bucket: vikunja
       access_key:
         from_secret: hetzner_access_key_id
       secret_key:
@@ -1311,7 +1311,7 @@ steps:
     image: plugins/s3
     pull: true
     settings:
-      bucket: vikunja-releases
+      bucket: vikunja
       access_key:
         from_secret: hetzner_access_key_id
       secret_key:
@@ -1362,8 +1362,8 @@ steps:
 #      - yarn install
 #      - yarn dist --mac
 #      - mc config host add scw-fsn1 https://fsn1.your-objectstorage.com $ACCESS_KEY $SECRET_KEY --api S3v4
-#      - mc cp ./dist/*.dmg scw-fsn1/vikunja-releases/desktop/$VERSION/
-#      - mc cp ./dist/*.dmg.blockmap scw-fsn1/vikunja-releases/desktop/$VERSION/
+#      - mc cp ./dist/*.dmg scw-fsn1/vikunja/desktop/$VERSION/
+#      - mc cp ./dist/*.dmg.blockmap scw-fsn1/vikunja/desktop/$VERSION/
 
 ---
 kind: pipeline
@@ -1400,6 +1400,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 35bb01a5ddc3fa2bd383eca7b3bf3f7d5c8a4dbf65a0fe71ef5401d5a7f748aa
+hmac: ba0652aeee2f07af2f861ea281d156db7ddd4803672dae0101ebb1f8111ec580
 
 ...
