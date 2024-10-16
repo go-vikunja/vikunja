@@ -87,7 +87,7 @@ const filterFromView = computed(() => {
 		return
 	}
 	const view = project.views.find(v => v.id === props.viewId)
-	return view?.filter
+	return view?.filter?.filter
 })
 </script>
 
