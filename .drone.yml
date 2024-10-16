@@ -676,7 +676,7 @@ steps:
     image: plugins/s3
     pull: always
     settings:
-      bucket: vikunja-releases
+      bucket: vikunja
       access_key:
         from_secret: hetzner_access_key_id
       secret_key:
@@ -698,7 +698,7 @@ steps:
     image: plugins/s3
     pull: always
     settings:
-      bucket: vikunja-releases
+      bucket: vikunja
       access_key:
         from_secret: hetzner_access_key_id
       secret_key:
@@ -750,7 +750,7 @@ steps:
     image: plugins/s3
     pull: always
     settings:
-      bucket: vikunja-releases
+      bucket: vikunja
       access_key:
         from_secret: hetzner_access_key_id
       secret_key:
@@ -772,7 +772,7 @@ steps:
     image: plugins/s3
     pull: always
     settings:
-      bucket: vikunja-releases
+      bucket: vikunja
       access_key:
         from_secret: hetzner_access_key_id
       secret_key:
@@ -929,7 +929,7 @@ steps:
     image: plugins/s3
     pull: always
     settings:
-      bucket: vikunja-releases
+      bucket: vikunja
       access_key:
         from_secret: hetzner_access_key_id
       secret_key:
@@ -988,7 +988,7 @@ steps:
     image: plugins/s3
     pull: always
     settings:
-      bucket: vikunja-releases
+      bucket: vikunja
       access_key:
         from_secret: hetzner_access_key_id
       secret_key:
@@ -1239,7 +1239,7 @@ steps:
     image: plugins/s3
     pull: true
     settings:
-      bucket: vikunja-releases
+      bucket: vikunja
       access_key:
         from_secret: hetzner_access_key_id
       secret_key:
@@ -1261,7 +1261,7 @@ steps:
     image: plugins/s3
     pull: true
     settings:
-      bucket: vikunja-releases
+      bucket: vikunja
       access_key:
         from_secret: hetzner_access_key_id
       secret_key:
@@ -1312,8 +1312,8 @@ steps:
 #      - yarn install
 #      - yarn dist --mac
 #      - mc config host add scw-fsn1 https://fsn1.your-objectstorage.com $ACCESS_KEY $SECRET_KEY --api S3v4
-#      - mc cp ./dist/*.dmg scw-fsn1/vikunja-releases/desktop/$VERSION/
-#      - mc cp ./dist/*.dmg.blockmap scw-fsn1/vikunja-releases/desktop/$VERSION/
+#      - mc cp ./dist/*.dmg scw-fsn1/vikunja/desktop/$VERSION/
+#      - mc cp ./dist/*.dmg.blockmap scw-fsn1/vikunja/desktop/$VERSION/
 
 ---
 kind: pipeline
@@ -1350,6 +1350,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: dcc1bda1f4ef4f46014b7d765e9e9f206fe26ec00c07f34712579413adbd0b1b
+hmac: 02fb3097f3e50facb2579de5c3b94e513b97e535a049a28ddb67f85e494d65b1
 
 ...
