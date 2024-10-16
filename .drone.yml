@@ -579,6 +579,53 @@ steps:
     when:
       event: [ push, tag, pull_request ]
 
+  - name: generate-config-yaml
+    image: vikunja/golang-build:latest
+    pull: always
+    commands:
+      - ./mage-static generate:config-yaml 1
+    depends_on: [ mage ]
+
+  - name: upload-config-yaml-unstable
+    image: plugins/s3
+    pull: always
+    settings:
+      bucket: vikunja-releases
+      access_key:
+        from_secret: hetzner_access_key_id
+      secret_key:
+        from_secret: hetzner_secret_access_key
+      endpoint: https://fsn1.your-objectstorage.com
+      region: fsn1
+      path_style: true
+      source: config.yml.sample
+      target: /vikunja/unstable/
+    when:
+      branch:
+        - main
+      event:
+        - push
+    depends_on: [ generate-config-yaml ]
+
+  - name: upload-config-yaml-version
+    image: plugins/s3
+    pull: always
+    settings:
+      bucket: vikunja-releases
+      access_key:
+        from_secret: hetzner_access_key_id
+      secret_key:
+        from_secret: hetzner_secret_access_key
+      endpoint: https://fsn1.your-objectstorage.com
+      region: fsn1
+      path_style: true
+      source: config.yml.sample
+      target: /vikunja/${DRONE_TAG##v}/
+    when:
+      event:
+        - tag
+    depends_on: [ generate-config-yaml ]
+
   - name: before-static-build
     image: ghcr.io/techknowlogick/xgo:go-1.23.x
     pull: always
@@ -678,11 +725,11 @@ steps:
     settings:
       bucket: vikunja-releases
       access_key:
-        from_secret: aws_access_key_id
+        from_secret: hetzner_access_key_id
       secret_key:
-        from_secret: aws_secret_access_key
-      endpoint: https://s3.fr-par.scw.cloud
-      region: fr-par
+        from_secret: hetzner_secret_access_key
+      endpoint: https://fsn1.your-objectstorage.com
+      region: fsn1
       path_style: true
       strip_prefix: dist/zip/
       source: dist/zip/*
@@ -700,11 +747,11 @@ steps:
     settings:
       bucket: vikunja-releases
       access_key:
-        from_secret: aws_access_key_id
+        from_secret: hetzner_access_key_id
       secret_key:
-        from_secret: aws_secret_access_key
-      endpoint: https://s3.fr-par.scw.cloud
-      region: fr-par
+        from_secret: hetzner_secret_access_key
+      endpoint: https://fsn1.your-objectstorage.com
+      region: fsn1
       path_style: true
       strip_prefix: dist/zip/
       source: dist/zip/*
@@ -752,11 +799,11 @@ steps:
     settings:
       bucket: vikunja-releases
       access_key:
-        from_secret: aws_access_key_id
+        from_secret: hetzner_access_key_id
       secret_key:
-        from_secret: aws_secret_access_key
-      endpoint: https://s3.fr-par.scw.cloud
-      region: fr-par
+        from_secret: hetzner_secret_access_key
+      endpoint: https://fsn1.your-objectstorage.com
+      region: fsn1
       path_style: true
       strip_prefix: dist/os-packages/
       source: dist/os-packages/*
@@ -774,11 +821,11 @@ steps:
     settings:
       bucket: vikunja-releases
       access_key:
-        from_secret: aws_access_key_id
+        from_secret: hetzner_access_key_id
       secret_key:
-        from_secret: aws_secret_access_key
-      endpoint: https://s3.fr-par.scw.cloud
-      region: fr-par
+        from_secret: hetzner_secret_access_key
+      endpoint: https://fsn1.your-objectstorage.com
+      region: fsn1
       path_style: true
       strip_prefix: dist/os-packages/
       source: dist/os-packages/*
@@ -931,11 +978,11 @@ steps:
     settings:
       bucket: vikunja-releases
       access_key:
-        from_secret: aws_access_key_id
+        from_secret: hetzner_access_key_id
       secret_key:
-        from_secret: aws_secret_access_key
-      endpoint: https://s3.fr-par.scw.cloud
-      region: fr-par
+        from_secret: hetzner_secret_access_key
+      endpoint: https://fsn1.your-objectstorage.com
+      region: fsn1
       path_style: true
       source: frontend/vikunja-frontend-unstable.zip
       target: /
@@ -990,11 +1037,11 @@ steps:
     settings:
       bucket: vikunja-releases
       access_key:
-        from_secret: aws_access_key_id
+        from_secret: hetzner_access_key_id
       secret_key:
-        from_secret: aws_secret_access_key
-      endpoint: https://s3.fr-par.scw.cloud
-      region: fr-par
+        from_secret: hetzner_secret_access_key
+      endpoint: https://fsn1.your-objectstorage.com
+      region: fsn1
       path_style: true
       source: frontend/vikunja-frontend-${DRONE_TAG##v}.zip
       target: /
@@ -1093,8 +1140,8 @@ steps:
 #    settings:
 #      restore: true
 #      bucket: kolaente.dev-drone-dependency-cache
-#      endpoint: https://s3.fr-par.scw.cloud
-#      region: fr-par
+#      endpoint: https://fsn1.your-objectstorage.com
+#      region: fsn1
 #      path_style: true
 #      cache_key: '{{ .Repo.Name }}_{{ checksum "desktop/yarn.lock" }}_{{ arch }}_{{ os }}'
 #      mount:
@@ -1131,8 +1178,8 @@ steps:
 #    settings:
 #      rebuild: true
 #      bucket: kolaente.dev-drone-dependency-cache
-#      endpoint: https://s3.fr-par.scw.cloud
-#      region: fr-par
+#      endpoint: https://fsn1.your-objectstorage.com
+#      region: fsn1
 #      path_style: true
 #      cache_key: '{{ .Repo.Name }}_{{ checksum "desktop/yarn.lock" }}_{{ arch }}_{{ os }}'
 #      mount:
@@ -1174,8 +1221,8 @@ steps:
 #    settings:
 #      restore: true
 #      bucket: kolaente.dev-drone-dependency-cache
-#      endpoint: https://s3.fr-par.scw.cloud
-#      region: fr-par
+#      endpoint: https://fsn1.your-objectstorage.com
+#      region: fsn1
 #      path_style: true
 #      cache_key: '{{ .Repo.Name }}_{{ checksum "desktop/yarn.lock" }}_{{ arch }}_{{ os }}'
 #      mount:
@@ -1198,30 +1245,30 @@ steps:
       - unzip vikunja-frontend-$$VERSION.zip -d frontend
       - sed -i 's/\\/api\\/v1//g' frontend/index.html
       - ./bumpp.sh
-      - yarn install
-      - cat package.json
-      - yarn dist --linux --windows
-
-#  - name: rebuild-cache
-#    image: meltwater/drone-cache:dev
-#    pull: true
-#    environment:
-#      AWS_ACCESS_KEY_ID:
-#        from_secret: cache_aws_access_key_id
-#      AWS_SECRET_ACCESS_KEY:
-#        from_secret: cache_aws_secret_access_key
-#    settings:
-#      rebuild: true
-#      bucket: kolaente.dev-drone-dependency-cache
-#      endpoint: https://s3.fr-par.scw.cloud
-#      region: fr-par
-#      path_style: true
-#      cache_key: '{{ .Repo.Name }}_{{ checksum "desktop/yarn.lock" }}_{{ arch }}_{{ os }}'
-#      mount:
-#        - '.cache'
-#    depends_on:
-#      - build
+      - corepack enable && pnpm config set store-dir .cache/pnpm
+      - pnpm install --fetch-timeout 100000
+      - pnpm dist --linux --windows
   
+  #  - name: rebuild-cache
+  #    image: meltwater/drone-cache:dev
+  #    pull: true
+  #    environment:
+  #      AWS_ACCESS_KEY_ID:
+  #        from_secret: cache_aws_access_key_id
+  #      AWS_SECRET_ACCESS_KEY:
+  #        from_secret: cache_aws_secret_access_key
+  #    settings:
+  #      rebuild: true
+  #      bucket: kolaente.dev-drone-dependency-cache
+  #      endpoint: https://fsn1.your-objectstorage.com
+  #      region: fsn1
+  #      path_style: true
+  #      cache_key: '{{ .Repo.Name }}_{{ checksum "desktop/yarn.lock" }}_{{ arch }}_{{ os }}'
+  #      mount:
+  #        - '.cache'
+  #    depends_on:
+  #      - build
+
   - name: rename-unstable
     image: bash
     pull: true
@@ -1241,11 +1288,11 @@ steps:
     settings:
       bucket: vikunja-releases
       access_key:
-        from_secret: aws_access_key_id
+        from_secret: hetzner_access_key_id
       secret_key:
-        from_secret: aws_secret_access_key
-      endpoint: https://s3.fr-par.scw.cloud
-      region: fr-par
+        from_secret: hetzner_secret_access_key
+      endpoint: https://fsn1.your-objectstorage.com
+      region: fsn1
       path_style: true
       strip_prefix: desktop/dist/
       source: desktop/dist/Vikunja-Desktop*
@@ -1263,11 +1310,11 @@ steps:
     settings:
       bucket: vikunja-releases
       access_key:
-        from_secret: aws_access_key_id
+        from_secret: hetzner_access_key_id
       secret_key:
-        from_secret: aws_secret_access_key
-      endpoint: https://s3.fr-par.scw.cloud
-      region: fr-par
+        from_secret: hetzner_secret_access_key
+      endpoint: https://fsn1.your-objectstorage.com
+      region: fsn1
       path_style: true
       strip_prefix: desktop/dist/
       source: desktop/dist/*
@@ -1296,9 +1343,9 @@ steps:
 #  - name: build
 #    environment:
 #      ACCESS_KEY:
-#        from_secret: aws_access_key_id
+#        from_secret: hetzner_access_key_id
 #      SECRET_KEY:
-#        from_secret: aws_secret_access_key
+#        from_secret: hetzner_secret_access_key
 #    commands:
 #      - git fetch --tags
 #      - export VERSION=${DRONE_TAG##v}
@@ -1311,9 +1358,9 @@ steps:
 #      - sed -i '' "s/\$${version}/$$VERSION/g" package.json
 #      - yarn install
 #      - yarn dist --mac
-#      - mc config host add scw-fr-par https://s3.fr-par.scw.cloud $ACCESS_KEY $SECRET_KEY --api S3v4
-#      - mc cp ./dist/*.dmg scw-fr-par/vikunja-releases/desktop/$VERSION/
-#      - mc cp ./dist/*.dmg.blockmap scw-fr-par/vikunja-releases/desktop/$VERSION/
+#      - mc config host add scw-fsn1 https://fsn1.your-objectstorage.com $ACCESS_KEY $SECRET_KEY --api S3v4
+#      - mc cp ./dist/*.dmg scw-fsn1/vikunja-releases/desktop/$VERSION/
+#      - mc cp ./dist/*.dmg.blockmap scw-fsn1/vikunja-releases/desktop/$VERSION/
 
 ---
 kind: pipeline
@@ -1350,6 +1397,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: a06d088bd62507aeb2be9cd4bfcd313bdc6fe0629b82816bef81770f8a34a3ef
+hmac: 35bb01a5ddc3fa2bd383eca7b3bf3f7d5c8a4dbf65a0fe71ef5401d5a7f748aa
 
 ...
