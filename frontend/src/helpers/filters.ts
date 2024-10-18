@@ -6,6 +6,8 @@ export const DATE_FIELDS = [
 	'endDate',
 	'doneAt',
 	'reminders',
+	'created',
+	'updated',
 ]
 
 export const ASSIGNEE_FIELDS = [
