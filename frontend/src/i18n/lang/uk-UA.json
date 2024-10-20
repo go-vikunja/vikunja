@@ -459,7 +459,9 @@
           "assignees": "Виконавці",
           "labels": "Позначки",
           "project": "Справа, якій це завдання належить (доступно тільки для постійних вибірок, а не на рівні справи)",
-          "reminders": "The reminders of the task as a date field, will return all tasks with at least one reminder matching the query"
+          "reminders": "The reminders of the task as a date field, will return all tasks with at least one reminder matching the query",
+          "created": "The time and date when the task was created",
+          "updated": "The time and date when the task was last changed"
         },
         "operators": {
           "intro": "Доступні оператори для вибірки такі:",

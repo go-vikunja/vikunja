@@ -459,7 +459,9 @@
           "assignees": "The assignees of the task",
           "labels": "The labels associated with the task",
           "project": "The project the task belongs to (only available for saved filters, not on a project level)",
-          "reminders": "The reminders of the task as a date field, will return all tasks with at least one reminder matching the query"
+          "reminders": "The reminders of the task as a date field, will return all tasks with at least one reminder matching the query",
+          "created": "The time and date when the task was created",
+          "updated": "The time and date when the task was last changed"
         },
         "operators": {
           "intro": "The available operators for filtering include:",

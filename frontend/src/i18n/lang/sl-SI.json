@@ -459,7 +459,9 @@
           "assignees": "Dodeljeni k nalogi",
           "labels": "Oznake, povezane z opravilom",
           "project": "Projekt, ki mu naloga pripada (na voljo samo za shranjene filtre, ne na ravni projekta)",
-          "reminders": "The reminders of the task as a date field, will return all tasks with at least one reminder matching the query"
+          "reminders": "The reminders of the task as a date field, will return all tasks with at least one reminder matching the query",
+          "created": "The time and date when the task was created",
+          "updated": "The time and date when the task was last changed"
         },
         "operators": {
           "intro": "Razpoložljivi operaterji za filtriranje vključujejo:",

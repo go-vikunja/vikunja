@@ -459,7 +459,9 @@
           "assignees": "Přiřazení uživatelé",
           "labels": "Štítky přiřazené úkolu",
           "project": "Projekt, do kterého úkol patří (k dispozici pouze pro uložené filtry, ne na úrovni projektu)",
-          "reminders": "The reminders of the task as a date field, will return all tasks with at least one reminder matching the query"
+          "reminders": "The reminders of the task as a date field, will return all tasks with at least one reminder matching the query",
+          "created": "The time and date when the task was created",
+          "updated": "The time and date when the task was last changed"
         },
         "operators": {
           "intro": "Dostupné operátory pro filtrování zahrnují:",

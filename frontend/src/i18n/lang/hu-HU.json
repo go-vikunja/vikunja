@@ -459,7 +459,9 @@
           "assignees": "A feladattal megbízottak",
           "labels": "A feladathoz társított címkék",
           "project": "A projekt, amelyhez a feladat tartozik (csak a mentett szűrőkhöz érhető el, projekt szinten nem)",
-          "reminders": "The reminders of the task as a date field, will return all tasks with at least one reminder matching the query"
+          "reminders": "The reminders of the task as a date field, will return all tasks with at least one reminder matching the query",
+          "created": "The time and date when the task was created",
+          "updated": "The time and date when the task was last changed"
         },
         "operators": {
           "intro": "A szűréshez elérhető operátorok a következők:",
