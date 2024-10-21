@@ -460,8 +460,8 @@
           "labels": "Die der Aufgabe zugeordneten Labels",
           "project": "Das Projekt, zu dem die Aufgabe gehört (nur verfügbar für gespeicherte Filter, nicht auf Projektebene)",
           "reminders": "Die Erinnerungen einer Aufgabe als Datumsfeld, gibt alle Aufgaben mit mindestens einer Erinnerung zurück, die dem Filter entspricht",
-          "created": "The time and date when the task was created",
-          "updated": "The time and date when the task was last changed"
+          "created": "Datum und Uhrzeit, an dem die Aufgabe erstellt wurde",
+          "updated": "Datum und Uhrzeit, an dem die Aufgabe zuletzt geändert wurde"
         },
         "operators": {
           "intro": "Die verfügbaren Operatoren für die Filterung sind:",
