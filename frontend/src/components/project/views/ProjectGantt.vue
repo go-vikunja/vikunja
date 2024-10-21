@@ -104,7 +104,7 @@ const GanttChart = createAsyncComponent(() => import('@/components/tasks/GanttCh
 const baseStore = useBaseStore()
 const canWrite = computed(() => baseStore.currentProject?.maxRight > RIGHTS.READ)
 
-const {route} = toRefs(props)
+const {route, viewId} = toRefs(props)
 const {
 	filters,
 	hasDefaultFilters,
@@ -113,7 +113,7 @@ const {
 	isLoading,
 	addTask,
 	updateTask,
-} = useGanttFilters(route, props.viewId)
+} = useGanttFilters(route, viewId)
 
 const DEFAULT_DATE_RANGE_DAYS = 7
 
