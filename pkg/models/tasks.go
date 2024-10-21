@@ -212,10 +212,8 @@ func (t *Task) ReadAll(_ *xorm.Session, _ web.Auth, _ string, _ int, _ int) (res
 }
 
 func getFilterCond(f *taskFilter, includeNulls bool) (cond builder.Cond, err error) {
-	field := "tasks.`" + f.field + "`"
-	if f.field == taskPropertyBucketID {
-		field = "task_buckets.`bucket_id`"
-	}
+	field := f.field
+
 	switch f.comparator {
 	case taskFilterComparatorEquals:
 		cond = &builder.Eq{field: f.value}

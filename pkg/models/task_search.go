@@ -179,6 +179,11 @@ func convertFiltersToDBFilterCond(rawFilters []*taskFilter, includeNulls bool) (
 			continue
 		}
 
+		if f.field == taskPropertyBucketID {
+			f.field = "task_buckets.`bucket_id`"
+		} else {
+			f.field = "tasks.`" + f.field + "`"
+		}
 		filter, err := getFilterCond(f, includeNulls)
 		if err != nil {
 			return nil, err
