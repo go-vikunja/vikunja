@@ -94,7 +94,7 @@ export type UseGanttFiltersReturn =
 	ReturnType<typeof useRouteFilters<GanttFilters>> &
 	ReturnType<typeof useGanttTaskList<GanttFilters>>
 
-export function useGanttFilters(route: Ref<RouteLocationNormalized>, viewId: IProjectView['id']): UseGanttFiltersReturn {
+export function useGanttFilters(route: Ref<RouteLocationNormalized>, viewId: Ref<IProjectView['id']>): UseGanttFiltersReturn {
 	const {
 		filters,
 		hasDefaultFilters,
