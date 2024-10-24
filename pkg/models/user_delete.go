@@ -177,6 +177,16 @@ func ensureProjectAdminUser(s *xorm.Session, l *Project) (hadUsers bool, err err
 		}
 	}
 
+	for _, lu := range projectUsers {
+		if lu.Right == RightWrite {
+			lu.Right = RightAdmin
+			_, err = s.Where("id = ?", lu.ID).
+				Cols("right").
+				Update(lu)
+			return true, err
+		}
+	}
+
 	firstUser := projectUsers[0]
 	firstUser.Right = RightAdmin
 	_, err = s.Where("id = ?", firstUser.ID).
@@ -200,6 +210,16 @@ func ensureProjectAdminTeam(s *xorm.Session, l *Project) (hadTeams bool, err err
 		if lu.Right == RightAdmin {
 			// Project already has more than one admin, no need to do anything
 			return true, nil
+		}
+	}
+
+	for _, lu := range projectTeams {
+		if lu.Right == RightWrite {
+			lu.Right = RightAdmin
+			_, err = s.Where("id = ?", lu.ID).
+				Cols("right").
+				Update(lu)
+			return true, err
 		}
 	}
 
