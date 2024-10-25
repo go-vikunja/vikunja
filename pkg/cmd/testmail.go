@@ -57,7 +57,7 @@ var testmailCmd = &cobra.Command{
 			return
 		}
 		if err := mail.SendTestMail(opts); err != nil &&
-			strings.HasPrefix(err.Error(), "failed to close connction: not connected to SMTP server") {
+			!strings.HasPrefix(err.Error(), "failed to close connction: not connected to SMTP server") {
 			log.Errorf("Error sending test mail: %s", err.Error())
 			return
 		}
