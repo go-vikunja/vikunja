@@ -165,6 +165,7 @@ func initPostgresEngine() (engine *xorm.Engine, err error) {
 	if err != nil {
 		return
 	}
+	engine.SetSchema(config.DatabaseSchema.GetString())
 	engine.SetMaxOpenConns(config.DatabaseMaxOpenConnections.GetInt())
 	engine.SetMaxIdleConns(config.DatabaseMaxIdleConnections.GetInt())
 	max, err := time.ParseDuration(strconv.Itoa(config.DatabaseMaxConnectionLifetime.GetInt()) + `ms`)

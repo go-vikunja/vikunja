@@ -93,6 +93,7 @@ const (
 	DatabaseSslKey                Key = `database.sslkey`
 	DatabaseSslRootCert           Key = `database.sslrootcert`
 	DatabaseTLS                   Key = `database.tls`
+	DatabaseSchema                Key = `database.schema`
 
 	TypesenseEnabled Key = `typesense.enabled`
 	TypesenseURL     Key = `typesense.url`
@@ -344,6 +345,7 @@ func InitDefaultConfig() {
 	DatabaseSslKey.setDefault("")
 	DatabaseSslRootCert.setDefault("")
 	DatabaseTLS.setDefault("false")
+	DatabaseSchema.setDefault("public")
 
 	// Typesense
 	TypesenseEnabled.setDefault(false)
