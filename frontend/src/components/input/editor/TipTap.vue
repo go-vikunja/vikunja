@@ -198,13 +198,13 @@ import {setLinkInEditor} from '@/components/input/editor/setLinkInEditor'
 const {
 	modelValue,
 	uploadCallback,
-	isEditEnabled = true,
-	bottomActions = [],
-	showSave = false,
-	placeholder = '',
-	editShortcut = '',
-	enableDiscardShortcut = false,
-} = defineProps<{
+	isEditEnabled,
+	bottomActions,
+	showSave,
+	placeholder,
+	editShortcut,
+	enableDiscardShortcut,
+} = withDefaults(defineProps<{
 	modelValue: string,
 	uploadCallback?: UploadCallback,
 	isEditEnabled?: boolean,
@@ -213,7 +213,14 @@ const {
 	placeholder?: string,
 	editShortcut?: string,
 	enableDiscardShortcut?: boolean,
-}>()
+}>(), {
+	isEditEnabled: true,
+	bottomActions: () => [],
+	showSave: false,
+	placeholder: '',
+	editShortcut: '',
+	enableDiscardShortcut: false,
+})
 
 const emit = defineEmits(['update:modelValue', 'save'])
 
