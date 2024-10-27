@@ -150,7 +150,7 @@
     "@vue/tsconfig": "0.5.1",
     "autoprefixer": "10.4.20",
     "browserslist": "4.24.2",
-    "caniuse-lite": "1.0.30001671",
+    "caniuse-lite": "1.0.30001672",
     "csstype": "3.1.3",
     "cypress": "13.15.1",
     "esbuild": "0.24.0",
