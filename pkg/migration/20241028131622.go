@@ -17,9 +17,11 @@
 package migration
 
 import (
-	"code.vikunja.io/api/pkg/db"
-	"src.techknowlogick.com/xormigrate"
 	"strings"
+
+	"code.vikunja.io/api/pkg/db"
+
+	"src.techknowlogick.com/xormigrate"
 	"xorm.io/xorm"
 	"xorm.io/xorm/schemas"
 )
