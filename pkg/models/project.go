@@ -519,7 +519,7 @@ INNER JOIN all_projects ap ON p.parent_project_id = ap.id`
 		"all_projects.identifier",
 		"all_projects.hex_color",
 		"all_projects.owner_id",
-		"CASE WHEN np.id IS NULL THEN 0 ELSE all_projects.parent_project_id END AS parent_project_id",
+		"all_projects.parent_project_id",
 		"all_projects.is_archived",
 		"all_projects.background_file_id",
 		"all_projects.background_blur_hash",
@@ -530,7 +530,6 @@ INNER JOIN all_projects ap ON p.parent_project_id = ap.id`
 	currentProjects := []*Project{}
 	err = s.SQL(`WITH RECURSIVE all_projects as (`+baseQuery+`)
 SELECT DISTINCT `+columnStr+` FROM all_projects
-	LEFT JOIN all_projects np on all_projects.parent_project_id = np.id
 ORDER BY all_projects.position `+limitSQL, args...).Find(&currentProjects)
 	if err != nil {
 		return
