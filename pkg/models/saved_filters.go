@@ -20,7 +20,6 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
-
 	"code.vikunja.io/api/pkg/cron"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
