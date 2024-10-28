@@ -19,6 +19,7 @@ package migration
 import (
 	"code.vikunja.io/api/pkg/db"
 	"src.techknowlogick.com/xormigrate"
+	"strings"
 	"xorm.io/xorm"
 	"xorm.io/xorm/schemas"
 )
@@ -51,8 +52,7 @@ func init() {
 
 			for _, query := range queries {
 				_, err := tx.Exec(query)
-				if err != nil && err.Error() != "Error 1061: Duplicate key name 'IDX_projects_owner_id'" &&
-					err.Error() != "Error 1061: Duplicate key name 'IDX_projects_parent_project_id'" {
+				if err != nil && !(strings.Contains(err.Error(), "Error 1061") && strings.Contains(err.Error(), "Duplicate key name")) {
 					return err
 				}
 			}
