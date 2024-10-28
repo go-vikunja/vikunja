@@ -430,15 +430,14 @@ type projectOptions struct {
 func getUserProjectsStatement(userID int64, search string, getArchived bool) *builder.Builder {
 	dialect := db.GetDialect()
 
-	// Adding a 1=1 condition by default here because xorm always needs a condition and cannot handle nil conditions
-	var getArchivedCond builder.Cond = builder.Eq{"1": 1}
-	if !getArchived {
-		getArchivedCond = builder.And(
-			builder.Eq{"l.is_archived": false},
-		)
+	conds := []builder.Cond{
+		builder.Or(
+			builder.Eq{"tm2.user_id": userID},
+			builder.Eq{"ul.user_id": userID},
+			builder.Eq{"l.owner_id": userID},
+		),
 	}
 
-	var filterCond builder.Cond
 	ids := []int64{}
 	if search != "" {
 		vals := strings.Split(search, ",")
@@ -450,16 +449,13 @@ func getUserProjectsStatement(userID int64, search string, getArchived bool) *bu
 			}
 			ids = append(ids, v)
 		}
-	}
 
-	filterCond = db.ILIKE("l.title", search)
-	if len(ids) > 0 {
-		filterCond = builder.In("l.id", ids)
-	}
+		filterCond := db.ILIKE("l.title", search)
+		if len(ids) > 0 {
+			filterCond = builder.In("l.id", ids)
+		}
 
-	var parentCondition builder.Cond
-	if search == "" {
-		parentCondition = builder.Or(
+		parentCondition := builder.Or(
 			builder.IsNull{"l.parent_project_id"},
 			builder.Eq{"l.parent_project_id": 0},
 			// else check for shared sub projects with a parent
@@ -471,6 +467,15 @@ func getUserProjectsStatement(userID int64, search string, getArchived bool) *bu
 				builder.NotNull{"l.parent_project_id"},
 			),
 		)
+		conds = append(conds, filterCond, parentCondition)
+	}
+
+	if !getArchived {
+		conds = append(conds,
+			builder.And(
+				builder.Eq{"l.is_archived": false},
+			),
+		)
 	}
 
 	return builder.Dialect(dialect).
@@ -479,16 +484,7 @@ func getUserProjectsStatement(userID int64, search string, getArchived bool) *bu
 		Join("LEFT", "team_projects tl", "tl.project_id = l.id").
 		Join("LEFT", "team_members tm2", "tm2.team_id = tl.team_id").
 		Join("LEFT", "users_projects ul", "ul.project_id = l.id").
-		Where(builder.And(
-			builder.Or(
-				builder.Eq{"tm2.user_id": userID},
-				builder.Eq{"ul.user_id": userID},
-				builder.Eq{"l.owner_id": userID},
-			),
-			filterCond,
-			getArchivedCond,
-			parentCondition,
-		)).
+		Where(builder.And(conds...)).
 		GroupBy("l.id")
 }
 
