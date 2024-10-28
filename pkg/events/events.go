@@ -19,6 +19,8 @@ package events
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"github.com/getsentry/sentry-go"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
@@ -36,6 +38,14 @@ var pubsub *gochannel.GoChannel
 // Event represents the event interface used by all events
 type Event interface {
 	Name() string
+}
+
+type messageHandleFailedError struct {
+	Metadata message.Metadata
+}
+
+func (m *messageHandleFailedError) Error() string {
+	return fmt.Sprintf("Failed to handle message: %v", m.Metadata)
 }
 
 // InitEvents sets up everything needed to work with events
@@ -70,6 +80,12 @@ func InitEvents() (err error) {
 			meta += s + "=" + m + ", "
 		}
 		log.Errorf("Error while handling message %s, %s payload=%s", msg.UUID, meta, string(msg.Payload))
+
+		if config.SentryEnabled.GetBool() {
+			sentry.CaptureException(&messageHandleFailedError{
+				Metadata: msg.Metadata,
+			})
+		}
 		return nil
 	})
 
