@@ -692,6 +692,14 @@ func (l *UpdateTaskInSavedFilterViews) Handle(msg *message.Message) (err error) 
 
 		taskBucket, taskPosition, err := addTaskToFilter(s, filter, view, doerTimezone, event.Task)
 		if err != nil {
+			if IsErrInvalidFilterExpression(err) ||
+				IsErrInvalidTaskFilterValue(err) ||
+				IsErrInvalidTaskFilterConcatinator(err) ||
+				IsErrInvalidTaskFilterComparator(err) {
+				log.Debugf("Invalid filter expression for view %d, expression: %s", view.ID, view.Filter)
+				continue
+			}
+
 			return err
 		}
 
