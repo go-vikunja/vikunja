@@ -235,7 +235,7 @@ func TestListUsersFromProject(t *testing.T) {
 			s := db.NewSession()
 			defer s.Close()
 
-			gotUsers, err := ListUsersFromProject(s, tt.args.l, tt.args.search)
+			gotUsers, err := ListUsersFromProject(s, tt.args.l, testuser1, tt.args.search)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ListUsersFromProject() error = %v, wantErr %v", err, tt.wantErr)
 				return

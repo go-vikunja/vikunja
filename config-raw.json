@@ -132,6 +132,11 @@
                     "key": "bcryptrounds",
                     "default_value": "11",
                     "comment": "The number of bcrypt rounds to use during registration. Each increment of this number doubles the computational cost. You probably don't need to change this value."
+                },
+                {
+                    "key": "enableopenidteamusersearch",
+                    "default_value": "false",
+                    "comment": "If enabled, users will only find other users who are part of an existing team when they are searching for a user by their partial name. The other existing team may be created from openid. It is still possible to add users to teams with their exact email address even when this is enabled."
                 }
             ]
         },

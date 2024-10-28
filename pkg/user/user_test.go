@@ -373,12 +373,14 @@ func TestUpdateUserPassword(t *testing.T) {
 }
 
 func TestListUsers(t *testing.T) {
+	user1 := &User{ID: 1}
+
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
 
-		all, err := ListUsers(s, "user1", nil)
+		all, err := ListUsers(s, "user1", user1, nil)
 		require.NoError(t, err)
 		assert.NotEmpty(t, all)
 		assert.Equal(t, "user1", all[0].Username)
@@ -388,7 +390,7 @@ func TestListUsers(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		all, err := ListUsers(s, "uSEr1", nil)
+		all, err := ListUsers(s, "uSEr1", user1, nil)
 		require.NoError(t, err)
 		assert.NotEmpty(t, all)
 		assert.Equal(t, "user1", all[0].Username)
@@ -407,7 +409,7 @@ func TestListUsers(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		all, err := ListUsers(s, "", nil)
+		all, err := ListUsers(s, "", user1, nil)
 		require.NoError(t, err)
 		assert.Empty(t, all)
 	})
@@ -416,7 +418,7 @@ func TestListUsers(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		all, err := ListUsers(s, "user1@example.com", nil)
+		all, err := ListUsers(s, "user1@example.com", user1, nil)
 		require.NoError(t, err)
 		assert.Empty(t, all)
 		db.AssertExists(t, "users", map[string]interface{}{
@@ -429,7 +431,7 @@ func TestListUsers(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		all, err := ListUsers(s, "one else", nil)
+		all, err := ListUsers(s, "one else", user1, nil)
 		require.NoError(t, err)
 		assert.Empty(t, all)
 		db.AssertExists(t, "users", map[string]interface{}{
@@ -442,7 +444,7 @@ func TestListUsers(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		all, err := ListUsers(s, "user7@example.com", nil)
+		all, err := ListUsers(s, "user7@example.com", user1, nil)
 		require.NoError(t, err)
 		assert.Len(t, all, 1)
 		assert.Equal(t, int64(7), all[0].ID)
@@ -456,7 +458,7 @@ func TestListUsers(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		all, err := ListUsers(s, "with space", nil)
+		all, err := ListUsers(s, "with space", user1, nil)
 		require.NoError(t, err)
 		assert.Len(t, all, 1)
 		assert.Equal(t, int64(12), all[0].ID)
@@ -470,7 +472,7 @@ func TestListUsers(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		all, err := ListUsers(s, "user7@example.com", &ProjectUserOpts{AdditionalCond: builder.In("id", 7)})
+		all, err := ListUsers(s, "user7@example.com", user1, &ProjectUserOpts{AdditionalCond: builder.In("id", 7)})
 		require.NoError(t, err)
 		assert.Len(t, all, 1)
 		assert.Equal(t, int64(7), all[0].ID)
@@ -484,7 +486,7 @@ func TestListUsers(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		all, err := ListUsers(s, "user7", nil)
+		all, err := ListUsers(s, "user7", user1, nil)
 		require.NoError(t, err)
 		assert.Len(t, all, 1)
 		assert.Equal(t, int64(7), all[0].ID)
@@ -497,7 +499,7 @@ func TestListUsers(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		all, err := ListUsers(s, "user", nil)
+		all, err := ListUsers(s, "user", user1, nil)
 		require.NoError(t, err)
 		assert.Empty(t, all)
 		db.AssertExists(t, "users", map[string]interface{}{
@@ -509,7 +511,7 @@ func TestListUsers(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		all, err := ListUsers(s, "user", &ProjectUserOpts{
+		all, err := ListUsers(s, "user", user1, &ProjectUserOpts{
 			MatchFuzzily: true,
 		})
 		require.NoError(t, err)

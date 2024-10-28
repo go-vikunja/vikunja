@@ -19,6 +19,8 @@ package user
 import (
 	"strings"
 
+	"code.vikunja.io/api/pkg/config"
+
 	"code.vikunja.io/api/pkg/db"
 
 	"xorm.io/builder"
@@ -33,7 +35,7 @@ type ProjectUserOpts struct {
 }
 
 // ListUsers returns a list with all users, filtered by an optional search string
-func ListUsers(s *xorm.Session, search string, opts *ProjectUserOpts) (users []*User, err error) {
+func ListUsers(s *xorm.Session, search string, currentUser *User, opts *ProjectUserOpts) (users []*User, err error) {
 	if opts == nil {
 		opts = &ProjectUserOpts{}
 	}
@@ -47,8 +49,10 @@ func ListUsers(s *xorm.Session, search string, opts *ProjectUserOpts) (users []*
 
 	conds := []builder.Cond{}
 
+	queryParts := strings.Split(search, ",")
+
 	if search != "" {
-		for _, queryPart := range strings.Split(search, ",") {
+		for _, queryPart := range queryParts {
 
 			if opts.MatchFuzzily {
 				conds = append(conds,
@@ -70,15 +74,20 @@ func ListUsers(s *xorm.Session, search string, opts *ProjectUserOpts) (users []*
 			conds = append(conds,
 				usernameCond,
 				builder.And(
-					builder.Eq{"email": queryPart},
-					builder.Eq{"discoverable_by_email": true},
-				),
-				builder.And(
 					db.ILIKE("name", queryPart),
 					builder.Eq{"discoverable_by_name": true},
 				),
 			)
 		}
+	}
+
+	if !opts.MatchFuzzily {
+		conds = append(conds,
+			builder.And(
+				builder.In("email", queryParts),
+				builder.Eq{"discoverable_by_email": true},
+			),
+		)
 	}
 
 	cond := builder.Or(conds...)
@@ -88,6 +97,35 @@ func ListUsers(s *xorm.Session, search string, opts *ProjectUserOpts) (users []*
 			cond,
 			opts.AdditionalCond,
 		)
+	}
+
+	if config.ServiceEnableOpenIDTeamUserOnlySearch.GetBool() {
+		teamMemberCond := builder.In("id", builder.Select("user_id").
+			From("team_members").
+			Where(builder.In("team_id",
+				builder.Select("team_id").
+					From("team_members").
+					Where(builder.Eq{"team_members.user_id": currentUser.ID}),
+			)),
+		)
+
+		if !opts.MatchFuzzily {
+			cond = builder.And(
+				cond,
+				builder.Or(
+					teamMemberCond,
+					builder.And(
+						builder.In("email", queryParts),
+						builder.Eq{"discoverable_by_email": true},
+					),
+				),
+			)
+		} else {
+			cond = builder.And(
+				cond,
+				teamMemberCond,
+			)
+		}
 	}
 
 	err = s.

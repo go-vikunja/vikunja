@@ -30,7 +30,7 @@ type ProjectUIDs struct {
 }
 
 // ListUsersFromProject returns a list with all users who have access to a project, regardless of the method which gave them access
-func ListUsersFromProject(s *xorm.Session, l *Project, search string) (users []*user.User, err error) {
+func ListUsersFromProject(s *xorm.Session, l *Project, currentUser *user.User, search string) (users []*user.User, err error) {
 
 	userids := []*ProjectUIDs{}
 
@@ -107,7 +107,7 @@ func ListUsersFromProject(s *xorm.Session, l *Project, search string) (users []*
 		cond = builder.In("id", uids)
 	}
 
-	users, err = user.ListUsers(s, search, &user.ProjectUserOpts{
+	users, err = user.ListUsers(s, search, currentUser, &user.ProjectUserOpts{
 		AdditionalCond:              cond,
 		ReturnAllIfNoSearchProvided: true,
 		MatchFuzzily:                true,

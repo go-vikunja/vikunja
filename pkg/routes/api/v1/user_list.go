@@ -47,13 +47,14 @@ func UserList(c echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
-	users, err := user.ListUsers(s, search, nil)
+	currentUser, err := user.GetCurrentUser(c)
 	if err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err)
 	}
 
-	if err := s.Commit(); err != nil {
+	users, err := user.ListUsers(s, search, currentUser, nil)
+	if err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err)
 	}
@@ -104,8 +105,14 @@ func ListUsersForProject(c echo.Context) error {
 		return echo.ErrForbidden
 	}
 
+	currentUser, err := user.GetCurrentUser(c)
+	if err != nil {
+		_ = s.Rollback()
+		return handler.HandleHTTPError(err)
+	}
+
 	search := c.QueryParam("s")
-	users, err := models.ListUsersFromProject(s, &project, search)
+	users, err := models.ListUsersFromProject(s, &project, currentUser, search)
 	if err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err)

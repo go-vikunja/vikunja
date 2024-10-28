@@ -50,22 +50,23 @@ const (
 	ServiceMaxItemsPerPage Key = `service.maxitemsperpage`
 	ServiceDemoMode        Key = `service.demomode`
 	// Deprecated: Use metrics.enabled
-	ServiceEnableMetrics         Key = `service.enablemetrics`
-	ServiceMotd                  Key = `service.motd`
-	ServiceEnableLinkSharing     Key = `service.enablelinksharing`
-	ServiceEnableRegistration    Key = `service.enableregistration`
-	ServiceEnableTaskAttachments Key = `service.enabletaskattachments`
-	ServiceTimeZone              Key = `service.timezone`
-	ServiceEnableTaskComments    Key = `service.enabletaskcomments`
-	ServiceEnableTotp            Key = `service.enabletotp`
-	ServiceTestingtoken          Key = `service.testingtoken`
-	ServiceEnableEmailReminders  Key = `service.enableemailreminders`
-	ServiceEnableUserDeletion    Key = `service.enableuserdeletion`
-	ServiceMaxAvatarSize         Key = `service.maxavatarsize`
-	ServiceAllowIconChanges      Key = `service.allowiconchanges`
-	ServiceCustomLogoURL         Key = `service.customlogourl`
-	ServiceEnablePublicTeams     Key = `service.enablepublicteams`
-	ServiceBcryptRounds          Key = `service.bcryptrounds`
+	ServiceEnableMetrics                  Key = `service.enablemetrics`
+	ServiceMotd                           Key = `service.motd`
+	ServiceEnableLinkSharing              Key = `service.enablelinksharing`
+	ServiceEnableRegistration             Key = `service.enableregistration`
+	ServiceEnableTaskAttachments          Key = `service.enabletaskattachments`
+	ServiceTimeZone                       Key = `service.timezone`
+	ServiceEnableTaskComments             Key = `service.enabletaskcomments`
+	ServiceEnableTotp                     Key = `service.enabletotp`
+	ServiceTestingtoken                   Key = `service.testingtoken`
+	ServiceEnableEmailReminders           Key = `service.enableemailreminders`
+	ServiceEnableUserDeletion             Key = `service.enableuserdeletion`
+	ServiceMaxAvatarSize                  Key = `service.maxavatarsize`
+	ServiceAllowIconChanges               Key = `service.allowiconchanges`
+	ServiceCustomLogoURL                  Key = `service.customlogourl`
+	ServiceEnablePublicTeams              Key = `service.enablepublicteams`
+	ServiceBcryptRounds                   Key = `service.bcryptrounds`
+	ServiceEnableOpenIDTeamUserOnlySearch Key = `service.enableopenidteamusersearch`
 
 	SentryEnabled         Key = `sentry.enabled`
 	SentryDsn             Key = `sentry.dsn`
@@ -321,6 +322,7 @@ func InitDefaultConfig() {
 	ServiceAllowIconChanges.setDefault(true)
 	ServiceEnablePublicTeams.setDefault(false)
 	ServiceBcryptRounds.setDefault(11)
+	ServiceEnableOpenIDTeamUserOnlySearch.setDefault(false)
 
 	// Sentry
 	SentryDsn.setDefault("https://440eedc957d545a795c17bbaf477497c@o1047380.ingest.sentry.io/4504254983634944")
