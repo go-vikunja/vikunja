@@ -45,6 +45,7 @@ const showDocs = ref(false)
 			<li><code>&lt;=</code>: {{ $t('filters.query.help.operators.lessThanOrEqual') }}</li>
 			<li><code>like</code>: {{ $t('filters.query.help.operators.like') }}</li>
 			<li><code>in</code>: {{ $t('filters.query.help.operators.in') }}</li>
+			<li><code>not in</code>: {{ $t('filters.query.help.operators.notIn') }}</li>
 		</ul>
 		<p>{{ $t('filters.query.help.logicalOperators.intro') }}</p>
 		<ul>

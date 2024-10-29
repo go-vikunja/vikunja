@@ -235,6 +235,8 @@ func getFilterCond(f *taskFilter, includeNulls bool) (cond builder.Cond, err err
 		cond = &builder.Like{field, "%" + val + "%"}
 	case taskFilterComparatorIn:
 		cond = builder.In(field, f.value)
+	case taskFilterComparatorNotIn:
+		cond = builder.NotIn(field, f.value)
 	case taskFilterComparatorInvalid:
 		// Nothing to do
 	}

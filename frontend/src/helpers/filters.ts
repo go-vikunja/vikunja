@@ -46,6 +46,7 @@ export const FILTER_OPERATORS = [
 	'<',
 	'<=',
 	'like',
+	'not in',
 	'in',
 	'?=',
 ]
@@ -57,7 +58,7 @@ export const FILTER_JOIN_OPERATOR = [
 	')',
 ]
 
-export const FILTER_OPERATORS_REGEX = '(&lt;|&gt;|&lt;=|&gt;=|=|!=|in)'
+export const FILTER_OPERATORS_REGEX = '(&lt;|&gt;|&lt;=|&gt;=|=|!=|not in|in)'
 
 export function getFilterFieldRegexPattern(field: string): RegExp {
 	return new RegExp('(' + field + '\\s*' + FILTER_OPERATORS_REGEX + '\\s*)([\'"]?)([^\'"&|()<]+\\1?)?', 'ig')
@@ -68,13 +69,13 @@ export function transformFilterStringForApi(
 	labelResolver: (title: string) => number | null,
 	projectResolver: (title: string) => number | null,
 ): string {
-	
+
 	filter = filter.trim()
 
 	if (filter === '') {
 		return ''
 	}
-	
+
 	AVAILABLE_FILTER_FIELDS.forEach(f => {
 		filter = filter.replace(new RegExp(f, 'ig'), f)
 	})
@@ -97,10 +98,10 @@ export function transformFilterStringForApi(
 				}
 
 				let keywords = [keyword.trim()]
-				if (operator === 'in' || operator === '?=') {
+				if (operator === 'in' || operator === '?=' || operator === 'not in' || operator === '?!=') {
 					keywords = keyword.trim().split(',').map(k => k.trim())
 				}
-				
+
 				let replaced = keyword
 
 				keywords.forEach(k => {
@@ -162,7 +163,7 @@ export function transformFilterStringFromApi(
 				const [matched, prefix, operator, space, keyword] = match
 				if (keyword) {
 					let keywords = [keyword.trim()]
-					if (operator === 'in' || operator === '?=') {
+					if (operator === 'in' || operator === '?=' || operator === 'not in' || operator === '?!=') {
 						keywords = keyword.trim().split(',').map(k => k.trim())
 					}
 

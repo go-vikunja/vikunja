@@ -133,7 +133,7 @@ const highlightedFilterQuery = computed(() => {
 				}
 
 				let labelTitles = [value.trim()]
-				if (operator === 'in' || operator === '?=') {
+				if (operator === 'in' || operator === '?=' || operator === 'not in' || operator === '?!=') {
 					labelTitles = value.split(',').map(v => v.trim())
 				}
 

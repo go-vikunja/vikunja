@@ -74,6 +74,18 @@ func TestParseFilter(t *testing.T) {
 		assert.Equal(t, int64(2), result[0].value.([]interface{})[1])
 		assert.Equal(t, int64(3), result[0].value.([]interface{})[2])
 	})
+	t.Run("not in", func(t *testing.T) {
+		result, err := getTaskFiltersFromFilterString("project_id not in 1,2,3", "UTC")
+
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		assert.Equal(t, "project_id", result[0].field)
+		assert.Equal(t, taskFilterComparatorNotIn, result[0].comparator)
+		require.Len(t, result[0].value, 3)
+		assert.Equal(t, int64(1), result[0].value.([]interface{})[0])
+		assert.Equal(t, int64(2), result[0].value.([]interface{})[1])
+		assert.Equal(t, int64(3), result[0].value.([]interface{})[2])
+	})
 	t.Run("use project for project_id", func(t *testing.T) {
 		result, err := getTaskFiltersFromFilterString("project in 1,2,3", "UTC")
 

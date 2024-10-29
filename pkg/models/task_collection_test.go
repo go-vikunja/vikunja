@@ -26,6 +26,7 @@ import (
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
+
 	"gopkg.in/d4l3k/messagediff.v1"
 )
 
@@ -1034,6 +1035,45 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			want: []*Task{
 				task1,
 				task2,
+			},
+			wantErr: false,
+		},
+		{
+			name: "filter not in",
+			fields: fields{
+				Filter: "id not in '1,2,3,4'",
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task5,
+				task6,
+				task7,
+				task8,
+				task9,
+				task10,
+				task11,
+				task12,
+				task15,
+				task16,
+				task17,
+				task18,
+				task19,
+				task20,
+				task21,
+				task22,
+				task23,
+				task24,
+				task25,
+				task26,
+				task27,
+				task28,
+				task29,
+				task30,
+				task31,
+				task32,
+				task33,
+				task35,
+				task39,
 			},
 			wantErr: false,
 		},

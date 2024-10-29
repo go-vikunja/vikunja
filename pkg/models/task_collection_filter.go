@@ -47,6 +47,7 @@ const (
 	taskFilterComparatorNotEquals    taskFilterComparator = "!="
 	taskFilterComparatorLike         taskFilterComparator = "like"
 	taskFilterComparatorIn           taskFilterComparator = "in"
+	taskFilterComparatorNotIn        taskFilterComparator = "not in"
 )
 
 // Guess what you get back if you ask Safari for a rfc 3339 formatted date?
@@ -153,11 +154,12 @@ func getTaskFiltersFromFilterString(filter string, filterTimezone string) (filte
 		return
 	}
 
+	filter = strings.ReplaceAll(filter, " not in ", " "+string(fexpr.SignAnyNeq)+" ")
 	filter = strings.ReplaceAll(filter, " in ", " ?= ")
 	filter = strings.ReplaceAll(filter, " like ", " ~ ")
 
 	// Regex pattern to match filter expressions
-	re := regexp.MustCompile(`(\w+)\s*(>=|<=|!=|~|\?=|=|>|<)\s*([^&|()]+)`)
+	re := regexp.MustCompile(`(\w+)\s*(>=|<=|!=|~|\?=|\?!=|=|>|<)\s*([^&|()]+)`)
 
 	filter = re.ReplaceAllStringFunc(filter, func(match string) string {
 		parts := re.FindStringSubmatch(match)
@@ -221,7 +223,8 @@ func validateTaskFieldComparator(comparator taskFilterComparator) error {
 		taskFilterComparatorLessEquals,
 		taskFilterComparatorNotEquals,
 		taskFilterComparatorLike,
-		taskFilterComparatorIn:
+		taskFilterComparatorIn,
+		taskFilterComparatorNotIn:
 		return nil
 	case taskFilterComparatorInvalid:
 		fallthrough
@@ -250,6 +253,10 @@ func getFilterComparatorFromOp(op fexpr.SignOp) (taskFilterComparator, error) {
 		fallthrough
 	case "in":
 		return taskFilterComparatorIn, nil
+	case fexpr.SignAnyNeq:
+		fallthrough
+	case "not in":
+		return taskFilterComparatorNotIn, nil
 	default:
 		return taskFilterComparatorInvalid, ErrInvalidTaskFilterComparator{Comparator: taskFilterComparator(op)}
 	}
@@ -337,7 +344,7 @@ func getNativeValueForTaskField(fieldName string, comparator taskFilterComparato
 		}
 	}
 
-	if comparator == taskFilterComparatorIn {
+	if comparator == taskFilterComparatorIn || comparator == taskFilterComparatorNotIn {
 		vals := strings.Split(value, ",")
 		valueSlice := []interface{}{}
 		for _, val := range vals {

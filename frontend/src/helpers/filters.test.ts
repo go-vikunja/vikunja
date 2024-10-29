@@ -67,6 +67,16 @@ describe('Filter Transformation', () => {
 
 			expect(transformed).toBe('labels in 1, 2 && due_date = now')
 		})
+		
+		it('should correctly resolve multiple labels with a not in clause', () => {
+			const transformed = transformFilterStringForApi(
+				'labels not in lorem, ipsum && dueDate = now',
+				multipleDummyResolver,
+				nullTitleToIdResolver,
+			)
+
+			expect(transformed).toBe('labels not in 1, 2 && due_date = now')
+		})
 
 		it('should correctly resolve projects', () => {
 			const transformed = transformFilterStringForApi(
@@ -218,7 +228,17 @@ describe('Filter Transformation', () => {
 
 			expect(transformed).toBe('labels in lorem, ipsum')
 		})
+		
+		it('should correctly resolve multiple labels not in', () => {
+			const transformed = transformFilterStringFromApi(
+				'labels not in 1, 2',
+				multipleIdToTitleResolver,
+				nullIdToTitleResolver,
+			)
 
+			expect(transformed).toBe('labels not in lorem, ipsum')
+		})
+		
 		it('should not touch the label value when it is undefined', () => {
 			const transformed = transformFilterStringFromApi(
 				'labels = one',
