@@ -363,7 +363,7 @@ steps:
       - api-build
 
   - name: frontend-dependencies
-    image: node:20.16.0-alpine
+    image: node:22.10.0-alpine
     pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
@@ -377,7 +377,7 @@ steps:
   #      - restore-cache
 
   - name: frontend-lint
-    image: node:20.16.0-alpine
+    image: node:22.10.0-alpine
     pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
@@ -389,7 +389,7 @@ steps:
       - frontend-dependencies
 
   - name: frontend-build-prod
-    image: node:20.16.0-alpine
+    image: node:22.10.0-alpine
     pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
@@ -401,7 +401,7 @@ steps:
       - frontend-dependencies
 
   - name: frontend-test-unit
-    image: node:20.16.0-alpine
+    image: node:22.10.0-alpine
     pull: always
     commands:
       - cd frontend
@@ -412,7 +412,7 @@ steps:
 
   - name: frontend-typecheck
     failure: ignore
-    image: node:20.16.0-alpine
+    image: node:22.10.0-alpine
     pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
@@ -543,7 +543,7 @@ steps:
       - git fetch --tags
 
   - name: frontend-dependencies
-    image: node:20.16.0-alpine
+    image: node:22.10.0-alpine
     pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
@@ -555,7 +555,7 @@ steps:
       - pnpm install --fetch-timeout 100000
 
   - name: frontend-build
-    image: node:20.16.0-alpine
+    image: node:22.10.0-alpine
     pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
@@ -948,7 +948,7 @@ steps:
       - git fetch --tags
 
   - name: build
-    image: node:20.16.0-alpine
+    image: node:22.10.0-alpine
     pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
@@ -1009,7 +1009,7 @@ steps:
       - git fetch --tags
 
   - name: build
-    image: node:20.16.0-alpine
+    image: node:22.10.0-alpine
     pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
@@ -1400,6 +1400,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: ba0652aeee2f07af2f861ea281d156db7ddd4803672dae0101ebb1f8111ec580
+hmac: 7d4310adbf337057c0e2ca26f888304b2e882b653043660d58631d2dda830b78
 
 ...
