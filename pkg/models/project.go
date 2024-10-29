@@ -228,7 +228,7 @@ func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 	}
 
 	if p.Expand == ProjectExpandableRights {
-		err = addMaxRightToProjects(s, prs, a)
+		err = addMaxRightToProjects(s, prs, doer)
 		if err != nil {
 			return
 		}
@@ -733,7 +733,7 @@ func addProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err er
 	return
 }
 
-func addMaxRightToProjects(s *xorm.Session, projects []*Project, a web.Auth) (err error) {
+func addMaxRightToProjects(s *xorm.Session, projects []*Project, u *user.User) (err error) {
 	projectIDs := make([]int64, 0, len(projects))
 	for _, project := range projects {
 		if getSavedFilterIDFromProjectID(project.ID) > 0 {
@@ -743,7 +743,7 @@ func addMaxRightToProjects(s *xorm.Session, projects []*Project, a web.Auth) (er
 		projectIDs = append(projectIDs, project.ID)
 	}
 
-	rights, err := checkRightsForProjects(s, a, projectIDs)
+	rights, err := checkRightsForProjects(s, u, projectIDs)
 	if err != nil {
 		return err
 	}

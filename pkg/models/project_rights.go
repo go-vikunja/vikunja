@@ -52,8 +52,10 @@ func (p *Project) CanWrite(s *xorm.Session, a web.Auth) (bool, error) {
 			(shareAuth.Right == RightWrite || shareAuth.Right == RightAdmin), errIsArchived
 	}
 
+	u := &user.User{ID: a.GetID()}
+
 	// Check if the user is either owner or can write to the project
-	if originalProject.isOwner(&user.User{ID: a.GetID()}) {
+	if originalProject.isOwner(u) {
 		canWrite = true
 	}
 
@@ -61,7 +63,7 @@ func (p *Project) CanWrite(s *xorm.Session, a web.Auth) (bool, error) {
 		return canWrite, errIsArchived
 	}
 
-	canWrite, _, err = originalProject.checkRight(s, a, RightWrite, RightAdmin)
+	canWrite, _, err = originalProject.checkRight(s, u, RightWrite, RightAdmin)
 	if err != nil {
 		return false, err
 	}
@@ -105,7 +107,7 @@ func (p *Project) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
 			(shareAuth.Right == RightRead || shareAuth.Right == RightWrite || shareAuth.Right == RightAdmin), int(shareAuth.Right), nil
 	}
 
-	return p.checkRight(s, a, RightRead, RightWrite, RightAdmin)
+	return p.checkRight(s, &user.User{ID: a.GetID()}, RightRead, RightWrite, RightAdmin)
 }
 
 // CanUpdate checks if the user can update a project
@@ -191,13 +193,15 @@ func (p *Project) IsAdmin(s *xorm.Session, a web.Auth) (bool, error) {
 		return originalProject.ID == shareAuth.ProjectID && shareAuth.Right == RightAdmin, nil
 	}
 
+	u := &user.User{ID: a.GetID()}
+
 	// Check all the things
 	// Check if the user is either owner or can write to the project
 	// Owners are always admins
-	if originalProject.isOwner(&user.User{ID: a.GetID()}) {
+	if originalProject.isOwner(u) {
 		return true, nil
 	}
-	is, _, err := originalProject.checkRight(s, a, RightAdmin)
+	is, _, err := originalProject.checkRight(s, u, RightAdmin)
 	return is, err
 }
 
@@ -207,8 +211,8 @@ func (p *Project) isOwner(u *user.User) bool {
 }
 
 // Checks n different rights for any given user
-func (p *Project) checkRight(s *xorm.Session, a web.Auth, rights ...Right) (bool, int, error) {
-	projectRights, err := checkRightsForProjects(s, a, []int64{p.ID})
+func (p *Project) checkRight(s *xorm.Session, u *user.User, rights ...Right) (bool, int, error) {
+	projectRights, err := checkRightsForProjects(s, u, []int64{p.ID})
 	if err != nil {
 		return false, 0, err
 	}
@@ -231,16 +235,16 @@ type projectRight struct {
 	MaxRight Right
 }
 
-func checkRightsForProjects(s *xorm.Session, a web.Auth, projectIDs []int64) (projectRightMap map[int64]*projectRight, err error) {
+func checkRightsForProjects(s *xorm.Session, u *user.User, projectIDs []int64) (projectRightMap map[int64]*projectRight, err error) {
 	projectRightMap = make(map[int64]*projectRight)
 	args := []interface{}{
-		a.GetID(),
-		a.GetID(),
-		a.GetID(),
-		a.GetID(),
-		a.GetID(),
-		a.GetID(),
-		a.GetID(),
+		u.ID,
+		u.ID,
+		u.ID,
+		u.ID,
+		u.ID,
+		u.ID,
+		u.ID,
 	}
 
 	err = s.SQL(`
