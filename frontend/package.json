@@ -132,7 +132,6 @@
     "@faker-js/faker": "9.1.0",
     "@histoire/plugin-screenshot": "0.17.17",
     "@histoire/plugin-vue": "0.17.17",
-    "@rushstack/eslint-patch": "1.10.4",
     "@tsconfig/node20": "20.1.4",
     "@types/codemirror": "5.60.15",
     "@types/dompurify": "3.0.5",

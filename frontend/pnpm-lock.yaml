@@ -257,9 +257,6 @@ importers:
       '@histoire/plugin-vue':
         specifier: 0.17.17
         version: 0.17.17(histoire@0.17.17(@types/node@22.8.2)(sass@1.80.4)(terser@5.31.6)(vite@5.4.10(@types/node@22.8.2)(sass@1.80.4)(terser@5.31.6)))(vite@5.4.10(@types/node@22.8.2)(sass@1.80.4)(terser@5.31.6))(vue@3.5.12(typescript@5.6.3))
-      '@rushstack/eslint-patch':
-        specifier: 1.10.4
-        version: 1.10.4
       '@tsconfig/node20':
         specifier: 20.1.4
         version: 20.1.4
@@ -2530,9 +2527,6 @@ packages:
     resolution: {integrity: sha512-2mLH46K1u3r6uwc95hU+OR9q/ggYMpnS7pSp83Ece1HUQgF9Nh/QwTK5rcgbFnV9j+08yBrU5sA/P0RK2MSBNA==}
     cpu: [x64]
     os: [win32]
-
-  '@rushstack/eslint-patch@1.10.4':
-    resolution: {integrity: sha512-WJgX9nzTqknM393q1QJDJmoW28kUfEnybeTfVNcNAPnIx210RXm2DiXiHzfNPJNIUUb1tJnz/l4QGtJ30PgWmA==}
 
   '@sentry-internal/browser-utils@8.35.0':
     resolution: {integrity: sha512-uj9nwERm7HIS13f/Q52hF/NUS5Al8Ma6jkgpfYGeppYvU0uSjPkwMogtqoJQNbOoZg973tV8qUScbcWY616wNA==}
@@ -9364,8 +9358,6 @@ snapshots:
 
   '@rollup/rollup-win32-x64-msvc@4.24.2':
     optional: true
-
-  '@rushstack/eslint-patch@1.10.4': {}
 
   '@sentry-internal/browser-utils@8.35.0':
     dependencies:
