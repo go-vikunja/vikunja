@@ -489,7 +489,7 @@ func convertParsedFilterToTypesense(rawFilters []*taskFilter) (filterBy string, 
 		case taskFilterComparatorIn:
 			filter += ":["
 		case taskFilterComparatorNotIn:
-			filter += ":!["
+			filter += ":!=["
 		case taskFilterComparatorInvalid:
 		// Nothing to do
 		default:
