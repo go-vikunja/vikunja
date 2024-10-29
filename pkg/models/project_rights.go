@@ -239,6 +239,8 @@ func checkRightsForProjects(s *xorm.Session, a web.Auth, projectIDs []int64) (pr
 		a.GetID(),
 		a.GetID(),
 		a.GetID(),
+		a.GetID(),
+		a.GetID(),
 	}
 
 	err = s.SQL(`
@@ -265,12 +267,12 @@ WITH RECURSIVE
     project_permissions AS (SELECT ph.id,
                                    ph.original_project_id,
                                    CASE
-                                       WHEN p.owner_id = 1 THEN 2
+                                       WHEN p.owner_id = ? THEN 2
                                        WHEN COALESCE(ul.right, 0) > COALESCE(tl.right, 0) THEN ul.right
                                        ELSE COALESCE(tl.right, 0)
                                        END AS project_right,
             CASE
-                WHEN p.owner_id = 1 THEN 1  -- Direct project ownership
+                WHEN p.owner_id = ? THEN 1  -- Direct project ownership
                 ELSE ph.level + 1  -- Derived from parent project
             END AS priority
                             FROM project_hierarchy ph
