@@ -117,6 +117,7 @@ async function setApiUrl() {
 		success({message: t('apiConfig.success', {domain: apiDomain.value})})
 		configureApi.value = false
 		emit('foundApi', apiUrl.value)
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	} catch (e) {
 		// Still not found, url is still invalid
 		errorMsg.value = t('apiConfig.error', {domain: apiDomain.value})

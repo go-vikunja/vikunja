@@ -40,6 +40,7 @@ export const checkAndSetApiUrl = (url: string | undefined | null): Promise<strin
 	let urlToCheck: URL
 	try {
 		urlToCheck = new URL(url)
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	} catch (e) {
 		throw new InvalidApiUrlProvidedError()
 	}

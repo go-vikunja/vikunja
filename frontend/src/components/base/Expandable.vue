@@ -73,6 +73,7 @@ function getHeight(el: HTMLElement) {
  * https://gist.github.com/paulirish/5d52fb081b3570c81e3a
  */
 function forceLayout(el: HTMLElement) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
   el.offsetTop
 }
 

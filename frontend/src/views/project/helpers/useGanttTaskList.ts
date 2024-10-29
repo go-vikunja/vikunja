@@ -88,7 +88,7 @@ export function useGanttTaskList<F extends Filters>(
 			// update the task with possible changes from server
 			tasks.value.set(updatedTask.id, updatedTask)
 			success('Saved')
-		} catch (e) {
+		} catch (_) {
 			error('Something went wrong saving the task')
 			// roll back changes
 			tasks.value.set(task.id, oldTask)

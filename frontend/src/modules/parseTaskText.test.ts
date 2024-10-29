@@ -273,7 +273,7 @@ describe('Parse Task Text', () => {
 			const mar = new Date(2022, 2, 32)
 			vi.setSystemTime(mar)
 
-			const result = parseTaskText(`Lorem Ipsum 31st`)
+			const result = parseTaskText('Lorem Ipsum 31st')
 
 			const expectedDate = new Date(2022, 4, 31)
 			expect(result.text).toBe('Lorem Ipsum')
@@ -617,7 +617,7 @@ describe('Parse Task Text', () => {
 			expect(result.labels[1]).toBe('label2')
 		})
 		it('should correctly parse labels with spaces in them', () => {
-			const result = parseTaskText(`Lorem *'label with space' Ipsum`)
+			const result = parseTaskText('Lorem *\'label with space\' Ipsum')
 
 			expect(result.text).toBe('Lorem Ipsum')
 			expect(result.labels).toHaveLength(1)
@@ -647,25 +647,25 @@ describe('Parse Task Text', () => {
 			expect(result.project).toBe('project')
 		})
 		it('should parse a project with a space in it', () => {
-			const result = parseTaskText(`Lorem Ipsum +'project with long name'`)
+			const result = parseTaskText('Lorem Ipsum +\'project with long name\'')
 
 			expect(result.text).toBe('Lorem Ipsum')
 			expect(result.project).toBe('project with long name')
 		})
 		it('should parse a project with a space in it and "', () => {
-			const result = parseTaskText(`Lorem Ipsum +"project with long name"`)
+			const result = parseTaskText('Lorem Ipsum +"project with long name"')
 
 			expect(result.text).toBe('Lorem Ipsum')
 			expect(result.project).toBe('project with long name')
 		})
 		it('should parse only the first project', () => {
-			const result = parseTaskText(`Lorem Ipsum +project1 +project2 +project3`)
+			const result = parseTaskText('Lorem Ipsum +project1 +project2 +project3')
 
 			expect(result.text).toBe('Lorem Ipsum +project2 +project3')
 			expect(result.project).toBe('project1')
 		})
 		it('should parse a project that\'s called like a date as project', () => {
-			const result = parseTaskText(`Lorem Ipsum +today`)
+			const result = parseTaskText('Lorem Ipsum +today')
 
 			expect(result.text).toBe('Lorem Ipsum')
 			expect(result.project).toBe('today')
@@ -681,14 +681,14 @@ describe('Parse Task Text', () => {
 				expect(result.priority).toBe(PRIORITIES[p])
 			})
 		}
-		it(`should not parse an invalid priority`, () => {
-			const result = parseTaskText(`Lorem Ipsum !9999`)
+		it('should not parse an invalid priority', () => {
+			const result = parseTaskText('Lorem Ipsum !9999')
 
 			expect(result.text).toBe('Lorem Ipsum !9999')
 			expect(result.priority).toBe(null)
 		})
-		it(`should not parse an invalid priority but use the first valid one it finds`, () => {
-			const result = parseTaskText(`Lorem Ipsum !9999 !1`)
+		it('should not parse an invalid priority but use the first valid one it finds', () => {
+			const result = parseTaskText('Lorem Ipsum !9999 !1')
 
 			expect(result.text).toBe('Lorem Ipsum !9999')
 			expect(result.priority).toBe(1)
@@ -724,7 +724,7 @@ describe('Parse Task Text', () => {
 			expect(result.assignees[1]).toBe('user2')
 		})
 		it('should parse an assignee with a space in it', () => {
-			const text = `Lorem Ipsum @'user with long name'`
+			const text = 'Lorem Ipsum @\'user with long name\''
 			const result = parseTaskText(text)
 
 			expect(result.text).toBe(text)
@@ -732,7 +732,7 @@ describe('Parse Task Text', () => {
 			expect(result.assignees[0]).toBe('user with long name')
 		})
 		it('should parse an assignee with a space in it and "', () => {
-			const text = `Lorem Ipsum @"user with long name"`
+			const text = 'Lorem Ipsum @"user with long name"'
 			const result = parseTaskText(text)
 
 			expect(result.text).toBe(text)
@@ -740,7 +740,7 @@ describe('Parse Task Text', () => {
 			expect(result.assignees[0]).toBe('user with long name')
 		})
 		it('should parse an assignee who is called like a date as assignee', () => {
-			const text = `Lorem Ipsum @today`
+			const text = 'Lorem Ipsum @today'
 			const result = parseTaskText(text)
 
 			expect(result.text).toBe(text)

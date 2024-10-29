@@ -247,7 +247,7 @@ export const useAuthStore = defineStore('auth', () => {
 				isAuthenticated = info.exp >= ts
 				// Settings should only be loaded from the api request, not via the jwt
 				setUser(info, false)
-			} catch (e) {
+			} catch (_) {
 				logout()
 			}
 

@@ -117,7 +117,6 @@ const showAll = computed(() => typeof props.dateFrom === 'undefined' || typeof p
 const pageTitle = computed(() => {
 	// We need to define "key" because it is the first parameter in the array and we need the second
 	const predefinedRange = Object.entries(DATE_RANGES)
-		// eslint-disable-next-line no-unused-vars
 		.find(([, value]) => props.dateFrom === value[0] && props.dateTo === value[1])
 		?.[0]
 	if (typeof predefinedRange !== 'undefined') {

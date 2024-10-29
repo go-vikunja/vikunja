@@ -5,9 +5,12 @@ export function useBodyClass(className: string, defaultValue = false) {
 	const isActive = ref(defaultValue)
 
 	watchEffect(() => {
-		isActive.value
-			? document.body.classList.add(className)
-			: document.body.classList.remove(className)
+		if(isActive.value) {
+			document.body.classList.add(className)
+			return
+		}
+		
+		document.body.classList.remove(className)
 	})
 
 	tryOnBeforeUnmount(() => isActive.value && document.body.classList.remove(className))

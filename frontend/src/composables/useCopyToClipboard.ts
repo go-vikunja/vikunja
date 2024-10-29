@@ -24,7 +24,8 @@ export function useCopyToClipboard() {
 			if (!successful) {
 				throw new Error()
 			}
-		} catch (err) {
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		} catch (e) {
 			error(t('misc.copyError'))
 		}
 	
@@ -38,6 +39,7 @@ export function useCopyToClipboard() {
 		}
 		try {
 			await navigator.clipboard.writeText(text)
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		} catch(e) {
 			error(t('misc.copyError'))
 		}

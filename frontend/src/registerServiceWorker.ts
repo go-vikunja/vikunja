@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-
 import {register} from 'register-service-worker'
 
 import {getFullBaseUrl} from './helpers/getFullBaseUrl'

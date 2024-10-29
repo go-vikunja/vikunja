@@ -1,6 +1,3 @@
-/* eslint-disable no-console */
-/* eslint-disable no-undef */
-
 import {getFullBaseUrl} from './helpers/getFullBaseUrl'
 
 declare let self: ServiceWorkerGlobalScope

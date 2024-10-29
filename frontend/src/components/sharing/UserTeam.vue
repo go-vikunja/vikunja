@@ -250,7 +250,6 @@ const sharableName = computed(() => {
 
 if (props.shareType === 'user') {
 	searchService = shallowReactive(new UserService())
-	// eslint-disable-next-line vue/no-ref-as-operand
 	sharable = ref(new UserModel())
 	searchLabel.value = 'username'
 
@@ -262,7 +261,6 @@ if (props.shareType === 'user') {
 	}
 } else if (props.shareType === 'team') {
 	searchService = new TeamService()
-	// eslint-disable-next-line vue/no-ref-as-operand
 	sharable = ref(new TeamModel())
 	searchLabel.value = 'name'
 
