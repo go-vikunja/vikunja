@@ -36,9 +36,9 @@
 		</p>
 		<p>{{ $t('misc.forExample') }}</p>
 		<ul>
-			<li><code>+1d</code> {{ $t('input.datemathHelp.add1Day') }}</li>
-			<li><code>-1d</code> {{ $t('input.datemathHelp.minus1Day') }}</li>
-			<li><code>/d</code> {{ $t('input.datemathHelp.roundDay') }}</li>
+			<li><code>+1d</code>: {{ $t('input.datemathHelp.add1Day') }}</li>
+			<li><code>-1d</code>: {{ $t('input.datemathHelp.minus1Day') }}</li>
+			<li><code>/d</code>: {{ $t('input.datemathHelp.roundDay') }}</li>
 		</ul>
 		<h3>{{ $t('input.datemathHelp.supportedUnits') }}</h3>
 		<table class="table">
