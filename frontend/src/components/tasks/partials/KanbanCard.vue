@@ -32,7 +32,10 @@
 					<template v-else>
 						{{ task.identifier }}
 					</template>
-					<span class="tw-text-red-600 tw-pl-2" v-if="showTaskPosition">
+					<span
+						v-if="showTaskPosition"
+						class="tw-text-red-600 tw-pl-2"
+					>
 						{{ task.position }}
 					</span>
 				</div>
