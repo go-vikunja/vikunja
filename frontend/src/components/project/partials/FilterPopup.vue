@@ -20,6 +20,7 @@
 			:has-title="true"
 			class="filter-popup"
 			:change-immediately="false"
+			:filter-from-view="filterFromView"
 			@showResults="showResults"
 		/>
 	</Modal>
@@ -31,13 +32,21 @@ import {computed, ref, watch} from 'vue'
 import Filters from '@/components/project/partials/Filters.vue'
 
 import {type TaskFilterParams} from '@/services/taskCollection'
+import {type IProjectView} from '@/modelTypes/IProjectView'
+import {type IProject} from '@/modelTypes/IProject'
+import {useProjectStore} from '@/stores/projects'
 
 const props = defineProps<{
 	modelValue: TaskFilterParams,
+	projectId?: IProject['id'],
+	viewId?: IProjectView['id'],
 }>()
+
 const emit = defineEmits<{
 	'update:modelValue': [value: TaskFilterParams]
 }>()
+
+const projectStore = useProjectStore()
 
 const value = ref<TaskFilterParams>({})
 
@@ -67,6 +76,19 @@ function showResults() {
 	})
 	modalOpen.value = false
 }
+
+const filterFromView = computed(() => {
+	if (!props.projectId || !props.viewId) {
+		return
+	}
+	
+	const project = projectStore.projects[props.projectId]
+	if (!project) {
+		return
+	}
+	const view = project.views.find(v => v.id === props.viewId)
+	return view?.filter
+})
 </script>
 
 <style scoped lang="scss">

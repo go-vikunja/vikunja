@@ -9,6 +9,8 @@
 				<FilterPopup
 					v-if="!isSavedFilter(project)"
 					v-model="params"
+					:view-id="viewId"
+					:project-id="projectId"
 					@update:modelValue="prepareFiltersAndLoadTasks()"
 				/>
 			</div>

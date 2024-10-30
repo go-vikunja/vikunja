@@ -67,7 +67,12 @@
 						</Card>
 					</template>
 				</Popup>
-				<FilterPopup v-model="params" />
+				<FilterPopup
+					v-if="!isSavedFilter({id: projectId})"
+					v-model="params"
+					:view-id="viewId"
+					:project-id="projectId"
+				/>
 			</div>
 		</template>
 
@@ -290,6 +295,7 @@ import type {IProject} from '@/modelTypes/IProject'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import type {IProjectView} from '@/modelTypes/IProjectView'
 import { camelCase } from 'change-case'
+import {isSavedFilter} from '@/services/savedFilter'
 
 const props = defineProps<{
 	projectId: IProject['id'],

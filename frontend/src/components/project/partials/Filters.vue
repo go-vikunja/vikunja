@@ -10,6 +10,15 @@
 			@update:modelValue="() => change('modelValue')"
 			@blur="() => change('blur')"
 		/>
+		
+		<div 
+			v-if="filterFromView"
+			class="tw-text-sm tw-mb-2"
+		>
+			{{ $t('filters.fromView') }}
+			<code>{{ filterFromView }}</code><br>
+			{{ $t('filters.fromViewBoth') }}
+		</div>
 
 		<div class="field is-flex is-flex-direction-column">
 			<FancyCheckbox
@@ -64,6 +73,7 @@ const props = withDefaults(defineProps<{
 	hasTitle?: boolean,
 	hasFooter?: boolean,
 	changeImmediately?: boolean,
+	filterFromView?: string,
 }>(), {
 	hasTitle: false,
 	hasFooter: true,
