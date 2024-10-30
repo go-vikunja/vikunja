@@ -208,6 +208,7 @@
 												class="kanban-card"
 												:task="task"
 												:loading="taskUpdating[task.id] ?? false"
+												:project-id="projectId"
 											/>
 										</div>
 									</template>

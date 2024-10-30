@@ -19,19 +19,24 @@
 			class="tw-w-full"
 		>
 		<div class="p-2">
-			<span class="task-id">
-				<Done
-					class="kanban-card__done"
-					:is-done="task.done"
-					variant="small"
-				/>
-				<template v-if="task.identifier === ''">
-					#{{ task.index }}
-				</template>
-				<template v-else>
-					{{ task.identifier }}
-				</template>
-			</span>
+			<div class="task-id tw-flex tw-justify-between">
+				<div>
+					<Done
+						class="kanban-card__done"
+						:is-done="task.done"
+						variant="small"
+					/>
+					<template v-if="task.identifier === ''">
+						#{{ task.index }}
+					</template>
+					<template v-else>
+						{{ task.identifier }}
+					</template>
+				</div>
+				<div v-if="projectTitle">
+					{{ projectTitle }}
+				</div>
+			</div>
 			<span
 				v-if="task.dueDate > 0"
 				v-tooltip="formatDateLong(task.dueDate)"
@@ -104,6 +109,7 @@ import ChecklistSummary from './ChecklistSummary.vue'
 
 import {getHexColor} from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
+import type {IProject} from '@/modelTypes/IProject'
 import {SUPPORTED_IMAGE_SUFFIX} from '@/models/attachment'
 import AttachmentService, {PREVIEW_SIZE} from '@/services/attachment'
 
@@ -113,9 +119,11 @@ import {useTaskStore} from '@/stores/tasks'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import {playPopSound} from '@/helpers/playPop'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
+import {useProjectStore} from '@/stores/projects'
 
 const props = withDefaults(defineProps<{
 	task: ITask,
+	projectId: IProject['id'],
 	loading: boolean,
 }>(), {
 	loading: false,
@@ -126,6 +134,17 @@ const router = useRouter()
 const loadingInternal = ref(false)
 
 const color = computed(() => getHexColor(props.task.hexColor))
+
+const projectStore = useProjectStore()
+
+const projectTitle = computed(() => {
+	if (props.projectId === props.task.projectId) {
+		return false
+	}
+	
+	const project = projectStore.projects[props.task.projectId]
+	return project?.title
+})
 
 async function toggleTaskDone(task: ITask) {
 	loadingInternal.value = true
