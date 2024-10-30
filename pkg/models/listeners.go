@@ -672,11 +672,15 @@ func (l *UpdateTaskInSavedFilterViews) Handle(msg *message.Message) (err error) 
 		return err
 	}
 
+	var fallbackTimezone string
 	u, err := user.GetUserByID(s, event.Doer.GetID())
-	if err != nil {
-		return err
+	if err == nil {
+		fallbackTimezone = u.Timezone
+		// When a link share triggered this event, the user id will be 0, and thus this fails.
+		// Only passing the value along when the user was retrieved successfully ensures the whole handler
+		// does not fail because of that.
+		// When the fallback is empty, it will be handled later anyhow.
 	}
-	doerTimezone := u.Timezone
 
 	taskBuckets := []*TaskBucket{}
 	taskPositions := []*TaskPosition{}
@@ -690,7 +694,7 @@ func (l *UpdateTaskInSavedFilterViews) Handle(msg *message.Message) (err error) 
 			continue
 		}
 
-		taskBucket, taskPosition, err := addTaskToFilter(s, filter, view, doerTimezone, event.Task)
+		taskBucket, taskPosition, err := addTaskToFilter(s, filter, view, fallbackTimezone, event.Task)
 		if err != nil {
 			if IsErrInvalidFilterExpression(err) ||
 				IsErrInvalidTaskFilterValue(err) ||
