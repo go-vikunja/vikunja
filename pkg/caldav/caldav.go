@@ -23,7 +23,6 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/models"
-
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 )

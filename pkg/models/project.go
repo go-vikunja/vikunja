@@ -330,25 +330,24 @@ func (p *Project) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 
 // GetProjectSimpleByID gets a project with only the basic items, aka no tasks or user objects. Returns an error if the project does not exist.
 func GetProjectSimpleByID(s *xorm.Session, projectID int64) (project *Project, err error) {
-
-	project = &Project{}
-
 	if projectID < 1 {
 		return nil, ErrProjectDoesNotExist{ID: projectID}
 	}
 
-	exists, err := s.
-		Where("id = ?", projectID).
-		OrderBy("position").
-		Get(project)
-	if err != nil {
-		return
-	}
-
+	project, exists, err := getProjectSimple(s, builder.Eq{"id": projectID})
 	if !exists {
 		return nil, ErrProjectDoesNotExist{ID: projectID}
 	}
 
+	return
+}
+
+func getProjectSimple(s *xorm.Session, cond builder.Cond) (project *Project, exists bool, err error) {
+	project = &Project{}
+	exists, err = s.
+		Where(cond).
+		OrderBy("position").
+		Get(project)
 	return
 }
 

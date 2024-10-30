@@ -18,18 +18,18 @@ package caldav
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
 	"reflect"
 	"strconv"
 	"strings"
 
+	"code.vikunja.io/api/pkg/db"
+
 	caldav2 "code.vikunja.io/api/pkg/caldav"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/web/handler"
 	"github.com/labstack/echo/v4"
 	"github.com/samedi/caldav-go"
 	"github.com/samedi/caldav-go/lib"
@@ -45,11 +45,8 @@ func getBasicAuthUserFromContext(c echo.Context) (*user.User, error) {
 
 // ProjectHandler returns all tasks from a project
 func ProjectHandler(c echo.Context) error {
-	projectID, err := getIntParam(c, "project")
+	project, err := getProjectFromParam(c)
 	if err != nil {
-		if errors.Is(err, &strconv.NumError{}) {
-			return echo.ErrBadRequest
-		}
 		return err
 	}
 
@@ -59,7 +56,7 @@ func ProjectHandler(c echo.Context) error {
 	}
 
 	storage := &VikunjaCaldavProjectStorage{
-		project: &models.ProjectWithTasksAndBuckets{Project: models.Project{ID: projectID}},
+		project: project,
 		user:    u,
 	}
 
@@ -89,7 +86,7 @@ func ProjectHandler(c echo.Context) error {
 
 // TaskHandler is the handler which manages updating/deleting a single task
 func TaskHandler(c echo.Context) error {
-	projectID, err := getIntParam(c, "project")
+	project, err := getProjectFromParam(c)
 	if err != nil {
 		return err
 	}
@@ -103,7 +100,7 @@ func TaskHandler(c echo.Context) error {
 	taskUID := strings.TrimSuffix(c.Param("task"), ".ics")
 
 	storage := &VikunjaCaldavProjectStorage{
-		project: &models.ProjectWithTasksAndBuckets{Project: models.Project{ID: projectID}},
+		project: project,
 		task:    &models.Task{UID: taskUID},
 		user:    u,
 	}
@@ -172,15 +169,25 @@ func EntryHandler(c echo.Context) error {
 	return nil
 }
 
-func getIntParam(c echo.Context, paramName string) (intParam int64, err error) {
-	param := c.Param(paramName)
+func getProjectFromParam(c echo.Context) (project *models.ProjectWithTasksAndBuckets, err error) {
+	param := c.Param("project")
 	if param == "" {
-		return 0, nil
+		return nil, echo.ErrBadRequest
 	}
 
-	intParam, err = strconv.ParseInt(param, 10, 64)
+	s := db.NewSession()
+	defer s.Close()
+
+	intParam, err := strconv.ParseInt(param, 10, 64)
 	if err != nil {
-		return 0, handler.HandleHTTPError(err)
+		return nil, err
 	}
+
+	p, err := models.GetProjectSimpleByID(s, intParam)
+	if err != nil {
+		return nil, err
+	}
+
+	project = &models.ProjectWithTasksAndBuckets{Project: *p}
 	return
 }
