@@ -32,6 +32,9 @@
 					<template v-else>
 						{{ task.identifier }}
 					</template>
+					<span class="tw-text-red-600 tw-pl-2" v-if="showTaskPosition">
+						{{ task.position }}
+					</span>
 				</div>
 				<div v-if="projectTitle">
 					{{ projectTitle }}
@@ -145,6 +148,8 @@ const projectTitle = computed(() => {
 	const project = projectStore.projects[props.task.projectId]
 	return project?.title
 })
+
+const showTaskPosition = computed(() => window.DEBUG_TASK_POSITION)
 
 async function toggleTaskDone(task: ITask) {
 	loadingInternal.value = true
