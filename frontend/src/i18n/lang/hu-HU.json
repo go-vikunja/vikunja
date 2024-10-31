@@ -410,6 +410,8 @@
     "title": "Szűrők",
     "clear": "Szűrők törlése",
     "showResults": "Eredmények megjelenítése",
+    "fromView": "The current view has a filter set as well:",
+    "fromViewBoth": "It will be used in combination with what you enter here.",
     "attributes": {
       "title": "Cím",
       "titlePlaceholder": "A mentett szűrő címe ide kerül…",
@@ -447,7 +449,7 @@
       "help": {
         "intro": "A feladatok szűréséhez az SQL-hez hasonló lekérdezési szintaxist használhat. A szűréshez rendelkezésre álló mezők a következők:",
         "link": "Hogyan működik?",
-        "canUseDatemath": "A relatív dátumok beállításához a matematikai dátumokat is használhat. További információért kattintson a dátum értékére a lekérdezésben.",
+        "canUseDatemath": "You can use date math to set relative dates. Click on the date value in a query to find out more.",
         "fields": {
           "done": "Akár befejeződött a feladat, akár nem",
           "priority": "A feladat prioritási szintje (1-5)",
@@ -472,7 +474,8 @@
           "lessThan": "Kevesebb, mint",
           "lessThanOrEqual": "Kevesebb, vagy egyenlő mint",
           "like": "Megfelel egy mintának (helyettesítő karakterrel %)",
-          "in": "A vesszővel elválasztott értéklistában szereplő bármely értéknek megfelel"
+          "in": "A vesszővel elválasztott értéklistában szereplő bármely értéknek megfelel",
+          "notIn": "Matches any value not present in a comma-seperated list of values"
         },
         "logicalOperators": {
           "intro": "Több feltétel kombinálásához a következő logikai operátorokat használhatja:",

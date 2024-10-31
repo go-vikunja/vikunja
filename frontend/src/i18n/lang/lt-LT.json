@@ -410,6 +410,8 @@
     "title": "Filtrai",
     "clear": "Anuliuoti filtrus",
     "showResults": "Rodyti rezultatus",
+    "fromView": "The current view has a filter set as well:",
+    "fromViewBoth": "It will be used in combination with what you enter here.",
     "attributes": {
       "title": "Pavadinimas",
       "titlePlaceholder": "Išsaugoto filtro pavadinimas rašomas čia…",
@@ -447,7 +449,7 @@
       "help": {
         "intro": "Norėdami filtruoti užduotis, galite naudoti sintaksę panašią į SQL. Galimi filtravimo laukai įtraukia:",
         "link": "Kaip tai veikia?",
-        "canUseDatemath": "You can date math to set relative dates. Click on the date value in a query to find out more.",
+        "canUseDatemath": "You can use date math to set relative dates. Click on the date value in a query to find out more.",
         "fields": {
           "done": "Ar užduotis atlikta ar ne",
           "priority": "Užduoties prioriteto lygis (1-5)",
@@ -472,7 +474,8 @@
           "lessThan": "Mažiau nei",
           "lessThanOrEqual": "Mažiau negu ar lygu",
           "like": "Atitinka šabloną (nadojama wildcard %)",
-          "in": "Matches any value in a comma-seperated list of values"
+          "in": "Matches any value in a comma-seperated list of values",
+          "notIn": "Matches any value not present in a comma-seperated list of values"
         },
         "logicalOperators": {
           "intro": "To combine multiple conditions, you can use the following logical operators:",

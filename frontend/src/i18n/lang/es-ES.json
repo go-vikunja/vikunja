@@ -410,6 +410,8 @@
     "title": "Filtros",
     "clear": "Limpiar Filtros",
     "showResults": "Show results",
+    "fromView": "The current view has a filter set as well:",
+    "fromViewBoth": "It will be used in combination with what you enter here.",
     "attributes": {
       "title": "Título",
       "titlePlaceholder": "El título del filtro guardado va aquí…",
@@ -447,7 +449,7 @@
       "help": {
         "intro": "To filter tasks, you can use a query syntax similar to SQL. The available fields for filtering include:",
         "link": "How does this work?",
-        "canUseDatemath": "You can date math to set relative dates. Click on the date value in a query to find out more.",
+        "canUseDatemath": "You can use date math to set relative dates. Click on the date value in a query to find out more.",
         "fields": {
           "done": "Whether the task is completed or not",
           "priority": "The priority level of the task (1-5)",
@@ -472,7 +474,8 @@
           "lessThan": "Less than",
           "lessThanOrEqual": "Less than or equal to",
           "like": "Matches a pattern (using wildcard %)",
-          "in": "Matches any value in a comma-seperated list of values"
+          "in": "Matches any value in a comma-seperated list of values",
+          "notIn": "Matches any value not present in a comma-seperated list of values"
         },
         "logicalOperators": {
           "intro": "To combine multiple conditions, you can use the following logical operators:",

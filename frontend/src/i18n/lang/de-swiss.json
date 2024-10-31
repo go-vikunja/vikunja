@@ -410,6 +410,8 @@
     "title": "Filter",
     "clear": "Filter zurücksetzen",
     "showResults": "Ergebnisse anzeigen",
+    "fromView": "The current view has a filter set as well:",
+    "fromViewBoth": "It will be used in combination with what you enter here.",
     "attributes": {
       "title": "Titl",
       "titlePlaceholder": "De Name für de g'speicheret Filter chunt da ahne…",
@@ -447,7 +449,7 @@
       "help": {
         "intro": "Um Aufgaben zu filtern, kannst du eine SQL-ähnliche Abfragesyntax verwenden. Du kannst die folgenden Felder in deinem Filter verwenden:",
         "link": "Wie funktioniert das?",
-        "canUseDatemath": "Du kannst Date Math verwenden, um relative Daten festzulegen. Klicke auf den Datumswert in einer Abfrage, um mehr zu erfahren.",
+        "canUseDatemath": "You can use date math to set relative dates. Click on the date value in a query to find out more.",
         "fields": {
           "done": "Ob die Aufgabe erledigt ist oder nicht",
           "priority": "Die Priorität der Aufgabe (1-5)",
@@ -472,7 +474,8 @@
           "lessThan": "Kleiner als",
           "lessThanOrEqual": "Kleiner als oder gleich",
           "like": "Vergleicht zu einem Muster (mit Platzhalter %)",
-          "in": "Filtert einen beliebigen Wert in einer kommaseparierten Liste"
+          "in": "Filtert einen beliebigen Wert in einer kommaseparierten Liste",
+          "notIn": "Filtert einen beliebigen Wert, der nicht in einer kommaseparierten vorkommt"
         },
         "logicalOperators": {
           "intro": "Um mehrere Bedingungen zu kombinieren, kannst du folgende logische Operatoren verwenden:",

@@ -410,6 +410,8 @@
     "title": "Фильтры",
     "clear": "Сбросить фильтры",
     "showResults": "Применить",
+    "fromView": "The current view has a filter set as well:",
+    "fromViewBoth": "It will be used in combination with what you enter here.",
     "attributes": {
       "title": "Название",
       "titlePlaceholder": "Введите название сохранённого фильтра…",
@@ -447,7 +449,7 @@
       "help": {
         "intro": "Для фильтрации задач можно использовать синтаксис, похожий на SQL. Можно фильтровать по следующим полям:",
         "link": "Как это работает?",
-        "canUseDatemath": "Можно использовать математические выражения для указания относительных дат. Нажмите на значение даты в запросе для подробностей.",
+        "canUseDatemath": "You can use date math to set relative dates. Click on the date value in a query to find out more.",
         "fields": {
           "done": "Выполнена ли задача или нет",
           "priority": "Приоритет задачи (1-5)",
@@ -472,7 +474,8 @@
           "lessThan": "Меньше",
           "lessThanOrEqual": "Меньше или равно",
           "like": "Соответствует шаблону (знак подстановки %)",
-          "in": "Соответствует любому из перечисленных значений, разделённых запятой"
+          "in": "Соответствует любому из перечисленных значений, разделённых запятой",
+          "notIn": "Matches any value not present in a comma-seperated list of values"
         },
         "logicalOperators": {
           "intro": "Для объединения нескольких условий можно использовать логические операторы:",

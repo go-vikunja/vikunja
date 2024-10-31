@@ -410,6 +410,8 @@
     "title": "Filtry",
     "clear": "Wyczyść filtry",
     "showResults": "Wyświetl wyniki",
+    "fromView": "The current view has a filter set as well:",
+    "fromViewBoth": "It will be used in combination with what you enter here.",
     "attributes": {
       "title": "Tytuł",
       "titlePlaceholder": "Tu wpisz tytuł filtra stałego…",
@@ -447,7 +449,7 @@
       "help": {
         "intro": "Aby filtrować zadania, możesz użyć składni zapytań podobnej do SQL. Pola dostępne do filtrowania to:",
         "link": "Jak to działa?",
-        "canUseDatemath": "Możesz użyć matematyki dat, aby ustawić daty względne. Kliknij wartość daty w zapytaniu, aby dowiedzieć się więcej.",
+        "canUseDatemath": "You can use date math to set relative dates. Click on the date value in a query to find out more.",
         "fields": {
           "done": "Czy zadanie zostało zakończone, czy nie",
           "priority": "Priorytet zadania (1-5)",
@@ -472,7 +474,8 @@
           "lessThan": "Mniejsze niż",
           "lessThanOrEqual": "Mniejsze niż lub równe",
           "like": "Pasuje do wzorca (używając symbolu %)",
-          "in": "Dopasuje dowolną wartość z listy wartości oddzielonych przecinkami"
+          "in": "Dopasuje dowolną wartość z listy wartości oddzielonych przecinkami",
+          "notIn": "Matches any value not present in a comma-seperated list of values"
         },
         "logicalOperators": {
           "intro": "Aby połączyć wiele warunków, możesz użyć następujących operatorów logicznych:",

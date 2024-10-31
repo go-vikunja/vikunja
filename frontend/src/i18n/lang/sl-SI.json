@@ -410,6 +410,8 @@
     "title": "Filtri",
     "clear": "Počisti filtre",
     "showResults": "Prikaži rezultate",
+    "fromView": "The current view has a filter set as well:",
+    "fromViewBoth": "It will be used in combination with what you enter here.",
     "attributes": {
       "title": "Naslov",
       "titlePlaceholder": "Tu je naslov shranjenega filtra…",
@@ -447,7 +449,7 @@
       "help": {
         "intro": "Za filtriranje nalog lahko uporabite sintakso poizvedbe, podobno SQL. Razpoložljiva polja za filtriranje vključujejo:",
         "link": "Kako to deluje?",
-        "canUseDatemath": "Za nastavitev relativnih datumov lahko določite datume. Če želite izvedeti več, kliknite vrednost datuma v poizvedbi.",
+        "canUseDatemath": "You can use date math to set relative dates. Click on the date value in a query to find out more.",
         "fields": {
           "done": "Ali je naloga opravljena ali ne",
           "priority": "Stopnja prioritete naloge (1-5)",
@@ -459,9 +461,9 @@
           "assignees": "Dodeljeni k nalogi",
           "labels": "Oznake, povezane z opravilom",
           "project": "Projekt, ki mu naloga pripada (na voljo samo za shranjene filtre, ne na ravni projekta)",
-          "reminders": "The reminders of the task as a date field, will return all tasks with at least one reminder matching the query",
-          "created": "The time and date when the task was created",
-          "updated": "The time and date when the task was last changed"
+          "reminders": "Opomniki za opravilo kot datumsko polje bodo vrnili vsa opravila z vsaj enim opomnikom, ki se ujema s poizvedbo",
+          "created": "Čas in datum, ko je bilo opravilo ustvarjeno",
+          "updated": "Čas in datum zadnje spremembe opravila"
         },
         "operators": {
           "intro": "Razpoložljivi operaterji za filtriranje vključujejo:",
@@ -472,7 +474,8 @@
           "lessThan": "Manj kot",
           "lessThanOrEqual": "Manjše ali enako kot",
           "like": "Ujema se z vzorcem (z nadomestnimi znaki %)",
-          "in": "Ujema se s katero koli vrednostjo na seznamu vrednosti, ločenih z vejico"
+          "in": "Ujema se s katero koli vrednostjo na seznamu vrednosti, ločenih z vejico",
+          "notIn": "Ujema se s katero koli vrednostjo na seznamu vrednosti, ločenih z vejico"
         },
         "logicalOperators": {
           "intro": "Če želite združiti več pogojev, lahko uporabite naslednje logične operatorje:",

@@ -472,7 +472,8 @@
           "lessThan": "Less than",
           "lessThanOrEqual": "Less than or equal to",
           "like": "Matches a pattern (using wildcard %)",
-          "in": "Matches any value in a comma-seperated list of values"
+          "in": "Matches any value in a comma-seperated list of values",
+          "notIn": "Matches any value not present in a comma-seperated list of values"
         },
         "logicalOperators": {
           "intro": "To combine multiple conditions, you can use the following logical operators:",

@@ -472,7 +472,8 @@
           "lessThan": "Menší než",
           "lessThanOrEqual": "Menší nebo rovno než",
           "like": "Odpovídá vzoru (s použitím zástupného znaku %)",
-          "in": "Odpovídá libovolné hodnotě v seznamu hodnot oddělených čárkou"
+          "in": "Odpovídá libovolné hodnotě v seznamu hodnot oddělených čárkou",
+          "notIn": "Matches any value not present in a comma-seperated list of values"
         },
         "logicalOperators": {
           "intro": "Pro kombinování více podmínek můžete použít tyto logické operátory:",

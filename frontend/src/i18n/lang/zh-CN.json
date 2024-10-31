@@ -472,7 +472,8 @@
           "lessThan": "小于",
           "lessThanOrEqual": "小于或等于",
           "like": "匹配模式 (使用通配符%)",
-          "in": "匹配任意一个逗号分隔的值列表"
+          "in": "匹配任意一个逗号分隔的值列表",
+          "notIn": "Matches any value not present in a comma-seperated list of values"
         },
         "logicalOperators": {
           "intro": "若要合并多个条件，您可以使用以下逻辑运算符：",

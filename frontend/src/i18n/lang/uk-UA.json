@@ -410,6 +410,8 @@
     "title": "Вибірки",
     "clear": "Очистити",
     "showResults": "Показати",
+    "fromView": "The current view has a filter set as well:",
+    "fromViewBoth": "It will be used in combination with what you enter here.",
     "attributes": {
       "title": "Заголовок",
       "titlePlaceholder": "Заголовок введіть тут…",
@@ -447,7 +449,7 @@
       "help": {
         "intro": "Для вибірки завдань вживається синтаксис запитів подібний до SQL. Доступні такі поля:",
         "link": "Як це діє?",
-        "canUseDatemath": "Можна вжити математичні вирази для обчислення приблизних днів. Клацніть на значення дати для подробиць.",
+        "canUseDatemath": "You can use date math to set relative dates. Click on the date value in a query to find out more.",
         "fields": {
           "done": "Стан: закінчене або ні",
           "priority": "Рівень першості (1-5)",
@@ -472,7 +474,8 @@
           "lessThan": "Менше ніж",
           "lessThanOrEqual": "Менше ніж або дорівнює",
           "like": "Збігається зі зразком (вживаючи знак %)",
-          "in": "Збігається з будь-яким значеннями, розділеними комою"
+          "in": "Збігається з будь-яким значеннями, розділеними комою",
+          "notIn": "Matches any value not present in a comma-seperated list of values"
         },
         "logicalOperators": {
           "intro": "Щоб поєднати декілька умов, можна вжити такі закономірні оператори:",
