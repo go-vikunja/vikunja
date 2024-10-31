@@ -19,9 +19,11 @@ package models
 import (
 	"math"
 
-	"code.vikunja.io/api/pkg/events"
-	"code.vikunja.io/api/pkg/web"
 	"xorm.io/xorm"
+
+	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/web"
 )
 
 type TaskPosition struct {
@@ -113,6 +115,8 @@ func (tp *TaskPosition) Update(s *xorm.Session, a web.Auth) (err error) {
 
 func RecalculateTaskPositions(s *xorm.Session, view *ProjectView, a web.Auth) (err error) {
 
+	log.Debugf("Recalculating task positions for view %d", view.ID)
+
 	// Using the collection so that we get all tasks, even in cases where we're dealing with a saved filter underneath
 	tc := &TaskCollection{
 		ProjectID: view.ProjectID,
@@ -165,10 +169,13 @@ func RecalculateTaskPositions(s *xorm.Session, view *ProjectView, a web.Auth) (e
 		return
 	}
 
-	_, err = s.Insert(newPositions)
+	count, err := s.Insert(newPositions)
 	if err != nil {
 		return
 	}
+
+	log.Debugf("Inserted %d new positions for %d total tasks in view %d", count, len(allTasks), view.ID)
+
 	return events.Dispatch(&TaskPositionsRecalculatedEvent{
 		NewTaskPositions: newPositions,
 	})
