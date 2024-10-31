@@ -242,6 +242,16 @@ func (pv *ProjectView) Delete(s *xorm.Session, _ web.Auth) (err error) {
 	_, err = s.
 		Where("id = ? AND project_id = ?", pv.ID, pv.ProjectID).
 		Delete(&ProjectView{})
+	if err != nil {
+		return
+	}
+
+	_, err = s.Where("project_view_id = ?", pv.ID).Delete(&TaskBucket{})
+	if err != nil {
+		return
+	}
+
+	_, err = s.Where("project_view_id = ?", pv.ID).Delete(&TaskPosition{})
 	return
 }
 
