@@ -242,3 +242,9 @@ func calculateNewPositionForTask(s *xorm.Session, a web.Auth, t *Task, view *Pro
 		Position:      calculateDefaultPosition(t.Index, t.Position),
 	}, nil
 }
+
+func DeleteOrphanedTaskPositions(s *xorm.Session) (count int64, err error) {
+	return s.
+		Where("task_id not in (select id from tasks) OR project_view_id not in (select id from project_views)").
+		Delete(&TaskPosition{})
+}
