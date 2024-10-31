@@ -117,6 +117,20 @@ func RecalculateTaskPositions(s *xorm.Session, view *ProjectView, a web.Auth) (e
 
 	log.Debugf("Recalculating task positions for view %d", view.ID)
 
+	opts := &taskSearchOptions{
+		sortby: []*sortParam{
+			{
+				projectViewID: view.ID,
+				sortBy:        taskPropertyPosition,
+				orderBy:       orderAscending,
+			},
+			{
+				sortBy:  taskPropertyID,
+				orderBy: orderAscending,
+			},
+		},
+	}
+
 	// Using the collection so that we get all tasks, even in cases where we're dealing with a saved filter underneath
 	tc := &TaskCollection{
 		ProjectID: view.ProjectID,
@@ -130,17 +144,21 @@ func RecalculateTaskPositions(s *xorm.Session, view *ProjectView, a web.Auth) (e
 		return err
 	}
 
-	opts := &taskSearchOptions{
-		sortby: []*sortParam{
-			{
-				projectViewID: view.ID,
-				sortBy:        taskPropertyPosition,
-				orderBy:       orderAscending,
-			},
-		},
+	for _, p := range projects {
+		opts.projectIDs = append(opts.projectIDs, p.ID)
 	}
 
-	allTasks, _, _, err := getRawTasksForProjects(s, projects, a, opts)
+	dbSearcher := &dbTaskSearcher{
+		s: s,
+		a: a,
+	}
+
+	// We're directly using the db here, even if Typesense is configured, because in some edge cases Typesense
+	// does not know about all tasks. These tasks then won't have their position recalculated, which means they will
+	// seemingly jump around after reloading their project.
+	// The real fix here is of course to make sure all tasks are indexed in Typesense, but until that's fixed,
+	// this solves the issue of task positions not being saved.
+	allTasks, _, err := dbSearcher.Search(opts)
 	if err != nil {
 		return
 	}
