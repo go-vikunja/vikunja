@@ -28,10 +28,9 @@ const enabled = computed(() => configStore.demoModeEnabled && !hide.value)
 
 <style scoped lang="scss">
 .demo-mode-banner {
-	position: fixed;
+	position: sticky;
 	bottom: 0;
-	left: 0;
-	right: 0;
+	inset-inline: 0;
 	background: var(--danger);
 	z-index: 100;
 	padding: .5rem;
