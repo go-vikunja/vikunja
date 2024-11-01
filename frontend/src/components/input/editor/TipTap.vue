@@ -17,7 +17,7 @@
 				v-tooltip="$t('input.editor.bold')"
 				class="editor-bubble__button"
 				:class="{ 'is-active': editor.isActive('bold') }"
-				@click="editor.chain().focus().toggleBold().run()"
+				@click="() => editor?.chain().focus().toggleBold().run()"
 			>
 				<Icon :icon="['fa', 'fa-bold']" />
 			</BaseButton>
@@ -25,7 +25,7 @@
 				v-tooltip="$t('input.editor.italic')"
 				class="editor-bubble__button"
 				:class="{ 'is-active': editor.isActive('italic') }"
-				@click="editor.chain().focus().toggleItalic().run()"
+				@click="() => editor?.chain().focus().toggleItalic().run()"
 			>
 				<Icon :icon="['fa', 'fa-italic']" />
 			</BaseButton>
@@ -33,7 +33,7 @@
 				v-tooltip="$t('input.editor.underline')"
 				class="editor-bubble__button"
 				:class="{ 'is-active': editor.isActive('underline') }"
-				@click="editor.chain().focus().toggleUnderline().run()"
+				@click="() => editor?.chain().focus().toggleUnderline().run()"
 			>
 				<Icon :icon="['fa', 'fa-underline']" />
 			</BaseButton>
@@ -41,7 +41,7 @@
 				v-tooltip="$t('input.editor.strikethrough')"
 				class="editor-bubble__button"
 				:class="{ 'is-active': editor.isActive('strike') }"
-				@click="editor.chain().focus().toggleStrike().run()"
+				@click="() => editor?.chain().focus().toggleStrike().run()"
 			>
 				<Icon :icon="['fa', 'fa-strikethrough']" />
 			</BaseButton>
@@ -49,7 +49,7 @@
 				v-tooltip="$t('input.editor.code')"
 				class="editor-bubble__button"
 				:class="{ 'is-active': editor.isActive('code') }"
-				@click="editor.chain().focus().toggleCode().run()"
+				@click="() => editor?.chain().focus().toggleCode().run()"
 			>
 				<Icon :icon="['fa', 'fa-code']" />
 			</BaseButton>
@@ -87,7 +87,7 @@
 			<li>
 				<BaseButton
 					class="done-edit"
-					@click="setEdit"
+					@click="() => setEdit()"
 				>
 					{{ $t('input.editor.edit') }}
 				</BaseButton>
@@ -108,7 +108,7 @@
 			<li v-if="!isEditing">
 				<BaseButton
 					class="done-edit"
-					@click="setEdit"
+					@click="() => setEdit()"
 				>
 					{{ $t('input.editor.edit') }}
 				</BaseButton>
@@ -138,11 +138,16 @@
 
 <script setup lang="ts">
 import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue'
+import {useI18n} from 'vue-i18n'
+import {eventToHotkeyString} from '@github/hotkey'
 
 import EditorToolbar from './EditorToolbar.vue'
 
-import Link from '@tiptap/extension-link'
+import StarterKit from '@tiptap/starter-kit'
+import {Extension, mergeAttributes} from '@tiptap/core'
+import {BubbleMenu, EditorContent, type Extensions, useEditor} from '@tiptap/vue-3'
 
+import Link from '@tiptap/extension-link'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import Table from '@tiptap/extension-table'
 import TableCell from '@tiptap/extension-table-cell'
@@ -151,28 +156,12 @@ import TableRow from '@tiptap/extension-table-row'
 import Typography from '@tiptap/extension-typography'
 import Image from '@tiptap/extension-image'
 import Underline from '@tiptap/extension-underline'
+import {Placeholder} from '@tiptap/extension-placeholder'
 
 import TaskItem from '@tiptap/extension-task-item'
 import TaskList from '@tiptap/extension-task-list'
+import HardBreak from '@tiptap/extension-hard-break'
 
-import {Blockquote} from '@tiptap/extension-blockquote'
-import {Bold} from '@tiptap/extension-bold'
-import {BulletList} from '@tiptap/extension-bullet-list'
-import {Code} from '@tiptap/extension-code'
-import {Document} from '@tiptap/extension-document'
-import {Dropcursor} from '@tiptap/extension-dropcursor'
-import {Gapcursor} from '@tiptap/extension-gapcursor'
-import {HardBreak} from '@tiptap/extension-hard-break'
-import {Heading} from '@tiptap/extension-heading'
-import {History} from '@tiptap/extension-history'
-import {HorizontalRule} from '@tiptap/extension-horizontal-rule'
-import {Italic} from '@tiptap/extension-italic'
-import {ListItem} from '@tiptap/extension-list-item'
-import {OrderedList} from '@tiptap/extension-ordered-list'
-import {Paragraph} from '@tiptap/extension-paragraph'
-import {Strike} from '@tiptap/extension-strike'
-import {Text} from '@tiptap/extension-text'
-import {BubbleMenu, EditorContent, type Extensions, useEditor} from '@tiptap/vue-3'
 import {Node} from '@tiptap/pm/model'
 
 import Commands from './commands'
@@ -185,12 +174,9 @@ import type {ITask} from '@/modelTypes/ITask'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import AttachmentModel from '@/models/attachment'
 import AttachmentService from '@/services/attachment'
-import {useI18n} from 'vue-i18n'
 import BaseButton from '@/components/base/BaseButton.vue'
 import XButton from '@/components/input/Button.vue'
-import {Placeholder} from '@tiptap/extension-placeholder'
-import {eventToHotkeyString} from '@github/hotkey'
-import {Extension, mergeAttributes} from '@tiptap/core'
+
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import inputPrompt from '@/helpers/inputPrompt'
 import {setLinkInEditor} from '@/components/input/editor/setLinkInEditor'
@@ -351,16 +337,14 @@ const additionalLinkProtocols = [
 
 const extensions : Extensions = [
 	// Starterkit:
-	Blockquote,
-	Bold,
-	BulletList,
-	Code,
+	StarterKit.configure({
+		codeBlock: false,
+		hardBreak: false,
+	}),
+
 	CodeBlockLowlight.configure({
 		lowlight,
 	}),
-	Document,
-	Dropcursor,
-	Gapcursor,
 	HardBreak.extend({
 		addKeyboardShortcuts() {
 			return {
@@ -374,15 +358,6 @@ const extensions : Extensions = [
 			}
 		},
 	}),
-	Heading,
-	History,
-	HorizontalRule,
-	Italic,
-	ListItem,
-	OrderedList,
-	Paragraph,
-	Strike,
-	Text,
 
 	Placeholder.configure({
 		placeholder: ({editor}) => {
@@ -451,7 +426,6 @@ const extensions : Extensions = [
 	Commands.configure({
 		suggestion: suggestionSetup(t),
 	}),
-	BubbleMenu,
 ]
 
 // Add a custom extension for the Escape key
