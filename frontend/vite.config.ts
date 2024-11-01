@@ -94,8 +94,10 @@ export default defineConfig(({mode}) => {
 		css: {
 			preprocessorOptions: {
 				scss: {
+					api: 'modern-compiler',
 					additionalData: PREFIXED_SCSS_STYLES,
-					charset: false, // fixes  "@charset" must be the first rule in the file" warnings
+					charset: false, // fixes  "@charset" must be the first rule in the file" warnings,
+					quietDeps: true, // silence bulmas deprecation warnings
 				},
 			},
 			postcss: {
