@@ -410,6 +410,8 @@
     "title": "Филтри",
     "clear": "Изчисти филтрите",
     "showResults": "Показване на резултатите",
+    "fromView": "The current view has a filter set as well:",
+    "fromViewBoth": "It will be used in combination with what you enter here.",
     "attributes": {
       "title": "Заглавие",
       "titlePlaceholder": "Заглавието на запазения филтър отива тук…",
@@ -447,7 +449,7 @@
       "help": {
         "intro": "За филтриране на задачи можете да използвате синтаксис, подобен на SQL. Наличните полета за филтриране включват:",
         "link": "Как работи това?",
-        "canUseDatemath": "Можете да използвате математика с дати за задаване на относителни дати. Кликнете върху стойността на датата в заявката за повече информация.",
+        "canUseDatemath": "You can use date math to set relative dates. Click on the date value in a query to find out more.",
         "fields": {
           "done": "Дали задачата е завършена или не",
           "priority": "Нивото на приоритет на задачата (1-5)",

@@ -410,6 +410,8 @@
     "title": "Filtry",
     "clear": "Vymazat filtry",
     "showResults": "Zobrazit výsledky",
+    "fromView": "The current view has a filter set as well:",
+    "fromViewBoth": "It will be used in combination with what you enter here.",
     "attributes": {
       "title": "Název",
       "titlePlaceholder": "Název uloženého filtru přijde sem…",
@@ -447,7 +449,7 @@
       "help": {
         "intro": "K filtrování úkolů můžete použít syntaxi dotazů podobnou SQL. Dostupná pole pro filtrování zahrnují:",
         "link": "Jak to funguje?",
-        "canUseDatemath": "Můžete použít matematiku a nastavit relativní data. Pro více informací klikněte na datum v dotazu.",
+        "canUseDatemath": "You can use date math to set relative dates. Click on the date value in a query to find out more.",
         "fields": {
           "done": "Zda je úkol dokončen nebo ne",
           "priority": "Úroveň priority úkolu (1-5)",

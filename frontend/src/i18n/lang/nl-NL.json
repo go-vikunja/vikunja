@@ -410,6 +410,8 @@
     "title": "Filters",
     "clear": "Clear Filters",
     "showResults": "Show results",
+    "fromView": "The current view has a filter set as well:",
+    "fromViewBoth": "It will be used in combination with what you enter here.",
     "attributes": {
       "title": "Titel",
       "titlePlaceholder": "The saved filter title goes here…",
@@ -447,7 +449,7 @@
       "help": {
         "intro": "To filter tasks, you can use a query syntax similar to SQL. The available fields for filtering include:",
         "link": "How does this work?",
-        "canUseDatemath": "You can date math to set relative dates. Click on the date value in a query to find out more.",
+        "canUseDatemath": "You can use date math to set relative dates. Click on the date value in a query to find out more.",
         "fields": {
           "done": "Whether the task is completed or not",
           "priority": "The priority level of the task (1-5)",

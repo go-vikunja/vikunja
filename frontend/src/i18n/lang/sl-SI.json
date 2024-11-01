@@ -410,8 +410,8 @@
     "title": "Filtri",
     "clear": "Počisti filtre",
     "showResults": "Prikaži rezultate",
-    "fromView": "The current view has a filter set as well:",
-    "fromViewBoth": "It will be used in combination with what you enter here.",
+    "fromView": "Trenutni pogled ima tudi nastavljen filter:",
+    "fromViewBoth": "Uporabljeno bo v kombinaciji s tem, kar ste vnesli tukaj.",
     "attributes": {
       "title": "Naslov",
       "titlePlaceholder": "Tu je naslov shranjenega filtra…",
@@ -449,7 +449,7 @@
       "help": {
         "intro": "Za filtriranje nalog lahko uporabite sintakso poizvedbe, podobno SQL. Razpoložljiva polja za filtriranje vključujejo:",
         "link": "Kako to deluje?",
-        "canUseDatemath": "You can use date math to set relative dates. Click on the date value in a query to find out more.",
+        "canUseDatemath": "Za nastavitev relativnih datumov lahko uporabite datumsko matematiko. Če želite izvedeti več, kliknite vrednost datuma v poizvedbi.",
         "fields": {
           "done": "Ali je naloga opravljena ali ne",
           "priority": "Stopnja prioritete naloge (1-5)",

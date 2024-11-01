@@ -410,6 +410,8 @@
     "title": "筛选器",
     "clear": "清除筛选条件",
     "showResults": "显示结果",
+    "fromView": "The current view has a filter set as well:",
+    "fromViewBoth": "It will be used in combination with what you enter here.",
     "attributes": {
       "title": "标题",
       "titlePlaceholder": "填写筛选器标题",
@@ -447,7 +449,7 @@
       "help": {
         "intro": "要过滤任务，您可以使用类似于SQL的查询语法。可用的过滤字段包括：",
         "link": "这是如何运作的？",
-        "canUseDatemath": "您可以将数学日期设定为相对日期。点击查询中的日期值来查找更多信息。",
+        "canUseDatemath": "You can use date math to set relative dates. Click on the date value in a query to find out more.",
         "fields": {
           "done": "任务是否完成",
           "priority": "任务的优先级(1-5)",

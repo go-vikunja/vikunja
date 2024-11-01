@@ -410,8 +410,8 @@
     "title": "Filter",
     "clear": "Filter zurücksetzen",
     "showResults": "Ergebnisse anzeigen",
-    "fromView": "The current view has a filter set as well:",
-    "fromViewBoth": "It will be used in combination with what you enter here.",
+    "fromView": "Die aktuelle Ansicht hat bereits einen Filter gesetzt:",
+    "fromViewBoth": "Er wird in Kombination mit dem, was du hier setzt, verwendet.",
     "attributes": {
       "title": "Titel",
       "titlePlaceholder": "Einen gespeicherten Filternamen eingeben …",
@@ -449,7 +449,7 @@
       "help": {
         "intro": "Um Aufgaben zu filtern, kannst du eine SQL-ähnliche Abfragesyntax verwenden. Du kannst die folgenden Felder in deinem Filter verwenden:",
         "link": "Wie funktioniert das?",
-        "canUseDatemath": "You can use date math to set relative dates. Click on the date value in a query to find out more.",
+        "canUseDatemath": "Du kannst Date Math verwenden, um relative Daten festzulegen. Klicke auf den Datumswert in einer Abfrage, um mehr zu erfahren.",
         "fields": {
           "done": "Ob die Aufgabe erledigt ist oder nicht",
           "priority": "Die Priorität der Aufgabe (1-5)",
