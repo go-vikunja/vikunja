@@ -1,3 +1,5 @@
+@use "bulma/sass/utilities/mixins.scss" as *;
+
 // FIXME: move to Loading.vue 
 .loader-container.is-loading {
   position: relative;

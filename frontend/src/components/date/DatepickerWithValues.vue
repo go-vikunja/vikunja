@@ -168,6 +168,8 @@ const customRangeActive = computed<boolean>(() => {
 </script>
 
 <style lang="scss" scoped>
+@use "bulma/sass/utilities/css-variables.scss" as cv;
+
 .datepicker-with-range-container {
 	position: relative;
 }
@@ -178,7 +180,7 @@ const customRangeActive = computed<boolean>(() => {
 	border-radius: $radius;
 	border: 1px solid var(--grey-200);
 	background-color: var(--white);
-	box-shadow: $shadow;
+	box-shadow: cv.getVar("shadow");
 
 	&.is-open {
 		width: 500px;

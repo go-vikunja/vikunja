@@ -160,9 +160,9 @@ importers:
       blurhash:
         specifier: 2.0.5
         version: 2.0.5
-      bulma-css-variables:
-        specifier: 0.9.33
-        version: 0.9.33
+      bulma:
+        specifier: ^1.0.2
+        version: 1.0.2
       change-case:
         specifier: 5.4.4
         version: 5.4.4
@@ -2975,9 +2975,8 @@ packages:
     resolution: {integrity: sha512-zhaCDicdLuWN5UbN5IMnFqNMhNfo919sH85y2/ea+5Yg9TsTkeZxpL+JLbp6cgYFS4sRLp3YV4S6yDuqVWHYOw==}
     engines: {node: '>=6'}
 
-  bulma-css-variables@0.9.33:
-    resolution: {integrity: sha512-D85dXLyLOBBDCuSSOeASc0kN2IknJqo5hzkZ22hxDHobxko/qay0nD+zNl2CJtF8v/7iwvQXqzVSDRnFVRSg9A==}
-    deprecated: bulma-css-variables is deprecated. Project has been shifted to monorepo @bulvar/bulma
+  bulma@1.0.2:
+    resolution: {integrity: sha512-D7GnDuF6seb6HkcnRMM9E739QpEY9chDzzeFrHMyEns/EXyDJuQ0XA0KxbBl/B2NTsKSoDomW61jFGFaAxhK5A==}
 
   cac@6.7.14:
     resolution: {integrity: sha512-b6Ilus+c3RrdDk+JhLKUAQfzzgLEPy6wcXqS7f/xe1EETvsDP6GORG7SFuOs6cID5YkqchW/LXZbX5bc8j7ZcQ==}
@@ -3564,10 +3563,6 @@ packages:
     resolution: {integrity: sha512-FuLPevChGDshgSicjisSooU0cemp/sGXR841D5LHMB7mTVOmsEHcAxaH3irL53+8YDIeVNQEySh4DaYU/iuPqQ==}
     engines: {node: '>=18'}
     hasBin: true
-
-  escalade@3.1.2:
-    resolution: {integrity: sha512-ErCHMCae19vR8vQGe50xIsVomy19rg6gFu3+r3jkEO46suLMWBksvVyoGgQV+jOfl84ZSOSlmv6Gxa89PmTGmA==}
-    engines: {node: '>=6'}
 
   escalade@3.2.0:
     resolution: {integrity: sha512-WUj2qlxaQtO4g6Pq5c29GTcWGDyd8itL8zTlipgECz3JesAiiOKotd8JU6otB3PACgG6xkJUyVhboMS+bje/jA==}
@@ -6794,7 +6789,7 @@ snapshots:
 
   '@babel/parser@7.25.4':
     dependencies:
-      '@babel/types': 7.25.4
+      '@babel/types': 7.26.0
 
   '@babel/parser@7.26.1':
     dependencies:
@@ -9361,7 +9356,7 @@ snapshots:
 
   builtin-modules@3.3.0: {}
 
-  bulma-css-variables@0.9.33: {}
+  bulma@1.0.2: {}
 
   cac@6.7.14: {}
 
@@ -10072,8 +10067,6 @@ snapshots:
       '@esbuild/win32-arm64': 0.24.0
       '@esbuild/win32-ia32': 0.24.0
       '@esbuild/win32-x64': 0.24.0
-
-  escalade@3.1.2: {}
 
   escalade@3.2.0: {}
 
@@ -13363,7 +13356,7 @@ snapshots:
   yargs@17.7.2:
     dependencies:
       cliui: 8.0.1
-      escalade: 3.1.2
+      escalade: 3.2.0
       get-caller-file: 2.0.5
       require-directory: 2.1.1
       string-width: 4.2.3

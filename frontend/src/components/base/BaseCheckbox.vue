@@ -8,7 +8,7 @@
 		>
 			<input
 				type="checkbox"
-				class="is-sr-only"
+				class="tw-sr-only"
 				:checked="modelValue"
 				:disabled="disabled || undefined"
 				@change="(event) => emit('update:modelValue', (event.target as HTMLInputElement).checked)"

@@ -22,7 +22,7 @@ const pathSrc = fileURLToPath(new URL('./src', import.meta.url)).replaceAll('\\'
 
 // the @use rules have to be the first in the compiled stylesheets
 const PREFIXED_SCSS_STYLES = `@use "sass:math";
-@import "${pathSrc}/styles/common-imports.scss";`
+@use "${pathSrc}/styles/common-imports.scss" as *;`
 
 const isModernBuild = Boolean(process.env.BUILD_MODERN_ONLY)
 const legacy = isModernBuild
@@ -93,6 +93,9 @@ export default defineConfig(({mode}) => {
 		},
 		css: {
 			preprocessorOptions: {
+				// sass: {
+				// 	api: 'modern-compiler',
+				// },
 				scss: {
 					api: 'modern-compiler',
 					additionalData: PREFIXED_SCSS_STYLES,

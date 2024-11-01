@@ -1,3 +1,4 @@
+@use "sass:math";
 //
 // IMPORTANT NOTE:
 //
@@ -10,10 +11,17 @@
 // are defined here.
 //
 
-$family-sans-serif: 'Open Sans', Helvetica, Arial, sans-serif;
 
-// the default values get overwritten by the definitions above
-@import "bulma-css-variables/sass/utilities/_all";
+// utilities
+@forward "bulma/sass/utilities/initial-variables.scss" with (
+  $family-sans-serif: "'Open Sans', Helvetica, Arial, sans-serif"
+);
+@forward "bulma/sass/utilities/functions";
+@forward "bulma/sass/utilities/derived-variables";
+@forward "bulma/sass/utilities/controls";
+
+
+@use "bulma/sass/utilities/initial-variables.scss" as *;
 
 // since $tablet is defined by bulma we can just define it after importing the utilities
 $mobile: math.div($tablet, 2);
@@ -39,3 +47,10 @@ $vikunja-nav-color: var(--grey-700);
 $vikunja-nav-selected-width: 0.4rem;
 
 $close-button-min-space: 84px;
+
+
+// re-added from bulma-css-variables
+$item-padding: 0.375rem 1rem;
+// 1152px container + 4rem
+$widescreen: 1152px + (2 * $gap);
+$border-light: $grey-lightest;

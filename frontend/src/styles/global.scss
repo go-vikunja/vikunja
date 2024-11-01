@@ -1,11 +1,3 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@import "fonts";
-
-@import "transitions";
-
 // ###################
 // START BULMA IMPORTS
 // ###################
@@ -14,79 +6,93 @@
 // with the expeption of the bulma utilities – They are
 // imported globally in common-imports.scss
 
-// imports from "bulma-css-variables/sass/base/_all";
-@import "bulma-css-variables/sass/base/minireset";
-@import "bulma-css-variables/sass/base/generic";
-@import "bulma-css-variables/sass/base/animations";
+// themes
+@forward "bulma/sass/themes";
+
+// base
+@forward "bulma/sass/base/minireset";
+@forward "bulma/sass/base/generic";
+@forward "bulma/sass/base/animations";
 
 
-// imports from "bulma-css-variables/sass/elements/_all";
-@import "bulma-css-variables/sass/elements/box";
-@import "bulma-css-variables/sass/elements/button";
-@import "bulma-css-variables/sass/elements/container";
-@import "bulma-css-variables/sass/elements/content";
-@import "bulma-css-variables/sass/elements/icon";
-@import "bulma-css-variables/sass/elements/image";
-//@import "bulma-css-variables/sass/elements/notification"; // not used
-// @import "bulma-css-variables/sass/elements/progress"; // not used
-@import "bulma-css-variables/sass/elements/table";
-@import "bulma-css-variables/sass/elements/tag";
-@import "bulma-css-variables/sass/elements/title";
+// elements
+@forward "bulma/sass/elements/block";
+@forward "bulma/sass/elements/box";
+@forward "bulma/sass/elements/button";
+@forward "bulma/sass/elements/content";
+@forward "bulma/sass/elements/delete";
+@forward "bulma/sass/elements/icon";
+@forward "bulma/sass/elements/image";
+@forward "bulma/sass/elements/loader";
+// @forward "bulma/sass/elements/notification"; // not used
+// @forward "bulma/sass/elements/progress"; // not used
+@forward "bulma/sass/elements/table";
+@forward "bulma/sass/elements/tag";
+@forward "bulma/sass/elements/title";
 
-@import "bulma-css-variables/sass/elements/other";
+// form
+@forward "bulma/sass/form/shared";
+@forward "bulma/sass/form/input-textarea";
+@forward "bulma/sass/form/checkbox-radio";
+@forward "bulma/sass/form/select";
+@forward "bulma/sass/form/file";
+@forward "bulma/sass/form/tools";
 
+// components
+// @forward "bulma/sass/components/breadcrumb"; // not used
+@forward "bulma/sass/components/card";
+// @forward "bulma/sass/components/dropdown"; // not used
+@forward "bulma/sass/components/menu";
+// @forward "bulma/sass/components/message"; // not used
+@forward "bulma/sass/components/modal";
+@forward "bulma/sass/components/navbar";
+@forward "bulma/sass/components/pagination";
+// @forward "bulma/sass/components/panel"; // not used
+// @forward "bulma/sass/components/tabs"; // not used
 
-// imports from "bulma-css-variables/sass/form/_all";
-@import "bulma-css-variables/sass/form/shared";
-@import "bulma-css-variables/sass/form/input-textarea";
-@import "bulma-css-variables/sass/form/checkbox-radio";
-@import "bulma-css-variables/sass/form/select";
-@import "bulma-css-variables/sass/form/file";
-@import "bulma-css-variables/sass/form/tools";
+// grid
+@forward "bulma/sass/grid/columns";
+// @forward "bulma/sass/grid/grid"; // probably not used, because new
 
+// layout
+@forward "bulma/sass/layout/container";
+// @forward "bulma/sass/layout/footer"; // not used
+// @forward "bulma/sass/layout/hero"; // not used
+// @forward "bulma/sass/layout/level"; // not used
+@forward "bulma/sass/layout/media";
+// @forward "bulma/sass/layout/section"; // not used
 
-// imports from "bulma-css-variables/sass/components/_all";
-// @import "bulma-css-variables/sass/components/breadcrumb"; // not used
-@import "bulma-css-variables/sass/components/card";
-// @import "bulma-css-variables/sass/components/dropdown"; // moved to component
-// @import "bulma-css-variables/sass/components/level"; // not used
-@import "bulma-css-variables/sass/components/media"; 
-@import "bulma-css-variables/sass/components/menu";
-//@import "bulma-css-variables/sass/components/message"; // not used
-@import "bulma-css-variables/sass/components/modal";
-@import "bulma-css-variables/sass/components/navbar";
-@import "bulma-css-variables/sass/components/pagination";
-// @import "bulma-css-variables/sass/components/panel"; // not used
-// @import "bulma-css-variables/sass/components/tabs"; // not used
+// base/skeleton
+@forward "bulma/sass/base/skeleton";
 
-
-// imports from "bulma-css-variables/sass/grid/_all";
-@import "bulma-css-variables/sass/grid/columns";
-// @import "bulma-css-variables/sass/grid/tiles"; // not used
-
-
-// imports from "bulma-css-variables/sass/helpers/_all";
-@import "bulma-css-variables/sass/helpers/color";
-@import "bulma-css-variables/sass/helpers/flexbox";
-@import "bulma-css-variables/sass/helpers/float";
-// @import "bulma-css-variables/sass/helpers/other"; // not used
-// @import "bulma-css-variables/sass/helpers/overflow";
-// @import "bulma-css-variables/sass/helpers/position";
-@import "bulma-css-variables/sass/helpers/spacing";
-@import "bulma-css-variables/sass/helpers/typography";
-@import "bulma-css-variables/sass/helpers/visibility";
-
-
-// imports from "bulma-css-variables/sass/layout/_all";
-// @import "bulma-css-variables/sass/layout/hero"; // not used
-// @import "bulma-css-variables/sass/layout/section"; // not used
-// @import "bulma-css-variables/sass/layout/footer"; // not used
+// helpers
+// @forward "bulma/sass/helpers/aspect-ratio"; // probably not used, because new
+// @forward "bulma/sass/helpers/border"; // probably not used, because new
+@forward "bulma/sass/helpers/color";
+@forward "bulma/sass/helpers/flexbox";
+@forward "bulma/sass/helpers/float";
+// @forward "bulma/sass/helpers/gap"; // probably not used, because new
+// @forward "bulma/sass/helpers/overflow"; // not used
+// @forward "bulma/sass/helpers/position"; // not used
+@forward "bulma/sass/helpers/spacing";
+@forward "bulma/sass/helpers/typography";
+@forward "bulma/sass/helpers/visibility";
+// @forward "bulma/sass/helpers/other"; // not used
 
 // #################
 // END BULMA IMPORTS
 // #################
 
-@import "theme";
-@import "components";
 
-@import "custom-properties";
+@use "fonts";
+
+@use "transitions";
+
+@use "theme";
+@use "components";
+
+@use "custom-properties";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

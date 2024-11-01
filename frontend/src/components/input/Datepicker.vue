@@ -120,6 +120,8 @@ function close() {
 </script>
 
 <style lang="scss" scoped>
+@use "bulma/sass/utilities/css-variables.scss" as cv;
+
 .datepicker {
 	input.input {
 		display: none;
@@ -132,7 +134,7 @@ function close() {
 	width: 320px;
 	background: var(--white);
 	border-radius: $radius;
-	box-shadow: $shadow;
+	box-shadow: cv.getVar("shadow");
 
 	@media screen and (max-width: ($tablet)) {
 		width: calc(100vw - 5rem);

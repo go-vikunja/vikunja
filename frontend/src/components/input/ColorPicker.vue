@@ -130,6 +130,8 @@ function reset() {
 </script>
 
 <style lang="scss" scoped>
+@use "bulma/sass/utilities/css-variables.scss" as cv;
+
 .color-picker-container {
   display: flex;
   justify-content: center;
@@ -156,7 +158,7 @@ function reset() {
 		overflow: hidden;
 		border-radius: 100%;
 		border: $BORDER_WIDTH solid var(--grey-300);
-		box-shadow: $shadow;
+		box-shadow: cv.getVar("shadow");
 
 		& > * {
 			grid-row: 1;

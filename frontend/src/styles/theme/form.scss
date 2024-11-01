@@ -1,3 +1,6 @@
+@use 'sass:list';
+@use "@/styles/common-imports" as *;
+
 .field.has-addons .button {
   height: 2.5rem;
   margin-left: 0 !important;
@@ -20,8 +23,8 @@
   }
 
   @each $name, $pair in $colors {
-    $color: nth($pair, 1);
-    $color-invert: nth($pair, 2);
+    $color: list.nth($pair, 1);
+    $color-invert: list.nth($pair, 2);
 
     &.is-#{$name} {
       &.is-active,
@@ -85,8 +88,8 @@
   padding: .3rem;
 
   &:focus {
-    background: $input-background-color;
-    border-color: $input-focus-border-color;
+    background: $scheme-main;
+    border-color: $link;
   }
 
   &.disabled {

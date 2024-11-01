@@ -51,10 +51,7 @@ const props = withDefaults(defineProps<{
 const wrapper = ref<HTMLElement | null>(null)
 
 const computedBackgroundColor = computed(() => {
-  if (wrapper.value === null) {
-    return props.backgroundColor || '#fff'
-  }
-  return props.backgroundColor || getInheritedBackgroundColor(wrapper.value)
+  return props.backgroundColor || wrapper.value === null ? '#fff' : getInheritedBackgroundColor(wrapper.value)
 })
 
 /**

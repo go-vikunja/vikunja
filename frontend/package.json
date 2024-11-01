@@ -98,7 +98,7 @@
     "@vueuse/router": "11.2.0",
     "axios": "1.7.7",
     "blurhash": "2.0.5",
-    "bulma-css-variables": "0.9.33",
+    "bulma": "^1.0.2",
     "change-case": "5.4.4",
     "date-fns": "4.1.0",
     "dayjs": "1.11.13",
