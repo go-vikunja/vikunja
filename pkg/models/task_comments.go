@@ -252,6 +252,10 @@ func (tc *TaskComment) ReadAll(s *xorm.Session, auth web.Auth, search string, pa
 		return nil, 0, 0, ErrGenericForbidden{}
 	}
 
+	return tc.getAllCommentsForTasksWithoutPermissionCheck(s, search, page, perPage)
+}
+
+func (tc *TaskComment) getAllCommentsForTasksWithoutPermissionCheck(s *xorm.Session, search string, page int, perPage int) (result []*TaskComment, resultCount int, numberOfTotalItems int64, err error) {
 	// Because we can't extend the type in general, we need to do this here.
 	// Not a good solution, but saves performance.
 	type TaskCommentWithAuthor struct {

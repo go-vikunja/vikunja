@@ -247,35 +247,11 @@ func ReindexAllTasks() (err error) {
 	return
 }
 
-func getTypesenseTaskForTask(s *xorm.Session, task *Task, projectsCache map[int64]*Project, taskPositionCache map[int64][]*TaskPositionWithView, taskBucketCache map[int64][]*TaskBucket) (ttask *typesenseTask, err error) {
+func getTypesenseTaskForTask(s *xorm.Session, task *Task, taskPositionCache map[int64][]*TaskPositionWithView, taskBucketCache map[int64][]*TaskBucket) (ttask *typesenseTask, err error) {
 	ttask = convertTaskToTypesenseTask(task, taskPositionCache[task.ID], taskBucketCache[task.ID])
 
-	var p *Project
-	if projectsCache == nil {
-		p, err = GetProjectSimpleByID(s, task.ProjectID)
-		if err != nil {
-			if IsErrProjectDoesNotExist(err) {
-				return nil, nil
-			}
-			return nil, fmt.Errorf("could not fetch project %d: %s", task.ProjectID, err.Error())
-		}
-	} else {
-		var has bool
-		p, has = projectsCache[task.ProjectID]
-		if !has {
-			p, err = GetProjectSimpleByID(s, task.ProjectID)
-			if err != nil {
-				if IsErrProjectDoesNotExist(err) {
-					return nil, nil
-				}
-				return nil, fmt.Errorf("could not fetch project %d: %s", task.ProjectID, err.Error())
-			}
-			projectsCache[task.ProjectID] = p
-		}
-	}
-
 	comment := &TaskComment{TaskID: task.ID}
-	ttask.Comments, _, _, err = comment.ReadAll(s, &user.User{ID: p.OwnerID}, "", -1, -1)
+	ttask.Comments, _, _, err = comment.getAllCommentsForTasksWithoutPermissionCheck(s, "", -1, -1)
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch comments for task %d: %s", task.ID, err.Error())
 	}
@@ -299,7 +275,6 @@ func reindexTasksInTypesense(s *xorm.Session, tasks map[int64]*Task) (err error)
 		return fmt.Errorf("could not fetch more task info: %s", err.Error())
 	}
 
-	projects := make(map[int64]*Project)
 	typesenseTasks := []interface{}{}
 
 	positionsByTask, err := getPositionsByTask(s)
@@ -314,7 +289,7 @@ func reindexTasksInTypesense(s *xorm.Session, tasks map[int64]*Task) (err error)
 
 	for _, task := range tasks {
 
-		ttask, err := getTypesenseTaskForTask(s, task, projects, positionsByTask, bucketsByTask)
+		ttask, err := getTypesenseTaskForTask(s, task, positionsByTask, bucketsByTask)
 		if err != nil {
 			return err
 		}
