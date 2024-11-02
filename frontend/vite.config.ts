@@ -219,7 +219,7 @@ export default defineConfig(({mode}) => {
 		build: {
 			target: 'esnext',
 			// required for sentry debugging: tells vite to create source maps
-			sourcemap: true,
+			sourcemap: Boolean(env.SENTRY_AUTH_TOKEN),
 			rollupOptions: {
 				plugins: [
 					visualizer({
