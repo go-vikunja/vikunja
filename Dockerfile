@@ -13,7 +13,7 @@ RUN corepack enable && \
       pnpm install && \
       pnpm run build
 
-FROM --platform=$BUILDPLATFORM techknowlogick/xgo:go-1.21.x AS apibuilder
+FROM --platform=$BUILDPLATFORM techknowlogick/xgo:go-1.22.x AS apibuilder
 
 RUN go install github.com/magefile/mage@latest && \
     mv /go/bin/mage /usr/local/go/bin
