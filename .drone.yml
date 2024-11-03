@@ -1150,7 +1150,7 @@ steps:
   #        - '.cache'
 
   - name: build
-    image: electronuserland/builder:wine-mono
+    image: electronuserland/builder:wine
     pull: true
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
@@ -1232,7 +1232,7 @@ steps:
   #        - '.cache'
 
   - name: build
-    image: electronuserland/builder:wine-mono
+    image: electronuserland/builder:wine
     pull: true
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
@@ -1400,6 +1400,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 75759b487ff5f815f3ca3d77e824f7d1d70a9c07d03967f62a00217f421a81d0
+hmac: ae4047f8bfd7331febeb19ac7f572892dc8e3ea79f0bd8cad501e903c79dd919
 
 ...
