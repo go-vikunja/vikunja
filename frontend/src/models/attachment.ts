@@ -5,7 +5,7 @@ import type { IUser } from '@/modelTypes/IUser'
 import type { IFile } from '@/modelTypes/IFile'
 import type { IAttachment } from '@/modelTypes/IAttachment'
 
-export const SUPPORTED_IMAGE_SUFFIX = ['.jpeg', '.jpg', '.png', '.bmp', '.gif']
+export const SUPPORTED_IMAGE_SUFFIX = ['.jpeg', '.jpg', '.png', '.bmp', '.gif', '.webp', '.avif']
 
 export function canPreview(attachment: IAttachment): boolean {
 	return SUPPORTED_IMAGE_SUFFIX.some((suffix) => attachment.file.name.toLowerCase().endsWith(suffix))
