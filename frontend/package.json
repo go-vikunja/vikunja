@@ -132,7 +132,7 @@
     "@faker-js/faker": "9.1.0",
     "@histoire/plugin-screenshot": "0.17.17",
     "@histoire/plugin-vue": "0.17.17",
-    "@tsconfig/node20": "20.1.4",
+    "@tsconfig/node22": "^22.0.0",
     "@types/codemirror": "5.60.15",
     "@types/dompurify": "3.0.5",
     "@types/flexsearch": "0.7.6",

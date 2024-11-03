@@ -257,9 +257,9 @@ importers:
       '@histoire/plugin-vue':
         specifier: 0.17.17
         version: 0.17.17(histoire@0.17.17(@types/node@22.8.7)(sass-embedded@1.80.6)(sass@1.80.6)(terser@5.31.6)(vite@5.4.10(@types/node@22.8.7)(sass-embedded@1.80.6)(sass@1.80.6)(terser@5.31.6)))(vite@5.4.10(@types/node@22.8.7)(sass-embedded@1.80.6)(sass@1.80.6)(terser@5.31.6))(vue@3.5.12(typescript@5.6.3))
-      '@tsconfig/node20':
-        specifier: 20.1.4
-        version: 20.1.4
+      '@tsconfig/node22':
+        specifier: ^22.0.0
+        version: 22.0.0
       '@types/codemirror':
         specifier: 5.60.15
         version: 5.60.15
@@ -2355,8 +2355,8 @@ packages:
     resolution: {integrity: sha512-L7z9BgrNEcYyUYtF+HaEfiS5ebkh9jXqbszz7pC0hRBPaatV0XjSD3+eHrpqFemQfgwiFF0QPIarnIihIDn7OA==}
     engines: {node: '>=10.13.0'}
 
-  '@tsconfig/node20@20.1.4':
-    resolution: {integrity: sha512-sqgsT69YFeLWf5NtJ4Xq/xAF8p4ZQHlmGW74Nu2tD4+g5fAsposc4ZfaaPixVu4y01BEiDCWLRDCvDM5JOsRxg==}
+  '@tsconfig/node22@22.0.0':
+    resolution: {integrity: sha512-twLQ77zevtxobBOD4ToAtVmuYrpeYUh3qh+TEp+08IWhpsrIflVHqQ1F1CiPxQGL7doCdBIOOCF+1Tm833faNg==}
 
   '@types/chrome@0.0.270':
     resolution: {integrity: sha512-ADvkowV7YnJfycZZxL2brluZ6STGW+9oKG37B422UePf2PCXuFA/XdERI0T18wtuWPx0tmFeZqq6MOXVk1IC+Q==}
@@ -8607,7 +8607,7 @@ snapshots:
 
   '@trysound/sax@0.2.0': {}
 
-  '@tsconfig/node20@20.1.4': {}
+  '@tsconfig/node22@22.0.0': {}
 
   '@types/chrome@0.0.270':
     dependencies:
