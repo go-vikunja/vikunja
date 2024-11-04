@@ -421,6 +421,44 @@ func InitDefaultConfig() {
 	AutoTLSRenewBefore.setDefault("720h") // 30days in hours
 }
 
+func getConfigValueFromFile(configKey string) string {
+	var valuePath = viper.GetString(configKey)
+	if valuePath == "" {
+		return ""
+	}
+
+	if !strings.HasPrefix(valuePath, "/") {
+		valuePath = path.Join(ServiceRootpath.GetString(), valuePath)
+	}
+
+	contents, err := os.ReadFile(valuePath)
+	if err == nil {
+		return string(contents)
+	}
+
+	log.Fatalf("Failed to read the config file at %s for key %s: %v", valuePath, configKey, err)
+	return ""
+}
+
+func readConfigvaluesFromFiles() {
+	keys := viper.AllKeys()
+	for _, key := range keys {
+		if strings.HasSuffix(key, "_file") {
+			value := getConfigValueFromFile(key)
+			if value != "" {
+				viper.Set(strings.TrimSuffix(key, "_file"), value)
+			}
+			continue
+		}
+
+		// Env is evaluated manually at runtime, so we need to check this for each key
+		value := getConfigValueFromFile(key + ".file")
+		if value != "" {
+			viper.Set(strings.TrimSuffix(key, ".file"), value)
+		}
+	}
+}
+
 // InitConfig initializes the config, sets defaults etc.
 func InitConfig() {
 
@@ -464,6 +502,8 @@ func InitConfig() {
 	} else {
 		log.Info("No config file found, using default or config from environment variables.")
 	}
+
+	readConfigvaluesFromFiles()
 
 	if RateLimitStore.GetString() == "keyvalue" {
 		RateLimitStore.Set(KeyvalueType.GetString())
