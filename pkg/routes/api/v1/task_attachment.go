@@ -17,6 +17,7 @@
 package v1
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 
@@ -72,6 +73,9 @@ func UploadTaskAttachment(c echo.Context) error {
 	form, err := c.MultipartForm()
 	if err != nil {
 		_ = s.Rollback()
+		if errors.Is(err, http.ErrNotMultipart) {
+			return echo.NewHTTPError(http.StatusBadRequest, "No multipart form provided")
+		}
 		return handler.HandleHTTPError(err)
 	}
 
