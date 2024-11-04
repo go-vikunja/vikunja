@@ -249,8 +249,8 @@ importers:
         specifier: 6.0.1
         version: 6.0.1(cypress@13.15.1)(vue@3.5.12(typescript@5.6.3))
       '@faker-js/faker':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 9.2.0
+        version: 9.2.0
       '@histoire/plugin-screenshot':
         specifier: 0.17.17
         version: 0.17.17(histoire@0.17.17(@types/node@22.8.7)(sass-embedded@1.80.6)(sass@1.80.6)(terser@5.31.6)(vite@5.4.10(@types/node@22.8.7)(sass-embedded@1.80.6)(sass@1.80.6)(terser@5.31.6)))
@@ -258,7 +258,7 @@ importers:
         specifier: 0.17.17
         version: 0.17.17(histoire@0.17.17(@types/node@22.8.7)(sass-embedded@1.80.6)(sass@1.80.6)(terser@5.31.6)(vite@5.4.10(@types/node@22.8.7)(sass-embedded@1.80.6)(sass@1.80.6)(terser@5.31.6)))(vite@5.4.10(@types/node@22.8.7)(sass-embedded@1.80.6)(sass@1.80.6)(terser@5.31.6))(vue@3.5.12(typescript@5.6.3))
       '@tsconfig/node22':
-        specifier: ^22.0.0
+        specifier: 22.0.0
         version: 22.0.0
       '@types/codemirror':
         specifier: 5.60.15
@@ -327,8 +327,8 @@ importers:
         specifier: 9.30.0
         version: 9.30.0(eslint@9.14.0(jiti@1.21.6))
       happy-dom:
-        specifier: 15.8.0
-        version: 15.8.0
+        specifier: 15.8.3
+        version: 15.8.3
       histoire:
         specifier: 0.17.17
         version: 0.17.17(@types/node@22.8.7)(sass-embedded@1.80.6)(sass@1.80.6)(terser@5.31.6)(vite@5.4.10(@types/node@22.8.7)(sass-embedded@1.80.6)(sass@1.80.6)(terser@5.31.6))
@@ -376,7 +376,7 @@ importers:
         version: 5.1.0(vue@3.5.12(typescript@5.6.3))
       vitest:
         specifier: 2.1.4
-        version: 2.1.4(@types/node@22.8.7)(happy-dom@15.8.0)(jsdom@20.0.3)(sass-embedded@1.80.6)(sass@1.80.6)(terser@5.31.6)
+        version: 2.1.4(@types/node@22.8.7)(happy-dom@15.8.3)(jsdom@20.0.3)(sass-embedded@1.80.6)(sass@1.80.6)(terser@5.31.6)
       vue-tsc:
         specifier: 2.1.10
         version: 2.1.10(typescript@5.6.3)
@@ -1562,8 +1562,8 @@ packages:
     resolution: {integrity: sha512-CXtq5nR4Su+2I47WPOlWud98Y5Lv8Kyxp2ukhgFx/eW6Blm18VXJO5WuQylPugRo8nbluoi6GvvxBLqHcvqUUw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@faker-js/faker@9.1.0':
-    resolution: {integrity: sha512-GJvX9iM9PBtKScJVlXQ0tWpihK3i0pha/XAhzQa1hPK/ILLa1Wq3I63Ij7lRtqTwmdTxRCyrUhLC5Sly9SLbug==}
+  '@faker-js/faker@9.2.0':
+    resolution: {integrity: sha512-ulqQu4KMr1/sTFIYvqSdegHT8NIkt66tFAkugGnHA+1WAfEn6hMzNR+svjXGFRVLnapxvej67Z/LwchFrnLBUg==}
     engines: {node: '>=18.0.0', npm: '>=9.0.0'}
 
   '@floating-ui/core@1.6.7':
@@ -3970,8 +3970,8 @@ packages:
     resolution: {integrity: sha512-5v6yZd4JK3eMI3FqqCouswVqwugaA9r4dNZB1wwcmrD02QkV5H0y7XBQW8QwQqEaZY1pM9aqORSORhJRdNK44Q==}
     engines: {node: '>=6.0'}
 
-  happy-dom@15.8.0:
-    resolution: {integrity: sha512-LwBvPvR4MQ1xfrf4gbWRJzeL2xQqWiEiHvZF5uA1AwlCCgjH9ht0fGVXciRGQCghdHAIXw1zGX1mJ6a3O0fpeA==}
+  happy-dom@15.8.3:
+    resolution: {integrity: sha512-YR9nUWN/T2bH7pPLEYMhTp4DQExPH+mC4KulJDgimCb+FY3Er0Vp6SOOcBXrNfMTri3lAk9uSZqUTG2hgZOYwg==}
     engines: {node: '>=18.0.0'}
 
   hard-rejection@2.1.0:
@@ -7828,7 +7828,7 @@ snapshots:
     dependencies:
       levn: 0.4.1
 
-  '@faker-js/faker@9.1.0': {}
+  '@faker-js/faker@9.2.0': {}
 
   '@floating-ui/core@1.6.7':
     dependencies:
@@ -10559,7 +10559,7 @@ snapshots:
       section-matter: 1.0.0
       strip-bom-string: 1.0.0
 
-  happy-dom@15.8.0:
+  happy-dom@15.8.3:
     dependencies:
       entities: 4.5.0
       webidl-conversions: 7.0.0
@@ -12978,7 +12978,7 @@ snapshots:
       sass-embedded: 1.80.6
       terser: 5.31.6
 
-  vitest@2.1.4(@types/node@22.8.7)(happy-dom@15.8.0)(jsdom@20.0.3)(sass-embedded@1.80.6)(sass@1.80.6)(terser@5.31.6):
+  vitest@2.1.4(@types/node@22.8.7)(happy-dom@15.8.3)(jsdom@20.0.3)(sass-embedded@1.80.6)(sass@1.80.6)(terser@5.31.6):
     dependencies:
       '@vitest/expect': 2.1.4
       '@vitest/mocker': 2.1.4(vite@5.4.10(@types/node@22.8.7)(sass-embedded@1.80.6)(sass@1.80.6)(terser@5.31.6))
@@ -13002,7 +13002,7 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 22.8.7
-      happy-dom: 15.8.0
+      happy-dom: 15.8.3
       jsdom: 20.0.3
     transitivePeerDependencies:
       - less
