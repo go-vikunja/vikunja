@@ -30,5 +30,10 @@
     ],
     "i18n-ally.sortKeys": true,
     "i18n-ally.keepFulfilled": true,
-    "i18n-ally.keystyle": "nested"
+    "i18n-ally.keystyle": "nested",
+
+    // unplugin-vue-router
+    // https://uvr.esm.is/introduction.html#setup
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "typescript.preferences.autoImportFileExcludePatterns": ["vue-router/auto$"]
 }

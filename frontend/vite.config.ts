@@ -17,6 +17,7 @@ import postcssPresetEnv from 'postcss-preset-env'
 import postcssEasings from 'postcss-easings'
 import postcssEasingGradients from 'postcss-easing-gradients'
 import tailwindcss from 'tailwindcss'
+import VueRouter from 'unplugin-vue-router/vite'
 
 const pathSrc = fileURLToPath(new URL('./src', import.meta.url)).replaceAll('\\', '/')
 
@@ -119,6 +120,7 @@ export default defineConfig(({mode}) => {
 					propsDestructure: true,
 				},
 			}),
+			VueRouter(),
 			legacy,
 			svgLoader({
 				// Since the svgs are already manually optimized via https://jakearchibald.github.io/svgomg/
