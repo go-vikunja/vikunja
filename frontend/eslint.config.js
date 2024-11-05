@@ -84,5 +84,14 @@ export default [
 		// 	'cypress/*',
 		// ],
 	},
-
+	{
+		// unplugin-vue-router
+		// https://uvr.esm.is/guide/eslint.html#eslint
+		settings: {
+		  'import/core-modules': ['vue-router/auto-routes'],
+		},
+		globals: {
+			'definePage': 'readonly',
+		},
+	},
 ]
