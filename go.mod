@@ -76,9 +76,8 @@ require (
 	golang.org/x/term v0.24.0
 	golang.org/x/text v0.18.0
 	gopkg.in/d4l3k/messagediff.v1 v1.2.1
-	gopkg.in/yaml.v3 v3.0.1
 	mvdan.cc/xurls/v2 v2.5.0
-	src.techknowlogick.com/xgo v1.7.1-0.20240403232151-e01c4fbef884
+	src.techknowlogick.com/xgo v1.8.1-0.20241105013731-313dedef864f
 	src.techknowlogick.com/xormigrate v1.7.1
 	xorm.io/builder v0.3.13
 	xorm.io/xorm v1.3.9
@@ -172,6 +171,7 @@ require (
 	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
