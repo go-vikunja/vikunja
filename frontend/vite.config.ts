@@ -16,6 +16,7 @@ import postcssPresetEnv from 'postcss-preset-env'
 import postcssEasingGradients from 'postcss-easing-gradients'
 import tailwindcss from 'tailwindcss'
 import vueDevTools from 'vite-plugin-vue-devtools'
+import VueRouter from 'unplugin-vue-router/vite'
 
 const pathSrc = fileURLToPath(new URL('./src', import.meta.url)).replaceAll('\\', '/')
 
@@ -100,6 +101,7 @@ export default defineConfig(({mode}) => {
 			},
 		},
 		plugins: [
+			VueRouter(),
 			vue({
 				script: {
 					propsDestructure: true,

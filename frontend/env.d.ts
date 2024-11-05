@@ -2,6 +2,7 @@
 /// <reference types="vite-svg-loader" />
 /// <reference types="cypress" />
 /// <reference types="@histoire/plugin-vue/components" />
+/// <reference types="unplugin-vue-router/client" />
 
 interface ImportMetaEnv {
 	readonly VIKUNJA_API_URL?: string

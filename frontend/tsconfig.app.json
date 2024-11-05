@@ -6,7 +6,9 @@
     "src/**/*",
     "src/**/*.vue",
     "src/**/*.json",
-    "tailwind.config.js"
+    "tailwind.config.js",
+    // https://uvr.esm.is/introduction.html#setup
+    "./typed-router.d.ts"
   ],
   "exclude": ["src/**/__tests__/*"],
   "compilerOptions": {
