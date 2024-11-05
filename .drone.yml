@@ -580,7 +580,7 @@ steps:
       event: [ push, tag, pull_request ]
 
   - name: before-static-build
-    image: techknowlogick/xgo:go-1.22.x
+    image: techknowlogick/xgo:go-1.23.x
     pull: always
     commands:
       - export PATH=$PATH:$GOPATH/bin
@@ -589,7 +589,7 @@ steps:
     depends_on: [ fetch-tags, mage ]
 
   - name: static-build-windows
-    image: techknowlogick/xgo:go-1.22.x
+    image: techknowlogick/xgo:go-1.23.x
     pull: always
     environment:
       # This path does not exist. However, when we set the gopath to /go, the build fails. Not sure why.
@@ -605,7 +605,7 @@ steps:
       - frontend-build
 
   - name: static-build-linux
-    image: techknowlogick/xgo:go-1.22.x
+    image: techknowlogick/xgo:go-1.23.x
     pull: always
     environment:
       # This path does not exist. However, when we set the gopath to /go, the build fails. Not sure why.
@@ -621,7 +621,7 @@ steps:
       - frontend-build
 
   - name: static-build-darwin
-    image: techknowlogick/xgo:go-1.22.x
+    image: techknowlogick/xgo:go-1.23.x
     pull: always
     environment:
       # This path does not exist. However, when we set the gopath to /go, the build fails. Not sure why.
@@ -647,7 +647,7 @@ steps:
       - ./mage-static release:compress
 
   - name: after-build-static
-    image: techknowlogick/xgo:go-1.22.x
+    image: techknowlogick/xgo:go-1.23.x
     pull: always
     depends_on:
       - after-build-compress
@@ -1352,6 +1352,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 75759b487ff5f815f3ca3d77e824f7d1d70a9c07d03967f62a00217f421a81d0
+hmac: 14968b058e6d28fa78d2329672bb46b401822543171ca4bf524ec5f7ed7fa443
 
 ...
