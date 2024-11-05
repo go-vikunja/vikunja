@@ -73,6 +73,8 @@ import {useConfigStore} from '@/stores/config'
 import {useAuthStore} from '@/stores/auth'
 import {useTaskStore} from '@/stores/tasks'
 
+definePage({ name: 'home' })
+
 const salutation = useDaytimeSalutation()
 
 const baseStore = useBaseStore()

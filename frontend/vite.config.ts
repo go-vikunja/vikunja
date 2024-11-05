@@ -101,7 +101,22 @@ export default defineConfig(({mode}) => {
 			},
 		},
 		plugins: [
-			VueRouter(),
+			VueRouter({
+				// FIXME: use dynamic imports for these components
+				importMode: (filePath) => {
+					const syncImports = [
+						pathSrc + '/pages/[[auth]]/register.vue',
+						pathSrc + '/pages/share/[share]/auth.vue',
+					]
+
+					if (syncImports.includes(filePath)) {
+						console.log('sync')
+						return 'sync'
+					}
+
+					return 'async'
+				},
+			}),
 			vue({
 				script: {
 					propsDestructure: true,
