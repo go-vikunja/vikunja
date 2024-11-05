@@ -615,8 +615,8 @@
       "quote": "Quote",
       "quoteTooltip": "Capture a quote.",
       "bulletList": "Bullet list",
-      "bulletListTooltip": "Create a simple bullet list.",
-      "unorderedList": "Unordered list",
+      "bulletListTooltip": "Sukurti paprastą sąrašą.",
+      "unorderedList": "Nerikiuojamas sąrašas",
       "orderedList": "Ordered list",
       "orderedListTooltip": "Create a list with numbering.",
       "cleanBlock": "Clean Block",
@@ -626,31 +626,31 @@
       "horizontalRule": "Horizontal Rule",
       "horizontalRuleTooltip": "Divide a section.",
       "sideBySide": "Vienas šalia kito",
-      "guide": "Guide",
+      "guide": "Vadovas",
       "text": "Text",
-      "textTooltip": "Just start typing with plain text.",
-      "taskList": "Task list",
-      "taskListTooltip": "Track tasks with a to-do list.",
+      "textTooltip": "Pradėkite rašyti paprastą tekstą.",
+      "taskList": "Užduočių sąrašas",
+      "taskListTooltip": "Sekti užduotis su veiklų sąrašu.",
       "undo": "Undo",
-      "redo": "Redo",
-      "placeholder": "Type some text or hit '/' to see more options…",
+      "redo": "Grąžinti",
+      "placeholder": "Rašykite tekstą arba spauskite '/' norėdami matyti daugiau pasirinkčių…",
       "table": {
         "title": "Table",
         "insert": "Insert table",
         "addColumnBefore": "Add column before",
         "addColumnAfter": "Add column after",
         "deleteColumn": "Delete column",
-        "addRowBefore": "Add row before",
-        "addRowAfter": "Add row after",
+        "addRowBefore": "Pridėti eilutę prieš tai",
+        "addRowAfter": "Pridėti eilutę po",
         "deleteRow": "Ištrinti eilutę",
-        "deleteTable": "Delete table",
-        "mergeCells": "Merge cells",
-        "splitCell": "Split cell",
+        "deleteTable": "Ištrinti lentelę",
+        "mergeCells": "Sujungti langelius",
+        "splitCell": "Skelti langelį",
         "toggleHeaderColumn": "Toggle header column",
         "toggleHeaderRow": "Toggle header row",
         "toggleHeaderCell": "Toggle header cell",
-        "mergeOrSplit": "Merge or split",
-        "fixTables": "Fix tables"
+        "mergeOrSplit": "Sujungti arba padalinti",
+        "fixTables": "Pataisyti lenteles"
       }
     },
     "multiselect": {
@@ -658,15 +658,15 @@
       "selectPlaceholder": "Click or press enter to select"
     },
     "datepickerRange": {
-      "to": "To",
+      "to": "Į",
       "from": "From",
-      "fromto": "{from} to {to}",
-      "date": "Date",
+      "fromto": "{from}{to}",
+      "date": "Data",
       "ranges": {
         "today": "Today",
-        "thisWeek": "This Week",
+        "thisWeek": "Šią savaitę",
         "restOfThisWeek": "The Rest of This Week",
-        "nextWeek": "Next Week",
+        "nextWeek": "Kitą savaitę",
         "next7Days": "Next 7 Days",
         "lastWeek": "Praeitą savaitę",
         "thisMonth": "Šį mėnesį",
@@ -693,7 +693,7 @@
         "startOfThisMonth": "Start of this month",
         "endOfThisMonth": "End of this month",
         "startOfNextMonth": "Start of next month",
-        "endOfNextMonth": "End of next month",
+        "endOfNextMonth": "Kito mėnesio pabaiga",
         "in30Days": "In 30 days",
         "startOfThisYear": "Beginning of this year",
         "endOfThisYear": "End of this year"
@@ -706,7 +706,7 @@
       "intro": "Specify relative dates which are resolved on the fly by Vikunja when applying the filter.",
       "expression": "Each Date Math expression starts with an anchor date, which can either be {0}, or a date string ending with {1}. This anchor date can optionally be followed by one or more maths expressions.",
       "similar": "These expressions are similar to the ones provided by {0} and {1}.",
-      "add1Day": "Add one day",
+      "add1Day": "Pridėti vieną dieną",
       "minus1Day": "Subtract one day",
       "roundDay": "Round down to the nearest day",
       "supportedUnits": "Supported time units",
@@ -716,17 +716,17 @@
         "minutes": "Minutes",
         "hours": "Hours",
         "days": "Days",
-        "weeks": "Weeks",
-        "months": "Months",
-        "years": "Years"
+        "weeks": "Savaitės",
+        "months": "Mėnesiai",
+        "years": "Metai"
       },
       "examples": {
-        "now": "Right now",
-        "in24h": "In 24h",
-        "today": "Today at 00:00",
+        "now": "Dabar",
+        "in24h": "24-ių valandų bėgyje",
+        "today": "Šiandien 00:00",
         "beginningOfThisWeek": "The beginning of this week at 00:00",
         "endOfThisWeek": "The end of this week",
-        "in30Days": "In 30 days",
+        "in30Days": "Už 30 dienų",
         "datePlusMonth": "{0} plus one month at 00:00 of that day"
       }
     }
@@ -743,13 +743,13 @@
     "undo": "Undo",
     "openDetail": "Open task detail view",
     "checklistTotal": "{checked} of {total} tasks",
-    "checklistAllDone": "{total} tasks",
+    "checklistAllDone": "{total} užduotys",
     "show": {
-      "titleCurrent": "Current Tasks",
-      "titleDates": "Tasks from {from} until {to}",
-      "noDates": "Show tasks without dates",
-      "overdue": "Show overdue tasks",
-      "fromuntil": "Tasks from {from} until {until}",
+      "titleCurrent": "Dabartinės Užduotys",
+      "titleDates": "Užduotys nuo {from} iki {to}",
+      "noDates": "Rodyti užduotis be datų",
+      "overdue": "Rodyti neišpildytas užduotis",
+      "fromuntil": "Užduotys nuo {from} iki {until}",
       "select": "Select a date range",
       "noTasks": "Nothing to do — Have a nice day!"
     },
@@ -823,55 +823,55 @@
       "notSubscribedTask": "You are not subscribed to this task and won't receive notifications for changes.",
       "subscribe": "Subscribe",
       "unsubscribe": "Unsubscribe",
-      "subscribeSuccessProject": "You are now subscribed to this project",
-      "unsubscribeSuccessProject": "You are now unsubscribed to this project",
-      "subscribeSuccessTask": "You are now subscribed to this task",
+      "subscribeSuccessProject": "Užsiprenumeravai projekto naujienas",
+      "unsubscribeSuccessProject": "Projekto naujienų atsisakyta",
+      "subscribeSuccessTask": "Užsiprenumeravai užduoties naujienas",
       "unsubscribeSuccessTask": "Užsiprenumeravai užduoties naujienas"
     },
     "attachment": {
       "title": "Attachments",
-      "createdBy": "created {0} by {1}",
-      "downloadTooltip": "Download this attachment",
+      "createdBy": "sukurta {0} {1}",
+      "downloadTooltip": "Atsiųsti šį prisegtuką",
       "upload": "Upload attachment",
       "drop": "Drop files here to upload",
       "delete": "Delete attachment",
-      "deleteTooltip": "Delete this attachment",
+      "deleteTooltip": "Pašalinti šį priedą",
       "deleteText1": "Ar esi tikra -s, kad nori ištrinti šį prisegtuką {filename}?",
       "copyUrl": "Copy URL",
-      "copyUrlTooltip": "Copy the url of this attachment for usage in text",
+      "copyUrlTooltip": "Nukopijuoti nuorodą šio prisegtuko, kaip paprastą tekstą",
       "setAsCover": "Make cover",
-      "unsetAsCover": "Remove cover",
-      "successfullyChangedCoverImage": "The cover image was successfully changed.",
-      "usedAsCover": "Cover image"
+      "unsetAsCover": "Pašalinti viršelį",
+      "successfullyChangedCoverImage": "Viršelio paveikslėlis buvo sėkmingai pakeistas.",
+      "usedAsCover": "Viršelio nuotrauka"
     },
     "comment": {
       "title": "Comments",
       "loading": "Loading comments…",
-      "edited": "edited {date}",
-      "creating": "Creating comment…",
-      "placeholder": "Add your comment, hit '/' for more options…",
+      "edited": "pataisyta {date}",
+      "creating": "Kraunami komentarai…",
+      "placeholder": "Pridėk komentarą, spausk '/' dėl daugiau pasirinkčių…",
       "comment": "Comment",
       "delete": "Delete this comment",
-      "deleteText1": "Are you sure you want to delete this comment?",
-      "deleteSuccess": "The comment was deleted successfully.",
-      "addedSuccess": "The comment was added successfully.",
-      "permalink": "Copy permalink to this comment"
+      "deleteText1": "Ar tikrai nori ištrinti šį komentarą?",
+      "deleteSuccess": "Komentaras panaikintas sėkmingai.",
+      "addedSuccess": "Komentaras sėkmigai pridėtas.",
+      "permalink": "Nukopijuoti komentaro nuorodą"
     },
     "deferDueDate": {
       "title": "Defer due date",
-      "1day": "1 day",
-      "3days": "3 days",
-      "1week": "1 week"
+      "1day": "1 diena",
+      "3days": "3 dienos",
+      "1week": "1 savaitė"
     },
     "description": {
       "placeholder": "Įvesti aprašą, spausti '/' norint gauti daugiau pasirinkčių…",
       "empty": "Aprašo kol kas nėra."
     },
     "assignee": {
-      "placeholder": "Type to assign a user…",
-      "selectPlaceholder": "Assign this user",
-      "assignSuccess": "The user has been assigned successfully.",
-      "unassignSuccess": "The user has been unassigned successfully."
+      "placeholder": "Rašykite norėdami priskirti naudotoją…",
+      "selectPlaceholder": "Priskirti šį naudotoją",
+      "assignSuccess": "Naudotojas buvo sėmingai priskirtas.",
+      "unassignSuccess": "Naudotojas buvo sėkmingai atšauktas."
     },
     "label": {
       "placeholder": "Rašykite noredami pridėti etiketę…",
@@ -898,15 +898,15 @@
       "add": "Add a New Task Relation",
       "new": "New Task Relation",
       "searchPlaceholder": "Type search for a task to add as related…",
-      "createPlaceholder": "Add this as related task",
+      "createPlaceholder": "Pridėti kaip susijusią užduotį",
       "differentProject": "This task belongs to a different project.",
-      "noneYet": "No task relations yet.",
+      "noneYet": "Kol kas užduoties ryšio nėra.",
       "delete": "Delete Task Relation",
       "deleteText1": "Are you sure you want to delete this task relation?",
-      "select": "Select a relation kind",
+      "select": "Pasirinkite ryšio tipą",
       "taskRequired": "Please select a task or enter a new task title.",
       "kinds": {
-        "subtask": "Subtask | Subtasks",
+        "subtask": "Sub užduotis | Sub užduotys",
         "parenttask": "Parent Task | Parent Tasks",
         "related": "Related Task | Related Tasks",
         "duplicateof": "Duplicate Of | Duplicates Of",
@@ -944,7 +944,7 @@
       "weeks": "Weeks",
       "months": "Months",
       "years": "Years",
-      "invalidAmount": "Please enter more than 0."
+      "invalidAmount": "Prašome įvesti daugiau nei 0."
     },
     "quickAddMagic": {
       "hint": "Use magic prefixes to define due dates, assignees and other task properties.",
@@ -965,7 +965,7 @@
       "dateAndTime": "Date and time",
       "date": "Any date will be used as the due date of the new task. You can use dates in any of these formats:",
       "dateWeekday": "any weekday, will use the next date with that date",
-      "dateCurrentYear": "will use the current year",
+      "dateCurrentYear": "naudoti šiuos metus",
       "dateNth": "will use the {day}th of the current month",
       "dateTime": "Combine any of the date formats with \"{time}\" (or {timePM}) to set a time.",
       "repeats": "Repeating tasks",
@@ -982,7 +982,7 @@
     "edit": {
       "title": "Edit Team \"{team}\"",
       "members": "Team Members",
-      "search": "Type to search a user…",
+      "search": "Rašykite čia norėdami ieškoti naudotojo…",
       "addUser": "Add to team",
       "makeMember": "Make Member",
       "makeAdmin": "Make Admin",
@@ -990,7 +990,7 @@
       "userAddedSuccess": "The team member was successfully added.",
       "madeMember": "The team member was successfully made member.",
       "madeAdmin": "The team member was successfully made admin.",
-      "mustSelectUser": "Please select a user.",
+      "mustSelectUser": "Prašome pasirinkti vartotoją.",
       "delete": {
         "header": "Delete the team",
         "text1": "Are you sure you want to delete this team and all of its members?",
@@ -1001,13 +1001,13 @@
         "header": "Remove a user from the team",
         "text1": "Are you sure you want to remove this user from the team?",
         "text2": "They will lose access to all projects this team has access to. This CANNOT BE UNDONE!",
-        "success": "The user was successfully deleted from the team."
+        "success": "Naudotojas buvo sėkmingai ištrintas iš komandos."
       },
       "leave": {
         "title": "Leave team",
         "text1": "Are you sure you want to leave this team?",
         "text2": "You will lose access to all projects this team has access to. If you change your mind you'll need a team admin to add you again.",
-        "success": "You have successfully left the team."
+        "success": "Jūs sėkmingai palikote komandą."
       }
     },
     "attributes": {
@@ -1016,7 +1016,7 @@
       "nameRequired": "Prašome nurodyti vardą.",
       "description": "Aprašymas",
       "descriptionPlaceholder": "Aprašykite komandą čia, spauskite '/' dėl daugiau opcijų…",
-      "admin": "Admin",
+      "admin": "Administravimas",
       "member": "Member",
       "isPublic": "Public Team",
       "isPublicDescription": "Padaryk komandą viešai randamą. Kai įgalinta, bet kas gali pasidalinti projektu su komanda, net nebūdama -s tiesioginiu komandos nariu."
@@ -1041,7 +1041,7 @@
       "related": "Modify related tasks of this task",
       "color": "Change the color of this task",
       "move": "Move this task to another project",
-      "reminder": "Manage reminders of this task",
+      "reminder": "Valdyti šios užduoties priminimus",
       "description": "Praskleisti redagavimą užduoties apraše",
       "delete": "Delete this task",
       "priority": "Change the priority of this task",
@@ -1105,7 +1105,7 @@
   },
   "quickActions": {
     "commands": "Commands",
-    "placeholder": "Type a command or search…",
+    "placeholder": "Rašykite komandą arba ieškokite…",
     "hint": "Gai naudoti {project} sutrumpinti projektų paiešką. Sujungti {project} ar {label} (etiketes) paieškos užklausoje norint ieškoti užduoties su tomis etiketėmis ar tame projekte. Naudok {assignee} norėdama(-s) ieškoti komandu.",
     "tasks": "Tasks",
     "projects": "Projects",
@@ -1165,7 +1165,7 @@
     "4002": "The task does not exist.",
     "4003": "All bulk editing tasks must belong to the same project.",
     "4004": "Need at least one task when bulk editing tasks.",
-    "4005": "You do not have the right to see the task.",
+    "4005": "Neturi prieigos prie šios užduoties.",
     "4006": "You can't set a parent task as the task itself.",
     "4007": "You can't create a task relation with an invalid kind of relation.",
     "4008": "You can't create a task relation which already exists.",
@@ -1186,7 +1186,7 @@
     "6005": "The user is already a member of that team.",
     "6006": "Cannot delete the last team member.",
     "6007": "The team does not have access to the project to perform that action.",
-    "7002": "The user already has access to that project.",
+    "7002": "Naudotojas jau turi prieigą prie šio projekto.",
     "7003": "You do not have access to that project.",
     "8001": "Ši etiketė jau yra prie šios užduoties.",
     "8002": "Etiketė neegzistuoja.",
