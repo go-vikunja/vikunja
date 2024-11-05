@@ -1,5 +1,6 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import type { RouteLocation } from 'vue-router'
+import { createRouter, createWebHistory, type RouteLocation } from 'vue-router'
+import { routes, handleHotUpdate } from 'vue-router/auto-routes'
+
 import {saveLastVisited} from '@/helpers/saveLastVisited'
 
 import {getProjectViewId} from '@/helpers/projectView'
@@ -32,6 +33,7 @@ const router = createRouter({
 		return {left: 0, top: 0}
 	},
 	routes: [
+		...routes,
 		{
 			path: '/',
 			name: 'home',
@@ -385,6 +387,11 @@ const router = createRouter({
 		},
 	],
 })
+
+// Update routes at runtime without reloading the page
+if (import.meta.hot) { 
+	handleHotUpdate(router) 
+}
 
 export async function getAuthForRoute(to: RouteLocation, authStore) {
 	if (authStore.authUser || authStore.authLinkShare) {
