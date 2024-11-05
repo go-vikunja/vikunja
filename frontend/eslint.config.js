@@ -27,7 +27,16 @@ export default [
 				'globals': ['RouterView', 'RouterLink', 'Icon', 'Notifications', 'Modal', 'Card'],
 			}],
 			'vue/custom-event-name-casing': ['error', 'camelCase'],
-			'vue/define-macros-order': 'error',
+			'vue/define-macros-order': ['error', {
+				'order': [
+					'definePage',
+					'defineOptions',
+					'defineProps',
+					'defineEmits',
+					'defineModel', // FIXME: move above defineProps
+					'defineSlots',
+				],
+			}],
 			'vue/match-component-file-name': ['error', {
 				'extensions': ['.js', '.jsx', '.ts', '.tsx', '.vue'],
 				'shouldMatchCase': true,
@@ -84,5 +93,16 @@ export default [
 		// 	'cypress/*',
 		// ],
 	},
-
+	{
+		// unplugin-vue-router
+		// https://uvr.esm.is/guide/eslint.html#eslint
+		languageOptions: {
+			globals: {
+				'definePage': 'readonly',
+			},
+		},
+		settings: {
+			'import/core-modules': ['vue-router/auto-routes'],
+		},
+	},
 ]
