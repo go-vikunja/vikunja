@@ -327,8 +327,8 @@ importers:
         specifier: 9.30.0
         version: 9.30.0(eslint@9.14.0(jiti@1.21.6))
       happy-dom:
-        specifier: 15.10.1
-        version: 15.10.1
+        specifier: 15.10.2
+        version: 15.10.2
       histoire:
         specifier: 0.17.17
         version: 0.17.17(@types/node@22.9.0)(sass-embedded@1.80.6)(sass@1.80.6)(terser@5.31.6)(vite@5.4.10(@types/node@22.9.0)(sass-embedded@1.80.6)(sass@1.80.6)(terser@5.31.6))
@@ -376,7 +376,7 @@ importers:
         version: 5.1.0(vue@3.5.12(typescript@5.6.3))
       vitest:
         specifier: 2.1.4
-        version: 2.1.4(@types/node@22.9.0)(happy-dom@15.10.1)(jsdom@20.0.3)(sass-embedded@1.80.6)(sass@1.80.6)(terser@5.31.6)
+        version: 2.1.4(@types/node@22.9.0)(happy-dom@15.10.2)(jsdom@20.0.3)(sass-embedded@1.80.6)(sass@1.80.6)(terser@5.31.6)
       vue-tsc:
         specifier: 2.1.10
         version: 2.1.10(typescript@5.6.3)
@@ -3966,8 +3966,8 @@ packages:
     resolution: {integrity: sha512-5v6yZd4JK3eMI3FqqCouswVqwugaA9r4dNZB1wwcmrD02QkV5H0y7XBQW8QwQqEaZY1pM9aqORSORhJRdNK44Q==}
     engines: {node: '>=6.0'}
 
-  happy-dom@15.10.1:
-    resolution: {integrity: sha512-FuGnj/qIB4QnBL6fWmD7Wnh6STxevLgOVWB6+nopDGgWG1+t9CXkNB2ldZ+iqwD2UKxD2D0SU8el8A6AX6Q1+g==}
+  happy-dom@15.10.2:
+    resolution: {integrity: sha512-NbA5XrSovenJIIcfixCREX3ZnV7yHP4phhbfuxxf4CPn+LZpz/jIM9EqJ2DrPwgVDSMoAKH3pZwQvkbsSiCrUw==}
     engines: {node: '>=18.0.0'}
 
   hard-rejection@2.1.0:
@@ -10560,7 +10560,7 @@ snapshots:
       section-matter: 1.0.0
       strip-bom-string: 1.0.0
 
-  happy-dom@15.10.1:
+  happy-dom@15.10.2:
     dependencies:
       entities: 4.5.0
       webidl-conversions: 7.0.0
@@ -12985,7 +12985,7 @@ snapshots:
       sass-embedded: 1.80.6
       terser: 5.31.6
 
-  vitest@2.1.4(@types/node@22.9.0)(happy-dom@15.10.1)(jsdom@20.0.3)(sass-embedded@1.80.6)(sass@1.80.6)(terser@5.31.6):
+  vitest@2.1.4(@types/node@22.9.0)(happy-dom@15.10.2)(jsdom@20.0.3)(sass-embedded@1.80.6)(sass@1.80.6)(terser@5.31.6):
     dependencies:
       '@vitest/expect': 2.1.4
       '@vitest/mocker': 2.1.4(vite@5.4.10(@types/node@22.9.0)(sass-embedded@1.80.6)(sass@1.80.6)(terser@5.31.6))
@@ -13009,7 +13009,7 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 22.9.0
-      happy-dom: 15.10.1
+      happy-dom: 15.10.2
       jsdom: 20.0.3
     transitivePeerDependencies:
       - less
