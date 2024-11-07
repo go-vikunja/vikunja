@@ -8,10 +8,13 @@
 <script setup lang="ts">
 import {useTitle} from '@/composables/useTitle'
 
+// regarding the name of this component, see
+// https://github.com/posva/unplugin-vue-router/issues/412#issuecomment-2150643118
 definePage({
 	name: 'not-found',
-	alias: '/:pathMatch(.*)*',
 })
+
+defineOptions({ name: 'NotFound' })
 
 useTitle(() => '404')
 </script>

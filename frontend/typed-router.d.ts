@@ -23,7 +23,7 @@ declare module 'vue-router/auto-routes' {
     'user.login': RouteRecordInfo<'user.login', '/:auth?/login', { auth?: ParamValueZeroOrOne<true> }, { auth?: ParamValueZeroOrOne<false> }>,
     'user.password-reset.reset': RouteRecordInfo<'user.password-reset.reset', '/:auth?/password-reset', { auth?: ParamValueZeroOrOne<true> }, { auth?: ParamValueZeroOrOne<false> }>,
     'user.register': RouteRecordInfo<'user.register', '/:auth?/register', { auth?: ParamValueZeroOrOne<true> }, { auth?: ParamValueZeroOrOne<false> }>,
-    'not-found': RouteRecordInfo<'not-found', '/:path(.*)', { path: ParamValue<true> }, { path: ParamValue<false> }>,
+    'not-found': RouteRecordInfo<'not-found', '/:path(.*)*', { path?: ParamValueZeroOrMore<true> }, { path?: ParamValueZeroOrMore<false> }>,
     'about': RouteRecordInfo<'about', '/about', Record<never, never>, Record<never, never>>,
     'openid.auth': RouteRecordInfo<'openid.auth', '/auth/openid/:provider', { provider: ParamValue<true> }, { provider: ParamValue<false> }>,
     'filters.create': RouteRecordInfo<'filters.create', '/filters/new', Record<never, never>, Record<never, never>>,
