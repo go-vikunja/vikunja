@@ -5,7 +5,7 @@ import {isoToKebabDate} from '@/helpers/time/isoToKebabDate'
 import {parseDateProp} from '@/helpers/time/parseDateProp'
 import {parseBooleanProp} from '@/helpers/time/parseBooleanProp'
 import {useRouteFilters} from '@/composables/useRouteFilters'
-import {useGanttTaskList} from './useGanttTaskList'
+import {useGanttTaskList} from '@/composables/useGanttTaskList'
 
 import type {IProject} from '@/modelTypes/IProject'
 import type {TaskFilterParams} from '@/services/taskCollection'

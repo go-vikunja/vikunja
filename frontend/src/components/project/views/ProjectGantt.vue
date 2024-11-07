@@ -86,7 +86,7 @@ import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import TaskForm from '@/components/tasks/TaskForm.vue'
 
 import {createAsyncComponent} from '@/helpers/createAsyncComponent'
-import {useGanttFilters} from '../../../views/project/helpers/useGanttFilters'
+import {useGanttFilters} from '@/composables/useGanttFilters'
 import {RIGHTS} from '@/constants/rights'
 
 import type {DateISO} from '@/types/DateISO'

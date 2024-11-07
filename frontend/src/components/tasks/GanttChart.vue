@@ -54,7 +54,7 @@ import {parseKebabDate} from '@/helpers/time/parseKebabDate'
 
 import type {ITask, ITaskPartialWithId} from '@/modelTypes/ITask'
 import type {DateISO} from '@/types/DateISO'
-import type {GanttFilters} from '@/views/project/helpers/useGanttFilters'
+import type {GanttFilters} from '@/composables/useGanttFilters'
 
 import {
 	extendDayjs,
