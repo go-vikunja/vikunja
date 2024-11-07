@@ -30,17 +30,6 @@ const router = createRouter({
 	routes: [
 		...routes,
 		{
-			path: '/tasks/by/upcoming',
-			name: 'tasks.range',
-			component: () => import('@/views/tasks/ShowTasks.vue'),
-			props: route => ({
-				dateFrom: parseDateOrString(route.query.from as string, new Date()),
-				dateTo: parseDateOrString(route.query.to as string, getNextWeekDate()),
-				showNulls: route.query.showNulls === 'true',
-				showOverdue: route.query.showOverdue === 'true',
-			}),
-		},
-		{
 			// Redirect old list routes to the respective project routes
 			// see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#catch-all-404-not-found-route
 			path: '/lists:pathMatch(.*)*',
