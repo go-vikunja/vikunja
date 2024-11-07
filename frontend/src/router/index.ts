@@ -3,7 +3,6 @@ import { routes, handleHotUpdate } from 'vue-router/auto-routes'
 
 import {saveLastVisited} from '@/helpers/saveLastVisited'
 
-import {getProjectViewId} from '@/helpers/projectView'
 import {LINK_SHARE_HASH_PREFIX} from '@/constants/linkShareHash'
 
 import {useAuthStore} from '@/stores/auth'
@@ -37,25 +36,6 @@ const router = createRouter({
 					path: to.path.replace('/lists', '/projects'),
 					query: to.query,
 					hash: to.hash,
-				}
-			},
-		},
-		{
-			path: '/projects/:projectId',
-			name: 'project.index',
-			redirect(to) {
-				const viewId = getProjectViewId(Number(to.params.projectId as string))
-
-				if (viewId) {
-					console.debug('Replaced list view with', viewId)
-				}
-
-				return {
-					name: 'project.view',
-					params: {
-						projectId: parseInt(to.params.projectId as string),
-						viewId: viewId ?? 0,
-					},
 				}
 			},
 		},

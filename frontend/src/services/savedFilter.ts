@@ -87,7 +87,7 @@ export function useSavedFilter(projectId?: MaybeRefOrGetter<IProject['id']>) {
 	async function createFilter() {
 		filter.value = await filterService.create(filter.value)
 		await projectStore.loadAllProjects()
-		router.push({name: 'project.index', params: {projectId: getProjectId(filter.value)}})
+		router.push({name: 'project', params: {projectId: getProjectId(filter.value)}})
 	}
 
 	async function saveFilter() {

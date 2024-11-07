@@ -23,7 +23,7 @@
 					:key="view.id"
 					class="switch-view-button"
 					:class="{'is-active': view.id === viewId}"
-					:to="{ name: 'project.view', params: { projectId, viewId: view.id } }"
+					:to="{ name: 'project', params: { projectId, viewId: view.id } }"
 				>
 					{{ getViewTitle(view) }}
 				</BaseButton>

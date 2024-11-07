@@ -72,7 +72,7 @@ function ganttFiltersToRoute(filters: GanttFilters): RouteLocationRaw {
 	}
 
 	return {
-		name: 'project.view',
+		name: 'project',
 		params: {
 			projectId: filters.projectId,
 			viewId: filters.viewId,
@@ -104,7 +104,7 @@ export function useGanttFilters(route: Ref<RouteLocationNormalized>, viewId: Ref
 		ganttGetDefaultFilters,
 		ganttRouteToFilters,
 		ganttFiltersToRoute,
-		['project.view'],
+		['project'],
 	)
 
 	const {

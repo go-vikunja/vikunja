@@ -108,7 +108,7 @@ function useAuth() {
 			}
 
 			return router.push({
-				name: 'project.index',
+				name: 'project',
 				params: {
 					projectId, 
 				},

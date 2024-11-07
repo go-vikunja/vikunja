@@ -449,7 +449,7 @@ async function doAction(type: ACTION_TYPE, item: DoAction) {
 		case ACTION_TYPE.PROJECT:
 			closeQuickActions()
 			await router.push({
-				name: 'project.index',
+				name: 'project',
 				params: {projectId: (item as DoAction<IProject>).id},
 			})
 			break

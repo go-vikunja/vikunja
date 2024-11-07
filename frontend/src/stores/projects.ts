@@ -150,7 +150,7 @@ export const useProjectStore = defineStore('project', () => {
 			const createdProject = await projectService.create(project)
 			setProject(createdProject)
 			router.push({
-				name: 'project.index',
+				name: 'project',
 				params: { projectId: createdProject.id },
 			})
 			return createdProject
@@ -315,7 +315,7 @@ export function useProject(projectId: MaybeRefOrGetter<IProject['id']>) {
 
 		projectStore.setProject(duplicate.duplicatedProject)
 		success({message: t('project.duplicate.success')})
-		router.push({name: 'project.index', params: {projectId: duplicate.duplicatedProject.id}})
+		router.push({name: 'project', params: {projectId: duplicate.duplicatedProject.id}})
 	}
 
 	return {

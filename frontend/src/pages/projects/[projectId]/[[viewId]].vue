@@ -6,7 +6,7 @@ import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
 
-import {saveProjectView} from '@/helpers/projectView'
+import {getProjectViewId, saveProjectView} from '@/helpers/projectView'
 import ProjectService from '@/services/project'
 
 import ProjectList from '@/components/project/views/ProjectList.vue'
@@ -16,6 +16,32 @@ import ProjectKanban from '@/components/project/views/ProjectKanban.vue'
 
 import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/modelTypes/IProjectView'
 import {saveProjectToHistory} from '@/modules/projectHistory'
+
+definePage({
+	name: 'project',
+	beforeEnter(to) {
+		if (to.name !== 'project') {
+			throw new Error()
+		}
+
+		const viewIdFromRoute = Number(to.params?.viewId)
+
+		if (!viewIdFromRoute) {
+			return {
+				name: 'project',
+				replace: true,
+				params: {
+					projectId: to.params.projectId,
+					viewId: getProjectViewId(Number(to.params?.projectId)) ?? 0,
+				},
+			}
+		}
+	},
+	props: route => ({ 
+		projectId: parseInt(route.params.projectId as string),
+		viewId: route.params.viewId ? parseInt(route.params.viewId as string): undefined,
+	}),
+})
 
 const props = defineProps<{
 	projectId: number,
@@ -100,7 +126,7 @@ function redirectToDefaultViewIfNecessary() {
 
 		if (view) {
 			router.replace({
-				name: 'project.view',
+				name: 'project',
 				params: {
 					projectId: props.projectId,
 					viewId: view.id,

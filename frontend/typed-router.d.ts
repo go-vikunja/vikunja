@@ -33,7 +33,7 @@ declare module 'vue-router/auto-routes' {
     'labels.create': RouteRecordInfo<'labels.create', '/labels/new', Record<never, never>, Record<never, never>>,
     'migrate.service': RouteRecordInfo<'migrate.service', '/migrate/:service', { service: ParamValue<true> }, { service: ParamValue<false> }>,
     'project.create': RouteRecordInfo<'project.create', '/projects/:parentProjectId?/new', { parentProjectId?: ParamValueZeroOrOne<true> }, { parentProjectId?: ParamValueZeroOrOne<false> }>,
-    '/projects/[projectId]/[[viewId]]': RouteRecordInfo<'/projects/[projectId]/[[viewId]]', '/projects/:projectId/:viewId?', { projectId: ParamValue<true>, viewId?: ParamValueZeroOrOne<true> }, { projectId: ParamValue<false>, viewId?: ParamValueZeroOrOne<false> }>,
+    'project': RouteRecordInfo<'project', '/projects/:projectId/:viewId?', { projectId: ParamValue<true>, viewId?: ParamValueZeroOrOne<true> }, { projectId: ParamValue<false>, viewId?: ParamValueZeroOrOne<false> }>,
     'project.info': RouteRecordInfo<'project.info', '/projects/:projectId/info', { projectId: ParamValue<true> }, { projectId: ParamValue<false> }>,
     'project.settings.archive': RouteRecordInfo<'project.settings.archive', '/projects/:projectId/settings/archive', { projectId: ParamValue<true> }, { projectId: ParamValue<false> }>,
     'project.settings.background': RouteRecordInfo<'project.settings.background', '/projects/:projectId/settings/background', { projectId: ParamValue<true> }, { projectId: ParamValue<false> }>,
