@@ -8,6 +8,8 @@ import {LINK_SHARE_HASH_PREFIX} from '@/constants/linkShareHash'
 import {useAuthStore} from '@/stores/auth'
 import {useBaseStore} from '@/stores/base'
 
+console.log(routes)
+
 const router = createRouter({
 	history: createWebHistory(import.meta.env.BASE_URL),
 	scrollBehavior(to, from, savedPosition) {
