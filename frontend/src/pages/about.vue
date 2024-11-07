@@ -32,6 +32,8 @@ import {computed} from 'vue'
 
 import {useConfigStore} from '@/stores/config'
 
+definePage({ name: 'about' })
+
 const configStore = useConfigStore()
 const apiVersion = computed(() => configStore.version)
 </script>

@@ -34,6 +34,8 @@ import {useRedirectToLastVisited} from '@/composables/useRedirectToLastVisited'
 
 import {useAuthStore} from '@/stores/auth'
 
+definePage({ name: 'openid.auth' })
+
 const {t} = useI18n({useScope: 'global'})
 
 const route = useRoute()

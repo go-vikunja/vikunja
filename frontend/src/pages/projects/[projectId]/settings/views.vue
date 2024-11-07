@@ -16,6 +16,12 @@ import Message from '@/components/misc/Message.vue'
 import draggable from 'zhyswan-vuedraggable'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 
+definePage({
+	name: 'project.settings.views',
+	meta: { showAsModal: true },
+	props: route => ({ projectId: Number(route.params.projectId as string) }),
+})
+
 const props = defineProps<{
 	projectId: number
 }>()

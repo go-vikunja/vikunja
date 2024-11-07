@@ -47,6 +47,8 @@ import {ref, computed, reactive} from 'vue'
 import DataExportService from '@/services/dataExport'
 import {useAuthStore} from '@/stores/auth'
 
+definePage({ name: 'user.export.download' })
+
 const dataExportService = reactive(new DataExportService())
 const password = ref('')
 const errPasswordRequired = ref(false)

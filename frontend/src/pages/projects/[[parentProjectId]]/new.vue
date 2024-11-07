@@ -65,6 +65,14 @@ import {useProjectStore} from '@/stores/projects'
 import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
 import type {IProject} from '@/modelTypes/IProject'
 
+definePage({
+	name: 'project.create',
+	props: route => ({ parentProjectId: Number(route.params.parentProjectId as string) }),
+	meta: {
+		showAsModal: true,
+	},
+})
+
 const props = defineProps<{
 	parentProjectId?: number,
 }>()

@@ -114,6 +114,8 @@ import type {ICaldavToken} from '@/modelTypes/ICaldavToken'
 import {useConfigStore} from '@/stores/config'
 import {useAuthStore} from '@/stores/auth'
 
+definePage({ name: 'user.settings.caldav' })
+
 const copy = useCopyToClipboard()
 
 const {t} = useI18n({useScope: 'global'})

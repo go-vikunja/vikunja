@@ -54,6 +54,8 @@ import {useTitle} from '@/composables/useTitle'
 import {success} from '@/message'
 import {getRandomColorHex} from '@/helpers/color/randomColor'
 
+definePage({ name: 'labels.create' })
+
 const router = useRouter()
 
 const {t} = useI18n({useScope: 'global'})

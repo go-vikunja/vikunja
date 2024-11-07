@@ -110,6 +110,8 @@ import {useTitle} from '@/composables/useTitle'
 import {useConfigStore} from '@/stores/config'
 import type {ITotp} from '@/modelTypes/ITotp'
 
+definePage({ name: 'user.settings.totp' })
+
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.settings.totp.title')} - ${t('user.settings.title')}`)
 

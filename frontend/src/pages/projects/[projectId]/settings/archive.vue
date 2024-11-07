@@ -28,6 +28,11 @@ import {useTitle} from '@/composables/useTitle'
 import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
 
+definePage({
+	name: 'project.settings.archive',
+	meta: { showAsModal: true }
+})
+
 const {t} = useI18n({useScope: 'global'})
 const projectStore = useProjectStore()
 const router = useRouter()

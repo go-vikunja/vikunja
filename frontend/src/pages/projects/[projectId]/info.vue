@@ -25,6 +25,12 @@ import {computed} from 'vue'
 import DOMPurify from 'dompurify'
 import {useProjectStore} from '@/stores/projects'
 
+definePage({
+	name: 'project.info',
+	meta: { showAsModal: true },
+	props: route => ({ projectId: Number(route.params.projectId as string) }),
+})
+
 const props = defineProps<{
 	projectId: number
 }>()

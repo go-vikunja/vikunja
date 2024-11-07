@@ -48,6 +48,8 @@ import {useStorage} from '@vueuse/core'
 
 import {useProjectStore} from '@/stores/projects'
 
+definePage({ name: 'projects.index' })
+
 const {t} = useI18n()
 const projectStore = useProjectStore()
 

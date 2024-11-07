@@ -4,8 +4,6 @@ import { routes, handleHotUpdate } from 'vue-router/auto-routes'
 import {saveLastVisited} from '@/helpers/saveLastVisited'
 
 import {getProjectViewId} from '@/helpers/projectView'
-import {parseDateOrString} from '@/helpers/time/parseDateOrString'
-import {getNextWeekDate} from '@/helpers/time/getNextWeekDate'
 import {LINK_SHARE_HASH_PREFIX} from '@/constants/linkShareHash'
 
 import {useAuthStore} from '@/stores/auth'

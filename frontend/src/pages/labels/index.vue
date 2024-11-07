@@ -149,6 +149,8 @@ import {useLabelStore} from '@/stores/labels'
 
 import { useTitle } from '@/composables/useTitle'
 
+definePage({ name: 'labels.index' })
+
 const {t} = useI18n({useScope: 'global'})
 
 const labelEditLabel = ref<ILabel>(new LabelModel())

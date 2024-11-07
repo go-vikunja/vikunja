@@ -103,16 +103,6 @@
 	</div>
 </template>
 
-<script lang="ts">
-export default {
-	beforeRouteEnter(to) {
-		if (MIGRATORS[to.params.service as string] === undefined) {
-			return {name: 'not-found'}
-		}
-	},
-}
-</script>
-
 <script setup lang="ts">
 import {computed, ref, shallowReactive} from 'vue'
 import {useI18n} from 'vue-i18n'
@@ -129,6 +119,19 @@ import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {MIGRATORS, type Migrator} from '@/helpers/migrators'
 import {useTitle} from '@/composables/useTitle'
 import {useProjectStore} from '@/stores/projects'
+
+definePage({
+	name: 'migrate.service',
+	props: route => ({
+		service: route.params.service as string,
+		code: route.query.code as string,
+	}),
+	beforeEnter(to) {
+		if (MIGRATORS[to.params.service as string] === undefined) {
+			return {name: 'not-found'}
+		}
+	}
+})
 
 const props = defineProps<{
 	service: string,

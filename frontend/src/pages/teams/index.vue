@@ -46,6 +46,8 @@ import { useI18n } from 'vue-i18n'
 import TeamService from '@/services/team'
 import { useTitle } from '@/composables/useTitle'
 
+definePage({ name: 'teams.index' })
+
 const { t } = useI18n({useScope: 'global'})
 useTitle(() => t('team.title'))
 
