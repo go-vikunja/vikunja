@@ -559,7 +559,19 @@ func (Release) Windows() error {
 
 // Builds binaries for linux
 func (Release) Linux() error {
-	return runXgo("linux/*")
+	targets := []string{
+		"linux/amd64",
+		"linux/arm-5",
+		"linux/arm-6",
+		"linux/arm-7",
+		"linux/arm64",
+		"linux/mips",
+		"linux/mipsle",
+		"linux/mips64",
+		"linux/mips64le",
+		"linux/riscv64",
+	}
+	return runXgo(strings.Join(targets, ","))
 }
 
 // Builds binaries for darwin
