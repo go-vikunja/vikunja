@@ -103,7 +103,7 @@
 				{{ $t('project.webhooks.title') }}
 			</DropdownItem>
 			<DropdownItem
-				:to="{ name: 'project.createFromParent', params: { parentProjectId: project.id } }"
+				:to="{ name: 'project.create', params: { parentProjectId: project.id } }"
 				icon="layer-group"
 			>
 				{{ $t('menu.createProject') }}
