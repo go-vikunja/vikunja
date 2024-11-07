@@ -46,6 +46,7 @@ declare module 'vue-router/auto-routes' {
     '/projects/(projects)': RouteRecordInfo<'/projects/(projects)', '/projects/(projects)', Record<never, never>, Record<never, never>>,
     '/share/[share]/auth': RouteRecordInfo<'/share/[share]/auth', '/share/:share/auth', { share: ParamValue<true> }, { share: ParamValue<false> }>,
     '/task/[id]': RouteRecordInfo<'/task/[id]', '/task/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
+    'tasks.range': RouteRecordInfo<'tasks.range', '/tasks/by/upcoming', Record<never, never>, Record<never, never>>,
     '/teams/[id]/edit': RouteRecordInfo<'/teams/[id]/edit', '/teams/:id/edit', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     '/teams/(teams)': RouteRecordInfo<'/teams/(teams)', '/teams/(teams)', Record<never, never>, Record<never, never>>,
     '/teams/new': RouteRecordInfo<'/teams/new', '/teams/new', Record<never, never>, Record<never, never>>,
