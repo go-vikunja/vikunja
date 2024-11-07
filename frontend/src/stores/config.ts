@@ -6,7 +6,7 @@ import {HTTPFactory} from '@/helpers/fetcher'
 import {objectToCamelCase} from '@/helpers/case'
 
 import type {IProvider} from '@/types/IProvider'
-import type {MIGRATORS} from '@/views/migrate/migrators'
+import type {MIGRATORS} from '@/helpers/migrators'
 import {InvalidApiUrlProvidedError} from '@/helpers/checkAndSetApiUrl'
 
 export interface ConfigState {

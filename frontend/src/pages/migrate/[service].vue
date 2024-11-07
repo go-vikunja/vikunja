@@ -133,7 +133,7 @@ import AbstractMigrationFileService from '@/services/migrator/abstractMigrationF
 import {formatDateLong} from '@/helpers/time/formatDate'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 
-import {MIGRATORS, type Migrator} from './migrators'
+import {MIGRATORS, type Migrator} from '@/helpers/migrators'
 import {useTitle} from '@/composables/useTitle'
 import {useProjectStore} from '@/stores/projects'
 import {getErrorText} from '@/message'
