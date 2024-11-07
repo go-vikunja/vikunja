@@ -24,7 +24,7 @@
 import {computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 
-import {MIGRATORS} from './migrators'
+import {MIGRATORS} from '@/helpers/migrators'
 import {useTitle} from '@/composables/useTitle'
 import {useConfigStore} from '@/stores/config'
 

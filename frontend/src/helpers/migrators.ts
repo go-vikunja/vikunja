@@ -1,9 +1,9 @@
-import wunderlistIcon from './icons/wunderlist.jpg'
-import todoistIcon from './icons/todoist.svg?url'
-import trelloIcon from './icons/trello.svg?url'
-import microsoftTodoIcon from './icons/microsoft-todo.svg?url'
-import vikunjaFileIcon from './icons/vikunja-file.png?url'
-import tickTickIcon from './icons/ticktick.svg?url'
+import wunderlistIcon from '@/assets/migrators/wunderlist.jpg'
+import todoistIcon from '@/assets/migrators/todoist.svg?url'
+import trelloIcon from '@/assets/migrators/trello.svg?url'
+import microsoftTodoIcon from '@/assets/migrators/microsoft-todo.svg?url'
+import vikunjaFileIcon from '@/assets/migrators/vikunja-file.png?url'
+import tickTickIcon from '@/assets/migrators/ticktick.svg?url'
 
 export interface Migrator {
 	id: string
