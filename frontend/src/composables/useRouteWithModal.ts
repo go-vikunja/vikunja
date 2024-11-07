@@ -72,7 +72,7 @@ export function useRouteWithModal() {
 			}
 
 			const newRoute = {
-				name: 'project.view',
+				name: 'project',
 				params: {
 					projectId: baseStore.currentProject?.id,
 					viewId,

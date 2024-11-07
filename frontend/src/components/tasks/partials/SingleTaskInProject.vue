@@ -28,7 +28,7 @@
 					<RouterLink
 						v-if="showProject && typeof project !== 'undefined'"
 						v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
-						:to="{ name: 'project.index', params: { projectId: task.projectId } }"
+						:to="{ name: 'project', params: { projectId: task.projectId } }"
 						class="task-project mr-1"
 						:class="{'mr-2': task.hexColor !== ''}"
 						@click.stop
@@ -139,7 +139,7 @@
 			<RouterLink
 				v-if="showProjectSeparately"
 				v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
-				:to="{ name: 'project.index', params: { projectId: task.projectId } }"
+				:to="{ name: 'project', params: { projectId: task.projectId } }"
 				class="task-project"
 				@click.stop
 			>

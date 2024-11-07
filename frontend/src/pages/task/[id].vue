@@ -35,7 +35,7 @@
 					</a>
 					<RouterLink 
 						v-else
-						:to="{ name: 'project.index', params: { projectId: p.id } }"
+						:to="{ name: 'project', params: { projectId: p.id } }"
 					>
 						{{ getProjectTitle(p) }}
 					</RouterLink>
@@ -881,7 +881,7 @@ const showDeleteModal = ref(false)
 async function deleteTask() {
 	await taskStore.delete(task.value)
 	success({message: t('task.detail.deleteSuccess')})
-	router.push({name: 'project.index', params: {projectId: task.value.projectId}})
+	router.push({name: 'project', params: {projectId: task.value.projectId}})
 }
 
 async function toggleTaskDone() {

@@ -37,7 +37,7 @@
 			:aria-label="project.title"
 			:title="textOnlyDescription"
 			:to="{
-				name: 'project.index',
+				name: 'project',
 				params: { projectId: project.id}
 			}"
 		/>
