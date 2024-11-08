@@ -69,12 +69,12 @@ require (
 	github.com/wneessen/go-mail v0.5.2
 	github.com/yuin/goldmark v1.7.8
 	golang.org/x/crypto v0.28.0
-	golang.org/x/image v0.21.0
+	golang.org/x/image v0.22.0
 	golang.org/x/oauth2 v0.23.0
 	golang.org/x/sync v0.9.0
 	golang.org/x/sys v0.26.0
 	golang.org/x/term v0.25.0
-	golang.org/x/text v0.19.0
+	golang.org/x/text v0.20.0
 	gopkg.in/d4l3k/messagediff.v1 v1.2.1
 	mvdan.cc/xurls/v2 v2.5.0
 	src.techknowlogick.com/xgo v1.8.1-0.20241105013731-313dedef864f
