@@ -24,15 +24,18 @@ definePage({
 			throw new Error()
 		}
 
+		const projectId = Number(to.params?.projectId)
 		const viewIdFromRoute = Number(to.params?.viewId)
 
-		if (!viewIdFromRoute) {
+		const newViewid = getProjectViewId(projectId) ?? 0
+
+		if (!viewIdFromRoute || viewIdFromRoute !== newViewid) {
 			return {
 				name: 'project',
 				replace: true,
 				params: {
-					projectId: to.params.projectId,
-					viewId: getProjectViewId(Number(to.params?.projectId)) ?? 0,
+					projectId,
+					viewId: newViewid,
 				},
 			}
 		}
@@ -136,16 +139,16 @@ function redirectToDefaultViewIfNecessary() {
 	}
 }
 
-watch(
-	() => props.viewId,
-	redirectToDefaultViewIfNecessary,
-	{immediate: true},
-)
+// watch(
+// 	() => props.viewId,
+// 	redirectToDefaultViewIfNecessary,
+// 	{immediate: true},
+// )
 
-watch(
-	currentProject,
-	redirectToDefaultViewIfNecessary,
-)
+// watch(
+// 	currentProject,
+// 	redirectToDefaultViewIfNecessary,
+// )
 
 watchEffect(() => saveProjectToHistory({id: props.projectId}))
 watchEffect(() => saveProjectView(props.projectId, props.viewId))

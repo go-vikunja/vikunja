@@ -117,7 +117,7 @@
 
 <script setup lang="ts">
 import {useDebounceFn} from '@vueuse/core'
-import {computed, onBeforeMount, reactive, ref, toRaw} from 'vue'
+import {computed, reactive, ref, toRaw} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import router from '@/router'
@@ -132,19 +132,18 @@ import {validatePassword} from '@/helpers/validatePasswort'
 definePage({
 	name: 'user.register',
 	meta: { title: 'user.auth.createAccount' },
+	beforeEnter() {
+		const authStore = useAuthStore()
+
+		if (authStore.authenticated) {
+			router.push({ name: 'home' })
+		}
+	},
 })
 
 const {t} = useI18n()
 const authStore = useAuthStore()
 const configStore = useConfigStore()
-
-// FIXME: use the `beforeEnter` hook of vue-router
-// Check if the user is already logged in, if so, redirect them to the homepage
-onBeforeMount(() => {
-	if (authStore.authenticated) {
-		router.push({name: 'home'})
-	}
-})
 
 const credentials = reactive({
 	username: '',
