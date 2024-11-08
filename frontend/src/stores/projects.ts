@@ -44,6 +44,24 @@ export const useProjectStore = defineStore('project', () => {
 		return (id: IProject['id']) => projectsArray.value.filter(p => p.parentProjectId === id)
 	})
 
+	const getAncestors = computed(() => {
+		return (project: IProject): IProject[] => {
+			if (typeof project === 'undefined') {
+				return []
+			}
+
+			if (!project?.parentProjectId) {
+				return [project]
+			}
+
+			const parentProject = projects.value[project.parentProjectId]
+			return [
+				...(parentProject ? getAncestors.value(parentProject) : []),
+				project,
+			]
+		}
+	})
+
 	const findProjectByExactname = computed(() => {
 		return (name: string) => {
 			const project = projectsArray.value.find(l => {
@@ -200,22 +218,6 @@ export const useProjectStore = defineStore('project', () => {
 		loadedProjects.forEach(p => add(p))
 
 		return loadedProjects
-	}
-
-	function getAncestors(project: IProject): IProject[] {
-		if (typeof project === 'undefined') {
-			return []
-		}
-
-		if (!project?.parentProjectId) {
-			return [project]
-		}
-
-		const parentProject = projects.value[project.parentProjectId]
-		return [
-			...(parentProject ? getAncestors(parentProject) : []),
-			project,
-		]
 	}
 	
 	function setProjectView(view: IProjectView) {
