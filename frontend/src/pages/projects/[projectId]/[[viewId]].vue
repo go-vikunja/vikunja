@@ -18,15 +18,18 @@ definePage({
 			throw new Error()
 		}
 
+		const projectId = Number(to.params?.projectId)
 		const viewIdFromRoute = Number(to.params?.viewId)
 
-		if (!viewIdFromRoute) {
+		const newViewid = getProjectViewId(projectId) ?? 0
+
+		if (!viewIdFromRoute || viewIdFromRoute !== newViewid) {
 			return {
 				name: 'project',
 				replace: true,
 				params: {
-					projectId: to.params.projectId,
-					viewId: getProjectViewId(Number(to.params?.projectId)) ?? 0,
+					projectId,
+					viewId: newViewid,
 				},
 			}
 		}
@@ -79,16 +82,16 @@ function redirectToDefaultViewIfNecessary() {
 	}
 }
 
-watch(
-	() => props.viewId,
-	redirectToDefaultViewIfNecessary,
-	{immediate: true},
-)
+// watch(
+// 	() => props.viewId,
+// 	redirectToDefaultViewIfNecessary,
+// 	{immediate: true},
+// )
 
-watch(
-	() => projectStore.projects[props.projectId],
-	redirectToDefaultViewIfNecessary,
-)
+// watch(
+// 	() => projectStore.projects[props.projectId],
+// 	redirectToDefaultViewIfNecessary,
+// )
 
 // using a watcher instead of beforeEnter because beforeEnter is not called when only the viewId changes
 watch(
