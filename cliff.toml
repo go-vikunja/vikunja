@@ -17,6 +17,7 @@ body = """
         {% raw %}  {% endraw %}- **BREAKING**: {{commit.breaking_description}}
         {%- endif -%}
     {%- endfor -%}
+		{% raw %}\n{% endraw %}\
     {%- for commit in commits %}
         {%- if commit.scope -%}
         {% else -%}
@@ -56,4 +57,3 @@ commit_parsers = [
     { body = ".*security", group = "Security"},
     { message = ".*", group = "Other", default_scope = "other"}, # Everything that's not a conventional commit goes into the "Other" category
 ]
-
