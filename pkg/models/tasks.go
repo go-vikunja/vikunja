@@ -956,6 +956,10 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 		if err != nil {
 			return err
 		}
+		_, err = s.Where("task_id = ?", t.ID).Delete(&TaskPosition{})
+		if err != nil {
+			return err
+		}
 
 		for _, view := range views {
 			var bucketID = view.DoneBucketID
