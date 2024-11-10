@@ -16,6 +16,7 @@ import svgLoader from 'vite-svg-loader'
 import postcssPresetEnv from 'postcss-preset-env'
 import postcssEasingGradients from 'postcss-easing-gradients'
 import tailwindcss from 'tailwindcss'
+import vueDevTools from 'vite-plugin-vue-devtools'
 
 const pathSrc = fileURLToPath(new URL('./src', import.meta.url)).replaceAll('\\', '/')
 
@@ -195,6 +196,9 @@ export default defineConfig(({mode}) => {
 						},
 					],
 				},
+			}),
+			vueDevTools({
+				launchEditor: env.VUE_DEVTOOLS_LAUNCH_EDITOR || 'code'
 			}),
 			viteSentry(getSentryConfig(env)),
 		],

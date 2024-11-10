@@ -16,6 +16,8 @@ interface ImportMetaEnv {
 	readonly SENTRY_PROJECT?: string
 
 	readonly VITE_IS_ONLINE: boolean
+
+	readonly VUE_DEVTOOLS_LAUNCH_EDITOR: VitePluginVueDevToolsOptions.launchEditor
 }
 
 interface ImportMeta {
