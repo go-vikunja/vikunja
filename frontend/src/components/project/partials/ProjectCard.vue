@@ -58,7 +58,7 @@ import type {IProject} from '@/modelTypes/IProject'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 
-import {useProjectBackground} from './useProjectBackground'
+import {useProjectBackground} from '@/composables/useProjectBackground'
 import {useProjectStore} from '@/stores/projects'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 
