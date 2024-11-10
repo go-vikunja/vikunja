@@ -837,7 +837,6 @@ steps:
       repo: vikunja/vikunja
       tags: unstable
       platforms:
-        - linux/386
         - linux/amd64
         - linux/arm/v6
         - linux/arm/v7
@@ -869,7 +868,6 @@ steps:
         from_secret: docker_password
       repo: vikunja/vikunja
       platforms:
-        - linux/386
         - linux/amd64
         - linux/arm/v6
         - linux/arm/v7
@@ -1352,6 +1350,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 0cc8af10e08998aeae9137ccb2c081997542739e99ec1545c381f779951e0166
+hmac: 7fc1cb2b0cfdc84d7eda25ce75dd56446fc01060c03af89c91043f095e92a2b3
 
 ...
