@@ -159,7 +159,6 @@
     "histoire": "0.17.17",
     "postcss": "8.4.49",
     "postcss-easing-gradients": "3.0.1",
-    "postcss-easings": "4.0.0",
     "postcss-preset-env": "10.1.0",
     "rollup": "4.26.0",
     "rollup-plugin-visualizer": "5.12.0",

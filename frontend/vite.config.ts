@@ -14,7 +14,6 @@ import {visualizer} from 'rollup-plugin-visualizer'
 import viteSentry, {type ViteSentryPluginOptions} from 'vite-plugin-sentry'
 import svgLoader from 'vite-svg-loader'
 import postcssPresetEnv from 'postcss-preset-env'
-import postcssEasings from 'postcss-easings'
 import postcssEasingGradients from 'postcss-easing-gradients'
 import tailwindcss from 'tailwindcss'
 
@@ -107,7 +106,6 @@ export default defineConfig(({mode}) => {
 			postcss: {
 				plugins: [
 					tailwindcss(),
-					postcssEasings(),
 					postcssEasingGradients(),
 					postcssPresetEnv(),
 				],

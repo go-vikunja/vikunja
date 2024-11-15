@@ -338,9 +338,6 @@ importers:
       postcss-easing-gradients:
         specifier: 3.0.1
         version: 3.0.1
-      postcss-easings:
-        specifier: 4.0.0
-        version: 4.0.0(postcss@8.4.49)
       postcss-preset-env:
         specifier: 10.1.0
         version: 10.1.0(postcss@8.4.49)
@@ -5034,12 +5031,6 @@ packages:
   postcss-easing-gradients@3.0.1:
     resolution: {integrity: sha512-UrOKb4cenjGmMmrheETw7Cjnn/IKn3xgTvHs92b0sSwMhKgeZKxJpduGRjYZ8wgpu3zOzzgQpRwOLhhtMofayA==}
     engines: {node: '>=6.0.0'}
-
-  postcss-easings@4.0.0:
-    resolution: {integrity: sha512-KNpwHA3mTnf0UWcdwahQDaz7DDJ6QteVwdlLff98se854p6pyQW9iofwrD05vtlp33AAAxuUGCOhYwERRJGy6Q==}
-    engines: {node: '>=16.0'}
-    peerDependencies:
-      postcss: ^8.1.0
 
   postcss-focus-visible@10.0.1:
     resolution: {integrity: sha512-U58wyjS/I1GZgjRok33aE8juW9qQgQUNwTSdxQGuShHzwuYdcklnvK/+qOWX1Q9kr7ysbraQ6ht6r+udansalA==}
@@ -11635,11 +11626,6 @@ snapshots:
       easing-coordinates: 2.0.2
       postcss: 7.0.39
       postcss-value-parser: 3.3.1
-
-  postcss-easings@4.0.0(postcss@8.4.49):
-    dependencies:
-      postcss: 8.4.49
-      postcss-value-parser: 4.2.0
 
   postcss-focus-visible@10.0.1(postcss@8.4.49):
     dependencies:

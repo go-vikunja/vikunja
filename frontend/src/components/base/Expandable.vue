@@ -134,11 +134,16 @@ function removeHeight(el: HTMLElement) {
 <style lang="scss" scoped>
 $transition-time: 300ms;
 
+// https://easings.net/#easeInQuint
+$ease-in-quint: cubic-bezier(0.64, 0, 0.78, 0);
+// https://easings.net/#easeInOutQuint
+$ease-in-out-quint: cubic-bezier(0.83, 0, 0.17, 1);
+
 .expandable-slide-enter-active,
 .expandable-slide-leave-active {
   transition:
-    opacity $transition-time ease-in-quint,
-    height $transition-time ease-in-out-quint;
+    opacity $transition-time $ease-in-quint,
+    height $transition-time $ease-in-out-quint;
   overflow: hidden;
 }
 
