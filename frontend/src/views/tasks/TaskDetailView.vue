@@ -587,6 +587,7 @@
 <script lang="ts" setup>
 import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted, onBeforeUnmount} from 'vue'
 import {useRouter, type RouteLocation} from 'vue-router'
+import {storeToRefs} from 'pinia'
 import {useI18n} from 'vue-i18n'
 import {unrefElement} from '@vueuse/core'
 import {klona} from 'klona/lite'
@@ -657,6 +658,7 @@ const {t} = useI18n({useScope: 'global'})
 
 const projectStore = useProjectStore()
 const attachmentStore = useAttachmentStore()
+const {hasAttachments} = storeToRefs(attachmentStore)
 const taskStore = useTaskStore()
 const kanbanStore = useKanbanStore()
 const authStore = useAuthStore()
@@ -709,8 +711,6 @@ const color = computed(() => {
 
 	return color
 })
-
-const hasAttachments = computed(() => attachmentStore.attachments.length > 0)
 
 const isModal = computed(() => Boolean(props.backdropView))
 
