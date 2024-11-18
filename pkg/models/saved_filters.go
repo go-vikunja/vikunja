@@ -123,6 +123,11 @@ func (sf *SavedFilter) toProject() *Project {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /filters [put]
 func (sf *SavedFilter) Create(s *xorm.Session, auth web.Auth) (err error) {
+	_, err = getTaskFiltersFromFilterString(sf.Filters.Filter, sf.Filters.FilterTimezone)
+	if err != nil {
+		return
+	}
+
 	sf.OwnerID = auth.GetID()
 	sf.ID = 0
 	_, err = s.Insert(sf)
@@ -188,6 +193,11 @@ func (sf *SavedFilter) Update(s *xorm.Session, _ web.Auth) error {
 
 	if sf.Filters == nil {
 		sf.Filters = origFilter.Filters
+	}
+
+	_, err = getTaskFiltersFromFilterString(sf.Filters.Filter, sf.Filters.FilterTimezone)
+	if err != nil {
+		return err
 	}
 
 	_, err = s.
