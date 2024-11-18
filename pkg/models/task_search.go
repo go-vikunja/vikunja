@@ -59,7 +59,7 @@ func getOrderByDBStatement(opts *taskSearchOptions) (orderby string, err error) 
 			prefix = "task_positions."
 		}
 
-		if param.sortBy == taskPropertyID {
+		if param.sortBy == taskPropertyID || param.sortBy == taskPropertyCreated || param.sortBy == taskPropertyUpdated {
 			prefix = "tasks."
 		}
 
