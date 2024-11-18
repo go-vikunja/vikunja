@@ -1,4 +1,4 @@
-import {ref, readonly} from 'vue'
+import {ref, computed, readonly} from 'vue'
 import {defineStore, acceptHMRUpdate} from 'pinia'
 import {findIndexById} from '@/helpers/utils'
 
@@ -23,11 +23,14 @@ export const useAttachmentStore = defineStore('attachment', () => {
 		console.debug('Remove attachement', id)
 	}
 
+	const hasAttachments = computed(() => attachments.value.length > 0)
+
 	return {
 		attachments: readonly(attachments),
 		set,
 		add,
 		removeById,
+		hasAttachments,
 	}
 })
 
