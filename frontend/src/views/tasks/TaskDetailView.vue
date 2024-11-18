@@ -2,13 +2,13 @@
 	<div
 		class="loader-container task-view-container"
 		:class="{
-			'is-loading': taskService.loading || !visible,
+			'is-loading': taskService.loading || !isReady,
 			'is-modal': isModal,
 		}"
 	>
 		<!-- Removing everything until the task is loaded to prevent empty initialization of other components -->
 		<div
-			v-if="visible"
+			v-if="isReady"
 			class="task-view"
 		>
 			<Heading
@@ -695,7 +695,7 @@ onBeforeUnmount(() => {
 const taskColor = ref<ITask['hexColor']>('')
 
 // Used to avoid flashing of empty elements if the task content is not yet loaded.
-const visible = ref(false)
+const isReady = ref(false)
 
 const project = computed(() => projectStore.projects[task.value.projectId])
 
@@ -743,7 +743,7 @@ watch(
 		} finally {
 			await nextTick()
 			scrollToHeading()
-			visible.value = true
+			isReady.value = true
 		}
 	}, {immediate: true})
 
