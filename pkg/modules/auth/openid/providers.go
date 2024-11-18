@@ -41,7 +41,11 @@ func GetAllProviders() (providers []*Provider, err error) {
 			return nil, nil
 		}
 
-		rawProvider := rawProviders.(map[string]interface{})
+		rawProvider, is := rawProviders.(map[string]interface{})
+		if !is {
+			log.Criticalf("It looks like your openid configuration is in the wrong format. Please check the docs for the correct format.")
+			return
+		}
 
 		for key, p := range rawProvider {
 			var pi map[string]interface{}
