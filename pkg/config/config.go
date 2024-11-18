@@ -440,17 +440,9 @@ func getConfigValueFromFile(configKey string) string {
 	return ""
 }
 
-func readConfigvaluesFromFiles() {
+func readConfigValuesFromFiles() {
 	keys := viper.AllKeys()
 	for _, key := range keys {
-		if strings.HasSuffix(key, "_file") {
-			value := getConfigValueFromFile(key)
-			if value != "" {
-				viper.Set(strings.TrimSuffix(key, "_file"), value)
-			}
-			continue
-		}
-
 		// Env is evaluated manually at runtime, so we need to check this for each key
 		value := getConfigValueFromFile(key + ".file")
 		if value != "" {
@@ -503,7 +495,7 @@ func InitConfig() {
 		log.Info("No config file found, using default or config from environment variables.")
 	}
 
-	readConfigvaluesFromFiles()
+	readConfigValuesFromFiles()
 
 	if RateLimitStore.GetString() == "keyvalue" {
 		RateLimitStore.Set(KeyvalueType.GetString())
