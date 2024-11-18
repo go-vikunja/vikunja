@@ -421,7 +421,10 @@ func InitDefaultConfig() {
 	AutoTLSRenewBefore.setDefault("720h") // 30days in hours
 }
 
-func getConfigValueFromFile(configKey string) string {
+func GetConfigValueFromFile(configKey string) string {
+	if !strings.HasSuffix(configKey, ".file") {
+		configKey += ".file"
+	}
 	var valuePath = viper.GetString(configKey)
 	if valuePath == "" {
 		return ""
@@ -433,7 +436,7 @@ func getConfigValueFromFile(configKey string) string {
 
 	contents, err := os.ReadFile(valuePath)
 	if err == nil {
-		return string(contents)
+		return strings.Trim(string(contents), "\n")
 	}
 
 	log.Fatalf("Failed to read the config file at %s for key %s: %v", valuePath, configKey, err)
@@ -448,7 +451,7 @@ func readConfigValuesFromFiles() {
 			continue
 		}
 		// Env is evaluated manually at runtime, so we need to check this for each key
-		value := getConfigValueFromFile(key + ".file")
+		value := GetConfigValueFromFile(key)
 		if value != "" {
 			viper.Set(strings.TrimSuffix(key, ".file"), value)
 		}
