@@ -24,14 +24,14 @@ import (
 	"strconv"
 	"strings"
 
-	"code.vikunja.io/api/pkg/web/handler"
-
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
+	"code.vikunja.io/api/pkg/web/handler"
+
 	"github.com/coreos/go-oidc/v3/oidc"
 	petname "github.com/dustinkirkland/golang-petname"
 	"github.com/labstack/echo/v4"
@@ -100,7 +100,6 @@ func HandleCallback(c echo.Context) error {
 	provider, err := GetProvider(providerKey)
 	log.Debugf("Provider: %v", provider)
 	if err != nil {
-		log.Error(err)
 		return handler.HandleHTTPError(err)
 	}
 	if provider == nil {
@@ -114,7 +113,6 @@ func HandleCallback(c echo.Context) error {
 	if err != nil {
 		var rerr *oauth2.RetrieveError
 		if errors.As(err, &rerr) {
-			log.Error(err)
 
 			details := make(map[string]interface{})
 			if err := json.Unmarshal(rerr.Body, &details); err != nil {
@@ -122,6 +120,7 @@ func HandleCallback(c echo.Context) error {
 				return handler.HandleHTTPError(err)
 			}
 
+			log.Error(err)
 			return c.JSON(http.StatusBadRequest, map[string]interface{}{
 				"message": "Could not authenticate against third party.",
 				"details": details,

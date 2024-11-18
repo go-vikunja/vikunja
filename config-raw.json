@@ -665,9 +665,10 @@
                         },
                         {
                             "key": "providers",
-                            "comment": "A list of enabled providers. This expects an array, which means you cannot use enviroment variables.",
+                            "comment": "A list of enabled providers. You can freely choose the `<provider key>`. Note that you must add at least one key to a config file if you want to read values from an environment variable as the provider won't be known to Vikunja otherwise.",
                             "children": [
                                 {
+                                    "key": "<provider key>",
                                     "children": [
                                         {
                                             "key": "name",

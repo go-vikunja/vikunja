@@ -17,14 +17,12 @@
 package openid
 
 import (
-	"regexp"
 	"strconv"
-	"strings"
-
-	"code.vikunja.io/api/pkg/log"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
+
 	"github.com/coreos/go-oidc/v3/oidc"
 	"golang.org/x/oauth2"
 )
@@ -43,14 +41,14 @@ func GetAllProviders() (providers []*Provider, err error) {
 			return nil, nil
 		}
 
-		rawProvider := rawProviders.([]interface{})
+		rawProvider := rawProviders.(map[string]interface{})
 
-		for _, p := range rawProvider {
+		for key, p := range rawProvider {
 			var pi map[string]interface{}
 			var is bool
 			pi, is = p.(map[string]interface{})
 			// JSON config is a map[string]interface{}, other providers are not. Under the hood they are all strings so
-			// it is save to cast.
+			// it is safe to cast.
 			if !is {
 				pis := p.(map[interface{}]interface{})
 				pi = make(map[string]interface{}, len(pis))
@@ -59,21 +57,21 @@ func GetAllProviders() (providers []*Provider, err error) {
 				}
 			}
 
-			provider, err := getProviderFromMap(pi)
+			provider, err := getProviderFromMap(pi, key)
 
 			if err != nil {
-				if provider != nil {
-					log.Errorf("Error while getting openid provider %s: %s", provider.Name, err)
-					continue
-				}
-				log.Errorf("Error while getting openid provider: %s", err)
+				log.Errorf("Error while getting openid provider %s: %s", key, err)
+				continue
+			}
+
+			if provider == nil {
+				log.Errorf("Could not openid provider %s, please check your config", key)
 				continue
 			}
 
 			providers = append(providers, provider)
 
-			k := getKeyFromName(pi["name"].(string))
-			err = keyvalue.Put("openid_provider_"+k, provider)
+			err = keyvalue.Put("openid_provider_"+key, provider)
 			if err != nil {
 				return nil, err
 			}
@@ -107,18 +105,28 @@ func GetProvider(key string) (provider *Provider, err error) {
 	return
 }
 
-func getKeyFromName(name string) string {
-	reg := regexp.MustCompile("[^a-z0-9]+")
-	return reg.ReplaceAllString(strings.ToLower(name), "")
-}
+func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provider, err error) {
 
-func getProviderFromMap(pi map[string]interface{}) (provider *Provider, err error) {
+	for _, configKey := range []string{
+		// Values from environment variables are evaluated at runtime, hence we need to check them explicitly
+		// through viper to make sure we catch all of them.
+		"name",
+		"logouturl",
+		"scope",
+		"authurl",
+		"clientsecret",
+		"clientid",
+	} {
+		valueFromFile := config.GetConfigValueFromFile("auth.openid.providers." + key + "." + configKey)
+		if valueFromFile != "" {
+			pi[configKey] = valueFromFile
+		}
+	}
+
 	name, is := pi["name"].(string)
 	if !is {
 		return nil, nil
 	}
-
-	k := getKeyFromName(name)
 
 	logoutURL, ok := pi["logouturl"].(string)
 	if !ok {
@@ -130,8 +138,8 @@ func getProviderFromMap(pi map[string]interface{}) (provider *Provider, err erro
 		scope = "openid profile email"
 	}
 	provider = &Provider{
-		Name:            pi["name"].(string),
-		Key:             k,
+		Name:            name,
+		Key:             key,
 		AuthURL:         pi["authurl"].(string),
 		OriginalAuthURL: pi["authurl"].(string),
 		ClientSecret:    pi["clientsecret"].(string),

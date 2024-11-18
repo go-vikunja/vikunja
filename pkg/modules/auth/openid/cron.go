@@ -17,13 +17,13 @@
 package openid
 
 import (
-	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/models"
-	"xorm.io/builder"
-	"xorm.io/xorm"
-
 	"code.vikunja.io/api/pkg/cron"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/models"
+
+	"xorm.io/builder"
+	"xorm.io/xorm"
 )
 
 func RemoveEmptySSOTeams(s *xorm.Session) (err error) {

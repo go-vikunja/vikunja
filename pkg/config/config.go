@@ -443,6 +443,10 @@ func getConfigValueFromFile(configKey string) string {
 func readConfigValuesFromFiles() {
 	keys := viper.AllKeys()
 	for _, key := range keys {
+		if strings.Contains(key, "auth.openid.providers") {
+			// Setting openid provider values will remove everything but the value from file
+			continue
+		}
 		// Env is evaluated manually at runtime, so we need to check this for each key
 		value := getConfigValueFromFile(key + ".file")
 		if value != "" {
