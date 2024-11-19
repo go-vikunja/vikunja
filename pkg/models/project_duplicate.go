@@ -216,6 +216,16 @@ func duplicateViews(s *xorm.Session, pd *ProjectDuplicate, doer web.Auth, taskMa
 		bucketMap[oldBucketID] = b.ID
 	}
 
+	for _, view := range views {
+		if view.DoneBucketID != 0 {
+			view.DoneBucketID = bucketMap[view.DoneBucketID]
+			err = view.Update(s, doer)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	oldTaskBuckets := []*TaskBucket{}
 	err = s.In("bucket_id", oldBucketIDs).Find(&oldTaskBuckets)
 	if err != nil {
