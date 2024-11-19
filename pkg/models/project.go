@@ -136,7 +136,7 @@ var FavoritesPseudoProject = Project{
 			Title:     "List",
 			ViewKind:  ProjectViewKindList,
 			Position:  100,
-			Filter:    "done = false",
+			Filter:    &TaskCollection{Filter: "done = false"},
 		},
 		{
 			ID:        -2,

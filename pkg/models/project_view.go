@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/web"
+
 	"xorm.io/xorm"
 )
 
@@ -130,7 +131,7 @@ type ProjectView struct {
 	ViewKind ProjectViewKind `xorm:"not null" json:"view_kind"`
 
 	// The filter query to match tasks by. Check out https://vikunja.io/docs/filters for a full explanation.
-	Filter string `xorm:"text null default null" query:"filter" json:"filter"`
+	Filter *TaskCollection `xorm:"json null default null" query:"filter" json:"filter"`
 	// The position of this view in the list. The list of all views will be sorted by this parameter.
 	Position float64 `xorm:"double null" json:"position"`
 
@@ -273,6 +274,13 @@ func (pv *ProjectView) Create(s *xorm.Session, a web.Auth) (err error) {
 }
 
 func createProjectView(s *xorm.Session, p *ProjectView, a web.Auth, createBacklogBucket bool, addExistingTasksToView bool) (err error) {
+	if p.Filter != nil && p.Filter.Filter != "" {
+		_, err = getTaskFiltersFromFilterString(p.Filter.Filter, p.Filter.FilterTimezone)
+		if err != nil {
+			return
+		}
+	}
+
 	p.ID = 0
 	_, err = s.Insert(p)
 	if err != nil {
@@ -348,6 +356,13 @@ func addTasksToView(s *xorm.Session, a web.Auth, pv *ProjectView, b *Bucket) (er
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/views/{id} [post]
 func (pv *ProjectView) Update(s *xorm.Session, _ web.Auth) (err error) {
+	if pv.Filter != nil && pv.Filter.Filter != "" {
+		_, err = getTaskFiltersFromFilterString(pv.Filter.Filter, pv.Filter.FilterTimezone)
+		if err != nil {
+			return
+		}
+	}
+
 	// Check if the project view exists
 	_, err = GetProjectViewByIDAndProject(s, pv.ID, pv.ProjectID)
 	if err != nil {
@@ -428,7 +443,9 @@ func CreateDefaultViewsForProject(s *xorm.Session, project *Project, a web.Auth,
 		Position:  100,
 	}
 	if createDefaultListFilter {
-		list.Filter = "done = false"
+		list.Filter = &TaskCollection{
+			Filter: "done = false",
+		}
 	}
 	err = createProjectView(s, list, a, createBacklogBucket, true)
 	if err != nil {
