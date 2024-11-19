@@ -230,7 +230,14 @@ func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, projects []*Pr
 
 			var bucketFilter = taskPropertyBucketID + " = " + strconv.FormatInt(id, 10)
 			if view.BucketConfigurationMode == BucketConfigurationModeFilter {
-				bucketFilter = "(" + view.BucketConfiguration[id].Filter + ")"
+				bucketFilter = ""
+				if view.BucketConfiguration[id].Filter.Filter != "" {
+					bucketFilter = "(" + view.BucketConfiguration[id].Filter.Filter + ")"
+				}
+
+				if view.BucketConfiguration[id].Filter.Search != "" {
+					opts.search = view.BucketConfiguration[id].Filter.Search
+				}
 			}
 
 			var filterString string

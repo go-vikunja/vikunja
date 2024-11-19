@@ -116,8 +116,8 @@ func (p *BucketConfigurationModeKind) UnmarshalJSON(bytes []byte) error {
 }
 
 type ProjectViewBucketConfiguration struct {
-	Title  string `json:"title"`
-	Filter string `json:"filter"`
+	Title  string          `json:"title"`
+	Filter *TaskCollection `json:"filter"`
 }
 
 type ProjectView struct {
@@ -278,6 +278,17 @@ func createProjectView(s *xorm.Session, p *ProjectView, a web.Auth, createBacklo
 		_, err = getTaskFiltersFromFilterString(p.Filter.Filter, p.Filter.FilterTimezone)
 		if err != nil {
 			return
+		}
+	}
+
+	if p.BucketConfigurationMode == BucketConfigurationModeFilter {
+		for _, configuration := range p.BucketConfiguration {
+			if configuration.Filter != nil && configuration.Filter.Filter != "" {
+				_, err = getTaskFiltersFromFilterString(configuration.Filter.Filter, configuration.Filter.FilterTimezone)
+				if err != nil {
+					return
+				}
+			}
 		}
 	}
 
