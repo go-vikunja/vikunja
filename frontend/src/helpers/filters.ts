@@ -60,6 +60,10 @@ export const FILTER_JOIN_OPERATOR = [
 
 export const FILTER_OPERATORS_REGEX = '(&lt;|&gt;|&lt;=|&gt;=|=|!=|not in|in)'
 
+export function hasFilterQuery(filter: string): boolean {
+	return FILTER_OPERATORS.find(o => filter.includes(o)) || false
+}
+
 export function getFilterFieldRegexPattern(field: string): RegExp {
 	return new RegExp('(' + field + '\\s*' + FILTER_OPERATORS_REGEX + '\\s*)([\'"]?)([^\'"&|()<]+\\1?)?', 'ig')
 }

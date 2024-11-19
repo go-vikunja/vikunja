@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import type {IProjectView} from '@/modelTypes/IProjectView'
+import type {IFilter} from '@/modelTypes/ISavedFilter'
 import XButton from '@/components/input/Button.vue'
 import FilterInput from '@/components/project/partials/FilterInput.vue'
 import {ref, onBeforeMount} from 'vue'
-import {transformFilterStringForApi, transformFilterStringFromApi} from '@/helpers/filters'
+import {hasFilterQuery, transformFilterStringForApi, transformFilterStringFromApi} from '@/helpers/filters'
 import {useLabelStore} from '@/stores/labels'
 import {useProjectStore} from '@/stores/projects'
 import FilterInputDocs from '@/components/project/partials/FilterInputDocs.vue'
@@ -33,10 +34,19 @@ onBeforeMount(() => {
 		labelId => labelStore.getLabelById(labelId)?.title || null,
 		projectId => projectStore.projects[projectId]?.title || null,
 	)
+	
+	const filterString = transform(props.modelValue.filter.filter)
+
+	const filter: IFilter = {}
+	if (hasFilterQuery(filterString)) {
+		filter.filter = filterString
+	} else {
+		filter.s = filterString
+	}
 
 	const transformed = {
 		...props.modelValue,
-		filter: transform(props.modelValue.filter),
+		filter,
 		bucketConfiguration: props.modelValue.bucketConfiguration.map(bc => ({
 			title: bc.title,
 			filter: transform(bc.filter),
@@ -57,10 +67,19 @@ function save() {
 			return found?.id || null
 		},
 	)
+	
+	const filterString = transformFilter(view.value?.filter?.filter)
+	
+	const filter: IFilter = {}
+	if (hasFilterQuery(filterString)) {
+		filter.filter = filterString
+	} else {
+		filter.s = filterString
+	}
 
 	emit('update:modelValue', {
 		...view.value,
-		filter: transformFilter(view.value?.filter),
+		filter,
 		bucketConfiguration: view.value?.bucketConfiguration.map(bc => ({
 			title: bc.title,
 			filter: transformFilter(bc.filter),
@@ -141,7 +160,7 @@ function handleBubbleSave() {
 		</div>
 
 		<FilterInput
-			v-model="view.filter"
+			v-model="view.filter.filter"
 			:project-id="view.projectId"
 			:input-label="$t('project.views.filter')"
 			class="mb-1"

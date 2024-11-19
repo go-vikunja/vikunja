@@ -65,7 +65,11 @@ import {useRoute} from 'vue-router'
 import type {TaskFilterParams} from '@/services/taskCollection'
 import {useLabelStore} from '@/stores/labels'
 import {useProjectStore} from '@/stores/projects'
-import {FILTER_OPERATORS, transformFilterStringForApi, transformFilterStringFromApi} from '@/helpers/filters'
+import {
+	hasFilterQuery,
+	transformFilterStringForApi,
+	transformFilterStringFromApi,
+} from '@/helpers/filters'
 import FilterInputDocs from '@/components/project/partials/FilterInputDocs.vue'
 
 const props = withDefaults(defineProps<{
@@ -161,8 +165,7 @@ function change(event: 'blur' | 'modelValue' | 'always') {
 	let s = ''
 
 	// When the filter does not contain any filter tokens, assume a simple search and redirect the input
-	const hasFilterQueries = FILTER_OPERATORS.find(o => filter.includes(o)) || false
-	if (!hasFilterQueries) {
+	if (!hasFilterQuery(filter)) {
 		s = filter
 	}
 

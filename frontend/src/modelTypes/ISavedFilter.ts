@@ -2,7 +2,7 @@ import type {IAbstract} from './IAbstract'
 import type {IUser} from './IUser'
 
 // FIXME: what makes this different from TaskFilterParams?
-interface Filters {
+export interface IFilters {
 	sort_by: ('start_date' | 'done' | 'id' | 'position')[],
 	order_by: ('asc' | 'desc')[],
 	filter: string,
@@ -14,7 +14,7 @@ export interface ISavedFilter extends IAbstract {
 	id: number
 	title: string
 	description: string
-	filters: Filters
+	filters: IFilters
 
 	owner: IUser
 	created: Date

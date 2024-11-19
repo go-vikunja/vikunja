@@ -7,7 +7,13 @@ export default class ProjectViewModel extends AbstractModel<IProjectView> implem
 	projectId = 0
 	viewKind: ProjectViewKind =  'list'
 
-	filter = ''
+	filter: IProjectView['filters'] = {
+		sort_by: ['done', 'id'],
+		order_by: ['asc', 'desc'],
+		filter: 'done = false',
+		filter_include_nulls: true,
+		s: '',
+	}
 	position = 0
 	
 	bucketConfiguration = []

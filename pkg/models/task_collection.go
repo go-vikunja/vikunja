@@ -32,6 +32,8 @@ type TaskCollection struct {
 	ProjectID     int64 `param:"project" json:"-"`
 	ProjectViewID int64 `param:"view" json:"-"`
 
+	Search string `query:"s" json:"s"`
+
 	// The query parameter to sort by. This is for ex. done, priority, etc.
 	SortBy    []string `query:"sort_by" json:"sort_by"`
 	SortByArr []string `query:"sort_by[]" json:"-"`
@@ -277,11 +279,26 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 			return nil, 0, 0, err
 		}
 
-		if view.Filter != "" {
-			if tf.Filter != "" {
-				tf.Filter = "(" + tf.Filter + ") && (" + view.Filter + ")"
-			} else {
-				tf.Filter = view.Filter
+		if view.Filter != nil {
+			if view.Filter.Filter != "" {
+				if tf.Filter != "" {
+					tf.Filter = "(" + tf.Filter + ") && (" + view.Filter.Filter + ")"
+				} else {
+					tf.Filter = view.Filter.Filter
+				}
+				tf.FilterIncludeNulls = view.Filter.FilterIncludeNulls
+			}
+
+			if view.Filter.FilterTimezone != "" {
+				tf.FilterTimezone = view.Filter.FilterTimezone
+			}
+
+			if view.Filter.FilterIncludeNulls {
+				tf.FilterIncludeNulls = view.Filter.FilterIncludeNulls
+			}
+
+			if view.Filter.Search != "" {
+				search = view.Filter.Search
 			}
 		}
 
