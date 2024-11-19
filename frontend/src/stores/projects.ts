@@ -17,6 +17,7 @@ import {success} from '@/message'
 import {useBaseStore} from '@/stores/base'
 import {getSavedFilterIdFromProjectId} from '@/services/savedFilter'
 import type {IProjectView} from '@/modelTypes/IProjectView'
+import {RIGHTS} from '@/constants/rights.ts'
 
 const {add, remove, search, update} = createNewIndexer('projects', ['title', 'description'])
 
@@ -306,6 +307,9 @@ export function useProject(projectId: MaybeRefOrGetter<IProject['id']>) {
 		})
 
 		const duplicate = await projectDuplicateService.create(projectDuplicate)
+		if (duplicate.duplicatedProject) {
+			duplicate.duplicatedProject.maxRight = RIGHTS.ADMIN
+		}
 
 		projectStore.setProject(duplicate.duplicatedProject)
 		success({message: t('project.duplicate.success')})
