@@ -27,6 +27,7 @@ in {
     
     go = {
       enable = true;
+      enableHardeningWorkaround = true;
     };
   };
   
