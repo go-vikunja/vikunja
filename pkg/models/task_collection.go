@@ -183,6 +183,10 @@ func getRelevantProjectsFromCollection(s *xorm.Session, a web.Auth, tf *TaskColl
 }
 
 func getFilterValueForBucketFilter(filter string, view *ProjectView) (newFilter string, err error) {
+	if view.BucketConfigurationMode != BucketConfigurationModeFilter {
+		return filter, nil
+	}
+
 	re := regexp.MustCompile(`bucket_id\s*=\s*(\d+)`)
 
 	match := re.FindStringSubmatch(filter)
@@ -197,7 +201,7 @@ func getFilterValueForBucketFilter(filter string, view *ProjectView) (newFilter 
 
 	for id, bucket := range view.BucketConfiguration {
 		if id == bucketID {
-			return re.ReplaceAllString(filter, `(`+bucket.Filter+`)`), nil
+			return re.ReplaceAllString(filter, `(`+bucket.Filter.Filter+`)`), nil
 		}
 	}
 
@@ -304,11 +308,9 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 
 		if strings.Contains(tf.Filter, taskPropertyBucketID) {
 			filteringForBucket = true
-			if view.BucketConfigurationMode == BucketConfigurationModeFilter {
-				tf.Filter, err = getFilterValueForBucketFilter(tf.Filter, view)
-				if err != nil {
-					return nil, 0, 0, err
-				}
+			tf.Filter, err = getFilterValueForBucketFilter(tf.Filter, view)
+			if err != nil {
+				return nil, 0, 0, err
 			}
 		}
 	}
