@@ -269,7 +269,11 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		tc.isSavedFilter = true
 
 		if tf.Filter != "" {
-			tc.Filter = "(" + tf.Filter + ") && (" + tc.Filter + ")"
+			if tc.Filter != "" {
+				tc.Filter = "(" + tf.Filter + ") && (" + tc.Filter + ")"
+			} else {
+				tc.Filter = tf.Filter
+			}
 		}
 
 		return tc.ReadAll(s, a, search, page, perPage)
