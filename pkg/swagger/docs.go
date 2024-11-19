@@ -8395,7 +8395,11 @@ const docTemplate = `{
                 },
                 "filter": {
                     "description": "The filter query to match tasks by. Check out https://vikunja.io/docs/filters for a full explanation.",
-                    "type": "string"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.TaskCollection"
+                        }
+                    ]
                 },
                 "id": {
                     "description": "The unique numeric id of this view",
@@ -8431,7 +8435,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "filter": {
-                    "type": "string"
+                    "$ref": "#/definitions/models.TaskCollection"
                 },
                 "title": {
                     "type": "string"
@@ -8864,6 +8868,9 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                },
+                "s": {
+                    "type": "string"
                 },
                 "sort_by": {
                     "description": "The query parameter to sort by. This is for ex. done, priority, etc.",
