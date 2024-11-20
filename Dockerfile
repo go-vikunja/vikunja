@@ -53,5 +53,5 @@ ENV VIKUNJA_DATABASE_PATH=/db/vikunja.db
 
 COPY --from=apibuilder /build/vikunja-* vikunja
 COPY --from=apibuilder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-HEALTHCHECK --interval=30s --timeout=30s --start-period=10s --retries=3 \
+HEALTHCHECK --interval=5s --timeout=30s --start-period=10s --retries=3 \
 	CMD [ "/app/vikunja/vikunja", "healthcheck" ]
