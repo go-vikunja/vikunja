@@ -17,17 +17,17 @@ importers:
   .:
     dependencies:
       '@fortawesome/fontawesome-svg-core':
-        specifier: 6.7.0
-        version: 6.7.0
+        specifier: 6.7.1
+        version: 6.7.1
       '@fortawesome/free-regular-svg-icons':
-        specifier: 6.7.0
-        version: 6.7.0
+        specifier: 6.7.1
+        version: 6.7.1
       '@fortawesome/free-solid-svg-icons':
-        specifier: 6.7.0
-        version: 6.7.0
+        specifier: 6.7.1
+        version: 6.7.1
       '@fortawesome/vue-fontawesome':
         specifier: 3.0.8
-        version: 3.0.8(@fortawesome/fontawesome-svg-core@6.7.0)(vue@3.5.13(typescript@5.6.3))
+        version: 3.0.8(@fortawesome/fontawesome-svg-core@6.7.1)(vue@3.5.13(typescript@5.6.3))
       '@github/hotkey':
         specifier: 3.1.1
         version: 3.1.1(patch_hash=c67tdk7qpd5grxd2zj6lsxfbou)
@@ -1575,20 +1575,20 @@ packages:
   '@floating-ui/utils@0.2.7':
     resolution: {integrity: sha512-X8R8Oj771YRl/w+c1HqAC1szL8zWQRwFvgDwT129k9ACdBoud/+/rX9V0qiMl6LWUdP9voC2nDVZYPMQQsb6eA==}
 
-  '@fortawesome/fontawesome-common-types@6.7.0':
-    resolution: {integrity: sha512-AUetZXU6cQdAe21p8j3mg2aD40MMDKfFNUNgq/G7gR3HMDp0BsQskAudLDSgq6d0SbCY0QKP0g4s5Y02S1kkhw==}
+  '@fortawesome/fontawesome-common-types@6.7.1':
+    resolution: {integrity: sha512-gbDz3TwRrIPT3i0cDfujhshnXO9z03IT1UKRIVi/VEjpNHtSBIP2o5XSm+e816FzzCFEzAxPw09Z13n20PaQJQ==}
     engines: {node: '>=6'}
 
-  '@fortawesome/fontawesome-svg-core@6.7.0':
-    resolution: {integrity: sha512-v6YZjSPuxriC7lYxCzKFbgZ1iaf60AVX2CsfZXSc0U9+mqVd8VGVtMEqDqz5GxDpNUQ8bMDfW+gspVMYGlRpUA==}
+  '@fortawesome/fontawesome-svg-core@6.7.1':
+    resolution: {integrity: sha512-8dBIHbfsKlCk2jHQ9PoRBg2Z+4TwyE3vZICSnoDlnsHA6SiMlTwfmW6yX0lHsRmWJugkeb92sA0hZdkXJhuz+g==}
     engines: {node: '>=6'}
 
-  '@fortawesome/free-regular-svg-icons@6.7.0':
-    resolution: {integrity: sha512-0htjBKeeN3TJf0JtQPsQu/n/prpc9TtSbtgi84XzCUdPpc49znb+MXMACFmehR5kSA7NQVMjLD+Dh9816wklbw==}
+  '@fortawesome/free-regular-svg-icons@6.7.1':
+    resolution: {integrity: sha512-e13cp+bAx716RZOTQ59DhqikAgETA9u1qTBHO3e3jMQQ+4H/N1NC1ZVeFYt1V0m+Th68BrEL1/X6XplISutbXg==}
     engines: {node: '>=6'}
 
-  '@fortawesome/free-solid-svg-icons@6.7.0':
-    resolution: {integrity: sha512-9ww5hQ3OzEehUrSXAlPTJ73xDub73fnxr+se5PU0MFQor2nZBO0m7HNm5Q4KD9XMYjwRqh2BnBNR2/9EFbGqmg==}
+  '@fortawesome/free-solid-svg-icons@6.7.1':
+    resolution: {integrity: sha512-BTKc0b0mgjWZ2UDKVgmwaE0qt0cZs6ITcDgjrti5f/ki7aF5zs+N91V6hitGo3TItCFtnKg6cUVGdTmBFICFRg==}
     engines: {node: '>=6'}
 
   '@fortawesome/vue-fontawesome@3.0.8':
@@ -7859,23 +7859,23 @@ snapshots:
 
   '@floating-ui/utils@0.2.7': {}
 
-  '@fortawesome/fontawesome-common-types@6.7.0': {}
+  '@fortawesome/fontawesome-common-types@6.7.1': {}
 
-  '@fortawesome/fontawesome-svg-core@6.7.0':
+  '@fortawesome/fontawesome-svg-core@6.7.1':
     dependencies:
-      '@fortawesome/fontawesome-common-types': 6.7.0
+      '@fortawesome/fontawesome-common-types': 6.7.1
 
-  '@fortawesome/free-regular-svg-icons@6.7.0':
+  '@fortawesome/free-regular-svg-icons@6.7.1':
     dependencies:
-      '@fortawesome/fontawesome-common-types': 6.7.0
+      '@fortawesome/fontawesome-common-types': 6.7.1
 
-  '@fortawesome/free-solid-svg-icons@6.7.0':
+  '@fortawesome/free-solid-svg-icons@6.7.1':
     dependencies:
-      '@fortawesome/fontawesome-common-types': 6.7.0
+      '@fortawesome/fontawesome-common-types': 6.7.1
 
-  '@fortawesome/vue-fontawesome@3.0.8(@fortawesome/fontawesome-svg-core@6.7.0)(vue@3.5.13(typescript@5.6.3))':
+  '@fortawesome/vue-fontawesome@3.0.8(@fortawesome/fontawesome-svg-core@6.7.1)(vue@3.5.13(typescript@5.6.3))':
     dependencies:
-      '@fortawesome/fontawesome-svg-core': 6.7.0
+      '@fortawesome/fontawesome-svg-core': 6.7.1
       vue: 3.5.13(typescript@5.6.3)
 
   '@github/hotkey@3.1.1(patch_hash=c67tdk7qpd5grxd2zj6lsxfbou)': {}
