@@ -239,6 +239,14 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 			return nil, 0, 0, err
 		}
 
+		canRead, _, err := sf.CanRead(s, a)
+		if err != nil {
+			return nil, 0, 0, err
+		}
+		if !canRead {
+			return nil, 0, 0, ErrGenericForbidden{}
+		}
+
 		// By prepending sort options before the saved ones from the filter, we make sure the supplied sort
 		// options via query take precedence over the rest.
 
