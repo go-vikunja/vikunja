@@ -7,6 +7,24 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 All releases can be found on https://code.vikunja.io/vikunja/releases.
 
+## [0.24.5] - 2024-11-21
+
+### Bug Fixes
+
+* *(attachments)* Check permissions when accessing all attachments
+* *(saved filters)* Check permissions when accessing tasks of a filter
+* Pin xgo to 1.22.x ([87b2aac](87b2aaccb8cdcbe1ecb6092951a0bfe224ad7006))
+* Upgrade xgo ([19b63c8](19b63c86c51f67614b867c75a58cda1774685edd))
+* Upgrade xgo docker image everywhere ([04b40f8](04b40f8a7dcd01a86ddb8b27596073d1e50f9e97))
+* *(ci)* Do not build linux 368 docker images
+* Disable 368 releases ([73db10f](73db10fb02268e07d29842493df55f4d645ac503))
+  - **BREAKING**: disable 368 releases
+
+### Miscellaneous Tasks
+
+* Sign drone config ([17c4878](17c487875b5771c0971ee8bf030807171de2dddc))
+* Go mod tidy ([9639025](96390257e0911089ae33a9565e8be7fa954c772c))
+
 ## [0.24.4] - 2024-09-29
 
 ### Bug Fixes
