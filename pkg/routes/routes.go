@@ -141,22 +141,19 @@ func setupSentry(e *echo.Echo) {
 		// Only capture errors not already handled by echo
 		var herr *echo.HTTPError
 		if errors.As(err, &herr) && herr.Code > 499 {
+			var errToReport = err
+			if herr.Internal == nil {
+				errToReport = herr.Internal
+			}
+
 			hub := sentryecho.GetHubFromContext(c)
 			if hub != nil {
 				hub.WithScope(func(scope *sentry.Scope) {
 					scope.SetExtra("url", c.Request().URL)
-					if herr.Internal == nil {
-						hub.CaptureException(err)
-					} else {
-						hub.CaptureException(herr.Internal)
-					}
+					hub.CaptureException(errToReport)
 				})
 			} else {
-				if herr.Internal == nil {
-					sentry.CaptureException(err)
-				} else {
-					sentry.CaptureException(herr.Internal)
-				}
+				sentry.CaptureException(errToReport)
 				log.Debugf("Could not add context for sending error '%s' to sentry", err.Error())
 			}
 			log.Debugf("Error '%s' sent to sentry", err.Error())

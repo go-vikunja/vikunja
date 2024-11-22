@@ -24,7 +24,7 @@ import (
 // CanCreate checks if a user can subscribe to an entity
 func (sb *Subscription) CanCreate(s *xorm.Session, a web.Auth) (can bool, err error) {
 	if _, is := a.(*LinkSharing); is {
-		return false, &ErrGenericForbidden{}
+		return false, ErrGenericForbidden{}
 	}
 
 	sb.EntityType = getEntityTypeFromString(sb.Entity)
@@ -46,7 +46,7 @@ func (sb *Subscription) CanCreate(s *xorm.Session, a web.Auth) (can bool, err er
 // CanDelete checks if a user can delete a subscription
 func (sb *Subscription) CanDelete(s *xorm.Session, a web.Auth) (can bool, err error) {
 	if _, is := a.(*LinkSharing); is {
-		return false, &ErrGenericForbidden{}
+		return false, ErrGenericForbidden{}
 	}
 
 	sb.EntityType = getEntityTypeFromString(sb.Entity)
