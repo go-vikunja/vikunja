@@ -37,7 +37,7 @@
       "usernameEmail": "Brukernavn / e-postadresse",
       "usernamePlaceholder": "e.g. frederick",
       "email": "E-postadresse",
-      "emailPlaceholder": "e.g. frederic{'@'}vikunja.io",
+      "emailPlaceholder": "f.eks. frederic{'@'}vikunja.io",
       "password": "Passord",
       "passwordPlaceholder": "f.eks. ••••••••••• •",
       "forgotPassword": "Glemt ditt passord?",
@@ -73,8 +73,8 @@
       "title": "Innstillinger",
       "newPasswordTitle": "Oppdater passord",
       "newPassword": "New password",
-      "newPasswordConfirm": "New password confirmation",
-      "currentPassword": "Current password",
+      "newPasswordConfirm": "Bekreft nytt passord",
+      "currentPassword": "Gjeldende passord",
       "currentPasswordPlaceholder": "Ditt nåværende passord",
       "passwordsDontMatch": "Det nye passordet og bekreftelse samsvarer ikke.",
       "passwordUpdateSuccess": "Passordet ditt ble vellykket oppdatert.",
@@ -83,13 +83,13 @@
       "updateEmailSuccess": "E-postadressen din ble oppdatert. Vi har sendt deg en lenke for å bekrefte den.",
       "general": {
         "title": "Generelle innstillinger",
-        "name": "My Name",
+        "name": "Mitt Navn",
         "newName": "The new name",
         "savedSuccess": "Innstillingene ble lagret.",
-        "emailReminders": "Send me reminders for tasks via email",
+        "emailReminders": "Send påminnelser om oppgaver på e-post",
         "overdueReminders": "Send meg et sammendrag av mine uferdige oppdager over dato hver dag",
         "discoverableByName": "Allow other users to add me as a member to teams or projects when they search for my name",
-        "discoverableByEmail": "Allow other users to add me as a member to teams or projects when they search for my full email",
+        "discoverableByEmail": "Tillat andre brukere å legge meg til som medlem i grupper eller prosjekter når det søkes etter min e-postadresse",
         "playSoundWhenDone": "Spill av en lyd når merking av oppgaver som ferdig",
         "weekStart": "Uken starter på",
         "weekStartSunday": "Søndag",
@@ -121,7 +121,7 @@
         "more": "Mer informasjon om CalDAV i Vikunja",
         "tokens": "CalDAV Tokens",
         "tokensHowTo": "Du kan bruke et CalDAV token til å bruke istedet for passord for å logge på det ovennevnte endepunktet.",
-        "createToken": "Opprett Token",
+        "createToken": "Opprett token",
         "tokenCreated": "Her er din token: {token}",
         "wontSeeItAgain": "Skriv den ned, du vil ikke kunne se den igjen.",
         "mustUseToken": "Du må opprette et CalDAV-token hvis du ønsker å bruke CalDAS med en tredjeparts klient. Bruk token som passord.",
@@ -158,7 +158,7 @@
         "apiDocs": "Check out the api docs",
         "createAToken": "Create a token",
         "createToken": "Create token",
-        "30d": "30 Days",
+        "30d": "30 dager",
         "60d": "60 Days",
         "90d": "90 Days",
         "permissionExplanation": "Permissions allow you to scope what an api token is allowed to do.",
@@ -231,7 +231,7 @@
       "archive": "Arkiver dette prosjektet",
       "unarchive": "Av-arkivere dette prosjektet",
       "unarchiveText": "You will be able to create tasks or edit it.",
-      "archiveText": "You won't be able to edit this project or create tasks until you un-archive it.",
+      "archiveText": "Du kan ikke redigere dette prosjektet før du tar det ut av arkivet.",
       "success": "Prosjektet ble vellykket arkivert."
     },
     "background": {
@@ -268,7 +268,7 @@
       "identifier": "Prosjekt identifikator",
       "identifierPlaceholder": "Prosjektidentifikatoren kommer her…",
       "description": "Beskrivelse",
-      "descriptionPlaceholder": "Enter a description for this project, hit '/' for more options…",
+      "descriptionPlaceholder": "Angi en beskrivelse til dette prosjektet. Trykk '/' for flere valg…",
       "color": "Farger",
       "success": "Prosjektet ble opprettet."
     },
@@ -609,7 +609,7 @@
       "bold": "Fet",
       "italic": "Kursiv",
       "strikethrough": "Gjennomstrekning",
-      "underline": "Underline",
+      "underline": "Understrek",
       "code": "Kode",
       "codeTooltip": "Capture a code snippet.",
       "quote": "Sitat",
@@ -768,8 +768,8 @@
       "belongsToProject": "Denne oppgaven tilhører listen '{project}'",
       "due": "Forfallsdato {at}",
       "closePopup": "Lukk popup",
-      "organization": "Organization",
-      "management": "Management",
+      "organization": "Organisering",
+      "management": "Behandling",
       "dateAndTime": "Date and time",
       "delete": {
         "header": "Slette denne oppgaven",
@@ -904,7 +904,7 @@
       "delete": "Slett relasjon",
       "deleteText1": "Er du sikker på at du vil slette denne relasjonen?",
       "select": "Velg en relasjonstype",
-      "taskRequired": "Velg en oppgave eller angi en ny oppgavetitle.",
+      "taskRequired": "Velg en oppgave eller angi en ny oppgavetittel.",
       "kinds": {
         "subtask": "Underoppgave | Underoppgaver",
         "parenttask": "Foreldreoppgaven ＋ Overordnede oppgaver",
@@ -1061,7 +1061,7 @@
       "upcoming": "Gå til kommende oppgaver",
       "labels": "Naviger til etiketter",
       "teams": "Naviger til gruppe",
-      "projects": "Navigate to projects"
+      "projects": "Gå til prosjekter"
     }
   },
   "update": {
@@ -1100,7 +1100,7 @@
     "title": "Varsler",
     "none": "Du har ingen varsler på dette tidspunktet!",
     "explainer": "Notifications will appear here when actions projects or tasks you subscribed to happen.",
-    "markAllRead": "Mark all notifications as read",
+    "markAllRead": "Marker alle varslinger som lest",
     "markAllReadSuccess": "Successfully marked all notifications as read."
   },
   "quickActions": {
@@ -1211,7 +1211,7 @@
   "time": {
     "units": {
       "seconds": "second|seconds",
-      "minutes": "minute|minutes",
+      "minutes": "minutt|minutter",
       "hours": "hour|hours",
       "days": "day|days",
       "weeks": "week|weeks",
