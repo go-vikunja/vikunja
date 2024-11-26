@@ -62,6 +62,7 @@
 				<ul>
 					<!-- Not localized because these only work in english -->
 					<li>Today</li>
+					<li>Tonight</li>
 					<li>Tomorrow</li>
 					<li>Next monday</li>
 					<li>This weekend</li>

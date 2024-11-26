@@ -22,6 +22,11 @@ export const parseDate = (text: string, now: Date = new Date()): dateParseResult
 	if (matchesDateExpr(text, 'today')) {
 		return addTimeToDate(text, getDateFromInterval(calculateDayInterval('today')), 'today')
 	}
+	if (matchesDateExpr(text, 'tonight')) {
+		const taskDate = getDateFromInterval(calculateDayInterval('today'))
+		taskDate.setHours(21)
+		return addTimeToDate(text, taskDate, 'tonight')
+	}
 	if (matchesDateExpr(text, 'tomorrow')) {
 		return addTimeToDate(text, getDateFromInterval(calculateDayInterval('tomorrow')), 'tomorrow')
 	}
