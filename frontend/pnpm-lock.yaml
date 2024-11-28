@@ -203,8 +203,8 @@ importers:
         specifier: 1.7.2
         version: 1.7.2
       sortablejs:
-        specifier: 1.15.4
-        version: 1.15.4
+        specifier: 1.15.5
+        version: 1.15.5
       tailwindcss:
         specifier: 3.4.15
         version: 3.4.15
@@ -5626,8 +5626,8 @@ packages:
   sortablejs@1.14.0:
     resolution: {integrity: sha512-pBXvQCs5/33fdN1/39pPL0NZF20LeRbLQ5jtnheIPN9JQAaufGjKdWduZn4U7wCtVuzKhmRkI0DFYHYRbB2H1w==}
 
-  sortablejs@1.15.4:
-    resolution: {integrity: sha512-wr7G5Id/WNllca5yF9I2vsz/2wDKJebX5FJBtfUFBGGpaaIVjW4kziAnNMEcigaTZAaPLB92NYBGqWenGDH++g==}
+  sortablejs@1.15.5:
+    resolution: {integrity: sha512-xDJLosRJzZ+nVnjaUYmO9H/wZth0lWTRq7VzV1eQyDSKsvxmoJ69HTGcwnwGYpJG/AkJ9OWiwWH4BhIycdonWw==}
 
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
@@ -12229,7 +12229,7 @@ snapshots:
 
   sortablejs@1.14.0: {}
 
-  sortablejs@1.15.4: {}
+  sortablejs@1.15.5: {}
 
   source-map-js@1.2.1: {}
 
