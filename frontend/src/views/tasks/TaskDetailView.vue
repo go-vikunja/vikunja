@@ -2,7 +2,7 @@
 	<div
 		class="loader-container task-view-container"
 		:class="{
-			'is-loading': taskService.loading || !isReady,
+			'is-loading': isLoading || !isReady,
 			'is-modal': isModal,
 		}"
 	>
@@ -24,7 +24,7 @@
 				class="subtitle"
 			>
 				<template
-					v-for="p in projectStore.getAncestors(project)"
+					v-for="p in ancestorProjects"
 					:key="p.id"
 				>
 					<a
@@ -117,7 +117,7 @@
 										:ref="e => setFieldRef('dueDate', e)"
 										v-model="task.dueDate"
 										:choose-date-label="$t('task.detail.chooseDueDate')"
-										:disabled="taskService.loading || !canWrite"
+										:disabled="isLoading || !canWrite"
 										@closeOnChange="saveTask()"
 									/>
 									<BaseButton
@@ -171,7 +171,7 @@
 										:ref="e => setFieldRef('startDate', e)"
 										v-model="task.startDate"
 										:choose-date-label="$t('task.detail.chooseStartDate')"
-										:disabled="taskService.loading || !canWrite"
+										:disabled="isLoading || !canWrite"
 										@closeOnChange="saveTask()"
 									/>
 									<BaseButton
@@ -204,7 +204,7 @@
 										:ref="e => setFieldRef('endDate', e)"
 										v-model="task.endDate"
 										:choose-date-label="$t('task.detail.chooseEndDate')"
-										:disabled="taskService.loading || !canWrite"
+										:disabled="isLoading || !canWrite"
 										@closeOnChange="saveTask()"
 									/>
 									<BaseButton
@@ -320,7 +320,7 @@
 						<Description
 							:model-value="task"
 							:can-write="canWrite"
-							:attachment-upload="attachmentUpload"
+							:attachment-upload="uploadAttachment"
 							@update:modelValue="Object.assign(task, $event)"
 						/>
 					</div>
@@ -415,10 +415,9 @@
 							{{ task.done ? $t('task.detail.undone') : $t('task.detail.done') }}
 						</x-button>
 						<TaskSubscription
+							v-model="task.subscription"
 							entity="task"
 							:entity-id="task.id"
-							:model-value="task.subscription"
-							@update:modelValue="sub => task.subscription = sub"
 						/>
 						<x-button
 							v-shortcut="'s'"
@@ -585,22 +584,14 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted, onBeforeUnmount} from 'vue'
+import {ref, reactive, computed, nextTick, watchPostEffect, watch} from 'vue'
 import {useRouter, type RouteLocation} from 'vue-router'
-import {storeToRefs} from 'pinia'
-import {useI18n} from 'vue-i18n'
-import {unrefElement} from '@vueuse/core'
-import {klona} from 'klona/lite'
+import {unrefElement, useEventListener} from '@vueuse/core'
 import {eventToHotkeyString} from '@github/hotkey'
 
-import TaskService from '@/services/task'
-import TaskModel from '@/models/task'
-
 import type {ITask} from '@/modelTypes/ITask'
-import type {IProject} from '@/modelTypes/IProject'
 
-import {PRIORITIES, type Priority} from '@/constants/priorities'
-import {RIGHTS} from '@/constants/rights'
+import {PRIORITIES} from '@/constants/priorities'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 
@@ -626,23 +617,14 @@ import CustomTransition from '@/components/misc/CustomTransition.vue'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import Reactions from '@/components/input/Reactions.vue'
 
-import {uploadFile} from '@/helpers/attachments'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 import {scrollIntoView} from '@/helpers/scrollIntoView'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
-import {playPopSound} from '@/helpers/playPop'
 
-import {useAttachmentStore} from '@/stores/attachments'
-import {useTaskStore} from '@/stores/tasks'
-import {useKanbanStore} from '@/stores/kanban'
-import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
-import {useBaseStore} from '@/stores/base'
 
 import {useTitle} from '@/composables/useTitle'
-
-import {success} from '@/message'
-import type {Action as MessageAction} from '@/message'
+import {useTask} from '@/composables/useTask'
 
 const props = defineProps<{
 	taskId: ITask['id'],
@@ -654,98 +636,59 @@ defineEmits<{
 }>()
 
 const router = useRouter()
-const {t} = useI18n({useScope: 'global'})
 
-const projectStore = useProjectStore()
-const attachmentStore = useAttachmentStore()
-const {hasAttachments} = storeToRefs(attachmentStore)
-const taskStore = useTaskStore()
-const kanbanStore = useKanbanStore()
 const authStore = useAuthStore()
-const baseStore = useBaseStore()
 
-const task = ref<ITask>(new TaskModel())
-const taskTitle = computed(() => task.value.title)
+const {
+	project,
+	ancestorProjects,
+
+	isReady,
+	isLoading,
+
+	task,
+	taskTitle,
+	taskColor,
+
+	canWrite,
+	hasAttachments,
+
+	saveTask,
+	deleteTask,
+	uploadAttachment,
+	
+	toggleTaskDone,
+	changeProject,
+	toggleFavorite,
+	setPriority,
+	setPercentDone,
+	removeRepeatAfter,
+} = useTask(() => props.taskId)
+
 useTitle(taskTitle)
 
+
 // See https://github.com/github/hotkey/discussions/85#discussioncomment-5214660
-function saveTaskViaHotkey(event) {
+useEventListener('keydown', (event) => {
 	const hotkeyString = eventToHotkeyString(event)
 	if (!hotkeyString) return
 	if (hotkeyString !== 'Control+s' && hotkeyString !== 'Meta+s') return
 	event.preventDefault()
 
 	saveTask()
-}
-
-onMounted(() => {
-	document.addEventListener('keydown', saveTaskViaHotkey)
 })
 
-onBeforeUnmount(() => {
-	document.removeEventListener('keydown', saveTaskViaHotkey)
-})
-
-// We doubled the task color property here because verte does not have a real change property, leading
-// to the color property change being triggered when the # is removed from it, leading to an update,
-// which leads in turn to a change... This creates an infinite loop in which the task is updated, changed,
-// updated, changed, updated and so on.
-// To prevent this, we put the task color property in a seperate value which is set to the task color
-// when it is saved and loaded.
-const taskColor = ref<ITask['hexColor']>('')
-
-// Used to avoid flashing of empty elements if the task content is not yet loaded.
-const isReady = ref(false)
-
-const project = computed(() => projectStore.projects[task.value.projectId])
-
-const canWrite = computed(() => (
-	task.value.maxRight !== null &&
-	task.value.maxRight > RIGHTS.READ
-))
-
-const color = computed(() => {
-	const color = task.value.getHexColor
-		? task.value.getHexColor()
-		: undefined
-
-	return color
-})
+const color = computed(() => task?.getHexColor())
 
 const isModal = computed(() => Boolean(props.backdropView))
 
-function attachmentUpload(file: File, onSuccess?: (url: string) => void) {
-	return uploadFile(props.taskId, file, onSuccess)
-}
-
 const heading = ref<HTMLElement | null>(null)
 
-async function scrollToHeading() {
-	scrollIntoView(unrefElement(heading))
-}
-
-const taskService = shallowReactive(new TaskService())
-
-// load task
-watch(
-	() => props.taskId,
-	async (id) => {
-		if (id === undefined) {
-			return
-		}
-
-		try {
-			const loaded = await taskService.get({id})
-			Object.assign(task.value, loaded)
-			attachmentStore.set(task.value.attachments)
-			taskColor.value = task.value.hexColor
-			setActiveFields()
-		} finally {
-			await nextTick()
-			scrollToHeading()
-			isReady.value = true
-		}
-	}, {immediate: true})
+watchPostEffect(() => {
+	if (isReady.value) {
+		scrollIntoView(unrefElement(heading))
+	}
+})
 
 type FieldType =
 	| 'assignees'
@@ -784,17 +727,19 @@ function setActiveFields() {
 	// task.endDate = task.endDate || null
 
 	// Set all active fields based on values in the model
-	activeFields.assignees = task.value.assignees.length > 0
-	activeFields.attachments = task.value.attachments.length > 0
-	activeFields.dueDate = task.value.dueDate !== null
-	activeFields.endDate = task.value.endDate !== null
-	activeFields.labels = task.value.labels.length > 0
-	activeFields.percentDone = task.value.percentDone > 0
-	activeFields.priority = task.value.priority !== PRIORITIES.UNSET
-	activeFields.relatedTasks = Object.keys(task.value.relatedTasks).length > 0
-	activeFields.reminders = task.value.reminders.length > 0
-	activeFields.repeatAfter = task.value.repeatAfter?.amount > 0 || task.value.repeatMode !== TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
-	activeFields.startDate = task.value.startDate !== null
+	Object.assign(activeFields, {
+		assignees: task.assignees.length > 0,
+		attachments: task.attachments.length > 0,
+		dueDate: task.dueDate !== null,
+		endDate: task.endDate !== null,
+		labels: task.labels.length > 0,
+		percentDone: task.percentDone > 0,
+		priority: task.priority !== PRIORITIES.UNSET,
+		relatedTasks: Object.keys(task.relatedTasks).length > 0,
+		reminders: task.reminders.length > 0,
+		repeatAfter: task.repeatAfter?.amount > 0 || task.repeatMode !== TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT,
+		startDate: task.startDate !== null,
+	})
 }
 
 const activeFieldElements: { [id in FieldType]: HTMLElement | null } = reactive({
@@ -833,105 +778,7 @@ function setFieldActive(fieldName: keyof typeof activeFields) {
 	})
 }
 
-async function saveTask(
-	currentTask: ITask | null = null,
-	undoCallback?: () => void,
-) {
-	if (currentTask === null) {
-		currentTask = klona(task.value)
-	}
-
-	if (!canWrite.value) {
-		return
-	}
-
-	currentTask.hexColor = taskColor.value
-
-	// If no end date is being set, but a start date and due date,
-	// use the due date as the end date
-	if (
-		currentTask.endDate === null &&
-		currentTask.startDate !== null &&
-		currentTask.dueDate !== null
-	) {
-		currentTask.endDate = currentTask.dueDate
-	}
-
-	const updatedTask = await taskStore.update(currentTask) // TODO: markraw ?
-	Object.assign(task.value, updatedTask)
-	setActiveFields()
-
-	let actions: MessageAction[] = []
-	if (undoCallback) {
-		actions = [{
-			title: t('task.undo'),
-			callback: undoCallback,
-		}]
-	}
-	success({message: t('task.detail.updateSuccess')}, actions)
-}
-
 const showDeleteModal = ref(false)
-
-async function deleteTask() {
-	await taskStore.delete(task.value)
-	success({message: t('task.detail.deleteSuccess')})
-	router.push({name: 'project.index', params: {projectId: task.value.projectId}})
-}
-
-async function toggleTaskDone() {
-	const newTask = {
-		...task.value,
-		done: !task.value.done,
-	}
-
-	if (newTask.done) {
-		playPopSound()
-	}
-
-	await saveTask(
-		newTask,
-		toggleTaskDone,
-	)
-}
-
-async function changeProject(project: IProject) {
-	kanbanStore.removeTaskInBucket(task.value)
-	await saveTask({
-		...task.value,
-		projectId: project.id,
-	})
-	baseStore.setCurrentProject(project)
-}
-
-async function toggleFavorite() {
-	const newTask = await taskStore.toggleFavorite(task.value)
-	Object.assign(task.value, newTask)
-}
-
-async function setPriority(priority: Priority) {
-	const newTask: ITask = {
-		...task.value,
-		priority,
-	}
-
-	return saveTask(newTask)
-}
-
-async function setPercentDone(percentDone: number) {
-	const newTask: ITask = {
-		...task.value,
-		percentDone,
-	}
-
-	return saveTask(newTask)
-}
-
-async function removeRepeatAfter() {
-	task.value.repeatAfter.amount = 0
-	task.value.repeatMode = TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
-	await saveTask()
-}
 
 function setRelatedTasksActive() {
 	setFieldActive('relatedTasks')

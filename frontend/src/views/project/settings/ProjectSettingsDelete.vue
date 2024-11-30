@@ -32,7 +32,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watchEffect} from 'vue'
+import {computed, shallowReactive, watchEffect} from 'vue'
 import {useTitle} from '@/composables/useTitle'
 import {useI18n} from 'vue-i18n'
 import {useRoute, useRouter} from 'vue-router'
@@ -46,36 +46,45 @@ const projectStore = useProjectStore()
 const route = useRoute()
 const router = useRouter()
 
-const totalTasks = ref<number | null>(null)
+const projectId = computed(() => Number(route.params.projectId))
 
-const project = computed(() => projectStore.projects[route.params.projectId])
-const projectIdsToDelete = ref<number[]>([])
+const project = computed(() => projectStore.projects[projectId.value])
 
+const projectIdsToDelete = computed(() => {
+	if (!projectId.value) {
+		return []
+	}
+
+	return [
+		...projectStore
+			.getChildProjects(projectId.value)
+			.map(p => p.id),
+		projectId.value,
+	]
+})
+
+const taskService = shallowReactive(new TaskService())
 watchEffect(
 	async () => {
-		if (!route.params.projectId) {
+		if (!projectIdsToDelete.value.length) {
 			return
 		}
 
-		projectIdsToDelete.value = projectStore
-			.getChildProjects(parseInt(route.params.projectId))
-			.map(p => p.id)
 
-		projectIdsToDelete.value.push(parseInt(route.params.projectId))
-
-		const taskService = new TaskService()
 		await taskService.getAll({}, {filter: `project in ${projectIdsToDelete.value.join(',')}`})
-		totalTasks.value = taskService.totalPages * taskService.resultCount
 	},
 )
+const totalTasks = computed(() => taskService.totalPages * taskService.resultCount)
 
 useTitle(() => t('project.delete.title', {project: project?.value?.title}))
 
 const deleteNotice = computed(() => {
-	if(totalTasks.value && totalTasks.value > 0) {
+	if (totalTasks.value && totalTasks.value > 0) {
 		if (projectIdsToDelete.value.length <= 1) {
 			return t('project.delete.tasksToDelete', {count: totalTasks.value})
-		} else if (projectIdsToDelete.value.length > 1) {
+		}
+		
+		if (projectIdsToDelete.value.length > 1) {
 			return t('project.delete.tasksAndChildProjectsToDelete', {tasks: totalTasks.value, projects: projectIdsToDelete.value.length})
 		}
 	}

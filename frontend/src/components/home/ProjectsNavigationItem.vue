@@ -84,11 +84,13 @@
 
 <script setup lang="ts">
 import {computed} from 'vue'
-import {useProjectStore} from '@/stores/projects'
-import {useBaseStore} from '@/stores/base'
+import {storeToRefs} from 'pinia'
 import {useStorage} from '@vueuse/core'
 
 import type {IProject} from '@/modelTypes/IProject'
+
+import {useProjectStore} from '@/stores/projects'
+import {useBaseStore} from '@/stores/base'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import ProjectSettingsDropdown from '@/components/project/ProjectSettingsDropdown.vue'
@@ -105,18 +107,17 @@ const props = defineProps<{
 
 const projectStore = useProjectStore()
 const baseStore = useBaseStore()
-const currentProject = computed(() => baseStore.currentProject)
+const {currentProject} = storeToRefs(baseStore)
 
 // Persist open state across browser reloads. Using a separate ref for the state 
 // allows us to use only one entry in local storage instead of one for every project id.
-type OpenState = { [key: number]: boolean }
-const childProjectsOpenState = useStorage<OpenState>('navigation-child-projects-open', {})
+const childProjectsCollapsed = useStorage<{ [key: number]: boolean }>('navigation-child-projects-collapsed', {})
 const childProjectsOpen = computed({
 	get() {
-		return childProjectsOpenState.value[props.project.id] ?? true
+		return childProjectsCollapsed.value[props.project.id] ?? true
 	},
 	set(open) {
-		childProjectsOpenState.value[props.project.id] = open
+		childProjectsCollapsed.value[props.project.id] = open
 	},
 })
 

@@ -416,10 +416,7 @@ watch(
 		collapsedBuckets.value = getCollapsedBucketState(projectId)
 		kanbanStore.loadBucketsForProject(projectId, viewId, params)
 	},
-	{
-		immediate: true,
-		deep: true,
-	},
+	{ immediate: true },
 )
 
 function setTaskContainerRef(id: IBucket['id'], el: HTMLElement) {

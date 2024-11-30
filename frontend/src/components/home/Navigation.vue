@@ -76,38 +76,32 @@
 			v-if="projectStore.isLoading"
 			variant="small"
 		/>
-		<template v-else>
-			<nav
-				v-if="favoriteProjects"
-				class="menu"
-			>
-				<ProjectsNavigation
-					:model-value="favoriteProjects" 
-					:can-edit-order="false"
-					:can-collapse="false"
-				/>
-			</nav>
-			
-			<nav
-				v-if="savedFilterProjects"
-				class="menu"
-			>
-				<ProjectsNavigation
-					:model-value="savedFilterProjects"
-					:can-edit-order="false"
-					:can-collapse="false"
-				/>
-			</nav>
+		<nav
+			v-else
+			class="menu"
+		>
+			<ProjectsNavigation
+				v-if="favoriteProjects?.length"
+				:model-value="favoriteProjects" 
+				:can-edit-order="false"
+				:can-collapse="false"
+			/>
 
-			<nav class="menu">
-				<ProjectsNavigation
-					:model-value="projects"
-					:can-edit-order="true"
-					:can-collapse="true"
-					:level="1"
-				/>
-			</nav>
-		</template>
+			<ProjectsNavigation
+				v-if="savedFilterProjects?.length"
+				:model-value="savedFilterProjects"
+				:can-edit-order="false"
+				:can-collapse="false"
+			/>
+
+			<ProjectsNavigation
+				v-if="projects?.length"
+				:model-value="projects"
+				:can-edit-order="true"
+				:can-collapse="true"
+				:level="1"
+			/>
+		</nav>
 
 		<PoweredByLink
 			class="mt-auto"
@@ -117,7 +111,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed} from 'vue'
+import { storeToRefs } from 'pinia'
 
 import PoweredByLink from '@/components/home/PoweredByLink.vue'
 import Logo from '@/components/home/Logo.vue'
@@ -129,16 +123,15 @@ import ProjectsNavigation from '@/components/home/ProjectsNavigation.vue'
 
 const baseStore = useBaseStore()
 const projectStore = useProjectStore()
-
-const projects = computed(() => projectStore.notArchivedRootProjects)
-const favoriteProjects = computed(() => projectStore.favoriteProjects)
-const savedFilterProjects = computed(() => projectStore.savedFilterProjects)
+const {
+	notArchivedRootProjects: projects,
+	favoriteProjects,
+	savedFilterProjects,
+} = storeToRefs(projectStore)
 </script>
 
 <style lang="scss" scoped>
 .logo {
-	display: block;
-
 	padding-left: 1rem;
 	margin-right: 1rem;
 	margin-bottom: 1rem;
@@ -192,7 +185,7 @@ const savedFilterProjects = computed(() => projectStore.savedFilterProjects)
 	}
 }
 
-.menu + .menu {
+.menu-list + .menu-list {
 	padding-top: math.div($navbar-padding, 2);
 }
 </style>
