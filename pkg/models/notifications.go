@@ -207,6 +207,15 @@ func (n *TeamMemberAddedNotification) Name() string {
 	return "team.member.added"
 }
 
+func getOverdueSinceString(until time.Duration) (overdueSince string) {
+	overdueSince = `overdue since ` + utils.HumanizeDuration(until)
+	if until == 0 {
+		overdueSince = `overdue now`
+	}
+
+	return
+}
+
 // UndoneTaskOverdueNotification represents a UndoneTaskOverdueNotification notification
 type UndoneTaskOverdueNotification struct {
 	User    *user.User
@@ -220,7 +229,7 @@ func (n *UndoneTaskOverdueNotification) ToMail() *notifications.Mail {
 	return notifications.NewMail().
 		Subject(`Task "`+n.Task.Title+`" (`+n.Project.Title+`) is overdue`).
 		Greeting("Hi "+n.User.GetName()+",").
-		Line(`This is a friendly reminder of the task "`+n.Task.Title+`" (`+n.Project.Title+`) which is overdue since `+utils.HumanizeDuration(until)+` and not yet done.`).
+		Line(`This is a friendly reminder of the task "`+n.Task.Title+`" (`+n.Project.Title+`) which is `+getOverdueSinceString(until)+` and not yet done.`).
 		Action("Open Task", config.ServicePublicURL.GetString()+"tasks/"+strconv.FormatInt(n.Task.ID, 10)).
 		Line("Have a nice day!")
 }
@@ -257,7 +266,7 @@ func (n *UndoneTasksOverdueNotification) ToMail() *notifications.Mail {
 	overdueLine := ""
 	for _, task := range sortedTasks {
 		until := time.Until(task.DueDate).Round(1*time.Hour) * -1
-		overdueLine += `* [` + task.Title + `](` + config.ServicePublicURL.GetString() + "tasks/" + strconv.FormatInt(task.ID, 10) + `) (` + n.Projects[task.ProjectID].Title + `), overdue since ` + utils.HumanizeDuration(until) + "\n"
+		overdueLine += `* [` + task.Title + `](` + config.ServicePublicURL.GetString() + "tasks/" + strconv.FormatInt(task.ID, 10) + `) (` + n.Projects[task.ProjectID].Title + `), ` + getOverdueSinceString(until) + "\n"
 	}
 
 	return notifications.NewMail().
