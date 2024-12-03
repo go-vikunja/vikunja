@@ -31,7 +31,7 @@ require (
 	github.com/dustinkirkland/golang-petname v0.0.0-20240422154211-76c06c4bde6b
 	github.com/gabriel-vasile/mimetype v1.4.7
 	github.com/ganigeorgiev/fexpr v0.4.1
-	github.com/getsentry/sentry-go v0.29.1
+	github.com/getsentry/sentry-go v0.30.0
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/go-testfixtures/testfixtures/v3 v3.11.0
 	github.com/gocarina/gocsv v0.0.0-20231116093920-b87c2d0e983a
