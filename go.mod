@@ -44,8 +44,8 @@ require (
 	github.com/iancoleman/strcase v0.3.0
 	github.com/jinzhu/copier v0.4.0
 	github.com/jszwedko/go-datemath v0.1.1-0.20230526204004-640a500621d6
-	github.com/labstack/echo-jwt/v4 v4.2.1
-	github.com/labstack/echo/v4 v4.12.0
+	github.com/labstack/echo-jwt/v4 v4.3.0
+	github.com/labstack/echo/v4 v4.13.0
 	github.com/labstack/gommon v0.4.2
 	github.com/lib/pq v1.10.9
 	github.com/magefile/mage v1.15.0
@@ -68,12 +68,12 @@ require (
 	github.com/ulule/limiter/v3 v3.11.2
 	github.com/wneessen/go-mail v0.5.2
 	github.com/yuin/goldmark v1.7.8
-	golang.org/x/crypto v0.29.0
+	golang.org/x/crypto v0.30.0
 	golang.org/x/image v0.23.0
 	golang.org/x/oauth2 v0.24.0
 	golang.org/x/sync v0.10.0
 	golang.org/x/sys v0.28.0
-	golang.org/x/term v0.26.0
+	golang.org/x/term v0.27.0
 	golang.org/x/text v0.21.0
 	gopkg.in/d4l3k/messagediff.v1 v1.2.1
 	mvdan.cc/xurls/v2 v2.5.0
