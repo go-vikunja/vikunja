@@ -162,7 +162,7 @@
     "postcss-preset-env": "10.1.1",
     "rollup": "4.28.0",
     "rollup-plugin-visualizer": "5.12.0",
-    "sass-embedded": "1.81.1",
+    "sass-embedded": "1.82.0",
     "start-server-and-test": "2.0.8",
     "typescript": "5.7.2",
     "unplugin-inject-preload": "3.0.0",
