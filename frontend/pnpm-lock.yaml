@@ -230,8 +230,8 @@ importers:
         specifier: 4.5.0
         version: 4.5.0(vue@3.5.13(typescript@5.7.2))
       vuemoji-picker:
-        specifier: 0.3.1
-        version: 0.3.1(vue@3.5.13(typescript@5.7.2))
+        specifier: 0.3.2
+        version: 0.3.2(vue@3.5.13(typescript@5.7.2))
       workbox-precaching:
         specifier: 7.3.0
         version: 7.3.0
@@ -3486,8 +3486,8 @@ packages:
   electron-to-chromium@1.5.47:
     resolution: {integrity: sha512-zS5Yer0MOYw4rtK2iq43cJagHZ8sXN0jDHDKzB+86gSBSAI4v07S97mcq+Gs2vclAxSh1j7vOAHxSVgduiiuVQ==}
 
-  emoji-picker-element@1.22.7:
-    resolution: {integrity: sha512-lX0a8f8yeDw2YuMDRqC1YXjMFRhTxezSGcSYnvgkEvtbtUnzYuNadxFrl4VBOeiwZMtwSe81nMk1Of6muNhCtQ==}
+  emoji-picker-element@1.25.0:
+    resolution: {integrity: sha512-UcUMxqIuneLCsEJ5KpqTD1xaHZyUpg6Oa7uCVe5AMXXpsW3C2TNegbNLXj2/rlbyr6qVMf7lXTFyzvFEarOIUg==}
 
   emoji-regex@8.0.0:
     resolution: {integrity: sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==}
@@ -6356,8 +6356,8 @@ packages:
       typescript:
         optional: true
 
-  vuemoji-picker@0.3.1:
-    resolution: {integrity: sha512-BfMBNBN1I6QO3vyzyiyibJx6tTczuXB51hoJFvD6gE1IKeND38AXn7R8dI0k1g61XtQeKPuiriJukqunJqrnXg==}
+  vuemoji-picker@0.3.2:
+    resolution: {integrity: sha512-yjNUSlth1HHxrqvSReG/JRFd1RiKP4CMdkhGiehy/IcajtVTrmzJtZ7zyXS4gFDX2YZDY43zw+LQzypkWWO6Lw==}
     peerDependencies:
       '@vue/composition-api': ^1.7.0
       vue: ^2.6.14 || ^3.2.0
@@ -9908,7 +9908,7 @@ snapshots:
 
   electron-to-chromium@1.5.47: {}
 
-  emoji-picker-element@1.22.7: {}
+  emoji-picker-element@1.25.0: {}
 
   emoji-regex@8.0.0: {}
 
@@ -13063,9 +13063,9 @@ snapshots:
     optionalDependencies:
       typescript: 5.7.2
 
-  vuemoji-picker@0.3.1(vue@3.5.13(typescript@5.7.2)):
+  vuemoji-picker@0.3.2(vue@3.5.13(typescript@5.7.2)):
     dependencies:
-      emoji-picker-element: 1.22.7
+      emoji-picker-element: 1.25.0
       vue: 3.5.13(typescript@5.7.2)
       vue-demi: 0.14.10(vue@3.5.13(typescript@5.7.2))
 
