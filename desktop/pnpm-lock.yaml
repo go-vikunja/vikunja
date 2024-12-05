@@ -12,8 +12,8 @@ importers:
         specifier: 2.0.0
         version: 2.0.0
       express:
-        specifier: 4.21.1
-        version: 4.21.1
+        specifier: 4.21.2
+        version: 4.21.2
     devDependencies:
       electron:
         specifier: 33.2.1
@@ -481,15 +481,6 @@ packages:
       supports-color:
         optional: true
 
-  debug@4.3.4:
-    resolution: {integrity: sha512-PRWFHuSU3eDtQJPvnNY7Jcket1j0t5OuOsFzPPzsekD52Zl8qUfFIPEiswXqIvHWGVHOgX+7G/vCNNhehwxfkQ==}
-    engines: {node: '>=6.0'}
-    peerDependencies:
-      supports-color: '*'
-    peerDependenciesMeta:
-      supports-color:
-        optional: true
-
   debug@4.3.7:
     resolution: {integrity: sha512-Er2nc/H7RrMXZBFCEim6TCmMk02Z8vLC2Rbi1KEBggpo0fS6l0S1nnapwmIi3yW/+GOJap1Krg4w0Hg80oCqgQ==}
     engines: {node: '>=6.0'}
@@ -656,8 +647,8 @@ packages:
   exponential-backoff@3.1.1:
     resolution: {integrity: sha512-dX7e/LHVJ6W3DE1MHWi9S1EYzDESENfLrYohG2G++ovZrYOkm4Knwa0mc1cn84xJOR4KEU0WSchhLbd0UklbHw==}
 
-  express@4.21.1:
-    resolution: {integrity: sha512-YSFlK1Ee0/GC8QaO91tHcDxJiE/X4FbpAyQWkxAvG6AXCuR65YzK8ua6D9hvi/TzUfZMpc+BwuM1IPw8fmQBiQ==}
+  express@4.21.2:
+    resolution: {integrity: sha512-28HqgMZAmih1Czt9ny7qr6ek2qddF4FclbMzwhCREB6OFfH+rXAnuNCwo1/wFvrtbgsQDb4kSbX9de9lFbrXnA==}
     engines: {node: '>= 0.10.0'}
 
   extract-zip@2.0.1:
@@ -1135,9 +1126,6 @@ packages:
   ms@2.0.0:
     resolution: {integrity: sha512-Tpp60P6IUJDTuOq/5Z8cdskzJujfwqfOTkrwIwj7IRISpnkJnT6SyJ4PCPnGMoFjC9ddhal5KVIYtAt97ix05A==}
 
-  ms@2.1.2:
-    resolution: {integrity: sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==}
-
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
 
@@ -1235,8 +1223,8 @@ packages:
     resolution: {integrity: sha512-Xa4Nw17FS9ApQFJ9umLiJS4orGjm7ZzwUrwamcGQuHSzDyth9boKDaycYdDcZDuqYATXw4HFXgaqWTctW/v1HA==}
     engines: {node: '>=16 || 14 >=14.18'}
 
-  path-to-regexp@0.1.10:
-    resolution: {integrity: sha512-7lf7qcQidTku0Gu3YDPc8DJ1q7OOucfa/BSsIwjuh56VU7katFvuM8hULfkwB3Fns/rsVF7PwPKVw1sl5KQS9w==}
+  path-to-regexp@0.1.12:
+    resolution: {integrity: sha512-RA1GjUVMnvYFxuqovrEqZoxxW5NUZqbwKtYz/Tt7nXerk0LbLblQmrsgdeOxV5SFHf0UDggjS/bSeOZwt1pmEQ==}
 
   pe-library@0.4.1:
     resolution: {integrity: sha512-eRWB5LBz7PpDu4PUlwT0PhnQfTQJlDDdPa35urV4Osrm0t0AqQFGn+UIkU3klZvwJ8KPO3VbBFsXquA6p6kqZw==}
@@ -1950,7 +1938,7 @@ snapshots:
       builder-util-runtime: 9.2.10
       chromium-pickle-js: 0.2.0
       config-file-ts: 0.2.8-rc1
-      debug: 4.3.4
+      debug: 4.3.7
       dmg-builder: 25.1.8(electron-builder-squirrel-windows@24.13.3)
       dotenv: 16.4.5
       dotenv-expand: 11.0.6
@@ -2096,7 +2084,7 @@ snapshots:
 
   builder-util-runtime@9.2.10:
     dependencies:
-      debug: 4.3.4
+      debug: 4.3.7
       sax: 1.3.0
     transitivePeerDependencies:
       - supports-color
@@ -2138,7 +2126,7 @@ snapshots:
       builder-util-runtime: 9.2.10
       chalk: 4.1.2
       cross-spawn: 7.0.6
-      debug: 4.3.4
+      debug: 4.3.7
       fs-extra: 10.1.0
       http-proxy-agent: 7.0.2
       https-proxy-agent: 7.0.5
@@ -2307,10 +2295,6 @@ snapshots:
   debug@2.6.9:
     dependencies:
       ms: 2.0.0
-
-  debug@4.3.4:
-    dependencies:
-      ms: 2.1.2
 
   debug@4.3.7:
     dependencies:
@@ -2507,7 +2491,7 @@ snapshots:
 
   exponential-backoff@3.1.1: {}
 
-  express@4.21.1:
+  express@4.21.2:
     dependencies:
       accepts: 1.3.8
       array-flatten: 1.1.1
@@ -2528,7 +2512,7 @@ snapshots:
       methods: 1.1.2
       on-finished: 2.4.1
       parseurl: 1.3.3
-      path-to-regexp: 0.1.10
+      path-to-regexp: 0.1.12
       proxy-addr: 2.0.7
       qs: 6.13.0
       range-parser: 1.2.1
@@ -3058,8 +3042,6 @@ snapshots:
 
   ms@2.0.0: {}
 
-  ms@2.1.2: {}
-
   ms@2.1.3: {}
 
   negotiator@0.6.3: {}
@@ -3164,7 +3146,7 @@ snapshots:
       lru-cache: 10.4.3
       minipass: 7.1.2
 
-  path-to-regexp@0.1.10: {}
+  path-to-regexp@0.1.12: {}
 
   pe-library@0.4.1: {}
 
