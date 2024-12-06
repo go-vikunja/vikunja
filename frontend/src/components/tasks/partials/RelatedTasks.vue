@@ -126,7 +126,7 @@
 							@update:modelValue="toggleTaskDone(task)"
 						/>
 						<RouterLink
-							:to="{ name: route.name as string, params: { id: task.id } }"
+							:to="{ name: route.name as string, params: { id: task.id }, state: { backdropView: route.fullPath } }"
 							:class="{ 'is-strikethrough': task.done}"
 						>
 							<span
