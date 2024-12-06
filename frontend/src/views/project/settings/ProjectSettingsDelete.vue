@@ -49,7 +49,7 @@ const router = useRouter()
 const totalTasks = ref<number | null>(null)
 
 const project = computed(() => projectStore.projects[route.params.projectId])
-const childProjectIds = ref<number[]>([])
+const projectIdsToDelete = ref<number[]>([])
 
 watchEffect(
 	async () => {
@@ -57,13 +57,14 @@ watchEffect(
 			return
 		}
 
-		childProjectIds.value = projectStore.getChildProjects(parseInt(route.params.projectId)).map(p => p.id)
-		if (childProjectIds.value.length === 0) {
-			childProjectIds.value = [parseInt(route.params.projectId)]
-		}
+		projectIdsToDelete.value = projectStore
+			.getChildProjects(parseInt(route.params.projectId))
+			.map(p => p.id)
+
+		projectIdsToDelete.value.push(parseInt(route.params.projectId))
 
 		const taskService = new TaskService()
-		await taskService.getAll({}, {filter: `project in ${childProjectIds.value.join(',')}`})
+		await taskService.getAll({}, {filter: `project in ${projectIdsToDelete.value.join(',')}`})
 		totalTasks.value = taskService.totalPages * taskService.resultCount
 	},
 )
@@ -72,10 +73,10 @@ useTitle(() => t('project.delete.title', {project: project?.value?.title}))
 
 const deleteNotice = computed(() => {
 	if(totalTasks.value && totalTasks.value > 0) {
-		if (childProjectIds.value.length <= 1) {
+		if (projectIdsToDelete.value.length <= 1) {
 			return t('project.delete.tasksToDelete', {count: totalTasks.value})
-		} else if (childProjectIds.value.length > 1) {
-			return t('project.delete.tasksAndChildProjectsToDelete', {tasks: totalTasks.value, projects: childProjectIds.value.length})
+		} else if (projectIdsToDelete.value.length > 1) {
+			return t('project.delete.tasksAndChildProjectsToDelete', {tasks: totalTasks.value, projects: projectIdsToDelete.value.length})
 		}
 	}
 
