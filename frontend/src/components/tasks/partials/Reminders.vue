@@ -92,7 +92,7 @@ function updateData() {
 	})
 }
 
-function addNewReminder(newReminder: ITaskReminder) {
+function addNewReminder(newReminder: ITaskReminder|null) {
 	if (newReminder === null) {
 		return
 	}

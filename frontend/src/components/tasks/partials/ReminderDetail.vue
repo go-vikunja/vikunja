@@ -144,7 +144,7 @@ watch(
 		if (newReminder) {
 			reminder.value = newReminder
 
-			if (newReminder.relativeTo === null) {
+			if (newReminder.relativeTo === null && newReminder.reminder !== null) {
 				reminderDate.value = new Date(newReminder.reminder)
 			}
 
