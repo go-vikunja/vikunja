@@ -3,6 +3,10 @@
 let
   pkgs-unstable = import inputs.nixpkgs-unstable { system = pkgs.stdenv.system; };
 in {
+  scripts.patch-sass-embedded.exec = ''
+  find node_modules/.pnpm/sass-embedded-linux-*/node_modules/sass-embedded-linux-*/dart-sass/src -name dart -print0 | xargs -I {} -0 patchelf --set-interpreter "$(<$NIX_CC/nix-support/dynamic-linker)" {}
+  '';
+
   packages = with pkgs-unstable; [
     # General tools
     git-cliff 
@@ -27,7 +31,6 @@ in {
     
     go = {
       enable = true;
-      enableHardeningWorkaround = true;
     };
   };
   
