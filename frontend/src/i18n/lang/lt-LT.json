@@ -410,7 +410,7 @@
     "title": "Filtrai",
     "clear": "Anuliuoti filtrus",
     "showResults": "Rodyti rezultatus",
-    "fromView": "The current view has a filter set as well:",
+    "fromView": "Dabartinis vaizdas turi nustatytą filtrą taip pat:",
     "fromViewBoth": "It will be used in combination with what you enter here.",
     "attributes": {
       "title": "Pavadinimas",
@@ -463,7 +463,7 @@
           "project": "The project the task belongs to (only available for saved filters, not on a project level)",
           "reminders": "The reminders of the task as a date field, will return all tasks with at least one reminder matching the query",
           "created": "The time and date when the task was created",
-          "updated": "The time and date when the task was last changed"
+          "updated": "Data ir laikas, kada užduotis buvo pakeista"
         },
         "operators": {
           "intro": "The available operators for filtering include:",
@@ -486,7 +486,7 @@
         "examples": {
           "intro": "Čia pateikiami keli filtravimo užklausos pavyzdžiai:",
           "priorityEqual": "Atitinka užduotis su 4 lygio prioritetu",
-          "dueDatePast": "Matches tasks with a due date in the past",
+          "dueDatePast": "Sutampa su užduotimis su praeities data",
           "undoneHighPriority": "Matches undone tasks with priority level 3 or higher",
           "assigneesIn": "Matches tasks assigned to either \"user1\" or \"user2\"",
           "priorityOneOrTwoPastDue": "Matches tasks with priority level 1 or 2 and a due date in the past"
@@ -548,7 +548,7 @@
     "upcoming": "Būsimos",
     "settings": "Nustatymai",
     "imprint": "Įspaudas",
-    "privacy": "Privacy Policy"
+    "privacy": "Privatumo politika"
   },
   "misc": {
     "loading": "Kraunama…",
@@ -565,7 +565,7 @@
     "previous": "Ankstesnis",
     "next": "Toliau",
     "poweredBy": "Sukurta Vikunja",
-    "info": "Info",
+    "info": "Informacija",
     "create": "Sukurti",
     "doit": "Atlikt!",
     "saving": "Išsaugoma…",
@@ -593,10 +593,10 @@
       "thisWeekend": "Šį savaitgalį",
       "laterThisWeek": "Vėliau šią savaitę",
       "nextWeek": "Kitą savaitę",
-      "chooseDate": "Choose a date"
+      "chooseDate": "Pasirinkite datą"
     },
     "editor": {
-      "edit": "Edit",
+      "edit": "Keisti",
       "done": "Atlikta",
       "heading1": "Heading 1",
       "heading1Tooltip": "Big section heading.",
@@ -605,13 +605,13 @@
       "heading3": "Heading 3",
       "heading3Tooltip": "Smaller section header.",
       "headingSmaller": "Heading Smaller",
-      "headingBigger": "Heading Bigger",
-      "bold": "Bold",
-      "italic": "Italic",
-      "strikethrough": "Strikethrough",
+      "headingBigger": "Antraštė Didesnė",
+      "bold": "Paryškintas",
+      "italic": "Pasviręs",
+      "strikethrough": "Perbrauktas",
       "underline": "Underline",
       "code": "Code",
-      "codeTooltip": "Capture a code snippet.",
+      "codeTooltip": "Atvaizduoti kodo ištrauką.",
       "quote": "Quote",
       "quoteTooltip": "Capture a quote.",
       "bulletList": "Bullet list",
@@ -696,7 +696,7 @@
         "endOfNextMonth": "Kito mėnesio pabaiga",
         "in30Days": "In 30 days",
         "startOfThisYear": "Beginning of this year",
-        "endOfThisYear": "End of this year"
+        "endOfThisYear": "Šių metų pabaiga"
       }
     },
     "datemathHelp": {
@@ -732,16 +732,16 @@
     }
   },
   "task": {
-    "task": "Task",
-    "new": "Create a task",
-    "delete": "Delete this task",
+    "task": "Užduotis",
+    "new": "Sukurti užduotį",
+    "delete": "Ištrinti šią užduotį",
     "createSuccess": "The task was successfully created.",
     "addReminder": "Add a reminder…",
     "doneSuccess": "The task was successfully marked as done.",
     "undoneSuccess": "The task was successfully un-marked as done.",
     "revertSuccess": "The task change was successfully undone.",
     "undo": "Undo",
-    "openDetail": "Open task detail view",
+    "openDetail": "Atidaryti užduoties duomenų vaizdą",
     "checklistTotal": "{checked} of {total} tasks",
     "checklistAllDone": "{total} užduotys",
     "show": {
@@ -750,7 +750,7 @@
       "noDates": "Rodyti užduotis be datų",
       "overdue": "Rodyti neišpildytas užduotis",
       "fromuntil": "Užduotys nuo {from} iki {until}",
-      "select": "Select a date range",
+      "select": "Pasirinkti datos rėžį",
       "noTasks": "Nothing to do — Have a nice day!"
     },
     "detail": {
