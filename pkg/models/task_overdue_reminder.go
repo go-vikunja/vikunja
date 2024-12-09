@@ -139,7 +139,7 @@ func RegisterOverdueReminderCron() {
 			}
 		}
 
-		projects, err := GetProjectsMapSimplByTaskIDs(s, taskIDs)
+		projects, err := GetProjectsMapSimpleByTaskIDs(s, taskIDs)
 		if err != nil {
 			log.Errorf("[Undone Overdue Tasks Reminder] Could not get projects for tasks: %s", err)
 			return

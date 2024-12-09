@@ -206,7 +206,7 @@ func getTasksWithRemindersDueAndTheirUsers(s *xorm.Session, now time.Time) (remi
 
 	seen := make(map[int64]map[int64]bool)
 
-	projects, err := GetProjectsMapSimplByTaskIDs(s, taskIDs)
+	projects, err := GetProjectsMapSimpleByTaskIDs(s, taskIDs)
 	if err != nil {
 		return
 	}

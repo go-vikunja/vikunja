@@ -219,7 +219,7 @@ func (la *TaskAssginee) Delete(s *xorm.Session, a web.Auth) (err error) {
 func (la *TaskAssginee) Create(s *xorm.Session, a web.Auth) (err error) {
 
 	// Get the project to perform later checks
-	project, err := GetProjectSimplByTaskID(s, la.TaskID)
+	project, err := GetProjectSimpleByTaskID(s, la.TaskID)
 	if err != nil {
 		return
 	}
@@ -314,7 +314,7 @@ func (t *Task) addNewAssigneeByID(s *xorm.Session, newAssigneeID int64, project 
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/assignees [get]
 func (la *TaskAssginee) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
-	task, err := GetProjectSimplByTaskID(s, la.TaskID)
+	task, err := GetProjectSimpleByTaskID(s, la.TaskID)
 	if err != nil {
 		return nil, 0, 0, err
 	}

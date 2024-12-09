@@ -351,8 +351,8 @@ func getProjectSimple(s *xorm.Session, cond builder.Cond) (project *Project, exi
 	return
 }
 
-// GetProjectSimplByTaskID gets a project by a task id
-func GetProjectSimplByTaskID(s *xorm.Session, taskID int64) (l *Project, err error) {
+// GetProjectSimpleByTaskID gets a project by a task id
+func GetProjectSimpleByTaskID(s *xorm.Session, taskID int64) (l *Project, err error) {
 	// We need to re-init our project object, because otherwise xorm creates a "where for every item in that project object,
 	// leading to not finding anything if the id is good, but for example the title is different.
 	var project Project
@@ -373,8 +373,8 @@ func GetProjectSimplByTaskID(s *xorm.Session, taskID int64) (l *Project, err err
 	return &project, nil
 }
 
-// GetProjectsMapSimplByTaskIDs gets a list of projects by a task ids
-func GetProjectsMapSimplByTaskIDs(s *xorm.Session, taskIDs []int64) (ps map[int64]*Project, err error) {
+// GetProjectsMapSimpleByTaskIDs gets a list of projects by a task ids
+func GetProjectsMapSimpleByTaskIDs(s *xorm.Session, taskIDs []int64) (ps map[int64]*Project, err error) {
 	ps = make(map[int64]*Project)
 	err = s.
 		Select("projects.*").
@@ -385,7 +385,7 @@ func GetProjectsMapSimplByTaskIDs(s *xorm.Session, taskIDs []int64) (ps map[int6
 	return
 }
 
-func GetProjectsSimplByTaskIDs(s *xorm.Session, taskIDs []int64) (ps []*Project, err error) {
+func GetProjectsSimpleByTaskIDs(s *xorm.Session, taskIDs []int64) (ps []*Project, err error) {
 	err = s.
 		Select("projects.*").
 		Table(Project{}).
