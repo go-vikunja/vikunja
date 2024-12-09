@@ -137,6 +137,19 @@ func RecalculateTaskPositions(s *xorm.Session, view *ProjectView, a web.Auth) (e
 	}
 	if view.ProjectID < -1 {
 		tc.ProjectID = 0
+
+		sf, err := getSavedFilterSimpleByID(s, getSavedFilterIDFromProjectID(view.ProjectID))
+		if err != nil {
+			return err
+		}
+
+		opts.filterIncludeNulls = sf.Filters.FilterIncludeNulls
+		opts.filterTimezone = sf.Filters.FilterTimezone
+		opts.filter = sf.Filters.Filter
+		opts.parsedFilters, err = getTaskFiltersFromFilterString(opts.filter, opts.filterTimezone)
+		if err != nil {
+			return err
+		}
 	}
 
 	projects, err := getRelevantProjectsFromCollection(s, a, tc)
