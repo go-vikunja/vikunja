@@ -75,7 +75,10 @@ func init() {
 						Title:  bc.Title,
 					})
 				}
-				_, err = tx.Where("id = ?", view.ID).Update(newView)
+				_, err = tx.
+					Where("id = ?", view.ID).
+					Cols("id", "bucket_configuration").
+					Update(newView)
 				if err != nil {
 					return
 				}
