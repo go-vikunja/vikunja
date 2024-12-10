@@ -2,7 +2,11 @@ import {ref, shallowReactive, watch, computed, type ComputedGetter} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {useRouteQuery} from '@vueuse/router'
 
-import TaskCollectionService, {getDefaultTaskFilterParams, type TaskFilterParams} from '@/services/taskCollection'
+import TaskCollectionService, {
+	type ExpandTaskFilterParam,
+	getDefaultTaskFilterParams,
+	type TaskFilterParams,
+} from '@/services/taskCollection'
 import type {ITask} from '@/modelTypes/ITask'
 import {error} from '@/message'
 import type {IProject} from '@/modelTypes/IProject'
@@ -59,6 +63,7 @@ export function useTaskList(
 	projectIdGetter: ComputedGetter<IProject['id']>,
 	projectViewIdGetter: ComputedGetter<IProjectView['id']>,
 	sortByDefault: SortBy = SORT_BY_DEFAULT,
+	expandGetter: ComputedGetter<ExpandTaskFilterParam> = () => 'subtasks',
 ) {
 	
 	const projectId = computed(() => projectIdGetter())
@@ -95,6 +100,7 @@ export function useTaskList(
 			{
 				...allParams.value,
 				filter_timezone: authStore.settings.timezone,
+				expand: expandGetter(),
 			},
 			page.value,
 		]

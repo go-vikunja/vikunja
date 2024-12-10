@@ -140,7 +140,14 @@ const {
 	loadTasks,
 	params,
 	sortByParam,
-} = useTaskList(() => props.projectId, () => props.viewId, {position: 'asc'})
+} = useTaskList(
+	() => props.projectId,
+	() => props.viewId,
+	{position: 'asc'},
+	() => props.projectId === -1
+		? null
+		: 'subtasks',
+)
 
 const taskPositionService = ref(new TaskPositionService())
 
