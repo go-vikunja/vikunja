@@ -135,7 +135,7 @@ async function addTask() {
 
 	const taskCollectionService = new TaskService()
 	const projectIndices = new Map<number, number>()
-	
+
 	let currentProjectId = authStore.settings.defaultProjectId
 	if (typeof router.currentRoute.value.params.projectId !== 'undefined') {
 		currentProjectId = Number(router.currentRoute.value.params.projectId)
@@ -143,22 +143,22 @@ async function addTask() {
 
 	// Create a map of project indices before creating tasks
 	if (tasksToCreate.length > 1) {
-	for (const {project} of tasksToCreate) {
-		const projectId = project !== null
-			? await taskStore.findProjectId({project, projectId: 0})
-			: currentProjectId
+		for (const {project} of tasksToCreate) {
+			const projectId = project !== null
+				? await taskStore.findProjectId({project, projectId: 0})
+				: currentProjectId
 
-		if (!projectIndices.has(projectId)) {
-			const newestTask = await taskCollectionService.getAll(new TaskModel({}), {
-				sort_by: ['id'],
-				order_by: ['desc'],
-				per_page: 1,
-				filter: `project_id = ${projectId}`,
-			})
-			projectIndices.set(projectId, newestTask[0]?.index || 0)
+			if (!projectIndices.has(projectId)) {
+				const newestTask = await taskCollectionService.getAll(new TaskModel({}), {
+					sort_by: ['id'],
+					order_by: ['desc'],
+					per_page: 1,
+					filter: `project_id = ${projectId}`,
+				})
+				projectIndices.set(projectId, newestTask[0]?.index || 0)
+			}
 		}
 	}
-}
 
 	const newTasks = tasksToCreate.map(async ({title, project}, index) => {
 		if (title === '') {
@@ -169,7 +169,7 @@ async function addTask() {
 		const projectId = project !== null
 			? await taskStore.findProjectId({project, projectId: 0})
 			: currentProjectId
-		
+
 		// Calculate new index for this task per project
 		let taskIndex: number | undefined
 		if (tasksToCreate.length > 1) {
@@ -215,23 +215,37 @@ async function addTask() {
 				otherTaskId: createdParentTask.id,
 				relationKind: RELATION_KIND.PARENTTASK,
 			}))
-
-			createdTask.relatedTasks[RELATION_KIND.PARENTTASK] = [{
+			
+			if (typeof createdTask.relatedTasks === 'undefined') {
+				createdTask.relatedTasks = {}
+			}
+			if (typeof createdTask.relatedTasks[RELATION_KIND.PARENTTASK] === 'undefined') {
+				createdTask.relatedTasks[RELATION_KIND.PARENTTASK] = []
+			}
+			createdTask.relatedTasks[RELATION_KIND.PARENTTASK].push({
 				...createdParentTask,
 				relatedTasks: {}, // To avoid endless references
-			}]
-			// we're only emitting here so that the relation shows up in the project
-			emit('taskAdded', createdTask)
+			})
 
-			createdParentTask.relatedTasks[RELATION_KIND.SUBTASK] = [{
+			if (typeof createdParentTask.relatedTasks === 'undefined') {
+				createdParentTask.relatedTasks = {}
+			}
+			if (typeof createdParentTask.relatedTasks[RELATION_KIND.SUBTASK] === 'undefined') {
+				createdParentTask.relatedTasks[RELATION_KIND.SUBTASK] = []
+			}
+			createdParentTask.relatedTasks[RELATION_KIND.SUBTASK].push({
 				...createdTask,
 				relatedTasks: {}, // To avoid endless references
-			}]
-			emit('taskAdded', createdParentTask)
+			})
 
 			return rel
 		})
 		await Promise.all(relations)
+		
+		// We're emitting all tasks at once at the end to avoid the same task showing up multiple times
+		Object.values(createdTasks).forEach(task => {
+			emit('taskAdded', task)
+		})
 	} catch (e) {
 		newTaskTitle.value = taskTitleBackup
 		if (e?.message === 'NO_PROJECT') {
@@ -264,7 +278,7 @@ defineExpose({
 
 <style lang="scss" scoped>
 .task-add,
-// overwrite bulma styles
+	// overwrite bulma styles
 .task-add .add-task__field {
 	margin-bottom: 0;
 }
