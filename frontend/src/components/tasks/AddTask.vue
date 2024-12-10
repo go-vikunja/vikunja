@@ -13,7 +13,7 @@
 					:class="{'textarea-empty': newTaskTitle === ''}"
 					:placeholder="$t('project.list.addPlaceholder')"
 					rows="1"
-					@keyup="resetEmptyTitleError"
+					@keydown="resetEmptyTitleError"
 					@keydown.enter="handleEnter"
 				/>
 				<span class="icon is-small is-left">
@@ -99,13 +99,10 @@ const taskAddHovered = useElementHover(taskAdd)
 
 const errorMessage = ref('')
 
-function resetEmptyTitleError(e: KeyboardEvent) {
-	if (
-		(e.which <= 90 && e.which >= 48 || e.which >= 96 && e.which <= 105)
-		&& newTaskTitle.value !== ''
-	) {
-		errorMessage.value = ''
-	}
+function resetEmptyTitleError() {
+	if (!newTaskTitle.value) {
+        errorMessage.value = ''
+    }
 }
 
 const loading = computed(() => taskStore.isLoading)
