@@ -120,9 +120,11 @@ func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provid
 	}
 
 	allKeys := append(
-		requiredKeys,
-		"logouturl",
-		"scope",
+		[]string{
+			"logouturl",
+			"scope",
+		},
+		requiredKeys...,
 	)
 
 	for _, configKey := range allKeys {
