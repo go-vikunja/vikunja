@@ -22,7 +22,7 @@ import (
 )
 
 func (pv *ProjectView) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
-	filterID := getSavedFilterIDFromProjectID(pv.ProjectID)
+	filterID := GetSavedFilterIDFromProjectID(pv.ProjectID)
 	if filterID > 0 {
 		sf := &SavedFilter{ID: filterID}
 		return sf.CanRead(s, a)
@@ -33,7 +33,7 @@ func (pv *ProjectView) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
 }
 
 func (pv *ProjectView) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
-	filterID := getSavedFilterIDFromProjectID(pv.ProjectID)
+	filterID := GetSavedFilterIDFromProjectID(pv.ProjectID)
 	if filterID > 0 {
 		sf := &SavedFilter{ID: filterID}
 		return sf.CanDelete(s, a)
@@ -44,7 +44,7 @@ func (pv *ProjectView) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 }
 
 func (pv *ProjectView) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
-	filterID := getSavedFilterIDFromProjectID(pv.ProjectID)
+	filterID := GetSavedFilterIDFromProjectID(pv.ProjectID)
 	if filterID > 0 {
 		sf := &SavedFilter{ID: filterID}
 		return sf.CanUpdate(s, a)
@@ -55,7 +55,7 @@ func (pv *ProjectView) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 }
 
 func (pv *ProjectView) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
-	filterID := getSavedFilterIDFromProjectID(pv.ProjectID)
+	filterID := GetSavedFilterIDFromProjectID(pv.ProjectID)
 	if filterID > 0 {
 		sf := &SavedFilter{ID: filterID}
 		return sf.CanUpdate(s, a)

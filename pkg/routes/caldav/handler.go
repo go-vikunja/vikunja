@@ -183,6 +183,21 @@ func getProjectFromParam(c echo.Context) (project *models.ProjectWithTasksAndBuc
 		return nil, err
 	}
 
+	if intParam == models.FavoritesPseudoProjectID {
+		return &models.ProjectWithTasksAndBuckets{Project: models.FavoritesPseudoProject}, nil
+	}
+
+	if intParam < models.FavoritesPseudoProjectID {
+		var sf *models.SavedFilter
+		sf, err = models.GetSavedFilterSimpleByID(s, models.GetSavedFilterIDFromProjectID(intParam))
+		if err != nil {
+			return nil, err
+		}
+
+		project = &models.ProjectWithTasksAndBuckets{Project: *sf.ToProject()}
+		return
+	}
+
 	p, err := models.GetProjectSimpleByID(s, intParam)
 	if err != nil {
 		return nil, err

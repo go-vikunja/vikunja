@@ -663,7 +663,7 @@ func (l *UpdateTaskInSavedFilterViews) Handle(msg *message.Message) (err error) 
 
 	filterIDs := []int64{}
 	for _, view := range kanbanFilterViews {
-		filterIDs = append(filterIDs, getSavedFilterIDFromProjectID(view.ProjectID))
+		filterIDs = append(filterIDs, GetSavedFilterIDFromProjectID(view.ProjectID))
 	}
 
 	filters := map[int64]*SavedFilter{}
@@ -688,7 +688,7 @@ func (l *UpdateTaskInSavedFilterViews) Handle(msg *message.Message) (err error) 
 	viewIDToCleanUp := []int64{}
 
 	for _, view := range kanbanFilterViews {
-		filter, exists := filters[getSavedFilterIDFromProjectID(view.ProjectID)]
+		filter, exists := filters[GetSavedFilterIDFromProjectID(view.ProjectID)]
 		if !exists {
 			log.Debugf("Did not find filter for view %d", view.ID)
 			continue

@@ -55,7 +55,7 @@ func (sf *SavedFilter) canDoFilter(s *xorm.Session, auth web.Auth) (can bool, er
 		return false, ErrSavedFilterNotAvailableForLinkShare{LinkShareID: auth.GetID(), SavedFilterID: sf.ID}
 	}
 
-	sff, err := getSavedFilterSimpleByID(s, sf.ID)
+	sff, err := GetSavedFilterSimpleByID(s, sf.ID)
 	if err != nil {
 		return false, err
 	}

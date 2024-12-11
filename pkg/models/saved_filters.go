@@ -68,9 +68,9 @@ func (sf *SavedFilter) getTaskCollection() *TaskCollection {
 	return sf.Filters
 }
 
-// Returns the saved filter ID from a project ID. Will not check if the filter actually exists.
+// GetSavedFilterIDFromProjectID returns the saved filter ID from a project ID. Will not check if the filter actually exists.
 // If the returned ID is zero, means that it is probably invalid.
-func getSavedFilterIDFromProjectID(projectID int64) (filterID int64) {
+func GetSavedFilterIDFromProjectID(projectID int64) (filterID int64) {
 	// We get the id of the saved filter by multiplying the ProjectID with -1 and subtracting one
 	filterID = projectID*-1 - 1
 	// FilterIDs from projectIDs are always positive
@@ -99,7 +99,7 @@ func getSavedFiltersForUser(s *xorm.Session, auth web.Auth) (filters []*SavedFil
 	return
 }
 
-func (sf *SavedFilter) toProject() *Project {
+func (sf *SavedFilter) ToProject() *Project {
 	return &Project{
 		ID:          getProjectIDFromSavedFilterID(sf.ID),
 		Title:       sf.Title,
@@ -139,7 +139,7 @@ func (sf *SavedFilter) Create(s *xorm.Session, auth web.Auth) (err error) {
 	return err
 }
 
-func getSavedFilterSimpleByID(s *xorm.Session, id int64) (sf *SavedFilter, err error) {
+func GetSavedFilterSimpleByID(s *xorm.Session, id int64) (sf *SavedFilter, err error) {
 	sf = &SavedFilter{}
 	exists, err := s.
 		Where("id = ?", id).
@@ -186,7 +186,7 @@ func (sf *SavedFilter) ReadOne(s *xorm.Session, _ web.Auth) error {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /filters/{id} [post]
 func (sf *SavedFilter) Update(s *xorm.Session, _ web.Auth) error {
-	origFilter, err := getSavedFilterSimpleByID(s, sf.ID)
+	origFilter, err := GetSavedFilterSimpleByID(s, sf.ID)
 	if err != nil {
 		return err
 	}
@@ -433,7 +433,7 @@ func RegisterAddTaskToFilterViewCron() {
 		deleteCond := []builder.Cond{}
 		taskIDsToRemove := []int64{}
 		for _, view := range kanbanFilterViews {
-			filterID := getSavedFilterIDFromProjectID(view.ProjectID)
+			filterID := GetSavedFilterIDFromProjectID(view.ProjectID)
 			filter, exists := filters[filterID]
 			if !exists {
 				log.Debugf("%sDid not find filter for view %d", logPrefix, view.ID)

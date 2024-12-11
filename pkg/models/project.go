@@ -265,10 +265,10 @@ func (p *Project) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	// Check for saved filters
-	filterID := getSavedFilterIDFromProjectID(p.ID)
+	filterID := GetSavedFilterIDFromProjectID(p.ID)
 	isFilter := filterID > 0
 	if isFilter {
-		sf, err := getSavedFilterSimpleByID(s, filterID)
+		sf, err := GetSavedFilterSimpleByID(s, filterID)
 		if err != nil {
 			return err
 		}
@@ -591,7 +591,7 @@ func getSavedFilterProjects(s *xorm.Session, doer *user.User) (savedFiltersProje
 	}
 
 	for _, filter := range savedFilters {
-		filterProject := filter.toProject()
+		filterProject := filter.ToProject()
 		filterProject.Owner = doer
 		savedFiltersProjects = append(savedFiltersProjects, filterProject)
 	}
@@ -735,7 +735,7 @@ func addProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err er
 func addMaxRightToProjects(s *xorm.Session, projects []*Project, u *user.User) (err error) {
 	projectIDs := make([]int64, 0, len(projects))
 	for _, project := range projects {
-		if getSavedFilterIDFromProjectID(project.ID) > 0 {
+		if GetSavedFilterIDFromProjectID(project.ID) > 0 {
 			project.MaxRight = RightAdmin
 			continue
 		}
@@ -1039,9 +1039,9 @@ func recalculateProjectPositions(s *xorm.Session, parentProjectID int64) (err er
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id} [post]
 func (p *Project) Update(s *xorm.Session, a web.Auth) (err error) {
-	fid := getSavedFilterIDFromProjectID(p.ID)
+	fid := GetSavedFilterIDFromProjectID(p.ID)
 	if fid > 0 {
-		f, err := getSavedFilterSimpleByID(s, fid)
+		f, err := GetSavedFilterSimpleByID(s, fid)
 		if err != nil {
 			return err
 		}
@@ -1054,7 +1054,7 @@ func (p *Project) Update(s *xorm.Session, a web.Auth) (err error) {
 			return err
 		}
 
-		*p = *f.toProject()
+		*p = *f.ToProject()
 		return nil
 	}
 

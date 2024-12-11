@@ -86,8 +86,8 @@ func (p *Project) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
 	}
 
 	// Saved Filter Projects need a special case
-	if getSavedFilterIDFromProjectID(p.ID) > 0 {
-		sf := &SavedFilter{ID: getSavedFilterIDFromProjectID(p.ID)}
+	if GetSavedFilterIDFromProjectID(p.ID) > 0 {
+		sf := &SavedFilter{ID: GetSavedFilterIDFromProjectID(p.ID)}
 		return sf.CanRead(s, a)
 	}
 
@@ -117,9 +117,9 @@ func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err er
 		return false, nil
 	}
 
-	fid := getSavedFilterIDFromProjectID(p.ID)
+	fid := GetSavedFilterIDFromProjectID(p.ID)
 	if fid > 0 {
-		sf, err := getSavedFilterSimpleByID(s, fid)
+		sf, err := GetSavedFilterSimpleByID(s, fid)
 		if err != nil {
 			return false, err
 		}

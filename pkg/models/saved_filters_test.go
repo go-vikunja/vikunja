@@ -38,10 +38,10 @@ func TestSavedFilter_getProjectIDFromFilter(t *testing.T) {
 
 func TestSavedFilter_getFilterIDFromProjectID(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
-		assert.Equal(t, int64(1), getSavedFilterIDFromProjectID(-2))
+		assert.Equal(t, int64(1), GetSavedFilterIDFromProjectID(-2))
 	})
 	t.Run("invalid", func(t *testing.T) {
-		assert.Equal(t, int64(0), getSavedFilterIDFromProjectID(2))
+		assert.Equal(t, int64(0), GetSavedFilterIDFromProjectID(2))
 	})
 }
 
