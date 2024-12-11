@@ -99,7 +99,7 @@ func (tp *TaskPosition) Update(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	_, err = s.
-		Where("task_id = ?", tp.TaskID).
+		Where("task_id = ? AND project_view_id = ?", tp.TaskID, tp.ProjectViewID).
 		Cols("project_view_id", "position").
 		Update(tp)
 	if err != nil {
