@@ -134,7 +134,6 @@
     "@histoire/plugin-vue": "0.17.17",
     "@tsconfig/node22": "22.0.0",
     "@types/codemirror": "5.60.15",
-    "@types/dompurify": "3.2.0",
     "@types/flexsearch": "0.7.6",
     "@types/is-touch-device": "1.0.3",
     "@types/node": "22.10.1",
