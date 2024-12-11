@@ -272,9 +272,6 @@ importers:
       '@types/is-touch-device':
         specifier: 1.0.3
         version: 1.0.3
-      '@types/lodash.clonedeep':
-        specifier: 4.5.9
-        version: 4.5.9
       '@types/node':
         specifier: 22.10.1
         version: 22.10.1
@@ -2441,12 +2438,6 @@ packages:
 
   '@types/linkify-it@5.0.0':
     resolution: {integrity: sha512-sVDA58zAw4eWAffKOaQH5/5j3XeayukzDk+ewSsnv3p4yJEZHCCzMDiZM8e0OUrRvmpGZ85jf4yDHkHsgBNr9Q==}
-
-  '@types/lodash.clonedeep@4.5.9':
-    resolution: {integrity: sha512-19429mWC+FyaAhOLzsS8kZUsI+/GmBAQ0HFiCPsKGU+7pBXOQWhyrY6xNNDwUSX8SMZMJvuFVMF9O5dQOlQK9Q==}
-
-  '@types/lodash@4.17.7':
-    resolution: {integrity: sha512-8wTvZawATi/lsmNu10/j2hk1KEP0IvjubqPE3cu1Xz7xfXXt5oCq3SNUz4fMIP4XGF9Ky+Ue2tBA3hcS7LSBlA==}
 
   '@types/markdown-it@12.2.3':
     resolution: {integrity: sha512-GKMHFfv3458yYy+v/N8gjufHO6MSZKCOXpZc5GXIWWy8uldwfmPn98vp81gZ5f9SVw8YYBctgfJ22a2d7AOMeQ==}
@@ -8934,12 +8925,6 @@ snapshots:
       '@types/node': 22.10.1
 
   '@types/linkify-it@5.0.0': {}
-
-  '@types/lodash.clonedeep@4.5.9':
-    dependencies:
-      '@types/lodash': 4.17.7
-
-  '@types/lodash@4.17.7': {}
 
   '@types/markdown-it@12.2.3':
     dependencies:
