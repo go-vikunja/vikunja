@@ -68,7 +68,7 @@ require (
 	github.com/ulule/limiter/v3 v3.11.2
 	github.com/wneessen/go-mail v0.5.2
 	github.com/yuin/goldmark v1.7.8
-	golang.org/x/crypto v0.30.0
+	golang.org/x/crypto v0.31.0
 	golang.org/x/image v0.23.0
 	golang.org/x/oauth2 v0.24.0
 	golang.org/x/sync v0.10.0
