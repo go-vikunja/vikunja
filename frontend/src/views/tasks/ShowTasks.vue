@@ -98,8 +98,14 @@ const props = withDefaults(defineProps<{
 	showOverdue: false,
 })
 
+const emit = defineEmits<{
+	'tasksLoaded': true,
+}>()
+
 const authStore = useAuthStore()
 const taskStore = useTaskStore()
+const projectStore = useProjectStore()
+
 const route = useRoute()
 const router = useRouter()
 const {t} = useI18n({useScope: 'global'})
@@ -107,8 +113,6 @@ const {t} = useI18n({useScope: 'global'})
 const tasks = ref<ITask[]>([])
 const showNothingToDo = ref<boolean>(false)
 const taskCollectionService = ref(new TaskCollectionService())
-
-const projectStore = useProjectStore()
 
 setTimeout(() => showNothingToDo.value = true, 100)
 
@@ -200,13 +204,14 @@ async function loadPendingTasks(from: Date|string, to: Date|string) {
 		}
 	}
 	
+	let projectId = null
 	const filterId = authStore.settings.frontendSettings.filterIdUsedOnOverview
 	if (showAll.value && filterId && typeof projectStore.projects[filterId] !== 'undefined') {
-		tasks.value = await taskCollectionService.value.getAll({projectId: filterId}, params)
-		return
+		projectId = filterId
 	}
 
-	tasks.value = await taskStore.loadTasks(params)
+	tasks.value = await taskStore.loadTasks(params, projectId)
+	emit('tasksLoaded', true)
 }
 
 // FIXME: this modification should happen in the store

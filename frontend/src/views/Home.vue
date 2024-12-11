@@ -23,7 +23,7 @@
 			class="is-max-width-desktop"
 			@taskAdded="updateTaskKey"
 		/>
-		<template v-if="!hasTasks && !loading && migratorsEnabled">
+		<template v-if="tasksLoaded && !hasTasks && !loading && migratorsEnabled">
 			<p class="mt-4">
 				{{ $t('home.project.importText') }}
 			</p>
@@ -49,6 +49,7 @@
 			v-if="projectStore.hasProjects"
 			:key="showTasksKey"
 			class="show-tasks"
+			@tasksLoaded="tasksLoaded = true"
 		/>
 	</div>
 </template>
@@ -90,6 +91,8 @@ const projectHistory = computed(() => {
 		.map(l => projectStore.projects[l.id])
 		.filter(l => Boolean(l))
 })
+
+const tasksLoaded = ref(false)
 
 const migratorsEnabled = computed(() => configStore.availableMigrators?.length > 0)
 const hasTasks = computed(() => baseStore.hasTasks)

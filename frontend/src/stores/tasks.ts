@@ -28,7 +28,7 @@ import {useKanbanStore} from '@/stores/kanban'
 import {useBaseStore} from '@/stores/base'
 import ProjectUserService from '@/services/projectUsers'
 import {useAuthStore} from '@/stores/auth'
-import {type TaskFilterParams} from '@/services/taskCollection'
+import TaskCollectionService, {type TaskFilterParams} from '@/services/taskCollection'
 import {getRandomColorHex} from '@/helpers/color/randomColor'
 import {REPEAT_TYPES} from '@/types/IRepeatAfter'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
@@ -134,15 +134,16 @@ export const useTaskStore = defineStore('task', () => {
 		if (!params.filter_timezone || params.filter_timezone === '') {
 			params.filter_timezone = authStore.settings.timezone
 		}
-		
-		if (projectId !== null) {
-			params.filter = 'project = '+projectId+' && (' + params.filter +')'
-		}
 
 		const cancel = setModuleLoading(setIsLoading)
 		try {
-			const taskService = new TaskService()
-			tasks.value = await taskService.getAll({}, params)
+			const model = {}
+			let taskCollectionService = new TaskService()
+			if (projectId !== null) {
+				model.projectId = projectId
+				taskCollectionService = new TaskCollectionService()
+			}
+			tasks.value = await taskCollectionService.getAll(model, params)
 			baseStore.setHasTasks(tasks.value.length > 0)
 			return tasks.value
 		} finally {
