@@ -62,6 +62,12 @@ export default class NotificationModel extends AbstractModel<INotification> impl
 					project: new ProjectModel(this.notification.project),
 				}
 				break
+			case NOTIFICATION_NAMES.TASK_MENTIONED:
+				this.notification = {
+					doer: new UserModel(this.notification.doer),
+					task: new TaskModel(this.notification.task),
+				}
+				break
 		}
 
 		this.created = new Date(this.created)
@@ -96,6 +102,8 @@ export default class NotificationModel extends AbstractModel<INotification> impl
 				return `added ${who} to the ${this.notification.team.name} team`
 			case NOTIFICATION_NAMES.TASK_REMINDER:
 				return `Reminder for ${this.notification.task.getTextIdentifier()} ${this.notification.task.title} (${this.notification.project.title})`
+			case NOTIFICATION_NAMES.TASK_MENTIONED:
+				return `${getDisplayName(this.notification.doer)} mentioned you on ${this.notification.task.getTextIdentifier()}`
 		}
 
 		return ''

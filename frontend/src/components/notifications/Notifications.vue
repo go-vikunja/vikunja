@@ -159,6 +159,7 @@ function to(n, index) {
 		case names.TASK_COMMENT:
 		case names.TASK_ASSIGNED:
 		case names.TASK_REMINDER:
+		case names.TASK_MENTIONED:
 			to.name = 'task.detail'
 			to.params.id = n.notification.task.id
 			break
