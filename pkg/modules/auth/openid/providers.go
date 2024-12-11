@@ -17,6 +17,7 @@
 package openid
 
 import (
+	"fmt"
 	"strconv"
 
 	"code.vikunja.io/api/pkg/config"
@@ -111,19 +112,29 @@ func GetProvider(key string) (provider *Provider, err error) {
 
 func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provider, err error) {
 
-	for _, configKey := range []string{
-		// Values from environment variables are evaluated at runtime, hence we need to check them explicitly
-		// through viper to make sure we catch all of them.
+	requiredKeys := []string{
 		"name",
-		"logouturl",
-		"scope",
 		"authurl",
 		"clientsecret",
 		"clientid",
-	} {
+	}
+
+	allKeys := append(
+		requiredKeys,
+		"logouturl",
+		"scope",
+	)
+
+	for _, configKey := range allKeys {
 		valueFromFile := config.GetConfigValueFromFile("auth.openid.providers." + key + "." + configKey)
 		if valueFromFile != "" {
 			pi[configKey] = valueFromFile
+		}
+	}
+
+	for _, key := range requiredKeys {
+		if _, exists := pi[key]; !exists {
+			return nil, fmt.Errorf("required key '%s' is missing in the provider configuration", key)
 		}
 	}
 
@@ -132,15 +143,23 @@ func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provid
 		return nil, nil
 	}
 
-	logoutURL, ok := pi["logouturl"].(string)
-	if !ok {
-		logoutURL = ""
+	var logoutURL string
+	logoutValue, exists := pi["logouturl"]
+	if exists {
+		url, ok := logoutValue.(string)
+		if ok {
+			logoutURL = url
+		}
 	}
 
-	scope, _ := pi["scope"].(string)
+	var scope string
+	if scopeValue, exists := pi["scope"]; exists {
+		scope = scopeValue.(string)
+	}
 	if scope == "" {
 		scope = "openid profile email"
 	}
+
 	provider = &Provider{
 		Name:            name,
 		Key:             key,
