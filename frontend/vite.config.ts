@@ -2,7 +2,6 @@
 import {defineConfig, type PluginOption, loadEnv} from 'vite'
 import {configDefaults} from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
-import legacyFn from '@vitejs/plugin-legacy'
 import {URL, fileURLToPath} from 'node:url'
 import {dirname, resolve} from 'node:path'
 
@@ -23,16 +22,6 @@ const pathSrc = fileURLToPath(new URL('./src', import.meta.url)).replaceAll('\\'
 // the @use rules have to be the first in the compiled stylesheets
 const PREFIXED_SCSS_STYLES = `@use "sass:math";
 @import "${pathSrc}/styles/common-imports.scss";`
-
-const isModernBuild = Boolean(process.env.BUILD_MODERN_ONLY)
-const legacy = isModernBuild
-	? undefined
-	: legacyFn()
-
-console.log(isModernBuild
-	? 'Building "modern-only" build'
-	: 'Building "legacy" build with "@vitejs/plugin-legacy"',
-)
 
 /*
 ** Configure sentry plugin
@@ -116,7 +105,6 @@ export default defineConfig(({mode}) => {
 					propsDestructure: true,
 				},
 			}),
-			legacy,
 			svgLoader({
 				// Since the svgs are already manually optimized via https://jakearchibald.github.io/svgomg/
 				// we don't need to optimize them again.
