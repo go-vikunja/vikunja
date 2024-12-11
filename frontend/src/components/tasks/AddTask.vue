@@ -198,7 +198,6 @@ async function addTask() {
 
 			const isParent = allParentTasks.includes(t.title)
 			if (t.parent === null && !isParent) {
-				emit('taskAdded', createdTask)
 				return
 			}
 
