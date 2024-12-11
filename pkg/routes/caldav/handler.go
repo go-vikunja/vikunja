@@ -172,7 +172,7 @@ func EntryHandler(c echo.Context) error {
 func getProjectFromParam(c echo.Context) (project *models.ProjectWithTasksAndBuckets, err error) {
 	param := c.Param("project")
 	if param == "" {
-		return nil, echo.ErrBadRequest
+		return &models.ProjectWithTasksAndBuckets{}, nil
 	}
 
 	s := db.NewSession()
