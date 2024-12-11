@@ -1,6 +1,5 @@
 import {computed, readonly, ref} from 'vue'
 import {acceptHMRUpdate, defineStore} from 'pinia'
-import {klona} from 'klona/lite'
 
 import {findById, findIndexById} from '@/helpers/utils'
 
@@ -342,7 +341,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 		const cancel = setModuleLoading(setIsLoading)
 
 		const bucketIndex = findIndexById(buckets.value, updatedBucketData.id)
-		const oldBucket = klona(buckets.value[bucketIndex])
+		const oldBucket = structuredClone(buckets.value[bucketIndex])
 
 		const updatedBucket = {
 			...oldBucket,

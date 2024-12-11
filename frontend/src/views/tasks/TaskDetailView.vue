@@ -590,7 +590,6 @@ import {useRouter, type RouteLocation} from 'vue-router'
 import {storeToRefs} from 'pinia'
 import {useI18n} from 'vue-i18n'
 import {unrefElement} from '@vueuse/core'
-import {klona} from 'klona/lite'
 import {eventToHotkeyString} from '@github/hotkey'
 
 import TaskService from '@/services/task'
@@ -838,7 +837,7 @@ async function saveTask(
 	undoCallback?: () => void,
 ) {
 	if (currentTask === null) {
-		currentTask = klona(task.value)
+		currentTask = structuredClone(task.value)
 	}
 
 	if (!canWrite.value) {

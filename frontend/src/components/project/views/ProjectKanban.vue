@@ -274,7 +274,6 @@
 import {computed, nextTick, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import draggable from 'zhyswan-vuedraggable'
-import {klona} from 'klona/lite'
 
 import {RIGHTS as Rights} from '@/constants/rights'
 import BucketModel from '@/models/bucket'
@@ -485,7 +484,7 @@ async function updateTaskPosition(e) {
 	const taskAfter = newBucket.tasks[newTaskIndex + 1] ?? null
 	taskUpdating.value[task.id] = true
 
-	const newTask = klona(task) // cloning the task to avoid pinia store manipulation
+	const newTask = structuredClone(task) // cloning the task to avoid pinia store manipulation
 	newTask.bucketId = newBucket.id
 	const position = calculateItemPosition(
 		taskBefore !== null ? taskBefore.position : null,
@@ -534,7 +533,7 @@ async function updateTaskPosition(e) {
 		// Make sure the first and second task don't both get position 0 assigned
 		if (newTaskIndex === 0 && taskAfter !== null && taskAfter.position === 0) {
 			const taskAfterAfter = newBucket.tasks[newTaskIndex + 2] ?? null
-			const newTaskAfter = klona(taskAfter) // cloning the task to avoid pinia store manipulation
+			const newTaskAfter = structuredClone(taskAfter) // cloning the task to avoid pinia store manipulation
 			newTaskAfter.bucketId = newBucket.id
 			newTaskAfter.position = calculateItemPosition(
 				0,
