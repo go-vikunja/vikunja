@@ -59,7 +59,7 @@ describe('Projects', () => {
 		cy.get('.menu-container .menu-list li:first-child .dropdown .dropdown-content')
 			.contains('Edit')
 			.click()
-		cy.get('#title')
+		cy.get('#title:not(:disabled)')
 			.type(`{selectall}${newProjectName}`)
 		cy.get('footer.card-footer .button')
 			.contains('Save')
