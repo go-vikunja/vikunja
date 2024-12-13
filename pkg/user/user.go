@@ -372,10 +372,23 @@ func handleFailedPassword(user *User) {
 
 	a, _, err := keyvalue.Get(key)
 	if err != nil {
-		log.Errorf("Could get failed password attempts for user %d: %s", user.ID, err)
+		log.Errorf("Could not get failed password attempts for user %d: %s", user.ID, err)
 		return
 	}
-	attempts := a.(int64)
+	attempts, ok := a.(int64)
+	if !ok {
+		attemptsStr, ok := a.(string)
+		if !ok {
+			log.Errorf("Unexpected type for failed password attempts: %v", a)
+			return
+		}
+		var err error
+		attempts, err = strconv.ParseInt(attemptsStr, 10, 64)
+		if err != nil {
+			log.Errorf("Could not convert failed password attempts to int64: %v, value: %s", err, attemptsStr)
+			return
+		}
+	}
 	if attempts != 3 {
 		return
 	}
