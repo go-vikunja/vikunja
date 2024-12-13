@@ -94,7 +94,7 @@
 			</div>
 
 			<table
-				v-if="linkShares.length > 0"
+				v-if="linkShares.length > 0 && availableViews.length > 0"
 				class="table has-actions is-striped is-hoverable is-fullwidth"
 			>
 				<thead>
@@ -150,7 +150,7 @@
 							<div class="field has-addons no-input-mobile">
 								<div class="control">
 									<input
-										:value="getShareLink(s.hash, selectedView[s.id])"
+										:value="shareLinks[s.id]"
 										class="input"
 										readonly
 										type="text"
@@ -160,7 +160,7 @@
 									<x-button
 										v-tooltip="$t('misc.copy')"
 										:shadow="false"
-										@click="copy(getShareLink(s.hash, selectedView[s.id]))"
+										@click="copy(shareLinks[s.id])"
 									>
 										<span class="icon">
 											<Icon icon="paste" />
@@ -171,7 +171,7 @@
 						</td>
 						<td>
 							<div class="select">
-								<select v-model="selectedView[s.id]">
+								<select v-model="selectedViews[s.id]">
 									<option
 										v-for="(view) in availableViews"
 										:key="view.id"
@@ -251,10 +251,6 @@ const showDeleteModal = ref(false)
 const linkIdToDelete = ref(0)
 const showNewForm = ref(false)
 
-type SelectedViewMapper = Record<IProject['id'], IProjectView['id']>
-
-const selectedView = ref<SelectedViewMapper>({})
-
 const projectStore = useProjectStore()
 
 const availableViews = computed<IProjectView[]>(() => projectStore.projects[props.projectId]?.views || [])
@@ -274,12 +270,27 @@ async function load(projectId: IProject['id']) {
 		return
 	}
 
-	const links = await linkShareService.getAll({projectId})
-	links.forEach((l: ILinkShare) => {
-		selectedView.value[l.id] = availableViews.value[0].id
-	})
-	linkShares.value = links
+	linkShares.value = await linkShareService.getAll({projectId})
 }
+
+type SelectedViewMapper = Record<IProject['id'], IProjectView['id']>
+
+const selectedViews = ref<SelectedViewMapper>({})
+
+watch(() => ([linkShares.value, availableViews.value]), ([newLinkShares, newProjectViews]) => {
+	if (!newLinkShares?.length || !newProjectViews?.length) {
+		selectedViews.value = {}
+		return
+	}
+
+	newLinkShares.forEach((linkShare) => {
+		selectedViews.value[linkShare.id] = newProjectViews[0].id
+	})
+}, {
+	immediate:true,
+	deep: true,
+})
+
 
 async function add(projectId: IProject['id']) {
 	const newLinkShare = new LinkShareModel({
@@ -313,6 +324,19 @@ async function remove(projectId: IProject['id']) {
 function getShareLink(hash: string, viewId: IProjectView['id']) {
 	return frontendUrl.value + 'share/' + hash + '/auth?view=' + viewId
 }
+
+const shareLinks = computed(() => {
+	const hasViews = Object.keys(selectedViews.value)?.length
+
+	return linkShares.value.reduce((links, linkShare) => {
+			if (!hasViews) {
+				return links
+			}
+			links[linkShare.id] = getShareLink(linkShare.hash, selectedViews.value[linkShare.id])
+			return links
+		}, {} as {[id: string]: string },
+	)
+})
 </script>
 
 <style lang="scss" scoped>
