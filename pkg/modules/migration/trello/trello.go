@@ -225,7 +225,7 @@ func convertMarkdownToHTML(input string) (output string, err error) {
 
 // Converts all previously obtained data from trello into the vikunja format.
 // `trelloData` should contain all boards with their projects and cards respectively.
-func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Board, token string, currentMember *trello.Member) (fullVikunjaHierachie []*models.ProjectWithTasksAndBuckets, err error) {
+func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Board, client *trello.Client, currentMember *trello.Member) (fullVikunjaHierachie []*models.ProjectWithTasksAndBuckets, err error) {
 
 	log.Debugf("[Trello Migration] ")
 
@@ -242,6 +242,8 @@ func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Bo
 	var bucketID int64 = 1
 
 	log.Debugf("[Trello Migration] Converting %d boards to vikunja projects", len(trelloData))
+
+	actionMemberCache := make(map[string]*trello.Member)
 
 	for index, board := range trelloData {
 		project := &models.ProjectWithTasksAndBuckets{
@@ -341,7 +343,7 @@ func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Bo
 						log.Debugf("[Trello Migration] Downloading card attachment %s", attachment.ID)
 
 						buf, err := migration.DownloadFileWithHeaders(attachment.URL, map[string][]string{
-							"Authorization": {`OAuth oauth_consumer_key="` + config.MigrationTrelloKey.GetString() + `", oauth_token="` + token + `"`},
+							"Authorization": {`OAuth oauth_consumer_key="` + config.MigrationTrelloKey.GetString() + `", oauth_token="` + client.Token + `"`},
 						})
 						if err != nil {
 							return nil, err
@@ -408,7 +410,26 @@ func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Bo
 						}
 
 						if currentMember == nil || action.IDMemberCreator != currentMember.ID {
-							comment.Comment = "*" + action.MemberCreator.FullName + "*:\n\n" + comment.Comment
+							if action.MemberCreator == nil {
+								if cached, ok := actionMemberCache[action.IDMemberCreator]; ok {
+									action.MemberCreator = cached
+								} else {
+									member, err := client.GetMember(action.IDMemberCreator)
+									if err != nil {
+										log.Errorf("[Trello Migration] Could not get member %s for card %s", action.IDMemberCreator, card.ID)
+									}
+									actionMemberCache[action.IDMemberCreator] = member
+									action.MemberCreator = member
+								}
+							}
+
+							fullName := action.IDMemberCreator
+							if action.MemberCreator != nil {
+								fullName = action.MemberCreator.FullName
+							}
+
+							//action.MemberCreator.FullName
+							comment.Comment = "*" + fullName + "*:\n\n" + comment.Comment
 						}
 
 						comment.Comment, err = convertMarkdownToHTML(comment.Comment)
@@ -489,7 +510,7 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 		if err != nil {
 			return err
 		}
-		hierarchy, err := convertTrelloDataToVikunja(orgName, boards, client.Token, currentMember)
+		hierarchy, err := convertTrelloDataToVikunja(orgName, boards, client, currentMember)
 		if err != nil {
 			return err
 		}
