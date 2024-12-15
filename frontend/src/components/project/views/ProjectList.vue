@@ -1,6 +1,7 @@
 <template>
 	<ProjectWrapper
 		class="project-list"
+		:is-loading-project
 		:project-id="projectId"
 		:view-id
 	>
@@ -124,6 +125,7 @@ import TaskPositionService from '@/services/taskPosition'
 import TaskPositionModel from '@/models/taskPosition'
 
 const props = defineProps<{
+	isLoadingProject: boolean,
 	projectId: IProject['id'],
 	viewId: IProjectView['id'],
 }>()
