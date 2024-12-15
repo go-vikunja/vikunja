@@ -1,6 +1,7 @@
 <template>
 	<ProjectWrapper
 		class="project-table"
+		:is-loading-project="isLoadingProject"
 		:project-id="projectId"
 		:view-id
 	>
@@ -298,6 +299,7 @@ import { camelCase } from 'change-case'
 import {isSavedFilter} from '@/services/savedFilter'
 
 const props = defineProps<{
+	isLoadingProject: boolean,
 	projectId: IProject['id'],
 	viewId: IProjectView['id'],
 }>()

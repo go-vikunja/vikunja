@@ -1,6 +1,7 @@
 <template>
 	<ProjectWrapper
 		class="project-kanban"
+		:is-loading-project="isLoadingProject"
 		:project-id="projectId"
 		:view-id
 	>
@@ -315,6 +316,7 @@ import TaskBucketService from '@/services/taskBucket'
 import TaskBucketModel from '@/models/taskBucket'
 
 const props = defineProps<{
+	isLoadingProject: boolean,
 	projectId: number,
 	viewId: IProjectView['id'],
 }>()

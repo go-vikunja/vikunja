@@ -1,7 +1,10 @@
 <template>
 	<div
-		:class="{ 'is-loading': projectService.loading, 'is-archived': currentProject?.isArchived}"
 		class="loader-container"
+		:class="{
+			'is-loading': isLoadingProject,
+			'is-archived': currentProject?.isArchived,
+		}"
 	>
 		<h1 class="project-title-print">
 			{{ getProjectTitle(currentProject) }}
@@ -37,43 +40,37 @@
 			</Message>
 		</CustomTransition>
 
-		<slot v-if="loadedProjectId" />
+		<slot v-if="!isLoadingProject" />
 	</div>
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watch} from 'vue'
-import {useRoute} from 'vue-router'
+import {computed} from 'vue'
+import {useI18n} from 'vue-i18n'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import Message from '@/components/misc/Message.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 
-import ProjectModel from '@/models/project'
-import ProjectService from '@/services/project'
-
 import {getProjectTitle} from '@/helpers/getProjectTitle'
-import {saveProjectToHistory} from '@/modules/projectHistory'
 import {useTitle} from '@/composables/useTitle'
 
 import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
+
 import type {IProject} from '@/modelTypes/IProject'
 import type {IProjectView} from '@/modelTypes/IProjectView'
-import {useI18n} from 'vue-i18n'
 
 const props = defineProps<{
+	isLoadingProject: boolean,
 	projectId: IProject['id'],
 	viewId: IProjectView['id'],
 }>()
 
-const route = useRoute()
 const {t} = useI18n()
 
 const baseStore = useBaseStore()
 const projectStore = useProjectStore()
-const projectService = ref(new ProjectService())
-const loadedProjectId = ref(0)
 
 const currentProject = computed<IProject>(() => {
 	return typeof baseStore.currentProject === 'undefined' ? {
@@ -86,61 +83,6 @@ const currentProject = computed<IProject>(() => {
 useTitle(() => currentProject.value?.id ? getProjectTitle(currentProject.value) : '')
 
 const views = computed(() => projectStore.projects[props.projectId]?.views)
-
-// watchEffect would be called every time the prop would get a value assigned, even if that value was the same as before.
-// This resulted in loading and setting the project multiple times, even when navigating away from it.
-// This caused wired bugs where the project background would be set on the home page but only right after setting a new 
-// project background and then navigating to home. It also highlighted the project in the menu and didn't allow changing any
-// of it, most likely due to the rights not being properly populated.
-watch(
-	() => props.projectId,
-	// loadProject
-	async (projectIdToLoad: number) => {
-		const projectData = {id: projectIdToLoad}
-		saveProjectToHistory(projectData)
-
-		// Don't load the project if we either already loaded it or aren't dealing with a project at all currently and
-		// the currently loaded project has the right set.
-		if (
-			(
-				projectIdToLoad === loadedProjectId.value ||
-				typeof projectIdToLoad === 'undefined' ||
-				projectIdToLoad === currentProject.value?.id
-			)
-			&& typeof currentProject.value !== 'undefined' && currentProject.value.maxRight !== null
-		) {
-			loadedProjectId.value = projectIdToLoad
-			return
-		}
-
-		console.debug('Loading project, $route.params =', route.params, `, loadedProjectId = ${loadedProjectId.value}, currentProject = `, currentProject.value)
-
-		// Set the current project to the one we're about to load so that the title is already shown at the top
-		loadedProjectId.value = 0
-		const projectFromStore = projectStore.projects[projectData.id]
-		if (projectFromStore) {
-			baseStore.handleSetCurrentProject({project: projectFromStore, currentProjectViewId: props.viewId})
-		}
-
-		// We create an extra project object instead of creating it in project.value because that would trigger a ui update which would result in bad ux.
-		const project = new ProjectModel(projectData)
-		try {
-			const loadedProject = await projectService.value.get(project)
-			baseStore.handleSetCurrentProject({project: loadedProject, currentProjectViewId: props.viewId})
-		} finally {
-			loadedProjectId.value = projectIdToLoad
-		}
-	},
-	{immediate: true},
-)
-
-watch(
-	() => props.viewId,
-	() => {
-		baseStore.setCurrentProjectViewId(props.viewId)
-	},
-	{immediate: true},
-)
 
 function getViewTitle(view: IProjectView) {
 	switch (view.title) {

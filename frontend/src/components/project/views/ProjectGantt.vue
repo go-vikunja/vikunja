@@ -1,6 +1,7 @@
 <template>
 	<ProjectWrapper
 		class="project-gantt"
+		:is-loading-project="isLoadingProject"
 		:project-id="filters.projectId"
 		:view-id
 	>
@@ -95,6 +96,7 @@ import type {IProjectView} from '@/modelTypes/IProjectView'
 type Options = Flatpickr.Options.Options
 
 const props = defineProps<{
+	isLoadingProject: boolean,
 	route: RouteLocationNormalized
 	viewId: IProjectView['id']
 }>()
