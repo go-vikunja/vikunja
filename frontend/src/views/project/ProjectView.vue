@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {computed, watch} from 'vue'
+import {computed, watch, watchEffect} from 'vue'
 import {useProjectStore} from '@/stores/projects'
 import {useRoute, useRouter} from 'vue-router'
 import {saveProjectView} from '@/helpers/projectView'
@@ -27,18 +27,20 @@ const currentView = computed(() => {
 })
 
 function redirectToDefaultViewIfNecessary() {
-	if (props.viewId === 0 || !projectStore.projects[props.projectId]?.views.find(v => v.id === props.viewId)) {
+	if (props.viewId === 0 || !currentView.value) {
 		// Ideally, we would do that in the router redirect, but the projects (and therefore, the views) 
 		// are not always loaded then.
 
+		const defaultView  = authStore.settings.frontendSettings.defaultView
+
 		let view
-		if (authStore.settings.frontendSettings.defaultView !== DEFAULT_PROJECT_VIEW_SETTINGS.FIRST) {
-			view = projectStore.projects[props.projectId]?.views.find(v => v.viewKind === authStore.settings.frontendSettings.defaultView)
+		if (defaultView !== DEFAULT_PROJECT_VIEW_SETTINGS.FIRST) {
+			view = currentProject.value?.views.find(v => v.viewKind === defaultView)
 		}
 
 		// Use the first view as fallback if the default view is not available
-		if (view === undefined && projectStore.projects[props.projectId]?.views?.length > 0) {
-			view = projectStore.projects[props.projectId]?.views[0]
+		if (view === undefined && currentProject.value?.views?.length > 0) {
+			view = currentProject.value?.views[0]
 		}
 
 		if (view) {
@@ -60,16 +62,11 @@ watch(
 )
 
 watch(
-	() => projectStore.projects[props.projectId],
+	currentProject,
 	redirectToDefaultViewIfNecessary,
 )
 
-// using a watcher instead of beforeEnter because beforeEnter is not called when only the viewId changes
-watch(
-	() => [props.projectId, props.viewId],
-	() => saveProjectView(props.projectId, props.viewId),
-	{immediate: true},
-)
+watchEffect(() => saveProjectView(props.projectId, props.viewId))
 
 const route = useRoute()
 </script>
