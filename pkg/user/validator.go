@@ -18,18 +18,24 @@ package user
 
 import (
 	"github.com/asaskevich/govalidator"
+	"strings"
 )
 
 func init() {
 	govalidator.TagMap["username"] = func(i string) bool {
-		// To avoid making this overly complicated, we only two things:
+		// To avoid making this overly complicated, we only check three things:
 		// 1. No Spaces
 		// 2. Should not look like an url
+		// 3. Should not contain , (because then it will be impossible to search for)
+		if govalidator.HasWhitespace(i) {
+			return false
+		}
+
 		if govalidator.IsURL(i) {
 			return false
 		}
 
-		if govalidator.HasWhitespace(i) {
+		if strings.Contains(i, ",") {
 			return false
 		}
 
