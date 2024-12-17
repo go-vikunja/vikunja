@@ -251,7 +251,7 @@
                 {
                     "key": "url",
                     "default_value": "",
-                    "comment": "The url to the Typesense instance you want to use. Can be hosted locally or in Typesense Cloud as long\nas Vikunja is able to reach it."
+                    "comment": "The url to the Typesense instance you want to use. Can be hosted locally or in Typesense Cloud as long as Vikunja is able to reach it. Must be a http(s) url."
                 },
                 {
                     "key": "apikey",
