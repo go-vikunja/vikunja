@@ -17,8 +17,9 @@
 package user
 
 import (
-	"github.com/asaskevich/govalidator"
 	"strings"
+
+	"github.com/asaskevich/govalidator"
 )
 
 func init() {
