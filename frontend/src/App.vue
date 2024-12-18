@@ -1,10 +1,10 @@
 <template>
 	<Ready>
-		<template v-if="authUser">
+		<template v-if="authStore.authUser">
 			<AppHeader />
 			<ContentAuth />
 		</template>
-		<ContentLinkShare v-else-if="authLinkShare" />
+		<ContentLinkShare v-else-if="authStore.authLinkShare" />
 		<NoAuthWrapper v-else>
 			<RouterView />
 		</NoAuthWrapper>
@@ -49,16 +49,14 @@ import DemoMode from '@/components/home/DemoMode.vue'
 const importAccountDeleteService = () => import('@/services/accountDelete')
 import {success} from '@/message'
 
-const baseStore = useBaseStore()
 const authStore = useAuthStore()
+const baseStore = useBaseStore()
+
 const router = useRouter()
 const route = useRoute()
 
 useBodyClass('is-touch', isTouchDevice())
 const keyboardShortcutsActive = computed(() => baseStore.keyboardShortcutsActive)
-
-const authUser = computed(() => authStore.authUser)
-const authLinkShare = computed(() => authStore.authLinkShare)
 
 const {t} = useI18n({useScope: 'global'})
 

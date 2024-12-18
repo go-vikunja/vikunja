@@ -1,11 +1,14 @@
-import { readonly, ref} from 'vue'
+import {ref, computed, readonly} from 'vue'
+import {useI18n} from 'vue-i18n'
+import {useRouter, useRoute} from 'vue-router'
 import {defineStore, acceptHMRUpdate} from 'pinia'
 
+import {getAuthForRoute} from '@/router'
 import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'
 
 import ProjectModel from '@/models/project'
-import ProjectService from '../services/project'
-import {checkAndSetApiUrl} from '@/helpers/checkAndSetApiUrl'
+import ProjectService from '@/services/project'
+import {checkAndSetApiUrl, ERROR_NO_API_URL, InvalidApiUrlProvidedError, NoApiUrlProvidedError} from '@/helpers/checkAndSetApiUrl'
 
 import {useMenuActive} from '@/composables/useMenuActive'
 
@@ -91,10 +94,6 @@ export const useBaseStore = defineStore('base', () => {
 		logoVisible.value = visible
 	}
 	
-	function setReady(value: boolean) {
-		ready.value = value
-	}
-	
 	function setUpdateAvailable(value: boolean) {
 		updateAvailable.value = value
 	}
@@ -140,14 +139,44 @@ export const useBaseStore = defineStore('base', () => {
 	}
 
 	const authStore = useAuthStore()
+	
+	const {t} = useI18n()
+
+	const router = useRouter()
+	const route = useRoute()
+
+	const error = ref('')
+
+	const showLoading = computed(() => !ready.value && error.value === '')
+
 	async function loadApp() {
-		await checkAndSetApiUrl(window.API_URL)
-		await authStore.checkAuth()
-		ready.value = true
+		try {
+			await checkAndSetApiUrl(window.API_URL)
+			await authStore.checkAuth()
+			ready.value = true
+			const redirectTo = await getAuthForRoute(route, authStore)
+			if (typeof redirectTo !== 'undefined') {
+				await router.push(redirectTo)
+			}
+		} catch (e: unknown) {
+			if (e instanceof NoApiUrlProvidedError) {
+				error.value = ERROR_NO_API_URL
+				return
+			}
+			if (e instanceof InvalidApiUrlProvidedError) {
+				error.value = t('apiConfig.error')
+				return
+			}
+			error.value = String(e.message)
+		}
 	}
 
+	loadApp()
+
 	return {
+		error: readonly(error),
 		loading: readonly(loading),
+		showLoading: readonly(showLoading),
 		ready: readonly(ready),
 		currentProject: readonly(currentProject),
 		currentProjectViewId: readonly(currentProjectViewId),
@@ -160,7 +189,6 @@ export const useBaseStore = defineStore('base', () => {
 		updateAvailable: readonly(updateAvailable),
 
 		setLoading,
-		setReady,
 		setCurrentProject,
 		setCurrentProjectViewId,
 		setHasTasks,
@@ -172,7 +200,6 @@ export const useBaseStore = defineStore('base', () => {
 		setUpdateAvailable,
 
 		handleSetCurrentProject,
-		loadApp,
 
 		...useMenuActive(),
 	}
