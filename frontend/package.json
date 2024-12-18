@@ -58,7 +58,7 @@
     "@intlify/unplugin-vue-i18n": "6.0.1",
     "@kyvg/vue3-notification": "3.4.1",
     "@sentry/tracing": "7.114.0",
-    "@sentry/vue": "8.46.0",
+    "@sentry/vue": "8.47.0",
     "@tiptap/core": "2.10.3",
     "@tiptap/extension-blockquote": "2.10.3",
     "@tiptap/extension-bold": "2.10.3",
