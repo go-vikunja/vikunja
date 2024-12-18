@@ -51,10 +51,9 @@ export const checkAndSetApiUrl = (url: string | undefined | null): Promise<strin
 	window.API_URL = urlToCheck.toString()
 
 	const configStore = useConfigStore()
-	const updateConfig = () => configStore.update()
 
 	// Check if the api is reachable at the provided url
-	return updateConfig()
+	return configStore.update()
 		.catch(e => {
 			// Check if it is reachable at /api/v1 and http
 			if (
@@ -63,7 +62,7 @@ export const checkAndSetApiUrl = (url: string | undefined | null): Promise<strin
 			) {
 				urlToCheck.pathname = `${urlToCheck.pathname}api/v1`
 				window.API_URL = urlToCheck.toString()
-				return updateConfig()
+				return configStore.update()
 			}
 			throw e
 		})
@@ -76,7 +75,7 @@ export const checkAndSetApiUrl = (url: string | undefined | null): Promise<strin
 			) {
 				urlToCheck.pathname = `${urlToCheck.pathname}api/v1`
 				window.API_URL = urlToCheck.toString()
-				return updateConfig()
+				return configStore.update()
 			}
 			throw e
 		})
@@ -85,7 +84,7 @@ export const checkAndSetApiUrl = (url: string | undefined | null): Promise<strin
 			if (urlToCheck.port !== API_DEFAULT_PORT) {
 				urlToCheck.port = API_DEFAULT_PORT
 				window.API_URL = urlToCheck.toString()
-				return updateConfig()
+				return configStore.update()
 			}
 			throw e
 		})
@@ -98,7 +97,7 @@ export const checkAndSetApiUrl = (url: string | undefined | null): Promise<strin
 			) {
 				urlToCheck.pathname = `${urlToCheck.pathname}api/v1`
 				window.API_URL = urlToCheck.toString()
-				return updateConfig()
+				return configStore.update()
 			}
 			throw e
 		})
