@@ -1,11 +1,14 @@
-import { readonly, ref} from 'vue'
+import {ref, computed, readonly} from 'vue'
+import {useI18n} from 'vue-i18n'
+import {useRouter, useRoute} from 'vue-router'
 import {defineStore, acceptHMRUpdate} from 'pinia'
 
+import {getAuthForRoute} from '@/router'
 import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'
 
 import ProjectModel from '@/models/project'
-import ProjectService from '../services/project'
-import {checkAndSetApiUrl} from '@/helpers/checkAndSetApiUrl'
+import ProjectService from '@/services/project'
+import {checkAndSetApiUrl, ERROR_NO_API_URL, InvalidApiUrlProvidedError, NoApiUrlProvidedError} from '@/helpers/checkAndSetApiUrl'
 
 import {useMenuActive} from '@/composables/useMenuActive'
 
@@ -15,8 +18,16 @@ import type {Right} from '@/constants/rights'
 import type {IProjectView} from '@/modelTypes/IProjectView'
 
 export const useBaseStore = defineStore('base', () => {
-	const loading = ref(false)
+	const authStore = useAuthStore()
+	
+	const {t} = useI18n()
+
+	const router = useRouter()
+	const route = useRoute()
+
 	const ready = ref(false)
+	const error = ref('')
+	const loading = computed(() => !ready.value && error.value === '')
 
 	// This is used to highlight the current project in menu for all project related views
 	const currentProject = ref<IProject | null>(new ProjectModel({
@@ -32,10 +43,6 @@ export const useBaseStore = defineStore('base', () => {
 	const quickActionsActive = ref(false)
 	const logoVisible = ref(true)
 	const updateAvailable = ref(false)
-
-	function setLoading(newLoading: boolean) {
-		loading.value = newLoading
-	}
 
 	function setCurrentProject(newCurrentProject: IProject | null, currentViewId?: IProjectView['id']) {
 		// Server updates don't return the right. Therefore, the right is reset after updating the project which is
@@ -91,10 +98,6 @@ export const useBaseStore = defineStore('base', () => {
 		logoVisible.value = visible
 	}
 	
-	function setReady(value: boolean) {
-		ready.value = value
-	}
-	
 	function setUpdateAvailable(value: boolean) {
 		updateAvailable.value = value
 	}
@@ -139,16 +142,36 @@ export const useBaseStore = defineStore('base', () => {
 		setCurrentProject(project, currentProjectViewId)
 	}
 
-	const authStore = useAuthStore()
 	async function loadApp() {
-		await checkAndSetApiUrl(window.API_URL)
-		await authStore.checkAuth()
-		ready.value = true
+		try {
+			await checkAndSetApiUrl(window.API_URL)
+			await authStore.checkAuth()
+			ready.value = true
+			const redirectTo = await getAuthForRoute(route, authStore)
+			if (typeof redirectTo !== 'undefined') {
+				await router.push(redirectTo)
+			}
+		} catch (e: unknown) {
+			if (e instanceof NoApiUrlProvidedError) {
+				error.value = ERROR_NO_API_URL
+				return
+			}
+			if (e instanceof InvalidApiUrlProvidedError) {
+				error.value = t('apiConfig.error')
+				return
+			}
+			error.value = String(e.message)
+		}
 	}
 
+	loadApp()
+
 	return {
+		error: readonly(error),
 		loading: readonly(loading),
 		ready: readonly(ready),
+		loadApp,
+
 		currentProject: readonly(currentProject),
 		currentProjectViewId: readonly(currentProjectViewId),
 		background: readonly(background),
@@ -159,8 +182,6 @@ export const useBaseStore = defineStore('base', () => {
 		logoVisible: readonly(logoVisible),
 		updateAvailable: readonly(updateAvailable),
 
-		setLoading,
-		setReady,
 		setCurrentProject,
 		setCurrentProjectViewId,
 		setHasTasks,
@@ -172,7 +193,6 @@ export const useBaseStore = defineStore('base', () => {
 		setUpdateAvailable,
 
 		handleSetCurrentProject,
-		loadApp,
 
 		...useMenuActive(),
 	}
