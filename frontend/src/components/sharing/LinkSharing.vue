@@ -94,13 +94,15 @@
 			</div>
 
 			<table
-				v-if="linkShares.length > 0 && availableViews.length > 0"
+				v-if="linkShares.length > 0"
 				class="table has-actions is-striped is-hoverable is-fullwidth"
 			>
 				<thead>
 					<tr>
 						<th />
-						<th>{{ $t('project.share.links.view') }}</th>
+						<th v-if="availableViews.length > 0">
+							{{ $t('project.share.links.view') }}
+						</th>
 						<th>{{ $t('project.share.attributes.delete') }}</th>
 					</tr>
 				</thead>
@@ -169,7 +171,7 @@
 								</div>
 							</div>
 						</td>
-						<td>
+						<td v-if="availableViews.length > 0">
 							<div class="select">
 								<select v-model="selectedViews[s.id]">
 									<option
@@ -284,7 +286,7 @@ watch(() => ([linkShares.value, availableViews.value]), ([newLinkShares, newProj
 	}
 
 	newLinkShares.forEach((linkShare) => {
-		selectedViews.value[linkShare.id] = newProjectViews[0].id
+		selectedViews.value[linkShare.id] = newProjectViews.length > 0 ? newProjectViews[0].id : null
 	})
 }, {
 	immediate:true,
@@ -321,18 +323,13 @@ async function remove(projectId: IProject['id']) {
 	}
 }
 
-function getShareLink(hash: string, viewId: IProjectView['id']) {
-	return frontendUrl.value + 'share/' + hash + '/auth?view=' + viewId
+function getShareLink(hash: string, viewId: IProjectView['id']|null) {
+	return frontendUrl.value + 'share/' + hash + '/auth' + (viewId ? '?view=' + viewId : '')
 }
 
 const shareLinks = computed(() => {
-	const hasViews = Object.keys(selectedViews.value)?.length
-
 	return linkShares.value.reduce((links, linkShare) => {
-			if (!hasViews) {
-				return links
-			}
-			links[linkShare.id] = getShareLink(linkShare.hash, selectedViews.value[linkShare.id])
+			links[linkShare.id] = getShareLink(linkShare.hash, selectedViews.value[linkShare.id] ?? null)
 			return links
 		}, {} as {[id: string]: string },
 	)
