@@ -15,12 +15,12 @@
 			<p>{{ $t('offline.text') }}</p>
 		</div>
 	</div>
-	<template v-else-if="ready">
+	<template v-else-if="baseStore.ready">
 		<slot />
 	</template>
-	<section v-else-if="error !== ''">
+	<section v-else-if="baseStore.error !== ''">
 		<NoAuthWrapper :show-api-config="false">
-			<p v-if="error === ERROR_NO_API_URL">
+			<p v-if="baseStore.error === ERROR_NO_API_URL">
 				{{ $t('ready.noApiUrlConfigured') }}
 			</p>
 			<Message
@@ -30,7 +30,7 @@
 			>
 				<p>
 					{{ $t('ready.errorOccured') }}<br>
-					{{ error }}
+					{{ baseStore.error }}
 				</p>
 				<p>
 					{{ $t('ready.checkApiUrl') }}
@@ -38,13 +38,13 @@
 			</Message>
 			<ApiConfig
 				:configure-open="true"
-				@foundApi="load"
+				@foundApi="baseStore.loadApp()"
 			/>
 		</NoAuthWrapper>
 	</section>
 	<CustomTransition name="fade">
 		<section
-			v-if="showLoading"
+			v-if="baseStore.loading"
 			class="vikunja-loading"
 		>
 			<Logo class="logo" />
@@ -57,60 +57,19 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, computed} from 'vue'
-import {useRouter, useRoute} from 'vue-router'
-
 import Logo from '@/assets/logo.svg?component'
 import ApiConfig from '@/components/misc/ApiConfig.vue'
 import Message from '@/components/misc/Message.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import NoAuthWrapper from '@/components/misc/NoAuthWrapper.vue'
 
-import {ERROR_NO_API_URL, InvalidApiUrlProvidedError, NoApiUrlProvidedError} from '@/helpers/checkAndSetApiUrl'
+import {ERROR_NO_API_URL} from '@/helpers/checkAndSetApiUrl'
+
 import {useOnline} from '@/composables/useOnline'
-
-import {getAuthForRoute} from '@/router'
-
 import {useBaseStore} from '@/stores/base'
-import {useAuthStore} from '@/stores/auth'
-import {useI18n} from 'vue-i18n'
 
-const router = useRouter()
-const route = useRoute()
-
-const baseStore = useBaseStore()
-const authStore = useAuthStore()
-
-const ready = computed(() => baseStore.ready)
 const online = useOnline()
-
-const error = ref('')
-const showLoading = computed(() => !ready.value && error.value === '')
-
-const {t} = useI18n()
-
-async function load() {
-	try {
-		await baseStore.loadApp()
-		baseStore.setReady(true)
-		const redirectTo = await getAuthForRoute(route, authStore)
-		if (typeof redirectTo !== 'undefined') {
-			await router.push(redirectTo)
-		}
-	} catch (e: unknown) {
-		if (e instanceof NoApiUrlProvidedError) {
-			error.value = ERROR_NO_API_URL
-			return
-		}
-		if (e instanceof InvalidApiUrlProvidedError) {
-			error.value = t('apiConfig.error')
-			return
-		}
-		error.value = String(e.message)
-	}
-}
-
-load()
+const baseStore = useBaseStore()
 </script>
 
 <style lang="scss" scoped>
