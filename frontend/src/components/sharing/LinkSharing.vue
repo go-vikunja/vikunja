@@ -284,7 +284,7 @@ watch(() => ([linkShares.value, availableViews.value]), ([newLinkShares, newProj
 	}
 
 	newLinkShares.forEach((linkShare) => {
-		selectedViews.value[linkShare.id] = newProjectViews[0].id
+		selectedViews.value[linkShare.id] = newProjectViews.length > 0 ? newProjectViews[0].id : null
 	})
 }, {
 	immediate:true,
