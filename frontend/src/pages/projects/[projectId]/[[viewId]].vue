@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {computed, watch} from 'vue'
+import {computed, watch, watchEffect} from 'vue'
 import {useProjectStore} from '@/stores/projects'
 import {useRoute, useRouter} from 'vue-router'
 import {getProjectViewId, saveProjectView} from '@/helpers/projectView'
@@ -13,27 +13,27 @@ import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/modelTypes/IProjectView'
 
 definePage({
 	name: 'project',
-	beforeEnter(to) {
-		if (to.name !== 'project') {
-			throw new Error()
-		}
+	// beforeEnter(to) {
+	// 	if (to.name !== 'project') {
+	// 		throw new Error()
+	// 	}
 
-		const projectId = Number(to.params?.projectId)
-		const viewIdFromRoute = Number(to.params?.viewId)
+	// 	const projectId = Number(to.params?.projectId)
+	// 	const viewIdFromRoute = Number(to.params?.viewId)
 
-		const newViewid = getProjectViewId(projectId) ?? 0
+	// 	const newViewid = getProjectViewId(projectId) ?? 0
 
-		if (!viewIdFromRoute || viewIdFromRoute !== newViewid) {
-			return {
-				name: 'project',
-				replace: true,
-				params: {
-					projectId,
-					viewId: newViewid,
-				},
-			}
-		}
-	},
+	// 	if (!viewIdFromRoute || viewIdFromRoute !== newViewid) {
+	// 		return {
+	// 			name: 'project',
+	// 			replace: true,
+	// 			params: {
+	// 				projectId,
+	// 				viewId: newViewid,
+	// 			},
+	// 		}
+	// 	}
+	// },
 	props: route => ({ 
 		projectId: parseInt(route.params.projectId as string),
 		viewId: route.params.viewId ? parseInt(route.params.viewId as string): undefined,
@@ -56,18 +56,19 @@ const currentView = computed(() => {
 })
 
 function redirectToDefaultViewIfNecessary() {
-	if (props.viewId === 0 || !projectStore.projects[props.projectId]?.views.find(v => v.id === props.viewId)) {
+	if (props.viewId === 0 || !currentView.value) {
 		// Ideally, we would do that in the router redirect, but the projects (and therefore, the views) 
 		// are not always loaded then.
 
 		let view
-		if (authStore.settings.frontendSettings.defaultView !== DEFAULT_PROJECT_VIEW_SETTINGS.FIRST) {
-			view = projectStore.projects[props.projectId]?.views.find(v => v.viewKind === authStore.settings.frontendSettings.defaultView)
+		const defaultView = authStore.settings.frontendSettings.defaultView
+		if (defaultView !== DEFAULT_PROJECT_VIEW_SETTINGS.FIRST) {
+			view = currentProject.value?.views.find(v => v.viewKind === defaultView)
 		}
 
 		// Use the first view as fallback if the default view is not available
-		if (view === undefined && projectStore.projects[props.projectId]?.views?.length > 0) {
-			view = projectStore.projects[props.projectId]?.views[0]
+		if (view === undefined && currentProject.value?.views?.length > 0) {
+			view = currentProject.value?.views[0]
 		}
 
 		if (view) {
@@ -82,23 +83,19 @@ function redirectToDefaultViewIfNecessary() {
 	}
 }
 
-// watch(
-// 	() => props.viewId,
-// 	redirectToDefaultViewIfNecessary,
-// 	{immediate: true},
-// )
-
-// watch(
-// 	() => projectStore.projects[props.projectId],
-// 	redirectToDefaultViewIfNecessary,
-// )
-
-// using a watcher instead of beforeEnter because beforeEnter is not called when only the viewId changes
 watch(
-	() => [props.projectId, props.viewId],
-	() => saveProjectView(props.projectId, props.viewId),
+	() => props.viewId,
+	redirectToDefaultViewIfNecessary,
 	{immediate: true},
 )
+
+watch(
+	() => projectStore.projects[props.projectId],
+	redirectToDefaultViewIfNecessary,
+)
+
+// using a watcher instead of beforeEnter because beforeEnter is not called when only the viewId changes
+watchEffect(() => saveProjectView(props.projectId, props.viewId))
 
 const route = useRoute()
 </script>

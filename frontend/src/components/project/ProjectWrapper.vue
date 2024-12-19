@@ -42,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watch} from 'vue'
+import {computed, ref, shallowReactive, watch, watchEffect} from 'vue'
 import {useRoute} from 'vue-router'
 
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -72,7 +72,7 @@ const {t} = useI18n()
 
 const baseStore = useBaseStore()
 const projectStore = useProjectStore()
-const projectService = ref(new ProjectService())
+const projectService = shallowReactive(new ProjectService())
 const loadedProjectId = ref(0)
 
 const currentProject = computed<IProject>(() => {
@@ -96,8 +96,7 @@ watch(
 	() => props.projectId,
 	// loadProject
 	async (projectIdToLoad: number) => {
-		const projectData = {id: projectIdToLoad}
-		saveProjectToHistory(projectData)
+		saveProjectToHistory({id: projectIdToLoad})
 
 		// Don't load the project if we either already loaded it or aren't dealing with a project at all currently and
 		// the currently loaded project has the right set.
@@ -117,15 +116,15 @@ watch(
 
 		// Set the current project to the one we're about to load so that the title is already shown at the top
 		loadedProjectId.value = 0
-		const projectFromStore = projectStore.projects[projectData.id]
+		const projectFromStore = projectStore.projects[projectIdToLoad]
 		if (projectFromStore) {
 			baseStore.handleSetCurrentProject({project: projectFromStore, currentProjectViewId: props.viewId})
 		}
 
 		// We create an extra project object instead of creating it in project.value because that would trigger a ui update which would result in bad ux.
-		const project = new ProjectModel(projectData)
+		const project = new ProjectModel({id: projectIdToLoad})
 		try {
-			const loadedProject = await projectService.value.get(project)
+			const loadedProject = await projectService.get(project)
 			baseStore.handleSetCurrentProject({project: loadedProject, currentProjectViewId: props.viewId})
 		} finally {
 			loadedProjectId.value = projectIdToLoad
@@ -134,13 +133,7 @@ watch(
 	{immediate: true},
 )
 
-watch(
-	() => props.viewId,
-	() => {
-		baseStore.setCurrentProjectViewId(props.viewId)
-	},
-	{immediate: true},
-)
+watchEffect(() =>  baseStore.setCurrentProjectViewId(props.viewId))
 
 function getViewTitle(view: IProjectView) {
 	switch (view.title) {
