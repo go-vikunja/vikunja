@@ -19,27 +19,27 @@ import {saveProjectToHistory} from '@/modules/projectHistory'
 
 definePage({
 	name: 'project',
-	beforeEnter(to) {
-		if (to.name !== 'project') {
-			throw new Error()
-		}
+	// beforeEnter(to) {
+	// 	if (to.name !== 'project') {
+	// 		throw new Error()
+	// 	}
 
-		const projectId = Number(to.params?.projectId)
-		const viewIdFromRoute = Number(to.params?.viewId)
+	// 	const projectId = Number(to.params?.projectId)
+	// 	const viewIdFromRoute = Number(to.params?.viewId)
 
-		const newViewid = getProjectViewId(projectId) ?? 0
+	// 	const newViewid = getProjectViewId(projectId) ?? 0
 
-		if (!viewIdFromRoute || viewIdFromRoute !== newViewid) {
-			return {
-				name: 'project',
-				replace: true,
-				params: {
-					projectId,
-					viewId: newViewid,
-				},
-			}
-		}
-	},
+	// 	if (!viewIdFromRoute || viewIdFromRoute !== newViewid) {
+	// 		return {
+	// 			name: 'project',
+	// 			replace: true,
+	// 			params: {
+	// 				projectId,
+	// 				viewId: newViewid,
+	// 			},
+	// 		}
+	// 	}
+	// },
 	props: route => ({ 
 		projectId: parseInt(route.params.projectId as string),
 		viewId: route.params.viewId ? parseInt(route.params.viewId as string): undefined,
@@ -52,10 +52,11 @@ const props = defineProps<{
 }>()
 
 const router = useRouter()
+const route = useRoute()
+
 const baseStore = useBaseStore()
 const projectStore = useProjectStore()
 const authStore = useAuthStore()
-const route = useRoute()
 
 const currentProject = computed(() => projectStore.projects[props.projectId])
 
@@ -139,21 +140,20 @@ function redirectToDefaultViewIfNecessary() {
 	}
 }
 
-// watch(
-// 	() => props.viewId,
-// 	redirectToDefaultViewIfNecessary,
-// 	{immediate: true},
-// )
+watch(
+	() => props.viewId,
+	redirectToDefaultViewIfNecessary,
+	{immediate: true},
+)
 
-// watch(
-// 	currentProject,
-// 	redirectToDefaultViewIfNecessary,
-// )
+watch(
+	currentProject,
+	redirectToDefaultViewIfNecessary,
+)
 
-watchEffect(() => saveProjectToHistory({id: props.projectId}))
+// using a watcher instead of beforeEnter because beforeEnter is not called when only the viewId changes
 watchEffect(() => saveProjectView(props.projectId, props.viewId))
-
-watchEffect(() => baseStore.setCurrentProjectViewId(props.viewId))
+watchEffect(() => saveProjectToHistory({id: props.projectId}))
 </script>
 
 <template>
