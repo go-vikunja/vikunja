@@ -196,10 +196,12 @@
 												icon="plus"
 												variant="secondary"
 												@click="toggleShowNewTaskInput(bucket.id)"
+												:disabled="bucket.count >= bucket.limit"
+												v-tooltip="bucket.count >= bucket.limit ? $t('project.kanban.bucketLimitReached') : ''"
 											>
 												{{
 													bucket.tasks.length === 0 ? $t('project.kanban.addTask') : $t('project.kanban.addAnotherTask')
-												}}
+													}}
 											</x-button>
 										</div>
 									</template>
