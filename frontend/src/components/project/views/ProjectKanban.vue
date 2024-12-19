@@ -571,7 +571,6 @@ async function addTaskToBucket(bucketId: IBucket['id']) {
 		bucketId,
 		projectId: project.value.id,
 	})
-	toggleShowNewTaskInput(bucketId)
 	newTaskText.value = ''
 	kanbanStore.addTaskToBucket(task)
 	scrollTaskContainerToTop(bucketId)
