@@ -4,18 +4,18 @@
     "welcomeMorning": "Labas rytas {username}!",
     "welcomeDay": "Labas {username}!",
     "welcomeEvening": "Labas vakaras {username}!",
-    "lastViewed": "Last viewed",
-    "addToHomeScreen": "Add this app to your home screen for faster access and improved experience.",
-    "goToOverview": "Go to overview",
+    "lastViewed": "Paskutinį kartą žiūrėta",
+    "addToHomeScreen": "Pridėkite aplikaciją į darbalaukį, lengvesniam pasiekiamumui ir geresnei patirčiai.",
+    "goToOverview": "Eiti į apžvalgą",
     "project": {
-      "importText": "Import your projects and tasks from other services into Vikunja:",
-      "import": "Import your data into Vikunja"
+      "importText": "Importuokite savo projektus ir užduotis iš kitų tiekėjų į Vikunja:",
+      "import": "Importuoti duomenis į Vikunja"
     }
   },
   "demo": {
-    "title": "This instance is in demo mode. Do not use this for real data!",
-    "everythingWillBeDeleted": "Everything will be deleted in regular intervals!",
-    "accountWillBeDeleted": "Your account will be deleted, including all projects, tasks and attachments you might create."
+    "title": "Ši aplinka yra demontracinės būsenos. Nenaudokite realių duomenų!",
+    "everythingWillBeDeleted": "Viskas bus ištrinta numatomais intervalais!",
+    "accountWillBeDeleted": "Tavo paskyra bus ištrinta, įskaitant visus projektus, užduotis ir prisegtukus su tuo susijusius."
   },
   "404": {
     "title": "Not found",
@@ -185,15 +185,15 @@
       "title": "Delete your Vikunja Account",
       "text1": "Profilio ištrynimas yra neatšaukiamas. Visi projektai, užduotys ir kita susijusi informacijas bus pašalinta.",
       "text2": "Norėdama -s tęsti, įvesk savo slaptažodį. Gausi email'ą su tolimesnėmis instrukcijomis.",
-      "text3": "To proceed, please press the button below. You will receive an email with further instructions.",
+      "text3": "Norėdami tęsti, spauskite mygtuką žemiau. Gausite el. laišką su tolimesnėmis instrukcijomis.",
       "confirm": "Delete my account",
       "requestSuccess": "Tavo užklausa sėkminga. Gausi email'ą su tolimesnėmis instrukcijomis.",
       "passwordRequired": "Prašome įvesti savo slaptažodį.",
-      "confirmSuccess": "You've successfully confirmed the deletion of your account. We will delete your account in three days.",
-      "scheduled": "We will delete your Vikunja account at {date} ({dateSince}).",
+      "confirmSuccess": "Sėkmingai patvirtinai paskyros ištrynimą. Ištrinsime tavo paskyrą per tris dienas.",
+      "scheduled": "Ištrinsime tavo Vikunja paskyrą {date} ({dateSince}).",
       "scheduledCancel": "Norėdama -s nutraukti paskyros ištrynimą, spausk čia.",
       "scheduledCancelText": "Norėdama -s nutraukti paskyros ištrynimą, įveskite slaptažodį žemiau:",
-      "scheduledCancelButton": "To cancel the deletion of your account, please press the button below:",
+      "scheduledCancelButton": "Norint atšaukti paskyros ištynimą, prašome spausti mygtuką žemiau:",
       "scheduledCancelConfirm": "Atšaukti mano paskyros ištrynimą",
       "scheduledCancelSuccess": "We will not delete your account."
     },
@@ -264,7 +264,7 @@
       "header": "Edit This Project",
       "title": "Edit \"{project}\"",
       "titlePlaceholder": "The project title goes here…",
-      "identifierTooltip": "The project identifier can be used to uniquely identify a task across projects. You can set it to empty to disable it.",
+      "identifierTooltip": "Projekto Id gali būti naudojamas unikaliai identifikuoti užduotį tarp projektų. Galima palikti tuščia, norint funkciją deaktyvuoti.",
       "identifier": "Projekto identifikatorius",
       "identifierPlaceholder": "Projekto identifikatorius bus čia…",
       "description": "Aprašymas",
@@ -479,8 +479,8 @@
         },
         "logicalOperators": {
           "intro": "To combine multiple conditions, you can use the following logical operators:",
-          "and": "AND operator, matches if all conditions are true",
-          "or": "OR operator, matches if any of the conditions are true",
+          "and": "IR operatorius, sutampa jei visos sąlygos yra tiesa",
+          "or": "ARBA operatorius, sutampa jei bet kuri sąlyga yra tiesa",
           "parentheses": "Skliausteliai sąlygų grupavimui"
         },
         "examples": {
@@ -508,7 +508,7 @@
     "confirm": "I am sure, please start migrating now!",
     "importUpload": "Importuoti duomenis iš {name} į Vikunja, spausk mygtuką žemiau, norėdamas pasirinkti failą.",
     "upload": "Įkelti failą",
-    "migrationStartedWillReciveEmail": "Vikunja will now import your lists/projects, tasks, notes, reminders and files from {service}. As this will take a while, we will send you an email once done. You can close this window now.",
+    "migrationStartedWillReciveEmail": "Vikunja dabar importuos tavo sąrašus/projektus, užduotis, užrašus, priminimus ir dokumentus iš {service}. Kadangi tai užtruks, atsiųsime el. laišką, kai bus baigta. Gali uždaryti šį langą.",
     "migrationInProgress": "A migration is currently in progress. Please wait until it is done."
   },
   "label": {

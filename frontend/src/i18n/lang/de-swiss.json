@@ -324,7 +324,7 @@
       "title": "Liste",
       "add": "Hinzufügen",
       "addPlaceholder": "Aufgabe hinzufügen…",
-      "empty": "Dieses Project ist derzeit leer.",
+      "empty": "Dieses Projekt ist derzeit leer.",
       "newTaskCta": "Aufgabe erstellen.",
       "editTask": "Aufgabe bearbeiten"
     },
@@ -365,7 +365,8 @@
       "deleteBucketSuccess": "Die Spalte wurde erfolgreich gelöscht.",
       "bucketTitleSavedSuccess": "Der Spaltenname wurde erfolgreich gespeichert.",
       "bucketLimitSavedSuccess": "Das Spaltenlimit wurde erfolgreich gespeichert.",
-      "collapse": "Spalte einklappen"
+      "collapse": "Spalte einklappen",
+      "bucketLimitReached": "You have reached the bucket limit. Remove tasks or increase the limit to add new tasks."
     },
     "pseudo": {
       "favorites": {

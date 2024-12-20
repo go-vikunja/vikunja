@@ -324,7 +324,7 @@
       "title": "Liste",
       "add": "Hinzufügen",
       "addPlaceholder": "Aufgabe hinzufügen…",
-      "empty": "Dieses Project ist derzeit leer.",
+      "empty": "Dieses Projekt ist derzeit leer.",
       "newTaskCta": "Aufgabe erstellen.",
       "editTask": "Aufgabe bearbeiten"
     },
