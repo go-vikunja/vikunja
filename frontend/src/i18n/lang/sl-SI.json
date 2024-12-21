@@ -365,7 +365,8 @@
       "deleteBucketSuccess": "Vedro je bilo uspešno izbrisano.",
       "bucketTitleSavedSuccess": "Naslov vedra je bil uspešno shranjen.",
       "bucketLimitSavedSuccess": "Omejitev vedra je bila uspešno shranjena.",
-      "collapse": "Zloži vedro"
+      "collapse": "Zloži vedro",
+      "bucketLimitReached": "You have reached the bucket limit. Remove tasks or increase the limit to add new tasks."
     },
     "pseudo": {
       "favorites": {

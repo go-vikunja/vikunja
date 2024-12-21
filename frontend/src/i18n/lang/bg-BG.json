@@ -365,7 +365,8 @@
       "deleteBucketSuccess": "Колоната беше успешно изтрита.",
       "bucketTitleSavedSuccess": "Заглавието на колоната беше успешно запазено.",
       "bucketLimitSavedSuccess": "Лимитът на колоната беше успешно запазен.",
-      "collapse": "Свий тази колона"
+      "collapse": "Свий тази колона",
+      "bucketLimitReached": "You have reached the bucket limit. Remove tasks or increase the limit to add new tasks."
     },
     "pseudo": {
       "favorites": {

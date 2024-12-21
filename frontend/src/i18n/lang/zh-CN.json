@@ -365,7 +365,8 @@
       "deleteBucketSuccess": "存储桶已删除。",
       "bucketTitleSavedSuccess": "存储桶标题已保存。",
       "bucketLimitSavedSuccess": "存储桶限制已保存。",
-      "collapse": "折叠此存储桶"
+      "collapse": "折叠此存储桶",
+      "bucketLimitReached": "You have reached the bucket limit. Remove tasks or increase the limit to add new tasks."
     },
     "pseudo": {
       "favorites": {

@@ -365,7 +365,8 @@
       "deleteBucketSuccess": "The bucket has been deleted successfully.",
       "bucketTitleSavedSuccess": "The bucket title has been saved successfully.",
       "bucketLimitSavedSuccess": "The bucket limit been saved successfully.",
-      "collapse": "Collapse this bucket"
+      "collapse": "Collapse this bucket",
+      "bucketLimitReached": "You have reached the bucket limit. Remove tasks or increase the limit to add new tasks."
     },
     "pseudo": {
       "favorites": {

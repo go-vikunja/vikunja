@@ -365,7 +365,8 @@
       "deleteBucketSuccess": "A vödör sikeresen törölve.",
       "bucketTitleSavedSuccess": "A vödör címe sikeresen elmentve.",
       "bucketLimitSavedSuccess": "A vödör limit sikeresen elmentve.",
-      "collapse": "Zárd össze ezt a vödröt"
+      "collapse": "Zárd össze ezt a vödröt",
+      "bucketLimitReached": "You have reached the bucket limit. Remove tasks or increase the limit to add new tasks."
     },
     "pseudo": {
       "favorites": {

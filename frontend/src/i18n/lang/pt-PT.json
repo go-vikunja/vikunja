@@ -365,7 +365,8 @@
       "deleteBucketSuccess": "O conjunto foi eliminado com sucesso.",
       "bucketTitleSavedSuccess": "O título do conjunto foi salvo com sucesso.",
       "bucketLimitSavedSuccess": "O limite do conjunto foi salvo com sucesso.",
-      "collapse": "Encolher este conjunto"
+      "collapse": "Encolher este conjunto",
+      "bucketLimitReached": "You have reached the bucket limit. Remove tasks or increase the limit to add new tasks."
     },
     "pseudo": {
       "favorites": {

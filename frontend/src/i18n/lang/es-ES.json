@@ -365,7 +365,8 @@
       "deleteBucketSuccess": "El contenedor se ha eliminado con éxito.",
       "bucketTitleSavedSuccess": "El título del contenedor se ha guardado con éxito.",
       "bucketLimitSavedSuccess": "El límite del contenedor se ha guardado con éxito.",
-      "collapse": "Contraer este contenedor"
+      "collapse": "Contraer este contenedor",
+      "bucketLimitReached": "You have reached the bucket limit. Remove tasks or increase the limit to add new tasks."
     },
     "pseudo": {
       "favorites": {

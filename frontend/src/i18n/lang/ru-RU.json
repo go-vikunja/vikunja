@@ -365,7 +365,8 @@
       "deleteBucketSuccess": "Колонка удалена.",
       "bucketTitleSavedSuccess": "Название колонки сохранено.",
       "bucketLimitSavedSuccess": "Лимит колонки сохранён.",
-      "collapse": "Свернуть эту колонку"
+      "collapse": "Свернуть эту колонку",
+      "bucketLimitReached": "Вы достигли лимита колонки. Удалите какие-нибудь задачи или увеличьте лимит, чтобы добавить новые задачи."
     },
     "pseudo": {
       "favorites": {

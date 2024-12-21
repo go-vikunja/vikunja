@@ -365,7 +365,8 @@
       "deleteBucketSuccess": "O bucket foi excluído com sucesso.",
       "bucketTitleSavedSuccess": "O título do bucket foi salvo com sucesso.",
       "bucketLimitSavedSuccess": "O limite do bucket foi salvo com sucesso.",
-      "collapse": "Recolher este bucket"
+      "collapse": "Recolher este bucket",
+      "bucketLimitReached": "You have reached the bucket limit. Remove tasks or increase the limit to add new tasks."
     },
     "pseudo": {
       "favorites": {

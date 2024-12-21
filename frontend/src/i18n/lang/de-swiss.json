@@ -366,7 +366,7 @@
       "bucketTitleSavedSuccess": "Der Spaltenname wurde erfolgreich gespeichert.",
       "bucketLimitSavedSuccess": "Das Spaltenlimit wurde erfolgreich gespeichert.",
       "collapse": "Spalte einklappen",
-      "bucketLimitReached": "You have reached the bucket limit. Remove tasks or increase the limit to add new tasks."
+      "bucketLimitReached": "Du hast das Limit dieses Buckets erreicht. Entferne Aufgaben oder erhöhe das Limit, um neue Aufgaben hinzuzufügen."
     },
     "pseudo": {
       "favorites": {

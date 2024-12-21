@@ -365,7 +365,8 @@
       "deleteBucketSuccess": "Kolumna została pomyślnie usunięta.",
       "bucketTitleSavedSuccess": "Tytuł kolumny został pomyślnie zapisany.",
       "bucketLimitSavedSuccess": "Limit kolumny został pomyślnie zapisany.",
-      "collapse": "Zwiń tę kolumnę"
+      "collapse": "Zwiń tę kolumnę",
+      "bucketLimitReached": "You have reached the bucket limit. Remove tasks or increase the limit to add new tasks."
     },
     "pseudo": {
       "favorites": {

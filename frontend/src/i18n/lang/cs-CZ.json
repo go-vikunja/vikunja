@@ -365,7 +365,8 @@
       "deleteBucketSuccess": "Sloupec byl úspěšně smazán.",
       "bucketTitleSavedSuccess": "Název sloupce byl úspěšně uložen.",
       "bucketLimitSavedSuccess": "Limit sloupce byl úspěšně uložen.",
-      "collapse": "Sbalit tento sloupec"
+      "collapse": "Sbalit tento sloupec",
+      "bucketLimitReached": "You have reached the bucket limit. Remove tasks or increase the limit to add new tasks."
     },
     "pseudo": {
       "favorites": {

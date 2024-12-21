@@ -365,7 +365,8 @@
       "deleteBucketSuccess": "Bøtten er slettet.",
       "bucketTitleSavedSuccess": "Bøtten er lagret.",
       "bucketLimitSavedSuccess": "Grensen på bøtte er lagret.",
-      "collapse": "Skjul denne bøtten"
+      "collapse": "Skjul denne bøtten",
+      "bucketLimitReached": "You have reached the bucket limit. Remove tasks or increase the limit to add new tasks."
     },
     "pseudo": {
       "favorites": {
