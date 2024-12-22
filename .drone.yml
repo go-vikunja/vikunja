@@ -579,53 +579,6 @@ steps:
     when:
       event: [ push, tag, pull_request ]
 
-  - name: generate-config-yaml
-    image: vikunja/golang-build:latest
-    pull: always
-    commands:
-      - ./mage-static generate:config-yaml 1
-    depends_on: [ mage ]
-
-  - name: upload-config-yaml-unstable
-    image: plugins/s3
-    pull: always
-    settings:
-      bucket: vikunja-releases
-      access_key:
-        from_secret: hetzner_access_key_id
-      secret_key:
-        from_secret: hetzner_secret_access_key
-      endpoint: https://fsn1.your-objectstorage.com
-      region: fsn1
-      path_style: true
-      source: config.yml.sample
-      target: /vikunja/unstable/
-    when:
-      branch:
-        - main
-      event:
-        - push
-    depends_on: [ generate-config-yaml ]
-
-  - name: upload-config-yaml-version
-    image: plugins/s3
-    pull: always
-    settings:
-      bucket: vikunja-releases
-      access_key:
-        from_secret: hetzner_access_key_id
-      secret_key:
-        from_secret: hetzner_secret_access_key
-      endpoint: https://fsn1.your-objectstorage.com
-      region: fsn1
-      path_style: true
-      source: config.yml.sample
-      target: /vikunja/${DRONE_TAG##v}/
-    when:
-      event:
-        - tag
-    depends_on: [ generate-config-yaml ]
-
   - name: before-static-build
     image: ghcr.io/techknowlogick/xgo:go-1.23.x
     pull: always
@@ -1397,6 +1350,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 938c4349e5a4e746bb9c276e063a51f189e07d94000e6b21a38d9e836949bb46
+hmac: dcc1bda1f4ef4f46014b7d765e9e9f206fe26ec00c07f34712579413adbd0b1b
 
 ...
