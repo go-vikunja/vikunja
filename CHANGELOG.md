@@ -13,6 +13,16 @@ All releases can be found on https://code.vikunja.io/vikunja/releases.
 
 * *(export)* Update only current user export file id
 
+### Features
+
+* Use hetzner object storage for releases ([3f98f47](3f98f47256628ac559a947f6c9541c0bf03001b6))
+
+### Miscellaneous Tasks
+
+* Release preparation ([17b2810](17b281072f095730a0fbb28458d713fa883f43ec))
+* Sign drone config ([b91a5d9](b91a5d9adfb7144126f5824224970ad4015dcd6a))
+* Do not generate config yaml ([8c28596](8c285968afff7ebd087ce824b52b0a9f28a8ec20))
+
 ## [0.24.5] - 2024-11-21
 
 ### Bug Fixes
