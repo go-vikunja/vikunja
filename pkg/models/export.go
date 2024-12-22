@@ -36,6 +36,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/version"
+
 	"xorm.io/xorm"
 )
 
@@ -106,7 +107,10 @@ func ExportUserData(s *xorm.Session, u *user.User) (err error) {
 
 	// Save the file id with the user
 	u.ExportFileID = exportFile.ID
-	_, err = s.Cols("export_file_id").Update(u)
+	_, err = s.
+		Where("id = ?", u.ID).
+		Cols("export_file_id").
+		Update(u)
 	if err != nil {
 		return
 	}
