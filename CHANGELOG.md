@@ -7,6 +7,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 All releases can be found on https://code.vikunja.io/vikunja/releases.
 
+## [0.24.6] - 2024-12-22
+
+### Bug Fixes
+
+* *(export)* Update only current user export file id
+
 ## [0.24.5] - 2024-11-21
 
 ### Bug Fixes
