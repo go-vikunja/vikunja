@@ -27,6 +27,7 @@ export const SUPPORTED_LOCALES = {
 	'uk-UA': 'Українська',
 	'lt-LT': 'Lietuvių Kalba',
 	'bg-BG': 'Български',
+	'ko-KR': '한국어',
 	// IMPORTANT: Also add new languages to useDayjsLanguageSync
 } as const
 
