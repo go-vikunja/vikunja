@@ -138,7 +138,7 @@ steps:
       event: [ push, tag, pull_request ]
 
   - name: api-lint
-    image: golangci/golangci-lint:v1.61.0
+    image: golangci/golangci-lint:v1.63.4
     pull: always
     environment:
       GOPROXY: 'https://goproxy.kolaente.de'
