@@ -29,7 +29,7 @@ require (
 	github.com/d4l3k/messagediff v1.2.1
 	github.com/disintegration/imaging v1.6.2
 	github.com/dustinkirkland/golang-petname v0.0.0-20240422154211-76c06c4bde6b
-	github.com/gabriel-vasile/mimetype v1.4.7
+	github.com/gabriel-vasile/mimetype v1.4.8
 	github.com/ganigeorgiev/fexpr v0.4.1
 	github.com/getsentry/sentry-go v0.30.0
 	github.com/go-sql-driver/mysql v1.8.1
