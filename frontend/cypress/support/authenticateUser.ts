@@ -21,10 +21,14 @@ export function login(user, cacheAcrossSpecs = false) {
   })
 }
 
+export function createFakeUser() {
+	return UserFactory.create(1)[0]
+}
+
 export function createFakeUserAndLogin() {
 	let user
 	before(() => {
-		user = UserFactory.create(1)[0]
+		user = createFakeUser()
 	})
 
 	beforeEach(() => {

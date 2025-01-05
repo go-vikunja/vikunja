@@ -5,7 +5,7 @@ import {createProjects} from '../project/prepareProjects'
 function prepareLinkShare() {
 	const projects = createProjects()
 	const tasks = TaskFactory.create(10, {
-		project_id: projects[0].id
+		project_id: projects[0].id,
 	})
 	const linkShares = LinkShareFactory.create(1, {
 		project_id: projects[0].id,
@@ -27,7 +27,7 @@ describe('Link shares', () => {
 
 		cy.get('h1.title')
 			.should('contain', project.title)
-		cy.get('input.input[placeholder="Add a task..."')
+		cy.get('input.input[placeholder="Add a task…"]')
 			.should('not.exist')
 		cy.get('.tasks')
 			.should('contain', tasks[0].title)
@@ -42,7 +42,7 @@ describe('Link shares', () => {
 
 		cy.get('h1.title')
 			.should('contain', project.title)
-		cy.get('input.input[placeholder="Add a task..."')
+		cy.get('input.input[placeholder="Add a task…"]')
 			.should('not.exist')
 		cy.get('.tasks')
 			.should('contain', tasks[0].title)
