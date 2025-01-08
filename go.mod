@@ -77,7 +77,7 @@ require (
 	golang.org/x/term v0.28.0
 	golang.org/x/text v0.21.0
 	gopkg.in/d4l3k/messagediff.v1 v1.2.1
-	mvdan.cc/xurls/v2 v2.5.0
+	mvdan.cc/xurls/v2 v2.6.0
 	src.techknowlogick.com/xgo v1.8.1-0.20241105013731-313dedef864f
 	src.techknowlogick.com/xormigrate v1.7.1
 	xorm.io/builder v0.3.13
@@ -196,10 +196,10 @@ require (
 	go.opentelemetry.io/otel/trace v1.29.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
-	golang.org/x/mod v0.17.0 // indirect
+	golang.org/x/mod v0.22.0 // indirect
 	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/time v0.8.0 // indirect
-	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
+	golang.org/x/tools v0.28.0 // indirect
 	google.golang.org/api v0.203.0 // indirect
 	google.golang.org/genproto v0.0.0-20241015192408-796eee8c2d53 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20241007155032-5fefd90f89a9 // indirect
@@ -214,6 +214,6 @@ require (
 
 replace github.com/samedi/caldav-go => github.com/kolaente/caldav-go v3.0.1-0.20190610114120-2a4eb8b5dcc9+incompatible // Branch: feature/dynamic-supported-components, PR: https://github.com/samedi/caldav-go/pull/6 and https://github.com/samedi/caldav-go/pull/7
 
-go 1.22
+go 1.22.0
 
 toolchain go1.23.4
