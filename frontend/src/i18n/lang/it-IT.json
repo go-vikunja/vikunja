@@ -4,7 +4,7 @@
     "welcomeMorning": "Buongiorno {username}!",
     "welcomeDay": "Ciao {username}!",
     "welcomeEvening": "Buonasera {username}!",
-    "lastViewed": "Ultima visualizzazione",
+    "lastViewed": "Visti di recente",
     "addToHomeScreen": "Aggiungi questa app alla tua schermata iniziale per un accesso più veloce e un'esperienza migliore.",
     "goToOverview": "Go to overview",
     "project": {
@@ -203,7 +203,7 @@
       "descriptionPasswordRequired": "Inserisci la tua password per procedere:",
       "request": "Richiedi una copia dei miei dati Vikunja",
       "success": "Hai richiesto con successo i tuoi dati Vikunja! Ti invieremo un'e-mail una volta che saranno pronti da scaricare.",
-      "downloadTitle": "Scarica i tuoi dati Vikunja esportati"
+      "downloadTitle": "Scarica i tuoi dati esportati da Vikunja"
     }
   },
   "project": {
@@ -339,7 +339,7 @@
       "noDates": "This task has no dates set."
     },
     "table": {
-      "title": "Table",
+      "title": "Tabella",
       "columns": "Columns"
     },
     "kanban": {
@@ -876,7 +876,7 @@
     },
     "label": {
       "placeholder": "Type to add a label…",
-      "createPlaceholder": "Aggiungila come nuova etichetta",
+      "createPlaceholder": "Aggiungi come nuova etichetta",
       "addSuccess": "Etichetta aggiunta.",
       "createSuccess": "Etichetta creata.",
       "removeSuccess": "Etichetta eliminata.",
@@ -908,7 +908,7 @@
       "taskRequired": "Seleziona un'attività o inserisci il nuovo titolo.",
       "kinds": {
         "subtask": "Sotto-attività | Sotto-attività",
-        "parenttask": "Attività Principale | Attività Principale",
+        "parenttask": "Attività Principale | Attività Principali",
         "related": "Attività Correlata | Attività Correlata",
         "duplicateof": "Duplicato Di | Duplicati Di",
         "duplicates": "Duplicato | Duplicati",
@@ -1037,12 +1037,12 @@
       "done": "Contrassegna l'attività come fatta / da fare",
       "assign": "Assegna questa attività a un utente",
       "labels": "Aggiungi etichette a questa attività",
-      "dueDate": "Modifica la data di scadenza di questa attività",
+      "dueDate": "Modifica data di scadenza di questa attività",
       "attachment": "Aggiungi un allegato a questa attività",
       "related": "Modifica le attività collegate a questa",
       "color": "Cambia il colore di questa attività",
       "move": "Move this task to another project",
-      "reminder": "Gestisci i promemoria di questa attività",
+      "reminder": "Gestisci promemoria di questa attività",
       "description": "Attiva/Disattiva modifica della descrizione dell'attività",
       "delete": "Elimina questa attività",
       "priority": "Modifica la priorità di questa attività",
@@ -1085,9 +1085,9 @@
   },
   "apiConfig": {
     "url": "URL Vikunja",
-    "urlPlaceholder": "es. http://localhost:8080",
+    "urlPlaceholder": "es. https://localhost:3456",
     "change": "modifica",
-    "use": "Usa l'installazione di Vikunja a {0}",
+    "use": "Usa l'installazione di Vikunja su {0}",
     "error": "Could not find or use Vikunja installation at \"{domain}\". Please check if the url has the correct format and you can reach it when accessing it directly and try again.",
     "success": "Utilizzando l'installazione di Vikunja su \"{domain}\".",
     "urlRequired": "L'URL è obbligatorio."
@@ -1108,7 +1108,7 @@
     "commands": "Comandi",
     "placeholder": "Digita un comando o cerca…",
     "hint": "You can use {project} to limit the search to a project. Combine {project} or {label} (labels) with a search query to search for a task with these labels or on that project. Use {assignee} to only search for teams.",
-    "tasks": "Attivitá",
+    "tasks": "Attività",
     "projects": "Projects",
     "teams": "Gruppi",
     "labels": "Labels",
