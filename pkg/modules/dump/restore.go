@@ -192,7 +192,10 @@ func Restore(filename string) error {
 
 func restoreTableData(tables map[string]*zip.File) error {
 	jsonFields := map[string][]string{
+		"api_tokens":    {"permissions"},
 		"notifications": {"notification"},
+		"project_views": {"filter", "bucket_configuration"},
+		"saved_filters": {"filters"},
 		"users":         {"frontend_settings"},
 	}
 
