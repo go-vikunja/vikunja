@@ -243,8 +243,8 @@ importers:
         specifier: 2.2.5
         version: 2.2.5(cypress@13.17.0)
       '@cypress/vite-dev-server':
-        specifier: 5.2.1
-        version: 5.2.1
+        specifier: 6.0.0
+        version: 6.0.0
       '@cypress/vue':
         specifier: 6.0.2
         version: 6.0.2(cypress@13.17.0)(vue@3.5.13(typescript@5.7.2))
@@ -1236,8 +1236,8 @@ packages:
     resolution: {integrity: sha512-fi0eVdCOtKu5Ed6+E8mYxUF6ZTFJDZvHogCBelM0xVXmrDEkyM22gRArQzq1YcHPm1V47Vf/iAD+WgVdUlJCGg==}
     engines: {node: '>= 6'}
 
-  '@cypress/vite-dev-server@5.2.1':
-    resolution: {integrity: sha512-5HEUpB2UjpoBByOPAdTBfeJWHlvyDv3Qz5GuGovoiZnzsZyF9eivWfFiYadFdjXXX8i8kVzibo8heWZg+jigGg==}
+  '@cypress/vite-dev-server@6.0.0':
+    resolution: {integrity: sha512-YaIFk5DuMXjgqlAX1jqsUTFihNvp/GXjVboyoWdzDXOks36Q8vuAz4oKcDiEDUxXBXyjsf0ljor32sUsiGjX/w==}
 
   '@cypress/vue@6.0.2':
     resolution: {integrity: sha512-To+Ik4CnhTPMmDh7VGpl5k0Z1LuE0xrI0j6LF7QyjROY2bkQwUE50WTmVPCz/Dvez9WrVpkJjRmflR5KlVmGiQ==}
@@ -7825,9 +7825,9 @@ snapshots:
       tunnel-agent: 0.6.0
       uuid: 8.3.2
 
-  '@cypress/vite-dev-server@5.2.1':
+  '@cypress/vite-dev-server@6.0.0':
     dependencies:
-      debug: 4.3.7
+      debug: 4.4.0(supports-color@8.1.1)
       find-up: 6.3.0
       node-html-parser: 5.3.3
       semver: 7.6.3
