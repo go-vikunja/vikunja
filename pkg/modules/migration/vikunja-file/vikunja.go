@@ -67,6 +67,9 @@ func (v *FileMigrator) Name() string {
 func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) error {
 	r, err := zip.NewReader(file, size)
 	if err != nil {
+		if err.Error() == "zip: not a valid zip file" {
+			return &migration.ErrNotAZipFile{}
+		}
 		return fmt.Errorf("could not open import file: %w", err)
 	}
 
