@@ -36,6 +36,18 @@ function redirectToProviderIfNothingElseIsEnabled() {
 	}
 }
 
+function getLoggedInVia(): string | null {
+	return localStorage.getItem('loggedInViaProvider')
+}
+
+function setLoggedInVia(provider: string | null): void {
+	if (provider) {
+		localStorage.setItem('loggedInViaProvider', provider)
+	} else {
+		localStorage.removeItem('loggedInViaProvider')
+	}
+}
+
 export const useAuthStore = defineStore('auth', () => {
 	const configStore = useConfigStore()
 	
@@ -186,6 +198,7 @@ export const useAuthStore = defineStore('auth', () => {
 	async function openIdAuth({provider, code}) {
 		const HTTP = HTTPFactory()
 		setIsLoading(true)
+		setLoggedInVia(null)
 
 		const fullProvider: IProvider = configStore.auth.openidConnect.providers.find((p: IProvider) => p.key === provider)
 
@@ -200,6 +213,7 @@ export const useAuthStore = defineStore('auth', () => {
 			const response = await HTTP.post(`/auth/openid/${provider}/callback`, data)
 			// Save the token to local storage for later use
 			saveToken(response.data.token, true)
+			setLoggedInVia(provider)
 
 			// Tell others the user is autheticated
 			await checkAuth()
@@ -406,17 +420,15 @@ export const useAuthStore = defineStore('auth', () => {
 
 	async function logout() {
 		removeToken()
+		const loggedInVia = getLoggedInVia()
 		window.localStorage.clear() // Clear all settings and history we might have saved in local storage.
 		await router.push({name: 'user.login'})
 		await checkAuth()
 
 		// if configured, redirect to OIDC Provider on logout
-		if (
-			configStore.auth.local.enabled === false &&
-			configStore.auth.openidConnect.enabled &&
-			configStore.auth.openidConnect.providers?.length === 1)
-		{
-			redirectToProviderOnLogout(configStore.auth.openidConnect.providers[0])
+		const fullProvider: IProvider = configStore.auth.openidConnect.providers.find((p: IProvider) => p.key === loggedInVia)
+		if (fullProvider) {
+			redirectToProviderOnLogout(fullProvider)
 		}
 	}
 
