@@ -7,6 +7,13 @@
 			<template v-if="isMigrating === false">
 				<template v-if="migrator.isFileMigrator">
 					<p>{{ $t('migrate.importUpload', {name: migrator.name}) }}</p>
+					<Message
+						v-if="migrationError"
+						variant="danger"
+						class="mb-4"
+					>
+						{{ migrationError }}
+					</Message>
 					<input
 						ref="uploadInput"
 						class="is-hidden"
@@ -129,6 +136,7 @@ import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {MIGRATORS, type Migrator} from './migrators'
 import {useTitle} from '@/composables/useTitle'
 import {useProjectStore} from '@/stores/projects'
+import {getErrorText} from '@/message'
 
 const props = defineProps<{
 	service: string,
@@ -147,6 +155,7 @@ const lastMigrationStartedAt = ref<Date | null>(null)
 const message = ref('')
 const migratorAuthCode = ref('')
 const migrationJustStarted = ref(false)
+const migrationError = ref('')
 
 const migrator = computed<Migrator>(() => MIGRATORS[props.service])
 
@@ -198,6 +207,7 @@ async function migrate() {
 	isMigrating.value = true
 	lastMigrationFinishedAt.value = null
 	message.value = ''
+	migrationError.value = ''
 
 	let migrationConfig: MigrationConfig | File = {code: migratorAuthCode.value}
 
@@ -219,7 +229,7 @@ async function migrate() {
 		await migrationService.migrate(migrationConfig as MigrationConfig)
 		migrationJustStarted.value = true
 	} catch (e) {
-		console.log(e)
+		migrationError.value = getErrorText(e)
 	} finally {
 		isMigrating.value = false
 	}
