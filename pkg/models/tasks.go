@@ -656,19 +656,39 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 }
 
 // Checks if adding a new task would exceed the bucket limit
-func checkBucketLimit(s *xorm.Session, t *Task, bucket *Bucket) (err error) {
+func checkBucketLimit(s *xorm.Session, a web.Auth, t *Task, bucket *Bucket) (err error) {
 	if bucket.Limit > 0 {
-		taskCount, err := s.
-			Where("bucket_id = ?", bucket.ID).
-			GroupBy("task_id").
-			Count(&TaskBucket{})
+		var taskCount int64
+		view, err := GetProjectViewByID(s, bucket.ProjectViewID)
 		if err != nil {
 			return err
 		}
+
+		if view.ProjectID < 0 || (view.Filter != nil && view.Filter.Filter != "") {
+			tc := &TaskCollection{
+				ProjectID:     view.ProjectID,
+				ProjectViewID: bucket.ProjectViewID,
+			}
+
+			_, _, taskCount, err = tc.ReadAll(s, a, "", 1, 1)
+			if err != nil {
+				return err
+			}
+		} else {
+			taskCount, err = s.
+				Where("bucket_id = ?", bucket.ID).
+				GroupBy("task_id").
+				Count(&TaskBucket{})
+			if err != nil {
+				return err
+			}
+		}
+
 		if taskCount >= bucket.Limit {
 			return ErrBucketLimitExceeded{TaskID: t.ID, BucketID: bucket.ID, Limit: bucket.Limit}
 		}
 	}
+
 	return nil
 }
 

@@ -123,7 +123,7 @@ func (b *TaskBucket) Update(s *xorm.Session, a web.Auth) (err error) {
 	// Check the bucket limit
 	// Only check the bucket limit if the task is being moved between buckets, allow reordering the task within a bucket
 	if b.BucketID != 0 && b.BucketID != oldTaskBucket.BucketID {
-		err = checkBucketLimit(s, &task, bucket)
+		err = checkBucketLimit(s, a, &task, bucket)
 		if err != nil {
 			return err
 		}
