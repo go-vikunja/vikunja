@@ -199,6 +199,13 @@ func restoreTableData(tables map[string]*zip.File) error {
 		"users":         {"frontend_settings"},
 	}
 
+	floatFields := map[string][]string{
+		"buckets":        {"position"},
+		"project_views":  {"position"},
+		"projects":       {"position"},
+		"task_positions": {"position"},
+	}
+
 	// Restore all db data
 	for table, d := range tables {
 		content, err := unmarshalFileToJSON(d)
@@ -206,8 +213,7 @@ func restoreTableData(tables map[string]*zip.File) error {
 			return fmt.Errorf("could not read table %s: %w", table, err)
 		}
 
-		fields, hasJSONFields := jsonFields[table]
-		if hasJSONFields {
+		processFields := func(fields []string, isFloat bool) error {
 			for i := range content {
 				for _, f := range fields {
 
@@ -225,8 +231,31 @@ func restoreTableData(tables map[string]*zip.File) error {
 						decoded = []byte(content[i][f].(string))
 					}
 
-					content[i][f] = string(decoded)
+					if isFloat {
+						val, err := strconv.ParseFloat(string(decoded), 64)
+						if err != nil {
+							return fmt.Errorf("could not parse double value for field '%s': %w", f, err)
+						}
+						content[i][f] = val
+					} else {
+						content[i][f] = string(decoded)
+					}
 				}
+			}
+			return nil
+		}
+
+		// Process JSON fields
+		if fields, hasJSONFields := jsonFields[table]; hasJSONFields {
+			if err := processFields(fields, false); err != nil {
+				return err
+			}
+		}
+
+		// Process double fields
+		if fields, hasDoubleFields := floatFields[table]; hasDoubleFields {
+			if err := processFields(fields, true); err != nil {
+				return err
 			}
 		}
 
