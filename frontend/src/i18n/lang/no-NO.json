@@ -975,7 +975,7 @@
   },
   "team": {
     "title": "Grupper",
-    "noTeams": "Du er for øyeblikket ikke en del av noen gurpper.",
+    "noTeams": "Du er for øyeblikket ikke med i en gruppe.",
     "create": {
       "title": "Create a team",
       "success": "Gruppen ble opprettet."
