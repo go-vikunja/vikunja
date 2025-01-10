@@ -57,7 +57,7 @@
     "@infectoone/vue-ganttastic": "2.3.2",
     "@intlify/unplugin-vue-i18n": "6.0.3",
     "@kyvg/vue3-notification": "3.4.1",
-    "@sentry/tracing": "7.114.0",
+    "@sentry/tracing": "7.120.3",
     "@sentry/vue": "8.48.0",
     "@tiptap/core": "2.11.0",
     "@tiptap/extension-blockquote": "2.11.0",
