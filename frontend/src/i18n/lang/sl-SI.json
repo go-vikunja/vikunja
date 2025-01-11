@@ -1203,7 +1203,8 @@
     "12001": "Tipa entitete naročnine je neveljaven.",
     "12002": "Ste že naročeni na samo entiteto ali nadrejeno entiteto.",
     "13001": "Ta skupna raba povezave zahteva geslo za preverjanje pristnosti, vendar ni bil podan.",
-    "13002": "Navedeno geslo za skupno rabo povezave je bilo neveljavno."
+    "13002": "Navedeno geslo za skupno rabo povezave je bilo neveljavno.",
+    "14001": "The provided file is not a valid zip file."
   },
   "about": {
     "title": "O programu",

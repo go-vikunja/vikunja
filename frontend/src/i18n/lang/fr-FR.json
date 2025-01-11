@@ -1203,7 +1203,8 @@
     "12001": "Le type d’entité d’abonnement est invalide.",
     "12002": "Vous êtes déjà abonné·e à l’entité elle-même ou à une entité parente.",
     "13001": "Le mot de passe requis n’a pas été fourni pour ce partage de lien.",
-    "13002": "Mot de passe de partage de lien invalide."
+    "13002": "Mot de passe de partage de lien invalide.",
+    "14001": "The provided file is not a valid zip file."
   },
   "about": {
     "title": "À propos",

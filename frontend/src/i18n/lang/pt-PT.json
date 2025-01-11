@@ -1203,7 +1203,8 @@
     "12001": "O tipo de entidade da subscrição é inválido.",
     "12002": "Já estás subcrito na entidade ou numa entidade parente.",
     "13001": "Este link partilhado requer uma palavra-passe para autenticação, mas nenhuma foi fornecida.",
-    "13002": "A palavra-passe fornecida para o link partilhado é inválida."
+    "13002": "A palavra-passe fornecida para o link partilhado é inválida.",
+    "14001": "The provided file is not a valid zip file."
   },
   "about": {
     "title": "Sobre",

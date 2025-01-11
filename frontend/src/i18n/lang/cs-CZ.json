@@ -1203,7 +1203,8 @@
     "12001": "Typ předplatného je neplatný.",
     "12002": "Již jste přihlášeni k odběru samotného subjektu nebo nadřazeného subjektu.",
     "13001": "Tento sdílený odkaz vyžaduje heslo k ověření, ale žádné nebylo poskytnuto.",
-    "13002": "Zadané heslo pro sdílený odkaz bylo neplatné."
+    "13002": "Zadané heslo pro sdílený odkaz bylo neplatné.",
+    "14001": "The provided file is not a valid zip file."
   },
   "about": {
     "title": "O aplikaci",

@@ -1203,7 +1203,8 @@
     "12001": "Prenumeratos objekto tipas yra nevalidus.",
     "12002": "Esi prisiregistravęs prie visko ar prie tėvinio subjekto.",
     "13001": "Šis dalinimasis nuoroda reikalauja slaptažodžio identifikavimuisi, bet jis nebuvo pateiktas.",
-    "13002": "Pateikta slaptažodžio dalinimosi nuoroda negalioja."
+    "13002": "Pateikta slaptažodžio dalinimosi nuoroda negalioja.",
+    "14001": "The provided file is not a valid zip file."
   },
   "about": {
     "title": "Apie",

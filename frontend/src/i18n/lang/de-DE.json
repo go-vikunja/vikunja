@@ -1203,7 +1203,8 @@
     "12001": "Der Abonnement-Typ ist ungültig.",
     "12002": "Du bist bereits zu dieser oder einer übergeordneten Entität abonniert.",
     "13001": "Das Passwort für diese Linkfreigabe wurde nicht angegeben.",
-    "13002": "Das Passwort für diese Linkfreigabe war ungültig."
+    "13002": "Das Passwort für diese Linkfreigabe war ungültig.",
+    "14001": "Die angegebene Datei ist keine gültige ZIP-Datei."
   },
   "about": {
     "title": "Über",

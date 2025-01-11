@@ -1203,7 +1203,8 @@
     "12001": "El tipo de entidad de suscripción es inválido.",
     "12002": "Ya está suscrito a la entidad en sí misma o a una entidad padre.",
     "13001": "Este enlace compartido requiere una contraseña para la autenticación, pero no se ha proporcionado ninguna.",
-    "13002": "La contraseña proporcionada del enlace compartido no es válida."
+    "13002": "La contraseña proporcionada del enlace compartido no es válida.",
+    "14001": "The provided file is not a valid zip file."
   },
   "about": {
     "title": "Acerca de",

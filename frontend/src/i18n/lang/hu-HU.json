@@ -1203,7 +1203,8 @@
     "12001": "A feliratkozás típusa érvénytelen.",
     "12002": "Ön már feliratkozott magára az entitásra, vagy egy szülő entitásra.",
     "13001": "A linkmegosztáshoz jelszó szükséges a hitelesítéshez, de nem adták meg.",
-    "13002": "A megadott linkmegosztási jelszó érvénytelen."
+    "13002": "A megadott linkmegosztási jelszó érvénytelen.",
+    "14001": "The provided file is not a valid zip file."
   },
   "about": {
     "title": "Névjegy",

@@ -1203,7 +1203,8 @@
     "12001": "Abonnement enhetstypen er ugyldig.",
     "12002": "Du abonnerer allerede på enheten selv eller en overordnet enhet.",
     "13001": "Denne koblingsdelingen krever et passord for autentisering, men ingen ble oppgitt.",
-    "13002": "Den angitte linken for å dele passordet var ugyldig."
+    "13002": "Den angitte linken for å dele passordet var ugyldig.",
+    "14001": "The provided file is not a valid zip file."
   },
   "about": {
     "title": "Om",

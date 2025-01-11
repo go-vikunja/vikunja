@@ -1203,7 +1203,8 @@
     "12001": "Loại đăng ký không hợp lệ.",
     "12002": "Bạn đã đăng ký với tổ chức này hoặc tổ chức chính rồi.",
     "13001": "Chia sẻ liên kết này yêu cầu mật khẩu để xác thực, nhưng không có mật khẩu nào được cung cấp.",
-    "13002": "Mật khẩu chia sẻ liên kết không hợp lệ."
+    "13002": "Mật khẩu chia sẻ liên kết không hợp lệ.",
+    "14001": "The provided file is not a valid zip file."
   },
   "about": {
     "title": "Về ứng dụng",

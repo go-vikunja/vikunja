@@ -1203,7 +1203,8 @@
     "12001": "A entidade de subscrição é inválida.",
     "12002": "Você já assinou a entidade em si ou uma entidade pai.",
     "13001": "Este link compartilhado requer uma senha para autenticação, mas nenhum foi fornecido.",
-    "13002": "A senha de compartilhamento do link fornecido é inválida."
+    "13002": "A senha de compartilhamento do link fornecido é inválida.",
+    "14001": "The provided file is not a valid zip file."
   },
   "about": {
     "title": "Sobre",

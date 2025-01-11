@@ -1203,7 +1203,8 @@
     "12001": "Enhedstypen for abonnementet er ugyldigt.",
     "12002": "Du er allerede abonneret på selve enheden eller en overordnet enhed.",
     "13001": "Dette delingslink kræver en adgangskode til godkendelse, men ingen blev angivet.",
-    "13002": "Adgangskoden til delingslinket er ugyldig."
+    "13002": "Adgangskoden til delingslinket er ugyldig.",
+    "14001": "The provided file is not a valid zip file."
   },
   "about": {
     "title": "Om",

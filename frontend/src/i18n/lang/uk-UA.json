@@ -1203,7 +1203,8 @@
     "12001": "The subscription entity type is invalid.",
     "12002": "Ви підписані на саму суть або головну частину.",
     "13001": "This link share requires a password for authentication, but none was provided.",
-    "13002": "Хибний пароль для поширеного посилання."
+    "13002": "Хибний пароль для поширеного посилання.",
+    "14001": "The provided file is not a valid zip file."
   },
   "about": {
     "title": "Про",

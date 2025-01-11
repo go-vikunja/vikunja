@@ -1203,7 +1203,8 @@
     "12001": "De Abonnement Entitätstyp isch ungültig.",
     "12002": "Du bisch scho zu dere oder ere übergordnete Entität abonniert.",
     "13001": "De teilti Link bruucht es Passwort, aber du hesch keis aahgeh.",
-    "13002": "Das Passwort wo du geh hesch isch ungültig."
+    "13002": "Das Passwort wo du geh hesch isch ungültig.",
+    "14001": "Die angegebene Datei ist keine gültige ZIP-Datei."
   },
   "about": {
     "title": "Über",
