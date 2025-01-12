@@ -1377,6 +1377,8 @@ github.com/wneessen/go-mail v0.5.2 h1:MZKwgHJoRboLJ+EHMLuHpZc95wo+u1xViL/4XSswDT
 github.com/wneessen/go-mail v0.5.2/go.mod h1:kRroJvEq2hOSEPFRiKjN7Csrz0G1w+RpiGR3b6yo+Ck=
 github.com/wneessen/go-mail v0.6.0 h1:wO7EeJ8RL6DD+aycFGntil6b11g3FNQpQQQC1gkm97Y=
 github.com/wneessen/go-mail v0.6.0/go.mod h1:G702XlFhzHV0Z4w9j2VsH5K9dJDvj0hx+yOOp1oX9vc=
+github.com/wneessen/go-mail v0.6.1 h1:cDGqlGuEEhdILRe53VFzmM9WBk8Xh/QMvbO0oxrNJB4=
+github.com/wneessen/go-mail v0.6.1/go.mod h1:G702XlFhzHV0Z4w9j2VsH5K9dJDvj0hx+yOOp1oX9vc=
 github.com/xdg-go/pbkdf2 v1.0.0/go.mod h1:jrpuAogTd400dnrH08LKmI/xc1MbPOebTwRqcT5RDeI=
 github.com/xdg-go/scram v1.1.1/go.mod h1:RaEWvsqvNKKvBPvcKeFjrG2cJqOkHTiyTpzz23ni57g=
 github.com/xdg-go/stringprep v1.0.3/go.mod h1:W3f5j4i+9rC0kuIEJL0ky1VpHXQU3ocBgklLGvcBnW8=
