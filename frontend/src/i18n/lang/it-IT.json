@@ -4,7 +4,7 @@
     "welcomeMorning": "Buongiorno {username}!",
     "welcomeDay": "Ciao {username}!",
     "welcomeEvening": "Buonasera {username}!",
-    "lastViewed": "Visti di recente",
+    "lastViewed": "Ultimi visualizzati",
     "addToHomeScreen": "Aggiungi questa app alla tua schermata iniziale per un accesso più veloce e un'esperienza migliore.",
     "goToOverview": "Vai alla panoramica",
     "project": {
@@ -98,8 +98,8 @@
         "defaultProject": "Progetto predefinito",
         "defaultView": "Vista predefinita",
         "timezone": "Fuso orario",
-        "overdueTasksRemindersTime": "Orario email attività in scadute",
-        "filterUsedOnOverview": "Filtro utilizzato nella pagina panoramica"
+        "overdueTasksRemindersTime": "Orario d'invio delle e-mail per attività scadute",
+        "filterUsedOnOverview": "Filtro utilizzato nella panoramica"
       },
       "totp": {
         "title": "Autenticazione a due fattori",
@@ -138,7 +138,7 @@
         "setSuccess": "L'avatar è stato impostato con successo!"
       },
       "quickAddMagic": {
-        "title": "Modalità Aggiunta Rapida Magica",
+        "title": "Modalità di aggiunta rapida magica",
         "disabled": "Disabilitato",
         "todoist": "Todoist",
         "vikunja": "Vikunja"
@@ -184,7 +184,7 @@
     "deletion": {
       "title": "Elimina account Vikunja",
       "text1": "La cancellazione del tuo account è definitiva e irreversibile. Elimineremo tutti i tuoi progetti, attività e tutto ciò che vi è associato.",
-      "text2": "Per continuare, inserisci la tua password. Riceverai un'e-mail con ulteriori istruzioni.",
+      "text2": "Per continuare, inserisci la tua password. Riceverai una e-mail con ulteriori istruzioni.",
       "text3": "Per procedere, premi il bottone qui di sotto. Riceverai una mail con ulteriori istruzioni.",
       "confirm": "Elimina il mio profilo",
       "requestSuccess": "Richiesta riuscita. Riceverai un'e-mail con ulteriori istruzioni.",
@@ -357,7 +357,7 @@
       "addTaskPlaceholder": "Inserisci il nuovo titolo dell'attività…",
       "addTask": "Aggiungi un'attività",
       "addAnotherTask": "Aggiungi un'altra attività",
-      "addBucket": "Crea una nuova lista",
+      "addBucket": "Crea nuova lista",
       "addBucketPlaceholder": "Inserisci il titolo della nuova lista…",
       "deleteHeaderBucket": "Elimina la lista",
       "deleteBucketText1": "Sei sicuro di voler eliminare questa lista?",
@@ -509,13 +509,13 @@
     "confirm": "Sono sicuro, per favore inizia adesso la migrazione!",
     "importUpload": "Per importare i dati da {name} in Vikunja, fai clic sul pulsante qui sotto per selezionare un file.",
     "upload": "Carica file",
-    "migrationStartedWillReciveEmail": "Vikunja importerà i tuoi elenchi, progetti, attività, note, promemoria e file da {service}. Ti invieremo un'email quando il processo sarà completato, poiché potrebbe richiedere del tempo. Ora puoi chiudere questa finestra.",
+    "migrationStartedWillReciveEmail": "Vikunja importerà i tuoi elenchi, progetti, attività, note, promemoria e file da {service}. Ti invieremo una e-mail quando il processo sarà completato, poiché potrebbe richiedere del tempo. Nel frattempo, puoi chiudere questa finestra.",
     "migrationInProgress": "Una migrazione è attualmente in corso. Si prega di attendere fino a quando non sarà terminata."
   },
   "label": {
     "title": "Etichette",
     "manage": "Gestione etichette",
-    "description": "Clicca su un'etichetta per modificarla. È possibile modificare tutte le etichette che hai creato, è possibile utilizzare tutte le etichette associate a un progetto a cui hai accesso.",
+    "description": "Clicca su un'etichetta per modificarla. Puoi modificare tutte le etichette che hai creato e utilizzare quelle associate a qualsiasi progetto a cui hai accesso.",
     "newCTA": "Non hai nessuna etichetta.",
     "search": "Digita per cercare un'etichetta…",
     "create": {
@@ -568,7 +568,7 @@
     "poweredBy": "Creato con Vikunja",
     "info": "Info",
     "create": "Crea",
-    "doit": "Fallo!",
+    "doit": "Esegui!",
     "saving": "Salvataggio…",
     "saved": "Salvato!",
     "default": "Predefinito",
@@ -598,13 +598,13 @@
     },
     "editor": {
       "edit": "Modifica",
-      "done": "Fatto",
+      "done": "Completato",
       "heading1": "Intestazione 1",
-      "heading1Tooltip": "Intestazione di sezione grande.",
+      "heading1Tooltip": "Titolo di sezione grande.",
       "heading2": "Intestazione 2",
       "heading2Tooltip": "Titolo di sezione medio.",
       "heading3": "Intestazione 3",
-      "heading3Tooltip": "Titolo di sezione più piccolo.",
+      "heading3Tooltip": "Titolo di sezione piccolo.",
       "headingSmaller": "Intestazione Più Piccola",
       "headingBigger": "Intestazione Più Grande",
       "bold": "Grassetto",
@@ -618,7 +618,7 @@
       "bulletList": "Elenco puntato",
       "bulletListTooltip": "Crea un semplice elenco puntato.",
       "unorderedList": "Elenco non ordinato",
-      "orderedList": "Elenco ordinato",
+      "orderedList": "Elenco numerato",
       "orderedListTooltip": "Crea un elenco numerato.",
       "cleanBlock": "Pulisci Blocco",
       "link": "Link",
@@ -629,9 +629,9 @@
       "sideBySide": "Affianca",
       "guide": "Guida",
       "text": "Testo",
-      "textTooltip": "Inizia a digitare con un semplice testo.",
+      "textTooltip": "Inizia a digitare del testo semplice.",
       "taskList": "Elenco attività",
-      "taskListTooltip": "Monitora le attività con un elenco di cose da fare.",
+      "taskListTooltip": "Crea un elenco con caselle di controllo.",
       "undo": "Annulla",
       "redo": "Ripristina",
       "placeholder": "Digita del testo o premi '/' per vedere più opzioni…",
@@ -645,11 +645,11 @@
         "addRowAfter": "Aggiungi riga dopo",
         "deleteRow": "Elimina riga",
         "deleteTable": "Elimina tabella",
-        "mergeCells": "Unisci caselle",
-        "splitCell": "Dividi casella",
-        "toggleHeaderColumn": "Attiva/disattiva colonna d'intestazione",
-        "toggleHeaderRow": "Attiva/disattiva riga d'intestazione",
-        "toggleHeaderCell": "Attiva/disattiva casella d'intestazione",
+        "mergeCells": "Merge cells",
+        "splitCell": "Split cell",
+        "toggleHeaderColumn": "Attiva/disattiva colonna intestazione",
+        "toggleHeaderRow": "Attiva/disattiva riga intestazione",
+        "toggleHeaderCell": "Attiva/disattiva cella intestazione",
         "mergeOrSplit": "Unisci o dividi",
         "fixTables": "Correggi le tabelle"
       }
@@ -751,7 +751,7 @@
       "noDates": "Mostra attività senza date",
       "overdue": "Mostra attività scadute",
       "fromuntil": "Attività dal {from} al {until}",
-      "select": "Seleziona un intervallo di date",
+      "select": "Seleziona intervallo di date",
       "noTasks": "Nessuna attività — Buona giornata!"
     },
     "detail": {
@@ -759,11 +759,11 @@
       "chooseStartDate": "Clicca qui per impostare una data di inizio",
       "chooseEndDate": "Clicca qui per impostare una data di fine",
       "move": "Sposta attività in un altro progetto",
-      "done": "Segna attività fatta!",
+      "done": "Segna attività come completata!",
       "undone": "Segna come non completato",
       "created": "Creato {0} da {1}",
       "updated": "Aggiornato {0}",
-      "doneAt": "Fatto {0}",
+      "doneAt": "Completato {0}",
       "updateSuccess": "Attività salvata con successo.",
       "deleteSuccess": "L'attività è stata eliminata con successo.",
       "belongsToProject": "Questa attività appartiene al progetto '{project}'",
@@ -802,7 +802,7 @@
       "created": "Creato",
       "createdBy": "Creato Da",
       "description": "Descrizione",
-      "done": "Fatto",
+      "done": "Completato",
       "dueDate": "Data di scadenza",
       "endDate": "Data di fine",
       "labels": "Etichette",
@@ -975,7 +975,7 @@
   },
   "team": {
     "title": "Gruppi",
-    "noTeams": "Non fai parte di nessun gruppo.",
+    "noTeams": "Attualmente non fai parte di alcun gruppo.",
     "create": {
       "title": "Crea un gruppo",
       "success": "Gruppo creato."
@@ -1029,12 +1029,12 @@
     "allPages": "Queste scorciatoie funzionano in tutte le pagine.",
     "currentPageOnly": "Queste scorciatoie funzionano solo nella pagina attuale.",
     "somePagesOnly": "Queste scorciatoie funzionano solo su alcune pagine.",
-    "toggleMenu": "Attiva/Disattiva Menù",
-    "quickSearch": "Apri la barra di ricerca/azione rapida",
+    "toggleMenu": "Attiva / Disattiva Menù",
+    "quickSearch": "Apri barra di ricerca / azione rapida",
     "then": "e dopo",
     "task": {
       "title": "Pagina Attività",
-      "done": "Contrassegna l'attività come fatta / da fare",
+      "done": "Segna l'attività come completata / da completare",
       "assign": "Assegna questa attività a un utente",
       "labels": "Aggiungi etichette a questa attività",
       "dueDate": "Modifica data di scadenza di questa attività",
@@ -1132,11 +1132,11 @@
     "reactedWith": "{user} ha reagito con {value}",
     "reactedWithAnd": "{users} e {lastUser} hanno reagito con {value}",
     "reactedWithAndMany": "{users} e altri {num} hanno reagito con {value}",
-    "add": "Aggiungi la tua reazione"
+    "add": "Aggiungi reazione"
   },
   "error": {
     "error": "Errore",
-    "success": "Fatto",
+    "success": "Successo",
     "0001": "Non ti è permesso farlo.",
     "1001": "Esiste già un utente con questo nome utente.",
     "1002": "Un utente con questo indirizzo e-mail esiste già.",
