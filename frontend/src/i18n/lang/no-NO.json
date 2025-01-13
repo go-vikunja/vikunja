@@ -6,7 +6,7 @@
     "welcomeEvening": "God kveld {username}!",
     "lastViewed": "Sist sett",
     "addToHomeScreen": "Legg denne appen til på startskjermen for raskere tilgang og forbedret opplevelse.",
-    "goToOverview": "Go to overview",
+    "goToOverview": "Gå til oversikt",
     "project": {
       "importText": "Importer prosjekter og oppgaver fra andre tjenester:",
       "import": "Importer dine data til Vikunja"
@@ -52,7 +52,7 @@
       "createAccount": "Opprett konto",
       "loginWith": "Logg inn med {provider}",
       "authenticating": "Autentiserer…",
-      "openIdStateError": "Staten samsvarer ikke, klikk ikke for å fortsette!",
+      "openIdStateError": "Status samsvarer ikke. Kan ikke fortsette!",
       "openIdGeneralError": "Det oppsto en feil ved autentisering mot tredjepart.",
       "logout": "Logg ut",
       "emailInvalid": "Vennligst oppgi en gyldig e-postadresse.",
@@ -83,7 +83,7 @@
       "updateEmailSuccess": "E-postadressen din ble oppdatert. Vi har sendt deg en lenke for å bekrefte den.",
       "general": {
         "title": "Generelle innstillinger",
-        "name": "Mitt Navn",
+        "name": "Mitt navn",
         "newName": "Nytt navn",
         "savedSuccess": "Innstillingene ble lagret.",
         "emailReminders": "Send påminnelser om oppgaver på e-post",
@@ -121,24 +121,24 @@
         "more": "Mer informasjon om CalDAV i Vikunja",
         "tokens": "CalDAV Tokens",
         "tokensHowTo": "Du kan bruke et CalDAV token til å bruke istedet for passord for å logge på det ovennevnte endepunktet.",
-        "createToken": "Opprett token",
-        "tokenCreated": "Her er din token: {token}",
+        "createToken": "Opprett plassholder",
+        "tokenCreated": "Her er din plassholder: {token}",
         "wontSeeItAgain": "Skriv den ned, du vil ikke kunne se den igjen.",
         "mustUseToken": "Du må opprette et CalDAV-token hvis du ønsker å bruke CalDAS med en tredjeparts klient. Bruk token som passord.",
         "usernameIs": "Brukernavnet ditt er: {0}"
       },
       "avatar": {
         "title": "Profilbilde",
-        "initials": "Initials",
+        "initials": "Initialer",
         "gravatar": "Gravatar",
         "marble": "Marmor",
         "upload": "Last opp",
         "uploadAvatar": "Last opp Avatar",
-        "statusUpdateSuccess": "Avatar status ble oppdatert vellykket!",
-        "setSuccess": "Avataren ble satt velykket!"
+        "statusUpdateSuccess": "Avatar status ble oppdatert!",
+        "setSuccess": "Avataren ble satt!"
       },
       "quickAddMagic": {
-        "title": "Rask Legg til / Magisk modus",
+        "title": "Legg til hurtig / magisk modus",
         "disabled": "Deaktivert",
         "todoist": "Todoist",
         "vikunja": "Vikunja"
@@ -147,7 +147,7 @@
         "title": "Fargetema",
         "setSuccess": "Lagret endring av fargevalg til {colorScheme}",
         "colorScheme": {
-          "light": "Lyst",
+          "light": "Lys",
           "system": "System",
           "dark": "Mørk"
         }
@@ -156,8 +156,8 @@
         "title": "API-plassholdere",
         "general": "API-plassholdere gjør at du kan bruke Vikunja API uten brukeropplysninger.",
         "apiDocs": "Les mer i dokumentasjonen til api",
-        "createAToken": "Opprett en token",
-        "createToken": "Opprett token",
+        "createAToken": "Opprett en plassholder",
+        "createToken": "Opprett plassholder",
         "30d": "30 dager",
         "60d": "60 dager",
         "90d": "90 dager",
@@ -165,11 +165,11 @@
         "titleRequired": "Tittel er nødvendig",
         "permissionRequired": "Velg minst en tillatelse fra listen.",
         "expired": "Denne plassholderen har utløpt {ago}.",
-        "tokenCreatedSuccess": "Here is your new api token: {token}",
+        "tokenCreatedSuccess": "Her er din nye api-plassholder {token}",
         "tokenCreatedNotSeeAgain": "Lagre på et trygt sted. Du vil ikke se dette flere ganger!",
         "selectAll": "Velg alle",
         "delete": {
-          "header": "Slett token",
+          "header": "Slett plassholderen",
           "text1": "Skal plassholderen {token} slettes?",
           "text2": "This will revoke access to all applications or integrations using it. You cannot undo this."
         },
@@ -527,7 +527,7 @@
     "edit": {
       "header": "Rediger etikett",
       "forbidden": "Etiketten kan ikke redigeres fordi du ikke er eier.",
-      "success": "Etiketten ble opprettet."
+      "success": "Etiketten ble oppdatert."
     },
     "deleteSuccess": "Etiketten ble slettet.",
     "attributes": {
@@ -597,7 +597,7 @@
       "chooseDate": "Velg en dato"
     },
     "editor": {
-      "edit": "Edit",
+      "edit": "Rediger",
       "done": "Ferdig",
       "heading1": "Overskrift 1",
       "heading1Tooltip": "Big section heading.",
@@ -609,13 +609,13 @@
       "headingBigger": "Overskrift større",
       "bold": "Fet",
       "italic": "Kursiv",
-      "strikethrough": "Gjennomstrekning",
+      "strikethrough": "Gjennomstrek",
       "underline": "Understrek",
       "code": "Kode",
       "codeTooltip": "Capture a code snippet.",
       "quote": "Sitat",
       "quoteTooltip": "Capture a quote.",
-      "bulletList": "Kulepunkter",
+      "bulletList": "Bullet list",
       "bulletListTooltip": "Lag en enkel liste med kulepunkter.",
       "unorderedList": "Usortert liste",
       "orderedList": "Sortert liste",
@@ -647,9 +647,9 @@
         "deleteTable": "Slett tabell",
         "mergeCells": "Flett celler",
         "splitCell": "Del celler",
-        "toggleHeaderColumn": "Toggle header column",
-        "toggleHeaderRow": "Toggle header row",
-        "toggleHeaderCell": "Toggle header cell",
+        "toggleHeaderColumn": "Vis/skjul topptekst på kolonne",
+        "toggleHeaderRow": "Vis/skjul topptekst på rad",
+        "toggleHeaderCell": "Vis/skjul topptekst på kolonne",
         "mergeOrSplit": "Flett eller splitt",
         "fixTables": "Fiks tabeller"
       }
@@ -666,17 +666,17 @@
       "ranges": {
         "today": "Idag",
         "thisWeek": "Denne uken",
-        "restOfThisWeek": "Resten av denne uken",
+        "restOfThisWeek": "Resten av uken",
         "nextWeek": "Neste uke",
         "next7Days": "Neste 7 dager",
         "lastWeek": "Forrige uke",
         "thisMonth": "Denne måneden",
-        "restOfThisMonth": "Resten av denne uken",
+        "restOfThisMonth": "Resten av måneden",
         "nextMonth": "Neste måned",
         "next30Days": "Neste 30 dager",
         "lastMonth": "Forrige måned",
         "thisYear": "Dette året",
-        "restOfThisYear": "Resten av denne uken"
+        "restOfThisYear": "Resten av året"
       },
       "values": {
         "now": "Nå",
@@ -746,7 +746,7 @@
     "checklistTotal": "{checked} av {total} oppgaver",
     "checklistAllDone": "{total} oppgaver",
     "show": {
-      "titleCurrent": "Pågående oppgaver",
+      "titleCurrent": "Aktuelle oppgaver",
       "titleDates": "Oppgaver fra {from} til {to}",
       "noDates": "Vis oppgaver uten dato",
       "overdue": "Vis forfalte oppgaver i rødt",
@@ -782,10 +782,10 @@
         "label": "Legg til etikett",
         "priority": "Angi prioritet",
         "dueDate": "Angi forfallsdato",
-        "startDate": "Sett startdato",
+        "startDate": "Angi startdato",
         "endDate": "Angi sluttdato",
-        "reminders": "Sett påminnelse",
-        "repeatAfter": "Sett gjentakelsesintervall",
+        "reminders": "Angi påminnelser",
+        "repeatAfter": "Angi gjentakelsesintervall",
         "percentDone": "Angi fremdrift",
         "attachments": "Legg til vedlegg",
         "relatedTasks": "Legg til relasjon",
@@ -859,7 +859,7 @@
       "permalink": "Copy permalink to this comment"
     },
     "deferDueDate": {
-      "title": "Utsatt forfallsdato",
+      "title": "Utsett forfallsdato",
       "1day": "1 dag",
       "3days": "3 dager",
       "1week": "1 uke"
@@ -967,10 +967,10 @@
       "date": "Hvilken som helst dato vil bli brukt som forfallsdato for den nye oppgaven. Du kan bruke datoer i hvilket som helst format:",
       "dateWeekday": "hver ukedag vil bruke neste dato med den datoen",
       "dateCurrentYear": "vil bruke inneværende år",
-      "dateNth": "vil bruke den {day}en i den gjeldende måneden",
+      "dateNth": "vil bruke den {day} i den gjeldende måneden",
       "dateTime": "Kombiner hvilke som helst av datoformatene med \"{time}\" (eller {timePM}) til å velge et klokkeslett.",
       "repeats": "Gjentakende oppgaver",
-      "repeatsDescription": "For å sette en oppgave som gjentar seg i et intervall, legger du ganske enkelt til '{suffix}' i oppgaveteksten. Beløpet må være et tall, og kan utelates å bruke bare typen (se eksempler)."
+      "repeatsDescription": "For å angi en oppgave som gjentar seg i et intervall, legger du ganske enkelt til '{suffix}' i oppgaveteksten. Beløpet må være et tall, og kan utelates å bruke bare typen (se eksempler)."
     }
   },
   "team": {
@@ -995,19 +995,19 @@
       "delete": {
         "header": "Slett gruppen",
         "text1": "Er du sikker på at du vil slette denne gruppen og alle dets medlemmer?",
-        "text2": "All team members will lose access to projects shared with this team. This CANNOT BE UNDONE!",
+        "text2": "Alle gruppemedlemmer vil miste tilgang til prosjekter som er delt med denne gruppen. DETTE KAN IKKE ANGRES!",
         "success": "Gruppen ble slettet."
       },
       "deleteUser": {
         "header": "Fjerne en bruker fra gruppen",
         "text1": "Er du sikker på at du vil fjerne bruker fra denne gruppen?",
-        "text2": "They will lose access to all projects this team has access to. This CANNOT BE UNDONE!",
+        "text2": "De vil miste tilgang til alle prosjekter denne gruppen har tilgang til. DETTE KAN IKKE ANGRES!",
         "success": "Brukeren ble slettet fra gruppen."
       },
       "leave": {
         "title": "Forlat gruppen",
         "text1": "Er du sikker på at du vil forlate denne gruppen?",
-        "text2": "You will lose access to all projects this team has access to. If you change your mind you'll need a team admin to add you again.",
+        "text2": "Du vil miste tilgang til alle prosjekter denne gruppen har tilgang til. Hvis du ombestemmer deg, må en gruppeadministrator for å legge deg til igjen.",
         "success": "Du har forlatt gruppen."
       }
     },
@@ -1058,9 +1058,9 @@
     },
     "navigation": {
       "title": "Navigasjon",
-      "overview": "Naviger til oversikt",
+      "overview": "Gå til til oversikt",
       "upcoming": "Gå til kommende oppgaver",
-      "labels": "Naviger til etiketter",
+      "labels": "Gå til etiketter",
       "teams": "Gå til til grupper",
       "projects": "Gå til prosjekter"
     }
@@ -1070,7 +1070,7 @@
     "do": "Oppdater Nå"
   },
   "menu": {
-    "edit": "Edit",
+    "edit": "Rediger",
     "archive": "Arkiv",
     "duplicate": "Dupliser",
     "delete": "Slett",
@@ -1164,8 +1164,8 @@
     "3008": "Prosjektet er arkivert og kan derfor bare leses inn. Dette gjelder også for alle oppgaver som er tilknyttet dette prosjektet.",
     "4001": "Oppgavetittel kan ikke være tom.",
     "4002": "Oppgaven eksisterer ikke.",
-    "4003": "Alle bulkredigering oppgaver må tilhøre samme prosjekt.",
-    "4004": "Trenger minst én oppgave når masseredigeringsoppgaver skal utføres.",
+    "4003": "All masseredigering av oppgaver må tilhøre samme prosjekt.",
+    "4004": "Trenger minst én oppgave når masseredigering av oppgaver skal utføres.",
     "4005": "Du har ikke rettigheter til å redigere denne siden.",
     "4006": "Du kan ikke sette en overordnet oppgave som oppgaven selv.",
     "4007": "Du kan ikke opprette et arbeidsforhold med en ugyldig type relasjon.",

@@ -138,7 +138,7 @@
         "setSuccess": "L'avatar è stato impostato con successo!"
       },
       "quickAddMagic": {
-        "title": "Modalità di aggiunta rapida magica",
+        "title": "Modalità di aggiunta rapida",
         "disabled": "Disabilitato",
         "todoist": "Todoist",
         "vikunja": "Vikunja"
@@ -199,9 +199,9 @@
     },
     "export": {
       "title": "Esporta i tuoi dati Vikunja",
-      "description": "Puoi richiedere una copia di tutti i tuoi dati Vikunja. Questo include i Progetti, le Attività e tutto ciò che è associato a essi. Puoi importare i dati in ogni istanza Vikunja attraverso la funzione \"migrazione\".",
+      "description": "Puoi richiedere una copia di tutti i tuoi dati su Vikunja, inclusi Progetti, Attività e tutto ciò che vi è associato. Questi dati possono essere importati in qualsiasi istanza di Vikunja utilizzando la funzione di migrazione.",
       "descriptionPasswordRequired": "Inserisci la tua password per procedere:",
-      "request": "Richiedi una copia dei miei dati Vikunja",
+      "request": "Richiedi una copia dei tuoi dati",
       "success": "Hai richiesto con successo i tuoi dati Vikunja! Ti invieremo un'e-mail una volta che saranno pronti da scaricare.",
       "downloadTitle": "Scarica i tuoi dati esportati da Vikunja"
     }
@@ -283,7 +283,7 @@
         "create": "Crea un nuovo link di condivisione",
         "name": "Nome (facoltativo)",
         "namePlaceholder": "es. Lorem Ipsum",
-        "nameExplanation": "Tutte le azioni svolte tramite questa condivisione verranno associate a questo nome.",
+        "nameExplanation": "Tutte le azioni eseguite tramite la condivisione saranno attribuite a questo nome.",
         "password": "Password (facoltativa)",
         "passwordExplanation": "Al momento dell' accesso, l'utente dovrà inserire questa password.",
         "noName": "Nessun nome impostato",
@@ -645,8 +645,8 @@
         "addRowAfter": "Aggiungi riga dopo",
         "deleteRow": "Elimina riga",
         "deleteTable": "Elimina tabella",
-        "mergeCells": "Merge cells",
-        "splitCell": "Split cell",
+        "mergeCells": "Unisci celle",
+        "splitCell": "Dividi cella",
         "toggleHeaderColumn": "Attiva/disattiva colonna intestazione",
         "toggleHeaderRow": "Attiva/disattiva riga intestazione",
         "toggleHeaderCell": "Attiva/disattiva cella intestazione",
@@ -746,7 +746,7 @@
     "checklistTotal": "{checked} di {total} attività",
     "checklistAllDone": "{total} attività",
     "show": {
-      "titleCurrent": "Attività Attuali",
+      "titleCurrent": "Attività correnti",
       "titleDates": "Attività dal {from} al {to}",
       "noDates": "Mostra attività senza date",
       "overdue": "Mostra attività scadute",
@@ -950,27 +950,27 @@
     "quickAddMagic": {
       "hint": "Usa prefissi magici per definire date di scadenza, assegnatari e altre proprietà delle attività.",
       "title": "Aggiunta Rapida Magica",
-      "intro": "Quando si crea un'attività, è possibile utilizzare parole chiave speciali per aggiungere direttamente attributi all'attività appena creata. Questo permette di aggiungere gli attributi comuni molto più velocemente.",
-      "multiple": "Puoi usarlo più volte.",
-      "label1": "Per aggiungere un'etichetta, basta aggiungere il nome dell'etichetta preceduto da {prefix}.",
-      "label2": "Vikunja controllerà prima se l'etichetta esiste già e nel caso la creerà.",
-      "label3": "Per usare gli spazi, basta aggiungere un \" o ' prima e dopo il nome dell'etichetta.",
+      "intro": "Quando crei un'attività, puoi usare parole chiave speciali per assegnare direttamente gli attributi, rendendo il processo più immediato.",
+      "multiple": "Puoi ripetere l'operazione più volte.",
+      "label1": "Per aggiungere un'etichetta basta inserire il nome preceduto da {prefix}.",
+      "label2": "Vikunja verificherà se l'etichetta esiste già e, in caso contrario, la creerà.",
+      "label3": "Per includere spazi nel nome dell'etichetta aggiungi \" o ' prima e dopo il nome.",
       "label4": "Per esempio: {prefix}\"Etichetta con spazi\".",
-      "priority1": "Per impostare la priorità di un'attività, aggiungi un numero 1-5, preceduto da {prefix}.",
-      "priority2": "Più alto è il numero, più alta è la priorità.",
-      "assignees": "Per assegnare direttamente l'attività a un utente, aggiungere il suo nome utente preceduto da {prefix} all'attività.",
-      "project1": "Per assegnare un progetto all'attività, inserisci il nome del progetto preceduto dal prefisso {prefix}.",
+      "priority1": "Per assegnare la priorità a un'attività aggiungi un numero da 1 a 5 preceduto da {prefix}.",
+      "priority2": "Un numero più alto indica una priorità maggiore.",
+      "assignees": "Per assegnare un'attività direttamente a un utente, aggiungi il suo nome utente preceduto da {prefix}.",
+      "project1": "Per assegnare un progetto all'attività inserisci il nome del progetto preceduto dal prefisso {prefix}.",
       "project2": "Verrà restituito un errore se il progetto non esiste.",
-      "project3": "Per usare gli spazi, basta aggiungere \" oppure ' prima e dopo il nome del progetto.",
+      "project3": "Per usare gli spazi basta aggiungere \" oppure ' prima e dopo il nome del progetto.",
       "project4": "Per esempio: {prefix}\"Progetto con spazi\".",
       "dateAndTime": "Data e ora",
-      "date": "Qualsiasi data verrà utilizzata come data di scadenza della nuova attività. È possibile utilizzare le date in uno qualsiasi di questi formati:",
+      "date": "Qualsiasi data inserita sarà considerata come data di scadenza della nuova attività. È possibile utilizzare le date in uno dei seguenti formati:",
       "dateWeekday": "qualsiasi giorno della settimana, userà la data più vicina",
       "dateCurrentYear": "userà l’anno corrente",
       "dateNth": "userà il {day} del mese corrente",
-      "dateTime": "Combina uno qualsiasi dei formati di data con \"{time}\" (o {timePM}) per impostare un orario.",
+      "dateTime": "Combina uno qualsiasi dei formati di data con \"{time}\" (o {timePM}) per specificare un orario.",
       "repeats": "Attività ricorrenti",
-      "repeatsDescription": "Per impostare un'attività come ricorrente in un intervallo, basta aggiungere '{suffix}' al testo dell'attività. La quantità deve essere un numero e può essere omesso per usare solo il tipo (vedi esempi)."
+      "repeatsDescription": "Per impostare un'attività come ricorrente basta aggiungere '{suffix}' al testo dell'attività. La quantità deve essere un numero, ma può essere omessa per usare solo il tipo (vedi esempi)."
     }
   },
   "team": {
