@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import ApiTokenService from '@/services/apiToken'
 import {computed, onMounted, ref} from 'vue'
+import {useFlatpickrLanguage} from '@/helpers/useFlatpickrLanguage'
 import {formatDateShort, formatDateSince} from '@/helpers/time/formatDate'
 import XButton from '@/components/input/Button.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -12,7 +13,6 @@ import 'flatpickr/dist/flatpickr.css'
 import {useI18n} from 'vue-i18n'
 import Message from '@/components/misc/Message.vue'
 import type {IApiToken} from '@/modelTypes/IApiToken'
-import { getFlatpickrLanguage } from '@/helpers/flatpickrLanguage'
 
 const service = new ApiTokenService()
 const tokens = ref<IApiToken[]>([])
@@ -42,7 +42,7 @@ const flatPickerConfig = computed(() => ({
 	dateFormat: 'Y-m-d H:i',
 	enableTime: true,
 	time_24hr: true,
-	locale: getFlatpickrLanguage(),
+	locale: useFlatpickrLanguage().value,
 	minDate: now,
 }))
 

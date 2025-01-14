@@ -89,7 +89,7 @@ import Popup from '@/components/misc/Popup.vue'
 import {DATE_VALUES} from '@/components/date/dateRanges'
 import BaseButton from '@/components/base/BaseButton.vue'
 import DatemathHelp from '@/components/date/DatemathHelp.vue'
-import {getFlatpickrLanguage} from '@/helpers/flatpickrLanguage'
+import {useFlatpickrLanguage} from '@/helpers/useFlatpickrLanguage'
 
 const props = withDefaults(defineProps<{
 	modelValue: string | Date | null,
@@ -112,7 +112,7 @@ const flatPickerConfig = computed(() => ({
 	dateFormat: 'Y-m-d H:i',
 	enableTime: false,
 	wrap: true,
-	locale: getFlatpickrLanguage(),
+	locale: useFlatpickrLanguage().value,
 }))
 
 const showHowItWorks = ref(false)

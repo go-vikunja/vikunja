@@ -44,7 +44,7 @@ import flatPickr from 'vue-flatpickr-component'
 
 import TaskService from '@/services/task'
 import type {ITask} from '@/modelTypes/ITask'
-import { getFlatpickrLanguage } from '@/helpers/flatpickrLanguage'
+import {useFlatpickrLanguage} from '@/helpers/useFlatpickrLanguage'
 
 const props = defineProps<{
 	modelValue: ITask,
@@ -101,7 +101,7 @@ const flatPickerConfig = computed(() => ({
 	enableTime: true,
 	time_24hr: true,
 	inline: true,
-	locale: getFlatpickrLanguage(),
+	locale: useFlatpickrLanguage().value,
 }))
 
 function deferDays(days: number) {

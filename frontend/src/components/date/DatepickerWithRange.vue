@@ -112,7 +112,7 @@ import Popup from '@/components/misc/Popup.vue'
 import {DATE_RANGES} from '@/components/date/dateRanges'
 import BaseButton from '@/components/base/BaseButton.vue'
 import DatemathHelp from '@/components/date/DatemathHelp.vue'
-import {getFlatpickrLanguage} from '@/helpers/flatpickrLanguage'
+import {useFlatpickrLanguage} from '@/helpers/useFlatpickrLanguage'
 
 const props = defineProps<{
 	modelValue: {
@@ -137,7 +137,7 @@ const flatPickerConfig = computed(() => ({
 	enableTime: false,
 	wrap: true,
 	mode: 'range',
-	locale: getFlatpickrLanguage(),
+	locale: useFlatpickrLanguage().value,
 }))
 
 const showHowItWorks = ref(false)

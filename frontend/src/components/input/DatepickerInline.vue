@@ -82,7 +82,7 @@ import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'
 import {calculateNearestHours} from '@/helpers/time/calculateNearestHours'
 import {createDateFromString} from '@/helpers/time/createDateFromString'
 import {useI18n} from 'vue-i18n'
-import {getFlatpickrLanguage} from '@/helpers/flatpickrLanguage'
+import {useFlatpickrLanguage} from '@/helpers/useFlatpickrLanguage'
 
 const props = withDefaults(defineProps<{
 	modelValue: Date | null | string
@@ -114,7 +114,7 @@ const flatPickerConfig = computed(() => ({
 	enableTime: true,
 	time_24hr: true,
 	inline: true,
-	locale: getFlatpickrLanguage(),
+	locale: useFlatpickrLanguage().value,
 }))
 
 // Since flatpickr dates are strings, we need to convert them to native date objects.

@@ -77,7 +77,7 @@ import {useI18n} from 'vue-i18n'
 import type {RouteLocationNormalized} from 'vue-router'
 
 import {useBaseStore} from '@/stores/base'
-import {getFlatpickrLanguage} from '@/helpers/flatpickrLanguage'
+import {useFlatpickrLanguage} from '@/helpers/useFlatpickrLanguage'
 
 import Foo from '@/components/misc/flatpickr/Flatpickr.vue'
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
@@ -153,14 +153,14 @@ const flatPickerDateRange = computed<Date[]>({
 const initialDateRange = [filters.value.dateFrom, filters.value.dateTo]
 
 const {t} = useI18n({useScope: 'global'})
-const flatPickerConfig = computed<Options>(() => ({
+const flatPickerConfig = computed(() => ({
 	altFormat: t('date.altFormatShort'),
 	altInput: true,
 	defaultDate: initialDateRange,
 	enableTime: false,
 	mode: 'range',
-	locale: getFlatpickrLanguage(),
-}))
+	locale: useFlatpickrLanguage().value,
+} as Options))
 </script>
 
 <style lang="scss" scoped>
