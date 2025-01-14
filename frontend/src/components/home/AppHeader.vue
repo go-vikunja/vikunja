@@ -25,6 +25,7 @@
 			</h1>
 
 			<BaseButton
+				v-if="!isEditorContentEmpty(currentProject.description)"
 				:to="{ name: 'project.info', params: { projectId: currentProject.id } }"
 				class="project-title-button"
 			>
@@ -124,6 +125,7 @@ import MenuButton from '@/components/home/MenuButton.vue'
 import OpenQuickActions from '@/components/misc/OpenQuickActions.vue'
 
 import { getProjectTitle } from '@/helpers/getProjectTitle'
+import { isEditorContentEmpty } from '@/helpers/editorContentEmpty'
 
 import { useBaseStore } from '@/stores/base'
 import { useConfigStore } from '@/stores/config'
