@@ -93,7 +93,7 @@
     "floating-vue": "5.2.2",
     "is-touch-device": "1.0.1",
     "klona": "2.0.6",
-    "lowlight": "2.9.0",
+    "lowlight": "3.3.0",
     "pinia": "2.3.0",
     "register-service-worker": "1.7.2",
     "sortablejs": "1.15.6",
