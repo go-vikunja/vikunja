@@ -38,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, watch, onBeforeUnmount} from 'vue'
+import {ref, computed, watchEffect, onBeforeUnmount} from 'vue'
 
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import Editor from '@/components/input/AsyncEditor'
@@ -46,21 +46,25 @@ import Editor from '@/components/input/AsyncEditor'
 import type {ITask} from '@/modelTypes/ITask'
 import {useTaskStore} from '@/stores/tasks'
 
-type AttachmentUploadFunction = (file: File, onSuccess: (attachmentUrl: string) => void) => Promise<string>
+export type AttachmentUploadFunction = (file: File, onSuccess: (attachmentUrl: string) => void) => Promise<string>
 
-const {
-	modelValue,
-	attachmentUpload,
-	canWrite,
-} = defineProps<{
+const props = withDefaults(defineProps<{
 	modelValue: ITask,
 	attachmentUpload: AttachmentUploadFunction,
 	canWrite: boolean,
+}>(), {
+	canWrite: true,
+})
+
+const emit = defineEmits<{
+	'update:modelValue': [value: ITask]
 }>()
 
-const emit = defineEmits(['update:modelValue'])
-
 const description = ref<string>('')
+watchEffect(() => {
+		description.value = props.modelValue.description
+})
+
 const saved = ref(false)
 
 // Since loading is global state, this variable ensures we're only showing the saving icon when saving the description.
@@ -68,14 +72,6 @@ const saving = ref(false)
 
 const taskStore = useTaskStore()
 const loading = computed(() => taskStore.isLoading)
-
-watch(
-	() => modelValue.description,
-	value => {
-		description.value = value
-	},
-	{immediate: true},
-)
 
 const changeTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
 
@@ -99,13 +95,12 @@ async function save() {
 	if (changeTimeout.value !== null) {
 		clearTimeout(changeTimeout.value)
 	}
-
+	saved.value = false
 	saving.value = true
 
 	try {
-		// FIXME: don't update state from internal.
 		const updated = await taskStore.update({
-			...modelValue,
+			...props.modelValue,
 			description: description.value,
 		})
 		emit('update:modelValue', updated)
@@ -119,13 +114,12 @@ async function save() {
 	}
 }
 
-async function uploadCallback(files: File[] | FileList): (Promise<string[]>) {
-
+async function uploadCallback(files: File[] | FileList): Promise<string[]> {
 	const uploadPromises: Promise<string>[] = []
 
 	files.forEach((file: File) => {
 		const promise = new Promise<string>((resolve) => {
-			attachmentUpload(file, (uploadedFileUrl: string) => resolve(uploadedFileUrl))
+			props.attachmentUpload(file, (uploadedFileUrl: string) => resolve(uploadedFileUrl))
 		})
 
 		uploadPromises.push(promise)
