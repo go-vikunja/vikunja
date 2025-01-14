@@ -1,6 +1,6 @@
 {
   "home": {
-    "welcomeNight": "God kveld {username}!f!",
+    "welcomeNight": "Hei {username}!",
     "welcomeMorning": "God morgen {username}!",
     "welcomeDay": "Hei {username}!",
     "welcomeEvening": "God kveld {username}!",
@@ -34,16 +34,16 @@
   "user": {
     "auth": {
       "username": "Brukernavn",
-      "usernameEmail": "Brukernavn / e-postadresse",
+      "usernameEmail": "Brukernavn eller e-postadresse",
       "usernamePlaceholder": "f.eks. frederick",
       "email": "E-postadresse",
       "emailPlaceholder": "f.eks. frederic{'@'}vikunja.io",
       "password": "Passord",
       "passwordPlaceholder": "f.eks. •••••••••••",
-      "forgotPassword": "Glemt ditt passord?",
-      "resetPassword": "Tilbakestill passordet",
+      "forgotPassword": "Glemt passordet?",
+      "resetPassword": "Tilbakestill passordet ditt",
       "resetPasswordAction": "Send lenke for tilbakestilling av passord",
-      "resetPasswordSuccess": "Sjekk innboksen! Du har mottatt en e-post med instruksjoner om hvordan passordet kan nullstilles.",
+      "resetPasswordSuccess": "Sjekk innboksen! Du har mottatt en e-post med instruksjoner om hvordan passordet kan tilbakestilles.",
       "passwordsDontMatch": "Passordene samsvarer ikke",
       "confirmEmailSuccess": "Du har bekreftet e-posten din! Du kan logge inn nå.",
       "totpTitle": "2FA (2-Faktorautentisering)",
@@ -62,8 +62,8 @@
       "passwordRequired": "Angi et passord.",
       "passwordNotMin": "Passord må være minst 8 tegn.",
       "passwordNotMax": "Passord kan ikke være lenger enn 72 tegn.",
-      "showPassword": "Vis passord",
-      "hidePassword": "Skjul passord",
+      "showPassword": "Vis passordet",
+      "hidePassword": "Skjul passordet",
       "noAccountYet": "Har du ikke konto ennå?",
       "alreadyHaveAnAccount": "Har du allerede en konto?",
       "remember": "Hold meg innlogget",
@@ -87,7 +87,7 @@
         "newName": "Nytt navn",
         "savedSuccess": "Innstillingene ble lagret.",
         "emailReminders": "Send påminnelser om oppgaver på e-post",
-        "overdueReminders": "Send meg et sammendrag av mine uferdige oppdager over dato hver dag",
+        "overdueReminders": "Send meg daglig et sammendrag av mine uferdige oppgaver som har forfalt",
         "discoverableByName": "Tillat andre brukere å legge meg til som medlem i grupper eller prosjekter når det søkes etter mitt navn",
         "discoverableByEmail": "Tillat andre brukere å legge meg til som medlem i grupper eller prosjekter når det søkes etter min e-postadresse",
         "playSoundWhenDone": "Spill av en lyd når merking av oppgaver som ferdig",
@@ -98,7 +98,7 @@
         "defaultProject": "Standardprosjekt",
         "defaultView": "Standardvisning",
         "timezone": "Tidssone",
-        "overdueTasksRemindersTime": "Utløpte påminnelses-tid for oppgaver",
+        "overdueTasksRemindersTime": "Påminnelsestid for utløpte oppgaver",
         "filterUsedOnOverview": "Lagret filter brukt på siden med oversikt"
       },
       "totp": {
@@ -109,22 +109,22 @@
         "scanQR": "Alternativt kan du skanne denne QR-koden:",
         "passcode": "Passord",
         "passcodePlaceholder": "En kode generert av TOTP-appen din",
-        "setupSuccess": "Du har nå deaktivert to faktor autentisering!",
+        "setupSuccess": "Du har nå deaktivert to-faktorautentisering!",
         "enterPassword": "Skriv inn ditt passord",
-        "disable": "Skru av tofaktorautentisering",
+        "disable": "Skru av to-faktorautentisering",
         "confirmSuccess": "Du har bekreftet ditt totp-oppsett og kan bruke det fra nå av!",
-        "disableSuccess": "2-trinnsautentisering ble vellykket skrudd av."
+        "disableSuccess": "To-faktorautentisering ble skrudd av."
       },
       "caldav": {
         "title": "CalDAV",
         "howTo": "Du kan koble Vikunja til CalDAV-klienter for å se og administrere alle oppgaver fra forskjellige kunder. Skriv inn denne Url'en til din klient:",
         "more": "Mer informasjon om CalDAV i Vikunja",
-        "tokens": "CalDAV Tokens",
+        "tokens": "CalDAV-plassholdere",
         "tokensHowTo": "Du kan bruke et CalDAV token til å bruke istedet for passord for å logge på det ovennevnte endepunktet.",
         "createToken": "Opprett plassholder",
         "tokenCreated": "Her er din plassholder: {token}",
         "wontSeeItAgain": "Skriv den ned, du vil ikke kunne se den igjen.",
-        "mustUseToken": "Du må opprette et CalDAV-token hvis du ønsker å bruke CalDAS med en tredjeparts klient. Bruk token som passord.",
+        "mustUseToken": "Du må opprette et CalDAV-plassholder hvis du ønsker å bruke CalDAV med en tredjeparts klient. Bruk plassholderen som passord.",
         "usernameIs": "Brukernavnet ditt er: {0}"
       },
       "avatar": {
@@ -133,18 +133,18 @@
         "gravatar": "Gravatar",
         "marble": "Marmor",
         "upload": "Last opp",
-        "uploadAvatar": "Last opp Avatar",
-        "statusUpdateSuccess": "Avatar status ble oppdatert!",
+        "uploadAvatar": "Last opp avatar",
+        "statusUpdateSuccess": "Avatar-status ble oppdatert!",
         "setSuccess": "Avataren ble satt!"
       },
       "quickAddMagic": {
-        "title": "Legg til hurtig / magisk modus",
+        "title": "Legg til hurtig/magisk modus",
         "disabled": "Deaktivert",
         "todoist": "Todoist",
         "vikunja": "Vikunja"
       },
       "appearance": {
-        "title": "Fargetema",
+        "title": "Fargevalg",
         "setSuccess": "Lagret endring av fargevalg til {colorScheme}",
         "colorScheme": {
           "light": "Lys",
@@ -171,7 +171,7 @@
         "delete": {
           "header": "Slett plassholderen",
           "text1": "Skal plassholderen {token} slettes?",
-          "text2": "This will revoke access to all applications or integrations using it. You cannot undo this."
+          "text2": "Dette vil tilbakekalle tilgang til alle applikasjoner eller integrasjoner som bruker den. Du kan ikke angre dette."
         },
         "attributes": {
           "title": "Tittel",
@@ -183,12 +183,12 @@
     },
     "deletion": {
       "title": "Slett kontoen din",
-      "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your projects, tasks and everything associated with it.",
+      "text1": "Sletting av kontoen din vil være permanent og kan ikke angres. Alle dine prosjekter, oppgaver og alt tilknyttet disse vil slettes.",
       "text2": "For å fortsette, skriv inn passordet ditt. Du vil motta en e-post med ytterligere instruksjoner.",
       "text3": "Trykk knappen under for å fortsette. Du vil motta en e-post med videre instruksjoner.",
       "confirm": "Slett min konto",
       "requestSuccess": "Forespørselen var vellykket. Du vil motta en e-post med ytterligere instruksjoner.",
-      "passwordRequired": "Skriv inn passordet.",
+      "passwordRequired": "Skriv inn passordet ditt.",
       "confirmSuccess": "Du har bekreftet slettingen av kontoen din. Vi vil slette kontoen din om tre dager.",
       "scheduled": "Vi vil slette din Vikunja konto den {date} ({dateSince}).",
       "scheduledCancel": "For å avbryte slettingen av kontoen din, klikk her.",
@@ -199,9 +199,9 @@
     },
     "export": {
       "title": "Eksporter dine kontodata",
-      "description": "You can request a copy of all your Vikunja data. This includes Projects, Tasks and everything associated to them. You can import this data in any Vikunja instance through the migration function.",
+      "description": "Du kan be om en kopi av alle Vikunja dataene dine. Dette inkluderer prosjekter, oppgaver og alt tilknyttet disse. Disse dataene kan importeres i andre installasjoner av Vikunja gjennom migreringsfunksjonen.",
       "descriptionPasswordRequired": "Skriv inn passordet for å fortsette:",
-      "request": "Be om kopi av mine Vikunja Data",
+      "request": "Be om kopi av mine Vikunja data",
       "success": "Du har spurt om dine Vikunja data! Vi sender deg en e-post når den er klar til å laste ned.",
       "downloadTitle": "Last ned dine eksporterte Vikunja data"
     }
@@ -210,10 +210,10 @@
     "archivedMessage": "Dette prosjektet er arkivert. Det er ikke mulig å opprette eller redigere oppgaver.",
     "archived": "Arkiverte",
     "showArchived": "Vis arkiverte",
-    "title": "Prosjekt tittel",
-    "color": "Farger",
+    "title": "Prosjekt-tittel",
+    "color": "Farge",
     "projects": "Prosjekter",
-    "parent": "Foreldreprosjekt",
+    "parent": "Overordnet prosjekt",
     "search": "Tast for å søke etter et prosjekt…",
     "searchSelect": "Klikk eller trykk enter for å velge dette prosjektet",
     "shared": "Delte prosjekter",
@@ -221,13 +221,13 @@
     "inboxTitle": "Innboks",
     "create": {
       "header": "Nytt prosjekt",
-      "titlePlaceholder": "Prosjektets tittel er her…",
+      "titlePlaceholder": "Prosjektets tittel angis her…",
       "addTitleRequired": "Angi den nye tittelen.",
       "createdSuccess": "Prosjektet ble opprettet.",
       "addProjectRequired": "Vennligst spesifiser et prosjekt eller angi et standardprosjekt i innstillingene."
     },
     "archive": {
-      "title": "Arkiver{project}\"",
+      "title": "Arkiver \"{project}\"",
       "archive": "Arkiver dette prosjektet",
       "unarchive": "Av-arkivere dette prosjektet",
       "unarchiveText": "Du kan opprette eller redigere oppgaver.",
@@ -241,11 +241,11 @@
       "searchPlaceholder": "Søk etter en bakgrunn…",
       "poweredByUnsplash": "Drevet av Unsplash",
       "loadMore": "Laste inn flere bilder",
-      "success": "Bakgrunnen er satt vellykket!",
-      "removeSuccess": "Bakgrunnen har blitt fjernet!"
+      "success": "Bakgrunnen er satt!",
+      "removeSuccess": "Bakgrunnen er fjernet!"
     },
     "delete": {
-      "title": "Slett \"{project}",
+      "title": "Slett \"{project}\"",
       "header": "Slett dette prosjektet",
       "text1": "Er du sikker på at du vil slette dette prosjektet og alle relaterte data?",
       "text2": "Dette inkluderer alle oppgaver og KAN IKKE ANGRES!",
@@ -257,46 +257,46 @@
     "duplicate": {
       "title": "Dupliser dette prosjektet",
       "label": "Dupliser",
-      "text": "Select a parent project which should hold the duplicated project:",
+      "text": "Velg et overordnet prosjekt som skal inneholde det duplikerte prosjektet:",
       "success": "Prosjektet ble duplisert."
     },
     "edit": {
-      "header": "Rediger prosjekt",
-      "title": "Rediger \"{project}",
-      "titlePlaceholder": "Prosjekttittelen går her…",
+      "header": "Rediger dette prosjektet",
+      "title": "Rediger \"{project}\"",
+      "titlePlaceholder": "Prosjekttittelen angis her…",
       "identifierTooltip": "Prosjektidentifikatoren kan brukes til å identifisere en oppgave på tvers av prosjekter. Du kan sette den til tom for å deaktivere den.",
       "identifier": "Prosjekt identifikator",
-      "identifierPlaceholder": "Prosjektidentifikatoren kommer her…",
+      "identifierPlaceholder": "Prosjektidentifikatoren angis her…",
       "description": "Beskrivelse",
       "descriptionPlaceholder": "Angi en beskrivelse til dette prosjektet. Trykk '/' for flere valg…",
-      "color": "Farger",
-      "success": "Prosjektet ble opprettet."
+      "color": "Farge",
+      "success": "Prosjektet ble oppdatert."
     },
     "share": {
       "header": "Del dette prosjektet",
       "title": "Del \"{project}\"",
       "share": "Del",
       "links": {
-        "title": "Del link",
-        "what": "Hva er en lenke for deling?",
-        "explanation": "Lenker lar deg enkelt dele et prosjekt med andre brukere som ikke har en konto på Vikunja.",
-        "create": "Opprett en delingslenke",
+        "title": "Delelenker",
+        "what": "Hva er en delelenke?",
+        "explanation": "Delelenker lar deg enkelt dele et prosjekt med andre brukere som ikke har en konto på Vikunja.",
+        "create": "Opprett en delelenke",
         "name": "Navn (valgfritt)",
-        "namePlaceholder": "e.g. Lorem Ipsum",
-        "nameExplanation": "Alle handlinger utført av denne koblingsdelingen vises med navnet.",
+        "namePlaceholder": "f.eks. Lorem Ipsum",
+        "nameExplanation": "Alle handlinger utført av denne delelenken vil vises med navnet.",
         "password": "Passord (valgfritt)",
-        "passwordExplanation": "When signing in, the user will be required to enter this password.",
-        "noName": "Ingen navn satt",
-        "remove": "Fjern en link deling",
-        "removeText": "Er du sikker på at du vil fjerne denne lenkedelen? Det vil ikke lenger være mulig å åpne dette prosjektet med denne lenkedelingen. Dette kan ikke angres!",
-        "createSuccess": "Delingen ble opprettet.",
-        "deleteSuccess": "Delingen ble slettet",
+        "passwordExplanation": "Når du logger inn vil brukeren være nødt til å angi dette passordet.",
+        "noName": "Ingen navn er angitt",
+        "remove": "Fjern en delelenke",
+        "removeText": "Er du sikker på at du vil fjerne denne delelenken? Det vil ikke lenger være mulig å åpne dette prosjektet med denne delelenken. Dette kan ikke angres!",
+        "createSuccess": "Delelenken ble opprettet.",
+        "deleteSuccess": "Delelenken ble slettet",
         "view": "Vis",
         "sharedBy": "Delt av {0}"
       },
       "userTeam": {
         "typeUser": "bruker | brukere",
-        "typeTeam": "team | teams",
+        "typeTeam": "gruppe | grupper",
         "shared": "Delt med disse {type}",
         "you": "Du",
         "notShared": "Ikke delt med noen {type} ennå.",
@@ -313,7 +313,7 @@
         "admin": "Administrator"
       },
       "attributes": {
-        "link": "Link",
+        "link": "Lenke",
         "delete": "Slett"
       }
     },
@@ -345,28 +345,28 @@
     "kanban": {
       "title": "Kanban",
       "limit": "Grense: {limit}",
-      "noLimit": "Ikke Angitt",
-      "doneBucket": "Ferdig bøtte",
+      "noLimit": "Ikke angitt",
+      "doneBucket": "Ferdigkurv",
       "doneBucketHint": "Alle oppgaver som flyttes til denne kurven vil automatisk bli markert som ferdige.",
-      "doneBucketHintExtended": "Alle oppgaver som er flyttet til ferdigkurven, vil bli merket som utført automatisk. Alle oppgaver merket som utført fra andre steder vil også bli flyttet.",
-      "doneBucketSavedSuccess": "Bøtten er lagret.",
+      "doneBucketHintExtended": "Alle oppgaver som er flyttet til ferdigkurven, vil automatisk bli merket som ferdig. Alle oppgaver merket som ferdig fra andre steder vil også bli flyttet.",
+      "doneBucketSavedSuccess": "Ferdigkurven er lagret.",
       "defaultBucket": "Standardkurv",
       "defaultBucketHint": "Hvis du oppretter oppgaver uten å angi en kurv, havner de her.",
       "defaultBucketSavedSuccess": "Standardkurven ble opprettet.",
-      "deleteLast": "Du kan ikke fjerne den siste bøtten.",
+      "deleteLast": "Du kan ikke fjerne den siste kurven.",
       "addTaskPlaceholder": "Angi den nye oppgavens tittel…",
       "addTask": "Legg til oppgave",
       "addAnotherTask": "Legg til en annen oppgave",
       "addBucket": "Opprett en kurv",
-      "addBucketPlaceholder": "Angi den nye bøtte tittelen…",
-      "deleteHeaderBucket": "Slett bøtte",
-      "deleteBucketText1": "Er du sikker på at du vil slette denne bøtte?",
-      "deleteBucketText2": "Dette vil ikke slette noen oppgaver, men flytte dem til standard bøtte.",
-      "deleteBucketSuccess": "Bøtten er slettet.",
-      "bucketTitleSavedSuccess": "Bøtten er lagret.",
-      "bucketLimitSavedSuccess": "Grensen på bøtte er lagret.",
+      "addBucketPlaceholder": "Angi den nye tittelen på kurven…",
+      "deleteHeaderBucket": "Slett kurven",
+      "deleteBucketText1": "Er du sikker på at du vil slette denne kurven?",
+      "deleteBucketText2": "Dette vil ikke slette noen oppgaver, men flytte dem til standardkurven.",
+      "deleteBucketSuccess": "Kurven er slettet.",
+      "bucketTitleSavedSuccess": "Kurven er lagret.",
+      "bucketLimitSavedSuccess": "Begrensningen på kurven er lagret.",
       "collapse": "Skjul denne kurven",
-      "bucketLimitReached": "You have reached the bucket limit. Remove tasks or increase the limit to add new tasks."
+      "bucketLimitReached": "Du har nådd grensen for kurven. Fjern oppgaver eller øk grensen for oppgaver."
     },
     "pseudo": {
       "favorites": {
@@ -375,24 +375,24 @@
     },
     "webhooks": {
       "title": "Webhooks",
-      "targetUrl": "Target URL",
+      "targetUrl": "Mål-URL",
       "targetUrlInvalid": "Oppgi en gyldig URL.",
       "events": "Hendelser",
-      "eventsHint": "Select all events this webhook should recieve updates for (within the current project).",
+      "eventsHint": "Velg alle hendelser denne webhooken skal motta oppdateringer for (innenfor gjeldende prosjekt).",
       "mustSelectEvents": "Velg minst en hendelse.",
-      "delete": "Delete this webhook",
-      "deleteText": "Are you sure you want to delete this webhook? External targets will not be notified of its events anymore.",
-      "deleteSuccess": "The webhook was successfully deleted.",
-      "create": "Create webhook",
-      "secret": "Secret",
-      "secretHint": "If provided, all requests to the webhook target URL will be signed using HMAC.",
-      "secretDocs": "Check out the docs for more details about how to use secrets."
+      "delete": "Slett denne webhooken",
+      "deleteText": "Er du sikker på at du vil slette denne webhooken? Eksterne mål vil ikke bli varslet om hendelsene lenger.",
+      "deleteSuccess": "Webhooken ble slettet.",
+      "create": "Opprett webhook",
+      "secret": "Hemmelighet",
+      "secretHint": "Hvis lagt inn, vil alle forespørsler til webhook mål-URL være signert med HMAC.",
+      "secretDocs": "Sjekk ut dokumentasjonen for flere detaljer om hvordan du kan bruke hemmeligheter."
     },
     "views": {
       "header": "Rediger visninger",
       "title": "Tittel",
       "actions": "Handlinger",
-      "kind": "Kind",
+      "kind": "Type",
       "bucketConfigMode": "Konfigurasjonsmodus for kurv",
       "bucketConfig": "Konfigurasjon av kurv",
       "bucketConfigManual": "Manual",
@@ -401,7 +401,7 @@
       "createSuccess": "Visningen ble opprettet.",
       "titleRequired": "Oppgi en tittel.",
       "delete": "Slett denne visningen",
-      "deleteText": "Are you sure you want to remove this view? It will no longer be possible to use it to view tasks in this project. This action won't delete any tasks. This cannot be undone!",
+      "deleteText": "Er du sikker på at du vil fjerne denne visningen? Det vil ikke lenger være mulig å bruke den til å vise oppgaver i dette prosjektet. Denne handlingen vil ikke slette noen oppgaver. Dette kan ikke angres!",
       "deleteSuccess": "Visningen ble slettet.",
       "onlyAdminsCanEdit": "Bare administratorer kan redigere visninger.",
       "updateSuccess": "Visningen ble oppdatert."
@@ -412,32 +412,32 @@
     "clear": "Fjern filtre",
     "showResults": "Vis resultater",
     "fromView": "Gjeldende visning har også et filter:",
-    "fromViewBoth": "It will be used in combination with what you enter here.",
+    "fromViewBoth": "Den brukes i kombinasjon med det du skriver inn her.",
     "attributes": {
       "title": "Tittel",
-      "titlePlaceholder": "Den lagrede filtertittelen kommer hit…",
+      "titlePlaceholder": "Den lagrede filtertittelen angis her…",
       "description": "Beskrivelse",
       "descriptionPlaceholder": "Legg til en beskrivelse for dette filteret. Trykk '/' for flere valg…",
       "includeNulls": "Inkluder oppgaver som ikke har en verdi satt",
-      "requireAll": "Krev at alle filtre er oppfylt for at en oppgave skal vises",
-      "showDoneTasks": "Vis utførte oppgaver",
+      "requireAll": "Krev at alle filtre er sanne for at en oppgave skal vises",
+      "showDoneTasks": "Vis ferdige oppgaver",
       "sortAlphabetically": "Sorter alfabetisk",
       "enablePriority": "Aktiver filter etter prioritet",
       "enablePercentDone": "Aktiver filter etter fremdrift",
       "dueDateRange": "Forfallsdatoer",
       "startDateRange": "Start datoområde",
-      "endDateRange": "Datointervall",
-      "reminderRange": "Reminder Date Range"
+      "endDateRange": "Slutt datoområde",
+      "reminderRange": "Datoområde for påminnelse"
     },
     "create": {
       "title": "Nytt lagret filter",
-      "description": "A saved filter is a virtual project which is computed from a set of filters each time it is accessed.",
+      "description": "Et lagret filter er et virtuelt prosjekt som beregnes fra et sett med filtre hver gang det åpnes.",
       "action": "Opprett lagret filter",
       "titleRequired": "Skriv inn en tittel for filteret."
     },
     "delete": {
       "header": "Slett dette lagrede filteret",
-      "text": "Er du sikker på at du vil slette dette?",
+      "text": "Er du sikker på at du vil slette dette lagrede filteret?",
       "success": "Sletting av filteret vellykket."
     },
     "edit": {
@@ -448,9 +448,9 @@
       "title": "Spørring",
       "placeholder": "Angi et søk eller filter…",
       "help": {
-        "intro": "To filter tasks, you can use a query syntax similar to SQL. The available fields for filtering include:",
+        "intro": "For å filtrere oppgaver kan du bruke en spørringssyntaks lik SQL. De tilgjengelige feltene for filtrering omfatter:",
         "link": "Hvordan virker dette?",
-        "canUseDatemath": "You can use date math to set relative dates. Click on the date value in a query to find out more.",
+        "canUseDatemath": "Du kan bruke datokalkulering for å angi relative datoer. Klikk på datoverdier i spørringen for å finne ut mer.",
         "fields": {
           "done": "Om oppgaven er fullført eller ikke",
           "priority": "Prioritering av oppgaven (1-5)",
@@ -461,8 +461,8 @@
           "doneAt": "Dato og tid for når oppgaven var fullført",
           "assignees": "Oppgavens tildelte brukere",
           "labels": "Etiketter knyttet til oppgaven",
-          "project": "The project the task belongs to (only available for saved filters, not on a project level)",
-          "reminders": "The reminders of the task as a date field, will return all tasks with at least one reminder matching the query",
+          "project": "Prosjektet oppgaven tilhører (kun tilgjengelig for lagrede filter, ikke på prosjektnivå)",
+          "reminders": "Påminnelsene om oppgaven som et datofelt, returnerer alle oppgaver med minst en påminnelse i samsvar med spørringen",
           "created": "Tid og dato for når oppgaven ble opprettet",
           "updated": "Tid og dato for når oppgaven sist ble endret"
         },
@@ -475,22 +475,22 @@
           "lessThan": "Mindre enn",
           "lessThanOrEqual": "Mindre enn eller lik",
           "like": "Samsvarer med et mønster (ved hjelp av jokertegn %)",
-          "in": "Matches any value in a comma-seperated list of values",
-          "notIn": "Matches any value not present in a comma-seperated list of values"
+          "in": "Samsvarer med alle verdier i en kommaseparert liste over verdier",
+          "notIn": "Samsvarer med hvilken som helst verdi som ikke finnes i en kommaseparert liste over verdier"
         },
         "logicalOperators": {
-          "intro": "To combine multiple conditions, you can use the following logical operators:",
-          "and": "AND operator, matches if all conditions are true",
-          "or": "OR operator, matches if any of the conditions are true",
-          "parentheses": "Parentheses for grouping conditions"
+          "intro": "For å kombinere flere betingelser kan du bruke følgende logiske operatører:",
+          "and": "OG operatør, treff hvis alle betingelser er oppfylt",
+          "or": "ELLER operatør, som samsvarer med noen av betingelsene er oppfylt",
+          "parentheses": "Paranteser for grupperingsbetingelser"
         },
         "examples": {
-          "intro": "Here are some examples of filter queries:",
-          "priorityEqual": "Matches tasks with priority level 4",
-          "dueDatePast": "Matches tasks with a due date in the past",
-          "undoneHighPriority": "Matches undone tasks with priority level 3 or higher",
-          "assigneesIn": "Matches tasks assigned to either \"user1\" or \"user2\"",
-          "priorityOneOrTwoPastDue": "Matches tasks with priority level 1 or 2 and a due date in the past"
+          "intro": "Her er noen eksempler på filterspørringer:",
+          "priorityEqual": "Samsvarer med oppgaver med prioritet 4",
+          "dueDatePast": "Samsvarer med oppgaver med en forfallsdato tilbake i tid",
+          "undoneHighPriority": "Samsvarer med uferdige oppgaver med prioritet 3 eller høyere",
+          "assigneesIn": "Samsvarer med oppgaver tildelt til enten \"user1\" eller \"user2\"",
+          "priorityOneOrTwoPastDue": "Samsvarer med oppgaver med prioritet 1 eller 2 og en forfallsdato tilbake i tid"
         }
       }
     }
@@ -500,7 +500,7 @@
     "titleService": "Importer dine data fra {name} til Vikunja",
     "import": "Importer dine data til Vikunja",
     "description": "Klikk på logoen til en av tjenester fra tredjeparter nedenfor for å starte.",
-    "descriptionDo": "Vikunja skal importere alle lister, oppgaver, notater, purringer og filer du har tilgang til.",
+    "descriptionDo": "Vikunja vil importere alle lister, oppgaver, notater, påminnelser og filer du har tilgang til.",
     "authorize": "For å autorisere Vikunja til din {name} konto, klikk på knappen nedenfor.",
     "getStarted": "Kom i gang",
     "inProgress": "Import pågår…",
@@ -509,7 +509,7 @@
     "confirm": "Jeg er sikker, vennligst begynn å migrere nå!",
     "importUpload": "For å importere data fra {name} til Vikunja, klikk på knappen nedenfor for å velge en fil.",
     "upload": "Last opp fil",
-    "migrationStartedWillReciveEmail": "Vikunja will now import your lists/projects, tasks, notes, reminders and files from {service}. As this will take a while, we will send you an email once done. You can close this window now.",
+    "migrationStartedWillReciveEmail": "Vikunja importerer nå dine lister/prosjekter, oppgaver, notater, påminnelser og filer fra {service}. Fra vår side vil vi sende deg en e-post når det er fullført. Du kan lukke dette vinduet nå.",
     "migrationInProgress": "Det pågår en migrering. Vent til denne er ferdig."
   },
   "label": {
@@ -521,7 +521,7 @@
     "create": {
       "header": "Ny etikett",
       "title": "Opprett en etikett",
-      "titleRequired": "Angi den nye tittelen.",
+      "titleRequired": "Angi en tittel.",
       "success": "Etiketten ble opprettet."
     },
     "edit": {
@@ -534,13 +534,13 @@
       "title": "Tittel",
       "titlePlaceholder": "Etikettens tittel angis her…",
       "description": "Beskrivelse",
-      "descriptionPlaceholder": "Etikett beskrivelse",
-      "color": "Farger"
+      "descriptionPlaceholder": "Etikettbeskrivelse",
+      "color": "Farge"
     }
   },
   "sharing": {
     "authenticating": "Autentiserer…",
-    "passwordRequired": "Denne delte listen krever et passord. Vennligst skriv det nedenfor:",
+    "passwordRequired": "Dette delte prosjektet krever et passord. Vennligst skriv det nedenfor:",
     "error": "Det oppsto en feil.",
     "invalidPassword": "Det oppgitte passordet er ugyldig."
   },
@@ -577,7 +577,7 @@
     "showMenu": "Vis menyen",
     "hideMenu": "Skjul menyen",
     "forExample": "For eksempel:",
-    "welcomeBack": "Velkommen Tilbake!",
+    "welcomeBack": "Velkommen tilbake!",
     "custom": "Egendefinert",
     "id": "Id",
     "created": "Opprettet",
@@ -586,7 +586,7 @@
     "cannotBeUndone": "Dette kan ikke angres!"
   },
   "input": {
-    "resetColor": "Tilbakestill farger",
+    "resetColor": "Tilbakestill farge",
     "datepicker": {
       "today": "I dag",
       "tomorrow": "I morgen",
@@ -600,28 +600,28 @@
       "edit": "Rediger",
       "done": "Ferdig",
       "heading1": "Overskrift 1",
-      "heading1Tooltip": "Big section heading.",
+      "heading1Tooltip": "Stor seksjonsoverskrift.",
       "heading2": "Overskrift 2",
-      "heading2Tooltip": "Medium section heading.",
+      "heading2Tooltip": "Medium seksjonsoverskrift.",
       "heading3": "Overskrift 3",
       "heading3Tooltip": "Mindre seksjonshode.",
-      "headingSmaller": "Overskrift mindre",
-      "headingBigger": "Overskrift større",
+      "headingSmaller": "Mindre overskrift",
+      "headingBigger": "Større overskrift",
       "bold": "Fet",
       "italic": "Kursiv",
       "strikethrough": "Gjennomstrek",
       "underline": "Understrek",
       "code": "Kode",
-      "codeTooltip": "Capture a code snippet.",
+      "codeTooltip": "Hent en kodesnutt.",
       "quote": "Sitat",
-      "quoteTooltip": "Capture a quote.",
-      "bulletList": "Bullet list",
+      "quoteTooltip": "Hent et sitat.",
+      "bulletList": "Kulepunkter",
       "bulletListTooltip": "Lag en enkel liste med kulepunkter.",
       "unorderedList": "Usortert liste",
       "orderedList": "Sortert liste",
       "orderedListTooltip": "Opprett en liste med nummerering.",
       "cleanBlock": "Tøm blokk",
-      "link": "Link",
+      "link": "Lenke",
       "image": "Bilde",
       "imageTooltip": "Last opp et bilde fra datamaskinen.",
       "horizontalRule": "Vannrett linje",
@@ -680,8 +680,8 @@
       },
       "values": {
         "now": "Nå",
-        "startOfToday": "Starten av dagen",
-        "endOfToday": "Slutten av dagen",
+        "startOfToday": "Starten av i dag",
+        "endOfToday": "Slutten av i dag",
         "beginningOflastWeek": "Starten av forrige uke",
         "endOfLastWeek": "Slutten av forrige uke",
         "beginningOfThisWeek": "Starten av denne uken",
@@ -690,7 +690,7 @@
         "endOfNextWeek": "Slutten av neste uke",
         "in7Days": "Om 7 dager",
         "beginningOfLastMonth": "Starten av forrige måned",
-        "endOfLastMonth": "Slutten av neste måned",
+        "endOfLastMonth": "Slutten av forrige måned",
         "startOfThisMonth": "Starten av denne måneden",
         "endOfThisMonth": "Slutten av denne måneden",
         "startOfNextMonth": "Starten av neste måned",
@@ -735,37 +735,37 @@
   "task": {
     "task": "Oppgave",
     "new": "Opprett en oppgave",
-    "delete": "Slette denne oppgaven",
+    "delete": "Slett denne oppgaven",
     "createSuccess": "Oppgaven ble opprettet.",
     "addReminder": "Legg til påminnelse…",
     "doneSuccess": "Oppgaven ble markert som ferdig.",
     "undoneSuccess": "Oppgaven ble fjernet som ferdig.",
-    "revertSuccess": "The task change was successfully undone.",
+    "revertSuccess": "Oppgaveendringen ble omgjort.",
     "undo": "Angre",
     "openDetail": "Åpne detaljvisning",
     "checklistTotal": "{checked} av {total} oppgaver",
     "checklistAllDone": "{total} oppgaver",
     "show": {
-      "titleCurrent": "Aktuelle oppgaver",
+      "titleCurrent": "Pågående oppgaver",
       "titleDates": "Oppgaver fra {from} til {to}",
       "noDates": "Vis oppgaver uten dato",
-      "overdue": "Vis forfalte oppgaver i rødt",
+      "overdue": "Vis forfalte oppgaver",
       "fromuntil": "Oppgaver fra {from} til {until}",
-      "select": "Velg et datointervall",
+      "select": "Velg et datoområde",
       "noTasks": "Ingenting å gjøre - Ha en fin dag!"
     },
     "detail": {
       "chooseDueDate": "Klikk her for å angi en forfallsdato",
       "chooseStartDate": "Klikk her for å angi en startdato",
       "chooseEndDate": "Klikk her for å angi en sluttdato",
-      "move": "Flytt oppgaven til en annen liste",
-      "done": "Marker som utført!",
+      "move": "Flytt oppgaven til et annet prosjekt",
+      "done": "Merk som ferdig!",
       "undone": "Merk som uferdig",
       "created": "Opprettet {0} av {1}",
       "updated": "Oppdatert {0}",
       "doneAt": "Ferdig {0}",
       "updateSuccess": "Oppgaven ble lagret.",
-      "deleteSuccess": "Oppgaven har blitt slettet.",
+      "deleteSuccess": "Oppgaven ble slettet.",
       "belongsToProject": "Denne oppgaven tilhører prosjektet '{project}'",
       "due": "Forfallsdato {at}",
       "closePopup": "Lukk popup",
@@ -773,7 +773,7 @@
       "management": "Behandling",
       "dateAndTime": "Dato og tid",
       "delete": {
-        "header": "Slette denne oppgaven",
+        "header": "Slett denne oppgaven",
         "text1": "Er du sikker på at du ønsker å slette denne oppgaven?",
         "text2": "Dette vil også fjerne alle vedlegg, påminnelser og relasjoner knyttet til denne oppgaven og kan ikke angres!"
       },
@@ -798,7 +798,7 @@
     },
     "attributes": {
       "assignees": "Tildelt",
-      "color": "Farger",
+      "color": "Farge",
       "created": "Opprettet",
       "createdBy": "Opprettet av",
       "description": "Beskrivelse",
@@ -811,23 +811,23 @@
       "relatedTasks": "Relaterte oppgaver",
       "reminders": "Påminnelser",
       "repeat": "Gjenta",
-      "startDate": "Start Dato",
+      "startDate": "Startdato",
       "title": "Tittel",
       "updated": "Oppdatert",
-      "doneAt": "Utført"
+      "doneAt": "Ferdig den"
     },
     "subscription": {
       "subscribedTaskThroughParentProject": "Du kan ikke melde deg ut her fordi du abonnerer på denne oppgaven gjennom prosjektet.",
-      "subscribedProject": "Du abonnerer for øyeblikket på dette prosjektet og vil motta varsler for endringer.",
-      "notSubscribedProject": "Du abonnerer ikke på dette prosjektet og vil ikke motta varsler for endringer.",
-      "subscribedTask": "Du abonnerer for øyeblikket på denne oppgaven og vil motta varsler for endringer.",
-      "notSubscribedTask": "Du abonnerer ikke på denne oppgaven og vil ikke motta varsler for endringer.",
-      "subscribe": "Abonnerer",
+      "subscribedProject": "Du abonnerer for øyeblikket på dette prosjektet og vil motta varsler om endringer.",
+      "notSubscribedProject": "Du abonnerer ikke på dette prosjektet og vil ikke motta varsler om endringer.",
+      "subscribedTask": "Du abonnerer for øyeblikket på denne oppgaven og vil motta varsler om endringer.",
+      "notSubscribedTask": "Du abonnerer ikke på denne oppgaven og vil ikke motta varsler om endringer.",
+      "subscribe": "Abonner",
       "unsubscribe": "Avslutt abonnement",
       "subscribeSuccessProject": "Du abonnerer nå på dette prosjektet",
-      "unsubscribeSuccessProject": "Du har nå avsluttet abonnementet for dette prosjektet",
+      "unsubscribeSuccessProject": "Du har nå avsluttet abonnementet på dette prosjektet",
       "subscribeSuccessTask": "Du abonnerer nå på denne oppgaven",
-      "unsubscribeSuccessTask": "Du har nå avsluttet abonnementet for denne oppgaven"
+      "unsubscribeSuccessTask": "Du har nå avsluttet abonnementet på denne oppgaven"
     },
     "attachment": {
       "title": "Vedlegg",
@@ -836,14 +836,14 @@
       "upload": "Last opp vedlegg",
       "drop": "Slipp filer her for å laste opp",
       "delete": "Slett vedlegg",
-      "deleteTooltip": "Slett vedlegg",
+      "deleteTooltip": "Slett dette vedlegget",
       "deleteText1": "Er du sikker på at du vil slette den vedlagte filen {filename}?",
       "copyUrl": "Kopier URL",
       "copyUrlTooltip": "Kopier url til dette vedlegget til bruk i tekst",
       "setAsCover": "Gjør til omslag",
-      "unsetAsCover": "Fjern omslaget",
-      "successfullyChangedCoverImage": "Brukerens gruppe ble endret.",
-      "usedAsCover": "Forsidebilde"
+      "unsetAsCover": "Fjern omslag",
+      "successfullyChangedCoverImage": "Omslagsbilde ble endret.",
+      "usedAsCover": "Omslagsbilde"
     },
     "comment": {
       "title": "Kommentarer",
@@ -851,12 +851,12 @@
       "edited": "redigert {date}",
       "creating": "Lager kommentar…",
       "placeholder": "Legg til kommentar, trykk '/' for flere valg…",
-      "comment": "Comment",
+      "comment": "Kommenter",
       "delete": "Slett denne kommentaren",
       "deleteText1": "Er du sikker på at du vil slette denne kommentaren?",
       "deleteSuccess": "Sletting av kommentaren var vellykket.",
       "addedSuccess": "Denne kommentaren ble lagt til.",
-      "permalink": "Copy permalink to this comment"
+      "permalink": "Kopier permalenke til denne kommentaren"
     },
     "deferDueDate": {
       "title": "Utsett forfallsdato",
@@ -869,10 +869,10 @@
       "empty": "Ingen beskrivelse tilgjengelig."
     },
     "assignee": {
-      "placeholder": "Skriv for å søke etter brukere…",
+      "placeholder": "Skriv for å søke etter en bruker…",
       "selectPlaceholder": "Tildel bruker",
       "assignSuccess": "Brukeren har blitt tildelt.",
-      "unassignSuccess": "Brukeren ble vellykket fjernet."
+      "unassignSuccess": "Tildelt bruker ble fjernet."
     },
     "label": {
       "placeholder": "Skriv for å legge til en etikett…",
@@ -888,7 +888,7 @@
       }
     },
     "priority": {
-      "unset": "Nullstill",
+      "unset": "Ingen",
       "low": "Lav",
       "medium": "Middels",
       "high": "Høy",
@@ -896,33 +896,33 @@
       "doNow": "Gjør nå"
     },
     "relation": {
-      "add": "Legg til en ny oppgaveforbindelse",
-      "new": "Ny oppgaveforbindelse",
-      "searchPlaceholder": "Skriv søk etter en oppgave for å legge til som relatert…",
+      "add": "Legg til en ny oppgaverelasjon",
+      "new": "Ny oppgaverelasjon",
+      "searchPlaceholder": "Skriv for å søke etter en oppgave for å legge til som relatert…",
       "createPlaceholder": "Legg til denne som en relatert oppgave",
       "differentProject": "Denne oppgaven tilhører et annet prosjekt.",
-      "noneYet": "Ingen arbeidsrelasjoner ennå.",
-      "delete": "Slett relasjon",
-      "deleteText1": "Er du sikker på at du vil slette denne relasjonen?",
+      "noneYet": "Ingen oppgaverelasjoner ennå.",
+      "delete": "Slett oppgaverelasjon",
+      "deleteText1": "Er du sikker på at du vil slette denneoppgaverelasjonen?",
       "select": "Velg en relasjonstype",
-      "taskRequired": "Velg en oppgave eller angi en ny oppgavetitle.",
+      "taskRequired": "Velg en oppgave eller angi en ny oppgavetittel.",
       "kinds": {
-        "subtask": "Underoppgave | Underoppgaver",
-        "parenttask": "Foreldreoppgaven ＋ Overordnede oppgaver",
+        "subtask": "Underordnet oppgave | Underordnede oppgaver",
+        "parenttask": "Overordnet oppgave | Overordnede oppgaver",
         "related": "Relatert oppgave | Relaterte oppgaver",
         "duplicateof": "Duplikat av | Duplikater av",
         "duplicates": "Duplikat | Duplikater",
         "blocking": "Blokker | Blokkering",
         "blocked": "Blokkert av",
-        "precedes": "Går foran",
+        "precedes": "Går foran | Går foran",
         "follows": "Følger | Følgere",
         "copiedfrom": "Kopiert fra",
         "copiedto": "Kopiert til"
       }
     },
     "reminder": {
-      "before": "{amount} {unit} before {type}",
-      "after": "{amount} {unit} after {type}",
+      "before": "{amount} {unit} før {type}",
+      "after": "{amount} {unit} etter {type}",
       "beforeShort": "før",
       "afterShort": "etter",
       "onDueDate": "På forfallsdatoen",
@@ -948,8 +948,8 @@
       "invalidAmount": "Vennligst angi mer enn 0."
     },
     "quickAddMagic": {
-      "hint": "Use magic prefixes to define due dates, assignees and other task properties.",
-      "title": "Rask Legg til / Magisk modus",
+      "hint": "Bruk magiske prefikser til å definere forfalte datoer, tildelte brukere og andre egenskaper til oppgaven.",
+      "title": "Legg til hurtig/magisk modus",
       "intro": "Når du oppretter en oppgave, kan du bruke spesielle nøkkelord ved å legge til attributter direkte til den nylig opprettede oppgaven. Dette gjør at du kan legge til vanlig brukte attributter mye raskere.",
       "multiple": "Dette kan du bruke flere ganger.",
       "label1": "For å legge til en etikett, legg til prefiks på etiketten med {prefix}.",
@@ -981,16 +981,16 @@
       "success": "Gruppen ble opprettet."
     },
     "edit": {
-      "title": "Rediger gruppen \"{team}",
+      "title": "Rediger gruppen \"{team}\"",
       "members": "Gruppemedlemmer",
-      "search": "Skriv for å søke etter brukere…",
+      "search": "Skriv for å søke etter en bruker…",
       "addUser": "Legg til gruppen din",
       "makeMember": "Gjør til medlem",
       "makeAdmin": "Gjør til Admin",
       "success": "Gruppen ble oppdatert.",
-      "userAddedSuccess": "Gruppen medlem ble lagt til.",
-      "madeMember": "Gruppemedlemmet ble vellykket opprettet.",
-      "madeAdmin": "Gruppemedlemmet ble vellykket admin.",
+      "userAddedSuccess": "Gruppemedlem ble lagt til.",
+      "madeMember": "Gruppemedlemmet ble opprettet.",
+      "madeAdmin": "Gruppemedlemmet ble admin.",
       "mustSelectUser": "Vennligst velg en bruker.",
       "delete": {
         "header": "Slett gruppen",
@@ -1016,11 +1016,11 @@
       "namePlaceholder": "Gruppens navn angis her…",
       "nameRequired": "Angi et navn.",
       "description": "Beskrivelse",
-      "descriptionPlaceholder": "Describe the team here, hit '/' for more options…",
+      "descriptionPlaceholder": "Beskriv gruppen her, trykk '/' for flere alternativer…",
       "admin": "Administrator",
       "member": "Medlem",
       "isPublic": "Offentlig gruppe",
-      "isPublicDescription": "Make the team publicly discoverable. When enabled, anyone can share projects with this team even when not being a direct member."
+      "isPublicDescription": "Gjør gruppen offentlig synlig. Når dette er aktivert, kan alle dele prosjekter med denne gruppen, selv når de ikke er direkte medlemmer."
     }
   },
   "keyboardShortcuts": {
@@ -1029,12 +1029,12 @@
     "allPages": "Disse snarveiene virker på alle sider.",
     "currentPageOnly": "Disse snarveiene fungerer kun på gjeldende side.",
     "somePagesOnly": "Disse snarveiene fungerer bare på enkelte sider.",
-    "toggleMenu": "Skru av/på menyen",
+    "toggleMenu": "Vis/skjul menyen",
     "quickSearch": "Åpne søk/hurtigvalg",
     "then": "da",
     "task": {
       "title": "Oppgaveside",
-      "done": "Marker oppgaven som avsluttet / angret",
+      "done": "Marker oppgaven som ferdig/uferdig",
       "assign": "Tildel denne oppgaven til en bruker",
       "labels": "Legg til etiketter til denne oppgaven",
       "dueDate": "Endre forfallsdato for denne oppgaven",
@@ -1043,17 +1043,17 @@
       "color": "Endre fargen på denne oppgaven",
       "move": "Flytt denne oppgaven til et annet prosjekt",
       "reminder": "Behandle påminnelser om denne oppgaven",
-      "description": "Veksle redigering av oppgavebeskrivelsen",
+      "description": "Vis/skjul redigering av oppgavebeskrivelsen",
       "delete": "Slett denne oppgaven",
       "priority": "Endre prioritet på denne oppgaven",
-      "favorite": "Merk denne oppgaven som favoritt /ikke favoritt",
+      "favorite": "Merk denne oppgaven som favoritt/ikke favoritt",
       "save": "Lagre gjeldende oppgave"
     },
     "project": {
       "title": "Prosjektvisning",
-      "switchToListView": "Byttet til listevisning",
-      "switchToGanttView": "Bytt til gantt-visning",
-      "switchToKanbanView": "Bytt til kanban visning",
+      "switchToListView": "Bytt til listevisning",
+      "switchToGanttView": "Bytt til ganttvisning",
+      "switchToKanbanView": "Bytt til kanbanvisning",
       "switchToTableView": "Bytt til tabellvisning"
     },
     "navigation": {
@@ -1067,7 +1067,7 @@
   },
   "update": {
     "available": "Det er en oppdatering tilgjengelig!",
-    "do": "Oppdater Nå"
+    "do": "Oppdater nå"
   },
   "menu": {
     "edit": "Rediger",
@@ -1085,12 +1085,12 @@
   },
   "apiConfig": {
     "url": "Vikunja URL",
-    "urlPlaceholder": "f.eks. http://localhost:3456",
+    "urlPlaceholder": "f.eks. https://localhost:3456",
     "change": "endre",
     "use": "Bruker Vikunja installasjonen på {0}",
-    "error": "Kan ikke bruke eller finne en installasjon av Vikunja på \"{domain}\". Kontroller at URL er riktig og at du kan nås ved direkte forespørsel.",
-    "success": "Bruker Vikunja installasjonen på \"{domain}.",
-    "urlRequired": "Url'en er tom, vennligst legg til."
+    "error": "Kan ikke bruke eller finne en installasjon av Vikunja på \"{domain}\". Kontroller at URL er riktig og at det kan nås ved direkte forespørsel.",
+    "success": "Bruker Vikunja installasjonen på \"{domain}\".",
+    "urlRequired": "En URL er nødvendig."
   },
   "loadingError": {
     "failed": "Lasting feilet, vennligst {0}. Hvis feilen vedvarer, vennligst {1}.",
@@ -1100,7 +1100,7 @@
   "notification": {
     "title": "Varsler",
     "none": "Du har ingen varsler på dette tidspunktet!",
-    "explainer": "Notifications will appear here when actions projects or tasks you subscribed to happen.",
+    "explainer": "Varsler vil vises her når det skjer noe i prosjekter eller oppgaver du abonnerer på.",
     "markAllRead": "Marker alle varslinger som lest",
     "markAllReadSuccess": "Alle meldinger ble markert som lest."
   },
@@ -1124,9 +1124,9 @@
     }
   },
   "date": {
-    "locale": "no",
+    "locale": "nb",
     "altFormatLong": "d.m.y H:i",
-    "altFormatShort": "j M Y"
+    "altFormatShort": "d.m.y"
   },
   "reaction": {
     "reactedWith": "{user} reagerte med {value}",
@@ -1151,8 +1151,8 @@
     "1013": "Nytt passordfelt er tomt.",
     "1014": "Gammelt passordfelt er tomt.",
     "1015": "Totp er allerede aktivert for denne brukeren.",
-    "1016": "TOTP is not enabled for this user.",
-    "1017": "The TOTP passcode is invalid.",
+    "1016": "Totp er ikke aktivert for denne brukeren.",
+    "1017": "TOTP-koden er ikke gyldig.",
     "1018": "Innstillingen av brukerens avatartype er ugyldig.",
     "2001": "ID kan ikke være tom eller 0.",
     "2002": "Noen av forespørselsdataene var ugyldig.",
@@ -1168,7 +1168,7 @@
     "4004": "Trenger minst én oppgave når masseredigering av oppgaver skal utføres.",
     "4005": "Du har ikke rettigheter til å redigere denne siden.",
     "4006": "Du kan ikke sette en overordnet oppgave som oppgaven selv.",
-    "4007": "Du kan ikke opprette et arbeidsforhold med en ugyldig type relasjon.",
+    "4007": "Du kan ikke opprette en opgaverelasjon med en ugyldig type relasjon.",
     "4008": "Du kan ikke opprette en arbeidsforhold som allerede eksisterer.",
     "4009": "Oppgaveforholdet finnes ikke.",
     "4010": "Kan ikke være knyttet til seg selv.",
@@ -1181,7 +1181,7 @@
     "4017": "Ugyldig oppgave filter.",
     "4018": "Ugyldig oppgave filter.",
     "4019": "Ugyldig oppgave filterverdi.",
-    "6001": "Gruppe nanvet kan ikke være tomt.",
+    "6001": "Gruppenavnet kan ikke være tomt.",
     "6002": "Gruppen finnes ikke.",
     "6004": "Gruppen har allerede tilgang til prosjektet.",
     "6005": "Brukeren er allerede medlem av gruppen.",
@@ -1192,12 +1192,12 @@
     "8001": "Denne etiketten finnes allerede på den oppgaven.",
     "8002": "Etiketten finnes ikke.",
     "8003": "Du har ikke tilgang til denne etiketten.",
-    "9001": "Linken er ugyldig.",
-    "10001": "Bøtten finnes ikke.",
-    "10002": "Denne bøtte tilhører ikke det prosjektet.",
-    "10003": "Du kan ikke fjerne den siste bøtten på et prosjekt.",
-    "10004": "Du kan ikke legge til oppgaven i denne bøtte fordi den allerede overskrider grensen på oppgaver som den kan holde.",
-    "10005": "Det kan bare finnes én ferdigstilt bøtte per prosjekt.",
+    "9001": "Lenken er ugyldig.",
+    "10001": "Kurven finnes ikke.",
+    "10002": "Denne kurven tilhører ikke det prosjektet.",
+    "10003": "Du kan ikke fjerne den siste kurven i et prosjekt.",
+    "10004": "Du kan ikke legge til oppgaven i denne kurven fordi den allerede overskrider grensen på oppgaver som den kan inneholde.",
+    "10005": "Det kan bare finnes én ferdigstilt kurv per prosjekt.",
     "11001": "Det lagrede filteret finnes ikke.",
     "11002": "Lagrede filtre er ikke tilgjengelige for lenke delinger.",
     "12001": "Abonnement enhetstypen er ugyldig.",
