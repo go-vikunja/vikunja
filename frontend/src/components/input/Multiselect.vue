@@ -123,7 +123,7 @@
 	</div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" generic="T extends { [id: string]: any }">
 import {computed, onBeforeUnmount, onMounted, ref, toRefs, watch, type ComponentPublicInstance} from 'vue'
 import {useI18n} from 'vue-i18n'
 
@@ -134,15 +134,13 @@ import CustomTransition from '@/components/misc/CustomTransition.vue'
 
 const props = withDefaults(defineProps<{
 	/** The object with the value, updated every time an entry is selected */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	modelValue: { [id: string]: any } | null
+	modelValue: T | T[] | null,
 	/** When true, shows a loading spinner */
 	loading?: boolean
 	/** The placeholder of the search input */
 	placeholder?: string
 	/** The search results where the @search listener needs to put the results into */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	searchResults?: { [id: string]: any }[]
+	searchResults?: T[]
 	/** The name of the property of the searched object to show the user. If empty the component will show all raw data of an entry */
 	label?: string
 	/** The id attribute of the input element */
@@ -188,8 +186,7 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	'update:modelValue': [value: { [key: string]: any }[] | null],
+	'update:modelValue': [value: T | T[] | null],
 	/**
 	 * Triggered every time the search query input changes
 	 */
@@ -197,8 +194,7 @@ const emit = defineEmits<{
 	/**
 	 * Triggered every time an option from the search results is selected. Also triggers a change in v-model.
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	'select': [value: { [key: string]: any }],
+	'select': [value: T],
 	/**
 	 * If nothing or no exact match was found and `creatable` is true, this event is triggered with the current value of the search query.
 	 */
@@ -206,8 +202,7 @@ const emit = defineEmits<{
 	/**
 	 * If `multiple` is enabled, this will be fired every time an item is removed from the array of selected items.
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	'remove': [value: { [key: string]: any }],
+	'remove': [value: T],
 }>()
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -220,13 +215,12 @@ function elementInResults(elem: string | any, label: string, query: string): boo
 	return elem === query
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const query = ref<string | { [key: string]: any }>('')
+const query = ref<string | T>('')
 const searchTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
 const localLoading = ref(false)
 const showSearchResults = ref(false)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const internalValue = ref<string | { [key: string]: any } | any[] | null>(null)
+
+const internalValue = ref<string | T | T[] | null>(null)
 
 onMounted(() => document.addEventListener('click', hideSearchResultsHandler))
 onBeforeUnmount(() => document.removeEventListener('click', hideSearchResultsHandler))
@@ -325,15 +319,13 @@ function handleFocus() {
 	}, 10)
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function select(object: { [key: string]: any } | null) {
+function select(object: T | null) {
 	if (props.multiple) {
 		if (internalValue.value === null) {
 			internalValue.value = []
 		}
 
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		(internalValue.value as any[]).push(object)
+		internalValue.value.push(object)
 	} else {
 		internalValue.value = object
 	}
@@ -346,8 +338,7 @@ function select(object: { [key: string]: any } | null) {
 	}
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function setSelectedObject(object: string | { [id: string]: any } | null, resetOnly = false) {
+function setSelectedObject(object: string | T | null, resetOnly = false) {
 	internalValue.value = object
 
 	// We assume we're getting an array when multiple is enabled and can therefore leave the query
