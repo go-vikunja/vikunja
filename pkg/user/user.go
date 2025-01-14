@@ -186,7 +186,11 @@ func (u *User) GetFailedPasswordAttemptsKey() string {
 func GetFromAuth(a web.Auth) (*User, error) {
 	u, is := a.(*User)
 	if !is {
-		return &User{}, fmt.Errorf("user is not user element, is %s", reflect.TypeOf(a))
+		typ := reflect.TypeOf(a)
+		if typ.String() == "*models.LinkSharing" {
+			return nil, &ErrMustNotBeLinkShare{}
+		}
+		return &User{}, fmt.Errorf("user is not user element, is %s", typ)
 	}
 	return u, nil
 }

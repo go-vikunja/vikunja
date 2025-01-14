@@ -532,3 +532,30 @@ func (err *ErrUsernameMustNotContainSpaces) HTTPError() web.HTTPError {
 		Message:  "The username must not contain spaces.",
 	}
 }
+
+// ErrMustNotBeLinkShare represents a "MustNotBeLinkShare" kind of error.
+type ErrMustNotBeLinkShare struct {
+	Username string
+}
+
+// IsErrMustNotBeLinkShare checks if an error is a ErrMustNotBeLinkShare.
+func IsErrMustNotBeLinkShare(err error) bool {
+	_, ok := err.(*ErrMustNotBeLinkShare)
+	return ok
+}
+
+func (err *ErrMustNotBeLinkShare) Error() string {
+	return "user must be a *User, not a *models.LinkSharing"
+}
+
+// ErrCodeMustNotBeLinkShare holds the unique world-error code of this error
+const ErrCodeMustNotBeLinkShare = 1023
+
+// HTTPError holds the http error description
+func (err *ErrMustNotBeLinkShare) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusForbidden,
+		Code:     ErrCodeMustNotBeLinkShare,
+		Message:  "You can't do that as a link share.",
+	}
+}
