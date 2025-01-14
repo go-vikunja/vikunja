@@ -17,6 +17,7 @@
 			<AssigneeList
 				:assignees="items"
 				:disabled="disabled"
+				can-remove
 				@remove="removeAssignee"
 			/>
 		</template>

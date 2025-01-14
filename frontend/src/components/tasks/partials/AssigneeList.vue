@@ -8,11 +8,17 @@ withDefaults(defineProps<{
 	disabled?: boolean,
 	avatarSize?: number,
 	inline?: boolean,
-	onRemove?: (user: IUser) => void
+	/** add this boolean prop to enable removal of assignees */
+	canRemove?: boolean,
 }>(), {
 	avatarSize: 30,
 	inline: false,
+	canRemove: false,
 })
+
+defineEmits<{
+	remove: [user: IUser],
+}>()
 </script>
 
 <template>
@@ -30,13 +36,13 @@ withDefaults(defineProps<{
 				:avatar-size="avatarSize"
 				:show-username="false"
 				:user="user"
-				:class="{'m-2': onRemove && !disabled}"
+				:class="{'m-2': canRemove && !disabled}"
 			/>
 			<BaseButton
-				v-if="onRemove && !disabled"
+				v-if="canRemove && !disabled"
 				:key="'delete'+user.id"
 				class="remove-assignee"
-				@click="onRemove(user)"
+				@click="$emit('remove', user)"
 			>
 				<Icon icon="times" />
 			</BaseButton>
