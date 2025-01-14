@@ -75,7 +75,7 @@
     "@tiptap/extension-typography": "2.11.2",
     "@tiptap/extension-underline": "2.11.2",
     "@tiptap/pm": "2.11.2",
-    "@tiptap/starter-kit": "^2.11.2",
+    "@tiptap/starter-kit": "2.11.2",
     "@tiptap/suggestion": "2.11.2",
     "@tiptap/vue-3": "2.11.2",
     "@vueuse/core": "12.4.0",

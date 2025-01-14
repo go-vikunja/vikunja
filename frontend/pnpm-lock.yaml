@@ -95,7 +95,7 @@ importers:
         specifier: 2.11.2
         version: 2.11.2
       '@tiptap/starter-kit':
-        specifier: ^2.11.2
+        specifier: 2.11.2
         version: 2.11.2
       '@tiptap/suggestion':
         specifier: 2.11.2
