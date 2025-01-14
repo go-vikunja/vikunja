@@ -446,16 +446,39 @@ func GetCurrentUser(c echo.Context) (user *User, err error) {
 func GetUserFromClaims(claims jwt.MapClaims) (user *User, err error) {
 	userID, ok := claims["id"].(float64)
 	if !ok {
-		return user, ErrCouldNotGetUserID{}
+		return user, &ErrInvalidClaimData{
+			Field: "id",
+			Type:  reflect.TypeOf(claims["id"]).String(),
+		}
 	}
-	user = &User{
-		ID:       int64(userID),
-		Email:    claims["email"].(string),
-		Username: claims["username"].(string),
-		Name:     claims["name"].(string),
+	email, ok := claims["email"].(string)
+	if !ok {
+		return nil, &ErrInvalidClaimData{
+			Field: "email",
+			Type:  reflect.TypeOf(claims["email"]).String(),
+		}
+	}
+	username, ok := claims["username"].(string)
+	if !ok {
+		return nil, &ErrInvalidClaimData{
+			Field: "username",
+			Type:  reflect.TypeOf(claims["username"]).String(),
+		}
+	}
+	name, ok := claims["name"].(string)
+	if !ok {
+		return nil, &ErrInvalidClaimData{
+			Field: "name",
+			Type:  reflect.TypeOf(claims["name"]).String(),
+		}
 	}
 
-	return
+	return &User{
+		ID:       int64(userID),
+		Email:    email,
+		Username: username,
+		Name:     name,
+	}, nil
 }
 
 // UpdateUser updates a user

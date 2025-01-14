@@ -534,9 +534,7 @@ func (err *ErrUsernameMustNotContainSpaces) HTTPError() web.HTTPError {
 }
 
 // ErrMustNotBeLinkShare represents a "MustNotBeLinkShare" kind of error.
-type ErrMustNotBeLinkShare struct {
-	Username string
-}
+type ErrMustNotBeLinkShare struct{}
 
 // IsErrMustNotBeLinkShare checks if an error is a ErrMustNotBeLinkShare.
 func IsErrMustNotBeLinkShare(err error) bool {
@@ -557,5 +555,33 @@ func (err *ErrMustNotBeLinkShare) HTTPError() web.HTTPError {
 		HTTPCode: http.StatusForbidden,
 		Code:     ErrCodeMustNotBeLinkShare,
 		Message:  "You can't do that as a link share.",
+	}
+}
+
+// ErrInvalidClaimData represents a "InvalidClaimData" kind of error.
+type ErrInvalidClaimData struct {
+	Field string
+	Type  string
+}
+
+// IsErrInvalidClaimData checks if an error is a ErrInvalidClaimData.
+func IsErrInvalidClaimData(err error) bool {
+	_, ok := err.(*ErrInvalidClaimData)
+	return ok
+}
+
+func (err *ErrInvalidClaimData) Error() string {
+	return fmt.Sprintf("invalid claim data for field %s of type %s", err.Field, err.Type)
+}
+
+// ErrCodeInvalidClaimData holds the unique world-error code of this error
+const ErrCodeInvalidClaimData = 1024
+
+// HTTPError holds the http error description
+func (err *ErrInvalidClaimData) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidClaimData,
+		Message:  fmt.Sprintf("Invalid claim data for field %s of type %s", err.Field, err.Type),
 	}
 }
