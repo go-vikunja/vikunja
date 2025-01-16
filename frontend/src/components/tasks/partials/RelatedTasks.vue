@@ -183,7 +183,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, reactive, shallowReactive, watch, computed, type PropType} from 'vue'
+import {ref, reactive, shallowReactive, watch, computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useRoute} from 'vue-router'
 
@@ -206,27 +206,17 @@ import {useTaskStore} from '@/stores/tasks'
 import {useProjectStore} from '@/stores/projects'
 import {playPopSound} from '@/helpers/playPop'
 
-const props = defineProps({
-	taskId: {
-		type: Number,
-		required: true,
-	},
-	initialRelatedTasks: {
-		type: Object as PropType<ITask['relatedTasks']>,
-		default: () => ({}),
-	},
-	showNoRelationsNotice: {
-		type: Boolean,
-		default: false,
-	},
-	projectId: {
-		type: Number,
-		default: 0,
-	},
-	editEnabled: {
-		type: Boolean,
-		default: true,
-	},
+const props = withDefaults(defineProps<{
+	taskId: number,
+	initialRelatedTasks?: ITask['relatedTasks'],
+	showNoRelationsNotice?: boolean,
+	projectId: number,
+	editEnabled: boolean,
+}>(), {
+	initialRelatedTasks: () => ({}),
+	showNoRelationsNotice: false,
+	projectId: 0,
+	editEnabled: true, // this seems like a mistake
 })
 
 const taskStore = useTaskStore()
