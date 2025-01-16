@@ -167,7 +167,7 @@ import {Node} from '@tiptap/pm/model'
 import Commands from './commands'
 import suggestionSetup from './suggestion'
 
-import {lowlight} from 'lowlight'
+import {common, createLowlight} from 'lowlight'
 
 import type {BottomAction, UploadCallback} from './types'
 import type {ITask} from '@/modelTypes/ITask'
@@ -343,7 +343,7 @@ const extensions : Extensions = [
 	}),
 
 	CodeBlockLowlight.configure({
-		lowlight,
+		lowlight: createLowlight(common),
 	}),
 	HardBreak.extend({
 		addKeyboardShortcuts() {
