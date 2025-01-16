@@ -216,4 +216,4 @@ replace github.com/samedi/caldav-go => github.com/kolaente/caldav-go v3.0.1-0.20
 
 go 1.22.0
 
-toolchain go1.23.4
+toolchain go1.23.5
