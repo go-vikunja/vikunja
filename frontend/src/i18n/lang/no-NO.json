@@ -348,7 +348,7 @@
       "noLimit": "Ikke angitt",
       "doneBucket": "Ferdigkurv",
       "doneBucketHint": "Alle oppgaver som flyttes til denne kurven vil automatisk bli markert som ferdige.",
-      "doneBucketHintExtended": "Alle oppgaver som er flyttet til ferdigkurven, vil automatisk bli merket som ferdig. Alle oppgaver merket som ferdig fra andre steder vil også bli flyttet.",
+      "doneBucketHintExtended": "Alle oppgaver som er flyttet til ferdigkurven, vil automatisk bli merket som ferdige. Alle oppgaver merket som ferdige fra andre steder vil også bli flyttet.",
       "doneBucketSavedSuccess": "Ferdigkurven er lagret.",
       "defaultBucket": "Standardkurv",
       "defaultBucketHint": "Hvis du oppretter oppgaver uten å angi en kurv, havner de her.",
@@ -515,7 +515,7 @@
   "label": {
     "title": "Etiketter",
     "manage": "Behandle etiketter",
-    "description": "Klikk på en etikett for å redigere den. Du kan redigere alle etikettene du lagde, du kan bruke alle etikettene som er tilknyttet en oppgave som du har tilgang til.",
+    "description": "Klikk på en etikett for å redigere den. Du kan redigere alle etikettene du lagde, og du kan bruke alle etikettene som er tilknyttet en oppgave i et prosjekt du har tilgang til.",
     "newCTA": "Du har ingen etiketter for øyeblikket.",
     "search": "Skriv for å søke etter en etikett…",
     "create": {
@@ -723,7 +723,7 @@
       },
       "examples": {
         "now": "Akkurat nå",
-        "in24h": "Om 24t",
+        "in24h": "Om 24 timer",
         "today": "I dag klokken 00:00",
         "beginningOfThisWeek": "Starten på denne uken klokken 00:00",
         "endOfThisWeek": "Slutten av denne uken",
@@ -803,7 +803,7 @@
       "createdBy": "Opprettet av",
       "description": "Beskrivelse",
       "done": "Ferdig",
-      "dueDate": "Forfallsdato",
+      "dueDate": "Forfall",
       "endDate": "Sluttdato",
       "labels": "Etiketter",
       "percentDone": "Fremdrift",
@@ -814,7 +814,7 @@
       "startDate": "Startdato",
       "title": "Tittel",
       "updated": "Oppdatert",
-      "doneAt": "Ferdig den"
+      "doneAt": "Ferdigstilt"
     },
     "subscription": {
       "subscribedTaskThroughParentProject": "Du kan ikke melde deg ut her fordi du abonnerer på denne oppgaven gjennom prosjektet.",
@@ -1037,7 +1037,7 @@
       "done": "Marker oppgaven som ferdig/uferdig",
       "assign": "Tildel denne oppgaven til en bruker",
       "labels": "Legg til etiketter til denne oppgaven",
-      "dueDate": "Endre forfallsdato for denne oppgaven",
+      "dueDate": "Endre forfallsdato på denne oppgaven",
       "attachment": "Legg til et vedlegg til denne oppgaven",
       "related": "Endre relaterte oppgaver for denne oppgaven",
       "color": "Endre fargen på denne oppgaven",
