@@ -62,29 +62,22 @@ export default {inheritAttrs: false}
 </script>
 
 <script setup lang="ts">
-import {computed, onBeforeUnmount, onMounted, ref, toRefs, useAttrs, watch, watchEffect, type PropType} from 'vue'
+import {computed, onBeforeUnmount, onMounted, ref, toRefs, useAttrs, watch, watchEffect} from 'vue'
 
-const props = defineProps({
-	modelValue: {
-		type: [String, Number, Date, Array] as PropType<DateOption | DateOption[] | null>,
-		default: null,
-	},
-	// https://flatpickr.js.org/options/
-	config: {
-		type: Object as PropType<Options>,
-		default: () => ({
-			defaultDate: null,
-			wrap: false,
-		}),
-	},
-	events: {
-		type: Array as PropType<HookKey[]>,
-		default: () => includedEvents,
-	},
-	disabled: {
-		type: Boolean,
-		default: false,
-	},
+const props = withDefaults(defineProps<{
+	modelValue: DateOption | DateOption[] | null,
+	/**  https://flatpickr.js.org/options/ */
+	config: Options,
+	events: HookKey[],
+	disabled: boolean,
+}>(), {
+	modelValue: null,
+	config: () => ({
+		defaultDate: undefined,
+		wrap: false,
+	}),
+	events: () => includedEvents,
+	disabled: false,
 })
 
 const emit = defineEmits([
