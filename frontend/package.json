@@ -132,7 +132,7 @@
     "browserslist": "4.24.4",
     "caniuse-lite": "1.0.30001692",
     "csstype": "3.1.3",
-    "cypress": "13.17.0",
+    "cypress": "14.0.0",
     "esbuild": "0.24.2",
     "eslint": "9.18.0",
     "eslint-plugin-vue": "9.32.0",
@@ -152,7 +152,7 @@
     "vite-plugin-sentry": "1.4.0",
     "vite-plugin-vue-devtools": "7.7.0",
     "vite-svg-loader": "5.1.0",
-    "vitest": "2.1.8",
+    "vitest": "3.0.1",
     "vue-tsc": "2.2.0",
     "wait-on": "8.0.2",
     "workbox-cli": "7.3.0"
