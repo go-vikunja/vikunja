@@ -229,7 +229,10 @@ func CanDoAPIRoute(c echo.Context, token *APIToken) (can bool) {
 
 	routeGroupName = strings.TrimSuffix(routeGroupName, "_bulk")
 
-	if routeGroupName == "user" {
+	if routeGroupName == "user" ||
+		routeGroupName == "users" ||
+		routeGroupName == "notifications" ||
+		routeGroupName == "routes" {
 		routeGroupName = "other"
 	}
 
