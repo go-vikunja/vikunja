@@ -100,7 +100,7 @@ func getRouteDetail(route echo.Route) (method string, detail *RouteDetail) {
 	}
 }
 
-func ensureApiTokenRoutesGroup(group string) {
+func ensureAPITokenRoutesGroup(group string) {
 	if _, has := apiTokenRoutes[group]; !has {
 		apiTokenRoutes[group] = make(APITokenRoute)
 	}
@@ -146,13 +146,13 @@ func CollectRoutesForAPITokenUsage(route echo.Route, middlewares []echo.Middlewa
 		// Otherwise, we add it to the "other" key.
 		if len(routeParts) == 1 {
 			if routeGroupName == "notifications" && route.Method == http.MethodPost {
-				ensureApiTokenRoutesGroup("notifications")
+				ensureAPITokenRoutesGroup("notifications")
 
 				apiTokenRoutes["notifications"]["mark_all_as_read"] = routeDetail
 				return
 			}
 
-			ensureApiTokenRoutesGroup("other")
+			ensureAPITokenRoutesGroup("other")
 
 			_, exists := apiTokenRoutes["other"][routeGroupName]
 			if exists {
@@ -179,7 +179,7 @@ func CollectRoutesForAPITokenUsage(route echo.Route, middlewares []echo.Middlewa
 
 	if strings.HasSuffix(routeGroupName, "_bulk") {
 		parent := strings.TrimSuffix(routeGroupName, "_bulk")
-		ensureApiTokenRoutesGroup(parent)
+		ensureAPITokenRoutesGroup(parent)
 
 		method, routeDetail := getRouteDetail(route)
 		apiTokenRoutes[parent][method+"_bulk"] = routeDetail
