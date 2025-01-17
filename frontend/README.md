@@ -2,30 +2,14 @@
 
 > The todo app to organize your life.
 
-[![Build Status](https://drone.kolaente.de/api/badges/vikunja/vikunja/status.svg)](https://drone.kolaente.de/vikunja/vikunja)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
-[![Download](https://img.shields.io/badge/download-v0.22.1-brightgreen.svg)](https://dl.vikunja.io)
 [![Translation](https://badges.crowdin.net/vikunja/localized.svg)](https://crowdin.com/project/vikunja)
 
 This is the web frontend for Vikunja, written in Vue.js.
 
 Take a look at [our roadmap](https://my.vikunja.cloud/share/UrdhKPqumxDXUbYpEGJLSIyNTwAnbBzVlwdDpRbv/auth) (hosted on Vikunja!) for a list of things we're currently working on!
 
-## Security Reports
-
-If you find any security-related issues you don't want to disclose publicly, please use [the contact information on our website](https://vikunja.io/contact/#security).
-
-## Docker
-
-There is a [docker image available](https://hub.docker.com/r/vikunja/vikunja) with support for http/2 and aggressive caching enabled.
-In order to build it from sources run the command below. (Docker >= v19.03)
-
-```shell
-export DOCKER_BUILDKIT=1
-docker build -t vikunja/frontend .
-```
-
-Refer to [multi-platform documentation](https://docs.docker.com/build/building/multi-platform/) in order to build for different platforms.
+For general information about the project, refer to the top-level readme of this repo.
 
 ## Project setup
 
@@ -36,7 +20,7 @@ pnpm install
 ### Compiles and hot-reloads for development
 
 ```shell
-pnpm run serve
+pnpm run dev
 ```
 
 ### Compiles and minifies for production
