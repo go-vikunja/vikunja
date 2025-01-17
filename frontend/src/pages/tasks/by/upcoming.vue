@@ -6,7 +6,7 @@
 import {parseDateOrString} from '@/helpers/time/parseDateOrString'
 import {getNextWeekDate} from '@/helpers/time/getNextWeekDate'
 
-import ShowTasks from '@/components/tasks/ShowTasks.vue';
+import ShowTasks from '@/components/tasks/ShowTasks.vue'
 
 definePage({
 	name: 'tasks.range',
@@ -15,7 +15,7 @@ definePage({
 		dateTo: parseDateOrString(route.query.to as string, getNextWeekDate()),
 		showNulls: route.query.showNulls === 'true',
 		showOverdue: route.query.showOverdue === 'true',
-	})
+	}),
 })
 
 const props = defineProps<{

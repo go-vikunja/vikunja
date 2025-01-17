@@ -83,6 +83,8 @@ import {useTitle} from '@/composables/useTitle'
 import {success, error} from '@/message'
 import {useAuthStore} from '@/stores/auth'
 
+definePage({ name: 'user.settings.password-update' })
+
 const passwordUpdateService = shallowReactive(new PasswordUpdateService())
 const passwordUpdate = reactive(new PasswordUpdateModel())
 const passwordConfirm = ref('')

@@ -41,6 +41,12 @@ import Loading from '@/components/misc/Loading.vue'
 import {useProjectStore} from '@/stores/projects'
 import TaskService from '@/services/task'
 
+definePage({
+	name: 'project.settings.delete',
+	meta: { showAsModal: true },
+	props: route => ({ projectId: Number(route.params.projectId as string) }),
+})
+
 const {t} = useI18n({useScope: 'global'})
 const projectStore = useProjectStore()
 const route = useRoute()

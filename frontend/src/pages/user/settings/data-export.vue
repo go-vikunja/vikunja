@@ -58,6 +58,8 @@ import {useTitle} from '@/composables/useTitle'
 import {success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
 
+definePage({ name: 'user.settings.data-export' })
+
 const {t} = useI18n({useScope: 'global'})
 const authStore = useAuthStore()
 

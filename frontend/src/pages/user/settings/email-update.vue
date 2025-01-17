@@ -62,6 +62,8 @@ import {success} from '@/message'
 import {useTitle} from '@/composables/useTitle'
 import {useAuthStore} from '@/stores/auth'
 
+definePage({ name: 'user.settings.email-update' })
+
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.settings.updateEmailTitle')} - ${t('user.settings.title')}`)
 

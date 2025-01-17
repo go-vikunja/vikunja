@@ -74,6 +74,11 @@ import {success} from '@/message'
 
 import {useConfigStore} from '@/stores/config'
 
+definePage({
+	name: 'teams.create',
+	meta: { showAsModal: true },
+})
+
 const {t} = useI18n()
 const title = computed(() => t('team.create.title'))
 useTitle(title)

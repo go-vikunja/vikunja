@@ -88,6 +88,11 @@ import Filters from '@/components/project/partials/Filters.vue'
 
 import {useSavedFilter} from '@/services/savedFilter'
 
+definePage({
+	name: 'filters.create',
+	meta: { showAsModal: true },
+})
+
 const {
 	filter,
 	filters,

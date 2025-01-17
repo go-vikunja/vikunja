@@ -71,6 +71,11 @@ import PasswordResetModel from '@/models/passwordReset'
 import PasswordResetService from '@/services/passwordReset'
 import Message from '@/components/misc/Message.vue'
 
+definePage({
+	name: 'user.password-reset.request',
+	meta: { title: 'user.auth.resetPassword' },
+})
+
 const passwordResetService = shallowReactive(new PasswordResetService())
 const passwordReset = ref(new PasswordResetModel())
 const errorMsg = ref('')

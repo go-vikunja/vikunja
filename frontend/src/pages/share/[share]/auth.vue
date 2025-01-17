@@ -55,6 +55,8 @@ import {useBaseStore} from '@/stores/base'
 import {useAuthStore} from '@/stores/auth'
 import {useRedirectToLastVisited} from '@/composables/useRedirectToLastVisited'
 
+definePage({ name: 'link-share.auth' })
+
 const {t} = useI18n({useScope: 'global'})
 useTitle(t('sharing.authenticating'))
 const {getLastVisitedRoute} = useRedirectToLastVisited()

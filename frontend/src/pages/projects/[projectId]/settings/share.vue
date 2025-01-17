@@ -48,6 +48,12 @@ import userTeam from '@/components/sharing/UserTeam.vue'
 import {useBaseStore} from '@/stores/base'
 import {useConfigStore} from '@/stores/config'
 
+definePage({
+	name: 'project.settings.share',
+	meta: { showAsModal: true },
+	props: route => ({ projectId: Number(route.params.projectId as string) }),
+})
+
 const {t} = useI18n({useScope: 'global'})
 
 const project = ref<IProject>()

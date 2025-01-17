@@ -25,6 +25,12 @@ import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import {success} from '@/message'
 import {isValidHttpUrl} from '@/helpers/isValidHttpUrl'
 
+definePage({
+	name: 'project.settings.webhooks',
+	meta: { showAsModal: true },
+	props: route => ({ projectId: Number(route.params.projectId as string) }),
+})
+
 const {t} = useI18n({useScope: 'global'})
 
 const project = ref<IProject>()

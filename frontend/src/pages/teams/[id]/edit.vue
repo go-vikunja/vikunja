@@ -282,6 +282,8 @@ import type {ITeam} from '@/modelTypes/ITeam'
 import type {IUser} from '@/modelTypes/IUser'
 import type {ITeamMember} from '@/modelTypes/ITeamMember'
 
+definePage({ name: 'teams.edit' })
+
 const authStore = useAuthStore()
 const configStore = useConfigStore()
 const route = useRoute()

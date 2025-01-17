@@ -32,6 +32,8 @@ import { useConfigStore } from '@/stores/config'
 import { useAuthStore } from '@/stores/auth'
 import {useRoute} from 'vue-router'
 
+definePage({ name: 'user.settings' })
+
 const { t } = useI18n({useScope: 'global'})
 useTitle(() => t('user.settings.title'))
 

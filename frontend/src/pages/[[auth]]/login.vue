@@ -161,6 +161,11 @@ import {useConfigStore} from '@/stores/config'
 
 import {useTitle} from '@/composables/useTitle'
 
+definePage({
+	name: 'user.login',
+	meta: { title: 'user.auth.login' },
+})
+
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => t('user.auth.login'))
 

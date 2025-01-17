@@ -24,6 +24,12 @@ import {useTitle} from '@/composables/useTitle'
 import {useProject, useProjectStore} from '@/stores/projects'
 import type {IProject} from '@/modelTypes/IProject'
 
+definePage({
+	name: 'project.settings.duplicate',
+	meta: { showAsModal: true },
+	props: route => ({ projectId: Number(route.params.projectId as string) }),
+})
+
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => t('project.duplicate.title'))
 

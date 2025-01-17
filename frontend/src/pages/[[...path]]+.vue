@@ -8,5 +8,10 @@
 <script setup lang="ts">
 import {useTitle} from '@/composables/useTitle'
 
+definePage({
+	name: 'not-found',
+	alias: '/:pathMatch(.*)*',
+})
+
 useTitle(() => '404')
 </script>

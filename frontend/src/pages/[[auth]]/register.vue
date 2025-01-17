@@ -129,6 +129,11 @@ import {useAuthStore} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
 import {validatePassword} from '@/helpers/validatePasswort'
 
+definePage({
+	name: 'user.register',
+	meta: { title: 'user.auth.createAccount' },
+})
+
 const {t} = useI18n()
 const authStore = useAuthStore()
 const configStore = useConfigStore()

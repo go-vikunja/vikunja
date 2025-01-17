@@ -644,6 +644,11 @@ import {useTitle} from '@/composables/useTitle'
 import {success} from '@/message'
 import type {Action as MessageAction} from '@/message'
 
+definePage({
+	name: 'task.detail',
+	props: route => ({ taskId: Number(route.params.id as string) }),
+})
+
 const props = defineProps<{
 	taskId: ITask['id'],
 	backdropView?: RouteLocation['fullPath'],

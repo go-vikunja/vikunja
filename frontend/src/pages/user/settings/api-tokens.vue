@@ -14,6 +14,8 @@ import {useI18n} from 'vue-i18n'
 import Message from '@/components/misc/Message.vue'
 import type {IApiToken} from '@/modelTypes/IApiToken'
 
+definePage({ name: 'user.settings.apiTokens' })
+
 const service = new ApiTokenService()
 const tokens = ref<IApiToken[]>([])
 const apiDocsUrl = window.API_URL + '/docs'

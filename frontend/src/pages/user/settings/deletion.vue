@@ -126,6 +126,8 @@ import {success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
 
+definePage({ name: 'user.settings.deletion' })
+
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.deletion.title')} - ${t('user.settings.title')}`)
 

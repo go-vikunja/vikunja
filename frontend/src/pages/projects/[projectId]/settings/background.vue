@@ -133,6 +133,12 @@ import {useTitle} from '@/composables/useTitle'
 import CreateEdit from '@/components/misc/CreateEdit.vue'
 import {success} from '@/message'
 
+definePage({
+	name: 'project.settings.background',
+	meta: { showAsModal: true },
+	props: route => ({ projectId: Number(route.params.projectId as string) }),
+})
+
 const SEARCH_DEBOUNCE = 300
 
 const {t} = useI18n({useScope: 'global'})

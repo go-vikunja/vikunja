@@ -101,6 +101,12 @@ import {useProject} from '@/stores/projects'
 import {useTitle} from '@/composables/useTitle'
 import {RIGHTS} from '@/constants/rights'
 
+definePage({
+	name: 'project.settings.edit',
+	meta: { showAsModal: true },
+	props: route => ({ projectId: Number(route.params.projectId as string) }),
+})
+
 const props = defineProps<{
 	projectId: IProject['id'],
 }>()

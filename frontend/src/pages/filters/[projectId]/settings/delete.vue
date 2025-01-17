@@ -17,6 +17,12 @@
 import type {IProject} from '@/modelTypes/IProject'
 import {useSavedFilter} from '@/services/savedFilter'
 
+definePage({
+	name: 'filter.settings.delete',
+	meta: { showAsModal: true },
+	props: route => ({ projectId: Number(route.params.projectId as string) }),
+})
+
 const props = defineProps<{
 	projectId: IProject['id'],
 }>()

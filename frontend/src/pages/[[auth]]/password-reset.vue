@@ -58,6 +58,11 @@ import PasswordResetService from '@/services/passwordReset'
 import Message from '@/components/misc/Message.vue'
 import Password from '@/components/input/Password.vue'
 
+definePage({
+	name: 'user.password-reset.reset',
+	meta: { title: 'user.auth.resetPassword' },
+})
+
 const credentials = reactive({
 	password: '',
 })

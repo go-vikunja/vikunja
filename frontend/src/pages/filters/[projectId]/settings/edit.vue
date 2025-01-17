@@ -77,6 +77,12 @@ import {useSavedFilter} from '@/services/savedFilter'
 
 import type {IProject} from '@/modelTypes/IProject'
 
+definePage({
+	name: 'filter.settings.edit',
+	meta: { showAsModal: true },
+	props: route => ({ projectId: Number(route.params.projectId as string) }),
+})
+
 const props = defineProps<{
 	projectId: IProject['id'],
 }>()

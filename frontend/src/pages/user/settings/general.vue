@@ -239,6 +239,8 @@ import type {IUserSettings} from '@/modelTypes/IUserSettings'
 import {isSavedFilter} from '@/services/savedFilter'
 import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/modelTypes/IProjectView'
 
+definePage({ name: 'user.settings.general' })
+
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.settings.general.title')} - ${t('user.settings.title')}`)
 
