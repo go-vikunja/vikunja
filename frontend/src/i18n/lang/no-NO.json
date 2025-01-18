@@ -1124,7 +1124,7 @@
     }
   },
   "date": {
-    "locale": "nb_NO",
+    "locale": "nn",
     "altFormatLong": "d.m.y H:i",
     "altFormatShort": "d.m.y"
   },
