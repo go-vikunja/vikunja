@@ -17,24 +17,23 @@
 package migration
 
 import (
-	"bytes"
 	templatehtml "html/template"
 	"strings"
 
-	"github.com/yuin/goldmark"
+	"code.vikunja.io/api/pkg/utils"
+	
 	"src.techknowlogick.com/xormigrate"
 	"xorm.io/xorm"
 )
 
 func convertMarkdownToHTML(input string) (output string, err error) {
-	md := []byte(templatehtml.HTMLEscapeString(input))
-	var buf bytes.Buffer
-	err = goldmark.Convert(md, &buf)
+	md := templatehtml.HTMLEscapeString(input)
+	html, err = utils.ConvertMarkdownToHTML(md)
 	if err != nil {
 		return
 	}
 	//#nosec - the html is escaped few lines before
-	return buf.String(), nil
+	return html, nil
 }
 
 func convertDescription(tx *xorm.Engine, table string, column string) (err error) {
