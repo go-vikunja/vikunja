@@ -1,6 +1,6 @@
-import {computed} from 'vue'
+import {computed, toValue} from 'vue'
 
-import {useTitle as useTitleVueUse, toValue, type UseTitleOptions, type ReadonlyRefOrGetter, type MaybeRef, type MaybeRefOrGetter} from '@vueuse/core'
+import {useTitle as useTitleVueUse, type UseTitleOptions, type ReadonlyRefOrGetter, type MaybeRef, type MaybeRefOrGetter} from '@vueuse/core'
 
 export function useTitle(
 	newTitle:
