@@ -63,7 +63,7 @@ const motd = computed(() => configStore.motd)
 
 const route = useRoute()
 const {t} = useI18n({useScope: 'global'})
-const title = computed(() => t(route.meta?.title as string || ''))
+const title = computed(() => route.meta?.title ? t(route.meta.title as string) : '')
 useTitle(() => title.value)
 
 </script>
