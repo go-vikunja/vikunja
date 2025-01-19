@@ -184,7 +184,7 @@ export default defineConfig(({mode}) => {
 				},
 			}),
 			vueDevTools({
-				launchEditor: env.VUE_DEVTOOLS_LAUNCH_EDITOR || 'code'
+				launchEditor: env.VUE_DEVTOOLS_LAUNCH_EDITOR || 'code',
 			}),
 			viteSentry(getSentryConfig(env)),
 		],
