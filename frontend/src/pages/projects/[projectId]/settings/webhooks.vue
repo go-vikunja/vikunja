@@ -3,8 +3,8 @@ export default {name: 'ProjectSettingWebhooks'}
 </script>
 
 <script lang="ts" setup>
-import {ref, computed, watchEffect} from 'vue'
-import {useRoute} from 'vue-router'
+import {ref, watchEffect} from 'vue'
+import type {RouteLocationNormalizedLoaded} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import {useTitle} from '@vueuse/core'
 
@@ -28,8 +28,16 @@ import {isValidHttpUrl} from '@/helpers/isValidHttpUrl'
 definePage({
 	name: 'project.settings.webhooks',
 	meta: { showAsModal: true },
-	props: route => ({ projectId: Number(route.params.projectId as string) }),
+	props: route => {
+		// https://github.com/posva/unplugin-vue-router/discussions/513#discussioncomment-10695660
+		const castedRoute = route as RouteLocationNormalizedLoaded<'project.settings.webhooks'>
+		return { projectId: parseInt(castedRoute.params.projectId, 2) }
+	},
 })
+
+const props = defineProps<{
+	projectId: number
+}>()
 
 const {t} = useI18n({useScope: 'global'})
 
@@ -46,13 +54,7 @@ async function loadProject(projectId: number) {
 	await loadWebhooks()
 }
 
-const route = useRoute()
-const projectId = computed(() => route.params.projectId !== undefined
-	? parseInt(route.params.projectId as string)
-	: undefined,
-)
-
-watchEffect(() => projectId.value !== undefined && loadProject(projectId.value))
+watchEffect(() => props.projectId !== undefined && loadProject(props.projectId))
 
 const webhooks = ref<IWebhook[]>()
 const webhookService = new WebhookService()

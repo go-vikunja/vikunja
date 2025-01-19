@@ -33,41 +33,50 @@
 
 <script setup lang="ts">
 import {computed, ref, watchEffect} from 'vue'
+import {useRouter, type RouteLocationNormalizedLoaded} from 'vue-router'
 import {useTitle} from '@/composables/useTitle'
 import {useI18n} from 'vue-i18n'
-import {useRoute, useRouter} from 'vue-router'
 import {success} from '@/message'
 import Loading from '@/components/misc/Loading.vue'
 import {useProjectStore} from '@/stores/projects'
 import TaskService from '@/services/task'
 
+import type { IProject } from '@/modelTypes/IProject'
+
 definePage({
 	name: 'project.settings.delete',
 	meta: { showAsModal: true },
-	props: route => ({ projectId: Number(route.params.projectId as string) }),
+	props: route => {
+		// https://github.com/posva/unplugin-vue-router/discussions/513#discussioncomment-10695660
+		const castedRoute = route as RouteLocationNormalizedLoaded<'project.settings.delete'>
+		return { projectId: Number(castedRoute.params.projectId) }
+	},
 })
+
+const props = defineProps<{
+	projectId: IProject['id'],
+}>()
 
 const {t} = useI18n({useScope: 'global'})
 const projectStore = useProjectStore()
-const route = useRoute()
 const router = useRouter()
 
 const totalTasks = ref<number | null>(null)
 
-const project = computed(() => projectStore.projects[route.params.projectId])
+const project = computed(() => projectStore.projects[props.projectId])
 const projectIdsToDelete = ref<number[]>([])
 
 watchEffect(
 	async () => {
-		if (!route.params.projectId) {
+		if (!props.projectId) {
 			return
 		}
 
 		projectIdsToDelete.value = projectStore
-			.getChildProjects(parseInt(route.params.projectId))
+			.getChildProjects(props.projectId)
 			.map(p => p.id)
 
-		projectIdsToDelete.value.push(parseInt(route.params.projectId))
+		projectIdsToDelete.value.push(props.projectId)
 
 		const taskService = new TaskService()
 		await taskService.getAll({}, {filter: `project in ${projectIdsToDelete.value.join(',')}`})

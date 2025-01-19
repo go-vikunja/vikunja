@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {computed, ref, shallowReactive, watch, watchEffect} from 'vue'
-import {useRoute, useRouter} from 'vue-router'
+import {useRoute, useRouter, type RouteLocationNormalizedLoaded} from 'vue-router'
 
 import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
@@ -40,15 +40,19 @@ definePage({
 	// 		}
 	// 	}
 	// },
-	props: route => ({ 
-		projectId: parseInt(route.params.projectId as string),
-		viewId: route.params.viewId ? parseInt(route.params.viewId as string): undefined,
-	}),
+	props: route => {
+		// https://github.com/posva/unplugin-vue-router/discussions/513#discussioncomment-10695660
+		const castedRoute = route as RouteLocationNormalizedLoaded<'project'>
+		return {
+			projectId: Number(castedRoute.params.projectId),
+			viewId: castedRoute.params.viewId ? parseInt(castedRoute.params.viewId): undefined,
+		}
+	},
 })
 
 const props = defineProps<{
 	projectId: number,
-	viewId: number,
+	viewId?: number,
 }>()
 
 const router = useRouter()
@@ -112,7 +116,7 @@ watch(
 )
 
 function redirectToDefaultViewIfNecessary() {
-	if (props.viewId === 0 || !currentView.value) {
+	if (props.viewId === undefined || props.viewId === 0 || !currentView.value) {
 		// Ideally, we would do that in the router redirect, but the projects (and therefore, the views) 
 		// are not always loaded then.
 

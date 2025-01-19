@@ -112,7 +112,7 @@ export default { name: 'ProjectSettingBackground' }
 <script setup lang="ts">
 import {ref, computed, shallowReactive} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {useRoute, useRouter} from 'vue-router'
+import {useRouter, type RouteLocationNormalizedLoaded} from 'vue-router'
 import {useDebounceFn} from '@vueuse/core'
 
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -133,17 +133,26 @@ import {useTitle} from '@/composables/useTitle'
 import CreateEdit from '@/components/misc/CreateEdit.vue'
 import {success} from '@/message'
 
+import type { IProject } from '@/modelTypes/IProject'
+
 definePage({
 	name: 'project.settings.background',
 	meta: { showAsModal: true },
-	props: route => ({ projectId: Number(route.params.projectId as string) }),
+	props: route => {
+		// https://github.com/posva/unplugin-vue-router/discussions/513#discussioncomment-10695660
+		const castedRoute = route as RouteLocationNormalizedLoaded<'project.settings.background'>
+		return { projectId: Number(castedRoute.params.projectId) }
+	},
 })
+
+const props = defineProps<{
+	projectId: IProject['id'],
+}>()
 
 const SEARCH_DEBOUNCE = 300
 
 const {t} = useI18n({useScope: 'global'})
 const baseStore = useBaseStore()
-const route = useRoute()
 const router = useRouter()
 
 useTitle(() => t('project.background.title'))
@@ -206,7 +215,7 @@ async function setBackground(backgroundId: string) {
 
 	const project = await backgroundService.update({
 		id: backgroundId,
-		projectId: route.params.projectId,
+		projectId: props.projectId,
 	})
 	await baseStore.handleSetCurrentProject({project, forceUpdate: true})
 	projectStore.setProject(project)
@@ -220,7 +229,7 @@ async function uploadBackground() {
 	}
 
 	const project = await backgroundUploadService.value.create(
-		route.params.projectId,
+		props.projectId,
 		backgroundUploadInput.value?.files[0],
 	)
 	await baseStore.handleSetCurrentProject({project, forceUpdate: true})

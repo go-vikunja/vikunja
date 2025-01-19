@@ -19,7 +19,7 @@ export default {name: 'ProjectSettingArchive'}
 
 <script setup lang="ts">
 import {computed} from 'vue'
-import {useRouter, useRoute} from 'vue-router'
+import {useRouter, type RouteLocationNormalizedLoaded} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
 import {success} from '@/message'
@@ -28,18 +28,28 @@ import {useTitle} from '@/composables/useTitle'
 import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
 
+import type { IProject } from '@/modelTypes/IProject'
+
 definePage({
 	name: 'project.settings.archive',
 	meta: { showAsModal: true },
-	props: route => ({ projectId: Number(route.params.projectId as string) }),
+	props: route => {
+		// https://github.com/posva/unplugin-vue-router/discussions/513#discussioncomment-10695660
+		const castedRoute = route as RouteLocationNormalizedLoaded<'project.settings.archive'>
+
+		return { projectId: Number(castedRoute.params.projectId) }
+	},
 })
+
+const props = defineProps<{
+	projectId: IProject['id'],
+}>()
 
 const {t} = useI18n({useScope: 'global'})
 const projectStore = useProjectStore()
 const router = useRouter()
-const route = useRoute()
 
-const project = computed(() => projectStore.projects[route.params.projectId])
+const project = computed(() => projectStore.projects[props.projectId])
 useTitle(() => t('project.archive.title', {project: project.value.title}))
 
 async function archiveProject() {

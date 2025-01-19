@@ -32,7 +32,7 @@ export default {name: 'ProjectSettingShare'}
 
 <script lang="ts" setup>
 import {ref, computed, watchEffect} from 'vue'
-import {useRoute} from 'vue-router'
+import {useRoute, type RouteLocationNormalizedLoaded} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import {useTitle} from '@vueuse/core'
 
@@ -51,7 +51,11 @@ import {useConfigStore} from '@/stores/config'
 definePage({
 	name: 'project.settings.share',
 	meta: { showAsModal: true },
-	props: route => ({ projectId: Number(route.params.projectId as string) }),
+	props: route => {
+		// https://github.com/posva/unplugin-vue-router/discussions/513#discussioncomment-10695660
+		const castedRoute = route as RouteLocationNormalizedLoaded<'project.settings.share'>
+		return { projectId: Number(castedRoute.params.projectId) }
+	},
 })
 
 const {t} = useI18n({useScope: 'global'})

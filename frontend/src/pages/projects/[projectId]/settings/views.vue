@@ -15,11 +15,16 @@ import ProjectModel from '@/models/project'
 import Message from '@/components/misc/Message.vue'
 import draggable from 'zhyswan-vuedraggable'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
+import type { RouteLocationNormalizedLoaded } from 'vue-router'
 
 definePage({
 	name: 'project.settings.views',
 	meta: { showAsModal: true },
-	props: route => ({ projectId: Number(route.params.projectId as string) }),
+	props: route => {
+		// https://github.com/posva/unplugin-vue-router/discussions/513#discussioncomment-10695660
+		const castedRoute = route as RouteLocationNormalizedLoaded<'project.settings.views'>
+		return { projectId: Number(castedRoute.params.projectId) }
+	},
 })
 
 const props = defineProps<{

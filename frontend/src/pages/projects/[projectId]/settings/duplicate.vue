@@ -13,7 +13,7 @@
 
 <script setup lang="ts">
 import {ref, watch} from 'vue'
-import {useRoute} from 'vue-router'
+import {type RouteLocationNormalizedLoaded} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
 import CreateEdit from '@/components/misc/CreateEdit.vue'
@@ -27,16 +27,23 @@ import type {IProject} from '@/modelTypes/IProject'
 definePage({
 	name: 'project.settings.duplicate',
 	meta: { showAsModal: true },
-	props: route => ({ projectId: Number(route.params.projectId as string) }),
+	props: route => {
+		// https://github.com/posva/unplugin-vue-router/discussions/513#discussioncomment-10695660
+		const castedRoute = route as RouteLocationNormalizedLoaded<'project.settings.duplicate'>
+		return { projectId: Number(castedRoute.params.projectId) }
+	},
 })
+
+const props = defineProps<{
+	projectId: IProject['id'],
+}>()
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => t('project.duplicate.title'))
 
-const route = useRoute()
 const projectStore = useProjectStore()
 
-const {project, isLoading, duplicateProject} = useProject(route.params.projectId)
+const {project, isLoading, duplicateProject} = useProject(() => props.projectId)
 
 const parentProject = ref<IProject | null>(null)
 watch(

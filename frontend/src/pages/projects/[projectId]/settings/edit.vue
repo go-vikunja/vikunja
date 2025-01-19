@@ -84,7 +84,7 @@ export default {name: 'ProjectSettingEdit'}
 
 <script setup lang="ts">
 import {watch, ref} from 'vue'
-import {useRouter} from 'vue-router'
+import {useRoute, useRouter, type RouteLocationNormalizedLoaded} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
 import Editor from '@/components/input/AsyncEditor'
@@ -104,7 +104,11 @@ import {RIGHTS} from '@/constants/rights'
 definePage({
 	name: 'project.settings.edit',
 	meta: { showAsModal: true },
-	props: route => ({ projectId: Number(route.params.projectId as string) }),
+	props: route => {
+		// https://github.com/posva/unplugin-vue-router/discussions/513#discussioncomment-10695660
+		const castedRoute = route as RouteLocationNormalizedLoaded<'project.settings.edit'>
+		return { projectId: Number(castedRoute.params.projectId) }
+	},
 })
 
 const props = defineProps<{

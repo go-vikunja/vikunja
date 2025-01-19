@@ -260,7 +260,7 @@
 <script lang="ts" setup>
 import {computed, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {useRoute, useRouter} from 'vue-router'
+import {useRouter, type RouteLocationNormalizedLoaded} from 'vue-router'
 
 import Editor from '@/components/input/AsyncEditor'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
@@ -282,11 +282,22 @@ import type {ITeam} from '@/modelTypes/ITeam'
 import type {IUser} from '@/modelTypes/IUser'
 import type {ITeamMember} from '@/modelTypes/ITeamMember'
 
-definePage({ name: 'teams.edit' })
+definePage({
+	name: 'teams.edit',
+	props: route => {
+		// https://github.com/posva/unplugin-vue-router/discussions/513#discussioncomment-10695660
+		const castedRoute = route as RouteLocationNormalizedLoaded<'teams.edit'>
+
+		return { id: Number(castedRoute.params.id) }
+	},
+})
+
+const props = defineProps<{
+	teamId: ITeam['id'],
+}>()
 
 const authStore = useAuthStore()
 const configStore = useConfigStore()
-const route = useRoute()
 const router = useRouter()
 const {t} = useI18n({useScope: 'global'})
 
@@ -304,7 +315,6 @@ const teamMemberService = ref<TeamMemberService>(new TeamMemberService())
 const userService = ref<UserService>(new UserService())
 
 const team = ref<ITeam>()
-const teamId = computed(() => Number(route.params.id))
 const memberToDelete = ref<ITeamMember>()
 const newMember = ref<IUser>()
 const foundUsers = ref<IUser[]>()
@@ -320,7 +330,7 @@ const title = ref('')
 loadTeam()
 
 async function loadTeam() {
-	team.value = await teamService.value.get({id: teamId.value})
+	team.value = await teamService.value.get({id: props.teamId})
 	title.value = t('team.edit.title', {team: team.value?.name})
 	useTitle(() => title.value)
 }
@@ -345,7 +355,7 @@ async function deleteTeam() {
 async function deleteMember() {
 	try {
 		await teamMemberService.value.delete({
-			teamId: teamId.value,
+			teamId: props.teamId,
 			username: memberToDelete.value.username,
 		})
 		success({message: t('team.edit.deleteUser.success')})
@@ -362,7 +372,7 @@ async function addUser() {
 		return
 	}
 	await teamMemberService.value.create({
-		teamId: teamId.value,
+		teamId: props.teamId,
 		username: newMember.value.username,
 	})
 	newMember.value = null
@@ -373,7 +383,7 @@ async function addUser() {
 async function toggleUserType(member: ITeamMember) {
 	// FIXME: direct manipulation
 	member.admin = !member.admin
-	member.teamId = teamId.value
+	member.teamId = props.teamId
 	const r = await teamMemberService.value.update(member)
 	for (const tm in team.value.members) {
 		if (team.value.members[tm].id === member.id) {
@@ -401,7 +411,7 @@ async function findUser(query: string) {
 async function leave() {
 	try {
 		await teamMemberService.value.delete({
-			teamId: teamId.value,
+			teamId: props.teamId,
 			username: userInfo.value.username,
 		})
 		success({message: t('team.edit.leave.success')})
