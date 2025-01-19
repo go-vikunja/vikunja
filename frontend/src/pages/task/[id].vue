@@ -586,7 +586,7 @@
 
 <script lang="ts" setup>
 import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted, onBeforeUnmount} from 'vue'
-import {useRouter, type RouteLocation} from 'vue-router'
+import {useRouter, type RouteLocation, type RouteLocationNormalizedLoaded} from 'vue-router'
 import {storeToRefs} from 'pinia'
 import {useI18n} from 'vue-i18n'
 import {unrefElement} from '@vueuse/core'
@@ -646,7 +646,12 @@ import type {Action as MessageAction} from '@/message'
 
 definePage({
 	name: 'task.detail',
-	props: route => ({ taskId: Number(route.params.id as string) }),
+	props: route => {
+		// https://github.com/posva/unplugin-vue-router/discussions/513#discussioncomment-10695660
+		const castedRoute = route as RouteLocationNormalizedLoaded<'task.detail'>
+
+		return { taskId: Number(castedRoute.params.id) }
+	},
 })
 
 const props = defineProps<{

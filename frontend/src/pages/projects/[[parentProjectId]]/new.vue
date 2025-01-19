@@ -52,6 +52,7 @@
 
 <script setup lang="ts">
 import {ref, reactive, shallowReactive, watch} from 'vue'
+import type { RouteLocationNormalizedLoaded } from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
 import ProjectService from '@/services/project'
@@ -67,9 +68,11 @@ import type {IProject} from '@/modelTypes/IProject'
 
 definePage({
 	name: 'project.create',
-	props: route => ({ parentProjectId: Number(route.params.parentProjectId as string) }),
-	meta: {
-		showAsModal: true,
+	meta: { showAsModal: true },
+	props: route => {
+		// https://github.com/posva/unplugin-vue-router/discussions/513#discussioncomment-10695660
+		const castedRoute = route as RouteLocationNormalizedLoaded<'project.create'>
+		return { parentProjectId: Number(castedRoute.params.parentProjectId) }
 	},
 })
 

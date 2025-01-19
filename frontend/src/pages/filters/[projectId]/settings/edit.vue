@@ -69,6 +69,8 @@
 </template>
 
 <script setup lang="ts">
+import type { RouteLocationNormalizedLoaded } from 'vue-router'
+
 import Editor from '@/components/input/AsyncEditor'
 import CreateEdit from '@/components/misc/CreateEdit.vue'
 import Filters from '@/components/project/partials/Filters.vue'
@@ -80,7 +82,11 @@ import type {IProject} from '@/modelTypes/IProject'
 definePage({
 	name: 'filter.settings.edit',
 	meta: { showAsModal: true },
-	props: route => ({ projectId: Number(route.params.projectId as string) }),
+	props: route => {
+		// https://github.com/posva/unplugin-vue-router/discussions/513#discussioncomment-10695660
+		const castedRoute = route as RouteLocationNormalizedLoaded<'filter.settings.edit'>
+		return { projectId: Number(castedRoute.params.projectId) }
+	},
 })
 
 const props = defineProps<{
