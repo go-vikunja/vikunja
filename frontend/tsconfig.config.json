@@ -3,7 +3,12 @@
     "@tsconfig/node22/tsconfig.json",
     "@vue/tsconfig/tsconfig.json"
   ],
-  "include": ["vite.config.*", "vitest.config.*", "cypress.config.*"],
+  "include": [
+    "env.config.d.ts",
+    "vite.config.*",
+    "vitest.config.*",
+    "cypress.config.*"
+  ],
   "compilerOptions": {
     "composite": true,
     "noEmit": true,
