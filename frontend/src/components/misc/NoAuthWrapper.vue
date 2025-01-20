@@ -56,7 +56,7 @@ import {useConfigStore} from '@/stores/config'
 withDefaults(defineProps<{
 	showApiConfig?: boolean
 }>(), {
-	showApiConfig: true,
+	showApiConfig: false,
 })
 const configStore = useConfigStore()
 const motd = computed(() => configStore.motd)

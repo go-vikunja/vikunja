@@ -19,7 +19,7 @@
 		<slot />
 	</template>
 	<section v-else-if="baseStore.error !== ''">
-		<NoAuthWrapper :show-api-config="false">
+		<NoAuthWrapper>
 			<p v-if="baseStore.error === ERROR_NO_API_URL">
 				{{ $t('ready.noApiUrlConfigured') }}
 			</p>

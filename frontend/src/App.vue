@@ -5,7 +5,7 @@
 			<ContentAuth />
 		</template>
 		<ContentLinkShare v-else-if="authStore.authLinkShare" />
-		<NoAuthWrapper v-else>
+		<NoAuthWrapper v-else show-api-config>
 			<RouterView />
 		</NoAuthWrapper>
 		
