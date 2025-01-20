@@ -192,6 +192,17 @@ func ensureProjectAdminUser(s *xorm.Session, l *Project) (hadUsers bool, err err
 	_, err = s.Where("id = ?", firstUser.ID).
 		Cols("right").
 		Update(firstUser)
+	if err != nil {
+		return true, err
+	}
+
+	_, err = s.Where("id = ?", l.ID).
+		Cols("owner_id").
+		Update(&Project{OwnerID: firstUser.UserID})
+	if err != nil {
+		return true, err
+	}
+
 	return true, err
 }
 
