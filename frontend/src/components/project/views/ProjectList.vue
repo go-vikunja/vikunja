@@ -50,13 +50,13 @@
 						v-model="tasks"
 						group="tasks"
 						handle=".handle"
-						:disabled="!canWrite"
+						:disabled="!canDragTasks"
 						item-key="id"
 						tag="ul"
 						:component-data="{
 							class: {
 								tasks: true,
-								'dragging-disabled': !canWrite || isAlphabeticalSorting
+								'dragging-disabled': !canDragTasks || isAlphabeticalSorting
 							},
 							type: 'transition-group'
 						}"
@@ -68,13 +68,13 @@
 						<template #item="{element: t}">
 							<SingleTaskInProject
 								:show-list-color="false"
-								:disabled="!canWrite"
+								:disabled="!canDragTasks"
 								:can-mark-as-done="canWrite || isPseudoProject"
 								:the-task="t"
 								:all-tasks="allTasks"
 								@taskUpdated="updateTasks"
 							>
-								<template v-if="canWrite">
+								<template v-if="canDragTasks">
 									<span class="icon handle">
 										<Icon icon="grip-lines" />
 									</span>
@@ -205,6 +205,8 @@ onMounted(async () => {
 	await nextTick()
 	ctaVisible.value = true
 })
+
+const canDragTasks = computed(() => canWrite.value || isSavedFilter(project.value))
 
 const addTaskRef = ref<typeof AddTask | null>(null)
 
