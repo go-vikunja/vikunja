@@ -210,7 +210,7 @@ func getFilterValueForBucketFilter(filter string, view *ProjectView) (newFilter 
 
 // ReadAll gets all tasks for a collection
 // @Summary Get tasks in a project
-// @Description Returns all tasks for the current project.
+// @Description Returns all tasks for the selected project. When the requested view is a kanban view, a list of buckets containing the tasks will be returned. Otherwise, a list of tasks will be returned.
 // @tags task
 // @Accept json
 // @Produce json
