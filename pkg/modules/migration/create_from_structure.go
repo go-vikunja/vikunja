@@ -279,6 +279,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 			}
 			err = tb.Update(s, user)
 			if err != nil {
+				log.Debugf("[creating structure] Error while updating task bucket %d for task %d: %s", bucketID, task.ID, err.Error())
 				return
 			}
 		} else if bucketID > 0 {
@@ -331,6 +332,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 					rt.ProjectID = t.ProjectID
 					err = rt.Create(s, user)
 					if err != nil {
+						log.Debugf("[creating structure] Error while creating related task %d: %s", rt.ID, err.Error())
 						return
 					}
 					err = setBucketOrDefault(rt)
