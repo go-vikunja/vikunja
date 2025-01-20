@@ -24,9 +24,9 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
-	"gopkg.in/d4l3k/messagediff.v1"
-
 	"code.vikunja.io/api/pkg/web"
+
+	"gopkg.in/d4l3k/messagediff.v1"
 )
 
 func TestLabel_ReadAll(t *testing.T) {
@@ -55,6 +55,18 @@ func TestLabel_ReadAll(t *testing.T) {
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,
 		OverdueTasksRemindersTime:    "09:00",
+		Created:                      testCreatedTime,
+		Updated:                      testUpdatedTime,
+	}
+	user2 := &user.User{
+		ID:                           2,
+		Username:                     "user2",
+		Password:                     "$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6",
+		Issuer:                       "local",
+		EmailRemindersEnabled:        true,
+		OverdueTasksRemindersEnabled: true,
+		OverdueTasksRemindersTime:    "09:00",
+		DefaultProjectID:             4,
 		Created:                      testCreatedTime,
 		Updated:                      testUpdatedTime,
 	}
@@ -98,18 +110,17 @@ func TestLabel_ReadAll(t *testing.T) {
 						Created:     testCreatedTime,
 						Updated:     testUpdatedTime,
 						CreatedByID: 2,
-						CreatedBy: &user.User{
-							ID:                           2,
-							Username:                     "user2",
-							Password:                     "$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6",
-							Issuer:                       "local",
-							EmailRemindersEnabled:        true,
-							OverdueTasksRemindersEnabled: true,
-							OverdueTasksRemindersTime:    "09:00",
-							DefaultProjectID:             4,
-							Created:                      testCreatedTime,
-							Updated:                      testUpdatedTime,
-						},
+						CreatedBy:   user2,
+					},
+				},
+				{
+					Label: Label{
+						ID:          5,
+						Title:       "Label #5",
+						CreatedByID: 2,
+						CreatedBy:   user2,
+						Created:     testCreatedTime,
+						Updated:     testUpdatedTime,
 					},
 				},
 			},

@@ -89,6 +89,7 @@ func getOrderByDBStatement(opts *taskSearchOptions) (orderby string, err error) 
 func convertFiltersToDBFilterCond(rawFilters []*taskFilter, includeNulls bool) (filterCond builder.Cond, err error) {
 
 	var dbFilters = make([]builder.Cond, 0, len(rawFilters))
+	var addLabelInFilter = false
 	// To still find tasks with nil values, we exclude 0s when comparing with >/< values.
 	for _, f := range rawFilters {
 
@@ -152,6 +153,28 @@ func convertFiltersToDBFilterCond(rawFilters []*taskFilter, includeNulls bool) (
 				return nil, err
 			}
 
+			if f.comparator == taskFilterComparatorNotEquals {
+				dbFilters = append(dbFilters, getNegativeFilterCondForSeparateTable(
+					"label_tasks",
+					builder.Eq{"label_id": f.value},
+				))
+				if !includeNulls {
+					addLabelInFilter = true
+				}
+				continue
+			}
+
+			if f.comparator == taskFilterComparatorNotIn {
+				dbFilters = append(dbFilters, getNegativeFilterCondForSeparateTable(
+					"label_tasks",
+					builder.In("label_id", f.value),
+				))
+				if !includeNulls {
+					addLabelInFilter = true
+				}
+				continue
+			}
+
 			dbFilters = append(dbFilters, getFilterCondForSeparateTable("label_tasks", filter))
 			continue
 		}
@@ -205,6 +228,16 @@ func convertFiltersToDBFilterCond(rawFilters []*taskFilter, includeNulls bool) (
 					}
 				}
 			}
+		}
+
+		if addLabelInFilter {
+			filterCond = builder.And(
+				filterCond,
+				builder.In("tasks.id", builder.
+					Select("task_id").
+					From("label_tasks"),
+				),
+			)
 		}
 	}
 

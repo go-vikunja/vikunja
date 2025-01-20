@@ -85,6 +85,14 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Created:     testCreatedTime,
 		Updated:     testUpdatedTime,
 	}
+	label5 := &Label{
+		ID:          5,
+		Title:       "Label #5",
+		CreatedByID: 2,
+		CreatedBy:   user2,
+		Created:     testCreatedTime,
+		Updated:     testUpdatedTime,
+	}
 
 	// We use individual variables for the tasks here to be able to rearrange or remove ones more easily
 	task1 := &Task{
@@ -591,6 +599,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		},
 		Labels: []*Label{
 			label4,
+			label5,
 		},
 		RelatedTasks: map[RelationKind][]*Task{
 			RelationKindRelated: {
@@ -1202,6 +1211,34 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task1,
 				task2,
 				task35,
+			},
+			wantErr: false,
+		},
+		{
+			name: "filter labels not eq",
+			fields: fields{
+				Filter: "labels != 5",
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task1,
+				task2,
+				//task35,
+				// task 35 has a label 5 and 4
+			},
+			wantErr: false,
+		},
+		{
+			name: "filter labels not in",
+			fields: fields{
+				Filter: "labels not in 5",
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task1,
+				task2,
+				//task35,
+				// task 35 has a label 5 and 4
 			},
 			wantErr: false,
 		},

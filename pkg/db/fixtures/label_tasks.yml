@@ -18,3 +18,7 @@
   task_id: 40
   label_id: 4
   created: 2018-12-01 15:13:12
+- id: 6 
+  task_id: 35
+  label_id: 5
+  created: 2018-12-01 15:13:12
