@@ -16,18 +16,22 @@
 
 package notifications
 
-import "code.vikunja.io/api/pkg/mail"
+import (
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/mail"
+)
 
 // Mail is a mail message
 type Mail struct {
-	from       string
-	to         string
-	subject    string
-	actionText string
-	actionURL  string
-	greeting   string
-	introLines []*mailLine
-	outroLines []*mailLine
+	from        string
+	to          string
+	subject     string
+	actionText  string
+	actionURL   string
+	greeting    string
+	introLines  []*mailLine
+	outroLines  []*mailLine
+	footerLines []*mailLine
 }
 
 type mailLine struct {
@@ -74,6 +78,18 @@ func (m *Mail) Action(text, url string) *Mail {
 // Line adds a line of Text to the mail
 func (m *Mail) Line(line string) *Mail {
 	return m.appendLine(line, false)
+}
+
+func (m *Mail) FooterLine(line string) *Mail {
+	m.footerLines = append(m.footerLines, &mailLine{
+		Text: line,
+	})
+	return m
+}
+
+func (m *Mail) IncludeLinkToSettings() *Mail {
+	m.FooterLine("You can change your notification settings [here](" + config.ServicePublicURL.GetString() + "user/settings/general).")
+	return m
 }
 
 func (m *Mail) HTML(line string) *Mail {

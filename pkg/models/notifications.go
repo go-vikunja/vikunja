@@ -21,11 +21,10 @@ import (
 	"strconv"
 	"time"
 
-	"code.vikunja.io/api/pkg/utils"
-
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/utils"
 )
 
 // ReminderDueNotification represents a ReminderDueNotification notification
@@ -38,6 +37,7 @@ type ReminderDueNotification struct {
 // ToMail returns the mail notification for ReminderDueNotification
 func (n *ReminderDueNotification) ToMail() *notifications.Mail {
 	return notifications.NewMail().
+		IncludeLinkToSettings().
 		To(n.User.Email).
 		Subject(`Reminder for "`+n.Task.Title+`" (`+n.Project.Title+`)`).
 		Greeting("Hi "+n.User.GetName()+",").
@@ -227,6 +227,7 @@ type UndoneTaskOverdueNotification struct {
 func (n *UndoneTaskOverdueNotification) ToMail() *notifications.Mail {
 	until := time.Until(n.Task.DueDate).Round(1*time.Hour) * -1
 	return notifications.NewMail().
+		IncludeLinkToSettings().
 		Subject(`Task "`+n.Task.Title+`" (`+n.Project.Title+`) is overdue`).
 		Greeting("Hi "+n.User.GetName()+",").
 		Line(`This is a friendly reminder of the task "`+n.Task.Title+`" (`+n.Project.Title+`) which is `+getOverdueSinceString(until)+` and not yet done.`).
@@ -270,6 +271,7 @@ func (n *UndoneTasksOverdueNotification) ToMail() *notifications.Mail {
 	}
 
 	return notifications.NewMail().
+		IncludeLinkToSettings().
 		Subject(`Your overdue tasks`).
 		Greeting("Hi "+n.User.GetName()+",").
 		Line("You have the following overdue tasks:").

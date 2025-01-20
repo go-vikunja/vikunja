@@ -41,6 +41,9 @@ const mailTemplatePlain = `
 {{ .ActionURL }}{{end}}
 {{ range $line := .OutroLines}}
 {{ $line.Text }}
+{{ end }}
+{{ range $line := .FooterLines}}
+{{ $line.Text }}
 {{ end }}`
 
 const mailTemplateHTML = `
@@ -76,10 +79,23 @@ const mailTemplateHTML = `
 {{ end }}
 
 {{ if .ActionURL }}
-	<p style="color: #9CA3AF;font-size:12px;border-top: 1px solid #dbdbdb;margin-top:20px;padding-top:20px;">
+	<div style="color: #9CA3AF;font-size:12px;border-top: 1px solid #dbdbdb;margin-top:20px;padding-top:20px;">
+	<p>
 		If the button above doesn't work, copy the url below and paste it in your browser's address bar:<br/>
 		{{ .ActionURL }}
 	</p>
+{{ range $line := .FooterLinesHTML}}
+	{{ $line }}
+	{{ end }}
+	</div>
+{{ else }}
+{{ if .FooterLinesHTML }}
+	<div style="color: #9CA3AF;font-size:12px;border-top: 1px solid #dbdbdb;margin-top:20px;padding-top:20px;">
+		{{ range $line := .FooterLinesHTML }}
+			{{ $line }}
+		{{ end }}
+	</div>
+{{ end }}
 {{ end }}
 </div>
 </div>
@@ -90,6 +106,29 @@ const mailTemplateHTML = `
 
 //go:embed logo.png
 var logo embed.FS
+
+func convertLinesToHTML(lines []*mailLine) (linesHTML []templatehtml.HTML, err error) {
+	p := bluemonday.UGCPolicy()
+
+	for _, line := range lines {
+		if line.isHTML {
+			// #nosec G203 -- the html is sanitized
+			linesHTML = append(linesHTML, templatehtml.HTML(p.Sanitize(line.Text)))
+			continue
+		}
+
+		md := []byte(templatehtml.HTMLEscapeString(line.Text))
+		var buf bytes.Buffer
+		err = goldmark.Convert(md, &buf)
+		if err != nil {
+			return nil, err
+		}
+		// #nosec G203 -- the html is sanitized
+		linesHTML = append(linesHTML, templatehtml.HTML(p.Sanitize(buf.String())))
+	}
+
+	return
+}
 
 // RenderMail takes a precomposed mail message and renders it into a ready to send mail.Opts object
 func RenderMail(m *Mail) (mailOpts *mail.Opts, err error) {
@@ -114,50 +153,26 @@ func RenderMail(m *Mail) (mailOpts *mail.Opts, err error) {
 	data["Greeting"] = m.greeting
 	data["IntroLines"] = m.introLines
 	data["OutroLines"] = m.outroLines
+	data["FooterLines"] = m.footerLines
 	data["ActionText"] = m.actionText
 	data["ActionURL"] = m.actionURL
 	data["Boundary"] = boundary
 	data["FrontendURL"] = config.ServicePublicURL.GetString()
 
-	p := bluemonday.UGCPolicy()
-
-	var introLinesHTML []templatehtml.HTML
-	for _, line := range m.introLines {
-		if line.isHTML {
-			// #nosec G203 -- the html is sanitized
-			introLinesHTML = append(introLinesHTML, templatehtml.HTML(p.Sanitize(line.Text)))
-			continue
-		}
-
-		md := []byte(templatehtml.HTMLEscapeString(line.Text))
-		var buf bytes.Buffer
-		err = goldmark.Convert(md, &buf)
-		if err != nil {
-			return nil, err
-		}
-		// #nosec G203 -- the html is sanitized
-		introLinesHTML = append(introLinesHTML, templatehtml.HTML(p.Sanitize(buf.String())))
+	data["IntroLinesHTML"], err = convertLinesToHTML(m.introLines)
+	if err != nil {
+		return nil, err
 	}
-	data["IntroLinesHTML"] = introLinesHTML
 
-	var outroLinesHTML []templatehtml.HTML
-	for _, line := range m.outroLines {
-		if line.isHTML {
-			// #nosec G203 -- the html is sanitized
-			outroLinesHTML = append(outroLinesHTML, templatehtml.HTML(p.Sanitize(line.Text)))
-			continue
-		}
-
-		md := []byte(templatehtml.HTMLEscapeString(line.Text))
-		var buf bytes.Buffer
-		err = goldmark.Convert(md, &buf)
-		if err != nil {
-			return nil, err
-		}
-		// #nosec G203 -- the html is sanitized
-		outroLinesHTML = append(outroLinesHTML, templatehtml.HTML(p.Sanitize(buf.String())))
+	data["OutroLinesHTML"], err = convertLinesToHTML(m.outroLines)
+	if err != nil {
+		return nil, err
 	}
-	data["OutroLinesHTML"] = outroLinesHTML
+
+	data["FooterLinesHTML"], err = convertLinesToHTML(m.footerLines)
+	if err != nil {
+		return nil, err
+	}
 
 	err = plain.Execute(&plainContent, data)
 	if err != nil {
