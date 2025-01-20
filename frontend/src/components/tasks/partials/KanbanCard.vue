@@ -46,7 +46,7 @@
 			<span
 				v-if="task.dueDate > 0"
 				v-tooltip="formatDateLong(task.dueDate)"
-				:class="{'overdue': task.dueDate <= new Date() && !task.done}"
+				:class="{'overdue': isOverdue}"
 				class="due-date"
 			>
 				<span class="icon">
@@ -107,6 +107,8 @@
 import {computed, ref, watch} from 'vue'
 import {useRouter} from 'vue-router'
 
+import {useGlobalNow} from '@/composables/useGlobalNow'
+
 import PriorityLabel from '@/components/tasks/partials/PriorityLabel.vue'
 import ProgressBar from '@/components/misc/ProgressBar.vue'
 import Done from '@/components/misc/Done.vue'
@@ -145,7 +147,7 @@ const projectStore = useProjectStore()
 
 const projectTitle = computed(() => {
 	if (props.projectId === props.task.projectId) {
-		return false
+		return
 	}
 	
 	const project = projectStore.projects[props.task.projectId]
@@ -153,6 +155,14 @@ const projectTitle = computed(() => {
 })
 
 const showTaskPosition = computed(() => window.DEBUG_TASK_POSITION)
+
+const {now} = useGlobalNow()
+const isOverdue = computed(() => (
+	!props.task.done &&
+	props.task.dueDate !== null &&
+	props.task.dueDate.getTime() > 0 &&
+	props.task.dueDate.getTime() <= now.value.getTime()
+))
 
 async function toggleTaskDone(task: ITask) {
 	loadingInternal.value = true

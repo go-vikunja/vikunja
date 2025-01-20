@@ -122,11 +122,14 @@
 </template>
 
 <script lang="ts" setup>
+import {computed} from 'vue'
+import {useGlobalNow} from '@/composables/useGlobalNow'
 import {formatDateShort} from '@/helpers/time/formatDate'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 
-const exampleDate = formatDateShort(new Date())
+const {now} = useGlobalNow()
+const exampleDate = computed(() => formatDateShort(now.value))
 </script>
 
 <style scoped lang="scss">

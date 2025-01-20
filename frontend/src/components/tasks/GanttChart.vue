@@ -43,8 +43,10 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watch, toRefs, onActivated} from 'vue'
+import {computed, ref, watch, toRefs} from 'vue'
 import {useRouter} from 'vue-router'
+
+import { useGlobalNow } from '@/composables/useGlobalNow'
 
 import {getHexColor} from '@/models/task'
 
@@ -122,7 +124,7 @@ const GANTT_COLOR_SCHEME: ColorScheme = {
 	hoverHighlight: 'var(--grey-700)',
 	text: 'var(--grey-800)',
 	background: 'var(--white)',
-}
+} as const
 
 /**
  * Update ganttBars when tasks change
@@ -198,8 +200,7 @@ function openTask(e: {
 
 const weekDayFromDate = useWeekDayFromDate()
 
-const today = ref(new Date())
-onActivated(() => today.value = new Date())
+const {now: today} = useGlobalNow()
 const dateIsToday = computed(() => (date: Date) => {
 	return (
 		date.getDate() === today.value.getDate() &&
