@@ -47,7 +47,7 @@ const emit = defineEmits<{
 	'update:modelValue': [value: IProject]
 }>()
 
-const project = reactive<IProject>(new ProjectModel())
+const project: IProject = reactive(new ProjectModel())
 
 watch(
 	() => props.modelValue,
