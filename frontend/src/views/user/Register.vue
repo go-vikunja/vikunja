@@ -173,7 +173,7 @@ const validateUsername = useDebounceFn(() => {
 		return
 	}
 
-	if (credentials.username.indexOf('://') !== -1) {
+	if (credentials.username.indexOf('://') !== -1 || credentials.username.indexOf('.') !== -1) {
 		usernameValid.value = t('user.auth.usernameMustNotLookLikeUrl')
 		return
 	}
