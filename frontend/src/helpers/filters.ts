@@ -94,6 +94,8 @@ export function transformFilterStringForApi(
 			const pattern = getFilterFieldRegexPattern(field)
 
 			let match: RegExpExecArray | null
+			const replacements: { start: number, length: number, replacement: string }[] = []
+
 			while ((match = pattern.exec(filter)) !== null) {
 				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				const [matched, prefix, operator, space, keyword] = match
@@ -116,10 +118,22 @@ export function transformFilterStringForApi(
 				})
 
 				const actualKeywordStart = (match?.index || 0) + prefix.length
-				filter = filter.substring(0, actualKeywordStart) +
-					replaced +
-					filter.substring(actualKeywordStart + keyword.length)
+				replacements.push({
+					start: actualKeywordStart,
+					length: keyword.length,
+					replacement: replaced,
+				})
 			}
+
+			// We're collecting the results first and then replacing the filter string in the end
+			// to avoid modifying the input string as we iterate over it.
+			let offset = 0
+			replacements.forEach(({start, length, replacement}) => {
+				filter = filter.substring(0, start + offset) +
+					replacement +
+					filter.substring(start + offset + length)
+				offset += replacement.length - length
+			})
 		})
 		return filter
 	}
