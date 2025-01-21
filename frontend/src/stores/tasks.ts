@@ -390,6 +390,9 @@ export const useTaskStore = defineStore('task', () => {
 			}
 			
 			foundProjectId = project === null ? null : project.id
+			if (foundProjectId !== null) {
+				return foundProjectId
+			}
 		}
 		
 		//  2. Else check if a project was passed as parameter

@@ -502,12 +502,13 @@ async function doCmd() {
 }
 
 async function newTask() {
-	if (currentProject.value === null) {
-		return
+	let projectId = authStore.settings.defaultProjectId
+	if (currentProject.value.id) {
+		projectId = currentProject.value.id
 	}
 	const task = await taskStore.createNewTask({
 		title: query.value,
-		projectId: currentProject.value.id,
+		projectId,
 	})
 	success({message: t('task.createSuccess')})
 	await router.push({name: 'task.detail', params: {id: task.id}})
