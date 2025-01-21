@@ -211,7 +211,7 @@ func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 	/////////////////
 	// Saved Filters
 
-	savedFiltersProject, err := getSavedFilterProjects(s, doer)
+	savedFiltersProject, err := getSavedFilterProjects(s, doer, search)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -580,8 +580,8 @@ func getRawProjectsForUser(s *xorm.Session, opts *projectOptions) (projects []*P
 	return allProjects, len(allProjects), totalItems, err
 }
 
-func getSavedFilterProjects(s *xorm.Session, doer *user.User) (savedFiltersProjects []*Project, err error) {
-	savedFilters, err := getSavedFiltersForUser(s, doer)
+func getSavedFilterProjects(s *xorm.Session, doer *user.User, search string) (savedFiltersProjects []*Project, err error) {
+	savedFilters, err := getSavedFiltersForUser(s, doer, search)
 	if err != nil {
 		return
 	}

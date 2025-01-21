@@ -74,6 +74,12 @@
 								/>
 							</template>
 							<template v-else>
+								<span
+									v-if="i.id < -1"
+									class="saved-filter-icon icon"
+								>
+									<Icon icon="filter" />
+								</span>
 								{{ i.title }}
 							</template>
 						</BaseButton>
@@ -173,7 +179,7 @@ const foundProjects = computed(() => {
 	const {project, text, labels, assignees} = parsedQuery.value
 
 	if (project !== null) {
-		return projectStore.searchProject(project ?? text)
+		return projectStore.searchProjectAndFilter(project ?? text)
 			.filter(p => Boolean(p))
 	}
 
@@ -187,7 +193,7 @@ const foundProjects = computed(() => {
 			.filter(p => Boolean(p))
 	}
 
-	return projectStore.searchProject(project ?? text)
+	return projectStore.searchProjectAndFilter(project ?? text)
 		.filter(p => Boolean(p))
 })
 
@@ -646,6 +652,18 @@ function reset() {
 
 	&:active {
 		background: var(--grey-100);
+	}
+	
+	.saved-filter-icon {
+		font-size: .75rem;
+		width: .75rem;
+		margin-right: .25rem;
+		color: var(--grey-400)
+	}
+	
+	&:has(.saved-filter-icon) {
+		display: inline-flex;
+		align-items: center;
 	}
 }
 </style>

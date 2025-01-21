@@ -80,6 +80,15 @@ export const useProjectStore = defineStore('project', () => {
 		}
 	})
 
+	const searchProjectAndFilter = computed(() => {
+		return (query: string, includeArchived = false) => {
+			return search(query)
+					?.map(id => projects.value[id])
+					.filter(project => project?.isArchived === includeArchived)
+				|| []
+		}
+	})
+
 	const searchProject = computed(() => {
 		return (query: string, includeArchived = false) => {
 			return search(query)
@@ -261,6 +270,7 @@ export const useProjectStore = defineStore('project', () => {
 		findProjectByIdentifier,
 		searchProject,
 		searchSavedFilter,
+		searchProjectAndFilter,
 
 		setProject,
 		setProjects,

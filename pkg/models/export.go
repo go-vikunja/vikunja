@@ -320,7 +320,7 @@ func exportTaskAttachments(s *xorm.Session, wr *zip.Writer, taskIDs []int64) (er
 }
 
 func exportSavedFilters(s *xorm.Session, u *user.User, wr *zip.Writer) (err error) {
-	filters, err := getSavedFiltersForUser(s, u)
+	filters, err := getSavedFiltersForUser(s, u, "")
 	if err != nil {
 		return err
 	}
