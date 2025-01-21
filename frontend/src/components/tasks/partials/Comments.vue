@@ -151,7 +151,7 @@
 						<div class="field">
 							<Editor
 								v-if="editorActive"
-								v-model="newComment.comment"
+								v-model="newCommentText"
 								:class="{
 									'is-loading':
 										taskCommentService.loading &&
@@ -166,7 +166,7 @@
 						<div class="field">
 							<x-button
 								:loading="taskCommentService.loading && !isCommentEdit"
-								:disabled="newComment.comment === ''"
+								:disabled="newCommentText === ''"
 								@click="addComment()"
 							>
 								{{ $t('task.comment.comment') }}
@@ -241,7 +241,7 @@ const commentToDelete = reactive(new TaskCommentModel())
 const isCommentEdit = ref(false)
 const commentEdit = reactive(new TaskCommentModel())
 
-const newComment = reactive(new TaskCommentModel())
+const newCommentText = ref('')
 
 const saved = ref<ITask['id'] | null>(null)
 const saving = ref<ITask['id'] | null>(null)
@@ -292,7 +292,6 @@ async function loadComments(taskId: ITask['id']) {
 		return
 	}
 
-	newComment.taskId = taskId
 	commentEdit.taskId = taskId
 	commentToDelete.taskId = taskId
 	comments.value = await taskCommentService.getAll({taskId}, {}, currentPage.value)
@@ -317,7 +316,7 @@ const editorActive = ref(true)
 const creating = ref(false)
 
 async function addComment() {
-	if (newComment.comment === '') {
+	if (newCommentText.value === '') {
 		return
 	}
 
@@ -331,9 +330,12 @@ async function addComment() {
 	creating.value = true
 
 	try {
+		const newComment = new TaskCommentModel()
+		newComment.taskId = props.taskId
+		newComment.comment = newCommentText.value
 		const comment = await taskCommentService.create(newComment)
 		comments.value.push(comment)
-		newComment.comment = ''
+		newCommentText.value = ''
 		success({message: t('task.comment.addedSuccess')})
 	} finally {
 		creating.value = false
