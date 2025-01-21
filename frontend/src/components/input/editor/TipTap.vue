@@ -181,16 +181,7 @@ import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import inputPrompt from '@/helpers/inputPrompt'
 import {setLinkInEditor} from '@/components/input/editor/setLinkInEditor'
 
-const {
-	modelValue,
-	uploadCallback,
-	isEditEnabled = true,
-	bottomActions = [],
-	showSave = false,
-	placeholder = '',
-	editShortcut = '',
-	enableDiscardShortcut = false,
-} = defineProps<{
+const props = withDefaults(defineProps<{
 	modelValue: string,
 	uploadCallback?: UploadCallback,
 	isEditEnabled?: boolean,
@@ -199,7 +190,15 @@ const {
 	placeholder?: string,
 	editShortcut?: string,
 	enableDiscardShortcut?: boolean,
-}>()
+}>(), {
+	uploadCallback: undefined,
+	isEditEnabled: true,
+	bottomActions: () => [],
+	showSave: false,
+	placeholder: '',
+	editShortcut: '',
+	enableDiscardShortcut: false,
+})
 
 const emit = defineEmits(['update:modelValue', 'save'])
 
@@ -297,13 +296,13 @@ const CustomImage = Image.extend({
 type Mode = 'edit' | 'preview'
 
 const internalMode = ref<Mode>('preview')
-const isEditing = computed(() => internalMode.value === 'edit' && isEditEnabled)
+const isEditing = computed(() => internalMode.value === 'edit' && props.isEditEnabled)
 const contentHasChanged = ref<boolean>(false)
 
 let lastSavedState = ''
 
 watch(
-	() => modelValue,
+	() => props.modelValue,
 	(newValue) => {
 		if (!contentHasChanged.value) {
 			lastSavedState = newValue
@@ -362,8 +361,8 @@ const extensions : Extensions = [
 				return ''
 			}
 
-			return placeholder !== ''
-				? placeholder
+			return props.placeholder !== ''
+				? props.placeholder
 				: t('input.editor.placeholder')
 		},
 	}),
@@ -391,7 +390,7 @@ const extensions : Extensions = [
 	TaskItem.configure({
 		nested: true,
 		onReadOnlyChecked: (node: Node, checked: boolean): boolean => {
-			if (!isEditEnabled) {
+			if (!props.isEditEnabled) {
 				return false
 			}
 
@@ -422,7 +421,7 @@ const extensions : Extensions = [
 ]
 
 // Add a custom extension for the Escape key
-if (enableDiscardShortcut) {
+if (props.enableDiscardShortcut) {
 	extensions.push(Extension.create({
 		name: 'escapeKey',
 
@@ -455,7 +454,7 @@ watch(
 )
 
 watch(
-	() => modelValue,
+	() => props.modelValue,
 	value => {
 		if (!editor?.value) return
 
@@ -469,8 +468,8 @@ watch(
 )
 
 function bubbleNow() {
-	if (editor.value?.getHTML() === modelValue ||
-		(editor.value?.getHTML() === '<p></p>') && modelValue === '') {
+	if (editor.value?.getHTML() === props.modelValue ||
+		(editor.value?.getHTML() === '<p></p>') && props.modelValue === '') {
 		return
 	}
 
@@ -495,7 +494,7 @@ function exitEditMode() {
 }
 
 function setEditIfApplicable() {
-	if (!isEditEnabled) return
+	if (!props.isEditEnabled) return
 	if (isEditing.value) return
 
 	setEdit()
@@ -513,7 +512,11 @@ onBeforeUnmount(() => editor.value?.destroy())
 const uploadInputRef = ref<HTMLInputElement | null>(null)
 
 function uploadAndInsertFiles(files: File[] | FileList) {
-	uploadCallback(files).then(urls => {
+	if (typeof props.uploadCallback !== 'undefined') {
+		throw new Error('Can\'t add files here')
+	}
+
+	props.uploadCallback(files).then(urls => {
 		urls?.forEach(url => {
 			editor.value
 				?.chain()
@@ -526,7 +529,7 @@ function uploadAndInsertFiles(files: File[] | FileList) {
 }
 
 function triggerImageInput(event) {
-	if (typeof uploadCallback !== 'undefined') {
+	if (typeof props.uploadCallback !== 'undefined') {
 		uploadInputRef.value?.click()
 		return
 	}
@@ -536,7 +539,7 @@ function triggerImageInput(event) {
 
 async function addImage(event) {
 
-	if (typeof uploadCallback !== 'undefined') {
+	if (typeof props.uploadCallback !== 'undefined') {
 		const files = uploadInputRef.value?.files
 
 		if (!files || files.length === 0) {
@@ -561,28 +564,28 @@ function setLink(event) {
 }
 
 onMounted(async () => {
-	if (editShortcut !== '') {
+	if (props.editShortcut !== '') {
 		document.addEventListener('keydown', setFocusToEditor)
 	}
 
 	await nextTick()
 
-	if (typeof uploadCallback !== 'undefined') {
+	if (typeof props.uploadCallback !== 'undefined') {
 		const input = tiptapInstanceRef.value?.querySelectorAll('.tiptap__editor')[0]?.children[0]
 		input?.addEventListener('paste', handleImagePaste)
 	}
 
-	setModeAndValue(modelValue)
+	setModeAndValue(props.modelValue)
 })
 
 onBeforeUnmount(() => {
 	nextTick(() => {
-		if (typeof uploadCallback !== 'undefined') {
+		if (typeof props.uploadCallback !== 'undefined') {
 			const input = tiptapInstanceRef.value?.querySelectorAll('.tiptap__editor')[0]?.children[0]
 			input?.removeEventListener('paste', handleImagePaste)
 		}
 	})
-	if (editShortcut !== '') {
+	if (props.editShortcut !== '') {
 		document.removeEventListener('keydown', setFocusToEditor)
 	}
 })
@@ -601,6 +604,10 @@ function handleImagePaste(event) {
 
 	const image = event.clipboardData.items[0]
 	if (image.kind === 'file' && image.type.startsWith('image/')) {
+		if (typeof props.uploadCallback !== 'undefined') {
+			return
+		}
+
 		uploadAndInsertFiles([image.getAsFile()])
 	}
 }
@@ -613,7 +620,7 @@ function setFocusToEditor(event) {
 
 	const hotkeyString = eventToHotkeyString(event)
 	if (!hotkeyString) return
-	if (hotkeyString !== editShortcut ||
+	if (hotkeyString !== props.editShortcut ||
 		event.target.tagName.toLowerCase() === 'input' ||
 		event.target.tagName.toLowerCase() === 'textarea' ||
 		event.target.contentEditable === 'true') {
@@ -622,7 +629,7 @@ function setFocusToEditor(event) {
 
 	event.preventDefault()
 
-	if (!isEditing.value && isEditEnabled) {
+	if (!isEditing.value && props.isEditEnabled) {
 		internalMode.value = 'edit'
 	}
 
