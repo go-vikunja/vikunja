@@ -77,10 +77,10 @@ function save() {
 
 	emit('update:modelValue', {
 		...view.value,
-		filter: transformFilterForApi(view.value?.filter || ''),
+		filter: transformFilterForApi(view.value?.filter?.filter || ''),
 		bucketConfiguration: view.value?.bucketConfiguration.map(bc => ({
 			title: bc.title,
-			filter: transformFilterForApi(bc.filter || ''),
+			filter: transformFilterForApi(bc.filter?.filter || ''),
 		})),
 	})
 }
@@ -233,7 +233,7 @@ function handleBubbleSave() {
 						</div>
 
 						<FilterInput
-							v-model="view.bucketConfiguration[index].filter"
+							v-model="view.bucketConfiguration[index].filter.filter"
 							:project-id="view.projectId"
 							:input-label="$t('project.views.filter')"
 							class="mb-2"

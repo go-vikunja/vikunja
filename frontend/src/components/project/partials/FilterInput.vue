@@ -64,7 +64,10 @@ watch(
 	},
 )
 
-function escapeHtml(unsafe: string): string {
+function escapeHtml(unsafe: string|null|undefined): string {
+	if (!unsafe) {
+		return ''
+	}
 	return unsafe
 		.replace(/&/g, '&amp;')
 		.replace(/</g, '&lt;')
@@ -73,7 +76,10 @@ function escapeHtml(unsafe: string): string {
 		.replace(/'/g, '&#039;')
 }
 
-function unEscapeHtml(unsafe: string): string {
+function unEscapeHtml(unsafe: string|null|undefined): string {
+	if (!unsafe) {
+		return ''
+	}
 	return unsafe
 		.replace(/&amp;/g, '&')
 		.replace(/&lt;/g, '<')
