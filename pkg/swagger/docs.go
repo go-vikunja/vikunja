@@ -9601,6 +9601,9 @@ const docTemplate = `{
         "v1.UserWithSettings": {
             "type": "object",
             "properties": {
+                "auth_provider": {
+                    "type": "string"
+                },
                 "created": {
                     "description": "A timestamp when this task was created. You cannot change this value.",
                     "type": "string"

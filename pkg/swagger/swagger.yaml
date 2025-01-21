@@ -1464,6 +1464,8 @@ definitions:
     type: object
   v1.UserWithSettings:
     properties:
+      auth_provider:
+        type: string
       created:
         description: A timestamp when this task was created. You cannot change this
           value.
