@@ -29,24 +29,40 @@ const labelStore = useLabelStore()
 const projectStore = useProjectStore()
 
 onBeforeMount(() => {
-	const transformFilterToString = (filter: IFilter): string => {
-		if (filter.s !== '') {
-			return filter.s
-		}
-
-		return transformFilterStringFromApi(
-			filter.filter,
+	const transformFilterFromApi = (filterInput: IFilter): IFilter => {
+		const filterString = transformFilterStringFromApi(
+			filterInput.filter,
 			labelId => labelStore.getLabelById(labelId)?.title || null,
 			projectId => projectStore.projects[projectId]?.title || null,
 		)
+		
+		const filter: IFilter = {
+			filter: '',
+			s: '',
+		}
+		if (hasFilterQuery(filterString)) {
+			filter.filter = filterString
+		} else {
+			filter.s = filterString
+		}
+		
+		if (filter.s === '') {
+			filter.s = filterInput.s
+		}
+		
+		if (filter.filter === '') {
+			filter.filter = filter.s
+		}
+
+		return filter
 	}
 
 	const transformed = {
 		...props.modelValue,
-		filter: transformFilterToString(props.modelValue.filter),
+		filter: transformFilterFromApi(props.modelValue.filter),
 		bucketConfiguration: props.modelValue.bucketConfiguration.map(bc => ({
 			title: bc.title,
-			filter: transformFilterToString(bc.filter),
+			filter: transformFilterFromApi(bc.filter),
 		})),
 	}
 
@@ -158,7 +174,7 @@ function handleBubbleSave() {
 		</div>
 
 		<FilterInput
-			v-model="view.filter"
+			v-model="view.filter.filter"
 			:project-id="view.projectId"
 			:input-label="$t('project.views.filter')"
 			class="mb-1"
