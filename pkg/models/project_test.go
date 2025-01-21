@@ -412,10 +412,23 @@ func TestProject_ReadAll(t *testing.T) {
 
 		require.NoError(t, err)
 		ls := projects3.([]*Project)
-		assert.Len(t, ls, 3)
+		require.Len(t, ls, 2)
 		assert.Equal(t, int64(10), ls[0].ID)
 		assert.Equal(t, int64(-1), ls[1].ID)
-		assert.Equal(t, int64(-2), ls[2].ID)
+		_ = s.Close()
+	})
+	t.Run("search returns filters as well", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		u := &user.User{ID: 1}
+		project := Project{}
+		projects3, _, _, err := project.ReadAll(s, u, "testfilter", 1, 50)
+
+		require.NoError(t, err)
+		ls := projects3.([]*Project)
+		require.Len(t, ls, 2)
+		assert.Equal(t, int64(-1), ls[0].ID)
+		assert.Equal(t, int64(-2), ls[1].ID)
 		_ = s.Close()
 	})
 }
