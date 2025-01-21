@@ -140,7 +140,6 @@ var webCmd = &cobra.Command{
 				if err := setupUnixSocket(e); err != nil {
 					e.Logger.Fatal(err)
 				}
-				return
 			}
 
 			err := e.Start(config.ServiceInterface.GetString())
