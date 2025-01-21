@@ -20,6 +20,8 @@ import (
 	"net/http"
 	"time"
 
+	"code.vikunja.io/api/pkg/modules/auth/openid"
+
 	"code.vikunja.io/api/pkg/user"
 
 	"code.vikunja.io/api/pkg/models"
@@ -36,6 +38,7 @@ type UserWithSettings struct {
 	Settings            *UserSettings `json:"settings"`
 	DeletionScheduledAt time.Time     `json:"deletion_scheduled_at"`
 	IsLocalUser         bool          `json:"is_local_user"`
+	AuthProvider        string        `json:"auth_provider"`
 }
 
 // UserShow gets all information about the current user
@@ -80,6 +83,22 @@ func UserShow(c echo.Context) error {
 		},
 		DeletionScheduledAt: u.DeletionScheduledAt,
 		IsLocalUser:         u.Issuer == user.IssuerLocal,
+	}
+
+	providers, err := openid.GetAllProviders()
+	if err != nil {
+		return handler.HandleHTTPError(err)
+	}
+
+	for _, provider := range providers {
+		issuerURL, err := provider.Issuer()
+		if err != nil {
+			return handler.HandleHTTPError(err)
+		}
+		if issuerURL == u.Issuer {
+			us.AuthProvider = provider.Name
+			break
+		}
 	}
 
 	return c.JSON(http.StatusOK, us)

@@ -76,6 +76,19 @@ func (p *Provider) setOicdProvider() (err error) {
 	return err
 }
 
+func (p *Provider) Issuer() (issuerURL string, err error) {
+	type Issuer struct {
+		Issuer string `json:"issuer"`
+	}
+
+	iss := &Issuer{}
+	err = p.openIDProvider.Claims(iss)
+	if err != nil {
+		return "", err
+	}
+	return iss.Issuer, nil
+}
+
 // HandleCallback handles the auth request callback after redirecting from the provider with an auth code
 // @Summary Authenticate a user with OpenID Connect
 // @Description After a redirect from the OpenID Connect provider to the frontend has been made with the authentication `code`, this endpoint can be used to obtain a jwt token for that user and thus log them in.

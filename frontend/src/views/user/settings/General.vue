@@ -8,17 +8,26 @@
 			<label
 				class="label"
 				:for="`newName${id}`"
-			>{{ $t('user.settings.general.name') }}</label>
+			>
+				{{ $t('user.settings.general.name') }}
+			</label>
 			<div class="control">
 				<input
 					:id="`newName${id}`"
 					v-model="settings.name"
+					:disabled="isExternalUser"
 					class="input"
 					:placeholder="$t('user.settings.general.newName')"
 					type="text"
 					@keyup.enter="updateSettings"
 				>
 			</div>
+			<p
+				v-if="isExternalUser"
+				class="help"
+			>
+				{{ $t('user.settings.general.externalUserNameChange', {provider: authStore.info.authProvider}) }}
+			</p>
 		</div>
 		<div class="field">
 			<label class="label">
@@ -287,6 +296,8 @@ const availableLanguageOptions = ref(
 		.map(l => ({code: l[0], title: l[1]}))
 		.sort((a, b) => a.title.localeCompare(b.title)),
 )
+
+const isExternalUser = computed(() => !authStore.info.isLocalUser)
 
 watch(
 	() => authStore.settings,
