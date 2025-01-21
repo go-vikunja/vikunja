@@ -158,7 +158,6 @@
 										!isCommentEdit,
 								}"
 								:upload-callback="attachmentUpload"
-								:upload-enabled="true"
 								:placeholder="$t('task.comment.placeholder')"
 								@save="addComment()"
 							/>
