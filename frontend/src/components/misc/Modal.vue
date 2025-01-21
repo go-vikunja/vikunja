@@ -213,7 +213,6 @@ $modal-width: 1024px;
 
 @media print, screen and (max-width: $tablet) {
   .modal-mask {
-    position: static;
     overflow: visible !important;
   }
 
