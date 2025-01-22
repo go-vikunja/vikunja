@@ -5,7 +5,14 @@
 	>
 		<div class="add-task__field field is-grouped">
 			<p class="control has-icons-left has-icons-right is-expanded">
+				<label
+					class="tw-sr-only"
+					:for="textareaId"
+				>
+					{{ $t('project.list.addPlaceholder') }}
+				</label>
 				<textarea
+					:id="textareaId"
 					ref="newTaskInput"
 					v-model="newTaskTitle"
 					v-focus
@@ -77,6 +84,8 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits(['taskAdded'])
+
+const textareaId = computed(() => `task-add-textarea-${Math.random().toString(36).substr(2, 9)}`)
 
 const newTaskTitle = ref('')
 const {textarea: newTaskInput} = useAutoHeightTextarea(newTaskTitle)
