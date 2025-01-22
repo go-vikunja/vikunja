@@ -444,41 +444,67 @@ func GetCurrentUser(c echo.Context) (user *User, err error) {
 
 // GetUserFromClaims Returns a new user from jwt claims
 func GetUserFromClaims(claims jwt.MapClaims) (user *User, err error) {
-	userID, ok := claims["id"].(float64)
-	if !ok {
-		return user, &ErrInvalidClaimData{
-			Field: "id",
-			Type:  reflect.TypeOf(claims["id"]).String(),
-		}
+	userID, err := getClaimAsInt(claims, "id")
+	if err != nil {
+		return nil, err
 	}
-	email, ok := claims["email"].(string)
-	if !ok {
-		return nil, &ErrInvalidClaimData{
-			Field: "email",
-			Type:  reflect.TypeOf(claims["email"]).String(),
-		}
+	email, err := getClaimAsString(claims, "email")
+	if err != nil {
+		return nil, err
 	}
-	username, ok := claims["username"].(string)
-	if !ok {
-		return nil, &ErrInvalidClaimData{
-			Field: "username",
-			Type:  reflect.TypeOf(claims["username"]).String(),
-		}
+	username, err := getClaimAsString(claims, "username")
+	if err != nil {
+		return nil, err
 	}
-	name, ok := claims["name"].(string)
-	if !ok {
-		return nil, &ErrInvalidClaimData{
-			Field: "name",
-			Type:  reflect.TypeOf(claims["name"]).String(),
-		}
+	name, err := getClaimAsString(claims, "name")
+	if err != nil {
+		return nil, err
 	}
 
 	return &User{
-		ID:       int64(userID),
+		ID:       userID,
 		Email:    email,
 		Username: username,
 		Name:     name,
 	}, nil
+}
+
+func getClaimAsInt(claims jwt.MapClaims, field string) (int64, error) {
+	_, exists := claims[field]
+	if !exists {
+		return 0, &ErrInvalidClaimData{
+			Field: field,
+			Type:  "missing",
+		}
+	}
+
+	value, ok := claims[field].(float64)
+	if !ok {
+		return 0, &ErrInvalidClaimData{
+			Field: field,
+			Type:  reflect.TypeOf(claims[field]).String(),
+		}
+	}
+	return int64(value), nil
+}
+
+func getClaimAsString(claims jwt.MapClaims, field string) (string, error) {
+	_, exists := claims[field]
+	if !exists {
+		return "", &ErrInvalidClaimData{
+			Field: field,
+			Type:  "missing",
+		}
+	}
+
+	value, ok := claims[field].(string)
+	if !ok {
+		return "", &ErrInvalidClaimData{
+			Field: field,
+			Type:  reflect.TypeOf(claims[field]).String(),
+		}
+	}
+	return value, nil
 }
 
 // UpdateUser updates a user
