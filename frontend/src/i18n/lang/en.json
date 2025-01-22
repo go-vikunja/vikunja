@@ -587,7 +587,8 @@
     "created": "Created at",
     "createdBy": "Created by {0}",
     "actions": "Actions",
-    "cannotBeUndone": "This cannot be undone!"
+    "cannotBeUndone": "This cannot be undone!",
+    "avatarOfUser": "{user}'s profile image"
   },
   "input": {
     "resetColor": "Reset Color",
