@@ -2,6 +2,7 @@
 	<div
 		ref="dropdown"
 		class="dropdown"
+		role="menu"
 		@pointerenter="initialMount = true"
 	>
 		<slot

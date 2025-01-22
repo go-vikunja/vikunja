@@ -43,6 +43,7 @@
 						class="project-title-button"
 						@click="toggleOpen"
 					>
+						<span class="tw-sr-only">{{ $t('project.openSettingsMenu') }}</span>
 						<Icon
 							icon="ellipsis-h"
 							class="icon"

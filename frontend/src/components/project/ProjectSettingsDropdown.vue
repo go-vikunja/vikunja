@@ -9,6 +9,7 @@
 					class="dropdown-trigger"
 					@click="triggerProps.toggleOpen"
 				>
+					<span class="tw-sr-only">{{ $t('project.openSettingsMenu') }}</span>
 					<Icon
 						icon="ellipsis-h"
 						class="icon"
