@@ -7,6 +7,7 @@
 		<RouterLink
 			:to="{ name: 'home' }"
 			class="logo-link"
+			:aria-label="$t('navigation.overview')"
 		>
 			<Logo
 				width="164"
