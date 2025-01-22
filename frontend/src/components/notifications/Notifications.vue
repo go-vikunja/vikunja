@@ -9,6 +9,7 @@
 				class="trigger-button"
 				@click.stop="showNotifications = !showNotifications"
 			>
+				<span class="sr-only">{{ $t('notification.title') }}</span>
 				<span
 					v-if="unreadNotifications > 0"
 					class="unread-indicator"
