@@ -155,6 +155,7 @@ async function toggleReaction(value: string) {
 			class="reaction-button"
 			@click.stop="toggleEmojiPicker"
 		>
+			<span class="tw-sr-only">{{ $t('reaction.add') }}</span>
 			<Icon :icon="['far', 'face-laugh']" />
 		</BaseButton>
 		<CustomTransition name="fade">
