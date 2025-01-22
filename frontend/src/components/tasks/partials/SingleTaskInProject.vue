@@ -99,7 +99,6 @@
 					</template>
 				</Popup>
 
-
 				<span>
 					<span
 						v-if="task.attachments.length > 0"
@@ -151,6 +150,7 @@
 				class="favorite"
 				@click.stop="toggleFavorite"
 			>
+				<span class="tw-sr-only">{{ task.isFavorite ? $t('task.detail.actions.unfavorite') : $t('task.detail.actions.favorite') }}</span>
 				<Icon
 					v-if="task.isFavorite"
 					icon="star"
