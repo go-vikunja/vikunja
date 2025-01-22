@@ -59,6 +59,7 @@
 					class="keyboard-shortcuts-button d-print-none"
 					@click="showKeyboardShortcuts()"
 				>
+					<span class="sr-only">{{ $t('keyboardShortcuts.title') }}</span>
 					<Icon icon="keyboard" />
 				</BaseButton>
 			</main>
