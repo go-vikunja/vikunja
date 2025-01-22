@@ -30,6 +30,7 @@
 				:to="{ name: 'project.info', params: { projectId: currentProject.id } }"
 				class="project-title-button"
 			>
+				<span class="tw-sr-only">{{ $t('project.description') }}</span>
 				<Icon icon="circle-info" />
 			</BaseButton>
 
