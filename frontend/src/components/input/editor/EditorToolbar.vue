@@ -9,8 +9,12 @@
 			>
 				<span class="icon">
 					<Icon :icon="['fa', 'fa-header']" />
-					<span class="icon__lower-text">1</span>
+					<span
+						class="icon__lower-text"
+						aria-hidden="true"
+					>1</span>
 				</span>
+				<span class="tw-sr-only">{{ $t('input.editor.heading1') }}</span>
 			</BaseButton>
 			<BaseButton
 				v-tooltip="$t('input.editor.heading2')"
@@ -20,8 +24,12 @@
 			>
 				<span class="icon">
 					<Icon :icon="['fa', 'fa-header']" />
-					<span class="icon__lower-text">2</span>
+					<span
+						class="icon__lower-text"
+						aria-hidden="true"
+					>2</span>
 				</span>
+				<span class="tw-sr-only">{{ $t('input.editor.heading2') }}</span>
 			</BaseButton>
 			<BaseButton
 				v-tooltip="$t('input.editor.heading3')"
@@ -31,8 +39,12 @@
 			>
 				<span class="icon">
 					<Icon :icon="['fa', 'fa-header']" />
-					<span class="icon__lower-text">3</span>
+					<span
+						class="icon__lower-text"
+						aria-hidden="true"
+					>3</span>
 				</span>
+				<span class="tw-sr-only">{{ $t('input.editor.heading3') }}</span>
 			</BaseButton>
 		</div>
 
@@ -46,6 +58,7 @@
 				<span class="icon">
 					<Icon :icon="['fa', 'fa-bold']" />
 				</span>
+				<span class="tw-sr-only">{{ $t('input.editor.bold') }}</span>
 			</BaseButton>
 			<BaseButton
 				v-tooltip="$t('input.editor.italic')"
@@ -56,6 +69,7 @@
 				<span class="icon">
 					<Icon :icon="['fa', 'fa-italic']" />
 				</span>
+				<span class="tw-sr-only">{{ $t('input.editor.italic') }}</span>
 			</BaseButton>
 			<BaseButton
 				v-tooltip="$t('input.editor.underline')"
@@ -66,6 +80,7 @@
 				<span class="icon">
 					<Icon :icon="['fa', 'fa-underline']" />
 				</span>
+				<span class="tw-sr-only">{{ $t('input.editor.underline') }}</span>
 			</BaseButton>
 			<BaseButton
 				v-tooltip="$t('input.editor.strikethrough')"
@@ -76,6 +91,7 @@
 				<span class="icon">
 					<Icon :icon="['fa', 'fa-strikethrough']" />
 				</span>
+				<span class="tw-sr-only">{{ $t('input.editor.strikethrough') }}</span>
 			</BaseButton>
 		</div>
 
@@ -89,6 +105,7 @@
 				<span class="icon">
 					<Icon :icon="['fa', 'fa-code']" />
 				</span>
+				<span class="tw-sr-only">{{ $t('input.editor.code') }}</span>
 			</BaseButton>
 			<BaseButton
 				v-tooltip="$t('input.editor.quote')"
@@ -99,6 +116,7 @@
 				<span class="icon">
 					<Icon :icon="['fa', 'fa-quote-right']" />
 				</span>
+				<span class="tw-sr-only">{{ $t('input.editor.quote') }}</span>
 			</BaseButton>
 		</div>
 
@@ -112,6 +130,7 @@
 				<span class="icon">
 					<Icon :icon="['fa', 'fa-list-ul']" />
 				</span>
+				<span class="tw-sr-only">{{ $t('input.editor.bulletList') }}</span>
 			</BaseButton>
 			<BaseButton
 				v-tooltip="$t('input.editor.orderedList')"
@@ -122,6 +141,7 @@
 				<span class="icon">
 					<Icon :icon="['fa', 'fa-list-ol']" />
 				</span>
+				<span class="tw-sr-only">{{ $t('input.editor.orderedList') }}</span>
 			</BaseButton>
 			<BaseButton
 				v-tooltip="$t('input.editor.taskList')"
@@ -132,18 +152,20 @@
 				<span class="icon">
 					<Icon icon="fa-list-check" />
 				</span>
+				<span class="tw-sr-only">{{ $t('input.editor.taskList') }}</span>
 			</BaseButton>
 		</div>
 
 		<div class="editor-toolbar__segment">
 			<BaseButton
-				v-tooltip="$t('input.editor.image')" 
-				class="editor-toolbar__button" 
+				v-tooltip="$t('input.editor.image')"
+				class="editor-toolbar__button"
 				@click="e => emit('imageUploadClicked', e)"
 			>
 				<span class="icon">
 					<Icon icon="fa-image" />
 				</span>
+				<span class="tw-sr-only">{{ $t('input.editor.image') }}</span>
 			</BaseButton>
 		</div>
 
@@ -158,6 +180,7 @@
 				<span class="icon">
 					<Icon :icon="['fa', 'fa-link']" />
 				</span>
+				<span class="tw-sr-only">{{ $t('input.editor.link') }}</span>
 			</BaseButton>
 			<BaseButton
 				v-tooltip="$t('input.editor.text')"
@@ -169,6 +192,7 @@
 				<span class="icon">
 					<Icon :icon="['fa', 'fa-paragraph']" />
 				</span>
+				<span class="tw-sr-only">{{ $t('input.editor.text') }}</span>
 			</BaseButton>
 
 			<BaseButton
@@ -179,6 +203,7 @@
 				<span class="icon">
 					<Icon :icon="['fa', 'fa-ruler-horizontal']" />
 				</span>
+				<span class="tw-sr-only">{{ $t('input.editor.horizontalRule') }}</span>
 			</BaseButton>
 		</div>
 
@@ -191,6 +216,7 @@
 				<span class="icon">
 					<Icon :icon="['fa', 'fa-undo']" />
 				</span>
+				<span class="tw-sr-only">{{ $t('input.editor.undo') }}</span>
 			</BaseButton>
 			<BaseButton
 				v-tooltip="$t('input.editor.redo')"
@@ -200,6 +226,7 @@
 				<span class="icon">
 					<Icon :icon="['fa', 'fa-redo']" />
 				</span>
+				<span class="tw-sr-only">{{ $t('input.editor.redo') }}</span>
 			</BaseButton>
 		</div>
 
@@ -214,6 +241,7 @@
 				<span class="icon">
 					<Icon :icon="['fa', 'fa-table']" />
 				</span>
+				<span class="tw-sr-only">{{ $t('input.editor.table.title') }}</span>
 			</BaseButton>
 			<div
 				v-if="tableMode"
@@ -389,10 +417,10 @@ function setLink(event) {
 		background: var(--grey-100);
 		border-color: var(--grey-200);
 	}
-	
+
 	.icon {
 		position: relative;
-		
+
 		.icon__lower-text {
 			font-size: .75rem;
 			position: absolute;
@@ -405,7 +433,7 @@ function setLink(event) {
 
 .editor-toolbar__table-buttons {
 	margin-top: .5rem;
-	
+
 	> .editor-toolbar__button {
 		margin-right: .5rem;
 		margin-bottom: .5rem;
