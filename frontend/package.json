@@ -120,7 +120,7 @@
     "@types/codemirror": "5.60.15",
     "@types/flexsearch": "0.7.6",
     "@types/is-touch-device": "1.0.3",
-    "@types/node": "22.10.7",
+    "@types/node": "22.10.9",
     "@types/sortablejs": "1.15.8",
     "@typescript-eslint/eslint-plugin": "8.21.0",
     "@typescript-eslint/parser": "8.21.0",
