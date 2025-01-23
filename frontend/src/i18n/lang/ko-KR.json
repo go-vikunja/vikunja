@@ -99,7 +99,8 @@
         "defaultView": "기본 보기",
         "timezone": "시간대",
         "overdueTasksRemindersTime": "기한이 지난 할 일 이메일 알림 시간",
-        "filterUsedOnOverview": "개요 페이지에 사용되는 저장된 필터"
+        "filterUsedOnOverview": "개요 페이지에 사용되는 저장된 필터",
+        "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
       },
       "totp": {
         "title": "2단계 인증",
@@ -219,6 +220,10 @@
     "shared": "프로젝트 공유",
     "noDescriptionAvailable": "프로젝트에 대한 설명이 없습니다.",
     "inboxTitle": "Inbox",
+    "favorite": "Mark this project as favorite",
+    "unfavorite": "Remove this project from favorites",
+    "openSettingsMenu": "Open project settings menu",
+    "description": "Project description",
     "create": {
       "header": "새 프로젝트",
       "titlePlaceholder": "프로젝트 제목은 여기...",
@@ -583,7 +588,8 @@
     "created": "생성일",
     "createdBy": "{0}에 의해 만들어짐",
     "actions": "액션",
-    "cannotBeUndone": "이 작업은 되돌릴 수 없습니다!"
+    "cannotBeUndone": "이 작업은 되돌릴 수 없습니다!",
+    "avatarOfUser": "{user}'s profile image"
   },
   "input": {
     "resetColor": "색상 초기화",

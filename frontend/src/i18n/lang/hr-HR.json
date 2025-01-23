@@ -99,7 +99,8 @@
         "defaultView": "Default view",
         "timezone": "Time zone",
         "overdueTasksRemindersTime": "Vrijeme podsjetnika za zakašnjele zadatke putem e-pošte",
-        "filterUsedOnOverview": "Spremljeni filtar korišten na stranici pregleda"
+        "filterUsedOnOverview": "Spremljeni filtar korišten na stranici pregleda",
+        "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
       },
       "totp": {
         "title": "Dvofaktorska autentikacija",

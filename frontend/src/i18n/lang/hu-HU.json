@@ -99,7 +99,8 @@
         "defaultView": "Default view",
         "timezone": "Time zone",
         "overdueTasksRemindersTime": "Esedékes feladatokra emlékeztető e-mail küldésének ideje",
-        "filterUsedOnOverview": "Az áttekintő oldalon használt mentett szűrő"
+        "filterUsedOnOverview": "Az áttekintő oldalon használt mentett szűrő",
+        "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
       },
       "totp": {
         "title": "Kétlépcsős azonosítás",
@@ -219,6 +220,10 @@
     "shared": "Megosztott projektek",
     "noDescriptionAvailable": "A projekt leírása nem áll rendelkezésre.",
     "inboxTitle": "Beérkezett üzenetek",
+    "favorite": "Mark this project as favorite",
+    "unfavorite": "Remove this project from favorites",
+    "openSettingsMenu": "Open project settings menu",
+    "description": "Project description",
     "create": {
       "header": "Új projekt",
       "titlePlaceholder": "Írja be a projekt címét…",
@@ -583,7 +588,8 @@
     "created": "Létrehozva ekkor:",
     "createdBy": "Létrehozta: {0}",
     "actions": "Műveletek",
-    "cannotBeUndone": "Ezt nem lehet visszavonni!"
+    "cannotBeUndone": "Ezt nem lehet visszavonni!",
+    "avatarOfUser": "{user}'s profile image"
   },
   "input": {
     "resetColor": "Szín visszaállítása",

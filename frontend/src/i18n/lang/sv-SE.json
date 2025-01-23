@@ -99,7 +99,8 @@
         "defaultView": "Default view",
         "timezone": "Tidzon",
         "overdueTasksRemindersTime": "Overdue tasks reminder email time",
-        "filterUsedOnOverview": "Saved filter used on the overview page"
+        "filterUsedOnOverview": "Saved filter used on the overview page",
+        "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
       },
       "totp": {
         "title": "Tvåfaktorsautentisering",
@@ -219,6 +220,10 @@
     "shared": "Delade projekt",
     "noDescriptionAvailable": "No project description is available.",
     "inboxTitle": "Inkorg",
+    "favorite": "Mark this project as favorite",
+    "unfavorite": "Remove this project from favorites",
+    "openSettingsMenu": "Open project settings menu",
+    "description": "Project description",
     "create": {
       "header": "Nytt projekt",
       "titlePlaceholder": "The project's title goes here…",
@@ -583,7 +588,8 @@
     "created": "Created at",
     "createdBy": "Created by {0}",
     "actions": "Åtgärder",
-    "cannotBeUndone": "This cannot be undone!"
+    "cannotBeUndone": "This cannot be undone!",
+    "avatarOfUser": "{user}'s profile image"
   },
   "input": {
     "resetColor": "Återställ färg",

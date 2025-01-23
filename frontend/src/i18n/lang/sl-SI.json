@@ -99,7 +99,8 @@
         "defaultView": "Privzeti pogled",
         "timezone": "Časovni pas",
         "overdueTasksRemindersTime": "Ura e-poštnega opomnika za zapadla naloge",
-        "filterUsedOnOverview": "Shranjen filter, ki bo uporabljen na strani s pregledom"
+        "filterUsedOnOverview": "Shranjen filter, ki bo uporabljen na strani s pregledom",
+        "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
       },
       "totp": {
         "title": "Dvofaktorna avtentikacija",
@@ -219,6 +220,10 @@
     "shared": "Skupni projekti",
     "noDescriptionAvailable": "Opis projekta ni na voljo.",
     "inboxTitle": "Nabiralnik",
+    "favorite": "Mark this project as favorite",
+    "unfavorite": "Remove this project from favorites",
+    "openSettingsMenu": "Open project settings menu",
+    "description": "Project description",
     "create": {
       "header": "Nov projekt",
       "titlePlaceholder": "Tu vnesite naslov projekta…",
@@ -583,7 +588,8 @@
     "created": "Ustvarjeno ob",
     "createdBy": "Ustvaril {0}",
     "actions": "Dejanja",
-    "cannotBeUndone": "Tega ni mogoče razveljaviti!"
+    "cannotBeUndone": "Tega ni mogoče razveljaviti!",
+    "avatarOfUser": "{user}'s profile image"
   },
   "input": {
     "resetColor": "Ponastavi barvo",

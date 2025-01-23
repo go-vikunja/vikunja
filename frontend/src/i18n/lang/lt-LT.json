@@ -99,7 +99,8 @@
         "defaultView": "Default view",
         "timezone": "Time zone",
         "overdueTasksRemindersTime": "Overdue tasks reminder email time",
-        "filterUsedOnOverview": "Išsaugotas filtras naudojamas apžvalgos puslapyje"
+        "filterUsedOnOverview": "Išsaugotas filtras naudojamas apžvalgos puslapyje",
+        "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
       },
       "totp": {
         "title": "Two Factor Authentication",
@@ -219,6 +220,10 @@
     "shared": "Shared Projects",
     "noDescriptionAvailable": "No project description is available.",
     "inboxTitle": "Inbox",
+    "favorite": "Mark this project as favorite",
+    "unfavorite": "Remove this project from favorites",
+    "openSettingsMenu": "Open project settings menu",
+    "description": "Project description",
     "create": {
       "header": "New project",
       "titlePlaceholder": "The project's title goes here…",
@@ -583,7 +588,8 @@
     "created": "Sukurta",
     "createdBy": "Sukurta {0}",
     "actions": "Veiksmai",
-    "cannotBeUndone": "Atšaukti negalėsite!"
+    "cannotBeUndone": "Atšaukti negalėsite!",
+    "avatarOfUser": "{user}'s profile image"
   },
   "input": {
     "resetColor": "Atstatyti spalvas",

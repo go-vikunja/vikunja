@@ -99,7 +99,8 @@
         "defaultView": "デフォルトのビュー",
         "timezone": "タイムゾーン",
         "overdueTasksRemindersTime": "期限切れタスクのリマインダー送信時間",
-        "filterUsedOnOverview": "概要ページの絞り込み条件"
+        "filterUsedOnOverview": "概要ページの絞り込み条件",
+        "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
       },
       "totp": {
         "title": "2要素認証",
@@ -219,6 +220,10 @@
     "shared": "共有プロジェクト",
     "noDescriptionAvailable": "プロジェクトの説明はありません。",
     "inboxTitle": "Inbox",
+    "favorite": "Mark this project as favorite",
+    "unfavorite": "Remove this project from favorites",
+    "openSettingsMenu": "Open project settings menu",
+    "description": "Project description",
     "create": {
       "header": "新しいプロジェクトの作成",
       "titlePlaceholder": "プロジェクト名を入力…",
@@ -583,7 +588,8 @@
     "created": "Created at",
     "createdBy": "Created by {0}",
     "actions": "Actions",
-    "cannotBeUndone": "この操作は元に戻せません！"
+    "cannotBeUndone": "この操作は元に戻せません！",
+    "avatarOfUser": "{user}'s profile image"
   },
   "input": {
     "resetColor": "色のリセット",

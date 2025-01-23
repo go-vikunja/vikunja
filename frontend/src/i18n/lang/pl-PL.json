@@ -99,7 +99,8 @@
         "defaultView": "Default view",
         "timezone": "Time zone",
         "overdueTasksRemindersTime": "Czas przypomnienia o zaległych zadaniach na e-mail",
-        "filterUsedOnOverview": "Zapisany filtr używany na stronie przeglądania"
+        "filterUsedOnOverview": "Zapisany filtr używany na stronie przeglądania",
+        "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
       },
       "totp": {
         "title": "Uwierzytelnianie dwuskładnikowe",
@@ -219,6 +220,10 @@
     "shared": "Projekty udostępnione",
     "noDescriptionAvailable": "Brak opisu projektu.",
     "inboxTitle": "Własna lista",
+    "favorite": "Mark this project as favorite",
+    "unfavorite": "Remove this project from favorites",
+    "openSettingsMenu": "Open project settings menu",
+    "description": "Project description",
     "create": {
       "header": "Nowy projekt",
       "titlePlaceholder": "Tu wpisz tytuł projektu…",
@@ -583,7 +588,8 @@
     "created": "Utworzono",
     "createdBy": "Utworzone przez {0}",
     "actions": "Akcje",
-    "cannotBeUndone": "Tego nie da się cofnąć!"
+    "cannotBeUndone": "Tego nie da się cofnąć!",
+    "avatarOfUser": "{user}'s profile image"
   },
   "input": {
     "resetColor": "Resetuj kolor",

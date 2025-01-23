@@ -99,7 +99,8 @@
         "defaultView": "Основне подання",
         "timezone": "Часовий пояс",
         "overdueTasksRemindersTime": "Нагадувати про завдання на е-скриньку",
-        "filterUsedOnOverview": "Постійна вибірка для сторінки огляду"
+        "filterUsedOnOverview": "Постійна вибірка для сторінки огляду",
+        "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
       },
       "totp": {
         "title": "Дворівнева перевірка",
@@ -219,6 +220,10 @@
     "shared": "Доступні справи",
     "noDescriptionAvailable": "Опису справи немає.",
     "inboxTitle": "Вхідні",
+    "favorite": "Mark this project as favorite",
+    "unfavorite": "Remove this project from favorites",
+    "openSettingsMenu": "Open project settings menu",
+    "description": "Project description",
     "create": {
       "header": "Нова справа",
       "titlePlaceholder": "Назву введіть тут…",
@@ -583,7 +588,8 @@
     "created": "Створено",
     "createdBy": "Автор: {0}",
     "actions": "Дії",
-    "cannotBeUndone": "Подальша дія остаточна!"
+    "cannotBeUndone": "Подальша дія остаточна!",
+    "avatarOfUser": "{user}'s profile image"
   },
   "input": {
     "resetColor": "Скинути",

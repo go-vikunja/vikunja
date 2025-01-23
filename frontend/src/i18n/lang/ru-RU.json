@@ -99,7 +99,8 @@
         "defaultView": "Представление по умолчанию",
         "timezone": "Часовой пояс",
         "overdueTasksRemindersTime": "Время напоминания о невыполненных задачах",
-        "filterUsedOnOverview": "Сохранённый фильтр, используемый на странице обзора"
+        "filterUsedOnOverview": "Сохранённый фильтр, используемый на странице обзора",
+        "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
       },
       "totp": {
         "title": "Двухфакторная аутентификация",
@@ -219,6 +220,10 @@
     "shared": "Общие проекты",
     "noDescriptionAvailable": "Описание проекта отсутствует.",
     "inboxTitle": "Входящие",
+    "favorite": "Mark this project as favorite",
+    "unfavorite": "Remove this project from favorites",
+    "openSettingsMenu": "Open project settings menu",
+    "description": "Project description",
     "create": {
       "header": "Создать проект",
       "titlePlaceholder": "Введите название проекта…",
@@ -583,7 +588,8 @@
     "created": "Дата создания",
     "createdBy": "Создатель {0}",
     "actions": "Действия",
-    "cannotBeUndone": "Это действие отменить нельзя!"
+    "cannotBeUndone": "Это действие отменить нельзя!",
+    "avatarOfUser": "{user}'s profile image"
   },
   "input": {
     "resetColor": "Сбросить цвет",

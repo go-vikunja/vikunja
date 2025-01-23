@@ -99,7 +99,8 @@
         "defaultView": "Default view",
         "timezone": "Time zone",
         "overdueTasksRemindersTime": "逾期任务提醒邮件时间",
-        "filterUsedOnOverview": "概述页面上使用已保存过滤器"
+        "filterUsedOnOverview": "概述页面上使用已保存过滤器",
+        "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
       },
       "totp": {
         "title": "两步验证",

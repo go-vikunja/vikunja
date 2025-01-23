@@ -99,7 +99,8 @@
         "defaultView": "Default view",
         "timezone": "Time zone",
         "overdueTasksRemindersTime": "وقت تذكير للمهام المتأخرة بالبريد الإلكتروني",
-        "filterUsedOnOverview": "الفلتر المحفوظ والمستخدم في صفحة العرض العام"
+        "filterUsedOnOverview": "الفلتر المحفوظ والمستخدم في صفحة العرض العام",
+        "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
       },
       "totp": {
         "title": "رمز المصادقة الثنائية 2FA",

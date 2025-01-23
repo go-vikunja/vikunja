@@ -99,7 +99,8 @@
         "defaultView": "Standardansicht",
         "timezone": "Zeitzone",
         "overdueTasksRemindersTime": "Zeit der E-Mail-Zusammenfassung der überfälligen Aufgaben",
-        "filterUsedOnOverview": "Gespeicherter Filter, der für die Startseite verwendet wird"
+        "filterUsedOnOverview": "Gespeicherter Filter, der für die Startseite verwendet wird",
+        "externalUserNameChange": "Dein Name wird von deinem Login-Provider verwaltet ({provider}). Um ihn zu ändern, aktualisiere ihn bitte dort."
       },
       "totp": {
         "title": "Zwei-Faktor-Authentifizierung",
@@ -219,6 +220,10 @@
     "shared": "Geteilte Projekte",
     "noDescriptionAvailable": "Keine Projektbeschreibung verfügbar.",
     "inboxTitle": "Eingang",
+    "favorite": "Mark this project as favorite",
+    "unfavorite": "Remove this project from favorites",
+    "openSettingsMenu": "Open project settings menu",
+    "description": "Project description",
     "create": {
       "header": "Neues Projekt",
       "titlePlaceholder": "Der Titel des Projekts kommt hier hin…",
@@ -583,7 +588,8 @@
     "created": "Erstellt am",
     "createdBy": "Erstellt von {0}",
     "actions": "Aktionen",
-    "cannotBeUndone": "Dies kann nicht rückgängig gemacht werden!"
+    "cannotBeUndone": "Dies kann nicht rückgängig gemacht werden!",
+    "avatarOfUser": "{user}'s profile image"
   },
   "input": {
     "resetColor": "Farbe zurücksetzen",

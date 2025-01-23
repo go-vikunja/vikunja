@@ -99,7 +99,8 @@
         "defaultView": "Vista predefinita",
         "timezone": "Fuso orario",
         "overdueTasksRemindersTime": "Orario d'invio delle e-mail per attività scadute",
-        "filterUsedOnOverview": "Filtro utilizzato nella panoramica"
+        "filterUsedOnOverview": "Filtro utilizzato nella panoramica",
+        "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
       },
       "totp": {
         "title": "Autenticazione a due fattori",
@@ -219,6 +220,10 @@
     "shared": "Progetti Condivisi",
     "noDescriptionAvailable": "Descrizione del progetto non disponibile.",
     "inboxTitle": "In arrivo",
+    "favorite": "Mark this project as favorite",
+    "unfavorite": "Remove this project from favorites",
+    "openSettingsMenu": "Open project settings menu",
+    "description": "Project description",
     "create": {
       "header": "Nuovo progetto",
       "titlePlaceholder": "Titolo del progetto…",
@@ -583,7 +588,8 @@
     "created": "Creato il",
     "createdBy": "Creato da {0}",
     "actions": "Azioni",
-    "cannotBeUndone": "Questa azione non può essere annullata!"
+    "cannotBeUndone": "Questa azione non può essere annullata!",
+    "avatarOfUser": "{user}'s profile image"
   },
   "input": {
     "resetColor": "Ripristina Colore",

@@ -99,7 +99,8 @@
         "defaultView": "Standardvisning",
         "timezone": "Tidssone",
         "overdueTasksRemindersTime": "Påminnelsestid for utløpte oppgaver",
-        "filterUsedOnOverview": "Lagret filter brukt på siden med oversikt"
+        "filterUsedOnOverview": "Lagret filter brukt på siden med oversikt",
+        "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
       },
       "totp": {
         "title": "To-faktor-autentisering",
@@ -219,6 +220,10 @@
     "shared": "Delte prosjekter",
     "noDescriptionAvailable": "Ingen prosjektbeskrivelse er tilgjengelig.",
     "inboxTitle": "Innboks",
+    "favorite": "Mark this project as favorite",
+    "unfavorite": "Remove this project from favorites",
+    "openSettingsMenu": "Open project settings menu",
+    "description": "Project description",
     "create": {
       "header": "Nytt prosjekt",
       "titlePlaceholder": "Prosjektets tittel angis her…",
@@ -583,7 +588,8 @@
     "created": "Opprettet",
     "createdBy": "Opprettet av {0}",
     "actions": "Handlinger",
-    "cannotBeUndone": "Dette kan ikke angres!"
+    "cannotBeUndone": "Dette kan ikke angres!",
+    "avatarOfUser": "{user}'s profile image"
   },
   "input": {
     "resetColor": "Tilbakestill farge",
