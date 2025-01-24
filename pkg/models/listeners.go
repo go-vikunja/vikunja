@@ -934,7 +934,12 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 		t := task.(map[string]interface{})
 		if taskID, has := t["id"]; has {
 			id := getIDAsInt64(taskID)
-			fullTask := Task{ID: id}
+			fullTask := Task{
+				ID: id,
+				Expand: []TaskCollectionExpandable{
+					TaskCollectionExpandBuckets,
+				},
+			}
 			err = fullTask.ReadOne(s, &user.User{ID: doerID})
 			if err != nil && !IsErrTaskDoesNotExist(err) {
 				return err
