@@ -256,7 +256,7 @@ func (tc *TaskComment) ReadAll(s *xorm.Session, auth web.Auth, search string, pa
 }
 
 func addCommentsToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Task) (err error) {
-	comments, _, _, err := getAllCommentsForTasksWithoutPermissionCheck(s, taskIDs, "", 0, 0)
+	comments, _, _, err := getAllCommentsForTasksWithoutPermissionCheck(s, taskIDs, "", 0, 50)
 	if err != nil {
 		return err
 	}

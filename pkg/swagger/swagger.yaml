@@ -167,6 +167,18 @@ definitions:
           The bucket id. Will only be populated when the task is accessed via a view with buckets.
           Can be used to move a task between buckets. In that case, the new bucket must be in the same view as the old one.
         type: integer
+      buckets:
+        description: All buckets across all views this task is part of. Only present
+          when fetching tasks with the `expand` parameter set to `buckets`.
+        items:
+          $ref: '#/definitions/models.Bucket'
+        type: array
+      comments:
+        description: All comments of this task. Only present when fetching tasks with
+          the `expand` parameter set to `comments`.
+        items:
+          $ref: '#/definitions/models.TaskComment'
+        type: array
       cover_image_attachment_id:
         description: If this task has a cover image, the field will return the id
           of the attachment that is the cover image.
@@ -742,6 +754,18 @@ definitions:
           The bucket id. Will only be populated when the task is accessed via a view with buckets.
           Can be used to move a task between buckets. In that case, the new bucket must be in the same view as the old one.
         type: integer
+      buckets:
+        description: All buckets across all views this task is part of. Only present
+          when fetching tasks with the `expand` parameter set to `buckets`.
+        items:
+          $ref: '#/definitions/models.Bucket'
+        type: array
+      comments:
+        description: All comments of this task. Only present when fetching tasks with
+          the `expand` parameter set to `comments`.
+        items:
+          $ref: '#/definitions/models.TaskComment'
+        type: array
       cover_image_attachment_id:
         description: If this task has a cover image, the field will return the id
           of the attachment that is the cover image.
@@ -3400,11 +3424,14 @@ paths:
       - description: If set to `subtasks`, Vikunja will fetch only tasks which do
           not have subtasks and then in a second step, will fetch all of these subtasks.
           This may result in more tasks than the pagination limit being returned,
-          but all subtasks will be present in the response. You can only set this
-          to `subtasks`.
+          but all subtasks will be present in the response. If set to `buckets`, the
+          buckets of each task will be present in the response. If set to `reactions`,
+          the reactions of each task will be present in the response. If set to `comments`,
+          the first 50 comments of each task will be present in the response. You
+          can set this multiple times with different values.
         in: query
         name: expand
-        type: string
+        type: array
       produces:
       - application/json
       responses:
@@ -4477,6 +4504,17 @@ paths:
         name: id
         required: true
         type: integer
+      - description: If set to `subtasks`, Vikunja will fetch only tasks which do
+          not have subtasks and then in a second step, will fetch all of these subtasks.
+          This may result in more tasks than the pagination limit being returned,
+          but all subtasks will be present in the response. If set to `buckets`, the
+          buckets of each task will be present in the response. If set to `reactions`,
+          the reactions of each task will be present in the response. If set to `comments`,
+          the first 50 comments of each task will be present in the response. You
+          can set this multiple times with different values.
+        in: query
+        name: expand
+        type: array
       produces:
       - application/json
       responses:
@@ -5403,11 +5441,14 @@ paths:
       - description: If set to `subtasks`, Vikunja will fetch only tasks which do
           not have subtasks and then in a second step, will fetch all of these subtasks.
           This may result in more tasks than the pagination limit being returned,
-          but all subtasks will be present in the response. You can only set this
-          to `subtasks`.
+          but all subtasks will be present in the response. If set to `buckets`, the
+          buckets of each task will be present in the response. If set to `reactions`,
+          the reactions of each task will be present in the response. If set to `comments`,
+          the first 50 comments of each task will be present in the response. You
+          can set this multiple times with different values.
         in: query
         name: expand
-        type: string
+        type: array
       produces:
       - application/json
       responses:

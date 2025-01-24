@@ -2497,8 +2497,8 @@
                         "in": "query"
                     },
                     {
-                        "type": "string",
-                        "description": "If set to `subtasks`, Vikunja will fetch only tasks which do not have subtasks and then in a second step, will fetch all of these subtasks. This may result in more tasks than the pagination limit being returned, but all subtasks will be present in the response. You can only set this to `subtasks`.",
+                        "type": "array",
+                        "description": "If set to `subtasks`, Vikunja will fetch only tasks which do not have subtasks and then in a second step, will fetch all of these subtasks. This may result in more tasks than the pagination limit being returned, but all subtasks will be present in the response. If set to `buckets`, the buckets of each task will be present in the response. If set to `reactions`, the reactions of each task will be present in the response. If set to `comments`, the first 50 comments of each task will be present in the response. You can set this multiple times with different values.",
                         "name": "expand",
                         "in": "query"
                     }
@@ -4123,8 +4123,8 @@
                         "in": "query"
                     },
                     {
-                        "type": "string",
-                        "description": "If set to `subtasks`, Vikunja will fetch only tasks which do not have subtasks and then in a second step, will fetch all of these subtasks. This may result in more tasks than the pagination limit being returned, but all subtasks will be present in the response. You can only set this to `subtasks`.",
+                        "type": "array",
+                        "description": "If set to `subtasks`, Vikunja will fetch only tasks which do not have subtasks and then in a second step, will fetch all of these subtasks. This may result in more tasks than the pagination limit being returned, but all subtasks will be present in the response. If set to `buckets`, the buckets of each task will be present in the response. If set to `reactions`, the reactions of each task will be present in the response. If set to `comments`, the first 50 comments of each task will be present in the response. You can set this multiple times with different values.",
                         "name": "expand",
                         "in": "query"
                     }
@@ -4230,6 +4230,12 @@
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "array",
+                        "description": "If set to `subtasks`, Vikunja will fetch only tasks which do not have subtasks and then in a second step, will fetch all of these subtasks. This may result in more tasks than the pagination limit being returned, but all subtasks will be present in the response. If set to `buckets`, the buckets of each task will be present in the response. If set to `reactions`, the reactions of each task will be present in the response. If set to `comments`, the first 50 comments of each task will be present in the response. You can set this multiple times with different values.",
+                        "name": "expand",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -7918,6 +7924,20 @@
                     "description": "The bucket id. Will only be populated when the task is accessed via a view with buckets.\nCan be used to move a task between buckets. In that case, the new bucket must be in the same view as the old one.",
                     "type": "integer"
                 },
+                "buckets": {
+                    "description": "All buckets across all views this task is part of. Only present when fetching tasks with the `expand` parameter set to `buckets`.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Bucket"
+                    }
+                },
+                "comments": {
+                    "description": "All comments of this task. Only present when fetching tasks with the `expand` parameter set to `comments`.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.TaskComment"
+                    }
+                },
                 "cover_image_attachment_id": {
                     "description": "If this task has a cover image, the field will return the id of the attachment that is the cover image.",
                     "type": "integer"
@@ -8656,6 +8676,20 @@
                 "bucket_id": {
                     "description": "The bucket id. Will only be populated when the task is accessed via a view with buckets.\nCan be used to move a task between buckets. In that case, the new bucket must be in the same view as the old one.",
                     "type": "integer"
+                },
+                "buckets": {
+                    "description": "All buckets across all views this task is part of. Only present when fetching tasks with the `expand` parameter set to `buckets`.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Bucket"
+                    }
+                },
+                "comments": {
+                    "description": "All comments of this task. Only present when fetching tasks with the `expand` parameter set to `comments`.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.TaskComment"
+                    }
                 },
                 "cover_image_attachment_id": {
                     "description": "If this task has a cover image, the field will return the id of the attachment that is the cover image.",
