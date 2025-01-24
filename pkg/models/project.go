@@ -180,6 +180,13 @@ func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 		return nil, 0, 0, err
 	}
 
+	_, is := a.(*LinkSharing)
+	if is {
+		// If we're dealing with a link share, we should just return the list of projects
+		// (which will contain only one) here because it would not do anything meaningful afterward.
+		return prs, resultCount, totalItems, nil
+	}
+
 	/////////////////
 	// Add project details (favorite state, among other things)
 	err = addProjectDetails(s, prs, a)
@@ -211,8 +218,8 @@ func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 
 func getAllRawProjects(s *xorm.Session, a web.Auth, search string, page int, perPage int, isArchived bool) (projects []*Project, resultCount int, totalItems int64, err error) {
 	// Check if we're dealing with a share auth
-	shareAuth, ok := a.(*LinkSharing)
-	if ok {
+	shareAuth, is := a.(*LinkSharing)
+	if is {
 		project, err := GetProjectSimpleByID(s, shareAuth.ProjectID)
 		if err != nil {
 			return nil, 0, 0, err
