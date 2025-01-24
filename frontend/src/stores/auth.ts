@@ -426,7 +426,7 @@ export const useAuthStore = defineStore('auth', () => {
 		await checkAuth()
 
 		// if configured, redirect to OIDC Provider on logout
-		const fullProvider: IProvider = configStore.auth.openidConnect.providers.find((p: IProvider) => p.key === loggedInVia)
+		const fullProvider: IProvider = configStore.auth.openidConnect.providers?.find((p: IProvider) => p.key === loggedInVia)
 		if (fullProvider) {
 			redirectToProviderOnLogout(fullProvider)
 		}
