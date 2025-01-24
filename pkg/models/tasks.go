@@ -122,6 +122,9 @@ type Task struct {
 	// All buckets across all views this task is part of. Only present when fetching tasks with the `expand` parameter set to `buckets`.
 	Buckets []*Bucket `xorm:"-" json:"buckets,omitempty"`
 
+	// All comments of this task. Only present when fetching tasks with the `expand` parameter set to `comments`.
+	Comments []*TaskComment `xorm:"-" json:"comments,omitempty"`
+
 	// Behaves exactly the same as with the TaskCollection.Expand parameter
 	Expand []TaskCollectionExpandable `xorm:"-" json:"-" query:"expand"`
 
@@ -208,7 +211,7 @@ type taskSearchOptions struct {
 // @Param filter query string false "The filter query to match tasks by. Check out https://vikunja.io/docs/filters for a full explanation of the feature."
 // @Param filter_timezone query string false "The time zone which should be used for date match (statements like "now" resolve to different actual times)"
 // @Param filter_include_nulls query string false "If set to true the result will include filtered fields whose value is set to `null`. Available values are `true` or `false`. Defaults to `false`."
-// @Param expand query string false "If set to `subtasks`, Vikunja will fetch only tasks which do not have subtasks and then in a second step, will fetch all of these subtasks. This may result in more tasks than the pagination limit being returned, but all subtasks will be present in the response. You can only set this to `subtasks`."
+// @Param expand query string false "If set to `subtasks`, Vikunja will fetch only tasks which do not have subtasks and then in a second step, will fetch all of these subtasks. This may result in more tasks than the pagination limit being returned, but all subtasks will be present in the response. If set to `buckets`, the buckets of each task will be present in the response. If set to `reactions`, the reactions of each task will be present in the response. If set to `comments`, the first 25 comments of each task will be present in the response. You can set this multiple times with different values.
 // @Security JWTKeyAuth
 // @Success 200 {array} models.Task "The tasks"
 // @Failure 500 {object} models.Message "Internal error"
@@ -692,6 +695,8 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 			}
 
 			switch expandable {
+			case TaskCollectionExpandSubtasks:
+				// already dealt with earlier
 			case TaskCollectionExpandBuckets:
 				err = addBucketsToTasks(s, a, taskIDs, taskMap)
 				if err != nil {
@@ -701,6 +706,11 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 				reactions, err = getReactionsForEntityIDs(s, ReactionKindTask, taskIDs)
 				if err != nil {
 					return
+				}
+			case TaskCollectionExpandComments:
+				err = addCommentsToTasks(s, taskIDs, taskMap)
+				if err != nil {
+					return err
 				}
 			}
 			expanded[expandable] = true

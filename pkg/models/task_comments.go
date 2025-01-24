@@ -252,10 +252,28 @@ func (tc *TaskComment) ReadAll(s *xorm.Session, auth web.Auth, search string, pa
 		return nil, 0, 0, ErrGenericForbidden{}
 	}
 
-	return tc.getAllCommentsForTasksWithoutPermissionCheck(s, search, page, perPage)
+	return getAllCommentsForTasksWithoutPermissionCheck(s, []int64{tc.TaskID}, search, page, perPage)
 }
 
-func (tc *TaskComment) getAllCommentsForTasksWithoutPermissionCheck(s *xorm.Session, search string, page int, perPage int) (result []*TaskComment, resultCount int, numberOfTotalItems int64, err error) {
+func addCommentsToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Task) (err error) {
+	comments, _, _, err := getAllCommentsForTasksWithoutPermissionCheck(s, taskIDs, "", 0, 0)
+	if err != nil {
+		return err
+	}
+
+	for _, comment := range comments {
+		if task, exists := taskMap[comment.TaskID]; exists {
+			if task.Comments == nil {
+				task.Comments = []*TaskComment{}
+			}
+			task.Comments = append(task.Comments, comment)
+		}
+	}
+
+	return nil
+}
+
+func getAllCommentsForTasksWithoutPermissionCheck(s *xorm.Session, taskIDs []int64, search string, page int, perPage int) (result []*TaskComment, resultCount int, numberOfTotalItems int64, err error) {
 	// Because we can't extend the type in general, we need to do this here.
 	// Not a good solution, but saves performance.
 	type TaskCommentWithAuthor struct {
@@ -266,7 +284,7 @@ func (tc *TaskComment) getAllCommentsForTasksWithoutPermissionCheck(s *xorm.Sess
 	limit, start := getLimitFromPageIndex(page, perPage)
 	comments := []*TaskComment{}
 	where := []builder.Cond{
-		builder.Eq{"task_id": tc.TaskID},
+		builder.In("task_id", taskIDs),
 	}
 
 	if search != "" {
@@ -309,8 +327,10 @@ func (tc *TaskComment) getAllCommentsForTasksWithoutPermissionCheck(s *xorm.Sess
 		}
 	}
 
-	numberOfTotalItems, err = s.
-		Where("task_id = ? AND comment like ?", tc.TaskID, "%"+search+"%").
-		Count(&TaskCommentWithAuthor{})
+	var totalItemsQuery = s.In("task_id", taskIDs)
+	if search != "" {
+		totalItemsQuery = totalItemsQuery.And("comment like ?", "%"+search+"%")
+	}
+	numberOfTotalItems, err = totalItemsQuery.Count(&TaskCommentWithAuthor{})
 	return comments, len(comments), numberOfTotalItems, err
 }

@@ -247,18 +247,6 @@ func ReindexAllTasks() (err error) {
 	return
 }
 
-func getTypesenseTaskForTask(s *xorm.Session, task *Task, taskPositionCache map[int64][]*TaskPositionWithView, taskBucketCache map[int64][]*TaskBucket) (ttask *typesenseTask, err error) {
-	ttask = convertTaskToTypesenseTask(task, taskPositionCache[task.ID], taskBucketCache[task.ID])
-
-	comment := &TaskComment{TaskID: task.ID}
-	ttask.Comments, _, _, err = comment.getAllCommentsForTasksWithoutPermissionCheck(s, "", -1, -1)
-	if err != nil {
-		return nil, fmt.Errorf("could not fetch comments for task %d: %s", task.ID, err.Error())
-	}
-
-	return
-}
-
 func reindexTasksInTypesense(s *xorm.Session, tasks map[int64]*Task) (err error) {
 
 	if !config.TypesenseEnabled.GetBool() {
@@ -270,7 +258,10 @@ func reindexTasksInTypesense(s *xorm.Session, tasks map[int64]*Task) (err error)
 		return
 	}
 
-	err = addMoreInfoToTasks(s, tasks, &user.User{ID: 1}, nil, nil)
+	err = addMoreInfoToTasks(s, tasks, &user.User{ID: 1}, nil, []TaskCollectionExpandable{
+		TaskCollectionExpandReactions,
+		TaskCollectionExpandComments,
+	})
 	if err != nil {
 		return fmt.Errorf("could not fetch more task info: %s", err.Error())
 	}
@@ -288,11 +279,7 @@ func reindexTasksInTypesense(s *xorm.Session, tasks map[int64]*Task) (err error)
 	}
 
 	for _, task := range tasks {
-
-		ttask, err := getTypesenseTaskForTask(s, task, positionsByTask, bucketsByTask)
-		if err != nil {
-			return err
-		}
+		ttask := convertTaskToTypesenseTask(task, positionsByTask[task.ID], bucketsByTask[task.ID])
 		if ttask == nil {
 			log.Debugf("Converted typesense task %d is nil, not indexing", task.ID)
 			continue
