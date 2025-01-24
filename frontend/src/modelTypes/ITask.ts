@@ -15,6 +15,7 @@ import type {IRepeatMode} from '@/types/IRepeatMode'
 import type {PartialWithId} from '@/types/PartialWithId'
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 import type {IReactionPerEntity} from '@/modelTypes/IReaction'
+import type {ITaskComment} from '@/modelTypes/ITaskComment.ts'
 
 export interface ITask extends IAbstract {
 	id: number
@@ -47,6 +48,7 @@ export interface ITask extends IAbstract {
 	position: number
 	
 	reactions: IReactionPerEntity
+	comments: ITaskComment[]
 
 	createdBy: IUser
 	created: Date

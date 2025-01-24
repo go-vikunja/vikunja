@@ -394,6 +394,7 @@
 					<Comments
 						:can-write="canWrite"
 						:task-id="taskId"
+						:initial-comments="task.comments"
 					/>
 				</div>
 				
@@ -735,7 +736,7 @@ watch(
 		}
 
 		try {
-			const loaded = await taskService.get({id}, {expand: 'reactions'})
+			const loaded = await taskService.get({id}, {expand: ['reactions', 'comments']})
 			Object.assign(task.value, loaded)
 			attachmentStore.set(task.value.attachments)
 			taskColor.value = task.value.hexColor

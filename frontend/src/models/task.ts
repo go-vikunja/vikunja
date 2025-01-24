@@ -13,6 +13,7 @@ import type {IRelationKind} from '@/types/IRelationKind'
 import {TASK_REPEAT_MODES, type IRepeatMode} from '@/types/IRepeatMode'
 
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
+import {secondsToPeriod} from '@/helpers/time/period'
 
 import AbstractModel from './abstractModel'
 import LabelModel from './label'
@@ -21,7 +22,7 @@ import AttachmentModel from './attachment'
 import SubscriptionModel from './subscription'
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 import TaskReminderModel from '@/models/taskReminder'
-import {secondsToPeriod} from '@/helpers/time/period'
+import TaskCommentModel from '@/models/taskComment.ts'
 
 export function	getHexColor(hexColor: string): string | undefined {
 	if (hexColor === '' || hexColor === '#') {
@@ -87,6 +88,7 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 	position = 0
 	
 	reactions = {}
+	comments = []
 
 	createdBy: IUser = UserModel
 	created: Date = null
@@ -149,6 +151,8 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 		this.updated = new Date(this.updated)
 
 		this.projectId = Number(this.projectId)
+		
+		this.comments = this.comments.map(c => new TaskCommentModel(c))
 
 		// We can't convert emojis to camel case, hence we do this manually
 		this.reactions = {}

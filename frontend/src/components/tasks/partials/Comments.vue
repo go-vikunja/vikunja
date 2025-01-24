@@ -231,6 +231,7 @@ import { useCopyToClipboard } from '@/composables/useCopyToClipboard'
 const props = withDefaults(defineProps<{
 	taskId: number,
 	canWrite?: boolean
+	initialComments?: ITaskComment[]
 }>(), {
 	canWrite: true,
 })
@@ -302,6 +303,12 @@ async function loadComments(taskId: ITask['id']) {
 
 	commentEdit.taskId = taskId
 	commentToDelete.taskId = taskId
+	
+	if(typeof props.initialComments !== 'undefined' && currentPage.value === 1) {
+		comments.value = props.initialComments
+		return
+	}
+
 	comments.value = await taskCommentService.getAll({taskId}, {}, currentPage.value)
 }
 
