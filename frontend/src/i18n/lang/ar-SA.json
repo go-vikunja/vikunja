@@ -220,6 +220,10 @@
     "shared": "المشاريع المشتركة",
     "noDescriptionAvailable": "لا يوجد وصف للمشروع.",
     "inboxTitle": "الوارد",
+    "favorite": "Mark this project as favorite",
+    "unfavorite": "Remove this project from favorites",
+    "openSettingsMenu": "Open project settings menu",
+    "description": "Project description",
     "create": {
       "header": "مشروع جديد",
       "titlePlaceholder": "عنوان المشروع هنا…",
@@ -584,7 +588,8 @@
     "created": "تاريخ الإنشاء",
     "createdBy": "Created by {0}",
     "actions": "الإجراءات",
-    "cannotBeUndone": "لا يمكن التراجع عن هذا الإجراء!"
+    "cannotBeUndone": "لا يمكن التراجع عن هذا الإجراء!",
+    "avatarOfUser": "{user}'s profile image"
   },
   "input": {
     "resetColor": "إعادة تعيين اللون",

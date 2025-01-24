@@ -220,6 +220,10 @@
     "shared": "Shared Projects",
     "noDescriptionAvailable": "No project description is available.",
     "inboxTitle": "Inbox",
+    "favorite": "Mark this project as favorite",
+    "unfavorite": "Remove this project from favorites",
+    "openSettingsMenu": "Open project settings menu",
+    "description": "Project description",
     "create": {
       "header": "New project",
       "titlePlaceholder": "The project's title goes here…",
@@ -584,7 +588,8 @@
     "created": "Oprettet den",
     "createdBy": "Created by {0}",
     "actions": "Handlinger",
-    "cannotBeUndone": "Dette kan ikke fortrydes!"
+    "cannotBeUndone": "Dette kan ikke fortrydes!",
+    "avatarOfUser": "{user}'s profile image"
   },
   "input": {
     "resetColor": "Nulstil Farve",

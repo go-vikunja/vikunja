@@ -220,6 +220,10 @@
     "shared": "Sdílené projekty",
     "noDescriptionAvailable": "Není k dispozici žádný popis projektu.",
     "inboxTitle": "Inbox",
+    "favorite": "Mark this project as favorite",
+    "unfavorite": "Remove this project from favorites",
+    "openSettingsMenu": "Open project settings menu",
+    "description": "Project description",
     "create": {
       "header": "Nový projekt",
       "titlePlaceholder": "Název projektu přijde sem…",
@@ -584,7 +588,8 @@
     "created": "Vytvořeno",
     "createdBy": "Vytvořil(a) {0}",
     "actions": "Akce",
-    "cannotBeUndone": "Toto nelze vrátit!"
+    "cannotBeUndone": "Toto nelze vrátit!",
+    "avatarOfUser": "{user}'s profile image"
   },
   "input": {
     "resetColor": "Obnovit barvu",

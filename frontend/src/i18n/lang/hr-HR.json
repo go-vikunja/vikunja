@@ -220,6 +220,10 @@
     "shared": "Dijeljeni projekti",
     "noDescriptionAvailable": "Opis projekta nije dostupan.",
     "inboxTitle": "Inbox",
+    "favorite": "Mark this project as favorite",
+    "unfavorite": "Remove this project from favorites",
+    "openSettingsMenu": "Open project settings menu",
+    "description": "Project description",
     "create": {
       "header": "Novi projekt",
       "titlePlaceholder": "Naslov projekta ide ovdje…",
@@ -584,7 +588,8 @@
     "created": "Stvoreno u",
     "createdBy": "Stvorio/la: {0}",
     "actions": "Akcije",
-    "cannotBeUndone": "Ovo se ne može poništiti!"
+    "cannotBeUndone": "Ovo se ne može poništiti!",
+    "avatarOfUser": "{user}'s profile image"
   },
   "input": {
     "resetColor": "Poništi boju",

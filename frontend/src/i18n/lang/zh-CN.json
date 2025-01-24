@@ -220,6 +220,10 @@
     "shared": "共享项目",
     "noDescriptionAvailable": "没有可用的项目描述。",
     "inboxTitle": "收件箱",
+    "favorite": "Mark this project as favorite",
+    "unfavorite": "Remove this project from favorites",
+    "openSettingsMenu": "Open project settings menu",
+    "description": "Project description",
     "create": {
       "header": "新项目",
       "titlePlaceholder": "项目标题",
@@ -584,7 +588,8 @@
     "created": "创建于",
     "createdBy": "由 {0} 创建",
     "actions": "行为",
-    "cannotBeUndone": "此操作无法撤消！"
+    "cannotBeUndone": "此操作无法撤消！",
+    "avatarOfUser": "{user}'s profile image"
   },
   "input": {
     "resetColor": "重置颜色",

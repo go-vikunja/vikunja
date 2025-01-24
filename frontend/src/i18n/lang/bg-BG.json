@@ -220,6 +220,10 @@
     "shared": "Споделени проекти",
     "noDescriptionAvailable": "Няма налично описание на проекта.",
     "inboxTitle": "Входяща кутия",
+    "favorite": "Mark this project as favorite",
+    "unfavorite": "Remove this project from favorites",
+    "openSettingsMenu": "Open project settings menu",
+    "description": "Project description",
     "create": {
       "header": "Нов проект",
       "titlePlaceholder": "Заглавието на проекта отива тук…",
@@ -584,7 +588,8 @@
     "created": "Създадено на",
     "createdBy": "Създадено от {0}",
     "actions": "Действия",
-    "cannotBeUndone": "Това действие не може да бъде отменено!"
+    "cannotBeUndone": "Това действие не може да бъде отменено!",
+    "avatarOfUser": "{user}'s profile image"
   },
   "input": {
     "resetColor": "Нулиране на цвета",

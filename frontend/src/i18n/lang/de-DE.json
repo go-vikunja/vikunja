@@ -220,10 +220,10 @@
     "shared": "Geteilte Projekte",
     "noDescriptionAvailable": "Keine Projektbeschreibung verfügbar.",
     "inboxTitle": "Eingang",
-    "favorite": "Mark this project as favorite",
-    "unfavorite": "Remove this project from favorites",
-    "openSettingsMenu": "Open project settings menu",
-    "description": "Project description",
+    "favorite": "Dieses Projekt als Favorit markieren",
+    "unfavorite": "Dieses Projekt von Favoriten entfernen",
+    "openSettingsMenu": "Projekteinstellungen öffnen",
+    "description": "Projektbeschreibung",
     "create": {
       "header": "Neues Projekt",
       "titlePlaceholder": "Der Titel des Projekts kommt hier hin…",
@@ -589,7 +589,7 @@
     "createdBy": "Erstellt von {0}",
     "actions": "Aktionen",
     "cannotBeUndone": "Dies kann nicht rückgängig gemacht werden!",
-    "avatarOfUser": "{user}'s profile image"
+    "avatarOfUser": "{user}'s Profilbild"
   },
   "input": {
     "resetColor": "Farbe zurücksetzen",
