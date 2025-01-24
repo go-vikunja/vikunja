@@ -134,6 +134,12 @@ func parseFilterFromExpression(f fexpr.ExprGroup, loc *time.Location) (filter *t
 	if filter.field == "project" {
 		filter.field = "project_id"
 	}
+
+	err = validateTaskField(filter.field)
+	if err != nil {
+		return nil, err
+	}
+
 	reflectValue, filter.value, err = getNativeValueForTaskField(filter.field, filter.comparator, value, loc)
 	if err != nil {
 		return nil, ErrInvalidTaskFilterValue{
