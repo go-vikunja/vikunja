@@ -111,11 +111,15 @@ func (err ValidationHTTPError) Error() string {
 }
 
 func InvalidFieldError(fields []string) error {
+	return InvalidFieldErrorWithMessage(fields, "Invalid Data")
+}
+
+func InvalidFieldErrorWithMessage(fields []string, message string) error {
 	return ValidationHTTPError{
 		HTTPError: web.HTTPError{
 			HTTPCode: http.StatusPreconditionFailed,
 			Code:     ErrCodeInvalidData,
-			Message:  "Invalid Data",
+			Message:  message,
 		},
 		InvalidFields: fields,
 	}

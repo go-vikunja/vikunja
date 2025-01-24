@@ -64,6 +64,16 @@ type TaskCollectionExpandable string
 
 const TaskCollectionExpandSubtasks TaskCollectionExpandable = `subtasks`
 
+// Validate validates if the TaskCollectionExpandable value is valid.
+func (t TaskCollectionExpandable) Validate() error {
+	switch t {
+	case TaskCollectionExpandSubtasks:
+		return nil
+	}
+
+	return InvalidFieldErrorWithMessage([]string{"expand"}, "Expand must be one of the following values: subtasks")
+}
+
 func validateTaskField(fieldName string) error {
 	switch fieldName {
 	case
@@ -327,6 +337,11 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 	}
 
 	opts, err := getTaskFilterOptsFromCollection(tf, view)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	err = tf.Expand.Validate()
 	if err != nil {
 		return nil, 0, 0, err
 	}
