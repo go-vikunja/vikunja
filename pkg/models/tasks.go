@@ -672,11 +672,6 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 		return err
 	}
 
-	reactions, err := getReactionsForEntityIDs(s, ReactionKindTask, taskIDs)
-	if err != nil {
-		return
-	}
-
 	var positionsMap = make(map[int64]*TaskPosition)
 	if view != nil {
 		positions, err := getPositionsForView(s, view)
@@ -688,6 +683,7 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 		}
 	}
 
+	var reactions map[int64]ReactionMap
 	if expand != nil {
 		expanded := make(map[TaskCollectionExpandable]bool)
 		for _, expandable := range expand {
@@ -695,10 +691,16 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 				continue
 			}
 
-			if expandable == TaskCollectionExpandBuckets {
+			switch expandable {
+			case TaskCollectionExpandBuckets:
 				err = addBucketsToTasks(s, a, taskIDs, taskMap)
 				if err != nil {
 					return err
+				}
+			case TaskCollectionExpandReactions:
+				reactions, err = getReactionsForEntityIDs(s, ReactionKindTask, taskIDs)
+				if err != nil {
+					return
 				}
 			}
 			expanded[expandable] = true
@@ -722,9 +724,11 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 
 		task.IsFavorite = taskFavorites[task.ID]
 
-		r, has := reactions[task.ID]
-		if has {
-			task.Reactions = r
+		if reactions != nil {
+			r, has := reactions[task.ID]
+			if has {
+				task.Reactions = r
+			}
 		}
 
 		p, has := positionsMap[task.ID]
@@ -1677,7 +1681,7 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 // @Accept json
 // @Produce json
 // @Param id path int true "The task ID"
-// @Param expand query string false "If set to `subtasks`, Vikunja will fetch only tasks which do not have subtasks and then in a second step, will fetch all of these subtasks. This may result in more tasks than the pagination limit being returned, but all subtasks will be present in the response. If set to `buckets`, the buckets of each task will be present in the response. You can set this multiple times with different values.
+// @Param expand query string false "If set to `subtasks`, Vikunja will fetch only tasks which do not have subtasks and then in a second step, will fetch all of these subtasks. This may result in more tasks than the pagination limit being returned, but all subtasks will be present in the response. If set to `buckets`, the buckets of each task will be present in the response. If set to `reactions`, the reactions of each task will be present in the response. You can set this multiple times with different values.
 // @Security JWTKeyAuth
 // @Success 200 {object} models.Task "The task"
 // @Failure 404 {object} models.Message "Task not found"

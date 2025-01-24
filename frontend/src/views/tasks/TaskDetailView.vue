@@ -735,7 +735,7 @@ watch(
 		}
 
 		try {
-			const loaded = await taskService.get({id})
+			const loaded = await taskService.get({id}, {expand: 'reactions'})
 			Object.assign(task.value, loaded)
 			attachmentStore.set(task.value.attachments)
 			taskColor.value = task.value.hexColor

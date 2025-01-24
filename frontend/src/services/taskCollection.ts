@@ -4,7 +4,7 @@ import TaskModel from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
 import BucketModel from '@/models/bucket'
 
-export type ExpandTaskFilterParam = 'subtasks' | null
+export type ExpandTaskFilterParam = 'subtasks' | 'buckets' | 'reactions' | null
 
 export interface TaskFilterParams {
 	sort_by: ('start_date' | 'end_date' | 'due_date' | 'done' | 'id' | 'position')[],

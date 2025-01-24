@@ -15,6 +15,7 @@ import type {IRepeatMode} from '@/types/IRepeatMode'
 import type {PartialWithId} from '@/types/PartialWithId'
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 import type {IReactionPerEntity} from '@/modelTypes/IReaction'
+import type {ExpandTaskFilterParam} from '@/services/taskCollection.ts'
 
 export interface ITask extends IAbstract {
 	id: number
