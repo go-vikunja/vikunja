@@ -52,7 +52,9 @@ type TaskCollection struct {
 	// If set to `subtasks`, Vikunja will fetch only tasks which do not have subtasks and then in a
 	// second step, will fetch all of these subtasks. This may result in more tasks than the
 	// pagination limit being returned, but all subtasks will be present in the response.
-	Expand TaskCollectionExpandable `query:"expand" json:"-"`
+	// If set to `buckets`, the buckets of each task will be present in the response.
+	// You can set this multiple times with different values.
+	Expand []TaskCollectionExpandable `query:"expand" json:"-"`
 
 	isSavedFilter bool
 
@@ -63,15 +65,18 @@ type TaskCollection struct {
 type TaskCollectionExpandable string
 
 const TaskCollectionExpandSubtasks TaskCollectionExpandable = `subtasks`
+const TaskCollectionExpandBuckets TaskCollectionExpandable = `buckets`
 
 // Validate validates if the TaskCollectionExpandable value is valid.
 func (t TaskCollectionExpandable) Validate() error {
 	switch t {
 	case TaskCollectionExpandSubtasks:
 		return nil
+	case TaskCollectionExpandBuckets:
+		return nil
 	}
 
-	return InvalidFieldErrorWithMessage([]string{"expand"}, "Expand must be one of the following values: subtasks")
+	return InvalidFieldErrorWithMessage([]string{"expand"}, "Expand must be one of the following values: subtasks, buckets")
 }
 
 func validateTaskField(fieldName string) error {
@@ -341,9 +346,11 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		return nil, 0, 0, err
 	}
 
-	err = tf.Expand.Validate()
-	if err != nil {
-		return nil, 0, 0, err
+	for _, expandValue := range tf.Expand {
+		err = expandValue.Validate()
+		if err != nil {
+			return nil, 0, 0, err
+		}
 	}
 
 	opts.search = search

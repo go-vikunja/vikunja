@@ -29,8 +29,8 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
-
 	"code.vikunja.io/api/pkg/web"
+
 	"xorm.io/builder"
 	"xorm.io/xorm"
 )
@@ -175,6 +175,41 @@ var FavoritesPseudoProject = Project{
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects [get]
 func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
+	prs, resultCount, totalItems, err := getAllRawProjects(s, a, search, page, perPage, p.IsArchived)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	/////////////////
+	// Add project details (favorite state, among other things)
+	err = addProjectDetails(s, prs, a)
+	if err != nil {
+		return
+	}
+
+	if p.Expand == ProjectExpandableRights {
+		var doer *user.User
+		doer, err = user.GetFromAuth(a)
+		if err != nil {
+			return
+		}
+		err = addMaxRightToProjects(s, prs, doer)
+		if err != nil {
+			return
+		}
+	} else {
+		for _, pr := range prs {
+			pr.MaxRight = RightUnknown
+		}
+	}
+
+	//////////////////////////
+	// Putting it all together
+
+	return prs, resultCount, totalItems, err
+}
+
+func getAllRawProjects(s *xorm.Session, a web.Auth, search string, page int, perPage int, isArchived bool) (projects []*Project, resultCount int, totalItems int64, err error) {
 	// Check if we're dealing with a share auth
 	shareAuth, ok := a.(*LinkSharing)
 	if ok {
@@ -202,7 +237,7 @@ func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 			user:        doer,
 			page:        page,
 			perPage:     perPage,
-			getArchived: p.IsArchived,
+			getArchived: isArchived,
 		})
 	if err != nil {
 		return nil, 0, 0, err
@@ -219,27 +254,6 @@ func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 	if len(savedFiltersProject) > 0 {
 		prs = append(prs, savedFiltersProject...)
 	}
-
-	/////////////////
-	// Add project details (favorite state, among other things)
-	err = addProjectDetails(s, prs, a)
-	if err != nil {
-		return
-	}
-
-	if p.Expand == ProjectExpandableRights {
-		err = addMaxRightToProjects(s, prs, doer)
-		if err != nil {
-			return
-		}
-	} else {
-		for _, pr := range prs {
-			pr.MaxRight = RightUnknown
-		}
-	}
-
-	//////////////////////////
-	// Putting it all together
 
 	return prs, resultCount, totalItems, err
 }

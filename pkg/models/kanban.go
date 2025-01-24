@@ -38,7 +38,7 @@ type Bucket struct {
 	// The project view this bucket belongs to.
 	ProjectViewID int64 `xorm:"bigint not null" json:"project_view_id" param:"view"`
 	// All tasks which belong to this bucket.
-	Tasks []*Task `xorm:"-" json:"tasks"`
+	Tasks []*Task `xorm:"-" json:"tasks,omitempty"`
 
 	// How many tasks can be at the same time on this board max
 	Limit int64 `xorm:"default 0" json:"limit" minimum:"0" valid:"range(0|9223372036854775807)"`
@@ -271,7 +271,7 @@ func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, projects []*Pr
 		taskMap[t.ID] = t
 	}
 
-	err = addMoreInfoToTasks(s, taskMap, auth, view)
+	err = addMoreInfoToTasks(s, taskMap, auth, view, opts.expand)
 	if err != nil {
 		return nil, err
 	}

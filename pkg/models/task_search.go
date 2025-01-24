@@ -319,7 +319,15 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		distinct += ", task_positions.position"
 	}
 
-	if opts.expand == TaskCollectionExpandSubtasks {
+	var expandSubtasks = false
+	for _, expandable := range opts.expand {
+		if expandable == TaskCollectionExpandSubtasks {
+			expandSubtasks = true
+			break
+		}
+	}
+
+	if expandSubtasks {
 		cond = builder.And(cond, builder.IsNull{"task_relations.id"})
 	}
 
@@ -340,7 +348,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	if joinTaskBuckets {
 		query = query.Join("LEFT", "task_buckets", "task_buckets.task_id = tasks.id")
 	}
-	if opts.expand == TaskCollectionExpandSubtasks {
+	if expandSubtasks {
 		query = query.Join("LEFT", "task_relations", "tasks.id = task_relations.task_id and task_relations.relation_kind = 'parenttask'")
 	}
 
@@ -354,7 +362,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	}
 
 	// fetch subtasks when expanding
-	if opts.expand == TaskCollectionExpandSubtasks {
+	if expandSubtasks {
 		subtasks := []*Task{}
 
 		taskIDs := []int64{}
@@ -407,7 +415,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	if joinTaskBuckets {
 		queryCount = queryCount.Join("LEFT", "task_buckets", "task_buckets.task_id = tasks.id")
 	}
-	if opts.expand == TaskCollectionExpandSubtasks {
+	if expandSubtasks {
 		queryCount = queryCount.Join("LEFT", "task_relations", "tasks.id = task_relations.task_id and task_relations.relation_kind = 'parenttask'")
 	}
 	totalCount, err = queryCount.

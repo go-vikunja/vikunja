@@ -119,6 +119,9 @@ type Task struct {
 	// Can be used to move a task between buckets. In that case, the new bucket must be in the same view as the old one.
 	BucketID int64 `xorm:"-" json:"bucket_id"`
 
+	// All buckets across all views this task is part of. Only present when fetching tasks with the `expand` parameter set to `buckets`.
+	Buckets []*Bucket `xorm:"-" json:"buckets,omitempty"`
+
 	// The position of the task - any task project can be sorted as usual by this parameter.
 	// When accessing tasks via views with buckets, this is primarily used to sort them based on a range.
 	// Positions are always saved per view. They will automatically be set if you request the tasks through a view
@@ -185,7 +188,7 @@ type taskSearchOptions struct {
 	filterTimezone     string
 	isSavedFilter      bool
 	projectIDs         []int64
-	expand             TaskCollectionExpandable
+	expand             []TaskCollectionExpandable
 }
 
 // ReadAll is a dummy function to still have that endpoint documented
@@ -345,7 +348,7 @@ func getTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts 
 		taskMap[t.ID] = t
 	}
 
-	err = addMoreInfoToTasks(s, taskMap, a, view)
+	err = addMoreInfoToTasks(s, taskMap, a, view, opts.expand)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -422,7 +425,7 @@ func GetTasksByUIDs(s *xorm.Session, uids []string, a web.Auth) (tasks []*Task, 
 		taskMap[t.ID] = t
 	}
 
-	err = addMoreInfoToTasks(s, taskMap, a, nil)
+	err = addMoreInfoToTasks(s, taskMap, a, nil, nil)
 	return
 }
 
@@ -561,9 +564,59 @@ func addRelatedTasksToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]
 	return
 }
 
+func addBucketsToTasks(s *xorm.Session, a web.Auth, taskIDs []int64, taskMap map[int64]*Task) (err error) {
+	if len(taskIDs) == 0 {
+		return nil
+	}
+
+	taskBuckets := []*TaskBucket{}
+	err = s.
+		In("task_id", taskIDs).
+		Find(&taskBuckets)
+	if err != nil {
+		return err
+	}
+
+	// We need to fetch all projects for that user to make sure they only
+	// get to see buckets that they have permission to see.
+	projectIDs := []int64{}
+	allProjects, _, _, err := getAllRawProjects(s, a, "", 0, -1, false)
+	if err != nil {
+		return err
+	}
+
+	for _, project := range allProjects {
+		projectIDs = append(projectIDs, project.ID)
+	}
+
+	buckets := make(map[int64]*Bucket)
+	err = s.
+		Where(builder.In("id", builder.Select("bucket_id").
+			From("task_buckets").
+			Where(builder.In("task_id", taskIDs)))).
+		And(builder.In("project_view_id", builder.Select("id").
+			From("project_views").
+			Where(builder.In("project_id", projectIDs)))).
+		Find(&buckets)
+	if err != nil {
+		return err
+	}
+
+	for _, tb := range taskBuckets {
+		if taskMap[tb.TaskID].Buckets == nil {
+			taskMap[tb.TaskID].Buckets = []*Bucket{}
+		}
+		if bucket, exists := buckets[tb.BucketID]; exists {
+			taskMap[tb.TaskID].Buckets = append(taskMap[tb.TaskID].Buckets, bucket)
+		}
+	}
+
+	return nil
+}
+
 // This function takes a map with pointers and returns a slice with pointers to tasks
 // It adds more stuff like assignees/labels/etc to a bunch of tasks
-func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, view *ProjectView) (err error) {
+func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, view *ProjectView, expand []TaskCollectionExpandable) (err error) {
 
 	// No need to iterate over users and stuff if the project doesn't have tasks
 	if len(taskMap) == 0 {
@@ -629,6 +682,23 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 		}
 		for _, position := range positions {
 			positionsMap[position.TaskID] = position
+		}
+	}
+
+	if expand != nil {
+		expanded := make(map[TaskCollectionExpandable]bool)
+		for _, expandable := range expand {
+			if expanded[expandable] {
+				continue
+			}
+
+			if expandable == TaskCollectionExpandBuckets {
+				err = addBucketsToTasks(s, a, taskIDs, taskMap)
+				if err != nil {
+					return err
+				}
+			}
+			expanded[expandable] = true
 		}
 	}
 
@@ -1618,7 +1688,8 @@ func (t *Task) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 	taskMap := make(map[int64]*Task, 1)
 	taskMap[t.ID] = t
 
-	err = addMoreInfoToTasks(s, taskMap, a, nil)
+	// TODO add expand here as well
+	err = addMoreInfoToTasks(s, taskMap, a, nil, nil)
 	if err != nil {
 		return
 	}
