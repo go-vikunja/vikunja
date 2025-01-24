@@ -194,20 +194,28 @@ function handleBubbleSave() {
 			>
 				{{ $t('project.views.bucketConfigMode') }}
 			</label>
-			<div class="control">
-				<div class="select">
-					<select
-						id="configMode"
+			<div
+				id="configMode"
+				class="control"
+			>
+				<label class="radio">
+					<input
 						v-model="view.bucketConfigurationMode"
+						type="radio"
+						name="configMode"
+						value="manual"
 					>
-						<option value="manual">
-							{{ $t('project.views.bucketConfigManual') }}
-						</option>
-						<option value="filter">
-							{{ $t('project.views.filter') }}
-						</option>
-					</select>
-				</div>
+					{{ $t('project.views.bucketConfigManual') }}
+				</label>
+				<label class="radio">
+					<input
+						v-model="view.bucketConfigurationMode"
+						type="radio"
+						name="configMode"
+						value="filter"
+					>
+					{{ $t('project.views.filter') }}
+				</label>
 			</div>
 		</div>
 
