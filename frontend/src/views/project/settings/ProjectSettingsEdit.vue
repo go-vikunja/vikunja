@@ -27,28 +27,6 @@
 			</div>
 		</div>
 		<div class="field">
-			<label
-				v-tooltip="$t('project.edit.identifierTooltip')"
-				class="label"
-				for="identifier"
-			>
-				{{ $t('project.edit.identifier') }}
-			</label>
-			<div class="control">
-				<input
-					id="identifier"
-					v-model="project.identifier"
-					v-focus
-					:class="{ 'disabled': isLoading}"
-					:disabled="isLoading || undefined"
-					class="input"
-					:placeholder="$t('project.edit.identifierPlaceholder')"
-					type="text"
-					@keyup.enter="save"
-				>
-			</div>
-		</div>
-		<div class="field">
 			<label class="label">{{ $t('project.parent') }}</label>
 			<div class="control">
 				<ProjectSearch v-model="parentProject" />
@@ -69,10 +47,37 @@
 				/>
 			</div>
 		</div>
-		<div class="field">
-			<label class="label">{{ $t('project.edit.color') }}</label>
-			<div class="control">
-				<ColorPicker v-model="project.hexColor" />
+
+		<div class="columns">
+			<div class="column field">
+				<label
+					v-tooltip="$t('project.edit.identifierTooltip')"
+					class="label"
+					for="identifier"
+				>
+					{{ $t('project.edit.identifier') }}
+				</label>
+				<div class="control">
+					<input
+						id="identifier"
+						v-model="project.identifier"
+						v-focus
+						:class="{ 'disabled': isLoading}"
+						:disabled="isLoading || undefined"
+						class="input"
+						:placeholder="$t('project.edit.identifierPlaceholder')"
+						type="text"
+						maxlength="10"
+						@keyup.enter="save"
+					>
+				</div>
+			</div>
+
+			<div class="column field">
+				<label class="label">{{ $t('project.edit.color') }}</label>
+				<div class="control">
+					<ColorPicker v-model="project.hexColor" />
+				</div>
 			</div>
 		</div>
 	</CreateEdit>
