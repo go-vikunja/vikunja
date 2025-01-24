@@ -49,7 +49,7 @@ const (
 	TaskRepeatModeFromCurrentDate
 )
 
-// Task represents an task in a project
+// Task represents a task in a project
 type Task struct {
 	// The unique, numeric id of this task.
 	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"projecttask"`
@@ -121,6 +121,9 @@ type Task struct {
 
 	// All buckets across all views this task is part of. Only present when fetching tasks with the `expand` parameter set to `buckets`.
 	Buckets []*Bucket `xorm:"-" json:"buckets,omitempty"`
+
+	// Behaves exactly the same as with the TaskCollection.Expand parameter
+	Expand []TaskCollectionExpandable `xorm:"-" json:"-" query:"expand"`
 
 	// The position of the task - any task project can be sorted as usual by this parameter.
 	// When accessing tasks via views with buckets, this is primarily used to sort them based on a range.
@@ -1674,6 +1677,7 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 // @Accept json
 // @Produce json
 // @Param id path int true "The task ID"
+// @Param expand query string false "If set to `subtasks`, Vikunja will fetch only tasks which do not have subtasks and then in a second step, will fetch all of these subtasks. This may result in more tasks than the pagination limit being returned, but all subtasks will be present in the response. If set to `buckets`, the buckets of each task will be present in the response. You can set this multiple times with different values.
 // @Security JWTKeyAuth
 // @Success 200 {object} models.Task "The task"
 // @Failure 404 {object} models.Message "Task not found"
@@ -1681,6 +1685,7 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 // @Router /tasks/{id} [get]
 func (t *Task) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 
+	expand := t.Expand
 	*t, err = GetTaskByIDSimple(s, t.ID)
 	if err != nil {
 		return
@@ -1688,8 +1693,14 @@ func (t *Task) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 	taskMap := make(map[int64]*Task, 1)
 	taskMap[t.ID] = t
 
-	// TODO add expand here as well
-	err = addMoreInfoToTasks(s, taskMap, a, nil, nil)
+	for _, expandValue := range expand {
+		err = expandValue.Validate()
+		if err != nil {
+			return
+		}
+	}
+
+	err = addMoreInfoToTasks(s, taskMap, a, nil, expand)
 	if err != nil {
 		return
 	}
