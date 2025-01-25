@@ -48,6 +48,9 @@ const (
 	taskPropertyBucketID      string = "bucket_id"
 	taskPropertyIndex         string = "index"
 	taskPropertyProjectViewID string = "project_view_id"
+	taskPropertyAssignees     string = "assignees"
+	taskPropertyLabels        string = "labels"
+	taskPropertyReminders     string = "reminders"
 )
 
 const (
@@ -79,5 +82,33 @@ func (sp *sortParam) validate() error {
 		return ErrMustHaveProjectViewToSortByPosition{}
 	}
 
-	return validateTaskField(sp.sortBy)
+	return validateTaskFieldForSorting(sp.sortBy)
+}
+
+func validateTaskFieldForSorting(fieldName string) error {
+	switch fieldName {
+	case
+		taskPropertyID,
+		taskPropertyTitle,
+		taskPropertyDescription,
+		taskPropertyDone,
+		taskPropertyDoneAt,
+		taskPropertyDueDate,
+		taskPropertyCreatedByID,
+		taskPropertyProjectID,
+		taskPropertyRepeatAfter,
+		taskPropertyPriority,
+		taskPropertyStartDate,
+		taskPropertyEndDate,
+		taskPropertyHexColor,
+		taskPropertyPercentDone,
+		taskPropertyUID,
+		taskPropertyCreated,
+		taskPropertyUpdated,
+		taskPropertyPosition,
+		taskPropertyBucketID,
+		taskPropertyIndex:
+		return nil
+	}
+	return ErrInvalidTaskField{TaskField: fieldName}
 }

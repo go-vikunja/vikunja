@@ -90,29 +90,13 @@ func (t TaskCollectionExpandable) Validate() error {
 func validateTaskField(fieldName string) error {
 	switch fieldName {
 	case
-		taskPropertyID,
-		taskPropertyTitle,
-		taskPropertyDescription,
-		taskPropertyDone,
-		taskPropertyDoneAt,
-		taskPropertyDueDate,
-		taskPropertyCreatedByID,
-		taskPropertyProjectID,
-		taskPropertyRepeatAfter,
-		taskPropertyPriority,
-		taskPropertyStartDate,
-		taskPropertyEndDate,
-		taskPropertyHexColor,
-		taskPropertyPercentDone,
-		taskPropertyUID,
-		taskPropertyCreated,
-		taskPropertyUpdated,
-		taskPropertyPosition,
-		taskPropertyBucketID,
-		taskPropertyIndex:
+		taskPropertyAssignees,
+		taskPropertyLabels,
+		taskPropertyReminders:
 		return nil
 	}
-	return ErrInvalidTaskField{TaskField: fieldName}
+
+	return validateTaskFieldForSorting(fieldName)
 }
 
 func getTaskFilterOptsFromCollection(tf *TaskCollection, projectView *ProjectView) (opts *taskSearchOptions, err error) {
