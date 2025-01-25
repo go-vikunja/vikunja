@@ -62,7 +62,7 @@ type taskFilter struct {
 	join       taskFilterConcatinator
 }
 
-func parseTimeFromUserInput(timeString string) (value modules.Time, err error) {
+func parseTimeFromUserInput(timeString string) (value *modules.Time, err error) {
 	var timeValue time.Time
 	timeValue, err = time.Parse(time.RFC3339, timeString)
 	if err != nil {
@@ -90,9 +90,9 @@ func parseTimeFromUserInput(timeString string) (value modules.Time, err error) {
 			return value, err
 		}
 		timeValue = time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
-		return modules.Time(timeValue.In(config.GetTimeZone())), nil
+		return modules.TimeFromTime(timeValue.In(config.GetTimeZone())), nil
 	}
-	return modules.Time(timeValue.In(config.GetTimeZone())), nil
+	return modules.TimeFromTime(timeValue.In(config.GetTimeZone())), nil
 }
 
 func parseFilterFromExpression(f fexpr.ExprGroup, loc *time.Location) (filter *taskFilter, err error) {
@@ -289,10 +289,10 @@ func getValueForField(field reflect.StructField, rawValue string, loc *time.Loca
 	case reflect.Struct:
 		if field.Type == reflect.TypeOf((*modules.Time)(nil)).Elem() {
 			var t datemath.Expression
-			var tt modules.Time
+			var tt *modules.Time
 			t, err = datemath.Parse(rawValue)
 			if err == nil {
-				tt = modules.Time(t.Time(datemath.WithLocation(config.GetTimeZone())).In(loc))
+				tt = modules.TimeFromTime(t.Time(datemath.WithLocation(config.GetTimeZone())).In(loc))
 			} else {
 				tt, err = parseTimeFromUserInput(rawValue)
 			}
@@ -302,11 +302,23 @@ func getValueForField(field reflect.StructField, rawValue string, loc *time.Loca
 			// Mysql/Mariadb does not support date values where the year < 1. To make this edge-case work,
 			// we're setting the year to 1 in that case.
 			if db.GetDialect() == builder.MYSQL && tt.Time().Year() < 1 {
-				tt = modules.Time(tt.Time().AddDate(1-tt.Time().Year(), 0, 0))
+				tt = modules.TimeFromTime(tt.Time().AddDate(1-tt.Time().Year(), 0, 0))
 			}
 			value = tt
 		}
-	case reflect.Slice:
+	case reflect.Slice, reflect.Ptr:
+		// There are probably better ways to do this - please let me know if you have one.
+		if field.Type.Elem().String() == "time.Time" || field.Type.Elem().String() == "modules.Time" {
+			value, err = time.Parse(time.RFC3339, rawValue)
+			value = value.(time.Time).In(config.GetTimeZone())
+
+			if field.Type.Elem().String() == "modules.Time" {
+				value, err = parseTimeFromUserInput(rawValue)
+			}
+
+			return
+		}
+
 		// If this is a slice of pointers we're dealing with some property which is a relation
 		// In that case we don't really care about what the actual type is, we just cast the value to an
 		// int64 since we need the id - yes, this assumes we only ever have int64 IDs, but this is fine.
@@ -315,15 +327,9 @@ func getValueForField(field reflect.StructField, rawValue string, loc *time.Loca
 			return
 		}
 
-		// There are probably better ways to do this - please let me know if you have one.
-		if field.Type.Elem().String() == "time.Time" {
-			value, err = time.Parse(time.RFC3339, rawValue)
-			value = value.(time.Time).In(config.GetTimeZone())
-			return
-		}
 		fallthrough
 	default:
-		panic(fmt.Errorf("unrecognized filter type %s for field %s, value %s", field.Type.String(), field.Name, value))
+		panic(fmt.Errorf("unrecognized filter type %s for field %s (kind %s), value %s", field.Type.String(), field.Type.Kind(), field.Name, value))
 	}
 
 	return

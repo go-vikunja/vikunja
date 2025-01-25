@@ -106,7 +106,7 @@ type Subscription struct {
 	UserID int64 `xorm:"bigint index not null" json:"-"`
 
 	// A timestamp when this subscription was created. You cannot change this value.
-	Created modules.Time `xorm:"created not null" json:"created"`
+	Created *modules.Time `xorm:"created not null" json:"created"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`

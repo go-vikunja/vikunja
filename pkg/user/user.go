@@ -103,17 +103,17 @@ type User struct {
 	Language                     string `xorm:"varchar(50) null" json:"-"`
 	Timezone                     string `xorm:"varchar(255) null" json:"-"`
 
-	DeletionScheduledAt      modules.Time `xorm:"datetime null" json:"-"`
-	DeletionLastReminderSent modules.Time `xorm:"datetime null" json:"-"`
+	DeletionScheduledAt      *modules.Time `xorm:"datetime null" json:"-"`
+	DeletionLastReminderSent *modules.Time `xorm:"datetime null" json:"-"`
 
 	FrontendSettings interface{} `xorm:"json null" json:"-"`
 
 	ExportFileID int64 `xorm:"bigint null" json:"-"`
 
 	// A timestamp when this task was created. You cannot change this value.
-	Created modules.Time `xorm:"created not null" json:"created"`
+	Created *modules.Time `xorm:"created not null" json:"created"`
 	// A timestamp when this task was last updated. You cannot change this value.
-	Updated modules.Time `xorm:"updated not null" json:"updated"`
+	Updated *modules.Time `xorm:"updated not null" json:"updated"`
 
 	web.Auth `xorm:"-" json:"-"`
 }

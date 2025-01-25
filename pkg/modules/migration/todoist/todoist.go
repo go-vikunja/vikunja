@@ -78,24 +78,24 @@ type dueDate struct {
 }
 
 type item struct {
-	ID             string       `json:"id"`
-	UserID         string       `json:"user_id"`
-	ProjectID      string       `json:"project_id"`
-	Content        string       `json:"content"`
-	Priority       int64        `json:"priority"`
-	Due            *dueDate     `json:"due"`
-	ParentID       string       `json:"parent_id"`
-	ChildOrder     int64        `json:"child_order"`
-	SectionID      string       `json:"section_id"`
-	Children       interface{}  `json:"children"`
-	Labels         []string     `json:"labels"`
-	AddedByUID     string       `json:"added_by_uid"`
-	AssignedByUID  string       `json:"assigned_by_uid"`
-	ResponsibleUID string       `json:"responsible_uid"`
-	Checked        bool         `json:"checked"`
-	DateAdded      modules.Time `json:"added_at"`
-	HasMoreNotes   bool         `json:"has_more_notes"`
-	DateCompleted  modules.Time `json:"completed_at"`
+	ID             string        `json:"id"`
+	UserID         string        `json:"user_id"`
+	ProjectID      string        `json:"project_id"`
+	Content        string        `json:"content"`
+	Priority       int64         `json:"priority"`
+	Due            *dueDate      `json:"due"`
+	ParentID       string        `json:"parent_id"`
+	ChildOrder     int64         `json:"child_order"`
+	SectionID      string        `json:"section_id"`
+	Children       interface{}   `json:"children"`
+	Labels         []string      `json:"labels"`
+	AddedByUID     string        `json:"added_by_uid"`
+	AssignedByUID  string        `json:"assigned_by_uid"`
+	ResponsibleUID string        `json:"responsible_uid"`
+	Checked        bool          `json:"checked"`
+	DateAdded      *modules.Time `json:"added_at"`
+	HasMoreNotes   bool          `json:"has_more_notes"`
+	DateCompleted  *modules.Time `json:"completed_at"`
 }
 
 type itemWrapper struct {
@@ -103,11 +103,11 @@ type itemWrapper struct {
 }
 
 type doneItem struct {
-	CompletedDate modules.Time `json:"completed_at"`
-	Content       string       `json:"content"`
-	ID            string       `json:"id"`
-	ProjectID     string       `json:"project_id"`
-	TaskID        string       `json:"task_id"`
+	CompletedDate *modules.Time `json:"completed_at"`
+	Content       string        `json:"content"`
+	ID            string        `json:"id"`
+	ProjectID     string        `json:"project_id"`
+	TaskID        string        `json:"task_id"`
 }
 
 type doneItemSync struct {
@@ -129,14 +129,14 @@ type note struct {
 	ItemID         string          `json:"item_id"`
 	Content        string          `json:"content"`
 	FileAttachment *fileAttachment `json:"file_attachment"`
-	Posted         modules.Time    `json:"posted_at"`
+	Posted         *modules.Time   `json:"posted_at"`
 }
 
 type projectNote struct {
 	Content        string          `json:"content"`
 	FileAttachment *fileAttachment `json:"file_attachment"`
 	ID             string          `json:"id"`
-	Posted         modules.Time    `json:"posted"`
+	Posted         *modules.Time   `json:"posted"`
 	ProjectID      string          `json:"project_id"`
 }
 
@@ -149,12 +149,12 @@ type reminder struct {
 }
 
 type section struct {
-	ID           string       `json:"id"`
-	DateAdded    modules.Time `json:"added_at"`
-	IsDeleted    bool         `json:"is_deleted"`
-	Name         string       `json:"name"`
-	ProjectID    string       `json:"project_id"`
-	SectionOrder int64        `json:"section_order"`
+	ID           string        `json:"id"`
+	DateAdded    *modules.Time `json:"added_at"`
+	IsDeleted    bool          `json:"is_deleted"`
+	Name         string        `json:"name"`
+	ProjectID    string        `json:"project_id"`
+	SectionOrder int64         `json:"section_order"`
 }
 
 type sync struct {
@@ -225,13 +225,13 @@ func (m *Migration) AuthURL() string {
 		"&state=" + utils.MakeRandomString(32)
 }
 
-func parseDate(dateString string) (date modules.Time, err error) {
+func parseDate(dateString string) (date *modules.Time, err error) {
 	if len(dateString) == 10 {
 		// We're probably dealing with a date in the form of 2021-11-23 without a time
 		tdate, err := time.Parse("2006-01-02", dateString)
 		if err == nil {
 			// round the day to eod
-			date = modules.Time(tdate)
+			date = modules.TimeFromTime(tdate)
 			return date.Add(time.Hour*23 + time.Minute*59), nil
 		}
 	}
@@ -244,7 +244,7 @@ func parseDate(dateString string) (date modules.Time, err error) {
 		tdate, err = time.Parse("2006-01-02", dateString)
 	}
 
-	return modules.Time(tdate), err
+	return modules.TimeFromTime(tdate), err
 }
 
 func convertTodoistToVikunja(sync *sync, doneItems map[string]*doneItem) (fullVikunjaHierachie []*models.ProjectWithTasksAndBuckets, err error) {

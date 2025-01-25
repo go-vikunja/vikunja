@@ -53,7 +53,7 @@ func TestLabelTask_ReadAll(t *testing.T) {
 		ID       int64
 		TaskID   int64
 		LabelID  int64
-		Created  modules.Time
+		Created  *modules.Time
 		CRUDable web.CRUDable
 		Rights   web.Rights
 	}
@@ -159,7 +159,7 @@ func TestLabelTask_Create(t *testing.T) {
 		ID       int64
 		TaskID   int64
 		LabelID  int64
-		Created  modules.Time
+		Created  *modules.Time
 		CRUDable web.CRUDable
 		Rights   web.Rights
 	}
@@ -263,7 +263,7 @@ func TestLabelTask_Delete(t *testing.T) {
 		ID       int64
 		TaskID   int64
 		LabelID  int64
-		Created  modules.Time
+		Created  *modules.Time
 		CRUDable web.CRUDable
 		Rights   web.Rights
 	}

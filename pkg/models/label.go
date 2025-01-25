@@ -41,9 +41,9 @@ type Label struct {
 	CreatedBy *user.User `xorm:"-" json:"created_by"`
 
 	// A timestamp when this label was created. You cannot change this value.
-	Created modules.Time `xorm:"created not null" json:"created"`
+	Created *modules.Time `xorm:"created not null" json:"created"`
 	// A timestamp when this label was last updated. You cannot change this value.
-	Updated modules.Time `xorm:"updated not null" json:"updated"`
+	Updated *modules.Time `xorm:"updated not null" json:"updated"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`

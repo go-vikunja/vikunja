@@ -38,8 +38,8 @@ type TaskComment struct {
 
 	Reactions ReactionMap `xorm:"-" json:"reactions"`
 
-	Created modules.Time `xorm:"created" json:"created"`
-	Updated modules.Time `xorm:"updated" json:"updated"`
+	Created *modules.Time `xorm:"created" json:"created"`
+	Updated *modules.Time `xorm:"updated" json:"updated"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`
@@ -66,8 +66,8 @@ func (tc *TaskComment) TableName() string {
 func (tc *TaskComment) Create(s *xorm.Session, a web.Auth) (err error) {
 
 	tc.ID = 0
-	tc.Created = modules.Time{}
-	tc.Updated = modules.Time{}
+	tc.Created = &modules.Time{}
+	tc.Updated = &modules.Time{}
 
 	return tc.CreateWithTimestamps(s, a)
 }

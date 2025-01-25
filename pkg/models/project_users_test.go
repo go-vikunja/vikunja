@@ -36,8 +36,8 @@ func TestProjectUser_Create(t *testing.T) {
 		Username  string
 		ProjectID int64
 		Right     Right
-		Created   modules.Time
-		Updated   modules.Time
+		Created   *modules.Time
+		Updated   *modules.Time
 		CRUDable  web.CRUDable
 		Rights    web.Rights
 	}
@@ -178,8 +178,8 @@ func TestProjectUser_ReadAll(t *testing.T) {
 		UserID    int64
 		ProjectID int64
 		Right     Right
-		Created   modules.Time
-		Updated   modules.Time
+		Created   *modules.Time
+		Updated   *modules.Time
 		CRUDable  web.CRUDable
 		Rights    web.Rights
 	}
@@ -270,8 +270,8 @@ func TestProjectUser_Update(t *testing.T) {
 		Username  string
 		ProjectID int64
 		Right     Right
-		Created   modules.Time
-		Updated   modules.Time
+		Created   *modules.Time
+		Updated   *modules.Time
 		CRUDable  web.CRUDable
 		Rights    web.Rights
 	}
@@ -360,8 +360,8 @@ func TestProjectUser_Delete(t *testing.T) {
 		UserID    int64
 		ProjectID int64
 		Right     Right
-		Created   modules.Time
-		Updated   modules.Time
+		Created   *modules.Time
+		Updated   *modules.Time
 		CRUDable  web.CRUDable
 		Rights    web.Rights
 	}

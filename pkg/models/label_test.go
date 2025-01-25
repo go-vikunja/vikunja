@@ -36,8 +36,8 @@ func TestLabel_ReadAll(t *testing.T) {
 		HexColor    string
 		CreatedByID int64
 		CreatedBy   *user.User
-		Created     modules.Time
-		Updated     modules.Time
+		Created     *modules.Time
+		Updated     *modules.Time
 		CRUDable    web.CRUDable
 		Rights      web.Rights
 	}
@@ -172,8 +172,8 @@ func TestLabel_ReadOne(t *testing.T) {
 		HexColor    string
 		CreatedByID int64
 		CreatedBy   *user.User
-		Created     modules.Time
-		Updated     modules.Time
+		Created     *modules.Time
+		Updated     *modules.Time
 		CRUDable    web.CRUDable
 		Rights      web.Rights
 	}
@@ -302,8 +302,8 @@ func TestLabel_Create(t *testing.T) {
 		HexColor    string
 		CreatedByID int64
 		CreatedBy   *user.User
-		Created     modules.Time
-		Updated     modules.Time
+		Created     *modules.Time
+		Updated     *modules.Time
 		CRUDable    web.CRUDable
 		Rights      web.Rights
 	}
@@ -372,8 +372,8 @@ func TestLabel_Update(t *testing.T) {
 		HexColor    string
 		CreatedByID int64
 		CreatedBy   *user.User
-		Created     modules.Time
-		Updated     modules.Time
+		Created     *modules.Time
+		Updated     *modules.Time
 		CRUDable    web.CRUDable
 		Rights      web.Rights
 	}
@@ -462,8 +462,8 @@ func TestLabel_Delete(t *testing.T) {
 		HexColor    string
 		CreatedByID int64
 		CreatedBy   *user.User
-		Created     modules.Time
-		Updated     modules.Time
+		Created     *modules.Time
+		Updated     *modules.Time
 		CRUDable    web.CRUDable
 		Rights      web.Rights
 	}

@@ -21,7 +21,6 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/modules"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/web"
 
@@ -36,7 +35,7 @@ const activeLinkSharesKey = `active_link_shares`
 // ActiveAuthenticable defines an active user or link share
 type ActiveAuthenticable struct {
 	ID       int64
-	LastSeen modules.Time
+	LastSeen time.Time
 }
 
 type activeUsersMap map[int64]*ActiveAuthenticable
@@ -84,7 +83,7 @@ func setupActiveUsersMetric() {
 		}
 		count := 0
 		for _, u := range allActiveUsers {
-			if time.Since(u.LastSeen.Time()) < secondsUntilInactive*time.Second {
+			if time.Since(u.LastSeen) < secondsUntilInactive*time.Second {
 				count++
 			}
 		}
@@ -111,7 +110,7 @@ func setupActiveLinkSharesMetric() {
 		}
 		count := 0
 		for _, u := range allActiveLinkShares {
-			if time.Since(u.LastSeen.Time()) < secondsUntilInactive*time.Second {
+			if time.Since(u.LastSeen) < secondsUntilInactive*time.Second {
 				count++
 			}
 		}
@@ -128,7 +127,7 @@ func SetUserActive(a web.Auth) (err error) {
 	defer activeUsers.mutex.Unlock()
 	activeUsers.users[a.GetID()] = &ActiveAuthenticable{
 		ID:       a.GetID(),
-		LastSeen: modules.Time(time.Now()),
+		LastSeen: time.Now(),
 	}
 
 	return keyvalue.Put(activeUsersKey, activeUsers.users)
@@ -140,7 +139,7 @@ func SetLinkShareActive(a web.Auth) (err error) {
 	defer activeLinkShares.mutex.Unlock()
 	activeLinkShares.shares[a.GetID()] = &ActiveAuthenticable{
 		ID:       a.GetID(),
-		LastSeen: modules.Time(time.Now()),
+		LastSeen: time.Now(),
 	}
 
 	return keyvalue.Put(activeLinkSharesKey, activeLinkShares.shares)

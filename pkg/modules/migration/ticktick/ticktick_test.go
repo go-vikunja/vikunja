@@ -29,13 +29,13 @@ import (
 func TestConvertTicktickTasksToVikunja(t *testing.T) {
 	t1, err := time.Parse(time.RFC3339Nano, "2022-11-18T03:00:00.4770000Z")
 	require.NoError(t, err)
-	time1 := tickTickTime{Time: modules.Time(t1)}
+	time1 := tickTickTime{Time: modules.TimeFromTime(t1)}
 	t2, err := time.Parse(time.RFC3339Nano, "2022-12-18T03:00:00.4770000Z")
 	require.NoError(t, err)
-	time2 := tickTickTime{Time: modules.Time(t2)}
+	time2 := tickTickTime{Time: modules.TimeFromTime(t2)}
 	t3, err := time.Parse(time.RFC3339Nano, "2022-12-10T03:00:00.4770000Z")
 	require.NoError(t, err)
-	time3 := tickTickTime{Time: modules.Time(t3)}
+	time3 := tickTickTime{Time: modules.TimeFromTime(t3)}
 	duration, err := time.ParseDuration("24h")
 	require.NoError(t, err)
 

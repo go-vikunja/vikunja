@@ -153,9 +153,9 @@ func (b *TaskBucket) Update(s *xorm.Session, a web.Auth) (err error) {
 
 	if doneChanged {
 		if task.Done {
-			task.DoneAt = modules.Time(time.Now())
+			task.DoneAt = modules.TimeFromTime(time.Now())
 		} else {
-			task.DoneAt = modules.Time{}
+			task.DoneAt = &modules.Time{}
 		}
 		_, err = s.Where("id = ?", task.ID).
 			Cols(

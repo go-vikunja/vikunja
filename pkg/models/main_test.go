@@ -37,14 +37,14 @@ func setupTime() {
 		os.Exit(1)
 	}
 	testCreatedTimeRaw, err := time.ParseInLocation(time.RFC3339Nano, "2018-12-01T15:13:12.0+00:00", loc)
-	testCreatedTime = modules.Time(testCreatedTimeRaw)
+	testCreatedTime = modules.TimeFromTime(testCreatedTimeRaw)
 	if err != nil {
 		fmt.Printf("Error setting up time: %s", err)
 		os.Exit(1)
 	}
 	testCreatedTime = testCreatedTime.In(loc)
 	testUpdatedTimeRaw, err := time.ParseInLocation(time.RFC3339Nano, "2018-12-02T15:13:12.0+00:00", loc)
-	testUpdatedTime = modules.Time(testUpdatedTimeRaw)
+	testUpdatedTime = modules.TimeFromTime(testUpdatedTimeRaw)
 	if err != nil {
 		fmt.Printf("Error setting up time: %s", err)
 		os.Exit(1)

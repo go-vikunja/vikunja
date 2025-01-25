@@ -31,8 +31,8 @@ func TestProjectUser_CanDoSomething(t *testing.T) {
 		UserID    int64
 		ProjectID int64
 		Right     Right
-		Created   modules.Time
-		Updated   modules.Time
+		Created   *modules.Time
+		Updated   *modules.Time
 		CRUDable  web.CRUDable
 		Rights    web.Rights
 	}

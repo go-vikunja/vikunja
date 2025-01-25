@@ -42,12 +42,12 @@ const (
 
 // Token is a token a user can use to do things like verify their email or resetting their password
 type Token struct {
-	ID             int64        `xorm:"bigint autoincr not null unique pk" json:"id"`
-	UserID         int64        `xorm:"not null" json:"-"`
-	Token          string       `xorm:"varchar(450) not null index" json:"-"`
-	ClearTextToken string       `xorm:"-" json:"token"`
-	Kind           TokenKind    `xorm:"not null" json:"-"`
-	Created        modules.Time `xorm:"created not null" json:"created"`
+	ID             int64         `xorm:"bigint autoincr not null unique pk" json:"id"`
+	UserID         int64         `xorm:"not null" json:"-"`
+	Token          string        `xorm:"varchar(450) not null index" json:"-"`
+	ClearTextToken string        `xorm:"-" json:"token"`
+	Kind           TokenKind     `xorm:"not null" json:"-"`
+	Created        *modules.Time `xorm:"created not null" json:"created"`
 }
 
 // TableName returns the real table name for user tokens

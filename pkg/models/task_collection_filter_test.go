@@ -116,7 +116,7 @@ func TestParseFilter(t *testing.T) {
 		require.Len(t, result, 1)
 		assert.Equal(t, "due_date", result[0].field)
 		in30Days := time.Now().Add(time.Hour * 24 * 30)
-		assert.Equal(t, in30Days.Unix(), result[0].value.(modules.Time).Unix())
+		assert.Equal(t, in30Days.Unix(), result[0].value.(*modules.Time).Unix())
 	})
 	t.Run("date math strings with quotes", func(t *testing.T) {
 		result, err := getTaskFiltersFromFilterString("due_date < 'now+30d'", "UTC")
@@ -125,7 +125,7 @@ func TestParseFilter(t *testing.T) {
 		require.Len(t, result, 1)
 		assert.Equal(t, "due_date", result[0].field)
 		in30Days := time.Now().Add(time.Hour * 24 * 30)
-		assert.Equal(t, in30Days.Unix(), result[0].value.(modules.Time).Unix())
+		assert.Equal(t, in30Days.Unix(), result[0].value.(*modules.Time).Unix())
 	})
 	t.Run("string values with single quotes", func(t *testing.T) {
 		result, err := getTaskFiltersFromFilterString("title = 'foo bar'", "UTC")
@@ -247,7 +247,7 @@ func TestParseFilter(t *testing.T) {
 		assert.Equal(t, "start_date", result[0].field)
 		assert.Equal(t, taskFilterComparatorEquals, result[0].comparator)
 		expectedDate, _ := time.Parse("2006-01-02", "2023-06-15")
-		assert.Equal(t, expectedDate.Unix(), result[0].value.(modules.Time).Unix())
+		assert.Equal(t, expectedDate.Unix(), result[0].value.(*modules.Time).Unix())
 	})
 	t.Run("in query with multiple values", func(t *testing.T) {
 		result, err := getTaskFiltersFromFilterString("priority in 1,3,5", "UTC")
@@ -269,14 +269,14 @@ func TestParseFilter(t *testing.T) {
 		assert.Equal(t, "done_at", result[0].field)
 		assert.Equal(t, taskFilterComparatorGreater, result[0].comparator)
 		sevenDaysAgo := time.Now().Add(-7 * 24 * time.Hour)
-		assert.Equal(t, sevenDaysAgo.Unix(), result[0].value.(modules.Time).Unix())
+		assert.Equal(t, sevenDaysAgo.Unix(), result[0].value.(*modules.Time).Unix())
 	})
 	t.Run("date filter with 0000-01-01", func(t *testing.T) {
 		result, err := getTaskFiltersFromFilterString("due_date > 0000-01-01", "UTC")
 
 		require.NoError(t, err)
 		require.Len(t, result, 1)
-		date := result[0].value.(modules.Time)
+		date := result[0].value.(*modules.Time)
 		if db.GetDialect() == builder.MYSQL {
 			assert.Equal(t, 1, date.Time().Year())
 		} else {

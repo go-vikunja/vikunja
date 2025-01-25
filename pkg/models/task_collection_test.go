@@ -117,8 +117,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 					Index:       14,
 					CreatedByID: 1,
 					ProjectID:   1,
-					Created:     modules.Time(time.Unix(1543626724, 0).In(loc)),
-					Updated:     modules.Time(time.Unix(1543626724, 0).In(loc)),
+					Created:     modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+					Updated:     modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
 				},
 			},
 		},
@@ -134,7 +134,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 					ID:          1,
 					Name:        "test",
 					Size:        100,
-					Created:     modules.Time(time.Unix(1570998791, 0).In(loc)),
+					Created:     modules.TimeFromTime(time.Unix(1570998791, 0).In(loc)),
 					CreatedByID: 1,
 				},
 			},
@@ -157,13 +157,13 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 					ID:          1,
 					Name:        "test",
 					Size:        100,
-					Created:     modules.Time(time.Unix(1570998791, 0).In(loc)),
+					Created:     modules.TimeFromTime(time.Unix(1570998791, 0).In(loc)),
 					CreatedByID: 1,
 				},
 			},
 		},
-		Created: modules.Time(time.Unix(1543626724, 0).In(loc)),
-		Updated: modules.Time(time.Unix(1543626724, 0).In(loc)),
+		Created: modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		Updated: modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
 	}
 	var task1WithReaction = &Task{}
 	*task1WithReaction = *task1
@@ -187,12 +187,12 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			{
 				ID:       3,
 				TaskID:   2,
-				Reminder: modules.Time(time.Unix(1543626824, 0).In(loc)),
-				Created:  modules.Time(time.Unix(1543626724, 0).In(loc)),
+				Reminder: modules.TimeFromTime(time.Unix(1543626824, 0).In(loc)),
+				Created:  modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
 			},
 		},
-		Created: modules.Time(time.Unix(1543626724, 0).In(loc)),
-		Updated: modules.Time(time.Unix(1543626724, 0).In(loc)),
+		Created: modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		Updated: modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
 	}
 	task3 := &Task{
 		ID:           3,
@@ -203,8 +203,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user1,
 		ProjectID:    1,
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      modules.Time(time.Unix(1543626724, 0).In(loc)),
-		Updated:      modules.Time(time.Unix(1543626724, 0).In(loc)),
+		Created:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		Updated:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
 		Priority:     100,
 	}
 	task4 := &Task{
@@ -216,8 +216,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user1,
 		ProjectID:    1,
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      modules.Time(time.Unix(1543626724, 0).In(loc)),
-		Updated:      modules.Time(time.Unix(1543626724, 0).In(loc)),
+		Created:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		Updated:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
 		Priority:     1,
 	}
 	task5 := &Task{
@@ -229,9 +229,9 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user1,
 		ProjectID:    1,
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      modules.Time(time.Unix(1543626724, 0).In(loc)),
-		Updated:      modules.Time(time.Unix(1543626724, 0).In(loc)),
-		DueDate:      modules.Time(time.Unix(1543636724, 0).In(loc)),
+		Created:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		Updated:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		DueDate:      modules.TimeFromTime(time.Unix(1543636724, 0).In(loc)),
 	}
 	task6 := &Task{
 		ID:           6,
@@ -242,9 +242,9 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user1,
 		ProjectID:    1,
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      modules.Time(time.Unix(1543626724, 0).In(loc)),
-		Updated:      modules.Time(time.Unix(1543626724, 0).In(loc)),
-		DueDate:      modules.Time(time.Unix(1543616724, 0).In(loc)),
+		Created:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		Updated:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		DueDate:      modules.TimeFromTime(time.Unix(1543616724, 0).In(loc)),
 	}
 	task7 := &Task{
 		ID:           7,
@@ -255,9 +255,9 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user1,
 		ProjectID:    1,
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      modules.Time(time.Unix(1543626724, 0).In(loc)),
-		Updated:      modules.Time(time.Unix(1543626724, 0).In(loc)),
-		StartDate:    modules.Time(time.Unix(1544600000, 0).In(loc)),
+		Created:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		Updated:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		StartDate:    modules.TimeFromTime(time.Unix(1544600000, 0).In(loc)),
 	}
 	task8 := &Task{
 		ID:           8,
@@ -268,9 +268,9 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user1,
 		ProjectID:    1,
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      modules.Time(time.Unix(1543626724, 0).In(loc)),
-		Updated:      modules.Time(time.Unix(1543626724, 0).In(loc)),
-		EndDate:      modules.Time(time.Unix(1544700000, 0).In(loc)),
+		Created:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		Updated:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		EndDate:      modules.TimeFromTime(time.Unix(1544700000, 0).In(loc)),
 	}
 	task9 := &Task{
 		ID:           9,
@@ -281,10 +281,10 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user1,
 		ProjectID:    1,
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      modules.Time(time.Unix(1543626724, 0).In(loc)),
-		Updated:      modules.Time(time.Unix(1543626724, 0).In(loc)),
-		StartDate:    modules.Time(time.Unix(1544600000, 0).In(loc)),
-		EndDate:      modules.Time(time.Unix(1544700000, 0).In(loc)),
+		Created:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		Updated:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		StartDate:    modules.TimeFromTime(time.Unix(1544600000, 0).In(loc)),
+		EndDate:      modules.TimeFromTime(time.Unix(1544700000, 0).In(loc)),
 	}
 	task10 := &Task{
 		ID:           10,
@@ -295,8 +295,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user1,
 		ProjectID:    1,
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      modules.Time(time.Unix(1543626724, 0).In(loc)),
-		Updated:      modules.Time(time.Unix(1543626724, 0).In(loc)),
+		Created:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		Updated:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
 	}
 	task11 := &Task{
 		ID:           11,
@@ -307,8 +307,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user1,
 		ProjectID:    1,
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      modules.Time(time.Unix(1543626724, 0).In(loc)),
-		Updated:      modules.Time(time.Unix(1543626724, 0).In(loc)),
+		Created:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		Updated:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
 	}
 	task12 := &Task{
 		ID:           12,
@@ -319,8 +319,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user1,
 		ProjectID:    1,
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      modules.Time(time.Unix(1543626724, 0).In(loc)),
-		Updated:      modules.Time(time.Unix(1543626724, 0).In(loc)),
+		Created:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		Updated:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
 	}
 	task15 := &Task{
 		ID:           15,
@@ -332,8 +332,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		ProjectID:    6,
 		IsFavorite:   true,
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      modules.Time(time.Unix(1543626724, 0).In(loc)),
-		Updated:      modules.Time(time.Unix(1543626724, 0).In(loc)),
+		Created:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		Updated:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
 	}
 	task16 := &Task{
 		ID:           16,
@@ -344,8 +344,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user6,
 		ProjectID:    7,
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      modules.Time(time.Unix(1543626724, 0).In(loc)),
-		Updated:      modules.Time(time.Unix(1543626724, 0).In(loc)),
+		Created:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		Updated:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
 	}
 	task17 := &Task{
 		ID:           17,
@@ -356,8 +356,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user6,
 		ProjectID:    8,
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      modules.Time(time.Unix(1543626724, 0).In(loc)),
-		Updated:      modules.Time(time.Unix(1543626724, 0).In(loc)),
+		Created:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		Updated:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
 	}
 	task18 := &Task{
 		ID:           18,
@@ -368,8 +368,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user6,
 		ProjectID:    9,
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      modules.Time(time.Unix(1543626724, 0).In(loc)),
-		Updated:      modules.Time(time.Unix(1543626724, 0).In(loc)),
+		Created:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		Updated:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
 	}
 	task19 := &Task{
 		ID:           19,
@@ -380,8 +380,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user6,
 		ProjectID:    10,
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      modules.Time(time.Unix(1543626724, 0).In(loc)),
-		Updated:      modules.Time(time.Unix(1543626724, 0).In(loc)),
+		Created:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		Updated:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
 	}
 	task20 := &Task{
 		ID:           20,
@@ -392,8 +392,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user6,
 		ProjectID:    11,
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      modules.Time(time.Unix(1543626724, 0).In(loc)),
-		Updated:      modules.Time(time.Unix(1543626724, 0).In(loc)),
+		Created:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		Updated:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
 	}
 	task21 := &Task{
 		ID:           21,
@@ -404,8 +404,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user6,
 		ProjectID:    32, // parent project is shared to user 1 via direct share
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      modules.Time(time.Unix(1543626724, 0).In(loc)),
-		Updated:      modules.Time(time.Unix(1543626724, 0).In(loc)),
+		Created:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		Updated:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
 	}
 	task22 := &Task{
 		ID:           22,
@@ -416,8 +416,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user6,
 		ProjectID:    33,
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      modules.Time(time.Unix(1543626724, 0).In(loc)),
-		Updated:      modules.Time(time.Unix(1543626724, 0).In(loc)),
+		Created:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		Updated:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
 	}
 	task23 := &Task{
 		ID:           23,
@@ -428,8 +428,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user6,
 		ProjectID:    34,
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      modules.Time(time.Unix(1543626724, 0).In(loc)),
-		Updated:      modules.Time(time.Unix(1543626724, 0).In(loc)),
+		Created:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		Updated:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
 	}
 	task24 := &Task{
 		ID:           24,
@@ -440,8 +440,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user6,
 		ProjectID:    15, // parent project is shared to user 1 via team
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      modules.Time(time.Unix(1543626724, 0).In(loc)),
-		Updated:      modules.Time(time.Unix(1543626724, 0).In(loc)),
+		Created:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		Updated:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
 	}
 	task25 := &Task{
 		ID:           25,
@@ -452,8 +452,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user6,
 		ProjectID:    16,
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      modules.Time(time.Unix(1543626724, 0).In(loc)),
-		Updated:      modules.Time(time.Unix(1543626724, 0).In(loc)),
+		Created:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		Updated:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
 	}
 	task26 := &Task{
 		ID:           26,
@@ -464,8 +464,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user6,
 		ProjectID:    17,
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      modules.Time(time.Unix(1543626724, 0).In(loc)),
-		Updated:      modules.Time(time.Unix(1543626724, 0).In(loc)),
+		Created:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		Updated:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
 	}
 	task27 := &Task{
 		ID:          27,
@@ -478,23 +478,23 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			{
 				ID:       1,
 				TaskID:   27,
-				Reminder: modules.Time(time.Unix(1543626724, 0).In(loc)),
-				Created:  modules.Time(time.Unix(1543626724, 0).In(loc)),
+				Reminder: modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+				Created:  modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
 			},
 			{
 				ID:             2,
 				TaskID:         27,
-				Reminder:       modules.Time(time.Unix(1543626824, 0).In(loc)),
-				Created:        modules.Time(time.Unix(1543626724, 0).In(loc)),
+				Reminder:       modules.TimeFromTime(time.Unix(1543626824, 0).In(loc)),
+				Created:        modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
 				RelativePeriod: -3600,
 				RelativeTo:     "start_date",
 			},
 		},
-		StartDate:    modules.Time(time.Unix(1543616724, 0).In(loc)),
+		StartDate:    modules.TimeFromTime(time.Unix(1543616724, 0).In(loc)),
 		ProjectID:    1,
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      modules.Time(time.Unix(1543626724, 0).In(loc)),
-		Updated:      modules.Time(time.Unix(1543626724, 0).In(loc)),
+		Created:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		Updated:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
 	}
 	task28 := &Task{
 		ID:           28,
@@ -506,8 +506,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		ProjectID:    1,
 		RelatedTasks: map[RelationKind][]*Task{},
 		RepeatAfter:  3600,
-		Created:      modules.Time(time.Unix(1543626724, 0).In(loc)),
-		Updated:      modules.Time(time.Unix(1543626724, 0).In(loc)),
+		Created:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		Updated:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
 	}
 	task29 := &Task{
 		ID:          29,
@@ -527,13 +527,13 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 					CreatedByID: 1,
 					ProjectID:   1,
 					IsFavorite:  true,
-					Created:     modules.Time(time.Unix(1543626724, 0).In(loc)),
-					Updated:     modules.Time(time.Unix(1543626724, 0).In(loc)),
+					Created:     modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+					Updated:     modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
 				},
 			},
 		},
-		Created: modules.Time(time.Unix(1543626724, 0).In(loc)),
-		Updated: modules.Time(time.Unix(1543626724, 0).In(loc)),
+		Created: modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		Updated: modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
 	}
 	task30 := &Task{
 		ID:          30,
@@ -548,8 +548,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			user2,
 		},
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      modules.Time(time.Unix(1543626724, 0).In(loc)),
-		Updated:      modules.Time(time.Unix(1543626724, 0).In(loc)),
+		Created:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		Updated:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
 	}
 	task31 := &Task{
 		ID:           31,
@@ -561,8 +561,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user1,
 		ProjectID:    1,
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      modules.Time(time.Unix(1543626724, 0).In(loc)),
-		Updated:      modules.Time(time.Unix(1543626724, 0).In(loc)),
+		Created:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		Updated:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
 	}
 	task32 := &Task{
 		ID:           32,
@@ -573,8 +573,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user1,
 		ProjectID:    3,
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      modules.Time(time.Unix(1543626724, 0).In(loc)),
-		Updated:      modules.Time(time.Unix(1543626724, 0).In(loc)),
+		Created:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		Updated:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
 	}
 	task33 := &Task{
 		ID:           33,
@@ -586,8 +586,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		ProjectID:    1,
 		PercentDone:  0.5,
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      modules.Time(time.Unix(1543626724, 0).In(loc)),
-		Updated:      modules.Time(time.Unix(1543626724, 0).In(loc)),
+		Created:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		Updated:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
 	}
 	task35 := &Task{
 		ID:          35,
@@ -614,8 +614,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 					CreatedByID: 1,
 					ProjectID:   1,
 					IsFavorite:  true,
-					Created:     modules.Time(time.Unix(1543626724, 0).In(loc)),
-					Updated:     modules.Time(time.Unix(1543626724, 0).In(loc)),
+					Created:     modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+					Updated:     modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
 				},
 				{
 					ID:          1,
@@ -625,13 +625,13 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 					CreatedByID: 1,
 					ProjectID:   1,
 					IsFavorite:  true,
-					Created:     modules.Time(time.Unix(1543626724, 0).In(loc)),
-					Updated:     modules.Time(time.Unix(1543626724, 0).In(loc)),
+					Created:     modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+					Updated:     modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
 				},
 			},
 		},
-		Created: modules.Time(time.Unix(1543626724, 0).In(loc)),
-		Updated: modules.Time(time.Unix(1543626724, 0).In(loc)),
+		Created: modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		Updated: modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
 	}
 	task39 := &Task{
 		ID:           39,
@@ -641,8 +641,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user1,
 		ProjectID:    25,
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      modules.Time(time.Unix(1543626724, 0).In(loc)),
-		Updated:      modules.Time(time.Unix(1543626724, 0).In(loc)),
+		Created:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
+		Updated:      modules.TimeFromTime(time.Unix(1543626724, 0).In(loc)),
 	}
 
 	type fields struct {

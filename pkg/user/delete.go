@@ -76,7 +76,7 @@ func notifyUsersScheduledForDeletion() {
 			continue
 		}
 
-		user.DeletionLastReminderSent = modules.Time(time.Now())
+		user.DeletionLastReminderSent = modules.TimeFromTime(time.Now())
 		_, err = s.Where("id = ?", user.ID).
 			Cols("deletion_last_reminder_sent").
 			Update(user)
@@ -116,7 +116,7 @@ func ConfirmDeletion(s *xorm.Session, user *User, token string) (err error) {
 		return err
 	}
 
-	user.DeletionScheduledAt = modules.Time(time.Now().Add(3 * 24 * time.Hour))
+	user.DeletionScheduledAt = modules.TimeFromTime(time.Now().Add(3 * 24 * time.Hour))
 	_, err = s.Where("id = ?", user.ID).
 		Cols("deletion_scheduled_at").
 		Update(user)
@@ -125,8 +125,8 @@ func ConfirmDeletion(s *xorm.Session, user *User, token string) (err error) {
 
 // CancelDeletion cancels the deletion of a user
 func CancelDeletion(s *xorm.Session, user *User) (err error) {
-	user.DeletionScheduledAt = modules.Time{}
-	user.DeletionLastReminderSent = modules.Time{}
+	user.DeletionScheduledAt = &modules.Time{}
+	user.DeletionLastReminderSent = &modules.Time{}
 	_, err = s.Where("id = ?", user.ID).
 		Cols("deletion_scheduled_at", "deletion_last_reminder_sent").
 		Update(user)

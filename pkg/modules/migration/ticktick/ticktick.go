@@ -63,11 +63,11 @@ type tickTickTask struct {
 }
 
 type tickTickTime struct {
-	modules.Time
+	*modules.Time
 }
 
 func (date *tickTickTime) UnmarshalCSV(csv string) (err error) {
-	date.Time = modules.Time{}
+	date.Time = &modules.Time{}
 	if csv == "" {
 		return nil
 	}
@@ -75,7 +75,7 @@ func (date *tickTickTime) UnmarshalCSV(csv string) (err error) {
 	if err != nil {
 		return err
 	}
-	date.Time = modules.Time(tt)
+	date.Time = modules.TimeFromTime(tt)
 	return nil
 }
 
@@ -115,17 +115,17 @@ func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.ProjectWi
 				ID:          t.TaskID,
 				Title:       t.Title,
 				Description: t.Content,
-				StartDate:   modules.Time(t.StartDate.Time),
-				EndDate:     modules.Time(t.DueDate.Time),
-				DueDate:     modules.Time(t.DueDate.Time),
+				StartDate:   t.StartDate.Time,
+				EndDate:     t.DueDate.Time,
+				DueDate:     t.DueDate.Time,
 				Done:        t.Status == "1",
-				DoneAt:      modules.Time(t.CompletedTime.Time),
+				DoneAt:      t.CompletedTime.Time,
 				Position:    t.Order,
 				Labels:      labels,
 			},
 		}
 
-		if !t.DueDate.IsZero() && t.Reminder > 0 {
+		if (t.DueDate.Time != nil && !t.DueDate.IsZero()) && t.Reminder > 0 {
 			task.Task.Reminders = []*models.TaskReminder{
 				{
 					RelativeTo:     models.ReminderRelationDueDate,

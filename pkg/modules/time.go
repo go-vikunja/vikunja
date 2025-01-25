@@ -20,11 +20,11 @@ import "time"
 
 type Time time.Time
 
-func (t Time) MarshalJSON() ([]byte, error) {
-	if time.Time(t).IsZero() {
+func (t *Time) MarshalJSON() ([]byte, error) {
+	if time.Time(*t).IsZero() {
 		return []byte("null"), nil
 	}
-	return []byte(`"` + time.Time(t).Format(time.RFC3339) + `"`), nil
+	return []byte(`"` + time.Time(*t).Format(time.RFC3339) + `"`), nil
 }
 
 func (t *Time) UnmarshalJSON(data []byte) error {
@@ -40,42 +40,49 @@ func (t *Time) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (t Time) Time() time.Time {
-	return time.Time(t)
+func (t *Time) Time() time.Time {
+	return time.Time(*t)
 }
 
-func (t Time) IsZero() bool {
+func (t *Time) IsZero() bool {
 	return t.Time().IsZero()
 }
 
-func (t Time) Add(d time.Duration) Time {
-	return Time(t.Time().Add(d))
+func (t *Time) Add(d time.Duration) *Time {
+	newTime := Time(t.Time().Add(d))
+	return &newTime
 }
 
-func (t Time) After(u Time) bool {
+func (t *Time) After(u *Time) bool {
 	return t.Time().After(u.Time())
 }
 
-func (t Time) Before(u Time) bool {
+func (t *Time) Before(u *Time) bool {
 	return t.Time().Before(u.Time())
 }
 
-func (t Time) Sub(u Time) time.Duration {
+func (t *Time) Sub(u *Time) time.Duration {
 	return t.Time().Sub(u.Time())
 }
 
-func (t Time) Unix() int64 {
+func (t *Time) Unix() int64 {
 	return t.Time().Unix()
 }
 
-func (t Time) In(loc *time.Location) Time {
-	return Time(t.Time().In(loc))
+func (t *Time) In(loc *time.Location) *Time {
+	newTime := Time(t.Time().In(loc))
+	return &newTime
 }
 
-func (t Time) Format(layout string) string {
+func (t *Time) Format(layout string) string {
 	return t.Time().Format(layout)
 }
 
-func (t Time) Month() time.Month {
+func (t *Time) Month() time.Month {
 	return t.Time().Month()
+}
+
+func TimeFromTime(time time.Time) *Time {
+	t := Time(time)
+	return &t
 }

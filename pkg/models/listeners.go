@@ -831,9 +831,9 @@ func (wl *WebhookListener) Name() string {
 }
 
 type WebhookPayload struct {
-	EventName string       `json:"event_name"`
-	Time      modules.Time `json:"time"`
-	Data      interface{}  `json:"data"`
+	EventName string        `json:"event_name"`
+	Time      *modules.Time `json:"time"`
+	Data      interface{}   `json:"data"`
 }
 
 func getIDAsInt64(id interface{}) int64 {
@@ -965,7 +965,7 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 	for _, webhook := range matchingWebhooks {
 		err = webhook.sendWebhookPayload(&WebhookPayload{
 			EventName: wl.EventName,
-			Time:      modules.Time(time.Now()),
+			Time:      modules.TimeFromTime(time.Now()),
 			Data:      event,
 		})
 		if err != nil {

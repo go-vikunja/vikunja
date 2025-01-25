@@ -31,8 +31,8 @@ import (
 var (
 	x *xorm.Engine
 
-	testCreatedTime modules.Time
-	testUpdatedTime modules.Time
+	testCreatedTime *modules.Time
+	testUpdatedTime *modules.Time
 )
 
 // GetTables returns all structs which are also a table.

@@ -92,7 +92,7 @@ type TaskRelation struct {
 	CreatedBy *user.User `xorm:"-" json:"created_by"`
 
 	// A timestamp when this label was created. You cannot change this value.
-	Created modules.Time `xorm:"created not null" json:"created"`
+	Created *modules.Time `xorm:"created not null" json:"created"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`

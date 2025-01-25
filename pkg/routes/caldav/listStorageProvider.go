@@ -252,7 +252,7 @@ func (vcls *VikunjaCaldavProjectStorage) GetResource(rpath string) (*data.Resour
 		}
 		vcls.task = tasks[0]
 
-		if updated.Unix() > 0 {
+		if updated != nil && updated.Unix() > 0 {
 			vcls.task.Updated = updated
 		}
 

@@ -45,7 +45,7 @@ type TaskAttachment struct {
 
 	File *files.File `xorm:"-" json:"file"`
 
-	Created modules.Time `xorm:"created" json:"created"`
+	Created *modules.Time `xorm:"created" json:"created"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`

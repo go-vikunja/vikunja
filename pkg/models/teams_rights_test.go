@@ -33,8 +33,8 @@ func TestTeam_CanDoSomething(t *testing.T) {
 		CreatedByID int64
 		CreatedBy   *user.User
 		Members     []*TeamUser
-		Created     modules.Time
-		Updated     modules.Time
+		Created     *modules.Time
+		Updated     *modules.Time
 		CRUDable    web.CRUDable
 		Rights      web.Rights
 	}

@@ -297,7 +297,7 @@ func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Bo
 				}
 
 				if card.Due != nil {
-					task.DueDate = modules.Time(*card.Due)
+					task.DueDate = modules.TimeFromTime(*card.Due)
 				}
 
 				// Checklists (as markdown in description)
@@ -406,8 +406,8 @@ func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Bo
 
 						comment := &models.TaskComment{
 							Comment: action.Data.Text,
-							Created: modules.Time(action.Date),
-							Updated: modules.Time(action.Date),
+							Created: modules.TimeFromTime(action.Date),
+							Updated: modules.TimeFromTime(action.Date),
 						}
 
 						if currentMember == nil || action.IDMemberCreator != currentMember.ID {

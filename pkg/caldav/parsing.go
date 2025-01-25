@@ -191,7 +191,6 @@ func GetCaldavTodosForTasks(project *models.ProjectWithTasksAndBuckets, projectT
 	var caldavtodos []*Todo
 	for _, t := range projectTasks {
 
-		duration := t.EndDate.Sub(t.StartDate)
 		var categories []string
 		for _, label := range t.Labels {
 			categories = append(categories, label.Title)
@@ -215,20 +214,32 @@ func GetCaldavTodosForTasks(project *models.ProjectWithTasksAndBuckets, projectT
 			}
 		}
 
+		var duration time.Duration
+		if t.StartDate != nil && t.EndDate != nil {
+			duration = t.EndDate.Sub(t.StartDate)
+		}
+
+		getTimeIfNotNil := func(t *modules.Time) time.Time {
+			if t == nil {
+				return time.Time{} // Return zero value of time.Time if t is nil
+			}
+			return t.Time() // Dereference the pointer and return the value
+		}
+
 		caldavtodos = append(caldavtodos, &Todo{
 			Timestamp:   t.Updated.Time(),
 			UID:         t.UID,
 			Summary:     t.Title,
 			Description: t.Description,
-			Completed:   t.DoneAt.Time(),
-			// Organizer:     &t.CreatedBy, // Disabled until we figure out how this works
+			Completed:   getTimeIfNotNil(t.DoneAt),
+			// Organizer:	 &t.CreatedBy, // Disabled until we figure out how this works
 			Categories:  categories,
 			Priority:    t.Priority,
-			Start:       t.StartDate.Time(),
-			End:         t.EndDate.Time(),
-			Created:     t.Created.Time(),
-			Updated:     t.Updated.Time(),
-			DueDate:     t.DueDate.Time(),
+			Start:       getTimeIfNotNil(t.StartDate),
+			End:         getTimeIfNotNil(t.EndDate),
+			Created:     getTimeIfNotNil(t.Created),
+			Updated:     getTimeIfNotNil(t.Updated),
+			DueDate:     getTimeIfNotNil(t.DueDate),
 			Duration:    duration,
 			RepeatAfter: t.RepeatAfter,
 			RepeatMode:  t.RepeatMode,
@@ -407,7 +418,7 @@ func parseVAlarm(vAlarm *ics.VAlarm, vTask *models.Task) *models.Task {
 
 		if contains(property.ICalParameters["RELATED"], "END") {
 			// Example: TRIGGER;RELATED=END:-P2D
-			if vTask.EndDate.IsZero() {
+			if vTask.EndDate == nil || (vTask.EndDate != nil && vTask.EndDate.IsZero()) {
 				vTask.Reminders = append(vTask.Reminders, &models.TaskReminder{
 					RelativePeriod: int64(duration.Seconds()),
 					RelativeTo:     models.ReminderRelationDueDate})
@@ -438,10 +449,10 @@ func contains(array []string, str string) bool {
 }
 
 // https://tools.ietf.org/html/rfc5545#section-3.3.5
-func caldavTimeToTimestamp(ianaProperty ics.IANAProperty) modules.Time {
+func caldavTimeToTimestamp(ianaProperty ics.IANAProperty) *modules.Time {
 	tstring := ianaProperty.Value
 	if tstring == "" {
-		return modules.Time{}
+		return nil
 	}
 
 	format := DateFormat
@@ -465,14 +476,14 @@ func caldavTimeToTimestamp(ianaProperty ics.IANAProperty) modules.Time {
 			if err != nil {
 				log.Warningf("Error while parsing caldav time %s to TimeStamp: %s at location %s", tstring, loc, err)
 			} else {
-				return modules.Time(tt.In(config.GetTimeZone()))
+				return modules.TimeFromTime(tt.In(config.GetTimeZone()))
 			}
 		}
 	}
 	tt, err := time.Parse(format, tstring)
 	if err != nil {
 		log.Warningf("Error while parsing caldav time %s to TimeStamp: %s", tstring, err)
-		return modules.Time{}
+		return nil
 	}
-	return modules.Time(tt)
+	return modules.TimeFromTime(tt)
 }

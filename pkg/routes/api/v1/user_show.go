@@ -33,7 +33,7 @@ import (
 type UserWithSettings struct {
 	user.User
 	Settings            *UserSettings `json:"settings"`
-	DeletionScheduledAt modules.Time  `json:"deletion_scheduled_at"`
+	DeletionScheduledAt *modules.Time `json:"deletion_scheduled_at"`
 	IsLocalUser         bool          `json:"is_local_user"`
 	AuthProvider        string        `json:"auth_provider"`
 }

@@ -464,7 +464,7 @@ func convertFilterValues(value interface{}) string {
 		}
 
 		return "false"
-	case modules.Time:
+	case *modules.Time:
 		return strconv.FormatInt(v.Time().Unix(), 10)
 	case time.Time:
 		return strconv.FormatInt(v.Unix(), 10)

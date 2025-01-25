@@ -43,8 +43,8 @@ type File struct {
 	Mime string `xorm:"text null" json:"mime"`
 	Size uint64 `xorm:"bigint not null" json:"size"`
 
-	Created     modules.Time `xorm:"created" json:"created"`
-	CreatedByID int64        `xorm:"bigint not null" json:"-"`
+	Created     *modules.Time `xorm:"created" json:"created"`
+	CreatedByID int64         `xorm:"bigint not null" json:"-"`
 
 	File afero.File `xorm:"-" json:"-"`
 	// This ReadCloser is only used for migration purposes. Use with care!

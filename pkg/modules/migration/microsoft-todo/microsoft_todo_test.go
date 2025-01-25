@@ -37,7 +37,7 @@ func TestConverting(t *testing.T) {
 
 	testTime, err := time.Parse(time.RFC3339Nano, "2020-12-18T03:00:00.4770000Z")
 	require.NoError(t, err)
-	testtimeTime := modules.Time(testTime)
+	testtimeTime := modules.TimeFromTime(testTime)
 
 	microsoftTodoData := []*project{
 		{

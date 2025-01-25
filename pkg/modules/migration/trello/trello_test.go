@@ -33,7 +33,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func getTestBoard(t *testing.T) ([]*trello.Board, modules.Time) {
+func getTestBoard(t *testing.T) ([]*trello.Board, *modules.Time) {
 
 	config.InitConfig()
 
@@ -235,7 +235,7 @@ func getTestBoard(t *testing.T) ([]*trello.Board, modules.Time) {
 	}
 	trelloData[0].Prefs.BackgroundImage = "https://vikunja.io/testimage.jpg" // Using an image which we are hosting, so it'll still be up
 
-	return trelloData, modules.Time(time1)
+	return trelloData, modules.TimeFromTime(time1)
 }
 
 func TestConvertTrelloToVikunja(t *testing.T) {

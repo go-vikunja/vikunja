@@ -211,8 +211,8 @@ func TestTeamProject_Update(t *testing.T) {
 		TeamID    int64
 		ProjectID int64
 		Right     Right
-		Created   modules.Time
-		Updated   modules.Time
+		Created   *modules.Time
+		Updated   *modules.Time
 		CRUDable  web.CRUDable
 		Rights    web.Rights
 	}

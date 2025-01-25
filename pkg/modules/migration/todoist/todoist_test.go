@@ -35,10 +35,10 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 
 	config.InitConfig()
 
-	parseAndConvertToTimeZone := func(timeStr string) modules.Time {
+	parseAndConvertToTimeZone := func(timeStr string) *modules.Time {
 		parsedTime, err := time.Parse(time.RFC3339Nano, timeStr)
 		require.NoError(t, err)
-		return modules.Time(parsedTime.In(config.GetTimeZone()))
+		return modules.TimeFromTime(parsedTime.In(config.GetTimeZone()))
 	}
 
 	time1 := parseAndConvertToTimeZone("2014-09-26T08:25:05Z")
@@ -392,8 +392,8 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 						Done:        false,
 						Created:     time1,
 						Reminders: []*models.TaskReminder{
-							{Reminder: modules.Time(time.Date(2020, time.June, 15, 23, 59, 0, 0, time.UTC).In(config.GetTimeZone()))},
-							{Reminder: modules.Time(time.Date(2020, time.June, 16, 7, 0, 0, 0, time.UTC).In(config.GetTimeZone()))},
+							{Reminder: modules.TimeFromTime(time.Date(2020, time.June, 15, 23, 59, 0, 0, time.UTC).In(config.GetTimeZone()))},
+							{Reminder: modules.TimeFromTime(time.Date(2020, time.June, 16, 7, 0, 0, 0, time.UTC).In(config.GetTimeZone()))},
 						},
 					},
 				},
@@ -411,7 +411,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 						Done:    false,
 						Created: time1,
 						Reminders: []*models.TaskReminder{
-							{Reminder: modules.Time(time.Date(2020, time.July, 15, 7, 0, 0, 0, time.UTC).In(config.GetTimeZone()))},
+							{Reminder: modules.TimeFromTime(time.Date(2020, time.July, 15, 7, 0, 0, 0, time.UTC).In(config.GetTimeZone()))},
 						},
 					},
 				},
@@ -425,7 +425,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 						DoneAt:      time3,
 						Labels:      vikunjaLabels,
 						Reminders: []*models.TaskReminder{
-							{Reminder: modules.Time(time.Date(2020, time.June, 15, 7, 0, 0, 0, time.UTC).In(config.GetTimeZone()))},
+							{Reminder: modules.TimeFromTime(time.Date(2020, time.June, 15, 7, 0, 0, 0, time.UTC).In(config.GetTimeZone()))},
 						},
 					},
 				},
@@ -445,7 +445,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 						Created: time1,
 						DoneAt:  time3,
 						Reminders: []*models.TaskReminder{
-							{Reminder: modules.Time(time.Date(2020, time.June, 15, 7, 0, 0, 0, time.UTC).In(config.GetTimeZone()))},
+							{Reminder: modules.TimeFromTime(time.Date(2020, time.June, 15, 7, 0, 0, 0, time.UTC).In(config.GetTimeZone()))},
 						},
 					},
 				},
@@ -537,7 +537,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 						Done:    false,
 						Created: time1,
 						Reminders: []*models.TaskReminder{
-							{Reminder: modules.Time(time.Date(2020, time.June, 15, 7, 0, 0, 0, time.UTC).In(config.GetTimeZone()))},
+							{Reminder: modules.TimeFromTime(time.Date(2020, time.June, 15, 7, 0, 0, 0, time.UTC).In(config.GetTimeZone()))},
 						},
 					},
 				},

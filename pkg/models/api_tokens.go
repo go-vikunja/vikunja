@@ -47,10 +47,10 @@ type APIToken struct {
 	// The permissions this token has. Possible values are available via the /routes endpoint and consist of the keys of the list from that endpoint. For example, if the token should be able to read all tasks as well as update existing tasks, you should add `{"tasks":["read_all","update"]}`.
 	Permissions APIPermissions `xorm:"json not null" json:"permissions" valid:"required"`
 	// The date when this key expires.
-	ExpiresAt modules.Time `xorm:"not null" json:"expires_at" valid:"required"`
+	ExpiresAt *modules.Time `xorm:"not null" json:"expires_at" valid:"required"`
 
 	// A timestamp when this api key was created. You cannot change this value.
-	Created modules.Time `xorm:"created not null" json:"created"`
+	Created *modules.Time `xorm:"created not null" json:"created"`
 
 	OwnerID int64 `xorm:"bigint not null" json:"-"`
 
