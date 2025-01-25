@@ -17,6 +17,7 @@
 package caldav
 
 import (
+	"code.vikunja.io/api/pkg/modules"
 	"errors"
 	"strconv"
 	"strings"
@@ -198,7 +199,7 @@ func GetCaldavTodosForTasks(project *models.ProjectWithTasksAndBuckets, projectT
 		var alarms []Alarm
 		for _, reminder := range t.Reminders {
 			alarms = append(alarms, Alarm{
-				Time:       reminder.Reminder,
+				Time:       reminder.Reminder.Time(),
 				Duration:   time.Duration(reminder.RelativePeriod) * time.Second,
 				RelativeTo: reminder.RelativeTo,
 			})
@@ -215,19 +216,19 @@ func GetCaldavTodosForTasks(project *models.ProjectWithTasksAndBuckets, projectT
 		}
 
 		caldavtodos = append(caldavtodos, &Todo{
-			Timestamp:   t.Updated,
+			Timestamp:   t.Updated.Time(),
 			UID:         t.UID,
 			Summary:     t.Title,
 			Description: t.Description,
-			Completed:   t.DoneAt,
+			Completed:   t.DoneAt.Time(),
 			// Organizer:     &t.CreatedBy, // Disabled until we figure out how this works
 			Categories:  categories,
 			Priority:    t.Priority,
-			Start:       t.StartDate,
-			End:         t.EndDate,
-			Created:     t.Created,
-			Updated:     t.Updated,
-			DueDate:     t.DueDate,
+			Start:       t.StartDate.Time(),
+			End:         t.EndDate.Time(),
+			Created:     t.Created.Time(),
+			Updated:     t.Updated.Time(),
+			DueDate:     t.DueDate.Time(),
 			Duration:    duration,
 			RepeatAfter: t.RepeatAfter,
 			RepeatMode:  t.RepeatMode,
@@ -437,10 +438,10 @@ func contains(array []string, str string) bool {
 }
 
 // https://tools.ietf.org/html/rfc5545#section-3.3.5
-func caldavTimeToTimestamp(ianaProperty ics.IANAProperty) time.Time {
+func caldavTimeToTimestamp(ianaProperty ics.IANAProperty) modules.Time {
 	tstring := ianaProperty.Value
 	if tstring == "" {
-		return time.Time{}
+		return modules.Time{}
 	}
 
 	format := DateFormat
@@ -453,7 +454,6 @@ func caldavTimeToTimestamp(ianaProperty ics.IANAProperty) time.Time {
 		format = `20060102`
 	}
 
-	var t time.Time
 	var err error
 	tzParameter := ianaProperty.ICalParameters["TZID"]
 	if len(tzParameter) > 0 {
@@ -461,19 +461,18 @@ func caldavTimeToTimestamp(ianaProperty ics.IANAProperty) time.Time {
 		if err != nil {
 			log.Warningf("Error while parsing caldav timezone %s: %s", tzParameter[0], err)
 		} else {
-			t, err = time.ParseInLocation(format, tstring, loc)
+			tt, err := time.ParseInLocation(format, tstring, loc)
 			if err != nil {
 				log.Warningf("Error while parsing caldav time %s to TimeStamp: %s at location %s", tstring, loc, err)
 			} else {
-				t = t.In(config.GetTimeZone())
-				return t
+				return modules.Time(tt.In(config.GetTimeZone()))
 			}
 		}
 	}
-	t, err = time.Parse(format, tstring)
+	tt, err := time.Parse(format, tstring)
 	if err != nil {
 		log.Warningf("Error while parsing caldav time %s to TimeStamp: %s", tstring, err)
-		return time.Time{}
+		return modules.Time{}
 	}
-	return t
+	return modules.Time(tt)
 }

@@ -17,10 +17,9 @@
 package models
 
 import (
-	"errors"
-	"time"
-
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/modules"
+	"errors"
 
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
@@ -66,9 +65,9 @@ type LinkSharing struct {
 	SharedByID int64      `xorm:"bigint INDEX not null" json:"-"`
 
 	// A timestamp when this project was shared. You cannot change this value.
-	Created time.Time `xorm:"created not null" json:"created"`
+	Created modules.Time `xorm:"created not null" json:"created"`
 	// A timestamp when this share was last updated. You cannot change this value.
-	Updated time.Time `xorm:"updated not null" json:"updated"`
+	Updated modules.Time `xorm:"updated not null" json:"updated"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`

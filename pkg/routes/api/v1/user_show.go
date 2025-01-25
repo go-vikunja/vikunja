@@ -18,25 +18,22 @@ package v1
 
 import (
 	"net/http"
-	"time"
-
-	"code.vikunja.io/api/pkg/modules/auth/openid"
-
-	"code.vikunja.io/api/pkg/user"
-
-	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/modules/auth"
 
 	"code.vikunja.io/api/pkg/db"
-
+	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules"
+	"code.vikunja.io/api/pkg/modules/auth"
+	"code.vikunja.io/api/pkg/modules/auth/openid"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web/handler"
+
 	"github.com/labstack/echo/v4"
 )
 
 type UserWithSettings struct {
 	user.User
 	Settings            *UserSettings `json:"settings"`
-	DeletionScheduledAt time.Time     `json:"deletion_scheduled_at"`
+	DeletionScheduledAt modules.Time  `json:"deletion_scheduled_at"`
 	IsLocalUser         bool          `json:"is_local_user"`
 	AuthProvider        string        `json:"auth_provider"`
 }

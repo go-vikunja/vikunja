@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/modules"
 	"fmt"
 	"os"
 	"testing"
@@ -35,13 +36,15 @@ func setupTime() {
 		fmt.Printf("Error setting up time: %s", err)
 		os.Exit(1)
 	}
-	testCreatedTime, err = time.ParseInLocation(time.RFC3339Nano, "2018-12-01T15:13:12.0+00:00", loc)
+	testCreatedTimeRaw, err := time.ParseInLocation(time.RFC3339Nano, "2018-12-01T15:13:12.0+00:00", loc)
+	testCreatedTime = modules.Time(testCreatedTimeRaw)
 	if err != nil {
 		fmt.Printf("Error setting up time: %s", err)
 		os.Exit(1)
 	}
 	testCreatedTime = testCreatedTime.In(loc)
-	testUpdatedTime, err = time.ParseInLocation(time.RFC3339Nano, "2018-12-02T15:13:12.0+00:00", loc)
+	testUpdatedTimeRaw, err := time.ParseInLocation(time.RFC3339Nano, "2018-12-02T15:13:12.0+00:00", loc)
+	testUpdatedTime = modules.Time(testUpdatedTimeRaw)
 	if err != nil {
 		fmt.Printf("Error setting up time: %s", err)
 		os.Exit(1)

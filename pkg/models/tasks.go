@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/modules"
 	"errors"
 	"math"
 	"regexp"
@@ -60,9 +61,9 @@ type Task struct {
 	// Whether a task is done or not.
 	Done bool `xorm:"INDEX null" json:"done"`
 	// The time when a task was marked as done.
-	DoneAt time.Time `xorm:"INDEX null 'done_at'" json:"done_at"`
+	DoneAt modules.Time `xorm:"INDEX null 'done_at'" json:"done_at"`
 	// The time when the task is due.
-	DueDate time.Time `xorm:"DATETIME INDEX null 'due_date'" json:"due_date"`
+	DueDate modules.Time `xorm:"DATETIME INDEX null 'due_date'" json:"due_date"`
 	// An array of reminders that are associated with this task.
 	Reminders []*TaskReminder `xorm:"-" json:"reminders"`
 	// The project this task belongs to.
@@ -74,9 +75,9 @@ type Task struct {
 	// The task priority. Can be anything you want, it is possible to sort by this later.
 	Priority int64 `xorm:"bigint null" json:"priority"`
 	// When this task starts.
-	StartDate time.Time `xorm:"DATETIME INDEX null 'start_date'" json:"start_date" query:"-"`
+	StartDate modules.Time `xorm:"DATETIME INDEX null 'start_date'" json:"start_date" query:"-"`
 	// When this task ends.
-	EndDate time.Time `xorm:"DATETIME INDEX null 'end_date'" json:"end_date" query:"-"`
+	EndDate modules.Time `xorm:"DATETIME INDEX null 'end_date'" json:"end_date" query:"-"`
 	// An array of users who are assigned to this task
 	Assignees []*user.User `xorm:"-" json:"assignees"`
 	// An array of labels which are associated with this task. This property is read-only, you must use the separate endpoint to add labels to a task.
@@ -111,9 +112,9 @@ type Task struct {
 	Subscription *Subscription `xorm:"-" json:"subscription,omitempty"`
 
 	// A timestamp when this task was created. You cannot change this value.
-	Created time.Time `xorm:"created not null" json:"created"`
+	Created modules.Time `xorm:"created not null" json:"created"`
 	// A timestamp when this task was last updated. You cannot change this value.
-	Updated time.Time `xorm:"updated not null" json:"updated"`
+	Updated modules.Time `xorm:"updated not null" json:"updated"`
 
 	// The bucket id. Will only be populated when the task is accessed via a view with buckets.
 	// Can be used to move a task between buckets. In that case, the new bucket must be in the same view as the old one.
@@ -1252,20 +1253,20 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 		ot.Description = ""
 	}
 	// Due date
-	if t.DueDate.IsZero() {
-		ot.DueDate = time.Time{}
+	if t.DueDate.Time().IsZero() {
+		ot.DueDate = modules.Time{}
 	}
 	// Repeat after
 	if t.RepeatAfter == 0 {
 		ot.RepeatAfter = 0
 	}
 	// Start date
-	if t.StartDate.IsZero() {
-		ot.StartDate = time.Time{}
+	if t.StartDate.Time().IsZero() {
+		ot.StartDate = modules.Time{}
 	}
 	// End date
-	if t.EndDate.IsZero() {
-		ot.EndDate = time.Time{}
+	if t.EndDate.Time().IsZero() {
+		ot.EndDate = modules.Time{}
 	}
 	// Color
 	if t.HexColor == "" {
@@ -1317,8 +1318,9 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 	return updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
 }
 
-func addOneMonthToDate(d time.Time) time.Time {
-	return time.Date(d.Year(), d.Month()+1, d.Day(), d.Hour(), d.Minute(), d.Second(), d.Nanosecond(), config.GetTimeZone())
+func addOneMonthToDate(dd modules.Time) modules.Time {
+	d := dd.Time()
+	return modules.Time(time.Date(d.Year(), d.Month()+1, d.Day(), d.Hour(), d.Minute(), d.Second(), d.Nanosecond(), config.GetTimeZone()))
 }
 
 func setTaskDatesDefault(oldTask, newTask *Task) {
@@ -1327,12 +1329,12 @@ func setTaskDatesDefault(oldTask, newTask *Task) {
 	}
 
 	// Current time in an extra variable to base all calculations on the same time
-	now := time.Now()
+	now := modules.Time(time.Now())
 
 	repeatDuration := time.Duration(oldTask.RepeatAfter) * time.Second
 
 	// assuming we'll merge the new task over the old task
-	if !oldTask.DueDate.IsZero() {
+	if !oldTask.DueDate.Time().IsZero() {
 		// Always add one instance of the repeating interval to catch cases where a due date is already in the future
 		// but not the repeating interval
 		newTask.DueDate = oldTask.DueDate.Add(repeatDuration)
@@ -1407,7 +1409,7 @@ func setTaskDatesFromCurrentDateRepeat(oldTask, newTask *Task) {
 	}
 
 	// Current time in an extra variable to base all calculations on the same time
-	now := time.Now()
+	now := modules.Time(time.Now())
 
 	repeatDuration := time.Duration(oldTask.RepeatAfter) * time.Second
 
@@ -1485,12 +1487,12 @@ func updateDone(oldTask *Task, newTask *Task) {
 			setTaskDatesDefault(oldTask, newTask)
 		}
 
-		newTask.DoneAt = time.Now()
+		newTask.DoneAt = modules.Time(time.Now())
 	}
 
 	// When unmarking a task as done, reset the timestamp
 	if oldTask.Done && !newTask.Done {
-		newTask.DoneAt = time.Time{}
+		newTask.DoneAt = modules.Time{}
 	}
 }
 
@@ -1499,7 +1501,7 @@ func updateRelativeReminderDates(task *Task) (err error) {
 	for _, reminder := range task.Reminders {
 		relativeDuration := time.Duration(reminder.RelativePeriod) * time.Second
 		if reminder.RelativeTo != "" {
-			reminder.Reminder = time.Time{}
+			reminder.Reminder = modules.Time{}
 		}
 		switch reminder.RelativeTo {
 		case ReminderRelationDueDate:
@@ -1547,7 +1549,7 @@ func (t *Task) updateReminders(s *xorm.Session, task *Task) (err error) {
 	// Resolve duplicates and sort them
 	reminderMap := make(map[int64]*TaskReminder, len(task.Reminders))
 	for _, reminder := range task.Reminders {
-		reminderMap[reminder.Reminder.UTC().Unix()] = reminder
+		reminderMap[reminder.Reminder.Unix()] = reminder
 	}
 
 	t.Reminders = make([]*TaskReminder, 0, len(reminderMap))

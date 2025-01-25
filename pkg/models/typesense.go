@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/modules"
 	"context"
 	"fmt"
 	"strconv"
@@ -366,10 +367,10 @@ func indexDummyTask() (err error) {
 			{
 				ID:             -10,
 				TaskID:         -100,
-				Reminder:       time.Now(),
+				Reminder:       modules.Time(time.Now()),
 				RelativePeriod: 10,
 				RelativeTo:     ReminderRelationDueDate,
-				Created:        time.Now(),
+				Created:        modules.Time(time.Now()),
 			},
 		},
 		Assignees: []*user.User{
@@ -378,8 +379,8 @@ func indexDummyTask() (err error) {
 				Username: "dummy",
 				Name:     "dummy",
 				Email:    "dummy@vikunja",
-				Created:  time.Now(),
-				Updated:  time.Now(),
+				Created:  modules.Time(time.Now()),
+				Updated:  modules.Time(time.Now()),
 			},
 		},
 		Labels: []*Label{
@@ -388,30 +389,30 @@ func indexDummyTask() (err error) {
 				Title:       "dummylabel",
 				Description: "Lorem Ipsum Dummy",
 				HexColor:    "000000",
-				Created:     time.Now(),
-				Updated:     time.Now(),
+				Created:     modules.Time(time.Now()),
+				Updated:     modules.Time(time.Now()),
 			},
 		},
 		Attachments: []*TaskAttachment{
 			{
 				ID:      -120,
 				TaskID:  -100,
-				Created: time.Now(),
+				Created: modules.Time(time.Now()),
 			},
 		},
 		Comments: []*TaskComment{
 			{
 				ID:      -220,
 				Comment: "Lorem Ipsum Dummy",
-				Created: time.Now(),
-				Updated: time.Now(),
+				Created: modules.Time(time.Now()),
+				Updated: modules.Time(time.Now()),
 				Author: &user.User{
 					ID:       -100,
 					Username: "dummy",
 					Name:     "dummy",
 					Email:    "dummy@vikunja",
-					Created:  time.Now(),
-					Updated:  time.Now(),
+					Created:  modules.Time(time.Now()),
+					Updated:  modules.Time(time.Now()),
 				},
 			},
 		},
@@ -476,22 +477,22 @@ func convertTaskToTypesenseTask(task *Task, positions []*TaskPositionWithView, b
 		Title:                  task.Title,
 		Description:            task.Description,
 		Done:                   task.Done,
-		DoneAt:                 pointer.Int64(task.DoneAt.UTC().Unix()),
-		DueDate:                pointer.Int64(task.DueDate.UTC().Unix()),
+		DoneAt:                 pointer.Int64(task.DoneAt.Unix()),
+		DueDate:                pointer.Int64(task.DueDate.Unix()),
 		ProjectID:              task.ProjectID,
 		RepeatAfter:            task.RepeatAfter,
 		RepeatMode:             int(task.RepeatMode),
 		Priority:               task.Priority,
-		StartDate:              pointer.Int64(task.StartDate.UTC().Unix()),
-		EndDate:                pointer.Int64(task.EndDate.UTC().Unix()),
+		StartDate:              pointer.Int64(task.StartDate.Unix()),
+		EndDate:                pointer.Int64(task.EndDate.Unix()),
 		HexColor:               task.HexColor,
 		PercentDone:            task.PercentDone,
 		Identifier:             task.Identifier,
 		Index:                  task.Index,
 		UID:                    task.UID,
 		CoverImageAttachmentID: task.CoverImageAttachmentID,
-		Created:                task.Created.UTC().Unix(),
-		Updated:                task.Updated.UTC().Unix(),
+		Created:                task.Created.Unix(),
+		Updated:                task.Updated.Unix(),
 		CreatedByID:            task.CreatedByID,
 		Reminders:              task.Reminders,
 		Assignees:              task.Assignees,

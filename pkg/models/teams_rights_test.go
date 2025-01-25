@@ -17,11 +17,10 @@
 package models
 
 import (
-	"testing"
-	"time"
-
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/modules"
 	"code.vikunja.io/api/pkg/user"
+	"testing"
 
 	"code.vikunja.io/api/pkg/web"
 )
@@ -34,8 +33,8 @@ func TestTeam_CanDoSomething(t *testing.T) {
 		CreatedByID int64
 		CreatedBy   *user.User
 		Members     []*TeamUser
-		Created     time.Time
-		Updated     time.Time
+		Created     modules.Time
+		Updated     modules.Time
 		CRUDable    web.CRUDable
 		Rights      web.Rights
 	}

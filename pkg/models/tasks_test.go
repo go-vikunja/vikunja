@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/modules"
 	"testing"
 	"time"
 
@@ -81,9 +82,9 @@ func TestTask_Create(t *testing.T) {
 			Title:       "Lorem",
 			Description: "Lorem Ipsum Dolor",
 			ProjectID:   1,
-			DueDate:     time.Date(2023, time.March, 7, 22, 5, 0, 0, time.Local),
-			StartDate:   time.Date(2023, time.March, 7, 22, 5, 10, 0, time.Local),
-			EndDate:     time.Date(2023, time.March, 7, 22, 5, 20, 0, time.Local),
+			DueDate:     modules.Time(time.Date(2023, time.March, 7, 22, 5, 0, 0, time.Local)),
+			StartDate:   modules.Time(time.Date(2023, time.March, 7, 22, 5, 10, 0, time.Local)),
+			EndDate:     modules.Time(time.Date(2023, time.March, 7, 22, 5, 20, 0, time.Local)),
 			Reminders: []*TaskReminder{
 				{
 					RelativeTo:     "due_date",
@@ -98,7 +99,7 @@ func TestTask_Create(t *testing.T) {
 					RelativePeriod: -1,
 				},
 				{
-					Reminder: time.Date(2023, time.March, 7, 23, 0, 0, 0, time.Local),
+					Reminder: modules.Time(time.Date(2023, time.March, 7, 23, 0, 0, 0, time.Local)),
 				},
 			}}
 		err := task.Create(s, usr)
@@ -359,9 +360,9 @@ func TestTask_Update(t *testing.T) {
 			ID:        1,
 			ProjectID: 1,
 			Title:     "test",
-			DueDate:   time.Date(2023, time.March, 7, 22, 5, 0, 0, time.Local),
-			StartDate: time.Date(2023, time.March, 7, 22, 5, 10, 0, time.Local),
-			EndDate:   time.Date(2023, time.March, 7, 22, 5, 20, 0, time.Local),
+			DueDate:   modules.Time(time.Date(2023, time.March, 7, 22, 5, 0, 0, time.Local)),
+			StartDate: modules.Time(time.Date(2023, time.March, 7, 22, 5, 10, 0, time.Local)),
+			EndDate:   modules.Time(time.Date(2023, time.March, 7, 22, 5, 20, 0, time.Local)),
 			Reminders: []*TaskReminder{
 				{
 					RelativeTo:     "due_date",
@@ -376,7 +377,7 @@ func TestTask_Update(t *testing.T) {
 					RelativePeriod: -1,
 				},
 				{
-					Reminder: time.Date(2023, time.March, 7, 23, 0, 0, 0, time.Local),
+					Reminder: modules.Time(time.Date(2023, time.March, 7, 23, 0, 0, 0, time.Local)),
 				},
 			}}
 		err := task.Update(s, u)
@@ -403,10 +404,10 @@ func TestTask_Update(t *testing.T) {
 			Title: "test",
 			Reminders: []*TaskReminder{
 				{
-					Reminder: time.Unix(1674745156, 0),
+					Reminder: modules.Time(time.Unix(1674745156, 0)),
 				},
 				{
-					Reminder: time.Unix(1674745156, 223),
+					Reminder: modules.Time(time.Unix(1674745156, 223)),
 				},
 			},
 			ProjectID: 1,
@@ -426,7 +427,7 @@ func TestTask_Update(t *testing.T) {
 		taskBefore := &Task{
 			Title:     "test",
 			ProjectID: 1,
-			StartDate: time.Date(2022, time.March, 8, 8, 5, 20, 0, time.Local),
+			StartDate: modules.Time(time.Date(2022, time.March, 8, 8, 5, 20, 0, time.Local)),
 			Reminders: []*TaskReminder{
 				{
 					RelativeTo:     "start_date",
@@ -441,7 +442,7 @@ func TestTask_Update(t *testing.T) {
 
 		// when start_date is modified
 		task := taskBefore
-		task.StartDate = time.Date(2023, time.March, 8, 8, 5, 0, 0, time.Local)
+		task.StartDate = modules.Time(time.Date(2023, time.March, 8, 8, 5, 0, 0, time.Local))
 		err = task.Update(s, u)
 		require.NoError(t, err)
 
@@ -481,7 +482,7 @@ func TestUpdateDone(t *testing.T) {
 		oldTask := &Task{Done: false}
 		newTask := &Task{Done: true}
 		updateDone(oldTask, newTask)
-		assert.NotEqual(t, time.Time{}, newTask.DoneAt)
+		assert.NotEqual(t, modules.Time{}, newTask.DoneAt)
 	})
 	t.Run("unmarking a task as done", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -491,10 +492,10 @@ func TestUpdateDone(t *testing.T) {
 		oldTask := &Task{Done: true}
 		newTask := &Task{Done: false}
 		updateDone(oldTask, newTask)
-		assert.Equal(t, time.Time{}, newTask.DoneAt)
+		assert.Equal(t, modules.Time{}, newTask.DoneAt)
 	})
 	t.Run("no interval set, default repeat mode", func(t *testing.T) {
-		dueDate := time.Unix(1550000000, 0)
+		dueDate := modules.Time(time.Unix(1550000000, 0))
 		oldTask := &Task{
 			Done:        false,
 			RepeatAfter: 0,
@@ -515,7 +516,7 @@ func TestUpdateDone(t *testing.T) {
 			oldTask := &Task{
 				Done:        false,
 				RepeatAfter: 8600,
-				DueDate:     time.Unix(1550000000, 0),
+				DueDate:     modules.Time(time.Unix(1550000000, 0)),
 			}
 			newTask := &Task{
 				Done: true,
@@ -534,11 +535,11 @@ func TestUpdateDone(t *testing.T) {
 			oldTask := &Task{
 				Done:        false,
 				RepeatAfter: 8600,
-				DueDate:     time.Time{},
+				DueDate:     modules.Time{},
 			}
 			newTask := &Task{
 				Done:    true,
-				DueDate: time.Unix(1543626724, 0),
+				DueDate: modules.Time(time.Unix(1543626724, 0)),
 			}
 			updateDone(oldTask, newTask)
 			assert.Equal(t, time.Unix(1543626724, 0), newTask.DueDate)
@@ -550,10 +551,10 @@ func TestUpdateDone(t *testing.T) {
 				RepeatAfter: 8600,
 				Reminders: []*TaskReminder{
 					{
-						Reminder: time.Unix(1550000000, 0),
+						Reminder: modules.Time(time.Unix(1550000000, 0)),
 					},
 					{
-						Reminder: time.Unix(1555000000, 0),
+						Reminder: modules.Time(time.Unix(1555000000, 0)),
 					},
 				},
 			}
@@ -580,7 +581,7 @@ func TestUpdateDone(t *testing.T) {
 			oldTask := &Task{
 				Done:        false,
 				RepeatAfter: 8600,
-				StartDate:   time.Unix(1550000000, 0),
+				StartDate:   modules.Time(time.Unix(1550000000, 0)),
 			}
 			newTask := &Task{
 				Done: true,
@@ -599,7 +600,7 @@ func TestUpdateDone(t *testing.T) {
 			oldTask := &Task{
 				Done:        false,
 				RepeatAfter: 8600,
-				EndDate:     time.Unix(1550000000, 0),
+				EndDate:     modules.Time(time.Unix(1550000000, 0)),
 			}
 			newTask := &Task{
 				Done: true,
@@ -618,7 +619,7 @@ func TestUpdateDone(t *testing.T) {
 			oldTask := &Task{
 				Done:        false,
 				RepeatAfter: 8600,
-				DueDate:     time.Now().Add(time.Hour),
+				DueDate:     modules.Time(time.Now().Add(time.Hour)),
 			}
 			newTask := &Task{
 				Done: true,
@@ -634,14 +635,14 @@ func TestUpdateDone(t *testing.T) {
 					Done:        false,
 					RepeatAfter: 8600,
 					RepeatMode:  TaskRepeatModeFromCurrentDate,
-					DueDate:     time.Unix(1550000000, 0),
+					DueDate:     modules.Time(time.Unix(1550000000, 0)),
 				}
 				newTask := &Task{
 					Done: true,
 				}
 				updateDone(oldTask, newTask)
 
-				// Only comparing unix timestamps because time.Time use nanoseconds which can't ever possibly have the same value
+				// Only comparing unix timestamps because Time use nanoseconds which can't ever possibly have the same value
 				assert.Equal(t, time.Now().Add(time.Duration(oldTask.RepeatAfter)*time.Second).Unix(), newTask.DueDate.Unix())
 				assert.False(t, newTask.Done)
 			})
@@ -652,10 +653,10 @@ func TestUpdateDone(t *testing.T) {
 					RepeatMode:  TaskRepeatModeFromCurrentDate,
 					Reminders: []*TaskReminder{
 						{
-							Reminder: time.Unix(1550000000, 0),
+							Reminder: modules.Time(time.Unix(1550000000, 0)),
 						},
 						{
-							Reminder: time.Unix(1555000000, 0),
+							Reminder: modules.Time(time.Unix(1555000000, 0)),
 						},
 					}}
 				newTask := &Task{
@@ -666,7 +667,7 @@ func TestUpdateDone(t *testing.T) {
 				diff := oldTask.Reminders[1].Reminder.Sub(oldTask.Reminders[0].Reminder)
 
 				assert.Len(t, newTask.Reminders, 2)
-				// Only comparing unix timestamps because time.Time use nanoseconds which can't ever possibly have the same value
+				// Only comparing unix timestamps because Time use nanoseconds which can't ever possibly have the same value
 				assert.Equal(t, time.Now().Add(time.Duration(oldTask.RepeatAfter)*time.Second).Unix(), newTask.Reminders[0].Reminder.Unix())
 				assert.Equal(t, time.Now().Add(diff+time.Duration(oldTask.RepeatAfter)*time.Second).Unix(), newTask.Reminders[1].Reminder.Unix())
 				assert.False(t, newTask.Done)
@@ -676,14 +677,14 @@ func TestUpdateDone(t *testing.T) {
 					Done:        false,
 					RepeatAfter: 8600,
 					RepeatMode:  TaskRepeatModeFromCurrentDate,
-					StartDate:   time.Unix(1550000000, 0),
+					StartDate:   modules.Time(time.Unix(1550000000, 0)),
 				}
 				newTask := &Task{
 					Done: true,
 				}
 				updateDone(oldTask, newTask)
 
-				// Only comparing unix timestamps because time.Time use nanoseconds which can't ever possibly have the same value
+				// Only comparing unix timestamps because Time use nanoseconds which can't ever possibly have the same value
 				assert.Equal(t, time.Now().Add(time.Duration(oldTask.RepeatAfter)*time.Second).Unix(), newTask.StartDate.Unix())
 				assert.False(t, newTask.Done)
 			})
@@ -692,14 +693,14 @@ func TestUpdateDone(t *testing.T) {
 					Done:        false,
 					RepeatAfter: 8600,
 					RepeatMode:  TaskRepeatModeFromCurrentDate,
-					EndDate:     time.Unix(1560000000, 0),
+					EndDate:     modules.Time(time.Unix(1560000000, 0)),
 				}
 				newTask := &Task{
 					Done: true,
 				}
 				updateDone(oldTask, newTask)
 
-				// Only comparing unix timestamps because time.Time use nanoseconds which can't ever possibly have the same value
+				// Only comparing unix timestamps because Time use nanoseconds which can't ever possibly have the same value
 				assert.Equal(t, time.Now().Add(time.Duration(oldTask.RepeatAfter)*time.Second).Unix(), newTask.EndDate.Unix())
 				assert.False(t, newTask.Done)
 			})
@@ -708,8 +709,8 @@ func TestUpdateDone(t *testing.T) {
 					Done:        false,
 					RepeatAfter: 8600,
 					RepeatMode:  TaskRepeatModeFromCurrentDate,
-					StartDate:   time.Unix(1550000000, 0),
-					EndDate:     time.Unix(1560000000, 0),
+					StartDate:   modules.Time(time.Unix(1550000000, 0)),
+					EndDate:     modules.Time(time.Unix(1560000000, 0)),
 				}
 				newTask := &Task{
 					Done: true,
@@ -718,7 +719,7 @@ func TestUpdateDone(t *testing.T) {
 
 				diff := oldTask.EndDate.Sub(oldTask.StartDate)
 
-				// Only comparing unix timestamps because time.Time use nanoseconds which can't ever possibly have the same value
+				// Only comparing unix timestamps because Time use nanoseconds which can't ever possibly have the same value
 				assert.Equal(t, time.Now().Add(time.Duration(oldTask.RepeatAfter)*time.Second).Unix(), newTask.StartDate.Unix())
 				assert.Equal(t, time.Now().Add(diff+time.Duration(oldTask.RepeatAfter)*time.Second).Unix(), newTask.EndDate.Unix())
 				assert.False(t, newTask.Done)
@@ -729,7 +730,7 @@ func TestUpdateDone(t *testing.T) {
 				oldTask := &Task{
 					Done:       false,
 					RepeatMode: TaskRepeatModeMonth,
-					DueDate:    time.Unix(1550000000, 0),
+					DueDate:    modules.Time(time.Unix(1550000000, 0)),
 				}
 				newTask := &Task{
 					Done: true,
@@ -748,16 +749,16 @@ func TestUpdateDone(t *testing.T) {
 					RepeatMode: TaskRepeatModeMonth,
 					Reminders: []*TaskReminder{
 						{
-							Reminder: time.Unix(1550000000, 0),
+							Reminder: modules.Time(time.Unix(1550000000, 0)),
 						},
 						{
-							Reminder: time.Unix(1555000000, 0),
+							Reminder: modules.Time(time.Unix(1555000000, 0)),
 						},
 					}}
 				newTask := &Task{
 					Done: true,
 				}
-				oldReminders := make([]time.Time, len(oldTask.Reminders))
+				oldReminders := make([]modules.Time, len(oldTask.Reminders))
 				for i, r := range newTask.Reminders {
 					oldReminders[i] = r.Reminder
 				}
@@ -775,7 +776,7 @@ func TestUpdateDone(t *testing.T) {
 				oldTask := &Task{
 					Done:       false,
 					RepeatMode: TaskRepeatModeMonth,
-					StartDate:  time.Unix(1550000000, 0),
+					StartDate:  modules.Time(time.Unix(1550000000, 0)),
 				}
 				newTask := &Task{
 					Done: true,
@@ -792,7 +793,7 @@ func TestUpdateDone(t *testing.T) {
 				oldTask := &Task{
 					Done:       false,
 					RepeatMode: TaskRepeatModeMonth,
-					EndDate:    time.Unix(1560000000, 0),
+					EndDate:    modules.Time(time.Unix(1560000000, 0)),
 				}
 				newTask := &Task{
 					Done: true,
@@ -809,8 +810,8 @@ func TestUpdateDone(t *testing.T) {
 				oldTask := &Task{
 					Done:       false,
 					RepeatMode: TaskRepeatModeMonth,
-					StartDate:  time.Unix(1550000000, 0),
-					EndDate:    time.Unix(1560000000, 0),
+					StartDate:  modules.Time(time.Unix(1550000000, 0)),
+					EndDate:    modules.Time(time.Unix(1560000000, 0)),
 				}
 				newTask := &Task{
 					Done: true,

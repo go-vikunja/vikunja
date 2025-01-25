@@ -1,7 +1,7 @@
 /**
  * Make date objects from timestamps
  */
-export function parseDateOrNull(date: string | Date) {
+export function parseDateOrNull(date: string | Date | null) {
 	if (date instanceof Date) {
 		return date
 	}

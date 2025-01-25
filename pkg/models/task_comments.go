@@ -17,9 +17,8 @@
 package models
 
 import (
-	"time"
-
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/modules"
 
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/user"
@@ -39,8 +38,8 @@ type TaskComment struct {
 
 	Reactions ReactionMap `xorm:"-" json:"reactions"`
 
-	Created time.Time `xorm:"created" json:"created"`
-	Updated time.Time `xorm:"updated" json:"updated"`
+	Created modules.Time `xorm:"created" json:"created"`
+	Updated modules.Time `xorm:"updated" json:"updated"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`
@@ -67,8 +66,8 @@ func (tc *TaskComment) TableName() string {
 func (tc *TaskComment) Create(s *xorm.Session, a web.Auth) (err error) {
 
 	tc.ID = 0
-	tc.Created = time.Time{}
-	tc.Updated = time.Time{}
+	tc.Created = modules.Time{}
+	tc.Updated = modules.Time{}
 
 	return tc.CreateWithTimestamps(s, a)
 }
@@ -86,7 +85,7 @@ func (tc *TaskComment) CreateWithTimestamps(s *xorm.Session, a web.Auth) (err er
 	}
 	tc.AuthorID = tc.Author.ID
 
-	if !tc.Created.IsZero() && !tc.Updated.IsZero() {
+	if !tc.Created.Time().IsZero() && !tc.Updated.Time().IsZero() {
 		_, err = s.NoAutoTime().Insert(tc)
 		if err != nil {
 			return

@@ -18,6 +18,7 @@ package microsofttodo
 
 import (
 	"bytes"
+	"code.vikunja.io/api/pkg/modules"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -54,8 +55,8 @@ type task struct {
 	IsReminderOn         bool              `json:"isReminderOn"`
 	Status               string            `json:"status"`
 	Title                string            `json:"title"`
-	CreatedDateTime      time.Time         `json:"createdDateTime"`
-	LastModifiedDateTime time.Time         `json:"lastModifiedDateTime"`
+	CreatedDateTime      modules.Time      `json:"createdDateTime"`
+	LastModifiedDateTime modules.Time      `json:"lastModifiedDateTime"`
 	ID                   string            `json:"id"`
 	Body                 *body             `json:"body"`
 	DueDateTime          *dateTimeTimeZone `json:"dueDateTime"`
@@ -113,13 +114,14 @@ type projectsResponse struct {
 	Value        []*project `json:"value"`
 }
 
-func (dtt *dateTimeTimeZone) toTime() (t time.Time, err error) {
+func (dtt *dateTimeTimeZone) toTime() (t modules.Time, err error) {
 	loc, err := time.LoadLocation(dtt.TimeZone)
 	if err != nil {
 		return t, err
 	}
 
-	return time.ParseInLocation(time.RFC3339Nano, dtt.DateTime+"Z", loc)
+	tt, err := time.ParseInLocation(time.RFC3339Nano, dtt.DateTime+"Z", loc)
+	return modules.Time(tt), err
 }
 
 // AuthURL returns the url users need to authenticate against

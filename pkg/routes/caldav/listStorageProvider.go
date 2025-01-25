@@ -28,6 +28,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	user2 "code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
+
 	"github.com/samedi/caldav-go/data"
 	"github.com/samedi/caldav-go/errs"
 	"xorm.io/xorm"
@@ -620,11 +621,11 @@ func (vlra *VikunjaProjectResourceAdapter) GetContentSize() int64 {
 // GetModTime returns when the resource was last modified
 func (vlra *VikunjaProjectResourceAdapter) GetModTime() time.Time {
 	if vlra.task != nil {
-		return vlra.task.Updated
+		return vlra.task.Updated.Time()
 	}
 
 	if vlra.project != nil {
-		return vlra.project.Updated
+		return vlra.project.Updated.Time()
 	}
 
 	return time.Time{}

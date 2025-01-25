@@ -225,7 +225,7 @@ type UndoneTaskOverdueNotification struct {
 
 // ToMail returns the mail notification for UndoneTaskOverdueNotification
 func (n *UndoneTaskOverdueNotification) ToMail() *notifications.Mail {
-	until := time.Until(n.Task.DueDate).Round(1*time.Hour) * -1
+	until := time.Until(n.Task.DueDate.Time()).Round(1*time.Hour) * -1
 	return notifications.NewMail().
 		IncludeLinkToSettings().
 		Subject(`Task "`+n.Task.Title+`" (`+n.Project.Title+`) is overdue`).
@@ -261,12 +261,12 @@ func (n *UndoneTasksOverdueNotification) ToMail() *notifications.Mail {
 	}
 
 	sort.Slice(sortedTasks, func(i, j int) bool {
-		return sortedTasks[i].DueDate.Before(sortedTasks[j].DueDate)
+		return sortedTasks[i].DueDate.Time().Before(sortedTasks[j].DueDate.Time())
 	})
 
 	overdueLine := ""
 	for _, task := range sortedTasks {
-		until := time.Until(task.DueDate).Round(1*time.Hour) * -1
+		until := time.Until(task.DueDate.Time()).Round(1*time.Hour) * -1
 		overdueLine += `* [` + task.Title + `](` + config.ServicePublicURL.GetString() + "tasks/" + strconv.FormatInt(task.ID, 10) + `) (` + n.Projects[task.ProjectID].Title + `), ` + getOverdueSinceString(until) + "\n"
 	}
 

@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/modules"
 	"fmt"
 	"math"
 	"strconv"
@@ -81,9 +82,9 @@ type Project struct {
 	MaxRight Right             `xorm:"-" json:"max_right"`
 
 	// A timestamp when this project was created. You cannot change this value.
-	Created time.Time `xorm:"created not null" json:"created"`
+	Created modules.Time `xorm:"created not null" json:"created"`
 	// A timestamp when this project was last updated. You cannot change this value.
-	Updated time.Time `xorm:"updated not null" json:"updated"`
+	Updated modules.Time `xorm:"updated not null" json:"updated"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`
@@ -154,8 +155,8 @@ var FavoritesPseudoProject = Project{
 		},
 	},
 
-	Created: time.Now(),
-	Updated: time.Now(),
+	Created: modules.Time(time.Now()),
+	Updated: modules.Time(time.Now()),
 }
 
 // ReadAll gets all projects a user has access to

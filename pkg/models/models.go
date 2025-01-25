@@ -17,23 +17,22 @@
 package models
 
 import (
-	"time"
-
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
-	_ "github.com/go-sql-driver/mysql" // Because.
-	_ "github.com/lib/pq"              // Because.
-	"xorm.io/xorm"
+	"code.vikunja.io/api/pkg/modules"
 
-	_ "github.com/mattn/go-sqlite3" // Because.
+	_ "github.com/go-sql-driver/mysql" // imported for side effects
+	_ "github.com/lib/pq"              // imported for side effects
+	_ "github.com/mattn/go-sqlite3"    // imported for side effects
+	"xorm.io/xorm"
 )
 
 var (
 	x *xorm.Engine
 
-	testCreatedTime time.Time
-	testUpdatedTime time.Time
+	testCreatedTime modules.Time
+	testUpdatedTime modules.Time
 )
 
 // GetTables returns all structs which are also a table.

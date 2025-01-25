@@ -26,6 +26,7 @@ import (
 
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules"
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
@@ -62,16 +63,20 @@ type tickTickTask struct {
 }
 
 type tickTickTime struct {
-	time.Time
+	modules.Time
 }
 
 func (date *tickTickTime) UnmarshalCSV(csv string) (err error) {
-	date.Time = time.Time{}
+	date.Time = modules.Time{}
 	if csv == "" {
 		return nil
 	}
-	date.Time, err = time.Parse(timeISO, csv)
-	return err
+	tt, err := time.Parse(timeISO, csv)
+	if err != nil {
+		return err
+	}
+	date.Time = modules.Time(tt)
+	return nil
 }
 
 func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.ProjectWithTasksAndBuckets) {
@@ -110,11 +115,11 @@ func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.ProjectWi
 				ID:          t.TaskID,
 				Title:       t.Title,
 				Description: t.Content,
-				StartDate:   t.StartDate.Time,
-				EndDate:     t.DueDate.Time,
-				DueDate:     t.DueDate.Time,
+				StartDate:   modules.Time(t.StartDate.Time),
+				EndDate:     modules.Time(t.DueDate.Time),
+				DueDate:     modules.Time(t.DueDate.Time),
 				Done:        t.Status == "1",
-				DoneAt:      t.CompletedTime.Time,
+				DoneAt:      modules.Time(t.CompletedTime.Time),
 				Position:    t.Order,
 				Labels:      labels,
 			},

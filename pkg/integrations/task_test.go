@@ -91,9 +91,9 @@ func TestTask(t *testing.T) {
 				assert.NotContains(t, rec.Body.String(), `"due_date":0`)
 			})
 			t.Run("Due date unset", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "5"}, `{"due_date": null}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "5"}, `{"due_date":null}`)
 				require.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"due_date":"0001-01-01T00:00:00Z"`)
+				assert.Contains(t, rec.Body.String(), `"due_date":null`)
 				assert.NotContains(t, rec.Body.String(), `"due_date":"2020-02-10T10:00:00Z"`)
 			})
 			t.Run("Reminders", func(t *testing.T) {
@@ -110,8 +110,8 @@ func TestTask(t *testing.T) {
 				assert.Contains(t, rec.Body.String(), `"reminders":null`)
 				assert.NotContains(t, rec.Body.String(), `{"Reminder":"2020-02-10T10:00:00Z"`)
 			})
-			t.Run("Reminders unset to null", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "27"}, `{"reminders": null}`)
+			t.Run("Reminders unset tonull", func(t *testing.T) {
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "27"}, `{"reminders":null}`)
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"reminders":null`)
 				assert.NotContains(t, rec.Body.String(), `{"Reminder":"2020-02-10T10:00:00Z"`)
@@ -146,7 +146,7 @@ func TestTask(t *testing.T) {
 				assert.Contains(t, rec.Body.String(), `"assignees":null`)
 				assert.NotContains(t, rec.Body.String(), `"assignees":[{"id":1`)
 			})
-			t.Run("Removing Assignees null", func(t *testing.T) {
+			t.Run("Removing Assigneesnull", func(t *testing.T) {
 				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "30"}, `{"assignees":null}`)
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"assignees":null`)
@@ -171,9 +171,9 @@ func TestTask(t *testing.T) {
 				assert.NotContains(t, rec.Body.String(), `"start_date":0`)
 			})
 			t.Run("Start date unset", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "7"}, `{"start_date":"0001-01-01T00:00:00Z"}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "7"}, `{"start_date":null}`)
 				require.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"start_date":"0001-01-01T00:00:00Z"`)
+				assert.Contains(t, rec.Body.String(), `"start_date":null`)
 				assert.NotContains(t, rec.Body.String(), `"start_date":"2020-02-10T10:00:00Z"`)
 			})
 			t.Run("End date", func(t *testing.T) {
@@ -183,9 +183,9 @@ func TestTask(t *testing.T) {
 				assert.NotContains(t, rec.Body.String(), `"end_date":""`)
 			})
 			t.Run("End date unset", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "8"}, `{"end_date":"0001-01-01T00:00:00Z"}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "8"}, `{"end_date":null}`)
 				require.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"end_date":"0001-01-01T00:00:00Z"`)
+				assert.Contains(t, rec.Body.String(), `"end_date":null`)
 				assert.NotContains(t, rec.Body.String(), `"end_date":"2020-02-10T10:00:00Z"`)
 			})
 			t.Run("Color", func(t *testing.T) {

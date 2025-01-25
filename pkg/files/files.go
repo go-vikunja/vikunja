@@ -22,12 +22,12 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/metrics"
+	"code.vikunja.io/api/pkg/modules"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 
 	"code.vikunja.io/api/pkg/web"
@@ -43,8 +43,8 @@ type File struct {
 	Mime string `xorm:"text null" json:"mime"`
 	Size uint64 `xorm:"bigint not null" json:"size"`
 
-	Created     time.Time `xorm:"created" json:"created"`
-	CreatedByID int64     `xorm:"bigint not null" json:"-"`
+	Created     modules.Time `xorm:"created" json:"created"`
+	CreatedByID int64        `xorm:"bigint not null" json:"-"`
 
 	File afero.File `xorm:"-" json:"-"`
 	// This ReadCloser is only used for migration purposes. Use with care!

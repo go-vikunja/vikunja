@@ -17,9 +17,8 @@
 package models
 
 import (
-	"time"
-
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/modules"
 
 	"xorm.io/builder"
 	"xorm.io/xorm"
@@ -93,7 +92,7 @@ type TaskRelation struct {
 	CreatedBy *user.User `xorm:"-" json:"created_by"`
 
 	// A timestamp when this label was created. You cannot change this value.
-	Created time.Time `xorm:"created not null" json:"created"`
+	Created modules.Time `xorm:"created not null" json:"created"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`

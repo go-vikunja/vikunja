@@ -22,6 +22,7 @@ import (
 	"code.vikunja.io/api/pkg/cron"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/modules"
 	"code.vikunja.io/api/pkg/notifications"
 
 	"xorm.io/builder"
@@ -52,15 +53,15 @@ func notifyUsersScheduledForDeletion() {
 	log.Debugf("Found %d users scheduled for deletion to notify", len(users))
 
 	for _, user := range users {
-		if time.Since(user.DeletionLastReminderSent) < time.Hour*24 {
+		if time.Since(user.DeletionLastReminderSent.Time()) < time.Hour*24 {
 			continue
 		}
 
 		var number = 2
-		if user.DeletionLastReminderSent.IsZero() {
+		if user.DeletionLastReminderSent.Time().IsZero() {
 			number = 3
 		}
-		if user.DeletionScheduledAt.Sub(user.DeletionLastReminderSent) < time.Hour*24 {
+		if user.DeletionScheduledAt.Time().Sub(user.DeletionLastReminderSent.Time()) < time.Hour*24 {
 			number = 1
 		}
 
@@ -75,7 +76,7 @@ func notifyUsersScheduledForDeletion() {
 			continue
 		}
 
-		user.DeletionLastReminderSent = time.Now()
+		user.DeletionLastReminderSent = modules.Time(time.Now())
 		_, err = s.Where("id = ?", user.ID).
 			Cols("deletion_last_reminder_sent").
 			Update(user)
@@ -115,7 +116,7 @@ func ConfirmDeletion(s *xorm.Session, user *User, token string) (err error) {
 		return err
 	}
 
-	user.DeletionScheduledAt = time.Now().Add(3 * 24 * time.Hour)
+	user.DeletionScheduledAt = modules.Time(time.Now().Add(3 * 24 * time.Hour))
 	_, err = s.Where("id = ?", user.ID).
 		Cols("deletion_scheduled_at").
 		Update(user)
@@ -124,8 +125,8 @@ func ConfirmDeletion(s *xorm.Session, user *User, token string) (err error) {
 
 // CancelDeletion cancels the deletion of a user
 func CancelDeletion(s *xorm.Session, user *User) (err error) {
-	user.DeletionScheduledAt = time.Time{}
-	user.DeletionLastReminderSent = time.Time{}
+	user.DeletionScheduledAt = modules.Time{}
+	user.DeletionLastReminderSent = modules.Time{}
 	_, err = s.Where("id = ?", user.ID).
 		Cols("deletion_scheduled_at", "deletion_last_reminder_sent").
 		Update(user)

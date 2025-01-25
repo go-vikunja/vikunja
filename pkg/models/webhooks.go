@@ -18,6 +18,7 @@ package models
 
 import (
 	"bytes"
+	"code.vikunja.io/api/pkg/modules"
 	"context"
 	"crypto/hmac"
 	"crypto/sha256"
@@ -61,9 +62,9 @@ type Webhook struct {
 	CreatedByID int64      `xorm:"bigint not null" json:"-"`
 
 	// A timestamp when this webhook target was created. You cannot change this value.
-	Created time.Time `xorm:"created not null" json:"created"`
+	Created modules.Time `xorm:"created not null" json:"created"`
 	// A timestamp when this webhook target was last updated. You cannot change this value.
-	Updated time.Time `xorm:"updated not null" json:"updated"`
+	Updated modules.Time `xorm:"updated not null" json:"updated"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`

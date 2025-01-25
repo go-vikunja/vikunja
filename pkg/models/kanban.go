@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/modules"
 	"strconv"
 	"strings"
 	"time"
@@ -50,9 +51,9 @@ type Bucket struct {
 	Position float64 `xorm:"double null" json:"position"`
 
 	// A timestamp when this bucket was created. You cannot change this value.
-	Created time.Time `xorm:"created not null" json:"created"`
+	Created modules.Time `xorm:"created not null" json:"created"`
 	// A timestamp when this bucket was last updated. You cannot change this value.
-	Updated time.Time `xorm:"updated not null" json:"updated"`
+	Updated modules.Time `xorm:"updated not null" json:"updated"`
 
 	// The user who initially created the bucket.
 	CreatedBy   *user.User `xorm:"-" json:"created_by" valid:"-"`
@@ -175,8 +176,8 @@ func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, projects []*Pr
 				ProjectViewID: view.ID,
 				Position:      float64(id),
 				CreatedByID:   auth.GetID(),
-				Created:       time.Now(),
-				Updated:       time.Now(),
+				Created:       modules.Time(time.Now()),
+				Updated:       modules.Time(time.Now()),
 			})
 		}
 	}

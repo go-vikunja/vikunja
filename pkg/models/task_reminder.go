@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/modules"
 	"time"
 
 	"code.vikunja.io/api/pkg/utils"
@@ -50,8 +51,8 @@ type TaskReminder struct {
 	ID     int64 `xorm:"bigint autoincr not null unique pk" json:"-"`
 	TaskID int64 `xorm:"bigint not null INDEX" json:"-"`
 	// The absolute time when the user wants to be reminded of the task.
-	Reminder time.Time `xorm:"DATETIME not null INDEX 'reminder'" json:"reminder"`
-	Created  time.Time `xorm:"created not null" json:"-"`
+	Reminder modules.Time `xorm:"DATETIME not null INDEX 'reminder'" json:"reminder"`
+	Created  modules.Time `xorm:"created not null" json:"-"`
 	// A period in seconds relative to another date argument. Negative values mean the reminder triggers before the date. Default: 0, tiggers when RelativeTo is due.
 	RelativePeriod int64 `xorm:"bigint null" json:"relative_period"`
 	// The name of the date field to which the relative period refers to.
@@ -243,7 +244,7 @@ func getTasksWithRemindersDueAndTheirUsers(s *xorm.Session, now time.Time) (remi
 				tzs[u.User.Timezone] = tz
 			}
 
-			actualReminder := r.Reminder.In(tz)
+			actualReminder := r.Reminder.Time().In(tz)
 			if (actualReminder.After(now) && actualReminder.Before(now.Add(time.Minute))) || actualReminder.Equal(now) {
 				reminderNotifications = append(reminderNotifications, &ReminderDueNotification{
 					User:    u.User,

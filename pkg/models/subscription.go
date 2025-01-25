@@ -17,13 +17,12 @@
 package models
 
 import (
-	"encoding/json"
-	"strconv"
-	"time"
-
+	"code.vikunja.io/api/pkg/modules"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web"
+	"encoding/json"
+	"strconv"
 
 	"xorm.io/xorm"
 )
@@ -107,7 +106,7 @@ type Subscription struct {
 	UserID int64 `xorm:"bigint index not null" json:"-"`
 
 	// A timestamp when this subscription was created. You cannot change this value.
-	Created time.Time `xorm:"created not null" json:"created"`
+	Created modules.Time `xorm:"created not null" json:"created"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`

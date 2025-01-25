@@ -17,8 +17,7 @@
 package models
 
 import (
-	"time"
-
+	"code.vikunja.io/api/pkg/modules"
 	"code.vikunja.io/api/pkg/web"
 	"xorm.io/builder"
 	"xorm.io/xorm"
@@ -51,7 +50,7 @@ type Reaction struct {
 	Value string `xorm:"varchar(20) not null INDEX" json:"value" valid:"required"`
 
 	// A timestamp when this reaction was created. You cannot change this value.
-	Created time.Time `xorm:"created not null" json:"created"`
+	Created modules.Time `xorm:"created not null" json:"created"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`

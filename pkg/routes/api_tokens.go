@@ -73,8 +73,8 @@ func checkAPITokenAndPutItInContext(tokenHeaderValue string, c echo.Context) err
 		return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
 	}
 
-	if time.Now().After(token.ExpiresAt) {
-		log.Debugf("[auth] Tried authenticating with token %d but it expired on %s", token.ID, token.ExpiresAt.String())
+	if time.Now().After(token.ExpiresAt.Time()) {
+		log.Debugf("[auth] Tried authenticating with token %d but it expired on %s", token.ID, token.ExpiresAt.Time().String())
 		return echo.NewHTTPError(http.StatusUnauthorized)
 	}
 

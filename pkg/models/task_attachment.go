@@ -18,18 +18,17 @@ package models
 
 import (
 	"bytes"
+	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/files"
+	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/modules"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
+	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/web"
 	"image"
 	"image/png"
 	"io"
 	"strconv"
-	"time"
-
-	"code.vikunja.io/api/pkg/events"
-	"code.vikunja.io/api/pkg/files"
-	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/modules/keyvalue"
-	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/web"
 
 	"github.com/disintegration/imaging"
 	"xorm.io/xorm"
@@ -46,7 +45,7 @@ type TaskAttachment struct {
 
 	File *files.File `xorm:"-" json:"file"`
 
-	Created time.Time `xorm:"created" json:"created"`
+	Created modules.Time `xorm:"created" json:"created"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`

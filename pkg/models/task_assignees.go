@@ -17,10 +17,9 @@
 package models
 
 import (
-	"time"
-
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/modules"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
@@ -30,10 +29,10 @@ import (
 
 // TaskAssginee represents an assignment of a user to a task
 type TaskAssginee struct {
-	ID      int64     `xorm:"bigint autoincr not null unique pk" json:"-"`
-	TaskID  int64     `xorm:"bigint INDEX not null" json:"-" param:"projecttask"`
-	UserID  int64     `xorm:"bigint INDEX not null" json:"user_id" param:"user"`
-	Created time.Time `xorm:"created not null"`
+	ID      int64        `xorm:"bigint autoincr not null unique pk" json:"-"`
+	TaskID  int64        `xorm:"bigint INDEX not null" json:"-" param:"projecttask"`
+	UserID  int64        `xorm:"bigint INDEX not null" json:"user_id" param:"user"`
+	Created modules.Time `xorm:"created not null"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`

@@ -19,6 +19,8 @@ package notifications
 import (
 	"time"
 
+	"code.vikunja.io/api/pkg/modules"
+
 	"xorm.io/xorm"
 )
 
@@ -37,10 +39,10 @@ type DatabaseNotification struct {
 	SubjectID int64 `xorm:"bigint null" json:"-"`
 
 	// When this notification is marked as read, this will be updated with the current timestamp.
-	ReadAt time.Time `xorm:"datetime null" json:"read_at"`
+	ReadAt modules.Time `xorm:"datetime null" json:"read_at"`
 
 	// A timestamp when this notification was created. You cannot change this value.
-	Created time.Time `xorm:"created not null" json:"created"`
+	Created modules.Time `xorm:"created not null" json:"created"`
 }
 
 // TableName resolves to a better table name for notifications
@@ -86,9 +88,9 @@ func CanMarkNotificationAsRead(s *xorm.Session, notification *DatabaseNotificati
 // MarkNotificationAsRead marks a notification as read. It should be called only after CanMarkNotificationAsRead has
 // been called.
 func MarkNotificationAsRead(s *xorm.Session, notification *DatabaseNotification, read bool) (err error) {
-	notification.ReadAt = time.Time{}
+	notification.ReadAt = modules.Time{}
 	if read {
-		notification.ReadAt = time.Now()
+		notification.ReadAt = modules.Time(time.Now())
 	}
 
 	_, err = s.
@@ -102,6 +104,8 @@ func MarkAllNotificationsAsRead(s *xorm.Session, userID int64) (err error) {
 	_, err = s.
 		Where("notifiable_id = ?", userID).
 		Cols("read_at").
-		Update(&DatabaseNotification{ReadAt: time.Now()})
+		Update(&DatabaseNotification{
+			ReadAt: modules.Time(time.Now()),
+		})
 	return
 }

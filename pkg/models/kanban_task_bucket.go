@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/modules"
 	"time"
 
 	"code.vikunja.io/api/pkg/events"
@@ -152,9 +153,9 @@ func (b *TaskBucket) Update(s *xorm.Session, a web.Auth) (err error) {
 
 	if doneChanged {
 		if task.Done {
-			task.DoneAt = time.Now()
+			task.DoneAt = modules.Time(time.Now())
 		} else {
-			task.DoneAt = time.Time{}
+			task.DoneAt = modules.Time{}
 		}
 		_, err = s.Where("id = ?", task.ID).
 			Cols(

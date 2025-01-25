@@ -18,6 +18,7 @@ package trello
 
 import (
 	"bytes"
+	"code.vikunja.io/api/pkg/modules"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/files"
@@ -296,7 +297,7 @@ func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Bo
 				}
 
 				if card.Due != nil {
-					task.DueDate = *card.Due
+					task.DueDate = modules.Time(*card.Due)
 				}
 
 				// Checklists (as markdown in description)
@@ -405,8 +406,8 @@ func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Bo
 
 						comment := &models.TaskComment{
 							Comment: action.Data.Text,
-							Created: action.Date,
-							Updated: action.Date,
+							Created: modules.Time(action.Date),
+							Updated: modules.Time(action.Date),
 						}
 
 						if currentMember == nil || action.IDMemberCreator != currentMember.ID {

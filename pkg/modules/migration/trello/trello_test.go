@@ -25,6 +25,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules"
 
 	"github.com/adlio/trello"
 	"github.com/d4l3k/messagediff"
@@ -32,7 +33,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func getTestBoard(t *testing.T) ([]*trello.Board, time.Time) {
+func getTestBoard(t *testing.T) ([]*trello.Board, modules.Time) {
 
 	config.InitConfig()
 
@@ -234,7 +235,7 @@ func getTestBoard(t *testing.T) ([]*trello.Board, time.Time) {
 	}
 	trelloData[0].Prefs.BackgroundImage = "https://vikunja.io/testimage.jpg" // Using an image which we are hosting, so it'll still be up
 
-	return trelloData, time1
+	return trelloData, modules.Time(time1)
 }
 
 func TestConvertTrelloToVikunja(t *testing.T) {

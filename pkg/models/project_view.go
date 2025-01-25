@@ -17,11 +17,10 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/modules"
+	"code.vikunja.io/api/pkg/web"
 	"encoding/json"
 	"fmt"
-	"time"
-
-	"code.vikunja.io/api/pkg/web"
 
 	"xorm.io/xorm"
 )
@@ -145,9 +144,9 @@ type ProjectView struct {
 	DoneBucketID int64 `xorm:"bigint INDEX null" json:"done_bucket_id"`
 
 	// A timestamp when this view was updated. You cannot change this value.
-	Updated time.Time `xorm:"updated not null" json:"updated"`
+	Updated modules.Time `xorm:"updated not null" json:"updated"`
 	// A timestamp when this reaction was created. You cannot change this value.
-	Created time.Time `xorm:"created not null" json:"created"`
+	Created modules.Time `xorm:"created not null" json:"created"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`

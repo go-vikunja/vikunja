@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/modules"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -31,7 +32,6 @@ import (
 	"github.com/iancoleman/strcase"
 	"github.com/jszwedko/go-datemath"
 	"xorm.io/builder"
-	"xorm.io/xorm/schemas"
 )
 
 type taskFilterComparator string
@@ -62,13 +62,14 @@ type taskFilter struct {
 	join       taskFilterConcatinator
 }
 
-func parseTimeFromUserInput(timeString string) (value time.Time, err error) {
-	value, err = time.Parse(time.RFC3339, timeString)
+func parseTimeFromUserInput(timeString string) (value modules.Time, err error) {
+	var timeValue time.Time
+	timeValue, err = time.Parse(time.RFC3339, timeString)
 	if err != nil {
-		value, err = time.Parse(safariDateAndTime, timeString)
+		timeValue, err = time.Parse(safariDateAndTime, timeString)
 	}
 	if err != nil {
-		value, err = time.Parse(safariDate, timeString)
+		timeValue, err = time.Parse(safariDate, timeString)
 	}
 	if err != nil {
 		// Here we assume a date like 2022-11-1 and try to parse it manually
@@ -88,10 +89,10 @@ func parseTimeFromUserInput(timeString string) (value time.Time, err error) {
 		if err != nil {
 			return value, err
 		}
-		value = time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
-		return value.In(config.GetTimeZone()), nil
+		timeValue = time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
+		return modules.Time(timeValue.In(config.GetTimeZone())), nil
 	}
-	return value.In(config.GetTimeZone()), err
+	return modules.Time(timeValue.In(config.GetTimeZone())), nil
 }
 
 func parseFilterFromExpression(f fexpr.ExprGroup, loc *time.Location) (filter *taskFilter, err error) {
@@ -286,12 +287,12 @@ func getValueForField(field reflect.StructField, rawValue string, loc *time.Loca
 	case reflect.Bool:
 		value, err = strconv.ParseBool(rawValue)
 	case reflect.Struct:
-		if field.Type == schemas.TimeType {
+		if field.Type == reflect.TypeOf((*modules.Time)(nil)).Elem() {
 			var t datemath.Expression
-			var tt time.Time
+			var tt modules.Time
 			t, err = datemath.Parse(rawValue)
 			if err == nil {
-				tt = t.Time(datemath.WithLocation(config.GetTimeZone())).In(loc)
+				tt = modules.Time(t.Time(datemath.WithLocation(config.GetTimeZone())).In(loc))
 			} else {
 				tt, err = parseTimeFromUserInput(rawValue)
 			}
@@ -300,8 +301,8 @@ func getValueForField(field reflect.StructField, rawValue string, loc *time.Loca
 			}
 			// Mysql/Mariadb does not support date values where the year < 1. To make this edge-case work,
 			// we're setting the year to 1 in that case.
-			if db.GetDialect() == builder.MYSQL && tt.Year() < 1 {
-				tt = tt.AddDate(1-tt.Year(), 0, 0)
+			if db.GetDialect() == builder.MYSQL && tt.Time().Year() < 1 {
+				tt = modules.Time(tt.Time().AddDate(1-tt.Time().Year(), 0, 0))
 			}
 			value = tt
 		}

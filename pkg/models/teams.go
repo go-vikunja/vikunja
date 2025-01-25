@@ -17,10 +17,9 @@
 package models
 
 import (
-	"time"
-
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/modules"
 
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/user"
@@ -50,9 +49,9 @@ type Team struct {
 	Members []*TeamUser `xorm:"-" json:"members"`
 
 	// A timestamp when this relation was created. You cannot change this value.
-	Created time.Time `xorm:"created" json:"created"`
+	Created modules.Time `xorm:"created" json:"created"`
 	// A timestamp when this relation was last updated. You cannot change this value.
-	Updated time.Time `xorm:"updated" json:"updated"`
+	Updated modules.Time `xorm:"updated" json:"updated"`
 
 	// Defines wether the team should be publicly discoverable when sharing a project
 	IsPublic bool `xorm:"not null default false" json:"is_public"`
@@ -83,7 +82,7 @@ type TeamMember struct {
 	Admin bool `xorm:"null" json:"admin"`
 
 	// A timestamp when this relation was created. You cannot change this value.
-	Created time.Time `xorm:"created not null" json:"created"`
+	Created modules.Time `xorm:"created not null" json:"created"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`

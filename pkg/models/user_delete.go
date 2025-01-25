@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/modules"
 	"time"
 
 	"code.vikunja.io/api/pkg/cron"
@@ -59,7 +60,7 @@ func deleteUsers() {
 	now := time.Now()
 
 	for _, u := range users {
-		if !u.DeletionScheduledAt.Before(now) {
+		if !u.DeletionScheduledAt.Before(modules.Time(now)) {
 			log.Debugf("User %d is not yet scheduled for deletion. Scheduled at %s, now is %s", u.ID, u.DeletionScheduledAt, now)
 			continue
 		}

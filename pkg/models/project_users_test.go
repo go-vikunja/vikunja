@@ -17,14 +17,13 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/modules"
+	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/web"
 	"reflect"
 	"runtime"
 	"testing"
-	"time"
-
-	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/web"
 
 	"github.com/stretchr/testify/require"
 	"gopkg.in/d4l3k/messagediff.v1"
@@ -37,8 +36,8 @@ func TestProjectUser_Create(t *testing.T) {
 		Username  string
 		ProjectID int64
 		Right     Right
-		Created   time.Time
-		Updated   time.Time
+		Created   modules.Time
+		Updated   modules.Time
 		CRUDable  web.CRUDable
 		Rights    web.Rights
 	}
@@ -179,8 +178,8 @@ func TestProjectUser_ReadAll(t *testing.T) {
 		UserID    int64
 		ProjectID int64
 		Right     Right
-		Created   time.Time
-		Updated   time.Time
+		Created   modules.Time
+		Updated   modules.Time
 		CRUDable  web.CRUDable
 		Rights    web.Rights
 	}
@@ -271,8 +270,8 @@ func TestProjectUser_Update(t *testing.T) {
 		Username  string
 		ProjectID int64
 		Right     Right
-		Created   time.Time
-		Updated   time.Time
+		Created   modules.Time
+		Updated   modules.Time
 		CRUDable  web.CRUDable
 		Rights    web.Rights
 	}
@@ -361,8 +360,8 @@ func TestProjectUser_Delete(t *testing.T) {
 		UserID    int64
 		ProjectID int64
 		Right     Right
-		Created   time.Time
-		Updated   time.Time
+		Created   modules.Time
+		Updated   modules.Time
 		CRUDable  web.CRUDable
 		Rights    web.Rights
 	}

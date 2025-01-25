@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/modules"
 	"context"
 	"encoding/json"
 	"strconv"
@@ -830,9 +831,9 @@ func (wl *WebhookListener) Name() string {
 }
 
 type WebhookPayload struct {
-	EventName string      `json:"event_name"`
-	Time      time.Time   `json:"time"`
-	Data      interface{} `json:"data"`
+	EventName string       `json:"event_name"`
+	Time      modules.Time `json:"time"`
+	Data      interface{}  `json:"data"`
 }
 
 func getIDAsInt64(id interface{}) int64 {
@@ -964,7 +965,7 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 	for _, webhook := range matchingWebhooks {
 		err = webhook.sendWebhookPayload(&WebhookPayload{
 			EventName: wl.EventName,
-			Time:      time.Now(),
+			Time:      modules.Time(time.Now()),
 			Data:      event,
 		})
 		if err != nil {

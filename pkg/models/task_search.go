@@ -17,15 +17,15 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/modules"
+	"code.vikunja.io/api/pkg/web"
 	"context"
 	"fmt"
 	"strconv"
 	"strings"
 	"time"
-
-	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/web"
 
 	"github.com/typesense/typesense-go/v2/typesense/api"
 	"github.com/typesense/typesense-go/v2/typesense/api/pointer"
@@ -464,6 +464,8 @@ func convertFilterValues(value interface{}) string {
 		}
 
 		return "false"
+	case modules.Time:
+		return strconv.FormatInt(v.Time().Unix(), 10)
 	case time.Time:
 		return strconv.FormatInt(v.Unix(), 10)
 	default:

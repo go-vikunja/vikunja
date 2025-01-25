@@ -17,6 +17,7 @@
 package todoist
 
 import (
+	"code.vikunja.io/api/pkg/modules"
 	"os"
 	"testing"
 	"time"
@@ -34,20 +35,17 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 
 	config.InitConfig()
 
-	time1, err := time.Parse(time.RFC3339Nano, "2014-09-26T08:25:05Z")
-	require.NoError(t, err)
-	time1 = time1.In(config.GetTimeZone())
-	time3, err := time.Parse(time.RFC3339Nano, "2014-10-21T08:25:05Z")
-	require.NoError(t, err)
-	time3 = time3.In(config.GetTimeZone())
-	dueTime, err := time.Parse(time.RFC3339Nano, "2020-05-31T23:59:00Z")
-	require.NoError(t, err)
-	dueTime = dueTime.In(config.GetTimeZone())
-	dueTimeWithTime, err := time.Parse(time.RFC3339Nano, "2021-01-31T19:00:00Z")
-	require.NoError(t, err)
-	dueTimeWithTime = dueTimeWithTime.In(config.GetTimeZone())
-	nilTime, err := time.Parse(time.RFC3339Nano, "0001-01-01T00:00:00Z")
-	require.NoError(t, err)
+	parseAndConvertToTimeZone := func(timeStr string) modules.Time {
+		parsedTime, err := time.Parse(time.RFC3339Nano, timeStr)
+		require.NoError(t, err)
+		return modules.Time(parsedTime.In(config.GetTimeZone()))
+	}
+
+	time1 := parseAndConvertToTimeZone("2014-09-26T08:25:05Z")
+	time3 := parseAndConvertToTimeZone("2014-10-21T08:25:05Z")
+	dueTime := parseAndConvertToTimeZone("2020-05-31T23:59:00Z")
+	dueTimeWithTime := parseAndConvertToTimeZone("2021-01-31T19:00:00Z")
+	nilTime := parseAndConvertToTimeZone("0001-01-01T00:00:00Z")
 	exampleFile, err := os.ReadFile(config.ServiceRootpath.GetString() + "/pkg/modules/migration/testimage.jpg")
 	require.NoError(t, err)
 
@@ -394,8 +392,8 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 						Done:        false,
 						Created:     time1,
 						Reminders: []*models.TaskReminder{
-							{Reminder: time.Date(2020, time.June, 15, 23, 59, 0, 0, time.UTC).In(config.GetTimeZone())},
-							{Reminder: time.Date(2020, time.June, 16, 7, 0, 0, 0, time.UTC).In(config.GetTimeZone())},
+							{Reminder: modules.Time(time.Date(2020, time.June, 15, 23, 59, 0, 0, time.UTC).In(config.GetTimeZone()))},
+							{Reminder: modules.Time(time.Date(2020, time.June, 16, 7, 0, 0, 0, time.UTC).In(config.GetTimeZone()))},
 						},
 					},
 				},
@@ -413,7 +411,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 						Done:    false,
 						Created: time1,
 						Reminders: []*models.TaskReminder{
-							{Reminder: time.Date(2020, time.July, 15, 7, 0, 0, 0, time.UTC).In(config.GetTimeZone())},
+							{Reminder: modules.Time(time.Date(2020, time.July, 15, 7, 0, 0, 0, time.UTC).In(config.GetTimeZone()))},
 						},
 					},
 				},
@@ -427,7 +425,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 						DoneAt:      time3,
 						Labels:      vikunjaLabels,
 						Reminders: []*models.TaskReminder{
-							{Reminder: time.Date(2020, time.June, 15, 7, 0, 0, 0, time.UTC).In(config.GetTimeZone())},
+							{Reminder: modules.Time(time.Date(2020, time.June, 15, 7, 0, 0, 0, time.UTC).In(config.GetTimeZone()))},
 						},
 					},
 				},
@@ -447,7 +445,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 						Created: time1,
 						DoneAt:  time3,
 						Reminders: []*models.TaskReminder{
-							{Reminder: time.Date(2020, time.June, 15, 7, 0, 0, 0, time.UTC).In(config.GetTimeZone())},
+							{Reminder: modules.Time(time.Date(2020, time.June, 15, 7, 0, 0, 0, time.UTC).In(config.GetTimeZone()))},
 						},
 					},
 				},
@@ -539,7 +537,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 						Done:    false,
 						Created: time1,
 						Reminders: []*models.TaskReminder{
-							{Reminder: time.Date(2020, time.June, 15, 7, 0, 0, 0, time.UTC).In(config.GetTimeZone())},
+							{Reminder: modules.Time(time.Date(2020, time.June, 15, 7, 0, 0, 0, time.UTC).In(config.GetTimeZone()))},
 						},
 					},
 				},

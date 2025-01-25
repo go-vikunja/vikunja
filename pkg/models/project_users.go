@@ -17,9 +17,8 @@
 package models
 
 import (
-	"time"
-
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/modules"
 
 	"code.vikunja.io/api/pkg/events"
 
@@ -42,9 +41,9 @@ type ProjectUser struct {
 	Right Right `xorm:"bigint INDEX not null default 0" json:"right" valid:"length(0|2)" maximum:"2" default:"0"`
 
 	// A timestamp when this relation was created. You cannot change this value.
-	Created time.Time `xorm:"created not null" json:"created"`
+	Created modules.Time `xorm:"created not null" json:"created"`
 	// A timestamp when this relation was last updated. You cannot change this value.
-	Updated time.Time `xorm:"updated not null" json:"updated"`
+	Updated modules.Time `xorm:"updated not null" json:"updated"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`

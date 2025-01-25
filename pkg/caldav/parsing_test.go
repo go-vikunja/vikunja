@@ -17,6 +17,7 @@
 package caldav
 
 import (
+	"code.vikunja.io/api/pkg/modules"
 	"testing"
 	"time"
 
@@ -56,7 +57,7 @@ END:VCALENDAR`,
 				Title:       "Todo #1",
 				UID:         "randomuid",
 				Description: "Lorem Ipsum",
-				Updated:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
+				Updated:     modules.Time(time.Unix(1543626724, 0).In(config.GetTimeZone())),
 			},
 		},
 		{
@@ -82,7 +83,7 @@ END:VCALENDAR`,
 				UID:         "randomuid",
 				Description: "Lorem Ipsum",
 				Priority:    1,
-				Updated:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
+				Updated:     modules.Time(time.Unix(1543626724, 0).In(config.GetTimeZone())),
 			},
 		},
 		{
@@ -115,7 +116,7 @@ END:VCALENDAR`,
 						Title: "cat2",
 					},
 				},
-				Updated: time.Unix(1543626724, 0).In(config.GetTimeZone()),
+				Updated: modules.Time(time.Unix(1543626724, 0).In(config.GetTimeZone())),
 			},
 		},
 		{
@@ -144,10 +145,10 @@ END:VCALENDAR`,
 				Description: "Lorem Ipsum",
 				Reminders: []*models.TaskReminder{
 					{
-						Reminder: time.Date(2018, 12, 1, 1, 12, 10, 0, config.GetTimeZone()),
+						Reminder: modules.Time(time.Date(2018, 12, 1, 1, 12, 10, 0, config.GetTimeZone())),
 					},
 				},
-				Updated: time.Unix(1543626724, 0).In(config.GetTimeZone()),
+				Updated: modules.Time(time.Unix(1543626724, 0).In(config.GetTimeZone())),
 			},
 		},
 		{
@@ -192,8 +193,8 @@ END:VCALENDAR`,
 				Title:       "Todo #1",
 				UID:         "randomuid",
 				Description: "Lorem Ipsum",
-				StartDate:   time.Date(2023, 2, 28, 17, 0, 0, 0, config.GetTimeZone()),
-				DueDate:     time.Date(2023, 3, 4, 15, 0, 0, 0, config.GetTimeZone()),
+				StartDate:   modules.Time(time.Date(2023, 2, 28, 17, 0, 0, 0, config.GetTimeZone())),
+				DueDate:     modules.Time(time.Date(2023, 3, 4, 15, 0, 0, 0, config.GetTimeZone())),
 				Reminders: []*models.TaskReminder{
 					{
 						RelativeTo:     models.ReminderRelationStartDate,
@@ -216,7 +217,7 @@ END:VCALENDAR`,
 						RelativePeriod: -1800,
 					},
 				},
-				Updated: time.Unix(1543626724, 0).In(config.GetTimeZone()),
+				Updated: modules.Time(time.Unix(1543626724, 0).In(config.GetTimeZone())),
 			},
 		},
 		{
@@ -241,7 +242,7 @@ END:VCALENDAR`,
 				Title:       "SubTask #1",
 				UID:         "randomuid",
 				Description: "Lorem Ipsum",
-				Updated:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
+				Updated:     modules.Time(time.Unix(1543626724, 0).In(config.GetTimeZone())),
 				RelatedTasks: map[models.RelationKind][]*models.Task{
 					models.RelationKindParenttask: {
 						{
@@ -273,7 +274,7 @@ END:VCALENDAR`,
 				Title:       "Parent",
 				UID:         "randomuid",
 				Description: "Lorem Ipsum",
-				Updated:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
+				Updated:     modules.Time(time.Unix(1543626724, 0).In(config.GetTimeZone())),
 				RelatedTasks: map[models.RelationKind][]*models.Task{
 					models.RelationKindSubtask: {
 						{
@@ -331,7 +332,7 @@ END:VTIMEZONE
 END:VCALENDAR`,
 			},
 			wantVTask: &models.Task{
-				Updated:  time.Date(2023, 4, 2, 7, 41, 58, 0, config.GetTimeZone()),
+				Updated:  modules.Time(time.Date(2023, 4, 2, 7, 41, 58, 0, config.GetTimeZone())),
 				UID:      "4290517349243274514",
 				Title:    "Test with tasks.org",
 				Priority: 1,
@@ -340,15 +341,15 @@ END:VCALENDAR`,
 						Title: "Vikunja",
 					},
 				},
-				DueDate:   time.Date(2023, 4, 2, 15, 0, 1, 0, config.GetTimeZone()),
-				StartDate: time.Date(2023, 4, 1, 7, 0, 0, 0, config.GetTimeZone()),
+				DueDate:   modules.Time(time.Date(2023, 4, 2, 15, 0, 1, 0, config.GetTimeZone())),
+				StartDate: modules.Time(time.Date(2023, 4, 1, 7, 0, 0, 0, config.GetTimeZone())),
 				Reminders: []*models.TaskReminder{
 					{
 						RelativeTo:     models.ReminderRelationDueDate,
 						RelativePeriod: 0,
 					},
 					{
-						Reminder: time.Date(2023, 4, 2, 10, 0, 0, 0, config.GetTimeZone()),
+						Reminder: modules.Time(time.Date(2023, 4, 2, 10, 0, 0, 0, config.GetTimeZone())),
 					},
 				},
 			},
@@ -529,12 +530,12 @@ func TestGetCaldavTodosForTasks(t *testing.T) {
 							UID:         "randomuid",
 							Description: "Description",
 							Priority:    3,
-							Created:     time.Unix(1543626721, 0).In(config.GetTimeZone()),
-							DueDate:     time.Unix(1543626722, 0).In(config.GetTimeZone()),
-							StartDate:   time.Unix(1543626723, 0).In(config.GetTimeZone()),
-							EndDate:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
-							Updated:     time.Unix(1543626725, 0).In(config.GetTimeZone()),
-							DoneAt:      time.Unix(1543626726, 0).In(config.GetTimeZone()),
+							Created:     modules.Time(time.Unix(1543626721, 0).In(config.GetTimeZone())),
+							DueDate:     modules.Time(time.Unix(1543626722, 0).In(config.GetTimeZone())),
+							StartDate:   modules.Time(time.Unix(1543626723, 0).In(config.GetTimeZone())),
+							EndDate:     modules.Time(time.Unix(1543626724, 0).In(config.GetTimeZone())),
+							Updated:     modules.Time(time.Unix(1543626725, 0).In(config.GetTimeZone())),
+							DoneAt:      modules.Time(time.Unix(1543626726, 0).In(config.GetTimeZone())),
 							RepeatAfter: 86400,
 							Labels: []*models.Label{
 								{
@@ -548,10 +549,10 @@ func TestGetCaldavTodosForTasks(t *testing.T) {
 							},
 							Reminders: []*models.TaskReminder{
 								{
-									Reminder: time.Unix(1543626730, 0).In(config.GetTimeZone()),
+									Reminder: modules.Time(time.Unix(1543626730, 0).In(config.GetTimeZone())),
 								},
 								{
-									Reminder:       time.Unix(1543626731, 0).In(config.GetTimeZone()),
+									Reminder:       modules.Time(time.Unix(1543626731, 0).In(config.GetTimeZone())),
 									RelativePeriod: -3600,
 									RelativeTo:     models.ReminderRelationDueDate,
 								},
@@ -609,23 +610,23 @@ END:VCALENDAR`,
 							UID:         "randomuid_parent",
 							Description: "A parent task",
 							Priority:    3,
-							Created:     time.Unix(1543626721, 0).In(config.GetTimeZone()),
-							Updated:     time.Unix(1543626725, 0).In(config.GetTimeZone()),
+							Created:     modules.Time(time.Unix(1543626721, 0).In(config.GetTimeZone())),
+							Updated:     modules.Time(time.Unix(1543626725, 0).In(config.GetTimeZone())),
 							RelatedTasks: map[models.RelationKind][]*models.Task{
 								models.RelationKindSubtask: {
 									{
 										Title:       "Subtask 1",
 										UID:         "randomuid_child_1",
 										Description: "The first child task",
-										Created:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
-										Updated:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
+										Created:     modules.Time(time.Unix(1543626724, 0).In(config.GetTimeZone())),
+										Updated:     modules.Time(time.Unix(1543626724, 0).In(config.GetTimeZone())),
 									},
 									{
 										Title:       "Subtask 2",
 										UID:         "randomuid_child_2",
 										Description: "The second child task",
-										Created:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
-										Updated:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
+										Created:     modules.Time(time.Unix(1543626724, 0).In(config.GetTimeZone())),
+										Updated:     modules.Time(time.Unix(1543626724, 0).In(config.GetTimeZone())),
 									},
 								},
 							},
@@ -636,8 +637,8 @@ END:VCALENDAR`,
 							Title:       "Subtask 1",
 							UID:         "randomuid_child_1",
 							Description: "The first child task",
-							Created:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
-							Updated:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
+							Created:     modules.Time(time.Unix(1543626724, 0).In(config.GetTimeZone())),
+							Updated:     modules.Time(time.Unix(1543626724, 0).In(config.GetTimeZone())),
 							RelatedTasks: map[models.RelationKind][]*models.Task{
 								models.RelationKindParenttask: {
 									{
@@ -645,8 +646,8 @@ END:VCALENDAR`,
 										UID:         "randomuid_parent",
 										Description: "A parent task",
 										Priority:    3,
-										Created:     time.Unix(1543626721, 0).In(config.GetTimeZone()),
-										Updated:     time.Unix(1543626725, 0).In(config.GetTimeZone()),
+										Created:     modules.Time(time.Unix(1543626721, 0).In(config.GetTimeZone())),
+										Updated:     modules.Time(time.Unix(1543626725, 0).In(config.GetTimeZone())),
 									},
 								},
 							},
@@ -657,8 +658,8 @@ END:VCALENDAR`,
 							Title:       "Subtask 2",
 							UID:         "randomuid_child_2",
 							Description: "The second child task",
-							Created:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
-							Updated:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
+							Created:     modules.Time(time.Unix(1543626724, 0).In(config.GetTimeZone())),
+							Updated:     modules.Time(time.Unix(1543626724, 0).In(config.GetTimeZone())),
 							RelatedTasks: map[models.RelationKind][]*models.Task{
 								models.RelationKindParenttask: {
 									{
@@ -666,8 +667,8 @@ END:VCALENDAR`,
 										UID:         "randomuid_parent",
 										Description: "A parent task",
 										Priority:    3,
-										Created:     time.Unix(1543626721, 0).In(config.GetTimeZone()),
-										Updated:     time.Unix(1543626725, 0).In(config.GetTimeZone()),
+										Created:     modules.Time(time.Unix(1543626721, 0).In(config.GetTimeZone())),
+										Updated:     modules.Time(time.Unix(1543626725, 0).In(config.GetTimeZone())),
 									},
 								},
 							},

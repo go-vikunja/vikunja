@@ -16,7 +16,9 @@
 
 package initialize
 
-import "time"
+import (
+	"time"
+)
 
 // BootedEvent represents a BootedEvent event
 type BootedEvent struct {

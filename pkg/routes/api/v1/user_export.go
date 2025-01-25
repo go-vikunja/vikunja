@@ -136,6 +136,6 @@ func DownloadUserDataExport(c echo.Context) error {
 		return handler.HandleHTTPError(err)
 	}
 
-	http.ServeContent(c.Response(), c.Request(), exportFile.Name, exportFile.Created, exportFile.File)
+	http.ServeContent(c.Response(), c.Request(), exportFile.Name, exportFile.Created.Time(), exportFile.File)
 	return nil
 }

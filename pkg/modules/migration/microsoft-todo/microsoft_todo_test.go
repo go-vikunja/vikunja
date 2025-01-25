@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules"
 
 	"github.com/d4l3k/messagediff"
 	"github.com/stretchr/testify/assert"
@@ -34,8 +35,9 @@ func TestConverting(t *testing.T) {
 		TimeZone: "UTC",
 	}
 
-	testtimeTime, err := time.Parse(time.RFC3339Nano, "2020-12-18T03:00:00.4770000Z")
+	testTime, err := time.Parse(time.RFC3339Nano, "2020-12-18T03:00:00.4770000Z")
 	require.NoError(t, err)
+	testtimeTime := modules.Time(testTime)
 
 	microsoftTodoData := []*project{
 		{

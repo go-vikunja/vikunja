@@ -17,14 +17,13 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/modules"
+	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/web"
 	"reflect"
 	"runtime"
 	"testing"
-	"time"
-
-	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/web"
 
 	"gopkg.in/d4l3k/messagediff.v1"
 )
@@ -37,8 +36,8 @@ func TestLabel_ReadAll(t *testing.T) {
 		HexColor    string
 		CreatedByID int64
 		CreatedBy   *user.User
-		Created     time.Time
-		Updated     time.Time
+		Created     modules.Time
+		Updated     modules.Time
 		CRUDable    web.CRUDable
 		Rights      web.Rights
 	}
@@ -173,8 +172,8 @@ func TestLabel_ReadOne(t *testing.T) {
 		HexColor    string
 		CreatedByID int64
 		CreatedBy   *user.User
-		Created     time.Time
-		Updated     time.Time
+		Created     modules.Time
+		Updated     modules.Time
 		CRUDable    web.CRUDable
 		Rights      web.Rights
 	}
@@ -303,8 +302,8 @@ func TestLabel_Create(t *testing.T) {
 		HexColor    string
 		CreatedByID int64
 		CreatedBy   *user.User
-		Created     time.Time
-		Updated     time.Time
+		Created     modules.Time
+		Updated     modules.Time
 		CRUDable    web.CRUDable
 		Rights      web.Rights
 	}
@@ -373,8 +372,8 @@ func TestLabel_Update(t *testing.T) {
 		HexColor    string
 		CreatedByID int64
 		CreatedBy   *user.User
-		Created     time.Time
-		Updated     time.Time
+		Created     modules.Time
+		Updated     modules.Time
 		CRUDable    web.CRUDable
 		Rights      web.Rights
 	}
@@ -463,8 +462,8 @@ func TestLabel_Delete(t *testing.T) {
 		HexColor    string
 		CreatedByID int64
 		CreatedBy   *user.User
-		Created     time.Time
-		Updated     time.Time
+		Created     modules.Time
+		Updated     modules.Time
 		CRUDable    web.CRUDable
 		Rights      web.Rights
 	}
