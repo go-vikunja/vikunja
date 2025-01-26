@@ -94,8 +94,6 @@ import {
 } from '@fortawesome/free-regular-svg-icons'
 import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
 
-import type {FontAwesomeIcon as FontAwesomeIconFixedTypes} from '@/types/vue-fontawesome'
-
 library.add(faBold)
 library.add(faUndo)
 library.add(faRedo)
@@ -195,4 +193,5 @@ library.add(faUnderline)
 library.add(faFaceLaugh)
 
 // overwriting the wrong types
-export default FontAwesomeIcon as unknown as FontAwesomeIconFixedTypes
+// export default FontAwesomeIcon as unknown as FontAwesomeIconFixedTypes
+export default FontAwesomeIcon

@@ -44,14 +44,14 @@
 </template>
 
 <script setup lang="ts">
-import type {IconProp} from '@fortawesome/fontawesome-svg-core'
+import type {FontAwesomeIconProps} from '@fortawesome/vue-fontawesome'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 
 withDefaults(defineProps<{
 	title?: string
 	padding?: boolean
-	closeIcon?: IconProp
+	closeIcon?: FontAwesomeIconProps['icon']
 	shadow?: boolean
 	hasContent?: boolean
 	loading?: boolean

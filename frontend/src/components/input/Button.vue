@@ -33,16 +33,24 @@
 	</BaseButton>
 </template>
 
+<script lang="ts">
+export const VARIANT_CLASS_MAP = {
+	primary: 'is-primary',
+	secondary: 'is-outlined',
+	tertiary: 'is-text is-inverted underline-none',
+} as const
+
+export type ButtonTypes = keyof typeof VARIANT_CLASS_MAP | undefined
+</script>
+
 <script setup lang="ts">
 import {computed} from 'vue'
-import BaseButton, {type BaseButtonProps} from '@/components/base/BaseButton.vue'
-import type {IconProp} from '@fortawesome/fontawesome-svg-core'
+import BaseButton, { type BaseButtonProps } from '@/components/base/BaseButton.vue'
+import type {FontAwesomeIconProps} from '@fortawesome/vue-fontawesome'
 
-export type ButtonTypes = keyof typeof VARIANT_CLASS_MAP
-
-export interface ButtonProps extends /* @vue-ignore */ BaseButtonProps {
+export interface ButtonProps extends BaseButtonProps {
 	variant?: ButtonTypes
-	icon?: IconProp
+	icon?: FontAwesomeIconProps['icon']
 	iconColor?: string
 	loading?: boolean
 	disabled?: boolean
@@ -61,12 +69,6 @@ const props = withDefaults(defineProps<ButtonProps>(), {
 })
 
 defineOptions({name: 'XButton'})
-
-const VARIANT_CLASS_MAP = {
-	primary: 'is-primary',
-	secondary: 'is-outlined',
-	tertiary: 'is-text is-inverted underline-none',
-} as const
 
 const variantClass = computed(() => VARIANT_CLASS_MAP[props.variant])
 </script>

@@ -49,12 +49,12 @@
 </template>
 
 <script setup lang="ts">
-import type {IconProp} from '@fortawesome/fontawesome-svg-core'
+import type {FontAwesomeIconProps} from '@fortawesome/vue-fontawesome'
 
 withDefaults(defineProps<{
 	title: string,
 	primaryLabel?: string,
-	primaryIcon?: IconProp,
+	primaryIcon?: FontAwesomeIconProps['icon'],
 	primaryDisabled?: boolean,
 	hasPrimaryAction?: boolean,
 	tertiary?: string,

@@ -20,10 +20,10 @@
 <script lang="ts" setup>
 import BaseButton, {type BaseButtonProps} from '@/components/base//BaseButton.vue'
 import Icon from '@/components/misc/Icon'
-import type {IconProp} from '@fortawesome/fontawesome-svg-core'
+import type {FontAwesomeIconProps} from '@fortawesome/vue-fontawesome'
 
-export interface DropDownItemProps extends /* @vue-ignore */ BaseButtonProps {
-	icon?: IconProp,
+export interface DropDownItemProps extends BaseButtonProps {
+	icon?: FontAwesomeIconProps['icon'],
 	iconClass?: object | string,
 	disabled?: boolean,
 }

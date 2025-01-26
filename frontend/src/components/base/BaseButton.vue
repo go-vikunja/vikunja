@@ -43,7 +43,7 @@
 </template>
 
 <script lang="ts">
-const BASE_BUTTON_TYPES_MAP = {
+export const BASE_BUTTON_TYPES_MAP = {
 	BUTTON: 'button',
 	SUBMIT: 'submit',
 } as const
@@ -58,16 +58,16 @@ export type BaseButtonTypes = typeof BASE_BUTTON_TYPES_MAP[keyof typeof BASE_BUT
 
 // the component tries to heuristically determine what it should be checking the props 
 
-// NOTE: Do NOT use buttons with @click to push routes. => Use router-links instead!
+// NOTE: Do NOT use buttons with @click to push routes. => Define the `to` prop instead to use router-links instead!
 
 import {unrefElement} from '@vueuse/core'
-import {ref, type HTMLAttributes} from 'vue'
-import type {RouteLocationRaw} from 'vue-router'
+import {ref} from 'vue'
+import type {RouterLinkProps} from 'vue-router'
 
-export interface BaseButtonProps extends /* @vue-ignore */ HTMLAttributes {
+export interface BaseButtonProps {
 	type?: BaseButtonTypes
 	disabled?: boolean
-	to?: RouteLocationRaw
+	to?: RouterLinkProps['to']
 	href?: string
 	openExternalInNewTab?: boolean
 }

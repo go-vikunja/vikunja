@@ -39,13 +39,13 @@
 <script setup lang="ts">
 import {ref} from 'vue'
 import {onClickOutside} from '@vueuse/core'
-import type {IconProp} from '@fortawesome/fontawesome-svg-core'
+import type {FontAwesomeIconProps} from '@fortawesome/vue-fontawesome'
 
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 withDefaults(defineProps<{
-	triggerIcon?: IconProp
+	triggerIcon?: FontAwesomeIconProps['icon']
 }>(), {
 	triggerIcon: 'ellipsis-h',
 })
