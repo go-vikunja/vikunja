@@ -54,7 +54,7 @@ const browserLanguage = getBrowserLanguage()
 setLanguage(browserLanguage).then(() => {
 	const app = createApp(App)
 
-	app.use(Notifications)
+	app.use(Notifications, { componentName: 'Toaster' })
 
 	app.directive('focus', focus)
 	app.directive('tooltip', vTooltip)

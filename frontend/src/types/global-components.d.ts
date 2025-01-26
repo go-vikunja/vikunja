@@ -11,7 +11,7 @@ import type Card from '@/components/misc/Card.vue'
 declare module 'vue' {
 	export interface GlobalComponents {
 		Icon: FontAwesomeIconFixedTypes
-		Notifications: FunctionalComponent<Notifications>
+		Toaster: FunctionalComponent<Notifications>
 		XButton: typeof XButton,
 		Modal: typeof Modal,
 		Card: typeof Card,

@@ -1,5 +1,5 @@
 <template>
-	<Notifications
+	<Toaster
 		position="bottom left"
 		:max="2"
 		class="global-notification"
@@ -44,7 +44,7 @@
 				</div>
 			</div>
 		</template>
-	</Notifications>
+	</Toaster>
 </template>
 
 <style scoped>
