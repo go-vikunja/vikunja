@@ -211,7 +211,7 @@
     "archivedMessage": "Ta projekt je arhiviran. Zanj ni mogoče ustvarjati novih nalog ali jih urejati.",
     "archived": "Arhiviran",
     "showArchived": "Pokaži arhivirane",
-    "title": "Naslov projekta",
+    "title": "Title",
     "color": "Barva",
     "projects": "Projekti",
     "parent": "Nadrejeni projekt",

@@ -211,7 +211,7 @@
     "archivedMessage": "アーカイブ済みプロジェクトです。タスクの作成や編集を行うことはできません。",
     "archived": "アーカイブ済み",
     "showArchived": "アーカイブ済みプロジェクトを表示",
-    "title": "プロジェクト名",
+    "title": "Title",
     "color": "色",
     "projects": "プロジェクト",
     "parent": "親プロジェクト",

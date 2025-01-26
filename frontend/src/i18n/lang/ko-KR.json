@@ -211,7 +211,7 @@
     "archivedMessage": "이 프로젝트는 보관되어 있어요. 이 프로젝트에 할 일을 새로 만들거나 편집할 수 없어요.",
     "archived": "보관",
     "showArchived": "보관 목록 표시",
-    "title": "프로젝트 제목",
+    "title": "Title",
     "color": "색상",
     "projects": "프로젝트",
     "parent": "상위 프로젝트",

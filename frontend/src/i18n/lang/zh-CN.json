@@ -211,7 +211,7 @@
     "archivedMessage": "该项目已存档。 无法为其创建新任务或编辑任务。",
     "archived": "已归档",
     "showArchived": "显示已归档",
-    "title": "项目标题",
+    "title": "Title",
     "color": "颜色",
     "projects": "项目",
     "parent": "父项目",
