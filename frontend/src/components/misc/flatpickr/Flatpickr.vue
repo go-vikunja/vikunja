@@ -93,6 +93,7 @@ const attrs = useAttrs()
 
 const root = ref<HTMLInputElement | null>(null)
 const fp = ref<flatpickr.Instance | null>(null)
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const safeConfig = ref<Options>({...props.config})
 
 function prepareConfig() {

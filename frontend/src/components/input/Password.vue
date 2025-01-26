@@ -55,6 +55,7 @@ const emit = defineEmits<{
 const {t} = useI18n()
 const passwordFieldType = ref('password')
 const password = ref('')
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const isValid = ref<true | string>(props.validateInitially === true ? true : '')
 const validateAfterFirst = ref(false)
 

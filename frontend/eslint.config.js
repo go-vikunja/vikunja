@@ -48,7 +48,7 @@ export default [
 
 			// vue3
 			'vue/no-ref-object-reactivity-loss': 'error',
-			'vue/no-setup-props-reactivity-loss': 'warn', // TODO: switch to error after vite `propsDestructure` is removed
+			'vue/no-setup-props-reactivity-loss': 'error',
 
 			'@typescript-eslint/no-unused-vars': [
 				'error',

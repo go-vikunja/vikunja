@@ -51,6 +51,7 @@ defineSlots<{
 	}): void
 }>()
 
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const openValue = ref(props.open)
 watchEffect(() => {
 	openValue.value = props.open

@@ -100,11 +100,7 @@ export default defineConfig(({mode}) => {
 			},
 		},
 		plugins: [
-			vue({
-				script: {
-					propsDestructure: true,
-				},
-			}),
+			vue(),
 			svgLoader({
 				// Since the svgs are already manually optimized via https://jakearchibald.github.io/svgomg/
 				// we don't need to optimize them again.
