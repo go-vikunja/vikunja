@@ -20,13 +20,11 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/modules/auth/ldap"
-
-	"code.vikunja.io/api/pkg/modules/keyvalue"
-
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
+	"code.vikunja.io/api/pkg/modules/auth/ldap"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 	user2 "code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web/handler"
 
@@ -58,12 +56,19 @@ func Login(c echo.Context) (err error) {
 	var user *user2.User
 	if config.AuthLdapEnabled.GetBool() {
 		user, err = ldap.AuthenticateUserInLDAP(s, u.Username, u.Password)
-	} else {
-		user, err = user2.CheckUserCredentials(s, &u)
+		if err != nil && !user2.IsErrWrongUsernameOrPassword(err) {
+			_ = s.Rollback()
+			return handler.HandleHTTPError(err)
+		}
 	}
-	if err != nil {
-		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+
+	if user == nil {
+		// This allows us to still have local users while ldap is enabled
+		user, err = user2.CheckUserCredentials(s, &u)
+		if err != nil {
+			_ = s.Rollback()
+			return handler.HandleHTTPError(err)
+		}
 	}
 
 	if user.Status == user2.StatusDisabled {

@@ -252,7 +252,7 @@ func registerAPIRoutes(a *echo.Group) {
 		ur.POST("/user/confirm", apiv1.UserConfirmEmail)
 	}
 
-	if config.AuthLdapEnabled.GetBool() {
+	if config.AuthLocalEnabled.GetBool() || config.AuthLdapEnabled.GetBool() {
 		ur.POST("/login", apiv1.Login)
 	}
 
