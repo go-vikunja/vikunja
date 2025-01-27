@@ -417,32 +417,7 @@ func getOrCreateUser(s *xorm.Session, cl *claims, issuer, subject string) (u *us
 			Subject:  subject,
 		}
 
-		// Check if we actually have a preferred username and generate a random one right away if we don't
-		if uu.Username == "" {
-			uu.Username = petname.Generate(3, "-")
-		}
-
-		u, err = user.CreateUser(s, uu)
-		if err != nil && !user.IsErrUsernameExists(err) {
-			return nil, err
-		}
-
-		// If their preferred username is already taken, generate a random one
-		if user.IsErrUsernameExists(err) {
-			uu.Username = petname.Generate(3, "-")
-			u, err = user.CreateUser(s, uu)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		// And create their project
-		err = models.CreateNewProjectForUser(s, u)
-		if err != nil {
-			return nil, err
-		}
-
-		return
+		return auth.CreateUserWithRandomUsername(s, uu)
 	}
 
 	// If it exists, check if the email address changed and change it if not

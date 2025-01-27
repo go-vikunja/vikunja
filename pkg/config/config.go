@@ -86,7 +86,10 @@ const (
 	AuthLdapVerifyTLS Key = `auth.ldap.verifytls`
 	AuthLdapBindDN    Key = `auth.ldap.binddn`
 	// #nosec G101
-	AuthLdapBindPassword Key = `auth.ldap.bindpassword`
+	AuthLdapBindPassword         Key = `auth.ldap.bindpassword`
+	AuthLdapAttributeUsername    Key = `auth.ldap.attribute.username`
+	AuthLdapAttributeEmail       Key = `auth.ldap.attribute.email`
+	AuthLdapAttributeDisplayname Key = `auth.ldap.attribute.displayname`
 
 	LegalImprintURL Key = `legal.imprinturl`
 	LegalPrivacyURL Key = `legal.privacyurl`
@@ -348,6 +351,9 @@ func InitDefaultConfig() {
 	AuthLdapPort.setDefault(389)
 	AuthLdapUseTLS.setDefault(true)
 	AuthLdapVerifyTLS.setDefault(true)
+	AuthLdapAttributeUsername.setDefault("uid")
+	AuthLdapAttributeEmail.setDefault("mail")
+	AuthLdapAttributeDisplayname.setDefault("displayName")
 
 	// Database
 	DatabaseType.setDefault("sqlite")

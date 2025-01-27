@@ -27,8 +27,10 @@ import (
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
+	petname "github.com/dustinkirkland/golang-petname"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
+	"xorm.io/xorm"
 )
 
 // These are all valid auth types
@@ -126,4 +128,29 @@ func GetAuthFromClaims(c echo.Context) (a web.Auth, err error) {
 		return user.GetUserFromClaims(claims)
 	}
 	return nil, echo.NewHTTPError(http.StatusBadRequest, models.Message{Message: "Invalid JWT token."})
+}
+
+func CreateUserWithRandomUsername(s *xorm.Session, uu *user.User) (u *user.User, err error) {
+	// Check if we actually have a preferred username and generate a random one right away if we don't
+	for {
+		if uu.Username == "" {
+			uu.Username = petname.Generate(3, "-")
+		}
+
+		u, err = user.CreateUser(s, uu)
+		if err == nil {
+			break
+		}
+
+		if !user.IsErrUsernameExists(err) {
+			return nil, err
+		}
+
+		// If their preferred username is already taken, generate a new one
+		uu.Username = petname.Generate(3, "-")
+	}
+
+	// And create their project
+	err = models.CreateNewProjectForUser(s, u)
+	return
 }

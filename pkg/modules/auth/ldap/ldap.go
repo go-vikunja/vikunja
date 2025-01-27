@@ -20,15 +20,13 @@ import (
 	"fmt"
 	"strings"
 
-	petname "github.com/dustinkirkland/golang-petname"
-	"xorm.io/xorm"
-
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/go-ldap/ldap/v3"
+	"xorm.io/xorm"
 )
 
 func ConnectAndBindToLDAPDirectory() (l *ldap.Conn, err error) {
@@ -76,7 +74,12 @@ func AuthenticateUserInLDAP(s *xorm.Session, username, password string) (u *user
 		config.AuthLdapBaseDN.GetString(),
 		ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false,
 		fmt.Sprintf("(&(objectClass=inetOrgPerson)(uid=%s))", username),
-		[]string{"dn", "uid", "mail", "displayName"},
+		[]string{
+			"dn",
+			config.AuthLdapAttributeUsername.GetString(),
+			config.AuthLdapAttributeEmail.GetString(),
+			config.AuthLdapAttributeDisplayname.GetString(),
+		},
 		nil,
 	)
 
@@ -102,9 +105,9 @@ func AuthenticateUserInLDAP(s *xorm.Session, username, password string) (u *user
 }
 
 func getOrCreateLdapUser(s *xorm.Session, entry *ldap.Entry) (u *user.User, err error) {
-	username := entry.GetAttributeValue("uid")
-	email := entry.GetAttributeValue("mail")
-	name := entry.GetAttributeValue("displayName")
+	username := entry.GetAttributeValue(config.AuthLdapAttributeUsername.GetString())
+	email := entry.GetAttributeValue(config.AuthLdapAttributeEmail.GetString())
+	name := entry.GetAttributeValue(config.AuthLdapAttributeDisplayname.GetString())
 
 	u, err = user.GetUserWithEmail(s, &user.User{
 		Issuer:  user.IssuerLDAP,
@@ -125,29 +128,7 @@ func getOrCreateLdapUser(s *xorm.Session, entry *ldap.Entry) (u *user.User, err 
 			Subject:  username,
 		}
 
-		// Check if we actually have a preferred username and generate a random one right away if we don't
-		if uu.Username == "" {
-			uu.Username = petname.Generate(3, "-")
-		}
-
-		// TODO abstract this away an use in openid auth and here
-		u, err = user.CreateUser(s, uu)
-		if err != nil && !user.IsErrUsernameExists(err) {
-			return nil, err
-		}
-
-		// If their preferred username is already taken, generate a random one
-		if user.IsErrUsernameExists(err) {
-			uu.Username = petname.Generate(3, "-")
-			u, err = user.CreateUser(s, uu)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		// And create their project
-		err = models.CreateNewProjectForUser(s, u)
-		return
+		return auth.CreateUserWithRandomUsername(s, uu)
 	}
 
 	return
