@@ -56,6 +56,18 @@ func ConnectAndBindToLDAPDirectory() (l *ldap.Conn, err error) {
 	return
 }
 
+// Adjusted from https://github.com/go-gitea/gitea/blob/6ca91f555ab9778310ac46cbbe33849c59286793/services/auth/source/ldap/source_search.go#L34
+func sanitizedUserQuery(username string) (string, bool) {
+	// See http://tools.ietf.org/search/rfc4515
+	badCharacters := "\x00()*\\"
+	if strings.ContainsAny(username, badCharacters) {
+		log.Debugf("'%s' contains invalid query characters. Aborting.", username)
+		return "", false
+	}
+
+	return fmt.Sprintf(config.AuthLdapUserFilter.GetString(), username), true
+}
+
 func AuthenticateUserInLDAP(s *xorm.Session, username, password string) (u *user.User, err error) {
 	if password == "" || username == "" {
 		return nil, user.ErrNoUsernamePassword{}
@@ -70,10 +82,16 @@ func AuthenticateUserInLDAP(s *xorm.Session, username, password string) (u *user
 
 	log.Debugf("Connected to LDAP server")
 
+	userFilter, ok := sanitizedUserQuery(username)
+	if !ok {
+		log.Debugf("Could not sanitize username %s", username)
+		return nil, user.ErrWrongUsernameOrPassword{}
+	}
+
 	searchRequest := ldap.NewSearchRequest(
 		config.AuthLdapBaseDN.GetString(),
 		ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false,
-		fmt.Sprintf("(&(objectClass=inetOrgPerson)(uid=%s))", username),
+		userFilter,
 		[]string{
 			"dn",
 			config.AuthLdapAttributeUsername.GetString(),

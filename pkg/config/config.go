@@ -78,13 +78,14 @@ const (
 	AuthOpenIDEnabled   Key = `auth.openid.enabled`
 	AuthOpenIDProviders Key = `auth.openid.providers`
 
-	AuthLdapEnabled   Key = `auth.ldap.enabled`
-	AuthLdapHost      Key = `auth.ldap.host`
-	AuthLdapPort      Key = `auth.ldap.port`
-	AuthLdapBaseDN    Key = `auth.ldap.basedn`
-	AuthLdapUseTLS    Key = `auth.ldap.usetls`
-	AuthLdapVerifyTLS Key = `auth.ldap.verifytls`
-	AuthLdapBindDN    Key = `auth.ldap.binddn`
+	AuthLdapEnabled    Key = `auth.ldap.enabled`
+	AuthLdapHost       Key = `auth.ldap.host`
+	AuthLdapPort       Key = `auth.ldap.port`
+	AuthLdapBaseDN     Key = `auth.ldap.basedn`
+	AuthLdapUserFilter Key = `auth.ldap.userfilter`
+	AuthLdapUseTLS     Key = `auth.ldap.usetls`
+	AuthLdapVerifyTLS  Key = `auth.ldap.verifytls`
+	AuthLdapBindDN     Key = `auth.ldap.binddn`
 	// #nosec G101
 	AuthLdapBindPassword         Key = `auth.ldap.bindpassword`
 	AuthLdapAttributeUsername    Key = `auth.ldap.attribute.username`
