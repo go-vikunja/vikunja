@@ -705,6 +705,79 @@
                             ]
                         }
                     ]
+                },
+                {
+                    "key": "ldap",
+                    "comment": "Authentication via an external LDAP server.",
+                    "children": [
+                        {
+                            "key": "enabled",
+                            "default_value": "false",
+                            "comment": "Enable or disable LDAP authentication."
+                        },
+                        {
+                            "key": "host",
+                            "default_value": "localhost",
+                            "comment": "The hostname of the LDAP server."
+                        },
+                        {
+                            "key": "port",
+                            "default_value": "389",
+                            "comment": "The port of the LDAP server."
+                        },
+                        {
+                            "key": "basedn",
+                            "default_value": "",
+                            "comment": "The Base DN used for LDAP search requests."
+                        },
+                        {
+                            "key": "userfilter",
+                            "default_value": "",
+                            "comment": "The string that will be used to filter users in the directory. `%[1]s` will be substituted with the username entered in the login form."
+                        },
+                        {
+                            "key": "usetls",
+                            "default_value": "true",
+                            "comment": "Whether to try and connect via a TLS-encrypted channel to the LDAP server."
+                        },
+                        {
+                            "key": "verifytls",
+                            "default_value": "true",
+                            "comment": "Whether to verify the TLS certificate offered by the LDAP server.",
+                        },
+                        {
+                            "key": "binddn",
+                            "default_value": "",
+                            "comment": "The DN of the account used to search the LDAP directory for users when they want to log in."
+                        },
+                        {
+                            "key": "bindpassword",
+                            "default_value": "",
+                            "comment": "The password of the account used to search the LDAP directory."
+                        },
+                        {
+                            "key": "attribute",
+                            "default_value": "",
+                            "comment": "The directory attributes that are used to create accounts in Vikunja.",
+                            "children": [
+                                {
+                                    "key": "username",
+                                    "default_value": "uid",
+                                    "comment": "The LDAP attribute used to set the username in Vikunja."
+                                },
+                                {
+                                    "key": "email",
+                                    "default_value": "mail",
+                                    "comment": "The LDAP attribute used to set the email in Vikunja."
+                                },
+                                {
+                                    "key": "displayname",
+                                    "default_value": "displayName",
+                                    "comment": "The LDAP attribute used to set the displayed name in Vikunja."
+                                }
+                            ]
+                        }
+                    ]
                 }
             ]
         },
