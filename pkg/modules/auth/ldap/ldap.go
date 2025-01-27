@@ -17,6 +17,7 @@
 package ldap
 
 import (
+	"crypto/tls"
 	"fmt"
 	"strings"
 
@@ -71,7 +72,16 @@ func ConnectAndBindToLDAPDirectory() (l *ldap.Conn, err error) {
 		config.AuthLdapHost.GetString(),
 		config.AuthLdapPort.GetInt(),
 	)
-	l, err = ldap.DialURL(url)
+
+	opts := []ldap.DialOpt{}
+	if config.AuthLdapUseTLS.GetBool() {
+		// #nosec G402
+		opts = append(opts, ldap.DialWithTLSConfig(&tls.Config{
+			InsecureSkipVerify: !config.AuthLdapVerifyTLS.GetBool(),
+		}))
+	}
+
+	l, err = ldap.DialURL(url, opts...)
 	if err != nil {
 		log.Fatalf("Could not connect to LDAP server: %s", err)
 	}
