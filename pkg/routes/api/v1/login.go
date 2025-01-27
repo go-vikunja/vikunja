@@ -19,6 +19,9 @@ package v1
 import (
 	"net/http"
 
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/modules/auth/ldap"
+
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 
 	"code.vikunja.io/api/pkg/db"
@@ -43,7 +46,7 @@ import (
 // @Failure 412 {object} models.Message "Invalid totp passcode."
 // @Failure 403 {object} models.Message "Invalid username or password."
 // @Router /login [post]
-func Login(c echo.Context) error {
+func Login(c echo.Context) (err error) {
 	u := user2.Login{}
 	if err := c.Bind(&u); err != nil {
 		return c.JSON(http.StatusBadRequest, models.Message{Message: "Please provide a username and password."})
@@ -52,8 +55,12 @@ func Login(c echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
-	// Check user
-	user, err := user2.CheckUserCredentials(s, &u)
+	var user *user2.User
+	if config.AuthLdapEnabled.GetBool() {
+		user, err = ldap.AuthenticateUserInLDAP(s, u.Username, u.Password)
+	} else {
+		user, err = user2.CheckUserCredentials(s, &u)
+	}
 	if err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err)

@@ -26,7 +26,10 @@ import (
 	"xorm.io/xorm"
 )
 
-const IssuerLocal = `local`
+const (
+	IssuerLocal = `local`
+	IssuerLDAP  = `ldap`
+)
 
 // CreateUser creates a new user and inserts it into the database
 func CreateUser(s *xorm.Session, user *User) (newUser *User, err error) {

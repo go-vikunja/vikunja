@@ -246,12 +246,14 @@ func registerAPIRoutes(a *echo.Group) {
 	ur.Use(RateLimit(rateLimiter, "ip"))
 
 	if config.AuthLocalEnabled.GetBool() {
-		// User stuff
-		ur.POST("/login", apiv1.Login)
 		ur.POST("/register", apiv1.RegisterUser)
 		ur.POST("/user/password/token", apiv1.UserRequestResetPasswordToken)
 		ur.POST("/user/password/reset", apiv1.UserResetPassword)
 		ur.POST("/user/confirm", apiv1.UserConfirmEmail)
+	}
+
+	if config.AuthLdapEnabled.GetBool() {
+		ur.POST("/login", apiv1.Login)
 	}
 
 	if config.AuthOpenIDEnabled.GetBool() {
