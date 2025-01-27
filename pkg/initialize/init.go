@@ -82,11 +82,7 @@ func FullInitWithoutAsync() {
 	mail.StartMailDaemon()
 
 	// Connect to ldap if enabled
-	l, err := ldap.ConnectAndBindToLDAPDirectory()
-	if err != nil {
-		log.Fatalf("Could not bind to LDAP server: %s", err)
-	}
-	_ = l.Close()
+	ldap.InitializeLDAPConnection()
 }
 
 // FullInit initializes all kinds of things in the right order

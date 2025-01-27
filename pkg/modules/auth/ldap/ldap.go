@@ -29,11 +29,38 @@ import (
 	"xorm.io/xorm"
 )
 
-func ConnectAndBindToLDAPDirectory() (l *ldap.Conn, err error) {
+func InitializeLDAPConnection() {
 	if !config.AuthLdapEnabled.GetBool() {
 		return
 	}
 
+	if config.AuthLdapHost.GetString() == "" {
+		log.Fatal("LDAP host is not configured")
+	}
+	if config.AuthLdapPort.GetInt() == 0 {
+		log.Fatal("LDAP port is not configured")
+	}
+	if config.AuthLdapBaseDN.GetString() == "" {
+		log.Fatal("LDAP base DN is not configured")
+	}
+	if config.AuthLdapBindDN.GetString() == "" {
+		log.Fatal("LDAP bind DN is not configured")
+	}
+	if config.AuthLdapBindPassword.GetString() == "" {
+		log.Fatal("LDAP bind password is not configured")
+	}
+	if config.AuthLdapUserFilter.GetString() == "" {
+		log.Fatal("LDAP user filter is not configured")
+	}
+
+	l, err := ConnectAndBindToLDAPDirectory()
+	if err != nil {
+		log.Fatalf("Could not bind to LDAP server: %s", err)
+	}
+	_ = l.Close()
+}
+
+func ConnectAndBindToLDAPDirectory() (l *ldap.Conn, err error) {
 	var protocol = "ldap"
 	if config.AuthLdapUseTLS.GetBool() {
 		protocol = "ldaps"
