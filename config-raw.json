@@ -743,7 +743,7 @@
                         {
                             "key": "verifytls",
                             "default_value": "true",
-                            "comment": "Whether to verify the TLS certificate offered by the LDAP server.",
+                            "comment": "Whether to verify the TLS certificate offered by the LDAP server."
                         },
                         {
                             "key": "binddn",
