@@ -9679,11 +9679,22 @@ const docTemplate = `{
         "v1.authInfo": {
             "type": "object",
             "properties": {
+                "ldap": {
+                    "$ref": "#/definitions/v1.ldapAuthInfo"
+                },
                 "local": {
                     "$ref": "#/definitions/v1.localAuthInfo"
                 },
                 "openid_connect": {
                     "$ref": "#/definitions/v1.openIDAuthInfo"
+                }
+            }
+        },
+        "v1.ldapAuthInfo": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
                 }
             }
         },
@@ -9702,6 +9713,9 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "enabled": {
+                    "type": "boolean"
+                },
+                "registration_enabled": {
                     "type": "boolean"
                 }
             }
@@ -9763,9 +9777,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "public_teams_enabled": {
-                    "type": "boolean"
-                },
-                "registration_enabled": {
                     "type": "boolean"
                 },
                 "task_attachments_enabled": {

@@ -1522,10 +1522,17 @@ definitions:
     type: object
   v1.authInfo:
     properties:
+      ldap:
+        $ref: '#/definitions/v1.ldapAuthInfo'
       local:
         $ref: '#/definitions/v1.localAuthInfo'
       openid_connect:
         $ref: '#/definitions/v1.openIDAuthInfo'
+    type: object
+  v1.ldapAuthInfo:
+    properties:
+      enabled:
+        type: boolean
     type: object
   v1.legalInfo:
     properties:
@@ -1537,6 +1544,8 @@ definitions:
   v1.localAuthInfo:
     properties:
       enabled:
+        type: boolean
+      registration_enabled:
         type: boolean
     type: object
   v1.openIDAuthInfo:
@@ -1577,8 +1586,6 @@ definitions:
       motd:
         type: string
       public_teams_enabled:
-        type: boolean
-      registration_enabled:
         type: boolean
       task_attachments_enabled:
         type: boolean
