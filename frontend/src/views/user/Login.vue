@@ -169,7 +169,7 @@ const authStore = useAuthStore()
 const configStore = useConfigStore()
 const {redirectIfSaved} = useRedirectToLastVisited()
 
-const registrationEnabled = computed(() => configStore.registrationEnabled)
+const registrationEnabled = computed(() => configStore.auth.local.registrationEnabled)
 const localAuthEnabled = computed(() => configStore.auth.local.enabled)
 const ldapAuthEnabled = computed(() => configStore.auth.ldap.enabled)
 

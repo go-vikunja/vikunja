@@ -1,5 +1,5 @@
 <template>
-	<div v-if="configStore.registrationEnabled">
+	<div v-if="configStore.auth.local.registrationEnabled">
 		<Message
 			v-if="errorMessage !== ''"
 			variant="danger"
