@@ -16,7 +16,7 @@
 			{{ errorMessage }}
 		</Message>
 		<form
-			v-if="localAuthEnabled"
+			v-if="localAuthEnabled || ldapAuthEnabled"
 			id="loginform"
 			@submit.prevent="submit"
 		>
@@ -55,6 +55,7 @@
 						for="password"
 					>{{ $t('user.auth.password') }}</label>
 					<RouterLink
+						v-if="localAuthEnabled"
 						:to="{ name: 'user.password-reset.request' }"
 						class="reset-password-link"
 						tabindex="6"
@@ -170,6 +171,7 @@ const {redirectIfSaved} = useRedirectToLastVisited()
 
 const registrationEnabled = computed(() => configStore.registrationEnabled)
 const localAuthEnabled = computed(() => configStore.auth.local.enabled)
+const ldapAuthEnabled = computed(() => configStore.auth.ldap.enabled)
 
 const openidConnect = computed(() => configStore.auth.openidConnect)
 const hasOpenIdProviders = computed(() => openidConnect.value.enabled && openidConnect.value.providers?.length > 0)

@@ -32,6 +32,9 @@ export interface ConfigState {
 		local: {
 			enabled: boolean,
 		},
+		ldap: {
+			enabled: boolean,
+		},
 		openidConnect: {
 			enabled: boolean,
 			redirectUrl: string,
@@ -65,6 +68,9 @@ export const useConfigStore = defineStore('config', () => {
 		auth: {
 			local: {
 				enabled: true,
+			},
+			ldap: {
+				enabled: false,
 			},
 			openidConnect: {
 				enabled: false,
