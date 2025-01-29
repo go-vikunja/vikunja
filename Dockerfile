@@ -22,7 +22,8 @@ WORKDIR /go/src/code.vikunja.io/api
 COPY . ./
 COPY --from=frontendbuilder /build/dist ./frontend/dist
 
-ARG TARGETOS TARGETARCH TARGETVARIANT
+ARG TARGETOS TARGETARCH TARGETVARIANT RELEASE_VERSION
+ENV RELEASE_VERSION=$RELEASE_VERSION
 
 ENV GOPROXY=https://goproxy.kolaente.de
 RUN export PATH=$PATH:$GOPATH/bin && \

@@ -37,7 +37,6 @@ import (
 	"time"
 
 	"github.com/iancoleman/strcase"
-
 	"github.com/magefile/mage/mg"
 	"golang.org/x/sync/errgroup"
 )
@@ -92,24 +91,41 @@ func runCmdWithOutput(name string, arg ...string) (output []byte, err error) {
 	return output, nil
 }
 
+func getRawVersionString() (version string, err error) {
+	versionEnv := os.Getenv("RELEASE_VERSION")
+	if versionEnv != "" {
+		return versionEnv, nil
+	}
+
+	if os.Getenv("DRONE_TAG") != "" {
+		return os.Getenv("DRONE_TAG"), nil
+	}
+
+	if os.Getenv("DRONE_BRANCH") != "" {
+		version = strings.Replace(os.Getenv("DRONE_BRANCH"), "release/v", "", 1)
+	}
+
+	if version == "main" {
+		version = "unstable"
+	}
+
+	if version != "" {
+		return
+	}
+
+	versionBytes, err := runCmdWithOutput("git", "describe", "--tags", "--always", "--abbrev=10")
+	return string(versionBytes), err
+}
+
 func setVersion() {
-	version, err := runCmdWithOutput("git", "describe", "--tags", "--always", "--abbrev=10")
+	version, err := getRawVersionString()
 	if err != nil {
 		fmt.Printf("Error getting version: %s\n", err)
 		os.Exit(1)
 	}
-	VersionNumber = strings.Trim(string(version), "\n")
+	VersionNumber = strings.Trim(version, "\n")
 	VersionNumber = strings.Replace(VersionNumber, "-g", "-", 1)
-
-	if os.Getenv("DRONE_TAG") != "" {
-		Version = os.Getenv("DRONE_TAG")
-	} else if os.Getenv("DRONE_BRANCH") != "" {
-		Version = strings.Replace(os.Getenv("DRONE_BRANCH"), "release/v", "", 1)
-	}
-
-	if Version == "main" {
-		Version = "unstable"
-	}
+	Version = version
 }
 
 func setBinLocation() {
