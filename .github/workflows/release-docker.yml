@@ -29,4 +29,4 @@ jobs:
           push: true
           tags: ghcr.io/go-vikunja/vikunja:unstable
           build-args: |
-            RELEASE_VERSION:${{ steps.ghd.outputs.describe }}
+            RELEASE_VERSION=${{ steps.ghd.outputs.describe }}
