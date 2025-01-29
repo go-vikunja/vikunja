@@ -10,10 +10,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       -
-        name: Login to Registry
+        name: Login to GHCR
         uses: docker/login-action@v3
         with:
-          username: ${{ vars.CONTAINER_REG_USERNAME }}
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
       -
         name: Set up QEMU
