@@ -51,7 +51,10 @@ function ganttRouteToFilters(route: Partial<RouteLocationNormalized>): GanttFilt
 }
 
 function ganttGetDefaultFilters(route: Partial<RouteLocationNormalized>): GanttFilters {
-	return ganttRouteToFilters({params: {projectId: route.params?.projectId as string}})
+	return ganttRouteToFilters({params: {
+		projectId: route.params?.projectId as string,
+		viewId: route.params?.viewId as string,
+	}})
 }
 
 // FIXME: use zod for this
