@@ -111,13 +111,14 @@ func HandleCallback(c echo.Context) error {
 	// Check if the provider exists
 	providerKey := c.Param("provider")
 	provider, err := GetProvider(providerKey)
-	log.Debugf("Provider: %v", provider)
 	if err != nil {
 		return handler.HandleHTTPError(err)
 	}
 	if provider == nil {
 		return c.JSON(http.StatusBadRequest, models.Message{Message: "Provider does not exist"})
 	}
+
+	log.Debugf("Trying to authenticate user using provider: %s", provider.Key)
 
 	provider.Oauth2Config.RedirectURL = cb.RedirectURL
 

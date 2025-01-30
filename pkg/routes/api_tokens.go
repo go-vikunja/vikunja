@@ -79,6 +79,7 @@ func checkAPITokenAndPutItInContext(tokenHeaderValue string, c echo.Context) err
 	}
 
 	if !models.CanDoAPIRoute(c, token) {
+		log.Debugf("[auth] Tried authenticating with token %d but it does not have permission to do this route", token.ID)
 		return echo.NewHTTPError(http.StatusUnauthorized)
 	}
 
