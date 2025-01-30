@@ -151,6 +151,8 @@ var userListCmd = &cobra.Command{
 			"Username",
 			"Email",
 			"Status",
+			"Issuer",
+			"Subject",
 			"Created",
 			"Updated",
 		})
@@ -161,6 +163,8 @@ var userListCmd = &cobra.Command{
 				u.Username,
 				u.Email,
 				u.Status.String(),
+				u.Issuer,
+				u.Subject,
 				u.Created.Format(time.RFC3339),
 				u.Updated.Format(time.RFC3339),
 			})
