@@ -100,7 +100,7 @@
         "timezone": "Time zone",
         "overdueTasksRemindersTime": "Overdue tasks reminder email time",
         "filterUsedOnOverview": "Išsaugotas filtras naudojamas apžvalgos puslapyje",
-        "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
+        "externalUserNameChange": "Tavo vardą valdo prisijungimo tiekėjas ({provider}). Norint pakeisti, atnaujinkite pasirinkimą."
       },
       "totp": {
         "title": "Two Factor Authentication",
@@ -211,7 +211,7 @@
     "archivedMessage": "This project is archived. It is not possible to create new or edit tasks for it.",
     "archived": "Archived",
     "showArchived": "Show Archived",
-    "title": "Title",
+    "title": "Pavadinimas",
     "color": "Color",
     "projects": "Projects",
     "parent": "Parent Project",
@@ -220,9 +220,9 @@
     "shared": "Shared Projects",
     "noDescriptionAvailable": "No project description is available.",
     "inboxTitle": "Inbox",
-    "favorite": "Mark this project as favorite",
-    "unfavorite": "Remove this project from favorites",
-    "openSettingsMenu": "Open project settings menu",
+    "favorite": "Pažymėti projektą kaip mėgstamą",
+    "unfavorite": "Pašalinti iš mėgstamiausių",
+    "openSettingsMenu": "Atidaryti projekto nustatymų meniu",
     "description": "Project description",
     "create": {
       "header": "New project",
@@ -503,14 +503,14 @@
   "migrate": {
     "title": "Importuoti iš kitų paslaugų tiekėjų",
     "titleService": "Importuoti duomenis iš {name} į Vikunja",
-    "import": "Import your data into Vikunja",
+    "import": "Importuoti savo duomenis į Vikunja",
     "description": "Paspauskite ant trečiosios šalies logotipo norint pradėti.",
     "descriptionDo": "Vikunja importuos visus sąrašus, užduotis, užrašus, priminimus ir dokumentus prie kurių tu turi prieigą.",
     "authorize": "Autorizuoti Vikunja prieigą prie tavo {name} paskyros, spauskite mygtuką žemiau.",
     "getStarted": "Pradėti",
     "inProgress": "Importavimas progrese…",
     "alreadyMigrated1": "Atrodo, kad jau importavai savo info is {name} {date}.",
-    "alreadyMigrated2": "Importing again is possible, but might create duplicates. Are you sure?",
+    "alreadyMigrated2": "Dar kartą importuoti galima, tačiau tai gali sukurti dublikatus. Ar tęsti?",
     "confirm": "Aš įsitikinęs, prašau pradėti migraciją dabar!",
     "importUpload": "Importuoti duomenis iš {name} į Vikunja, spausk mygtuką žemiau, norėdamas pasirinkti failą.",
     "upload": "Įkelti failą",
@@ -589,7 +589,7 @@
     "createdBy": "Sukurta {0}",
     "actions": "Veiksmai",
     "cannotBeUndone": "Atšaukti negalėsite!",
-    "avatarOfUser": "{user}'s profile image"
+    "avatarOfUser": "{user} profilio paveiksliukas"
   },
   "input": {
     "resetColor": "Atstatyti spalvas",
@@ -620,7 +620,7 @@
       "code": "Code",
       "codeTooltip": "Atvaizduoti kodo ištrauką.",
       "quote": "Quote",
-      "quoteTooltip": "Capture a quote.",
+      "quoteTooltip": "Cituoti.",
       "bulletList": "Bullet list",
       "bulletListTooltip": "Sukurti paprastą sąrašą.",
       "unorderedList": "Nerikiuojamas sąrašas",
@@ -662,7 +662,7 @@
     },
     "multiselect": {
       "createPlaceholder": "Create",
-      "selectPlaceholder": "Click or press enter to select"
+      "selectPlaceholder": "Spustelėkite arba spauskite įvesties klavisą norėdami pasirinkti"
     },
     "datepickerRange": {
       "to": "Į",
