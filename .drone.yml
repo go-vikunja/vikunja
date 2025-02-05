@@ -424,7 +424,7 @@ steps:
       - frontend-dependencies
 
   - name: frontend-test
-    image: cypress/browsers:node18.12.0-chrome107
+    image: cypress/browsers:22.13.1
     pull: always
     environment:
       CYPRESS_API_URL: http://test-api-run:3456/api/v1
@@ -1398,6 +1398,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 5aeeb477e5809411257faf65701fa6f6d301e7d905f136b81165b654e5a58f72
+hmac: 08f93847c405bf7b6f50ab3deb19a39aa69645313a936e632fdb3d4a35e74d83
 
 ...
