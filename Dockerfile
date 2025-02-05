@@ -9,7 +9,7 @@ ENV CYPRESS_INSTALL_BINARY=0
 
 COPY frontend/ ./
 
-RUN corepack enable && \
+RUN npm install -g corepack && corepack enable && \
       pnpm install && \
       pnpm run build
 

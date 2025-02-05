@@ -371,7 +371,7 @@ steps:
       PUPPETEER_SKIP_DOWNLOAD: true
     commands:
       - cd frontend
-      - corepack enable && pnpm config set store-dir .cache/pnpm
+      - npm install -g corepack && corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm install --fetch-timeout 100000
   #    depends_on:
   #      - restore-cache
@@ -383,7 +383,7 @@ steps:
       PNPM_CACHE_FOLDER: .cache/pnpm
     commands:
       - cd frontend
-      - corepack enable && pnpm config set store-dir .cache/pnpm
+      - npm install -g corepack && corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm run lint
     depends_on:
       - frontend-dependencies
@@ -395,7 +395,7 @@ steps:
       PNPM_CACHE_FOLDER: .cache/pnpm
     commands:
       - cd frontend
-      - corepack enable && pnpm config set store-dir .cache/pnpm
+      - npm install -g corepack && corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm run build:test
     depends_on:
       - frontend-dependencies
@@ -405,7 +405,7 @@ steps:
     pull: always
     commands:
       - cd frontend
-      - corepack enable && pnpm config set store-dir .cache/pnpm
+      - npm install -g corepack && corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm run test:unit
     depends_on:
       - frontend-dependencies
@@ -418,7 +418,7 @@ steps:
       PNPM_CACHE_FOLDER: .cache/pnpm
     commands:
       - cd frontend
-      - corepack enable && pnpm config set store-dir .cache/pnpm
+      - npm install -g corepack && corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm run typecheck
     depends_on:
       - frontend-dependencies
@@ -437,7 +437,7 @@ steps:
     commands:
       - cd frontend
       - sed -i 's/localhost/test-api-run/g' dist-test/index.html
-      - corepack enable && pnpm config set store-dir .cache/pnpm
+      - npm install -g corepack && corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm cypress install
       - pnpm run test:e2e-record-test
     depends_on:
@@ -551,7 +551,7 @@ steps:
       PUPPETEER_SKIP_DOWNLOAD: true
     commands:
       - cd frontend
-      - corepack enable && pnpm config set store-dir .cache/pnpm
+      - npm install -g corepack && corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm install --fetch-timeout 100000
 
   - name: frontend-build
@@ -561,7 +561,7 @@ steps:
       PNPM_CACHE_FOLDER: .cache/pnpm
     commands:
       - cd frontend
-      - corepack enable && pnpm config set store-dir .cache/pnpm
+      - npm install -g corepack && corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm run build
     depends_on:
       - frontend-dependencies
@@ -957,7 +957,7 @@ steps:
       PUPPETEER_SKIP_DOWNLOAD: true
     commands:
       - cd frontend
-      - corepack enable && pnpm config set store-dir .cache/pnpm
+      - npm install -g corepack && corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm install --fetch-timeout 100000 --frozen-lockfile
       - pnpm run lint
       - pnpm run build
@@ -1017,7 +1017,7 @@ steps:
       SENTRY_PROJECT: frontend-oss
     commands:
       - cd frontend
-      - corepack enable && pnpm config set store-dir .cache/pnpm
+      - npm install -g corepack && corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm install --fetch-timeout 100000 --frozen-lockfile
       - pnpm run build
       - sed -i 's/http\:\\/\\/localhost\\:3456\\/api\\/v1/\\/api\\/v1/g' dist/index.html # Override the default api url used for developing
@@ -1164,7 +1164,7 @@ steps:
       - unzip vikunja-frontend-$$VERSION.zip -d frontend
       - sed -i 's/\\/api\\/v1//g' frontend/index.html
       - ./bumpp.sh
-      - corepack enable && pnpm config set store-dir .cache/pnpm
+      - npm install -g corepack && corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm install --fetch-timeout 100000
       - pnpm dist --linux zip
 
@@ -1246,7 +1246,7 @@ steps:
       - unzip vikunja-frontend-$$VERSION.zip -d frontend
       - sed -i 's/\\/api\\/v1//g' frontend/index.html
       - ./bumpp.sh
-      - corepack enable && pnpm config set store-dir .cache/pnpm
+      - npm install -g corepack && corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm install --fetch-timeout 100000
       - pnpm dist --linux --windows
   
@@ -1398,6 +1398,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: ef4a67a772a0065903e68da616fde01461fc94008d927635702b15b30afa6936
+hmac: 5aeeb477e5809411257faf65701fa6f6d301e7d905f136b81165b654e5a58f72
 
 ...
