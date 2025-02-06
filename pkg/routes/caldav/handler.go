@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"net/http"
 	"reflect"
 	"strconv"
 	"strings"
@@ -46,6 +47,9 @@ func getBasicAuthUserFromContext(c echo.Context) (*user.User, error) {
 // ProjectHandler returns all tasks from a project
 func ProjectHandler(c echo.Context) error {
 	project, err := getProjectFromParam(c)
+	if err != nil && models.IsErrProjectDoesNotExist(err) {
+		return c.String(http.StatusNotFound, "Project not found")
+	}
 	if err != nil {
 		return err
 	}
@@ -69,7 +73,8 @@ func ProjectHandler(c echo.Context) error {
 	if vtodo != "" && strings.HasPrefix(vtodo, `BEGIN:VCALENDAR`) {
 		storage.task, err = caldav2.ParseTaskFromVTODO(vtodo)
 		if err != nil {
-			return echo.ErrInternalServerError.SetInternal(err)
+			log.Warningf("[CALDAV] Failed to parse task: %v", err)
+			return models.ErrInvalidData{Message: "Invalid task"}
 		}
 	}
 
