@@ -4,7 +4,7 @@
     "welcomeMorning": "Hei {username}!",
     "welcomeDay": "Hei {username}!",
     "welcomeEvening": "Hei {username}!",
-    "lastViewed": "Sist sett",
+    "lastViewed": "Sist vist",
     "addToHomeScreen": "Legg denne appen til på startskjermen for raskere tilgang og forbedret opplevelse.",
     "goToOverview": "Gå til oversikt",
     "project": {
@@ -77,17 +77,17 @@
       "currentPassword": "Nåværende passord",
       "currentPasswordPlaceholder": "Ditt nåværende passord",
       "passwordsDontMatch": "Det nye passordet og bekreftelse samsvarer ikke.",
-      "passwordUpdateSuccess": "Passordet ditt ble vellykket oppdatert.",
-      "updateEmailTitle": "Oppdater e-postadressen din",
+      "passwordUpdateSuccess": "The password was successfully updated.",
+      "updateEmailTitle": "Update Your Email Address",
       "updateEmailNew": "Ny e-postadresse",
-      "updateEmailSuccess": "E-postadressen din ble oppdatert. Vi har sendt deg en lenke for å bekrefte den.",
+      "updateEmailSuccess": "E-postadressen ble oppdatert. Vi har sendt deg en lenke for å bekrefte den.",
       "general": {
         "title": "Generelle innstillinger",
         "name": "Mitt navn",
         "newName": "Nytt navn",
         "savedSuccess": "Innstillingene ble lagret.",
         "emailReminders": "Send påminnelser om oppgaver på e-post",
-        "overdueReminders": "Send meg daglig et sammendrag av mine uferdige oppgaver som har forfalt",
+        "overdueReminders": "Send daglig et sammendrag av forfalte uferdige oppgaver",
         "discoverableByName": "Tillat andre brukere å legge meg til som medlem i grupper eller prosjekter når det søkes etter mitt navn",
         "discoverableByEmail": "Tillat andre brukere å legge meg til som medlem i grupper eller prosjekter når det søkes etter min e-postadresse",
         "playSoundWhenDone": "Spill av en lyd når merking av oppgaver som ferdig",
@@ -100,7 +100,7 @@
         "timezone": "Tidssone",
         "overdueTasksRemindersTime": "Påminnelsestid for utløpte oppgaver",
         "filterUsedOnOverview": "Lagret filter brukt på siden med oversikt",
-        "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
+        "externalUserNameChange": "Navnet ditt blir administrert av din innloggingsleverandør ({provider}). For å endre det, vennligst oppdater det hos leverandøren."
       },
       "totp": {
         "title": "To-faktor-autentisering",
@@ -183,8 +183,8 @@
       }
     },
     "deletion": {
-      "title": "Slett kontoen din",
-      "text1": "Sletting av kontoen din vil være permanent og kan ikke angres. Alle dine prosjekter, oppgaver og alt tilknyttet disse vil slettes.",
+      "title": "Delete your Vikunja Account",
+      "text1": "Sletting av kontoen vil være permanent og kan ikke angres. Alle dine prosjekter, oppgaver og alt tilknyttet disse vil slettes.",
       "text2": "For å fortsette, skriv inn passordet ditt. Du vil motta en e-post med ytterligere instruksjoner.",
       "text3": "Trykk knappen under for å fortsette. Du vil motta en e-post med videre instruksjoner.",
       "confirm": "Slett min konto",
@@ -199,7 +199,7 @@
       "scheduledCancelSuccess": "Vi vil ikke slette din konto."
     },
     "export": {
-      "title": "Eksporter dine kontodata",
+      "title": "Eksporter kontodata",
       "description": "Du kan be om en kopi av alle Vikunja dataene dine. Dette inkluderer prosjekter, oppgaver og alt tilknyttet disse. Disse dataene kan importeres i andre installasjoner av Vikunja gjennom migreringsfunksjonen.",
       "descriptionPasswordRequired": "Skriv inn passordet for å fortsette:",
       "request": "Be om kopi av mine Vikunja data",
@@ -211,7 +211,7 @@
     "archivedMessage": "Dette prosjektet er arkivert. Det er ikke mulig å opprette eller redigere oppgaver.",
     "archived": "Arkiverte",
     "showArchived": "Vis arkiverte",
-    "title": "Title",
+    "title": "Tittel",
     "color": "Farge",
     "projects": "Prosjekter",
     "parent": "Overordnet prosjekt",
@@ -220,10 +220,10 @@
     "shared": "Delte prosjekter",
     "noDescriptionAvailable": "Ingen prosjektbeskrivelse er tilgjengelig.",
     "inboxTitle": "Innboks",
-    "favorite": "Mark this project as favorite",
-    "unfavorite": "Remove this project from favorites",
-    "openSettingsMenu": "Open project settings menu",
-    "description": "Project description",
+    "favorite": "Marker dette prosjektet som favoritt",
+    "unfavorite": "Fjern dette prosjektet fra favoritter",
+    "openSettingsMenu": "Åpne innstillingene til prosjektet",
+    "description": "Prosjektbeskrivelse",
     "create": {
       "header": "Nytt prosjekt",
       "titlePlaceholder": "Prosjektets tittel angis her…",
@@ -589,7 +589,7 @@
     "createdBy": "Opprettet av {0}",
     "actions": "Handlinger",
     "cannotBeUndone": "Dette kan ikke angres!",
-    "avatarOfUser": "{user}'s profile image"
+    "avatarOfUser": "{user}s profilbilde"
   },
   "input": {
     "resetColor": "Tilbakestill farge",
