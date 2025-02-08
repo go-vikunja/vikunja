@@ -59,7 +59,7 @@ jobs:
         run: |
           pnpm install --fetch-timeout 100000
           # TODO use the built output from a previous frontend build step
-          node build.js "${{ steps.ghd.outputs.describe }}"
+          node build.js "${{ steps.ghd.outputs.describe }}" ${{ github.ref_type == 'tag' }}
       - name: Store release as artifact
         uses: actions/upload-artifact@v4
         with:

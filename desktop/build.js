@@ -52,16 +52,32 @@ async function replaceTextInFile(filePath, searchValue, replaceValue) {
 	await fs.promises.writeFile(filePath, result, 'utf8');
 }
 
+async function renameDistFilesToUnstable(currentVersion) {
+	const directory = 'dist';
+	const files = await fs.promises.readdir(directory);
+	for (const file of files) {
+		if (file.includes(currentVersion)) {
+			const newName = file.replace(currentVersion, 'unstable');
+			await fs.promises.rename(
+				path.join(directory, file),
+				path.join(directory, newName)
+			);
+			console.log(`Renamed: ${file} -> ${newName}`);
+		}
+	}
+}
+
 // Main function to execute the script steps
 async function main() {
 	const args = process.argv.slice(2);
 	if (args.length === 0) {
 		console.error("Error: Version placeholder argument is required.");
-		console.error("Usage: node build-script.js <version-placeholder>");
+		console.error("Usage: node build-script.js <version-placeholder> [rename-version]");
 		process.exit(1);
 	}
 
 	const versionPlaceholder = args[0];
+	const renameDistFiles = args[1] || false;
 	const frontendZipUrl = "https://dl.vikunja.io/frontend/vikunja-frontend-unstable.zip";
 	const zipFilePath = path.resolve(__dirname, 'vikunja-frontend-unstable.zip');
 	const frontendDir = path.resolve(__dirname, 'frontend');
@@ -90,6 +106,11 @@ async function main() {
 
 		console.log('Step 5: Installing dependencies and building...');
 		execSync('pnpm dist', { stdio: 'inherit' });
+
+		if (renameDistFiles) {
+			console.log('Step 6: Renaming release files...');
+			await renameDistFilesToUnstable(versionPlaceholder);
+		}
 
 		console.log('All steps completed successfully!');
 	} catch (err) {
