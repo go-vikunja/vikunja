@@ -60,3 +60,8 @@ jobs:
           npm install -g corepack && corepack enable && pnpm config set store-dir .cache/pnpm
           pnpm install --fetch-timeout 100000
           pnpm dist --linux --windows
+      - name: Store release as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-release 
+          path: desktop/dist/Vikunja-Desktop*
