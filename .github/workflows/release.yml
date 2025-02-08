@@ -1,0 +1,59 @@
+name: release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git describe
+        id: ghd
+        uses: proudust/gh-describe@v2
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8
+          push: true
+          tags: ghcr.io/go-vikunja/vikunja:unstable
+          build-args: |
+            RELEASE_VERSION=${{ steps.ghd.outputs.describe }}
+  desktop:
+    runs-on: ubuntu-latest
+    container:
+      image: electronuserland/builder:wine
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set version
+        id: version
+        run: |
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            VERSION="${{ github.ref_name}}"
+          else
+            VERSION="unstable"
+          fi
+          echo version=$VERSION >> "$GITHUB_OUTPUT"
+
+      - name: Build desktop app
+        working-directory: desktop
+        run: |
+          wget "https://dl.vikunja.io/frontend/vikunja-frontend-${{ steps.version.outputs.version }}.zip"
+          unzip "vikunja-frontend-${{ steps.version.outputs.version }}.zip" -d frontend
+          sed -i 's/\/api\/v1//g' frontend/index.html
+          ./bumpp.sh
+          npm install -g corepack && corepack enable && pnpm config set store-dir .cache/pnpm
+          pnpm install --fetch-timeout 100000
+          pnpm dist --linux --windows

@@ -10,6 +10,7 @@ in {
   packages = with pkgs-unstable; [
     # General tools
     git-cliff 
+    actionlint
     # API tools
     golangci-lint mage
     # Desktop
