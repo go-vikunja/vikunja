@@ -6,12 +6,20 @@ on:
       - main
 
 jobs:
-  docker:
+  version:
     runs-on: ubuntu-latest
+    outputs: 
+      version: ${{ steps.ghd.outputs.describe }}
     steps:
       - name: Git describe
         id: ghd
         uses: proudust/gh-describe@v2
+    
+  docker:
+    runs-on: ubuntu-latest
+    needs:
+      - version
+    steps:
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
@@ -29,17 +37,16 @@ jobs:
           push: true
           tags: ghcr.io/go-vikunja/vikunja:unstable
           build-args: |
-            RELEASE_VERSION=${{ steps.ghd.outputs.describe }}
+            RELEASE_VERSION=${{ needs.version.outputs.version }}
   desktop:
     runs-on: ubuntu-latest
+    needs:
+      - version
     container:
       image: electronuserland/builder:wine
 
     steps:
       - uses: actions/checkout@v3
-      - name: Git describe
-        id: ghd
-        uses: proudust/gh-describe@v2
       - name: Set version
         id: version
         run: |
@@ -55,8 +62,8 @@ jobs:
           wget "https://dl.vikunja.io/frontend/vikunja-frontend-${{ steps.version.outputs.version }}.zip"
           unzip "vikunja-frontend-${{ steps.version.outputs.version }}.zip" -d frontend
           sed -i 's/\/api\/v1//g' frontend/index.html
-          sed -i "s/\${version}/${{ steps.ghd.outputs.describe }}/g" package.json
-          sed -i "s/\"version\": \".*\"/\"version\": \"${{ steps.ghd.outputs.describe }}\"/" package.json
+          sed -i "s/\${version}/${{ needs.version.outputs.version }}/g" package.json
+          sed -i "s/\"version\": \".*\"/\"version\": \"${{ needs.version.outputs.version }}\"/" package.json
           npm install -g corepack && corepack enable && pnpm config set store-dir .cache/pnpm
           pnpm install --fetch-timeout 100000
           pnpm dist --linux --windows
