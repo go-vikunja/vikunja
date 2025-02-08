@@ -1,10 +1,11 @@
 {
   "name": "vikunja-desktop",
-  "version": "0.21.0",
+  "version": "v0.1.0",
   "description": "Vikunja's frontend as a standalone desktop application.",
   "main": "main.js",
   "repository": "https://code.vikunja.io/desktop",
   "license": "GPL-3.0-or-later",
+  "packageManager": "pnpm@9.15.4",
   "author": {
     "email": "maintainers@vikunja.io",
     "name": "Vikunja Team"
@@ -52,7 +53,8 @@
   },
   "devDependencies": {
     "electron": "34.0.1",
-    "electron-builder": "25.1.8"
+    "electron-builder": "25.1.8",
+    "unzipper": "^0.12.3"
   },
   "dependencies": {
     "connect-history-api-fallback": "2.0.0",

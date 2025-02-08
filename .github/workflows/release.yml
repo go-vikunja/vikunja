@@ -6,20 +6,12 @@ on:
       - main
 
 jobs:
-  version:
+  docker:
     runs-on: ubuntu-latest
-    outputs: 
-      version: ${{ steps.ghd.outputs.describe }}
     steps:
       - name: Git describe
         id: ghd
         uses: proudust/gh-describe@v2
-    
-  docker:
-    runs-on: ubuntu-latest
-    needs:
-      - version
-    steps:
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
@@ -37,38 +29,39 @@ jobs:
           push: true
           tags: ghcr.io/go-vikunja/vikunja:unstable
           build-args: |
-            RELEASE_VERSION=${{ needs.version.outputs.version }}
+            RELEASE_VERSION=${{ steps.ghd.outputs.describe }}
   desktop:
-    runs-on: ubuntu-latest
-    needs:
-      - version
-    container:
-      image: electronuserland/builder:wine
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v3
-      - name: Set version
-        id: version
-        run: |
-          if [ "${{ github.ref_type }}" = "tag" ]; then
-            VERSION="${{ github.ref_name}}"
-          else
-            VERSION="unstable"
-          fi
-          echo version=$VERSION >> "$GITHUB_OUTPUT"
+      - name: Git describe
+        id: ghd
+        uses: proudust/gh-describe@v2
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: desktop/package.json
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: desktop/pnpm-lock.yaml
       - name: Build desktop app
         working-directory: desktop
         run: |
-          wget "https://dl.vikunja.io/frontend/vikunja-frontend-${{ steps.version.outputs.version }}.zip"
-          unzip "vikunja-frontend-${{ steps.version.outputs.version }}.zip" -d frontend
-          sed -i 's/\/api\/v1//g' frontend/index.html
-          sed -i "s/\${version}/${{ needs.version.outputs.version }}/g" package.json
-          sed -i "s/\"version\": \".*\"/\"version\": \"${{ needs.version.outputs.version }}\"/" package.json
-          npm install -g corepack && corepack enable && pnpm config set store-dir .cache/pnpm
           pnpm install --fetch-timeout 100000
-          pnpm dist --linux --windows
+          # TODO use the built output from a previous frontend build step
+          node build.js "${{ steps.ghd.outputs.describe }}"
       - name: Store release as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: desktop-release 
-          path: desktop/dist/Vikunja-Desktop*
+          name: desktop-release-${{ runner.os }}
+          path: desktop/dist/Vikunja*
