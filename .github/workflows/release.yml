@@ -37,6 +37,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      - name: Git describe
+        id: ghd
+        uses: proudust/gh-describe@v2
       - name: Set version
         id: version
         run: |
@@ -46,14 +49,14 @@ jobs:
             VERSION="unstable"
           fi
           echo version=$VERSION >> "$GITHUB_OUTPUT"
-
       - name: Build desktop app
         working-directory: desktop
         run: |
           wget "https://dl.vikunja.io/frontend/vikunja-frontend-${{ steps.version.outputs.version }}.zip"
           unzip "vikunja-frontend-${{ steps.version.outputs.version }}.zip" -d frontend
           sed -i 's/\/api\/v1//g' frontend/index.html
-          ./bumpp.sh
+          sed -i "s/\${version}/${{ steps.ghd.outputs.describe }}/g" package.json
+          sed -i "s/\"version\": \".*\"/\"version\": \"${{ steps.ghd.outputs.describe }}\"/" package.json
           npm install -g corepack && corepack enable && pnpm config set store-dir .cache/pnpm
           pnpm install --fetch-timeout 100000
           pnpm dist --linux --windows
