@@ -85,14 +85,14 @@
         "title": "Bendriniai nustatymai",
         "name": "Mano vardas",
         "newName": "Naujas vardas",
-        "savedSuccess": "The settings were successfully updated.",
-        "emailReminders": "Send me reminders for tasks via email",
-        "overdueReminders": "Send me a summary of my undone overdue tasks every day",
+        "savedSuccess": "Nustatymai buvo sėkmingai atnaujinti.",
+        "emailReminders": "Siųskite man priminimus apie užduotis el. paštu",
+        "overdueReminders": "Siųskite man santrauką, neatliktų ir viršijusių terminą, kiekvieną dieną",
         "discoverableByName": "Leisti kitiems vartotojas mane pridėti prie komandų ar projektų radus mano vardą paieškoje",
-        "discoverableByEmail": "Allow other users to add me as a member to teams or projects when they search for my full email",
-        "playSoundWhenDone": "Play a sound when marking tasks as done",
-        "weekStart": "Week starts on",
-        "weekStartSunday": "Sunday",
+        "discoverableByEmail": "Leisti kitiems vartotojas mane pridėti prie komandų ar projektų radus mano pilną el. pašto adresą paieškoje",
+        "playSoundWhenDone": "Leisti garsą, kai užduotis yra pažymima kaip atlikta",
+        "weekStart": "Savaitė prasideda nuo",
+        "weekStartSunday": "Sekmadienio",
         "weekStartMonday": "Monday",
         "language": "Language",
         "defaultProject": "Default project",
@@ -123,43 +123,43 @@
         "tokens": "CalDAV Tokens",
         "tokensHowTo": "You can use a CalDAV token to use instead of a password to log in the above endpoint.",
         "createToken": "Sukurti prieigos raktą",
-        "tokenCreated": "Here is your token: {token}",
-        "wontSeeItAgain": "Write it down, you won't be able to see it again.",
-        "mustUseToken": "You need to create a CalDAV token if you want to use CalDAV with a third party client. Use the token as the password.",
+        "tokenCreated": "Čia jūsų tokenas: {token}",
+        "wontSeeItAgain": "Užsirašyk, nes daugiau to nepamatysi.",
+        "mustUseToken": "Reikia susikurti CalDAV tokeną, jei norite naudoti CalDAV su trečiųjų šalių paskyromis. Naudokite tokeną, kaip slaptažodį.",
         "usernameIs": "Tavo vartotojo vardas yra: {0}"
       },
       "avatar": {
-        "title": "Avatar",
-        "initials": "Initials",
-        "gravatar": "Gravatar",
-        "marble": "Marble",
-        "upload": "Upload",
-        "uploadAvatar": "Upload Avatar",
-        "statusUpdateSuccess": "Avatar status was updated successfully!",
-        "setSuccess": "The avatar has been set successfully!"
+        "title": "Avataras",
+        "initials": "Inicialai",
+        "gravatar": "Gravataras",
+        "marble": "Marmūras",
+        "upload": "Įkelti",
+        "uploadAvatar": "Įkelti avatarą",
+        "statusUpdateSuccess": "Avataro statusas buvo atnaujintas sėkmingai!",
+        "setSuccess": "Avataras buvo sėkmimgai nustatytas!"
       },
       "quickAddMagic": {
-        "title": "Quick Add Magic Mode",
-        "disabled": "Disabled",
+        "title": "Greito pridėjimo magijos būsena",
+        "disabled": "Išjungta",
         "todoist": "Todoist",
         "vikunja": "Vikunja"
       },
       "appearance": {
-        "title": "Color Scheme",
-        "setSuccess": "Saved change of color scheme to {colorScheme}",
+        "title": "Spalvų paletė",
+        "setSuccess": "Išsaugoti pakeitimai spalvų schemoje {colorScheme}",
         "colorScheme": {
-          "light": "Light",
-          "system": "System",
-          "dark": "Dark"
+          "light": "Šviesus",
+          "system": "Sistemos",
+          "dark": "Tamsus"
         }
       },
       "apiTokens": {
-        "title": "API Tokens",
-        "general": "API tokens allow you to use Vikunja's API without user credentials.",
-        "apiDocs": "Check out the api docs",
-        "createAToken": "Create a token",
-        "createToken": "Create token",
-        "30d": "30 Days",
+        "title": "API sąsajos prieigos raktai",
+        "general": "API tokenai leidžia naudoti Vikunja API be prisijungimo duomenų.",
+        "apiDocs": "Peržiūrėkite api dokumentaciją",
+        "createAToken": "Sukurti prieigos raktą",
+        "createToken": "Sukurti prieigos raktą",
+        "30d": "30 dienų",
         "60d": "60 Days",
         "90d": "90 Days",
         "permissionExplanation": "Permissions allow you to scope what an api token is allowed to do.",
@@ -223,7 +223,7 @@
     "favorite": "Pažymėti projektą kaip mėgstamą",
     "unfavorite": "Pašalinti iš mėgstamiausių",
     "openSettingsMenu": "Atidaryti projekto nustatymų meniu",
-    "description": "Project description",
+    "description": "Projekto aprašymas",
     "create": {
       "header": "New project",
       "titlePlaceholder": "The project's title goes here…",
@@ -390,8 +390,8 @@
       "deleteSuccess": "Webhook'as buvo sėkmingai ištrintas.",
       "create": "Sukurti ryšį",
       "secret": "Paslaptis",
-      "secretHint": "If provided, all requests to the webhook target URL will be signed using HMAC.",
-      "secretDocs": "Check out the docs for more details about how to use secrets."
+      "secretHint": "Jei pateikta, visos užklausos į webhook'o nuorodą bus pasirašyta HMAC.",
+      "secretDocs": "Peržiūrėkite dokumentus, dėl daugiau informacijos, kaip naudoti paslaptis."
     },
     "views": {
       "header": "Keisti vaizdo nustatymus",
@@ -406,7 +406,7 @@
       "createSuccess": "Atvaizdavimas buvo sėkmingai sukurtas.",
       "titleRequired": "Please provide a title.",
       "delete": "Ištrinti šį atvaizdavimą",
-      "deleteText": "Are you sure you want to remove this view? It will no longer be possible to use it to view tasks in this project. This action won't delete any tasks. This cannot be undone!",
+      "deleteText": "Ar tikrai nori panaikinti šį vaizdavimą? Vėliau nebus galima jo naudoti užduotims šiame projekte. Šis veiksmas neištrins užduočių. Tai negalima bus pakeisti!",
       "deleteSuccess": "Atvaizdavimas buvo sėkmingai ištrintas.",
       "onlyAdminsCanEdit": "Tik projekto administratoriai gali keisti atvaizdavimą.",
       "updateSuccess": "Atvaizdavimas buvo sėkmingai atnaujintas."
@@ -417,7 +417,7 @@
     "clear": "Anuliuoti filtrus",
     "showResults": "Rodyti rezultatus",
     "fromView": "Dabartinis vaizdas turi nustatytą filtrą taip pat:",
-    "fromViewBoth": "It will be used in combination with what you enter here.",
+    "fromViewBoth": "Tai bus panaudota kartu su tuo, ką įvesite čia.",
     "attributes": {
       "title": "Pavadinimas",
       "titlePlaceholder": "Išsaugoto filtro pavadinimas rašomas čia…",
@@ -455,7 +455,7 @@
       "help": {
         "intro": "Norėdami filtruoti užduotis, galite naudoti sintaksę panašią į SQL. Galimi filtravimo laukai įtraukia:",
         "link": "Kaip tai veikia?",
-        "canUseDatemath": "You can use date math to set relative dates. Click on the date value in a query to find out more.",
+        "canUseDatemath": "Galima naudoti matematika datoms, norint nustatyti reliatyvias datas. Spauskite and datos vertės norėdami sužinoti daugiau.",
         "fields": {
           "done": "Ar užduotis atlikta ar ne",
           "priority": "Užduoties prioriteto lygis (1-5)",
@@ -466,7 +466,7 @@
           "doneAt": "Data ir laikas, kada užduotis buvo atlikta",
           "assignees": "Užduočiai priskirti vartotojai",
           "labels": "Etiketės sietinos su užduotimi",
-          "project": "The project the task belongs to (only available for saved filters, not on a project level)",
+          "project": "Projekto užduotis priklauso (tik galima išsaugotiems filtrams, ne projekto lygio)",
           "reminders": "The reminders of the task as a date field, will return all tasks with at least one reminder matching the query",
           "created": "Laikas ir data, kai užduotis buvo sukurta",
           "updated": "Data ir laikas, kada užduotis buvo pakeista"
@@ -484,7 +484,7 @@
           "notIn": "Matches any value not present in a comma-seperated list of values"
         },
         "logicalOperators": {
-          "intro": "To combine multiple conditions, you can use the following logical operators:",
+          "intro": "Norint sujungti kelias sąlygas, galite naudoti žemiau esančius operandus:",
           "and": "IR operatorius, sutampa jei visos sąlygos yra tiesa",
           "or": "ARBA operatorius, sutampa jei bet kuri sąlyga yra tiesa",
           "parentheses": "Skliausteliai sąlygų grupavimui"
@@ -493,8 +493,8 @@
           "intro": "Čia pateikiami keli filtravimo užklausos pavyzdžiai:",
           "priorityEqual": "Atitinka užduotis su 4 lygio prioritetu",
           "dueDatePast": "Sutampa su užduotimis su praeities data",
-          "undoneHighPriority": "Matches undone tasks with priority level 3 or higher",
-          "assigneesIn": "Matches tasks assigned to either \"user1\" or \"user2\"",
+          "undoneHighPriority": "Atšauktos užduotys su 3 ar aukštesnio lygio prioritetu",
+          "assigneesIn": "Sutinka su užduotimis priskirtomis arba \"vartotojui1\" ar \"vartotojui2\"",
           "priorityOneOrTwoPastDue": "Matches tasks with priority level 1 or 2 and a due date in the past"
         }
       }
@@ -515,7 +515,7 @@
     "importUpload": "Importuoti duomenis iš {name} į Vikunja, spausk mygtuką žemiau, norėdamas pasirinkti failą.",
     "upload": "Įkelti failą",
     "migrationStartedWillReciveEmail": "Vikunja dabar importuos tavo sąrašus/projektus, užduotis, užrašus, priminimus ir dokumentus iš {service}. Kadangi tai užtruks, atsiųsime el. laišką, kai bus baigta. Gali uždaryti šį langą.",
-    "migrationInProgress": "A migration is currently in progress. Please wait until it is done."
+    "migrationInProgress": "Migracija progrese. Prašome laukti iki galo."
   },
   "label": {
     "title": "Etiketės",
@@ -606,11 +606,11 @@
       "edit": "Keisti",
       "done": "Atlikta",
       "heading1": "Heading 1",
-      "heading1Tooltip": "Big section heading.",
+      "heading1Tooltip": "Didelio skyriaus antraštė.",
       "heading2": "Heading 2",
-      "heading2Tooltip": "Medium section heading.",
+      "heading2Tooltip": "Vidutinio dydžio skyriaus antraštė.",
       "heading3": "Heading 3",
-      "heading3Tooltip": "Smaller section header.",
+      "heading3Tooltip": "Mažesnio dydžio skyriaus antraštė.",
       "headingSmaller": "Heading Smaller",
       "headingBigger": "Antraštė Didesnė",
       "bold": "Paryškintas",
@@ -653,9 +653,9 @@
         "deleteTable": "Ištrinti lentelę",
         "mergeCells": "Sujungti langelius",
         "splitCell": "Skelti langelį",
-        "toggleHeaderColumn": "Toggle header column",
-        "toggleHeaderRow": "Toggle header row",
-        "toggleHeaderCell": "Toggle header cell",
+        "toggleHeaderColumn": "Perjungti antraštės stulpelį",
+        "toggleHeaderRow": "Perjungti antraštės eilutę",
+        "toggleHeaderCell": "Perjungti antraštės celę",
         "mergeOrSplit": "Sujungti arba padalinti",
         "fixTables": "Pataisyti lenteles"
       }
@@ -827,7 +827,7 @@
       "subscribedProject": "You are currently subscribed to this project and will receive notifications for changes.",
       "notSubscribedProject": "You are not subscribed to this project and won't receive notifications for changes.",
       "subscribedTask": "You are currently subscribed to this task and will receive notifications for changes.",
-      "notSubscribedTask": "You are not subscribed to this task and won't receive notifications for changes.",
+      "notSubscribedTask": "Nesi užsiprenumeravęs užduoties naujienų, todėl negausi pranešimų apie pakeitimus.",
       "subscribe": "Subscribe",
       "unsubscribe": "Unsubscribe",
       "subscribeSuccessProject": "Užsiprenumeravai projekto naujienas",
@@ -918,9 +918,9 @@
         "related": "Susijusi Užduotis | Susijusi Užduotis",
         "duplicateof": "Dublikatas | Dublikatas",
         "duplicates": "Dublikatai | Dublikatai",
-        "blocking": "Blocking | Blocking",
+        "blocking": "Blokuojama | Blokuojama",
         "blocked": "Užblokuota | Užblokuota",
-        "precedes": "Precedes | Precedes",
+        "precedes": "Praeina | Praeina",
         "follows": "Seka | Seka",
         "copiedfrom": "Nukopijuota iš | Nukopijuota iš",
         "copiedto": "Copied To | Copied To"
@@ -994,20 +994,20 @@
       "makeMember": "Make Member",
       "makeAdmin": "Make Admin",
       "success": "Komanda buvo sėkmingai atnaujinta.",
-      "userAddedSuccess": "The team member was successfully added.",
-      "madeMember": "The team member was successfully made member.",
-      "madeAdmin": "The team member was successfully made admin.",
+      "userAddedSuccess": "Komandos narys buvo sėkmingai pridėtas.",
+      "madeMember": "Komandos narys buvo sėkmingai pridėtas prie narių.",
+      "madeAdmin": "Komandos narys buvo sėkmingai pridėtas prie administratorių.",
       "mustSelectUser": "Prašome pasirinkti vartotoją.",
       "delete": {
         "header": "Delete the team",
-        "text1": "Are you sure you want to delete this team and all of its members?",
-        "text2": "All team members will lose access to projects shared with this team. This CANNOT BE UNDONE!",
-        "success": "The team was successfully deleted."
+        "text1": "Ar tikrai nori ištrinti komandą ir visus jos narius?",
+        "text2": "Visi komandos nariai praras prieigą prie komandai prieinamų projektų. To SUGRĄŽINTI NEGALIMA!",
+        "success": "Komanda buvo sėkmingai ištrinta."
       },
       "deleteUser": {
         "header": "Remove a user from the team",
-        "text1": "Are you sure you want to remove this user from the team?",
-        "text2": "They will lose access to all projects this team has access to. This CANNOT BE UNDONE!",
+        "text1": "Ar tikrai nori ištrinti vartotoją iš komandos?",
+        "text2": "Jie visi praras prieigą prie komandai prieinamų projektų. To SUGRĄŽINTI NEGALIMA!",
         "success": "Naudotojas buvo sėkmingai ištrintas iš komandos."
       },
       "leave": {
@@ -1094,19 +1094,19 @@
     "urlPlaceholder": "eg. https://localhost:3456",
     "change": "change",
     "use": "Naudojama Vikunja instaliacija {0}",
-    "error": "Could not find or use Vikunja installation at \"{domain}\". Please check if the url has the correct format and you can reach it when accessing it directly and try again.",
-    "success": "Using Vikunja installation at \"{domain}\".",
+    "error": "Vikunjos instaliacija \"{domain}\" nebuvo rasta ar panaudota. Prašome patikrinti ar nuoroda yra teisingo formato ir gali būti pasiekiama, ir bandykite dar kartą.",
+    "success": "Naudojama Vikunja instaliacija {domain}\".",
     "urlRequired": "A url is required."
   },
   "loadingError": {
-    "failed": "Loading failed, please {0}. If the error persists, please {1}.",
+    "failed": "Užkrova nepavyko, prašome {0}. Jei klaida išlieka, prašome {1}.",
     "tryAgain": "try again",
     "contact": "contact us"
   },
   "notification": {
     "title": "Notifications",
     "none": "You don't have any notifications. Have a nice day!",
-    "explainer": "Notifications will appear here when actions projects or tasks you subscribed to happen.",
+    "explainer": "Prisiregistravus prie projektų ar užduočių, žinutės bus publikuojamos čia.",
     "markAllRead": "Mark all notifications as read",
     "markAllReadSuccess": "Successfully marked all notifications as read."
   },
@@ -1137,7 +1137,7 @@
   "reaction": {
     "reactedWith": "{user} reacted with {value}",
     "reactedWithAnd": "{users} ir {lastUser} sureagavo {value}",
-    "reactedWithAndMany": "{users} and {num} more reacted reacted with {value}",
+    "reactedWithAndMany": "{users} ir {num} reagavo, suregavo {value}",
     "add": "Add your reaction"
   },
   "error": {
@@ -1156,35 +1156,35 @@
     "1012": "Email address of the user not confirmed.",
     "1013": "New password is empty.",
     "1014": "Old password is empty.",
-    "1015": "TOTP is already enabled for this user.",
-    "1016": "TOTP is not enabled for this user.",
-    "1017": "The TOTP passcode is invalid.",
+    "1015": "Vienkartinis slaptažodis šiam vartotojui aktyvuotas.",
+    "1016": "Vienkartinis slaptažodis šiam vartotojui neaktyvuotas.",
+    "1017": "Vienkartinis slaptažodis neteisingas.",
     "1018": "The user avatar type setting is invalid.",
     "2001": "ID cannot be empty or 0.",
-    "2002": "Some of the request data was invalid.",
+    "2002": "Tam tikri užklausos duomenys buvo neteisingi.",
     "3001": "The project does not exist.",
-    "3004": "You need to have read permissions on that project to perform that action.",
+    "3004": "Reikalingas skaitymo leidimas, norint atlikti šiuos veiksmus projekte.",
     "3005": "The project title cannot be empty.",
     "3006": "The project share does not exist.",
     "3007": "A project with this identifier already exists.",
-    "3008": "The project is archived and can therefore only be accessed read only. This is also true for all tasks associated with this project.",
+    "3008": "Projektas buvo suarchivuotas, todėl galima tik skaitymo prieiga. Tai taip pat taikoma visoms užduotims susijusiomis su projektu.",
     "4001": "The task title cannot be empty.",
     "4002": "The task does not exist.",
-    "4003": "All bulk editing tasks must belong to the same project.",
-    "4004": "Need at least one task when bulk editing tasks.",
+    "4003": "Visi bendri taisymai pažymėtoms užduotims, gali būti taikomi tik vienam projektui priklausančioms užduotims.",
+    "4004": "Reikia bent vienos užduoties, norit taikyti masto redagavimą užduotims.",
     "4005": "Neturi prieigos prie šios užduoties.",
-    "4006": "You can't set a parent task as the task itself.",
-    "4007": "You can't create a task relation with an invalid kind of relation.",
-    "4008": "You can't create a task relation which already exists.",
+    "4006": "Negalima tos pačios užduoties paskirti kaip tėvinės.",
+    "4007": "Negalima sukurti užduoties ryšio naudojant netinkamą ryšį.",
+    "4008": "Negalima sukurti užduoties ryšio, kuris jau egzistuoja.",
     "4009": "The task relation does not exist.",
     "4010": "Cannot relate a task with itself.",
-    "4011": "The task attachment does not exist.",
+    "4011": "Užduoties prisegtukas neegzistuoja.",
     "4012": "The task attachment is too large.",
-    "4013": "The task sort param is invalid.",
-    "4014": "The task sort order is invalid.",
+    "4013": "Užduočių rūšiavimo parametrai neteisingi.",
+    "4014": "Užduočių rūšiavimo tvarka neteisinga.",
     "4015": "The task comment does not exist.",
     "4016": "Invalid task field.",
-    "4017": "Invalid task filter comparator.",
+    "4017": "Neteisingas užduoties filtro palyginimas.",
     "4018": "Neteisingas užduoties filtro jungtukas.",
     "4019": "Neteisinga užduotis filtro vertė.",
     "6001": "Komandos pavadinimas negali būti tuščias.",
@@ -1192,7 +1192,7 @@
     "6004": "The team already has access to that project.",
     "6005": "The user is already a member of that team.",
     "6006": "Negalime ištrinti paskutinio komandos nario.",
-    "6007": "The team does not have access to the project to perform that action.",
+    "6007": "Komanda neturi prieigos prie projekto atlikti šiems veiksmams.",
     "7002": "Naudotojas jau turi prieigą prie šio projekto.",
     "7003": "You do not have access to that project.",
     "8001": "Ši etiketė jau yra prie šios užduoties.",
@@ -1210,7 +1210,7 @@
     "12002": "Esi prisiregistravęs prie visko ar prie tėvinio subjekto.",
     "13001": "Šis dalinimasis nuoroda reikalauja slaptažodžio identifikavimuisi, bet jis nebuvo pateiktas.",
     "13002": "Pateikta slaptažodžio dalinimosi nuoroda negalioja.",
-    "14001": "The provided file is not a valid zip file."
+    "14001": "Pateiktas failas nėra zip failas."
   },
   "about": {
     "title": "Apie",
