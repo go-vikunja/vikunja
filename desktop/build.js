@@ -115,6 +115,7 @@ async function main() {
 		console.log('All steps completed successfully!')
 	} catch (err) {
 		console.error('An error occurred:', err.message)
+		process.exit(1)
 	} finally {
 		// Cleanup the zip file
 		if (fs.existsSync(zipFilePath)) {

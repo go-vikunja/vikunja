@@ -54,14 +54,24 @@ jobs:
           node-version: 22
           cache: pnpm
           cache-dependency-path: desktop/pnpm-lock.yaml
+      - name: Install Linux dependencies
+        if: ${{ runner.os == 'Linux' }}
+        run: sudo apt-get install --no-install-recommends -y libopenjp2-tools rpm libarchive-tools
       - name: Build desktop app
         working-directory: desktop
         run: |
           pnpm install --fetch-timeout 100000
           # TODO use the built output from a previous frontend build step
           node build.js "${{ steps.ghd.outputs.describe }}" ${{ github.ref_type == 'tag' }}
-      - name: Store release as artifact
-        uses: actions/upload-artifact@v4
+      - name: Upload to S3
+        uses: kolaente/s3-action@v1.0.1
         with:
-          name: desktop-release-${{ runner.os }}
-          path: desktop/dist/Vikunja*
+          s3-access-key-id: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+          s3-secret-access-key: ${{ secrets.HETZNER_S3_SECRET_KEY }}
+          s3-endpoint: 'https://fsn1.your-objectstorage.com'
+          s3-bucket: 'vikunja'
+          files: 'desktop/dist/Vikunja*'
+          target-path: /desktop/${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}
+          s3-region: 'fsn1'
+          strip-path-prefix: desktop/dist/
+          exclude: 'desktop/dist/*.blockmap'
