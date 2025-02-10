@@ -34,9 +34,9 @@
   "user": {
     "auth": {
       "username": "Ім'я вживача",
-      "usernameEmail": "Ім'я вживача або е-скринька",
+      "usernameEmail": "Ім'я або е.скринька",
       "usernamePlaceholder": "напр. Frederick",
-      "email": "Е-скринька",
+      "email": "Е.скринька",
       "emailPlaceholder": "напр. frederic{'@'}vikunja.io",
       "password": "Пароль",
       "passwordPlaceholder": "напр. •••••••••••",
@@ -61,7 +61,7 @@
       "usernameMustNotLookLikeUrl": "Ім'я вживача не має виглядати як посилання.",
       "passwordRequired": "Будь ласка, введіть пароль.",
       "passwordNotMin": "Пароль має містити принаймні 8 знаків.",
-      "passwordNotMax": "Password must have at most 72 characters.",
+      "passwordNotMax": "Пароль має містити не більше 72 знаків.",
       "showPassword": "Показати пароль",
       "hidePassword": "Сховати пароль",
       "noAccountYet": "Досі немає обліковки?",
@@ -113,7 +113,7 @@
         "setupSuccess": "Дворівневу перевірку встановлено!",
         "enterPassword": "Будь ласка, введіть ваш пароль",
         "disable": "Вимкнути дворівневу перевірку",
-        "confirmSuccess": "You've successfully confirmed your TOTP setup and can use it from now on!",
+        "confirmSuccess": "Наладжено разовий пароль і можна вживати його!",
         "disableSuccess": "Дворівневу перевірку вимкнено."
       },
       "caldav": {
@@ -164,7 +164,7 @@
         "90d": "90 днів",
         "permissionExplanation": "Дозволи визначають, що може робити api ключ.",
         "titleRequired": "Слід вказати заголовок",
-        "permissionRequired": "Please select at least one permission from the list.",
+        "permissionRequired": "Будь ласка, виберіть принаймні один дозвіл зі списку.",
         "expired": "Цей ключ закінчився {ago}.",
         "tokenCreatedSuccess": "Ось Ваш новий api ключ: {token}",
         "tokenCreatedNotSeeAgain": "Збережіть його в надійному місці, бо він зникне і не з'явиться знову!",
@@ -211,7 +211,7 @@
     "archivedMessage": "Ця справа у сховищі. Створювати або змінювати завдання - неможливо.",
     "archived": "Схововано",
     "showArchived": "Показувати схововані",
-    "title": "Title",
+    "title": "Заголовок",
     "color": "Цвіт",
     "projects": "Справи",
     "parent": "Головна справа",
@@ -220,10 +220,10 @@
     "shared": "Доступні справи",
     "noDescriptionAvailable": "Опису справи немає.",
     "inboxTitle": "Вхідні",
-    "favorite": "Mark this project as favorite",
-    "unfavorite": "Remove this project from favorites",
+    "favorite": "Додати до обраних",
+    "unfavorite": "Прибрати з обраних",
     "openSettingsMenu": "Open project settings menu",
-    "description": "Project description",
+    "description": "Опис справи",
     "create": {
       "header": "Нова справа",
       "titlePlaceholder": "Назву введіть тут…",
@@ -1153,7 +1153,7 @@
     "1009": "Invalid password reset token.",
     "1010": "Invalid email confirm token.",
     "1011": "Хибне ім'я або пароль.",
-    "1012": "Е-скринька вживача не підтверджена.",
+    "1012": "Е.скринька вживача не підтверджена.",
     "1013": "Новий пароль не заповнений.",
     "1014": "Старий пароль не заповнений.",
     "1015": "Разовий пароль вже увімкнено.",
@@ -1210,7 +1210,7 @@
     "12002": "Ви підписані на саму суть або головну частину.",
     "13001": "This link share requires a password for authentication, but none was provided.",
     "13002": "Хибний пароль для поширеного посилання.",
-    "14001": "The provided file is not a valid zip file."
+    "14001": "Наданий файл не є допустимим zip файлом."
   },
   "about": {
     "title": "Про",
