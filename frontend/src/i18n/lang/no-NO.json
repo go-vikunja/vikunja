@@ -77,8 +77,8 @@
       "currentPassword": "Nåværende passord",
       "currentPasswordPlaceholder": "Ditt nåværende passord",
       "passwordsDontMatch": "Det nye passordet og bekreftelse samsvarer ikke.",
-      "passwordUpdateSuccess": "The password was successfully updated.",
-      "updateEmailTitle": "Update Your Email Address",
+      "passwordUpdateSuccess": "Passordet ble vellykket oppdatert.",
+      "updateEmailTitle": "Oppdater e-postadresse",
       "updateEmailNew": "Ny e-postadresse",
       "updateEmailSuccess": "E-postadressen ble oppdatert. Vi har sendt deg en lenke for å bekrefte den.",
       "general": {
@@ -183,7 +183,7 @@
       }
     },
     "deletion": {
-      "title": "Delete your Vikunja Account",
+      "title": "Slett kontoen",
       "text1": "Sletting av kontoen vil være permanent og kan ikke angres. Alle dine prosjekter, oppgaver og alt tilknyttet disse vil slettes.",
       "text2": "For å fortsette, skriv inn passordet ditt. Du vil motta en e-post med ytterligere instruksjoner.",
       "text3": "Trykk knappen under for å fortsette. Du vil motta en e-post med videre instruksjoner.",
