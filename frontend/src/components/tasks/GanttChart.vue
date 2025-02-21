@@ -52,7 +52,6 @@ import {getHexColor} from '@/models/task'
 
 import {colorIsDark} from '@/helpers/color/colorIsDark'
 import {isoToKebabDate} from '@/helpers/time/isoToKebabDate'
-import {parseKebabDate} from '@/helpers/time/parseKebabDate'
 
 import type {ITask, ITaskPartialWithId} from '@/modelTypes/ITask'
 import type {DateISO} from '@/types/DateISO'
@@ -181,8 +180,8 @@ async function updateGanttTask(e: {
 }) {
 	emit('update:task', {
 		id: Number(e.bar.ganttBarConfig.id),
-		startDate: new Date(parseKebabDate(e.bar.startDate).setHours(0,0,0,0)),
-		endDate: new Date(parseKebabDate(e.bar.endDate).setHours(23,59,0,0)),
+		startDate: new Date((new Date(e.bar.startDate)).setHours(0,0,0,0)),
+		endDate: new Date((new Date(e.bar.endDate)).setHours(23,59,0,0)),
 	})
 }
 

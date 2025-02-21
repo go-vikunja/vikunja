@@ -130,8 +130,8 @@ const pageTitle = computed(() => {
 	return showAll.value
 		? t('task.show.titleCurrent')
 		: t('task.show.fromuntil', {
-			from: formatDate(props.dateFrom, 'PPP'),
-			until: formatDate(props.dateTo, 'PPP'),
+			from: formatDate(props.dateFrom, 'LL'),
+			until: formatDate(props.dateTo, 'LL'),
 		})
 })
 const hasTasks = computed(() => tasks.value && tasks.value.length > 0)

@@ -127,7 +127,7 @@ const flatPickrDate = computed({
 		}
 
 		if (date.value !== null) {
-			const oldDate = formatDate(date.value, 'yyy-LL-dd H:mm')
+			const oldDate = formatDate(date.value, 'YYYY-MM-DD h:m')
 			if (oldDate === newValue) {
 				return
 			}
@@ -140,7 +140,7 @@ const flatPickrDate = computed({
 			return ''
 		}
 
-		return formatDate(date.value, 'yyy-LL-dd H:mm')
+		return formatDate(date.value, 'YYYY-MM-DD h:m')
 	},
 })
 
@@ -208,7 +208,7 @@ function getWeekdayFromStringInterval(dateString: string) {
 	const interval = calculateDayInterval(dateString)
 	const newDate = new Date()
 	newDate.setDate(newDate.getDate() + interval)
-	return formatDate(newDate, 'E')
+	return formatDate(newDate, 'ddd')
 }
 </script>
 

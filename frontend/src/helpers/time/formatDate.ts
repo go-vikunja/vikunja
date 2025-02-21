@@ -1,14 +1,9 @@
 import {createDateFromString} from '@/helpers/time/createDateFromString'
-import {format, formatDistanceToNow} from 'date-fns'
-
-// FIXME: support all locales and load dynamically
-import {enGB, de, fr, ru} from 'date-fns/locale'
+import dayjs from 'dayjs'
 
 import {i18n} from '@/i18n'
 import {createSharedComposable} from '@vueuse/core'
 import {computed, toValue, type MaybeRefOrGetter} from 'vue'
-
-const locales = {en: enGB, de, ch: de, fr, ru}
 
 export function dateIsValid(date: Date | null) {
 	if (date === null) {
@@ -18,35 +13,36 @@ export function dateIsValid(date: Date | null) {
 	return date instanceof Date && !isNaN(date)
 }
 
-export const formatDate = (date, f, locale = i18n.global.t('date.locale')) => {
+export const formatDate = (date: Date | string | null, f: string, locale = i18n.global.t('date.locale')) => {
 	if (!dateIsValid(date)) {
 		return ''
 	}
 
 	date = createDateFromString(date)
 
-	return date ? format(date, f, {locale: locales[locale]}) : ''
+	return date 
+		? dayjs(date).locale(locale).format(f) 
+		: ''
 }
 
 export function formatDateLong(date) {
-	return formatDate(date, 'PPPPpppp')
+	return formatDate(date, 'LLLL')
 }
 
 export function formatDateShort(date) {
-	return formatDate(date, 'PPpp')
+	return formatDate(date, 'lll')
 }
 
-export const formatDateSince = (date) => {
+export const formatDateSince = (date: Date | string | null, locale = i18n.global.t('date.locale')) => {
 	if (!dateIsValid(date)) {
 		return ''
 	}
 
 	date = createDateFromString(date)
 
-	return formatDistanceToNow(date, {
-		locale: locales[i18n.global.t('date.locale')],
-		addSuffix: true,
-	})
+	return date
+		? dayjs(date).locale(locale).fromNow()
+		: ''
 }
 
 export function formatISO(date) {

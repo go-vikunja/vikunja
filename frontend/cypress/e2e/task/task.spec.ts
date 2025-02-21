@@ -12,7 +12,7 @@ import {BucketFactory} from '../../factories/bucket'
 
 import {TaskAttachmentFactory} from '../../factories/task_attachments'
 import {TaskReminderFactory} from '../../factories/task_reminders'
-import {createDefaultViews} from "../project/prepareProjects";
+import {createDefaultViews} from '../project/prepareProjects'
 import { TaskBucketFactory } from '../../factories/task_buckets'
 
 function addLabelToTaskAndVerify(labelTitle: string) {
@@ -572,7 +572,7 @@ describe('Task', () => {
 			const day = today.toLocaleString('default', {day: 'numeric'})
 			const month = today.toLocaleString('default', {month: 'short'})
 			const year = today.toLocaleString('default', {year: 'numeric'})
-			const date = `${day} ${month} ${year}, 12:00:00`
+			const date = `${month} ${day}, ${year} 12:00 PM`
 			cy.get('.task-view .columns.details .column')
 				.contains('Due Date')
 				.get('.date-input .datepicker-popup')
@@ -615,7 +615,7 @@ describe('Task', () => {
 			const day = today.toLocaleString('default', {day: 'numeric'})
 			const month = today.toLocaleString('default', {month: 'short'})
 			const year = today.toLocaleString('default', {year: 'numeric'})
-			const date = `${day} ${month} ${year}, 12:00:00`
+			const date = `${month} ${day}, ${year} 12:00 PM`
 			cy.get('.task-view .columns.details .column')
 				.contains('Due Date')
 				.get('.date-input .datepicker-popup')

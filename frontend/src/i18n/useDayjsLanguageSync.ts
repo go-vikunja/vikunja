@@ -56,6 +56,14 @@ export const DAYJS_LANGUAGE_IMPORTS = {
 	'ko-kr': () => import('dayjs/locale/ko'),
 } as Record<SupportedLocale, () => Promise<ILocale>>
 
+export async function loadDayJsLocale(language: SupportedLocale) {
+	if (language === 'en') {
+		return
+	}
+	
+	await DAYJS_LANGUAGE_IMPORTS[language.toLowerCase()]()
+}
+
 export function useDayjsLanguageSync(dayjsGlobal: typeof dayjs) {
 
 	const dayjsLanguageLoaded = ref(false)
@@ -70,7 +78,7 @@ export function useDayjsLanguageSync(dayjsGlobal: typeof dayjs) {
 			if (dayjsLanguageLoaded.value) {
 				return
 			}
-			await DAYJS_LANGUAGE_IMPORTS[currentLanguage.toLowerCase()]()
+			await loadDayJsLocale(currentLanguage)
 			dayjsGlobal.locale(dayjsLanguageCode)
 			dayjsLanguageLoaded.value = true
 		},

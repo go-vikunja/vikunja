@@ -1,4 +1,4 @@
-import {formatISO, format} from 'date-fns'
+import dayjs from 'dayjs'
 
 import {createFakeUserAndLogin} from '../../support/authenticateUser'
 
@@ -28,8 +28,8 @@ describe('Project View Gantt', () => {
 		cy.visit('/projects/1/2')
 
 		cy.get('.g-timeunits-container')
-			.should('contain', format(now, 'MMMM'))
-			.should('contain', format(nextMonth, 'MMMM'))
+			.should('contain', dayjs(now).format('MMMM'))
+			.should('contain', dayjs(nextMonth).format('MMMM'))
 	})
 
 	it('Shows tasks with dates', () => {
@@ -112,8 +112,8 @@ describe('Project View Gantt', () => {
 	it('Should open a task when double clicked on it', () => {
 		const now = new Date()
 		const tasks = TaskFactory.create(1, {
-			start_date: formatISO(now),
-			end_date: formatISO(now.setDate(now.getDate() + 4)),
+			start_date: dayjs(now).format(),
+			end_date: dayjs(now.setDate(now.getDate() + 4)).format(),
 		})
 		cy.visit('/projects/1/2')
 
