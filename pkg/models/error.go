@@ -1332,7 +1332,11 @@ const ErrCodeOIDCTeamDoesNotExist = 6008
 
 // HTTPError holds the http error description
 func (err ErrOIDCTeamDoesNotExist) HTTPError() web.HTTPError {
-	return web.HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeTeamDoesNotExist, Message: "No team could be found for the given OIDC ID and issuer."}
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeTeamDoesNotExist,
+		Message:  "No team could be found for the given OIDC ID and issuer.",
+	}
 }
 
 // ErrOIDCTeamsDoNotExistForUser represents an error where an oidcTeam does not exist for the user
@@ -1355,7 +1359,11 @@ const ErrCodeOIDCTeamsDoNotExistForUser = 6009
 
 // HTTPError holds the http error description
 func (err ErrOIDCTeamsDoNotExistForUser) HTTPError() web.HTTPError {
-	return web.HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeTeamDoesNotExist, Message: "No Teams with property oidcId could be found for User."}
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeOIDCTeamsDoNotExistForUser,
+		Message:  "No Teams with property oidcId could be found for User.",
+	}
 }
 
 // ====================
