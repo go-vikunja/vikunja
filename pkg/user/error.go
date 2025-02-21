@@ -585,3 +585,27 @@ func (err *ErrInvalidClaimData) HTTPError() web.HTTPError {
 		Message:  fmt.Sprintf("Invalid claim data for field %s of type %s", err.Field, err.Type),
 	}
 }
+
+// ErrInvalidTimezone represents an error where the provided timezone is invalid
+type ErrInvalidTimezone struct {
+	Name      string
+	LoadError error
+}
+
+// IsErrInvalidTimezone checks if an error is a ErrInvalidTimezone.
+func IsErrInvalidTimezone(err error) bool {
+	_, ok := err.(ErrInvalidTimezone)
+	return ok
+}
+
+func (err ErrInvalidTimezone) Error() string {
+	return fmt.Sprintf("Invalid timezone [Name: %s, Error: %s]", err.Name, err.LoadError)
+}
+
+// ErrorCodeInvalidTimezone holds the unique world-error code of this error
+const ErrorCodeInvalidTimezone = 1025
+
+// HTTPError holds the http error description
+func (err ErrInvalidTimezone) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrorCodeInvalidTimezone, Message: fmt.Sprintf("The timezone '%s' is invalid. Please select a valid timezone from the list.", err.Name)}
+}

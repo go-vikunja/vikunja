@@ -570,7 +570,7 @@ func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *U
 
 	_, err = time.LoadLocation(user.Timezone)
 	if err != nil {
-		return
+		return nil, &ErrInvalidTimezone{Name: user.Timezone, LoadError: err}
 	}
 
 	frontendSettingsJSON, err := json.Marshal(user.FrontendSettings)

@@ -1160,6 +1160,7 @@
     "1016": "TOTP is not enabled for this user.",
     "1017": "The TOTP passcode is invalid.",
     "1018": "The user avatar type setting is invalid.",
+    "1025": "The timezone '{timezone}' is invalid. Please select a valid timezone from the list.",
     "2001": "ID cannot be empty or 0.",
     "2002": "Some of the request data was invalid.",
     "3001": "The project does not exist.",

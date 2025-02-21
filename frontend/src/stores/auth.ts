@@ -8,7 +8,7 @@ import UserModel, {getAvatarUrl, getDisplayName} from '@/models/user'
 import UserSettingsService from '@/services/userSettings'
 import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
 import {setModuleLoading} from '@/stores/helper'
-import {success} from '@/message'
+import {success, error} from '@/message'
 import {
 	getRedirectUrlFromCurrentFrontendPath,
 	redirectToProvider,
@@ -387,7 +387,7 @@ export const useAuthStore = defineStore('auth', () => {
 				success({message: i18n.global.t('user.settings.general.savedSuccess')})
 			}
 		} catch (e) {
-			throw new Error('Error while saving user settings:', {cause: e})
+			error(e)
 		} finally {
 			cancel()
 		}
