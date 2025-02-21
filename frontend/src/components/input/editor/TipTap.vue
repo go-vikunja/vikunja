@@ -146,6 +146,8 @@ import EditorToolbar from './EditorToolbar.vue'
 import StarterKit from '@tiptap/starter-kit'
 import {Extension, mergeAttributes} from '@tiptap/core'
 import {BubbleMenu, EditorContent, type Extensions, useEditor} from '@tiptap/vue-3'
+import {Plugin, PluginKey} from '@tiptap/pm/state'
+import {marked} from 'marked'
 
 import Link from '@tiptap/extension-link'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
@@ -327,6 +329,32 @@ const additionalLinkProtocols = [
 	'notion',
 ]
 
+const MarkdownPasteHandler = Extension.create({
+	name: 'markdownPasteHandler',
+
+	addProseMirrorPlugins() {
+		return [
+			new Plugin({
+				key: new PluginKey('markdownPasteHandler'),
+				props: {
+					handlePaste: (view, event) => {
+						const text = event.clipboardData?.getData('text/plain')
+						if (!text) return false
+
+						const html = marked.parse(text)
+
+						// It is fine to paste the content without sanitizing because it will be sanitized later by TipTap
+						this.editor.commands.insertContent(html)
+						// https://github.com/ueberdosis/tiptap/discussions/4118#discussioncomment-8931999
+						return true
+					},
+				},
+			}),
+		]
+	},
+})
+
+
 const extensions : Extensions = [
 	// Starterkit:
 	StarterKit.configure({
@@ -418,6 +446,8 @@ const extensions : Extensions = [
 	Commands.configure({
 		suggestion: suggestionSetup(t),
 	}),
+	
+	MarkdownPasteHandler,
 ]
 
 // Add a custom extension for the Escape key
