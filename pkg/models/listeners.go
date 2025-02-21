@@ -962,6 +962,18 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 	}
 
 	for _, webhook := range matchingWebhooks {
+
+		if _, has := event["project"]; !has {
+			project := &Project{ID: webhook.ProjectID}
+			err = project.ReadOne(s, &user.User{ID: doerID})
+			if err != nil && !IsErrProjectDoesNotExist(err) {
+				return err
+			}
+			if err == nil {
+				event["project"] = project
+			}
+		}
+
 		err = webhook.sendWebhookPayload(&WebhookPayload{
 			EventName: wl.EventName,
 			Time:      time.Now(),
