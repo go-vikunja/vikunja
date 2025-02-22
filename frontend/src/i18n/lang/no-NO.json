@@ -1130,7 +1130,7 @@
     }
   },
   "date": {
-    "locale": "nn",
+    "locale": "en",
     "altFormatLong": "d.m.y H:i",
     "altFormatShort": "d.m.y"
   },
