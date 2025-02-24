@@ -50,6 +50,7 @@ export const DAYJS_LANGUAGE_IMPORTS = {
 	'ar-sa': () => import('dayjs/locale/ar-sa'),
 	'sl-si': () => import('dayjs/locale/sl'),
 	'pt-br': () => import('dayjs/locale/pt-br'),
+	'hr-hr': () => import('dayjs/locale/hr'),
 	'uk-ua': () => import('dayjs/locale/uk'),
 	'lt-lt': () => import('dayjs/locale/lt'),
 	'bg-bg': () => import('dayjs/locale/bg'),
