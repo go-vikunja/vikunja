@@ -863,6 +863,56 @@ func getProjectIDFromAnyEvent(eventPayload map[string]interface{}) int64 {
 	return 0
 }
 
+func reloadEventData(s *xorm.Session, event map[string]interface{}, projectID int64) (eventWithData map[string]interface{}, doerID int64, err error) {
+	// Load event data again so that it is always populated in the webhook payload
+	if doer, has := event["doer"]; has {
+		d := doer.(map[string]interface{})
+		if rawDoerID, has := d["id"]; has {
+			doerID = getIDAsInt64(rawDoerID)
+			fullDoer, err := user.GetUserByID(s, doerID)
+			if err != nil && !user.IsErrUserDoesNotExist(err) {
+				return nil, 0, err
+			}
+			if err == nil {
+				event["doer"] = fullDoer
+			}
+		}
+	}
+
+	if task, has := event["task"]; has && doerID != 0 {
+		t := task.(map[string]interface{})
+		if taskID, has := t["id"]; has {
+			id := getIDAsInt64(taskID)
+			fullTask := Task{
+				ID: id,
+				Expand: []TaskCollectionExpandable{
+					TaskCollectionExpandBuckets,
+				},
+			}
+			err = fullTask.ReadOne(s, &user.User{ID: doerID})
+			if err != nil && !IsErrTaskDoesNotExist(err) {
+				return
+			}
+			if err == nil {
+				event["task"] = fullTask
+			}
+		}
+	}
+
+	if _, has := event["project"]; has && doerID != 0 {
+		project := &Project{ID: projectID}
+		err = project.ReadOne(s, &user.User{ID: doerID})
+		if err != nil && !IsErrProjectDoesNotExist(err) {
+			return
+		}
+		if err == nil {
+			event["project"] = project
+		}
+	}
+
+	return event, doerID, nil
+}
+
 // Handle is executed when the event WebhookListener listens on is fired
 func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 	var event map[string]interface{}
@@ -914,51 +964,10 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 		return nil
 	}
 
-	// Load event data again so that it is always populated in the webhook payload
 	var doerID int64
-	if doer, has := event["doer"]; has {
-		d := doer.(map[string]interface{})
-		if rawDoerID, has := d["id"]; has {
-			doerID = getIDAsInt64(rawDoerID)
-			fullDoer, err := user.GetUserByID(s, doerID)
-			if err != nil && !user.IsErrUserDoesNotExist(err) {
-				return err
-			}
-			if err == nil {
-				event["doer"] = fullDoer
-			}
-		}
-	}
-
-	if task, has := event["task"]; has && doerID != 0 {
-		t := task.(map[string]interface{})
-		if taskID, has := t["id"]; has {
-			id := getIDAsInt64(taskID)
-			fullTask := Task{
-				ID: id,
-				Expand: []TaskCollectionExpandable{
-					TaskCollectionExpandBuckets,
-				},
-			}
-			err = fullTask.ReadOne(s, &user.User{ID: doerID})
-			if err != nil && !IsErrTaskDoesNotExist(err) {
-				return err
-			}
-			if err == nil {
-				event["task"] = fullTask
-			}
-		}
-	}
-
-	if _, has := event["project"]; has && doerID != 0 {
-		project := &Project{ID: projectID}
-		err = project.ReadOne(s, &user.User{ID: doerID})
-		if err != nil && !IsErrProjectDoesNotExist(err) {
-			return err
-		}
-		if err == nil {
-			event["project"] = project
-		}
+	event, doerID, err = reloadEventData(s, event, projectID)
+	if err != nil {
+		return err
 	}
 
 	for _, webhook := range matchingWebhooks {
