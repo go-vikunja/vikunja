@@ -3,6 +3,11 @@
   publish = "dist-preview"
 
 [[redirects]]
+  from = "/api"
+  to = "/api"
+  status = 200
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200

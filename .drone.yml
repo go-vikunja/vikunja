@@ -458,8 +458,6 @@ steps:
     commands:
       - cd frontend
       - cp -r dist-test dist-preview
-      # Override the default api url used for preview
-      - sed -i 's|http://localhost:3456|https://try.vikunja.io|g' dist-preview/index.html
       # create via:
       # `shasum -a 384 ./scripts/deploy-preview-netlify.mjs > ./scripts/deploy-preview-netlify.mjs.sha384`
       - shasum -a 384 -c ./scripts/deploy-preview-netlify.mjs.sha384
@@ -961,7 +959,6 @@ steps:
       - pnpm install --fetch-timeout 100000 --frozen-lockfile
       - pnpm run lint
       - pnpm run build
-      - sed -i 's/http\:\\/\\/localhost\\:3456\\/api\\/v1/\\/api\\/v1/g' dist/index.html # Override the default api url used for developing
 
   - name: static
     image: kolaente/zip
@@ -1020,7 +1017,6 @@ steps:
       - npm install -g corepack && corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm install --fetch-timeout 100000 --frozen-lockfile
       - pnpm run build
-      - sed -i 's/http\:\\/\\/localhost\\:3456\\/api\\/v1/\\/api\\/v1/g' dist/index.html # Override the default api url used for developing
 
   - name: static
     image: kolaente/zip
