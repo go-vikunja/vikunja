@@ -4,7 +4,7 @@
 
 [[redirects]]
   from = "/api"
-  to = "/api"
+  to = "https://try.vikunja.io/api"
 
 [[redirects]]
   from = "/*"
