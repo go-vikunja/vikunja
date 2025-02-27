@@ -7,11 +7,13 @@
   to = "https://try.vikunja.io/api/:splat"
   status = 200
   force = true
+  headers = {X-Debug-Redirect = "api-rule"}
 
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+  headers = {X-Debug-Redirect = "all-to-index"}
 
 [[headers]]
   for = "/*"
