@@ -32,6 +32,7 @@ in {
     
     go = {
       enable = true;
+      package = pkgs-unstable.go;
     };
   };
   
