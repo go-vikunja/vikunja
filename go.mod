@@ -33,6 +33,7 @@ require (
 	github.com/ganigeorgiev/fexpr v0.4.1
 	github.com/getsentry/sentry-go v0.31.1
 	github.com/getsentry/sentry-go/echo v0.31.1
+	github.com/go-ldap/ldap/v3 v3.4.10
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/go-testfixtures/testfixtures/v3 v3.14.0
 	github.com/gocarina/gocsv v0.0.0-20231116093920-b87c2d0e983a
@@ -71,7 +72,7 @@ require (
 	github.com/yuin/goldmark v1.7.8
 	golang.org/x/crypto v0.32.0
 	golang.org/x/image v0.23.0
-	golang.org/x/oauth2 v0.25.0
+	golang.org/x/oauth2 v0.27.0
 	golang.org/x/sync v0.10.0
 	golang.org/x/sys v0.29.0
 	golang.org/x/term v0.28.0
@@ -118,8 +119,7 @@ require (
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/go-asn1-ber/asn1-ber v1.5.7 // indirect
 	github.com/go-chi/chi/v5 v5.1.0 // indirect
-	github.com/go-jose/go-jose/v4 v4.0.2 // indirect
-	github.com/go-ldap/ldap/v3 v3.4.10 // indirect
+	github.com/go-jose/go-jose/v4 v4.0.5 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/jsonpointer v0.20.2 // indirect
@@ -210,6 +210,6 @@ replace github.com/samedi/caldav-go => github.com/kolaente/caldav-go v3.0.1-0.20
 
 replace github.com/labstack/echo/v4 => github.com/kolaente/echo/v4 v4.0.0-20250124112709-682dfde74c31 // https://github.com/labstack/echo/pull/2738
 
-go 1.22.0
+go 1.23.0
 
 toolchain go1.23.5
