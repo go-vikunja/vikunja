@@ -20,14 +20,20 @@ import (
 	"errors"
 	"net/http"
 
-	"code.vikunja.io/api/pkg/db"
-
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web/handler"
+
 	"github.com/labstack/echo/v4"
 )
+
+type UserRegister struct {
+	// The language of the new user. Must be a valid IETF BCP 47 language code and exist in Vikunja.
+	Language string `json:"language" valid:"language"`
+	user.APIUserPassword
+}
 
 // RegisterUser is the register handler
 // @Summary Register
@@ -35,7 +41,7 @@ import (
 // @tags auth
 // @Accept json
 // @Produce json
-// @Param credentials body user.APIUserPassword true "The user credentials"
+// @Param credentials body v1.UserRegister true "The user with credentials to create"
 // @Success 200 {object} user.User
 // @Failure 400 {object} web.HTTPError "No or invalid user register object provided / User already exists."
 // @Failure 500 {object} models.Message "Internal error"
@@ -45,7 +51,7 @@ func RegisterUser(c echo.Context) error {
 		return echo.ErrNotFound
 	}
 	// Check for Request Content
-	var userIn *user.APIUserPassword
+	var userIn *UserRegister
 	if err := c.Bind(&userIn); err != nil {
 		return c.JSON(http.StatusBadRequest, models.Message{Message: "No or invalid user model provided."})
 	}
@@ -65,7 +71,12 @@ func RegisterUser(c echo.Context) error {
 	defer s.Close()
 
 	// Insert the user
-	newUser, err := user.CreateUser(s, userIn.APIFormat())
+	newUser, err := user.CreateUser(s, &user.User{
+		Username: userIn.Username,
+		Password: userIn.Password,
+		Email:    userIn.Email,
+		Language: userIn.Language,
+	})
 	if err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err)

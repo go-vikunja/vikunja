@@ -19,6 +19,8 @@ package user
 import (
 	"strings"
 
+	"code.vikunja.io/api/pkg/i18n"
+
 	"github.com/asaskevich/govalidator"
 )
 
@@ -50,4 +52,6 @@ func init() {
 
 		return len([]byte(str)) < 72
 	}
+
+	govalidator.TagMap["language"] = i18n.HasLanguage
 }

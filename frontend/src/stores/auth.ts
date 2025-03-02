@@ -178,13 +178,25 @@ export const useAuthStore = defineStore('auth', () => {
 	 * Registers a new user and logs them in.
 	 * Not sure if this is the right place to put the logic in, maybe a seperate js component would be better suited. 
 	 */
-	async function register(credentials) {
+	async function register(credentials, language: string|null = null) {
 		const HTTP = HTTPFactory()
 		setIsLoading(true)
+		
+		if (!language) {
+			language = i18n.global.locale.value ?? getBrowserLanguage()
+		}
+		
 		try {
-			await HTTP.post('register', credentials)
+			await HTTP.post('register', {
+				...credentials,
+				language,
+			})
 			return login(credentials)
 		} catch (e) {
+			if (e.response?.data?.code === 2002 && e.response?.data?.invalid_fields[0]?.startsWith('language:')) {
+				return register(credentials, 'en')
+			}
+			
 			if (e.response?.data?.message) {
 				throw e.response.data
 			}
@@ -302,23 +314,6 @@ export const useAuthStore = defineStore('auth', () => {
 			setUser(newUser)
 			updateLastUserRefresh()
 
-			if (
-				newUser.type === AUTH_TYPES.USER &&
-					(
-						typeof newUser.settings.language === 'undefined' ||
-						newUser.settings.language === ''
-					)
-			) {
-				// save current language
-				await saveUserSettings({
-					settings: {
-						...settings.value,
-						language: settings.value.language ? settings.value.language : getBrowserLanguage(),
-					},
-					showMessage: false,
-				})
-			}
-
 			return newUser
 		} catch (e) {
 			if((e?.response?.status >= 400 && e?.response?.status < 500) ||
@@ -326,8 +321,6 @@ export const useAuthStore = defineStore('auth', () => {
 				await logout()
 				return
 			}
-			
-			console.log('continuerd')
 			
 			const cause = {e}
 			

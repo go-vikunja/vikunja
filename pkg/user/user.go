@@ -99,7 +99,7 @@ type User struct {
 	OverdueTasksRemindersTime    string `xorm:"varchar(5) not null default '09:00'" json:"-"`
 	DefaultProjectID             int64  `xorm:"bigint null index" json:"-"`
 	WeekStart                    int    `xorm:"null" json:"-"`
-	Language                     string `xorm:"varchar(50) null" json:"-"`
+	Language                     string `xorm:"varchar(50) null" json:"-" valid:"language"`
 	Timezone                     string `xorm:"varchar(255) null" json:"-"`
 
 	DeletionScheduledAt      time.Time `xorm:"datetime null" json:"-"`
@@ -201,24 +201,12 @@ func GetFromAuth(a web.Auth) (*User, error) {
 
 // APIUserPassword represents a user object without timestamps and a json password field.
 type APIUserPassword struct {
-	// The unique, numeric id of this user.
-	ID int64 `json:"id"`
 	// The user's username. Cannot contain anything that looks like an url or whitespaces.
 	Username string `json:"username" valid:"length(3|250),username" minLength:"3" maxLength:"250"`
 	// The user's password in clear text. Only used when registering the user. The maximum limi is 72 bytes, which may be less than 72 characters. This is due to the limit in the bcrypt hashing algorithm used to store passwords in Vikunja.
 	Password string `json:"password" valid:"bcrypt_password" minLength:"8" maxLength:"72"`
 	// The user's email address
 	Email string `json:"email" valid:"email,length(0|250)" maxLength:"250"`
-}
-
-// APIFormat formats an API User into a normal user struct
-func (apiUser *APIUserPassword) APIFormat() *User {
-	return &User{
-		ID:       apiUser.ID,
-		Username: apiUser.Username,
-		Password: apiUser.Password,
-		Email:    apiUser.Email,
-	}
 }
 
 // GetUserByID returns user by its ID

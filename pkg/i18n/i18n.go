@@ -41,10 +41,38 @@ type Translator struct {
 	mu           sync.RWMutex
 }
 
-// singleton instance
 var translator = &Translator{
 	translations: make(map[string]TranslationStore),
 	fallbackLang: "en",
+}
+
+var availableLanguages = map[string]bool{
+	"en":       true,
+	"de-DE":    true,
+	"de-swiss": true,
+	"ru-RU":    true,
+	"fr-FR":    true,
+	"vi-VN":    true,
+	"it-IT":    true,
+	"cs-CZ":    true,
+	"pl-PL":    true,
+	"nl-NL":    true,
+	"pt-PT":    true,
+	"zh-CN":    true,
+	"no-NO":    true,
+	"es-ES":    true,
+	"da-DK":    true,
+	"ja-JP":    true,
+	"hu-HU":    true,
+	"ar-SA":    true,
+	"sl-SI":    true,
+	"pt-BR":    true,
+	"hr-HR":    true,
+	"uk-UA":    true,
+	"lt-LT":    true,
+	"bg-BG":    true,
+	"ko-KR":    true,
+	// IMPORTANT: Also add new languages to the frontend
 }
 
 // Init initializes the global translator with translation files
@@ -61,6 +89,11 @@ func Init() {
 		}
 
 		langCode := strings.TrimSuffix(entry.Name(), ".json")
+
+		if !availableLanguages[langCode] {
+			continue
+		}
+
 		filePath := filepath.Join(dir, entry.Name())
 
 		err = translator.loadFile(localeFS, langCode, filePath)
@@ -165,4 +198,9 @@ func stringSliceToInterfaceSlice(strings []string) []interface{} {
 		interfaces[i] = s
 	}
 	return interfaces
+}
+
+func HasLanguage(lang string) bool {
+	_, exists := translator.translations[lang]
+	return exists
 }

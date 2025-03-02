@@ -69,8 +69,11 @@ func CreateUser(s *xorm.Session, user *User) (newUser *User, err error) {
 	user.OverdueTasksRemindersTime = config.DefaultSettingsOverdueTaskRemindersTime.GetString()
 	user.DefaultProjectID = config.DefaultSettingsDefaultProjectID.GetInt64()
 	user.WeekStart = config.DefaultSettingsWeekStart.GetInt()
-	user.Language = config.DefaultSettingsLanguage.GetString()
 	user.Timezone = config.DefaultSettingsTimezone.GetString()
+
+	if user.Language == "" {
+		user.Language = config.DefaultSettingsLanguage.GetString()
+	}
 
 	// Insert it
 	_, err = s.Insert(user)
