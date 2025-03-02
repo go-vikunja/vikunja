@@ -128,12 +128,7 @@ func GetAvailableLanguages() []string {
 }
 
 // T returns the translation for the specified key using dot notation in the specified language
-func T(lang, key string) string {
-	return TWithParams(lang, key)
-}
-
-// TWithParams returns the translation with parameter substitution in the specified language
-func TWithParams(lang, key string, params ...string) string {
+func T(lang, key string, params ...string) string {
 	translator.mu.RLock()
 	defer translator.mu.RUnlock()
 
