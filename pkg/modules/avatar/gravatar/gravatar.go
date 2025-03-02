@@ -32,6 +32,7 @@ import (
 
 type avatar struct {
 	content  []byte
+	mimeType string
 	loadedAt time.Time
 }
 
@@ -78,10 +79,18 @@ func (g *Provider) GetAvatar(user *user.User, size int64) ([]byte, string, error
 		if err != nil {
 			return nil, "", err
 		}
+
+		// Determine the mime type from the response
+		mimeType := "image/jpeg"
+		if contentType := resp.Header.Get("Content-Type"); contentType != "" {
+			mimeType = contentType
+		}
+
 		avatars[cacheKey] = &avatar{
 			content:  avatarContent,
+			mimeType: mimeType,
 			loadedAt: time.Now(),
 		}
 	}
-	return avatars[cacheKey].content, "image/jpg", nil
+	return avatars[cacheKey].content, avatars[cacheKey].mimeType, nil
 }

@@ -35,12 +35,18 @@ import (
 type Provider struct {
 }
 
+// CachedAvatar represents a cached avatar with its content and mime type
+type CachedAvatar struct {
+	Content  []byte
+	MimeType string
+}
+
 // GetAvatar returns an uploaded user avatar
 func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType string, err error) {
 
 	cacheKey := "avatar_upload_" + strconv.Itoa(int(u.ID))
 
-	var cached map[int64][]byte
+	var cached map[int64]*CachedAvatar
 	exists, err := keyvalue.GetWithValue(cacheKey, &cached)
 	if err != nil {
 		return nil, "", err
@@ -48,16 +54,16 @@ func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType 
 
 	if !exists {
 		// Nothing ever cached for this user so we need to create the size map to avoid panics
-		cached = make(map[int64][]byte)
+		cached = make(map[int64]*CachedAvatar)
 	} else {
 		a := cached
 		if a != nil && a[size] != nil {
 			log.Debugf("Serving uploaded avatar for user %d and size %d from cache.", u.ID, size)
-			return a[size], "", nil
+			return a[size].Content, a[size].MimeType, nil
 		}
 		// This means we have a map for the user, but nothing in it.
 		if a == nil {
-			cached = make(map[int64][]byte)
+			cached = make(map[int64]*CachedAvatar)
 		}
 	}
 
@@ -87,9 +93,16 @@ func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType 
 	if err != nil {
 		return nil, "", err
 	}
-	cached[size] = avatar
+
+	// Always use image/png for resized avatars since we're encoding with png
+	mimeType = "image/png"
+	cached[size] = &CachedAvatar{
+		Content:  avatar,
+		MimeType: mimeType,
+	}
+
 	err = keyvalue.Put(cacheKey, cached)
-	return avatar, f.Mime, err
+	return avatar, mimeType, err
 }
 
 // InvalidateCache invalidates the avatar cache for a user
