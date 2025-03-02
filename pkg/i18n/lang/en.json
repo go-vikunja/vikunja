@@ -118,6 +118,26 @@
                 "availability": "The download will be available for the next 7 days."
             }
         },
+        "migration": {
+            "done": {
+                "subject": "The migration from %[1]s to Vikunja was completed",
+                "imported": "Vikunja has imported all lists/projects, tasks, notes, reminders and files from %[1]s you have access to.",
+                "have_fun": "Have fun with your new (old) projects!"
+            },
+            "failed": {
+                "subject": "The migration from %[1]s to Vikunja has failed",
+                "message": "Looks like the move from %[1]s didn't go as planned this time.",
+                "retry": "No worries, though! Just give it another shot by starting over the same way you did before. Sometimes, these hiccups happen because of glitches on %[1]s's end, but trying again often does the trick.",
+                "error": "We bumped into a little error along the way: `%[2]s`.",
+                "report": "Please drop us a note about this [in the forum](https://community.vikunja.io/) or any of the usual places so that we can take a look at why it failed."
+            },
+            "failed_reported": {
+                "subject": "The migration from %[1]s to Vikunja has failed",
+                "message": "Looks like the move from %[1]s didn't go as planned this time.",
+                "retry": "No worries, though! Just give it another shot by starting over the same way you did before. Sometimes, these hiccups happen because of glitches on %[1]s's end, but trying again often does the trick.",
+                "working_on_it": "We've got the error message on our radar and are on it to get it sorted out soon."
+            }
+        },
         "common": {
             "have_nice_day": "Have a nice day!",
             "copy_url": "If the button above doesn't work, copy the url below and paste it in your browser's address bar:"

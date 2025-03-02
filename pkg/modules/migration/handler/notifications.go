@@ -21,6 +21,7 @@ import (
 	"golang.org/x/text/language"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/i18n"
 	"code.vikunja.io/api/pkg/notifications"
 )
 
@@ -34,10 +35,10 @@ func (n *MigrationDoneNotification) ToMail(lang string) *notifications.Mail {
 	kind := cases.Title(language.English).String(n.MigratorName)
 
 	return notifications.NewMail().
-		Subject("The migration from "+kind+" to Vikunja was completed").
-		Line("Vikunja has imported all lists/projects, tasks, notes, reminders and files from "+kind+" you have access to.").
+		Subject(i18n.T(lang, "notifications.migration.done.subject", kind)).
+		Line(i18n.T(lang, "notifications.migration.done.imported", kind)).
 		Action("View your imported projects in Vikunja", config.ServicePublicURL.GetString()).
-		Line("Have fun with your new (old) projects!")
+		Line(i18n.T(lang, "notifications.migration.done.have_fun"))
 }
 
 // ToDB returns the MigrationDoneNotification notification in a format which can be saved in the db
@@ -60,10 +61,10 @@ func (n *MigrationFailedReportedNotification) ToMail(lang string) *notifications
 	kind := cases.Title(language.English).String(n.MigratorName)
 
 	return notifications.NewMail().
-		Subject("The migration from " + kind + " to Vikunja has failed").
-		Line("Looks like the move from " + kind + " didn't go as planned this time.").
-		Line("No worries, though! Just give it another shot by starting over the same way you did before. Sometimes, these hiccups happen because of glitches on " + kind + "'s end, but trying again often does the trick.").
-		Line("We've got the error message on our radar and are on it to get it sorted out soon.")
+		Subject(i18n.T(lang, "notifications.migration.failed_reported.subject", kind)).
+		Line(i18n.T(lang, "notifications.migration.failed_reported.message", kind)).
+		Line(i18n.T(lang, "notifications.migration.failed_reported.retry", kind)).
+		Line(i18n.T(lang, "notifications.migration.failed_reported.working_on_it"))
 }
 
 // ToDB returns the MigrationFailedReportedNotification notification in a format which can be saved in the db
@@ -87,11 +88,11 @@ func (n *MigrationFailedNotification) ToMail(lang string) *notifications.Mail {
 	kind := cases.Title(language.English).String(n.MigratorName)
 
 	return notifications.NewMail().
-		Subject("The migration from " + kind + " to Vikunja has failed").
-		Line("Looks like the move from " + kind + " didn't go as planned this time.").
-		Line("No worries, though! Just give it another shot by starting over the same way you did before. Sometimes, these hiccups happen because of glitches on " + kind + "'s end, but trying again often does the trick.").
-		Line("We bumped into a little error along the way: `" + n.Error.Error() + "`.").
-		Line("Please drop us a note about this [in the forum](https://community.vikunja.io/) or any of the usual places so that we can take a look at why it failed.")
+		Subject(i18n.T(lang, "notifications.migration.failed.subject", kind)).
+		Line(i18n.T(lang, "notifications.migration.failed.message", kind)).
+		Line(i18n.T(lang, "notifications.migration.failed.retry", kind)).
+		Line(i18n.T(lang, "notifications.migration.failed.error", n.Error.Error())).
+		Line(i18n.T(lang, "notifications.migration.failed.report"))
 }
 
 // ToDB returns the MigrationFailedNotification notification in a format which can be saved in the db
