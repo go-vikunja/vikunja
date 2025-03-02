@@ -81,6 +81,13 @@ func (p *Provider) Issuer() (issuerURL string, err error) {
 		Issuer string `json:"issuer"`
 	}
 
+	if p.openIDProvider == nil {
+		err = p.setOicdProvider()
+		if err != nil {
+			return "", err
+		}
+	}
+
 	iss := &Issuer{}
 	err = p.openIDProvider.Claims(iss)
 	if err != nil {
