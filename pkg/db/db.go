@@ -109,11 +109,11 @@ func initMysqlEngine() (engine *xorm.Engine, err error) {
 	}
 	engine.SetMaxOpenConns(config.DatabaseMaxOpenConnections.GetInt())
 	engine.SetMaxIdleConns(config.DatabaseMaxIdleConnections.GetInt())
-	max, err := time.ParseDuration(strconv.Itoa(config.DatabaseMaxConnectionLifetime.GetInt()) + `ms`)
+	maxLifetime, err := time.ParseDuration(strconv.Itoa(config.DatabaseMaxConnectionLifetime.GetInt()) + `ms`)
 	if err != nil {
 		return
 	}
-	engine.SetConnMaxLifetime(max)
+	engine.SetConnMaxLifetime(maxLifetime)
 	return
 }
 
@@ -168,11 +168,11 @@ func initPostgresEngine() (engine *xorm.Engine, err error) {
 	engine.SetSchema(config.DatabaseSchema.GetString())
 	engine.SetMaxOpenConns(config.DatabaseMaxOpenConnections.GetInt())
 	engine.SetMaxIdleConns(config.DatabaseMaxIdleConnections.GetInt())
-	max, err := time.ParseDuration(strconv.Itoa(config.DatabaseMaxConnectionLifetime.GetInt()) + `ms`)
+	maxLifetime, err := time.ParseDuration(strconv.Itoa(config.DatabaseMaxConnectionLifetime.GetInt()) + `ms`)
 	if err != nil {
 		return
 	}
-	engine.SetConnMaxLifetime(max)
+	engine.SetConnMaxLifetime(maxLifetime)
 	return
 }
 

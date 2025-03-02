@@ -40,7 +40,7 @@ type TaskAssginee struct {
 }
 
 // TableName makes a pretty table name
-func (TaskAssginee) TableName() string {
+func (*TaskAssginee) TableName() string {
 	return "task_assignees"
 }
 
@@ -77,7 +77,7 @@ func (t *Task) updateTaskAssignees(s *xorm.Session, assignees []*user.User, doer
 	// If we don't have any new assignees, delete everything right away. Saves us some hassle.
 	if len(assignees) == 0 && len(t.Assignees) > 0 {
 		_, err = s.Where("task_id = ?", t.ID).
-			Delete(TaskAssginee{})
+			Delete(&TaskAssginee{})
 		t.setTaskAssignees(assignees)
 		return err
 	}
@@ -115,7 +115,7 @@ func (t *Task) updateTaskAssignees(s *xorm.Session, assignees []*user.User, doer
 	if len(assigneesToDelete) > 0 {
 		_, err = s.In("user_id", assigneesToDelete).
 			And("task_id = ?", t.ID).
-			Delete(TaskAssginee{})
+			Delete(&TaskAssginee{})
 		if err != nil {
 			return err
 		}
@@ -253,7 +253,7 @@ func (t *Task) addNewAssigneeByID(s *xorm.Session, newAssigneeID int64, project 
 		}
 	}
 
-	_, err = s.Insert(TaskAssginee{
+	_, err = s.Insert(&TaskAssginee{
 		TaskID: t.ID,
 		UserID: newAssigneeID,
 	})

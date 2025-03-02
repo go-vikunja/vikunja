@@ -216,9 +216,9 @@ func TestSavedFilter_Rights(t *testing.T) {
 				ID:    1,
 				Title: "Lorem",
 			}
-			can, max, err := sf.CanRead(s, user1)
+			can, maxRight, err := sf.CanRead(s, user1)
 			require.NoError(t, err)
-			assert.Equal(t, int(RightAdmin), max)
+			assert.Equal(t, int(RightAdmin), maxRight)
 			assert.True(t, can)
 		})
 		t.Run("not owner", func(t *testing.T) {

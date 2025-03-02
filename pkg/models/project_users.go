@@ -51,7 +51,7 @@ type ProjectUser struct {
 }
 
 // TableName is the table name for ProjectUser
-func (ProjectUser) TableName() string {
+func (*ProjectUser) TableName() string {
 	return "users_projects"
 }
 

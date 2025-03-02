@@ -75,7 +75,7 @@ type LinkSharing struct {
 }
 
 // TableName holds the table name
-func (LinkSharing) TableName() string {
+func (*LinkSharing) TableName() string {
 	return "link_shares"
 }
 

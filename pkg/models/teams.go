@@ -65,7 +65,7 @@ type Team struct {
 }
 
 // TableName makes beautiful table names
-func (Team) TableName() string {
+func (*Team) TableName() string {
 	return "teams"
 }
 

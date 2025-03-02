@@ -1606,7 +1606,7 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	// Delete assignees
-	if _, err = s.Where("task_id = ?", t.ID).Delete(TaskAssginee{}); err != nil {
+	if _, err = s.Where("task_id = ?", t.ID).Delete(&TaskAssginee{}); err != nil {
 		return err
 	}
 

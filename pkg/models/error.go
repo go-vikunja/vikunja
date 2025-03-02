@@ -1763,7 +1763,7 @@ func (err *ErrUnknownSubscriptionEntityType) Error() string {
 const ErrCodeUnknownSubscriptionEntityType = 12001
 
 // HTTPError holds the http error description
-func (err ErrUnknownSubscriptionEntityType) HTTPError() web.HTTPError {
+func (err *ErrUnknownSubscriptionEntityType) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusPreconditionFailed,
 		Code:     ErrCodeUnknownSubscriptionEntityType,
@@ -1792,7 +1792,7 @@ func (err *ErrSubscriptionAlreadyExists) Error() string {
 const ErrCodeSubscriptionAlreadyExists = 12002
 
 // HTTPError holds the http error description
-func (err ErrSubscriptionAlreadyExists) HTTPError() web.HTTPError {
+func (err *ErrSubscriptionAlreadyExists) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusPreconditionFailed,
 		Code:     ErrCodeSubscriptionAlreadyExists,
@@ -1818,7 +1818,7 @@ func (err *ErrMustProvideUser) Error() string {
 const ErrCodeMustProvideUser = 12003
 
 // HTTPError holds the http error description
-func (err ErrMustProvideUser) HTTPError() web.HTTPError {
+func (err *ErrMustProvideUser) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusPreconditionFailed,
 		Code:     ErrCodeMustProvideUser,
@@ -1849,7 +1849,7 @@ func (err *ErrLinkSharePasswordRequired) Error() string {
 const ErrCodeLinkSharePasswordRequired = 13001
 
 // HTTPError holds the http error description
-func (err ErrLinkSharePasswordRequired) HTTPError() web.HTTPError {
+func (err *ErrLinkSharePasswordRequired) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusPreconditionFailed,
 		Code:     ErrCodeLinkSharePasswordRequired,
@@ -1876,7 +1876,7 @@ func (err *ErrLinkSharePasswordInvalid) Error() string {
 const ErrCodeLinkSharePasswordInvalid = 13002
 
 // HTTPError holds the http error description
-func (err ErrLinkSharePasswordInvalid) HTTPError() web.HTTPError {
+func (err *ErrLinkSharePasswordInvalid) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusForbidden,
 		Code:     ErrCodeLinkSharePasswordInvalid,
@@ -1902,7 +1902,7 @@ func (err *ErrLinkShareTokenInvalid) Error() string {
 const ErrCodeLinkShareTokenInvalid = 13003
 
 // HTTPError holds the http error description
-func (err ErrLinkShareTokenInvalid) HTTPError() web.HTTPError {
+func (err *ErrLinkShareTokenInvalid) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusBadRequest,
 		Code:     ErrCodeLinkShareTokenInvalid,
@@ -1932,7 +1932,7 @@ func (err *ErrAPITokenInvalid) Error() string {
 const ErrCodeAPITokenInvalid = 14001
 
 // HTTPError holds the http error description
-func (err ErrAPITokenInvalid) HTTPError() web.HTTPError {
+func (err *ErrAPITokenInvalid) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusBadRequest,
 		Code:     ErrCodeAPITokenInvalid,
@@ -1960,7 +1960,7 @@ func (err *ErrInvalidAPITokenPermission) Error() string {
 const ErrCodeInvalidAPITokenPermission = 14002
 
 // HTTPError holds the http error description
-func (err ErrInvalidAPITokenPermission) HTTPError() web.HTTPError {
+func (err *ErrInvalidAPITokenPermission) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusBadRequest,
 		Code:     ErrCodeInvalidAPITokenPermission,

@@ -48,7 +48,7 @@ type TeamProject struct {
 }
 
 // TableName makes beautiful table names
-func (TeamProject) TableName() string {
+func (*TeamProject) TableName() string {
 	return "team_projects"
 }
 
@@ -158,7 +158,7 @@ func (tl *TeamProject) Delete(s *xorm.Session, _ web.Auth) (err error) {
 	// Delete the relation
 	_, err = s.Where("team_id = ?", tl.TeamID).
 		And("project_id = ?", tl.ProjectID).
-		Delete(TeamProject{})
+		Delete(&TeamProject{})
 	if err != nil {
 		return err
 	}
