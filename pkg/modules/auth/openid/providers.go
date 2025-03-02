@@ -123,6 +123,8 @@ func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provid
 		[]string{
 			"logouturl",
 			"scope",
+			"emailfallback",
+			"usernamefallback",
 		},
 		requiredKeys...,
 	)
@@ -162,14 +164,32 @@ func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provid
 		scope = "openid profile email"
 	}
 
+	var emailFallback = false
+	emailFallbackValue, exists := pi["emailfallback"]
+	if exists {
+		emailFallbackTypedValue, ok := emailFallbackValue.(bool)
+		if ok {
+			emailFallback = emailFallbackTypedValue
+		}
+	}
+	var usernameFallback = false
+	usernameFallbackValue, exists := pi["usernamefallback"]
+	if exists {
+		usernameFallbackTypedValue, ok := usernameFallbackValue.(bool)
+		if ok {
+			usernameFallback = usernameFallbackTypedValue
+		}
+	}
 	provider = &Provider{
-		Name:            name,
-		Key:             key,
-		AuthURL:         pi["authurl"].(string),
-		OriginalAuthURL: pi["authurl"].(string),
-		ClientSecret:    pi["clientsecret"].(string),
-		LogoutURL:       logoutURL,
-		Scope:           scope,
+		Name:             name,
+		Key:              key,
+		AuthURL:          pi["authurl"].(string),
+		OriginalAuthURL:  pi["authurl"].(string),
+		ClientSecret:     pi["clientsecret"].(string),
+		LogoutURL:        logoutURL,
+		Scope:            scope,
+		EmailFallback:    emailFallback,
+		UsernameFallback: usernameFallback,
 	}
 
 	cl, is := pi["clientid"].(int)

@@ -1967,3 +1967,31 @@ func (err *ErrInvalidAPITokenPermission) HTTPError() web.HTTPError {
 		Message:  fmt.Sprintf("The permission %s of group %s is invalid.", err.Permission, err.Group),
 	}
 }
+
+// OIDC errors
+const ErrCodeOpenIDError = 15001
+
+type ErrOpenIDBadRequest struct {
+	Message string
+}
+
+func (err *ErrOpenIDBadRequest) Error() string {
+	return err.Message
+}
+
+func (err ErrOpenIDBadRequest) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeOpenIDError,
+		Message:  err.Message,
+	}
+}
+
+type ErrOpenIDBadRequestWithDetails struct {
+	Message string
+	Details interface{}
+}
+
+func (err *ErrOpenIDBadRequestWithDetails) Error() string {
+	return err.Message
+}

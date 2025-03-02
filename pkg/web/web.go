@@ -50,6 +50,11 @@ type HTTPError struct {
 	Message  string `json:"message"`
 }
 
+type HTTPErrorWithDetails struct {
+	HTTPError
+	Details interface{} `json:"details"`
+}
+
 // Auth defines the authentication interface used to get some auth thing
 type Auth interface {
 	// Most of the time, we need an ID from the auth object only. Having this method saves the need to cast it.

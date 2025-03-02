@@ -23,6 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
+	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -37,7 +38,10 @@ func TestGetOrCreateUser(t *testing.T) {
 			Email:             "test@example.com",
 			PreferredUsername: "someUserWhoDoesNotExistYet",
 		}
-		u, err := getOrCreateUser(s, cl, "https://some.issuer", "12345")
+		provider := &Provider{}
+		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "12345"}
+
+		u, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
@@ -57,7 +61,10 @@ func TestGetOrCreateUser(t *testing.T) {
 			Email:             "test@example.com",
 			PreferredUsername: "",
 		}
-		u, err := getOrCreateUser(s, cl, "https://some.issuer", "12345")
+		provider := &Provider{}
+		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "12345"}
+
+		u, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		assert.NotEmpty(t, u.Username)
 		err = s.Commit()
@@ -76,7 +83,10 @@ func TestGetOrCreateUser(t *testing.T) {
 		cl := &claims{
 			Email: "",
 		}
-		_, err := getOrCreateUser(s, cl, "https://some.issuer", "12345")
+		provider := &Provider{}
+		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "12345"}
+
+		_, err := getOrCreateUser(s, cl, provider, idToken)
 		require.Error(t, err)
 	})
 	t.Run("existing user, different email address", func(t *testing.T) {
@@ -87,7 +97,10 @@ func TestGetOrCreateUser(t *testing.T) {
 		cl := &claims{
 			Email: "other-email-address@some.service.com",
 		}
-		u, err := getOrCreateUser(s, cl, "https://some.service.com", "12345")
+		provider := &Provider{}
+		idToken := &oidc.IDToken{Issuer: "https://some.service.com", Subject: "12345"}
+
+		u, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
@@ -111,7 +124,10 @@ func TestGetOrCreateUser(t *testing.T) {
 			},
 		}
 
-		u, err := getOrCreateUser(s, cl, "https://some.service.com", "12345")
+		provider := &Provider{}
+		idToken := &oidc.IDToken{Issuer: "https://some.service.com", Subject: "12345"}
+
+		u, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		teamData, errs := getTeamDataFromToken(cl.VikunjaGroups, nil)
 		for _, err := range errs {
@@ -148,7 +164,10 @@ func TestGetOrCreateUser(t *testing.T) {
 			},
 		}
 
-		u, err := getOrCreateUser(s, cl, "https://some.service.com", "12345")
+		provider := &Provider{}
+		idToken := &oidc.IDToken{Issuer: "https://some.service.com", Subject: "12345"}
+
+		u, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		teamData, errs := getTeamDataFromToken(cl.VikunjaGroups, nil)
 		for _, err := range errs {
@@ -230,5 +249,63 @@ func TestGetOrCreateUser(t *testing.T) {
 		db.AssertMissing(t, "teams", map[string]interface{}{
 			"id": oidcTeams,
 		})
+	})
+	t.Run("ProviderFallback : Match to existing local user on username", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		cl := &claims{}
+		provider := &Provider{
+			UsernameFallback: true,
+		}
+		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "user11"}
+
+		u, err := getOrCreateUser(s, cl, provider, idToken)
+		require.NoError(t, err)
+		assert.Equal(t, idToken.Subject, u.Username, "subject match username")
+		assert.Equal(t, user.IssuerLocal, u.Issuer, "User should be a local one")
+		assert.Equal(t, 11, int(u.ID), "user id 11 expected")
+	})
+	t.Run("ProviderFallback : Match to existing local user on email", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		cl := &claims{
+			Email: "user11@example.com",
+		}
+		provider := &Provider{
+			EmailFallback: true,
+		}
+		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "user11"}
+
+		u, err := getOrCreateUser(s, cl, provider, idToken)
+		require.NoError(t, err)
+		assert.Equal(t, cl.Email, u.Email, "email should match")
+		assert.Equal(t, user.IssuerLocal, u.Issuer, "User should be a local one")
+		assert.Equal(t, 11, int(u.ID), "user id 11 expected")
+	})
+	t.Run("ProviderFallback : Match to existing local user  on username and email", func(t *testing.T) {
+
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		cl := &claims{
+			Email: "user11@example.com",
+		}
+		provider := &Provider{
+			UsernameFallback: true,
+			EmailFallback:    true,
+		}
+		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "user11"}
+
+		u, err := getOrCreateUser(s, cl, provider, idToken)
+		require.NoError(t, err)
+		assert.Equal(t, cl.Email, u.Email, "email should match")
+		assert.Equal(t, idToken.Subject, u.Username, "subject match username")
+		assert.Equal(t, user.IssuerLocal, u.Issuer, "User should be a local one")
+		assert.Equal(t, 11, int(u.ID), "user id 11 expected")
 	})
 }
