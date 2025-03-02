@@ -227,7 +227,7 @@ And one more, because why not?
 
 	<div style="color: #9CA3AF;font-size:12px;border-top: 1px solid #dbdbdb;margin-top:20px;padding-top:20px;">
 	<p>
-		If the button above doesn't work, copy the url below and paste it in your browser's address bar:<br/>
+		If the button above doesn&#39;t work, copy the url below and paste it in your browser&#39;s address bar:<br/>
 		https://example.com
 	</p>
 
@@ -391,7 +391,7 @@ This is a footer line
 
 	<div style="color: #9CA3AF;font-size:12px;border-top: 1px solid #dbdbdb;margin-top:20px;padding-top:20px;">
 	<p>
-		If the button above doesn't work, copy the url below and paste it in your browser's address bar:<br/>
+		If the button above doesn&#39;t work, copy the url below and paste it in your browser&#39;s address bar:<br/>
 		https://example.com
 	</p>
 
