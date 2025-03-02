@@ -14,6 +14,7 @@ export class UserFactory extends Factory {
             password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.', // 1234
 			status: 0,
 			issuer: 'local',
+			language: 'en',
 			created: now.toISOString(),
 			updated: now.toISOString(),
 		}
