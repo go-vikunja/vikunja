@@ -76,7 +76,7 @@ export const i18n = createI18n({
 
 export async function setLanguage(lang: SupportedLocale): Promise<SupportedLocale | undefined> {
 	if (!lang) {
-		throw new Error()
+		throw new Error('language is empty')
 	}
 
 	// do not change language to the current one
