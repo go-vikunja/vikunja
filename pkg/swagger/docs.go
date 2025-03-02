@@ -3829,12 +3829,12 @@ const docTemplate = `{
                 "summary": "Register",
                 "parameters": [
                     {
-                        "description": "The user credentials",
+                        "description": "The user with credentials to create",
                         "name": "credentials",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/user.APIUserPassword"
+                            "$ref": "#/definitions/v1.UserRegister"
                         }
                     }
                 ],
@@ -9379,32 +9379,6 @@ const docTemplate = `{
                 }
             }
         },
-        "user.APIUserPassword": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "description": "The user's email address",
-                    "type": "string",
-                    "maxLength": 250
-                },
-                "id": {
-                    "description": "The unique, numeric id of this user.",
-                    "type": "integer"
-                },
-                "password": {
-                    "description": "The user's password in clear text. Only used when registering the user. The maximum limi is 72 bytes, which may be less than 72 characters. This is due to the limit in the bcrypt hashing algorithm used to store passwords in Vikunja.",
-                    "type": "string",
-                    "maxLength": 72,
-                    "minLength": 8
-                },
-                "username": {
-                    "description": "The user's username. Cannot contain anything that looks like an url or whitespaces.",
-                    "type": "string",
-                    "maxLength": 250,
-                    "minLength": 3
-                }
-            }
-        },
         "user.EmailConfirm": {
             "type": "object",
             "properties": {
@@ -9581,6 +9555,32 @@ const docTemplate = `{
             "properties": {
                 "password": {
                     "type": "string"
+                }
+            }
+        },
+        "v1.UserRegister": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "description": "The user's email address",
+                    "type": "string",
+                    "maxLength": 250
+                },
+                "language": {
+                    "description": "The language of the new user. Must be a valid IETF BCP 47 language code and exist in Vikunja.",
+                    "type": "string"
+                },
+                "password": {
+                    "description": "The user's password in clear text. Only used when registering the user. The maximum limi is 72 bytes, which may be less than 72 characters. This is due to the limit in the bcrypt hashing algorithm used to store passwords in Vikunja.",
+                    "type": "string",
+                    "maxLength": 72,
+                    "minLength": 8
+                },
+                "username": {
+                    "description": "The user's username. Cannot contain anything that looks like an url or whitespaces.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 3
                 }
             }
         },
