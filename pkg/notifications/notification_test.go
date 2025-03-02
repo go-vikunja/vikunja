@@ -52,6 +52,7 @@ func (n *testNotification) Name() string {
 
 type testNotifiable struct {
 	ShouldSendNotification bool
+	Language               string
 }
 
 // RouteForMail routes a test notification for mail
@@ -68,6 +69,10 @@ func (t *testNotifiable) ShouldNotify() (should bool, err error) {
 	return t.ShouldSendNotification, nil
 }
 
+func (t *testNotifiable) Lang() string {
+	return t.Language
+}
+
 func TestNotify(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 
@@ -82,6 +87,7 @@ func TestNotify(t *testing.T) {
 		}
 		tnf := &testNotifiable{
 			ShouldSendNotification: true,
+			Language:               "en",
 		}
 
 		err = Notify(tnf, tn)
@@ -116,6 +122,7 @@ func TestNotify(t *testing.T) {
 		}
 		tnf := &testNotifiable{
 			ShouldSendNotification: false,
+			Language:               "en",
 		}
 
 		err = Notify(tnf, tn)

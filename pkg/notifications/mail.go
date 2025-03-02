@@ -114,8 +114,8 @@ func (m *Mail) appendLine(line string, isHTML bool) *Mail {
 }
 
 // SendMail passes the notification to the mailing queue for sending
-func SendMail(m *Mail) error {
-	opts, err := RenderMail(m)
+func SendMail(m *Mail, lang string) error {
+	opts, err := RenderMail(m, lang)
 	if err != nil {
 		return err
 	}

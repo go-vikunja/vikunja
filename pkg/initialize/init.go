@@ -23,6 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/cron"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
+	"code.vikunja.io/api/pkg/i18n"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/mail"
 	"code.vikunja.io/api/pkg/migration"
@@ -35,7 +36,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 )
 
-// LightInit will only fullInit config, redis, logger but no db connection.
+// LightInit will only init config, redis, logger but no db connection.
 func LightInit() {
 	// Set logger
 	log.InitLogger()
@@ -83,6 +84,9 @@ func FullInitWithoutAsync() {
 
 	// Connect to ldap if enabled
 	ldap.InitializeLDAPConnection()
+
+	// Load translations
+	i18n.Init()
 }
 
 // FullInit initializes all kinds of things in the right order

@@ -20,6 +20,7 @@ import (
 	"strconv"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/i18n"
 	"code.vikunja.io/api/pkg/notifications"
 )
 
@@ -33,23 +34,23 @@ type EmailConfirmNotification struct {
 // ToMail returns the mail notification for EmailConfirmNotification
 func (n *EmailConfirmNotification) ToMail() *notifications.Mail {
 
-	subject := n.User.GetName() + ", please confirm your email address at Vikunja"
+	subject := i18n.TWithParams(n.User.Language, "notifications.email_confirm.subject", n.User.GetName())
 	if n.IsNew {
-		subject = n.User.GetName() + " + Vikunja = <3"
+		subject = i18n.TWithParams(n.User.Language, "notifications.email_confirm.subject_new", n.User.GetName())
 	}
 
 	nn := notifications.NewMail().
 		Subject(subject).
-		Greeting("Hi " + n.User.GetName() + ",")
+		Greeting(i18n.TWithParams(n.User.Language, "notifications.greeting", n.User.GetName()))
 
 	if n.IsNew {
-		nn.Line("Welcome to Vikunja!")
+		nn.Line(i18n.T(n.User.Language, "notifications.email_confirm.welcome"))
 	}
 
 	return nn.
-		Line("To confirm your email address, click the link below:").
+		Line(i18n.T(n.User.Language, "notifications.email_confirm.confirm")).
 		Action("Confirm your email address", config.ServicePublicURL.GetString()+"?userEmailConfirm="+n.ConfirmToken).
-		Line("Have a nice day!")
+		Line(i18n.T(n.User.Language, "notifications.common.have_nice_day"))
 }
 
 // ToDB returns the EmailConfirmNotification notification in a format which can be saved in the db
@@ -70,10 +71,10 @@ type PasswordChangedNotification struct {
 // ToMail returns the mail notification for PasswordChangedNotification
 func (n *PasswordChangedNotification) ToMail() *notifications.Mail {
 	return notifications.NewMail().
-		Subject("Your Password on Vikunja was changed").
-		Greeting("Hi " + n.User.GetName() + ",").
-		Line("Your account password was successfully changed.").
-		Line("If this wasn't you, it could mean someone compromised your account. In this case contact your server's administrator.")
+		Subject(i18n.T(n.User.Language, "notifications.password.changed.subject")).
+		Greeting(i18n.TWithParams(n.User.Language, "notifications.greeting", n.User.GetName())).
+		Line(i18n.T(n.User.Language, "notifications.password.changed.success")).
+		Line(i18n.T(n.User.Language, "notifications.password.changed.warning"))
 }
 
 // ToDB returns the PasswordChangedNotification notification in a format which can be saved in the db
@@ -95,12 +96,12 @@ type ResetPasswordNotification struct {
 // ToMail returns the mail notification for ResetPasswordNotification
 func (n *ResetPasswordNotification) ToMail() *notifications.Mail {
 	return notifications.NewMail().
-		Subject("Reset your password on Vikunja").
-		Greeting("Hi "+n.User.GetName()+",").
-		Line("To reset your password, click the link below:").
+		Subject(i18n.T(n.User.Language, "notifications.password.reset.subject")).
+		Greeting(i18n.TWithParams(n.User.Language, "notifications.greeting", n.User.GetName())).
+		Line(i18n.T(n.User.Language, "notifications.password.reset.instructions")).
 		Action("Reset your password", config.ServicePublicURL.GetString()+"?userPasswordReset="+n.Token.Token).
-		Line("This link will be valid for 24 hours.").
-		Line("Have a nice day!")
+		Line(i18n.T(n.User.Language, "notifications.password.reset.valid_duration")).
+		Line(i18n.T(n.User.Language, "notifications.common.have_nice_day"))
 }
 
 // ToDB returns the ResetPasswordNotification notification in a format which can be saved in the db
@@ -121,10 +122,10 @@ type InvalidTOTPNotification struct {
 // ToMail returns the mail notification for InvalidTOTPNotification
 func (n *InvalidTOTPNotification) ToMail() *notifications.Mail {
 	return notifications.NewMail().
-		Subject("Someone just tried to login to your Vikunja account, but failed").
-		Greeting("Hi "+n.User.GetName()+",").
-		Line("Someone just tried to log in into your account with correct username and password but a wrong TOTP passcode.").
-		Line("**If this was not you, someone else knows your password. You should set a new one immediately!**").
+		Subject(i18n.T(n.User.Language, "notifications.totp.invalid.subject")).
+		Greeting(i18n.TWithParams(n.User.Language, "notifications.greeting", n.User.GetName())).
+		Line(i18n.T(n.User.Language, "notifications.totp.invalid.message")).
+		Line(i18n.T(n.User.Language, "notifications.totp.invalid.warning")).
 		Action("Reset your password", config.ServicePublicURL.GetString()+"get-password-reset")
 }
 
@@ -145,12 +146,13 @@ type PasswordAccountLockedAfterInvalidTOTOPNotification struct {
 
 // ToMail returns the mail notification for PasswordAccountLockedAfterInvalidTOTOPNotification
 func (n *PasswordAccountLockedAfterInvalidTOTOPNotification) ToMail() *notifications.Mail {
+	resetURL := config.ServicePublicURL.GetString() + "get-password-reset"
 	return notifications.NewMail().
-		Subject("We've disabled your account on Vikunja").
-		Greeting("Hi " + n.User.GetName() + ",").
-		Line("Someone tried to log in with your credentials but failed to provide a valid TOTP passcode.").
-		Line("After 10 failed attempts, we've disabled your account and reset your password. To set a new one, follow the instructions in the reset email we just sent you.").
-		Line("If you did not receive an email with reset instructions, you can always request a new one at [" + config.ServicePublicURL.GetString() + "get-password-reset](" + config.ServicePublicURL.GetString() + "get-password-reset).")
+		Subject(i18n.T(n.User.Language, "notifications.totp.account_locked.subject")).
+		Greeting(i18n.TWithParams(n.User.Language, "notifications.greeting", n.User.GetName())).
+		Line(i18n.T(n.User.Language, "notifications.totp.account_locked.message")).
+		Line(i18n.T(n.User.Language, "notifications.totp.account_locked.disabled")).
+		Line(i18n.TWithParams(n.User.Language, "notifications.totp.account_locked.reset_instructions", resetURL, resetURL))
 }
 
 // ToDB returns the PasswordAccountLockedAfterInvalidTOTOPNotification notification in a format which can be saved in the db
@@ -171,11 +173,11 @@ type FailedLoginAttemptNotification struct {
 // ToMail returns the mail notification for FailedLoginAttemptNotification
 func (n *FailedLoginAttemptNotification) ToMail() *notifications.Mail {
 	return notifications.NewMail().
-		Subject("Someone just tried to login to your Vikunja account, but failed to provide a correct password").
-		Greeting("Hi "+n.User.GetName()+",").
-		Line("Someone just tried to log in into your account with a wrong password three times in a row.").
-		Line("If this was not you, this could be someone else trying to break into your account.").
-		Line("To enhance the security of you account you may want to set a stronger password or enable TOTP authentication in the settings:").
+		Subject(i18n.T(n.User.Language, "notifications.login.failed.subject")).
+		Greeting(i18n.TWithParams(n.User.Language, "notifications.greeting", n.User.GetName())).
+		Line(i18n.T(n.User.Language, "notifications.login.failed.message")).
+		Line(i18n.T(n.User.Language, "notifications.login.failed.warning")).
+		Line(i18n.T(n.User.Language, "notifications.login.failed.enhance_security")).
 		Action("Go to settings", config.ServicePublicURL.GetString()+"user/settings")
 }
 
@@ -198,15 +200,15 @@ type AccountDeletionConfirmNotification struct {
 // ToMail returns the mail notification for AccountDeletionConfirmNotification
 func (n *AccountDeletionConfirmNotification) ToMail() *notifications.Mail {
 	return notifications.NewMail().
-		Subject("Please confirm the deletion of your Vikunja account").
-		Greeting("Hi "+n.User.GetName()+",").
-		Line("You have requested the deletion of your account. To confirm this, please click the link below:").
+		Subject(i18n.T(n.User.Language, "notifications.account.deletion.confirm.subject")).
+		Greeting(i18n.TWithParams(n.User.Language, "notifications.greeting", n.User.GetName())).
+		Line(i18n.T(n.User.Language, "notifications.account.deletion.confirm.request")).
 		Action("Confirm the deletion of my account", config.ServicePublicURL.GetString()+"?accountDeletionConfirm="+n.ConfirmToken).
-		Line("This link will be valid for 24 hours.").
-		Line("Once you confirm the deletion we will schedule the deletion of your account in three days and send you another email until then.").
-		Line("If you proceed with the deletion of your account, we will remove all of your projects and tasks you created. Everything you shared with another user or team will transfer ownership to them.").
-		Line("If you did not requested the deletion or changed your mind, you can simply ignore this email.").
-		Line("Have a nice day!")
+		Line(i18n.T(n.User.Language, "notifications.account.deletion.confirm.valid_duration")).
+		Line(i18n.T(n.User.Language, "notifications.account.deletion.confirm.schedule_info")).
+		Line(i18n.T(n.User.Language, "notifications.account.deletion.confirm.consequences")).
+		Line(i18n.T(n.User.Language, "notifications.account.deletion.confirm.changed_mind")).
+		Line(i18n.T(n.User.Language, "notifications.common.have_nice_day"))
 }
 
 // ToDB returns the AccountDeletionConfirmNotification notification in a format which can be saved in the db
@@ -227,20 +229,26 @@ type AccountDeletionNotification struct {
 
 // ToMail returns the mail notification for AccountDeletionNotification
 func (n *AccountDeletionNotification) ToMail() *notifications.Mail {
-	durationString := "in " + strconv.Itoa(n.NotificationNumber) + " days"
+	var subject string
+	var deletionTimeLine string
 
 	if n.NotificationNumber == 1 {
-		durationString = "tomorrow"
+		subject = i18n.T(n.User.Language, "notifications.account.deletion.scheduled.subject_tomorrow")
+		deletionTimeLine = i18n.T(n.User.Language, "notifications.account.deletion.scheduled.deletion_time_tomorrow")
+	} else {
+		days := strconv.Itoa(n.NotificationNumber)
+		subject = i18n.TWithParams(n.User.Language, "notifications.account.deletion.scheduled.subject_days", days)
+		deletionTimeLine = i18n.TWithParams(n.User.Language, "notifications.account.deletion.scheduled.deletion_time_days", days)
 	}
 
 	return notifications.NewMail().
-		Subject("Your Vikunja account will be deleted "+durationString).
-		Greeting("Hi "+n.User.GetName()+",").
-		Line("You recently requested the deletion of your Vikunja account.").
-		Line("We will delete your account "+durationString+".").
-		Line("If you changed your mind, simply click the link below to cancel the deletion and follow the instructions there:").
+		Subject(subject).
+		Greeting(i18n.TWithParams(n.User.Language, "notifications.greeting", n.User.GetName())).
+		Line(i18n.T(n.User.Language, "notifications.account.deletion.scheduled.request_reminder")).
+		Line(deletionTimeLine).
+		Line(i18n.T(n.User.Language, "notifications.account.deletion.scheduled.changed_mind")).
 		Action("Abort the deletion", config.ServicePublicURL.GetString()).
-		Line("Have a nice day!")
+		Line(i18n.T(n.User.Language, "notifications.common.have_nice_day"))
 }
 
 // ToDB returns the AccountDeletionNotification notification in a format which can be saved in the db
@@ -261,11 +269,11 @@ type AccountDeletedNotification struct {
 // ToMail returns the mail notification for AccountDeletedNotification
 func (n *AccountDeletedNotification) ToMail() *notifications.Mail {
 	return notifications.NewMail().
-		Subject("Your Vikunja Account has been deleted").
-		Greeting("Hi " + n.User.GetName() + ",").
-		Line("As requested, we've deleted your Vikunja account.").
-		Line("This deletion is permanent. If did not create a backup and need your data back now, talk to your administrator.").
-		Line("Have a nice day!")
+		Subject(i18n.T(n.User.Language, "notifications.account.deletion.completed.subject")).
+		Greeting(i18n.TWithParams(n.User.Language, "notifications.greeting", n.User.GetName())).
+		Line(i18n.T(n.User.Language, "notifications.account.deletion.completed.confirmation")).
+		Line(i18n.T(n.User.Language, "notifications.account.deletion.completed.permanent")).
+		Line(i18n.T(n.User.Language, "notifications.common.have_nice_day"))
 }
 
 // ToDB returns the AccountDeletedNotification notification in a format which can be saved in the db

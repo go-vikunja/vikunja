@@ -51,7 +51,7 @@ var testmailCmd = &cobra.Command{
 			Line("If you received this, Vikunja is correctly set up to send emails.").
 			Action("Go to your instance", config.ServicePublicURL.GetString())
 
-		opts, err := notifications.RenderMail(message)
+		opts, err := notifications.RenderMail(message, "en")
 		if err != nil {
 			log.Errorf("Error rendering test mail: %s", err.Error())
 			return

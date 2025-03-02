@@ -31,6 +31,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -418,6 +419,158 @@ func (Check) GotSwag() {
 	}
 }
 
+// Checks if all translation keys used in the code exist in the English translation file
+func (Check) Translations() {
+	mg.Deps(initVars)
+	fmt.Println("Checking for missing translation keys...")
+
+	// Load translations from the English translation file
+	translationFile := RootPath + "/pkg/i18n/lang/en.json"
+	translations, err := loadTranslations(translationFile)
+	if err != nil {
+		fmt.Printf("Error loading translations: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Printf("Loaded %d translation keys from %s\n", len(translations), translationFile)
+
+	// Extract keys from codebase
+	keys, err := walkCodebaseForTranslationKeys(RootPath)
+	if err != nil {
+		fmt.Printf("Error walking codebase: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Printf("Found %d translation keys in the codebase\n", len(keys))
+
+	// Check for missing keys
+	missingKeys := make(map[string][]TranslationKey)
+	for _, key := range keys {
+		if !translations[key.Key] {
+			missingKeys[key.Key] = append(missingKeys[key.Key], key)
+		}
+	}
+
+	// Print results
+	if len(missingKeys) > 0 {
+		fmt.Printf("\nFound %d missing translation keys:\n", len(missingKeys))
+		for key, occurrences := range missingKeys {
+			fmt.Printf("\nKey: %s\n", key)
+			for _, occurrence := range occurrences {
+				fmt.Printf("  - %s:%d\n", occurrence.FilePath, occurrence.Line)
+			}
+		}
+		os.Exit(1)
+	} else {
+		printSuccess("All translation keys are present in the translation file!")
+	}
+}
+
+// TranslationKey represents a translation key found in the code
+type TranslationKey struct {
+	Key      string
+	FilePath string
+	Line     int
+}
+
+// loadTranslations loads the English translation file and returns a flattened map
+func loadTranslations(filePath string) (map[string]bool, error) {
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("error reading translation file: %v", err)
+	}
+
+	var translationsMap map[string]interface{}
+	if err := json.Unmarshal(data, &translationsMap); err != nil {
+		return nil, fmt.Errorf("error parsing JSON: %v", err)
+	}
+
+	// Flatten the nested structure
+	flattenedMap := make(map[string]bool)
+	flattenTranslations("", translationsMap, flattenedMap)
+
+	return flattenedMap, nil
+}
+
+// flattenTranslations recursively flattens a nested map structure into a flat map with dot-separated keys
+func flattenTranslations(prefix string, src map[string]interface{}, dest map[string]bool) {
+	for k, v := range src {
+		key := k
+		if prefix != "" {
+			key = prefix + "." + k
+		}
+
+		switch vv := v.(type) {
+		case string:
+			dest[key] = true
+		case map[string]interface{}:
+			flattenTranslations(key, vv, dest)
+		}
+	}
+}
+
+// walkCodebaseForTranslationKeys walks the codebase and extracts all translation keys
+func walkCodebaseForTranslationKeys(rootDir string) ([]TranslationKey, error) {
+	var allKeys []TranslationKey
+
+	err := filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Skip non-Go files, vendor directory, and the contrib directory
+		if !info.IsDir() && strings.HasSuffix(path, ".go") &&
+			!strings.Contains(path, "/vendor/") &&
+			!strings.Contains(path, "/contrib/") {
+			keys, err := extractTranslationKeysFromFile(path)
+			if err != nil {
+				fmt.Printf("Warning: %v\n", err)
+				return nil
+			}
+			allKeys = append(allKeys, keys...)
+		}
+
+		return nil
+	})
+
+	return allKeys, err
+}
+
+// extractTranslationKeysFromFile extracts all i18n.T and i18n.TWithParams calls from a file
+func extractTranslationKeysFromFile(filePath string) ([]TranslationKey, error) {
+	// Read the file content
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("error reading file %s: %v", filePath, err)
+	}
+
+	var keys []TranslationKey
+
+	// Regex to match i18n.T and i18n.TWithParams calls
+	re := regexp.MustCompile(`i18n\.(T|TWithParams)\([^,]+,\s*"([^"]+)"`)
+	matches := re.FindAllSubmatchIndex(content, -1)
+
+	for _, match := range matches {
+		if len(match) >= 4 {
+			// Extract the key from the match
+			keyStart, keyEnd := match[4], match[5]
+			key := string(content[keyStart:keyEnd])
+
+			// Count lines to determine the line number
+			beforeMatch := content[:keyStart]
+			lineCount := bytes.Count(beforeMatch, []byte("\n")) + 1
+
+			keys = append(keys, TranslationKey{
+				Key:      key,
+				FilePath: filePath,
+				Line:     lineCount,
+			})
+		}
+	}
+
+	return keys, nil
+}
+
 func checkGolangCiLintInstalled() {
 	mg.Deps(initVars)
 	if err := exec.Command("golangci-lint").Run(); err != nil && strings.Contains(err.Error(), "executable file not found") {
@@ -443,6 +596,7 @@ func (Check) All() {
 	mg.Deps(
 		Check.Golangci,
 		Check.GotSwag,
+		Check.Translations,
 	)
 }
 

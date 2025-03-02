@@ -48,6 +48,8 @@ type Notifiable interface {
 	// ShouldNotify provides a last-minute way to cancel a notification. It will be called immediately before
 	// sending a notification.
 	ShouldNotify() (should bool, err error)
+	// Lang provides the language which should be used for translations in the mail.
+	Lang() string
 }
 
 // Notify notifies a notifiable of a notification
@@ -83,7 +85,7 @@ func notifyMail(notifiable Notifiable, notification Notification) error {
 	}
 	mail.To(to)
 
-	return SendMail(mail)
+	return SendMail(mail, notifiable.Lang())
 }
 
 func notifyDB(notifiable Notifiable, notification Notification) (err error) {

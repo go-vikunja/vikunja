@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/i18n"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
@@ -39,11 +40,11 @@ func (n *ReminderDueNotification) ToMail() *notifications.Mail {
 	return notifications.NewMail().
 		IncludeLinkToSettings().
 		To(n.User.Email).
-		Subject(`Reminder for "`+n.Task.Title+`" (`+n.Project.Title+`)`).
-		Greeting("Hi "+n.User.GetName()+",").
-		Line(`This is a friendly reminder of the task "`+n.Task.Title+`" (`+n.Project.Title+`).`).
+		Subject(i18n.TWithParams(n.User.Language, "notifications.task.reminder.subject", n.Task.Title, n.Project.Title)).
+		Greeting(i18n.TWithParams(n.User.Language, "notifications.greeting", n.User.GetName())).
+		Line(i18n.TWithParams(n.User.Language, "notifications.task.reminder.message", n.Task.Title, n.Project.Title)).
 		Action("Open Task", config.ServicePublicURL.GetString()+"tasks/"+strconv.FormatInt(n.Task.ID, 10)).
-		Line("Have a nice day!")
+		Line(i18n.T(n.User.Language, "notifications.common.have_nice_day"))
 }
 
 // ToDB returns the ReminderDueNotification notification in a format which can be saved in the db
@@ -65,6 +66,7 @@ type TaskCommentNotification struct {
 	Task      *Task        `json:"task"`
 	Comment   *TaskComment `json:"comment"`
 	Mentioned bool         `json:"mentioned"`
+	User      *user.User   `json:"-"` // Target user
 }
 
 func (n *TaskCommentNotification) SubjectID() int64 {
@@ -76,12 +78,12 @@ func (n *TaskCommentNotification) ToMail() *notifications.Mail {
 
 	mail := notifications.NewMail().
 		From(n.Doer.GetNameAndFromEmail()).
-		Subject("Re: " + n.Task.Title)
+		Subject(i18n.TWithParams(n.User.Language, "notifications.task.comment.subject", n.Task.Title))
 
 	if n.Mentioned {
 		mail.
-			Line("**" + n.Doer.GetName() + "** mentioned you in a comment:").
-			Subject(n.Doer.GetName() + ` mentioned you in a comment in "` + n.Task.Title + `"`)
+			Line(i18n.TWithParams(n.User.Language, "notifications.task.comment.mentioned_message", n.Doer.GetName())).
+			Subject(i18n.TWithParams(n.User.Language, "notifications.task.comment.mentioned_subject", n.Doer.GetName(), n.Task.Title))
 	}
 
 	mail.HTML(n.Comment.Comment)
@@ -112,14 +114,14 @@ type TaskAssignedNotification struct {
 func (n *TaskAssignedNotification) ToMail() *notifications.Mail {
 	if n.Target.ID == n.Assignee.ID {
 		return notifications.NewMail().
-			Subject("You have been assigned to "+n.Task.Title+"("+n.Task.GetFullIdentifier()+")").
-			Line(n.Doer.GetName()+" has assigned you to "+n.Task.Title+".").
+			Subject(i18n.TWithParams(n.Target.Language, "notifications.task.assigned.subject_to_assignee", n.Task.Title, n.Task.GetFullIdentifier())).
+			Line(i18n.TWithParams(n.Target.Language, "notifications.task.assigned.message_to_assignee", n.Doer.GetName(), n.Task.Title)).
 			Action("View Task", n.Task.GetFrontendURL())
 	}
 
 	return notifications.NewMail().
-		Subject(n.Task.Title+"("+n.Task.GetFullIdentifier()+")"+" has been assigned to "+n.Assignee.GetName()).
-		Line(n.Doer.GetName()+" has assigned this task to "+n.Assignee.GetName()+".").
+		Subject(i18n.TWithParams(n.Target.Language, "notifications.task.assigned.subject_to_others", n.Task.Title, n.Task.GetFullIdentifier(), n.Assignee.GetName())).
+		Line(i18n.TWithParams(n.Target.Language, "notifications.task.assigned.message_to_others", n.Doer.GetName(), n.Assignee.GetName())).
 		Action("View Task", n.Task.GetFrontendURL())
 }
 
@@ -137,13 +139,14 @@ func (n *TaskAssignedNotification) Name() string {
 type TaskDeletedNotification struct {
 	Doer *user.User `json:"doer"`
 	Task *Task      `json:"task"`
+	User *user.User `json:"-"` // Target user
 }
 
 // ToMail returns the mail notification for TaskDeletedNotification
 func (n *TaskDeletedNotification) ToMail() *notifications.Mail {
 	return notifications.NewMail().
-		Subject(n.Task.Title + " (" + n.Task.GetFullIdentifier() + ")" + " has been deleted").
-		Line(n.Doer.GetName() + " has deleted the task " + n.Task.Title + " (" + n.Task.GetFullIdentifier() + ")")
+		Subject(i18n.TWithParams(n.User.Language, "notifications.task.deleted.subject", n.Task.Title, n.Task.GetFullIdentifier())).
+		Line(i18n.TWithParams(n.User.Language, "notifications.task.deleted.message", n.Doer.GetName(), n.Task.Title, n.Task.GetFullIdentifier()))
 }
 
 // ToDB returns the TaskDeletedNotification notification in a format which can be saved in the db
@@ -160,13 +163,14 @@ func (n *TaskDeletedNotification) Name() string {
 type ProjectCreatedNotification struct {
 	Doer    *user.User `json:"doer"`
 	Project *Project   `json:"project"`
+	User    *user.User `json:"-"` // Target user
 }
 
 // ToMail returns the mail notification for ProjectCreatedNotification
 func (n *ProjectCreatedNotification) ToMail() *notifications.Mail {
 	return notifications.NewMail().
-		Subject(n.Doer.GetName()+` created the project "`+n.Project.Title+`"`).
-		Line(n.Doer.GetName()+` created the project "`+n.Project.Title+`"`).
+		Subject(i18n.TWithParams(n.User.Language, "notifications.project.created.subject", n.Doer.GetName(), n.Project.Title)).
+		Line(i18n.TWithParams(n.User.Language, "notifications.project.created.message", n.Doer.GetName(), n.Project.Title)).
 		Action("View Project", config.ServicePublicURL.GetString()+"projects/")
 }
 
@@ -190,10 +194,10 @@ type TeamMemberAddedNotification struct {
 // ToMail returns the mail notification for TeamMemberAddedNotification
 func (n *TeamMemberAddedNotification) ToMail() *notifications.Mail {
 	return notifications.NewMail().
-		Subject(n.Doer.GetName()+" added you to the "+n.Team.Name+" team in Vikunja").
+		Subject(i18n.TWithParams(n.Member.Language, "notifications.team.member_added.subject", n.Doer.GetName(), n.Team.Name)).
 		From(n.Doer.GetNameAndFromEmail()).
-		Greeting("Hi "+n.Member.GetName()+",").
-		Line(n.Doer.GetName()+" has just added you to the "+n.Team.Name+" team in Vikunja.").
+		Greeting(i18n.TWithParams(n.Member.Language, "notifications.greeting", n.Member.GetName())).
+		Line(i18n.TWithParams(n.Member.Language, "notifications.team.member_added.message", n.Doer.GetName(), n.Team.Name)).
 		Action("View Team", config.ServicePublicURL.GetString()+"teams/"+strconv.FormatInt(n.Team.ID, 10)+"/edit")
 }
 
@@ -207,10 +211,10 @@ func (n *TeamMemberAddedNotification) Name() string {
 	return "team.member.added"
 }
 
-func getOverdueSinceString(until time.Duration) (overdueSince string) {
-	overdueSince = `overdue since ` + utils.HumanizeDuration(until)
+func getOverdueSinceString(until time.Duration, language string) (overdueSince string) {
+	overdueSince = i18n.TWithParams(language, "notifications.task.overdue.overdue_since", utils.HumanizeDuration(until))
 	if until == 0 {
-		overdueSince = `overdue now`
+		overdueSince = i18n.T(language, "notifications.task.overdue.overdue_now")
 	}
 
 	return
@@ -228,11 +232,11 @@ func (n *UndoneTaskOverdueNotification) ToMail() *notifications.Mail {
 	until := time.Until(n.Task.DueDate).Round(1*time.Hour) * -1
 	return notifications.NewMail().
 		IncludeLinkToSettings().
-		Subject(`Task "`+n.Task.Title+`" (`+n.Project.Title+`) is overdue`).
-		Greeting("Hi "+n.User.GetName()+",").
-		Line(`This is a friendly reminder of the task "`+n.Task.Title+`" (`+n.Project.Title+`) which is `+getOverdueSinceString(until)+` and not yet done.`).
+		Subject(i18n.TWithParams(n.User.Language, "notifications.task.overdue.subject", n.Task.Title, n.Project.Title)).
+		Greeting(i18n.TWithParams(n.User.Language, "notifications.greeting", n.User.GetName())).
+		Line(i18n.TWithParams(n.User.Language, "notifications.task.overdue.message", n.Task.Title, n.Project.Title, getOverdueSinceString(until, n.User.Language))).
 		Action("Open Task", config.ServicePublicURL.GetString()+"tasks/"+strconv.FormatInt(n.Task.ID, 10)).
-		Line("Have a nice day!")
+		Line(i18n.T(n.User.Language, "notifications.common.have_nice_day"))
 }
 
 // ToDB returns the UndoneTaskOverdueNotification notification in a format which can be saved in the db
@@ -267,17 +271,17 @@ func (n *UndoneTasksOverdueNotification) ToMail() *notifications.Mail {
 	overdueLine := ""
 	for _, task := range sortedTasks {
 		until := time.Until(task.DueDate).Round(1*time.Hour) * -1
-		overdueLine += `* [` + task.Title + `](` + config.ServicePublicURL.GetString() + "tasks/" + strconv.FormatInt(task.ID, 10) + `) (` + n.Projects[task.ProjectID].Title + `), ` + getOverdueSinceString(until) + "\n"
+		overdueLine += `* [` + task.Title + `](` + config.ServicePublicURL.GetString() + "tasks/" + strconv.FormatInt(task.ID, 10) + `) (` + n.Projects[task.ProjectID].Title + `), ` + getOverdueSinceString(until, n.User.Language) + "\n"
 	}
 
 	return notifications.NewMail().
 		IncludeLinkToSettings().
-		Subject(`Your overdue tasks`).
-		Greeting("Hi "+n.User.GetName()+",").
-		Line("You have the following overdue tasks:").
+		Subject(i18n.T(n.User.Language, "notifications.task.overdue.multiple_subject")).
+		Greeting(i18n.TWithParams(n.User.Language, "notifications.greeting", n.User.GetName())).
+		Line(i18n.T(n.User.Language, "notifications.task.overdue.multiple_message")).
 		Line(overdueLine).
 		Action("Open Vikunja", config.ServicePublicURL.GetString()).
-		Line("Have a nice day!")
+		Line(i18n.T(n.User.Language, "notifications.common.have_nice_day"))
 }
 
 // ToDB returns the UndoneTasksOverdueNotification notification in a format which can be saved in the db
@@ -295,6 +299,7 @@ type UserMentionedInTaskNotification struct {
 	Doer  *user.User `json:"doer"`
 	Task  *Task      `json:"task"`
 	IsNew bool       `json:"is_new"`
+	User  *user.User `json:"-"` // Target user
 }
 
 func (n *UserMentionedInTaskNotification) SubjectID() int64 {
@@ -303,15 +308,17 @@ func (n *UserMentionedInTaskNotification) SubjectID() int64 {
 
 // ToMail returns the mail notification for UserMentionedInTaskNotification
 func (n *UserMentionedInTaskNotification) ToMail() *notifications.Mail {
-	subject := n.Doer.GetName() + ` mentioned you in a new task "` + n.Task.Title + `"`
+	var subject string
 	if n.IsNew {
-		subject = n.Doer.GetName() + ` mentioned you in a task "` + n.Task.Title + `"`
+		subject = i18n.TWithParams(n.User.Language, "notifications.task.mentioned.subject_new", n.Doer.GetName(), n.Task.Title)
+	} else {
+		subject = i18n.TWithParams(n.User.Language, "notifications.task.mentioned.subject", n.Doer.GetName(), n.Task.Title)
 	}
 
 	mail := notifications.NewMail().
 		From(n.Doer.GetNameAndFromEmail()).
 		Subject(subject).
-		Line("**" + n.Doer.GetName() + "** mentioned you in a task:").
+		Line(i18n.TWithParams(n.User.Language, "notifications.task.mentioned.message", n.Doer.GetName())).
 		HTML(n.Task.Description)
 
 	return mail.
@@ -336,12 +343,12 @@ type DataExportReadyNotification struct {
 // ToMail returns the mail notification for DataExportReadyNotification
 func (n *DataExportReadyNotification) ToMail() *notifications.Mail {
 	return notifications.NewMail().
-		Subject("Your Vikunja Data Export is ready").
-		Greeting("Hi "+n.User.GetName()+",").
-		Line("Your Vikunja Data Export is ready for you to download. Click the button below to download it:").
+		Subject(i18n.T(n.User.Language, "notifications.data_export.ready.subject")).
+		Greeting(i18n.TWithParams(n.User.Language, "notifications.greeting", n.User.GetName())).
+		Line(i18n.T(n.User.Language, "notifications.data_export.ready.message")).
 		Action("Download", config.ServicePublicURL.GetString()+"user/export/download").
-		Line("The download will be available for the next 7 days.").
-		Line("Have a nice day!")
+		Line(i18n.T(n.User.Language, "notifications.data_export.ready.availability")).
+		Line(i18n.T(n.User.Language, "notifications.common.have_nice_day"))
 }
 
 // ToDB returns the DataExportReadyNotification notification in a format which can be saved in the db

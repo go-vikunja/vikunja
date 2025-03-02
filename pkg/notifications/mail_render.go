@@ -23,12 +23,12 @@ import (
 	templatehtml "html/template"
 	templatetext "text/template"
 
-	"github.com/microcosm-cc/bluemonday"
-
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/i18n"
 	"code.vikunja.io/api/pkg/mail"
 	"code.vikunja.io/api/pkg/utils"
 
+	"github.com/microcosm-cc/bluemonday"
 	"github.com/yuin/goldmark"
 )
 
@@ -81,7 +81,7 @@ const mailTemplateHTML = `
 {{ if .ActionURL }}
 	<div style="color: #9CA3AF;font-size:12px;border-top: 1px solid #dbdbdb;margin-top:20px;padding-top:20px;">
 	<p>
-		If the button above doesn't work, copy the url below and paste it in your browser's address bar:<br/>
+		{{ .CopyURLText }}<br/>
 		{{ .ActionURL }}
 	</p>
 {{ range $line := .FooterLinesHTML}}
@@ -131,7 +131,7 @@ func convertLinesToHTML(lines []*mailLine) (linesHTML []templatehtml.HTML, err e
 }
 
 // RenderMail takes a precomposed mail message and renders it into a ready to send mail.Opts object
-func RenderMail(m *Mail) (mailOpts *mail.Opts, err error) {
+func RenderMail(m *Mail, lang string) (mailOpts *mail.Opts, err error) {
 
 	var htmlContent bytes.Buffer
 	var plainContent bytes.Buffer
@@ -158,6 +158,7 @@ func RenderMail(m *Mail) (mailOpts *mail.Opts, err error) {
 	data["ActionURL"] = m.actionURL
 	data["Boundary"] = boundary
 	data["FrontendURL"] = config.ServicePublicURL.GetString()
+	data["CopyURLText"] = i18n.T(lang, "notifications.common.copy_url")
 
 	data["IntroLinesHTML"], err = convertLinesToHTML(m.introLines)
 	if err != nil {

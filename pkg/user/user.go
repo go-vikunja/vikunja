@@ -149,6 +149,10 @@ func (u *User) ShouldNotify() (bool, error) {
 	return user.Status != StatusDisabled, err
 }
 
+func (u *User) Lang() string {
+	return u.Language
+}
+
 // GetID implements the Auth interface
 func (u *User) GetID() int64 {
 	return u.ID

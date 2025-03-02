@@ -97,7 +97,7 @@ func TestRenderMail(t *testing.T) {
 			Greeting("Hi there,").
 			Line("This is a line")
 
-		mailopts, err := RenderMail(mail)
+		mailopts, err := RenderMail(mail, "en")
 		require.NoError(t, err)
 		assert.Equal(t, mail.from, mailopts.From)
 		assert.Equal(t, mail.to, mailopts.To)
@@ -159,7 +159,7 @@ This is a line
 			Line("This should be an outro line").
 			Line("And one more, because why not?")
 
-		mailopts, err := RenderMail(mail)
+		mailopts, err := RenderMail(mail, "en")
 		require.NoError(t, err)
 		assert.Equal(t, mail.from, mailopts.From)
 		assert.Equal(t, mail.to, mailopts.To)
@@ -249,7 +249,7 @@ And one more, because why not?
 			Line("This is a line").
 			FooterLine("This is a footer line")
 
-		mailopts, err := RenderMail(mail)
+		mailopts, err := RenderMail(mail, "en")
 		require.NoError(t, err)
 		assert.Equal(t, mail.from, mailopts.From)
 		assert.Equal(t, mail.to, mailopts.To)
@@ -321,7 +321,7 @@ This is a footer line
 			Line("And one more, because why not?").
 			FooterLine("This is a footer line")
 
-		mailopts, err := RenderMail(mail)
+		mailopts, err := RenderMail(mail, "en")
 		require.NoError(t, err)
 		assert.Equal(t, mail.from, mailopts.From)
 		assert.Equal(t, mail.to, mailopts.To)

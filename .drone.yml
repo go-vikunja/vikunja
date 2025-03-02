@@ -149,6 +149,18 @@ steps:
     when:
       event: [ push, tag, pull_request ]
 
+  - name: api-check-translations
+    image: vikunja/golang-build:latest
+    pull: always
+    environment:
+      GOPROXY: 'https://goproxy.kolaente.de'
+    depends_on: [ mage ]
+    commands:
+      - export "GOROOT=$(go env GOROOT)"
+      - ./mage-static check:translations
+    when:
+      event: [ push, tag, pull_request ]
+
   - name: test-migration-prepare
     image: kolaente/toolbox:latest
     pull: always
@@ -1063,7 +1075,7 @@ trigger:
     - update_translations
 
 steps:
-  - name: download
+  - name: download-frontend
     pull: always
     image: ghcr.io/kolaente/kolaente/drone-crowdin-v2:latest
     settings:
@@ -1073,14 +1085,26 @@ steps:
       target: download
       download_to: frontend/src/i18n/lang/
       download_export_approved_only: true
+  
+  - name: download-api
+    pull: always
+    image: ghcr.io/kolaente/kolaente/drone-crowdin-v2:latest
+    settings:
+      crowdin_key:
+        from_secret: crowdin_key
+      project_id: 462614
+      target: download
+      download_to: pkg/i18n/lang/
+      download_export_approved_only: true
 
   - name: move-files
     pull: always
     image: bash
     depends_on:
-      - download
+      - download-frontend
     commands:
       - mv frontend/src/i18n/lang/*/*.json frontend/src/i18n/lang
+      - mv pkg/i18n/lang/*/*.json pkg/i18n/lang
 
   - name: push
     pull: always
@@ -1109,6 +1133,7 @@ steps:
       target: upload
       upload_files:
         frontend/src/i18n/lang/en.json: en.json
+        pkg/i18n/lang/en.json: en-api.json
 
 ---
 kind: pipeline
@@ -1189,6 +1214,6 @@ steps:
 
 ---
 kind: signature
-hmac: df9858e2b37dfddccd4892f007bbe69a61321352e94ebcf6adf82fa6560665bb
+hmac: bf9f28a874dae9397c45062a2e1c8839ab9624b2cf265838577e1baad7fe3d03
 
 ...
