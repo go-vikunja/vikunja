@@ -45,7 +45,7 @@ export interface ConfigState {
 }
 
 export const useConfigStore = defineStore('config', () => {
-	const state = reactive({
+	const state: ConfigState = reactive({
 		// These are the api defaults.
 		version: '',
 		frontendUrl: '',
