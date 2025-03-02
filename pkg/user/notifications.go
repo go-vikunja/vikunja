@@ -32,25 +32,25 @@ type EmailConfirmNotification struct {
 }
 
 // ToMail returns the mail notification for EmailConfirmNotification
-func (n *EmailConfirmNotification) ToMail() *notifications.Mail {
+func (n *EmailConfirmNotification) ToMail(lang string) *notifications.Mail {
 
-	subject := i18n.TWithParams(n.User.Language, "notifications.email_confirm.subject", n.User.GetName())
+	subject := i18n.T(lang, "notifications.email_confirm.subject", n.User.GetName())
 	if n.IsNew {
-		subject = i18n.TWithParams(n.User.Language, "notifications.email_confirm.subject_new", n.User.GetName())
+		subject = i18n.T(lang, "notifications.email_confirm.subject_new", n.User.GetName())
 	}
 
 	nn := notifications.NewMail().
 		Subject(subject).
-		Greeting(i18n.TWithParams(n.User.Language, "notifications.greeting", n.User.GetName()))
+		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName()))
 
 	if n.IsNew {
-		nn.Line(i18n.T(n.User.Language, "notifications.email_confirm.welcome"))
+		nn.Line(i18n.T(lang, "notifications.email_confirm.welcome"))
 	}
 
 	return nn.
-		Line(i18n.T(n.User.Language, "notifications.email_confirm.confirm")).
+		Line(i18n.T(lang, "notifications.email_confirm.confirm")).
 		Action("Confirm your email address", config.ServicePublicURL.GetString()+"?userEmailConfirm="+n.ConfirmToken).
-		Line(i18n.T(n.User.Language, "notifications.common.have_nice_day"))
+		Line(i18n.T(lang, "notifications.common.have_nice_day"))
 }
 
 // ToDB returns the EmailConfirmNotification notification in a format which can be saved in the db
@@ -69,12 +69,12 @@ type PasswordChangedNotification struct {
 }
 
 // ToMail returns the mail notification for PasswordChangedNotification
-func (n *PasswordChangedNotification) ToMail() *notifications.Mail {
+func (n *PasswordChangedNotification) ToMail(lang string) *notifications.Mail {
 	return notifications.NewMail().
-		Subject(i18n.T(n.User.Language, "notifications.password.changed.subject")).
-		Greeting(i18n.TWithParams(n.User.Language, "notifications.greeting", n.User.GetName())).
-		Line(i18n.T(n.User.Language, "notifications.password.changed.success")).
-		Line(i18n.T(n.User.Language, "notifications.password.changed.warning"))
+		Subject(i18n.T(lang, "notifications.password.changed.subject")).
+		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
+		Line(i18n.T(lang, "notifications.password.changed.success")).
+		Line(i18n.T(lang, "notifications.password.changed.warning"))
 }
 
 // ToDB returns the PasswordChangedNotification notification in a format which can be saved in the db
@@ -94,14 +94,14 @@ type ResetPasswordNotification struct {
 }
 
 // ToMail returns the mail notification for ResetPasswordNotification
-func (n *ResetPasswordNotification) ToMail() *notifications.Mail {
+func (n *ResetPasswordNotification) ToMail(lang string) *notifications.Mail {
 	return notifications.NewMail().
-		Subject(i18n.T(n.User.Language, "notifications.password.reset.subject")).
-		Greeting(i18n.TWithParams(n.User.Language, "notifications.greeting", n.User.GetName())).
-		Line(i18n.T(n.User.Language, "notifications.password.reset.instructions")).
+		Subject(i18n.T(lang, "notifications.password.reset.subject")).
+		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
+		Line(i18n.T(lang, "notifications.password.reset.instructions")).
 		Action("Reset your password", config.ServicePublicURL.GetString()+"?userPasswordReset="+n.Token.Token).
-		Line(i18n.T(n.User.Language, "notifications.password.reset.valid_duration")).
-		Line(i18n.T(n.User.Language, "notifications.common.have_nice_day"))
+		Line(i18n.T(lang, "notifications.password.reset.valid_duration")).
+		Line(i18n.T(lang, "notifications.common.have_nice_day"))
 }
 
 // ToDB returns the ResetPasswordNotification notification in a format which can be saved in the db
@@ -120,12 +120,12 @@ type InvalidTOTPNotification struct {
 }
 
 // ToMail returns the mail notification for InvalidTOTPNotification
-func (n *InvalidTOTPNotification) ToMail() *notifications.Mail {
+func (n *InvalidTOTPNotification) ToMail(lang string) *notifications.Mail {
 	return notifications.NewMail().
-		Subject(i18n.T(n.User.Language, "notifications.totp.invalid.subject")).
-		Greeting(i18n.TWithParams(n.User.Language, "notifications.greeting", n.User.GetName())).
-		Line(i18n.T(n.User.Language, "notifications.totp.invalid.message")).
-		Line(i18n.T(n.User.Language, "notifications.totp.invalid.warning")).
+		Subject(i18n.T(lang, "notifications.totp.invalid.subject")).
+		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
+		Line(i18n.T(lang, "notifications.totp.invalid.message")).
+		Line(i18n.T(lang, "notifications.totp.invalid.warning")).
 		Action("Reset your password", config.ServicePublicURL.GetString()+"get-password-reset")
 }
 
@@ -145,14 +145,14 @@ type PasswordAccountLockedAfterInvalidTOTOPNotification struct {
 }
 
 // ToMail returns the mail notification for PasswordAccountLockedAfterInvalidTOTOPNotification
-func (n *PasswordAccountLockedAfterInvalidTOTOPNotification) ToMail() *notifications.Mail {
+func (n *PasswordAccountLockedAfterInvalidTOTOPNotification) ToMail(lang string) *notifications.Mail {
 	resetURL := config.ServicePublicURL.GetString() + "get-password-reset"
 	return notifications.NewMail().
-		Subject(i18n.T(n.User.Language, "notifications.totp.account_locked.subject")).
-		Greeting(i18n.TWithParams(n.User.Language, "notifications.greeting", n.User.GetName())).
-		Line(i18n.T(n.User.Language, "notifications.totp.account_locked.message")).
-		Line(i18n.T(n.User.Language, "notifications.totp.account_locked.disabled")).
-		Line(i18n.TWithParams(n.User.Language, "notifications.totp.account_locked.reset_instructions", resetURL, resetURL))
+		Subject(i18n.T(lang, "notifications.totp.account_locked.subject")).
+		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
+		Line(i18n.T(lang, "notifications.totp.account_locked.message")).
+		Line(i18n.T(lang, "notifications.totp.account_locked.disabled")).
+		Line(i18n.T(lang, "notifications.totp.account_locked.reset_instructions", resetURL, resetURL))
 }
 
 // ToDB returns the PasswordAccountLockedAfterInvalidTOTOPNotification notification in a format which can be saved in the db
@@ -171,13 +171,13 @@ type FailedLoginAttemptNotification struct {
 }
 
 // ToMail returns the mail notification for FailedLoginAttemptNotification
-func (n *FailedLoginAttemptNotification) ToMail() *notifications.Mail {
+func (n *FailedLoginAttemptNotification) ToMail(lang string) *notifications.Mail {
 	return notifications.NewMail().
-		Subject(i18n.T(n.User.Language, "notifications.login.failed.subject")).
-		Greeting(i18n.TWithParams(n.User.Language, "notifications.greeting", n.User.GetName())).
-		Line(i18n.T(n.User.Language, "notifications.login.failed.message")).
-		Line(i18n.T(n.User.Language, "notifications.login.failed.warning")).
-		Line(i18n.T(n.User.Language, "notifications.login.failed.enhance_security")).
+		Subject(i18n.T(lang, "notifications.login.failed.subject")).
+		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
+		Line(i18n.T(lang, "notifications.login.failed.message")).
+		Line(i18n.T(lang, "notifications.login.failed.warning")).
+		Line(i18n.T(lang, "notifications.login.failed.enhance_security")).
 		Action("Go to settings", config.ServicePublicURL.GetString()+"user/settings")
 }
 
@@ -198,17 +198,17 @@ type AccountDeletionConfirmNotification struct {
 }
 
 // ToMail returns the mail notification for AccountDeletionConfirmNotification
-func (n *AccountDeletionConfirmNotification) ToMail() *notifications.Mail {
+func (n *AccountDeletionConfirmNotification) ToMail(lang string) *notifications.Mail {
 	return notifications.NewMail().
-		Subject(i18n.T(n.User.Language, "notifications.account.deletion.confirm.subject")).
-		Greeting(i18n.TWithParams(n.User.Language, "notifications.greeting", n.User.GetName())).
-		Line(i18n.T(n.User.Language, "notifications.account.deletion.confirm.request")).
+		Subject(i18n.T(lang, "notifications.account.deletion.confirm.subject")).
+		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
+		Line(i18n.T(lang, "notifications.account.deletion.confirm.request")).
 		Action("Confirm the deletion of my account", config.ServicePublicURL.GetString()+"?accountDeletionConfirm="+n.ConfirmToken).
-		Line(i18n.T(n.User.Language, "notifications.account.deletion.confirm.valid_duration")).
-		Line(i18n.T(n.User.Language, "notifications.account.deletion.confirm.schedule_info")).
-		Line(i18n.T(n.User.Language, "notifications.account.deletion.confirm.consequences")).
-		Line(i18n.T(n.User.Language, "notifications.account.deletion.confirm.changed_mind")).
-		Line(i18n.T(n.User.Language, "notifications.common.have_nice_day"))
+		Line(i18n.T(lang, "notifications.account.deletion.confirm.valid_duration")).
+		Line(i18n.T(lang, "notifications.account.deletion.confirm.schedule_info")).
+		Line(i18n.T(lang, "notifications.account.deletion.confirm.consequences")).
+		Line(i18n.T(lang, "notifications.account.deletion.confirm.changed_mind")).
+		Line(i18n.T(lang, "notifications.common.have_nice_day"))
 }
 
 // ToDB returns the AccountDeletionConfirmNotification notification in a format which can be saved in the db
@@ -228,27 +228,27 @@ type AccountDeletionNotification struct {
 }
 
 // ToMail returns the mail notification for AccountDeletionNotification
-func (n *AccountDeletionNotification) ToMail() *notifications.Mail {
+func (n *AccountDeletionNotification) ToMail(lang string) *notifications.Mail {
 	var subject string
 	var deletionTimeLine string
 
 	if n.NotificationNumber == 1 {
-		subject = i18n.T(n.User.Language, "notifications.account.deletion.scheduled.subject_tomorrow")
-		deletionTimeLine = i18n.T(n.User.Language, "notifications.account.deletion.scheduled.deletion_time_tomorrow")
+		subject = i18n.T(lang, "notifications.account.deletion.scheduled.subject_tomorrow")
+		deletionTimeLine = i18n.T(lang, "notifications.account.deletion.scheduled.deletion_time_tomorrow")
 	} else {
 		days := strconv.Itoa(n.NotificationNumber)
-		subject = i18n.TWithParams(n.User.Language, "notifications.account.deletion.scheduled.subject_days", days)
-		deletionTimeLine = i18n.TWithParams(n.User.Language, "notifications.account.deletion.scheduled.deletion_time_days", days)
+		subject = i18n.T(lang, "notifications.account.deletion.scheduled.subject_days", days)
+		deletionTimeLine = i18n.T(lang, "notifications.account.deletion.scheduled.deletion_time_days", days)
 	}
 
 	return notifications.NewMail().
 		Subject(subject).
-		Greeting(i18n.TWithParams(n.User.Language, "notifications.greeting", n.User.GetName())).
-		Line(i18n.T(n.User.Language, "notifications.account.deletion.scheduled.request_reminder")).
+		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
+		Line(i18n.T(lang, "notifications.account.deletion.scheduled.request_reminder")).
 		Line(deletionTimeLine).
-		Line(i18n.T(n.User.Language, "notifications.account.deletion.scheduled.changed_mind")).
+		Line(i18n.T(lang, "notifications.account.deletion.scheduled.changed_mind")).
 		Action("Abort the deletion", config.ServicePublicURL.GetString()).
-		Line(i18n.T(n.User.Language, "notifications.common.have_nice_day"))
+		Line(i18n.T(lang, "notifications.common.have_nice_day"))
 }
 
 // ToDB returns the AccountDeletionNotification notification in a format which can be saved in the db
@@ -267,13 +267,13 @@ type AccountDeletedNotification struct {
 }
 
 // ToMail returns the mail notification for AccountDeletedNotification
-func (n *AccountDeletedNotification) ToMail() *notifications.Mail {
+func (n *AccountDeletedNotification) ToMail(lang string) *notifications.Mail {
 	return notifications.NewMail().
-		Subject(i18n.T(n.User.Language, "notifications.account.deletion.completed.subject")).
-		Greeting(i18n.TWithParams(n.User.Language, "notifications.greeting", n.User.GetName())).
-		Line(i18n.T(n.User.Language, "notifications.account.deletion.completed.confirmation")).
-		Line(i18n.T(n.User.Language, "notifications.account.deletion.completed.permanent")).
-		Line(i18n.T(n.User.Language, "notifications.common.have_nice_day"))
+		Subject(i18n.T(lang, "notifications.account.deletion.completed.subject")).
+		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
+		Line(i18n.T(lang, "notifications.account.deletion.completed.confirmation")).
+		Line(i18n.T(lang, "notifications.account.deletion.completed.permanent")).
+		Line(i18n.T(lang, "notifications.common.have_nice_day"))
 }
 
 // ToDB returns the AccountDeletedNotification notification in a format which can be saved in the db

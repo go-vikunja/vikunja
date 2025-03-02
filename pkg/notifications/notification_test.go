@@ -31,7 +31,7 @@ type testNotification struct {
 }
 
 // ToMail returns the mail notification for testNotification
-func (n *testNotification) ToMail() *Mail {
+func (n *testNotification) ToMail(_ string) *Mail {
 	return NewMail().
 		Subject("Test Notification").
 		Line(n.Test)

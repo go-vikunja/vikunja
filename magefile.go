@@ -536,7 +536,7 @@ func walkCodebaseForTranslationKeys(rootDir string) ([]TranslationKey, error) {
 	return allKeys, err
 }
 
-// extractTranslationKeysFromFile extracts all i18n.T and i18n.TWithParams calls from a file
+// extractTranslationKeysFromFile extracts all i18n.T calls from a file
 func extractTranslationKeysFromFile(filePath string) ([]TranslationKey, error) {
 	// Read the file content
 	content, err := os.ReadFile(filePath)
@@ -546,8 +546,8 @@ func extractTranslationKeysFromFile(filePath string) ([]TranslationKey, error) {
 
 	var keys []TranslationKey
 
-	// Regex to match i18n.T and i18n.TWithParams calls
-	re := regexp.MustCompile(`i18n\.(T|TWithParams)\([^,]+,\s*"([^"]+)"`)
+	// Regex to match i18n.T calls
+	re := regexp.MustCompile(`i18n\.(T)\([^,]+,\s*"([^"]+)"`)
 	matches := re.FindAllSubmatchIndex(content, -1)
 
 	for _, match := range matches {
@@ -1141,7 +1141,7 @@ type ` + name + ` struct {
 }
 
 // ToMail returns the mail notification for ` + name + `
-func (n *` + name + `) ToMail() *notifications.Mail {
+func (n *` + name + `) ToMail(lang string) *notifications.Mail {
 	return notifications.NewMail().
 		Subject("").
 		Greeting("Hi ").

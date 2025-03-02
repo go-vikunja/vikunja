@@ -30,7 +30,7 @@ type MigrationDoneNotification struct {
 }
 
 // ToMail returns the mail notification for MigrationDoneNotification
-func (n *MigrationDoneNotification) ToMail() *notifications.Mail {
+func (n *MigrationDoneNotification) ToMail(lang string) *notifications.Mail {
 	kind := cases.Title(language.English).String(n.MigratorName)
 
 	return notifications.NewMail().
@@ -56,7 +56,7 @@ type MigrationFailedReportedNotification struct {
 }
 
 // ToMail returns the mail notification for MigrationFailedReportedNotification
-func (n *MigrationFailedReportedNotification) ToMail() *notifications.Mail {
+func (n *MigrationFailedReportedNotification) ToMail(lang string) *notifications.Mail {
 	kind := cases.Title(language.English).String(n.MigratorName)
 
 	return notifications.NewMail().
@@ -83,7 +83,7 @@ type MigrationFailedNotification struct {
 }
 
 // ToMail returns the mail notification for MigrationFailedNotification
-func (n *MigrationFailedNotification) ToMail() *notifications.Mail {
+func (n *MigrationFailedNotification) ToMail(lang string) *notifications.Mail {
 	kind := cases.Title(language.English).String(n.MigratorName)
 
 	return notifications.NewMail().

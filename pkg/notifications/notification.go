@@ -25,7 +25,7 @@ import (
 
 // Notification is a notification which can be sent via mail or db.
 type Notification interface {
-	ToMail() *Mail
+	ToMail(lang string) *Mail
 	ToDB() interface{}
 	Name() string
 }
@@ -74,7 +74,7 @@ func Notify(notifiable Notifiable, notification Notification) (err error) {
 }
 
 func notifyMail(notifiable Notifiable, notification Notification) error {
-	mail := notification.ToMail()
+	mail := notification.ToMail(notifiable.Lang())
 	if mail == nil {
 		return nil
 	}
