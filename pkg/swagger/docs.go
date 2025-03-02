@@ -9349,6 +9349,9 @@ const docTemplate = `{
                 "client_id": {
                     "type": "string"
                 },
+                "email_fallback": {
+                    "type": "boolean"
+                },
                 "key": {
                     "type": "string"
                 },
@@ -9360,6 +9363,9 @@ const docTemplate = `{
                 },
                 "scope": {
                     "type": "string"
+                },
+                "username_fallback": {
+                    "type": "boolean"
                 }
             }
         },

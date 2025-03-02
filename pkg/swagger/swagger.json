@@ -9341,6 +9341,9 @@
                 "client_id": {
                     "type": "string"
                 },
+                "email_fallback": {
+                    "type": "boolean"
+                },
                 "key": {
                     "type": "string"
                 },
@@ -9352,6 +9355,9 @@
                 },
                 "scope": {
                     "type": "string"
+                },
+                "username_fallback": {
+                    "type": "boolean"
                 }
             }
         },
