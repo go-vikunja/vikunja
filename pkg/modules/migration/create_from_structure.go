@@ -352,6 +352,13 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 				if ttt, exists := tasksByOldID[rt.ID]; exists {
 					taskRel.OtherTaskID = ttt.ID
 				}
+
+				// Add this check to prevent self-relations
+				if taskRel.TaskID == taskRel.OtherTaskID {
+					log.Debugf("[creating structure] Skipping invalid self-relation for task %d", taskRel.TaskID)
+					continue
+				}
+
 				err = taskRel.Create(s, user)
 				if err != nil && !models.IsErrRelationAlreadyExists(err) {
 					return
