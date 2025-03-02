@@ -1979,7 +1979,7 @@ func (err *ErrOpenIDBadRequest) Error() string {
 	return err.Message
 }
 
-func (err ErrOpenIDBadRequest) HTTPError() web.HTTPError {
+func (err *ErrOpenIDBadRequest) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusBadRequest,
 		Code:     ErrCodeOpenIDError,
