@@ -1075,7 +1075,7 @@ trigger:
     - update_translations
 
 steps:
-  - name: download-frontend
+  - name: download
     pull: always
     image: ghcr.io/kolaente/kolaente/drone-crowdin-v2:latest
     settings:
@@ -1083,28 +1083,22 @@ steps:
         from_secret: crowdin_key
       project_id: 462614
       target: download
-      download_to: frontend/src/i18n/lang/
+      download_to: i18n/lang/
       download_export_approved_only: true
   
-  - name: download-api
-    pull: always
-    image: ghcr.io/kolaente/kolaente/drone-crowdin-v2:latest
-    settings:
-      crowdin_key:
-        from_secret: crowdin_key
-      project_id: 462614
-      target: download
-      download_to: pkg/i18n/lang/
-      download_export_approved_only: true
-
   - name: move-files
     pull: always
     image: bash
     depends_on:
-      - download-frontend
+      - download
     commands:
-      - mv frontend/src/i18n/lang/*/*.json frontend/src/i18n/lang
-      - mv pkg/i18n/lang/*/*.json pkg/i18n/lang
+      - mv i18n/lang/*/frontend-*.json frontend/src/i18n/lang
+      - cd frontend/src/i18n/lang
+      - for file in frontend-*; do mv "$file" "${file#frontend-}"; done
+      - cd ../../../..
+      - mv i18n/lang/*/api-*.json pkg/i18n/lang
+      - cd pkg/i18n/lang
+      - for file in api-*; do mv "$file" "${file#api-}"; done
 
   - name: push
     pull: always
@@ -1214,6 +1208,6 @@ steps:
 
 ---
 kind: signature
-hmac: 3aa9604902b5bf7b6eb0db09fdaf833b78215005e7371c686a7e0723755c84f4
+hmac: 43e10a9537190af3e753d44cf7bfdb4080af9e2fc8306381b7195c676571e6b3
 
 ...
