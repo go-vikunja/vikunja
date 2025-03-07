@@ -71,7 +71,7 @@
 									<Dropdown
 										v-if="canWrite && !collapsedBuckets[bucket.id]"
 										class="is-right options"
-										trigger-icon="ellipsis-v"
+										trigger-icon="ellipsis-h"
 										@close="() => showSetLimitInput = false"
 									>
 										<div
@@ -193,7 +193,7 @@
 											<x-button
 												v-else
 												v-tooltip="bucket.limit > 0 && bucket.count >= bucket.limit ? $t('project.kanban.bucketLimitReached') : ''"
-												class="is-fullwidth has-text-centered"
+												class="is-fullwidth has-text-centered add-task-text"
 												:shadow="false"
 												icon="plus"
 												variant="secondary"
@@ -805,7 +805,8 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 	height: calc(#{$crazy-height-calculation});
 	margin: 0 -1.5rem;
 	padding: 0 1.5rem;
-
+	
+	
 	&:focus, .bucket .tasks:focus {
 		box-shadow: none;
 	}
@@ -862,9 +863,11 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		}
 
 		.task-item {
-			background-color: var(--grey-100);
+			//background-color: var(--grey-100);
+			background-color: var(--white);
 			padding: .25rem .5rem;
 
+			
 			&:first-of-type {
 				padding-top: .5rem;
 			}
@@ -920,6 +923,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		justify-content: space-between;
 		padding: .5rem;
 		height: $bucket-header-height;
+		background-color: white;
 
 		.limit {
 			padding: 0 .5rem;
@@ -947,7 +951,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		bottom: 0;
 		height: min-content;
 		padding: .5rem;
-		background-color: var(--grey-100);
+		background-color: var(--white);
 		border-bottom-left-radius: $radius;
 		border-bottom-right-radius: $radius;
 		transform: none;
@@ -958,6 +962,9 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 			&:hover {
 				background-color: var(--white);
 			}
+		}
+		.add-task-text {
+			color: gray;
 		}
 	}
 }

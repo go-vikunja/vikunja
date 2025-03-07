@@ -18,7 +18,7 @@
 			alt=""
 			class="tw-w-full"
 		>
-		<div class="p-2">
+		<div class="p-2 kanban-card-view">
 			<div class="task-id tw-flex tw-justify-between">
 				<div>
 					<Done
@@ -220,6 +220,9 @@ $task-background: var(--white);
 	user-select: none;
 	cursor: pointer;
 	box-shadow: var(--shadow-xs);
+	&:hover {
+		box-shadow: var(--shadow-lg);
+	}
 	display: block;
 
 	font-size: .9rem;
@@ -259,7 +262,7 @@ $task-background: var(--white);
 	.label-wrapper .tag {
 		margin: .5rem .5rem 0 0;
 	}
-
+	
 	.footer {
 		background: transparent;
 		padding: 0;

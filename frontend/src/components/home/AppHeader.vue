@@ -69,8 +69,8 @@
 							:src="authStore.avatarUrl"
 							alt=""
 							class="avatar"
-							width="40"
-							height="40"
+							width="30"
+							height="30"
 						>
 						<span class="username">{{ authStore.userDisplayName }}</span>
 						<span
@@ -293,7 +293,7 @@ $user-dropdown-width-mobile: 5rem;
 .avatar {
 	border-radius: 100%;
 	vertical-align: middle;
-	height: 40px;
+	height: 30px;
 	margin-right: .5rem;
 }
 </style>

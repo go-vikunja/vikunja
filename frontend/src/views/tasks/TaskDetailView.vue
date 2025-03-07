@@ -45,7 +45,6 @@
 					> &gt; </span>
 				</template>
 			</h6>
-
 			<ChecklistSummary :task="task" />
 
 			<!-- Content and buttons -->
@@ -1117,7 +1116,6 @@ h3 .button {
 
 .attachments {
 	margin-bottom: 0;
-
 	table tr:last-child td {
 		border-bottom: none;
 	}

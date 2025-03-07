@@ -29,7 +29,7 @@
 			>
 				<figure class="media-left is-hidden-mobile">
 					<img
-						:src="getAvatarUrl(c.author, 48)"
+						:src="getAvatarUrl(c.author, 28)"
 						alt=""
 						class="image is-avatar"
 						height="48"
@@ -469,6 +469,7 @@ function getCommentUrl(commentId: string) {
 }
 
 .image.is-avatar {
+	width: 40px;
 	border-radius: 100%;
 }
 

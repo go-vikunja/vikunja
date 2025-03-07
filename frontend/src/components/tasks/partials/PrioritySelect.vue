@@ -1,6 +1,7 @@
 <template>
 	<div class="select">
 		<select
+			class="item"
 			v-model="priority"
 			:disabled="disabled || undefined"
 		>
@@ -41,3 +42,13 @@ const priority = defineModel<number>({
 })
 
 </script>
+
+<style lang="scss" scoped>
+.select {
+	.item {
+		background-color: transparent;
+		border: none;
+		height: 48px;
+	}
+}
+</style>
