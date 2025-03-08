@@ -52,6 +52,7 @@
 package routes
 
 import (
+	"encoding/json"
 	"errors"
 	"net/url"
 	"strings"
@@ -106,6 +107,31 @@ func NewEcho() *echo.Echo {
 			Format: log.WebFmt + "\n",
 			Output: log.GetLogWriter(config.LogHTTP.GetString(), "http"),
 		}))
+
+		if config.LogLevel.GetString() == "debug" {
+			e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+				return func(c echo.Context) error {
+					headers := make(map[string][]string)
+
+					for k, v := range c.Request().Header {
+						if k == "Authorization" {
+							continue
+						}
+
+						headers[k] = v
+					}
+
+					headersJSON, err := json.Marshal(headers)
+					if err != nil {
+						log.Errorf("Failed to marshal headers to JSON: %s", err.Error())
+					} else {
+						log.Debugf("Headers: %s", headersJSON)
+					}
+
+					return next(c)
+				}
+			})
+		}
 	}
 
 	// panic recover
