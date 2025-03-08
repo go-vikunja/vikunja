@@ -53,6 +53,8 @@ package routes
 
 import (
 	"errors"
+	"fmt"
+	"github.com/valyala/fasttemplate"
 	"net/url"
 	"strings"
 	"time"
@@ -101,11 +103,31 @@ func NewEcho() *echo.Echo {
 	}
 
 	// Logger
+
 	if !config.LogEnabled.GetBool() || config.LogHTTP.GetString() != "off" {
-		e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
-			Format: log.WebFmt + "\n",
-			Output: log.GetLogWriter(config.LogHTTP.GetString(), "http"),
+		logWriter := log.GetLogWriter(config.LogHTTP.GetString(), "http")
+		template := fasttemplate.New(log.WebFmt, "${", "}")
+		e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
+			LogStatus:    true,
+			LogURI:       true,
+			LogRemoteIP:  true,
+			LogRequestID: true,
+			LogMethod:    true,
+			LogLatency:   true,
+			LogUserAgent: true,
+			LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
+				logWriter.Write()
+				//`${time_rfc3339}: WEB ` + "\t" + `▶ ${remote_ip} ${id} ${method} ${status} ${uri} ${latency_human} - ${user_agent}`
+				value, _ := c.Get("customValueFromContext").(int)
+				fmt.Printf("REQUEST: uri: %v, status: %v, custom-value: %v\n", v.URI, v.Status, value)
+				return nil
+			},
 		}))
+
+		//e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+		//		Format: log.WebFmt + "\n",
+		//		Output: log.GetLogWriter(config.LogHTTP.GetString(), "http"),
+		//	}))
 	}
 
 	// panic recover
