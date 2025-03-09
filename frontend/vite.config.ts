@@ -66,12 +66,24 @@ function createFontMatcher(fontNames: string[]) {
 }
 
 // https://vitejs.dev/config/
-export default defineConfig(({mode}) => {
+export default defineConfig(({command, mode}) => {
 	// Load env file based on `mode` in the current working directory.
 	// Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
 	// https://vitejs.dev/config/#environment-variables
 	const env = loadEnv(mode, process.cwd(), '')
 
+	switch (command) {
+		case 'serve':
+			// this is DEV mode 
+			return getServeConfig(env)
+			// return getBuildConfig(env)
+		case 'build':
+			// build for prodution
+			return getBuildConfig(env)
+	}
+})
+
+function getBuildConfig(env: Record<string, string>) {
 	return {
 		base: env.VIKUNJA_FRONTEND_BASE,
 		// https://vitest.dev/config/
@@ -220,4 +232,23 @@ export default defineConfig(({mode}) => {
 			},
 		},
 	}
-})
+}
+
+function getServeConfig(env: Record<string, string>) {
+	// get some default settings from prod mod
+	const buildConfig = getBuildConfig(env)
+	// override prod settings with dev settings
+	return {
+		...buildConfig,
+		server: {
+			...buildConfig.server,
+			...(env.DEV_PROXY && { proxy: {
+				'/api': {
+					target: env.DEV_PROXY,
+					changeOrigin: true,
+					secure: false,
+				},
+			}}),
+		},
+	}
+}
