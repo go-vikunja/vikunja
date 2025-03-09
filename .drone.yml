@@ -7,6 +7,9 @@ trigger:
   event:
     exclude:
       - cron
+  branch:
+    exclude:
+      - fix-crowdin
 
 workspace:
   base: /go
@@ -1067,13 +1070,19 @@ name: update-translations
 trigger:
   branch:
     include:
-      - main
+      - fix-crowdin
   event:
     include:
-      - cron
       - push
-  cron:
-    - update_translations
+#trigger:
+#  branch:
+#    include:
+#      - main
+#  event:
+#    include:
+#      - cron
+#  cron:
+#    - update_translations
 
 steps:
   - name: download
@@ -1211,6 +1220,6 @@ steps:
 
 ---
 kind: signature
-hmac: 97793eda1e6c971943f59df9754cf15348ccd85c4850966031f7dcba926d1c14
+hmac: 105ce46acef13f5d4fd2f65176b875b5aeafeae6301e24e2c03e53635498d5a9
 
 ...
