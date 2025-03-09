@@ -7,9 +7,6 @@ trigger:
   event:
     exclude:
       - cron
-  branch:
-    exclude:
-      - fix-crowdin
 
 workspace:
   base: /go
@@ -1070,19 +1067,12 @@ name: update-translations
 trigger:
   branch:
     include:
-      - fix-crowdin
+      - main
   event:
     include:
-      - push
-#trigger:
-#  branch:
-#    include:
-#      - main
-#  event:
-#    include:
-#      - cron
-#  cron:
-#    - update_translations
+      - cron
+  cron:
+    - update_translations
 
 steps:
   - name: download
@@ -1102,10 +1092,8 @@ steps:
     depends_on:
       - download
     commands:
-      - ls -lah i18n/lang
       - mv i18n/lang/*/frontend-*.json frontend/src/i18n/lang
       - cd frontend/src/i18n/lang
-      - ls -lah
       - for file in frontend-*; do mv "$file" "$${file#frontend-}"; done
       - cd ../../../..
       - mv i18n/lang/*/api-*.json pkg/i18n/lang
@@ -1220,6 +1208,6 @@ steps:
 
 ---
 kind: signature
-hmac: 7d10cb10dc561200ea0abf2f3db7a84f32349c6fe06a321dfabf4bf2e7449178
+hmac: 03f04eb6ba48191e7a854126243382c9ff0213f728b9f8525e74331535dd4968
 
 ...
