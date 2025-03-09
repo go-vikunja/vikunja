@@ -329,6 +329,7 @@ async function setCoverImage(attachment: IAttachment | null) {
 	font-weight: bold;
 	height: 2rem;
 	color: var(--text);
+	text-align: left;
 }
 
 .info {
