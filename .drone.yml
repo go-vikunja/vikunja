@@ -1071,6 +1071,7 @@ trigger:
   event:
     include:
       - cron
+      - push
   cron:
     - update_translations
 
@@ -1092,8 +1093,10 @@ steps:
     depends_on:
       - download
     commands:
+      - ls -lah i18n/lang
       - mv i18n/lang/*/frontend-*.json frontend/src/i18n/lang
       - cd frontend/src/i18n/lang
+      - ls -lah
       - for file in frontend-*; do mv "$file" "${file#frontend-}"; done
       - cd ../../../..
       - mv i18n/lang/*/api-*.json pkg/i18n/lang
@@ -1208,6 +1211,6 @@ steps:
 
 ---
 kind: signature
-hmac: 43e10a9537190af3e753d44cf7bfdb4080af9e2fc8306381b7195c676571e6b3
+hmac: 97793eda1e6c971943f59df9754cf15348ccd85c4850966031f7dcba926d1c14
 
 ...
