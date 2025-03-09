@@ -95,6 +95,7 @@
 						<DeferTask
 							v-if="isOpen"
 							v-model="task"
+							@update:modelValue="deferTaskUpdate"
 						/>
 					</template>
 				</Popup>
@@ -292,6 +293,8 @@ useIntervalFn(updateDueDate, 60_000, {
 	immediateCallback: true,
 })
 onMounted(updateDueDate)
+
+watch(() => task.value.dueDate, updateDueDate)
 
 let oldTask
 
