@@ -8,6 +8,7 @@
 			class="has-no-shadow"
 			:title="$t('about.title')"
 			:padding="false"
+			:show-close="true"
 			@close="$router.back()"
 		>
 			<div class="p-4">

@@ -11,14 +11,13 @@
 				{{ title }}
 			</p>
 			<BaseButton
-				v-if="$attrs.onClose"
-				v-tooltip="$t('misc.close')"
-				class="card-header-icon"
+				v-if="showClose"
+				class="card-header-icon close"
 				:aria-label="$t('misc.close')"
 				@click="$emit('close')"
 			>	
 				<span class="icon">
-					<Icon :icon="closeIcon" />
+					<Icon icon="times" />
 				</span>
 			</BaseButton>
 		</header>
@@ -44,24 +43,22 @@
 </template>
 
 <script setup lang="ts">
-import type {IconProp} from '@fortawesome/fontawesome-svg-core'
-
 import BaseButton from '@/components/base/BaseButton.vue'
 
 withDefaults(defineProps<{
 	title?: string
 	padding?: boolean
-	closeIcon?: IconProp
 	shadow?: boolean
 	hasContent?: boolean
 	loading?: boolean
+	showClose?: boolean
 }>(), {
 	title: '',
 	padding: true,
-	closeIcon: 'times',
 	shadow: true,
 	hasContent: true,
 	loading: false,
+	showClose: false,
 })
 
 defineEmits<{

@@ -62,6 +62,7 @@
 			>
 				<Card
 					:title="$t('label.edit.header')"
+					:show-close="true"
 					@close="() => isLabelEdit = false"
 				>
 					<form @submit.prevent="editLabelSubmit()">

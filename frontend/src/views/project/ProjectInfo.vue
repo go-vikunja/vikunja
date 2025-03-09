@@ -4,6 +4,9 @@
 	>
 		<Card
 			:title="project?.title"
+			class="is-justify-content-start"
+			:show-close="true"
+			@close="$router.back()"
 		>
 			<div
 				v-if="htmlDescription !== ''"

@@ -10,6 +10,7 @@
 			:padding="false"
 			class="has-text-left"
 			:loading="loading"
+			:show-close="true"
 			@close="$router.back()"
 		>
 			<div class="p-4">
