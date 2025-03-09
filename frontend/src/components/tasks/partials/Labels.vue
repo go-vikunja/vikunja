@@ -18,7 +18,10 @@ const props = defineProps<{
 	labels: ILabel[],
 }>()
 
-const displayLabels = computed(() => Array.from(new Map(props.labels.map(label => [label.id, label])).values()))
+const displayLabels = computed(() =>
+	Array.from(new Map(props.labels.map(label => [label.id, label])).values())
+		.sort((a, b) => a.title.localeCompare(b.title)),
+)
 </script>
 
 <style lang="scss" scoped>
