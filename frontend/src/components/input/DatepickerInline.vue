@@ -117,6 +117,16 @@ const flatPickerConfig = computed(() => ({
 	locale: useFlatpickrLanguage().value,
 }))
 
+function formatDateToFlatpickrString(date: Date): string {
+	const year = date.getFullYear()
+	const month = (date.getMonth() + 1).toString().padStart(2, '0')
+	const day = date.getDate().toString().padStart(2, '0')
+	const hours = date.getHours().toString().padStart(2, '0')
+	const minutes = date.getMinutes().toString().padStart(2, '0')
+	
+	return `${year}-${month}-${day} ${hours}:${minutes}`
+}
+
 // Since flatpickr dates are strings, we need to convert them to native date objects.
 // To make that work, we need a separate variable since flatpickr does not have a change event.
 const flatPickrDate = computed({
@@ -126,11 +136,8 @@ const flatPickrDate = computed({
 			return
 		}
 
-		if (date.value !== null) {
-			const oldDate = formatDate(date.value, 'YYYY-MM-DD h:m')
-			if (oldDate === newValue) {
-				return
-			}
+		if (date.value && formatDateToFlatpickrString(date.value) === newValue) {
+			return
 		}
 		date.value = createDateFromString(newValue)
 		updateData()
@@ -139,8 +146,8 @@ const flatPickrDate = computed({
 		if (!date.value) {
 			return ''
 		}
-
-		return formatDate(date.value, 'YYYY-MM-DD h:m')
+		
+		return formatDateToFlatpickrString(date.value)
 	},
 })
 
