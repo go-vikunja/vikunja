@@ -4,6 +4,7 @@ import dayjs from 'dayjs'
 import {i18n} from '@/i18n'
 import {createSharedComposable} from '@vueuse/core'
 import {computed, toValue, type MaybeRefOrGetter} from 'vue'
+import {DAYJS_LOCALE_MAPPING} from '@/i18n/useDayjsLanguageSync.ts'
 
 export function dateIsValid(date: Date | null) {
 	if (date === null) {
@@ -13,12 +14,14 @@ export function dateIsValid(date: Date | null) {
 	return date instanceof Date && !isNaN(date)
 }
 
-export const formatDate = (date: Date | string | null, f: string, locale = i18n.global.t('date.locale')) => {
+export const formatDate = (date: Date | string | null, f: string) => {
 	if (!dateIsValid(date)) {
 		return ''
 	}
 
 	date = createDateFromString(date)
+	
+	const locale = DAYJS_LOCALE_MAPPING[i18n.global.locale.value.toLowerCase()] ?? 'en'
 
 	return date 
 		? dayjs(date).locale(locale).format(f) 
@@ -33,12 +36,14 @@ export function formatDateShort(date) {
 	return formatDate(date, 'lll')
 }
 
-export const formatDateSince = (date: Date | string | null, locale = i18n.global.t('date.locale')) => {
+export const formatDateSince = (date: Date | string | null) => {
 	if (!dateIsValid(date)) {
 		return ''
 	}
 
 	date = createDateFromString(date)
+
+	const locale = DAYJS_LOCALE_MAPPING[i18n.global.locale.value.toLowerCase()] ?? 'en'
 
 	return date
 		? dayjs(date).locale(locale).fromNow()

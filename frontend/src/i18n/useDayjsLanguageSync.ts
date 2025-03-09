@@ -61,7 +61,7 @@ export async function loadDayJsLocale(language: SupportedLocale) {
 	if (language === 'en') {
 		return
 	}
-	
+
 	await DAYJS_LANGUAGE_IMPORTS[language.toLowerCase()]()
 }
 
