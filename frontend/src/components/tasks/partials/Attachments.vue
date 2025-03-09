@@ -126,7 +126,7 @@
 		<Teleport to="body">
 			<div
 				v-if="editEnabled"
-				:class="{ hidden: !isOverDropZone }"
+				:class="{hidden: !isOverDropZone}"
 				class="dropzone"
 			>
 				<div class="drop-hint">
@@ -355,7 +355,7 @@ async function setCoverImage(attachment: IAttachment | null) {
 	left: 0;
 	bottom: 0;
 	right: 0;
-	z-index: 100;
+	z-index: 4001; // modal z-index is 4000
 	text-align: center;
 
 	&.hidden {
