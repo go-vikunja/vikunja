@@ -1,7 +1,7 @@
 <template>
 	<div class="label-wrapper">
 		<XLabel
-			v-for="label in labels"
+			v-for="label in displayLabels"
 			:key="label.id"
 			:label="label"
 		/>
@@ -9,13 +9,16 @@
 </template>
 
 <script setup lang="ts">
-import type {ILabel} from '@/modelTypes/ILabel'
+import {computed} from 'vue'
 
+import type {ILabel} from '@/modelTypes/ILabel'
 import XLabel from '@/components/tasks/partials/Label.vue'
 
-defineProps<{
+const props = defineProps<{
 	labels: ILabel[],
 }>()
+
+const displayLabels = computed(() => Array.from(new Map(props.labels.map(label => [label.id, label])).values()))
 </script>
 
 <style lang="scss" scoped>
