@@ -864,7 +864,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 
 		.task-item {
 			//background-color: var(--grey-100);
-			background-color: var(--white);
+			background-color: var(--grey-50);
 			padding: .25rem .5rem;
 
 			
@@ -916,14 +916,14 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 	}
 
 	.bucket-header {
-		background-color: var(--grey-100);
-		height: min-content;
+		//background-color: var(--grey-100);
+		//height: min-content;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		padding: .5rem;
 		height: $bucket-header-height;
-		background-color: white;
+		background-color: var(--grey-50);
 
 		.limit {
 			padding: 0 .5rem;
@@ -951,7 +951,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		bottom: 0;
 		height: min-content;
 		padding: .5rem;
-		background-color: var(--white);
+		background-color: var(--grey-50);
 		border-bottom-left-radius: $radius;
 		border-bottom-right-radius: $radius;
 		transform: none;

@@ -140,6 +140,8 @@ func static() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) (err error) {
 			p := c.Request().URL.Path
+			//c.Response().Header().Set("Access-Control-Allow-Origin", "*")
+			//c.Response().Header().Set("Access-Control-Allow-Credentials", "true")
 			if strings.HasPrefix(p, "/api/") {
 				return next(c)
 			}

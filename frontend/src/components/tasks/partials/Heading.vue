@@ -11,17 +11,18 @@
 						{{ textIdentifier }}
 					</h1>
 				</BaseButton>
+			
+				<Done
+					:is-done="task.done"
+				/>
+				<BaseButton
+					v-if="hasClose"
+					class="close"
+					@click="$emit('close')"
+				>
+					<Icon icon="times" />
+				</BaseButton>
 			</div>
-			<Done
-				:is-done="task.done"
-			/>
-			<BaseButton
-				v-if="hasClose"
-				class="close"
-				@click="$emit('close')"
-			>
-				<Icon icon="times" />
-			</BaseButton>
 		</div>
 		<h1
 			class="title input"
@@ -34,6 +35,10 @@
 		>
 			{{ task.title.trim() }}
 		</h1>
+		<div class="create">
+			<span>{{ getDisplayName(task.createdBy) }}{{ $t('task.detail.created')}}</span>
+			<span>{{ formatDateShort(task.created)}}</span>
+		</div>
 		<BaseButton
 			v-if="hasClose"
 			class="close"
@@ -77,6 +82,8 @@ import {useTaskStore} from '@/stores/tasks'
 
 import type {ITask} from '@/modelTypes/ITask'
 import {getHexColor, getTaskIdentifier} from '@/models/task'
+import {formatDateLong, formatDateShort, formatDateSince, formatISO} from "../../../helpers/time/formatDate.ts";
+import {getDisplayName} from "@/models/user.ts";
 
 const props = withDefaults(defineProps<{
 	task: ITask,
@@ -166,6 +173,19 @@ async function cancel(element: HTMLInputElement) {
 	@media screen and (max-width: $tablet) {
 		margin: 0 -.3rem .5rem -.3rem; // the title has 0.3rem padding - this make the text inside of it align with the rest
 	}
+	
+	.show-info {
+		display: flex;
+	}
+}
+
+.create {
+	color: var(--grey-800);
+	width: 280px;
+	display: flex;
+	flex-direction: column;
+	font-size: 17px;
+	text-align: right;
 }
 
 .title.task-id {
