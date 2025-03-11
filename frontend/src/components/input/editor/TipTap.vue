@@ -301,6 +301,10 @@ const internalMode = ref<Mode>('preview')
 const isEditing = computed(() => internalMode.value === 'edit' && props.isEditEnabled)
 const contentHasChanged = ref<boolean>(false)
 
+// TipTap crashes when inserting an image into an empty editor.
+// To work around this, we're inserting an element first, then insert the image, then remove the element.
+const UPLOAD_PLACEHOLDER_ELEMENT = '<p>UPLOAD_PLACEHOLDER</p>'
+
 let lastSavedState = ''
 
 watch(
@@ -542,18 +546,30 @@ onBeforeUnmount(() => editor.value?.destroy())
 const uploadInputRef = ref<HTMLInputElement | null>(null)
 
 function uploadAndInsertFiles(files: File[] | FileList) {
-	if (typeof props.uploadCallback !== 'undefined') {
+	if (typeof props.uploadCallback === 'undefined') {
 		throw new Error('Can\'t add files here')
 	}
 
 	props.uploadCallback(files).then(urls => {
 		urls?.forEach(url => {
+			if (editor.value?.isEmpty) {
+				editor.value
+					?.chain()
+					.focus()
+					.insertContent(UPLOAD_PLACEHOLDER_ELEMENT)
+					.run()
+			}
 			editor.value
 				?.chain()
 				.focus()
 				.setImage({src: url})
 				.run()
 		})
+		
+		const html = editor.value?.getHTML().replace(UPLOAD_PLACEHOLDER_ELEMENT, '') ?? ''
+		
+		editor.value?.commands.setContent(html, false)
+		
 		bubbleSave()
 	})
 }
@@ -786,6 +802,7 @@ watch(
 	code {
 		background-color: var(--grey-200);
 		color: var(--grey-700);
+		border-radius: $radius;
 	}
 
 	pre {

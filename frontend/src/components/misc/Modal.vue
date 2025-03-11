@@ -248,6 +248,14 @@ $modal-width: 1024px;
 	padding: 0 1rem;
 	min-height: 100vh
 }
+
+.modal-content :deep(.card .card-header-icon.close) {
+	display: none;
+	
+	@media screen and (max-width: $tablet) {
+		display: block;
+	}
+}
 </style>
 
 <style lang="scss">

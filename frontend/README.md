@@ -17,7 +17,22 @@ For general information about the project, refer to the top-level readme of this
 pnpm install
 ```
 
-### Compiles and hot-reloads for development
+### Development
+
+#### Define backend server
+
+You can develop the web front end against any accessible backend, including the demo at https://try.vikunja.io
+
+In order to do so, you need to set the `DEV_PROXY` env variable. The recommended way to do so is to:
+
+- Copy `.env.local.exemple` as `.env.local`
+- Uncomment the `DEV_PROXY` line
+- Set the backend url you want to use
+
+In the end, it should look like `DEV_PROXY=https://try.vikunja.io` if you work against the online demo backend.
+
+
+#### Start dev server (compiles and hot-reloads)
 
 ```shell
 pnpm run dev

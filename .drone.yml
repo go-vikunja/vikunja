@@ -448,7 +448,7 @@ steps:
         from_secret: cypress_project_key
     commands:
       - cd frontend
-      - sed -i 's/localhost/test-api-run/g' dist-test/index.html
+      - sed -i 's@/api/v1@http://test-api-run:3456/api/v1@g' dist-test/index.html
       - npm install -g corepack && corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm cypress install
       - pnpm run test:e2e-record-test
@@ -470,8 +470,6 @@ steps:
     commands:
       - cd frontend
       - cp -r dist-test dist-preview
-      # Override the default api url used for preview
-      - sed -i 's|http://localhost:3456|https://try.vikunja.io|g' dist-preview/index.html
       # create via:
       # `shasum -a 384 ./scripts/deploy-preview-netlify.mjs > ./scripts/deploy-preview-netlify.mjs.sha384`
       - shasum -a 384 -c ./scripts/deploy-preview-netlify.mjs.sha384
@@ -973,7 +971,6 @@ steps:
       - pnpm install --fetch-timeout 100000 --frozen-lockfile
       - pnpm run lint
       - pnpm run build
-      - sed -i 's/http\:\\/\\/localhost\\:3456\\/api\\/v1/\\/api\\/v1/g' dist/index.html # Override the default api url used for developing
 
   - name: static
     image: kolaente/zip
@@ -1032,7 +1029,6 @@ steps:
       - npm install -g corepack && corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm install --fetch-timeout 100000 --frozen-lockfile
       - pnpm run build
-      - sed -i 's/http\:\\/\\/localhost\\:3456\\/api\\/v1/\\/api\\/v1/g' dist/index.html # Override the default api url used for developing
 
   - name: static
     image: kolaente/zip
@@ -1094,11 +1090,11 @@ steps:
     commands:
       - mv i18n/lang/*/frontend-*.json frontend/src/i18n/lang
       - cd frontend/src/i18n/lang
-      - for file in frontend-*; do mv "$file" "${file#frontend-}"; done
+      - for file in frontend-*; do mv "$file" "$${file#frontend-}"; done
       - cd ../../../..
       - mv i18n/lang/*/api-*.json pkg/i18n/lang
       - cd pkg/i18n/lang
-      - for file in api-*; do mv "$file" "${file#api-}"; done
+      - for file in api-*; do mv "$file" "$${file#api-}"; done
 
   - name: push
     pull: always
@@ -1208,6 +1204,6 @@ steps:
 
 ---
 kind: signature
-hmac: 43e10a9537190af3e753d44cf7bfdb4080af9e2fc8306381b7195c676571e6b3
+hmac: 321cc0f212caa1566aa5139c8f983f0e55653ddc241e3093b24697802be733be
 
 ...

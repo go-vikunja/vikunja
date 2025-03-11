@@ -87,7 +87,7 @@ const query = ref('')
 watch(
 	() => props.modelValue,
 	(value) => {
-		labels.value = value
+		labels.value = Array.from(new Map(value.map(label => [label.id, label])).values())
 	},
 	{
 		immediate: true,

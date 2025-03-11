@@ -105,7 +105,7 @@ watch(
 
 watch(color, () => update())
 
-const isEmpty = computed(() => color.value === '#000000' || color.value === '')
+const isEmpty = computed(() => color.value === '')
 
 function update(force = false) {
 	if(isEmpty.value && !force) {

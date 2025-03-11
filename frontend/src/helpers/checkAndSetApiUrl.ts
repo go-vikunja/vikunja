@@ -20,7 +20,8 @@ export class InvalidApiUrlProvidedError extends Error {
 	}
 }
 
-export const checkAndSetApiUrl = (url: string | undefined | null): Promise<string> => {
+export const checkAndSetApiUrl = (pUrl: string | undefined | null): Promise<string> => {
+	let url = pUrl
 	if (url === '' || url === null || typeof url === 'undefined') {
 		throw new NoApiUrlProvidedError()
 	}
@@ -55,6 +56,7 @@ export const checkAndSetApiUrl = (url: string | undefined | null): Promise<strin
 	// Check if the api is reachable at the provided url
 	return configStore.update()
 		.catch(e => {
+			console.warn(`Could not fetch 'info' from the provided endpoint ${pUrl} on ${window.API_URL}/info. Some automatic fallback will be tried.`)
 			// Check if it is reachable at /api/v1 and http
 			if (
 				!urlToCheck.pathname.endsWith('/api/v1') &&

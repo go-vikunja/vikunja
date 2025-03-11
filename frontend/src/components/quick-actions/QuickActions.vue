@@ -28,6 +28,12 @@
 					@keyup.prevent.enter="doCmd"
 					@keyup.prevent.esc="closeQuickActions"
 				>
+				<BaseButton
+					class="close"
+					@click="closeQuickActions"
+				>
+					<Icon icon="times" />
+				</BaseButton>
 			</div>
 
 			<div
@@ -587,6 +593,7 @@ function reset() {
 <style lang="scss" scoped>
 .quick-actions {
 	overflow: hidden;
+	justify-content: flex-start !important;
 
 	// FIXME: changed position should be an option of the modal
 	:deep(.modal-content) {
@@ -602,12 +609,24 @@ function reset() {
 	.input {
 		border: 0;
 		font-size: 1.5rem;
+		
+		@media screen and (max-width: $tablet) {
+			padding-right: .25rem;
+		}
 	}
 
 	&.has-active-cmd .input {
 		padding-left: .5rem;
 	}
 
+	.close {
+		padding: 0 1rem 0 .5rem;
+		font-size: 1.5rem;
+		
+		@media screen and (min-width: $tablet + 1) {
+			display: none;
+		}
+	}
 }
 
 .active-cmd {

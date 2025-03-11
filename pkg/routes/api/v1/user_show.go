@@ -85,21 +85,37 @@ func UserShow(c echo.Context) error {
 		IsLocalUser:         u.Issuer == user.IssuerLocal,
 	}
 
-	providers, err := openid.GetAllProviders()
+	us.AuthProvider, err = getAuthProviderName(u)
 	if err != nil {
 		return handler.HandleHTTPError(err)
+	}
+
+	return c.JSON(http.StatusOK, us)
+}
+
+func getAuthProviderName(u *user.User) (name string, err error) {
+	if u.Issuer == user.IssuerLocal {
+		return "local", nil
+	}
+
+	if u.Issuer == user.IssuerLDAP {
+		return "ldap", nil
+	}
+
+	providers, err := openid.GetAllProviders()
+	if err != nil {
+		return "", err
 	}
 
 	for _, provider := range providers {
 		issuerURL, err := provider.Issuer()
 		if err != nil {
-			return handler.HandleHTTPError(err)
+			return "", err
 		}
 		if issuerURL == u.Issuer {
-			us.AuthProvider = provider.Name
-			break
+			return provider.Name, nil
 		}
 	}
 
-	return c.JSON(http.StatusOK, us)
+	return
 }
