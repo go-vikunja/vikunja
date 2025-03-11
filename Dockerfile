@@ -18,7 +18,7 @@ FROM --platform=$BUILDPLATFORM ghcr.io/techknowlogick/xgo:go-1.23.x AS apibuilde
 RUN go install github.com/magefile/mage@latest && \
     mv /go/bin/mage /usr/local/go/bin
 
-WORKDIR /go/src/code.vikunja.io/api
+WORKDIR /go/src/code.vikunja.io/api	
 COPY . ./
 COPY --from=frontendbuilder /build/dist ./frontend/dist
 

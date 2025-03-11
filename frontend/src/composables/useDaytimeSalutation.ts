@@ -18,6 +18,7 @@ export function useDaytimeSalutation() {
 	const salutations = {
 		'night': () => t('home.welcomeNight', {username: name.value}),
 		'morning': () => t('home.welcomeMorning', {username: name.value}),
+		'noon': () => t('home.welcomeNoon', {username: name.value}),
 		'day': () => t('home.welcomeDay', {username: name.value}),
 		'evening': () => t('home.welcomeEvening', {username: name.value}),
 	} as Record<Daytime, () => string>

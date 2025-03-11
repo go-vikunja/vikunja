@@ -236,7 +236,7 @@ function validateSelectedEvents() {
 					:key="w.id"
 				>
 					<td>{{ w.targetUrl }}</td>
-					<td>{{ w.events.join(', ') }}</td>
+					<td width="100px">{{ w.events.join(', ') }}</td>
 					<td>{{ formatDateShort(w.created) }}</td>
 					<td>
 						<User

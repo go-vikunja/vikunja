@@ -20,8 +20,8 @@ const menuActive = computed(() => baseStore.menuActive)
 </script>
 
 <style lang="scss" scoped>
-$lineWidth: 2rem;
-$size: $lineWidth + 1rem;
+$lineWidth: 1.5rem;
+$size: $lineWidth + 0.5rem;
 
 .menu-show-button {
 	min-height: $size;

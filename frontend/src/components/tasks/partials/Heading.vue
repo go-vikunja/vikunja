@@ -184,7 +184,7 @@ async function cancel(element: HTMLInputElement) {
 	width: 280px;
 	display: flex;
 	flex-direction: column;
-	font-size: 17px;
+	font-size: 15px;
 	text-align: right;
 }
 

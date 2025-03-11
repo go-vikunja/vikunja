@@ -965,24 +965,24 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 		return nil
 	}
 
-	var doerID int64
-	event, doerID, err = reloadEventData(s, event, projectID)
-	if err != nil {
-		return err
-	}
+	//var doerID int64
+	//event, doerID, err = reloadEventData(s, event, projectID)
+	//if err != nil {
+	//	return err
+	//}
 
 	for _, webhook := range matchingWebhooks {
 
-		if _, has := event["project"]; !has {
-			project := &Project{ID: webhook.ProjectID}
-			err = project.ReadOne(s, &user.User{ID: doerID})
-			if err != nil && !IsErrProjectDoesNotExist(err) {
-				return err
-			}
-			if err == nil {
-				event["project"] = project
-			}
-		}
+		//if _, has := event["project"]; !has {
+		//	project := &Project{ID: webhook.ProjectID}
+		//	err = project.ReadOne(s, &user.User{ID: doerID})
+		//	if err != nil && !IsErrProjectDoesNotExist(err) {
+		//		return err
+		//	}
+		//	if err == nil {
+		//		event["project"] = project
+		//	}
+		//}
 
 		err = webhook.sendWebhookPayload(&WebhookPayload{
 			EventName: wl.EventName,

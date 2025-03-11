@@ -4,6 +4,7 @@
     "welcomeMorning": "早上好， {username}！",
     "welcomeDay": "嗨~，{username}！",
     "welcomeEvening": "中午好，{username}！",
+    "welcomeNoon": "下午好，{username}！",
     "lastViewed": "最近查看",
     "addToHomeScreen": "将此应用程序添加到您的主屏幕以便更快地访问和改善体验。",
     "goToOverview": "转到概览",
@@ -43,7 +44,7 @@
       "forgotPassword": "忘记密码",
       "resetPassword": "重置密码",
       "resetPasswordAction": "发送密码重置链接",
-      "resetPasswordSuccess": "Check your inbox! You should have an email with instructions on how to reset your password.",
+      "resetPasswordSuccess": "检查您的收件箱！您应该会收到一封电子邮件，其中包含有关如何重置密码的说明.",
       "passwordsDontMatch": "两次输入的密码不一致",
       "confirmEmailSuccess": "已成功确认您的电子邮件！现在可以登录。",
       "totpTitle": "两步验证码",
@@ -53,7 +54,7 @@
       "loginWith": "以 {provider} 身份登录",
       "authenticating": "验证中",
       "openIdStateError": "状态不匹配，无法继续！",
-      "openIdGeneralError": "An error occurred while authenticating against the third party.",
+      "openIdGeneralError": "向第三方进行身份验证时发生错误.",
       "logout": "注销",
       "emailInvalid": "请输入有效的电子邮件地址。",
       "usernameRequired": "请输入用户名",
@@ -67,26 +68,26 @@
       "noAccountYet": "还没有账号？",
       "alreadyHaveAnAccount": "已有账户？",
       "remember": "保持登录状态",
-      "registrationDisabled": "Registration is disabled."
+      "registrationDisabled": "注册已禁用."
     },
     "settings": {
       "title": "设置",
       "newPasswordTitle": "更新密码",
-      "newPassword": "New password",
-      "newPasswordConfirm": "New password confirmation",
-      "currentPassword": "Current password",
+      "newPassword": "新密码",
+      "newPasswordConfirm": "确认新密码",
+      "currentPassword": "当前密码",
       "currentPasswordPlaceholder": "输入当前密码",
       "passwordsDontMatch": "两次输入密码不一致",
       "passwordUpdateSuccess": "已成功更新密码",
       "updateEmailTitle": "更新电子邮件地址",
-      "updateEmailNew": "New email address",
+      "updateEmailNew": "新电子邮件地址",
       "updateEmailSuccess": "您的电子邮件地址已成功更新。我们已经向您发送了一个链接来确认。",
       "general": {
         "title": "通用设置",
-        "name": "My Name",
-        "newName": "The new name",
+        "name": "我的名字",
+        "newName": "新名字",
         "savedSuccess": "成功更新了设置",
-        "emailReminders": "Send me reminders for tasks via email",
+        "emailReminders": "通过电子邮件向我发送任务提醒",
         "overdueReminders": "每天给我发送我未完成任务的摘要",
         "discoverableByName": "允许其他用户在搜索我的名字时将我添加为团队或项目的成员",
         "discoverableByEmail": "允许其他用户在搜索我的完整电子邮件时将我添加为团队或项目的成员",
@@ -95,12 +96,12 @@
         "weekStartSunday": "星期日",
         "weekStartMonday": "星期一",
         "language": "语言设置",
-        "defaultProject": "Default project",
-        "defaultView": "Default view",
-        "timezone": "Time zone",
+        "defaultProject": "默认项目",
+        "defaultView": "默认视图",
+        "timezone": "时区",
         "overdueTasksRemindersTime": "逾期任务提醒邮件时间",
         "filterUsedOnOverview": "概述页面上使用已保存过滤器",
-        "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
+        "externalUserNameChange": "您的姓名由您的登录提供商 ({provider}) 管理。若要更改，请在此处更新。"
       },
       "totp": {
         "title": "两步验证",
@@ -328,9 +329,9 @@
     "list": {
       "title": "列表",
       "add": "添加",
-      "addPlaceholder": "Add a task…",
+      "addPlaceholder": "添加任务",
       "empty": "此项目目前为空。",
-      "newTaskCta": "Create a task.",
+      "newTaskCta": "创建任务",
       "editTask": "编辑任务"
     },
     "gantt": {
@@ -362,7 +363,7 @@
       "addTaskPlaceholder": "输入新任务标题…",
       "addTask": "添加任务",
       "addAnotherTask": "添加另一个任务",
-      "addBucket": "Create a bucket",
+      "addBucket": "创建任务桶",
       "addBucketPlaceholder": "输入新的存储桶标题…",
       "deleteHeaderBucket": "删除存储桶",
       "deleteBucketText1": "您确定要删除此存储桶吗？",
@@ -407,9 +408,9 @@
       "titleRequired": "请提供标题。",
       "delete": "删除此视图",
       "deleteText": "您确定要删除此视图吗？它将不再可能使用它来查看此项目中的任务。 此操作不会删除任何任务。此操作不能撤销！",
-      "deleteSuccess": "The view was deleted successfully.",
-      "onlyAdminsCanEdit": "Only project admins can edit views.",
-      "updateSuccess": "The view was updated successfully."
+      "deleteSuccess": "视图已成功删除.",
+      "onlyAdminsCanEdit": "只有项目管理员可以编辑视图.",
+      "updateSuccess": "视图已成功更新."
     }
   },
   "filters": {
@@ -437,7 +438,7 @@
     "create": {
       "title": "新保存的过滤器",
       "description": "保存的过滤器是一个虚拟工程，每次访问时都从一组过滤器中计算。",
-      "action": "Create saved filter",
+      "action": "创建并保存过滤器",
       "titleRequired": "请为该过滤器提供名称。"
     },
     "delete": {
@@ -455,7 +456,7 @@
       "help": {
         "intro": "要过滤任务，您可以使用类似于SQL的查询语法。可用的过滤字段包括：",
         "link": "这是如何运作的？",
-        "canUseDatemath": "You can use date math to set relative dates. Click on the date value in a query to find out more.",
+        "canUseDatemath": "\n您可以使用日期数学来设置相对日期。单击查询中的日期值以了解更多信息",
         "fields": {
           "done": "任务是否完成",
           "priority": "任务的优先级(1-5)",
@@ -467,9 +468,9 @@
           "assignees": "任务的指派人",
           "labels": "与任务相关的标签",
           "project": "任务属于的项目 (仅适用于保存的过滤器，不适用于项目级别)",
-          "reminders": "The reminders of the task as a date field, will return all tasks with at least one reminder matching the query",
-          "created": "The time and date when the task was created",
-          "updated": "The time and date when the task was last changed"
+          "reminders": "任务的提醒作为日期字段，将返回至少有一个提醒与查询匹配的所有任务",
+          "created": "任务创建的时间和日期",
+          "updated": "任务上次更改的时间和日期"
         },
         "operators": {
           "intro": "可用的过滤操作员包括：",
@@ -481,7 +482,7 @@
           "lessThanOrEqual": "小于或等于",
           "like": "匹配模式 (使用通配符%)",
           "in": "匹配任意一个逗号分隔的值列表",
-          "notIn": "Matches any value not present in a comma-seperated list of values"
+          "notIn": "匹配逗号分隔的值列表中不存在的任何值"
         },
         "logicalOperators": {
           "intro": "若要合并多个条件，您可以使用以下逻辑运算符：",
@@ -740,13 +741,13 @@
   },
   "task": {
     "task": "任务",
-    "new": "Create a task",
+    "new": "创建新任务",
     "delete": "删除此任务",
     "createSuccess": "成功创建任务",
     "addReminder": "Add a reminder…",
     "doneSuccess": "待办事项已标记为完成。",
     "undoneSuccess": "待办事项已标记为未完成。",
-    "revertSuccess": "The task change was successfully undone.",
+    "revertSuccess": "任务变更已成功撤消",
     "undo": "撤销",
     "openDetail": "查看任务详细信息",
     "checklistTotal": "{checked} 项任务，共 {total} 项。",
@@ -881,7 +882,7 @@
       "unassignSuccess": "已成功取消分配用户。"
     },
     "label": {
-      "placeholder": "Type to add a label…",
+      "placeholder": "填入并添加标签",
       "createPlaceholder": "将此添加为新标签",
       "addSuccess": "已成功添加标签。",
       "createSuccess": "已成功创建标签。",
@@ -904,8 +905,8 @@
     "relation": {
       "add": "添加新任务关系",
       "new": "新任务关系",
-      "searchPlaceholder": "Type search for a task to add as related…",
-      "createPlaceholder": "Add this as related task",
+      "searchPlaceholder": "键入搜索任务以添加为相关任务…",
+      "createPlaceholder": "将此添加为相关任务",
       "differentProject": "此任务属于另一个项目。",
       "noneYet": "还没有任务关联。",
       "delete": "删除关联",
@@ -1081,7 +1082,7 @@
     "duplicate": "复制",
     "delete": "删除",
     "unarchive": "取消存档",
-    "setBackground": "Background settings",
+    "setBackground": "背景设置",
     "share": "共享",
     "newProject": "新项目",
     "createProject": "创建项目",

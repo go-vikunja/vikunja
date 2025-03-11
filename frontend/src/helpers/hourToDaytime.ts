@@ -6,7 +6,8 @@ export function hourToDaytime(now: Date): Daytime {
 	const daytimeMap = {
 		night: hours < 5 || hours > 23,
 		morning: hours < 11,
-		day: hours < 18,
+		day: hours < 13,
+		noon: hours < 18,
 		evening: hours < 23,
 	} as Record<Daytime, boolean>
 
