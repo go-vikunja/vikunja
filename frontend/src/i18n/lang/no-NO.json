@@ -1130,7 +1130,6 @@
     }
   },
   "date": {
-    "locale": "nb-NO",
     "altFormatLong": "d.m.y H:i",
     "altFormatShort": "d.m.y"
   },
@@ -1196,7 +1195,7 @@
     "4018": "Ugyldig oppgave filter.",
     "4019": "Ugyldig oppgave filterverdi.",
     "4020": "Dette vedlegget tilhører ikke den oppgaven.",
-    "4021": "This user is already assigned to that task.",
+    "4021": "Denne brukeren er allerede tildelt den oppgaven.",
     "4022": "Angi hva påminnelsesdatoen er relativ til.",
     "4023": "Kan ikke opprette relasjon mellom oppgaver.",
     "6001": "Gruppenavnet kan ikke være tomt.",
