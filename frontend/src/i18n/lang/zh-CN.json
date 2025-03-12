@@ -984,7 +984,7 @@
     "title": "团队",
     "noTeams": "你目前不属于任何团队。",
     "create": {
-      "title": "Create a team",
+      "title": "创建团队",
       "success": "团队已成功创建。"
     },
     "edit": {

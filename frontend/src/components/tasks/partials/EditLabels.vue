@@ -2,7 +2,7 @@
 	<Multiselect
 		v-model="labels"
 		:loading="loading"
-		:placeholder="$t('task.label.placeholder')"
+		:placeholder="placeholder"
 		:multiple="true"
 		:search-results="foundLabels"
 		label="title"
@@ -14,6 +14,8 @@
 		@search="findLabel"
 		@select="addLabel"
 		@create="createAndAddLabel"
+		@mouseover="mouseAction(true)"
+		@mouseout="mouseAction(false)"
 	>
 		<template #tag="{item: label}">
 			<span
@@ -83,6 +85,15 @@ const {t} = useI18n({useScope: 'global'})
 const labelTaskService = shallowReactive(new LabelTaskService())
 const labels = ref<ILabel[]>([])
 const query = ref('')
+const placeholder = ref('')
+
+const mouseAction = (over: boolean) => {
+	if (over) {
+		placeholder.value = t('task.label.placeholder')
+	} else {
+		placeholder.value = ''
+	}
+}
 
 watch(
 	() => props.modelValue,

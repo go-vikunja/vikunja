@@ -315,7 +315,7 @@
 					</div>
 
 					<!-- Description -->
-					<div class="details content description">
+					<div class="details content description content-layout">
 						<Description
 							:model-value="task"
 							:can-write="canWrite"
@@ -393,6 +393,7 @@
 					<Comments
 						:can-write="canWrite"
 						:task-id="taskId"
+						class="content-layout"
 						:initial-comments="task.comments"
 					/>
 				</div>
@@ -1044,7 +1045,7 @@ h3 .button {
 	padding-bottom: 0.75rem;
 	flex-flow: row wrap;
 	margin-bottom: 0;
-
+	
 	.detail-title {
 		display: block;
 		color: var(--grey-400);
@@ -1053,7 +1054,7 @@ h3 .button {
 	.none {
 		font-style: italic;
 	}
-
+	
 	// Break after the 2nd element
 	.column:nth-child(2n) {
 		page-break-after: always; // CSS 2.1 syntax
@@ -1159,6 +1160,10 @@ h3 .button {
 	@media print {
 		width: 100% !important;
 	}
+}
+
+.content-layout {
+	margin-top: 2rem;
 }
 
 .action-heading {

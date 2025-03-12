@@ -182,6 +182,7 @@ import XButton from '@/components/input/Button.vue'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import inputPrompt from '@/helpers/inputPrompt'
 import {setLinkInEditor} from '@/components/input/editor/setLinkInEditor'
+import {fa} from "@faker-js/faker";
 
 const props = withDefaults(defineProps<{
 	modelValue: string,
@@ -201,6 +202,11 @@ const props = withDefaults(defineProps<{
 	editShortcut: '',
 	enableDiscardShortcut: false,
 })
+
+const focus = ref(false)
+const focusAction = (focusB: boolean) => {
+	focus.value = focusB
+}
 
 const emit = defineEmits(['update:modelValue', 'save'])
 

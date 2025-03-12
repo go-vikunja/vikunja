@@ -4,7 +4,7 @@
 		class="edit-assignees"
 		:class="{'has-assignees': assignees.length > 0}"
 		:loading="projectUserService.loading"
-		:placeholder="$t('task.assignee.placeholder')"
+		:placeholder="placeholder"
 		:multiple="true"
 		:search-results="foundUsers"
 		label="name"
@@ -12,6 +12,8 @@
 		:autocomplete-enabled="false"
 		@search="findUser"
 		@select="addAssignee"
+		@mouseover="focusAction(true)"
+		@mouseout="focusAction(false)"
 	>
 		<template #items="{items}">
 			<AssigneeList
@@ -67,7 +69,17 @@ const {t} = useI18n({useScope: 'global'})
 const projectUserService = shallowReactive(new ProjectUserService())
 const foundUsers = ref<IUser[]>([])
 const assignees = ref<IUser[]>([])
+const placeholder = ref('')
 let isAdding = false
+
+const focusAction = (focus: boolean) => {
+	console.log(focus)
+	if (focus) {
+		placeholder.value = t('task.assignee.placeholder')
+	} else {
+		placeholder.value = ''
+	}
+}
 
 watch(
 	() => props.modelValue,
