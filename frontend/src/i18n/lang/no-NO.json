@@ -420,10 +420,10 @@
     "fromViewBoth": "Den brukes i kombinasjon med det du skriver inn her.",
     "attributes": {
       "title": "Tittel",
-      "titlePlaceholder": "Den lagrede filtertittelen angis her…",
+      "titlePlaceholder": "Tittel på det lagrede filteret angis her…",
       "description": "Beskrivelse",
       "descriptionPlaceholder": "Legg til en beskrivelse for dette filteret. Trykk '/' for flere valg…",
-      "includeNulls": "Inkluder oppgaver som ikke har en verdi satt",
+      "includeNulls": "Inkluder oppgaver som ikke har en verdi",
       "requireAll": "Krev at alle filtre er sanne for at en oppgave skal vises",
       "showDoneTasks": "Vis ferdige oppgaver",
       "sortAlphabetically": "Sorter alfabetisk",
@@ -1164,7 +1164,7 @@
     "1021": "Denne kontoen administreres av en tredjeparts autentiseringstjeneste.",
     "1022": "Brukernavnet kan ikke inneholde mellomrom.",
     "1023": "Du kan ikke gjøre det som en delelenke.",
-    "1024": "Invalid claim data for field {field} of type {type}.",
+    "1024": "Ugyldige data for felt {field} av type {type}.",
     "1025": "Tidssonen '{timezone}' er ugyldig. Velg en gyldig tidssone fra listen.",
     "2001": "ID kan ikke være tom eller 0.",
     "2002": "Noen av forespørselsdataene var ugyldig.",
@@ -1224,8 +1224,8 @@
     "12003": "Du må angi en bruker for å hente abonnementene.",
     "13001": "Denne koblingsdelingen krever et passord for autentisering, men ingen ble oppgitt.",
     "13002": "Den angitte linken for å dele passordet er ugyldig.",
-    "13003": "The provided link share token is invalid.",
-    "14001": "The provided api token is invalid.",
+    "13003": "Den oppgitte delelenke plassholder er ugyldig.",
+    "14001": "Den oppgitte api-plassholder er ugyldig.",
     "14002": "Tillatelsen {permission} for gruppen {group} er ugyldig."
   },
   "about": {
