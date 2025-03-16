@@ -18,6 +18,7 @@ package ldap
 
 import (
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -153,6 +154,11 @@ func AuthenticateUserInLDAP(s *xorm.Session, username, password string) (u *user
 	// Bind as the user to verify their password
 	err = l.Bind(userdn, password)
 	if err != nil {
+		var lerr *ldap.Error
+		if errors.As(err, &lerr) && lerr.ResultCode == ldap.LDAPResultInvalidCredentials {
+			return nil, user.ErrWrongUsernameOrPassword{}
+		}
+
 		return
 	}
 
