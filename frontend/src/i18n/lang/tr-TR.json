@@ -1,9 +1,9 @@
 {
   "home": {
-    "welcomeNight": "Good Night {username}!",
-    "welcomeMorning": "Good Morning {username}!",
-    "welcomeDay": "Hi {username}!",
-    "welcomeEvening": "Good Evening {username}!",
+    "welcomeNight": "Good Night, {username}!",
+    "welcomeMorning": "Good Morning, {username}!",
+    "welcomeDay": "Hi, {username}!",
+    "welcomeEvening": "Good Evening, {username}!",
     "lastViewed": "Last viewed",
     "addToHomeScreen": "Add this app to your home screen for faster access and improved experience.",
     "goToOverview": "Go to overview",
