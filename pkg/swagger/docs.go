@@ -8877,8 +8877,8 @@ const docTemplate = `{
                 "project_view_id": {
                     "type": "integer"
                 },
-                "task_done": {
-                    "type": "boolean"
+                "task": {
+                    "$ref": "#/definitions/models.Task"
                 },
                 "task_id": {
                     "type": "integer"
