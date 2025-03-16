@@ -5917,53 +5917,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/teams/{id}/members/{userID}": {
-            "delete": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Remove a user from a team. This will also revoke any access this user might have via that team. A user can remove themselves from the team if they are not the last user in the team.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "team"
-                ],
-                "summary": "Remove a user from a team",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Team ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "User ID",
-                        "name": "userID",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The user was successfully removed from the team.",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            }
-        },
         "/teams/{id}/members/{userID}/admin": {
             "post": {
                 "security": [
@@ -5998,6 +5951,53 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "The member right was successfully changed.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/teams/{id}/members/{username}": {
+            "delete": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Remove a user from a team. This will also revoke any access this user might have via that team. A user can remove themselves from the team if they are not the last user in the team.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "team"
+                ],
+                "summary": "Remove a user from a team",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The ID of the team you want to remove th user from",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The username of the user you want to remove",
+                        "name": "username",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The user was successfully removed from the team.",
                         "schema": {
                             "$ref": "#/definitions/models.Message"
                         }

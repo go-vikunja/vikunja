@@ -5724,38 +5724,6 @@ paths:
       summary: Add a user to a team
       tags:
       - team
-  /teams/{id}/members/{userID}:
-    delete:
-      description: Remove a user from a team. This will also revoke any access this
-        user might have via that team. A user can remove themselves from the team
-        if they are not the last user in the team.
-      parameters:
-      - description: Team ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: User ID
-        in: path
-        name: userID
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: The user was successfully removed from the team.
-          schema:
-            $ref: '#/definitions/models.Message'
-        "500":
-          description: Internal error
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Remove a user from a team
-      tags:
-      - team
   /teams/{id}/members/{userID}/admin:
     post:
       description: If a user is team admin, this will make them member and vise-versa.
@@ -5784,6 +5752,38 @@ paths:
       security:
       - JWTKeyAuth: []
       summary: Toggle a team member's admin status
+      tags:
+      - team
+  /teams/{id}/members/{username}:
+    delete:
+      description: Remove a user from a team. This will also revoke any access this
+        user might have via that team. A user can remove themselves from the team
+        if they are not the last user in the team.
+      parameters:
+      - description: The ID of the team you want to remove th user from
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The username of the user you want to remove
+        in: path
+        name: username
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The user was successfully removed from the team.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Remove a user from a team
       tags:
       - team
   /test/{table}:
