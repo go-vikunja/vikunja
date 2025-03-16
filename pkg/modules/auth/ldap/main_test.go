@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public Licensee
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package openid
+package ldap
 
 import (
 	"os"
@@ -32,5 +32,6 @@ func TestMain(m *testing.M) {
 	files.InitTests()
 	models.SetupTests()
 	events.Fake()
+	InitializeLDAPConnection()
 	os.Exit(m.Run())
 }
