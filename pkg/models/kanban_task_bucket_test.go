@@ -88,7 +88,7 @@ func TestTaskBucket_Update(t *testing.T) {
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
-		assert.True(t, tb.TaskDone)
+		assert.True(t, tb.Task.Done)
 
 		db.AssertExists(t, "tasks", map[string]interface{}{
 			"id":   1,
@@ -114,7 +114,7 @@ func TestTaskBucket_Update(t *testing.T) {
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
-		assert.False(t, tb.TaskDone)
+		assert.False(t, tb.Task.Done)
 
 		db.AssertExists(t, "tasks", map[string]interface{}{
 			"id":   tb.TaskID,
@@ -144,7 +144,7 @@ func TestTaskBucket_Update(t *testing.T) {
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
-		assert.False(t, tb.TaskDone)
+		assert.False(t, tb.Task.Done)
 		assert.Equal(t, int64(1), tb.BucketID) // This should be the actual bucket
 
 		db.AssertExists(t, "tasks", map[string]interface{}{
