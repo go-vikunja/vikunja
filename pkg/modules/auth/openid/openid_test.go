@@ -17,8 +17,9 @@
 package openid
 
 import (
-	"code.vikunja.io/api/pkg/models"
 	"testing"
+
+	"code.vikunja.io/api/pkg/models"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"

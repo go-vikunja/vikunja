@@ -140,7 +140,7 @@ func GetTeamByExternalIDAndIssuer(s *xorm.Session, oidcID string, issuer string)
 		Where("external_id = ? AND issuer = ?", oidcID, issuer).
 		Get(team)
 	if !has || err != nil {
-		return nil, ErrOIDCTeamDoesNotExist{issuer, oidcID}
+		return nil, ErrExternalTeamDoesNotExist{issuer, oidcID}
 	}
 	return team, nil
 }

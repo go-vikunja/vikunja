@@ -290,12 +290,13 @@ func GetOrCreateTeamsByOIDC(s *xorm.Session, teamData []*team, u *user.User, iss
 	te = []*models.Team{}
 	// Procedure can only be successful if oidcID is set
 	for _, oidcTeam := range teamData {
-		team, err := models.GetTeamByExternalIDAndIssuer(s, oidcTeam.OidcID, issuer)
-		if err != nil && !models.IsErrOIDCTeamDoesNotExist(err) {
+		t, err := models.GetTeamByExternalIDAndIssuer(s, oidcTeam.OidcID, issuer)
+		if err != nil && !models.IsErrExternalTeamDoesNotExist(err) {
 			return nil, err
 		}
-		if err != nil && models.IsErrOIDCTeamDoesNotExist(err) {
+		if err != nil && models.IsErrExternalTeamDoesNotExist(err) {
 			log.Debugf("Team with external_id %v and name %v does not exist. Creating team… ", oidcTeam.OidcID, oidcTeam.Name)
+
 			newTeam, err := CreateOIDCTeam(s, oidcTeam, u, issuer)
 			if err != nil {
 				return te, err
@@ -305,27 +306,27 @@ func GetOrCreateTeamsByOIDC(s *xorm.Session, teamData []*team, u *user.User, iss
 		}
 
 		// Compare the name and update if it changed
-		if team.Name != getOIDCTeamName(oidcTeam.Name) {
-			team.Name = getOIDCTeamName(oidcTeam.Name)
+		if t.Name != getOIDCTeamName(oidcTeam.Name) {
+			t.Name = getOIDCTeamName(oidcTeam.Name)
 		}
 
 		// Compare the description and update if it changed
-		if team.Description != oidcTeam.Description {
-			team.Description = oidcTeam.Description
+		if t.Description != oidcTeam.Description {
+			t.Description = oidcTeam.Description
 		}
 
 		// Compare the isPublic flag and update if it changed
-		if team.IsPublic != oidcTeam.IsPublic {
-			team.IsPublic = oidcTeam.IsPublic
+		if t.IsPublic != oidcTeam.IsPublic {
+			t.IsPublic = oidcTeam.IsPublic
 		}
 
-		err = team.Update(s, u)
+		err = t.Update(s, u)
 		if err != nil {
 			return nil, err
 		}
 
-		log.Debugf("Team with external_id %v and name %v already exists.", team.ExternalID, team.Name)
-		te = append(te, team)
+		log.Debugf("Team with external_id %v and name %v already exists.", t.ExternalID, t.Name)
+		te = append(te, t)
 	}
 	return te, err
 }
