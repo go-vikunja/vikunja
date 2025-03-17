@@ -158,7 +158,7 @@ func HandleCallback(c echo.Context) error {
 		}
 
 		// find old teams for user through oidc
-		oldOidcTeams, err := models.FindAllOidcTeamIDsForUser(s, u.ID)
+		oldOidcTeams, err := models.FindAllExternalTeamIDsForUser(s, u.ID)
 		if err != nil {
 			log.Debugf("No oidc teams found for user %v", err)
 		}
@@ -290,7 +290,7 @@ func GetOrCreateTeamsByOIDC(s *xorm.Session, teamData []*team, u *user.User, iss
 	te = []*models.Team{}
 	// Procedure can only be successful if oidcID is set
 	for _, oidcTeam := range teamData {
-		team, err := models.GetTeamByOidcIDAndIssuer(s, oidcTeam.OidcID, issuer)
+		team, err := models.GetTeamByExternalIDAndIssuer(s, oidcTeam.OidcID, issuer)
 		if err != nil && !models.IsErrOIDCTeamDoesNotExist(err) {
 			return nil, err
 		}

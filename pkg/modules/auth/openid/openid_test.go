@@ -17,10 +17,10 @@
 package openid
 
 import (
+	"code.vikunja.io/api/pkg/models"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 
@@ -232,7 +232,7 @@ func TestGetOrCreateUser(t *testing.T) {
 				require.NoError(t, err)
 			}
 		}
-		oldOidcTeams, err := models.FindAllOidcTeamIDsForUser(s, u.ID)
+		oldOidcTeams, err := models.FindAllExternalTeamIDsForUser(s, u.ID)
 		require.NoError(t, err)
 		oidcTeams, err := AssignOrCreateUserToTeams(s, u, teamData, "https://some.issuer")
 		require.NoError(t, err)

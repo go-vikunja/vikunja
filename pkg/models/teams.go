@@ -131,9 +131,9 @@ func GetTeamByID(s *xorm.Session, id int64) (team *Team, err error) {
 	return
 }
 
-// GetTeamByOidcID returns a team matching the given external_id
+// GetTeamByExternalIDAndIssuer returns a team matching the given external_id
 // For oidc team creation oidcID and Name need to be set
-func GetTeamByOidcIDAndIssuer(s *xorm.Session, oidcID string, issuer string) (*Team, error) {
+func GetTeamByExternalIDAndIssuer(s *xorm.Session, oidcID string, issuer string) (*Team, error) {
 	team := &Team{}
 	has, err := s.
 		Table("teams").
@@ -145,7 +145,7 @@ func GetTeamByOidcIDAndIssuer(s *xorm.Session, oidcID string, issuer string) (*T
 	return team, nil
 }
 
-func FindAllOidcTeamIDsForUser(s *xorm.Session, userID int64) (ts []int64, err error) {
+func FindAllExternalTeamIDsForUser(s *xorm.Session, userID int64) (ts []int64, err error) {
 	err = s.
 		Table("team_members").
 		Where("user_id = ? ", userID).
