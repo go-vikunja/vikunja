@@ -6,7 +6,7 @@
     "welcomeEvening": "Hyvää Iltaa {username}!",
     "lastViewed": "Viimeksi katsottu",
     "addToHomeScreen": "Lisää tämä sovellus aloitusnäyttöösi saadaksesi nopeamman pääsyn ja paremman kokemuksen.",
-    "goToOverview": "Siirry yleiskatsaukseen",
+    "goToOverview": "Siirry yleisnäkymään",
     "project": {
       "importText": "Tuo projektisi ja tehtäväsi muista palveluista Vikunjaan:",
       "import": "Tuo tietosi Vikunjaan"
@@ -99,7 +99,7 @@
         "defaultView": "Oletusnäkymä",
         "timezone": "Aikavyöhyke",
         "overdueTasksRemindersTime": "Erääntyneiden tehtävien muistutus sähköpostin aika",
-        "filterUsedOnOverview": "Tallennettu yleiskatsaus sivulla käytetty suodatin",
+        "filterUsedOnOverview": "Tallennettu yleisnäkymä-sivulla käytetty suodatin",
         "externalUserNameChange": "Nimeäsi hallinnoi kirjautumisoperaattori ({provider}). Muuttaaksesi sen, päivitä se siellä."
       },
       "totp": {
@@ -349,8 +349,8 @@
     },
     "kanban": {
       "title": "Kanban",
-      "limit": "Limit: {limit}",
-      "noLimit": "Not Set",
+      "limit": "Raja: {limit}",
+      "noLimit": "Ei Asetettu",
       "doneBucket": "Valmiit sarake",
       "doneBucketHint": "Kaikki tähän sarakkeeseen lisätyt tehtävät merkitään automaattisesti valmiiksi.",
       "doneBucketHintExtended": "Kaikki tähän sarakkeeseen lisätyt tehtävät merkitään automaattisesti valmiiksi. Muualla valmiiksi merkityt tehtävät siirretään myös.",
@@ -435,14 +435,14 @@
       "reminderRange": "Reminder Date Range"
     },
     "create": {
-      "title": "New Saved Filter",
-      "description": "A saved filter is a virtual project which is computed from a set of filters each time it is accessed.",
-      "action": "Create saved filter",
+      "title": "Uusi Tallennettu Suodatin",
+      "description": "Tallennettu suodatin on virtuaalinen projekti, joka muodostetaan suodattimia hyödyntäen joka kerta kun sitä kutsutaan.",
+      "action": "Luo tallennettu suodatin",
       "titleRequired": "Please provide a title for the filter."
     },
     "delete": {
-      "header": "Delete this saved filter",
-      "text": "Are you sure you want to delete this saved filter?",
+      "header": "Poista tämä tallennettu suodatin",
+      "text": "Haluatko varmasti poistaa tämä tallennetun suodattimen?",
       "success": "The filter was deleted successfully."
     },
     "edit": {
@@ -453,26 +453,26 @@
       "title": "Kysely",
       "placeholder": "Kirjoita haku tai suodatinkysely…",
       "help": {
-        "intro": "Suodattaaksesi tehtäviä voit käyttää SQL kieltä muistuttavaa syntaksia. Saatavilla olevat kentät suodatukseen ovat:",
+        "intro": "Suodattaaksesi tehtäviä voit käyttää SQL kieltä muistuttavaa syntaksia. Saatavilla olevat kentät suodatukseen ovat: ",
         "link": "Miten tämä toimii?",
-        "canUseDatemath": "You can use date math to set relative dates. Click on the date value in a query to find out more.",
+        "canUseDatemath": "Voit käyttää päivämäärä laskentaa asettaaksesi suhteellisia päivämääriä. Klikkaa päivämäärä arvoa kyselyssä saadaksesi lisätietoa.",
         "fields": {
-          "done": "Whether the task is completed or not",
+          "done": "Onko tehtävä valmis vai ei",
           "priority": "Tehtävän prioriteettitaso (1-5)",
-          "percentDone": "The percentage of completion for the task (0-100)",
-          "dueDate": "The due date of the task",
-          "startDate": "The start date of the task",
-          "endDate": "The end date of the task",
-          "doneAt": "The date and time when the task was completed",
-          "assignees": "The assignees of the task",
-          "labels": "The labels associated with the task",
-          "project": "The project the task belongs to (only available for saved filters, not on a project level)",
+          "percentDone": "Tehtävän edistymis prosentti (0-100)",
+          "dueDate": "Tehtävän eräpäivä",
+          "startDate": "Tehtävän aloituspäivä",
+          "endDate": "Tehtävän päättymispäivä",
+          "doneAt": "Tehtävän valmistumis hetki",
+          "assignees": "Osoitettu käyttäjlle",
+          "labels": "Tehtävään liitetyt tunnisteet",
+          "project": "Tehtävän projekti (käytettävissä ainoastaan tallennetuilla suodattimilla, ei projekti tasolla)",
           "reminders": "The reminders of the task as a date field, will return all tasks with at least one reminder matching the query",
-          "created": "The time and date when the task was created",
-          "updated": "The time and date when the task was last changed"
+          "created": "Tehtävän luonti hetki",
+          "updated": "Tehtävän edellinen muokkaus hetki"
         },
         "operators": {
-          "intro": "The available operators for filtering include:",
+          "intro": "Suodattamiseen käytettävissä olevat operaattorit sisältävät:",
           "notEqual": "Erisuuri kuin",
           "equal": "Yhtä suuri kuin",
           "greaterThan": "Suurempi kuin",
@@ -484,25 +484,25 @@
           "notIn": "Matches any value not present in a comma-seperated list of values"
         },
         "logicalOperators": {
-          "intro": "To combine multiple conditions, you can use the following logical operators:",
-          "and": "AND operator, matches if all conditions are true",
-          "or": "OR operator, matches if any of the conditions are true",
+          "intro": "Yhdistääksesi usean ehdon, voit käyttää seuraavia loogisia operaattoreja:",
+          "and": "JA operaattori täyttyy, jos kaikki ehdot ovat tosi",
+          "or": "TAI operaattori täyttyy, jos yksikin ehto on tosi",
           "parentheses": "Parentheses for grouping conditions"
         },
         "examples": {
-          "intro": "Here are some examples of filter queries:",
-          "priorityEqual": "Matches tasks with priority level 4",
-          "dueDatePast": "Matches tasks with a due date in the past",
-          "undoneHighPriority": "Matches undone tasks with priority level 3 or higher",
-          "assigneesIn": "Matches tasks assigned to either \"user1\" or \"user2\"",
-          "priorityOneOrTwoPastDue": "Matches tasks with priority level 1 or 2 and a due date in the past"
+          "intro": "Tässä on muutama esimerkki suodatin kyselyistä:",
+          "priorityEqual": "Löytää tehtävät joiden prioriteetti taso on 4",
+          "dueDatePast": "Löytää tehtävät joiden eräpäivä on menneisyydessä",
+          "undoneHighPriority": "Löytää keskeneräiset tehtävät joiden prioriteetti taso on 3 tai korkeampi",
+          "assigneesIn": "Löytää tehtävät jotka on osoitettu joko käyttäjälle \"user1\" tai käyttäjälle \"user2\"",
+          "priorityOneOrTwoPastDue": "Löytää tehtävät joiden prioriteetti taso on 1 ta 2 ja joiden eräpäivä on menneisyydessä"
         }
       }
     }
   },
   "migrate": {
-    "title": "Import from other services",
-    "titleService": "Import your data from {name} into Vikunja",
+    "title": "Tuo muista palveluista",
+    "titleService": "Tuo {name} tietosi Vikunjaan",
     "import": "Import your data into Vikunja",
     "description": "Click on the logo of one of the third-party services below to get started.",
     "descriptionDo": "Vikunja will import all lists, tasks, notes, reminders and files you have access to.",
@@ -550,8 +550,8 @@
     "invalidPassword": "Salasana on virheellinen."
   },
   "navigation": {
-    "overview": "Overview",
-    "upcoming": "Upcoming",
+    "overview": "Yleisnäkymä",
+    "upcoming": "Tulevat",
     "settings": "Asetukset",
     "imprint": "Imprint",
     "privacy": "Tietosuojakäytäntö"
@@ -685,55 +685,55 @@
         "restOfThisYear": "The Rest of This Year"
       },
       "values": {
-        "now": "Now",
-        "startOfToday": "Start of today",
-        "endOfToday": "End of today",
-        "beginningOflastWeek": "Beginning of last week",
-        "endOfLastWeek": "End of last week",
-        "beginningOfThisWeek": "Beginning of this week",
-        "endOfThisWeek": "End of this week",
-        "startOfNextWeek": "Start of next week",
-        "endOfNextWeek": "End of next week",
-        "in7Days": "In 7 days",
-        "beginningOfLastMonth": "Beginning of last month",
-        "endOfLastMonth": "End of last month",
-        "startOfThisMonth": "Start of this month",
-        "endOfThisMonth": "End of this month",
-        "startOfNextMonth": "Start of next month",
-        "endOfNextMonth": "End of next month",
-        "in30Days": "In 30 days",
-        "startOfThisYear": "Beginning of this year",
-        "endOfThisYear": "End of this year"
+        "now": "Nyt",
+        "startOfToday": "Tämän päivän alku",
+        "endOfToday": "Tämän päivän loppu",
+        "beginningOflastWeek": "Viime viikon alku",
+        "endOfLastWeek": "Viime viikon loppu",
+        "beginningOfThisWeek": "Tämän viikon alku",
+        "endOfThisWeek": "Tämän viikon loppu",
+        "startOfNextWeek": "Ensi viikon alku",
+        "endOfNextWeek": "Ensi viikon loppu",
+        "in7Days": "7 päivän päästä",
+        "beginningOfLastMonth": "Viime kuun alku",
+        "endOfLastMonth": "Viime kuun loppu",
+        "startOfThisMonth": "Tämän kuun alku",
+        "endOfThisMonth": "Tämän kuun loppu",
+        "startOfNextMonth": "Ensi kuun alku",
+        "endOfNextMonth": "Ensi kuun loppu",
+        "in30Days": "30 päivän päästä",
+        "startOfThisYear": "Tämän vuoden alku",
+        "endOfThisYear": "Tämän vuoden loppu"
       }
     },
     "datemathHelp": {
-      "canuse": "You can use date math to filter for relative dates.",
-      "learnhow": "Check out how it works",
-      "title": "Date Math",
-      "intro": "Specify relative dates which are resolved on the fly by Vikunja when applying the filter.",
+      "canuse": "Voit käyttää päivämäärä laskentaa suodattaaksesi suhteellisia päivämääriä.",
+      "learnhow": "Katso kuinka se toimii",
+      "title": "Päivämäärä Laskenta",
+      "intro": "Määrittele suhteellisia päivämääriä, jotka Vikunja laskee suodatinta käyttäessä.",
       "expression": "Each Date Math expression starts with an anchor date, which can either be {0}, or a date string ending with {1}. This anchor date can optionally be followed by one or more maths expressions.",
-      "similar": "These expressions are similar to the ones provided by {0} and {1}.",
+      "similar": "Nämä lausekkeet ovat samankaltaisia kuin {0} ja {1} käyttävät.",
       "add1Day": "Lisää yksi päivä",
       "minus1Day": "Vähennä yksi päivä",
       "roundDay": "Pyöristä alas lähimpään päivään",
       "supportedUnits": "Tuetut aikayksiköt",
       "someExamples": "Examples of time expressions",
       "units": {
-        "seconds": "Seconds",
-        "minutes": "Minutes",
-        "hours": "Hours",
-        "days": "Days",
-        "weeks": "Weeks",
-        "months": "Months",
-        "years": "Years"
+        "seconds": "Sekunti",
+        "minutes": "Minuutti",
+        "hours": "Tunti",
+        "days": "Päivä",
+        "weeks": "Viikko",
+        "months": "Kuukausi",
+        "years": "Vuosi"
       },
       "examples": {
-        "now": "Right now",
-        "in24h": "In 24h",
+        "now": "Juuri nyt",
+        "in24h": "24 tunnin päästä",
         "today": "Tänään klo 00:00",
-        "beginningOfThisWeek": "The beginning of this week at 00:00",
-        "endOfThisWeek": "The end of this week",
-        "in30Days": "In 30 days",
+        "beginningOfThisWeek": "Tämän viikon alussa klo 00:00",
+        "endOfThisWeek": "Tämän viikon lopussa",
+        "in30Days": "30 päivän päästä",
         "datePlusMonth": "{0} plus one month at 00:00 of that day"
       }
     }
@@ -753,11 +753,11 @@
     "checklistAllDone": "{total} tehtävää",
     "show": {
       "titleCurrent": "Nykyiset Tehtävät",
-      "titleDates": "Tasks from {from} until {to}",
+      "titleDates": "Tehtävät väliltä {from} - {to}",
       "noDates": "Näytä tehtävät joilla ei ole päivämäärää",
       "overdue": "Näytä erääntyneet tehtävät",
-      "fromuntil": "Tasks from {from} until {until}",
-      "select": "Select a date range",
+      "fromuntil": "Tehtävät väliltä {from} - {until}",
+      "select": "Valitse päivämäärä väli",
       "noTasks": "Ei mitään tehtävää — Mukavaa päivää!"
     },
     "detail": {
@@ -776,23 +776,23 @@
       "due": "Due {at}",
       "closePopup": "Sulje ponnahdusikkuna",
       "organization": "Organisaatio",
-      "management": "Management",
-      "dateAndTime": "Date and time",
+      "management": "Hallinta",
+      "dateAndTime": "Päivä ja Aika",
       "delete": {
         "header": "Poista tämä tehtävä",
         "text1": "Haluatko varmasti poistaa tämän tehtävän?",
         "text2": "Tämä poistaa myös kaikki tähän tehtävään liittyvät liitteet, muistutukset ja relaatiot eikä sitä voi peruuttaa!"
       },
       "actions": {
-        "assign": "Assign to User",
+        "assign": "Osoita käyttäjälle",
         "label": "Lisää Tunnisteita",
         "priority": "Aseta Priotiteetti",
         "dueDate": "Aseta Eräpäivä",
         "startDate": "Aseta Aloituspäivä",
         "endDate": "Aseta Päättymispäivä",
-        "reminders": "Set Reminders",
-        "repeatAfter": "Set Repeating Interval",
-        "percentDone": "Set Progress",
+        "reminders": "Aseta Muistutuksia",
+        "repeatAfter": "Aseta Toistoväli",
+        "percentDone": "Aseta Edistymis Prosentti",
         "attachments": "Lisää Liitteitä",
         "relatedTasks": "Lisää Relaatio",
         "moveProject": "Siirrä",
@@ -803,10 +803,10 @@
       }
     },
     "attributes": {
-      "assignees": "Assignees",
+      "assignees": "Osoita käyttäjille",
       "color": "Väri",
-      "created": "Created",
-      "createdBy": "Created By",
+      "created": "Luontiaika",
+      "createdBy": "Luoja",
       "description": "Kuvaus",
       "done": "Valmis",
       "dueDate": "Eräpäivä",
@@ -820,7 +820,7 @@
       "startDate": "Aloituspäivä",
       "title": "Otsikko",
       "updated": "Päivitetty",
-      "doneAt": "Done At"
+      "doneAt": "Valmistumisaika"
     },
     "subscription": {
       "subscribedTaskThroughParentProject": "Et voi perua ilmoitusten tilausta tästä, koska olet tilannut ilmoitukset tehtävän projektilta.",
@@ -875,10 +875,10 @@
       "empty": "Kuvausta ei ole vielä saatavilla."
     },
     "assignee": {
-      "placeholder": "Type to assign a user…",
-      "selectPlaceholder": "Assign this user",
-      "assignSuccess": "The user has been assigned successfully.",
-      "unassignSuccess": "The user has been unassigned successfully."
+      "placeholder": "Kirjoita osoittaaksesi käyttäjälle…",
+      "selectPlaceholder": "Osoita tälle käyttäjälle",
+      "assignSuccess": "Osoitettiin käyttäjälle onnistuneesti.",
+      "unassignSuccess": "Poistettiin käyttäjälle osoitus onnistuneesti."
     },
     "label": {
       "placeholder": "Kirjoita lisätäksesi tunnisteen…",
@@ -935,7 +935,7 @@
       "onStartDate": "On the start date",
       "onEndDate": "On the end date",
       "custom": "Mukautettu",
-      "dateAndTime": "Date and time"
+      "dateAndTime": "Päivä ja Aika"
     },
     "repeat": {
       "everyDay": "Joka Päivä",
@@ -964,27 +964,27 @@
       "label4": "For example: {prefix}\"Label with spaces\".",
       "priority1": "To set a task's priority, add a number 1-5, prefixed with a {prefix}.",
       "priority2": "The higher the number, the higher the priority.",
-      "assignees": "To directly assign the task to a user, add their username prefixed with {prefix} to the task.",
+      "assignees": "Osoittaaksesi tehtävän suoraan käyttäjälle lisää käyttäjänimi etuliitteellä {prefix}.",
       "project1": "To set a project for the task to appear in, enter its name prefixed with {prefix}.",
       "project2": "This will return an error if the project does not exist.",
       "project3": "To use spaces, simply add a \" or ' around the project name.",
       "project4": "For example: {prefix}\"Project with spaces\".",
-      "dateAndTime": "Date and time",
-      "date": "Any date will be used as the due date of the new task. You can use dates in any of these formats:",
+      "dateAndTime": "Päivä ja Aika",
+      "date": "Voit käyttää päivämääriä seuraavissa muodoissa:",
       "dateWeekday": "any weekday, will use the next date with that date",
       "dateCurrentYear": "will use the current year",
       "dateNth": "will use the {day}th of the current month",
       "dateTime": "Combine any of the date formats with \"{time}\" (or {timePM}) to set a time.",
-      "repeats": "Repeating tasks",
+      "repeats": "Toistuvat tehtävät",
       "repeatsDescription": "To set a task as repeating in an interval, simply add '{suffix}' to the task text. The amount needs to be a number and can be omitted to use just the type (see examples)."
     }
   },
   "team": {
-    "title": "Teams",
-    "noTeams": "You are currently not part of any teams.",
+    "title": "Tiimit",
+    "noTeams": "Et ole tällä hetkellä missään tiimissä.",
     "create": {
-      "title": "Create a team",
-      "success": "The team was successfully created."
+      "title": "Luo tiimi",
+      "success": "Tiimi luotiin onnistuneesti."
     },
     "edit": {
       "title": "Edit Team \"{team}\"",
@@ -1040,19 +1040,19 @@
     "then": "then",
     "task": {
       "title": "Task Page",
-      "done": "Mark task done / undone",
-      "assign": "Assign this task to a user",
+      "done": "Merkitse tehtävä valmiiksi / keskeneräiseksi",
+      "assign": "Osoita tämä tehtävä käyttäjälle",
       "labels": "Lisää tunnisteita tähän tehtävään",
-      "dueDate": "Change the due date of this task",
+      "dueDate": "Muuta tämän tehtävän eräpäivää",
       "attachment": "Lisää liite tähän tehtävään",
-      "related": "Modify related tasks of this task",
+      "related": "Muokkaa tähän tehtävään liitettyjä tehtäviä",
       "color": "Vaihda tämän tehtävän väriä",
       "move": "Siirrä tehtävä toiseen projektiin",
-      "reminder": "Manage reminders of this task",
+      "reminder": "Hallitse tämän tehtävän muistutuksia",
       "description": "Toggle editing of the task description",
       "delete": "Poista tämä tehtävä",
       "priority": "Muuta tämän tehtävän prioriteettia",
-      "favorite": "Mark this task as favorite / unfavorite",
+      "favorite": "Lisää / poista tehtävä suosikeista",
       "save": "Tallenna nykyinen tehtävä"
     },
     "project": {
@@ -1064,11 +1064,11 @@
     },
     "navigation": {
       "title": "Navigation",
-      "overview": "Navigate to overview",
-      "upcoming": "Navigate to upcoming tasks",
-      "labels": "Navigate to labels",
-      "teams": "Navigate to teams",
-      "projects": "Navigate to projects"
+      "overview": "Siirry yleisnäkymään",
+      "upcoming": "Siirry tuleviin tehtäviin",
+      "labels": "Siirry tunnisteisiin",
+      "teams": "Siirry tiimeihin",
+      "projects": "Siirry projekteihin"
     }
   },
   "update": {
@@ -1077,10 +1077,10 @@
   },
   "menu": {
     "edit": "Muokkaa",
-    "archive": "Archive",
+    "archive": "Arkistoi",
     "duplicate": "Monista",
     "delete": "Poista",
-    "unarchive": "Un-Archive",
+    "unarchive": "Poista arkistosta",
     "setBackground": "Background settings",
     "share": "Jaa",
     "newProject": "Uusi projekti ",
@@ -1106,7 +1106,7 @@
   "notification": {
     "title": "Ilmoitukset",
     "none": "Sinulla ei ole ilmoituksia. Mukavaa päivää!",
-    "explainer": "Notifications will appear here when actions projects or tasks you subscribed to happen.",
+    "explainer": "Ilmoitukset näkyvät täällä kun tilaamissasi projekteissa tai tehtävissä tapahtuu jotain.",
     "markAllRead": "Merkitse kaikki ilmoitukset luetuiksi",
     "markAllReadSuccess": "Kaikki ilmoitukset merkittiin onnistuneesti luetuiksi."
   },
@@ -1195,7 +1195,7 @@
     "4018": "Invalid task filter concatenator.",
     "4019": "Invalid task filter value.",
     "4020": "This attachment does not belong to that task.",
-    "4021": "This user is already assigned to that task.",
+    "4021": "Tehtävä on jo osoitettu tälle käyttäjälle.",
     "4022": "Please provide what the reminder date is relative to.",
     "4023": "Cannot create a task relation cycle.",
     "6001": "Tiimin nimi ei voi olla tyhjä.",
