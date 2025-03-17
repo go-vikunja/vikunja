@@ -221,42 +221,42 @@ func RemoveUserFromTeamsByIDs(s *xorm.Session, u *user.User, teamIDs []int64) (e
 func getTeamDataFromToken(groups []map[string]interface{}, provider *Provider) (teamData []*team, errs []error) {
 	teamData = []*team{}
 	errs = []error{}
-	for _, team := range groups {
+	for _, t := range groups {
 		var name string
 		var description string
 		var oidcID string
 		var IsPublic bool
 
 		// Read name
-		_, exists := team["name"]
+		_, exists := t["name"]
 		if exists {
-			name = team["name"].(string)
+			name = t["name"].(string)
 		}
 
 		// Read description
-		_, exists = team["description"]
+		_, exists = t["description"]
 		if exists {
-			description = team["description"].(string)
+			description = t["description"].(string)
 		}
 
 		// Read isPublic flag
-		_, exists = team["isPublic"]
+		_, exists = t["isPublic"]
 		if exists {
-			IsPublic = team["isPublic"].(bool)
+			IsPublic = t["isPublic"].(bool)
 		}
 
 		// Read oidcID
-		_, exists = team["oidcID"]
+		_, exists = t["oidcID"]
 		if exists {
-			switch t := team["oidcID"].(type) {
+			switch id := t["oidcID"].(type) {
 			case string:
-				oidcID = team["oidcID"].(string)
+				oidcID = id
 			case int64:
-				oidcID = strconv.FormatInt(team["oidcID"].(int64), 10)
+				oidcID = strconv.FormatInt(id, 10)
 			case float64:
-				oidcID = strconv.FormatFloat(team["oidcID"].(float64), 'f', -1, 64)
+				oidcID = strconv.FormatFloat(id, 'f', -1, 64)
 			default:
-				log.Errorf("No oidcID assigned for %v or type %v not supported", team, t)
+				log.Errorf("No oidcID assigned for %v or type %v not supported", t, t)
 			}
 		}
 		if name == "" || oidcID == "" {
@@ -277,7 +277,7 @@ func CreateOIDCTeam(s *xorm.Session, teamData *team, u *user.User, issuer string
 	team = &models.Team{
 		Name:        getOIDCTeamName(teamData.Name),
 		Description: teamData.Description,
-		OidcID:      teamData.OidcID,
+		ExternalID:  teamData.OidcID,
 		Issuer:      issuer,
 		IsPublic:    teamData.IsPublic,
 	}
@@ -295,7 +295,7 @@ func GetOrCreateTeamsByOIDC(s *xorm.Session, teamData []*team, u *user.User, iss
 			return nil, err
 		}
 		if err != nil && models.IsErrOIDCTeamDoesNotExist(err) {
-			log.Debugf("Team with oidc_id %v and name %v does not exist. Creating team… ", oidcTeam.OidcID, oidcTeam.Name)
+			log.Debugf("Team with external_id %v and name %v does not exist. Creating team… ", oidcTeam.OidcID, oidcTeam.Name)
 			newTeam, err := CreateOIDCTeam(s, oidcTeam, u, issuer)
 			if err != nil {
 				return te, err
@@ -324,7 +324,7 @@ func GetOrCreateTeamsByOIDC(s *xorm.Session, teamData []*team, u *user.User, iss
 			return nil, err
 		}
 
-		log.Debugf("Team with oidc_id %v and name %v already exists.", team.OidcID, team.Name)
+		log.Debugf("Team with external_id %v and name %v already exists.", team.ExternalID, team.Name)
 		te = append(te, team)
 	}
 	return te, err

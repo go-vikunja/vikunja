@@ -39,8 +39,8 @@ type Team struct {
 	// The team's description.
 	Description string `xorm:"longtext null" json:"description"`
 	CreatedByID int64  `xorm:"bigint not null INDEX" json:"-"`
-	// The team's oidc id delivered by the oidc provider
-	OidcID string `xorm:"varchar(250) null" maxLength:"250" json:"oidc_id"`
+	// The team's external id provided by the openid or ldap provider
+	ExternalID string `xorm:"varchar(250) null" maxLength:"250" json:"external_id"`
 	// Contains the issuer extracted from the vikunja_groups claim if this team was created through oidc
 	Issuer string `xorm:"text null" json:"-"`
 
@@ -102,14 +102,6 @@ type TeamUser struct {
 	TeamID int64 `json:"-"`
 }
 
-// OIDCTeam is the relevant data for a team and is delivered by oidc token
-type OIDCTeam struct {
-	Name        string
-	OidcID      string
-	Description string
-	IsPublic    bool
-}
-
 // GetTeamByID gets a team by its ID
 func GetTeamByID(s *xorm.Session, id int64) (team *Team, err error) {
 	if id < 1 {
@@ -139,13 +131,13 @@ func GetTeamByID(s *xorm.Session, id int64) (team *Team, err error) {
 	return
 }
 
-// GetTeamByOidcID returns a team matching the given oidc_id
+// GetTeamByOidcID returns a team matching the given external_id
 // For oidc team creation oidcID and Name need to be set
 func GetTeamByOidcIDAndIssuer(s *xorm.Session, oidcID string, issuer string) (*Team, error) {
 	team := &Team{}
 	has, err := s.
 		Table("teams").
-		Where("oidc_id = ? AND issuer = ?", oidcID, issuer).
+		Where("external_id = ? AND issuer = ?", oidcID, issuer).
 		Get(team)
 	if !has || err != nil {
 		return nil, ErrOIDCTeamDoesNotExist{issuer, oidcID}
@@ -158,13 +150,10 @@ func FindAllOidcTeamIDsForUser(s *xorm.Session, userID int64) (ts []int64, err e
 		Table("team_members").
 		Where("user_id = ? ", userID).
 		Join("RIGHT", "teams", "teams.id = team_members.team_id").
-		Where("teams.oidc_id != ? AND teams.oidc_id IS NOT NULL", "").
+		Where("teams.external_id != ? AND teams.external_id IS NOT NULL", "").
 		Cols("teams.id").
 		Find(&ts)
-	if ts == nil || err != nil {
-		return ts, err
-	}
-	return ts, nil
+	return
 }
 
 func addMoreInfoToTeams(s *xorm.Session, teams []*Team) (err error) {

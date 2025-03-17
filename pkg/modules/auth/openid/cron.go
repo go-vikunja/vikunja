@@ -31,7 +31,7 @@ func RemoveEmptySSOTeams(s *xorm.Session) (err error) {
 	err = s.
 		Where(
 			builder.NotIn("id", builder.Expr("select team_members.team_id from team_members")),
-			builder.Or(builder.Neq{"oidc_id": ""}, builder.NotNull{"oidc_id"}),
+			builder.Or(builder.Neq{"external_id": ""}, builder.NotNull{"external_id"}),
 		).
 		Find(&teams)
 	if err != nil {

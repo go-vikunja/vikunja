@@ -33,12 +33,12 @@
 - id: 14
   name: testteam14
   created_by_id: 7
-  oidc_id: 14
+  external_id: 14
   issuer: "https://some.issuer"
 - id: 15
   name: testteam15
   created_by_id: 7
-  oidc_id: 15
+  external_id: 15
   issuer: "https://some.issuer"
   is_public: true
   description: "This is a public team"
