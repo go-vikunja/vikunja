@@ -23,13 +23,21 @@ import (
 	"strings"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/user"
-
+	"code.vikunja.io/api/pkg/utils"
 	"github.com/go-ldap/ldap/v3"
 	"xorm.io/xorm"
 )
+
+type team struct {
+	Name        string
+	DN          string
+	Description string
+}
 
 func InitializeLDAPConnection() {
 	if !config.AuthLdapEnabled.GetBool() {
@@ -162,7 +170,12 @@ func AuthenticateUserInLDAP(s *xorm.Session, username, password string) (u *user
 		return
 	}
 
-	return getOrCreateLdapUser(s, sr.Entries[0])
+	u, err = getOrCreateLdapUser(s, sr.Entries[0])
+
+	// TODO this should be unified with openid
+	syncUserGroups(l, u, userdn)
+
+	return u, err
 }
 
 func getOrCreateLdapUser(s *xorm.Session, entry *ldap.Entry) (u *user.User, err error) {
@@ -193,4 +206,181 @@ func getOrCreateLdapUser(s *xorm.Session, entry *ldap.Entry) (u *user.User, err 
 	}
 
 	return
+}
+
+func syncUserGroups(l *ldap.Conn, u *user.User, userdn string) {
+	s := db.NewSession()
+	defer s.Close()
+
+	searchRequest := ldap.NewSearchRequest(
+		config.AuthLdapBaseDN.GetString(),
+		ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false,
+		"(&(objectclass=*)(|(objectclass=group)(objectclass=groupOfNames)))",
+		[]string{
+			"dn",
+			"cn",
+			"member",
+			"description",
+		},
+		nil,
+	)
+
+	sr, err := l.Search(searchRequest)
+	if err != nil {
+		log.Errorf("Error searching for LDAP groups: %v", err)
+		return
+	}
+
+	var teams []*team
+
+	for _, group := range sr.Entries {
+		groupName := group.GetAttributeValue("cn")
+		members := group.GetAttributeValues("member")
+		description := group.GetAttributeValue("description")
+
+		log.Debugf("Group %s has %d members", groupName, len(members))
+
+		for _, member := range members {
+			if member == userdn {
+				teams = append(teams, &team{
+					Name:        groupName,
+					DN:          group.DN,
+					Description: description,
+				})
+			}
+		}
+	}
+
+	if len(teams) > 0 {
+		// Find old teams for user through LDAP
+		oldLdapTeams, err := models.FindAllExternalTeamIDsForUser(s, u.ID)
+		if err != nil {
+			log.Errorf("Error retrieving external team ids for user: %v", err)
+			return
+		}
+
+		// Assign or create teams for the user
+		ldapTeamIDs, err := assignOrCreateUserToTeams(s, u, teams)
+		if err != nil {
+			log.Errorf("Could not assign or create user to teams: %v", err)
+			return
+		}
+
+		// Remove user from teams they're no longer a member of
+		teamIDsToLeave := utils.NotIn(oldLdapTeams, ldapTeamIDs)
+		err = RemoveUserFromTeamsByIDs(s, u, teamIDsToLeave)
+		if err != nil {
+			log.Errorf("Error while removing user from teams: %v", err)
+			return
+		}
+
+		err = s.Commit()
+		if err != nil {
+			_ = s.Rollback()
+			log.Errorf("Error committing LDAP team changes: %v", err)
+		}
+	}
+}
+
+func assignOrCreateUserToTeams(s *xorm.Session, u *user.User, teamData []*team) (ldapTeamIDs []int64, err error) {
+	if len(teamData) == 0 {
+		return
+	}
+
+	// Check if we have seen these teams before.
+	// Find or create Teams and assign user as teammember.
+	teams, err := GetOrCreateTeamsByLDAP(s, teamData, u)
+	if err != nil {
+		log.Errorf("Error verifying team for %v, got %v. Error: %v", u.Name, teams, err)
+		return nil, err
+	}
+
+	for _, team := range teams {
+		tm := models.TeamMember{
+			TeamID:   team.ID,
+			UserID:   u.ID,
+			Username: u.Username,
+		}
+		exists, _ := tm.MembershipExists(s)
+		if !exists {
+			err = tm.Create(s, u)
+			if err != nil {
+				log.Errorf("Could not assign user %s to team %s: %v", u.Username, team.Name, err)
+			}
+		}
+		ldapTeamIDs = append(ldapTeamIDs, team.ID)
+	}
+
+	return ldapTeamIDs, err
+}
+
+func RemoveUserFromTeamsByIDs(s *xorm.Session, u *user.User, teamIDs []int64) (err error) {
+	if len(teamIDs) < 1 {
+		return nil
+	}
+
+	log.Debugf("Removing team_member with user_id %v from team_ids %v", u.ID, teamIDs)
+	_, err = s.
+		In("team_id", teamIDs).
+		And("user_id = ?", u.ID).
+		Delete(&models.TeamMember{})
+	return err
+}
+
+func getLDAPTeamName(name string) string {
+	return name + " (LDAP)"
+}
+
+func createLDAPTeam(s *xorm.Session, teamData *team, u *user.User) (team *models.Team, err error) {
+	team = &models.Team{
+		Name:        getLDAPTeamName(teamData.Name),
+		Description: teamData.Description,
+		ExternalID:  teamData.DN,
+		Issuer:      user.IssuerLDAP,
+	}
+	err = team.CreateNewTeam(s, u, false)
+	return team, err
+}
+
+// GetOrCreateTeamsByLDAP returns a slice of teams which were generated from the LDAP data.
+// If a team did not exist previously it is automatically created.
+func GetOrCreateTeamsByLDAP(s *xorm.Session, teamData []*team, u *user.User) (teams []*models.Team, err error) {
+	teams = []*models.Team{}
+
+	for _, ldapTeam := range teamData {
+		t, err := models.GetTeamByExternalIDAndIssuer(s, ldapTeam.DN, user.IssuerLDAP)
+		if err != nil && !models.IsErrExternalTeamDoesNotExist(err) {
+			return nil, err
+		}
+
+		if err != nil && models.IsErrExternalTeamDoesNotExist(err) {
+			log.Debugf("Team with LDAP DN %v and name %v does not exist. Creating team...", ldapTeam.DN, ldapTeam.Name)
+			newTeam, err := createLDAPTeam(s, ldapTeam, u)
+			if err != nil {
+				return teams, err
+			}
+			teams = append(teams, newTeam)
+			continue
+		}
+
+		// Compare the name and update if it changed
+		if t.Name != getLDAPTeamName(ldapTeam.Name) {
+			t.Name = getLDAPTeamName(ldapTeam.Name)
+		}
+
+		// Compare the description and update if it changed
+		if t.Description != ldapTeam.Description {
+			t.Description = ldapTeam.Description
+		}
+
+		err = t.Update(s, u)
+		if err != nil {
+			return nil, err
+		}
+
+		log.Debugf("Team with LDAP DN %v and name %v already exists.", ldapTeam.DN, t.Name)
+		teams = append(teams, t)
+	}
+
+	return teams, err
 }
