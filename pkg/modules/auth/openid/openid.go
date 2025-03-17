@@ -61,12 +61,20 @@ type Provider struct {
 	openIDProvider   *oidc.Provider
 	Oauth2Config     *oauth2.Config `json:"-"`
 }
+
 type claims struct {
 	Email             string                   `json:"email"`
 	Name              string                   `json:"name"`
 	PreferredUsername string                   `json:"preferred_username"`
 	Nickname          string                   `json:"nickname"`
 	VikunjaGroups     []map[string]interface{} `json:"vikunja_groups"`
+}
+
+type team struct {
+	Name        string
+	OidcID      string
+	Description string
+	IsPublic    bool
 }
 
 func init() {
@@ -174,7 +182,7 @@ func HandleCallback(c echo.Context) error {
 	return auth.NewUserAuthTokenResponse(u, c, false)
 }
 
-func AssignOrCreateUserToTeams(s *xorm.Session, u *user.User, teamData []*models.OIDCTeam, issuer string) (oidcTeams []int64, err error) {
+func AssignOrCreateUserToTeams(s *xorm.Session, u *user.User, teamData []*team, issuer string) (oidcTeams []int64, err error) {
 	if len(teamData) == 0 {
 		return
 	}
@@ -210,8 +218,8 @@ func RemoveUserFromTeamsByIDs(s *xorm.Session, u *user.User, teamIDs []int64) (e
 	return err
 }
 
-func getTeamDataFromToken(groups []map[string]interface{}, provider *Provider) (teamData []*models.OIDCTeam, errs []error) {
-	teamData = []*models.OIDCTeam{}
+func getTeamDataFromToken(groups []map[string]interface{}, provider *Provider) (teamData []*team, errs []error) {
+	teamData = []*team{}
 	errs = []error{}
 	for _, team := range groups {
 		var name string
@@ -256,7 +264,7 @@ func getTeamDataFromToken(groups []map[string]interface{}, provider *Provider) (
 			errs = append(errs, &user.ErrOpenIDCustomScopeMalformed{})
 			continue
 		}
-		teamData = append(teamData, &models.OIDCTeam{Name: name, OidcID: oidcID, Description: description, IsPublic: IsPublic})
+		teamData = append(teamData, &team{Name: name, OidcID: oidcID, Description: description, IsPublic: IsPublic})
 	}
 	return teamData, errs
 }
@@ -265,7 +273,7 @@ func getOIDCTeamName(name string) string {
 	return name + " (OIDC)"
 }
 
-func CreateOIDCTeam(s *xorm.Session, teamData *models.OIDCTeam, u *user.User, issuer string) (team *models.Team, err error) {
+func CreateOIDCTeam(s *xorm.Session, teamData *team, u *user.User, issuer string) (team *models.Team, err error) {
 	team = &models.Team{
 		Name:        getOIDCTeamName(teamData.Name),
 		Description: teamData.Description,
@@ -278,7 +286,7 @@ func CreateOIDCTeam(s *xorm.Session, teamData *models.OIDCTeam, u *user.User, is
 }
 
 // GetOrCreateTeamsByOIDC returns a slice of teams which were generated from the oidc data. If a team did not exist previously it is automatically created.
-func GetOrCreateTeamsByOIDC(s *xorm.Session, teamData []*models.OIDCTeam, u *user.User, issuer string) (te []*models.Team, err error) {
+func GetOrCreateTeamsByOIDC(s *xorm.Session, teamData []*team, u *user.User, issuer string) (te []*models.Team, err error) {
 	te = []*models.Team{}
 	// Procedure can only be successful if oidcID is set
 	for _, oidcTeam := range teamData {
