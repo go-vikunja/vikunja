@@ -27,11 +27,11 @@ import (
 func SyncExternalTeamsForUser(s *xorm.Session, u *user.User, teams []*Team, issuer, teamNameSuffix string) (err error) {
 
 	if len(teams) == 0 {
-		return
+		return removeUserFromAllTeamsForThisIssuer(s, u, issuer)
 	}
 
 	// Find old teams for user through LDAP
-	oldLdapTeams, err := FindAllExternalTeamIDsForUser(s, u.ID)
+	oldLdapTeams, err := findAllExternalTeamIDsForUser(s, u.ID)
 	if err != nil {
 		return
 	}
@@ -63,7 +63,7 @@ func GetTeamByExternalIDAndIssuer(s *xorm.Session, oidcID string, issuer string)
 	return team, nil
 }
 
-func FindAllExternalTeamIDsForUser(s *xorm.Session, userID int64) (ts []int64, err error) {
+func findAllExternalTeamIDsForUser(s *xorm.Session, userID int64) (ts []int64, err error) {
 	err = s.
 		Table("team_members").
 		Where("user_id = ? ", userID).
@@ -111,6 +111,24 @@ func removeUserFromTeamsByIDs(s *xorm.Session, u *user.User, teamIDs []int64) (e
 	}
 
 	log.Debugf("Removing team_member with user_id %v from team_ids %v", u.ID, teamIDs)
+	_, err = s.
+		In("team_id", teamIDs).
+		And("user_id = ?", u.ID).
+		Delete(&TeamMember{})
+	return err
+}
+
+func removeUserFromAllTeamsForThisIssuer(s *xorm.Session, u *user.User, issuer string) (err error) {
+	teamIDs := []int64{}
+	err = s.
+		Table("teams").
+		Where("issuer = ?", issuer).
+		Cols("id").
+		Find(&teamIDs)
+	if err != nil {
+		return
+	}
+
 	_, err = s.
 		In("team_id", teamIDs).
 		And("user_id = ?", u.ID).

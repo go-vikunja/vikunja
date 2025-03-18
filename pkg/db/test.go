@@ -109,10 +109,16 @@ func AssertExists(t *testing.T, table string, values map[string]interface{}, cus
 
 // AssertMissing checks and asserts the nonexiste nce of certain entries in the db
 func AssertMissing(t *testing.T, table string, values map[string]interface{}) {
-	v := make(map[string]interface{})
-	exists, err := x.Table(table).Where(values).Exist(&v)
+	all := []map[string]interface{}{}
+	err := x.Table(table).Where(values).Find(&all)
 	require.NoErrorf(t, err, "Failed to assert entries don't exist in db, error was: %s", err)
-	assert.Falsef(t, exists, "Entries %v exist in table %s", values, table)
+
+	if len(all) > 0 {
+		pretty, err := json.MarshalIndent(all, "", "    ")
+		require.NoErrorf(t, err, "Failed to assert entries do not exist in db, error was: %s", err)
+
+		t.Errorf("Entries %v exist in table %s:\n\n%v", values, table, string(pretty))
+	}
 }
 
 // AssertCount checks if a number of entries exists in the database
