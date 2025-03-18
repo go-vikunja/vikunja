@@ -96,6 +96,8 @@ services:
         path: /var/lib/postgresql/data
     commands:
       - docker-entrypoint.sh -c fsync=off -c full_page_writes=off # turns of wal
+  - name: test-ldap
+    image: gitea/test-openldap
 
 trigger:
   branch:
@@ -315,6 +317,13 @@ steps:
       VIKUNJA_TESTS_USE_CONFIG: 1
       VIKUNJA_DATABASE_TYPE: sqlite
       VIKUNJA_DATABASE_PATH: /db/vikunja-test.db
+      VIKUNJA_AUTH_LDAP_ENABLED: 1
+      VIKUNJA_AUTH_LDAP_HOST: test-ldap
+      VIKUNJA_AUTH_LDAP_USETLS: 0
+      VIKUNJA_AUTH_LDAP_BASEDN: dc=planetexpress,dc=com
+      VIKUNJA_AUTH_LDAP_BINDDN: uid=gitea,ou=service,dc=planetexpress,dc=com
+      VIKUNJA_AUTH_LDAP_BINDPASSWORD: password
+      VIKUNJA_AUTH_LDAP_USERFILTER: '(&(objectclass=inetorgperson)(uid=%s))'
     volumes:
       - name: tmp-sqlite-integration
         path: /db
@@ -335,6 +344,13 @@ steps:
       VIKUNJA_DATABASE_USER: root
       VIKUNJA_DATABASE_PASSWORD: vikunjatest
       VIKUNJA_DATABASE_DATABASE: vikunjatest
+      VIKUNJA_AUTH_LDAP_ENABLED: 1
+      VIKUNJA_AUTH_LDAP_HOST: test-ldap
+      VIKUNJA_AUTH_LDAP_USETLS: 0
+      VIKUNJA_AUTH_LDAP_BASEDN: dc=planetexpress,dc=com
+      VIKUNJA_AUTH_LDAP_BINDDN: uid=gitea,ou=service,dc=planetexpress,dc=com
+      VIKUNJA_AUTH_LDAP_BINDPASSWORD: password
+      VIKUNJA_AUTH_LDAP_USERFILTER: '(&(objectclass=inetorgperson)(uid=%s))'
     commands:
       - ./mage-static test:integration
     depends_on: [ fetch-tags, mage ]
@@ -353,6 +369,13 @@ steps:
       VIKUNJA_DATABASE_PASSWORD: vikunjatest
       VIKUNJA_DATABASE_DATABASE: vikunjatest
       VIKUNJA_DATABASE_SSLMODE: disable
+      VIKUNJA_AUTH_LDAP_ENABLED: 1
+      VIKUNJA_AUTH_LDAP_HOST: test-ldap
+      VIKUNJA_AUTH_LDAP_USETLS: 0
+      VIKUNJA_AUTH_LDAP_BASEDN: dc=planetexpress,dc=com
+      VIKUNJA_AUTH_LDAP_BINDDN: uid=gitea,ou=service,dc=planetexpress,dc=com
+      VIKUNJA_AUTH_LDAP_BINDPASSWORD: password
+      VIKUNJA_AUTH_LDAP_USERFILTER: '(&(objectclass=inetorgperson)(uid=%s))'
     commands:
       - ./mage-static test:integration
     depends_on: [ fetch-tags, mage ]
@@ -368,6 +391,13 @@ steps:
       VIKUNJA_CORS_ENABLE: 1
       VIKUNJA_DATABASE_PATH: memory
       VIKUNJA_DATABASE_TYPE: sqlite
+      VIKUNJA_AUTH_LDAP_ENABLED: 1
+      VIKUNJA_AUTH_LDAP_HOST: test-ldap
+      VIKUNJA_AUTH_LDAP_USETLS: 0
+      VIKUNJA_AUTH_LDAP_BASEDN: dc=planetexpress,dc=com
+      VIKUNJA_AUTH_LDAP_BINDDN: uid=gitea,ou=service,dc=planetexpress,dc=com
+      VIKUNJA_AUTH_LDAP_BINDPASSWORD: password
+      VIKUNJA_AUTH_LDAP_USERFILTER: '(&(objectclass=inetorgperson)(uid=%s))'
     commands:
       - ./vikunja
     detach: true
@@ -1204,6 +1234,6 @@ steps:
 
 ---
 kind: signature
-hmac: 321cc0f212caa1566aa5139c8f983f0e55653ddc241e3093b24697802be733be
+hmac: c85c1cb5429b3fa04f363c01dcfb9599b98a409ba521631654efeaa61c0dedd6
 
 ...
