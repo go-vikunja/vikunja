@@ -1,72 +1,78 @@
 <template>
 	<Card :title="$t('user.settings.avatar.title')">
-		<div class="control mb-4">
-			<label
-				v-for="(label, providerId) in AVATAR_PROVIDERS"
-				:key="providerId"
-				class="radio"
-			>
-				<input
-					v-model="avatarProvider"
-					name="avatarProvider"
-					type="radio"
-					:value="providerId"
+		<Message v-if="avatarProvider === 'ldap'">
+			{{ $t('user.settings.avatar.ldap') }}
+		</Message>
+
+		<template v-else>
+			<div class="control mb-4">
+				<label
+					v-for="(label, providerId) in AVATAR_PROVIDERS"
+					:key="providerId"
+					class="radio"
 				>
-				{{ label }}
-			</label>
-		</div>
+					<input
+						v-model="avatarProvider"
+						name="avatarProvider"
+						type="radio"
+						:value="providerId"
+					>
+					{{ label }}
+				</label>
+			</div>
 
-		<template v-if="avatarProvider === 'upload'">
-			<input
-				ref="avatarUploadInput"
-				accept="image/*"
-				class="is-hidden"
-				type="file"
-				@change="cropAvatar"
-			>
+			<template v-if="avatarProvider === 'upload'">
+				<input
+					ref="avatarUploadInput"
+					accept="image/*"
+					class="is-hidden"
+					type="file"
+					@change="cropAvatar"
+				>
 
-			<x-button
-				v-if="!isCropAvatar"
-				:loading="avatarService.loading || loading"
-				@click="avatarUploadInput.click()"
-			>
-				{{ $t('user.settings.avatar.uploadAvatar') }}
-			</x-button>
-			<template v-else>
-				<Cropper
-					ref="cropper"
-					:src="avatarToCrop"
-					:stencil-props="{aspectRatio: 1}"
-					class="mb-4 cropper"
-					@ready="() => loading = false"
-				/>
 				<x-button
-					v-cy="'uploadAvatar'"
+					v-if="!isCropAvatar"
 					:loading="avatarService.loading || loading"
-					@click="uploadAvatar"
+					@click="avatarUploadInput.click()"
 				>
 					{{ $t('user.settings.avatar.uploadAvatar') }}
 				</x-button>
+				<template v-else>
+					<Cropper
+						ref="cropper"
+						:src="avatarToCrop"
+						:stencil-props="{aspectRatio: 1}"
+						class="mb-4 cropper"
+						@ready="() => loading = false"
+					/>
+					<x-button
+						v-cy="'uploadAvatar'"
+						:loading="avatarService.loading || loading"
+						@click="uploadAvatar"
+					>
+						{{ $t('user.settings.avatar.uploadAvatar') }}
+					</x-button>
+				</template>
 			</template>
-		</template>
 
-		<div
-			v-else
-			class="mt-2"
-		>
-			<x-button
-				:loading="avatarService.loading || loading"
-				class="is-fullwidth"
-				@click="updateAvatarStatus()"
+			<div
+				v-else
+				class="mt-2"
 			>
-				{{ $t('misc.save') }}
-			</x-button>
-		</div>
+				<x-button
+					:loading="avatarService.loading || loading"
+					class="is-fullwidth"
+					@click="updateAvatarStatus()"
+				>
+					{{ $t('misc.save') }}
+				</x-button>
+			</div>
+		</template>
 	</Card>
 </template>
 
 <script lang="ts">
-export default { name: 'UserSettingsAvatar' }
+export default {name: 'UserSettingsAvatar'}
 </script>
 
 <script setup lang="ts">
@@ -80,6 +86,7 @@ import AvatarModel from '@/models/avatar'
 import {useTitle} from '@/composables/useTitle'
 import {success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
+import Message from '@/components/misc/Message.vue'
 
 const {t} = useI18n({useScope: 'global'})
 const authStore = useAuthStore()
@@ -100,10 +107,12 @@ const loading = ref(false)
 
 
 const avatarProvider = ref('')
+
 async function avatarStatus() {
-	const { avatarProvider: currentProvider } = await avatarService.get({})
+	const {avatarProvider: currentProvider} = await avatarService.get({})
 	avatarProvider.value = currentProvider
 }
+
 avatarStatus()
 
 
@@ -138,6 +147,7 @@ async function uploadAvatar() {
 
 const avatarToCrop = ref()
 const avatarUploadInput = ref()
+
 function cropAvatar() {
 	const avatar = avatarUploadInput.value.files
 
