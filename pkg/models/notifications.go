@@ -166,8 +166,8 @@ type ProjectCreatedNotification struct {
 // ToMail returns the mail notification for ProjectCreatedNotification
 func (n *ProjectCreatedNotification) ToMail(lang string) *notifications.Mail {
 	return notifications.NewMail().
-		Subject(i18n.T(lang, "notifications.project.created.subject", n.Doer.GetName(), n.Project.Title)).
-		Line(i18n.T(lang, "notifications.project.created.message", n.Doer.GetName(), n.Project.Title)).
+		Subject(i18n.T(lang, "notifications.project.created", n.Doer.GetName(), n.Project.Title)).
+		Line(i18n.T(lang, "notifications.project.created", n.Doer.GetName(), n.Project.Title)).
 		Action("View Project", config.ServicePublicURL.GetString()+"projects/")
 }
 

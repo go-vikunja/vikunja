@@ -100,10 +100,7 @@
             }
         },
         "project": {
-            "created": {
-                "subject": "%[1]s created the project \"%[2]s\"",
-                "message": "%[1]s created the project \"%[2]s\""
-            }
+            "created": "%[1]s created the project \"%[2]s\"",
         },
         "team": {
             "member_added": {
@@ -129,12 +126,7 @@
                 "message": "Looks like the move from %[1]s didn't go as planned this time.",
                 "retry": "No worries, though! Just give it another shot by starting over the same way you did before. Sometimes, these hiccups happen because of glitches on %[1]s's end, but trying again often does the trick.",
                 "error": "We bumped into a little error along the way: `%[2]s`.",
-                "report": "Please drop us a note about this [in the forum](https://community.vikunja.io/) or any of the usual places so that we can take a look at why it failed."
-            },
-            "failed_reported": {
-                "subject": "The migration from %[1]s to Vikunja has failed",
-                "message": "Looks like the move from %[1]s didn't go as planned this time.",
-                "retry": "No worries, though! Just give it another shot by starting over the same way you did before. Sometimes, these hiccups happen because of glitches on %[1]s's end, but trying again often does the trick.",
+                "report": "Please drop us a note about this [in the forum](https://community.vikunja.io/) or any of the usual places so that we can take a look at why it failed.",
                 "working_on_it": "We've got the error message on our radar and are on it to get it sorted out soon."
             }
         },
