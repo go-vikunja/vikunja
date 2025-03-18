@@ -21,7 +21,6 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
-
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
@@ -128,31 +127,6 @@ func GetTeamByID(s *xorm.Session, id int64) (team *Team, err error) {
 
 	team = &t
 
-	return
-}
-
-// GetTeamByExternalIDAndIssuer returns a team matching the given external_id
-// For oidc team creation oidcID and Name need to be set
-func GetTeamByExternalIDAndIssuer(s *xorm.Session, oidcID string, issuer string) (*Team, error) {
-	team := &Team{}
-	has, err := s.
-		Table("teams").
-		Where("external_id = ? AND issuer = ?", oidcID, issuer).
-		Get(team)
-	if !has || err != nil {
-		return nil, ErrExternalTeamDoesNotExist{issuer, oidcID}
-	}
-	return team, nil
-}
-
-func FindAllExternalTeamIDsForUser(s *xorm.Session, userID int64) (ts []int64, err error) {
-	err = s.
-		Table("team_members").
-		Where("user_id = ? ", userID).
-		Join("RIGHT", "teams", "teams.id = team_members.team_id").
-		Where("teams.external_id != ? AND teams.external_id IS NOT NULL", "").
-		Cols("teams.id").
-		Find(&ts)
 	return
 }
 
