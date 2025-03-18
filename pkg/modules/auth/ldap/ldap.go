@@ -108,7 +108,7 @@ func sanitizedUserQuery(username string) (string, bool) {
 	return fmt.Sprintf(config.AuthLdapUserFilter.GetString(), username), true
 }
 
-func AuthenticateUserInLDAP(s *xorm.Session, username, password string) (u *user.User, err error) {
+func AuthenticateUserInLDAP(s *xorm.Session, username, password string, syncGroups bool) (u *user.User, err error) {
 	if password == "" || username == "" {
 		return nil, user.ErrNoUsernamePassword{}
 	}
@@ -169,6 +169,10 @@ func AuthenticateUserInLDAP(s *xorm.Session, username, password string) (u *user
 		return nil, err
 	}
 
+	if !syncGroups {
+		return
+	}
+
 	err = syncUserGroups(l, u, userdn)
 
 	return u, err
@@ -211,7 +215,7 @@ func syncUserGroups(l *ldap.Conn, u *user.User, userdn string) (err error) {
 	searchRequest := ldap.NewSearchRequest(
 		config.AuthLdapBaseDN.GetString(),
 		ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false,
-		"(&(objectclass=*)(|(objectclass=group)(objectclass=groupOfNames)))",
+		config.AuthLdapGroupSyncFilter.GetString(),
 		[]string{
 			"dn",
 			"cn",

@@ -88,6 +88,8 @@ const (
 	AuthLdapBindDN     Key = `auth.ldap.binddn`
 	// #nosec G101
 	AuthLdapBindPassword         Key = `auth.ldap.bindpassword`
+	AuthLdapGroupSyncEnabled     Key = `auth.ldap.groupsyncenabled`
+	AuthLdapGroupSyncFilter      Key = `auth.ldap.groupsyncfilter`
 	AuthLdapAttributeUsername    Key = `auth.ldap.attribute.username`
 	AuthLdapAttributeEmail       Key = `auth.ldap.attribute.email`
 	AuthLdapAttributeDisplayname Key = `auth.ldap.attribute.displayname`
@@ -352,6 +354,8 @@ func InitDefaultConfig() {
 	AuthLdapPort.setDefault(389)
 	AuthLdapUseTLS.setDefault(true)
 	AuthLdapVerifyTLS.setDefault(true)
+	AuthLdapGroupSyncEnabled.setDefault(false)
+	AuthLdapGroupSyncFilter.setDefault("(&(objectclass=*)(|(objectclass=group)(objectclass=groupOfNames)))")
 	AuthLdapAttributeUsername.setDefault("uid")
 	AuthLdapAttributeEmail.setDefault("mail")
 	AuthLdapAttributeDisplayname.setDefault("displayName")

@@ -766,6 +766,16 @@
                             "comment": "The password of the account used to search the LDAP directory."
                         },
                         {
+                            "key": "groupsyncenabled",
+                            "default_value": "false",
+                            "comment": "If enabled, Vikunja will automagically add users to teams in Vikunja matching `groupsyncfilter`. The teams will be automatically created and kept in sync by Vikunja."
+                        },
+                        {
+                            "key": "groupsyncfilter",
+                            "default_value": "(&(objectclass=*)(|(objectclass=group)(objectclass=groupOfNames)))",
+                            "comment": "The filter to search for group objects in the ldap directory. Only used when `groupsyncenabled` is set to `true`."
+                        },
+                        {
                             "key": "attribute",
                             "default_value": "",
                             "comment": "The directory attributes that are used to create accounts in Vikunja.",

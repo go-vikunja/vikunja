@@ -55,7 +55,7 @@ func Login(c echo.Context) (err error) {
 
 	var user *user2.User
 	if config.AuthLdapEnabled.GetBool() {
-		user, err = ldap.AuthenticateUserInLDAP(s, u.Username, u.Password)
+		user, err = ldap.AuthenticateUserInLDAP(s, u.Username, u.Password, config.AuthLdapGroupSyncEnabled.GetBool())
 		if err != nil && !user2.IsErrWrongUsernameOrPassword(err) {
 			_ = s.Rollback()
 			return handler.HandleHTTPError(err)
