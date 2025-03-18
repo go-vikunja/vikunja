@@ -9041,6 +9041,11 @@ const docTemplate = `{
                     "description": "The team's description.",
                     "type": "string"
                 },
+                "external_id": {
+                    "description": "The team's external id provided by the openid or ldap provider",
+                    "type": "string",
+                    "maxLength": 250
+                },
                 "id": {
                     "description": "The unique, numeric id of this team.",
                     "type": "integer"
@@ -9065,11 +9070,6 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 250,
                     "minLength": 1
-                },
-                "oidc_id": {
-                    "description": "The team's oidc id delivered by the oidc provider",
-                    "type": "string",
-                    "maxLength": 250
                 },
                 "updated": {
                     "description": "A timestamp when this relation was last updated. You cannot change this value.",
@@ -9184,6 +9184,11 @@ const docTemplate = `{
                     "description": "The team's description.",
                     "type": "string"
                 },
+                "external_id": {
+                    "description": "The team's external id provided by the openid or ldap provider",
+                    "type": "string",
+                    "maxLength": 250
+                },
                 "id": {
                     "description": "The unique, numeric id of this team.",
                     "type": "integer"
@@ -9208,11 +9213,6 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 250,
                     "minLength": 1
-                },
-                "oidc_id": {
-                    "description": "The team's oidc id delivered by the oidc provider",
-                    "type": "string",
-                    "maxLength": 250
                 },
                 "right": {
                     "$ref": "#/definitions/models.Right"
