@@ -90,6 +90,7 @@ const (
 	AuthLdapBindPassword         Key = `auth.ldap.bindpassword`
 	AuthLdapGroupSyncEnabled     Key = `auth.ldap.groupsyncenabled`
 	AuthLdapGroupSyncFilter      Key = `auth.ldap.groupsyncfilter`
+	AuthLdapAvatarSyncAttribute  Key = `auth.ldap.avatarsyncattribute`
 	AuthLdapAttributeUsername    Key = `auth.ldap.attribute.username`
 	AuthLdapAttributeEmail       Key = `auth.ldap.attribute.email`
 	AuthLdapAttributeDisplayname Key = `auth.ldap.attribute.displayname`

@@ -776,6 +776,11 @@
                             "comment": "The filter to search for group objects in the ldap directory. Only used when `groupsyncenabled` is set to `true`."
                         },
                         {
+                            "key": "avatarsyncattribute",
+                            "default_value": "",
+                            "comment": "The LDAP attribute where an image, decoded as raw bytes, can be found. If provided, Vikunja will use the value as avatar."
+                        },
+                        {
                             "key": "attribute",
                             "default_value": "",
                             "comment": "The directory attributes that are used to create accounts in Vikunja.",

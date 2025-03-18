@@ -17,6 +17,7 @@
 package ldap
 
 import (
+	"bytes"
 	"crypto/tls"
 	"errors"
 	"fmt"
@@ -27,6 +28,7 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
+	"code.vikunja.io/api/pkg/modules/avatar/upload"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/go-ldap/ldap/v3"
@@ -108,7 +110,7 @@ func sanitizedUserQuery(username string) (string, bool) {
 	return fmt.Sprintf(config.AuthLdapUserFilter.GetString(), username), true
 }
 
-func AuthenticateUserInLDAP(s *xorm.Session, username, password string, syncGroups bool) (u *user.User, err error) {
+func AuthenticateUserInLDAP(s *xorm.Session, username, password string, syncGroups bool, avatarSyncAttribute string) (u *user.User, err error) {
 	if password == "" || username == "" {
 		return nil, user.ErrNoUsernamePassword{}
 	}
@@ -137,6 +139,7 @@ func AuthenticateUserInLDAP(s *xorm.Session, username, password string, syncGrou
 			config.AuthLdapAttributeUsername.GetString(),
 			config.AuthLdapAttributeEmail.GetString(),
 			config.AuthLdapAttributeDisplayname.GetString(),
+			"jpegPhoto",
 		},
 		nil,
 	)
@@ -167,6 +170,15 @@ func AuthenticateUserInLDAP(s *xorm.Session, username, password string, syncGrou
 	u, err = getOrCreateLdapUser(s, sr.Entries[0])
 	if err != nil {
 		return nil, err
+	}
+
+	if avatarSyncAttribute != "" {
+		raw := sr.Entries[0].GetRawAttributeValue(avatarSyncAttribute)
+		u.AvatarProvider = "ldap"
+		err = upload.StoreAvatarFile(s, u, bytes.NewReader(raw))
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if !syncGroups {

@@ -40,7 +40,7 @@ func TestLdapLogin(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		user, err := AuthenticateUserInLDAP(s, "professor", "professor", false)
+		user, err := AuthenticateUserInLDAP(s, "professor", "professor", false, "")
 
 		require.NoError(t, err)
 		assert.Equal(t, "professor", user.Username)
@@ -58,7 +58,7 @@ func TestLdapLogin(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		_, err := AuthenticateUserInLDAP(s, "professor", "wrongpassword", false)
+		_, err := AuthenticateUserInLDAP(s, "professor", "wrongpassword", false, "")
 
 		require.Error(t, err)
 		assert.True(t, user2.IsErrWrongUsernameOrPassword(err))
@@ -69,7 +69,7 @@ func TestLdapLogin(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		_, err := AuthenticateUserInLDAP(s, "gnome", "professor", false)
+		_, err := AuthenticateUserInLDAP(s, "gnome", "professor", false, "")
 
 		require.Error(t, err)
 		assert.True(t, user2.IsErrWrongUsernameOrPassword(err))
@@ -80,7 +80,7 @@ func TestLdapLogin(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		user, err := AuthenticateUserInLDAP(s, "professor", "professor", true)
+		user, err := AuthenticateUserInLDAP(s, "professor", "professor", true, "")
 
 		require.NoError(t, err)
 		assert.Equal(t, "professor", user.Username)
@@ -97,6 +97,22 @@ func TestLdapLogin(t *testing.T) {
 			"name":        "git (LDAP)",
 			"issuer":      "ldap",
 			"external_id": "cn=git,ou=people,dc=planetexpress,dc=com",
+		}, false)
+	})
+
+	t.Run("should sync avatar when enabled", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		user, err := AuthenticateUserInLDAP(s, "professor", "professor", false, "jpegPhoto")
+
+		require.NoError(t, err)
+		assert.Equal(t, "professor", user.Username)
+		db.AssertExists(t, "users", map[string]interface{}{
+			"username":        "professor",
+			"issuer":          "ldap",
+			"avatar_provider": "ldap",
 		}, false)
 	})
 }
