@@ -19,27 +19,23 @@ package v1
 import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/avatar"
 	"code.vikunja.io/api/pkg/modules/avatar/empty"
 	"code.vikunja.io/api/pkg/modules/avatar/gravatar"
 	"code.vikunja.io/api/pkg/modules/avatar/initials"
+	"code.vikunja.io/api/pkg/modules/avatar/ldap"
 	"code.vikunja.io/api/pkg/modules/avatar/marble"
 	"code.vikunja.io/api/pkg/modules/avatar/upload"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web/handler"
 
-	"bytes"
-	"image"
-	"image/png"
 	"io"
 	"net/http"
 	"strconv"
 	"strings"
 
-	"github.com/disintegration/imaging"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/labstack/echo/v4"
 )
@@ -81,6 +77,8 @@ func GetAvatar(c echo.Context) error {
 		avatarProvider = &upload.Provider{}
 	case "marble":
 		avatarProvider = &marble.Provider{}
+	case "ldap":
+		avatarProvider = &ldap.Provider{}
 	default:
 		avatarProvider = &empty.Provider{}
 	}
@@ -164,48 +162,9 @@ func UploadAvatar(c echo.Context) (err error) {
 	}
 	_, _ = src.Seek(0, io.SeekStart)
 
-	// Remove the old file if one exists
-	if u.AvatarFileID != 0 {
-		f := &files.File{ID: u.AvatarFileID}
-		if err := f.Delete(s); err != nil {
-			if !files.IsErrFileDoesNotExist(err) {
-				_ = s.Rollback()
-				return handler.HandleHTTPError(err)
-			}
-		}
-		u.AvatarFileID = 0
-	}
-
-	// Resize the new file to a max height of 1024
-	img, _, err := image.Decode(src)
-	if err != nil {
-		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
-	}
-	resizedImg := imaging.Resize(img, 0, 1024, imaging.Lanczos)
-	buf := &bytes.Buffer{}
-	if err := png.Encode(buf, resizedImg); err != nil {
-		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
-	}
-
-	upload.InvalidateCache(u)
-
-	// Save the file
-	f, err := files.CreateWithMime(buf, file.Filename, uint64(file.Size), u, "image/png")
-	if err != nil {
-		_ = s.Rollback()
-		if files.IsErrFileIsTooLarge(err) {
-			return echo.ErrBadRequest
-		}
-
-		return handler.HandleHTTPError(err)
-	}
-
-	u.AvatarFileID = f.ID
 	u.AvatarProvider = "upload"
-
-	if _, err := user.UpdateUser(s, u, false); err != nil {
+	err = upload.StoreAvatarFile(s, u, src)
+	if err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err)
 	}
