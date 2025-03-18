@@ -100,7 +100,7 @@
             }
         },
         "project": {
-            "created": "%[1]s created the project \"%[2]s\"",
+            "created": "%[1]s created the project \"%[2]s\""
         },
         "team": {
             "member_added": {
