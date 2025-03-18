@@ -120,22 +120,22 @@
         },
         "migration": {
             "done": {
-                "subject": "The migration from %[1]s to Vikunja was completed",
-                "imported": "Vikunja has imported all lists/projects, tasks, notes, reminders and files from %[1]s you have access to.",
-                "have_fun": "Have fun with your new (old) projects!"
+                "subject": "Die Migration von %[1]s zu Vikunja wurde abgeschlossen",
+                "imported": "Vikunja hat alle Listen/Projekte, Aufgaben, Notizen, Erinnerungen und Dateien von %[1]s importiert, auf die du Zugriff hast.",
+                "have_fun": "Viel Spaß mit deinen neuen (alten) Projekten!"
             },
             "failed": {
-                "subject": "The migration from %[1]s to Vikunja has failed",
-                "message": "Looks like the move from %[1]s didn't go as planned this time.",
-                "retry": "No worries, though! Just give it another shot by starting over the same way you did before. Sometimes, these hiccups happen because of glitches on %[1]s's end, but trying again often does the trick.",
-                "error": "We bumped into a little error along the way: `%[2]s`.",
-                "report": "Please drop us a note about this [in the forum](https://community.vikunja.io/) or any of the usual places so that we can take a look at why it failed."
+                "subject": "Die Migration von %[1]s zu Vikunja ist fehlgeschlagen",
+                "message": "Sieht so aus, als ob der Wechsel von %[1]s diesmal nicht wie geplant geklappt hat.",
+                "retry": "Aber keine Sorge! Probiere es einfach genau so nochmal. Manchmal passieren diese Fehler aufgrund von Störungen auf Seiten von %[1]s, aber ein erneuter Versuch hilft oft.",
+                "error": "Wir sind auf einen kleinen Fehler gestoßen: `%[2]s`.",
+                "report": "Bitte hinterlasse uns eine Nachricht dazu [im Forum](https://community.vikunja.io/) oder an einer der üblichen Stellen, damit wir uns anschauen können, warum es fehlgeschlagen ist."
             },
             "failed_reported": {
-                "subject": "The migration from %[1]s to Vikunja has failed",
+                "subject": "Die Migration von %[1]s zu Vikunja ist fehlgeschlagen",
                 "message": "Looks like the move from %[1]s didn't go as planned this time.",
                 "retry": "No worries, though! Just give it another shot by starting over the same way you did before. Sometimes, these hiccups happen because of glitches on %[1]s's end, but trying again often does the trick.",
-                "working_on_it": "We've got the error message on our radar and are on it to get it sorted out soon."
+                "working_on_it": "Wir haben die Fehlermeldung auf dem Schirm und arbeiten daran, das Problem bald zu beheben."
             }
         },
         "common": {
