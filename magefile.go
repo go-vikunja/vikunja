@@ -93,6 +93,23 @@ func runCmdWithOutput(name string, arg ...string) (output []byte, err error) {
 }
 
 func getRawVersionString() (version string, err error) {
+	version, err = getRawVersionNumber()
+	if err != nil {
+		return
+	}
+
+	if version == "main" {
+		version = "unstable"
+	}
+
+	if version != "" && version != "unstable" {
+		return
+	}
+
+	return
+}
+
+func getRawVersionNumber() (version string, err error) {
 	versionEnv := os.Getenv("RELEASE_VERSION")
 	if versionEnv != "" {
 		return versionEnv, nil
@@ -103,15 +120,7 @@ func getRawVersionString() (version string, err error) {
 	}
 
 	if os.Getenv("DRONE_BRANCH") != "" {
-		version = strings.Replace(os.Getenv("DRONE_BRANCH"), "release/v", "", 1)
-	}
-
-	if version == "main" {
-		version = "unstable"
-	}
-
-	if version != "" {
-		return
+		return strings.Replace(os.Getenv("DRONE_BRANCH"), "release/v", "", 1), nil
 	}
 
 	versionBytes, err := runCmdWithOutput("git", "describe", "--tags", "--always", "--abbrev=10")
@@ -119,13 +128,15 @@ func getRawVersionString() (version string, err error) {
 }
 
 func setVersion() {
+	versionNumber, err := getRawVersionNumber()
+	VersionNumber = strings.Trim(versionNumber, "\n")
+	VersionNumber = strings.Replace(VersionNumber, "-g", "-", 1)
+
 	version, err := getRawVersionString()
 	if err != nil {
 		fmt.Printf("Error getting version: %s\n", err)
 		os.Exit(1)
 	}
-	VersionNumber = strings.Trim(version, "\n")
-	VersionNumber = strings.Replace(VersionNumber, "-g", "-", 1)
 	Version = version
 }
 
