@@ -30,7 +30,7 @@ export interface IProjectView extends IAbstract {
 	projectId: IProject['id']
 	viewKind: ProjectViewKind
 
-	filter: IFilters
+	filter: IFilters|undefined
 	position: number
 
 	bucketConfigurationMode: ProjectViewBucketConfigurationMode

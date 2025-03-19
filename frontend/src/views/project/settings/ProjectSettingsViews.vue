@@ -38,7 +38,7 @@ watch(
 const showCreateForm = ref(false)
 
 const projectViewService = shallowReactive(new ProjectViewService())
-const newView = ref<IProjectView>(new ProjectViewModel({}))
+const newView = ref<IProjectView>(ProjectViewModel.createWithDefaultFilter())
 const viewIdToDelete = ref<number | null>(null)
 const showDeleteModal = ref(false)
 const viewToEdit = ref<IProjectView | null>(null)
