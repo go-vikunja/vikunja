@@ -893,7 +893,12 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setB
 	if t.BucketID != 0 {
 		providedBucket, err = getBucketByID(s, t.BucketID)
 		if err != nil {
-			return err
+			return
+		}
+
+		err = checkBucketLimit(s, a, t, providedBucket)
+		if err != nil {
+			return
 		}
 	}
 
