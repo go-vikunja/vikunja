@@ -576,6 +576,11 @@ async function addTaskToBucket(bucketId: IBucket['id']) {
 	newTaskText.value = ''
 	kanbanStore.addTaskToBucket(task)
 	scrollTaskContainerToTop(bucketId)
+
+	const bucket = kanbanStore.getBucketById(bucketId)
+	if (bucket && bucket.count >= bucket.limit) {
+		toggleShowNewTaskInput(bucketId)
+	}
 }
 
 function scrollTaskContainerToTop(bucketId: IBucket['id']) {
