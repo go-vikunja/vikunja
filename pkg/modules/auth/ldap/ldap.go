@@ -253,7 +253,7 @@ func syncUserGroups(l *ldap.Conn, u *user.User, userdn string) (err error) {
 		log.Debugf("Group %s has %d members", groupName, len(members))
 
 		for _, member := range members {
-			if member == userdn {
+			if member == userdn || member == u.Username {
 				teams = append(teams, &models.Team{
 					Name:        groupName,
 					ExternalID:  group.DN,
