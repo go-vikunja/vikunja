@@ -231,7 +231,7 @@ func syncUserGroups(l *ldap.Conn, u *user.User, userdn string) (err error) {
 		[]string{
 			"dn",
 			"cn",
-			"member",
+			config.AuthLdapAttributeMemberID.GetString(),
 			"description",
 		},
 		nil,
@@ -247,7 +247,7 @@ func syncUserGroups(l *ldap.Conn, u *user.User, userdn string) (err error) {
 
 	for _, group := range sr.Entries {
 		groupName := group.GetAttributeValue("cn")
-		members := group.GetAttributeValues("member")
+		members := group.GetAttributeValues(config.AuthLdapAttributeMemberID.GetString())
 		description := group.GetAttributeValue("description")
 
 		log.Debugf("Group %s has %d members", groupName, len(members))

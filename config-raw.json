@@ -799,6 +799,11 @@
                                     "key": "displayname",
                                     "default_value": "displayName",
                                     "comment": "The LDAP attribute used to set the displayed name in Vikunja."
+                                },
+                                {
+                                    "key": "memberid",
+                                    "default_value": "member",
+                                    "comment": "The LDAP attribute used to check group membership of a team in Vikunja. Only used when groups are synced to Vikunja."
                                 }
                             ]
                         }

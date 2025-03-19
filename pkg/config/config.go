@@ -94,6 +94,7 @@ const (
 	AuthLdapAttributeUsername    Key = `auth.ldap.attribute.username`
 	AuthLdapAttributeEmail       Key = `auth.ldap.attribute.email`
 	AuthLdapAttributeDisplayname Key = `auth.ldap.attribute.displayname`
+	AuthLdapAttributeMemberID    Key = `auth.ldap.attribute.memberid`
 
 	LegalImprintURL Key = `legal.imprinturl`
 	LegalPrivacyURL Key = `legal.privacyurl`
@@ -360,6 +361,7 @@ func InitDefaultConfig() {
 	AuthLdapAttributeUsername.setDefault("uid")
 	AuthLdapAttributeEmail.setDefault("mail")
 	AuthLdapAttributeDisplayname.setDefault("displayName")
+	AuthLdapAttributeMemberID.setDefault("member")
 
 	// Database
 	DatabaseType.setDefault("sqlite")
