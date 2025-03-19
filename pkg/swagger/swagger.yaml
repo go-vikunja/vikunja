@@ -901,6 +901,8 @@ definitions:
     type: object
   models.TaskBucket:
     properties:
+      bucket:
+        $ref: '#/definitions/models.Bucket'
       bucket_id:
         type: integer
       project_view_id:

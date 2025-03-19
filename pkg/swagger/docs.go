@@ -8871,6 +8871,9 @@ const docTemplate = `{
         "models.TaskBucket": {
             "type": "object",
             "properties": {
+                "bucket": {
+                    "$ref": "#/definitions/models.Bucket"
+                },
                 "bucket_id": {
                     "type": "integer"
                 },
