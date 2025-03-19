@@ -550,7 +550,8 @@ func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *U
 			user.AvatarProvider != "gravatar" &&
 			user.AvatarProvider != "initials" &&
 			user.AvatarProvider != "upload" &&
-			user.AvatarProvider != "marble" {
+			user.AvatarProvider != "marble" &&
+			user.AvatarProvider != "ldap" {
 			return updatedUser, &ErrInvalidAvatarProvider{AvatarProvider: user.AvatarProvider}
 		}
 	}

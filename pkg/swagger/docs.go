@@ -5917,53 +5917,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/teams/{id}/members/{userID}": {
-            "delete": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Remove a user from a team. This will also revoke any access this user might have via that team. A user can remove themselves from the team if they are not the last user in the team.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "team"
-                ],
-                "summary": "Remove a user from a team",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Team ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "User ID",
-                        "name": "userID",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The user was successfully removed from the team.",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            }
-        },
         "/teams/{id}/members/{userID}/admin": {
             "post": {
                 "security": [
@@ -5998,6 +5951,53 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "The member right was successfully changed.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/teams/{id}/members/{username}": {
+            "delete": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Remove a user from a team. This will also revoke any access this user might have via that team. A user can remove themselves from the team if they are not the last user in the team.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "team"
+                ],
+                "summary": "Remove a user from a team",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The ID of the team you want to remove th user from",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The username of the user you want to remove",
+                        "name": "username",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The user was successfully removed from the team.",
                         "schema": {
                             "$ref": "#/definitions/models.Message"
                         }
@@ -8877,8 +8877,8 @@ const docTemplate = `{
                 "project_view_id": {
                     "type": "integer"
                 },
-                "task_done": {
-                    "type": "boolean"
+                "task": {
+                    "$ref": "#/definitions/models.Task"
                 },
                 "task_id": {
                     "type": "integer"
@@ -9041,6 +9041,11 @@ const docTemplate = `{
                     "description": "The team's description.",
                     "type": "string"
                 },
+                "external_id": {
+                    "description": "The team's external id provided by the openid or ldap provider",
+                    "type": "string",
+                    "maxLength": 250
+                },
                 "id": {
                     "description": "The unique, numeric id of this team.",
                     "type": "integer"
@@ -9065,11 +9070,6 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 250,
                     "minLength": 1
-                },
-                "oidc_id": {
-                    "description": "The team's oidc id delivered by the oidc provider",
-                    "type": "string",
-                    "maxLength": 250
                 },
                 "updated": {
                     "description": "A timestamp when this relation was last updated. You cannot change this value.",
@@ -9184,6 +9184,11 @@ const docTemplate = `{
                     "description": "The team's description.",
                     "type": "string"
                 },
+                "external_id": {
+                    "description": "The team's external id provided by the openid or ldap provider",
+                    "type": "string",
+                    "maxLength": 250
+                },
                 "id": {
                     "description": "The unique, numeric id of this team.",
                     "type": "integer"
@@ -9208,11 +9213,6 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 250,
                     "minLength": 1
-                },
-                "oidc_id": {
-                    "description": "The team's oidc id delivered by the oidc provider",
-                    "type": "string",
-                    "maxLength": 250
                 },
                 "right": {
                     "$ref": "#/definitions/models.Right"

@@ -29,6 +29,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/disintegration/imaging"
+	"xorm.io/xorm"
 )
 
 // Provider represents the upload avatar provider
@@ -110,4 +111,43 @@ func InvalidateCache(u *user.User) {
 	if err := keyvalue.Del("avatar_upload_" + strconv.Itoa(int(u.ID))); err != nil {
 		log.Errorf("Could not invalidate upload avatar cache for user %d, error was %s", u.ID, err)
 	}
+}
+
+func StoreAvatarFile(s *xorm.Session, u *user.User, src io.Reader) (err error) {
+
+	// Remove the old file if one exists
+	if u.AvatarFileID != 0 {
+		f := &files.File{ID: u.AvatarFileID}
+		if err := f.Delete(s); err != nil {
+			if !files.IsErrFileDoesNotExist(err) {
+				return err
+			}
+		}
+		u.AvatarFileID = 0
+	}
+
+	// Resize the new file to a max height of 1024
+	img, _, err := image.Decode(src)
+	if err != nil {
+		return
+	}
+	resizedImg := imaging.Resize(img, 0, 1024, imaging.Lanczos)
+	buf := &bytes.Buffer{}
+	err = png.Encode(buf, resizedImg)
+	if err != nil {
+		return
+	}
+
+	InvalidateCache(u)
+
+	// Save the file
+	f, err := files.CreateWithMime(buf, "avatar.png", uint64(buf.Len()), u, "image/png")
+	if err != nil {
+		return err
+	}
+
+	u.AvatarFileID = f.ID
+
+	_, err = user.UpdateUser(s, u, false)
+	return
 }

@@ -14,23 +14,17 @@
 // You should have received a copy of the GNU Affero General Public Licensee
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package openid
+package ldap
 
 import (
-	"os"
-	"testing"
-
-	"code.vikunja.io/api/pkg/events"
-	"code.vikunja.io/api/pkg/files"
-	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/avatar/upload"
 	"code.vikunja.io/api/pkg/user"
 )
 
-// TestMain is the main test function used to bootstrap the test env
-func TestMain(m *testing.M) {
-	user.InitTests()
-	files.InitTests()
-	models.SetupTests()
-	events.Fake()
-	os.Exit(m.Run())
+type Provider struct{}
+
+func (p *Provider) GetAvatar(user *user.User, size int64) (avatar []byte, mimeType string, err error) {
+	up := upload.Provider{}
+
+	return up.GetAvatar(user, size)
 }

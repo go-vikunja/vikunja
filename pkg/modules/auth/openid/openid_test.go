@@ -19,10 +19,10 @@ package openid
 import (
 	"testing"
 
-	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
+
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/utils"
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -129,12 +129,9 @@ func TestGetOrCreateUser(t *testing.T) {
 
 		u, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
-		teamData, errs := getTeamDataFromToken(cl.VikunjaGroups, nil)
-		for _, err := range errs {
-			require.NoError(t, err)
-		}
+		teamData := getTeamDataFromToken(cl.VikunjaGroups, nil)
 		require.NoError(t, err)
-		oidcTeams, err := AssignOrCreateUserToTeams(s, u, teamData, "https://some.issuer")
+		err = models.SyncExternalTeamsForUser(s, u, teamData, "https://some.issuer", "OIDC")
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
@@ -144,9 +141,9 @@ func TestGetOrCreateUser(t *testing.T) {
 			"email": cl.Email,
 		}, false)
 		db.AssertExists(t, "teams", map[string]interface{}{
-			"id":        oidcTeams,
-			"name":      team + " (OIDC)",
-			"is_public": false,
+			"name":        team + " (OIDC)",
+			"external_id": oidcID,
+			"is_public":   false,
 		}, false)
 	})
 
@@ -169,19 +166,16 @@ func TestGetOrCreateUser(t *testing.T) {
 
 		u, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
-		teamData, errs := getTeamDataFromToken(cl.VikunjaGroups, nil)
-		for _, err := range errs {
-			require.NoError(t, err)
-		}
-		oidcTeams, err := AssignOrCreateUserToTeams(s, u, teamData, "https://some.issuer")
+		teamData := getTeamDataFromToken(cl.VikunjaGroups, nil)
+		err = models.SyncExternalTeamsForUser(s, u, teamData, "https://some.issuer", "OIDC")
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
 
 		db.AssertExists(t, "teams", map[string]interface{}{
-			"id":        oidcTeams,
-			"name":      team + " (OIDC)",
-			"is_public": true,
+			"name":        team + " (OIDC)",
+			"external_id": oidcID,
+			"is_public":   true,
 		}, false)
 	})
 
@@ -200,17 +194,13 @@ func TestGetOrCreateUser(t *testing.T) {
 		}
 
 		u := &user.User{ID: 10}
-		teamData, errs := getTeamDataFromToken(cl.VikunjaGroups, nil)
-		for _, err := range errs {
-			require.NoError(t, err)
-		}
-		oidcTeams, err := AssignOrCreateUserToTeams(s, u, teamData, "https://some.issuer")
+		teamData := getTeamDataFromToken(cl.VikunjaGroups, nil)
+		err := models.SyncExternalTeamsForUser(s, u, teamData, "https://some.issuer", "OIDC")
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
 
 		db.AssertExists(t, "team_members", map[string]interface{}{
-			"team_id": oidcTeams,
 			"user_id": u.ID,
 		}, false)
 	})
@@ -225,32 +215,25 @@ func TestGetOrCreateUser(t *testing.T) {
 		}
 
 		u := &user.User{ID: 10}
-		teamData, errs := getTeamDataFromToken(cl.VikunjaGroups, nil)
-		if len(errs) > 0 {
-			for _, err := range errs {
-				require.NoError(t, err)
-			}
-		}
-		oldOidcTeams, err := models.FindAllOidcTeamIDsForUser(s, u.ID)
-		require.NoError(t, err)
-		oidcTeams, err := AssignOrCreateUserToTeams(s, u, teamData, "https://some.issuer")
-		require.NoError(t, err)
-		teamIDsToLeave := utils.NotIn(oldOidcTeams, oidcTeams)
-		require.NoError(t, err)
-		err = RemoveUserFromTeamsByIDs(s, u, teamIDsToLeave)
-		require.NoError(t, err)
-		err = s.Commit()
+		teamData := getTeamDataFromToken(cl.VikunjaGroups, nil)
+		err := models.SyncExternalTeamsForUser(s, u, teamData, "https://some.issuer", "OIDC")
 		require.NoError(t, err)
 
 		db.AssertMissing(t, "team_members", map[string]interface{}{
-			"team_id": oidcTeams,
+			"team_id": 14,
 			"user_id": u.ID,
 		})
-		db.AssertMissing(t, "teams", map[string]interface{}{
-			"id": oidcTeams,
+		db.AssertMissing(t, "team_members", map[string]interface{}{
+			"team_id": 15,
+			"user_id": u.ID,
 		})
+		// This team is not external and should not be touched
+		db.AssertExists(t, "team_members", map[string]interface{}{
+			"team_id": 13,
+			"user_id": u.ID,
+		}, false)
 	})
-	t.Run("ProviderFallback : Match to existing local user on username", func(t *testing.T) {
+	t.Run("ProviderFallback: Match to existing local user on username", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
@@ -267,7 +250,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		assert.Equal(t, user.IssuerLocal, u.Issuer, "User should be a local one")
 		assert.Equal(t, 11, int(u.ID), "user id 11 expected")
 	})
-	t.Run("ProviderFallback : Match to existing local user on email", func(t *testing.T) {
+	t.Run("ProviderFallback: Match to existing local user on email", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
@@ -286,7 +269,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		assert.Equal(t, user.IssuerLocal, u.Issuer, "User should be a local one")
 		assert.Equal(t, 11, int(u.ID), "user id 11 expected")
 	})
-	t.Run("ProviderFallback : Match to existing local user  on username and email", func(t *testing.T) {
+	t.Run("ProviderFallback: Match to existing local user  on username and email", func(t *testing.T) {
 
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()

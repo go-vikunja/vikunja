@@ -1321,6 +1321,17 @@ func addOneMonthToDate(d time.Time) time.Time {
 	return time.Date(d.Year(), d.Month()+1, d.Day(), d.Hour(), d.Minute(), d.Second(), d.Nanosecond(), config.GetTimeZone())
 }
 
+func addRepeatIntervalToTime(now, t time.Time, duration time.Duration) time.Time {
+	for {
+		t = t.Add(duration)
+		if t.After(now) {
+			break
+		}
+	}
+
+	return t
+}
+
 func setTaskDatesDefault(oldTask, newTask *Task) {
 	if oldTask.RepeatAfter == 0 {
 		return
@@ -1333,13 +1344,7 @@ func setTaskDatesDefault(oldTask, newTask *Task) {
 
 	// assuming we'll merge the new task over the old task
 	if !oldTask.DueDate.IsZero() {
-		// Always add one instance of the repeating interval to catch cases where a due date is already in the future
-		// but not the repeating interval
-		newTask.DueDate = oldTask.DueDate.Add(repeatDuration)
-		// Add the repeating interval until the new due date is in the future
-		for !newTask.DueDate.After(now) {
-			newTask.DueDate = newTask.DueDate.Add(repeatDuration)
-		}
+		newTask.DueDate = addRepeatIntervalToTime(now, oldTask.DueDate, repeatDuration)
 	}
 
 	newTask.Reminders = oldTask.Reminders
@@ -1347,26 +1352,17 @@ func setTaskDatesDefault(oldTask, newTask *Task) {
 	// To make this easier, we sort them first because we can then rely on the fact the first is the smallest
 	if len(oldTask.Reminders) > 0 {
 		for in, r := range oldTask.Reminders {
-			newTask.Reminders[in].Reminder = r.Reminder.Add(repeatDuration)
-			for !newTask.Reminders[in].Reminder.After(now) {
-				newTask.Reminders[in].Reminder = newTask.Reminders[in].Reminder.Add(repeatDuration)
-			}
+			newTask.Reminders[in].Reminder = addRepeatIntervalToTime(now, r.Reminder, repeatDuration)
 		}
 	}
 
 	// If a task has a start and end date, the end date should keep the difference to the start date when setting them as new
 	if !oldTask.StartDate.IsZero() {
-		newTask.StartDate = oldTask.StartDate.Add(repeatDuration)
-		for !newTask.StartDate.After(now) {
-			newTask.StartDate = newTask.StartDate.Add(repeatDuration)
-		}
+		newTask.StartDate = addRepeatIntervalToTime(now, oldTask.StartDate, repeatDuration)
 	}
 
 	if !oldTask.EndDate.IsZero() {
-		newTask.EndDate = oldTask.EndDate.Add(repeatDuration)
-		for !newTask.EndDate.After(now) {
-			newTask.EndDate = newTask.EndDate.Add(repeatDuration)
-		}
+		newTask.EndDate = addRepeatIntervalToTime(now, oldTask.EndDate, repeatDuration)
 	}
 
 	newTask.Done = false

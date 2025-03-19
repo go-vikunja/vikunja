@@ -61,10 +61,10 @@ func (n *MigrationFailedReportedNotification) ToMail(lang string) *notifications
 	kind := cases.Title(language.English).String(n.MigratorName)
 
 	return notifications.NewMail().
-		Subject(i18n.T(lang, "notifications.migration.failed_reported.subject", kind)).
-		Line(i18n.T(lang, "notifications.migration.failed_reported.message", kind)).
-		Line(i18n.T(lang, "notifications.migration.failed_reported.retry", kind)).
-		Line(i18n.T(lang, "notifications.migration.failed_reported.working_on_it"))
+		Subject(i18n.T(lang, "notifications.migration.failed.subject", kind)).
+		Line(i18n.T(lang, "notifications.migration.failed.message", kind)).
+		Line(i18n.T(lang, "notifications.migration.failed.retry", kind)).
+		Line(i18n.T(lang, "notifications.migration.failed.working_on_it"))
 }
 
 // ToDB returns the MigrationFailedReportedNotification notification in a format which can be saved in the db

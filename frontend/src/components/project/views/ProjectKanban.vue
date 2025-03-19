@@ -528,7 +528,7 @@ async function updateTaskPosition(e) {
 				projectViewId: props.viewId,
 				projectId: project.value.id,
 			}))
-			newTask.done = updatedTaskBucket.taskDone
+			Object.assign(newTask, updatedTaskBucket.task)
 			if (updatedTaskBucket.bucketId !== newTask.bucketId) {
 				kanbanStore.moveTaskToBucket(newTask, updatedTaskBucket.bucketId)
 			}

@@ -17,13 +17,18 @@
 package ldap
 
 import (
+	"bytes"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"strings"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
+	"code.vikunja.io/api/pkg/modules/avatar/upload"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/go-ldap/ldap/v3"
@@ -105,7 +110,7 @@ func sanitizedUserQuery(username string) (string, bool) {
 	return fmt.Sprintf(config.AuthLdapUserFilter.GetString(), username), true
 }
 
-func AuthenticateUserInLDAP(s *xorm.Session, username, password string) (u *user.User, err error) {
+func AuthenticateUserInLDAP(s *xorm.Session, username, password string, syncGroups bool, avatarSyncAttribute string) (u *user.User, err error) {
 	if password == "" || username == "" {
 		return nil, user.ErrNoUsernamePassword{}
 	}
@@ -134,6 +139,7 @@ func AuthenticateUserInLDAP(s *xorm.Session, username, password string) (u *user
 			config.AuthLdapAttributeUsername.GetString(),
 			config.AuthLdapAttributeEmail.GetString(),
 			config.AuthLdapAttributeDisplayname.GetString(),
+			"jpegPhoto",
 		},
 		nil,
 	)
@@ -153,10 +159,35 @@ func AuthenticateUserInLDAP(s *xorm.Session, username, password string) (u *user
 	// Bind as the user to verify their password
 	err = l.Bind(userdn, password)
 	if err != nil {
+		var lerr *ldap.Error
+		if errors.As(err, &lerr) && lerr.ResultCode == ldap.LDAPResultInvalidCredentials {
+			return nil, user.ErrWrongUsernameOrPassword{}
+		}
+
 		return
 	}
 
-	return getOrCreateLdapUser(s, sr.Entries[0])
+	u, err = getOrCreateLdapUser(s, sr.Entries[0])
+	if err != nil {
+		return nil, err
+	}
+
+	if avatarSyncAttribute != "" {
+		raw := sr.Entries[0].GetRawAttributeValue(avatarSyncAttribute)
+		u.AvatarProvider = "ldap"
+		err = upload.StoreAvatarFile(s, u, bytes.NewReader(raw))
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if !syncGroups {
+		return
+	}
+
+	err = syncUserGroups(l, u, userdn)
+
+	return u, err
 }
 
 func getOrCreateLdapUser(s *xorm.Session, entry *ldap.Entry) (u *user.User, err error) {
@@ -184,6 +215,62 @@ func getOrCreateLdapUser(s *xorm.Session, entry *ldap.Entry) (u *user.User, err 
 		}
 
 		return auth.CreateUserWithRandomUsername(s, uu)
+	}
+
+	return
+}
+
+func syncUserGroups(l *ldap.Conn, u *user.User, userdn string) (err error) {
+	s := db.NewSession()
+	defer s.Close()
+
+	searchRequest := ldap.NewSearchRequest(
+		config.AuthLdapBaseDN.GetString(),
+		ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false,
+		config.AuthLdapGroupSyncFilter.GetString(),
+		[]string{
+			"dn",
+			"cn",
+			"member",
+			"description",
+		},
+		nil,
+	)
+
+	sr, err := l.Search(searchRequest)
+	if err != nil {
+		log.Errorf("Error searching for LDAP groups: %v", err)
+		return err
+	}
+
+	var teams []*models.Team
+
+	for _, group := range sr.Entries {
+		groupName := group.GetAttributeValue("cn")
+		members := group.GetAttributeValues("member")
+		description := group.GetAttributeValue("description")
+
+		log.Debugf("Group %s has %d members", groupName, len(members))
+
+		for _, member := range members {
+			if member == userdn {
+				teams = append(teams, &models.Team{
+					Name:        groupName,
+					ExternalID:  group.DN,
+					Description: description,
+				})
+			}
+		}
+	}
+
+	err = models.SyncExternalTeamsForUser(s, u, teams, user.IssuerLDAP, "LDAP")
+	if err != nil {
+		return
+	}
+
+	err = s.Commit()
+	if err != nil {
+		_ = s.Rollback()
 	}
 
 	return

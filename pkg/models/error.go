@@ -1310,28 +1310,28 @@ func (err ErrTeamDoesNotHaveAccessToProject) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusForbidden, Code: ErrCodeTeamDoesNotHaveAccessToProject, Message: "This team does not have access to the project."}
 }
 
-// ErrOIDCTeamDoesNotExist represents an error where a team with specified oidcId property does not exist for a given issuer
-type ErrOIDCTeamDoesNotExist struct {
-	OidcID string
-	Issuer string
+// ErrExternalTeamDoesNotExist represents an error where a team with specified oidcId property does not exist for a given issuer
+type ErrExternalTeamDoesNotExist struct {
+	ExternalID string
+	Issuer     string
 }
 
-// IsErrOIDCTeamDoesNotExist checks if an error is ErrOIDCTeamDoesNotExist.
-func IsErrOIDCTeamDoesNotExist(err error) bool {
-	_, ok := err.(ErrOIDCTeamDoesNotExist)
+// IsErrExternalTeamDoesNotExist checks if an error is ErrExternalTeamDoesNotExist.
+func IsErrExternalTeamDoesNotExist(err error) bool {
+	_, ok := err.(ErrExternalTeamDoesNotExist)
 	return ok
 }
 
 // ErrTeamDoesNotExist represents an error where a team does not exist
-func (err ErrOIDCTeamDoesNotExist) Error() string {
-	return fmt.Sprintf("No team could be found for the given oidcId and issuer. [OIDC ID : %v] [Issuer: %v] ", err.OidcID, err.Issuer)
+func (err ErrExternalTeamDoesNotExist) Error() string {
+	return fmt.Sprintf("No team could be found for the given oidcId and issuer. [OIDC ID : %v] [Issuer: %v] ", err.ExternalID, err.Issuer)
 }
 
 // ErrCodeTeamDoesNotExist holds the unique world-error code of this error
 const ErrCodeOIDCTeamDoesNotExist = 6008
 
 // HTTPError holds the http error description
-func (err ErrOIDCTeamDoesNotExist) HTTPError() web.HTTPError {
+func (err ErrExternalTeamDoesNotExist) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusNotFound,
 		Code:     ErrCodeTeamDoesNotExist,

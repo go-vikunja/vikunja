@@ -513,15 +513,20 @@ func flattenTranslations(prefix string, src map[string]interface{}, dest map[str
 func walkCodebaseForTranslationKeys(rootDir string) ([]TranslationKey, error) {
 	var allKeys []TranslationKey
 
-	err := filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
+	pkgDir := filepath.Join(rootDir, "pkg")
+
+	err := filepath.Walk(pkgDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 
-		// Skip non-Go files, vendor directory, and the contrib directory
-		if !info.IsDir() && strings.HasSuffix(path, ".go") &&
-			!strings.Contains(path, "/vendor/") &&
-			!strings.Contains(path, "/contrib/") {
+		// Skip hidden directories (starting with .)
+		if info.IsDir() && strings.HasPrefix(info.Name(), ".") {
+			return filepath.SkipDir
+		}
+
+		// Only process Go files
+		if !info.IsDir() && strings.HasSuffix(path, ".go") {
 			keys, err := extractTranslationKeysFromFile(path)
 			if err != nil {
 				fmt.Printf("Warning: %v\n", err)

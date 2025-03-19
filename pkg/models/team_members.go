@@ -82,11 +82,11 @@ func (tm *TeamMember) Create(s *xorm.Session, a web.Auth) (err error) {
 // @tags team
 // @Produce json
 // @Security JWTKeyAuth
-// @Param id path int true "Team ID"
-// @Param userID path int true "User ID"
+// @Param id path int true "The ID of the team you want to remove th user from"
+// @Param username path int true "The username of the user you want to remove"
 // @Success 200 {object} models.Message "The user was successfully removed from the team."
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /teams/{id}/members/{userID} [delete]
+// @Router /teams/{id}/members/{username} [delete]
 func (tm *TeamMember) Delete(s *xorm.Session, _ web.Auth) (err error) {
 
 	total, err := s.Where("team_id = ?", tm.TeamID).Count(&TeamMember{})
