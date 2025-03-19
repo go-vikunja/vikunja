@@ -84,8 +84,14 @@ export const useKanbanStore = defineStore('kanban', () => {
 		buckets.value.splice(bucketIndex, 1)
 	}
 
-	function setBucketById(newBucket: IBucket) {
+	function setBucketById(newBucket: IBucket, setTasks: boolean = true) {
 		const bucketIndex = findIndexById(buckets.value, newBucket.id)
+		const oldBucket = buckets.value[bucketIndex]
+		if (!setTasks && oldBucket) {
+			newBucket.tasks = [
+				...oldBucket.tasks,
+			]
+		}
 		buckets.value[bucketIndex] = newBucket
 	}
 

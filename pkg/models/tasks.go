@@ -753,40 +753,37 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 }
 
 // Checks if adding a new task would exceed the bucket limit
-func checkBucketLimit(s *xorm.Session, a web.Auth, t *Task, bucket *Bucket) (err error) {
-	if bucket.Limit > 0 {
-		var taskCount int64
-		view, err := GetProjectViewByID(s, bucket.ProjectViewID)
+func checkBucketLimit(s *xorm.Session, a web.Auth, t *Task, bucket *Bucket) (taskCount int64, err error) {
+	view, err := GetProjectViewByID(s, bucket.ProjectViewID)
+	if err != nil {
+		return 0, err
+	}
+
+	if view.ProjectID < 0 || (view.Filter != nil && view.Filter.Filter != "") {
+		tc := &TaskCollection{
+			ProjectID:     view.ProjectID,
+			ProjectViewID: bucket.ProjectViewID,
+		}
+
+		_, _, taskCount, err = tc.ReadAll(s, a, "", 1, 1)
 		if err != nil {
-			return err
+			return 0, err
 		}
-
-		if view.ProjectID < 0 || (view.Filter != nil && view.Filter.Filter != "") {
-			tc := &TaskCollection{
-				ProjectID:     view.ProjectID,
-				ProjectViewID: bucket.ProjectViewID,
-			}
-
-			_, _, taskCount, err = tc.ReadAll(s, a, "", 1, 1)
-			if err != nil {
-				return err
-			}
-		} else {
-			taskCount, err = s.
-				Where("bucket_id = ?", bucket.ID).
-				GroupBy("task_id").
-				Count(&TaskBucket{})
-			if err != nil {
-				return err
-			}
-		}
-
-		if taskCount >= bucket.Limit {
-			return ErrBucketLimitExceeded{TaskID: t.ID, BucketID: bucket.ID, Limit: bucket.Limit}
+	} else {
+		taskCount, err = s.
+			Where("bucket_id = ?", bucket.ID).
+			GroupBy("task_id").
+			Count(&TaskBucket{})
+		if err != nil {
+			return 0, err
 		}
 	}
 
-	return nil
+	if bucket.Limit > 0 && taskCount >= bucket.Limit {
+		return 0, ErrBucketLimitExceeded{TaskID: t.ID, BucketID: bucket.ID, Limit: bucket.Limit}
+	}
+
+	return
 }
 
 func calculateDefaultPosition(entityID int64, position float64) float64 {
@@ -896,50 +893,15 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setB
 			return
 		}
 
-		err = checkBucketLimit(s, a, t, providedBucket)
+		_, err = checkBucketLimit(s, a, t, providedBucket)
 		if err != nil {
 			return
 		}
 	}
 
-	views, err := getViewsForProject(s, t.ProjectID)
+	positions, taskBuckets, err := setTaskInBucketInViews(s, t, a, setBucket, providedBucket)
 	if err != nil {
 		return err
-	}
-
-	positions := []*TaskPosition{}
-	taskBuckets := []*TaskBucket{}
-
-	for _, view := range views {
-		if setBucket &&
-			view.ViewKind == ProjectViewKindKanban &&
-			view.BucketConfigurationMode == BucketConfigurationModeManual {
-
-			bucketID := view.DoneBucketID
-			if !t.Done || view.DoneBucketID == 0 {
-				if providedBucket != nil && view.ID == providedBucket.ProjectViewID {
-					bucketID = providedBucket.ID
-				} else {
-					bucketID, err = getDefaultBucketID(s, view)
-					if err != nil {
-						return err
-					}
-				}
-			}
-
-			taskBuckets = append(taskBuckets, &TaskBucket{
-				BucketID:      bucketID,
-				TaskID:        t.ID,
-				ProjectViewID: view.ID,
-			})
-		}
-
-		newPosition, err := calculateNewPositionForTask(s, a, t, view)
-		if err != nil {
-			return err
-		}
-
-		positions = append(positions, newPosition)
 	}
 
 	if len(positions) > 0 {
@@ -988,6 +950,49 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setB
 
 	err = updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
 	return
+}
+
+func setTaskInBucketInViews(s *xorm.Session, t *Task, a web.Auth, setBucket bool, providedBucket *Bucket) ([]*TaskPosition, []*TaskBucket, error) {
+	views, err := getViewsForProject(s, t.ProjectID)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	positions := []*TaskPosition{}
+	taskBuckets := []*TaskBucket{}
+
+	for _, view := range views {
+		if setBucket &&
+			view.ViewKind == ProjectViewKindKanban &&
+			view.BucketConfigurationMode == BucketConfigurationModeManual {
+
+			bucketID := view.DoneBucketID
+			if !t.Done || view.DoneBucketID == 0 {
+				if providedBucket != nil && view.ID == providedBucket.ProjectViewID {
+					bucketID = providedBucket.ID
+				} else {
+					bucketID, err = getDefaultBucketID(s, view)
+					if err != nil {
+						return nil, nil, err
+					}
+				}
+			}
+
+			taskBuckets = append(taskBuckets, &TaskBucket{
+				BucketID:      bucketID,
+				TaskID:        t.ID,
+				ProjectViewID: view.ID,
+			})
+		}
+
+		newPosition, err := calculateNewPositionForTask(s, a, t, view)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		positions = append(positions, newPosition)
+	}
+	return positions, taskBuckets, nil
 }
 
 // Update updates a project task

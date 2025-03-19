@@ -10,4 +10,5 @@ export interface ITaskBucket extends IAbstract {
 	projectViewId: IProjectView['id']
 	projectId: IProject['id']
 	task: ?ITask
+	bucket: ?IBucket
 }

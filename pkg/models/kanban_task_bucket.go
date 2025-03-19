@@ -26,11 +26,12 @@ import (
 )
 
 type TaskBucket struct {
-	BucketID      int64 `xorm:"bigint not null index" json:"bucket_id" param:"bucket"`
-	TaskID        int64 `xorm:"bigint not null index" json:"task_id"`
-	ProjectViewID int64 `xorm:"bigint not null index" json:"project_view_id" param:"view"`
-	ProjectID     int64 `xorm:"-" json:"-" param:"project"`
-	Task          *Task `xorm:"-" json:"task"`
+	BucketID      int64   `xorm:"bigint not null index" json:"bucket_id" param:"bucket"`
+	Bucket        *Bucket `xorm:"-" json:"bucket"`
+	TaskID        int64   `xorm:"bigint not null index" json:"task_id"`
+	ProjectViewID int64   `xorm:"bigint not null index" json:"project_view_id" param:"view"`
+	ProjectID     int64   `xorm:"-" json:"-" param:"project"`
+	Task          *Task   `xorm:"-" json:"task"`
 
 	web.Rights   `xorm:"-" json:"-"`
 	web.CRUDable `xorm:"-" json:"-"`
@@ -123,10 +124,11 @@ func (b *TaskBucket) Update(s *xorm.Session, a web.Auth) (err error) {
 	// Check the bucket limit
 	// Only check the bucket limit if the task is being moved between buckets, allow reordering the task within a bucket
 	if b.BucketID != 0 && b.BucketID != oldTaskBucket.BucketID {
-		err = checkBucketLimit(s, a, &task, bucket)
+		taskCount, err := checkBucketLimit(s, a, &task, bucket)
 		if err != nil {
 			return err
 		}
+		bucket.Count = taskCount
 	}
 
 	var updateBucket = true
@@ -203,9 +205,11 @@ func (b *TaskBucket) Update(s *xorm.Session, a web.Auth) (err error) {
 		if err != nil {
 			return
 		}
+		bucket.Count++
 	}
 
 	b.Task = &task
+	b.Bucket = bucket
 
 	doer, _ := user.GetFromAuth(a)
 	return events.Dispatch(&TaskUpdatedEvent{

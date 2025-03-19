@@ -532,6 +532,7 @@ async function updateTaskPosition(e) {
 			if (updatedTaskBucket.bucketId !== newTask.bucketId) {
 				kanbanStore.moveTaskToBucket(newTask, updatedTaskBucket.bucketId)
 			}
+			kanbanStore.setBucketById(updatedTaskBucket.bucket, false)
 		}
 		kanbanStore.setTaskInBucket(newTask)
 
