@@ -28,6 +28,7 @@ import {
 	faDownload,
 	faEllipsisH,
 	faEllipsisV,
+	faExclamation,
 	faExclamationCircle,
 	faEye,
 	faEyeSlash,
@@ -193,6 +194,7 @@ library.add(faFont)
 library.add(faRulerHorizontal)
 library.add(faUnderline)
 library.add(faFaceLaugh)
+library.add(faExclamation)
 
 // overwriting the wrong types
 export default FontAwesomeIcon as unknown as FontAwesomeIconFixedTypes

@@ -5,6 +5,7 @@ import type {PrefixMode} from '@/modules/parseTaskText'
 import type {BasicColorSchema} from '@vueuse/core'
 import type {SupportedLocale} from '@/i18n'
 import type {DefaultProjectViewKind} from '@/modelTypes/IProjectView'
+import type {Priority} from '@/constants/priorities'
 
 export interface IFrontendSettings {
 	playSoundWhenDone: boolean
@@ -12,6 +13,7 @@ export interface IFrontendSettings {
 	colorSchema: BasicColorSchema
 	filterIdUsedOnOverview: IProject['id'] | null
 	defaultView?: DefaultProjectViewKind
+	minimumPriority: Priority
 }
 
 export interface IUserSettings extends IAbstract {
@@ -20,7 +22,7 @@ export interface IUserSettings extends IAbstract {
 	discoverableByName: boolean
 	discoverableByEmail: boolean
 	overdueTasksRemindersEnabled: boolean
-	overdueTasksRemindersTime: string | Date
+	overdueTasksRemindersTime: undefined | string | Date
 	defaultProjectId: undefined | IProject['id']
 	weekStart: 0 | 1 | 2 | 3 | 4 | 5 | 6
 	timezone: string

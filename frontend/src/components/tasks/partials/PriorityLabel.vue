@@ -1,17 +1,22 @@
 <template>
 	<span
-		v-if="!done && (showAll || priority >= priorities.HIGH)"
+		v-if="!done && (showAll || priority >= minimumPriority)"
 		:class="{
-			'not-so-high': priority === priorities.HIGH,
+			'negligible': priority <= priorities.LOW,
+			'not-so-high': priority > priorities.LOW && priority < priorities.HIGH,
 			'high-priority': priority >= priorities.HIGH
 		}"
 		class="priority-label"
 	>
-		<span
-			v-if="priority >= priorities.HIGH"
-			class="icon"
-		>
-			<Icon icon="exclamation-circle" />
+		<span class="icon">
+			<Icon
+				v-if="priority >= priorities.HIGH"
+				icon="exclamation-circle"
+			/>
+			<Icon
+				v-else
+				icon="exclamation"
+			/>
 		</span>
 		<span>
 			<template v-if="priority === priorities.UNSET">{{ $t('task.priority.unset') }}</template>
@@ -25,7 +30,9 @@
 </template>
 
 <script setup lang="ts">
+import {computed} from 'vue'
 import {PRIORITIES as priorities} from '@/constants/priorities'
+import {useAuthStore} from '@/stores/auth'
 	
 withDefaults(defineProps<{
 	priority: number,
@@ -35,6 +42,12 @@ withDefaults(defineProps<{
 	priority: priorities.UNSET,
 	showAll: false,
 	done: false,
+})
+
+const authStore = useAuthStore()
+
+const minimumPriority = computed(() => {
+	return authStore.settings.frontendSettings.minimumPriority
 })
 </script>
 
@@ -46,6 +59,10 @@ withDefaults(defineProps<{
 
 .not-so-high {
 	color: var(--warning);
+}
+
+.negligible {
+	color: var(--info);
 }
 
 .icon {
