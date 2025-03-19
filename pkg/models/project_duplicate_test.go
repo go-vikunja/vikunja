@@ -17,7 +17,6 @@
 package models
 
 import (
-	"fmt"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
@@ -90,7 +89,7 @@ func TestProjectDuplicate(t *testing.T) {
 			t,
 			originalViewPositions[originalViews[i].ID],
 			taskPositionsCount,
-			fmt.Sprintf("duplicated view %s does not have the same amount of task positions as the original view", view.Title),
+			"duplicated view %s does not have the same amount of task positions as the original view", view.Title,
 		)
 	}
 
@@ -110,7 +109,7 @@ func TestProjectDuplicate(t *testing.T) {
 			t,
 			originalViewBuckets[originalViews[i].ID],
 			taskBucketsCount,
-			fmt.Sprintf("duplicated view %s does not have the same amount of task buckets as the original view", view.Title),
+			"duplicated view %s does not have the same amount of task buckets as the original view", view.Title,
 		)
 	}
 
