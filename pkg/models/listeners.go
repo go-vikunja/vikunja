@@ -977,7 +977,7 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 			project := &Project{ID: webhook.ProjectID}
 			err = project.ReadOne(s, &user.User{ID: doerID})
 			if err != nil && !IsErrProjectDoesNotExist(err) {
-				return err
+				log.Errorf("Could not load project for webhook %d: %s", webhook.ID, err)
 			}
 			if err == nil {
 				event["project"] = project
