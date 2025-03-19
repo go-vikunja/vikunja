@@ -21,6 +21,7 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web"
+
 	"xorm.io/xorm"
 )
 
@@ -217,8 +218,14 @@ func duplicateViews(s *xorm.Session, pd *ProjectDuplicate, doer web.Auth, taskMa
 	}
 
 	for _, view := range views {
+		if view.DefaultBucketID != 0 {
+			view.DefaultBucketID = bucketMap[view.DefaultBucketID]
+		}
 		if view.DoneBucketID != 0 {
 			view.DoneBucketID = bucketMap[view.DoneBucketID]
+		}
+
+		if view.DefaultBucketID != 0 || view.DoneBucketID != 0 {
 			err = view.Update(s, doer)
 			if err != nil {
 				return err

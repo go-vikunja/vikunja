@@ -24,6 +24,7 @@
   updated: '2024-03-18 15:14:13'
   created: '2018-03-18 15:14:13'
   bucket_configuration_mode: 1
+  default_bucket_id: 1
 - id: 5
   title: List
   project_id: 2

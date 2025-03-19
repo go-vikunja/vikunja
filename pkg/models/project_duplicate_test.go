@@ -17,6 +17,7 @@
 package models
 
 import (
+	"fmt"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
@@ -47,13 +48,94 @@ func TestProjectDuplicate(t *testing.T) {
 	err = l.Create(s, u)
 	require.NoError(t, err)
 
+	originalProjectID := l.ProjectID
+	duplicatedProjectID := l.Project.ID
+
 	// assert the new project has the same number of buckets as the old one
-	numberOfOriginalViews, err := s.Where("project_id = ?", l.ProjectID).Count(&ProjectView{})
+	numberOfOriginalViews, err := s.Where("project_id = ?", originalProjectID).Count(&ProjectView{})
 	require.NoError(t, err)
-	numberOfDuplicatedViews, err := s.Where("project_id = ?", l.Project.ID).Count(&ProjectView{})
+	numberOfDuplicatedViews, err := s.Where("project_id = ?", duplicatedProjectID).Count(&ProjectView{})
 	require.NoError(t, err)
 	assert.Equal(t, numberOfOriginalViews, numberOfDuplicatedViews, "duplicated project does not have the same amount of views as the original one")
 
-	// To make this test 100% useful, it would need to assert a lot more stuff, but it is good enough for now.
-	// Also, we're lacking utility functions to do all needed assertions.
+	// Check that the duplicated project has the same number of tasks as the original
+	numberOfOriginalTasks, err := s.Where("project_id = ?", originalProjectID).Count(&Task{})
+	require.NoError(t, err)
+	numberOfDuplicatedTasks, err := s.Where("project_id = ?", duplicatedProjectID).Count(&Task{})
+	require.NoError(t, err)
+	assert.Equal(t, numberOfOriginalTasks, numberOfDuplicatedTasks, "duplicated project does not have the same amount of tasks as the original one")
+
+	// Check that each view has the same number of task positions between original and duplicated project
+	var originalViews []*ProjectView
+	err = s.Where("project_id = ?", originalProjectID).Find(&originalViews)
+	require.NoError(t, err)
+
+	var duplicatedViews []*ProjectView
+	err = s.Where("project_id = ?", duplicatedProjectID).Find(&duplicatedViews)
+	require.NoError(t, err)
+
+	// Create a map of original view positions to compare with duplicated views
+	originalViewPositions := make(map[int64]int64)
+	for _, view := range originalViews {
+		count, err := s.Where("project_view_id = ?", view.ID).Count(&TaskPosition{})
+		require.NoError(t, err)
+		originalViewPositions[view.ID] = count
+	}
+
+	// For each duplicated view, check if it has the same number of task positions as its original counterpart
+	for i, view := range duplicatedViews {
+		taskPositionsCount, err := s.Where("project_view_id = ?", view.ID).Count(&TaskPosition{})
+		require.NoError(t, err)
+		assert.Equal(
+			t,
+			originalViewPositions[originalViews[i].ID],
+			taskPositionsCount,
+			fmt.Sprintf("duplicated view %s does not have the same amount of task positions as the original view", view.Title),
+		)
+	}
+
+	// Check that each view has the same number of task buckets between original and duplicated project
+	originalViewBuckets := make(map[int64]int64)
+	for _, view := range originalViews {
+		count, err := s.Where("project_view_id = ?", view.ID).Count(&TaskBucket{})
+		require.NoError(t, err)
+		originalViewBuckets[view.ID] = count
+	}
+
+	// For each duplicated view, check if it has the same number of task buckets as its original counterpart
+	for i, view := range duplicatedViews {
+		taskBucketsCount, err := s.Where("project_view_id = ?", view.ID).Count(&TaskBucket{})
+		require.NoError(t, err)
+		assert.Equal(
+			t,
+			originalViewBuckets[originalViews[i].ID],
+			taskBucketsCount,
+			fmt.Sprintf("duplicated view %s does not have the same amount of task buckets as the original view", view.Title),
+		)
+	}
+
+	// Check that the kanban view in the duplicated project has a different default bucket than the original
+	var originalKanbanView *ProjectView
+	var duplicatedKanbanView *ProjectView
+
+	for _, view := range originalViews {
+		if view.ViewKind == ProjectViewKindKanban {
+			originalKanbanView = view
+			break
+		}
+	}
+
+	for _, view := range duplicatedViews {
+		if view.ViewKind == ProjectViewKindKanban {
+			duplicatedKanbanView = view
+			break
+		}
+	}
+
+	require.NotNil(t, originalKanbanView, "Original project does not have a kanban view")
+	require.NotNil(t, duplicatedKanbanView, "Duplicated project does not have a kanban view")
+
+	if originalKanbanView != nil && duplicatedKanbanView != nil {
+		assert.NotEqual(t, originalKanbanView.DefaultBucketID, duplicatedKanbanView.DefaultBucketID)
+	}
 }
