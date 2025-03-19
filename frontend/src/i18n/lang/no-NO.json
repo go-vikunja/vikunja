@@ -90,7 +90,7 @@
         "overdueReminders": "Send daglig et sammendrag av forfalte uferdige oppgaver",
         "discoverableByName": "Tillat andre brukere å legge meg til som medlem i grupper eller prosjekter når det søkes etter mitt navn",
         "discoverableByEmail": "Tillat andre brukere å legge meg til som medlem i grupper eller prosjekter når det søkes etter min e-postadresse",
-        "playSoundWhenDone": "Play a sound when marking tasks as done",
+        "playSoundWhenDone": "Spill av en lyd når oppgaver markeres som ferdig",
         "weekStart": "Uken starter på",
         "weekStartSunday": "Søndag",
         "weekStartMonday": "Mandag",
@@ -353,7 +353,7 @@
       "noLimit": "Ikke angitt",
       "doneBucket": "Ferdigkurv",
       "doneBucketHint": "Alle oppgaver som flyttes til denne kurven vil automatisk bli markert som ferdige.",
-      "doneBucketHintExtended": "All tasks moved into the done bucket will be marked as done automatically. All tasks marked as done from elsewhere will be moved as well.",
+      "doneBucketHintExtended": "Alle oppgaver som er flyttet til ferdigkurven, vil automatisk bli markert som ferdige. Alle oppgaver markert som ferdige fra andre steder vil også bli flyttet.",
       "doneBucketSavedSuccess": "Ferdigkurven er lagret.",
       "defaultBucket": "Standardkurv",
       "defaultBucketHint": "Hvis du oppretter oppgaver uten å angi en kurv, havner de her.",
@@ -429,7 +429,7 @@
       "sortAlphabetically": "Sorter alfabetisk",
       "enablePriority": "Aktiver filter etter prioritet",
       "enablePercentDone": "Aktiver filter etter fremdrift",
-      "dueDateRange": "Forfallsdatoer",
+      "dueDateRange": "Forfallsområde",
       "startDateRange": "Start datoområde",
       "endDateRange": "Slutt datoområde",
       "reminderRange": "Datoområde for påminnelse"
@@ -460,7 +460,7 @@
           "done": "Om oppgaven er fullført eller ikke",
           "priority": "Prioritering av oppgaven (1-5)",
           "percentDone": "Fullføringsgrad av oppgaven (0-100)",
-          "dueDate": "The due date of the task",
+          "dueDate": "Forfall for oppgaven",
           "startDate": "Startdato for oppgaven",
           "endDate": "Sluttdato for oppgaven",
           "doneAt": "Dato og tid for når oppgaven var fullført",
@@ -492,10 +492,10 @@
         "examples": {
           "intro": "Her er noen eksempler på filterspørringer:",
           "priorityEqual": "Samsvarer med oppgaver med prioritet 4",
-          "dueDatePast": "Samsvarer med oppgaver med en forfallsdato tilbake i tid",
+          "dueDatePast": "Samsvarer med oppgaver med forfall tilbake i tid",
           "undoneHighPriority": "Samsvarer med uferdige oppgaver med prioritet 3 eller høyere",
           "assigneesIn": "Samsvarer med oppgaver tildelt til enten \"user1\" eller \"user2\"",
-          "priorityOneOrTwoPastDue": "Samsvarer med oppgaver med prioritet 1 eller 2 og en forfallsdato tilbake i tid"
+          "priorityOneOrTwoPastDue": "Samsvarer med oppgaver med prioritet 1 eller 2 og forfall tilbake i tid"
         }
       }
     }
@@ -761,19 +761,19 @@
       "noTasks": "Ingenting å gjøre - Ha en fin dag!"
     },
     "detail": {
-      "chooseDueDate": "Klikk her for å angi en forfallsdato",
+      "chooseDueDate": "Klikk her for å angi forfall",
       "chooseStartDate": "Klikk her for å angi en startdato",
       "chooseEndDate": "Klikk her for å angi en sluttdato",
       "move": "Flytt oppgaven til et annet prosjekt",
-      "done": "Mark task done!",
-      "undone": "Mark as undone",
+      "done": "Marker som ferdig!",
+      "undone": "Marker som uferdig",
       "created": "Opprettet {0} av {1}",
       "updated": "Oppdatert {0}",
       "doneAt": "Ferdig {0}",
       "updateSuccess": "Oppgaven ble lagret.",
       "deleteSuccess": "Oppgaven ble slettet.",
       "belongsToProject": "Denne oppgaven tilhører prosjektet '{project}'",
-      "due": "Forfallsdato {at}",
+      "due": "Forfaller {at}",
       "closePopup": "Lukk popup",
       "organization": "Organisering",
       "management": "Behandling",
@@ -787,7 +787,7 @@
         "assign": "Tildel bruker",
         "label": "Legg til etikett",
         "priority": "Angi prioritet",
-        "dueDate": "Angi forfallsdato",
+        "dueDate": "Angi forfall",
         "startDate": "Angi startdato",
         "endDate": "Angi sluttdato",
         "reminders": "Angi påminnelser",
@@ -865,7 +865,7 @@
       "permalink": "Kopier permalenke til denne kommentaren"
     },
     "deferDueDate": {
-      "title": "Utsett forfallsdato",
+      "title": "Utsett forfall",
       "1day": "1 dag",
       "3days": "3 dager",
       "1week": "1 uke"
@@ -931,7 +931,7 @@
       "after": "{amount} {unit} etter {type}",
       "beforeShort": "før",
       "afterShort": "etter",
-      "onDueDate": "På forfallsdatoen",
+      "onDueDate": "På forfall",
       "onStartDate": "På startdatoen",
       "onEndDate": "På sluttdatoen",
       "custom": "Egendefinert",
@@ -970,7 +970,7 @@
       "project3": "For å bruke mellomrom, legg bare til en \" eller ' rundt navnet på prosjektet.",
       "project4": "For eksempel: {prefix}\"Prosjekt med mellomrom\".",
       "dateAndTime": "Dato og tid",
-      "date": "Hvilken som helst dato vil bli brukt som forfallsdato for den nye oppgaven. Du kan bruke datoer i hvilket som helst format:",
+      "date": "Any date will be used as the due date of the new task. You can use dates in any of these formats:",
       "dateWeekday": "hver ukedag vil bruke neste dato med den datoen",
       "dateCurrentYear": "vil bruke inneværende år",
       "dateNth": "vil bruke den {day} i den gjeldende måneden",
@@ -1043,7 +1043,7 @@
       "done": "Marker oppgaven som ferdig/uferdig",
       "assign": "Tildel denne oppgaven til en bruker",
       "labels": "Legg til etiketter til denne oppgaven",
-      "dueDate": "Endre forfallsdato på denne oppgaven",
+      "dueDate": "Change the due date of this task",
       "attachment": "Legg til et vedlegg til denne oppgaven",
       "related": "Endre relaterte oppgaver for denne oppgaven",
       "color": "Endre fargen på denne oppgaven",
@@ -1052,7 +1052,7 @@
       "description": "Vis/skjul redigering av oppgavebeskrivelsen",
       "delete": "Slett denne oppgaven",
       "priority": "Endre prioritet på denne oppgaven",
-      "favorite": "Mark this task as favorite / unfavorite",
+      "favorite": "Marker denne oppgaven som favoritt/ikke favoritt",
       "save": "Lagre gjeldende oppgave"
     },
     "project": {

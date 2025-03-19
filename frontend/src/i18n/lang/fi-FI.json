@@ -140,7 +140,7 @@
       },
       "quickAddMagic": {
         "title": "Quick Add Magic Mode",
-        "disabled": "Disabled",
+        "disabled": "Pois käytöstä",
         "todoist": "Todoist",
         "vikunja": "Vikunja"
       },
@@ -209,7 +209,7 @@
   },
   "project": {
     "archivedMessage": "Tämä projekti on arkistoitu. Siihen ei voi luoda uusia tai muokata olemassa olevia tehtäviä.",
-    "archived": "Archived",
+    "archived": "Arkistoitu",
     "showArchived": "Näytä Arkistoidut",
     "title": "Otsikko",
     "color": "Väri",
@@ -262,7 +262,7 @@
     "duplicate": {
       "title": "Monista tämä projekti",
       "label": "Monista",
-      "text": "Select a parent project which should hold the duplicated project:",
+      "text": "Valitse ylätason projekti monistetulle projektille:",
       "success": "Projekti monistettiin onnistuneesti."
     },
     "edit": {
@@ -303,13 +303,13 @@
         "typeUser": "käyttäjä | käyttäjät",
         "typeTeam": "tiimi | tiimit",
         "shared": "Shared with these {type}",
-        "you": "You",
+        "you": "Sinä",
         "notShared": "Not shared with any {type} yet.",
         "removeHeader": "Remove a {type} from the {sharable}",
         "removeText": "Are you sure you want to remove this {sharable} from the {type}? This cannot be undone!",
         "removeSuccess": "The {sharable} was successfully removed from the {type}.",
-        "addedSuccess": "The {type} was successfully added.",
-        "updatedSuccess": "The {type} was successfully added."
+        "addedSuccess": "{type} lisättiin onnistuneesti.",
+        "updatedSuccess": "{type} lisättiin onnistuneesti."
       },
       "right": {
         "title": "Oikeudet",
@@ -323,7 +323,7 @@
       }
     },
     "first": {
-      "title": "First View"
+      "title": "Ensi Näkymä"
     },
     "list": {
       "title": "Lista",
@@ -507,11 +507,11 @@
     "description": "Click on the logo of one of the third-party services below to get started.",
     "descriptionDo": "Vikunja will import all lists, tasks, notes, reminders and files you have access to.",
     "authorize": "To authorize Vikunja to access your {name} Account, click the button below.",
-    "getStarted": "Get Started",
-    "inProgress": "Importing in progress…",
+    "getStarted": "Aloitetaan",
+    "inProgress": "Tuonti käynnissä…",
     "alreadyMigrated1": "It looks like you've already imported your stuff from {name} at {date}.",
-    "alreadyMigrated2": "Importing again is possible, but might create duplicates. Are you sure?",
-    "confirm": "I am sure, please start migrating now!",
+    "alreadyMigrated2": "Uudelleen tuonti on mahdollista, mutta saattaa luoda kaksoiskappaleita. Oletko varma?",
+    "confirm": "Olen varma, aloitetaan migraatio!",
     "importUpload": "To import data from {name} into Vikunja, click the button below to select a file.",
     "upload": "Lataa tiedosto",
     "migrationStartedWillReciveEmail": "Vikunja will now import your lists/projects, tasks, notes, reminders and files from {service}. As this will take a while, we will send you an email once done. You can close this window now.",
@@ -585,11 +585,11 @@
     "welcomeBack": "Tervetuloa takaisin!",
     "custom": "Mukautettu",
     "id": "ID",
-    "created": "Created at",
+    "created": "Luontiaika",
     "createdBy": "Luoja {0}",
     "actions": "Toiminnot",
     "cannotBeUndone": "Tätä ei voi perua!",
-    "avatarOfUser": "{user}'s profile image"
+    "avatarOfUser": "{user}n profiilikuva"
   },
   "input": {
     "resetColor": "Palauta Väri",
@@ -630,7 +630,7 @@
       "link": "Link",
       "image": "Kuva",
       "imageTooltip": "Lataa kuva tietokoneeltasi.",
-      "horizontalRule": "Horizontal Rule",
+      "horizontalRule": "Vaakaviiva",
       "horizontalRuleTooltip": "Jaa osio.",
       "sideBySide": "Rinnakkain",
       "guide": "Guide",
