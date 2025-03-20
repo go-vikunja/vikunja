@@ -21,6 +21,10 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"image"
+	"image/draw"
+	"image/jpeg"
+	"image/png"
 	"strings"
 
 	"code.vikunja.io/api/pkg/config"
@@ -175,9 +179,17 @@ func AuthenticateUserInLDAP(s *xorm.Session, username, password string, syncGrou
 	if avatarSyncAttribute != "" {
 		raw := sr.Entries[0].GetRawAttributeValue(avatarSyncAttribute)
 		u.AvatarProvider = "ldap"
-		err = upload.StoreAvatarFile(s, u, bytes.NewReader(raw))
+
+		// Process the avatar image to ensure 1:1 aspect ratio
+		processedAvatar, err := cropAvatarTo1x1(raw)
 		if err != nil {
-			return nil, err
+			log.Debugf("Error processing LDAP avatar: %v", err)
+			// Continue without avatar if processing fails
+		} else {
+			err = upload.StoreAvatarFile(s, u, bytes.NewReader(processedAvatar))
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -274,4 +286,66 @@ func syncUserGroups(l *ldap.Conn, u *user.User, userdn string) (err error) {
 	}
 
 	return
+}
+
+// cropAvatarTo1x1 crops the avatar image to a 1:1 aspect ratio, centered on the image
+func cropAvatarTo1x1(imageData []byte) ([]byte, error) {
+	if len(imageData) == 0 {
+		return nil, errors.New("empty image data")
+	}
+
+	// Decode the image
+	img, format, err := image.Decode(bytes.NewReader(imageData))
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode image: %w", err)
+	}
+
+	// Get image dimensions
+	bounds := img.Bounds()
+	width := bounds.Dx()
+	height := bounds.Dy()
+
+	// If already square, return original
+	if width == height {
+		return imageData, nil
+	}
+
+	// Determine the crop size (use the smaller dimension)
+	size := width
+	if height < width {
+		size = height
+	}
+
+	// Calculate crop coordinates to center the image
+	x0 := (width - size) / 2
+	y0 := (height - size) / 2
+	x1 := x0 + size
+	y1 := y0 + size
+
+	// Create the cropping rectangle
+	cropRect := image.Rect(x0, y0, x1, y1)
+
+	// Create a new RGBA image
+	croppedImg := image.NewRGBA(image.Rect(0, 0, size, size))
+
+	// Copy the cropped portion
+	draw.Draw(croppedImg, croppedImg.Bounds(), img, cropRect.Min, draw.Src)
+
+	// Encode the result
+	var buf bytes.Buffer
+	switch format {
+	case "jpeg":
+		err = jpeg.Encode(&buf, croppedImg, nil)
+	case "png":
+		err = png.Encode(&buf, croppedImg)
+	default:
+		// Default to PNG if format is unknown
+		err = png.Encode(&buf, croppedImg)
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to encode cropped image: %w", err)
+	}
+
+	return buf.Bytes(), nil
 }
