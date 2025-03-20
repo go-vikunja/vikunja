@@ -43,7 +43,7 @@ func (n *ReminderDueNotification) ToMail(lang string) *notifications.Mail {
 		Subject(i18n.T(lang, "notifications.task.reminder.subject", n.Task.Title, n.Project.Title)).
 		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
 		Line(i18n.T(lang, "notifications.task.reminder.message", n.Task.Title, n.Project.Title)).
-		Action("Open Task", config.ServicePublicURL.GetString()+"tasks/"+strconv.FormatInt(n.Task.ID, 10)).
+		Action(i18n.T(lang, "notifications.common.actions.open_task"), config.ServicePublicURL.GetString()+"tasks/"+strconv.FormatInt(n.Task.ID, 10)).
 		Line(i18n.T(lang, "notifications.common.have_nice_day"))
 }
 
@@ -88,7 +88,7 @@ func (n *TaskCommentNotification) ToMail(lang string) *notifications.Mail {
 	mail.HTML(n.Comment.Comment)
 
 	return mail.
-		Action("View Task", n.Task.GetFrontendURL())
+		Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL())
 }
 
 // ToDB returns the TaskCommentNotification notification in a format which can be saved in the db
@@ -115,13 +115,13 @@ func (n *TaskAssignedNotification) ToMail(lang string) *notifications.Mail {
 		return notifications.NewMail().
 			Subject(i18n.T(lang, "notifications.task.assigned.subject_to_assignee", n.Task.Title, n.Task.GetFullIdentifier())).
 			Line(i18n.T(lang, "notifications.task.assigned.message_to_assignee", n.Doer.GetName(), n.Task.Title)).
-			Action("View Task", n.Task.GetFrontendURL())
+			Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL())
 	}
 
 	return notifications.NewMail().
 		Subject(i18n.T(lang, "notifications.task.assigned.subject_to_others", n.Task.Title, n.Task.GetFullIdentifier(), n.Assignee.GetName())).
 		Line(i18n.T(lang, "notifications.task.assigned.message_to_others", n.Doer.GetName(), n.Assignee.GetName())).
-		Action("View Task", n.Task.GetFrontendURL())
+		Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL())
 }
 
 // ToDB returns the TaskAssignedNotification notification in a format which can be saved in the db
@@ -168,7 +168,7 @@ func (n *ProjectCreatedNotification) ToMail(lang string) *notifications.Mail {
 	return notifications.NewMail().
 		Subject(i18n.T(lang, "notifications.project.created", n.Doer.GetName(), n.Project.Title)).
 		Line(i18n.T(lang, "notifications.project.created", n.Doer.GetName(), n.Project.Title)).
-		Action("View Project", config.ServicePublicURL.GetString()+"projects/")
+		Action(i18n.T(lang, "notifications.common.actions.open_project"), config.ServicePublicURL.GetString()+"projects/")
 }
 
 // ToDB returns the ProjectCreatedNotification notification in a format which can be saved in the db
@@ -195,7 +195,7 @@ func (n *TeamMemberAddedNotification) ToMail(lang string) *notifications.Mail {
 		From(n.Doer.GetNameAndFromEmail()).
 		Greeting(i18n.T(lang, "notifications.greeting", n.Member.GetName())).
 		Line(i18n.T(lang, "notifications.team.member_added.message", n.Doer.GetName(), n.Team.Name)).
-		Action("View Team", config.ServicePublicURL.GetString()+"teams/"+strconv.FormatInt(n.Team.ID, 10)+"/edit")
+		Action(i18n.T(lang, "notifications.common.actions.open_team"), config.ServicePublicURL.GetString()+"teams/"+strconv.FormatInt(n.Team.ID, 10)+"/edit")
 }
 
 // ToDB returns the TeamMemberAddedNotification notification in a format which can be saved in the db
@@ -232,7 +232,7 @@ func (n *UndoneTaskOverdueNotification) ToMail(lang string) *notifications.Mail 
 		Subject(i18n.T(lang, "notifications.task.overdue.subject", n.Task.Title, n.Project.Title)).
 		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
 		Line(i18n.T(lang, "notifications.task.overdue.message", n.Task.Title, n.Project.Title, getOverdueSinceString(until, n.User.Language))).
-		Action("Open Task", config.ServicePublicURL.GetString()+"tasks/"+strconv.FormatInt(n.Task.ID, 10)).
+		Action(i18n.T(lang, "notifications.common.actions.open_task"), config.ServicePublicURL.GetString()+"tasks/"+strconv.FormatInt(n.Task.ID, 10)).
 		Line(i18n.T(lang, "notifications.common.have_nice_day"))
 }
 
@@ -277,7 +277,7 @@ func (n *UndoneTasksOverdueNotification) ToMail(lang string) *notifications.Mail
 		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
 		Line(i18n.T(lang, "notifications.task.overdue.multiple_message")).
 		Line(overdueLine).
-		Action("Open Vikunja", config.ServicePublicURL.GetString()).
+		Action(i18n.T(lang, "notifications.common.actions.open_vikunja"), config.ServicePublicURL.GetString()).
 		Line(i18n.T(lang, "notifications.common.have_nice_day"))
 }
 
@@ -318,7 +318,7 @@ func (n *UserMentionedInTaskNotification) ToMail(lang string) *notifications.Mai
 		HTML(n.Task.Description)
 
 	return mail.
-		Action("View Task", n.Task.GetFrontendURL())
+		Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL())
 }
 
 // ToDB returns the UserMentionedInTaskNotification notification in a format which can be saved in the db
@@ -342,7 +342,7 @@ func (n *DataExportReadyNotification) ToMail(lang string) *notifications.Mail {
 		Subject(i18n.T(lang, "notifications.data_export.ready.subject")).
 		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
 		Line(i18n.T(lang, "notifications.data_export.ready.message")).
-		Action("Download", config.ServicePublicURL.GetString()+"user/export/download").
+		Action(i18n.T(lang, "notifications.common.actions.download"), config.ServicePublicURL.GetString()+"user/export/download").
 		Line(i18n.T(lang, "notifications.data_export.ready.availability")).
 		Line(i18n.T(lang, "notifications.common.have_nice_day"))
 }

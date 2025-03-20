@@ -37,7 +37,7 @@ func (n *MigrationDoneNotification) ToMail(lang string) *notifications.Mail {
 	return notifications.NewMail().
 		Subject(i18n.T(lang, "notifications.migration.done.subject", kind)).
 		Line(i18n.T(lang, "notifications.migration.done.imported", kind)).
-		Action("View your imported projects in Vikunja", config.ServicePublicURL.GetString()).
+		Action(i18n.T(lang, "notifications.common.actions.open_vikunja"), config.ServicePublicURL.GetString()).
 		Line(i18n.T(lang, "notifications.migration.done.have_fun"))
 }
 

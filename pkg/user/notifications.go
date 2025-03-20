@@ -49,7 +49,7 @@ func (n *EmailConfirmNotification) ToMail(lang string) *notifications.Mail {
 
 	return nn.
 		Line(i18n.T(lang, "notifications.email_confirm.confirm")).
-		Action("Confirm your email address", config.ServicePublicURL.GetString()+"?userEmailConfirm="+n.ConfirmToken).
+		Action(i18n.T(lang, "notifications.common.actions.confirm_email"), config.ServicePublicURL.GetString()+"?userEmailConfirm="+n.ConfirmToken).
 		Line(i18n.T(lang, "notifications.common.have_nice_day"))
 }
 
@@ -99,7 +99,7 @@ func (n *ResetPasswordNotification) ToMail(lang string) *notifications.Mail {
 		Subject(i18n.T(lang, "notifications.password.reset.subject")).
 		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
 		Line(i18n.T(lang, "notifications.password.reset.instructions")).
-		Action("Reset your password", config.ServicePublicURL.GetString()+"?userPasswordReset="+n.Token.Token).
+		Action(i18n.T(lang, "notifications.common.actions.reset_password"), config.ServicePublicURL.GetString()+"?userPasswordReset="+n.Token.Token).
 		Line(i18n.T(lang, "notifications.password.reset.valid_duration")).
 		Line(i18n.T(lang, "notifications.common.have_nice_day"))
 }
@@ -126,7 +126,7 @@ func (n *InvalidTOTPNotification) ToMail(lang string) *notifications.Mail {
 		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
 		Line(i18n.T(lang, "notifications.totp.invalid.message")).
 		Line(i18n.T(lang, "notifications.totp.invalid.warning")).
-		Action("Reset your password", config.ServicePublicURL.GetString()+"get-password-reset")
+		Action(i18n.T(lang, "notifications.common.actions.reset_password"), config.ServicePublicURL.GetString()+"get-password-reset")
 }
 
 // ToDB returns the InvalidTOTPNotification notification in a format which can be saved in the db
@@ -178,7 +178,7 @@ func (n *FailedLoginAttemptNotification) ToMail(lang string) *notifications.Mail
 		Line(i18n.T(lang, "notifications.login.failed.message")).
 		Line(i18n.T(lang, "notifications.login.failed.warning")).
 		Line(i18n.T(lang, "notifications.login.failed.enhance_security")).
-		Action("Go to settings", config.ServicePublicURL.GetString()+"user/settings")
+		Action(i18n.T(lang, "notifications.common.actions.go_to_settings"), config.ServicePublicURL.GetString()+"user/settings")
 }
 
 // ToDB returns the FailedLoginAttemptNotification notification in a format which can be saved in the db
@@ -203,7 +203,7 @@ func (n *AccountDeletionConfirmNotification) ToMail(lang string) *notifications.
 		Subject(i18n.T(lang, "notifications.account.deletion.confirm.subject")).
 		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
 		Line(i18n.T(lang, "notifications.account.deletion.confirm.request")).
-		Action("Confirm the deletion of my account", config.ServicePublicURL.GetString()+"?accountDeletionConfirm="+n.ConfirmToken).
+		Action(i18n.T(lang, "notifications.common.actions.confirm_account_deletion"), config.ServicePublicURL.GetString()+"?accountDeletionConfirm="+n.ConfirmToken).
 		Line(i18n.T(lang, "notifications.account.deletion.confirm.valid_duration")).
 		Line(i18n.T(lang, "notifications.account.deletion.confirm.schedule_info")).
 		Line(i18n.T(lang, "notifications.account.deletion.confirm.consequences")).
@@ -247,7 +247,7 @@ func (n *AccountDeletionNotification) ToMail(lang string) *notifications.Mail {
 		Line(i18n.T(lang, "notifications.account.deletion.scheduled.request_reminder")).
 		Line(deletionTimeLine).
 		Line(i18n.T(lang, "notifications.account.deletion.scheduled.changed_mind")).
-		Action("Abort the deletion", config.ServicePublicURL.GetString()).
+		Action(i18n.T(lang, "notifications.common.actions.abort_deletion"), config.ServicePublicURL.GetString()).
 		Line(i18n.T(lang, "notifications.common.have_nice_day"))
 }
 
