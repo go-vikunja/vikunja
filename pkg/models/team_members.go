@@ -20,6 +20,7 @@ import (
 	"code.vikunja.io/api/pkg/events"
 	user2 "code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
+
 	"xorm.io/xorm"
 )
 
@@ -88,6 +89,15 @@ func (tm *TeamMember) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams/{id}/members/{username} [delete]
 func (tm *TeamMember) Delete(s *xorm.Session, _ web.Auth) (err error) {
+
+	t, err := GetTeamByID(s, tm.TeamID)
+	if err != nil {
+		return err
+	}
+
+	if t.ExternalID != "" {
+		return ErrCannotRemoveUserFromExternalTeam{tm.TeamID}
+	}
 
 	total, err := s.Where("team_id = ?", tm.TeamID).Count(&TeamMember{})
 	if err != nil {

@@ -9,7 +9,7 @@ export interface ITeam extends IAbstract {
 	description: string
 	members: ITeamMember[]
 	right: Right
-	oidcId: string
+	externalId: string
 	isPublic: boolean
 
 	createdBy: IUser

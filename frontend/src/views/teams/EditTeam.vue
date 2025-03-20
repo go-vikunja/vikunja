@@ -194,7 +194,7 @@
 		</Card>
 
 		<x-button
-			v-if="team && !team.oidcId"
+			v-if="team && !team.externalId"
 			class="is-fullwidth is-danger"
 			@click="showLeaveModal = true"
 		>

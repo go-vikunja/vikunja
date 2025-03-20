@@ -1366,6 +1366,26 @@ func (err ErrOIDCTeamsDoNotExistForUser) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrCannotRemoveUserFromExternalTeam represents an error where an oidcTeam does not exist for the user
+type ErrCannotRemoveUserFromExternalTeam struct {
+	TeamID int64
+}
+
+func (err ErrCannotRemoveUserFromExternalTeam) Error() string {
+	return fmt.Sprintf("Users cannot be removed from an external team [Team ID: %d]", err.TeamID)
+}
+
+const ErrCodeCannotLeaveExternalTeam = 6010
+
+// HTTPError holds the http error description
+func (err ErrCannotRemoveUserFromExternalTeam) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeCannotLeaveExternalTeam,
+		Message:  "Users cannot be removed from an external team.",
+	}
+}
+
 // ====================
 // User <-> Project errors
 // ====================

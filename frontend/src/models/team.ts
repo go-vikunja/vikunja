@@ -13,7 +13,7 @@ export default class TeamModel extends AbstractModel<ITeam> implements ITeam {
 	description = ''
 	members: ITeamMember[] = []
 	right: Right = RIGHTS.READ
-	oidcId = ''
+	externalId = ''
 	isPublic: boolean = false
 
 	createdBy: IUser = {} // FIXME: seems wrong
