@@ -229,6 +229,30 @@ func getOrCreateLdapUser(s *xorm.Session, entry *ldap.Entry) (u *user.User, err 
 		return auth.CreateUserWithRandomUsername(s, uu)
 	}
 
+	// Check if user information has changed and update if necessary
+	needsUpdate := false
+
+	if u.Email != email && email != "" {
+		u.Email = email
+		needsUpdate = true
+	}
+
+	if u.Name != name && name != "" {
+		u.Name = name
+		needsUpdate = true
+	}
+
+	if needsUpdate {
+		log.Debugf("Updating LDAP user information for %s", username)
+		_, err = s.Where("id = ?", u.ID).
+			Cols("email", "name").
+			Update(u)
+		if err != nil {
+			log.Errorf("Failed to update user information: %v", err)
+			return nil, err
+		}
+	}
+
 	return
 }
 
@@ -336,8 +360,6 @@ func cropAvatarTo1x1(imageData []byte) ([]byte, error) {
 	switch format {
 	case "jpeg":
 		err = jpeg.Encode(&buf, croppedImg, nil)
-	case "png":
-		err = png.Encode(&buf, croppedImg)
 	default:
 		// Default to PNG if format is unknown
 		err = png.Encode(&buf, croppedImg)
