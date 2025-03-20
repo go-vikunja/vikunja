@@ -29,8 +29,8 @@ import (
 
 func TestProjectDuplicate(t *testing.T) {
 
-	db.LoadAndAssertFixtures(t)
 	files.InitTestFileFixtures(t)
+	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
 	defer s.Close()
 
@@ -66,11 +66,15 @@ func TestProjectDuplicate(t *testing.T) {
 
 	// Check that each view has the same number of task positions between original and duplicated project
 	var originalViews []*ProjectView
-	err = s.Where("project_id = ?", originalProjectID).Find(&originalViews)
+	err = s.Where("project_id = ?", originalProjectID).
+		OrderBy("position").
+		Find(&originalViews)
 	require.NoError(t, err)
 
 	var duplicatedViews []*ProjectView
-	err = s.Where("project_id = ?", duplicatedProjectID).Find(&duplicatedViews)
+	err = s.Where("project_id = ?", duplicatedProjectID).
+		OrderBy("position").
+		Find(&duplicatedViews)
 	require.NoError(t, err)
 
 	// Create a map of original view positions to compare with duplicated views
@@ -89,7 +93,7 @@ func TestProjectDuplicate(t *testing.T) {
 			t,
 			originalViewPositions[originalViews[i].ID],
 			taskPositionsCount,
-			"duplicated view %s does not have the same amount of task positions as the original view", view.Title,
+			"duplicated view '%s' does not have the same amount of task positions as the original view", view.Title,
 		)
 	}
 
@@ -109,7 +113,7 @@ func TestProjectDuplicate(t *testing.T) {
 			t,
 			originalViewBuckets[originalViews[i].ID],
 			taskBucketsCount,
-			"duplicated view %s does not have the same amount of task buckets as the original view", view.Title,
+			"duplicated view '%s' does not have the same amount of task buckets as the original view", view.Title,
 		)
 	}
 
