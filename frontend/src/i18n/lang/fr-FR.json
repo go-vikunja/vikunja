@@ -136,7 +136,8 @@
         "upload": "Téléverser",
         "uploadAvatar": "Téléverser l’avatar",
         "statusUpdateSuccess": "Statut de l’avatar mis à jour.",
-        "setSuccess": "Avatar défini."
+        "setSuccess": "Avatar défini.",
+        "ldap": "Your avatar is automagically synced from your organization's directory service (LDAP). You can ask your IT team for information on how to change it."
       },
       "quickAddMagic": {
         "title": "Ajout rapide en mode magique",

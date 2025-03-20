@@ -136,7 +136,8 @@
         "upload": "上传",
         "uploadAvatar": "上传头像",
         "statusUpdateSuccess": "头像状态更新成功！",
-        "setSuccess": "头像设置成功！"
+        "setSuccess": "头像设置成功！",
+        "ldap": "Your avatar is automagically synced from your organization's directory service (LDAP). You can ask your IT team for information on how to change it."
       },
       "quickAddMagic": {
         "title": "快速添加 Magic 模式",

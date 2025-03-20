@@ -100,6 +100,7 @@
         "timezone": "Time zone",
         "overdueTasksRemindersTime": "Horário do e-mail de lembrete de tarefas pendentes",
         "filterUsedOnOverview": "Salvo filtro utilizado na visão geral",
+        "minimumPriority": "Minimum visible task priority",
         "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
       },
       "totp": {
@@ -136,7 +137,8 @@
         "upload": "Carregar",
         "uploadAvatar": "Carregar Avatar",
         "statusUpdateSuccess": "O status de Avatar foi atualizado com sucesso!",
-        "setSuccess": "O avatar foi definido com sucesso!"
+        "setSuccess": "O avatar foi definido com sucesso!",
+        "ldap": "Your avatar is automagically synced from your organization's directory service (LDAP). You can ask your IT team for information on how to change it."
       },
       "quickAddMagic": {
         "title": "Modo de adição mágica rápida",

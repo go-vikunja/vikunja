@@ -100,6 +100,7 @@
         "timezone": "Часовой пояс",
         "overdueTasksRemindersTime": "Время напоминания о невыполненных задачах",
         "filterUsedOnOverview": "Сохранённый фильтр, используемый на странице обзора",
+        "minimumPriority": "Minimum visible task priority",
         "externalUserNameChange": "Ваше имя управляется вашим поставщиком для входа ({provider}). Чтобы изменить его, пожалуйста, обновите его там."
       },
       "totp": {
@@ -136,7 +137,8 @@
         "upload": "Загрузить файл",
         "uploadAvatar": "Загрузить аватар",
         "statusUpdateSuccess": "Статус аватара обновлён.",
-        "setSuccess": "Аватар установлен."
+        "setSuccess": "Аватар установлен.",
+        "ldap": "Your avatar is automagically synced from your organization's directory service (LDAP). You can ask your IT team for information on how to change it."
       },
       "quickAddMagic": {
         "title": "Режим Волшебного Быстрого Добавления",

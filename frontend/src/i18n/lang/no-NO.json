@@ -24,8 +24,8 @@
   "ready": {
     "loading": "Vikunja laster…",
     "errorOccured": "Det har oppstått en feil:",
-    "checkApiUrl": "Vennligst kontroller om api Url er korrekt.",
-    "noApiUrlConfigured": "Ingen API URL ble konfigurert. Angi en nedenfor:"
+    "checkApiUrl": "Vennligst kontroller om api-url er korrekt.",
+    "noApiUrlConfigured": "Ingen api-url ble konfigurert. Angi en nedenfor:"
   },
   "offline": {
     "title": "Du er frakoblet.",
@@ -100,6 +100,7 @@
         "timezone": "Tidssone",
         "overdueTasksRemindersTime": "Påminnelsestid for utløpte oppgaver",
         "filterUsedOnOverview": "Lagret filter brukt på siden med oversikt",
+        "minimumPriority": "Minimum visible task priority",
         "externalUserNameChange": "Navnet ditt blir administrert av din innloggingsleverandør ({provider}). For å endre det, vennligst oppdater det hos leverandøren."
       },
       "totp": {
@@ -136,7 +137,8 @@
         "upload": "Last opp",
         "uploadAvatar": "Last opp avatar",
         "statusUpdateSuccess": "Avatar-status ble oppdatert!",
-        "setSuccess": "Avataren ble satt!"
+        "setSuccess": "Avataren ble satt!",
+        "ldap": "Avataren din er automatisk synkronisert fra organisasjonens katalogtjeneste (LDAP). Du kan be IT-avdelingen din om informasjon om hvordan den kan endres."
       },
       "quickAddMagic": {
         "title": "Legg til hurtig/magisk modus",
@@ -363,7 +365,7 @@
       "addTask": "Legg til oppgave",
       "addAnotherTask": "Legg til en annen oppgave",
       "addBucket": "Opprett en kurv",
-      "addBucketPlaceholder": "Enter the new bucket title…",
+      "addBucketPlaceholder": "Angi tittel på den nye kurven…",
       "deleteHeaderBucket": "Slett kurven",
       "deleteBucketText1": "Er du sikker på at du vil slette denne kurven?",
       "deleteBucketText2": "Dette vil ikke slette noen oppgaver, men flytte dem til standardkurven.",
@@ -585,7 +587,7 @@
     "welcomeBack": "Velkommen tilbake!",
     "custom": "Egendefinert",
     "id": "Id",
-    "created": "Created at",
+    "created": "Opprettet for",
     "createdBy": "Opprettet av {0}",
     "actions": "Handlinger",
     "cannotBeUndone": "Dette kan ikke angres!",
@@ -970,7 +972,7 @@
       "project3": "For å bruke mellomrom, legg bare til en \" eller ' rundt navnet på prosjektet.",
       "project4": "For eksempel: {prefix}\"Prosjekt med mellomrom\".",
       "dateAndTime": "Dato og tid",
-      "date": "Any date will be used as the due date of the new task. You can use dates in any of these formats:",
+      "date": "Hvilken som helst dato vil bli brukt som forfallsdato for den nye oppgaven. Du kan bruke datoer i hvilket som helst format:",
       "dateWeekday": "hver ukedag vil bruke neste dato med den datoen",
       "dateCurrentYear": "vil bruke inneværende år",
       "dateNth": "vil bruke den {day} i den gjeldende måneden",
@@ -1043,7 +1045,7 @@
       "done": "Marker oppgaven som ferdig/uferdig",
       "assign": "Tildel denne oppgaven til en bruker",
       "labels": "Legg til etiketter til denne oppgaven",
-      "dueDate": "Change the due date of this task",
+      "dueDate": "Endre forfall for denne oppgaven",
       "attachment": "Legg til et vedlegg til denne oppgaven",
       "related": "Endre relaterte oppgaver for denne oppgaven",
       "color": "Endre fargen på denne oppgaven",

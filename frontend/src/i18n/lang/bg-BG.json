@@ -136,7 +136,8 @@
         "upload": "Качване",
         "uploadAvatar": "Качване на аватар",
         "statusUpdateSuccess": "Статусът на аватара беше успешно обновен!",
-        "setSuccess": "Аватарът беше успешно зададен!"
+        "setSuccess": "Аватарът беше успешно зададен!",
+        "ldap": "Your avatar is automagically synced from your organization's directory service (LDAP). You can ask your IT team for information on how to change it."
       },
       "quickAddMagic": {
         "title": "Бърз режим на добавяне",

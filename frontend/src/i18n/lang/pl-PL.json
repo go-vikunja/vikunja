@@ -100,6 +100,7 @@
         "timezone": "Time zone",
         "overdueTasksRemindersTime": "Czas przypomnienia o zaległych zadaniach na e-mail",
         "filterUsedOnOverview": "Zapisany filtr używany na stronie przeglądania",
+        "minimumPriority": "Minimum visible task priority",
         "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
       },
       "totp": {
@@ -136,7 +137,8 @@
         "upload": "Prześlij",
         "uploadAvatar": "Prześlij awatar",
         "statusUpdateSuccess": "Status awatara został pomyślnie zaktualizowany!",
-        "setSuccess": "Awatar został pomyślnie ustawiony!"
+        "setSuccess": "Awatar został pomyślnie ustawiony!",
+        "ldap": "Your avatar is automagically synced from your organization's directory service (LDAP). You can ask your IT team for information on how to change it."
       },
       "quickAddMagic": {
         "title": "Tryb Quick Add Magic",

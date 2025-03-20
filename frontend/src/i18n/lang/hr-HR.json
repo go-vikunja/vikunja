@@ -136,7 +136,8 @@
         "upload": "Prenesi",
         "uploadAvatar": "Učitaj avatar",
         "statusUpdateSuccess": "Status avatara je uspješno ažuriran!",
-        "setSuccess": "Avatar je uspješno postavljen!"
+        "setSuccess": "Avatar je uspješno postavljen!",
+        "ldap": "Your avatar is automagically synced from your organization's directory service (LDAP). You can ask your IT team for information on how to change it."
       },
       "quickAddMagic": {
         "title": "Brzo dodavanje čarobnog načina rada",

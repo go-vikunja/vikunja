@@ -100,6 +100,7 @@
         "timezone": "Time zone",
         "overdueTasksRemindersTime": "Esedékes feladatokra emlékeztető e-mail küldésének ideje",
         "filterUsedOnOverview": "Az áttekintő oldalon használt mentett szűrő",
+        "minimumPriority": "Minimum visible task priority",
         "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
       },
       "totp": {
@@ -136,7 +137,8 @@
         "upload": "Feltöltés",
         "uploadAvatar": "Avatar feltöltése",
         "statusUpdateSuccess": "Az avatar állapota sikeresen frissítve!",
-        "setSuccess": "Az avatar sikeresen beállítva!"
+        "setSuccess": "Az avatar sikeresen beállítva!",
+        "ldap": "Your avatar is automagically synced from your organization's directory service (LDAP). You can ask your IT team for information on how to change it."
       },
       "quickAddMagic": {
         "title": "Gyors hozzáadás",

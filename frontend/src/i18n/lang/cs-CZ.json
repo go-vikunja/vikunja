@@ -136,7 +136,8 @@
         "upload": "Nahrát",
         "uploadAvatar": "Nahrát avatara",
         "statusUpdateSuccess": "Stav avatara byl úspěšně aktualizován!",
-        "setSuccess": "Avatar byl úspěšně nastaven!"
+        "setSuccess": "Avatar byl úspěšně nastaven!",
+        "ldap": "Your avatar is automagically synced from your organization's directory service (LDAP). You can ask your IT team for information on how to change it."
       },
       "quickAddMagic": {
         "title": "Kouzelný režim pro rychlé přidání",

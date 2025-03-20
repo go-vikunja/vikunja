@@ -100,6 +100,7 @@
         "timezone": "Laiko juosta",
         "overdueTasksRemindersTime": "Viršyto užduoties laiko priminimas el. pštu",
         "filterUsedOnOverview": "Išsaugotas filtras naudojamas apžvalgos puslapyje",
+        "minimumPriority": "Minimum visible task priority",
         "externalUserNameChange": "Tavo vardą valdo prisijungimo tiekėjas ({provider}). Norint pakeisti, atnaujinkite pasirinkimą."
       },
       "totp": {
@@ -136,7 +137,8 @@
         "upload": "Įkelti",
         "uploadAvatar": "Įkelti avatarą",
         "statusUpdateSuccess": "Avataro statusas buvo atnaujintas sėkmingai!",
-        "setSuccess": "Avataras buvo sėkmimgai nustatytas!"
+        "setSuccess": "Avataras buvo sėkmimgai nustatytas!",
+        "ldap": "Your avatar is automagically synced from your organization's directory service (LDAP). You can ask your IT team for information on how to change it."
       },
       "quickAddMagic": {
         "title": "Greito pridėjimo magijos būsena",

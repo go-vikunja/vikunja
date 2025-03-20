@@ -100,6 +100,7 @@
         "timezone": "Zaman dilimi",
         "overdueTasksRemindersTime": "Gecikmiş görevler hatırlatma e-posta zamanı",
         "filterUsedOnOverview": "Genel bakış sayfasında kullanılan kaydedilmiş filtre",
+        "minimumPriority": "Minimum visible task priority",
         "externalUserNameChange": "Adınız, oturum açma sağlayıcınız ({provider}) tarafından yönetiliyor. Değiştirmek için lütfen orada güncelleyin."
       },
       "totp": {
@@ -136,7 +137,8 @@
         "upload": "Yükle",
         "uploadAvatar": "Avatar Yükle",
         "statusUpdateSuccess": "Avatar durumu başarıyla güncellendi!",
-        "setSuccess": "Avatar başarıyla ayarlandı!"
+        "setSuccess": "Avatar başarıyla ayarlandı!",
+        "ldap": "Avatarınız, kuruluşunuzun dizin hizmeti (LDAP) ile otomatik olarak senkronize edilir. Nasıl değiştireceğiniz hakkında bilgi almak için BT ekibinize danışabilirsiniz."
       },
       "quickAddMagic": {
         "title": "Hızlı Ekleme Sihir Modu",

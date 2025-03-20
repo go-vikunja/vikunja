@@ -136,7 +136,8 @@
         "upload": "Hochladen",
         "uploadAvatar": "Avatar hochladen",
         "statusUpdateSuccess": "Avatar-Status wurde erfolgreich aktualisiert.",
-        "setSuccess": "Der Avatar wurde erfolgreich gesetzt!"
+        "setSuccess": "Der Avatar wurde erfolgreich gesetzt!",
+        "ldap": "Dein Avatar wird automatisch aus dem Verzeichnisdienst deiner Organisation (LDAP) synchronisiert. Du kannst dein IT-Team nach Informationen fragen, um es zu ändern."
       },
       "quickAddMagic": {
         "title": "Quick Add Magic Modus",

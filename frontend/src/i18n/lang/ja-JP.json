@@ -100,6 +100,7 @@
         "timezone": "タイムゾーン",
         "overdueTasksRemindersTime": "期限切れタスクのリマインダー送信時間",
         "filterUsedOnOverview": "概要ページの絞り込み条件",
+        "minimumPriority": "Minimum visible task priority",
         "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
       },
       "totp": {
@@ -136,7 +137,8 @@
         "upload": "アップロード",
         "uploadAvatar": "画像のアップロード",
         "statusUpdateSuccess": "プロフィール画像を更新しました。",
-        "setSuccess": "プロフィール画像を設定しました。"
+        "setSuccess": "プロフィール画像を設定しました。",
+        "ldap": "Your avatar is automagically synced from your organization's directory service (LDAP). You can ask your IT team for information on how to change it."
       },
       "quickAddMagic": {
         "title": "Quick Add Magic Mode",

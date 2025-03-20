@@ -100,6 +100,7 @@
         "timezone": "시간대",
         "overdueTasksRemindersTime": "기한이 지난 할 일 이메일 알림 시간",
         "filterUsedOnOverview": "개요 페이지에 사용되는 저장된 필터",
+        "minimumPriority": "Minimum visible task priority",
         "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
       },
       "totp": {
@@ -136,7 +137,8 @@
         "upload": "업로드",
         "uploadAvatar": "아바타 업로드",
         "statusUpdateSuccess": "아바타 상태가 업데이트되었습니다!",
-        "setSuccess": "아바타가 성공적으로 설정되었습니다!"
+        "setSuccess": "아바타가 성공적으로 설정되었습니다!",
+        "ldap": "Your avatar is automagically synced from your organization's directory service (LDAP). You can ask your IT team for information on how to change it."
       },
       "quickAddMagic": {
         "title": "빠른 매직 모드 추가",

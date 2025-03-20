@@ -100,10 +100,7 @@
             }
         },
         "project": {
-            "created": {
-                "subject": "%[1]s, \"%[2]s\" projesini oluşturdu",
-                "message": "%[1]s, \"%[2]s\" projesini oluşturdu."
-            }
+            "created": "%[1]s, \"%[2]s\" projesini oluşturdu"
         },
         "team": {
             "member_added": {
@@ -129,13 +126,8 @@
                 "message": "Görünüşe göre %[1]s uygulamasından geçiş bu sefer planlandığı gibi gitmedi.",
                 "retry": "Endişelenmeyin! Daha önce yaptığınız gibi yeniden başlatarak bir kez daha deneyebilirsiniz. Bazen bu aksaklıklar %[1]s tarafındaki sorunlardan kaynaklanıyor, ancak tekrar denemek genellikle sorunu çözer.",
                 "error": "Yolda küçük bir hatayla karşılaştık: `%[2]s`.",
-                "report": "Lütfen bu durumu [forumda](https://community.vikunja.io/) veya her zamanki iletişim kanallarından bize bildirin, böylece neden başarısız olduğunu inceleyebiliriz."
-            },
-            "failed_reported": {
-                "subject": "%[1]s uygulamasından Vikunja'ya geçiş başarısız oldu",
-                "message": "Görünüşe göre %[1]s uygulamasından geçiş bu sefer planlandığı gibi gitmedi.",
-                "retry": "Endişelenmeyin! Daha önce yaptığınız gibi yeniden başlatarak bir kez daha deneyebilirsiniz. Bazen bu aksaklıklar %[1]s tarafındaki sorunlardan kaynaklanıyor, ancak tekrar denemek genellikle sorunu çözer.",
-                "working_on_it": "Hata mesajını radarımıza aldık ve yakında çözmek için çalışıyoruz."
+                "report": "Lütfen bu durumu [forumda](https://community.vikunja.io/) veya her zamanki iletişim kanallarından bize bildirin, böylece neden başarısız olduğunu inceleyebiliriz.",
+                "working_on_it": "Hata mesajını takip ediyoruz ve en kısa sürede çözmek için çalışıyoruz."
             }
         },
         "common": {

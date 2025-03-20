@@ -1,32 +1,32 @@
 {
     "notifications": {
-        "greeting": "Hi %[1]s,",
+        "greeting": "Hei %[1]s!",
         "email_confirm": {
-            "subject": "%[1]s, please confirm your email address at Vikunja",
+            "subject": "%[1]s, vennligst bekreft e-postadressen din på Vikunja",
             "subject_new": "%[1]s + Vikunja = <3",
-            "welcome": "Welcome to Vikunja!",
-            "confirm": "To confirm your email address, click the link below:"
+            "welcome": "Velkommen til Vikunja!",
+            "confirm": "For å bekrefte din e-postadresse, klikk på linken nedenfor:"
         },
         "password": {
             "changed": {
-                "subject": "Your Password on Vikunja was changed",
-                "success": "Your account password was successfully changed.",
-                "warning": "If this wasn't you, it could mean someone compromised your account. In this case contact your server's administrator."
+                "subject": "Passordet ditt på Vikunja ble endret",
+                "success": "Passordet ditt ble endret.",
+                "warning": "Hvis dette ikke var deg, kan det bety at noen kompromitterte kontoen din. I dette tilfellet må du kontakte administrator."
             },
             "reset": {
-                "subject": "Reset your password on Vikunja",
-                "instructions": "To reset your password, click the link below:",
-                "valid_duration": "This link will be valid for 24 hours."
+                "subject": "Tilbakestill passordet ditt på Vikunja",
+                "instructions": "Klikk på lenken nedenfor for å tilbakestille passordet:",
+                "valid_duration": "Denne lenken vil være gyldig i 24 timer."
             }
         },
         "totp": {
             "invalid": {
-                "subject": "Someone just tried to login to your Vikunja account, but failed",
-                "message": "Someone just tried to log in into your account with correct username and password but a wrong TOTP passcode.",
-                "warning": "**If this was not you, someone else knows your password. You should set a new one immediately!**"
+                "subject": "Noen prøvde nettopp å logge inn på Vikunja kontoen din, men mislyktes",
+                "message": "Noen prøvde nettopp å logge inn på kontoen med riktig brukernavn og passord, men med feil TOTP-kode.",
+                "warning": "**Hvis dette ikke var deg, vet noen andre passordet ditt. Du bør velge et ny umiddelbart!**"
             },
             "account_locked": {
-                "subject": "We've disabled your account on Vikunja",
+                "subject": "Vi har deaktivert kontoen din på Vikunja",
                 "message": "Someone tried to log in with your credentials but failed to provide a valid TOTP passcode.",
                 "disabled": "After 10 failed attempts, we've disabled your account and reset your password. To set a new one, follow the instructions in the reset email we just sent you.",
                 "reset_instructions": "If you did not receive an email with reset instructions, you can always request a new one at [%[1]s](%[2]s)."
@@ -100,10 +100,7 @@
             }
         },
         "project": {
-            "created": {
-                "subject": "%[1]s created the project \"%[2]s\"",
-                "message": "%[1]s created the project \"%[2]s\""
-            }
+            "created": "%[1]s created the project \"%[2]s\""
         },
         "team": {
             "member_added": {
@@ -129,12 +126,7 @@
                 "message": "Looks like the move from %[1]s didn't go as planned this time.",
                 "retry": "No worries, though! Just give it another shot by starting over the same way you did before. Sometimes, these hiccups happen because of glitches on %[1]s's end, but trying again often does the trick.",
                 "error": "We bumped into a little error along the way: `%[2]s`.",
-                "report": "Please drop us a note about this [in the forum](https://community.vikunja.io/) or any of the usual places so that we can take a look at why it failed."
-            },
-            "failed_reported": {
-                "subject": "The migration from %[1]s to Vikunja has failed",
-                "message": "Looks like the move from %[1]s didn't go as planned this time.",
-                "retry": "No worries, though! Just give it another shot by starting over the same way you did before. Sometimes, these hiccups happen because of glitches on %[1]s's end, but trying again often does the trick.",
+                "report": "Please drop us a note about this [in the forum](https://community.vikunja.io/) or any of the usual places so that we can take a look at why it failed.",
                 "working_on_it": "We've got the error message on our radar and are on it to get it sorted out soon."
             }
         },

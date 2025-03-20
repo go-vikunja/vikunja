@@ -136,7 +136,8 @@
         "upload": "Uploaden",
         "uploadAvatar": "Upload avatar",
         "statusUpdateSuccess": "Avatar status is succesvol bijgewerkt!",
-        "setSuccess": "De avatar is succesvol ingesteld!"
+        "setSuccess": "De avatar is succesvol ingesteld!",
+        "ldap": "Your avatar is automagically synced from your organization's directory service (LDAP). You can ask your IT team for information on how to change it."
       },
       "quickAddMagic": {
         "title": "Magische Modus Snel Toevoegen",

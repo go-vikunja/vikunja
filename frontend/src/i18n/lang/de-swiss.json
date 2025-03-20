@@ -100,6 +100,7 @@
         "timezone": "Zeitzone",
         "overdueTasksRemindersTime": "Zeit der E-Mail-Zusammenfassung der überfälligen Aufgaben",
         "filterUsedOnOverview": "Gespeicherter Filter, der für die Startseite verwendet wird",
+        "minimumPriority": "Minimum visible task priority",
         "externalUserNameChange": "Dein Name wird von deinem Login-Provider verwaltet ({provider}). Um ihn zu ändern, aktualisiere ihn bitte dort."
       },
       "totp": {
@@ -136,7 +137,8 @@
         "upload": "Ufeladä",
         "uploadAvatar": "Profiilbild ufeladä",
         "statusUpdateSuccess": "Avatar Zuestand erfolgriich aktualisiert!",
-        "setSuccess": "Diis Profilbild isch erfolgriich gsetzt worde!"
+        "setSuccess": "Diis Profilbild isch erfolgriich gsetzt worde!",
+        "ldap": "Dein Avatar wird automatisch aus dem Verzeichnisdienst deiner Organisation (LDAP) synchronisiert. Du kannst dein IT-Team nach Informationen fragen, um es zu ändern."
       },
       "quickAddMagic": {
         "title": "Quick Add Magic Modus",

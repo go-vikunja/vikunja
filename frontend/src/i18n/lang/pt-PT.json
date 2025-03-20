@@ -100,6 +100,7 @@
         "timezone": "Time zone",
         "overdueTasksRemindersTime": "Horário do e-mail de lembrete de tarefas pendentes",
         "filterUsedOnOverview": "Salvo filtro utilizado na vista geral",
+        "minimumPriority": "Minimum visible task priority",
         "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
       },
       "totp": {
@@ -136,7 +137,8 @@
         "upload": "Carregar",
         "uploadAvatar": "Carregar Avatar",
         "statusUpdateSuccess": "Estado do avatar foi atualizado com sucesso!",
-        "setSuccess": "O avatar foi configurado com sucesso!"
+        "setSuccess": "O avatar foi configurado com sucesso!",
+        "ldap": "Your avatar is automagically synced from your organization's directory service (LDAP). You can ask your IT team for information on how to change it."
       },
       "quickAddMagic": {
         "title": "Modo de Introdução Mágica Rápida",
@@ -255,7 +257,7 @@
       "text1": "Tens a certeza que prentedes apagar este projeto e todo o seu conteúdo?",
       "text2": "Isto inclui todas as tarefas e NÃO PODE SER REVERTIDO!",
       "success": "O projeto foi eliminado com sucesso.",
-      "tasksToDelete": "Isto irá remover irrevogavelmente aprox. {count} tarefas.",
+      "tasksToDelete": "Isto irá remover irremediavelmente aprox. {count} tarefas.",
       "tasksAndChildProjectsToDelete": "This will irrevocably remove approx. {tasks} tasks and {projects} projects.",
       "noTasksToDelete": "Este projeto não contém tarefas, deve ser seguro eliminá-lo."
     },

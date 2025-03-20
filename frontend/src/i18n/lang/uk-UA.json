@@ -100,6 +100,7 @@
         "timezone": "Часовий пояс",
         "overdueTasksRemindersTime": "Нагадувати про завдання на е-скриньку",
         "filterUsedOnOverview": "Постійна вибірка для сторінки огляду",
+        "minimumPriority": "Minimum visible task priority",
         "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
       },
       "totp": {
@@ -136,7 +137,8 @@
         "upload": "Втягти",
         "uploadAvatar": "Обрати/Втягти",
         "statusUpdateSuccess": "Стан облікового зображення оновлено!",
-        "setSuccess": "Зображення обліковки встановлено!"
+        "setSuccess": "Зображення обліковки встановлено!",
+        "ldap": "Your avatar is automagically synced from your organization's directory service (LDAP). You can ask your IT team for information on how to change it."
       },
       "quickAddMagic": {
         "title": "Спосіб скорого чарівного додавання",
