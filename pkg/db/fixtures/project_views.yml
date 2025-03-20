@@ -2,18 +2,21 @@
   title: List
   project_id: 1
   view_kind: 0
+  position: 1
   updated: '2024-03-18 15:14:13'
   created: '2018-03-18 15:14:13'
 - id: 2
   title: Gantt
   project_id: 1
   view_kind: 1
+  position: 2
   updated: '2024-03-18 15:14:13'
   created: '2018-03-18 15:14:13'
 - id: 3
   title: Table
   project_id: 1
   view_kind: 2
+  position: 3
   updated: '2024-03-18 15:14:13'
   created: '2018-03-18 15:14:13'
 - id: 4
@@ -21,10 +24,11 @@
   project_id: 1
   view_kind: 3
   done_bucket_id: 3
-  updated: '2024-03-18 15:14:13'
-  created: '2018-03-18 15:14:13'
   bucket_configuration_mode: 1
   default_bucket_id: 1
+  position: 4
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'
 - id: 5
   title: List
   project_id: 2
