@@ -116,7 +116,8 @@ func (b *TaskBucket) Update(s *xorm.Session, a web.Auth) (err error) {
 		}
 	}
 
-	task, err := GetTaskByIDSimple(s, b.TaskID)
+	task := &Task{ID: b.TaskID}
+	err = task.ReadOne(s, a)
 	if err != nil {
 		return err
 	}
@@ -124,7 +125,7 @@ func (b *TaskBucket) Update(s *xorm.Session, a web.Auth) (err error) {
 	// Check the bucket limit
 	// Only check the bucket limit if the task is being moved between buckets, allow reordering the task within a bucket
 	if b.BucketID != 0 && b.BucketID != oldTaskBucket.BucketID {
-		taskCount, err := checkBucketLimit(s, a, &task, bucket)
+		taskCount, err := checkBucketLimit(s, a, task, bucket)
 		if err != nil {
 			return err
 		}
@@ -141,7 +142,7 @@ func (b *TaskBucket) Update(s *xorm.Session, a web.Auth) (err error) {
 		if task.isRepeating() {
 			oldTask := task
 			oldTask.Done = false
-			updateDone(&oldTask, &task)
+			updateDone(oldTask, task)
 			updateBucket = false
 			b.BucketID = oldTaskBucket.BucketID
 		}
@@ -171,7 +172,7 @@ func (b *TaskBucket) Update(s *xorm.Session, a web.Auth) (err error) {
 			return
 		}
 
-		err = task.updateReminders(s, &task)
+		err = task.updateReminders(s, task)
 		if err != nil {
 			return err
 		}
@@ -208,12 +209,12 @@ func (b *TaskBucket) Update(s *xorm.Session, a web.Auth) (err error) {
 		bucket.Count++
 	}
 
-	b.Task = &task
+	b.Task = task
 	b.Bucket = bucket
 
 	doer, _ := user.GetFromAuth(a)
 	return events.Dispatch(&TaskUpdatedEvent{
-		Task: &task,
+		Task: task,
 		Doer: doer,
 	})
 }
