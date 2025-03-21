@@ -961,8 +961,10 @@ func setTaskInBucketInViews(s *xorm.Session, t *Task, a web.Auth, setBucket bool
 	positions := []*TaskPosition{}
 	taskBuckets := []*TaskBucket{}
 
+	var moveToDone bool
+
 	for _, view := range views {
-		if setBucket &&
+		if setBucket && !moveToDone &&
 			view.ViewKind == ProjectViewKindKanban &&
 			view.BucketConfigurationMode == BucketConfigurationModeManual {
 
@@ -976,6 +978,25 @@ func setTaskInBucketInViews(s *xorm.Session, t *Task, a web.Auth, setBucket bool
 						return nil, nil, err
 					}
 				}
+			}
+
+			if view.DoneBucketID != 0 && view.DoneBucketID == t.BucketID && !t.Done {
+				t.Done = true
+				_, err = s.Where("id = ?", t.ID).
+					Cols("done").
+					Update(t)
+				if err != nil {
+					return nil, nil, err
+				}
+
+				err = t.moveTaskToDoneBuckets(s, a, views)
+				if err != nil {
+					return nil, nil, err
+				}
+
+				moveToDone = true
+
+				continue
 			}
 
 			taskBuckets = append(taskBuckets, &TaskBucket{
@@ -992,6 +1013,11 @@ func setTaskInBucketInViews(s *xorm.Session, t *Task, a web.Auth, setBucket bool
 
 		positions = append(positions, newPosition)
 	}
+
+	if moveToDone {
+		taskBuckets = []*TaskBucket{}
+	}
+
 	return positions, taskBuckets, nil
 }
 
@@ -1122,59 +1148,9 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 
 	// When a task changed its done status, make sure it is in the correct bucket
 	if t.ProjectID == ot.ProjectID && !t.isRepeating() && t.Done != ot.Done {
-		for _, view := range views {
-			currentTaskBucket := &TaskBucket{}
-			_, err := s.Where("task_id = ? AND project_view_id = ?", t.ID, view.ID).
-				Get(currentTaskBucket)
-			if err != nil {
-				return err
-			}
-
-			var bucketID = currentTaskBucket.BucketID
-
-			// Task done, but no done bucket? Do nothing
-			if t.Done && view.DoneBucketID == 0 {
-				continue
-			}
-
-			// Task not done, currently not in done bucket? Do nothing
-			if !t.Done && bucketID != view.DoneBucketID {
-				continue
-			}
-
-			// Task done? Done bucket
-			if t.Done && view.DoneBucketID != 0 {
-				bucketID = view.DoneBucketID
-			}
-
-			// Task not done, currently in done bucket? Move to default
-			if !t.Done && bucketID == view.DoneBucketID {
-				bucketID, err = getDefaultBucketID(s, view)
-				if err != nil {
-					return err
-				}
-			}
-
-			tb := &TaskBucket{
-				BucketID:      bucketID,
-				TaskID:        t.ID,
-				ProjectViewID: view.ID,
-				ProjectID:     t.ProjectID,
-			}
-			err = tb.Update(s, a)
-			if err != nil {
-				return err
-			}
-
-			tp := TaskPosition{
-				TaskID:        t.ID,
-				ProjectViewID: view.ID,
-				Position:      calculateDefaultPosition(t.Index, t.Position),
-			}
-			err = tp.Update(s, a)
-			if err != nil {
-				return err
-			}
+		err = t.moveTaskToDoneBuckets(s, a, views)
+		if err != nil {
+			return
 		}
 	}
 
@@ -1325,6 +1301,64 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	return updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
+}
+
+func (t *Task) moveTaskToDoneBuckets(s *xorm.Session, a web.Auth, views []*ProjectView) error {
+	for _, view := range views {
+		currentTaskBucket := &TaskBucket{}
+		_, err := s.Where("task_id = ? AND project_view_id = ?", t.ID, view.ID).
+			Get(currentTaskBucket)
+		if err != nil {
+			return err
+		}
+
+		var bucketID = currentTaskBucket.BucketID
+
+		// Task done, but no done bucket? Do nothing
+		if t.Done && view.DoneBucketID == 0 {
+			continue
+		}
+
+		// Task not done, currently not in done bucket? Do nothing
+		if !t.Done && bucketID != view.DoneBucketID {
+			continue
+		}
+
+		// Task done? Done bucket
+		if t.Done && view.DoneBucketID != 0 {
+			bucketID = view.DoneBucketID
+		}
+
+		// Task not done, currently in done bucket? Move to default
+		if !t.Done && bucketID == view.DoneBucketID {
+			bucketID, err = getDefaultBucketID(s, view)
+			if err != nil {
+				return err
+			}
+		}
+
+		tb := &TaskBucket{
+			BucketID:      bucketID,
+			TaskID:        t.ID,
+			ProjectViewID: view.ID,
+			ProjectID:     t.ProjectID,
+		}
+		err = tb.Update(s, a)
+		if err != nil {
+			return err
+		}
+
+		tp := TaskPosition{
+			TaskID:        t.ID,
+			ProjectViewID: view.ID,
+			Position:      calculateDefaultPosition(t.Index, t.Position),
+		}
+		err = tp.Update(s, a)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func addOneMonthToDate(d time.Time) time.Time {
