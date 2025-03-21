@@ -59,3 +59,22 @@ func (err *ErrFileIsEmpty) HTTPError() web.HTTPError {
 		Message:  "The provided file does not contain any data.",
 	}
 }
+
+// ErrNotACSVFile represents a "ErrNotACSVFile" kind of error.
+type ErrNotACSVFile struct{}
+
+func (err *ErrNotACSVFile) Error() string {
+	return "The provided file is not a valid CSV file"
+}
+
+// ErrCodeNotACSVFile holds the unique world-error code of this error
+const ErrCodeNotACSVFile = 14003
+
+// HTTPError holds the http error description
+func (err *ErrNotACSVFile) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeNotACSVFile,
+		Message:  "The provided file is not a valid CSV file.",
+	}
+}

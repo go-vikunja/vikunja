@@ -197,9 +197,8 @@ func (m *Migrator) Migrate(user *user.User, file io.ReaderAt, size int64) error 
 
 	fr := io.NewSectionReader(file, 0, size)
 
-	// Check if the file contains only headers (or less content than expected)
-	// We can do a preliminary check by reading a small buffer
-	buf := make([]byte, 64) // Small buffer to check initial content
+	// Check if the file is a valid CSV
+	buf := make([]byte, 1024)
 	n, err := fr.Read(buf)
 	if errors.Is(err, io.EOF) || n == 0 {
 		return &migration.ErrFileIsEmpty{}
@@ -209,7 +208,16 @@ func (m *Migrator) Migrate(user *user.User, file io.ReaderAt, size int64) error 
 	}
 
 	// Reset the reader position to start
-	_, _ = fr.Seek(0, io.SeekStart)
+	_, err = fr.Seek(0, io.SeekStart)
+	if err != nil {
+		return err
+	}
+
+	// Check if the content looks like a CSV file
+	content := string(buf[:n])
+	if !isValidCSV(content) {
+		return &migration.ErrNotACSVFile{}
+	}
 
 	allTasks := []*tickTickTask{}
 	decode := newLineSkipDecoder(fr, 3)
@@ -239,4 +247,20 @@ func (m *Migrator) Migrate(user *user.User, file io.ReaderAt, size int64) error 
 	vikunjaTasks := convertTickTickToVikunja(allTasks)
 
 	return migration.InsertFromStructure(vikunjaTasks, user)
+}
+
+// isValidCSV performs a basic check to determine if the content looks like a CSV file
+func isValidCSV(content string) bool {
+	// Check for common CSV headers from TickTick export
+	if !strings.Contains(content, "Folder Name") ||
+		!strings.Contains(content, "List Name") ||
+		!strings.Contains(content, "Title") {
+		return false
+	}
+
+	// Check if the file has commas as separators and multiple lines
+	hasCommas := strings.Contains(content, ",")
+	hasNewlines := strings.Contains(content, "\n")
+
+	return hasCommas && hasNewlines
 }
