@@ -100,6 +100,7 @@
         "timezone": "Time zone",
         "overdueTasksRemindersTime": "وقت تذكير للمهام المتأخرة بالبريد الإلكتروني",
         "filterUsedOnOverview": "الفلتر المحفوظ والمستخدم في صفحة العرض العام",
+        "minimumPriority": "Minimum visible task priority",
         "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
       },
       "totp": {

@@ -37,15 +37,15 @@
                 "subject": "Someone just tried to login to your Vikunja account, but failed to provide a correct password",
                 "message": "Someone just tried to log in into your account with a wrong password three times in a row.",
                 "warning": "If this was not you, this could be someone else trying to break into your account.",
-                "enhance_security": "To enhance the security of you account you may want to set a stronger password or enable TOTP authentication in the settings:"
+                "enhance_security": "For å forbedre sikkerheten på kontoen bør du sette et sterkere passord eller aktivere TOTP-autentisering i innstillingene:"
             }
         },
         "account": {
             "deletion": {
                 "confirm": {
-                    "subject": "Please confirm the deletion of your Vikunja account",
+                    "subject": "Bekreft sletting av Vikunja-kontoen din",
                     "request": "You have requested the deletion of your account. To confirm this, please click the link below:",
-                    "valid_duration": "This link will be valid for 24 hours.",
+                    "valid_duration": "Denne lenken vil være gyldig i 24 timer.",
                     "schedule_info": "Once you confirm the deletion we will schedule the deletion of your account in three days and send you another email until then.",
                     "consequences": "If you proceed with the deletion of your account, we will remove all of your projects and tasks you created. Everything you shared with another user or team will transfer ownership to them.",
                     "changed_mind": "If you did not requested the deletion or changed your mind, you can simply ignore this email."
@@ -59,24 +59,24 @@
                     "changed_mind": "If you changed your mind, simply click the link below to cancel the deletion and follow the instructions there:"
                 },
                 "completed": {
-                    "subject": "Your Vikunja Account has been deleted",
-                    "confirmation": "As requested, we've deleted your Vikunja account.",
-                    "permanent": "This deletion is permanent. If did not create a backup and need your data back now, talk to your administrator."
+                    "subject": "Din Vikunja-konto er slettet",
+                    "confirmation": "Som forespurt har vi slettet Vikunja-kontoen din.",
+                    "permanent": "Denne slettingen er permanent. Hvis det ikke er opprettet en sikkerhetskopi og trenger dataene dine tilbake nå, kontakt administrator."
                 }
             }
         },
         "task": {
             "reminder": {
-                "subject": "Reminder for \"%[1]s\" (%[2]s)",
-                "message": "This is a friendly reminder of the task \"%[1]s\" (%[2]s)."
+                "subject": "Påminnelse for \"%[1]s\" (%[2]s)",
+                "message": "Dette er en påminnelse om oppgaven «%[1]» (%[2]s)."
             },
             "comment": {
-                "subject": "Re: %[1]s",
-                "mentioned_subject": "%[1]s mentioned you in a comment in \"%[2]s\"",
-                "mentioned_message": "**%[1]s** mentioned you in a comment:"
+                "subject": "Sv: %[1]s",
+                "mentioned_subject": "%[1]s nevnte deg i en kommentar i \"%[2]s\"",
+                "mentioned_message": "**%[1]s nevnte deg i en kommentar i \"%[]s:"
             },
             "assigned": {
-                "subject_to_assignee": "You have been assigned to %[1]s (%[2]s)",
+                "subject_to_assignee": "Du er tildelt %[1]s (%[2]s)",
                 "message_to_assignee": "%[1]s has assigned you to %[2]s.",
                 "subject_to_others": "%[1]s(%[2]s) has been assigned to %[3]s",
                 "message_to_others": "%[1]s has assigned this task to %[2]s."
@@ -132,7 +132,19 @@
         },
         "common": {
             "have_nice_day": "Have a nice day!",
-            "copy_url": "If the button above doesn't work, copy the url below and paste it in your browser's address bar:"
+            "copy_url": "If the button above doesn't work, copy the url below and paste it in your browser's address bar:",
+            "actions": {
+                "open_task": "Open Task",
+                "open_vikunja": "Open Vikunja",
+                "open_project": "Open Project",
+                "open_team": "Open Team",
+                "download": "Download",
+                "reset_password": "Reset your password",
+                "go_to_settings": "Go to settings",
+                "confirm_email": "Confirm your email address",
+                "abort_deletion": "Abort the deletion",
+                "confirm_account_deletion": "Confirm the deletion of my account"
+            }
         }
     }
 }

@@ -100,7 +100,7 @@
         "timezone": "Zaman dilimi",
         "overdueTasksRemindersTime": "Gecikmiş görevler hatırlatma e-posta zamanı",
         "filterUsedOnOverview": "Genel bakış sayfasında kullanılan kaydedilmiş filtre",
-        "minimumPriority": "Minimum visible task priority",
+        "minimumPriority": "Minimum görünür görev önceliği",
         "externalUserNameChange": "Adınız, oturum açma sağlayıcınız ({provider}) tarafından yönetiliyor. Değiştirmek için lütfen orada güncelleyin."
       },
       "totp": {

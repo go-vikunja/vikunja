@@ -43,7 +43,7 @@
       "forgotPassword": "Esqueceste a tua palavra-passe?",
       "resetPassword": "Redefine a tua palavra-passe",
       "resetPasswordAction": "Enviem-me um link para redefinição da palavra-passe",
-      "resetPasswordSuccess": "Check your inbox! You should have an email with instructions on how to reset your password.",
+      "resetPasswordSuccess": "Verifica a tua caixa de correio! Deves ter um e-mail com instruções sobre como redefinir a tua palavra-passe.",
       "passwordsDontMatch": "As palavras-passe não coincidem",
       "confirmEmailSuccess": "Confirmaste com sucesso o teu e-mail! Podes agora iniciar sessão.",
       "totpTitle": "Código de autenticação de dois fatores",
@@ -53,7 +53,7 @@
       "loginWith": "Iniciar sessão com {provider}",
       "authenticating": "A autenticar…",
       "openIdStateError": "O estado não coincide, a recusar continuar!",
-      "openIdGeneralError": "An error occurred while authenticating against the third party.",
+      "openIdGeneralError": "Ocorreu um erro na autenticação perante a entidade externa.",
       "logout": "Terminar Sessão",
       "emailInvalid": "Por favor, insire um endereço de e-mail válido.",
       "usernameRequired": "Por favor, fornece um nome de utilizador.",
@@ -61,32 +61,32 @@
       "usernameMustNotLookLikeUrl": "O nome de utilizador não se deve assemelhar a um URL.",
       "passwordRequired": "Por favor, fornece uma palavra-passe.",
       "passwordNotMin": "A palavra-passe deve ter no mínimo 8 caracteres.",
-      "passwordNotMax": "Password must have at most 72 characters.",
+      "passwordNotMax": "A palavra-passe deve ter, no máximo, 72 caracteres.",
       "showPassword": "Mostrar a palavra-passe",
       "hidePassword": "Esconder a palavra-passe",
       "noAccountYet": "Ainda não tens uma conta?",
       "alreadyHaveAnAccount": "Já tens uma conta?",
       "remember": "Permanecer autenticado",
-      "registrationDisabled": "Registration is disabled."
+      "registrationDisabled": "O registo está desativado."
     },
     "settings": {
       "title": "Definições",
       "newPasswordTitle": "Atualizar Palavra-Passe",
-      "newPassword": "New password",
-      "newPasswordConfirm": "New password confirmation",
-      "currentPassword": "Current password",
+      "newPassword": "Nova palavra-passe",
+      "newPasswordConfirm": "Confirmação da nova palavra-passe",
+      "currentPassword": "Palavra-passe atual",
       "currentPasswordPlaceholder": "A tua palavra-passe atual",
       "passwordsDontMatch": "A nova palavra-passe e a sua confirmação não correspondem.",
       "passwordUpdateSuccess": "A sua palavra-passe foi atualizada com sucesso.",
       "updateEmailTitle": "Atualiza o Teu Endereço de E-mail",
-      "updateEmailNew": "New email address",
+      "updateEmailNew": "Novo endereço de e-mail",
       "updateEmailSuccess": "E-mail atualizado com sucesso. Foi enviado um link de confirmação.",
       "general": {
         "title": "Definições Gerais",
-        "name": "My Name",
-        "newName": "The new name",
+        "name": "O Meu Nome",
+        "newName": "O novo nome",
         "savedSuccess": "As definições foram atualizadas com sucesso.",
-        "emailReminders": "Send me reminders for tasks via email",
+        "emailReminders": "Enviem-me lembretes de tarefas por e-mail",
         "overdueReminders": "Envie-me diariamente um resumo das minhas tarefas pendentes",
         "discoverableByName": "Permitir que outros utilizadores me adicionem como membro a equipas ou projetos quando pesquisem pelo meu nome",
         "discoverableByEmail": "Permitir que outros utilizadores me adicionem como membro a equipas ou projetos quando pesquisem pelos meu endereço de e-mail completo",
@@ -95,26 +95,26 @@
         "weekStartSunday": "Domingo",
         "weekStartMonday": "Segunda-Feira",
         "language": "Idioma",
-        "defaultProject": "Default project",
-        "defaultView": "Default view",
-        "timezone": "Time zone",
+        "defaultProject": "Projeto padrão",
+        "defaultView": "Vista padrão",
+        "timezone": "Fuso horário",
         "overdueTasksRemindersTime": "Horário do e-mail de lembrete de tarefas pendentes",
         "filterUsedOnOverview": "Salvo filtro utilizado na vista geral",
-        "minimumPriority": "Minimum visible task priority",
-        "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
+        "minimumPriority": "Prioridade mínima de tarefa a visualizar",
+        "externalUserNameChange": "O teu nome é gerido pelo teu fornecedor de início de sessão ({provider}). Para o alterar, atualiza-o antes lá."
       },
       "totp": {
         "title": "Autenticação de Dois Fatores",
         "enroll": "Registar",
-        "finishSetupPart1": "To finish your setup, use this secret in your TOTP app (Google Authenticator or similar):",
+        "finishSetupPart1": "Para concluir a tua configuração, utiliza este código no teu aplicativo TOTP (Google Authenticator ou similar):",
         "finishSetupPart2": "Depois disso, insere um código do teu aplicativo abaixo.",
         "scanQR": "Como alternativa, podes digitalizar este código QR:",
         "passcode": "Código",
-        "passcodePlaceholder": "A code generated by your TOTP application",
+        "passcodePlaceholder": "Um código gerado pelo teu aplicativo TOTP",
         "setupSuccess": "Configuraste com sucesso a autenticação de dois fatores!",
         "enterPassword": "Por favor, insere a tua palavra-passe",
         "disable": "Desativar a autenticação de dois fatores",
-        "confirmSuccess": "You've successfully confirmed your TOTP setup and can use it from now on!",
+        "confirmSuccess": "Confirmaste com sucesso a tua configuração TOTP e podes utilizá-la de agora em diante!",
         "disableSuccess": "A autenticação de dois fatores foi desativada com sucesso."
       },
       "caldav": {
@@ -138,7 +138,7 @@
         "uploadAvatar": "Carregar Avatar",
         "statusUpdateSuccess": "Estado do avatar foi atualizado com sucesso!",
         "setSuccess": "O avatar foi configurado com sucesso!",
-        "ldap": "Your avatar is automagically synced from your organization's directory service (LDAP). You can ask your IT team for information on how to change it."
+        "ldap": "O teu avatar é sincronizado automaticamente a partir do serviço de diretório da tua organização (LDAP). Podes solicitar à tua equipa de TI mais informação sobre como o alterar."
       },
       "quickAddMagic": {
         "title": "Modo de Introdução Mágica Rápida",
@@ -166,7 +166,7 @@
         "90d": "90 Dias",
         "permissionExplanation": "As permissões permitem-te definir o âmbito para o qual o token de API pode ser utilizado.",
         "titleRequired": "O título é requerido",
-        "permissionRequired": "Please select at least one permission from the list.",
+        "permissionRequired": "Por favor, seleciona pelo menos uma permissão da lista.",
         "expired": "Este token expirou {ago}.",
         "tokenCreatedSuccess": "Aqui está o teu novo token de API: {token}",
         "tokenCreatedNotSeeAgain": "Guarda-o num local seguro, não o vais poder visualizar novamente!",
@@ -213,7 +213,7 @@
     "archivedMessage": "Este projeto está arquivado. Não é possível editar ou criar novas tarefas para ele.",
     "archived": "Arquivado",
     "showArchived": "Mostrar Arquivados",
-    "title": "Title",
+    "title": "Título",
     "color": "Cor",
     "projects": "Projetos",
     "parent": "Projeto Principal",
@@ -222,10 +222,10 @@
     "shared": "Projetos Partilhados",
     "noDescriptionAvailable": "Não está disponível nenhuma descrição do projeto.",
     "inboxTitle": "Caixa de Entrada",
-    "favorite": "Mark this project as favorite",
-    "unfavorite": "Remove this project from favorites",
-    "openSettingsMenu": "Open project settings menu",
-    "description": "Project description",
+    "favorite": "Marcar este projeto como favorito",
+    "unfavorite": "Remover este projeto dos favoritos",
+    "openSettingsMenu": "Abrir o menu de definições do projeto",
+    "description": "Descrição do projeto",
     "create": {
       "header": "Novo projeto",
       "titlePlaceholder": "O título do projeto será aqui…",
@@ -237,8 +237,8 @@
       "title": "Arquivar \"{project}\"",
       "archive": "Arquivar este projeto",
       "unarchive": "Desarquivar este projeto",
-      "unarchiveText": "You will be able to create tasks or edit it.",
-      "archiveText": "You won't be able to edit this project or create tasks until you un-archive it.",
+      "unarchiveText": "Vais ser capaz de criar tarefas ou editá-las.",
+      "archiveText": "Não poderás editar este projeto ou criar tarefas até o desarquivares.",
       "success": "Este projeto foi arquivado com sucesso."
     },
     "background": {
@@ -258,7 +258,7 @@
       "text2": "Isto inclui todas as tarefas e NÃO PODE SER REVERTIDO!",
       "success": "O projeto foi eliminado com sucesso.",
       "tasksToDelete": "Isto irá remover irremediavelmente aprox. {count} tarefas.",
-      "tasksAndChildProjectsToDelete": "This will irrevocably remove approx. {tasks} tasks and {projects} projects.",
+      "tasksAndChildProjectsToDelete": "Isto irá remover irremediavelmente cerca de {tasks} tarefas e {projects} projetos.",
       "noTasksToDelete": "Este projeto não contém tarefas, deve ser seguro eliminá-lo."
     },
     "duplicate": {
@@ -287,7 +287,7 @@
         "title": "Links Partilhados",
         "what": "Como funcionam os links partilhados?",
         "explanation": "Links Partilhados permite-lhe partilhar facilmente um projeto com outros utilizadores que não têm uma conta no Vikunja.",
-        "create": "Create a link share",
+        "create": "Criar um link partilhado",
         "name": "Nome (opcional)",
         "namePlaceholder": "ex.: Lorem Ipsum",
         "nameExplanation": "Todas as ações realizadas através deste link partilhado vão aparecer com este nome.",
@@ -325,14 +325,14 @@
       }
     },
     "first": {
-      "title": "First View"
+      "title": "Vista Principal"
     },
     "list": {
       "title": "Lista",
       "add": "Adicionar",
-      "addPlaceholder": "Add a task…",
+      "addPlaceholder": "Adicionar uma tarefa…",
       "empty": "Este projeto está atualmente vazio.",
-      "newTaskCta": "Create a task.",
+      "newTaskCta": "Cria uma tarefa.",
       "editTask": "Editar Tarefa"
     },
     "gantt": {
@@ -364,7 +364,7 @@
       "addTaskPlaceholder": "Introduz o título da nova tarefa…",
       "addTask": "Adicionar uma tarefa",
       "addAnotherTask": "Adicionar outra tarefa",
-      "addBucket": "Create a bucket",
+      "addBucket": "Criar um conjunto",
       "addBucketPlaceholder": "Introduz o título do novo conjunto…",
       "deleteHeaderBucket": "Eliminar o conjunto",
       "deleteBucketText1": "Tens a certeza que pretendes eliminar este conjunto?",
@@ -373,7 +373,7 @@
       "bucketTitleSavedSuccess": "O título do conjunto foi salvo com sucesso.",
       "bucketLimitSavedSuccess": "O limite do conjunto foi salvo com sucesso.",
       "collapse": "Encolher este conjunto",
-      "bucketLimitReached": "You have reached the bucket limit. Remove tasks or increase the limit to add new tasks."
+      "bucketLimitReached": "Atingis-te o limite do conjunto. Remove tarefas ou aumenta o limite para adicionares novas tarefas."
     },
     "pseudo": {
       "favorites": {
@@ -396,30 +396,30 @@
       "secretDocs": "Verifica a documentação para mais detalhes sobre como utilizar segredos."
     },
     "views": {
-      "header": "Edit views",
-      "title": "Title",
-      "actions": "Actions",
-      "kind": "Kind",
-      "bucketConfigMode": "Bucket configuration mode",
-      "bucketConfig": "Bucket configuration",
+      "header": "Editar vista",
+      "title": "Título",
+      "actions": "Ações",
+      "kind": "Tipo",
+      "bucketConfigMode": "Modo de configuração do conjunto",
+      "bucketConfig": "Configuração do conjunto",
       "bucketConfigManual": "Manual",
-      "filter": "Filter",
-      "create": "Create view",
-      "createSuccess": "The view was created successfully.",
-      "titleRequired": "Please provide a title.",
-      "delete": "Delete this view",
-      "deleteText": "Are you sure you want to remove this view? It will no longer be possible to use it to view tasks in this project. This action won't delete any tasks. This cannot be undone!",
-      "deleteSuccess": "The view was deleted successfully.",
-      "onlyAdminsCanEdit": "Only project admins can edit views.",
-      "updateSuccess": "The view was updated successfully."
+      "filter": "Filtro",
+      "create": "Criar vista",
+      "createSuccess": "A vista foi criada com sucesso.",
+      "titleRequired": "Por favor, insere um título.",
+      "delete": "Eliminar esta vista",
+      "deleteText": "Tens a certeza que queres remover esta vista? Não será mais possível utilizá-la para visualizar tarefas neste projeto. Esta ação não irá eliminar nenhuma tarefa. Isto não pode ser revertido!",
+      "deleteSuccess": "Esta vista foi eliminada com sucesso.",
+      "onlyAdminsCanEdit": "Apenas administradores do projeto podem editar esta vista.",
+      "updateSuccess": "A vista foi atualizada com sucesso."
     }
   },
   "filters": {
     "title": "Filtros",
     "clear": "Limpar Filtros",
-    "showResults": "Show results",
-    "fromView": "The current view has a filter set as well:",
-    "fromViewBoth": "It will be used in combination with what you enter here.",
+    "showResults": "Mostrar resultados",
+    "fromView": "A vista atual tem também um filtro definido:",
+    "fromViewBoth": "Será utilizado em combinação com o que inserires aqui.",
     "attributes": {
       "title": "Título",
       "titlePlaceholder": "O título do filtro memorizado será aqui…",
@@ -439,7 +439,7 @@
     "create": {
       "title": "Novo Filtro Memorizado",
       "description": "Um filtro memorizado é um projeto virtual que é compilado a partir de um conjunto de filtros de cada vez que é acedido.",
-      "action": "Create saved filter",
+      "action": "Criar filtro memorizado",
       "titleRequired": "Por favor, insere um título para o filtro."
     },
     "delete": {
@@ -452,52 +452,52 @@
       "success": "O filtro foi memorizado com sucesso."
     },
     "query": {
-      "title": "Query",
-      "placeholder": "Type a search or filter query…",
+      "title": "Pesquisa",
+      "placeholder": "Introduz uma pesquisa ou filtro…",
       "help": {
-        "intro": "To filter tasks, you can use a query syntax similar to SQL. The available fields for filtering include:",
-        "link": "How does this work?",
-        "canUseDatemath": "You can use date math to set relative dates. Click on the date value in a query to find out more.",
+        "intro": "Para filtrar tarefas, podes utilizar uma sintaxe de pesquisa semelhante à SQL. Os campos disponíveis para filtragem incluem:",
+        "link": "Como é que isto funciona?",
+        "canUseDatemath": "Podes utilizar a matemática de datas para definir datas relativas. Clica no valor da data numa pesquisa para saber mais.",
         "fields": {
-          "done": "Whether the task is completed or not",
-          "priority": "The priority level of the task (1-5)",
-          "percentDone": "The percentage of completion for the task (0-100)",
-          "dueDate": "The due date of the task",
-          "startDate": "The start date of the task",
-          "endDate": "The end date of the task",
-          "doneAt": "The date and time when the task was completed",
-          "assignees": "The assignees of the task",
-          "labels": "The labels associated with the task",
-          "project": "The project the task belongs to (only available for saved filters, not on a project level)",
-          "reminders": "The reminders of the task as a date field, will return all tasks with at least one reminder matching the query",
-          "created": "The time and date when the task was created",
-          "updated": "The time and date when the task was last changed"
+          "done": "Se a tarefa está concluída ou não",
+          "priority": "O nível de prioridade da tarefa (1-5)",
+          "percentDone": "A percentagem de conclusão da tarefa (0-100)",
+          "dueDate": "A data de vencimento da tarefa",
+          "startDate": "A data de início da tarefa",
+          "endDate": "A data de fim da tarefa",
+          "doneAt": "A data e a hora em que a tarefa foi concluída",
+          "assignees": "Os responsáveis pela tarefa",
+          "labels": "As etiquetas associadas à tarefa",
+          "project": "O projeto a que a tarefa pertence (apenas disponível para filtros memorizados, não ao nível do projeto)",
+          "reminders": "Os lembretes da tarefa como um campo de data, apresentará todas as tarefas com pelo menos um lembrete que corresponda à pesquisa",
+          "created": "A hora e a data em que a tarefa foi criada",
+          "updated": "A hora e a data em que a tarefa foi alterada pela última vez"
         },
         "operators": {
-          "intro": "The available operators for filtering include:",
-          "notEqual": "Not equal to",
-          "equal": "Equal to",
-          "greaterThan": "Greater than",
-          "greaterThanOrEqual": "Greater than or equal to",
-          "lessThan": "Less than",
-          "lessThanOrEqual": "Less than or equal to",
-          "like": "Matches a pattern (using wildcard %)",
-          "in": "Matches any value in a comma-seperated list of values",
-          "notIn": "Matches any value not present in a comma-seperated list of values"
+          "intro": "Os operadores disponíveis para filtragem incluem:",
+          "notEqual": "Não igual a",
+          "equal": "Igual a",
+          "greaterThan": "Maior que",
+          "greaterThanOrEqual": "Maior ou igual a",
+          "lessThan": "Menor que",
+          "lessThanOrEqual": "Menor ou igual a",
+          "like": "Corresponde a um padrão (utilizando o carater universal %)",
+          "in": "Faz corresponder qualquer valor numa lista de valores separados por vírgulas",
+          "notIn": "Faz corresponder qualquer valor não presente numa lista de valores separados por vírgulas"
         },
         "logicalOperators": {
-          "intro": "To combine multiple conditions, you can use the following logical operators:",
-          "and": "AND operator, matches if all conditions are true",
-          "or": "OR operator, matches if any of the conditions are true",
-          "parentheses": "Parentheses for grouping conditions"
+          "intro": "Para combinar várias condições, pode utilizar os seguintes operadores lógicos:",
+          "and": "Operador AND, faz a correspondência se todas as condições forem verdadeiras",
+          "or": "Operador OR, faz a correspondência se qualquer das condições for verdadeira",
+          "parentheses": "Parênteses para agrupar condições"
         },
         "examples": {
-          "intro": "Here are some examples of filter queries:",
-          "priorityEqual": "Matches tasks with priority level 4",
-          "dueDatePast": "Matches tasks with a due date in the past",
-          "undoneHighPriority": "Matches undone tasks with priority level 3 or higher",
-          "assigneesIn": "Matches tasks assigned to either \"user1\" or \"user2\"",
-          "priorityOneOrTwoPastDue": "Matches tasks with priority level 1 or 2 and a due date in the past"
+          "intro": "Eis alguns exemplos de pesquisas de filtros:",
+          "priorityEqual": "Faz corresponder tarefas com o nível de prioridade 4",
+          "dueDatePast": "Faz corresponder tarefas com uma data de vencimento já passada",
+          "undoneHighPriority": "Faz corresponder tarefas não concluídas com um nível de prioridade 3 ou superior",
+          "assigneesIn": "Faz corresponder tarefas atribuídas a “utilizador1” ou “utilizador2”",
+          "priorityOneOrTwoPastDue": "Faz corresponder tarefas com prioridade 1 ou 2 e uma data de vencimento já passada"
         }
       }
     }
@@ -527,7 +527,7 @@
     "search": "Escreve para pesquisar uma etiqueta…",
     "create": {
       "header": "Nova etiqueta",
-      "title": "Create a label",
+      "title": "Cria uma etiqueta",
       "titleRequired": "Por favor, especifica um título.",
       "success": "A etiqueta foi criada com sucesso."
     },
@@ -548,7 +548,7 @@
   "sharing": {
     "authenticating": "A autenticar…",
     "passwordRequired": "Este projeto partilhado requer uma palavra-passe. Por favor, introduz-a abaixo:",
-    "error": "An error occurred.",
+    "error": "Ocorreu um erro.",
     "invalidPassword": "A palavra-passe é inválida."
   },
   "navigation": {
@@ -591,7 +591,7 @@
     "createdBy": "Criado por {0}",
     "actions": "Ações",
     "cannotBeUndone": "Isto não pode ser revertido!",
-    "avatarOfUser": "{user}'s profile image"
+    "avatarOfUser": "Avatar de {user}"
   },
   "input": {
     "resetColor": "Repor cor",
@@ -663,14 +663,14 @@
       }
     },
     "multiselect": {
-      "createPlaceholder": "Create",
+      "createPlaceholder": "Criar",
       "selectPlaceholder": "Clica ou pressiona Enter para selecionar"
     },
     "datepickerRange": {
       "to": "Até",
       "from": "De",
       "fromto": "{from} até {to}",
-      "date": "Date",
+      "date": "Data",
       "ranges": {
         "today": "Hoje",
         "thisWeek": "Esta semana",
@@ -687,25 +687,25 @@
         "restOfThisYear": "O Resto Deste Ano"
       },
       "values": {
-        "now": "Now",
-        "startOfToday": "Start of today",
-        "endOfToday": "End of today",
-        "beginningOflastWeek": "Beginning of last week",
-        "endOfLastWeek": "End of last week",
-        "beginningOfThisWeek": "Beginning of this week",
-        "endOfThisWeek": "End of this week",
-        "startOfNextWeek": "Start of next week",
-        "endOfNextWeek": "End of next week",
-        "in7Days": "In 7 days",
-        "beginningOfLastMonth": "Beginning of last month",
-        "endOfLastMonth": "End of last month",
-        "startOfThisMonth": "Start of this month",
-        "endOfThisMonth": "End of this month",
-        "startOfNextMonth": "Start of next month",
-        "endOfNextMonth": "End of next month",
-        "in30Days": "In 30 days",
-        "startOfThisYear": "Beginning of this year",
-        "endOfThisYear": "End of this year"
+        "now": "Agora",
+        "startOfToday": "Início de hoje",
+        "endOfToday": "Final de hoje",
+        "beginningOflastWeek": "Início da semana passada",
+        "endOfLastWeek": "Final da semana passada",
+        "beginningOfThisWeek": "Início desta semana",
+        "endOfThisWeek": "Final desta semana",
+        "startOfNextWeek": "Início da próxima semana",
+        "endOfNextWeek": "Final da próxima semana",
+        "in7Days": "Em 7 dias",
+        "beginningOfLastMonth": "Início do mês passado",
+        "endOfLastMonth": "Final do mês passado",
+        "startOfThisMonth": "Início deste mês",
+        "endOfThisMonth": "Final deste mês",
+        "startOfNextMonth": "Início do próximo mês",
+        "endOfNextMonth": "Final do próximo mês",
+        "in30Days": "Em 30 dias",
+        "startOfThisYear": "Início deste ano",
+        "endOfThisYear": "Final deste ano"
       }
     },
     "datemathHelp": {
@@ -742,13 +742,13 @@
   },
   "task": {
     "task": "Tarefa",
-    "new": "Create a task",
+    "new": "Cria uma tarefa",
     "delete": "Eliminar esta tarefa",
     "createSuccess": "A tarefa for criada com sucesso.",
-    "addReminder": "Add a reminder…",
+    "addReminder": "Adicionar um lembrete…",
     "doneSuccess": "A tarefa foi marcada como concluída.",
     "undoneSuccess": "A tarefa foi desmarcada como concluída.",
-    "revertSuccess": "The task change was successfully undone.",
+    "revertSuccess": "A alteração da tarefa foi anulada com sucesso.",
     "undo": "Desfazer",
     "openDetail": "Abrir vista detalhada da tarefa",
     "checklistTotal": "{checked} de {total} tarefas",
@@ -864,7 +864,7 @@
       "deleteText1": "Tens a certeza que pretendes eliminar este comentário?",
       "deleteSuccess": "O comentário foi eliminado com sucesso.",
       "addedSuccess": "O comentário foi adicionada com sucesso.",
-      "permalink": "Copy permalink to this comment"
+      "permalink": "Copiar o link permanente para este comentário"
     },
     "deferDueDate": {
       "title": "Adiar data de vencimento",
@@ -883,7 +883,7 @@
       "unassignSuccess": "O utilizador foi desatribuido com sucesso."
     },
     "label": {
-      "placeholder": "Type to add a label…",
+      "placeholder": "Escreve para adicionar uma etiqueta…",
       "createPlaceholder": "Adicionar isto como nova etiqueta",
       "addSuccess": "A etiqueta foi adicionada com sucesso.",
       "createSuccess": "A etiqueta foi criada com sucesso.",
@@ -906,8 +906,8 @@
     "relation": {
       "add": "Adicionar Nova Relação Entre Tarefas",
       "new": "Nova Relação Entre Tarefas",
-      "searchPlaceholder": "Type search for a task to add as related…",
-      "createPlaceholder": "Add this as related task",
+      "searchPlaceholder": "Escreve para pesquisar uma tarefa a adicionar como relacionada…",
+      "createPlaceholder": "Adicionar esta como tarefa relacionada",
       "differentProject": "Esta tarefa pertence a um projeto diferente.",
       "noneYet": "Ainda sem tarefas relacionadas.",
       "delete": "Eliminar Relação Entre Tarefas",
@@ -945,7 +945,7 @@
       "every30d": "A cada 30 Dias",
       "mode": "Modo de repetição",
       "monthly": "Mensal",
-      "fromCurrentDate": "From completion date",
+      "fromCurrentDate": "Da data de conclusão",
       "each": "Cada",
       "specifyAmount": "Especifica uma quantidade…",
       "hours": "Horas",
@@ -985,7 +985,7 @@
     "title": "Equipas",
     "noTeams": "Atualmente não fazes parte de nenhuma equipa.",
     "create": {
-      "title": "Create a team",
+      "title": "Criar uma equipa",
       "success": "A equipa foi criada com sucesso."
     },
     "edit": {
@@ -1027,8 +1027,8 @@
       "descriptionPlaceholder": "Descreve aqui a equipa, pressiona '/' para mais opções…",
       "admin": "Administrador",
       "member": "Membro",
-      "isPublic": "Public Team",
-      "isPublicDescription": "Make the team publicly discoverable. When enabled, anyone can share projects with this team even when not being a direct member."
+      "isPublic": "Equipa Pública",
+      "isPublicDescription": "Torna a equipa publicamente visível. Quando ativado, qualquer pessoa pode partilhar projetos com esta equipa, mesmo que não seja um membro direto."
     }
   },
   "keyboardShortcuts": {
@@ -1083,13 +1083,13 @@
     "duplicate": "Duplicar",
     "delete": "Eliminar",
     "unarchive": "Desarquivar",
-    "setBackground": "Background settings",
+    "setBackground": "Definições do fundo",
     "share": "Partilhar",
     "newProject": "Novo projeto",
     "createProject": "Criar projeto",
     "cantArchiveIsDefault": "Não podes arquivar isto porque é o teu projeto padrão.",
     "cantDeleteIsDefault": "Não podes eliminar isto porque é o teu projeto padrão.",
-    "views": "Views"
+    "views": "Vistas"
   },
   "apiConfig": {
     "url": "URL do Vikunja",
@@ -1136,10 +1136,10 @@
     "altFormatShort": "j M Y"
   },
   "reaction": {
-    "reactedWith": "{user} reacted with {value}",
-    "reactedWithAnd": "{users} and {lastUser} reacted with {value}",
-    "reactedWithAndMany": "{users} and {num} more reacted reacted with {value}",
-    "add": "Add your reaction"
+    "reactedWith": "{user} reagiu com {value}",
+    "reactedWithAnd": "{users} e {lastUser} reagiram com {value}",
+    "reactedWithAndMany": "{users} e {num} mais reagiram com {value}",
+    "add": "Adiciona a tua reação"
   },
   "error": {
     "error": "Erro",
@@ -1157,28 +1157,28 @@
     "1012": "Endereço de e-mail do utlizador não confirmado.",
     "1013": "Campo de nova palavra-passe vazio.",
     "1014": "Campo de antiga palavra-passe vazio.",
-    "1015": "TOTP is already enabled for this user.",
-    "1016": "TOTP is not enabled for this user.",
-    "1017": "The TOTP passcode is invalid.",
+    "1015": "TOTP já está ativado para este utilizador.",
+    "1016": "TOTP não está ativado para este utilizador.",
+    "1017": "O código TOTP é inválido.",
     "1018": "A definição do tipo de avatar do utilizador é inválida.",
-    "1019": "No email address was provided by the OpenID provider.Please make sure the openid provider publicly provides an email address for your account.",
-    "1020": "This account is disabled. Check your emails or ask your administrator.",
-    "1021": "This account is managed by a third-party authentication provider.",
-    "1022": "The username must not contain spaces.",
-    "1023": "You can't do that as a link share.",
-    "1024": "Invalid claim data for field {field} of type {type}.",
-    "1025": "The timezone '{timezone}' is invalid. Please select a valid timezone from the list.",
+    "1019": "O fornecedor de OpenID não forneceu nenhum endereço de e-mail. Certifica-te que o fornecedor de OpenID fornece publicamente um endereço de e-mail para a tua conta.",
+    "1020": "Esta conta está desativada. Verifica os teus e-mails ou informa-te junto do teu administrador.",
+    "1021": "Esta conta é gerida por um fornecedor de autenticação de terceiros.",
+    "1022": "O nome de utilizador não deve conter espaços.",
+    "1023": "Não é possível fazer isso como um link partilhado.",
+    "1024": "Dados do pedido inválidos para o campo {field} do tipo {type}.",
+    "1025": "O fuso horário '{timezone}' é inválido. Por favor, seleciona um fuso horário válido da lista.",
     "2001": "O ID não pode ser 0 ou estar vazio.",
     "2002": "Alguns dos dados solicitados eram inválidos.",
-    "2003": "The timezone '{timezone}' is invalid.",
+    "2003": "O fuso horário '{timezone}' é inválido.",
     "3001": "O projeto não existe.",
     "3004": "Precisas ter permissão de leitura nesse projeto para executar essa ação.",
     "3005": "O nome do projeto não pode estar em branco.",
     "3006": "O projeto partiilhado não existe.",
     "3007": "Já existe um projeto com este identificador.",
     "3008": "O projeto está arquivado, portanto, só pode ser acedido para leitura. Isto é também verdade para todas as tarefas associadas a este projeto.",
-    "4001": "The task title cannot be empty.",
-    "4002": "The task does not exist.",
+    "4001": "O título da lista não pode estar em branco.",
+    "4002": "A tarefa não existe.",
     "4003": "Todas as tarefas para edição em massa devem pertencer ao mesmo projeto.",
     "4004": "Precisas selecionar pelo menos uma tarefa para realizar uma edição em massa.",
     "4005": "Não possuis permissão para ver esta tarefa.",
@@ -1196,18 +1196,18 @@
     "4017": "Filtro de comparação de tarefas inválido.",
     "4018": "Filtro de encademanto de tarefas inválido.",
     "4019": "Valor de filtro de tarefas inválido.",
-    "4020": "This attachment does not belong to that task.",
-    "4021": "This user is already assigned to that task.",
-    "4022": "Please provide what the reminder date is relative to.",
-    "4023": "Cannot create a task relation cycle.",
+    "4020": "Este anexo não pertence a essa tarefa.",
+    "4021": "Este utilizador já está atribuído a essa tarefa.",
+    "4022": "Por favor, indica a que se deve relacionar a data do lembrete.",
+    "4023": "Não é possível criar um ciclo de relação de tarefas.",
     "6001": "O nome da equipa não pode estar vazio.",
     "6002": "A equipa não existe.",
     "6004": "A equipa tem já acesso a esse projeto.",
     "6005": "O utilizador é já membro dessa equipa.",
     "6006": "Não podes eliminar o último membro da equipa.",
     "6007": "A equipa não tem acesso ao projeto para executar essa ação.",
-    "6008": "No team could be found for the given OIDC ID and issuer.",
-    "6009": "No Teams with property oidcId could be found for User.",
+    "6008": "Não foi possível encontrar nenhuma equipa para o ID OIDC e o emissor indicados.",
+    "6009": "Não foi possível encontrar Equipas com propriedade OIDC ID para o Utilizador.",
     "7002": "O utilizador tem já acesso a esse projeto.",
     "7003": "Não tens acesso a esse projeto.",
     "8001": "Esta etiqueta já existe nessa lista.",
@@ -1223,12 +1223,12 @@
     "11002": "Filtros memorizados não estão disponíveis para links partilhados.",
     "12001": "O tipo de entidade da subscrição é inválido.",
     "12002": "Já estás subcrito na entidade ou numa entidade parente.",
-    "12003": "You must provide a user to fetch subscriptions.",
+    "12003": "É necessário fornecer um utilizador para consultar as subscrições.",
     "13001": "Este link partilhado requer uma palavra-passe para autenticação, mas nenhuma foi fornecida.",
-    "13002": "The provided link share password is invalid.",
-    "13003": "The provided link share token is invalid.",
-    "14001": "The provided api token is invalid.",
-    "14002": "The permission {permission} of group {group} is invalid."
+    "13002": "A palavra-passe fornecida para o link partilhado é inválida.",
+    "13003": "O token fornecido para o link partilhado é inválido.",
+    "14001": "O token de API fornecido é inválido.",
+    "14002": "A permissão {permission} do grupo {group} é inválida."
   },
   "about": {
     "title": "Sobre",

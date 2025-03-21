@@ -100,6 +100,7 @@
         "timezone": "Aikavyöhyke",
         "overdueTasksRemindersTime": "Erääntyneiden tehtävien muistutus sähköpostin aika",
         "filterUsedOnOverview": "Tallennettu yleisnäkymä-sivulla käytetty suodatin",
+        "minimumPriority": "Minimum visible task priority",
         "externalUserNameChange": "Nimeäsi hallinnoi kirjautumisoperaattori ({provider}). Muuttaaksesi sen, päivitä se siellä."
       },
       "totp": {

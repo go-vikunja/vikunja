@@ -100,6 +100,7 @@
         "timezone": "Time zone",
         "overdueTasksRemindersTime": "Forfaldne opgaver påmindelse e-mail tidspunkt",
         "filterUsedOnOverview": "Saved filter used on the overview page",
+        "minimumPriority": "Minimum visible task priority",
         "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
       },
       "totp": {

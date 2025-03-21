@@ -100,6 +100,7 @@
         "timezone": "Часова зона",
         "overdueTasksRemindersTime": "Час за напомняне за просрочени задачи",
         "filterUsedOnOverview": "Запазен филтър, използван на страницата за общ преглед",
+        "minimumPriority": "Minimum visible task priority",
         "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
       },
       "totp": {

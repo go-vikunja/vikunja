@@ -100,7 +100,7 @@
         "timezone": "Zeitzone",
         "overdueTasksRemindersTime": "Zeit der E-Mail-Zusammenfassung der überfälligen Aufgaben",
         "filterUsedOnOverview": "Gespeicherter Filter, der für die Startseite verwendet wird",
-        "minimumPriority": "Minimum visible task priority",
+        "minimumPriority": "Minimal sichtbare Aufgaben-Priorität",
         "externalUserNameChange": "Dein Name wird von deinem Login-Provider verwaltet ({provider}). Um ihn zu ändern, aktualisiere ihn bitte dort."
       },
       "totp": {

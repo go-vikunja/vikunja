@@ -132,7 +132,19 @@
         },
         "common": {
             "have_nice_day": "İyi günler dileriz!",
-            "copy_url": "Yukarıdaki düğme çalışmazsa, aşağıdaki URL'yi kopyalayıp tarayıcınızın adres çubuğuna yapıştırın:"
+            "copy_url": "Yukarıdaki düğme çalışmazsa, aşağıdaki URL'yi kopyalayıp tarayıcınızın adres çubuğuna yapıştırın:",
+            "actions": {
+                "open_task": "Open Task",
+                "open_vikunja": "Open Vikunja",
+                "open_project": "Open Project",
+                "open_team": "Open Team",
+                "download": "Download",
+                "reset_password": "Reset your password",
+                "go_to_settings": "Go to settings",
+                "confirm_email": "Confirm your email address",
+                "abort_deletion": "Abort the deletion",
+                "confirm_account_deletion": "Confirm the deletion of my account"
+            }
         }
     }
 }

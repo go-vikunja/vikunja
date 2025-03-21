@@ -100,7 +100,7 @@
         "timezone": "Tidssone",
         "overdueTasksRemindersTime": "Påminnelsestid for utløpte oppgaver",
         "filterUsedOnOverview": "Lagret filter brukt på siden med oversikt",
-        "minimumPriority": "Minimum visible task priority",
+        "minimumPriority": "Minimum synlig oppgaveprioritet",
         "externalUserNameChange": "Navnet ditt blir administrert av din innloggingsleverandør ({provider}). For å endre det, vennligst oppdater det hos leverandøren."
       },
       "totp": {
@@ -455,7 +455,7 @@
       "title": "Spørring",
       "placeholder": "Angi et søk eller filter…",
       "help": {
-        "intro": "For å filtrere oppgaver kan du bruke en spørringssyntaks lik SQL. De tilgjengelige feltene for filtrering omfatter:",
+        "intro": "For å filtrere oppgaver kan du bruke en spørresyntaks på samme måte som SQL. De tilgjengelige feltene for filtrering omfatter:",
         "link": "Hvordan virker dette?",
         "canUseDatemath": "Du kan bruke datokalkulering for å angi relative datoer. Klikk på datoverdier i spørringen for å finne ut mer.",
         "fields": {
