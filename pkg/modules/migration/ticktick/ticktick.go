@@ -190,14 +190,37 @@ func newLineSkipDecoder(r io.Reader, linesToSkip int) gocsv.SimpleDecoder {
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /migration/ticktick/migrate [post]
 func (m *Migrator) Migrate(user *user.User, file io.ReaderAt, size int64) error {
+	// Check if file is empty
+	if size == 0 {
+		return &migration.ErrFileIsEmpty{}
+	}
+
 	fr := io.NewSectionReader(file, 0, size)
-	//r := csv.NewReader(fr)
+
+	// Check if the file contains only headers (or less content than expected)
+	// We can do a preliminary check by reading a small buffer
+	buf := make([]byte, 64) // Small buffer to check initial content
+	n, err := fr.Read(buf)
+	if errors.Is(err, io.EOF) || n == 0 {
+		return &migration.ErrFileIsEmpty{}
+	}
+	if err != nil {
+		return err
+	}
+
+	// Reset the reader position to start
+	_, _ = fr.Seek(0, io.SeekStart)
 
 	allTasks := []*tickTickTask{}
 	decode := newLineSkipDecoder(fr, 3)
-	err := gocsv.UnmarshalDecoder(decode, &allTasks)
+	err = gocsv.UnmarshalDecoder(decode, &allTasks)
 	if err != nil {
 		return err
+	}
+
+	// Also check if no tasks were found after decoding
+	if len(allTasks) == 0 {
+		return &migration.ErrFileIsEmpty{}
 	}
 
 	for _, task := range allTasks {

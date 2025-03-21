@@ -40,3 +40,22 @@ func (err *ErrNotAZipFile) HTTPError() web.HTTPError {
 		Message:  "The provided file is not a valid zip file.",
 	}
 }
+
+// ErrFileIsEmpty represents a "ErrFileIsEmpty" kind of error.
+type ErrFileIsEmpty struct{}
+
+func (err *ErrFileIsEmpty) Error() string {
+	return "The provided file does not contain any data"
+}
+
+// ErrCodeFileIsEmpty holds the unique world-error code of this error
+const ErrCodeFileIsEmpty = 14002
+
+// HTTPError holds the http error description
+func (err *ErrFileIsEmpty) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeFileIsEmpty,
+		Message:  "The provided file does not contain any data.",
+	}
+}
