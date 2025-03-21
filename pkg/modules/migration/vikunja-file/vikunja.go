@@ -267,11 +267,13 @@ func addDetailsToProject(l *models.ProjectWithTasksAndBuckets, storedFiles map[i
 			}
 			af, err := attachmentFile.Open()
 			if err != nil {
-				return fmt.Errorf("could not open attachment %d for reading: %w", attachment.ID, err)
+				log.Warningf(logPrefix+"Could not open attachment %d for reading: %v, skipping", attachment.ID, err)
+				continue
 			}
 			var buf bytes.Buffer
 			if _, err := buf.ReadFrom(af); err != nil {
-				return fmt.Errorf("could not read attachment %d: %w", attachment.ID, err)
+				log.Warningf(logPrefix+"Could not read attachment %d: %v, skipping", attachment.ID, err)
+				continue
 			}
 
 			attachment.ID = 0

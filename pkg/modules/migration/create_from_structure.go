@@ -382,6 +382,10 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 				fr := io.NopCloser(bytes.NewReader(a.File.FileContent))
 				err = a.NewAttachment(s, fr, a.File.Name, a.File.Size, user)
 				if err != nil {
+					if models.IsErrTaskAttachmentIsTooLarge(err) {
+						log.Warningf("[creating structure] Attachment %s is too large (%d bytes), skipping: %v", a.File.Name, a.File.Size, err)
+						continue
+					}
 					return
 				}
 				log.Debugf("[creating structure] Created new attachment %d", a.ID)
