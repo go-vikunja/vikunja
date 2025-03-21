@@ -298,20 +298,49 @@ func createProjectView(s *xorm.Session, p *ProjectView, a web.Auth, createBacklo
 		return
 	}
 
-	if createBacklogBucket && p.BucketConfigurationMode == BucketConfigurationModeManual {
-		// Create a new first bucket for this project
-		b := &Bucket{
+	if p.ViewKind == ProjectViewKindKanban && createBacklogBucket && p.BucketConfigurationMode == BucketConfigurationModeManual {
+		// Create default buckets for kanban view
+		backlog := &Bucket{
 			ProjectViewID: p.ID,
-			Title:         "Backlog",
+			Title:         "To-Do",
+			Position:      100,
 		}
-		err = b.Create(s, a)
+		err = backlog.Create(s, a)
+		if err != nil {
+			return
+		}
+
+		doing := &Bucket{
+			ProjectViewID: p.ID,
+			Title:         "Doing",
+			Position:      200,
+		}
+		err = doing.Create(s, a)
+		if err != nil {
+			return
+		}
+
+		done := &Bucket{
+			ProjectViewID: p.ID,
+			Title:         "Done",
+			Position:      300,
+		}
+		err = done.Create(s, a)
+		if err != nil {
+			return
+		}
+
+		// Set Backlog as default bucket and Done as done bucket
+		p.DefaultBucketID = backlog.ID
+		p.DoneBucketID = done.ID
+		_, err = s.ID(p.ID).Cols("default_bucket_id", "done_bucket_id").Update(p)
 		if err != nil {
 			return
 		}
 
 		// Move all tasks into the new bucket when the project already has tasks
 		if addExistingTasksToView {
-			err = addTasksToView(s, a, p, b)
+			err = addTasksToView(s, a, p, backlog)
 			if err != nil {
 				return
 			}

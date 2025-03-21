@@ -461,7 +461,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		buckets := bucketsIn.([]*models.Bucket)
 		var newBacklogBucket *models.Bucket
 		for _, b := range buckets {
-			if b.Title == "Backlog" {
+			if b.Title == "To-Do" {
 				newBacklogBucket = b
 				newBacklogBucket.ProjectID = project.ID
 				break

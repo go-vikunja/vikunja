@@ -78,7 +78,45 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 				"project_view_id": kanbanView.ID,
 			}, false)
 		})
-		t.Run("nonexistant parent project", func(t *testing.T) {
+		t.Run("kanban view creates To-Do, doing, done buckets", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			project := Project{
+				Title:       "test kanban buckets",
+				Description: "Lorem Ipsum",
+			}
+			err := project.Create(s, usr)
+			require.NoError(t, err)
+			err = s.Commit()
+			require.NoError(t, err)
+
+			// Get the kanban view
+			kanbanView := &ProjectView{}
+			_, err = s.Where("project_id = ? AND view_kind = ?", project.ID, ProjectViewKindKanban).Get(kanbanView)
+			require.NoError(t, err)
+
+			// Check that three buckets were created
+			var bucketCount int64
+			bucketCount, err = s.Where("project_view_id = ?", kanbanView.ID).Count(&Bucket{})
+			require.NoError(t, err)
+			assert.Equal(t, int64(3), bucketCount, "Should have created three buckets")
+
+			// Check that the buckets are named correctly
+			var buckets []*Bucket
+			err = s.Where("project_view_id = ?", kanbanView.ID).OrderBy("position ASC").Find(&buckets)
+			require.NoError(t, err)
+			require.Len(t, buckets, 3, "Should have three buckets")
+			assert.Equal(t, "To-Do", buckets[0].Title)
+			assert.Equal(t, "Doing", buckets[1].Title)
+			assert.Equal(t, "Done", buckets[2].Title)
+
+			// Check that Backlog is the default bucket
+			assert.Equal(t, buckets[0].ID, kanbanView.DefaultBucketID, "To-Do should be the default bucket")
+
+			// Check that Done is the done bucket
+			assert.Equal(t, buckets[2].ID, kanbanView.DoneBucketID, "Done should be the done bucket")
+		})
+		t.Run("nonexistent parent", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
 			project := Project{
@@ -91,7 +129,7 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 			assert.True(t, IsErrProjectDoesNotExist(err))
 			_ = s.Close()
 		})
-		t.Run("nonexistant owner", func(t *testing.T) {
+		t.Run("nonexistent owner", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
 			usr := &user.User{ID: 9482385}
@@ -156,7 +194,7 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 				"description": project.Description,
 			}, false)
 		})
-		t.Run("nonexistant", func(t *testing.T) {
+		t.Run("nonexistent", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
 			project := Project{
@@ -393,7 +431,7 @@ func TestProject_ReadAll(t *testing.T) {
 		assert.Equal(t, int64(-2), ls[27].ID)
 		_ = s.Close()
 	})
-	t.Run("projects for nonexistant user", func(t *testing.T) {
+	t.Run("projects for nonexistent user", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		usr := &user.User{ID: 999999}
