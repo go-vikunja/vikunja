@@ -122,6 +122,8 @@ type Task struct {
 	// All buckets across all views this task is part of. Only present when fetching tasks with the `expand` parameter set to `buckets`.
 	Buckets []*Bucket `xorm:"-" json:"buckets,omitempty"`
 
+	Bucket *Bucket `xorm:"-" json:"bucket,omitempty"`
+
 	// All comments of this task. Only present when fetching tasks with the `expand` parameter set to `comments`.
 	Comments []*TaskComment `xorm:"-" json:"comments,omitempty"`
 
@@ -452,6 +454,19 @@ func (t *Task) setIdentifier(project *Project) {
 	t.Identifier = project.Identifier + "-" + strconv.FormatInt(t.Index, 10)
 }
 
+func addBucketToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Task) (err error) {
+	bucketsTask, err := getRawBucketForTasks(s, taskIDs)
+	if err != nil {
+		return
+	}
+	for _, bucketTask := range bucketsTask {
+		if bucketTask != nil {
+			taskMap[bucketTask.TaskId].Bucket = &bucketTask.Bucket
+		}
+	}
+	return
+}
+
 // Get all assignees
 func addAssigneesToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Task) (err error) {
 	taskAssignees, err := getRawTaskAssigneesForTasks(s, taskIDs)
@@ -640,6 +655,11 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 	}
 
 	err = addAssigneesToTasks(s, taskIDs, taskMap)
+	if err != nil {
+		return
+	}
+
+	err = addBucketToTasks(s, taskIDs, taskMap)
 	if err != nil {
 		return
 	}

@@ -70,6 +70,21 @@ func (b *Bucket) TableName() string {
 	return "buckets"
 }
 
+type BucketsWithTask struct {
+	TaskId int64
+	Bucket `xorm:"extends"`
+}
+
+func getRawBucketForTasks(s *xorm.Session, taskIDs []int64) (buckets []*BucketsWithTask, err error) {
+	buckets = []*BucketsWithTask{}
+	err = s.Table("task_buckets").
+		Select("task_id, bucket_id, buckets.*").
+		In("task_id", taskIDs).
+		Join("INNER", "buckets", "task_buckets.bucket_id = buckets.id").
+		Find(&buckets)
+	return
+}
+
 func getBucketByID(s *xorm.Session, id int64) (b *Bucket, err error) {
 	b = &Bucket{}
 	exists, err := s.Where("id = ?", id).Get(b)

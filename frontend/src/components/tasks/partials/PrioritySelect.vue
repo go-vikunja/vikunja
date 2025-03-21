@@ -1,9 +1,12 @@
 <template>
 	<div class="select">
 		<select
-			class="item"
 			v-model="priority"
+			class="item"
+			:class="mouseOver ? 'item-over' : 'item-out'"
 			:disabled="disabled || undefined"
+			@mouseover="mouseAction(true)"
+			@mouseout="mouseAction(false)"
 		>
 			<option :value="PRIORITIES.UNSET">
 				{{ $t('task.priority.unset') }}
@@ -29,6 +32,13 @@
 
 <script setup lang="ts">
 import {PRIORITIES} from '@/constants/priorities'
+import {ref} from "vue";
+
+const mouseOver = ref(false)
+
+const mouseAction = (over: boolean) => {
+	mouseOver.value = over
+}
 
 withDefaults(defineProps<{
 	disabled?: boolean
@@ -41,14 +51,22 @@ const priority = defineModel<number>({
 	default: 0,
 })
 
+
 </script>
 
 <style lang="scss" scoped>
 .select {
+	height: 48px;
 	.item {
 		background-color: transparent;
 		border: none;
 		height: 48px;
+	}
+	.item-out {
+		background-color: transparent !important;
+	}
+	.item-over {
+		background-color: transparent
 	}
 }
 </style>

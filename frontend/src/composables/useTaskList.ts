@@ -28,6 +28,7 @@ export interface SortBy {
 	created?: Order
 	updated?: Order
 	done_at?: Order,
+	status?: Order
 }
 
 const SORT_BY_DEFAULT: SortBy = {

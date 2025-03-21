@@ -821,7 +821,8 @@
       "startDate": "开始日期",
       "title": "标题",
       "updated": "已更新",
-      "doneAt": "完成于"
+      "doneAt": "完成于",
+      "status": "状态"
     },
     "subscription": {
       "subscribedTaskThroughParentProject": "你无法在此处取消订阅，因为你已通过其项目订阅了此任务。",

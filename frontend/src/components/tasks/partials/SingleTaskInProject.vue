@@ -161,6 +161,7 @@
 					:icon="['far', 'star']"
 				/>
 			</BaseButton>
+			<span class="bucket-title">{{ task.bucket.title }}</span>
 			<slot />
 		</div>
 		<template v-if="typeof task.relatedTasks?.subtask !== 'undefined'">
@@ -479,6 +480,12 @@ function openTaskDetail(event: MouseEvent | KeyboardEvent) {
 			opacity: 1;
 			color: var(--warning);
 		}
+	}
+	
+	.bucket-title {
+		font-size: .9rem;
+		color: var(--grey);
+		height: 100%;
 	}
 
 	@media(hover: hover) and (pointer: fine) {

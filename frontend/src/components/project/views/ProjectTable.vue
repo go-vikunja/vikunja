@@ -56,11 +56,17 @@
 							<FancyCheckbox v-model="activeColumns.doneAt">
 								{{ $t('task.attributes.doneAt') }}
 							</FancyCheckbox>
+							<FancyCheckbox v-model="activeColumns.status">
+								{{ $t('task.attributes.status') }}
+							</FancyCheckbox>
 							<FancyCheckbox v-model="activeColumns.created">
 								{{ $t('task.attributes.created') }}
 							</FancyCheckbox>
 							<FancyCheckbox v-model="activeColumns.updated">
 								{{ $t('task.attributes.updated') }}
+							</FancyCheckbox>
+							<FancyCheckbox v-model="activeColumns.createdBy">
+								{{ $t('task.attributes.createdBy') }}
 							</FancyCheckbox>
 							<FancyCheckbox v-model="activeColumns.createdBy">
 								{{ $t('task.attributes.createdBy') }}
@@ -159,6 +165,9 @@
 											@click="sort('done_at')"
 										/>
 									</th>
+									<th v-if="activeColumns.status">
+										{{ $t('task.attributes.status') }}
+									</th>
 									<th v-if="activeColumns.created">
 										{{ $t('task.attributes.created') }}
 										<Sort
@@ -242,6 +251,9 @@
 										v-if="activeColumns.doneAt"
 										:date="t.doneAt"
 									/>
+									<td v-if="activeColumns.status">
+										{{t.bucket.title}}
+									</td>
 									<DateTableCell
 										v-if="activeColumns.created"
 										:date="t.created"
@@ -319,6 +331,7 @@ const ACTIVE_COLUMNS_DEFAULT = {
 	updated: false,
 	createdBy: false,
 	doneAt: false,
+	status: false,
 }
 
 const SORT_BY_DEFAULT: SortBy = {
