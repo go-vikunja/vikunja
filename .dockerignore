@@ -2,6 +2,9 @@ files/
 dist/
 logs/
 docs/
+.devenv/
+.direnv/
+.idea/
 
 Dockerfile
 docker-manifest.tmpl
