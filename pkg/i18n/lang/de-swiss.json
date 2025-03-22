@@ -134,16 +134,16 @@
             "have_nice_day": "Hab einen schönen Tag!",
             "copy_url": "Falls der Button oben nicht funktioniert, kopiere die untenstehende URL und füge sie in die Adressleiste deines Browsers ein:",
             "actions": {
-                "open_task": "Open Task",
-                "open_vikunja": "Open Vikunja",
-                "open_project": "Open Project",
-                "open_team": "Open Team",
-                "download": "Download",
-                "reset_password": "Reset your password",
-                "go_to_settings": "Go to settings",
-                "confirm_email": "Confirm your email address",
-                "abort_deletion": "Abort the deletion",
-                "confirm_account_deletion": "Confirm the deletion of my account"
+                "open_task": "Aufgabe öffnen",
+                "open_vikunja": "Vikunja öffnen",
+                "open_project": "Projekt öffnen",
+                "open_team": "Team öffnen",
+                "download": "Herunterladen",
+                "reset_password": "Passwort zurücksetzen",
+                "go_to_settings": "Einstellungen öffnen",
+                "confirm_email": "E-Mail-Adresse bestätigen",
+                "abort_deletion": "Löschen abbrechen",
+                "confirm_account_deletion": "Löschung meines Accounts bestätigen"
             }
         }
     }

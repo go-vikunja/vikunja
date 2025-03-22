@@ -134,16 +134,16 @@
             "have_nice_day": "İyi günler dileriz!",
             "copy_url": "Yukarıdaki düğme çalışmazsa, aşağıdaki URL'yi kopyalayıp tarayıcınızın adres çubuğuna yapıştırın:",
             "actions": {
-                "open_task": "Open Task",
-                "open_vikunja": "Open Vikunja",
-                "open_project": "Open Project",
-                "open_team": "Open Team",
-                "download": "Download",
-                "reset_password": "Reset your password",
-                "go_to_settings": "Go to settings",
-                "confirm_email": "Confirm your email address",
-                "abort_deletion": "Abort the deletion",
-                "confirm_account_deletion": "Confirm the deletion of my account"
+                "open_task": "Görevi Aç",
+                "open_vikunja": "Vikunja'yı Aç",
+                "open_project": "Projeyi Aç",
+                "open_team": "Takımı Aç",
+                "download": "İndir",
+                "reset_password": "Şifrenizi sıfırlayın",
+                "go_to_settings": "Ayarlara git",
+                "confirm_email": "E-posta adresinizi onaylayın",
+                "abort_deletion": "Silme işlemini iptal et",
+                "confirm_account_deletion": "Hesabımın silinmesini onayla"
             }
         }
     }

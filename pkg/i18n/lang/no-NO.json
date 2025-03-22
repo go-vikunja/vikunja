@@ -27,16 +27,16 @@
             },
             "account_locked": {
                 "subject": "Vi har deaktivert kontoen din på Vikunja",
-                "message": "Someone tried to log in with your credentials but failed to provide a valid TOTP passcode.",
-                "disabled": "After 10 failed attempts, we've disabled your account and reset your password. To set a new one, follow the instructions in the reset email we just sent you.",
-                "reset_instructions": "If you did not receive an email with reset instructions, you can always request a new one at [%[1]s](%[2]s)."
+                "message": "Noen prøvde å logge inn med din legitimasjon, men kunne ikke oppgi en gyldig TOTP-kode.",
+                "disabled": "Etter 10 mislykkede forsøk har vi deaktivert kontoen din og tilbakestilt passordet ditt. For å angi et nytt passord må du følge instruksjonene i tilbakestillings-e-posten vi har sendt deg.",
+                "reset_instructions": "Hvis du ikke fikk en e-post med tilbakestillingsinstruksjoner kan du alltid be om en ny [%[1]s](%[2]s)."
             }
         },
         "login": {
             "failed": {
-                "subject": "Someone just tried to login to your Vikunja account, but failed to provide a correct password",
-                "message": "Someone just tried to log in into your account with a wrong password three times in a row.",
-                "warning": "If this was not you, this could be someone else trying to break into your account.",
+                "subject": "Noen har nettopp prøvd å logge inn på Vikunja-kontoen din, men kunne ikke å oppgi et riktig passord",
+                "message": "Noen prøvde nettopp å logge inn på kontoen din med feil passord tre ganger på rad.",
+                "warning": "Hvis dette ikke var deg, kan dette være noen andre som prøver å bryte seg inn på kontoen din.",
                 "enhance_security": "For å forbedre sikkerheten på kontoen bør du sette et sterkere passord eller aktivere TOTP-autentisering i innstillingene:"
             }
         },
@@ -44,15 +44,15 @@
             "deletion": {
                 "confirm": {
                     "subject": "Bekreft sletting av Vikunja-kontoen din",
-                    "request": "You have requested the deletion of your account. To confirm this, please click the link below:",
+                    "request": "Du har bedt om sletting av kontoen din. For å bekrefte dette, klikk på lenken nedenfor:",
                     "valid_duration": "Denne lenken vil være gyldig i 24 timer.",
-                    "schedule_info": "Once you confirm the deletion we will schedule the deletion of your account in three days and send you another email until then.",
-                    "consequences": "If you proceed with the deletion of your account, we will remove all of your projects and tasks you created. Everything you shared with another user or team will transfer ownership to them.",
-                    "changed_mind": "If you did not requested the deletion or changed your mind, you can simply ignore this email."
+                    "schedule_info": "Når du bekrefter slettingen, gjennomføres slettingen av kontoen din om tre dager. Du får ytterligere en e-post om dette før den tid.",
+                    "consequences": "Hvis du fortsetter å slette kontoen din, fjerner du alle prosjektene og oppgavene du har opprettet. Alt du delte med en annen bruker eller gruppe blir overlevert med eierskap til dem.",
+                    "changed_mind": "Hvis du ikke har bedt om sletting eller du har endret mening, kan du bare ignorere denne e-posten."
                 },
                 "scheduled": {
-                    "subject_days": "Your Vikunja account will be deleted in %[1]s days",
-                    "subject_tomorrow": "Your Vikunja account will be deleted tomorrow",
+                    "subject_days": "Vikunja-kontoen din slettes om %[1]s dager",
+                    "subject_tomorrow": "Vikunja-kontoen din vil bli slettet i morgen",
                     "request_reminder": "You recently requested the deletion of your Vikunja account.",
                     "deletion_time_days": "We will delete your account in %[1]s days.",
                     "deletion_time_tomorrow": "We will delete your account tomorrow.",
@@ -131,19 +131,19 @@
             }
         },
         "common": {
-            "have_nice_day": "Have a nice day!",
-            "copy_url": "If the button above doesn't work, copy the url below and paste it in your browser's address bar:",
+            "have_nice_day": "Ha en fin dag!",
+            "copy_url": "Hvis knappen over ikke fungerer, kopier nettadressen under og lim den inn i adresselinjen i nettleseren:",
             "actions": {
-                "open_task": "Open Task",
-                "open_vikunja": "Open Vikunja",
-                "open_project": "Open Project",
-                "open_team": "Open Team",
-                "download": "Download",
-                "reset_password": "Reset your password",
-                "go_to_settings": "Go to settings",
-                "confirm_email": "Confirm your email address",
-                "abort_deletion": "Abort the deletion",
-                "confirm_account_deletion": "Confirm the deletion of my account"
+                "open_task": "Åpne oppgave",
+                "open_vikunja": "Åpne Vikunja",
+                "open_project": "Åpne prosjekt",
+                "open_team": "Åpne gruppe",
+                "download": "Last ned",
+                "reset_password": "Tilbakestill passordet ditt",
+                "go_to_settings": "Gå til innstillinger",
+                "confirm_email": "Bekreft e-postadressen din",
+                "abort_deletion": "Avbryt slettingen",
+                "confirm_account_deletion": "Bekreft sletting av kontoen min"
             }
         }
     }

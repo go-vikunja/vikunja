@@ -14,7 +14,7 @@
   },
   "demo": {
     "title": "Esta instância está em modo de demonstração. Não a utilizes para dados reais!",
-    "everythingWillBeDeleted": "Tudo aqui serão eliminados em intervalos regulares!",
+    "everythingWillBeDeleted": "Será tudo eliminado em intervalos regulares!",
     "accountWillBeDeleted": "A tua conta será eliminada, incluindo todos os projetos, tarefas e anexos que poderás ter criado."
   },
   "404": {
@@ -205,7 +205,7 @@
       "description": "Podes solicitar uma cópia de todos os teus dados do Vikunja. Isso inclui Projetos, Tarefas e tudo o que lhes está associado. Podes importar esses dados em qualquer instância do Vikunja através da função de migração.",
       "descriptionPasswordRequired": "Por favor, introduz a tua palavra-passe para continuar:",
       "request": "Solicitar uma cópia dos meus dados do Vikunja",
-      "success": "Solicitaste com sucesso os teus dados do Vikunja! Enviaremos um e-mail assim que estiverem prontos para download.",
+      "success": "Solicitaste com sucesso os teus dados do Vikunja! Enviaremos um e-mail assim que estiverem prontos para transferência.",
       "downloadTitle": "Transferir os teus dados exportados"
     }
   },
@@ -226,6 +226,7 @@
     "unfavorite": "Remover este projeto dos favoritos",
     "openSettingsMenu": "Abrir o menu de definições do projeto",
     "description": "Descrição do projeto",
+    "favoriteDescription": "This project has all tasks marked as favorites.",
     "create": {
       "header": "Novo projeto",
       "titlePlaceholder": "O título do projeto será aqui…",

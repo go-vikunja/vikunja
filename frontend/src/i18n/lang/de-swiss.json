@@ -226,6 +226,7 @@
     "unfavorite": "Dieses Projekt von Favoriten entfernen",
     "openSettingsMenu": "Projekteinstellungen öffnen",
     "description": "Projektbeschreibung",
+    "favoriteDescription": "This project has all tasks marked as favorites.",
     "create": {
       "header": "Neues Projekt",
       "titlePlaceholder": "Der Titel des Projekts kommt hier hin…",

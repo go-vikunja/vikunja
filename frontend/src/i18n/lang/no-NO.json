@@ -77,7 +77,7 @@
       "currentPassword": "Nåværende passord",
       "currentPasswordPlaceholder": "Ditt nåværende passord",
       "passwordsDontMatch": "Det nye passordet og bekreftelse samsvarer ikke.",
-      "passwordUpdateSuccess": "Passordet ble vellykket oppdatert.",
+      "passwordUpdateSuccess": "Passordet ble oppdatert.",
       "updateEmailTitle": "Oppdater e-postadresse",
       "updateEmailNew": "Ny e-postadresse",
       "updateEmailSuccess": "E-postadressen ble oppdatert. Vi har sendt deg en lenke for å bekrefte den.",
@@ -226,6 +226,7 @@
     "unfavorite": "Fjern dette prosjektet fra favoritter",
     "openSettingsMenu": "Åpne innstillingene til prosjektet",
     "description": "Prosjektbeskrivelse",
+    "favoriteDescription": "This project has all tasks marked as favorites.",
     "create": {
       "header": "Nytt prosjekt",
       "titlePlaceholder": "Prosjektets tittel angis her…",
@@ -351,7 +352,7 @@
     },
     "kanban": {
       "title": "Kanban",
-      "limit": "Grense: {limit}",
+      "limit": "Begrens: {limit}",
       "noLimit": "Ikke angitt",
       "doneBucket": "Ferdigkurv",
       "doneBucketHint": "Alle oppgaver som flyttes til denne kurven vil automatisk bli markert som ferdige.",
@@ -373,7 +374,7 @@
       "bucketTitleSavedSuccess": "Kurven er lagret.",
       "bucketLimitSavedSuccess": "Begrensningen på kurven er lagret.",
       "collapse": "Skjul denne kurven",
-      "bucketLimitReached": "Du har nådd grensen for kurven. Fjern oppgaver eller øk grensen for oppgaver."
+      "bucketLimitReached": "Du har nådd grensen for antall oppgaver i kurven. Fjern oppgaver eller øk begrensningen."
     },
     "pseudo": {
       "favorites": {
@@ -769,8 +770,8 @@
       "move": "Flytt oppgaven til et annet prosjekt",
       "done": "Marker som ferdig!",
       "undone": "Marker som uferdig",
-      "created": "Opprettet {0} av {1}",
-      "updated": "Oppdatert {0}",
+      "created": "Opprettet for {0} av {1}",
+      "updated": "Oppdatert for {0}",
       "doneAt": "Ferdig {0}",
       "updateSuccess": "Oppgaven ble lagret.",
       "deleteSuccess": "Oppgaven ble slettet.",
@@ -1217,7 +1218,7 @@
     "10001": "Kurven finnes ikke.",
     "10002": "Denne kurven tilhører ikke det prosjektet.",
     "10003": "Du kan ikke fjerne den siste kurven i et prosjekt.",
-    "10004": "Du kan ikke legge til oppgaven i denne kurven fordi den allerede overskrider grensen på oppgaver som den kan inneholde.",
+    "10004": "Du kan ikke legge til oppgaven i denne kurven fordi den allerede overskrider grensen på antall oppgaver den kan inneholde.",
     "10005": "Det kan bare finnes én ferdigstilt kurv per prosjekt.",
     "11001": "Det lagrede filteret finnes ikke.",
     "11002": "Lagrede filtre er ikke tilgjengelige for lenke delinger.",
