@@ -68,7 +68,7 @@ const navigationItems = computed(() => {
 		{
 			title: t('user.settings.totp.title'),
 			routeName: 'user.settings.totp',
-			condition: totpEnabled.value,
+			condition: totpEnabled.value && isLocalUser.value,
 		},
 		{
 			title: t('user.export.title'),

@@ -1,6 +1,6 @@
 <template>
 	<Card
-		v-if="totpEnabled"
+		v-if="totpEnabled && isLocalUser"
 		:title="$t('user.settings.totp.title')"
 	>
 		<x-button
@@ -108,6 +108,7 @@ import {success} from '@/message'
 
 import {useTitle} from '@/composables/useTitle'
 import {useConfigStore} from '@/stores/config'
+import {useAuthStore} from '@/stores/auth'
 import type {ITotp} from '@/modelTypes/ITotp'
 
 const {t} = useI18n({useScope: 'global'})
@@ -123,20 +124,23 @@ const totpDisableForm = ref(false)
 const totpDisablePassword = ref('')
 
 const configStore = useConfigStore()
+const authStore = useAuthStore()
 const totpEnabled = computed(() => configStore.totpEnabled)
+const isLocalUser = computed(() => authStore.info?.isLocalUser)
 
 totpStatus()
 
 async function totpStatus() {
-	if (!totpEnabled.value) {
+	if (!totpEnabled.value || !isLocalUser.value) {
 		return
 	}
 	try {
-		totp.value = await totpService.get()
+		totp.value = await totpService.get({})
 		totpSetQrCode()
-	} catch(e) {
+	} catch(e: unknown) {
 		// Error code 1016 means totp is not enabled, we don't need an error in that case.
-		if (e.response?.data?.code === 1016) {
+		const err = e as {response?: {data?: {code?: number}}}
+		if (err.response?.data?.code === 1016) {
 			totpEnrolled.value = false
 			return
 		}

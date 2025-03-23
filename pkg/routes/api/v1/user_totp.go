@@ -24,11 +24,11 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/db"
-
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web/handler"
+
 	"github.com/labstack/echo/v4"
 )
 
@@ -48,6 +48,11 @@ func UserTOTPEnroll(c echo.Context) error {
 	u, err := user.GetCurrentUser(c)
 	if err != nil {
 		return handler.HandleHTTPError(err)
+	}
+
+	// Check if the user is a local user
+	if !u.IsLocalUser() {
+		return handler.HandleHTTPError(&user.ErrAccountIsNotLocal{UserID: u.ID})
 	}
 
 	s := db.NewSession()
@@ -85,6 +90,11 @@ func UserTOTPEnable(c echo.Context) error {
 	u, err := user.GetCurrentUser(c)
 	if err != nil {
 		return handler.HandleHTTPError(err)
+	}
+
+	// Check if the user is a local user
+	if !u.IsLocalUser() {
+		return handler.HandleHTTPError(&user.ErrAccountIsNotLocal{UserID: u.ID})
 	}
 
 	passcode := &user.TOTPPasscode{
@@ -145,6 +155,11 @@ func UserTOTPDisable(c echo.Context) error {
 		return handler.HandleHTTPError(err)
 	}
 
+	// Check if the user is a local user
+	if !u.IsLocalUser() {
+		return handler.HandleHTTPError(&user.ErrAccountIsNotLocal{UserID: u.ID})
+	}
+
 	s := db.NewSession()
 	defer s.Close()
 
@@ -190,6 +205,11 @@ func UserTOTPQrCode(c echo.Context) error {
 		return handler.HandleHTTPError(err)
 	}
 
+	// Check if the user is a local user
+	if !u.IsLocalUser() {
+		return handler.HandleHTTPError(&user.ErrAccountIsNotLocal{UserID: u.ID})
+	}
+
 	s := db.NewSession()
 	defer s.Close()
 
@@ -228,6 +248,11 @@ func UserTOTP(c echo.Context) error {
 	u, err := user.GetCurrentUser(c)
 	if err != nil {
 		return handler.HandleHTTPError(err)
+	}
+
+	// Check if the user is a local user
+	if !u.IsLocalUser() {
+		return handler.HandleHTTPError(&user.ErrAccountIsNotLocal{UserID: u.ID})
 	}
 
 	s := db.NewSession()
