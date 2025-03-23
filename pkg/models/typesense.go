@@ -291,7 +291,7 @@ func reindexTasksInTypesense(s *xorm.Session, tasks map[int64]*Task) (err error)
 	response, err := typesenseClient.Collection("tasks").
 		Documents().
 		Import(context.Background(), typesenseTasks, &api.ImportDocumentsParams{
-			Action:    pointer.String("emplace"),
+			Action:    pointer.String("upsert"),
 			BatchSize: pointer.Int(100),
 		})
 	if err != nil {
