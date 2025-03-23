@@ -21,41 +21,14 @@ import (
 	"xorm.io/xorm"
 )
 
-type taskCollection20241118123644 struct {
-	Filter string `query:"filter" json:"filter"`
-}
-
-type projectViews20241118123644New struct {
-	ID     int64                         `xorm:"autoincr not null unique pk" json:"id" param:"view"`
-	Filter *taskCollection20241118123644 `xorm:"json null default null" query:"filter" json:"filter"`
-}
-
-func (*projectViews20241118123644New) TableName() string {
-	return "project_views"
-}
-
-type projectViews20241118123644 struct {
-	ID     int64  `xorm:"autoincr not null unique pk" json:"id" param:"view"`
-	Filter string `xorm:"json null default null" query:"filter" json:"filter"`
-}
-
-func (*projectViews20241118123644) TableName() string {
-	return "project_views"
-}
-
 func init() {
 	migrations = append(migrations, &xormigrate.Migration{
-		ID:          "20241118123644",
-		Description: "change filter format",
+		ID:          "20250323212553",
+		Description: "",
 		Migrate: func(tx *xorm.Engine) (err error) {
 			oldViews := []*projectViews20241118123644{}
 
-			err = tx.Where("filter != '' AND filter IS NOT NULL").Find(&oldViews)
-			if err != nil {
-				return
-			}
-
-			err = tx.Sync(projectViews20241118123644New{})
+			err = tx.Where("filter not like '{%' AND filter is not null AND filter != ''").Find(&oldViews)
 			if err != nil {
 				return
 			}
@@ -78,6 +51,7 @@ func init() {
 
 			return
 		},
+
 		Rollback: func(tx *xorm.Engine) error {
 			return nil
 		},
