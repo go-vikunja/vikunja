@@ -20,7 +20,6 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
-
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
@@ -32,7 +31,7 @@ import (
 // TaskComment represents a task comment
 type TaskComment struct {
 	ID       int64      `xorm:"autoincr pk unique not null" json:"id" param:"commentid"`
-	Comment  string     `xorm:"text not null" json:"comment"`
+	Comment  string     `xorm:"text not null" json:"comment" valid:"dbtext,required"`
 	AuthorID int64      `xorm:"not null" json:"-"`
 	Author   *user.User `xorm:"-" json:"author"`
 	TaskID   int64      `xorm:"not null" json:"-" param:"task"`
