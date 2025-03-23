@@ -226,7 +226,7 @@
     "unfavorite": "Bu projeyi favorilerden kaldır",
     "openSettingsMenu": "Proje ayarları menüsünü aç",
     "description": "Proje açıklaması",
-    "favoriteDescription": "This project has all tasks marked as favorites.",
+    "favoriteDescription": "Bu projedeki tüm görevler favori olarak işaretlenmiş.",
     "create": {
       "header": "Yeni proje",
       "titlePlaceholder": "Proje başlığı buraya gelir…",

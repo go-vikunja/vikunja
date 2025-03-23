@@ -226,6 +226,7 @@
     "unfavorite": "Poista tämä projekti suosikeista",
     "openSettingsMenu": "Avaa projektin asetusvalikko",
     "description": "Projektin kuvaus",
+    "favoriteDescription": "This project has all tasks marked as favorites.",
     "create": {
       "header": "Uusi projekti ",
       "titlePlaceholder": "Projektin otsikko menee tähän…",

@@ -226,6 +226,7 @@
     "unfavorite": "Remove this project from favorites",
     "openSettingsMenu": "Open project settings menu",
     "description": "Project description",
+    "favoriteDescription": "This project has all tasks marked as favorites.",
     "create": {
       "header": "Nytt projekt",
       "titlePlaceholder": "The project's title goes here…",

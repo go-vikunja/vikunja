@@ -226,6 +226,7 @@
     "unfavorite": "Pašalinti iš mėgstamiausių",
     "openSettingsMenu": "Atidaryti projekto nustatymų meniu",
     "description": "Projekto aprašymas",
+    "favoriteDescription": "This project has all tasks marked as favorites.",
     "create": {
       "header": "Naujas projektas",
       "titlePlaceholder": "Projekto pavadinimas rašomas čia…",

@@ -226,6 +226,7 @@
     "unfavorite": "Прибрати з обраних",
     "openSettingsMenu": "Open project settings menu",
     "description": "Опис справи",
+    "favoriteDescription": "This project has all tasks marked as favorites.",
     "create": {
       "header": "Нова справа",
       "titlePlaceholder": "Назву введіть тут…",

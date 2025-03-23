@@ -226,6 +226,7 @@
     "unfavorite": "Gỡ dự án này khỏi mục yêu thích",
     "openSettingsMenu": "Cài đặt dự án",
     "description": "Mô tả dự án",
+    "favoriteDescription": "This project has all tasks marked as favorites.",
     "create": {
       "header": "Dự án mới",
       "titlePlaceholder": "Tên dự án nằm ở đây…",
