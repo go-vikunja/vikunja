@@ -245,8 +245,10 @@ func TestParseFilter(t *testing.T) {
 		require.Len(t, result, 1)
 		assert.Equal(t, "start_date", result[0].field)
 		assert.Equal(t, taskFilterComparatorEquals, result[0].comparator)
-		expectedDate, _ := time.Parse("2006-01-02", "2023-06-15")
-		assert.Equal(t, expectedDate, result[0].value)
+		expectedDate, err := time.ParseInLocation("2006-01-02", "2023-06-15", time.UTC)
+		require.NoError(t, err)
+		resultTime := result[0].value.(time.Time)
+		assert.Equal(t, expectedDate.Format(time.RFC3339), resultTime.Format(time.RFC3339))
 	})
 	t.Run("in query with multiple values", func(t *testing.T) {
 		result, err := getTaskFiltersFromFilterString("priority in 1,3,5", "UTC")
