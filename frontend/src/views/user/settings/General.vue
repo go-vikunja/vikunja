@@ -224,16 +224,15 @@
 				<span>
 					{{ $t('user.settings.general.timezone') }}
 				</span>
-				<div class="select ml-2">
-					<select v-model="settings.timezone">
-						<option
-							v-for="tz in availableTimezones"
-							:key="tz"
-						>
-							{{ tz }}
-						</option>
-					</select>
-				</div>
+				<Multiselect
+					v-model="timezoneObject"
+					:placeholder="$t('user.settings.general.timezone')"
+					:search-results="timezoneSearchResults"
+					:show-empty="true"
+					class="ml-2 timezone-select"
+					label="label"
+					@search="searchTimezones"
+				/>
 			</label>
 		</div>
 
@@ -259,6 +258,7 @@ import {useI18n} from 'vue-i18n'
 import {PrefixMode} from '@/modules/parseTaskText'
 
 import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
+import Multiselect from '@/components/input/Multiselect.vue'
 
 import {SUPPORTED_LOCALES} from '@/i18n'
 import {createRandomID} from '@/helpers/randomId'
@@ -284,25 +284,6 @@ const colorSchemeSettings = computed(() => ({
 	dark: t('user.settings.appearance.colorScheme.dark'),
 }))
 
-function useAvailableTimezones() {
-	const availableTimezones = ref([])
-
-	const HTTP = AuthenticatedHTTPFactory()
-	HTTP.get('user/timezones')
-		.then(r => {
-			if (r.data) {
-				availableTimezones.value = r.data.sort()
-				return
-			}
-			
-			availableTimezones.value = []
-		})
-
-	return availableTimezones
-}
-
-const availableTimezones = useAvailableTimezones()
-
 const authStore = useAuthStore()
 
 const settings = ref<IUserSettings>({
@@ -317,6 +298,70 @@ const settings = ref<IUserSettings>({
 		minimumPriority: authStore.settings.frontendSettings.minimumPriority ?? PRIORITIES.HIGH,
 	},
 })
+
+function useAvailableTimezones(settingsRef: Ref<IUserSettings>) {
+	const availableTimezones = ref<{value: string, label: string}[]>([])
+	const searchResults = ref<{value: string, label: string}[]>([])
+
+	// Load timezones from API
+	const HTTP = AuthenticatedHTTPFactory()
+	HTTP.get('user/timezones')
+		.then(r => {
+			if (r.data) {
+				// Transform timezones into objects with value/label pairs
+				availableTimezones.value = r.data
+					.sort()
+					.map((tz: string) => ({
+						value: tz,
+						label: tz.replace(/_/g, ' '),
+					}))
+				
+				// Initial populate of search results
+				searchResults.value = [...availableTimezones.value]
+				return
+			}
+			
+			availableTimezones.value = []
+		})
+	
+	// Search function that filters available timezones
+	function search(query: string) {
+		if (query === '') {
+			searchResults.value = [...availableTimezones.value]
+			return
+		}
+
+		searchResults.value = availableTimezones.value
+			.filter(tz => tz.label.toLowerCase().includes(query.toLowerCase()))
+	}
+	
+		const timezoneObject = computed({
+			get: () => ({ 
+				value: settingsRef.value.timezone, 
+				label: settingsRef.value.timezone?.replace(/_/g, ' '), 
+			}),
+			set: (obj) => {
+				if (obj && typeof obj === 'object' && 'value' in obj) {
+					settingsRef.value.timezone = obj.value
+				}
+			},
+		})
+
+	return {
+		availableTimezones,
+		searchResults,
+		search,
+		timezoneObject,
+	}
+}
+
+// Use the timezone composable and destructure its return values
+const { 
+	searchResults: timezoneSearchResults,
+	search: searchTimezones, 
+	timezoneObject,
+} = useAvailableTimezones(settings)
+
 const id = ref(createRandomID())
 const availableLanguageOptions = ref(
 	Object.entries(SUPPORTED_LOCALES)
@@ -364,5 +409,10 @@ async function updateSettings() {
 <style scoped>
 .select select {
 	width: 100%;
+}
+
+.timezone-select {
+	min-width: 200px;
+	flex-grow: 1;
 }
 </style>
