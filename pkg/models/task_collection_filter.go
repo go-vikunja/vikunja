@@ -62,13 +62,13 @@ type taskFilter struct {
 	join       taskFilterConcatinator
 }
 
-func parseTimeFromUserInput(timeString string) (value time.Time, err error) {
-	value, err = time.Parse(time.RFC3339, timeString)
+func parseTimeFromUserInput(timeString string, loc *time.Location) (value time.Time, err error) {
+	value, err = time.ParseInLocation(time.RFC3339, timeString, loc)
 	if err != nil {
-		value, err = time.Parse(safariDateAndTime, timeString)
+		value, err = time.ParseInLocation(safariDateAndTime, timeString, loc)
 	}
 	if err != nil {
-		value, err = time.Parse(safariDate, timeString)
+		value, err = time.ParseInLocation(safariDate, timeString, loc)
 	}
 	if err != nil {
 		// Here we assume a date like 2022-11-1 and try to parse it manually
@@ -88,7 +88,7 @@ func parseTimeFromUserInput(timeString string) (value time.Time, err error) {
 		if err != nil {
 			return value, err
 		}
-		value = time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
+		value = time.Date(year, time.Month(month), day, 0, 0, 0, 0, loc)
 		return value.In(config.GetTimeZone()), nil
 	}
 	return value.In(config.GetTimeZone()), err
@@ -291,9 +291,9 @@ func getValueForField(field reflect.StructField, rawValue string, loc *time.Loca
 			var tt time.Time
 			t, err = datemath.Parse(rawValue)
 			if err == nil {
-				tt = t.Time(datemath.WithLocation(config.GetTimeZone())).In(loc)
+				tt = t.Time(datemath.WithLocation(loc)).In(config.GetTimeZone())
 			} else {
-				tt, err = parseTimeFromUserInput(rawValue)
+				tt, err = parseTimeFromUserInput(rawValue, loc)
 			}
 			if err != nil {
 				return
