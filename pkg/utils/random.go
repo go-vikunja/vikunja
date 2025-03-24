@@ -17,22 +17,9 @@
 package utils
 
 import (
-	"code.vikunja.io/api/pkg/log"
-
 	"crypto/rand"
 	"math/big"
 )
-
-// MakeRandomString return a random string
-// Deprecated: use CryptoRandomString instead
-func MakeRandomString(n int) string {
-	str, err := CryptoRandomString(int64(n))
-	if err != nil {
-		log.Errorf("Could not generate random string: %s", err)
-	}
-
-	return str
-}
 
 // CryptoRandomInt returns a crypto random integer between 0 and limit, inclusive
 // Copied from https://github.com/go-gitea/gitea/blob/main/modules/util/util.go#L121-L127

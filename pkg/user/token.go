@@ -54,23 +54,33 @@ func (t *Token) TableName() string {
 	return "user_tokens"
 }
 
-func genToken(u *User, kind TokenKind) *Token {
+func genToken(u *User, kind TokenKind) (*Token, error) {
+	tokenStr, err := utils.CryptoRandomString(tokenSize)
+	if err != nil {
+		return nil, err
+	}
 	return &Token{
 		UserID: u.ID,
 		Kind:   kind,
-		Token:  utils.MakeRandomString(tokenSize),
-	}
+		Token:  tokenStr,
+	}, nil
 }
 
 func generateToken(s *xorm.Session, u *User, kind TokenKind) (token *Token, err error) {
-	token = genToken(u, kind)
+	token, err = genToken(u, kind)
+	if err != nil {
+		return nil, err
+	}
 
 	_, err = s.Insert(token)
 	return
 }
 
 func generateHashedToken(s *xorm.Session, u *User, kind TokenKind) (token *Token, err error) {
-	token = genToken(u, kind)
+	token, err = genToken(u, kind)
+	if err != nil {
+		return nil, err
+	}
 	token.ClearTextToken = token.Token
 	token.Token, err = HashPassword(token.ClearTextToken)
 	if err != nil {

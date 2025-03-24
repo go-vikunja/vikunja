@@ -153,7 +153,11 @@ func (pd *ProjectDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 	for _, share := range linkShares {
 		share.ID = 0
 		share.ProjectID = pd.Project.ID
-		share.Hash = utils.MakeRandomString(40)
+		hash, err := utils.CryptoRandomString(40)
+		if err != nil {
+			return err
+		}
+		share.Hash = hash
 		if _, err := s.Insert(share); err != nil {
 			return err
 		}

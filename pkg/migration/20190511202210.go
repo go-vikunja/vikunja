@@ -17,7 +17,11 @@
 package migration
 
 import (
+	"strconv"
+
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/utils"
+
 	"src.techknowlogick.com/xormigrate"
 	"xorm.io/xorm"
 )
@@ -68,7 +72,12 @@ func init() {
 			}
 
 			for _, t := range allTasks {
-				t.UID = utils.MakeRandomString(40)
+				var err error
+				t.UID, err = utils.CryptoRandomString(40)
+				if err != nil {
+					log.Errorf("Migration 20190511202210: Could not generate random string: %s", err)
+					t.UID = "migration-error-uid-" + strconv.FormatInt(t.ID, 10)
+				}
 				_, err = tx.Where("id = ?", t.ID).Cols("uid").Update(t)
 				if err != nil {
 					return err

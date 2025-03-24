@@ -20,10 +20,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-func TestMakeRandomString(t *testing.T) {
-	rand := MakeRandomString(32)
+func TestCryptoRandomString(t *testing.T) {
+	rand, err := CryptoRandomString(32)
+	require.NoError(t, err)
 	assert.NotEqual(t, "loremipsuim", rand)
 	assert.Len(t, rand, 32)
 }

@@ -146,7 +146,11 @@ func RenderMail(m *Mail, lang string) (mailOpts *mail.Opts, err error) {
 		return nil, err
 	}
 
-	boundary := "np" + utils.MakeRandomString(13)
+	boundaryStr, err := utils.CryptoRandomString(13)
+	if err != nil {
+		return nil, err
+	}
+	boundary := "np" + boundaryStr
 
 	data := make(map[string]interface{})
 

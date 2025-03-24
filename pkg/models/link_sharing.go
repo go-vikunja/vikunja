@@ -142,7 +142,11 @@ func (share *LinkSharing) Create(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	share.SharedByID = a.GetID()
-	share.Hash = utils.MakeRandomString(40)
+	hash, err := utils.CryptoRandomString(40)
+	if err != nil {
+		return err
+	}
+	share.Hash = hash
 
 	if share.Password != "" {
 		share.SharingType = SharingTypeWithPassword
