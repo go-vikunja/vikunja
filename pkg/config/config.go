@@ -39,19 +39,17 @@ type Key string
 // These constants hold all config value keys
 const (
 	// #nosec
-	ServiceJWTSecret       Key = `service.JWTSecret`
-	ServiceJWTTTL          Key = `service.jwtttl`
-	ServiceJWTTTLLong      Key = `service.jwtttllong`
-	ServiceInterface       Key = `service.interface`
-	ServiceUnixSocket      Key = `service.unixsocket`
-	ServiceUnixSocketMode  Key = `service.unixsocketmode`
-	ServicePublicURL       Key = `service.publicurl`
-	ServiceEnableCaldav    Key = `service.enablecaldav`
-	ServiceRootpath        Key = `service.rootpath`
-	ServiceMaxItemsPerPage Key = `service.maxitemsperpage`
-	ServiceDemoMode        Key = `service.demomode`
-	// Deprecated: Use metrics.enabled
-	ServiceEnableMetrics                  Key = `service.enablemetrics`
+	ServiceJWTSecret                      Key = `service.JWTSecret`
+	ServiceJWTTTL                         Key = `service.jwtttl`
+	ServiceJWTTTLLong                     Key = `service.jwtttllong`
+	ServiceInterface                      Key = `service.interface`
+	ServiceUnixSocket                     Key = `service.unixsocket`
+	ServiceUnixSocketMode                 Key = `service.unixsocketmode`
+	ServicePublicURL                      Key = `service.publicurl`
+	ServiceEnableCaldav                   Key = `service.enablecaldav`
+	ServiceRootpath                       Key = `service.rootpath`
+	ServiceMaxItemsPerPage                Key = `service.maxitemsperpage`
+	ServiceDemoMode                       Key = `service.demomode`
 	ServiceMotd                           Key = `service.motd`
 	ServiceEnableLinkSharing              Key = `service.enablelinksharing`
 	ServiceEnableRegistration             Key = `service.enableregistration`
@@ -326,7 +324,6 @@ func InitDefaultConfig() {
 
 	ServiceRootpath.setDefault(getBinaryDirLocation())
 	ServiceMaxItemsPerPage.setDefault(50)
-	ServiceEnableMetrics.setDefault(false)
 	ServiceMotd.setDefault("")
 	ServiceEnableLinkSharing.setDefault(true)
 	ServiceEnableRegistration.setDefault(true)
@@ -594,11 +591,6 @@ func InitConfig() {
 
 	if DefaultSettingsTimezone.GetString() == "" {
 		DefaultSettingsTimezone.Set(ServiceTimeZone.GetString())
-	}
-
-	if ServiceEnableMetrics.GetBool() {
-		log.Warning("service.enablemetrics is deprecated and will be removed in a future release. Please use metrics.enable.")
-		MetricsEnabled.Set(true)
 	}
 }
 

@@ -47,10 +47,6 @@ func NewWatermillLogger(configLogEnabled bool, configLogEvents string, configLog
 
 	var backend logging.Backend
 	backend = &NoopBackend{}
-	if configLogEvents == "false" {
-		configLogEvents = "off"
-		Warning("log.events value 'false' is deprecated and will be removed in a future release. Please use the value 'off'.")
-	}
 	if configLogEnabled && configLogEvents != "off" {
 		logBackend := logging.NewLogBackend(GetLogWriter(configLogEvents, "events"), "", 0)
 		backend = logging.NewBackendFormatter(logBackend, logging.MustStringFormatter(watermillFmt+"\n"))

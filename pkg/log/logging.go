@@ -71,10 +71,6 @@ func ConfigureLogger(configLogEnabled bool, configLogStandard string, configLogP
 	// The backend is the part which actually handles logging the log entries somewhere.
 	var backend logging.Backend
 	backend = &NoopBackend{}
-	if configLogStandard == "false" {
-		configLogStandard = "off"
-		Warning("log.standard value 'false' is deprecated and will be removed in a future release. Please use the value 'off'.")
-	}
 	if configLogEnabled && configLogStandard != "off" {
 		logBackend := logging.NewLogBackend(GetLogWriter(configLogStandard, "standard"), "", 0)
 		backend = logging.NewBackendFormatter(logBackend, logging.MustStringFormatter(Fmt+"\n"))
