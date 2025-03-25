@@ -76,14 +76,14 @@
                 "mentioned_message": "**%[1]s** mentioned you in a comment:"
             },
             "assigned": {
-                "subject_to_assignee": "You have been assigned to %[1]s (%[2]s)",
-                "message_to_assignee": "%[1]s has assigned you to %[2]s.",
-                "subject_to_others": "%[1]s(%[2]s) has been assigned to %[3]s",
+                "subject_to_assignee": "You have been assigned to \"%[1]s\" (%[2]s)",
+                "message_to_assignee": "%[1]s has assigned you to \"%[2]s\".",
+                "subject_to_others": "\"%[1]s\" (%[2]s) has been assigned to %[3]s",
                 "message_to_others": "%[1]s has assigned this task to %[2]s."
             },
             "deleted": {
-                "subject": "%[1]s (%[2]s) has been deleted",
-                "message": "%[1]s has deleted the task %[2]s (%[3]s)"
+                "subject": "\"%[1]s\" (%[2]s) has been deleted",
+                "message": "%[1]s has deleted the task \"%[2]s\" (%[3]s)"
             },
             "mentioned": {
                 "subject_new": "%[1]s mentioned you in a new task \"%[2]s\"",
@@ -104,7 +104,7 @@
         },
         "team": {
             "member_added": {
-                "subject": "%[1]s added you to the %[2]s team in Vikunja",
+                "subject": "%[1]s added you to the \"%[2]s\" team in Vikunja",
                 "message": "%[1]s has just added you to the %[2]s team in Vikunja."
             }
         },
