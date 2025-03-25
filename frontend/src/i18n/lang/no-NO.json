@@ -226,7 +226,7 @@
     "unfavorite": "Fjern dette prosjektet fra favoritter",
     "openSettingsMenu": "Åpne innstillingene til prosjektet",
     "description": "Prosjektbeskrivelse",
-    "favoriteDescription": "This project has all tasks marked as favorites.",
+    "favoriteDescription": "Dette prosjektet har alle oppgaver merket som favoritter.",
     "create": {
       "header": "Nytt prosjekt",
       "titlePlaceholder": "Prosjektets tittel angis her…",

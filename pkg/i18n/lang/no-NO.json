@@ -53,10 +53,10 @@
                 "scheduled": {
                     "subject_days": "Vikunja-kontoen din slettes om %[1]s dager",
                     "subject_tomorrow": "Vikunja-kontoen din vil bli slettet i morgen",
-                    "request_reminder": "You recently requested the deletion of your Vikunja account.",
-                    "deletion_time_days": "We will delete your account in %[1]s days.",
-                    "deletion_time_tomorrow": "We will delete your account tomorrow.",
-                    "changed_mind": "If you changed your mind, simply click the link below to cancel the deletion and follow the instructions there:"
+                    "request_reminder": "Du har nylig bedt om sletting av Vikunja-kontoen Vikunja.",
+                    "deletion_time_days": "Vi vil slette kontoen din om %[1]dager.",
+                    "deletion_time_tomorrow": "Vi sletter kontoen din i morgen.",
+                    "changed_mind": "Hvis du har endret mening klikker du på lenken nedenfor for å avbryte slettingen:"
                 },
                 "completed": {
                     "subject": "Din Vikunja-konto er slettet",
@@ -77,34 +77,34 @@
             },
             "assigned": {
                 "subject_to_assignee": "Du er tildelt %[1]s (%[2]s)",
-                "message_to_assignee": "%[1]s has assigned you to %[2]s.",
-                "subject_to_others": "%[1]s(%[2]s) has been assigned to %[3]s",
-                "message_to_others": "%[1]s has assigned this task to %[2]s."
+                "message_to_assignee": "%[1]s har tildelt deg %[2]s.",
+                "subject_to_others": "%[1]s(%[2]s) er tildelt %[3]s",
+                "message_to_others": "%[1]s har tildelt deg %[2]s."
             },
             "deleted": {
-                "subject": "%[1]s (%[2]s) has been deleted",
-                "message": "%[1]s has deleted the task %[2]s (%[3]s)"
+                "subject": "%[1]s (%[2]s) er slettet",
+                "message": "%[1]s har slettet oppgaven %[2]s (%[3]s)"
             },
             "mentioned": {
-                "subject_new": "%[1]s mentioned you in a new task \"%[2]s\"",
-                "subject": "%[1]s mentioned you in a task \"%[2]s\"",
-                "message": "**%[1]s** mentioned you in a task:"
+                "subject_new": "%[1]s nevnte deg i en kommentar i \"%[2]s\"",
+                "subject": "%[1]s nevnt deg i en oppgave \"%[2]s\"",
+                "message": "**%[1]s** nevnte deg i en oppgave:"
             },
             "overdue": {
-                "subject": "Task \"%[1]s\" (%[2]s) is overdue",
-                "message": "This is a friendly reminder of the task \"%[1]s\" (%[2]s) which is %[3]s and not yet done.",
-                "multiple_subject": "Your overdue tasks",
-                "multiple_message": "You have the following overdue tasks:",
-                "overdue_since": "overdue since %[1]s",
-                "overdue_now": "overdue now"
+                "subject": "Oppgave \"%[1]s\" (%[2]s) er forfalt",
+                "message": "Dette er en vennlig påminnelse om oppgaven \"%[1]s\" (%[2]s), som er %[3]s og ennå ikke utført.",
+                "multiple_subject": "Dine forfalte oppgaver",
+                "multiple_message": "Du har følgende forfalte oppgaver:",
+                "overdue_since": "forfalt siden %[1]s",
+                "overdue_now": "forfalt nå"
             }
         },
         "project": {
-            "created": "%[1]s created the project \"%[2]s\""
+            "created": "%[1]s opprettet prosjektet \"%[2]\""
         },
         "team": {
             "member_added": {
-                "subject": "%[1]s added you to the %[2]s team in Vikunja",
+                "subject": "%[1]s har lagt deg til i gruppen %[2] i Vikunja",
                 "message": "%[1]s has just added you to the %[2]s team in Vikunja."
             }
         },
