@@ -22,7 +22,7 @@ export default class UserSettingsModel extends AbstractModel<IUserSettings> impl
 		quickAddMagicMode: PrefixMode.Default,
 		colorSchema: 'auto',
 		defaultView: DEFAULT_PROJECT_VIEW_SETTINGS.FIRST,
-		minimumPriority: PRIORITIES.HIGH,
+		minimumPriority: PRIORITIES.MEDIUM,
 	}
 
 	constructor(data: Partial<IUserSettings> = {}) {

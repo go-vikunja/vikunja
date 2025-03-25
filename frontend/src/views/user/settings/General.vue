@@ -295,7 +295,7 @@ const settings = ref<IUserSettings>({
 		// Add fallback for old settings that don't have the default view set
 		defaultView: authStore.settings.frontendSettings.defaultView ?? DEFAULT_PROJECT_VIEW_SETTINGS.FIRST,
 		// Add fallback for old settings that don't have the minimum priority set
-		minimumPriority: authStore.settings.frontendSettings.minimumPriority ?? PRIORITIES.HIGH,
+		minimumPriority: authStore.settings.frontendSettings.minimumPriority ?? PRIORITIES.MEDIUM,
 	},
 })
 
