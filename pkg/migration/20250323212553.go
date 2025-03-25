@@ -19,6 +19,7 @@ package migration
 import (
 	"src.techknowlogick.com/xormigrate"
 	"xorm.io/xorm"
+	"xorm.io/xorm/schemas"
 )
 
 func init() {
@@ -28,7 +29,13 @@ func init() {
 		Migrate: func(tx *xorm.Engine) (err error) {
 			oldViews := []*projectViews20241118123644{}
 
-			err = tx.Where("filter not like '{%' AND filter is not null AND filter != ''").Find(&oldViews)
+			// PostgreSQL needs explicit casting for LIKE operations on JSON fields
+			if tx.Dialect().URI().DBType == schemas.POSTGRES {
+				err = tx.Where("filter::text not like '{%' AND filter is not null AND filter::text != ''").Find(&oldViews)
+			} else {
+				err = tx.Where("filter not like '{%' AND filter is not null AND filter != ''").Find(&oldViews)
+			}
+
 			if err != nil {
 				return
 			}
