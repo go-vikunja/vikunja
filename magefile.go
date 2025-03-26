@@ -64,18 +64,19 @@ var (
 
 	// Aliases are mage aliases of targets
 	Aliases = map[string]interface{}{
-		"build":                 Build.Build,
-		"check:got-swag":        Check.GotSwag,
-		"release":               Release.Release,
-		"release:os-package":    Release.OsPackage,
-		"dev:make-migration":    Dev.MakeMigration,
-		"dev:make-event":        Dev.MakeEvent,
-		"dev:make-listener":     Dev.MakeListener,
-		"dev:make-notification": Dev.MakeNotification,
-		"lint":                  Check.Golangci,
-		"lint:fix":              Check.GolangciFix,
-		"generate:config-yaml":  Generate.ConfigYAML,
-		"generate:swagger-docs": Generate.SwaggerDocs,
+		"build":                       Build.Build,
+		"check:got-swag":              Check.GotSwag,
+		"release":                     Release.Release,
+		"release:os-package":          Release.OsPackage,
+		"release:prepare-nfpm-config": Release.PrepareNFPMConfig,
+		"dev:make-migration":          Dev.MakeMigration,
+		"dev:make-event":              Dev.MakeEvent,
+		"dev:make-listener":           Dev.MakeListener,
+		"dev:make-notification":       Dev.MakeNotification,
+		"lint":                        Check.Golangci,
+		"lint:fix":                    Check.GolangciFix,
+		"generate:config-yaml":        Generate.ConfigYAML,
+		"generate:swagger-docs":       Generate.SwaggerDocs,
 	}
 )
 
@@ -717,13 +718,17 @@ func runXgo(targets string) error {
 	if strings.HasPrefix(targets, "darwin") {
 		extraLdflags = ""
 	}
+	outName := os.Getenv("XGO_OUT_NAME")
+	if outName == "" {
+		outName = Executable + "-" + Version
+	}
 
 	runAndStreamOutput("xgo",
 		"-dest", RootPath+"/"+DIST+"/binaries",
 		"-tags", "netgo "+Tags,
 		"-ldflags", extraLdflags+Ldflags,
 		"-targets", targets,
-		"-out", Executable+"-"+Version,
+		"-out", outName,
 		RootPath)
 	if os.Getenv("DRONE_WORKSPACE") != "" {
 		return filepath.Walk("/build/", func(path string, info os.FileInfo, err error) error {
@@ -790,10 +795,11 @@ func (Release) Compress(ctx context.Context) error {
 		if !strings.Contains(info.Name(), Executable) {
 			return nil
 		}
-		// No mips or s390x for you today
 		if strings.Contains(info.Name(), "mips") ||
 			strings.Contains(info.Name(), "s390x") ||
-			strings.Contains(info.Name(), "riscv64") { // not supported by upx
+			strings.Contains(info.Name(), "riscv64") ||
+			strings.Contains(info.Name(), "darwin") {
+			// not supported by upx
 			return nil
 		}
 
@@ -917,21 +923,10 @@ func (Release) Reprepro() {
 	runAndStreamOutput("reprepro_expect", "debian", "includedeb", "buster", RootPath+"/"+DIST+"/os-packages/"+Executable+"_"+strings.ReplaceAll(VersionNumber, "v0", "0")+"_amd64.deb")
 }
 
-// Creates deb, rpm and apk packages
-func (Release) Packages() error {
+// Prepares the nfpm config
+func (Release) PrepareNFPMConfig() error {
 	mg.Deps(initVars)
 	var err error
-	binpath := "nfpm"
-	err = exec.Command(binpath).Run()
-	if err != nil && strings.Contains(err.Error(), "executable file not found") {
-		binpath = "/usr/bin/nfpm"
-		err = exec.Command(binpath).Run()
-	}
-	if err != nil && strings.Contains(err.Error(), "executable file not found") {
-		fmt.Println("Please manually install nfpm by running")
-		fmt.Println("curl -sfL https://install.goreleaser.com/github.com/goreleaser/nfpm.sh | sh -s -- -b $(go env GOPATH)/bin")
-		os.Exit(1)
-	}
 
 	// Because nfpm does not support templating, we replace the values in the config file and restore it after running
 	nfpmConfigPath := RootPath + "/nfpm.yaml"
@@ -946,18 +941,46 @@ func (Release) Packages() error {
 		return err
 	}
 
+	generateConfigYAMLFromJSON(DefaultConfigYAMLSamplePath, true)
+
+	return nil
+}
+
+// Creates deb, rpm and apk packages
+func (Release) Packages() error {
+	mg.Deps(initVars)
+
+	var err error
+	binpath := os.Getenv("NFPM_BIN_PATH")
+	if binpath == "" {
+		binpath = "nfpm"
+	}
+	err = exec.Command(binpath).Run()
+	if err != nil && strings.Contains(err.Error(), "executable file not found") {
+		binpath = "/usr/bin/nfpm"
+		err = exec.Command(binpath).Run()
+	}
+	if err != nil && strings.Contains(err.Error(), "executable file not found") {
+		fmt.Println("Please manually install nfpm by running")
+		fmt.Println("curl -sfL https://install.goreleaser.com/github.com/goreleaser/nfpm.sh | sh -s -- -b $(go env GOPATH)/bin")
+		os.Exit(1)
+	}
+
+	err = (Release{}).PrepareNFPMConfig()
+	if err != nil {
+		return err
+	}
+
 	releasePath := RootPath + "/" + DIST + "/os-packages/"
 	if err := os.MkdirAll(releasePath, 0755); err != nil {
 		return err
 	}
 
-	generateConfigYAMLFromJSON(DefaultConfigYAMLSamplePath, true)
-
 	runAndStreamOutput(binpath, "pkg", "--packager", "deb", "--target", releasePath)
 	runAndStreamOutput(binpath, "pkg", "--packager", "rpm", "--target", releasePath)
 	runAndStreamOutput(binpath, "pkg", "--packager", "apk", "--target", releasePath)
 
-	return os.WriteFile(nfpmConfigPath, nfpmconfig, 0)
+	return nil
 }
 
 type Dev mg.Namespace

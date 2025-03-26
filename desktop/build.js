@@ -16,33 +16,30 @@
 
 const fs = require('fs')
 const path = require('path')
-const https = require('https')
 const {execSync} = require('child_process')
-const unzipper = require('unzipper')
 
-// Helper function to download a file
-async function downloadFile(url, dest) {
-	return new Promise((resolve, reject) => {
-		const file = fs.createWriteStream(dest)
-		https.get(url, (response) => {
-			if (response.statusCode !== 200) {
-				return reject(new Error(`Failed to download file: ${response.statusCode}`))
-			}
-			response.pipe(file)
-			file.on('finish', () => {
-				file.close(resolve)
-			})
-		}).on('error', (err) => {
-			fs.unlink(dest, () => reject(err))
-		})
-	})
-}
+// Helper function to copy directory recursively
+async function copyDir(src, dest) {
+	// Create destination directory if it doesn't exist
+	if (!fs.existsSync(dest)) {
+		await fs.promises.mkdir(dest, { recursive: true })
+	}
 
-// Helper function to unzip a file to a directory
-async function unzipFile(zipPath, destDir) {
-	return fs.createReadStream(zipPath)
-		.pipe(unzipper.Extract({path: destDir}))
-		.promise()
+	// Get all files in source directory
+	const entries = await fs.promises.readdir(src, { withFileTypes: true })
+
+	for (const entry of entries) {
+		const srcPath = path.join(src, entry.name)
+		const destPath = path.join(dest, entry.name)
+
+		if (entry.isDirectory()) {
+			// Recursively copy subdirectories
+			await copyDir(srcPath, destPath)
+		} else {
+			// Copy files
+			await fs.promises.copyFile(srcPath, destPath)
+		}
+	}
 }
 
 // Helper function to replace text in a file
@@ -78,8 +75,7 @@ async function main() {
 
 	const versionPlaceholder = args[0]
 	const renameDistFiles = args[1] || false
-	const frontendZipUrl = 'https://dl.vikunja.io/frontend/vikunja-frontend-unstable.zip'
-	const zipFilePath = path.resolve(__dirname, 'vikunja-frontend-unstable.zip')
+	const frontendSourceDir = path.resolve(__dirname, '../frontend/dist')
 	const frontendDir = path.resolve(__dirname, 'frontend')
 	const indexFilePath = path.join(frontendDir, 'index.html')
 	const packageJsonPath = path.join(__dirname, 'package.json')
@@ -87,16 +83,19 @@ async function main() {
 	console.log(`Building version ${versionPlaceholder}`)
 
 	try {
-		console.log('Step 1: Downloading frontend zip...')
-		await downloadFile(frontendZipUrl, zipFilePath)
+		console.log('Step 1: Copying frontend files...')
+		if (fs.existsSync(frontendDir)) {
+			console.log('Removing existing frontend directory...')
+			await fs.promises.rm(frontendDir, { recursive: true, force: true })
+		}
+		await fs.promises.mkdir(frontendDir, { recursive: true })
+		
+		await copyDir(frontendSourceDir, frontendDir)
 
-		console.log('Step 2: Unzipping frontend package...')
-		await unzipFile(zipFilePath, frontendDir)
-
-		console.log('Step 3: Modifying index.html...')
+		console.log('Step 2: Modifying index.html...')
 		await replaceTextInFile(indexFilePath, /\/api\/v1/g, '')
 
-		console.log('Step 4: Updating version in package.json...')
+		console.log('Step 3: Updating version in package.json...')
 		await replaceTextInFile(packageJsonPath, /\${version}/g, versionPlaceholder)
 		await replaceTextInFile(
 			packageJsonPath,
@@ -104,11 +103,11 @@ async function main() {
 			`"version": "${versionPlaceholder}"`,
 		)
 
-		console.log('Step 5: Installing dependencies and building...')
+		console.log('Step 4: Installing dependencies and building...')
 		execSync('pnpm dist', {stdio: 'inherit'})
 
 		if (renameDistFiles) {
-			console.log('Step 6: Renaming release files...')
+			console.log('Step 5: Renaming release files...')
 			await renameDistFilesToUnstable(versionPlaceholder)
 		}
 
@@ -116,11 +115,6 @@ async function main() {
 	} catch (err) {
 		console.error('An error occurred:', err.message)
 		process.exit(1)
-	} finally {
-		// Cleanup the zip file
-		if (fs.existsSync(zipFilePath)) {
-			fs.unlinkSync(zipFilePath)
-		}
 	}
 }
 

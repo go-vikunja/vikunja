@@ -1,0 +1,30 @@
+name: Crowdin Sync
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  synchronize-with-crowdin:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: crowdin action
+        uses: crowdin/github-action@v2
+        with:
+          crowdin_branch_name: main
+          dryrun_action: true
+          upload_sources: true
+          download_translations: true
+          export_only_approved: true
+          push_translations: true
+          localization_branch_name: main
+          create_pull_request: false
+          commit_message: 'chore(i18n): update translations via Crowdin'
+        env:
+          GITHUB_TOKEN: ${{ secrets.CROWDIN_GH_TOKEN }}
+          CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
+          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}

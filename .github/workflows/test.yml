@@ -1,0 +1,344 @@
+name: Test
+
+on:
+  workflow_call:
+
+jobs:
+  mage:
+    runs-on: ubuntu-latest
+    name: prepare-mage
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - name: Cache Mage
+        id: cache-mage
+        uses: actions/cache@v4
+        with:
+          key: ${{ runner.os }}-build-mage-${{ hashFiles('magefile.go') }}
+          path: |
+            ./mage-static
+      - name: Compile Mage
+        if: ${{ steps.cache-mage.outputs.cache-hit != 'true' }}
+        uses: magefile/mage-action@v3
+        with:
+          version: latest
+          args: -compile ./mage-static
+      - name: Store Mage Binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: mage_bin
+          path: ./mage-static
+  
+  api-build:
+    runs-on: ubuntu-latest
+    needs: mage
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download Mage Binary
+        uses: actions/download-artifact@v4
+        with:
+          name: mage_bin 
+      - name: Git describe
+        id: ghd
+        uses: proudust/gh-describe@v2
+      - name: Build
+        env:
+          RELEASE_VERSION: ${{ steps.ghd.outputs.describe }}
+        run: |
+          mkdir -p frontend/dist
+          touch frontend/dist/index.html
+          chmod +x ./mage-static
+          ./mage-static build
+      - name: Store Vikunja Binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: vikunja_bin
+          path: ./vikunja
+
+  api-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - name: prepare frontend files
+        run: |
+          mkdir -p frontend/dist
+          touch frontend/dist/index.html
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.64.5
+  
+  api-check-translations:
+    runs-on: ubuntu-latest
+    needs: mage
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download Mage Binary
+        uses: actions/download-artifact@v4
+        with:
+          name: mage_bin
+      - name: Check
+        run: |
+          chmod +x ./mage-static
+          ./mage-static check:translations    
+          
+  test-migration-smoke:
+    runs-on: ubuntu-latest
+    needs:
+      - api-build
+    strategy:
+      matrix:
+        db:
+          - sqlite
+          - postgres
+          - mysql
+    services:
+      migration-smoke-db-mysql:
+        image: mariadb:11
+        env:
+          MYSQL_ROOT_PASSWORD: vikunjatest
+          MYSQL_DATABASE: vikunjatest
+        ports:
+          - 3307:3306
+      migration-smoke-db-postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: vikunjatest
+          POSTGRES_DB: vikunjatest
+        ports:
+          - 5433:5432
+    steps:
+      - name: Download Unstable
+        run: |
+          wget https://dl.vikunja.io/api/unstable/vikunja-unstable-linux-amd64-full.zip -q -O vikunja-latest.zip
+          unzip vikunja-latest.zip vikunja-unstable-linux-amd64
+      - name: Download Vikunja Binary
+        uses: actions/download-artifact@v4
+        with:
+          name: vikunja_bin
+      - name: run migration
+        env:
+          VIKUNJA_DATABASE_TYPE: ${{ matrix.db }}
+          VIKUNJA_DATABASE_PATH: ./vikunja-migration-test.db
+          VIKUNJA_DATABASE_USER: ${{ matrix.db == 'postgres' && 'postgres' || 'root' }}
+          VIKUNJA_DATABASE_PASSWORD: vikunjatest
+          VIKUNJA_DATABASE_DATABASE: vikunjatest
+          VIKUNJA_DATABASE_SSLMODE: disable
+          VIKUNJA_DATABASE_PORT: ${{ matrix.db == 'postgres' && 5433 || 3307 }}
+          VIKUNJA_LOG_DATABASE: stdout
+          VIKUNJA_LOG_DATABASELEVEL: debug
+        run: |
+          ./vikunja-unstable-linux-amd64 migrate
+          # Run the migrations from the binary built in the step before
+          chmod +x vikunja
+          ./vikunja migrate
+  
+  test-api:
+    runs-on: ubuntu-latest
+    needs:
+      - mage
+    strategy:
+      matrix:
+        db:
+          - sqlite-in-memory
+          - sqlite
+          - postgres
+          - mysql
+        test:
+          - unit
+          - integration
+    services:
+      db-mysql:
+        image: mariadb:11
+        env:
+          MYSQL_ROOT_PASSWORD: vikunjatest
+          MYSQL_DATABASE: vikunjatest
+        ports:
+          - 3306:3306
+      db-postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: vikunjatest
+          POSTGRES_DB: vikunjatest
+        ports:
+          - 5432:5432
+      test-ldap:
+        image: gitea/test-openldap
+        ports:
+          - 389:389
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download Mage Binary
+        uses: actions/download-artifact@v4
+        with:
+          name: mage_bin
+      - name: test
+        env:
+          VIKUNJA_TESTS_USE_CONFIG: ${{ matrix.db != 'sqlite-in-memory' && 1 || 0 }}
+          VIKUNJA_DATABASE_TYPE: ${{ matrix.db }}
+          VIKUNJA_DATABASE_USER: ${{ matrix.db == 'postgres' && 'postgres' || 'root' }}
+          VIKUNJA_DATABASE_PASSWORD: vikunjatest
+          VIKUNJA_DATABASE_DATABASE: vikunjatest
+          VIKUNJA_DATABASE_SSLMODE: disable
+          VIKUNJA_AUTH_LDAP_ENABLED: 1
+          VIKUNJA_AUTH_LDAP_HOST: localhost
+          VIKUNJA_AUTH_LDAP_USETLS: 0
+          VIKUNJA_AUTH_LDAP_BASEDN: dc=planetexpress,dc=com
+          VIKUNJA_AUTH_LDAP_BINDDN: uid=gitea,ou=service,dc=planetexpress,dc=com
+          VIKUNJA_AUTH_LDAP_BINDPASSWORD: password
+          VIKUNJA_AUTH_LDAP_USERFILTER: '(&(objectclass=inetorgperson)(uid=%s))'
+        run: |
+          mkdir -p frontend/dist
+          touch frontend/dist/index.html
+          chmod +x mage-static
+          ./mage-static test:${{ matrix.test }}
+  
+  frontend-dependencies:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: false
+          package_json_file: frontend/package.json
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - name: Install dependencies
+        run: |
+          cd frontend
+          pnpm install
+  
+  frontend-lint:
+    runs-on: ubuntu-latest
+    needs:
+      - frontend-dependencies
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: false
+          package_json_file: frontend/package.json
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - name: Lint
+        run: |
+          cd frontend
+          pnpm install
+          pnpm lint
+
+  frontend-typecheck:
+    runs-on: ubuntu-latest
+    needs:
+      - frontend-dependencies
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: false
+          package_json_file: frontend/package.json
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - name: Typecheck
+        continue-on-error: true
+        run: |
+          cd frontend
+          pnpm install
+          pnpm typecheck
+
+  test-frontend-unit:
+    runs-on: ubuntu-latest
+    needs:
+      - frontend-dependencies
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: false
+          package_json_file: frontend/package.json
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - name: Run unit tests
+        run: |
+          cd frontend
+          pnpm install
+          pnpm test:unit
+  
+  test-frontend-e2e:
+    runs-on: ubuntu-latest
+    needs:
+      - frontend-dependencies
+      - api-build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: false
+          package_json_file: frontend/package.json
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - name: Download Vikunja Binary
+        uses: actions/download-artifact@v4
+        with:
+          name: vikunja_bin
+      - name: Build frontend for test
+        run: |
+          cd frontend
+          pnpm install
+          pnpm cypress install
+          pnpm build:test
+      - name: Run api
+        env:
+          VIKUNJA_SERVICE_TESTINGTOKEN: averyLongSecretToSe33dtheDB
+          VIKUNJA_LOG_LEVEL: DEBUG
+          VIKUNJA_CORS_ENABLE: 1
+          VIKUNJA_DATABASE_PATH: memory
+          VIKUNJA_DATABASE_TYPE: sqlite
+        run: |
+          chmod +x ./vikunja
+          ./vikunja &
+      - uses: cypress-io/github-action@v6
+        with:
+          working-directory: frontend
+          browser: chrome
+          record: true
+          start: |
+            pnpm preview:test
+          wait-on: http://127.0.0.1:4173,http://127.0.0.1:3456/api/v1/info
+          wait-on-timeout: 10
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          CYPRESS_API_URL: http://127.0.0.1:3456/api/v1
+          CYPRESS_TEST_SECRET: averyLongSecretToSe33dtheDB
+          CYPRESS_DEFAULT_COMMAND_TIMEOUT: 60000

@@ -11,6 +11,7 @@ in {
     # General tools
     git-cliff 
     actionlint
+    crowdin-cli
     # API tools
     golangci-lint mage
     # Desktop

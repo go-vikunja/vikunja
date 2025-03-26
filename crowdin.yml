@@ -1,0 +1,21 @@
+"project_id": "462614"
+"api_token_env": "CROWDIN_PERSONAL_TOKEN"
+"base_path": "."
+"base_url": "https://api.crowdin.com"
+
+"preserve_hierarchy": true
+
+files: [
+  {
+    "source": "pkg/i18n/lang/en.json",
+    "translation": "pkg/i18n/lang/%locale%.json",
+    "dest": "en-api.json",
+    "type": "json",
+  },
+  {
+    "source": "frontend/src/i18n/lang/en.json",
+    "translation": "frontend/src/i18n/lang/%locale%.json",
+    "dest": "en.json",
+    "type": "json",
+  },
+]
