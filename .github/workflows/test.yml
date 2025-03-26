@@ -130,7 +130,7 @@ jobs:
           VIKUNJA_DATABASE_PASSWORD: vikunjatest
           VIKUNJA_DATABASE_DATABASE: vikunjatest
           VIKUNJA_DATABASE_SSLMODE: disable
-          VIKUNJA_DATABASE_PORT: ${{ matrix.db == 'postgres' && 5433 || 3307 }}
+          VIKUNJA_DATABASE_HOST: localhost:${{ matrix.db == 'postgres' && 5433 || 3307 }}
           VIKUNJA_LOG_DATABASE: stdout
           VIKUNJA_LOG_DATABASELEVEL: debug
         run: |
