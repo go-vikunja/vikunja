@@ -76,14 +76,14 @@
                 "mentioned_message": "**%[1]s nevnte deg i en kommentar i \"%[]s:"
             },
             "assigned": {
-                "subject_to_assignee": "Du er tildelt %[1]s (%[2]s)",
-                "message_to_assignee": "%[1]s har tildelt deg %[2]s.",
-                "subject_to_others": "%[1]s(%[2]s) er tildelt %[3]s",
+                "subject_to_assignee": "You have been assigned to \"%[1]s\" (%[2]s)",
+                "message_to_assignee": "%[1]s has assigned you to \"%[2]s\".",
+                "subject_to_others": "\"%[1]s\" (%[2]s) has been assigned to %[3]s",
                 "message_to_others": "%[1]s har tildelt deg %[2]s."
             },
             "deleted": {
-                "subject": "%[1]s (%[2]s) er slettet",
-                "message": "%[1]s har slettet oppgaven %[2]s (%[3]s)"
+                "subject": "\"%[1]s\" (%[2]s) has been deleted",
+                "message": "%[1]s has deleted the task \"%[2]s\" (%[3]s)"
             },
             "mentioned": {
                 "subject_new": "%[1]s nevnte deg i en kommentar i \"%[2]s\"",
@@ -104,30 +104,30 @@
         },
         "team": {
             "member_added": {
-                "subject": "%[1]s har lagt deg til i gruppen %[2] i Vikunja",
-                "message": "%[1]s has just added you to the %[2]s team in Vikunja."
+                "subject": "%[1]s added you to the \"%[2]s\" team in Vikunja",
+                "message": "%[1]s har lagt deg til i gruppen %[2] i Vikunja."
             }
         },
         "data_export": {
             "ready": {
-                "subject": "Your Vikunja Data Export is ready",
-                "message": "Your Vikunja Data Export is ready for you to download. Click the button below to download it:",
-                "availability": "The download will be available for the next 7 days."
+                "subject": "Vikunja dataeksporten er klar",
+                "message": "Vikunja dataeksport er klar til å lastes ned. Klikk på knappen nedenfor for å laste den ned:",
+                "availability": "Nedlasting vil være tilgjengelig de neste 7 dagene."
             }
         },
         "migration": {
             "done": {
-                "subject": "The migration from %[1]s to Vikunja was completed",
-                "imported": "Vikunja has imported all lists/projects, tasks, notes, reminders and files from %[1]s you have access to.",
-                "have_fun": "Have fun with your new (old) projects!"
+                "subject": "Migrasjonen fra %[1]s til Vikunja ble fullført",
+                "imported": "Vikunja har importert alle lister/prosjekter, oppgaver, notater, påminnelser og filer fra %[1]s du har tilgang til.",
+                "have_fun": "Ha det gøy med dine nye (og gamle) prosjekter!"
             },
             "failed": {
-                "subject": "The migration from %[1]s to Vikunja has failed",
-                "message": "Looks like the move from %[1]s didn't go as planned this time.",
-                "retry": "No worries, though! Just give it another shot by starting over the same way you did before. Sometimes, these hiccups happen because of glitches on %[1]s's end, but trying again often does the trick.",
-                "error": "We bumped into a little error along the way: `%[2]s`.",
-                "report": "Please drop us a note about this [in the forum](https://community.vikunja.io/) or any of the usual places so that we can take a look at why it failed.",
-                "working_on_it": "We've got the error message on our radar and are on it to get it sorted out soon."
+                "subject": "Migrasjonen fra %[1]s til Vikunja feilet",
+                "message": "Det ser ut som om flytting fra %[1]s ikke gikk som planlagt denne gangen.",
+                "retry": "Ingen grunn til bekymringer! Prøv en gang til.",
+                "error": "Det oppsto en liten feil på veien: `%[2]s`.",
+                "report": "Vennligst send oss et notat om dette [i forumet] (https://community.vikunja.io/), slik at vi kan ta en kikk på hvorfor det mislyktes.",
+                "working_on_it": "Vi har feilmeldingen på bordet og jobber med saken for å få den ordnet."
             }
         },
         "common": {
