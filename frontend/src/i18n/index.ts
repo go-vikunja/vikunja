@@ -37,6 +37,7 @@ export const SUPPORTED_LOCALES = {
 	'bg-BG': 'Български',
 	'ko-KR': '한국어',
 	'tr-TR': 'Türkçe',
+	'fi-FI': 'Suomi',
 	// IMPORTANT: Also add new languages to useDayjsLanguageSync
 	// IMPORTANT: Also add new languages to pkg/i18n/i18n.go
 } as const
