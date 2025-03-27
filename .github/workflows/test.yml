@@ -44,6 +44,10 @@ jobs:
       - name: Git describe
         id: ghd
         uses: proudust/gh-describe@v2
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
       - name: Build
         env:
           RELEASE_VERSION: ${{ steps.ghd.outputs.describe }}
@@ -105,14 +109,14 @@ jobs:
           MYSQL_ROOT_PASSWORD: vikunjatest
           MYSQL_DATABASE: vikunjatest
         ports:
-          - 3307:3306
+          - 3306:3306
       migration-smoke-db-postgres:
         image: postgres:16
         env:
           POSTGRES_PASSWORD: vikunjatest
           POSTGRES_DB: vikunjatest
         ports:
-          - 5433:5432
+          - 5432:5432
     steps:
       - name: Download Unstable
         run: |
@@ -130,7 +134,6 @@ jobs:
           VIKUNJA_DATABASE_PASSWORD: vikunjatest
           VIKUNJA_DATABASE_DATABASE: vikunjatest
           VIKUNJA_DATABASE_SSLMODE: disable
-          VIKUNJA_DATABASE_HOST: localhost:${{ matrix.db == 'postgres' && 5433 || 3307 }}
           VIKUNJA_LOG_DATABASE: stdout
           VIKUNJA_LOG_DATABASELEVEL: debug
         run: |
