@@ -44,6 +44,10 @@ jobs:
       - name: Git describe
         id: ghd
         uses: proudust/gh-describe@v2
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
       - name: Build
         env:
           RELEASE_VERSION: ${{ steps.ghd.outputs.describe }}
