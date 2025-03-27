@@ -4,34 +4,6 @@ on:
   workflow_call:
 
 jobs:
-  mage:
-    runs-on: ubuntu-latest
-    name: prepare-mage
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: stable
-      - name: Cache Mage
-        id: cache-mage
-        uses: actions/cache@v4
-        with:
-          key: ${{ runner.os }}-build-mage-${{ hashFiles('magefile.go') }}
-          path: |
-            ./mage-static
-      - name: Compile Mage
-        if: ${{ steps.cache-mage.outputs.cache-hit != 'true' }}
-        uses: magefile/mage-action@v3
-        with:
-          version: latest
-          args: -compile ./mage-static
-      - name: Store Mage Binary
-        uses: actions/upload-artifact@v4
-        with:
-          name: mage_bin
-          path: ./mage-static
-
   docker:
     runs-on: ubuntu-latest
     steps:
@@ -108,7 +80,6 @@ jobs:
   binaries:
     runs-on: ubuntu-latest
     needs:
-      - mage
       - frontend
     steps:
       - uses: actions/checkout@v4
@@ -226,8 +197,6 @@ jobs:
 
   config-yaml:
     runs-on: ubuntu-latest
-    needs: 
-      - mage
     steps:
       - uses: actions/checkout@v4
       - name: Git describe
@@ -308,8 +277,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    needs:
-      - mage
     steps:
       - uses: actions/checkout@v4
       - name: Download Mage Binary
