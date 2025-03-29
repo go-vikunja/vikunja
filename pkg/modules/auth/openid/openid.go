@@ -364,6 +364,7 @@ func getProviderAndOidcTokens(c echo.Context) (*Provider, *oauth2.Token, *oidc.I
 			details := make(map[string]interface{})
 			if err := json.Unmarshal(rerr.Body, &details); err != nil {
 				log.Errorf("Error unmarshalling token for provider %s: %v", provider.Name, err)
+				log.Debugf("Raw token value is %s", rerr.Body)
 				return nil, nil, nil, err
 			}
 
