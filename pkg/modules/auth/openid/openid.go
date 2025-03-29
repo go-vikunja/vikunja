@@ -368,7 +368,8 @@ func getProviderAndOidcTokens(c echo.Context) (*Provider, *oauth2.Token, *oidc.I
 				return nil, nil, nil, err
 			}
 
-			log.Error(err)
+			log.Errorf("Error retrieving token: %s", err)
+			log.Debugf("Raw token value is %s", rerr.Body)
 			return nil, nil, nil, &models.ErrOpenIDBadRequestWithDetails{
 				Message: "Could not authenticate against third party.",
 				Details: details,
@@ -381,6 +382,7 @@ func getProviderAndOidcTokens(c echo.Context) (*Provider, *oauth2.Token, *oidc.I
 	// Extract the ID Token from OAuth2 token.
 	rawIDToken, ok := oauth2Token.Extra("id_token").(string)
 	if !ok {
+		log.Debugf("Could not get id_token, raw token is %v", oauth2Token)
 		return nil, nil, nil, &models.ErrOpenIDBadRequest{Message: "Missing token"}
 	}
 
