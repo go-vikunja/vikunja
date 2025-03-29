@@ -10,65 +10,10 @@ import {LINK_SHARE_HASH_PREFIX} from '@/constants/linkShareHash'
 import {useAuthStore} from '@/stores/auth'
 import {useBaseStore} from '@/stores/base'
 
-import HomeComponent from '@/views/Home.vue'
+import Register from '@/views/user/Register.vue'
+import LinkSharingAuth from '@/views/sharing/LinkSharingAuth.vue'
+
 import NotFoundComponent from '@/views/404.vue'
-const About = () => import('@/views/About.vue')
-// User Handling
-import LoginComponent from '@/views/user/Login.vue'
-import RegisterComponent from '@/views/user/Register.vue'
-import OpenIdAuth from '@/views/user/OpenIdAuth.vue'
-const DataExportDownload = () => import('@/views/user/DataExportDownload.vue')
-// Tasks
-import UpcomingTasksComponent from '@/views/tasks/ShowTasks.vue'
-import LinkShareAuthComponent from '@/views/sharing/LinkSharingAuth.vue'
-const TaskDetailView = () => import('@/views/tasks/TaskDetailView.vue')
-
-// Team Handling
-const ListTeamsComponent = () => import('@/views/teams/ListTeams.vue')
-// Label Handling
-const ListLabelsComponent = () => import('@/views/labels/ListLabels.vue')
-const NewLabelComponent = () => import('@/views/labels/NewLabel.vue')
-// Migration
-const MigrationComponent = () => import('@/views/migrate/Migration.vue')
-const MigrationHandlerComponent = () => import('@/views/migrate/MigrationHandler.vue')
-// Project View
-import ProjectView from '@/views/project/ProjectView.vue'
-const ProjectInfo = () => import('@/views/project/ProjectInfo.vue')
-
-// Project Settings
-const ListProjects = () => import('@/views/project/ListProjects.vue')
-const ProjectSettingEdit = () => import('@/views/project/settings/ProjectSettingsEdit.vue')
-const ProjectSettingBackground = () => import('@/views/project/settings/ProjectSettingsBackground.vue')
-const ProjectSettingDuplicate = () => import('@/views/project/settings/ProjectSettingsDuplicate.vue')
-const ProjectSettingShare = () => import('@/views/project/settings/ProjectSettingsShare.vue')
-const ProjectSettingWebhooks = () => import('@/views/project/settings/ProjectSettingsWebhooks.vue')
-const ProjectSettingDelete = () => import('@/views/project/settings/ProjectSettingsDelete.vue')
-const ProjectSettingArchive = () => import('@/views/project/settings/ProjectSettingsArchive.vue')
-const ProjectSettingViews = () =>  import('@/views/project/settings/ProjectSettingsViews.vue')
-
-// Saved Filters
-const FilterNew = () => import('@/views/filters/FilterNew.vue')
-const FilterEdit = () => import('@/views/filters/FilterEdit.vue')
-const FilterDelete = () => import('@/views/filters/FilterDelete.vue')
-
-const PasswordResetComponent = () => import('@/views/user/PasswordReset.vue')
-const GetPasswordResetComponent = () => import('@/views/user/RequestPasswordReset.vue')
-const UserSettingsComponent = () => import('@/views/user/Settings.vue')
-const UserSettingsAvatarComponent = () => import('@/views/user/settings/Avatar.vue')
-const UserSettingsCaldavComponent = () => import('@/views/user/settings/Caldav.vue')
-const UserSettingsDataExportComponent = () => import('@/views/user/settings/DataExport.vue')
-const UserSettingsDeletionComponent = () => import('@/views/user/settings/Deletion.vue')
-const UserSettingsEmailUpdateComponent = () => import('@/views/user/settings/EmailUpdate.vue')
-const UserSettingsGeneralComponent = () => import('@/views/user/settings/General.vue')
-const UserSettingsPasswordUpdateComponent = () => import('@/views/user/settings/PasswordUpdate.vue')
-const UserSettingsTOTPComponent = () => import('@/views/user/settings/TOTP.vue')
-const UserSettingsApiTokensComponent = () => import('@/views/user/settings/ApiTokens.vue')
-
-// Project Handling
-const NewProjectComponent = () => import('@/views/project/NewProject.vue')
-
-const EditTeamComponent = () => import('@/views/teams/EditTeam.vue')
-const NewTeamComponent = () =>  import('@/views/teams/NewTeam.vue')
 
 const router = createRouter({
 	history: createWebHistory(import.meta.env.BASE_URL),
@@ -90,7 +35,7 @@ const router = createRouter({
 		{
 			path: '/',
 			name: 'home',
-			component: HomeComponent,
+			component: () => import('@/views/Home.vue'),
 		},
 		{
 			path: '/:pathMatch(.*)*',
@@ -106,7 +51,7 @@ const router = createRouter({
 		{
 			path: '/login',
 			name: 'user.login',
-			component: LoginComponent,
+			component: () => import('@/views/user/Login.vue'),
 			meta: {
 				title: 'user.auth.login',
 			},
@@ -114,7 +59,7 @@ const router = createRouter({
 		{
 			path: '/get-password-reset',
 			name: 'user.password-reset.request',
-			component: GetPasswordResetComponent,
+			component: () => import('@/views/user/RequestPasswordReset.vue'),
 			meta: {
 				title: 'user.auth.resetPassword',
 			},
@@ -122,7 +67,7 @@ const router = createRouter({
 		{
 			path: '/password-reset',
 			name: 'user.password-reset.reset',
-			component: PasswordResetComponent,
+			component: () => import('@/views/user/PasswordReset.vue'),
 			meta: {
 				title: 'user.auth.resetPassword',
 			},
@@ -130,7 +75,9 @@ const router = createRouter({
 		{
 			path: '/register',
 			name: 'user.register',
-			component: RegisterComponent,
+			// FIXME: use dynamic imports
+			// component: () => import('@/views/user/Register.vue'),
+			component: Register,
 			meta: {
 				title: 'user.auth.createAccount',
 			},
@@ -138,63 +85,63 @@ const router = createRouter({
 		{
 			path: '/user/settings',
 			name: 'user.settings',
-			component: UserSettingsComponent,
+			component: () => import('@/views/user/Settings.vue'),
 			redirect: {name: 'user.settings.general'},
 			children: [
 				{
 					path: '/user/settings/avatar',
 					name: 'user.settings.avatar',
-					component: UserSettingsAvatarComponent,
+					component: () => import('@/views/user/settings/Avatar.vue'),
 				},
 				{
 					path: '/user/settings/caldav',
 					name: 'user.settings.caldav',
-					component: UserSettingsCaldavComponent,
+					component: () => import('@/views/user/settings/Caldav.vue'),
 				},
 				{
 					path: '/user/settings/data-export',
 					name: 'user.settings.data-export',
-					component: UserSettingsDataExportComponent,
+					component: () => import('@/views/user/settings/DataExport.vue'),
 				},
 				{
 					path: '/user/settings/deletion',
 					name: 'user.settings.deletion',
-					component: UserSettingsDeletionComponent,
+					component: () => import('@/views/user/settings/Deletion.vue'),
 				},
 				{
 					path: '/user/settings/email-update',
 					name: 'user.settings.email-update',
-					component: UserSettingsEmailUpdateComponent,
+					component: () => import('@/views/user/settings/EmailUpdate.vue'),
 				},
 				{
 					path: '/user/settings/general',
 					name: 'user.settings.general',
-					component: UserSettingsGeneralComponent,
+					component: () => import('@/views/user/settings/General.vue'),
 				},
 				{
 					path: '/user/settings/password-update',
 					name: 'user.settings.password-update',
-					component: UserSettingsPasswordUpdateComponent,
+					component: () => import('@/views/user/settings/PasswordUpdate.vue'),
 				},
 				{
 					path: '/user/settings/totp',
 					name: 'user.settings.totp',
-					component: UserSettingsTOTPComponent,
+					component: () => import('@/views/user/settings/TOTP.vue'),
 				},
 				{
 					path: '/user/settings/api-tokens',
 					name: 'user.settings.apiTokens',
-					component: UserSettingsApiTokensComponent,
+					component: () => import('@/views/user/settings/ApiTokens.vue'),
 				},
 				{
 					path: '/user/settings/migrate',
 					name: 'migrate.start',
-					component: MigrationComponent,
+					component: () => import('@/views/migrate/Migration.vue'),
 				},
 				{
 					path: '/migrate/:service',
 					name: 'migrate.service',
-					component: MigrationHandlerComponent,
+					component: () => import('@/views/migrate/MigrationHandler.vue'),
 					props: route => ({
 						service: route.params.service as string,
 						code: route.query.code as string,
@@ -205,23 +152,25 @@ const router = createRouter({
 		{
 			path: '/user/export/download',
 			name: 'user.export.download',
-			component: DataExportDownload,
+			component: () => import('@/views/user/DataExportDownload.vue'),
 		},
 		{
 			path: '/share/:share/auth',
 			name: 'link-share.auth',
-			component: LinkShareAuthComponent,
+			// FIXME: use dynamic imports
+			// component: () => import('@/views/sharing/LinkSharingAuth.vue'),
+			component: LinkSharingAuth,
 		},
 		{
 			path: '/tasks/:id',
 			name: 'task.detail',
-			component: TaskDetailView,
+			component: () => import('@/views/tasks/TaskDetailView.vue'),
 			props: route => ({ taskId: Number(route.params.id as string) }),
 		},
 		{
 			path: '/tasks/by/upcoming',
 			name: 'tasks.range',
-			component: UpcomingTasksComponent,
+			component: () => import('@/views/tasks/ShowTasks.vue'),
 			props: route => ({
 				dateFrom: parseDateOrString(route.query.from as string, new Date()),
 				dateTo: parseDateOrString(route.query.to as string, getNextWeekDate()),
@@ -245,12 +194,12 @@ const router = createRouter({
 		{
 			path: '/projects',
 			name: 'projects.index',
-			component: ListProjects,
+			component: () => import('@/views/project/ListProjects.vue'),
 		},
 		{
 			path: '/projects/new',
 			name: 'project.create',
-			component: NewProjectComponent,
+			component: () => import('@/views/project/NewProject.vue'),
 			meta: {
 				showAsModal: true,
 			},
@@ -258,7 +207,7 @@ const router = createRouter({
 		{
 			path: '/projects/:parentProjectId/new',
 			name: 'project.createFromParent',
-			component: NewProjectComponent,
+			component: () => import('@/views/project/NewProject.vue'),
 			props: route => ({ parentProjectId: Number(route.params.parentProjectId as string) }),
 			meta: {
 				showAsModal: true,
@@ -267,7 +216,7 @@ const router = createRouter({
 		{
 			path: '/projects/:projectId/settings/edit',
 			name: 'project.settings.edit',
-			component: ProjectSettingEdit,
+			component: () => import('@/views/project/settings/ProjectSettingsEdit.vue'),
 			props: route => ({ projectId: Number(route.params.projectId as string) }),
 			meta: {
 				showAsModal: true,
@@ -276,7 +225,7 @@ const router = createRouter({
 		{
 			path: '/projects/:projectId/settings/background',
 			name: 'project.settings.background',
-			component: ProjectSettingBackground,
+			component: () => import('@/views/project/settings/ProjectSettingsBackground.vue'),
 			meta: {
 				showAsModal: true,
 			},
@@ -284,7 +233,7 @@ const router = createRouter({
 		{
 			path: '/projects/:projectId/settings/duplicate',
 			name: 'project.settings.duplicate',
-			component: ProjectSettingDuplicate,
+			component: () => import('@/views/project/settings/ProjectSettingsDuplicate.vue'),
 			meta: {
 				showAsModal: true,
 			},
@@ -292,7 +241,7 @@ const router = createRouter({
 		{
 			path: '/projects/:projectId/settings/share',
 			name: 'project.settings.share',
-			component: ProjectSettingShare,
+			component: () => import('@/views/project/settings/ProjectSettingsShare.vue'),
 			meta: {
 				showAsModal: true,
 			},
@@ -300,7 +249,7 @@ const router = createRouter({
 		{
 			path: '/projects/:projectId/settings/webhooks',
 			name: 'project.settings.webhooks',
-			component: ProjectSettingWebhooks,
+			component: () => import('@/views/project/settings/ProjectSettingsWebhooks.vue'),
 			meta: {
 				showAsModal: true,
 			},
@@ -308,7 +257,7 @@ const router = createRouter({
 		{
 			path: '/projects/:projectId/settings/delete',
 			name: 'project.settings.delete',
-			component: ProjectSettingDelete,
+			component: () => import('@/views/project/settings/ProjectSettingsDelete.vue'),
 			meta: {
 				showAsModal: true,
 			},
@@ -316,7 +265,7 @@ const router = createRouter({
 		{
 			path: '/projects/:projectId/settings/archive',
 			name: 'project.settings.archive',
-			component: ProjectSettingArchive,
+			component: () => import('@/views/project/settings/ProjectSettingsArchive.vue'),
 			meta: {
 				showAsModal: true,
 			},
@@ -324,7 +273,7 @@ const router = createRouter({
 		{
 			path: '/projects/:projectId/settings/views',
 			name: 'project.settings.views',
-			component: ProjectSettingViews,
+			component: () =>  import('@/views/project/settings/ProjectSettingsViews.vue'),
 			meta: {
 				showAsModal: true,
 			},
@@ -333,7 +282,7 @@ const router = createRouter({
 		{
 			path: '/projects/:projectId/settings/edit',
 			name: 'filter.settings.edit',
-			component: FilterEdit,
+			component: () => import('@/views/filters/FilterEdit.vue'),
 			meta: {
 				showAsModal: true,
 			},
@@ -342,7 +291,7 @@ const router = createRouter({
 		{
 			path: '/projects/:projectId/settings/delete',
 			name: 'filter.settings.delete',
-			component: FilterDelete,
+			component: () => import('@/views/filters/FilterDelete.vue'),
 			meta: {
 				showAsModal: true,
 			},
@@ -351,7 +300,7 @@ const router = createRouter({
 		{
 			path: '/projects/:projectId/info',
 			name: 'project.info',
-			component: ProjectInfo,
+			component: () => import('@/views/project/ProjectInfo.vue')			,
 			meta: {
 				showAsModal: true,
 			},
@@ -379,7 +328,7 @@ const router = createRouter({
 		{
 			path: '/projects/:projectId/:viewId',
 			name: 'project.view',
-			component: ProjectView,
+			component: () => import('@/views/project/ProjectView.vue'),
 			props: route => ({ 
 				projectId: parseInt(route.params.projectId as string),
 				viewId: route.params.viewId ? parseInt(route.params.viewId as string): undefined,
@@ -388,12 +337,12 @@ const router = createRouter({
 		{
 			path: '/teams',
 			name: 'teams.index',
-			component: ListTeamsComponent,
+			component: () => import('@/views/teams/ListTeams.vue'),
 		},
 		{
 			path: '/teams/new',
 			name: 'teams.create',
-			component: NewTeamComponent,
+			component: () =>  import('@/views/teams/NewTeam.vue'),
 			meta: {
 				showAsModal: true,
 			},
@@ -401,17 +350,17 @@ const router = createRouter({
 		{
 			path: '/teams/:id/edit',
 			name: 'teams.edit',
-			component: EditTeamComponent,
+			component: () => import('@/views/teams/EditTeam.vue'),
 		},
 		{
 			path: '/labels',
 			name: 'labels.index',
-			component: ListLabelsComponent,
+			component: () => import('@/views/labels/ListLabels.vue'),
 		},
 		{
 			path: '/labels/new',
 			name: 'labels.create',
-			component: NewLabelComponent,
+			component: () => import('@/views/labels/NewLabel.vue'),
 			meta: {
 				showAsModal: true,
 			},
@@ -419,7 +368,7 @@ const router = createRouter({
 		{
 			path: '/filters/new',
 			name: 'filters.create',
-			component: FilterNew,
+			component: () => import('@/views/filters/FilterNew.vue'),
 			meta: {
 				showAsModal: true,
 			},
@@ -427,12 +376,12 @@ const router = createRouter({
 		{
 			path: '/auth/openid/:provider',
 			name: 'openid.auth',
-			component: OpenIdAuth,
+			component: () => import('@/views/user/OpenIdAuth.vue'),
 		},
 		{
 			path: '/about',
 			name: 'about',
-			component: About,
+			component: () => import('@/views/About.vue'),
 		},
 	],
 })
