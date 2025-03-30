@@ -47,7 +47,7 @@ jobs:
       - name: Commit files
         if: steps.check_changes.outputs.changes_exist != '0'
         run: |
-          git config --local user.email "frederik@vikunja.io"
+          git config --local user.email "bot@vikunja.io"
           git config --local user.name "Frederick [Bot]"
           git commit -am "chore(i18n): update translations via Crowdin"
       - name: Push changes
