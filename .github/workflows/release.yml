@@ -296,8 +296,11 @@ jobs:
       - name: Check for changes
         id: check_changes
         run: |
-          git diff --quiet
-          echo "changes_exist=$?" >> "$GITHUB_OUTPUT"
+          if git diff --quiet; then
+            echo "changes_exist=0" >> "$GITHUB_OUTPUT"
+          else
+            echo "changes_exist=1" >> "$GITHUB_OUTPUT"
+          fi
       - name: Commit files
         if: steps.check_changes.outputs.changes_exist != '0'
         run: |

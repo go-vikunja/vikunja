@@ -11,20 +11,48 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: crowdin action
+      - name: push source files
         uses: crowdin/github-action@v2
         with:
-          crowdin_branch_name: main
-          dryrun_action: true
-          upload_sources: true
-          download_translations: true
-          export_only_approved: true
-          push_translations: true
-          localization_branch_name: main
-          create_pull_request: false
-          commit_message: 'chore(i18n): update translations via Crowdin'
+          command: 'push'
         env:
-          GITHUB_TOKEN: ${{ secrets.CROWDIN_GH_TOKEN }}
           CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
           CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
+      - name: pull translations
+        uses: crowdin/github-action@v2
+        with:
+          command: 'download'
+          command_args: '--export-only-approved --skip-untranslated-strings'
+        env:
+          CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
+          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Ensure file permissions
+        run: |
+          find pkg/i18n/lang frontend/src/i18n/lang -type f -name "*.json" -exec sudo chmod 666 {} \;
+      - name: Fix exported files
+        run: |
+          node contrib/clean-translations.js
+      - name: Check for changes
+        id: check_changes
+        run: |
+          if git diff --quiet; then
+            echo "changes_exist=0" >> "$GITHUB_OUTPUT"
+          else
+            echo "changes_exist=1" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Commit files
+        if: steps.check_changes.outputs.changes_exist != '0'
+        run: |
+          git config --local user.email "frederik@vikunja.io"
+          git config --local user.name "Frederick [Bot]"
+          git commit -am "chore(i18n): update translations via Crowdin"
+      - name: Push changes
+        if: steps.check_changes.outputs.changes_exist != '0'
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
