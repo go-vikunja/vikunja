@@ -466,7 +466,7 @@ steps:
       - frontend-dependencies
 
   - name: frontend-test
-    image: cypress/browsers:22.13.1
+    image: cypress/browsers:22.14.0@sha256:f10e2404d9ae5f821ca9aad1fd10511e61fc7a5f8f0a82305ab33d53a42af406
     pull: always
     environment:
       CYPRESS_API_URL: http://test-api-run:3456/api/v1
