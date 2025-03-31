@@ -52,8 +52,8 @@
     }
   },
   "devDependencies": {
-    "electron": "34.4.1",
-    "electron-builder": "25.1.8",
+    "electron": "35.1.2",
+    "electron-builder": "26.0.12",
     "unzipper": "0.12.3"
   },
   "dependencies": {
