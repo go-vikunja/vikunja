@@ -1,6 +1,8 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "labels": ["dependencies"],
+  "labels": [
+    "dependencies"
+  ],
   "extends": [
     "config:best-practices",
     "config:js-app"
@@ -12,38 +14,51 @@
   ],
   "packageRules": [
     {
-      "matchPackageNames": ["happy-dom"],
-      "extends": ["schedule:weekly"]
+      "matchPackageNames": [
+        "happy-dom"
+      ],
+      "extends": [
+        "schedule:weekly"
+      ]
     },
     {
       "groupName": "caniuse-and-related",
-      "matchPackageNames": ["caniuse-lite", "browserslist"],
-      "extends": ["schedule:weekly"]
+      "matchPackageNames": [
+        "caniuse-lite",
+        "browserslist"
+      ],
+      "extends": [
+        "schedule:weekly"
+      ]
     },
     {
       "groupName": "vueuse",
-      "matchPackagePrefixes": [
-        "@vueuse/"
+      "matchPackageNames": [
+        "@vueuse/{/,}**"
       ]
     },
     {
       "groupName": "histoire",
-      "matchPackagePrefixes": [
-        "@histoire/",
-        "histoire"
+      "matchPackageNames": [
+        "@histoire/{/,}**",
+        "histoire{/,}**"
       ]
     },
     {
       "groupName": "tiptap",
-      "matchPackagePrefixes": [
-        "@tiptap/",
-        "tiptap"
+      "matchPackageNames": [
+        "@tiptap/{/,}**",
+        "tiptap{/,}**"
       ]
     },
     {
-      "matchDepTypes": ["devDependencies"],
+      "matchDepTypes": [
+        "devDependencies"
+      ],
       "groupName": "dev-dependencies",
-      "extends": ["schedule:daily"]
+      "extends": [
+        "schedule:daily"
+      ]
     }
   ]
 }
