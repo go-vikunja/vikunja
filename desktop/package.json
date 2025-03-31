@@ -52,9 +52,9 @@
     }
   },
   "devDependencies": {
-    "electron": "34.0.1",
+    "electron": "34.4.1",
     "electron-builder": "25.1.8",
-    "unzipper": "^0.12.3"
+    "unzipper": "0.12.3"
   },
   "dependencies": {
     "connect-history-api-fallback": "2.0.0",
