@@ -149,7 +149,7 @@ importers:
         specifier: 3.3.0
         version: 3.3.0
       marked:
-        specifier: ^15.0.6
+        specifier: 15.0.6
         version: 15.0.6
       pinia:
         specifier: 2.3.1
