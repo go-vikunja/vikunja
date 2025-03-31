@@ -176,8 +176,8 @@ importers:
         specifier: 2.8.9
         version: 2.8.9(vue@3.5.13(typescript@5.8.2))
       vue-flatpickr-component:
-        specifier: 11.0.5
-        version: 11.0.5(vue@3.5.13(typescript@5.8.2))
+        specifier: 12.0.0
+        version: 12.0.0(vue@3.5.13(typescript@5.8.2))
       vue-i18n:
         specifier: 11.1.2
         version: 11.1.2(vue@3.5.13(typescript@5.8.2))
@@ -6516,8 +6516,8 @@ packages:
     peerDependencies:
       eslint: ^8.57.0 || ^9.0.0
 
-  vue-flatpickr-component@11.0.5:
-    resolution: {integrity: sha512-Vfwg5uVU+sanKkkLzUGC5BUlWd5wlqAMq/UpQ6lI2BCZq0DDrXhOMX7hrevt8bEgglIq2QUv0K2Nl84Me/VnlA==}
+  vue-flatpickr-component@12.0.0:
+    resolution: {integrity: sha512-CJ5jrgTaeD66Z4mjEocSTAdB/n6IGSlUICwdBanpyCI8hswq5rwXvEYQ5IKA3K3uVjP5pBlY9Rg6o3xoszTPpA==}
     engines: {node: '>=14.13.0'}
     peerDependencies:
       vue: ^3.2.0
@@ -13516,7 +13516,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  vue-flatpickr-component@11.0.5(vue@3.5.13(typescript@5.8.2)):
+  vue-flatpickr-component@12.0.0(vue@3.5.13(typescript@5.8.2)):
     dependencies:
       flatpickr: 4.6.13
       vue: 3.5.13(typescript@5.8.2)
