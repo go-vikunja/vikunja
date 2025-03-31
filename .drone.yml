@@ -405,7 +405,7 @@ steps:
       - api-build
 
   - name: frontend-dependencies
-    image: node:22.13.1-alpine
+    image: node:22.14.0-alpine@sha256:9bef0ef1e268f60627da9ba7d7605e8831d5b56ad07487d24d1aa386336d1944
     pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
@@ -419,7 +419,7 @@ steps:
   #      - restore-cache
 
   - name: frontend-lint
-    image: node:22.13.1-alpine
+    image: node:22.14.0-alpine@sha256:9bef0ef1e268f60627da9ba7d7605e8831d5b56ad07487d24d1aa386336d1944
     pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
@@ -431,7 +431,7 @@ steps:
       - frontend-dependencies
 
   - name: frontend-build-prod
-    image: node:22.13.1-alpine
+    image: node:22.14.0-alpine@sha256:9bef0ef1e268f60627da9ba7d7605e8831d5b56ad07487d24d1aa386336d1944
     pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
@@ -443,7 +443,7 @@ steps:
       - frontend-dependencies
 
   - name: frontend-test-unit
-    image: node:22.13.1-alpine
+    image: node:22.14.0-alpine@sha256:9bef0ef1e268f60627da9ba7d7605e8831d5b56ad07487d24d1aa386336d1944
     pull: always
     commands:
       - cd frontend
@@ -454,7 +454,7 @@ steps:
 
   - name: frontend-typecheck
     failure: ignore
-    image: node:22.13.1-alpine
+    image: node:22.14.0-alpine@sha256:9bef0ef1e268f60627da9ba7d7605e8831d5b56ad07487d24d1aa386336d1944
     pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
@@ -583,7 +583,7 @@ steps:
       - git fetch --tags
 
   - name: frontend-dependencies
-    image: node:22.13.1-alpine
+    image: node:22.14.0-alpine@sha256:9bef0ef1e268f60627da9ba7d7605e8831d5b56ad07487d24d1aa386336d1944
     pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
@@ -595,7 +595,7 @@ steps:
       - pnpm install --fetch-timeout 100000
 
   - name: frontend-build
-    image: node:22.13.1-alpine
+    image: node:22.14.0-alpine@sha256:9bef0ef1e268f60627da9ba7d7605e8831d5b56ad07487d24d1aa386336d1944
     pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
@@ -986,7 +986,7 @@ steps:
       - git fetch --tags
 
   - name: build
-    image: node:22.13.1-alpine
+    image: node:22.14.0-alpine@sha256:9bef0ef1e268f60627da9ba7d7605e8831d5b56ad07487d24d1aa386336d1944
     pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
@@ -1046,7 +1046,7 @@ steps:
       - git fetch --tags
 
   - name: build
-    image: node:22.13.1-alpine
+    image: node:22.14.0-alpine@sha256:9bef0ef1e268f60627da9ba7d7605e8831d5b56ad07487d24d1aa386336d1944
     pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
