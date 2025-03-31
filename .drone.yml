@@ -803,7 +803,7 @@ steps:
 
   # Build os packages and push it to our bucket
   - name: build-os-packages-unstable
-    image: goreleaser/nfpm:v2.41.2
+    image: goreleaser/nfpm:v2.42.0@sha256:44ab1c1726fc775a8e7d6fcd216ed7632b52af4b8f43e2c1daec12a735e7851b
     pull: always
     commands:
       - apk add git go
@@ -819,7 +819,7 @@ steps:
     depends_on: [ after-build-compress ]
 
   - name: build-os-packages-version
-    image: goreleaser/nfpm:v2.41.2
+    image: goreleaser/nfpm:v2.42.0@sha256:44ab1c1726fc775a8e7d6fcd216ed7632b52af4b8f43e2c1daec12a735e7851b
     pull: always
     commands:
       - apk add git go
