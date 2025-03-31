@@ -10,16 +10,16 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
       - name: push source files
-        uses: crowdin/github-action@v2
+        uses: crowdin/github-action@b8012bd5491b8aa8578b73ab5b5f5e7c94aaa6e2 # v2
         with:
           command: 'push'
         env:
           CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
           CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
       - name: pull translations
-        uses: crowdin/github-action@v2
+        uses: crowdin/github-action@b8012bd5491b8aa8578b73ab5b5f5e7c94aaa6e2 # v2
         with:
           command: 'download'
           command_args: '--export-only-approved --skip-untranslated-strings'
@@ -27,9 +27,9 @@ jobs:
           CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
           CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4
         with:
-          node-version: '22'
+          node-version: '22.14.0'
       - name: Ensure file permissions
         run: |
           find pkg/i18n/lang frontend/src/i18n/lang -type f -name "*.json" -exec sudo chmod 666 {} \;
