@@ -68,7 +68,7 @@ require (
 	github.com/tkuchiki/go-timezone v0.2.3
 	github.com/typesense/typesense-go/v2 v2.0.0
 	github.com/ulule/limiter/v3 v3.11.2
-	github.com/wneessen/go-mail v0.6.1
+	github.com/wneessen/go-mail v0.6.2
 	github.com/yuin/goldmark v1.7.8
 	golang.org/x/crypto v0.36.0
 	golang.org/x/image v0.23.0
