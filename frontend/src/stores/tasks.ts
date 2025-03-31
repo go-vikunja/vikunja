@@ -401,8 +401,9 @@ export const useTaskStore = defineStore('task', () => {
 		}
 	
 		//  3. Otherwise use the id from the route parameter
-		if (typeof router.currentRoute.value.params.projectId !== 'undefined') {
-			foundProjectId = Number(router.currentRoute.value.params.projectId)
+		const projectIdFromRoute = Number(router.currentRoute.value.params.projectId)
+		if (typeof router.currentRoute.value.params.projectId !== 'undefined' && projectIdFromRoute > 0) {
+			foundProjectId = projectIdFromRoute
 		}
 		
 		//  4. If none of the above worked, reject the promise with an error.

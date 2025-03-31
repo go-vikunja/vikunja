@@ -318,12 +318,11 @@ const hintText = computed(() => {
 })
 
 const availableCmds = computed(() => {
-	const cmds = []
-	if (currentProject.value !== null) {
-		cmds.push(commands.value.newTask, commands.value.newProject)
-	}
-	cmds.push(commands.value.newTeam)
-	return cmds
+	return [
+		commands.value.newTask,
+		commands.value.newProject,
+		commands.value.newTeam,
+	]
 })
 
 const parsedQuery = computed(() => parseTaskText(query.value, authStore.settings.frontendSettings.quickAddMagicMode))
@@ -509,7 +508,7 @@ async function doCmd() {
 
 async function newTask() {
 	let projectId = authStore.settings.defaultProjectId
-	if (currentProject.value.id) {
+	if (currentProject.value?.id && currentProject.value.id > 0) {
 		projectId = currentProject.value.id
 	}
 	const task = await taskStore.createNewTask({
@@ -521,11 +520,10 @@ async function newTask() {
 }
 
 async function newProject() {
-	if (currentProject.value === null) {
-		return
-	}
+	const parentProjectId = currentProject.value?.id ?? 0
 	await projectStore.createProject(new ProjectModel({
 		title: query.value,
+		parentProjectId: Math.max(parentProjectId, 0),
 	}))
 	success({message: t('project.create.createdSuccess')})
 }
