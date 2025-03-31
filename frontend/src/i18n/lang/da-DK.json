@@ -1,1249 +1,708 @@
 {
-  "home": {
-    "welcomeNight": "Godnat {username}!",
-    "welcomeMorning": "Godmorgen {username}!",
-    "welcomeDay": "Hej {username}!",
-    "welcomeEvening": "Godaften {username}!",
-    "lastViewed": "Sidst vist",
-    "addToHomeScreen": "Add this app to your home screen for faster access and improved experience.",
-    "goToOverview": "Go to overview",
-    "project": {
-      "importText": "Import your projects and tasks from other services into Vikunja:",
-      "import": "Import your data into Vikunja"
-    }
-  },
-  "demo": {
-    "title": "This instance is in demo mode. Do not use this for real data!",
-    "everythingWillBeDeleted": "Everything will be deleted in regular intervals!",
-    "accountWillBeDeleted": "Your account will be deleted, including all projects, tasks and attachments you might create."
-  },
-  "404": {
-    "title": "Ikke fundet",
-    "text": "Den ønskede side findes ikke."
-  },
-  "ready": {
-    "loading": "Vikunja er ved at indlæse…",
-    "errorOccured": "Der opstod en fejl:",
-    "checkApiUrl": "Tjek venligst om api url er korrekt.",
-    "noApiUrlConfigured": "Ingen API url er konfigureret. Angiv venligst en nedenfor:"
-  },
-  "offline": {
-    "title": "Du er offline.",
-    "text": "Tjek venligst din netværksforbindelse og prøv igen."
-  },
-  "user": {
-    "auth": {
-      "username": "Brugernavn",
-      "usernameEmail": "Brugernavn eller e-mailadresse",
-      "usernamePlaceholder": "f.eks. Frederick",
-      "email": "E-mailadresse",
-      "emailPlaceholder": "f.eks. frederic{'@'}vikunja.io",
-      "password": "Kodeord",
-      "passwordPlaceholder": "f.eks. •••••••••••••••",
-      "forgotPassword": "Har du glemt din adgangskode?",
-      "resetPassword": "Nulstil din adgangskode",
-      "resetPasswordAction": "Send mig et link til nulstilling af adgangskode",
-      "resetPasswordSuccess": "Check your inbox! You should have an email with instructions on how to reset your password.",
-      "passwordsDontMatch": "Adgangskoderne er ikke ens",
-      "confirmEmailSuccess": "Du har bekræftet din e-mail! Du kan logge ind nu.",
-      "totpTitle": "To Faktor Godkendelseskode",
-      "totpPlaceholder": "f.eks. 123456",
-      "login": "Log ind",
-      "createAccount": "Opret konto",
-      "loginWith": "Log ind med {provider}",
-      "authenticating": "Godkender…",
-      "openIdStateError": "Indholdet stemmer ikke overens, nægter at fortsætte!",
-      "openIdGeneralError": "An error occurred while authenticating against the third party.",
-      "logout": "Log ud",
-      "emailInvalid": "Indtast venligst en gyldig e-mailadresse.",
-      "usernameRequired": "Angiv venligst et brugernavn.",
-      "usernameMustNotContainSpace": "The username must not contain spaces.",
-      "usernameMustNotLookLikeUrl": "The username must not look like a URL.",
-      "passwordRequired": "Angiv venligst en adgangskode.",
-      "passwordNotMin": "Password must have at least 8 characters.",
-      "passwordNotMax": "Password must have at most 72 characters.",
-      "showPassword": "Vis adgangskoden",
-      "hidePassword": "Skjul adgangskoden",
-      "noAccountYet": "Har du ikke en konto endnu?",
-      "alreadyHaveAnAccount": "Har du allerede en konto?",
-      "remember": "Forbliv logget ind",
-      "registrationDisabled": "Registration is disabled."
-    },
-    "settings": {
-      "title": "Indstillinger",
-      "newPasswordTitle": "Opdater din adgangskode",
-      "newPassword": "New password",
-      "newPasswordConfirm": "New password confirmation",
-      "currentPassword": "Current password",
-      "currentPasswordPlaceholder": "Din nuværende adgangskode",
-      "passwordsDontMatch": "Din nye adgangskode og bekræftelsesadgangskoden er ikke ens.",
-      "passwordUpdateSuccess": "Adgangskoden blev ændret.",
-      "updateEmailTitle": "Opdater din e-mailadresse",
-      "updateEmailNew": "New email address",
-      "updateEmailSuccess": "Din e-mailadresse blev opdateret. Vi har sendt dig et link til at bekræfte den.",
-      "general": {
-        "title": "Generelle Indstillinger",
-        "name": "My Name",
-        "newName": "The new name",
-        "savedSuccess": "Indstillingerne er gemt.",
-        "emailReminders": "Send me reminders for tasks via email",
-        "overdueReminders": "Send mig en oversigt over mine ufærdige opgaver hver dag",
-        "discoverableByName": "Allow other users to add me as a member to teams or projects when they search for my name",
-        "discoverableByEmail": "Allow other users to add me as a member to teams or projects when they search for my full email",
-        "playSoundWhenDone": "Afspil en lyd, når du markerer opgaver som udført",
-        "weekStart": "Ugen starter på en",
-        "weekStartSunday": "Søndag",
-        "weekStartMonday": "Mandag",
-        "language": "Sprog",
-        "defaultProject": "Default project",
-        "defaultView": "Default view",
-        "timezone": "Time zone",
-        "overdueTasksRemindersTime": "Forfaldne opgaver påmindelse e-mail tidspunkt",
-        "filterUsedOnOverview": "Saved filter used on the overview page",
-        "minimumPriority": "Minimum visible task priority",
-        "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
-      },
-      "totp": {
-        "title": "To-faktor godkendelse",
-        "enroll": "Tilmeld",
-        "finishSetupPart1": "To finish your setup, use this secret in your TOTP app (Google Authenticator or similar):",
-        "finishSetupPart2": "Herefter skal du indtaste en kode fra din app nedenfor.",
-        "scanQR": "Alternativt kan du scanne denne QR-kode:",
-        "passcode": "Kode",
-        "passcodePlaceholder": "A code generated by your TOTP application",
-        "setupSuccess": "Du har aktiveret to-faktor autentificering!",
-        "enterPassword": "Indtast venligst din adgangskode",
-        "disable": "Deaktiver to-faktor autentificering",
-        "confirmSuccess": "You've successfully confirmed your TOTP setup and can use it from now on!",
-        "disableSuccess": "To faktor godkendelse blev deaktiveret."
-      },
-      "caldav": {
-        "title": "CalDAV",
-        "howTo": "Du kan forbinde Vikunja til CalDAV klienter for at vise og administrere alle opgaver fra forskellige klienter. Indtast dette url i din klient:",
-        "more": "Mere information om CalDAV i Vikunja",
-        "tokens": "CalDAV Tokens",
-        "tokensHowTo": "Du kan bruge et CalDAV-token i stedet for en adgangskode til at logge på ovenstående slutpunkt.",
-        "createToken": "Opret et token",
-        "tokenCreated": "Her er dit token: {token}",
-        "wontSeeItAgain": "Skriv det ned; du vil ikke være i stand til at få det vist igen.",
-        "mustUseToken": "Du skal oprette et CalDAV-token hvis du ønsker at bruge CalDAV med en tredjeparts klient. Brug token som adgangskode.",
-        "usernameIs": "Dit brugernavn er: {0}"
-      },
-      "avatar": {
-        "title": "Profilbillede",
-        "initials": "Initialer",
-        "gravatar": "Gravatar",
-        "marble": "Marmor",
-        "upload": "Upload",
-        "uploadAvatar": "Upload Profilbillede",
-        "statusUpdateSuccess": "Profilbillede status blev opdateret!",
-        "setSuccess": "Profilbilledet er blevet indstillet!",
-        "ldap": "Your avatar is automagically synced from your organization's directory service (LDAP). You can ask your IT team for information on how to change it."
-      },
-      "quickAddMagic": {
-        "title": "Hurtigtilføjelsemagi Tilstand",
-        "disabled": "Deaktiveret",
-        "todoist": "Todoist",
-        "vikunja": "Vikunja"
-      },
-      "appearance": {
-        "title": "Farvetema",
-        "setSuccess": "Gemt ændring af farvetema til {colorScheme}",
-        "colorScheme": {
-          "light": "Lys",
-          "system": "System",
-          "dark": "Mørk"
-        }
-      },
-      "apiTokens": {
-        "title": "API Tokens",
-        "general": "API tokens allow you to use Vikunja's API without user credentials.",
-        "apiDocs": "Check out the api docs",
-        "createAToken": "Create a token",
-        "createToken": "Create token",
-        "30d": "30 Days",
-        "60d": "60 Days",
-        "90d": "90 Days",
-        "permissionExplanation": "Permissions allow you to scope what an api token is allowed to do.",
-        "titleRequired": "The title is required",
-        "permissionRequired": "Please select at least one permission from the list.",
-        "expired": "This token has expired {ago}.",
-        "tokenCreatedSuccess": "Here is your new api token: {token}",
-        "tokenCreatedNotSeeAgain": "Store it in a secure location, you won't see it again!",
-        "selectAll": "Select all",
-        "delete": {
-          "header": "Delete this token",
-          "text1": "Are you sure you want to delete the token \"{token}\"?",
-          "text2": "This will revoke access to all applications or integrations using it. You cannot undo this."
-        },
-        "attributes": {
-          "title": "Title",
-          "titlePlaceholder": "Enter a title you will recognize later",
-          "expiresAt": "Expires at",
-          "permissions": "Permissions"
-        }
-      }
-    },
-    "deletion": {
-      "title": "Slet din Vikunja konto",
-      "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your projects, tasks and everything associated with it.",
-      "text2": "For at fortsætte, skal du indtaste din adgangskode. Du vil modtage en e-mail med yderligere instruktioner.",
-      "text3": "To proceed, please press the button below. You will receive an email with further instructions.",
-      "confirm": "Slet min konto",
-      "requestSuccess": "Anmodningen blev gennemført. Du vil modtage en e-mail med yderligere instruktioner.",
-      "passwordRequired": "Indtast venligst din adgangskode.",
-      "confirmSuccess": "Du har bekræftet sletningen af din konto. Vi vil slette din konto om tre dage.",
-      "scheduled": "Vi sletter din Vikunja-konto {date} ({dateSince}).",
-      "scheduledCancel": "Klik her for at annullere sletningen af din konto.",
-      "scheduledCancelText": "For at annullere sletningen af din konto, skal du indtaste din adgangskode nedenfor:",
-      "scheduledCancelButton": "To cancel the deletion of your account, please press the button below:",
-      "scheduledCancelConfirm": "Annuller sletningen af min konto",
-      "scheduledCancelSuccess": "Vi sletter ikke din konto."
-    },
-    "export": {
-      "title": "Eksporter dine Vikunja-data",
-      "description": "You can request a copy of all your Vikunja data. This includes Projects, Tasks and everything associated to them. You can import this data in any Vikunja instance through the migration function.",
-      "descriptionPasswordRequired": "Indtast venligst din adgangskode for at fortsætte:",
-      "request": "Anmod om en kopi af mine Vikunja-data",
-      "success": "Du har anmodet om dine Vikunja-data! Vi sender dig en e-mail, når den er klar til hentning.",
-      "downloadTitle": "Download dine eksporterede Vikunja-data"
-    }
-  },
-  "project": {
-    "archivedMessage": "This project is archived. It is not possible to create new or edit tasks for it.",
-    "archived": "Archived",
-    "showArchived": "Show Archived",
-    "title": "Title",
-    "color": "Color",
-    "projects": "Projects",
-    "parent": "Parent Project",
-    "search": "Type to search for a project…",
-    "searchSelect": "Click or press enter to select this project",
-    "shared": "Shared Projects",
-    "noDescriptionAvailable": "No project description is available.",
-    "inboxTitle": "Inbox",
-    "favorite": "Mark this project as favorite",
-    "unfavorite": "Remove this project from favorites",
-    "openSettingsMenu": "Open project settings menu",
-    "description": "Project description",
-    "favoriteDescription": "This project has all tasks marked as favorites.",
-    "create": {
-      "header": "New project",
-      "titlePlaceholder": "The project's title goes here…",
-      "addTitleRequired": "Please specify a title.",
-      "createdSuccess": "The project was successfully created.",
-      "addProjectRequired": "Please specify a project or set a default project in the settings."
-    },
-    "archive": {
-      "title": "Archive \"{project}\"",
-      "archive": "Archive this project",
-      "unarchive": "Un-Archive this project",
-      "unarchiveText": "You will be able to create tasks or edit it.",
-      "archiveText": "You won't be able to edit this project or create tasks until you un-archive it.",
-      "success": "The project was successfully archived."
-    },
-    "background": {
-      "title": "Set project background",
-      "remove": "Remove Background",
-      "upload": "Choose a background from your pc",
-      "searchPlaceholder": "Search for a background…",
-      "poweredByUnsplash": "Powered by Unsplash",
-      "loadMore": "Load more photos",
-      "success": "The background has been set successfully!",
-      "removeSuccess": "The background has been removed successfully!"
-    },
-    "delete": {
-      "title": "Delete \"{project}\"",
-      "header": "Delete this project",
-      "text1": "Are you sure you want to delete this project and all of its contents?",
-      "text2": "This includes all tasks and CANNOT BE UNDONE!",
-      "success": "The project was successfully deleted.",
-      "tasksToDelete": "This will irrevocably remove approx. {count} tasks.",
-      "tasksAndChildProjectsToDelete": "This will irrevocably remove approx. {tasks} tasks and {projects} projects.",
-      "noTasksToDelete": "This project does not contain any tasks, it should be safe to delete."
-    },
-    "duplicate": {
-      "title": "Duplicate this project",
-      "label": "Duplicate",
-      "text": "Select a parent project which should hold the duplicated project:",
-      "success": "The project was successfully duplicated."
-    },
-    "edit": {
-      "header": "Edit This Project",
-      "title": "Edit \"{project}\"",
-      "titlePlaceholder": "The project title goes here…",
-      "identifierTooltip": "The project identifier can be used to uniquely identify a task across projects. You can set it to empty to disable it.",
-      "identifier": "Project Identifier",
-      "identifierPlaceholder": "The project identifier goes here…",
-      "description": "Description",
-      "descriptionPlaceholder": "Enter a description for this project, hit '/' for more options…",
-      "color": "Color",
-      "success": "The project was successfully updated."
-    },
-    "share": {
-      "header": "Share this project",
-      "title": "Share \"{project}\"",
-      "share": "Share",
-      "links": {
-        "title": "Share Links",
-        "what": "What is a share link?",
-        "explanation": "Share Links allow you to easily share a project with other users who don't have an account on Vikunja.",
-        "create": "Create a link share",
-        "name": "Name (optional)",
-        "namePlaceholder": "e.g. Lorem Ipsum",
-        "nameExplanation": "All actions done by this link share will show up with the name.",
-        "password": "Password (optional)",
-        "passwordExplanation": "When signing in, the user will be required to enter this password.",
-        "noName": "No name set",
-        "remove": "Remove a link share",
-        "removeText": "Are you sure you want to remove this link share? It will no longer be possible to access this project with this link share. This cannot be undone!",
-        "createSuccess": "The link share was successfully created.",
-        "deleteSuccess": "The link share was successfully deleted",
-        "view": "View",
-        "sharedBy": "Shared by {0}"
-      },
-      "userTeam": {
-        "typeUser": "user | users",
-        "typeTeam": "team | teams",
-        "shared": "Shared with these {type}",
-        "you": "You",
-        "notShared": "Not shared with any {type} yet.",
-        "removeHeader": "Remove a {type} from the {sharable}",
-        "removeText": "Are you sure you want to remove this {sharable} from the {type}? This cannot be undone!",
-        "removeSuccess": "The {sharable} was successfully removed from the {type}.",
-        "addedSuccess": "The {type} was successfully added.",
-        "updatedSuccess": "The {type} was successfully added."
-      },
-      "right": {
-        "title": "Permission",
-        "read": "Read only",
-        "readWrite": "Read & write",
-        "admin": "Admin"
-      },
-      "attributes": {
-        "link": "Link",
-        "delete": "Delete"
-      }
-    },
-    "first": {
-      "title": "First View"
-    },
-    "list": {
-      "title": "List",
-      "add": "Add",
-      "addPlaceholder": "Add a task…",
-      "empty": "This project is currently empty.",
-      "newTaskCta": "Create a task.",
-      "editTask": "Edit Task"
-    },
-    "gantt": {
-      "title": "Gantt",
-      "size": "Size",
-      "default": "Default",
-      "month": "Month",
-      "day": "Day",
-      "hour": "Hour",
-      "range": "Date Range",
-      "noDates": "This task has no dates set."
-    },
-    "table": {
-      "title": "Table",
-      "columns": "Columns"
-    },
-    "kanban": {
-      "title": "Kanban",
-      "limit": "Limit: {limit}",
-      "noLimit": "Not Set",
-      "doneBucket": "Done bucket",
-      "doneBucketHint": "All tasks moved into this bucket will automatically marked as done.",
-      "doneBucketHintExtended": "All tasks moved into the done bucket will be marked as done automatically. All tasks marked as done from elsewhere will be moved as well.",
-      "doneBucketSavedSuccess": "The done bucket has been saved successfully.",
-      "defaultBucket": "Default bucket",
-      "defaultBucketHint": "When creating tasks without specifying a bucket, they will be added to this bucket.",
-      "defaultBucketSavedSuccess": "The default bucket has been saved successfully.",
-      "deleteLast": "You cannot remove the last bucket.",
-      "addTaskPlaceholder": "Enter the new task title…",
-      "addTask": "Add a task",
-      "addAnotherTask": "Add another task",
-      "addBucket": "Create a bucket",
-      "addBucketPlaceholder": "Enter the new bucket title…",
-      "deleteHeaderBucket": "Delete the bucket",
-      "deleteBucketText1": "Are you sure you want to delete this bucket?",
-      "deleteBucketText2": "This will not delete any tasks but move them into the default bucket.",
-      "deleteBucketSuccess": "The bucket has been deleted successfully.",
-      "bucketTitleSavedSuccess": "The bucket title has been saved successfully.",
-      "bucketLimitSavedSuccess": "The bucket limit been saved successfully.",
-      "collapse": "Collapse this bucket",
-      "bucketLimitReached": "You have reached the bucket limit. Remove tasks or increase the limit to add new tasks."
-    },
-    "pseudo": {
-      "favorites": {
-        "title": "Favorites"
-      }
-    },
-    "webhooks": {
-      "title": "Webhooks",
-      "targetUrl": "Target URL",
-      "targetUrlInvalid": "Please provide a valid URL.",
-      "events": "Events",
-      "eventsHint": "Select all events this webhook should recieve updates for (within the current project).",
-      "mustSelectEvents": "You must select at least one event.",
-      "delete": "Delete this webhook",
-      "deleteText": "Are you sure you want to delete this webhook? External targets will not be notified of its events anymore.",
-      "deleteSuccess": "The webhook was successfully deleted.",
-      "create": "Create webhook",
-      "secret": "Secret",
-      "secretHint": "If provided, all requests to the webhook target URL will be signed using HMAC.",
-      "secretDocs": "Check out the docs for more details about how to use secrets."
-    },
-    "views": {
-      "header": "Edit views",
-      "title": "Title",
-      "actions": "Actions",
-      "kind": "Kind",
-      "bucketConfigMode": "Bucket configuration mode",
-      "bucketConfig": "Bucket configuration",
-      "bucketConfigManual": "Manual",
-      "filter": "Filter",
-      "create": "Create view",
-      "createSuccess": "The view was created successfully.",
-      "titleRequired": "Please provide a title.",
-      "delete": "Delete this view",
-      "deleteText": "Are you sure you want to remove this view? It will no longer be possible to use it to view tasks in this project. This action won't delete any tasks. This cannot be undone!",
-      "deleteSuccess": "The view was deleted successfully.",
-      "onlyAdminsCanEdit": "Only project admins can edit views.",
-      "updateSuccess": "The view was updated successfully."
-    }
-  },
-  "filters": {
-    "title": "Filtre",
-    "clear": "Ryd Filtre",
-    "showResults": "Show results",
-    "fromView": "The current view has a filter set as well:",
-    "fromViewBoth": "It will be used in combination with what you enter here.",
-    "attributes": {
-      "title": "Titel",
-      "titlePlaceholder": "Det gemte filters titel skrives her…",
-      "description": "Beskrivelse",
-      "descriptionPlaceholder": "Add a description for this filter here, hit '/' for more options…",
-      "includeNulls": "Inkluder Opgaver som ikke har en værdi indstillet",
-      "requireAll": "Kræv at alle filtre er sande for at en opgave kan vises",
-      "showDoneTasks": "Vis Udførte Opgaver",
-      "sortAlphabetically": "Sorter Alfabetisk",
-      "enablePriority": "Aktiver Filtrer Efter Prioritet",
-      "enablePercentDone": "Aktiver Filter Efter Fremskridt",
-      "dueDateRange": "Udløbsdato Interval",
-      "startDateRange": "Start Dato Interval",
-      "endDateRange": "Slut Dato Interval",
-      "reminderRange": "Påmindeslesdato Interval"
-    },
-    "create": {
-      "title": "Nyt Gemt Filter",
-      "description": "A saved filter is a virtual project which is computed from a set of filters each time it is accessed.",
-      "action": "Create saved filter",
-      "titleRequired": "Please provide a title for the filter."
-    },
-    "delete": {
-      "header": "Slet dette gemte filter",
-      "text": "Er du sikker på, at du vil slette dette gemte filter?",
-      "success": "Filteret blev slettet."
-    },
-    "edit": {
-      "title": "Rediger Dette Gemte Filter",
-      "success": "Filteret blev slettet."
-    },
-    "query": {
-      "title": "Query",
-      "placeholder": "Type a search or filter query…",
-      "help": {
-        "intro": "To filter tasks, you can use a query syntax similar to SQL. The available fields for filtering include:",
-        "link": "How does this work?",
-        "canUseDatemath": "You can use date math to set relative dates. Click on the date value in a query to find out more.",
-        "fields": {
-          "done": "Whether the task is completed or not",
-          "priority": "The priority level of the task (1-5)",
-          "percentDone": "The percentage of completion for the task (0-100)",
-          "dueDate": "The due date of the task",
-          "startDate": "The start date of the task",
-          "endDate": "The end date of the task",
-          "doneAt": "The date and time when the task was completed",
-          "assignees": "The assignees of the task",
-          "labels": "The labels associated with the task",
-          "project": "The project the task belongs to (only available for saved filters, not on a project level)",
-          "reminders": "The reminders of the task as a date field, will return all tasks with at least one reminder matching the query",
-          "created": "The time and date when the task was created",
-          "updated": "The time and date when the task was last changed"
-        },
-        "operators": {
-          "intro": "The available operators for filtering include:",
-          "notEqual": "Not equal to",
-          "equal": "Equal to",
-          "greaterThan": "Greater than",
-          "greaterThanOrEqual": "Greater than or equal to",
-          "lessThan": "Less than",
-          "lessThanOrEqual": "Less than or equal to",
-          "like": "Matches a pattern (using wildcard %)",
-          "in": "Matches any value in a comma-seperated list of values",
-          "notIn": "Matches any value not present in a comma-seperated list of values"
-        },
-        "logicalOperators": {
-          "intro": "To combine multiple conditions, you can use the following logical operators:",
-          "and": "AND operator, matches if all conditions are true",
-          "or": "OR operator, matches if any of the conditions are true",
-          "parentheses": "Parentheses for grouping conditions"
-        },
-        "examples": {
-          "intro": "Here are some examples of filter queries:",
-          "priorityEqual": "Matches tasks with priority level 4",
-          "dueDatePast": "Matches tasks with a due date in the past",
-          "undoneHighPriority": "Matches undone tasks with priority level 3 or higher",
-          "assigneesIn": "Matches tasks assigned to either \"user1\" or \"user2\"",
-          "priorityOneOrTwoPastDue": "Matches tasks with priority level 1 or 2 and a due date in the past"
-        }
-      }
-    }
-  },
-  "migrate": {
-    "title": "Import fra andre tjenester",
-    "titleService": "Importer dine data fra {name} til Vikunja",
-    "import": "Importer dine data til Vikunja",
-    "description": "Klik på logoet for en af de tredjeparts tjenester nedenfor for at komme i gang.",
-    "descriptionDo": "Vikunja vil importere alle lister, opgaver, noter, påmindelser og filer, du har adgang til.",
-    "authorize": "For at give Vikunja tilladelse til at tilgå din {name} konto, klik på knappen nedenfor.",
-    "getStarted": "Kom i gang",
-    "inProgress": "Importerer…",
-    "alreadyMigrated1": "Det ser ud til, at du allerede har importeret dine ting fra {name} på {date}.",
-    "alreadyMigrated2": "Du kan godt importere igen, men kan der kan opstå dubletter. Er du sikker?",
-    "confirm": "Jeg er sikker, start migreringen nu!",
-    "importUpload": "For at importere data fra {name} til Vikunja, skal du klikke på knappen nedenfor for at vælge en fil.",
-    "upload": "Upload fil",
-    "migrationStartedWillReciveEmail": "Vikunja will now import your lists/projects, tasks, notes, reminders and files from {service}. As this will take a while, we will send you an email once done. You can close this window now.",
-    "migrationInProgress": "A migration is currently in progress. Please wait until it is done."
-  },
-  "label": {
-    "title": "Etiketter",
-    "manage": "Administrer etiketter",
-    "description": "Click on a label to edit it. You can edit all labels you created, you can use all labels which are associated with a task to whose project you have access.",
-    "newCTA": "Du har i øjeblikket ingen etiketter.",
-    "search": "Skriv for at søge efter en etiket…",
-    "create": {
-      "header": "Ny etiket",
-      "title": "Create a label",
-      "titleRequired": "Angiv venligst en titel.",
-      "success": "Etiketten blev oprettet."
-    },
-    "edit": {
-      "header": "Rediger etiket",
-      "forbidden": "You are not allowed to edit this label because you don't own it.",
-      "success": "Etiketten blev opdateret."
-    },
-    "deleteSuccess": "Etiketten blev slettet.",
-    "attributes": {
-      "title": "Titel",
-      "titlePlaceholder": "Titlen på etiketten vises her…",
-      "description": "Beskrivelse",
-      "descriptionPlaceholder": "Beskrivelse af etiket",
-      "color": "Farve"
-    }
-  },
-  "sharing": {
-    "authenticating": "Godkender…",
-    "passwordRequired": "This shared project requires a password. Please enter it below:",
-    "error": "An error occurred.",
-    "invalidPassword": "Adgangskoden er ugyldig."
-  },
-  "navigation": {
-    "overview": "Oversigt",
-    "upcoming": "Kommende",
-    "settings": "Indstillinger",
-    "imprint": "Om os",
-    "privacy": "Privatlivspolitik"
-  },
-  "misc": {
-    "loading": "Indlæser…",
-    "save": "Gem",
-    "delete": "Slet",
-    "confirm": "Bekræft",
-    "cancel": "Annuller",
-    "refresh": "Genindlæs",
-    "disable": "Deaktiver",
-    "copy": "Kopier til udklipsholder",
-    "copyError": "Kopiering til udklipsholder mislykkedes",
-    "search": "Søg",
-    "searchPlaceholder": "Skriv for at søge…",
-    "previous": "Forrige",
-    "next": "Næste",
-    "poweredBy": "Drevet af Vikunja",
-    "info": "Info",
-    "create": "Opret",
-    "doit": "Gør det!",
-    "saving": "Gemmer…",
-    "saved": "Gemt!",
-    "default": "Standard",
-    "close": "Luk",
-    "download": "Download",
-    "showMenu": "Vis menuen",
-    "hideMenu": "Skjul menuen",
-    "forExample": "Eksempel:",
-    "welcomeBack": "Velkommen tilbage!",
-    "custom": "Brugerdefineret",
-    "id": "ID",
-    "created": "Oprettet den",
-    "createdBy": "Created by {0}",
-    "actions": "Handlinger",
-    "cannotBeUndone": "Dette kan ikke fortrydes!",
-    "avatarOfUser": "{user}'s profile image"
-  },
-  "input": {
-    "resetColor": "Nulstil Farve",
-    "datepicker": {
-      "today": "I dag",
-      "tomorrow": "I morgen",
-      "nextMonday": "Næste mandag",
-      "thisWeekend": "Denne weekend",
-      "laterThisWeek": "Senere Denne Uge",
-      "nextWeek": "Næste uge",
-      "chooseDate": "Vælg en dato"
-    },
-    "editor": {
-      "edit": "Rediger",
-      "done": "Udfør",
-      "heading1": "Overskrift 1",
-      "heading1Tooltip": "Big section heading.",
-      "heading2": "Overskrift 2",
-      "heading2Tooltip": "Medium section heading.",
-      "heading3": "Overskrift 3",
-      "heading3Tooltip": "Smaller section header.",
-      "headingSmaller": "Overskrift Mindre",
-      "headingBigger": "Overskrift Større",
-      "bold": "Fed",
-      "italic": "Kursiv",
-      "strikethrough": "Gennemstreget",
-      "underline": "Underline",
-      "code": "Kode",
-      "codeTooltip": "Capture a code snippet.",
-      "quote": "Citat",
-      "quoteTooltip": "Capture a quote.",
-      "bulletList": "Bullet list",
-      "bulletListTooltip": "Create a simple bullet list.",
-      "unorderedList": "Unordered list",
-      "orderedList": "Ordered list",
-      "orderedListTooltip": "Create a list with numbering.",
-      "cleanBlock": "Ryd Blok",
-      "link": "Link",
-      "image": "Billede",
-      "imageTooltip": "Upload an image from your computer.",
-      "horizontalRule": "Horisontal Linje",
-      "horizontalRuleTooltip": "Divide a section.",
-      "sideBySide": "Side Om Side",
-      "guide": "Vejledning",
-      "text": "Text",
-      "textTooltip": "Just start typing with plain text.",
-      "taskList": "Task list",
-      "taskListTooltip": "Track tasks with a to-do list.",
-      "undo": "Undo",
-      "redo": "Redo",
-      "placeholder": "Type some text or hit '/' to see more options…",
-      "table": {
-        "title": "Table",
-        "insert": "Insert table",
-        "addColumnBefore": "Add column before",
-        "addColumnAfter": "Add column after",
-        "deleteColumn": "Delete column",
-        "addRowBefore": "Add row before",
-        "addRowAfter": "Add row after",
-        "deleteRow": "Delete row",
-        "deleteTable": "Delete table",
-        "mergeCells": "Merge cells",
-        "splitCell": "Split cell",
-        "toggleHeaderColumn": "Toggle header column",
-        "toggleHeaderRow": "Toggle header row",
-        "toggleHeaderCell": "Toggle header cell",
-        "mergeOrSplit": "Merge or split",
-        "fixTables": "Fix tables"
-      }
-    },
-    "multiselect": {
-      "createPlaceholder": "Create",
-      "selectPlaceholder": "Klik eller tryk på Enter for at vælge"
-    },
-    "datepickerRange": {
-      "to": "Til",
-      "from": "Fra",
-      "fromto": "{from} til {to}",
-      "date": "Date",
-      "ranges": {
-        "today": "I dag",
-        "thisWeek": "Denne uge",
-        "restOfThisWeek": "Resten af denne uge",
-        "nextWeek": "Næste uge",
-        "next7Days": "Næste 7 dage",
-        "lastWeek": "Sidste uge",
-        "thisMonth": "Denne Måned",
-        "restOfThisMonth": "Resten af denne måned",
-        "nextMonth": "Næste måned",
-        "next30Days": "Næste 30 dage",
-        "lastMonth": "Sidste måned",
-        "thisYear": "Dette år",
-        "restOfThisYear": "Resten af dette år"
-      },
-      "values": {
-        "now": "Now",
-        "startOfToday": "Start of today",
-        "endOfToday": "End of today",
-        "beginningOflastWeek": "Beginning of last week",
-        "endOfLastWeek": "End of last week",
-        "beginningOfThisWeek": "Beginning of this week",
-        "endOfThisWeek": "End of this week",
-        "startOfNextWeek": "Start of next week",
-        "endOfNextWeek": "End of next week",
-        "in7Days": "In 7 days",
-        "beginningOfLastMonth": "Beginning of last month",
-        "endOfLastMonth": "End of last month",
-        "startOfThisMonth": "Start of this month",
-        "endOfThisMonth": "End of this month",
-        "startOfNextMonth": "Start of next month",
-        "endOfNextMonth": "End of next month",
-        "in30Days": "In 30 days",
-        "startOfThisYear": "Beginning of this year",
-        "endOfThisYear": "End of this year"
-      }
-    },
-    "datemathHelp": {
-      "canuse": "Du kan bruge datomatematik til at filtrere for relative datoer.",
-      "learnhow": "Se hvordan det virker",
-      "title": "Datomatematik",
-      "intro": "Specify relative dates which are resolved on the fly by Vikunja when applying the filter.",
-      "expression": "Hver Datomatematik udtryk starter med en ankerdato, som enten kan være {0} eller en datostreng, der slutter med {1}. Denneanker dato kan eventuelt efterfølges af en eller flere matematik udtryk.",
-      "similar": "Disse udtryk ligner dem fra {0} og {1}.",
-      "add1Day": "Læg en dag til",
-      "minus1Day": "Træk en dag fra",
-      "roundDay": "Rund ned til nærmeste dag",
-      "supportedUnits": "Supported time units",
-      "someExamples": "Examples of time expressions",
-      "units": {
-        "seconds": "Sekunder",
-        "minutes": "Minutter",
-        "hours": "Timer",
-        "days": "Dage",
-        "weeks": "Uger",
-        "months": "Måneder",
-        "years": "År"
-      },
-      "examples": {
-        "now": "Nu",
-        "in24h": "Om 24 Timer",
-        "today": "I dag kl. 00:00",
-        "beginningOfThisWeek": "Begyndelsen af denne uge kl. 00:00",
-        "endOfThisWeek": "Slutningen af denne uge",
-        "in30Days": "Om 30 dage",
-        "datePlusMonth": "{0} plus en måned kl. 00:00 på den pågældende dag"
-      }
-    }
-  },
-  "task": {
-    "task": "Opgave",
-    "new": "Create a task",
-    "delete": "Slet denne opgave",
-    "createSuccess": "Opgaven blev oprettet.",
-    "addReminder": "Add a reminder…",
-    "doneSuccess": "Opgaven blev markeret som udført.",
-    "undoneSuccess": "Opgaven fik fjernet sin udført-markering.",
-    "revertSuccess": "The task change was successfully undone.",
-    "undo": "Undo",
-    "openDetail": "Åbn detaljeret opgavevisning",
-    "checklistTotal": "{checked} af {total} opgaver",
-    "checklistAllDone": "{total} opgaver",
-    "show": {
-      "titleCurrent": "Aktuelle Opgaver",
-      "titleDates": "Opgaver fra {from} indtil {to}",
-      "noDates": "Vis opgaver uden datoer",
-      "overdue": "Vis forfaldne opgaver",
-      "fromuntil": "Opgaver fra {from} indtil {until}",
-      "select": "Vælg et datointerval",
-      "noTasks": "Intet at gøre — Hav en dejlig dag!"
-    },
-    "detail": {
-      "chooseDueDate": "Klik her for at angive en forfaldsdato",
-      "chooseStartDate": "Klik her for at angive en startdato",
-      "chooseEndDate": "Klik her for at angive en slutdato",
-      "move": "Move task to a different project",
-      "done": "Markér opgave som udført!",
-      "undone": "Markér opgave som ikke-udført",
-      "created": "Oprettet {0} af {1}",
-      "updated": "Opdateret {0}",
-      "doneAt": "Udført {0}",
-      "updateSuccess": "Opgaven blev gemt.",
-      "deleteSuccess": "Opgaven er blevet slettet.",
-      "belongsToProject": "This task belongs to project '{project}'",
-      "due": "Forfalder {at}",
-      "closePopup": "Luk pop-up",
-      "organization": "Organization",
-      "management": "Management",
-      "dateAndTime": "Date and time",
-      "delete": {
-        "header": "Slet denne opgave",
-        "text1": "Er du sikker på, at du vil slette denne opgave?",
-        "text2": "Dette vil også fjerne alle vedhæftede filer, påmindelser og relationer knyttet til denne opgave, og kan ikke fortrydes!"
-      },
-      "actions": {
-        "assign": "Tildel til bruger",
-        "label": "Tilføj Etiketter",
-        "priority": "Angiv Prioritet",
-        "dueDate": "Angiv Forfaldsdato",
-        "startDate": "Angiv Startdato",
-        "endDate": "Angiv Slutdato",
-        "reminders": "Indstil Påmindelser",
-        "repeatAfter": "Angiv Gentagelsesinterval",
-        "percentDone": "Indstil Fremskridt",
-        "attachments": "Tilføj Vedhæftninger",
-        "relatedTasks": "Tilføj Relation",
-        "moveProject": "Move",
-        "color": "Indstil Farve",
-        "delete": "Slet",
-        "favorite": "Tilføj til Favoritter",
-        "unfavorite": "Fjern fra favoritter"
-      }
-    },
-    "attributes": {
-      "assignees": "Tildelte",
-      "color": "Farve",
-      "created": "Oprettet",
-      "createdBy": "Oprettet Af",
-      "description": "Beskrivelse",
-      "done": "Udført",
-      "dueDate": "Forfaldsdato",
-      "endDate": "Slutdato",
-      "labels": "Etiketter",
-      "percentDone": "Fremskridt",
-      "priority": "Prioritet",
-      "relatedTasks": "Relaterede Opgaver",
-      "reminders": "Påmindelser",
-      "repeat": "Gentag",
-      "startDate": "Startdato",
-      "title": "Titel",
-      "updated": "Opdateret",
-      "doneAt": "Done At"
-    },
-    "subscription": {
-      "subscribedTaskThroughParentProject": "You can't unsubscribe here because you are subscribed to this task through its project.",
-      "subscribedProject": "You are currently subscribed to this project and will receive notifications for changes.",
-      "notSubscribedProject": "You are not subscribed to this project and won't receive notifications for changes.",
-      "subscribedTask": "Du abonnerer på denne opgave og vil modtage notifikationer om ændringer.",
-      "notSubscribedTask": "Du abonnerer ikke på denne opgave og modtager ikke notifikationer om ændringer.",
-      "subscribe": "Abonner",
-      "unsubscribe": "Afmeld",
-      "subscribeSuccessProject": "You are now subscribed to this project",
-      "unsubscribeSuccessProject": "You are now unsubscribed to this project",
-      "subscribeSuccessTask": "Du abonnerer nu på denne opgave",
-      "unsubscribeSuccessTask": "Du er nu afmeldt denne opgave"
-    },
-    "attachment": {
-      "title": "Vedhæftede filer",
-      "createdBy": "oprettet {0} af {1}",
-      "downloadTooltip": "Download denne vedhæftede fil",
-      "upload": "Upload vedhæftet fil",
-      "drop": "Smid filer her for at uploade",
-      "delete": "Slet vedhæftet fil",
-      "deleteTooltip": "Slet denne vedhæftede fil",
-      "deleteText1": "Er du sikker på, at du vil slette den vedhæftede fil {filename}?",
-      "copyUrl": "Kopier URL",
-      "copyUrlTooltip": "Kopier url'en til denne vedhæftede fil til brug i tekst",
-      "setAsCover": "Gør til forsidebillede",
-      "unsetAsCover": "Fjern forsidebillede",
-      "successfullyChangedCoverImage": "Forsidebilledet blev ændret.",
-      "usedAsCover": "Forsidebillede"
-    },
-    "comment": {
-      "title": "Kommentarer",
-      "loading": "Indlæser kommentarer…",
-      "edited": "redigeret {date}",
-      "creating": "Opretter kommentar…",
-      "placeholder": "Add your comment, hit '/' for more options…",
-      "comment": "Kommentar",
-      "delete": "Slet denne kommentar",
-      "deleteText1": "Er du sikker på du vil slette denne kommentar?",
-      "deleteSuccess": "Kommentaren blev slettet.",
-      "addedSuccess": "Din kommentar blev tilføjet.",
-      "permalink": "Copy permalink to this comment"
-    },
-    "deferDueDate": {
-      "title": "Udsæt forfaldsdato",
-      "1day": "1 dag",
-      "3days": "3 dage",
-      "1week": "1 uge"
-    },
-    "description": {
-      "placeholder": "Enter a description, hit '/' for more options…",
-      "empty": "Ingen beskrivelse tilgængelig endnu."
-    },
-    "assignee": {
-      "placeholder": "Skriv for at tilknytte en bruger…",
-      "selectPlaceholder": "Tildel denne bruger",
-      "assignSuccess": "Brugeren er blevet tilknyttet.",
-      "unassignSuccess": "Brugeren er blevet frakoblet."
-    },
-    "label": {
-      "placeholder": "Type to add a label…",
-      "createPlaceholder": "Tilføj dette som ny etiket",
-      "addSuccess": "Etiketten er blevet tilføjet.",
-      "createSuccess": "Etiketten er blevet oprettet.",
-      "removeSuccess": "Etiketten er blevet fjernet.",
-      "addCreateSuccess": "Etiketten er blevet oprettet og tilføjet.",
-      "delete": {
-        "header": "Slet denne etiket",
-        "text1": "Er du sikker på du vil slette etiketten?",
-        "text2": "Dette vil fjerne den fra alle opgaver og kan ikke gøres om."
-      }
-    },
-    "priority": {
-      "unset": "Fjern",
-      "low": "Lav",
-      "medium": "Mellem",
-      "high": "Høj",
-      "urgent": "Haster",
-      "doNow": "GØR DET NU"
-    },
-    "relation": {
-      "add": "Tilføj en ny opgaverelation",
-      "new": "Ny Opgaverelation",
-      "searchPlaceholder": "Type search for a task to add as related…",
-      "createPlaceholder": "Add this as related task",
-      "differentProject": "This task belongs to a different project.",
-      "noneYet": "Ingen opgaverelationer endnu.",
-      "delete": "Slet Opgaverelation",
-      "deleteText1": "Er du sikker på, at du vil slette denne opgaverelation?",
-      "select": "Vælg en relationstype",
-      "taskRequired": "Vælg venligst en opgave eller indtast en ny opgavetitel.",
-      "kinds": {
-        "subtask": "Underopgave | Underopgaver",
-        "parenttask": "Forældreopgave | ForældreOpgaver",
-        "related": "Relateret Opgave | Relaterede Opgaver",
-        "duplicateof": "Duplikat af | Duplikater af",
-        "duplicates": "Duplikat | Duplikater",
-        "blocking": "Blokerende | Blokerende",
-        "blocked": "Blokeret Af | Blokeret Af",
-        "precedes": "Kommer før | Kommer før",
-        "follows": "Følger | Følgere",
-        "copiedfrom": "Kopieret Fra | Kopieret Fra",
-        "copiedto": "Kopieret Til | Kopieret Til"
-      }
-    },
-    "reminder": {
-      "before": "{amount} {unit} before {type}",
-      "after": "{amount} {unit} after {type}",
-      "beforeShort": "before",
-      "afterShort": "after",
-      "onDueDate": "On the due date",
-      "onStartDate": "On the start date",
-      "onEndDate": "On the end date",
-      "custom": "Custom",
-      "dateAndTime": "Date and time"
-    },
-    "repeat": {
-      "everyDay": "Hver Dag",
-      "everyWeek": "Hver Uge",
-      "every30d": "Every 30 Days",
-      "mode": "Gentagelsestilstand",
-      "monthly": "Månedligt",
-      "fromCurrentDate": "From completion date",
-      "each": "Hver",
-      "specifyAmount": "Angiv et beløb…",
-      "hours": "Timer",
-      "days": "Dage",
-      "weeks": "Uger",
-      "months": "Måneder",
-      "years": "År",
-      "invalidAmount": "Angiv venligst mere end 0."
-    },
-    "quickAddMagic": {
-      "hint": "Use magic prefixes to define due dates, assignees and other task properties.",
-      "title": "Hurtigtilføjelsemagi",
-      "intro": "Når du opretter en opgave, kan du bruge specielle søgeord til direkte at tilføje attributter til den nyoprettede opgave. Dette giver muligheden for at tilføje almindeligt anvendte attributter til opgaver meget hurtigere.",
-      "multiple": "Du kan bruge dette flere gange.",
-      "label1": "For at tilføje en etiket, skal du blot præfikse navnet på etiketten med {prefix}.",
-      "label2": "Vikunja vil først kontrollere, om etiketten allerede findes, og oprette den hvis ikke.",
-      "label3": "For at bruge mellemrum, skal du blot tilføje \" eller ' omkring etikettens navn.",
-      "label4": "For eksempel: {prefix}\"Etiket med mellemrum\".",
-      "priority1": "For at sætte en opgaves prioritet, tilføj et nummer 1-5, præfikset med {prefix}.",
-      "priority2": "Jo højere nummer, des højere prioritet.",
-      "assignees": "For at tildele opgaven direkte til en bruger, tilføj deres brugernavn præfikset med {prefix} til opgaven.",
-      "project1": "To set a project for the task to appear in, enter its name prefixed with {prefix}.",
-      "project2": "This will return an error if the project does not exist.",
-      "project3": "To use spaces, simply add a \" or ' around the project name.",
-      "project4": "For example: {prefix}\"Project with spaces\".",
-      "dateAndTime": "Dato og tid",
-      "date": "En dato vil blive brugt som forfaldsdato for den nye opgave. Du kan bruge datoer i enhver af disse formater:",
-      "dateWeekday": "enhver ugedag, vil bruge den næste dato med på den dag",
-      "dateCurrentYear": "vil bruge det aktuelle år",
-      "dateNth": "vil bruge den {day}. i den aktuelle måned",
-      "dateTime": "Kombiner alle datoformater med \"{time}\" (eller {timePM}) for at angive en tid.",
-      "repeats": "Gentagende opgaver",
-      "repeatsDescription": "For at sætte en opgave til at gentage i et interval, skal du blot tilføje '{suffix}' til opgaveteksten. Beløbet skal være et tal og kan udelades for kun at bruge typen (se eksempler)."
-    }
-  },
-  "team": {
-    "title": "Hold",
-    "noTeams": "Du er i øjeblikket ikke en del af et hold.",
-    "create": {
-      "title": "Create a team",
-      "success": "Holdet blev oprettet."
-    },
-    "edit": {
-      "title": "Rediger hold \"{team}\"",
-      "members": "Holdmedlemmer",
-      "search": "Skriv for at søge efter en bruger…",
-      "addUser": "Tilføj til hold",
-      "makeMember": "Gør Medlem",
-      "makeAdmin": "Gør til administrator",
-      "success": "Holdet blev opdateret.",
-      "userAddedSuccess": "Holdmedlemmet blev tilføjet.",
-      "madeMember": "Holdmedlemmet blev gjort til almindeligt medlem.",
-      "madeAdmin": "Holdmedlemmet blev gjort til administrator.",
-      "mustSelectUser": "Vælg venligst en bruger.",
-      "delete": {
-        "header": "Slet holdet",
-        "text1": "Er du sikker på du vil slette dette hold og alle dets medlemmer?",
-        "text2": "All team members will lose access to projects shared with this team. This CANNOT BE UNDONE!",
-        "success": "Holdet blev slettet."
-      },
-      "deleteUser": {
-        "header": "Fjern en bruger fra holdet",
-        "text1": "Er du sikker på du vil fjerne denne bruger fra holdet?",
-        "text2": "They will lose access to all projects this team has access to. This CANNOT BE UNDONE!",
-        "success": "Brugeren blev fjernet fra holdet."
-      },
-      "leave": {
-        "title": "Forlad hold",
-        "text1": "Er du sikker på du vil forlade dette hold?",
-        "text2": "You will lose access to all projects this team has access to. If you change your mind you'll need a team admin to add you again.",
-        "success": "Du har forladt holdet."
-      }
-    },
-    "attributes": {
-      "name": "Holdnavn",
-      "namePlaceholder": "Holdnavnet skrives her…",
-      "nameRequired": "Angiv venligst et navn.",
-      "description": "Beskrivelse",
-      "descriptionPlaceholder": "Describe the team here, hit '/' for more options…",
-      "admin": "Administrator",
-      "member": "Medlem",
-      "isPublic": "Public Team",
-      "isPublicDescription": "Make the team publicly discoverable. When enabled, anyone can share projects with this team even when not being a direct member."
-    }
-  },
-  "keyboardShortcuts": {
-    "title": "Tastaturgenveje",
-    "general": "Generelt",
-    "allPages": "Disse genveje virker på alle sider.",
-    "currentPageOnly": "Disse genveje virker kun på den aktuelle side.",
-    "somePagesOnly": "Disse genveje virker kun på nogle sider.",
-    "toggleMenu": "Slå Menuen Til/Fra",
-    "quickSearch": "Åbn søgnings- og hurtighandling-bjælken",
-    "then": "så",
-    "task": {
-      "title": "Opgaveside",
-      "done": "Markér opgave udført / ikke-udført",
-      "assign": "Tildel denne opgave til en bruger",
-      "labels": "Tilføj etiketter til denne opgave",
-      "dueDate": "Ændr forfaldsdatoen for denne opgave",
-      "attachment": "Tilføj en vedhæftet fil til denne opgave",
-      "related": "Rediger relaterede opgaver for denne opgave",
-      "color": "Skift farven på denne opgave",
-      "move": "Move this task to another project",
-      "reminder": "Administrer påmindelser om denne opgave",
-      "description": "Slå redigering af opgavebeskrivelse til/fra",
-      "delete": "Delete this task",
-      "priority": "Change the priority of this task",
-      "favorite": "Mark this task as favorite / unfavorite",
-      "save": "Save the current task"
-    },
-    "project": {
-      "title": "Project Views",
-      "switchToListView": "Switch to list view",
-      "switchToGanttView": "Switch to gantt view",
-      "switchToKanbanView": "Switch to kanban view",
-      "switchToTableView": "Switch to table view"
-    },
-    "navigation": {
-      "title": "Navigation",
-      "overview": "Gå til oversigt",
-      "upcoming": "Gå til kommende opgaver",
-      "labels": "Naviger til etiketter",
-      "teams": "Naviger til hold",
-      "projects": "Navigate to projects"
-    }
-  },
-  "update": {
-    "available": "There is an update available!",
-    "do": "Opdater nu"
-  },
-  "menu": {
-    "edit": "Rediger",
-    "archive": "Arkiver",
-    "duplicate": "Dupliker",
-    "delete": "Slet",
-    "unarchive": "Tilbagekald",
-    "setBackground": "Background settings",
-    "share": "Del",
-    "newProject": "New project",
-    "createProject": "Create project",
-    "cantArchiveIsDefault": "You cannot archive this because it is your default project.",
-    "cantDeleteIsDefault": "You cannot delete this because it is your default project.",
-    "views": "Views"
-  },
-  "apiConfig": {
-    "url": "Vikunja URL",
-    "urlPlaceholder": "f.eks. https://localhost:3456",
-    "change": "ændr",
-    "use": "Brug Vikunja-installationen på {0}",
-    "error": "Could not find or use Vikunja installation at \"{domain}\". Please check if the url has the correct format and you can reach it when accessing it directly and try again.",
-    "success": "Bruger Vikunja-installationen på \"{domain}\".",
-    "urlRequired": "En url er påkrævet."
-  },
-  "loadingError": {
-    "failed": "Indlæsning mislykkedes, venligst {0}. Hvis fejlen fortsætter, så {1}.",
-    "tryAgain": "prøv igen",
-    "contact": "kontakt os"
-  },
-  "notification": {
-    "title": "Notifikationer",
-    "none": "Du har ingen notifikationer. Hav en dejlig dag!",
-    "explainer": "Notifications will appear here when actions projects or tasks you subscribed to happen.",
-    "markAllRead": "Mark all notifications as read",
-    "markAllReadSuccess": "Successfully marked all notifications as read."
-  },
-  "quickActions": {
-    "commands": "Kommandoer",
-    "placeholder": "Indtast en kommando eller søg…",
-    "hint": "You can use {project} to limit the search to a project. Combine {project} or {label} (labels) with a search query to search for a task with these labels or on that project. Use {assignee} to only search for teams.",
-    "tasks": "Opgaver",
-    "projects": "Projects",
-    "teams": "Hold",
-    "labels": "Labels",
-    "newProject": "Enter the title of the new project…",
-    "newTask": "Indtast titlen på den nye opgave…",
-    "newTeam": "Indtast navnet på det nye hold…",
-    "createTask": "Create a task in the current project ({title})",
-    "createProject": "Create a project",
-    "cmds": {
-      "newTask": "Ny Opgave",
-      "newProject": "New project",
-      "newTeam": "Nyt hold"
-    }
-  },
-  "date": {
-    "altFormatLong": "j M Y, H:i",
-    "altFormatShort": "j M Y"
-  },
-  "reaction": {
-    "reactedWith": "{user} reacted with {value}",
-    "reactedWithAnd": "{users} and {lastUser} reacted with {value}",
-    "reactedWithAndMany": "{users} and {num} more reacted reacted with {value}",
-    "add": "Add your reaction"
-  },
-  "error": {
-    "error": "Fejl",
-    "success": "Succes",
-    "0001": "Du har ikke tilladelse til at gøre det.",
-    "1001": "Der findes allerede en bruger med dette brugernavn.",
-    "1002": "En bruger med denne emailadresse findes allerede.",
-    "1004": "Intet brugernavn og adgangskode angivet.",
-    "1005": "Brugeren findes ikke.",
-    "1006": "Kunne ikke hente brugerens id.",
-    "1008": "Ingen adgangskode nulstillingstoken angivet.",
-    "1009": "Ugyldig adgangskode nulstillingstoken.",
-    "1010": "Ugyldig e-mail bekræftelsestoken.",
-    "1011": "Forkert brugernavn eller kodeord.",
-    "1012": "E-mail adresse for brugeren ikke bekræftet.",
-    "1013": "Ny adgangskode er tom.",
-    "1014": "Gammel adgangskode er tom.",
-    "1015": "TOTP is already enabled for this user.",
-    "1016": "TOTP is not enabled for this user.",
-    "1017": "The TOTP passcode is invalid.",
-    "1018": "Brugerens avatartype indstilling er ugyldig.",
-    "1019": "No email address was provided by the OpenID provider.Please make sure the openid provider publicly provides an email address for your account.",
-    "1020": "This account is disabled. Check your emails or ask your administrator.",
-    "1021": "This account is managed by a third-party authentication provider.",
-    "1022": "The username must not contain spaces.",
-    "1023": "You can't do that as a link share.",
-    "1024": "Invalid claim data for field {field} of type {type}.",
-    "1025": "The timezone '{timezone}' is invalid. Please select a valid timezone from the list.",
-    "2001": "ID kan ikke være tomt eller 0.",
-    "2002": "Nogle af forespørgselsdataene var ugyldige.",
-    "2003": "The timezone '{timezone}' is invalid.",
-    "3001": "The project does not exist.",
-    "3004": "You need to have read permissions on that project to perform that action.",
-    "3005": "The project title cannot be empty.",
-    "3006": "The project share does not exist.",
-    "3007": "A project with this identifier already exists.",
-    "3008": "The project is archived and can therefore only be accessed read only. This is also true for all tasks associated with this project.",
-    "4001": "The task title cannot be empty.",
-    "4002": "The task does not exist.",
-    "4003": "All bulk editing tasks must belong to the same project.",
-    "4004": "Der skal være mindst én opgave for at masseredigere opgaver.",
-    "4005": "Du har ikke rettigheder til at se opgaven.",
-    "4006": "Du kan ikke indstille en overordnet opgave som opgaven selv.",
-    "4007": "Du kan ikke oprette en opgaverelation med en ugyldig slags relation.",
-    "4008": "Du kan ikke oprette en opgaverelation som allerede eksisterer.",
-    "4009": "Opgavenrelationen findes ikke.",
-    "4010": "Kan ikke relatere en opgave med sig selv.",
-    "4011": "Den vedhæftede fil findes ikke.",
-    "4012": "Den vedhæftede fil er for stor.",
-    "4013": "Opgavensorteringsparameter er ugyldig.",
-    "4014": "Opgavensorteringsrækkefølge er ugyldig.",
-    "4015": "Opgavekommentaren findes ikke.",
-    "4016": "Ugyldigt opgavefelt.",
-    "4017": "Ugyldig komparator til opgavefilter.",
-    "4018": "Ugyldig sammenkædning til opgavefilter.",
-    "4019": "Ugyldig værdi til opgavefilter.",
-    "4020": "This attachment does not belong to that task.",
-    "4021": "This user is already assigned to that task.",
-    "4022": "Please provide what the reminder date is relative to.",
-    "4023": "Cannot create a task relation cycle.",
-    "6001": "Holdnavnet må ikke være tomt.",
-    "6002": "Holdet findes ikke.",
-    "6004": "The team already has access to that project.",
-    "6005": "Brugeren er allerede medlem af holdet.",
-    "6006": "Kan ikke slette det sidste holdmedlem.",
-    "6007": "The team does not have access to the project to perform that action.",
-    "6008": "No team could be found for the given OIDC ID and issuer.",
-    "6009": "No Teams with property oidcId could be found for User.",
-    "7002": "The user already has access to that project.",
-    "7003": "You do not have access to that project.",
-    "8001": "Denne etiket findes allerede på denne opgave.",
-    "8002": "Etiketten findes ikke.",
-    "8003": "Du har ikke adgang til denne etiket.",
-    "9001": "Rettigheden er ugyldig.",
-    "10001": "Kurven findes ikke.",
-    "10002": "The bucket does not belong to that project.",
-    "10003": "You cannot remove the last bucket on a project.",
-    "10004": "Du kan ikke tilføje opgaven til denne kurv, da den allerede overskrider grænsen for opgaver, den kan holde.",
-    "10005": "There can be only one done bucket per project.",
-    "11001": "Det gemte filter eksisterer ikke.",
-    "11002": "Gemte filtre er ikke tilgængelige for delingslink.",
-    "12001": "Enhedstypen for abonnementet er ugyldigt.",
-    "12002": "Du er allerede abonneret på selve enheden eller en overordnet enhed.",
-    "12003": "You must provide a user to fetch subscriptions.",
-    "13001": "Dette delingslink kræver en adgangskode til godkendelse, men ingen blev angivet.",
-    "13002": "The provided link share password is invalid.",
-    "13003": "The provided link share token is invalid.",
-    "14001": "The provided api token is invalid.",
-    "14002": "The permission {permission} of group {group} is invalid."
-  },
-  "about": {
-    "title": "Om",
-    "version": "Version: {version}"
-  },
-  "time": {
-    "units": {
-      "seconds": "second|seconds",
-      "minutes": "minute|minutes",
-      "hours": "hour|hours",
-      "days": "day|days",
-      "weeks": "week|weeks",
-      "months": "month|months",
-      "years": "year|years"
-    }
-  }
+	"404": {
+		"title": "Ikke fundet",
+		"text": "Den ønskede side findes ikke."
+	},
+	"home": {
+		"welcomeNight": "Godnat {username}!",
+		"welcomeMorning": "Godmorgen {username}!",
+		"welcomeDay": "Hej {username}!",
+		"welcomeEvening": "Godaften {username}!",
+		"lastViewed": "Sidst vist"
+	},
+	"ready": {
+		"loading": "Vikunja er ved at indlæse…",
+		"errorOccured": "Der opstod en fejl:",
+		"checkApiUrl": "Tjek venligst om api url er korrekt.",
+		"noApiUrlConfigured": "Ingen API url er konfigureret. Angiv venligst en nedenfor:"
+	},
+	"offline": {
+		"title": "Du er offline.",
+		"text": "Tjek venligst din netværksforbindelse og prøv igen."
+	},
+	"user": {
+		"auth": {
+			"username": "Brugernavn",
+			"usernameEmail": "Brugernavn eller e-mailadresse",
+			"usernamePlaceholder": "f.eks. Frederick",
+			"email": "E-mailadresse",
+			"emailPlaceholder": "f.eks. frederic{'@'}vikunja.io",
+			"password": "Kodeord",
+			"passwordPlaceholder": "f.eks. •••••••••••••••",
+			"forgotPassword": "Har du glemt din adgangskode?",
+			"resetPassword": "Nulstil din adgangskode",
+			"resetPasswordAction": "Send mig et link til nulstilling af adgangskode",
+			"passwordsDontMatch": "Adgangskoderne er ikke ens",
+			"confirmEmailSuccess": "Du har bekræftet din e-mail! Du kan logge ind nu.",
+			"totpTitle": "To Faktor Godkendelseskode",
+			"totpPlaceholder": "f.eks. 123456",
+			"login": "Log ind",
+			"createAccount": "Opret konto",
+			"loginWith": "Log ind med {provider}",
+			"authenticating": "Godkender…",
+			"openIdStateError": "Indholdet stemmer ikke overens, nægter at fortsætte!",
+			"logout": "Log ud",
+			"emailInvalid": "Indtast venligst en gyldig e-mailadresse.",
+			"usernameRequired": "Angiv venligst et brugernavn.",
+			"passwordRequired": "Angiv venligst en adgangskode.",
+			"showPassword": "Vis adgangskoden",
+			"hidePassword": "Skjul adgangskoden",
+			"noAccountYet": "Har du ikke en konto endnu?",
+			"alreadyHaveAnAccount": "Har du allerede en konto?",
+			"remember": "Forbliv logget ind"
+		},
+		"settings": {
+			"title": "Indstillinger",
+			"newPasswordTitle": "Opdater din adgangskode",
+			"currentPasswordPlaceholder": "Din nuværende adgangskode",
+			"passwordsDontMatch": "Din nye adgangskode og bekræftelsesadgangskoden er ikke ens.",
+			"passwordUpdateSuccess": "Adgangskoden blev ændret.",
+			"updateEmailTitle": "Opdater din e-mailadresse",
+			"updateEmailSuccess": "Din e-mailadresse blev opdateret. Vi har sendt dig et link til at bekræfte den.",
+			"general": {
+				"title": "Generelle Indstillinger",
+				"savedSuccess": "Indstillingerne er gemt.",
+				"overdueReminders": "Send mig en oversigt over mine ufærdige opgaver hver dag",
+				"playSoundWhenDone": "Afspil en lyd, når du markerer opgaver som udført",
+				"weekStart": "Ugen starter på en",
+				"weekStartSunday": "Søndag",
+				"weekStartMonday": "Mandag",
+				"language": "Sprog",
+				"overdueTasksRemindersTime": "Forfaldne opgaver påmindelse e-mail tidspunkt"
+			},
+			"totp": {
+				"title": "To-faktor godkendelse",
+				"enroll": "Tilmeld",
+				"finishSetupPart2": "Herefter skal du indtaste en kode fra din app nedenfor.",
+				"scanQR": "Alternativt kan du scanne denne QR-kode:",
+				"passcode": "Kode",
+				"setupSuccess": "Du har aktiveret to-faktor autentificering!",
+				"enterPassword": "Indtast venligst din adgangskode",
+				"disable": "Deaktiver to-faktor autentificering",
+				"disableSuccess": "To faktor godkendelse blev deaktiveret."
+			},
+			"caldav": {
+				"title": "CalDAV",
+				"howTo": "Du kan forbinde Vikunja til CalDAV klienter for at vise og administrere alle opgaver fra forskellige klienter. Indtast dette url i din klient:",
+				"more": "Mere information om CalDAV i Vikunja",
+				"tokens": "CalDAV Tokens",
+				"tokensHowTo": "Du kan bruge et CalDAV-token i stedet for en adgangskode til at logge på ovenstående slutpunkt.",
+				"createToken": "Opret et token",
+				"tokenCreated": "Her er dit token: {token}",
+				"wontSeeItAgain": "Skriv det ned; du vil ikke være i stand til at få det vist igen.",
+				"mustUseToken": "Du skal oprette et CalDAV-token hvis du ønsker at bruge CalDAV med en tredjeparts klient. Brug token som adgangskode.",
+				"usernameIs": "Dit brugernavn er: {0}"
+			},
+			"avatar": {
+				"title": "Profilbillede",
+				"initials": "Initialer",
+				"gravatar": "Gravatar",
+				"marble": "Marmor",
+				"upload": "Upload",
+				"uploadAvatar": "Upload Profilbillede",
+				"statusUpdateSuccess": "Profilbillede status blev opdateret!",
+				"setSuccess": "Profilbilledet er blevet indstillet!"
+			},
+			"quickAddMagic": {
+				"title": "Hurtigtilføjelsemagi Tilstand",
+				"disabled": "Deaktiveret",
+				"todoist": "Todoist",
+				"vikunja": "Vikunja"
+			},
+			"appearance": {
+				"title": "Farvetema",
+				"setSuccess": "Gemt ændring af farvetema til {colorScheme}",
+				"colorScheme": {
+					"light": "Lys",
+					"system": "System",
+					"dark": "Mørk"
+				}
+			}
+		},
+		"deletion": {
+			"title": "Slet din Vikunja konto",
+			"text2": "For at fortsætte, skal du indtaste din adgangskode. Du vil modtage en e-mail med yderligere instruktioner.",
+			"confirm": "Slet min konto",
+			"requestSuccess": "Anmodningen blev gennemført. Du vil modtage en e-mail med yderligere instruktioner.",
+			"passwordRequired": "Indtast venligst din adgangskode.",
+			"confirmSuccess": "Du har bekræftet sletningen af din konto. Vi vil slette din konto om tre dage.",
+			"scheduled": "Vi sletter din Vikunja-konto {date} ({dateSince}).",
+			"scheduledCancel": "Klik her for at annullere sletningen af din konto.",
+			"scheduledCancelText": "For at annullere sletningen af din konto, skal du indtaste din adgangskode nedenfor:",
+			"scheduledCancelConfirm": "Annuller sletningen af min konto",
+			"scheduledCancelSuccess": "Vi sletter ikke din konto."
+		},
+		"export": {
+			"title": "Eksporter dine Vikunja-data",
+			"descriptionPasswordRequired": "Indtast venligst din adgangskode for at fortsætte:",
+			"request": "Anmod om en kopi af mine Vikunja-data",
+			"success": "Du har anmodet om dine Vikunja-data! Vi sender dig en e-mail, når den er klar til hentning.",
+			"downloadTitle": "Download dine eksporterede Vikunja-data"
+		}
+	},
+	"filters": {
+		"title": "Filtre",
+		"clear": "Ryd Filtre",
+		"attributes": {
+			"title": "Titel",
+			"titlePlaceholder": "Det gemte filters titel skrives her…",
+			"description": "Beskrivelse",
+			"includeNulls": "Inkluder Opgaver som ikke har en værdi indstillet",
+			"requireAll": "Kræv at alle filtre er sande for at en opgave kan vises",
+			"showDoneTasks": "Vis Udførte Opgaver",
+			"sortAlphabetically": "Sorter Alfabetisk",
+			"enablePriority": "Aktiver Filtrer Efter Prioritet",
+			"enablePercentDone": "Aktiver Filter Efter Fremskridt",
+			"dueDateRange": "Udløbsdato Interval",
+			"startDateRange": "Start Dato Interval",
+			"endDateRange": "Slut Dato Interval",
+			"reminderRange": "Påmindeslesdato Interval"
+		},
+		"create": {
+			"title": "Nyt Gemt Filter"
+		},
+		"delete": {
+			"header": "Slet dette gemte filter",
+			"text": "Er du sikker på, at du vil slette dette gemte filter?",
+			"success": "Filteret blev slettet."
+		},
+		"edit": {
+			"title": "Rediger Dette Gemte Filter",
+			"success": "Filteret blev slettet."
+		}
+	},
+	"migrate": {
+		"title": "Import fra andre tjenester",
+		"titleService": "Importer dine data fra {name} til Vikunja",
+		"import": "Importer dine data til Vikunja",
+		"description": "Klik på logoet for en af de tredjeparts tjenester nedenfor for at komme i gang.",
+		"descriptionDo": "Vikunja vil importere alle lister, opgaver, noter, påmindelser og filer, du har adgang til.",
+		"authorize": "For at give Vikunja tilladelse til at tilgå din {name} konto, klik på knappen nedenfor.",
+		"getStarted": "Kom i gang",
+		"inProgress": "Importerer…",
+		"alreadyMigrated1": "Det ser ud til, at du allerede har importeret dine ting fra {name} på {date}.",
+		"alreadyMigrated2": "Du kan godt importere igen, men kan der kan opstå dubletter. Er du sikker?",
+		"confirm": "Jeg er sikker, start migreringen nu!",
+		"importUpload": "For at importere data fra {name} til Vikunja, skal du klikke på knappen nedenfor for at vælge en fil.",
+		"upload": "Upload fil"
+	},
+	"label": {
+		"title": "Etiketter",
+		"manage": "Administrer etiketter",
+		"newCTA": "Du har i øjeblikket ingen etiketter.",
+		"search": "Skriv for at søge efter en etiket…",
+		"create": {
+			"header": "Ny etiket",
+			"titleRequired": "Angiv venligst en titel.",
+			"success": "Etiketten blev oprettet."
+		},
+		"edit": {
+			"header": "Rediger etiket",
+			"success": "Etiketten blev opdateret."
+		},
+		"deleteSuccess": "Etiketten blev slettet.",
+		"attributes": {
+			"title": "Titel",
+			"titlePlaceholder": "Titlen på etiketten vises her…",
+			"description": "Beskrivelse",
+			"descriptionPlaceholder": "Beskrivelse af etiket",
+			"color": "Farve"
+		}
+	},
+	"sharing": {
+		"authenticating": "Godkender…",
+		"invalidPassword": "Adgangskoden er ugyldig."
+	},
+	"navigation": {
+		"overview": "Oversigt",
+		"upcoming": "Kommende",
+		"settings": "Indstillinger",
+		"imprint": "Om os",
+		"privacy": "Privatlivspolitik"
+	},
+	"misc": {
+		"loading": "Indlæser…",
+		"save": "Gem",
+		"delete": "Slet",
+		"confirm": "Bekræft",
+		"cancel": "Annuller",
+		"refresh": "Genindlæs",
+		"disable": "Deaktiver",
+		"copy": "Kopier til udklipsholder",
+		"copyError": "Kopiering til udklipsholder mislykkedes",
+		"search": "Søg",
+		"searchPlaceholder": "Skriv for at søge…",
+		"previous": "Forrige",
+		"next": "Næste",
+		"poweredBy": "Drevet af Vikunja",
+		"info": "Info",
+		"create": "Opret",
+		"doit": "Gør det!",
+		"saving": "Gemmer…",
+		"saved": "Gemt!",
+		"default": "Standard",
+		"close": "Luk",
+		"download": "Download",
+		"showMenu": "Vis menuen",
+		"hideMenu": "Skjul menuen",
+		"forExample": "Eksempel:",
+		"welcomeBack": "Velkommen tilbage!",
+		"custom": "Brugerdefineret",
+		"id": "ID",
+		"created": "Oprettet den",
+		"actions": "Handlinger",
+		"cannotBeUndone": "Dette kan ikke fortrydes!"
+	},
+	"input": {
+		"resetColor": "Nulstil Farve",
+		"datepicker": {
+			"today": "I dag",
+			"tomorrow": "I morgen",
+			"nextMonday": "Næste mandag",
+			"thisWeekend": "Denne weekend",
+			"laterThisWeek": "Senere Denne Uge",
+			"nextWeek": "Næste uge",
+			"chooseDate": "Vælg en dato"
+		},
+		"editor": {
+			"edit": "Rediger",
+			"done": "Udfør",
+			"heading1": "Overskrift 1",
+			"heading2": "Overskrift 2",
+			"heading3": "Overskrift 3",
+			"headingSmaller": "Overskrift Mindre",
+			"headingBigger": "Overskrift Større",
+			"bold": "Fed",
+			"italic": "Kursiv",
+			"strikethrough": "Gennemstreget",
+			"code": "Kode",
+			"quote": "Citat",
+			"cleanBlock": "Ryd Blok",
+			"link": "Link",
+			"image": "Billede",
+			"horizontalRule": "Horisontal Linje",
+			"sideBySide": "Side Om Side",
+			"guide": "Vejledning"
+		},
+		"multiselect": {
+			"selectPlaceholder": "Klik eller tryk på Enter for at vælge"
+		},
+		"datepickerRange": {
+			"to": "Til",
+			"from": "Fra",
+			"fromto": "{from} til {to}",
+			"ranges": {
+				"today": "I dag",
+				"thisWeek": "Denne uge",
+				"restOfThisWeek": "Resten af denne uge",
+				"nextWeek": "Næste uge",
+				"next7Days": "Næste 7 dage",
+				"lastWeek": "Sidste uge",
+				"thisMonth": "Denne Måned",
+				"restOfThisMonth": "Resten af denne måned",
+				"nextMonth": "Næste måned",
+				"next30Days": "Næste 30 dage",
+				"lastMonth": "Sidste måned",
+				"thisYear": "Dette år",
+				"restOfThisYear": "Resten af dette år"
+			}
+		},
+		"datemathHelp": {
+			"canuse": "Du kan bruge datomatematik til at filtrere for relative datoer.",
+			"learnhow": "Se hvordan det virker",
+			"title": "Datomatematik",
+			"expression": "Hver Datomatematik udtryk starter med en ankerdato, som enten kan være {0} eller en datostreng, der slutter med {1}. Denneanker dato kan eventuelt efterfølges af en eller flere matematik udtryk.",
+			"similar": "Disse udtryk ligner dem fra {0} og {1}.",
+			"add1Day": "Læg en dag til",
+			"minus1Day": "Træk en dag fra",
+			"roundDay": "Rund ned til nærmeste dag",
+			"units": {
+				"seconds": "Sekunder",
+				"minutes": "Minutter",
+				"hours": "Timer",
+				"days": "Dage",
+				"weeks": "Uger",
+				"months": "Måneder",
+				"years": "År"
+			},
+			"examples": {
+				"now": "Nu",
+				"in24h": "Om 24 Timer",
+				"today": "I dag kl. 00:00",
+				"beginningOfThisWeek": "Begyndelsen af denne uge kl. 00:00",
+				"endOfThisWeek": "Slutningen af denne uge",
+				"in30Days": "Om 30 dage",
+				"datePlusMonth": "{0} plus en måned kl. 00:00 på den pågældende dag"
+			}
+		}
+	},
+	"task": {
+		"task": "Opgave",
+		"delete": "Slet denne opgave",
+		"createSuccess": "Opgaven blev oprettet.",
+		"doneSuccess": "Opgaven blev markeret som udført.",
+		"undoneSuccess": "Opgaven fik fjernet sin udført-markering.",
+		"openDetail": "Åbn detaljeret opgavevisning",
+		"checklistTotal": "{checked} af {total} opgaver",
+		"checklistAllDone": "{total} opgaver",
+		"show": {
+			"titleCurrent": "Aktuelle Opgaver",
+			"titleDates": "Opgaver fra {from} indtil {to}",
+			"noDates": "Vis opgaver uden datoer",
+			"overdue": "Vis forfaldne opgaver",
+			"fromuntil": "Opgaver fra {from} indtil {until}",
+			"select": "Vælg et datointerval",
+			"noTasks": "Intet at gøre — Hav en dejlig dag!"
+		},
+		"detail": {
+			"chooseDueDate": "Klik her for at angive en forfaldsdato",
+			"chooseStartDate": "Klik her for at angive en startdato",
+			"chooseEndDate": "Klik her for at angive en slutdato",
+			"done": "Markér opgave som udført!",
+			"undone": "Markér opgave som ikke-udført",
+			"created": "Oprettet {0} af {1}",
+			"updated": "Opdateret {0}",
+			"doneAt": "Udført {0}",
+			"updateSuccess": "Opgaven blev gemt.",
+			"deleteSuccess": "Opgaven er blevet slettet.",
+			"due": "Forfalder {at}",
+			"closePopup": "Luk pop-up",
+			"delete": {
+				"header": "Slet denne opgave",
+				"text1": "Er du sikker på, at du vil slette denne opgave?",
+				"text2": "Dette vil også fjerne alle vedhæftede filer, påmindelser og relationer knyttet til denne opgave, og kan ikke fortrydes!"
+			},
+			"actions": {
+				"assign": "Tildel til bruger",
+				"label": "Tilføj Etiketter",
+				"priority": "Angiv Prioritet",
+				"dueDate": "Angiv Forfaldsdato",
+				"startDate": "Angiv Startdato",
+				"endDate": "Angiv Slutdato",
+				"reminders": "Indstil Påmindelser",
+				"repeatAfter": "Angiv Gentagelsesinterval",
+				"percentDone": "Indstil Fremskridt",
+				"attachments": "Tilføj Vedhæftninger",
+				"relatedTasks": "Tilføj Relation",
+				"color": "Indstil Farve",
+				"delete": "Slet",
+				"favorite": "Tilføj til Favoritter",
+				"unfavorite": "Fjern fra favoritter"
+			}
+		},
+		"attributes": {
+			"assignees": "Tildelte",
+			"color": "Farve",
+			"created": "Oprettet",
+			"createdBy": "Oprettet Af",
+			"description": "Beskrivelse",
+			"done": "Udført",
+			"dueDate": "Forfaldsdato",
+			"endDate": "Slutdato",
+			"labels": "Etiketter",
+			"percentDone": "Fremskridt",
+			"priority": "Prioritet",
+			"relatedTasks": "Relaterede Opgaver",
+			"reminders": "Påmindelser",
+			"repeat": "Gentag",
+			"startDate": "Startdato",
+			"title": "Titel",
+			"updated": "Opdateret"
+		},
+		"subscription": {
+			"subscribedTask": "Du abonnerer på denne opgave og vil modtage notifikationer om ændringer.",
+			"notSubscribedTask": "Du abonnerer ikke på denne opgave og modtager ikke notifikationer om ændringer.",
+			"subscribe": "Abonner",
+			"unsubscribe": "Afmeld",
+			"subscribeSuccessTask": "Du abonnerer nu på denne opgave",
+			"unsubscribeSuccessTask": "Du er nu afmeldt denne opgave"
+		},
+		"attachment": {
+			"title": "Vedhæftede filer",
+			"createdBy": "oprettet {0} af {1}",
+			"downloadTooltip": "Download denne vedhæftede fil",
+			"upload": "Upload vedhæftet fil",
+			"drop": "Smid filer her for at uploade",
+			"delete": "Slet vedhæftet fil",
+			"deleteTooltip": "Slet denne vedhæftede fil",
+			"deleteText1": "Er du sikker på, at du vil slette den vedhæftede fil {filename}?",
+			"copyUrl": "Kopier URL",
+			"copyUrlTooltip": "Kopier url'en til denne vedhæftede fil til brug i tekst",
+			"setAsCover": "Gør til forsidebillede",
+			"unsetAsCover": "Fjern forsidebillede",
+			"successfullyChangedCoverImage": "Forsidebilledet blev ændret.",
+			"usedAsCover": "Forsidebillede"
+		},
+		"comment": {
+			"title": "Kommentarer",
+			"loading": "Indlæser kommentarer…",
+			"edited": "redigeret {date}",
+			"creating": "Opretter kommentar…",
+			"comment": "Kommentar",
+			"delete": "Slet denne kommentar",
+			"deleteText1": "Er du sikker på du vil slette denne kommentar?",
+			"deleteSuccess": "Kommentaren blev slettet.",
+			"addedSuccess": "Din kommentar blev tilføjet."
+		},
+		"deferDueDate": {
+			"title": "Udsæt forfaldsdato",
+			"1day": "1 dag",
+			"3days": "3 dage",
+			"1week": "1 uge"
+		},
+		"description": {
+			"empty": "Ingen beskrivelse tilgængelig endnu."
+		},
+		"assignee": {
+			"placeholder": "Skriv for at tilknytte en bruger…",
+			"selectPlaceholder": "Tildel denne bruger",
+			"assignSuccess": "Brugeren er blevet tilknyttet.",
+			"unassignSuccess": "Brugeren er blevet frakoblet."
+		},
+		"label": {
+			"createPlaceholder": "Tilføj dette som ny etiket",
+			"addSuccess": "Etiketten er blevet tilføjet.",
+			"createSuccess": "Etiketten er blevet oprettet.",
+			"removeSuccess": "Etiketten er blevet fjernet.",
+			"addCreateSuccess": "Etiketten er blevet oprettet og tilføjet.",
+			"delete": {
+				"header": "Slet denne etiket",
+				"text1": "Er du sikker på du vil slette etiketten?",
+				"text2": "Dette vil fjerne den fra alle opgaver og kan ikke gøres om."
+			}
+		},
+		"priority": {
+			"unset": "Fjern",
+			"low": "Lav",
+			"medium": "Mellem",
+			"high": "Høj",
+			"urgent": "Haster",
+			"doNow": "GØR DET NU"
+		},
+		"relation": {
+			"add": "Tilføj en ny opgaverelation",
+			"new": "Ny Opgaverelation",
+			"noneYet": "Ingen opgaverelationer endnu.",
+			"delete": "Slet Opgaverelation",
+			"deleteText1": "Er du sikker på, at du vil slette denne opgaverelation?",
+			"select": "Vælg en relationstype",
+			"taskRequired": "Vælg venligst en opgave eller indtast en ny opgavetitel.",
+			"kinds": {
+				"subtask": "Underopgave | Underopgaver",
+				"parenttask": "Forældreopgave | ForældreOpgaver",
+				"related": "Relateret Opgave | Relaterede Opgaver",
+				"duplicateof": "Duplikat af | Duplikater af",
+				"duplicates": "Duplikat | Duplikater",
+				"blocking": "Blokerende | Blokerende",
+				"blocked": "Blokeret Af | Blokeret Af",
+				"precedes": "Kommer før | Kommer før",
+				"follows": "Følger | Følgere",
+				"copiedfrom": "Kopieret Fra | Kopieret Fra",
+				"copiedto": "Kopieret Til | Kopieret Til"
+			}
+		},
+		"repeat": {
+			"everyDay": "Hver Dag",
+			"everyWeek": "Hver Uge",
+			"mode": "Gentagelsestilstand",
+			"monthly": "Månedligt",
+			"each": "Hver",
+			"specifyAmount": "Angiv et beløb…",
+			"hours": "Timer",
+			"days": "Dage",
+			"weeks": "Uger",
+			"months": "Måneder",
+			"years": "År",
+			"invalidAmount": "Angiv venligst mere end 0."
+		},
+		"quickAddMagic": {
+			"title": "Hurtigtilføjelsemagi",
+			"intro": "Når du opretter en opgave, kan du bruge specielle søgeord til direkte at tilføje attributter til den nyoprettede opgave. Dette giver muligheden for at tilføje almindeligt anvendte attributter til opgaver meget hurtigere.",
+			"multiple": "Du kan bruge dette flere gange.",
+			"label1": "For at tilføje en etiket, skal du blot præfikse navnet på etiketten med {prefix}.",
+			"label2": "Vikunja vil først kontrollere, om etiketten allerede findes, og oprette den hvis ikke.",
+			"label3": "For at bruge mellemrum, skal du blot tilføje \" eller ' omkring etikettens navn.",
+			"label4": "For eksempel: {prefix}\"Etiket med mellemrum\".",
+			"priority1": "For at sætte en opgaves prioritet, tilføj et nummer 1-5, præfikset med {prefix}.",
+			"priority2": "Jo højere nummer, des højere prioritet.",
+			"assignees": "For at tildele opgaven direkte til en bruger, tilføj deres brugernavn præfikset med {prefix} til opgaven.",
+			"dateAndTime": "Dato og tid",
+			"date": "En dato vil blive brugt som forfaldsdato for den nye opgave. Du kan bruge datoer i enhver af disse formater:",
+			"dateWeekday": "enhver ugedag, vil bruge den næste dato med på den dag",
+			"dateCurrentYear": "vil bruge det aktuelle år",
+			"dateNth": "vil bruge den {day}. i den aktuelle måned",
+			"dateTime": "Kombiner alle datoformater med \"{time}\" (eller {timePM}) for at angive en tid.",
+			"repeats": "Gentagende opgaver",
+			"repeatsDescription": "For at sætte en opgave til at gentage i et interval, skal du blot tilføje '{suffix}' til opgaveteksten. Beløbet skal være et tal og kan udelades for kun at bruge typen (se eksempler)."
+		}
+	},
+	"team": {
+		"title": "Hold",
+		"noTeams": "Du er i øjeblikket ikke en del af et hold.",
+		"create": {
+			"success": "Holdet blev oprettet."
+		},
+		"edit": {
+			"title": "Rediger hold \"{team}\"",
+			"members": "Holdmedlemmer",
+			"search": "Skriv for at søge efter en bruger…",
+			"addUser": "Tilføj til hold",
+			"makeMember": "Gør Medlem",
+			"makeAdmin": "Gør til administrator",
+			"success": "Holdet blev opdateret.",
+			"userAddedSuccess": "Holdmedlemmet blev tilføjet.",
+			"madeMember": "Holdmedlemmet blev gjort til almindeligt medlem.",
+			"madeAdmin": "Holdmedlemmet blev gjort til administrator.",
+			"mustSelectUser": "Vælg venligst en bruger.",
+			"delete": {
+				"header": "Slet holdet",
+				"text1": "Er du sikker på du vil slette dette hold og alle dets medlemmer?",
+				"success": "Holdet blev slettet."
+			},
+			"deleteUser": {
+				"header": "Fjern en bruger fra holdet",
+				"text1": "Er du sikker på du vil fjerne denne bruger fra holdet?",
+				"success": "Brugeren blev fjernet fra holdet."
+			},
+			"leave": {
+				"title": "Forlad hold",
+				"text1": "Er du sikker på du vil forlade dette hold?",
+				"success": "Du har forladt holdet."
+			}
+		},
+		"attributes": {
+			"name": "Holdnavn",
+			"namePlaceholder": "Holdnavnet skrives her…",
+			"nameRequired": "Angiv venligst et navn.",
+			"description": "Beskrivelse",
+			"admin": "Administrator",
+			"member": "Medlem"
+		}
+	},
+	"keyboardShortcuts": {
+		"title": "Tastaturgenveje",
+		"general": "Generelt",
+		"allPages": "Disse genveje virker på alle sider.",
+		"currentPageOnly": "Disse genveje virker kun på den aktuelle side.",
+		"somePagesOnly": "Disse genveje virker kun på nogle sider.",
+		"toggleMenu": "Slå Menuen Til/Fra",
+		"quickSearch": "Åbn søgnings- og hurtighandling-bjælken",
+		"then": "så",
+		"task": {
+			"title": "Opgaveside",
+			"done": "Markér opgave udført / ikke-udført",
+			"assign": "Tildel denne opgave til en bruger",
+			"labels": "Tilføj etiketter til denne opgave",
+			"dueDate": "Ændr forfaldsdatoen for denne opgave",
+			"attachment": "Tilføj en vedhæftet fil til denne opgave",
+			"related": "Rediger relaterede opgaver for denne opgave",
+			"color": "Skift farven på denne opgave",
+			"reminder": "Administrer påmindelser om denne opgave",
+			"description": "Slå redigering af opgavebeskrivelse til/fra"
+		},
+		"navigation": {
+			"title": "Navigation",
+			"overview": "Gå til oversigt",
+			"upcoming": "Gå til kommende opgaver",
+			"labels": "Naviger til etiketter",
+			"teams": "Naviger til hold"
+		}
+	},
+	"update": {
+		"do": "Opdater nu"
+	},
+	"menu": {
+		"edit": "Rediger",
+		"archive": "Arkiver",
+		"duplicate": "Dupliker",
+		"delete": "Slet",
+		"unarchive": "Tilbagekald",
+		"share": "Del"
+	},
+	"apiConfig": {
+		"url": "Vikunja URL",
+		"urlPlaceholder": "f.eks. https://localhost:3456",
+		"change": "ændr",
+		"use": "Brug Vikunja-installationen på {0}",
+		"success": "Bruger Vikunja-installationen på \"{domain}\".",
+		"urlRequired": "En url er påkrævet."
+	},
+	"loadingError": {
+		"failed": "Indlæsning mislykkedes, venligst {0}. Hvis fejlen fortsætter, så {1}.",
+		"tryAgain": "prøv igen",
+		"contact": "kontakt os"
+	},
+	"notification": {
+		"title": "Notifikationer",
+		"none": "Du har ingen notifikationer. Hav en dejlig dag!"
+	},
+	"quickActions": {
+		"commands": "Kommandoer",
+		"placeholder": "Indtast en kommando eller søg…",
+		"tasks": "Opgaver",
+		"teams": "Hold",
+		"newTask": "Indtast titlen på den nye opgave…",
+		"newTeam": "Indtast navnet på det nye hold…",
+		"cmds": {
+			"newTask": "Ny Opgave",
+			"newTeam": "Nyt hold"
+		}
+	},
+	"date": {
+		"altFormatShort": "j M Y"
+	},
+	"error": {
+		"1001": "Der findes allerede en bruger med dette brugernavn.",
+		"1002": "En bruger med denne emailadresse findes allerede.",
+		"1004": "Intet brugernavn og adgangskode angivet.",
+		"1005": "Brugeren findes ikke.",
+		"1006": "Kunne ikke hente brugerens id.",
+		"1008": "Ingen adgangskode nulstillingstoken angivet.",
+		"1009": "Ugyldig adgangskode nulstillingstoken.",
+		"1010": "Ugyldig e-mail bekræftelsestoken.",
+		"1011": "Forkert brugernavn eller kodeord.",
+		"1012": "E-mail adresse for brugeren ikke bekræftet.",
+		"1013": "Ny adgangskode er tom.",
+		"1014": "Gammel adgangskode er tom.",
+		"1018": "Brugerens avatartype indstilling er ugyldig.",
+		"2001": "ID kan ikke være tomt eller 0.",
+		"2002": "Nogle af forespørgselsdataene var ugyldige.",
+		"4004": "Der skal være mindst én opgave for at masseredigere opgaver.",
+		"4005": "Du har ikke rettigheder til at se opgaven.",
+		"4006": "Du kan ikke indstille en overordnet opgave som opgaven selv.",
+		"4007": "Du kan ikke oprette en opgaverelation med en ugyldig slags relation.",
+		"4008": "Du kan ikke oprette en opgaverelation som allerede eksisterer.",
+		"4009": "Opgavenrelationen findes ikke.",
+		"4010": "Kan ikke relatere en opgave med sig selv.",
+		"4011": "Den vedhæftede fil findes ikke.",
+		"4012": "Den vedhæftede fil er for stor.",
+		"4013": "Opgavensorteringsparameter er ugyldig.",
+		"4014": "Opgavensorteringsrækkefølge er ugyldig.",
+		"4015": "Opgavekommentaren findes ikke.",
+		"4016": "Ugyldigt opgavefelt.",
+		"4017": "Ugyldig komparator til opgavefilter.",
+		"4018": "Ugyldig sammenkædning til opgavefilter.",
+		"4019": "Ugyldig værdi til opgavefilter.",
+		"6001": "Holdnavnet må ikke være tomt.",
+		"6002": "Holdet findes ikke.",
+		"6005": "Brugeren er allerede medlem af holdet.",
+		"6006": "Kan ikke slette det sidste holdmedlem.",
+		"8001": "Denne etiket findes allerede på denne opgave.",
+		"8002": "Etiketten findes ikke.",
+		"8003": "Du har ikke adgang til denne etiket.",
+		"9001": "Rettigheden er ugyldig.",
+		"10001": "Kurven findes ikke.",
+		"10004": "Du kan ikke tilføje opgaven til denne kurv, da den allerede overskrider grænsen for opgaver, den kan holde.",
+		"11001": "Det gemte filter eksisterer ikke.",
+		"11002": "Gemte filtre er ikke tilgængelige for delingslink.",
+		"12001": "Enhedstypen for abonnementet er ugyldigt.",
+		"12002": "Du er allerede abonneret på selve enheden eller en overordnet enhed.",
+		"13001": "Dette delingslink kræver en adgangskode til godkendelse, men ingen blev angivet.",
+		"error": "Fejl",
+		"success": "Succes",
+		"0001": "Du har ikke tilladelse til at gøre det."
+	},
+	"about": {
+		"title": "Om"
+	}
 }

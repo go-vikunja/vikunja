@@ -1,150 +1,115 @@
 {
-    "notifications": {
-        "greeting": "Chào %[1]s,",
-        "email_confirm": {
-            "subject": "%[1]s, vui lòng xác thực địa chỉ email trên Vikunja của bạn",
-            "subject_new": "%[1]s + Vikunja = <3",
-            "welcome": "Chào mừng đến với Vikunja!",
-            "confirm": "Để xác nhận địa chỉ email của mình, hãy nhấn vào liên kết bên dưới:"
-        },
-        "password": {
-            "changed": {
-                "subject": "Mật khẩu của bạn trên Vikunja đã được thay đổi",
-                "success": "Mật khẩu tài khoản của bạn đã được thay đổi thành công.",
-                "warning": "Nếu đây không phải là bạn, có thể đã có ai đó xâm nhập vào tài khoản của bạn. Trong trường hợp này vui lòng liên hệ với quản trị viên server của bạn."
-            },
-            "reset": {
-                "subject": "Đặt lại mật khẩu của bạn trên Vikunja",
-                "instructions": "Để đặt lại mật khẩu, vui lòng nhấn vào đường dẫn bên dưới:",
-                "valid_duration": "Đường dẫn này có hiệu lực trong vòng 24 giờ."
-            }
-        },
-        "totp": {
-            "invalid": {
-                "subject": "Có ai đó vừa cố gắng đăng nhập vào tài khoản Vikunja của bạn, nhưng thất bại",
-                "message": "Có ai đó vừa cố đăng nhập vào tài khoản của bạn với tên đăng nhập và mật khẩu chính xác nhưng sai mã TOTP.",
-                "warning": "**Nếu đây không phải là bạn, ai đó khác đã biết mật khẩu của bạn. Bạn nên đặt mới mật khẩu ngay!**"
-            },
-            "account_locked": {
-                "subject": "Chúng tôi vừa vô hiệu hóa tài khoản của bạn trên Vikunja",
-                "message": "Có ai đó vừa cố gắng đăng nhập bằng thông tin của bạn nhưng không cung cấp được mã TOTP hợp lệ.",
-                "disabled": "Sau 10 lần thất bại, chúng tôi đã vô hiệu hóa tài khoản của bạn và đặt lại mật khẩu. Để đặt một mật khẩu mới, hãy làm theo hướng dẫn trong email đặt lại mật khẩu mà chúng tôi vừa gửi cho bạn.",
-                "reset_instructions": "Nếu bạn không nhận được email hướng dẫn đặt lại mật khẩu, bạn vẫn có thể gửi yêu cầu nhận một email mới tại [%[1]s](%[2]s)."
-            }
-        },
-        "login": {
-            "failed": {
-                "subject": "Có ai đó vừa cố gắng đăng nhập vào tài khoản Vikunja của bạn, nhưng không cung cấp đúng mật khẩu",
-                "message": "Có ai đó vừa cố đăng nhập vào tài khoản của bạn với mật khẩu nhập sai ba lần liên tiếp.",
-                "warning": "Nếu đây không phải bạn, có thể đang có ai đó cố gắng xâm nhập vào tài khoản của bạn.",
-                "enhance_security": "Để nâng cao bảo mật cho tài khoản, bạn có thể sẽ cần thiết lập một mật khẩu mạnh hơn hoặc bật xác thực TOTP trong phần cài đặt:"
-            }
-        },
-        "account": {
-            "deletion": {
-                "confirm": {
-                    "subject": "Vui lòng xác nhận việc xóa bỏ tài khoản Vikunja của bạn",
-                    "request": "Bạn đã yêu cầu xóa tài khoản của mình. Để xác nhận, vui lòng nhấn vào đường dẫn bên dưới:",
-                    "valid_duration": "Liên kết này có hiệu lực trong vòng 24 giờ.",
-                    "schedule_info": "Ngay khi bạn xác nhận việc xóa này chúng tôi sẽ lên lịch xóa tài khoản của bạn trong vòng 3 ngày và sẽ gửi bạn một email khác cho đến lúc đó.",
-                    "consequences": "Nếu bạn xóa tài khoản của mình, chúng tôi sẽ gỡ bỏ tất cả các dự án và tác vụ mà bạn đã tạo. Mọi thứ bạn đã chia sẻ với người dùng hoặc team khác sẽ được chuyển giao quyền sở hữu sang cho người dùng hoặc team đó.",
-                    "changed_mind": "Nếu bạn không yêu cầu xóa hay thay đổi quyết định, bạn chỉ cần bỏ qua email này."
-                },
-                "scheduled": {
-                    "subject_days": "Tài khoản Vikunja của bạn sẽ được xóa trong %[1]s ngày nữa",
-                    "subject_tomorrow": "Tài khoản Vikunjia của bạn sẽ được xóa vào ngày mai",
-                    "request_reminder": "Bạn gần đây có yêu cầu xóa tài khoản Vikunja của mình.",
-                    "deletion_time_days": "Chúng tôi sẽ xóa tài khoản của bạn trong %[1]s ngày nữa.",
-                    "deletion_time_tomorrow": "Chúng tôi sẽ xóa tài khoản của bạn vào ngày mai.",
-                    "changed_mind": "Nếu bạn thay đổi quyết đinh, chỉ cần nhấn vào đường dẫn bên dưới để hủy xóa và làm theo hướng dẫn:"
-                },
-                "completed": {
-                    "subject": "Tài khoản Vikunja của bạn đã được xóa",
-                    "confirmation": "Theo như yêu cầu, chúng tôi đã xóa tài khoản Vikunja của bạn.",
-                    "permanent": "Việc xóa này là vĩnh viễn. Nếu chưa tạo bản sao lưu và hiện tại cần lấy lại dữ liệu của mình, vui lòng liên hệ với quản trị viên."
-                }
-            }
-        },
-        "task": {
-            "reminder": {
-                "subject": "Nhắc nhở cho \"%[1]s\" (%[2]s)",
-                "message": "This is a friendly reminder of the task \"%[1]s\" (%[2]s)."
-            },
-            "comment": {
-                "subject": "Re: %[1]s",
-                "mentioned_subject": "%[1]s đã nhắc đến bạn trong một bình luận của \"%[2]s\"",
-                "mentioned_message": "**%[1]s** đã nhắc đến bạn trong một bình luận:"
-            },
-            "assigned": {
-                "subject_to_assignee": "You have been assigned to %[1]s (%[2]s)",
-                "message_to_assignee": "%[1]s has assigned you to %[2]s.",
-                "subject_to_others": "%[1]s(%[2]s) has been assigned to %[3]s",
-                "message_to_others": "%[1]s đã giao tác vụ này cho %[2]s."
-            },
-            "deleted": {
-                "subject": "%[1]s (%[2]s) đã được xóa",
-                "message": "%[1]s đã xóa tác vụ %[2]s (%[3]s)"
-            },
-            "mentioned": {
-                "subject_new": "%[1]s nhắc đến bạn trong một tác vụ mới \"%[2]s\"",
-                "subject": "%[1]s đã nhắc đến bạn trong một tác vụ \"%[2]s\"",
-                "message": "**%[1]s** đã nhắc đến bạn trong một tác vụ:"
-            },
-            "overdue": {
-                "subject": "Tác vụ \"%[1]s\" (%[2]s) bị quá hạn",
-                "message": "This is a friendly reminder of the task \"%[1]s\" (%[2]s) which is %[3]s and not yet done.",
-                "multiple_subject": "Các tác vụ quá hạn của bạn",
-                "multiple_message": "Bạn có các tác vụ quá hạn sau:",
-                "overdue_since": "quá hạn kể từ %[1]s",
-                "overdue_now": "hiện đang quá hạn"
-            }
-        },
-        "project": {
-            "created": "%[1]s đã tạo dự án \"%[2]s\""
-        },
-        "team": {
-            "member_added": {
-                "subject": "%[1]s đã thêm bạn vào Team %[2]s trong Vikunja",
-                "message": "%[1]s vừa thêm bạn vào Team %[2]s trong Vikunja."
-            }
-        },
-        "data_export": {
-            "ready": {
-                "subject": "Your Vikunja Data Export is ready",
-                "message": "Your Vikunja Data Export is ready for you to download. Click the button below to download it:",
-                "availability": "Bản tải xuống sẽ có sẵn trong vòng 7 ngày tới."
-            }
-        },
-        "migration": {
-            "done": {
-                "subject": "The migration from %[1]s to Vikunja was completed",
-                "imported": "Vikunjia đã nhập toàn bộ danh sách/dự án, tác vụ, ghi chú, nhắc nhở và tệp từ %[1]s mà bạn có quyền truy cập.",
-                "have_fun": "Have fun with your new (old) projects!"
-            },
-            "failed": {
-                "subject": "The migration from %[1]s to Vikunja has failed",
-                "message": "Looks like the move from %[1]s didn't go as planned this time.",
-                "retry": "No worries, though! Just give it another shot by starting over the same way you did before. Sometimes, these hiccups happen because of glitches on %[1]s's end, but trying again often does the trick.",
-                "error": "We bumped into a little error along the way: `%[2]s`.",
-                "report": "Please drop us a note about this [in the forum](https://community.vikunja.io/) or any of the usual places so that we can take a look at why it failed.",
-                "working_on_it": "We've got the error message on our radar and are on it to get it sorted out soon."
-            }
-        },
-        "common": {
-            "have_nice_day": "Chúc một ngày tốt lành!",
-            "copy_url": "Nếu nút bấm bên trên không hoạt động, hãy sao chép url bên dưới và dán vào thanh địa chỉ trong trình duyệt của bạn:",
-            "actions": {
-                "open_task": "Open Task",
-                "open_vikunja": "Open Vikunja",
-                "open_project": "Open Project",
-                "open_team": "Open Team",
-                "download": "Download",
-                "reset_password": "Reset your password",
-                "go_to_settings": "Go to settings",
-                "confirm_email": "Confirm your email address",
-                "abort_deletion": "Abort the deletion",
-                "confirm_account_deletion": "Confirm the deletion of my account"
-            }
-        }
-    }
+	"notifications": {
+		"greeting": "Chào %[1]s,",
+		"email_confirm": {
+			"subject": "%[1]s, vui lòng xác thực địa chỉ email trên Vikunja của bạn",
+			"subject_new": "%[1]s + Vikunja = <3",
+			"welcome": "Chào mừng đến với Vikunja!",
+			"confirm": "Để xác nhận địa chỉ email của mình, hãy nhấn vào liên kết bên dưới:"
+		},
+		"password": {
+			"changed": {
+				"subject": "Mật khẩu của bạn trên Vikunja đã được thay đổi",
+				"success": "Mật khẩu tài khoản của bạn đã được thay đổi thành công.",
+				"warning": "Nếu đây không phải là bạn, có thể đã có ai đó xâm nhập vào tài khoản của bạn. Trong trường hợp này vui lòng liên hệ với quản trị viên server của bạn."
+			},
+			"reset": {
+				"subject": "Đặt lại mật khẩu của bạn trên Vikunja",
+				"instructions": "Để đặt lại mật khẩu, vui lòng nhấn vào đường dẫn bên dưới:",
+				"valid_duration": "Đường dẫn này có hiệu lực trong vòng 24 giờ."
+			}
+		},
+		"totp": {
+			"invalid": {
+				"subject": "Có ai đó vừa cố gắng đăng nhập vào tài khoản Vikunja của bạn, nhưng thất bại",
+				"message": "Có ai đó vừa cố đăng nhập vào tài khoản của bạn với tên đăng nhập và mật khẩu chính xác nhưng sai mã TOTP.",
+				"warning": "**Nếu đây không phải là bạn, ai đó khác đã biết mật khẩu của bạn. Bạn nên đặt mới mật khẩu ngay!**"
+			},
+			"account_locked": {
+				"subject": "Chúng tôi vừa vô hiệu hóa tài khoản của bạn trên Vikunja",
+				"message": "Có ai đó vừa cố gắng đăng nhập bằng thông tin của bạn nhưng không cung cấp được mã TOTP hợp lệ.",
+				"disabled": "Sau 10 lần thất bại, chúng tôi đã vô hiệu hóa tài khoản của bạn và đặt lại mật khẩu. Để đặt một mật khẩu mới, hãy làm theo hướng dẫn trong email đặt lại mật khẩu mà chúng tôi vừa gửi cho bạn.",
+				"reset_instructions": "Nếu bạn không nhận được email hướng dẫn đặt lại mật khẩu, bạn vẫn có thể gửi yêu cầu nhận một email mới tại [%[1]s](%[2]s)."
+			}
+		},
+		"login": {
+			"failed": {
+				"subject": "Có ai đó vừa cố gắng đăng nhập vào tài khoản Vikunja của bạn, nhưng không cung cấp đúng mật khẩu",
+				"message": "Có ai đó vừa cố đăng nhập vào tài khoản của bạn với mật khẩu nhập sai ba lần liên tiếp.",
+				"warning": "Nếu đây không phải bạn, có thể đang có ai đó cố gắng xâm nhập vào tài khoản của bạn.",
+				"enhance_security": "Để nâng cao bảo mật cho tài khoản, bạn có thể sẽ cần thiết lập một mật khẩu mạnh hơn hoặc bật xác thực TOTP trong phần cài đặt:"
+			}
+		},
+		"account": {
+			"deletion": {
+				"confirm": {
+					"subject": "Vui lòng xác nhận việc xóa bỏ tài khoản Vikunja của bạn",
+					"request": "Bạn đã yêu cầu xóa tài khoản của mình. Để xác nhận, vui lòng nhấn vào đường dẫn bên dưới:",
+					"valid_duration": "Liên kết này có hiệu lực trong vòng 24 giờ.",
+					"schedule_info": "Ngay khi bạn xác nhận việc xóa này chúng tôi sẽ lên lịch xóa tài khoản của bạn trong vòng 3 ngày và sẽ gửi bạn một email khác cho đến lúc đó.",
+					"consequences": "Nếu bạn xóa tài khoản của mình, chúng tôi sẽ gỡ bỏ tất cả các dự án và tác vụ mà bạn đã tạo. Mọi thứ bạn đã chia sẻ với người dùng hoặc team khác sẽ được chuyển giao quyền sở hữu sang cho người dùng hoặc team đó.",
+					"changed_mind": "Nếu bạn không yêu cầu xóa hay thay đổi quyết định, bạn chỉ cần bỏ qua email này."
+				},
+				"scheduled": {
+					"subject_days": "Tài khoản Vikunja của bạn sẽ được xóa trong %[1]s ngày nữa",
+					"subject_tomorrow": "Tài khoản Vikunjia của bạn sẽ được xóa vào ngày mai",
+					"request_reminder": "Bạn gần đây có yêu cầu xóa tài khoản Vikunja của mình.",
+					"deletion_time_days": "Chúng tôi sẽ xóa tài khoản của bạn trong %[1]s ngày nữa.",
+					"deletion_time_tomorrow": "Chúng tôi sẽ xóa tài khoản của bạn vào ngày mai.",
+					"changed_mind": "Nếu bạn thay đổi quyết đinh, chỉ cần nhấn vào đường dẫn bên dưới để hủy xóa và làm theo hướng dẫn:"
+				},
+				"completed": {
+					"subject": "Tài khoản Vikunja của bạn đã được xóa",
+					"confirmation": "Theo như yêu cầu, chúng tôi đã xóa tài khoản Vikunja của bạn.",
+					"permanent": "Việc xóa này là vĩnh viễn. Nếu chưa tạo bản sao lưu và hiện tại cần lấy lại dữ liệu của mình, vui lòng liên hệ với quản trị viên."
+				}
+			}
+		},
+		"task": {
+			"reminder": {
+				"subject": "Nhắc nhở cho \"%[1]s\" (%[2]s)"
+			},
+			"comment": {
+				"mentioned_subject": "%[1]s đã nhắc đến bạn trong một bình luận của \"%[2]s\"",
+				"mentioned_message": "**%[1]s** đã nhắc đến bạn trong một bình luận:"
+			},
+			"assigned": {
+				"message_to_others": "%[1]s đã giao tác vụ này cho %[2]s."
+			},
+			"mentioned": {
+				"subject_new": "%[1]s nhắc đến bạn trong một tác vụ mới \"%[2]s\"",
+				"subject": "%[1]s đã nhắc đến bạn trong một tác vụ \"%[2]s\"",
+				"message": "**%[1]s** đã nhắc đến bạn trong một tác vụ:"
+			},
+			"overdue": {
+				"subject": "Tác vụ \"%[1]s\" (%[2]s) bị quá hạn",
+				"multiple_subject": "Các tác vụ quá hạn của bạn",
+				"multiple_message": "Bạn có các tác vụ quá hạn sau:",
+				"overdue_since": "quá hạn kể từ %[1]s",
+				"overdue_now": "hiện đang quá hạn"
+			}
+		},
+		"project": {
+			"created": "%[1]s đã tạo dự án \"%[2]s\""
+		},
+		"team": {
+			"member_added": {
+				"message": "%[1]s vừa thêm bạn vào Team %[2]s trong Vikunja."
+			}
+		},
+		"data_export": {
+			"ready": {
+				"availability": "Bản tải xuống sẽ có sẵn trong vòng 7 ngày tới."
+			}
+		},
+		"migration": {
+			"done": {
+				"imported": "Vikunjia đã nhập toàn bộ danh sách/dự án, tác vụ, ghi chú, nhắc nhở và tệp từ %[1]s mà bạn có quyền truy cập."
+			}
+		},
+		"common": {
+			"have_nice_day": "Chúc một ngày tốt lành!",
+			"copy_url": "Nếu nút bấm bên trên không hoạt động, hãy sao chép url bên dưới và dán vào thanh địa chỉ trong trình duyệt của bạn:"
+		}
+	}
 }

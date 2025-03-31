@@ -1,150 +1,150 @@
 {
-    "notifications": {
-        "greeting": "Hallo %[1]s,",
-        "email_confirm": {
-            "subject": "%[1]s, bitte bestätige deine E-Mail-Adresse bei Vikunja",
-            "subject_new": "%[1]s + Vikunja = <3",
-            "welcome": "Willkommen bei Vikunja!",
-            "confirm": "Um deine E-Mail-Adresse zu bestätigen, klicke auf den Link unten:"
-        },
-        "password": {
-            "changed": {
-                "subject": "Dein Passwort bei Vikunja wurde geändert",
-                "success": "Dein Account-Passwort wurde erfolgreich geändert.",
-                "warning": "Falls das nicht du warst, könnte jemand Zugriff auf deinen Account haben. Wende dich in diesem Fall an den Administrator deines Servers."
-            },
-            "reset": {
-                "subject": "Setze dein Passwort bei Vikunja zurück",
-                "instructions": "Um dein Passwort zurückzusetzen, klicke auf den Link unten:",
-                "valid_duration": "Dieser Link ist 24 Stunden gültig."
-            }
-        },
-        "totp": {
-            "invalid": {
-                "subject": "Jemand hat gerade versucht, sich bei deinem Vikunja-Account anzumelden, ist aber gescheitert",
-                "message": "Jemand hat gerade versucht, sich mit dem richtigen Anmeldenamen und Passwort, aber einem falschen TOTP-Code bei deinem Account anzumelden.",
-                "warning": "**Falls das nicht du warst, kennt jemand anderes dein Passwort. Du solltest es sofort ändern!**"
-            },
-            "account_locked": {
-                "subject": "Wir haben deinen Account bei Vikunja deaktiviert",
-                "message": "Jemand hat versucht, sich mit deinen Zugangsdaten anzumelden, konnte aber keinen gültigen TOTP-Code angeben.",
-                "disabled": "Nach 10 fehlgeschlagenen Versuchen haben wir deinen Account deaktiviert und dein Passwort zurückgesetzt. Um ein neues zu setzen, folge den Anweisungen in der Zurücksetzungs-E-Mail, die wir dir gerade geschickt haben.",
-                "reset_instructions": "Falls du keine E-Mail mit Zurücksetzungsanweisungen erhalten hast, kannst du jederzeit eine neue unter [%[1]s](%[2]s) anfordern."
-            }
-        },
-        "login": {
-            "failed": {
-                "subject": "Jemand hat gerade versucht, sich bei deinem Vikunja-Account anzumelden, konnte aber kein korrektes Passwort angeben",
-                "message": "Jemand hat gerade dreimal hintereinander versucht, sich mit einem falschen Passwort bei deinem Account anzumelden.",
-                "warning": "Falls das nicht du warst, könnte jemand versuchen, in deinen Account einzudringen.",
-                "enhance_security": "Um die Sicherheit deines Accounts zu erhöhen, könntest du ein stärkeres Passwort einstellen oder die TOTP-Authentifizierung in den Einstellungen aktivieren:"
-            }
-        },
-        "account": {
-            "deletion": {
-                "confirm": {
-                    "subject": "Bitte bestätige die Löschung deines Vikunja-Accounts",
-                    "request": "Du hast die Löschung deines Accounts beantragt. Um dies zu bestätigen, klicke bitte auf den Link unten:",
-                    "valid_duration": "Dieser Link ist 24 Stunden gültig.",
-                    "schedule_info": "Sobald du die Löschung bestätigst, planen wir die Löschung deines Accounts in drei Tagen und senden dir bis dahin eine weitere E-Mail.",
-                    "consequences": "Wenn du mit der Löschung deines Accounts fortfährst, werden wir alle deine erstellten Projekte und Aufgaben löschen. Alles, was du mit anderen Nutzer:innen oder Teams geteilt hast, wird an diese übertragen.",
-                    "changed_mind": "Falls du die Löschung nicht beantragt hast oder deine Meinung geändert hast, kannst du diese E-Mail einfach ignorieren."
-                },
-                "scheduled": {
-                    "subject_days": "Dein Vikunja-Account wird in %[1]s Tagen gelöscht",
-                    "subject_tomorrow": "Dein Vikunja-Account wird morgen gelöscht",
-                    "request_reminder": "Du hast kürzlich die Löschung deines Vikunja-Accounts beantragt.",
-                    "deletion_time_days": "Wir werden deinen Account in %[1]s Tagen löschen.",
-                    "deletion_time_tomorrow": "Wir werden deinen Account morgen löschen.",
-                    "changed_mind": "Falls du deine Meinung geändert hast, klicke einfach auf den Link unten, um die Löschung abzubrechen, und folge den Anweisungen dort:"
-                },
-                "completed": {
-                    "subject": "Dein Vikunja-Account wurde gelöscht",
-                    "confirmation": "Wie gewünscht haben wir deinen Vikunja-Account gelöscht.",
-                    "permanent": "Diese Löschung ist endgültig. Falls du kein Backup erstellt hast und jetzt deine Daten zurück benötigst, sprich mit deinem Administrator."
-                }
-            }
-        },
-        "task": {
-            "reminder": {
-                "subject": "Erinnerung an „%[1]s“ (%[2]s)",
-                "message": "Dies ist eine freundliche Erinnerung an die Aufgabe „%[1]s“ (%[2]s)."
-            },
-            "comment": {
-                "subject": "Re: %[1]s",
-                "mentioned_subject": "%[1]s hat dich in einem Kommentar zu „%[2]s“ erwähnt",
-                "mentioned_message": "**%[1]s** hat dich in einem Kommentar erwähnt:"
-            },
-            "assigned": {
-                "subject_to_assignee": "Du wurdest %[1]s (%[2]s) zugewiesen",
-                "message_to_assignee": "%[1]s hat dich in %[2]s zugewiesen.",
-                "subject_to_others": "%[1]s (%[2]s) wurde zu %[3]s zugewiesen",
-                "message_to_others": "%[1]s hat diese Aufgabe %[2]s zugewiesen."
-            },
-            "deleted": {
-                "subject": "%[1]s (%[2]s) wurde gelöscht",
-                "message": "%[1]s hat die Aufgabe %[2]s (%[3]s) gelöscht"
-            },
-            "mentioned": {
-                "subject_new": "%[1]s hat dich in einer neuen Aufgabe „%[2]s“ erwähnt",
-                "subject": "%[1]s hat dich in einer Aufgabe „%[2]s“ erwähnt",
-                "message": "**%[1]s** hat dich in einer Aufgabe erwähnt:"
-            },
-            "overdue": {
-                "subject": "Aufgabe „%[1]s“ (%[2]s) ist überfällig",
-                "message": "Dies ist eine freundliche Erinnerung an die Aufgabe „%[1]s“ (%[2]s), die %[3]s und noch nicht erledigt ist.",
-                "multiple_subject": "Deine überfälligen Aufgaben",
-                "multiple_message": "Du hast folgende überfällige Aufgaben:",
-                "overdue_since": "überfällig seit %[1]s",
-                "overdue_now": "jetzt überfällig"
-            }
-        },
-        "project": {
-            "created": "%[1]s hat das Projekt „%[2]s“ erstellt"
-        },
-        "team": {
-            "member_added": {
-                "subject": "%[1]s hat dich zum Team %[2]s in Vikunja hinzugefügt",
-                "message": "%[1]s hat dich gerade zum Team %[2]s in Vikunja hinzugefügt."
-            }
-        },
-        "data_export": {
-            "ready": {
-                "subject": "Dein Vikunja-Datenexport ist fertig",
-                "message": "Dein Vikunja-Datenexport ist zum Herunterladen bereit. Klicke auf den Button unten, um ihn herunterzuladen:",
-                "availability": "Der Download wird für die nächsten 7 Tage verfügbar sein."
-            }
-        },
-        "migration": {
-            "done": {
-                "subject": "Die Migration von %[1]s zu Vikunja wurde abgeschlossen",
-                "imported": "Vikunja hat alle Listen/Projekte, Aufgaben, Notizen, Erinnerungen und Dateien von %[1]s importiert, auf die du Zugriff hast.",
-                "have_fun": "Viel Spaß mit deinen neuen (alten) Projekten!"
-            },
-            "failed": {
-                "subject": "Die Migration von %[1]s zu Vikunja ist fehlgeschlagen",
-                "message": "Sieht so aus, als ob der Wechsel von %[1]s diesmal nicht wie geplant geklappt hat.",
-                "retry": "Aber keine Sorge! Probiere es einfach genau so nochmal. Manchmal passieren diese Fehler aufgrund von Störungen auf Seiten von %[1]s, aber ein erneuter Versuch hilft oft.",
-                "error": "Wir sind auf einen kleinen Fehler gestoßen: `%[2]s`.",
-                "report": "Bitte hinterlasse uns eine Nachricht dazu [im Forum](https://community.vikunja.io/) oder an einer der üblichen Stellen, damit wir uns anschauen können, warum es fehlgeschlagen ist.",
-                "working_on_it": "Wir haben die Fehlermeldung auf dem Schirm und arbeiten daran, das Problem bald zu beheben."
-            }
-        },
-        "common": {
-            "have_nice_day": "Hab einen schönen Tag!",
-            "copy_url": "Falls der Button oben nicht funktioniert, kopiere die untenstehende URL und füge sie in die Adressleiste deines Browsers ein:",
-            "actions": {
-                "open_task": "Aufgabe öffnen",
-                "open_vikunja": "Vikunja öffnen",
-                "open_project": "Projekt öffnen",
-                "open_team": "Team öffnen",
-                "download": "Herunterladen",
-                "reset_password": "Passwort zurücksetzen",
-                "go_to_settings": "Einstellungen öffnen",
-                "confirm_email": "E-Mail-Adresse bestätigen",
-                "abort_deletion": "Löschen abbrechen",
-                "confirm_account_deletion": "Löschung meines Accounts bestätigen"
-            }
-        }
-    }
+	"notifications": {
+		"greeting": "Hallo %[1]s,",
+		"email_confirm": {
+			"subject": "%[1]s, bitte bestätige deine E-Mail-Adresse bei Vikunja",
+			"subject_new": "%[1]s + Vikunja = <3",
+			"welcome": "Willkommen bei Vikunja!",
+			"confirm": "Um deine E-Mail-Adresse zu bestätigen, klicke auf den Link unten:"
+		},
+		"password": {
+			"changed": {
+				"subject": "Dein Passwort bei Vikunja wurde geändert",
+				"success": "Dein Account-Passwort wurde erfolgreich geändert.",
+				"warning": "Falls das nicht du warst, könnte jemand Zugriff auf deinen Account haben. Wende dich in diesem Fall an den Administrator deines Servers."
+			},
+			"reset": {
+				"subject": "Setze dein Passwort bei Vikunja zurück",
+				"instructions": "Um dein Passwort zurückzusetzen, klicke auf den Link unten:",
+				"valid_duration": "Dieser Link ist 24 Stunden gültig."
+			}
+		},
+		"totp": {
+			"invalid": {
+				"subject": "Jemand hat gerade versucht, sich bei deinem Vikunja-Account anzumelden, ist aber gescheitert",
+				"message": "Jemand hat gerade versucht, sich mit dem richtigen Anmeldenamen und Passwort, aber einem falschen TOTP-Code bei deinem Account anzumelden.",
+				"warning": "**Falls das nicht du warst, kennt jemand anderes dein Passwort. Du solltest es sofort ändern!**"
+			},
+			"account_locked": {
+				"subject": "Wir haben deinen Account bei Vikunja deaktiviert",
+				"message": "Jemand hat versucht, sich mit deinen Zugangsdaten anzumelden, konnte aber keinen gültigen TOTP-Code angeben.",
+				"disabled": "Nach 10 fehlgeschlagenen Versuchen haben wir deinen Account deaktiviert und dein Passwort zurückgesetzt. Um ein neues zu setzen, folge den Anweisungen in der Zurücksetzungs-E-Mail, die wir dir gerade geschickt haben.",
+				"reset_instructions": "Falls du keine E-Mail mit Zurücksetzungsanweisungen erhalten hast, kannst du jederzeit eine neue unter [%[1]s](%[2]s) anfordern."
+			}
+		},
+		"login": {
+			"failed": {
+				"subject": "Jemand hat gerade versucht, sich bei deinem Vikunja-Account anzumelden, konnte aber kein korrektes Passwort angeben",
+				"message": "Jemand hat gerade dreimal hintereinander versucht, sich mit einem falschen Passwort bei deinem Account anzumelden.",
+				"warning": "Falls das nicht du warst, könnte jemand versuchen, in deinen Account einzudringen.",
+				"enhance_security": "Um die Sicherheit deines Accounts zu erhöhen, könntest du ein stärkeres Passwort einstellen oder die TOTP-Authentifizierung in den Einstellungen aktivieren:"
+			}
+		},
+		"account": {
+			"deletion": {
+				"confirm": {
+					"subject": "Bitte bestätige die Löschung deines Vikunja-Accounts",
+					"request": "Du hast die Löschung deines Accounts beantragt. Um dies zu bestätigen, klicke bitte auf den Link unten:",
+					"valid_duration": "Dieser Link ist 24 Stunden gültig.",
+					"schedule_info": "Sobald du die Löschung bestätigst, planen wir die Löschung deines Accounts in drei Tagen und senden dir bis dahin eine weitere E-Mail.",
+					"consequences": "Wenn du mit der Löschung deines Accounts fortfährst, werden wir alle deine erstellten Projekte und Aufgaben löschen. Alles, was du mit anderen Nutzer:innen oder Teams geteilt hast, wird an diese übertragen.",
+					"changed_mind": "Falls du die Löschung nicht beantragt hast oder deine Meinung geändert hast, kannst du diese E-Mail einfach ignorieren."
+				},
+				"scheduled": {
+					"subject_days": "Dein Vikunja-Account wird in %[1]s Tagen gelöscht",
+					"subject_tomorrow": "Dein Vikunja-Account wird morgen gelöscht",
+					"request_reminder": "Du hast kürzlich die Löschung deines Vikunja-Accounts beantragt.",
+					"deletion_time_days": "Wir werden deinen Account in %[1]s Tagen löschen.",
+					"deletion_time_tomorrow": "Wir werden deinen Account morgen löschen.",
+					"changed_mind": "Falls du deine Meinung geändert hast, klicke einfach auf den Link unten, um die Löschung abzubrechen, und folge den Anweisungen dort:"
+				},
+				"completed": {
+					"subject": "Dein Vikunja-Account wurde gelöscht",
+					"confirmation": "Wie gewünscht haben wir deinen Vikunja-Account gelöscht.",
+					"permanent": "Diese Löschung ist endgültig. Falls du kein Backup erstellt hast und jetzt deine Daten zurück benötigst, sprich mit deinem Administrator."
+				}
+			}
+		},
+		"task": {
+			"reminder": {
+				"subject": "Erinnerung an „%[1]s“ (%[2]s)",
+				"message": "Dies ist eine freundliche Erinnerung an die Aufgabe „%[1]s“ (%[2]s)."
+			},
+			"comment": {
+				"subject": "Re: %[1]s",
+				"mentioned_subject": "%[1]s hat dich in einem Kommentar zu „%[2]s“ erwähnt",
+				"mentioned_message": "**%[1]s** hat dich in einem Kommentar erwähnt:"
+			},
+			"assigned": {
+				"subject_to_assignee": "Du wurdest „%[1]s“ (%[2]s) zugewiesen",
+				"message_to_assignee": "%[1]s hat dich in „%[2]s“ zugewiesen.",
+				"subject_to_others": "„%[1]s“ (%[2]s) wurde zu %[3]s zugewiesen",
+				"message_to_others": "%[1]s hat diese Aufgabe %[2]s zugewiesen."
+			},
+			"deleted": {
+				"subject": "„%[1]s“ (%[2]s) wurde gelöscht",
+				"message": "%[1]s hat die Aufgabe „%[2]s“ (%[3]s) gelöscht"
+			},
+			"mentioned": {
+				"subject_new": "%[1]s hat dich in einer neuen Aufgabe „%[2]s“ erwähnt",
+				"subject": "%[1]s hat dich in einer Aufgabe „%[2]s“ erwähnt",
+				"message": "**%[1]s** hat dich in einer Aufgabe erwähnt:"
+			},
+			"overdue": {
+				"subject": "Aufgabe „%[1]s“ (%[2]s) ist überfällig",
+				"message": "Dies ist eine freundliche Erinnerung an die Aufgabe „%[1]s“ (%[2]s), die %[3]s und noch nicht erledigt ist.",
+				"multiple_subject": "Deine überfälligen Aufgaben",
+				"multiple_message": "Du hast folgende überfällige Aufgaben:",
+				"overdue_since": "überfällig seit %[1]s",
+				"overdue_now": "jetzt überfällig"
+			}
+		},
+		"project": {
+			"created": "%[1]s hat das Projekt „%[2]s“ erstellt"
+		},
+		"team": {
+			"member_added": {
+				"subject": "%[1]s hat dich zum Team „%[2]s“ in Vikunja hinzugefügt",
+				"message": "%[1]s hat dich gerade zum Team %[2]s in Vikunja hinzugefügt."
+			}
+		},
+		"data_export": {
+			"ready": {
+				"subject": "Dein Vikunja-Datenexport ist fertig",
+				"message": "Dein Vikunja-Datenexport ist zum Herunterladen bereit. Klicke auf den Button unten, um ihn herunterzuladen:",
+				"availability": "Der Download wird für die nächsten 7 Tage verfügbar sein."
+			}
+		},
+		"migration": {
+			"done": {
+				"subject": "Die Migration von %[1]s zu Vikunja wurde abgeschlossen",
+				"imported": "Vikunja hat alle Listen/Projekte, Aufgaben, Notizen, Erinnerungen und Dateien von %[1]s importiert, auf die du Zugriff hast.",
+				"have_fun": "Viel Spaß mit deinen neuen (alten) Projekten!"
+			},
+			"failed": {
+				"subject": "Die Migration von %[1]s zu Vikunja ist fehlgeschlagen",
+				"message": "Sieht so aus, als ob der Wechsel von %[1]s diesmal nicht wie geplant geklappt hat.",
+				"retry": "Aber keine Sorge! Probiere es einfach genau so nochmal. Manchmal passieren diese Fehler aufgrund von Störungen auf Seiten von %[1]s, aber ein erneuter Versuch hilft oft.",
+				"error": "Wir sind auf einen kleinen Fehler gestoßen: `%[2]s`.",
+				"report": "Bitte hinterlasse uns eine Nachricht dazu [im Forum](https://community.vikunja.io/) oder an einer der üblichen Stellen, damit wir uns anschauen können, warum es fehlgeschlagen ist.",
+				"working_on_it": "Wir haben die Fehlermeldung auf dem Schirm und arbeiten daran, das Problem bald zu beheben."
+			}
+		},
+		"common": {
+			"have_nice_day": "Hab einen schönen Tag!",
+			"copy_url": "Falls der Button oben nicht funktioniert, kopiere die untenstehende URL und füge sie in die Adressleiste deines Browsers ein:",
+			"actions": {
+				"open_task": "Aufgabe öffnen",
+				"open_vikunja": "Vikunja öffnen",
+				"open_project": "Projekt öffnen",
+				"open_team": "Team öffnen",
+				"download": "Herunterladen",
+				"reset_password": "Passwort zurücksetzen",
+				"go_to_settings": "Einstellungen öffnen",
+				"confirm_email": "E-Mail-Adresse bestätigen",
+				"abort_deletion": "Löschen abbrechen",
+				"confirm_account_deletion": "Löschung meines Accounts bestätigen"
+			}
+		}
+	}
 }

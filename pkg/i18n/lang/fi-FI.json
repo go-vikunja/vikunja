@@ -1,150 +1,103 @@
 {
-    "notifications": {
-        "greeting": "Moi %[1]s,",
-        "email_confirm": {
-            "subject": "%[1]s, ole hyvä ja vahvista sähköpostiosoitteesi Vikunjassa",
-            "subject_new": "%[1]s + Vikunja = <3",
-            "welcome": "Tervetuloa Vikunjaan!",
-            "confirm": "Vahvistaaksesi sähköpostiosoitteesi, klikkaa alla olevaa linkkiä:"
-        },
-        "password": {
-            "changed": {
-                "subject": "Salasanasi Vikunjassa vaihdettiin",
-                "success": "Tilisi salasana vaihdettiin onnistuneesti.",
-                "warning": "Jos tämä et ollut sinä, se voi tarkoittaa sitä että joku on vaarantanut tilisi. Tässä tapauksessa ota yhteyttä palvelimesi ylläpitäjään."
-            },
-            "reset": {
-                "subject": "Palauta salasanasi Vikunjassa",
-                "instructions": "Palauttaaksesi salasanasi, klikkaa alla olevaa linkkiä:",
-                "valid_duration": "Tämä linkki on voimassa 24 tuntia."
-            }
-        },
-        "totp": {
-            "invalid": {
-                "subject": "Joku yritti juuri kirjautua Vikunja-tilillesi, mutta ei onnistunut",
-                "message": "Joku juuri yritti kirjautua tilillesi oikealla käyttäjätunnuksella ja salasanalla, mutta väärällä TOTP-koodilla.",
-                "warning": "**Jos tämä et ollut sinä, joku muu tietää salasanasi. Sinun tulisi asettaa uusi salasana välittömästi!**"
-            },
-            "account_locked": {
-                "subject": "Olemme poistaneet Vikunja-tilisi käytöstä.",
-                "message": "Joku yritti kirjautua sisään käyttäjätunnuksillasi, mutta ei pystynyt antamaan kelvollista TOTP-koodia.",
-                "disabled": "Kymmenen epäonnistuneen yrityksen jälkeen olemme poistaneet tilisi käytöstä ja nollanneet salasanasi. Asettaaksesi uuden, noudata nollaussähköpostin ohjeita, jonka juuri lähetimme sinulle.",
-                "reset_instructions": "If you did not receive an email with reset instructions, you can always request a new one at [%[1]s](%[2]s)."
-            }
-        },
-        "login": {
-            "failed": {
-                "subject": "Joku juuri yritti kirjautua Vikunja-tilillesi, mutta antoi väärän salasanan",
-                "message": "Joku yritti juuri kirjautua tilillesi väärällä salasanalla kolme kertaa peräkkäin.",
-                "warning": "Jos tämä et ollut sinä, joku muu saattaa yrittää murtautua tilillesi.",
-                "enhance_security": "To enhance the security of you account you may want to set a stronger password or enable TOTP authentication in the settings:"
-            }
-        },
-        "account": {
-            "deletion": {
-                "confirm": {
-                    "subject": "Ole hyvä ja vahvista Vikunja-tilisi poistaminen",
-                    "request": "Olet pyytänyt tilisi poistamista. Vahvistaaksesi tämän, klikkaa alla olevaa linkkiä:",
-                    "valid_duration": "Tämä linkki on voimassa 24 tuntia.",
-                    "schedule_info": "Once you confirm the deletion we will schedule the deletion of your account in three days and send you another email until then.",
-                    "consequences": "If you proceed with the deletion of your account, we will remove all of your projects and tasks you created. Everything you shared with another user or team will transfer ownership to them.",
-                    "changed_mind": "Jos et ole pyytänyt poistoa tai olet muuttanut mielesi, voit yksinkertaisesti jättää tämän sähköpostin huomiotta."
-                },
-                "scheduled": {
-                    "subject_days": "Vikunja-tilisi poistetaan %[1]s päivässä",
-                    "subject_tomorrow": "Vikunja-tilisi poistetaan huomenna",
-                    "request_reminder": "Olet äskettäin pyytänyt Vikunja-tilisi poistamista.",
-                    "deletion_time_days": "Poistamme tilisi %[1]s päivässä.",
-                    "deletion_time_tomorrow": "Poistamme tilisi huomenna.",
-                    "changed_mind": "Jos olet muuttanut mieltäsi, klikkaa alla olevaa linkkiä peruuttaaksesi poistamisen ja noudata siellä olevia ohjeita:"
-                },
-                "completed": {
-                    "subject": "Vikunja-tilisi on poistettu",
-                    "confirmation": "Kuten pyydetty, olemme poistaneet Vikunja-tilisi.",
-                    "permanent": "Tämä poisto on pysyvä. Jos et luonut varmuuskopiota ja tarvitset tietosi takaisin nyt, keskustele järjestelmänvalvojasi kanssa."
-                }
-            }
-        },
-        "task": {
-            "reminder": {
-                "subject": "Muistutus \"%[1]s\":lle (%[2]s)",
-                "message": "Tämä on ystävällinen muistutus tehtävästä \"%[1]s\" (%[2]s)."
-            },
-            "comment": {
-                "subject": "Re: %[1]s",
-                "mentioned_subject": "%[1]s mainitsi sinut kommentissa \"%[2]s\"",
-                "mentioned_message": "**%[1]s** mainitsi sinut kommentissa:"
-            },
-            "assigned": {
-                "subject_to_assignee": "You have been assigned to %[1]s (%[2]s)",
-                "message_to_assignee": "%[1]s has assigned you to %[2]s.",
-                "subject_to_others": "%[1]s(%[2]s) has been assigned to %[3]s",
-                "message_to_others": "%[1]s has assigned this task to %[2]s."
-            },
-            "deleted": {
-                "subject": "%[1]s (%[2]s) on poistettu",
-                "message": "%[1]s on poistanut tehtävän %[2]s (%[3]s)"
-            },
-            "mentioned": {
-                "subject_new": "%[1]s mainitsi sinut uudessa tehtävässä \"%[2]s\"",
-                "subject": "%[1]s mainitsi sinut tehtävässä \"%[2]s\"",
-                "message": "**%[1]s** mainitsi sinut tehtävässä:"
-            },
-            "overdue": {
-                "subject": "Tehtävä \"%[1]s\" (%[2]s) on erääntynyt",
-                "message": "This is a friendly reminder of the task \"%[1]s\" (%[2]s) which is %[3]s and not yet done.",
-                "multiple_subject": "Myöhässä olevat tehtäväsi",
-                "multiple_message": "Sinulla on seuraavat erääntyneet tehtävät:",
-                "overdue_since": "overdue since %[1]s",
-                "overdue_now": "erääntynyt nyt"
-            }
-        },
-        "project": {
-            "created": "%[1]s created the project \"%[2]s\""
-        },
-        "team": {
-            "member_added": {
-                "subject": "%[1]s lisäsi sinut %[2]s tiimiin Vikunjassa",
-                "message": "%[1]s on juuri lisännyt sinut %[2]s tiimiin Vikunjassa."
-            }
-        },
-        "data_export": {
-            "ready": {
-                "subject": "Your Vikunja Data Export is ready",
-                "message": "Your Vikunja Data Export is ready for you to download. Click the button below to download it:",
-                "availability": "The download will be available for the next 7 days."
-            }
-        },
-        "migration": {
-            "done": {
-                "subject": "The migration from %[1]s to Vikunja was completed",
-                "imported": "Vikunja has imported all lists/projects, tasks, notes, reminders and files from %[1]s you have access to.",
-                "have_fun": "Pidä hauskaa uusien (vanhojen) projektiesi kanssa!"
-            },
-            "failed": {
-                "subject": "The migration from %[1]s to Vikunja has failed",
-                "message": "Looks like the move from %[1]s didn't go as planned this time.",
-                "retry": "No worries, though! Just give it another shot by starting over the same way you did before. Sometimes, these hiccups happen because of glitches on %[1]s's end, but trying again often does the trick.",
-                "error": "Törmäsimme pieneen virheeseen matkalla: `%[2]s`.",
-                "report": "Please drop us a note about this [in the forum](https://community.vikunja.io/) or any of the usual places so that we can take a look at why it failed.",
-                "working_on_it": "We've got the error message on our radar and are on it to get it sorted out soon."
-            }
-        },
-        "common": {
-            "have_nice_day": "Hauskaa päivän jatkoa!",
-            "copy_url": "If the button above doesn't work, copy the url below and paste it in your browser's address bar:",
-            "actions": {
-                "open_task": "Open Task",
-                "open_vikunja": "Open Vikunja",
-                "open_project": "Open Project",
-                "open_team": "Open Team",
-                "download": "Download",
-                "reset_password": "Reset your password",
-                "go_to_settings": "Go to settings",
-                "confirm_email": "Confirm your email address",
-                "abort_deletion": "Abort the deletion",
-                "confirm_account_deletion": "Confirm the deletion of my account"
-            }
-        }
-    }
+	"notifications": {
+		"greeting": "Moi %[1]s,",
+		"email_confirm": {
+			"subject": "%[1]s, ole hyvä ja vahvista sähköpostiosoitteesi Vikunjassa",
+			"subject_new": "%[1]s + Vikunja = <3",
+			"welcome": "Tervetuloa Vikunjaan!",
+			"confirm": "Vahvistaaksesi sähköpostiosoitteesi, klikkaa alla olevaa linkkiä:"
+		},
+		"password": {
+			"changed": {
+				"subject": "Salasanasi Vikunjassa vaihdettiin",
+				"success": "Tilisi salasana vaihdettiin onnistuneesti.",
+				"warning": "Jos tämä et ollut sinä, se voi tarkoittaa sitä että joku on vaarantanut tilisi. Tässä tapauksessa ota yhteyttä palvelimesi ylläpitäjään."
+			},
+			"reset": {
+				"subject": "Palauta salasanasi Vikunjassa",
+				"instructions": "Palauttaaksesi salasanasi, klikkaa alla olevaa linkkiä:",
+				"valid_duration": "Tämä linkki on voimassa 24 tuntia."
+			}
+		},
+		"totp": {
+			"invalid": {
+				"subject": "Joku yritti juuri kirjautua Vikunja-tilillesi, mutta ei onnistunut",
+				"message": "Joku juuri yritti kirjautua tilillesi oikealla käyttäjätunnuksella ja salasanalla, mutta väärällä TOTP-koodilla.",
+				"warning": "**Jos tämä et ollut sinä, joku muu tietää salasanasi. Sinun tulisi asettaa uusi salasana välittömästi!**"
+			},
+			"account_locked": {
+				"subject": "Olemme poistaneet Vikunja-tilisi käytöstä.",
+				"message": "Joku yritti kirjautua sisään käyttäjätunnuksillasi, mutta ei pystynyt antamaan kelvollista TOTP-koodia.",
+				"disabled": "Kymmenen epäonnistuneen yrityksen jälkeen olemme poistaneet tilisi käytöstä ja nollanneet salasanasi. Asettaaksesi uuden, noudata nollaussähköpostin ohjeita, jonka juuri lähetimme sinulle."
+			}
+		},
+		"login": {
+			"failed": {
+				"subject": "Joku juuri yritti kirjautua Vikunja-tilillesi, mutta antoi väärän salasanan",
+				"message": "Joku yritti juuri kirjautua tilillesi väärällä salasanalla kolme kertaa peräkkäin.",
+				"warning": "Jos tämä et ollut sinä, joku muu saattaa yrittää murtautua tilillesi."
+			}
+		},
+		"account": {
+			"deletion": {
+				"confirm": {
+					"subject": "Ole hyvä ja vahvista Vikunja-tilisi poistaminen",
+					"request": "Olet pyytänyt tilisi poistamista. Vahvistaaksesi tämän, klikkaa alla olevaa linkkiä:",
+					"valid_duration": "Tämä linkki on voimassa 24 tuntia.",
+					"changed_mind": "Jos et ole pyytänyt poistoa tai olet muuttanut mielesi, voit yksinkertaisesti jättää tämän sähköpostin huomiotta."
+				},
+				"scheduled": {
+					"subject_days": "Vikunja-tilisi poistetaan %[1]s päivässä",
+					"subject_tomorrow": "Vikunja-tilisi poistetaan huomenna",
+					"request_reminder": "Olet äskettäin pyytänyt Vikunja-tilisi poistamista.",
+					"deletion_time_days": "Poistamme tilisi %[1]s päivässä.",
+					"deletion_time_tomorrow": "Poistamme tilisi huomenna.",
+					"changed_mind": "Jos olet muuttanut mieltäsi, klikkaa alla olevaa linkkiä peruuttaaksesi poistamisen ja noudata siellä olevia ohjeita:"
+				},
+				"completed": {
+					"subject": "Vikunja-tilisi on poistettu",
+					"confirmation": "Kuten pyydetty, olemme poistaneet Vikunja-tilisi.",
+					"permanent": "Tämä poisto on pysyvä. Jos et luonut varmuuskopiota ja tarvitset tietosi takaisin nyt, keskustele järjestelmänvalvojasi kanssa."
+				}
+			}
+		},
+		"task": {
+			"reminder": {
+				"subject": "Muistutus \"%[1]s\":lle (%[2]s)",
+				"message": "Tämä on ystävällinen muistutus tehtävästä \"%[1]s\" (%[2]s)."
+			},
+			"comment": {
+				"subject": "Re: %[1]s",
+				"mentioned_subject": "%[1]s mainitsi sinut kommentissa \"%[2]s\"",
+				"mentioned_message": "**%[1]s** mainitsi sinut kommentissa:"
+			},
+			"mentioned": {
+				"subject_new": "%[1]s mainitsi sinut uudessa tehtävässä \"%[2]s\"",
+				"subject": "%[1]s mainitsi sinut tehtävässä \"%[2]s\"",
+				"message": "**%[1]s** mainitsi sinut tehtävässä:"
+			},
+			"overdue": {
+				"subject": "Tehtävä \"%[1]s\" (%[2]s) on erääntynyt",
+				"multiple_subject": "Myöhässä olevat tehtäväsi",
+				"multiple_message": "Sinulla on seuraavat erääntyneet tehtävät:",
+				"overdue_now": "erääntynyt nyt"
+			}
+		},
+		"team": {
+			"member_added": {
+				"message": "%[1]s on juuri lisännyt sinut %[2]s tiimiin Vikunjassa."
+			}
+		},
+		"migration": {
+			"done": {
+				"have_fun": "Pidä hauskaa uusien (vanhojen) projektiesi kanssa!"
+			},
+			"failed": {
+				"error": "Törmäsimme pieneen virheeseen matkalla: `%[2]s`."
+			}
+		},
+		"common": {
+			"have_nice_day": "Hauskaa päivän jatkoa!"
+		}
+	}
 }

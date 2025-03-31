@@ -1,1249 +1,945 @@
 {
-  "home": {
-    "welcomeNight": "おやすみなさい、{username}さん",
-    "welcomeMorning": "おはようございます、{username}さん",
-    "welcomeDay": "こんにちは、{username}さん",
-    "welcomeEvening": "こんばんは、{username}さん",
-    "lastViewed": "最近の表示",
-    "addToHomeScreen": "ホーム画面に追加することで、よりすばやくアクセスでき操作性が向上します。",
-    "goToOverview": "概要に移動",
-    "project": {
-      "importText": "他のサービスからVikunjaにプロジェクトやタスクをインポートします:",
-      "import": "Vikunjaへのデータのインポート"
-    }
-  },
-  "demo": {
-    "title": "This instance is in demo mode. Do not use this for real data!",
-    "everythingWillBeDeleted": "Everything will be deleted in regular intervals!",
-    "accountWillBeDeleted": "Your account will be deleted, including all projects, tasks and attachments you might create."
-  },
-  "404": {
-    "title": "Not found",
-    "text": "リクエストされたページは存在しません。"
-  },
-  "ready": {
-    "loading": "Vikunjaを読み込み中…",
-    "errorOccured": "エラーが発生しました:",
-    "checkApiUrl": "API URLをご確認ください",
-    "noApiUrlConfigured": "API URLが設定されていません。以下の項目を設定してください:"
-  },
-  "offline": {
-    "title": "オフライン",
-    "text": "ネットワーク接続を確認し、再度お試しください。"
-  },
-  "user": {
-    "auth": {
-      "username": "ユーザー名",
-      "usernameEmail": "ユーザー名またはメールアドレス",
-      "usernamePlaceholder": "例: frederick",
-      "email": "メールアドレス",
-      "emailPlaceholder": "例: frederic{'@'}vikunja.io",
-      "password": "パスワード",
-      "passwordPlaceholder": "例: •••••••••••",
-      "forgotPassword": "パスワードをお忘れですか？",
-      "resetPassword": "パスワードの再設定",
-      "resetPasswordAction": "パスワード再設定リンクの送信",
-      "resetPasswordSuccess": "受信トレイをご確認ください。パスワードの再設定方法を記載したメールが届くはずです。",
-      "passwordsDontMatch": "パスワードが一致しません",
-      "confirmEmailSuccess": "メールの確認に成功しました！ログインの準備が整いました。",
-      "totpTitle": "2要素認証コード",
-      "totpPlaceholder": "例: 123456",
-      "login": "ログイン",
-      "createAccount": "アカウントの作成",
-      "loginWith": "{provider}でログイン",
-      "authenticating": "認証中…",
-      "openIdStateError": "stateパラメータが一致しないため処理を中断しました。",
-      "openIdGeneralError": "認証中にエラーが発生しました。",
-      "logout": "ログアウト",
-      "emailInvalid": "有効なメールアドレスを入力してください。",
-      "usernameRequired": "ユーザー名を入力してください。",
-      "usernameMustNotContainSpace": "ユーザー名にスペースを含めてはいけません。",
-      "usernameMustNotLookLikeUrl": "The username must not look like a URL.",
-      "passwordRequired": "パスワードを入力してください。",
-      "passwordNotMin": "パスワードは8文字以上でなければなりません。",
-      "passwordNotMax": "Password must have at most 72 characters.",
-      "showPassword": "パスワードの表示",
-      "hidePassword": "パスワードの非表示",
-      "noAccountYet": "まだアカウントをお持ちでないですか？",
-      "alreadyHaveAnAccount": "すでにアカウントをお持ちですか？",
-      "remember": "ログインしたままにする",
-      "registrationDisabled": "Registration is disabled."
-    },
-    "settings": {
-      "title": "設定",
-      "newPasswordTitle": "パスワードの更新",
-      "newPassword": "新しいパスワード",
-      "newPasswordConfirm": "新しいパスワードの確認",
-      "currentPassword": "現在のパスワード",
-      "currentPasswordPlaceholder": "現在のパスワード",
-      "passwordsDontMatch": "新しいパスワードとその確認が一致しません。",
-      "passwordUpdateSuccess": "パスワードは正常に更新されました。",
-      "updateEmailTitle": "メールアドレスの更新",
-      "updateEmailNew": "新しいメールアドレス",
-      "updateEmailSuccess": "メールアドレスは正常に更新されました。確認のためのリンクを送信しました。",
-      "general": {
-        "title": "一般設定",
-        "name": "名前",
-        "newName": "新しい名前",
-        "savedSuccess": "設定の更新に成功しました。",
-        "emailReminders": "タスクのリマインダーをメールで送信する",
-        "overdueReminders": "期限切れタスクのリマインダーを毎日メールで送信する",
-        "discoverableByName": "他のユーザーが名前で検索したときチームやプロジェクトのメンバーとして追加できるようにする",
-        "discoverableByEmail": "他のユーザーがメールアドレスで検索したときチームやプロジェクトのメンバーとして追加できるようにする",
-        "playSoundWhenDone": "タスクを完了したとき音を鳴らす",
-        "weekStart": "週の始まり",
-        "weekStartSunday": "日曜日",
-        "weekStartMonday": "月曜日",
-        "language": "言語",
-        "defaultProject": "デフォルトのプロジェクト",
-        "defaultView": "デフォルトのビュー",
-        "timezone": "タイムゾーン",
-        "overdueTasksRemindersTime": "期限切れタスクのリマインダー送信時間",
-        "filterUsedOnOverview": "概要ページの絞り込み条件",
-        "minimumPriority": "Minimum visible task priority",
-        "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
-      },
-      "totp": {
-        "title": "2要素認証",
-        "enroll": "登録",
-        "finishSetupPart1": "セットアップを完了するには、Google AuthenticatorなどのTime-based One-Time Password (TOTP) アプリで次のシークレットを使用します:",
-        "finishSetupPart2": "その後、TOTPアプリの認証コードを入力してください。",
-        "scanQR": "あるいは、TOTPアプリでこのQRコードをスキャンして認証コードを入力してください:",
-        "passcode": "認証コード",
-        "passcodePlaceholder": "TOTPアプリで生成された認証コード",
-        "setupSuccess": "2要素認証は正常に設定されました。",
-        "enterPassword": "パスワードを入力してください",
-        "disable": "2要素認証の無効化",
-        "confirmSuccess": "2要素認証のセットアップを完了しました。",
-        "disableSuccess": "2要素認証は無効化されました。"
-      },
-      "caldav": {
-        "title": "CalDAV",
-        "howTo": "VikunjaをCalDAVクライアントと連携することでさまざまなクライアントからのすべてのタスクを表示および管理できます。CalDAVクライアントから接続するには次のエンドポイントをコピーしてクライアントに入力します:",
-        "more": "VikunjaのCalDAVに関する詳細情報",
-        "tokens": "CalDAVトークン",
-        "tokensHowTo": "上記のエンドポイントからログインする際にパスワードの代わりにCalDAVトークンを使用できます。",
-        "createToken": "トークンの生成",
-        "tokenCreated": "トークン: {token}",
-        "wontSeeItAgain": "このトークンをコピーしてください。二度と見ることができなくなります。",
-        "mustUseToken": "サードパーティーのクライアントからCalDAVを使用する場合、パスワードの代わりにCalDAVトークンを生成して使用する必要があります。",
-        "usernameIs": "ユーザー名: {0}"
-      },
-      "avatar": {
-        "title": "プロフィール画像",
-        "initials": "初期値",
-        "gravatar": "Gravatar",
-        "marble": "Marble",
-        "upload": "アップロード",
-        "uploadAvatar": "画像のアップロード",
-        "statusUpdateSuccess": "プロフィール画像を更新しました。",
-        "setSuccess": "プロフィール画像を設定しました。",
-        "ldap": "Your avatar is automagically synced from your organization's directory service (LDAP). You can ask your IT team for information on how to change it."
-      },
-      "quickAddMagic": {
-        "title": "Quick Add Magic Mode",
-        "disabled": "無効",
-        "todoist": "Todoist",
-        "vikunja": "Vikunja"
-      },
-      "appearance": {
-        "title": "カラースキーム",
-        "setSuccess": "カラースキームを{colorScheme}に変更しました。",
-        "colorScheme": {
-          "light": "ライト",
-          "system": "システム既定",
-          "dark": "ダーク"
-        }
-      },
-      "apiTokens": {
-        "title": "APIトークン",
-        "general": "APIトークンを使うとログインせずにVikunjaのAPIを利用できます。",
-        "apiDocs": "詳しくはAPIドキュメントをご確認ください",
-        "createAToken": "トークンの生成",
-        "createToken": "トークンの生成",
-        "30d": "30日",
-        "60d": "60日",
-        "90d": "90日",
-        "permissionExplanation": "Permissions allow you to scope what an api token is allowed to do.",
-        "titleRequired": "トークン名を入力してください。",
-        "permissionRequired": "Please select at least one permission from the list.",
-        "expired": "This token has expired {ago}.",
-        "tokenCreatedSuccess": "Here is your new api token: {token}",
-        "tokenCreatedNotSeeAgain": "このトークンは二度と表示されません。安全な場所に保管してください。",
-        "selectAll": "すべて選択",
-        "delete": {
-          "header": "トークンの削除",
-          "text1": "Are you sure you want to delete the token \"{token}\"?",
-          "text2": "This will revoke access to all applications or integrations using it. You cannot undo this."
-        },
-        "attributes": {
-          "title": "トークン名",
-          "titlePlaceholder": "Enter a title you will recognize later",
-          "expiresAt": "Expires at",
-          "permissions": "Permissions"
-        }
-      }
-    },
-    "deletion": {
-      "title": "Vikunjaアカウントの削除",
-      "text1": "アカウントの削除は永久的なものであり、元に戻すことはできません。あなたのプロジェクト、タスク、それらに関連するすべてのものを削除します。",
-      "text2": "続行するにはパスワードを入力してください。詳しい案内の記載したメールを送信します。",
-      "text3": "To proceed, please press the button below. You will receive an email with further instructions.",
-      "confirm": "アカウントの削除",
-      "requestSuccess": "リクエストは成功しました。詳しい案内はメールでお知らせします。",
-      "passwordRequired": "パスワードを入力してください。",
-      "confirmSuccess": "アカウントの削除を承認しました。3日後にアカウントは削除されます。",
-      "scheduled": "{date} ({dateSince}) にVikunjaアカウントは削除されます。",
-      "scheduledCancel": "アカウントの削除を取り消す場合はこちらをご覧ください。",
-      "scheduledCancelText": "アカウントの削除を取り消すにはパスワードを入力してください:",
-      "scheduledCancelButton": "To cancel the deletion of your account, please press the button below:",
-      "scheduledCancelConfirm": "アカウント削除の取り消し",
-      "scheduledCancelSuccess": "アカウント削除は行われません。"
-    },
-    "export": {
-      "title": "Vikunjaデータのエクスポート",
-      "description": "利用しているVikunjaの全データのダウンロードをリクエストできます。これにはプロジェクト、タスク、およびそれらに関連するすべてを含みます。このデータはどのVikunjaインスタンスでもインポートすることができます。",
-      "descriptionPasswordRequired": "続行するにはパスワードを入力してください:",
-      "request": "Vikunjaデータのリクエスト",
-      "success": "Vikunjaデータのリクエストに成功しました！ダウンロードの準備が整い次第、メールでお知らせします。",
-      "downloadTitle": "エクスポートされたVikunjaデータのダウンロード"
-    }
-  },
-  "project": {
-    "archivedMessage": "アーカイブ済みプロジェクトです。タスクの作成や編集を行うことはできません。",
-    "archived": "アーカイブ済み",
-    "showArchived": "アーカイブ済みプロジェクトを表示",
-    "title": "Title",
-    "color": "色",
-    "projects": "プロジェクト",
-    "parent": "親プロジェクト",
-    "search": "プロジェクトのキーワードを入力…",
-    "searchSelect": "クリックするかEnterキーを押してプロジェクトを選択",
-    "shared": "共有プロジェクト",
-    "noDescriptionAvailable": "プロジェクトの説明はありません。",
-    "inboxTitle": "Inbox",
-    "favorite": "Mark this project as favorite",
-    "unfavorite": "Remove this project from favorites",
-    "openSettingsMenu": "Open project settings menu",
-    "description": "Project description",
-    "favoriteDescription": "This project has all tasks marked as favorites.",
-    "create": {
-      "header": "新しいプロジェクトの作成",
-      "titlePlaceholder": "プロジェクト名を入力…",
-      "addTitleRequired": "プロジェクト名を入力してください。",
-      "createdSuccess": "プロジェクトは正常に作成されました。",
-      "addProjectRequired": "プロジェクトを指定するか、あらかじめデフォルトのプロジェクトを設定してください。"
-    },
-    "archive": {
-      "title": "「{project}」のアーカイブ",
-      "archive": "プロジェクトのアーカイブ",
-      "unarchive": "プロジェクトのアーカイブの取り消し",
-      "unarchiveText": "タスクの作成や編集を行えるようになります。",
-      "archiveText": "アーカイブを取り消すまで、このプロジェクトではタスクの作成や編集を行うことができません。",
-      "success": "プロジェクトは正常にアーカイブされました。"
-    },
-    "background": {
-      "title": "プロジェクトの背景画像を設定",
-      "remove": "背景画像を削除",
-      "upload": "画像を選択…",
-      "searchPlaceholder": "背景画像を検索…",
-      "poweredByUnsplash": "Powered by Unsplash",
-      "loadMore": "写真をもっと読み込む",
-      "success": "背景画像は正常に設定されました。",
-      "removeSuccess": "背景画像は正常に削除されました。"
-    },
-    "delete": {
-      "title": "「{project}」の削除",
-      "header": "プロジェクトの削除",
-      "text1": "このプロジェクトを削除して本当によろしいですか？",
-      "text2": "このプロジェクトに含まれるタスクはすべて削除されます。この操作は元に戻せません。",
-      "success": "プロジェクトは正常に削除されました。",
-      "tasksToDelete": "約{count}件のタスクが抹消されます。",
-      "tasksAndChildProjectsToDelete": "This will irrevocably remove approx. {tasks} tasks and {projects} projects.",
-      "noTasksToDelete": "このプロジェクトにはタスクが含まれていないので問題なく削除できます。"
-    },
-    "duplicate": {
-      "title": "プロジェクトの複製",
-      "label": "複製",
-      "text": "Select a parent project which should hold the duplicated project:",
-      "success": "プロジェクトは正常に複製されました。"
-    },
-    "edit": {
-      "header": "プロジェクトの編集",
-      "title": "「{project}」の編集",
-      "titlePlaceholder": "プロジェクト名を入力…",
-      "identifierTooltip": "プロジェクトIDは、プロジェクト間でタスクを一意に識別するために使用できます。空に設定すると無効化されます。",
-      "identifier": "プロジェクトID",
-      "identifierPlaceholder": "プロジェクトIDを入力…",
-      "description": "説明",
-      "descriptionPlaceholder": "Enter a description for this project, hit '/' for more options…",
-      "color": "色",
-      "success": "プロジェクトは正常に更新されました。"
-    },
-    "share": {
-      "header": "プロジェクトの共有",
-      "title": "「{project}」の共有",
-      "share": "共有",
-      "links": {
-        "title": "リンクの共有",
-        "what": "共有リンクとは何ですか？",
-        "explanation": "共有リンクとは、Vikunjaのアカウントを持たない他のユーザーとプロジェクトを簡単に共有することができる機能です。",
-        "create": "共有リンクの作成",
-        "name": "名前 (オプション)",
-        "namePlaceholder": "例: Lorem Ipsum",
-        "nameExplanation": "この共有リンクで行われた操作はすべてこの名前で表示されるようになります。",
-        "password": "パスワード (オプション)",
-        "passwordExplanation": "認証の際にユーザーはこのパスワードの入力を求められます。",
-        "noName": "名称未設定",
-        "remove": "共有リンクの削除",
-        "removeText": "この共有リンクを削除して本当によろしいですか？この共有リンクを使ってプロジェクトにアクセスすることができなくなります。この操作は元に戻せません。",
-        "createSuccess": "共有リンクは正常に作成されました。",
-        "deleteSuccess": "共有リンクは正常に削除されました。",
-        "view": "ビュー",
-        "sharedBy": "{0}によって共有されました"
-      },
-      "userTeam": {
-        "typeUser": "ユーザー",
-        "typeTeam": "チーム",
-        "shared": "アクセスできる{type}",
-        "you": "あなた",
-        "notShared": "まだどの{type}とも共有していません。",
-        "removeHeader": "Remove a {type} from the {sharable}",
-        "removeText": "Are you sure you want to remove this {sharable} from the {type}? This cannot be undone!",
-        "removeSuccess": "The {sharable} was successfully removed from the {type}.",
-        "addedSuccess": "The {type} was successfully added.",
-        "updatedSuccess": "The {type} was successfully added."
-      },
-      "right": {
-        "title": "権限",
-        "read": "読み取り専用",
-        "readWrite": "読み取りと書き込み",
-        "admin": "管理者"
-      },
-      "attributes": {
-        "link": "リンク",
-        "delete": "削除"
-      }
-    },
-    "first": {
-      "title": "First View"
-    },
-    "list": {
-      "title": "リスト",
-      "add": "追加",
-      "addPlaceholder": "タスクを追加…",
-      "empty": "このプロジェクトにはタスクが存在しません。",
-      "newTaskCta": "タスクを作成してください。",
-      "editTask": "タスクの編集"
-    },
-    "gantt": {
-      "title": "ガント",
-      "size": "大きさ",
-      "default": "デフォルト",
-      "month": "月",
-      "day": "日",
-      "hour": "時間",
-      "range": "期間",
-      "noDates": "指定日が未設定のタスクです。"
-    },
-    "table": {
-      "title": "テーブル",
-      "columns": "列"
-    },
-    "kanban": {
-      "title": "カンバン",
-      "limit": "Limit: {limit}",
-      "noLimit": "未設定",
-      "doneBucket": "バケットを完了",
-      "doneBucketHint": "All tasks moved into this bucket will automatically marked as done.",
-      "doneBucketHintExtended": "All tasks moved into the done bucket will be marked as done automatically. All tasks marked as done from elsewhere will be moved as well.",
-      "doneBucketSavedSuccess": "The done bucket has been saved successfully.",
-      "defaultBucket": "デフォルトのバケット",
-      "defaultBucketHint": "When creating tasks without specifying a bucket, they will be added to this bucket.",
-      "defaultBucketSavedSuccess": "The default bucket has been saved successfully.",
-      "deleteLast": "You cannot remove the last bucket.",
-      "addTaskPlaceholder": "新しいタスク名を入力…",
-      "addTask": "タスクの追加",
-      "addAnotherTask": "他のタスクを追加",
-      "addBucket": "バケットの作成",
-      "addBucketPlaceholder": "新しいバケット名を入力…",
-      "deleteHeaderBucket": "バケットの削除",
-      "deleteBucketText1": "このバケットを削除して本当によろしいですか？",
-      "deleteBucketText2": "This will not delete any tasks but move them into the default bucket.",
-      "deleteBucketSuccess": "バケットは正常に削除されました。",
-      "bucketTitleSavedSuccess": "The bucket title has been saved successfully.",
-      "bucketLimitSavedSuccess": "The bucket limit been saved successfully.",
-      "collapse": "Collapse this bucket",
-      "bucketLimitReached": "You have reached the bucket limit. Remove tasks or increase the limit to add new tasks."
-    },
-    "pseudo": {
-      "favorites": {
-        "title": "お気に入り"
-      }
-    },
-    "webhooks": {
-      "title": "Webhook",
-      "targetUrl": "ターゲットURL",
-      "targetUrlInvalid": "有効なURLを入力してください。",
-      "events": "イベント",
-      "eventsHint": "Webhookが受信する (現在のプロジェクト内での) イベントを選択します。",
-      "mustSelectEvents": "イベントを少なくとも1つ選択する必要があります。",
-      "delete": "Webhookの削除",
-      "deleteText": "このWebhookを削除して本当によろしいですか？このWebhookのターゲットURLにはイベントは送信されなくなります。",
-      "deleteSuccess": "Webhookは正常に削除されました。",
-      "create": "Webhookを作成",
-      "secret": "シークレット",
-      "secretHint": "シークレットを指定した場合、WebhookターゲットURLへのリクエストはすべてHMAC署名されます。",
-      "secretDocs": "シークレットに関する詳細はドキュメントをご確認ください。"
-    },
-    "views": {
-      "header": "ビューの編集",
-      "title": "ビュー名",
-      "actions": "Actions",
-      "kind": "Kind",
-      "bucketConfigMode": "Bucket configuration mode",
-      "bucketConfig": "Bucket configuration",
-      "bucketConfigManual": "Manual",
-      "filter": "Filter",
-      "create": "ビューの作成",
-      "createSuccess": "ビューは正常に作成されました。",
-      "titleRequired": "ビュー名を入力してください。",
-      "delete": "ビューの削除",
-      "deleteText": "Are you sure you want to remove this view? It will no longer be possible to use it to view tasks in this project. This action won't delete any tasks. This cannot be undone!",
-      "deleteSuccess": "ビューは正常に削除されました。",
-      "onlyAdminsCanEdit": "Only project admins can edit views.",
-      "updateSuccess": "ビューは正常に更新されました。"
-    }
-  },
-  "filters": {
-    "title": "絞り込み",
-    "clear": "絞り込みの解除",
-    "showResults": "Show results",
-    "fromView": "The current view has a filter set as well:",
-    "fromViewBoth": "It will be used in combination with what you enter here.",
-    "attributes": {
-      "title": "絞り込み条件名",
-      "titlePlaceholder": "絞り込み条件名を入力…",
-      "description": "説明",
-      "descriptionPlaceholder": "Add a description for this filter here, hit '/' for more options…",
-      "includeNulls": "値が設定されていないタスクを含める",
-      "requireAll": "すべての条件に一致するタスクのみ表示",
-      "showDoneTasks": "完了したタスクを表示",
-      "sortAlphabetically": "アルファベット順に並べ替える",
-      "enablePriority": "優先度による絞り込みを有効化",
-      "enablePercentDone": "進捗状況による絞り込みを有効化",
-      "dueDateRange": "期日の範囲",
-      "startDateRange": "開始日の範囲",
-      "endDateRange": "開始日の範囲",
-      "reminderRange": "リマインダーの範囲"
-    },
-    "create": {
-      "title": "新しい絞り込み条件の作成",
-      "description": "絞り込み条件は、複数の条件を組み合わせて保存できる仮想のプロジェクトです。",
-      "action": "絞り込み条件を作成",
-      "titleRequired": "絞り込み条件名を入力してください。"
-    },
-    "delete": {
-      "header": "絞り込み条件の削除",
-      "text": "絞り込み条件を削除して本当によろしいですか？",
-      "success": "絞り込み条件は正常に削除されました。"
-    },
-    "edit": {
-      "title": "絞り込み条件の編集",
-      "success": "絞り込み条件は正常に保存されました。"
-    },
-    "query": {
-      "title": "Query",
-      "placeholder": "Type a search or filter query…",
-      "help": {
-        "intro": "To filter tasks, you can use a query syntax similar to SQL. The available fields for filtering include:",
-        "link": "How does this work?",
-        "canUseDatemath": "You can use date math to set relative dates. Click on the date value in a query to find out more.",
-        "fields": {
-          "done": "Whether the task is completed or not",
-          "priority": "The priority level of the task (1-5)",
-          "percentDone": "The percentage of completion for the task (0-100)",
-          "dueDate": "The due date of the task",
-          "startDate": "The start date of the task",
-          "endDate": "タスクの終了日",
-          "doneAt": "The date and time when the task was completed",
-          "assignees": "The assignees of the task",
-          "labels": "The labels associated with the task",
-          "project": "The project the task belongs to (only available for saved filters, not on a project level)",
-          "reminders": "The reminders of the task as a date field, will return all tasks with at least one reminder matching the query",
-          "created": "The time and date when the task was created",
-          "updated": "The time and date when the task was last changed"
-        },
-        "operators": {
-          "intro": "The available operators for filtering include:",
-          "notEqual": "Not equal to",
-          "equal": "Equal to",
-          "greaterThan": "Greater than",
-          "greaterThanOrEqual": "Greater than or equal to",
-          "lessThan": "Less than",
-          "lessThanOrEqual": "Less than or equal to",
-          "like": "Matches a pattern (using wildcard %)",
-          "in": "Matches any value in a comma-seperated list of values",
-          "notIn": "Matches any value not present in a comma-seperated list of values"
-        },
-        "logicalOperators": {
-          "intro": "To combine multiple conditions, you can use the following logical operators:",
-          "and": "AND operator, matches if all conditions are true",
-          "or": "OR operator, matches if any of the conditions are true",
-          "parentheses": "Parentheses for grouping conditions"
-        },
-        "examples": {
-          "intro": "Here are some examples of filter queries:",
-          "priorityEqual": "Matches tasks with priority level 4",
-          "dueDatePast": "Matches tasks with a due date in the past",
-          "undoneHighPriority": "Matches undone tasks with priority level 3 or higher",
-          "assigneesIn": "Matches tasks assigned to either \"user1\" or \"user2\"",
-          "priorityOneOrTwoPastDue": "Matches tasks with priority level 1 or 2 and a due date in the past"
-        }
-      }
-    }
-  },
-  "migrate": {
-    "title": "他のサービスからのインポート",
-    "titleService": "{name}からVikunjaへのデータのインポート",
-    "import": "Vikunjaへのデータのインポート",
-    "description": "以下のいずれかのサービスのロゴをクリックして始めましょう。",
-    "descriptionDo": "アクセス可能なリスト、タスク、メモ、リマインダー、ファイルをすべてVikunjaにインポートします。",
-    "authorize": "Vikunjaはあなたの{name}アカウントにアクセスします。よろしければ以下のボタンをクリックして許可してください。",
-    "getStarted": "さっそく始めましょう",
-    "inProgress": "インポート中…",
-    "alreadyMigrated1": "すでに{name}からは{date}にインポート済みのようです。",
-    "alreadyMigrated2": "再びインポートすることも可能ですが、重複する可能性があります。インポートして本当によろしいですか？",
-    "confirm": "了解！インポート開始なのだ！",
-    "importUpload": "{name}からVikunjaにデータをインポートするには、以下のボタンをクリックしてファイルを選択してください。",
-    "upload": "ファイルのアップロード",
-    "migrationStartedWillReciveEmail": "Vikunja will now import your lists/projects, tasks, notes, reminders and files from {service}. As this will take a while, we will send you an email once done. You can close this window now.",
-    "migrationInProgress": "A migration is currently in progress. Please wait until it is done."
-  },
-  "label": {
-    "title": "ラベル",
-    "manage": "ラベルの管理",
-    "description": "ラベルをクリックして編集します。ラベルはアクセス可能なプロジェクトのタスクで使用できます。",
-    "newCTA": "利用可能なラベルは存在しません。",
-    "search": "ラベルのキーワードを入力…",
-    "create": {
-      "header": "新しいラベルの作成",
-      "title": "ラベルの作成",
-      "titleRequired": "ラベル名を入力してください。",
-      "success": "ラベルは正常に作成されました。"
-    },
-    "edit": {
-      "header": "ラベルの編集",
-      "forbidden": "このラベルはあなたのものではないので編集することはできません。",
-      "success": "ラベルは正常に更新されました。"
-    },
-    "deleteSuccess": "ラベルは正常に削除されました。",
-    "attributes": {
-      "title": "ラベル名",
-      "titlePlaceholder": "ラベル名を入力…",
-      "description": "説明",
-      "descriptionPlaceholder": "ラベルの説明",
-      "color": "色"
-    }
-  },
-  "sharing": {
-    "authenticating": "認証中…",
-    "passwordRequired": "この共有プロジェクトにはパスワードが必要です。パスワードを入力してください:",
-    "error": "エラーが発生しました。",
-    "invalidPassword": "無効なパスワードです。"
-  },
-  "navigation": {
-    "overview": "概要",
-    "upcoming": "今後の予定",
-    "settings": "設定",
-    "imprint": "運営情報",
-    "privacy": "プライバシーポリシー"
-  },
-  "misc": {
-    "loading": "読み込み中…",
-    "save": "保存",
-    "delete": "削除",
-    "confirm": "確定",
-    "cancel": "キャンセル",
-    "refresh": "更新",
-    "disable": "無効化",
-    "copy": "コピー",
-    "copyError": "クリップボードへのコピーに失敗",
-    "search": "検索",
-    "searchPlaceholder": "キーワードを入力…",
-    "previous": "前へ",
-    "next": "次へ",
-    "poweredBy": "Powered by Vikunja",
-    "info": "Info",
-    "create": "作成",
-    "doit": "続行",
-    "saving": "保存中…",
-    "saved": "保存しました！",
-    "default": "デフォルト",
-    "close": "閉じる",
-    "download": "ダウンロード",
-    "showMenu": "メニューの表示",
-    "hideMenu": "メニューの非表示",
-    "forExample": "例:",
-    "welcomeBack": "おかえりなさい",
-    "custom": "カスタム",
-    "id": "ID",
-    "created": "Created at",
-    "createdBy": "Created by {0}",
-    "actions": "Actions",
-    "cannotBeUndone": "この操作は元に戻せません！",
-    "avatarOfUser": "{user}'s profile image"
-  },
-  "input": {
-    "resetColor": "色のリセット",
-    "datepicker": {
-      "today": "今日",
-      "tomorrow": "明日",
-      "nextMonday": "次の月曜日",
-      "thisWeekend": "週末",
-      "laterThisWeek": "今週中",
-      "nextWeek": "来週",
-      "chooseDate": "日付の選択"
-    },
-    "editor": {
-      "edit": "編集",
-      "done": "完了",
-      "heading1": "見出し1",
-      "heading1Tooltip": "Big section heading.",
-      "heading2": "見出し2",
-      "heading2Tooltip": "Medium section heading.",
-      "heading3": "見出し3",
-      "heading3Tooltip": "Smaller section header.",
-      "headingSmaller": "見出しを小さくする",
-      "headingBigger": "見出しを大きくする",
-      "bold": "太字",
-      "italic": "斜体",
-      "strikethrough": "打ち消し線",
-      "underline": "下線",
-      "code": "コード",
-      "codeTooltip": "Capture a code snippet.",
-      "quote": "引用",
-      "quoteTooltip": "Capture a quote.",
-      "bulletList": "順序なしリスト",
-      "bulletListTooltip": "Create a simple bullet list.",
-      "unorderedList": "順序なしリスト",
-      "orderedList": "順序付きリスト",
-      "orderedListTooltip": "Create a list with numbering.",
-      "cleanBlock": "Clean Block",
-      "link": "リンク",
-      "image": "画像",
-      "imageTooltip": "Upload an image from your computer.",
-      "horizontalRule": "横罫",
-      "horizontalRuleTooltip": "Divide a section.",
-      "sideBySide": "Side By Side",
-      "guide": "説明書",
-      "text": "テキスト",
-      "textTooltip": "Just start typing with plain text.",
-      "taskList": "タスクリスト",
-      "taskListTooltip": "Track tasks with a to-do list.",
-      "undo": "元に戻す",
-      "redo": "やり直す",
-      "placeholder": "テキストを入力するか「/」を押して選択肢から選ぶ…",
-      "table": {
-        "title": "テーブル",
-        "insert": "テーブルの挿入",
-        "addColumnBefore": "Add column before",
-        "addColumnAfter": "Add column after",
-        "deleteColumn": "列の削除",
-        "addRowBefore": "Add row before",
-        "addRowAfter": "Add row after",
-        "deleteRow": "行の削除",
-        "deleteTable": "テーブルの削除",
-        "mergeCells": "セルの統合",
-        "splitCell": "セルの分割",
-        "toggleHeaderColumn": "Toggle header column",
-        "toggleHeaderRow": "Toggle header row",
-        "toggleHeaderCell": "Toggle header cell",
-        "mergeOrSplit": "Merge or split",
-        "fixTables": "テーブルの修正"
-      }
-    },
-    "multiselect": {
-      "createPlaceholder": "作成",
-      "selectPlaceholder": "クリックするかEnterキーを押して選択"
-    },
-    "datepickerRange": {
-      "to": "終了",
-      "from": "開始",
-      "fromto": "{from} 〜 {to} まで",
-      "date": "Date",
-      "ranges": {
-        "today": "今日",
-        "thisWeek": "今週",
-        "restOfThisWeek": "今から週末まで",
-        "nextWeek": "来週",
-        "next7Days": "7日間",
-        "lastWeek": "先週",
-        "thisMonth": "今月",
-        "restOfThisMonth": "今から月末まで",
-        "nextMonth": "来月",
-        "next30Days": "30日間",
-        "lastMonth": "先月",
-        "thisYear": "今年",
-        "restOfThisYear": "今から年末まで"
-      },
-      "values": {
-        "now": "現在",
-        "startOfToday": "Start of today",
-        "endOfToday": "今日の終わり",
-        "beginningOflastWeek": "Beginning of last week",
-        "endOfLastWeek": "先週の終わり",
-        "beginningOfThisWeek": "Beginning of this week",
-        "endOfThisWeek": "今週の終わり",
-        "startOfNextWeek": "Start of next week",
-        "endOfNextWeek": "来週の終わり",
-        "in7Days": "In 7 days",
-        "beginningOfLastMonth": "Beginning of last month",
-        "endOfLastMonth": "先月の終わり",
-        "startOfThisMonth": "Start of this month",
-        "endOfThisMonth": "今月の終わり",
-        "startOfNextMonth": "Start of next month",
-        "endOfNextMonth": "来月の終わり",
-        "in30Days": "In 30 days",
-        "startOfThisYear": "Beginning of this year",
-        "endOfThisYear": "今年の終わり"
-      }
-    },
-    "datemathHelp": {
-      "canuse": "You can use date math to filter for relative dates.",
-      "learnhow": "Check out how it works",
-      "title": "Date Math",
-      "intro": "Specify relative dates which are resolved on the fly by Vikunja when applying the filter.",
-      "expression": "Each Date Math expression starts with an anchor date, which can either be {0}, or a date string ending with {1}. This anchor date can optionally be followed by one or more maths expressions.",
-      "similar": "These expressions are similar to the ones provided by {0} and {1}.",
-      "add1Day": "Add one day",
-      "minus1Day": "Subtract one day",
-      "roundDay": "Round down to the nearest day",
-      "supportedUnits": "Supported time units",
-      "someExamples": "Examples of time expressions",
-      "units": {
-        "seconds": "秒",
-        "minutes": "分",
-        "hours": "時間",
-        "days": "日",
-        "weeks": "週間",
-        "months": "月",
-        "years": "年"
-      },
-      "examples": {
-        "now": "現在",
-        "in24h": "24時間以内",
-        "today": "本日00:00",
-        "beginningOfThisWeek": "今週の初めの00:00",
-        "endOfThisWeek": "今週の終わり",
-        "in30Days": "30日間以内",
-        "datePlusMonth": "{0} 00:00の1ヶ月後"
-      }
-    }
-  },
-  "task": {
-    "task": "タスク",
-    "new": "タスクの作成",
-    "delete": "タスクの削除",
-    "createSuccess": "タスクは正常に作成されました。",
-    "addReminder": "リマイダーを作成…",
-    "doneSuccess": "タスクを完了にしました。",
-    "undoneSuccess": "タスクを未完了に戻しました。",
-    "revertSuccess": "タスクは正常に未完了へ戻されました。",
-    "undo": "元に戻す",
-    "openDetail": "タスクの詳細を表示",
-    "checklistTotal": "{total}件中{checked}件のタスク",
-    "checklistAllDone": "{total}件のタスク",
-    "show": {
-      "titleCurrent": "現在のタスク",
-      "titleDates": "{from} 〜 {to} までのタスク",
-      "noDates": "指定日が未設定のタスクを表示",
-      "overdue": "期限切れタスクを表示",
-      "fromuntil": "{from} 〜 {until} までのタスク",
-      "select": "期間の選択",
-      "noTasks": "タスクはありません — よい一日を！"
-    },
-    "detail": {
-      "chooseDueDate": "期日を設定…",
-      "chooseStartDate": "開始日を設定…",
-      "chooseEndDate": "終了日を設定…",
-      "move": "別のプロジェクトにタスクを移動",
-      "done": "タスクを完了",
-      "undone": "未完了に戻す",
-      "created": "Created {0} by {1}",
-      "updated": "Updated {0}",
-      "doneAt": "完了 {0}",
-      "updateSuccess": "タスクは正常に保存されました。",
-      "deleteSuccess": "タスクは正常に削除されました。",
-      "belongsToProject": "このタスクはプロジェクト「{project}」に含まれています。",
-      "due": "Due {at}",
-      "closePopup": "閉じる",
-      "organization": "組織",
-      "management": "管理",
-      "dateAndTime": "日付と時刻",
-      "delete": {
-        "header": "タスクの削除",
-        "text1": "このタスクを削除して本当によろしいですか？",
-        "text2": "このタスクに含まれるすべての添付ファイル、リマインダー、関連付けは削除されます。この操作は元に戻せません。"
-      },
-      "actions": {
-        "assign": "担当者の割り当て",
-        "label": "ラベルの追加",
-        "priority": "優先度の設定",
-        "dueDate": "期日の設定",
-        "startDate": "開始日の設定",
-        "endDate": "終了日の設定",
-        "reminders": "リマインダーの設定",
-        "repeatAfter": "繰り返し間隔の設定",
-        "percentDone": "進捗状況の設定",
-        "attachments": "添付ファイルの追加",
-        "relatedTasks": "関連タスクの追加",
-        "moveProject": "移動",
-        "color": "色の設定",
-        "delete": "削除",
-        "favorite": "お気に入りに追加",
-        "unfavorite": "お気に入りから削除"
-      }
-    },
-    "attributes": {
-      "assignees": "担当",
-      "color": "色",
-      "created": "Created",
-      "createdBy": "Created By",
-      "description": "説明",
-      "done": "完了",
-      "dueDate": "期日",
-      "endDate": "終了日",
-      "labels": "ラベル",
-      "percentDone": "進捗状況",
-      "priority": "優先度",
-      "relatedTasks": "関連タスク",
-      "reminders": "リマインダー",
-      "repeat": "繰り返し間隔",
-      "startDate": "開始日",
-      "title": "タスク名",
-      "updated": "Updated",
-      "doneAt": "Done At"
-    },
-    "subscription": {
-      "subscribedTaskThroughParentProject": "現在プロジェクトを通して購読しているため、ここでこのタスクの購読を解除することはできません。",
-      "subscribedProject": "現在このプロジェクトを購読しており、変更通知が届きます。",
-      "notSubscribedProject": "このプロジェクトを購読していないため、変更通知は届きません。",
-      "subscribedTask": "現在このタスクを購読しており、変更通知が届きます。",
-      "notSubscribedTask": "このタスクを購読していないため、変更通知は届きません。",
-      "subscribe": "購読",
-      "unsubscribe": "購読解除",
-      "subscribeSuccessProject": "プロジェクトを購読しています",
-      "unsubscribeSuccessProject": "プロジェクトの購読を解除しました",
-      "subscribeSuccessTask": "このタスクを購読しています",
-      "unsubscribeSuccessTask": "このタスクの購読を解除しました"
-    },
-    "attachment": {
-      "title": "添付ファイル",
-      "createdBy": "created {0} by {1}",
-      "downloadTooltip": "添付ファイルをダウンロード",
-      "upload": "添付ファイルのアップロード",
-      "drop": "ここにアップロードするファイルをドロップ",
-      "delete": "添付ファイルの削除",
-      "deleteTooltip": "添付ファイルを削除",
-      "deleteText1": "添付ファイル「{filename}」を削除して本当によろしいですか？",
-      "copyUrl": "URLのコピー",
-      "copyUrlTooltip": "添付ファイルのURLをコピー",
-      "setAsCover": "カバー画像にする",
-      "unsetAsCover": "カバー画像から取り外す",
-      "successfullyChangedCoverImage": "カバー画像は正常に変更されました。",
-      "usedAsCover": "カバー画像"
-    },
-    "comment": {
-      "title": "コメント",
-      "loading": "コメントを読み込み中…",
-      "edited": "edited {date}",
-      "creating": "コメントを作成中…",
-      "placeholder": "Add your comment, hit '/' for more options…",
-      "comment": "コメント",
-      "delete": "コメントの削除",
-      "deleteText1": "このコメントを削除して本当によろしいですか？",
-      "deleteSuccess": "コメントは正常に削除されました。",
-      "addedSuccess": "コメントは正常に追加されました。",
-      "permalink": "コメントへのリンクをコピー"
-    },
-    "deferDueDate": {
-      "title": "延期",
-      "1day": "1日後",
-      "3days": "3日後",
-      "1week": "1週間後"
-    },
-    "description": {
-      "placeholder": "Enter a description, hit '/' for more options…",
-      "empty": "説明文はありません。"
-    },
-    "assignee": {
-      "placeholder": "担当者を入力…",
-      "selectPlaceholder": "担当者に割り当てる",
-      "assignSuccess": "担当者が正常に割り当てられました。",
-      "unassignSuccess": "担当者から正常に解除されました。"
-    },
-    "label": {
-      "placeholder": "追加するラベルを入力…",
-      "createPlaceholder": "新しいラベルを追加",
-      "addSuccess": "ラベルは正常に追加されました。",
-      "createSuccess": "ラベルは正常に作成されました。",
-      "removeSuccess": "ラベルは正常に削除されました。",
-      "addCreateSuccess": "ラベルは正常に追加・作成されました。",
-      "delete": {
-        "header": "ラベルの削除",
-        "text1": "このラベルを削除して本当によろしいですか？",
-        "text2": "すべてのタスクから削除されます。この操作は元に戻せません。"
-      }
-    },
-    "priority": {
-      "unset": "未設定",
-      "low": "低",
-      "medium": "中",
-      "high": "高",
-      "urgent": "至急",
-      "doNow": "大至急"
-    },
-    "relation": {
-      "add": "新しい関連タスクの追加",
-      "new": "新しい関連タスクの作成",
-      "searchPlaceholder": "追加する関連タスクのキーワードを入力…",
-      "createPlaceholder": "関連タスクを追加",
-      "differentProject": "This task belongs to a different project.",
-      "noneYet": "関連タスクはまだありません。",
-      "delete": "関連タスクの削除",
-      "deleteText1": "この関連タスクを削除して本当によろしいですか？",
-      "select": "Select a relation kind",
-      "taskRequired": "タスクを選択するか、新しいタスク名を入力してください。",
-      "kinds": {
-        "subtask": "サブタスク",
-        "parenttask": "親タスク",
-        "related": "関連タスク",
-        "duplicateof": "Duplicate Of | Duplicates Of",
-        "duplicates": "Duplicates | Duplicates",
-        "blocking": "Blocking | Blocking",
-        "blocked": "Blocked By | Blocked By",
-        "precedes": "Precedes | Precedes",
-        "follows": "Follows | Follows",
-        "copiedfrom": "Copied From | Copied From",
-        "copiedto": "Copied To | Copied To"
-      }
-    },
-    "reminder": {
-      "before": "{amount} {unit} before {type}",
-      "after": "{amount} {unit} after {type}",
-      "beforeShort": "before",
-      "afterShort": "after",
-      "onDueDate": "On the due date",
-      "onStartDate": "On the start date",
-      "onEndDate": "On the end date",
-      "custom": "カスタム",
-      "dateAndTime": "日付と時刻"
-    },
-    "repeat": {
-      "everyDay": "毎日",
-      "everyWeek": "毎週",
-      "every30d": "30日ごと",
-      "mode": "繰り返しモード",
-      "monthly": "毎月",
-      "fromCurrentDate": "完了からの間隔",
-      "each": "隔",
-      "specifyAmount": "数字を入力…",
-      "hours": "時間ごと",
-      "days": "日ごと",
-      "weeks": "週間ごと",
-      "months": "ヶ月ごと",
-      "years": "年ごと",
-      "invalidAmount": "0以上を入力してください。"
-    },
-    "quickAddMagic": {
-      "hint": "Use magic prefixes to define due dates, assignees and other task properties.",
-      "title": "Quick Add Magic",
-      "intro": "When creating a task, you can use special keywords to directly add attributes to the newly created task. This allows to add commonly used attributes to tasks much faster.",
-      "multiple": "You can use this multiple times.",
-      "label1": "ラベルを付けるには、ラベル名の前に {prefix} を入力します。",
-      "label2": "Vikunja will first check if the label already exist and create it if not.",
-      "label3": "To use spaces, simply add a \" or ' around the label name.",
-      "label4": "For example: {prefix}\"Label with spaces\".",
-      "priority1": "To set a task's priority, add a number 1-5, prefixed with a {prefix}.",
-      "priority2": "The higher the number, the higher the priority.",
-      "assignees": "To directly assign the task to a user, add their username prefixed with {prefix} to the task.",
-      "project1": "To set a project for the task to appear in, enter its name prefixed with {prefix}.",
-      "project2": "This will return an error if the project does not exist.",
-      "project3": "To use spaces, simply add a \" or ' around the project name.",
-      "project4": "For example: {prefix}\"Project with spaces\".",
-      "dateAndTime": "日付と時刻",
-      "date": "Any date will be used as the due date of the new task. You can use dates in any of these formats:",
-      "dateWeekday": "any weekday, will use the next date with that date",
-      "dateCurrentYear": "will use the current year",
-      "dateNth": "will use the {day}th of the current month",
-      "dateTime": "Combine any of the date formats with \"{time}\" (or {timePM}) to set a time.",
-      "repeats": "Repeating tasks",
-      "repeatsDescription": "To set a task as repeating in an interval, simply add '{suffix}' to the task text. The amount needs to be a number and can be omitted to use just the type (see examples)."
-    }
-  },
-  "team": {
-    "title": "チーム",
-    "noTeams": "現在どのチームにも所属していません。",
-    "create": {
-      "title": "チームの作成",
-      "success": "チームは正常に作成されました。"
-    },
-    "edit": {
-      "title": "チーム「{team}」の編集",
-      "members": "チームメンバー",
-      "search": "ユーザーのキーワードを入力…",
-      "addUser": "チームに追加",
-      "makeMember": "メンバーにする",
-      "makeAdmin": "管理者にする",
-      "success": "チームは正常に更新されました。",
-      "userAddedSuccess": "チームメンバーは正常に追加されました。",
-      "madeMember": "チームメンバーはメンバーになりました。",
-      "madeAdmin": "チームメンバーは管理者になりました。",
-      "mustSelectUser": "ユーザーを選択してください。",
-      "delete": {
-        "header": "チームの削除",
-        "text1": "このチームと所属するチームメンバー全員を削除して本当によろしいですか？",
-        "text2": "All team members will lose access to projects shared with this team. This CANNOT BE UNDONE!",
-        "success": "チームは正常に削除されました。"
-      },
-      "deleteUser": {
-        "header": "Remove a user from the team",
-        "text1": "Are you sure you want to remove this user from the team?",
-        "text2": "They will lose access to all projects this team has access to. This CANNOT BE UNDONE!",
-        "success": "ユーザーは正常にチームから削除されました。"
-      },
-      "leave": {
-        "title": "Leave team",
-        "text1": "Are you sure you want to leave this team?",
-        "text2": "You will lose access to all projects this team has access to. If you change your mind you'll need a team admin to add you again.",
-        "success": "You have successfully left the team."
-      }
-    },
-    "attributes": {
-      "name": "チーム名",
-      "namePlaceholder": "The team's name goes here…",
-      "nameRequired": "チーム名を入力してください。",
-      "description": "説明",
-      "descriptionPlaceholder": "Describe the team here, hit '/' for more options…",
-      "admin": "管理者",
-      "member": "メンバー",
-      "isPublic": "Public Team",
-      "isPublicDescription": "Make the team publicly discoverable. When enabled, anyone can share projects with this team even when not being a direct member."
-    }
-  },
-  "keyboardShortcuts": {
-    "title": "キーボードショートカット",
-    "general": "一般",
-    "allPages": "これらのショートカットはすべてのページで機能します。",
-    "currentPageOnly": "これらのショートカットはこのページで機能します。",
-    "somePagesOnly": "これらのショートカットは一部のページで動作します。",
-    "toggleMenu": "メニューの表示/非表示",
-    "quickSearch": "Open the search/quick action bar",
-    "then": " ",
-    "task": {
-      "title": "タスク",
-      "done": "タスクの完了/取り消し",
-      "assign": "タスクに担当者を割り当てる",
-      "labels": "タスクにラベルを追加",
-      "dueDate": "タスクの期日を設定",
-      "attachment": "タスクに添付ファイルを追加",
-      "related": "関連タスクを追加",
-      "color": "タスクの色を変更",
-      "move": "タスクを別のプロジェクトに移動",
-      "reminder": "タスクのリマインダーを設定",
-      "description": "タスクの説明を編集",
-      "delete": "タスクを削除",
-      "priority": "タスクの優先度を設定",
-      "favorite": "タスクをお気に入りに追加/削除",
-      "save": "Save the current task"
-    },
-    "project": {
-      "title": "プロジェクト",
-      "switchToListView": "リストで表示",
-      "switchToGanttView": "ガントチャートで表示",
-      "switchToKanbanView": "カンバンボードで表示",
-      "switchToTableView": "テーブルで表示"
-    },
-    "navigation": {
-      "title": "ナビゲーション",
-      "overview": "概要に移動",
-      "upcoming": "今後の予定に移動",
-      "labels": "ラベルに移動",
-      "teams": "チームに移動",
-      "projects": "プロジェクトに移動"
-    }
-  },
-  "update": {
-    "available": "アップデートがあります！",
-    "do": "アップデート"
-  },
-  "menu": {
-    "edit": "編集",
-    "archive": "アーカイブ",
-    "duplicate": "複製",
-    "delete": "削除",
-    "unarchive": "アーカイブの取り消し",
-    "setBackground": "背景画像の設定",
-    "share": "共有",
-    "newProject": "新しいプロジェクトの作成",
-    "createProject": "プロジェクトの作成",
-    "cantArchiveIsDefault": "デフォルトのプロジェクトのためアーカイブできません。",
-    "cantDeleteIsDefault": "デフォルトのプロジェクトのため削除できません。",
-    "views": "ビュー"
-  },
-  "apiConfig": {
-    "url": "Vikunja URL",
-    "urlPlaceholder": "例: https://localhost:3456",
-    "change": "変更",
-    "use": "{0} に設置されたVikunjaを使用します。",
-    "error": "\"{domain}\" にはVikunjaは存在しないか使用できない状態です。URLの形式が正しいかどうか、そして直接アクセスして到達できるかどうかを確認し、もう一度お試しください。",
-    "success": "\"{domain}\" に設置されたVikunjaを使用します。",
-    "urlRequired": "URLを入力してください。"
-  },
-  "loadingError": {
-    "failed": "Loading failed, please {0}. If the error persists, please {1}.",
-    "tryAgain": "try again",
-    "contact": "contact us"
-  },
-  "notification": {
-    "title": "通知",
-    "none": "通知はありません。よい一日を！",
-    "explainer": "購読しているプロジェクトやタスクが変更されると通知されます。",
-    "markAllRead": "Mark all notifications as read",
-    "markAllReadSuccess": "Successfully marked all notifications as read."
-  },
-  "quickActions": {
-    "commands": "コマンド",
-    "placeholder": "コマンドまたはキーワードを入力…",
-    "hint": "You can use {project} to limit the search to a project. Combine {project} or {label} (labels) with a search query to search for a task with these labels or on that project. Use {assignee} to only search for teams.",
-    "tasks": "タスク",
-    "projects": "プロジェクト",
-    "teams": "チーム",
-    "labels": "ラベル",
-    "newProject": "新しいプロジェクト名を入力…",
-    "newTask": "新しいタスク名を入力…",
-    "newTeam": "新しいチーム名を入力…",
-    "createTask": "現在のプロジェクト ({title}) にタスクを作成",
-    "createProject": "プロジェクトを作成",
-    "cmds": {
-      "newTask": "新しいタスクの作成",
-      "newProject": "新しいプロジェクトの作成",
-      "newTeam": "新しいチームの作成"
-    }
-  },
-  "date": {
-    "altFormatLong": "Y/n/j H:i",
-    "altFormatShort": "Y/n/j"
-  },
-  "reaction": {
-    "reactedWith": "{user} reacted with {value}",
-    "reactedWithAnd": "{users} and {lastUser} reacted with {value}",
-    "reactedWithAndMany": "{users} and {num} more reacted reacted with {value}",
-    "add": "Add your reaction"
-  },
-  "error": {
-    "error": "エラー",
-    "success": "成功",
-    "0001": "You're not allowed to do that.",
-    "1001": "A user with this username already exists.",
-    "1002": "A user with this email address already exists.",
-    "1004": "No username and password specified.",
-    "1005": "そのユーザーは存在しません。",
-    "1006": "Could not get the user id.",
-    "1008": "No password reset token provided.",
-    "1009": "無効なパスワードリセット用トークンです。",
-    "1010": "無効なメール確認用トークンです。",
-    "1011": "ユーザー名またはパスワードが正しくありません。",
-    "1012": "Email address of the user not confirmed.",
-    "1013": "New password is empty.",
-    "1014": "Old password is empty.",
-    "1015": "このユーザーはすでにTOTPが有効になっています。",
-    "1016": "このユーザーはTOTPが有効ではありません。",
-    "1017": "無効なTOTP認証コードです。",
-    "1018": "The user avatar type setting is invalid.",
-    "1019": "No email address was provided by the OpenID provider.Please make sure the openid provider publicly provides an email address for your account.",
-    "1020": "This account is disabled. Check your emails or ask your administrator.",
-    "1021": "This account is managed by a third-party authentication provider.",
-    "1022": "The username must not contain spaces.",
-    "1023": "You can't do that as a link share.",
-    "1024": "Invalid claim data for field {field} of type {type}.",
-    "1025": "The timezone '{timezone}' is invalid. Please select a valid timezone from the list.",
-    "2001": "ID cannot be empty or 0.",
-    "2002": "Some of the request data was invalid.",
-    "2003": "The timezone '{timezone}' is invalid.",
-    "3001": "そのプロジェクトは存在しません。",
-    "3004": "You need to have read permissions on that project to perform that action.",
-    "3005": "The project title cannot be empty.",
-    "3006": "その共有プロジェクトは存在しません。",
-    "3007": "A project with this identifier already exists.",
-    "3008": "このプロジェクトはアーカイブ済みのため読み取り専用です。またプロジェクトに関連するタスクも同様です。",
-    "4001": "The task title cannot be empty.",
-    "4002": "The task does not exist.",
-    "4003": "All bulk editing tasks must belong to the same project.",
-    "4004": "Need at least one task when bulk editing tasks.",
-    "4005": "You do not have the right to see the task.",
-    "4006": "You can't set a parent task as the task itself.",
-    "4007": "You can't create a task relation with an invalid kind of relation.",
-    "4008": "You can't create a task relation which already exists.",
-    "4009": "その関連タスクは存在しません。",
-    "4010": "Cannot relate a task with itself.",
-    "4011": "その添付ファイルは存在しません。",
-    "4012": "添付ファイルが大きすぎます。",
-    "4013": "The task sort param is invalid.",
-    "4014": "The task sort order is invalid.",
-    "4015": "そのコメントは存在しません。",
-    "4016": "Invalid task field.",
-    "4017": "Invalid task filter comparator.",
-    "4018": "Invalid task filter concatenator.",
-    "4019": "Invalid task filter value.",
-    "4020": "This attachment does not belong to that task.",
-    "4021": "This user is already assigned to that task.",
-    "4022": "Please provide what the reminder date is relative to.",
-    "4023": "Cannot create a task relation cycle.",
-    "6001": "The team name cannot be empty.",
-    "6002": "そのチームは存在しません。",
-    "6004": "The team already has access to that project.",
-    "6005": "The user is already a member of that team.",
-    "6006": "Cannot delete the last team member.",
-    "6007": "The team does not have access to the project to perform that action.",
-    "6008": "No team could be found for the given OIDC ID and issuer.",
-    "6009": "No Teams with property oidcId could be found for User.",
-    "7002": "The user already has access to that project.",
-    "7003": "You do not have access to that project.",
-    "8001": "This label already exists on that task.",
-    "8002": "そのラベルは存在しません。",
-    "8003": "You do not have access to this label.",
-    "9001": "The right is invalid.",
-    "10001": "そのバケットは存在しません。",
-    "10002": "The bucket does not belong to that project.",
-    "10003": "You cannot remove the last bucket on a project.",
-    "10004": "You cannot add the task to this bucket as it already exceeded the limit of tasks it can hold.",
-    "10005": "There can be only one done bucket per project.",
-    "11001": "その絞り込み条件は存在しません。",
-    "11002": "絞り込み条件はリンクの共有には使用できません。",
-    "12001": "The subscription entity type is invalid.",
-    "12002": "You are already subscribed to the entity itself or a parent entity.",
-    "12003": "You must provide a user to fetch subscriptions.",
-    "13001": "This link share requires a password for authentication, but none was provided.",
-    "13002": "The provided link share password is invalid.",
-    "13003": "The provided link share token is invalid.",
-    "14001": "The provided api token is invalid.",
-    "14002": "The permission {permission} of group {group} is invalid."
-  },
-  "about": {
-    "title": "Vikunjaについて",
-    "version": "バージョン: {version}"
-  },
-  "time": {
-    "units": {
-      "seconds": "秒",
-      "minutes": "分",
-      "hours": "時間",
-      "days": "日",
-      "weeks": "週間",
-      "months": "月",
-      "years": "年"
-    }
-  }
+	"404": {
+		"title": "Not found",
+		"text": "リクエストされたページは存在しません。"
+	},
+	"home": {
+		"welcomeNight": "おやすみなさい、{username}さん",
+		"welcomeMorning": "おはようございます、{username}さん",
+		"welcomeDay": "こんにちは、{username}さん",
+		"welcomeEvening": "こんばんは、{username}さん",
+		"lastViewed": "最近の表示",
+		"addToHomeScreen": "ホーム画面に追加することで、よりすばやくアクセスでき操作性が向上します。",
+		"goToOverview": "概要に移動",
+		"project": {
+			"importText": "他のサービスからVikunjaにプロジェクトやタスクをインポートします:",
+			"import": "Vikunjaへのデータのインポート"
+		}
+	},
+	"ready": {
+		"loading": "Vikunjaを読み込み中…",
+		"errorOccured": "エラーが発生しました:",
+		"checkApiUrl": "API URLをご確認ください",
+		"noApiUrlConfigured": "API URLが設定されていません。以下の項目を設定してください:"
+	},
+	"offline": {
+		"title": "オフライン",
+		"text": "ネットワーク接続を確認し、再度お試しください。"
+	},
+	"user": {
+		"auth": {
+			"username": "ユーザー名",
+			"usernameEmail": "ユーザー名またはメールアドレス",
+			"usernamePlaceholder": "例: frederick",
+			"email": "メールアドレス",
+			"emailPlaceholder": "例: frederic{'@'}vikunja.io",
+			"password": "パスワード",
+			"passwordPlaceholder": "例: •••••••••••",
+			"forgotPassword": "パスワードをお忘れですか？",
+			"resetPassword": "パスワードの再設定",
+			"resetPasswordAction": "パスワード再設定リンクの送信",
+			"resetPasswordSuccess": "受信トレイをご確認ください。パスワードの再設定方法を記載したメールが届くはずです。",
+			"passwordsDontMatch": "パスワードが一致しません",
+			"confirmEmailSuccess": "メールの確認に成功しました！ログインの準備が整いました。",
+			"totpTitle": "2要素認証コード",
+			"totpPlaceholder": "例: 123456",
+			"login": "ログイン",
+			"createAccount": "アカウントの作成",
+			"loginWith": "{provider}でログイン",
+			"authenticating": "認証中…",
+			"openIdStateError": "stateパラメータが一致しないため処理を中断しました。",
+			"openIdGeneralError": "認証中にエラーが発生しました。",
+			"logout": "ログアウト",
+			"emailInvalid": "有効なメールアドレスを入力してください。",
+			"usernameRequired": "ユーザー名を入力してください。",
+			"usernameMustNotContainSpace": "ユーザー名にスペースを含めてはいけません。",
+			"passwordRequired": "パスワードを入力してください。",
+			"passwordNotMin": "パスワードは8文字以上でなければなりません。",
+			"showPassword": "パスワードの表示",
+			"hidePassword": "パスワードの非表示",
+			"noAccountYet": "まだアカウントをお持ちでないですか？",
+			"alreadyHaveAnAccount": "すでにアカウントをお持ちですか？",
+			"remember": "ログインしたままにする"
+		},
+		"settings": {
+			"title": "設定",
+			"newPasswordTitle": "パスワードの更新",
+			"newPassword": "新しいパスワード",
+			"newPasswordConfirm": "新しいパスワードの確認",
+			"currentPassword": "現在のパスワード",
+			"currentPasswordPlaceholder": "現在のパスワード",
+			"passwordsDontMatch": "新しいパスワードとその確認が一致しません。",
+			"passwordUpdateSuccess": "パスワードは正常に更新されました。",
+			"updateEmailTitle": "メールアドレスの更新",
+			"updateEmailNew": "新しいメールアドレス",
+			"updateEmailSuccess": "メールアドレスは正常に更新されました。確認のためのリンクを送信しました。",
+			"general": {
+				"title": "一般設定",
+				"name": "名前",
+				"newName": "新しい名前",
+				"savedSuccess": "設定の更新に成功しました。",
+				"emailReminders": "タスクのリマインダーをメールで送信する",
+				"overdueReminders": "期限切れタスクのリマインダーを毎日メールで送信する",
+				"discoverableByName": "他のユーザーが名前で検索したときチームやプロジェクトのメンバーとして追加できるようにする",
+				"discoverableByEmail": "他のユーザーがメールアドレスで検索したときチームやプロジェクトのメンバーとして追加できるようにする",
+				"playSoundWhenDone": "タスクを完了したとき音を鳴らす",
+				"weekStart": "週の始まり",
+				"weekStartSunday": "日曜日",
+				"weekStartMonday": "月曜日",
+				"language": "言語",
+				"defaultProject": "デフォルトのプロジェクト",
+				"defaultView": "デフォルトのビュー",
+				"timezone": "タイムゾーン",
+				"overdueTasksRemindersTime": "期限切れタスクのリマインダー送信時間",
+				"filterUsedOnOverview": "概要ページの絞り込み条件"
+			},
+			"totp": {
+				"title": "2要素認証",
+				"enroll": "登録",
+				"finishSetupPart1": "セットアップを完了するには、Google AuthenticatorなどのTime-based One-Time Password (TOTP) アプリで次のシークレットを使用します:",
+				"finishSetupPart2": "その後、TOTPアプリの認証コードを入力してください。",
+				"scanQR": "あるいは、TOTPアプリでこのQRコードをスキャンして認証コードを入力してください:",
+				"passcode": "認証コード",
+				"passcodePlaceholder": "TOTPアプリで生成された認証コード",
+				"setupSuccess": "2要素認証は正常に設定されました。",
+				"enterPassword": "パスワードを入力してください",
+				"disable": "2要素認証の無効化",
+				"confirmSuccess": "2要素認証のセットアップを完了しました。",
+				"disableSuccess": "2要素認証は無効化されました。"
+			},
+			"caldav": {
+				"title": "CalDAV",
+				"howTo": "VikunjaをCalDAVクライアントと連携することでさまざまなクライアントからのすべてのタスクを表示および管理できます。CalDAVクライアントから接続するには次のエンドポイントをコピーしてクライアントに入力します:",
+				"more": "VikunjaのCalDAVに関する詳細情報",
+				"tokens": "CalDAVトークン",
+				"tokensHowTo": "上記のエンドポイントからログインする際にパスワードの代わりにCalDAVトークンを使用できます。",
+				"createToken": "トークンの生成",
+				"tokenCreated": "トークン: {token}",
+				"wontSeeItAgain": "このトークンをコピーしてください。二度と見ることができなくなります。",
+				"mustUseToken": "サードパーティーのクライアントからCalDAVを使用する場合、パスワードの代わりにCalDAVトークンを生成して使用する必要があります。",
+				"usernameIs": "ユーザー名: {0}"
+			},
+			"avatar": {
+				"title": "プロフィール画像",
+				"initials": "初期値",
+				"gravatar": "Gravatar",
+				"marble": "Marble",
+				"upload": "アップロード",
+				"uploadAvatar": "画像のアップロード",
+				"statusUpdateSuccess": "プロフィール画像を更新しました。",
+				"setSuccess": "プロフィール画像を設定しました。"
+			},
+			"quickAddMagic": {
+				"disabled": "無効",
+				"todoist": "Todoist",
+				"vikunja": "Vikunja"
+			},
+			"appearance": {
+				"title": "カラースキーム",
+				"setSuccess": "カラースキームを{colorScheme}に変更しました。",
+				"colorScheme": {
+					"light": "ライト",
+					"system": "システム既定",
+					"dark": "ダーク"
+				}
+			},
+			"apiTokens": {
+				"title": "APIトークン",
+				"general": "APIトークンを使うとログインせずにVikunjaのAPIを利用できます。",
+				"apiDocs": "詳しくはAPIドキュメントをご確認ください",
+				"createAToken": "トークンの生成",
+				"createToken": "トークンの生成",
+				"30d": "30日",
+				"60d": "60日",
+				"90d": "90日",
+				"titleRequired": "トークン名を入力してください。",
+				"tokenCreatedNotSeeAgain": "このトークンは二度と表示されません。安全な場所に保管してください。",
+				"selectAll": "すべて選択",
+				"delete": {
+					"header": "トークンの削除"
+				},
+				"attributes": {
+					"title": "トークン名"
+				}
+			}
+		},
+		"deletion": {
+			"title": "Vikunjaアカウントの削除",
+			"text1": "アカウントの削除は永久的なものであり、元に戻すことはできません。あなたのプロジェクト、タスク、それらに関連するすべてのものを削除します。",
+			"text2": "続行するにはパスワードを入力してください。詳しい案内の記載したメールを送信します。",
+			"confirm": "アカウントの削除",
+			"requestSuccess": "リクエストは成功しました。詳しい案内はメールでお知らせします。",
+			"passwordRequired": "パスワードを入力してください。",
+			"confirmSuccess": "アカウントの削除を承認しました。3日後にアカウントは削除されます。",
+			"scheduled": "{date} ({dateSince}) にVikunjaアカウントは削除されます。",
+			"scheduledCancel": "アカウントの削除を取り消す場合はこちらをご覧ください。",
+			"scheduledCancelText": "アカウントの削除を取り消すにはパスワードを入力してください:",
+			"scheduledCancelConfirm": "アカウント削除の取り消し",
+			"scheduledCancelSuccess": "アカウント削除は行われません。"
+		},
+		"export": {
+			"title": "Vikunjaデータのエクスポート",
+			"description": "利用しているVikunjaの全データのダウンロードをリクエストできます。これにはプロジェクト、タスク、およびそれらに関連するすべてを含みます。このデータはどのVikunjaインスタンスでもインポートすることができます。",
+			"descriptionPasswordRequired": "続行するにはパスワードを入力してください:",
+			"request": "Vikunjaデータのリクエスト",
+			"success": "Vikunjaデータのリクエストに成功しました！ダウンロードの準備が整い次第、メールでお知らせします。",
+			"downloadTitle": "エクスポートされたVikunjaデータのダウンロード"
+		}
+	},
+	"project": {
+		"archivedMessage": "アーカイブ済みプロジェクトです。タスクの作成や編集を行うことはできません。",
+		"archived": "アーカイブ済み",
+		"showArchived": "アーカイブ済みプロジェクトを表示",
+		"color": "色",
+		"projects": "プロジェクト",
+		"parent": "親プロジェクト",
+		"search": "プロジェクトのキーワードを入力…",
+		"searchSelect": "クリックするかEnterキーを押してプロジェクトを選択",
+		"shared": "共有プロジェクト",
+		"noDescriptionAvailable": "プロジェクトの説明はありません。",
+		"create": {
+			"header": "新しいプロジェクトの作成",
+			"titlePlaceholder": "プロジェクト名を入力…",
+			"addTitleRequired": "プロジェクト名を入力してください。",
+			"createdSuccess": "プロジェクトは正常に作成されました。",
+			"addProjectRequired": "プロジェクトを指定するか、あらかじめデフォルトのプロジェクトを設定してください。"
+		},
+		"archive": {
+			"title": "「{project}」のアーカイブ",
+			"archive": "プロジェクトのアーカイブ",
+			"unarchive": "プロジェクトのアーカイブの取り消し",
+			"unarchiveText": "タスクの作成や編集を行えるようになります。",
+			"archiveText": "アーカイブを取り消すまで、このプロジェクトではタスクの作成や編集を行うことができません。",
+			"success": "プロジェクトは正常にアーカイブされました。"
+		},
+		"background": {
+			"title": "プロジェクトの背景画像を設定",
+			"remove": "背景画像を削除",
+			"upload": "画像を選択…",
+			"searchPlaceholder": "背景画像を検索…",
+			"loadMore": "写真をもっと読み込む",
+			"success": "背景画像は正常に設定されました。",
+			"removeSuccess": "背景画像は正常に削除されました。"
+		},
+		"delete": {
+			"title": "「{project}」の削除",
+			"header": "プロジェクトの削除",
+			"text1": "このプロジェクトを削除して本当によろしいですか？",
+			"text2": "このプロジェクトに含まれるタスクはすべて削除されます。この操作は元に戻せません。",
+			"success": "プロジェクトは正常に削除されました。",
+			"tasksToDelete": "約{count}件のタスクが抹消されます。",
+			"noTasksToDelete": "このプロジェクトにはタスクが含まれていないので問題なく削除できます。"
+		},
+		"duplicate": {
+			"title": "プロジェクトの複製",
+			"label": "複製",
+			"success": "プロジェクトは正常に複製されました。"
+		},
+		"edit": {
+			"header": "プロジェクトの編集",
+			"title": "「{project}」の編集",
+			"titlePlaceholder": "プロジェクト名を入力…",
+			"identifierTooltip": "プロジェクトIDは、プロジェクト間でタスクを一意に識別するために使用できます。空に設定すると無効化されます。",
+			"identifier": "プロジェクトID",
+			"identifierPlaceholder": "プロジェクトIDを入力…",
+			"description": "説明",
+			"color": "色",
+			"success": "プロジェクトは正常に更新されました。"
+		},
+		"share": {
+			"header": "プロジェクトの共有",
+			"title": "「{project}」の共有",
+			"share": "共有",
+			"links": {
+				"title": "リンクの共有",
+				"what": "共有リンクとは何ですか？",
+				"explanation": "共有リンクとは、Vikunjaのアカウントを持たない他のユーザーとプロジェクトを簡単に共有することができる機能です。",
+				"create": "共有リンクの作成",
+				"name": "名前 (オプション)",
+				"namePlaceholder": "例: Lorem Ipsum",
+				"nameExplanation": "この共有リンクで行われた操作はすべてこの名前で表示されるようになります。",
+				"password": "パスワード (オプション)",
+				"passwordExplanation": "認証の際にユーザーはこのパスワードの入力を求められます。",
+				"noName": "名称未設定",
+				"remove": "共有リンクの削除",
+				"removeText": "この共有リンクを削除して本当によろしいですか？この共有リンクを使ってプロジェクトにアクセスすることができなくなります。この操作は元に戻せません。",
+				"createSuccess": "共有リンクは正常に作成されました。",
+				"deleteSuccess": "共有リンクは正常に削除されました。",
+				"view": "ビュー",
+				"sharedBy": "{0}によって共有されました"
+			},
+			"userTeam": {
+				"typeUser": "ユーザー",
+				"typeTeam": "チーム",
+				"shared": "アクセスできる{type}",
+				"you": "あなた",
+				"notShared": "まだどの{type}とも共有していません。"
+			},
+			"right": {
+				"title": "権限",
+				"read": "読み取り専用",
+				"readWrite": "読み取りと書き込み",
+				"admin": "管理者"
+			},
+			"attributes": {
+				"link": "リンク",
+				"delete": "削除"
+			}
+		},
+		"list": {
+			"title": "リスト",
+			"add": "追加",
+			"addPlaceholder": "タスクを追加…",
+			"empty": "このプロジェクトにはタスクが存在しません。",
+			"newTaskCta": "タスクを作成してください。",
+			"editTask": "タスクの編集"
+		},
+		"gantt": {
+			"title": "ガント",
+			"size": "大きさ",
+			"default": "デフォルト",
+			"month": "月",
+			"day": "日",
+			"hour": "時間",
+			"range": "期間",
+			"noDates": "指定日が未設定のタスクです。"
+		},
+		"table": {
+			"title": "テーブル",
+			"columns": "列"
+		},
+		"kanban": {
+			"title": "カンバン",
+			"noLimit": "未設定",
+			"doneBucket": "バケットを完了",
+			"defaultBucket": "デフォルトのバケット",
+			"addTaskPlaceholder": "新しいタスク名を入力…",
+			"addTask": "タスクの追加",
+			"addAnotherTask": "他のタスクを追加",
+			"addBucket": "バケットの作成",
+			"addBucketPlaceholder": "新しいバケット名を入力…",
+			"deleteHeaderBucket": "バケットの削除",
+			"deleteBucketText1": "このバケットを削除して本当によろしいですか？",
+			"deleteBucketSuccess": "バケットは正常に削除されました。"
+		},
+		"pseudo": {
+			"favorites": {
+				"title": "お気に入り"
+			}
+		},
+		"webhooks": {
+			"title": "Webhook",
+			"targetUrl": "ターゲットURL",
+			"targetUrlInvalid": "有効なURLを入力してください。",
+			"events": "イベント",
+			"eventsHint": "Webhookが受信する (現在のプロジェクト内での) イベントを選択します。",
+			"mustSelectEvents": "イベントを少なくとも1つ選択する必要があります。",
+			"delete": "Webhookの削除",
+			"deleteText": "このWebhookを削除して本当によろしいですか？このWebhookのターゲットURLにはイベントは送信されなくなります。",
+			"deleteSuccess": "Webhookは正常に削除されました。",
+			"create": "Webhookを作成",
+			"secret": "シークレット",
+			"secretHint": "シークレットを指定した場合、WebhookターゲットURLへのリクエストはすべてHMAC署名されます。",
+			"secretDocs": "シークレットに関する詳細はドキュメントをご確認ください。"
+		},
+		"views": {
+			"header": "ビューの編集",
+			"title": "ビュー名",
+			"create": "ビューの作成",
+			"createSuccess": "ビューは正常に作成されました。",
+			"titleRequired": "ビュー名を入力してください。",
+			"delete": "ビューの削除",
+			"deleteSuccess": "ビューは正常に削除されました。",
+			"updateSuccess": "ビューは正常に更新されました。"
+		}
+	},
+	"filters": {
+		"title": "絞り込み",
+		"clear": "絞り込みの解除",
+		"attributes": {
+			"title": "絞り込み条件名",
+			"titlePlaceholder": "絞り込み条件名を入力…",
+			"description": "説明",
+			"includeNulls": "値が設定されていないタスクを含める",
+			"requireAll": "すべての条件に一致するタスクのみ表示",
+			"showDoneTasks": "完了したタスクを表示",
+			"sortAlphabetically": "アルファベット順に並べ替える",
+			"enablePriority": "優先度による絞り込みを有効化",
+			"enablePercentDone": "進捗状況による絞り込みを有効化",
+			"dueDateRange": "期日の範囲",
+			"startDateRange": "開始日の範囲",
+			"endDateRange": "開始日の範囲",
+			"reminderRange": "リマインダーの範囲"
+		},
+		"create": {
+			"title": "新しい絞り込み条件の作成",
+			"description": "絞り込み条件は、複数の条件を組み合わせて保存できる仮想のプロジェクトです。",
+			"action": "絞り込み条件を作成",
+			"titleRequired": "絞り込み条件名を入力してください。"
+		},
+		"delete": {
+			"header": "絞り込み条件の削除",
+			"text": "絞り込み条件を削除して本当によろしいですか？",
+			"success": "絞り込み条件は正常に削除されました。"
+		},
+		"edit": {
+			"title": "絞り込み条件の編集",
+			"success": "絞り込み条件は正常に保存されました。"
+		},
+		"query": {
+			"help": {
+				"fields": {
+					"endDate": "タスクの終了日"
+				}
+			}
+		}
+	},
+	"migrate": {
+		"title": "他のサービスからのインポート",
+		"titleService": "{name}からVikunjaへのデータのインポート",
+		"import": "Vikunjaへのデータのインポート",
+		"description": "以下のいずれかのサービスのロゴをクリックして始めましょう。",
+		"descriptionDo": "アクセス可能なリスト、タスク、メモ、リマインダー、ファイルをすべてVikunjaにインポートします。",
+		"authorize": "Vikunjaはあなたの{name}アカウントにアクセスします。よろしければ以下のボタンをクリックして許可してください。",
+		"getStarted": "さっそく始めましょう",
+		"inProgress": "インポート中…",
+		"alreadyMigrated1": "すでに{name}からは{date}にインポート済みのようです。",
+		"alreadyMigrated2": "再びインポートすることも可能ですが、重複する可能性があります。インポートして本当によろしいですか？",
+		"confirm": "了解！インポート開始なのだ！",
+		"importUpload": "{name}からVikunjaにデータをインポートするには、以下のボタンをクリックしてファイルを選択してください。",
+		"upload": "ファイルのアップロード"
+	},
+	"label": {
+		"title": "ラベル",
+		"manage": "ラベルの管理",
+		"description": "ラベルをクリックして編集します。ラベルはアクセス可能なプロジェクトのタスクで使用できます。",
+		"newCTA": "利用可能なラベルは存在しません。",
+		"search": "ラベルのキーワードを入力…",
+		"create": {
+			"header": "新しいラベルの作成",
+			"title": "ラベルの作成",
+			"titleRequired": "ラベル名を入力してください。",
+			"success": "ラベルは正常に作成されました。"
+		},
+		"edit": {
+			"header": "ラベルの編集",
+			"forbidden": "このラベルはあなたのものではないので編集することはできません。",
+			"success": "ラベルは正常に更新されました。"
+		},
+		"deleteSuccess": "ラベルは正常に削除されました。",
+		"attributes": {
+			"title": "ラベル名",
+			"titlePlaceholder": "ラベル名を入力…",
+			"description": "説明",
+			"descriptionPlaceholder": "ラベルの説明",
+			"color": "色"
+		}
+	},
+	"sharing": {
+		"authenticating": "認証中…",
+		"passwordRequired": "この共有プロジェクトにはパスワードが必要です。パスワードを入力してください:",
+		"error": "エラーが発生しました。",
+		"invalidPassword": "無効なパスワードです。"
+	},
+	"navigation": {
+		"overview": "概要",
+		"upcoming": "今後の予定",
+		"settings": "設定",
+		"imprint": "運営情報",
+		"privacy": "プライバシーポリシー"
+	},
+	"misc": {
+		"loading": "読み込み中…",
+		"save": "保存",
+		"delete": "削除",
+		"confirm": "確定",
+		"cancel": "キャンセル",
+		"refresh": "更新",
+		"disable": "無効化",
+		"copy": "コピー",
+		"copyError": "クリップボードへのコピーに失敗",
+		"search": "検索",
+		"searchPlaceholder": "キーワードを入力…",
+		"previous": "前へ",
+		"next": "次へ",
+		"poweredBy": "Powered by Vikunja",
+		"create": "作成",
+		"doit": "続行",
+		"saving": "保存中…",
+		"saved": "保存しました！",
+		"default": "デフォルト",
+		"close": "閉じる",
+		"download": "ダウンロード",
+		"showMenu": "メニューの表示",
+		"hideMenu": "メニューの非表示",
+		"forExample": "例:",
+		"welcomeBack": "おかえりなさい",
+		"custom": "カスタム",
+		"id": "ID",
+		"cannotBeUndone": "この操作は元に戻せません！"
+	},
+	"input": {
+		"resetColor": "色のリセット",
+		"datepicker": {
+			"today": "今日",
+			"tomorrow": "明日",
+			"nextMonday": "次の月曜日",
+			"thisWeekend": "週末",
+			"laterThisWeek": "今週中",
+			"nextWeek": "来週",
+			"chooseDate": "日付の選択"
+		},
+		"editor": {
+			"edit": "編集",
+			"done": "完了",
+			"heading1": "見出し1",
+			"heading2": "見出し2",
+			"heading3": "見出し3",
+			"headingSmaller": "見出しを小さくする",
+			"headingBigger": "見出しを大きくする",
+			"bold": "太字",
+			"italic": "斜体",
+			"strikethrough": "打ち消し線",
+			"underline": "下線",
+			"code": "コード",
+			"quote": "引用",
+			"bulletList": "順序なしリスト",
+			"unorderedList": "順序なしリスト",
+			"orderedList": "順序付きリスト",
+			"link": "リンク",
+			"image": "画像",
+			"horizontalRule": "横罫",
+			"guide": "説明書",
+			"text": "テキスト",
+			"taskList": "タスクリスト",
+			"undo": "元に戻す",
+			"redo": "やり直す",
+			"placeholder": "テキストを入力するか「/」を押して選択肢から選ぶ…",
+			"table": {
+				"title": "テーブル",
+				"insert": "テーブルの挿入",
+				"deleteColumn": "列の削除",
+				"deleteRow": "行の削除",
+				"deleteTable": "テーブルの削除",
+				"mergeCells": "セルの統合",
+				"splitCell": "セルの分割",
+				"fixTables": "テーブルの修正"
+			}
+		},
+		"multiselect": {
+			"createPlaceholder": "作成",
+			"selectPlaceholder": "クリックするかEnterキーを押して選択"
+		},
+		"datepickerRange": {
+			"to": "終了",
+			"from": "開始",
+			"fromto": "{from} 〜 {to} まで",
+			"ranges": {
+				"today": "今日",
+				"thisWeek": "今週",
+				"restOfThisWeek": "今から週末まで",
+				"nextWeek": "来週",
+				"next7Days": "7日間",
+				"lastWeek": "先週",
+				"thisMonth": "今月",
+				"restOfThisMonth": "今から月末まで",
+				"nextMonth": "来月",
+				"next30Days": "30日間",
+				"lastMonth": "先月",
+				"thisYear": "今年",
+				"restOfThisYear": "今から年末まで"
+			},
+			"values": {
+				"now": "現在",
+				"endOfToday": "今日の終わり",
+				"endOfLastWeek": "先週の終わり",
+				"endOfThisWeek": "今週の終わり",
+				"endOfNextWeek": "来週の終わり",
+				"endOfLastMonth": "先月の終わり",
+				"endOfThisMonth": "今月の終わり",
+				"endOfNextMonth": "来月の終わり",
+				"endOfThisYear": "今年の終わり"
+			}
+		},
+		"datemathHelp": {
+			"units": {
+				"seconds": "秒",
+				"minutes": "分",
+				"hours": "時間",
+				"days": "日",
+				"weeks": "週間",
+				"months": "月",
+				"years": "年"
+			},
+			"examples": {
+				"now": "現在",
+				"in24h": "24時間以内",
+				"today": "本日00:00",
+				"beginningOfThisWeek": "今週の初めの00:00",
+				"endOfThisWeek": "今週の終わり",
+				"in30Days": "30日間以内",
+				"datePlusMonth": "{0} 00:00の1ヶ月後"
+			}
+		}
+	},
+	"task": {
+		"task": "タスク",
+		"new": "タスクの作成",
+		"delete": "タスクの削除",
+		"createSuccess": "タスクは正常に作成されました。",
+		"addReminder": "リマイダーを作成…",
+		"doneSuccess": "タスクを完了にしました。",
+		"undoneSuccess": "タスクを未完了に戻しました。",
+		"revertSuccess": "タスクは正常に未完了へ戻されました。",
+		"undo": "元に戻す",
+		"openDetail": "タスクの詳細を表示",
+		"checklistTotal": "{total}件中{checked}件のタスク",
+		"checklistAllDone": "{total}件のタスク",
+		"show": {
+			"titleCurrent": "現在のタスク",
+			"titleDates": "{from} 〜 {to} までのタスク",
+			"noDates": "指定日が未設定のタスクを表示",
+			"overdue": "期限切れタスクを表示",
+			"fromuntil": "{from} 〜 {until} までのタスク",
+			"select": "期間の選択",
+			"noTasks": "タスクはありません — よい一日を！"
+		},
+		"detail": {
+			"chooseDueDate": "期日を設定…",
+			"chooseStartDate": "開始日を設定…",
+			"chooseEndDate": "終了日を設定…",
+			"move": "別のプロジェクトにタスクを移動",
+			"done": "タスクを完了",
+			"undone": "未完了に戻す",
+			"doneAt": "完了 {0}",
+			"updateSuccess": "タスクは正常に保存されました。",
+			"deleteSuccess": "タスクは正常に削除されました。",
+			"belongsToProject": "このタスクはプロジェクト「{project}」に含まれています。",
+			"closePopup": "閉じる",
+			"organization": "組織",
+			"management": "管理",
+			"dateAndTime": "日付と時刻",
+			"delete": {
+				"header": "タスクの削除",
+				"text1": "このタスクを削除して本当によろしいですか？",
+				"text2": "このタスクに含まれるすべての添付ファイル、リマインダー、関連付けは削除されます。この操作は元に戻せません。"
+			},
+			"actions": {
+				"assign": "担当者の割り当て",
+				"label": "ラベルの追加",
+				"priority": "優先度の設定",
+				"dueDate": "期日の設定",
+				"startDate": "開始日の設定",
+				"endDate": "終了日の設定",
+				"reminders": "リマインダーの設定",
+				"repeatAfter": "繰り返し間隔の設定",
+				"percentDone": "進捗状況の設定",
+				"attachments": "添付ファイルの追加",
+				"relatedTasks": "関連タスクの追加",
+				"moveProject": "移動",
+				"color": "色の設定",
+				"delete": "削除",
+				"favorite": "お気に入りに追加",
+				"unfavorite": "お気に入りから削除"
+			}
+		},
+		"attributes": {
+			"assignees": "担当",
+			"color": "色",
+			"description": "説明",
+			"done": "完了",
+			"dueDate": "期日",
+			"endDate": "終了日",
+			"labels": "ラベル",
+			"percentDone": "進捗状況",
+			"priority": "優先度",
+			"relatedTasks": "関連タスク",
+			"reminders": "リマインダー",
+			"repeat": "繰り返し間隔",
+			"startDate": "開始日",
+			"title": "タスク名"
+		},
+		"subscription": {
+			"subscribedTaskThroughParentProject": "現在プロジェクトを通して購読しているため、ここでこのタスクの購読を解除することはできません。",
+			"subscribedProject": "現在このプロジェクトを購読しており、変更通知が届きます。",
+			"notSubscribedProject": "このプロジェクトを購読していないため、変更通知は届きません。",
+			"subscribedTask": "現在このタスクを購読しており、変更通知が届きます。",
+			"notSubscribedTask": "このタスクを購読していないため、変更通知は届きません。",
+			"subscribe": "購読",
+			"unsubscribe": "購読解除",
+			"subscribeSuccessProject": "プロジェクトを購読しています",
+			"unsubscribeSuccessProject": "プロジェクトの購読を解除しました",
+			"subscribeSuccessTask": "このタスクを購読しています",
+			"unsubscribeSuccessTask": "このタスクの購読を解除しました"
+		},
+		"attachment": {
+			"title": "添付ファイル",
+			"downloadTooltip": "添付ファイルをダウンロード",
+			"upload": "添付ファイルのアップロード",
+			"drop": "ここにアップロードするファイルをドロップ",
+			"delete": "添付ファイルの削除",
+			"deleteTooltip": "添付ファイルを削除",
+			"deleteText1": "添付ファイル「{filename}」を削除して本当によろしいですか？",
+			"copyUrl": "URLのコピー",
+			"copyUrlTooltip": "添付ファイルのURLをコピー",
+			"setAsCover": "カバー画像にする",
+			"unsetAsCover": "カバー画像から取り外す",
+			"successfullyChangedCoverImage": "カバー画像は正常に変更されました。",
+			"usedAsCover": "カバー画像"
+		},
+		"comment": {
+			"title": "コメント",
+			"loading": "コメントを読み込み中…",
+			"creating": "コメントを作成中…",
+			"comment": "コメント",
+			"delete": "コメントの削除",
+			"deleteText1": "このコメントを削除して本当によろしいですか？",
+			"deleteSuccess": "コメントは正常に削除されました。",
+			"addedSuccess": "コメントは正常に追加されました。",
+			"permalink": "コメントへのリンクをコピー"
+		},
+		"deferDueDate": {
+			"title": "延期",
+			"1day": "1日後",
+			"3days": "3日後",
+			"1week": "1週間後"
+		},
+		"description": {
+			"empty": "説明文はありません。"
+		},
+		"assignee": {
+			"placeholder": "担当者を入力…",
+			"selectPlaceholder": "担当者に割り当てる",
+			"assignSuccess": "担当者が正常に割り当てられました。",
+			"unassignSuccess": "担当者から正常に解除されました。"
+		},
+		"label": {
+			"placeholder": "追加するラベルを入力…",
+			"createPlaceholder": "新しいラベルを追加",
+			"addSuccess": "ラベルは正常に追加されました。",
+			"createSuccess": "ラベルは正常に作成されました。",
+			"removeSuccess": "ラベルは正常に削除されました。",
+			"addCreateSuccess": "ラベルは正常に追加・作成されました。",
+			"delete": {
+				"header": "ラベルの削除",
+				"text1": "このラベルを削除して本当によろしいですか？",
+				"text2": "すべてのタスクから削除されます。この操作は元に戻せません。"
+			}
+		},
+		"priority": {
+			"unset": "未設定",
+			"low": "低",
+			"medium": "中",
+			"high": "高",
+			"urgent": "至急",
+			"doNow": "大至急"
+		},
+		"relation": {
+			"add": "新しい関連タスクの追加",
+			"new": "新しい関連タスクの作成",
+			"searchPlaceholder": "追加する関連タスクのキーワードを入力…",
+			"createPlaceholder": "関連タスクを追加",
+			"noneYet": "関連タスクはまだありません。",
+			"delete": "関連タスクの削除",
+			"deleteText1": "この関連タスクを削除して本当によろしいですか？",
+			"taskRequired": "タスクを選択するか、新しいタスク名を入力してください。",
+			"kinds": {
+				"subtask": "サブタスク",
+				"parenttask": "親タスク",
+				"related": "関連タスク"
+			}
+		},
+		"reminder": {
+			"custom": "カスタム",
+			"dateAndTime": "日付と時刻"
+		},
+		"repeat": {
+			"everyDay": "毎日",
+			"everyWeek": "毎週",
+			"every30d": "30日ごと",
+			"mode": "繰り返しモード",
+			"monthly": "毎月",
+			"fromCurrentDate": "完了からの間隔",
+			"each": "隔",
+			"specifyAmount": "数字を入力…",
+			"hours": "時間ごと",
+			"days": "日ごと",
+			"weeks": "週間ごと",
+			"months": "ヶ月ごと",
+			"years": "年ごと",
+			"invalidAmount": "0以上を入力してください。"
+		},
+		"quickAddMagic": {
+			"label1": "ラベルを付けるには、ラベル名の前に {prefix} を入力します。",
+			"dateAndTime": "日付と時刻"
+		}
+	},
+	"team": {
+		"title": "チーム",
+		"noTeams": "現在どのチームにも所属していません。",
+		"create": {
+			"title": "チームの作成",
+			"success": "チームは正常に作成されました。"
+		},
+		"edit": {
+			"title": "チーム「{team}」の編集",
+			"members": "チームメンバー",
+			"search": "ユーザーのキーワードを入力…",
+			"addUser": "チームに追加",
+			"makeMember": "メンバーにする",
+			"makeAdmin": "管理者にする",
+			"success": "チームは正常に更新されました。",
+			"userAddedSuccess": "チームメンバーは正常に追加されました。",
+			"madeMember": "チームメンバーはメンバーになりました。",
+			"madeAdmin": "チームメンバーは管理者になりました。",
+			"mustSelectUser": "ユーザーを選択してください。",
+			"delete": {
+				"header": "チームの削除",
+				"text1": "このチームと所属するチームメンバー全員を削除して本当によろしいですか？",
+				"success": "チームは正常に削除されました。"
+			},
+			"deleteUser": {
+				"success": "ユーザーは正常にチームから削除されました。"
+			}
+		},
+		"attributes": {
+			"name": "チーム名",
+			"nameRequired": "チーム名を入力してください。",
+			"description": "説明",
+			"admin": "管理者",
+			"member": "メンバー"
+		}
+	},
+	"keyboardShortcuts": {
+		"title": "キーボードショートカット",
+		"general": "一般",
+		"allPages": "これらのショートカットはすべてのページで機能します。",
+		"currentPageOnly": "これらのショートカットはこのページで機能します。",
+		"somePagesOnly": "これらのショートカットは一部のページで動作します。",
+		"toggleMenu": "メニューの表示/非表示",
+		"then": " ",
+		"task": {
+			"title": "タスク",
+			"done": "タスクの完了/取り消し",
+			"assign": "タスクに担当者を割り当てる",
+			"labels": "タスクにラベルを追加",
+			"dueDate": "タスクの期日を設定",
+			"attachment": "タスクに添付ファイルを追加",
+			"related": "関連タスクを追加",
+			"color": "タスクの色を変更",
+			"move": "タスクを別のプロジェクトに移動",
+			"reminder": "タスクのリマインダーを設定",
+			"description": "タスクの説明を編集",
+			"delete": "タスクを削除",
+			"priority": "タスクの優先度を設定",
+			"favorite": "タスクをお気に入りに追加/削除"
+		},
+		"project": {
+			"title": "プロジェクト",
+			"switchToListView": "リストで表示",
+			"switchToGanttView": "ガントチャートで表示",
+			"switchToKanbanView": "カンバンボードで表示",
+			"switchToTableView": "テーブルで表示"
+		},
+		"navigation": {
+			"title": "ナビゲーション",
+			"overview": "概要に移動",
+			"upcoming": "今後の予定に移動",
+			"labels": "ラベルに移動",
+			"teams": "チームに移動",
+			"projects": "プロジェクトに移動"
+		}
+	},
+	"update": {
+		"available": "アップデートがあります！",
+		"do": "アップデート"
+	},
+	"menu": {
+		"edit": "編集",
+		"archive": "アーカイブ",
+		"duplicate": "複製",
+		"delete": "削除",
+		"unarchive": "アーカイブの取り消し",
+		"setBackground": "背景画像の設定",
+		"share": "共有",
+		"newProject": "新しいプロジェクトの作成",
+		"createProject": "プロジェクトの作成",
+		"cantArchiveIsDefault": "デフォルトのプロジェクトのためアーカイブできません。",
+		"cantDeleteIsDefault": "デフォルトのプロジェクトのため削除できません。",
+		"views": "ビュー"
+	},
+	"apiConfig": {
+		"url": "Vikunja URL",
+		"urlPlaceholder": "例: https://localhost:3456",
+		"change": "変更",
+		"use": "{0} に設置されたVikunjaを使用します。",
+		"error": "\"{domain}\" にはVikunjaは存在しないか使用できない状態です。URLの形式が正しいかどうか、そして直接アクセスして到達できるかどうかを確認し、もう一度お試しください。",
+		"success": "\"{domain}\" に設置されたVikunjaを使用します。",
+		"urlRequired": "URLを入力してください。"
+	},
+	"notification": {
+		"title": "通知",
+		"none": "通知はありません。よい一日を！",
+		"explainer": "購読しているプロジェクトやタスクが変更されると通知されます。"
+	},
+	"quickActions": {
+		"commands": "コマンド",
+		"placeholder": "コマンドまたはキーワードを入力…",
+		"tasks": "タスク",
+		"projects": "プロジェクト",
+		"teams": "チーム",
+		"labels": "ラベル",
+		"newProject": "新しいプロジェクト名を入力…",
+		"newTask": "新しいタスク名を入力…",
+		"newTeam": "新しいチーム名を入力…",
+		"createTask": "現在のプロジェクト ({title}) にタスクを作成",
+		"createProject": "プロジェクトを作成",
+		"cmds": {
+			"newTask": "新しいタスクの作成",
+			"newProject": "新しいプロジェクトの作成",
+			"newTeam": "新しいチームの作成"
+		}
+	},
+	"date": {
+		"altFormatLong": "Y/n/j H:i",
+		"altFormatShort": "Y/n/j"
+	},
+	"error": {
+		"1005": "そのユーザーは存在しません。",
+		"1009": "無効なパスワードリセット用トークンです。",
+		"1010": "無効なメール確認用トークンです。",
+		"1011": "ユーザー名またはパスワードが正しくありません。",
+		"1015": "このユーザーはすでにTOTPが有効になっています。",
+		"1016": "このユーザーはTOTPが有効ではありません。",
+		"1017": "無効なTOTP認証コードです。",
+		"3001": "そのプロジェクトは存在しません。",
+		"3006": "その共有プロジェクトは存在しません。",
+		"3008": "このプロジェクトはアーカイブ済みのため読み取り専用です。またプロジェクトに関連するタスクも同様です。",
+		"4009": "その関連タスクは存在しません。",
+		"4011": "その添付ファイルは存在しません。",
+		"4012": "添付ファイルが大きすぎます。",
+		"4015": "そのコメントは存在しません。",
+		"6002": "そのチームは存在しません。",
+		"8002": "そのラベルは存在しません。",
+		"10001": "そのバケットは存在しません。",
+		"11001": "その絞り込み条件は存在しません。",
+		"11002": "絞り込み条件はリンクの共有には使用できません。",
+		"error": "エラー",
+		"success": "成功"
+	},
+	"about": {
+		"title": "Vikunjaについて",
+		"version": "バージョン: {version}"
+	},
+	"time": {
+		"units": {
+			"seconds": "秒",
+			"minutes": "分",
+			"hours": "時間",
+			"days": "日",
+			"weeks": "週間",
+			"months": "月",
+			"years": "年"
+		}
+	}
 }

@@ -1,150 +1,150 @@
 {
-    "notifications": {
-        "greeting": "Hei %[1]s!",
-        "email_confirm": {
-            "subject": "%[1]s, vennligst bekreft e-postadressen din på Vikunja",
-            "subject_new": "%[1]s + Vikunja = <3",
-            "welcome": "Velkommen til Vikunja!",
-            "confirm": "For å bekrefte din e-postadresse, klikk på linken nedenfor:"
-        },
-        "password": {
-            "changed": {
-                "subject": "Passordet ditt på Vikunja ble endret",
-                "success": "Passordet ditt ble endret.",
-                "warning": "Hvis dette ikke var deg, kan det bety at noen kompromitterte kontoen din. I dette tilfellet må du kontakte administrator."
-            },
-            "reset": {
-                "subject": "Tilbakestill passordet ditt på Vikunja",
-                "instructions": "Klikk på lenken nedenfor for å tilbakestille passordet:",
-                "valid_duration": "Denne lenken vil være gyldig i 24 timer."
-            }
-        },
-        "totp": {
-            "invalid": {
-                "subject": "Noen prøvde nettopp å logge inn på Vikunja kontoen din, men mislyktes",
-                "message": "Noen prøvde nettopp å logge inn på kontoen med riktig brukernavn og passord, men med feil TOTP-kode.",
-                "warning": "**Hvis dette ikke var deg, vet noen andre passordet ditt. Du bør velge et ny umiddelbart!**"
-            },
-            "account_locked": {
-                "subject": "Vi har deaktivert kontoen din på Vikunja",
-                "message": "Noen prøvde å logge inn med din legitimasjon, men kunne ikke oppgi en gyldig TOTP-kode.",
-                "disabled": "Etter 10 mislykkede forsøk har vi deaktivert kontoen din og tilbakestilt passordet ditt. For å angi et nytt passord må du følge instruksjonene i tilbakestillings-e-posten vi har sendt deg.",
-                "reset_instructions": "Hvis du ikke fikk en e-post med tilbakestillingsinstruksjoner kan du alltid be om en ny [%[1]s](%[2]s)."
-            }
-        },
-        "login": {
-            "failed": {
-                "subject": "Noen har nettopp prøvd å logge inn på Vikunja-kontoen din, men kunne ikke å oppgi et riktig passord",
-                "message": "Noen prøvde nettopp å logge inn på kontoen din med feil passord tre ganger på rad.",
-                "warning": "Hvis dette ikke var deg, kan dette være noen andre som prøver å bryte seg inn på kontoen din.",
-                "enhance_security": "For å forbedre sikkerheten på kontoen bør du sette et sterkere passord eller aktivere TOTP-autentisering i innstillingene:"
-            }
-        },
-        "account": {
-            "deletion": {
-                "confirm": {
-                    "subject": "Bekreft sletting av Vikunja-kontoen din",
-                    "request": "Du har bedt om sletting av kontoen din. For å bekrefte dette, klikk på lenken nedenfor:",
-                    "valid_duration": "Denne lenken vil være gyldig i 24 timer.",
-                    "schedule_info": "Når du bekrefter slettingen, gjennomføres slettingen av kontoen din om tre dager. Du får ytterligere en e-post om dette før den tid.",
-                    "consequences": "Hvis du fortsetter å slette kontoen din, fjerner du alle prosjektene og oppgavene du har opprettet. Alt du delte med en annen bruker eller gruppe blir overlevert med eierskap til dem.",
-                    "changed_mind": "Hvis du ikke har bedt om sletting eller du har endret mening, kan du bare ignorere denne e-posten."
-                },
-                "scheduled": {
-                    "subject_days": "Vikunja-kontoen din slettes om %[1]s dager",
-                    "subject_tomorrow": "Vikunja-kontoen din vil bli slettet i morgen",
-                    "request_reminder": "Du har nylig bedt om sletting av Vikunja-kontoen Vikunja.",
-                    "deletion_time_days": "Vi vil slette kontoen din om %[1]dager.",
-                    "deletion_time_tomorrow": "Vi sletter kontoen din i morgen.",
-                    "changed_mind": "Hvis du har endret mening klikker du på lenken nedenfor for å avbryte slettingen:"
-                },
-                "completed": {
-                    "subject": "Din Vikunja-konto er slettet",
-                    "confirmation": "Som forespurt har vi slettet Vikunja-kontoen din.",
-                    "permanent": "Denne slettingen er permanent. Hvis det ikke er opprettet en sikkerhetskopi og trenger dataene dine tilbake nå, kontakt administrator."
-                }
-            }
-        },
-        "task": {
-            "reminder": {
-                "subject": "Påminnelse for \"%[1]s\" (%[2]s)",
-                "message": "Dette er en påminnelse om oppgaven «%[1]» (%[2]s)."
-            },
-            "comment": {
-                "subject": "Sv: %[1]s",
-                "mentioned_subject": "%[1]s nevnte deg i en kommentar i \"%[2]s\"",
-                "mentioned_message": "**%[1]s nevnte deg i en kommentar i \"%[]s:"
-            },
-            "assigned": {
-                "subject_to_assignee": "You have been assigned to \"%[1]s\" (%[2]s)",
-                "message_to_assignee": "%[1]s has assigned you to \"%[2]s\".",
-                "subject_to_others": "\"%[1]s\" (%[2]s) has been assigned to %[3]s",
-                "message_to_others": "%[1]s har tildelt deg %[2]s."
-            },
-            "deleted": {
-                "subject": "\"%[1]s\" (%[2]s) has been deleted",
-                "message": "%[1]s has deleted the task \"%[2]s\" (%[3]s)"
-            },
-            "mentioned": {
-                "subject_new": "%[1]s nevnte deg i en kommentar i \"%[2]s\"",
-                "subject": "%[1]s nevnt deg i en oppgave \"%[2]s\"",
-                "message": "**%[1]s** nevnte deg i en oppgave:"
-            },
-            "overdue": {
-                "subject": "Oppgave \"%[1]s\" (%[2]s) er forfalt",
-                "message": "Dette er en vennlig påminnelse om oppgaven \"%[1]s\" (%[2]s), som er %[3]s og ennå ikke utført.",
-                "multiple_subject": "Dine forfalte oppgaver",
-                "multiple_message": "Du har følgende forfalte oppgaver:",
-                "overdue_since": "forfalt siden %[1]s",
-                "overdue_now": "forfalt nå"
-            }
-        },
-        "project": {
-            "created": "%[1]s opprettet prosjektet \"%[2]\""
-        },
-        "team": {
-            "member_added": {
-                "subject": "%[1]s added you to the \"%[2]s\" team in Vikunja",
-                "message": "%[1]s har lagt deg til i gruppen %[2] i Vikunja."
-            }
-        },
-        "data_export": {
-            "ready": {
-                "subject": "Vikunja dataeksporten er klar",
-                "message": "Vikunja dataeksport er klar til å lastes ned. Klikk på knappen nedenfor for å laste den ned:",
-                "availability": "Nedlasting vil være tilgjengelig de neste 7 dagene."
-            }
-        },
-        "migration": {
-            "done": {
-                "subject": "Migrasjonen fra %[1]s til Vikunja ble fullført",
-                "imported": "Vikunja har importert alle lister/prosjekter, oppgaver, notater, påminnelser og filer fra %[1]s du har tilgang til.",
-                "have_fun": "Ha det gøy med dine nye (og gamle) prosjekter!"
-            },
-            "failed": {
-                "subject": "Migrasjonen fra %[1]s til Vikunja feilet",
-                "message": "Det ser ut som om flytting fra %[1]s ikke gikk som planlagt denne gangen.",
-                "retry": "Ingen grunn til bekymringer! Prøv en gang til.",
-                "error": "Det oppsto en liten feil på veien: `%[2]s`.",
-                "report": "Vennligst send oss et notat om dette [i forumet] (https://community.vikunja.io/), slik at vi kan ta en kikk på hvorfor det mislyktes.",
-                "working_on_it": "Vi har feilmeldingen på bordet og jobber med saken for å få den ordnet."
-            }
-        },
-        "common": {
-            "have_nice_day": "Ha en fin dag!",
-            "copy_url": "Hvis knappen over ikke fungerer, kopier nettadressen under og lim den inn i adresselinjen i nettleseren:",
-            "actions": {
-                "open_task": "Åpne oppgave",
-                "open_vikunja": "Åpne Vikunja",
-                "open_project": "Åpne prosjekt",
-                "open_team": "Åpne gruppe",
-                "download": "Last ned",
-                "reset_password": "Tilbakestill passordet ditt",
-                "go_to_settings": "Gå til innstillinger",
-                "confirm_email": "Bekreft e-postadressen din",
-                "abort_deletion": "Avbryt slettingen",
-                "confirm_account_deletion": "Bekreft sletting av kontoen min"
-            }
-        }
-    }
+	"notifications": {
+		"greeting": "Hei %[1]s!",
+		"email_confirm": {
+			"subject": "%[1]s, vennligst bekreft e-postadressen din på Vikunja",
+			"subject_new": "%[1]s + Vikunja = <3",
+			"welcome": "Velkommen til Vikunja!",
+			"confirm": "For å bekrefte din e-postadresse, klikk på linken nedenfor:"
+		},
+		"password": {
+			"changed": {
+				"subject": "Passordet ditt på Vikunja ble endret",
+				"success": "Passordet ditt ble endret.",
+				"warning": "Hvis dette ikke var deg, kan det bety at noen kompromitterte kontoen din. I dette tilfellet må du kontakte administrator."
+			},
+			"reset": {
+				"subject": "Tilbakestill passordet ditt på Vikunja",
+				"instructions": "Klikk på lenken nedenfor for å tilbakestille passordet:",
+				"valid_duration": "Denne lenken vil være gyldig i 24 timer."
+			}
+		},
+		"totp": {
+			"invalid": {
+				"subject": "Noen prøvde nettopp å logge inn på Vikunja kontoen din, men mislyktes",
+				"message": "Noen prøvde nettopp å logge inn på kontoen med riktig brukernavn og passord, men med feil TOTP-kode.",
+				"warning": "**Hvis dette ikke var deg, vet noen andre passordet ditt. Du bør velge et ny umiddelbart!**"
+			},
+			"account_locked": {
+				"subject": "Vi har deaktivert kontoen din på Vikunja",
+				"message": "Noen prøvde å logge inn med din legitimasjon, men kunne ikke oppgi en gyldig TOTP-kode.",
+				"disabled": "Etter 10 mislykkede forsøk har vi deaktivert kontoen din og tilbakestilt passordet ditt. For å angi et nytt passord må du følge instruksjonene i tilbakestillings-e-posten vi har sendt deg.",
+				"reset_instructions": "Hvis du ikke fikk en e-post med tilbakestillingsinstruksjoner kan du alltid be om en ny [%[1]s](%[2]s)."
+			}
+		},
+		"login": {
+			"failed": {
+				"subject": "Noen har nettopp prøvd å logge inn på Vikunja-kontoen din, men kunne ikke å oppgi et riktig passord",
+				"message": "Noen prøvde nettopp å logge inn på kontoen din med feil passord tre ganger på rad.",
+				"warning": "Hvis dette ikke var deg, kan dette være noen andre som prøver å bryte seg inn på kontoen din.",
+				"enhance_security": "For å forbedre sikkerheten på kontoen bør du sette et sterkere passord eller aktivere TOTP-autentisering i innstillingene:"
+			}
+		},
+		"account": {
+			"deletion": {
+				"confirm": {
+					"subject": "Bekreft sletting av Vikunja-kontoen din",
+					"request": "Du har bedt om sletting av kontoen din. For å bekrefte dette, klikk på lenken nedenfor:",
+					"valid_duration": "Denne lenken vil være gyldig i 24 timer.",
+					"schedule_info": "Når du bekrefter slettingen, gjennomføres slettingen av kontoen din om tre dager. Du får ytterligere en e-post om dette før den tid.",
+					"consequences": "Hvis du fortsetter å slette kontoen din, fjerner du alle prosjektene og oppgavene du har opprettet. Alt du delte med en annen bruker eller gruppe blir overlevert med eierskap til dem.",
+					"changed_mind": "Hvis du ikke har bedt om sletting eller du har endret mening, kan du bare ignorere denne e-posten."
+				},
+				"scheduled": {
+					"subject_days": "Vikunja-kontoen din slettes om %[1]s dager",
+					"subject_tomorrow": "Vikunja-kontoen din vil bli slettet i morgen",
+					"request_reminder": "Du har nylig bedt om sletting av Vikunja-kontoen Vikunja.",
+					"deletion_time_days": "Vi vil slette kontoen din om %[1]dager.",
+					"deletion_time_tomorrow": "Vi sletter kontoen din i morgen.",
+					"changed_mind": "Hvis du har endret mening klikker du på lenken nedenfor for å avbryte slettingen:"
+				},
+				"completed": {
+					"subject": "Din Vikunja-konto er slettet",
+					"confirmation": "Som forespurt har vi slettet Vikunja-kontoen din.",
+					"permanent": "Denne slettingen er permanent. Hvis det ikke er opprettet en sikkerhetskopi og trenger dataene dine tilbake nå, kontakt administrator."
+				}
+			}
+		},
+		"task": {
+			"reminder": {
+				"subject": "Påminnelse for \"%[1]s\" (%[2]s)",
+				"message": "Dette er en påminnelse om oppgaven «%[1]» (%[2]s)."
+			},
+			"comment": {
+				"subject": "Sv: %[1]s",
+				"mentioned_subject": "%[1]s nevnte deg i en kommentar i \"%[2]s\"",
+				"mentioned_message": "**%[1]s nevnte deg i en kommentar i \"%[]s:"
+			},
+			"assigned": {
+				"subject_to_assignee": "Du har blitt tildelt \"%[1]\" (%[2]s)",
+				"message_to_assignee": "%[1]s har tildelt deg %[2]s\".",
+				"subject_to_others": "\"%[1]s\" (%[2]s) er tildelt %[3]s",
+				"message_to_others": "%[1]s har tildelt deg %[2]s."
+			},
+			"deleted": {
+				"subject": "\"%[1]s\" (%[2]s) er slettet",
+				"message": "%[1]s har slettet oppgaven \"%[2]s\" (%[3]s)"
+			},
+			"mentioned": {
+				"subject_new": "%[1]s nevnte deg i en kommentar i \"%[2]s\"",
+				"subject": "%[1]s nevnt deg i en oppgave \"%[2]s\"",
+				"message": "**%[1]s** nevnte deg i en oppgave:"
+			},
+			"overdue": {
+				"subject": "Oppgave \"%[1]s\" (%[2]s) er forfalt",
+				"message": "Dette er en vennlig påminnelse om oppgaven \"%[1]s\" (%[2]s), som er %[3]s og ennå ikke utført.",
+				"multiple_subject": "Dine forfalte oppgaver",
+				"multiple_message": "Du har følgende forfalte oppgaver:",
+				"overdue_since": "forfalt siden %[1]s",
+				"overdue_now": "forfalt nå"
+			}
+		},
+		"project": {
+			"created": "%[1]s opprettet prosjektet \"%[2]\""
+		},
+		"team": {
+			"member_added": {
+				"subject": "%[1]s har lagt deg til i gruppen \"%[2]s\" i Vikunja",
+				"message": "%[1]s har lagt deg til i gruppen %[2] i Vikunja."
+			}
+		},
+		"data_export": {
+			"ready": {
+				"subject": "Vikunja dataeksporten er klar",
+				"message": "Vikunja dataeksport er klar til å lastes ned. Klikk på knappen nedenfor for å laste den ned:",
+				"availability": "Nedlasting vil være tilgjengelig de neste 7 dagene."
+			}
+		},
+		"migration": {
+			"done": {
+				"subject": "Migrasjonen fra %[1]s til Vikunja ble fullført",
+				"imported": "Vikunja har importert alle lister/prosjekter, oppgaver, notater, påminnelser og filer fra %[1]s du har tilgang til.",
+				"have_fun": "Ha det gøy med dine nye (og gamle) prosjekter!"
+			},
+			"failed": {
+				"subject": "Migrasjonen fra %[1]s til Vikunja feilet",
+				"message": "Det ser ut som om flytting fra %[1]s ikke gikk som planlagt denne gangen.",
+				"retry": "Ingen grunn til bekymringer! Prøv en gang til.",
+				"error": "Det oppsto en liten feil på veien: `%[2]s`.",
+				"report": "Vennligst send oss et notat om dette [i forumet] (https://community.vikunja.io/), slik at vi kan ta en kikk på hvorfor det mislyktes.",
+				"working_on_it": "Vi har feilmeldingen på bordet og jobber med saken for å få den ordnet."
+			}
+		},
+		"common": {
+			"have_nice_day": "Ha en fin dag!",
+			"copy_url": "Hvis knappen over ikke fungerer, kopier nettadressen under og lim den inn i adresselinjen i nettleseren:",
+			"actions": {
+				"open_task": "Åpne oppgave",
+				"open_vikunja": "Åpne Vikunja",
+				"open_project": "Åpne prosjekt",
+				"open_team": "Åpne gruppe",
+				"download": "Last ned",
+				"reset_password": "Tilbakestill passordet ditt",
+				"go_to_settings": "Gå til innstillinger",
+				"confirm_email": "Bekreft e-postadressen din",
+				"abort_deletion": "Avbryt slettingen",
+				"confirm_account_deletion": "Bekreft sletting av kontoen min"
+			}
+		}
+	}
 }

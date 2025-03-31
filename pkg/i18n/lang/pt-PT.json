@@ -1,150 +1,142 @@
 {
-    "notifications": {
-        "greeting": "Olá %[1]s,",
-        "email_confirm": {
-            "subject": "%[1]s, por favor, confirma o teu e-mail no Vikunja",
-            "subject_new": "%[1]s + Vikunja = <3",
-            "welcome": "Bem-Vindo ao Vikunja!",
-            "confirm": "Para confirmares o teu endereço de e-mail, clica no link abaixo:"
-        },
-        "password": {
-            "changed": {
-                "subject": "A tua palavra-passe no Vikunja foi alterada",
-                "success": "A palavra-passe da tua conta foi alterada com sucesso.",
-                "warning": "Se não foste tu, isso pode significar que alguém comprometeu a tua conta. Nesse caso, contacta o administrador do teu servidor."
-            },
-            "reset": {
-                "subject": "Redefine a tua palavra-passe no Vikunja",
-                "instructions": "Para redefinires a tua palavra-passe, clica no link abaixo:",
-                "valid_duration": "Este link será válido por 24 horas."
-            }
-        },
-        "totp": {
-            "invalid": {
-                "subject": "Alguém tentou iniciar sessão na tua conta no Vikunja, mas sem sucesso",
-                "message": "Alguém tentou iniciar sessão na tua conta utilizando um nome de utilizador e palavra-passe corretos, mas com um código TOPT incorreto.",
-                "warning": "**Se não foste tu, significa que outra pessoa sabe a tua palavra-passe. Deves definir uma nova imediatamente!**"
-            },
-            "account_locked": {
-                "subject": "Desativamos a tua conta no Vikunja",
-                "message": "Alguém tentou iniciar sessão com as tuas credenciais, mas não forneceu um código TOTP válido.",
-                "disabled": "Após 10 tentativas falhadas, desativámos a tua conta e redefinimos a tua palavra-passe. Para definires uma nova palavra-passe, segue as instruções no e-mail que acabámos de te enviar.",
-                "reset_instructions": "Se não recebeste um e-mail com as instruções de redefinição, podes sempre solicitar um novo e-mail em [%[1]s](%[2]s)."
-            }
-        },
-        "login": {
-            "failed": {
-                "subject": "Alguém tento iniciar sessão na tua conta no Vikunja, mas não conseguiu fornecer uma palavra-passe correta",
-                "message": "Alguém tentou iniciar sessão na tua conta com uma palavra-passe incorreta por três vezes consecutivas.",
-                "warning": "Se não foste tu, pode ser outra pessoa a tentar invadir a tua conta.",
-                "enhance_security": "Para aumentar a segurança da tua conta, podes querer definir uma palavra-passe mais forte ou ativar a autenticação TOTP nas definições:"
-            }
-        },
-        "account": {
-            "deletion": {
-                "confirm": {
-                    "subject": "Por favor, confirma a eliminação da tua conta Vikunja",
-                    "request": "Solicitas-te a eliminação da tua conta. Para o confirmar, clica no link abaixo:",
-                    "valid_duration": "Este link será válido por 24 horas.",
-                    "schedule_info": "Depois de confirmares a eliminação, agendaremos a eliminação da tua conta para daí a três dias e vamos enviar-te outro e-mail até lá.",
-                    "consequences": "Se procederes à eliminação da tua conta, removeremos todos os teus projetos e tarefas que crias-te. Tudo o que partilhas-te com outro utilizador ou equipa será transferido para eles.",
-                    "changed_mind": "Se não solicitas-te a eliminação da tua conta ou mudaste de ideias, podes simplesmente ignorar este e-mail."
-                },
-                "scheduled": {
-                    "subject_days": "A tua conta Vikunja será eliminada em %[1]s dias",
-                    "subject_tomorrow": "A tua conta Vikunja será eliminada amanhã",
-                    "request_reminder": "Recentemente, solicitas-te a eliminação da tua conta Vikunja.",
-                    "deletion_time_days": "Vamos eliminar a tua conta dentro de %[1]s dias.",
-                    "deletion_time_tomorrow": "Vamos eliminar a tua conta amanhã.",
-                    "changed_mind": "Se mudaste de ideias, basta clicares no link abaixo para cancelares a eliminação e seguir as instruções:"
-                },
-                "completed": {
-                    "subject": "A tua conta Vikunja foi eliminada",
-                    "confirmation": "Como solicitado, eliminámos a tua conta Vikunja.",
-                    "permanent": "Esta eliminação é permanente. Se não criaste uma cópia de segurança e precisas dos teus dados de volta agora, fala com o teu administrador."
-                }
-            }
-        },
-        "task": {
-            "reminder": {
-                "subject": "Lembrete para \"%[1]s\" (%[2]s)",
-                "message": "Este é um lembrete cordial da tarefa “%[1]s” (%[2]s)."
-            },
-            "comment": {
-                "subject": "Re: %[1]s",
-                "mentioned_subject": "%[1]s mencionou-te num comentário em \"%[2]s\"",
-                "mentioned_message": "**%[1]s** mencionou-te num comentário:"
-            },
-            "assigned": {
-                "subject_to_assignee": "Foste atribuído a %[1]s (%[2]s)",
-                "message_to_assignee": "%[1]s atribuiu-te a %[2]s.",
-                "subject_to_others": "%[1]s(%[2]s) foi atribuído a %[3]s",
-                "message_to_others": "%[1]s atribuiu esta tarefa a %[2]s."
-            },
-            "deleted": {
-                "subject": "%[1]s (%[2]s) foi eliminada",
-                "message": "%[1]s eliminou a tarefa %[2]s (%[3]s)"
-            },
-            "mentioned": {
-                "subject_new": "%[1]s mencionou-te numa nova tarefa \"%[2]s\"",
-                "subject": "%[1]s mencionou-te numa tarefa \"%[2]s\"",
-                "message": "**%[1]s** mencionou-te numa tarefa:"
-            },
-            "overdue": {
-                "subject": "A tarefa \"%[1]s\" (%[2]s) está em atraso",
-                "message": "Este é um lembrete cordial da tarefa \"%[1]s\" (%[2]s) que está %[3]s e ainda por concluir.",
-                "multiple_subject": "As tuas taredas em atraso",
-                "multiple_message": "Tens as seguintes tarefas em atraso:",
-                "overdue_since": "em atraso desde %[1]s",
-                "overdue_now": "agora em atraso"
-            }
-        },
-        "project": {
-            "created": "%[1]s criou o projeto \"%[2]s\""
-        },
-        "team": {
-            "member_added": {
-                "subject": "%[1]s adicionou-te à equipa %[2]s no Vikunja",
-                "message": "%[1]s acabou de te adicionar à equipa %[2]s no Vikunja."
-            }
-        },
-        "data_export": {
-            "ready": {
-                "subject": "A tua Exportação de Dados do Vikunja está pronta",
-                "message": "A tua Exportação de Dados Vikunja está pronta para ser descarregada. Clique no botão abaixo para a transferir:",
-                "availability": "A transferência estará disponível durante os próximos 7 dias."
-            }
-        },
-        "migration": {
-            "done": {
-                "subject": "A migração de %[1]s para o Vikunja foi concluída",
-                "imported": "O Vikunja importou todas as listas/projetos, tarefas, notas, lembretes e ficheiros de %[1]s a que tens acesso.",
-                "have_fun": "Diverte-te com os teus novos (velhos) projetos!"
-            },
-            "failed": {
-                "subject": "A migração de %[1]s para o Vikunja falhou",
-                "message": "Parece que a migração de %[1]s não correu como planeado desta vez.",
-                "retry": "Mas não te preocupes! Basta tentar de novo, recomeçando da mesma forma que fizeste antes. Por vezes, estes contratempos acontecem devido a falhas no %[1]s, mas tentar de novo frequentemente resolve o problema.",
-                "error": "Deparámo-nos com um pequeno erro durante o processo: `%[2]s`.",
-                "report": "Por favor, envia-nos uma nota sobre este assunto [no fórum] (https://community.vikunja.io/) ou em qualquer um dos locais habituais, para que possamos analisar o motivo da falha.",
-                "working_on_it": "A mensagem de erro foi assinalada no nosso sistema e vamos tentar corrigir o problema em breve."
-            }
-        },
-        "common": {
-            "have_nice_day": "Tem um ótimo dia!",
-            "copy_url": "Se o botão acima não funcionar, copia o url abaixo e cola-o na barra de endereços do teu browser:",
-            "actions": {
-                "open_task": "Abrir Tarefa",
-                "open_vikunja": "Abrir Vikunja",
-                "open_project": "Abrir Projeto",
-                "open_team": "Abrir Equipa",
-                "download": "Descarregar",
-                "reset_password": "Redefinir a tua palavra-passe",
-                "go_to_settings": "Ir para definições",
-                "confirm_email": "Confirmar o teu endereço de e-mail",
-                "abort_deletion": "Cancelar a eliminação",
-                "confirm_account_deletion": "Confirmar a eliminação da minha conta"
-            }
-        }
-    }
+	"notifications": {
+		"greeting": "Olá %[1]s,",
+		"email_confirm": {
+			"subject": "%[1]s, por favor, confirma o teu e-mail no Vikunja",
+			"subject_new": "%[1]s + Vikunja = <3",
+			"welcome": "Bem-Vindo ao Vikunja!",
+			"confirm": "Para confirmares o teu endereço de e-mail, clica no link abaixo:"
+		},
+		"password": {
+			"changed": {
+				"subject": "A tua palavra-passe no Vikunja foi alterada",
+				"success": "A palavra-passe da tua conta foi alterada com sucesso.",
+				"warning": "Se não foste tu, isso pode significar que alguém comprometeu a tua conta. Nesse caso, contacta o administrador do teu servidor."
+			},
+			"reset": {
+				"subject": "Redefine a tua palavra-passe no Vikunja",
+				"instructions": "Para redefinires a tua palavra-passe, clica no link abaixo:",
+				"valid_duration": "Este link será válido por 24 horas."
+			}
+		},
+		"totp": {
+			"invalid": {
+				"subject": "Alguém tentou iniciar sessão na tua conta no Vikunja, mas sem sucesso",
+				"message": "Alguém tentou iniciar sessão na tua conta utilizando um nome de utilizador e palavra-passe corretos, mas com um código TOPT incorreto.",
+				"warning": "**Se não foste tu, significa que outra pessoa sabe a tua palavra-passe. Deves definir uma nova imediatamente!**"
+			},
+			"account_locked": {
+				"subject": "Desativamos a tua conta no Vikunja",
+				"message": "Alguém tentou iniciar sessão com as tuas credenciais, mas não forneceu um código TOTP válido.",
+				"disabled": "Após 10 tentativas falhadas, desativámos a tua conta e redefinimos a tua palavra-passe. Para definires uma nova palavra-passe, segue as instruções no e-mail que acabámos de te enviar.",
+				"reset_instructions": "Se não recebeste um e-mail com as instruções de redefinição, podes sempre solicitar um novo e-mail em [%[1]s](%[2]s)."
+			}
+		},
+		"login": {
+			"failed": {
+				"subject": "Alguém tento iniciar sessão na tua conta no Vikunja, mas não conseguiu fornecer uma palavra-passe correta",
+				"message": "Alguém tentou iniciar sessão na tua conta com uma palavra-passe incorreta por três vezes consecutivas.",
+				"warning": "Se não foste tu, pode ser outra pessoa a tentar invadir a tua conta.",
+				"enhance_security": "Para aumentar a segurança da tua conta, podes querer definir uma palavra-passe mais forte ou ativar a autenticação TOTP nas definições:"
+			}
+		},
+		"account": {
+			"deletion": {
+				"confirm": {
+					"subject": "Por favor, confirma a eliminação da tua conta Vikunja",
+					"request": "Solicitas-te a eliminação da tua conta. Para o confirmar, clica no link abaixo:",
+					"valid_duration": "Este link será válido por 24 horas.",
+					"schedule_info": "Depois de confirmares a eliminação, agendaremos a eliminação da tua conta para daí a três dias e vamos enviar-te outro e-mail até lá.",
+					"consequences": "Se procederes à eliminação da tua conta, removeremos todos os teus projetos e tarefas que crias-te. Tudo o que partilhas-te com outro utilizador ou equipa será transferido para eles.",
+					"changed_mind": "Se não solicitas-te a eliminação da tua conta ou mudaste de ideias, podes simplesmente ignorar este e-mail."
+				},
+				"scheduled": {
+					"subject_days": "A tua conta Vikunja será eliminada em %[1]s dias",
+					"subject_tomorrow": "A tua conta Vikunja será eliminada amanhã",
+					"request_reminder": "Recentemente, solicitas-te a eliminação da tua conta Vikunja.",
+					"deletion_time_days": "Vamos eliminar a tua conta dentro de %[1]s dias.",
+					"deletion_time_tomorrow": "Vamos eliminar a tua conta amanhã.",
+					"changed_mind": "Se mudaste de ideias, basta clicares no link abaixo para cancelares a eliminação e seguir as instruções:"
+				},
+				"completed": {
+					"subject": "A tua conta Vikunja foi eliminada",
+					"confirmation": "Como solicitado, eliminámos a tua conta Vikunja.",
+					"permanent": "Esta eliminação é permanente. Se não criaste uma cópia de segurança e precisas dos teus dados de volta agora, fala com o teu administrador."
+				}
+			}
+		},
+		"task": {
+			"reminder": {
+				"subject": "Lembrete para \"%[1]s\" (%[2]s)",
+				"message": "Este é um lembrete cordial da tarefa “%[1]s” (%[2]s)."
+			},
+			"comment": {
+				"subject": "Re: %[1]s",
+				"mentioned_subject": "%[1]s mencionou-te num comentário em \"%[2]s\"",
+				"mentioned_message": "**%[1]s** mencionou-te num comentário:"
+			},
+			"assigned": {
+				"message_to_others": "%[1]s atribuiu esta tarefa a %[2]s."
+			},
+			"mentioned": {
+				"subject_new": "%[1]s mencionou-te numa nova tarefa \"%[2]s\"",
+				"subject": "%[1]s mencionou-te numa tarefa \"%[2]s\"",
+				"message": "**%[1]s** mencionou-te numa tarefa:"
+			},
+			"overdue": {
+				"subject": "A tarefa \"%[1]s\" (%[2]s) está em atraso",
+				"message": "Este é um lembrete cordial da tarefa \"%[1]s\" (%[2]s) que está %[3]s e ainda por concluir.",
+				"multiple_subject": "As tuas taredas em atraso",
+				"multiple_message": "Tens as seguintes tarefas em atraso:",
+				"overdue_since": "em atraso desde %[1]s",
+				"overdue_now": "agora em atraso"
+			}
+		},
+		"project": {
+			"created": "%[1]s criou o projeto \"%[2]s\""
+		},
+		"team": {
+			"member_added": {
+				"message": "%[1]s acabou de te adicionar à equipa %[2]s no Vikunja."
+			}
+		},
+		"data_export": {
+			"ready": {
+				"subject": "A tua Exportação de Dados do Vikunja está pronta",
+				"message": "A tua Exportação de Dados Vikunja está pronta para ser descarregada. Clique no botão abaixo para a transferir:",
+				"availability": "A transferência estará disponível durante os próximos 7 dias."
+			}
+		},
+		"migration": {
+			"done": {
+				"subject": "A migração de %[1]s para o Vikunja foi concluída",
+				"imported": "O Vikunja importou todas as listas/projetos, tarefas, notas, lembretes e ficheiros de %[1]s a que tens acesso.",
+				"have_fun": "Diverte-te com os teus novos (velhos) projetos!"
+			},
+			"failed": {
+				"subject": "A migração de %[1]s para o Vikunja falhou",
+				"message": "Parece que a migração de %[1]s não correu como planeado desta vez.",
+				"retry": "Mas não te preocupes! Basta tentar de novo, recomeçando da mesma forma que fizeste antes. Por vezes, estes contratempos acontecem devido a falhas no %[1]s, mas tentar de novo frequentemente resolve o problema.",
+				"error": "Deparámo-nos com um pequeno erro durante o processo: `%[2]s`.",
+				"report": "Por favor, envia-nos uma nota sobre este assunto [no fórum] (https://community.vikunja.io/) ou em qualquer um dos locais habituais, para que possamos analisar o motivo da falha.",
+				"working_on_it": "A mensagem de erro foi assinalada no nosso sistema e vamos tentar corrigir o problema em breve."
+			}
+		},
+		"common": {
+			"have_nice_day": "Tem um ótimo dia!",
+			"copy_url": "Se o botão acima não funcionar, copia o url abaixo e cola-o na barra de endereços do teu browser:",
+			"actions": {
+				"open_task": "Abrir Tarefa",
+				"open_vikunja": "Abrir Vikunja",
+				"open_project": "Abrir Projeto",
+				"open_team": "Abrir Equipa",
+				"download": "Descarregar",
+				"reset_password": "Redefinir a tua palavra-passe",
+				"go_to_settings": "Ir para definições",
+				"confirm_email": "Confirmar o teu endereço de e-mail",
+				"abort_deletion": "Cancelar a eliminação",
+				"confirm_account_deletion": "Confirmar a eliminação da minha conta"
+			}
+		}
+	}
 }
