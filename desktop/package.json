@@ -58,6 +58,6 @@
   },
   "dependencies": {
     "connect-history-api-fallback": "2.0.0",
-    "express": "4.21.2"
+    "express": "5.1.0"
   }
 }
