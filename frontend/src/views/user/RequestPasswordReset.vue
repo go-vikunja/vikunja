@@ -44,21 +44,19 @@
 				</div>
 			</div>
 
-			<div class="field is-grouped">
-				<div class="control">
-					<x-button
-						type="submit"
-						:loading="passwordResetService.loading"
-					>
-						{{ $t('user.auth.resetPasswordAction') }}
-					</x-button>
-					<x-button
-						:to="{ name: 'user.login' }"
-						variant="secondary"
-					>
-						{{ $t('user.auth.login') }}
-					</x-button>
-				</div>
+			<div class="is-flex">
+				<x-button
+					type="submit"
+					:loading="passwordResetService.loading"
+				>
+					{{ $t('user.auth.resetPasswordAction') }}
+				</x-button>
+				<x-button
+					:to="{ name: 'user.login' }"
+					variant="secondary"
+				>
+					{{ $t('user.auth.login') }}
+				</x-button>
 			</div>
 		</form>
 	</div>
