@@ -586,7 +586,7 @@ describe('Task', () => {
 		})
 
 		it('Can change a due date to a specific date for a task', () => {
-			const dueDate = new Date()
+			const dueDate = new Date(2025, 2, 20)
 			dueDate.setHours(12)
 			dueDate.setMinutes(0)
 			dueDate.setSeconds(0)
