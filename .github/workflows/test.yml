@@ -163,7 +163,7 @@ jobs:
           ./vikunja migrate
   
   test-api:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, type-cx32, image-x86-app-docker-ce]
     needs:
       - mage
     strategy:
@@ -313,7 +313,7 @@ jobs:
           pnpm test:unit
   
   test-frontend-e2e:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, type-cx32, image-x86-app-docker-ce]
     needs:
       - frontend-dependencies
       - api-build
