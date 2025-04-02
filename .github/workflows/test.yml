@@ -137,6 +137,26 @@ jobs:
           VIKUNJA_LOG_DATABASE: stdout
           VIKUNJA_LOG_DATABASELEVEL: debug
         run: |
+          # Wait for MySQL to be ready if using MySQL
+          if [ "$VIKUNJA_DATABASE_TYPE" = "mysql" ]; then
+            echo "Waiting for MySQL to be ready..."
+            until mysql -h 127.0.0.1 -u root -pvikunjatest -e "SELECT 1" &> /dev/null; do
+              echo "MySQL not ready yet, waiting 2 seconds..."
+              sleep 2
+            done
+            echo "MySQL is ready!"
+          fi
+          
+          # Wait for PostgreSQL to be ready if using PostgreSQL
+          if [ "$VIKUNJA_DATABASE_TYPE" = "postgres" ]; then
+            echo "Waiting for PostgreSQL to be ready..."
+            until PGPASSWORD=vikunjatest psql -h 127.0.0.1 -U postgres -d vikunjatest -c "SELECT 1" &> /dev/null; do
+              echo "PostgreSQL not ready yet, waiting 2 seconds..."
+              sleep 2
+            done
+            echo "PostgreSQL is ready!"
+          fi
+
           ./vikunja-unstable-linux-amd64 migrate
           # Run the migrations from the binary built in the step before
           chmod +x vikunja
