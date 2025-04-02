@@ -5,7 +5,7 @@ on:
 
 jobs:
   docker:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2204
     steps:
       - name: Git describe
         id: ghd
@@ -52,7 +52,7 @@ jobs:
             RELEASE_VERSION=${{ steps.ghd.outputs.describe }}
  
   frontend:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2204
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
       - uses: ./.github/actions/setup-frontend
@@ -66,7 +66,7 @@ jobs:
           path: ./frontend/dist/**/*
 
   binaries:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-16vcpu-ubuntu-2204
     needs:
       - frontend
     steps:
@@ -74,7 +74,7 @@ jobs:
       - name: Git describe
         id: ghd
         uses: proudust/gh-describe@v2
-      - uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # v5
+      - uses: useblacksmith/setup-go@v6 # v5
         with:
           go-version: stable
       - name: Download Mage Binary
