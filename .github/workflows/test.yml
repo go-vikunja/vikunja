@@ -220,6 +220,7 @@ jobs:
           VIKUNJA_AUTH_LDAP_BINDDN: uid=gitea,ou=service,dc=planetexpress,dc=com
           VIKUNJA_AUTH_LDAP_BINDPASSWORD: password
           VIKUNJA_AUTH_LDAP_USERFILTER: '(&(objectclass=inetorgperson)(uid=%s))'
+          CGO_ENABLED: 1
         run: |
           mkdir -p frontend/dist
           touch frontend/dist/index.html
