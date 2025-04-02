@@ -74,7 +74,7 @@ jobs:
       - name: Git describe
         id: ghd
         uses: proudust/gh-describe@v2
-      - uses: useblacksmith/setup-go@v6 # v5
+      - uses: useblacksmith/setup-go@647ac649bd5b480f2a262e3e3e5f4d150ed452ad # v6
         with:
           go-version: stable
       - name: Download Mage Binary
