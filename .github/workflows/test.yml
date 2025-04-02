@@ -234,7 +234,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4
         with:
-          node-version: 22
+          node-version-file: frontend/.nvmrc
           cache: 'pnpm'
           cache-dependency-path: frontend/pnpm-lock.yaml
       - name: Install dependencies
@@ -256,7 +256,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4
         with:
-          node-version: 22
+          node-version-file: frontend/.nvmrc
           cache: 'pnpm'
           cache-dependency-path: frontend/pnpm-lock.yaml
       - name: Lint
@@ -279,7 +279,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4
         with:
-          node-version: 22
+          node-version-file: frontend/.nvmrc
           cache: 'pnpm'
           cache-dependency-path: frontend/pnpm-lock.yaml
       - name: Typecheck
@@ -303,7 +303,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4
         with:
-          node-version: 22
+          node-version-file: frontend/.nvmrc
           cache: 'pnpm'
           cache-dependency-path: frontend/pnpm-lock.yaml
       - name: Run unit tests
@@ -327,7 +327,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4
         with:
-          node-version: 22
+          node-version-file: frontend/.nvmrc
           cache: 'pnpm'
           cache-dependency-path: frontend/pnpm-lock.yaml
       - name: Download Vikunja Binary
