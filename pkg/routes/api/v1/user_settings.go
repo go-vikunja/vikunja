@@ -62,6 +62,8 @@ type UserSettings struct {
 	Timezone string `json:"timezone"`
 	// Additional settings only used by the frontend
 	FrontendSettings interface{} `json:"frontend_settings"`
+	// Additional settings links as provided by openid
+	ExtraSettingsLinks map[string]any `json:"extra_settings_links"`
 }
 
 // GetUserAvatarProvider returns the currently set user avatar

@@ -15,6 +15,24 @@
 							{{ title }}
 						</RouterLink>
 					</li>
+					<li
+						v-for="({url, text}, index) in extraSettingsLinks"
+						:key="index"
+					>
+						<BaseButton
+							class="navigation-link is-flex is-align-items-center"
+							:href="url"
+						>
+							<span>
+								{{ text }}
+							</span>
+							<span class="ml-1 has-text-grey-light is-size-7">
+								<Icon
+									icon="arrow-up-right-from-square"
+								/>
+							</span>
+						</BaseButton>
+					</li>
 				</ul>
 			</nav>
 			<section class="view">
@@ -31,6 +49,8 @@ import { useTitle } from '@/composables/useTitle'
 import { useConfigStore } from '@/stores/config'
 import { useAuthStore } from '@/stores/auth'
 import {useRoute} from 'vue-router'
+
+import BaseButton from '@/components/base/BaseButton.vue'
 
 const { t } = useI18n({useScope: 'global'})
 useTitle(() => t('user.settings.title'))
@@ -97,6 +117,8 @@ const navigationItems = computed(() => {
 	
 	return items.filter(({condition}) => condition !== false)
 })
+
+const extraSettingsLinks = computed(() => authStore.settings.extraSettingsLinks)
 </script>
 
 <style lang="scss" scoped>
