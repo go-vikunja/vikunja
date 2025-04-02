@@ -13,7 +13,7 @@
   },
   "homepage": "https://vikunja.io/",
   "funding": "https://opencollective.com/vikunja",
-  "packageManager": "pnpm@9.15.9",
+  "packageManager": "pnpm@10.7.1",
   "keywords": [
     "todo",
     "productivity",
@@ -161,6 +161,14 @@
     "patchedDependencies": {
       "@github/hotkey@3.1.1": "patches/@github__hotkey@3.1.1.patch",
       "flexsearch@0.7.43": "patches/flexsearch@0.7.43.patch"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "@sentry/cli",
+      "cypress",
+      "esbuild",
+      "puppeteer",
+      "vue-demi"
+    ]
   }
 }

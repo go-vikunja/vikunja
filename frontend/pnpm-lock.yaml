@@ -6,10 +6,10 @@ settings:
 
 patchedDependencies:
   '@github/hotkey@3.1.1':
-    hash: c67tdk7qpd5grxd2zj6lsxfbou
+    hash: 145ab3233cbcd3bc934b4961cd8710e2b15e4ae5dd20862a8d1d6621d7f9d4a8
     path: patches/@github__hotkey@3.1.1.patch
   flexsearch@0.7.43:
-    hash: ckihdd27npzvopd22uqqxfna44
+    hash: f7066310ad918eadadaf64278c0a00d7ca785faf7d7fb631392b50db140954a6
     path: patches/flexsearch@0.7.43.patch
 
 importers:
@@ -30,7 +30,7 @@ importers:
         version: 3.0.8(@fortawesome/fontawesome-svg-core@6.7.2)(vue@3.5.13(typescript@5.8.2))
       '@github/hotkey':
         specifier: 3.1.1
-        version: 3.1.1(patch_hash=c67tdk7qpd5grxd2zj6lsxfbou)
+        version: 3.1.1(patch_hash=145ab3233cbcd3bc934b4961cd8710e2b15e4ae5dd20862a8d1d6621d7f9d4a8)
       '@infectoone/vue-ganttastic':
         specifier: 2.3.2
         version: 2.3.2(dayjs@1.11.13)(vue@3.5.13(typescript@5.8.2))
@@ -135,7 +135,7 @@ importers:
         version: 4.6.13
       flexsearch:
         specifier: 0.7.43
-        version: 0.7.43(patch_hash=ckihdd27npzvopd22uqqxfna44)
+        version: 0.7.43(patch_hash=f7066310ad918eadadaf64278c0a00d7ca785faf7d7fb631392b50db140954a6)
       floating-vue:
         specifier: 5.2.2
         version: 5.2.2(vue@3.5.13(typescript@5.8.2))
@@ -8151,7 +8151,7 @@ snapshots:
       '@fortawesome/fontawesome-svg-core': 6.7.2
       vue: 3.5.13(typescript@5.8.2)
 
-  '@github/hotkey@3.1.1(patch_hash=c67tdk7qpd5grxd2zj6lsxfbou)': {}
+  '@github/hotkey@3.1.1(patch_hash=145ab3233cbcd3bc934b4961cd8710e2b15e4ae5dd20862a8d1d6621d7f9d4a8)': {}
 
   '@hapi/hoek@9.3.0': {}
 
@@ -8940,7 +8940,7 @@ snapshots:
 
   '@types/flexsearch@0.7.42':
     dependencies:
-      flexsearch: 0.7.43(patch_hash=ckihdd27npzvopd22uqqxfna44)
+      flexsearch: 0.7.43(patch_hash=f7066310ad918eadadaf64278c0a00d7ca785faf7d7fb631392b50db140954a6)
 
   '@types/fs-extra@9.0.13':
     dependencies:
@@ -10742,7 +10742,7 @@ snapshots:
 
   flexsearch@0.7.21: {}
 
-  flexsearch@0.7.43(patch_hash=ckihdd27npzvopd22uqqxfna44): {}
+  flexsearch@0.7.43(patch_hash=f7066310ad918eadadaf64278c0a00d7ca785faf7d7fb631392b50db140954a6): {}
 
   floating-vue@5.2.2(vue@3.5.13(typescript@5.8.2)):
     dependencies:
