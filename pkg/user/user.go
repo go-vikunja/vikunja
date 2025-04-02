@@ -105,7 +105,8 @@ type User struct {
 	DeletionScheduledAt      time.Time `xorm:"datetime null" json:"-"`
 	DeletionLastReminderSent time.Time `xorm:"datetime null" json:"-"`
 
-	FrontendSettings interface{} `xorm:"json null" json:"-"`
+	FrontendSettings   interface{}    `xorm:"json null" json:"-"`
+	ExtraSettingsLinks map[string]any `xorm:"json null" json:"-"`
 
 	ExportFileID int64 `xorm:"bigint null" json:"-"`
 
@@ -607,6 +608,7 @@ func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *U
 			"timezone",
 			"overdue_tasks_reminders_time",
 			"frontend_settings",
+			"extra_settings_links",
 		).
 		Update(user)
 	if err != nil {
