@@ -1,0 +1,18 @@
+name: Setup Frontend
+description: Common setup for frontend jobs using pnpm
+runs:
+  using: "composite"
+  steps:
+    - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4
+      with:
+        run_install: false
+        package_json_file: frontend/package.json
+    - uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4
+      with:
+        node-version-file: frontend/.nvmrc
+        cache: 'pnpm'
+        cache-dependency-path: frontend/pnpm-lock.yaml
+    - name: Install dependencies
+      working-directory: frontend
+      run: pnpm install
+      shell: bash
