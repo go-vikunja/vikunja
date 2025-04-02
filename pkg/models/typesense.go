@@ -520,7 +520,7 @@ func convertTaskToTypesenseTask(task *Task, positions []*TaskPositionWithView, b
 		if pos == 0 {
 			pos = float64(task.ID)
 		}
-		tt.Positions["view_"+strconv.FormatInt(position.ProjectView.ID, 10)] = pos
+		tt.Positions["view_"+strconv.FormatInt(position.ID, 10)] = pos
 	}
 
 	for _, bucket := range buckets {

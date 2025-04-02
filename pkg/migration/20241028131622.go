@@ -54,7 +54,7 @@ func init() {
 
 			for _, query := range queries {
 				_, err := tx.Exec(query)
-				if err != nil && !(strings.Contains(err.Error(), "Error 1061") && strings.Contains(err.Error(), "Duplicate key name")) {
+				if err != nil && (!strings.Contains(err.Error(), "Error 1061") || !strings.Contains(err.Error(), "Duplicate key name")) {
 					return err
 				}
 			}

@@ -121,7 +121,7 @@ func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.ProjectWi
 		}
 
 		if !t.DueDate.IsZero() && t.Reminder > 0 {
-			task.Task.Reminders = []*models.TaskReminder{
+			task.Reminders = []*models.TaskReminder{
 				{
 					RelativeTo:     models.ReminderRelationDueDate,
 					RelativePeriod: int64((t.Reminder * -1).Seconds()),

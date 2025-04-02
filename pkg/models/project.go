@@ -825,10 +825,7 @@ func checkProjectBeforeUpdateOrDelete(s *xorm.Session, project *Project) (err er
 		// Check if there's a cycle in the parent relation
 		parentsVisited := make(map[int64]bool)
 		parentsVisited[project.ID] = true
-		for {
-			if parent.ParentProjectID == 0 {
-				break
-			}
+		for parent.ParentProjectID != 0 {
 
 			parent = allProjects[parent.ParentProjectID]
 

@@ -65,7 +65,7 @@ func GetAvatar(c echo.Context) error {
 		return handler.HandleHTTPError(err)
 	}
 
-	found := !(err != nil && user.IsErrUserDoesNotExist(err))
+	found := err == nil || !user.IsErrUserDoesNotExist(err)
 
 	var avatarProvider avatar.Provider
 	switch u.AvatarProvider {

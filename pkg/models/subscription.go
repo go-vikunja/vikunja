@@ -395,7 +395,7 @@ ORDER BY t.id, sh.user_id`,
 	subscriptions = make(map[int64][]*SubscriptionWithUser)
 	for _, sub := range rawSubscriptions {
 
-		if sub.Subscription.EntityID == 0 {
+		if sub.EntityID == 0 {
 			continue
 		}
 
@@ -404,7 +404,7 @@ ORDER BY t.id, sh.user_id`,
 			subscriptions[sub.OriginalEntityID] = []*SubscriptionWithUser{}
 		}
 
-		sub.Subscription.ID = sub.SubscriptionID
+		sub.ID = sub.SubscriptionID
 		if sub.User != nil {
 			sub.User.ID = sub.UserID
 		}

@@ -81,9 +81,9 @@ func TestTask_Create(t *testing.T) {
 			Title:       "Lorem",
 			Description: "Lorem Ipsum Dolor",
 			ProjectID:   1,
-			DueDate:     time.Date(2023, time.March, 7, 22, 5, 0, 0, time.Local),
-			StartDate:   time.Date(2023, time.March, 7, 22, 5, 10, 0, time.Local),
-			EndDate:     time.Date(2023, time.March, 7, 22, 5, 20, 0, time.Local),
+			DueDate:     time.Date(2023, time.March, 7, 22, 5, 0, 0, time.UTC),
+			StartDate:   time.Date(2023, time.March, 7, 22, 5, 10, 0, time.UTC),
+			EndDate:     time.Date(2023, time.March, 7, 22, 5, 20, 0, time.UTC),
 			Reminders: []*TaskReminder{
 				{
 					RelativeTo:     "due_date",
@@ -98,19 +98,19 @@ func TestTask_Create(t *testing.T) {
 					RelativePeriod: -1,
 				},
 				{
-					Reminder: time.Date(2023, time.March, 7, 23, 0, 0, 0, time.Local),
+					Reminder: time.Date(2023, time.March, 7, 23, 0, 0, 0, time.UTC),
 				},
 			}}
 		err := task.Create(s, usr)
 		require.NoError(t, err)
-		assert.Equal(t, time.Date(2023, time.March, 7, 22, 5, 1, 0, time.Local), task.Reminders[0].Reminder)
+		assert.Equal(t, time.Date(2023, time.March, 7, 22, 5, 1, 0, time.UTC), task.Reminders[0].Reminder)
 		assert.Equal(t, int64(1), task.Reminders[0].RelativePeriod)
 		assert.Equal(t, ReminderRelationDueDate, task.Reminders[0].RelativeTo)
-		assert.Equal(t, time.Date(2023, time.March, 7, 22, 5, 8, 0, time.Local), task.Reminders[1].Reminder)
+		assert.Equal(t, time.Date(2023, time.March, 7, 22, 5, 8, 0, time.UTC), task.Reminders[1].Reminder)
 		assert.Equal(t, ReminderRelationStartDate, task.Reminders[1].RelativeTo)
-		assert.Equal(t, time.Date(2023, time.March, 7, 22, 5, 19, 0, time.Local), task.Reminders[2].Reminder)
+		assert.Equal(t, time.Date(2023, time.March, 7, 22, 5, 19, 0, time.UTC), task.Reminders[2].Reminder)
 		assert.Equal(t, ReminderRelationEndDate, task.Reminders[2].RelativeTo)
-		assert.Equal(t, time.Date(2023, time.March, 7, 23, 0, 0, 0, time.Local), task.Reminders[3].Reminder)
+		assert.Equal(t, time.Date(2023, time.March, 7, 23, 0, 0, 0, time.UTC), task.Reminders[3].Reminder)
 		err = s.Commit()
 		require.NoError(t, err)
 	})
@@ -359,9 +359,9 @@ func TestTask_Update(t *testing.T) {
 			ID:        1,
 			ProjectID: 1,
 			Title:     "test",
-			DueDate:   time.Date(2023, time.March, 7, 22, 5, 0, 0, time.Local),
-			StartDate: time.Date(2023, time.March, 7, 22, 5, 10, 0, time.Local),
-			EndDate:   time.Date(2023, time.March, 7, 22, 5, 20, 0, time.Local),
+			DueDate:   time.Date(2023, time.March, 7, 22, 5, 0, 0, time.UTC),
+			StartDate: time.Date(2023, time.March, 7, 22, 5, 10, 0, time.UTC),
+			EndDate:   time.Date(2023, time.March, 7, 22, 5, 20, 0, time.UTC),
 			Reminders: []*TaskReminder{
 				{
 					RelativeTo:     "due_date",
@@ -376,19 +376,19 @@ func TestTask_Update(t *testing.T) {
 					RelativePeriod: -1,
 				},
 				{
-					Reminder: time.Date(2023, time.March, 7, 23, 0, 0, 0, time.Local),
+					Reminder: time.Date(2023, time.March, 7, 23, 0, 0, 0, time.UTC),
 				},
 			}}
 		err := task.Update(s, u)
 		require.NoError(t, err)
-		assert.Equal(t, time.Date(2023, time.March, 7, 22, 5, 1, 0, time.Local), task.Reminders[0].Reminder)
+		assert.Equal(t, time.Date(2023, time.March, 7, 22, 5, 1, 0, time.UTC), task.Reminders[0].Reminder)
 		assert.Equal(t, int64(1), task.Reminders[0].RelativePeriod)
 		assert.Equal(t, ReminderRelationDueDate, task.Reminders[0].RelativeTo)
-		assert.Equal(t, time.Date(2023, time.March, 7, 22, 5, 8, 0, time.Local), task.Reminders[1].Reminder)
+		assert.Equal(t, time.Date(2023, time.March, 7, 22, 5, 8, 0, time.UTC), task.Reminders[1].Reminder)
 		assert.Equal(t, ReminderRelationStartDate, task.Reminders[1].RelativeTo)
-		assert.Equal(t, time.Date(2023, time.March, 7, 22, 5, 19, 0, time.Local), task.Reminders[2].Reminder)
+		assert.Equal(t, time.Date(2023, time.March, 7, 22, 5, 19, 0, time.UTC), task.Reminders[2].Reminder)
 		assert.Equal(t, ReminderRelationEndDate, task.Reminders[2].RelativeTo)
-		assert.Equal(t, time.Date(2023, time.March, 7, 23, 0, 0, 0, time.Local), task.Reminders[3].Reminder)
+		assert.Equal(t, time.Date(2023, time.March, 7, 23, 0, 0, 0, time.UTC), task.Reminders[3].Reminder)
 		err = s.Commit()
 		require.NoError(t, err)
 		db.AssertCount(t, "task_reminders", builder.Eq{"task_id": 1}, 4)
@@ -426,7 +426,7 @@ func TestTask_Update(t *testing.T) {
 		taskBefore := &Task{
 			Title:     "test",
 			ProjectID: 1,
-			StartDate: time.Date(2022, time.March, 8, 8, 5, 20, 0, time.Local),
+			StartDate: time.Date(2022, time.March, 8, 8, 5, 20, 0, time.UTC),
 			Reminders: []*TaskReminder{
 				{
 					RelativeTo:     "start_date",
@@ -437,16 +437,16 @@ func TestTask_Update(t *testing.T) {
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
-		assert.Equal(t, time.Date(2022, time.March, 8, 8, 4, 20, 0, time.Local), taskBefore.Reminders[0].Reminder)
+		assert.Equal(t, time.Date(2022, time.March, 8, 8, 4, 20, 0, time.UTC), taskBefore.Reminders[0].Reminder)
 
 		// when start_date is modified
 		task := taskBefore
-		task.StartDate = time.Date(2023, time.March, 8, 8, 5, 0, 0, time.Local)
+		task.StartDate = time.Date(2023, time.March, 8, 8, 5, 0, 0, time.UTC)
 		err = task.Update(s, u)
 		require.NoError(t, err)
 
 		// then reminder time is updated
-		assert.Equal(t, time.Date(2023, time.March, 8, 8, 4, 0, 0, time.Local), task.Reminders[0].Reminder)
+		assert.Equal(t, time.Date(2023, time.March, 8, 8, 4, 0, 0, time.UTC), task.Reminders[0].Reminder)
 		err = s.Commit()
 		require.NoError(t, err)
 	})
