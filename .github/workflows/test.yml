@@ -318,6 +318,8 @@ jobs:
   
   test-frontend-e2e:
     runs-on: [self-hosted, type-cx32, image-x86-app-docker-ce]
+    container:
+      image: cypress/browsers:22.13.1
     needs:
       - frontend-dependencies
       - api-build
