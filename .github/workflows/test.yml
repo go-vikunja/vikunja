@@ -5,17 +5,17 @@ on:
 
 jobs:
   mage:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2204
     name: prepare-mage
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
       - name: Set up Go
-        uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # v5
+        uses: useblacksmith/setup-go@v6 # v5
         with:
           go-version: stable
       - name: Cache Mage
         id: cache-mage
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+        uses: useblacksmith/cache@v5 # v4
         with:
           key: ${{ runner.os }}-build-mage-${{ hashFiles('magefile.go') }}
           path: |
@@ -33,7 +33,7 @@ jobs:
           path: ./mage-static
   
   api-build:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2204
     needs: mage
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
@@ -45,7 +45,7 @@ jobs:
         id: ghd
         uses: proudust/gh-describe@v2
       - name: Set up Go
-        uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # v5
+        uses: useblacksmith/setup-go@v6 # v5
         with:
           go-version: stable
       - name: Build
@@ -63,10 +63,10 @@ jobs:
           path: ./vikunja
 
   api-lint:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2204
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # v5
+      - uses: useblacksmith/setup-go@v6 # v5
         with:
           go-version: stable
       - name: prepare frontend files
@@ -74,7 +74,7 @@ jobs:
           mkdir -p frontend/dist
           touch frontend/dist/index.html
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@1481404843c368bc19ca9406f87d6e0fc97bdcfd # v7
+        uses: useblacksmith/golangci-lint-action@v6 # v7
         with:
           version: v2.0.0
   
@@ -163,7 +163,7 @@ jobs:
           ./vikunja migrate
   
   test-api:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-8vcpu-ubuntu-2204
     needs:
       - mage
     strategy:
@@ -313,7 +313,7 @@ jobs:
           pnpm test:unit
   
   test-frontend-e2e:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2204
     needs:
       - frontend-dependencies
       - api-build
@@ -325,7 +325,7 @@ jobs:
           run_install: false
           package_json_file: frontend/package.json
       - name: Install Node.js
-        uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4
+        uses: useblacksmith/setup-node@v5 # v4
         with:
           node-version: 22
           cache: 'pnpm'
