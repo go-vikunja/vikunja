@@ -461,7 +461,7 @@ func addAssigneesToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Ta
 	// Put the assignees in the task map
 	for i, a := range taskAssignees {
 		if a != nil {
-			a.User.Email = "" // Obfuscate the email
+			a.Email = "" // Obfuscate the email
 			taskMap[a.TaskID].Assignees = append(taskMap[a.TaskID].Assignees, &taskAssignees[i].User)
 		}
 	}

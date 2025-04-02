@@ -200,7 +200,7 @@ func makeAuthenticatedGetRequest(token, urlPart string, v interface{}) error {
 	}
 
 	if resp.StatusCode > 399 {
-		return fmt.Errorf("Microsoft Graph API Error: Status Code: %d, Response was: %s", resp.StatusCode, buf.String())
+		return fmt.Errorf("microsoft graph api error: status code: %d, response was: %s", resp.StatusCode, buf.String())
 	}
 
 	// If the response is an empty json array, we need to exit here, otherwise this breaks the json parser since it

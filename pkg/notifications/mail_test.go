@@ -62,7 +62,7 @@ func TestNewMail(t *testing.T) {
 		assert.Equal(t, "test@example.com", mail.from)
 		assert.Equal(t, "test@otherdomain.com", mail.to)
 		assert.Equal(t, "Testmail", mail.subject)
-		assert.Equal(t, "", mail.greeting)
+		assert.Empty(t, mail.greeting)
 		assert.Len(t, mail.introLines, 2)
 		assert.Equal(t, "This is a line", mail.introLines[0].Text)
 		assert.Equal(t, "And another one", mail.introLines[1].Text)

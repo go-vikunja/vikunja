@@ -98,7 +98,7 @@ func (bt *BulkTask) Update(s *xorm.Session, a web.Auth) (err error) {
 		}
 
 		// And because a false is considered to be a null value, we need to explicitly check that case here.
-		if !bt.Task.Done {
+		if !bt.Done {
 			oldtask.Done = false
 		}
 

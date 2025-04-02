@@ -19,7 +19,6 @@ package notifications
 import (
 	"bytes"
 	"embed"
-	_ "embed"
 	templatehtml "html/template"
 	templatetext "text/template"
 

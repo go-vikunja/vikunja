@@ -1,127 +1,160 @@
+version: "2"
 run:
-  timeout: 15m
   tests: true
-
 linters:
   enable:
-    - gosimple
-    - staticcheck
-    - unused
-    - govet
+    - asasalint
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - contextcheck
+    - err113
+    - errchkjson
+    - errorlint
+    - exhaustive
+    - gocheckcompilerdirectives
+    - gochecksumtype
     - gocritic
     - gocyclo
-    - err113
     - goheader
-    - gofmt
-    - goimports
-    - revive
+    - gosec
+    - gosmopolitan
+    - loggercheck
+    - makezero
     - misspell
+    - nilerr
+    - nilnesserr
+    - noctx
+    - protogetter
+    - reassign
+    - recvcheck
+    - revive
+    - rowserrcheck
+    - spancheck
+    - sqlclosecheck
+    - testifylint
+    - unparam
+    - zerologlint
   disable:
     - durationcheck
     - goconst
     - musttag
-  presets:
-    - bugs
-    - unused
-  fast: false
-
-linters-settings:
-  nestif:
-    min-complexity: 6
-  goheader:
-    template-path: code-header-template.txt
-
-issues:
-  exclude-rules:
-    # Exclude some linters from running on tests files.
-    - path: _test\.go
-      linters:
-        - gocyclo
-        - deadcode
-        - errorlint
-    - path: pkg/integrations/*
-      linters:
-        - gocyclo
-        - deadcode
-        - varcheck
-        - unparam
-        - bodyclose
-    - path: pkg/integrations/*
-      text: "unlambda"
-      linters:
-        - gocritic
-    - path: pkg/modules/background/unsplash/unsplash\.go
-      linters:
-        - bodyclose
-    - path: pkg/migration/*
-      linters:
-        - exhaustive
-        - err113
-    - path: pkg/models/task_collection_filter\.go
-      linters:
-        - exhaustive
-    - path: pkg/utils/random_string\.go
-      text: "G404:" # We don't care about cryptographically secure randomness when we're using that utility function.
-      linters:
-        - gosec
-    - path: pkg/modules/dump/*
-      linters:
-        - err113
-    - path: pkg/
-      text: "do not define dynamic errors, use wrapped static errors instead:"
-      linters:
-        - err113
-    - text: "commentFormatting: put a space between `//` and comment text"
-      linters:
-        - gocritic
-    - path: pkg/modules/migration
-      linters:
-        - gocyclo
-    - path: pkg/routes/api/v1/docs.go
-      linters:
-        - goheader
-        - misspell
-        - gosmopolitan
-    - text: "Missed string"
-      linters:
-        - goheader
-    - path: pkg/.*/error.go
-      linters:
-        - errorlint
-    - path: pkg/models/favorites\.go
-      linters:
-        - nilerr
-    - path: pkg/models/project\.go
-      text: "string `parent_project_id` has 3 occurrences, make it a constant"
-    - path: pkg/models/events\.go
-      linters:
-        - musttag
-    - path: pkg/models/task_collection.go
-      text: 'append result not assigned to the same slice'
-    - path: pkg/modules/migration/ticktick/ticktick_test.go
-      linters:
-        - testifylint
-    - path: pkg/migration/*
-      text: "parameter 'tx' seems to be unused, consider removing or renaming it as"
-      linters:
-        - revive
-    - path: pkg/models/typesense.go
-      text: 'structtag: struct field Position repeats json tag "position" also at'
-      linters:
-        - govet
-    - path: pkg/cmd/user.go
-      text: 'G115: integer overflow conversion uintptr -> int'
-      linters:
-        - gosec
-    - text: 'G115: integer overflow conversion int64 -> uint64'
-      linters:
-        - gosec
-    - text: 'G115: integer overflow conversion int -> uint64'
-      linters:
-        - gosec
-    - text: 'the methods of "Right" use pointer receiver and non-pointer receiver.'
-      linters:
-        - recvcheck
-    - text: 'the methods of "SubscriptionEntityType" use pointer receiver and non-pointer receiver.'
-      linters:
-        - recvcheck
+  settings:
+    goheader:
+      template-path: code-header-template.txt
+    nestif:
+      min-complexity: 6
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - deadcode
+          - errorlint
+          - gocyclo
+        path: _test\.go
+      - linters:
+          - bodyclose
+          - deadcode
+          - gocyclo
+          - unparam
+          - varcheck
+        path: pkg/integrations/*
+      - linters:
+          - gocritic
+        path: pkg/integrations/*
+        text: unlambda
+      - linters:
+          - bodyclose
+        path: pkg/modules/background/unsplash/unsplash\.go
+      - linters:
+          - err113
+          - exhaustive
+        path: pkg/migration/*
+      - linters:
+          - exhaustive
+        path: pkg/models/task_collection_filter\.go
+      - linters:
+          - gosec
+        path: pkg/utils/random_string\.go
+        text: 'G404:' # We don't care about cryptographically secure randomness when we're using that utility function.
+      - linters:
+          - err113
+        path: pkg/modules/dump/*
+      - linters:
+          - err113
+        path: pkg/
+        text: 'do not define dynamic errors, use wrapped static errors instead:'
+      - linters:
+          - gocritic
+        text: 'commentFormatting: put a space between `//` and comment text'
+      - linters:
+          - gocyclo
+        path: pkg/modules/migration
+      - linters:
+          - goheader
+          - gosmopolitan
+          - misspell
+        path: pkg/routes/api/v1/docs.go
+      - linters:
+          - goheader
+        text: Missed string
+      - linters:
+          - errorlint
+        path: pkg/.*/error.go
+      - linters:
+          - nilerr
+        path: pkg/models/favorites\.go
+      - path: pkg/models/project\.go
+        text: string `parent_project_id` has 3 occurrences, make it a constant
+      - linters:
+          - musttag
+        path: pkg/models/events\.go
+      - path: pkg/models/task_collection.go
+        text: append result not assigned to the same slice
+      - linters:
+          - testifylint
+        path: pkg/modules/migration/ticktick/ticktick_test.go
+      - linters:
+          - revive
+        path: pkg/migration/*
+        text: parameter 'tx' seems to be unused, consider removing or renaming it as
+      - linters:
+          - govet
+        path: pkg/models/typesense.go
+        text: 'structtag: struct field Position repeats json tag "position" also at'
+      - linters:
+          - gosec
+        path: pkg/cmd/user.go
+        text: 'G115: integer overflow conversion uintptr -> int'
+      - linters:
+          - gosec
+        text: 'G115: integer overflow conversion int64 -> uint64'
+      - linters:
+          - gosec
+        text: 'G115: integer overflow conversion int -> uint64'
+      - linters:
+          - recvcheck
+        text: the methods of "Right" use pointer receiver and non-pointer receiver.
+      - linters:
+          - recvcheck
+        text: the methods of "SubscriptionEntityType" use pointer receiver and non-pointer receiver.
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+      - pkg/routes/api/v1/docs.go
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
