@@ -347,6 +347,7 @@ jobs:
           VIKUNJA_CORS_ENABLE: 1
           VIKUNJA_DATABASE_PATH: memory
           VIKUNJA_DATABASE_TYPE: sqlite
+          VIKUNJA_RATELIMIT_NOAUTHLIMIT: 1000
         run: |
           chmod +x ./vikunja
           ./vikunja &
