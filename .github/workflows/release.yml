@@ -88,7 +88,7 @@ jobs:
         uses: proudust/gh-describe@v2
       - uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # v5
         with:
-          go-version: stable
+          go-version-file: ./go.mod
       - name: Download Mage Binary
         uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4
         with:
@@ -286,7 +286,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # v5
         with:
-          go-version: stable
+          go-version-file: ./go.mod
       - name: generate
         run: |
           export PATH=$PATH:$GOPATH/bin
