@@ -100,6 +100,7 @@
 				"timezone": "Aikavyöhyke",
 				"overdueTasksRemindersTime": "Erääntyneiden tehtävien muistutus sähköpostin aika",
 				"filterUsedOnOverview": "Tallennettu yleisnäkymä-sivulla käytetty suodatin",
+				"minimumPriority": "Pienin prioriteetti, jolla tehtävä näkyy",
 				"externalUserNameChange": "Nimeäsi hallinnoi kirjautumisoperaattori ({provider}). Muuttaaksesi sen, päivitä se siellä."
 			},
 			"totp": {
@@ -150,12 +151,14 @@
 			},
 			"apiTokens": {
 				"title": "API Tokenit",
+				"general": "API tokeneilla voit käyttää VIkunjaa ilman käyttäjätunnuksia.",
 				"apiDocs": "Tutustu api dokumentaatioon",
 				"createAToken": "Luo token",
 				"createToken": "Luo token",
 				"30d": "30 Päivää",
 				"60d": "60 Päivää",
 				"90d": "90 Päivää",
+				"permissionExplanation": "Oikeuksilla voit määritellä mitä api token saa tehdä.",
 				"titleRequired": "Otsikko on pakollinen",
 				"permissionRequired": "Valitse ainakin yksi käyttöoikeus listalta.",
 				"tokenCreatedSuccess": "Tässä on uusi api tokenisi: {token}",
@@ -169,7 +172,7 @@
 				"attributes": {
 					"title": "Otsikko",
 					"titlePlaceholder": "Syötä otsikko, jonka tunnistat myöhemmin",
-					"expiresAt": "Vanhenee",
+					"expiresAt": "Vanhentumisaika",
 					"permissions": "Oikeudet"
 				}
 			}
@@ -192,6 +195,7 @@
 		},
 		"export": {
 			"title": "Vie Vikunja tiedot",
+			"description": "Voit pyytää kopion kaikista Vikunja tiedoistasi. Tämä sisältää Projektisi, Tehtäväsi ja kaiken niihin liittyvän. Voit tuoda tietosi mihin tahansa Vikunja instanssiin migraatio ominaisuuden kautta.",
 			"descriptionPasswordRequired": "Syötä salasanasi jatkaaksesi:",
 			"request": "Pyydä kopio Vikunja Tiedoistani",
 			"success": "Olet onnistuneesti pyytänyt Vikunja Tietosi! Lähetämme sinulle sähköpostiviestin, kun ne ovat valmiit ladattavaksi.",
@@ -271,10 +275,18 @@
 			"title": "Jaa \"{project}\"",
 			"share": "Jaa",
 			"links": {
+				"title": "Jako Linkki",
+				"what": "Mikä on jako linkki?",
+				"explanation": "Jako Linkit mahdollistavat projektin jakamisen käyttäjien kanssa, joilla ei ole Vikunja-tiliä.",
+				"create": "Luo jako linkki",
 				"name": "Nimi (valinnainen)",
 				"namePlaceholder": "esim. Lorem Ipsum",
 				"password": "Salasana (valinnainen)",
-				"noName": "Nimeä ei ole asetettu"
+				"noName": "Nimeä ei ole asetettu",
+				"remove": "Poista jako linkki",
+				"removeText": "Haluatko varmasti poistaa tämän linkki jaon? Tähän projektiin ei enää voi päästä käsiksi tällä linkki jaolla. Tätä ei voi peruuttaa!",
+				"createSuccess": "Linkki jako luotiin onnistuneesti.",
+				"deleteSuccess": "Linkki jako poistettiin onnistuneesti"
 			},
 			"userTeam": {
 				"typeUser": "käyttäjä | käyttäjät",
@@ -440,6 +452,7 @@
 	"migrate": {
 		"title": "Tuo muista palveluista",
 		"titleService": "Tuo {name} tietosi Vikunjaan",
+		"description": "Kilkkaa kolmannen osapuolen logoa alta aloittaaksesi.",
 		"getStarted": "Aloitetaan",
 		"inProgress": "Tuonti käynnissä…",
 		"alreadyMigrated2": "Uudelleen tuonti on mahdollista, mutta saattaa luoda kaksoiskappaleita. Oletko varma?",
@@ -656,6 +669,7 @@
 			"updateSuccess": "Tehtävä tallennettiin onnistuneesti.",
 			"deleteSuccess": "Tehtävä poistettiin onnistuneesti.",
 			"belongsToProject": "Tämä tehtävä kuuluu '{project}' projektiin",
+			"due": "Erääntyy {at}",
 			"closePopup": "Sulje ponnahdusikkuna",
 			"organization": "Organisaatio",
 			"management": "Hallinta",
@@ -739,6 +753,12 @@
 			"addedSuccess": "Kommentti lisättiin onnistuneesti.",
 			"permalink": "Kopioi pysyvä linkki tähän kommenttiin"
 		},
+		"deferDueDate": {
+			"title": "Siirrä eräpäivää",
+			"1day": "1 päivä",
+			"3days": "3 päivää",
+			"1week": "1 viikko"
+		},
 		"description": {
 			"placeholder": "Syötä kuvaus, paina '/' saadaksesi lisää vaihtoehtoja…",
 			"empty": "Kuvausta ei ole vielä saatavilla."
@@ -763,6 +783,10 @@
 			}
 		},
 		"priority": {
+			"low": "Alhainen",
+			"medium": "Keskitaso",
+			"high": "Korkea",
+			"urgent": "Kiireellinen",
 			"doNow": "TEE NYT"
 		},
 		"relation": {
@@ -803,6 +827,7 @@
 			"invalidAmount": "Ole hyvä ja syötä suurempi arvo kuin 0."
 		},
 		"quickAddMagic": {
+			"priority2": "Mitä korkeampi numero, sitä suurempi prioriteetti.",
 			"assignees": "Osoittaaksesi tehtävän suoraan käyttäjälle lisää käyttäjänimi etuliitteellä {prefix}.",
 			"dateAndTime": "Päivä ja Aika",
 			"date": "Voit käyttää päivämääriä seuraavissa muodoissa:",
