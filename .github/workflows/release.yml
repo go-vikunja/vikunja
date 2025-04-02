@@ -55,22 +55,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4
-        name: Install pnpm
-        with:
-          run_install: false
-          package_json_file: frontend/package.json
-      - name: Install Node.js
-        uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4
-        with:
-          node-version-file: frontend/.nvmrc
-          cache: 'pnpm'
-          cache-dependency-path: frontend/pnpm-lock.yaml
-      - name: Install dependencies
+      - uses: ./.github/actions/setup-frontend
+      - name: Build frontend
         working-directory: frontend
-        run: |
-          pnpm install
-          pnpm build
+        run: pnpm build
       - name: Store frontend dist
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:

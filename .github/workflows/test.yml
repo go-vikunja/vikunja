@@ -226,65 +226,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4
-        name: Install pnpm
-        with:
-          run_install: false
-          package_json_file: frontend/package.json
-      - name: Install Node.js
-        uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4
-        with:
-          node-version-file: frontend/.nvmrc
-          cache: 'pnpm'
-          cache-dependency-path: frontend/pnpm-lock.yaml
+      - uses: ./.github/actions/setup-frontend
       - name: Lint
-        run: |
-          cd frontend
-          pnpm install
-          pnpm lint
+        working-directory: frontend
+        run: pnpm lint
 
   frontend-typecheck:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4
-        name: Install pnpm
-        with:
-          run_install: false
-          package_json_file: frontend/package.json
-      - name: Install Node.js
-        uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4
-        with:
-          node-version-file: frontend/.nvmrc
-          cache: 'pnpm'
-          cache-dependency-path: frontend/pnpm-lock.yaml
+      - uses: ./.github/actions/setup-frontend
       - name: Typecheck
         continue-on-error: true
-        run: |
-          cd frontend
-          pnpm install
-          pnpm typecheck
+        working-directory: frontend
+        run: pnpm typecheck
 
   test-frontend-unit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4
-        name: Install pnpm
-        with:
-          run_install: false
-          package_json_file: frontend/package.json
-      - name: Install Node.js
-        uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4
-        with:
-          node-version-file: frontend/.nvmrc
-          cache: 'pnpm'
-          cache-dependency-path: frontend/pnpm-lock.yaml
+      - uses: ./.github/actions/setup-frontend
       - name: Run unit tests
-        run: |
-          cd frontend
-          pnpm install
-          pnpm test:unit
+        working-directory: frontend
+        run: pnpm test:unit
   
   test-frontend-e2e:
     runs-on: ubuntu-latest
@@ -292,17 +256,7 @@ jobs:
       - api-build
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4
-        name: Install pnpm
-        with:
-          run_install: false
-          package_json_file: frontend/package.json
-      - name: Install Node.js
-        uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4
-        with:
-          node-version-file: frontend/.nvmrc
-          cache: 'pnpm'
-          cache-dependency-path: frontend/pnpm-lock.yaml
+      - uses: ./.github/actions/setup-frontend
       - name: Download Vikunja Binary
         uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4
         with:
@@ -310,7 +264,6 @@ jobs:
       - name: Build frontend for test
         run: |
           cd frontend
-          pnpm install
           pnpm cypress install
           pnpm build:test
       - name: Run api
