@@ -113,7 +113,7 @@ jobs:
             gpg -v --default-key 7D061A4AA61436B40713D42EFF054DACD908493A -b --batch --yes --passphrase "${{ secrets.RELEASE_GPG_PASSPHRASE }}" --pinentry-mode loopback --sign "$file"
           done
       - name: Upload
-        uses: kolaente/s3-action@v1.2.0
+        uses: kolaente/s3-action@f154255c2aecc0bb3fa1b8c558b14f74bcc64299 # v1.2.0
         with:
           s3-access-key-id: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           s3-secret-access-key: ${{ secrets.HETZNER_S3_SECRET_KEY }}
@@ -172,7 +172,7 @@ jobs:
           target: ./dist/os-packages/vikunja-${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}-x86_64.${{ matrix.package }}
           config: ./nfpm.yaml
       - name: Upload
-        uses: kolaente/s3-action@v1.2.0
+        uses: kolaente/s3-action@f154255c2aecc0bb3fa1b8c558b14f74bcc64299 # v1.2.0
         with:
           s3-access-key-id: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           s3-secret-access-key: ${{ secrets.HETZNER_S3_SECRET_KEY }}
@@ -199,7 +199,7 @@ jobs:
           chmod +x ./mage-static
           ./mage-static generate:config-yaml 1
       - name: Upload to S3
-        uses: kolaente/s3-action@v1.2.0
+        uses: kolaente/s3-action@f154255c2aecc0bb3fa1b8c558b14f74bcc64299 # v1.2.0
         with:
           s3-access-key-id: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           s3-secret-access-key: ${{ secrets.HETZNER_S3_SECRET_KEY }}
@@ -249,7 +249,7 @@ jobs:
           pnpm install --fetch-timeout 100000
           node build.js "${{ steps.ghd.outputs.describe }}" ${{ github.ref_type == 'tag' }}
       - name: Upload to S3
-        uses: kolaente/s3-action@v1.2.0
+        uses: kolaente/s3-action@f154255c2aecc0bb3fa1b8c558b14f74bcc64299 # v1.2.0
         with:
           s3-access-key-id: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           s3-secret-access-key: ${{ secrets.HETZNER_S3_SECRET_KEY }}
