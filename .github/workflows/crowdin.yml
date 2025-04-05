@@ -32,8 +32,6 @@ jobs:
         uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4
         with:
           node-version-file: frontend/.nvmrc
-          cache: 'pnpm'
-          cache-dependency-path: frontend/pnpm-lock.yaml
       - name: Ensure file permissions
         run: |
           find pkg/i18n/lang frontend/src/i18n/lang -type f -name "*.json" -exec sudo chmod 666 {} \;
