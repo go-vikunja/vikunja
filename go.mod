@@ -66,7 +66,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/swaggo/swag v1.16.4
 	github.com/tkuchiki/go-timezone v0.2.3
-	github.com/typesense/typesense-go/v2 v2.0.0
+	github.com/typesense/typesense-go/v3 v3.2.0
 	github.com/typesense/typesense-go/v3 v3.2.0
 	github.com/ulule/limiter/v3 v3.11.2
 	github.com/wneessen/go-mail v0.6.2
