@@ -279,8 +279,8 @@ export const useAuthStore = defineStore('auth', () => {
 			try {
 				const base64 = jwt
 					.split('.')[1]
-					.replace('-', '+')
-					.replace('_', '/')
+					.replace('/-/g', '+')
+					.replace('/_/g', '/')
 				const info = new UserModel(JSON.parse(atob(base64)))
 				const ts = Math.round((new Date()).getTime() / MILLISECONDS_A_SECOND)
 
