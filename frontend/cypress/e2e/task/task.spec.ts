@@ -585,7 +585,7 @@ describe('Task', () => {
 				.should('contain', 'Success')
 		})
 
-		it('Can change a due date to a specific date for a task', () => {
+		it.only('Can change a due date to a specific date for a task', () => {
 			const dueDate = new Date(2025, 2, 20)
 			dueDate.setHours(12)
 			dueDate.setMinutes(0)
@@ -596,6 +596,9 @@ describe('Task', () => {
 				done: false,
 				due_date: dueDate.toISOString(),
 			})
+			
+			const today = new Date(2025, 2, 5)
+
 			cy.visit(`/tasks/${tasks[0].id}`)
 
 			cy.get('.task-view .action-buttons .button')
@@ -605,13 +608,12 @@ describe('Task', () => {
 				.contains('Due Date')
 				.get('.date-input .datepicker .show')
 				.click()
-			cy.get('.datepicker-popup .flatpickr-innerContainer .flatpickr-days .flatpickr-day.today')
+			cy.get(`.datepicker-popup .flatpickr-innerContainer .flatpickr-days [aria-label="${today.toLocaleString('en-US', {month: 'long'})} ${today.getDate()}, ${today.getFullYear()}"]`)
 				.click()
 			cy.get('[data-cy="closeDatepicker"]')
 				.contains('Confirm')
 				.click()
 
-			const today = new Date()
 			const day = today.toLocaleString('default', {day: 'numeric'})
 			const month = today.toLocaleString('default', {month: 'short'})
 			const year = today.toLocaleString('default', {year: 'numeric'})

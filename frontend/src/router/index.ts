@@ -10,8 +10,11 @@ import {LINK_SHARE_HASH_PREFIX} from '@/constants/linkShareHash'
 import {useAuthStore} from '@/stores/auth'
 import {useBaseStore} from '@/stores/base'
 
+import Login from '@/views/user/Login.vue'
 import Register from '@/views/user/Register.vue'
 import LinkSharingAuth from '@/views/sharing/LinkSharingAuth.vue'
+import OpenIdAuth from '@/views/user/OpenIdAuth.vue'
+import UpcomingTasks from '@/views/tasks/ShowTasks.vue'
 
 import NotFoundComponent from '@/views/404.vue'
 
@@ -51,7 +54,7 @@ const router = createRouter({
 		{
 			path: '/login',
 			name: 'user.login',
-			component: () => import('@/views/user/Login.vue'),
+			component: Login,
 			meta: {
 				title: 'user.auth.login',
 			},
@@ -170,7 +173,7 @@ const router = createRouter({
 		{
 			path: '/tasks/by/upcoming',
 			name: 'tasks.range',
-			component: () => import('@/views/tasks/ShowTasks.vue'),
+			component: UpcomingTasks,
 			props: route => ({
 				dateFrom: parseDateOrString(route.query.from as string, new Date()),
 				dateTo: parseDateOrString(route.query.to as string, getNextWeekDate()),
@@ -376,7 +379,7 @@ const router = createRouter({
 		{
 			path: '/auth/openid/:provider',
 			name: 'openid.auth',
-			component: () => import('@/views/user/OpenIdAuth.vue'),
+			component: OpenIdAuth,
 		},
 		{
 			path: '/about',
