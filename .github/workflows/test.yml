@@ -264,6 +264,7 @@ jobs:
       - name: Build frontend for test
         run: |
           cd frontend
+          pnpm cypress install
           pnpm build:test
       - name: Run api
         env:
