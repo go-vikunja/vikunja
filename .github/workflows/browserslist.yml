@@ -1,0 +1,51 @@
+name: Update Browserslist DB
+
+on:
+  # Runs at 2:00 AM on the 1st and 15th day of each month
+  schedule:
+    - cron: '0 2 1,15 * *'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-browserslist:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          fetch-depth: 0
+          ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          persist-credentials: true
+
+      - uses: ./.github/actions/setup-frontend
+
+      - name: Update Browserslist Database
+        working-directory: frontend
+        run: pnpm run browserslist:update
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          if git diff --quiet; then
+            echo "changes_exist=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changes_exist=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit changes
+        if: steps.check_changes.outputs.changes_exist == 'true'
+        run: |
+          git config --local user.email "bot@vikunja.io"
+          git config --local user.name "Frederick [Bot]"
+          git add .
+          git commit -m "build: update Browserslist db"
+
+      - name: Push changes
+        if: steps.check_changes.outputs.changes_exist == 'true'
+        uses: ad-m/github-push-action@master
+        with:
+          ssh: true
+          branch: ${{ github.ref }}
