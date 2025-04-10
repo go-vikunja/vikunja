@@ -798,6 +798,8 @@ github.com/ganigeorgiev/fexpr v0.5.0 h1:XA9JxtTE/Xm+g/JFI6RfZEHSiQlk+1glLvRK1Lpv
 github.com/ganigeorgiev/fexpr v0.5.0/go.mod h1:RyGiGqmeXhEQ6+mlGdnUleLHgtzzu/VGO2WtJkF5drE=
 github.com/getsentry/sentry-go v0.31.1 h1:ELVc0h7gwyhnXHDouXkhqTFSO5oslsRDk0++eyE0KJ4=
 github.com/getsentry/sentry-go v0.31.1/go.mod h1:CYNcMMz73YigoHljQRG+qPF+eMq8gG72XcGN/p71BAY=
+github.com/getsentry/sentry-go v0.32.0 h1:YKs+//QmwE3DcYtfKRH8/KyOOF/I6Qnx7qYGNHCGmCY=
+github.com/getsentry/sentry-go v0.32.0/go.mod h1:CYNcMMz73YigoHljQRG+qPF+eMq8gG72XcGN/p71BAY=
 github.com/getsentry/sentry-go/echo v0.31.1 h1:bGY2QrNq5PovERoQBwyfJtQixjptHC06gLiAlF0WUPc=
 github.com/getsentry/sentry-go/echo v0.31.1/go.mod h1:2gHa20EVxDNNTJY+Cq4Eqr8A0Z6UEULh4ImSsVMSRUg=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
