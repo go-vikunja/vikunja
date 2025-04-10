@@ -1,1 +1,113 @@
-{}
+{
+	"notifications": {
+		"greeting": "Bonjour %[1]s,",
+		"email_confirm": {
+			"subject": "%[1]s, veuillez confirmer votre adresse e-mail sur Vikunja",
+			"subject_new": "%[1]s + Vikunja = <3",
+			"welcome": "Bienvenue sur Vikunja !",
+			"confirm": "Pour confirmer votre adresse e-mail, cliquez sur le lien ci-dessous :"
+		},
+		"password": {
+			"changed": {
+				"subject": "Votre mot de passe sur Vikunja a été modifié",
+				"success": "Le mot de passe de votre compte a été modifié avec succès."
+			}
+		},
+		"totp": {
+			"account_locked": {
+				"subject": "Nous avons désactivé votre compte sur Vikunja",
+				"message": "Quelqu'un a tenté de se connecter avec vos identifiants mais avec un code TOTP invalide.",
+				"disabled": "Après 10 tentatives infructueuses, nous avons désactivé votre compte et réinitialisé votre mot de passe. Pour en définir un nouveau, suivez les instructions dans l'e-mail de réinitialisation que nous venons de vous envoyer.",
+				"reset_instructions": "Si vous n'avez pas reçu d'e-mail avec des instructions de réinitialisation, vous pouvez toujours en demander un nouveau à [%[1]s](%[2]s)."
+			}
+		},
+		"login": {
+			"failed": {
+				"subject": "Quelqu'un vient d'essayer de se connecter à votre compte Vikunja, avec un mot de passe incorrect",
+				"message": "Quelqu'un vient d'essayer de se connecter à votre compte avec un mauvais mot de passe trois fois de suite."
+			}
+		},
+		"account": {
+			"deletion": {
+				"confirm": {
+					"subject": "Veuillez confirmer la suppression de votre compte Vikunja",
+					"valid_duration": "Ce lien sera valide pendant 24 heures.",
+					"schedule_info": "Après avoir confirmé la suppression, nous programmerons la suppression de votre compte dans trois jours et nous vous enverrons un autre e-mail à ce moment-là.",
+					"consequences": "Si vous procédez à la suppression de votre compte, tous les projets et tâches que vous avez créés seront supprimés. Tout ce que vous avez partagé avec un autre utilisateur ou une autre équipe leur transférera la propriété.",
+					"changed_mind": "Si vous n'avez pas demandé la suppression ou changé d'avis, vous pouvez simplement ignorer cet e-mail."
+				},
+				"scheduled": {
+					"subject_days": "Votre compte Vikunja sera supprimé dans %[1]s jours",
+					"subject_tomorrow": "Votre compte Vikunja sera supprimé demain",
+					"request_reminder": "Vous avez récemment demandé la suppression de votre compte Vikunja.",
+					"deletion_time_days": "Nous allons supprimer votre compte dans %[1]s jours.",
+					"deletion_time_tomorrow": "Nous allons supprimer votre compte demain.",
+					"changed_mind": "Si vous avez changé d'avis, cliquez simplement sur le lien ci-dessous pour annuler la suppression et suivez les instructions :"
+				},
+				"completed": {
+					"subject": "Votre compte Vikunja a été supprimé",
+					"confirmation": "Comme demandé, nous avons supprimé votre compte Vikunja.",
+					"permanent": "Cette suppression est permanente. Si vous n'avez pas créé de sauvegarde et avez besoin de vos données maintenant, contactez votre administrateur."
+				}
+			}
+		},
+		"task": {
+			"reminder": {
+				"subject": "Rappel pour \"%[1]s\" (%[2]s)",
+				"message": "Ceci est un petit rappel de la tâche \"%[1]s\" (%[2]s)."
+			},
+			"comment": {
+				"subject": "Re: %[1]s",
+				"mentioned_message": "**%[1]s** vous a mentionné dans un commentaire :"
+			},
+			"overdue": {
+				"multiple_subject": "Vos tâches en retard",
+				"overdue_since": "en retard depuis %[1]s",
+				"overdue_now": "en retard"
+			}
+		},
+		"project": {
+			"created": "%[1]s a créé le projet \"%[2]s\""
+		},
+		"team": {
+			"member_added": {
+				"subject": "%[1]s vous a ajouté à l'équipe \"%[2]s\" sur Vikunja",
+				"message": "%[1]s vous a ajouté à l'équipe \"%[2]s\" sur Vikunja."
+			}
+		},
+		"data_export": {
+			"ready": {
+				"subject": "Votre export de données de Vikunja est prêt",
+				"message": "Votre export de données Vikunja est prêt à être téléchargé. Cliquez sur le bouton ci-dessous pour le télécharger :",
+				"availability": "Le téléchargement sera disponible pendant les 7 prochains jours."
+			}
+		},
+		"migration": {
+			"done": {
+				"subject": "La migration de %[1]s vers Vikunja est terminée",
+				"imported": "Vikunja a importé toutes les listes/projets, tâches, notes, rappels et fichiers de %[1]s auxquels vous avez accès.",
+				"have_fun": "Amusez-vous avec vos nouveaux-anciens projets !"
+			},
+			"failed": {
+				"subject": "La migration de %[1]s vers Vikunja a échoué",
+				"retry": "Pas d'inquiétude ! Réessayez simplement comme précédemment. Parfois, ces problèmes surviennent à cause de bugs côté %[1]s, mais réessayer fait souvent l'affaire.",
+				"error": "Nous sommes tombés sur une petite erreur en cours de route : `%[2]s`."
+			}
+		},
+		"common": {
+			"have_nice_day": "Passez une bonne journée !",
+			"copy_url": "Si le bouton ci-dessus ne fonctionne pas, copiez l'URL ci-dessous et collez-la dans la barre d'adresse de votre navigateur :",
+			"actions": {
+				"open_task": "Ouvrir la tâche",
+				"open_vikunja": "Ouvrir Vikunja",
+				"open_project": "Ouvrir le projet",
+				"open_team": "Ouvrir l'équipe",
+				"download": "Télécharger",
+				"reset_password": "Réinitialiser votre mot de passe",
+				"go_to_settings": "Ouvrir les paramètres",
+				"abort_deletion": "Annuler la suppression",
+				"confirm_account_deletion": "Confirmer la suppression de mon compte"
+			}
+		}
+	}
+}

@@ -10,10 +10,16 @@
 		"welcomeEvening": "Bonsoir {username} !",
 		"lastViewed": "Dernière consultation",
 		"addToHomeScreen": "Ajoutez cette application à votre écran d'accueil pour un accès plus rapide et une meilleure expérience.",
+		"goToOverview": "Aller à la vue d'ensemble",
 		"project": {
 			"importText": "Importer vos projets et tâches d’autres services dans Vikunja :",
 			"import": "Importer vos données dans Vikunja"
 		}
+	},
+	"demo": {
+		"title": "Cette instance est en mode démo. N'utilisez pas cela pour de vraies données !",
+		"everythingWillBeDeleted": "Tout sera supprimé à intervalles réguliers !",
+		"accountWillBeDeleted": "Votre compte sera supprimé, y compris tous les projets, tâches et pièces jointes que vous pourriez créer."
 	},
 	"ready": {
 		"loading": "Chargement de Vikunja en cours…",
@@ -37,6 +43,7 @@
 			"forgotPassword": "Mot de passe oublié ?",
 			"resetPassword": "Réinitialiser votre mot de passe",
 			"resetPasswordAction": "M’envoyer un lien de réinitialisation du mot de passe",
+			"resetPasswordSuccess": "Vérifiez votre boîte de réception ! Vous devriez y trouver un courriel contenant les instructions pour réinitialiser votre mot de passe.",
 			"passwordsDontMatch": "Les mots de passe ne correspondent pas",
 			"confirmEmailSuccess": "Vous avez bien confirmé votre adresse ! Vous pouvez maintenant vous connecter.",
 			"totpTitle": "Code d’authentification à deux facteurs",
@@ -46,27 +53,40 @@
 			"loginWith": "Se connecter avec {provider}",
 			"authenticating": "Authentification…",
 			"openIdStateError": "L’état ne correspond pas, impossible de continuer !",
+			"openIdGeneralError": "Une erreur s'est produite lors de l'authentification depuis le service externe.",
 			"logout": "Se déconnecter",
 			"emailInvalid": "Veuillez saisir une adresse courriel valide.",
 			"usernameRequired": "Veuillez saisir un nom d'utilisateur.",
+			"usernameMustNotContainSpace": "Le nom d'utilisateur ne doit pas contenir d'espaces.",
+			"usernameMustNotLookLikeUrl": "Le nom d'utilisateur ne doit pas ressembler à une URL.",
 			"passwordRequired": "Veuillez fournir un mot de passe.",
+			"passwordNotMin": "Le mot de passe doit contenir au moins 8 caractères.",
+			"passwordNotMax": "Le mot de passe doit contenir au maximum 72 caractères.",
 			"showPassword": "Afficher le mot de passe",
 			"hidePassword": "Masquer le mot de passe",
 			"noAccountYet": "Vous n'avez pas encore de compte ?",
 			"alreadyHaveAnAccount": "Vous avez déjà un compte ?",
-			"remember": "Rester connecté(e)"
+			"remember": "Rester connecté(e)",
+			"registrationDisabled": "L'enregistrement est désactivé."
 		},
 		"settings": {
 			"title": "Paramètres",
 			"newPasswordTitle": "Mets à jour ton mot de passe",
+			"newPassword": "Nouveau mot de passe",
+			"newPasswordConfirm": "Confirmation du nouveau mot de passe",
+			"currentPassword": "Mot de passe actuel",
 			"currentPasswordPlaceholder": "Votre mot de passe actuel",
 			"passwordsDontMatch": "Le nouveau mot de passe et sa confirmation ne correspondent pas.",
 			"passwordUpdateSuccess": "Le mot de passe a bien été mis à jour.",
 			"updateEmailTitle": "Mettre à jour votre adresse électronique",
+			"updateEmailNew": "Nouvelle adresse électronique",
 			"updateEmailSuccess": "L’adresse électronique a bien été mise à jour. Nous vous avons envoyé un lien pour confirmer ce changement.",
 			"general": {
 				"title": "Paramètres généraux",
+				"name": "Mon nom",
+				"newName": "Le nouveau nom",
 				"savedSuccess": "Paramètres mis à jour.",
+				"emailReminders": "M’envoyer des rappels de tâches par courriel",
 				"overdueReminders": "Envoyez-moi un résumé de mes tâches en retard inachevées chaque jour",
 				"discoverableByName": "Autoriser d’autres utilisateurs ou utilisatrices à m’ajouter en tant que membre aux équipes ou aux projets lorsqu’ils recherchent mon nom",
 				"discoverableByEmail": "Autoriser d’autres utilisateurs ou utilisatrices à m’ajouter en tant que membre aux équipes ou aux projets lorsqu’ils recherchent mon adresse électronique complète",
@@ -75,18 +95,26 @@
 				"weekStartSunday": "dimanche",
 				"weekStartMonday": "lundi",
 				"language": "Langue",
+				"defaultProject": "Projet par défaut",
+				"defaultView": "Vue par défaut",
+				"timezone": "Fuseau horaire",
 				"overdueTasksRemindersTime": "Heure du courriel de rappel des tâches en retard",
-				"filterUsedOnOverview": "Filtre enregistré utilisé sur la vue d’ensemble"
+				"filterUsedOnOverview": "Filtre enregistré utilisé sur la vue d’ensemble",
+				"minimumPriority": "Priorité minimale de la tâche visible",
+				"externalUserNameChange": "Votre nom est géré par votre fournisseur de connexion ({provider}). Pour le modifier, veuillez le mettre à jour auprès de celui-ci."
 			},
 			"totp": {
 				"title": "Authentification à deux facteurs",
 				"enroll": "S’inscrire",
+				"finishSetupPart1": "Pour terminer la configuration, utilisez ce code dans votre application d'A2F (Google Authenticator ou autre) :",
 				"finishSetupPart2": "Après cela, saisissez un code issu de votre application ci-dessous.",
 				"scanQR": "Vous pouvez également scanner ce code QR :",
 				"passcode": "Code",
+				"passcodePlaceholder": "Un code généré par votre application d'A2F",
 				"setupSuccess": "Vous avez maintenant configuré l’authentification à deux facteurs !",
 				"enterPassword": "Saisissez votre mot de passe",
 				"disable": "Désactiver l’authentification à deux facteurs",
+				"confirmSuccess": "La configuration de l'A2F est confirmée et vous pouvez l’utiliser dès à présent !",
 				"disableSuccess": "L’authentification à deux facteurs a bien été désactivée."
 			},
 			"caldav": {
@@ -109,7 +137,8 @@
 				"upload": "Téléverser",
 				"uploadAvatar": "Téléverser l’avatar",
 				"statusUpdateSuccess": "Statut de l’avatar mis à jour.",
-				"setSuccess": "Avatar défini."
+				"setSuccess": "Avatar défini.",
+				"ldap": "Votre avatar est automatiquement synchronisé à partir du service d'annuaire de votre organisation (LDAP). Vous pouvez demander à votre équipe informatique des informations pour savoir comment le modifier."
 			},
 			"quickAddMagic": {
 				"title": "Ajout rapide en mode magique",
@@ -125,12 +154,41 @@
 					"system": "Système",
 					"dark": "Sombre"
 				}
+			},
+			"apiTokens": {
+				"title": "Tokens API",
+				"general": "Les jetons API vous permettent d'utiliser l'API de Vikunja sans identifiants utilisateur.",
+				"apiDocs": "Voir la documentation de l'api",
+				"createAToken": "Créer un jeton",
+				"createToken": "Créer un jeton",
+				"30d": "30 Jours",
+				"60d": "60 Jours",
+				"90d": "90 Jours",
+				"permissionExplanation": "Les permissions vous permettent de limiter ce qu'un jeton api est autorisé à faire.",
+				"titleRequired": "Le titre est obligatoire",
+				"permissionRequired": "Veuillez sélectionner au moins une permission dans la liste.",
+				"expired": "Ce jeton a expiré {ago}.",
+				"tokenCreatedSuccess": "Voici votre nouveau jeton api : {token}",
+				"tokenCreatedNotSeeAgain": "Conservez-le dans un endroit sécurisé, vous ne le reverrez plus !",
+				"selectAll": "Sélectionner tout",
+				"delete": {
+					"header": "Supprimer ce jeton",
+					"text1": "Voulez-vous vraiment effacer le jeton « {token} » ?",
+					"text2": "Cela révoquera l'accès à toutes les applications ou intégrations qui l'utilisent. Vous ne pouvez pas annuler cette action."
+				},
+				"attributes": {
+					"title": "Titre",
+					"titlePlaceholder": "Entrez un titre que vous reconnaîtrez plus tard",
+					"expiresAt": "Expire le",
+					"permissions": "Autorisations"
+				}
 			}
 		},
 		"deletion": {
 			"title": "Supprimer votre compte Vikunja",
 			"text1": "La suppression de votre compte est définitive et ne peut pas être annulée. Nous supprimerons tous vos projets, tâches et tout ce qui y est associé.",
 			"text2": "Pour continuer, saisissez votre mot de passe. Vous recevrez un courriel contenant les instructions à suivre.",
+			"text3": "Pour continuer, appuyez sur le bouton ci-dessous. Vous recevrez un e-mail avec des instructions supplémentaires.",
 			"confirm": "Supprimer mon compte",
 			"requestSuccess": "La requête a abouti. Vous recevrez un courriel avec des instructions à suivre.",
 			"passwordRequired": "Saisissez votre mot de passe.",
@@ -138,6 +196,7 @@
 			"scheduled": "Nous allons supprimer votre compte Vikunja le {date} ({dateSince}).",
 			"scheduledCancel": "Pour annuler la suppression de votre compte, cliquez ici.",
 			"scheduledCancelText": "Pour annuler la suppression de votre compte, saisissez votre mot de passe ci-dessous :",
+			"scheduledCancelButton": "Pour annuler la suppression de votre compte, cliquez sur le bouton ci-dessous :",
 			"scheduledCancelConfirm": "Annuler la suppression de mon compte",
 			"scheduledCancelSuccess": "Nous ne supprimerons pas votre compte."
 		},
@@ -154,6 +213,7 @@
 		"archivedMessage": "Ce projet est archivé. Il n’est pas possible d’y créer de nouvelles tâches ou de les modifier.",
 		"archived": "Archivé",
 		"showArchived": "Montrer les archivés",
+		"title": "Titre",
 		"color": "Couleur",
 		"projects": "Projets",
 		"parent": "Projet parent",
@@ -162,6 +222,11 @@
 		"shared": "Projets partagés",
 		"noDescriptionAvailable": "Aucune description du projet n’est disponible.",
 		"inboxTitle": "Boîte de réception",
+		"favorite": "Marquer ce projet comme favori",
+		"unfavorite": "Retirer ce projet des favoris",
+		"openSettingsMenu": "Ouvrir le menu des paramètres du projet",
+		"description": "Description du projet",
+		"favoriteDescription": "Toutes les tâches de ce projet sont marquées comme favorites.",
 		"create": {
 			"header": "Nouveau projet",
 			"titlePlaceholder": "Saisir le titre du projet ici…",
@@ -173,6 +238,8 @@
 			"title": "Archiver « {project} »",
 			"archive": "Archiver ce projet",
 			"unarchive": "Désarchiver ce projet",
+			"unarchiveText": "Tu seras en mesure de créer de nouvelles tâches ou de les modifier.",
+			"archiveText": "Vous ne pourrez pas modifier ce projet ou créer de tâches si vous ne le désarchivez pas.",
 			"success": "Le projet a bien été archivé."
 		},
 		"background": {
@@ -192,6 +259,7 @@
 			"text2": "Ceci inclut toutes les tâches et NE PEUT PAS ÊTRE ANNULÉ !",
 			"success": "Le projet a bien été supprimé.",
 			"tasksToDelete": "Cela supprimera définitivement environ {count} tâches.",
+			"tasksAndChildProjectsToDelete": "Cela supprimera irrévocablement approx. {tasks} tâches et {projects} projets.",
 			"noTasksToDelete": "Ce projet ne contient aucune tâche, vous pouvez le supprimer sans problème."
 		},
 		"duplicate": {
@@ -208,6 +276,7 @@
 			"identifier": "Identifiant de projet",
 			"identifierPlaceholder": "Saisir ici l’identifiant du projet…",
 			"description": "Description",
+			"descriptionPlaceholder": "Entrez une description pour ce projet, tapez '/' pour plus d'options…",
 			"color": "Couleur",
 			"success": "Le projet a bien été mis à jour."
 		},
@@ -219,6 +288,7 @@
 				"title": "Liens de partage",
 				"what": "Qu’est-ce qu’un lien de partage ?",
 				"explanation": "Les liens de partage permettent de partager facilement un projet avec d’autres personnes qui n’ont pas de compte sur Vikunja.",
+				"create": "Créer un lien de partage",
 				"name": "Nom (facultatif)",
 				"namePlaceholder": "par ex., Lorem Ipsum",
 				"nameExplanation": "Toutes les actions effectuées par ce partage de lien apparaîtront avec le nom.",
@@ -255,10 +325,15 @@
 				"delete": "Supprimer"
 			}
 		},
+		"first": {
+			"title": "Premier aperçu"
+		},
 		"list": {
 			"title": "Liste",
 			"add": "Ajouter",
+			"addPlaceholder": "Ajouter une tâche…",
 			"empty": "Ce projet est actuellement vide.",
+			"newTaskCta": "Créer une tâche.",
 			"editTask": "Modifier la tâche"
 		},
 		"gantt": {
@@ -283,10 +358,14 @@
 			"doneBucketHint": "Toute tâche déplacée dans cette colonne sera automatiquement marquée comme terminée.",
 			"doneBucketHintExtended": "Toute tâche déplacée dans cette colonne sera automatiquement marquée comme terminée. Toute tâche marquée comme terminée ailleurs sera également déplacée.",
 			"doneBucketSavedSuccess": "La colonne des tâches terminées a bien été enregistrée.",
+			"defaultBucket": "Colonne par défaut",
+			"defaultBucketHint": "Quand une tache est créée sans spécifier de colonne, elle sera ajoutée à cette colonne.",
+			"defaultBucketSavedSuccess": "La colonne par défaut a été enregistrée.",
 			"deleteLast": "Vous ne pouvez pas retirer la dernière colonne.",
 			"addTaskPlaceholder": "Saisir le nouveau nom de la tâche…",
 			"addTask": "Ajouter une tâche",
 			"addAnotherTask": "Ajouter une autre tâche",
+			"addBucket": "Créer une colonne",
 			"addBucketPlaceholder": "Saisir le titre de la nouvelle colonne…",
 			"deleteHeaderBucket": "Supprimer la colonne",
 			"deleteBucketText1": "Voulez-vous supprimer cette colonne ?",
@@ -294,17 +373,51 @@
 			"deleteBucketSuccess": "La colonne a bien été supprimée.",
 			"bucketTitleSavedSuccess": "Le titre de la colonne a bien été enregistré.",
 			"bucketLimitSavedSuccess": "La limite de la colonne a bien été enregistrée.",
-			"collapse": "Réduire cette colonne"
+			"collapse": "Réduire cette colonne",
+			"bucketLimitReached": "Vous avez atteint la limite de colonne. Supprimez des tâches ou augmentez la limite pour ajouter de nouvelles tâches."
 		},
 		"pseudo": {
 			"favorites": {
 				"title": "Favoris"
 			}
+		},
+		"webhooks": {
+			"title": "Webhooks",
+			"targetUrl": "URL cible",
+			"targetUrlInvalid": "Veuillez fournir une URL valide.",
+			"events": "Évènements",
+			"eventsHint": "Sélectionnez tous les événements pour lesquels ce webhook devrait recevoir des mises à jour (dans le projet actuel).",
+			"mustSelectEvents": "Vous devez sélectionner au moins un évènement.",
+			"delete": "Supprimer ce webhook",
+			"deleteText": "Êtes-vous sûr de vouloir supprimer ce webhook? Les cibles externes ne seront plus notifiées des événements.",
+			"deleteSuccess": "Le webhook a été supprimé avec succès.",
+			"create": "Créer un Webhook",
+			"secret": "Secret",
+			"secretHint": "Si fournie, toutes les requêtes vers l'URL cible du webhook seront signées à l'aide de HMAC.",
+			"secretDocs": "Jetez un coup d'œil à la documentation pour plus de détails à propos de l'utilisation des secrets."
+		},
+		"views": {
+			"header": "Modifier les vues",
+			"title": "Titre",
+			"actions": "Actions",
+			"kind": "Type",
+			"bucketConfigManual": "Manuel",
+			"filter": "Filtre",
+			"create": "Créer une vue",
+			"createSuccess": "La vue a été créée avec succès.",
+			"titleRequired": "Veuillez fournir un titre.",
+			"delete": "Supprimer cette vue",
+			"deleteText": "Êtes-vous sûr de vouloir supprimer cette vue ? Il ne sera plus possible de l'utiliser pour voir les tâches de ce projet. Cette action ne supprimera aucune tâche. Cette action est irréversible !",
+			"deleteSuccess": "La vue a été correctement supprimée.",
+			"onlyAdminsCanEdit": "Seuls les administrateurs du projet peuvent modifier les vues.",
+			"updateSuccess": "La vue a été correctement mise à jour."
 		}
 	},
 	"filters": {
 		"title": "Filtres",
 		"clear": "Effacer les filtres",
+		"showResults": "Afficher les résultats",
+		"fromView": "La vue active utilise également un filtre :",
 		"attributes": {
 			"title": "Nom",
 			"titlePlaceholder": "Entre un nom de filtre enregistré…",
@@ -333,6 +446,42 @@
 		"edit": {
 			"title": "Modifier ce filtre enregistré",
 			"success": "Filtre enregistré."
+		},
+		"query": {
+			"title": "Requête",
+			"help": {
+				"link": "Comment ça marche ?",
+				"fields": {
+					"done": "Si la tâche est terminée ou non",
+					"priority": "Le niveau de priorité de la tâche (1-5)",
+					"dueDate": "La date d'échéance de la tâche",
+					"startDate": "La date de début de la tâche",
+					"endDate": "La date de fin de la tâche",
+					"doneAt": "La date et l'heure de complétion de la tâche",
+					"labels": "Les étiquettes associées à la tâche",
+					"project": "Le projet auquel appartient la tâche (seulement disponible pour les filtres sauvegardés, pas à l'échelle d'un projet)",
+					"created": "La date et l'heure de création de la tâche",
+					"updated": "La date et l'heure de dernière modification de la tâche"
+				},
+				"operators": {
+					"equal": "Égal à",
+					"greaterThan": "Plus grand que",
+					"greaterThanOrEqual": "Plus grand ou égal à",
+					"lessThan": "Inférieur à",
+					"lessThanOrEqual": "Inférieur ou égal à"
+				},
+				"logicalOperators": {
+					"parentheses": "Parenthèses pour regrouper les conditions"
+				},
+				"examples": {
+					"intro": "Voici quelques exemples de requêtes de filtres :",
+					"priorityEqual": "Associe les tâches de niveau de priorité 4",
+					"dueDatePast": "Associe les tâches avec une date d'échéance antérieure",
+					"undoneHighPriority": "Associe les tâches inachevées de niveau de priorité 3 ou plus",
+					"assigneesIn": "Associe les tâches affectées soit à \"user1\" soit à \"user2\"",
+					"priorityOneOrTwoPastDue": "Associe les tâches de niveau priorité 1 ou 2 et qui partagent une d'échéance antérieure"
+				}
+			}
 		}
 	},
 	"migrate": {
@@ -348,7 +497,9 @@
 		"alreadyMigrated2": "Importer à nouveau est possible mais peut créer des doublons. Es-tu sûr·e ?",
 		"confirm": "Je suis sûr·e, commencer à migrer maintenant !",
 		"importUpload": "Pour importer les données de {name} dans Vikunja, cliquez sur le bouton ci-dessous pour sélectionner un fichier.",
-		"upload": "Téléverser le fichier"
+		"upload": "Téléverser le fichier",
+		"migrationStartedWillReciveEmail": "Vikunja va maintenant importer vos listes/projets, tâches, notes, rappels et fichiers depuis {service}. Cela prendra un certain temps, nous vous enverrons donc un e-mail une fois terminé. Vous pouvez fermer cette fenêtre.",
+		"migrationInProgress": "Une migration est en cours. Veuillez patienter jusqu'à ce qu'elle soit terminée."
 	},
 	"label": {
 		"title": "Étiquettes",
@@ -358,6 +509,7 @@
 		"search": "Taper pour rechercher une étiquette…",
 		"create": {
 			"header": "Nouvelle étiquette",
+			"title": "Créer une étiquette",
 			"titleRequired": "Indiquer un nom.",
 			"success": "Étiquette créée."
 		},
@@ -378,6 +530,7 @@
 	"sharing": {
 		"authenticating": "Authentification…",
 		"passwordRequired": "Ce projet partagé nécessite un mot de passe. Saisissez-le ci-dessous :",
+		"error": "Une erreur s’est produite.",
 		"invalidPassword": "Le mot de passe est invalide."
 	},
 	"navigation": {
@@ -417,8 +570,10 @@
 		"custom": "Personnaliser",
 		"id": "Identifiant",
 		"created": "Créé à",
+		"createdBy": "Créé par {0}",
 		"actions": "Actions",
-		"cannotBeUndone": "Cette action ne peut pas être annulée !"
+		"cannotBeUndone": "Cette action ne peut pas être annulée !",
+		"avatarOfUser": "Image de profil de {user}"
 	},
 	"input": {
 		"resetColor": "Réinitialiser la couleur",
@@ -435,29 +590,62 @@
 			"edit": "Modifier",
 			"done": "Terminé",
 			"heading1": "En-tête 1",
+			"heading1Tooltip": "En-tête de grande section.",
 			"heading2": "En-tête 2",
+			"heading2Tooltip": "En-tête de section moyenne.",
 			"heading3": "En-tête 3",
+			"heading3Tooltip": "En-tête de section plus petite.",
 			"headingSmaller": "En-tête plus petit",
 			"headingBigger": "En-tête plus grand",
 			"bold": "Gras",
 			"italic": "Italique",
 			"strikethrough": "Barré",
+			"underline": "Souligné",
 			"code": "Code",
+			"codeTooltip": "Insérer un morceau de code.",
 			"quote": "Citation",
+			"quoteTooltip": "Insérer une citation.",
+			"bulletList": "Liste à puces",
+			"bulletListTooltip": "Créer une liste à puces simple.",
+			"unorderedList": "Liste non-ordonnée",
+			"orderedList": "Liste ordonnée",
+			"orderedListTooltip": "Créer une liste numérotée.",
 			"cleanBlock": "Nettoyer le code",
 			"link": "Lien",
 			"image": "Image",
+			"imageTooltip": "Charger une image depuis votre ordinateur.",
 			"horizontalRule": "Règle horizontale",
+			"horizontalRuleTooltip": "Diviser une section.",
 			"sideBySide": "Côte à côte",
-			"guide": "Guide"
+			"guide": "Guide",
+			"text": "Texte",
+			"undo": "Annuler",
+			"redo": "Rétablir",
+			"table": {
+				"title": "Tableau",
+				"insert": "Insérer un tableau",
+				"addColumnBefore": "Ajouter une colonne avant",
+				"addColumnAfter": "Ajouter une colonne après",
+				"deleteColumn": "Supprimer la colonne",
+				"addRowBefore": "Ajouter une ligne avant",
+				"addRowAfter": "Ajouter une ligne après",
+				"deleteRow": "Supprimer la ligne",
+				"deleteTable": "Supprimer le tableau",
+				"mergeCells": "Fusionner les cellules",
+				"splitCell": "Diviser la cellule",
+				"mergeOrSplit": "Fusionner ou diviser",
+				"fixTables": "Corriger les tableaux"
+			}
 		},
 		"multiselect": {
+			"createPlaceholder": "Créer",
 			"selectPlaceholder": "Cliquer ou appuyer sur la touche Entrée pour sélectionner"
 		},
 		"datepickerRange": {
 			"to": "À",
 			"from": "De",
 			"fromto": "Du {from} au {to}",
+			"date": "Date",
 			"ranges": {
 				"today": "Aujourd’hui",
 				"thisWeek": "Cette semaine",
@@ -472,6 +660,26 @@
 				"lastMonth": "Le mois dernier",
 				"thisYear": "Cette année",
 				"restOfThisYear": "Le reste de cette année"
+			},
+			"values": {
+				"startOfToday": "Début d'aujourd'hui",
+				"endOfToday": "Fin d'aujourd'hui",
+				"beginningOflastWeek": "Début de la semaine dernière",
+				"endOfLastWeek": "Fin de la semaine dernière",
+				"beginningOfThisWeek": "Début de cette semaine",
+				"endOfThisWeek": "Fin de cette semaine",
+				"startOfNextWeek": "Début de la semaine prochaine",
+				"endOfNextWeek": "Fin de la semaine prochaine",
+				"in7Days": "Dans 7 jours",
+				"beginningOfLastMonth": "Début du mois dernier",
+				"endOfLastMonth": "Fin du mois dernier",
+				"startOfThisMonth": "Début de ce mois",
+				"endOfThisMonth": "Fin de ce mois",
+				"startOfNextMonth": "Début du mois prochain",
+				"endOfNextMonth": "Fin du mois prochain",
+				"in30Days": "Dans 30 jours",
+				"startOfThisYear": "Début de l'année",
+				"endOfThisYear": "Fin de l'année"
 			}
 		},
 		"datemathHelp": {
@@ -508,8 +716,10 @@
 	},
 	"task": {
 		"task": "Tâche",
+		"new": "Créer une tâche",
 		"delete": "Supprimer cette tâche",
 		"createSuccess": "Tâche créée.",
+		"addReminder": "Ajouter un rappel…",
 		"doneSuccess": "Tâche marquée comme terminée.",
 		"undoneSuccess": "Tâche marquée comme non terminée.",
 		"undo": "Annuler",
@@ -540,6 +750,9 @@
 			"belongsToProject": "Cette tâche appartient au projet « {project} »",
 			"due": "Échéance {at}",
 			"closePopup": "Fermer la fenêtre",
+			"organization": "Organisation",
+			"management": "Gestion",
+			"dateAndTime": "Date et heure",
 			"delete": {
 				"header": "Supprimer cette tâche",
 				"text1": "Retirer cette tâche ?",
@@ -581,7 +794,8 @@
 			"repeat": "Répéter",
 			"startDate": "Date de début",
 			"title": "Nom",
-			"updated": "Mis à jour"
+			"updated": "Mis à jour",
+			"doneAt": "Fait le"
 		},
 		"subscription": {
 			"subscribedTaskThroughParentProject": "Impossible de se désabonner ici, car vous êtes abonné·e à cette tâche depuis son projet.",
@@ -621,7 +835,8 @@
 			"delete": "Supprimer ce commentaire",
 			"deleteText1": "Supprimer ce commentaire ?",
 			"deleteSuccess": "Le commentaire a bien été supprimé.",
-			"addedSuccess": "Commentaire ajouté."
+			"addedSuccess": "Commentaire ajouté.",
+			"permalink": "Copier le lien permanent vers ce commentaire"
 		},
 		"deferDueDate": {
 			"title": "Reporter la date d’échéance",
@@ -634,11 +849,12 @@
 		},
 		"assignee": {
 			"placeholder": "Taper pour affecter un ou une utilisatrice…",
-			"selectPlaceholder": "Affecter cet·te utilisateur·rice",
+			"selectPlaceholder": "Affecter à cet·te utilisateur·rice",
 			"assignSuccess": "Affectation réussie.",
 			"unassignSuccess": "Désaffectation réussie."
 		},
 		"label": {
+			"placeholder": "Taper pour ajouter une étiquette…",
 			"createPlaceholder": "Ajouter ceci comme nouvelle étiquette",
 			"addSuccess": "Étiquette ajoutée.",
 			"createSuccess": "Étiquette créée.",
@@ -695,6 +911,7 @@
 		"repeat": {
 			"everyDay": "Chaque jour",
 			"everyWeek": "Chaque semaine",
+			"every30d": "Tous les 30 jours",
 			"mode": "Mode de répétition",
 			"monthly": "Mensuel",
 			"each": "Tous ou toutes les",
@@ -736,6 +953,7 @@
 		"title": "Équipes",
 		"noTeams": "Vous ne faites actuellement partie d’aucune équipe.",
 		"create": {
+			"title": "Créer une équipe",
 			"success": "Équipe créée."
 		},
 		"edit": {
@@ -775,7 +993,8 @@
 			"nameRequired": "Indiquer un nom.",
 			"description": "Description",
 			"admin": "Admin",
-			"member": "Membre"
+			"member": "Membre",
+			"isPublic": "Équipe publique"
 		}
 	},
 	"keyboardShortcuts": {
@@ -801,7 +1020,8 @@
 			"description": "Activer ou désactiver la modification de la description de tâche",
 			"delete": "Supprimer cette tâche",
 			"priority": "Changer la priorité de cette tâche",
-			"favorite": "Marquer cette tâche comme favorite ou non"
+			"favorite": "Marquer cette tâche comme favorite ou non",
+			"save": "Enregistrer la tâche en cours"
 		},
 		"project": {
 			"title": "Vues du projet",
@@ -829,15 +1049,18 @@
 		"duplicate": "Dupliquer",
 		"delete": "Supprimer",
 		"unarchive": "Désarchiver",
+		"setBackground": "Paramètres d'arrière-plan",
 		"share": "Partager",
 		"newProject": "Nouveau projet",
-		"createProject": "Créer un projet"
+		"createProject": "Créer un projet",
+		"views": "Vues"
 	},
 	"apiConfig": {
 		"url": "URL Vikunja",
 		"urlPlaceholder": "Par exemple : https://localhost:3456",
 		"change": "changer",
 		"use": "Utiliser l’installation de Vikunja à {0}",
+		"error": "Impossible de trouver ou d'utiliser l'installation de Vikunja à \"{domain}\". Veuillez vérifier si l'URL a le format correct et si vous pouvez l'atteindre en y accédant directement et réessayez.",
 		"success": "Utilisation de l’installation Vikunja sur « {domain} ».",
 		"urlRequired": "Une adresse est requise."
 	},
@@ -849,7 +1072,8 @@
 	"notification": {
 		"title": "Notifications",
 		"none": "Vous n’avez pas de notification. Passez une bonne journée !",
-		"explainer": "Les notifications apparaîtront ici lorsque des actions auxquelles vous êtes abonné·e se produisent."
+		"explainer": "Les notifications apparaîtront ici lorsque des actions auxquelles vous êtes abonné·e se produisent.",
+		"markAllRead": "Marquer toutes les notifications comme lues"
 	},
 	"quickActions": {
 		"commands": "Commandes",
@@ -858,6 +1082,7 @@
 		"tasks": "Tâches",
 		"projects": "Projets",
 		"teams": "Équipes",
+		"labels": "Étiquettes",
 		"newProject": "Saisissez le nom du nouveau projet…",
 		"newTask": "Saisir le nom de la nouvelle tâche…",
 		"newTeam": "Saisir le nom de la nouvelle équipe…",
@@ -870,7 +1095,14 @@
 		}
 	},
 	"date": {
+		"altFormatLong": "j M Y, H:i",
 		"altFormatShort": "j M Y"
+	},
+	"reaction": {
+		"reactedWith": "{user} a réagi avec {value}",
+		"reactedWithAnd": "{users} et {lastUser} ont réagi avec {value}",
+		"reactedWithAndMany": "{users} and {num} autres ont réagi avec {value}",
+		"add": "Ajoutez votre réaction"
 	},
 	"error": {
 		"1001": "Un·e utilisateur·rice avec ce nom d’utilisateur·rice existe déjà.",
@@ -885,15 +1117,26 @@
 		"1012": "L’adresse électronique de l’utilisateur·rice n’est pas confirmée.",
 		"1013": "Le nouveau mot de passe est vide.",
 		"1014": "L’ancien mot de passe est vide.",
+		"1015": "L'A2F est déjà activé pour cet utilisateur.",
+		"1016": "L'A2F n'est pas activé pour cet utilisateur.",
+		"1017": "Le code d'A2F est invalide.",
 		"1018": "Le paramètre du type d’avatar de l’utilisateur·rice est invalide.",
+		"1019": "Aucune adresse e-mail n'a été fournie par le fournisseur OpenID. Veuillez vous assurer que le fournisseur openid fournit une adresse e-mail pour votre compte.",
+		"1020": "Ce compte est désactivé. Vérifiez vos e-mails ou demandez à votre administrateur.",
+		"1021": "Ce compte est géré par un fournisseur d'authentification tiers.",
+		"1022": "Le nom d'utilisateur ne doit pas contenir d'espace.",
+		"1025": "Le fuseau horaire '{timezone}' n'est pas valide. Veuillez sélectionner un fuseau horaire valide dans la liste.",
 		"2001": "L’identifiant ne peut pas être vide ou égal à 0.",
 		"2002": "Certaines des données de la requête étaient invalides.",
+		"2003": "Le fuseau horaire '{timezone}' est invalide.",
 		"3001": "Ce projet n’existe pas.",
 		"3004": "Vous devez avoir les droits en lecture sur ce projet pour effectuer cette action.",
 		"3005": "Le nom du projet ne peut pas être vide.",
 		"3006": "Le partage de ce projet n’existe pas.",
 		"3007": "Un projet avec cet identifiant existe déjà.",
 		"3008": "Le projet est archivé et ne peut donc être consulté qu’en lecture seule. Ceci est également vrai pour toutes les tâches associées à ce projet.",
+		"4001": "Le titre de la tâche ne peut pas être vide.",
+		"4002": "La tâche n’existe pas.",
 		"4003": "Toutes les tâches de modification en bloc doivent appartenir au même projet.",
 		"4004": "Besoin d’au moins une tâche lors de la modification en bloc de tâches.",
 		"4005": "Vous n’avez pas le droit de voir la tâche.",
@@ -911,12 +1154,15 @@
 		"4017": "Comparateur de filtre de tâche invalide.",
 		"4018": "Concaténateur de filtre de tâche invalide.",
 		"4019": "Valeur de filtre de tâche invalide.",
+		"4020": "Cette pièce jointe n'appartient pas à cette tâche.",
 		"6001": "Le nom de l'équipe ne peut pas être vide.",
 		"6002": "L’équipe n’existe pas.",
 		"6004": "L’équipe a déjà accès à ce projet.",
 		"6005": "L’utilisateur·rice est déjà membre de cette équipe.",
 		"6006": "Impossible de supprimer le dernier membre de l’équipe.",
 		"6007": "L’équipe n’a pas accès au projet pour effectuer cette action.",
+		"6008": "Aucune équipe n'a pu être trouvée pour l'ID OIDC et l'émetteur donné.",
+		"6009": "Aucune équipe avec la propriété oidcId n'a pu être trouvée pour cet utilisateur.",
 		"7002": "L’utilisatrice ou l’utilisateur a déjà accès à ce projet.",
 		"7003": "Vous n’avez pas accès à ce projet.",
 		"8001": "Cette étiquette existe déjà sur cette tâche.",
@@ -932,13 +1178,19 @@
 		"11002": "Les filtres enregistrés ne sont pas disponibles pour les partages de liens.",
 		"12001": "Le type d’entité d’abonnement est invalide.",
 		"12002": "Vous êtes déjà abonné·e à l’entité elle-même ou à une entité parente.",
+		"12003": "Vous devez fournir un utilisateur pour récupérer les abonnements.",
 		"13001": "Le mot de passe requis n’a pas été fourni pour ce partage de lien.",
+		"13002": "Le mot de passe de partage de lien n'est pas valide.",
+		"13003": "Le jeton de partage de lien fourni est invalide.",
+		"14001": "Le jeton api fourni n'est pas valide.",
+		"14002": "La permission {permission} du groupe {group} est invalide.",
 		"error": "Erreur",
 		"success": "Succès",
 		"0001": "Vous n’avez pas le droit de faire cela."
 	},
 	"about": {
-		"title": "À propos"
+		"title": "À propos",
+		"version": "Version : {version}"
 	},
 	"time": {
 		"units": {
