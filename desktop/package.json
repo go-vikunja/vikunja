@@ -59,5 +59,10 @@
   "dependencies": {
     "connect-history-api-fallback": "2.0.0",
     "express": "5.1.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "electron"
+    ]
   }
 }
