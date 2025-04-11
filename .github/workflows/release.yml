@@ -140,6 +140,12 @@ jobs:
           - deb
           - apk
           - archlinux
+        arch:
+          - amd64
+          - arm64
+          - "386"
+          - armv6
+          - armv7
     
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
@@ -169,8 +175,10 @@ jobs:
         uses: kolaente/action-gh-nfpm@master
         with:
           packager: ${{ matrix.package }}
-          target: ./dist/os-packages/vikunja-${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}-x86_64.${{ matrix.package }}
+          target: ./dist/os-packages/vikunja-${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}-${{ matrix.arch }}.${{ matrix.package }}
           config: ./nfpm.yaml
+        env:
+          BUILD_ARCH: ${{ matrix.arch }}
       - name: Upload
         uses: kolaente/s3-action@41963184b524ccac734ea4d8c964ac74b5b1af89 # v1.2.1
         with:
