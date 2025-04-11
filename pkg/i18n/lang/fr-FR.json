@@ -10,10 +10,20 @@
 		"password": {
 			"changed": {
 				"subject": "Votre mot de passe sur Vikunja a été modifié",
-				"success": "Le mot de passe de votre compte a été modifié avec succès."
+				"success": "Le mot de passe de votre compte a été modifié avec succès.",
+				"warning": "Si ce n'était pas vous, cela pourrait signifier que quelqu'un a compromis votre compte. Dans ce cas, contactez l'administrateur de votre serveur."
+			},
+			"reset": {
+				"subject": "Réinitialiser votre mot de passe sur Vikunja",
+				"instructions": "Pour réinitialiser votre mot de passe, cliquez sur le lien ci-dessous :",
+				"valid_duration": "Ce lien sera valide pendant 24 heures."
 			}
 		},
 		"totp": {
+			"invalid": {
+				"subject": "Quelqu'un vient d'essayer de se connecter à votre compte Vikunja, mais a échoué",
+				"message": "Quelqu'un vient d'essayer de se connecter à votre compte avec un nom d'utilisateur et un mot de passe corrects, mais un mauvais code d'accès TOTP."
+			},
 			"account_locked": {
 				"subject": "Nous avons désactivé votre compte sur Vikunja",
 				"message": "Quelqu'un a tenté de se connecter avec vos identifiants mais avec un code TOTP invalide.",
@@ -60,7 +70,17 @@
 				"subject": "Re: %[1]s",
 				"mentioned_message": "**%[1]s** vous a mentionné dans un commentaire :"
 			},
+			"assigned": {
+				"subject_to_assignee": "Vous avez été assigné à \"%[1]s\" (%[2]s)",
+				"message_to_assignee": "%[1]s vous a assigné à \"%[2]\".",
+				"subject_to_others": "\"%[1]s\" (%[2]s) a été assigné à %[3]s",
+				"message_to_others": "%[1]s a assigné cette tâche à %[2]s."
+			},
+			"mentioned": {
+				"subject": "%[1]s vous a mentionné dans une tâche \"%[2]"
+			},
 			"overdue": {
+				"subject": "La tâche \"%[1]s\" (%[2]s) est en retard",
 				"multiple_subject": "Vos tâches en retard",
 				"overdue_since": "en retard depuis %[1]s",
 				"overdue_now": "en retard"
@@ -91,7 +111,8 @@
 			"failed": {
 				"subject": "La migration de %[1]s vers Vikunja a échoué",
 				"retry": "Pas d'inquiétude ! Réessayez simplement comme précédemment. Parfois, ces problèmes surviennent à cause de bugs côté %[1]s, mais réessayer fait souvent l'affaire.",
-				"error": "Nous sommes tombés sur une petite erreur en cours de route : `%[2]s`."
+				"error": "Nous sommes tombés sur une petite erreur en cours de route : `%[2]s`.",
+				"report": "Veuillez nous envoyer un message à ce sujet [sur le forum](https://community.vikunja.io/), ou aux endroits habituels afin que nous puissions y jeter un coup d'œil."
 			}
 		},
 		"common": {
@@ -105,6 +126,7 @@
 				"download": "Télécharger",
 				"reset_password": "Réinitialiser votre mot de passe",
 				"go_to_settings": "Ouvrir les paramètres",
+				"confirm_email": "Confirmer votre adresse email",
 				"abort_deletion": "Annuler la suppression",
 				"confirm_account_deletion": "Confirmer la suppression de mon compte"
 			}

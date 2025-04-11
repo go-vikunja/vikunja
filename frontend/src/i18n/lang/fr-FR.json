@@ -458,6 +458,7 @@
 					"startDate": "La date de début de la tâche",
 					"endDate": "La date de fin de la tâche",
 					"doneAt": "La date et l'heure de complétion de la tâche",
+					"assignees": "Les responsables de la tâche",
 					"labels": "Les étiquettes associées à la tâche",
 					"project": "Le projet auquel appartient la tâche (seulement disponible pour les filtres sauvegardés, pas à l'échelle d'un projet)",
 					"created": "La date et l'heure de création de la tâche",
@@ -778,7 +779,7 @@
 			}
 		},
 		"attributes": {
-			"assignees": "Assigné à",
+			"assignees": "Responsables",
 			"color": "Couleur",
 			"created": "Créé",
 			"createdBy": "Créé par",
@@ -848,10 +849,10 @@
 			"empty": "Aucune description n’est encore disponible."
 		},
 		"assignee": {
-			"placeholder": "Taper pour affecter un ou une utilisatrice…",
-			"selectPlaceholder": "Affecter à cet·te utilisateur·rice",
-			"assignSuccess": "Affectation réussie.",
-			"unassignSuccess": "Désaffectation réussie."
+			"placeholder": "Tapez pour assigner à un utilisateur…",
+			"selectPlaceholder": "Assigner à cet utilisateur",
+			"assignSuccess": "Assignation réussie.",
+			"unassignSuccess": "Désassignation réussie."
 		},
 		"label": {
 			"placeholder": "Taper pour ajouter une étiquette…",
@@ -914,6 +915,7 @@
 			"every30d": "Tous les 30 jours",
 			"mode": "Mode de répétition",
 			"monthly": "Mensuel",
+			"fromCurrentDate": "À partir de la date d'achèvement",
 			"each": "Tous ou toutes les",
 			"specifyAmount": "Indiquer un nombre…",
 			"hours": "Heures",
@@ -924,7 +926,7 @@
 			"invalidAmount": "Merci de saisir une valeur supérieure à 0."
 		},
 		"quickAddMagic": {
-			"hint": "Utiliser les préfixes magiques pour définir les dates d’échéance, les attributaires et d’autres propriétés des tâches.",
+			"hint": "Utiliser les préfixes magiques pour définir les dates d’échéance, les responsables et d’autres propriétés des tâches.",
 			"title": "Ajout rapide magique",
 			"intro": "Lors de la création d’une tâche, vous pouvez utiliser des mots-clés spéciaux pour ajouter directement des attributs à la tâche nouvellement créée. Ceci permet d’ajouter des attributs couramment utilisés aux tâches beaucoup plus rapidement.",
 			"multiple": "Vous pouvez utiliser ceci plusieurs fois.",
@@ -934,7 +936,7 @@
 			"label4": "Par exemple : {prefix}\"Étiquette avec espaces\".",
 			"priority1": "Pour définir la priorité d’une tâche, ajoutez un chiffre de 1 à 5, précédé d’un {prefix}.",
 			"priority2": "Plus le numéro est élevé, plus la priorité est élevée.",
-			"assignees": "Pour assigner directement la tâche à un utilisateur, ajoutez son nom d'utilisateur préfixé avec {prefix} à la tâche.",
+			"assignees": "Pour assigner directement la tâche à un utilisateur, ajoutez son nom d'utilisateur préfixé de {prefix} à la tâche.",
 			"project1": "Pour définir un projet dans lequel la tâche doit apparaître, saisissez son nom précédé de {prefix}.",
 			"project2": "Ceci renverra une erreur si le projet n’existe pas.",
 			"project3": "Pour utiliser des espaces, il vous suffit d’ajouter un \" ou un ' autour du nom du projet.",
@@ -992,9 +994,11 @@
 			"namePlaceholder": "Saisir le nom de l’équipe…",
 			"nameRequired": "Indiquer un nom.",
 			"description": "Description",
+			"descriptionPlaceholder": "Décrivez l'équipe ici, appuyez sur \"/\" pour plus d'options…",
 			"admin": "Admin",
 			"member": "Membre",
-			"isPublic": "Équipe publique"
+			"isPublic": "Équipe publique",
+			"isPublicDescription": "Rendre l'équipe visible publiquement. Une fois activé, n'importe qui peut partager des projets avec l'équipe, même s'il ne s'agit pas d'un membre direct."
 		}
 	},
 	"keyboardShortcuts": {
@@ -1009,7 +1013,7 @@
 		"task": {
 			"title": "Page de tâche",
 			"done": "Marquer la tâche comme terminée ou non",
-			"assign": "Assigner cette tâche à un utilisateur ou à une utilisatrice",
+			"assign": "Assigner cette tâche à un utilisateur",
 			"labels": "Ajouter des étiquettes à cette tâche",
 			"dueDate": "Modifier la date d’échéance de cette tâche",
 			"attachment": "Ajouter une pièce jointe à cette tâche",
@@ -1073,7 +1077,8 @@
 		"title": "Notifications",
 		"none": "Vous n’avez pas de notification. Passez une bonne journée !",
 		"explainer": "Les notifications apparaîtront ici lorsque des actions auxquelles vous êtes abonné·e se produisent.",
-		"markAllRead": "Marquer toutes les notifications comme lues"
+		"markAllRead": "Marquer toutes les notifications comme lues",
+		"markAllReadSuccess": "Toutes les notifications ont bien été marquées comme lues."
 	},
 	"quickActions": {
 		"commands": "Commandes",
@@ -1125,6 +1130,7 @@
 		"1020": "Ce compte est désactivé. Vérifiez vos e-mails ou demandez à votre administrateur.",
 		"1021": "Ce compte est géré par un fournisseur d'authentification tiers.",
 		"1022": "Le nom d'utilisateur ne doit pas contenir d'espace.",
+		"1024": "Données demandées non valides pour le champ {field} de type {type}.",
 		"1025": "Le fuseau horaire '{timezone}' n'est pas valide. Veuillez sélectionner un fuseau horaire valide dans la liste.",
 		"2001": "L’identifiant ne peut pas être vide ou égal à 0.",
 		"2002": "Certaines des données de la requête étaient invalides.",
@@ -1155,6 +1161,7 @@
 		"4018": "Concaténateur de filtre de tâche invalide.",
 		"4019": "Valeur de filtre de tâche invalide.",
 		"4020": "Cette pièce jointe n'appartient pas à cette tâche.",
+		"4021": "Cet utilisateur est déjà assigné à cette tâche.",
 		"6001": "Le nom de l'équipe ne peut pas être vide.",
 		"6002": "L’équipe n’existe pas.",
 		"6004": "L’équipe a déjà accès à ce projet.",

@@ -772,7 +772,7 @@
 			"undone": "Marker som uferdig",
 			"created": "Opprettet for {0} av {1}",
 			"updated": "Oppdatert for {0}",
-			"doneAt": "Ferdig {0}",
+			"doneAt": "Ferdig for {0}",
 			"updateSuccess": "Oppgaven ble lagret.",
 			"deleteSuccess": "Oppgaven ble slettet.",
 			"belongsToProject": "Denne oppgaven tilhører prosjektet '{project}'",
