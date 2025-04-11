@@ -40,7 +40,6 @@
     "test:e2e-dev": "start-server-and-test preview http://127.0.0.1:4173 'cypress open --e2e'",
     "test:unit": "vitest --dir ./src",
     "typecheck": "vue-tsc --build --force",
-    "browserslist:update": "pnpm dlx browserslist@latest --update-db",
     "fonts:update": "pnpm fonts:download && pnpm fonts:subset",
     "fonts:download": "./scripts/fonts-download.sh",
     "fonts:subset": "./scripts/fonts-subset.sh",
