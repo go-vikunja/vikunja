@@ -1,5 +1,5 @@
 name: "vikunja"
-arch: "amd64"
+arch: "${BUILD_ARCH}"
 platform: "linux"
 version: "<version>"
 description: "Vikunja is an open-source todo application, written in Go. It lets you create lists,tasks and share them via teams or directly between users."
