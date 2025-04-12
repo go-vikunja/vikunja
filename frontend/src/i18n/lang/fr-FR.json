@@ -401,6 +401,8 @@
 			"title": "Titre",
 			"actions": "Actions",
 			"kind": "Type",
+			"bucketConfigMode": "Mode de configuration des colonnes",
+			"bucketConfig": "Configuration des colonnes",
 			"bucketConfigManual": "Manuel",
 			"filter": "Filtre",
 			"create": "Créer une vue",
@@ -418,10 +420,12 @@
 		"clear": "Effacer les filtres",
 		"showResults": "Afficher les résultats",
 		"fromView": "La vue active utilise également un filtre :",
+		"fromViewBoth": "Il sera utilisé en combinaison avec ce que vous saisissez ici.",
 		"attributes": {
 			"title": "Nom",
 			"titlePlaceholder": "Entre un nom de filtre enregistré…",
 			"description": "Description",
+			"descriptionPlaceholder": "Entrez une description pour ce filtre, tapez '/' pour plus d'options…",
 			"includeNulls": "Inclure les tâches sans valeurs",
 			"requireAll": "Exiger tous les filtres pour qu’une tâche s’affiche",
 			"showDoneTasks": "Afficher les tâches terminées",
@@ -436,6 +440,7 @@
 		"create": {
 			"title": "Nouveau filtre enregistré",
 			"description": "Un filtre sauvegardé est un projet virtuel qui est calculé à partir d’un ensemble de filtres à chaque fois qu’il est consulté.",
+			"action": "Créer un filtre enregistré",
 			"titleRequired": "Veuillez donner un nom au filtre."
 		},
 		"delete": {
@@ -449,11 +454,15 @@
 		},
 		"query": {
 			"title": "Requête",
+			"placeholder": "Faites une recherche ou saisissez une requête de filtre…",
 			"help": {
+				"intro": "Pour filtrer les tâches, vous pouvez utiliser une syntaxe de requête similaire à SQL. Les champs disponibles pour le filtrage incluent :",
 				"link": "Comment ça marche ?",
+				"canUseDatemath": "Vous pouvez réaliser des calculs sur les dates pour définir des dates relatives. Cliquez sur la valeur d'une date dans une requête pour en savoir plus.",
 				"fields": {
 					"done": "Si la tâche est terminée ou non",
 					"priority": "Le niveau de priorité de la tâche (1-5)",
+					"percentDone": "Le pourcentage de progression de la tâche (0-100)",
 					"dueDate": "La date d'échéance de la tâche",
 					"startDate": "La date de début de la tâche",
 					"endDate": "La date de fin de la tâche",
@@ -461,17 +470,26 @@
 					"assignees": "Les responsables de la tâche",
 					"labels": "Les étiquettes associées à la tâche",
 					"project": "Le projet auquel appartient la tâche (seulement disponible pour les filtres sauvegardés, pas à l'échelle d'un projet)",
+					"reminders": "Les rappels de la tâche en tant que date, retournera toutes les tâches avec au moins un rappel correspondant à la requête",
 					"created": "La date et l'heure de création de la tâche",
 					"updated": "La date et l'heure de dernière modification de la tâche"
 				},
 				"operators": {
+					"intro": "Les opérateurs disponibles pour le filtrage comprennent :",
+					"notEqual": "Différent de",
 					"equal": "Égal à",
 					"greaterThan": "Plus grand que",
 					"greaterThanOrEqual": "Plus grand ou égal à",
 					"lessThan": "Inférieur à",
-					"lessThanOrEqual": "Inférieur ou égal à"
+					"lessThanOrEqual": "Inférieur ou égal à",
+					"like": "Correspond à un modèle (utilise des métacaractères %)",
+					"in": "Correspond à une valeur dans une liste de valeurs séparée par des virgules",
+					"notIn": "Correspond lorsqu'une valeur n'est pas présente dans une liste de valeurs séparée par des virgules"
 				},
 				"logicalOperators": {
+					"intro": "Pour combiner plusieurs conditions, vous pouvez utiliser les opérateurs logiques suivants :",
+					"and": "L'opérateur ET, correspond si toutes les conditions sont vraies",
+					"or": "L'opérateur OU, correspond si l'une des conditions est vraie",
 					"parentheses": "Parenthèses pour regrouper les conditions"
 				},
 				"examples": {
@@ -615,13 +633,17 @@
 			"link": "Lien",
 			"image": "Image",
 			"imageTooltip": "Charger une image depuis votre ordinateur.",
-			"horizontalRule": "Règle horizontale",
+			"horizontalRule": "Ligne horizontale",
 			"horizontalRuleTooltip": "Diviser une section.",
 			"sideBySide": "Côte à côte",
 			"guide": "Guide",
 			"text": "Texte",
+			"textTooltip": "Commencez à taper du texte brut.",
+			"taskList": "Liste de tâches",
+			"taskListTooltip": "Suivre les tâches avec une liste de tâches à faire.",
 			"undo": "Annuler",
 			"redo": "Rétablir",
+			"placeholder": "Tapez du texte ou appuyez sur \"/\" pour voir plus d'options…",
 			"table": {
 				"title": "Tableau",
 				"insert": "Insérer un tableau",
@@ -634,6 +656,9 @@
 				"deleteTable": "Supprimer le tableau",
 				"mergeCells": "Fusionner les cellules",
 				"splitCell": "Diviser la cellule",
+				"toggleHeaderColumn": "(Dés)activer la colonne d'en-tête",
+				"toggleHeaderRow": "(Dés)activer la ligne d'en-tête",
+				"toggleHeaderCell": "(Dés)activer la cellule d'en-tête",
 				"mergeOrSplit": "Fusionner ou diviser",
 				"fixTables": "Corriger les tableaux"
 			}
@@ -663,6 +688,7 @@
 				"restOfThisYear": "Le reste de cette année"
 			},
 			"values": {
+				"now": "Maintenant",
 				"startOfToday": "Début d'aujourd'hui",
 				"endOfToday": "Fin d'aujourd'hui",
 				"beginningOflastWeek": "Début de la semaine dernière",
@@ -684,7 +710,7 @@
 			}
 		},
 		"datemathHelp": {
-			"canuse": "Vous pouvez utiliser les calculs de date pour filtrer selon des dates relatives.",
+			"canuse": "Vous pouvez réaliser des calculs sur les dates pour filtrer selon des dates relatives.",
 			"learnhow": "Découvrez comment ça marche",
 			"title": "Calcul de dates",
 			"intro": "Spécifier des dates relatives qui sont résolues à la volée par Vikunja lors de l’application du filtre.",
@@ -723,6 +749,7 @@
 		"addReminder": "Ajouter un rappel…",
 		"doneSuccess": "Tâche marquée comme terminée.",
 		"undoneSuccess": "Tâche marquée comme non terminée.",
+		"revertSuccess": "La modification de tâche a bien été annulée.",
 		"undo": "Annuler",
 		"openDetail": "Ouvrir la vue détaillée de la tâche",
 		"checklistTotal": "{checked} sur {total} tâches",
@@ -832,6 +859,7 @@
 			"loading": "Chargement des commentaires…",
 			"edited": "modifié {date}",
 			"creating": "Création d’un commentaire…",
+			"placeholder": "Ajoutez votre commentaire, appuyez sur \"/\" pour plus d'options…",
 			"comment": "Commentaire",
 			"delete": "Supprimer ce commentaire",
 			"deleteText1": "Supprimer ce commentaire ?",
@@ -846,6 +874,7 @@
 			"1week": "1 semaine"
 		},
 		"description": {
+			"placeholder": "Entrez une description, appuyez sur \"/\" pour plus d'options…",
 			"empty": "Aucune description n’est encore disponible."
 		},
 		"assignee": {
@@ -878,6 +907,8 @@
 		"relation": {
 			"add": "Ajouter une nouvelle relation de tâche",
 			"new": "Nouvelle relation de tâche",
+			"searchPlaceholder": "Saisissez une tâche à ajouter comme connexe…",
+			"createPlaceholder": "Ajouter ceci comme tâche connexe",
 			"differentProject": "Cette tâche appartient à un autre projet.",
 			"noneYet": "Pas encore de relations de tâches.",
 			"delete": "Supprimer la relation de tâche",
@@ -890,10 +921,10 @@
 				"related": "Tâche connexe | Tâches connexes",
 				"duplicateof": "Doublon de | Doublons de",
 				"duplicates": "Doublon | Doublons",
-				"blocking": "Blocage | Blocages",
+				"blocking": "Bloque | Bloquent",
 				"blocked": "Bloqué par | Bloqués par",
-				"precedes": "Précède | Précède",
-				"follows": "Suit | Suit",
+				"precedes": "Précède | Précèdent",
+				"follows": "Suit | Suivent",
 				"copiedfrom": "Copié depuis | Copiés depuis",
 				"copiedto": "Copié vers | Copiés vers"
 			}
@@ -916,7 +947,7 @@
 			"mode": "Mode de répétition",
 			"monthly": "Mensuel",
 			"fromCurrentDate": "À partir de la date d'achèvement",
-			"each": "Tous ou toutes les",
+			"each": "Tou(te)s les",
 			"specifyAmount": "Indiquer un nombre…",
 			"hours": "Heures",
 			"days": "Jours",
@@ -1057,6 +1088,8 @@
 		"share": "Partager",
 		"newProject": "Nouveau projet",
 		"createProject": "Créer un projet",
+		"cantArchiveIsDefault": "Vous ne pouvez pas archiver ceci car il s'agit de votre projet par défaut.",
+		"cantDeleteIsDefault": "Vous ne pouvez pas supprimer ceci car il s'agit de votre projet par défaut.",
 		"views": "Vues"
 	},
 	"apiConfig": {
@@ -1130,6 +1163,7 @@
 		"1020": "Ce compte est désactivé. Vérifiez vos e-mails ou demandez à votre administrateur.",
 		"1021": "Ce compte est géré par un fournisseur d'authentification tiers.",
 		"1022": "Le nom d'utilisateur ne doit pas contenir d'espace.",
+		"1023": "Vous n'avez pas la permission de faire cela avec le partage de liens.",
 		"1024": "Données demandées non valides pour le champ {field} de type {type}.",
 		"1025": "Le fuseau horaire '{timezone}' n'est pas valide. Veuillez sélectionner un fuseau horaire valide dans la liste.",
 		"2001": "L’identifiant ne peut pas être vide ou égal à 0.",
@@ -1162,6 +1196,8 @@
 		"4019": "Valeur de filtre de tâche invalide.",
 		"4020": "Cette pièce jointe n'appartient pas à cette tâche.",
 		"4021": "Cet utilisateur est déjà assigné à cette tâche.",
+		"4022": "Veuillez indiquer à quelle date la date de rappel est relative.",
+		"4023": "Impossible de créer un cycle de relation de tâches.",
 		"6001": "Le nom de l'équipe ne peut pas être vide.",
 		"6002": "L’équipe n’existe pas.",
 		"6004": "L’équipe a déjà accès à ce projet.",
@@ -1176,7 +1212,7 @@
 		"8002": "L’étiquette n’existe pas.",
 		"8003": "Vous n’avez pas accès à cette étiquette.",
 		"9001": "Le droit est invalide.",
-		"10001": "Le seau n’existe pas.",
+		"10001": "La colonne n’existe pas.",
 		"10002": "La colonne ne fait pas partie de ce projet.",
 		"10003": "Vous ne pouvez pas supprimer la dernière colonne d’un projet.",
 		"10004": "Vous ne pouvez pas ajouter la tâche à cette colonne car elle a déjà dépassé la limite de tâches qu’elle peut contenir.",
