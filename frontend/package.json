@@ -112,7 +112,7 @@
     "@4tw/cypress-drag-drop": "2.3.0",
     "@cypress/vite-dev-server": "6.0.3",
     "@cypress/vue": "6.0.2",
-    "@faker-js/faker": "9.6.0",
+    "@faker-js/faker": "9.7.0",
     "@histoire/plugin-screenshot": "1.0.0-alpha.2",
     "@histoire/plugin-vue": "1.0.0-alpha.2",
     "@tsconfig/node22": "22.0.1",
