@@ -22,7 +22,8 @@
 		"totp": {
 			"invalid": {
 				"subject": "Quelqu'un vient d'essayer de se connecter à votre compte Vikunja, mais a échoué",
-				"message": "Quelqu'un vient d'essayer de se connecter à votre compte avec un nom d'utilisateur et un mot de passe corrects, mais un mauvais code d'accès TOTP."
+				"message": "Quelqu'un vient d'essayer de se connecter à votre compte avec un nom d'utilisateur et un mot de passe corrects, mais un mauvais code d'accès TOTP.",
+				"warning": "**Si ce n'était pas vous, quelqu'un d'autre connaît votre mot de passe. Vous devriez en définir un nouveau immédiatement !**"
 			},
 			"account_locked": {
 				"subject": "Nous avons désactivé votre compte sur Vikunja",
@@ -34,13 +35,16 @@
 		"login": {
 			"failed": {
 				"subject": "Quelqu'un vient d'essayer de se connecter à votre compte Vikunja, avec un mot de passe incorrect",
-				"message": "Quelqu'un vient d'essayer de se connecter à votre compte avec un mauvais mot de passe trois fois de suite."
+				"message": "Quelqu'un vient d'essayer de se connecter à votre compte avec un mauvais mot de passe trois fois de suite.",
+				"warning": "Si ce n'était pas vous, cela pourrait être quelqu'un qui essaye de s'introduire dans votre compte.",
+				"enhance_security": "Pour améliorer la sécurité de votre compte, vous pouvez définir un mot de passe plus fort ou activer l'authentification TOTP dans les paramètres :"
 			}
 		},
 		"account": {
 			"deletion": {
 				"confirm": {
 					"subject": "Veuillez confirmer la suppression de votre compte Vikunja",
+					"request": "Vous avez demandé la suppression de votre compte. Pour confirmer cela, veuillez cliquer sur le lien ci-dessous :",
 					"valid_duration": "Ce lien sera valide pendant 24 heures.",
 					"schedule_info": "Après avoir confirmé la suppression, nous programmerons la suppression de votre compte dans trois jours et nous vous enverrons un autre e-mail à ce moment-là.",
 					"consequences": "Si vous procédez à la suppression de votre compte, tous les projets et tâches que vous avez créés seront supprimés. Tout ce que vous avez partagé avec un autre utilisateur ou une autre équipe leur transférera la propriété.",
@@ -68,6 +72,7 @@
 			},
 			"comment": {
 				"subject": "Re: %[1]s",
+				"mentioned_subject": "%[1]s vous a mentionné dans un commentaire dans \"%[2]s\"",
 				"mentioned_message": "**%[1]s** vous a mentionné dans un commentaire :"
 			},
 			"assigned": {
@@ -76,12 +81,20 @@
 				"subject_to_others": "\"%[1]s\" (%[2]s) a été assigné à %[3]s",
 				"message_to_others": "%[1]s a assigné cette tâche à %[2]s."
 			},
+			"deleted": {
+				"subject": "\"%[1]s\" (%[2]s) a été supprimé",
+				"message": "%[1]s a supprimé la tâche \"%[2]s\" (%[3]s)"
+			},
 			"mentioned": {
-				"subject": "%[1]s vous a mentionné dans une tâche \"%[2]"
+				"subject_new": "%[1]s vous a mentionné dans une nouvelle tâche \"%[2]",
+				"subject": "%[1]s vous a mentionné dans une tâche \"%[2]",
+				"message": "**%[1]s** vous a mentionné dans une tâche :"
 			},
 			"overdue": {
 				"subject": "La tâche \"%[1]s\" (%[2]s) est en retard",
+				"message": "Ceci est un petit rappel pour la tâche \"%[1]s\" (%[2]s) qui est %[3]s et pas encore terminée.",
 				"multiple_subject": "Vos tâches en retard",
+				"multiple_message": "Vous avez les tâches suivantes en retard :",
 				"overdue_since": "en retard depuis %[1]s",
 				"overdue_now": "en retard"
 			}
@@ -110,9 +123,11 @@
 			},
 			"failed": {
 				"subject": "La migration de %[1]s vers Vikunja a échoué",
+				"message": "Il semble que le déplacement de %[1]s ne se soit pas déroulé comme prévu cette fois-ci.",
 				"retry": "Pas d'inquiétude ! Réessayez simplement comme précédemment. Parfois, ces problèmes surviennent à cause de bugs côté %[1]s, mais réessayer fait souvent l'affaire.",
 				"error": "Nous sommes tombés sur une petite erreur en cours de route : `%[2]s`.",
-				"report": "Veuillez nous envoyer un message à ce sujet [sur le forum](https://community.vikunja.io/), ou aux endroits habituels afin que nous puissions y jeter un coup d'œil."
+				"report": "Veuillez nous envoyer un message à ce sujet [sur le forum](https://community.vikunja.io/), ou aux endroits habituels afin que nous puissions y jeter un coup d'œil.",
+				"working_on_it": "Nous avons bien reçu le message d'erreur et nous allons faire en sorte de résoudre ça."
 			}
 		},
 		"common": {

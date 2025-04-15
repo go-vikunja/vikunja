@@ -264,8 +264,7 @@ jobs:
       - name: Build frontend for test
         run: |
           cd frontend
-          pnpm cypress install
-          pnpm run build
+          pnpm build
       - name: Run api
         env:
           VIKUNJA_SERVICE_TESTINGTOKEN: averyLongSecretToSe33dtheDB

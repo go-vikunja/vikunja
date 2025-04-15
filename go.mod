@@ -33,7 +33,7 @@ require (
 	github.com/ganigeorgiev/fexpr v0.5.0
 	github.com/getsentry/sentry-go v0.32.0
 	github.com/getsentry/sentry-go/echo v0.32.0
-	github.com/go-ldap/ldap/v3 v3.4.10
+	github.com/go-ldap/ldap/v3 v3.4.11
 	github.com/go-sql-driver/mysql v1.9.2
 	github.com/go-testfixtures/testfixtures/v3 v3.14.0
 	github.com/gocarina/gocsv v0.0.0-20231116093920-b87c2d0e983a
@@ -70,7 +70,7 @@ require (
 	github.com/typesense/typesense-go/v3 v3.2.0
 	github.com/ulule/limiter/v3 v3.11.2
 	github.com/wneessen/go-mail v0.6.2
-	github.com/yuin/goldmark v1.7.8
+	github.com/yuin/goldmark v1.7.9
 	golang.org/x/crypto v0.37.0
 	golang.org/x/image v0.26.0
 	golang.org/x/oauth2 v0.29.0
@@ -118,7 +118,7 @@ require (
 	github.com/envoyproxy/protoc-gen-validate v1.1.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
-	github.com/go-asn1-ber/asn1-ber v1.5.7 // indirect
+	github.com/go-asn1-ber/asn1-ber v1.5.8-0.20250403174932-29230038a667 // indirect
 	github.com/go-chi/chi/v5 v5.1.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.0.5 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
