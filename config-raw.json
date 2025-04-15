@@ -494,7 +494,7 @@
                         {
                             "key": "enable",
                             "default_value": "false",
-                            "comment": "Wheter to enable the Todoist migrator."
+                            "comment": "Whether to enable the Todoist migrator."
                         },
                         {
                             "key": "clientid",
@@ -539,7 +539,7 @@
                         {
                             "key": "enable",
                             "default_value": "false",
-                            "comment": "Wheter to enable the Microsoft Todo migrator."
+                            "comment": "Whether to enable the Microsoft Todo migrator."
                         },
                         {
                             "key": "clientid",
