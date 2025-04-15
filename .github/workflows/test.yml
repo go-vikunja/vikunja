@@ -264,7 +264,7 @@ jobs:
       - name: Build frontend for test
         run: |
           cd frontend
-          pnpm build:test
+          pnpm build
       - name: Run api
         env:
           VIKUNJA_SERVICE_TESTINGTOKEN: averyLongSecretToSe33dtheDB
@@ -282,7 +282,7 @@ jobs:
           browser: chrome
           record: true
           start: |
-            pnpm preview:test
+            pnpm run preview
           wait-on: http://127.0.0.1:4173,http://127.0.0.1:3456/api/v1/info
           wait-on-timeout: 10
         env:
