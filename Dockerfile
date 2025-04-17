@@ -13,7 +13,7 @@ RUN npm install -g corepack && corepack enable && \
       pnpm install && \
       pnpm run build
 
-FROM --platform=$BUILDPLATFORM ghcr.io/techknowlogick/xgo:go-1.23.x@sha256:770db5a4eb8cdf3ca0963943d133f4f352298cae65230f946f4763e97874dbdb AS apibuilder
+FROM --platform=$BUILDPLATFORM ghcr.io/techknowlogick/xgo:go-1.23.x@sha256:46a34792b019ee60cb16d0f2ec464dbd69fde843e485203c4f65258bde4fe7e2 AS apibuilder
 
 RUN go install github.com/magefile/mage@latest && \
     mv /go/bin/mage /usr/local/go/bin
