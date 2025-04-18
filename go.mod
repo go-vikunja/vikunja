@@ -29,7 +29,7 @@ require (
 	github.com/d4l3k/messagediff v1.2.1
 	github.com/disintegration/imaging v1.6.2
 	github.com/dustinkirkland/golang-petname v0.0.0-20240422154211-76c06c4bde6b
-	github.com/gabriel-vasile/mimetype v1.4.8
+	github.com/gabriel-vasile/mimetype v1.4.9
 	github.com/ganigeorgiev/fexpr v0.5.0
 	github.com/getsentry/sentry-go v0.32.0
 	github.com/getsentry/sentry-go/echo v0.32.0
@@ -193,7 +193,7 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
 	golang.org/x/mod v0.22.0 // indirect
-	golang.org/x/net v0.38.0 // indirect
+	golang.org/x/net v0.39.0 // indirect
 	golang.org/x/time v0.11.0 // indirect
 	golang.org/x/tools v0.28.0 // indirect
 	google.golang.org/api v0.215.0 // indirect
