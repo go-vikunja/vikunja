@@ -16,6 +16,11 @@
 			"import": "Vikunjaへのデータのインポート"
 		}
 	},
+	"demo": {
+		"title": "このインスタンスはデモモードです。実際のデータには使用しないでください！",
+		"everythingWillBeDeleted": "定期的に全データが削除されます！",
+		"accountWillBeDeleted": "あなたのアカウントとともに、作成したすべてのプロジェクト、タスク、添付ファイルも削除されます。"
+	},
 	"ready": {
 		"loading": "Vikunjaを読み込み中…",
 		"errorOccured": "エラーが発生しました:",
@@ -53,13 +58,16 @@
 			"emailInvalid": "有効なメールアドレスを入力してください。",
 			"usernameRequired": "ユーザー名を入力してください。",
 			"usernameMustNotContainSpace": "ユーザー名にスペースを含めてはいけません。",
+			"usernameMustNotLookLikeUrl": "ユーザー名に URL のような文字列を含むことはできません。",
 			"passwordRequired": "パスワードを入力してください。",
 			"passwordNotMin": "パスワードは8文字以上でなければなりません。",
+			"passwordNotMax": "パスワードは 72 文字以内でなければなりません。",
 			"showPassword": "パスワードの表示",
 			"hidePassword": "パスワードの非表示",
 			"noAccountYet": "まだアカウントをお持ちでないですか？",
 			"alreadyHaveAnAccount": "すでにアカウントをお持ちですか？",
-			"remember": "ログインしたままにする"
+			"remember": "ログインしたままにする",
+			"registrationDisabled": "新規登録は無効化されています。"
 		},
 		"settings": {
 			"title": "設定",
@@ -91,7 +99,8 @@
 				"defaultView": "デフォルトのビュー",
 				"timezone": "タイムゾーン",
 				"overdueTasksRemindersTime": "期限切れタスクのリマインダー送信時間",
-				"filterUsedOnOverview": "概要ページの絞り込み条件"
+				"filterUsedOnOverview": "概要ページの絞り込み条件",
+				"externalUserNameChange": "名前はログインプロバイダー（{provider}）で管理されています。名前を変更する場合はそちらで行ってください。"
 			},
 			"totp": {
 				"title": "2要素認証",
@@ -152,14 +161,23 @@
 				"30d": "30日",
 				"60d": "60日",
 				"90d": "90日",
+				"permissionExplanation": "アクセス権限を使用すると、API トークンに許可する権限を限定できます。",
 				"titleRequired": "トークン名を入力してください。",
+				"permissionRequired": "リストから少なくとも 1 つ以上権限を選択してください。",
+				"expired": "このトークンは {ago} に期限切れしています。",
+				"tokenCreatedSuccess": "新しい API トークンはこちらです: {token}",
 				"tokenCreatedNotSeeAgain": "このトークンは二度と表示されません。安全な場所に保管してください。",
 				"selectAll": "すべて選択",
 				"delete": {
-					"header": "トークンの削除"
+					"header": "トークンの削除",
+					"text1": "トークン \"{token}\" を削除してよろしいですか？",
+					"text2": "これにより、このトークンを使用しているアプリケーションやインテグレーションへのアクセスが取り消されます。この操作はもとに戻せません。"
 				},
 				"attributes": {
-					"title": "トークン名"
+					"title": "トークン名",
+					"titlePlaceholder": "後で参照するためのタイトルを入力してください",
+					"expiresAt": "有効期限:",
+					"permissions": "権限"
 				}
 			}
 		},
@@ -167,6 +185,7 @@
 			"title": "Vikunjaアカウントの削除",
 			"text1": "アカウントの削除は永久的なものであり、元に戻すことはできません。あなたのプロジェクト、タスク、それらに関連するすべてのものを削除します。",
 			"text2": "続行するにはパスワードを入力してください。詳しい案内の記載したメールを送信します。",
+			"text3": "続行するには以下のボタンを押してください。詳しい案内を記載したメールを送信します。",
 			"confirm": "アカウントの削除",
 			"requestSuccess": "リクエストは成功しました。詳しい案内はメールでお知らせします。",
 			"passwordRequired": "パスワードを入力してください。",
@@ -174,6 +193,7 @@
 			"scheduled": "{date} ({dateSince}) にVikunjaアカウントは削除されます。",
 			"scheduledCancel": "アカウントの削除を取り消す場合はこちらをご覧ください。",
 			"scheduledCancelText": "アカウントの削除を取り消すにはパスワードを入力してください:",
+			"scheduledCancelButton": "アカウントの削除を取り消すには以下のボタンを押してください：",
 			"scheduledCancelConfirm": "アカウント削除の取り消し",
 			"scheduledCancelSuccess": "アカウント削除は行われません。"
 		},
@@ -190,6 +210,7 @@
 		"archivedMessage": "アーカイブ済みプロジェクトです。タスクの作成や編集を行うことはできません。",
 		"archived": "アーカイブ済み",
 		"showArchived": "アーカイブ済みプロジェクトを表示",
+		"title": "プロジェクト名",
 		"color": "色",
 		"projects": "プロジェクト",
 		"parent": "親プロジェクト",
@@ -197,6 +218,11 @@
 		"searchSelect": "クリックするかEnterキーを押してプロジェクトを選択",
 		"shared": "共有プロジェクト",
 		"noDescriptionAvailable": "プロジェクトの説明はありません。",
+		"inboxTitle": "Inbox",
+		"favorite": "このプロジェクトをお気に入りに追加",
+		"unfavorite": "このプロジェクトをお気に入りから削除",
+		"openSettingsMenu": "プロジェクト設定メニューを開く",
+		"description": "プロジェクトの説明",
 		"create": {
 			"header": "新しいプロジェクトの作成",
 			"titlePlaceholder": "プロジェクト名を入力…",
@@ -217,6 +243,7 @@
 			"remove": "背景画像を削除",
 			"upload": "画像を選択…",
 			"searchPlaceholder": "背景画像を検索…",
+			"poweredByUnsplash": "Powered by Unsplash",
 			"loadMore": "写真をもっと読み込む",
 			"success": "背景画像は正常に設定されました。",
 			"removeSuccess": "背景画像は正常に削除されました。"
@@ -228,6 +255,7 @@
 			"text2": "このプロジェクトに含まれるタスクはすべて削除されます。この操作は元に戻せません。",
 			"success": "プロジェクトは正常に削除されました。",
 			"tasksToDelete": "約{count}件のタスクが抹消されます。",
+			"tasksAndChildProjectsToDelete": "これにより、約 {tasks} 件のタスクと {projects} 個のプロジェクトを削除します。",
 			"noTasksToDelete": "このプロジェクトにはタスクが含まれていないので問題なく削除できます。"
 		},
 		"duplicate": {
@@ -243,6 +271,7 @@
 			"identifier": "プロジェクトID",
 			"identifierPlaceholder": "プロジェクトIDを入力…",
 			"description": "説明",
+			"descriptionPlaceholder": "このプロジェクトに関する説明を記入します。'/' でオプションを表示します…",
 			"color": "色",
 			"success": "プロジェクトは正常に更新されました。"
 		},
@@ -273,7 +302,12 @@
 				"typeTeam": "チーム",
 				"shared": "アクセスできる{type}",
 				"you": "あなた",
-				"notShared": "まだどの{type}とも共有していません。"
+				"notShared": "まだどの{type}とも共有していません。",
+				"removeHeader": "{type} から {sharable} を削除",
+				"removeText": "{sharable} を {type} から削除してもよろしいですか？元に戻すことはできません。",
+				"removeSuccess": "{sharable} は {type} から正常に削除されました。",
+				"addedSuccess": "{type} は正常に追加されました。",
+				"updatedSuccess": "{type} は正常に追加されました。"
 			},
 			"right": {
 				"title": "権限",
@@ -285,6 +319,9 @@
 				"link": "リンク",
 				"delete": "削除"
 			}
+		},
+		"first": {
+			"title": "最初のビュー"
 		},
 		"list": {
 			"title": "リスト",
@@ -310,9 +347,16 @@
 		},
 		"kanban": {
 			"title": "カンバン",
+			"limit": "上限: {limit}",
 			"noLimit": "未設定",
 			"doneBucket": "バケットを完了",
+			"doneBucketHint": "このバケットに移動されたすべてのタスクは自動的に完了としてマークされます。",
+			"doneBucketHintExtended": "完了バケットに移動されたすべてのタスクは自動的に完了としてマークされます。他の場所にあるタスクも完了としてマークされるとこのバケットに移動されます。",
+			"doneBucketSavedSuccess": "完了バケットは正常に保存されました。",
 			"defaultBucket": "デフォルトのバケット",
+			"defaultBucketHint": "バケットを指定せずにタスクを作成すると、このバケットに自動的に追加されます。",
+			"defaultBucketSavedSuccess": "デフォルト バケットは正常に保存されました。",
+			"deleteLast": "最後のバケットを削除することはできません。",
 			"addTaskPlaceholder": "新しいタスク名を入力…",
 			"addTask": "タスクの追加",
 			"addAnotherTask": "他のタスクを追加",
@@ -320,7 +364,12 @@
 			"addBucketPlaceholder": "新しいバケット名を入力…",
 			"deleteHeaderBucket": "バケットの削除",
 			"deleteBucketText1": "このバケットを削除して本当によろしいですか？",
-			"deleteBucketSuccess": "バケットは正常に削除されました。"
+			"deleteBucketText2": "タスクは削除されずにデフォルト バケットに移動します。",
+			"deleteBucketSuccess": "バケットは正常に削除されました。",
+			"bucketTitleSavedSuccess": "バケットのタイトルは正常に保存されました。",
+			"bucketLimitSavedSuccess": "バケットの上限は正常に保存されました。",
+			"collapse": "このバケットを折りたたむ",
+			"bucketLimitReached": "バケットの上限に達しました。新しいタスクを追加するには、既存のタスクを削除するか、上限を緩和してください。"
 		},
 		"pseudo": {
 			"favorites": {
@@ -345,6 +394,11 @@
 		"views": {
 			"header": "ビューの編集",
 			"title": "ビュー名",
+			"actions": "アクション",
+			"kind": "種別",
+			"bucketConfigMode": "バケット設定モード",
+			"bucketConfig": "バケット設定",
+			"bucketConfigManual": "手動",
 			"create": "ビューの作成",
 			"createSuccess": "ビューは正常に作成されました。",
 			"titleRequired": "ビュー名を入力してください。",
@@ -476,7 +530,9 @@
 		"welcomeBack": "おかえりなさい",
 		"custom": "カスタム",
 		"id": "ID",
-		"cannotBeUndone": "この操作は元に戻せません！"
+		"actions": "アクション",
+		"cannotBeUndone": "この操作は元に戻せません！",
+		"avatarOfUser": "{user} のプロフィール画像"
 	},
 	"input": {
 		"resetColor": "色のリセット",
@@ -493,8 +549,11 @@
 			"edit": "編集",
 			"done": "完了",
 			"heading1": "見出し1",
+			"heading1Tooltip": "大きいフォントのセクション見出しです。",
 			"heading2": "見出し2",
+			"heading2Tooltip": "中くらいのフォントのセクション見出しです。",
 			"heading3": "見出し3",
+			"heading3Tooltip": "小さいフォントのセクション見出しです。",
 			"headingSmaller": "見出しを小さくする",
 			"headingBigger": "見出しを大きくする",
 			"bold": "太字",
@@ -502,27 +561,43 @@
 			"strikethrough": "打ち消し線",
 			"underline": "下線",
 			"code": "コード",
+			"codeTooltip": "コードスニペットを貼り付ける",
 			"quote": "引用",
+			"quoteTooltip": "引用を貼り付ける",
 			"bulletList": "順序なしリスト",
+			"bulletListTooltip": "シンプルな箇条書きリストを作成",
 			"unorderedList": "順序なしリスト",
 			"orderedList": "順序付きリスト",
+			"orderedListTooltip": "番号付きのリストを作成",
 			"link": "リンク",
 			"image": "画像",
+			"imageTooltip": "コンピュータから画像をアップロード",
 			"horizontalRule": "横罫",
+			"horizontalRuleTooltip": "セクションを分割",
+			"sideBySide": "並べて表示",
 			"guide": "説明書",
 			"text": "テキスト",
 			"taskList": "タスクリスト",
+			"taskListTooltip": "Todoリストでタスクを追跡",
 			"undo": "元に戻す",
 			"redo": "やり直す",
 			"placeholder": "テキストを入力するか「/」を押して選択肢から選ぶ…",
 			"table": {
 				"title": "テーブル",
 				"insert": "テーブルの挿入",
+				"addColumnBefore": "前に列を挿入",
+				"addColumnAfter": "後ろに列を挿入",
 				"deleteColumn": "列の削除",
+				"addRowBefore": "前に行を挿入",
+				"addRowAfter": "後ろに行を挿入",
 				"deleteRow": "行の削除",
 				"deleteTable": "テーブルの削除",
 				"mergeCells": "セルの統合",
 				"splitCell": "セルの分割",
+				"toggleHeaderColumn": "タイトル列の有無の切り替え",
+				"toggleHeaderRow": "タイトル行の有無の切り替え",
+				"toggleHeaderCell": "選択中のセルのタイトル セル指定の有無の切り替え",
+				"mergeOrSplit": "結合または分割",
 				"fixTables": "テーブルの修正"
 			}
 		},
@@ -534,6 +609,7 @@
 			"to": "終了",
 			"from": "開始",
 			"fromto": "{from} 〜 {to} まで",
+			"date": "日付",
 			"ranges": {
 				"today": "今日",
 				"thisWeek": "今週",
@@ -611,10 +687,13 @@
 			"move": "別のプロジェクトにタスクを移動",
 			"done": "タスクを完了",
 			"undone": "未完了に戻す",
+			"created": "{1} によって {0} に作成",
+			"updated": "{0} に更新",
 			"doneAt": "完了 {0}",
 			"updateSuccess": "タスクは正常に保存されました。",
 			"deleteSuccess": "タスクは正常に削除されました。",
 			"belongsToProject": "このタスクはプロジェクト「{project}」に含まれています。",
+			"due": "期限: {at}",
 			"closePopup": "閉じる",
 			"organization": "組織",
 			"management": "管理",
@@ -646,6 +725,7 @@
 		"attributes": {
 			"assignees": "担当",
 			"color": "色",
+			"createdBy": "作成者:",
 			"description": "説明",
 			"done": "完了",
 			"dueDate": "期日",
@@ -657,7 +737,8 @@
 			"reminders": "リマインダー",
 			"repeat": "繰り返し間隔",
 			"startDate": "開始日",
-			"title": "タスク名"
+			"title": "タスク名",
+			"doneAt": "完了日時: "
 		},
 		"subscription": {
 			"subscribedTaskThroughParentProject": "現在プロジェクトを通して購読しているため、ここでこのタスクの購読を解除することはできません。",
@@ -674,6 +755,7 @@
 		},
 		"attachment": {
 			"title": "添付ファイル",
+			"createdBy": "{1}によって{0}に作成",
 			"downloadTooltip": "添付ファイルをダウンロード",
 			"upload": "添付ファイルのアップロード",
 			"drop": "ここにアップロードするファイルをドロップ",
@@ -690,7 +772,9 @@
 		"comment": {
 			"title": "コメント",
 			"loading": "コメントを読み込み中…",
+			"edited": "{date} 編集",
 			"creating": "コメントを作成中…",
+			"placeholder": "コメントを追加します。'/' でオプションを表示します…",
 			"comment": "コメント",
 			"delete": "コメントの削除",
 			"deleteText1": "このコメントを削除して本当によろしいですか？",
@@ -705,6 +789,7 @@
 			"1week": "1週間後"
 		},
 		"description": {
+			"placeholder": "説明を記入します。'/' でオプションを表示します…",
 			"empty": "説明文はありません。"
 		},
 		"assignee": {
@@ -739,9 +824,11 @@
 			"new": "新しい関連タスクの作成",
 			"searchPlaceholder": "追加する関連タスクのキーワードを入力…",
 			"createPlaceholder": "関連タスクを追加",
+			"differentProject": "このタスクは別のプロジェクトに属しています。",
 			"noneYet": "関連タスクはまだありません。",
 			"delete": "関連タスクの削除",
 			"deleteText1": "この関連タスクを削除して本当によろしいですか？",
+			"select": "関連の種類を選択してください",
 			"taskRequired": "タスクを選択するか、新しいタスク名を入力してください。",
 			"kinds": {
 				"subtask": "サブタスク",
