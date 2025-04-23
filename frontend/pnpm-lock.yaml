@@ -196,13 +196,13 @@ importers:
     devDependencies:
       '@4tw/cypress-drag-drop':
         specifier: 2.3.0
-        version: 2.3.0(cypress@14.3.1)
+        version: 2.3.0(cypress@14.3.2)
       '@cypress/vite-dev-server':
         specifier: 6.0.3
-        version: 6.0.3(cypress@14.3.1)
+        version: 6.0.3(cypress@14.3.2)
       '@cypress/vue':
         specifier: 6.0.2
-        version: 6.0.2(cypress@14.3.1)(vue@3.5.13(typescript@5.8.3))
+        version: 6.0.2(cypress@14.3.2)(vue@3.5.13(typescript@5.8.3))
       '@faker-js/faker':
         specifier: 9.7.0
         version: 9.7.0
@@ -261,8 +261,8 @@ importers:
         specifier: 3.1.3
         version: 3.1.3
       cypress:
-        specifier: 14.3.1
-        version: 14.3.1
+        specifier: 14.3.2
+        version: 14.3.2
       esbuild:
         specifier: 0.25.2
         version: 0.25.2
@@ -324,8 +324,8 @@ importers:
         specifier: 3.1.2
         version: 3.1.2(@types/node@22.14.1)(happy-dom@17.4.4)(jiti@2.4.2)(jsdom@25.0.1)(sass-embedded@1.87.0)(sass@1.80.6)(terser@5.31.6)(yaml@2.5.0)
       vue-tsc:
-        specifier: 2.2.8
-        version: 2.2.8(typescript@5.8.3)
+        specifier: 2.2.10
+        version: 2.2.10(typescript@5.8.3)
       wait-on:
         specifier: 8.0.3
         version: 8.0.3(debug@4.4.0)
@@ -2720,8 +2720,8 @@ packages:
       typescript:
         optional: true
 
-  '@vue/language-core@2.2.8':
-    resolution: {integrity: sha512-rrzB0wPGBvcwaSNRriVWdNAbHQWSf0NlGqgKHK5mEkXpefjUlVRP62u03KvwZpvKVjRnBIQ/Lwre+Mx9N6juUQ==}
+  '@vue/language-core@2.2.10':
+    resolution: {integrity: sha512-+yNoYx6XIKuAO8Mqh1vGytu8jkFEOH5C8iOv3i8Z/65A7x9iAOXA97Q+PqZ3nlm2lxf5rOJuIGI/wDtx/riNYw==}
     peerDependencies:
       typescript: '*'
     peerDependenciesMeta:
@@ -3361,8 +3361,8 @@ packages:
   csstype@3.1.3:
     resolution: {integrity: sha512-M1uQkMl8rQK/szD0LNhtqxIPLpimGm8sOBwU7lLnCpSbTyY3yeU1Vc7l4KT5zT4s/yOxHH5O7tIuuLOCnLADRw==}
 
-  cypress@14.3.1:
-    resolution: {integrity: sha512-/2q06qvHMK3PNiadnRW1Je0lJ43gAFPQJUAK2zIxjr22kugtWxVQznTBLVu1AvRH+RP3oWZhCdWqiEi+0NuqCg==}
+  cypress@14.3.2:
+    resolution: {integrity: sha512-n+yGD2ZFFKgy7I3YtVpZ7BcFYrrDMcKj713eOZdtxPttpBjCyw/R8dLlFSsJPouneGN7A/HOSRyPJ5+3/gKDoA==}
     engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
     hasBin: true
 
@@ -6692,8 +6692,8 @@ packages:
     peerDependencies:
       vue: ^3.2.0
 
-  vue-tsc@2.2.8:
-    resolution: {integrity: sha512-jBYKBNFADTN+L+MdesNX/TB3XuDSyaWynKMDgR+yCSln0GQ9Tfb7JS2lr46s2LiFUT1WsmfWsSvIElyxzOPqcQ==}
+  vue-tsc@2.2.10:
+    resolution: {integrity: sha512-jWZ1xSaNbabEV3whpIDMbjVSVawjAyW+x1n3JeGQo7S0uv2n9F/JMgWW90tGWNFRKya4YwKMZgCtr0vRAM7DeQ==}
     hasBin: true
     peerDependencies:
       typescript: '>=5.0.0'
@@ -6949,9 +6949,9 @@ packages:
 
 snapshots:
 
-  '@4tw/cypress-drag-drop@2.3.0(cypress@14.3.1)':
+  '@4tw/cypress-drag-drop@2.3.0(cypress@14.3.2)':
     dependencies:
-      cypress: 14.3.1
+      cypress: 14.3.2
 
   '@akryum/tinypool@0.3.1': {}
 
@@ -8021,9 +8021,9 @@ snapshots:
       tunnel-agent: 0.6.0
       uuid: 8.3.2
 
-  '@cypress/vite-dev-server@6.0.3(cypress@14.3.1)':
+  '@cypress/vite-dev-server@6.0.3(cypress@14.3.2)':
     dependencies:
-      cypress: 14.3.1
+      cypress: 14.3.2
       debug: 4.4.0(supports-color@8.1.1)
       find-up: 6.3.0
       node-html-parser: 5.3.3
@@ -8031,9 +8031,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@cypress/vue@6.0.2(cypress@14.3.1)(vue@3.5.13(typescript@5.8.3))':
+  '@cypress/vue@6.0.2(cypress@14.3.2)(vue@3.5.13(typescript@5.8.3))':
     dependencies:
-      cypress: 14.3.1
+      cypress: 14.3.2
       vue: 3.5.13(typescript@5.8.3)
 
   '@cypress/xvfb@1.2.4(supports-color@8.1.1)':
@@ -9549,7 +9549,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@vue/language-core@2.2.8(typescript@5.8.3)':
+  '@vue/language-core@2.2.10(typescript@5.8.3)':
     dependencies:
       '@volar/language-core': 2.4.11
       '@vue/compiler-dom': 3.5.13
@@ -10208,7 +10208,7 @@ snapshots:
 
   csstype@3.1.3: {}
 
-  cypress@14.3.1:
+  cypress@14.3.2:
     dependencies:
       '@cypress/request': 3.0.8
       '@cypress/xvfb': 1.2.4(supports-color@8.1.1)
@@ -13929,10 +13929,10 @@ snapshots:
       '@vue/devtools-api': 6.6.4
       vue: 3.5.13(typescript@5.8.3)
 
-  vue-tsc@2.2.8(typescript@5.8.3):
+  vue-tsc@2.2.10(typescript@5.8.3):
     dependencies:
       '@volar/typescript': 2.4.11
-      '@vue/language-core': 2.2.8(typescript@5.8.3)
+      '@vue/language-core': 2.2.10(typescript@5.8.3)
       typescript: 5.8.3
 
   vue@3.5.13(typescript@5.8.3):
