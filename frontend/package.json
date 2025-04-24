@@ -77,7 +77,7 @@
     "@tiptap/vue-3": "2.11.7",
     "@vueuse/core": "13.1.0",
     "@vueuse/router": "13.1.0",
-    "axios": "1.8.4",
+    "axios": "1.9.0",
     "blurhash": "2.0.5",
     "bulma-css-variables": "0.9.33",
     "change-case": "5.4.4",
