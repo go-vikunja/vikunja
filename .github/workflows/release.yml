@@ -78,11 +78,11 @@ jobs:
         with:
           go-version: stable
       - name: Download Mage Binary
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: mage_bin
       - name: get frontend
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: frontend_dist
           path: frontend/dist
@@ -144,7 +144,7 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
       - name: Download Vikunja Binary
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: vikunja_bins
           pattern: vikunja-*-linux-amd64
@@ -152,7 +152,7 @@ jobs:
         id: ghd
         uses: proudust/gh-describe@v2
       - name: Download Mage Binary
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: mage_bin
       - name: Prepare
@@ -191,7 +191,7 @@ jobs:
         id: ghd
         uses: proudust/gh-describe@v2
       - name: Download Mage Binary
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: mage_bin
       - name: generate
@@ -239,7 +239,7 @@ jobs:
         if: ${{ runner.os == 'Linux' }}
         run: sudo apt-get install --no-install-recommends -y libopenjp2-tools rpm libarchive-tools
       - name: get frontend
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: frontend_dist
           path: frontend/dist
@@ -268,7 +268,7 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
       - name: Download Mage Binary
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: mage_bin
       - name: Set up Go
