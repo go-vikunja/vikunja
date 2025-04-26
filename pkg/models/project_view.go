@@ -66,6 +66,10 @@ func (p *ProjectViewKind) UnmarshalJSON(bytes []byte) error {
 	return nil
 }
 
+// NOTE: When adding or changing enum values for ProjectViewKind,
+// make sure to update the corresponding `enums` tag in the ProjectView struct
+// to keep the OpenAPI documentation in sync.
+
 const (
 	ProjectViewKindList ProjectViewKind = iota
 	ProjectViewKindGantt
@@ -74,6 +78,10 @@ const (
 )
 
 type BucketConfigurationModeKind int
+
+// NOTE: When adding or changing enum values for BucketConfigurationModeKind,
+// make sure to update the corresponding `enums` tag in the ProjectView struct
+// to keep the OpenAPI documentation in sync.
 
 const (
 	BucketConfigurationModeNone BucketConfigurationModeKind = iota
