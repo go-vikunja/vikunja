@@ -105,10 +105,11 @@
 			},
 			"totp": {
 				"title": "Kaksivaiheinen Tunnistautuminen",
-				"enroll": "Ilmoittaudu",
+				"enroll": "Ota käyttöön",
 				"finishSetupPart1": "Viimeistelläksesi määrityksen, käytä tätä salaisuutta TOTP-sovelluksessasi (Google Authenticator tai vastaava):",
 				"finishSetupPart2": "Sen jälkeen syötä koodi sovelluksestasi alle.",
 				"scanQR": "Vaihtoehtoisesti voit skannata tämän QR-koodin:",
+				"passcode": "TOTP-koodi",
 				"passcodePlaceholder": "TOTP sovelluksen generoima koodi",
 				"setupSuccess": "Olet määrittänyt kaksivaiheinen tunnistautumisen onnistuneesti!",
 				"enterPassword": "Ole Hyvä ja Syötä Salasanasi",
@@ -118,6 +119,7 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
+				"howTo": "Voit yhdistää Vikunjan CalDAV asiakasohjelmiin nähdäksesi ja hallitaksesi kaikkia tehtäviä eri asiakasohjelmilla. Syötä tämä url asiakasohjelmaasi:",
 				"more": "Lisätietoja CalDAVista Vikunjassa",
 				"tokens": "CalDAV Tokenit",
 				"createToken": "Luo tokeni",

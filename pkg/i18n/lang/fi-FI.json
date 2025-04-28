@@ -63,7 +63,7 @@
 		},
 		"task": {
 			"reminder": {
-				"subject": "Muistutus \"%[1]s\":lle (%[2]s)",
+				"subject": "Muistutus \"%[1]s\" (%[2]s)",
 				"message": "Tämä on ystävällinen muistutus tehtävästä \"%[1]s\" (%[2]s)."
 			},
 			"comment": {
@@ -80,6 +80,7 @@
 				"subject": "Tehtävä \"%[1]s\" (%[2]s) on erääntynyt",
 				"multiple_subject": "Myöhässä olevat tehtäväsi",
 				"multiple_message": "Sinulla on seuraavat erääntyneet tehtävät:",
+				"overdue_since": "erääntynyt %[1]s sitten",
 				"overdue_now": "erääntynyt nyt"
 			}
 		},
@@ -97,7 +98,16 @@
 			}
 		},
 		"common": {
-			"have_nice_day": "Hauskaa päivän jatkoa!"
+			"have_nice_day": "Hauskaa päivän jatkoa!",
+			"copy_url": "Jos yläpuolella oleva nappi ei toimi, kopioi seuraava osoite selaimesi osoitepalkkiin:",
+			"actions": {
+				"open_task": "Avaa Tehtävä",
+				"open_vikunja": "Avaa Vikunja",
+				"open_project": "Avaa Projekti",
+				"open_team": "Avaa Tiimi",
+				"confirm_email": "Vahvista sähköpostiosoitteesi",
+				"confirm_account_deletion": "Vahvista tilini poistaminen"
+			}
 		}
 	}
 }
