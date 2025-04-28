@@ -1,5 +1,8 @@
 name: ci
 
+env:
+  DO_NOT_TRACK: 1
+
 on:
   pull_request:
   push:
