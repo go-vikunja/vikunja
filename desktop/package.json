@@ -52,7 +52,7 @@
     }
   },
   "devDependencies": {
-    "electron": "35.2.1",
+    "electron": "35.2.2",
     "electron-builder": "26.0.12",
     "unzipper": "0.12.3"
   },
