@@ -650,6 +650,7 @@
 		"undoneSuccess": "Tehtävä merkittiin onnistuneesti keskeneräiseksi.",
 		"revertSuccess": "Tehtävän muutos peruutettiin onnistuneesti.",
 		"undo": "Kumoa",
+		"checklistTotal": "{checked} tehtävää {total} tehtävästä",
 		"checklistAllDone": "{total} tehtävää",
 		"show": {
 			"titleCurrent": "Nykyiset Tehtävät",
