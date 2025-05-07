@@ -17,7 +17,7 @@
 module code.vikunja.io/api
 
 require (
-	dario.cat/mergo v1.0.1
+	dario.cat/mergo v1.0.2
 	github.com/ThreeDotsLabs/watermill v1.4.6
 	github.com/adlio/trello v1.12.0
 	github.com/arran4/golang-ical v0.3.2
