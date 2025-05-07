@@ -97,9 +97,10 @@
 			:title="$t('team.edit.members')"
 			:padding="false"
 		>
-			<div
+			<form
 				v-if="userIsAdmin && !team.oidcId"
 				class="p-4"
+				@submit.prevent="addUser"
 			>
 				<div class="field has-addons">
 					<div class="control is-expanded">
@@ -135,7 +136,7 @@
 				>
 					{{ $t('team.edit.mustSelectUser') }}
 				</p>
-			</div>
+			</form>
 			<table class="table has-actions is-striped is-hoverable is-fullwidth">
 				<tbody>
 					<tr
