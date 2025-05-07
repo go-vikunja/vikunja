@@ -10,6 +10,10 @@ jobs:
       - name: Git describe
         id: ghd
         uses: proudust/gh-describe@v2
+      - name: setup blacksmith docker action
+        uses: useblacksmith/build-push-action@v1
+        with:
+          setup-only: true
       - name: Login to GHCR
         uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3
         with:
