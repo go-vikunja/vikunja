@@ -25,7 +25,6 @@ COPY --from=frontendbuilder /build/dist ./frontend/dist
 ARG TARGETOS TARGETARCH TARGETVARIANT RELEASE_VERSION
 ENV RELEASE_VERSION=$RELEASE_VERSION
 
-ENV GOPROXY=https://goproxy.kolaente.de
 RUN export PATH=$PATH:$GOPATH/bin && \
 	mage build:clean && \
     mage release:xgo "${TARGETOS}/${TARGETARCH}/${TARGETVARIANT}"
