@@ -139,36 +139,49 @@ const addTimeToDate = (text: string, date: Date, previousMatch: string | null): 
 
 export const getDateFromText = (text: string, now: Date = new Date()) => {
 	const dateRegexes: RegExp[] = [
-		/(^| )(?<foundText>(?<month>[0-9][0-9]?)\/(?<day>[0-9][0-9]?)(\/(?<year>[0-9][0-9]([0-9][0-9])?))?)($| )/gi,
-		/(^| )(?<foundText>(?<year>[0-9][0-9][0-9][0-9]?)\/(?<day>[0-9][0-9]?)\/(?<month>[0-9][0-9]))($| )/gi,
-		/(^| )(?<foundText>(?<year>[0-9][0-9][0-9][0-9]?)-(?<day>[0-9][0-9]?)-(?<month>[0-9][0-9]))($| )/gi,
-		/(^| )(?<foundText>(?<day>[0-9][0-9]?)\.(?<month>[0-9][0-9]?)\.(?<year>[0-9][0-9]([0-9][0-9])?))($| )/gi
+		/(^| )(?<found>(?<month>[0-9][0-9]?)\/(?<day>[0-9][0-9]?)(\/(?<year>[0-9][0-9]([0-9][0-9])?))?)($| )/gi,
+		/(^| )(?<found>(?<year>[0-9][0-9][0-9][0-9]?)\/(?<month>[0-9][0-9]?)\/(?<day>[0-9][0-9]))($| )/gi,
+		/(^| )(?<found>(?<year>[0-9][0-9][0-9][0-9]?)-(?<month>[0-9][0-9]?)-(?<day>[0-9][0-9]))($| )/gi,
+		/(^| )(?<found>(?<day>[0-9][0-9]?)\.(?<month>[0-9][0-9]?)(\.(?<year>[0-9][0-9]([0-9][0-9])?))?)($| )/gi,
 	]
 
+	let result: string | null = null
+	let results: RegExpExecArray | null = null
+	let foundText: string | null = ''
+	let containsYear = true
+
 	// 1. Try parsing the text as a "usual" date, like 2021-06-24 or "06/24/2021" or "27/01" or "01/27"
-	for (let dateRegex of dateRegexes) {
-		const result = dateRegex.exec(text)
-		console.log(result)
-		if (result !== null) {
-			const {day, month, year, foundText} = {...result.groups}
-			const dateFound = new Date(`${month}/${day}/${year ?? now.getFullYear()}`)
+	for (const dateRegex of dateRegexes) {
+		results = dateRegex.exec(text)
+		if (results !== null) {
+			const {day, month, year, found} = {...results.groups}
+			let tmp_year = year
+
+			if (tmp_year === undefined) {
+				tmp_year = year ?? now.getFullYear()
+				containsYear = false
+			}
+
+			result = `${month}/${day}/${tmp_year}`
+			result = !isNaN(new Date(result).getTime()) ? result : `${day}/${month}/${tmp_year}`
+			result = !isNaN(new Date(result).getTime()) ? result : null
 			
-			if (!isNaN(dateFound.getTime())) {
-				return {
-					foundText,
-					date: dateFound,
-				}
+			if(result !== null){
+				foundText = found
+				break
 			}
 		}
 	}
 
 	// 2. Try parsing the date as something like "jan 21" or "21 jan"
-	const monthRegex = new RegExp(`(^| )(${monthsRegexGroup} [0-9][0-9]?|[0-9][0-9]? ${monthsRegexGroup})`, 'ig')
-	let results: string[] | null = monthRegex.exec(text)
-	let result: string | null = results === null ? null : `${results[0]} ${now.getFullYear()}`.trim()
-	let foundText: string | null = results === null ? '' : results[0].trim()
-	let containsYear = false
-
+	if (result === null) {
+		const monthRegex = new RegExp(`(^| )(${monthsRegexGroup} [0-9][0-9]?|[0-9][0-9]? ${monthsRegexGroup})`, 'ig')
+		results = monthRegex.exec(text)
+		result = results === null ? null : `${results[0]} ${now.getFullYear()}`.trim()
+		foundText = results === null ? '' : results[0].trim()
+		containsYear = false
+	}
+	
 	if (result === null) {
 		return {
 			foundText,
