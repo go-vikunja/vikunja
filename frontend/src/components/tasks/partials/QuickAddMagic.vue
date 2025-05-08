@@ -73,7 +73,9 @@
 					<li>End of month</li>
 					<li>In 5 days [hours/weeks/months]</li>
 					<li>Tuesday ({{ $t('task.quickAddMagic.dateWeekday') }})</li>
-					<li>17/02/2021</li>
+					<li>02/17/2021</li>
+					<li>2021-02-17</li>
+					<li>17.02.2021</li>
 					<li>Feb 17 ({{ $t('task.quickAddMagic.dateCurrentYear') }})</li>
 					<li>17th ({{ $t('task.quickAddMagic.dateNth', {day: '17'}) }})</li>
 				</ul>

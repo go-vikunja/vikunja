@@ -85,11 +85,11 @@ export const parseDate = (text: string, now: Date = new Date()): dateParseResult
 
 	if (parsed.date === null) {
 		const time = addTimeToDate(text, new Date(now), parsed.foundText)
-		
+
 		if (time.date !== null && +now !== +time.date) {
 			return time
 		}
-		
+
 		return {
 			newText: replaceAll(text, parsed.foundText, ''),
 			date: parsed.date,
@@ -138,45 +138,36 @@ const addTimeToDate = (text: string, date: Date, previousMatch: string | null): 
 }
 
 export const getDateFromText = (text: string, now: Date = new Date()) => {
-	const fullDateRegex = /(^| )([0-9][0-9]?\/[0-9][0-9]?\/[0-9][0-9]([0-9][0-9])?|[0-9][0-9][0-9][0-9]\/[0-9][0-9]?\/[0-9][0-9]?|[0-9][0-9][0-9][0-9]-[0-9][0-9]?-[0-9][0-9]?)/ig
+	const dateRegexes: RegExp[] = [
+		/(^| )(?<foundText>(?<month>[0-9][0-9]?)\/(?<day>[0-9][0-9]?)(\/(?<year>[0-9][0-9]([0-9][0-9])?))?)($| )/gi,
+		/(^| )(?<foundText>(?<year>[0-9][0-9][0-9][0-9]?)\/(?<day>[0-9][0-9]?)\/(?<month>[0-9][0-9]))($| )/gi,
+		/(^| )(?<foundText>(?<year>[0-9][0-9][0-9][0-9]?)-(?<day>[0-9][0-9]?)-(?<month>[0-9][0-9]))($| )/gi,
+		/(^| )(?<foundText>(?<day>[0-9][0-9]?)\.(?<month>[0-9][0-9]?)\.(?<year>[0-9][0-9]([0-9][0-9])?))($| )/gi
+	]
 
-	// 1. Try parsing the text as a "usual" date, like 2021-06-24 or 06/24/2021
-	let results: string[] | null = fullDateRegex.exec(text)
-	let result: string | null = results === null ? null : results[0]
-	let foundText: string | null = result
-	let containsYear = true
-	if (result === null) {
-		// 2. Try parsing the date as something like "jan 21" or "21 jan"
-		const monthRegex = new RegExp(`(^| )(${monthsRegexGroup} [0-9][0-9]?|[0-9][0-9]? ${monthsRegexGroup})`, 'ig')
-		results = monthRegex.exec(text)
-		result = results === null ? null : `${results[0]} ${now.getFullYear()}`.trim()
-		foundText = results === null ? '' : results[0].trim()
-		containsYear = false
-
-		if (result === null) {
-			// 3. Try parsing the date as "27/01" or "01/27"
-			const monthNumericRegex = /(^| )([0-9][0-9]?\/[0-9][0-9]?)/ig
-			results = monthNumericRegex.exec(text)
-
-			// Put the year before or after the date, depending on what works
-			result = results === null ? null : `${now.getFullYear()}/${results[0]}`
-			if (result === null) {
+	// 1. Try parsing the text as a "usual" date, like 2021-06-24 or "06/24/2021" or "27/01" or "01/27"
+	for (let dateRegex of dateRegexes) {
+		const result = dateRegex.exec(text)
+		console.log(result)
+		if (result !== null) {
+			const {day, month, year, foundText} = {...result.groups}
+			const dateFound = new Date(`${month}/${day}/${year ?? now.getFullYear()}`)
+			
+			if (!isNaN(dateFound.getTime())) {
 				return {
 					foundText,
-					date: null,
+					date: dateFound,
 				}
-			}
-
-			foundText = results === null ? '' : results[0]
-			if (result === null || isNaN(new Date(result).getTime())) {
-				result = results === null ? null : `${results[0]}/${now.getFullYear()}`
-			}
-			if (result === null || (isNaN(new Date(result).getTime()) && foundText !== '')) {
-				const parts = foundText.split('/')
-				result = `${parts[1]}/${parts[0]}/${now.getFullYear()}`
 			}
 		}
 	}
+
+	// 2. Try parsing the date as something like "jan 21" or "21 jan"
+	const monthRegex = new RegExp(`(^| )(${monthsRegexGroup} [0-9][0-9]?|[0-9][0-9]? ${monthsRegexGroup})`, 'ig')
+	let results: string[] | null = monthRegex.exec(text)
+	let result: string | null = results === null ? null : `${results[0]} ${now.getFullYear()}`.trim()
+	let foundText: string | null = results === null ? '' : results[0].trim()
+	let containsYear = false
 
 	if (result === null) {
 		return {
