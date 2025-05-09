@@ -17,12 +17,13 @@
 package caldav
 
 import (
-	"regexp"
+	//"regexp"
 	"strconv"
 	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/models"
+
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 )
@@ -136,12 +137,12 @@ DURATION:PT` + formatDuration(t.Duration)
 			caldavtodos += `
 DTEND:` + makeCalDavTimeFromTimeStamp(t.End)
 		}
-		if t.Description != "" {
-			re := regexp.MustCompile(`\r?\n`)
-			formattedDescription := re.ReplaceAllString(t.Description, "\\n")
-			caldavtodos += `
-DESCRIPTION:` + formattedDescription
-		}
+// 		if t.Description != "" {
+// 			re := regexp.MustCompile(`\r?\n`)
+// 			formattedDescription := re.ReplaceAllString(t.Description, "\\n")
+// 			caldavtodos += `
+// DESCRIPTION:` + formattedDescription
+// 		}
 		if t.Completed.Unix() > 0 {
 			caldavtodos += `
 COMPLETED:` + makeCalDavTimeFromTimeStamp(t.Completed) + `
@@ -168,10 +169,33 @@ PRIORITY:` + strconv.Itoa(mapPriorityToCaldav(t.Priority))
 		}
 
 		if t.RepeatAfter > 0 || t.RepeatMode == models.TaskRepeatModeMonth {
-			if t.RepeatMode == models.TaskRepeatModeMonth {
+			switch {
+		
+			// 1) explicit “monthly” mode (already correct)
+			case t.RepeatMode == models.TaskRepeatModeMonth:
 				caldavtodos += `
-RRULE:FREQ=MONTHLY;BYMONTHDAY=` + t.DueDate.Format("02") // Day of the month
-			} else {
+RRULE:FREQ=MONTHLY;BYMONTHDAY=` + t.DueDate.Format("02")
+		
+			// 2) exact multiple of a week
+			case t.RepeatAfter%604800 == 0:
+				weeks := t.RepeatAfter / 604800
+				if weeks < 1 {
+					weeks = 1
+				}
+				caldavtodos += `
+RRULE:FREQ=WEEKLY;INTERVAL=` + strconv.FormatInt(weeks, 10)
+		
+			// 3) exact multiple of a day
+			case t.RepeatAfter%86400 == 0:
+				days := t.RepeatAfter / 86400
+				if days < 1 {
+					days = 1
+				}
+				caldavtodos += `
+RRULE:FREQ=DAILY;INTERVAL=` + strconv.FormatInt(days, 10)
+		
+			// 4) everything else stays as seconds so existing logic keeps working
+			default:
 				caldavtodos += `
 RRULE:FREQ=SECONDLY;INTERVAL=` + strconv.FormatInt(t.RepeatAfter, 10)
 			}
