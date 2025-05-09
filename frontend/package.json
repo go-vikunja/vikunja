@@ -117,7 +117,7 @@
     "@types/codemirror": "5.60.15",
     "@types/flexsearch": "0.7.42",
     "@types/is-touch-device": "1.0.3",
-    "@types/node": "22.15.15",
+    "@types/node": "22.15.17",
     "@types/sortablejs": "1.15.8",
     "@typescript-eslint/eslint-plugin": "8.32.0",
     "@typescript-eslint/parser": "8.32.0",
