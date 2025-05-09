@@ -168,10 +168,29 @@ PRIORITY:` + strconv.Itoa(mapPriorityToCaldav(t.Priority))
 		}
 
 		if t.RepeatAfter > 0 || t.RepeatMode == models.TaskRepeatModeMonth {
-			if t.RepeatMode == models.TaskRepeatModeMonth {
+			switch {
+		
+			case t.RepeatMode == models.TaskRepeatModeMonth:
 				caldavtodos += `
-RRULE:FREQ=MONTHLY;BYMONTHDAY=` + t.DueDate.Format("02") // Day of the month
-			} else {
+RRULE:FREQ=MONTHLY;BYMONTHDAY=` + t.DueDate.Format("02")
+		
+			case t.RepeatAfter%604800 == 0:
+				weeks := t.RepeatAfter / 604800
+				if weeks < 1 {
+					weeks = 1
+				}
+				caldavtodos += `
+RRULE:FREQ=WEEKLY;INTERVAL=` + strconv.FormatInt(weeks, 10)
+		
+			case t.RepeatAfter%86400 == 0:
+				days := t.RepeatAfter / 86400
+				if days < 1 {
+					days = 1
+				}
+				caldavtodos += `
+RRULE:FREQ=DAILY;INTERVAL=` + strconv.FormatInt(days, 10)
+		
+			default:
 				caldavtodos += `
 RRULE:FREQ=SECONDLY;INTERVAL=` + strconv.FormatInt(t.RepeatAfter, 10)
 			}
