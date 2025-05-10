@@ -34,6 +34,61 @@ import (
 	"xorm.io/xorm/schemas"
 )
 
+type SubTableFilter struct {
+	Table           string
+	BaseFilter      string
+	FilterableField string
+	AllowNullCheck  bool
+}
+
+type SubTableFilters map[string]SubTableFilter
+
+var subTableFilters = SubTableFilters{
+	"labels": {
+		Table:           "label_tasks",
+		BaseFilter:      "tasks.id = task_id",
+		FilterableField: "label_id",
+		AllowNullCheck:  true,
+	},
+	"label_id": {
+		Table:           "label_tasks",
+		BaseFilter:      "tasks.id = task_id",
+		FilterableField: "label_id",
+		AllowNullCheck:  true,
+	},
+	"reminders": {
+		Table:           "task_reminders",
+		BaseFilter:      "tasks.id = task_id",
+		FilterableField: "reminder",
+		AllowNullCheck:  true,
+	},
+	"assignees": {
+		Table:           "task_assignees",
+		BaseFilter:      "tasks.id = task_id",
+		FilterableField: "username",
+		AllowNullCheck:  true,
+	},
+	"parent_project": {
+		Table:           "projects",
+		BaseFilter:      "tasks.project_id = id",
+		FilterableField: "parent_project_id",
+		AllowNullCheck:  false,
+	},
+	"parent_project_id": {
+		Table:           "projects",
+		BaseFilter:      "tasks.project_id = id",
+		FilterableField: "parent_project_id",
+		AllowNullCheck:  false,
+	},
+}
+
+var strictComparators = map[taskFilterComparator]bool{
+	taskFilterComparatorIn:        true,
+	taskFilterComparatorNotIn:     true,
+	taskFilterComparatorEquals:    true,
+	taskFilterComparatorNotEquals: true,
+}
+
 type taskSearcher interface {
 	Search(opts *taskSearchOptions) (tasks []*Task, totalCount int64, err error)
 }
@@ -42,6 +97,20 @@ type dbTaskSearcher struct {
 	s                   *xorm.Session
 	a                   web.Auth
 	hasFavoritesProject bool
+}
+
+func (sf *SubTableFilter) ToBaseSubQuery() *builder.Builder {
+	var cond = builder.
+		Select("1").
+		From(sf.Table).
+		Where(builder.Expr(sf.BaseFilter))
+
+	// little hack to add users table for assignees filter
+	if sf.Table == "task_assignees" {
+		cond.Join("INNER", "users", "users.id = user_id")
+	}
+
+	return cond
 }
 
 func getOrderByDBStatement(opts *taskSearchOptions) (orderby string, err error) {
@@ -89,7 +158,6 @@ func getOrderByDBStatement(opts *taskSearchOptions) (orderby string, err error) 
 func convertFiltersToDBFilterCond(rawFilters []*taskFilter, includeNulls bool) (filterCond builder.Cond, err error) {
 
 	var dbFilters = make([]builder.Cond, 0, len(rawFilters))
-	var addLabelInFilter = false
 	// To still find tasks with nil values, we exclude 0s when comparing with >/< values.
 	for _, f := range rawFilters {
 
@@ -102,103 +170,45 @@ func convertFiltersToDBFilterCond(rawFilters []*taskFilter, includeNulls bool) (
 			continue
 		}
 
-		if f.field == "reminders" {
-			filter, err := getFilterCond(&taskFilter{
-				// recreating the struct here to avoid modifying it when reusing the opts struct
-				field:      "reminder",
-				value:      f.value,
-				comparator: f.comparator,
-				isNumeric:  f.isNumeric,
-			}, includeNulls)
-			if err != nil {
-				return nil, err
-			}
-			dbFilters = append(dbFilters, getFilterCondForSeparateTable("task_reminders", filter))
-			continue
-		}
-
-		if f.field == "assignees" {
-			if f.comparator == taskFilterComparatorLike {
-				return
-			}
-			filter, err := getFilterCond(&taskFilter{
-				// recreating the struct here to avoid modifying it when reusing the opts struct
-				field:      "username",
-				value:      f.value,
-				comparator: f.comparator,
-				isNumeric:  f.isNumeric,
-			}, includeNulls)
-			if err != nil {
-				return nil, err
-			}
-
-			assigneeFilter := builder.In("user_id",
-				builder.Select("id").
-					From("users").
-					Where(filter),
-			)
-			dbFilters = append(dbFilters, getFilterCondForSeparateTable("task_assignees", assigneeFilter))
-			continue
-		}
-
-		if f.field == "labels" || f.field == "label_id" {
-			filter, err := getFilterCond(&taskFilter{
-				// recreating the struct here to avoid modifying it when reusing the opts struct
-				field:      "label_id",
-				value:      f.value,
-				comparator: f.comparator,
-				isNumeric:  f.isNumeric,
-			}, includeNulls)
-			if err != nil {
-				return nil, err
-			}
-
-			if f.comparator == taskFilterComparatorNotEquals {
-				dbFilters = append(dbFilters, getNegativeFilterCondForSeparateTable(
-					"label_tasks",
-					builder.Eq{"label_id": f.value},
-				))
-				if !includeNulls {
-					addLabelInFilter = true
-				}
+		subTableFilterParams, ok := subTableFilters[f.field]
+		if ok {
+			if f.field == "assignees" && (f.comparator == taskFilterComparatorLike) {
 				continue
 			}
 
-			if f.comparator == taskFilterComparatorNotIn {
-				dbFilters = append(dbFilters, getNegativeFilterCondForSeparateTable(
-					"label_tasks",
-					builder.In("label_id", f.value),
-				))
-				if !includeNulls {
-					addLabelInFilter = true
-				}
-				continue
+			comparator := f.comparator
+			_, ok = strictComparators[f.comparator]
+			// we will select all specified values in both cases, negative and positive filtering.
+			// but later we will eather check their existence or absence of them.
+			if ok {
+				comparator = taskFilterComparatorIn
 			}
 
-			dbFilters = append(dbFilters, getFilterCondForSeparateTable("label_tasks", filter))
-			continue
-		}
-
-		if f.field == "parent_project" || f.field == "parent_project_id" {
 			filter, err := getFilterCond(&taskFilter{
 				// recreating the struct here to avoid modifying it when reusing the opts struct
-				field:      "parent_project_id",
+				field:      subTableFilterParams.FilterableField,
 				value:      f.value,
-				comparator: f.comparator,
+				comparator: comparator,
 				isNumeric:  f.isNumeric,
-			}, includeNulls)
+			}, false)
 			if err != nil {
 				return nil, err
 			}
 
-			cond := builder.In(
-				"project_id",
-				builder.
-					Select("id").
-					From("projects").
-					Where(filter),
-			)
-			dbFilters = append(dbFilters, cond)
+			filterSubQuery := subTableFilterParams.ToBaseSubQuery().And(filter)
+
+			if f.comparator == taskFilterComparatorNotEquals || f.comparator == taskFilterComparatorNotIn {
+				filter = builder.NotExists(filterSubQuery)
+			} else {
+				filter = builder.Exists(filterSubQuery)
+			}
+
+			if includeNulls && subTableFilterParams.AllowNullCheck {
+				// check that we have no any connected values for this field
+				filter = builder.Or(filter, builder.NotExists(subTableFilterParams.ToBaseSubQuery()))
+			}
+
+			dbFilters = append(dbFilters, filter)
 			continue
 		}
 
@@ -228,16 +238,6 @@ func convertFiltersToDBFilterCond(rawFilters []*taskFilter, includeNulls bool) (
 					}
 				}
 			}
-		}
-
-		if addLabelInFilter {
-			filterCond = builder.And(
-				filterCond,
-				builder.In("tasks.id", builder.
-					Select("task_id").
-					From("label_tasks"),
-				),
-			)
 		}
 	}
 
