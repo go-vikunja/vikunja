@@ -17,7 +17,7 @@
 package caldav
 
 import (
-	//"regexp"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -137,12 +137,12 @@ DURATION:PT` + formatDuration(t.Duration)
 			caldavtodos += `
 DTEND:` + makeCalDavTimeFromTimeStamp(t.End)
 		}
-// 		if t.Description != "" {
-// 			re := regexp.MustCompile(`\r?\n`)
-// 			formattedDescription := re.ReplaceAllString(t.Description, "\\n")
-// 			caldavtodos += `
-// DESCRIPTION:` + formattedDescription
-// 		}
+		if t.Description != "" {
+			re := regexp.MustCompile(`\r?\n`)
+			formattedDescription := re.ReplaceAllString(t.Description, "\\n")
+			caldavtodos += `
+DESCRIPTION:` + formattedDescription
+		}
 		if t.Completed.Unix() > 0 {
 			caldavtodos += `
 COMPLETED:` + makeCalDavTimeFromTimeStamp(t.Completed) + `
