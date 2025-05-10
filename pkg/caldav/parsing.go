@@ -273,8 +273,14 @@ func ParseTaskFromVTODO(content string) (vTask *models.Task, err error) {
 	if len(parsed.Components) == 0 {
 		return nil, errors.New("VTODO element does seem not contain any components")
 	}
-	vTodo, ok := parsed.Components[0].(*ics.VTodo)
-	if !ok {
+	var vTodo *ics.VTodo
+	for _, comp := range parsed.Components {
+		if todo, ok := comp.(*ics.VTodo); ok {
+			vTodo = todo
+			break
+		}
+	}
+	if vTodo == nil {
 		return nil, errors.New("VTODO element not found")
 	}
 	// We put the vTodo details in a map to be able to handle them more easily
