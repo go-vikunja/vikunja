@@ -1,5 +1,5 @@
-# syntax=docker/dockerfile:1
-FROM --platform=$BUILDPLATFORM node:20.16.0-alpine AS frontendbuilder
+# syntax=docker/dockerfile:1@sha256:9857836c9ee4268391bb5b09f9f157f3c91bb15821bb77969642813b0d00518d
+FROM --platform=$BUILDPLATFORM node:22.15.0-alpine@sha256:ad1aedbcc1b0575074a91ac146d6956476c1f9985994810e4ee02efd932a68fd AS frontendbuilder
 
 WORKDIR /build
 
@@ -9,11 +9,11 @@ ENV CYPRESS_INSTALL_BINARY=0
 
 COPY frontend/ ./
 
-RUN corepack enable && \
+RUN npm install -g corepack && corepack enable && \
       pnpm install && \
       pnpm run build
 
-FROM --platform=$BUILDPLATFORM ghcr.io/techknowlogick/xgo:go-1.23.x AS apibuilder
+FROM --platform=$BUILDPLATFORM ghcr.io/techknowlogick/xgo:go-1.23.x@sha256:d45f463381d025efa2fa0fb8617d2b04694e650bfd5d206ae1ef13d0c78fdea6 AS apibuilder
 
 RUN go install github.com/magefile/mage@latest && \
     mv /go/bin/mage /usr/local/go/bin
@@ -22,9 +22,9 @@ WORKDIR /go/src/code.vikunja.io/api
 COPY . ./
 COPY --from=frontendbuilder /build/dist ./frontend/dist
 
-ARG TARGETOS TARGETARCH TARGETVARIANT
+ARG TARGETOS TARGETARCH TARGETVARIANT RELEASE_VERSION
+ENV RELEASE_VERSION=$RELEASE_VERSION
 
-ENV GOPROXY=https://goproxy.kolaente.de
 RUN export PATH=$PATH:$GOPATH/bin && \
 	mage build:clean && \
     mage release:xgo "${TARGETOS}/${TARGETARCH}/${TARGETVARIANT}"
@@ -35,7 +35,14 @@ RUN export PATH=$PATH:$GOPATH/bin && \
 
 # The actual image
 FROM scratch
-LABEL maintainer="maintainers@vikunja.io"
+
+LABEL org.opencontainers.image.authors='maintainers@vikunja.io'
+LABEL org.opencontainers.image.url='https://vikunja.io'
+LABEL org.opencontainers.image.documentation='https://vikunja.io/docs'
+LABEL org.opencontainers.image.source='https://code.vikunja.io/vikunja'
+LABEL org.opencontainers.image.licenses='AGPLv3'
+LABEL org.opencontainers.image.title='Vikunja'
+
 WORKDIR /app/vikunja
 ENTRYPOINT [ "/app/vikunja/vikunja" ]
 EXPOSE 3456
