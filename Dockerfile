@@ -9,15 +9,6 @@ ENV CYPRESS_INSTALL_BINARY=0
 
 COPY frontend/ ./
 
-# 👇 Fix corepack issue by upgrading it before using
-RUN echo "Before: corepack version => $(corepack --version || echo 'not installed')" && \
-    npm install -g corepack@latest && \
-    echo "After : corepack version => $(corepack --version)" && \
-    corepack enable && \
-    pnpm --version && \
-    pnpm install && \
-    pnpm run build
-
 RUN corepack enable && \
       pnpm install && \
       pnpm run build
