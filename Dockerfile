@@ -10,7 +10,7 @@ ENV CYPRESS_INSTALL_BINARY=0
 COPY frontend/ ./
 
 RUN npm install -g corepack && corepack enable && \
-      pnpm install && \
+      pnpm install --frozen-lockfile --prefer-offline && \
       pnpm run build
 
 FROM --platform=$BUILDPLATFORM ghcr.io/techknowlogick/xgo:go-1.23.x@sha256:d45f463381d025efa2fa0fb8617d2b04694e650bfd5d206ae1ef13d0c78fdea6 AS apibuilder
