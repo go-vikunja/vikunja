@@ -260,26 +260,6 @@ func getFilterCond(f *taskFilter, includeNulls bool) (cond builder.Cond, err err
 	return
 }
 
-func getNegativeFilterCondForSeparateTable(table string, cond builder.Cond) builder.Cond {
-	return builder.NotIn(
-		"tasks.id",
-		builder.
-			Select("task_id").
-			From(table).
-			Where(cond),
-	)
-}
-
-func getFilterCondForSeparateTable(table string, cond builder.Cond) builder.Cond {
-	return builder.In(
-		"tasks.id",
-		builder.
-			Select("task_id").
-			From(table).
-			Where(cond),
-	)
-}
-
 func getTaskIndexFromSearchString(s string) (index int64) {
 	re := regexp.MustCompile("#([0-9]+)")
 	in := re.FindString(s)
