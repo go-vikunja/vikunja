@@ -76,7 +76,14 @@
 				"mentioned_message": "**%[1]s** mencionou-te num comentário:"
 			},
 			"assigned": {
+				"subject_to_assignee": "Foste atribuído a \"%[1]s\" (%[2]s)",
+				"message_to_assignee": "%[1]s atribuiu-te a \"%[2]s\".",
+				"subject_to_others": "\"%[1]s\" (%[2]s) foi atribuído a %[3]s",
 				"message_to_others": "%[1]s atribuiu esta tarefa a %[2]s."
+			},
+			"deleted": {
+				"subject": "\"%[1]s\" (%[2]s) foi eliminada",
+				"message": "%[1]s eliminou a tarefa \"%[2]s\" (%[3]s)"
 			},
 			"mentioned": {
 				"subject_new": "%[1]s mencionou-te numa nova tarefa \"%[2]s\"",
@@ -97,6 +104,7 @@
 		},
 		"team": {
 			"member_added": {
+				"subject": "%[1]s adicionou-te à equipa \"%[2]s\" no Vikunja",
 				"message": "%[1]s acabou de te adicionar à equipa %[2]s no Vikunja."
 			}
 		},
