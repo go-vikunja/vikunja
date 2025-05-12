@@ -1,5 +1,11 @@
 basePath: /api/v1
 definitions:
+  auth.Token:
+    properties:
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+        type: string
+    type: object
   background.Image:
     properties:
       blur_hash:
@@ -12,12 +18,6 @@ definitions:
       thumb:
         type: string
       url:
-        type: string
-    type: object
-  code_vikunja_io_api_pkg_modules_auth.Token:
-    properties:
-      token:
-        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
         type: string
     type: object
   files.File:
@@ -1825,7 +1825,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/code_vikunja_io_api_pkg_modules_auth.Token'
+            $ref: '#/definitions/auth.Token'
         "500":
           description: Internal error
           schema:
@@ -2266,7 +2266,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/code_vikunja_io_api_pkg_modules_auth.Token'
+            $ref: '#/definitions/auth.Token'
         "400":
           description: Invalid user password model.
           schema:
@@ -4382,7 +4382,7 @@ paths:
         "200":
           description: The valid jwt auth token.
           schema:
-            $ref: '#/definitions/code_vikunja_io_api_pkg_modules_auth.Token'
+            $ref: '#/definitions/auth.Token'
         "400":
           description: Invalid link share object provided.
           schema:
@@ -6666,7 +6666,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/code_vikunja_io_api_pkg_modules_auth.Token'
+            $ref: '#/definitions/auth.Token'
         "400":
           description: Only user token are available for renew.
           schema:
