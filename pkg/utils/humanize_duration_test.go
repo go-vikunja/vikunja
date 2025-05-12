@@ -20,44 +20,49 @@ import (
 	"testing"
 	"time"
 
+	"code.vikunja.io/api/pkg/i18n"
+
 	"github.com/stretchr/testify/assert"
 )
 
 func TestHumanizeDuration(t *testing.T) {
+
+	i18n.Init()
+
 	t.Run("one part", func(t *testing.T) {
 		d := 1 * time.Hour
-		dur := HumanizeDuration(d)
+		dur := HumanizeDuration(d, "en")
 
 		assert.Equal(t, "one hour", dur)
 	})
 	t.Run("amount > 1", func(t *testing.T) {
 		d := 2 * time.Hour
-		dur := HumanizeDuration(d)
+		dur := HumanizeDuration(d, "en")
 
 		assert.Equal(t, "2 hours", dur)
 	})
 	t.Run("2 parts", func(t *testing.T) {
 		d := 2*time.Hour + 48*time.Hour
-		dur := HumanizeDuration(d)
+		dur := HumanizeDuration(d, "en")
 
 		assert.Equal(t, "2 days and 2 hours", dur)
 	})
 	t.Run("multiple parts", func(t *testing.T) {
 		d := 2*time.Hour + 24*15*time.Hour
-		dur := HumanizeDuration(d)
+		dur := HumanizeDuration(d, "en")
 
 		assert.Equal(t, "2 weeks, one day and 2 hours", dur)
 	})
 	t.Run("years", func(t *testing.T) {
 		day := 24 * time.Hour
 		d := 2*time.Hour + 365*day + 14*day
-		dur := HumanizeDuration(d)
+		dur := HumanizeDuration(d, "en")
 
 		assert.Equal(t, "one year, 2 weeks and 2 hours", dur)
 	})
 	t.Run("ignore seconds", func(t *testing.T) {
 		d := 2*time.Hour + 48*time.Hour + 23*time.Second
-		dur := HumanizeDuration(d)
+		dur := HumanizeDuration(d, "en")
 
 		assert.Equal(t, "2 days and 2 hours", dur)
 	})

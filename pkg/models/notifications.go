@@ -209,7 +209,7 @@ func (n *TeamMemberAddedNotification) Name() string {
 }
 
 func getOverdueSinceString(until time.Duration, language string) (overdueSince string) {
-	overdueSince = i18n.T(language, "notifications.task.overdue.overdue_since", utils.HumanizeDuration(until))
+	overdueSince = i18n.T(language, "notifications.task.overdue.overdue_since", utils.HumanizeDuration(until, language))
 	if until == 0 {
 		overdueSince = i18n.T(language, "notifications.task.overdue.overdue_now")
 	}

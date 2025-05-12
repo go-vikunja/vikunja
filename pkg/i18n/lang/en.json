@@ -146,5 +146,20 @@
                 "confirm_account_deletion": "Confirm the deletion of my account"
             }
         }
+    },
+    "time": {
+        "year": "year",
+        "years": "years",
+        "week": "week",
+        "weeks": "weeks",
+        "day": "day",
+        "days": "days",
+        "hour": "hour",
+        "hours": "hours",
+        "minute": "minute",
+        "minutes": "minutes",
+        "one_unit_format": "one %[1]s",
+        "multiple_units_format": "%[1]d %[2]s",
+        "list_last_separator": " and "
     }
 }

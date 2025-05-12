@@ -21,11 +21,13 @@ import (
 	"math"
 	"strings"
 	"time"
+
+	"code.vikunja.io/api/pkg/i18n"
 )
 
 // HumanizeDuration formats a time.Duration in a human-friendly format.
 // Based on https://gist.github.com/harshavardhana/327e0577c4fed9211f65
-func HumanizeDuration(duration time.Duration) string {
+func HumanizeDuration(duration time.Duration, lang string) string {
 	years := int64(duration.Hours() / 24 / 365)
 	days := int64(duration.Hours()/24) - years*365
 	weeks := days / 7
@@ -35,14 +37,15 @@ func HumanizeDuration(duration time.Duration) string {
 	minutes := int64(math.Mod(duration.Minutes(), 60))
 
 	chunks := []struct {
-		singularName string
-		amount       int64
+		singularKey string
+		pluralKey   string
+		amount      int64
 	}{
-		{"year", years},
-		{"week", weeks},
-		{"day", days},
-		{"hour", hours},
-		{"minute", minutes},
+		{"time.year", "time.years", years},
+		{"time.week", "time.weeks", weeks},
+		{"time.day", "time.days", days},
+		{"time.hour", "time.hours", hours},
+		{"time.minute", "time.minutes", minutes},
 	}
 
 	parts := []string{}
@@ -52,14 +55,16 @@ func HumanizeDuration(duration time.Duration) string {
 		case 0:
 			continue
 		case 1:
-			parts = append(parts, fmt.Sprintf("one %s", chunk.singularName))
+			parts = append(parts, fmt.Sprintf(i18n.T(lang, "time.one_unit_format"), i18n.T(lang, chunk.singularKey)))
 		default:
-			parts = append(parts, fmt.Sprintf("%d %ss", chunk.amount, chunk.singularName))
+			parts = append(parts, fmt.Sprintf(i18n.T(lang, "time.multiple_units_format"), chunk.amount, i18n.T(lang, chunk.pluralKey)))
+			// i18n.T(lang, "time.multiple_units_format",
+			// strconv.FormatInt(chunk.amount, 10), i18n.T(lang, chunk.pluralKey))
 		}
 	}
 
 	if len(parts) > 1 {
-		return strings.Join(parts[:len(parts)-1], ", ") + " and " + parts[len(parts)-1]
+		return strings.Join(parts[:len(parts)-1], ", ") + i18n.T(lang, "time.list_last_separator") + parts[len(parts)-1]
 	}
 
 	return strings.Join(parts, ", ")
