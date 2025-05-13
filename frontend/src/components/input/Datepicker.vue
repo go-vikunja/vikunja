@@ -49,7 +49,6 @@ const props = withDefaults(defineProps<{
 	chooseDateLabel?: string,
 	disabled?: boolean,
 }>(), {
-	modelValue: null,
 	chooseDateLabel: () => {
 		const {t} = useI18n({useScope: 'global'})
 		return t('input.datepicker.chooseDate')
