@@ -66,6 +66,10 @@ func (p *ProjectViewKind) UnmarshalJSON(bytes []byte) error {
 	return nil
 }
 
+// NOTE: When adding or changing enum values for ProjectViewKind,
+// make sure to update the corresponding `enums` tag in the ProjectView struct
+// to keep the OpenAPI documentation in sync.
+
 const (
 	ProjectViewKindList ProjectViewKind = iota
 	ProjectViewKindGantt
@@ -74,6 +78,10 @@ const (
 )
 
 type BucketConfigurationModeKind int
+
+// NOTE: When adding or changing enum values for BucketConfigurationModeKind,
+// make sure to update the corresponding `enums` tag in the ProjectView struct
+// to keep the OpenAPI documentation in sync.
 
 const (
 	BucketConfigurationModeNone BucketConfigurationModeKind = iota
@@ -128,7 +136,7 @@ type ProjectView struct {
 	// The project this view belongs to
 	ProjectID int64 `xorm:"not null index" json:"project_id" param:"project"`
 	// The kind of this view. Can be `list`, `gantt`, `table` or `kanban`.
-	ViewKind ProjectViewKind `xorm:"not null" json:"view_kind"`
+	ViewKind ProjectViewKind `xorm:"not null" json:"view_kind" swaggertype:"string" enums:"list,gantt,table,kanban"`
 
 	// The filter query to match tasks by. Check out https://vikunja.io/docs/filters for a full explanation.
 	Filter *TaskCollection `xorm:"json null default null" query:"filter" json:"filter"`
@@ -136,7 +144,7 @@ type ProjectView struct {
 	Position float64 `xorm:"double null" json:"position"`
 
 	// The bucket configuration mode. Can be `none`, `manual` or `filter`. `manual` allows to move tasks between buckets as you normally would. `filter` creates buckets based on a filter for each bucket.
-	BucketConfigurationMode BucketConfigurationModeKind `xorm:"default 0" json:"bucket_configuration_mode"`
+	BucketConfigurationMode BucketConfigurationModeKind `xorm:"default 0" json:"bucket_configuration_mode" swaggertype:"string" enums:"none,manual,filter,manual"`
 	// When the bucket configuration mode is not `manual`, this field holds the options of that configuration.
 	BucketConfiguration []*ProjectViewBucketConfiguration `xorm:"json" json:"bucket_configuration"`
 	// The ID of the bucket where new tasks without a bucket are added to. By default, this is the leftmost bucket in a view.
