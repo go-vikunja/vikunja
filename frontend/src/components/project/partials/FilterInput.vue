@@ -271,6 +271,7 @@ function autocompleteSelect(value) {
 const blurDebounced = useDebounceFn(() => emit('blur'), 500)
 </script>
 
+<!-- eslint-disable vue/no-v-html -->
 <template>
 	<div class="field">
 		<label
