@@ -37,15 +37,15 @@ func HumanizeDuration(duration time.Duration, lang string) string {
 	minutes := int64(math.Mod(duration.Minutes(), 60))
 
 	chunks := []struct {
-		singularKey string
-		pluralKey   string
-		amount      int64
+		pluralFormatKey string
+		oneKey          string
+		amount          int64
 	}{
-		{"time.year", "time.years", years},
-		{"time.week", "time.weeks", weeks},
-		{"time.day", "time.days", days},
-		{"time.hour", "time.hours", hours},
-		{"time.minute", "time.minutes", minutes},
+		{"time.many_years", "time.one_year", years},
+		{"time.many_weeks", "time.one_week", weeks},
+		{"time.many_days", "time.one_day", days},
+		{"time.many_hours", "time.one_hour", hours},
+		{"time.many_minutes", "time.one_minute", minutes},
 	}
 
 	parts := []string{}
@@ -55,16 +55,14 @@ func HumanizeDuration(duration time.Duration, lang string) string {
 		case 0:
 			continue
 		case 1:
-			parts = append(parts, fmt.Sprintf(i18n.T(lang, "time.one_unit_format"), i18n.T(lang, chunk.singularKey)))
+			parts = append(parts, i18n.T(lang, chunk.oneKey))
 		default:
-			parts = append(parts, fmt.Sprintf(i18n.T(lang, "time.multiple_units_format"), chunk.amount, i18n.T(lang, chunk.pluralKey)))
-			// i18n.T(lang, "time.multiple_units_format",
-			// strconv.FormatInt(chunk.amount, 10), i18n.T(lang, chunk.pluralKey))
+			parts = append(parts, fmt.Sprintf(i18n.T(lang, chunk.pluralFormatKey), chunk.amount))
 		}
 	}
 
 	if len(parts) > 1 {
-		return strings.Join(parts[:len(parts)-1], ", ") + i18n.T(lang, "time.list_last_separator") + parts[len(parts)-1]
+		return strings.Join(parts[:len(parts)-1], ", ") + " " + i18n.T(lang, "time.list_last_separator") + " " + parts[len(parts)-1]
 	}
 
 	return strings.Join(parts, ", ")
