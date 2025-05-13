@@ -148,18 +148,16 @@
         }
     },
     "time": {
-        "year": "year",
-        "years": "years",
-        "week": "week",
-        "weeks": "weeks",
-        "day": "day",
-        "days": "days",
-        "hour": "hour",
-        "hours": "hours",
-        "minute": "minute",
-        "minutes": "minutes",
-        "one_unit_format": "one %[1]s",
-        "multiple_units_format": "%[1]d %[2]s",
-        "list_last_separator": " and "
+        "one_year": "one year",
+        "one_week": "one week",
+        "one_day": "one day",
+        "one_hour": "one hour",
+        "one_minute": "one minute",
+        "many_years": "%[1]d years",
+        "many_weeks": "%[1]d weeks",
+        "many_days": "%[1]d days",
+        "many_hours": "%[1]d hours",
+        "many_minutes": "%[1]d minutes",
+        "list_last_separator": "and"
     }
 }
