@@ -45,6 +45,7 @@ const props = withDefaults(defineProps<{
 	validateInitially?: boolean,
 	validateMinLength?: boolean,
 }>(), {
+	tabindex: undefined,
 	validateMinLength: true,
 })
 
