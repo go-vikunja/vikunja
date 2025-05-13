@@ -84,11 +84,9 @@ import {createDateFromString} from '@/helpers/time/createDateFromString'
 import {useI18n} from 'vue-i18n'
 import {useFlatpickrLanguage} from '@/helpers/useFlatpickrLanguage'
 
-const props = withDefaults(defineProps<{
+const props = defineProps<{
 	modelValue: Date | null | string
-}>(), {
-	modelValue: null,
-})
+}>()
 
 const emit = defineEmits<{
 	'update:modelValue': [Date | null],
