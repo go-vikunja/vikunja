@@ -40,7 +40,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 
 const props = withDefaults(defineProps<{
 	totalPages: number,
-	currentPage: number
+	currentPage?: number
 }>(), {
 	currentPage: 1,
 })
