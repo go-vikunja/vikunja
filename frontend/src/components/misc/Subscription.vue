@@ -53,7 +53,6 @@ const props = withDefaults(defineProps<{
 	isButton?: boolean,
 	type?: 'button' | 'dropdown',
 }>(), {
-	modelValue: null,
 	isButton: true,
 	type: 'button',
 })
