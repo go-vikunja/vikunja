@@ -53,7 +53,6 @@ const props = withDefaults(defineProps<{
 	projectId: number,
 	disabled?: boolean,
 }>(), {
-	modelValue: () => [],
 	disabled: false,
 })
 
