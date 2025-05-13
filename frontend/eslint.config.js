@@ -32,7 +32,6 @@ export default [
 				'extensions': ['.js', '.jsx', '.ts', '.tsx', '.vue'],
 				'shouldMatchCase': true,
 			}],
-			'vue/no-boolean-default': ['warn', 'default-false'],
 			'vue/match-component-import-name': 'error',
 			'vue/prefer-separate-static-class': 'warn',
 
