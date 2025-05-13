@@ -25,7 +25,6 @@ const props = withDefaults(defineProps<{
 	itemLimit?: boolean,
 	showEvenNumberOfProjects?: boolean,
 }>(), {
-	projects: () => [],
 	showArchived: false,
 	itemLimit: false,
 	showEvenNumberOfProjects: false,
