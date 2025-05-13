@@ -139,7 +139,7 @@ type ProjectView struct {
 	ViewKind ProjectViewKind `xorm:"not null" json:"view_kind" swaggertype:"string" enums:"list,gantt,table,kanban"`
 
 	// The filter query to match tasks by. Check out https://vikunja.io/docs/filters for a full explanation.
-	Filter *TaskCollection `xorm:"json null default null" query:"filter" json:"filter" swaggertype:"string"`
+	Filter *TaskCollection `xorm:"json null default null" query:"filter" json:"filter"`
 	// The position of this view in the list. The list of all views will be sorted by this parameter.
 	Position float64 `xorm:"double null" json:"position"`
 
