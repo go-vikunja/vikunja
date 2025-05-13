@@ -78,14 +78,11 @@ import {useTaskStore} from '@/stores/tasks'
 import type {ITask} from '@/modelTypes/ITask'
 import {getHexColor, getTaskIdentifier} from '@/models/task'
 
-const props = withDefaults(defineProps<{
+const props = defineProps<{
 	task: ITask,
-	canWrite: boolean | undefined,
-	hasClose: boolean | undefined,
-}>(), {
-	canWrite: false,
-	hasClose: false,
-})
+	canWrite: boolean,
+	hasClose: boolean,
+}>()
 
 const emit = defineEmits<{
 	'update:task': [task: ITask],
