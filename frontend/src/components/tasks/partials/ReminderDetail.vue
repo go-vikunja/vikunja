@@ -89,11 +89,11 @@ import SimpleButton from '@/components/input/SimpleButton.vue'
 import {useDebounceFn} from '@vueuse/core'
 
 const props = withDefaults(defineProps<{
-	modelValue: ITaskReminder | undefined,
+	modelValue?: ITaskReminder,
 	clearAfterUpdate?: boolean,
 	defaultRelativeTo?: IReminderPeriodRelativeTo | null,
 }>(), {
-	modelValue: new TaskReminderModel() as ITaskReminder,
+	modelValue: () => new TaskReminderModel() as ITaskReminder,
 	clearAfterUpdate: false,
 	defaultRelativeTo: REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE,
 })
