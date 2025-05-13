@@ -196,7 +196,7 @@ import FilePreview from '@/components/tasks/partials/FilePreview.vue'
 
 const props = withDefaults(defineProps<{
 	task: ITask,
-	editEnabled: boolean,
+	editEnabled?: boolean,
 }>(), {
 	editEnabled: true,
 })
