@@ -39,7 +39,6 @@ withDefaults(defineProps<{
 	showAll?: boolean,
 	done?: boolean
 }>(), {
-	priority: priorities.UNSET,
 	showAll: false,
 	done: false,
 })
