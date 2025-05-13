@@ -168,7 +168,6 @@ const props = withDefaults(defineProps<{
 	/** If true, disables the multiselect input */
 	disabled?: boolean
 }>(), {
-	modelValue: null,
 	loading: false,
 	placeholder: '',
 	searchResults: () => [],
