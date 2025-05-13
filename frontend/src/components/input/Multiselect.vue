@@ -182,6 +182,8 @@ const props = withDefaults(defineProps<{
 	closeAfterSelect: true,
 	autocompleteEnabled: true,
 	disabled: false,
+	id: undefined,
+	name: undefined,
 })
 
 const emit = defineEmits<{
