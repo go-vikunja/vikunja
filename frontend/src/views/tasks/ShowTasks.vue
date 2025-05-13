@@ -96,6 +96,8 @@ const props = withDefaults(defineProps<{
 }>(), {
 	showNulls: false,
 	showOverdue: false,
+	dateFrom: undefined,
+	dateTo: undefined,
 })
 
 const emit = defineEmits<{
