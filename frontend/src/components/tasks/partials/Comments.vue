@@ -231,7 +231,7 @@ import { useCopyToClipboard } from '@/composables/useCopyToClipboard'
 const props = withDefaults(defineProps<{
 	taskId: number,
 	canWrite?: boolean
-	initialComments?: ITaskComment[]
+	initialComments: ITaskComment[]
 }>(), {
 	canWrite: true,
 })
