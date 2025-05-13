@@ -82,6 +82,7 @@ const props = withDefaults(defineProps<{
 	hasTitle: false,
 	hasFooter: true,
 	changeImmediately: false,
+	filterFromView: undefined,
 })
 
 const emit = defineEmits<{
