@@ -93,9 +93,8 @@ import {useFlatpickrLanguage} from '@/helpers/useFlatpickrLanguage'
 
 const props = withDefaults(defineProps<{
 	modelValue: string | Date | null,
-	open: boolean
+	open?: boolean
 }>(), {
-	modelValue: null,
 	open: false,
 })
 
