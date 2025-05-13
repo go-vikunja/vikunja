@@ -46,7 +46,7 @@ import {useI18n} from 'vue-i18n'
 
 const props = withDefaults(defineProps<{
 	modelValue: Date | null | string,
-	chooseDateLabel: string,
+	chooseDateLabel?: string,
 	disabled?: boolean,
 }>(), {
 	modelValue: null,
