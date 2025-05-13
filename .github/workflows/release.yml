@@ -101,6 +101,15 @@ jobs:
         with:
           gpg-passphrase: "${{ secrets.RELEASE_GPG_PASSPHRASE }}"
           gpg-sign-key: "${{ secrets.RELEASE_GPG_SIGN_KEY }}"
+      - run: echo $HOME
+      - run: id
+      - name: setup xgo cache
+        uses: useblacksmith/cache@v5
+        with:
+          path: /root/.xgo-cache
+          key: ${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
       - name: build and release
         env:
           RELEASE_VERSION: ${{ steps.ghd.outputs.describe }}
