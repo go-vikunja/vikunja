@@ -28,7 +28,6 @@ withDefaults(defineProps<{
 	disabled?: boolean,
 	isBlock?: boolean
 }>(), {
-	modelValue: false,
 	disabled: false,
 	isBlock: false,
 })
