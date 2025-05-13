@@ -215,8 +215,6 @@ const props = withDefaults(defineProps<{
 }>(), {
 	initialRelatedTasks: () => ({}),
 	showNoRelationsNotice: false,
-	projectId: 0,
-	editEnabled: true, // this seems like a mistake
 })
 
 const taskStore = useTaskStore()
