@@ -10,10 +10,6 @@ jobs:
       - name: Git describe
         id: ghd
         uses: proudust/gh-describe@v2
-      - name: setup blacksmith docker action
-        uses: useblacksmith/build-push-action@5646913081e85d88fd2b81c50c30fcd1d5b11ac8 # v1
-        with:
-          setup-only: true
       - name: Login to GHCR
         uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3
         with:
@@ -23,6 +19,8 @@ jobs:
         uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392 # v3
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3
+        with:
+          version: latest
       - name: Docker meta version
         if: ${{ github.ref_type == 'tag' }}
         id: meta
