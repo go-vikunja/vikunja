@@ -8,13 +8,11 @@
 				:id="project.id"
 				:user-is-admin="userIsAdmin"
 				share-type="user"
-				type="project"
 			/>
 			<userTeam
 				:id="project.id"
 				:user-is-admin="userIsAdmin"
 				share-type="team"
-				type="project"
 			/>
 		</template>
 
