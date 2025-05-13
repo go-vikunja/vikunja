@@ -668,7 +668,7 @@ type Release mg.Namespace
 // Runs all steps in the right order to create release packages for various platforms
 func (Release) Release(ctx context.Context) error {
 	mg.Deps(initVars)
-	mg.Deps(Release.Dirs)
+	mg.Deps(Release.Dirs, prepareXgo)
 
 	// Run compiling in parallel to speed it up
 	errs, _ := errgroup.WithContext(ctx)
@@ -706,6 +706,14 @@ func (Release) Dirs() error {
 		}
 	}
 	return nil
+}
+
+func prepareXgo() {
+	mg.Deps(initVars)
+	checkAndInstallGoTool("xgo", "src.techknowlogick.com/xgo")
+
+	fmt.Println("Pulling latest xgo docker image...")
+	runAndStreamOutput("docker", "pull", "ghcr.io/techknowlogick/xgo:latest")
 }
 
 func runXgo(targets string) error {
