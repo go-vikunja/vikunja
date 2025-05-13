@@ -250,7 +250,7 @@ jobs:
       - name: Build desktop app
         working-directory: desktop
         run: |
-          pnpm install --fetch-timeout 100000
+          pnpm install  --frozen-lockfile --prefer-offline --fetch-timeout 100000
           node build.js "${{ steps.ghd.outputs.describe }}" ${{ github.ref_type == 'tag' }}
       - name: Upload to S3
         uses: kolaente/s3-action@41963184b524ccac734ea4d8c964ac74b5b1af89 # v1.2.1

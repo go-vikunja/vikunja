@@ -14,5 +14,5 @@ runs:
         cache-dependency-path: frontend/pnpm-lock.yaml
     - name: Install dependencies
       working-directory: frontend
-      run: pnpm install
+      run: pnpm install --frozen-lockfile --prefer-offline
       shell: bash
