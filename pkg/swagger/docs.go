@@ -7886,19 +7886,6 @@ const docTemplate = `{
                 }
             }
         },
-        "models.BucketConfigurationModeKind": {
-            "type": "integer",
-            "enum": [
-                0,
-                1,
-                2
-            ],
-            "x-enum-varnames": [
-                "BucketConfigurationModeNone",
-                "BucketConfigurationModeManual",
-                "BucketConfigurationModeFilter"
-            ]
-        },
         "models.BulkAssignees": {
             "type": "object",
             "properties": {
@@ -8395,10 +8382,12 @@ const docTemplate = `{
                 },
                 "bucket_configuration_mode": {
                     "description": "The bucket configuration mode. Can be ` + "`" + `none` + "`" + `, ` + "`" + `manual` + "`" + ` or ` + "`" + `filter` + "`" + `. ` + "`" + `manual` + "`" + ` allows to move tasks between buckets as you normally would. ` + "`" + `filter` + "`" + ` creates buckets based on a filter for each bucket.",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/models.BucketConfigurationModeKind"
-                        }
+                    "type": "string",
+                    "enum": [
+                        "none",
+                        "manual",
+                        "filter",
+                        "manual"
                     ]
                 },
                 "created": {
@@ -8443,10 +8432,12 @@ const docTemplate = `{
                 },
                 "view_kind": {
                     "description": "The kind of this view. Can be ` + "`" + `list` + "`" + `, ` + "`" + `gantt` + "`" + `, ` + "`" + `table` + "`" + ` or ` + "`" + `kanban` + "`" + `.",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/models.ProjectViewKind"
-                        }
+                    "type": "string",
+                    "enum": [
+                        "list",
+                        "gantt",
+                        "table",
+                        "kanban"
                     ]
                 }
             }
@@ -8461,21 +8452,6 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
-        },
-        "models.ProjectViewKind": {
-            "type": "integer",
-            "enum": [
-                0,
-                1,
-                2,
-                3
-            ],
-            "x-enum-varnames": [
-                "ProjectViewKindList",
-                "ProjectViewKindGantt",
-                "ProjectViewKindTable",
-                "ProjectViewKindKanban"
-            ]
         },
         "models.Reaction": {
             "type": "object",

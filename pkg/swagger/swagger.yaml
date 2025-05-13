@@ -131,16 +131,6 @@ definitions:
           this value.
         type: string
     type: object
-  models.BucketConfigurationModeKind:
-    enum:
-    - 0
-    - 1
-    - 2
-    type: integer
-    x-enum-varnames:
-    - BucketConfigurationModeNone
-    - BucketConfigurationModeManual
-    - BucketConfigurationModeFilter
   models.BulkAssignees:
     properties:
       assignees:
@@ -532,11 +522,15 @@ definitions:
           $ref: '#/definitions/models.ProjectViewBucketConfiguration'
         type: array
       bucket_configuration_mode:
-        allOf:
-        - $ref: '#/definitions/models.BucketConfigurationModeKind'
         description: The bucket configuration mode. Can be `none`, `manual` or `filter`.
           `manual` allows to move tasks between buckets as you normally would. `filter`
           creates buckets based on a filter for each bucket.
+        enum:
+        - none
+        - manual
+        - filter
+        - manual
+        type: string
       created:
         description: A timestamp when this reaction was created. You cannot change
           this value.
@@ -572,9 +566,13 @@ definitions:
           value.
         type: string
       view_kind:
-        allOf:
-        - $ref: '#/definitions/models.ProjectViewKind'
         description: The kind of this view. Can be `list`, `gantt`, `table` or `kanban`.
+        enum:
+        - list
+        - gantt
+        - table
+        - kanban
+        type: string
     type: object
   models.ProjectViewBucketConfiguration:
     properties:
@@ -583,18 +581,6 @@ definitions:
       title:
         type: string
     type: object
-  models.ProjectViewKind:
-    enum:
-    - 0
-    - 1
-    - 2
-    - 3
-    type: integer
-    x-enum-varnames:
-    - ProjectViewKindList
-    - ProjectViewKindGantt
-    - ProjectViewKindTable
-    - ProjectViewKindKanban
   models.Reaction:
     properties:
       created:
