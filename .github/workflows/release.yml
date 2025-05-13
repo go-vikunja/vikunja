@@ -104,7 +104,7 @@ jobs:
       - run: echo $HOME
       - run: id
       - name: setup xgo cache
-        uses: useblacksmith/cache@v5
+        uses: useblacksmith/cache@c5fe29eb0efdf1cf4186b9f7fcbbcbc0cf025662 # v5
         with:
           path: /root/.xgo-cache
           key: ${{ hashFiles('**/go.sum') }}
