@@ -67,11 +67,10 @@ import {computed, onBeforeUnmount, onMounted, ref, toRefs, useAttrs, watch, watc
 const props = withDefaults(defineProps<{
 	modelValue: DateOption | DateOption[] | null,
 	/**  https://flatpickr.js.org/options/ */
-	config: Options,
-	events: HookKey[],
-	disabled: boolean,
+	config?: Options,
+	events?: HookKey[],
+	disabled?: boolean,
 }>(), {
-	modelValue: null,
 	config: () => ({
 		defaultDate: undefined,
 		wrap: false,
