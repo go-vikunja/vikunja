@@ -192,14 +192,12 @@ import User from '@/components/misc/User.vue'
 // FIXME: I think this whole thing can now only manage user/team sharing for projects? Maybe remove a little generalization?
 
 const props = withDefaults(defineProps<{
-	type: 'project',
+	type?: 'project',
 	shareType: 'user' | 'team',
 	id: number,
 	userIsAdmin?: boolean
 }>(), {
-	type: '',
-	shareType: '',
-	id: 0,
+	type: 'project',
 	userIsAdmin: false,
 })
 
