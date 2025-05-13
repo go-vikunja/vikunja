@@ -48,13 +48,11 @@ import {useTaskStore} from '@/stores/tasks'
 
 export type AttachmentUploadFunction = (file: File, onSuccess: (attachmentUrl: string) => void) => Promise<string>
 
-const props = withDefaults(defineProps<{
+const props = defineProps<{
 	modelValue: ITask,
 	attachmentUpload: AttachmentUploadFunction,
 	canWrite: boolean,
-}>(), {
-	canWrite: true,
-})
+}>()
 
 const emit = defineEmits<{
 	'update:modelValue': [value: ITask]
