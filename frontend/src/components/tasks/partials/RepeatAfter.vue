@@ -106,9 +106,8 @@ import TaskModel from '@/models/task'
 
 const props = withDefaults(defineProps<{
 	modelValue: ITask | undefined,
-	disabled: boolean
+	disabled?: boolean
 }>(), {
-	modelValue: () => {},
 	disabled: false,
 })
 
