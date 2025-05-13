@@ -132,7 +132,7 @@ import {useProjectStore} from '@/stores/projects'
 const props = withDefaults(defineProps<{
 	task: ITask,
 	projectId: IProject['id'],
-	loading: boolean,
+	loading?: boolean,
 }>(), {
 	loading: false,
 })
