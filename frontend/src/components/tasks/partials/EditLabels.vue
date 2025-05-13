@@ -68,7 +68,6 @@ const props = withDefaults(defineProps<{
 	disabled?: boolean
 	creatable?: boolean
 }>(), {
-	modelValue: () => [],
 	taskId: 0,
 	disabled: false,
 	creatable: true,
