@@ -59,6 +59,14 @@
       "extends": [
         "schedule:daily"
       ]
+    },
+    {
+      "matchCategories": [
+        "github-actions"
+      ],
+      "extends": [
+        "schedule:weekly"
+      ]
     }
   ]
 }
