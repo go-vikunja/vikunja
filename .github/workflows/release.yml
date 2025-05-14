@@ -35,7 +35,7 @@ jobs:
             type=raw,value=latest
       - name: Build and push unstable
         if: ${{ github.ref_type != 'tag' }}
-        uses: useblacksmith/build-push-action@5646913081e85d88fd2b81c50c30fcd1d5b11ac8 # v1
+        uses: useblacksmith/build-push-action@5501e3ffb36468ed19a32a5bf925cb13fd673771 # v1
         with:
           platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8
           push: true
@@ -44,7 +44,7 @@ jobs:
             RELEASE_VERSION=${{ steps.ghd.outputs.describe }}
       - name: Build and push version
         if: ${{ github.ref_type == 'tag' }}
-        uses: useblacksmith/build-push-action@5646913081e85d88fd2b81c50c30fcd1d5b11ac8 # v1
+        uses: useblacksmith/build-push-action@5501e3ffb36468ed19a32a5bf925cb13fd673771 # v1
         with:
           platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8
           push: true
