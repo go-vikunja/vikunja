@@ -52,6 +52,9 @@
 
 <script setup lang="ts">
 import {ref, reactive} from 'vue'
+import {useRoute} from 'vue-router'
+import {useI18n} from 'vue-i18n'
+import {useAuthStore} from '@/stores/auth'
 
 import PasswordResetModel from '@/models/passwordReset'
 import PasswordResetService from '@/services/passwordReset'
@@ -62,22 +65,32 @@ const credentials = reactive({
 	password: '',
 })
 
+const route = useRoute()
+const authStore = useAuthStore()
+const {t} = useI18n()
+
 const passwordResetService = reactive(new PasswordResetService())
 const errorMsg = ref('')
 const successMessage = ref('')
 
 async function resetPassword() {
 	errorMsg.value = ''
-	
-	if(credentials.password === '') {
+	const token = route.query.token as string
+
+	if (!token) {
+		errorMsg.value = t('user.auth.passwordResetTokenMissing')
 		return
 	}
 
-	const passwordReset = new PasswordResetModel({newPassword: credentials.password})
+	if (credentials.password === '') {
+		return
+	}
+
+	const passwordReset = new PasswordResetModel({newPassword: credentials.password, token: token})
 	try {
 		const {message} = await passwordResetService.resetPassword(passwordReset)
 		successMessage.value = message
-		localStorage.removeItem('passwordResetToken')
+		authStore.setPasswordResetToken(null)
 	} catch (e) {
 		errorMsg.value = e.response.data.message
 	}

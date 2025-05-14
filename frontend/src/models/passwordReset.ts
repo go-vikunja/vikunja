@@ -11,6 +11,8 @@ export default class PasswordResetModel extends AbstractModel<IPasswordReset> im
 		super()
 		this.assignData(data)
 
-		this.token = localStorage.getItem('passwordResetToken')
+		if (data.token) {
+			this.token = data.token
+		}
 	}
 }
