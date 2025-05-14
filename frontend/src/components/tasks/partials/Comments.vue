@@ -420,7 +420,8 @@ async function deleteComment(commentToDelete: ITaskComment) {
 }
 
 function getCommentUrl(commentId: string) {
-	return `${frontendUrl.value}${location.pathname}${location.search}#comment-${commentId}`
+	const baseUrl = frontendUrl.value.endsWith('/') ? frontendUrl.value.slice(0, -1) : frontendUrl.value
+	return `${baseUrl}${location.pathname}${location.search}#comment-${commentId}`
 }
 </script>
 
