@@ -67,7 +67,8 @@
       "noAccountYet": "Don't have an account yet?",
       "alreadyHaveAnAccount": "Already have an account?",
       "remember": "Stay logged in",
-      "registrationDisabled": "Registration is disabled."
+      "registrationDisabled": "Registration is disabled.",
+      "passwordResetTokenMissing": "Password reset token is missing."
     },
     "settings": {
       "title": "Settings",

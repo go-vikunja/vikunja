@@ -394,6 +394,17 @@ export async function getAuthForRoute(to: RouteLocation, authStore) {
 		return
 	}
 	
+	// Check if password reset token is in query params
+	const resetToken = to.query.userPasswordReset as string | undefined
+	if (resetToken) {
+		authStore.setPasswordResetToken(resetToken)
+	}
+	
+	// Redirect to password reset page if we have a token stored
+	if (authStore.passwordResetToken && to.name !== 'user.password-reset.reset') {
+		return {name: 'user.password-reset.reset', query: { token: authStore.passwordResetToken }}
+	}
+
 	// Check if the route the user wants to go to is a route which needs authentication. We use this to 
 	// redirect the user after successful login.
 	const isValidUserAppRoute = ![
@@ -404,7 +415,7 @@ export async function getAuthForRoute(to: RouteLocation, authStore) {
 			'link-share.auth',
 			'openid.auth',
 		].includes(to.name as string) &&
-		localStorage.getItem('passwordResetToken') === null &&
+		authStore.passwordResetToken === null &&
 		localStorage.getItem('emailConfirmToken') === null &&
 		!(to.name === 'home' && (typeof to.query.userPasswordReset !== 'undefined' || typeof to.query.userEmailConfirm !== 'undefined'))
 	
@@ -421,10 +432,6 @@ export async function getAuthForRoute(to: RouteLocation, authStore) {
 
 	if (isValidUserAppRoute) {
 		return {name: 'user.login'}
-	}
-	
-	if(localStorage.getItem('passwordResetToken') !== null && to.name !== 'user.password-reset.reset') {
-		return {name: 'user.password-reset.reset'}
 	}
 	
 	if(localStorage.getItem('emailConfirmToken') !== null && to.name !== 'user.login') {

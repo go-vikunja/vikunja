@@ -1,10 +1,18 @@
 import {Factory} from '../support/factory'
 import {faker} from '@faker-js/faker'
 
+export interface ProjectAttributes {
+	id: number | string; // Allow string for '{increment}'
+	title: string;
+	owner_id: number;
+	created: string;
+	updated: string;
+}
+
 export class ProjectFactory extends Factory {
 	static table = 'projects'
 
-	static factory() {
+	static factory(): Omit<ProjectAttributes, 'id'> & { id: string } { // id is '{increment}' before seeding
 		const now = new Date()
 
 		return {

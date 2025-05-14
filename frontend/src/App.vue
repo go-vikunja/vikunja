@@ -84,8 +84,8 @@ watch(userPasswordReset, (userPasswordReset) => {
 		return
 	}
 
-	localStorage.setItem('passwordResetToken', userPasswordReset)
-	router.push({name: 'user.password-reset.reset'})
+	authStore.setPasswordResetToken(userPasswordReset)
+	router.push({name: 'user.password-reset.reset', query: { token: userPasswordReset }})
 }, { immediate: true })
 
 // setup email verification redirect

@@ -11,7 +11,7 @@
         "editor.defaultFormatter": "dbaeumer.vscode-eslint"
     },
     "[typescript]": {
-        "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+        "editor.defaultFormatter": "vscode.typescript-language-features"
     },
 
     // https://eslint.vuejs.org/user-guide/#editor-integrations
