@@ -102,7 +102,7 @@ jobs:
           gpg-passphrase: "${{ secrets.RELEASE_GPG_PASSPHRASE }}"
           gpg-sign-key: "${{ secrets.RELEASE_GPG_SIGN_KEY }}"
       - name: setup xgo cache
-        uses: useblacksmith/cache@v5
+        uses: useblacksmith/cache@c5fe29eb0efdf1cf4186b9f7fcbbcbc0cf025662 # v5
         with:
           path: /home/runner/.xgo-cache
           key: ${{ hashFiles('**/go.sum') }}
