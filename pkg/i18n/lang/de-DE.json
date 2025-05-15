@@ -146,5 +146,18 @@
 				"confirm_account_deletion": "Löschung meines Accounts bestätigen"
 			}
 		}
+	},
+	"time": {
+		"one_year": "ein Jahr",
+		"one_week": "eine Woche",
+		"one_day": "ein Tag",
+		"one_hour": "eine Stunde",
+		"one_minute": "eine Minute",
+		"many_years": "%[1]d Jahren",
+		"many_weeks": "%[1]d Wochen",
+		"many_days": "%[1]d Tagen",
+		"many_hours": "%[1]d Stunden",
+		"many_minutes": "%[1]d Minuten",
+		"list_last_separator": "und"
 	}
 }

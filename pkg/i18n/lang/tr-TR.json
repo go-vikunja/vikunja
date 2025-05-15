@@ -146,5 +146,18 @@
 				"confirm_account_deletion": "Hesabımın silinmesini onayla"
 			}
 		}
+	},
+	"time": {
+		"one_year": "bir yıl",
+		"one_week": "bir hafta",
+		"one_day": "bir gün",
+		"one_hour": "bir saat",
+		"one_minute": "bir dakika",
+		"many_years": "%[1]d yıl",
+		"many_weeks": "%[1]d hafta",
+		"many_days": "%[1]d gün",
+		"many_hours": "%[1]d saat",
+		"many_minutes": "%[1]d dakika",
+		"list_last_separator": "ve"
 	}
 }
