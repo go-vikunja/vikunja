@@ -943,6 +943,11 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 			return &ErrCannotArchiveDefaultProject{ProjectID: project.ID}
 		}
 	}
+	
+	err = setArchiveStateForProjectDecendants(s, project.ID, project.IsArchived)
+	if err != nil {
+		return err
+	}
 
 	// We need to specify the cols we want to update here to be able to un-archive projects
 	colsToUpdate := []string{
@@ -1285,4 +1290,30 @@ func SetProjectBackground(s *xorm.Session, projectID int64, background *files.Fi
 		Cols("background_file_id", "background_blur_hash").
 		Update(l)
 	return
+}
+
+// setArchiveStateForProjectDecendants uses a recursive CTE to find and set the archived status of all descendant projects.
+func setArchiveStateForProjectDecendants(s *xorm.Session, parentProjectID int64, shouldBeArchived bool) error {
+	// The CTE finds all descendants of parentProjectID and updates their is_archived status.
+	// We only update if the current state is different from the target state to avoid unnecessary updates.
+	query := `
+WITH RECURSIVE descendant_ids (id) AS (
+    SELECT id
+    FROM projects
+    WHERE parent_project_id = ?
+    UNION ALL
+    SELECT p.id
+    FROM projects p
+    INNER JOIN descendant_ids di ON p.parent_project_id = di.id
+)
+UPDATE projects
+SET is_archived = ?
+WHERE id IN (SELECT id FROM descendant_ids) AND is_archived != ?`
+
+	_, err := s.Exec(query, parentProjectID, shouldBeArchived, shouldBeArchived)
+	if err != nil {
+		log.Errorf("Error updating is_archived for descendant projects for parent ID %d to %t: %v", parentProjectID, shouldBeArchived, err)
+		return fmt.Errorf("failed to update is_archived for descendant projects for parent ID %d to %t: %w", parentProjectID, shouldBeArchived, err)
+	}
+	return nil
 }
