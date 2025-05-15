@@ -17,6 +17,14 @@
 package integrations
 
 import (
+	"errors"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"os"
+	"strings"
+	"testing"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
@@ -29,13 +37,6 @@ import (
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 	"code.vikunja.io/api/pkg/web/handler"
-	"errors"
-	"net/http"
-	"net/http/httptest"
-	"net/url"
-	"os"
-	"strings"
-	"testing"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
