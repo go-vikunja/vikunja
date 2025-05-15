@@ -59,6 +59,7 @@ func InitFixtures(tablenames ...string) (err error) {
 		loaderOptions = append(loaderOptions,
 			testfixtures.SkipResetSequences(),
 			testfixtures.UseAlterConstraint(),
+			testfixtures.SkipTableChecksumComputation(),
 		)
 	}
 
