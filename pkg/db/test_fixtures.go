@@ -56,7 +56,10 @@ func InitFixtures(tablenames ...string) (err error) {
 	}
 
 	if config.DatabaseType.GetString() == "postgres" {
-		loaderOptions = append(loaderOptions, testfixtures.SkipResetSequences())
+		loaderOptions = append(loaderOptions,
+			testfixtures.SkipResetSequences(),
+			testfixtures.UseAlterConstraint(),
+		)
 	}
 
 	fixtures, err = testfixtures.New(loaderOptions...)
