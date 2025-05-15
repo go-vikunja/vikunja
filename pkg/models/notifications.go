@@ -38,7 +38,7 @@ type ReminderDueNotification struct {
 // ToMail returns the mail notification for ReminderDueNotification
 func (n *ReminderDueNotification) ToMail(lang string) *notifications.Mail {
 	return notifications.NewMail().
-		IncludeLinkToSettings().
+		IncludeLinkToSettings(lang).
 		To(n.User.Email).
 		Subject(i18n.T(lang, "notifications.task.reminder.subject", n.Task.Title, n.Project.Title)).
 		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
@@ -228,7 +228,7 @@ type UndoneTaskOverdueNotification struct {
 func (n *UndoneTaskOverdueNotification) ToMail(lang string) *notifications.Mail {
 	until := time.Until(n.Task.DueDate).Round(1*time.Hour) * -1
 	return notifications.NewMail().
-		IncludeLinkToSettings().
+		IncludeLinkToSettings(lang).
 		Subject(i18n.T(lang, "notifications.task.overdue.subject", n.Task.Title, n.Project.Title)).
 		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
 		Line(i18n.T(lang, "notifications.task.overdue.message", n.Task.Title, n.Project.Title, getOverdueSinceString(until, n.User.Language))).
@@ -272,7 +272,7 @@ func (n *UndoneTasksOverdueNotification) ToMail(lang string) *notifications.Mail
 	}
 
 	return notifications.NewMail().
-		IncludeLinkToSettings().
+		IncludeLinkToSettings(lang).
 		Subject(i18n.T(lang, "notifications.task.overdue.multiple_subject")).
 		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
 		Line(i18n.T(lang, "notifications.task.overdue.multiple_message")).

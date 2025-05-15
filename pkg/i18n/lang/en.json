@@ -143,7 +143,8 @@
                 "go_to_settings": "Go to settings",
                 "confirm_email": "Confirm your email address",
                 "abort_deletion": "Abort the deletion",
-                "confirm_account_deletion": "Confirm the deletion of my account"
+                "confirm_account_deletion": "Confirm the deletion of my account",
+                "change_notification_settings_link": "You can change your notification settings [here](%[1]s)."
             }
         }
     },

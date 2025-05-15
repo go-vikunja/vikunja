@@ -17,7 +17,10 @@
 package notifications
 
 import (
+	"fmt"
+
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/i18n"
 	"code.vikunja.io/api/pkg/mail"
 )
 
@@ -87,8 +90,9 @@ func (m *Mail) FooterLine(line string) *Mail {
 	return m
 }
 
-func (m *Mail) IncludeLinkToSettings() *Mail {
-	m.FooterLine("You can change your notification settings [here](" + config.ServicePublicURL.GetString() + "user/settings/general).")
+func (m *Mail) IncludeLinkToSettings(lang string) *Mail {
+	link := config.ServicePublicURL.GetString() + "user/settings/general"
+	m.FooterLine(fmt.Sprintf(i18n.T(lang, "notifications.common.actions.change_notification_settings_link"), link))
 	return m
 }
 
