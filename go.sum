@@ -817,6 +817,8 @@ github.com/getsentry/sentry-go v0.31.1 h1:ELVc0h7gwyhnXHDouXkhqTFSO5oslsRDk0++ey
 github.com/getsentry/sentry-go v0.31.1/go.mod h1:CYNcMMz73YigoHljQRG+qPF+eMq8gG72XcGN/p71BAY=
 github.com/getsentry/sentry-go v0.32.0 h1:YKs+//QmwE3DcYtfKRH8/KyOOF/I6Qnx7qYGNHCGmCY=
 github.com/getsentry/sentry-go v0.32.0/go.mod h1:CYNcMMz73YigoHljQRG+qPF+eMq8gG72XcGN/p71BAY=
+github.com/getsentry/sentry-go v0.33.0 h1:YWyDii0KGVov3xOaamOnF0mjOrqSjBqwv48UEzn7QFg=
+github.com/getsentry/sentry-go v0.33.0/go.mod h1:C55omcY9ChRQIUcVcGcs+Zdy4ZpQGvNJ7JYHIoSWOtE=
 github.com/getsentry/sentry-go/echo v0.31.1 h1:bGY2QrNq5PovERoQBwyfJtQixjptHC06gLiAlF0WUPc=
 github.com/getsentry/sentry-go/echo v0.31.1/go.mod h1:2gHa20EVxDNNTJY+Cq4Eqr8A0Z6UEULh4ImSsVMSRUg=
 github.com/getsentry/sentry-go/echo v0.32.0 h1:Klqbny8ye5sbyDqTrfGryh10FhNz1BMX5TfP/q77tYg=
