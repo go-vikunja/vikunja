@@ -235,6 +235,7 @@ jobs:
           touch frontend/dist/index.html
           chmod +x mage-static
           ./mage-static test:${{ matrix.test }}
+          docker logs "${{ job.services.db-postgres.id }}"
   
   frontend-lint:
     runs-on: ubuntu-latest
