@@ -21,7 +21,6 @@ import (
 	"strconv"
 
 	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/web"
 
 	"code.vikunja.io/api/pkg/models"
 	auth2 "code.vikunja.io/api/pkg/modules/auth"
