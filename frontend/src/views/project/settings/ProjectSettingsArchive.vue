@@ -44,6 +44,7 @@ async function archiveProject() {
 		})
 		useBaseStore().setCurrentProject(newProject)
 		success({message: t('project.archive.success')})
+		await projectStore.loadAllProjects()
 	} finally {
 		router.back()
 	}
