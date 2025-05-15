@@ -21,6 +21,7 @@ import (
 	"strconv"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/web"
 
 	"code.vikunja.io/api/pkg/models"
 	auth2 "code.vikunja.io/api/pkg/modules/auth"
@@ -84,7 +85,10 @@ func UserList(c echo.Context) error {
 func ListUsersForProject(c echo.Context) error {
 	projectID, err := strconv.ParseInt(c.Param("project"), 10, 64)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"message": "Invalid project ID",
+			"details": err.Error(),
+		})
 	}
 
 	project := models.Project{ID: projectID}
