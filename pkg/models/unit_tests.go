@@ -98,7 +98,8 @@ func SetupTestsWithT(t *testing.T) {
 	}
 
 	fixturesTime := time.Now()
-	err = db.InitTestFixtures(
+	err = db.InitTestFixturesWithT(
+		t,
 		"files",
 		"label_tasks",
 		"labels",

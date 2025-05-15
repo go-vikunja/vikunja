@@ -17,13 +17,12 @@
 package db
 
 import (
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/log"
 	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
-
-	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/log"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -70,6 +69,21 @@ func InitTestFixtures(tablenames ...string) (err error) {
 
 	// Sync fixtures
 	err = InitFixtures(tablenames...)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return nil
+}
+
+func InitTestFixturesWithT(t *testing.T, tablenames ...string) (err error) {
+	// Create all fixtures
+	config.InitDefaultConfig()
+	// We need to set the root path even if we're not using the config, otherwise fixtures are not loaded correctly
+	config.ServiceRootpath.Set(os.Getenv("VIKUNJA_SERVICE_ROOTPATH"))
+
+	// Sync fixtures
+	err = InitFixturesWithT(t, tablenames...)
 	if err != nil {
 		log.Fatal(err)
 	}

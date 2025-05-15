@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/config"
 
@@ -64,6 +65,46 @@ func InitFixtures(tablenames ...string) (err error) {
 	}
 
 	fixtures, err = testfixtures.New(loaderOptions...)
+	return err
+}
+
+func InitFixturesWithT(t *testing.T, tablenames ...string) (err error) {
+
+	startTime := time.Now()
+
+	var testfiles func(loader *testfixtures.Loader) error
+	dir := filepath.Join(config.ServiceRootpath.GetString(), "pkg", "db", "fixtures")
+
+	// If fixture table names are specified, load them
+	// Otherwise, load all fixtures
+	if len(tablenames) > 0 {
+		for i, name := range tablenames {
+			tablenames[i] = filepath.Join(dir, name+".yml")
+		}
+		testfiles = testfixtures.Files(tablenames...)
+	} else {
+		testfiles = testfixtures.Directory(dir)
+	}
+
+	loaderOptions := []func(loader *testfixtures.Loader) error{
+		testfixtures.Database(x.DB().DB),
+		testfixtures.Dialect(config.DatabaseType.GetString()),
+		testfixtures.DangerousSkipTestDatabaseCheck(),
+		testfixtures.Location(config.GetTimeZone()),
+		testfiles,
+	}
+
+	if config.DatabaseType.GetString() == "postgres" {
+		loaderOptions = append(loaderOptions,
+			testfixtures.SkipResetSequences(),
+			testfixtures.UseAlterConstraint(),
+			testfixtures.SkipTableChecksumComputation(),
+		)
+	}
+
+	fixtures, err = testfixtures.New(loaderOptions...)
+
+	t.Logf("Fixtures setup took %v", time.Since(startTime))
 	return err
 }
 
