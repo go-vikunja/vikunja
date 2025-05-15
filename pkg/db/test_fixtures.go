@@ -69,9 +69,13 @@ func InitFixtures(tablenames ...string) (err error) {
 }
 
 func InitFixturesWithT(t *testing.T, tablenames ...string) (err error) {
-
 	startTime := time.Now()
-
+	
+	// Track individual timings
+	var setupTime, optionsTime, fixturesCreationTime time.Duration
+	
+	// Setup phase
+	setupStart := time.Now()
 	var testfiles func(loader *testfixtures.Loader) error
 	dir := filepath.Join(config.ServiceRootpath.GetString(), "pkg", "db", "fixtures")
 
@@ -85,7 +89,10 @@ func InitFixturesWithT(t *testing.T, tablenames ...string) (err error) {
 	} else {
 		testfiles = testfixtures.Directory(dir)
 	}
-
+	setupTime = time.Since(setupStart)
+	
+	// Options configuration phase
+	optionsStart := time.Now()
 	loaderOptions := []func(loader *testfixtures.Loader) error{
 		testfixtures.Database(x.DB().DB),
 		testfixtures.Dialect(config.DatabaseType.GetString()),
@@ -101,10 +108,18 @@ func InitFixturesWithT(t *testing.T, tablenames ...string) (err error) {
 			testfixtures.SkipTableChecksumComputation(),
 		)
 	}
-
+	optionsTime = time.Since(optionsStart)
+	
+	// Fixtures creation phase
+	fixturesStart := time.Now()
 	fixtures, err = testfixtures.New(loaderOptions...)
-
-	t.Logf("Fixtures setup took %v", time.Since(startTime))
+	fixturesCreationTime = time.Since(fixturesStart)
+	
+	// Log all timings in one statement
+	totalTime := time.Since(startTime)
+	t.Logf("Fixtures setup: total=%v (setup=%v, options=%v, creation=%v)", 
+		totalTime, setupTime, optionsTime, fixturesCreationTime)
+	
 	return err
 }
 
