@@ -222,6 +222,7 @@ jobs:
           VIKUNJA_DATABASE_PASSWORD: vikunjatest
           VIKUNJA_DATABASE_DATABASE: vikunjatest
           VIKUNJA_DATABASE_SSLMODE: disable
+          VIKUNJA_DATABASE_HOST: 127.0.0.1
           VIKUNJA_AUTH_LDAP_ENABLED: 1
           VIKUNJA_AUTH_LDAP_HOST: localhost
           VIKUNJA_AUTH_LDAP_USETLS: 0
