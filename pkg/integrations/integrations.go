@@ -17,15 +17,6 @@
 package integrations
 
 import (
-	"errors"
-	"net/http"
-	"net/http/httptest"
-	"net/url"
-	"os"
-	"strings"
-	"testing"
-	"time"
-
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
@@ -38,6 +29,13 @@ import (
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 	"code.vikunja.io/api/pkg/web/handler"
+	"errors"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"os"
+	"strings"
+	"testing"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
@@ -62,54 +60,26 @@ var (
 )
 
 func setupTestEnv(t *testing.T) (e *echo.Echo, err error) {
-	start := time.Now()
-
-	configTime := time.Now()
 	config.InitDefaultConfig()
-	configDuration := time.Since(configTime)
 
 	// We need to set the root path even if we're not using the config, otherwise fixtures are not loaded correctly
-	rootPathTime := time.Now()
 	config.ServiceRootpath.Set(os.Getenv("VIKUNJA_SERVICE_ROOTPATH"))
-	rootPathDuration := time.Since(rootPathTime)
 
 	// Some tests use the file engine, so we'll need to initialize that
-	filesTime := time.Now()
 	files.InitTests()
-	filesDuration := time.Since(filesTime)
-
-	userTime := time.Now()
 	user.InitTests()
-	userDuration := time.Since(userTime)
-
-	modelsTime := time.Now()
-	models.SetupTests()
-	modelsDuration := time.Since(modelsTime)
-
-	eventsTime := time.Now()
+	models.SetupTestsWithT(t)
 	events.Fake()
-	eventsDuration := time.Since(eventsTime)
-
-	kvTime := time.Now()
 	keyvalue.InitStorage()
-	kvDuration := time.Since(kvTime)
 
-	fixturesTime := time.Now()
 	err = db.LoadFixtures()
-	fixturesDuration := time.Since(fixturesTime)
 	if err != nil {
 		return
 	}
 
-	routesTime := time.Now()
 	e = routes.NewEcho()
 	routes.RegisterRoutes(e)
-	routesDuration := time.Since(routesTime)
 
-	totalDuration := time.Since(start)
-
-	// Log all timings
-	t.Logf("Test setup timings: \n\tConfig initialization: %v, \n\tRoot path setup: %v, \n\tFiles initialization: %v, \n\tUser initialization: %v, \n\tModels setup: %v, \n\tEvents setup: %v, \n\tKey-value storage: %v, \n\tLoading fixtures: %v, \n\tRoutes setup: %v, \n\tTotal setup time: %v", configDuration, rootPathDuration, filesDuration, userDuration, modelsDuration, eventsDuration, kvDuration, fixturesDuration, routesDuration, totalDuration)
 	return
 }
 

@@ -17,6 +17,9 @@
 package models
 
 import (
+	"testing"
+	"time"
+
 	_ "code.vikunja.io/api/pkg/config" // To trigger its init() which initializes the config
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
@@ -73,6 +76,61 @@ func SetupTests() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// Start the pseudo mail queue
+	mail.StartMailDaemon()
+}
+
+func SetupTestsWithT(t *testing.T) {
+	var err error
+	x, err = db.CreateTestEngine()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	tables := []interface{}{}
+	tables = append(tables, GetTables()...)
+	tables = append(tables, notifications.GetTables()...)
+
+	err = x.Sync2(tables...)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fixturesTime := time.Now()
+	err = db.InitTestFixtures(
+		"files",
+		"label_tasks",
+		"labels",
+		"link_shares",
+		"projects",
+		"task_assignees",
+		"task_attachments",
+		"task_comments",
+		"task_relations",
+		"task_reminders",
+		"tasks",
+		"team_projects",
+		"team_members",
+		"teams",
+		"users",
+		"user_tokens",
+		"users_projects",
+		"buckets",
+		"saved_filters",
+		"subscriptions",
+		"favorites",
+		"api_tokens",
+		"reactions",
+		"project_views",
+		"task_positions",
+		"task_buckets",
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fixturesDuration := time.Since(fixturesTime)
+	t.Logf("Fixtures init took %v", fixturesDuration)
 
 	// Start the pseudo mail queue
 	mail.StartMailDaemon()
