@@ -52,25 +52,9 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             RELEASE_VERSION=${{ steps.ghd.outputs.describe }}
- 
-  frontend:
-    runs-on: blacksmith-2vcpu-ubuntu-2204
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - uses: ./.github/actions/setup-frontend
-      - name: Build frontend
-        working-directory: frontend
-        run: pnpm build
-      - name: Store frontend dist
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: frontend_dist
-          path: ./frontend/dist/**/*
 
   binaries:
     runs-on: blacksmith-8vcpu-ubuntu-2204
-    needs:
-      - frontend
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
       - name: Git describe
@@ -219,8 +203,6 @@ jobs:
           files: 'config.yml.sample'
 
   desktop:
-    needs:
-      - frontend
     strategy:
       matrix:
         os:
