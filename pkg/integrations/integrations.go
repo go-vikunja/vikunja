@@ -24,6 +24,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
@@ -100,9 +101,11 @@ func createRequest(e *echo.Echo, method string, payload string, queryParam url.V
 }
 
 func bootstrapTestRequest(t *testing.T, method string, payload string, queryParam url.Values, urlParams map[string]string) (c echo.Context, rec *httptest.ResponseRecorder) {
-	// Setup
+	start := time.Now()
 	e, err := setupTestEnv()
 	require.NoError(t, err)
+	setupTime := time.Since(start)
+	t.Logf("Test environment setup took %v", setupTime)
 
 	c, rec = createRequest(e, method, payload, queryParam, urlParams)
 	return
