@@ -943,8 +943,8 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 			return &ErrCannotArchiveDefaultProject{ProjectID: project.ID}
 		}
 	}
-	
-	err = setArchiveStateForProjectDecendants(s, project.ID, project.IsArchived)
+
+	err = setArchiveStateForProjectDescendants(s, project.ID, project.IsArchived)
 	if err != nil {
 		return err
 	}
