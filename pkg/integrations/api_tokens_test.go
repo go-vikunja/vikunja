@@ -33,7 +33,7 @@ import (
 
 func TestAPIToken(t *testing.T) {
 	t.Run("valid token", func(t *testing.T) {
-		e, err := setupTestEnv()
+		e, err := setupTestEnv(t)
 		require.NoError(t, err)
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/tasks/all", nil)
 		res := httptest.NewRecorder()
@@ -53,7 +53,7 @@ func TestAPIToken(t *testing.T) {
 		assert.Contains(t, res.Body.String(), `"username":"user1"`)
 	})
 	t.Run("invalid token", func(t *testing.T) {
-		e, err := setupTestEnv()
+		e, err := setupTestEnv(t)
 		require.NoError(t, err)
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/tasks/all", nil)
 		res := httptest.NewRecorder()
@@ -66,7 +66,7 @@ func TestAPIToken(t *testing.T) {
 		require.Error(t, h(c))
 	})
 	t.Run("expired token", func(t *testing.T) {
-		e, err := setupTestEnv()
+		e, err := setupTestEnv(t)
 		require.NoError(t, err)
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/tasks/all", nil)
 		res := httptest.NewRecorder()
@@ -79,7 +79,7 @@ func TestAPIToken(t *testing.T) {
 		require.Error(t, h(c))
 	})
 	t.Run("valid token, invalid scope", func(t *testing.T) {
-		e, err := setupTestEnv()
+		e, err := setupTestEnv(t)
 		require.NoError(t, err)
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/projects", nil)
 		res := httptest.NewRecorder()
@@ -92,7 +92,7 @@ func TestAPIToken(t *testing.T) {
 		require.Error(t, h(c))
 	})
 	t.Run("jwt", func(t *testing.T) {
-		e, err := setupTestEnv()
+		e, err := setupTestEnv(t)
 		require.NoError(t, err)
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/tasks/all", nil)
 		res := httptest.NewRecorder()
@@ -112,7 +112,7 @@ func TestAPIToken(t *testing.T) {
 		require.NoError(t, h(c))
 	})
 	t.Run("nonexisting route", func(t *testing.T) {
-		e, err := setupTestEnv()
+		e, err := setupTestEnv(t)
 		require.NoError(t, err)
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/nonexisting", nil)
 		res := httptest.NewRecorder()
