@@ -1292,8 +1292,8 @@ func SetProjectBackground(s *xorm.Session, projectID int64, background *files.Fi
 	return
 }
 
-// setArchiveStateForProjectDecendants uses a recursive CTE to find and set the archived status of all descendant projects.
-func setArchiveStateForProjectDecendants(s *xorm.Session, parentProjectID int64, shouldBeArchived bool) error {
+// setArchiveStateForProjectDescendants uses a recursive CTE to find and set the archived status of all descendant projects.
+func setArchiveStateForProjectDescendants(s *xorm.Session, parentProjectID int64, shouldBeArchived bool) error {
 	// The CTE finds all descendants of parentProjectID and updates their is_archived status.
 	// We only update if the current state is different from the target state to avoid unnecessary updates.
 	query := `
