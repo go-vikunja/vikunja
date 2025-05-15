@@ -1294,9 +1294,9 @@ func SetProjectBackground(s *xorm.Session, projectID int64, background *files.Fi
 
 // setArchiveStateForProjectDescendants uses a recursive CTE to find and set the archived status of all descendant projects.
 func setArchiveStateForProjectDescendants(s *xorm.Session, parentProjectID int64, shouldBeArchived bool) error {
-	// The CTE finds all descendants of parentProjectID and updates their is_archived status.
-	// We only update if the current state is different from the target state to avoid unnecessary updates.
-	query := `
+	var descendantIDs []int64
+	err := s.SQL(
+		`
 WITH RECURSIVE descendant_ids (id) AS (
     SELECT id
     FROM projects
@@ -1306,11 +1306,22 @@ WITH RECURSIVE descendant_ids (id) AS (
     FROM projects p
     INNER JOIN descendant_ids di ON p.parent_project_id = di.id
 )
-UPDATE projects
-SET is_archived = ?
-WHERE id IN (SELECT id FROM descendant_ids) AND is_archived != ?`
+SELECT id FROM descendant_ids`,
+		parentProjectID,
+	).Find(&descendantIDs)
+	if err != nil {
+		log.Errorf("Error finding descendant projects for parent ID %d: %v", parentProjectID, err)
+		return fmt.Errorf("failed to find descendant projects for parent ID %d: %w", parentProjectID, err)
+	}
 
-	_, err := s.Exec(query, parentProjectID, shouldBeArchived, shouldBeArchived)
+	if len(descendantIDs) == 0 {
+		return nil
+	}
+
+	_, err = s.In("id", descendantIDs).
+		And("is_archived != ?", shouldBeArchived).
+		Cols("is_archived").
+		Update(&Project{IsArchived: shouldBeArchived})
 	if err != nil {
 		log.Errorf("Error updating is_archived for descendant projects for parent ID %d to %t: %v", parentProjectID, shouldBeArchived, err)
 		return fmt.Errorf("failed to update is_archived for descendant projects for parent ID %d to %t: %w", parentProjectID, shouldBeArchived, err)
