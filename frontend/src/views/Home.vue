@@ -15,7 +15,7 @@
 					dateSince: formatDateSince(deletionScheduledAt),
 				})
 			}}
-			<RouterLink :to="{name: 'user.settings', hash: '#deletion'}">
+			<RouterLink :to="{name: 'user.settings.deletion'}">
 				{{ $t('user.deletion.scheduledCancel') }}
 			</RouterLink>
 		</Message>
