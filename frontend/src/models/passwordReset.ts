@@ -7,7 +7,7 @@ export default class PasswordResetModel extends AbstractModel<IPasswordReset> im
 	newPassword = ''
 	email = ''
 
-	constructor(data: Partial<IPasswordReset>) {
+	constructor(data: Partial<IPasswordReset> = {}) {
 		super()
 		this.assignData(data)
 
