@@ -67,7 +67,8 @@
 			"noAccountYet": "Henüz bir hesabınız yok mu?",
 			"alreadyHaveAnAccount": "Zaten bir hesabınız var mı?",
 			"remember": "Oturumu açık tut",
-			"registrationDisabled": "Kayıt devre dışı bırakıldı."
+			"registrationDisabled": "Kayıt devre dışı bırakıldı.",
+			"passwordResetTokenMissing": "Şifre sıfırlama tokeni eksik."
 		},
 		"settings": {
 			"title": "Ayarlar",

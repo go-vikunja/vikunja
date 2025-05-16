@@ -67,7 +67,8 @@
 			"noAccountYet": "Noch kein Account?",
 			"alreadyHaveAnAccount": "Hast du bereits einen Account?",
 			"remember": "Angemeldet bleiben",
-			"registrationDisabled": "Registrierung ist deaktiviert."
+			"registrationDisabled": "Registrierung ist deaktiviert.",
+			"passwordResetTokenMissing": "Das Passwort-Reset-Token fehlt."
 		},
 		"settings": {
 			"title": "Iihstellige",
