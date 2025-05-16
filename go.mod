@@ -215,3 +215,5 @@ replace github.com/labstack/echo/v4 => github.com/kolaente/echo/v4 v4.0.0-202501
 go 1.23.0
 
 toolchain go1.24.3
+
+replace github.com/go-testfixtures/testfixtures/v3 => github.com/kolaente/testfixtures/v3 v3.2.1-0.20250516135329-c9de039f867e
