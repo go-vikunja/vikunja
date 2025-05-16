@@ -212,6 +212,8 @@ replace github.com/samedi/caldav-go => github.com/kolaente/caldav-go v3.0.1-0.20
 
 replace github.com/labstack/echo/v4 => github.com/kolaente/echo/v4 v4.0.0-20250124112709-682dfde74c31 // https://github.com/labstack/echo/pull/2738
 
+replace github.com/go-testfixtures/testfixtures/v3 => github.com/kolaente/testfixtures/v3 v3.2.1-0.20250516135329-c9de039f867e // https://github.com/go-testfixtures/testfixtures/pull/289
+
 go 1.23.0
 
 toolchain go1.24.3
