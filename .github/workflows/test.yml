@@ -277,24 +277,11 @@ jobs:
           name: frontend_dist
           path: ./frontend/dist
 
-  # Workaround for this old issue, still not fixed:
-  # https://github.com/cypress-io/github-action/issues/121
-  define-frontend-e2e-batches:
-    runs-on: ubuntu-latest
-    outputs: 
-      batches: ${{ steps.get-batches.outputs.batches }}
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - name: Get spec batches
-        id: get-batches
-        run: echo "batches=$(find frontend/cypress/e2e -type f -name '*.spec.ts' -printf "%P\n" | jq -R . | jq -cs .)" >> "$GITHUB_OUTPUT"
-
   test-frontend-e2e:
     runs-on: ubuntu-latest
     needs:
       - api-build
       - frontend-build
-      - define-frontend-e2e-batches
     strategy:
       # when one test fails, DO NOT cancel the other
       # containers, because this will kill Cypress processes
@@ -302,7 +289,10 @@ jobs:
       # https://github.com/cypress-io/github-action/issues/48
       fail-fast: false
       matrix:
-        spec: ${{ fromJSON(needs.define-frontend-e2e-batches.outputs.batches) }}
+        containers: [1, 2, 3, 4, 5]
+    container:
+      image: cypress/browsers:latest
+      options: --user 1001
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
       - name: Download Vikunja Binary
@@ -315,24 +305,15 @@ jobs:
         with:
           name: frontend_dist
           path: ./frontend/dist
-      - name: Run api
-        env:
-          VIKUNJA_SERVICE_TESTINGTOKEN: averyLongSecretToSe33dtheDB
-          VIKUNJA_LOG_LEVEL: DEBUG
-          VIKUNJA_CORS_ENABLE: 1
-          VIKUNJA_DATABASE_PATH: memory
-          VIKUNJA_DATABASE_TYPE: sqlite
-          VIKUNJA_RATELIMIT_NOAUTHLIMIT: 1000
-        run: |
-          chmod +x ./vikunja
-          ./vikunja &
+      - run: chmod +x ./vikunja
       - uses: cypress-io/github-action@v6
         with:
           working-directory: frontend
           browser: chrome
           record: true
-          spec: cypress/e2e/${{ matrix.spec }}
+          parallel: true
           start: |
+            pnpm run preview:vikunja
             pnpm run preview
           wait-on: http://127.0.0.1:4173,http://127.0.0.1:3456/api/v1/info
           wait-on-timeout: 10
@@ -342,6 +323,12 @@ jobs:
           CYPRESS_API_URL: http://127.0.0.1:3456/api/v1
           CYPRESS_TEST_SECRET: averyLongSecretToSe33dtheDB
           CYPRESS_DEFAULT_COMMAND_TIMEOUT: 60000
+          VIKUNJA_SERVICE_TESTINGTOKEN: averyLongSecretToSe33dtheDB
+          VIKUNJA_LOG_LEVEL: DEBUG
+          VIKUNJA_CORS_ENABLE: 1
+          VIKUNJA_DATABASE_PATH: memory
+          VIKUNJA_DATABASE_TYPE: sqlite
+          VIKUNJA_RATELIMIT_NOAUTHLIMIT: 1000
   
   # This step only exists so that we can make it required, because we can't make 
   # the actual test step required due to the matrix
