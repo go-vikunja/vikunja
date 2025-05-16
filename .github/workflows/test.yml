@@ -263,7 +263,7 @@ jobs:
         working-directory: frontend
         run: pnpm test:unit
 
-  build-frontend:
+  frontend-build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
@@ -293,7 +293,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - api-build
-      - build-frontend
+      - frontend-build
       - define-frontend-e2e-batches
     strategy:
       # when one test fails, DO NOT cancel the other
