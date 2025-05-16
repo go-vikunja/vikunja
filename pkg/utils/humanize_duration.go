@@ -17,7 +17,6 @@
 package utils
 
 import (
-	"fmt"
 	"math"
 	"strings"
 	"time"
@@ -37,28 +36,25 @@ func HumanizeDuration(duration time.Duration, lang string) string {
 	minutes := int64(math.Mod(duration.Minutes(), 60))
 
 	chunks := []struct {
-		pluralFormatKey string
-		oneKey          string
-		amount          int64
+		key    string
+		amount int64
 	}{
-		{"time.many_years", "time.one_year", years},
-		{"time.many_weeks", "time.one_week", weeks},
-		{"time.many_days", "time.one_day", days},
-		{"time.many_hours", "time.one_hour", hours},
-		{"time.many_minutes", "time.one_minute", minutes},
+		{"time.since_years", years},
+		{"time.since_weeks", weeks},
+		{"time.since_days", days},
+		{"time.since_hours", hours},
+		{"time.since_minutes", minutes},
 	}
 
 	parts := []string{}
 
 	for _, chunk := range chunks {
-		switch chunk.amount {
-		case 0:
+		if chunk.amount <= 0 {
 			continue
-		case 1:
-			parts = append(parts, i18n.T(lang, chunk.oneKey))
-		default:
-			parts = append(parts, fmt.Sprintf(i18n.T(lang, chunk.pluralFormatKey), chunk.amount))
 		}
+
+		translatedText := i18n.TP(lang, chunk.key, chunk.amount, chunk.amount)
+		parts = append(parts, translatedText)
 	}
 
 	if len(parts) > 1 {
