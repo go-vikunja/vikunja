@@ -164,7 +164,7 @@ func GetAvailableLanguages() []string {
 }
 
 // T returns the translation for the specified key using dot notation in the specified language
-func T(lang, key string, params ...string) string {
+func T(lang, key string, params ...any) string {
 	translator.mu.RLock()
 	defer translator.mu.RUnlock()
 
@@ -172,7 +172,7 @@ func T(lang, key string, params ...string) string {
 	if langMap, exists := translator.translations[lang]; exists {
 		if translation, found := langMap[key]; found {
 			if len(params) > 0 {
-				return fmt.Sprintf(translation, stringSliceToInterfaceSlice(params)...)
+				return fmt.Sprintf(translation, params...)
 			}
 			return translation
 		}
@@ -183,7 +183,7 @@ func T(lang, key string, params ...string) string {
 		if langMap, exists := translator.translations[translator.fallbackLang]; exists {
 			if translation, found := langMap[key]; found {
 				if len(params) > 0 {
-					return fmt.Sprintf(translation, stringSliceToInterfaceSlice(params)...)
+					return fmt.Sprintf(translation, params...)
 				}
 				return translation
 			}
@@ -192,15 +192,6 @@ func T(lang, key string, params ...string) string {
 
 	// Return the key if no translation found
 	return key
-}
-
-// stringSliceToInterfaceSlice converts a string slice to an interface slice for fmt.Sprintf
-func stringSliceToInterfaceSlice(strings []string) []interface{} {
-	interfaces := make([]interface{}, len(strings))
-	for i, s := range strings {
-		interfaces[i] = s
-	}
-	return interfaces
 }
 
 func HasLanguage(lang string) bool {
@@ -213,12 +204,12 @@ func HasLanguage(lang string) bool {
 //   - For "singular | plural" (2 forms): uses the first for count 1, second otherwise.
 //   - For "zero | one | other" (3 forms): uses the first for count 0, second for count 1, third otherwise.
 //
-// If the translation string for the key does not contain '|', it's returned as 
+// If the translation string for the key does not contain '|', it's returned as
 // If the translation string for the key does not contain '|', it's returned as is.
 // If the key is not found, the key itself is returned.
 // If the pluralization string is malformed (e.g. contains '|' but not 2 or 3 valid parts), the key is returned and a warning is logged.
 // This function does NOT perform any variable interpolation (e.g., replacing "{count}" with the actual number).
-func TP(lang, key string, count int64) string {
+func TP(lang, key string, count int64, params ...any) string {
 	translator.mu.RLock()
 	defer translator.mu.RUnlock()
 
@@ -250,6 +241,9 @@ func TP(lang, key string, count int64) string {
 	// If the string doesn't contain a pipe, it's not a pluralized string according to convention.
 	// Return it as is.
 	if !strings.Contains(rawTranslation, "|") {
+		if len(params) > 0 && strings.Contains(rawTranslation, "%") {
+			return fmt.Sprintf(rawTranslation, params...)
+		}
 		return rawTranslation
 	}
 
@@ -284,5 +278,10 @@ func TP(lang, key string, count int64) string {
 		return key // Return the key to indicate an issue with the translation data.
 	}
 
-	return strings.TrimSpace(selectedChoice)
+	selectedChoice = strings.TrimSpace(selectedChoice)
+
+	if len(params) > 0 && strings.Contains(selectedChoice, "%") {
+		return fmt.Sprintf(selectedChoice, params...)
+	}
+	return selectedChoice
 }
