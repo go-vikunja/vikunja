@@ -893,6 +893,8 @@ github.com/go-testfixtures/testfixtures/v3 v3.14.0 h1:aRt5qyH2XjzFgCC5NizNs6Qrzj
 github.com/go-testfixtures/testfixtures/v3 v3.14.0/go.mod h1:HHb6Yd8spzm6aFZU6jwBj9qFvVUNNkx5nGbjG4UHeOE=
 github.com/go-testfixtures/testfixtures/v3 v3.15.0 h1:fu8Pqu2xto9OHbnWm4go0ZHXZrQB8nYlu3bXfaRYw8k=
 github.com/go-testfixtures/testfixtures/v3 v3.15.0/go.mod h1:0Du505tczzCjEVuFXa74gd95Z4PwuHsFW4t4PB9xNH0=
+github.com/go-testfixtures/testfixtures/v3 v3.15.1-0.20250516142852-684fa278bb8f h1:EMODsZVmNZGzZN6MF6ipyqXPj7Olev4ot6xD+YzP41o=
+github.com/go-testfixtures/testfixtures/v3 v3.15.1-0.20250516142852-684fa278bb8f/go.mod h1:0Du505tczzCjEVuFXa74gd95Z4PwuHsFW4t4PB9xNH0=
 github.com/go-viper/mapstructure/v2 v2.2.1 h1:ZAaOCxANMuZx5RCeg0mBdEZk7DZasvvZIxtHqx8aGss=
 github.com/go-viper/mapstructure/v2 v2.2.1/go.mod h1:oJDH3BJKyqBA2TXFhDsKDGDTlndYOZ6rGS0BRZIxGhM=
 github.com/gocarina/gocsv v0.0.0-20231116093920-b87c2d0e983a h1:RYfmiM0zluBJOiPDJseKLEN4BapJ42uSi9SZBQ2YyiA=
