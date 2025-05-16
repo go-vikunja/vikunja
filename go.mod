@@ -55,7 +55,7 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
-	github.com/pquerna/otp v1.4.0
+	github.com/pquerna/otp v1.5.0
 	github.com/prometheus/client_golang v1.22.0
 	github.com/redis/go-redis/v9 v9.8.0
 	github.com/robfig/cron/v3 v3.0.1
