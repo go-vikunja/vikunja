@@ -148,16 +148,6 @@
 		}
 	},
 	"time": {
-		"one_year": "un an",
-		"one_week": "une semaine",
-		"one_day": "un jour",
-		"one_hour": "une heure",
-		"one_minute": "une minute",
-		"many_years": "%[1]d ans",
-		"many_weeks": "%[1]d semaines",
-		"many_days": "%[1]d jours",
-		"many_hours": "%[1]d heures",
-		"many_minutes": "%[1]d minutes",
 		"list_last_separator": "et"
 	}
 }

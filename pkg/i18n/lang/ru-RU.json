@@ -143,21 +143,12 @@
 				"go_to_settings": "Перейти в настройки",
 				"confirm_email": "Подтвердить email",
 				"abort_deletion": "Отменить удаление",
-				"confirm_account_deletion": "Подтвердить удаление аккаунта"
+				"confirm_account_deletion": "Подтвердить удаление аккаунта",
+				"change_notification_settings_link": "Вы можете изменить настройки уведомлений [здесь](%[1]s)."
 			}
 		}
 	},
 	"time": {
-		"one_year": "один год",
-		"one_week": "одну неделю",
-		"one_day": "один день",
-		"one_hour": "один час",
-		"one_minute": "одну минуту",
-		"many_years": "%[1]d лет",
-		"many_weeks": "%[1]d недель",
-		"many_days": "%[1]d дней",
-		"many_hours": "%[1]d часов",
-		"many_minutes": "%[1]d минут",
 		"list_last_separator": "и"
 	}
 }
