@@ -67,7 +67,8 @@
 			"noAccountYet": "Vous n'avez pas encore de compte ?",
 			"alreadyHaveAnAccount": "Vous avez déjà un compte ?",
 			"remember": "Rester connecté(e)",
-			"registrationDisabled": "L'enregistrement est désactivé."
+			"registrationDisabled": "L'enregistrement est désactivé.",
+			"passwordResetTokenMissing": "Le jeton de réinitialisation du mot de passe est manquant."
 		},
 		"settings": {
 			"title": "Paramètres",

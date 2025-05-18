@@ -143,11 +143,17 @@
 				"go_to_settings": "Ouvrir les paramètres",
 				"confirm_email": "Confirmer votre adresse email",
 				"abort_deletion": "Annuler la suppression",
-				"confirm_account_deletion": "Confirmer la suppression de mon compte"
+				"confirm_account_deletion": "Confirmer la suppression de mon compte",
+				"change_notification_settings_link": "Vous pouvez modifier vos paramètres de notification [ici](%[1]s)."
 			}
 		}
 	},
 	"time": {
+		"since_years": "un an|%[1]d ans",
+		"since_weeks": "une semaine|%[1] semaines",
+		"since_days": "un jour|%[1]d jours",
+		"since_hours": "une heure|%[1]d heures",
+		"since_minutes": "une minute|%[1]d minutes",
 		"list_last_separator": "et"
 	}
 }

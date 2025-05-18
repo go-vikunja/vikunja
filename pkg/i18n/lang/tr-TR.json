@@ -149,6 +149,11 @@
 		}
 	},
 	"time": {
+		"since_years": "bir yıl|%[1]d yıl",
+		"since_weeks": "bir hafta|%[1]d hafta",
+		"since_days": "bir gün|%[1]d gün",
+		"since_hours": "bir saat|%[1]d saat",
+		"since_minutes": "bir dakika|%[1]d dakika",
 		"list_last_separator": "ve"
 	}
 }
