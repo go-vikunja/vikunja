@@ -188,6 +188,8 @@ func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provid
 		forceUserInfoTypedValue, ok := forceUserInfoValue.(bool)
 		if ok {
 			forceUserInfo = forceUserInfoTypedValue
+		} else {
+			log.Errorf("forceuserinfo is not a boolean for provider %s, value: %v", key, forceUserInfoValue)
 		}
 	}
 
