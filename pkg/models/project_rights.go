@@ -237,6 +237,11 @@ type projectRight struct {
 
 func checkRightsForProjects(s *xorm.Session, u *user.User, projectIDs []int64) (projectRightMap map[int64]*projectRight, err error) {
 	projectRightMap = make(map[int64]*projectRight)
+
+	if len(projectIDs) < 1 {
+		return
+	}
+
 	args := []interface{}{
 		u.ID,
 		u.ID,
