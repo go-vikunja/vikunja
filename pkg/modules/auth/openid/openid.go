@@ -56,6 +56,7 @@ type Provider struct {
 	Scope            string `json:"scope"`
 	EmailFallback    bool   `json:"email_fallback"`
 	UsernameFallback bool   `json:"username_fallback"`
+	ForceUserInfo    bool   `json:"force_user_info"`
 	ClientSecret     string `json:"-"`
 	openIDProvider   *oidc.Provider
 	Oauth2Config     *oauth2.Config `json:"-"`
@@ -297,7 +298,7 @@ func getClaims(provider *Provider, oauth2Token *oauth2.Token, idToken *oidc.IDTo
 		return nil, err
 	}
 
-	if cl.Email == "" || cl.Name == "" || cl.PreferredUsername == "" {
+	if provider.ForceUserInfo || cl.Email == "" || cl.Name == "" || cl.PreferredUsername == "" {
 		info, err := provider.openIDProvider.UserInfo(context.Background(), provider.Oauth2Config.TokenSource(context.Background(), oauth2Token))
 		if err != nil {
 			log.Errorf("Error getting userinfo for provider %s: %v", provider.Name, err)
@@ -311,15 +312,15 @@ func getClaims(provider *Provider, oauth2Token *oauth2.Token, idToken *oidc.IDTo
 			return nil, err
 		}
 
-		if cl.Email == "" {
+		if (provider.ForceUserInfo && cl2.Email != "") || cl.Email == "" {
 			cl.Email = cl2.Email
 		}
 
-		if cl.Name == "" {
+		if (provider.ForceUserInfo && cl2.Name != "") || cl.Name == "" {
 			cl.Name = cl2.Name
 		}
 
-		if cl.PreferredUsername == "" {
+		if (provider.ForceUserInfo && cl2.PreferredUsername != "") || cl.PreferredUsername == "" {
 			cl.PreferredUsername = cl2.PreferredUsername
 		}
 
