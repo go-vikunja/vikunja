@@ -292,3 +292,127 @@ func TestGetOrCreateUser(t *testing.T) {
 		assert.Equal(t, 11, int(u.ID), "user id 11 expected")
 	})
 }
+
+// TestMergeClaims tests the mergeClaims function with different configurations including forceUserInfo
+func TestMergeClaims(t *testing.T) {
+	t.Run("ForceUserInfo enabled - should use userinfo values", func(t *testing.T) {
+		// Setup token claims
+		tokenClaims := &claims{
+			Email:             "token-email@example.com",
+			Name:              "Token Name",
+			PreferredUsername: "token_username",
+		}
+
+		// Setup userinfo claims
+		userinfoClaims := &claims{
+			Email:             "userinfo-email@example.com",
+			Name:              "UserInfo Name",
+			PreferredUsername: "userinfo_username",
+		}
+
+		// Test with ForceUserInfo enabled
+		err := mergeClaims(tokenClaims, userinfoClaims, true)
+		require.NoError(t, err)
+
+		// Verify userinfo data was used
+		assert.Equal(t, "userinfo-email@example.com", tokenClaims.Email)
+		assert.Equal(t, "UserInfo Name", tokenClaims.Name)
+		assert.Equal(t, "userinfo_username", tokenClaims.PreferredUsername)
+	})
+
+	t.Run("ForceUserInfo disabled - should use token values if present", func(t *testing.T) {
+		// Setup token claims with all values
+		tokenClaims := &claims{
+			Email:             "token-email@example.com",
+			Name:              "Token Name",
+			PreferredUsername: "token_username",
+		}
+
+		// Setup userinfo claims
+		userinfoClaims := &claims{
+			Email:             "userinfo-email@example.com",
+			Name:              "UserInfo Name",
+			PreferredUsername: "userinfo_username",
+		}
+
+		// Test with ForceUserInfo disabled
+		err := mergeClaims(tokenClaims, userinfoClaims, false)
+		require.NoError(t, err)
+
+		// Verify token data was preserved
+		assert.Equal(t, "token-email@example.com", tokenClaims.Email)
+		assert.Equal(t, "Token Name", tokenClaims.Name)
+		assert.Equal(t, "token_username", tokenClaims.PreferredUsername)
+	})
+
+	t.Run("Missing values - should use userinfo when token is missing values", func(t *testing.T) {
+		// Setup token claims with missing values
+		tokenClaims := &claims{
+			Email: "token-email@example.com",
+			// Missing Name and PreferredUsername
+		}
+
+		// Setup userinfo claims
+		userinfoClaims := &claims{
+			Email:             "userinfo-email@example.com",
+			Name:              "UserInfo Name",
+			PreferredUsername: "userinfo_username",
+		}
+
+		// Test with ForceUserInfo disabled, but missing values in token
+		err := mergeClaims(tokenClaims, userinfoClaims, false)
+		require.NoError(t, err)
+
+		// Verify token email was kept, but missing fields were filled from userinfo
+		assert.Equal(t, "token-email@example.com", tokenClaims.Email)
+		assert.Equal(t, "UserInfo Name", tokenClaims.Name)
+		assert.Equal(t, "userinfo_username", tokenClaims.PreferredUsername)
+	})
+
+	t.Run("Use nickname when preferred_username is missing", func(t *testing.T) {
+		// Setup token claims with missing preferred_username
+		tokenClaims := &claims{
+			Email: "token-email@example.com",
+			Name:  "Token Name",
+			// Missing PreferredUsername
+		}
+
+		// Setup userinfo claims with nickname but no preferred_username
+		userinfoClaims := &claims{
+			Email:    "userinfo-email@example.com",
+			Name:     "UserInfo Name",
+			Nickname: "userinfo_nickname",
+			// Missing PreferredUsername to test fallback to nickname
+		}
+
+		// Test with ForceUserInfo disabled
+		err := mergeClaims(tokenClaims, userinfoClaims, false)
+		require.NoError(t, err)
+
+		// Verify nickname was used for preferred_username
+		assert.Equal(t, "userinfo_nickname", tokenClaims.PreferredUsername)
+	})
+
+	t.Run("Error when email is missing", func(t *testing.T) {
+		// Setup token claims with missing email
+		tokenClaims := &claims{
+			// Missing Email
+			Name:              "Token Name",
+			PreferredUsername: "token_username",
+		}
+
+		// Setup userinfo claims also with missing email
+		userinfoClaims := &claims{
+			// Missing Email
+			Name:              "UserInfo Name",
+			PreferredUsername: "userinfo_username",
+		}
+
+		// Test with ForceUserInfo disabled
+		err := mergeClaims(tokenClaims, userinfoClaims, false)
+
+		// Verify error is returned for missing email
+		require.Error(t, err)
+		assert.IsType(t, &user.ErrNoOpenIDEmailProvided{}, err)
+	})
+}

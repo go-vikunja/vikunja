@@ -56,6 +56,7 @@ type Provider struct {
 	Scope            string `json:"scope"`
 	EmailFallback    bool   `json:"email_fallback"`
 	UsernameFallback bool   `json:"username_fallback"`
+	ForceUserInfo    bool   `json:"force_user_info"`
 	ClientSecret     string `json:"-"`
 	openIDProvider   *oidc.Provider
 	Oauth2Config     *oauth2.Config `json:"-"`
@@ -288,6 +289,32 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 	return
 }
 
+// mergeClaims combines claims from token and userinfo based on the ForceUserInfo setting
+// cl represents the claims from the token, cl2 represents the claims from userinfo
+func mergeClaims(cl *claims, cl2 *claims, forceUserInfo bool) error {
+	if (forceUserInfo && cl2.Email != "") || cl.Email == "" {
+		cl.Email = cl2.Email
+	}
+
+	if (forceUserInfo && cl2.Name != "") || cl.Name == "" {
+		cl.Name = cl2.Name
+	}
+
+	if (forceUserInfo && cl2.PreferredUsername != "") || cl.PreferredUsername == "" {
+		cl.PreferredUsername = cl2.PreferredUsername
+	}
+
+	if cl.PreferredUsername == "" && cl2.Nickname != "" {
+		cl.PreferredUsername = cl2.Nickname
+	}
+
+	if cl.Email == "" {
+		return &user.ErrNoOpenIDEmailProvided{}
+	}
+
+	return nil
+}
+
 func getClaims(provider *Provider, oauth2Token *oauth2.Token, idToken *oidc.IDToken) (*claims, error) {
 
 	cl := &claims{}
@@ -297,7 +324,7 @@ func getClaims(provider *Provider, oauth2Token *oauth2.Token, idToken *oidc.IDTo
 		return nil, err
 	}
 
-	if cl.Email == "" || cl.Name == "" || cl.PreferredUsername == "" {
+	if provider.ForceUserInfo || cl.Email == "" || cl.Name == "" || cl.PreferredUsername == "" {
 		info, err := provider.openIDProvider.UserInfo(context.Background(), provider.Oauth2Config.TokenSource(context.Background(), oauth2Token))
 		if err != nil {
 			log.Errorf("Error getting userinfo for provider %s: %v", provider.Name, err)
@@ -311,25 +338,13 @@ func getClaims(provider *Provider, oauth2Token *oauth2.Token, idToken *oidc.IDTo
 			return nil, err
 		}
 
-		if cl.Email == "" {
-			cl.Email = cl2.Email
-		}
+		err = mergeClaims(cl, cl2, provider.ForceUserInfo)
+		if err != nil {
+			if user.IsErrNoEmailProvided(err) {
+				log.Errorf("Claim does not contain an email address for provider %s", provider.Name)
+			}
 
-		if cl.Name == "" {
-			cl.Name = cl2.Name
-		}
-
-		if cl.PreferredUsername == "" {
-			cl.PreferredUsername = cl2.PreferredUsername
-		}
-
-		if cl.PreferredUsername == "" && cl2.Nickname != "" {
-			cl.PreferredUsername = cl2.Nickname
-		}
-
-		if cl.Email == "" {
-			log.Errorf("Claim does not contain an email address for provider %s", provider.Name)
-			return nil, &user.ErrNoOpenIDEmailProvided{}
+			return nil, err
 		}
 	}
 	return cl, nil
