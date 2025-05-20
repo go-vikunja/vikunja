@@ -7,11 +7,15 @@ ENV PNPM_CACHE_FOLDER=.cache/pnpm/
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 ENV CYPRESS_INSTALL_BINARY=0
 
-COPY frontend/ ./
-
+# First copy lockfile & manifest => they rarely change
+COPY frontend/pnpm-lock.yaml frontend/package.json ./
 RUN npm install -g corepack && corepack enable && \
-      pnpm install --frozen-lockfile --prefer-offline && \
-      pnpm run build
+    pnpm fetch --prod # installs into cache only
+
+# Copy the rest => invalidates only when code changes
+COPY frontend/ ./
+RUN pnpm install --frozen-lockfile --offline && \
+	pnpm run build
 
 FROM --platform=$BUILDPLATFORM ghcr.io/techknowlogick/xgo:go-1.23.x@sha256:d45f463381d025efa2fa0fb8617d2b04694e650bfd5d206ae1ef13d0c78fdea6 AS apibuilder
 

@@ -1,3 +1,10 @@
+# Source-control & editors
+.git
+.github
+.vscode
+.idea
+*.swp
+
 files/
 dist/
 logs/
@@ -16,3 +23,7 @@ docker-manifest-unstable.tmpl
 /frontend/node_modules/
 /frontend/.direnv
 /frontend/dist
+
+# OS
+.DS_Store
+Thumbs.db
