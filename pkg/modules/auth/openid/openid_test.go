@@ -311,7 +311,7 @@ func TestMergeClaims(t *testing.T) {
 		}
 
 		// Test with ForceUserInfo enabled
-		err := mergeClaims(tokenClaims, userinfoClaims, "test-provider", true)
+		err := mergeClaims(tokenClaims, userinfoClaims, true)
 		require.NoError(t, err)
 
 		// Verify userinfo data was used
@@ -336,7 +336,7 @@ func TestMergeClaims(t *testing.T) {
 		}
 
 		// Test with ForceUserInfo disabled
-		err := mergeClaims(tokenClaims, userinfoClaims, "test-provider", false)
+		err := mergeClaims(tokenClaims, userinfoClaims, false)
 		require.NoError(t, err)
 
 		// Verify token data was preserved
@@ -360,7 +360,7 @@ func TestMergeClaims(t *testing.T) {
 		}
 
 		// Test with ForceUserInfo disabled, but missing values in token
-		err := mergeClaims(tokenClaims, userinfoClaims, "test-provider", false)
+		err := mergeClaims(tokenClaims, userinfoClaims, false)
 		require.NoError(t, err)
 
 		// Verify token email was kept, but missing fields were filled from userinfo
@@ -386,7 +386,7 @@ func TestMergeClaims(t *testing.T) {
 		}
 
 		// Test with ForceUserInfo disabled
-		err := mergeClaims(tokenClaims, userinfoClaims, "test-provider", false)
+		err := mergeClaims(tokenClaims, userinfoClaims, false)
 		require.NoError(t, err)
 
 		// Verify nickname was used for preferred_username
@@ -409,7 +409,7 @@ func TestMergeClaims(t *testing.T) {
 		}
 
 		// Test with ForceUserInfo disabled
-		err := mergeClaims(tokenClaims, userinfoClaims, "test-provider", false)
+		err := mergeClaims(tokenClaims, userinfoClaims, false)
 
 		// Verify error is returned for missing email
 		require.Error(t, err)

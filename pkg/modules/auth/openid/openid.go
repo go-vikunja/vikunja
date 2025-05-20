@@ -291,7 +291,7 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 
 // mergeClaims combines claims from token and userinfo based on the ForceUserInfo setting
 // cl represents the claims from the token, cl2 represents the claims from userinfo
-func mergeClaims(cl *claims, cl2 *claims, providerName string, forceUserInfo bool) error {
+func mergeClaims(cl *claims, cl2 *claims, forceUserInfo bool) error {
 	if (forceUserInfo && cl2.Email != "") || cl.Email == "" {
 		cl.Email = cl2.Email
 	}
@@ -309,7 +309,6 @@ func mergeClaims(cl *claims, cl2 *claims, providerName string, forceUserInfo boo
 	}
 
 	if cl.Email == "" {
-		log.Errorf("Claim does not contain an email address for provider %s", providerName)
 		return &user.ErrNoOpenIDEmailProvided{}
 	}
 
@@ -339,8 +338,12 @@ func getClaims(provider *Provider, oauth2Token *oauth2.Token, idToken *oidc.IDTo
 			return nil, err
 		}
 
-		err = mergeClaims(cl, cl2, provider.Name, provider.ForceUserInfo)
+		err = mergeClaims(cl, cl2, provider.ForceUserInfo)
 		if err != nil {
+			if user.IsErrNoEmailProvided(err) {
+				log.Errorf("Claim does not contain an email address for provider %s", provider.Name)
+			}
+
 			return nil, err
 		}
 	}
