@@ -35,9 +35,9 @@ function createWindow() {
 
 		// Start a local express server to serve static files
 		eApp.use(express.static(path.join(__dirname, frontendPath)))
-		// Handle urls set by the frontend
-		eApp.get('*', (request, response, next) => {
-			response.sendFile(`${__dirname}/${frontendPath}index.html`);
+		// Handle urls set by the frontend - use app.use as catch-all instead of route pattern
+		eApp.use((request, response) => {
+			response.sendFile(path.join(__dirname, frontendPath, 'index.html'))
 		})
 		const server = eApp.listen(port,  '127.0.0.1', () => {
 			console.log(`Server started on port ${server.address().port}`)
