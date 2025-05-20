@@ -149,6 +149,11 @@
 		}
 	},
 	"time": {
+		"since_years": "einem Jahr|%[1]d Jahren",
+		"since_weeks": "einer Woche|%[1]d Wochen",
+		"since_days": "einem Tag|%[1]d Tagen",
+		"since_hours": "einer Stunde|%[1]d Stunden",
+		"since_minutes": "einer Minute|%[1]d Minuten",
 		"list_last_separator": "und"
 	}
 }
