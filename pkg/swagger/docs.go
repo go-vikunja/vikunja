@@ -9331,6 +9331,9 @@ const docTemplate = `{
                 "email_fallback": {
                     "type": "boolean"
                 },
+                "force_user_info": {
+                    "type": "boolean"
+                },
                 "key": {
                     "type": "string"
                 },
