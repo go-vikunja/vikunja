@@ -13,7 +13,36 @@ import {BucketFactory} from '../../factories/bucket'
 import {TaskAttachmentFactory} from '../../factories/task_attachments'
 import {TaskReminderFactory} from '../../factories/task_reminders'
 import {createDefaultViews} from '../project/prepareProjects'
-import { TaskBucketFactory } from '../../factories/task_buckets'
+import {TaskBucketFactory} from '../../factories/task_buckets'
+
+// Type definitions to fix linting errors
+interface Project {
+	id: number;
+	title: string;
+	identifier?: string;
+}
+
+interface Task {
+	id: number;
+	title: string;
+	description: string;
+	project_id: number;
+	index: number;
+}
+
+interface User {
+	id: number;
+	username: string;
+}
+
+interface Label {
+	id: number;
+	title: string;
+}
+
+interface Bucket {
+	id: number;
+}
 
 function addLabelToTaskAndVerify(labelTitle: string) {
 	cy.get('.task-view .action-buttons .button')
@@ -34,7 +63,7 @@ function addLabelToTaskAndVerify(labelTitle: string) {
 }
 
 function uploadAttachmentAndVerify(taskId: number) {
-	cy.intercept(`${Cypress.env('API_URL')}/tasks/${taskId}/attachments`).as('uploadAttachment')
+	cy.intercept(`**/tasks/${taskId}/attachments`).as('uploadAttachment')
 	cy.get('.task-view .action-buttons .button')
 		.contains('Add Attachments')
 		.click()
@@ -49,16 +78,16 @@ function uploadAttachmentAndVerify(taskId: number) {
 describe('Task', () => {
 	createFakeUserAndLogin()
 
-	let projects: {}[]
-	let buckets
+	let projects: Project[]
+	let buckets: Bucket[]
 
 	beforeEach(() => {
 		// UserFactory.create(1)
-		projects = ProjectFactory.create(1)
+		projects = ProjectFactory.create(1) as Project[]
 		const views = createDefaultViews(projects[0].id)
 		buckets = BucketFactory.create(1, {
 			project_view_id: views[3].id,
-		})
+		}) as Bucket[]
 		TaskFactory.truncate()
 		UserProjectFactory.truncate()
 	})
@@ -116,7 +145,7 @@ describe('Task', () => {
 	})
 
 	it('Should show a task description icon if the task has a description', () => {
-		cy.intercept(Cypress.env('API_URL') + '/projects/1/views/*/tasks**').as('loadTasks')
+		cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
 		TaskFactory.create(1, {
 			description: 'Lorem Ipsum',
 		})
@@ -124,12 +153,12 @@ describe('Task', () => {
 		cy.visit('/projects/1/1')
 		cy.wait('@loadTasks')
 
-		cy.get('.tasks .task .project-task-icon')
+		cy.get('.tasks .task .project-task-icon .fa-align-left')
 			.should('exist')
 	})
 
 	it('Should not show a task description icon if the task has an empty description', () => {
-		cy.intercept(Cypress.env('API_URL') + '/projects/1/views/*/tasks**').as('loadTasks')
+		cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
 		TaskFactory.create(1, {
 			description: '',
 		})
@@ -137,12 +166,12 @@ describe('Task', () => {
 		cy.visit('/projects/1/1')
 		cy.wait('@loadTasks')
 
-		cy.get('.tasks .task .project-task-icon')
+		cy.get('.tasks .task .project-task-icon .fa-align-left')
 			.should('not.exist')
 	})
 
 	it('Should not show a task description icon if the task has a description containing only an empty p tag', () => {
-		cy.intercept(Cypress.env('API_URL') + '/projects/1/views/*/tasks**').as('loadTasks')
+		cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
 		TaskFactory.create(1, {
 			description: '<p></p>',
 		})
@@ -150,7 +179,7 @@ describe('Task', () => {
 		cy.visit('/projects/1/1')
 		cy.wait('@loadTasks')
 
-		cy.get('.tasks .task .project-task-icon')
+		cy.get('.tasks .task .project-task-icon .fa-align-left')
 			.should('not.exist')
 	})
 
@@ -585,7 +614,7 @@ describe('Task', () => {
 				.should('contain', 'Success')
 		})
 
-		it.only('Can change a due date to a specific date for a task', () => {
+		it('Can change a due date to a specific date for a task', () => {
 			const dueDate = new Date(2025, 2, 20)
 			dueDate.setHours(12)
 			dueDate.setMinutes(0)
@@ -596,7 +625,7 @@ describe('Task', () => {
 				done: false,
 				due_date: dueDate.toISOString(),
 			})
-			
+
 			const today = new Date(2025, 2, 5)
 
 			cy.visit(`/tasks/${tasks[0].id}`)
