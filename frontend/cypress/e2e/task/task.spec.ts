@@ -630,6 +630,29 @@ describe('Task', () => {
 				.should('contain', 'Success')
 		})
 
+		it('Can paste an image into the description editor which uploads it as an attachment', () => {
+			TaskAttachmentFactory.truncate()
+			const tasks = TaskFactory.create(1, {
+				id: 1,
+			}) as Task[]
+			cy.visit(`/tasks/${tasks[0].id}`)
+
+			cy.intercept('**/tasks/*/attachments').as('uploadAttachment')
+			
+			cy.get('.task-view .details.content.description .tiptap__editor .tiptap.ProseMirror', {timeout: 30_000})
+				.pasteFile('image.jpg', 'image/jpeg')
+
+			cy.wait('@uploadAttachment')
+			cy.get('.attachments .attachments .files button.attachment')
+				.should('exist')
+			cy.get('.task-view .details.content.description .tiptap__editor .tiptap.ProseMirror img')
+				.should('be.visible')
+				.and(($img) => {
+					// "naturalWidth" and "naturalHeight" are set when the image loads
+					expect($img[0].naturalWidth).to.be.greaterThan(0)
+				})
+		})
+
 		it('Can set a reminder', () => {
 			TaskReminderFactory.truncate()
 			const tasks = TaskFactory.create(1, {

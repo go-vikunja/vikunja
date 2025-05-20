@@ -333,15 +333,32 @@ const additionalLinkProtocols = [
 	'notion',
 ]
 
-const MarkdownPasteHandler = Extension.create({
-	name: 'markdownPasteHandler',
+const PasteHandler = Extension.create({
+	name: 'pasteHandler',
 
 	addProseMirrorPlugins() {
 		return [
 			new Plugin({
-				key: new PluginKey('markdownPasteHandler'),
+				key: new PluginKey('pasteHandler'),
 				props: {
 					handlePaste: (view, event) => {
+						
+						// Handle images pasted from clipboard
+						if (typeof props.uploadCallback !== 'undefined' && event.clipboardData?.items?.length > 0) {
+
+							for (const item of event.clipboardData.items) {
+								console.log({item})
+								if (item.kind === 'file' && item.type.startsWith('image/')) {
+									const file = item.getAsFile()
+									if (file) {
+										uploadAndInsertFiles([file])
+										return true
+									}
+								}
+							}
+						}
+						
+						// Handle markdown text
 						const text = event.clipboardData?.getData('text/plain')
 						if (!text) return false
 
@@ -451,7 +468,7 @@ const extensions : Extensions = [
 		suggestion: suggestionSetup(t),
 	}),
 	
-	MarkdownPasteHandler,
+	PasteHandler,
 ]
 
 // Add a custom extension for the Escape key
@@ -616,21 +633,10 @@ onMounted(async () => {
 
 	await nextTick()
 
-	if (typeof props.uploadCallback !== 'undefined') {
-		const input = tiptapInstanceRef.value?.querySelectorAll('.tiptap__editor')[0]?.children[0]
-		input?.addEventListener('paste', handleImagePaste)
-	}
-
 	setModeAndValue(props.modelValue)
 })
 
 onBeforeUnmount(() => {
-	nextTick(() => {
-		if (typeof props.uploadCallback !== 'undefined') {
-			const input = tiptapInstanceRef.value?.querySelectorAll('.tiptap__editor')[0]?.children[0]
-			input?.removeEventListener('paste', handleImagePaste)
-		}
-	})
 	if (props.editShortcut !== '') {
 		document.removeEventListener('keydown', setFocusToEditor)
 	}
@@ -641,22 +647,6 @@ function setModeAndValue(value: string) {
 	editor.value?.commands.setContent(value, false)
 }
 
-function handleImagePaste(event) {
-	if (event?.clipboardData?.items?.length === 0) {
-		return
-	}
-
-	event.preventDefault()
-
-	const image = event.clipboardData.items[0]
-	if (image.kind === 'file' && image.type.startsWith('image/')) {
-		if (typeof props.uploadCallback !== 'undefined') {
-			return
-		}
-
-		uploadAndInsertFiles([image.getAsFile()])
-	}
-}
 
 // See https://github.com/github/hotkey/discussions/85#discussioncomment-5214660
 function setFocusToEditor(event) {

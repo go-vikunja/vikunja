@@ -35,3 +35,27 @@
 //     }
 //   }
 // }
+
+Cypress.Commands.add('pasteFile', {prevSubject: true}, (subject, fileName, fileType = 'image/png') => {
+	// Load the file fixture as base64
+	cy.fixture(fileName, 'base64').then((fileContent) => {
+		// Convert base64 to a Blob
+		const blob = Cypress.Blob.base64StringToBlob(fileContent, fileType)
+		// Create a File object
+		const testFile = new File([blob], fileName, {type: fileType})
+		// Create a DataTransfer and add the file
+		const dataTransfer = new DataTransfer()
+		dataTransfer.items.add(testFile)
+
+		// Create the paste event with clipboardData containing the file
+		const pasteEvent = new ClipboardEvent('paste', {
+			bubbles: true,
+			cancelable: true,
+			clipboardData: dataTransfer,
+		})
+
+		// Dispatch the paste event on the target element
+		subject[0].dispatchEvent(pasteEvent)
+	})
+})
+
