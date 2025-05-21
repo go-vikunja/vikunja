@@ -330,7 +330,7 @@
 						v-model="task.reactions" 
 						entity-kind="tasks"
 						:entity-id="task.id"
-						class="details"
+						class="details reactions-container"
 						:disabled="!canWrite"
 					/>
 
@@ -346,11 +346,11 @@
 							@taskChanged="({coverImageAttachmentId}) => task.coverImageAttachmentId = coverImageAttachmentId"
 						/>
 					</div>
-
+					
 					<!-- Related Tasks -->
 					<div
 						v-if="activeFields.relatedTasks"
-						class="content details mb-0"
+						class="content details related-tasks mb-0"
 					>
 						<h3>
 							<span class="icon is-grey">
@@ -998,8 +998,14 @@ function setRelatedTasksActive() {
 	}
 }
 
-h3 .button {
-	vertical-align: middle;
+h3 {
+	margin-bottom: 0.75rem;
+	padding-bottom: 0.5rem;
+	border-bottom: 1px solid var(--grey-200);
+
+	.button {
+		vertical-align: middle;
+	}
 }
 
 .icon.is-grey {
@@ -1042,13 +1048,19 @@ h3 .button {
 }
 
 .details {
-	padding-bottom: 0.75rem;
+	padding-bottom: 1rem;
+	margin-bottom: 1.5rem;
 	flex-flow: row wrap;
-	margin-bottom: 0;
+	background-color: var(--scheme-main-bis);
+	border-radius: $radius;
+	padding: 1rem;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 
 	.detail-title {
 		display: block;
 		color: var(--grey-400);
+		margin-bottom: 0.5rem;
+		font-weight: 500;
 	}
 
 	.none {
@@ -1060,7 +1072,23 @@ h3 .button {
 		page-break-after: always; // CSS 2.1 syntax
 		break-after: always; // New syntax
 	}
+}
 
+.content.description {
+	margin-top: 1.5rem;
+	margin-bottom: 1.5rem;
+	padding: 1rem;
+	background-color: var(--scheme-main-bis);
+	border-radius: $radius;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.comments-container {
+	margin-top: 2rem;
+	padding: 1rem;
+	background-color: var(--scheme-main-bis);
+	border-radius: $radius;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .details.labels-list,
@@ -1116,7 +1144,12 @@ h3 .button {
 }
 
 .attachments {
-	margin-bottom: 0;
+	margin-top: 1.5rem;
+	margin-bottom: 1.5rem;
+	padding: 1rem;
+	background-color: var(--scheme-main-bis);
+	border-radius: $radius;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 
 	table tr:last-child td {
 		border-bottom: none;
@@ -1170,5 +1203,23 @@ h3 .button {
 	font-weight: 700;
 	margin: .5rem 0;
 	display: inline-block;
+}
+
+.related-tasks {
+	margin-top: 1.5rem;
+	margin-bottom: 1.5rem;
+	padding: 1rem;
+	background-color: var(--scheme-main-bis);
+	border-radius: $radius;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.reactions-container {
+	margin-top: 1.5rem;
+	margin-bottom: 1.5rem;
+	padding: 1rem;
+	background-color: var(--scheme-main-bis);
+	border-radius: $radius;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 </style>

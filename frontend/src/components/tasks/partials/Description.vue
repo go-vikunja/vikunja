@@ -133,4 +133,19 @@ async function uploadCallback(files: File[] | FileList): Promise<string[]> {
 	// The icon is not exactly the same length on all sides so we need to hack our way around it.
 	margin-left: 4px;
 }
+
+:deep(.tiptap-editor) {
+	border-radius: 4px;
+	background-color: var(--scheme-main);
+	
+	.tiptap-menubar {
+		border-top-left-radius: 4px;
+		border-top-right-radius: 4px;
+		border-bottom: 1px solid var(--grey-200);
+	}
+	
+	.ProseMirror {
+		padding: 0.75rem;
+	}
+}
 </style>
