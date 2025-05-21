@@ -48,6 +48,10 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 						return true
 					}
 
+					if c.Request().URL.Path == "/api/v1/token/test" {
+						return true
+					}
+
 					err := checkAPITokenAndPutItInContext(s, c)
 					return err == nil
 				}
