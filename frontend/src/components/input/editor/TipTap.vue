@@ -127,7 +127,7 @@
 			v-cy="'saveEditor'"
 			class="mt-4"
 			variant="secondary"
-			:shadow="false"
+			no-shadow
 			:disabled="!contentHasChanged"
 			@click="bubbleSave"
 		>

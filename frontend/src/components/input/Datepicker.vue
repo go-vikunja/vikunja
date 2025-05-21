@@ -22,7 +22,7 @@
 				<x-button
 					v-cy="'closeDatepicker'"
 					class="datepicker__close-button"
-					:shadow="false"
+					no-shadow
 					@click="close"
 				>
 					{{ $t('misc.confirm') }}

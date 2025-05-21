@@ -56,7 +56,7 @@
 			v-if="!isEmpty"
 			:disabled="isEmpty"
 			class="is-small ml-2"
-			:shadow="false"
+			no-shadow
 			variant="secondary"
 			@click="reset"
 		>

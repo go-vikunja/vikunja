@@ -39,7 +39,7 @@ onMounted(async () => {
 		</p>
 		<x-button
 			:to="{ name: 'migrate.start' }"
-			:shadow="false"
+			no-shadow
 		>
 			{{ $t('home.project.import') }}
 		</x-button>

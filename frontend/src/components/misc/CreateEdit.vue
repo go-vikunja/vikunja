@@ -21,7 +21,7 @@
 				<slot name="footer">
 					<x-button
 						v-if="tertiary !== ''"
-						:shadow="false"
+						no-shadow
 						variant="tertiary"
 						@click.prevent.stop="$emit('tertiary', $event)"
 					>

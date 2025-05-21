@@ -14,7 +14,7 @@
 				<template #trigger="{toggle}">
 					<x-button
 						variant="primary"
-						:shadow="false"
+						no-shadow
 						class="mb-2"
 						@click.prevent.stop="toggle()"
 					>

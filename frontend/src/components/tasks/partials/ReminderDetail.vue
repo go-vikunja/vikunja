@@ -58,7 +58,7 @@
 					<x-button
 						v-if="showFormSwitch !== null"
 						class="reminder__close-button"
-						:shadow="false"
+						no-shadow
 						@click="updateDataAndMaybeCloseNow(close)"
 					>
 						{{ $t('misc.confirm') }}

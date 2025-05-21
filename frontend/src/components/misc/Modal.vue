@@ -51,7 +51,7 @@
 								<x-button
 									v-cy="'modalPrimary'"
 									variant="primary"
-									:shadow="false"
+									no-shadow
 									@click="$emit('submit')"
 								>
 									{{ $t('misc.doit') }}

@@ -116,7 +116,7 @@
 			class="mb-4"
 			icon="cloud-upload-alt"
 			variant="secondary"
-			:shadow="false"
+			no-shadow
 			@click="filesRef?.click()"
 		>
 			{{ $t('task.attachment.upload') }}

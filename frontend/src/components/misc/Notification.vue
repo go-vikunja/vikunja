@@ -34,7 +34,7 @@
 					<x-button
 						v-for="(action, i) in item.data.actions"
 						:key="'action_' + i"
-						:shadow="false"
+						no-shadow
 						class="is-small"
 						variant="secondary"
 						@click="action.callback"

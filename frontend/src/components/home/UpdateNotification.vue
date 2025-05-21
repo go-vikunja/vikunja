@@ -7,8 +7,8 @@
 			{{ $t('update.available') }}
 		</p>
 		<x-button
-			:shadow="false"
-			:wrap="false"
+			no-shadow
+			no-wrap
 			@click="refreshApp()"
 		>
 			{{ $t('update.do') }}
