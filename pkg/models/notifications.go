@@ -209,12 +209,11 @@ func (n *TeamMemberAddedNotification) Name() string {
 }
 
 func getOverdueSinceString(until time.Duration, language string) (overdueSince string) {
-	overdueSince = i18n.T(language, "notifications.task.overdue.overdue_since", utils.HumanizeDuration(until, language))
 	if until == 0 {
-		overdueSince = i18n.T(language, "notifications.task.overdue.overdue_now")
+		return i18n.T(language, "notifications.task.overdue.overdue_now")
 	}
 
-	return
+	return i18n.T(language, "notifications.task.overdue.overdue_since", utils.HumanizeDuration(until, language))
 }
 
 // UndoneTaskOverdueNotification represents a UndoneTaskOverdueNotification notification
@@ -268,7 +267,7 @@ func (n *UndoneTasksOverdueNotification) ToMail(lang string) *notifications.Mail
 	overdueLine := ""
 	for _, task := range sortedTasks {
 		until := time.Until(task.DueDate).Round(1*time.Hour) * -1
-		overdueLine += `* [` + task.Title + `](` + config.ServicePublicURL.GetString() + "tasks/" + strconv.FormatInt(task.ID, 10) + `) (` + n.Projects[task.ProjectID].Title + `), ` + getOverdueSinceString(until, n.User.Language) + "\n"
+		overdueLine += `* [` + task.Title + `](` + config.ServicePublicURL.GetString() + "tasks/" + strconv.FormatInt(task.ID, 10) + `) (` + n.Projects[task.ProjectID].Title + `), ` + i18n.T("notifications.task.overdue.overdue", getOverdueSinceString(until, n.User.Language)) + "\n"
 	}
 
 	return notifications.NewMail().

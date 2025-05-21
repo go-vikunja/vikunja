@@ -92,11 +92,12 @@
             },
             "overdue": {
                 "subject": "Task \"%[1]s\" (%[2]s) is overdue",
-                "message": "This is a friendly reminder of the task \"%[1]s\" (%[2]s) which is %[3]s and not yet done.",
+                "message": "This is a friendly reminder of the task \"%[1]s\" (%[2]s) which is overdue %[3]s and not yet done.",
                 "multiple_subject": "Your overdue tasks",
                 "multiple_message": "You have the following overdue tasks:",
-                "overdue_since": "overdue since %[1]s",
-                "overdue_now": "overdue now"
+                "overdue_since": "since %[1]s",
+                "overdue_now": "now",
+                "overdue": "overdue %[1]s"
             }
         },
         "project": {
