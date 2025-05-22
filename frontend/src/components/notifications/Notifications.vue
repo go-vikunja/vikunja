@@ -37,7 +37,7 @@
 					<User
 						v-if="n.notification.doer"
 						:user="n.notification.doer"
-						:show-username="false"
+						hide-username
 						:avatar-size="16"
 					/>
 					<div class="detail">

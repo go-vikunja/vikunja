@@ -253,7 +253,7 @@
 									<td v-if="activeColumns.createdBy">
 										<User
 											:avatar-size="27"
-											:show-username="false"
+											hide-username
 											:user="t.createdBy"
 										/>
 									</td>
