@@ -306,13 +306,13 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 		// Download avatar
 		avatarData, err := utils.DownloadImage(cl.Picture)
 		if err != nil {
-			log.Errorf("Error downloading avatar: %v", err)
+			log.Errorf("Error downloading avatar: %v, user id: %d", err, u.ID)
 			// Continue, do not interrupt the authentication process due to avatar download failure
 		} else {
 			// Process avatar, ensure 1:1 ratio
 			processedAvatar, err := utils.CropAvatarTo1x1(avatarData)
 			if err != nil {
-				log.Errorf("Error processing avatar: %v", err)
+				log.Errorf("Error processing avatar: %v, user id: %d", err, u.ID)
 				// Continue, do not interrupt the authentication process due to avatar processing failure
 			} else {
 				// Set avatar provider to openid
@@ -321,7 +321,7 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 				// Store avatar
 				err = upload.StoreAvatarFile(s, u, bytes.NewReader(processedAvatar))
 				if err != nil {
-					log.Errorf("Error storing avatar: %v", err)
+					log.Errorf("Error storing avatar: %v, user id: %d", err, u.ID)
 					// Continue, do not interrupt the authentication process due to avatar storage failure
 				}
 			}
