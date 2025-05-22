@@ -409,21 +409,6 @@
 						/>
                          <!-- <x-button v-if="!activeFields.repeatAfter && canWrite" @click="setFieldActive('repeatAfter')"> {{ $t('task.detail.actions.setupRepeat') }} </x-button> -->
 					</div>
-					
-					<!-- Color -->
-					<div v-if="canWrite || activeFields.color" class="sidebar-attribute-item">
-						<div class="detail-title">
-							<Icon icon="fill-drip" />
-							{{ $t('task.attributes.color') }}
-						</div>
-						<ColorPicker
-							:ref="e => setFieldRef('color', e)"
-							v-model="taskColor"
-							menu-position="bottom"
-							@update:modelValue="saveTask()"
-						/>
-						<!-- <x-button v-if="!activeFields.color && canWrite" @click="setFieldActive('color')"> {{ $t('task.detail.actions.setColor') }} </x-button> -->
-					</div>
 				</div>
 				
 				<div class="sidebar-actions">
@@ -525,7 +510,6 @@ import BaseButton from '@/components/base/BaseButton.vue'
 // partials
 import Attachments from '@/components/tasks/partials/Attachments.vue'
 import ChecklistSummary from '@/components/tasks/partials/ChecklistSummary.vue'
-import ColorPicker from '@/components/input/ColorPicker.vue'
 import Comments from '@/components/tasks/partials/Comments.vue'
 import CreatedUpdated from '@/components/tasks/partials/CreatedUpdated.vue'
 import Datepicker from '@/components/input/Datepicker.vue'
@@ -596,14 +580,6 @@ function setActiveMainContentTab(tabName: string) {
 	activeMainContentTab.value = tabName
 }
 
-// We doubled the task color property here because verte does not have a real change property, leading
-// to the color property change being triggered when the # is removed from it, leading to an update,
-// which leads in turn to a change... This creates an infinite loop in which the task is updated, changed,
-// updated, changed, updated and so on.
-// To prevent this, we put the task color property in a seperate value which is set to the task color
-// when it is saved and loaded.
-const taskColor = ref<ITask['hexColor']>('')
-
 // Used to avoid flashing of empty elements if the task content is not yet loaded.
 const visible = ref(false)
 
@@ -648,7 +624,6 @@ watch(
 			const loaded = await taskService.get({id}, {expand: ['reactions', 'comments']})
 			Object.assign(task.value, loaded)
 			attachmentStore.set(task.value.attachments)
-			taskColor.value = task.value.hexColor
 			setActiveFields()
 		} finally {
 			await nextTick()
@@ -660,7 +635,6 @@ watch(
 type FieldType =
 	| 'assignees'
 	| 'attachments'
-	| 'color'
 	| 'dueDate'
 	| 'endDate'
 	| 'labels'
@@ -675,7 +649,6 @@ type FieldType =
 const activeFields: { [type in FieldType]: boolean } = reactive({
 	assignees: false,
 	attachments: false,
-	color: false,
 	dueDate: false,
 	endDate: false,
 	labels: false,
@@ -696,7 +669,6 @@ function setActiveFields() {
 	// Set all active fields based on values in the model
 	activeFields.assignees = task.value.assignees.length > 0
 	activeFields.attachments = task.value.attachments.length > 0
-	activeFields.color = !!task.value.hexColor // Ensures color field activity is based on hexColor presence
 	activeFields.dueDate = task.value.dueDate !== null
 	activeFields.endDate = task.value.endDate !== null
 	activeFields.labels = task.value.labels.length > 0
@@ -712,7 +684,6 @@ function setActiveFields() {
 const activeFieldElements: { [id in FieldType]: HTMLElement | null } = reactive({
 	assignees: null,
 	attachments: null,
-	color: null,
 	dueDate: null,
 	endDate: null,
 	labels: null,
@@ -755,18 +726,6 @@ async function saveTask(
 
 	if (!canWrite.value) {
 		return
-	}
-
-	currentTask.hexColor = taskColor.value
-
-	// If no end date is being set, but a start date and due date,
-	// use the due date as the end date
-	if (
-		currentTask.endDate === null &&
-		currentTask.startDate !== null &&
-		currentTask.dueDate !== null
-	) {
-		currentTask.endDate = currentTask.dueDate
 	}
 
 	const updatedTask = await taskStore.update(currentTask) // TODO: markraw ?
