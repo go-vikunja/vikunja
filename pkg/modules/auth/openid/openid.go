@@ -263,8 +263,6 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 		fallbackMatchFound = err == nil // found if no error, not found if we reach it here despite an error
 	}
 
-	var isNewUser bool = false
-
 	if !alreadyCreatedFromIssuer && !fallbackMatchFound {
 
 		// If no user exists, create one with the preferred username if it is not already taken
@@ -283,7 +281,6 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 		if err != nil {
 			return nil, err
 		}
-		isNewUser = true
 	} else if alreadyCreatedFromIssuer {
 
 		// try updating user.Name and/or user.Email if necessary
@@ -302,7 +299,7 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 		}
 	}
 
-	if cl.Picture != "" && (isNewUser || u.AvatarProvider == "openid" || u.AvatarProvider == "") {
+	if cl.Picture != "" && (u.AvatarProvider == "openid" || u.AvatarProvider == "") {
 		log.Debugf("Found avatar URL for user %s: %s", u.Username, cl.Picture)
 
 		// Download avatar
@@ -314,7 +311,7 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 			// Process avatar, ensure 1:1 ratio
 			processedAvatar, err := utils.CropAvatarTo1x1(avatarData)
 			if err != nil {
-				log.Debugf("Error processing avatar: %v", err)
+				log.Errorf("Error processing avatar: %v", err)
 				// Continue, do not interrupt the authentication process due to avatar processing failure
 			} else {
 				// Set avatar provider to openid
@@ -323,7 +320,7 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 				// Store avatar
 				err = upload.StoreAvatarFile(s, u, bytes.NewReader(processedAvatar))
 				if err != nil {
-					log.Debugf("Error storing avatar: %v", err)
+					log.Errorf("Error storing avatar: %v", err)
 					// Continue, do not interrupt the authentication process due to avatar storage failure
 				}
 			}
