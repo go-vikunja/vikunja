@@ -34,7 +34,7 @@
 						{{ $t('misc.cancel') }}
 					</x-button>
 					<x-button
-						v-if="hasPrimaryAction"
+						v-if="!noPrimaryAction"
 						variant="primary"
 						:icon="primaryIcon"
 						:disabled="primaryDisabled || loading"
@@ -57,7 +57,7 @@ withDefaults(defineProps<{
 	primaryLabel?: string,
 	primaryIcon?: IconProp,
 	primaryDisabled?: boolean,
-	hasPrimaryAction?: boolean,
+	noPrimaryAction?: boolean,
 	tertiary?: string,
 	wide?: boolean,
 	loading?: boolean
@@ -65,7 +65,7 @@ withDefaults(defineProps<{
 	primaryLabel: '',
 	primaryIcon: 'plus',
 	primaryDisabled: false,
-	hasPrimaryAction: true,
+	noPrimaryAction: false,
 	tertiary: '',
 	wide: false,
 	loading: false,

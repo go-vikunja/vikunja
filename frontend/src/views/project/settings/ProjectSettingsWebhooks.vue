@@ -120,7 +120,7 @@ function validateSelectedEvents() {
 <template>
 	<CreateEdit
 		:title="$t('project.webhooks.title')"
-		:has-primary-action="false"
+		no-primary-action
 		:wide="true"
 	>
 		<x-button

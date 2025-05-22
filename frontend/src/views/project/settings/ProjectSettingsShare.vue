@@ -1,7 +1,7 @@
 <template>
 	<CreateEdit
 		:title="$t('project.share.header')"
-		:has-primary-action="false"
+		no-primary-action
 	>
 		<template v-if="project">
 			<userTeam
