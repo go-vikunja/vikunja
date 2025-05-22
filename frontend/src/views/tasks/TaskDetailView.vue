@@ -502,7 +502,14 @@
 						>
 							{{ $t('task.detail.actions.moveProject') }}
 						</x-button>
-						
+						<x-button
+							variant="secondary"
+							icon="copy"
+							@click="duplicateTask()"
+						>
+							{{ $t('task.detail.actions.duplicate') }}	
+						</x-button>
+
 						<span class="action-heading">{{ $t('task.detail.dateAndTime') }}</span>
 						
 						<x-button
@@ -932,7 +939,7 @@ async function removeRepeatAfter() {
 	task.value.repeatAfter.amount = 0
 	task.value.repeatMode = TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
 	await saveTask()
-}
+}~
 
 function setRelatedTasksActive() {
 	setFieldActive('relatedTasks')
@@ -945,6 +952,18 @@ function setRelatedTasksActive() {
 			break
 		}
 	}
+}
+
+async function duplicateTask() {
+	const clone = await taskStore.duplicateTask(task.value)
+	if (clone != null) {
+		router.replace({
+			name: 'task.detail',
+			params: { id: clone.id },
+			state: { backdropView: isModal.value ? router.options.history.state.back : undefined },
+		})
+	}
+
 }
 </script>
 

@@ -383,6 +383,13 @@ func registerAPIRoutes(a *echo.Group) {
 	a.DELETE("/tasks/:projecttask", taskHandler.DeleteWeb)
 	a.POST("/tasks/:projecttask", taskHandler.UpdateWeb)
 
+	taskDuplicateHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
+			return &models.TaskDuplicate{}
+		},
+	}
+	a.PUT("/projects/:projectid/tasks/:taskid/duplicate", taskDuplicateHandler.CreateWeb)
+
 	taskPositionHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
 			return &models.TaskPosition{}
