@@ -404,7 +404,7 @@
 					class="column is-one-third action-buttons d-print-none"
 				>
 					<template v-if="canWrite">
-						<x-button
+						<XButton
 							v-shortcut="'t'"
 							:class="{'is-success': !task.done}"
 							:shadow="task.done"
@@ -414,14 +414,14 @@
 							@click="toggleTaskDone()"
 						>
 							{{ task.done ? $t('task.detail.undone') : $t('task.detail.done') }}
-						</x-button>
+						</XButton>
 						<TaskSubscription
 							entity="task"
 							:entity-id="task.id"
 							:model-value="task.subscription"
 							@update:modelValue="sub => task.subscription = sub"
 						/>
-						<x-button
+						<XButton
 							v-shortcut="'s'"
 							variant="secondary"
 							:icon="task.isFavorite ? 'star' : ['far', 'star']"
@@ -430,34 +430,34 @@
 							{{
 								task.isFavorite ? $t('task.detail.actions.unfavorite') : $t('task.detail.actions.favorite')
 							}}
-						</x-button>
+						</XButton>
 						
 						<span class="action-heading">{{ $t('task.detail.organization') }}</span>
 						
-						<x-button
+						<XButton
 							v-shortcut="'l'"
 							variant="secondary"
 							icon="tags"
 							@click="setFieldActive('labels')"
 						>
 							{{ $t('task.detail.actions.label') }}
-						</x-button>
-						<x-button
+						</XButton>
+						<XButton
 							v-shortcut="'p'"
 							variant="secondary"
 							icon="exclamation-circle"
 							@click="setFieldActive('priority')"
 						>
 							{{ $t('task.detail.actions.priority') }}
-						</x-button>
-						<x-button
+						</XButton>
+						<XButton
 							variant="secondary"
 							icon="percent"
 							@click="setFieldActive('percentDone')"
 						>
 							{{ $t('task.detail.actions.percentDone') }}
-						</x-button>
-						<x-button
+						</XButton>
+						<XButton
 							v-shortcut="'c'"
 							variant="secondary"
 							icon="fill-drip"
@@ -465,11 +465,11 @@
 							@click="setFieldActive('color')"
 						>
 							{{ $t('task.detail.actions.color') }}
-						</x-button>
+						</XButton>
 						
 						<span class="action-heading">{{ $t('task.detail.management') }}</span>
 
-						<x-button
+						<XButton
 							v-shortcut="'a'"
 							v-cy="'taskDetail.assign'"
 							variant="secondary"
@@ -477,72 +477,72 @@
 							@click="setFieldActive('assignees')"
 						>
 							{{ $t('task.detail.actions.assign') }}
-						</x-button>
-						<x-button
+						</XButton>
+						<XButton
 							v-shortcut="'f'"
 							variant="secondary"
 							icon="paperclip"
 							@click="setFieldActive('attachments')"
 						>
 							{{ $t('task.detail.actions.attachments') }}
-						</x-button>
-						<x-button
+						</XButton>
+						<XButton
 							v-shortcut="'r'"
 							variant="secondary"
 							icon="sitemap"
 							@click="setRelatedTasksActive()"
 						>
 							{{ $t('task.detail.actions.relatedTasks') }}
-						</x-button>
-						<x-button
+						</XButton>
+						<XButton
 							v-shortcut="'m'"
 							variant="secondary"
 							icon="list"
 							@click="setFieldActive('moveProject')"
 						>
 							{{ $t('task.detail.actions.moveProject') }}
-						</x-button>
+						</XButton>
 						
 						<span class="action-heading">{{ $t('task.detail.dateAndTime') }}</span>
 						
-						<x-button
+						<XButton
 							v-shortcut="'d'"
 							variant="secondary"
 							icon="calendar"
 							@click="setFieldActive('dueDate')"
 						>
 							{{ $t('task.detail.actions.dueDate') }}
-						</x-button>
-						<x-button
+						</XButton>
+						<XButton
 							variant="secondary"
 							icon="play"
 							@click="setFieldActive('startDate')"
 						>
 							{{ $t('task.detail.actions.startDate') }}
-						</x-button>
-						<x-button
+						</XButton>
+						<XButton
 							variant="secondary"
 							icon="stop"
 							@click="setFieldActive('endDate')"
 						>
 							{{ $t('task.detail.actions.endDate') }}
-						</x-button>
-						<x-button
+						</XButton>
+						<XButton
 							v-shortcut="'Alt+r'"
 							variant="secondary"
 							:icon="['far', 'clock']"
 							@click="setFieldActive('reminders')"
 						>
 							{{ $t('task.detail.actions.reminders') }}
-						</x-button>
-						<x-button
+						</XButton>
+						<XButton
 							variant="secondary"
 							icon="history"
 							@click="setFieldActive('repeatAfter')"
 						>
 							{{ $t('task.detail.actions.repeatAfter') }}
-						</x-button>
-						<x-button
+						</XButton>
+						<XButton
 							v-shortcut="'Shift+Delete'"
 							icon="trash-alt"
 							:shadow="false"
@@ -550,7 +550,7 @@
 							@click="showDeleteModal = true"
 						>
 							{{ $t('task.detail.actions.delete') }}
-						</x-button>
+						</XButton>
 					</template>
 
 					<!-- Created / Updated [by] -->

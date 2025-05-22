@@ -19,12 +19,12 @@
 					>
 				</div>
 				<div class="control">
-					<x-button
+					<XButton
 						:disabled="apiUrl === '' || undefined"
 						@click="setApiUrl"
 					>
 						{{ $t('apiConfig.change') }}
-					</x-button>
+					</XButton>
 				</div>
 			</div>
 		</div>

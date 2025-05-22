@@ -38,13 +38,13 @@
 			</div>
 		</form>
 
-		<x-button
+		<XButton
 			:loading="emailUpdateService.loading"
 			class="is-fullwidth mt-4"
 			@click="updateEmail"
 		>
 			{{ $t('misc.save') }}
-		</x-button>
+		</XButton>
 	</Card>
 </template>
 

@@ -123,14 +123,14 @@ function validateSelectedEvents() {
 		:has-primary-action="false"
 		:wide="true"
 	>
-		<x-button
+		<XButton
 			v-if="!(webhooks?.length === 0 || showNewForm)"
 			icon="plus"
 			class="mb-4"
 			@click="showNewForm = true"
 		>
 			{{ $t('project.webhooks.create') }}
-		</x-button>
+		</XButton>
 
 		<div
 			v-if="webhooks?.length === 0 || showNewForm"
@@ -209,12 +209,12 @@ function validateSelectedEvents() {
 					{{ $t('project.webhooks.mustSelectEvents') }}
 				</p>
 			</div>
-			<x-button
+			<XButton
 				icon="plus"
 				@click="create"
 			>
 				{{ $t('project.webhooks.create') }}
-			</x-button>
+			</XButton>
 		</div>
 
 		<table
@@ -246,7 +246,7 @@ function validateSelectedEvents() {
 					</td>
 
 					<td class="actions">
-						<x-button
+						<XButton
 							class="is-danger"
 							icon="trash-alt"
 							@click="() => {showDeleteModal = true;webhookIdToDelete = w.id}"

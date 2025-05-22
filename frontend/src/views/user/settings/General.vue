@@ -236,14 +236,14 @@
 			</label>
 		</div>
 
-		<x-button
+		<XButton
 			v-cy="'saveGeneralSettings'"
 			:loading="loading"
 			class="is-fullwidth mt-4"
 			@click="updateSettings()"
 		>
 			{{ $t('misc.save') }}
-		</x-button>
+		</XButton>
 	</Card>
 </template>
 

@@ -19,21 +19,21 @@
 
 			<template #footer>
 				<slot name="footer">
-					<x-button
+					<XButton
 						v-if="tertiary !== ''"
 						:shadow="false"
 						variant="tertiary"
 						@click.prevent.stop="$emit('tertiary', $event)"
 					>
 						{{ tertiary }}
-					</x-button>
-					<x-button
+					</XButton>
+					<XButton
 						variant="secondary"
 						@click.prevent.stop="$router.back()"
 					>
 						{{ $t('misc.cancel') }}
-					</x-button>
-					<x-button
+					</XButton>
+					<XButton
 						v-if="hasPrimaryAction"
 						variant="primary"
 						:icon="primaryIcon"
@@ -42,7 +42,7 @@
 						@click.prevent.stop="primary"
 					>
 						{{ primaryLabel || $t('misc.create') }}
-					</x-button>
+					</XButton>
 				</slot>
 			</template>
 		</Card>

@@ -1,5 +1,5 @@
 <template>
-	<x-button
+	<XButton
 		v-if="type === 'button'"
 		v-tooltip="tooltipText"
 		variant="secondary"
@@ -8,7 +8,7 @@
 		@click="changeSubscription"
 	>
 		{{ buttonText }}
-	</x-button>
+	</XButton>
 	<DropdownItem
 		v-else-if="type === 'dropdown'"
 		v-tooltip="tooltipText"
