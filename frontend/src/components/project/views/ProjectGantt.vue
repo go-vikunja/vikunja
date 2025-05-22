@@ -33,9 +33,9 @@
 							for="range"
 						>Reset</label>
 						<div class="control">
-							<x-button @click="setDefaultFilters">
+							<XButton @click="setDefaultFilters">
 								Reset
-							</x-button>
+							</XButton>
 						</div>
 					</div>
 					<FancyCheckbox

@@ -17,12 +17,12 @@
 				</p>
 			</div>
 			<template #footer>
-				<x-button
+				<XButton
 					variant="secondary"
 					@click.prevent.stop="$router.back()"
 				>
 					{{ $t('misc.close') }}
-				</x-button>
+				</XButton>
 			</template>
 		</Card>
 	</Modal>

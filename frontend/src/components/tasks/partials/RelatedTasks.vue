@@ -1,6 +1,6 @@
 <template>
 	<div class="task-relations">
-		<x-button
+		<XButton
 			v-if="editEnabled && Object.keys(relatedTasks).length > 0"
 			id="showRelatedTasksFormButton"
 			v-tooltip="$t('task.relation.add')"
@@ -99,9 +99,9 @@
 						</div>
 					</div>
 					<div class="control">
-						<x-button @click="addTaskRelation()">
+						<XButton @click="addTaskRelation()">
 							{{ $t('task.relation.add') }}
-						</x-button>
+						</XButton>
 					</div>
 				</div>
 			</template>

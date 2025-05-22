@@ -31,7 +31,7 @@
 					v-if="item.data?.actions?.length > 0"
 					class="buttons is-right"
 				>
-					<x-button
+					<XButton
 						v-for="(action, i) in item.data.actions"
 						:key="'action_' + i"
 						:shadow="false"
@@ -40,7 +40,7 @@
 						@click="action.callback"
 					>
 						{{ action.title }}
-					</x-button>
+					</XButton>
 				</div>
 			</div>
 		</template>

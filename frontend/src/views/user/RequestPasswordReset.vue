@@ -14,12 +14,12 @@
 			<Message variant="success">
 				{{ $t('user.auth.resetPasswordSuccess') }}
 			</Message>
-			<x-button
+			<XButton
 				:to="{ name: 'user.login' }"
 				class="mt-4"
 			>
 				{{ $t('user.auth.login') }}
-			</x-button>
+			</XButton>
 		</div>
 		<form
 			v-if="!isSuccess"
@@ -45,18 +45,18 @@
 			</div>
 
 			<div class="is-flex">
-				<x-button
+				<XButton
 					type="submit"
 					:loading="passwordResetService.loading"
 				>
 					{{ $t('user.auth.resetPasswordAction') }}
-				</x-button>
-				<x-button
+				</XButton>
+				<XButton
 					:to="{ name: 'user.login' }"
 					variant="secondary"
 				>
 					{{ $t('user.auth.login') }}
-				</x-button>
+				</XButton>
 			</div>
 		</form>
 	</div>

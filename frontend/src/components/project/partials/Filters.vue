@@ -35,20 +35,20 @@
 			v-if="hasFooter"
 			#footer
 		>
-			<x-button
+			<XButton
 				variant="secondary"
 				class="mr-2"
 				:disabled="filterQuery === ''"
 				@click.prevent.stop="clearFiltersAndEmit"
 			>
 				{{ $t('filters.clear') }}
-			</x-button>
-			<x-button
+			</XButton>
+			<XButton
 				variant="primary"
 				@click.prevent.stop="changeAndEmitButton"
 			>
 				{{ $t('filters.showResults') }}
-			</x-button>
+			</XButton>
 		</template>
 	</Card>
 </template>

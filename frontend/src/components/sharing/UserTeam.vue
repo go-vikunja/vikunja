@@ -34,9 +34,9 @@
 					</Multiselect>
 				</p>
 				<p class="control">
-					<x-button @click="add()">
+					<XButton @click="add()">
 						{{ $t('project.share.share') }}
-					</x-button>
+					</XButton>
 				</p>
 			</div>
 		</div>
@@ -120,7 +120,7 @@
 								</option>
 							</select>
 						</div>
-						<x-button
+						<XButton
 							class="is-danger"
 							icon="trash-alt"
 							@click="

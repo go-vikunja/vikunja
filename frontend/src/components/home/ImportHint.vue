@@ -37,11 +37,11 @@ onMounted(async () => {
 		<p class="mt-4">
 			{{ $t('home.project.importText') }}
 		</p>
-		<x-button
+		<XButton
 			:to="{ name: 'migrate.start' }"
 			:shadow="false"
 		>
 			{{ $t('home.project.import') }}
-		</x-button>
+		</XButton>
 	</template>
 </template>
