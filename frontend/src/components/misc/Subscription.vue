@@ -50,10 +50,8 @@ const props = withDefaults(defineProps<{
 	modelValue: ISubscription | null,
 	entity: ISubscription['entity'],
 	entityId: number,
-	isButton?: boolean,
 	type?: 'button' | 'dropdown',
 }>(), {
-	isButton: true,
 	type: 'button',
 })
 
