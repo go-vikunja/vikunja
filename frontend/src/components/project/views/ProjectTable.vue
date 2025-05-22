@@ -83,7 +83,7 @@
 				class="loader-container"
 			>
 				<Card
-					:padding="false"
+					no-padding
 					:has-content="false"
 				>
 					<div class="has-horizontal-overflow">

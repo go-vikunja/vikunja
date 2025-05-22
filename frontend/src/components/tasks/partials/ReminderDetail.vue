@@ -13,7 +13,7 @@
 				<Card
 					class="reminder-options-popup"
 					:class="{'is-open': isOpen}"
-					:padding="false"
+					no-padding
 				>
 					<div
 						v-if="activeForm === null"

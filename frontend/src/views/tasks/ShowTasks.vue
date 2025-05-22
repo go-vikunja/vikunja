@@ -45,7 +45,7 @@
 
 		<Card
 			v-if="hasTasks"
-			:padding="false"
+			no-padding
 			class="has-overflow"
 			:has-content="false"
 			:loading="loading"

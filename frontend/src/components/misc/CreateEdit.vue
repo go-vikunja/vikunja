@@ -6,8 +6,8 @@
 	>
 		<Card
 			:title="title"
-			:shadow="false"
-			:padding="false"
+			no-shadow
+			no-padding
 			class="has-text-left"
 			:loading="loading"
 			:show-close="true"
