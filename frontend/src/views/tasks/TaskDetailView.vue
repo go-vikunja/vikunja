@@ -160,12 +160,28 @@
 
 					<!-- Assignees -->
 					<div class="sidebar-attribute-item">
-						<div class="detail-title">
-							<Icon icon="users" />
-							{{ $t('task.attributes.assignees') }}
+						<div class="detail-title is-flex is-justify-content-space-between">
+							<span>
+								<Icon icon="users" />
+								{{ $t('task.attributes.assignees') }}
+							</span>
+							<BaseButton 
+								v-if="canWrite && !isEditingAssignees"
+								class="is-small is-text action-edit-button"
+								@click="isEditingAssignees = true"
+							>
+								<Icon icon="pen" class="mr-1" /> {{ $t('input.editor.edit') }}
+							</BaseButton>
+							<BaseButton 
+								v-if="canWrite && isEditingAssignees"
+								class="is-small is-text action-edit-button"
+								@click="() => { isEditingAssignees = false; /* saveTask will be triggered by EditAssignees component changes */ }"
+							>
+								<Icon icon="check" class="mr-1" /> {{ $t('input.editor.done') }}
+							</BaseButton>
 						</div>
 						<EditAssignees
-							v-if="canWrite"
+							v-if="canWrite && isEditingAssignees"
 							:ref="e => setFieldRef('assignees', e)"
 							v-model="task.assignees"
 							:project-id="task.projectId"
@@ -174,35 +190,75 @@
 						<AssigneeList
 							v-else
 							:assignees="task.assignees"
+							:can-write="canWrite" 
+							:task-id="task.id" 
 							class="mt-1"
+							@update:assignees="(newAssignees) => { task.assignees = newAssignees; saveTask(); }"
 						/>
 					</div>
 
 					<!-- Labels -->
 					<div class="sidebar-attribute-item">
-						<div class="detail-title">
-							<span class="icon is-grey">
-								<Icon icon="tags" />
+						<div class="detail-title is-flex is-justify-content-space-between">
+							<span>
+								<span class="icon is-grey">
+									<Icon icon="tags" />
+								</span>
+								{{ $t('task.attributes.labels') }}
 							</span>
-							{{ $t('task.attributes.labels') }}
+							<BaseButton 
+								v-if="canWrite && !isEditingLabels"
+								class="is-small is-text action-edit-button"
+								@click="isEditingLabels = true"
+							>
+								<Icon icon="pen" class="mr-1" /> {{ $t('input.editor.edit') }}
+							</BaseButton>
+							<BaseButton 
+								v-if="canWrite && isEditingLabels"
+								class="is-small is-text action-edit-button"
+								@click="() => { isEditingLabels = false; /* saveTask will be triggered by EditLabels component changes */ }"
+							>
+								<Icon icon="check" class="mr-1" /> {{ $t('input.editor.done') }}
+							</BaseButton>
 						</div>
 						<EditLabels
+							v-if="canWrite && isEditingLabels"
 							:ref="e => setFieldRef('labels', e)"
 							v-model="task.labels"
-							:disabled="!canWrite"
+							:disabled="!canWrite" 
 							:task-id="taskId"
 							:creatable="!authStore.isLinkShareAuth"
 						/>
+						<div v-else class="labels-display-area">
+							<span v-if="!task.labels || task.labels.length === 0" class="has-text-grey-light is-italic">{{ $t('misc.none') }}</span>
+							<span 
+								v-for="label in task.labels" 
+								:key="label.id" 
+								class="tag is-rounded mr-1 mb-1"
+								:style="{ backgroundColor: label.hexColor, color: label.fontColor || '#fff' }"
+							>
+								{{ label.title }}
+								<button 
+									v-if="canWrite"
+									class="delete is-small"
+									@click="removeLabel(label)"
+								></button>
+							</span>
+						</div>
 					</div>
 					
 					<!-- Reporter (Mimicking Jira's Reporter) -->
 					<div v-if="task.createdBy" class="sidebar-attribute-item">
 						<div class="detail-title">
-							<Icon icon="user-check" /> <!-- Example icon, choose appropriate -->
-							{{ $t('task.attributes.reporter') }} <!-- Add this to translations -->
+							<Icon icon="user-check" />
+							{{ $t('task.attributes.reporter') }}
 						</div>
 						<div class="reporter-info">
-							{{ task.createdBy.username }}
+							<User
+								:user="task.createdBy"
+								:avatar-size="30"
+								:show-username="true"
+							/>
 						</div>
 					</div>
 
@@ -487,6 +543,7 @@ import TaskSubscription from '@/components/misc/Subscription.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import Reactions from '@/components/input/Reactions.vue'
+import User from '@/components/misc/User.vue'
 
 import {uploadFile} from '@/helpers/attachments'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
@@ -531,6 +588,9 @@ const taskTitle = computed(() => task.value.title)
 useTitle(taskTitle)
 
 const activeMainContentTab = ref('comments') // Default to 'comments'
+
+const isEditingAssignees = ref(false)
+const isEditingLabels = ref(false)
 
 function setActiveMainContentTab(tabName: string) {
 	activeMainContentTab.value = tabName
@@ -783,6 +843,11 @@ async function removeRepeatAfter() {
 	task.value.repeatAfter.amount = 0
 	task.value.repeatMode = TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
 	await saveTask()
+}
+
+function removeLabel(labelToRemove: ITask['labels'][number]) {
+	task.value.labels = task.value.labels.filter(label => label.id !== labelToRemove.id)
+	saveTask() // Save immediately after removing a label
 }
 
 function setRelatedTasksActive() {
@@ -1155,6 +1220,31 @@ h3 {
     background-color: var(--scheme-main-bis);
     border-radius: $radius;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+}
+
+.action-edit-button {
+  padding: 0.25em 0.5em; // Make edit/done buttons smaller
+  font-size: 0.75rem; // Smaller font for edit/done
+  color: var(--link);
+  &:hover {
+    color: var(--link-hover);
+    background-color: var(--link-light);
+  }
+}
+
+.labels-display-area {
+  .tag {
+    // Styles for displayed labels, if needed beyond Bulma defaults
+    // Example: ensure consistent height if delete button makes them taller
+    align-items: center;
+    display: inline-flex;
+    .delete {
+      margin-left: 0.25rem;
+    }
+  }
+  .is-italic {
+    font-size: 0.85rem;
   }
 }
 

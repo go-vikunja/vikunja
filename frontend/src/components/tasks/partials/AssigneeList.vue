@@ -32,15 +32,15 @@ defineEmits<{
 			class="assignee"
 		>
 			<User
-				:key="'user'+user.id"
+				:key="'user' + user.id"
 				:avatar-size="avatarSize"
-				:show-username="false"
+				:show-username="true"
 				:user="user"
 				:class="{'m-2': canRemove && !disabled}"
 			/>
 			<BaseButton
 				v-if="canRemove && !disabled"
-				:key="'delete'+user.id"
+				:key="'delete' + user.id"
 				class="remove-assignee"
 				@click="$emit('remove', user)"
 			>
@@ -53,27 +53,76 @@ defineEmits<{
 <style scoped lang="scss">
 .assignees-list {
 	display: flex;
+	align-items: center;
 
-	&.is-inline :deep(.user) {
-		display: inline;
+	&:not(.is-inline) {
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		
+		.assignee {
+			position: relative;
+			margin-left: 0;
+			
+			:deep(.user img) {
+				border: 2px solid var(--white);
+				margin-right: 0.25rem;
+			}
+			
+			:deep(.user .username) {
+				font-size: 0.85rem;
+				display: inline-block;
+				max-width: 100px;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+				vertical-align: middle;
+			}
+		}
 	}
 
-	&:hover .assignee:not(:first-child) {
-		margin-left: -0.5rem;
+	&.is-inline {
+		flex-wrap: nowrap;
+		overflow: hidden;
+		
+		:deep(.user) {
+			display: inline-flex;
+			align-items: center;
+		}
+
+		.assignee {
+			position: relative;
+			display: inline-flex;
+			align-items: center;
+			max-width: fit-content;
+			margin-right: 0.25rem;
+			
+			:deep(.user img) {
+				border: 2px solid var(--white);
+				margin-right: 0.25rem;
+				z-index: 1;
+			}
+			
+			:deep(.user .username) {
+				font-size: 0.75rem;
+				display: inline-block;
+				max-width: 50px;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+				vertical-align: middle;
+				opacity: 0.85;
+			}
+		}
 	}
 }
 
 .assignee {
 	position: relative;
-	transition: all $transition;
-
-	&:not(:first-child) {
-		margin-left: -1rem;
-	}
+	margin-right: 0.25rem;
 
 	:deep(.user img) {
 		border: 2px solid var(--white);
-		margin-right: 0;
+		margin-right: 0.25rem;
 	}
 }
 
