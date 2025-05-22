@@ -18,6 +18,7 @@ package utils
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"image"
@@ -26,6 +27,7 @@ import (
 	"image/png"
 	"io"
 	"net/http"
+	"time"
 )
 
 // CropAvatarTo1x1 crops the avatar image to a 1:1 aspect ratio, centered on the image
@@ -90,7 +92,16 @@ func CropAvatarTo1x1(imageData []byte) ([]byte, error) {
 
 // DownloadImage downloads an image from a URL and returns the image data
 func DownloadImage(url string) ([]byte, error) {
-	resp, err := http.Get(url) // #nosec G107
+	// 3 seconds is enough for downloading an avatar
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create HTTP request: %w", err)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to download image: %w", err)
 	}
