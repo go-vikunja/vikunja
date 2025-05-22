@@ -92,11 +92,8 @@
 			},
 			"overdue": {
 				"subject": "La tâche \"%[1]s\" (%[2]s) est en retard",
-				"message": "Ceci est un petit rappel pour la tâche \"%[1]s\" (%[2]s) qui est %[3]s et pas encore terminée.",
 				"multiple_subject": "Vos tâches en retard",
-				"multiple_message": "Vous avez les tâches suivantes en retard :",
-				"overdue_since": "en retard depuis %[1]s",
-				"overdue_now": "en retard"
+				"multiple_message": "Vous avez les tâches suivantes en retard :"
 			}
 		},
 		"project": {

@@ -79,9 +79,7 @@
 			"overdue": {
 				"subject": "Tehtävä \"%[1]s\" (%[2]s) on erääntynyt",
 				"multiple_subject": "Myöhässä olevat tehtäväsi",
-				"multiple_message": "Sinulla on seuraavat erääntyneet tehtävät:",
-				"overdue_since": "erääntynyt %[1]s sitten",
-				"overdue_now": "erääntynyt nyt"
+				"multiple_message": "Sinulla on seuraavat erääntyneet tehtävät:"
 			}
 		},
 		"team": {

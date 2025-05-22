@@ -92,11 +92,8 @@
 			},
 			"overdue": {
 				"subject": "Aufgabe „%[1]s“ (%[2]s) ist überfällig",
-				"message": "Dies ist eine freundliche Erinnerung an die Aufgabe „%[1]s“ (%[2]s), die %[3]s und noch nicht erledigt ist.",
 				"multiple_subject": "Deine überfälligen Aufgaben",
-				"multiple_message": "Du hast folgende überfällige Aufgaben:",
-				"overdue_since": "überfällig seit %[1]s",
-				"overdue_now": "jetzt überfällig"
+				"multiple_message": "Du hast folgende überfällige Aufgaben:"
 			}
 		},
 		"project": {

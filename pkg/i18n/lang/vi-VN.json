@@ -84,9 +84,7 @@
 			"overdue": {
 				"subject": "Tác vụ \"%[1]s\" (%[2]s) bị quá hạn",
 				"multiple_subject": "Các tác vụ quá hạn của bạn",
-				"multiple_message": "Bạn có các tác vụ quá hạn sau:",
-				"overdue_since": "quá hạn kể từ %[1]s",
-				"overdue_now": "hiện đang quá hạn"
+				"multiple_message": "Bạn có các tác vụ quá hạn sau:"
 			}
 		},
 		"project": {
