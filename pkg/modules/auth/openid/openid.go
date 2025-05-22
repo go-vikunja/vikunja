@@ -275,6 +275,8 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 			Subject:  idToken.Subject,
 		}
 		if cl.Picture != "" {
+			// This will not take effect because it will be overridden by the default provider
+			// in CreateUserWithRandomUsername
 			uu.AvatarProvider = "openid"
 		}
 		u, err = auth.CreateUserWithRandomUsername(s, uu)
@@ -299,8 +301,9 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 		}
 	}
 
-	// Don't sync avatar if it's already set by another method
-	if cl.Picture != "" && u.AvatarProvider == "openid" {
+	// `initials` is the default provider
+	// Don't sync avatar if it's already set by another provider
+	if cl.Picture != "" && (u.AvatarProvider == "openid" || u.AvatarProvider == "initials") {
 		log.Debugf("Found avatar URL for user %s: %s", u.Username, cl.Picture)
 
 		// Download avatar
