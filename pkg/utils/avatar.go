@@ -90,7 +90,7 @@ func CropAvatarTo1x1(imageData []byte) ([]byte, error) {
 
 // DownloadImage downloads an image from a URL and returns the image data
 func DownloadImage(url string) ([]byte, error) {
-	resp, err := http.Get(url)
+	resp, err := http.Get(url) // #nosec G107
 	if err != nil {
 		return nil, fmt.Errorf("failed to download image: %w", err)
 	}

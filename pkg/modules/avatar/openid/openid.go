@@ -27,4 +27,4 @@ func (p *Provider) GetAvatar(user *user.User, size int64) (avatar []byte, mimeTy
 	up := upload.Provider{}
 
 	return up.GetAvatar(user, size)
-} 
+}
