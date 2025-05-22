@@ -512,7 +512,13 @@ func setConfigFromEnv() error {
 					}
 
 					// Move into the nested map
-					currentMap = currentMap[part].(map[string]any)
+					typed, is := currentMap[part].(map[string]any)
+					if !is {
+						log.Errorf("Failed to set config value from environment variable %s: %s, failed on part %s, type is not map, is %t", key, value, part, currentMap[part])
+						continue
+					}
+
+					currentMap = typed
 				}
 			}
 		}
