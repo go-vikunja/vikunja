@@ -123,6 +123,12 @@
 									<span>{{ $t('task.attributes.relatedTasks') }}</span>
 								</a>
 							</li>
+							<li :class="{'is-active': activeMainContentTab === 'other'}">
+								<a @click="setActiveMainContentTab('other')">
+									<span class="icon is-small"><Icon icon="ellipsis-h" /></span>
+									<span>{{ $t('misc.other') }}</span>
+								</a>
+							</li>
 						</ul>
 					</div>
 
@@ -156,6 +162,66 @@
 								:show-no-relations-notice="true"
 								:task-id="taskId"
 							/>
+						</div>
+						
+						<!-- Other Settings -->
+						<div v-if="activeMainContentTab === 'other'" class="content details other-settings mb-0">
+							<h4 class="other-section-title">{{ $t('misc.advancedSettings') }}</h4>
+							
+							<div class="other-attributes-grid">
+								<!-- Color -->
+								<div class="other-attribute-item">
+									<div class="detail-title">
+										<Icon icon="fill-drip" />
+										{{ $t('task.attributes.color') }}
+									</div>
+									<ColorPicker
+										:ref="e => setFieldRef('color', e)"
+										v-model="taskColor"
+										menu-position="bottom"
+										@update:modelValue="saveTask()"
+									/>
+								</div>
+								
+								<!-- Reminders -->
+								<div class="other-attribute-item">
+									<div class="detail-title">
+										<Icon :icon="['far', 'clock']" />
+										{{ $t('task.attributes.reminders') }}
+									</div>
+									<Reminders
+										:ref="e => setFieldRef('reminders', e)"
+										v-model="task"
+										:disabled="!canWrite"
+										@update:modelValue="saveTask()"
+									/>
+								</div>
+								
+								<!-- Repeat after -->
+								<div class="other-attribute-item">
+									<div class="is-flex is-justify-content-space-between">
+										<div class="detail-title">
+											<Icon icon="history" />
+											{{ $t('task.attributes.repeat') }}
+										</div>
+										<BaseButton
+											v-if="canWrite && (task.repeatAfter?.amount > 0 || task.repeatMode !== TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT)"
+											class="remove"
+											@click="removeRepeatAfter"
+										>
+											<span class="icon is-small">
+												<Icon icon="times" />
+											</span>
+										</BaseButton>
+									</div>
+									<RepeatAfter
+										:ref="e => setFieldRef('repeatAfter', e)"
+										v-model="task"
+										:disabled="!canWrite"
+										@update:modelValue="saveTask()"
+									/>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -390,62 +456,6 @@
 								</span>
 							</BaseButton>
 						</div>
-					</div>
-
-					<!-- Reminders -->
-					<div v-if="activeFields.reminders || canWrite" class="sidebar-attribute-item">
-						<div class="detail-title">
-							<Icon :icon="['far', 'clock']" />
-							{{ $t('task.attributes.reminders') }}
-						</div>
-						<Reminders
-							:ref="e => setFieldRef('reminders', e)"
-							v-model="task"
-							:disabled="!canWrite"
-							@update:modelValue="saveTask()"
-						/>
-						<!-- <x-button v-if="!activeFields.reminders && canWrite" @click="setFieldActive('reminders')"> {{ $t('task.detail.actions.addReminders') }} </x-button> -->
-					</div>
-
-					<!-- Repeat after -->
-					<div v-if="canWrite || activeFields.repeatAfter" class="sidebar-attribute-item">
-						<div class="is-flex is-justify-content-space-between">
-							<div class="detail-title">
-								<Icon icon="history" />
-								{{ $t('task.attributes.repeat') }}
-							</div>
-							<BaseButton
-								v-if="canWrite && (task.repeatAfter?.amount > 0 || task.repeatMode !== TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT)"
-								class="remove"
-								@click="removeRepeatAfter"
-							>
-								<span class="icon is-small">
-									<Icon icon="times" />
-								</span>
-							</BaseButton>
-						</div>
-						<RepeatAfter
-							:ref="e => setFieldRef('repeatAfter', e)"
-							v-model="task"
-							:disabled="!canWrite"
-							@update:modelValue="saveTask()"
-						/>
-                         <!-- <x-button v-if="!activeFields.repeatAfter && canWrite" @click="setFieldActive('repeatAfter')"> {{ $t('task.detail.actions.setupRepeat') }} </x-button> -->
-					</div>
-					
-					<!-- Color -->
-					<div v-if="canWrite || activeFields.color" class="sidebar-attribute-item">
-						<div class="detail-title">
-							<Icon icon="fill-drip" />
-							{{ $t('task.attributes.color') }}
-						</div>
-						<ColorPicker
-							:ref="e => setFieldRef('color', e)"
-							v-model="taskColor"
-							menu-position="bottom"
-							@update:modelValue="saveTask()"
-						/>
-						<!-- <x-button v-if="!activeFields.color && canWrite" @click="setFieldActive('color')"> {{ $t('task.detail.actions.setColor') }} </x-button> -->
 					</div>
 				</div>
 				
@@ -1295,6 +1305,61 @@ h3 {
   .cancel-move-button {
     font-size: 0.75rem;
     padding: 0.25em 0.75em;
+  }
+}
+
+// 其他标签页样式
+.other-settings {
+  .other-section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--grey-200);
+  }
+  
+  .other-attributes-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+  
+  .other-attribute-item {
+    min-width: 0; // 防止内容溢出
+    
+    .detail-title {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--grey-700);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      
+      .icon {
+        margin-right: 0.3rem;
+      }
+    }
+    
+    // 确保ColorPicker, Reminders和RepeatAfter组件在容器内合理显示
+    :deep(.verte), :deep(.reminders-list), :deep(.repeat-after-container) {
+      width: 100%;
+      max-width: 100%;
+    }
+  }
+  
+  // 在中等屏幕上调整为两列
+  @media screen and (max-width: $desktop) and (min-width: $tablet) {
+    .other-attributes-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  // 移动设备上调整为单列
+  @media screen and (max-width: $tablet) {
+    .other-attributes-grid {
+      grid-template-columns: 1fr;
+    }
   }
 }
 
