@@ -47,7 +47,7 @@ require (
 	github.com/jinzhu/copier v0.4.0
 	github.com/jszwedko/go-datemath v0.1.1-0.20230526204004-640a500621d6
 	github.com/labstack/echo-jwt/v4 v4.3.1
-	github.com/labstack/echo/v4 v4.13.3
+	github.com/labstack/echo/v4 v4.13.4
 	github.com/labstack/gommon v0.4.2
 	github.com/lib/pq v1.10.9
 	github.com/magefile/mage v1.15.0
