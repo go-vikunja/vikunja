@@ -290,7 +290,7 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 		if cl.Name != u.Name {
 			u.Name = cl.Name
 		}
-		if cl.Picture != "" {
+		if cl.Picture != "" && u.AvatarProvider == "" {
 			u.AvatarProvider = "openid"
 		}
 		u, err = user.UpdateUser(s, u, false)
@@ -299,7 +299,8 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 		}
 	}
 
-	if cl.Picture != "" && (u.AvatarProvider == "openid" || u.AvatarProvider == "") {
+	// Don't sync avatar if it's already set by another method
+	if cl.Picture != "" && u.AvatarProvider == "openid" {
 		log.Debugf("Found avatar URL for user %s: %s", u.Username, cl.Picture)
 
 		// Download avatar
