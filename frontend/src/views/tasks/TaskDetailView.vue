@@ -21,32 +21,55 @@
 					@update:task="Object.assign(task, $event)"
 					@close="$emit('close')"
 				/>
-				<h6
+				<div
 					v-if="project?.id"
-					class="subtitle"
+					class="subtitle-container"
 				>
-					<template
-						v-for="p in projectStore.getAncestors(project)"
-						:key="p.id"
+					<h6 class="subtitle">
+						<template
+							v-for="p in projectStore.getAncestors(project)"
+							:key="p.id"
+						>
+							<a
+								v-if="router.options.history.state.back?.includes('/projects/'+p.id+'/') || false"
+								@click="router.back()"
+							>
+								{{ getProjectTitle(p) }}
+							</a>
+							<RouterLink
+								v-else
+								:to="{ name: 'project.index', params: { projectId: p.id } }"
+							>
+								{{ getProjectTitle(p) }}
+							</RouterLink>
+							<span
+								v-if="p.id !== project?.id"
+								class="has-text-grey-light"
+							> &gt; </span>
+						</template>
+					</h6>
+					<BaseButton 
+						v-if="canWrite"
+						class="move-project-button is-small"
+						@click="isMovingProject = !isMovingProject"
 					>
-						<a
-							v-if="router.options.history.state.back?.includes('/projects/'+p.id+'/') || false"
-							@click="router.back()"
-						>
-							{{ getProjectTitle(p) }}
-						</a>
-						<RouterLink
-							v-else
-							:to="{ name: 'project.index', params: { projectId: p.id } }"
-						>
-							{{ getProjectTitle(p) }}
-						</RouterLink>
-						<span
-							v-if="p.id !== project?.id"
-							class="has-text-grey-light"
-						> &gt; </span>
-					</template>
-				</h6>
+						<Icon icon="exchange-alt" class="mr-1" /> {{ $t('task.detail.move') }}
+					</BaseButton>
+				</div>
+				
+				<div v-if="isMovingProject && canWrite" class="project-search-container">
+					<ProjectSearch
+						:ref="e => setFieldRef('moveProject', e)"
+						:filter="project => project.id !== task.projectId"
+						@update:modelValue="(p) => { changeProject(p); isMovingProject = false; }"
+					/>
+					<BaseButton 
+						class="cancel-move-button is-small"
+						@click="isMovingProject = false"
+					>
+						{{ $t('misc.cancel') }}
+					</BaseButton>
+				</div>
 
 				<ChecklistSummary :task="task" />
 
@@ -433,19 +456,7 @@
 						}}
 					</x-button>
 					
-					<!-- Move Task -->
-					<div v-if="canWrite" class="sidebar-attribute-item">
-						<div class="detail-title">
-							<Icon icon="list" />
-							{{ $t('task.detail.move') }}
-						</div>
-						<ProjectSearch
-							:ref="e => setFieldRef('moveProject', e)"
-							:filter="project => project.id !== task.projectId"
-							@update:modelValue="changeProject"
-						/>
-						<!-- <x-button v-if="!activeFields.moveProject && canWrite" @click="setFieldActive('moveProject')"> {{ $t('task.detail.actions.moveProject') }} </x-button> -->
-					</div>
+					<!-- Move Task - 已移动到标题下方 -->
 
 					<x-button
 						v-if="canWrite"
@@ -575,6 +586,7 @@ const activeMainContentTab = ref('comments') // Default to 'comments'
 
 const isEditingAssignees = ref(false)
 const isEditingLabels = ref(false)
+const isMovingProject = ref(false)
 
 function setActiveMainContentTab(tabName: string) {
 	activeMainContentTab.value = tabName
@@ -1204,6 +1216,44 @@ h3 {
   }
   .is-italic {
     font-size: 0.85rem;
+  }
+}
+
+.subtitle-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+  
+  .subtitle {
+    margin-bottom: 0;
+    margin-right: 0.5rem;
+  }
+  
+  .move-project-button {
+    font-size: 0.75rem;
+    padding: 0.25em 0.5em;
+    color: var(--link);
+    
+    &:hover {
+      color: var(--link-hover);
+      background-color: var(--link-light);
+    }
+  }
+}
+
+.project-search-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+  
+  :deep(.multiselect) {
+    flex-grow: 1;
+    margin-right: 0.5rem;
+  }
+  
+  .cancel-move-button {
+    font-size: 0.75rem;
+    padding: 0.25em 0.75em;
   }
 }
 
