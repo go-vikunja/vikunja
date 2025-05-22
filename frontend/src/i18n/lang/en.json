@@ -139,7 +139,8 @@
         "uploadAvatar": "Upload Avatar",
         "statusUpdateSuccess": "Avatar status was updated successfully!",
         "setSuccess": "The avatar has been set successfully!",
-        "ldap": "Your avatar is automagically synced from your organization's directory service (LDAP). You can ask your IT team for information on how to change it."
+        "ldap": "Your avatar is automagically synced from your organization's directory service (LDAP). You can ask your IT team for information on how to change it.",
+        "openid": "Your avatar is automagically synced from your login provider ({provider}). To change it, please update it there instead."
       },
       "quickAddMagic": {
         "title": "Quick Add Magic Mode",

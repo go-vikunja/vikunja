@@ -17,6 +17,7 @@
 package openid
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -28,7 +29,9 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
+	"code.vikunja.io/api/pkg/modules/avatar/upload"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web/handler"
 
 	"github.com/coreos/go-oidc/v3/oidc"
@@ -68,6 +71,7 @@ type claims struct {
 	PreferredUsername string                   `json:"preferred_username"`
 	Nickname          string                   `json:"nickname"`
 	VikunjaGroups     []map[string]interface{} `json:"vikunja_groups"`
+	Picture           string                   `json:"picture"`
 }
 
 func init() {
@@ -259,6 +263,8 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 		fallbackMatchFound = err == nil // found if no error, not found if we reach it here despite an error
 	}
 
+	var isNewUser bool = false
+
 	if !alreadyCreatedFromIssuer && !fallbackMatchFound {
 
 		// If no user exists, create one with the preferred username if it is not already taken
@@ -270,7 +276,14 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 			Issuer:   idToken.Issuer,
 			Subject:  idToken.Subject,
 		}
-		return auth.CreateUserWithRandomUsername(s, uu)
+		if cl.Picture != "" {
+			uu.AvatarProvider = "openid"
+		}
+		u, err = auth.CreateUserWithRandomUsername(s, uu)
+		if err != nil {
+			return nil, err
+		}
+		isNewUser = true
 	} else if alreadyCreatedFromIssuer {
 
 		// try updating user.Name and/or user.Email if necessary
@@ -280,13 +293,44 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 		if cl.Name != u.Name {
 			u.Name = cl.Name
 		}
+		if cl.Picture != "" {
+			u.AvatarProvider = "openid"
+		}
 		u, err = user.UpdateUser(s, u, false)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return
+	if cl.Picture != "" && (isNewUser || u.AvatarProvider == "openid" || u.AvatarProvider == "") {
+		log.Debugf("Found avatar URL for user %s: %s", u.Username, cl.Picture)
+
+		// Download avatar
+		avatarData, err := utils.DownloadImage(cl.Picture)
+		if err != nil {
+			log.Errorf("Error downloading avatar: %v", err)
+			// Continue, do not interrupt the authentication process due to avatar download failure
+		} else {
+			// Process avatar, ensure 1:1 ratio
+			processedAvatar, err := utils.CropAvatarTo1x1(avatarData)
+			if err != nil {
+				log.Debugf("Error processing avatar: %v", err)
+				// Continue, do not interrupt the authentication process due to avatar processing failure
+			} else {
+				// Set avatar provider to openid
+				u.AvatarProvider = "openid"
+
+				// Store avatar
+				err = upload.StoreAvatarFile(s, u, bytes.NewReader(processedAvatar))
+				if err != nil {
+					log.Debugf("Error storing avatar: %v", err)
+					// Continue, do not interrupt the authentication process due to avatar storage failure
+				}
+			}
+		}
+	}
+
+	return u, nil
 }
 
 // mergeClaims combines claims from token and userinfo based on the ForceUserInfo setting
@@ -308,6 +352,10 @@ func mergeClaims(cl *claims, cl2 *claims, forceUserInfo bool) error {
 		cl.PreferredUsername = cl2.Nickname
 	}
 
+	if (forceUserInfo && cl2.Picture != "") || cl.Picture == "" {
+		cl.Picture = cl2.Picture
+	}
+
 	if cl.Email == "" {
 		return &user.ErrNoOpenIDEmailProvided{}
 	}
@@ -324,7 +372,7 @@ func getClaims(provider *Provider, oauth2Token *oauth2.Token, idToken *oidc.IDTo
 		return nil, err
 	}
 
-	if provider.ForceUserInfo || cl.Email == "" || cl.Name == "" || cl.PreferredUsername == "" {
+	if provider.ForceUserInfo || cl.Email == "" || cl.Name == "" || cl.PreferredUsername == "" || cl.Picture == "" {
 		info, err := provider.openIDProvider.UserInfo(context.Background(), provider.Oauth2Config.TokenSource(context.Background(), oauth2Token))
 		if err != nil {
 			log.Errorf("Error getting userinfo for provider %s: %v", provider.Name, err)
