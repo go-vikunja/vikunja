@@ -92,11 +92,8 @@
 			},
 			"overdue": {
 				"subject": "Oppgave \"%[1]s\" (%[2]s) er forfalt",
-				"message": "Dette er en vennlig påminnelse om oppgaven \"%[1]s\" (%[2]s), som er %[3]s og ennå ikke utført.",
 				"multiple_subject": "Dine forfalte oppgaver",
-				"multiple_message": "Du har følgende forfalte oppgaver:",
-				"overdue_since": "forfalt siden %[1]s",
-				"overdue_now": "forfalt nå"
+				"multiple_message": "Du har følgende forfalte oppgaver:"
 			}
 		},
 		"project": {

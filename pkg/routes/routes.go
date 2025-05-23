@@ -285,7 +285,8 @@ func registerAPIRoutes(a *echo.Group) {
 	// Middleware to collect metrics
 	setupMetricsMiddleware(a)
 
-	a.POST("/tokenTest", apiv1.CheckToken)
+	a.GET("/token/test", apiv1.TestToken)
+	a.POST("/token/test", apiv1.CheckToken)
 	a.GET("/routes", models.GetAvailableAPIRoutesForToken)
 
 	// User stuff

@@ -92,11 +92,8 @@
 			},
 			"overdue": {
 				"subject": "A tarefa \"%[1]s\" (%[2]s) está em atraso",
-				"message": "Este é um lembrete cordial da tarefa \"%[1]s\" (%[2]s) que está %[3]s e ainda por concluir.",
 				"multiple_subject": "As tuas taredas em atraso",
-				"multiple_message": "Tens as seguintes tarefas em atraso:",
-				"overdue_since": "em atraso desde %[1]s",
-				"overdue_now": "agora em atraso"
+				"multiple_message": "Tens as seguintes tarefas em atraso:"
 			}
 		},
 		"project": {

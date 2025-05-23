@@ -92,11 +92,8 @@
 			},
 			"overdue": {
 				"subject": "작업 \"%[1]s\" (%[2]s) 가 기한이 지났습니다.",
-				"message": "이것은 “%[1]s”(%[2]s) 작업이 %[3]s이고 아직 완료되지 않았다는 것을 알려주는 친절한 알림입니다.",
 				"multiple_subject": "기한이 지난 작업",
-				"multiple_message": "다음과 같은 기한이 지난 작업이 있습니다:",
-				"overdue_since": "%[1]s 이후 기한 초과",
-				"overdue_now": "지금 기한 초과"
+				"multiple_message": "다음과 같은 기한이 지난 작업이 있습니다:"
 			}
 		},
 		"project": {

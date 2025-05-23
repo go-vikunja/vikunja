@@ -92,11 +92,8 @@
 			},
 			"overdue": {
 				"subject": "\"%[1]s\" (%[2]s) görevi zaman aşımına uğradı",
-				"message": "Bu, henüz tamamlanmamış ve %[3]s olan \"%[1]s\" (%[2]s) görevi için dostça bir hatırlatmadır.",
 				"multiple_subject": "Zaman aşımına uğramış görevleriniz",
-				"multiple_message": "Aşağıdaki zaman aşımına uğramış görevleriniz var:",
-				"overdue_since": "%[1]s tarihinden beri zaman aşımına uğradı",
-				"overdue_now": "şu anda zaman aşımına uğradı"
+				"multiple_message": "Aşağıdaki zaman aşımına uğramış görevleriniz var:"
 			}
 		},
 		"project": {

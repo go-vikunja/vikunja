@@ -18,6 +18,7 @@ package v1
 
 import (
 	"fmt"
+	"net/http"
 
 	"code.vikunja.io/api/pkg/models"
 	"github.com/golang-jwt/jwt/v5"
@@ -32,4 +33,9 @@ func CheckToken(c echo.Context) error {
 	fmt.Println(user.Valid)
 
 	return c.JSON(418, models.Message{Message: "🍵"})
+}
+
+// TestToken returns a simple test message. Used for testing purposes.
+func TestToken(c echo.Context) error {
+	return c.JSON(http.StatusOK, models.Message{Message: "ok"})
 }
