@@ -310,11 +310,6 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 			Issuer:   idToken.Issuer,
 			Subject:  idToken.Subject,
 		}
-		if cl.Picture != "" {
-			// This will not take effect because it will be overridden by the default provider
-			// in CreateUserWithRandomUsername
-			uu.AvatarProvider = "openid"
-		}
 		u, err = auth.CreateUserWithRandomUsername(s, uu)
 		if err != nil {
 			return nil, err
