@@ -219,8 +219,8 @@ func getTeamDataFromToken(groups []map[string]interface{}, provider *Provider) (
 	return teamData
 }
 
-// syncUserAvatarFromOpenID attempts to download and store a user's avatar from an OpenID provider
-func syncUserAvatarFromOpenID(s *xorm.Session, u *user.User, pictureURL string) {
+// trySyncUserAvatarFromOpenID attempts to download and store a user's avatar from an OpenID provider
+func trySyncUserAvatarFromOpenID(s *xorm.Session, u *user.User, pictureURL string) {
 	// Don't sync avatar if no picture URL is provided
 	if pictureURL == "" {
 		return
@@ -232,7 +232,6 @@ func syncUserAvatarFromOpenID(s *xorm.Session, u *user.User, pictureURL string) 
 	avatarData, err := utils.DownloadImage(pictureURL)
 	if err != nil {
 		log.Errorf("Error downloading avatar: %v, user id: %d", err, u.ID)
-		// Continue, do not interrupt the authentication process due to avatar download failure
 		return
 	}
 
@@ -240,7 +239,6 @@ func syncUserAvatarFromOpenID(s *xorm.Session, u *user.User, pictureURL string) 
 	processedAvatar, err := utils.CropAvatarTo1x1(avatarData)
 	if err != nil {
 		log.Errorf("Error processing avatar: %v, user id: %d", err, u.ID)
-		// Continue, do not interrupt the authentication process due to avatar processing failure
 		return
 	}
 
@@ -251,7 +249,6 @@ func syncUserAvatarFromOpenID(s *xorm.Session, u *user.User, pictureURL string) 
 	err = upload.StoreAvatarFile(s, u, bytes.NewReader(processedAvatar))
 	if err != nil {
 		log.Errorf("Error storing avatar: %v, user id: %d", err, u.ID)
-		// Continue, do not interrupt the authentication process due to avatar storage failure
 	}
 }
 
@@ -330,7 +327,7 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 	}
 
 	// Sync avatar if available
-	syncUserAvatarFromOpenID(s, u, cl.Picture)
+	trySyncUserAvatarFromOpenID(s, u, cl.Picture)
 
 	return u, nil
 }
