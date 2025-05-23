@@ -49,84 +49,15 @@ type TaskDuplicate struct {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{projectID}tasks/{taskID}/duplicate [put]
 func (td *TaskDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
-	// Helper to copy a single task (without subtasks)
-	copyTask := func(orig *Task) *Task {
-		return &Task{
-			Title:       orig.Title,
-			Description: orig.Description,
-			Done:        orig.Done,
-			DoneAt:      orig.DoneAt,
-			DueDate:     orig.DueDate,
-			ProjectID:   orig.ProjectID,
-			RepeatAfter: orig.RepeatAfter,
-			RepeatMode:  orig.RepeatMode,
-			Priority:    orig.Priority,
-			StartDate:   orig.StartDate,
-			EndDate:     orig.EndDate,
-			Assignees:   orig.Assignees,
-			Labels:      orig.Labels,
-			HexColor:    orig.HexColor,
-			PercentDone: orig.PercentDone,
-		}
-	}
-
-	// Map from old task ID to new task pointer
 	idMap := map[int64]*Task{}
-
-	// Recursively duplicate a task and its subtasks
-	var duplicateTaskTree func(parentID, origID int64) (*Task, error)
-	duplicateTaskTree = func(parentID, origID int64) (*Task, error) {
-		// Get the original task with all info
-		origTask, err := GetTaskByIDSimple(s, origID)
-		if err != nil {
-			return nil, err
-		}
-		err = addMoreInfoToTasks(s, map[int64]*Task{origTask.ID: &origTask}, doer, nil, nil)
-		if err != nil {
-			return nil, err
-		}
-		// Copy the task
-		newTask := copyTask(&origTask)
-		newTask.ProjectID = origTask.ProjectID
-		// Insert the new task
-		err = newTask.Create(s, doer)
-		if err != nil {
-			return nil, err
-		}
-		idMap[origTask.ID] = newTask
-
-		// Duplicate subtasks recursively
-		relations := []*TaskRelation{}
-		err = s.Where("task_id = ? AND relation_kind = ?", origTask.ID, RelationKindSubtask).Find(&relations)
-		if err != nil {
-			return nil, err
-		}
-		for _, rel := range relations {
-			child, err := duplicateTaskTree(newTask.ID, rel.OtherTaskID)
-			if err != nil {
-				return nil, err
-			}
-			// Create subtask relation (newTask.ID -> child.ID)
-			tr := &TaskRelation{
-				TaskID:       newTask.ID,
-				OtherTaskID:  child.ID,
-				RelationKind: RelationKindSubtask,
-			}
-			if err := tr.Create(s, doer); err != nil {
-				return nil, err
-			}
-		}
-		return newTask, nil
-	}
-
-	// Start duplicating from the root task
-	root, err := duplicateTaskTree(0, td.TaskID)
+	// Start duplicating from the root task, do not copy parent relation in recursion
+	root, err := duplicateTask(s, doer, td.TaskID, idMap)
 	if err != nil {
 		return err
 	}
 	td.Task = root
 
-	// Copy follows/precedes relations for all duplicated tasks, needs to select only one type, corresponding will be created too
+	// Copy follows/precedes relations for all duplicated tasks, only one type, corresponding will be created too
 	for oldID, newTask := range idMap {
 		rels := []*TaskRelation{}
 		err := s.Where("task_id = ? AND relation_kind = ? ", oldID, RelationKindFollows).Find(&rels)
@@ -148,7 +79,102 @@ func (td *TaskDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 		}
 	}
 
+	// If the topmost task has a parent, copy that relation to the new task
+	parentRel := &TaskRelation{}
+	hasParent, err := s.Where("other_task_id = ? AND relation_kind = ?", td.TaskID, RelationKindSubtask).Get(parentRel)
+	if err != nil {
+		return err
+	}
+	if hasParent {
+		tr := &TaskRelation{
+			TaskID:       parentRel.TaskID, // original parent
+			OtherTaskID:  root.ID,          // new duplicated task
+			RelationKind: RelationKindSubtask,
+		}
+		if err := tr.Create(s, doer); err != nil {
+			return err
+		}
+	}
+
 	return nil
+}
+
+// duplicateTask duplicates a task and its subtasks recursively, copying reminders and relations.
+func duplicateTask(s *xorm.Session, doer web.Auth, origID int64, idMap map[int64]*Task) (*Task, error) {
+
+	// Get the original task with all info
+	origTask, err := GetTaskByIDSimple(s, origID)
+	if err != nil {
+		return nil, err
+	}
+	err = addMoreInfoToTasks(s, map[int64]*Task{origTask.ID: &origTask}, doer, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// Copy the task
+	newTask := &Task{
+		Title:       origTask.Title,
+		Description: origTask.Description,
+		Done:        origTask.Done,
+		DoneAt:      origTask.DoneAt,
+		DueDate:     origTask.DueDate,
+		ProjectID:   origTask.ProjectID,
+		RepeatAfter: origTask.RepeatAfter,
+		RepeatMode:  origTask.RepeatMode,
+		Priority:    origTask.Priority,
+		StartDate:   origTask.StartDate,
+		EndDate:     origTask.EndDate,
+		Assignees:   origTask.Assignees,
+		Labels:      origTask.Labels,
+		HexColor:    origTask.HexColor,
+		PercentDone: origTask.PercentDone,
+	}
+
+	// Copy reminders
+	reminders, _ := getRemindersForTasks(s, []int64{origTask.ID})
+	if len(reminders) > 0 {
+		newReminders := make([]*TaskReminder, len(reminders))
+		for i, r := range reminders {
+			newReminders[i] = &TaskReminder{
+				Reminder:       r.Reminder,
+				RelativeTo:     r.RelativeTo,
+				RelativePeriod: r.RelativePeriod,
+			}
+		}
+		newTask.Reminders = newReminders
+	}
+
+	// Insert the new task
+	err = newTask.Create(s, doer)
+	if err != nil {
+		return nil, err
+	}
+	idMap[origTask.ID] = newTask
+
+	// Duplicate subtasks recursively
+	relations := []*TaskRelation{}
+	err = s.Where("task_id = ? AND relation_kind = ?", origTask.ID, RelationKindSubtask).Find(&relations)
+	if err != nil {
+		return nil, err
+	}
+	for _, rel := range relations {
+		child, err := duplicateTask(s, doer, rel.OtherTaskID, idMap)
+		if err != nil {
+			return nil, err
+		}
+
+		// Create subtask relation (newTask.ID -> child.ID)
+		tr := &TaskRelation{
+			TaskID:       newTask.ID,
+			OtherTaskID:  child.ID,
+			RelationKind: RelationKindSubtask,
+		}
+		if err := tr.Create(s, doer); err != nil {
+			return nil, err
+		}
+	}
+	return newTask, nil
 }
 
 // CanCreate checks if a user has the right to duplicate a task
