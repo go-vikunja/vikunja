@@ -17,7 +17,6 @@
 package migration
 
 import (
-	"github.com/olekukonko/tablewriter/tw"
 	"os"
 	"sort"
 
@@ -29,7 +28,9 @@ import (
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
+
 	"github.com/olekukonko/tablewriter"
+	"github.com/olekukonko/tablewriter/tw"
 	"src.techknowlogick.com/xormigrate"
 	"xorm.io/xorm"
 )

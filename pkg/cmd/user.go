@@ -19,7 +19,6 @@ package cmd
 import (
 	"bufio"
 	"fmt"
-	"github.com/olekukonko/tablewriter/tw"
 	"os"
 	"strconv"
 	"strings"
@@ -33,6 +32,7 @@ import (
 
 	"github.com/asaskevich/govalidator"
 	"github.com/olekukonko/tablewriter"
+	"github.com/olekukonko/tablewriter/tw"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 	"xorm.io/xorm"
