@@ -219,6 +219,43 @@ func getTeamDataFromToken(groups []map[string]interface{}, provider *Provider) (
 	return teamData
 }
 
+// syncUserAvatarFromOpenID attempts to download and store a user's avatar from an OpenID provider
+// Only updates avatar if the current provider is "openid" or "initials" (default)
+func syncUserAvatarFromOpenID(s *xorm.Session, u *user.User, pictureURL string) {
+	// Don't sync avatar if it's already set by another provider or if no picture URL is provided
+	if pictureURL == "" || (u.AvatarProvider != "openid" && u.AvatarProvider != "initials") {
+		return
+	}
+
+	log.Debugf("Found avatar URL for user %s: %s", u.Username, pictureURL)
+
+	// Download avatar
+	avatarData, err := utils.DownloadImage(pictureURL)
+	if err != nil {
+		log.Errorf("Error downloading avatar: %v, user id: %d", err, u.ID)
+		// Continue, do not interrupt the authentication process due to avatar download failure
+		return
+	}
+
+	// Process avatar, ensure 1:1 ratio
+	processedAvatar, err := utils.CropAvatarTo1x1(avatarData)
+	if err != nil {
+		log.Errorf("Error processing avatar: %v, user id: %d", err, u.ID)
+		// Continue, do not interrupt the authentication process due to avatar processing failure
+		return
+	}
+
+	// Set avatar provider to openid
+	u.AvatarProvider = "openid"
+
+	// Store avatar and update user
+	err = upload.StoreAvatarFile(s, u, bytes.NewReader(processedAvatar))
+	if err != nil {
+		log.Errorf("Error storing avatar: %v, user id: %d", err, u.ID)
+		// Continue, do not interrupt the authentication process due to avatar storage failure
+	}
+}
+
 func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *oidc.IDToken) (u *user.User, err error) {
 
 	// set defaults
@@ -292,44 +329,14 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 		if cl.Name != u.Name {
 			u.Name = cl.Name
 		}
-		if cl.Picture != "" && u.AvatarProvider == "" {
-			u.AvatarProvider = "openid"
-		}
 		u, err = user.UpdateUser(s, u, false)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	// `initials` is the default provider
-	// Don't sync avatar if it's already set by another provider
-	if cl.Picture != "" && (u.AvatarProvider == "openid" || u.AvatarProvider == "initials") {
-		log.Debugf("Found avatar URL for user %s: %s", u.Username, cl.Picture)
-
-		// Download avatar
-		avatarData, err := utils.DownloadImage(cl.Picture)
-		if err != nil {
-			log.Errorf("Error downloading avatar: %v, user id: %d", err, u.ID)
-			// Continue, do not interrupt the authentication process due to avatar download failure
-		} else {
-			// Process avatar, ensure 1:1 ratio
-			processedAvatar, err := utils.CropAvatarTo1x1(avatarData)
-			if err != nil {
-				log.Errorf("Error processing avatar: %v, user id: %d", err, u.ID)
-				// Continue, do not interrupt the authentication process due to avatar processing failure
-			} else {
-				// Set avatar provider to openid
-				u.AvatarProvider = "openid"
-
-				// Store avatar
-				err = upload.StoreAvatarFile(s, u, bytes.NewReader(processedAvatar))
-				if err != nil {
-					log.Errorf("Error storing avatar: %v, user id: %d", err, u.ID)
-					// Continue, do not interrupt the authentication process due to avatar storage failure
-				}
-			}
-		}
-	}
+	// Sync avatar if available
+	syncUserAvatarFromOpenID(s, u, cl.Picture)
 
 	return u, nil
 }
