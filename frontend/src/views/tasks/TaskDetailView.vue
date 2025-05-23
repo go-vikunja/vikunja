@@ -939,7 +939,7 @@ async function removeRepeatAfter() {
 	task.value.repeatAfter.amount = 0
 	task.value.repeatMode = TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
 	await saveTask()
-}~
+}
 
 function setRelatedTasksActive() {
 	setFieldActive('relatedTasks')
@@ -956,14 +956,13 @@ function setRelatedTasksActive() {
 
 async function duplicateTask() {
 	const clone = await taskStore.duplicateTask(task.value)
-	if (clone != null) {
-		router.replace({
+	if (clone !== null) {
+		router.push({
 			name: 'task.detail',
 			params: { id: clone.id },
 			state: { backdropView: isModal.value ? router.options.history.state.back : undefined },
 		})
 	}
-
 }
 </script>
 

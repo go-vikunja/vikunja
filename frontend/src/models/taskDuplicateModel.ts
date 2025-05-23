@@ -10,6 +10,5 @@ export default class TaskDuplicateModel extends AbstractModel<ITaskDuplicate> im
 	constructor(data: Partial<ITaskDuplicate>) {
 		super()
 		this.assignData(data)
-		this.duplicatedTask = this.duplicatedTask ? this.duplicatedTask : null
 	}
 }

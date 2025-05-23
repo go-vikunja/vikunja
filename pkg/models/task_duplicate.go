@@ -43,8 +43,7 @@ type TaskDuplicate struct {
 // @Security JWTKeyAuth
 // @Param taskID path int true "The task ID to duplicate"
 // @Param projectID path int true "The project ID of task to duplicate"
-
-// @Success 201 {object} models.TaskDuplicate "The created task."
+// @Success 201 {object} models.TaskDuplicate "The duplicated task."
 // @Failure 400 {object} web.HTTPError "Invalid task duplicate object provided."
 // @Failure 403 {object} web.HTTPError "The user does not have access to the project."
 // @Failure 500 {object} models.Message "Internal error"
@@ -89,7 +88,6 @@ func (td *TaskDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 		// Copy the task
 		newTask := copyTask(&origTask)
 		newTask.ProjectID = origTask.ProjectID
-		newTask.ID = 0 // Ensure new insert
 		// Insert the new task
 		err = newTask.Create(s, doer)
 		if err != nil {
@@ -155,12 +153,6 @@ func (td *TaskDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 
 // CanCreate checks if a user has the right to duplicate a task
 func (td *TaskDuplicate) CanCreate(s *xorm.Session, a web.Auth) (canCreate bool, err error) {
-	// project Exists + user has read and write access to project
 	project := &Project{ID: td.ProjectID}
-	canRead, _, err := project.CanRead(s, a)
-	if err != nil || !canRead {
-		return canRead, err
-	}
-
 	return project.CanWrite(s, a)
 }
