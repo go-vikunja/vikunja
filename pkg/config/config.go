@@ -502,7 +502,8 @@ func setConfigFromEnv() error {
 			currentMap := configMap
 
 			for i, part := range keys {
-				if i == len(keys)-1 {
+				_, isString := currentMap[part].(string)
+				if i == len(keys)-1 || isString {
 					// Set the value at the final level
 					currentMap[part] = value
 				} else {
@@ -514,7 +515,7 @@ func setConfigFromEnv() error {
 					// Move into the nested map
 					typed, is := currentMap[part].(map[string]any)
 					if !is {
-						log.Errorf("Failed to set config value from environment variable %s: %s, failed on part %s, type is not map, is %t", key, value, part, currentMap[part])
+						log.Errorf("Failed to set config value from environment variable %s: %s, failed on part %s, type is not map, is %T", key, value, part, currentMap[part])
 						continue
 					}
 
