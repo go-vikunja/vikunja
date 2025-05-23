@@ -220,10 +220,9 @@ func getTeamDataFromToken(groups []map[string]interface{}, provider *Provider) (
 }
 
 // syncUserAvatarFromOpenID attempts to download and store a user's avatar from an OpenID provider
-// Only updates avatar if the current provider is "openid" or "initials" (default)
 func syncUserAvatarFromOpenID(s *xorm.Session, u *user.User, pictureURL string) {
-	// Don't sync avatar if it's already set by another provider or if no picture URL is provided
-	if pictureURL == "" || (u.AvatarProvider != "openid" && u.AvatarProvider != "initials") {
+	// Don't sync avatar if no picture URL is provided
+	if pictureURL == "" {
 		return
 	}
 
