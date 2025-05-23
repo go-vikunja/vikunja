@@ -19,6 +19,7 @@ package cmd
 import (
 	"bufio"
 	"fmt"
+	"github.com/olekukonko/tablewriter/tw"
 	"os"
 	"strconv"
 	"strings"
@@ -145,20 +146,23 @@ var userListCmd = &cobra.Command{
 			log.Fatalf("Error getting users: %s", err)
 		}
 
-		table := tablewriter.NewWriter(os.Stdout)
-		table.SetHeader([]string{
-			"ID",
-			"Username",
-			"Email",
-			"Status",
-			"Issuer",
-			"Subject",
-			"Created",
-			"Updated",
-		})
+		table := tablewriter.NewTable(
+			os.Stdout,
+			tablewriter.WithHeader([]string{
+				"ID",
+				"Username",
+				"Email",
+				"Status",
+				"Issuer",
+				"Subject",
+				"Created",
+				"Updated",
+			}),
+			tablewriter.WithAlignment(tw.Alignment{tw.AlignLeft}),
+		)
 
 		for _, u := range users {
-			table.Append([]string{
+			_ = table.Append([]string{
 				strconv.FormatInt(u.ID, 10),
 				u.Username,
 				u.Email,
@@ -170,7 +174,7 @@ var userListCmd = &cobra.Command{
 			})
 		}
 
-		table.Render()
+		_ = table.Render()
 	},
 }
 

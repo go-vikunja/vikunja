@@ -17,6 +17,7 @@
 package migration
 
 import (
+	"github.com/olekukonko/tablewriter/tw"
 	"os"
 	"sort"
 
@@ -85,16 +86,16 @@ func ListMigrations() {
 		log.Fatalf("Error getting migration table: %v", err.Error())
 	}
 
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"ID", "Description"})
-	table.SetAlignment(tablewriter.ALIGN_LEFT)
-	table.SetHeaderColor(tablewriter.Colors{tablewriter.Bold, tablewriter.BgGreenColor},
-		tablewriter.Colors{tablewriter.Bold, tablewriter.BgGreenColor})
+	table := tablewriter.NewTable(
+		os.Stdout,
+		tablewriter.WithHeader([]string{"ID", "Description"}),
+		tablewriter.WithAlignment(tw.Alignment{tw.AlignLeft}),
+	)
 
 	for _, m := range ms {
-		table.Append([]string{m.ID, m.Description})
+		_ = table.Append([]string{m.ID, m.Description})
 	}
-	table.Render()
+	_ = table.Render()
 }
 
 // Rollback rolls back all migrations until a certain point.
