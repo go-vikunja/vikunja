@@ -407,7 +407,7 @@
 						<x-button
 							v-shortcut="'t'"
 							:class="{'is-success': !task.done}"
-							:shadow="task.done"
+							:no-shadow="!task.done"
 							class="is-outlined has-no-border"
 							icon="check-double"
 							variant="secondary"
@@ -545,7 +545,7 @@
 						<x-button
 							v-shortcut="'Shift+Delete'"
 							icon="trash-alt"
-							:shadow="false"
+							no-shadow
 							class="is-danger is-outlined has-no-border"
 							@click="showDeleteModal = true"
 						>

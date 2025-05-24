@@ -5,12 +5,12 @@
 			variantClass,
 			{
 				'is-loading': loading,
-				'has-no-shadow': !shadow || variant === 'tertiary',
+				'has-no-shadow': noShadow || variant === 'tertiary',
 			}
 		]"
 		:disabled="disabled || loading"
 		:style="{
-			'--button-white-space': wrap ? 'break-spaces' : 'nowrap',
+			'--button-white-space': noWrap ? 'nowrap' : 'break-spaces',
 		}"
 	>
 		<template v-if="icon">
@@ -46,8 +46,8 @@ export interface ButtonProps extends /* @vue-ignore */ BaseButtonProps {
 	iconColor?: string
 	loading?: boolean
 	disabled?: boolean
-	shadow?: boolean
-	wrap?: boolean
+	noShadow?: boolean
+	noWrap?: boolean
 }
 
 const props = withDefaults(defineProps<ButtonProps>(), {
@@ -56,8 +56,8 @@ const props = withDefaults(defineProps<ButtonProps>(), {
 	iconColor: undefined,
 	loading: false,
 	disabled: false,
-	shadow: true,
-	wrap: true,
+	noShadow: false,
+	noWrap: false,
 })
 
 defineOptions({name: 'XButton'})

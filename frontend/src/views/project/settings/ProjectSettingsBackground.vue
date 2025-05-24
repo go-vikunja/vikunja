@@ -77,7 +77,7 @@
 				v-if="backgroundSearchResult.length > 0"
 				:disabled="backgroundService.loading"
 				class="is-load-more-button mt-4"
-				:shadow="false"
+				no-shadow
 				variant="secondary"
 				@click="searchBackgrounds(currentPage + 1)"
 			>
@@ -88,7 +88,7 @@
 		<template #footer>
 			<x-button
 				v-if="hasBackground"
-				:shadow="false"
+				no-shadow
 				variant="tertiary"
 				class="is-danger"
 				@click.prevent.stop="removeBackground"

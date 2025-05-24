@@ -96,7 +96,7 @@
 													v-cy="'setBucketLimit'"
 													:disabled="bucket.limit < 0"
 													:icon="['far', 'save']"
-													:shadow="false"
+													no-shadow
 													@click="() => {setBucketLimit(bucket.id, true); showSetLimitInput = false}"
 												/>
 											</div>
@@ -194,7 +194,7 @@
 												v-else
 												v-tooltip="bucket.limit > 0 && bucket.count >= bucket.limit ? $t('project.kanban.bucketLimitReached') : ''"
 												class="is-fullwidth has-text-centered"
-												:shadow="false"
+												no-shadow
 												icon="plus"
 												variant="secondary"
 												:disabled="bucket.limit > 0 && bucket.count >= bucket.limit"
@@ -241,7 +241,7 @@
 						>
 						<x-button
 							v-else
-							:shadow="false"
+							no-shadow
 							class="is-transparent is-fullwidth has-text-centered"
 							variant="secondary"
 							icon="plus"

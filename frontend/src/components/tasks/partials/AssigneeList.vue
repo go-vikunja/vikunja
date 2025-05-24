@@ -34,7 +34,7 @@ defineEmits<{
 			<User
 				:key="'user'+user.id"
 				:avatar-size="avatarSize"
-				:show-username="false"
+				hide-username
 				:user="user"
 				:class="{'m-2': canRemove && !disabled}"
 			/>

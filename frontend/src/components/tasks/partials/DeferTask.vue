@@ -6,21 +6,21 @@
 		<label class="label">{{ $t('task.deferDueDate.title') }}</label>
 		<div class="defer-days">
 			<x-button
-				:shadow="false"
+				no-shadow
 				variant="secondary"
 				@click.prevent.stop="() => deferDays(1)"
 			>
 				{{ $t('task.deferDueDate.1day') }}
 			</x-button>
 			<x-button
-				:shadow="false"
+				no-shadow
 				variant="secondary"
 				@click.prevent.stop="() => deferDays(3)"
 			>
 				{{ $t('task.deferDueDate.3days') }}
 			</x-button>
 			<x-button
-				:shadow="false"
+				no-shadow
 				variant="secondary"
 				@click.prevent.stop="() => deferDays(7)"
 			>

@@ -12,7 +12,7 @@
 			class="avatar"
 		>
 		<span
-			v-if="showUsername"
+			v-if="!hideUsername"
 			class="username"
 		>{{ displayName }}</span>
 	</div>
@@ -26,11 +26,11 @@ import type {IUser} from '@/modelTypes/IUser'
 
 const props = withDefaults(defineProps<{
 	user: IUser,
-	showUsername?: boolean,
+	hideUsername?: boolean,
 	avatarSize?: number,
 	isInline?: boolean,
 }>(), {
-	showUsername: true,
+	hideUsername: false,
 	avatarSize: 50,
 	isInline: false,
 })

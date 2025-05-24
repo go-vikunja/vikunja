@@ -83,7 +83,7 @@
 				class="loader-container"
 			>
 				<Card
-					:padding="false"
+					no-padding
 					:has-content="false"
 				>
 					<div class="has-horizontal-overflow">
@@ -253,7 +253,7 @@
 									<td v-if="activeColumns.createdBy">
 										<User
 											:avatar-size="27"
-											:show-username="false"
+											hide-username
 											:user="t.createdBy"
 										/>
 									</td>
