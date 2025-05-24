@@ -479,5 +479,34 @@ function getCommentUrl(commentId: string) {
 
 .comments-container {
 	scroll-margin-top: 4rem;
+
+	.comment {
+		margin-bottom: 1.5rem;
+		
+		&:not(:last-child) {
+			padding-bottom: 1.5rem;
+			border-bottom: 1px solid var(--grey-200);
+		}
+	}
+	
+	.comment-info {
+		margin-bottom: 0.5rem;
+		padding-bottom: 0.5rem;
+		border-bottom: 1px dashed var(--grey-200);
+	}
+	
+	:deep(.tiptap-editor) {
+		background-color: var(--scheme-main);
+		border-radius: 4px;
+	}
+}
+
+.comment-permalink {
+	color: var(--grey-400);
+	margin-left: 0.5rem;
+	
+	&:hover {
+		color: var(--link);
+	}
 }
 </style>
