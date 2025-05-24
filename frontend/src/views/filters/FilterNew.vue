@@ -69,14 +69,14 @@
 			</div>
 
 			<template #footer>
-				<x-button
+				<XButton
 					:loading="filterService.loading"
 					:disabled="filterService.loading || !titleValid"
 					class="is-fullwidth"
 					@click="createFilterWithValidation()"
 				>
 					{{ $t('filters.create.action') }}
-				</x-button>
+				</XButton>
 			</template>
 		</Card>
 	</Modal>

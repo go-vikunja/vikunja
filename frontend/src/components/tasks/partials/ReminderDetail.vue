@@ -55,14 +55,14 @@
 						@update:modelValue="setReminderDateAndClose(close)"
 					/>
 
-					<x-button
+					<XButton
 						v-if="showFormSwitch !== null"
 						class="reminder__close-button"
 						:shadow="false"
 						@click="updateDataAndMaybeCloseNow(close)"
 					>
 						{{ $t('misc.confirm') }}
-					</x-button>
+					</XButton>
 				</Card>
 			</template>
 		</Popup>

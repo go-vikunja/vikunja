@@ -3,13 +3,13 @@
 		v-if="totpEnabled && isLocalUser"
 		:title="$t('user.settings.totp.title')"
 	>
-		<x-button
+		<XButton
 			v-if="!totpEnrolled && totp.secret === ''"
 			:loading="totpService.loading"
 			@click="totpEnroll()"
 		>
 			{{ $t('user.settings.totp.enroll') }}
-		</x-button>
+		</XButton>
 		<template v-else-if="totp.secret !== '' && !totp.enabled">
 			<p>
 				{{ $t('user.settings.totp.finishSetupPart1') }}
@@ -41,21 +41,21 @@
 					>
 				</div>
 			</div>
-			<x-button @click="totpConfirm">
+			<XButton @click="totpConfirm">
 				{{ $t('misc.confirm') }}
-			</x-button>
+			</XButton>
 		</template>
 		<template v-else-if="totp.secret !== '' && totp.enabled">
 			<p>
 				{{ $t('user.settings.totp.setupSuccess') }}
 			</p>
 			<p v-if="!totpDisableForm">
-				<x-button
+				<XButton
 					class="is-danger"
 					@click="totpDisableForm = true"
 				>
 					{{ $t('misc.disable') }}
-				</x-button>
+				</XButton>
 			</p>
 			<div v-if="totpDisableForm">
 				<div class="field">
@@ -75,19 +75,19 @@
 						>
 					</div>
 				</div>
-				<x-button
+				<XButton
 					class="is-danger"
 					@click="totpDisable"
 				>
 					{{ $t('user.settings.totp.disable') }}
-				</x-button>
-				<x-button
+				</XButton>
+				<XButton
 					variant="tertiary"
 					class="ml-2"
 					@click="totpDisableForm = false"
 				>
 					{{ $t('misc.cancel') }}
-				</x-button>
+				</XButton>
 			</div>
 		</template>
 	</Card>

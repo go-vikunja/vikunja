@@ -12,14 +12,14 @@
 		>
 			<DatepickerWithRange @update:modelValue="setDate">
 				<template #trigger="{toggle}">
-					<x-button
+					<XButton
 						variant="primary"
 						:shadow="false"
 						class="mb-2"
 						@click.prevent.stop="toggle()"
 					>
 						{{ $t('task.show.select') }}
-					</x-button>
+					</XButton>
 				</template>
 			</DatepickerWithRange>
 			<FancyCheckbox

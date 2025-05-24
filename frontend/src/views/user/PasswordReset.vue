@@ -13,12 +13,12 @@
 			<Message variant="success">
 				{{ successMessage }}
 			</Message>
-			<x-button
+			<XButton
 				:to="{ name: 'user.login' }"
 				class="mt-4"
 			>
 				{{ $t('user.auth.login') }}
-			</x-button>
+			</XButton>
 		</div>
 		<form
 			v-if="!successMessage"
@@ -38,12 +38,12 @@
 
 			<div class="field is-grouped">
 				<div class="control">
-					<x-button
+					<XButton
 						:loading="passwordResetService.loading"
 						@click="resetPassword"
 					>
 						{{ $t('user.auth.resetPassword') }}
-					</x-button>
+					</XButton>
 				</div>
 			</div>
 		</form>

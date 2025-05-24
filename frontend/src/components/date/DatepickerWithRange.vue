@@ -41,7 +41,7 @@
 									>
 								</div>
 								<div class="control">
-									<x-button
+									<XButton
 										icon="calendar"
 										variant="secondary"
 										data-toggle
@@ -60,7 +60,7 @@
 									>
 								</div>
 								<div class="control">
-									<x-button
+									<XButton
 										icon="calendar"
 										variant="secondary"
 										data-toggle

@@ -79,7 +79,7 @@
 				/>
 			</div>
 
-			<x-button
+			<XButton
 				id="register-submit"
 				:loading="isLoading"
 				class="mr-2"
@@ -87,7 +87,7 @@
 				@click="submit"
 			>
 				{{ $t('user.auth.createAccount') }}
-			</x-button>
+			</XButton>
 
 			<Message
 				v-if="configStore.demoModeEnabled"

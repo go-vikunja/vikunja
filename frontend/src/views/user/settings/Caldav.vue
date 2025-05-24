@@ -16,7 +16,7 @@
 				>
 			</div>
 			<div class="control">
-				<x-button
+				<XButton
 					v-tooltip="$t('misc.copy')"
 					:shadow="false"
 					icon="paste"
@@ -60,12 +60,12 @@
 				<td>{{ tk.id }}</td>
 				<td>{{ formatDateShort(tk.created) }}</td>
 				<td class="has-text-right">
-					<x-button
+					<XButton
 						variant="secondary"
 						@click="deleteToken(tk)"
 					>
 						{{ $t('misc.delete') }}
-					</x-button>
+					</XButton>
 				</td>
 			</tr>
 		</table>
@@ -78,14 +78,14 @@
 			{{ $t('user.settings.caldav.wontSeeItAgain') }}
 		</Message>
 
-		<x-button
+		<XButton
 			icon="plus"
 			class="mb-4"
 			:loading="service.loading"
 			@click="createToken"
 		>
 			{{ $t('user.settings.caldav.createToken') }}
-		</x-button>
+		</XButton>
 
 		<p>
 			<BaseButton

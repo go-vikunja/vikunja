@@ -73,16 +73,16 @@
 
 			<div class="field has-addons mt-4">
 				<div class="control is-fullwidth">
-					<x-button
+					<XButton
 						:loading="teamService.loading"
 						class="is-fullwidth"
 						@click="save()"
 					>
 						{{ $t('misc.save') }}
-					</x-button>
+					</XButton>
 				</div>
 				<div class="control">
-					<x-button
+					<XButton
 						:loading="teamService.loading"
 						class="is-danger"
 						icon="trash-alt"
@@ -122,12 +122,12 @@
 						</Multiselect>
 					</div>
 					<div class="control">
-						<x-button
+						<XButton
 							icon="plus"
 							@click="addUser"
 						>
 							{{ $t('team.edit.addUser') }}
-						</x-button>
+						</XButton>
 					</div>
 				</div>
 				<p
@@ -173,15 +173,15 @@
 							v-if="userIsAdmin"
 							class="actions"
 						>
-							<x-button
+							<XButton
 								v-if="m.id !== userInfo.id"
 								:loading="teamMemberService.loading"
 								class="mr-2"
 								@click="() => toggleUserType(m)"
 							>
 								{{ m.admin ? $t('team.edit.makeMember') : $t('team.edit.makeAdmin') }}
-							</x-button>
-							<x-button
+							</XButton>
+							<XButton
 								v-if="m.id !== userInfo.id"
 								:loading="teamMemberService.loading"
 								class="is-danger"
@@ -194,13 +194,13 @@
 			</table>
 		</Card>
 
-		<x-button
+		<XButton
 			v-if="team && !team.externalId"
 			class="is-fullwidth is-danger"
 			@click="showLeaveModal = true"
 		>
 			{{ $t('team.edit.leave.title') }}
-		</x-button>
+		</XButton>
 
 		<!-- Leave team modal -->
 		<Modal

@@ -1,12 +1,12 @@
 <template>
-	<x-button
+	<XButton
 		variant="secondary"
 		icon="filter"
 		:class="{'has-filters': hasFilters}"
 		@click="() => modalOpen = true"
 	>
 		{{ $t('filters.title') }}
-	</x-button>
+	</XButton>
 	<Modal
 		:enabled="modalOpen"
 		transition-name="fade"

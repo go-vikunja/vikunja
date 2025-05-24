@@ -13,19 +13,19 @@
 			</FancyCheckbox>
 
 			<div class="action-buttons">
-				<x-button
+				<XButton
 					:to="{name: 'filters.create'}"
 					icon="filter"
 				>
 					{{ $t('filters.create.title') }}
-				</x-button>
-				<x-button
+				</XButton>
+				<XButton
 					v-cy="'new-project'"
 					:to="{name: 'project.create'}"
 					icon="plus"
 				>
 					{{ $t('project.create.header') }}
-				</x-button>
+				</XButton>
 			</div>
 		</header>
 

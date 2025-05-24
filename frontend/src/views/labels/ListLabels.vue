@@ -3,13 +3,13 @@
 		:class="{ 'is-loading': loading}"
 		class="loader-container"
 	>
-		<x-button
+		<XButton
 			:to="{name:'labels.create'}"
 			class="is-pulled-right"
 			icon="plus"
 		>
 			{{ $t('label.create.header') }}
-		</x-button>
+		</XButton>
 
 		<div class="content">
 			<h1>{{ $t('label.manage') }}</h1>
@@ -95,16 +95,16 @@
 						</div>
 						<div class="field has-addons">
 							<div class="control is-expanded">
-								<x-button
+								<XButton
 									:loading="loading"
 									class="is-fullwidth"
 									@click="editLabelSubmit()"
 								>
 									{{ $t('misc.save') }}
-								</x-button>
+								</XButton>
 							</div>
 							<div class="control">
-								<x-button
+								<XButton
 									icon="trash-alt"
 									class="is-danger"
 									@click="showDeleteDialoge(labelEditLabel)"

@@ -17,13 +17,13 @@
 				type="file"
 				@change="uploadBackground"
 			>
-			<x-button
+			<XButton
 				:loading="backgroundUploadService.loading"
 				variant="primary"
 				@click="backgroundUploadInput?.click()"
 			>
 				{{ $t('project.background.upload') }}
-			</x-button>
+			</XButton>
 		</div>
 		<template v-if="unsplashBackgroundEnabled">
 			<input
@@ -73,7 +73,7 @@
 					</BaseButton>
 				</li>
 			</ul>
-			<x-button
+			<XButton
 				v-if="backgroundSearchResult.length > 0"
 				:disabled="backgroundService.loading"
 				class="is-load-more-button mt-4"
@@ -82,11 +82,11 @@
 				@click="searchBackgrounds(currentPage + 1)"
 			>
 				{{ backgroundService.loading ? $t('misc.loading') : $t('project.background.loadMore') }}
-			</x-button>
+			</XButton>
 		</template>
 
 		<template #footer>
-			<x-button
+			<XButton
 				v-if="hasBackground"
 				:shadow="false"
 				variant="tertiary"
@@ -94,13 +94,13 @@
 				@click.prevent.stop="removeBackground"
 			>
 				{{ $t('project.background.remove') }}
-			</x-button>
-			<x-button
+			</XButton>
+			<XButton
 				variant="secondary"
 				@click.prevent.stop="$router.back()"
 			>
 				{{ $t('misc.close') }}
-			</x-button>
+			</XButton>
 		</template>
 	</CreateEdit>
 </template>

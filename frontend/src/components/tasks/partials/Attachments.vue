@@ -110,7 +110,7 @@
 			</button>
 		</div>
 
-		<x-button
+		<XButton
 			v-if="editEnabled"
 			:disabled="loading"
 			class="mb-4"
@@ -120,7 +120,7 @@
 			@click="filesRef?.click()"
 		>
 			{{ $t('task.attachment.upload') }}
-		</x-button>
+		</XButton>
 
 		<!-- Dropzone -->
 		<Teleport to="body">

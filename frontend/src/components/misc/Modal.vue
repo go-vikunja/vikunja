@@ -41,21 +41,21 @@
 								<slot name="text" />
 							</div>
 							<div class="actions">
-								<x-button
+								<XButton
 									variant="tertiary"
 									class="has-text-danger"
 									@click="$emit('close')"
 								>
 									{{ $t('misc.cancel') }}
-								</x-button>
-								<x-button
+								</XButton>
+								<XButton
 									v-cy="'modalPrimary'"
 									variant="primary"
 									:shadow="false"
 									@click="$emit('submit')"
 								>
 									{{ $t('misc.doit') }}
-								</x-button>
+								</XButton>
 							</div>
 						</slot>
 					</div>

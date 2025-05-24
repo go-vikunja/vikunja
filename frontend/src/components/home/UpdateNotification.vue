@@ -6,13 +6,13 @@
 		<p class="update-notification__message">
 			{{ $t('update.available') }}
 		</p>
-		<x-button
+		<XButton
 			:shadow="false"
 			:wrap="false"
 			@click="refreshApp()"
 		>
 			{{ $t('update.do') }}
-		</x-button>
+		</XButton>
 	</div>
 </template>
 

@@ -24,12 +24,12 @@
 				</div>
 			</div>
 
-			<x-button
+			<XButton
 				:loading="loading"
 				@click="authenticate()"
 			>
 				{{ $t('user.auth.login') }}
-			</x-button>
+			</XButton>
 
 			<Message
 				v-if="errorMessage !== ''"

@@ -106,13 +106,13 @@
 				</label>
 			</div>
 
-			<x-button
+			<XButton
 				:loading="isLoading"
 				tabindex="4"
 				@click="submit"
 			>
 				{{ $t('user.auth.login') }}
-			</x-button>
+			</XButton>
 			<p
 				v-if="registrationEnabled"
 				class="mt-2"
@@ -132,7 +132,7 @@
 			v-if="hasOpenIdProviders"
 			class="mt-4"
 		>
-			<x-button
+			<XButton
 				v-for="(p, k) in openidConnect.providers"
 				:key="k"
 				variant="secondary"
@@ -140,7 +140,7 @@
 				@click="redirectToProvider(p)"
 			>
 				{{ $t('user.auth.loginWith', {provider: p.name}) }}
-			</x-button>
+			</XButton>
 		</div>
 	</div>
 </template>

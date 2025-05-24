@@ -20,24 +20,24 @@
 						type="file"
 						@change="migrate"
 					>
-					<x-button
+					<XButton
 						:loading="migrationFileService.loading"
 						:disabled="migrationFileService.loading || undefined"
 						@click="uploadInput?.click()"
 					>
 						{{ $t('migrate.upload') }}
-					</x-button>
+					</XButton>
 				</template>
 				<template v-else>
 					<p>{{ $t('migrate.authorize', {name: migrator.name}) }}</p>
-					<x-button
+					<XButton
 						:loading="migrationService.loading"
 						:disabled="migrationService.loading || undefined"
 						:href="authUrl"
 						:open-external-in-new-tab="false"
 					>
 						{{ $t('migrate.getStarted') }}
-					</x-button>
+					</XButton>
 				</template>
 			</template>
 			<div
@@ -65,9 +65,9 @@
 			<Message class="mb-4">
 				{{ $t('migrate.migrationInProgress') }}
 			</Message>
-			<x-button :to="{name: 'home'}">
+			<XButton :to="{name: 'home'}">
 				{{ $t('home.goToOverview') }}
-			</x-button>
+			</XButton>
 		</div>
 		<div v-else-if="lastMigrationFinishedAt">
 			<p>
@@ -77,16 +77,16 @@
 				{{ $t('migrate.alreadyMigrated2') }}
 			</p>
 			<div class="buttons">
-				<x-button @click="migrate">
+				<XButton @click="migrate">
 					{{ $t('migrate.confirm') }}
-				</x-button>
-				<x-button
+				</XButton>
+				<XButton
 					:to="{name: 'home'}"
 					variant="tertiary"
 					class="has-text-danger"
 				>
 					{{ $t('misc.cancel') }}
-				</x-button>
+				</XButton>
 			</div>
 		</div>
 		<div v-else>
@@ -103,9 +103,9 @@
 				{{ $t('migrate.migrationStartedWillReciveEmail', {service: migrator.name}) }}
 			</Message>
 
-			<x-button :to="{name: 'home'}">
+			<XButton :to="{name: 'home'}">
 				{{ $t('home.goToOverview') }}
-			</x-button>
+			</XButton>
 		</div>
 	</div>
 </template>

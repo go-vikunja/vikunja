@@ -9,14 +9,14 @@
 			<div class="filter-container">
 				<Popup>
 					<template #trigger="{toggle}">
-						<x-button
+						<XButton
 							icon="th"
 							variant="secondary"
 							class="mr-2"
 							@click.prevent.stop="toggle()"
 						>
 							{{ $t('project.table.columns') }}
-						</x-button>
+						</XButton>
 					</template>
 					<template #content="{isOpen}">
 						<Card
