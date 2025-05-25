@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import {computed, nextTick, ref, watch} from 'vue'
-import {useAutoHeightTextarea} from '@/composables/useAutoHeightTextarea'
+import {ref, onMounted, onBeforeUnmount} from 'vue'
 import DatepickerWithValues from '@/components/date/DatepickerWithValues.vue'
 import UserService from '@/services/user'
 import AutocompleteDropdown from '@/components/input/AutocompleteDropdown.vue'
@@ -23,6 +22,14 @@ import {
 import {useDebounceFn} from '@vueuse/core'
 import {createRandomID} from '@/helpers/randomId'
 
+// ProseMirror imports
+import {EditorView, Decoration, DecorationSet} from '@tiptap/pm/view'
+import {EditorState, Plugin, PluginKey} from '@tiptap/pm/state'
+import {Schema} from '@tiptap/pm/model'
+import {keymap} from '@tiptap/pm/keymap'
+import {history, undo, redo} from '@tiptap/pm/history'
+import {baseKeymap} from '@tiptap/pm/commands'
+
 const props = defineProps<{
 	modelValue: string,
 	projectId?: number,
@@ -39,179 +46,260 @@ const projectUserService = new ProjectUserService()
 const labelStore = useLabelStore()
 const projectStore = useProjectStore()
 
-const filterQuery = ref<string>('')
-const {
-	textarea: filterInput,
-	height,
-} = useAutoHeightTextarea(filterQuery)
-
+const editorRef = ref<HTMLDivElement | null>(null)
+const editor = ref<EditorView | null>(null)
 const id = ref(createRandomID())
 
-watch(
-	() => props.modelValue,
-	() => {
-		filterQuery.value = props.modelValue
+
+// Simple schema for plain text with highlighting
+const filterSchema = new Schema({
+	nodes: {
+		doc: {
+			content: 'paragraph*',
+		},
+		paragraph: {
+			content: 'text*',
+			group: 'block',
+			parseDOM: [{tag: 'p'}],
+			toDOM() { return ['p', 0] },
+		},
+		text: {
+			group: 'inline',
+		},
 	},
-	{immediate: true},
-)
-
-watch(
-	() => filterQuery.value,
-	() => {
-		if (filterQuery.value !== props.modelValue) {
-			emit('update:modelValue', filterQuery.value)
-		}
-	},
-)
-
-function escapeHtml(unsafe: string|null|undefined): string {
-	if (!unsafe) {
-		return ''
-	}
-	return unsafe
-		.replace(/&/g, '&amp;')
-		.replace(/</g, '&lt;')
-		.replace(/>/g, '&gt;')
-		.replace(/"/g, '&quot;')
-		.replace(/'/g, '&#039;')
-}
-
-function unEscapeHtml(unsafe: string|null|undefined): string {
-	if (!unsafe) {
-		return ''
-	}
-	return unsafe
-		.replace(/&amp;/g, '&')
-		.replace(/&lt;/g, '<')
-		.replace(/&gt;/g, '>')
-		.replace(/&quot/g, '"')
-		.replace(/&#039;/g, '\'')
-}
-
-const highlightedFilterQuery = computed(() => {
-	if (filterQuery.value === '') {
-		return ''
-	}
-
-	let highlighted = escapeHtml(filterQuery.value)
-	DATE_FIELDS
-		.forEach(o => {
-			const pattern = new RegExp(o + '(\\s*)' + FILTER_OPERATORS_REGEX + '(\\s*)([\'"]?)([^\'"\\s]+\\1?)?', 'ig')
-			highlighted = highlighted.replaceAll(pattern, (match, spacesBefore, token, spacesAfter, start, value, position) => {
-				if (typeof value === 'undefined') {
-					value = ''
-				}
-
-				let endPadding = ''
-				if (value.endsWith(' ')) {
-					const fullLength = value.length
-					value = value.trimEnd()
-					const numberOfRemovedSpaces = fullLength - value.length
-					endPadding = endPadding.padEnd(numberOfRemovedSpaces, ' ')
-				}
-
-				return `${o}${spacesBefore}${token}${spacesAfter}<button class="is-primary filter-query__date_value" data-position="${position}">${value}</button><span class="filter-query__date_value_placeholder">${value}</span>${endPadding}`
-			})
-		})
-	ASSIGNEE_FIELDS
-		.forEach(f => {
-			const pattern = new RegExp(f + '\\s*' + FILTER_OPERATORS_REGEX + '\\s*([\'"]?)([^\'"\\s]+\\1?)?', 'ig')
-			highlighted = highlighted.replaceAll(pattern, (match, token, start, value) => {
-				if (typeof value === 'undefined') {
-					value = ''
-				}
-
-				return `${f} ${token} <span class="filter-query__assignee_value">${value}<span>`
-			})
-		})
-	FILTER_JOIN_OPERATOR
-		.map(o => escapeHtml(o))
-		.forEach(o => {
-			highlighted = highlighted.replaceAll(o, `<span class="filter-query__join-operator">${o}</span>`)
-		})
-	LABEL_FIELDS
-		.forEach(f => {
-			const pattern = getFilterFieldRegexPattern(f)
-			highlighted = highlighted.replaceAll(pattern, (match, prefix, operator, space, value) => {
-
-				if (typeof value === 'undefined') {
-					value = ''
-				}
-
-				let labelTitles = [value.trim()]
-				if (operator === 'in' || operator === '?=' || operator === 'not in' || operator === '?!=') {
-					labelTitles = value.split(',').map(v => v.trim())
-				}
-
-				const labelsHtml: string[] = []
-				labelTitles.forEach(t => {
-					const label = labelStore.getLabelByExactTitle(t) || undefined
-					labelsHtml.push(`<span class="filter-query__label_value" style="background-color: ${label?.hexColor}; color: ${label?.textColor}">${label?.title ?? t}</span>`)
-				})
-
-				const endSpace = value.endsWith(' ') ? ' ' : ''
-				return `${f} ${operator} ${labelsHtml.join(', ')}${endSpace}`
-			})
-		})
-	FILTER_OPERATORS
-		.map(o => ` ${escapeHtml(o)} `)
-		.forEach(o => {
-			highlighted = highlighted.replaceAll(o, `<span class="filter-query__operator">${o}</span>`)
-		})
-	AVAILABLE_FILTER_FIELDS.forEach(f => {
-		highlighted = highlighted.replaceAll(f, `<span class="filter-query__field">${f}</span>`)
-	})
-	return highlighted
+	marks: {},
 })
+
+// Plugin for syntax highlighting
+function createHighlightPlugin() {
+	return new Plugin({
+		key: new PluginKey('filterHighlight'),
+		state: {
+			init() {
+				return DecorationSet.empty
+			},
+			apply(tr, decorationSet) {
+				if (!tr.docChanged) {
+					return decorationSet.map(tr.mapping, tr.doc)
+				}
+				return createDecorations(tr.doc)
+			},
+		},
+		props: {
+			decorations(state) {
+				return this.getState(state)
+			},
+		},
+	})
+}
+
+function createDecorations(doc: {textContent: string}) {
+	const decorations: Decoration[] = []
+	const text = doc.textContent
+
+	// Helper function to add decoration
+	const addDecoration = (from: number, to: number, className: string, attributes = {}) => {
+		if (from < to && from >= 0 && to <= text.length) {
+			decorations.push(
+				Decoration.inline(from, to, {
+					class: className,
+					...attributes,
+				}),
+			)
+		}
+	}
+
+	try {
+		// Highlight filter fields
+		AVAILABLE_FILTER_FIELDS.forEach(field => {
+			const regex = new RegExp(`\\b${field}\\b`, 'gi')
+			let match
+			while ((match = regex.exec(text)) !== null) {
+				addDecoration(match.index, match.index + match[0].length, 'filter-field')
+			}
+		})
+
+		// Highlight operators
+		FILTER_OPERATORS.forEach(op => {
+			const escapedOp = op.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+			const regex = new RegExp(`\\s(${escapedOp})\\s`, 'gi')
+			let match
+			while ((match = regex.exec(text)) !== null) {
+				addDecoration(match.index + 1, match.index + 1 + match[1].length, 'filter-operator')
+			}
+		})
+
+		// Highlight join operators
+		FILTER_JOIN_OPERATOR.forEach(joinOp => {
+			const regex = new RegExp(`\\b${joinOp}\\b`, 'gi')
+			let match
+			while ((match = regex.exec(text)) !== null) {
+				addDecoration(match.index, match.index + match[0].length, 'filter-join-operator')
+			}
+		})
+
+		// Highlight date values with clickable decoration
+		DATE_FIELDS.forEach(dateField => {
+			const pattern = new RegExp(dateField + '\\s*' + FILTER_OPERATORS_REGEX + '\\s*([\'"]?)([^\'"\\s]+\\1?)?', 'gi')
+			let match
+			while ((match = pattern.exec(text)) !== null) {
+				if (match[3]) { // If there's a value
+					const valueStart = match.index + match[0].indexOf(match[3])
+					const valueEnd = valueStart + match[3].length
+					addDecoration(valueStart, valueEnd, 'filter-date-value', {
+						'data-date-value': match[3],
+						'data-position': valueStart.toString(),
+					})
+				}
+			}
+		})
+
+		// Highlight assignee values
+		ASSIGNEE_FIELDS.forEach(assigneeField => {
+			const pattern = new RegExp(assigneeField + '\\s*' + FILTER_OPERATORS_REGEX + '\\s*([\'"]?)([^\'"\\s]+\\1?)?', 'gi')
+			let match
+			while ((match = pattern.exec(text)) !== null) {
+				if (match[3]) { // If there's a value
+					const valueStart = match.index + match[0].indexOf(match[3])
+					const valueEnd = valueStart + match[3].length
+					addDecoration(valueStart, valueEnd, 'filter-assignee-value')
+				}
+			}
+		})
+
+		// Highlight label values with colors (simplified)
+		LABEL_FIELDS.forEach(labelField => {
+			const pattern = getFilterFieldRegexPattern(labelField)
+			let match
+			while ((match = pattern.exec(text)) !== null) {
+				if (match[4]) { // If there's a value
+					const valueStart = match.index + match[0].indexOf(match[4])
+					const valueEnd = valueStart + match[4].length
+					addDecoration(valueStart, valueEnd, 'filter-label-value')
+				}
+			}
+		})
+	} catch (error) {
+		console.warn('Error creating decorations:', error)
+	}
+
+	return DecorationSet.create(doc, decorations)
+}
+
+// Initialize ProseMirror editor
+onMounted(() => {
+	if (!editorRef.value) return
+
+	editor.value = new EditorView(editorRef.value, {
+		state: createEditorState(props.modelValue),
+		dispatchTransaction(tr) {
+			if (!editor.value) return
+			
+			const newState = editor.value.state.apply(tr)
+			editor.value.updateState(newState)
+			
+			// Update the model value when document changes
+			if (tr.docChanged) {
+				const text = newState.doc.textContent
+				emit('update:modelValue', text)
+			}
+		},
+		attributes: {
+			class: 'filter-prosemirror',
+			style: 'white-space: pre-wrap',
+		},
+		handleDOMEvents: {
+			click(_, event) {
+				const target = event.target as HTMLElement
+				if (target.classList.contains('filter-date-value')) {
+					event.preventDefault()
+					event.stopPropagation()
+					
+					const dateValue = target.getAttribute('data-date-value') || ''
+					const position = parseInt(target.getAttribute('data-position') || '0')
+					
+					currentOldDatepickerValue.value = dateValue
+					currentDatepickerValue.value = dateValue
+					currentDatepickerPos.value = position
+					datePickerPopupOpen.value = true
+					
+					return true
+				}
+				return false
+			},
+			input() {
+				handleFieldInput()
+				return false
+			},
+		},
+	})
+
+})
+
+onBeforeUnmount(() => {
+	editor.value?.destroy()
+})
+
+// Create a new editor state similar to the working draft approach
+function createEditorState(content = '') {
+	const nodes = content ? [
+		filterSchema.node('paragraph', null, [
+			filterSchema.text(content),
+		]),
+	] : [filterSchema.node('paragraph')]
+
+	return EditorState.create({
+		schema: filterSchema,
+		plugins: [
+			keymap({
+				...baseKeymap,
+				'Mod-z': undo,
+				'Mod-y': redo,
+				'Enter': () => {
+					blurDebounced()
+					return true
+				},
+			}),
+			history(),
+			createHighlightPlugin(),
+		],
+		doc: filterSchema.node('doc', null, nodes),
+	})
+}
+
 
 const currentOldDatepickerValue = ref('')
 const currentDatepickerValue = ref('')
-const currentDatepickerPos = ref()
+const currentDatepickerPos = ref(0)
 const datePickerPopupOpen = ref(false)
 
-watch(
-	() => highlightedFilterQuery.value,
-	async () => {
-		await nextTick()
-		document.querySelectorAll('button.filter-query__date_value')
-			.forEach(b => {
-				b.addEventListener('click', event => {
-					event.preventDefault()
-					event.stopPropagation()
-
-					const button = event.target
-					currentOldDatepickerValue.value = button?.innerText
-					currentDatepickerValue.value = button?.innerText
-					currentDatepickerPos.value = parseInt(button?.dataset.position)
-					datePickerPopupOpen.value = true
-				})
-			})
-	},
-	{immediate: true},
-)
-
-function updateDateInQuery(newDate: string) {
-	// Need to escape and unescape the query because the positions are based on the escaped query
-	let escaped = escapeHtml(filterQuery.value)
-	escaped = escaped
-		.substring(0, currentDatepickerPos.value)
-		+ escaped
-			.substring(currentDatepickerPos.value)
-			.replace(currentOldDatepickerValue.value, newDate)
-	currentOldDatepickerValue.value = newDate
-	filterQuery.value = unEscapeHtml(escaped)
+function updateDateInQuery(newDate: string | Date | null) {
+	if (!editor.value || !newDate) return
+	
+	const dateStr = typeof newDate === 'string' ? newDate : newDate.toISOString().split('T')[0]
+	const currentText = editor.value.state.doc.textContent
+	const newText = currentText.replace(currentOldDatepickerValue.value, dateStr)
+	currentOldDatepickerValue.value = dateStr
+	
+	// Update by recreating the editor state
+	const newState = createEditorState(newText)
+	editor.value.updateState(newState)
+	emit('update:modelValue', newText)
 }
 
 const autocompleteMatchPosition = ref(0)
 const autocompleteMatchText = ref('')
 const autocompleteResultType = ref<'labels' | 'assignees' | 'projects' | null>(null)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const autocompleteResults = ref<any[]>([])
+const autocompleteResults = ref<Array<{id: number, title?: string, username?: string, name?: string}>>([])
 
 function handleFieldInput() {
-	if (!filterInput.value) return
-	const cursorPosition = filterInput.value.selectionStart
-	const textUpToCursor = filterQuery.value.substring(0, cursorPosition)
+	if (!editor.value) return
+	
+	const state = editor.value.state
+	const selection = state.selection
+	const cursorPosition = selection.from
+	const text = state.doc.textContent
+	const textUpToCursor = text.substring(0, cursorPosition)
 	autocompleteResults.value = []
 
 	AUTOCOMPLETE_FIELDS.forEach(field => {
@@ -222,8 +310,7 @@ function handleFieldInput() {
 			return
 		}
 
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		const [matched, prefix, operator, space, keyword] = match
+		const [matched, prefix, operator, , keyword] = match
 		if(!keyword) {
 			return
 		}
@@ -256,22 +343,27 @@ function handleFieldInput() {
 	})
 }
 
-function autocompleteSelect(value) {
-	filterQuery.value = filterQuery.value.substring(0, autocompleteMatchPosition.value + 1) +
-		(autocompleteResultType.value === 'assignees'
-			? value.username
-			: value.title) +
-		filterQuery.value.substring(autocompleteMatchPosition.value + autocompleteMatchText.value.length + 1)
-
+function autocompleteSelect(value: {id: number, username?: string, title?: string}) {
+	if (!editor.value) return
+	
+	const newValue = autocompleteResultType.value === 'assignees' ? value.username : value.title
+	const currentText = editor.value.state.doc.textContent
+	const newText = currentText.substring(0, autocompleteMatchPosition.value + 1) +
+		newValue +
+		currentText.substring(autocompleteMatchPosition.value + autocompleteMatchText.value.length + 1)
+	
+	// Update by recreating the editor state
+	const newState = createEditorState(newText)
+	editor.value.updateState(newState)
+	emit('update:modelValue', newText)
+	
 	autocompleteResults.value = []
 }
 
-// The blur from the textarea might happen before the replacement after autocomplete select was done.
-// That caused listeners to try and replace values earlier, resulting in broken queries.
+// The blur from the editor might happen before the replacement after autocomplete select was done.
 const blurDebounced = useDebounceFn(() => emit('blur'), 500)
 </script>
 
-<!-- eslint-disable vue/no-v-html -->
 <template>
 	<div class="field">
 		<label
@@ -282,34 +374,21 @@ const blurDebounced = useDebounceFn(() => emit('blur'), 500)
 		</label>
 		<AutocompleteDropdown
 			:options="autocompleteResults"
-			@blur="filterInput?.blur()"
+			@blur="editor?.dom.blur()"
 			@update:modelValue="autocompleteSelect"
 		>
 			<template
 				#input="{ onKeydown, onFocusField }"
 			>
 				<div class="control filter-input">
-					<textarea
-						:id
-						ref="filterInput"
-						v-model="filterQuery"
-						autocomplete="off"
-						autocorrect="off"
-						autocapitalize="off"
-						spellcheck="false"
-						class="input"
+					<div
+						:id="id"
+						ref="editorRef"
+						class="filter-editor-container"
 						:class="{'has-autocomplete-results': autocompleteResults.length > 0}"
-						:placeholder="$t('filters.query.placeholder')"
-						@input="handleFieldInput"
 						@focus="onFocusField"
 						@keydown="onKeydown"
-						@keydown.enter.prevent="blurDebounced"
 						@blur="blurDebounced"
-					/>
-					<div
-						class="filter-input-highlight"
-						:style="{'height': height}"
-						v-html="highlightedFilterQuery"
 					/>
 					<DatepickerWithValues
 						v-model="currentDatepickerValue"
@@ -339,48 +418,88 @@ const blurDebounced = useDebounceFn(() => emit('blur'), 500)
 </template>
 
 <style lang="scss">
-.filter-input-highlight {
+.filter-editor-container {
+	min-block-size: 2.5em;
+	border: 1px solid var(--input-border-color);
+	border-radius: var(--input-radius);
+	padding: .5em .75em;
+	background: var(--white);
+	position: relative;
 
-	&, button.filter-query__date_value {
-		color: var(--card-color);
+	&.has-autocomplete-results {
+		border-radius: var(--input-radius) var(--input-radius) 0 0;
 	}
 
-	span {
-		&.filter-query__field {
+	&:focus-within {
+		border-color: var(--primary);
+		box-shadow: 0 0 0 2px hsla(var(--primary-hsl), 0.25);
+	}
+
+	.filter-prosemirror {
+		outline: none;
+		min-block-size: 1.5em;
+		line-height: 1.5;
+
+		// Placeholder support
+		&:empty::before {
+			content: attr(data-placeholder);
+			color: var(--input-placeholder-color);
+			pointer-events: none;
+			position: absolute;
+		}
+
+		// Syntax highlighting styles
+		.filter-field {
 			color: var(--code-literal);
+			font-weight: 600;
 		}
 
-		&.filter-query__operator {
+		.filter-operator {
 			color: var(--code-keyword);
+			font-weight: 600;
 		}
 
-		&.filter-query__join-operator {
+		.filter-join-operator {
 			color: var(--code-section);
+			font-weight: 600;
 		}
 
-		&.filter-query__date_value_placeholder {
-			display: inline-block;
-			color: transparent;
+		.filter-date-value {
+			background-color: var(--primary);
+			color: var(--white);
+			border-radius: var(--radius);
+			padding: 0.125em 0.25em;
+			cursor: pointer;
+			transition: background-color var(--transition);
+
+			&:hover {
+				background-color: var(--primary-dark);
+			}
 		}
 
-		&.filter-query__assignee_value, &.filter-query__label_value {
-			border-radius: $radius;
+		.filter-label-value {
+			border-radius: var(--radius);
 			background-color: var(--grey-200);
 			color: var(--grey-700);
+			padding: 0.125em 0.25em;
+		}
+
+		.filter-assignee-value {
+			border-radius: var(--radius);
+			background-color: var(--grey-200);
+			color: var(--grey-700);
+			padding: 0.125em 0.25em;
 		}
 	}
 
-	button.filter-query__date_value {
-		border-radius: $radius;
-		position: absolute;
-		margin-block-start: calc((0.25em - 0.125rem) * -1);
-		block-size: 1.75rem;
-		padding: 0;
-		border: 0;
-		background: transparent;
-		font-size: 1rem;
-		cursor: pointer;
-		line-height: 1.5;
+	// ProseMirror base styles
+	.ProseMirror {
+		outline: none;
+		min-block-size: 1.5em;
+
+		p {
+			margin: 0;
+		}
 	}
 }
 </style>
@@ -388,28 +507,5 @@ const blurDebounced = useDebounceFn(() => emit('blur'), 500)
 <style lang="scss" scoped>
 .filter-input {
 	position: relative;
-
-	textarea {
-		position: absolute;
-		background: transparent !important;
-		resize: none;
-		-webkit-text-fill-color: transparent;
-
-		&::placeholder {
-			-webkit-text-fill-color: var(--input-placeholder-color);
-		}
-
-		&.has-autocomplete-results {
-			border-radius: var(--input-radius) var(--input-radius) 0 0;
-		}
-	}
-
-	.filter-input-highlight {
-		background: var(--white);
-		block-size: 2.5em;
-		line-height: 1.5;
-		padding: .5em .75em;
-		word-break: break-word;
-	}
 }
 </style>
