@@ -139,7 +139,7 @@
     "postcss-easing-gradients": "3.0.1",
     "postcss-preset-env": "10.1.6",
     "rollup": "4.41.1",
-    "rollup-plugin-visualizer": "5.14.0",
+    "rollup-plugin-visualizer": "6.0.0",
     "sass-embedded": "1.89.0",
     "start-server-and-test": "2.0.12",
     "typescript": "5.8.3",
