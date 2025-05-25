@@ -58,14 +58,14 @@ export const FILTER_JOIN_OPERATOR = [
 	')',
 ]
 
-export const FILTER_OPERATORS_REGEX = '(&lt;|&gt;|&lt;=|&gt;=|=|!=|not in|in)'
+export const FILTER_OPERATORS_REGEX = '('+FILTER_OPERATORS.map(op => op.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')+')'
 
 export function hasFilterQuery(filter: string): boolean {
 	return FILTER_OPERATORS.find(o => filter.includes(o)) || false
 }
 
 export function getFilterFieldRegexPattern(field: string): RegExp {
-	return new RegExp('(' + field + '\\s*' + FILTER_OPERATORS_REGEX + '\\s*)([\'"]?)([^\'"&|()<]+\\1?)?', 'ig')
+	return new RegExp('(' + field + ')\\s*' + FILTER_OPERATORS_REGEX + '\\s*([\'"]?)([^\'"&|()<]+?)(?=\\s*(?:&&|\\|\\||$))', 'ig')
 }
 
 export function transformFilterStringForApi(
@@ -98,14 +98,14 @@ export function transformFilterStringForApi(
 
 			while ((match = pattern.exec(filter)) !== null) {
 				// eslint-disable-next-line @typescript-eslint/no-unused-vars
-				const [matched, prefix, operator, space, keyword] = match
+				const [matched, fieldName, operator, quotes, keyword] = match
 				if (!keyword) {
 					continue
 				}
 
 				let keywords = [keyword.trim()]
-				if (operator === 'in' || operator === '?=' || operator === 'not in' || operator === '?!=') {
-					keywords = keyword.trim().split(',').map(k => k.trim())
+				if (isMultiValueOperator(operator)) {
+					keywords = keyword.trim().split(',').map(k => trimQuotes(k))
 				}
 
 				let replaced = keyword
@@ -116,8 +116,29 @@ export function transformFilterStringForApi(
 						replaced = replaced.replace(k, String(id))
 					}
 				})
+				
+				// Join the transformed keywords back together
+				if (isMultiValueOperator(operator)) {
+					replaced = transformedKeywords.join(', ')
+				} else {
+					replaced = transformedKeywords[0] || keyword
+				}
 
-				const actualKeywordStart = (match?.index || 0) + prefix.length
+				replaced = replaced.replaceAll('"', '').replaceAll('\'', '')
+
+				// Reconstruct the entire match with the replaced value
+				let reconstructedMatch
+				if (quotes && quotedContent) {
+					// For quoted values, remove quotes since we converted to IDs
+					reconstructedMatch = `${fieldName} ${operator} ${replaced}`
+				} else if (unquotedContent) {
+					// For unquoted values
+					reconstructedMatch = `${fieldName} ${operator} ${replaced}`
+				} else {
+					continue
+				}
+
+				const actualKeywordStart = (match?.index || 0) + matched.length - keyword.length
 				replacements.push({
 					start: actualKeywordStart,
 					length: keyword.length,
@@ -178,11 +199,16 @@ export function transformFilterStringFromApi(
 			let match: RegExpExecArray | null
 			while ((match = pattern.exec(filter)) !== null) {
 				// eslint-disable-next-line @typescript-eslint/no-unused-vars
-				const [matched, prefix, operator, space, keyword] = match
+				const [matched, fieldName, operator, quotes, keyword] = match
 				if (keyword) {
 					let keywords = [keyword.trim()]
-					if (operator === 'in' || operator === '?=' || operator === 'not in' || operator === '?!=') {
-						keywords = keyword.trim().split(',').map(k => k.trim())
+					if (isMultiValueOperator(operator)) {
+						keywords = keyword.trim().split(',').map(k => {
+							let trimmed = k.trim()
+							// Strip quotes from individual values in multi-value scenarios
+							trimmed = trimQuotes(trimmed)
+							return trimmed
+						})
 					}
 
 					keywords.forEach(k => {
@@ -203,4 +229,8 @@ export function transformFilterStringFromApi(
 	transformFieldsToTitles(PROJECT_FIELDS, projectResolver)
 
 	return filter
+}
+
+export function isMultiValueOperator(operator: string): boolean {
+	return ['in', '?=', 'not in', '?!='].includes(operator)
 }

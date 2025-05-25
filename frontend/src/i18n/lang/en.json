@@ -441,6 +441,7 @@
     "title": "Filters",
     "clear": "Clear Filters",
     "showResults": "Show results",
+    "noResults": "No results",
     "fromView": "The current view has a filter set as well:",
     "fromViewBoth": "It will be used in combination with what you enter here.",
     "attributes": {

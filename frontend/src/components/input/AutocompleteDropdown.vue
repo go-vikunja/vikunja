@@ -198,6 +198,7 @@ function onUpdateField(e) {
 		max-inline-size: 100%;
 		min-inline-size: 100%;
 		margin-block-start: -2px;
+		margin-inline: -1px;
 
 		button {
 			background: transparent;
