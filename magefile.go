@@ -399,6 +399,11 @@ func (Test) Integration() {
 	runAndStreamOutput("go", "test", Goflags[0], "-p", "1", "-timeout", "45m", PACKAGE+"/pkg/integrations")
 }
 
+func (Test) All() {
+	mg.Deps(initVars)
+	mg.Deps(Test.Unit, Test.Integration)
+}
+
 type Check mg.Namespace
 
 // Checks if the swagger docs need to be re-generated from the code annotations
