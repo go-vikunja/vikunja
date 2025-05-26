@@ -7,10 +7,14 @@ import {baseKeymap} from '@tiptap/pm/commands'
 
 import {filterHighlighter} from './highlighter.ts'
 import {schema} from './schema.ts'
+import {placeholder} from '@/components/input/filter/placeholder.ts'
+import {useI18n} from 'vue-i18n'
 
 const emit = defineEmits(['update:filter'])
 const editorRef = ref<HTMLDivElement | null>(null)
 let editorView: EditorView | null = null
+
+const {t} = useI18n()
 
 // Set up the editor state with our custom schema
 const createEditorState = (content = '') => {
@@ -25,6 +29,7 @@ const createEditorState = (content = '') => {
 		plugins: [
 			keymap(baseKeymap),
 			filterHighlighter,
+			placeholder(t('filters.query.placeholder')),
 		],
 		doc: schema.node('doc', null, nodes),
 	})
@@ -150,6 +155,13 @@ const filterValue = ref('')
 			justify-content: center;
 			text-transform: uppercase;
 		}
+	}
+
+	&[data-placeholder]::before {
+		color: var(--grey-500);
+		position: absolute;
+		content: attr(data-placeholder);
+		pointer-events: none;
 	}
 }
 </style>
