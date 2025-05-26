@@ -15,7 +15,7 @@
 			>
 		</CustomTransition>
 		<x-button
-			:shadow="false"
+			no-shadow
 			icon="plus"
 			@click="showCreateTaskOrCreate"
 		>

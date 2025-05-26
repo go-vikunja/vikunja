@@ -95,7 +95,7 @@
 		<Card
 			class="is-fullwidth has-overflow"
 			:title="$t('team.edit.members')"
-			:padding="false"
+			no-padding
 		>
 			<form
 				v-if="userIsAdmin && !team.oidcId"

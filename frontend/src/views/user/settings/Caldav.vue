@@ -18,7 +18,7 @@
 			<div class="control">
 				<x-button
 					v-tooltip="$t('misc.copy')"
-					:shadow="false"
+					no-shadow
 					icon="paste"
 					@click="copy(caldavUrl)"
 				/>

@@ -50,7 +50,7 @@
 			<div class="gantt-chart-container">
 				<Card
 					:has-content="false"
-					:padding="false"
+					no-padding
 					class="has-overflow"
 				>
 					<GanttChart

@@ -127,7 +127,7 @@ async function saveViewPosition(e) {
 	<CreateEdit
 		:title="$t('project.views.header')"
 		:primary-label="$t('misc.save')"
-		:has-primary-action="false"
+		no-primary-action
 	>
 		<ViewEditForm
 			v-if="showCreateForm"

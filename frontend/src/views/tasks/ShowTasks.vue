@@ -14,7 +14,7 @@
 				<template #trigger="{toggle}">
 					<x-button
 						variant="primary"
-						:shadow="false"
+						no-shadow
 						class="mb-2"
 						@click.prevent.stop="toggle()"
 					>
@@ -45,7 +45,7 @@
 
 		<Card
 			v-if="hasTasks"
-			:padding="false"
+			no-padding
 			class="has-overflow"
 			:has-content="false"
 			:loading="loading"

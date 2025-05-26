@@ -62,7 +62,7 @@
 					<BaseButton
 						class="username-dropdown-trigger"
 						variant="secondary"
-						:shadow="false"
+						no-shadow
 						@click="toggleOpen"
 					>
 						<img

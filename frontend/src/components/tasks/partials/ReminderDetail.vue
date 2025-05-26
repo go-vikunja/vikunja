@@ -13,7 +13,7 @@
 				<Card
 					class="reminder-options-popup"
 					:class="{'is-open': isOpen}"
-					:padding="false"
+					no-padding
 				>
 					<div
 						v-if="activeForm === null"
@@ -58,7 +58,7 @@
 					<x-button
 						v-if="showFormSwitch !== null"
 						class="reminder__close-button"
-						:shadow="false"
+						no-shadow
 						@click="updateDataAndMaybeCloseNow(close)"
 					>
 						{{ $t('misc.confirm') }}

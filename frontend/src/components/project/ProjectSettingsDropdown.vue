@@ -90,7 +90,6 @@
 			</DropdownItem>
 			<Subscription
 				class="has-no-shadow"
-				:is-button="false"
 				entity="project"
 				:entity-id="project.id"
 				:model-value="project.subscription"

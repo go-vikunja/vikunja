@@ -1,7 +1,7 @@
 <template>
 	<div
 		class="card"
-		:class="{'has-no-shadow': !shadow}"
+		:class="{'has-no-shadow': noShadow}"
 	>
 		<header
 			v-if="title !== ''"
@@ -24,7 +24,7 @@
 		<div
 			class="card-content loader-container"
 			:class="{
-				'p-0': !padding,
+				'p-0': noPadding,
 				'is-loading': loading
 			}"
 		>
@@ -47,15 +47,15 @@ import BaseButton from '@/components/base/BaseButton.vue'
 
 withDefaults(defineProps<{
 	title?: string
-	padding?: boolean
-	shadow?: boolean
+	noPadding?: boolean
+	noShadow?: boolean
 	hasContent?: boolean
 	loading?: boolean
 	showClose?: boolean
 }>(), {
 	title: '',
-	padding: true,
-	shadow: true,
+	noPadding: false,
+	noShadow: false,
 	hasContent: true,
 	loading: false,
 	showClose: false,

@@ -2,7 +2,7 @@
 	<Modal @close="close()">
 		<Card
 			class="has-background-white keyboard-shortcuts"
-			:shadow="false"
+			no-shadow
 			:title="$t('keyboardShortcuts.title')"
 		>
 			<template

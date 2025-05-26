@@ -23,7 +23,7 @@
 				class="loader-container is-max-width-desktop list-view"
 			>
 				<Card
-					:padding="false"
+					no-padding
 					:has-content="false"
 					class="has-overflow"
 				>

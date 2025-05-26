@@ -6,8 +6,8 @@
 	>
 		<Card
 			:title="title"
-			:shadow="false"
-			:padding="false"
+			no-shadow
+			no-padding
 			class="has-text-left"
 			:loading="loading"
 			:show-close="true"
@@ -21,7 +21,7 @@
 				<slot name="footer">
 					<x-button
 						v-if="tertiary !== ''"
-						:shadow="false"
+						no-shadow
 						variant="tertiary"
 						@click.prevent.stop="$emit('tertiary', $event)"
 					>
@@ -34,7 +34,7 @@
 						{{ $t('misc.cancel') }}
 					</x-button>
 					<x-button
-						v-if="hasPrimaryAction"
+						v-if="!noPrimaryAction"
 						variant="primary"
 						:icon="primaryIcon"
 						:disabled="primaryDisabled || loading"
@@ -57,7 +57,7 @@ withDefaults(defineProps<{
 	primaryLabel?: string,
 	primaryIcon?: IconProp,
 	primaryDisabled?: boolean,
-	hasPrimaryAction?: boolean,
+	noPrimaryAction?: boolean,
 	tertiary?: string,
 	wide?: boolean,
 	loading?: boolean
@@ -65,7 +65,7 @@ withDefaults(defineProps<{
 	primaryLabel: '',
 	primaryIcon: 'plus',
 	primaryDisabled: false,
-	hasPrimaryAction: true,
+	noPrimaryAction: false,
 	tertiary: '',
 	wide: false,
 	loading: false,

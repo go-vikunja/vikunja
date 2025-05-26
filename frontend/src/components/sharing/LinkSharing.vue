@@ -161,7 +161,7 @@
 								<div class="control">
 									<x-button
 										v-tooltip="$t('misc.copy')"
-										:shadow="false"
+										no-shadow
 										@click="copy(shareLinks[s.id])"
 									>
 										<span class="icon">

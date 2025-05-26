@@ -8,7 +8,7 @@
 			:class="{'is-active': showNewRelationForm}"
 			variant="secondary"
 			icon="plus"
-			:shadow="false"
+			no-shadow
 			@click="showNewRelationForm = !showNewRelationForm"
 		/>
 		<transition-group name="fade">
