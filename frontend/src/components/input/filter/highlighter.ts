@@ -1,6 +1,6 @@
 import {Plugin, PluginKey} from '@tiptap/pm/state'
 import {Decoration, DecorationSet} from '@tiptap/pm/view'
-import {AVAILABLE_FILTER_FIELDS, FILTER_JOIN_OPERATOR, FILTER_OPERATORS, LABEL_FIELDS, getFilterFieldRegexPattern} from '@/helpers/filters'
+import {AVAILABLE_FILTER_FIELDS, FILTER_JOIN_OPERATOR, FILTER_OPERATORS, LABEL_FIELDS, DATE_FIELDS, getFilterFieldRegexPattern} from '@/helpers/filters'
 import {useLabelStore} from '@/stores/labels'
 import {colorIsDark} from '@/helpers/color/colorIsDark.ts'
 
@@ -47,7 +47,34 @@ export const filterHighlighter = new Plugin({
 			// Track ranges that are already decorated as values to avoid conflicts
 			const valueRanges: Array<{ start: number, end: number }> = []
 
-			// Handle label values with colors first
+			// Handle date values with click functionality first
+			DATE_FIELDS.forEach(dateField => {
+				const pattern = getFilterFieldRegexPattern(dateField)
+				let dateMatch
+				while ((dateMatch = pattern.exec(text)) !== null) {
+					if (dateMatch[4]) { // If there's a value
+						const valueText = dateMatch[4].trim()
+						const valueStart = dateMatch.index + dateMatch[0].indexOf(dateMatch[4])
+						const valueEnd = valueStart + dateMatch[4].length
+
+						const from = findPosForIndex(doc, valueStart)
+						const to = findPosForIndex(doc, valueEnd)
+
+						if (from !== null && to !== null) {
+							decorations.push(
+								Decoration.inline(from, to, {
+									class: 'date-value',
+									'data-date-value': valueText,
+									'data-position': valueStart.toString()
+								})
+							)
+							valueRanges.push({start: valueStart, end: valueEnd})
+						}
+					}
+				}
+			})
+
+			// Handle label values with colors
 			LABEL_FIELDS.forEach(labelField => {
 				const pattern = getFilterFieldRegexPattern(labelField)
 				let labelMatch
@@ -89,8 +116,8 @@ export const filterHighlighter = new Plugin({
 			while ((match = fieldValueRegex.exec(text)) !== null) {
 				const [fullMatch, field, operator, value] = match
 
-				// Skip label fields as they're handled above
-				if (LABEL_FIELDS.includes(field)) {
+				// Skip label and date fields as they're handled above
+				if (LABEL_FIELDS.includes(field) || DATE_FIELDS.includes(field)) {
 					continue
 				}
 
