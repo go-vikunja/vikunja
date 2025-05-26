@@ -4,11 +4,14 @@
 		:title="hasTitle ? $t('filters.title') : ''"
 		role="search"
 	>
+<!--		<FilterInput-->
+<!--			v-model="filterQuery"-->
+<!--			:project-id="projectId"-->
+<!--			@update:modelValue="() => change('modelValue')"-->
+<!--			@blur="() => change('blur')"-->
+<!--		/>-->
 		<FilterInput
-			v-model="filterQuery"
 			:project-id="projectId"
-			@update:modelValue="() => change('modelValue')"
-			@blur="() => change('blur')"
 		/>
 		
 		<div 
@@ -60,7 +63,7 @@ export const ALPHABETICAL_SORT = 'title'
 <script setup lang="ts">
 import {computed, ref, watch} from 'vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
-import FilterInput from '@/components/project/partials/FilterInput.vue'
+// import FilterInput from '@/components/project/partials/FilterInput.vue'
 import {useRoute} from 'vue-router'
 import type {TaskFilterParams} from '@/services/taskCollection'
 import {useLabelStore} from '@/stores/labels'
@@ -71,6 +74,7 @@ import {
 	transformFilterStringFromApi,
 } from '@/helpers/filters'
 import FilterInputDocs from '@/components/project/partials/FilterInputDocs.vue'
+import FilterInput from '@/components/input/filter/FilterInput.vue'
 
 const props = withDefaults(defineProps<{
 	modelValue: TaskFilterParams,
