@@ -9,6 +9,7 @@ import {filterHighlighter} from './highlighter.ts'
 import {schema} from './schema.ts'
 import {placeholder} from '@/components/input/filter/placeholder.ts'
 import {useI18n} from 'vue-i18n'
+import DatepickerWithValues from '@/components/date/DatepickerWithValues.vue'
 
 const emit = defineEmits(['update:filter'])
 const editorRef = ref<HTMLDivElement | null>(null)
@@ -68,6 +69,26 @@ onMounted(() => {
 		attributes: {
 			spellcheck: 'false',
 		},
+		handleDOMEvents: {
+			click(view, event) {
+				const target = event.target as HTMLElement
+				if (target.classList.contains('date-value')) {
+					event.preventDefault()
+					event.stopPropagation()
+					
+					const dateValue = target.getAttribute('data-date-value') || ''
+					const position = parseInt(target.getAttribute('data-position') || '0')
+					
+					currentOldDatepickerValue.value = dateValue
+					currentDatepickerValue.value = dateValue
+					currentDatepickerPos.value = position
+					datePickerPopupOpen.value = true
+					
+					return true
+				}
+				return false
+			}
+		},
 		dispatchTransaction(transaction) {
 			if (!editorView) return
 
@@ -85,11 +106,40 @@ onMounted(() => {
 })
 
 const filterValue = ref('')
+
+// Date picker functionality
+const currentOldDatepickerValue = ref('')
+const currentDatepickerValue = ref('')
+const currentDatepickerPos = ref(0)
+const datePickerPopupOpen = ref(false)
+
+function updateDateInQuery(newDate: string | Date | null) {
+	if (!editorView || !newDate) return
+	
+	const dateStr = typeof newDate === 'string' ? newDate : newDate.toISOString().split('T')[0]
+	const currentText = editorView.state.doc.textContent
+	const newText = currentText.replace(currentOldDatepickerValue.value, dateStr)
+	currentOldDatepickerValue.value = dateStr
+	
+	// Update by creating a transaction instead of recreating the state
+	const tr = editorView.state.tr.replaceWith(0, editorView.state.doc.content.size, 
+		editorView.state.schema.text(newText))
+	editorView.dispatch(tr)
+	
+	emit('update:filter', processContent(editorView))
+	filterValue.value = processContent(editorView)
+}
 </script>
 
 <template>
 	<div class="filter-input">
 		<div ref="editorRef" class="editor-content"></div>
+		<DatepickerWithValues
+			class="filter-datepicker"
+			v-model="currentDatepickerValue"
+			v-model:open="datePickerPopupOpen"
+			@update:modelValue="updateDateInQuery"
+		/>
 	</div>
 	<pre>{{ filterValue }}</pre>
 </template>
@@ -105,6 +155,10 @@ const filterValue = ref('')
 
 	&:focus-within {
 		border-color: var(--primary);
+	}
+	
+	.filter-datepicker {
+		position: absolute;
 	}
 }
 
@@ -135,6 +189,19 @@ const filterValue = ref('')
 		border-radius: $radius;
 		padding: .125rem .25rem;
 		font-weight: 500;
+	}
+
+	.date-value {
+		background-color: var(--primary);
+		color: var(--white);
+		border-radius: $radius;
+		padding: 0.125em 0.25em;
+		cursor: pointer;
+		transition: background-color var(--transition);
+
+		&:hover {
+			background-color: var(--primary-dark);
+		}
 	}
 
 	.grouping, .logical {
