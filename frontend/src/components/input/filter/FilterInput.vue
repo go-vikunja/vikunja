@@ -86,18 +86,16 @@ const filterValue = ref('')
 	<pre>{{ filterValue }}</pre>
 </template>
 
-<style>
-.filter-editor {
-	border: 1px solid #d1d5db;
+<style lang="scss">
+.filter-input {
+	border: 1px solid var(--grey-100);
 	border-radius: 0.375rem;
 	overflow: hidden;
-	background-color: #f9fafb;
 	transition: border-color 0.2s ease;
-}
 
-.filter-editor:focus-within {
-	border-color: #3b82f6;
-	box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+	&:focus-within {
+		border-color: var(--primary);
+	}
 }
 
 .editor-content {
@@ -109,78 +107,53 @@ const filterValue = ref('')
 .ProseMirror {
 	outline: none;
 	white-space: pre-wrap;
-}
 
-.ProseMirror .field {
-	color: #2563eb;
-	font-weight: 500;
-}
-
-.ProseMirror .operator {
-	color: #7c3aed;
-	font-weight: 500;
-}
-
-.ProseMirror .value {
-	color: #059669;
-}
-
-.ProseMirror .logical {
-	color: #dc2626;
-	font-weight: 500;
-}
-
-.ProseMirror .grouping {
-	color: #9333ea;
-	font-weight: 500;
-}
-
-.ProseMirror .user-value {
-	position: relative;
-	padding-left: 1.5em;
-}
-
-.ProseMirror .user-value::before {
-	content: attr(data-user);
-	position: absolute;
-	left: 0;
-	top: 50%;
-	transform: translateY(-50%);
-	width: 1.2em;
-	height: 1.2em;
-	background-color: #3b82f6;
-	color: white;
-	border-radius: 50%;
-	font-size: 0.8em;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	text-transform: uppercase;
-}
-
-@media (prefers-color-scheme: dark) {
-	.ProseMirror .field {
-		color: #60a5fa;
+	.field {
+		color: var(--code-literal);
 	}
 
-	.ProseMirror .operator {
-		color: #a78bfa;
+	.operator {
+		color: var(--code-keyword);
 	}
 
-	.ProseMirror .value {
-		color: #34d399;
+	.value {
+		color: #059669;
+		border-radius: $radius;
+		padding: .125rem .25rem;
+		background: var(--grey-200);
 	}
 
-	.ProseMirror .logical {
-		color: #f87171;
+	.logical {
+		color: #dc2626;
+		font-weight: 500;
 	}
 
-	.ProseMirror .grouping {
-		color: #c084fc;
+	.grouping {
+		color: var(--code-section);
+		font-weight: 600;
 	}
 
-	.ProseMirror .user-value::before {
-		background-color: #60a5fa;
+	.user-value {
+		position: relative;
+		padding-left: 1.5em;
+
+		&::before {
+			content: attr(data-user);
+			position: absolute;
+			left: 0;
+			top: 50%;
+			transform: translateY(-50%);
+			width: 1.2em;
+			height: 1.2em;
+			background-color: #3b82f6;
+			color: white;
+			border-radius: 50%;
+			font-size: 0.8em;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			text-transform: uppercase;
+		}
 	}
 }
 </style>
