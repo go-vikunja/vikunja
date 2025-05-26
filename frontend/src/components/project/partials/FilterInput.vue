@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {ref, watch, onMounted, onBeforeUnmount} from 'vue'
+import {ref, onMounted, onBeforeUnmount} from 'vue'
 import DatepickerWithValues from '@/components/date/DatepickerWithValues.vue'
 import UserService from '@/services/user'
 import AutocompleteDropdown from '@/components/input/AutocompleteDropdown.vue'
@@ -50,8 +50,6 @@ const editorRef = ref<HTMLDivElement | null>(null)
 const editor = ref<EditorView | null>(null)
 const id = ref(createRandomID())
 
-// Prevent infinite loops
-let isInternalUpdate = false
 
 // Simple schema for plain text with highlighting
 const filterSchema = new Schema({
@@ -192,48 +190,18 @@ function createDecorations(doc: any) {
 onMounted(() => {
 	if (!editorRef.value) return
 
-	const initialDoc = filterSchema.nodes.doc.createAndFill()
-	if (!initialDoc) return
-
-	const state = EditorState.create({
-		schema: filterSchema,
-		doc: initialDoc,
-		plugins: [
-			keymap({
-				...baseKeymap,
-				'Mod-z': undo,
-				'Mod-y': redo,
-				'Enter': () => {
-					blurDebounced()
-					return true
-				}
-			}),
-			history(),
-			createHighlightPlugin()
-		]
-	})
-
 	editor.value = new EditorView(editorRef.value, {
-		state,
+		state: createEditorState(props.modelValue),
 		dispatchTransaction(tr) {
 			if (!editor.value) return
 			
-			try {
-				const newState = editor.value.state.apply(tr)
-				editor.value.updateState(newState)
-				
-				// Update the model value only if this is a user edit
-				if (tr.docChanged && !isInternalUpdate) {
-					const text = newState.doc.textContent
-					emit('update:modelValue', text)
-				}
-			} catch (error: unknown) {
-				console.error('ProseMirror transaction error:', error)
-				// If we get a mismatched transaction, recreate the editor state
-				if (error instanceof Error && error.message.includes('mismatched')) {
-					const currentText = editor.value.state.doc.textContent
-					setTimeout(() => updateEditorContent(currentText), 0)
-				}
+			const newState = editor.value.state.apply(tr)
+			editor.value.updateState(newState)
+			
+			// Update the model value when document changes
+			if (tr.docChanged) {
+				const text = newState.doc.textContent
+				emit('update:modelValue', text)
 			}
 		},
 		attributes: {
@@ -266,93 +234,39 @@ onMounted(() => {
 		}
 	})
 
-	// Set initial content if provided
-	if (props.modelValue) {
-		setTimeout(() => updateEditorContent(props.modelValue), 0)
-	}
 })
 
 onBeforeUnmount(() => {
 	editor.value?.destroy()
 })
 
-function updateEditorContent(text: string) {
-	if (!editor.value) return
-	
-	isInternalUpdate = true
-	
-	try {
-		// Check if content is already the same
-		const currentText = editor.value.state.doc.textContent
-		if (currentText === text) {
-			isInternalUpdate = false
-			return
-		}
-		
-		// Use a transaction from the current state to avoid mismatches
-		const currentState = editor.value.state
-		const tr = currentState.tr
-		
-		// Clear existing content
-		if (currentState.doc.content.size > 0) {
-			tr.delete(0, currentState.doc.content.size)
-		}
-		
-		// Insert new content if provided
-		if (text) {
-			const textNode = filterSchema.text(text)
-			tr.insert(0, textNode)
-		}
-		
-		// Set cursor to end
-		if (tr.doc.content.size > 0) {
-			tr.setSelection(TextSelection.create(tr.doc, tr.doc.content.size))
-		}
-		
-		// Dispatch the transaction synchronously
-		editor.value.dispatch(tr)
-		
-	} catch (error) {
-		console.error('Error updating editor content:', error)
-		// Fallback: recreate entire state only if transaction fails
-		try {
-			const paragraph = text 
-				? filterSchema.nodes.paragraph.createAndFill({}, filterSchema.text(text))
-				: filterSchema.nodes.paragraph.createAndFill()
-			
-			if (paragraph) {
-				const doc = filterSchema.nodes.doc.createAndFill({}, paragraph)
-				if (doc) {
-					const newState = EditorState.create({
-						schema: filterSchema,
-						doc,
-						plugins: editor.value.state.plugins,
-						selection: TextSelection.create(doc, Math.min(doc.content.size, text.length))
-					})
-					editor.value.updateState(newState)
+// Create a new editor state similar to the working draft approach
+function createEditorState(content = '') {
+	const nodes = content ? [
+		filterSchema.node('paragraph', null, [
+			filterSchema.text(content)
+		])
+	] : [filterSchema.node('paragraph')]
+
+	return EditorState.create({
+		schema: filterSchema,
+		plugins: [
+			keymap({
+				...baseKeymap,
+				'Mod-z': undo,
+				'Mod-y': redo,
+				'Enter': () => {
+					blurDebounced()
+					return true
 				}
-			}
-		} catch (fallbackError) {
-			console.error('Fallback update failed:', fallbackError)
-		}
-	}
-	
-	isInternalUpdate = false
+			}),
+			history(),
+			createHighlightPlugin()
+		],
+		doc: filterSchema.node('doc', null, nodes)
+	})
 }
 
-// Watch for external model changes
-watch(
-	() => props.modelValue,
-	(newValue) => {
-		if (!editor.value || isInternalUpdate) return
-		
-		const currentText = editor.value.state.doc.textContent
-		if (newValue !== currentText) {
-			updateEditorContent(newValue)
-		}
-	},
-	{immediate: true}
-)
 
 const currentOldDatepickerValue = ref('')
 const currentDatepickerValue = ref('')
@@ -367,37 +281,10 @@ function updateDateInQuery(newDate: string | Date | null) {
 	const newText = currentText.replace(currentOldDatepickerValue.value, dateStr)
 	currentOldDatepickerValue.value = dateStr
 	
-	// Use direct transaction to avoid state mismatch
-	isInternalUpdate = true
-	try {
-		const currentState = editor.value.state
-		const tr = currentState.tr
-		
-		// Replace all content with new text
-		if (currentState.doc.content.size > 0) {
-			tr.delete(0, currentState.doc.content.size)
-		}
-		
-		if (newText) {
-			const textNode = filterSchema.text(newText)
-			tr.insert(0, textNode)
-		}
-		
-		// Set cursor to end
-		if (tr.doc.content.size > 0) {
-			tr.setSelection(TextSelection.create(tr.doc, tr.doc.content.size))
-		}
-		
-		editor.value.dispatch(tr)
-		emit('update:modelValue', newText)
-	} catch (error) {
-		console.error('Error updating date in query:', error)
-		// Fallback to full content update
-		updateEditorContent(newText)
-		emit('update:modelValue', newText)
-	} finally {
-		isInternalUpdate = false
-	}
+	// Update by recreating the editor state
+	const newState = createEditorState(newText)
+	editor.value.updateState(newState)
+	emit('update:modelValue', newText)
 }
 
 const autocompleteMatchPosition = ref(0)
@@ -465,37 +352,10 @@ function autocompleteSelect(value: any) {
 		newValue +
 		currentText.substring(autocompleteMatchPosition.value + autocompleteMatchText.value.length + 1)
 	
-	// Use direct transaction to avoid state mismatch
-	isInternalUpdate = true
-	try {
-		const currentState = editor.value.state
-		const tr = currentState.tr
-		
-		// Replace all content with new text
-		if (currentState.doc.content.size > 0) {
-			tr.delete(0, currentState.doc.content.size)
-		}
-		
-		if (newText) {
-			const textNode = filterSchema.text(newText)
-			tr.insert(0, textNode)
-		}
-		
-		// Set cursor to end
-		if (tr.doc.content.size > 0) {
-			tr.setSelection(TextSelection.create(tr.doc, tr.doc.content.size))
-		}
-		
-		editor.value.dispatch(tr)
-		emit('update:modelValue', newText)
-	} catch (error) {
-		console.error('Error in autocomplete select:', error)
-		// Fallback to full content update
-		updateEditorContent(newText)
-		emit('update:modelValue', newText)
-	} finally {
-		isInternalUpdate = false
-	}
+	// Update by recreating the editor state
+	const newState = createEditorState(newText)
+	editor.value.updateState(newState)
+	emit('update:modelValue', newText)
 	
 	autocompleteResults.value = []
 }
