@@ -60,6 +60,9 @@ onMounted(() => {
 
 	editorView = new EditorView(editorRef.value, {
 		state: createEditorState(),
+		attributes: {
+			spellcheck: 'false',
+		},
 		dispatchTransaction(transaction) {
 			if (!editorView) return
 
