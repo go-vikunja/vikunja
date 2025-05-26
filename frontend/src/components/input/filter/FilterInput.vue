@@ -115,6 +115,7 @@ const filterValue = ref('')
 .ProseMirror {
 	outline: none;
 	white-space: pre-wrap;
+	padding: 0 !important;
 
 	.field {
 		color: var(--code-literal);
@@ -128,6 +129,12 @@ const filterValue = ref('')
 		border-radius: $radius;
 		padding: .125rem .25rem;
 		background: var(--grey-100);
+	}
+
+	.label-value {
+		border-radius: $radius;
+		padding: .125rem .25rem;
+		font-weight: 500;
 	}
 
 	.grouping, .logical {

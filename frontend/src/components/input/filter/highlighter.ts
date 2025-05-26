@@ -1,6 +1,8 @@
 import {Plugin, PluginKey} from '@tiptap/pm/state'
 import {Decoration, DecorationSet} from '@tiptap/pm/view'
-import {AVAILABLE_FILTER_FIELDS, FILTER_JOIN_OPERATOR, FILTER_OPERATORS} from '@/helpers/filters'
+import {AVAILABLE_FILTER_FIELDS, FILTER_JOIN_OPERATOR, FILTER_OPERATORS, LABEL_FIELDS, getFilterFieldRegexPattern} from '@/helpers/filters'
+import {useLabelStore} from '@/stores/labels'
+import {colorIsDark} from '@/helpers/color/colorIsDark.ts'
 
 // Create a plugin key for our plugin
 const filterHighlighterKey = new PluginKey('filterHighlighter')
@@ -20,6 +22,9 @@ export const filterHighlighter = new Plugin({
 
 			// Get the text content of the document
 			const text = doc.textContent
+
+			// Get label store for color decoration
+			const labelStore = useLabelStore()
 
 			// Create a regex to match field names
 			const fieldRegex = new RegExp(`\\b(${AVAILABLE_FILTER_FIELDS.join('|')})\\b`, 'g')
@@ -42,10 +47,52 @@ export const filterHighlighter = new Plugin({
 			// Track ranges that are already decorated as values to avoid conflicts
 			const valueRanges: Array<{ start: number, end: number }> = []
 
-			// Match values - anything coming after an operator
+			// Handle label values with colors first
+			LABEL_FIELDS.forEach(labelField => {
+				const pattern = getFilterFieldRegexPattern(labelField)
+				let labelMatch
+				while ((labelMatch = pattern.exec(text)) !== null) {
+					if (labelMatch[4]) { // If there's a value
+						const valueText = labelMatch[4].trim()
+						const valueStart = labelMatch.index + labelMatch[0].indexOf(labelMatch[4])
+						const valueEnd = valueStart + labelMatch[4].length
+
+						// Find the label by its title
+						const label = labelStore.getLabelByExactTitle(valueText)
+
+						const from = findPosForIndex(doc, valueStart)
+						const to = findPosForIndex(doc, valueEnd)
+
+						if (from !== null && to !== null) {
+							if (label) {
+								// Use label color if found
+								decorations.push(
+									Decoration.inline(from, to, {
+										class: 'label-value',
+										style: `background-color: ${label.hexColor}; color: ${label.hexColor && colorIsDark(label.hexColor) ? 'white' : 'black'};`
+									})
+								)
+							} else {
+								// Fallback to generic value styling
+								decorations.push(
+									Decoration.inline(from, to, {class: 'value'})
+								)
+							}
+							valueRanges.push({start: valueStart, end: valueEnd})
+						}
+					}
+				}
+			})
+
+			// Match other values - anything coming after an operator (excluding labels)
 			fieldValueRegex.lastIndex = 0
 			while ((match = fieldValueRegex.exec(text)) !== null) {
 				const [fullMatch, field, operator, value] = match
+
+				// Skip label fields as they're handled above
+				if (LABEL_FIELDS.includes(field)) {
+					continue
+				}
 
 				if (value && value.trim()) {
 					// Calculate the actual position of the value by finding where it starts after the operator
