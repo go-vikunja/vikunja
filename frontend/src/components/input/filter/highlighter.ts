@@ -1,28 +1,6 @@
 import {Plugin, PluginKey} from '@tiptap/pm/state'
 import {Decoration, DecorationSet} from '@tiptap/pm/view'
-
-// Define the available fields for filtering
-const FIELDS = [
-	'assignees', 
-	'created', 
-	'done',
-	'doneAt', 
-	'dueDate', 
-	'endDate', 
-	'labels', 
-	'percentDone', 
-	'priority', 
-	'project',
-	'reminders', 
-	'startDate',
-	'updated',
-]
-
-// Operators
-const OPERATORS = ['!=', '=', '>=', '<=', '>', '<', 'like', 'in', 'not in']
-
-// Logical operators
-const LOGICAL_OPERATORS = ['&&', '||']
+import {AVAILABLE_FILTER_FIELDS, FILTER_JOIN_OPERATOR, FILTER_OPERATORS} from '@/helpers/filters'
 
 // Create a plugin key for our plugin
 const filterHighlighterKey = new PluginKey('filterHighlighter')
@@ -44,27 +22,73 @@ export const filterHighlighter = new Plugin({
 			const text = doc.textContent
 
 			// Create a regex to match field names
-			const fieldRegex = new RegExp(`\\b(${FIELDS.join('|')})\\b`, 'g')
+			const fieldRegex = new RegExp(`\\b(${AVAILABLE_FILTER_FIELDS.join('|')})\\b`, 'g')
 
 			// Create a regex to match operators
-			const operatorRegex = new RegExp(`(${OPERATORS.map(op => op.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'g')
+			const operatorRegex = new RegExp(`(${FILTER_OPERATORS.map(op => op.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'g')
 
-			// Create a regex to match logical operators
-			const logicalRegex = new RegExp(`(${LOGICAL_OPERATORS.map(op => op.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'g')
+			// Create a regex to match logical/join operators  
+			const logicalRegex = new RegExp(`(${FILTER_JOIN_OPERATOR.map(op => op.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'g')
 
-			// Create a regex for parentheses
-			const groupingRegex = /[()]/g
+			// Create a regex to match field + operator + value patterns
+			// This will match anything coming after an operator
+			const fieldValueRegex = new RegExp(
+				`(${AVAILABLE_FILTER_FIELDS.join('|')})\\s*(${FILTER_OPERATORS.map(op => op.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\s*([^&|()]+?)(?=\\s*(?:${FILTER_JOIN_OPERATOR.slice(0, 2).map(op => op.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})|$)`,
+				'gi',
+			)
 
-			// Create a regex for values
-			const valueRegex = /(?:true|false|\d+|"[^"]*"|'[^']*'|now(?:[+-]\d+[smhdwMy])?(?:\/[dwMy])?)/g
-
-			// Match fields
 			let match
+
+			// Track ranges that are already decorated as values to avoid conflicts
+			const valueRanges: Array<{ start: number, end: number }> = []
+
+			// Match values - anything coming after an operator
+			fieldValueRegex.lastIndex = 0
+			while ((match = fieldValueRegex.exec(text)) !== null) {
+				const [fullMatch, field, operator, value] = match
+
+				if (value && value.trim()) {
+					// Calculate the actual position of the value by finding where it starts after the operator
+					const fieldLength = field.length
+					const operatorIndex = fullMatch.indexOf(operator, fieldLength)
+					const operatorEnd = operatorIndex + operator.length
+					const valueIndex = fullMatch.indexOf(value.trim(), operatorEnd)
+
+					const valueStart = match.index + valueIndex
+					const valueEnd = valueStart + value.trim().length
+
+					const from = findPosForIndex(doc, valueStart)
+					const to = findPosForIndex(doc, valueEnd)
+
+					if (from !== null && to !== null) {
+						decorations.push(
+							Decoration.inline(from, to, {class: 'value'}),
+						)
+						valueRanges.push({start: valueStart, end: valueEnd})
+					}
+				}
+			}
+
+			// Helper function to check if a range overlaps with any value range
+			const overlapsWithValue = (start: number, end: number): boolean => {
+				return valueRanges.some(range =>
+					(start >= range.start && start < range.end) ||
+					(end > range.start && end <= range.end) ||
+					(start <= range.start && end >= range.end),
+				)
+			}
+
+			// Match fields (excluding those within value ranges)
+			fieldRegex.lastIndex = 0
 			while ((match = fieldRegex.exec(text)) !== null) {
 				const start = match.index
 				const end = start + match[0].length
 
-				// Get the position in the document
+				// Skip if this field match is within a value range
+				if (overlapsWithValue(start, end)) {
+					continue
+				}
+
 				const from = findPosForIndex(doc, start)
 				const to = findPosForIndex(doc, end)
 
@@ -72,36 +96,6 @@ export const filterHighlighter = new Plugin({
 					decorations.push(
 						Decoration.inline(from, to, {class: 'field'}),
 					)
-
-					// If this is an assignees field, look for the next value
-					if (match[0] === 'assignees') {
-						// Look for the next value after this field
-						const afterField = text.slice(end)
-						const operatorMatch = /\s*(?:in|=)\s*/.exec(afterField)
-						if (operatorMatch) {
-							const valueStart = end + operatorMatch[0].length
-							const valueMatch = /([a-zA-Z0-9_]+)(?:,\s*[a-zA-Z0-9_]+)*/.exec(text.slice(valueStart))
-							if (valueMatch) {
-								const users = valueMatch[0].split(/,\s*/)
-								users.forEach(user => {
-									const userStart = text.indexOf(user, valueStart)
-									const userEnd = userStart + user.length
-									const userFrom = findPosForIndex(doc, userStart)
-									const userTo = findPosForIndex(doc, userEnd)
-
-									if (userFrom !== null && userTo !== null) {
-										decorations.push(
-											Decoration.inline(userFrom, userTo, {
-												class: 'value user-value',
-												'data-user': user,
-											}),
-										)
-									}
-								})
-								continue
-							}
-						}
-					}
 				}
 			}
 
@@ -137,49 +131,6 @@ export const filterHighlighter = new Plugin({
 				}
 			}
 
-			// Match grouping symbols
-			groupingRegex.lastIndex = 0
-			while ((match = groupingRegex.exec(text)) !== null) {
-				const start = match.index
-				const end = start + match[0].length
-
-				const from = findPosForIndex(doc, start)
-				const to = findPosForIndex(doc, end)
-
-				if (from !== null && to !== null) {
-					decorations.push(
-						Decoration.inline(from, to, {class: 'grouping'}),
-					)
-				}
-			}
-
-			// Match values that aren't already matched as user values
-			valueRegex.lastIndex = 0
-			while ((match = valueRegex.exec(text)) !== null) {
-				const start = match.index
-				const end = start + match[0].length
-
-				// Skip if this is a field name
-				const value = match[0]
-				if (FIELDS.includes(value)) continue
-
-				const from = findPosForIndex(doc, start)
-				const to = findPosForIndex(doc, end)
-
-				if (from !== null && to !== null) {
-					// Check if this position is already decorated as a user value
-					const hasUserValue = decorations.some(d =>
-						d.from === from && d.to === to && d.type.attrs.class?.includes('user-value'),
-					)
-
-					if (!hasUserValue) {
-						decorations.push(
-							Decoration.inline(from, to, {class: 'value'}),
-						)
-					}
-				}
-			}
-
 			return DecorationSet.create(doc, decorations)
 		},
 	},
@@ -191,12 +142,14 @@ export const filterHighlighter = new Plugin({
 })
 
 // Helper function to find the position in the document for a given text index
-function findPosForIndex(doc: any, index: number): number | null {
+function findPosForIndex(doc: {
+	descendants: (fn: (node: { isText: boolean, text: string }, nodePos: number) => boolean | void) => void
+}, index: number): number | null {
 	let pos = 0
 	let found = false
 	let textIndex = 0
 
-	doc.descendants((node: any, nodePos: number) => {
+	doc.descendants((node: { isText: boolean, text: string }, nodePos: number) => {
 		if (found) return false
 
 		if (node.isText) {
