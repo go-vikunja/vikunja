@@ -10,12 +10,47 @@ import {schema} from './schema.ts'
 import {placeholder} from '@/components/input/filter/placeholder.ts'
 import {useI18n} from 'vue-i18n'
 import DatepickerWithValues from '@/components/date/DatepickerWithValues.vue'
+import AutocompleteDropdown from '@/components/input/AutocompleteDropdown.vue'
+import UserService from '@/services/user'
+import ProjectUserService from '@/services/projectUsers'
+import {useLabelStore} from '@/stores/labels'
+import {useProjectStore} from '@/stores/projects'
+import XLabel from '@/components/tasks/partials/Label.vue'
+import User from '@/components/misc/User.vue'
+import {
+	ASSIGNEE_FIELDS,
+	AUTOCOMPLETE_FIELDS,
+	FILTER_OPERATORS_REGEX,
+	LABEL_FIELDS,
+	PROJECT_FIELDS,
+} from '@/helpers/filters'
+import {useDebounceFn} from '@vueuse/core'
+
+const props = defineProps<{
+	projectId?: number,
+}>()
 
 const emit = defineEmits(['update:filter'])
 const editorRef = ref<HTMLDivElement | null>(null)
 let editorView: EditorView | null = null
 
 const {t} = useI18n()
+
+// Services and stores for autocomplete
+const userService = new UserService()
+const projectUserService = new ProjectUserService()
+const labelStore = useLabelStore()
+const projectStore = useProjectStore()
+
+// Autocomplete state
+const autocompleteMatchPosition = ref(0)
+const autocompleteMatchText = ref('')
+const autocompleteResultType = ref<'labels' | 'assignees' | 'projects' | null>(null)
+const autocompleteResults = ref<any[]>([])
+
+// Store references to the dropdown functions
+const dropdownOnFocusField = ref<(() => void) | null>(null)
+const dropdownOnKeydown = ref<((event: KeyboardEvent) => void) | null>(null)
 
 // Set up the editor state with our custom schema
 const createEditorState = (content = '') => {
@@ -87,6 +122,18 @@ onMounted(() => {
 					return true
 				}
 				return false
+			},
+			focus(view, event) {
+				if (dropdownOnFocusField.value) {
+					dropdownOnFocusField.value()
+				}
+				return false
+			},
+			keydown(view, event) {
+				if (dropdownOnKeydown.value) {
+					dropdownOnKeydown.value(event as KeyboardEvent)
+				}
+				return false
 			}
 		},
 		dispatchTransaction(transaction) {
@@ -95,11 +142,14 @@ onMounted(() => {
 			const newState = editorView.state.apply(transaction)
 			editorView.updateState(newState)
 
-			// When the document changes, emit the updated filter value
+			// When the document changes, emit the updated filter value and handle autocomplete
 			if (transaction.docChanged) {
 				const snakeCaseFilter = processContent(editorView)
 				emit('update:filter', snakeCaseFilter)
 				filterValue.value = snakeCaseFilter
+				
+				// Handle autocomplete with the updated content
+				handleFieldInput()
 			}
 		},
 	})
@@ -129,11 +179,122 @@ function updateDateInQuery(newDate: string | Date | null) {
 	emit('update:filter', processContent(editorView))
 	filterValue.value = processContent(editorView)
 }
+
+// Autocomplete functionality
+function handleFieldInput() {
+	if (!editorView) return
+	
+	const state = editorView.state
+	const selection = state.selection
+	const cursorPosition = selection.from
+	const text = state.doc.textContent
+	const textUpToCursor = text.substring(0, cursorPosition)
+	autocompleteResults.value = []
+
+	AUTOCOMPLETE_FIELDS.forEach(field => {
+		const pattern = new RegExp('(' + field + '\\s*' + FILTER_OPERATORS_REGEX + '\\s*)([\'"]?)([^\'"&|()]+\\1?)?$', 'ig')
+		const match = pattern.exec(textUpToCursor)
+
+		if (match === null) {
+			return
+		}
+
+		const [matched, prefix, operator, , keyword] = match
+		if(!keyword) {
+			return
+		}
+
+		let search = keyword
+		if (operator === 'in' || operator === '?=') {
+			const keywords = keyword.split(',')
+			search = keywords[keywords.length - 1].trim()
+		}
+		
+		if (LABEL_FIELDS.includes(field)) {
+			autocompleteResultType.value = 'labels'
+			autocompleteResults.value = labelStore.filterLabelsByQuery([], search)
+		}
+		if (ASSIGNEE_FIELDS.includes(field)) {
+			autocompleteResultType.value = 'assignees'
+			if (props.projectId) {
+				projectUserService.getAll({projectId: props.projectId} as any, {s: search})
+					.then(users => autocompleteResults.value = users.length > 1 ? users : [])
+			} else {
+				userService.getAll({} as any, {s: search})
+					.then(users => autocompleteResults.value = users.length > 1 ? users : [])
+			}
+		}
+		if (!props.projectId && PROJECT_FIELDS.includes(field)) {
+			autocompleteResultType.value = 'projects'
+			autocompleteResults.value = projectStore.searchProject(search)
+		}
+		autocompleteMatchText.value = keyword
+		autocompleteMatchPosition.value = match.index + prefix.length - 1 + keyword.replace(search, '').length
+	})
+}
+
+function autocompleteSelect(value: any) {
+	if (!editorView) return
+	
+	const newValue = autocompleteResultType.value === 'assignees' ? value.username : value.title
+	const currentText = editorView.state.doc.textContent
+	const newText = currentText.substring(0, autocompleteMatchPosition.value + 1) +
+		newValue +
+		currentText.substring(autocompleteMatchPosition.value + autocompleteMatchText.value.length + 1)
+	
+	// Update by creating a transaction instead of recreating the state
+	const tr = editorView.state.tr.replaceWith(0, editorView.state.doc.content.size, 
+		editorView.state.schema.text(newText))
+	editorView.dispatch(tr)
+	
+	emit('update:filter', processContent(editorView))
+	filterValue.value = processContent(editorView)
+	
+	autocompleteResults.value = []
+}
+
+// The blur from the editor might happen before the replacement after autocomplete select was done.
+const blurDebounced = useDebounceFn(() => {}, 500)
+
+// Function to setup dropdown callbacks from the slot props
+function setupDropdownCallbacks(onFocusField: () => void, onKeydown: (event: KeyboardEvent) => void) {
+	dropdownOnFocusField.value = onFocusField
+	dropdownOnKeydown.value = onKeydown
+	return ''
+}
 </script>
 
 <template>
 	<div class="filter-input">
-		<div ref="editorRef" class="editor-content"></div>
+		<AutocompleteDropdown
+			:options="autocompleteResults"
+			@blur="editorRef?.blur()"
+			@update:modelValue="autocompleteSelect"
+		>
+			<template #input="{ onKeydown, onFocusField }">
+				<div 
+					ref="editorRef" 
+					class="editor-content"
+					:class="{'has-autocomplete-results': autocompleteResults.length > 0}"
+					@blur="blurDebounced"
+				></div>
+				<span v-show="false">{{ setupDropdownCallbacks(onFocusField, onKeydown) }}</span>
+			</template>
+			<template #result="{ item }">
+				<XLabel
+					v-if="autocompleteResultType === 'labels'"
+					:label="item"
+				/>
+				<User
+					v-else-if="autocompleteResultType === 'assignees'"
+					:user="item"
+					:avatar-size="25"
+				/>
+				<template v-else>
+					{{ item.title }}
+				</template>
+			</template>
+		</AutocompleteDropdown>
 		<DatepickerWithValues
 			class="filter-datepicker"
 			v-model="currentDatepickerValue"
@@ -148,9 +309,7 @@ function updateDateInQuery(newDate: string | Date | null) {
 .filter-input {
 	border: 1px solid var(--input-border-color);
 	border-radius: var(--input-radius);
-	padding: .5rem .75rem;
 	background: var(--white);
-	overflow: hidden;
 	transition: border-color 0.2s ease;
 
 	&:focus-within {
@@ -164,6 +323,7 @@ function updateDateInQuery(newDate: string | Date | null) {
 
 .editor-content {
 	line-height: 1.5;
+	padding: .5rem .75rem;
 }
 
 .ProseMirror {

@@ -58,7 +58,7 @@ export const FILTER_JOIN_OPERATOR = [
 	')',
 ]
 
-export const FILTER_OPERATORS_REGEX = '(&lt;|&gt;|&lt;=|&gt;=|=|!=|not in|in)'
+export const FILTER_OPERATORS_REGEX = '('+FILTER_OPERATORS.map(op => op.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')+')'
 
 export function hasFilterQuery(filter: string): boolean {
 	return FILTER_OPERATORS.find(o => filter.includes(o)) || false

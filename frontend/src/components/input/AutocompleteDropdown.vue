@@ -198,7 +198,7 @@ function onUpdateField(e) {
 		z-index: 100;
 		max-width: 100%;
 		min-width: 100%;
-		margin-top: -2px;
+		margin: -2px -1px;
 
 		button {
 			width: 100%;
