@@ -88,8 +88,10 @@ const filterValue = ref('')
 
 <style lang="scss">
 .filter-input {
-	border: 1px solid var(--grey-100);
-	border-radius: 0.375rem;
+	border: 1px solid var(--input-border-color);
+	border-radius: var(--input-radius);
+	padding: .5rem .75rem;
+	background: var(--white);
 	overflow: hidden;
 	transition: border-color 0.2s ease;
 
@@ -99,8 +101,6 @@ const filterValue = ref('')
 }
 
 .editor-content {
-	padding: 0.75rem;
-	font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
 	line-height: 1.5;
 }
 
@@ -117,20 +117,13 @@ const filterValue = ref('')
 	}
 
 	.value {
-		color: #059669;
 		border-radius: $radius;
 		padding: .125rem .25rem;
-		background: var(--grey-200);
+		background: var(--grey-100);
 	}
 
-	.logical {
-		color: #dc2626;
-		font-weight: 500;
-	}
-
-	.grouping {
+	.grouping, .logical {
 		color: var(--code-section);
-		font-weight: 600;
 	}
 
 	.user-value {
