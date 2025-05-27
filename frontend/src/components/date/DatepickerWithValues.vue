@@ -2,6 +2,7 @@
 	<div class="datepicker-with-range-container">
 		<Popup
 			:open="open"
+			:ignore-click-classes="ignoreClickClasses"
 			@update:open="(open) => !open && $emit('update:open', false)"
 		>
 			<template #content="{isOpen}">
@@ -94,8 +95,10 @@ import {useFlatpickrLanguage} from '@/helpers/useFlatpickrLanguage'
 const props = withDefaults(defineProps<{
 	modelValue: string | Date | null,
 	open?: boolean
+	ignoreClickClasses?: string[]
 }>(), {
 	open: false,
+	ignoreClickClasses: () => [],
 })
 
 const emit = defineEmits<{

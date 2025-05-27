@@ -1,13 +1,5 @@
 <script setup lang="ts">
-import {defineEmits, onMounted, ref} from 'vue'
-import {EditorState} from '@tiptap/pm/state'
-import {EditorView} from '@tiptap/pm/view'
-import {keymap} from '@tiptap/pm/keymap'
-import {baseKeymap} from '@tiptap/pm/commands'
-
-import {filterHighlighter} from './highlighter.ts'
-import {schema} from './schema.ts'
-import {placeholder} from '@/components/input/filter/placeholder.ts'
+import {onBeforeUnmount, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import DatepickerWithValues from '@/components/date/DatepickerWithValues.vue'
 import AutocompleteDropdown from '@/components/input/AutocompleteDropdown.vue'
@@ -28,15 +20,20 @@ import {
 } from '@/helpers/filters'
 import {useDebounceFn} from '@vueuse/core'
 
+// TipTap imports
+import {EditorContent, useEditor} from '@tiptap/vue-3'
+import {Extension} from '@tiptap/core'
+import StarterKit from '@tiptap/starter-kit'
+import {Placeholder} from '@tiptap/extension-placeholder'
+import {Plugin, PluginKey} from '@tiptap/pm/state'
+import {filterHighlighter} from '@/components/input/filter/highlighter.ts'
+
 const props = defineProps<{
 	projectId?: number,
 	modelValue?: string,
 }>()
 
 const emit = defineEmits(['update:modelValue'])
-const editorRef = ref<HTMLDivElement | null>(null)
-let editorView: EditorView | null = null
-
 const {t} = useI18n()
 
 // Services and stores for autocomplete
@@ -55,42 +52,89 @@ const autocompleteResults = ref<any[]>([])
 const dropdownOnFocusField = ref<(() => void) | null>(null)
 const dropdownOnKeydown = ref<((event: KeyboardEvent) => void) | null>(null)
 
-// Set up the editor state with our custom schema
-const createEditorState = (content = '') => {
+// Date picker functionality
+const currentOldDatepickerValue = ref('')
+const currentDatepickerValue = ref('')
+const currentDatepickerPos = ref(0)
+const datePickerPopupOpen = ref(false)
 
-	let nodes = [schema.node('paragraph')]
+// Create a custom extension for filter syntax highlighting
+const FilterHighlighter = Extension.create({
+	name: 'filterHighlighter',
 
-	if (content) {
-		content = transformFilterStringFromApi(
-			content || '',
-			labelId => labelStore.getLabelById(labelId)?.title || null,
-			projectId => projectStore.projects[projectId]?.title || null,
-		)
-		console.log('Filter content:', content)
-		nodes = [
-			schema.node('paragraph', null, [
-				schema.text(content),
-			]),
-		] 
-	}
-
-	return EditorState.create({
-		schema: schema,
-		plugins: [
-			keymap(baseKeymap),
+	addProseMirrorPlugins() {
+		return [
 			filterHighlighter,
-			placeholder(t('filters.query.placeholder')),
-		],
-		doc: schema.node('doc', null, nodes),
-	})
-}
+		]
+	},
+})
+
+// Create a custom extension for handling date clicks
+const DateClickHandler = Extension.create({
+	name: 'dateClickHandler',
+
+	addProseMirrorPlugins() {
+		return [
+			new Plugin({
+				key: new PluginKey('dateClickHandler'),
+				props: {
+					handleClick: (view, pos, event) => {
+						const target = event.target as HTMLElement
+						if (target.classList.contains('date-value')) {
+							event.preventDefault()
+							event.stopPropagation()
+
+							const dateValue = target.getAttribute('data-date-value') || ''
+							const position = parseInt(target.getAttribute('data-position') || '0')
+
+							currentOldDatepickerValue.value = dateValue
+							currentDatepickerValue.value = dateValue
+							currentDatepickerPos.value = position
+							datePickerPopupOpen.value = true
+
+							return true
+						}
+						return false
+					},
+				},
+			}),
+		]
+	},
+})
+
+// Initialize TipTap editor
+const editor = useEditor({
+	extensions: [
+		StarterKit.configure({
+			history: false, // We'll handle history ourselves
+		}),
+		Placeholder.configure({
+			placeholder: t('filters.query.placeholder'),
+		}),
+		FilterHighlighter,
+		DateClickHandler,
+		Extension.create({
+			name: 'enterHandler',
+			addKeyboardShortcuts() {
+				return {
+					'Enter': () => {
+						blurDebounced()
+						return true
+					},
+				}
+			},
+		}),
+	],
+	content: '',
+	onUpdate: ({editor}) => {
+		const content = editor.getText()
+		emit('update:modelValue', processContent(content))
+		handleFieldInput()
+	},
+})
 
 // Process the editor content to output snake_cased filter
-const processContent = (view: EditorView) => {
-	if (!view) return ''
-
-	const content = view.state.doc.textContent
-	
+const processContent = (content: string) => {
 	return transformFilterStringForApi(
 		content,
 		labelTitle => labelStore.getLabelByExactTitle(labelTitle)?.id || null,
@@ -101,94 +145,41 @@ const processContent = (view: EditorView) => {
 	)
 }
 
-// Initialize the editor when the component is mounted
-onMounted(() => {
-	if (!editorRef.value) return
+// Watch for changes to the model value
+watch(() => props.modelValue, (newValue) => {
+	if (!editor.value || !newValue) return
 
-	editorView = new EditorView(editorRef.value, {
-		state: createEditorState(props.modelValue),
-		attributes: {
-			spellcheck: 'false',
-		},
-		handleDOMEvents: {
-			click(view, event) {
-				const target = event.target as HTMLElement
-				if (target.classList.contains('date-value')) {
-					event.preventDefault()
-					event.stopPropagation()
-					
-					const dateValue = target.getAttribute('data-date-value') || ''
-					const position = parseInt(target.getAttribute('data-position') || '0')
-					
-					currentOldDatepickerValue.value = dateValue
-					currentDatepickerValue.value = dateValue
-					currentDatepickerPos.value = position
-					datePickerPopupOpen.value = true
-					
-					return true
-				}
-				return false
-			},
-			focus(view, event) {
-				if (dropdownOnFocusField.value) {
-					dropdownOnFocusField.value()
-				}
-				return false
-			},
-			keydown(view, event) {
-				if (dropdownOnKeydown.value) {
-					dropdownOnKeydown.value(event as KeyboardEvent)
-				}
-				return false
-			}
-		},
-		dispatchTransaction(transaction) {
-			if (!editorView) return
+	const content = transformFilterStringFromApi(
+		newValue,
+		labelId => labelStore.getLabelById(labelId)?.title || null,
+		projectId => projectStore.projects[projectId]?.title || null,
+	)
 
-			const newState = editorView.state.apply(transaction)
-			editorView.updateState(newState)
-
-			// When the document changes, emit the updated filter value and handle autocomplete
-			if (transaction.docChanged) {
-				emit('update:modelValue', processContent(editorView))
-				
-				// Handle autocomplete with the updated content
-				handleFieldInput()
-			}
-		},
-	})
-})
-
-// Date picker functionality
-const currentOldDatepickerValue = ref('')
-const currentDatepickerValue = ref('')
-const currentDatepickerPos = ref(0)
-const datePickerPopupOpen = ref(false)
+	// Only update if the content is different
+	if (editor.value.getText() !== content) {
+		editor.value.commands.setContent(content, false)
+	}
+}, {immediate: true})
 
 function updateDateInQuery(newDate: string | Date | null) {
-	if (!editorView || !newDate) return
-	
+	if (!editor.value || !newDate) return
+
 	const dateStr = typeof newDate === 'string' ? newDate : newDate.toISOString().split('T')[0]
-	const currentText = editorView.state.doc.textContent
+	const currentText = editor.value.getText()
 	const newText = currentText.replace(currentOldDatepickerValue.value, dateStr)
 	currentOldDatepickerValue.value = dateStr
-	
-	// Update by creating a transaction instead of recreating the state
-	const tr = editorView.state.tr.replaceWith(0, editorView.state.doc.content.size, 
-		editorView.state.schema.text(newText))
-	editorView.dispatch(tr)
-	
-	emit('update:modelValue', processContent(editorView))
+
+	// Update the editor content
+	editor.value.commands.setContent(newText, false)
+	emit('update:modelValue', processContent(newText))
 }
 
 // Autocomplete functionality
 function handleFieldInput() {
-	if (!editorView) return
-	
-	const state = editorView.state
-	const selection = state.selection
-	const cursorPosition = selection.from
-	const text = state.doc.textContent
+	if (!editor.value) return
+
+	const cursorPosition = editor.value.state.selection.from
+	const text = editor.value.getText()
 	const textUpToCursor = text.substring(0, cursorPosition)
 	autocompleteResults.value = []
 
@@ -201,7 +192,7 @@ function handleFieldInput() {
 		}
 
 		const [matched, prefix, operator, , keyword] = match
-		if(!keyword) {
+		if (!keyword) {
 			return
 		}
 
@@ -210,7 +201,7 @@ function handleFieldInput() {
 			const keywords = keyword.split(',')
 			search = keywords[keywords.length - 1].trim()
 		}
-		
+
 		if (LABEL_FIELDS.includes(field)) {
 			autocompleteResultType.value = 'labels'
 			autocompleteResults.value = labelStore.filterLabelsByQuery([], search)
@@ -235,26 +226,24 @@ function handleFieldInput() {
 }
 
 function autocompleteSelect(value: any) {
-	if (!editorView) return
-	
+	if (!editor.value) return
+
 	const newValue = autocompleteResultType.value === 'assignees' ? value.username : value.title
-	const currentText = editorView.state.doc.textContent
+	const currentText = editor.value.getText()
 	const newText = currentText.substring(0, autocompleteMatchPosition.value + 1) +
 		newValue +
 		currentText.substring(autocompleteMatchPosition.value + autocompleteMatchText.value.length + 1)
-	
-	// Update by creating a transaction instead of recreating the state
-	const tr = editorView.state.tr.replaceWith(0, editorView.state.doc.content.size, 
-		editorView.state.schema.text(newText))
-	editorView.dispatch(tr)
-	
-	emit('update:modelValue', processContent(editorView))
-	
+
+	// Update the editor content
+	editor.value.commands.setContent(newText, false)
+	emit('update:modelValue', processContent(newText))
+
 	autocompleteResults.value = []
 }
 
 // The blur from the editor might happen before the replacement after autocomplete select was done.
-const blurDebounced = useDebounceFn(() => {}, 500)
+const blurDebounced = useDebounceFn(() => {
+}, 500)
 
 // Function to setup dropdown callbacks from the slot props
 function setupDropdownCallbacks(onFocusField: () => void, onKeydown: (event: KeyboardEvent) => void) {
@@ -262,22 +251,32 @@ function setupDropdownCallbacks(onFocusField: () => void, onKeydown: (event: Key
 	dropdownOnKeydown.value = onKeydown
 	return ''
 }
+
+onBeforeUnmount(() => {
+	editor.value?.destroy()
+})
 </script>
 
 <template>
 	<div class="filter-input">
 		<AutocompleteDropdown
 			:options="autocompleteResults"
-			@blur="editorRef?.blur()"
+			@blur="editor?.commands.blur()"
 			@update:modelValue="autocompleteSelect"
 		>
 			<template #input="{ onKeydown, onFocusField }">
-				<div 
-					ref="editorRef" 
-					class="editor-content"
+				<div
+					class="editor-wrapper"
 					:class="{'has-autocomplete-results': autocompleteResults.length > 0}"
+					@keydown="onKeydown"
+					@focus="onFocusField"
 					@blur="blurDebounced"
-				></div>
+				>
+					<EditorContent
+						:editor="editor"
+						class="editor-content"
+					/>
+				</div>
 				<span v-show="false">{{ setupDropdownCallbacks(onFocusField, onKeydown) }}</span>
 			</template>
 			<template #result="{ item }">
@@ -299,6 +298,7 @@ function setupDropdownCallbacks(onFocusField: () => void, onKeydown: (event: Key
 			class="filter-datepicker"
 			v-model="currentDatepickerValue"
 			v-model:open="datePickerPopupOpen"
+			:ignore-click-classes="['date-value']"
 			@update:modelValue="updateDateInQuery"
 		/>
 	</div>
@@ -314,10 +314,14 @@ function setupDropdownCallbacks(onFocusField: () => void, onKeydown: (event: Key
 	&:focus-within {
 		border-color: var(--primary);
 	}
-	
+
 	.filter-datepicker {
 		position: absolute;
 	}
+}
+
+.editor-wrapper {
+	position: relative;
 }
 
 .editor-content {
@@ -390,10 +394,11 @@ function setupDropdownCallbacks(onFocusField: () => void, onKeydown: (event: Key
 		}
 	}
 
-	&[data-placeholder]::before {
+	p.is-editor-empty:first-child::before {
 		color: var(--grey-500);
-		position: absolute;
 		content: attr(data-placeholder);
+		float: left;
+		height: 0;
 		pointer-events: none;
 	}
 }
