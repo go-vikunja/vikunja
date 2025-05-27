@@ -56,7 +56,7 @@ function decorateDocument(doc: Node) {
 	// Create a regex to match field + operator + value patterns
 	// This will match anything coming after an operator
 	const fieldValueRegex = new RegExp(
-		`(${AVAILABLE_FILTER_FIELDS.join('|')})\\s*(${FILTER_OPERATORS.map(op => op.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\s*([^&|()]+?)(?=\\s*(?:${FILTER_JOIN_OPERATOR.slice(0, 2).map(op => op.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})|$)`,
+		`(${AVAILABLE_FILTER_FIELDS.join('|')})\\s*(${FILTER_OPERATORS.map(op => op.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\s*([^\\s&|()]+)`,
 		'gi',
 	)
 
@@ -144,10 +144,10 @@ function decorateDocument(doc: Node) {
 			const fieldLength = field.length
 			const operatorIndex = fullMatch.indexOf(operator, fieldLength)
 			const operatorEnd = operatorIndex + operator.length
-			const valueIndex = fullMatch.indexOf(value.trim(), operatorEnd)
+			const valueIndex = fullMatch.indexOf(value, operatorEnd)
 
 			const valueStart = match.index + valueIndex
-			const valueEnd = valueStart + value.trim().length
+			const valueEnd = valueStart + value.length
 
 			const from = findPosForIndex(doc, valueStart)
 			const to = findPosForIndex(doc, valueEnd)
