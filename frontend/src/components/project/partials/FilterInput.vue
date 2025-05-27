@@ -55,19 +55,19 @@ const id = ref(createRandomID())
 const filterSchema = new Schema({
 	nodes: {
 		doc: {
-			content: 'paragraph*'
+			content: 'paragraph*',
 		},
 		paragraph: {
 			content: 'text*',
 			group: 'block',
 			parseDOM: [{tag: 'p'}],
-			toDOM() { return ['p', 0] }
+			toDOM() { return ['p', 0] },
 		},
 		text: {
-			group: 'inline'
-		}
+			group: 'inline',
+		},
 	},
-	marks: {}
+	marks: {},
 })
 
 // Plugin for syntax highlighting
@@ -83,13 +83,13 @@ function createHighlightPlugin() {
 					return decorationSet.map(tr.mapping, tr.doc)
 				}
 				return createDecorations(tr.doc)
-			}
+			},
 		},
 		props: {
 			decorations(state) {
 				return this.getState(state)
-			}
-		}
+			},
+		},
 	})
 }
 
@@ -103,8 +103,8 @@ function createDecorations(doc: any) {
 			decorations.push(
 				Decoration.inline(from, to, {
 					class: className,
-					...attributes
-				})
+					...attributes,
+				}),
 			)
 		}
 	}
@@ -148,7 +148,7 @@ function createDecorations(doc: any) {
 					const valueEnd = valueStart + match[3].length
 					addDecoration(valueStart, valueEnd, 'filter-date-value', {
 						'data-date-value': match[3],
-						'data-position': valueStart.toString()
+						'data-position': valueStart.toString(),
 					})
 				}
 			}
@@ -206,7 +206,7 @@ onMounted(() => {
 		},
 		attributes: {
 			class: 'filter-prosemirror',
-			style: 'white-space: pre-wrap'
+			style: 'white-space: pre-wrap',
 		},
 		handleDOMEvents: {
 			click(_, event) {
@@ -230,8 +230,8 @@ onMounted(() => {
 			input() {
 				handleFieldInput()
 				return false
-			}
-		}
+			},
+		},
 	})
 
 })
@@ -244,8 +244,8 @@ onBeforeUnmount(() => {
 function createEditorState(content = '') {
 	const nodes = content ? [
 		filterSchema.node('paragraph', null, [
-			filterSchema.text(content)
-		])
+			filterSchema.text(content),
+		]),
 	] : [filterSchema.node('paragraph')]
 
 	return EditorState.create({
@@ -258,12 +258,12 @@ function createEditorState(content = '') {
 				'Enter': () => {
 					blurDebounced()
 					return true
-				}
+				},
 			}),
 			history(),
-			createHighlightPlugin()
+			createHighlightPlugin(),
 		],
-		doc: filterSchema.node('doc', null, nodes)
+		doc: filterSchema.node('doc', null, nodes),
 	})
 }
 

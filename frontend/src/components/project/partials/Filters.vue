@@ -4,17 +4,17 @@
 		:title="hasTitle ? $t('filters.title') : ''"
 		role="search"
 	>
-<!--		<FilterInput-->
-<!--			v-model="filterQuery"-->
-<!--			:project-id="projectId"-->
-	<!--			@blur="() => change('blur')"-->
-<!--		/>-->
+		<!--		<FilterInput-->
+		<!--			v-model="filterQuery"-->
+		<!--			:project-id="projectId"-->
+		<!--			@blur="() => change('blur')"-->
+		<!--		/>-->
 		<FilterInput
-			:project-id="projectId"
 			v-model="filterQuery"
+			:project-id="projectId"
 			update:modelValue="() => change('modelValue')"
 		/>
-			<pre>{{ filterQuery }}</pre>
+		<pre>{{ filterQuery }}</pre>
 		<div 
 			v-if="filterFromView"
 			class="tw-text-sm tw-mb-2"
