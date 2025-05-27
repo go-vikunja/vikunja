@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {onBeforeUnmount, ref, watch} from 'vue'
+import {onBeforeUnmount, onMounted, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import DatepickerWithValues from '@/components/date/DatepickerWithValues.vue'
 import {useLabelStore} from '@/stores/labels'
@@ -127,20 +127,28 @@ const processContent = (content: string) => {
 }
 
 // Watch for changes to the model value
-watch(() => props.modelValue, (newValue) => {
-	if (!editor.value || !newValue) return
+watch(
+	() => props.modelValue, 
+ 	value => setEditorContentFromModelValue(value), 
+	{immediate: true},
+)
 
-	const content = transformFilterStringFromApi(
+onMounted(() => setEditorContentFromModelValue(props.modelValue))
+
+function setEditorContentFromModelValue(newValue: string | undefined) {
+	if (!editor.value) return
+
+	const content = newValue ? transformFilterStringFromApi(
 		newValue,
 		labelId => labelStore.getLabelById(labelId)?.title || null,
 		projectId => projectStore.projects[projectId]?.title || null,
-	)
+	) : ''
 
 	// Only update if the content is different
 	if (editor.value.getText() !== content) {
 		editor.value.commands.setContent(content, false)
 	}
-}, {immediate: true})
+}
 
 function updateDateInQuery(newDate: string | Date | null) {
 	if (!editor.value || !newDate) return
@@ -159,7 +167,6 @@ function updateDateInQuery(newDate: string | Date | null) {
 // The blur from the editor might happen before the replacement after autocomplete select was done.
 const blurDebounced = useDebounceFn(() => {
 }, 500)
-
 
 onBeforeUnmount(() => {
 	editor.value?.destroy()
