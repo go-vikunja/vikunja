@@ -23,14 +23,17 @@ import {
 	FILTER_OPERATORS_REGEX,
 	LABEL_FIELDS,
 	PROJECT_FIELDS,
+	transformFilterStringForApi,
+	transformFilterStringFromApi,
 } from '@/helpers/filters'
 import {useDebounceFn} from '@vueuse/core'
 
 const props = defineProps<{
 	projectId?: number,
+	modelValue?: string,
 }>()
 
-const emit = defineEmits(['update:filter'])
+const emit = defineEmits(['update:modelValue'])
 const editorRef = ref<HTMLDivElement | null>(null)
 let editorView: EditorView | null = null
 
@@ -54,11 +57,22 @@ const dropdownOnKeydown = ref<((event: KeyboardEvent) => void) | null>(null)
 
 // Set up the editor state with our custom schema
 const createEditorState = (content = '') => {
-	const nodes = content ? [
-		schema.node('paragraph', null, [
-			schema.text(content),
-		]),
-	] : [schema.node('paragraph')]
+
+	let nodes = [schema.node('paragraph')]
+
+	if (content) {
+		content = transformFilterStringFromApi(
+			content || '',
+			labelId => labelStore.getLabelById(labelId)?.title || null,
+			projectId => projectStore.projects[projectId]?.title || null,
+		)
+		console.log('Filter content:', content)
+		nodes = [
+			schema.node('paragraph', null, [
+				schema.text(content),
+			]),
+		] 
+	}
 
 	return EditorState.create({
 		schema: schema,
@@ -76,23 +90,15 @@ const processContent = (view: EditorView) => {
 	if (!view) return ''
 
 	const content = view.state.doc.textContent
-
-	const fieldMap: Record<string, string> = {
-		'dueDate': 'due_date',
-		'percentDone': 'percent_done',
-		'startDate': 'start_date',
-		'endDate': 'end_date',
-		'doneAt': 'done_at',
-	}
-
-	// Simple regex-based transformation for field names
-	let processed = content
-	Object.entries(fieldMap).forEach(([camel, snake]) => {
-		const regex = new RegExp(`\\b${camel}\\b`, 'g')
-		processed = processed.replace(regex, snake)
-	})
-
-	return processed
+	
+	return transformFilterStringForApi(
+		content,
+		labelTitle => labelStore.getLabelByExactTitle(labelTitle)?.id || null,
+		projectTitle => {
+			const found = projectStore.findProjectByExactname(projectTitle)
+			return found?.id || null
+		},
+	)
 }
 
 // Initialize the editor when the component is mounted
@@ -100,7 +106,7 @@ onMounted(() => {
 	if (!editorRef.value) return
 
 	editorView = new EditorView(editorRef.value, {
-		state: createEditorState(),
+		state: createEditorState(props.modelValue),
 		attributes: {
 			spellcheck: 'false',
 		},
@@ -144,9 +150,7 @@ onMounted(() => {
 
 			// When the document changes, emit the updated filter value and handle autocomplete
 			if (transaction.docChanged) {
-				const snakeCaseFilter = processContent(editorView)
-				emit('update:filter', snakeCaseFilter)
-				filterValue.value = snakeCaseFilter
+				emit('update:modelValue', processContent(editorView))
 				
 				// Handle autocomplete with the updated content
 				handleFieldInput()
@@ -154,8 +158,6 @@ onMounted(() => {
 		},
 	})
 })
-
-const filterValue = ref('')
 
 // Date picker functionality
 const currentOldDatepickerValue = ref('')
@@ -176,8 +178,7 @@ function updateDateInQuery(newDate: string | Date | null) {
 		editorView.state.schema.text(newText))
 	editorView.dispatch(tr)
 	
-	emit('update:filter', processContent(editorView))
-	filterValue.value = processContent(editorView)
+	emit('update:modelValue', processContent(editorView))
 }
 
 // Autocomplete functionality
@@ -247,8 +248,7 @@ function autocompleteSelect(value: any) {
 		editorView.state.schema.text(newText))
 	editorView.dispatch(tr)
 	
-	emit('update:filter', processContent(editorView))
-	filterValue.value = processContent(editorView)
+	emit('update:modelValue', processContent(editorView))
 	
 	autocompleteResults.value = []
 }
@@ -302,7 +302,6 @@ function setupDropdownCallbacks(onFocusField: () => void, onKeydown: (event: Key
 			@update:modelValue="updateDateInQuery"
 		/>
 	</div>
-	<pre>{{ filterValue }}</pre>
 </template>
 
 <style lang="scss">

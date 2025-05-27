@@ -7,13 +7,14 @@
 <!--		<FilterInput-->
 <!--			v-model="filterQuery"-->
 <!--			:project-id="projectId"-->
-<!--			@update:modelValue="() => change('modelValue')"-->
-<!--			@blur="() => change('blur')"-->
+	<!--			@blur="() => change('blur')"-->
 <!--		/>-->
 		<FilterInput
 			:project-id="projectId"
+			v-model="filterQuery"
+			update:modelValue="() => change('modelValue')"
 		/>
-		
+			<pre>{{ filterQuery }}</pre>
 		<div 
 			v-if="filterFromView"
 			class="tw-text-sm tw-mb-2"
@@ -75,6 +76,7 @@ import {
 } from '@/helpers/filters'
 import FilterInputDocs from '@/components/project/partials/FilterInputDocs.vue'
 import FilterInput from '@/components/input/filter/FilterInput.vue'
+import { filter } from 'node_modules/cypress/types/bluebird'
 
 const props = withDefaults(defineProps<{
 	modelValue: TaskFilterParams,
@@ -129,11 +131,11 @@ watch(
 	() => props.modelValue,
 	(value: TaskFilterParams) => {
 		const val = {...value}
-		val.filter = transformFilterStringFromApi(
-			val?.filter || '',
-			labelId => labelStore.getLabelById(labelId)?.title || null,
-			projectId => projectStore.projects[projectId]?.title || null,
-		)
+		//val.filter = transformFilterStringFromApi(
+		//	val?.filter || '',
+		//	labelId => labelStore.getLabelById(labelId)?.title || null,
+		//	projectId => projectStore.projects[projectId]?.title || null,
+		//)
 		params.value = val
 	},
 	{
