@@ -2,19 +2,9 @@
 import {onBeforeUnmount, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import DatepickerWithValues from '@/components/date/DatepickerWithValues.vue'
-import AutocompleteDropdown from '@/components/input/AutocompleteDropdown.vue'
-import UserService from '@/services/user'
-import ProjectUserService from '@/services/projectUsers'
 import {useLabelStore} from '@/stores/labels'
 import {useProjectStore} from '@/stores/projects'
-import XLabel from '@/components/tasks/partials/Label.vue'
-import User from '@/components/misc/User.vue'
 import {
-	ASSIGNEE_FIELDS,
-	AUTOCOMPLETE_FIELDS,
-	FILTER_OPERATORS_REGEX,
-	LABEL_FIELDS,
-	PROJECT_FIELDS,
 	transformFilterStringForApi,
 	transformFilterStringFromApi,
 } from '@/helpers/filters'
@@ -27,6 +17,7 @@ import StarterKit from '@tiptap/starter-kit'
 import {Placeholder} from '@tiptap/extension-placeholder'
 import {Plugin, PluginKey} from '@tiptap/pm/state'
 import {filterHighlighter} from '@/components/input/filter/highlighter.ts'
+import FilterAutocomplete from '@/components/input/filter/FilterAutocomplete'
 
 const props = defineProps<{
 	projectId?: number,
@@ -37,20 +28,8 @@ const emit = defineEmits(['update:modelValue'])
 const {t} = useI18n()
 
 // Services and stores for autocomplete
-const userService = new UserService()
-const projectUserService = new ProjectUserService()
 const labelStore = useLabelStore()
 const projectStore = useProjectStore()
-
-// Autocomplete state
-const autocompleteMatchPosition = ref(0)
-const autocompleteMatchText = ref('')
-const autocompleteResultType = ref<'labels' | 'assignees' | 'projects' | null>(null)
-const autocompleteResults = ref<any[]>([])
-
-// Store references to the dropdown functions
-const dropdownOnFocusField = ref<(() => void) | null>(null)
-const dropdownOnKeydown = ref<((event: KeyboardEvent) => void) | null>(null)
 
 // Date picker functionality
 const currentOldDatepickerValue = ref('')
@@ -113,6 +92,9 @@ const editor = useEditor({
 		}),
 		FilterHighlighter,
 		DateClickHandler,
+		FilterAutocomplete.configure({
+			projectId: props.projectId,
+		}),
 		Extension.create({
 			name: 'enterHandler',
 			addKeyboardShortcuts() {
@@ -129,7 +111,6 @@ const editor = useEditor({
 	onUpdate: ({editor}) => {
 		const content = editor.getText()
 		emit('update:modelValue', processContent(content))
-		handleFieldInput()
 	},
 })
 
@@ -174,83 +155,11 @@ function updateDateInQuery(newDate: string | Date | null) {
 	emit('update:modelValue', processContent(newText))
 }
 
-// Autocomplete functionality
-function handleFieldInput() {
-	if (!editor.value) return
-
-	const cursorPosition = editor.value.state.selection.from
-	const text = editor.value.getText()
-	const textUpToCursor = text.substring(0, cursorPosition)
-	autocompleteResults.value = []
-
-	AUTOCOMPLETE_FIELDS.forEach(field => {
-		const pattern = new RegExp('(' + field + '\\s*' + FILTER_OPERATORS_REGEX + '\\s*)([\'"]?)([^\'"&|()]+\\1?)?$', 'ig')
-		const match = pattern.exec(textUpToCursor)
-
-		if (match === null) {
-			return
-		}
-
-		const [matched, prefix, operator, , keyword] = match
-		if (!keyword) {
-			return
-		}
-
-		let search = keyword
-		if (operator === 'in' || operator === '?=') {
-			const keywords = keyword.split(',')
-			search = keywords[keywords.length - 1].trim()
-		}
-
-		if (LABEL_FIELDS.includes(field)) {
-			autocompleteResultType.value = 'labels'
-			autocompleteResults.value = labelStore.filterLabelsByQuery([], search)
-		}
-		if (ASSIGNEE_FIELDS.includes(field)) {
-			autocompleteResultType.value = 'assignees'
-			if (props.projectId) {
-				projectUserService.getAll({projectId: props.projectId} as any, {s: search})
-					.then(users => autocompleteResults.value = users.length > 1 ? users : [])
-			} else {
-				userService.getAll({} as any, {s: search})
-					.then(users => autocompleteResults.value = users.length > 1 ? users : [])
-			}
-		}
-		if (!props.projectId && PROJECT_FIELDS.includes(field)) {
-			autocompleteResultType.value = 'projects'
-			autocompleteResults.value = projectStore.searchProject(search)
-		}
-		autocompleteMatchText.value = keyword
-		autocompleteMatchPosition.value = match.index + prefix.length - 1 + keyword.replace(search, '').length
-	})
-}
-
-function autocompleteSelect(value: any) {
-	if (!editor.value) return
-
-	const newValue = autocompleteResultType.value === 'assignees' ? value.username : value.title
-	const currentText = editor.value.getText()
-	const newText = currentText.substring(0, autocompleteMatchPosition.value + 1) +
-		newValue +
-		currentText.substring(autocompleteMatchPosition.value + autocompleteMatchText.value.length + 1)
-
-	// Update the editor content
-	editor.value.commands.setContent(newText, false)
-	emit('update:modelValue', processContent(newText))
-
-	autocompleteResults.value = []
-}
 
 // The blur from the editor might happen before the replacement after autocomplete select was done.
 const blurDebounced = useDebounceFn(() => {
 }, 500)
 
-// Function to setup dropdown callbacks from the slot props
-function setupDropdownCallbacks(onFocusField: () => void, onKeydown: (event: KeyboardEvent) => void) {
-	dropdownOnFocusField.value = onFocusField
-	dropdownOnKeydown.value = onKeydown
-	return ''
-}
 
 onBeforeUnmount(() => {
 	editor.value?.destroy()
@@ -259,41 +168,15 @@ onBeforeUnmount(() => {
 
 <template>
 	<div class="filter-input">
-		<AutocompleteDropdown
-			:options="autocompleteResults"
-			@blur="editor?.commands.blur()"
-			@update:modelValue="autocompleteSelect"
+		<div
+			class="editor-wrapper"
+			@blur="blurDebounced"
 		>
-			<template #input="{ onKeydown, onFocusField }">
-				<div
-					class="editor-wrapper"
-					:class="{'has-autocomplete-results': autocompleteResults.length > 0}"
-					@keydown="onKeydown"
-					@focus="onFocusField"
-					@blur="blurDebounced"
-				>
-					<EditorContent
-						:editor="editor"
-						class="editor-content"
-					/>
-				</div>
-				<span v-show="false">{{ setupDropdownCallbacks(onFocusField, onKeydown) }}</span>
-			</template>
-			<template #result="{ item }">
-				<XLabel
-					v-if="autocompleteResultType === 'labels'"
-					:label="item"
-				/>
-				<User
-					v-else-if="autocompleteResultType === 'assignees'"
-					:user="item"
-					:avatar-size="25"
-				/>
-				<template v-else>
-					{{ item.title }}
-				</template>
-			</template>
-		</AutocompleteDropdown>
+			<EditorContent
+				:editor="editor"
+				class="editor-content"
+			/>
+		</div>
 		<DatepickerWithValues
 			class="filter-datepicker"
 			v-model="currentDatepickerValue"
