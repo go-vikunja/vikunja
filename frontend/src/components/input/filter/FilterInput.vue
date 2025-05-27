@@ -178,9 +178,9 @@ onBeforeUnmount(() => {
 			/>
 		</div>
 		<DatepickerWithValues
-			class="filter-datepicker"
 			v-model="currentDatepickerValue"
 			v-model:open="datePickerPopupOpen"
+			class="filter-datepicker"
 			:ignore-click-classes="['date-value']"
 			@update:modelValue="updateDateInQuery"
 		/>
