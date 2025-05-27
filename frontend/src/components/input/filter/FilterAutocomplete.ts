@@ -150,7 +150,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 							const currentText = view.state.doc.textContent
 							
 							// Find the search term and replace it
-							const searchStart = currentText.lastIndexOf(item.context.search, from)
+							const searchStart = currentText.lastIndexOf(item.context.search, from) + 1
 							if (searchStart !== -1) {
 								const transaction = view.state.tr.replaceWith(
 									searchStart,
