@@ -1,28 +1,28 @@
 <template>
-	<div class="filter-commands">
+	<div class="filter-autocompletes">
 		<template v-if="items.length">
 			<button
 				v-for="(item, index) in items"
 				:key="`${item.fieldType}-${item.id}`"
-				class="filter-command"
+				class="filter-autocomplete"
 				:class="{ 'is-selected': index === selectedIndex }"
 				@click="selectItem(index)"
 			>
-				<div class="filter-command__content">
+				<div class="filter-autocomplete__content">
 					<XLabel
 						v-if="item.fieldType === 'labels'"
 						:label="item.item"
-						class="filter-command__label"
+						class="filter-autocomplete__label"
 					/>
 					<User
 						v-else-if="item.fieldType === 'assignees'"
 						:user="item.item"
 						:avatar-size="20"
-						class="filter-command__user"
+						class="filter-autocomplete__user"
 					/>
 					<div
 						v-else
-						class="filter-command__project"
+						class="filter-autocomplete__project"
 					>
 						{{ item.title }}
 					</div>
@@ -31,7 +31,7 @@
 		</template>
 		<div
 			v-else
-			class="filter-command no-results"
+			class="filter-autocomplete no-results"
 		>
 			No results
 		</div>
@@ -115,8 +115,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.filter-commands {
-	padding: 0.25rem;
+.filter-autocompletes {
 	position: relative;
 	border-radius: $radius;
 	background: var(--white);
@@ -129,7 +128,7 @@ export default {
 	overflow-y: auto;
 }
 
-.filter-command {
+.filter-autocomplete {
 	display: flex;
 	align-items: center;
 	margin: 0;
@@ -157,21 +156,21 @@ export default {
 	}
 }
 
-.filter-command__content {
+.filter-autocomplete__content {
 	display: flex;
 	align-items: center;
 	width: 100%;
 }
 
-.filter-command__label {
+.filter-autocomplete__label {
 	font-size: 0.75rem;
 }
 
-.filter-command__user {
+.filter-autocomplete__user {
 	font-size: 0.875rem;
 }
 
-.filter-command__project {
+.filter-autocomplete__project {
 	color: var(--grey-800);
 	font-weight: 500;
 }

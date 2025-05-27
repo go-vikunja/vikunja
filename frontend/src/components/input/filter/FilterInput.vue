@@ -234,7 +234,6 @@ onBeforeUnmount(() => {
 	.label-value {
 		border-radius: $radius;
 		padding: .125rem .25rem;
-		font-weight: 500;
 	}
 
 	.date-value {

@@ -193,6 +193,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 					interactive: true,
 					trigger: 'manual',
 					placement: 'bottom-start',
+					offset: [0, 25],
 				})[0]
 			} else {
 				popup.show()
