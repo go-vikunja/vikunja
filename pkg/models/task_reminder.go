@@ -308,7 +308,7 @@ func RegisterReminderCron() {
 	}
 }
 
-func RegisterReminderWebhooks() {
+func RegisterReminderCronWebhooks() {
 	if !config.WebhooksEnabled.GetBool() {
 		return
 	}

@@ -97,9 +97,9 @@ func FullInit() {
 	// Start the cron
 	cron.Init()
 	models.RegisterReminderCron()
-	models.RegisterReminderWebhooks()
+	models.RegisterReminderCronWebhooks()
 	models.RegisterOverdueReminderCron()
-	models.RegisterOverdueReminderWebhooks()
+	models.RegisterOverdueReminderCronWebhooks()
 	models.RegisterUserDeletionCron()
 	models.RegisterOldExportCleanupCron()
 	models.RegisterAddTaskToFilterViewCron()

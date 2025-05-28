@@ -179,7 +179,7 @@ func RegisterOverdueReminderCron() {
 	}
 }
 
-func RegisterOverdueReminderWebhooks() {
+func RegisterOverdueReminderCronWebhooks() {
 	if !config.WebhooksEnabled.GetBool() {
 		return
 	}
