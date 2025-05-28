@@ -5,6 +5,7 @@ import router from '@/router'
 import TaskService from '@/services/task'
 import TaskAssigneeService from '@/services/taskAssignee'
 import LabelTaskService from '@/services/labelTask'
+import TaskDuplicateService from '@/services/taskDuplicate'
 
 import {cleanupItemText, parseTaskText, PREFIXES} from '@/modules/parseTaskText'
 
@@ -32,6 +33,7 @@ import TaskCollectionService, {type TaskFilterParams} from '@/services/taskColle
 import {getRandomColorHex} from '@/helpers/color/randomColor'
 import {REPEAT_TYPES} from '@/types/IRepeatAfter'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
+import TaskDuplicateModel from '@/models/taskDuplicateModel'
 
 interface MatchedAssignee extends IUser {
 	match: string,
@@ -494,6 +496,23 @@ export const useTaskStore = defineStore('task', () => {
 		}
 	}
 	
+	async function duplicateTask(task : ITask) : Promise<ITask | null> {
+		const cancel = setModuleLoading(setIsLoading)
+		const taskDuplicateService = new TaskDuplicateService()
+
+		const model = new TaskDuplicateModel({
+			taskId: task.id,
+			projectId: task.projectId,
+		})
+
+		try{
+			const copy = await taskDuplicateService.create(model)
+			return copy.duplicatedTask
+		} finally {
+			cancel()
+		}
+	}
+
 	async function setCoverImage(task: ITask, attachment: IAttachment | null) {
 		return update({
 			...task,
@@ -529,6 +548,7 @@ export const useTaskStore = defineStore('task', () => {
 		removeLabel,
 		addLabelsToTask,
 		createNewTask,
+		duplicateTask,
 		setCoverImage,
 		findProjectId,
 		ensureLabelsExist,
