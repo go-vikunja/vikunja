@@ -595,6 +595,8 @@ func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *U
 			"status",
 			"name",
 			"email_reminders_enabled",
+			"webhook_reminders_enabled",
+			"webhook_reminder_url",
 			"discoverable_by_name",
 			"discoverable_by_email",
 			"overdue_tasks_reminders_enabled",

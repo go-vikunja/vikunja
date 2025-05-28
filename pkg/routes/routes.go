@@ -379,6 +379,13 @@ func registerAPIRoutes(a *echo.Group) {
 	u.GET("/settings/token/caldav", apiv1.GetCaldavTokens)
 	u.DELETE("/settings/token/caldav/:id", apiv1.DeleteCaldavToken)
 
+	// Webhook settings
+	u.GET("/settings/webhooks", apiv1.GetUserWebhookSettings)
+	u.GET("/settings/webhooks/types", apiv1.GetAvailableWebhookNotificationTypes)
+	u.GET("/settings/webhooks/:type", apiv1.GetUserWebhookSettingByType)
+	u.PUT("/settings/webhooks/:type", apiv1.CreateOrUpdateUserWebhookSetting)
+	u.DELETE("/settings/webhooks/:type", apiv1.DeleteUserWebhookSetting)
+
 	if config.ServiceEnableTotp.GetBool() {
 		u.GET("/settings/totp", apiv1.UserTOTP)
 		u.POST("/settings/totp/enroll", apiv1.UserTOTPEnroll)
