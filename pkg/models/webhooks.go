@@ -319,3 +319,9 @@ func (w *Webhook) sendWebhookPayload(p *WebhookPayload) (err error) {
 	log.Debugf("Sent webhook payload for webhook %d for event %s", w.ID, p.EventName)
 	return
 }
+
+type WebhookPayload struct {
+	EventName string      `json:"event_name"`
+	Time      time.Time   `json:"time"`
+	Data      interface{} `json:"data"`
+}
