@@ -19,6 +19,7 @@ export interface IFrontendSettings {
 export interface IUserSettings extends IAbstract {
 	name: string
 	emailRemindersEnabled: boolean
+	webhookRemindersEnabled: boolean
 	discoverableByName: boolean
 	discoverableByEmail: boolean
 	overdueTasksRemindersEnabled: boolean

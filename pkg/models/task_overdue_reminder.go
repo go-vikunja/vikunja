@@ -31,7 +31,7 @@ import (
 	"xorm.io/xorm"
 )
 
-func getUndoneOverdueTasks(s *xorm.Session, now time.Time) (usersWithTasks map[int64]*userWithTasks, err error) {
+func getUndoneOverdueTasks(s *xorm.Session, now time.Time, cond builder.Cond) (usersWithTasks map[int64]*userWithTasks, err error) {
 	now = utils.GetTimeWithoutSeconds(now)
 	nextMinute := now.Add(1 * time.Minute)
 
@@ -54,7 +54,7 @@ func getUndoneOverdueTasks(s *xorm.Session, now time.Time) (usersWithTasks map[i
 		taskIDs = append(taskIDs, task.ID)
 	}
 
-	users, err := getTaskUsersForTasks(s, taskIDs, builder.Eq{"users.overdue_tasks_reminders_enabled": true})
+	users, err := getTaskUsersForTasks(s, taskIDs, cond)
 	if err != nil {
 		return
 	}
@@ -124,7 +124,7 @@ func RegisterOverdueReminderCron() {
 		defer s.Close()
 
 		now := time.Now()
-		uts, err := getUndoneOverdueTasks(s, now)
+		uts, err := getUndoneOverdueTasks(s, now, builder.Eq{"users.overdue_tasks_reminders_enabled": true})
 		if err != nil {
 			log.Errorf("[Undone Overdue Tasks Reminder] Could not get undone overdue tasks in the next minute: %s", err)
 			return
@@ -160,6 +160,7 @@ func RegisterOverdueReminderCron() {
 						User:    ut.user,
 						Task:    t,
 						Project: projects[t.ProjectID],
+						Overdue: true,
 					}
 				}
 			}
@@ -171,6 +172,74 @@ func RegisterOverdueReminderCron() {
 			}
 
 			log.Debugf("[Undone Overdue Tasks Reminder] Sent reminder email for %d tasks to user %d", len(ut.tasks), ut.user.ID)
+		}
+	})
+	if err != nil {
+		log.Fatalf("Could not register undone overdue tasks reminder cron: %s", err)
+	}
+}
+
+func RegisterOverdueReminderWebhooks() {
+	if !config.WebhooksEnabled.GetBool() {
+		return
+	}
+
+	err := cron.Schedule("* * * * *", func() {
+		s := db.NewSession()
+		defer s.Close()
+
+		now := time.Now()
+		uts, err := getUndoneOverdueTasks(s, now, builder.Eq{"users.webhook_reminders_enabled": true})
+		if err != nil {
+			log.Errorf("[Undone Overdue Tasks Reminder - Webhook] Could not get undone overdue tasks in the next minute: %s", err)
+			return
+		}
+
+		log.Debugf("[Undone Overdue Tasks Reminder - Webhook] Sending reminders to %d users", len(uts))
+
+		taskIDs := []int64{}
+		for _, ut := range uts {
+			for _, t := range ut.tasks {
+				taskIDs = append(taskIDs, t.ID)
+			}
+		}
+
+		projects, err := GetProjectsMapSimpleByTaskIDs(s, taskIDs)
+		if err != nil {
+			log.Errorf("[Undone Overdue Tasks Reminder - Webhook] Could not get projects for tasks: %s", err)
+			return
+		}
+
+		for _, ut := range uts {
+			var n notifications.Notification = &UndoneTasksOverdueNotification{
+				User:     ut.user,
+				Tasks:    ut.tasks,
+				Projects: projects,
+			}
+
+			if len(ut.tasks) == 1 {
+				// We know there's only one entry in the map so this is actually O(1) and we can use it to get the
+				// first entry without knowing the key of it.
+				for _, t := range ut.tasks {
+					n = &UndoneTaskOverdueNotification{
+						User:    ut.user,
+						Task:    t,
+						Project: projects[t.ProjectID],
+						Overdue: true,
+					}
+				}
+			}
+
+			err = notifications.NotifyListener(ut.user, n, &WebhookListener{
+				EventName: "notification.reminder_overdue",
+			})
+
+			if err != nil {
+				log.Errorf("[Undone Overdue Tasks Reminder - Webhook] Could not notify user %d: %s", ut.user.ID, err)
+				return
+			}
+
+			log.Debugf("[Undone Overdue Tasks Reminder - Webhook] Sent reminder email for %d tasks to user %d", len(ut.tasks), ut.user.ID)
 		}
 	})
 	if err != nil {

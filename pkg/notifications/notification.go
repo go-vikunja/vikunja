@@ -20,7 +20,11 @@ import (
 	"encoding/json"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
+
+	"github.com/ThreeDotsLabs/watermill"
+	"github.com/ThreeDotsLabs/watermill/message"
 )
 
 // Notification is a notification which can be sent via mail or db.
@@ -118,4 +122,25 @@ func notifyDB(notifiable Notifiable, notification Notification) (err error) {
 	}
 
 	return s.Commit()
+}
+
+func NotifyListener(notifiable Notifiable, notification Notification, listener events.Listener) (err error) {
+	if isUnderTest {
+		sentTestNotifications = append(sentTestNotifications, notification)
+		return nil
+	}
+
+	should, err := notifiable.ShouldNotify()
+	if err != nil || !should {
+		log.Debugf("Not notifying user %d because they are disabled", notifiable.RouteForDB())
+		return err
+	}
+
+	content, err := json.Marshal(notification)
+	if err != nil {
+		return err
+	}
+
+	msg := message.NewMessage(watermill.NewUUID(), content)
+	return listener.Handle(msg)
 }

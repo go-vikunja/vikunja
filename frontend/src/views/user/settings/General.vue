@@ -99,6 +99,15 @@
 		<div class="field">
 			<label class="checkbox">
 				<input
+					v-model="settings.webhookRemindersEnabled"
+					type="checkbox"
+				>
+				{{ $t('user.settings.general.webhookReminders') }}
+			</label>
+		</div>
+		<div class="field">
+			<label class="checkbox">
+				<input
 					v-model="settings.discoverableByName"
 					type="checkbox"
 				>
