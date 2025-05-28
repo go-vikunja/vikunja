@@ -28,6 +28,7 @@ export interface ConfigState {
 	userDeletionEnabled: boolean,
 	taskCommentsEnabled: boolean,
 	demoModeEnabled: boolean,
+	webhooksEnabled: boolean,
 	auth: {
 		local: {
 			enabled: boolean,
@@ -66,6 +67,7 @@ export const useConfigStore = defineStore('config', () => {
 		userDeletionEnabled: true,
 		taskCommentsEnabled: true,
 		demoModeEnabled: false,
+		webhooksEnabled: false,
 		auth: {
 			local: {
 				enabled: true,

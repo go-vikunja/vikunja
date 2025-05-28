@@ -45,9 +45,10 @@ func getThreadID(taskID int64) string {
 
 // ReminderDueNotification represents a ReminderDueNotification notification
 type ReminderDueNotification struct {
-	User    *user.User `json:"user,omitempty"`
-	Task    *Task      `json:"task"`
-	Project *Project   `json:"project"`
+	User         *user.User    `json:"user,omitempty"`
+	Task         *Task         `json:"task"`
+	Project      *Project      `json:"project"`
+	TaskReminder *TaskReminder `json:"reminder"`
 }
 
 // ToMail returns the mail notification for ReminderDueNotification
@@ -78,6 +79,25 @@ func (n *ReminderDueNotification) Name() string {
 // ThreadID returns the thread ID for email threading
 func (n *ReminderDueNotification) ThreadID() string {
 	return getThreadID(n.Task.ID)
+}
+
+// ToWebhook returns the webhook payload for ReminderDueNotification
+func (n *ReminderDueNotification) ToWebhook() *notifications.WebhookPayload {
+	return &notifications.WebhookPayload{
+		EventName: "notification.reminder",
+		Time:      time.Now(),
+		Data:      n,
+	}
+}
+
+// WebhookType returns the notification type for webhook settings lookup
+func (n *ReminderDueNotification) WebhookType() string {
+	return "task.reminder"
+}
+
+// ShouldSendMail returns whether email should be sent for this notification
+func (n *ReminderDueNotification) ShouldSendMail() bool {
+	return n.User.EmailRemindersEnabled
 }
 
 // TaskCommentNotification represents a TaskCommentNotification notification
@@ -264,9 +284,10 @@ func getOverdueSinceString(until time.Duration, language string) (overdueSince s
 
 // UndoneTaskOverdueNotification represents a UndoneTaskOverdueNotification notification
 type UndoneTaskOverdueNotification struct {
-	User    *user.User
-	Task    *Task
-	Project *Project
+	User    *user.User `json:"user"`
+	Task    *Task      `json:"task"`
+	Project *Project   `json:"project"`
+	Overdue bool       `json:"overdue"`
 }
 
 // ToMail returns the mail notification for UndoneTaskOverdueNotification
@@ -294,6 +315,25 @@ func (n *UndoneTaskOverdueNotification) Name() string {
 // ThreadID returns the thread ID for email threading
 func (n *UndoneTaskOverdueNotification) ThreadID() string {
 	return getThreadID(n.Task.ID)
+}
+
+// ToWebhook returns the webhook payload for UndoneTaskOverdueNotification
+func (n *UndoneTaskOverdueNotification) ToWebhook() *notifications.WebhookPayload {
+	return &notifications.WebhookPayload{
+		EventName: "notification.reminder_overdue",
+		Time:      time.Now(),
+		Data:      n,
+	}
+}
+
+// WebhookType returns the notification type for webhook settings lookup
+func (n *UndoneTaskOverdueNotification) WebhookType() string {
+	return "task.undone.overdue"
+}
+
+// ShouldSendMail returns whether email should be sent for this notification
+func (n *UndoneTaskOverdueNotification) ShouldSendMail() bool {
+	return n.User.OverdueTasksRemindersEnabled
 }
 
 // UndoneTasksOverdueNotification represents a UndoneTasksOverdueNotification notification
@@ -339,6 +379,25 @@ func (n *UndoneTasksOverdueNotification) ToDB() interface{} {
 // Name returns the name of the notification
 func (n *UndoneTasksOverdueNotification) Name() string {
 	return "task.undone.overdue"
+}
+
+// ToWebhook returns the webhook payload for UndoneTasksOverdueNotification
+func (n *UndoneTasksOverdueNotification) ToWebhook() *notifications.WebhookPayload {
+	return &notifications.WebhookPayload{
+		EventName: "notification.reminder_overdue",
+		Time:      time.Now(),
+		Data:      n,
+	}
+}
+
+// WebhookType returns the notification type for webhook settings lookup
+func (n *UndoneTasksOverdueNotification) WebhookType() string {
+	return "task.undone.overdue"
+}
+
+// ShouldSendMail returns whether email should be sent for this notification
+func (n *UndoneTasksOverdueNotification) ShouldSendMail() bool {
+	return n.User.OverdueTasksRemindersEnabled
 }
 
 // UserMentionedInTaskNotification represents a UserMentionedInTaskNotification notification
