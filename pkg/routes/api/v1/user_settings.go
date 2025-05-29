@@ -42,6 +42,8 @@ type UserSettings struct {
 	Name string `json:"name"`
 	// If enabled, sends email reminders of tasks to the user.
 	EmailRemindersEnabled bool `json:"email_reminders_enabled"`
+	// If enabled, sends reminders of tasks to the user using webhook.
+	WebhookRemindersEnabled bool `json:"webhook_reminders_enabled"`
 	// If true, this user can be found by their name or parts of it when searching for it.
 	DiscoverableByName bool `json:"discoverable_by_name"`
 	// If true, the user can be found when searching for their exact email.
@@ -192,6 +194,7 @@ func UpdateGeneralUserSettings(c echo.Context) error {
 
 	user.Name = us.Name
 	user.EmailRemindersEnabled = us.EmailRemindersEnabled
+	user.WebhookRemindersEnabled = us.WebhookRemindersEnabled
 	user.DiscoverableByEmail = us.DiscoverableByEmail
 	user.DiscoverableByName = us.DiscoverableByName
 	user.OverdueTasksRemindersEnabled = us.OverdueTasksRemindersEnabled

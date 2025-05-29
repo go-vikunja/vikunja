@@ -30,9 +30,10 @@ import (
 
 // ReminderDueNotification represents a ReminderDueNotification notification
 type ReminderDueNotification struct {
-	User    *user.User `json:"user,omitempty"`
-	Task    *Task      `json:"task"`
-	Project *Project   `json:"project"`
+	User         *user.User    `json:"user,omitempty"`
+	Task         *Task         `json:"task"`
+	Project      *Project      `json:"project"`
+	TaskReminder *TaskReminder `json:"reminder"`
 }
 
 // ToMail returns the mail notification for ReminderDueNotification
@@ -218,9 +219,10 @@ func getOverdueSinceString(until time.Duration, language string) (overdueSince s
 
 // UndoneTaskOverdueNotification represents a UndoneTaskOverdueNotification notification
 type UndoneTaskOverdueNotification struct {
-	User    *user.User
-	Task    *Task
-	Project *Project
+	User    *user.User `json:"user"`
+	Task    *Task      `json:"task"`
+	Project *Project   `json:"project"`
+	Overdue bool       `json:"overdue"`
 }
 
 // ToMail returns the mail notification for UndoneTaskOverdueNotification
