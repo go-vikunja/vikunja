@@ -107,7 +107,7 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 
 		this.labels = this.labels
 			.map(l => new LabelModel(l))
-			.sort((f, s) => f.title > s.title ? 1 : -1)
+			.sort((a, b) => a.title.localeCompare(b.title))
 
 		// Parse the assignees into user models
 		this.assignees = this.assignees.map(a => {
