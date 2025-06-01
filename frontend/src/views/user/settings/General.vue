@@ -310,7 +310,7 @@ function useAvailableTimezones(settingsRef: Ref<IUserSettings>) {
 			if (r.data) {
 				// Transform timezones into objects with value/label pairs
 				availableTimezones.value = r.data
-					.sort()
+					.sort((a, b) => a.localeCompare(b))
 					.map((tz: string) => ({
 						value: tz,
 						label: tz.replace(/_/g, ' '),

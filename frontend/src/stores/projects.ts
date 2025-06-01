@@ -238,7 +238,7 @@ export const useProjectStore = defineStore('project', () => {
 		} else {
 			views.push(view)
 		}
-		views.sort((a, b) => a.position < b.position ? -1 : 1)
+		views.sort((a, b) => a.position - b.position)
 		
 		setProject({
 			...projects.value[view.projectId],
