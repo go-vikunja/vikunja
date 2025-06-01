@@ -79,7 +79,7 @@
 		/>
 		<template v-else>
 			<nav
-				v-if="favoriteProjects"
+				v-if="favoriteProjects.length"
 				class="menu"
 			>
 				<ProjectsNavigation
@@ -90,7 +90,7 @@
 			</nav>
 			
 			<nav
-				v-if="savedFilterProjects"
+				v-if="savedFilterProjects.length"
 				class="menu"
 			>
 				<ProjectsNavigation
