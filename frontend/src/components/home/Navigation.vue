@@ -105,7 +105,6 @@
 					:model-value="projects"
 					:can-edit-order="true"
 					:can-collapse="true"
-					:level="1"
 				/>
 			</nav>
 		</template>
