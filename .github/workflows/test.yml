@@ -291,7 +291,7 @@ jobs:
       matrix:
         containers: [1, 2, 3, 4, 5]
     container:
-      image: cypress/browsers:latest@sha256:ceabc128d2496a75dde533361b240f8727e9dbc561cffc06b3632007cc804086
+      image: cypress/browsers:latest@sha256:d74c0a3c1144267792d1a26f1ce66e6edc20155309d64df6d0ec53b8ad0925ea
       options: --user 1001
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
