@@ -15,7 +15,7 @@ context('Password Reset', () => {
 		const token: TokenAttributes = tokenArray[0] as TokenAttributes
 
 		cy.visit(`/?userPasswordReset=${token.token}`)
-		cy.url().should('include', `/password-reset?token=${token.token}`)
+		cy.url().should('include', `/password-reset?userPasswordReset=${token.token}`)
 
 		const newPassword = 'newSecurePassword123'
 		cy.get('input[id=password]').type(newPassword)
@@ -34,7 +34,7 @@ context('Password Reset', () => {
 
 	it('Should show an error for an invalid token', () => {
 		cy.visit('/?userPasswordReset=invalidtoken123')
-		cy.url().should('include', '/password-reset?token=invalidtoken123')
+		cy.url().should('include', '/password-reset?userPasswordReset=invalidtoken123')
 
 		// Attempt to reset password
 		const newPassword = 'newSecurePassword123'

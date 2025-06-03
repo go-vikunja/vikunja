@@ -68,7 +68,6 @@ export const useAuthStore = defineStore('auth', () => {
 	const authenticated = ref(false)
 	const isLinkShareAuth = ref(false)
 	const needsTotpPasscode = ref(false)
-	const passwordResetToken = ref<string | null>(null)
 	
 	const info = ref<IUser | null>(null)
 	const avatarUrl = ref('')
@@ -148,10 +147,6 @@ export const useAuthStore = defineStore('auth', () => {
 
 	function setNeedsTotpPasscode(newNeedsTotpPasscode: boolean) {
 		needsTotpPasscode.value = newNeedsTotpPasscode
-	}
-
-	function setPasswordResetToken(token: string | null) {
-		passwordResetToken.value = token
 	}
 
 	function reloadAvatar() {
@@ -449,7 +444,6 @@ export const useAuthStore = defineStore('auth', () => {
 		authenticated: readonly(authenticated),
 		isLinkShareAuth: readonly(isLinkShareAuth),
 		needsTotpPasscode: readonly(needsTotpPasscode),
-		passwordResetToken: readonly(passwordResetToken),
 
 		info: readonly(info),
 		avatarUrl: readonly(avatarUrl),
@@ -472,7 +466,6 @@ export const useAuthStore = defineStore('auth', () => {
 		setAuthenticated,
 		setIsLinkShareAuth,
 		setNeedsTotpPasscode,
-		setPasswordResetToken,
 
 		reloadAvatar,
 		updateLastUserRefresh,

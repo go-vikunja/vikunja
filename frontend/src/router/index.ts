@@ -8,7 +8,6 @@ import {getNextWeekDate} from '@/helpers/time/getNextWeekDate'
 import {LINK_SHARE_HASH_PREFIX} from '@/constants/linkShareHash'
 
 import {useAuthStore} from '@/stores/auth'
-import {useBaseStore} from '@/stores/base'
 
 import Login from '@/views/user/Login.vue'
 import Register from '@/views/user/Register.vue'
@@ -396,13 +395,14 @@ export async function getAuthForRoute(to: RouteLocation, authStore) {
 	
 	// Check if password reset token is in query params
 	const resetToken = to.query.userPasswordReset as string | undefined
-	if (resetToken) {
-		authStore.setPasswordResetToken(resetToken)
-	}
 	
 	// Redirect to password reset page if we have a token stored
-	if (authStore.passwordResetToken && to.name !== 'user.password-reset.reset') {
-		return {name: 'user.password-reset.reset', query: { token: authStore.passwordResetToken }}
+	if (resetToken && to.name !== 'user.password-reset.reset') {
+		return {name: 'user.password-reset.reset', query: { userPasswordReset: resetToken }}
+	}
+
+	if (typeof resetToken === 'undefined' && to.name === 'user.password-reset.reset') {
+		return {name: 'user.login'}
 	}
 
 	// Check if the route the user wants to go to is a route which needs authentication. We use this to 
@@ -415,21 +415,12 @@ export async function getAuthForRoute(to: RouteLocation, authStore) {
 			'link-share.auth',
 			'openid.auth',
 		].includes(to.name as string) &&
-		authStore.passwordResetToken === null &&
-		localStorage.getItem('emailConfirmToken') === null &&
-		!(to.name === 'home' && (typeof to.query.userPasswordReset !== 'undefined' || typeof to.query.userEmailConfirm !== 'undefined'))
+		localStorage.getItem('emailConfirmToken') === null
 	
 	if (isValidUserAppRoute) {
 		saveLastVisited(to.name as string, to.params, to.query)
 	}
 	
-	const baseStore = useBaseStore()
-	// When trying this before the current user was fully loaded we might get a flash of the login screen 
-	// in the user shell. To make sure this does not happen we check if everything is ready before trying.
-	if (!baseStore.ready) {
-		return
-	}
-
 	if (isValidUserAppRoute) {
 		return {name: 'user.login'}
 	}
