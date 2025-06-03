@@ -92,8 +92,8 @@ export default Extension.create<FilterAutocompleteOptions>({
 
 			// Hide popup if no context
 			if (!autocompleteContext || !fieldType) {
-				if (popup) {
-					popup.hide()
+				if (popup[0]) {
+					popup[0].hide()
 				}
 				return
 			}
@@ -133,8 +133,8 @@ export default Extension.create<FilterAutocompleteOptions>({
 			}))
 
 			if (items.length === 0) {
-				if (popup) {
-					popup.hide()
+				if (popup[0]) {
+					popup[0].hide()
 				}
 				return
 			}
@@ -160,8 +160,8 @@ export default Extension.create<FilterAutocompleteOptions>({
 								view.dispatch(transaction)
 							}
 
-							if (popup) {
-								popup.hide()
+							if (popup[0]) {
+								popup[0].hide()
 							}
 						},
 					},
@@ -174,7 +174,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 			}
 
 			// Create or update popup
-			if (!popup) {
+			if (!popup[0]) {
 				popup = tippy(view.dom, {
 					getReferenceClientRect: () => {
 						const coords = view.coordsAtPos(from)
@@ -194,9 +194,9 @@ export default Extension.create<FilterAutocompleteOptions>({
 					trigger: 'manual',
 					placement: 'bottom-start',
 					offset: [0, 25],
-				})[0]
+				})
 			} else {
-				popup.show()
+				popup[0].show()
 			}
 		}
 
@@ -216,8 +216,8 @@ export default Extension.create<FilterAutocompleteOptions>({
 							}
 						},
 						destroy() {
-							if (popup) {
-								popup.destroy()
+							if (popup[0]) {
+								popup[0].destroy()
 							}
 							if (component) {
 								component.destroy()
@@ -227,7 +227,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 				},
 				props: {
 					handleKeyDown(view, event) {
-						if (!popup || !popup.state.isVisible) {
+						if (!popup[0] || !popup[0].state.isVisible) {
 							return false
 						}
 
