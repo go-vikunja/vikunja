@@ -77,17 +77,6 @@ watch(accountDeletionConfirm, async (accountDeletionConfirm) => {
 	authStore.refreshUserInfo()
 }, { immediate: true })
 
-// setup password reset redirect
-const userPasswordReset = computed(() => route.query?.userPasswordReset as (string | undefined))
-watch(userPasswordReset, (userPasswordReset) => {
-	if (userPasswordReset === undefined) {
-		return
-	}
-
-	authStore.setPasswordResetToken(userPasswordReset)
-	router.push({name: 'user.password-reset.reset', query: { token: userPasswordReset }})
-}, { immediate: true })
-
 // setup email verification redirect
 const userEmailConfirm = computed(() => route.query?.userEmailConfirm as (string | undefined))
 watch(userEmailConfirm, (userEmailConfirm) => {

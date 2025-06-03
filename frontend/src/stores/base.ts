@@ -1,9 +1,7 @@
 import {ref, computed, readonly} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {useRouter, useRoute} from 'vue-router'
 import {defineStore, acceptHMRUpdate} from 'pinia'
 
-import {getAuthForRoute} from '@/router'
 import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'
 
 import ProjectModel from '@/models/project'
@@ -21,9 +19,6 @@ export const useBaseStore = defineStore('base', () => {
 	const authStore = useAuthStore()
 	
 	const {t} = useI18n()
-
-	const router = useRouter()
-	const route = useRoute()
 
 	const ready = ref(false)
 	const error = ref('')
@@ -147,10 +142,6 @@ export const useBaseStore = defineStore('base', () => {
 			await checkAndSetApiUrl(window.API_URL)
 			await authStore.checkAuth()
 			ready.value = true
-			const redirectTo = await getAuthForRoute(route, authStore)
-			if (typeof redirectTo !== 'undefined') {
-				await router.push(redirectTo)
-			}
 		} catch (e: unknown) {
 			if (e instanceof NoApiUrlProvidedError) {
 				error.value = ERROR_NO_API_URL
