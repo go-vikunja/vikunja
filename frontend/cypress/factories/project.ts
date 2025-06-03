@@ -2,7 +2,7 @@ import {Factory} from '../support/factory'
 import {faker} from '@faker-js/faker'
 
 export interface ProjectAttributes {
-	id: number | string; // Allow string for '{increment}'
+	id: number | '{increment}';
 	title: string;
 	owner_id: number;
 	created: string;
@@ -12,7 +12,7 @@ export interface ProjectAttributes {
 export class ProjectFactory extends Factory {
 	static table = 'projects'
 
-	static factory(): Omit<ProjectAttributes, 'id'> & { id: string } { // id is '{increment}' before seeding
+	static factory() {
 		const now = new Date()
 
 		return {

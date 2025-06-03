@@ -2,7 +2,7 @@ import {faker} from '@faker-js/faker'
 import {Factory} from '../support/factory'
 
 export interface TokenAttributes {
-	id: number | string; // Allow string for '{increment}'
+	id: number | '{increment}';
 	user_id: number;
 	token: string;
 	kind: number;
