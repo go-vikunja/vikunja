@@ -57,7 +57,7 @@ func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, withChildren
 	// It looks like we need to have the same handler for returning both the calendar home set and the user principal
 	// Since the client seems to ignore the whatever is being returned in the first request and just makes a second one
 	// to the same url but requesting the calendar home instead
-	// The problem with this is caldav-go just return whatever ressource it gets and making that the requested path
+	// The problem with this is caldav-go just return whatever resource it gets and making that the requested path
 	// And for us here, there is no easy (I can think of at least one hacky way) to figure out if the client is requesting
 	// the home or principal url. Ough.
 
@@ -166,7 +166,7 @@ func (vcls *VikunjaCaldavProjectStorage) GetResourcesByList(rpaths []string) (re
 	defer s.Close()
 
 	// GetTasksByUIDs...
-	// Parse these into ressources...
+	// Parse these into resources...
 	tasks, err := models.GetTasksByUIDs(s, uids, vcls.user)
 	if err != nil {
 		_ = s.Rollback()
@@ -272,10 +272,10 @@ func (vcls *VikunjaCaldavProjectStorage) GetResource(rpath string) (*data.Resour
 	return &r, true, nil
 }
 
-// GetShallowResource gets a ressource without childs
+// GetShallowResource gets a resource without children
 // Since Vikunja has no children, this is the same as GetResource
 func (vcls *VikunjaCaldavProjectStorage) GetShallowResource(rpath string) (*data.Resource, bool, error) {
-	// Since Vikunja has no childs, this just returns the same as GetResource()
+	// Since Vikunja has no children, this just returns the same as GetResource()
 	// FIXME: This should just get the project with no tasks whatsoever, nothing else
 	return vcls.GetResource(rpath)
 }
