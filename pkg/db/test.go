@@ -107,7 +107,7 @@ func AssertExists(t *testing.T, table string, values map[string]interface{}, cus
 	}
 }
 
-// AssertMissing checks and asserts the nonexiste nce of certain entries in the db
+// AssertMissing checks and asserts the nonexistence of certain entries in the db
 func AssertMissing(t *testing.T, table string, values map[string]interface{}) {
 	all := []map[string]interface{}{}
 	err := x.Table(table).Where(values).Find(&all)
