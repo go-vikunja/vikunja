@@ -310,7 +310,8 @@ jobs:
         with:
           working-directory: frontend
           browser: chrome
-          record: true
+          # Only record if this is not a forked PR
+          record: ${{ github.event.pull_request.head.repo.full_name == github.repository || github.event_name != 'pull_request' }}
           parallel: true
           start: |
             pnpm run preview:vikunja
