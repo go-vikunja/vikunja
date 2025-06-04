@@ -139,13 +139,13 @@ func (n *InvalidTOTPNotification) Name() string {
 	return "totp.invalid"
 }
 
-// PasswordAccountLockedAfterInvalidTOTOPNotification represents a PasswordAccountLockedAfterInvalidTOTOPNotification notification
-type PasswordAccountLockedAfterInvalidTOTOPNotification struct {
+// PasswordAccountLockedAfterInvalidTOTPNotification represents a PasswordAccountLockedAfterInvalidTOTPNotification notification
+type PasswordAccountLockedAfterInvalidTOTPNotification struct {
 	User *User
 }
 
-// ToMail returns the mail notification for PasswordAccountLockedAfterInvalidTOTOPNotification
-func (n *PasswordAccountLockedAfterInvalidTOTOPNotification) ToMail(lang string) *notifications.Mail {
+// ToMail returns the mail notification for PasswordAccountLockedAfterInvalidTOTPNotification
+func (n *PasswordAccountLockedAfterInvalidTOTPNotification) ToMail(lang string) *notifications.Mail {
 	resetURL := config.ServicePublicURL.GetString() + "get-password-reset"
 	return notifications.NewMail().
 		Subject(i18n.T(lang, "notifications.totp.account_locked.subject")).
@@ -155,14 +155,14 @@ func (n *PasswordAccountLockedAfterInvalidTOTOPNotification) ToMail(lang string)
 		Line(i18n.T(lang, "notifications.totp.account_locked.reset_instructions", resetURL, resetURL))
 }
 
-// ToDB returns the PasswordAccountLockedAfterInvalidTOTOPNotification notification in a format which can be saved in the db
-func (n *PasswordAccountLockedAfterInvalidTOTOPNotification) ToDB() interface{} {
+// ToDB returns the PasswordAccountLockedAfterInvalidTOTPNotification notification in a format which can be saved in the db
+func (n *PasswordAccountLockedAfterInvalidTOTPNotification) ToDB() interface{} {
 	return nil
 }
 
 // Name returns the name of the notification
-func (n *PasswordAccountLockedAfterInvalidTOTOPNotification) Name() string {
-	return "password.account.locked.after.invalid.totop"
+func (n *PasswordAccountLockedAfterInvalidTOTPNotification) Name() string {
+	return "password.account.locked.after.invalid.totp"
 }
 
 // FailedLoginAttemptNotification represents a FailedLoginAttemptNotification notification
