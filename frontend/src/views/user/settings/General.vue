@@ -26,7 +26,7 @@
 				v-if="isExternalUser"
 				class="help"
 			>
-				{{ $t('user.settings.general.externalUserNameChange', {provider: authStore.info.authProvider}) }}
+                                {{ $t('user.settings.general.externalUserNameChange', {provider: authStore.info?.authProvider}) }}
 			</p>
 		</div>
 		<div class="field">
@@ -252,7 +252,7 @@ export default {name: 'UserSettingsGeneral'}
 </script>
 
 <script setup lang="ts">
-import {computed, watch, ref} from 'vue'
+import {computed, watch, ref, type Ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import {PrefixMode} from '@/modules/parseTaskText'
@@ -271,6 +271,8 @@ import {useAuthStore} from '@/stores/auth'
 import type {IUserSettings} from '@/modelTypes/IUserSettings'
 import {isSavedFilter} from '@/services/savedFilter'
 import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/modelTypes/IProjectView'
+import type {IProject} from '@/modelTypes/IProject'
+import ProjectModel from '@/models/project'
 import {PRIORITIES} from '@/constants/priorities'
 
 const {t} = useI18n({useScope: 'global'})
@@ -309,9 +311,9 @@ function useAvailableTimezones(settingsRef: Ref<IUserSettings>) {
 		.then(r => {
 			if (r.data) {
 				// Transform timezones into objects with value/label pairs
-				availableTimezones.value = r.data
-					.sort((a, b) => a.localeCompare(b))
-					.map((tz: string) => ({
+                                availableTimezones.value = r.data
+                                        .sort((a: string, b: string) => a.localeCompare(b))
+                                        .map((tz: string) => ({
 						value: tz,
 						label: tz.replace(/_/g, ' '),
 					}))
@@ -364,12 +366,12 @@ const {
 
 const id = ref(createRandomID())
 const availableLanguageOptions = ref(
-	Object.entries(SUPPORTED_LOCALES)
-		.map(l => ({code: l[0], title: l[1]}))
-		.sort((a, b) => a.title.localeCompare(b.title)),
+        Object.entries(SUPPORTED_LOCALES)
+                .map(l => ({code: l[0], title: l[1]}))
+                .sort((a: {code: string; title: string}, b: {code: string; title: string}) => a.title.localeCompare(b.title)),
 )
 
-const isExternalUser = computed(() => !authStore.info.isLocalUser)
+const isExternalUser = computed(() => !authStore.info?.isLocalUser)
 
 watch(
 	() => authStore.settings,
@@ -384,25 +386,30 @@ watch(
 )
 
 const projectStore = useProjectStore()
-const defaultProject = computed({
-	get: () => projectStore.projects[settings.value.defaultProjectId],
-	set(l) {
-		settings.value.defaultProjectId = l ? l.id : DEFAULT_PROJECT_ID
-	},
+const defaultProject = computed<IProject>({
+        get: () => settings.value.defaultProjectId !== undefined
+                ? (projectStore.projects[settings.value.defaultProjectId] as IProject) ?? new ProjectModel()
+                : new ProjectModel(),
+        set(l: IProject) {
+                settings.value.defaultProjectId = l ? l.id : DEFAULT_PROJECT_ID
+        },
 })
-const filterUsedInOverview = computed({
-	get: () => projectStore.projects[settings.value.frontendSettings.filterIdUsedOnOverview],
-	set(l) {
-		settings.value.frontendSettings.filterIdUsedOnOverview = l ? l.id : null
-	},
+const filterUsedInOverview = computed<IProject>({
+        get: () => settings.value.frontendSettings.filterIdUsedOnOverview !== null
+                ? (projectStore.projects[settings.value.frontendSettings.filterIdUsedOnOverview] as IProject) ?? new ProjectModel()
+                : new ProjectModel(),
+        set(l: IProject) {
+                settings.value.frontendSettings.filterIdUsedOnOverview = l ? l.id : null
+        },
 })
-const hasFilters = computed(() => typeof projectStore.projectsArray.find(p => isSavedFilter(p)) !== 'undefined')
+const hasFilters = computed(() => typeof projectStore.projectsArray.find(p => isSavedFilter(p as IProject)) !== 'undefined')
 const loading = computed(() => authStore.isLoadingGeneralSettings)
 
 async function updateSettings() {
-	await authStore.saveUserSettings({
-		settings: {...settings.value},
-	})
+        await authStore.saveUserSettings({
+                settings: {...settings.value},
+                showMessage: true,
+        })
 }
 </script>
 

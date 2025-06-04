@@ -20,7 +20,8 @@
     "strictNullChecks": true,
     
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "vite-plugin-sentry/client": ["./node_modules/vite-plugin-sentry/client.d.ts"]
     },
     "types": [
       // https://github.com/ikenfin/vite-plugin-sentry#typescript

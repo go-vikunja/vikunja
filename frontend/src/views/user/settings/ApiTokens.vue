@@ -18,19 +18,19 @@ const service = new ApiTokenService()
 const tokens = ref<IApiToken[]>([])
 const apiDocsUrl = window.API_URL + '/docs'
 const showCreateForm = ref(false)
-const availableRoutes = ref(null)
+const availableRoutes = ref<Record<string, Record<string, string[]>> | null>(null)
 const newToken = ref<IApiToken>(new ApiTokenModel())
 const newTokenExpiry = ref<string | number>(30)
 const newTokenExpiryCustom = ref(new Date())
-const newTokenPermissions = ref({})
-const newTokenPermissionsGroup = ref({})
+const newTokenPermissions = ref<Record<string, Record<string, boolean>>>({})
+const newTokenPermissionsGroup = ref<Record<string, boolean>>({})
 const newTokenTitleValid = ref(true)
 const newTokenPermissionValid = ref(true)
 const apiTokenTitle = ref()
 const tokenCreatedSuccessMessage = ref('')
 
 const showDeleteModal = ref<boolean>(false)
-const tokenToDelete = ref<IApiToken>()
+const tokenToDelete = ref<IApiToken | null>(null)
 
 const {t} = useI18n()
 
@@ -50,7 +50,7 @@ onMounted(async () => {
 	tokens.value = await service.getAll()
 	const allRoutes = await service.getAvailableRoutes()
 
-	const routesAvailable = {}
+        const routesAvailable: Record<string, Record<string, string[]>> = {}
 	const keys = Object.keys(allRoutes)
 	keys.sort((a, b) => (a === 'other' ? 1 : b === 'other' ? -1 : 0))
 	keys.forEach(key => {
@@ -63,8 +63,8 @@ onMounted(async () => {
 })
 
 function resetPermissions() {
-	newTokenPermissions.value = {}
-	Object.entries(availableRoutes.value).forEach(entry => {
+        newTokenPermissions.value = {}
+        Object.entries(availableRoutes.value || {}).forEach(entry => {
 		const [group, routes] = entry
 		newTokenPermissions.value[group] = {}
 		Object.keys(routes).forEach(r => {
@@ -74,13 +74,16 @@ function resetPermissions() {
 }
 
 async function deleteToken() {
-	await service.delete(tokenToDelete.value)
-	showDeleteModal.value = false
-	const index = tokens.value.findIndex(el => el.id === tokenToDelete.value.id)
-	tokenToDelete.value = null
-	if (index === -1) {
-		return
-	}
+        if (!tokenToDelete.value) {
+                return
+        }
+        await service.delete(tokenToDelete.value!)
+        showDeleteModal.value = false
+        const index = tokens.value.findIndex(el => el.id === tokenToDelete.value!.id)
+        tokenToDelete.value = null
+        if (index === -1) {
+                return
+        }
 	tokens.value.splice(index, 1)
 }
 
@@ -127,22 +130,22 @@ async function createToken() {
 	showCreateForm.value = false
 }
 
-function formatPermissionTitle(title: string): string {
-	return title.replaceAll('_', ' ')
+function formatPermissionTitle(title: string | number): string {
+        return String(title).split('_').join(' ')
 }
 
-function selectPermissionGroup(group: string, checked: boolean) {
-	Object.entries(availableRoutes.value[group]).forEach(entry => {
+function selectPermissionGroup(group: string | number, checked: boolean) {
+        Object.entries(availableRoutes.value?.[group] || {}).forEach(entry => {
 		const [key] = entry
 		newTokenPermissions.value[group][key] = checked
 	})
 }
 
-function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
-	if (checked) {
-		// Check if all permissions of that group are checked and check the "select all" checkbox in that case
-		let allChecked = true
-		Object.entries(availableRoutes.value[group]).forEach(entry => {
+function toggleGroupPermissionsFromChild(group: string | number, checked: boolean) {
+        if (checked) {
+                // Check if all permissions of that group are checked and check the "select all" checkbox in that case
+                let allChecked = true
+                Object.entries(availableRoutes.value?.[group] || {}).forEach(entry => {
 			const [key] = entry
 			if (!newTokenPermissions.value[group][key]) {
 				allChecked = false
@@ -368,7 +371,7 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 
 			<template #text>
 				<p>
-					{{ $t('user.settings.apiTokens.delete.text1', {token: tokenToDelete.title}) }}<br>
+                                        {{ $t('user.settings.apiTokens.delete.text1', {token: tokenToDelete?.title}) }}<br>
 					{{ $t('user.settings.apiTokens.delete.text2') }}
 				</p>
 			</template>

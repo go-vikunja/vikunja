@@ -21,6 +21,7 @@ export interface IUser extends IAbstract {
 	updated: Date
 	settings: IUserSettings
 
-	isLocalUser: boolean
-	deletionScheduledAt: string | Date | null
+        isLocalUser: boolean
+        deletionScheduledAt: string | Date | null
+        authProvider?: string
 }

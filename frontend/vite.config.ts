@@ -1,5 +1,5 @@
 /// <reference types="vitest" />
-import {defineConfig, type PluginOption, loadEnv} from 'vite'
+import {defineConfig, type PluginOption, loadEnv, type ImportMetaEnv} from 'vite'
 import {configDefaults} from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
 import {URL, fileURLToPath} from 'node:url'

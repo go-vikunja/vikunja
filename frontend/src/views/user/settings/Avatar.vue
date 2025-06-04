@@ -33,7 +33,7 @@
 				<XButton
 					v-if="!isCropAvatar"
 					:loading="avatarService.loading || loading"
-					@click="avatarUploadInput.click()"
+                                        @click="avatarUploadInput?.click()"
 				>
 					{{ $t('user.settings.avatar.uploadAvatar') }}
 				</XButton>
@@ -87,6 +87,7 @@ import {useTitle} from '@/composables/useTitle'
 import {success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
 import Message from '@/components/misc/Message.vue'
+import type { AvatarProvider } from '@/modelTypes/IAvatar'
 
 const {t} = useI18n({useScope: 'global'})
 const authStore = useAuthStore()
@@ -106,11 +107,11 @@ const avatarService = shallowReactive(new AvatarService())
 const loading = ref(false)
 
 
-const avatarProvider = ref('')
+const avatarProvider = ref<AvatarProvider>('default')
 
 async function avatarStatus() {
-	const {avatarProvider: currentProvider} = await avatarService.get({})
-	avatarProvider.value = currentProvider
+        const {avatarProvider: currentProvider} = await avatarService.get(new AvatarModel({}))
+        avatarProvider.value = currentProvider
 }
 
 avatarStatus()
@@ -134,9 +135,11 @@ async function uploadAvatar() {
 		return
 	}
 
-	try {
-		const blob = await new Promise(resolve => canvas.toBlob(blob => resolve(blob)))
-		await avatarService.create(blob)
+        try {
+                const blob = await new Promise<Blob | null>(resolve => canvas.toBlob((b: Blob | null) => resolve(b)))
+                if (blob) {
+                        await avatarService.create(blob)
+                }
 		success({message: t('user.settings.avatar.setSuccess')})
 		authStore.reloadAvatar()
 	} finally {
@@ -145,24 +148,26 @@ async function uploadAvatar() {
 	}
 }
 
-const avatarToCrop = ref()
-const avatarUploadInput = ref()
+const avatarToCrop = ref<string | ArrayBuffer | null>(null)
+const avatarUploadInput = ref<HTMLInputElement | null>(null)
 
 function cropAvatar() {
-	const avatar = avatarUploadInput.value.files
+        const files = avatarUploadInput.value?.files
 
-	if (avatar.length === 0) {
-		return
-	}
+        if (!files || files.length === 0) {
+                return
+        }
 
 	loading.value = true
-	const reader = new FileReader()
-	reader.onload = e => {
-		avatarToCrop.value = e.target.result
-		isCropAvatar.value = true
-	}
+        const reader = new FileReader()
+        reader.onload = e => {
+                const target = e.target as FileReader | null
+                if (!target) return
+                avatarToCrop.value = target.result
+                isCropAvatar.value = true
+        }
 	reader.onloadend = () => loading.value = false
-	reader.readAsDataURL(avatar[0])
+        reader.readAsDataURL(files[0])
 }
 </script>
 

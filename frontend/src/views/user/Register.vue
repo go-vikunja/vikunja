@@ -72,11 +72,12 @@
 					class="label"
 					for="password"
 				>{{ $t('user.auth.password') }}</label>
-				<Password
-					:validate-initially="validatePasswordInitially"
-					@submit="submit"
-					@update:modelValue="v => credentials.password = v"
-				/>
+                                <Password
+                                        :model-value="credentials.password"
+                                        :validate-initially="validatePasswordInitially"
+                                        @submit="submit"
+                                        @update:modelValue="v => credentials.password = v"
+                                />
 			</div>
 
 			<XButton
@@ -199,8 +200,9 @@ async function submit() {
 
 	try {
 		await authStore.register(toRaw(credentials))
-	} catch (e) {
-		errorMessage.value = e?.message
-	}
+       } catch (e: unknown) {
+               const err = e as {message?: string}
+               errorMessage.value = err.message ?? ''
+       }
 }
 </script>
