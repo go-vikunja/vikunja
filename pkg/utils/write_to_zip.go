@@ -40,7 +40,7 @@ func WriteBytesToZip(filename string, data []byte, writer *zip.Writer) (err erro
 	return
 }
 
-// WriteFilesToZip writes a bunch of files from the db to a zip file. It exprects a map with the file id
+// WriteFilesToZip writes a bunch of files from the db to a zip file. It expects a map with the file id
 // as key and its content as io.ReadCloser.
 func WriteFilesToZip(files map[int64]io.ReadCloser, wr *zip.Writer) (err error) {
 	for fid, file := range files {
