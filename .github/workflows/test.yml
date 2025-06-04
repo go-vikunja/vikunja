@@ -162,20 +162,40 @@ jobs:
           chmod +x vikunja
           ./vikunja migrate
   
-  test-api:
+  test-api-unit:
+    runs-on: ubuntu-latest
+    needs:
+      - mage
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - name: Download Mage Binary
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: mage_bin
+      - name: Set up Go
+        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5
+        with:
+          go-version: stable
+      - name: test
+        env:
+          VIKUNJA_TESTS_USE_CONFIG: 0
+          VIKUNJA_DATABASE_TYPE: sqlite-in-memory
+        run: |
+          mkdir -p frontend/dist
+          touch frontend/dist/index.html
+          chmod +x mage-static
+          ./mage-static test:unit
+
+  test-api-integration:
     runs-on: ubuntu-latest
     needs:
       - mage
     strategy:
       matrix:
         db:
-          - sqlite-in-memory
           - sqlite
           - postgres
           - mysql
-        test:
-          - unit
-          - integration
     services:
       db-mysql:
         image: mariadb:11@sha256:fcc7fcd7114adb5d41f14d116b8aac45f94280d2babfbbb71b4782922ee6d8d4
@@ -216,7 +236,7 @@ jobs:
           PGPASSWORD=vikunjatest psql -h localhost -U postgres -d vikunjatest -c "SELECT pg_reload_conf();"
       - name: test
         env:
-          VIKUNJA_TESTS_USE_CONFIG: ${{ matrix.db != 'sqlite-in-memory' && 1 || 0 }}
+          VIKUNJA_TESTS_USE_CONFIG: 1
           VIKUNJA_DATABASE_TYPE: ${{ matrix.db }}
           VIKUNJA_DATABASE_USER: ${{ matrix.db == 'postgres' && 'postgres' || 'root' }}
           VIKUNJA_DATABASE_PASSWORD: vikunjatest
@@ -233,8 +253,19 @@ jobs:
           mkdir -p frontend/dist
           touch frontend/dist/index.html
           chmod +x mage-static
-          ./mage-static test:${{ matrix.test }}
-  
+          ./mage-static test:integration
+
+  # This step only exists so that we can make it required, because we can't make
+  # the actual test step required due to the matrix
+  test-api-success:
+    runs-on: ubuntu-latest
+    needs:
+      - test-api-unit
+      - test-api-integration
+    if: always()
+    steps:
+      - run: exit 0
+
   frontend-lint:
     runs-on: ubuntu-latest
     steps:
