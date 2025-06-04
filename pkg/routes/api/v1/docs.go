@@ -36,13 +36,8 @@ func DocsJSON(c echo.Context) error {
 		log.Error(err.Error())
 		return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
 	}
-	_, err = c.Response().Write([]byte(doc))
-	if err != nil {
-		log.Error(err.Error())
-		return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
-	}
 
-	return nil
+	return c.Blob(http.StatusOK, echo.MIMEApplicationJSON, []byte(doc))
 }
 
 // RedocUI serves everything needed to provide the redoc ui
