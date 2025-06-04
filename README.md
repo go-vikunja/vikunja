@@ -48,7 +48,7 @@ See [the roadmap](https://my.vikunja.cloud/share/QFyzYEmEYfSyQfTOmIRSwLUpkFjboaB
 
 ## Contributing
 
-Please check out the contribuition guidelines on [the website](https://vikunja.io/docs/development/).
+Please check out the contribution guidelines on [the website](https://vikunja.io/docs/development/).
 
 ## License
 
