@@ -3,7 +3,10 @@
   "version": "v0.1.0",
   "description": "Vikunja's frontend as a standalone desktop application.",
   "main": "main.js",
-  "repository": "https://code.vikunja.io/desktop",
+  "repository": "https://code.vikunja.io/vikunja/tree/main/desktop",
+  "bugs": {
+    "url": "https://code.vikunja.io/vikunja/issues"
+  },
   "license": "GPL-3.0-or-later",
   "packageManager": "pnpm@10.11.1",
   "author": {

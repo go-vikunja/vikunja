@@ -6,10 +6,10 @@
   "license": "AGPL-3.0-or-later",
   "repository": {
     "type": "git",
-    "url": "https://kolaente.dev/vikunja/vikunja"
+    "url": "https://code.vikunja.io/vikunja/tree/main/frontend"
   },
   "bugs": {
-    "url": "https://kolaente.dev/vikunja/vikunja/issues"
+    "url": "https://code.vikunja.io/vikunja/issues"
   },
   "homepage": "https://vikunja.io/",
   "funding": "https://opencollective.com/vikunja",
