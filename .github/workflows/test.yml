@@ -299,13 +299,14 @@ jobs:
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: vikunja_bin
-      - uses: ./.github/actions/setup-frontend
       - name: Download Frontend
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: frontend_dist
           path: ./frontend/dist
-      - run: chmod +x ./vikunja
+      - run: |
+          chmod +x ./vikunja
+          ./vikunja
       - uses: cypress-io/github-action@v6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -321,13 +322,20 @@ jobs:
           VIKUNJA_DATABASE_TYPE: sqlite
           VIKUNJA_RATELIMIT_NOAUTHLIMIT: 1000
         with:
+          install: false
           working-directory: frontend
           browser: chrome
           record: true
           parallel: true
           start: |
-            pnpm run preview:vikunja
-            pnpm run preview
+            npx sirv-cli dist \
+              --single \                 # SPA fallback
+              --host 127.0.0.1 \         # bind only to loopback
+              --port 4173 \              # same port Vite preview uses
+              --quiet \                  # keep CI logs tidy
+              --maxage 31536000 \        # 1 year = 60*60*24*365
+              --immutable \              # mark response as forever-valid
+              --etag                     # enable 304 revalidation when needed
           wait-on: http://127.0.0.1:4173,http://127.0.0.1:3456/api/v1/info
           wait-on-timeout: 10
   
