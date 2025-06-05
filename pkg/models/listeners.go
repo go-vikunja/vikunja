@@ -91,6 +91,8 @@ func RegisterListeners() {
 		RegisterEventForWebhook(&ProjectDeletedEvent{})
 		RegisterEventForWebhook(&ProjectSharedWithUserEvent{})
 		RegisterEventForWebhook(&ProjectSharedWithTeamEvent{})
+		RegisterEventForWebhook(&NotificationReminderEvent{})
+		RegisterEventForWebhook(&NotificationReminderOverdueEvent{})
 	}
 }
 
