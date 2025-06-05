@@ -11,7 +11,7 @@
 
 We're using the [test endpoint](https://vikunja.io/docs/config-options/#testingtoken) of the vikunja api to
 seed the database with test data before running the tests.
-This ensures better reproducability of tests.
+This ensures better reproducibility of tests.
 
 ## Running The Tests Locally
 

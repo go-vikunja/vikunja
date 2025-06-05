@@ -103,7 +103,7 @@ It is possible to define a different factory for each request. This is done by i
 
 #### Before Request
 
-For each request exists a `before{TYPE}(model)` method. It recieves the model, can alter it and should return
+For each request exists a `before{TYPE}(model)` method. It receives the model, can alter it and should return
 the modified version.
 
 This is useful to make unix timestamps from javascript dates, for example.
