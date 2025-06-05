@@ -41,3 +41,5 @@ cypress/videos
 
 # histoire
 .histoire
+# Sentry Config File
+.env.sentry-build-plugin
