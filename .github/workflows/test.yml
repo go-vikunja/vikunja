@@ -289,7 +289,7 @@ jobs:
       # https://github.com/cypress-io/github-action/issues/48
       fail-fast: false
       matrix:
-        containers: [1, 2, 3, 4, 5]
+        containers: [1, 2, 3, 4]
     container:
       image: cypress/browsers:latest@sha256:201bee8d17cb4ded4da0ac4432428206805fc4a905f33ebc3cc9c62c1f5877fd
       options: --user 1001
@@ -307,6 +307,19 @@ jobs:
           path: ./frontend/dist
       - run: chmod +x ./vikunja
       - uses: cypress-io/github-action@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          CYPRESS_API_URL: http://127.0.0.1:3456/api/v1
+          CYPRESS_TEST_SECRET: averyLongSecretToSe33dtheDB
+          CYPRESS_DEFAULT_COMMAND_TIMEOUT: 60000
+          CYPRESS_CI_BUILD_ID: '${{ github.workflow }}-${{ github.run_id }}-${{ github.run_attempt }}' # see https://github.com/cypress-io/github-action/issues/431
+          VIKUNJA_SERVICE_TESTINGTOKEN: averyLongSecretToSe33dtheDB
+          VIKUNJA_LOG_LEVEL: DEBUG
+          VIKUNJA_CORS_ENABLE: 1
+          VIKUNJA_DATABASE_PATH: memory
+          VIKUNJA_DATABASE_TYPE: sqlite
+          VIKUNJA_RATELIMIT_NOAUTHLIMIT: 1000
         with:
           working-directory: frontend
           browser: chrome
@@ -317,18 +330,6 @@ jobs:
             pnpm run preview
           wait-on: http://127.0.0.1:4173,http://127.0.0.1:3456/api/v1/info
           wait-on-timeout: 10
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
-          CYPRESS_API_URL: http://127.0.0.1:3456/api/v1
-          CYPRESS_TEST_SECRET: averyLongSecretToSe33dtheDB
-          CYPRESS_DEFAULT_COMMAND_TIMEOUT: 60000
-          VIKUNJA_SERVICE_TESTINGTOKEN: averyLongSecretToSe33dtheDB
-          VIKUNJA_LOG_LEVEL: DEBUG
-          VIKUNJA_CORS_ENABLE: 1
-          VIKUNJA_DATABASE_PATH: memory
-          VIKUNJA_DATABASE_TYPE: sqlite
-          VIKUNJA_RATELIMIT_NOAUTHLIMIT: 1000
   
   # This step only exists so that we can make it required, because we can't make 
   # the actual test step required due to the matrix
