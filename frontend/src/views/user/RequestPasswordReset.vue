@@ -79,9 +79,10 @@ async function requestPasswordReset() {
 	try {
 		await passwordResetService.requestResetPassword(passwordReset.value)
 		isSuccess.value = true
-	} catch (e) {
-		errorMsg.value = e.response.data.message
-	}
+        } catch (e: unknown) {
+                const err = e as {response?: {data?: {message?: string}}}
+                errorMsg.value = err.response?.data?.message ?? ''
+        }
 }
 </script>
 

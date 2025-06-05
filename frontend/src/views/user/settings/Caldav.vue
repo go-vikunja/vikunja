@@ -109,6 +109,7 @@ import {success} from '@/message'
 import BaseButton from '@/components/base/BaseButton.vue'
 import Message from '@/components/misc/Message.vue'
 import CaldavTokenService from '@/services/caldavToken'
+import CaldavTokenModel from '@/models/caldavToken'
 import { formatDateShort } from '@/helpers/time/formatDate'
 import type {ICaldavToken} from '@/modelTypes/ICaldavToken'
 import {useConfigStore} from '@/stores/config'
@@ -128,8 +129,10 @@ service.getAll().then((result: ICaldavToken[]) => {
 
 const newToken = ref<ICaldavToken>()
 async function createToken() {
-	newToken.value = await service.create({}) as ICaldavToken
-	tokens.value.push(newToken.value)
+       // The API does not require any payload when creating a token.
+       // Create an empty model instance to satisfy the expected type.
+       newToken.value = await service.create(new CaldavTokenModel({}))
+       tokens.value.push(newToken.value)
 }
 
 async function deleteToken(token: ICaldavToken) {

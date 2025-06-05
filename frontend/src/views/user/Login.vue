@@ -208,16 +208,23 @@ const validateUsernameField = useDebounceFn(() => {
 const needsTotpPasscode = computed(() => authStore.needsTotpPasscode)
 const totpPasscode = ref<HTMLInputElement | null>(null)
 
+interface Credentials {
+       username: string | undefined
+       password: string
+       longToken: boolean
+       totpPasscode?: string
+}
+
 async function submit() {
-	errorMessage.value = ''
+       errorMessage.value = ''
 	// Some browsers prevent Vue bindings from working with autofilled values.
 	// To work around this, we're manually getting the values here instead of relying on vue bindings.
 	// For more info, see https://kolaente.dev/vikunja/frontend/issues/78
-	const credentials = {
-		username: usernameRef.value?.value,
-		password: password.value,
-		longToken: rememberMe.value,
-	}
+       const credentials: Credentials = {
+               username: usernameRef.value?.value,
+               password: password.value,
+               longToken: rememberMe.value,
+       }
 
 	if (credentials.username === '' || credentials.password === '') {
 		// Trigger the validation error messages

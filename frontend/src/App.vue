@@ -39,7 +39,7 @@ import ContentLinkShare from '@/components/home/ContentLinkShare.vue'
 import NoAuthWrapper from '@/components/misc/NoAuthWrapper.vue'
 import Ready from '@/components/misc/Ready.vue'
 
-import {setLanguage} from '@/i18n'
+import {setLanguage, getBrowserLanguage} from '@/i18n'
 
 import {useAuthStore} from '@/stores/auth'
 import {useBaseStore} from '@/stores/base'
@@ -88,7 +88,7 @@ watch(userEmailConfirm, (userEmailConfirm) => {
 	router.push({name: 'user.login'})
 }, { immediate: true })
 
-setLanguage(authStore.settings.language)
+setLanguage(authStore.settings.language ?? getBrowserLanguage())
 useColorScheme()
 </script>
 
