@@ -189,7 +189,7 @@ func HandleFailedTOTPAuth(s *xorm.Session, user *User) {
 		log.Errorf("Could not reset password of user %d after 10 failed TOTP attempts: %s", user.ID, err)
 		return
 	}
-	err = notifications.Notify(user, &PasswordAccountLockedAfterInvalidTOTOPNotification{
+	err = notifications.Notify(user, &PasswordAccountLockedAfterInvalidTOTPNotification{
 		User: user,
 	})
 	if err != nil {
