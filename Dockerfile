@@ -16,7 +16,7 @@ RUN pnpm install --frozen-lockfile --offline
 COPY frontend/ ./
 RUN	pnpm run build
 
-FROM --platform=$BUILDPLATFORM ghcr.io/techknowlogick/xgo:go-1.23.x@sha256:229c59582d5ca6b11973647cc3ee945d5b5bb630dcd5d100bd81576f631b4dd6 AS apibuilder
+FROM --platform=$BUILDPLATFORM ghcr.io/techknowlogick/xgo:go-1.23.x@sha256:a56d0c3e60531c3a7ff4bfde6bc73f4f1a91165e58818f4ba6eb56750a3b49e4 AS apibuilder
 
 RUN go install github.com/magefile/mage@latest && \
     mv /go/bin/mage /usr/local/go/bin
