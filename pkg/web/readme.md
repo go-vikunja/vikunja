@@ -9,7 +9,7 @@ After I implemented some functions, I've decided to save me a lot of hassle and 
 processing function"-logic to a general interface to facilitate development and not having to have a lot of similar code all over the place.
 
 This webhandler was built to be used in a REST-API, it takes and returns JSON, but can also be used in combination with own 
-other handler implementations, enabling a lot of flexibility while develeoping.
+other handler implementations, enabling a lot of flexibility while developing.
 
 ## Features
 
@@ -58,7 +58,7 @@ To learn how to use the handler, take a look at the [handler config](#handler-co
 Each request runs in its own db session.
 This ensures each operation is one atomic entity without any side effects for concurrent requests happening at the same time.
 
-The session is started at the beginning of the request, rolled back in case of any errors and comitted if no errors occur.
+The session is started at the beginning of the request, rolled back in case of any errors and committed if no errors occur.
 The rights methods get the same session (for the same request) as the actual crud methods.
 
 See [`SessionFactory`](#sessionfactory) for docs about how to configure it.
@@ -112,10 +112,10 @@ type Rights interface {
 ```
 
 When using the standard web handler, all methods are called before their `CRUD` counterparts.
-Use pointers for methods like `CanRead()` to get the base data of the model first, then check the right and then add addintional data.
+Use pointers for methods like `CanRead()` to get the base data of the model first, then check the right and then add additional data.
 
 The `CanRead` method should also return the max right a user has on this entity.
-This number will be returned in the`x-max-right` header to enable user interfaces to show/hide ui elements based on the right the user has.
+This number will be returned in the `x-max-right` header to enable user interfaces to show/hide UI elements based on the right the user has.
 
 ## Handler Config
 
@@ -185,7 +185,7 @@ You need to return a number of things:
 
 * The result itself, usually a slice
 * The number of items you return in `result`. Most of the time, this is just `len(result)`. You need to return this value to make the clients aware if they requested a number of items > max items per page.
-* The total number of items available. We use the total number of items here and not the number pages so the implementations don't have to deal with calculating the number of pages from that. The total number of clients is then calculated and returned to the client, ite can then be used by the clients to build client-side pagination or similar.
+* The total number of items available. We use the total number of items here and not the number of pages so implementations don't have to calculate the page count. The total number is returned to the client; it can be used to build client-side pagination or similar.
 * An error.
 
 The number of items and the total number of pages available will be returned in the `x-pagination-total-pages` and `x-pagination-result-count` response headers.
@@ -194,7 +194,7 @@ _You should put this in your api documentation._
 ### Search
 
 When using the `ReadAll`-method, the first parameter is a search term which should be used to search items of your struct. 
-You define the critera inside of that function.
+You define the criteria inside of that function.
 
 Users can then pass the `?s=something` parameter to the url to search, _thats something you should put in your api documentation_.
 
@@ -226,8 +226,8 @@ The handler will take care of everything like parsing the request, checking righ
 ## Errors
 
 Error types with their messages and http-codes should be implemented by you somewhere in your application and then returned by 
-the appropriate function when an error occures. If the error type implements `HTTPError`, the server returns a user-friendly 
-error message when this error occours. This means it returns a good HTTP status code, a message, and an error code. The error 
+the appropriate function when an error occurs. If the error type implements `HTTPError`, the server returns a user-friendly
+error message when this error occurs. This means it returns a good HTTP status code, a message, and an error code. The error
 code should be unique across all error codes and can be used on the client to show a localized error message or do other stuff 
 based on the exact error the server returns. That way the client won't have to "guess" that the error message remains the same 
 over multiple versions of your application.
@@ -236,8 +236,8 @@ An `HTTPError` is defined as follows:
 
 ```go
 type HTTPError struct {
-	HTTPCode int    `json:"-"` // Can be any valid HTTP status code, I'd reccomend to use the constants of the http package.
-	Code     int    `json:"code"` // Must be a uniqe int identifier for this specific error. I'd reccomend defining a constant for this.
+    HTTPCode int    `json:"-"` // Can be any valid HTTP status code, I'd recommend to use the constants of the http package.
+    Code     int    `json:"code"` // Must be a unique int identifier for this specific error. I'd recommend defining a constant for this.
 	Message  string `json:"message"` // A user-readable message what went wrong.
 }
 ```
