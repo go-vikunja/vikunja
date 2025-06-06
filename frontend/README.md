@@ -25,7 +25,7 @@ You can develop the web front end against any accessible backend, including the 
 
 In order to do so, you need to set the `DEV_PROXY` env variable. The recommended way to do so is to:
 
-- Copy `.env.local.exemple` as `.env.local`
+- Copy `.env.local.example` as `.env.local`
 - Uncomment the `DEV_PROXY` line
 - Set the backend url you want to use
 
