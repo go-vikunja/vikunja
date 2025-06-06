@@ -35,7 +35,7 @@ pnpm start
 ## Building for release
 
 1. Run the snippet from above, but with a valid frontend version instead of `unstable`
-2. Change the version in `package.json` (That's the one that will be used by electron-builder`
+2. Change the version in `package.json` (that's the one that will be used by electron-builder)
 3. `pnpm install`
 4. `pnpm run dist --linux --windows`
 
