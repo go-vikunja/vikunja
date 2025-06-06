@@ -1776,7 +1776,7 @@ func IsErrUnknownSubscriptionEntityType(err error) bool {
 }
 
 func (err *ErrUnknownSubscriptionEntityType) Error() string {
-	return fmt.Sprintf("Subscription entity type is unkowns [EntityType: %d]", err.EntityType)
+	return fmt.Sprintf("Subscription entity type is unknown [EntityType: %d]", err.EntityType)
 }
 
 // ErrCodeUnknownSubscriptionEntityType holds the unique world-error code of this error
