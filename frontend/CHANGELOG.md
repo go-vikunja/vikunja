@@ -39,7 +39,7 @@ The releases aim at the api versions which is why there are missing versions.
 * *(notifications)* Read indicator size
 * *(openid)* Use the full path when building the redirect url, not only the host
 * *(openid)* Use the calculated redirect url when authenticating with openid providers
-* *(project)* Always use the appropriate color for task estimate during deletion dialoge
+* *(project)* Always use the appropriate color for task estimate during deletion dialog
 * *(quick add magic)* Ensure month is removed from task text
 * *(table view)* Make sure popup does not overlap
 * *(task)* Don't immediately re-trigger date change when nothing changed
@@ -2373,7 +2373,7 @@ The releases aim at the api versions which is why there are missing versions.
 * *(link shares)* Allows switching the initial view by passing a query parameter
 * *(link shares)* Cleanup link share table
 * *(link shares)* Allows switching the initial view by passing a query parameter (#2335)
-* *(list)* Add info dialoge to show list description (#2368)
+* *(list)* Add info dialog to show list description (#2368)
 * *(openid)* Show error message from query after being redirected from third party
 * *(task)* Cover image for tasks (#2460)
 * *(tests)* Add tests for task attachments* Settings background script setup (#2104) ([ff65580](ff655808b3cb562bd1c843ff70bf3641718ae61d))
@@ -2400,7 +2400,7 @@ The releases aim at the api versions which is why there are missing versions.
 * Move the url link to the bottom of the items ([6576b61](6576b6148ce1b02dbe6a335778592c4b72e275de))
 * Color the task color button when the task has a color set ([51c806c](51c806c12b90aa124384497856590f5010b9ff49))
 * Color the color button icon instead of the button itself ([bdf992c](bdf992c9bfe9de176a22f7b5a6fdae1bc5e5010f))
-* Move the update available dialoge always to the bottom ([a18c6ab](a18c6ab8d860a496905f58278315222992bacd07))
+* Move the update available dialog always to the bottom ([a18c6ab](a18c6ab8d860a496905f58278315222992bacd07))
 * Show the task color bubble everywhere ([2683fec](2683fec0a67f6afd16579bb44a6ceadc0edd565f))
 * Color the task color button when the task has a color set (#2331) ([f70b1d2](f70b1d2902f91a88eaf33f1a9799489c20a6a143))
 * Namespace settings archive script setup ([ad6b335](ad6b335d41e07e8ce2e74e4282d572ba4c04ea30))
