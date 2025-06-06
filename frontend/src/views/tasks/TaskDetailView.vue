@@ -691,7 +691,7 @@ onBeforeUnmount(() => {
 // to the color property change being triggered when the # is removed from it, leading to an update,
 // which leads in turn to a change... This creates an infinite loop in which the task is updated, changed,
 // updated, changed, updated and so on.
-// To prevent this, we put the task color property in a seperate value which is set to the task color
+// To prevent this, we put the task color property in a separate value which is set to the task color
 // when it is saved and loaded.
 const taskColor = ref<ITask['hexColor']>('')
 

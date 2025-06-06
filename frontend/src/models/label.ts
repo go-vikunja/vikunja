@@ -9,8 +9,8 @@ import {colorIsDark} from '@/helpers/color/colorIsDark'
 export default class LabelModel extends AbstractModel<ILabel> implements ILabel {
 	id = 0
 	title = ''
-	// FIXME: this should be empty and be definied in the client.
-	// that way it get's never send to the server db and is easier to change in future versions.
+	// FIXME: this should be empty and be defined in the client.
+	// that way it gets never send to the server db and is easier to change in future versions.
 	hexColor = ''
 	description = ''
 	createdBy: IUser

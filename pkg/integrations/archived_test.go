@@ -111,7 +111,7 @@ func TestArchived(t *testing.T) {
 				require.Error(t, err)
 				assertHandlerErrorCode(t, err, errCode)
 			})
-			t.Run("remove lables", func(t *testing.T) {
+			t.Run("remove labels", func(t *testing.T) {
 				_, err := testLabelHandler.testDeleteWithUser(nil, map[string]string{"projecttask": taskID, "label": "4"})
 				require.Error(t, err)
 				assertHandlerErrorCode(t, err, errCode)

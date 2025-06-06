@@ -2761,7 +2761,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Copies the project, tasks, files, kanban data, assignees, comments, attachments, lables, relations, backgrounds, user/team rights and link shares from one project to a new one. The user needs read access in the project and write access in the parent of the new project.",
+                "description": "Copies the project, tasks, files, kanban data, assignees, comments, attachments, labels, relations, backgrounds, user/team rights and link shares from one project to a new one. The user needs read access in the project and write access in the parent of the new project.",
                 "consumes": [
                     "application/json"
                 ],

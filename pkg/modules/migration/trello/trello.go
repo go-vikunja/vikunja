@@ -208,7 +208,7 @@ func fillCardData(client *trello.Client, board *trello.Board) (err error) {
 		list.Cards = append(list.Cards, card)
 	}
 
-	log.Debugf("[Trello Migration] Looked for attachements on all cards of board %s", board.ID)
+	log.Debugf("[Trello Migration] Looked for attachments on all cards of board %s", board.ID)
 
 	return
 }

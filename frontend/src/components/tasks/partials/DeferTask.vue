@@ -59,7 +59,7 @@ const {t} = useI18n({useScope: 'global'})
 const taskService = shallowReactive(new TaskService())
 const task = ref<ITask>()
 
-// We're saving the due date seperately to prevent null errors in very short periods where the task is null.
+// We're saving the due date separately to prevent null errors in very short periods where the task is null.
 const dueDate = ref<Date | null>()
 const lastValue = ref<Date | null>()
 const changeInterval = ref<ReturnType<typeof setInterval>>()

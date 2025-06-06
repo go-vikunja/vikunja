@@ -171,7 +171,7 @@ export const useAuthStore = defineStore('auth', () => {
 			// Save the token to local storage for later use
 			saveToken(response.data.token, true)
 
-			// Tell others the user is autheticated
+			// Tell others the user is authenticated
 			await checkAuth()
 		} catch (e) {
 			if (
@@ -190,7 +190,7 @@ export const useAuthStore = defineStore('auth', () => {
 
 	/**
 	 * Registers a new user and logs them in.
-	 * Not sure if this is the right place to put the logic in, maybe a seperate js component would be better suited. 
+	 * Not sure if this is the right place to put the logic in, maybe a separate js component would be better suited. 
 	 */
 	async function register(credentials, language: string|null = null) {
 		const HTTP = HTTPFactory()
@@ -241,7 +241,7 @@ export const useAuthStore = defineStore('auth', () => {
 			saveToken(response.data.token, true)
 			setLoggedInVia(provider)
 
-			// Tell others the user is autheticated
+			// Tell others the user is authenticated
 			await checkAuth()
 		} finally {
 			setIsLoading(false)
