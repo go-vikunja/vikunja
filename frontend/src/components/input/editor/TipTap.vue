@@ -182,7 +182,6 @@ import XButton from '@/components/input/Button.vue'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import inputPrompt from '@/helpers/inputPrompt'
 import {setLinkInEditor} from '@/components/input/editor/setLinkInEditor'
-import StopLinkOnSpace from './stopLinkOnSpace'
 
 const props = withDefaults(defineProps<{
 	modelValue: string,
@@ -293,6 +292,13 @@ const CustomImage = Image.extend({
 		}
 
 		return ['img', mergeAttributes(this.options.HTMLAttributes, HTMLAttributes)]
+	},
+})
+
+// prevent links from extending after space
+const NonInclusiveLink = Link.extend({
+	inclusive() {
+		return false
 	},
 })
 
@@ -421,7 +427,7 @@ const extensions : Extensions = [
 	}),
 	Typography,
 	Underline,
-	Link.configure({
+	NonInclusiveLink.configure({
 		openOnClick: false,
 		validate: (href: string) => (new RegExp(
 			`^(https?|${additionalLinkProtocols.join('|')}):\\/\\/`,
@@ -473,7 +479,6 @@ const extensions : Extensions = [
 	}),
 
 	PasteHandler,
-	StopLinkOnSpace,
 ]
 
 // Add a custom extension for the Escape key
