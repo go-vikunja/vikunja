@@ -29,7 +29,7 @@ type Rights interface {
 	CanCreate(*xorm.Session, Auth) (bool, error)
 }
 
-// CRUDable defines the crud methods
+// CRUDable defines the CRUD methods
 type CRUDable interface {
 	Create(*xorm.Session, Auth) error
 	ReadOne(*xorm.Session, Auth) error
@@ -43,7 +43,7 @@ type HTTPErrorProcessor interface {
 	HTTPError() HTTPError
 }
 
-// HTTPError holds informations about an http error
+// HTTPError holds information about an http error
 type HTTPError struct {
 	HTTPCode int    `json:"-"`
 	Code     int    `json:"code"`
@@ -55,18 +55,18 @@ type HTTPErrorWithDetails struct {
 	Details interface{} `json:"details"`
 }
 
-// Auth defines the authentication interface used to get some auth thing
+// Auth defines the interface used to retrieve authentication information
 type Auth interface {
 	// Most of the time, we need an ID from the auth object only. Having this method saves the need to cast it.
 	GetID() int64
 }
 
-// Authprovider is a holder for the implementation of an authprovider by the application
+// Authprovider holds the implementation of an auth provider used by the application
 type Authprovider interface {
 	GetAuthObject(echo.Context) (Auth, error)
 }
 
-// Auths holds the authobject
+// Auths holds the auth object
 type Auths struct {
 	AuthObject func(echo.Context) (Auth, error)
 }
