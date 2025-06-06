@@ -20,7 +20,7 @@ workbox.routing.registerRoute(
 	new workbox.strategies.StaleWhileRevalidate(),
 )
 
-// Always send api reqeusts through the network
+// Always send api requests through the network
 workbox.routing.registerRoute(
 	new RegExp('api\\/v1\\/.*$'),
 	new workbox.strategies.NetworkOnly(),

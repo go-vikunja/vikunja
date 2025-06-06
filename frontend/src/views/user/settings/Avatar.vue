@@ -105,7 +105,7 @@ const AVATAR_PROVIDERS = computed(() => ({
 useTitle(() => `${t('user.settings.avatar.title')} - ${t('user.settings.title')}`)
 
 const avatarService = shallowReactive(new AvatarService())
-// Seperate variable because some things we're doing in browser take a bit
+// Separate variable because some things we're doing in browser take a bit
 const loading = ref(false)
 
 

@@ -310,7 +310,7 @@ func copyFile(src, dst string) error {
 }
 
 // os.Rename has issues with moving files between docker volumes.
-// Because of this limitaion, it fails in drone.
+// Because of this limitation, it fails in drone.
 // Source: https://gist.github.com/var23rav/23ae5d0d4d830aff886c3c970b8f6c6b
 func moveFile(src, dst string) error {
 	inputFile, err := os.Open(src)
@@ -612,7 +612,7 @@ func (Check) GolangciFix() {
 	runAndStreamOutput("golangci-lint", "run", "--fix")
 }
 
-// Runs golangci and the swagger test in parralel
+// Runs golangci and the swagger test in parallel
 func (Check) All() {
 	mg.Deps(initVars)
 	mg.Deps(
@@ -838,7 +838,7 @@ func (Release) Compress(ctx context.Context) error {
 
 		// Runs compressing in parallel since upx is single-threaded
 		errs.Go(func() error {
-			runAndStreamOutput("chmod", "+x", path) // Make sure all binaries are executable. Sometimes the CI does weired things and they're not.
+			runAndStreamOutput("chmod", "+x", path) // Make sure all binaries are executable. Sometimes the CI does weird things and they're not.
 			runAndStreamOutput("upx", "-9", path)
 			return nil
 		})
