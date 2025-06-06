@@ -53,8 +53,7 @@ The `constructor` calls its parent constructor and provides the paths to make th
 The parent constructor will take these and save them in the service.
 All paths are optional. Calling a method which doesn't have a path defined will fail. 
 
-The placeholder values in the urls are replaced with the contents of variables with the same name in the
-corresponding model (the one you pass to the functions).
+The placeholder values in the urls are replaced with the contents of variables with the same name in the corresponding model (the one you pass to the functions).
 
 #### Requests
 

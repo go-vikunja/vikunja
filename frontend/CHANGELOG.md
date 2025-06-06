@@ -208,7 +208,7 @@ The releases aim at the api versions which is why there are missing versions.
 * *(quick actions)* Search for tasks within a project when specifying a project with quick add magic
 * *(quick add magic)* Annually and variants spelling
 * *(quick add magic)* Headline
-* *(quick add magic)* Ignore common task indention when adding multiple tasks at once
+* *(quick add magic)* Ignore common task indentation when adding multiple tasks at once
 * *(quick add magic)* Repeating intervals in words
 * *(settings)* Allow removing the default project via settings
 * *(settings)* Move overdue remindeer time below
@@ -473,7 +473,7 @@ The releases aim at the api versions which is why there are missing versions.
 * Api tokens ([28f2551](28f2551d87b99c59055a4909195e435dbd9794b6))
 * Improve error message for invalid API url ([725fd1a](725fd1ad467fb988810cb23f12d372af236bd21d))
 * Move from easymde to tiptap editor (#2222) ([26fc9b4](26fc9b4e4f8b96616385f4ca0a77a0ff7ee5eee5))
-* Quick actions improvments ([47d5890](47d589002ccef5047a25ea3ad8ebe582c3b0bbc6))
+* Quick actions improvements ([47d5890](47d589002ccef5047a25ea3ad8ebe582c3b0bbc6))
 * Webhooks (#3783) ([5d991e5](5d991e539bb3a249447847c13c92ee35d356b902))
 
 ### Miscellaneous Tasks
@@ -555,7 +555,7 @@ The releases aim at the api versions which is why there are missing versions.
 * *(reminders)* Align remove icon with the rest
 * *(reminders)* Assignment to const when changing a reminder
 * *(reminders)* Custom relative highlight now only when a custom relative reminder was actually selected
-* *(reminders)* Don't assigne the task
+* *(reminders)* Don't assign the task
 * *(reminders)* Don't assume 30 days are always a month
 * *(reminders)* Don't sync negative relative reminder amounts in ui
 * *(reminders)* Duplicate reminder for each change
@@ -615,7 +615,7 @@ The releases aim at the api versions which is why there are missing versions.
 * Improve tooltip icon contrast ([a6cdf6c](a6cdf6c4bdceb1168f20e9d049c2e66f40c98aa1))
 * Improve tooltip text ([2174608](21746088012f4fe0f750ed5e5cac916d506fb17b))
 * Increase default auto-save timeout to 5 seconds ([f7ba3bd](f7ba3bd08fa9181180f99f4e5ebd5ec916fbcf19))
-* Indention ([e25273d](e25273df4899867ee146159d3d18125d387f8524))
+* Indentation ([e25273d](e25273df4899867ee146159d3d18125d387f8524))
 * Lint ([292c904](292c90425ef96b99671702a0b28d87d660fa53dc))
 * Lint ([4ff0c81](4ff0c81e373696b0505c2c080d558a20071562f3))
 * Lint ([5d59392](5d593925666a09cbfda2f62577deb670033f93fb))
@@ -637,13 +637,13 @@ The releases aim at the api versions which is why there are missing versions.
 * Missing variant prop for loading component ([2e9ade1](2e9ade11c3a3b6cb531d053f82a598a5ab851a93))
 * Move parent project child id mutation to store ([26e3d42](26e3d42ed527afd6bf695ba3ad291e1c2b545bba))
 * Move parent project handling out of useProject ([ba452ab](ba452ab88339b9ace987f1a18584a7950e00a776))
-* Move the collapsable placeholder to the button ([1344026](1344026494fe47ac5604bff07b537a2765e840f6))
+* Move the collapsible placeholder to the button ([1344026](1344026494fe47ac5604bff07b537a2765e840f6))
 * Move types to dev dependencies ([739fe0c](739fe0caa13dc946e1801f290d8ab5f18cdc5faf))
 * Only bind child projects data down ([3eca9f6](3eca9f6180e64f892e94d27eaa192cea780563a0))
 * Only update daytime salutation when switching to home view ([c577626](c5776264c069000efbb62c64dfc2143d5fc4e0df))
 * Passing readonly projects data to navigation ([d85be26](d85be26761240164b6bdcbe0601b46585b74fafa))
 * Properly determine if there are projects ([a2cc9dd](a2cc9ddc8821a4b9b1ee1dd6109d1b3958a06ba6))
-* Rebase readd CustomTransition ([b93639e](b93639e14ecab06496086c3d2cc14f51d8f9f672))
+* Rebase re-add CustomTransition ([b93639e](b93639e14ecab06496086c3d2cc14f51d8f9f672))
 * Recreate project instead of editing before ([175e31c](175e31ca629660d8d683b35b8e7c8052a62cd17d))
 * Redundant ) ([6c2dc48](6c2dc483a20213f1f238e6224b9ecfb87faa2461))
 * Remove getProjectById and replace all usages of it ([78158bc](78158bcba52d152a2ebf465242e25a55e6764470))
@@ -653,7 +653,7 @@ The releases aim at the api versions which is why there are missing versions.
 * Remove namespace store reference ([ad2690b](ad2690b21cfc9ccc658737a726cc6b110089b635))
 * Remove unnecessary fallback ([d414b65](d414b65e7d591f567067ce8085b9934207dc938a))
 * Rename getParentProjects method to make it clear what it does ([39f699a](39f699a61ae91eb93c364137f76b595e7cad7561))
-* Rename list to project for parsing subtasks via indention ([fc8711d](fc8711d6d841d11847cd8567999373145ce3398d))
+* Rename list to project for parsing subtasks via indentation ([fc8711d](fc8711d6d841d11847cd8567999373145ce3398d))
 * Rename resolveRef ([f14e721](f14e721caf9434ac119f32c5e7f107bfbdd6746c))
 * Return redirect ([7c964c2](7c964c29d487b5bcd2c125f81731e3b37374641a))
 * Return updated project instead of the old one ([4ab5478](4ab547810c77e747e701ea865c13157d51aba461))
@@ -1081,7 +1081,7 @@ The releases aim at the api versions which is why there are missing versions.
 * *(navigation)* Show favorite projects on top
 * *(projects)* Allow setting a saved filter for tasks shown on the overview page
 * *(projects)* Move hasProjects check to store
-* *(quick add magic)* Allow fuzzy matching of assignees when the api results are unambigous
+* *(quick add magic)* Allow fuzzy matching of assignees when the api results are unambiguous
 * *(reminders)* Add confirm button
 * *(reminders)* Add e2e tests for task reminders
 * *(reminders)* Add more spacing
@@ -1097,7 +1097,7 @@ The releases aim at the api versions which is why there are missing versions.
 * *(reminders)* Translate all reminder form strings
 * *(sentry)* Only load sentry when it's enabled
 * *(tests)* Add project tests derived from old namespace tests
-* *(user)* Migrate color scheme settings to persistance in db
+* *(user)* Migrate color scheme settings to persistence in db
 * *(user)* Migrate pop sound setting to store in api
 * *(user)* Persist frontend settings in the api (#3594)* Rename files with list to project ([b9d3b5c](b9d3b5c75635577321acc1791219aed40c6c14a4))
 * *(user)* Save quick add magic mode in api
@@ -1165,9 +1165,9 @@ The releases aim at the api versions which is why there are missing versions.
 * *(ci)* Sign drone config
 * *(editor)* Disable deprecated marked options
 * *(i18n)* Clarify translation string
-* *(parseSubtasksViaIndention)* Fix comment (#3259)
+* *(parseSubtasksViaIndentation)* Fix comment (#3259)
 * *(reminders)* Remove reminderDates property
-* *(sentry)* Alwys use the same version
+* *(sentry)* Always use the same version
 * *(sentry)* Ignore missing commits
 * *(sentry)* Only load sentry when enabled
 * *(sentry)* Remove debug options
@@ -1175,7 +1175,7 @@ The releases aim at the api versions which is why there are missing versions.
 * *(sentry)* Use correct chunks option
 * *(task)* Move toggleFavorite to store
 * *(task)* Use ref for task instead of reactive
-* *(tests)* Enable experimental memory managment for cypress tests
+* *(tests)* Enable experimental memory management for cypress tests
 * *(user)* Cleanup* Update JSDoc example ([bfbfd6a](bfbfd6a4212d493912406c1c505b6c0a24f0f014))
 * Add comment on overriding ([21ad830](21ad8301f28ba838c577acb72cb66ea00e176876))
 * Add types for emit ([c567874](c56787443f6f9f6be0f8d8501dd4e6e7a768648a))
@@ -1198,7 +1198,7 @@ The releases aim at the api versions which is why there are missing versions.
 * Group return parameter ([5298706](52987060b11ac0418b6a88f1beabaee59165117d))
 * Import const instead of redeclaring it ([61baf02](61baf02e26b292e3f02816a483eb7d92fb49d8ab))
 * Improve prop type definition ([638f6be](638f6bea24980658d0f5fb3432d7b64c2ae06f75))
-* Make fuzzy matching a paramater ([aeb73a3](aeb73a374f84f6b01d4be4cc784336a214a4cdfa))
+* Make fuzzy matching a parameter ([aeb73a3](aeb73a374f84f6b01d4be4cc784336a214a4cdfa))
 * Move ProjectsNavigationWrapper back to navigation.vue ([65522a5](65522a57f1ceddfabeba235e17f8f81ee6bae47b))
 * Move all options to component props ([db1c6d6](db1c6d6a41591c8ee5df2d2ee400aaaeda0d02bb))
 * Move const ([0ce150a](0ce150af237985dda0cf44f24179ebae332e7585))
@@ -1234,7 +1234,7 @@ The releases aim at the api versions which is why there are missing versions.
 * Set project id from the outside ([6c9cbaa](6c9cbaadc821ab92e85b1f8e3fcb3fa85ea99670))
 * Update nix flake ([f40035d](f40035dc7943e8199c553acfec838f21ea212c3e))
 * Use <menu> instead of <ul> ([49fac7d](49fac7db1cbefce49712797869b956f31e8f541c))
-* Use klona to clone project objet ([55e9122](55e912221be4b4765cdb3a7bd0e3dc693478ac81))
+* Use klona to clone project object ([55e9122](55e912221be4b4765cdb3a7bd0e3dc693478ac81))
 * Use long variable name ([6f1baa3](6f1baa3219093147842efe10f92482364516c84c))
 * Use long variable name ([a0d39e6](a0d39e6081f35e4ba6589b7840168b0c69b3210f))
 * Use project id type ([a342ae6](a342ae67de1c884895ce3304cf6eb1757a38573a))
@@ -1689,7 +1689,7 @@ The releases aim at the api versions which is why there are missing versions.
 
 * *(bug-report.yml)* List (#2845)
 * *(quick add magic)* Don't create a new label multiple times if it is used in multiple tasks
-* *(task)* Pass a list specified via quick add magic down to all subtasks created via indention
+* *(task)* Pass a list specified via quick add magic down to all subtasks created via indentation
 * *(task)* Move task color bubble next to task index and done badge on mobile
 * *(tasks)* Remove a task from its bucket when it is in the first kanban bucket
 * *(tasks)* Missing space when showing parent tasks and list title
@@ -1852,7 +1852,7 @@ The releases aim at the api versions which is why there are missing versions.
 * Add vite build target esnext (#2674) ([163d936](163d9366d3061c40b5db7f3aad5c2cea01948403))
 * Filters script setup (#2671) ([4a550da](4a550da6a69a50126b9d4a555b6713687347c2d3))
 * Reduce multiselect selector specificity (#2678) ([9f0f0b3](9f0f0b39f8eea399b7b03003afa5893d0b8016f8))
-* Reduce contentAuth selector specifity (#2677) ([12a8f7e](12a8f7ebe9fc556a7b0bc6e2d74e81d424ccfcf8))
+* Reduce contentAuth selector specificity (#2677) ([12a8f7e](12a8f7ebe9fc556a7b0bc6e2d74e81d424ccfcf8))
 * Reduce ListWrapper selector specificity (#2679) ([599c1ba](599c1ba4b5b0861d89755addf016e8f797b49dfe))
 * Reduce dropdown-item selector specificity (#2680) ([eb4c2a4](eb4c2a4b9df93ee35404cd7143cc88b3d44f9d59))
 * Reduce attachments selector specificity (#2682) ([0f1f131](0f1f131f7a2a38ee57175edfd5ed1c932225af16))
@@ -2000,7 +2000,7 @@ The releases aim at the api versions which is why there are missing versions.
 * Improved types (#2547) ([0ff0d8c](0ff0d8c5b89bd6a8b628ddbe6074f61797b6b9c1))
 * MigrateService script setup (#2432) ([8b7b4d6](8b7b4d61a3b9dd01ab58b7e7dd30bf649b62fcf6))
 * Sticky action buttons (#2622) ([f4bc2b9](f4bc2b94f0466a357361a69cfb3562e84d1ea439))
-* Simpliy editAssignees (#2646) ([d9a8382](d9a83820495f34ddbd776f70cabdc24bbb1c3f32))
+* Simplify editAssignees (#2646) ([d9a8382](d9a83820495f34ddbd776f70cabdc24bbb1c3f32))
 * Remove comments from prioritySelect (#2645) ([6a93701](6a93701649d35622d13dda969aae4aedf145d4d0))
 * ListKanban script setup (#2643) ([d85abbd](d85abbd77a8197e977fdbfec0ee309736cce05fa))
 * Kanban store with composition api ([f0492d4](f0492d49ef5cd99d95085deec066cec85f4688b3))
@@ -2389,7 +2389,7 @@ The releases aim at the api versions which is why there are missing versions.
 * Improve store typing ([2444784](244478400ad8b8243ae2b29d741c03fa2b83601b))
 * Add modelTypes ([7d4ba62](7d4ba6249e300b6711369476f5d6a84728668b0f))
 * Convert services and models to ts (#1798) ([dbea1f7](dbea1f7a51f3cf5173b5f381944c4ef19ef97ec8))
-* Add sponsor logo to readme (relm) ([e959043](e95904351fbd30776306225f3be55978d70ae42e))
+* Add sponsor logo to readme (realm) ([e959043](e95904351fbd30776306225f3be55978d70ae42e))
 * Show user display name when searching for assignees on a list ([65fd2f1](65fd2f14a067ea9d79b352af00f3c316be883fdf))
 * Add keyboard shortcut to toggle task description edit (#2332) ([7f6f896](7f6f8963e7db236f3beb9e6a36fab4ba479b969b))
 * Programmatically generate list of available views ([26d02d5](26d02d5593283c3ad2fb961348ba2f412cc9eaa8))
@@ -2441,8 +2441,8 @@ The releases aim at the api versions which is why there are missing versions.
 * Move kanban to stores ([9f26ae1](9f26ae1ee6241b2ef529f01d3511380c9d7a4576))
 * Port kanban store to pinia ([c35810f](c35810f28fc5aacefabad7526b0ac4e982d53cc7))
 * Port tasks store to pina (#2409) ([8c394d8](8c394d8024a825b961e825543453d188c28fa370))
-* Automatically create subtask relations based on indention ([cc378b8](cc378b83fee2b326610cdda1997cc5236f947fbf))
-* Automatically create subtask relations based on indention (#2443) ([ec227a6](ec227a6872ababb612cb0b7e68ca0c20676117c1))
+* Automatically create subtask relations based on indentation ([cc378b8](cc378b83fee2b326610cdda1997cc5236f947fbf))
+* Automatically create subtask relations based on indentation (#2443) ([ec227a6](ec227a6872ababb612cb0b7e68ca0c20676117c1))
 * Migrate kanban store to pina (#2411) ([d1d7cd5](d1d7cd535ed992fc0a8be8afaf13250ac9b61132))
 * Move base store to stores ([df74f9d](df74f9d80cdd44315a29189ecb2f236482cb70f5))
 * Port base store to pinia ([7f281fc](7f281fc5e98c5eb83f926100c7f79ee374c5a784))
@@ -2558,7 +2558,7 @@ The releases aim at the api versions which is why there are missing versions.
 * Define types ([56a2573](56a25734d7557663e2ba43ba41f4922f0b10ed8b))
 * Don't use for..in ([6975a2b](6975a2b286628294b8909bce3d43334cc383d987))
 * Add types for template ref ([4be0977](4be097701449b74bbeb7218b539db65961539591))
-* Don't use ref when not nessecary ([fd9d0ad](fd9d0ad1553756414696315508bc2d8928f63d9d))
+* Don't use ref when not necessary ([fd9d0ad](fd9d0ad1553756414696315508bc2d8928f63d9d))
 * Update lockfile ([957d8f0](957d8f05a5e9548138f8dce192513928deb02669))
 * Better naming for input ([df02dd5](df02dd529181e9701ce586dba9025c83eeaf48d8))
 * Clean up ([2acb70c](2acb70c56257202fe7d136b36ceaaa2fe122491e))
@@ -2773,7 +2773,7 @@ The releases aim at the api versions which is why there are missing versions.
 * ATTR_ENUMERATED_COERCION errors with contenteditable ([f795d2d](f795d2d0f31a28dd292ff9b237d6ce21ebd284aa))
 * Remove nonexisting prop ([c7b4c25](c7b4c25caa49cdf2a149184cd9935e598d449237))
 * Task attachment upload ([6d472bf](6d472bf5ca7c2b9621e3be5a8e9b2f5671c2e066))
-* Update node in .nvmrc aswell (#886) ([0fdfccc](0fdfcccee9b8185588dc62346e468c65ac57d3ea))
+* Update node in .nvmrc as well (#886) ([0fdfccc](0fdfcccee9b8185588dc62346e468c65ac57d3ea))
 * Move .progress styles together as close as possible ([6ba974f](6ba974f9faf7912d796dc54de3b00e629149dc32))
 * User dropdown-trigger background ([f496c9d](f496c9d678d6dc3a43df6f52e7de8f5eb19ee03f))
 * Use :deep() selector instead of ::v-deep ([87d2b4f](87d2b4fed38e01aa31308ef299e94a17fce8b790))
@@ -2852,7 +2852,7 @@ The releases aim at the api versions which is why there are missing versions.
 * Test ([7dddfea](7dddfea79ea6539d195eaa2fabc808b6337dbb1d))
 * Padding and centering of the kanban limit and dropdown ([8ae84ea](8ae84eaf42c1f7cf8cb26e555cfb77e70aabfef2))
 * Blockquote styling in dark mode ([0befa58](0befa58908ae3f5a2467429d1ab0ff7fded0eb46))
-* Readd modal transitions ([16b0d03](16b0d0360159aed24cae41fabc4a88a37e9d9711))
+* Re-add modal transitions ([16b0d03](16b0d0360159aed24cae41fabc4a88a37e9d9711))
 * List loading ([5937f01](5937f01cc57d74f9bc69d58c05406537975189f5))
 * List specs ([e78d47f](e78d47fdcf93052fdcf5d41abbe2bd63ca51e086))
 * Task done label test ([da8cf13](da8cf13619e269a0fc02b3b733d9eeb0b5d9c860))
@@ -2907,8 +2907,8 @@ The releases aim at the api versions which is why there are missing versions.
 * Related task within the same namespace ([20a9ad2](20a9ad2c9efea59a1752bae170744f500cba9092))
 * Undefined prop subscription ([3e311e0](3e311e07cdd603d970b834fa5de6b8c926c474dd))
 * Make isButton prop optional ([3d420c3](3d420c37708ae3568200ccf8214dd2d120a0af37))
-* Don't try to load a langauge if there's none provided ([210a78b](210a78be86385b2d57a65563082e60bd11965217))
-* Don't try to load a langauge if there's none provided ([ba20ac3](ba20ac3b89e11af897978c350f20b501fd028686))
+* Don't try to load a language if there's none provided ([210a78b](210a78be86385b2d57a65563082e60bd11965217))
+* Don't try to load a language if there's none provided ([ba20ac3](ba20ac3b89e11af897978c350f20b501fd028686))
 * Custom date range with nothing specified ([16f48bc](16f48bcc2dbc081c5526040e789a1a9f07f1575b))
 * Reset the flatpickr range when setting a date either manually or through a quick setting ([4d23fae](4d23fae9ad1d1238dfdecf9694adfa36313c6651))
 * Now correctly showing the title of predefined ranges ([6c55411](6c55411f71b1790f7144624ba651df468ab37af8))
@@ -2961,7 +2961,7 @@ The releases aim at the api versions which is why there are missing versions.
 * Lint ([a055a3e](a055a3ea52488287377920aba530eda9de15d3dc))
 * Forgotten import ([4605061](46050611d86f4173048e4e7a2f7583326b62d0b4))
 * Loading list views would sometimes not get loaded ([2e537f6](2e537f6d63690724fb83b31107ddf3e34f63edba))
-* Indention of nested checklist items ([ad8ca46](ad8ca462cb19a0e5d81e23ebf07c292381ea0219))
+* Indentation of nested checklist items ([ad8ca46](ad8ca462cb19a0e5d81e23ebf07c292381ea0219))
 * Lint ([53787a6](53787a65dfccebeca938d84e3e6a30f47aa48304))
 * Remove self and replace with this ([175b786](175b786ec6c807ef61aefc1153bb786b8e14f787))
 * Service worker path ([fb2eb4c](fb2eb4c439580a34533a0bf0ee0adfb8f2d3b02d))
@@ -2984,7 +2984,7 @@ The releases aim at the api versions which is why there are missing versions.
 * Update notification spacing ([49946b2](49946b27662ed30ab0556c901c6bc91e4e6396f1))
 * New task input focus ([24701a1](24701a17f5cc8f656bc3f0ede7aa3a5ff5cca888))
 * Progress bar alignment in task list ([fbcf587](fbcf587e938f1d990f74669889e548875e0a537c))
-* Date filters are now correclty converted ([87d4ced](87d4ceddb8a033f89f9764256f0d39e6da25fc3e))
+* Date filters are now correctly converted ([87d4ced](87d4ceddb8a033f89f9764256f0d39e6da25fc3e))
 * Actually deleting the list now works ([b40d6f7](b40d6f783c013c0d15bcfec656942947393be4fc))
 * Remove user from team ([86efe9f](86efe9fd23978d9af2c7bbd1198c9d74b8bedda2))
 * Dark mode for user and team settings ([ed85557](ed85557cf3031184a6bb9176c1371b2ac17723dc))
@@ -3033,7 +3033,7 @@ The releases aim at the api versions which is why there are missing versions.
 * Archiving a list ([2b8a786](2b8a7868254db5fd739d6f0ec62e67ee802d8429))
 * Fix import type ([d064f0a](d064f0acc099311dae63db86dbea0a1f6e247864))
 * Fix linting ([5835848](58358481bcab645087135f32bf1c00adaf52cd3a))
-* Reenable some compilerOptions ([8f82dd2](8f82dd27835667654bdd869e4dbf0b070064948d))
+* Re-enable some compilerOptions ([8f82dd2](8f82dd27835667654bdd869e4dbf0b070064948d))
 * Cypress plugins import ([77466e3](77466e337353fdc1d7ee5eb7b21c55c752c4b6bd))
 * Cypress plugins ([c6d214b](c6d214b9ebb469a0636c86c5b5b62dc335ac53c7))
 * Button styling ([02f985d](02f985d8a3627f5536dfe0c88e2c97c0aaea8701))
@@ -3050,7 +3050,7 @@ The releases aim at the api versions which is why there are missing versions.
 * Upgrade packages for vite 3.0 ([d96ea38](d96ea384dce1f282722e37161a1767a090def812))
 * Datepicker confirm button overflow ([9fd2f4e](9fd2f4ea5caad1a307a6886379f029a83ad0aa6c))
 * Use of sortable js with transition-group (#2160) ([0456f4a](0456f4a041300a2c076c808b5b844d0677ffaba0))
-* Don't try to pass nonexistant props to filters ([6dc02c4](6dc02c45dd78485106b89537f9ca49328a4adbb7))
+* Don't try to pass nonexistent props to filters ([6dc02c4](6dc02c45dd78485106b89537f9ca49328a4adbb7))
 * Don't use transitions for elements where it is not possible ([c2d5370](c2d5370e4a88fc646dccd3c598c2953b6b40ca82))
 * User avatar settings ([62bbffb](62bbffb17ef863a3a1575d6827e392cad3ee0e84))
 * Quick actions arrow key navigation in dark mode ([f5bb697](f5bb6970322f825faf64841c97539c6a324ca8d4))
@@ -4699,7 +4699,7 @@ Co-committed-by: renovate <renovatebot@kolaente.de>
 * Automatically update approved translations from crowdin
 * Break long list titles in list overview
 * Preload labels and use locally stored in vuex
-* PWA improvments (#622)
+* PWA improvements (#622)
 * Quick Actions & global search (#528)
 * Quick add magic for tasks (#570)
 * Reorder tasks, lists and kanban buckets (#620)
@@ -5004,7 +5004,7 @@ Co-committed-by: renovate <renovatebot@kolaente.de>
 * Fix adding a label twice when selecting it and pressing enter
 * Fix attachment hover
 * Fix attachment not being added if the task was not a kanban task
-* Fix attachments being added mutliple times
+* Fix attachments being added multiple times
 * Fix bucket test fixture when moving tasks between lists test
 * Fix button height
 * Fix caldav url not containing the api url if the frontend and api are on the same domain
@@ -5045,7 +5045,7 @@ Co-committed-by: renovate <renovatebot@kolaente.de>
 * Fix multiselect on mobile
 * Fix namespace actions alignment in the menu
 * Fix no color selected in the color picket
-* Fix notification parsing for team memeber added
+* Fix notification parsing for team member added
 * Fix notification styling
 * Fix pasting text into task comments or task descriptions
 * Fix priority label width in task list
@@ -5092,7 +5092,7 @@ Co-committed-by: renovate <renovatebot@kolaente.de>
 * Change bucket background color
 * Change main branch to main
 * Cleanup font caching and requesting
-* Don't hide all lists of namespaces when loosing network connectivity
+* Don't hide all lists of namespaces when losing network connectivity
 * Don't save the editor text when it is loaded
 * Don't show the list color in the list view
 * Don't show the "new bucket" button when buckets are still loading
@@ -5111,7 +5111,7 @@ Co-committed-by: renovate <renovatebot@kolaente.de>
 * Make sure all arm64 build steps run in parallel
 * Make sure all empty pages have a call to action
 * Make sure all popups & dropdowns are animated
-* Make sure attachements are only added once to the list after uploading + Make sure the attachment list shows up every
+* Make sure attachments are only added once to the list after uploading + Make sure the attachment list shows up every
   time after adding an attachment
 * Make sure no cta's are visible while the page is loading
 * Make sure the loading spinner is always visible at the end of the page
@@ -5328,7 +5328,7 @@ Co-committed-by: renovate <renovatebot@kolaente.de>
 * Log the user out if the token could not be renewed
 * Make adding fields to tasks more intuitive (#365)
 * Make keyboard shortcuts single keys
-* Move focus directive to seperate file
+* Move focus directive to separate file
 * Move next week/next month task overview pages into a single "Upcoming" page and allow toggle
 * Move "Teams" menu further down the list
 * Pin dependencies (#324)
@@ -5683,7 +5683,7 @@ Co-committed-by: renovate <renovatebot@kolaente.de>
 * Add logging frontend version to console on startup
 * Add moving tasks between lists
 * Add scrolling for task table view
-* Add telegram release notificiation (#98)
+* Add telegram release notification (#98)
 * Add user settings (#108)
 * Better responsive layout for unauthenticated pages
 * Change default api url to 3456 (Vikunja default)
@@ -5737,7 +5737,7 @@ Co-committed-by: renovate <renovatebot@kolaente.de>
 * Fix task relation kind dropdown
 * Fix task sort parameters
 * Fix task title overflowing in detail view
-* Fix team managment (#121)
+* Fix team management (#121)
 * Fix trying to load the current tasks even when not logged in (Fixes #133)
 * Fix undefined getter for related tasks
 * Fix uploading attachments
@@ -5989,7 +5989,7 @@ Co-committed-by: renovate <renovatebot@kolaente.de>
 
 * Labels (#25)
 * Task priorites (#19)
-* Task assingees (#21)
+* Task assignees (#21)
 
 ### Changed
 

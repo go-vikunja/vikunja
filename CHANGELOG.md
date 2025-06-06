@@ -785,7 +785,7 @@ All releases can be found on https://code.vikunja.io/vikunja/releases.
 * Lint ([5e9edef](5e9edef3b36f6a4be5002b8aef4bc02c7649f7b6))
 * Lint ([6f51b56](6f51b565895edd75ca26d96c08af26d85ce38f3a))
 * Pick first available view if currently configured view got deleted (#2235) ([c4d3d99](c4d3d99cd49aa65d602327abcc5f848d81d6da4e))
-* Do not try to fetch nonexistant bucket ([037022e](037022e8570f9b7b0d3053e2b20057b8f5630803))
+* Do not try to fetch nonexistent bucket ([037022e](037022e8570f9b7b0d3053e2b20057b8f5630803))
 * Update task in typesense when adding a label or assignee to them ([5213006](521300613f24f2ed585ca7da49a02b58f7d77fb8))
 * Lint ([1cd5dd2](1cd5dd2b2fc06731c70721a42ca93966449fa3d2))
 * Drop bucket index before recreating it ([ca33c0b](ca33c0b2bcaf9de018cecca1051bc4c3b176ce61))
@@ -1258,7 +1258,7 @@ All releases can be found on https://code.vikunja.io/vikunja/releases.
 * *(views)* Fetch tasks via view context when accessing them through views
 * *(views)* Generate swagger docs
 * *(views)* Save task position
-* *(views)* Return position when retriving tasks
+* *(views)* Return position when retrieving tasks
 * *(views)* Save task position in list view
 * *(views)* Load views when navigating with link share
 * *(views)* Create task bucket relation when creating a new bucket
@@ -1421,7 +1421,7 @@ All releases can be found on https://code.vikunja.io/vikunja/releases.
 * *(ci)* Typo
 * *(ci)* Update shasum
 * *(docs)* Old install pages redirect
-* *(editor)* Don't set editor content intitially
+* *(editor)* Don't set editor content initially
 * *(export)* Don't crash when an exported file does not exist
 * *(filters)* Add explicit check for string slice filter
 * *(gantt)* Correctly import languages from dayjs
@@ -1586,7 +1586,7 @@ All releases can be found on https://code.vikunja.io/vikunja/releases.
 * *(ci)* Don't generate swagger docs in ci
 * *(ci)* Use the same go image for everything
 * *(ci)* Don't try to install when linting
-* *(cmd)* Do not initialize asnyc operations when running certain cli commands
+* *(cmd)* Do not initialize async operations when running certain cli commands
 * *(comments)* Make sure comment sort order is stable
 * *(docs)* Add empty swagger file so that the package exists
 * *(docs)* Remove duplicate paths (params) in swagger docs
@@ -1625,7 +1625,7 @@ All releases can be found on https://code.vikunja.io/vikunja/releases.
 * *(typesense)* Add more error logging
 * *(typesense)* Pass the correct user when fetching task comments
 * *(typesense)* Upsert all documents at once
-* *(typesense)* Explicitely create typesense sync table
+* *(typesense)* Explicitly create typesense sync table
 * *(typesense)* Don't try to index tasks if there are none
 * *(typesense)* Add typesense sync to initial structs
 * *(typesense)* Make sure searching works when no task has a comment at index time
@@ -1786,7 +1786,7 @@ All releases can be found on https://code.vikunja.io/vikunja/releases.
 * *(webhooks)* Prevent link shares from managing webhooks
 * *(webhooks)* Register task and project events as webhook
 * *(webhooks)* Set user agent header to Vikunja
-* *(webhooks)* Validate events and target url* Search improvemens (#1598) ([6f825fa](6f825fa4133a3200dab8a46faa2932cf5633263c))
+* *(webhooks)* Validate events and target url* Search improvements (#1598) ([6f825fa](6f825fa4133a3200dab8a46faa2932cf5633263c))
 * Accept hex values which start with a # ([a1ea77f](a1ea77f7519efe7696bce018814071cbabaaa62c))
 * Add demo mode flag ([97b5cd3](97b5cd306f44a23d5f8923b1cf750533c1ca3e10))
 * Add setting for default bucket ([b99b323](b99b323c4c5a003c5b34e0196da566816469c608))
@@ -1845,7 +1845,7 @@ All releases can be found on https://code.vikunja.io/vikunja/releases.
 * *(filters)* Return all filters with all projects, not grouped under a pseudo project
 * *(filters)* Sorting tasks from filters
 * *(image)* Json type of struct property (#1469)
-* *(import)* Don't try to load a nonexistant attachment file
+* *(import)* Don't try to load a nonexistent attachment file
 * *(lint)* Disable misspell linter on redoc
 * *(migration)* Don't try to fetch task details of tasks whose projects are deleted
 * *(migration)* Enable insert from structure work recursively
@@ -2128,7 +2128,7 @@ All releases can be found on https://code.vikunja.io/vikunja/releases.
 * *(docs)* Old helm charts url (#1344)
 * *(docs)* Fix a few minor typos (#59)
 * *(docs)* Fix traefik v2 example (#65)
-* *(docs)* Clarify support for caldav reccurrence
+* *(docs)* Clarify support for caldav recurrence
 * *(drone)* Add type, fix pull, remove group (#1355)
 * *(dump)* Make sure null dates are properly set when restoring from a dump
 * *(export)* Ignore file size for export files
@@ -2146,7 +2146,7 @@ All releases can be found on https://code.vikunja.io/vikunja/releases.
 * *(reminders)* Make sure an overdue reminder is sent when there is only one overdue task
 * *(reminders)* Prevent duplicate reminders when updating task details
 * *(restore)* Check if we're really dealing with a string
-* *(task)* Make sure the task's last updated timestamp is always updated when releated entities changed
+* *(task)* Make sure the task's last updated timestamp is always updated when related entities changed
 * *(task)* Correctly load tasks by id and uuid in caldav
 * *(tasks)* Don't include undone overdue tasks from archived lists or namespaces in notification mails
 * *(tasks)* Don't reset the kanban bucket when updating a task and not providing one
@@ -2269,7 +2269,7 @@ All releases can be found on https://code.vikunja.io/vikunja/releases.
 * *(docs)* Remove sponsors
 * *(task)* Add test to check if a task's reminders are duplicated
 * Remove custom gitea bug template in favor of githubs ([4fa45bf](4fa45bf9dcbaa8a41a53fc2305c4c2c1aa15691c))
-* 0.20.2 release preperations ([d19fc80](d19fc80b8be08673136d84e10187cadb293822bf))
+* 0.20.2 release preparations ([d19fc80](d19fc80b8be08673136d84e10187cadb293822bf))
 * Update funding links ([aa25ccd](aa25ccdc917684583a9bff4b7cb272004386f0fa))
 
 
@@ -2389,11 +2389,11 @@ All releases can be found on https://code.vikunja.io/vikunja/releases.
 
 ### Features
 
-* *(docs)* Add relase checklist
+* *(docs)* Add release checklist
 
 ### Other
 
-* *(other)* Nessecary is a common misspelling of necessary (#1304)
+* *(other)* Necessary is a common misspelling of necessary (#1304)
 
 ## [0.20.0] - 2022-10-28
 
@@ -2484,7 +2484,7 @@ All releases can be found on https://code.vikunja.io/vikunja/releases.
 * *(migration)* Add routes for TickTick migrator
 * *(migration)* Generate swagger docs
 * *(task)* Add cover image attachment id property
-* *(task)* Add cover image attachment id property (#1263)* Add sponsor to readme (relm) ([f814dd0](f814dd03eb7f1ae08ea67ae0e3e89b8b4e684ce3))
+* *(task)* Add cover image attachment id property (#1263)* Add sponsor to readme (realm) ([f814dd0](f814dd03eb7f1ae08ea67ae0e3e89b8b4e684ce3))
 * Upgrade xorm ([b1fd13b](b1fd13bbcbc551d1bbfe78d91fe6209369709df5))
 * Upgrade xorm ([4323803](4323803fd6801e21121eac0d9f9cd62879f090f7))
 * Upgrade xorm (#1197) ([5341918](53419180be386d675b4513e7ec70aca85b5ac99b))
@@ -3282,7 +3282,7 @@ All releases can be found on https://code.vikunja.io/vikunja/releases.
 * Don't create a list identifier by default
 * Make sure all int64 db fields are using bigint when actually storing the data (#741)
 * Make sure a password reset token can be used only once
-* Make the debian repo structure for buster instead of strech
+* Make the debian repo structure for buster instead of stretch
 * Refactor adding more details to tasks (#739)
 * Simplify updating task reminders
 * Update code header template
@@ -3621,7 +3621,7 @@ All releases can be found on https://code.vikunja.io/vikunja/releases.
 
 #### Added
 
-* Add 2fa for authentification (#383)
+* Add 2fa for authentication (#383)
 * Add categories to error docs
 * Add changing email for users
 * Add community link
@@ -3745,7 +3745,7 @@ All releases can be found on https://code.vikunja.io/vikunja/releases.
 * Add more logging to web handler methods
 * Add postgres support (#135)
 * Add rate limit by ip for non-authenticated routes (#127)
-* Better efficency for loading teams (#128)
+* Better efficiency for loading teams (#128)
 * Expand relative path ~/.config/vikunja to $HOME/.config/vikunja (#146)
 * Task Comments (#138)
 
@@ -3937,7 +3937,7 @@ All releases can be found on https://code.vikunja.io/vikunja/releases.
 
 * Fixed path to get all tasks (echo bug)
 * Explicitly get the peudonamespace with all shared lists (#32)
-* Properly init tabels Redis
+* Properly init tables Redis
 * unexpected EOF when using metrics (#35)
 * Task sorting in lists (#36)
 * Various user fixes (#38)
@@ -3946,7 +3946,7 @@ All releases can be found on https://code.vikunja.io/vikunja/releases.
 ### Changed
 
 * Simplified list rights check (#50)
-* Refactored some structs to not expose unneded values via json (#52)
+* Refactored some structs to not expose unneeded values via json (#52)
 
 ### Misc
 
