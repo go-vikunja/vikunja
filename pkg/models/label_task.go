@@ -164,7 +164,7 @@ type LabelByTaskIDsOptions struct {
 }
 
 // GetLabelsByTaskIDs is a helper function to get all labels for a set of tasks
-// Used when getting all labels for one task as well when getting all lables
+// Used when getting all labels for one task as well when getting all labels
 func GetLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*LabelWithTaskID, resultCount int, totalEntries int64, err error) {
 
 	linkShare, isLinkShareAuth := opts.User.(*LinkSharing)

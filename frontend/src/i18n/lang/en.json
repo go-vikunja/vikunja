@@ -389,7 +389,7 @@
       "targetUrl": "Target URL",
       "targetUrlInvalid": "Please provide a valid URL.",
       "events": "Events",
-      "eventsHint": "Select all events this webhook should recieve updates for (within the current project).",
+      "eventsHint": "Select all events this webhook should receive updates for (within the current project).",
       "mustSelectEvents": "You must select at least one event.",
       "delete": "Delete this webhook",
       "deleteText": "Are you sure you want to delete this webhook? External targets will not be notified of its events anymore.",
@@ -486,8 +486,8 @@
           "lessThan": "Less than",
           "lessThanOrEqual": "Less than or equal to",
           "like": "Matches a pattern (using wildcard %)",
-          "in": "Matches any value in a comma-seperated list of values",
-          "notIn": "Matches any value not present in a comma-seperated list of values"
+          "in": "Matches any value in a comma-separated list of values",
+          "notIn": "Matches any value not present in a comma-separated list of values"
         },
         "logicalOperators": {
           "intro": "To combine multiple conditions, you can use the following logical operators:",

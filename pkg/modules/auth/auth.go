@@ -40,7 +40,7 @@ const (
 	AuthTypeLinkShare
 )
 
-// Token represents an authentification token
+// Token represents an authentication token
 type Token struct {
 	Token string `json:"token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"`
 }
@@ -55,7 +55,7 @@ func NewUserAuthTokenResponse(u *user.User, c echo.Context, long bool) error {
 	return c.JSON(http.StatusOK, Token{Token: t})
 }
 
-// NewUserJWTAuthtoken generates and signes a new jwt token for a user. This is a global function to be able to call it from web tests.
+// NewUserJWTAuthtoken generates and signs a new jwt token for a user. This is a global function to be able to call it from web tests.
 func NewUserJWTAuthtoken(u *user.User, long bool) (token string, err error) {
 	t := jwt.New(jwt.SigningMethodHS256)
 

@@ -209,7 +209,7 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 	// Default factories
 	// It is possible to specify a factory for each type of request.
 	// This makes it possible to have different models returned from different routes.
-	// Specific factories for each request are completly optional, if these are not specified, the defautl factory is used.
+	// Specific factories for each request are completely optional, if these are not specified, the default factory is used.
 	////////////////
 
 	/**
