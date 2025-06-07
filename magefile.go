@@ -77,6 +77,7 @@ var (
 		"lint:fix":                    Check.GolangciFix,
 		"generate:config-yaml":        Generate.ConfigYAML,
 		"generate:swagger-docs":       Generate.SwaggerDocs,
+		"generate:frontend-version":   Generate.FrontendVersion,
 	}
 )
 
@@ -199,6 +200,42 @@ func setGoFiles() {
 			GoFiles = append(GoFiles, RootPath+strings.TrimLeft(f, "."))
 		}
 	}
+}
+
+func updateFrontendVersion() error {
+	if VersionNumber == "dev" || Version == "unstable" {
+		return nil
+	}
+
+	packageJSONPath := filepath.Join(RootPath, "frontend", "package.json")
+	packageData, err := os.ReadFile(packageJSONPath)
+	if err != nil {
+		return fmt.Errorf("error reading frontend package.json: %w", err)
+	}
+
+	var pkg map[string]interface{}
+	if err := json.Unmarshal(packageData, &pkg); err != nil {
+		return fmt.Errorf("error parsing frontend package.json: %w", err)
+	}
+
+	pkg["version"] = VersionNumber
+
+	updated, err := json.MarshalIndent(pkg, "", "  ")
+	if err != nil {
+		return fmt.Errorf("error marshalling frontend package.json: %w", err)
+	}
+	updated = append(updated, '\n')
+	if err := os.WriteFile(packageJSONPath, updated, 0644); err != nil {
+		return fmt.Errorf("error writing frontend package.json: %w", err)
+	}
+
+	versionJSONPath := filepath.Join(RootPath, "frontend", "src", "version.json")
+	versionContent := fmt.Sprintf("{\n  \"VERSION\": \"%s\"\n}\n", VersionNumber)
+	if err := os.WriteFile(versionJSONPath, []byte(versionContent), 0644); err != nil {
+		return fmt.Errorf("error writing version.json: %w", err)
+	}
+
+	return nil
 }
 
 // Some variables can always get initialized, so we do just that.
@@ -1360,4 +1397,10 @@ func generateConfigYAMLFromJSON(yamlPath string, commented bool) {
 // Create a yaml config file from the config-raw.json definition
 func (Generate) ConfigYAML(commented bool) {
 	generateConfigYAMLFromJSON(DefaultConfigYAMLSamplePath, commented)
+}
+
+// Updates the frontend version files based on RELEASE_VERSION or git tags
+func (Generate) FrontendVersion() error {
+	mg.Deps(initVars)
+	return updateFrontendVersion()
 }

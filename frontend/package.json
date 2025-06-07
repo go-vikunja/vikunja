@@ -2,7 +2,7 @@
   "name": "vikunja-frontend",
   "description": "The todo app to organize your life.",
   "private": true,
-  "version": "0.10.0",
+  "version": "0.24.6",
   "license": "AGPL-3.0-or-later",
   "repository": {
     "type": "git",
