@@ -303,7 +303,7 @@ func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, op
 		a:                   a,
 		hasFavoritesProject: hasFavoritesProject,
 	}
-	if config.TypesenseEnabled.GetBool() {
+	if config.TypesenseEnabled.GetBool() && !opts.filterIncludeNulls {
 		var tsSearcher taskSearcher = &typesenseTaskSearcher{
 			s: s,
 		}
