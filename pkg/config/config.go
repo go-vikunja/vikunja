@@ -18,6 +18,7 @@ package config
 
 import (
 	"crypto/rand"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -527,6 +528,29 @@ func setConfigFromEnv() error {
 	return viper.MergeConfigMap(configMap)
 }
 
+func mergeConfigFromPath(p string) {
+	if p == "" {
+		return
+	}
+
+	tmp := viper.New()
+	tmp.SetConfigName("config")
+	tmp.AddConfigPath(p)
+
+	if err := tmp.ReadInConfig(); err != nil {
+		var notFound viper.ConfigFileNotFoundError
+		if errors.As(err, &notFound) {
+			return
+		}
+		log.Warning(err.Error())
+		log.Warning("Using default config.")
+		return
+	}
+
+	log.Infof("Using config file: %s", tmp.ConfigFileUsed())
+	_ = viper.MergeConfigMap(tmp.AllSettings())
+}
+
 // InitConfig initializes the config, sets defaults etc.
 func InitConfig() {
 
@@ -540,33 +564,22 @@ func InitConfig() {
 
 	log.ConfigureLogger(LogEnabled.GetBool(), LogStandard.GetString(), LogPath.GetString(), LogLevel.GetString())
 
-	// Load the config file
-	viper.AddConfigPath(ServiceRootpath.GetString())
-	viper.AddConfigPath("/etc/vikunja/")
+	// Load the config file from all known locations
+	rootPath := ServiceRootpath.GetString()
+	mergeConfigFromPath(rootPath)
+	mergeConfigFromPath("/etc/vikunja/")
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		log.Debugf("No home directory found, not using config from ~/.config/vikunja/. Error was: %s\n", err.Error())
 	} else {
-		viper.AddConfigPath(path.Join(homeDir, ".config", "vikunja"))
+		mergeConfigFromPath(path.Join(homeDir, ".config", "vikunja"))
 	}
 
-	viper.AddConfigPath(".")
-	viper.SetConfigName("config")
+	mergeConfigFromPath(".")
 
-	err = viper.ReadInConfig()
-
-	if viper.ConfigFileUsed() != "" {
-		log.Infof("Using config file: %s", viper.ConfigFileUsed())
-
-		if err != nil {
-			log.Warning(err.Error())
-			log.Warning("Using default config.")
-		} else {
-			log.ConfigureLogger(LogEnabled.GetBool(), LogStandard.GetString(), LogPath.GetString(), LogLevel.GetString())
-		}
-	} else {
-		log.Info("No config file found, using default or config from environment variables.")
+	if ServiceRootpath.GetString() != rootPath {
+		mergeConfigFromPath(ServiceRootpath.GetString())
 	}
 
 	err = setConfigFromEnv()
