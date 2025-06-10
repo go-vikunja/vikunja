@@ -291,7 +291,7 @@
                 {
                     "key": "enable",
                     "default_value": "true",
-                    "comment": "Whether to enable or disable cors headers.\nBy default, this is enabled only for requests from the desktop application.\nNote: If you want to put the frontend and the api on separate domains or ports, you will need to adjust this setting accordingly."
+                    "comment": "Whether to enable or disable cors headers.\nBy default, this is enabled only for requests from the desktop application running on localhost.\nNote: If you want to put the frontend and the api on separate domains or ports, you will need to adjust this setting accordingly."
                 },
                 {
                     "key": "origins",
@@ -299,6 +299,9 @@
                     "children": [
                         {
                             "default_value": "http://127.0.0.1:*"
+                        },
+                        {
+                            "default_value": "http://localhost:*"
                         }
                     ]
                 },
