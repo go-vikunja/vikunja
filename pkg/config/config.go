@@ -421,8 +421,8 @@ func InitDefaultConfig() {
 	FilesBasePath.setDefault("files")
 	FilesMaxSize.setDefault("20MB")
 	// Cors
-	CorsEnable.setDefault(false)
-	CorsOrigins.setDefault([]string{"*"})
+	CorsEnable.setDefault(true)
+	CorsOrigins.setDefault([]string{"http://127.0.0.1:*", "http://localhost:*"})
 	CorsMaxAge.setDefault(0)
 	// Migration
 	MigrationTodoistEnable.setDefault(false)
