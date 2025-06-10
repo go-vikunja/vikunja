@@ -86,7 +86,7 @@
     "dompurify": "3.2.6",
     "fast-deep-equal": "3.1.3",
     "flatpickr": "4.6.13",
-    "flexsearch": "0.7.43",
+    "flexsearch": "0.8.205",
     "floating-vue": "5.2.2",
     "is-touch-device": "1.0.1",
     "klona": "2.0.6",
@@ -157,7 +157,7 @@
   "pnpm": {
     "patchedDependencies": {
       "@github/hotkey@3.1.1": "patches/@github__hotkey@3.1.1.patch",
-      "flexsearch@0.7.43": "patches/flexsearch@0.7.43.patch"
+      "flexsearch@0.8.205": "patches/flexsearch@0.8.205.patch"
     },
     "onlyBuiltDependencies": [
       "@parcel/watcher",

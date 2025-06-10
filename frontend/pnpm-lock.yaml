@@ -8,9 +8,9 @@ patchedDependencies:
   '@github/hotkey@3.1.1':
     hash: 145ab3233cbcd3bc934b4961cd8710e2b15e4ae5dd20862a8d1d6621d7f9d4a8
     path: patches/@github__hotkey@3.1.1.patch
-  flexsearch@0.7.43:
-    hash: f7066310ad918eadadaf64278c0a00d7ca785faf7d7fb631392b50db140954a6
-    path: patches/flexsearch@0.7.43.patch
+  flexsearch@0.8.205:
+    hash: e038b813d8bf1c71d07a35c866056edc10b68b513c474e8a3c0c5078ba0f7e9a
+    path: patches/flexsearch@0.8.205.patch
 
 importers:
 
@@ -3874,8 +3874,8 @@ packages:
   flatted@3.3.1:
     resolution: {integrity: sha512-X8cqMLLie7KsNUDSdzeN8FYK9rEt4Dt67OsG/DNGnYTSDBG4uFAJFBnUeiV+zCVAvwFy56IjM9sH51jVaEhNxw==}
 
-  flexsearch@0.7.43:
-    resolution: {integrity: sha512-c5o/+Um8aqCSOXGcZoqZOm+NqtVwNsvVpWv6lfmSclU954O3wvQKxxK8zj74fPaSJbXpSLTs4PRhh+wnoCXnKg==}
+  flexsearch@0.8.205:
+    resolution: {integrity: sha512-REFjMqy86DKkCTJ4gIE42c9MVm9t1vUWfEub/8taixYuhvyu4jd4XmFALk5VuKW4GH4VLav8A4BJboTsslHF1w==}
 
   floating-vue@5.2.2:
     resolution: {integrity: sha512-afW+h2CFafo+7Y9Lvw/xsqjaQlKLdJV7h1fCHfcYQ1C4SVMlu7OAekqWgu5d4SgvkBVU0pVpLlVsrSTBURFRkg==}
@@ -10823,7 +10823,7 @@ snapshots:
 
   flatted@3.3.1: {}
 
-  flexsearch@0.7.43(patch_hash=f7066310ad918eadadaf64278c0a00d7ca785faf7d7fb631392b50db140954a6): {}
+  flexsearch@0.8.205(patch_hash=e038b813d8bf1c71d07a35c866056edc10b68b513c474e8a3c0c5078ba0f7e9a): {}
 
   floating-vue@5.2.2(vue@3.5.16(typescript@5.8.3)):
     dependencies:

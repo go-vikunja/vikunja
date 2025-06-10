@@ -1,0 +1,34 @@
+diff --git a/package.json b/package.json
+index 5f8239ff969323f40dfd1602d3ef48cb438fd723..8d8d3c988cd9554a3e5401b44b559484bb38c9b5 100644
+--- a/package.json
++++ b/package.json
+@@ -28,10 +28,8 @@
+     "email": "info@nextapps.de"
+   },
+   "main": "dist/flexsearch.bundle.min.js",
+-  "module": "dist/flexsearch.bundle.module.min.js",
+-  "types": "./index.d.ts",
+   "exports": {
+     ".": {
+       "types": "./index.d.ts",
+       "import": "./dist/flexsearch.bundle.module.min.js",
+       "require": "./dist/flexsearch.bundle.min.js"
+     },
+     "./lang/*": {
+       "import": "./dist/module/lang/*.js",
+       "require": "./dist/lang/*.min.js"
+     },
+     "./db/*": {
+       "import": "./dist/module/db/*/index.js",
+       "require": "./dist/db/*/index.cjs"
+     },
+     "./debug": {
+       "import": "./dist/flexsearch.bundle.module.debug.js",
+       "require": "./dist/flexsearch.bundle.debug.js"
+     }
+   },
+   "browser": {
+     "flexsearch": "./dist/flexsearch.bundle.module.min.js",
+     "flexsearch/debug": "./dist/flexsearch.bundle.module.debug.js",
+     "dist/flexsearch.bundle.min.js": "./dist/flexsearch.bundle.min.js",
+     "dist/flexsearch.bundle.module.min.js": "./dist/flexsearch.bundle.module.min.js"
