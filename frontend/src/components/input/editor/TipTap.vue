@@ -182,6 +182,7 @@ import XButton from '@/components/input/Button.vue'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import inputPrompt from '@/helpers/inputPrompt'
 import {setLinkInEditor} from '@/components/input/editor/setLinkInEditor'
+import StopLinkOnSpace from './stopLinkOnSpace'
 
 const props = withDefaults(defineProps<{
 	modelValue: string,
@@ -464,11 +465,12 @@ const extensions : Extensions = [
 		},
 	}),
 
-	Commands.configure({
-		suggestion: suggestionSetup(t),
-	}),
-	
-	PasteHandler,
+        Commands.configure({
+                suggestion: suggestionSetup(t),
+        }),
+
+        PasteHandler,
+       StopLinkOnSpace,
 ]
 
 // Add a custom extension for the Escape key
