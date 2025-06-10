@@ -911,8 +911,8 @@ describe('Task', () => {
 				.should('exist')
 		})
 
-		it('Can check items off a checklist', () => {
-			const tasks = TaskFactory.create(1, {
+                it('Can check items off a checklist', () => {
+                        const tasks = TaskFactory.create(1, {
 				id: 1,
 				description: `
 <ul data-type="taskList">
@@ -950,8 +950,35 @@ describe('Task', () => {
 			cy.get('.tiptap__editor input[type=checkbox]')
 				.should('have.length', 5)
 			cy.get('.task-view .checklist-summary')
-				.should('contain.text', '2 of 5 tasks')
-		})
+                                .should('contain.text', '2 of 5 tasks')
+                })
+
+                it('Checklist item stays checked after reload', () => {
+                        const tasks = TaskFactory.create(1, {
+                                id: 1,
+                                description: `
+<ul data-type="taskList">
+        <li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label>
+                <div><p>First Item</p></div>
+        </li>
+</ul>`,
+                        })
+                        cy.visit(`/tasks/${tasks[0].id}`)
+
+                        cy.get('.tiptap__editor ul > li input[type=checkbox]')
+                                .click()
+
+                        cy.get('.task-view .details.content.description h3 span.is-small.has-text-success')
+                                .contains('Saved!')
+                                .should('exist')
+
+                        cy.reload()
+
+                        cy.get('.tiptap__editor ul > li input[type=checkbox]')
+                                .should('be.checked')
+                        cy.get('.task-view .checklist-summary')
+                                .should('contain.text', '1 of 1 tasks')
+                })
 
 		it('Should use the editor to render description', () => {
 			const tasks = TaskFactory.create(1, {

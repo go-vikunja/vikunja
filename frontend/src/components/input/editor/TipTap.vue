@@ -454,10 +454,11 @@ const extensions : Extensions = [
 						...node.attrs,
 						checked,
 					})
-					editor.value!.view.dispatch(tr)
-					bubbleSave()
-				}
-			})
+                                        editor.value!.view.dispatch(tr)
+                                        bubbleSave()
+                                        refreshTasklistCheckboxes()
+                                }
+                        })
 
 
 			return true
@@ -679,57 +680,59 @@ function focusIfEditing() {
 }
 
 function clickTasklistCheckbox(event) {
-	event.stopImmediatePropagation()
+        event.stopImmediatePropagation()
 
-	if (event.target.localName !== 'p') {
-		return
-	}
+        if (event.target.localName !== 'p') {
+                return
+        }
 
-	event.target.parentNode.parentNode.firstChild.click()
+        event.target.parentNode.parentNode.firstChild.click()
+}
+
+async function refreshTasklistCheckboxes() {
+        await nextTick()
+
+        let checkboxes = tiptapInstanceRef.value?.querySelectorAll('[data-checked]')
+        if (typeof checkboxes === 'undefined' || checkboxes.length === 0) {
+                // For some reason, this works when we check a second time.
+                await nextTick()
+
+                checkboxes = tiptapInstanceRef.value?.querySelectorAll('[data-checked]')
+                if (typeof checkboxes === 'undefined' || checkboxes.length === 0) {
+                        return
+                }
+        }
+
+        if (isEditing.value) {
+                checkboxes.forEach(check => {
+                        if (check.children.length < 2) {
+                                return
+                        }
+
+                        // We assume the first child contains the label element with the checkbox and the second child the actual label
+                        // When the actual label is clicked, we forward that click to the checkbox.
+                        check.children[1].removeEventListener('click', clickTasklistCheckbox)
+                })
+
+                return
+        }
+
+        checkboxes.forEach(check => {
+                if (check.children.length < 2) {
+                        return
+                }
+
+                // We assume the first child contains the label element with the checkbox and the second child the actual label
+                // When the actual label is clicked, we forward that click to the checkbox.
+                check.children[1].removeEventListener('click', clickTasklistCheckbox)
+                check.children[1].addEventListener('click', clickTasklistCheckbox)
+        })
 }
 
 watch(
-	() => isEditing.value,
-	async editing => {
-		await nextTick()
-
-		let checkboxes = tiptapInstanceRef.value?.querySelectorAll('[data-checked]')
-		if (typeof checkboxes === 'undefined' || checkboxes.length === 0) {
-			// For some reason, this works when we check a second time.
-			await nextTick()
-
-			checkboxes = tiptapInstanceRef.value?.querySelectorAll('[data-checked]')
-			if (typeof checkboxes === 'undefined' || checkboxes.length === 0) {
-				return
-			}
-		}
-
-		if (editing) {
-			checkboxes.forEach(check => {
-				if (check.children.length < 2) {
-					return
-				}
-
-				// We assume the first child contains the label element with the checkbox and the second child the actual label
-				// When the actual label is clicked, we forward that click to the checkbox.
-				check.children[1].removeEventListener('click', clickTasklistCheckbox)
-			})
-
-			return
-		}
-
-		checkboxes.forEach(check => {
-			if (check.children.length < 2) {
-				return
-			}
-
-			// We assume the first child contains the label element with the checkbox and the second child the actual label
-			// When the actual label is clicked, we forward that click to the checkbox.
-			check.children[1].removeEventListener('click', clickTasklistCheckbox)
-			check.children[1].addEventListener('click', clickTasklistCheckbox)
-		})
-	},
-	{immediate: true},
+        () => isEditing.value,
+        () => refreshTasklistCheckboxes(),
+        {immediate: true},
 )
 </script>
 
