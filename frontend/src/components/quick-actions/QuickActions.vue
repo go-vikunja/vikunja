@@ -492,18 +492,17 @@ async function doAction(type: ACTION_TYPE, item: DoAction) {
 }
 
 async function doCmd() {
-	if (results.value.length === 1 && results.value[0].items.length === 1) {
-		const result = results.value[0]
-		doAction(result.type, result.items[0])
-		return
-	}
+       if (selectedCmd.value !== null && query.value !== '') {
+               closeQuickActions()
+               await selectedCmd.value.action()
+               return
+       }
 
-	if (selectedCmd.value === null || query.value === '') {
-		return
-	}
-
-	closeQuickActions()
-	await selectedCmd.value.action()
+       if (results.value.length === 1 && results.value[0].items.length === 1) {
+               const result = results.value[0]
+               doAction(result.type, result.items[0])
+               return
+       }
 }
 
 async function newTask() {
