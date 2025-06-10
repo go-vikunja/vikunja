@@ -46,7 +46,7 @@ func LightInit() {
 
 	// Check if the configured time zone is valid
 	if _, err := time.LoadLocation(config.ServiceTimeZone.GetString()); err != nil {
-		log.Criticalf("Error parsing time zone: %s", err)
+		log.Criticalf("Error parsing default time zone: %s", err)
 	}
 
 	// Init redis
