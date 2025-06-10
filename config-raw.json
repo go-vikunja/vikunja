@@ -290,15 +290,15 @@
             "children": [
                 {
                     "key": "enable",
-                    "default_value": "false",
-                    "comment": "Whether to enable or disable cors headers.\nNote: If you want to put the frontend and the api on separate domains or ports, you will need to enable this.\nOtherwise the frontend won't be able to make requests to the api through the browser."
+                    "default_value": "true",
+                    "comment": "Whether to enable or disable cors headers.\nBy default, this is enabled only for requests from the desktop application.\nNote: If you want to put the frontend and the api on separate domains or ports, you will need to adjust this setting accordingly."
                 },
                 {
                     "key": "origins",
                     "comment": "A list of origins which may access the api. These need to include the protocol (`http://` or `https://`) and port, if any.",
                     "children": [
                         {
-                            "default_value": "*"
+                            "default_value": "http://127.0.0.1:*"
                         }
                     ]
                 },
