@@ -1,19 +1,19 @@
-import {createFakeUserAndLogin} from '../../support/authenticateUser'
+import { createFakeUserAndLogin } from '../../support/authenticateUser'
 
-import {TaskFactory} from '../../factories/task'
-import {ProjectFactory} from '../../factories/project'
-import {TaskCommentFactory} from '../../factories/task_comment'
-import {UserFactory} from '../../factories/user'
-import {UserProjectFactory} from '../../factories/users_project'
-import {TaskAssigneeFactory} from '../../factories/task_assignee'
-import {LabelFactory} from '../../factories/labels'
-import {LabelTaskFactory} from '../../factories/label_task'
-import {BucketFactory} from '../../factories/bucket'
+import { TaskFactory } from '../../factories/task'
+import { ProjectFactory } from '../../factories/project'
+import { TaskCommentFactory } from '../../factories/task_comment'
+import { UserFactory } from '../../factories/user'
+import { UserProjectFactory } from '../../factories/users_project'
+import { TaskAssigneeFactory } from '../../factories/task_assignee'
+import { LabelFactory } from '../../factories/labels'
+import { LabelTaskFactory } from '../../factories/label_task'
+import { BucketFactory } from '../../factories/bucket'
 
-import {TaskAttachmentFactory} from '../../factories/task_attachments'
-import {TaskReminderFactory} from '../../factories/task_reminders'
-import {createDefaultViews} from '../project/prepareProjects'
-import {TaskBucketFactory} from '../../factories/task_buckets'
+import { TaskAttachmentFactory } from '../../factories/task_attachments'
+import { TaskReminderFactory } from '../../factories/task_reminders'
+import { createDefaultViews } from '../project/prepareProjects'
+import { TaskBucketFactory } from '../../factories/task_buckets'
 
 // Type definitions to fix linting errors
 interface Project {
@@ -55,7 +55,7 @@ function addLabelToTaskAndVerify(labelTitle: string) {
 		.first()
 		.click()
 
-	cy.get('.global-notification', {timeout: 4000})
+	cy.get('.global-notification', { timeout: 4000 })
 		.should('contain', 'Success')
 	cy.get('.task-view .details.labels-list .multiselect .input-wrapper span.tag')
 		.should('exist')
@@ -67,8 +67,8 @@ function uploadAttachmentAndVerify(taskId: number) {
 	cy.get('.task-view .action-buttons .button')
 		.contains('Add Attachments')
 		.click()
-	cy.get('input[type=file]#files', {timeout: 1000})
-		.selectFile('cypress/fixtures/image.jpg', {force: true}) // The input is not visible, but on purpose
+	cy.get('input[type=file]#files', { timeout: 1000 })
+		.selectFile('cypress/fixtures/image.jpg', { force: true }) // The input is not visible, but on purpose
 	cy.wait('@uploadAttachment')
 
 	cy.get('.attachments .attachments .files button.attachment')
@@ -598,9 +598,9 @@ describe('Task', () => {
 				.click()
 
 			const today = new Date()
-			const day = today.toLocaleString('default', {day: 'numeric'})
-			const month = today.toLocaleString('default', {month: 'short'})
-			const year = today.toLocaleString('default', {year: 'numeric'})
+			const day = today.toLocaleString('default', { day: 'numeric' })
+			const month = today.toLocaleString('default', { month: 'short' })
+			const year = today.toLocaleString('default', { year: 'numeric' })
 			const date = `${month} ${day}, ${year} 12:00 PM`
 			cy.get('.task-view .columns.details .column')
 				.contains('Due Date')
@@ -637,15 +637,15 @@ describe('Task', () => {
 				.contains('Due Date')
 				.get('.date-input .datepicker .show')
 				.click()
-			cy.get(`.datepicker-popup .flatpickr-innerContainer .flatpickr-days [aria-label="${today.toLocaleString('en-US', {month: 'long'})} ${today.getDate()}, ${today.getFullYear()}"]`)
+			cy.get(`.datepicker-popup .flatpickr-innerContainer .flatpickr-days [aria-label="${today.toLocaleString('en-US', { month: 'long' })} ${today.getDate()}, ${today.getFullYear()}"]`)
 				.click()
 			cy.get('[data-cy="closeDatepicker"]')
 				.contains('Confirm')
 				.click()
 
-			const day = today.toLocaleString('default', {day: 'numeric'})
-			const month = today.toLocaleString('default', {month: 'short'})
-			const year = today.toLocaleString('default', {year: 'numeric'})
+			const day = today.toLocaleString('default', { day: 'numeric' })
+			const month = today.toLocaleString('default', { month: 'short' })
+			const year = today.toLocaleString('default', { year: 'numeric' })
 			const date = `${month} ${day}, ${year} 12:00 PM`
 			cy.get('.task-view .columns.details .column')
 				.contains('Due Date')
@@ -667,8 +667,8 @@ describe('Task', () => {
 			cy.visit(`/tasks/${tasks[0].id}`)
 
 			cy.intercept('**/tasks/*/attachments').as('uploadAttachment')
-			
-			cy.get('.task-view .details.content.description .tiptap__editor .tiptap.ProseMirror', {timeout: 30_000})
+
+			cy.get('.task-view .details.content.description .tiptap__editor .tiptap.ProseMirror', { timeout: 30_000 })
 				.pasteFile('image.jpg', 'image/jpeg')
 
 			cy.wait('@uploadAttachment')
@@ -911,8 +911,8 @@ describe('Task', () => {
 				.should('exist')
 		})
 
-                it('Can check items off a checklist', () => {
-                        const tasks = TaskFactory.create(1, {
+		it('Can check items off a checklist', () => {
+			const tasks = TaskFactory.create(1, {
 				id: 1,
 				description: `
 <ul data-type="taskList">
@@ -950,35 +950,35 @@ describe('Task', () => {
 			cy.get('.tiptap__editor input[type=checkbox]')
 				.should('have.length', 5)
 			cy.get('.task-view .checklist-summary')
-                                .should('contain.text', '2 of 5 tasks')
-                })
+				.should('contain.text', '2 of 5 tasks')
+		})
 
-                it('Checklist item stays checked after reload', () => {
-                        const tasks = TaskFactory.create(1, {
-                                id: 1,
-                                description: `
+		it('Checklist item stays checked after reload', () => {
+			const tasks = TaskFactory.create(1, {
+				id: 1,
+				description: `
 <ul data-type="taskList">
         <li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label>
                 <div><p>First Item</p></div>
         </li>
 </ul>`,
-                        })
-                        cy.visit(`/tasks/${tasks[0].id}`)
+			})
+			cy.visit(`/tasks/${tasks[0].id}`)
 
-                        cy.get('.tiptap__editor ul > li input[type=checkbox]')
-                                .click()
+			cy.get('.tiptap__editor ul > li input[type=checkbox]')
+				.click()
 
-                        cy.get('.task-view .details.content.description h3 span.is-small.has-text-success')
-                                .contains('Saved!')
-                                .should('exist')
+			cy.get('.task-view .details.content.description h3 span.is-small.has-text-success')
+				.contains('Saved!')
+				.should('exist')
 
-                        cy.reload()
+			cy.reload()
 
-                        cy.get('.tiptap__editor ul > li input[type=checkbox]')
-                                .should('be.checked')
-                        cy.get('.task-view .checklist-summary')
-                                .should('contain.text', '1 of 1 tasks')
-                })
+			cy.get('.tiptap__editor ul > li input[type=checkbox]')
+				.should('be.checked')
+			cy.get('.task-view .checklist-summary')
+				.should('contain.text', '1 of 1 tasks')
+		})
 
 		it('Should use the editor to render description', () => {
 			const tasks = TaskFactory.create(1, {
@@ -1030,9 +1030,9 @@ describe('Task', () => {
 					},
 					body: formData,
 				})
-					.then(({body}) => {
+					.then(({ body }) => {
 						const dec = new TextDecoder('utf-8')
-						const {success} = JSON.parse(dec.decode(body))
+						const { success } = JSON.parse(dec.decode(body))
 
 						TaskFactory.create(1, {
 							id: 1,
