@@ -112,11 +112,11 @@ describe('Task', () => {
 			.should('not.exist')
 		cy.get('.input[placeholder="Add a task…"]')
 			.type('New Task')
+		cy.intercept('PUT', Cypress.env('API_URL') + '/projects/*/tasks').as('createTask')
 		cy.get('.button')
 			.contains('Add')
 			.click()
-
-		cy.wait(1000) // Wait for the request
+		cy.wait('@createTask')
 		cy.get('.tasks .task .tasktext')
 			.first()
 			.should('contain', 'New Task')
@@ -858,6 +858,7 @@ describe('Task', () => {
 			})
 			cy.visit(`/tasks/${tasks[0].id}`)
 
+			cy.intercept('POST', Cypress.env('API_URL') + '/tasks/*').as('updateTask')
 			cy.get('.task-view .action-buttons .button')
 				.contains('Set Progress')
 				.click()
@@ -867,8 +868,7 @@ describe('Task', () => {
 				.select('50%')
 			cy.get('.global-notification')
 				.should('contain', 'Success')
-
-			cy.wait(200)
+			cy.wait('@updateTask')
 
 			cy.get('.task-view .columns.details .column')
 				.contains('Progress')

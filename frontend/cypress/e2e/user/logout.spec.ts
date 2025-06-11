@@ -28,19 +28,15 @@ describe('Log out', () => {
 	
 	it.skip('Should clear the project history after logging the user out', () => {
 		const projects = createProjects()
-		cy.visit(`/projects/${projects[0].id}`)
-			.then(() => {
-				expect(localStorage.getItem('projectHistory')).to.not.eq(null)
-			})
+		cy.visit(`/projects/${projects[0].id}`).then(() => {
+			expect(localStorage.getItem('projectHistory')).to.not.eq(null)
+		})
 
 		logout()
-
-		cy.wait(1000) // This makes re-loading of the project and associated entities (and the resulting error) visible
-		
 		cy.url()
 			.should('contain', '/login')
 			.then(() => {
 				expect(localStorage.getItem('projectHistory')).to.eq(null)
-			})
+		})
 	})
 })
