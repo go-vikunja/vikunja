@@ -103,7 +103,7 @@ const router = useRouter()
 // 	newTaskInput.value.focus()
 // })
 
-const taskAdd = ref<HTMLTextAreaElement | null>(null)
+const taskAdd = ref<HTMLElement | null>(null)
 const taskAddHovered = useElementHover(taskAdd)
 
 const errorMessage = ref('')

@@ -24,9 +24,9 @@ const state = ref<StateType>('unfocused')
 const val = ref<string>('')
 const model = defineModel<string>()
 
-const suggestionScrollerRef = ref<HTMLInputElement | null>(null)
-const containerRef = ref<HTMLInputElement | null>(null)
-const editorRef = ref<HTMLInputElement | null>(null)
+const suggestionScrollerRef = ref<HTMLElement | null>(null)
+const containerRef = ref<HTMLElement | null>(null)
+const editorRef = ref<HTMLTextAreaElement | null>(null)
 
 watch(
 	() => model.value,
