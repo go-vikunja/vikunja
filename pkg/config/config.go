@@ -599,6 +599,9 @@ func InitConfig() {
 	if DefaultSettingsTimezone.GetString() == "" {
 		DefaultSettingsTimezone.Set(ServiceTimeZone.GetString())
 	}
+
+	publicURL := strings.TrimSuffix(ServicePublicURL.GetString(), "/")
+	CorsOrigins.Set(append(CorsOrigins.GetStringSlice(), publicURL))
 }
 
 func random(length int) (string, error) {

@@ -182,6 +182,7 @@ func RegisterRoutes(e *echo.Echo) {
 
 	// CORS
 	if config.CorsEnable.GetBool() {
+		log.Debugf("CORS enabled with origins: %s", strings.Join(config.CorsOrigins.GetStringSlice(), ", "))
 		e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 			AllowOrigins: config.CorsOrigins.GetStringSlice(),
 			MaxAge:       config.CorsMaxAge.GetInt(),
