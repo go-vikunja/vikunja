@@ -25,7 +25,7 @@ export function useRenewTokenOnFocus() {
 		}
 
 		const nowInSeconds = new Date().getTime() / MILLISECONDS_A_SECOND
-		const expiresIn = userInfo.value !== null
+		const expiresIn = userInfo.value
 			? userInfo.value.exp - nowInSeconds
 			: 0
 
