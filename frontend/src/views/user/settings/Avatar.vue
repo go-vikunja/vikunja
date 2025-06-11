@@ -75,9 +75,6 @@
 	</Card>
 </template>
 
-<script lang="ts">
-export default {name: 'UserSettingsAvatar'}
-</script>
 
 <script setup lang="ts">
 import {computed, ref, shallowReactive} from 'vue'
@@ -91,6 +88,8 @@ import {useTitle} from '@/composables/useTitle'
 import {success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
 import Message from '@/components/misc/Message.vue'
+
+defineOptions({name: 'UserSettingsAvatar'})
 
 const {t} = useI18n({useScope: 'global'})
 const authStore = useAuthStore()

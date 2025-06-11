@@ -1,7 +1,3 @@
-<script lang="ts">
-export default {name: 'ProjectSettingWebhooks'}
-</script>
-
 <script lang="ts" setup>
 import {ref, computed, watchEffect} from 'vue'
 import {useRoute} from 'vue-router'
@@ -24,6 +20,8 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import {success} from '@/message'
 import {isValidHttpUrl} from '@/helpers/isValidHttpUrl'
+
+defineOptions({name: 'ProjectSettingWebhooks'})
 
 const {t} = useI18n({useScope: 'global'})
 
@@ -105,7 +103,7 @@ const selectedEventsValid = ref(true)
 
 function getSelectedEventsArray() {
 	return Object.entries(newWebhookEvents.value)
-		.filter(([_, use]) => use)
+		.filter(([, use]) => use)
 		.map(([event]) => event)
 }
 

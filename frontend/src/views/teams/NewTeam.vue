@@ -54,10 +54,6 @@
 	</CreateEdit>
 </template>
 
-<script lang="ts">
-export default { name: 'NewTeam' }
-</script>
-
 <script setup lang="ts">
 import {reactive, ref, shallowReactive, computed} from 'vue'
 import {useI18n} from 'vue-i18n'
@@ -73,6 +69,8 @@ import {useRouter} from 'vue-router'
 import {success} from '@/message'
 
 import {useConfigStore} from '@/stores/config'
+
+defineOptions({name: 'NewTeam'})
 
 const {t} = useI18n()
 const title = computed(() => t('team.create.title'))
