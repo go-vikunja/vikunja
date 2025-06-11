@@ -861,6 +861,14 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		flex-direction: column;
 		overflow: hidden; // Make sure the edges are always rounded
 
+		// Skip rendering tasks in off-screen buckets to speed up scrolling.
+		@supports (content-visibility: auto) {
+			content-visibility: auto;
+			// Ensure the column keeps its width and roughly matches its
+			// expected height when its content is skipped.
+			contain-intrinsic-size: $bucket-width 1000px;
+		}
+
 		@media screen and (max-width: $tablet) {
 			scroll-snap-align: center;
 		}
