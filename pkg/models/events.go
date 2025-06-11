@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 )
@@ -287,4 +288,22 @@ type UserDataExportRequestedEvent struct {
 // Name defines the name for UserDataExportRequestedEvent
 func (t *UserDataExportRequestedEvent) Name() string {
 	return "user.export.requested"
+}
+
+type NotificationReminderEvent struct {
+	Notification *notifications.Notification `json:"notification"`
+}
+
+// Name defines the name for ProjectDeletedEvent
+func (p *NotificationReminderEvent) Name() string {
+	return "notification.reminder"
+}
+
+type NotificationReminderOverdueEvent struct {
+	Notification *notifications.Notification `json:"notification"`
+}
+
+// Name defines the name for ProjectDeletedEvent
+func (p *NotificationReminderOverdueEvent) Name() string {
+	return "notification.reminder_overdue"
 }

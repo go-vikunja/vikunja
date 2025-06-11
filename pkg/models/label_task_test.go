@@ -42,6 +42,7 @@ func TestLabelTask_ReadAll(t *testing.T) {
 			Password:                     "$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6",
 			Issuer:                       "local",
 			EmailRemindersEnabled:        true,
+			WebhookRemindersEnabled:      true,
 			OverdueTasksRemindersEnabled: true,
 			OverdueTasksRemindersTime:    "09:00",
 			DefaultProjectID:             4,

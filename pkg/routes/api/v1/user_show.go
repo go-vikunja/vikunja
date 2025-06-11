@@ -71,6 +71,7 @@ func UserShow(c echo.Context) error {
 		Settings: &UserSettings{
 			Name:                         u.Name,
 			EmailRemindersEnabled:        u.EmailRemindersEnabled,
+			WebhookRemindersEnabled:      u.WebhookRemindersEnabled,
 			DiscoverableByName:           u.DiscoverableByName,
 			DiscoverableByEmail:          u.DiscoverableByEmail,
 			OverdueTasksRemindersEnabled: u.OverdueTasksRemindersEnabled,

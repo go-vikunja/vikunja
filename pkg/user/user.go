@@ -93,6 +93,7 @@ type User struct {
 	Subject string `xorm:"text null" json:"-"`
 
 	EmailRemindersEnabled        bool   `xorm:"bool default true" json:"-"`
+	WebhookRemindersEnabled      bool   `xorm:"bool default true" json:"-"`
 	DiscoverableByName           bool   `xorm:"bool default false index" json:"-"`
 	DiscoverableByEmail          bool   `xorm:"bool default false index" json:"-"`
 	OverdueTasksRemindersEnabled bool   `xorm:"bool default true index" json:"-"`

@@ -59,6 +59,7 @@ const (
 	ServiceEnableTotp                     Key = `service.enabletotp`
 	ServiceTestingtoken                   Key = `service.testingtoken`
 	ServiceEnableEmailReminders           Key = `service.enableemailreminders`
+	ServiceEnableWebhookReminders         Key = `service.enablewebhookreminders`
 	ServiceEnableUserDeletion             Key = `service.enableuserdeletion`
 	ServiceMaxAvatarSize                  Key = `service.maxavatarsize`
 	ServiceAllowIconChanges               Key = `service.allowiconchanges`
@@ -190,6 +191,7 @@ const (
 	DefaultSettingsAvatarProvider              Key = `defaultsettings.avatar_provider`
 	DefaultSettingsAvatarFileID                Key = `defaultsettings.avatar_file_id`
 	DefaultSettingsEmailRemindersEnabled       Key = `defaultsettings.email_reminders_enabled`
+	DefaultSettingsWebhookRemindersEnabled     Key = `defaultsettings.webhook_reminders_enabled`
 	DefaultSettingsDiscoverableByName          Key = `defaultsettings.discoverable_by_name`
 	DefaultSettingsDiscoverableByEmail         Key = `defaultsettings.discoverable_by_email`
 	DefaultSettingsOverdueTaskRemindersEnabled Key = `defaultsettings.overdue_tasks_reminders_enabled`

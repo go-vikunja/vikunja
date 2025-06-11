@@ -88,6 +88,7 @@
         "newName": "The new name",
         "savedSuccess": "The settings were successfully updated.",
         "emailReminders": "Send me reminders for tasks via email",
+        "webhookReminders": "Send me reminders for tasks via webhook",
         "overdueReminders": "Send me a summary of my undone overdue tasks every day",
         "discoverableByName": "Allow other users to add me as a member to teams or projects when they search for my name",
         "discoverableByEmail": "Allow other users to add me as a member to teams or projects when they search for my full email",
