@@ -1256,7 +1256,7 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 
 	_, err = s.ID(t.ID).
 		Cols(colsToUpdate...).
-		Update(ot)
+		Update(&ot)
 	*t = ot
 	if err != nil {
 		return err

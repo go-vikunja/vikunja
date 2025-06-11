@@ -127,3 +127,63 @@ func AssertCount(t *testing.T, table string, where builder.Cond, count int64) {
 	require.NoErrorf(t, err, "Failed to assert count in db, error was: %s", err)
 	assert.Equalf(t, count, dbCount, "Found %d entries instead of expected %d in table %s", dbCount, count, table)
 }
+
+// BeginTx starts a transaction for a test and rolls it back when the test ends.
+func BeginTx(t *testing.T) *xorm.Session {
+	t.Helper()
+	s := NewSession()
+	require.NoError(t, s.Begin())
+	t.Cleanup(func() {
+		_ = s.Rollback()
+		s.Close()
+	})
+	return s
+}
+
+// AssertExistsTx asserts that values exist within the given transaction.
+func AssertExistsTx(t *testing.T, s *xorm.Session, table string, values map[string]interface{}, custom bool) {
+	var exists bool
+	var err error
+	v := make(map[string]interface{})
+	if custom {
+		sql := "SELECT * FROM " + table + " WHERE "
+		for col, val := range values {
+			sql += col + "=" + fmt.Sprintf("%v", val) + " AND "
+		}
+		sql = sql[:len(sql)-5]
+		exists, err = s.SQL(sql).Get(&v)
+	} else {
+		exists, err = s.Table(table).Where(values).Get(&v)
+	}
+	require.NoError(t, err, "Failed to assert entries exist in db")
+	if !exists {
+		all := []map[string]interface{}{}
+		err = s.Table(table).Find(&all)
+		require.NoErrorf(t, err, "Failed to assert entries exist in db, error was: %s", err)
+		pretty, err := json.MarshalIndent(all, "", "    ")
+		require.NoErrorf(t, err, "Failed to assert entries exist in db, error was: %s", err)
+
+		t.Errorf("Entries %v do not exist in table %s\n\nFound entries instead: %v", values, table, string(pretty))
+	}
+}
+
+// AssertMissingTx asserts that values are missing within the transaction.
+func AssertMissingTx(t *testing.T, s *xorm.Session, table string, values map[string]interface{}) {
+	all := []map[string]interface{}{}
+	err := s.Table(table).Where(values).Find(&all)
+	require.NoErrorf(t, err, "Failed to assert entries don't exist in db, error was: %s", err)
+
+	if len(all) > 0 {
+		pretty, err := json.MarshalIndent(all, "", "    ")
+		require.NoErrorf(t, err, "Failed to assert entries do not exist in db, error was: %s", err)
+
+		t.Errorf("Entries %v exist in table %s:\n\n%v", values, table, string(pretty))
+	}
+}
+
+// AssertCountTx checks if a number of entries exists using the given transaction.
+func AssertCountTx(t *testing.T, s *xorm.Session, table string, where builder.Cond, count int64) {
+	dbCount, err := s.Table(table).Where(where).Count()
+	require.NoErrorf(t, err, "Failed to assert count in db, error was: %s", err)
+	assert.Equalf(t, count, dbCount, "Found %d entries instead of expected %d in table %s", dbCount, count, table)
+}
