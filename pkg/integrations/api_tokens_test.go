@@ -33,11 +33,10 @@ import (
 
 func TestAPIToken(t *testing.T) {
 	t.Run("valid token", func(t *testing.T) {
-		e, err := setupTestEnv()
-		require.NoError(t, err)
+		require.NoError(t, db.LoadFixtures())
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/tasks/all", nil)
 		res := httptest.NewRecorder()
-		c := e.NewContext(req, res)
+		c := testRouter.NewContext(req, res)
 		h := routes.SetupTokenMiddleware()(func(c echo.Context) error {
 			u, err := auth.GetAuthFromClaims(c)
 			if err != nil {
@@ -53,11 +52,10 @@ func TestAPIToken(t *testing.T) {
 		assert.Contains(t, res.Body.String(), `"username":"user1"`)
 	})
 	t.Run("invalid token", func(t *testing.T) {
-		e, err := setupTestEnv()
-		require.NoError(t, err)
+		require.NoError(t, db.LoadFixtures())
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/tasks/all", nil)
 		res := httptest.NewRecorder()
-		c := e.NewContext(req, res)
+		c := testRouter.NewContext(req, res)
 		h := routes.SetupTokenMiddleware()(func(c echo.Context) error {
 			return c.String(http.StatusOK, "test")
 		})
@@ -66,11 +64,10 @@ func TestAPIToken(t *testing.T) {
 		require.Error(t, h(c))
 	})
 	t.Run("expired token", func(t *testing.T) {
-		e, err := setupTestEnv()
-		require.NoError(t, err)
+		require.NoError(t, db.LoadFixtures())
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/tasks/all", nil)
 		res := httptest.NewRecorder()
-		c := e.NewContext(req, res)
+		c := testRouter.NewContext(req, res)
 		h := routes.SetupTokenMiddleware()(func(c echo.Context) error {
 			return c.String(http.StatusOK, "test")
 		})
@@ -79,11 +76,10 @@ func TestAPIToken(t *testing.T) {
 		require.Error(t, h(c))
 	})
 	t.Run("valid token, invalid scope", func(t *testing.T) {
-		e, err := setupTestEnv()
-		require.NoError(t, err)
+		require.NoError(t, db.LoadFixtures())
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/projects", nil)
 		res := httptest.NewRecorder()
-		c := e.NewContext(req, res)
+		c := testRouter.NewContext(req, res)
 		h := routes.SetupTokenMiddleware()(func(c echo.Context) error {
 			return c.String(http.StatusOK, "test")
 		})
@@ -92,11 +88,10 @@ func TestAPIToken(t *testing.T) {
 		require.Error(t, h(c))
 	})
 	t.Run("jwt", func(t *testing.T) {
-		e, err := setupTestEnv()
-		require.NoError(t, err)
+		require.NoError(t, db.LoadFixtures())
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/tasks/all", nil)
 		res := httptest.NewRecorder()
-		c := e.NewContext(req, res)
+		c := testRouter.NewContext(req, res)
 		h := routes.SetupTokenMiddleware()(func(c echo.Context) error {
 			return c.String(http.StatusOK, "test")
 		})
@@ -112,18 +107,17 @@ func TestAPIToken(t *testing.T) {
 		require.NoError(t, h(c))
 	})
 	t.Run("nonexisting route", func(t *testing.T) {
-		e, err := setupTestEnv()
-		require.NoError(t, err)
+		require.NoError(t, db.LoadFixtures())
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/nonexisting", nil)
 		res := httptest.NewRecorder()
-		c := e.NewContext(req, res)
+		c := testRouter.NewContext(req, res)
 		h := routes.SetupTokenMiddleware()(func(c echo.Context) error {
 			return c.String(http.StatusNotFound, "test")
 		})
 
 		req.Header.Set(echo.HeaderAuthorization, "Bearer tk_a5e6f92ddbad68f49ee2c63e52174db0235008c8") // Token 2
 
-		err = h(c)
+		err := h(c)
 		require.NoError(t, err)
 		assert.Equal(t, 404, c.Response().Status)
 	})

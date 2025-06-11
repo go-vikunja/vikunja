@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"testing"
 
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/routes/caldav"
 
 	"github.com/stretchr/testify/assert"
@@ -28,8 +29,8 @@ import (
 
 func TestCaldav(t *testing.T) {
 	t.Run("Delivers VTODO for project", func(t *testing.T) {
-		e, _ := setupTestEnv()
-		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodGet, caldav.ProjectHandler, &testuser15, ``, nil, map[string]string{"project": "36"})
+		require.NoError(t, db.LoadFixtures())
+		rec, err := newCaldavTestRequestWithUser(t, http.MethodGet, caldav.ProjectHandler, &testuser15, ``, nil, map[string]string{"project": "36"})
 		require.NoError(t, err)
 		assert.Contains(t, rec.Body.String(), "BEGIN:VCALENDAR")
 		assert.Contains(t, rec.Body.String(), "PRODID:-//Vikunja Todo App//EN")
@@ -59,14 +60,14 @@ END:VALARM
 END:VTODO
 END:VCALENDAR`
 
-		e, _ := setupTestEnv()
-		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, vtodo, nil, map[string]string{"project": "36", "task": "uid"})
+		require.NoError(t, db.LoadFixtures())
+		rec, err := newCaldavTestRequestWithUser(t, http.MethodPut, caldav.TaskHandler, &testuser15, vtodo, nil, map[string]string{"project": "36", "task": "uid"})
 		require.NoError(t, err)
 		assert.Equal(t, 201, rec.Result().StatusCode)
 	})
 	t.Run("Export VTODO", func(t *testing.T) {
-		e, _ := setupTestEnv()
-		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodGet, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "36", "task": "uid-caldav-test"})
+		require.NoError(t, db.LoadFixtures())
+		rec, err := newCaldavTestRequestWithUser(t, http.MethodGet, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "36", "task": "uid-caldav-test"})
 		require.NoError(t, err)
 		assert.Contains(t, rec.Body.String(), "BEGIN:VCALENDAR")
 		assert.Contains(t, rec.Body.String(), "SUMMARY:Title Caldav Test")
@@ -121,24 +122,24 @@ LAST-MODIFIED:20230301T073337Z
 RELATED-TO;RELTYPE=PARENT:uid_child_import
 END:VTODO`
 
-		e, _ := setupTestEnv()
+		require.NoError(t, db.LoadFixtures())
 
 		const parentVTODO = vtodoHeader + vtodoParentTaskStub + vtodoFooter
-		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, parentVTODO, nil, map[string]string{"project": "36", "task": "uid_parent_import"})
+		rec, err := newCaldavTestRequestWithUser(t, http.MethodPut, caldav.TaskHandler, &testuser15, parentVTODO, nil, map[string]string{"project": "36", "task": "uid_parent_import"})
 		require.NoError(t, err)
 		assert.Equal(t, 201, rec.Result().StatusCode)
 
 		const childVTODO = vtodoHeader + vtodoChildTaskStub + vtodoFooter
-		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, childVTODO, nil, map[string]string{"project": "36", "task": "uid_child_import"})
+		rec, err = newCaldavTestRequestWithUser(t, http.MethodPut, caldav.TaskHandler, &testuser15, childVTODO, nil, map[string]string{"project": "36", "task": "uid_child_import"})
 		require.NoError(t, err)
 		assert.Equal(t, 201, rec.Result().StatusCode)
 
 		const grandChildVTODO = vtodoHeader + vtodoGrandChildTaskStub + vtodoFooter
-		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, grandChildVTODO, nil, map[string]string{"project": "36", "task": "uid_grand_child_import"})
+		rec, err = newCaldavTestRequestWithUser(t, http.MethodPut, caldav.TaskHandler, &testuser15, grandChildVTODO, nil, map[string]string{"project": "36", "task": "uid_grand_child_import"})
 		require.NoError(t, err)
 		assert.Equal(t, 201, rec.Result().StatusCode)
 
-		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodGet, caldav.ProjectHandler, &testuser15, ``, nil, map[string]string{"project": "36"})
+		rec, err = newCaldavTestRequestWithUser(t, http.MethodGet, caldav.ProjectHandler, &testuser15, ``, nil, map[string]string{"project": "36"})
 		require.NoError(t, err)
 		assert.Equal(t, 200, rec.Result().StatusCode)
 
@@ -152,7 +153,7 @@ END:VTODO`
 	})
 
 	t.Run("Import Task & Subtask (Reverse - Subtask first)", func(t *testing.T) {
-		e, _ := setupTestEnv()
+		require.NoError(t, db.LoadFixtures())
 
 		const vtodoGrandChildTaskStub = `
 BEGIN:VTODO
@@ -165,7 +166,7 @@ RELATED-TO;RELTYPE=PARENT:uid_child_import
 END:VTODO`
 
 		const grandChildVTODO = vtodoHeader + vtodoGrandChildTaskStub + vtodoFooter
-		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, grandChildVTODO, nil, map[string]string{"project": "36", "task": "uid_grand_child_import"})
+		rec, err := newCaldavTestRequestWithUser(t, http.MethodPut, caldav.TaskHandler, &testuser15, grandChildVTODO, nil, map[string]string{"project": "36", "task": "uid_grand_child_import"})
 		require.NoError(t, err)
 		assert.Equal(t, 201, rec.Result().StatusCode)
 
@@ -180,7 +181,7 @@ RELATED-TO;RELTYPE=CHILD:uid_grand_child_import
 END:VTODO`
 
 		const childVTODO = vtodoHeader + vtodoChildTaskStub + vtodoFooter
-		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, childVTODO, nil, map[string]string{"project": "36", "task": "uid_child_import"})
+		rec, err = newCaldavTestRequestWithUser(t, http.MethodPut, caldav.TaskHandler, &testuser15, childVTODO, nil, map[string]string{"project": "36", "task": "uid_child_import"})
 		require.NoError(t, err)
 		assert.Equal(t, 201, rec.Result().StatusCode)
 
@@ -194,11 +195,11 @@ RELATED-TO;RELTYPE=CHILD:uid_child_import
 END:VTODO`
 
 		const parentVTODO = vtodoHeader + vtodoParentTaskStub + vtodoFooter
-		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, parentVTODO, nil, map[string]string{"project": "36", "task": "uid_parent_import"})
+		rec, err = newCaldavTestRequestWithUser(t, http.MethodPut, caldav.TaskHandler, &testuser15, parentVTODO, nil, map[string]string{"project": "36", "task": "uid_parent_import"})
 		require.NoError(t, err)
 		assert.Equal(t, 201, rec.Result().StatusCode)
 
-		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodGet, caldav.ProjectHandler, &testuser15, ``, nil, map[string]string{"project": "36"})
+		rec, err = newCaldavTestRequestWithUser(t, http.MethodGet, caldav.ProjectHandler, &testuser15, ``, nil, map[string]string{"project": "36"})
 		require.NoError(t, err)
 		assert.Equal(t, 200, rec.Result().StatusCode)
 
@@ -212,17 +213,17 @@ END:VTODO`
 	})
 
 	t.Run("Delete Subtask", func(t *testing.T) {
-		e, _ := setupTestEnv()
+		require.NoError(t, db.LoadFixtures())
 
-		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodDelete, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "36", "task": "uid-caldav-test-child-task"})
+		rec, err := newCaldavTestRequestWithUser(t, http.MethodDelete, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "36", "task": "uid-caldav-test-child-task"})
 		require.NoError(t, err)
 		assert.Equal(t, 204, rec.Result().StatusCode)
 
-		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodDelete, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "36", "task": "uid-caldav-test-child-task-2"})
+		rec, err = newCaldavTestRequestWithUser(t, http.MethodDelete, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "36", "task": "uid-caldav-test-child-task-2"})
 		require.NoError(t, err)
 		assert.Equal(t, 204, rec.Result().StatusCode)
 
-		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodGet, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "36", "task": "uid-caldav-test-parent-task"})
+		rec, err = newCaldavTestRequestWithUser(t, http.MethodGet, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "36", "task": "uid-caldav-test-parent-task"})
 		require.NoError(t, err)
 		assert.Equal(t, 200, rec.Result().StatusCode)
 
@@ -231,13 +232,13 @@ END:VTODO`
 	})
 
 	t.Run("Delete Parent Task", func(t *testing.T) {
-		e, _ := setupTestEnv()
+		require.NoError(t, db.LoadFixtures())
 
-		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodDelete, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "36", "task": "uid-caldav-test-parent-task"})
+		rec, err := newCaldavTestRequestWithUser(t, http.MethodDelete, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "36", "task": "uid-caldav-test-parent-task"})
 		require.NoError(t, err)
 		assert.Equal(t, 204, rec.Result().StatusCode)
 
-		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodGet, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "36", "task": "uid-caldav-test-child-task"})
+		rec, err = newCaldavTestRequestWithUser(t, http.MethodGet, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "36", "task": "uid-caldav-test-child-task"})
 		require.NoError(t, err)
 		assert.Equal(t, 200, rec.Result().StatusCode)
 
@@ -279,23 +280,23 @@ RELATED-TO;RELTYPE=PARENT:uid_parent_import
 END:VTODO
 END:VCALENDAR`
 
-		e, _ := setupTestEnv()
+		require.NoError(t, db.LoadFixtures())
 
-		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, vtodoParentTask, nil, map[string]string{"project": "36", "task": "uid_parent_import"})
+		rec, err := newCaldavTestRequestWithUser(t, http.MethodPut, caldav.TaskHandler, &testuser15, vtodoParentTask, nil, map[string]string{"project": "36", "task": "uid_parent_import"})
 		require.NoError(t, err)
 		assert.Equal(t, 201, rec.Result().StatusCode)
 
-		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, vtodoChildTask, nil, map[string]string{"project": "38", "task": "uid_child_import"})
+		rec, err = newCaldavTestRequestWithUser(t, http.MethodPut, caldav.TaskHandler, &testuser15, vtodoChildTask, nil, map[string]string{"project": "38", "task": "uid_child_import"})
 		require.NoError(t, err)
 		assert.Equal(t, 201, rec.Result().StatusCode)
 
-		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodGet, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "36", "task": "uid_parent_import"})
+		rec, err = newCaldavTestRequestWithUser(t, http.MethodGet, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "36", "task": "uid_parent_import"})
 		require.NoError(t, err)
 		assert.Equal(t, 200, rec.Result().StatusCode)
 		assert.Contains(t, rec.Body.String(), "UID:uid_parent_import")
 		assert.Contains(t, rec.Body.String(), "RELATED-TO;RELTYPE=CHILD:uid_child_import")
 
-		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodGet, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "38", "task": "uid_child_import"})
+		rec, err = newCaldavTestRequestWithUser(t, http.MethodGet, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "38", "task": "uid_child_import"})
 		require.NoError(t, err)
 		assert.Equal(t, 200, rec.Result().StatusCode)
 		assert.Contains(t, rec.Body.String(), "UID:uid_child_import")
@@ -303,15 +304,15 @@ END:VCALENDAR`
 	})
 
 	t.Run("Check relationships across lists", func(t *testing.T) {
-		e, _ := setupTestEnv()
+		require.NoError(t, db.LoadFixtures())
 
-		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodGet, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "36", "task": "uid-caldav-test-parent-task-another-list"})
+		rec, err := newCaldavTestRequestWithUser(t, http.MethodGet, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "36", "task": "uid-caldav-test-parent-task-another-list"})
 		require.NoError(t, err)
 		assert.Equal(t, 200, rec.Result().StatusCode)
 		assert.Contains(t, rec.Body.String(), "UID:uid-caldav-test-parent-task-another-list")
 		assert.Contains(t, rec.Body.String(), "RELATED-TO;RELTYPE=CHILD:uid-caldav-test-child-task-another-list")
 
-		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodGet, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "38", "task": "uid-caldav-test-child-task-another-list"})
+		rec, err = newCaldavTestRequestWithUser(t, http.MethodGet, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "38", "task": "uid-caldav-test-child-task-another-list"})
 		require.NoError(t, err)
 		assert.Equal(t, 200, rec.Result().StatusCode)
 		assert.Contains(t, rec.Body.String(), "UID:uid-caldav-test-child-task-another-list")

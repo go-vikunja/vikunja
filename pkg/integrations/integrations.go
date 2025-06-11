@@ -100,11 +100,8 @@ func createRequest(e *echo.Echo, method string, payload string, queryParam url.V
 }
 
 func bootstrapTestRequest(t *testing.T, method string, payload string, queryParam url.Values, urlParams map[string]string) (c echo.Context, rec *httptest.ResponseRecorder) {
-	// Setup
-	e, err := setupTestEnv()
-	require.NoError(t, err)
-
-	c, rec = createRequest(e, method, payload, queryParam, urlParams)
+	require.NoError(t, db.LoadFixtures())
+	c, rec = createRequest(testRouter, method, payload, queryParam, urlParams)
 	return
 }
 
@@ -155,9 +152,9 @@ func newTestRequestWithLinkShare(t *testing.T, method string, handler echo.Handl
 	return
 }
 
-func newCaldavTestRequestWithUser(t *testing.T, e *echo.Echo, method string, handler echo.HandlerFunc, user *user.User, payload string, queryParams url.Values, urlParams map[string]string) (rec *httptest.ResponseRecorder, err error) {
+func newCaldavTestRequestWithUser(t *testing.T, method string, handler echo.HandlerFunc, user *user.User, payload string, queryParams url.Values, urlParams map[string]string) (rec *httptest.ResponseRecorder, err error) {
 	var c echo.Context
-	c, rec = createRequest(e, method, payload, queryParams, urlParams)
+	c, rec = createRequest(testRouter, method, payload, queryParams, urlParams)
 	c.Request().Header.Set(echo.HeaderContentType, echo.MIMETextPlain)
 
 	result, _ := caldav.BasicAuth(user.Username, "12345678", c)
