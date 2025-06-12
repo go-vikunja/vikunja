@@ -25,24 +25,24 @@ import {fetchAvatarBlobUrl, getDisplayName} from '@/models/user'
 import type {IUser} from '@/modelTypes/IUser'
 
 const props = withDefaults(defineProps<{
-        user: IUser,
-        showUsername?: boolean,
-        avatarSize?: number,
-        isInline?: boolean,
+	user: IUser,
+	showUsername?: boolean,
+	avatarSize?: number,
+	isInline?: boolean,
 }>(), {
-        showUsername: true,
-        avatarSize: 50,
-        isInline: false,
+	showUsername: true,
+	avatarSize: 50,
+	isInline: false,
 })
 
 const displayName = computed(() => getDisplayName(props.user))
 const avatarSrc = ref('')
 
 async function loadAvatar() {
-       avatarSrc.value = await fetchAvatarBlobUrl(props.user, props.avatarSize)
+	avatarSrc.value = await fetchAvatarBlobUrl(props.user, props.avatarSize)
 }
 
-watch(() => [props.user, props.avatarSize], loadAvatar, {immediate: true})
+watch(() => [props.user, props.avatarSize], loadAvatar, { immediate: true })
 </script>
 
 <style lang="scss" scoped>

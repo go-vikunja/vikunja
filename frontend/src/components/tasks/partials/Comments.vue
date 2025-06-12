@@ -223,11 +223,11 @@ import {uploadFile} from '@/helpers/attachments'
 import {success} from '@/message'
 import {formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
 import {fetchAvatarBlobUrl, getDisplayName} from '@/models/user'
-import type { IUser } from '@/modelTypes/IUser'
+import type {IUser} from '@/modelTypes/IUser'
 import {useConfigStore} from '@/stores/config'
 import {useAuthStore} from '@/stores/auth'
 import Reactions from '@/components/input/Reactions.vue'
-import { useCopyToClipboard } from '@/composables/useCopyToClipboard'
+import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 
 const props = withDefaults(defineProps<{
 	taskId: number,
@@ -260,19 +260,22 @@ const userAvatar = ref('')
 const avatarCache = reactive(new Map<string, string>())
 
 function avatarFor(u: IUser, size: number) {
-       const key = `${u.id}-${size}`
-       const cached = avatarCache.get(key)
-       if (!cached) {
-               fetchAvatarBlobUrl(u, size).then(url => avatarCache.set(key, url))
-       }
-       return avatarCache.get(key) || ''
+	const key = `${u.id}-${size}`
+	const cached = avatarCache.get(key)
+	if (!cached) {
+		fetchAvatarBlobUrl(u, size).then(url => avatarCache.set(key, url))
+	}
+
+	return avatarCache.get(key) || ''
 }
 
 watch(() => authStore.info, async (nu) => {
-       if (nu) {
-               userAvatar.value = await fetchAvatarBlobUrl(nu, 48)
-       }
+	if (!nu) {
+		return
+	}
+	userAvatar.value = await fetchAvatarBlobUrl(nu, 48)
 }, {immediate: true})
+
 const currentUserId = computed(() => authStore.info.id)
 const enabled = computed(() => configStore.taskCommentsEnabled)
 const actions = computed(() => {

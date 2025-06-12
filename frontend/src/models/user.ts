@@ -9,13 +9,13 @@ const avatarService = new AvatarService()
 const avatarCache = new Map<string, string>()
 
 export async function fetchAvatarBlobUrl(user: IUser, size = 50) {
-       const key = `${user.username}-${size}`
-       if (avatarCache.has(key)) {
-               return avatarCache.get(key) as string
-       }
-       const url = await avatarService.getBlobUrl(user, size)
-       avatarCache.set(key, url)
-       return url
+	const key = `${user.username}-${size}`
+	if (avatarCache.has(key)) {
+		return avatarCache.get(key) as string
+	}
+	const url = await avatarService.getBlobUrl(`/avatar/${user.username}?size=${size}`)
+	avatarCache.set(key, url)
+	return url
 }
 
 export function getDisplayName(user: IUser) {

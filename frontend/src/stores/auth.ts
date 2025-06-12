@@ -149,10 +149,12 @@ export const useAuthStore = defineStore('auth', () => {
 		needsTotpPasscode.value = newNeedsTotpPasscode
 	}
 
-       async function reloadAvatar() {
-               if (!info.value) return
-               avatarUrl.value = await fetchAvatarBlobUrl(info.value, 40)
-       }
+	async function reloadAvatar() {
+		if (!info.value) {
+			return
+		}
+		avatarUrl.value = await fetchAvatarBlobUrl(info.value, 40)
+	}
 
 	function updateLastUserRefresh() {
 		lastUserInfoRefresh.value = new Date()

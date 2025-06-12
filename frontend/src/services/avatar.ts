@@ -1,7 +1,6 @@
 import AbstractService from './abstractService'
 import AvatarModel from '@/models/avatar'
 import type { IAvatar } from '@/modelTypes/IAvatar'
-import type { IUser } from '@/modelTypes/IUser'
 
 export default class AvatarService extends AbstractService<IAvatar> {
 	constructor() {
@@ -20,19 +19,12 @@ export default class AvatarService extends AbstractService<IAvatar> {
 		return false
 	}
 
-        create(blob) {
-                return this.uploadBlob(
-                        this.paths.create,
-                        blob,
-                        'avatar',
-                        'avatar.jpg', // This fails without a file name
-                )
-        }
-
-       getBlobUrl(user: IUser, size = 50) {
-               return AbstractService.prototype.getBlobUrl.call(
-                       this,
-                       `/avatar/${user.username}?size=${size}`,
-               )
-       }
+	create(blob) {
+		return this.uploadBlob(
+			this.paths.create,
+			blob,
+			'avatar',
+			'avatar.jpg', // This fails without a file name
+		)
+	}
 }
