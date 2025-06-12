@@ -26,8 +26,8 @@ The project consists of:
 - **Clean**: `mage build:clean` - Cleans build artifacts
 - **Format**: `mage fmt` - Format Go code before committing
 
-Development helpers under the `dev` namespace:
-- **Migration**: `mage dev:make-migration` - Creates new database migration
+-Development helpers under the `dev` namespace:
+- **Migration**: `mage dev:make-migration <StructName>` - Creates new database migration. If you omit `<StructName>`, the command will prompt for it.
 - **Event**: `mage dev:make-event` - Create an event type
 - **Listener**: `mage dev:make-listener` - Create an event listener  
 - **Notification**: `mage dev:make-notification` - Create a notification skeleton
@@ -114,7 +114,7 @@ Modern Vue 3 composition API application with TypeScript:
 
 **Backend Changes:**
 1. Create/modify models in `pkg/models/` with proper CRUD and Rights interfaces as required
-2. Add database migration if needed: `mage dev:make-migration`
+2. Add database migration if needed: `mage dev:make-migration <StructName>`
 3. Create/update services in `pkg/services/` for complex business logic
 4. Add API routes in `pkg/routes/api/v1/` following existing patterns
 5. Update Swagger annotations
@@ -127,7 +127,7 @@ Modern Vue 3 composition API application with TypeScript:
 5. Update Pinia stores if global state changes are needed
 
 ### Database Changes
-1. Run `mage dev:make-migration` and enter the struct name
+1. Run `mage dev:make-migration <StructName>`
 2. Edit the generated migration file in `pkg/migration/`
 3. Update corresponding model in `pkg/models/`
 4. Update TypeScript interfaces in frontend `src/modelTypes/`
