@@ -1,1 +1,160 @@
-{}
+{
+	"notifications": {
+		"greeting": "Ciao %[1]s,",
+		"email_confirm": {
+			"subject": "%[1]s, si prega di confermare il tuo indirizzo email a Vikunja",
+			"subject_new": "%[1]s + Vikunja = <3",
+			"welcome": "Benvenuto su Vikunja!",
+			"confirm": "Per confermare il tuo indirizzo email, clicca sul link qui sotto:"
+		},
+		"password": {
+			"changed": {
+				"subject": "La password su Vikunja è stata cambiata",
+				"success": "La password del tuo account è stata cambiata con successo.",
+				"warning": "Se non sei stato tu, potrebbe significare che qualcuno ha compromesso il tuo account. In questo caso contatta l'amministratore del server."
+			},
+			"reset": {
+				"subject": "Reimposta la tua password su Vikunja",
+				"instructions": "Per reimpostare la password, fare clic sul link qui sotto:",
+				"valid_duration": "Il link sarà valido per 24 ore."
+			}
+		},
+		"totp": {
+			"invalid": {
+				"subject": "Qualcuno ha appena provato ad accedere al tuo account Vikunja, ma non è riuscito",
+				"message": "Qualcuno ha appena provato ad accedere al tuo account con nome utente e password corretti, ma un codice di accesso TOTP errato.",
+				"warning": "**Se non sei stato tu, qualcun altro conosce la tua password. Dovresti impostarne una nuova immediatamente!**"
+			},
+			"account_locked": {
+				"subject": "Abbiamo disabilitato il tuo account su Vikunja",
+				"message": "Qualcuno ha cercato di accedere con le tue credenziali ma non ha fornito un codice di accesso TOTP valido.",
+				"disabled": "Dopo 10 tentativi falliti, abbiamo disabilitato il tuo account e reimpostato la password. Per impostarne uno nuovo, segui le istruzioni nell'email di reset che ti abbiamo appena inviato.",
+				"reset_instructions": "Se non hai ricevuto un'email con le istruzioni di reset, puoi sempre richiederne una nuova a [%[1]s](%[2]s)."
+			}
+		},
+		"login": {
+			"failed": {
+				"subject": "Qualcuno ha appena provato ad accedere al tuo account Vikunja, ma non ha fornito una password corretta",
+				"message": "Qualcuno ha appena provato ad accedere al tuo account con una password sbagliata per tre volte di fila.",
+				"warning": "Se questo non fosse tu, questo potrebbe essere qualcun altro cercando di entrare nel tuo account.",
+				"enhance_security": "Per migliorare la sicurezza dell'account potresti voler impostare una password più forte o abilitare l'autenticazione TOTP nelle impostazioni:"
+			}
+		},
+		"account": {
+			"deletion": {
+				"confirm": {
+					"subject": "Si prega di confermare l'eliminazione del tuo account Vikunja",
+					"request": "Hai richiesto l'eliminazione del tuo account. Per confermarla, clicca sul link qui sotto:",
+					"valid_duration": "Il link sarà valido per 24 ore.",
+					"schedule_info": "Una volta confermata l'eliminazione, programmeremo l'eliminazione del tuo account entro tre giorni e nel frattempo ti invieremo un'altra e-mail.",
+					"consequences": "Se procedi con l'eliminazione del tuo account, rimuoveremo tutti i progetti e le attività che hai creato. Tutto ciò che hai condiviso con un altro utente o team verrà trasferito a loro.",
+					"changed_mind": "Se non hai richiesto l'eliminazione o hai cambiato idea, puoi semplicemente ignorare questa email."
+				},
+				"scheduled": {
+					"subject_days": "Il tuo account Vikunja verrà eliminato tra %[1] giorni",
+					"subject_tomorrow": "Il tuo account Vikunja verrà eliminato domani",
+					"request_reminder": "Di recente hai richiesto l'eliminazione del tuo account Vikunja.",
+					"deletion_time_days": "Elimineremo il tuo account entro %[1] giorni.",
+					"deletion_time_tomorrow": "Domani elimineremo il tuo account.",
+					"changed_mind": "Se hai cambiato idea, clicca semplicemente sul link sottostante per annullare l'eliminazione e segui le istruzioni riportate lì:"
+				},
+				"completed": {
+					"subject": "Il tuo account Vikunja è stato eliminato",
+					"confirmation": "Come richiesto, abbiamo eliminato il tuo account Vikunja.",
+					"permanent": "Questa eliminazione è definitiva. Se non hai creato un backup e hai bisogno di recuperare i tuoi dati ora, contatta il tuo amministratore."
+				}
+			}
+		},
+		"task": {
+			"reminder": {
+				"subject": "Promemoria per \"%[1]s\" (%[2]s)",
+				"message": "Questo è un promemoria amichevole del compito \"%[1]s\" (%[2]s)."
+			},
+			"comment": {
+				"subject": "Riguardo a %[1]s",
+				"mentioned_subject": "%[1]s ti ha menzionato in un commento in \"%[2]s\"",
+				"mentioned_message": "**%[1]s** ti ha menzionato in un commento:"
+			},
+			"assigned": {
+				"subject_to_assignee": "Sei stato assegnato a \"%[1]s\" (%[2]s)",
+				"message_to_assignee": "%[1]s ti ha assegnato a \"%[2]s\".",
+				"subject_to_others": "\"%[1]s\" (%[2]s) è ​​stato assegnato a %[3]s",
+				"message_to_others": "%[1]s ha assegnato questo compito a %[2]s."
+			},
+			"deleted": {
+				"subject": "\"%[1]s\" (%[2]s) è ​​stato eliminato",
+				"message": "%[1]s ha eliminato l'attività \"%[2]s\" (%[3]s)"
+			},
+			"mentioned": {
+				"subject_new": "%[1]s ti ha menzionato in una nuova attività \"%[2]s\"",
+				"subject": "%[1]s ti ha menzionato in un'attività \"%[2]s\"",
+				"message": "**%[1]s** ti ha menzionato in un'attività:"
+			},
+			"overdue": {
+				"subject": "L'attività \"%[1]s\" (%[2]s) è ​​in ritardo",
+				"message": "Questo è un promemoria amichevole del compito \"%[1]s\" (%[2]s) che è in ritardo di %[3]s e non è ancora stato completato.",
+				"multiple_subject": "I tuoi compiti in ritardo",
+				"multiple_message": "Hai i seguenti compiti scaduti:",
+				"overdue_since": "da %[1]s",
+				"overdue_now": "adesso",
+				"overdue": "in ritardo %[1]s"
+			}
+		},
+		"project": {
+			"created": "%[1]s ha creato il progetto \"%[2]s\""
+		},
+		"team": {
+			"member_added": {
+				"subject": "%[1]s ti ha aggiunto al team \"%[2]s\" a Vikunja",
+				"message": "%[1]s ti ha appena aggiunto al team %[2]s a Vikunja."
+			}
+		},
+		"data_export": {
+			"ready": {
+				"subject": "L'esportazione dei dati Vikunja è pronta",
+				"message": "Il tuo Vikunja Data Export è pronto per essere scaricato. Clicca sul pulsante qui sotto per scaricarlo:",
+				"availability": "Il download sarà disponibile per i prossimi 7 giorni."
+			}
+		},
+		"migration": {
+			"done": {
+				"subject": "La migrazione da %[1]s a Vikunja è stata completata",
+				"imported": "Vikunja ha importato tutti gli elenchi/progetti, le attività, le note, i promemoria e i file da %[1]s a cui hai accesso.",
+				"have_fun": "Divertitevi con i vostri nuovi (vecchi) progetti!"
+			},
+			"failed": {
+				"subject": "La migrazione da %[1]s a Vikunja è fallita",
+				"message": "Sembra che questa volta il passaggio da %[1]s non sia andato come previsto.",
+				"retry": "Ma niente paura! Provateci di nuovo, ricominciando da capo come avete fatto prima. A volte, questi intoppi si verificano a causa di problemi tecnici da parte di %[1]s, ma riprovare spesso risolve il problema.",
+				"error": "Lungo il percorso abbiamo riscontrato un piccolo errore: `%[2]s`.",
+				"report": "Lasciaci una nota a riguardo [nel forum](https://community.vikunja.io/) o in uno dei soliti posti, così possiamo dare un'occhiata al motivo per cui non è riuscito.",
+				"working_on_it": "Abbiamo monitorato il messaggio di errore e stiamo lavorando per risolverlo al più presto."
+			}
+		},
+		"common": {
+			"have_nice_day": "Buona giornata!",
+			"copy_url": "Se il pulsante qui sopra non funziona, copia l'Url qui sotto e incollalo nella barra degli indirizzi del tuo browser:",
+			"actions": {
+				"open_task": "Apri attività",
+				"open_vikunja": "Apri Vikunja",
+				"open_project": "Apri progetto",
+				"open_team": "Apri Squadra",
+				"download": "Scarica",
+				"reset_password": "Reimposta la tua password",
+				"go_to_settings": "Vai alle impostazioni",
+				"confirm_email": "Conferma il tuo indirizzo email",
+				"abort_deletion": "Interrompi la cancellazione",
+				"confirm_account_deletion": "Conferma la cancellazione del mio account",
+				"change_notification_settings_link": "È possibile modificare le impostazioni di notifica [here](%[1]s)."
+			}
+		}
+	},
+	"time": {
+		"since_years": "un anno<unk> %[1]d anni",
+		"since_weeks": "una settimana|%[1]d settimane",
+		"since_days": "un giorno|%[1]d giorni",
+		"since_hours": "un'ora|%[1]d ore",
+		"since_minutes": "un minuto|%[1]d minuti",
+		"list_last_separator": "e"
+	}
+}

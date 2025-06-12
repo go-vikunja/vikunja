@@ -67,7 +67,8 @@
 			"noAccountYet": "Non hai un account?",
 			"alreadyHaveAnAccount": "Hai già un account?",
 			"remember": "Resta connesso",
-			"registrationDisabled": "La registrazione è disabilitata."
+			"registrationDisabled": "La registrazione è disabilitata.",
+			"passwordResetTokenMissing": "Manca il token per la reimpostazione della password."
 		},
 		"settings": {
 			"title": "Impostazioni",
@@ -99,7 +100,9 @@
 				"defaultView": "Vista predefinita",
 				"timezone": "Fuso orario",
 				"overdueTasksRemindersTime": "Orario d'invio delle e-mail per attività scadute",
-				"filterUsedOnOverview": "Filtro utilizzato nella panoramica"
+				"filterUsedOnOverview": "Filtro utilizzato nella panoramica",
+				"minimumPriority": "Priorità minima delle attività visibili",
+				"externalUserNameChange": "Il tuo nome è gestito dal tuo provider di autenticazione ({provider}). Per cambiarlo, aggiorna il tuo nome lì."
 			},
 			"totp": {
 				"title": "Autenticazione a due fattori",
@@ -135,7 +138,8 @@
 				"upload": "Caricato",
 				"uploadAvatar": "Carica Avatar",
 				"statusUpdateSuccess": "Avatar aggiornato!",
-				"setSuccess": "L'avatar è stato impostato con successo!"
+				"setSuccess": "L'avatar è stato impostato con successo!",
+				"ldap": "Il tuo avatar è sincronizzato automaticamente dal servizio di directory della tua organizzazione (LDAP). Puoi chiedere al tuo team IT informazioni su come cambiarlo."
 			},
 			"quickAddMagic": {
 				"title": "Modalità di aggiunta rapida",
@@ -210,6 +214,7 @@
 		"archivedMessage": "Questo progetto è archiviato. Non è possibile creare nuove attività o modificarle.",
 		"archived": "Archiviati",
 		"showArchived": "Mostra Archiviati",
+		"title": "Titolo",
 		"color": "Colore",
 		"projects": "Progetti",
 		"parent": "Progetto Principale",
@@ -218,6 +223,11 @@
 		"shared": "Progetti Condivisi",
 		"noDescriptionAvailable": "Descrizione del progetto non disponibile.",
 		"inboxTitle": "In arrivo",
+		"favorite": "Segna questo progetto come preferito",
+		"unfavorite": "Rimuovi questo progetto dai preferiti",
+		"openSettingsMenu": "Apri menu impostazioni progetto",
+		"description": "Descrizione progetto",
+		"favoriteDescription": "Questo progetto ha tutte le attività contrassegnate come preferiti.",
 		"create": {
 			"header": "Nuovo progetto",
 			"titlePlaceholder": "Titolo del progetto…",
@@ -582,7 +592,8 @@
 		"created": "Creato il",
 		"createdBy": "Creato da {0}",
 		"actions": "Azioni",
-		"cannotBeUndone": "Questa azione non può essere annullata!"
+		"cannotBeUndone": "Questa azione non può essere annullata!",
+		"avatarOfUser": "Immagine profilo di {user}"
 	},
 	"input": {
 		"resetColor": "Ripristina Colore",
@@ -1149,8 +1160,16 @@
 		"1016": "TOTP non è attivo per questo utente.",
 		"1017": "Codice TOTP non valido.",
 		"1018": "L'impostazione del tipo di avatar utente non è valida.",
+		"1019": "Nessun indirizzo email è stato fornito dal provider OpenID. Assicurati che il provider OpenID fornisca pubblicamente un indirizzo email per il tuo account.",
+		"1020": "Questo account è disabilitato. Controlla le tue email o chiedi al tuo amministratore.",
+		"1021": "Questo account è gestito da un provider di autenticazione di terze parti.",
+		"1022": "Il nome utente non deve contenere spazi.",
+		"1023": "Non puoi farlo come link condiviso.",
+		"1024": "Dati della richiesta non validi per il campo {field} del tipo {type}.",
+		"1025": "Il fuso orario '{timezone}' non è valido. Seleziona un fuso orario valido dalla lista.",
 		"2001": "L'ID non può essere vuoto o 0.",
 		"2002": "Alcuni dati della richiesta non erano validi.",
+		"2003": "Il fuso orario '{timezone}' non è valido.",
 		"3001": "Il progetto non esiste.",
 		"3004": "Per eseguire l'azione, è necessario avere i permessi di lettura sul progetto.",
 		"3005": "Il titolo del progetto non può essere vuoto.",
@@ -1176,12 +1195,18 @@
 		"4017": "Comparatore di filtri attività non valido.",
 		"4018": "Concatenatore filtro attività non valido.",
 		"4019": "Filtro attività non valido.",
+		"4020": "Questo allegato non appartiene a questa attività.",
+		"4021": "Questo utente è già assegnato a questa attività.",
+		"4022": "Fornisci a quale data di promemoria è relativa.",
+		"4023": "Impossibile creare un ciclo di relazione dell'attività.",
 		"6001": "Il nome del gruppo non può essere vuoto.",
 		"6002": "Gruppo non esistente.",
 		"6004": "Il gruppo ha già accesso a quel progetto.",
 		"6005": "L'utente è già membro di quel gruppo.",
 		"6006": "Non è possibile eliminare l'ultimo membro del gruppo.",
 		"6007": "Il gruppo non ha accesso al progetto per eseguire l'azione.",
+		"6008": "Non è stato possibile trovare alcun team per OIDC ID ed emittente forniti.",
+		"6009": "Non è stato trovato nessun team con proprietà OIDC ID per l'utente.",
 		"7002": "L'utente ha già accesso a questo progetto.",
 		"7003": "Non hai accesso a questo progetto.",
 		"8001": "Questa etichetta esiste già in quell'attività.",
@@ -1197,7 +1222,12 @@
 		"11002": "I filtri salvati non sono disponibili per i link di condivisione.",
 		"12001": "Il tipo di entità sottoscritto non è valido.",
 		"12002": "Sei già iscritto all'entità stessa o a un'entità principale.",
+		"12003": "È necessario fornire un utente per recuperare le sottoscrizioni.",
 		"13001": "Questa condivisione di link richiede una password per l'autenticazione, ma non è stata fornita.",
+		"13002": "La password inserita per il link condiviso non è valida.",
+		"13003": "Il token API inserito per il link condiviso non è valido.",
+		"14001": "Il token api fornito non è valido.",
+		"14002": "Il permesso {permission} del gruppo {group} non è valido.",
 		"error": "Errore",
 		"success": "Successo",
 		"0001": "Non ti è permesso farlo."
