@@ -1001,10 +1001,8 @@ type Dev mg.Namespace
 // MakeMigration creates a new bare db migration skeleton in pkg/migration.
 // If you pass the struct name as an argument, the prompt will be skipped.
 func (Dev) MakeMigration(name string) error {
-	var str string
-	if strings.TrimSpace(name) != "" {
-		str = strings.TrimSpace(name)
-	} else {
+	str := strings.TrimSpace(name)
+	if str == "" {
 		reader := bufio.NewReader(os.Stdin)
 		fmt.Print("Enter the name of the struct: ")
 		s, _ := reader.ReadString('\n')
