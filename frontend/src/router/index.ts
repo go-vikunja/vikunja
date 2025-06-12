@@ -433,6 +433,8 @@ export async function getAuthForRoute(to: RouteLocation, authStore) {
 router.beforeEach(async (to, from) => {
 	const authStore = useAuthStore()
 
+	await authStore.checkAuth()
+
 	if(from.hash && from.hash.startsWith(LINK_SHARE_HASH_PREFIX)) {
 		to.hash = from.hash
 	}
