@@ -1,5 +1,8 @@
 <template>
-	<div class="task">
+	<div
+		class="task"
+		:data-is-overdue="task.dueDate <= new Date() && !task.done || undefined"
+	>
 		<span>
 			<span
 				v-if="showProject && typeof project !== 'undefined'"
@@ -55,7 +58,6 @@
 		>
 			<time
 				:datetime="formatISO(task.dueDate)"
-				:class="{'overdue': task.dueDate <= new Date() && !task.done}"
 				class="is-italic"
 			>
 				– {{ $t('task.detail.due', {at: formatDisplayDate(task.dueDate)}) }}
@@ -151,7 +153,7 @@ const project = computed(() => projectStore.projects[props.task.projectId])
 		margin-inline-start: 5px;
 	}
 
-	.overdue {
+	&[data-is-overdue] .dueDate {
 		color: var(--danger);
 	}
 
