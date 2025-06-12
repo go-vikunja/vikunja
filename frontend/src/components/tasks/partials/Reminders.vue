@@ -3,7 +3,7 @@
 		<div
 			v-for="(r, index) in reminders"
 			:key="index"
-			:class="{ 'overdue': r.reminder < now }"
+			:data-is-overdue="r.reminder < now || undefined"
 			class="reminder-input"
 		>
 			<ReminderDetail
@@ -111,7 +111,7 @@ function removeReminderByIndex(index: number) {
 	display: flex;
 	align-items: center;
 
-	&.overdue :deep(.datepicker .show) {
+	&[data-is-overdue] :deep(.datepicker .show) {
 		color: var(--danger);
 	}
 
