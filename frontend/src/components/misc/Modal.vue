@@ -101,21 +101,21 @@ watchEffect(() => {
 })
 
 function onKeydown(e: KeyboardEvent) {
-        if (e.key === 'Escape') {
-                emit('close')
-        }
+	if (e.key === 'Escape') {
+ 		emit('close')
+	}
 }
 
 watch(
-        () => props.enabled,
-        (value) => {
-                if (value) {
-                        window.addEventListener('keydown', onKeydown)
-                } else {
-                        window.removeEventListener('keydown', onKeydown)
-                }
-        },
-        {immediate: true},
+	() => props.enabled,
+	(value: boolean) => {
+ 		if (value) {
+			window.addEventListener('keydown', onKeydown)
+		} else {
+			window.removeEventListener('keydown', onKeydown)
+		}
+	},
+	{immediate: true},
 )
 
 onBeforeUnmount(() => {
