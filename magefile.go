@@ -998,13 +998,18 @@ func (Release) Packages() error {
 
 type Dev mg.Namespace
 
-// Creates a new bare db migration skeleton in pkg/migration with the current date
-func (Dev) MakeMigration() error {
-
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Enter the name of the struct: ")
-	str, _ := reader.ReadString('\n')
-	str = strings.Trim(str, "\n")
+// MakeMigration creates a new bare db migration skeleton in pkg/migration.
+// If you pass the struct name as an argument, the prompt will be skipped.
+func (Dev) MakeMigration(name string) error {
+	var str string
+	if strings.TrimSpace(name) != "" {
+		str = strings.TrimSpace(name)
+	} else {
+		reader := bufio.NewReader(os.Stdin)
+		fmt.Print("Enter the name of the struct: ")
+		s, _ := reader.ReadString('\n')
+		str = strings.TrimSpace(s)
+	}
 
 	date := time.Now().Format("20060102150405")
 
