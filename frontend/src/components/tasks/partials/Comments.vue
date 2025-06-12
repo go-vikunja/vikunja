@@ -29,7 +29,7 @@
 			>
 				<figure class="media-left is-hidden-mobile">
 					<img
-						:src="getAvatarUrl(c.author, 48)"
+						:src="avatarFor(c.author, 48)"
 						alt=""
 						class="image is-avatar"
 						height="48"
@@ -42,7 +42,7 @@
 				<div class="media-content">
 					<div class="comment-info">
 						<img
-							:src="getAvatarUrl(c.author, 20)"
+							:src="avatarFor(c.author, 20)"
 							alt=""
 							class="image is-avatar d-print-none"
 							height="20"
@@ -222,7 +222,8 @@ import type {ITask} from '@/modelTypes/ITask'
 import {uploadFile} from '@/helpers/attachments'
 import {success} from '@/message'
 import {formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
-import {getAvatarUrl, getDisplayName} from '@/models/user'
+import {fetchAvatarBlobUrl, getDisplayName} from '@/models/user'
+import type { IUser } from '@/modelTypes/IUser'
 import {useConfigStore} from '@/stores/config'
 import {useAuthStore} from '@/stores/auth'
 import Reactions from '@/components/input/Reactions.vue'
@@ -255,7 +256,23 @@ const newCommentText = ref('')
 const saved = ref<ITask['id'] | null>(null)
 const saving = ref<ITask['id'] | null>(null)
 
-const userAvatar = computed(() => getAvatarUrl(authStore.info, 48))
+const userAvatar = ref('')
+const avatarCache = reactive(new Map<string, string>())
+
+function avatarFor(u: IUser, size: number) {
+       const key = `${u.id}-${size}`
+       const cached = avatarCache.get(key)
+       if (!cached) {
+               fetchAvatarBlobUrl(u, size).then(url => avatarCache.set(key, url))
+       }
+       return avatarCache.get(key) || ''
+}
+
+watch(() => authStore.info, async (nu) => {
+       if (nu) {
+               userAvatar.value = await fetchAvatarBlobUrl(nu, 48)
+       }
+}, {immediate: true})
 const currentUserId = computed(() => authStore.info.id)
 const enabled = computed(() => configStore.taskCommentsEnabled)
 const actions = computed(() => {

@@ -31,8 +31,8 @@ import (
 )
 
 func SetupTokenMiddleware() echo.MiddlewareFunc {
-	return echojwt.WithConfig(echojwt.Config{
-		SigningKey: []byte(config.ServiceJWTSecret.GetString()),
+       return echojwt.WithConfig(echojwt.Config{
+               SigningKey: []byte(config.ServiceJWTSecret.GetString()),
 		Skipper: func(c echo.Context) bool {
 			authHeader := c.Request().Header.Values("Authorization")
 			if len(authHeader) == 0 {

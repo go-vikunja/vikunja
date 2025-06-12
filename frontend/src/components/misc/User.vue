@@ -6,7 +6,7 @@
 		<img
 			v-tooltip="displayName"
 			:height="avatarSize"
-			:src="getAvatarUrl(user, avatarSize)"
+			:src="avatarSrc"
 			:width="avatarSize"
 			:alt="'Avatar of ' + displayName"
 			class="avatar"
@@ -19,23 +19,30 @@
 </template>
 
 <script lang="ts" setup>
-import {computed} from 'vue'
+import {computed, ref, watch} from 'vue'
 
-import {getAvatarUrl, getDisplayName} from '@/models/user'
+import {fetchAvatarBlobUrl, getDisplayName} from '@/models/user'
 import type {IUser} from '@/modelTypes/IUser'
 
 const props = withDefaults(defineProps<{
-	user: IUser,
-	showUsername?: boolean,
-	avatarSize?: number,
-	isInline?: boolean,
+        user: IUser,
+        showUsername?: boolean,
+        avatarSize?: number,
+        isInline?: boolean,
 }>(), {
-	showUsername: true,
-	avatarSize: 50,
-	isInline: false,
+        showUsername: true,
+        avatarSize: 50,
+        isInline: false,
 })
 
 const displayName = computed(() => getDisplayName(props.user))
+const avatarSrc = ref('')
+
+async function loadAvatar() {
+       avatarSrc.value = await fetchAvatarBlobUrl(props.user, props.avatarSize)
+}
+
+watch(() => [props.user, props.avatarSize], loadAvatar, {immediate: true})
 </script>
 
 <style lang="scss" scoped>

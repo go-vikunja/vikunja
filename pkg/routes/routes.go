@@ -1,53 +1,53 @@
-// Vikunja is a to-do list application to facilitate your life.
-// Copyright 2018-present Vikunja and contributors. All rights reserved.
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+	// Vikunja is a to-do list application to facilitate your life.
+	// Copyright 2018-present Vikunja and contributors. All rights reserved.
+	//
+	// This program is free software: you can redistribute it and/or modify
+	// it under the terms of the GNU Affero General Public License as published by
+	// the Free Software Foundation, either version 3 of the License, or
+	// (at your option) any later version.
+	//
+	// This program is distributed in the hope that it will be useful,
+	// but WITHOUT ANY WARRANTY; without even the implied warranty of
+	// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	// GNU Affero General Public License for more details.
+	//
+	// You should have received a copy of the GNU Affero General Public License
+	// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// @title Vikunja API
-// @description This is the documentation for the [Vikunja](https://vikunja.io) API. Vikunja is a cross-platform To-do-application with a lot of features, such as sharing projects with users or teams. <!-- ReDoc-Inject: <security-definitions> -->
+	// @title Vikunja API
+	// @description This is the documentation for the [Vikunja](https://vikunja.io) API. Vikunja is a cross-platform To-do-application with a lot of features, such as sharing projects with users or teams. <!-- ReDoc-Inject: <security-definitions> -->
 
-// @description # Pagination
-// @description Every endpoint capable of pagination will return two headers:
-// @description * `x-pagination-total-pages`: The total number of available pages for this request
-// @description * `x-pagination-result-count`: The number of items returned for this request.
-// @description # Rights
-// @description All endpoints which return a single item (project, task, etc.) - no array - will also return a `x-max-right` header with the max right the user has on this item as an int where `0` is `Read Only`, `1` is `Read & Write` and `2` is `Admin`.
-// @description This can be used to show or hide ui elements based on the rights the user has.
-// @description # Errors
-// @description All errors have an error code and a human-readable error message in addition to the http status code. You should always check for the status code in the response, not only the http status code.
-// @description Due to limitations in the swagger library we're using for this document, only one error per http status code is documented here. Make sure to check the [error docs](https://vikunja.io/docs/errors/) in Vikunja's documentation for a full list of available error codes.
-// @description # Authorization
-// @description **JWT-Auth:** Main authorization method, used for most of the requests. Needs `Authorization: Bearer <jwt-token>`-header to authenticate successfully.
-// @description
-// @description **API Token:** You can create scoped API tokens for your user and use the token to make authenticated requests in the context of that user. The token must be provided via an `Authorization: Bearer <token>` header, similar to jwt auth. See the documentation for the `api` group to manage token creation and revocation.
-// @description
-// @description **BasicAuth:** Only used when requesting tasks via CalDAV.
-// @description <!-- ReDoc-Inject: <security-definitions> -->
-// @BasePath /api/v1
+	// @description # Pagination
+	// @description Every endpoint capable of pagination will return two headers:
+	// @description * `x-pagination-total-pages`: The total number of available pages for this request
+	// @description * `x-pagination-result-count`: The number of items returned for this request.
+	// @description # Rights
+	// @description All endpoints which return a single item (project, task, etc.) - no array - will also return a `x-max-right` header with the max right the user has on this item as an int where `0` is `Read Only`, `1` is `Read & Write` and `2` is `Admin`.
+	// @description This can be used to show or hide ui elements based on the rights the user has.
+	// @description # Errors
+	// @description All errors have an error code and a human-readable error message in addition to the http status code. You should always check for the status code in the response, not only the http status code.
+	// @description Due to limitations in the swagger library we're using for this document, only one error per http status code is documented here. Make sure to check the [error docs](https://vikunja.io/docs/errors/) in Vikunja's documentation for a full list of available error codes.
+	// @description # Authorization
+	// @description **JWT-Auth:** Main authorization method, used for most of the requests. Needs `Authorization: Bearer <jwt-token>`-header to authenticate successfully.
+	// @description
+	// @description **API Token:** You can create scoped API tokens for your user and use the token to make authenticated requests in the context of that user. The token must be provided via an `Authorization: Bearer <token>` header, similar to jwt auth. See the documentation for the `api` group to manage token creation and revocation.
+	// @description
+	// @description **BasicAuth:** Only used when requesting tasks via CalDAV.
+	// @description <!-- ReDoc-Inject: <security-definitions> -->
+	// @BasePath /api/v1
 
-// @license.url https://code.vikunja.io/api/src/branch/main/LICENSE
-// @license.name AGPL-3.0-or-later
+	// @license.url https://code.vikunja.io/api/src/branch/main/LICENSE
+	// @license.name AGPL-3.0-or-later
 
-// @contact.url https://vikunja.io/contact/
-// @contact.name General Vikunja contact
-// @contact.email hello@vikunja.io
+	// @contact.url https://vikunja.io/contact/
+	// @contact.name General Vikunja contact
+	// @contact.email hello@vikunja.io
 
-// @securityDefinitions.basic BasicAuth
+	// @securityDefinitions.basic BasicAuth
 
-// @securityDefinitions.apikey JWTKeyAuth
-// @in header
-// @name Authorization
+	// @securityDefinitions.apikey JWTKeyAuth
+	// @in header
+	// @name Authorization
 
 package routes
 
@@ -85,7 +85,7 @@ import (
 	"github.com/ulule/limiter/v3"
 )
 
-// NewEcho registers a new Echo instance
+	// NewEcho registers a new Echo instance
 func NewEcho() *echo.Echo {
 	e := echo.New()
 
@@ -162,7 +162,7 @@ func setupSentry(e *echo.Echo) {
 	}
 }
 
-// RegisterRoutes registers all routes for the application
+	// RegisterRoutes registers all routes for the application
 func RegisterRoutes(e *echo.Echo) {
 
 	if config.ServiceEnableCaldav.GetBool() {
@@ -269,9 +269,6 @@ func registerAPIRoutes(a *echo.Group) {
 	// Info endpoint
 	n.GET("/info", apiv1.Info)
 
-	// Avatar endpoint
-	n.GET("/avatar/:username", apiv1.GetAvatar)
-
 	// Link share auth
 	if config.ServiceEnableLinkSharing.GetBool() {
 		ur.POST("/shares/:share/auth", apiv1.AuthenticateLinkShare)
@@ -289,6 +286,9 @@ func registerAPIRoutes(a *echo.Group) {
 	a.GET("/token/test", apiv1.TestToken)
 	a.POST("/token/test", apiv1.CheckToken)
 	a.GET("/routes", models.GetAvailableAPIRoutesForToken)
+
+	// Avatar endpoint
+	a.GET("/avatar/:username", apiv1.GetAvatar)
 
 	// User stuff
 	u := a.Group("/user")

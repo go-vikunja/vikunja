@@ -4,7 +4,7 @@ import {acceptHMRUpdate, defineStore} from 'pinia'
 import {AuthenticatedHTTPFactory, HTTPFactory} from '@/helpers/fetcher'
 import {getBrowserLanguage, i18n, setLanguage} from '@/i18n'
 import {objectToSnakeCase} from '@/helpers/case'
-import UserModel, {getAvatarUrl, getDisplayName} from '@/models/user'
+import UserModel, {getDisplayName, fetchAvatarBlobUrl} from '@/models/user'
 import UserSettingsService from '@/services/userSettings'
 import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
 import {setModuleLoading} from '@/stores/helper'
@@ -149,10 +149,10 @@ export const useAuthStore = defineStore('auth', () => {
 		needsTotpPasscode.value = newNeedsTotpPasscode
 	}
 
-	function reloadAvatar() {
-		if (!info.value) return
-		avatarUrl.value = `${getAvatarUrl(info.value)}&=${new Date().valueOf()}`
-	}
+       async function reloadAvatar() {
+               if (!info.value) return
+               avatarUrl.value = await fetchAvatarBlobUrl(info.value, 40)
+       }
 
 	function updateLastUserRefresh() {
 		lastUserInfoRefresh.value = new Date()
