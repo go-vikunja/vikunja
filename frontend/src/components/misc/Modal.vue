@@ -119,7 +119,7 @@ watch(
 )
 
 onBeforeUnmount(() => {
-        window.removeEventListener('keydown', onKeydown)
+	window.removeEventListener('keydown', onKeydown)
 })
 </script>
 
