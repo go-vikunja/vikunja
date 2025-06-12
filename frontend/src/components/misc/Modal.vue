@@ -68,7 +68,7 @@
 <script lang="ts" setup>
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
-import {ref, useAttrs, watchEffect} from 'vue'
+import {ref, useAttrs, watchEffect, onBeforeUnmount, watch} from 'vue'
 import {useScrollLock} from '@vueuse/core'
 
 const props = withDefaults(defineProps<{
@@ -85,7 +85,7 @@ const props = withDefaults(defineProps<{
 	variant: 'default',
 })
 
-defineEmits(['close', 'submit'])
+const emit = defineEmits(['close', 'submit'])
 
 defineOptions({
 	inheritAttrs: false,
@@ -97,7 +97,29 @@ const modal = ref<HTMLElement | null>(null)
 const scrollLock = useScrollLock(modal)
 
 watchEffect(() => {
-	scrollLock.value = props.enabled
+        scrollLock.value = props.enabled
+})
+
+function onKeydown(e: KeyboardEvent) {
+	if (e.key === 'Escape') {
+ 		emit('close')
+	}
+}
+
+watch(
+	() => props.enabled,
+	(value: boolean) => {
+ 		if (value) {
+			window.addEventListener('keydown', onKeydown)
+		} else {
+			window.removeEventListener('keydown', onKeydown)
+		}
+	},
+	{immediate: true},
+)
+
+onBeforeUnmount(() => {
+	window.removeEventListener('keydown', onKeydown)
 })
 </script>
 
