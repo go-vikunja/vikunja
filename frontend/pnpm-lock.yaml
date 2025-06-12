@@ -10823,7 +10823,7 @@ snapshots:
 
   flatted@3.3.1: {}
 
-  flexsearch@0.8.205(patch_hash=e038b813d8bf1c71d07a35c866056edc10b68b513c474e8a3c0c5078ba0f7e9a): {}
+  flexsearch@0.8.205(patch_hash=6790fa13404fc20cbd14ebd2370684abaca8eae490bddc69d715cc27dea6a98a): {}
 
   floating-vue@5.2.2(vue@3.5.16(typescript@5.8.3)):
     dependencies:
