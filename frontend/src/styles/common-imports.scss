@@ -13,7 +13,7 @@
 $family-sans-serif: 'Open Sans', Helvetica, Arial, sans-serif;
 
 // the default values get overwritten by the definitions above
-@import "bulma-css-variables/sass/utilities/_all";
+@use "bulma-css-variables/sass/utilities/_all" as *;
 
 // since $tablet is defined by bulma we can just define it after importing the utilities
 $mobile: math.div($tablet, 2);
