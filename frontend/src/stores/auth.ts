@@ -145,7 +145,7 @@ export const useAuthStore = defineStore('auth', () => {
 	}
 
 	async function reloadAvatar() {
-		if (!info.value) {
+		if (!info.value || !info.value.username) {
 			return
 		}
 		avatarUrl.value = await fetchAvatarBlobUrl(info.value, 40)

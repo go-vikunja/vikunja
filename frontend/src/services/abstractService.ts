@@ -324,6 +324,17 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 			responseType: 'blob',
 			data,
 		})
+		
+		// Handle SVG blobs specially - convert to data URL for better browser compatibility
+		if (response.data.type === 'image/svg+xml') {
+			return new Promise((resolve, reject) => {
+				const reader = new FileReader()
+				reader.onload = () => resolve(reader.result as string)
+				reader.onerror = reject
+				reader.readAsDataURL(response.data)
+			})
+		}
+		
 		return window.URL.createObjectURL(new Blob([response.data]))
 	}
 
