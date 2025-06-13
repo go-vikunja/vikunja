@@ -174,8 +174,8 @@ jobs:
           - postgres
           - mysql
         test:
-          - unit
-          - integration
+          - feature
+          - web
     services:
       db-mysql:
         image: mariadb:11@sha256:1e669024fc94f626b9dc48bf47b29b5339cec203c28e61a3dc372991a345daf5
