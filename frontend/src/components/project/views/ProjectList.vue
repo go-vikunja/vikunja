@@ -93,9 +93,6 @@
 	</ProjectWrapper>
 </template>
 
-<script lang="ts">
-export default {name: 'List'}
-</script>
 
 <script setup lang="ts">
 import {ref, computed, nextTick, onMounted, watch} from 'vue'
@@ -128,6 +125,8 @@ const props = defineProps<{
 	projectId: IProject['id'],
 	viewId: IProjectView['id'],
 }>()
+
+defineOptions({name: 'List'})
 
 const ctaVisible = ref(false)
 

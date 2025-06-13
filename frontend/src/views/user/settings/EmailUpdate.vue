@@ -48,12 +48,8 @@
 	</Card>
 </template>
 
-<script lang="ts">
-export default { name: 'UserSettingsUpdateEmail' }
-</script>
 
-<script setup lang="ts">
-import {reactive, computed, shallowReactive} from 'vue'
+<script setup lang="ts">import {reactive, computed, shallowReactive} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import EmailUpdateService from '@/services/emailUpdate'
@@ -61,6 +57,8 @@ import EmailUpdateModel from '@/models/emailUpdate'
 import {success} from '@/message'
 import {useTitle} from '@/composables/useTitle'
 import {useAuthStore} from '@/stores/auth'
+
+defineOptions({name: 'UserSettingsUpdateEmail'})
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.settings.updateEmailTitle')} - ${t('user.settings.title')}`)
