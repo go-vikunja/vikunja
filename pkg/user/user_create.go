@@ -17,6 +17,7 @@
 package user
 
 import (
+	"regexp"
 	"strings"
 
 	"code.vikunja.io/api/pkg/config"
@@ -139,6 +140,14 @@ func checkIfUserIsValid(user *User) error {
 
 	if strings.Contains(user.Username, " ") {
 		return &ErrUsernameMustNotContainSpaces{
+			Username: user.Username,
+		}
+	}
+
+	// Check if username matches the reserved link-share pattern
+	linkSharePattern := regexp.MustCompile(`^link-share-\d+$`)
+	if linkSharePattern.MatchString(user.Username) {
+		return ErrUsernameReserved{
 			Username: user.Username,
 		}
 	}

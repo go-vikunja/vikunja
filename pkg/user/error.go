@@ -609,3 +609,26 @@ const ErrorCodeInvalidTimezone = 1025
 func (err ErrInvalidTimezone) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrorCodeInvalidTimezone, Message: fmt.Sprintf("The timezone '%s' is invalid. Please select a valid timezone from the list.", err.Name)}
 }
+
+// ErrUsernameReserved represents a "UsernameReserved" kind of error.
+type ErrUsernameReserved struct {
+	Username string
+}
+
+// IsErrUsernameReserved checks if an error is a ErrUsernameReserved.
+func IsErrUsernameReserved(err error) bool {
+	_, ok := err.(ErrUsernameReserved)
+	return ok
+}
+
+func (err ErrUsernameReserved) Error() string {
+	return fmt.Sprintf("Username is reserved [Username: %s]", err.Username)
+}
+
+// ErrorCodeUsernameReserved holds the unique world-error code of this error
+const ErrorCodeUsernameReserved = 1026
+
+// HTTPError holds the http error description
+func (err ErrUsernameReserved) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrorCodeUsernameReserved, Message: "This username is reserved and cannot be used."}
+}
