@@ -66,7 +66,6 @@ export const useAuthStore = defineStore('auth', () => {
 	const configStore = useConfigStore()
 	
 	const authenticated = ref(false)
-	const isLinkShareAuth = ref(false)
 	const needsTotpPasscode = ref(false)
 	
 	const info = ref<IUser | null>(null)
@@ -92,7 +91,8 @@ export const useAuthStore = defineStore('auth', () => {
 	})
 
 	const userDisplayName = computed(() => info.value ? getDisplayName(info.value) : undefined)
-
+	
+	const isLinkShareAuth = computed(() => info.value?.type === AUTH_TYPES.LINK_SHARE)
 
 	function setIsLoading(newIsLoading: boolean) {
 		isLoading.value = newIsLoading 
@@ -104,14 +104,12 @@ export const useAuthStore = defineStore('auth', () => {
 
 	function setUser(newUser: IUser | null, saveSettings = true) {
 		info.value = newUser
-		if (newUser !== null) {
+		if (newUser !== null && !isLinkShareAuth.value) {
 			reloadAvatar()
 
 			if (saveSettings && newUser.settings) {
 				loadSettings(newUser.settings)
 			}
-
-			isLinkShareAuth.value = newUser.id < 0
 		}
 	}
 
@@ -141,9 +139,6 @@ export const useAuthStore = defineStore('auth', () => {
 		authenticated.value = newAuthenticated
 	}
 
-	function setIsLinkShareAuth(newIsLinkShareAuth: boolean) {
-		isLinkShareAuth.value = newIsLinkShareAuth
-	}
 
 	function setNeedsTotpPasscode(newNeedsTotpPasscode: boolean) {
 		needsTotpPasscode.value = newNeedsTotpPasscode
@@ -444,7 +439,6 @@ export const useAuthStore = defineStore('auth', () => {
 	return {
 		// state
 		authenticated: readonly(authenticated),
-		isLinkShareAuth: readonly(isLinkShareAuth),
 		needsTotpPasscode: readonly(needsTotpPasscode),
 
 		info: readonly(info),
@@ -456,6 +450,7 @@ export const useAuthStore = defineStore('auth', () => {
 		authUser,
 		authLinkShare,
 		userDisplayName,
+		isLinkShareAuth,
 
 		isLoading: readonly(isLoading),
 		setIsLoading,
@@ -466,7 +461,6 @@ export const useAuthStore = defineStore('auth', () => {
 		setUser,
 		setUserSettings,
 		setAuthenticated,
-		setIsLinkShareAuth,
 		setNeedsTotpPasscode,
 
 		reloadAvatar,
