@@ -14,21 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package integrations
+package webtests
 
 import (
 	"net/http"
 	"testing"
 
-	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
+	"code.vikunja.io/api/pkg/routes"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestCheckToken(t *testing.T) {
-	t.Run("Normal test", func(t *testing.T) {
-		rec, err := newTestRequestWithUser(t, http.MethodPost, apiv1.CheckToken, &testuser1, "", nil, nil)
+func TestHealthcheck(t *testing.T) {
+	t.Run("healthcheck", func(t *testing.T) {
+		rec, err := newTestRequest(t, http.MethodGet, routes.HealthcheckHandler, ``, nil, nil)
 		require.NoError(t, err)
-		assert.Contains(t, rec.Body.String(), `🍵`)
+		assert.Contains(t, rec.Body.String(), "OK")
 	})
 }

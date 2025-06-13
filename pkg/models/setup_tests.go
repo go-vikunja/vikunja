@@ -25,7 +25,7 @@ import (
 )
 
 // SetupTests takes care of seting up the db, fixtures etc.
-// This is an extra function to be able to call the fixtures setup from the integration tests.
+// This is an extra function to be able to call the fixtures setup from the web tests.
 func SetupTests() {
 	var err error
 	x, err = db.CreateTestEngine()

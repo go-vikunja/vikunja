@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package integrations
+package webtests
 
 import (
 	"testing"
@@ -39,7 +39,7 @@ import (
 // 11. Archived projects should not appear in the list with all projects.
 // 12. Projects whose parent project is archived should not appear in the project with all projects.
 //
-// All of this is tested through integration tests because it's not yet clear if this will be implemented directly
+// All of this is tested through web tests because it's not yet clear if this will be implemented directly
 // or with some kind of middleware.
 //
 // Maybe the inheritance of projects from parents could be solved with some kind of is_archived_inherited flag -

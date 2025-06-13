@@ -15,8 +15,8 @@ The project consists of:
 
 ### Backend (Go)
 - **Build**: `mage build` - Builds the Go binary
-- **Test**: `mage test:unit` - Runs unit tests 
-- **Test Integration**: `mage test:integration` - Runs integration tests
+- **Test**: `mage test:feature` - Runs feature tests
+- **Test Web**: `mage test:web` - Runs web tests
 - **Test All**: `mage test:all` - Runs all tests
 - **Lint**: `mage lint` - Runs golangci-lint
 - **Lint Fix**: `mage lint:fix` - Runs golangci-lint with auto-fix
@@ -138,8 +138,8 @@ Modern Vue 3 composition API application with TypeScript:
 - Implement proper rights checking using the Rights interface
 - Add Swagger annotations for automatic documentation generation
 
-### Testing
-- Backend: Unit tests alongside source files, integration tests in `pkg/integrations/`
+-### Testing
+- Backend: Feature tests alongside source files, web tests in `pkg/webtests/`
 - Frontend: Unit tests with Vitest, E2E tests with Cypress
 - Always test both positive and negative authorization scenarios
 - Use test fixtures in `pkg/db/fixtures/` for consistent test data

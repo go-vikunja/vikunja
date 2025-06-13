@@ -55,7 +55,7 @@ func NewUserAuthTokenResponse(u *user.User, c echo.Context, long bool) error {
 	return c.JSON(http.StatusOK, Token{Token: t})
 }
 
-// NewUserJWTAuthtoken generates and signes a new jwt token for a user. This is a global function to be able to call it from integration tests.
+// NewUserJWTAuthtoken generates and signes a new jwt token for a user. This is a global function to be able to call it from web tests.
 func NewUserJWTAuthtoken(u *user.User, long bool) (token string, err error) {
 	t := jwt.New(jwt.SigningMethodHS256)
 

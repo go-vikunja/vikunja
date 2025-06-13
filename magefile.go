@@ -168,7 +168,7 @@ func setApiPackages() {
 		os.Exit(1)
 	}
 	for _, p := range strings.Split(string(pkgs), "\n") {
-		if strings.Contains(p, "code.vikunja.io/api") && !strings.Contains(p, "code.vikunja.io/api/pkg/integrations") {
+		if strings.Contains(p, "code.vikunja.io/api") && !strings.Contains(p, "code.vikunja.io/api/pkg/webtests") {
 			ApiPackages = append(ApiPackages, p)
 		}
 	}
@@ -376,8 +376,8 @@ func Fmt() {
 
 type Test mg.Namespace
 
-// Runs all tests except integration tests
-func (Test) Unit() {
+// Runs the feature tests
+func (Test) Feature() {
 	mg.Deps(initVars)
 	setApiPackages()
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
@@ -388,20 +388,20 @@ func (Test) Unit() {
 // Runs the tests and builds the coverage html file from coverage output
 func (Test) Coverage() {
 	mg.Deps(initVars)
-	mg.Deps(Test.Unit)
+	mg.Deps(Test.Feature)
 	runAndStreamOutput("go", "tool", "cover", "-html=cover.out", "-o", "cover.html")
 }
 
-// Runs the integration tests
-func (Test) Integration() {
+// Runs the web tests
+func (Test) Web() {
 	mg.Deps(initVars)
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
-	runAndStreamOutput("go", "test", Goflags[0], "-p", "1", "-timeout", "45m", PACKAGE+"/pkg/integrations")
+	runAndStreamOutput("go", "test", Goflags[0], "-p", "1", "-timeout", "45m", PACKAGE+"/pkg/webtests")
 }
 
 func (Test) All() {
 	mg.Deps(initVars)
-	mg.Deps(Test.Unit, Test.Integration)
+	mg.Deps(Test.Feature, Test.Web)
 }
 
 type Check mg.Namespace
