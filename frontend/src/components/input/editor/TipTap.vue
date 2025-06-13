@@ -348,7 +348,6 @@ const PasteHandler = Extension.create({
 						if (typeof props.uploadCallback !== 'undefined' && event.clipboardData?.items?.length > 0) {
 
 							for (const item of event.clipboardData.items) {
-								console.log({item})
 								if (item.kind === 'file' && item.type.startsWith('image/')) {
 									const file = item.getAsFile()
 									if (file) {
@@ -359,15 +358,19 @@ const PasteHandler = Extension.create({
 							}
 						}
 						
-						// Handle markdown text
-						const text = event.clipboardData?.getData('text/plain')
-						if (!text) return false
+						const text = event.clipboardData?.getData('text/plain') || ''
+						if (!text) {
+							return false
+						}
+
+						const hasMarkdownSyntax = new RegExp('[*`_\\[\\]#-]').test(text)
+						if (!hasMarkdownSyntax) {
+							return false
+						}
 
 						const html = marked.parse(text)
 
-						// It is fine to paste the content without sanitizing because it will be sanitized later by TipTap
 						this.editor.commands.insertContent(html)
-						// https://github.com/ueberdosis/tiptap/discussions/4118#discussioncomment-8931999
 						return true
 					},
 				},
