@@ -18,14 +18,14 @@ package models
 
 import (
 	"errors"
+	"strconv"
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
-
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
-
 	"code.vikunja.io/api/pkg/web"
+
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 	"xorm.io/builder"
@@ -110,10 +110,12 @@ func (share *LinkSharing) toUser() *user.User {
 		suffix = " (" + suffix + ")"
 	}
 
+	username := "link-share-" + strconv.FormatInt(share.ID, 10)
+
 	return &user.User{
 		ID:       share.getUserID(),
 		Name:     share.Name + suffix,
-		Username: share.Name,
+		Username: username,
 		Created:  share.Created,
 		Updated:  share.Updated,
 	}
