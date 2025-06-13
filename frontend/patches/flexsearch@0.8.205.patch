@@ -1,0 +1,13 @@
+diff --git a/package.json b/package.json
+index 5f8239f..fb17fff 100644
+--- a/package.json
++++ b/package.json
+@@ -27,10 +27,8 @@
+     "email": "info@nextapps.de"
+   },
+   "main": "dist/flexsearch.bundle.min.js",
+-  "module": "dist/flexsearch.bundle.module.min.js",
+-  "types": "./index.d.ts",
+   "exports": {
+     ".": {
+       "types": "./index.d.ts",
