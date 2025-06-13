@@ -1,9 +1,8 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="T">
 import {type ComponentPublicInstance, nextTick, ref, watch} from 'vue'
 
 const props = withDefaults(defineProps<{
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	options: any[],
+	options: T[],
 	suggestion?: string,
 	maxHeight?: number,
 }>(), {
@@ -111,7 +110,7 @@ function select(offset: number) {
 	elems?.focus()
 }
 
-function onSelectValue(value) {
+function onSelectValue(value: T) {
 	model.value = value
 	selectedIndex.value = 0
 	setState('unfocused')

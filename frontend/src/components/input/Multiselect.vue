@@ -123,7 +123,7 @@
 	</div>
 </template>
 
-<script setup lang="ts" generic="T extends { [id: string]: any }">
+<script setup lang="ts" generic="T extends Record<string, unknown>">
 import {computed, onBeforeUnmount, onMounted, ref, toRefs, watch, type ComponentPublicInstance} from 'vue'
 import {useI18n} from 'vue-i18n'
 
@@ -206,11 +206,10 @@ const emit = defineEmits<{
 	'remove': [value: T],
 }>()
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function elementInResults(elem: string | any, label: string, query: string): boolean {
+function elementInResults(elem: string | T, label: string, query: string): boolean {
 	// Don't make create available if we have an exact match in our search results.
 	if (label !== '') {
-		return elem[label] === query
+		return (elem as Record<string, unknown>)[label] === query
 	}
 
 	return elem === query
@@ -249,9 +248,8 @@ const searchResultsVisible = computed(() => {
 })
 
 const creatableAvailable = computed(() => {
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const hasResult = filteredSearchResults.value.some((elem: any) => elementInResults(elem, props.label, query.value))
-	const hasQueryAlreadyAdded = Array.isArray(internalValue.value) && internalValue.value.some(elem => elementInResults(elem, props.label, query.value))
+        const hasResult = filteredSearchResults.value.some((elem) => elementInResults(elem, props.label, query.value as string))
+        const hasQueryAlreadyAdded = Array.isArray(internalValue.value) && internalValue.value.some(elem => elementInResults(elem, props.label, query.value))
 
 	return props.creatable
 		&& query.value !== ''
@@ -259,11 +257,10 @@ const creatableAvailable = computed(() => {
 })
 
 const filteredSearchResults = computed(() => {
-	const currentInternal = internalValue.value
-	if (props.multiple && currentInternal !== null && Array.isArray(currentInternal)) {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		return searchResults.value.filter((item: any) => !currentInternal.some(e => e === item))
-	}
+        const currentInternal = internalValue.value
+        if (props.multiple && currentInternal !== null && Array.isArray(currentInternal)) {
+                return searchResults.value.filter((item) => !currentInternal.some(e => e === item))
+        }
 
 	return searchResults.value
 })
@@ -406,10 +403,9 @@ function createOrSelectOnEnter() {
 		return
 	}
 
-	if (!creatableAvailable.value) {
-		// Check if there's an exact match for our search term
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const exactMatch = filteredSearchResults.value.find((elem: any) => elementInResults(elem, props.label, query.value))
+        if (!creatableAvailable.value) {
+                // Check if there's an exact match for our search term
+                const exactMatch = filteredSearchResults.value.find((elem) => elementInResults(elem, props.label, query.value as string))
 		if (exactMatch) {
 			select(exactMatch)
 		}
@@ -420,8 +416,7 @@ function createOrSelectOnEnter() {
 	create()
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function remove(item: any) {
+function remove(item: T) {
 	for (const ind in internalValue.value) {
 		if (internalValue.value[ind] === item) {
 			internalValue.value.splice(ind, 1)
