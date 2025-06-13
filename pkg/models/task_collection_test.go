@@ -69,10 +69,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Updated:                      testUpdatedTime,
 	}
 	linkShareUser2 := &user.User{
-		ID:      -2,
-		Name:    "Link Share",
-		Created: testCreatedTime,
-		Updated: testUpdatedTime,
+		ID:       -2,
+		Name:     "Link Share",
+		Username: "link-share-2",
+		Created:  testCreatedTime,
+		Updated:  testUpdatedTime,
 	}
 
 	loc := config.GetTimeZone()
