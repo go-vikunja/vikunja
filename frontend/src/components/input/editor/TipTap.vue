@@ -358,22 +358,21 @@ const PasteHandler = Extension.create({
 							}
 						}
 						
-                                               const text = event.clipboardData?.getData('text/plain') || ''
+						const text = event.clipboardData?.getData('text/plain') || ''
+						if (!text) {
+							return false
+						}
 
-                                               if (!text) {
-                                                       return false
-                                               }
+						const hasMarkdownSyntax = new RegExp('[*`_\\[\\]#-]').test(text)
+						if (!hasMarkdownSyntax) {
+							return false
+						}
 
-                                               if (!(/[\\*`_\\[\\]#-]/.test(text))) {
-                                                       return false
-                                               }
+						const html = marked.parse(text)
 
-                                               const html = marked.parse(text)
-
-                                               this.editor.commands.insertContent(html)
-                                               // https://github.com/ueberdosis/tiptap/discussions/4118#discussioncomment-8931999
-                                               return true
-                                       },
+						this.editor.commands.insertContent(html)
+						return true
+					},
 				},
 			}),
 		]
