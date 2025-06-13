@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -178,8 +179,9 @@ func initPostgresEngine() (engine *xorm.Engine, err error) {
 
 func initSqliteEngine() (engine *xorm.Engine, err error) {
 	path := config.DatabasePath.GetString()
-	if path == "" {
-		path = "./db.db"
+
+	if path != "memory" && !filepath.IsAbs(path) {
+		path = filepath.Join(config.ServiceRootpath.GetString(), path)
 	}
 
 	if path == "memory" {

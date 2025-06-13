@@ -366,7 +366,7 @@ func InitDefaultConfig() {
 	DatabaseUser.setDefault("vikunja")
 	DatabasePassword.setDefault("")
 	DatabaseDatabase.setDefault("vikunja")
-	DatabasePath.setDefault("./vikunja.db")
+	DatabasePath.setDefault(filepath.Join(ServiceRootpath.GetString(), "vikunja.db"))
 	DatabaseMaxOpenConnections.setDefault(100)
 	DatabaseMaxIdleConnections.setDefault(50)
 	DatabaseMaxConnectionLifetime.setDefault(10000)
