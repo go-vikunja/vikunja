@@ -17,6 +17,7 @@
 package ticktick
 
 import (
+	"bufio"
 	"encoding/csv"
 	"errors"
 	"io"
@@ -164,7 +165,6 @@ func (m *Migrator) Name() string {
 
 func newLineSkipDecoder(r io.Reader, linesToSkip int) gocsv.SimpleDecoder {
 	reader := csv.NewReader(r)
-	//	reader.FieldsPerRecord = -1
 	for i := 0; i < linesToSkip; i++ {
 		_, err := reader.Read()
 		if err != nil {
@@ -176,6 +176,25 @@ func newLineSkipDecoder(r io.Reader, linesToSkip int) gocsv.SimpleDecoder {
 	}
 	reader.FieldsPerRecord = 0
 	return gocsv.NewSimpleDecoderFromCSVReader(reader)
+}
+
+func linesToSkipBeforeHeader(file io.ReaderAt, size int64) (int, error) {
+	sr := io.NewSectionReader(file, 0, size)
+	scanner := bufio.NewScanner(sr)
+	lines := 0
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.Contains(line, "Folder Name") &&
+			strings.Contains(line, "List Name") &&
+			strings.Contains(line, "Title") {
+			break
+		}
+		lines++
+	}
+	if err := scanner.Err(); err != nil {
+		return 0, err
+	}
+	return lines, nil
 }
 
 // Migrate takes a ticktick export, parses it and imports everything in it into Vikunja.
@@ -220,7 +239,11 @@ func (m *Migrator) Migrate(user *user.User, file io.ReaderAt, size int64) error 
 	}
 
 	allTasks := []*tickTickTask{}
-	decode := newLineSkipDecoder(fr, 3)
+	skip, err := linesToSkipBeforeHeader(file, size)
+	if err != nil {
+		return err
+	}
+	decode := newLineSkipDecoder(fr, skip)
 	err = gocsv.UnmarshalDecoder(decode, &allTasks)
 	if err != nil {
 		return err

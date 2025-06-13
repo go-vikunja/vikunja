@@ -17,10 +17,12 @@
 package ticktick
 
 import (
+	"bytes"
 	"testing"
 	"time"
 
 	"code.vikunja.io/api/pkg/models"
+	"github.com/gocarina/gocsv"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -140,4 +142,23 @@ func TestConvertTicktickTasksToVikunja(t *testing.T) {
 
 	assert.Equal(t, vikunjaTasks[2].Tasks[0].Title, tickTickTasks[3].Title)
 	assert.Equal(t, vikunjaTasks[2].Tasks[0].Position, tickTickTasks[3].Order)
+}
+
+func TestLinesToSkipBeforeHeader(t *testing.T) {
+	csvContent := "Date: 2024-01-01+0000\nVersion: 7.1\n" +
+		"\"Folder Name\",\"List Name\",\"Title\",\"Kind\",\"Tags\",\"Content\",\"Is Check list\",\"Start Date\",\"Due Date\",\"Reminder\",\"Repeat\",\"Priority\",\"Status\",\"Created Time\",\"Completed Time\",\"Order\",\"Timezone\",\"Is All Day\",\"Is Floating\",\"Column Name\",\"Column Order\",\"View Mode\",\"taskId\",\"parentId\"\n" +
+		",\"list\",\"task1\",\"TEXT\",\"\",\"\",\"N\",\"\",\"\",\"\",\"\",\"0\",\"0\",\"2022-10-09T15:09:48+0000\",\"\",\"-1099511627776\",\"\",\"true\",\"false\",,,\"list\",\"1\",\"\"\n"
+
+	r := bytes.NewReader([]byte(csvContent))
+	lines, err := linesToSkipBeforeHeader(r, int64(len(csvContent)))
+	require.NoError(t, err)
+	assert.Equal(t, 2, lines)
+
+	r2 := bytes.NewReader([]byte(csvContent))
+	dec := newLineSkipDecoder(r2, lines)
+	tasks := []*tickTickTask{}
+	err = gocsv.UnmarshalDecoder(dec, &tasks)
+	require.NoError(t, err)
+	require.Len(t, tasks, 1)
+	assert.Equal(t, "task1", tasks[0].Title)
 }
