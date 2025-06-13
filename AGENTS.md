@@ -138,7 +138,7 @@ Modern Vue 3 composition API application with TypeScript:
 - Implement proper rights checking using the Rights interface
 - Add Swagger annotations for automatic documentation generation
 
--### Testing
+### Testing
 - Backend: Feature tests alongside source files, web tests in `pkg/webtests/`
 - Frontend: Unit tests with Vitest, E2E tests with Cypress
 - Always test both positive and negative authorization scenarios
