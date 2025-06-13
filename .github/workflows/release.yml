@@ -296,3 +296,54 @@ jobs:
         with:
           ssh: true
           branch: ${{ github.ref }}
+
+  update-frontend-version:
+    if: ${{ github.ref_type == 'tag' }}
+    runs-on: ubuntu-latest
+    needs:
+      - generate-swagger-docs
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          persist-credentials: true
+      - name: Git describe
+        id: ghd
+        uses: proudust/gh-describe@v2
+      - name: Download Mage Binary
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: mage_bin
+      - name: Set up Go
+        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5
+        with:
+          go-version: stable
+      - name: Update version files
+        env:
+          RELEASE_VERSION: ${{ steps.ghd.outputs.describe }}
+        run: |
+          chmod +x ./mage-static
+          ./mage-static generate:frontend-version
+      - name: Check for changes
+        id: check_version
+        run: |
+          if git diff --quiet; then
+            echo "changes_exist=0" >> "$GITHUB_OUTPUT"
+          else
+            echo "changes_exist=1" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Commit version bump
+        if: steps.check_version.outputs.changes_exist != '0'
+        run: |
+          git config --local user.email "bot@vikunja.io"
+          git config --local user.name "Frederick [Bot]"
+          git commit -am "[skip ci] Update frontend version"
+      - name: Push changes
+        if: steps.check_version.outputs.changes_exist != '0'
+        uses: ad-m/github-push-action@master
+        with:
+          ssh: true
+          branch: ${{ github.ref }}
