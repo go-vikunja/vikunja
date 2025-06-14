@@ -27,6 +27,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/avatar/initials"
 	"code.vikunja.io/api/pkg/modules/avatar/ldap"
 	"code.vikunja.io/api/pkg/modules/avatar/marble"
+	"code.vikunja.io/api/pkg/modules/avatar/openid"
 	"code.vikunja.io/api/pkg/modules/avatar/upload"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web/handler"
@@ -79,6 +80,8 @@ func GetAvatar(c echo.Context) error {
 		avatarProvider = &marble.Provider{}
 	case "ldap":
 		avatarProvider = &ldap.Provider{}
+	case "openid":
+		avatarProvider = &openid.Provider{}
 	default:
 		avatarProvider = &empty.Provider{}
 	}

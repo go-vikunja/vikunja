@@ -32,7 +32,7 @@ import (
 
 // UserAvatarProvider holds the user avatar provider type
 type UserAvatarProvider struct {
-	// The avatar provider. Valid types are `gravatar` (uses the user email), `upload`, `initials`, `marble` (generates a random avatar for each user), `default`.
+	// The avatar provider. Valid types are `gravatar` (uses the user email), `upload`, `initials`, `marble` (generates a random avatar for each user), `ldap` (synced from LDAP server), `openid` (synced from OpenID provider), `default`.
 	AvatarProvider string `json:"avatar_provider"`
 }
 
@@ -101,7 +101,7 @@ func GetUserAvatarProvider(c echo.Context) error {
 
 // ChangeUserAvatarProvider changes the user's avatar provider
 // @Summary Set the user's avatar
-// @Description Changes the user avatar. Valid types are gravatar (uses the user email), upload, initials, default.
+// @Description Changes the user avatar. Valid types are gravatar (uses the user email), upload, initials, marble, ldap (synced from LDAP server), openid (synced from OpenID provider), default.
 // @tags user
 // @Accept json
 // @Produce json
