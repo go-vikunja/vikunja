@@ -18,6 +18,7 @@ package webtests
 
 import (
 	"net/http"
+	"strconv"
 	"testing"
 
 	"code.vikunja.io/api/pkg/models"
@@ -37,7 +38,8 @@ func TestLinkShareAvatar(t *testing.T) {
 		SharedByID:  1,
 	}
 
-	rec, err := newTestRequestWithLinkShare(t, http.MethodGet, apiv1.GetAvatar, share, "", nil, map[string]string{"username": "user1"})
+	username := "link-share-" + strconv.FormatInt(share.ID, 10)
+	rec, err := newTestRequestWithLinkShare(t, http.MethodGet, apiv1.GetAvatar, share, "", nil, map[string]string{"username": username})
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusOK, rec.Code)
 	assert.NotEmpty(t, rec.Body.Bytes())
