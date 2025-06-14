@@ -269,9 +269,6 @@ func registerAPIRoutes(a *echo.Group) {
 	// Info endpoint
 	n.GET("/info", apiv1.Info)
 
-	// Avatar endpoint
-	n.GET("/avatar/:username", apiv1.GetAvatar)
-
 	// Link share auth
 	if config.ServiceEnableLinkSharing.GetBool() {
 		ur.POST("/shares/:share/auth", apiv1.AuthenticateLinkShare)
@@ -289,6 +286,9 @@ func registerAPIRoutes(a *echo.Group) {
 	a.GET("/token/test", apiv1.TestToken)
 	a.POST("/token/test", apiv1.CheckToken)
 	a.GET("/routes", models.GetAvailableAPIRoutesForToken)
+
+	// Avatar endpoint
+	a.GET("/avatar/:username", apiv1.GetAvatar)
 
 	// User stuff
 	u := a.Group("/user")

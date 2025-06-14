@@ -4,7 +4,7 @@ import {acceptHMRUpdate, defineStore} from 'pinia'
 import {AuthenticatedHTTPFactory, HTTPFactory} from '@/helpers/fetcher'
 import {getBrowserLanguage, i18n, setLanguage} from '@/i18n'
 import {objectToSnakeCase} from '@/helpers/case'
-import UserModel, {getAvatarUrl, getDisplayName} from '@/models/user'
+import UserModel, {getDisplayName, fetchAvatarBlobUrl} from '@/models/user'
 import UserSettingsService from '@/services/userSettings'
 import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
 import {setModuleLoading} from '@/stores/helper'
@@ -66,7 +66,6 @@ export const useAuthStore = defineStore('auth', () => {
 	const configStore = useConfigStore()
 	
 	const authenticated = ref(false)
-	const isLinkShareAuth = ref(false)
 	const needsTotpPasscode = ref(false)
 	
 	const info = ref<IUser | null>(null)
@@ -92,7 +91,8 @@ export const useAuthStore = defineStore('auth', () => {
 	})
 
 	const userDisplayName = computed(() => info.value ? getDisplayName(info.value) : undefined)
-
+	
+	const isLinkShareAuth = computed(() => info.value?.type === AUTH_TYPES.LINK_SHARE)
 
 	function setIsLoading(newIsLoading: boolean) {
 		isLoading.value = newIsLoading 
@@ -104,14 +104,12 @@ export const useAuthStore = defineStore('auth', () => {
 
 	function setUser(newUser: IUser | null, saveSettings = true) {
 		info.value = newUser
-		if (newUser !== null) {
+		if (newUser !== null && !isLinkShareAuth.value) {
 			reloadAvatar()
 
 			if (saveSettings && newUser.settings) {
 				loadSettings(newUser.settings)
 			}
-
-			isLinkShareAuth.value = newUser.id < 0
 		}
 	}
 
@@ -141,17 +139,16 @@ export const useAuthStore = defineStore('auth', () => {
 		authenticated.value = newAuthenticated
 	}
 
-	function setIsLinkShareAuth(newIsLinkShareAuth: boolean) {
-		isLinkShareAuth.value = newIsLinkShareAuth
-	}
 
 	function setNeedsTotpPasscode(newNeedsTotpPasscode: boolean) {
 		needsTotpPasscode.value = newNeedsTotpPasscode
 	}
 
-	function reloadAvatar() {
-		if (!info.value) return
-		avatarUrl.value = `${getAvatarUrl(info.value)}&=${new Date().valueOf()}`
+	async function reloadAvatar() {
+		if (!info.value || !info.value.username) {
+			return
+		}
+		avatarUrl.value = await fetchAvatarBlobUrl(info.value, 40)
 	}
 
 	function updateLastUserRefresh() {
@@ -442,7 +439,6 @@ export const useAuthStore = defineStore('auth', () => {
 	return {
 		// state
 		authenticated: readonly(authenticated),
-		isLinkShareAuth: readonly(isLinkShareAuth),
 		needsTotpPasscode: readonly(needsTotpPasscode),
 
 		info: readonly(info),
@@ -454,6 +450,7 @@ export const useAuthStore = defineStore('auth', () => {
 		authUser,
 		authLinkShare,
 		userDisplayName,
+		isLinkShareAuth,
 
 		isLoading: readonly(isLoading),
 		setIsLoading,
@@ -464,7 +461,6 @@ export const useAuthStore = defineStore('auth', () => {
 		setUser,
 		setUserSettings,
 		setAuthenticated,
-		setIsLinkShareAuth,
 		setNeedsTotpPasscode,
 
 		reloadAvatar,

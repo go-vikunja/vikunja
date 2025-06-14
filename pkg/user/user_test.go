@@ -147,6 +147,32 @@ func TestCreateUser(t *testing.T) {
 		require.Error(t, err)
 		assert.True(t, IsErrUsernameMustNotContainSpaces(err))
 	})
+	t.Run("reserved link-share username", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := CreateUser(s, &User{
+			Username: "link-share-123",
+			Password: "12345678",
+			Email:    "user2@example.com",
+		})
+		require.Error(t, err)
+		assert.True(t, IsErrUsernameReserved(err))
+	})
+	t.Run("reserved link-share username with single digit", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := CreateUser(s, &User{
+			Username: "link-share-1",
+			Password: "12345678",
+			Email:    "user3@example.com",
+		})
+		require.Error(t, err)
+		assert.True(t, IsErrUsernameReserved(err))
+	})
 }
 
 func TestGetUser(t *testing.T) {
