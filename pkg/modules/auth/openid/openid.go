@@ -21,6 +21,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -219,11 +220,11 @@ func getTeamDataFromToken(groups []map[string]interface{}, provider *Provider) (
 	return teamData
 }
 
-// trySyncUserAvatarFromOpenID attempts to download and store a user's avatar from an OpenID provider
-func trySyncUserAvatarFromOpenID(s *xorm.Session, u *user.User, pictureURL string) {
+// Download and store a user's avatar from an OpenID provider
+func syncUserAvatarFromOpenID(s *xorm.Session, u *user.User, pictureURL string) (err error) {
 	// Don't sync avatar if no picture URL is provided
 	if pictureURL == "" {
-		return
+		return fmt.Errorf("no picture URL provided")
 	}
 
 	log.Debugf("Found avatar URL for user %s: %s", u.Username, pictureURL)
@@ -231,15 +232,13 @@ func trySyncUserAvatarFromOpenID(s *xorm.Session, u *user.User, pictureURL strin
 	// Download avatar
 	avatarData, err := utils.DownloadImage(pictureURL)
 	if err != nil {
-		log.Errorf("Error downloading avatar: %v, user id: %d", err, u.ID)
-		return
+		return fmt.Errorf("error downloading avatar: %v", err)
 	}
 
 	// Process avatar, ensure 1:1 ratio
 	processedAvatar, err := utils.CropAvatarTo1x1(avatarData)
 	if err != nil {
-		log.Errorf("Error processing avatar: %v, user id: %d", err, u.ID)
-		return
+		return fmt.Errorf("error processing avatar: %v", err)
 	}
 
 	// Set avatar provider to openid
@@ -248,8 +247,10 @@ func trySyncUserAvatarFromOpenID(s *xorm.Session, u *user.User, pictureURL strin
 	// Store avatar and update user
 	err = upload.StoreAvatarFile(s, u, bytes.NewReader(processedAvatar))
 	if err != nil {
-		log.Errorf("Error storing avatar: %v, user id: %d", err, u.ID)
+		return fmt.Errorf("error storing avatar: %v", err)
 	}
+
+	return nil
 }
 
 func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *oidc.IDToken) (u *user.User, err error) {
@@ -326,8 +327,11 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 		}
 	}
 
-	// Sync avatar if available
-	trySyncUserAvatarFromOpenID(s, u, cl.Picture)
+	// Try sync avatar if available
+	err = syncUserAvatarFromOpenID(s, u, cl.Picture)
+	if err != nil {
+		log.Errorf("Error syncing avatar for user %s: %v", u.Username, err)
+	}
 
 	return u, nil
 }
