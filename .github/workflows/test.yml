@@ -104,14 +104,14 @@ jobs:
           - mysql
     services:
       migration-smoke-db-mysql:
-        image: mariadb:11@sha256:11706a6fd276c2eada52d0d69b1a2aa1f1484cbe78137678e02cca8f7a0ae502
+        image: mariadb:11@sha256:1e669024fc94f626b9dc48bf47b29b5339cec203c28e61a3dc372991a345daf5
         env:
           MYSQL_ROOT_PASSWORD: vikunjatest
           MYSQL_DATABASE: vikunjatest
         ports:
           - 3306:3306
       migration-smoke-db-postgres:
-        image: postgres:17@sha256:bbdcc0478449fa12e85e0e4aca644f42733be578ad29d2bcd28f376ed477489a
+        image: postgres:17@sha256:6cf6142afacfa89fb28b894d6391c7dcbf6523c33178bdc33e782b3b533a9342
         env:
           POSTGRES_PASSWORD: vikunjatest
           POSTGRES_DB: vikunjatest
@@ -174,18 +174,18 @@ jobs:
           - postgres
           - mysql
         test:
-          - unit
-          - integration
+          - feature
+          - web
     services:
       db-mysql:
-        image: mariadb:11@sha256:11706a6fd276c2eada52d0d69b1a2aa1f1484cbe78137678e02cca8f7a0ae502
+        image: mariadb:11@sha256:1e669024fc94f626b9dc48bf47b29b5339cec203c28e61a3dc372991a345daf5
         env:
           MYSQL_ROOT_PASSWORD: vikunjatest
           MYSQL_DATABASE: vikunjatest
         ports:
           - 3306:3306
       db-postgres:
-        image: postgres:17@sha256:bbdcc0478449fa12e85e0e4aca644f42733be578ad29d2bcd28f376ed477489a
+        image: postgres:17@sha256:6cf6142afacfa89fb28b894d6391c7dcbf6523c33178bdc33e782b3b533a9342
         env:
           POSTGRES_PASSWORD: vikunjatest
           POSTGRES_DB: vikunjatest
@@ -289,9 +289,9 @@ jobs:
       # https://github.com/cypress-io/github-action/issues/48
       fail-fast: false
       matrix:
-        containers: [1, 2, 3, 4, 5]
+        containers: [1, 2, 3, 4]
     container:
-      image: cypress/browsers:latest@sha256:753c6dd8dc176c2eb9e9a622146d2c260e308e86eb62ce2b3e6f12e7d67d7b13
+      image: cypress/browsers:latest@sha256:201bee8d17cb4ded4da0ac4432428206805fc4a905f33ebc3cc9c62c1f5877fd
       options: --user 1001
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
@@ -307,6 +307,19 @@ jobs:
           path: ./frontend/dist
       - run: chmod +x ./vikunja
       - uses: cypress-io/github-action@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          CYPRESS_API_URL: http://127.0.0.1:3456/api/v1
+          CYPRESS_TEST_SECRET: averyLongSecretToSe33dtheDB
+          CYPRESS_DEFAULT_COMMAND_TIMEOUT: 60000
+          CYPRESS_CI_BUILD_ID: '${{ github.workflow }}-${{ github.run_id }}-${{ github.run_attempt }}' # see https://github.com/cypress-io/github-action/issues/431
+          VIKUNJA_SERVICE_TESTINGTOKEN: averyLongSecretToSe33dtheDB
+          VIKUNJA_LOG_LEVEL: DEBUG
+          VIKUNJA_CORS_ENABLE: 1
+          VIKUNJA_DATABASE_PATH: memory
+          VIKUNJA_DATABASE_TYPE: sqlite
+          VIKUNJA_RATELIMIT_NOAUTHLIMIT: 1000
         with:
           working-directory: frontend
           browser: chrome
@@ -317,18 +330,6 @@ jobs:
             pnpm run preview
           wait-on: http://127.0.0.1:4173,http://127.0.0.1:3456/api/v1/info
           wait-on-timeout: 10
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
-          CYPRESS_API_URL: http://127.0.0.1:3456/api/v1
-          CYPRESS_TEST_SECRET: averyLongSecretToSe33dtheDB
-          CYPRESS_DEFAULT_COMMAND_TIMEOUT: 60000
-          VIKUNJA_SERVICE_TESTINGTOKEN: averyLongSecretToSe33dtheDB
-          VIKUNJA_LOG_LEVEL: DEBUG
-          VIKUNJA_CORS_ENABLE: 1
-          VIKUNJA_DATABASE_PATH: memory
-          VIKUNJA_DATABASE_TYPE: sqlite
-          VIKUNJA_RATELIMIT_NOAUTHLIMIT: 1000
   
   # This step only exists so that we can make it required, because we can't make 
   # the actual test step required due to the matrix

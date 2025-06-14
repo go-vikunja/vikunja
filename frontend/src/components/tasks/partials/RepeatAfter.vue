@@ -1,27 +1,27 @@
 <template>
 	<div class="control repeat-after-input">
 		<div class="buttons has-addons is-centered mt-2">
-			<x-button
+			<XButton
 				variant="secondary"
 				class="is-small"
 				@click="() => setRepeatAfter(1, 'days')"
 			>
 				{{ $t('task.repeat.everyDay') }}
-			</x-button>
-			<x-button
+			</XButton>
+			<XButton
 				variant="secondary"
 				class="is-small"
 				@click="() => setRepeatAfter(1, 'weeks')"
 			>
 				{{ $t('task.repeat.everyWeek') }}
-			</x-button>
-			<x-button
+			</XButton>
+			<XButton
 				variant="secondary"
 				class="is-small"
 				@click="() => setRepeatAfter(30, 'days')"
 			>
 				{{ $t('task.repeat.every30d') }}
-			</x-button>
+			</XButton>
 		</div>
 		<div class="is-flex is-align-items-center mb-2">
 			<label

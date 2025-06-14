@@ -19,14 +19,14 @@
 					@update:modelValue="updateData"
 				/>
 
-				<x-button
+				<XButton
 					v-cy="'closeDatepicker'"
 					class="datepicker__close-button"
 					:shadow="false"
 					@click="close"
 				>
 					{{ $t('misc.confirm') }}
-				</x-button>
+				</XButton>
 			</div>
 		</CustomTransition>
 	</div>

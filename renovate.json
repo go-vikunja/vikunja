@@ -62,7 +62,8 @@
     },
     {
       "matchCategories": [
-        "github-actions"
+        "github-actions",
+        "service"
       ],
       "extends": [
         "schedule:weekly"

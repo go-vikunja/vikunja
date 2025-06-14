@@ -4,16 +4,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package v1
@@ -36,13 +36,8 @@ func DocsJSON(c echo.Context) error {
 		log.Error(err.Error())
 		return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
 	}
-	_, err = c.Response().Write([]byte(doc))
-	if err != nil {
-		log.Error(err.Error())
-		return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
-	}
 
-	return nil
+	return c.Blob(http.StatusOK, echo.MIMEApplicationJSON, []byte(doc))
 }
 
 // RedocUI serves everything needed to provide the redoc ui

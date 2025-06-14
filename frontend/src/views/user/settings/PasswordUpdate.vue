@@ -58,13 +58,13 @@
 			</div>
 		</form>
 
-		<x-button
+		<XButton
 			:loading="passwordUpdateService.loading"
 			class="is-fullwidth mt-4"
 			@click="updatePassword"
 		>
 			{{ $t('misc.save') }}
-		</x-button>
+		</XButton>
 	</Card>
 </template>
 

@@ -34,13 +34,13 @@
 					@change="cropAvatar"
 				>
 
-				<x-button
+				<XButton
 					v-if="!isCropAvatar"
 					:loading="avatarService.loading || loading"
 					@click="avatarUploadInput.click()"
 				>
 					{{ $t('user.settings.avatar.uploadAvatar') }}
-				</x-button>
+				</XButton>
 				<template v-else>
 					<Cropper
 						ref="cropper"
@@ -49,13 +49,13 @@
 						class="mb-4 cropper"
 						@ready="() => loading = false"
 					/>
-					<x-button
+					<XButton
 						v-cy="'uploadAvatar'"
 						:loading="avatarService.loading || loading"
 						@click="uploadAvatar"
 					>
 						{{ $t('user.settings.avatar.uploadAvatar') }}
-					</x-button>
+					</XButton>
 				</template>
 			</template>
 
@@ -63,13 +63,13 @@
 				v-else
 				class="mt-2"
 			>
-				<x-button
+				<XButton
 					:loading="avatarService.loading || loading"
 					class="is-fullwidth"
 					@click="updateAvatarStatus()"
 				>
 					{{ $t('misc.save') }}
-				</x-button>
+				</XButton>
 			</div>
 		</template>
 	</Card>

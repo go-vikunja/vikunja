@@ -236,14 +236,14 @@
 			</label>
 		</div>
 
-		<x-button
+		<XButton
 			v-cy="'saveGeneralSettings'"
 			:loading="loading"
 			class="is-fullwidth mt-4"
 			@click="updateSettings()"
 		>
 			{{ $t('misc.save') }}
-		</x-button>
+		</XButton>
 	</Card>
 </template>
 
@@ -310,7 +310,7 @@ function useAvailableTimezones(settingsRef: Ref<IUserSettings>) {
 			if (r.data) {
 				// Transform timezones into objects with value/label pairs
 				availableTimezones.value = r.data
-					.sort()
+					.sort((a, b) => a.localeCompare(b))
 					.map((tz: string) => ({
 						value: tz,
 						label: tz.replace(/_/g, ' '),

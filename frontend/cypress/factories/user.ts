@@ -3,7 +3,7 @@ import {faker} from '@faker-js/faker'
 import {Factory} from '../support/factory'
 
 export interface UserAttributes {
-	id: number | string;
+	id: number | '{increment}';
 	username: string;
 	password?: string;
 	status: number;
@@ -16,7 +16,7 @@ export interface UserAttributes {
 export class UserFactory extends Factory {
 	static table = 'users'
 
-	static factory(): Omit<UserAttributes, 'id' | 'password'> & { id: string; password?: string } {
+	static factory() {
 		const now = new Date()
 
 		return {

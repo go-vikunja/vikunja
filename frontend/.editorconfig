@@ -8,7 +8,7 @@ indent_style = tab
 end_of_line = lf
 charset = utf-8
 trim_trailing_whitespace = false
-insert_final_newline = false
+insert_final_newline = true
 
 [*.vue]
 indent_style = tab

@@ -13,12 +13,12 @@
 			<Message variant="success">
 				{{ successMessage }}
 			</Message>
-			<x-button
+			<XButton
 				:to="{ name: 'user.login' }"
 				class="mt-4"
 			>
 				{{ $t('user.auth.login') }}
-			</x-button>
+			</XButton>
 		</div>
 		<form
 			v-if="!successMessage"
@@ -38,12 +38,12 @@
 
 			<div class="field is-grouped">
 				<div class="control">
-					<x-button
+					<XButton
 						:loading="passwordResetService.loading"
 						@click="resetPassword"
 					>
 						{{ $t('user.auth.resetPassword') }}
-					</x-button>
+					</XButton>
 				</div>
 			</div>
 		</form>
@@ -54,7 +54,6 @@
 import {ref, reactive} from 'vue'
 import {useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
-import {useAuthStore} from '@/stores/auth'
 
 import PasswordResetModel from '@/models/passwordReset'
 import PasswordResetService from '@/services/passwordReset'
@@ -66,7 +65,6 @@ const credentials = reactive({
 })
 
 const route = useRoute()
-const authStore = useAuthStore()
 const {t} = useI18n()
 
 const passwordResetService = reactive(new PasswordResetService())
@@ -75,7 +73,7 @@ const successMessage = ref('')
 
 async function resetPassword() {
 	errorMsg.value = ''
-	const token = route.query.token as string
+	const token = route.query.userPasswordReset as string
 
 	if (!token) {
 		errorMsg.value = t('user.auth.passwordResetTokenMissing')
@@ -90,7 +88,6 @@ async function resetPassword() {
 	try {
 		const {message} = await passwordResetService.resetPassword(passwordReset)
 		successMessage.value = message
-		authStore.setPasswordResetToken(null)
 	} catch (e) {
 		errorMsg.value = e.response.data.message
 	}

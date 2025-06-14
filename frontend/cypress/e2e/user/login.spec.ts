@@ -63,12 +63,12 @@ context('Login', () => {
 	
 	it('Should redirect to the previous route after logging in', () => {
 		const projects = ProjectFactory.create(1)
-		cy.visit(`/projects/${projects[0].id}/list`)
+		cy.visit(`/projects/${projects[0].id}/1`)
 
 		cy.url().should('include', '/login')
 		
 		login()
 
-		cy.url().should('include', `/projects/${projects[0].id}/list`)
+		cy.url().should('include', `/projects/${projects[0].id}/1`)
 	})
 })

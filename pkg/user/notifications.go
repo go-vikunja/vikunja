@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package user
@@ -139,13 +139,13 @@ func (n *InvalidTOTPNotification) Name() string {
 	return "totp.invalid"
 }
 
-// PasswordAccountLockedAfterInvalidTOTOPNotification represents a PasswordAccountLockedAfterInvalidTOTOPNotification notification
-type PasswordAccountLockedAfterInvalidTOTOPNotification struct {
+// PasswordAccountLockedAfterInvalidTOTPNotification represents a PasswordAccountLockedAfterInvalidTOTPNotification notification
+type PasswordAccountLockedAfterInvalidTOTPNotification struct {
 	User *User
 }
 
-// ToMail returns the mail notification for PasswordAccountLockedAfterInvalidTOTOPNotification
-func (n *PasswordAccountLockedAfterInvalidTOTOPNotification) ToMail(lang string) *notifications.Mail {
+// ToMail returns the mail notification for PasswordAccountLockedAfterInvalidTOTPNotification
+func (n *PasswordAccountLockedAfterInvalidTOTPNotification) ToMail(lang string) *notifications.Mail {
 	resetURL := config.ServicePublicURL.GetString() + "get-password-reset"
 	return notifications.NewMail().
 		Subject(i18n.T(lang, "notifications.totp.account_locked.subject")).
@@ -155,14 +155,14 @@ func (n *PasswordAccountLockedAfterInvalidTOTOPNotification) ToMail(lang string)
 		Line(i18n.T(lang, "notifications.totp.account_locked.reset_instructions", resetURL, resetURL))
 }
 
-// ToDB returns the PasswordAccountLockedAfterInvalidTOTOPNotification notification in a format which can be saved in the db
-func (n *PasswordAccountLockedAfterInvalidTOTOPNotification) ToDB() interface{} {
+// ToDB returns the PasswordAccountLockedAfterInvalidTOTPNotification notification in a format which can be saved in the db
+func (n *PasswordAccountLockedAfterInvalidTOTPNotification) ToDB() interface{} {
 	return nil
 }
 
 // Name returns the name of the notification
-func (n *PasswordAccountLockedAfterInvalidTOTOPNotification) Name() string {
-	return "password.account.locked.after.invalid.totop"
+func (n *PasswordAccountLockedAfterInvalidTOTPNotification) Name() string {
+	return "password.account.locked.after.invalid.totp"
 }
 
 // FailedLoginAttemptNotification represents a FailedLoginAttemptNotification notification

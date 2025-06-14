@@ -14,13 +14,13 @@
 				@keyup.esc="newTaskFieldActive = false"
 			>
 		</CustomTransition>
-		<x-button
+		<XButton
 			:shadow="false"
 			icon="plus"
 			@click="showCreateTaskOrCreate"
 		>
 			{{ $t('task.new') }}
-		</x-button>
+		</XButton>
 	</form>
 </template>
 

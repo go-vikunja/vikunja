@@ -35,13 +35,13 @@
 			</div>
 		</template>
 
-		<x-button
+		<XButton
 			:loading="dataExportService.loading"
 			class="is-fullwidth mt-4"
 			@click="requestDataExport()"
 		>
 			{{ $t('user.export.request') }}
-		</x-button>
+		</XButton>
 	</Card>
 </template>
 

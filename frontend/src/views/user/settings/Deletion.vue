@@ -49,13 +49,13 @@
 				</p>
 			</form>
 
-			<x-button
+			<XButton
 				:loading="accountDeleteService.loading"
 				class="is-fullwidth mt-4"
 				@click="cancelDeletion()"
 			>
 				{{ $t('user.deletion.scheduledCancelConfirm') }}
-			</x-button>
+			</XButton>
 		</template>
 		<template v-else>
 			<p>
@@ -99,13 +99,13 @@
 				{{ $t('user.deletion.text3') }}
 			</p>
 
-			<x-button
+			<XButton
 				:loading="accountDeleteService.loading"
 				class="is-fullwidth mt-4 is-danger"
 				@click="deleteAccount()"
 			>
 				{{ $t('user.deletion.confirm') }}
-			</x-button>
+			</XButton>
 		</template>
 	</Card>
 </template>

@@ -3,13 +3,13 @@
 		class="content loader-container is-max-width-desktop"
 		:class="{ 'is-loading': teamService.loading}"
 	>
-		<x-button
+		<XButton
 			:to="{name:'teams.create'}"
 			class="is-pulled-right"
 			icon="plus"
 		>
 			{{ $t('team.create.title') }}
-		</x-button>
+		</XButton>
 
 		<h1>{{ $t('team.title') }}</h1>
 		<ul

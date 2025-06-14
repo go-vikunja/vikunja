@@ -172,13 +172,13 @@
 							/>
 						</div>
 						<div class="field">
-							<x-button
+							<XButton
 								:loading="taskCommentService.loading && !isCommentEdit"
 								:disabled="newCommentText === ''"
 								@click="addComment()"
 							>
 								{{ $t('task.comment.comment') }}
-							</x-button>
+							</XButton>
 						</div>
 					</div>
 				</div>

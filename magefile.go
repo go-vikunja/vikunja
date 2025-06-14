@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 //go:build mage
@@ -168,7 +168,7 @@ func setApiPackages() {
 		os.Exit(1)
 	}
 	for _, p := range strings.Split(string(pkgs), "\n") {
-		if strings.Contains(p, "code.vikunja.io/api") && !strings.Contains(p, "code.vikunja.io/api/pkg/integrations") {
+		if strings.Contains(p, "code.vikunja.io/api") && !strings.Contains(p, "code.vikunja.io/api/pkg/webtests") {
 			ApiPackages = append(ApiPackages, p)
 		}
 	}
@@ -376,8 +376,8 @@ func Fmt() {
 
 type Test mg.Namespace
 
-// Runs all tests except integration tests
-func (Test) Unit() {
+// Runs the feature tests
+func (Test) Feature() {
 	mg.Deps(initVars)
 	setApiPackages()
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
@@ -388,15 +388,20 @@ func (Test) Unit() {
 // Runs the tests and builds the coverage html file from coverage output
 func (Test) Coverage() {
 	mg.Deps(initVars)
-	mg.Deps(Test.Unit)
+	mg.Deps(Test.Feature)
 	runAndStreamOutput("go", "tool", "cover", "-html=cover.out", "-o", "cover.html")
 }
 
-// Runs the integration tests
-func (Test) Integration() {
+// Runs the web tests
+func (Test) Web() {
 	mg.Deps(initVars)
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
-	runAndStreamOutput("go", "test", Goflags[0], "-p", "1", "-timeout", "45m", PACKAGE+"/pkg/integrations")
+	runAndStreamOutput("go", "test", Goflags[0], "-p", "1", "-timeout", "45m", PACKAGE+"/pkg/webtests")
+}
+
+func (Test) All() {
+	mg.Deps(initVars)
+	mg.Deps(Test.Feature, Test.Web)
 }
 
 type Check mg.Namespace
@@ -993,13 +998,16 @@ func (Release) Packages() error {
 
 type Dev mg.Namespace
 
-// Creates a new bare db migration skeleton in pkg/migration with the current date
-func (Dev) MakeMigration() error {
-
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Enter the name of the struct: ")
-	str, _ := reader.ReadString('\n')
-	str = strings.Trim(str, "\n")
+// MakeMigration creates a new bare db migration skeleton in pkg/migration.
+// If you pass the struct name as an argument, the prompt will be skipped.
+func (Dev) MakeMigration(name string) error {
+	str := strings.TrimSpace(name)
+	if str == "" {
+		reader := bufio.NewReader(os.Stdin)
+		fmt.Print("Enter the name of the struct: ")
+		s, _ := reader.ReadString('\n')
+		str = strings.TrimSpace(s)
+	}
 
 	date := time.Now().Format("20060102150405")
 
@@ -1007,16 +1015,16 @@ func (Dev) MakeMigration() error {
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package migration

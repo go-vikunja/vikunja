@@ -11,14 +11,14 @@
 		</p>
 
 		<div class="sharables-project">
-			<x-button
+			<XButton
 				v-if="!(linkShares.length === 0 || showNewForm)"
 				icon="plus"
 				class="mb-4"
 				@click="showNewForm = true"
 			>
 				{{ $t('project.share.links.create') }}
-			</x-button>
+			</XButton>
 
 			<div
 				v-if="linkShares.length === 0 || showNewForm"
@@ -85,12 +85,12 @@
 						>
 					</div>
 				</div>
-				<x-button
+				<XButton
 					icon="plus"
 					@click="add(projectId)"
 				>
 					{{ $t('project.share.share') }}
-				</x-button>
+				</XButton>
 			</div>
 
 			<table
@@ -159,7 +159,7 @@
 									>
 								</div>
 								<div class="control">
-									<x-button
+									<XButton
 										v-tooltip="$t('misc.copy')"
 										:shadow="false"
 										@click="copy(shareLinks[s.id])"
@@ -167,7 +167,7 @@
 										<span class="icon">
 											<Icon icon="paste" />
 										</span>
-									</x-button>
+									</XButton>
 								</div>
 							</div>
 						</td>
@@ -185,7 +185,7 @@
 							</div>
 						</td>
 						<td class="actions">
-							<x-button
+							<XButton
 								class="is-danger"
 								icon="trash-alt"
 								@click="

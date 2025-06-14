@@ -31,14 +31,14 @@
 			</div>
 		</template>
 
-		<x-button
+		<XButton
 			v-focus
 			:loading="dataExportService.loading"
 			class="mt-4"
 			@click="download()"
 		>
 			{{ $t('misc.download') }}
-		</x-button>
+		</XButton>
 	</div>
 </template>
 

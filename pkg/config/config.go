@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package config
@@ -366,7 +366,7 @@ func InitDefaultConfig() {
 	DatabaseUser.setDefault("vikunja")
 	DatabasePassword.setDefault("")
 	DatabaseDatabase.setDefault("vikunja")
-	DatabasePath.setDefault("./vikunja.db")
+	DatabasePath.setDefault(filepath.Join(ServiceRootpath.GetString(), "vikunja.db"))
 	DatabaseMaxOpenConnections.setDefault(100)
 	DatabaseMaxIdleConnections.setDefault(50)
 	DatabaseMaxConnectionLifetime.setDefault(10000)
@@ -421,8 +421,8 @@ func InitDefaultConfig() {
 	FilesBasePath.setDefault("files")
 	FilesMaxSize.setDefault("20MB")
 	// Cors
-	CorsEnable.setDefault(false)
-	CorsOrigins.setDefault([]string{"*"})
+	CorsEnable.setDefault(true)
+	CorsOrigins.setDefault([]string{"http://127.0.0.1:*", "http://localhost:*"})
 	CorsMaxAge.setDefault(0)
 	// Migration
 	MigrationTodoistEnable.setDefault(false)
@@ -502,7 +502,8 @@ func setConfigFromEnv() error {
 			currentMap := configMap
 
 			for i, part := range keys {
-				if i == len(keys)-1 {
+				_, isString := currentMap[part].(string)
+				if i == len(keys)-1 || isString {
 					// Set the value at the final level
 					currentMap[part] = value
 				} else {
@@ -512,7 +513,13 @@ func setConfigFromEnv() error {
 					}
 
 					// Move into the nested map
-					currentMap = currentMap[part].(map[string]any)
+					typed, is := currentMap[part].(map[string]any)
+					if !is {
+						log.Errorf("Failed to set config value from environment variable %s: %s, failed on part %s, type is not map, is %T", key, value, part, currentMap[part])
+						continue
+					}
+
+					currentMap = typed
 				}
 			}
 		}
@@ -592,6 +599,9 @@ func InitConfig() {
 	if DefaultSettingsTimezone.GetString() == "" {
 		DefaultSettingsTimezone.Set(ServiceTimeZone.GetString())
 	}
+
+	publicURL := strings.TrimSuffix(ServicePublicURL.GetString(), "/")
+	CorsOrigins.Set(append(CorsOrigins.GetStringSlice(), publicURL))
 }
 
 func random(length int) (string, error) {

@@ -5,7 +5,7 @@
   "main": "main.js",
   "repository": "https://code.vikunja.io/desktop",
   "license": "GPL-3.0-or-later",
-  "packageManager": "pnpm@10.11.0",
+  "packageManager": "pnpm@10.12.1",
   "author": {
     "email": "maintainers@vikunja.io",
     "name": "Vikunja Team"
@@ -52,7 +52,7 @@
     }
   },
   "devDependencies": {
-    "electron": "36.2.1",
+    "electron": "36.4.0",
     "electron-builder": "26.0.12",
     "unzipper": "0.12.3"
   },

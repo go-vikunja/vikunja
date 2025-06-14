@@ -92,7 +92,7 @@
 												>
 											</div>
 											<div class="control">
-												<x-button
+												<XButton
 													v-cy="'setBucketLimit'"
 													:disabled="bucket.limit < 0"
 													:icon="['far', 'save']"
@@ -190,7 +190,7 @@
 													{{ $t('project.create.addTitleRequired') }}
 												</p>
 											</div>
-											<x-button
+											<XButton
 												v-else
 												v-tooltip="bucket.limit > 0 && bucket.count >= bucket.limit ? $t('project.kanban.bucketLimitReached') : ''"
 												class="is-fullwidth has-text-centered"
@@ -203,7 +203,7 @@
 												{{
 													bucket.tasks.length === 0 ? $t('project.kanban.addTask') : $t('project.kanban.addAnotherTask')
 												}}
-											</x-button>
+											</XButton>
 										</div>
 									</template>
 
@@ -239,7 +239,7 @@
 							@keyup.enter="createNewBucket"
 							@keyup.esc="($event.target as HTMLInputElement).blur()"
 						>
-						<x-button
+						<XButton
 							v-else
 							:shadow="false"
 							class="is-transparent is-fullwidth has-text-centered"
@@ -248,7 +248,7 @@
 							@click="() => showNewBucketInput = true"
 						>
 							{{ $t('project.kanban.addBucket') }}
-						</x-button>
+						</XButton>
 					</div>
 				</div>
 

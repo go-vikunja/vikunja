@@ -63,10 +63,10 @@ linters:
           - gocyclo
           - unparam
           - varcheck
-        path: pkg/integrations/*
+        path: pkg/webtests/*
       - linters:
           - gocritic
-        path: pkg/integrations/*
+        path: pkg/webtests/*
         text: unlambda
       - linters:
           - bodyclose

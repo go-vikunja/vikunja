@@ -29,7 +29,7 @@
 				<QuickAddMagic :highlight-hint-icon="taskAddHovered" />
 			</p>
 			<p class="control">
-				<x-button
+				<XButton
 					class="add-task-button"
 					:disabled="newTaskTitle === '' || loading || undefined"
 					icon="plus"
@@ -40,7 +40,7 @@
 					<span class="button-text">
 						{{ $t('project.list.add') }}
 					</span>
-				</x-button>
+				</XButton>
 			</p>
 		</div>
 		<Expandable :open="errorMessage !== ''">
@@ -103,7 +103,7 @@ const router = useRouter()
 // 	newTaskInput.value.focus()
 // })
 
-const taskAdd = ref<HTMLTextAreaElement | null>(null)
+const taskAdd = ref<HTMLElement | null>(null)
 const taskAddHovered = useElementHover(taskAdd)
 
 const errorMessage = ref('')

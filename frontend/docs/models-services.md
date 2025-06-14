@@ -53,8 +53,7 @@ The `constructor` calls its parent constructor and provides the paths to make th
 The parent constructor will take these and save them in the service.
 All paths are optional. Calling a method which doesn't have a path defined will fail. 
 
-The placeholder values in the urls are replaced with the contens of variables with the same name in the 
-corresponding model (the one you pass to the functions).
+The placeholder values in the urls are replaced with the contents of variables with the same name in the corresponding model (the one you pass to the functions).
 
 #### Requests
 
@@ -103,7 +102,7 @@ It is possible to define a different factory for each request. This is done by i
 
 #### Before Request
 
-For each request exists a `before{TYPE}(model)` method. It recieves the model, can alter it and should return
+For each request exists a `before{TYPE}(model)` method. It receives the model, can alter it and should return
 the modified version.
 
 This is useful to make unix timestamps from javascript dates, for example.

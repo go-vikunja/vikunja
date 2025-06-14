@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package migration
@@ -28,7 +28,9 @@ import (
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
+
 	"github.com/olekukonko/tablewriter"
+	"github.com/olekukonko/tablewriter/tw"
 	"src.techknowlogick.com/xormigrate"
 	"xorm.io/xorm"
 )
@@ -85,16 +87,16 @@ func ListMigrations() {
 		log.Fatalf("Error getting migration table: %v", err.Error())
 	}
 
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"ID", "Description"})
-	table.SetAlignment(tablewriter.ALIGN_LEFT)
-	table.SetHeaderColor(tablewriter.Colors{tablewriter.Bold, tablewriter.BgGreenColor},
-		tablewriter.Colors{tablewriter.Bold, tablewriter.BgGreenColor})
+	table := tablewriter.NewTable(
+		os.Stdout,
+		tablewriter.WithHeader([]string{"ID", "Description"}),
+		tablewriter.WithAlignment(tw.Alignment{tw.AlignLeft}),
+	)
 
 	for _, m := range ms {
-		table.Append([]string{m.ID, m.Description})
+		_ = table.Append([]string{m.ID, m.Description})
 	}
-	table.Render()
+	_ = table.Render()
 }
 
 // Rollback rolls back all migrations until a certain point.

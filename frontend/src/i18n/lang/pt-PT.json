@@ -67,7 +67,8 @@
 			"noAccountYet": "Ainda não tens uma conta?",
 			"alreadyHaveAnAccount": "Já tens uma conta?",
 			"remember": "Permanecer autenticado",
-			"registrationDisabled": "O registo está desativado."
+			"registrationDisabled": "O registo está desativado.",
+			"passwordResetTokenMissing": "Está em falta o token de redefinição da palavra-passe."
 		},
 		"settings": {
 			"title": "Definições",
