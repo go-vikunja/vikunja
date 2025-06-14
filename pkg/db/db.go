@@ -38,8 +38,13 @@ import (
 	_ "github.com/mattn/go-sqlite3"    // Because.
 )
 
-// We only want one instance of the engine, so we can reate it once and reuse it
-var x *xorm.Engine
+// We only want one instance of the engine, so we can create it once and reuse it
+var (
+	x *xorm.Engine
+	// pgroongaInstalled marks whether the pgroonga extension is available
+	// and can be used for full text search.
+	pgroongaInstalled bool
+)
 
 // CreateDBEngine initializes a db engine from the config
 func CreateDBEngine() (engine *xorm.Engine, err error) {
@@ -174,6 +179,8 @@ func initPostgresEngine() (engine *xorm.Engine, err error) {
 		return
 	}
 	engine.SetConnMaxLifetime(maxLifetime)
+
+	checkPGroonga(engine)
 	return
 }
 
@@ -240,4 +247,27 @@ func GetDialect() string {
 	}
 
 	return dialect
+}
+
+func checkPGroonga(engine *xorm.Engine) {
+	if engine.Dialect().URI().DBType != schemas.POSTGRES {
+		return
+	}
+
+	exists := false
+	if _, err := engine.SQL("SELECT EXISTS (SELECT 1 FROM pg_extension WHERE extname='pgroonga')").Get(&exists); err != nil {
+		log.Errorf("could not check for pgroonga extension: %v", err)
+		return
+	}
+
+	if !exists {
+		return
+	}
+
+	pgroongaInstalled = true
+	log.Debug("PGroonga extension detected, using &@ search operator")
+
+	if _, err := engine.Exec("CREATE INDEX IF NOT EXISTS idx_tasks_pgroonga ON tasks USING pgroonga (title, description)"); err != nil {
+		log.Criticalf("could not ensure pgroonga index: %v", err)
+	}
 }

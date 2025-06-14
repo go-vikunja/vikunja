@@ -28,6 +28,9 @@ import (
 // See https://stackoverflow.com/q/7005302/10924593
 func ILIKE(column, search string) builder.Cond {
 	if Type() == schemas.POSTGRES {
+		if pgroongaInstalled && search != "" {
+			return builder.Expr(column+" &@ ?", search)
+		}
 		return builder.Expr(column+" ILIKE ?", "%"+search+"%")
 	}
 
