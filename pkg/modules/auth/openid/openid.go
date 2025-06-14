@@ -232,13 +232,13 @@ func syncUserAvatarFromOpenID(s *xorm.Session, u *user.User, pictureURL string) 
 	// Download avatar
 	avatarData, err := utils.DownloadImage(pictureURL)
 	if err != nil {
-		return fmt.Errorf("error downloading avatar: %v", err)
+		return fmt.Errorf("error downloading avatar: %w", err)
 	}
 
 	// Process avatar, ensure 1:1 ratio
 	processedAvatar, err := utils.CropAvatarTo1x1(avatarData)
 	if err != nil {
-		return fmt.Errorf("error processing avatar: %v", err)
+		return fmt.Errorf("error processing avatar: %w", err)
 	}
 
 	// Set avatar provider to openid
@@ -247,7 +247,7 @@ func syncUserAvatarFromOpenID(s *xorm.Session, u *user.User, pictureURL string) 
 	// Store avatar and update user
 	err = upload.StoreAvatarFile(s, u, bytes.NewReader(processedAvatar))
 	if err != nil {
-		return fmt.Errorf("error storing avatar: %v", err)
+		return fmt.Errorf("error storing avatar: %w", err)
 	}
 
 	return nil
