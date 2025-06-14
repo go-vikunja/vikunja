@@ -451,6 +451,8 @@ const extensions : Extensions = [
 			// https://github.com/ueberdosis/tiptap/issues/4521
 			// https://github.com/ueberdosis/tiptap/issues/3676
 
+			let changed = false
+
 			editor.value!.state.doc.descendants((subnode, pos) => {
 				if (node.eq(subnode)) {
 					const {tr} = editor.value!.state
@@ -458,11 +460,15 @@ const extensions : Extensions = [
 						...node.attrs,
 						checked,
 					})
+                                    
 					editor.value!.view.dispatch(tr)
-					bubbleSave()
+					changed = true
 				}
 			})
 
+			if (changed) {
+				nextTick(bubbleSave)
+			}
 
 			return true
 		},
@@ -682,60 +688,6 @@ function focusIfEditing() {
 		editor.value?.commands.focus()
 	}
 }
-
-function clickTasklistCheckbox(event) {
-	event.stopImmediatePropagation()
-
-	if (event.target.localName !== 'p') {
-		return
-	}
-
-	event.target.parentNode.parentNode.firstChild.click()
-}
-
-watch(
-	() => isEditing.value,
-	async editing => {
-		await nextTick()
-
-		let checkboxes = tiptapInstanceRef.value?.querySelectorAll('[data-checked]')
-		if (typeof checkboxes === 'undefined' || checkboxes.length === 0) {
-			// For some reason, this works when we check a second time.
-			await nextTick()
-
-			checkboxes = tiptapInstanceRef.value?.querySelectorAll('[data-checked]')
-			if (typeof checkboxes === 'undefined' || checkboxes.length === 0) {
-				return
-			}
-		}
-
-		if (editing) {
-			checkboxes.forEach(check => {
-				if (check.children.length < 2) {
-					return
-				}
-
-				// We assume the first child contains the label element with the checkbox and the second child the actual label
-				// When the actual label is clicked, we forward that click to the checkbox.
-				check.children[1].removeEventListener('click', clickTasklistCheckbox)
-			})
-
-			return
-		}
-
-		checkboxes.forEach(check => {
-			if (check.children.length < 2) {
-				return
-			}
-
-			// We assume the first child contains the label element with the checkbox and the second child the actual label
-			// When the actual label is clicked, we forward that click to the checkbox.
-			check.children[1].removeEventListener('click', clickTasklistCheckbox)
-			check.children[1].addEventListener('click', clickTasklistCheckbox)
-		})
-	},
-	{immediate: true},
-)
 </script>
 
 <style lang="scss">
