@@ -40,6 +40,11 @@
 					:change-immediately="true"
 				/>
 			</FormField>
+			<button
+				type="submit"
+				class="is-hidden"
+				tabindex="-1"
+			/>
 		</form>
 	</CreateEdit>
 </template>

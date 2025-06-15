@@ -375,7 +375,7 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 			</p>
 			<XButton
 				:loading="service.loading"
-				@click="createToken"
+				type="submit"
 			>
 				{{ $t('user.settings.apiTokens.createToken') }}
 			</XButton>
