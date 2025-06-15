@@ -54,7 +54,7 @@ defineEmits<{
 .assignees-list {
 	display: flex;
 
-	&.is-inline :deep(.user) {
+	&.is-inline ::v-deep(.user) {
 		display: inline;
 	}
 
@@ -71,7 +71,7 @@ defineEmits<{
 		margin-left: -1rem;
 	}
 
-	:deep(.user img) {
+	::v-deep(.user img) {
 		border: 2px solid var(--white);
 		margin-right: 0;
 	}

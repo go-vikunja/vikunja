@@ -296,7 +296,7 @@ defineExpose({
 			display: none;
 		}
 
-		:deep(.icon) {
+		::v-deep(.icon) {
 			margin: 0 !important;
 		}
 	}

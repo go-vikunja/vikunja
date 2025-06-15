@@ -181,7 +181,7 @@ const flatPickerConfig = computed(() => ({
 	}
 }
 
-:global(.link-share-view:not(.has-background)) .gantt-options {
+::v-global(.link-share-view:not(.has-background)) .gantt-options {
 	border: none;
 	box-shadow: none;
 

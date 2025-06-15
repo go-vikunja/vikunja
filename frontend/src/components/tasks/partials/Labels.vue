@@ -28,7 +28,7 @@ const displayLabels = computed(() =>
 .label-wrapper {
 	display: inline;
 	
-	:deep(.tag) {
+	::v-deep(.tag) {
 		margin-top: .125rem;
 		margin-bottom: .125rem;
 	}

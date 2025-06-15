@@ -947,9 +947,9 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		}
 	}
 
-	:deep(.dropdown-trigger) {
-		padding: .5rem;
-	}
+       .dropdown-trigger {
+               padding: .5rem;
+       }
 
 	.bucket-footer {
 		position: sticky;

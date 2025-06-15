@@ -11,6 +11,9 @@ patchedDependencies:
   '@github/hotkey@3.1.1':
     hash: 145ab3233cbcd3bc934b4961cd8710e2b15e4ae5dd20862a8d1d6621d7f9d4a8
     path: patches/@github__hotkey@3.1.1.patch
+  bulma-css-variables:
+    hash: 5e0506212615a533db0ebd2adb4873989a106f588b0deb8349a4364c8ea6e4a5
+    path: patches/bulma-css-variables.patch
   flexsearch@0.7.43:
     hash: f7066310ad918eadadaf64278c0a00d7ca785faf7d7fb631392b50db140954a6
     path: patches/flexsearch@0.7.43.patch
@@ -120,7 +123,7 @@ importers:
         version: 2.0.5
       bulma-css-variables:
         specifier: 0.9.33
-        version: 0.9.33
+        version: 0.9.33(patch_hash=5e0506212615a533db0ebd2adb4873989a106f588b0deb8349a4364c8ea6e4a5)
       change-case:
         specifier: 5.4.4
         version: 5.4.4
@@ -9764,7 +9767,7 @@ snapshots:
 
   builtin-modules@3.3.0: {}
 
-  bulma-css-variables@0.9.33: {}
+  bulma-css-variables@0.9.33(patch_hash=5e0506212615a533db0ebd2adb4873989a106f588b0deb8349a4364c8ea6e4a5): {}
 
   bundle-name@4.1.0:
     dependencies:

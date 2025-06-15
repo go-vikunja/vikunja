@@ -95,7 +95,7 @@ const isFullWidth = computed(() => {
 }
 
 .link-share-container:not(.has-background) {
-	:deep(.loader-container, .gantt-chart-container > .card) {
+	::v-deep(.loader-container, .gantt-chart-container > .card) {
 		box-shadow: none !important;
 		border: none;
 

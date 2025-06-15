@@ -111,11 +111,11 @@ function removeReminderByIndex(index: number) {
 	display: flex;
 	align-items: center;
 
-	&.overdue :deep(.datepicker .show) {
+	&.overdue ::v-deep(.datepicker .show) {
 		color: var(--danger);
 	}
 
-	&::last-child {
+	&:last-child {
 		margin-bottom: 0.75rem;
 	}
 }

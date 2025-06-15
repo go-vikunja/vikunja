@@ -157,7 +157,8 @@
   "pnpm": {
     "patchedDependencies": {
       "@github/hotkey@3.1.1": "patches/@github__hotkey@3.1.1.patch",
-      "flexsearch@0.7.43": "patches/flexsearch@0.7.43.patch"
+      "flexsearch@0.7.43": "patches/flexsearch@0.7.43.patch",
+      "bulma-css-variables": "patches/bulma-css-variables.patch"
     },
     "onlyBuiltDependencies": [
       "@parcel/watcher",

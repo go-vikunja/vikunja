@@ -1020,7 +1020,7 @@ h3 .button {
 	line-height: 1;
 }
 
-:deep(.datepicker) {
+::v-deep(.datepicker) {
 	width: 100%;
 
 	.show {
@@ -1067,7 +1067,7 @@ h3 .button {
 
 .details.labels-list,
 .assignees {
-	:deep(.multiselect) {
+	::v-deep(.multiselect) {
 		.input-wrapper {
 			&:not(:focus-within):not(:hover) {
 				background: transparent;
@@ -1077,8 +1077,8 @@ h3 .button {
 	}
 }
 
-:deep(.details),
-:deep(.heading) {
+::v-deep(.details),
+::v-deep(.heading) {
 	.input:not(.has-defaults),
 	.textarea,
 	.select:not(.has-defaults) select {

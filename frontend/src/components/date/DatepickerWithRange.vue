@@ -225,7 +225,7 @@ const buttonText = computed<string>(() => {
 	position: relative;
 }
 
-:deep(.popup) {
+::v-deep(.popup) {
 	z-index: 10;
 	margin-top: 1rem;
 	border-radius: $radius;
@@ -246,7 +246,7 @@ const buttonText = computed<string>(() => {
 	position: absolute;
 }
 
-:deep(.flatpickr-calendar) {
+::v-deep(.flatpickr-calendar) {
 	margin: 0 auto 8px;
 	box-shadow: none;
 }
@@ -258,13 +258,13 @@ const buttonText = computed<string>(() => {
 	font-size: .9rem;
 
 	// Flatpickr has no option to use it without an input field so we're hiding it instead
-	:deep(input.form-control.input) {
+	::v-deep(input.form-control.input) {
 		height: 0;
 		padding: 0;
 		border: 0;
 	}
 
-	.field .control :deep(.button) {
+	.field .control ::v-deep(.button) {
 		border: 1px solid var(--input-border-color);
 		height: 2.25rem;
 
@@ -273,7 +273,7 @@ const buttonText = computed<string>(() => {
 		}
 	}
 
-	.label, .input, :deep(.button) {
+	.label, .input, ::v-deep(.button) {
 		font-size: .9rem;
 	}
 }

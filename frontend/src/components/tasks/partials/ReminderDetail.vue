@@ -260,7 +260,7 @@ function translateUnit(amount: number, unit: PeriodUnit): string {
 	align-items: flex-start;
 }
 
-:deep(.popup) {
+::v-deep(.popup) {
 	top: unset;
 }
 

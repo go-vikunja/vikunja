@@ -495,7 +495,7 @@ function openTaskDetail(event: MouseEvent | KeyboardEvent) {
 		opacity: 1;
 	}
 
-	:deep(.fancy-checkbox) {
+	::v-deep(.fancy-checkbox) {
 		height: 18px;
 		padding-top: 0;
 		padding-right: .5rem;
@@ -547,7 +547,7 @@ function openTaskDetail(event: MouseEvent | KeyboardEvent) {
 	margin-left: 1.75rem;
 }
 
-:deep(.popup) {
+::v-deep(.popup) {
 	border-radius: $radius;
 	background-color: var(--white);
 	box-shadow: var(--shadow-lg);

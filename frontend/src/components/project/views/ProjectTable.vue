@@ -415,7 +415,7 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 .columns-filter {
 	margin: 0;
 
-	:deep(.card-content .content) {
+	::v-deep(.card-content .content) {
 		display: flex;
 		flex-direction: column;
 	}
@@ -430,7 +430,7 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 	box-shadow: none;
 }
 
-.filter-container :deep(.popup) {
+.filter-container ::v-deep(.popup) {
 	top: 7rem;
 }
 </style>
