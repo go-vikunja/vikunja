@@ -452,7 +452,7 @@ const extensions : Extensions = [
 			// https://github.com/ueberdosis/tiptap/issues/3676
 
 			editor.value!.state.doc.descendants((subnode, pos) => {
-				if (node.eq(subnode)) {
+				if (subnode === node) {
 					const {tr} = editor.value!.state
 					tr.setNodeMarkup(pos, undefined, {
 						...node.attrs,
