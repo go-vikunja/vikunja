@@ -64,6 +64,11 @@
 					/>
 				</div>
 			</div>
+			<button
+				type="submit"
+				class="is-hidden"
+				tabindex="-1"
+			/>
 		</form>
 	</CreateEdit>
 </template>

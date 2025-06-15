@@ -117,7 +117,10 @@ function handleBubbleSave() {
 </script>
 
 <template>
-	<form @focusout="handleBubbleSave">
+	<form
+		@focusout="handleBubbleSave"
+		@submit.prevent="save"
+	>
 		<div class="field">
 			<label
 				class="label"
@@ -292,7 +295,7 @@ function handleBubbleSave() {
 			</XButton>
 			<XButton
 				:loading="loading"
-				@click="save"
+				type="submit"
 			>
 				{{ $t('misc.save') }}
 			</XButton>
