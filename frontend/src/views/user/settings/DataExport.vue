@@ -45,9 +45,6 @@
 	</Card>
 </template>
 
-<script lang="ts">
-export default {name: 'UserSettingsDataExport'}
-</script>
 
 <script setup lang="ts">
 import {ref, computed, shallowReactive} from 'vue'
@@ -57,6 +54,8 @@ import DataExportService from '@/services/dataExport'
 import {useTitle} from '@/composables/useTitle'
 import {success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
+
+defineOptions({name: 'UserSettingsDataExport'})
 
 const {t} = useI18n({useScope: 'global'})
 const authStore = useAuthStore()

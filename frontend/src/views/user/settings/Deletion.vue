@@ -110,10 +110,6 @@
 	</Card>
 </template>
 
-<script lang="ts">
-export default {name: 'UserSettingsDeletion'}
-</script>
-
 <script setup lang="ts">
 import {ref, shallowReactive, computed} from 'vue'
 import {useI18n} from 'vue-i18n'
@@ -125,6 +121,8 @@ import {useTitle} from '@/composables/useTitle'
 import {success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
+
+defineOptions({name: 'UserSettingsDeletion'})
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.deletion.title')} - ${t('user.settings.title')}`)

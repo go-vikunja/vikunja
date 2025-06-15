@@ -24,9 +24,6 @@
 	</CreateEdit>
 </template>
 
-<script lang="ts">
-export default {name: 'ProjectSettingShare'}
-</script>
 
 <script lang="ts" setup>
 import {ref, computed, watchEffect} from 'vue'
@@ -45,6 +42,8 @@ import userTeam from '@/components/sharing/UserTeam.vue'
 
 import {useBaseStore} from '@/stores/base'
 import {useConfigStore} from '@/stores/config'
+
+defineOptions({name: 'ProjectSettingShare'})
 
 const {t} = useI18n({useScope: 'global'})
 
