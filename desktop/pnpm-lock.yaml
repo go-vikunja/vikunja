@@ -8,9 +8,6 @@ importers:
 
   .:
     dependencies:
-      connect-history-api-fallback:
-        specifier: 2.0.0
-        version: 2.0.0
       express:
         specifier: 5.1.0
         version: 5.1.0
@@ -422,10 +419,6 @@ packages:
 
   config-file-ts@0.2.8-rc1:
     resolution: {integrity: sha512-GtNECbVI82bT4RiDIzBSVuTKoSHufnU7Ce7/42bkWZJZFLjmDF2WBpVsvRkhKCfKBnTBb3qZrBwPpFBU/Myvhg==}
-
-  connect-history-api-fallback@2.0.0:
-    resolution: {integrity: sha512-U73+6lQFmfiNPrYbXqr6kZ1i1wiRqXnp2nhMsINseWXO8lDau0LGEffJ8kQi4EjLZympVgRdvqjAgiZ1tgzDDA==}
-    engines: {node: '>=0.8'}
 
   content-disposition@1.0.0:
     resolution: {integrity: sha512-Au9nRL8VNUut/XSzbQA38+M78dzP4D+eqg3gfJHMIHHYa3bg067xj1KxMUWj+VULbiZMowKngFFbKczUrNJ1mg==}
@@ -2205,8 +2198,6 @@ snapshots:
     dependencies:
       glob: 10.4.5
       typescript: 5.6.3
-
-  connect-history-api-fallback@2.0.0: {}
 
   content-disposition@1.0.0:
     dependencies:
