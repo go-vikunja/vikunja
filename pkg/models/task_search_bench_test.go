@@ -106,8 +106,8 @@ func createBenchmarkData(b *testing.B, needle string) *user.User {
 	return u
 }
 
-func benchmarkTaskSearch(b *testing.B) {
-	const needle = "benchmarkneedle"
+func BenchmarkTaskSearch(b *testing.B) {
+	const needle = "llama"
 
 	initBenchmarkConfig()
 	setupBenchmarkDB(b)
@@ -138,8 +138,4 @@ func benchmarkTaskSearch(b *testing.B) {
 			b.Fatalf("search error: %v", err)
 		}
 	}
-}
-
-func BenchmarkTaskSearch(b *testing.B) {
-	benchmarkTaskSearch(b)
 }
