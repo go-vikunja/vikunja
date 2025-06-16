@@ -212,9 +212,6 @@ importers:
       '@histoire/plugin-vue':
         specifier: 1.0.0-alpha.2
         version: 1.0.0-alpha.2(histoire@1.0.0-alpha.2(@types/node@22.15.31)(sass-embedded@1.89.2)(sass@1.80.6)(terser@5.31.6)(vite@6.3.5(@types/node@22.15.31)(jiti@2.4.2)(sass-embedded@1.89.2)(sass@1.80.6)(terser@5.31.6)(yaml@2.5.0)))(vite@6.3.5(@types/node@22.15.31)(jiti@2.4.2)(sass-embedded@1.89.2)(sass@1.80.6)(terser@5.31.6)(yaml@2.5.0))(vue@3.5.16(typescript@5.8.3))
-      '@storybook/addon-actions':
-        specifier: ^9.0.8
-        version: 9.0.8
       '@storybook/addon-links':
         specifier: ^9.0.10
         version: 9.0.10(storybook@9.0.10(@testing-library/dom@10.4.0))
@@ -2173,9 +2170,6 @@ packages:
   '@sindresorhus/merge-streams@4.0.0':
     resolution: {integrity: sha512-tlqY9xq5ukxTUZBmoOp+m61cqwQD5pHJtFY3Mn8CA8ps6yghLH/Hw8UPdqg4OLmFW3IFlcXnQNmo/dh8HzXYIQ==}
     engines: {node: '>=18'}
-
-  '@storybook/addon-actions@9.0.8':
-    resolution: {integrity: sha512-LFePu7PPnWN0Il/uoUpmA5T0J0C7d6haJIbg0pXrjxW2MQVSYXE4S4LSUz8fOImltBDV3xAl6tLPYHFj6VcrOA==}
 
   '@storybook/addon-links@9.0.10':
     resolution: {integrity: sha512-is7I8ZnFF06npQQamQEMzVw+8UZT3QqYeOhMP8AQwKEFNn0LSvq5+Q6EHzQmY7VK9RWOv/xUrblaRhZe3A0W6A==}
@@ -9077,8 +9071,6 @@ snapshots:
   '@sindresorhus/merge-streams@2.3.0': {}
 
   '@sindresorhus/merge-streams@4.0.0': {}
-
-  '@storybook/addon-actions@9.0.8': {}
 
   '@storybook/addon-links@9.0.10(storybook@9.0.10(@testing-library/dom@10.4.0))':
     dependencies:
