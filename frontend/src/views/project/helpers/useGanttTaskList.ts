@@ -1,4 +1,4 @@
-import {computed, ref, type Ref, shallowReactive, watch} from 'vue'
+import {computed, ref, type Ref, shallowReactive, watch, type ComputedRef} from 'vue'
 import {klona} from 'klona/lite'
 
 import type {Filters} from '@/composables/useRouteFilters'
@@ -12,13 +12,21 @@ import {error, success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
 import type {IProjectView} from '@/modelTypes/IProjectView'
 
+export interface UseGanttTaskListReturn {
+	tasks: Ref<Map<ITask['id'], ITask>>
+	isLoading: ComputedRef<boolean>
+	loadTasks: () => Promise<void>
+	addTask: (task: Partial<ITask>) => Promise<ITask>
+	updateTask: (task: ITaskPartialWithId) => Promise<void>
+}
+
 // FIXME: unify with general `useTaskList`
 export function useGanttTaskList<F extends Filters>(
 	filters: Ref<F>,
 	filterToApiParams: (filters: F) => TaskFilterParams,
 	viewId: Ref<IProjectView['id']>,
 	loadAll: boolean = true,
-) {
+) : UseGanttTaskListReturn {
 	const taskCollectionService = shallowReactive(new TaskCollectionService())
 	const taskService = shallowReactive(new TaskService())
 	const authStore = useAuthStore()
