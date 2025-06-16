@@ -15,7 +15,7 @@ setup(app => {
     const pinia = createPinia()
     const router = createRouter({
         history: createMemoryHistory(),
-        routes: [{ path: '/', name: 'home', component: { render: () => null } }],
+        routes: [],
     })
     app.use(pinia)
     app.use(router)

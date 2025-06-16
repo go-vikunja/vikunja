@@ -52,10 +52,20 @@ pnpm run lint
 
 ### Storybook
 
-Storybook can be used to preview and test components.
+Storybook (v9) uses the Vite-based Vue 3 framework. A small memory router is
+registered in [`src/storybook.setup.ts`](../src/storybook.setup.ts) so that
+components using `RouterLink` render correctly.
+
+Run Storybook in development mode with:
 
 ```shell
 pnpm storybook
+```
+
+To verify the configuration without opening a browser, use the smoke test:
+
+```shell
+pnpm test:storybook
 ```
 
 The static build can be created with:
@@ -63,6 +73,9 @@ The static build can be created with:
 ```shell
 pnpm storybook:build
 ```
+
+See [`docs/histoire-stories.md`](docs/histoire-stories.md) for details about the
+legacy `.story.vue` files shipped for Histoire.
 
 ## License
 
