@@ -25,7 +25,6 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/jaswdr/faker/v2"
@@ -40,39 +39,29 @@ func initBenchmarkConfig() {
 	}
 }
 
-// setupBenchmarkDB initializes an in-memory database without fixtures.
-func setupBenchmarkDB(b *testing.B) {
-	var err error
-	x, err = db.CreateTestEngine()
-	if err != nil {
-		b.Fatalf("failed to create test engine: %v", err)
-	}
-
-	tables := append(GetTables(), notifications.GetTables()...)
-	if err := x.Sync2(tables...); err != nil {
-		b.Fatalf("failed to sync tables: %v", err)
-	}
-}
-
 // createBenchmarkData creates projects and tasks used for search benchmarks.
 func createBenchmarkData(b *testing.B, needle string) *user.User {
+
+	numberOfProjects := 10
+	numberOfTasks := 2500
+
 	s := db.NewSession()
 	defer s.Close()
 
 	f := faker.New()
 
-	u := &user.User{Username: "benchuser", Email: "bench@example.com", Password: "pass"}
-	if _, err := s.Insert(u); err != nil {
-		b.Fatalf("insert user: %v", err)
+	u, err := user.GetUserByID(s, 1)
+	if err != nil {
+		b.Fatalf("get user: %v", err)
 	}
 
-	for i := range 10 {
+	for i := range numberOfProjects {
 		p := &Project{Title: fmt.Sprintf("Project %d", i), OwnerID: u.ID}
 		if _, err := s.Insert(p); err != nil {
 			b.Fatalf("insert project: %v", err)
 		}
 
-		for j := range 5000 {
+		for j := range numberOfTasks {
 			title := f.Lorem().Sentence(6)
 			if rand.Intn(100) == 0 { //nolint:gosec
 				title += " " + needle
@@ -110,7 +99,11 @@ func BenchmarkTaskSearch(b *testing.B) {
 	const needle = "llama"
 
 	initBenchmarkConfig()
-	setupBenchmarkDB(b)
+	SetupTests()
+	err := db.LoadFixtures()
+	if err != nil {
+		b.Fatalf("load fixtures: %v", err)
+	}
 
 	// Log database configuration
 	b.Logf("Database Type: %s", config.DatabaseType.GetString())
@@ -135,10 +128,16 @@ func BenchmarkTaskSearch(b *testing.B) {
 		FilterTimezone: "UTC",
 	}
 
+	b.Log("Setup done, starting benchmark...")
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		s := db.NewSession()
-		_, _, _, err := tc.ReadAll(s, auth, needle, 1, 50)
+		result, _, _, err := tc.ReadAll(s, auth, needle, 1, 50)
+		resultSlice := result.([]*Task)
+		if len(resultSlice) == 0 {
+			b.Fatalf("no results found for needle %q", needle)
+		}
 		s.Close()
 		if err != nil {
 			b.Fatalf("search error: %v", err)
