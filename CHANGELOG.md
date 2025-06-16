@@ -7,6 +7,14 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 All releases can be found on https://code.vikunja.io/vikunja/releases.
 
+## [Unreleased]
+
+### Changed
+
+* Updated Storybook to v9 using the vue3-vite preset
+* Storybook now registers a memory router for components relying on `RouterLink`
+* Documented remaining Histoire stories and updated README instructions
+
 ## [0.24.6] - 2024-12-22
 
 ### Bug Fixes

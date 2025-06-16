@@ -44,7 +44,10 @@
     "fonts:subset": "./scripts/fonts-subset.sh",
     "story:dev": "histoire dev",
     "story:build": "histoire build",
-    "story:preview": "histoire preview"
+    "story:preview": "histoire preview",
+    "storybook": "storybook dev -p 6006",
+    "storybook:build": "storybook build",
+    "test:storybook": "storybook dev --smoke-test"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "6.7.2",
@@ -114,6 +117,9 @@
     "@faker-js/faker": "9.8.0",
     "@histoire/plugin-screenshot": "1.0.0-alpha.2",
     "@histoire/plugin-vue": "1.0.0-alpha.2",
+    "@storybook/addon-links": "9.0.10",
+    "@storybook/vue3-vite": "9.0.10",
+    "storybook": "9.0.10",
     "@tsconfig/node22": "22.0.2",
     "@types/codemirror": "5.60.16",
     "@types/is-touch-device": "1.0.3",
