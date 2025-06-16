@@ -1057,6 +1057,7 @@
       "delete": "Delete this task",
       "priority": "Change the priority of this task",
       "favorite": "Mark this task as favorite / unfavorite",
+      "openProject": "Open the project of this task",
       "save": "Save the current task"
     },
     "project": {

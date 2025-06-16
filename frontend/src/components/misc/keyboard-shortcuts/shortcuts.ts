@@ -16,7 +16,7 @@ export interface ShortcutGroup {
 	shortcuts: Shortcut[]
 }
 
-export const KEYBOARD_SHORTCUTS : ShortcutGroup[] = [
+export const KEYBOARD_SHORTCUTS: ShortcutGroup[] = [
 	{
 		title: 'keyboardShortcuts.general',
 		shortcuts: [
@@ -151,6 +151,10 @@ export const KEYBOARD_SHORTCUTS : ShortcutGroup[] = [
 			{
 				title: 'keyboardShortcuts.task.favorite',
 				keys: ['s'],
+			},
+			{
+				title: 'keyboardShortcuts.task.openProject',
+				keys: ['u'],
 			},
 			{
 				title: 'keyboardShortcuts.task.save',
