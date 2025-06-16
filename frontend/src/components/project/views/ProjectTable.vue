@@ -351,29 +351,27 @@ watch(
 
 // Allow sorting by multiple columns only when ctrl is pressed
 function sort(property: keyof SortBy, event?: MouseEvent) {
-       const ctrlPressed = event?.ctrlKey || event?.metaKey
+	const ctrlPressed = event?.ctrlKey || event?.metaKey
 
-       const currentOrder = sortBy.value[property]
-       let newOrder: 'asc' | 'desc' | undefined
-       if (typeof currentOrder === 'undefined' || currentOrder === 'none') {
-               newOrder = 'desc'
-       } else if (currentOrder === 'desc') {
-               newOrder = 'asc'
-       } else {
-               newOrder = undefined
-       }
+	const currentOrder = sortBy.value[property]
+	let newOrder: 'asc' | 'desc' | 'none' | undefined = undefined
+	if (typeof currentOrder === 'undefined' || currentOrder === 'none') {
+		newOrder = 'desc'
+	} else if (currentOrder === 'desc') {
+		newOrder = 'asc'
+	}
 
-       if (!ctrlPressed) {
-               sortBy.value = {} as SortBy
-       }
+	if (!ctrlPressed) {
+		sortBy.value = {} as SortBy
+	}
 
-       if (newOrder) {
-               sortBy.value[property] = newOrder
-       } else {
-               delete sortBy.value[property]
-       }
+	if (newOrder) {
+		sortBy.value[property] = newOrder
+	} else {
+		delete sortBy.value[property]
+	}
 
-       setActiveColumnsSortParam()
+	setActiveColumnsSortParam()
 }
 
 function setActiveColumnsSortParam() {
