@@ -6733,7 +6733,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Changes the user avatar. Valid types are gravatar (uses the user email), upload, initials, default.",
+                "description": "Changes the user avatar. Valid types are gravatar (uses the user email), upload, initials, marble, ldap (synced from LDAP server), openid (synced from OpenID provider), default.",
                 "consumes": [
                     "application/json"
                 ],
@@ -7736,6 +7736,38 @@ const docTemplate = `{
                 },
                 "url": {
                     "type": "string"
+                }
+            }
+        },
+        "code_vikunja_io_api_pkg_modules_auth_openid.Provider": {
+            "type": "object",
+            "properties": {
+                "auth_url": {
+                    "type": "string"
+                },
+                "client_id": {
+                    "type": "string"
+                },
+                "email_fallback": {
+                    "type": "boolean"
+                },
+                "force_user_info": {
+                    "type": "boolean"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "logout_url": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "scope": {
+                    "type": "string"
+                },
+                "username_fallback": {
+                    "type": "boolean"
                 }
             }
         },
@@ -9327,38 +9359,6 @@ const docTemplate = `{
                 }
             }
         },
-        "openid.Provider": {
-            "type": "object",
-            "properties": {
-                "auth_url": {
-                    "type": "string"
-                },
-                "client_id": {
-                    "type": "string"
-                },
-                "email_fallback": {
-                    "type": "boolean"
-                },
-                "force_user_info": {
-                    "type": "boolean"
-                },
-                "key": {
-                    "type": "string"
-                },
-                "logout_url": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "scope": {
-                    "type": "string"
-                },
-                "username_fallback": {
-                    "type": "boolean"
-                }
-            }
-        },
         "todoist.Migration": {
             "type": "object",
             "properties": {
@@ -9522,7 +9522,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "avatar_provider": {
-                    "description": "The avatar provider. Valid types are ` + "`" + `gravatar` + "`" + ` (uses the user email), ` + "`" + `upload` + "`" + `, ` + "`" + `initials` + "`" + `, ` + "`" + `marble` + "`" + ` (generates a random avatar for each user), ` + "`" + `default` + "`" + `.",
+                    "description": "The avatar provider. Valid types are ` + "`" + `gravatar` + "`" + ` (uses the user email), ` + "`" + `upload` + "`" + `, ` + "`" + `initials` + "`" + `, ` + "`" + `marble` + "`" + ` (generates a random avatar for each user), ` + "`" + `ldap` + "`" + ` (synced from LDAP server), ` + "`" + `openid` + "`" + ` (synced from OpenID provider), ` + "`" + `default` + "`" + `.",
                     "type": "string"
                 }
             }
@@ -9725,7 +9725,7 @@ const docTemplate = `{
                 "providers": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/openid.Provider"
+                        "$ref": "#/definitions/code_vikunja_io_api_pkg_modules_auth_openid.Provider"
                     }
                 }
             }

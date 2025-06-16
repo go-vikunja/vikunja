@@ -20,6 +20,27 @@ definitions:
       url:
         type: string
     type: object
+  code_vikunja_io_api_pkg_modules_auth_openid.Provider:
+    properties:
+      auth_url:
+        type: string
+      client_id:
+        type: string
+      email_fallback:
+        type: boolean
+      force_user_info:
+        type: boolean
+      key:
+        type: string
+      logout_url:
+        type: string
+      name:
+        type: string
+      scope:
+        type: string
+      username_fallback:
+        type: boolean
+    type: object
   files.File:
     properties:
       created:
@@ -1254,27 +1275,6 @@ definitions:
       scope:
         type: string
     type: object
-  openid.Provider:
-    properties:
-      auth_url:
-        type: string
-      client_id:
-        type: string
-      email_fallback:
-        type: boolean
-      force_user_info:
-        type: boolean
-      key:
-        type: string
-      logout_url:
-        type: string
-      name:
-        type: string
-      scope:
-        type: string
-      username_fallback:
-        type: boolean
-    type: object
   todoist.Migration:
     properties:
       code:
@@ -1393,7 +1393,8 @@ definitions:
       avatar_provider:
         description: The avatar provider. Valid types are `gravatar` (uses the user
           email), `upload`, `initials`, `marble` (generates a random avatar for each
-          user), `default`.
+          user), `ldap` (synced from LDAP server), `openid` (synced from OpenID provider),
+          `default`.
         type: string
     type: object
   v1.UserDeletionRequestConfirm:
@@ -1549,7 +1550,7 @@ definitions:
         type: boolean
       providers:
         items:
-          $ref: '#/definitions/openid.Provider'
+          $ref: '#/definitions/code_vikunja_io_api_pkg_modules_auth_openid.Provider'
         type: array
     type: object
   v1.vikunjaInfos:
@@ -6246,7 +6247,8 @@ paths:
       consumes:
       - application/json
       description: Changes the user avatar. Valid types are gravatar (uses the user
-        email), upload, initials, default.
+        email), upload, initials, marble, ldap (synced from LDAP server), openid (synced
+        from OpenID provider), default.
       parameters:
       - description: The user's avatar setting
         in: body
