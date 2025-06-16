@@ -1,38 +1,46 @@
-import {UserFactory, type UserAttributes} from '../../factories/user'
-import {login} from '../../support/authenticateUser'
+import { UserFactory, type UserAttributes } from '../../factories/user'
+import { login } from '../../support/authenticateUser'
 
-const avatarProviders = ['initials', 'gravatar', 'marble', 'upload', 'ldap'] as const
+const avatarProviders = [
+	'initials',
+	'gravatar',
+	'marble',
+	'upload',
+	'ldap',
+] as const
+
+function createFakeUserWithAvatar(provider: string) {
+	const overrides: Partial<UserAttributes & {
+		avatar_provider?: string;
+		avatar_file_id?: number;
+		email?: string
+	}> = {
+		username: `user_${provider}`,
+		avatar_provider: provider,
+	}
+
+	if (provider === 'gravatar') {
+		overrides.email = `user_${provider}@example.com`
+	}
+	if (provider === 'upload' || provider === 'ldap') {
+		overrides.avatar_file_id = 1
+	}
+
+	return UserFactory.create(1, overrides)[0] as UserAttributes
+}
 
 describe('User avatars', () => {
-  avatarProviders.forEach(provider => {
-    describe(`Avatar provider ${provider}`, () => {
-      let user: UserAttributes
+	avatarProviders.forEach(provider => {
+		it(`Shows the avatar image for ${provider}`, () => {
 
-      beforeEach(() => {
-        const overrides: Partial<UserAttributes & {avatar_provider?: string; avatar_file_id?: number; email?: string}> = {
-          username: `user_${provider}`,
-          avatar_provider: provider,
-        }
+			login(createFakeUserWithAvatar(provider))
 
-        if (provider === 'gravatar') {
-          overrides.email = `user_${provider}@example.com`
-        }
-        if (provider === 'upload' || provider === 'ldap') {
-          overrides.avatar_file_id = 1
-        }
-
-        user = UserFactory.create(1, overrides)[0] as UserAttributes
-        login(user)
-      })
-
-      it('Shows the avatar image', () => {
-        cy.visit('/')
-        cy.get('.username-dropdown-trigger img.avatar')
-          .should('be.visible')
-          .and(($img) => {
-            expect($img[0].naturalWidth).to.be.greaterThan(0)
-          })
-      })
-    })
-  })
+			cy.visit('/')
+			cy.get('.username-dropdown-trigger img.avatar')
+				.should('be.visible')
+				.and(($img) => {
+					expect($img[0].naturalWidth).to.be.greaterThan(0)
+				})
+		})
+	})
 })
