@@ -1,4 +1,4 @@
-import { setup } from '@storybook/vue3'
+import {setup} from '@storybook/vue3'
 import { createPinia } from 'pinia'
 import { createRouter, createMemoryHistory } from 'vue-router'
 import { i18n } from './i18n'
