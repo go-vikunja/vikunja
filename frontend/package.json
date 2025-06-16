@@ -109,6 +109,7 @@
   },
   "devDependencies": {
     "@4tw/cypress-drag-drop": "2.3.0",
+    "@biomejs/biome": "1.9.4",
     "@cypress/vite-dev-server": "6.0.3",
     "@cypress/vue": "6.0.2",
     "@faker-js/faker": "9.8.0",
@@ -160,6 +161,7 @@
       "flexsearch@0.7.43": "patches/flexsearch@0.7.43.patch"
     },
     "onlyBuiltDependencies": [
+      "@biomejs/biome",
       "@parcel/watcher",
       "@sentry/cli",
       "cypress",
