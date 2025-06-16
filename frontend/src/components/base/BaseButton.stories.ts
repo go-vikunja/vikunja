@@ -35,3 +35,15 @@ export const Disabled: Story = {
     }),
 }
 
+export const Overview: Story = {
+    render: () => ({
+        components: { BaseButton },
+        template: `
+            <div class="buttons">
+                <BaseButton>Default</BaseButton>
+                <BaseButton disabled>Disabled</BaseButton>
+            </div>
+        `,
+    }),
+}
+

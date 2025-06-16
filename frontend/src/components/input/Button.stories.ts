@@ -29,3 +29,16 @@ export const Tertiary: Story = {
         template: '<XButton variant="tertiary">Order tortellini!</XButton>',
     }),
 }
+
+export const Overview: Story = {
+    render: () => ({
+        components: { XButton },
+        template: `
+            <div class="buttons">
+                <XButton variant="primary">Primary</XButton>
+                <XButton variant="secondary">Secondary</XButton>
+                <XButton variant="tertiary">Tertiary</XButton>
+            </div>
+        `,
+    }),
+}

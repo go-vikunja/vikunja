@@ -11,11 +11,11 @@ export default meta
 
 type Story = StoryObj<typeof Modal>
 
-export const Default: Story = {
+export const Overview: Story = {
     render: () => ({
         components: { Modal, BaseButton },
         setup() {
-            const open = ref(true)
+            const open = ref(false)
             return { open }
         },
         template: `

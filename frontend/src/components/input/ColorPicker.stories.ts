@@ -20,3 +20,19 @@ export const Default: Story = {
         template: '<ColorPicker v-model="color" />',
     }),
 }
+
+export const Overview: Story = {
+    render: () => ({
+        components: { ColorPicker },
+        setup() {
+            const color = ref('#f2f2f2')
+            return { color }
+        },
+        template: `
+            <div class="field is-grouped">
+                <ColorPicker v-model="color" />
+                <ColorPicker v-model="color" disabled class="ml-2" />
+            </div>
+        `,
+    }),
+}

@@ -53,3 +53,19 @@ export const UndefinedInitial: Story = {
         template: '<FancyCheckbox v-model="withoutInitialState">Not sure what the value should be</FancyCheckbox>\n<input v-model="withoutInitialState" type="checkbox" disabled> {{ withoutInitialState }}',
     }),
 }
+
+export const Overview: Story = {
+    render: () => ({
+        components: { FancyCheckbox },
+        setup() {
+            const model = ref(false)
+            return { model }
+        },
+        template: `
+            <div>
+                <FancyCheckbox v-model="model">Default</FancyCheckbox>
+                <FancyCheckbox v-model="model" disabled class="ml-2">Disabled</FancyCheckbox>
+            </div>
+        `,
+    }),
+}
