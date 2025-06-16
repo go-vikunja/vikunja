@@ -155,11 +155,11 @@ async function createAndAddLabel(title: string) {
 	margin: 0 !important;
 }
 
-:deep(.input-wrapper) {
+::v-deep(.input-wrapper) {
 	padding: .25rem !important;
 }
 
-:deep(input.input) {
+::v-deep(input.input) {
 	padding: 0 .5rem;
 }
 </style>

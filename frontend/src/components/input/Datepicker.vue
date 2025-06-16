@@ -143,7 +143,7 @@ function close() {
 	width: calc(100% - 2rem);
 }
 
-:deep(.flatpickr-calendar) {
+::v-deep(.flatpickr-calendar) {
 	margin: 0 auto 8px;
 	box-shadow: none;
 }

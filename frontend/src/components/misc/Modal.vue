@@ -204,7 +204,7 @@ $modal-width: 1024px;
 .hint-modal {
 	z-index: 4600;
 
-	:deep(.card-content) {
+	::v-deep(.card-content) {
 		text-align: left;
 
 		.info {
@@ -252,7 +252,7 @@ $modal-width: 1024px;
     display: none;
   }
 
-  :deep(.card) {
+  ::v-deep(.card) {
 	border: none !important; 
 	border-radius: 0 !important;
 	min-height: 100vh;
@@ -271,7 +271,7 @@ $modal-width: 1024px;
 	min-height: 100vh
 }
 
-.modal-content :deep(.card .card-header-icon.close) {
+.modal-content ::v-deep(.card .card-header-icon.close) {
 	display: none;
 	
 	@media screen and (max-width: $tablet) {

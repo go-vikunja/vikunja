@@ -268,15 +268,15 @@ $task-background: var(--white);
 		align-items: center;
 		margin-top: .25rem;
 
-		:deep(.tag),
-		:deep(.checklist-summary),
+		::v-deep(.tag),
+		::v-deep(.checklist-summary),
 		.assignees,
 		.icon,
 		.priority-label {
 			margin-right: .25rem;
 		}
 
-		:deep(.checklist-summary) {
+		::v-deep(.checklist-summary) {
 			padding-left: 0;
 		}
 
@@ -294,7 +294,7 @@ $task-background: var(--white);
 		}
 
 		// FIXME: should be in Labels.vue
-		:deep(.tag) {
+		::v-deep(.tag) {
 			margin-left: 0;
 		}
 
@@ -346,7 +346,7 @@ $task-background: var(--white);
 			background: hsl(220, 13%, 91%);
 		}
 
-		.footer :deep(.checklist-summary) {
+		.footer ::v-deep(.checklist-summary) {
 			color: hsl(216.9, 19.1%, 26.7%); // grey-700
 		}
 	}
@@ -370,7 +370,7 @@ $task-background: var(--white);
 				fill: var(--white);
 			}
 
-			:deep(.checklist-summary) {
+			::v-deep(.checklist-summary) {
 				color: hsl(220, 13%, 91%); // grey-200
 			}
 		}

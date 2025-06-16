@@ -404,7 +404,7 @@ async function setCoverImage(attachment: IAttachment | null) {
 	display: flex;
 	align-items: center;
 
-	:deep(.user) {
+	::v-deep(.user) {
 		display: flex !important;
 		align-items: center;
 		margin: 0 .5rem;
@@ -414,7 +414,7 @@ async function setCoverImage(attachment: IAttachment | null) {
 		flex-direction: column;
 		align-items: flex-start;
 
-		:deep(.user) {
+		::v-deep(.user) {
 			margin: .5rem 0;
 		}
 

@@ -55,7 +55,7 @@ const emit = defineEmits<{
 	padding-left: .5rem;
 }
 
-.fancy-checkbox__icon:deep() {
+.fancy-checkbox__icon::v-deep() {
 	position: relative;
 	z-index: 1;
 	stroke: var(--stroke-color, #c8ccd4);

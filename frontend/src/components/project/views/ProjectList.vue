@@ -303,7 +303,7 @@ function prepareFiltersAndLoadTasks() {
 	transition: all $transition;
 }
 
-:deep(.single-task) {
+::v-deep(.single-task) {
 	.handle {
 		opacity: 1;
 		transition: opacity $transition;
@@ -325,7 +325,7 @@ function prepareFiltersAndLoadTasks() {
 .list-view {
 	padding-bottom: 1rem;
 
-	:deep(.card) {
+	::v-deep(.card) {
 		margin-bottom: 0;
 	}
 }

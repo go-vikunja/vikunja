@@ -594,7 +594,7 @@ function reset() {
 	justify-content: flex-start !important;
 
 	// FIXME: changed position should be an option of the modal
-	:deep(.modal-content) {
+	::v-deep(.modal-content) {
 		top: 3rem;
 		transform: translate(-50%, 0);
 	}

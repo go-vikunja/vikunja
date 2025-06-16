@@ -452,7 +452,7 @@ async function toggleTaskDone(task: ITask) {
 	text-align: center;
 }
 
-:deep(.multiselect .search-results button) {
+::v-deep(.multiselect .search-results button) {
 	padding: 0.5rem;
 }
 
