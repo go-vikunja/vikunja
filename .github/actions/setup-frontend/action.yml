@@ -1,8 +1,20 @@
 name: Setup Frontend
-description: Common setup for frontend jobs using pnpm
+description: |
+  Common setup for frontend jobs using pnpm
+  Skips heavy binary installs that are needed for e2e by default
+inputs:
+  install-e2e-binaries:
+    description: 'Install heavy e2e binary downloads'
+    required: false
+    default: 'false'
 runs:
   using: "composite"
   steps:
+    - if: inputs.install-e2e-binaries == 'false'
+      shell: bash
+      run: |
+        echo "CYPRESS_INSTALL_BINARY=0"       >> $GITHUB_ENV
+        echo "PUPPETEER_SKIP_DOWNLOAD=true"   >> $GITHUB_ENV
     - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4
       with:
         run_install: false
