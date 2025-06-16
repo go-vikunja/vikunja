@@ -66,13 +66,13 @@ func createBenchmarkData(b *testing.B, needle string) *user.User {
 		b.Fatalf("insert user: %v", err)
 	}
 
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		p := &Project{Title: fmt.Sprintf("Project %d", i), OwnerID: u.ID}
 		if _, err := s.Insert(p); err != nil {
 			b.Fatalf("insert project: %v", err)
 		}
 
-		for j := 0; j < 5000; j++ {
+		for j := range 5000 {
 			title := f.Lorem().Sentence(6)
 			if rand.Intn(100) == 0 { //nolint:gosec
 				title += " " + needle
@@ -111,6 +111,12 @@ func BenchmarkTaskSearch(b *testing.B) {
 
 	initBenchmarkConfig()
 	setupBenchmarkDB(b)
+
+	// Log database configuration
+	b.Logf("Database Type: %s", config.DatabaseType.GetString())
+	if config.TypesenseEnabled.GetBool() {
+		b.Log("Typesense is enabled")
+	}
 
 	auth := createBenchmarkData(b, needle)
 
