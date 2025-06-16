@@ -50,6 +50,20 @@ pnpm run build
 pnpm run lint
 ```
 
+### Storybook
+
+Storybook can be used to preview and test components.
+
+```shell
+pnpm storybook
+```
+
+The static build can be created with:
+
+```shell
+pnpm storybook:build
+```
+
 ## License
 
 This project is licensed under the AGPL-3.0-or-later license. See the [LICENSE](LICENSE) file for details.
