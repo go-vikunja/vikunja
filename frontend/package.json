@@ -135,6 +135,7 @@
     "eslint-plugin-vue": "10.2.0",
     "happy-dom": "18.0.1",
     "histoire": "1.0.0-alpha.2",
+    "oxlint": "^1.1.0",
     "postcss": "8.5.5",
     "postcss-easing-gradients": "3.0.1",
     "postcss-preset-env": "10.2.3",
