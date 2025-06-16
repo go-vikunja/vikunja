@@ -94,28 +94,28 @@
 										#
 										<Sort
 											:order="sortBy.index"
-											@click="sort('index')"
+											@click="sort('index', $event)"
 										/>
 									</th>
 									<th v-if="activeColumns.done">
 										{{ $t('task.attributes.done') }}
 										<Sort
 											:order="sortBy.done"
-											@click="sort('done')"
+											@click="sort('done', $event)"
 										/>
 									</th>
 									<th v-if="activeColumns.title">
 										{{ $t('task.attributes.title') }}
 										<Sort
 											:order="sortBy.title"
-											@click="sort('title')"
+											@click="sort('title', $event)"
 										/>
 									</th>
 									<th v-if="activeColumns.priority">
 										{{ $t('task.attributes.priority') }}
 										<Sort
 											:order="sortBy.priority"
-											@click="sort('priority')"
+											@click="sort('priority', $event)"
 										/>
 									</th>
 									<th v-if="activeColumns.labels">
@@ -128,49 +128,49 @@
 										{{ $t('task.attributes.dueDate') }}
 										<Sort
 											:order="sortBy.due_date"
-											@click="sort('due_date')"
+											@click="sort('due_date', $event)"
 										/>
 									</th>
 									<th v-if="activeColumns.startDate">
 										{{ $t('task.attributes.startDate') }}
 										<Sort
 											:order="sortBy.start_date"
-											@click="sort('start_date')"
+											@click="sort('start_date', $event)"
 										/>
 									</th>
 									<th v-if="activeColumns.endDate">
 										{{ $t('task.attributes.endDate') }}
 										<Sort
 											:order="sortBy.end_date"
-											@click="sort('end_date')"
+											@click="sort('end_date', $event)"
 										/>
 									</th>
 									<th v-if="activeColumns.percentDone">
 										{{ $t('task.attributes.percentDone') }}
 										<Sort
 											:order="sortBy.percent_done"
-											@click="sort('percent_done')"
+											@click="sort('percent_done', $event)"
 										/>
 									</th>
 									<th v-if="activeColumns.doneAt">
 										{{ $t('task.attributes.doneAt') }}
 										<Sort
 											:order="sortBy.done_at"
-											@click="sort('done_at')"
+											@click="sort('done_at', $event)"
 										/>
 									</th>
 									<th v-if="activeColumns.created">
 										{{ $t('task.attributes.created') }}
 										<Sort
 											:order="sortBy.created"
-											@click="sort('created')"
+											@click="sort('created', $event)"
 										/>
 									</th>
 									<th v-if="activeColumns.updated">
 										{{ $t('task.attributes.updated') }}
 										<Sort
 											:order="sortBy.updated"
-											@click="sort('updated')"
+											@click="sort('updated', $event)"
 										/>
 									</th>
 									<th v-if="activeColumns.createdBy">
@@ -349,17 +349,31 @@ watch(
 	{deep: true},
 )
 
-// FIXME: by doing this we can have multiple sort orders
-function sort(property: keyof SortBy) {
-	const order = sortBy.value[property]
-	if (typeof order === 'undefined' || order === 'none') {
-		sortBy.value[property] = 'desc'
-	} else if (order === 'desc') {
-		sortBy.value[property] = 'asc'
-	} else {
-		delete sortBy.value[property]
-	}
-	setActiveColumnsSortParam()
+// Allow sorting by multiple columns only when ctrl is pressed
+function sort(property: keyof SortBy, event?: MouseEvent) {
+       const ctrlPressed = event?.ctrlKey || event?.metaKey
+
+       const currentOrder = sortBy.value[property]
+       let newOrder: 'asc' | 'desc' | undefined
+       if (typeof currentOrder === 'undefined' || currentOrder === 'none') {
+               newOrder = 'desc'
+       } else if (currentOrder === 'desc') {
+               newOrder = 'asc'
+       } else {
+               newOrder = undefined
+       }
+
+       if (!ctrlPressed) {
+               sortBy.value = {} as SortBy
+       }
+
+       if (newOrder) {
+               sortBy.value[property] = newOrder
+       } else {
+               delete sortBy.value[property]
+       }
+
+       setActiveColumnsSortParam()
 }
 
 function setActiveColumnsSortParam() {
