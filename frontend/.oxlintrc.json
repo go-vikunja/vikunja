@@ -94,7 +94,8 @@
   },
   "ignorePatterns": [
     "**/*.test.ts",
-    "./cypress"
+    "**/*.spec.ts",
+    "./cypress/**/*"
   ],
   "overrides": [
     {
