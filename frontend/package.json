@@ -144,7 +144,7 @@
     "start-server-and-test": "2.0.12",
     "typescript": "5.8.3",
     "unplugin-inject-preload": "3.0.0",
-    "vite": "npm:rolldown-vite@latest",
+    "vite": "npm:rolldown-vite@6.3.21",
     "vite-plugin-pwa": "1.0.0",
     "vite-plugin-sentry": "1.4.1",
     "vite-plugin-vue-devtools": "7.7.7",
@@ -168,8 +168,8 @@
       "puppeteer",
       "vue-demi"
     ],
-    "overrides": {
-      "vite": "npm:rolldown-vite@latest"
-    }
+      "overrides": {
+        "vite": "npm:rolldown-vite@6.3.21"
+      }
   }
 }
