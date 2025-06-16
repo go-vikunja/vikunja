@@ -16,7 +16,7 @@ export default class TeamModel extends AbstractModel<ITeam> implements ITeam {
 	externalId = ''
 	isPublic: boolean = false
 
-	createdBy: IUser = {} // FIXME: seems wrong
+	createdBy: IUser | null = null
 	created: Date = null
 	updated: Date = null
 
