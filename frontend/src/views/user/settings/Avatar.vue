@@ -4,6 +4,10 @@
 			{{ $t('user.settings.avatar.ldap') }}
 		</Message>
 
+		<Message v-else-if="avatarProvider === 'openid'">
+			{{ $t('user.settings.avatar.openid', {provider: authStore.info.authProvider}) }}
+		</Message>
+
 		<template v-else>
 			<div class="control mb-4">
 				<label
