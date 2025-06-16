@@ -43,7 +43,7 @@ export function createProjects() {
 	return projects
 }
 
-export function prepareProjects(setProjects = (...args: any[]) => {
+export function prepareProjects(setProjects = (..._: unknown[]) => {
 }) {
 	beforeEach(() => {
 		const projects = createProjects()
