@@ -147,7 +147,7 @@
     "vite": "6.3.5",
     "vite-plugin-pwa": "1.0.0",
     "vite-plugin-sentry": "1.4.1",
-    "vite-plugin-vue-devtools": "7.7.6",
+    "vite-plugin-vue-devtools": "7.7.7",
     "vite-svg-loader": "5.1.0",
     "vitest": "3.2.3",
     "vue-tsc": "2.2.10",
