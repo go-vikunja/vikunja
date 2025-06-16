@@ -1,12 +1,12 @@
-@import "scrollbars";
+@forward "scrollbars";
 
-@import "theme";
+@forward "theme";
 
-@import "background";
-@import "content";
-@import "form";
-@import "link-share";
-@import "loading";
-@import "flatpickr";
-@import 'helpers';
-@import 'navigation';
+@forward "background";
+@forward "content";
+@forward "form";
+@forward "link-share";
+@forward "loading";
+@forward "flatpickr";
+@forward 'helpers';
+@forward 'navigation';
