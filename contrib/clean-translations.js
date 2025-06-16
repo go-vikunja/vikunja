@@ -9,7 +9,6 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
 
 // Get the root directory (where the script is run from)
 const rootDir = process.cwd();
@@ -72,24 +71,24 @@ function removeEmptyStrings(obj) {
  * Process a single JSON file to remove empty strings
  * @param {string} filePath - Path to the JSON file
  */
-function processFile(filePath) {
+async function processFile(filePath) {
   try {
     console.log(`Processing ${filePath}`);
-    
+
     // Read and parse the JSON file
-    const data = fs.readFileSync(filePath, 'utf8');
+    const data = await fs.promises.readFile(filePath, 'utf8');
     const json = JSON.parse(data);
-    
+
     // Clean the JSON data
     const cleanedJson = removeEmptyStrings(json);
-    
+
     // Write the cleaned JSON back to the file
-    fs.writeFileSync(
-      filePath, 
+    await fs.promises.writeFile(
+      filePath,
       JSON.stringify(cleanedJson, null, '\t'),
       'utf8'
     );
-    
+
     console.log(`Successfully cleaned ${filePath}`);
   } catch (error) {
     console.error(`Error processing ${filePath}:`, error);
@@ -99,26 +98,28 @@ function processFile(filePath) {
 /**
  * Process all JSON files in the specified directories
  */
-function main() {
-  directories.forEach(dir => {
-    if (!fs.existsSync(dir)) {
+async function main() {
+  for (const dir of directories) {
+    try {
+      await fs.promises.access(dir);
+    } catch {
       console.warn(`Directory ${dir} does not exist. Skipping.`);
-      return;
+      continue;
     }
-    
-    const files = fs.readdirSync(dir);
-    
-    files.forEach(file => {
+
+    const files = await fs.promises.readdir(dir);
+
+    for (const file of files) {
       const filePath = path.join(dir, file);
-      
+
       if (file.endsWith('.json') && file !== 'en.json') {
-        processFile(filePath);
+        await processFile(filePath);
       }
-    });
-  });
-  
+    }
+  }
+
   console.log('All translation files have been processed successfully!');
 }
 
 // Run the script
-main(); 
+main();
