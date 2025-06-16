@@ -1,6 +1,7 @@
-import {setup} from '@storybook/vue3'
-import {createPinia} from 'pinia'
-import {i18n} from './i18n'
+import { setup } from '@storybook/vue3'
+import { createPinia } from 'pinia'
+import { createRouter, createMemoryHistory } from 'vue-router'
+import { i18n } from './i18n'
 
 import cypress from '@/directives/cypress'
 import FontAwesomeIcon from '@/components/misc/Icon'
@@ -12,7 +13,12 @@ import './styles/global.scss'
 
 setup(app => {
     const pinia = createPinia()
+    const router = createRouter({
+        history: createMemoryHistory(),
+        routes: [{ path: '/', name: 'home', component: { render: () => null } }],
+    })
     app.use(pinia)
+    app.use(router)
     app.use(i18n)
 
     app.directive('cy', cypress)
