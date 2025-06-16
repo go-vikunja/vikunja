@@ -6,7 +6,7 @@ import {useProjectStore} from '@/stores/projects'
 export function useRouteWithModal() {
 	const router = useRouter()
 	const route = useRoute()
-	const backdropView = computed(() => route.fullPath && window.history.state.backdropView)
+	const backdropView = computed(() => route.fullPath ? window.history.state.backdropView : undefined)
 	const baseStore = useBaseStore()
 	const projectStore = useProjectStore()
 
@@ -55,7 +55,7 @@ export function useRouteWithModal() {
 		currentModal.value = h(component, routeProps)
 	})
 
-	const historyState = computed(() => route.fullPath && window.history.state)
+	const historyState = computed(() => route.fullPath ? window.history.state : undefined)
 
 	function closeModal() {
 
@@ -63,7 +63,9 @@ export function useRouteWithModal() {
 		// we need to reflect that change in the route when they close the task modal.
 		// The last route is only available as resolved string, therefore we need to use a regex for matching here
 		const routeMatch = new RegExp('\\/projects\\/\\d+\\/(\\d+)', 'g')
-		const match = routeMatch.exec(historyState.value.back)
+		const match = historyState.value?.back
+			? routeMatch.exec(historyState.value.back)
+			: null
 		if (match !== null && baseStore.currentProject) {
 			let viewId: string | number = match[1]
 
@@ -86,7 +88,9 @@ export function useRouteWithModal() {
 			router.back()
 		} else {
 			const backdropRoute = historyState.value?.backdropView && router.resolve(historyState.value.backdropView)
-			router.push(backdropRoute)
+			if (backdropRoute) {
+				router.push(backdropRoute)
+			}
 		}
 	}
 
