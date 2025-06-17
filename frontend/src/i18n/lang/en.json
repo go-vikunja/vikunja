@@ -1236,7 +1236,9 @@
   },
   "about": {
     "title": "About",
-    "version": "Version: {version}"
+    "version": "Version: {version}",
+    "frontendVersion": "Frontend version: {version}",
+    "apiVersion": "API version: {version}"
   },
   "time": {
     "units": {
