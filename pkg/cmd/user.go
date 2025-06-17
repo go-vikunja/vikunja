@@ -51,6 +51,9 @@ var (
 )
 
 func init() {
+	// List flags
+	userListCmd.Flags().StringVarP(&userFlagEmail, "email", "e", "", "Filter users by an email address (exact match).")
+
 	// User create flags
 	userCreateCmd.Flags().StringVarP(&userFlagUsername, "username", "u", "", "The username of the new user.")
 	_ = userCreateCmd.MarkFlagRequired("username")
@@ -136,14 +139,23 @@ var userListCmd = &cobra.Command{
 		s := db.NewSession()
 		defer s.Close()
 
-		users, err := user.ListAllUsers(s)
-		if err != nil {
-			_ = s.Rollback()
-			log.Fatalf("Error getting users: %s", err)
-		}
+		var users []*user.User
 
-		if err := s.Commit(); err != nil {
-			log.Fatalf("Error getting users: %s", err)
+		if userFlagEmail != "" {
+			u, err := user.GetUserWithEmail(s, &user.User{Email: userFlagEmail})
+			if err != nil {
+				if !user.IsErrUserDoesNotExist(err) {
+					log.Fatalf("Error getting user: %s", err)
+				}
+			} else {
+				users = []*user.User{u}
+			}
+		} else {
+			var err error
+			users, err = user.ListAllUsers(s)
+			if err != nil {
+				log.Fatalf("Error getting users: %s", err)
+			}
 		}
 
 		table := tablewriter.NewTable(
