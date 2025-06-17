@@ -280,11 +280,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	var where builder.Cond
 
 	if opts.search != "" {
-		where =
-			builder.Or(
-				db.ILIKE("tasks.title", opts.search),
-				db.ILIKE("tasks.description", opts.search),
-			)
+		where = db.MultiFieldSearchWithTableAlias([]string{"title", "description"}, opts.search, "tasks")
 
 		searchIndex := getTaskIndexFromSearchString(opts.search)
 		if searchIndex > 0 {
