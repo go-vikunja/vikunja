@@ -83,10 +83,6 @@
 	</CreateEdit>
 </template>
 
-<script lang="ts">
-export default {name: 'ProjectSettingEdit'}
-</script>
-
 <script setup lang="ts">
 import {watch, ref} from 'vue'
 import {useRouter} from 'vue-router'
@@ -109,6 +105,8 @@ import {RIGHTS} from '@/constants/rights'
 const props = defineProps<{
 	projectId: IProject['id'],
 }>()
+
+defineOptions({name: 'ProjectSettingEdit'})
 
 const router = useRouter()
 const projectStore = useProjectStore()
