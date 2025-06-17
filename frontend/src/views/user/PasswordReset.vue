@@ -51,7 +51,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, reactive} from 'vue'
+import {ref, shallowReactive} from 'vue'
 import {useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
@@ -67,7 +67,7 @@ const credentials = reactive({
 const route = useRoute()
 const {t} = useI18n()
 
-const passwordResetService = reactive(new PasswordResetService())
+const passwordResetService = shallowReactive(new PasswordResetService())
 const errorMsg = ref('')
 const successMessage = ref('')
 

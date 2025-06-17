@@ -259,7 +259,7 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, ref} from 'vue'
+import {computed, ref, shallowReactive} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useRoute, useRouter} from 'vue-router'
 
@@ -298,9 +298,9 @@ const userIsAdmin = computed(() => {
 })
 const userInfo = computed(() => authStore.info)
 
-const teamService = ref<TeamService>(new TeamService())
-const teamMemberService = ref<TeamMemberService>(new TeamMemberService())
-const userService = ref<UserService>(new UserService())
+const teamService = shallowReactive(new TeamService())
+const teamMemberService = shallowReactive(new TeamMemberService())
+const userService = shallowReactive(new UserService())
 
 const team = ref<ITeam>()
 const teamId = computed(() => Number(route.params.id))
@@ -319,7 +319,7 @@ const title = ref('')
 loadTeam()
 
 async function loadTeam() {
-	team.value = await teamService.value.get({id: teamId.value})
+	team.value = await teamService.get({id: teamId.value})
 	title.value = t('team.edit.title', {team: team.value?.name})
 	useTitle(() => title.value)
 }
@@ -331,19 +331,19 @@ async function save() {
 	}
 	showErrorTeamnameRequired.value = false
 
-	team.value = await teamService.value.update(team.value)
+	team.value = await teamService.update(team.value)
 	success({message: t('team.edit.success')})
 }
 
 async function deleteTeam() {
-	await teamService.value.delete(team.value)
+	await teamService.delete(team.value)
 	success({message: t('team.edit.delete.success')})
 	router.push({name: 'teams.index'})
 }
 
 async function deleteMember() {
 	try {
-		await teamMemberService.value.delete({
+		await teamMemberService.delete({
 			teamId: teamId.value,
 			username: memberToDelete.value.username,
 		})
@@ -360,7 +360,7 @@ async function addUser() {
 		showMustSelectUserError.value = true
 		return
 	}
-	await teamMemberService.value.create({
+	await teamMemberService.create({
 		teamId: teamId.value,
 		username: newMember.value.username,
 	})
@@ -373,7 +373,7 @@ async function toggleUserType(member: ITeamMember) {
 	// FIXME: direct manipulation
 	member.admin = !member.admin
 	member.teamId = teamId.value
-	const r = await teamMemberService.value.update(member)
+	const r = await teamMemberService.update(member)
 	for (const tm in team.value.members) {
 		if (team.value.members[tm].id === member.id) {
 			team.value.members[tm].admin = r.admin
@@ -393,13 +393,13 @@ async function findUser(query: string) {
 		return
 	}
 
-	const users = await userService.value.getAll({}, {s: query})
+	const users = await userService.getAll({}, {s: query})
 	foundUsers.value = users.filter((u: IUser) => u.id !== userInfo.value.id)
 }
 
 async function leave() {
 	try {
-		await teamMemberService.value.delete({
+		await teamMemberService.delete({
 			teamId: teamId.value,
 			username: userInfo.value.username,
 		})
