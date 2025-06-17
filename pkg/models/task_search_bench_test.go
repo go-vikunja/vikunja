@@ -123,9 +123,28 @@ func BenchmarkTaskSearch(b *testing.B) {
 		}
 	}
 
-	tc := &TaskCollection{
-		Filter:         "done = false",
-		FilterTimezone: "UTC",
+	// Get all projects for the user
+	s := db.NewSession()
+	projects, _, _, err := getRawProjectsForUser(
+		s,
+		&projectOptions{
+			user: auth,
+			page: -1,
+		},
+	)
+	s.Close()
+	if err != nil {
+		b.Fatalf("get projects: %v", err)
+	}
+
+	// Create search options
+	opts := &taskSearchOptions{
+		search:             needle,
+		page:               1,
+		perPage:            50,
+		filter:             "done = false",
+		filterTimezone:     "UTC",
+		filterIncludeNulls: false,
 	}
 
 	b.Log("Setup done, starting benchmark...")
@@ -133,8 +152,7 @@ func BenchmarkTaskSearch(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		s := db.NewSession()
-		result, _, _, err := tc.ReadAll(s, auth, needle, 1, 50)
-		resultSlice := result.([]*Task)
+		resultSlice, _, _, err := getRawTasksForProjects(s, projects, auth, opts)
 		if len(resultSlice) == 0 {
 			b.Fatalf("no results found for needle %q", needle)
 		}
