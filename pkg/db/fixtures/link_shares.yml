@@ -24,6 +24,7 @@
   updated: 2018-12-02 15:13:12
 - id: 4
   hash: testWithPassword
+  name: testWithPassword
   project_id: 1
   right: 0
   password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6' # 12345678
