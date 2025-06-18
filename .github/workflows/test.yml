@@ -173,6 +173,7 @@ jobs:
           - sqlite
           - postgres
           - mysql
+          - paradedb
         test:
           - feature
           - web
@@ -191,6 +192,13 @@ jobs:
           POSTGRES_DB: vikunjatest
         ports:
           - 5432:5432
+      db-paradedb:
+        image: paradedb/paradedb:latest-pg17
+        env:
+          POSTGRES_PASSWORD: vikunjatest
+          POSTGRES_DB: vikunjatest
+        ports:
+          - 5433:5432
       test-ldap:
         image: gitea/test-openldap@sha256:b66527e298d6062d5289dc411d1b8da1c593f8140a3d1f863e8d9d021234122f
         ports:
@@ -206,22 +214,23 @@ jobs:
         with:
           go-version: stable
       - name: Configure Postgres for faster tests
-        if: matrix.db == 'postgres'
+        if: matrix.db == 'postgres' || matrix.db == 'paradedb'
         run: |
           # Connect to Postgres and disable fsync, full_page_writes, and synchronous_commit for faster tests
-          PGPASSWORD=vikunjatest psql -h localhost -U postgres -d vikunjatest -c "ALTER SYSTEM SET fsync = off;"
-          PGPASSWORD=vikunjatest psql -h localhost -U postgres -d vikunjatest -c "ALTER SYSTEM SET full_page_writes = off;"
-          PGPASSWORD=vikunjatest psql -h localhost -U postgres -d vikunjatest -c "ALTER SYSTEM SET synchronous_commit = off;"
+          PGPASSWORD=vikunjatest psql -h localhost ${{ matrix.db == 'paradedb' && ' -p 5433' || '' }} -U postgres -d vikunjatest -c "ALTER SYSTEM SET fsync = off;"
+          PGPASSWORD=vikunjatest psql -h localhost ${{ matrix.db == 'paradedb' && ' -p 5433' || '' }} -U postgres -d vikunjatest -c "ALTER SYSTEM SET full_page_writes = off;"
+          PGPASSWORD=vikunjatest psql -h localhost ${{ matrix.db == 'paradedb' && ' -p 5433' || '' }} -U postgres -d vikunjatest -c "ALTER SYSTEM SET synchronous_commit = off;"
           # Reload the configuration
-          PGPASSWORD=vikunjatest psql -h localhost -U postgres -d vikunjatest -c "SELECT pg_reload_conf();"
+          PGPASSWORD=vikunjatest psql -h localhost ${{ matrix.db == 'paradedb' && ' -p 5433' || '' }} -U postgres -d vikunjatest -c "SELECT pg_reload_conf();"
       - name: test
         env:
           VIKUNJA_TESTS_USE_CONFIG: ${{ matrix.db != 'sqlite-in-memory' && 1 || 0 }}
-          VIKUNJA_DATABASE_TYPE: ${{ matrix.db }}
-          VIKUNJA_DATABASE_USER: ${{ matrix.db == 'postgres' && 'postgres' || 'root' }}
+          VIKUNJA_DATABASE_TYPE: ${{ matrix.db == 'paradedb' && 'postgres' || matrix.db }}
+          VIKUNJA_DATABASE_USER: ${{ matrix.db == 'mysql' && 'root' || 'postgres' }}
           VIKUNJA_DATABASE_PASSWORD: vikunjatest
           VIKUNJA_DATABASE_DATABASE: vikunjatest
           VIKUNJA_DATABASE_SSLMODE: disable
+          VIKUNJA_DATABASE_HOST: localhost${{ matrix.db == 'paradedb' && ':5433' || '' }}
           VIKUNJA_AUTH_LDAP_ENABLED: 1
           VIKUNJA_AUTH_LDAP_HOST: localhost
           VIKUNJA_AUTH_LDAP_USETLS: 0
