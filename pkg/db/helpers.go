@@ -80,8 +80,3 @@ func MultiFieldSearch(fields []string, search string) builder.Cond {
 	}
 	return builder.Or(conditions...)
 }
-
-// IsParadeDBInstalled returns true if ParadeDB extension is available
-func IsParadeDBInstalled() bool {
-	return paradedbInstalled
-}
