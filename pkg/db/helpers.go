@@ -30,9 +30,6 @@ import (
 // See https://stackoverflow.com/q/7005302/10924593
 func ILIKE(column, search string) builder.Cond {
 	if Type() == schemas.POSTGRES {
-		if paradedbInstalled {
-			return builder.Expr(column+" @@@ ?", search)
-		}
 		return builder.Expr(column+" ILIKE ?", "%"+search+"%")
 	}
 
@@ -47,9 +44,14 @@ func ParadeDBAvailable() bool {
 // using a single query rather than multiple OR conditions.
 // Falls back to individual ILIKE queries for PGroonga and standard PostgreSQL.
 func MultiFieldSearch(fields []string, search string) builder.Cond {
+	return MultiFieldSearchWithTableAlias(fields, search, "")
+}
+
+// MultiFieldSearchWithTableAlias performs an optimized search across multiple fields for ParadeDB
+// with support for table aliases. When tableAlias is provided, it will be used to prefix field names
+// for non-ParadeDB queries and the id field for ParadeDB queries.
+func MultiFieldSearchWithTableAlias(fields []string, search, tableAlias string) builder.Cond {
 	if Type() == schemas.POSTGRES && paradedbInstalled {
-		// For ParadeDB, use the optimized disjunction_max approach for multi-field search
-		// This provides better relevance scoring than individual OR conditions
 		if len(fields) == 1 {
 			// Single field search - use optimized match function
 			return builder.Expr("id @@@ paradedb.match(?, ?)", fields[0], search)
@@ -62,13 +64,24 @@ func MultiFieldSearch(fields []string, search string) builder.Cond {
 			args[i*2] = field
 			args[i*2+1] = search
 		}
-		return builder.Expr("id @@@ paradedb.disjunction_max(ARRAY["+strings.Join(fieldMatches, ", ")+"])", args...)
+
+		idField := "`id`"
+		if tableAlias != "" {
+			idField = "`" + tableAlias + "`.`id`"
+		}
+
+		return builder.Expr(idField+" @@@ paradedb.disjunction_max(ARRAY["+strings.Join(fieldMatches, ", ")+"])", args...)
 	}
 
-	// For non-PostgreSQL databases, use LIKE on all fields
+	// For non-PostgreSQL databases, use ILIKE on all fields
 	conditions := make([]builder.Cond, len(fields))
 	for i, field := range fields {
-		conditions[i] = ILIKE(field, search)
+		// Add table alias to field name if provided
+		fieldName := field
+		if tableAlias != "" {
+			fieldName = tableAlias + "." + field
+		}
+		conditions[i] = ILIKE(fieldName, search)
 	}
 	return builder.Or(conditions...)
 }

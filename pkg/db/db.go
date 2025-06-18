@@ -292,5 +292,19 @@ func CreateParadeDBIndexes() error {
 		return fmt.Errorf("could not ensure paradedb task index: %w", err)
 	}
 
+	// Create ParadeDB index for projects table
+	projectIndexSQL := `CREATE INDEX IF NOT EXISTS idx_projects_paradedb ON projects USING bm25 (id, title, description, identifier) 
+	WITH (
+		key_field='id',
+		text_fields='{
+			"title": {"fast": true, "record": "freq"}, 
+			"description": {"fast": true, "record": "freq"},
+			"identifier": {"fast": true, "record": "freq"}
+		}'
+	)`
+	if _, err := x.Exec(projectIndexSQL); err != nil {
+		return fmt.Errorf("could not ensure paradedb project index: %w", err)
+	}
+
 	return nil
 }
