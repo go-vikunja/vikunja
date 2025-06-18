@@ -271,6 +271,7 @@ import User from '@/components/misc/User.vue'
 import TeamService from '@/services/team'
 import TeamMemberService from '@/services/teamMember'
 import UserService from '@/services/user'
+import UserModel from '@/models/user'
 
 import {RIGHTS as Rights} from '@/constants/rights'
 
@@ -305,8 +306,8 @@ const userService = ref<UserService>(new UserService())
 const team = ref<ITeam>()
 const teamId = computed(() => Number(route.params.id))
 const memberToDelete = ref<ITeamMember>()
-const newMember = ref<IUser>()
-const foundUsers = ref<IUser[]>()
+const newMember = ref<IUser | null>(null)
+const foundUsers = ref<IUser[]>([])
 
 const showDeleteModal = ref(false)
 const showUserDeleteModal = ref(false)
@@ -331,22 +332,22 @@ async function save() {
 	}
 	showErrorTeamnameRequired.value = false
 
-	team.value = await teamService.value.update(team.value)
+       team.value = await teamService.value.update(team.value as ITeam)
 	success({message: t('team.edit.success')})
 }
 
 async function deleteTeam() {
-	await teamService.value.delete(team.value)
+       await teamService.value.delete(team.value as ITeam)
 	success({message: t('team.edit.delete.success')})
 	router.push({name: 'teams.index'})
 }
 
 async function deleteMember() {
 	try {
-		await teamMemberService.value.delete({
-			teamId: teamId.value,
-			username: memberToDelete.value.username,
-		})
+               await teamMemberService.value.delete({
+                       teamId: teamId.value,
+                       username: memberToDelete.value?.username ?? '',
+               } as unknown as ITeamMember)
 		success({message: t('team.edit.deleteUser.success')})
 		await loadTeam()
 	} finally {
@@ -360,11 +361,11 @@ async function addUser() {
 		showMustSelectUserError.value = true
 		return
 	}
-	await teamMemberService.value.create({
-		teamId: teamId.value,
-		username: newMember.value.username,
-	})
-	newMember.value = null
+       await teamMemberService.value.create({
+               teamId: teamId.value,
+               username: newMember.value!.username,
+       } as unknown as ITeamMember)
+       newMember.value = null
 	await loadTeam()
 	success({message: t('team.edit.userAddedSuccess')})
 }
@@ -393,16 +394,16 @@ async function findUser(query: string) {
 		return
 	}
 
-	const users = await userService.value.getAll({}, {s: query})
-	foundUsers.value = users.filter((u: IUser) => u.id !== userInfo.value.id)
+       const users = await userService.value.getAll(new UserModel(), {s: query})
+       foundUsers.value = users.filter((u: IUser) => u.id !== userInfo.value?.id)
 }
 
 async function leave() {
 	try {
-		await teamMemberService.value.delete({
-			teamId: teamId.value,
-			username: userInfo.value.username,
-		})
+               await teamMemberService.value.delete({
+                       teamId: teamId.value,
+                       username: userInfo.value?.username ?? '',
+               } as unknown as ITeamMember)
 		success({message: t('team.edit.leave.success')})
 		await router.push({name: 'home'})
 	} finally {

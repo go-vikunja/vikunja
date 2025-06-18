@@ -30,10 +30,11 @@
 					class="label"
 					for="password"
 				>{{ $t('user.auth.password') }}</label>
-				<Password
-					@submit="resetPassword"
-					@update:modelValue="v => credentials.password = v"
-				/>
+                                <Password
+                                        :model-value="credentials.password"
+                                        @submit="resetPassword"
+                                        @update:modelValue="v => credentials.password = v"
+                                />
 			</div>
 
 			<div class="field is-grouped">
@@ -85,9 +86,9 @@ async function resetPassword() {
 	}
 
 	const passwordReset = new PasswordResetModel({newPassword: credentials.password, token: token})
-	try {
-		const {message} = await passwordResetService.resetPassword(passwordReset)
-		successMessage.value = message
+       try {
+       const {message} = await passwordResetService.resetPassword(passwordReset) as unknown as {message: string}
+               successMessage.value = message
 	} catch (e) {
 		errorMsg.value = e.response.data.message
 	}
