@@ -47,36 +47,28 @@ func ParadeDBAvailable() bool {
 // using a single query rather than multiple OR conditions.
 // Falls back to individual ILIKE queries for PGroonga and standard PostgreSQL.
 func MultiFieldSearch(fields []string, search string) builder.Cond {
-	if Type() == schemas.POSTGRES {
-		if paradedbInstalled {
-			// For ParadeDB, use the optimized disjunction_max approach for multi-field search
-			// This provides better relevance scoring than individual OR conditions
-			if len(fields) == 1 {
-				// Single field search - use optimized match function
-				return builder.Expr("id @@@ paradedb.match(?, ?)", fields[0], search)
-			}
-			// Multi-field search - use disjunction_max for optimal performance
-			fieldMatches := make([]string, len(fields))
-			args := make([]interface{}, len(fields)*2)
-			for i, field := range fields {
-				fieldMatches[i] = "paradedb.match(?, ?)"
-				args[i*2] = field
-				args[i*2+1] = search
-			}
-			return builder.Expr("id @@@ paradedb.disjunction_max(ARRAY["+strings.Join(fieldMatches, ", ")+"])", args...)
+	if Type() == schemas.POSTGRES && paradedbInstalled {
+		// For ParadeDB, use the optimized disjunction_max approach for multi-field search
+		// This provides better relevance scoring than individual OR conditions
+		if len(fields) == 1 {
+			// Single field search - use optimized match function
+			return builder.Expr("id @@@ paradedb.match(?, ?)", fields[0], search)
 		}
-		// For standard PostgreSQL, use ILIKE on all fields
-		conditions := make([]builder.Cond, len(fields))
+		// Multi-field search - use disjunction_max for optimal performance
+		fieldMatches := make([]string, len(fields))
+		args := make([]interface{}, len(fields)*2)
 		for i, field := range fields {
-			conditions[i] = builder.Expr(field+" ILIKE ?", "%"+search+"%")
+			fieldMatches[i] = "paradedb.match(?, ?)"
+			args[i*2] = field
+			args[i*2+1] = search
 		}
-		return builder.Or(conditions...)
+		return builder.Expr("id @@@ paradedb.disjunction_max(ARRAY["+strings.Join(fieldMatches, ", ")+"])", args...)
 	}
 
 	// For non-PostgreSQL databases, use LIKE on all fields
 	conditions := make([]builder.Cond, len(fields))
 	for i, field := range fields {
-		conditions[i] = &builder.Like{field, "%" + search + "%"}
+		conditions[i] = ILIKE(field, search)
 	}
 	return builder.Or(conditions...)
 }
