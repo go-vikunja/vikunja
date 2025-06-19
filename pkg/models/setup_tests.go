@@ -42,6 +42,11 @@ func SetupTests() {
 		log.Fatal(err)
 	}
 
+	err = db.CreateParadeDBIndexes()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	err = db.InitTestFixtures(
 		"files",
 		"label_tasks",
