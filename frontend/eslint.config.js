@@ -17,6 +17,7 @@ export default [
 			'quotes': ['error', 'single'],
 			'comma-dangle': ['error', 'always-multiline'],
 			'semi': ['error', 'never'],
+			'indent': ['error', 'tab', { 'SwitchCase': 1 }],
 
 			'vue/v-on-event-hyphenation': ['warn', 'never', {'autofix': true}],
 			'vue/multi-word-component-names': 'off',
