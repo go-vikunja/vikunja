@@ -15,7 +15,19 @@
       ]
     }
   },
+  "forwardPorts": [
+    4173,
+    3456
+  ],
   "image": "ghcr.io/cachix/devenv/devcontainer:latest",
   "overrideCommand": false,
-  "updateContentCommand": "devenv test"
+  "portsAttributes": {
+    "3456": {
+      "label": "Vikunja API"
+    },
+    "4173": {
+      "label": "Vikunja Frontend dev server"
+    }
+  },
+  "updateContentCommand": "sudo setfacl -k /tmp && devenv test"
 }
