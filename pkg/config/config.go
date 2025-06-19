@@ -528,6 +528,10 @@ func setConfigFromEnv() error {
 	return viper.MergeConfigMap(configMap)
 }
 
+// mergeConfigFromPath loads a config file from the given directory and merges
+// it into the main viper instance. Viper itself only reads the first config
+// file found when multiple paths are configured, so we manually merge any
+// additional configs found in subsequent paths.
 func mergeConfigFromPath(p string) {
 	if p == "" {
 		return
