@@ -191,5 +191,5 @@ export const useBaseStore = defineStore('base', () => {
 
 // support hot reloading
 if (import.meta.hot) {
-  import.meta.hot.accept(acceptHMRUpdate(useBaseStore, import.meta.hot))
+	import.meta.hot.accept(acceptHMRUpdate(useBaseStore, import.meta.hot))
 }

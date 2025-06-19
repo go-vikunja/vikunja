@@ -329,9 +329,9 @@ function getShareLink(hash: string, viewId: IProjectView['id']|null) {
 
 const shareLinks = computed(() => {
 	return linkShares.value.reduce((links, linkShare) => {
-			links[linkShare.id] = getShareLink(linkShare.hash, selectedViews.value[linkShare.id] ?? null)
-			return links
-		}, {} as {[id: string]: string },
+		links[linkShare.id] = getShareLink(linkShare.hash, selectedViews.value[linkShare.id] ?? null)
+		return links
+	}, {} as {[id: string]: string },
 	)
 })
 </script>

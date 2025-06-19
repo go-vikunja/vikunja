@@ -10,8 +10,8 @@ export function useProjectBackground(project: MaybeRefOrGetter<IProject | null>)
 
 	watch(
 		() => [
-				toValue(project)?.id ?? null,
-				toValue(project)?.backgroundBlurHash ?? null,
+			toValue(project)?.id ?? null,
+			toValue(project)?.backgroundBlurHash ?? null,
 		] as [IProject['id'] | null, IProject['backgroundBlurHash'] | null],
 		async ([projectId, blurHash], oldValue) => {
 			const projectValue = toValue(project)

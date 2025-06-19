@@ -51,8 +51,8 @@ export const useLabelStore = defineStore('label', () => {
 			const labelIdsToHide: number[] = labelsToHide.map(({id}) => id)
 
 			return search(query)
-					?.filter(value => !labelIdsToHide.includes(value))
-					.map(id => labels.value[id])
+				?.filter(value => !labelIdsToHide.includes(value))
+				.map(id => labels.value[id])
 				|| []
 		}
 	})
@@ -169,5 +169,5 @@ export const useLabelStore = defineStore('label', () => {
 
 // support hot reloading
 if (import.meta.hot) {
-  import.meta.hot.accept(acceptHMRUpdate(useLabelStore, import.meta.hot))
+	import.meta.hot.accept(acceptHMRUpdate(useLabelStore, import.meta.hot))
 }

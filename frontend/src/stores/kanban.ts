@@ -103,10 +103,10 @@ export const useKanbanStore = defineStore('kanban', () => {
 	}
 
 	function setTaskInBucketByIndex({
-										bucketIndex,
-										taskIndex,
-										task,
-									}: {
+		bucketIndex,
+		taskIndex,
+		task,
+	}: {
 		bucketIndex: number,
 		taskIndex: number,
 		task: ITask

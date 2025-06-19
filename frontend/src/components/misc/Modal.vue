@@ -97,7 +97,7 @@ const modal = ref<HTMLElement | null>(null)
 const scrollLock = useScrollLock(modal)
 
 watchEffect(() => {
-        scrollLock.value = props.enabled
+	scrollLock.value = props.enabled
 })
 
 function onKeydown(e: KeyboardEvent) {

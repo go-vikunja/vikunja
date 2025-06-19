@@ -468,12 +468,12 @@ const extensions : Extensions = [
 		},
 	}),
 
-        Commands.configure({
-                suggestion: suggestionSetup(t),
-        }),
+	Commands.configure({
+		suggestion: suggestionSetup(t),
+	}),
 
-        PasteHandler,
-       StopLinkOnSpace,
+	PasteHandler,
+	StopLinkOnSpace,
 ]
 
 // Add a custom extension for the Escape key

@@ -8,9 +8,9 @@ const DEFAULT_TIMEOUT = 60000
 export function createAsyncComponent<T extends Component = {
 	new (): ComponentPublicInstance;
 }>(source: AsyncComponentLoader<T> | AsyncComponentOptions<T>): T {
-  if (typeof source === 'function') {
-    source = { loader: source }
-  }
+	if (typeof source === 'function') {
+		source = { loader: source }
+	}
 
 	return defineAsyncComponent({
 		...source,
