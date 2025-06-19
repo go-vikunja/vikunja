@@ -179,8 +179,11 @@ func initPostgresEngine() (engine *xorm.Engine, err error) {
 
 func initSqliteEngine() (engine *xorm.Engine, err error) {
 	path := config.DatabasePath.GetString()
+	if path == "" {
+		path = "vikunja.db"
+	}
 
-	if path != "memory" && !filepath.IsAbs(path) {
+	if !filepath.IsAbs(path) && path != "memory" {
 		path = filepath.Join(config.ServiceRootpath.GetString(), path)
 	}
 
