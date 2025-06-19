@@ -1236,7 +1236,9 @@
 	},
 	"about": {
 		"title": "Hakkında",
-		"version": "Sürüm: {version}"
+		"version": "Sürüm: {version}",
+		"frontendVersion": "Frontend sürümü: {version}",
+		"apiVersion": "API sürümü: {version}"
 	},
 	"time": {
 		"units": {
