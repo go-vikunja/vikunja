@@ -1,5 +1,7 @@
 {
-    "recommendations": [
+  "customizations": {
+    "vscode": {
+      "extensions": [
         "Syler.sass-indented",
         "codezombiech.gitignore",
         "dbaeumer.vscode-eslint",
@@ -10,5 +12,10 @@
         "mkhl.direnv",
         "vitest.explorer",
         "vue.volar"
-    ]
+      ]
+    }
+  },
+  "image": "ghcr.io/cachix/devenv/devcontainer:latest",
+  "overrideCommand": false,
+  "updateContentCommand": "devenv test"
 }

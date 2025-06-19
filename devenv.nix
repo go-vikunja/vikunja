@@ -7,6 +7,8 @@ in {
   find node_modules/.pnpm/sass-embedded-linux-*/node_modules/sass-embedded-linux-*/dart-sass/src -name dart -print0 | xargs -I {} -0 patchelf --set-interpreter "$(<$NIX_CC/nix-support/dynamic-linker)" {}
   '';
 
+	devcontainer.enable = true;
+
   packages = with pkgs-unstable; [
     # General tools
     git-cliff 
