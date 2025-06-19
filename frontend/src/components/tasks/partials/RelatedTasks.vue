@@ -238,7 +238,7 @@ watch(
 	(value) => {
 		relatedTasks.value = value
 	},
-		{immediate: true},
+	{immediate: true},
 )
 
 const showNewRelationForm = ref(false)

@@ -133,8 +133,8 @@ async function save(title: string) {
 }
 
 async function cancel(element: HTMLInputElement) {
-  element.textContent = props.task.title
-  element.blur()
+	element.textContent = props.task.title
+	element.blur()
 }
 </script>
 

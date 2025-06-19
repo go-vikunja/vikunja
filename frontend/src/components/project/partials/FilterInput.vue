@@ -194,7 +194,7 @@ function updateDateInQuery(newDate: string) {
 	// Need to escape and unescape the query because the positions are based on the escaped query
 	let escaped = escapeHtml(filterQuery.value)
 	escaped = escaped
-			.substring(0, currentDatepickerPos.value)
+		.substring(0, currentDatepickerPos.value)
 		+ escaped
 			.substring(currentDatepickerPos.value)
 			.replace(currentOldDatepickerValue.value, newDate)

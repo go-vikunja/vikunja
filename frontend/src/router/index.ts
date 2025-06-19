@@ -408,13 +408,13 @@ export async function getAuthForRoute(to: RouteLocation, authStore) {
 	// Check if the route the user wants to go to is a route which needs authentication. We use this to 
 	// redirect the user after successful login.
 	const isValidUserAppRoute = ![
-			'user.login',
-			'user.password-reset.request',
-			'user.password-reset.reset',
-			'user.register',
-			'link-share.auth',
-			'openid.auth',
-		].includes(to.name as string) &&
+		'user.login',
+		'user.password-reset.request',
+		'user.password-reset.reset',
+		'user.register',
+		'link-share.auth',
+		'openid.auth',
+	].includes(to.name as string) &&
 		localStorage.getItem('emailConfirmToken') === null
 	
 	if (isValidUserAppRoute) {

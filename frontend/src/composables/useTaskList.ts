@@ -34,27 +34,27 @@ const SORT_BY_DEFAULT: SortBy = {
 	id: 'desc',
 }
 
-	// This makes sure an id sort order is always sorted last.
-	// When tasks would be sorted first by id and then by whatever else was specified, the id sort takes
-	// precedence over everything else, making any other sort columns pretty useless.
-	function formatSortOrder(sortBy, params) {
-		let hasIdFilter = false
-		const sortKeys = Object.keys(sortBy)
-		for (const s of sortKeys) {
-			if (s === 'id') {
-				sortKeys.splice(s, 1)
-				hasIdFilter = true
-				break
-			}
+// This makes sure an id sort order is always sorted last.
+// When tasks would be sorted first by id and then by whatever else was specified, the id sort takes
+// precedence over everything else, making any other sort columns pretty useless.
+function formatSortOrder(sortBy, params) {
+	let hasIdFilter = false
+	const sortKeys = Object.keys(sortBy)
+	for (const s of sortKeys) {
+		if (s === 'id') {
+			sortKeys.splice(s, 1)
+			hasIdFilter = true
+			break
 		}
-		if (hasIdFilter) {
-			sortKeys.push('id')
-		}
-		params.sort_by = sortKeys
-		params.order_by = sortKeys.map(s => sortBy[s])
-
-		return params
 	}
+	if (hasIdFilter) {
+		sortKeys.push('id')
+	}
+	params.sort_by = sortKeys
+	params.order_by = sortKeys.map(s => sortBy[s])
+
+	return params
+}
 
 /**
  * This mixin provides a base set of methods and properties to get tasks.

@@ -4,7 +4,7 @@ const SIZES = [
 	'MB',
 	'GB',
 	'TB',
- ] as const
+] as const
 
 export function getHumanSize(inputSize: number) {
 	let iterator = 0
