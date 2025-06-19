@@ -24,6 +24,8 @@ withDefaults(defineProps<{
 </script>
 
 <style lang="scss" scoped>
+@use 'sass:list';
+
 .progress-bar {
 	--progress-height: #{$size-normal};
 	--progress-bar-background-color: var(--border-light, #{$border-light});
@@ -73,7 +75,7 @@ withDefaults(defineProps<{
 
 	// Colors
 	@each $name, $pair in $colors {
-		$color: nth($pair, 1);
+		$color: list.nth($pair, 1);
 		&.is-#{$name} {
 			--progress-value-background-color: var(--#{$name}, #{$color});
 
