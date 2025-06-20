@@ -99,6 +99,37 @@
 		<div class="field">
 			<label class="checkbox">
 				<input
+					v-model="settings.webhookRemindersEnabled"
+					type="checkbox"
+				>
+				{{ $t('user.settings.general.webhookReminders') }}
+			</label>
+		</div>
+		<div class="field">
+			<label
+				class="label"
+				for="webhookReminderUrl"
+			>
+				{{ $t('user.settings.general.webhookReminderUrl') }}
+			</label>
+			<div class="control">
+				<input
+					id="webhookReminderUrl"
+					v-model="settings.webhookReminderUrl"
+					class="input"
+					type="url"
+					:placeholder="$t('user.settings.general.webhookReminderUrlPlaceholder')"
+					:disabled="!settings.webhookRemindersEnabled"
+					@keyup.enter="updateSettings"
+				>
+			</div>
+			<p class="help">
+				{{ $t('user.settings.general.webhookReminderUrlHelp') }}
+			</p>
+		</div>
+		<div class="field">
+			<label class="checkbox">
+				<input
 					v-model="settings.discoverableByName"
 					type="checkbox"
 				>

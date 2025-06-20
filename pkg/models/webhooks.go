@@ -310,3 +310,45 @@ func (w *Webhook) sendWebhookPayload(p *WebhookPayload) (err error) {
 	log.Debugf("Sent webhook payload for webhook %d for event %s", w.ID, p.EventName)
 	return
 }
+
+type WebhookPayload struct {
+	EventName string      `json:"event_name"`
+	Time      time.Time   `json:"time"`
+	Data      interface{} `json:"data"`
+}
+
+// sendUserWebhookPayload sends a webhook payload to a user's personal webhook URL
+func sendUserWebhookPayload(targetURL string, p *WebhookPayload) (err error) {
+	payload, err := json.Marshal(p)
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, targetURL, bytes.NewReader(payload))
+	if err != nil {
+		return err
+	}
+
+	req.Header.Add("User-Agent", "Vikunja/"+version.Version)
+	req.Header.Add("Content-Type", "application/json")
+
+	client := getWebhookHTTPClient()
+	res, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+
+	defer res.Body.Close()
+
+	if res.StatusCode > 399 {
+		responseBody, err := io.ReadAll(res.Body)
+		if err != nil {
+			return err
+		}
+
+		log.Errorf("Got response with status %d from user webhook URL %s: %s", res.StatusCode, targetURL, responseBody)
+	}
+
+	log.Debugf("Sent user webhook payload to %s for event %s", targetURL, p.EventName)
+	return
+}
