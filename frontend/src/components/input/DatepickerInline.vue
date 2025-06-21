@@ -71,9 +71,10 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, onBeforeUnmount, onMounted, ref, toRef, watch} from 'vue'
+import {computed, onBeforeUnmount, onMounted, ref, toRef, watch, markRaw} from 'vue'
 import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
+import type {Options} from 'flatpickr/dist/types/options'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 
@@ -105,7 +106,7 @@ watch(
 )
 
 const flatPickrRef = ref<HTMLElement | null>(null)
-const flatPickerConfig = computed(() => ({
+const flatPickerConfig = computed(() => markRaw<Options>({
 	altFormat: t('date.altFormatLong'),
 	altInput: true,
 	dateFormat: 'Y-m-d H:i',

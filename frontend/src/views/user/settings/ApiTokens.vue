@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import ApiTokenService from '@/services/apiToken'
-import {computed, onMounted, ref} from 'vue'
+import {computed, onMounted, ref, markRaw} from 'vue'
 import {useFlatpickrLanguage} from '@/helpers/useFlatpickrLanguage'
 import {formatDateShort, formatDateSince} from '@/helpers/time/formatDate'
 import XButton from '@/components/input/Button.vue'
@@ -10,6 +10,7 @@ import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import {MILLISECONDS_A_DAY} from '@/constants/date'
 import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
+import type {Options} from 'flatpickr/dist/types/options'
 import {useI18n} from 'vue-i18n'
 import Message from '@/components/misc/Message.vue'
 import type {IApiToken} from '@/modelTypes/IApiToken'
@@ -36,7 +37,7 @@ const {t} = useI18n()
 
 const now = new Date()
 
-const flatPickerConfig = computed(() => ({
+const flatPickerConfig = computed(() => markRaw<Options>({
 	altFormat: t('date.altFormatLong'),
 	altInput: true,
 	dateFormat: 'Y-m-d H:i',
