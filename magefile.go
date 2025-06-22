@@ -645,6 +645,26 @@ func (Build) Clean() error {
 // Builds a vikunja binary, ready to run
 func (Build) Build() {
 	mg.Deps(initVars)
+	// Check if the frontend dist folder exists
+	distPath := filepath.Join(RootPath, "frontend", "dist")
+	if _, err := os.Stat(distPath); os.IsNotExist(err) {
+		if err := os.MkdirAll(distPath, 0o755); err != nil {
+			fmt.Printf("Error creating %s: %s\n", distPath, err)
+			os.Exit(1)
+		}
+	}
+
+	indexFile := filepath.Join(distPath, "index.html")
+	if _, err := os.Stat(indexFile); os.IsNotExist(err) {
+		f, err := os.Create(indexFile)
+		if err != nil {
+			fmt.Printf("Error creating %s: %s\n", indexFile, err)
+			os.Exit(1)
+		}
+		f.Close()
+		fmt.Printf("Warning: %s not found, created empty file\n", indexFile)
+	}
+
 	runAndStreamOutput("go", "build", Goflags[0], "-tags", Tags, "-ldflags", "-s -w "+Ldflags, "-o", Executable)
 }
 
