@@ -46,8 +46,8 @@ in {
 	devcontainer = {
 		enable = true;
 		settings = {
-			updateContentCommand = "sudo setfacl -k /tmp && devenv test";
 			forwardPorts = [ 4173 3456 ];
+			image = "ghcr.io/cachix/devenv/devcontainer:main";
 			portsAttributes = {
 				"4173" = {
 					label = "Vikunja Frontend dev server";
