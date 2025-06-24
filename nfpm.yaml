@@ -10,6 +10,15 @@ priority: "extra"
 license: "AGPLv3"
 depends:
   - systemd
+overrides:
+  apk:
+    depends: []
+    contents:
+      - src: vikunja.initd
+        dst: /etc/init.d/vikunja
+        type: "config"
+    scripts:
+      postinstall: ./build/after-install-openrc.sh
 contents:
   - src: <binlocation>
     dst: /opt/vikunja/vikunja
