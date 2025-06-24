@@ -276,9 +276,9 @@ func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, projects []*Pr
 		return nil, err
 	}
 
-	// Put all tasks in their buckets
-	// All tasks which are not associated to any bucket will have bucket id 0 which is the nil value for int64
-	// Since we created a bucked with that id at the beginning, all tasks should be in there.
+	// Put all tasks in their buckets.
+	// Tasks without a bucket association are not returned by the query above
+	// and therefore will not be part of any bucket in the result.
 	for _, task := range tasks {
 		// Check if the bucket exists in the map to prevent nil pointer panics
 		if _, exists := bucketMap[task.BucketID]; !exists {
