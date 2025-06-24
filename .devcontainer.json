@@ -19,7 +19,7 @@
     4173,
     3456
   ],
-  "image": "ghcr.io/cachix/devenv/devcontainer:latest",
+  "image": "ghcr.io/cachix/devenv/devcontainer:main",
   "overrideCommand": false,
   "portsAttributes": {
     "3456": {
@@ -29,5 +29,5 @@
       "label": "Vikunja Frontend dev server"
     }
   },
-  "updateContentCommand": "sudo setfacl -k /tmp && devenv test"
+  "updateContentCommand": "devenv test"
 }
