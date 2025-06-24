@@ -294,7 +294,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	var projectIDCond builder.Cond
 	var favoritesCond builder.Cond
 	if len(opts.projectIDs) > 0 {
-		projectIDCond = builder.In("project_id", opts.projectIDs)
+		projectIDCond = builder.In("tasks.project_id", opts.projectIDs)
 	}
 
 	if d.hasFavoritesProject {
@@ -328,7 +328,10 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	}
 
 	if expandSubtasks {
-		cond = builder.And(cond, builder.IsNull{"task_relations.id"})
+		cond = builder.And(cond, builder.Or(
+			builder.IsNull{"task_relations.id"},
+			builder.Expr("parent_tasks.project_id != tasks.project_id"),
+		))
 	}
 
 	query := d.s.
@@ -349,7 +352,9 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		query = query.Join("LEFT", "task_buckets", "task_buckets.task_id = tasks.id")
 	}
 	if expandSubtasks {
-		query = query.Join("LEFT", "task_relations", "tasks.id = task_relations.task_id and task_relations.relation_kind = 'parenttask'")
+		query = query.
+			Join("LEFT", "task_relations", "tasks.id = task_relations.task_id and task_relations.relation_kind = 'parenttask'").
+			Join("LEFT", "tasks parent_tasks", "task_relations.other_task_id = parent_tasks.id")
 	}
 
 	tasks = []*Task{}
@@ -416,7 +421,9 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		queryCount = queryCount.Join("LEFT", "task_buckets", "task_buckets.task_id = tasks.id")
 	}
 	if expandSubtasks {
-		queryCount = queryCount.Join("LEFT", "task_relations", "tasks.id = task_relations.task_id and task_relations.relation_kind = 'parenttask'")
+		queryCount = queryCount.
+			Join("LEFT", "task_relations", "tasks.id = task_relations.task_id and task_relations.relation_kind = 'parenttask'").
+			Join("LEFT", "tasks parent_tasks", "task_relations.other_task_id = parent_tasks.id")
 	}
 	totalCount, err = queryCount.
 		Select("count(DISTINCT tasks.id)").
