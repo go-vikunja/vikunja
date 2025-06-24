@@ -189,7 +189,13 @@ describe('Task', () => {
 			LabelTaskFactory.truncate()
 			TaskAttachmentFactory.truncate()
 		})
+		it('Shows a 404 page for nonexisting tasks', () => {
 
+			cy.visit('/tasks/9999')
+
+			cy.contains('Not found')
+				.should('be.visible')
+		})
 		it('Shows all task details', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
