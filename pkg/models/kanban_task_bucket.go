@@ -25,13 +25,20 @@ import (
 	"xorm.io/xorm"
 )
 
+// TaskBucket represents the relation between a task and a kanban bucket.
+// A task can only appear once per project view which is ensured by a
+// unique index on the combination of task_id and project_view_id.
 type TaskBucket struct {
-	BucketID      int64   `xorm:"bigint not null index" json:"bucket_id" param:"bucket"`
-	Bucket        *Bucket `xorm:"-" json:"bucket"`
-	TaskID        int64   `xorm:"bigint not null index" json:"task_id"`
-	ProjectViewID int64   `xorm:"bigint not null index" json:"project_view_id" param:"view"`
-	ProjectID     int64   `xorm:"-" json:"-" param:"project"`
-	Task          *Task   `xorm:"-" json:"task"`
+	BucketID int64   `xorm:"bigint not null index" json:"bucket_id" param:"bucket"`
+	Bucket   *Bucket `xorm:"-" json:"bucket"`
+	// The task which belongs to the bucket. Together with ProjectViewID
+	// this field is part of a unique index to prevent duplicates.
+	TaskID int64 `xorm:"bigint not null index unique(task_view)" json:"task_id"`
+	// The view this bucket belongs to. Combined with TaskID this forms a
+	// unique index.
+	ProjectViewID int64 `xorm:"bigint not null index unique(task_view)" json:"project_view_id" param:"view"`
+	ProjectID     int64 `xorm:"-" json:"-" param:"project"`
+	Task          *Task `xorm:"-" json:"task"`
 
 	web.Rights   `xorm:"-" json:"-"`
 	web.CRUDable `xorm:"-" json:"-"`
