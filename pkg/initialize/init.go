@@ -21,6 +21,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/cron"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/i18n"
@@ -63,6 +64,11 @@ func InitEngines() {
 		log.Fatal(err.Error())
 	}
 	err = files.SetEngine()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	err = db.CreateParadeDBIndexes()
 	if err != nil {
 		log.Fatal(err.Error())
 	}

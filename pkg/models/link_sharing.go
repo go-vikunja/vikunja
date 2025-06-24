@@ -220,14 +220,14 @@ func (share *LinkSharing) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 	limit, start := getLimitFromPageIndex(page, perPage)
 
 	var shares []*LinkSharing
-	query := s.
-		Where(builder.And(
-			builder.Eq{"project_id": share.ProjectID},
-			builder.Or(
-				db.ILIKE("hash", search),
-				db.ILIKE("name", search),
-			),
-		))
+	var where []builder.Cond
+	where = append(where, builder.Eq{"project_id": share.ProjectID})
+
+	if search != "" {
+		where = append(where, db.ILIKE("name", search))
+	}
+
+	query := s.Where(builder.And(where...))
 
 	if limit > 0 {
 		query = query.Limit(limit, start)
