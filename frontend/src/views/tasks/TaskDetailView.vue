@@ -743,6 +743,13 @@ watch(
 			attachmentStore.set(task.value.attachments)
 			taskColor.value = task.value.hexColor
 			setActiveFields()
+		} catch (e) {
+			if (e?.response?.status === 404) {
+				router.replace({name: 'not-found'})
+				return
+			}
+
+			throw e
 		} finally {
 			await nextTick()
 			scrollToHeading()
