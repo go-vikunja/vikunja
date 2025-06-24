@@ -8894,12 +8894,14 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "project_view_id": {
+                    "description": "The view this bucket belongs to. Combined with TaskID this forms a\nunique index.",
                     "type": "integer"
                 },
                 "task": {
                     "$ref": "#/definitions/models.Task"
                 },
                 "task_id": {
+                    "description": "The task which belongs to the bucket. Together with ProjectViewID\nthis field is part of a unique index to prevent duplicates.",
                     "type": "integer"
                 }
             }
