@@ -137,7 +137,7 @@ func (t *APIToken) ReadAll(s *xorm.Session, a web.Auth, search string, page int,
 	if search != "" {
 		where = builder.And(
 			where,
-			db.ILIKE("title", search),
+			db.ILIKE("api_tokens.title", search),
 		)
 	}
 

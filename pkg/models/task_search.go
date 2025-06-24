@@ -282,7 +282,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	if opts.search != "" {
 		where =
 			builder.Or(
-				db.ILIKE("title", opts.search),
+				db.ILIKE("tasks.title", opts.search),
 				db.ILIKE("description", opts.search),
 			)
 
