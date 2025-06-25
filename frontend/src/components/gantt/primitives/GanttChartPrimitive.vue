@@ -34,18 +34,18 @@ const focusedCell = focusedCellIndex
 const cellsCount = computed(()=>props.rows.length?props.cellsByRow[props.rows[0]].length:0)
 
 onClickOutside(chartRef, () => {
-  focusedRowIndex.value = null
-  focusedCellIndex.value = null
-  anchor.value = null
-  emit('update:focused', {row:null, cell:null})
+	focusedRowIndex.value = null
+	focusedCellIndex.value = null
+	anchor.value = null
+	emit('update:focused', {row:null, cell:null})
 })
 
 function onKeyDown(e: KeyboardEvent) {
-  if (focusedRowIndex.value === null || focusedCellIndex.value === null) return
-  if (e.key === 'ArrowRight') focusedCellIndex.value++
-  if (e.key === 'ArrowLeft') focusedCellIndex.value--
-  if (e.key === 'ArrowDown') focusedRowIndex.value++
-  if (e.key === 'ArrowUp') focusedRowIndex.value--
-  emit('update:focused', {row: focusedRow.value, cell: focusedCellIndex.value})
+	if (focusedRowIndex.value === null || focusedCellIndex.value === null) return
+	if (e.key === 'ArrowRight') focusedCellIndex.value++
+	if (e.key === 'ArrowLeft') focusedCellIndex.value--
+	if (e.key === 'ArrowDown') focusedRowIndex.value++
+	if (e.key === 'ArrowUp') focusedRowIndex.value--
+	emit('update:focused', {row: focusedRow.value, cell: focusedCellIndex.value})
 }
 </script>
