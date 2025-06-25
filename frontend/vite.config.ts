@@ -111,7 +111,7 @@ function getBuildConfig(env: Record<string, string>) {
 			},
 		},
                 plugins: [
-                        tailwindcss(),
+                        tailwindcss({config: './tailwind.config.js'}),
                         vue(),
 			svgLoader({
 				// Since the svgs are already manually optimized via https://jakearchibald.github.io/svgomg/

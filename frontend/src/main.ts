@@ -38,6 +38,8 @@ if (window.API_URL.endsWith('/')) {
 // directives
 import focus from '@/directives/focus'
 import {vTooltip} from 'floating-vue'
+
+import './styles/global.scss'
 import 'floating-vue/dist/style.css'
 import shortcut from '@/directives/shortcut'
 import cypress from '@/directives/cypress'
