@@ -9,7 +9,6 @@
 		class="gantt-container"
 	>
 		<div class="gantt-chart-wrapper">
-
 			<!-- Timeline Header -->
 			<div class="gantt-timeline">
 				<!-- Upper timeunit for months -->
@@ -108,8 +107,7 @@
 										:stroke-width="getBarStrokeWidth(bar)"
 										:stroke-dasharray="!bar.meta?.hasActualDates ? '5,5' : 'none'"
 										class="gantt-bar"
-										@pointerdown="startDrag(bar, $event)"
-										@dblclick="openTask(bar)"
+										@pointerdown="handleBarPointerDown(bar, $event)"
 									/>
 									
 									<!-- Left resize handle -->
@@ -440,6 +438,52 @@ function getBarTextColor(bar: GanttBarModel) {
 	
 	// Default for primary color background (white text)
 	return 'white'
+}
+
+// Double-click and drag detection
+let lastClickTime = 0
+let dragStarted = false
+
+function handleBarPointerDown(bar: GanttBarModel, event: PointerEvent) {
+	event.preventDefault()
+	
+	const currentTime = Date.now()
+	const timeDiff = currentTime - lastClickTime
+	
+	// Double-click detection (within 500ms)
+	if (timeDiff < 500) {
+		openTask(bar)
+		lastClickTime = 0
+		return
+	}
+	
+	lastClickTime = currentTime
+	dragStarted = false
+	
+	const startX = event.clientX
+	const startY = event.clientY
+	
+	const handleMove = (e: PointerEvent) => {
+		const diffX = Math.abs(e.clientX - startX)
+		const diffY = Math.abs(e.clientY - startY)
+		
+		// Start drag if mouse moved more than 5 pixels
+		if (!dragStarted && (diffX > 5 || diffY > 5)) {
+			dragStarted = true
+			document.removeEventListener('pointermove', handleMove)
+			document.removeEventListener('pointerup', handleStop)
+			startDrag(bar, event)
+		}
+	}
+	
+	const handleStop = () => {
+		document.removeEventListener('pointermove', handleMove)
+		document.removeEventListener('pointerup', handleStop)
+		// If no drag was started, this was just a click (do nothing)
+	}
+	
+	document.addEventListener('pointermove', handleMove)
+	document.addEventListener('pointerup', handleStop)
 }
 
 function startDrag(bar: GanttBarModel, event: PointerEvent) {
