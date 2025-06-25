@@ -12,11 +12,8 @@ depends:
   - systemd
 overrides:
   apk:
-    depends: []
-    contents:
-      - src: vikunja.initd
-        dst: /etc/init.d/vikunja
-        type: "config"
+    depends:
+      - openrc
     scripts:
       postinstall: ./build/after-install-openrc.sh
 contents:
@@ -30,5 +27,9 @@ contents:
     type: "symlink"
   - src: vikunja.service
     dst: /usr/lib/systemd/system/vikunja.service
+  - src: vikunja.initd
+    dst: /etc/init.d/vikunja
+    type: "config"
+    packager: apk
 scripts:
   postinstall: ./build/after-install.sh
