@@ -41,34 +41,55 @@ import {colorIsDark} from '@/helpers/color/colorIsDark'
 const props = defineProps<{ model:GanttBarModel; timelineStart:Date; timelineEnd:Date; onMove:(id:string,start:Date,end:Date)=>void; onDoubleClick?:(model:GanttBarModel)=>void }>()
 
 function computeX(date: Date) {
-	return (date.getTime() - props.timelineStart.getTime()) / (1000*60*60*24) * 24
+	const x = (date.getTime() - props.timelineStart.getTime()) / (1000*60*60*24) * 30
+	console.log('Bar X position:', { 
+		taskId: props.model.id, 
+		date: date, 
+		timelineStart: props.timelineStart, 
+		x: x, 
+	})
+	return x
 }
 
 function computeWidth(bar: GanttBarModel) {
 	const diff = (bar.end.getTime() - bar.start.getTime()) / (1000*60*60*24)
-	return diff * 24
+	const width = diff * 30
+	console.log('Bar width:', { 
+		taskId: bar.id, 
+		diff: diff, 
+		width: width, 
+	})
+	return width
 }
 
 function getBarFill(dragging: boolean, selected: boolean) {
-	if (dragging) return 'var(--bar-bg-drag)'
-	if (selected) return 'var(--bar-bg-active)'
+	console.log('Bar fill debug:', {
+		taskId: props.model.id,
+		dragging,
+		selected,
+		hasActualDates: props.model.meta?.hasActualDates,
+		color: props.model.meta?.color,
+	})
+	
+	if (dragging) return '#3498db' // Blue for dragging
+	if (selected) return '#2980b9' // Darker blue for selected
 	
 	// Use task color if available and has actual dates
 	if (props.model.meta?.hasActualDates && props.model.meta?.color) {
 		return props.model.meta.color
 	}
 	
-	// Default colors
+	// Default colors - use actual color values instead of CSS variables
 	if (props.model.meta?.hasActualDates) {
-		return 'var(--primary)'
+		return '#1dd1a1' // Primary green color
 	}
 	
-	return 'var(--bar-bg)'
+	return '#d3d3d3' // Light gray for tasks without dates
 }
 
 function getBarStroke(focused: boolean) {
-	if (focused) return 'var(--bar-stroke-focus)'
-	if (!props.model.meta?.hasActualDates) return 'var(--grey-300)'
+	if (focused) return '#1dd1a1' // Primary color for focus
+	if (!props.model.meta?.hasActualDates) return '#bdc3c7' // Gray for dashed border
 	return 'none'
 }
 
@@ -79,17 +100,17 @@ function getStrokeWidth(focused: boolean) {
 }
 
 function getTextColor() {
-	// For tasks without actual dates, use default text color
+	// For tasks without actual dates, use dark text
 	if (!props.model.meta?.hasActualDates) {
-		return 'var(--text-on-bar)'
+		return '#2c3e50'
 	}
 	
 	// For tasks with color, determine text color based on background
 	if (props.model.meta?.color) {
-		return colorIsDark(props.model.meta.color) ? 'var(--grey-800)' : 'white'
+		return colorIsDark(props.model.meta.color) ? '#2c3e50' : 'white'
 	}
 	
-	// Default for primary color background
+	// Default for primary color background (white text on green)
 	return 'white'
 }
 </script>
