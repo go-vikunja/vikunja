@@ -662,7 +662,7 @@ const dateIsToday = computed(() => (date: Date) => {
 .gantt-grid-lines {
 	position: absolute;
 	left: 0;
-	z-index: 3;
+	z-index: 1;
 	pointer-events: none;
 }
 
@@ -760,6 +760,7 @@ const dateIsToday = computed(() => (date: Date) => {
 	min-height: 40px;
 	position: relative;
 	border-bottom: 1px solid var(--grey-200);
+	z-index: 2;
 	
 	&:nth-child(odd) {
 		background: var(--row-alt-bg);
