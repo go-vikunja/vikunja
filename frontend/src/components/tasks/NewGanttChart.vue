@@ -96,8 +96,8 @@
 										:width="6"
 										:height="28"
 										:rx="3"
-										fill="rgba(255,255,255,0.8)"
-										stroke="#3498db"
+										fill="var(--white)"
+										stroke="var(--primary)"
 										stroke-width="1"
 										class="gantt-resize-handle gantt-resize-left"
 										@pointerdown="startResize(bar, 'start', $event)"
@@ -110,8 +110,8 @@
 										:width="6"
 										:height="28"
 										:rx="3"
-										fill="rgba(255,255,255,0.8)"
-										stroke="#3498db"
+										fill="var(--white)"
+										stroke="var(--primary)"
 										stroke-width="1"
 										class="gantt-resize-handle gantt-resize-right"
 										@pointerdown="startResize(bar, 'end', $event)"
@@ -142,6 +142,7 @@ import {useRouter} from 'vue-router'
 
 import { useGlobalNow } from '@/composables/useGlobalNow'
 import {getHexColor} from '@/models/task'
+import {colorIsDark} from '@/helpers/color/colorIsDark'
 
 import type {ITask, ITaskPartialWithId} from '@/modelTypes/ITask'
 import type {DateISO} from '@/types/DateISO'
@@ -360,22 +361,23 @@ function computeBarWidth(bar: GanttBarModel) {
 }
 
 function getBarFill(bar: GanttBarModel) {
-	// Use task color if available and has actual dates
-	if (bar.meta?.hasActualDates && bar.meta?.color) {
-		return bar.meta.color
-	}
-	
-	// Default colors
+	// For tasks with actual dates
 	if (bar.meta?.hasActualDates) {
-		return '#1dd1a1' // Primary green
+		// Use task color if available
+		if (bar.meta?.color) {
+			return bar.meta.color
+		}
+		// Default to primary color if no task color
+		return 'var(--primary)'
 	}
 	
-	return '#d3d3d3' // Light gray for tasks without dates
+	// For tasks without dates, use gray
+	return 'var(--grey-100)'
 }
 
 function getBarStroke(bar: GanttBarModel) {
 	if (!bar.meta?.hasActualDates) {
-		return '#bdc3c7' // Gray for dashed border
+		return 'var(--grey-300)' // Gray for dashed border
 	}
 	return 'none'
 }
@@ -388,19 +390,21 @@ function getBarStrokeWidth(bar: GanttBarModel) {
 }
 
 function getBarTextColor(bar: GanttBarModel) {
-	// For tasks without actual dates, use dark text
+	const black = 'var(--grey-800)'
+	
+	// For tasks without actual dates, use dark text on gray background
 	if (!bar.meta?.hasActualDates) {
-		return '#2c3e50'
+		return black
 	}
 	
-	// For tasks with color, determine text color based on background
+	// For tasks with actual dates
 	if (bar.meta?.color) {
-		// Simple brightness check - you may want to import colorIsDark if needed
-		return '#ffffff'
+		// Use colorIsDark to determine text color based on background
+		return colorIsDark(bar.meta.color) ? black : 'white'
 	}
 	
-	// Default for primary color background (white text on green)
-	return '#ffffff'
+	// Default for primary color background (white text)
+	return 'white'
 }
 
 function startDrag(bar: GanttBarModel, event: PointerEvent) {
