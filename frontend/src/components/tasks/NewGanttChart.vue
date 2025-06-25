@@ -11,20 +11,35 @@
 		<div class="gantt-chart-wrapper">
 			<!-- Timeline Header -->
 			<div class="gantt-timeline">
-				<div
-					v-for="date in timelineData"
-					:key="date.toISOString()"
-					class="timeunit"
-					:style="{ width: `${DAY_WIDTH_PIXELS}px` }"
-				>
+				<!-- Upper timeunit for months -->
+				<div class="gantt-timeline-upper">
 					<div
-						class="timeunit-wrapper"
-						:class="{'today': dateIsToday(date)}"
+						v-for="monthGroup in monthGroups"
+						:key="monthGroup.key"
+						class="upper-timeunit"
+						:style="{ width: `${monthGroup.width}px` }"
 					>
-						<span>{{ date.getDate() }}</span>
-						<span class="weekday">
-							{{ weekDayFromDate(date) }}
-						</span>
+						{{ monthGroup.label }}
+					</div>
+				</div>
+				
+				<!-- Lower timeunit for days -->
+				<div class="gantt-timeline-lower">
+					<div
+						v-for="date in timelineData"
+						:key="date.toISOString()"
+						class="timeunit"
+						:style="{ width: `${DAY_WIDTH_PIXELS}px` }"
+					>
+						<div
+							class="timeunit-wrapper"
+							:class="{'today': dateIsToday(date)}"
+						>
+							<span>{{ date.getDate() }}</span>
+							<span class="weekday">
+								{{ weekDayFromDate(date) }}
+							</span>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -130,6 +145,47 @@ const timelineData = computed(() => {
 	}
 	
 	return dates
+})
+
+// Generate month groups for the upper timeline
+const monthGroups = computed(() => {
+	const groups: Array<{key: string; label: string; width: number}> = []
+	let currentMonth = -1
+	let currentYear = -1
+	let dayCount = 0
+	
+	timelineData.value.forEach((date, index) => {
+		const month = date.getMonth()
+		const year = date.getFullYear()
+		
+		if (month !== currentMonth || year !== currentYear) {
+			// Finish previous group
+			if (currentMonth !== -1) {
+				groups[groups.length - 1].width = dayCount * DAY_WIDTH_PIXELS
+			}
+			
+			// Start new group
+			currentMonth = month
+			currentYear = year
+			dayCount = 1
+			
+			const monthName = date.toLocaleDateString('en', { month: 'long', year: 'numeric' })
+			groups.push({
+				key: `${year}-${month}`,
+				label: monthName,
+				width: 0, // Will be set when we finish the group
+			})
+		} else {
+			dayCount++
+		}
+		
+		// Handle last group
+		if (index === timelineData.value.length - 1) {
+			groups[groups.length - 1].width = dayCount * DAY_WIDTH_PIXELS
+		}
+	})
+	
+	return groups
 })
 
 // Transform tasks to gantt bars
@@ -267,7 +323,6 @@ const dateIsToday = computed(() => (date: Date) => {
 }
 
 .gantt-timeline {
-	display: flex;
 	background: var(--white);
 	border-bottom: 1px solid var(--grey-200);
 	position: sticky;
@@ -275,24 +330,45 @@ const dateIsToday = computed(() => (date: Date) => {
 	z-index: 10;
 }
 
-.timeunit .timeunit-wrapper {
-	padding: 0.5rem 0;
-	font-size: 1rem;
+.gantt-timeline-upper {
 	display: flex;
-	flex-direction: column;
-	align-items: center;
-	width: 100%;
-	font-family: $vikunja-font;
 	
-	&.today {
-		background: var(--primary);
-		color: var(--white);
-		border-radius: 5px 5px 0 0;
+	.upper-timeunit {
+		background: var(--white);
+		font-family: $vikunja-font;
 		font-weight: bold;
+		border-right: 1px solid var(--grey-200);
+		padding: 0.5rem 0;
+		text-align: center;
+		font-size: 1rem;
+		color: var(--grey-800);
 	}
+}
+
+.gantt-timeline-lower {
+	display: flex;
 	
-	.weekday {
-		font-size: 0.8rem;
+	.timeunit {	
+		.timeunit-wrapper {
+			padding: 0.5rem 0;
+			font-size: 1rem;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			width: 100%;
+			font-family: $vikunja-font;
+			
+			&.today {
+				background: var(--primary);
+				color: var(--white);
+				border-radius: 5px 5px 0 0;
+				font-weight: bold;
+			}
+			
+			.weekday {
+				font-size: 0.8rem;
+			}
+		}
 	}
 }
 
