@@ -92,4 +92,3 @@ setLanguage(authStore.settings.language)
 useColorScheme()
 </script>
 
-<style lang="scss" src="@/styles/global.scss" />
