@@ -9,6 +9,7 @@
 		class="gantt-container"
 	>
 		<div class="gantt-chart-wrapper">
+
 			<!-- Timeline Header -->
 			<div class="gantt-timeline">
 				<!-- Upper timeunit for months -->
@@ -42,6 +43,28 @@
 						</div>
 					</div>
 				</div>
+			</div>
+
+			<!-- Vertical Grid Lines -->
+			<div class="gantt-grid-lines">
+				<svg
+					class="gantt-vertical-lines"
+					:width="totalWidth"
+					:height="ganttRows.length * 40"
+					xmlns="http://www.w3.org/2000/svg"
+				>
+					<line
+						v-for="(date, index) in timelineData"
+						:key="date.toISOString()"
+						:x1="index * DAY_WIDTH_PIXELS"
+						:y1="0"
+						:x2="index * DAY_WIDTH_PIXELS"
+						:y2="ganttRows.length * 40"
+						stroke="var(--grey-400)"
+						stroke-width="0.5"
+						opacity="0.6"
+					/>
+				</svg>
 			</div>
 
 			<!-- Gantt Chart Body -->
@@ -633,6 +656,20 @@ const dateIsToday = computed(() => (date: Date) => {
 .gantt-chart-wrapper {
 	width: max-content;
 	min-width: 100%;
+	position: relative;
+}
+
+.gantt-grid-lines {
+	position: absolute;
+	left: 0;
+	z-index: 3;
+	pointer-events: none;
+}
+
+.gantt-vertical-lines {
+	position: absolute;
+	top: 0;
+	left: 0;
 }
 
 .gantt-timeline {
@@ -687,6 +724,7 @@ const dateIsToday = computed(() => (date: Date) => {
 
 .gantt-rows {
 	position: relative;
+	z-index: 2;
 }
 
 .gantt-row-content {
@@ -700,7 +738,7 @@ const dateIsToday = computed(() => (date: Date) => {
 	top: 0;
 	left: 0;
 	pointer-events: none;
-	z-index: 5;
+	z-index: 4;
 	
 	:deep(rect) {
 		pointer-events: all;
