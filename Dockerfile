@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1@sha256:9857836c9ee4268391bb5b09f9f157f3c91bb15821bb77969642813b0d00518d
-FROM --platform=$BUILDPLATFORM node:22.17.0-alpine@sha256:eb37f58646a901dc7727cf448cae36daaefaba79de33b5058dab79aa4c04aefb AS frontendbuilder
+FROM --platform=$BUILDPLATFORM node:22.17.0-alpine@sha256:9f3f2c6ce92dd6c7c82dfeafcb08956117cde67bdd5012e308348d32d0a409d6 AS frontendbuilder
 
 WORKDIR /build
 
