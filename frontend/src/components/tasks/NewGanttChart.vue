@@ -73,8 +73,8 @@
 									v-for="bar in ganttBars[index]"
 									:key="bar.id"
 									@dblclick="openTask(bar)"
-									@pointerdown="startDrag(bar, $event)"
 								>
+									<!-- Main bar -->
 									<rect
 										:x="computeBarX(bar.start)"
 										:y="2"
@@ -86,7 +86,38 @@
 										:stroke-width="getBarStrokeWidth(bar)"
 										:stroke-dasharray="!bar.meta?.hasActualDates ? '5,5' : 'none'"
 										class="gantt-bar"
+										@pointerdown="startDrag(bar, $event)"
 									/>
+									
+									<!-- Left resize handle -->
+									<rect
+										:x="computeBarX(bar.start) - 3"
+										:y="2"
+										:width="6"
+										:height="28"
+										:rx="3"
+										fill="rgba(255,255,255,0.8)"
+										stroke="#3498db"
+										stroke-width="1"
+										class="gantt-resize-handle gantt-resize-left"
+										@pointerdown="startResize(bar, 'start', $event)"
+									/>
+									
+									<!-- Right resize handle -->
+									<rect
+										:x="computeBarX(bar.start) + computeBarWidth(bar) - 3"
+										:y="2"
+										:width="6"
+										:height="28"
+										:rx="3"
+										fill="rgba(255,255,255,0.8)"
+										stroke="#3498db"
+										stroke-width="1"
+										class="gantt-resize-handle gantt-resize-right"
+										@pointerdown="startResize(bar, 'end', $event)"
+									/>
+									
+									<!-- Task label -->
 									<text
 										:x="computeBarX(bar.start) + 8"
 										:y="20"
@@ -380,9 +411,11 @@ function startDrag(bar: GanttBarModel, event: PointerEvent) {
 	const originalEnd = new Date(bar.end)
 	let currentDays = 0
 	
-	// Find the bar element to update its position during drag
-	const barElement = (event.target as Element).closest('g')?.querySelector('rect')
-	const textElement = (event.target as Element).closest('g')?.querySelector('text')
+	// Find the bar elements to update during drag
+	const barElement = (event.target as Element).closest('g')?.querySelector('.gantt-bar')
+	const leftHandle = (event.target as Element).closest('g')?.querySelector('.gantt-resize-left')
+	const rightHandle = (event.target as Element).closest('g')?.querySelector('.gantt-resize-right')
+	const textElement = (event.target as Element).closest('g')?.querySelector('.gantt-bar-text')
 	
 	const handleMove = (e: PointerEvent) => {
 		const diff = e.clientX - startX
@@ -392,12 +425,24 @@ function startDrag(bar: GanttBarModel, event: PointerEvent) {
 			currentDays = days
 			
 			// Update visual position without dispatching update
+			const dayOffset = days * DAY_WIDTH_PIXELS
+			const originalBarX = computeBarX(originalStart)
+			const barWidth = computeBarWidth(bar)
+			
 			if (barElement) {
-				const newX = computeBarX(originalStart) + (days * DAY_WIDTH_PIXELS)
+				const newX = originalBarX + dayOffset
 				barElement.setAttribute('x', newX.toString())
 			}
+			if (leftHandle) {
+				const newX = originalBarX + dayOffset - 3
+				leftHandle.setAttribute('x', newX.toString())
+			}
+			if (rightHandle) {
+				const newX = originalBarX + dayOffset + barWidth - 3
+				rightHandle.setAttribute('x', newX.toString())
+			}
 			if (textElement) {
-				const newX = computeBarX(originalStart) + (days * DAY_WIDTH_PIXELS) + 8
+				const newX = originalBarX + dayOffset + 8
 				textElement.setAttribute('x', newX.toString())
 			}
 		}
@@ -415,6 +460,102 @@ function startDrag(bar: GanttBarModel, event: PointerEvent) {
 			newEnd.setDate(newEnd.getDate() + currentDays)
 			
 			updateGanttTask(bar.id, newStart, newEnd)
+		}
+	}
+	
+	document.addEventListener('pointermove', handleMove)
+	document.addEventListener('pointerup', handleStop)
+}
+
+function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEvent) {
+	event.preventDefault()
+	event.stopPropagation() // Prevent drag from triggering
+	
+	const startX = event.clientX
+	const originalStart = new Date(bar.start)
+	const originalEnd = new Date(bar.end)
+	let currentDays = 0
+	
+	// Find the bar elements to update during resize
+	const barElement = (event.target as Element).closest('g')?.querySelector('.gantt-bar')
+	const leftHandle = (event.target as Element).closest('g')?.querySelector('.gantt-resize-left')
+	const rightHandle = (event.target as Element).closest('g')?.querySelector('.gantt-resize-right')
+	const textElement = (event.target as Element).closest('g')?.querySelector('.gantt-bar-text')
+	
+	const handleMove = (e: PointerEvent) => {
+		const diff = e.clientX - startX
+		const days = Math.round(diff / DAY_WIDTH_PIXELS)
+		
+		if (days !== currentDays) {
+			currentDays = days
+			
+			if (edge === 'start') {
+				// Resizing from the left (changing start date)
+				const newStart = new Date(originalStart)
+				newStart.setDate(newStart.getDate() + days)
+				
+				// Don't allow start date to go past end date
+				if (newStart >= originalEnd) return
+				
+				// Update visual elements
+				const newX = computeBarX(newStart)
+				const newWidth = computeBarX(originalEnd) - newX
+				
+				if (barElement && newWidth > 0) {
+					barElement.setAttribute('x', newX.toString())
+					barElement.setAttribute('width', newWidth.toString())
+				}
+				if (leftHandle) {
+					leftHandle.setAttribute('x', (newX - 3).toString())
+				}
+				if (textElement) {
+					textElement.setAttribute('x', (newX + 8).toString())
+				}
+			} else {
+				// Resizing from the right (changing end date)
+				const newEnd = new Date(originalEnd)
+				newEnd.setDate(newEnd.getDate() + days)
+				
+				// Don't allow end date to go before start date
+				if (newEnd <= originalStart) return
+				
+				// Update visual elements
+				const startX = computeBarX(originalStart)
+				const newWidth = computeBarX(newEnd) - startX
+				
+				if (barElement && newWidth > 0) {
+					barElement.setAttribute('width', newWidth.toString())
+				}
+				if (rightHandle) {
+					rightHandle.setAttribute('x', (startX + newWidth - 3).toString())
+				}
+			}
+		}
+	}
+	
+	const handleStop = () => {
+		document.removeEventListener('pointermove', handleMove)
+		document.removeEventListener('pointerup', handleStop)
+		
+		// Only dispatch update when resize is finished
+		if (currentDays !== 0) {
+			if (edge === 'start') {
+				const newStart = new Date(originalStart)
+				newStart.setDate(newStart.getDate() + currentDays)
+				
+				// Ensure start doesn't go past end
+				if (newStart < originalEnd) {
+					updateGanttTask(bar.id, newStart, originalEnd)
+				}
+			} else {
+				const newEnd = new Date(originalEnd)
+				newEnd.setDate(newEnd.getDate() + currentDays)
+				
+				// Ensure end doesn't go before start
+				if (newEnd > originalStart) {
+					updateGanttTask(bar.id, originalStart, newEnd)
+				}
+			}
 		}
 	}
 	
@@ -569,5 +710,33 @@ const dateIsToday = computed(() => (date: Date) => {
 	font-weight: 500;
 	pointer-events: none;
 	user-select: none;
+}
+
+// Resize handles
+.gantt-resize-handle {
+	cursor: col-resize;
+	opacity: 0;
+	transition: opacity 0.2s ease;
+	
+	&:hover {
+		opacity: 1;
+	}
+}
+
+.gantt-resize-left {
+	cursor: w-resize;
+}
+
+.gantt-resize-right {
+	cursor: e-resize;
+}
+
+// Show resize handles on bar hover
+:deep(g:hover) .gantt-resize-handle {
+	opacity: 0.8;
+	
+	&:hover {
+		opacity: 1;
+	}
 }
 </style>
