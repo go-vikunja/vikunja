@@ -12,6 +12,7 @@
 			:data-state="dataState"
 			v-bind="attrs"
 			@pointerdown="onPointerDown"
+			@dblclick="() => props.onDoubleClick?.(props.model)"
 			@focus="onFocus"
 			@blur="onBlur"
 			@keydown="onKeyDown"
@@ -33,8 +34,9 @@ const props = withDefaults(defineProps<{
   timelineStart: Date
   timelineEnd: Date
   onMove: (id: string, newStart: Date, newEnd: Date) => void
+  onDoubleClick?: (model: GanttBarModel) => void
   as?: string
-}>(), { as: 'div' })
+}>(), { as: 'div', onDoubleClick: undefined })
 const attrs = useAttrs()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const {dragging, selected, focused, onPointerDown, onFocus, onBlur, onKeyDown} = useGanttBar({

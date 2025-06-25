@@ -53,7 +53,7 @@
 					:padding="false"
 					class="has-overflow"
 				>
-					<GanttChart
+					<NewGanttChart
 						:filters="filters"
 						:tasks="tasks"
 						:is-loading="isLoading"
@@ -85,7 +85,7 @@ import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import TaskForm from '@/components/tasks/TaskForm.vue'
 
-import {createAsyncComponent} from '@/helpers/createAsyncComponent'
+import NewGanttChart from '@/components/tasks/NewGanttChart.vue'
 import {useGanttFilters} from '../../../views/project/helpers/useGanttFilters'
 import {RIGHTS} from '@/constants/rights'
 
@@ -101,7 +101,6 @@ const props = defineProps<{
 	viewId: IProjectView['id']
 }>()
 
-const GanttChart = createAsyncComponent(() => import('@/components/tasks/GanttChart.vue'))
 
 const baseStore = useBaseStore()
 const canWrite = computed(() => baseStore.currentProject?.maxRight > RIGHTS.READ)

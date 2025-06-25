@@ -1,6 +1,17 @@
 import {ref} from 'vue'
 
-export interface GanttBarModel { id: string; start: Date; end: Date }
+export interface GanttBarModel { 
+	id: string; 
+	start: Date; 
+	end: Date;
+	meta?: {
+		label?: string;
+		color?: string;
+		hasActualDates?: boolean;
+		isDone?: boolean;
+		task?: unknown;
+	}
+}
 export interface UseGanttBarOptions {
   model: GanttBarModel
   timelineStart: Date
@@ -19,8 +30,8 @@ export function useGanttBar(options: UseGanttBarOptions) {
 		const startX = e.clientX
 		const handleMove = (evt: PointerEvent) => {
 			const diff = evt.clientX - startX
-			// simplified: move one day per 20px
-			const days = Math.round(diff / 20)
+			// Use 24px per day to match our styling
+			const days = Math.round(diff / 24)
 			const newStart = new Date(options.model.start)
 			newStart.setDate(newStart.getDate() + days)
 			const newEnd = new Date(options.model.end)
