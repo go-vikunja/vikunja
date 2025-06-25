@@ -373,24 +373,49 @@ function getBarTextColor(bar: GanttBarModel) {
 }
 
 function startDrag(bar: GanttBarModel, event: PointerEvent) {
-	// Simple drag implementation
+	event.preventDefault()
+	
 	const startX = event.clientX
 	const originalStart = new Date(bar.start)
+	const originalEnd = new Date(bar.end)
+	let currentDays = 0
+	
+	// Find the bar element to update its position during drag
+	const barElement = (event.target as Element).closest('g')?.querySelector('rect')
+	const textElement = (event.target as Element).closest('g')?.querySelector('text')
 	
 	const handleMove = (e: PointerEvent) => {
 		const diff = e.clientX - startX
 		const days = Math.round(diff / DAY_WIDTH_PIXELS)
-		const newStart = new Date(originalStart)
-		newStart.setDate(newStart.getDate() + days)
-		const newEnd = new Date(bar.end)
-		newEnd.setDate(newEnd.getDate() + days)
 		
-		updateGanttTask(bar.id, newStart, newEnd)
+		if (days !== currentDays) {
+			currentDays = days
+			
+			// Update visual position without dispatching update
+			if (barElement) {
+				const newX = computeBarX(originalStart) + (days * DAY_WIDTH_PIXELS)
+				barElement.setAttribute('x', newX.toString())
+			}
+			if (textElement) {
+				const newX = computeBarX(originalStart) + (days * DAY_WIDTH_PIXELS) + 8
+				textElement.setAttribute('x', newX.toString())
+			}
+		}
 	}
 	
 	const handleStop = () => {
 		document.removeEventListener('pointermove', handleMove)
 		document.removeEventListener('pointerup', handleStop)
+		
+		// Only dispatch update when drag is finished
+		if (currentDays !== 0) {
+			const newStart = new Date(originalStart)
+			newStart.setDate(newStart.getDate() + currentDays)
+			const newEnd = new Date(originalEnd)
+			newEnd.setDate(newEnd.getDate() + currentDays)
+			
+			updateGanttTask(bar.id, newStart, newEnd)
+		}
 	}
 	
 	document.addEventListener('pointermove', handleMove)
