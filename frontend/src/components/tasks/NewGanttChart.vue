@@ -428,10 +428,17 @@ function startDrag(bar: GanttBarModel, event: PointerEvent) {
 	let currentDays = 0
 	
 	// Find the bar elements to update during drag
-	const barElement = (event.target as Element).closest('g')?.querySelector('.gantt-bar')
-	const leftHandle = (event.target as Element).closest('g')?.querySelector('.gantt-resize-left')
-	const rightHandle = (event.target as Element).closest('g')?.querySelector('.gantt-resize-right')
-	const textElement = (event.target as Element).closest('g')?.querySelector('.gantt-bar-text')
+	const barGroup = (event.target as Element).closest('g')
+	const barElement = barGroup?.querySelector('.gantt-bar')
+	const leftHandle = barGroup?.querySelector('.gantt-resize-left')
+	const rightHandle = barGroup?.querySelector('.gantt-resize-right') 
+	const textElement = barGroup?.querySelector('.gantt-bar-text')
+	const clipPath = barGroup?.querySelector('clipPath rect')
+	
+	// Bring the entire group to front during drag
+	if (barGroup) {
+		barGroup.parentElement?.appendChild(barGroup)
+	}
 	
 	const handleMove = (e: PointerEvent) => {
 		const diff = e.clientX - startX
@@ -460,6 +467,10 @@ function startDrag(bar: GanttBarModel, event: PointerEvent) {
 			if (textElement) {
 				const newX = originalBarX + dayOffset + 8
 				textElement.setAttribute('x', newX.toString())
+			}
+			if (clipPath) {
+				const newX = originalBarX + dayOffset + 2
+				clipPath.setAttribute('x', newX.toString())
 			}
 		}
 	}
@@ -493,10 +504,17 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 	let currentDays = 0
 	
 	// Find the bar elements to update during resize
-	const barElement = (event.target as Element).closest('g')?.querySelector('.gantt-bar')
-	const leftHandle = (event.target as Element).closest('g')?.querySelector('.gantt-resize-left')
-	const rightHandle = (event.target as Element).closest('g')?.querySelector('.gantt-resize-right')
-	const textElement = (event.target as Element).closest('g')?.querySelector('.gantt-bar-text')
+	const barGroup = (event.target as Element).closest('g')
+	const barElement = barGroup?.querySelector('.gantt-bar')
+	const leftHandle = barGroup?.querySelector('.gantt-resize-left')
+	const rightHandle = barGroup?.querySelector('.gantt-resize-right')
+	const textElement = barGroup?.querySelector('.gantt-bar-text')
+	const clipPath = barGroup?.querySelector('clipPath rect')
+	
+	// Bring the entire group to front during resize
+	if (barGroup) {
+		barGroup.parentElement?.appendChild(barGroup)
+	}
 	
 	const handleMove = (e: PointerEvent) => {
 		const diff = e.clientX - startX
@@ -527,6 +545,10 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 				if (textElement) {
 					textElement.setAttribute('x', (newX + 8).toString())
 				}
+				if (clipPath) {
+					clipPath.setAttribute('x', (newX + 2).toString())
+					clipPath.setAttribute('width', (newWidth - 4).toString())
+				}
 			} else {
 				// Resizing from the right (changing end date)
 				const newEnd = new Date(originalEnd)
@@ -544,6 +566,9 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 				}
 				if (rightHandle) {
 					rightHandle.setAttribute('x', (startX + newWidth - 3).toString())
+				}
+				if (clipPath) {  
+					clipPath.setAttribute('width', (newWidth - 4).toString())
 				}
 			}
 		}
