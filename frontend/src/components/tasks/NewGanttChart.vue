@@ -95,7 +95,6 @@
 								<g
 									v-for="bar in ganttBars[index]"
 									:key="bar.id"
-									@dblclick="openTask(bar)"
 								>
 									<!-- Main bar -->
 									<rect
@@ -110,6 +109,7 @@
 										:stroke-dasharray="!bar.meta?.hasActualDates ? '5,5' : 'none'"
 										class="gantt-bar"
 										@pointerdown="startDrag(bar, $event)"
+										@dblclick="openTask(bar)"
 									/>
 									
 									<!-- Left resize handle -->
