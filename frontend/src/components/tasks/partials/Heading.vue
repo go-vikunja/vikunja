@@ -1,7 +1,7 @@
 <template>
 	<div class="heading">
-		<div class="tw-flex tw-items-center md:tw-items-stretch tw-flex-col tw-gap-1 task-properties">
-			<div class="tw-flex tw-items-center tw-gap-2">
+		<div class="tw:flex tw:items-center md:tw:items-stretch tw:flex-col tw:gap-1 task-properties">
+			<div class="tw:flex tw:items-center tw:gap-2">
 				<ColorBubble
 					v-if="task.hexColor !== ''"
 					:color="getHexColor(task.hexColor)"

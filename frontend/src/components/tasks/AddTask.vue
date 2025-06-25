@@ -6,7 +6,7 @@
 		<div class="add-task__field field is-grouped">
 			<p class="control has-icons-left has-icons-right is-expanded">
 				<label
-					class="tw-sr-only"
+					class="tw:sr-only"
 					:for="textareaId"
 				>
 					{{ $t('project.list.addPlaceholder') }}

@@ -54,7 +54,7 @@
 				:class="{'is-favorite': project.isFavorite}"
 				@click="projectStore.toggleProjectFavorite(project)"
 			>
-				<span class="tw-sr-only">{{ project.isFavorite ? $t('project.unfavorite') : $t('project.favorite') }}</span>
+				<span class="tw:sr-only">{{ project.isFavorite ? $t('project.unfavorite') : $t('project.favorite') }}</span>
 				<Icon :icon="project.isFavorite ? 'star' : ['far', 'star']" />
 			</BaseButton>
 			<ProjectSettingsDropdown
@@ -67,7 +67,7 @@
 						class="menu-list-dropdown-trigger"
 						@click="toggleOpen"
 					>
-						<span class="tw-sr-only">{{ $t('project.openSettingsMenu') }}</span>
+						<span class="tw:sr-only">{{ $t('project.openSettingsMenu') }}</span>
 						<Icon
 							icon="ellipsis-h"
 							class="icon"
