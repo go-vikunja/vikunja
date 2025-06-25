@@ -6,7 +6,7 @@
 		@select="onSelect"
 	>
 		<div
-			class="w-full flex items-center border-b"
+			class="w-full flex items-center"
 			:class="selected ? 'bg-row-selected' : (index % 2 ? 'bg-row-alt' : 'bg-row')"
 			role="presentation"
 		>
