@@ -33,11 +33,11 @@ import GanttBarPrimitive from '../primitives/GanttBarPrimitive.vue'
 import type {GanttBarModel} from '@/composables/useGanttBar'
 const props = defineProps<{ model:GanttBarModel; timelineStart:Date; timelineEnd:Date; onMove:(id:string,start:Date,end:Date)=>void }>()
 function computeX(date: Date) {
-  return (date.getTime() - props.timelineStart.getTime()) / (1000*60*60*24) * 24
+	return (date.getTime() - props.timelineStart.getTime()) / (1000*60*60*24) * 24
 }
 function computeWidth(bar: GanttBarModel) {
-  const diff = (bar.end.getTime() - bar.start.getTime()) / (1000*60*60*24)
-  return diff * 24
+	const diff = (bar.end.getTime() - bar.start.getTime()) / (1000*60*60*24)
+	return diff * 24
 }
 </script>
 

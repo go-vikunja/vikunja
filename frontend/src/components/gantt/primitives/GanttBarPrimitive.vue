@@ -38,10 +38,10 @@ const props = withDefaults(defineProps<{
 const attrs = useAttrs()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const {dragging, selected, focused, onPointerDown, onFocus, onBlur, onKeyDown} = useGanttBar({
-  model: props.model,
-  timelineStart: props.timelineStart,
-  timelineEnd: props.timelineEnd,
-  onMove: props.onMove,
+	model: props.model,
+	timelineStart: props.timelineStart,
+	timelineEnd: props.timelineEnd,
+	onMove: props.onMove,
 })
 const ariaMin = computed(()=>props.timelineStart.valueOf())
 const ariaMax = computed(()=>props.timelineEnd.valueOf())
