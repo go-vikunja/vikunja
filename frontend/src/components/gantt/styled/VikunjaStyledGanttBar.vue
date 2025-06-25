@@ -42,35 +42,16 @@ const props = defineProps<{ model:GanttBarModel; timelineStart:Date; timelineEnd
 
 function computeX(date: Date) {
 	const x = (date.getTime() - props.timelineStart.getTime()) / (1000*60*60*24) * 30
-	console.log('Bar X position:', { 
-		taskId: props.model.id, 
-		date: date, 
-		timelineStart: props.timelineStart, 
-		x: x, 
-	})
 	return x
 }
 
 function computeWidth(bar: GanttBarModel) {
 	const diff = (bar.end.getTime() - bar.start.getTime()) / (1000*60*60*24)
 	const width = diff * 30
-	console.log('Bar width:', { 
-		taskId: bar.id, 
-		diff: diff, 
-		width: width, 
-	})
 	return width
 }
 
 function getBarFill(dragging: boolean, selected: boolean) {
-	console.log('Bar fill debug:', {
-		taskId: props.model.id,
-		dragging,
-		selected,
-		hasActualDates: props.model.meta?.hasActualDates,
-		color: props.model.meta?.color,
-	})
-	
 	if (dragging) return '#3498db' // Blue for dragging
 	if (selected) return '#2980b9' // Darker blue for selected
 	
