@@ -15,7 +15,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref} from 'vue'
+import {ref, computed} from 'vue'
 import {onClickOutside} from '@vueuse/core'
 
 const props = defineProps<{ rows: string[]; cellsByRow: Record<string,string[]> }>()

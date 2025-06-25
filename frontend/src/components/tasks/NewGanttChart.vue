@@ -113,7 +113,7 @@ const router = useRouter()
 const dateFromDate = computed(() => new Date(new Date(filters.value.dateFrom).setHours(0,0,0,0)))
 const dateToDate = computed(() => new Date(new Date(filters.value.dateTo).setHours(23,59,0,0)))
 
-const DAY_WIDTH_PIXELS = 24
+const DAY_WIDTH_PIXELS = 30
 const totalWidth = computed(() => {
 	const dateDiff = Math.ceil((dateToDate.value.valueOf() - dateFromDate.value.valueOf()) / MILLISECONDS_A_DAY)
 	return dateDiff * DAY_WIDTH_PIXELS
@@ -275,28 +275,24 @@ const dateIsToday = computed(() => (date: Date) => {
 	z-index: 10;
 }
 
-.timeunit {
-	border-right: 1px solid var(--grey-200);
+.timeunit .timeunit-wrapper {
+	padding: 0.5rem 0;
+	font-size: 1rem;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	width: 100%;
+	font-family: $vikunja-font;
 	
-	.timeunit-wrapper {
-		padding: 0.5rem 0;
-		font-size: 1rem;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		width: 100%;
-		font-family: $vikunja-font;
-		
-		&.today {
-			background: var(--primary);
-			color: var(--white);
-			border-radius: 5px 5px 0 0;
-			font-weight: bold;
-		}
-		
-		.weekday {
-			font-size: 0.8rem;
-		}
+	&.today {
+		background: var(--primary);
+		color: var(--white);
+		border-radius: 5px 5px 0 0;
+		font-weight: bold;
+	}
+	
+	.weekday {
+		font-size: 0.8rem;
 	}
 }
 
