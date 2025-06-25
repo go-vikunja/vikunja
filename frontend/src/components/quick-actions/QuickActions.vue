@@ -484,7 +484,11 @@ async function doAction(type: ACTION_TYPE, item: DoAction) {
 			searchInput.value?.focus()
 			break
 		case ACTION_TYPE.LABELS:
-			query.value = '*' + item.title
+			if (/\s/.test(item.title)) {
+				query.value = '*"' + item.title + '"'
+			} else {
+				query.value = '*' + item.title
+			}
 			searchInput.value?.focus()
 			searchTasks()
 			break
