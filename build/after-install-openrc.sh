@@ -1,6 +1,5 @@
-#!/bin/bash
-
-systemctl enable vikunja.service
+#!/bin/sh
+rc-update add vikunja default
 
 # Fix the config to contain proper values
 NEW_SECRET=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)

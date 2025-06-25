@@ -10,6 +10,12 @@ priority: "extra"
 license: "AGPLv3"
 depends:
   - systemd
+overrides:
+  apk:
+    depends:
+      - openrc
+    scripts:
+      postinstall: ./build/after-install-openrc.sh
 contents:
   - src: <binlocation>
     dst: /opt/vikunja/vikunja
@@ -21,5 +27,9 @@ contents:
     type: "symlink"
   - src: vikunja.service
     dst: /usr/lib/systemd/system/vikunja.service
+  - src: vikunja.initd
+    dst: /etc/init.d/vikunja
+    type: "config"
+    packager: apk
 scripts:
   postinstall: ./build/after-install.sh

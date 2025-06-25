@@ -12,6 +12,7 @@ in {
     git-cliff 
     actionlint
     crowdin-cli
+    nfpm
     # API tools
     golangci-lint mage
     # Desktop
