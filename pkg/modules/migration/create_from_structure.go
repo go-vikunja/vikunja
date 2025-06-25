@@ -18,7 +18,6 @@ package migration
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 
 	"xorm.io/xorm"
@@ -181,7 +180,22 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 	if len(project.Buckets) > 0 {
 		log.Debugf("[creating structure] Creating %d buckets", len(project.Buckets))
 	}
-	for _, bucket := range originalBuckets {
+
+	// ensureBucketForImport returns an existing bucket for the given old bucket ID or
+	// creates one if it doesn't exist yet.
+	ensureBucketForImport := func(s *xorm.Session, bucket *models.Bucket) (newBucket *models.Bucket, err error) {
+		if bucket == nil {
+			return
+		}
+
+		if bucket.ID == 0 {
+			return
+		}
+
+		if newBucket, exists := bucketsByOldID[bucket.ID]; exists {
+			return newBucket, nil
+		}
+
 		oldID := bucket.ID
 		bucket.ID = 0 // We want a new id
 		bucket.ProjectID = project.ID
@@ -189,8 +203,18 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		if err != nil {
 			return
 		}
+
 		bucketsByOldID[oldID] = bucket
 		log.Debugf("[creating structure] Created bucket %d, old ID was %d", bucket.ID, oldID)
+
+		return bucket, nil
+	}
+
+	for _, bucket := range originalBuckets {
+		_, err = ensureBucketForImport(s, bucket)
+		if err != nil {
+			return
+		}
 	}
 
 	// Create all views, create default views if we don't have any
@@ -301,14 +325,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		oldid := t.ID
 		t.ProjectID = project.ID
 		originalBucketID := t.BucketID
-		if bucket, err2 := ensureBucketForImport(s, project, bucketsByOldID, &originalBuckets, originalBucketID, user); err2 != nil {
-			err = err2
-			return
-		} else if bucket != nil {
-			t.BucketID = bucket.ID
-		} else {
-			t.BucketID = 0
-		}
+		t.BucketID = 0
 		err = t.Create(s, user)
 		if err != nil && models.IsErrTaskCannotBeEmpty(err) {
 			continue
@@ -343,21 +360,16 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 					oldid := rt.ID
 					rt.ProjectID = t.ProjectID
 					originalBucketID := rt.BucketID
-					if bucket, err2 := ensureBucketForImport(s, project, bucketsByOldID, &originalBuckets, originalBucketID, user); err2 != nil {
-						log.Debugf("[creating structure] Error while creating related bucket %d: %s", originalBucketID, err2.Error())
-						err = err2
-						return
-					} else if bucket != nil {
-						rt.BucketID = bucket.ID
-					} else {
-						rt.BucketID = 0
-					}
+					rt.BucketID = 0
+
 					err = rt.Create(s, user)
 					if err != nil {
 						log.Debugf("[creating structure] Error while creating related task %d: %s", rt.ID, err.Error())
 						return
 					}
+
 					rt.BucketID = originalBucketID
+
 					err = setBucketOrDefault(rt)
 					if err != nil {
 						return
@@ -552,30 +564,4 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 	project.Buckets = originalBuckets
 
 	return nil
-}
-
-// ensureBucketForImport returns an existing bucket for the given old bucket ID or
-// creates one if it doesn't exist yet.
-func ensureBucketForImport(s *xorm.Session, project *models.ProjectWithTasksAndBuckets, bucketsByOldID map[int64]*models.Bucket, originalBuckets *[]*models.Bucket, oldID int64, user *user.User) (*models.Bucket, error) {
-	if oldID == 0 {
-		return nil, nil
-	}
-
-	if bucket, exists := bucketsByOldID[oldID]; exists {
-		return bucket, nil
-	}
-
-	newBucket := &models.Bucket{
-		ProjectID:     project.ID,
-		ProjectViewID: project.Views[0].ID,
-		Title:         fmt.Sprintf("Imported Bucket %d", oldID),
-	}
-	if err := newBucket.Create(s, user); err != nil {
-		return nil, err
-	}
-
-	bucketsByOldID[oldID] = newBucket
-	*originalBuckets = append(*originalBuckets, newBucket)
-
-	return newBucket, nil
 }
