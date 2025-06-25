@@ -62,7 +62,7 @@
 <script setup lang="ts">
 import {ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
-import XButton from '@/components/base/XButton.vue'
+import XButton from '@/components/input/Button.vue'
 import Modal from '@/components/misc/Modal.vue'
 import type {SortBy} from '@/composables/useTaskList'
 
@@ -76,28 +76,28 @@ const sortField = ref<string>('position')
 const sortOrder = ref<'asc' | 'desc'>('asc')
 
 watch(() => props.modelValue, (val) => {
-        const key = Object.keys(val)[0] || 'position'
-        sortField.value = key
-        sortOrder.value = (val as SortBy)[key as keyof SortBy] ?? 'asc'
+	const key = Object.keys(val)[0] || 'position'
+	sortField.value = key
+	sortOrder.value = (val as SortBy)[key as keyof SortBy] ?? 'asc'
 }, {immediate: true})
 
 const options = [
-        {value: 'position', label: t('sorting.position')},
-        {value: 'title', label: t('task.attributes.title')},
-        {value: 'priority', label: t('task.attributes.priority')},
-        {value: 'due_date', label: t('task.attributes.dueDate')},
-        {value: 'start_date', label: t('task.attributes.startDate')},
-        {value: 'end_date', label: t('task.attributes.endDate')},
-        {value: 'percent_done', label: t('task.attributes.percentDone')},
-        {value: 'created', label: t('task.attributes.created')},
-        {value: 'updated', label: t('task.attributes.updated')},
+	{value: 'position', label: t('sorting.position')},
+	{value: 'title', label: t('task.attributes.title')},
+	{value: 'priority', label: t('task.attributes.priority')},
+	{value: 'due_date', label: t('task.attributes.dueDate')},
+	{value: 'start_date', label: t('task.attributes.startDate')},
+	{value: 'end_date', label: t('task.attributes.endDate')},
+	{value: 'percent_done', label: t('task.attributes.percentDone')},
+	{value: 'created', label: t('task.attributes.created')},
+	{value: 'updated', label: t('task.attributes.updated')},
 ]
 
 function applySort() {
-        const sort: SortBy = {} as SortBy
+	const sort: SortBy = {} as SortBy
         ;(sort as Record<string, 'asc' | 'desc'>)[sortField.value] = sortOrder.value
-        emit('update:modelValue', sort)
-        modalOpen.value = false
+	emit('update:modelValue', sort)
+	modalOpen.value = false
 }
 </script>
 
