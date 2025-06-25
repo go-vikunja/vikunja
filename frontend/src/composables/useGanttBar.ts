@@ -30,8 +30,8 @@ export function useGanttBar(options: UseGanttBarOptions) {
 		const startX = e.clientX
 		const handleMove = (evt: PointerEvent) => {
 			const diff = evt.clientX - startX
-			// Use 24px per day to match our styling
-			const days = Math.round(diff / 24)
+			// Use 30px per day to match our styling
+			const days = Math.round(diff / 30)
 			const newStart = new Date(options.model.start)
 			newStart.setDate(newStart.getDate() + days)
 			const newEnd = new Date(options.model.end)

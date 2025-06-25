@@ -60,22 +60,44 @@
 						@select="onRowSelect"
 						@focus="onRowFocus"
 					>
-						<!-- SVG container for bars in this row -->
-						<svg
-							class="gantt-row-bars"
-							:width="totalWidth"
-							height="24"
-						>
-							<VikunjaStyledGanttBar
-								v-for="bar in ganttBars[index]"
-								:key="bar.id"
-								:model="bar"
-								:timeline-start="dateFromDate"
-								:timeline-end="dateToDate"
-								:on-move="updateGanttTask"
-								:on-double-click="openTask"
-							/>
-						</svg>
+						<!-- Row content with relative positioning -->
+						<div class="gantt-row-content">
+							<!-- SVG container for bars in this row -->
+							<svg
+								class="gantt-row-bars"
+								:width="totalWidth"
+								height="32"
+								xmlns="http://www.w3.org/2000/svg"
+							>
+								<g
+									v-for="bar in ganttBars[index]"
+									:key="bar.id"
+									@dblclick="openTask(bar)"
+									@pointerdown="startDrag(bar, $event)"
+								>
+									<rect
+										:x="computeBarX(bar.start)"
+										:y="2"
+										:width="computeBarWidth(bar)"
+										:height="28"
+										:rx="4"
+										:fill="getBarFill(bar)"
+										:stroke="getBarStroke(bar)"
+										:stroke-width="getBarStrokeWidth(bar)"
+										:stroke-dasharray="!bar.meta?.hasActualDates ? '5,5' : 'none'"
+										class="gantt-bar"
+									/>
+									<text
+										:x="computeBarX(bar.start) + 8"
+										:y="20"
+										class="gantt-bar-text"
+										:fill="getBarTextColor(bar)"
+									>
+										{{ bar.meta?.label || bar.id }}
+									</text>
+								</g>
+							</svg>
+						</div>
 					</VikunjaStyledGanttRow>
 				</div>
 			</VikunjaStyledGanttChart>
@@ -96,7 +118,6 @@ import type {GanttFilters} from '@/views/project/helpers/useGanttFilters'
 import type {GanttBarModel} from '@/composables/useGanttBar'
 
 import VikunjaStyledGanttChart from '@/components/gantt/styled/VikunjaStyledGanttChart.vue'
-import VikunjaStyledGanttBar from '@/components/gantt/styled/VikunjaStyledGanttBar.vue'
 import VikunjaStyledGanttRow from '@/components/gantt/styled/VikunjaStyledGanttRow.vue'
 import Loading from '@/components/misc/Loading.vue'
 
@@ -199,7 +220,7 @@ function transformTaskToGanttBar(t: ITask): GanttBarModel {
 	
 	const taskColor = getHexColor(t.hexColor)
 	
-	return {
+	const bar = {
 		id: String(t.id),
 		start: startDate,
 		end: endDate,
@@ -211,6 +232,17 @@ function transformTaskToGanttBar(t: ITask): GanttBarModel {
 			isDone: t.done,
 		},
 	}
+	
+	// Debug individual bars
+	console.log('Creating bar for task:', t.title, {
+		id: bar.id,
+		start: bar.start,
+		end: bar.end,
+		hasActualDates: bar.meta.hasActualDates,
+		color: bar.meta.color,
+	})
+	
+	return bar
 }
 
 /**
@@ -259,6 +291,17 @@ watch(
 		ganttBars.value = bars.map(bar => [bar])
 		ganttRows.value = rows
 		cellsByRow.value = cells
+		
+		// Debug logging
+		console.log('Gantt Debug:', {
+			totalTasks: tasks.value.size,
+			filteredTasks: filteredTasks.length,
+			bars: bars.length,
+			rows: rows.length,
+			dateFrom: dateFromDate.value,
+			dateTo: dateToDate.value,
+			showTasksWithoutDates: filters.value.showTasksWithoutDates,
+		})
 	},
 	{deep: true, immediate: true},
 )
@@ -289,6 +332,89 @@ function onRowSelect() {
 
 function onRowFocus() {
 	// Handle row focus if needed
+}
+
+// Direct SVG bar rendering functions
+function computeBarX(startDate: Date) {
+	const x = (startDate.getTime() - dateFromDate.value.getTime()) / (1000*60*60*24) * DAY_WIDTH_PIXELS
+	console.log('Direct bar X:', { startDate, x })
+	return x
+}
+
+function computeBarWidth(bar: GanttBarModel) {
+	const diff = (bar.end.getTime() - bar.start.getTime()) / (1000*60*60*24)
+	const width = diff * DAY_WIDTH_PIXELS
+	console.log('Direct bar width:', { taskId: bar.id, diff, width })
+	return width
+}
+
+function getBarFill(bar: GanttBarModel) {
+	// Use task color if available and has actual dates
+	if (bar.meta?.hasActualDates && bar.meta?.color) {
+		return bar.meta.color
+	}
+	
+	// Default colors
+	if (bar.meta?.hasActualDates) {
+		return '#1dd1a1' // Primary green
+	}
+	
+	return '#d3d3d3' // Light gray for tasks without dates
+}
+
+function getBarStroke(bar: GanttBarModel) {
+	if (!bar.meta?.hasActualDates) {
+		return '#bdc3c7' // Gray for dashed border
+	}
+	return 'none'
+}
+
+function getBarStrokeWidth(bar: GanttBarModel) {
+	if (!bar.meta?.hasActualDates) {
+		return '2'
+	}
+	return '0'
+}
+
+function getBarTextColor(bar: GanttBarModel) {
+	// For tasks without actual dates, use dark text
+	if (!bar.meta?.hasActualDates) {
+		return '#2c3e50'
+	}
+	
+	// For tasks with color, determine text color based on background
+	if (bar.meta?.color) {
+		// Simple brightness check - you may want to import colorIsDark if needed
+		return '#ffffff'
+	}
+	
+	// Default for primary color background (white text on green)
+	return '#ffffff'
+}
+
+function startDrag(bar: GanttBarModel, event: PointerEvent) {
+	// Simple drag implementation
+	const startX = event.clientX
+	const originalStart = new Date(bar.start)
+	
+	const handleMove = (e: PointerEvent) => {
+		const diff = e.clientX - startX
+		const days = Math.round(diff / DAY_WIDTH_PIXELS)
+		const newStart = new Date(originalStart)
+		newStart.setDate(newStart.getDate() + days)
+		const newEnd = new Date(bar.end)
+		newEnd.setDate(newEnd.getDate() + days)
+		
+		updateGanttTask(bar.id, newStart, newEnd)
+	}
+	
+	const handleStop = () => {
+		document.removeEventListener('pointermove', handleMove)
+		document.removeEventListener('pointerup', handleStop)
+	}
+	
+	document.addEventListener('pointermove', handleMove)
+	document.addEventListener('pointerup', handleStop)
 }
 
 const weekDayFromDate = useWeekDayFromDate()
@@ -376,14 +502,67 @@ const dateIsToday = computed(() => (date: Date) => {
 	position: relative;
 }
 
+.gantt-row-content {
+	position: relative;
+	min-height: 32px;
+	width: 100%;
+}
+
 .gantt-row-bars {
 	position: absolute;
 	top: 0;
 	left: 0;
 	pointer-events: none;
+	z-index: 5;
 	
 	:deep(rect) {
 		pointer-events: all;
+		cursor: grab;
+		
+		&:hover {
+			opacity: 0.8;
+		}
 	}
+	
+	:deep(text) {
+		pointer-events: none;
+		user-select: none;
+	}
+}
+
+// Ensure rows have minimum height and proper styling
+:deep(.gantt-row) {
+	min-height: 32px;
+	position: relative;
+	border-bottom: 1px solid var(--grey-200);
+	
+	&:nth-child(odd) {
+		background: var(--row-alt-bg);
+	}
+	
+	&:nth-child(even) {
+		background: var(--row-bg);
+	}
+}
+
+// SVG bar styling
+.gantt-bar {
+	cursor: grab;
+	
+	&:hover {
+		opacity: 0.8;
+	}
+	
+	&:active {
+		cursor: grabbing;
+	}
+}
+
+.gantt-bar-text {
+	font-family: $vikunja-font;
+	font-size: 14px;
+	font-weight: 500;
+	pointer-events: none;
+	user-select: none;
 }
 </style>
