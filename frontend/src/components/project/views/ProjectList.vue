@@ -175,7 +175,7 @@ watch(
 )
 
 const isPositionSorting = computed(() => {
-        return Object.keys(sortByParam.value).length === 0 || (Object.keys(sortByParam.value).length === 1 && typeof sortByParam.value.position !== 'undefined')
+	return Object.keys(sortByParam.value).length === 0 || (Object.keys(sortByParam.value).length === 1 && typeof sortByParam.value.position !== 'undefined')
 })
 
 const firstNewPosition = computed(() => {
@@ -217,15 +217,15 @@ function focusNewTaskInput() {
 }
 
 function updateTaskList(task: ITask) {
-        if (!isPositionSorting.value) {
-                // reload tasks with current filter and sorting
-                loadTasks()
-        } else {
-                allTasks.value = [
-                        task,
-                        ...allTasks.value,
-                ]
-        }
+	if (!isPositionSorting.value) {
+		// reload tasks with current filter and sorting
+		loadTasks()
+	} else {
+		allTasks.value = [
+			task,
+			...allTasks.value,
+		]
+	}
 
 	baseStore.setHasTasks(true)
 }
@@ -290,7 +290,7 @@ async function saveTaskPosition(e: { originalEvent?: MouseEvent, to: HTMLElement
 }
 
 function prepareFiltersAndLoadTasks() {
-        loadTasks()
+	loadTasks()
 }
 
 const taskRefs = ref<(InstanceType<typeof SingleTaskInProject> | null)[]>([])
