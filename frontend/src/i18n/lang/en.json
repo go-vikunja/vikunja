@@ -434,7 +434,8 @@
       "addPlaceholder": "Add a task…",
       "empty": "This project is currently empty.",
       "newTaskCta": "Create a task.",
-      "editTask": "Edit Task"
+      "editTask": "Edit Task",
+      "sort": "Sort"
     },
     "gantt": {
       "title": "Gantt",
@@ -624,6 +625,29 @@
           "priorityOneOrTwoPastDue": "Matches tasks with priority level 1 or 2 and a due date in the past"
         }
       }
+    }
+  },
+  "sorting": {
+    "manually": "Manually",
+    "apply": "Apply sort",
+    "description": "Choose how tasks in this list are sorted. When sorting manually, you can drag and drop tasks to reorder them.",
+    "options": {
+      "titleAsc": "Title (A–Z)",
+      "titleDesc": "Title (Z–A)",
+      "priorityDesc": "Priority (Highest first)",
+      "priorityAsc": "Priority (Lowest first)",
+      "dueDateAsc": "Due date (Earliest first)",
+      "dueDateDesc": "Due date (Latest first)",
+      "startDateAsc": "Start date (Earliest first)",
+      "startDateDesc": "Start date (Latest first)",
+      "endDateAsc": "End date (Earliest first)",
+      "endDateDesc": "End date (Latest first)",
+      "percentDoneDesc": "% done (Most done first)",
+      "percentDoneAsc": "% done (Least done first)",
+      "createdDesc": "Created (Newest first)",
+      "createdAsc": "Created (Oldest first)",
+      "updatedDesc": "Updated (Newest first)",
+      "updatedAsc": "Updated (Oldest first)"
     }
   },
   "migrate": {
