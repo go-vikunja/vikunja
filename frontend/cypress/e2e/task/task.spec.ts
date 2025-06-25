@@ -500,11 +500,11 @@ describe('Task', () => {
 			})
 			const labels = LabelFactory.create(1)
 			LabelTaskFactory.truncate()
-                       TaskBucketFactory.create(1, {
-                               task_id: tasks[0].id,
-                               bucket_id: buckets[0].id,
-                               project_view_id: buckets[0].project_view_id,
-                       })
+			TaskBucketFactory.create(1, {
+				task_id: tasks[0].id,
+				bucket_id: buckets[0].id,
+				project_view_id: buckets[0].project_view_id,
+			})
 
 			cy.visit(`/projects/${projects[0].id}/4`)
 
@@ -888,21 +888,21 @@ describe('Task', () => {
 			uploadAttachmentAndVerify(tasks[0].id)
 		})
 
-               it('Can add an attachment to a task and see it appearing on kanban', () => {
-                       TaskAttachmentFactory.truncate()
-                       const tasks = TaskFactory.create(1, {
-                               id: 1,
-                               project_id: projects[0].id,
-                       })
-                       const labels = LabelFactory.create(1)
-                       LabelTaskFactory.truncate()
-                       TaskBucketFactory.create(1, {
-                               task_id: tasks[0].id,
-                               bucket_id: buckets[0].id,
-                               project_view_id: buckets[0].project_view_id,
-                       })
+		it('Can add an attachment to a task and see it appearing on kanban', () => {
+			TaskAttachmentFactory.truncate()
+			const tasks = TaskFactory.create(1, {
+				id: 1,
+				project_id: projects[0].id,
+			})
+			const labels = LabelFactory.create(1)
+			LabelTaskFactory.truncate()
+			TaskBucketFactory.create(1, {
+				task_id: tasks[0].id,
+				bucket_id: buckets[0].id,
+				project_view_id: buckets[0].project_view_id,
+			})
 
-                       cy.visit(`/projects/${projects[0].id}/4`)
+			cy.visit(`/projects/${projects[0].id}/4`)
 
 			cy.get('.bucket .task')
 				.contains(tasks[0].title)
