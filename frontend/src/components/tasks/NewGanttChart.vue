@@ -233,14 +233,6 @@ function transformTaskToGanttBar(t: ITask): GanttBarModel {
 		},
 	}
 	
-	// Debug individual bars
-	console.log('Creating bar for task:', t.title, {
-		id: bar.id,
-		start: bar.start,
-		end: bar.end,
-		hasActualDates: bar.meta.hasActualDates,
-		color: bar.meta.color,
-	})
 	
 	return bar
 }
@@ -292,16 +284,6 @@ watch(
 		ganttRows.value = rows
 		cellsByRow.value = cells
 		
-		// Debug logging
-		console.log('Gantt Debug:', {
-			totalTasks: tasks.value.size,
-			filteredTasks: filteredTasks.length,
-			bars: bars.length,
-			rows: rows.length,
-			dateFrom: dateFromDate.value,
-			dateTo: dateToDate.value,
-			showTasksWithoutDates: filters.value.showTasksWithoutDates,
-		})
 	},
 	{deep: true, immediate: true},
 )
@@ -337,14 +319,12 @@ function onRowFocus() {
 // Direct SVG bar rendering functions
 function computeBarX(startDate: Date) {
 	const x = (startDate.getTime() - dateFromDate.value.getTime()) / (1000*60*60*24) * DAY_WIDTH_PIXELS
-	console.log('Direct bar X:', { startDate, x })
 	return x
 }
 
 function computeBarWidth(bar: GanttBarModel) {
 	const diff = (bar.end.getTime() - bar.start.getTime()) / (1000*60*60*24)
 	const width = diff * DAY_WIDTH_PIXELS
-	console.log('Direct bar width:', { taskId: bar.id, diff, width })
 	return width
 }
 
