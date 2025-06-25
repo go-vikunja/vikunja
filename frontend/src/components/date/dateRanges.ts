@@ -4,13 +4,13 @@ export const DATE_RANGES = {
 	// is the "from" date, the second one is the "to" date.
 	'today': ['now/d', 'now/d+1d'],
 
-	'lastWeek': ['now/w-1w', 'now/w-2w'],
+	'lastWeek': ['now/w-1w', 'now/w'],
 	'thisWeek': ['now/w', 'now/w+1w'],
 	'restOfThisWeek': ['now', 'now/w+1w'],
 	'nextWeek': ['now/w+1w', 'now/w+2w'],
 	'next7Days': ['now', 'now+7d'],
 
-	'lastMonth': ['now/M-1M', 'now/M-2M'],
+	'lastMonth': ['now/M-1M', 'now/M'],
 	'thisMonth': ['now/M', 'now/M+1M'],
 	'restOfThisMonth': ['now', 'now/M+1M'],
 	'nextMonth': ['now/M+1M', 'now/M+2M'],
@@ -26,7 +26,7 @@ export const DATE_VALUES = {
 	'endOfToday': 'now/d+1d',
 
 	'beginningOflastWeek': 'now/w-1w',
-	'endOfLastWeek': 'now/w-2w',
+	'endOfLastWeek': 'now/w',
 	'beginningOfThisWeek': 'now/w',
 	'endOfThisWeek': 'now/w+1w',
 	'startOfNextWeek': 'now/w+1w',
@@ -34,7 +34,7 @@ export const DATE_VALUES = {
 	'in7Days': 'now+7d',
 
 	'beginningOfLastMonth': 'now/M-1M',
-	'endOfLastMonth': 'now/M-2M',
+	'endOfLastMonth': 'now/M',
 	'startOfThisMonth': 'now/M',
 	'endOfThisMonth': 'now/M+1M',
 	'startOfNextMonth': 'now/M+1M',
