@@ -181,19 +181,9 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		log.Debugf("[creating structure] Creating %d buckets", len(project.Buckets))
 	}
 
-	// ensureBucketForImport returns an existing bucket for the given old bucket ID or
-	// creates one if it doesn't exist yet.
-	ensureBucketForImport := func(s *xorm.Session, bucket *models.Bucket) (newBucket *models.Bucket, err error) {
-		if bucket == nil {
-			return
-		}
-
-		if bucket.ID == 0 {
-			return
-		}
-
-		if newBucket, exists := bucketsByOldID[bucket.ID]; exists {
-			return newBucket, nil
+	for _, bucket := range originalBuckets {
+		if _, exists := bucketsByOldID[bucket.ID]; exists {
+			continue
 		}
 
 		oldID := bucket.ID
@@ -206,15 +196,6 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 
 		bucketsByOldID[oldID] = bucket
 		log.Debugf("[creating structure] Created bucket %d, old ID was %d", bucket.ID, oldID)
-
-		return bucket, nil
-	}
-
-	for _, bucket := range originalBuckets {
-		_, err = ensureBucketForImport(s, bucket)
-		if err != nil {
-			return
-		}
 	}
 
 	// Create all views, create default views if we don't have any
