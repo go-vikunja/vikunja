@@ -8,7 +8,8 @@
   --bar-stroke-focus: #084298;
   --text-on-bar: #fff;
 }
-@media (prefers-color-scheme: dark), .dark-mode {
+
+.dark {
   :root {
     --row-bg: #1f1f1f;
     --row-alt-bg: #2c2c2c;
