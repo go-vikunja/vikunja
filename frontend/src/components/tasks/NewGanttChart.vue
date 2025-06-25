@@ -66,7 +66,7 @@
 							<svg
 								class="gantt-row-bars"
 								:width="totalWidth"
-								height="32"
+								height="40"
 								xmlns="http://www.w3.org/2000/svg"
 							>
 								<g
@@ -77,7 +77,7 @@
 									<!-- Main bar -->
 									<rect
 										:x="computeBarX(bar.start)"
-										:y="2"
+										:y="6"
 										:width="computeBarWidth(bar)"
 										:height="28"
 										:rx="4"
@@ -92,7 +92,7 @@
 									<!-- Left resize handle -->
 									<rect
 										:x="computeBarX(bar.start) - 3"
-										:y="2"
+										:y="6"
 										:width="6"
 										:height="28"
 										:rx="3"
@@ -106,7 +106,7 @@
 									<!-- Right resize handle -->
 									<rect
 										:x="computeBarX(bar.start) + computeBarWidth(bar) - 3"
-										:y="2"
+										:y="6"
 										:width="6"
 										:height="28"
 										:rx="3"
@@ -117,12 +117,24 @@
 										@pointerdown="startResize(bar, 'end', $event)"
 									/>
 									
-									<!-- Task label -->
+									<!-- Task label with clipping -->
+									<defs>
+										<clipPath :id="`clip-${bar.id}`">
+											<rect
+												:x="computeBarX(bar.start) + 2"
+												:y="6"
+												:width="computeBarWidth(bar) - 4"
+												:height="28"
+												:rx="4"
+											/>
+										</clipPath>
+									</defs>
 									<text
 										:x="computeBarX(bar.start) + 8"
-										:y="20"
+										:y="24"
 										class="gantt-bar-text"
 										:fill="getBarTextColor(bar)"
+										:clip-path="`url(#clip-${bar.id})`"
 									>
 										{{ bar.meta?.label || bar.id }}
 									</text>
@@ -654,7 +666,7 @@ const dateIsToday = computed(() => (date: Date) => {
 
 .gantt-row-content {
 	position: relative;
-	min-height: 32px;
+	min-height: 40px;
 	width: 100%;
 }
 
@@ -682,7 +694,7 @@ const dateIsToday = computed(() => (date: Date) => {
 
 // Ensure rows have minimum height and proper styling
 :deep(.gantt-row) {
-	min-height: 32px;
+	min-height: 40px;
 	position: relative;
 	border-bottom: 1px solid var(--grey-200);
 	
