@@ -13,7 +13,7 @@
 		
 		<div 
 			v-if="filterFromView"
-			class="tw-text-sm tw-mb-2"
+			class="tw:text-sm tw:mb-2"
 		>
 			{{ $t('filters.fromView') }}
 			<code>{{ filterFromView }}</code><br>

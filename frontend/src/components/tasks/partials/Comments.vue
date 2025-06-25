@@ -35,7 +35,7 @@
 						height="48"
 						width="48"
 					>
-					<figcaption class="tw-sr-only">
+					<figcaption class="tw:sr-only">
 						{{ $t('misc.avatarOfUser', {user: getDisplayName(c.author)}) }}
 					</figcaption>
 				</figure>
@@ -68,7 +68,7 @@
 							:title="$t('task.comment.permalink')"
 							@click.prevent.stop="copy(getCommentUrl(`${c.id}`))"
 						>
-							<span class="tw-sr-only">{{ $t('task.comment.permalink') }}</span>
+							<span class="tw:sr-only">{{ $t('task.comment.permalink') }}</span>
 							<Icon icon="link" />
 						</a>
 						<CustomTransition name="fade">
@@ -142,7 +142,7 @@
 						height="48"
 						width="48"
 					>
-					<figcaption class="tw-sr-only">
+					<figcaption class="tw:sr-only">
 						{{ $t('misc.avatarOfUser', {user: getDisplayName(authStore.info)}) }}
 					</figcaption>
 				</figure>

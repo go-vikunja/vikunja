@@ -14,7 +14,7 @@ import viteSentry, {type ViteSentryPluginOptions} from 'vite-plugin-sentry'
 import svgLoader from 'vite-svg-loader'
 import postcssPresetEnv from 'postcss-preset-env'
 import postcssEasingGradients from 'postcss-easing-gradients'
-import tailwindcss from 'tailwindcss'
+import tailwindcss from '@tailwindcss/vite'
 import vueDevTools from 'vite-plugin-vue-devtools'
 
 const pathSrc = fileURLToPath(new URL('./src', import.meta.url)).replaceAll('\\', '/')
@@ -105,7 +105,6 @@ function getBuildConfig(env: Record<string, string>) {
 			},
 			postcss: {
 				plugins: [
-					tailwindcss(),
 					postcssEasingGradients(),
 					postcssPresetEnv(),
 				],
@@ -195,6 +194,7 @@ function getBuildConfig(env: Record<string, string>) {
 				launchEditor: env.VUE_DEVTOOLS_LAUNCH_EDITOR || 'code',
 			}),
 			viteSentry(getSentryConfig(env)),
+			tailwindcss(),
 		],
 		resolve: {
 			alias: [
