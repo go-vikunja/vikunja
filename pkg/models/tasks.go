@@ -195,6 +195,7 @@ type taskSearchOptions struct {
 	isSavedFilter      bool
 	projectIDs         []int64
 	expand             []TaskCollectionExpandable
+	projectViewID      int64
 }
 
 // ReadAll is a dummy function to still have that endpoint documented

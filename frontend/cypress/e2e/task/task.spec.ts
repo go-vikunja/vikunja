@@ -509,6 +509,7 @@ describe('Task', () => {
 			TaskBucketFactory.create(1, {
 				task_id: tasks[0].id,
 				bucket_id: buckets[0].id,
+				project_view_id: buckets[0].project_view_id,
 			})
 
 			cy.visit(`/projects/${projects[0].id}/4`)
@@ -901,6 +902,11 @@ describe('Task', () => {
 			})
 			const labels = LabelFactory.create(1)
 			LabelTaskFactory.truncate()
+			TaskBucketFactory.create(1, {
+				task_id: tasks[0].id,
+				bucket_id: buckets[0].id,
+				project_view_id: buckets[0].project_view_id,
+			})
 
 			cy.visit(`/projects/${projects[0].id}/4`)
 

@@ -350,7 +350,13 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	}
 
 	if joinTaskBuckets {
-		query = query.Join("LEFT", "task_buckets", "task_buckets.task_id = tasks.id")
+		joinCond := "task_buckets.task_id = tasks.id"
+		if opts.projectViewID > 0 {
+			joinCond += " AND task_buckets.project_view_id = ?"
+			query = query.Join("LEFT", "task_buckets", joinCond, opts.projectViewID)
+		} else {
+			query = query.Join("LEFT", "task_buckets", joinCond)
+		}
 	}
 	if expandSubtasks {
 		query = query.
@@ -419,7 +425,13 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 
 	queryCount := d.s.Where(cond)
 	if joinTaskBuckets {
-		queryCount = queryCount.Join("LEFT", "task_buckets", "task_buckets.task_id = tasks.id")
+		joinCond := "task_buckets.task_id = tasks.id"
+		if opts.projectViewID > 0 {
+			joinCond += " AND task_buckets.project_view_id = ?"
+			queryCount = queryCount.Join("LEFT", "task_buckets", joinCond, opts.projectViewID)
+		} else {
+			queryCount = queryCount.Join("LEFT", "task_buckets", joinCond)
+		}
 	}
 	if expandSubtasks {
 		queryCount = queryCount.
