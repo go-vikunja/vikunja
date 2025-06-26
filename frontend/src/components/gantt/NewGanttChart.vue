@@ -52,13 +52,13 @@
 			/>
 
 			<!-- Gantt Chart Body -->
-			<VikunjaStyledGanttChart
+			<GanttChartBody
 				:rows="ganttRows"
 				:cells-by-row="cellsByRow"
 				@update:focused="onFocusChanged"
 			>
 				<div class="gantt-rows">
-					<VikunjaStyledGanttRow
+					<GanttRow
 						v-for="(rowId, index) in ganttRows"
 						:id="rowId"
 						:key="rowId"
@@ -82,9 +82,9 @@
 								@startResize="startResize"
 							/>
 						</div>
-					</VikunjaStyledGanttRow>
+					</GanttRow>
 				</div>
-			</VikunjaStyledGanttChart>
+			</GanttChartBody>
 		</div>
 	</div>
 </template>
@@ -101,11 +101,11 @@ import type {DateISO} from '@/types/DateISO'
 import type {GanttFilters} from '@/views/project/helpers/useGanttFilters'
 import type {GanttBarModel} from '@/composables/useGanttBar'
 
-import VikunjaStyledGanttChart from '@/components/gantt/styled/VikunjaStyledGanttChart.vue'
-import VikunjaStyledGanttRow from '@/components/gantt/styled/VikunjaStyledGanttRow.vue'
-import Loading from '@/components/misc/Loading.vue'
-import GanttVerticalGridLines from '@/components/gantt/GanttVerticalGridLines.vue'
+import GanttChartBody from '@/components/gantt/GanttChartBody.vue'
+import GanttRow from '@/components/gantt/GanttRow.vue'
 import GanttRowBars from '@/components/gantt/GanttRowBars.vue'
+import GanttVerticalGridLines from '@/components/gantt/GanttVerticalGridLines.vue'
+import Loading from '@/components/misc/Loading.vue'
 
 import {MILLISECONDS_A_DAY} from '@/constants/date'
 import {useWeekDayFromDate} from '@/helpers/time/formatDate'

@@ -9,7 +9,7 @@
 </template>
 
 <script setup lang="ts">
-import GanttChartPrimitive from '../primitives/GanttChartPrimitive.vue'
+import GanttChartPrimitive from '@/components/gantt/primitives/GanttChartPrimitive.vue'
 
 defineProps<{ 
 	rows: string[]; 

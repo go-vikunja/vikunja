@@ -16,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-import GanttRowPrimitive from '../primitives/GanttRowPrimitive.vue'
+import GanttRowPrimitive from '@/components/gantt/primitives/GanttRowPrimitive.vue'
 const props = defineProps<{ id:string; index:number; selected:boolean }>()
 const emit = defineEmits(['focus','select'])
 const onFocus = () => emit('focus', props.id)
