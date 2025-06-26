@@ -1,27 +1,29 @@
 <template>
-	<component
-		:is="as"
-		role="slider"
-		tabindex="0"
-		:aria-valuemin="ariaMin"
-		:aria-valuemax="ariaMax"
-		:aria-valuenow="ariaNow"
-		:aria-valuetext="ariaValueText"
-		:aria-label="ariaLabel"
-		:data-state="dataState"
-		v-bind="attrs"
-		@pointerdown="onPointerDown"
-		@dblclick="() => props.onDoubleClick?.(props.model)"
-		@focus="onFocus"
-		@blur="onBlur"
-		@keydown="onKeyDown"
-	>
-		<slot
-			:dragging="dragging"
-			:selected="selected"
-			:focused="focused"
-		/>
-	</component>
+	<div role="gridcell">
+		<component
+			:is="as"
+			role="slider"
+			tabindex="0"
+			:aria-valuemin="ariaMin"
+			:aria-valuemax="ariaMax"
+			:aria-valuenow="ariaNow"
+			:aria-valuetext="ariaValueText"
+			:aria-label="ariaLabel"
+			:data-state="dataState"
+			v-bind="attrs"
+			@pointerdown="onPointerDown"
+			@dblclick="() => props.onDoubleClick?.(props.model)"
+			@focus="onFocus"
+			@blur="onBlur"
+			@keydown="onKeyDown"
+		>
+			<slot
+				:dragging="dragging"
+				:selected="selected"
+				:focused="focused"
+			/>
+		</component>
+	</div>
 </template>
 
 <script setup lang="ts">

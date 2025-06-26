@@ -5,116 +5,108 @@
 		height="40"
 		xmlns="http://www.w3.org/2000/svg"
 	>
-		<GanttBarPrimitive
+		<g
 			v-for="bar in bars"
 			:key="bar.id"
-			:model="bar"
-			:timeline-start="dateFromDate"
-			:timeline-end="dateToDate"
-			:on-move="handleBarMove"
-			:on-double-click="handleBarDoubleClick"
-			as="g"
 		>
-			<template #default="{ dragging, selected, focused }">
-				<!-- Main bar -->
-				<rect
-					:x="getBarX(bar)"
-					:y="4"
-					:width="getBarWidth(bar)"
-					:height="32"
-					:rx="4"
-					:fill="getBarFill(bar)"
-					:stroke="getBarStroke(bar, focused)"
-					:stroke-width="getBarStrokeWidth(bar, focused)"
-					:stroke-dasharray="!bar.meta?.hasActualDates ? '3,3' : 'none'"
-					:style="{ textDecoration: bar.meta?.isDone ? 'line-through' : 'none' }"
-					class="gantt-bar"
-				/>
-				
-				<!-- Resize handles (only show when focused/selected) -->
-				<g
-					v-if="focused || selected"
-					class="resize-handles"
-				>
-					<!-- Left resize handle -->
+			<!-- Main bar -->
+			<rect
+				:x="getBarX(bar)"
+				:y="4"
+				:width="getBarWidth(bar)"
+				:height="32"
+				:rx="4"
+				:fill="getBarFill(bar)"
+				:stroke="getBarStroke(bar)"
+				:stroke-width="getBarStrokeWidth(bar)"
+				:stroke-dasharray="!bar.meta?.hasActualDates ? '5,5' : 'none'"
+				class="gantt-bar"
+				@pointerdown="handleBarPointerDown(bar, $event)"
+			/>
+			
+			<!-- Left resize handle -->
+			<rect
+				:x="getBarX(bar) - 3"
+				:y="4"
+				:width="6"
+				:height="32"
+				:rx="3"
+				fill="var(--white)"
+				stroke="var(--primary)"
+				stroke-width="1"
+				class="gantt-resize-handle gantt-resize-left"
+				@pointerdown="startResize(bar, 'start', $event)"
+			/>
+			
+			<!-- Right resize handle -->
+			<rect
+				:x="getBarX(bar) + getBarWidth(bar) - 3"
+				:y="4"
+				:width="6"
+				:height="32"
+				:rx="3"
+				fill="var(--white)"
+				stroke="var(--primary)"
+				stroke-width="1"
+				class="gantt-resize-handle gantt-resize-right"
+				@pointerdown="startResize(bar, 'end', $event)"
+			/>
+			
+			<!-- Task label with clipping -->
+			<defs>
+				<clipPath :id="`clip-${bar.id}`">
 					<rect
-						:x="getBarX(bar) - 3"
+						:x="getBarX(bar) + 2"
 						:y="4"
-						:width="6"
+						:width="getBarWidth(bar) - 4"
 						:height="32"
-						:rx="3"
-						fill="var(--white)"
-						stroke="var(--primary)"
-						stroke-width="1"
-						class="gantt-resize-handle gantt-resize-left"
-						@pointerdown="startResize(bar, 'start', $event)"
+						:rx="4"
 					/>
-					
-					<!-- Right resize handle -->
-					<rect
-						:x="getBarX(bar) + getBarWidth(bar) - 3"
-						:y="4"
-						:width="6"
-						:height="32"
-						:rx="3"
-						fill="var(--white)"
-						stroke="var(--primary)"
-						stroke-width="1"
-						class="gantt-resize-handle gantt-resize-right"
-						@pointerdown="startResize(bar, 'end', $event)"
-					/>
-				</g>
-				
-				<!-- Task label with clipping -->
-				<defs>
-					<clipPath :id="`clip-${bar.id}`">
-						<rect
-							:x="getBarX(bar) + 2"
-							:y="4"
-							:width="getBarWidth(bar) - 4"
-							:height="32"
-							:rx="4"
-						/>
-					</clipPath>
-				</defs>
-				<text
-					:x="getBarX(bar) + 8"
-					:y="24"
-					class="gantt-bar-text"
-					:fill="getBarTextColor(bar)"
-					:clip-path="`url(#clip-${bar.id})`"
-					:style="{ textDecoration: bar.meta?.isDone ? 'line-through' : 'none' }"
-				>
-					{{ bar.meta?.label || bar.id }}
-				</text>
-			</template>
-		</GanttBarPrimitive>
+				</clipPath>
+			</defs>
+			<text
+				:x="getBarTextX(bar)"
+				:y="24"
+				class="gantt-bar-text"
+				:fill="getBarTextColor(bar)"
+				:clip-path="`url(#clip-${bar.id})`"
+			>
+				{{ bar.meta?.label || bar.id }}
+			</text>
+		</g>
 	</svg>
 </template>
 
 <script setup lang="ts">
-import {computed, ref} from 'vue'
+import {computed} from 'vue'
 import type {GanttBarModel} from '@/composables/useGanttBar'
 import {colorIsDark} from '@/helpers/color/colorIsDark'
-import GanttBarPrimitive from './primitives/GanttBarPrimitive.vue'
 
 interface Props {
 	bars: GanttBarModel[]
 	totalWidth: number
 	dateFromDate: Date
-	dateToDate: Date
 	dayWidthPixels: number
+	isDragging: boolean
+	isResizing: boolean
+	dragState: {
+		barId: string
+		startX: number
+		originalStart: Date
+		originalEnd: Date
+		currentDays: number
+		edge?: 'start' | 'end'
+	} | null
 }
 
 const props = defineProps<Props>()
 
 const emit = defineEmits<{
-	(e: 'updateTask', id: string, start: Date, end: Date): void
-	(e: 'openTask', bar: GanttBarModel): void
+	(e: 'barPointerDown', bar: GanttBarModel, event: PointerEvent): void
 	(e: 'startResize', bar: GanttBarModel, edge: 'start' | 'end', event: PointerEvent): void
 }>()
 
-// Simplified positioning - primitive handles drag state
+// Direct SVG bar rendering functions
 function computeBarX(startDate: Date) {
 	const x = (startDate.getTime() - props.dateFromDate.getTime()) / (1000*60*60*24) * props.dayWidthPixels
 	return x
@@ -122,15 +114,46 @@ function computeBarX(startDate: Date) {
 
 function computeBarWidth(bar: GanttBarModel) {
 	const diff = (bar.end.getTime() - bar.start.getTime()) / (1000*60*60*24)
-	return diff * props.dayWidthPixels
+	const width = diff * props.dayWidthPixels
+	return width
 }
 
+// Computed properties for dynamic bar positions during drag/resize
 const getBarX = computed(() => (bar: GanttBarModel) => {
+	if (props.isDragging && props.dragState?.barId === bar.id) {
+		const originalX = computeBarX(props.dragState.originalStart)
+		const offset = props.dragState.currentDays * props.dayWidthPixels
+		return originalX + offset
+	}
+	if (props.isResizing && props.dragState?.barId === bar.id && props.dragState.edge === 'start') {
+		const newStart = new Date(props.dragState.originalStart)
+		newStart.setDate(newStart.getDate() + props.dragState.currentDays)
+		return computeBarX(newStart)
+	}
 	return computeBarX(bar.start)
 })
 
 const getBarWidth = computed(() => (bar: GanttBarModel) => {
+	if (props.isResizing && props.dragState?.barId === bar.id) {
+		if (props.dragState.edge === 'start') {
+			const newStart = new Date(props.dragState.originalStart)
+			newStart.setDate(newStart.getDate() + props.dragState.currentDays)
+			const originalEndX = computeBarX(props.dragState.originalEnd)
+			const newStartX = computeBarX(newStart)
+			return Math.max(0, originalEndX - newStartX)
+		} else {
+			const newEnd = new Date(props.dragState.originalEnd)
+			newEnd.setDate(newEnd.getDate() + props.dragState.currentDays)
+			const originalStartX = computeBarX(props.dragState.originalStart)
+			const newEndX = computeBarX(newEnd)
+			return Math.max(0, newEndX - originalStartX)
+		}
+	}
 	return computeBarWidth(bar)
+})
+
+const getBarTextX = computed(() => (bar: GanttBarModel) => {
+	return getBarX.value(bar) + 8
 })
 
 function getBarFill(bar: GanttBarModel) {
@@ -148,15 +171,17 @@ function getBarFill(bar: GanttBarModel) {
 	return 'var(--grey-100)'
 }
 
-function getBarStroke(bar: GanttBarModel, focused: boolean) {
-	if (focused) return 'var(--bar-stroke-focus)'
-	if (!bar.meta?.hasActualDates) return 'var(--grey-400)'
+function getBarStroke(bar: GanttBarModel) {
+	if (!bar.meta?.hasActualDates) {
+		return 'var(--grey-300)' // Gray for dashed border
+	}
 	return 'none'
 }
 
-function getBarStrokeWidth(bar: GanttBarModel, focused: boolean) {
-	if (focused) return '2'
-	if (!bar.meta?.hasActualDates) return '2'
+function getBarStrokeWidth(bar: GanttBarModel) {
+	if (!bar.meta?.hasActualDates) {
+		return '2'
+	}
 	return '0'
 }
 
@@ -178,13 +203,8 @@ function getBarTextColor(bar: GanttBarModel) {
 	return 'white'
 }
 
-function handleBarMove(id: string, newStart: Date, newEnd: Date) {
-	// Emit immediately for visual feedback - parent should handle debouncing
-	emit('updateTask', id, newStart, newEnd)
-}
-
-function handleBarDoubleClick(bar: GanttBarModel) {
-	emit('openTask', bar)
+function handleBarPointerDown(bar: GanttBarModel, event: PointerEvent) {
+	emit('barPointerDown', bar, event)
 }
 
 function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEvent) {
@@ -226,15 +246,6 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 	&:active {
 		cursor: grabbing;
 	}
-}
-
-// Handle dragging and selected states via CSS using data-state from primitive
-:deep([data-state*="dragging"]) .gantt-bar {
-	opacity: 0.7;
-}
-
-:deep([data-state*="selected"]) .gantt-bar {
-	opacity: 0.9;
 }
 
 .gantt-bar-text {
