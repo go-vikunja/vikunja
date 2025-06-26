@@ -4,32 +4,32 @@
 		:class="[
 			variantClass,
 			{
-				'is-loading': loading,
-				'has-no-shadow': !shadow || variant === 'tertiary',
+				'is-loading': props.loading,
+				'has-no-shadow': !props.shadow || props.variant === 'tertiary',
 			}
 		]"
-		:disabled="disabled || loading"
+		:disabled="props.disabled || props.loading"
 		:style="{
-			'--button-white-space': wrap ? 'break-spaces' : 'nowrap',
+			'--button-white-space': props.wrap ? 'break-spaces' : 'nowrap',
 		}"
-		:type="type"
-		:to="to"
-		:href="href"
-		:open-external-in-new-tab="openExternalInNewTab"
+		:type="props.type"
+		:to="props.to"
+		:href="props.href"
+		:open-external-in-new-tab="props.openExternalInNewTab"
 	>
-		<template v-if="icon">
+		<template v-if="props.icon">
 			<Icon
 				v-if="!$slots.default"
-				:icon="icon"
-				:style="{color: iconColor}"
+				:icon="props.icon"
+				:style="{color: props.iconColor}"
 			/>
 			<span
 				v-else
 				class="icon is-small"
 			>
 				<Icon
-					:icon="icon"
-					:style="{color: iconColor}"
+					:icon="props.icon"
+					:style="{color: props.iconColor}"
 				/>
 			</span>
 		</template>
@@ -38,40 +38,56 @@
 </template>
 
 <script setup lang="ts">
-import {computed} from 'vue'
-import BaseButton, {type BaseButtonProps} from '@/components/base/BaseButton.vue'
+import {computed, type PropType} from 'vue'
+import BaseButton from '@/components/base/BaseButton.vue'
 import type {IconProp} from '@fortawesome/fontawesome-svg-core'
 import type {RouteLocationRaw} from 'vue-router'
 
-export type ButtonTypes = 'primary' | 'secondary' | 'tertiary'
-
-export interface ButtonProps {
-	variant?: ButtonTypes
-	icon?: IconProp
-	iconColor?: string
-	loading?: boolean
-	disabled?: boolean
-	shadow?: boolean
-	wrap?: boolean
-	// BaseButton props (explicit types to avoid union complexity)
-	type?: 'button' | 'submit' | undefined
-	to?: RouteLocationRaw
-	href?: string
-	openExternalInNewTab?: boolean
-}
-
-const props = withDefaults(defineProps<ButtonProps>(), {
-	variant: 'primary',
-	icon: undefined,
-	iconColor: undefined,
-	loading: false,
-	disabled: false,
-	shadow: true,
-	wrap: true,
-	type: undefined,
-	to: undefined,
-	href: undefined,
-	openExternalInNewTab: true,
+const props = defineProps({
+	variant: {
+		type: String as PropType<'primary' | 'secondary' | 'tertiary'>,
+		default: 'primary'
+	},
+	icon: {
+		type: Object as PropType<IconProp>,
+		default: undefined
+	},
+	iconColor: {
+		type: String,
+		default: undefined
+	},
+	loading: {
+		type: Boolean,
+		default: false
+	},
+	disabled: {
+		type: Boolean,
+		default: false
+	},
+	shadow: {
+		type: Boolean,
+		default: true
+	},
+	wrap: {
+		type: Boolean,
+		default: true
+	},
+	type: {
+		type: String as PropType<'button' | 'submit' | undefined>,
+		default: undefined
+	},
+	to: {
+		type: Object as PropType<RouteLocationRaw>,
+		default: undefined
+	},
+	href: {
+		type: String,
+		default: undefined
+	},
+	openExternalInNewTab: {
+		type: Boolean,
+		default: true
+	},
 })
 
 defineOptions({name: 'XButton'})
