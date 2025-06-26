@@ -26,10 +26,19 @@
 
 <script lang="ts">
 /* eslint-disable vue/component-api-style */
+
+import type { IconProp } from '@fortawesome/fontawesome-svg-core'
+
+interface CommandItem {
+	icon: IconProp
+	title: string
+	description: string
+}
+
 export default {
 	props: {
 		items: {
-			type: Array,
+			type: Array as () => CommandItem[],
 			required: true,
 		},
 
@@ -52,7 +61,7 @@ export default {
 	},
 
 	methods: {
-		onKeyDown({event}) {
+		onKeyDown({event}: {event: KeyboardEvent}) {
 			if (event.key === 'ArrowUp') {
 				this.upHandler()
 				return true
