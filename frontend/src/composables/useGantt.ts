@@ -1,5 +1,4 @@
 import {ref, shallowRef, watch, toValue, type Ref} from 'vue'
-import {tryOnUnmounted} from '@vueuse/core'
 
 export interface GanttBarInput { id: string; start: Date; end: Date; meta?: Record<string, unknown> }
 export interface TimeScale { range: Date[]; unit: 'hour' | 'day' }
