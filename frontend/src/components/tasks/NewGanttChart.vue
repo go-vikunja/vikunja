@@ -98,9 +98,9 @@
 									<!-- Main bar -->
 									<rect
 										:x="computeBarX(bar.start)"
-										:y="6"
+										:y="4"
 										:width="computeBarWidth(bar)"
-										:height="28"
+										:height="32"
 										:rx="4"
 										:fill="getBarFill(bar)"
 										:stroke="getBarStroke(bar)"
@@ -113,9 +113,9 @@
 									<!-- Left resize handle -->
 									<rect
 										:x="computeBarX(bar.start) - 3"
-										:y="6"
+										:y="4"
 										:width="6"
-										:height="28"
+										:height="32"
 										:rx="3"
 										fill="var(--white)"
 										stroke="var(--primary)"
@@ -127,9 +127,9 @@
 									<!-- Right resize handle -->
 									<rect
 										:x="computeBarX(bar.start) + computeBarWidth(bar) - 3"
-										:y="6"
+										:y="4"
 										:width="6"
-										:height="28"
+										:height="32"
 										:rx="3"
 										fill="var(--white)"
 										stroke="var(--primary)"
@@ -143,9 +143,9 @@
 										<clipPath :id="`clip-${bar.id}`">
 											<rect
 												:x="computeBarX(bar.start) + 2"
-												:y="6"
+												:y="4"
 												:width="computeBarWidth(bar) - 4"
-												:height="28"
+												:height="32"
 												:rx="4"
 											/>
 										</clipPath>
