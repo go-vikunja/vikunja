@@ -147,7 +147,9 @@ func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, _ string, _ int, _ int)
 	}
 
 	for _, bb := range buckets {
-		bb.CreatedBy = users[bb.CreatedByID]
+		if createdBy, has := users[bb.CreatedByID]; has {
+			bb.CreatedBy = createdBy
+		}
 	}
 
 	return buckets, len(buckets), int64(len(buckets)), nil
@@ -196,7 +198,9 @@ func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, projects []*Pr
 	}
 
 	for _, bb := range buckets {
-		bb.CreatedBy = users[bb.CreatedByID]
+		if createdBy, has := users[bb.CreatedByID]; has {
+			bb.CreatedBy = createdBy
+		}
 	}
 
 	tasks := []*Task{}

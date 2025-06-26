@@ -186,7 +186,9 @@ func (ta *TaskAttachment) ReadAll(s *xorm.Session, a web.Auth, _ string, page in
 	}
 
 	for _, r := range attachments {
-		r.CreatedBy = users[r.CreatedByID]
+		if createdBy, has := users[r.CreatedByID]; has {
+			r.CreatedBy = createdBy
+		}
 
 		// If the actual file does not exist, don't try to load it as that would fail with nil panic
 		if _, exists := fs[r.FileID]; !exists {
@@ -395,7 +397,9 @@ func getTaskAttachmentsByTaskIDs(s *xorm.Session, taskIDs []int64) (attachments 
 	}
 
 	for _, a := range attachments {
-		a.CreatedBy = users[a.CreatedByID]
+		if createdBy, has := users[a.CreatedByID]; has {
+			a.CreatedBy = createdBy
+		}
 		a.File = fs[a.FileID]
 	}
 

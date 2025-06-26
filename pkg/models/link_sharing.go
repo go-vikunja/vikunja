@@ -252,7 +252,9 @@ func (share *LinkSharing) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 	}
 
 	for _, s := range shares {
-		s.SharedBy = users[s.SharedByID]
+		if sharedBy, has := users[s.SharedByID]; has {
+			s.SharedBy = sharedBy
+		}
 		s.Password = ""
 	}
 
