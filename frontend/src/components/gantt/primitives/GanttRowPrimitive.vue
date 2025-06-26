@@ -12,8 +12,21 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{ id:string; selected:boolean }>()
-const emit = defineEmits(['select','focus'])
-function onSelect(){ emit('select', props.id) }
-function onFocus(){ emit('focus', props.id) }
+const props = defineProps<{ 
+  id: string
+  selected: boolean 
+}>()
+
+const emit = defineEmits<{
+  select: [id: string]
+  focus: [id: string]
+}>()
+
+function onSelect() { 
+	emit('select', props.id) 
+}
+
+function onFocus() { 
+	emit('focus', props.id) 
+}
 </script>
