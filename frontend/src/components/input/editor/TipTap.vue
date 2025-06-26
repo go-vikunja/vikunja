@@ -603,7 +603,7 @@ function uploadAndInsertFiles(files: File[] | FileList) {
 	})
 }
 
-function triggerImageInput(event) {
+function triggerImageInput(event: Event) {
 	if (typeof props.uploadCallback !== 'undefined') {
 		uploadInputRef.value?.click()
 		return
@@ -612,7 +612,7 @@ function triggerImageInput(event) {
 	addImage(event)
 }
 
-async function addImage(event) {
+async function addImage(event: Event) {
 
 	if (typeof props.uploadCallback !== 'undefined') {
 		const files = uploadInputRef.value?.files
@@ -626,7 +626,8 @@ async function addImage(event) {
 		return
 	}
 
-	const url = await inputPrompt(event.target.getBoundingClientRect())
+	const target = event.target as HTMLElement
+	const url = await inputPrompt(target.getBoundingClientRect())
 
 	if (url) {
 		editor.value?.chain().focus().setImage({src: url}).run()
@@ -634,8 +635,9 @@ async function addImage(event) {
 	}
 }
 
-function setLink(event) {
-	setLinkInEditor(event.target.getBoundingClientRect(), editor.value)
+function setLink(event: Event) {
+	const target = event.target as HTMLElement
+	setLinkInEditor(target.getBoundingClientRect(), editor.value || null)
 }
 
 onMounted(async () => {
@@ -661,17 +663,19 @@ function setModeAndValue(value: string) {
 
 
 // See https://github.com/github/hotkey/discussions/85#discussioncomment-5214660
-function setFocusToEditor(event) {
-	if (event.target.shadowRoot) {
+function setFocusToEditor(event: KeyboardEvent) {
+	if (event.target && (event.target as any).shadowRoot) {
 		return
 	}
 
 	const hotkeyString = eventToHotkeyString(event)
 	if (!hotkeyString) return
+	
+	const target = event.target as HTMLElement
 	if (hotkeyString !== props.editShortcut ||
-		event.target.tagName.toLowerCase() === 'input' ||
-		event.target.tagName.toLowerCase() === 'textarea' ||
-		event.target.contentEditable === 'true') {
+		target.tagName.toLowerCase() === 'input' ||
+		target.tagName.toLowerCase() === 'textarea' ||
+		target.contentEditable === 'true') {
 		return
 	}
 
@@ -690,14 +694,15 @@ function focusIfEditing() {
 	}
 }
 
-function clickTasklistCheckbox(event) {
+function clickTasklistCheckbox(event: Event) {
 	event.stopImmediatePropagation()
 
-	if (event.target.localName !== 'p') {
+	const target = event.target as HTMLElement
+	if (target.localName !== 'p') {
 		return
 	}
 
-	event.target.parentNode.parentNode.firstChild.click()
+	(target.parentNode?.parentNode?.firstChild as HTMLElement)?.click()
 }
 
 watch(
