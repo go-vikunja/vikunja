@@ -3,7 +3,7 @@
 		role="row"
 		:aria-selected="selected"
 		tabindex="-1"
-		:data-state="selected ? 'selected' : ''"
+		:data-state="selected ? 'selected' : null"
 		@click="onSelect"
 		@focus="onFocus"
 	>
