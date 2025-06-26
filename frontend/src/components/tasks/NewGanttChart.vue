@@ -502,6 +502,12 @@ function startDrag(bar: GanttBarModel, event: PointerEvent) {
 	const textElement = barGroup?.querySelector('.gantt-bar-text')
 	const clipPath = barGroup?.querySelector('clipPath rect')
 	
+	// Set grabbing cursor during drag with high specificity
+	document.body.style.setProperty('cursor', 'grabbing', 'important')
+	if (barElement) {
+		(barElement as HTMLElement).style.setProperty('cursor', 'grabbing', 'important')
+	}
+	
 	// Bring the entire group to front during drag
 	if (barGroup) {
 		barGroup.parentElement?.appendChild(barGroup)
@@ -546,6 +552,12 @@ function startDrag(bar: GanttBarModel, event: PointerEvent) {
 		document.removeEventListener('pointermove', handleMove)
 		document.removeEventListener('pointerup', handleStop)
 		
+		// Reset cursor
+		document.body.style.removeProperty('cursor')
+		if (barElement) {
+			(barElement as HTMLElement).style.removeProperty('cursor')
+		}
+		
 		// Only dispatch update when drag is finished
 		if (currentDays !== 0) {
 			const newStart = new Date(originalStart)
@@ -577,6 +589,12 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 	const rightHandle = barGroup?.querySelector('.gantt-resize-right')
 	const textElement = barGroup?.querySelector('.gantt-bar-text')
 	const clipPath = barGroup?.querySelector('clipPath rect')
+	
+	// Set col-resize cursor during resize with high specificity
+	document.body.style.setProperty('cursor', 'col-resize', 'important')
+	if (barElement) {
+		(barElement as HTMLElement).style.setProperty('cursor', 'col-resize', 'important')
+	}
 	
 	// Bring the entire group to front during resize
 	if (barGroup) {
@@ -644,6 +662,12 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 	const handleStop = () => {
 		document.removeEventListener('pointermove', handleMove)
 		document.removeEventListener('pointerup', handleStop)
+		
+		// Reset cursor
+		document.body.style.removeProperty('cursor')
+		if (barElement) {
+			(barElement as HTMLElement).style.removeProperty('cursor')
+		}
 		
 		// Only dispatch update when resize is finished
 		if (currentDays !== 0) {
