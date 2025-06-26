@@ -25,7 +25,7 @@
     },
     "types": [
       // https://github.com/ikenfin/vite-plugin-sentry#typescript
-      "vite-plugin-sentry/client"
+      // "vite-plugin-sentry/client" // Using local type declaration instead
     ],
   }
 }
