@@ -53,25 +53,25 @@ function computeWidth(bar: GanttBarModel) {
 }
 
 function getBarFill(dragging: boolean, selected: boolean) {
-	if (dragging) return '#3498db' // Blue for dragging
-	if (selected) return '#2980b9' // Darker blue for selected
+	if (dragging) return 'var(--bar-bg-drag)' // Blue for dragging
+	if (selected) return 'var(--bar-bg-active)' // Darker blue for selected
 	
 	// Use task color if available and has actual dates
 	if (props.model.meta?.hasActualDates && props.model.meta?.color) {
 		return props.model.meta.color
 	}
 	
-	// Default colors - use actual color values instead of CSS variables
+	// Default colors - use CSS variables for theming support
 	if (props.model.meta?.hasActualDates) {
-		return '#1dd1a1' // Primary green color
+		return 'var(--bar-bg)' // Primary bar color
 	}
 	
-	return '#d3d3d3' // Light gray for tasks without dates
+	return 'var(--grey-300)' // Light gray for tasks without dates
 }
 
 function getBarStroke(focused: boolean) {
-	if (focused) return '#1dd1a1' // Primary color for focus
-	if (!props.model.meta?.hasActualDates) return '#bdc3c7' // Gray for dashed border
+	if (focused) return 'var(--bar-stroke-focus)' // Primary color for focus
+	if (!props.model.meta?.hasActualDates) return 'var(--grey-400)' // Gray for dashed border
 	return 'none'
 }
 
