@@ -306,13 +306,9 @@ func (p *Project) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	// Get project owner
-	if p.OwnerID > 0 {
-		p.Owner, err = user.GetUserByID(s, p.OwnerID)
-		if user.IsErrUserDoesNotExist(err) {
-			p.Owner = nil
-		} else if err != nil {
-			return err
-		}
+	p.Owner, err = user.GetUserByID(s, p.OwnerID)
+	if err != nil && !user.IsErrUserDoesNotExist(err) {
+		return err
 	}
 
 	// Check if the project is archived and set it to archived if it is not already archived individually.
