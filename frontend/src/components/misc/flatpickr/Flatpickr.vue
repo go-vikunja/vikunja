@@ -148,7 +148,9 @@ onMounted(() => {
 		: root.value
 
 	// Init flatpickr
-	fp.value = flatpickr(element, safeConfig.value)
+	if (element) {
+		fp.value = flatpickr(element, safeConfig.value)
+	}
 })
 onBeforeUnmount(() => fp.value?.destroy())
 
