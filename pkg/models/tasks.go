@@ -616,7 +616,9 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 	var projectIDs []int64
 	for _, i := range taskMap {
 		taskIDs = append(taskIDs, i.ID)
-		userIDs = append(userIDs, i.CreatedByID)
+		if i.CreatedByID > 0 {
+			userIDs = append(userIDs, i.CreatedByID)
+		}
 		projectIDs = append(projectIDs, i.ProjectID)
 	}
 

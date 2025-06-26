@@ -873,12 +873,14 @@ func reloadEventData(s *xorm.Session, event map[string]interface{}, projectID in
 		d := doer.(map[string]interface{})
 		if rawDoerID, has := d["id"]; has {
 			doerID = getIDAsInt64(rawDoerID)
-			fullDoer, err := user.GetUserByID(s, doerID)
-			if err != nil && !user.IsErrUserDoesNotExist(err) {
-				return nil, 0, err
-			}
-			if err == nil {
-				event["doer"] = fullDoer
+			if doerID > 0 {
+				fullDoer, err := user.GetUserByID(s, doerID)
+				if err != nil && !user.IsErrUserDoesNotExist(err) {
+					return nil, 0, err
+				}
+				if err == nil {
+					event["doer"] = fullDoer
+				}
 			}
 		}
 	}
