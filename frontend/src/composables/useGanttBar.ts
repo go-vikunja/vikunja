@@ -16,8 +16,6 @@ export interface UseGanttBarOptions {
   model: GanttBarModel
   timelineStart: Date
   timelineEnd: Date
-  onMove(id: string, newStart: Date, newEnd: Date): void
-  window?: Window | undefined
 }
 
 export function useGanttBar(options: UseGanttBarOptions) {
@@ -36,16 +34,14 @@ export function useGanttBar(options: UseGanttBarOptions) {
 			newStart.setDate(newStart.getDate() + days)
 			const newEnd = new Date(options.model.end)
 			newEnd.setDate(newEnd.getDate() + days)
-			options.onMove(options.model.id, newStart, newEnd)
 		}
 		const stop = () => {
 			dragging.value = false
-			opts.removeEventListener('pointermove', handleMove)
-			opts.removeEventListener('pointerup', stop)
+			window.removeEventListener('pointermove', handleMove)
+			window.removeEventListener('pointerup', stop)
 		}
-		const opts = options.window ?? window
-		opts.addEventListener('pointermove', handleMove)
-		opts.addEventListener('pointerup', stop)
+		window.addEventListener('pointermove', handleMove)
+		window.addEventListener('pointerup', stop)
 	}
 
 	function onFocus() { focused.value = true }
@@ -57,7 +53,6 @@ export function useGanttBar(options: UseGanttBarOptions) {
 			newStart.setDate(newStart.getDate() + dir)
 			const newEnd = new Date(options.model.end)
 			newEnd.setDate(newEnd.getDate() + dir)
-			options.onMove(options.model.id, newStart, newEnd)
 		}
 	}
 
