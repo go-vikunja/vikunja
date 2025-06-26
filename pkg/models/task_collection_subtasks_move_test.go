@@ -78,3 +78,21 @@ func TestTaskCollection_SubtaskRemainsAfterMove(t *testing.T) {
 	}
 	assert.True(t, found, "subtask should be returned after moving to another project")
 }
+
+func TestTaskSearchWithExpandSubtasks(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	project, err := GetProjectSimpleByID(s, 36)
+	require.NoError(t, err)
+
+	opts := &taskSearchOptions{
+		search: "Caldav",
+		expand: []TaskCollectionExpandable{TaskCollectionExpandSubtasks},
+	}
+
+	tasks, _, _, err := getRawTasksForProjects(s, []*Project{project}, &user.User{ID: 15}, opts)
+	require.NoError(t, err)
+	require.NotEmpty(t, tasks)
+}
