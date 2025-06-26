@@ -10,6 +10,12 @@
 
 <script setup lang="ts">
 import GanttChartPrimitive from '../primitives/GanttChartPrimitive.vue'
-defineProps<{ rows:string[]; cellsByRow:Record<string,string[]> }>()
-defineEmits<{(e:'update:focused', payload:{row:string|null;cell:number|null}):void}>()
+
+defineProps<{ 
+	rows: string[]; 
+	cellsByRow: Record<string, string[]> 
+}>()
+defineEmits<{
+	'update:focused': [payload: { row: string | null; cell: number | null }],
+}>()
 </script>
