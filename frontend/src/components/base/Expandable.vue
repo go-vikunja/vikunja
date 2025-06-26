@@ -60,11 +60,12 @@ const computedBackgroundColor = computed(() => {
 /**
  * Get the natural height of the element
  */
-function getHeight(el: HTMLElement) {
-	const { display } = el.style // save display property
-	el.style.display = 'block' // Make it visible
-	const height = `${el.scrollHeight}px` // Get its height
-	el.style.display = display // revert to original display property
+function getHeight(el: Element): string {
+	const htmlEl = el as HTMLElement
+	const display = htmlEl.style.display // save display property
+	htmlEl.style.display = 'block' // Make it visible
+	const height: string = `${htmlEl.scrollHeight}px` // Get its height
+	htmlEl.style.display = display // revert to original display property
 	return height
 }
 
@@ -72,9 +73,9 @@ function getHeight(el: HTMLElement) {
  * force layout of element changes
  * https://gist.github.com/paulirish/5d52fb081b3570c81e3a
  */
-function forceLayout(el: HTMLElement) {
+function forceLayout(el: Element): void {
 	// eslint-disable-next-line @typescript-eslint/no-unused-expressions
-	el.offsetTop
+	(el as HTMLElement).offsetTop
 }
 
 /* ######################################################################
@@ -83,51 +84,54 @@ function forceLayout(el: HTMLElement) {
 # see: https://vuejs.org/guide/built-ins/transition.html#javascript-hooks
 ###################################################################### */
 
-function beforeEnter(el: HTMLElement) {
-	el.style.height = '0'
-	el.style.willChange = 'height'
-	el.style.backfaceVisibility = 'hidden'
+function beforeEnter(el: Element): void {
+	const htmlEl = el as HTMLElement
+	htmlEl.style.height = '0'
+	htmlEl.style.willChange = 'height'
+	htmlEl.style.backfaceVisibility = 'hidden'
 	forceLayout(el)
 }
 
 // the done callback is optional when
 // used in combination with CSS
-function enter(el: HTMLElement) {
+function enter(el: Element): void {
 	const height = getHeight(el) // Get the natural height
-	el.style.height = height // Update the height
+	;(el as HTMLElement).style.height = height // Update the height
 }
 
-function afterEnter(el: HTMLElement) {
+function afterEnter(el: Element): void {
 	removeHeight(el)
 }
 
-function enterCancelled(el: HTMLElement) {
+function enterCancelled(el: Element): void {
 	removeHeight(el)
 }
 
-function beforeLeave(el: HTMLElement) {
+function beforeLeave(el: Element): void {
 	// Give the element a height to change from
-	el.style.height = `${el.scrollHeight}px`
+	const htmlEl = el as HTMLElement
+	htmlEl.style.height = `${htmlEl.scrollHeight}px`
 	forceLayout(el)
 }
 
-function leave(el: HTMLElement) {
+function leave(el: Element): void {
 	// Set the height back to 0
-	el.style.height = '0'
-	el.style.willChange = ''
-	el.style.backfaceVisibility = ''
+	const htmlEl = el as HTMLElement
+	htmlEl.style.height = '0'
+	htmlEl.style.willChange = ''
+	htmlEl.style.backfaceVisibility = ''
 }
 
-function afterLeave(el: HTMLElement) {
+function afterLeave(el: Element): void {
 	removeHeight(el)
 }
 
-function leaveCancelled(el: HTMLElement) {
+function leaveCancelled(el: Element): void {
 	removeHeight(el)
 }
 
-function removeHeight(el: HTMLElement) {
-	el.style.height = ''
+function removeHeight(el: Element): void {
+	(el as HTMLElement).style.height = ''
 }
 </script>
 
