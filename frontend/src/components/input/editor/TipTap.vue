@@ -137,7 +137,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue'
+import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch, watchEffect} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {eventToHotkeyString} from '@github/hotkey'
 
@@ -164,8 +164,6 @@ import TaskItem from '@tiptap/extension-task-item'
 import TaskList from '@tiptap/extension-task-list'
 import HardBreak from '@tiptap/extension-hard-break'
 
-import {Node} from '@tiptap/pm/model'
-
 import Commands from './commands'
 import suggestionSetup from './suggestion'
 
@@ -185,7 +183,6 @@ import {setLinkInEditor} from '@/components/input/editor/setLinkInEditor'
 import StopLinkOnSpace from './stopLinkOnSpace'
 
 const props = withDefaults(defineProps<{
-	modelValue: string,
 	uploadCallback?: UploadCallback,
 	isEditEnabled?: boolean,
 	bottomActions?: BottomAction[],
@@ -203,7 +200,9 @@ const props = withDefaults(defineProps<{
 	enableDiscardShortcut: false,
 })
 
-const emit = defineEmits(['update:modelValue', 'save'])
+const emit = defineEmits(['save'])
+
+const modelValue = defineModel<string>({ default: '' })
 
 const tiptapInstanceRef = ref<HTMLInputElement | null>(null)
 
@@ -268,7 +267,7 @@ const CustomImage = Image.extend({
 
 			nextTick(async () => {
 
-				const img = document.getElementById(id)
+				const img = document.getElementById(id) as HTMLImageElement | null
 
 				if (!img) return
 
@@ -309,7 +308,7 @@ const UPLOAD_PLACEHOLDER_ELEMENT = '<p>UPLOAD_PLACEHOLDER</p>'
 let lastSavedState = ''
 
 watch(
-	() => props.modelValue,
+	modelValue,
 	(newValue) => {
 		if (!contentHasChanged.value) {
 			lastSavedState = newValue
@@ -319,7 +318,7 @@ watch(
 )
 
 watch(
-	() => internalMode.value,
+	internalMode,
 	mode => {
 		if (mode === 'preview') {
 			contentHasChanged.value = false
@@ -345,7 +344,7 @@ const PasteHandler = Extension.create({
 					handlePaste: (view, event) => {
 						
 						// Handle images pasted from clipboard
-						if (typeof props.uploadCallback !== 'undefined' && event.clipboardData?.items?.length > 0) {
+						if (typeof props.uploadCallback !== 'undefined' && event.clipboardData?.items?.length) {
 
 							for (const item of event.clipboardData.items) {
 								if (item.kind === 'file' && item.type.startsWith('image/')) {
@@ -405,25 +404,19 @@ const extensions : Extensions = [
 	}),
 
 	Placeholder.configure({
-		placeholder: ({editor}) => {
-			if (!isEditing.value) {
+		placeholder({editor}) {
+			if (!isEditing.value || editor.getText() !== '' && !editor.isFocused) {
 				return ''
 			}
 
-			if (editor.getText() !== '' && !editor.isFocused) {
-				return ''
-			}
-
-			return props.placeholder !== ''
-				? props.placeholder
-				: t('input.editor.placeholder')
+			return props.placeholder || t('input.editor.placeholder')
 		},
 	}),
 	Typography,
 	Underline,
 	Link.configure({
 		openOnClick: false,
-		validate: (href: string) => (new RegExp(
+		validate: (href) => (new RegExp(
 			`^(https?|${additionalLinkProtocols.join('|')}):\\/\\/`,
 			'i',
 		)).test(href),
@@ -442,7 +435,7 @@ const extensions : Extensions = [
 	TaskList,
 	TaskItem.configure({
 		nested: true,
-		onReadOnlyChecked: (node: Node, checked: boolean): boolean => {
+		onReadOnlyChecked(node, checked) {
 			if (!props.isEditEnabled) {
 				return false
 			}
@@ -496,21 +489,13 @@ const editor = useEditor({
 	// eslint-disable-next-line vue/no-ref-object-reactivity-loss
 	editable: isEditing.value,
 	extensions: extensions,
-	onUpdate: () => {
-		bubbleNow()
-	},
+	onUpdate: bubbleNow,
 })
 
-watch(
-	() => isEditing.value,
-	() => {
-		editor.value?.setEditable(isEditing.value)
-	},
-	{immediate: true},
-)
+watchEffect(() => editor.value?.setEditable(isEditing.value))
 
 watch(
-	() => props.modelValue,
+	modelValue,
 	value => {
 		if (!editor?.value) return
 
@@ -524,13 +509,14 @@ watch(
 )
 
 function bubbleNow() {
-	if (editor.value?.getHTML() === props.modelValue ||
-		(editor.value?.getHTML() === '<p></p>') && props.modelValue === '') {
+	const editorVal = editor.value!.getHTML()
+	if (editorVal === modelValue.value ||
+		(editorVal === '<p></p>') && modelValue.value === '') {
 		return
 	}
 
 	contentHasChanged.value = true
-	emit('update:modelValue', editor.value?.getHTML())
+	modelValue.value = editorVal
 }
 
 function bubbleSave() {
