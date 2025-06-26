@@ -44,11 +44,11 @@ withDefaults(defineProps<{
 	currentPage: 0,
 })
 
-function getRouteForPagination(page = 1, type = null) {
+function getRouteForPagination(page: number = 1, type: string | null = null): any {
 	return {
-		name: type,
+		name: type ?? undefined,
 		params: {
-			type: type,
+			type: type ?? undefined,
 		},
 		query: {
 			page: page,
