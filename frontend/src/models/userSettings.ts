@@ -21,6 +21,7 @@ export default class UserSettingsModel extends AbstractModel<IUserSettings> impl
 		playSoundWhenDone: true,
 		quickAddMagicMode: PrefixMode.Default,
 		colorSchema: 'auto',
+		allowIconChanges: true,
 		defaultView: DEFAULT_PROJECT_VIEW_SETTINGS.FIRST,
 		minimumPriority: PRIORITIES.MEDIUM,
 	}

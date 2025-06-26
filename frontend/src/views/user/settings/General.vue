@@ -126,6 +126,15 @@
 		<div class="field">
 			<label class="checkbox">
 				<input
+					v-model="settings.frontendSettings.allowIconChanges"
+					type="checkbox"
+				>
+				{{ $t('user.settings.general.allowIconChanges') }}
+			</label>
+		</div>
+		<div class="field">
+			<label class="checkbox">
+				<input
 					v-model="settings.overdueTasksRemindersEnabled"
 					type="checkbox"
 				>
@@ -295,6 +304,8 @@ const settings = ref<IUserSettings>({
 		defaultView: authStore.settings.frontendSettings.defaultView ?? DEFAULT_PROJECT_VIEW_SETTINGS.FIRST,
 		// Add fallback for old settings that don't have the minimum priority set
 		minimumPriority: authStore.settings.frontendSettings.minimumPriority ?? PRIORITIES.MEDIUM,
+		// Add fallback for old settings that don't have the logo change setting set
+		allowIconChanges: authStore.settings.frontendSettings.allowIconChanges ?? true,
 	},
 })
 
