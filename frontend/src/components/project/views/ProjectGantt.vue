@@ -85,7 +85,7 @@ import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import TaskForm from '@/components/tasks/TaskForm.vue'
 
-import NewGanttChart from '@/components/tasks/NewGanttChart.vue'
+import NewGanttChart from '@/components/gantt/NewGanttChart.vue'
 import {useGanttFilters} from '../../../views/project/helpers/useGanttFilters'
 import {RIGHTS} from '@/constants/rights'
 
