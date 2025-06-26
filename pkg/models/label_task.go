@@ -291,7 +291,9 @@ func GetLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*Lab
 
 	// Put it all together
 	for in, l := range labels {
-		labels[in].CreatedBy = users[l.CreatedByID]
+		if createdBy, has := users[l.CreatedByID]; has {
+			labels[in].CreatedBy = createdBy
+		}
 	}
 
 	// Get the total number of entries

@@ -307,7 +307,9 @@ func (p *Project) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 
 	// Get project owner
 	p.Owner, err = user.GetUserByID(s, p.OwnerID)
-	if err != nil && !user.IsErrUserDoesNotExist(err) {
+	if user.IsErrUserDoesNotExist(err) {
+		p.Owner = nil
+	} else if err != nil {
 		return err
 	}
 

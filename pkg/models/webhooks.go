@@ -187,7 +187,9 @@ func (w *Webhook) ReadAll(s *xorm.Session, a web.Auth, _ string, page int, perPa
 
 	for _, webhook := range ws {
 		webhook.Secret = ""
-		webhook.CreatedBy = users[webhook.CreatedByID]
+		if createdBy, has := users[webhook.CreatedByID]; has {
+			webhook.CreatedBy = createdBy
+		}
 	}
 
 	return ws, len(ws), total, err
