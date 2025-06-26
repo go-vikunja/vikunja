@@ -9,40 +9,10 @@
 		class="gantt-container"
 	>
 		<div class="gantt-chart-wrapper">
-			<!-- Timeline Header -->
-			<div class="gantt-timeline">
-				<!-- Upper timeunit for months -->
-				<div class="gantt-timeline-upper">
-					<div
-						v-for="monthGroup in monthGroups"
-						:key="monthGroup.key"
-						class="upper-timeunit"
-						:style="{ width: `${monthGroup.width}px` }"
-					>
-						{{ monthGroup.label }}
-					</div>
-				</div>
-				
-				<!-- Lower timeunit for days -->
-				<div class="gantt-timeline-lower">
-					<div
-						v-for="date in timelineData"
-						:key="date.toISOString()"
-						class="timeunit"
-						:style="{ width: `${DAY_WIDTH_PIXELS}px` }"
-					>
-						<div
-							class="timeunit-wrapper"
-							:class="{'today': dateIsToday(date)}"
-						>
-							<span>{{ date.getDate() }}</span>
-							<span class="weekday">
-								{{ weekDayFromDate(date) }}
-							</span>
-						</div>
-					</div>
-				</div>
-			</div>
+			<GanttTimelineHeader
+				:timeline-data="timelineData"
+				:day-width-pixels="DAY_WIDTH_PIXELS"
+			/>
 
 			<GanttVerticalGridLines
 				:timeline-data="timelineData"
@@ -93,7 +63,6 @@
 import {computed, ref, watch, toRefs, onUnmounted} from 'vue'
 import {useRouter} from 'vue-router'
 
-import { useGlobalNow } from '@/composables/useGlobalNow'
 import {getHexColor} from '@/models/task'
 
 import type {ITask, ITaskPartialWithId} from '@/modelTypes/ITask'
@@ -105,10 +74,10 @@ import GanttChartBody from '@/components/gantt/GanttChartBody.vue'
 import GanttRow from '@/components/gantt/GanttRow.vue'
 import GanttRowBars from '@/components/gantt/GanttRowBars.vue'
 import GanttVerticalGridLines from '@/components/gantt/GanttVerticalGridLines.vue'
+import GanttTimelineHeader from '@/components/gantt/GanttTimelineHeader.vue'
 import Loading from '@/components/misc/Loading.vue'
 
 import {MILLISECONDS_A_DAY} from '@/constants/date'
-import {useWeekDayFromDate} from '@/helpers/time/formatDate'
 import dayjs from 'dayjs'
 import {useDayjsLanguageSync} from '@/i18n/useDayjsLanguageSync'
 
@@ -170,47 +139,6 @@ const timelineData = computed(() => {
 	return dates
 })
 
-// Generate month groups for the upper timeline
-const monthGroups = computed(() => {
-	const groups: Array<{key: string; label: string; width: number}> = []
-	let currentMonth = -1
-	let currentYear = -1
-	let dayCount = 0
-	
-	timelineData.value.forEach((date, index) => {
-		const month = date.getMonth()
-		const year = date.getFullYear()
-		
-		if (month !== currentMonth || year !== currentYear) {
-			// Finish previous group
-			if (currentMonth !== -1) {
-				groups[groups.length - 1].width = dayCount * DAY_WIDTH_PIXELS
-			}
-			
-			// Start new group
-			currentMonth = month
-			currentYear = year
-			dayCount = 1
-			
-			const monthName = dayjs(date).format('MMMM YYYY')
-			groups.push({
-				key: `${year}-${month}`,
-				label: monthName,
-				width: 0, // Will be set when we finish the group
-			})
-		} else {
-			dayCount++
-		}
-		
-		// Handle last group
-		if (index === timelineData.value.length - 1) {
-			groups[groups.length - 1].width = dayCount * DAY_WIDTH_PIXELS
-		}
-	})
-	
-	return groups
-})
-
 // Transform tasks to gantt bars
 const ganttBars = ref<GanttBarModel[][]>([])
 const ganttRows = ref<string[]>([])
@@ -235,10 +163,8 @@ function transformTaskToGanttBar(t: ITask): GanttBarModel {
 		},
 	}
 	
-	
 	return bar
 }
-
 
 /**
  * Update ganttBars when tasks change
@@ -551,17 +477,6 @@ onUnmounted(() => {
 	// Reset cursor if component unmounts during drag
 	document.body.style.removeProperty('cursor')
 })
-
-const weekDayFromDate = useWeekDayFromDate()
-
-const {now: today} = useGlobalNow()
-const dateIsToday = computed(() => (date: Date) => {
-	return (
-		date.getDate() === today.value.getDate() &&
-		date.getMonth() === today.value.getMonth() &&
-		date.getFullYear() === today.value.getFullYear()
-	)
-})
 </script>
 
 <style scoped lang="scss">
@@ -585,55 +500,6 @@ const dateIsToday = computed(() => (date: Date) => {
 }
 
 
-.gantt-timeline {
-	background: var(--white);
-	border-bottom: 1px solid var(--grey-200);
-	position: sticky;
-	top: 0;
-	z-index: 10;
-}
-
-.gantt-timeline-upper {
-	display: flex;
-	
-	.upper-timeunit {
-		background: var(--white);
-		font-family: $vikunja-font;
-		font-weight: bold;
-		border-right: 1px solid var(--grey-200);
-		padding: 0.5rem 0;
-		text-align: center;
-		font-size: 1rem;
-		color: var(--grey-800);
-	}
-}
-
-.gantt-timeline-lower {
-	display: flex;
-	
-	.timeunit {	
-		.timeunit-wrapper {
-			padding: 0.5rem 0;
-			font-size: 1rem;
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			width: 100%;
-			font-family: $vikunja-font;
-			
-			&.today {
-				background: var(--primary);
-				color: var(--white);
-				border-radius: 5px 5px 0 0;
-				font-weight: bold;
-			}
-			
-			.weekday {
-				font-size: 0.8rem;
-			}
-		}
-	}
-}
 
 .gantt-rows {
 	position: relative;
