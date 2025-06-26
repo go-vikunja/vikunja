@@ -19,7 +19,7 @@
 				:class="{ 'is-active': editor.isActive('bold') }"
 				@click="() => editor?.chain().focus().toggleBold().run()"
 			>
-				<Icon :icon="['fa', 'fa-bold']" />
+				<Icon :icon="['fas', 'bold']" />
 			</BaseButton>
 			<BaseButton
 				v-tooltip="$t('input.editor.italic')"
@@ -27,7 +27,7 @@
 				:class="{ 'is-active': editor.isActive('italic') }"
 				@click="() => editor?.chain().focus().toggleItalic().run()"
 			>
-				<Icon :icon="['fa', 'fa-italic']" />
+				<Icon :icon="['fas', 'italic']" />
 			</BaseButton>
 			<BaseButton
 				v-tooltip="$t('input.editor.underline')"
@@ -35,7 +35,7 @@
 				:class="{ 'is-active': editor.isActive('underline') }"
 				@click="() => editor?.chain().focus().toggleUnderline().run()"
 			>
-				<Icon :icon="['fa', 'fa-underline']" />
+				<Icon :icon="['fas', 'underline']" />
 			</BaseButton>
 			<BaseButton
 				v-tooltip="$t('input.editor.strikethrough')"
@@ -43,7 +43,7 @@
 				:class="{ 'is-active': editor.isActive('strike') }"
 				@click="() => editor?.chain().focus().toggleStrike().run()"
 			>
-				<Icon :icon="['fa', 'fa-strikethrough']" />
+				<Icon :icon="['fas', 'strikethrough']" />
 			</BaseButton>
 			<BaseButton
 				v-tooltip="$t('input.editor.code')"
@@ -51,7 +51,7 @@
 				:class="{ 'is-active': editor.isActive('code') }"
 				@click="() => editor?.chain().focus().toggleCode().run()"
 			>
-				<Icon :icon="['fa', 'fa-code']" />
+				<Icon :icon="['fas', 'code']" />
 			</BaseButton>
 			<BaseButton
 				v-tooltip="$t('input.editor.link')"
@@ -59,7 +59,7 @@
 				:class="{ 'is-active': editor.isActive('link') }"
 				@click="setLink"
 			>
-				<Icon :icon="['fa', 'fa-link']" />
+				<Icon :icon="['fas', 'link']" />
 			</BaseButton>
 		</BubbleMenu>
 
@@ -276,10 +276,12 @@ const CustomImage = Image.extend({
 					const attachment = new AttachmentModel({taskId: taskId, id: attachmentId})
 
 					const attachmentService = new AttachmentService()
-					loadedAttachments.value[cacheKey] = await attachmentService.getBlobUrl(attachment)
+					loadedAttachments.value[cacheKey] = await attachmentService.getBlobUrl(attachment) as string
 				}
 
+				if (img instanceof HTMLImageElement) {
 				img.src = loadedAttachments.value[cacheKey]
+			}
 			})
 
 			return ['img', mergeAttributes(this.options.HTMLAttributes, {
@@ -351,7 +353,7 @@ const PasteHandler = Extension.create({
 					handlePaste: (view, event) => {
 						
 						// Handle images pasted from clipboard
-						if (typeof props.uploadCallback !== 'undefined' && event.clipboardData?.items?.length > 0) {
+						if (typeof props.uploadCallback !== 'undefined' && event.clipboardData?.items && event.clipboardData.items.length > 0) {
 
 							for (const item of event.clipboardData.items) {
 								if (item.kind === 'file' && item.type.startsWith('image/')) {
