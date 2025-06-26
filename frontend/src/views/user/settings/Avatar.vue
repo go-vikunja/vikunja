@@ -5,7 +5,7 @@
 		</Message>
 
 		<Message v-else-if="avatarProvider === 'openid'">
-			{{ $t('user.settings.avatar.openid', {provider: authStore.info.authProvider}) }}
+			{{ $t('user.settings.avatar.openid', {provider: authStore.info?.authProvider || 'unknown'}) }}
 		</Message>
 
 		<template v-else>
@@ -84,6 +84,7 @@ import 'vue-advanced-cropper/dist/style.css'
 
 import AvatarService from '@/services/avatar'
 import AvatarModel from '@/models/avatar'
+import type {AvatarProvider} from '@/modelTypes/IAvatar'
 import {useTitle} from '@/composables/useTitle'
 import {success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
@@ -112,7 +113,7 @@ const loading = ref(false)
 const avatarProvider = ref('')
 
 async function avatarStatus() {
-	const {avatarProvider: currentProvider} = await avatarService.get({})
+	const {avatarProvider: currentProvider} = await avatarService.get(new AvatarModel({avatarProvider: 'default'}))
 	avatarProvider.value = currentProvider
 }
 
@@ -120,7 +121,7 @@ avatarStatus()
 
 
 async function updateAvatarStatus() {
-	await avatarService.update(new AvatarModel({avatarProvider: avatarProvider.value}))
+	await avatarService.update(new AvatarModel({avatarProvider: avatarProvider.value as AvatarProvider}))
 	success({message: t('user.settings.avatar.statusUpdateSuccess')})
 	authStore.reloadAvatar()
 }
@@ -138,10 +139,12 @@ async function uploadAvatar() {
 	}
 
 	try {
-		const blob = await new Promise(resolve => canvas.toBlob(blob => resolve(blob)))
-		await avatarService.create(blob)
-		success({message: t('user.settings.avatar.setSuccess')})
-		authStore.reloadAvatar()
+		const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(blob => resolve(blob)))
+		if (blob) {
+			await avatarService.create(blob)
+			success({message: t('user.settings.avatar.setSuccess')})
+			authStore.reloadAvatar()
+		}
 	} finally {
 		loading.value = false
 		isCropAvatar.value = false
@@ -161,8 +164,10 @@ function cropAvatar() {
 	loading.value = true
 	const reader = new FileReader()
 	reader.onload = e => {
-		avatarToCrop.value = e.target.result
-		isCropAvatar.value = true
+		if (e.target) {
+			avatarToCrop.value = e.target.result
+			isCropAvatar.value = true
+		}
 	}
 	reader.onloadend = () => loading.value = false
 	reader.readAsDataURL(avatar[0])
