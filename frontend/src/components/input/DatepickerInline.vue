@@ -104,7 +104,7 @@ watch(
 	{immediate: true},
 )
 
-const flatPickrRef = ref<HTMLElement | null>(null)
+const flatPickrRef = ref<any>(null)
 const flatPickerConfig = computed(() => ({
 	altFormat: t('date.altFormatLong'),
 	altInput: true,
@@ -151,14 +151,14 @@ const flatPickrDate = computed({
 
 onMounted(() => {
 	const inputs = flatPickrRef.value?.$el.parentNode.querySelectorAll('.numInputWrapper > input.numInput')
-	inputs.forEach(i => {
+	inputs.forEach((i: HTMLInputElement) => {
 		i.addEventListener('input', handleFlatpickrInput)
 	})
 })
 
 onBeforeUnmount(() => {
 	const inputs = flatPickrRef.value?.$el.parentNode.querySelectorAll('.numInputWrapper > input.numInput')
-	inputs.forEach(i => {
+	inputs.forEach((i: HTMLInputElement) => {
 		i.removeEventListener('input', handleFlatpickrInput)
 	})
 })
@@ -170,16 +170,19 @@ onBeforeUnmount(() => {
 // chance to fire. In that case, it would not update the date value. To fix 
 // this, we're now listening on every change and bubble them up as soon
 // as they happen.
-function handleFlatpickrInput(e) {
+function handleFlatpickrInput(e: Event) {
+	const target = e.target as HTMLInputElement | null
+	if (!target) return
+	
 	const newDate = new Date(date?.value || 'now')
-	if (e.target.classList.contains('flatpickr-minute')) {
-		newDate.setMinutes(e.target.value)
+	if (target.classList.contains('flatpickr-minute')) {
+		newDate.setMinutes(parseInt(target.value))
 	}
-	if (e.target.classList.contains('flatpickr-hour')) {
-		newDate.setHours(e.target.value)
+	if (target.classList.contains('flatpickr-hour')) {
+		newDate.setHours(parseInt(target.value))
 	}
-	if (e.target.classList.contains('cur-year')) {
-		newDate.setFullYear(e.target.value)
+	if (target.classList.contains('cur-year')) {
+		newDate.setFullYear(parseInt(target.value))
 	}
 	flatPickrDate.value = newDate
 }
