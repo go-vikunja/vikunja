@@ -26,7 +26,7 @@
 				v-if="isExternalUser"
 				class="help"
 			>
-				{{ $t('user.settings.general.externalUserNameChange', {provider: authStore.info.authProvider}) }}
+				{{ $t('user.settings.general.externalUserNameChange', {provider: authStore.info?.authProvider || 'unknown'}) }}
 			</p>
 		</div>
 		<div class="field">
@@ -309,7 +309,7 @@ const settings = ref<IUserSettings>({
 	},
 })
 
-function useAvailableTimezones(settingsRef: Ref<IUserSettings>) {
+function useAvailableTimezones(settingsRef: any) {
 	const availableTimezones = ref<{value: string, label: string}[]>([])
 	const searchResults = ref<{value: string, label: string}[]>([])
 
@@ -320,7 +320,7 @@ function useAvailableTimezones(settingsRef: Ref<IUserSettings>) {
 			if (r.data) {
 				// Transform timezones into objects with value/label pairs
 				availableTimezones.value = r.data
-					.sort((a, b) => a.localeCompare(b))
+					.sort((a: string, b: string) => a.localeCompare(b))
 					.map((tz: string) => ({
 						value: tz,
 						label: tz.replace(/_/g, ' '),
@@ -379,7 +379,7 @@ const availableLanguageOptions = ref(
 		.sort((a, b) => a.title.localeCompare(b.title)),
 )
 
-const isExternalUser = computed(() => !authStore.info.isLocalUser)
+const isExternalUser = computed(() => !authStore.info?.isLocalUser)
 
 watch(
 	() => authStore.settings,
@@ -395,9 +395,9 @@ watch(
 
 const projectStore = useProjectStore()
 const defaultProject = computed({
-	get: () => projectStore.projects[settings.value.defaultProjectId],
-	set(l) {
-		settings.value.defaultProjectId = l ? l.id : DEFAULT_PROJECT_ID
+	get: () => settings.value.defaultProjectId ? projectStore.projects[settings.value.defaultProjectId] : null,
+	set(l: any) {
+		settings.value.defaultProjectId = l?.id || DEFAULT_PROJECT_ID
 	},
 })
 const filterUsedInOverview = computed({
@@ -412,6 +412,7 @@ const loading = computed(() => authStore.isLoadingGeneralSettings)
 async function updateSettings() {
 	await authStore.saveUserSettings({
 		settings: {...settings.value},
+		showMessage: true,
 	})
 }
 </script>
