@@ -121,7 +121,11 @@ function toggleEmojiPicker() {
 }
 
 function hasCurrentUserReactedWithEmoji(value: string): boolean {
-	const user = model.value[value].find(u => u.id === authStore.info.id)
+	if (!model.value || !model.value[value] || !authStore.info) {
+		return false
+	}
+	const currentUserId = authStore.info.id
+	const user = model.value[value].find(u => u.id === currentUserId)
 	return typeof user !== 'undefined'
 }
 
