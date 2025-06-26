@@ -829,9 +829,7 @@ const dateIsToday = computed(() => (date: Date) => {
 }
 
 .gantt-bar-text {
-	font-family: $vikunja-font;
-	font-size: 14px;
-	font-weight: 500;
+	font-size: .85rem;
 	pointer-events: none;
 	user-select: none;
 }
