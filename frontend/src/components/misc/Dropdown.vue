@@ -37,17 +37,18 @@
 </template>
 
 <script setup lang="ts">
-import {ref} from 'vue'
+import {ref, type PropType} from 'vue'
 import {onClickOutside} from '@vueuse/core'
 import type {IconProp} from '@fortawesome/fontawesome-svg-core'
 
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
-withDefaults(defineProps<{
-	triggerIcon?: IconProp
-}>(), {
-	triggerIcon: 'ellipsis-h',
+const props = defineProps({
+	triggerIcon: {
+		type: Object as PropType<IconProp>,
+		default: 'ellipsis-h'
+	}
 })
 
 const emit = defineEmits<{
