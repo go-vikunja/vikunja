@@ -38,10 +38,9 @@ import GanttBarPrimitive from '../primitives/GanttBarPrimitive.vue'
 import type {GanttBarModel} from '@/composables/useGanttBar'
 import {colorIsDark} from '@/helpers/color/colorIsDark'
 
+const props = defineProps<{ model:GanttBarModel; timelineStart:Date; timelineEnd:Date; onMove:(id:string,start:Date,end:Date)=>void; onDoubleClick?:(model:GanttBarModel)=>void }>()
 const PIXELS_PER_DAY = 30
 const MILLISECONDS_PER_DAY = 1000 * 60 * 60 * 24
-
-const props = defineProps<{ model:GanttBarModel; timelineStart:Date; timelineEnd:Date; onMove:(id:string,start:Date,end:Date)=>void; onDoubleClick?:(model:GanttBarModel)=>void }>()
 
 function computeX(date: Date) {
 	return (date.getTime() - props.timelineStart.getTime()) / MILLISECONDS_PER_DAY * PIXELS_PER_DAY

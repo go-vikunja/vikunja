@@ -550,7 +550,7 @@ function startDrag(bar: GanttBarModel, event: PointerEvent) {
 		startX: event.clientX,
 		originalStart: new Date(bar.start),
 		originalEnd: new Date(bar.end),
-		currentDays: 0
+		currentDays: 0,
 	}
 	
 	// Set grabbing cursor during drag
@@ -616,7 +616,7 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 		originalStart: new Date(bar.start),
 		originalEnd: new Date(bar.end),
 		currentDays: 0,
-		edge
+		edge,
 	}
 	
 	// Set col-resize cursor during resize
