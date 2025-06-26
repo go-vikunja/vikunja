@@ -12,6 +12,10 @@
 		:style="{
 			'--button-white-space': wrap ? 'break-spaces' : 'nowrap',
 		}"
+		:type="type"
+		:to="to"
+		:href="href"
+		:open-external-in-new-tab="openExternalInNewTab"
 	>
 		<template v-if="icon">
 			<Icon
@@ -37,10 +41,11 @@
 import {computed} from 'vue'
 import BaseButton, {type BaseButtonProps} from '@/components/base/BaseButton.vue'
 import type {IconProp} from '@fortawesome/fontawesome-svg-core'
+import type {RouteLocationRaw} from 'vue-router'
 
-export type ButtonTypes = keyof typeof VARIANT_CLASS_MAP
+export type ButtonTypes = 'primary' | 'secondary' | 'tertiary'
 
-export interface ButtonProps extends /* @vue-ignore */ BaseButtonProps {
+export interface ButtonProps {
 	variant?: ButtonTypes
 	icon?: IconProp
 	iconColor?: string
@@ -48,6 +53,11 @@ export interface ButtonProps extends /* @vue-ignore */ BaseButtonProps {
 	disabled?: boolean
 	shadow?: boolean
 	wrap?: boolean
+	// BaseButton props (explicit types to avoid union complexity)
+	type?: 'button' | 'submit' | undefined
+	to?: RouteLocationRaw
+	href?: string
+	openExternalInNewTab?: boolean
 }
 
 const props = withDefaults(defineProps<ButtonProps>(), {
@@ -58,6 +68,10 @@ const props = withDefaults(defineProps<ButtonProps>(), {
 	disabled: false,
 	shadow: true,
 	wrap: true,
+	type: undefined,
+	to: undefined,
+	href: undefined,
+	openExternalInNewTab: true,
 })
 
 defineOptions({name: 'XButton'})

@@ -248,7 +248,7 @@ const searchResultsVisible = computed(() => {
 })
 
 const creatableAvailable = computed(() => {
-	const hasResult = filteredSearchResults.value.some((elem) => elementInResults(elem, props.label, query.value as string))
+	const hasResult = filteredSearchResults.value.some((elem: T) => elementInResults(elem, props.label, query.value as string))
 	const hasQueryAlreadyAdded = Array.isArray(internalValue.value) && internalValue.value.some(elem => elementInResults(elem, props.label, query.value))
 
 	return props.creatable
@@ -259,7 +259,7 @@ const creatableAvailable = computed(() => {
 const filteredSearchResults = computed(() => {
 	const currentInternal = internalValue.value
 	if (props.multiple && currentInternal !== null && Array.isArray(currentInternal)) {
-		return searchResults.value.filter((item) => !currentInternal.some(e => e === item))
+		return searchResults.value.filter((item: T) => !currentInternal.some(e => e === item))
 	}
 
 	return searchResults.value
@@ -302,7 +302,9 @@ function search() {
 const multiselectRoot = ref<HTMLElement | null>(null)
 
 function hideSearchResultsHandler(e: MouseEvent) {
-	closeWhenClickedOutside(e, multiselectRoot.value, closeSearchResults)
+	if (multiselectRoot.value) {
+		closeWhenClickedOutside(e, multiselectRoot.value, closeSearchResults)
+	}
 }
 
 function closeSearchResults() {
@@ -318,6 +320,8 @@ function handleFocus() {
 }
 
 function select(object: T | null) {
+	if (object === null) return
+	
 	if (props.multiple) {
 		if (internalValue.value === null) {
 			internalValue.value = []
@@ -355,7 +359,7 @@ function setSelectedObject(object: string | T | null, resetOnly = false) {
 		return
 	}
 
-	query.value = props.label !== '' ? object[props.label] : object
+	query.value = props.label !== '' && typeof object === 'object' && object !== null ? (object as T)[props.label] : String(object)
 }
 
 const results = ref<(Element | ComponentPublicInstance)[]>([])
@@ -375,16 +379,16 @@ function preSelect(index: number) {
 	}
 
 	const elems = results.value[index]
-	if (typeof elems === 'undefined' || elems.length === 0) {
+	if (typeof elems === 'undefined') {
 		return
 	}
 
 	if (Array.isArray(elems)) {
-		elems[0].focus()
+		(elems[0] as HTMLElement).focus()
 		return
 	}
 
-	elems.focus()
+	(elems as HTMLElement).focus()
 }
 
 function create() {
@@ -405,7 +409,7 @@ function createOrSelectOnEnter() {
 
 	if (!creatableAvailable.value) {
 		// Check if there's an exact match for our search term
-		const exactMatch = filteredSearchResults.value.find((elem) => elementInResults(elem, props.label, query.value as string))
+		const exactMatch = filteredSearchResults.value.find((elem: T) => elementInResults(elem, props.label, query.value as string))
 		if (exactMatch) {
 			select(exactMatch)
 		}
