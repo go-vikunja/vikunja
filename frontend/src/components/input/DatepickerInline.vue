@@ -198,7 +198,7 @@ function setDateValue(dateString: string | Date | null) {
 
 function updateData() {
 	changed.value = true
-	emit('update:modelValue', date.value)
+	emit('update:modelValue', date.value ?? null)
 }
 
 function setDate(dateString: string) {
