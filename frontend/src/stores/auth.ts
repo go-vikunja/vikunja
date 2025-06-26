@@ -129,6 +129,7 @@ export const useAuthStore = defineStore('auth', () => {
 				playSoundWhenDone: true,
 				quickAddMagicMode: PrefixMode.Default,
 				colorSchema: 'auto',
+				allowIconChanges: true,
 				...newSettings.frontendSettings,
 			},
 		})

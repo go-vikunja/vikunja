@@ -11,6 +11,7 @@ export interface IFrontendSettings {
 	playSoundWhenDone: boolean
 	quickAddMagicMode: PrefixMode
 	colorSchema: BasicColorSchema
+	allowIconChanges: boolean
 	filterIdUsedOnOverview: IProject['id'] | null
 	defaultView?: DefaultProjectViewKind
 	minimumPriority: Priority
