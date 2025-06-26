@@ -9,7 +9,6 @@
 			v-for="bar in bars"
 			:key="bar.id"
 			:model="bar"
-			:on-move="() => {}"
 			:timeline-start="dateFromDate"
 			:timeline-end="dateToDate"
 		>
