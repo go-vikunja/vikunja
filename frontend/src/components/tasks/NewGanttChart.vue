@@ -211,8 +211,8 @@ const dayjsLanguageLoading = useDayjsLanguageSync(dayjs)
 const ganttContainer = ref(null)
 const router = useRouter()
 
-const dateFromDate = computed(() => new Date(new Date(filters.value.dateFrom).setHours(0,0,0,0)))
-const dateToDate = computed(() => new Date(new Date(filters.value.dateTo).setHours(23,59,0,0)))
+const dateFromDate = computed(() => dayjs(filters.value.dateFrom).startOf('day').toDate())
+const dateToDate = computed(() => dayjs(filters.value.dateTo).endOf('day').toDate())
 
 const DAY_WIDTH_PIXELS = 30
 const totalWidth = computed(() => {
@@ -356,8 +356,8 @@ watch(
 function updateGanttTask(id: string, newStart: Date, newEnd: Date) {
 	emit('update:task', {
 		id: Number(id),
-		startDate: new Date(newStart.setHours(0,0,0,0)),
-		endDate: new Date(newEnd.setHours(23,59,0,0)),
+		startDate: dayjs(newStart).startOf('day').toDate(),
+		endDate: dayjs(newEnd).endOf('day').toDate(),
 	})
 }
 
