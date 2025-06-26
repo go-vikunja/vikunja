@@ -73,11 +73,10 @@
 								:bars="ganttBars[index]"
 								:total-width="totalWidth"
 								:date-from-date="dateFromDate"
+								:date-to-date="dateToDate"
 								:day-width-pixels="DAY_WIDTH_PIXELS"
-								:is-dragging="isDragging"
-								:is-resizing="isResizing"
-								:drag-state="dragState"
-								@barPointerDown="handleBarPointerDown"
+								@updateTask="updateGanttTask"
+								@openTask="openTask"
 								@startResize="startResize"
 							/>
 						</div>
@@ -131,19 +130,7 @@ const dayjsLanguageLoading = useDayjsLanguageSync(dayjs)
 const ganttContainer = ref(null)
 const router = useRouter()
 
-// Reactive drag state
-const isDragging = ref(false)
-const isResizing = ref(false)
-const dragState = ref<{
-	barId: string
-	startX: number
-	originalStart: Date
-	originalEnd: Date
-	currentDays: number
-	edge?: 'start' | 'end'
-} | null>(null)
-
-// Event listener cleanup functions
+// Event listener cleanup functions for resize operations
 let dragMoveHandler: ((e: PointerEvent) => void) | null = null
 let dragStopHandler: (() => void) | null = null
 
@@ -290,12 +277,27 @@ watch(
 	{deep: true, immediate: true},
 )
 
+// Debounce task updates to only emit on drag end, but allow immediate visual feedback
+const updateTimeouts = ref<Map<string, NodeJS.Timeout>>(new Map())
+
 function updateGanttTask(id: string, newStart: Date, newEnd: Date) {
-	emit('update:task', {
-		id: Number(id),
-		startDate: dayjs(newStart).startOf('day').toDate(),
-		endDate: dayjs(newEnd).endOf('day').toDate(),
-	})
+	// Clear existing timeout for this task
+	const existingTimeout = updateTimeouts.value.get(id)
+	if (existingTimeout) {
+		clearTimeout(existingTimeout)
+	}
+	
+	// Set a new timeout to emit the change after drag stops
+	const timeout = setTimeout(() => {
+		emit('update:task', {
+			id: Number(id),
+			startDate: dayjs(newStart).startOf('day').toDate(),
+			endDate: dayjs(newEnd).endOf('day').toDate(),
+		})
+		updateTimeouts.value.delete(id)
+	}, 150) // 150ms delay to detect end of drag
+	
+	updateTimeouts.value.set(id, timeout)
 }
 
 function openTask(bar: GanttBarModel) {
@@ -319,140 +321,15 @@ function onRowFocus() {
 }
 
 
-// Double-click and drag detection
-let lastClickTime = 0
-let dragStarted = false
-
-function handleBarPointerDown(bar: GanttBarModel, event: PointerEvent) {
-	event.preventDefault()
-	
-	const currentTime = Date.now()
-	const timeDiff = currentTime - lastClickTime
-	
-	// Double-click detection (within 500ms)
-	if (timeDiff < 500) {
-		openTask(bar)
-		lastClickTime = 0
-		return
-	}
-	
-	lastClickTime = currentTime
-	dragStarted = false
-	
-	const startX = event.clientX
-	const startY = event.clientY
-	
-	const handleMove = (e: PointerEvent) => {
-		const diffX = Math.abs(e.clientX - startX)
-		const diffY = Math.abs(e.clientY - startY)
-		
-		// Start drag if mouse moved more than 5 pixels
-		if (!dragStarted && (diffX > 5 || diffY > 5)) {
-			dragStarted = true
-			document.removeEventListener('pointermove', handleMove)
-			document.removeEventListener('pointerup', handleStop)
-			startDrag(bar, event)
-		}
-	}
-	
-	const handleStop = () => {
-		document.removeEventListener('pointermove', handleMove)
-		document.removeEventListener('pointerup', handleStop)
-		// If no drag was started, this was just a click (do nothing)
-	}
-	
-	document.addEventListener('pointermove', handleMove)
-	document.addEventListener('pointerup', handleStop)
-}
-
-function startDrag(bar: GanttBarModel, event: PointerEvent) {
-	event.preventDefault()
-	
-	// Initialize reactive drag state
-	isDragging.value = true
-	dragState.value = {
-		barId: bar.id,
-		startX: event.clientX,
-		originalStart: new Date(bar.start),
-		originalEnd: new Date(bar.end),
-		currentDays: 0,
-	}
-	
-	// Set grabbing cursor during drag
-	document.body.style.setProperty('cursor', 'grabbing', 'important')
-	
-	// Find the bar element and set cursor directly for SVG elements
-	const barGroup = (event.target as Element).closest('g')
-	const barElement = barGroup?.querySelector('.gantt-bar')
-	if (barElement) {
-		(barElement as HTMLElement).style.setProperty('cursor', 'grabbing', 'important')
-	}
-	
-	const handleMove = (e: PointerEvent) => {
-		if (!dragState.value || !isDragging.value) return
-		
-		const diff = e.clientX - dragState.value.startX
-		const days = Math.round(diff / DAY_WIDTH_PIXELS)
-		
-		// Update reactive state - this will automatically update the template
-		if (days !== dragState.value.currentDays) {
-			dragState.value.currentDays = days
-		}
-	}
-	
-	const handleStop = () => {
-		if (dragMoveHandler) {
-			document.removeEventListener('pointermove', dragMoveHandler)
-			dragMoveHandler = null
-		}
-		if (dragStopHandler) {
-			document.removeEventListener('pointerup', dragStopHandler)
-			dragStopHandler = null
-		}
-		
-		// Reset cursor
-		document.body.style.removeProperty('cursor')
-		if (barElement) {
-			(barElement as HTMLElement).style.removeProperty('cursor')
-		}
-		
-		// Only dispatch update when drag is finished
-		if (dragState.value && dragState.value.currentDays !== 0) {
-			const newStart = new Date(dragState.value.originalStart)
-			newStart.setDate(newStart.getDate() + dragState.value.currentDays)
-			const newEnd = new Date(dragState.value.originalEnd)
-			newEnd.setDate(newEnd.getDate() + dragState.value.currentDays)
-			
-			updateGanttTask(bar.id, newStart, newEnd)
-		}
-		
-		// Reset drag state
-		isDragging.value = false
-		dragState.value = null
-	}
-	
-	// Store handlers for cleanup
-	dragMoveHandler = handleMove
-	dragStopHandler = handleStop
-	
-	document.addEventListener('pointermove', handleMove)
-	document.addEventListener('pointerup', handleStop)
-}
 
 function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEvent) {
 	event.preventDefault()
 	event.stopPropagation() // Prevent drag from triggering
 	
-	// Initialize reactive resize state
-	isResizing.value = true
-	dragState.value = {
-		barId: bar.id,
-		startX: event.clientX,
-		originalStart: new Date(bar.start),
-		originalEnd: new Date(bar.end),
-		currentDays: 0,
-		edge,
-	}
+	const startX = event.clientX
+	const originalStart = new Date(bar.start)
+	const originalEnd = new Date(bar.end)
+	let finalDays = 0
 	
 	// Set col-resize cursor during resize
 	document.body.style.setProperty('cursor', 'col-resize', 'important')
@@ -465,26 +342,21 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 	}
 	
 	const handleMove = (e: PointerEvent) => {
-		if (!dragState.value || !isResizing.value) return
-		
-		const diff = e.clientX - dragState.value.startX
+		const diff = e.clientX - startX
 		const days = Math.round(diff / DAY_WIDTH_PIXELS)
 		
 		// Validate resize bounds
 		if (edge === 'start') {
-			const newStart = new Date(dragState.value.originalStart)
+			const newStart = new Date(originalStart)
 			newStart.setDate(newStart.getDate() + days)
-			if (newStart >= dragState.value.originalEnd) return
+			if (newStart >= originalEnd) return
 		} else {
-			const newEnd = new Date(dragState.value.originalEnd)
+			const newEnd = new Date(originalEnd)
 			newEnd.setDate(newEnd.getDate() + days)
-			if (newEnd <= dragState.value.originalStart) return
+			if (newEnd <= originalStart) return
 		}
 		
-		// Update reactive state - this will automatically update the template
-		if (days !== dragState.value.currentDays) {
-			dragState.value.currentDays = days
-		}
+		finalDays = days
 	}
 	
 	const handleStop = () => {
@@ -503,30 +375,26 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 			(barElement as HTMLElement).style.removeProperty('cursor')
 		}
 		
-		// Only dispatch update when resize is finished
-		if (dragState.value && dragState.value.currentDays !== 0) {
+		// Use the final days from the last move event
+		if (finalDays !== 0) {
 			if (edge === 'start') {
-				const newStart = new Date(dragState.value.originalStart)
-				newStart.setDate(newStart.getDate() + dragState.value.currentDays)
+				const newStart = new Date(originalStart)
+				newStart.setDate(newStart.getDate() + finalDays)
 				
 				// Ensure start doesn't go past end
-				if (newStart < dragState.value.originalEnd) {
-					updateGanttTask(bar.id, newStart, dragState.value.originalEnd)
+				if (newStart < originalEnd) {
+					updateGanttTask(bar.id, newStart, originalEnd)
 				}
 			} else {
-				const newEnd = new Date(dragState.value.originalEnd)
-				newEnd.setDate(newEnd.getDate() + dragState.value.currentDays)
+				const newEnd = new Date(originalEnd)
+				newEnd.setDate(newEnd.getDate() + finalDays)
 				
 				// Ensure end doesn't go before start
-				if (newEnd > dragState.value.originalStart) {
-					updateGanttTask(bar.id, dragState.value.originalStart, newEnd)
+				if (newEnd > originalStart) {
+					updateGanttTask(bar.id, originalStart, newEnd)
 				}
 			}
 		}
-		
-		// Reset resize state
-		isResizing.value = false
-		dragState.value = null
 	}
 	
 	// Store handlers for cleanup
@@ -547,7 +415,10 @@ onUnmounted(() => {
 		document.removeEventListener('pointerup', dragStopHandler)
 		dragStopHandler = null
 	}
-	// Reset cursor if component unmounts during drag
+	// Clear any pending update timeouts
+	updateTimeouts.value.forEach(timeout => clearTimeout(timeout))
+	updateTimeouts.value.clear()
+	// Reset cursor if component unmounts during resize
 	document.body.style.removeProperty('cursor')
 })
 
