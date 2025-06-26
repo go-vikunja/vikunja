@@ -123,8 +123,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{
 	'update:modelValue': [value: {
-		dateFrom: Date | string,
-		dateTo: Date | string
+		dateFrom: Date | string | null,
+		dateTo: Date | string | null
 	}]
 }>()
 
@@ -136,7 +136,7 @@ const flatPickerConfig = computed(() => ({
 	dateFormat: 'Y-m-d H:i',
 	enableTime: false,
 	wrap: true,
-	mode: 'range',
+	mode: 'range' as const,
 	locale: useFlatpickrLanguage().value,
 }))
 
@@ -144,8 +144,8 @@ const showHowItWorks = ref(false)
 
 const flatpickrRange = ref('')
 
-const from = ref('')
-const to = ref('')
+const from = ref<string | Date | null>('')
+const to = ref<string | Date | null>('')
 
 watch(
 	() => props.modelValue,
@@ -154,8 +154,8 @@ watch(
 		to.value = newValue.dateTo
 		// Only set the date back to flatpickr when it's an actual date.
 		// Otherwise flatpickr runs in an endless loop and slows down the browser.
-		const dateFrom = parseDateOrString(from.value, false)
-		const dateTo = parseDateOrString(to.value, false)
+		const dateFrom = parseDateOrString(from.value instanceof Date ? from.value.toISOString() : from.value, false)
+		const dateTo = parseDateOrString(to.value instanceof Date ? to.value.toISOString() : to.value, false)
 		if (dateFrom instanceof Date && dateTo instanceof Date) {
 			flatpickrRange.value = `${from.value} to ${to.value}`
 		}
@@ -192,7 +192,7 @@ watch(
 watch(() => from.value, emitChanged)
 watch(() => to.value, emitChanged)
 
-function setDateRange(range: string[] | null) {
+function setDateRange(range: readonly [string, string] | null) {
 	if (range === null) {
 		from.value = ''
 		to.value = ''
