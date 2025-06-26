@@ -132,6 +132,7 @@ import DropdownItem from '@/components/misc/DropdownItem.vue'
 import Subscription from '@/components/misc/Subscription.vue'
 import type {IProject} from '@/modelTypes/IProject'
 import type {ISubscription} from '@/modelTypes/ISubscription'
+import type {DeepReadonly} from '@/types/utilities'
 
 import {isSavedFilter} from '@/services/savedFilter'
 import {useConfigStore} from '@/stores/config'
@@ -140,7 +141,7 @@ import {useAuthStore} from '@/stores/auth'
 import {RIGHTS} from '@/constants/rights'
 
 const props = defineProps<{
-	project: IProject
+	project: IProject | any
 }>()
 
 const projectStore = useProjectStore()
