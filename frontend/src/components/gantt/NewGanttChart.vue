@@ -73,6 +73,7 @@
 								:bars="ganttBars[index]"
 								:total-width="totalWidth"
 								:date-from-date="dateFromDate"
+								:date-to-date="dateToDate"
 								:day-width-pixels="DAY_WIDTH_PIXELS"
 								:is-dragging="isDragging"
 								:is-resizing="isResizing"
