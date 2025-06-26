@@ -17,7 +17,7 @@ export default class SavedFilterModel extends AbstractModel<ISavedFilter> implem
 		s: '',
 	}
 
-	owner: IUser = {}
+	owner: IUser = new UserModel()
 	created: Date = null
 	updated: Date = null
 
