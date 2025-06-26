@@ -9,7 +9,6 @@ export interface UseGanttOptions {
   endDate: Date
   unit?: 'hour' | 'day'
   bars?: GanttBarInput[]
-  window?: Window | undefined
   watchOptions?: { immediate?: boolean; flush?: 'pre'|'post'|'sync' }
 }
 
@@ -65,10 +64,6 @@ export function useGantt(options: UseGanttOptions): UseGanttReturn {
 		},
 		options.watchOptions,
 	)
-
-	tryOnUnmounted(() => {
-		// nothing to cleanup yet
-	})
 
 	return { timeScale, bars, isDragSupported, moveBar, zoom }
 }
