@@ -139,7 +139,8 @@
 				"uploadAvatar": "Carregar Avatar",
 				"statusUpdateSuccess": "Estado do avatar foi atualizado com sucesso!",
 				"setSuccess": "O avatar foi configurado com sucesso!",
-				"ldap": "O teu avatar é sincronizado automaticamente a partir do serviço de diretório da tua organização (LDAP). Podes solicitar à tua equipa de TI mais informação sobre como o alterar."
+				"ldap": "O teu avatar é sincronizado automaticamente a partir do serviço de diretório da tua organização (LDAP). Podes solicitar à tua equipa de TI mais informação sobre como o alterar.",
+				"openid": "O teu avatar é gerido pelo teu fornecedor de início de sessão ({provider}). Para o alterar, atualiza-o antes lá."
 			},
 			"quickAddMagic": {
 				"title": "Modo de Introdução Mágica Rápida",
@@ -1057,6 +1058,7 @@
 			"delete": "Eliminar esta tarefa",
 			"priority": "Alterar a prioridade desta tarefa",
 			"favorite": "Marcar / Desmarcar esta tarefa como favorita",
+			"openProject": "Abrir o projeto desta tarefa",
 			"save": "Salvar a tarefa atual"
 		},
 		"project": {
@@ -1234,7 +1236,9 @@
 	},
 	"about": {
 		"title": "Sobre",
-		"version": "Versão: {version}"
+		"version": "Versão: {version}",
+		"frontendVersion": "Versão da interface: {version}",
+		"apiVersion": "Versão da API: {version}"
 	},
 	"time": {
 		"units": {

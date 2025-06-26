@@ -105,9 +105,6 @@
 	</CreateEdit>
 </template>
 
-<script lang="ts">
-export default { name: 'ProjectSettingBackground' }
-</script>
 
 <script setup lang="ts">
 import {ref, computed, shallowReactive} from 'vue'
@@ -132,6 +129,8 @@ import {useTitle} from '@/composables/useTitle'
 
 import CreateEdit from '@/components/misc/CreateEdit.vue'
 import {success} from '@/message'
+
+defineOptions({name: 'ProjectSettingBackground'})
 
 const SEARCH_DEBOUNCE = 300
 

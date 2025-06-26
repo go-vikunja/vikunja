@@ -400,7 +400,7 @@ export const useAuthStore = defineStore('auth', () => {
 	/**
 	 * Renews the api token and saves it to local storage
 	 */
-		function renewToken() {
+	function renewToken() {
 		// FIXME: Timeout to avoid race conditions when authenticated as a user (=auth token in localStorage) and as a
 		// link share in another tab. Without the timeout both the token renew and link share auth are executed at
 		// the same time and one might win over the other.
@@ -481,5 +481,5 @@ export const useAuthStore = defineStore('auth', () => {
 
 // support hot reloading
 if (import.meta.hot) {
-  import.meta.hot.accept(acceptHMRUpdate(useAuthStore, import.meta.hot))
+	import.meta.hot.accept(acceptHMRUpdate(useAuthStore, import.meta.hot))
 }

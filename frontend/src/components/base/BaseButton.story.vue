@@ -5,13 +5,13 @@ import {createRouter, createMemoryHistory} from 'vue-router'
 import BaseButton from './BaseButton.vue'
 
 function setupApp({ app }) {
-  // Router mock
-  app.use(createRouter({
-    history: createMemoryHistory(),
-    routes: [
-      { path: '/', name: 'home', component: { render: () => null } },
-    ],
-  }))
+	// Router mock
+	app.use(createRouter({
+		history: createMemoryHistory(),
+		routes: [
+			{ path: '/', name: 'home', component: { render: () => null } },
+		],
+	}))
 }
 
 

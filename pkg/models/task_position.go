@@ -118,6 +118,7 @@ func RecalculateTaskPositions(s *xorm.Session, view *ProjectView, a web.Auth) (e
 	log.Debugf("Recalculating task positions for view %d", view.ID)
 
 	opts := &taskSearchOptions{
+		projectViewID: view.ID,
 		sortby: []*sortParam{
 			{
 				projectViewID: view.ID,

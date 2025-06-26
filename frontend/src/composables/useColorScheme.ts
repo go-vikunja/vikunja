@@ -32,13 +32,13 @@ export const useColorScheme = createSharedComposable(() => {
 		return autoColorScheme === 'dark'
 	})
 
-    function onChanged(v: boolean) {
+	function onChanged(v: boolean) {
 		const el = window?.document.querySelector('html')
 		el?.classList.toggle(CLASS_DARK, v)
 		el?.classList.toggle(CLASS_LIGHT, !v)
 	}
 
-    watch(isDark, onChanged, { flush: 'post' })
+	watch(isDark, onChanged, { flush: 'post' })
 
 	tryOnMounted(() => onChanged(isDark.value))
 

@@ -73,8 +73,8 @@ const tooltipText = computed(() => {
 			return t('task.subscription.subscribedTaskThroughParentProject')
 		}
 
-			return ''
-		}
+		return ''
+	}
 
 	switch (props.entity) {
 		case 'project':

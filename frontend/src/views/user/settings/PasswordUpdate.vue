@@ -68,9 +68,6 @@
 	</Card>
 </template>
 
-<script lang="ts">
-export default {name: 'UserSettingsPasswordUpdate'}
-</script>
 
 <script setup lang="ts">
 import {ref, reactive, shallowReactive, computed} from 'vue'
@@ -82,6 +79,8 @@ import PasswordUpdateModel from '@/models/passwordUpdate'
 import {useTitle} from '@/composables/useTitle'
 import {success, error} from '@/message'
 import {useAuthStore} from '@/stores/auth'
+
+defineOptions({name: 'UserSettingsPasswordUpdate'})
 
 const passwordUpdateService = shallowReactive(new PasswordUpdateService())
 const passwordUpdate = reactive(new PasswordUpdateModel())

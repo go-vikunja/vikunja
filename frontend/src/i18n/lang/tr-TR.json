@@ -139,7 +139,8 @@
 				"uploadAvatar": "Avatar Yükle",
 				"statusUpdateSuccess": "Avatar durumu başarıyla güncellendi!",
 				"setSuccess": "Avatar başarıyla ayarlandı!",
-				"ldap": "Avatarınız, kuruluşunuzun dizin hizmeti (LDAP) ile otomatik olarak senkronize edilir. Nasıl değiştireceğiniz hakkında bilgi almak için BT ekibinize danışabilirsiniz."
+				"ldap": "Avatarınız, kuruluşunuzun dizin hizmeti (LDAP) ile otomatik olarak senkronize edilir. Nasıl değiştireceğiniz hakkında bilgi almak için BT ekibinize danışabilirsiniz.",
+				"openid": "Avatarınız, oturum açma sağlayıcınızdan ({provider}) otomatik olarak senkronize edilir. Değiştirmek için lütfen oradan güncelleyin."
 			},
 			"quickAddMagic": {
 				"title": "Hızlı Ekleme Sihir Modu",
@@ -1057,6 +1058,7 @@
 			"delete": "Bu görevi sil",
 			"priority": "Bu görevin önceliğini değiştir",
 			"favorite": "Bu görevi favori olarak işaretle/kaldır",
+			"openProject": "Bu görevin projesini aç",
 			"save": "Mevcut görevi kaydet"
 		},
 		"project": {
@@ -1234,7 +1236,9 @@
 	},
 	"about": {
 		"title": "Hakkında",
-		"version": "Sürüm: {version}"
+		"version": "Sürüm: {version}",
+		"frontendVersion": "Frontend sürümü: {version}",
+		"apiVersion": "API sürümü: {version}"
 	},
 	"time": {
 		"units": {

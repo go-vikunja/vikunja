@@ -35,11 +35,11 @@ function createSingleTaskInBucket(count = 1, attrs = {}) {
 }
 
 function createTaskWithBuckets(buckets, count = 1) {
-	const data = TaskFactory.create(10, {
+	const data = TaskFactory.create(count, {
 		project_id: 1,
 	})
 	TaskBucketFactory.truncate()
-	data.forEach(t => TaskBucketFactory.create(count, {
+	data.forEach(t => TaskBucketFactory.create(1, {
 		task_id: t.id,
 		bucket_id: buckets[0].id,
 		project_view_id: buckets[0].project_view_id,

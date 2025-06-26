@@ -83,8 +83,8 @@ export const useProjectStore = defineStore('project', () => {
 	const searchProjectAndFilter = computed(() => {
 		return (query: string, includeArchived = false) => {
 			return search(query)
-					?.map(id => projects.value[id])
-					.filter(project => project?.isArchived === includeArchived)
+				?.map(id => projects.value[id])
+				.filter(project => project?.isArchived === includeArchived)
 				|| []
 		}
 	})
@@ -102,9 +102,9 @@ export const useProjectStore = defineStore('project', () => {
 	const searchSavedFilter = computed(() => {
 		return (query: string, includeArchived = false) => {
 			return search(query)
-					?.filter(value => getSavedFilterIdFromProjectId(value) > 0)
-					.map(id => projects.value[id])
-					.filter(project => project?.isArchived === includeArchived)
+				?.filter(value => getSavedFilterIdFromProjectId(value) > 0)
+				.map(id => projects.value[id])
+				.filter(project => project?.isArchived === includeArchived)
 				|| []
 		}
 	})

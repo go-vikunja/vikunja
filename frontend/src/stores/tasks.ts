@@ -538,5 +538,5 @@ export const useTaskStore = defineStore('task', () => {
 
 // support hot reloading
 if (import.meta.hot) {
-  import.meta.hot.accept(acceptHMRUpdate(useTaskStore, import.meta.hot))
+	import.meta.hot.accept(acceptHMRUpdate(useTaskStore, import.meta.hot))
 }

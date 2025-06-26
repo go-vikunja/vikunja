@@ -60,7 +60,7 @@ const emit = defineEmits<{
 
 const description = ref<string>('')
 watchEffect(() => {
-		description.value = props.modelValue.description
+	description.value = props.modelValue.description
 })
 
 const saved = ref(false)

@@ -110,8 +110,8 @@ const errorMessage = ref('')
 
 function resetEmptyTitleError() {
 	if (!newTaskTitle.value) {
-        errorMessage.value = ''
-    }
+		errorMessage.value = ''
+	}
 }
 
 const loading = computed(() => taskStore.isLoading)

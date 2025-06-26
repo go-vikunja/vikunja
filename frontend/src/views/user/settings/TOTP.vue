@@ -93,9 +93,6 @@
 	</Card>
 </template>
 
-<script lang="ts">
-export default { name: 'UserSettingsTotp' }
-</script>
 
 <script lang="ts" setup>
 import {computed, ref, shallowReactive} from 'vue'
@@ -111,9 +108,10 @@ import {useConfigStore} from '@/stores/config'
 import {useAuthStore} from '@/stores/auth'
 import type {ITotp} from '@/modelTypes/ITotp'
 
+defineOptions({name: 'UserSettingsTotp'})
+
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.settings.totp.title')} - ${t('user.settings.title')}`)
-
 
 const totpService = shallowReactive(new TotpService())
 const totp = ref<ITotp>(new TotpModel())

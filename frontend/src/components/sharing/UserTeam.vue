@@ -156,9 +156,6 @@
 	</div>
 </template>
 
-<script lang="ts">
-export default {name: 'UserTeamShare'}
-</script>
 
 <script setup lang="ts">
 import {ref, reactive, computed, shallowReactive, type Ref} from 'vue'
@@ -200,6 +197,8 @@ const props = withDefaults(defineProps<{
 	type: 'project',
 	userIsAdmin: false,
 })
+
+defineOptions({name: 'UserTeamShare'})
 
 const {t} = useI18n({useScope: 'global'})
 

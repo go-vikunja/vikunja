@@ -139,7 +139,8 @@
 				"uploadAvatar": "Profiilbild ufeladä",
 				"statusUpdateSuccess": "Avatar Zuestand erfolgriich aktualisiert!",
 				"setSuccess": "Diis Profilbild isch erfolgriich gsetzt worde!",
-				"ldap": "Dein Avatar wird automatisch aus dem Verzeichnisdienst deiner Organisation (LDAP) synchronisiert. Du kannst dein IT-Team nach Informationen fragen, um es zu ändern."
+				"ldap": "Dein Avatar wird automatisch aus dem Verzeichnisdienst deiner Organisation (LDAP) synchronisiert. Du kannst dein IT-Team nach Informationen fragen, um es zu ändern.",
+				"openid": "Dein Avatar wird von deinem Login-Provider verwaltet ({provider}). Um ihn zu ändern, aktualisiere ihn bitte dort."
 			},
 			"quickAddMagic": {
 				"title": "Quick Add Magic Modus",
@@ -1057,6 +1058,7 @@
 			"delete": "Diese Aufgabe löschen",
 			"priority": "Die Priorität dieser Aufgabe ändern",
 			"favorite": "Diese Aufgabe zum Favoriten machen / von Favoriten entfernen",
+			"openProject": "Projekt dieser Aufgabe öffnen",
 			"save": "Aktuelle Aufgabe speichern"
 		},
 		"project": {
@@ -1234,7 +1236,9 @@
 	},
 	"about": {
 		"title": "Über",
-		"version": "Version: {version}"
+		"version": "Version: {version}",
+		"frontendVersion": "Frontend-Version: {version}",
+		"apiVersion": "API-Version: {version}"
 	},
 	"time": {
 		"units": {

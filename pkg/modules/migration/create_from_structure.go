@@ -180,7 +180,12 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 	if len(project.Buckets) > 0 {
 		log.Debugf("[creating structure] Creating %d buckets", len(project.Buckets))
 	}
+
 	for _, bucket := range originalBuckets {
+		if _, exists := bucketsByOldID[bucket.ID]; exists {
+			continue
+		}
+
 		oldID := bucket.ID
 		bucket.ID = 0 // We want a new id
 		bucket.ProjectID = project.ID
@@ -188,6 +193,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		if err != nil {
 			return
 		}
+
 		bucketsByOldID[oldID] = bucket
 		log.Debugf("[creating structure] Created bucket %d, old ID was %d", bucket.ID, oldID)
 	}
@@ -299,10 +305,14 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 	for i, t := range tasks {
 		oldid := t.ID
 		t.ProjectID = project.ID
+		originalBucketID := t.BucketID
+		t.BucketID = 0
 		err = t.Create(s, user)
 		if err != nil && models.IsErrTaskCannotBeEmpty(err) {
 			continue
 		}
+
+		t.BucketID = originalBucketID
 
 		err = setBucketOrDefault(&tasks[i].Task)
 		if err != nil {
@@ -330,11 +340,17 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 				if _, exists := tasksByOldID[rt.ID]; !exists || rt.ID == 0 {
 					oldid := rt.ID
 					rt.ProjectID = t.ProjectID
+					originalBucketID := rt.BucketID
+					rt.BucketID = 0
+
 					err = rt.Create(s, user)
 					if err != nil {
 						log.Debugf("[creating structure] Error while creating related task %d: %s", rt.ID, err.Error())
 						return
 					}
+
+					rt.BucketID = originalBucketID
+
 					err = setBucketOrDefault(rt)
 					if err != nil {
 						return

@@ -189,7 +189,13 @@ describe('Task', () => {
 			LabelTaskFactory.truncate()
 			TaskAttachmentFactory.truncate()
 		})
+		it('Shows a 404 page for nonexisting tasks', () => {
 
+			cy.visit('/tasks/9999')
+
+			cy.contains('Not found')
+				.should('be.visible')
+		})
 		it('Shows all task details', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
@@ -503,6 +509,7 @@ describe('Task', () => {
 			TaskBucketFactory.create(1, {
 				task_id: tasks[0].id,
 				bucket_id: buckets[0].id,
+				project_view_id: buckets[0].project_view_id,
 			})
 
 			cy.visit(`/projects/${projects[0].id}/4`)
@@ -895,6 +902,11 @@ describe('Task', () => {
 			})
 			const labels = LabelFactory.create(1)
 			LabelTaskFactory.truncate()
+			TaskBucketFactory.create(1, {
+				task_id: tasks[0].id,
+				bucket_id: buckets[0].id,
+				project_view_id: buckets[0].project_view_id,
+			})
 
 			cy.visit(`/projects/${projects[0].id}/4`)
 

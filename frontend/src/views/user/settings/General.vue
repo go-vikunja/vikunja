@@ -247,9 +247,6 @@
 	</Card>
 </template>
 
-<script lang="ts">
-export default {name: 'UserSettingsGeneral'}
-</script>
 
 <script setup lang="ts">
 import {computed, watch, ref} from 'vue'
@@ -272,6 +269,8 @@ import type {IUserSettings} from '@/modelTypes/IUserSettings'
 import {isSavedFilter} from '@/services/savedFilter'
 import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/modelTypes/IProjectView'
 import {PRIORITIES} from '@/constants/priorities'
+
+defineOptions({name: 'UserSettingsGeneral'})
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.settings.general.title')} - ${t('user.settings.title')}`)
@@ -335,17 +334,17 @@ function useAvailableTimezones(settingsRef: Ref<IUserSettings>) {
 			.filter(tz => tz.label.toLowerCase().includes(query.toLowerCase()))
 	}
 	
-		const timezoneObject = computed({
-			get: () => ({ 
-				value: settingsRef.value.timezone, 
-				label: settingsRef.value.timezone?.replace(/_/g, ' '), 
-			}),
-			set: (obj) => {
-				if (obj && typeof obj === 'object' && 'value' in obj) {
-					settingsRef.value.timezone = obj.value
-				}
-			},
-		})
+	const timezoneObject = computed({
+		get: () => ({ 
+			value: settingsRef.value.timezone, 
+			label: settingsRef.value.timezone?.replace(/_/g, ' '), 
+		}),
+		set: (obj) => {
+			if (obj && typeof obj === 'object' && 'value' in obj) {
+				settingsRef.value.timezone = obj.value
+			}
+		},
+	})
 
 	return {
 		availableTimezones,

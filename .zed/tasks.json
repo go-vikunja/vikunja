@@ -1,0 +1,12 @@
+// Project tasks configuration. See https://zed.dev/docs/tasks for documentation.
+[
+    {
+        "label": "build and run api",
+        "command": "mage build && ./vikunja"
+    },
+    {
+        "label": "run frontend dev",
+        "command": "pnpm dev",
+        "cwd": "$ZED_WORKTREE_ROOT/frontend"
+    }
+]

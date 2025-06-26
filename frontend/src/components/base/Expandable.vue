@@ -43,29 +43,29 @@ const props = withDefaults(defineProps<{
   * Makes only sense if `initialHeight` is set. */
 	backgroundColor?: string
 }>(), {
-  open: false,
-  initialHeight: undefined,
+	open: false,
+	initialHeight: undefined,
 	backgroundColor: undefined,
 })
 
 const wrapper = ref<HTMLElement | null>(null)
 
 const computedBackgroundColor = computed(() => {
-  if (wrapper.value === null) {
-    return props.backgroundColor || '#fff'
-  }
-  return props.backgroundColor || getInheritedBackgroundColor(wrapper.value)
+	if (wrapper.value === null) {
+		return props.backgroundColor || '#fff'
+	}
+	return props.backgroundColor || getInheritedBackgroundColor(wrapper.value)
 })
 
 /**
  * Get the natural height of the element
  */
 function getHeight(el: HTMLElement) {
-  const { display } = el.style // save display property
-  el.style.display = 'block' // Make it visible
-  const height = `${el.scrollHeight}px` // Get its height
-  el.style.display = display // revert to original display property
-  return height
+	const { display } = el.style // save display property
+	el.style.display = 'block' // Make it visible
+	const height = `${el.scrollHeight}px` // Get its height
+	el.style.display = display // revert to original display property
+	return height
 }
 
 /**
@@ -73,8 +73,8 @@ function getHeight(el: HTMLElement) {
  * https://gist.github.com/paulirish/5d52fb081b3570c81e3a
  */
 function forceLayout(el: HTMLElement) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-  el.offsetTop
+	// eslint-disable-next-line @typescript-eslint/no-unused-expressions
+	el.offsetTop
 }
 
 /* ######################################################################
@@ -84,50 +84,50 @@ function forceLayout(el: HTMLElement) {
 ###################################################################### */
 
 function beforeEnter(el: HTMLElement) {
-  el.style.height = '0'
-  el.style.willChange = 'height'
-  el.style.backfaceVisibility = 'hidden'
-  forceLayout(el)
+	el.style.height = '0'
+	el.style.willChange = 'height'
+	el.style.backfaceVisibility = 'hidden'
+	forceLayout(el)
 }
 
 // the done callback is optional when
 // used in combination with CSS
 function enter(el: HTMLElement) {
-  const height = getHeight(el) // Get the natural height
-  el.style.height = height // Update the height
+	const height = getHeight(el) // Get the natural height
+	el.style.height = height // Update the height
 }
 
 function afterEnter(el: HTMLElement) {
-  removeHeight(el)
+	removeHeight(el)
 }
 
 function enterCancelled(el: HTMLElement) {
-  removeHeight(el)
+	removeHeight(el)
 }
 
 function beforeLeave(el: HTMLElement) {
-  // Give the element a height to change from
-  el.style.height = `${el.scrollHeight}px`
-  forceLayout(el)
+	// Give the element a height to change from
+	el.style.height = `${el.scrollHeight}px`
+	forceLayout(el)
 }
 
 function leave(el: HTMLElement) {
-  // Set the height back to 0
-  el.style.height = '0'
-  el.style.willChange = ''
-  el.style.backfaceVisibility = ''
+	// Set the height back to 0
+	el.style.height = '0'
+	el.style.willChange = ''
+	el.style.backfaceVisibility = ''
 }
 
 function afterLeave(el: HTMLElement) {
-  removeHeight(el)
+	removeHeight(el)
 }
 
 function leaveCancelled(el: HTMLElement) {
-  removeHeight(el)
+	removeHeight(el)
 }
 
 function removeHeight(el: HTMLElement) {
-  el.style.height = ''
+	el.style.height = ''
 }
 </script>
 
