@@ -8,13 +8,13 @@ import type {DefaultProjectViewKind} from '@/modelTypes/IProjectView'
 import type {Priority} from '@/constants/priorities'
 
 export interface IFrontendSettings {
-        playSoundWhenDone: boolean
-        quickAddMagicMode: PrefixMode
-        colorSchema: BasicColorSchema
-       allowIconChanges: boolean
-        filterIdUsedOnOverview: IProject['id'] | null
-        defaultView?: DefaultProjectViewKind
-        minimumPriority: Priority
+	playSoundWhenDone: boolean
+	quickAddMagicMode: PrefixMode
+	colorSchema: BasicColorSchema
+	allowIconChanges: boolean
+	filterIdUsedOnOverview: IProject['id'] | null
+	defaultView?: DefaultProjectViewKind
+	minimumPriority: Priority
 }
 
 export interface IUserSettings extends IAbstract {

@@ -10,8 +10,13 @@ import {MILLISECONDS_A_HOUR} from '@/constants/date'
 const now = useNow({
 	interval: MILLISECONDS_A_HOUR,
 })
+
 const authStore = useAuthStore()
-const Logo = computed(() => window.ALLOW_ICON_CHANGES && authStore.settings.frontendSettings.allowIconChanges && now.value.getMonth() === 5 ? LogoFullPride : LogoFull)
+const Logo = computed(() => window.ALLOW_ICON_CHANGES 
+	&& authStore.settings.frontendSettings.allowIconChanges 
+	&& now.value.getMonth() === 5 
+	? LogoFullPride 
+	: LogoFull)
 const CustomLogo = computed(() => window.CUSTOM_LOGO_URL)
 </script>
 
