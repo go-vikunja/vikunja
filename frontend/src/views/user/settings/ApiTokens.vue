@@ -205,7 +205,7 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 						v-for="(v, p) in tk.permissions"
 						:key="'permission-' + p"
 					>
-						<strong>{{ formatPermissionTitle(p) }}:</strong>
+						<strong>{{ formatPermissionTitle(String(p)) }}:</strong>
 						{{ v.map(formatPermissionTitle).join(', ') }}
 						<br>
 					</template>
@@ -315,9 +315,9 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 						<FancyCheckbox
 							v-model="newTokenPermissionsGroup[group]"
 							class="mr-2 is-capitalized has-text-weight-bold"
-							@update:modelValue="checked => selectPermissionGroup(group, checked)"
+							@update:modelValue="checked => selectPermissionGroup(String(group), checked)"
 						>
-							{{ formatPermissionTitle(group) }}
+							{{ formatPermissionTitle(String(group)) }}
 						</FancyCheckbox>
 						<br>
 					</template>
@@ -328,9 +328,9 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 						<FancyCheckbox
 							v-model="newTokenPermissions[group][route]"
 							class="ml-4 mr-2 is-capitalized"
-							@update:modelValue="checked => toggleGroupPermissionsFromChild(group, checked)"
+							@update:modelValue="checked => toggleGroupPermissionsFromChild(String(group), checked)"
 						>
-							{{ formatPermissionTitle(route) }}
+							{{ formatPermissionTitle(String(route)) }}
 						</FancyCheckbox>
 						<br>
 					</template>
