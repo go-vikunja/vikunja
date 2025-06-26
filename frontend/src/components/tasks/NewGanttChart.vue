@@ -784,7 +784,7 @@ const dateIsToday = computed(() => (date: Date) => {
 	pointer-events: none;
 	z-index: 4;
 	
-	:deep(rect) {
+	:deep(.gantt-bar) {
 		pointer-events: all;
 		cursor: grab;
 		
@@ -792,7 +792,7 @@ const dateIsToday = computed(() => (date: Date) => {
 			opacity: 0.8;
 		}
 	}
-	
+
 	:deep(text) {
 		pointer-events: none;
 		user-select: none;
@@ -835,22 +835,15 @@ const dateIsToday = computed(() => (date: Date) => {
 }
 
 // Resize handles
-.gantt-resize-handle {
-	cursor: col-resize;
+:deep(.gantt-resize-handle) {
+	cursor: col-resize !important;
 	opacity: 0;
 	transition: opacity 0.2s ease;
+	pointer-events: all; // Ensure they receive pointer events
 	
 	&:hover {
 		opacity: 1;
 	}
-}
-
-.gantt-resize-left {
-	cursor: w-resize;
-}
-
-.gantt-resize-right {
-	cursor: e-resize;
 }
 
 // Show resize handles on bar hover
@@ -859,6 +852,7 @@ const dateIsToday = computed(() => (date: Date) => {
 	
 	&:hover {
 		opacity: 1;
+		cursor: inherit; // Use the specific cursor defined above
 	}
 }
 </style>
