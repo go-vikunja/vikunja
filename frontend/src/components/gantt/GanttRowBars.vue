@@ -5,9 +5,13 @@
 		height="40"
 		xmlns="http://www.w3.org/2000/svg"
 	>
-		<g
+		<GanttBarPrimitive
 			v-for="bar in bars"
 			:key="bar.id"
+			:model="bar"
+			:on-move="() => {}"
+			:timeline-start="dateFromDate"
+			:timeline-end="dateToDate"
 		>
 			<!-- Main bar -->
 			<rect
@@ -73,7 +77,7 @@
 			>
 				{{ bar.meta?.label || bar.id }}
 			</text>
-		</g>
+		</GanttBarPrimitive>
 	</svg>
 </template>
 
@@ -82,10 +86,13 @@ import {computed} from 'vue'
 import type {GanttBarModel} from '@/composables/useGanttBar'
 import {colorIsDark} from '@/helpers/color/colorIsDark'
 
+import GanttBarPrimitive from './primitives/GanttBarPrimitive.vue'
+
 interface Props {
 	bars: GanttBarModel[]
 	totalWidth: number
 	dateFromDate: Date
+	dateToDate: Date
 	dayWidthPixels: number
 	isDragging: boolean
 	isResizing: boolean
