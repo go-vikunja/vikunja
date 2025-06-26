@@ -83,7 +83,7 @@ export default {
 			this.selectItem(this.selectedIndex)
 		},
 
-		selectItem(index) {
+		selectItem(index: number) {
 			const item = this.items[index]
 
 			if (item) {
