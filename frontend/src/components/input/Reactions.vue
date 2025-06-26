@@ -42,9 +42,9 @@ async function addReaction(value: string) {
 	}
 
 	if (typeof model.value[reaction.value] === 'undefined') {
-		model.value[reaction.value] = [authStore.info]
+		model.value[reaction.value] = [authStore.info!]
 	} else {
-		model.value[reaction.value].push(authStore.info)
+		model.value[reaction.value].push(authStore.info!)
 	}
 }
 
@@ -56,6 +56,8 @@ async function removeReaction(value: string) {
 	})
 	await reactionService.delete(reaction)
 	showEmojiPicker.value = false
+	
+	if (!model.value || !model.value[reaction.value]) return
 	
 	const userIndex = model.value[reaction.value].findIndex(u => u.id === authStore.info?.id)
 	if (userIndex !== -1) {
@@ -89,7 +91,7 @@ function getReactionTooltip(users: IUser[], value: string) {
 }
 
 const showEmojiPicker = ref(false)
-const emojiPickerRef = ref<HTMLElement | null>(null)
+const emojiPickerRef = ref<any>(null)
 
 function hideEmojiPicker(e: MouseEvent) {
 	if (showEmojiPicker.value) {
@@ -100,8 +102,8 @@ function hideEmojiPicker(e: MouseEvent) {
 onMounted(() => document.addEventListener('click', hideEmojiPicker))
 onBeforeUnmount(() => document.removeEventListener('click', hideEmojiPicker))
 
-const emojiPickerButtonRef = ref<HTMLElement | null>(null)
-const reactionContainerRef = ref<HTMLElement | null>(null)
+const emojiPickerButtonRef = ref<any>(null)
+const reactionContainerRef = ref<any>(null)
 const emojiPickerPosition = ref()
 
 function toggleEmojiPicker() {
@@ -139,12 +141,12 @@ async function toggleReaction(value: string) {
 	>
 		<BaseButton
 			v-for="(users, value) in (model as IReactionPerEntity)"
-			:key="'button' + value"
-			v-tooltip="getReactionTooltip(users, value)"
+			:key="'button' + String(value)"
+			v-tooltip="getReactionTooltip(users, String(value))"
 			class="reaction-button"
-			:class="{'current-user-has-reacted': hasCurrentUserReactedWithEmoji(value)}"
+			:class="{'current-user-has-reacted': hasCurrentUserReactedWithEmoji(String(value))}"
 			:disabled
-			@click="toggleReaction(value)"
+			@click="toggleReaction(String(value))"
 		>
 			{{ value }} {{ users.length }}
 		</BaseButton>
