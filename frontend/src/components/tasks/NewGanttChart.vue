@@ -255,7 +255,7 @@ const monthGroups = computed(() => {
 			currentYear = year
 			dayCount = 1
 			
-			const monthName = date.toLocaleDateString('en', { month: 'long', year: 'numeric' })
+			const monthName = dayjs(date).format('MMMM YYYY')
 			groups.push({
 				key: `${year}-${month}`,
 				label: monthName,
