@@ -10,14 +10,12 @@
 }
 
 .dark {
-  :root {
-    --row-bg: #1f1f1f;
-    --row-alt-bg: #2c2c2c;
-    --row-selected-bg: #294481;
-    --bar-bg: #2657b3;
-    --bar-bg-active: #1f3e8a;
-    --bar-bg-drag: #122f5b;
-    --bar-stroke-focus: #122f5b;
-    --text-on-bar: #fff;
-  }
+  --row-bg: #1f1f1f;
+  --row-alt-bg: #2c2c2c;
+  --row-selected-bg: #294481;
+  --bar-bg: #2657b3;
+  --bar-bg-active: #1f3e8a;
+  --bar-bg-drag: #122f5b;
+  --bar-stroke-focus: #122f5b;
+  --text-on-bar: #fff;
 }
