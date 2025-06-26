@@ -88,7 +88,9 @@ watch(userEmailConfirm, (userEmailConfirm) => {
 	router.push({name: 'user.login'})
 }, { immediate: true })
 
-setLanguage(authStore.settings.language)
+if (authStore.settings.language) {
+  setLanguage(authStore.settings.language)
+}
 useColorScheme()
 </script>
 
