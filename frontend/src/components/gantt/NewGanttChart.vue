@@ -44,27 +44,12 @@
 				</div>
 			</div>
 
-			<!-- Vertical Grid Lines -->
-			<div class="gantt-grid-lines">
-				<svg
-					class="gantt-vertical-lines"
-					:width="totalWidth"
-					:height="ganttRows.length * 40"
-					xmlns="http://www.w3.org/2000/svg"
-				>
-					<line
-						v-for="(date, index) in timelineData"
-						:key="date.toISOString()"
-						:x1="index * DAY_WIDTH_PIXELS"
-						:y1="0"
-						:x2="index * DAY_WIDTH_PIXELS"
-						:y2="ganttRows.length * 40"
-						stroke="var(--grey-400)"
-						stroke-width="0.5"
-						opacity="0.6"
-					/>
-				</svg>
-			</div>
+			<GanttVerticalGridLines
+				:timeline-data="timelineData"
+				:total-width="totalWidth"
+				:height="ganttRows.length * 40"
+				:day-width-pixels="DAY_WIDTH_PIXELS"
+			/>
 
 			<!-- Gantt Chart Body -->
 			<VikunjaStyledGanttChart
@@ -185,6 +170,7 @@ import type {GanttBarModel} from '@/composables/useGanttBar'
 import VikunjaStyledGanttChart from '@/components/gantt/styled/VikunjaStyledGanttChart.vue'
 import VikunjaStyledGanttRow from '@/components/gantt/styled/VikunjaStyledGanttRow.vue'
 import Loading from '@/components/misc/Loading.vue'
+import GanttVerticalGridLines from '@/components/gantt/GanttVerticalGridLines.vue'
 
 import {MILLISECONDS_A_DAY} from '@/constants/date'
 import {useWeekDayFromDate} from '@/helpers/time/formatDate'
@@ -738,18 +724,6 @@ const dateIsToday = computed(() => (date: Date) => {
 	position: relative;
 }
 
-.gantt-grid-lines {
-	position: absolute;
-	left: 0;
-	z-index: 1;
-	pointer-events: none;
-}
-
-.gantt-vertical-lines {
-	position: absolute;
-	top: 0;
-	left: 0;
-}
 
 .gantt-timeline {
 	background: var(--white);
