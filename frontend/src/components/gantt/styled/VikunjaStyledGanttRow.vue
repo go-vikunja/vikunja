@@ -27,5 +27,4 @@ const onSelect = () => emit('select', props.id)
 .bg-row { background: var(--row-bg); }
 .bg-row-alt { background: var(--row-alt-bg); }
 .bg-row-selected { background: var(--row-selected-bg); }
-.border-b { border-bottom:1px solid #ccc; }
 </style>
