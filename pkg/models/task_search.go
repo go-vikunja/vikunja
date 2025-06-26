@@ -283,7 +283,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		where =
 			builder.Or(
 				db.ILIKE("tasks.title", opts.search),
-				db.ILIKE("description", opts.search),
+				db.ILIKE("tasks.description", opts.search),
 			)
 
 		searchIndex := getTaskIndexFromSearchString(opts.search)
