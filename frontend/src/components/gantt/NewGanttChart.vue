@@ -542,6 +542,13 @@ function startDrag(bar: GanttBarModel, event: PointerEvent) {
 	// Set grabbing cursor during drag
 	document.body.style.setProperty('cursor', 'grabbing', 'important')
 	
+	// Find the bar element and set cursor directly for SVG elements
+	const barGroup = (event.target as Element).closest('g')
+	const barElement = barGroup?.querySelector('.gantt-bar')
+	if (barElement) {
+		(barElement as HTMLElement).style.setProperty('cursor', 'grabbing', 'important')
+	}
+	
 	const handleMove = (e: PointerEvent) => {
 		if (!dragState.value || !isDragging.value) return
 		
@@ -566,6 +573,9 @@ function startDrag(bar: GanttBarModel, event: PointerEvent) {
 		
 		// Reset cursor
 		document.body.style.removeProperty('cursor')
+		if (barElement) {
+			(barElement as HTMLElement).style.removeProperty('cursor')
+		}
 		
 		// Only dispatch update when drag is finished
 		if (dragState.value && dragState.value.currentDays !== 0) {
@@ -608,6 +618,13 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 	// Set col-resize cursor during resize
 	document.body.style.setProperty('cursor', 'col-resize', 'important')
 	
+	// Find the bar element and set cursor directly for SVG elements
+	const barGroup = (event.target as Element).closest('g')
+	const barElement = barGroup?.querySelector('.gantt-bar')
+	if (barElement) {
+		(barElement as HTMLElement).style.setProperty('cursor', 'col-resize', 'important')
+	}
+	
 	const handleMove = (e: PointerEvent) => {
 		if (!dragState.value || !isResizing.value) return
 		
@@ -643,6 +660,9 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 		
 		// Reset cursor
 		document.body.style.removeProperty('cursor')
+		if (barElement) {
+			(barElement as HTMLElement).style.removeProperty('cursor')
+		}
 		
 		// Only dispatch update when resize is finished
 		if (dragState.value && dragState.value.currentDays !== 0) {
