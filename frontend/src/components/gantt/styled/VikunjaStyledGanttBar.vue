@@ -38,17 +38,18 @@ import GanttBarPrimitive from '../primitives/GanttBarPrimitive.vue'
 import type {GanttBarModel} from '@/composables/useGanttBar'
 import {colorIsDark} from '@/helpers/color/colorIsDark'
 
+const PIXELS_PER_DAY = 30
+const MILLISECONDS_PER_DAY = 1000 * 60 * 60 * 24
+
 const props = defineProps<{ model:GanttBarModel; timelineStart:Date; timelineEnd:Date; onMove:(id:string,start:Date,end:Date)=>void; onDoubleClick?:(model:GanttBarModel)=>void }>()
 
 function computeX(date: Date) {
-	const x = (date.getTime() - props.timelineStart.getTime()) / (1000*60*60*24) * 30
-	return x
+	return (date.getTime() - props.timelineStart.getTime()) / MILLISECONDS_PER_DAY * PIXELS_PER_DAY
 }
 
 function computeWidth(bar: GanttBarModel) {
-	const diff = (bar.end.getTime() - bar.start.getTime()) / (1000*60*60*24)
-	const width = diff * 30
-	return width
+	const diff = (bar.end.getTime() - bar.start.getTime()) / MILLISECONDS_PER_DAY
+	return diff * PIXELS_PER_DAY
 }
 
 function getBarFill(dragging: boolean, selected: boolean) {
