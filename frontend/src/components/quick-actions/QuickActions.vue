@@ -562,14 +562,11 @@ function select(parentIndex: number, index: number) {
 		parentIndex--
 		index = results.value[parentIndex].items.length - 1
 	}
-	let elems = resultRefs.value[parentIndex]?.[index]
+	let elems: BaseButtonInstance | null = resultRefs.value[parentIndex]?.[index] ?? null
 	if (results.value[parentIndex].items.length === index) {
-		elems = resultRefs.value[parentIndex + 1]?.[0] ?? undefined
+		elems = resultRefs.value[parentIndex + 1]?.[0] ?? null
 	}
-	if (
-		typeof elems === 'undefined'
-		/* || elems.length === 0 */
-	) {
+	if (elems === null) {
 		return
 	}
 	if (Array.isArray(elems)) {
