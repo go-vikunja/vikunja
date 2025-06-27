@@ -8,6 +8,7 @@
 			'has-custom-background-color': color ?? undefined,
 		}"
 		:style="{'background-color': color ?? undefined}"
+		:data-is-overdue="isOverdue || undefined"
 		@click.exact="openTaskDetail()"
 		@click.ctrl="() => toggleTaskDone(task)"
 		@click.meta="() => toggleTaskDone(task)"
@@ -46,7 +47,6 @@
 			<span
 				v-if="task.dueDate > 0"
 				v-tooltip="formatDateLong(task.dueDate)"
-				:class="{'overdue': isOverdue}"
 				class="due-date"
 			>
 				<span class="icon">
@@ -251,9 +251,10 @@ $task-background: var(--white);
 			margin-right: .25rem;
 		}
 
-		&.overdue {
-			color: var(--danger);
-		}
+	}
+
+	&[data-is-overdue] .due-date {
+		color: var(--danger);
 	}
 
 	.label-wrapper .tag {
