@@ -18,6 +18,7 @@ package memory
 
 import (
 	"reflect"
+	"strings"
 	"sync"
 
 	e "code.vikunja.io/api/pkg/modules/keyvalue/error"
@@ -123,5 +124,34 @@ func (s *Storage) DecrBy(key string, update int64) (err error) {
 		return &e.ErrValueHasWrongType{Key: key, ExpectedValue: "int64"}
 	}
 	s.store[key] = val - update
+	return nil
+}
+
+// ListKeys returns all keys in the storage which start with the given prefix
+func (s *Storage) ListKeys(prefix string) ([]string, error) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	keys := make([]string, 0)
+	for k := range s.store {
+		if strings.HasPrefix(k, prefix) {
+			keys = append(keys, k)
+		}
+	}
+
+	return keys, nil
+}
+
+// DelPrefix removes all keys which start with the given prefix
+func (s *Storage) DelPrefix(prefix string) error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	for k := range s.store {
+		if strings.HasPrefix(k, prefix) {
+			delete(s.store, k)
+		}
+	}
+
 	return nil
 }

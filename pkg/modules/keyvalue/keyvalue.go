@@ -30,6 +30,8 @@ type Storage interface {
 	Del(key string) (err error)
 	IncrBy(key string, update int64) (err error)
 	DecrBy(key string, update int64) (err error)
+	ListKeys(prefix string) ([]string, error)
+	DelPrefix(prefix string) error
 }
 
 var store Storage
@@ -73,4 +75,14 @@ func IncrBy(key string, update int64) (err error) {
 // DecrBy increases a value at key by the amount in update
 func DecrBy(key string, update int64) (err error) {
 	return store.DecrBy(key, update)
+}
+
+// ListKeys returns all keys beginning with prefix from the configured backend
+func ListKeys(prefix string) ([]string, error) {
+	return store.ListKeys(prefix)
+}
+
+// DelPrefix deletes all keys with the given prefix in the backend
+func DelPrefix(prefix string) error {
+	return store.DelPrefix(prefix)
 }
