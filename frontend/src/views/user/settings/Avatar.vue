@@ -5,7 +5,7 @@
 		</Message>
 
 		<Message v-else-if="avatarProvider === 'openid'">
-			{{ $t('user.settings.avatar.openid', {provider: authStore.info?.authProvider || 'unknown'}) }}
+			{{ $t('user.settings.avatar.openid', {provider: (authStore.info as any)?.authProvider || 'unknown'}) }}
 		</Message>
 
 		<template v-else>
@@ -139,7 +139,7 @@ async function uploadAvatar() {
 	}
 
 	try {
-		const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(blob => resolve(blob)))
+		const blob = await new Promise<Blob | null>(resolve => canvas.toBlob((blob: Blob | null) => resolve(blob)))
 		if (blob) {
 			await avatarService.create(blob)
 			success({message: t('user.settings.avatar.setSuccess')})
