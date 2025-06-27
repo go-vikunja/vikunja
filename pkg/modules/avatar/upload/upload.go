@@ -36,10 +36,11 @@ import (
 type Provider struct {
 }
 
+const CacheKeyPrefix = "avatar_upload_"
+
 // FlushCache removes cached avatars for a user
 func (p *Provider) FlushCache(u *user.User) error {
-	InvalidateCache(u)
-	return nil
+	return keyvalue.Del(CacheKeyPrefix + strconv.Itoa(int(u.ID)))
 }
 
 // CachedAvatar represents a cached avatar with its content and mime type
@@ -51,7 +52,7 @@ type CachedAvatar struct {
 // GetAvatar returns an uploaded user avatar
 func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType string, err error) {
 
-	cacheKey := "avatar_upload_" + strconv.Itoa(int(u.ID))
+	cacheKey := CacheKeyPrefix + strconv.Itoa(int(u.ID))
 
 	var cached map[int64]*CachedAvatar
 	exists, err := keyvalue.GetWithValue(cacheKey, &cached)
@@ -112,13 +113,6 @@ func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType 
 	return avatar, mimeType, err
 }
 
-// InvalidateCache invalidates the avatar cache for a user
-func InvalidateCache(u *user.User) {
-	if err := keyvalue.Del("avatar_upload_" + strconv.Itoa(int(u.ID))); err != nil {
-		log.Errorf("Could not invalidate upload avatar cache for user %d, error was %s", u.ID, err)
-	}
-}
-
 func StoreAvatarFile(s *xorm.Session, u *user.User, src io.Reader) (err error) {
 
 	// Remove the old file if one exists
@@ -144,7 +138,10 @@ func StoreAvatarFile(s *xorm.Session, u *user.User, src io.Reader) (err error) {
 		return
 	}
 
-	InvalidateCache(u)
+	err = (&Provider{}).FlushCache(u)
+	if err != nil {
+		log.Errorf("Could not invalidate upload avatar cache for user %d, error was %s", u.ID, err)
+	}
 
 	// Save the file
 	f, err := files.CreateWithMime(buf, "avatar.png", uint64(buf.Len()), u, "image/png")
