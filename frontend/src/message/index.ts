@@ -37,6 +37,7 @@ export function error(e, actions: Action[] = []) {
 		type: 'error',
 		title: i18n.global.t('error.error'),
 		text: [getErrorText(e)],
+		ignoreDuplicates: true,
 		actions: actions,
 	})
 }
