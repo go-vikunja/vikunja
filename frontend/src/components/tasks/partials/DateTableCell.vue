@@ -1,7 +1,7 @@
 <template>
-	<td v-tooltip="+date === 0 ? '' : formatDateLong(date)">
+	<td v-tooltip="!date || +date === 0 ? '' : formatDateLong(date)">
 		<time :datetime="date ? formatISO(date) : undefined">
-			{{ +date === 0 ? '-' : formatDateSince(date) }}
+			{{ !date || +date === 0 ? '-' : formatDateSince(date) }}
 		</time>
 	</td>
 </template>
@@ -10,8 +10,8 @@
 import {formatISO, formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
 
 withDefaults(defineProps<{
-	date?: Date
+	date?: Date | null
 }>(), {
-	date: 0,
+	date: null,
 })
 </script>
