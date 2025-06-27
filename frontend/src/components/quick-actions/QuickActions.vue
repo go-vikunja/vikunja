@@ -61,32 +61,32 @@
 						<BaseButton
 							v-for="(i, key) in r.items"
 							:key="key"
-							:ref="(el: Element | ComponentPublicInstance | null) => setResultRefs(el, k, key)"
+							:ref="(el: Element | ComponentPublicInstance | null) => setResultRefs(el, k, Number(key))"
 							class="result-item-button"
-							:class="{'is-strikethrough': (i as DoAction<ITask>)?.done}"
-							@keydown.up.prevent="select(k, key - 1)"
-							@keydown.down.prevent="select(k, key + 1)"
+							:class="{'is-strikethrough': (i as any)?.done}"
+							@keydown.up.prevent="select(k, Number(key) - 1)"
+							@keydown.down.prevent="select(k, Number(key) + 1)"
 							@click.prevent.stop="doAction(r.type, i)"
 							@keyup.prevent.enter="doAction(r.type, i)"
 							@keyup.prevent.esc="searchInput?.focus()"
 						>
-							<template v-if="r.type === ACTION_TYPE.LABELS">
-								<XLabel :label="i" />
+							<template v-if="r.type === ACTION_TYPE.LABELS && i">
+								<XLabel :label="i as any" />
 							</template>
-							<template v-else-if="r.type === ACTION_TYPE.TASK">
+							<template v-else-if="r.type === ACTION_TYPE.TASK && i">
 								<SingleTaskInlineReadonly
-									:task="i"
+									:task="i as any"
 									:show-project="true"
 								/>
 							</template>
 							<template v-else>
 								<span
-									v-if="i.id < -1"
+									v-if="i && (i as any).id < -1"
 									class="saved-filter-icon icon"
 								>
 									<Icon icon="filter" />
 								</span>
-								{{ i.title }}
+								{{ i ? (i as any).title : '' }}
 							</template>
 						</BaseButton>
 					</div>
