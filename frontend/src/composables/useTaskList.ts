@@ -27,7 +27,8 @@ export interface SortBy {
 	percent_done?: Order
 	created?: Order
 	updated?: Order
-	done_at?: Order,
+	done_at?: Order
+	position?: Order,
 }
 
 const SORT_BY_DEFAULT: SortBy = {
