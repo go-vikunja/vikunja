@@ -69,27 +69,27 @@
 						/>
 					</div>
 				</div>
-			</form>
 
-			<div class="field has-addons mt-4">
-				<div class="control is-fullwidth">
-					<XButton
-						:loading="teamService.loading"
-						class="is-fullwidth"
-						@click="save()"
-					>
-						{{ $t('misc.save') }}
-					</XButton>
+				<div class="field has-addons mt-4">
+					<div class="control is-fullwidth">
+						<XButton
+							:loading="teamService.loading"
+							class="is-fullwidth"
+							type="submit"
+						>
+							{{ $t('misc.save') }}
+						</XButton>
+					</div>
+					<div class="control">
+						<XButton
+							:loading="teamService.loading"
+							class="is-danger"
+							icon="trash-alt"
+							@click="showDeleteModal = true"
+						/>
+					</div>
 				</div>
-				<div class="control">
-					<XButton
-						:loading="teamService.loading"
-						class="is-danger"
-						icon="trash-alt"
-						@click="showDeleteModal = true"
-					/>
-				</div>
-			</div>
+			</form>
 		</Card>
 
 		<Card
