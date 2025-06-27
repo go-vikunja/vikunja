@@ -72,19 +72,19 @@ const {t} = useI18n()
 const baseStore = useBaseStore()
 const projectStore = useProjectStore()
 
-const currentProject = computed<IProject>(() => {
-	return typeof baseStore.currentProject === 'undefined' ? {
+const currentProject = computed(() => {
+	return typeof baseStore.currentProject === 'undefined' || baseStore.currentProject === null ? {
 		id: 0,
 		title: '',
 		isArchived: false,
 		maxRight: null,
-	} : baseStore.currentProject
+	} as IProject : baseStore.currentProject as IProject
 })
 useTitle(() => currentProject.value?.id ? getProjectTitle(currentProject.value) : '')
 
 const views = computed(() => projectStore.projects[props.projectId]?.views)
 
-function getViewTitle(view: IProjectView) {
+function getViewTitle(view: any) {
 	switch (view.title) {
 		case 'List':
 			return t('project.list.title')
