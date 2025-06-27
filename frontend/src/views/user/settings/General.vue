@@ -26,7 +26,7 @@
 				v-if="isExternalUser"
 				class="help"
 			>
-				{{ $t('user.settings.general.externalUserNameChange', {provider: authStore.info?.authProvider || 'unknown'}) }}
+				{{ $t('user.settings.general.externalUserNameChange', {provider: (authStore.info as any)?.authProvider || 'unknown'}) }}
 			</p>
 		</div>
 		<div class="field">
@@ -395,18 +395,18 @@ watch(
 
 const projectStore = useProjectStore()
 const defaultProject = computed({
-	get: () => settings.value.defaultProjectId ? projectStore.projects[settings.value.defaultProjectId] : null,
+	get: () => settings.value.defaultProjectId ? projectStore.projects[settings.value.defaultProjectId] as any : null,
 	set(l: any) {
 		settings.value.defaultProjectId = l?.id || DEFAULT_PROJECT_ID
 	},
 })
 const filterUsedInOverview = computed({
-	get: () => projectStore.projects[settings.value.frontendSettings.filterIdUsedOnOverview],
+	get: () => settings.value.frontendSettings.filterIdUsedOnOverview ? projectStore.projects[settings.value.frontendSettings.filterIdUsedOnOverview] : null,
 	set(l) {
 		settings.value.frontendSettings.filterIdUsedOnOverview = l ? l.id : null
 	},
 })
-const hasFilters = computed(() => typeof projectStore.projectsArray.find(p => isSavedFilter(p)) !== 'undefined')
+const hasFilters = computed(() => typeof projectStore.projectsArray.find((p: any) => isSavedFilter(p)) !== 'undefined')
 const loading = computed(() => authStore.isLoadingGeneralSettings)
 
 async function updateSettings() {
