@@ -92,7 +92,7 @@ const emit = defineEmits<{
 
 const route = useRoute()
 const projectId = computed(() => {
-	if (route.name?.startsWith('project.')) {
+	if (typeof route.name === 'string' && route.name.startsWith('project.')) {
 		return Number(route.params.projectId)
 	}
 
@@ -184,7 +184,7 @@ function change(event: 'blur' | 'modelValue' | 'always') {
 }
 
 function changeAndEmitButton() {
-	change()
+	change('always')
 	emit('showResults')
 }
 
