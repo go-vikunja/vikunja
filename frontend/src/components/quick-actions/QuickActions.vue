@@ -224,7 +224,7 @@ const foundCommands = computed(() => availableCmds.value.filter((a) =>
 interface Result {
 	type: ACTION_TYPE
 	title: string
-	items: DoAction<IAbstract>
+	items: any[]
 }
 
 const results = computed<Result[]>(() => {
@@ -294,7 +294,7 @@ const commands = computed<{ [key in COMMAND_TYPE]: Command }>(() => ({
 const placeholder = computed(() => selectedCmd.value?.placeholder || t('quickActions.placeholder'))
 
 const currentProject = computed(() => {
-	if (Object.keys(baseStore.currentProject).length === 0 || isSavedFilter(baseStore.currentProject)) {
+	if (!baseStore.currentProject || Object.keys(baseStore.currentProject).length === 0 || isSavedFilter(baseStore.currentProject)) {
 		return null
 	}
 	
@@ -314,7 +314,7 @@ const hintText = computed(() => {
 	}
 	const prefixes =
 		PREFIXES[authStore.settings.frontendSettings.quickAddMagicMode] ?? PREFIXES[PrefixMode.Default]
-	return t('quickActions.hint', prefixes)
+	return prefixes ? t('quickActions.hint', prefixes as unknown as Record<string, unknown>) : t('quickActions.hint')
 })
 
 const availableCmds = computed(() => {
@@ -410,7 +410,7 @@ function searchTasks() {
 	}
 
 	taskSearchTimeout.value = setTimeout(async () => {
-		const r = await taskService.getAll({}, params) as DoAction<ITask>[]
+		const r = await taskService.getAll(undefined, params) as DoAction<ITask>[]
 		foundTasks.value = r.map((t) => {
 			t.type = ACTION_TYPE.TASK
 			return t
@@ -438,11 +438,11 @@ function searchTeams() {
 	const {assignees} = parsedQuery.value
 	teamSearchTimeout.value = setTimeout(async () => {
 		const teamSearchPromises = assignees.map((t) =>
-			teamService.getAll({}, {s: t}),
+			teamService.getAll(undefined, {s: t}),
 		)
 		const teamsResult = await Promise.all(teamSearchPromises)
 		foundTeams.value = teamsResult.flat().map((team) => {
-			team.title = team.name
+			(team as any).title = team.name
 			return team
 		})
 	}, 150)
@@ -455,7 +455,7 @@ function search() {
 
 const searchInput = ref<HTMLElement | null>(null)
 
-async function doAction(type: ACTION_TYPE, item: DoAction) {
+async function doAction(type: ACTION_TYPE, item: DoAction<any>) {
 	switch (type) {
 		case ACTION_TYPE.PROJECT:
 			closeQuickActions()
@@ -534,7 +534,7 @@ async function newProject() {
 
 async function newTeam() {
 	const newTeam = new TeamModel({name: query.value})
-	const team = await teamService.create(newTeam)
+	const team = await teamService.create(newTeam as ITeam)
 	await router.push({
 		name: 'teams.edit',
 		params: {id: team.id},
@@ -562,9 +562,9 @@ function select(parentIndex: number, index: number) {
 		parentIndex--
 		index = results.value[parentIndex].items.length - 1
 	}
-	let elems = resultRefs.value[parentIndex][index]
+	let elems = resultRefs.value[parentIndex]?.[index]
 	if (results.value[parentIndex].items.length === index) {
-		elems = resultRefs.value[parentIndex + 1] ? resultRefs.value[parentIndex + 1][0] : undefined
+		elems = resultRefs.value[parentIndex + 1]?.[0] ?? undefined
 	}
 	if (
 		typeof elems === 'undefined'
