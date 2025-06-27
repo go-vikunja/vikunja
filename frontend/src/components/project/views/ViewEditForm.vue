@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type {IProjectView} from '@/modelTypes/IProjectView'
-import type {IFilter} from '@/modelTypes/ISavedFilter'
+import type {IFilters} from '@/modelTypes/ISavedFilter'
 import XButton from '@/components/input/Button.vue'
 import FilterInput from '@/components/project/partials/FilterInput.vue'
 import {onBeforeMount, ref} from 'vue'
@@ -23,21 +23,24 @@ const emit = defineEmits<{
 	'cancel': [],
 }>()
 
-const view = ref<IProjectView>()
+const view = ref<IProjectView>(props.modelValue)
 
 const labelStore = useLabelStore()
 const projectStore = useProjectStore()
 
 onBeforeMount(() => {
-	const transformFilterFromApi = (filterInput: IFilter): IFilter => {
+	const transformFilterFromApi = (filterInput: IFilters): IFilters => {
 		const filterString = transformFilterStringFromApi(
 			filterInput.filter,
 			labelId => labelStore.getLabelById(labelId)?.title || null,
 			projectId => projectStore.projects[projectId]?.title || null,
 		)
 		
-		const filter: IFilter = {
+		const filter: IFilters = {
+			sort_by: filterInput.sort_by || [],
+			order_by: filterInput.order_by || [],
 			filter: '',
+			filter_include_nulls: filterInput.filter_include_nulls || false,
 			s: '',
 		}
 		if (hasFilterQuery(filterString)) {
@@ -59,11 +62,17 @@ onBeforeMount(() => {
 
 	const transformed = {
 		...props.modelValue,
-		filter: transformFilterFromApi(props.modelValue.filter),
-		bucketConfiguration: props.modelValue.bucketConfiguration.map(bc => ({
+		filter: props.modelValue.filter ? transformFilterFromApi(props.modelValue.filter) : {
+			sort_by: [],
+			order_by: [],
+			filter: '',
+			filter_include_nulls: false,
+			s: '',
+		},
+		bucketConfiguration: props.modelValue.bucketConfiguration ? props.modelValue.bucketConfiguration.map(bc => ({
 			title: bc.title,
 			filter: transformFilterFromApi(bc.filter),
-		})),
+		})) : [],
 	}
 
 	if (JSON.stringify(view.value) !== JSON.stringify(transformed)) {
@@ -72,7 +81,7 @@ onBeforeMount(() => {
 })
 
 function save() {
-	const transformFilterForApi = (filterQuery: string): IFilter => {
+	const transformFilterForApi = (filterQuery: string): IFilters => {
 		const filterString = transformFilterStringForApi(
 			filterQuery,
 			labelTitle => labelStore.getLabelByExactTitle(labelTitle)?.id || null,
@@ -81,7 +90,13 @@ function save() {
 				return found?.id || null
 			},
 		)
-		const filter: IFilter = {}
+		const filter: IFilters = {
+			sort_by: [],
+			order_by: [],
+			filter: '',
+			filter_include_nulls: false,
+			s: '',
+		}
 		if (hasFilterQuery(filterString)) {
 			filter.filter = filterString
 		} else {
@@ -94,7 +109,7 @@ function save() {
 	emit('update:modelValue', {
 		...view.value,
 		filter: transformFilterForApi(view.value?.filter?.filter || ''),
-		bucketConfiguration: view.value?.bucketConfiguration.map(bc => ({
+		bucketConfiguration: view.value?.bucketConfiguration?.map(bc => ({
 			title: bc.title,
 			filter: transformFilterForApi(bc.filter?.filter || ''),
 		})),
@@ -174,7 +189,7 @@ function handleBubbleSave() {
 		</div>
 
 		<FilterInput
-			v-model="view.filter.filter"
+			v-model="view.filter!.filter"
 			:project-id="view.projectId"
 			:input-label="$t('project.views.filter')"
 			class="mb-1"
@@ -272,7 +287,7 @@ function handleBubbleSave() {
 					<XButton
 						variant="secondary"
 						icon="plus"
-						@click="() => view.bucketConfiguration.push({title: '', filter: {filter: ''}})"
+						@click="() => view.bucketConfiguration.push({title: '', filter: {sort_by: [], order_by: [], filter: '', filter_include_nulls: false, s: ''}})"
 					>
 						{{ $t('project.kanban.addBucket') }}
 					</XButton>
