@@ -64,6 +64,7 @@ func CreateUser(s *xorm.Session, user *User) (newUser *User, err error) {
 	user.AvatarProvider = config.DefaultSettingsAvatarProvider.GetString()
 	user.AvatarFileID = config.DefaultSettingsAvatarFileID.GetInt64()
 	user.EmailRemindersEnabled = config.DefaultSettingsEmailRemindersEnabled.GetBool()
+	user.WebhookRemindersEnabled = config.DefaultSettingsWebhookRemindersEnabled.GetBool()
 	user.DiscoverableByName = config.DefaultSettingsDiscoverableByName.GetBool()
 	user.DiscoverableByEmail = config.DefaultSettingsDiscoverableByEmail.GetBool()
 	user.OverdueTasksRemindersEnabled = config.DefaultSettingsOverdueTaskRemindersEnabled.GetBool()

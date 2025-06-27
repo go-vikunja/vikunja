@@ -74,6 +74,8 @@ func NewUserJWTAuthtoken(u *user.User, long bool) (token string, err error) {
 	claims["exp"] = exp
 	claims["name"] = u.Name
 	claims["emailRemindersEnabled"] = u.EmailRemindersEnabled
+	claims["webhookRemindersEnabled"] = u.WebhookRemindersEnabled
+	claims["webhookReminderURL"] = u.WebhookReminderURL
 	claims["isLocalUser"] = u.Issuer == user.IssuerLocal
 	claims["long"] = long
 

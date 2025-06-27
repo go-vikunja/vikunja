@@ -833,10 +833,44 @@ func (wl *WebhookListener) Name() string {
 	return "webhook.listener"
 }
 
-type WebhookPayload struct {
-	EventName string      `json:"event_name"`
-	Time      time.Time   `json:"time"`
-	Data      interface{} `json:"data"`
+// UserWebhookReminderListener represents a listener for per-user webhook reminders
+type UserWebhookReminderListener struct {
+	EventName string
+	UserID    int64
+	TargetURL string
+}
+
+// Name defines the name for the UserWebhookReminderListener listener
+func (uwrl *UserWebhookReminderListener) Name() string {
+	return "user.webhook.reminder.listener"
+}
+
+// Handle is executed when the event UserWebhookReminderListener listens on is fired
+func (uwrl *UserWebhookReminderListener) Handle(msg *message.Message) (err error) {
+	if uwrl.TargetURL == "" {
+		log.Debugf("No webhook URL configured for user %d, skipping webhook reminder", uwrl.UserID)
+		return nil
+	}
+
+	var event map[string]interface{}
+	err = json.Unmarshal(msg.Payload, &event)
+	if err != nil {
+		return err
+	}
+
+	// Send webhook payload to user's personal URL
+	err = sendUserWebhookPayload(uwrl.TargetURL, &WebhookPayload{
+		EventName: uwrl.EventName,
+		Time:      time.Now(),
+		Data:      event,
+	})
+	if err != nil {
+		log.Errorf("Could not send webhook reminder to user %d at %s: %s", uwrl.UserID, uwrl.TargetURL, err)
+		return err
+	}
+
+	log.Debugf("Sent webhook reminder to user %d at %s for event %s", uwrl.UserID, uwrl.TargetURL, uwrl.EventName)
+	return nil
 }
 
 func getIDAsInt64(id interface{}) int64 {
