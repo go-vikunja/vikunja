@@ -133,7 +133,7 @@ async function totpStatus() {
 		return
 	}
 	try {
-		totp.value = await totpService.get({})
+		totp.value = await totpService.get({} as any)
 		totpSetQrCode()
 	} catch(e: unknown) {
 		// Error code 1016 means totp is not enabled, we don't need an error in that case.

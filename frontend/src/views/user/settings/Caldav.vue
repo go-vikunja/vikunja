@@ -74,7 +74,7 @@
 			v-if="newToken"
 			class="mb-4"
 		>
-			{{ $t('user.settings.caldav.tokenCreated', {token: newToken.token}) }}<br>
+			{{ $t('user.settings.caldav.tokenCreated', {token: (newToken as any).token}) }}<br>
 			{{ $t('user.settings.caldav.wontSeeItAgain') }}
 		</Message>
 
@@ -128,7 +128,7 @@ service.getAll().then((result: ICaldavToken[]) => {
 
 const newToken = ref<ICaldavToken>()
 async function createToken() {
-	newToken.value = await service.create({}) as ICaldavToken
+	newToken.value = await service.create({} as ICaldavToken) as ICaldavToken
 	tokens.value.push(newToken.value)
 }
 
