@@ -143,7 +143,11 @@ func getAvatarForUser(u *user.User) (fullSizeAvatar *image.RGBA64, err error) {
 
 	if !exists {
 		log.Debugf("Initials avatar for user %d not cached, creating...", u.ID)
-		firstRune := []rune(strings.ToUpper(u.Name))[0]
+		avatarText := u.Name
+		if avatarText == "" {
+			avatarText = u.Username
+		}
+		firstRune := []rune(strings.ToUpper(avatarText))[0]
 		bg := avatarBgColors[int(u.ID)%len(avatarBgColors)] // Random color based on the user id
 
 		fullSizeAvatar, err = drawImage(firstRune, bg)
