@@ -78,8 +78,9 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, ref, watch} from 'vue'
+import {computed, ref, watch, markRaw} from 'vue'
 import {useI18n} from 'vue-i18n'
+import type {Options} from 'flatpickr/dist/types/options'
 
 import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
@@ -105,7 +106,7 @@ const emit = defineEmits<{
 
 const {t} = useI18n({useScope: 'global'})
 
-const flatPickerConfig = computed(() => ({
+const flatPickerConfig = computed(() => markRaw<Options>({
 	altFormat: t('date.altFormatLong'),
 	altInput: true,
 	dateFormat: 'Y-m-d H:i',

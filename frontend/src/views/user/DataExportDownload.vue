@@ -43,11 +43,11 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, reactive} from 'vue'
+import {ref, computed, shallowReactive} from 'vue'
 import DataExportService from '@/services/dataExport'
 import {useAuthStore} from '@/stores/auth'
 
-const dataExportService = reactive(new DataExportService())
+const dataExportService = shallowReactive(new DataExportService())
 const password = ref('')
 const errPasswordRequired = ref(false)
 const passwordInput = ref(null)

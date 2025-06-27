@@ -38,9 +38,10 @@
 </template>
 
 <script setup lang="ts">
-import {ref, shallowReactive, computed, watch, onMounted, onBeforeUnmount} from 'vue'
+import {ref, shallowReactive, computed, watch, onMounted, onBeforeUnmount, markRaw} from 'vue'
 import {useI18n} from 'vue-i18n'
 import flatPickr from 'vue-flatpickr-component'
+import type {Options} from 'flatpickr/dist/types/options'
 
 import TaskService from '@/services/task'
 import type {ITask} from '@/modelTypes/ITask'
@@ -94,7 +95,7 @@ onBeforeUnmount(() => {
 	updateDueDate()
 })
 
-const flatPickerConfig = computed(() => ({
+const flatPickerConfig = computed(() => markRaw<Options>({
 	altFormat: t('date.altFormatLong'),
 	altInput: true,
 	dateFormat: 'Y-m-d H:i',
