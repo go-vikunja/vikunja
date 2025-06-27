@@ -38,10 +38,10 @@ func TestTask_Create(t *testing.T) {
 
 	// We only test creating a task here, the rights are all well tested in the web tests.
 
+	db.LoadAndAssertFixtures(t)
+
 	t.Run("normal", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
+		s := db.BeginTx(t)
 
 		task := &Task{
 			Title:       "Lorem",
@@ -55,17 +55,14 @@ func TestTask_Create(t *testing.T) {
 		// Assert getting a new index
 		assert.NotEmpty(t, task.Index)
 		assert.Equal(t, int64(18), task.Index)
-		err = s.Commit()
-		require.NoError(t, err)
-
-		db.AssertExists(t, "tasks", map[string]interface{}{
+		db.AssertExistsTx(t, s, "tasks", map[string]interface{}{
 			"id":            task.ID,
 			"title":         "Lorem",
 			"description":   "Lorem Ipsum Dolor",
 			"project_id":    1,
 			"created_by_id": 1,
 		}, false)
-		db.AssertExists(t, "task_buckets", map[string]interface{}{
+		db.AssertExistsTx(t, s, "task_buckets", map[string]interface{}{
 			"task_id":   task.ID,
 			"bucket_id": 1,
 		}, false)
@@ -73,9 +70,7 @@ func TestTask_Create(t *testing.T) {
 		events.AssertDispatched(t, &TaskCreatedEvent{})
 	})
 	t.Run("with reminders", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
+		s := db.BeginTx(t)
 
 		task := &Task{
 			Title:       "Lorem",
@@ -111,8 +106,13 @@ func TestTask_Create(t *testing.T) {
 		assert.Equal(t, time.Date(2023, time.March, 7, 22, 5, 19, 0, time.UTC), task.Reminders[2].Reminder)
 		assert.Equal(t, ReminderRelationEndDate, task.Reminders[2].RelativeTo)
 		assert.Equal(t, time.Date(2023, time.March, 7, 23, 0, 0, 0, time.UTC), task.Reminders[3].Reminder)
-		err = s.Commit()
-		require.NoError(t, err)
+
+		db.AssertExistsTx(t, s, "tasks", map[string]interface{}{
+			"id":          task.ID,
+			"project_id":  1,
+			"title":       "Lorem",
+			"description": "Lorem Ipsum Dolor",
+		}, false)
 	})
 	t.Run("empty title", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
