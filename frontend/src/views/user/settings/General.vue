@@ -275,6 +275,7 @@ import {useTitle} from '@/composables/useTitle'
 import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
 import type {IUserSettings} from '@/modelTypes/IUserSettings'
+import type {IProject} from '@/modelTypes/IProject'
 import {isSavedFilter} from '@/services/savedFilter'
 import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/modelTypes/IProjectView'
 import {PRIORITIES} from '@/constants/priorities'
@@ -401,7 +402,12 @@ const defaultProject = computed({
 	},
 })
 const filterUsedInOverview = computed({
-	get: () => settings.value.frontendSettings.filterIdUsedOnOverview ? projectStore.projects[settings.value.frontendSettings.filterIdUsedOnOverview] : null,
+	get: () => {
+		const id = settings.value.frontendSettings.filterIdUsedOnOverview
+		if (!id) return undefined
+		const project = projectStore.projects[id]
+		return project ? JSON.parse(JSON.stringify(project)) as IProject : undefined
+	},
 	set(l) {
 		settings.value.frontendSettings.filterIdUsedOnOverview = l ? l.id : null
 	},
