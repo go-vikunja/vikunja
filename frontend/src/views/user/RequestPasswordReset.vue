@@ -64,10 +64,13 @@
 
 <script setup lang="ts">
 import {ref, shallowReactive} from 'vue'
+import {useI18n} from 'vue-i18n'
 
 import PasswordResetModel from '@/models/passwordReset'
 import PasswordResetService from '@/services/passwordReset'
 import Message from '@/components/misc/Message.vue'
+
+const {t} = useI18n({useScope: 'global'})
 
 const passwordResetService = shallowReactive(new PasswordResetService())
 const passwordReset = ref(new PasswordResetModel())
@@ -79,8 +82,8 @@ async function requestPasswordReset() {
 	try {
 		await passwordResetService.requestResetPassword(passwordReset.value)
 		isSuccess.value = true
-	} catch (e) {
-		errorMsg.value = e.response.data.message
+	} catch (e: any) {
+		errorMsg.value = e.response?.data?.message || t('user.auth.requestPasswordResetError')
 	}
 }
 </script>
