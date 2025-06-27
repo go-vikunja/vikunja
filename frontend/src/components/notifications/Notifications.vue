@@ -94,6 +94,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import User from '@/components/misc/User.vue'
 import { NOTIFICATION_NAMES as names, type INotification} from '@/modelTypes/INotification'
+import NotificationModel from '@/models/notification'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
 import {getDisplayName} from '@/models/user'
@@ -108,7 +109,7 @@ const authStore = useAuthStore()
 const router = useRouter()
 const {t} = useI18n()
 
-const allNotifications = ref<INotification[]>([])
+const allNotifications = ref<NotificationModel[]>([])
 const showNotifications = ref(false)
 const popup = ref(null)
 
@@ -144,16 +145,16 @@ async function loadNotifications() {
 	allNotifications.value = await notificationService.getAll()
 }
 
-function hidePopup(e) {
-	if (showNotifications.value) {
+function hidePopup(e: MouseEvent) {
+	if (showNotifications.value && popup.value) {
 		closeWhenClickedOutside(e, popup.value, () => showNotifications.value = false)
 	}
 }
 
-function to(n, index) {
+function to(n: NotificationModel, index: number) {
 	const to = {
 		name: '',
-		params: {},
+		params: {} as any,
 	}
 
 	switch (n.name) {
@@ -162,18 +163,18 @@ function to(n, index) {
 		case names.TASK_REMINDER:
 		case names.TASK_MENTIONED:
 			to.name = 'task.detail'
-			to.params.id = n.notification.task.id
+			to.params.id = (n.notification as any).task.id
 			break
 		case names.TASK_DELETED:
 			// Nothing
 			break
 		case names.PROJECT_CREATED:
 			to.name = 'task.index'
-			to.params.projectId = n.notification.project.id
+			to.params.projectId = (n.notification as any).project.id
 			break
 		case names.TEAM_MEMBER_ADDED:
 			to.name = 'teams.edit'
-			to.params.id = n.notification.team.id
+			to.params.id = (n.notification as any).team.id
 			break
 	}
 
