@@ -115,7 +115,7 @@
 							<template #searchResult="{option: user}">
 								<User
 									:avatar-size="24"
-									:user="user"
+									:user="user as IUser"
 									class="m-0"
 								/>
 							</template>
@@ -151,7 +151,7 @@
 							/>
 						</td>
 						<td>
-							<template v-if="m.id === userInfo.id">
+							<template v-if="m.id === userInfo?.id">
 								<b class="is-success">You</b>
 							</template>
 						</td>
@@ -174,7 +174,7 @@
 							class="actions"
 						>
 							<XButton
-								v-if="m.id !== userInfo.id"
+								v-if="m.id !== userInfo?.id"
 								:loading="teamMemberService.loading"
 								class="mr-2"
 								@click="() => toggleUserType(m)"
@@ -182,7 +182,7 @@
 								{{ m.admin ? $t('team.edit.makeMember') : $t('team.edit.makeAdmin') }}
 							</XButton>
 							<XButton
-								v-if="m.id !== userInfo.id"
+								v-if="m.id !== userInfo?.id"
 								:loading="teamMemberService.loading"
 								class="is-danger"
 								icon="trash-alt"
@@ -271,6 +271,7 @@ import User from '@/components/misc/User.vue'
 import TeamService from '@/services/team'
 import TeamMemberService from '@/services/teamMember'
 import UserService from '@/services/user'
+import TeamModel from '@/models/team'
 
 import {RIGHTS as Rights} from '@/constants/rights'
 
@@ -305,8 +306,8 @@ const userService = ref<UserService>(new UserService())
 const team = ref<ITeam>()
 const teamId = computed(() => Number(route.params.id))
 const memberToDelete = ref<ITeamMember>()
-const newMember = ref<IUser>()
-const foundUsers = ref<IUser[]>()
+const newMember = ref<IUser | undefined>()
+const foundUsers = ref<IUser[] | undefined>()
 
 const showDeleteModal = ref(false)
 const showUserDeleteModal = ref(false)
@@ -319,7 +320,7 @@ const title = ref('')
 loadTeam()
 
 async function loadTeam() {
-	team.value = await teamService.value.get({id: teamId.value})
+	team.value = await teamService.value.get(new TeamModel({id: teamId.value}))
 	title.value = t('team.edit.title', {team: team.value?.name})
 	useTitle(() => title.value)
 }
@@ -331,12 +332,12 @@ async function save() {
 	}
 	showErrorTeamnameRequired.value = false
 
-	team.value = await teamService.value.update(team.value)
+	team.value = await teamService.value.update(team.value!)
 	success({message: t('team.edit.success')})
 }
 
 async function deleteTeam() {
-	await teamService.value.delete(team.value)
+	await teamService.value.delete(team.value!)
 	success({message: t('team.edit.delete.success')})
 	router.push({name: 'teams.index'})
 }
@@ -345,7 +346,7 @@ async function deleteMember() {
 	try {
 		await teamMemberService.value.delete({
 			teamId: teamId.value,
-			username: memberToDelete.value.username,
+			username: memberToDelete.value!.username,
 		})
 		success({message: t('team.edit.deleteUser.success')})
 		await loadTeam()
@@ -362,9 +363,9 @@ async function addUser() {
 	}
 	await teamMemberService.value.create({
 		teamId: teamId.value,
-		username: newMember.value.username,
+		username: newMember.value!.username,
 	})
-	newMember.value = null
+	newMember.value = undefined
 	await loadTeam()
 	success({message: t('team.edit.userAddedSuccess')})
 }
@@ -374,9 +375,9 @@ async function toggleUserType(member: ITeamMember) {
 	member.admin = !member.admin
 	member.teamId = teamId.value
 	const r = await teamMemberService.value.update(member)
-	for (const tm in team.value.members) {
-		if (team.value.members[tm].id === member.id) {
-			team.value.members[tm].admin = r.admin
+	for (const tm in team.value!.members) {
+		if (team.value!.members[tm].id === member.id) {
+			team.value!.members[tm].admin = r.admin
 			break
 		}
 	}
@@ -394,14 +395,14 @@ async function findUser(query: string) {
 	}
 
 	const users = await userService.value.getAll({}, {s: query})
-	foundUsers.value = users.filter((u: IUser) => u.id !== userInfo.value.id)
+	foundUsers.value = users.filter((u: IUser) => u.id !== userInfo.value?.id)
 }
 
 async function leave() {
 	try {
 		await teamMemberService.value.delete({
 			teamId: teamId.value,
-			username: userInfo.value.username,
+			username: userInfo.value!.username,
 		})
 		success({message: t('team.edit.leave.success')})
 		await router.push({name: 'home'})
