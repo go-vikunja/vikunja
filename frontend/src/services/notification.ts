@@ -2,7 +2,7 @@ import AbstractService from '@/services/abstractService'
 import NotificationModel from '@/models/notification'
 import type {INotification} from '@/modelTypes/INotification'
 
-export default class NotificationService extends AbstractService<INotification> {
+export default class NotificationService extends AbstractService<NotificationModel> {
 	constructor() {
 		super({
 			getAll: '/notifications',
@@ -11,6 +11,10 @@ export default class NotificationService extends AbstractService<INotification> 
 	}
 
 	modelFactory(data) {
+		return new NotificationModel(data)
+	}
+
+	modelGetAllFactory(data) {
 		return new NotificationModel(data)
 	}
 
