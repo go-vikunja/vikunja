@@ -8,7 +8,7 @@
 		<template #header>
 			<div class="filter-container">
 				<FilterPopup
-					v-if="!isSavedFilter(project)"
+					v-if="project && !isSavedFilter(project as IProject)"
 					v-model="params"
 					:view-id="viewId"
 					:project-id="projectId"
