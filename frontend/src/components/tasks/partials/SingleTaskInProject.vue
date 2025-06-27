@@ -1,6 +1,7 @@
 <template>
 	<div>
 		<div
+			ref="taskRoot"
 			:class="{'is-loading': taskService.loading}"
 			class="task loader-container single-task"
 			tabindex="-1"
@@ -347,6 +348,7 @@ async function toggleFavorite() {
 	emit('taskUpdated', task.value)
 }
 
+const taskRoot = ref<HTMLElement | null>(null)
 const taskLinkRef = ref<HTMLElement | null>(null)
 
 function hasTextSelected() {
@@ -364,6 +366,11 @@ function openTaskDetail(event: MouseEvent | KeyboardEvent) {
 
 	taskLinkRef.value?.$el.click()
 }
+
+defineExpose({
+	focus: () => taskRoot.value?.focus(),
+	click: (e: MouseEvent | KeyboardEvent) => openTaskDetail(e),
+})
 </script>
 
 <style lang="scss" scoped>
@@ -381,7 +388,7 @@ function openTaskDetail(event: MouseEvent | KeyboardEvent) {
 		background-color: var(--grey-100);
 	}
 
-	&:has(*:focus-visible) {
+	&:has(*:focus-visible), &:focus {
 		box-shadow: 0 0 0 2px hsla(var(--primary-hsl), 0.5);
 
 		a.task-link {
