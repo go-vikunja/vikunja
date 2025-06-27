@@ -41,6 +41,11 @@ type avatar struct {
 type Provider struct {
 }
 
+// FlushCache removes all gravatar cache entries for a user
+func (g *Provider) FlushCache(u *user.User) error {
+	return keyvalue.DelPrefix(keyPrefix + u.Username + "_")
+}
+
 const keyPrefix = "gravatar_avatar_"
 
 // GetAvatar implements getting the avatar for the user

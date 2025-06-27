@@ -26,6 +26,7 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/avatar"
 	user2 "code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web/handler"
 )
@@ -133,6 +134,8 @@ func ChangeUserAvatarProvider(c echo.Context) error {
 		return handler.HandleHTTPError(err)
 	}
 
+	oldProvider := user.AvatarProvider
+
 	user.AvatarProvider = uap.AvatarProvider
 
 	_, err = user2.UpdateUser(s, user, false)
@@ -144,6 +147,10 @@ func ChangeUserAvatarProvider(c echo.Context) error {
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err)
+	}
+
+	if oldProvider != user.AvatarProvider {
+		avatar.FlushAllCaches(user)
 	}
 
 	return c.JSON(http.StatusOK, &models.Message{Message: "Avatar was changed successfully."})

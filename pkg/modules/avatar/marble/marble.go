@@ -27,6 +27,9 @@ import (
 type Provider struct {
 }
 
+// FlushCache is a no-op for the marble provider
+func (p *Provider) FlushCache(_ *user.User) error { return nil }
+
 const avatarSize = 80
 
 var colors = []string{

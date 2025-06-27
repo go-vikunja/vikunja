@@ -16,10 +16,40 @@
 
 package avatar
 
-import "code.vikunja.io/api/pkg/user"
+import (
+	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/modules/avatar/empty"
+	"code.vikunja.io/api/pkg/modules/avatar/gravatar"
+	"code.vikunja.io/api/pkg/modules/avatar/initials"
+	"code.vikunja.io/api/pkg/modules/avatar/ldap"
+	"code.vikunja.io/api/pkg/modules/avatar/marble"
+	"code.vikunja.io/api/pkg/modules/avatar/openid"
+	"code.vikunja.io/api/pkg/modules/avatar/upload"
+	"code.vikunja.io/api/pkg/user"
+)
 
 // Provider defines the avatar provider interface
 type Provider interface {
 	// GetAvatar is the method used to get an actual avatar for a user
 	GetAvatar(user *user.User, size int64) (avatar []byte, mimeType string, err error)
+	// FlushCache removes cached avatar data for the user
+	FlushCache(u *user.User) error
+}
+
+// FlushAllCaches removes cached avatars for the given user for all providers
+func FlushAllCaches(u *user.User) {
+	providers := []Provider{
+		&upload.Provider{},
+		&gravatar.Provider{},
+		&initials.Provider{},
+		&ldap.Provider{},
+		&openid.Provider{},
+		&marble.Provider{},
+		&empty.Provider{},
+	}
+	for _, p := range providers {
+		if err := p.FlushCache(u); err != nil {
+			log.Errorf("Error flushing avatar cache: %v", err)
+		}
+	}
 }
