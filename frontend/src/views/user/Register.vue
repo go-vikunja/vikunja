@@ -73,6 +73,7 @@
 					for="password"
 				>{{ $t('user.auth.password') }}</label>
 				<Password
+					:modelValue="credentials.password"
 					:validate-initially="validatePasswordInitially"
 					@submit="submit"
 					@update:modelValue="v => credentials.password = v"
@@ -199,8 +200,8 @@ async function submit() {
 
 	try {
 		await authStore.register(toRaw(credentials))
-	} catch (e) {
-		errorMessage.value = e?.message
+	} catch (e: any) {
+		errorMessage.value = e?.message || t('user.auth.registerError')
 	}
 }
 </script>
