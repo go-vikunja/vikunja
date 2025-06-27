@@ -130,7 +130,7 @@ async function createToken() {
 }
 
 function formatPermissionTitle(title: string): string {
-	return title.replaceAll('_', ' ')
+	return title.replace(/_/g, ' ')
 }
 
 function selectPermissionGroup(group: string, checked: boolean) {
@@ -372,7 +372,7 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 
 			<template #text>
 				<p>
-					{{ $t('user.settings.apiTokens.delete.text1', {token: tokenToDelete.title}) }}<br>
+					{{ $t('user.settings.apiTokens.delete.text1', {token: tokenToDelete?.title}) }}<br>
 					{{ $t('user.settings.apiTokens.delete.text2') }}
 				</p>
 			</template>
