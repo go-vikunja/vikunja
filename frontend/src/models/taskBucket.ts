@@ -8,8 +8,8 @@ export default class TaskBucketModel extends AbstractModel<ITaskBucket> implemen
 	bucketId = 0
 	projectViewId = 0
 	projectId = 0
-	task = undefined
-	bucket = undefined
+	task = null
+	bucket = null
 
 	constructor(data: Partial<ITaskBucket>) {
 		super()
