@@ -22,19 +22,19 @@
 								v-if="shareType === 'user'"
 								:avatar-size="24"
 								:show-username="true"
-								:user="result"
+								:user="result as IUser"
 							/>
 							<span 
 								v-else
 								class="search-result"
 							>
-								{{ result.name }}
+								{{ (result as ITeam).name }}
 							</span>
 						</template>
 					</Multiselect>
 				</p>
 				<p class="control">
-					<XButton @click="add()">
+					<XButton @click="add(false)">
 						{{ $t('project.share.share') }}
 					</XButton>
 				</p>
@@ -51,9 +51,9 @@
 					:key="s.id"
 				>
 					<template v-if="shareType === 'user'">
-						<td>{{ getDisplayName(s) }}</td>
+						<td>{{ getDisplayName(s as UserProjectWithUser) }}</td>
 						<td>
-							<template v-if="s.id === userInfo.id">
+							<template v-if="s.id === userInfo?.id">
 								<b class="is-success">{{ $t('project.share.userTeam.you') }}</b>
 							</template>
 						</td>
@@ -66,7 +66,7 @@
 									params: { id: s.id },
 								}"
 							>
-								{{ s.name }}
+								{{ (s as TeamProjectWithTeam).name }}
 							</RouterLink>
 						</td>
 					</template>
@@ -209,11 +209,14 @@ let searchService: UserService | TeamService
 let sharable: Ref<IUser | ITeam>
 
 const searchLabel = ref('')
-const selectedRight = ref({})
+const selectedRight = ref<Record<number, any>>({})
 
 
 // This holds either teams or users who this namepace or project is shared with
-const sharables = ref([])
+// Note: The API returns enriched objects that include user/team data, not just the relationship data
+type UserProjectWithUser = IUserProject & { id: number; username: string; name: string; email: string }
+type TeamProjectWithTeam = ITeamProject & { id: number; name: string }
+const sharables = ref<(UserProjectWithUser | TeamProjectWithTeam)[]>([])
 const showDeleteModal = ref(false)
 
 const authStore = useAuthStore()
@@ -282,19 +285,19 @@ async function load() {
 
 async function deleteSharable() {
 	if (props.shareType === 'user') {
-		stuffModel.userId = sharable.value.username
+		stuffModel.userId = (sharable.value as IUser).username
 	} else if (props.shareType === 'team') {
-		stuffModel.teamId = sharable.value.id
+		stuffModel.teamId = (sharable.value as ITeam).id
 	}
 
 	await stuffService.delete(stuffModel)
 	showDeleteModal.value = false
 	for (const i in sharables.value) {
 		if (
-			(sharables.value[i].username === stuffModel.userId && props.shareType === 'user') ||
+			((sharables.value[i] as UserProjectWithUser).username === stuffModel.userId && props.shareType === 'user') ||
 			(sharables.value[i].id === stuffModel.teamId && props.shareType === 'team')
 		) {
-			sharables.value.splice(i, 1)
+			sharables.value.splice(Number(i), 1)
 		}
 	}
 	success({
@@ -305,10 +308,7 @@ async function deleteSharable() {
 	})
 }
 
-async function add(admin) {
-	if (admin === null) {
-		admin = false
-	}
+async function add(admin: boolean) {
 	stuffModel.right = RIGHTS.READ
 	if (admin) {
 		stuffModel.right = RIGHTS.ADMIN
@@ -325,7 +325,7 @@ async function add(admin) {
 	await load()
 }
 
-async function toggleType(sharable) {
+async function toggleType(sharable: UserProjectWithUser | TeamProjectWithTeam) {
 	if (
 		selectedRight.value[sharable.id] !== RIGHTS.ADMIN &&
 		selectedRight.value[sharable.id] !== RIGHTS.READ &&
@@ -336,7 +336,7 @@ async function toggleType(sharable) {
 	stuffModel.right = selectedRight.value[sharable.id]
 
 	if (props.shareType === 'user') {
-		stuffModel.userId = sharable.username
+		stuffModel.userId = (sharable as UserProjectWithUser).username
 	} else if (props.shareType === 'team') {
 		stuffModel.teamId = sharable.id
 	}
@@ -344,7 +344,7 @@ async function toggleType(sharable) {
 	const r = await stuffService.update(stuffModel)
 	for (const i in sharables.value) {
 		if (
-			(sharables.value[i].username ===
+			((sharables.value[i] as UserProjectWithUser).username ===
 				stuffModel.userId &&
 				props.shareType === 'user') ||
 			(sharables.value[i].id === stuffModel.teamId &&
@@ -356,7 +356,7 @@ async function toggleType(sharable) {
 	success({message: t('project.share.userTeam.updatedSuccess', {type: shareTypeName.value})})
 }
 
-const found = ref([])
+const found = ref<(IUser | ITeam)[]>([])
 
 const currentUserId = computed(() => authStore.info.id)
 async function find(query: string) {
