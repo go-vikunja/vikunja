@@ -17,6 +17,7 @@ import {
 } from '@/helpers/redirectToProvider'
 import {AUTH_TYPES, type IUser} from '@/modelTypes/IUser'
 import type {IUserSettings} from '@/modelTypes/IUserSettings'
+import type {ILoginCredentials} from '@/modelTypes/ILoginCredentials'
 import router from '@/router'
 import {useConfigStore} from '@/stores/config'
 import UserSettingsModel from '@/models/userSettings'
@@ -159,7 +160,7 @@ export const useAuthStore = defineStore('auth', () => {
 	}
 
 	// Logs a user in with a set of credentials.
-	async function login(credentials) {
+	async function login(credentials: ILoginCredentials) {
 		const HTTP = HTTPFactory()
 		setIsLoading(true)
 

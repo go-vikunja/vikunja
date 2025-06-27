@@ -1,7 +1,7 @@
 import {i18n} from '@/i18n'
 import {notify} from '@kyvg/vue3-notification'
 
-export function getErrorText(r): string {
+export function getErrorText(r: any): string {
 	const data = r?.reason?.response?.data || r?.response?.data
 
 	if (data?.code) {
