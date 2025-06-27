@@ -58,7 +58,7 @@ const isLocalUser = computed(() => authStore.info?.isLocalUser)
 function download() {
 	if (password.value === '' && isLocalUser.value) {
 		errPasswordRequired.value = true
-		passwordInput.value.focus()
+		passwordInput.value?.focus()
 		return
 	}
 
