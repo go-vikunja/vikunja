@@ -132,7 +132,7 @@ import DropdownItem from '@/components/misc/DropdownItem.vue'
 import Subscription from '@/components/misc/Subscription.vue'
 import type {IProject} from '@/modelTypes/IProject'
 import type {ISubscription} from '@/modelTypes/ISubscription'
-import type {DeepReadonly} from '@/types/utilities'
+// import type {DeepReadonly} from '@/types/utilities'
 
 import {isSavedFilter} from '@/services/savedFilter'
 import {useConfigStore} from '@/stores/config'
@@ -153,7 +153,7 @@ watchEffect(() => {
 const configStore = useConfigStore()
 const backgroundsEnabled = computed(() => configStore.enabledBackgroundProviders?.length > 0)
 
-function setSubscriptionInStore(sub: ISubscription) {
+function setSubscriptionInStore(sub: ISubscription | null) {
 	subscription.value = sub
 	const updatedProject = {
 		...props.project,
