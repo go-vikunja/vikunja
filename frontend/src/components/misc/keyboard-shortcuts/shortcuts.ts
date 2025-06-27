@@ -61,6 +61,24 @@ export const KEYBOARD_SHORTCUTS: ShortcutGroup[] = [
 		],
 	},
 	{
+		title: 'keyboardShortcuts.list.title',
+		available: (route) => route.name === 'project.view',
+		shortcuts: [
+			{
+				title: 'keyboardShortcuts.list.navigateDown',
+				keys: ['j'],
+			},
+			{
+				title: 'keyboardShortcuts.list.navigateUp',
+				keys: ['k'],
+			},
+			{
+				title: 'keyboardShortcuts.list.open',
+				keys: ['enter'],
+			},
+		],
+	},
+	{
 		title: 'project.kanban.title',
 		available: (route) => route.name === 'project.view',
 		shortcuts: [

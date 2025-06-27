@@ -65,8 +65,9 @@
 						@start="() => drag = true"
 						@end="saveTaskPosition"
 					>
-						<template #item="{element: t}">
+						<template #item="{element: t, index}">
 							<SingleTaskInProject
+								:ref="(el) => setTaskRef(el, index)"
 								:show-list-color="false"
 								:disabled="!canDragTasks"
 								:can-mark-as-done="canWrite || isPseudoProject"
@@ -95,7 +96,7 @@
 
 
 <script setup lang="ts">
-import {ref, computed, nextTick, onMounted, watch} from 'vue'
+import {ref, computed, nextTick, onMounted, onBeforeUnmount, watch} from 'vue'
 import draggable from 'zhyswan-vuedraggable'
 
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
@@ -271,6 +272,70 @@ function prepareFiltersAndLoadTasks() {
 
 	loadTasks()
 }
+
+const taskRefs = ref<(InstanceType<typeof SingleTaskInProject> | null)[]>([])
+const focusedIndex = ref(-1)
+
+function setTaskRef(el: InstanceType<typeof SingleTaskInProject> | null, index: number) {
+	if (el === null) {
+		delete taskRefs.value[index]
+	} else {
+		taskRefs.value[index] = el
+	}
+}
+
+function focusTask(index: number) {
+	if (index < 0 || index >= tasks.value.length) {
+		return
+	}
+
+	const taskRef = taskRefs.value[index]
+
+	focusedIndex.value = index
+	taskRef?.focus()
+}
+
+function handleListNavigation(e: KeyboardEvent) {
+	if (e.target instanceof HTMLElement && (e.target.closest('input, textarea, select, [contenteditable="true"]'))) {
+		return
+	}
+
+	if (e.key === 'j') {
+		e.preventDefault()
+		focusTask(Math.min(focusedIndex.value + 1, tasks.value.length - 1))
+		return
+	}
+
+	if (e.key === 'k') {
+		e.preventDefault()
+		if (focusedIndex.value === -1) {
+			focusTask(tasks.value.length - 1)
+			return
+		}
+
+		if (focusedIndex.value === 0) {
+			addTaskRef.value?.focusTaskInput()
+			focusedIndex.value = -1
+			return
+		}
+
+		focusTask(Math.max(focusedIndex.value - 1, 0))
+		return
+	}
+
+	if (e.key === 'Enter') {
+		e.preventDefault()
+		taskRefs.value[focusedIndex.value]?.click(e)
+	}
+}
+
+onMounted(() => {
+	document.addEventListener('keydown', handleListNavigation)
+})
+
+onBeforeUnmount(() => {
+	document.removeEventListener('keydown', handleListNavigation)
+})
 </script>
 
 <style lang="scss" scoped>

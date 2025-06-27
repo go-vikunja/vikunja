@@ -1076,6 +1076,12 @@
       "labels": "Navigate to labels",
       "teams": "Navigate to teams",
       "projects": "Navigate to projects"
+    },
+    "list": {
+      "title": "Task List",
+      "navigateDown": "Highlight next task",
+      "navigateUp": "Highlight previous task",
+      "open": "Open highlighted task"
     }
   },
   "update": {
