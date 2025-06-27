@@ -113,3 +113,37 @@ func (s *Storage) IncrBy(key string, update int64) (err error) {
 func (s *Storage) DecrBy(key string, update int64) (err error) {
 	return s.client.DecrBy(context.Background(), key, update).Err()
 }
+
+// ListKeys returns all keys in redis starting with the given prefix
+func (s *Storage) ListKeys(prefix string) ([]string, error) {
+	ctx := context.Background()
+	pattern := prefix + "*"
+	var cursor uint64
+	var keys []string
+
+	for {
+		k, c, err := s.client.Scan(ctx, cursor, pattern, 100).Result()
+		if err != nil {
+			return nil, err
+		}
+		keys = append(keys, k...)
+		cursor = c
+		if cursor == 0 {
+			break
+		}
+	}
+
+	return keys, nil
+}
+
+// DelPrefix removes all keys in redis which start with the given prefix
+func (s *Storage) DelPrefix(prefix string) error {
+	keys, err := s.ListKeys(prefix)
+	if err != nil {
+		return err
+	}
+	if len(keys) == 0 {
+		return nil
+	}
+	return s.client.Del(context.Background(), keys...).Err()
+}
