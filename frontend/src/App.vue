@@ -89,7 +89,7 @@ watch(userEmailConfirm, (userEmailConfirm) => {
 }, { immediate: true })
 
 if (authStore.settings.language) {
-  setLanguage(authStore.settings.language)
+	setLanguage(authStore.settings.language)
 }
 useColorScheme()
 </script>

@@ -280,8 +280,8 @@ const CustomImage = Image.extend({
 				}
 
 				if (img instanceof HTMLImageElement) {
-				img.src = loadedAttachments.value[cacheKey]
-			}
+					img.src = loadedAttachments.value[cacheKey]
+				}
 			})
 
 			return ['img', mergeAttributes(this.options.HTMLAttributes, {

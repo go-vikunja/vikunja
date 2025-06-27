@@ -46,47 +46,47 @@ import type {RouteLocationRaw} from 'vue-router'
 const props = defineProps({
 	variant: {
 		type: String as PropType<'primary' | 'secondary' | 'tertiary'>,
-		default: 'primary'
+		default: 'primary',
 	},
 	icon: {
 		type: Object as PropType<IconProp>,
-		default: undefined
+		default: undefined,
 	},
 	iconColor: {
 		type: String,
-		default: undefined
+		default: undefined,
 	},
 	loading: {
 		type: Boolean,
-		default: false
+		default: false,
 	},
 	disabled: {
 		type: Boolean,
-		default: false
+		default: false,
 	},
 	shadow: {
 		type: Boolean,
-		default: true
+		default: true,
 	},
 	wrap: {
 		type: Boolean,
-		default: true
+		default: true,
 	},
 	type: {
 		type: String as PropType<'button' | 'submit' | undefined>,
-		default: undefined
+		default: undefined,
 	},
 	to: {
 		type: Object as PropType<RouteLocationRaw>,
-		default: undefined
+		default: undefined,
 	},
 	href: {
 		type: String,
-		default: undefined
+		default: undefined,
 	},
 	openExternalInNewTab: {
 		type: Boolean,
-		default: true
+		default: true,
 	},
 })
 

@@ -56,36 +56,36 @@ import {type PropType} from 'vue'
 const props = defineProps({
 	title: {
 		type: String,
-		required: true
+		required: true,
 	},
 	primaryLabel: {
 		type: String,
-		default: ''
+		default: '',
 	},
 	primaryIcon: {
 		type: Object as PropType<IconProp>,
-		default: 'plus'
+		default: 'plus',
 	},
 	primaryDisabled: {
 		type: Boolean,
-		default: false
+		default: false,
 	},
 	hasPrimaryAction: {
 		type: Boolean,
-		default: true
+		default: true,
 	},
 	tertiary: {
 		type: String,
-		default: ''
+		default: '',
 	},
 	wide: {
 		type: Boolean,
-		default: false
+		default: false,
 	},
 	loading: {
 		type: Boolean,
-		default: false
-	}
+		default: false,
+	},
 })
 
 const emit = defineEmits<{
