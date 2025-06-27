@@ -36,6 +36,12 @@ import (
 type Provider struct {
 }
 
+// FlushCache removes cached avatars for a user
+func (p *Provider) FlushCache(u *user.User) error {
+	InvalidateCache(u)
+	return nil
+}
+
 // CachedAvatar represents a cached avatar with its content and mime type
 type CachedAvatar struct {
 	Content  []byte

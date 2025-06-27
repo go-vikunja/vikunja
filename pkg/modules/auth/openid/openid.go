@@ -30,6 +30,7 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
+	"code.vikunja.io/api/pkg/modules/avatar"
 	"code.vikunja.io/api/pkg/modules/avatar/upload"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
@@ -249,6 +250,8 @@ func syncUserAvatarFromOpenID(s *xorm.Session, u *user.User, pictureURL string) 
 	if err != nil {
 		return fmt.Errorf("error storing avatar: %w", err)
 	}
+
+	avatar.FlushAllCaches(u)
 
 	return nil
 }

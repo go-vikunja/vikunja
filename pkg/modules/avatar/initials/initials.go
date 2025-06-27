@@ -39,6 +39,14 @@ import (
 type Provider struct {
 }
 
+// FlushCache removes cached initials avatars for a user
+func (p *Provider) FlushCache(u *user.User) error {
+	if err := keyvalue.Del(getCacheKey("full", u.ID)); err != nil {
+		return err
+	}
+	return keyvalue.DelPrefix(getCacheKey("resized", u.ID))
+}
+
 var (
 	avatarBgColors = []*color.RGBA{
 		{R: 69, G: 189, B: 243, A: 255},

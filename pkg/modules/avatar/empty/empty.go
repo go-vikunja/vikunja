@@ -22,6 +22,9 @@ import "code.vikunja.io/api/pkg/user"
 type Provider struct {
 }
 
+// FlushCache is a no-op for the empty provider
+func (p *Provider) FlushCache(_ *user.User) error { return nil }
+
 const defaultAvatar string = `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="128" height="128" version="1.1" viewBox="0 0 33.867 33.867" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:xlink="http://www.w3.org/1999/xlink">
 <metadata>

@@ -177,5 +177,7 @@ func UploadAvatar(c echo.Context) (err error) {
 		return handler.HandleHTTPError(err)
 	}
 
+	avatar.FlushAllCaches(u)
+
 	return c.JSON(http.StatusOK, models.Message{Message: "Avatar was uploaded successfully."})
 }
