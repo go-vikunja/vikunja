@@ -140,7 +140,7 @@ const highlightedFilterQuery = computed(() => {
 
 				let labelTitles = [value.trim()]
 				if (operator === 'in' || operator === '?=' || operator === 'not in' || operator === '?!=') {
-					labelTitles = value.split(',').map(v => v.trim())
+					labelTitles = value.split(',').map((v: string) => v.trim())
 				}
 
 				const labelsHtml: string[] = []
@@ -179,10 +179,10 @@ watch(
 					event.preventDefault()
 					event.stopPropagation()
 
-					const button = event.target
+					const button = event.target as HTMLElement
 					currentOldDatepickerValue.value = button?.innerText
 					currentDatepickerValue.value = button?.innerText
-					currentDatepickerPos.value = parseInt(button?.dataset.position)
+					currentDatepickerPos.value = parseInt(button?.dataset.position || '0')
 					datePickerPopupOpen.value = true
 				})
 			})
@@ -190,15 +190,18 @@ watch(
 	{immediate: true},
 )
 
-function updateDateInQuery(newDate: string) {
+function updateDateInQuery(newDate: string | Date | null) {
+	if (newDate === null) return
+	
+	const dateString = newDate instanceof Date ? newDate.toISOString() : newDate
 	// Need to escape and unescape the query because the positions are based on the escaped query
 	let escaped = escapeHtml(filterQuery.value)
 	escaped = escaped
 		.substring(0, currentDatepickerPos.value)
 		+ escaped
 			.substring(currentDatepickerPos.value)
-			.replace(currentOldDatepickerValue.value, newDate)
-	currentOldDatepickerValue.value = newDate
+			.replace(currentOldDatepickerValue.value, dateString)
+	currentOldDatepickerValue.value = dateString
 	filterQuery.value = unEscapeHtml(escaped)
 }
 
@@ -240,10 +243,10 @@ function handleFieldInput() {
 		if (matched.startsWith('assignee')) {
 			autocompleteResultType.value = 'assignees'
 			if (props.projectId) {
-				projectUserService.getAll({projectId: props.projectId}, {s: search})
+				projectUserService.getAll({} as any, {projectId: props.projectId, s: search})
 					.then(users => autocompleteResults.value = users.length > 1 ? users : [])
 			} else {
-				userService.getAll({}, {s: search})
+				userService.getAll({} as any, {s: search})
 					.then(users => autocompleteResults.value = users.length > 1 ? users : [])
 			}
 		}
@@ -256,7 +259,7 @@ function handleFieldInput() {
 	})
 }
 
-function autocompleteSelect(value) {
+function autocompleteSelect(value: any) {
 	filterQuery.value = filterQuery.value.substring(0, autocompleteMatchPosition.value + 1) +
 		(autocompleteResultType.value === 'assignees'
 			? value.username
