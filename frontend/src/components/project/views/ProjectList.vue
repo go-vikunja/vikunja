@@ -28,7 +28,7 @@
 					class="has-overflow"
 				>
 					<AddTask
-						v-if="!project.isArchived && canWrite"
+						v-if="project && !project.isArchived && canWrite"
 						ref="addTaskRef"
 						class="list-view__add-task d-print-none"
 						:default-position="firstNewPosition"
@@ -38,7 +38,7 @@
 					<Nothing v-if="ctaVisible && tasks.length === 0 && !loading">
 						{{ $t('project.list.empty') }}
 						<ButtonLink
-							v-if="project.id > 0 && canWrite"
+							v-if="project && project.id > 0 && canWrite"
 							@click="focusNewTaskInput()"
 						>
 							{{ $t('project.list.newTaskCta') }}
@@ -160,6 +160,9 @@ watch(
 		if (props.projectId < 0) {
 			return
 		}
+		const tasksById: Record<number, boolean> = {}
+		tasks.value.forEach(t => tasksById[t.id] = true)
+
 		tasks.value = tasks.value.filter(t => {
 			return !((t.relatedTasks?.parenttask?.length ?? 0) > 0)
 		})
@@ -182,7 +185,7 @@ const baseStore = useBaseStore()
 const project = computed(() => baseStore.currentProject)
 
 const canWrite = computed(() => {
-	return project.value.maxRight > Rights.READ && project.value.id > 0
+	return project.value && project.value.maxRight && project.value.maxRight > Rights.READ && project.value.id > 0
 })
 
 const isPseudoProject = computed(() => (project.value && isSavedFilter(project.value)) || project.value?.id === -1)
@@ -192,7 +195,7 @@ onMounted(async () => {
 	ctaVisible.value = true
 })
 
-const canDragTasks = computed(() => canWrite.value || isSavedFilter(project.value))
+const canDragTasks = computed(() => canWrite.value || (project.value && isSavedFilter(project.value)))
 
 const addTaskRef = ref<typeof AddTask | null>(null)
 
@@ -230,7 +233,7 @@ function updateTasks(updatedTask: ITask) {
 	}
 }
 
-async function saveTaskPosition(e) {
+async function saveTaskPosition(e: {newIndex: number, oldIndex: number}) {
 	drag.value = false
 
 	const task = tasks.value[e.newIndex]
