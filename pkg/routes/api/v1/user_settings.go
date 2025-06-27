@@ -144,6 +144,10 @@ func ChangeUserAvatarProvider(c echo.Context) error {
 		return handler.HandleHTTPError(err)
 	}
 
+	if user.AvatarProvider == "initials" {
+		avatar.FlushAllCaches(user)
+	}
+
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err)
