@@ -92,6 +92,7 @@
 				"discoverableByName": "Diğer kullanıcıların beni isimle arayarak takımlara veya projelere üye olarak eklemesine izin ver",
 				"discoverableByEmail": "Diğer kullanıcıların beni tam e-posta adresimle arayarak takımlara veya projelere üye olarak eklemesine izin ver",
 				"playSoundWhenDone": "Görevleri tamamlandı olarak işaretlerken ses çal",
+				"allowIconChanges": "Belirli zamanlarda özel logoları göster",
 				"weekStart": "Hafta başlangıcı",
 				"weekStartSunday": "Pazar",
 				"weekStartMonday": "Pazartesi",

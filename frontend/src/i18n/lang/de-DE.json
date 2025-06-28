@@ -92,6 +92,7 @@
 				"discoverableByName": "Erlaube anderen Benutzer:innen, mich als Mitglied zu Teams oder Projekten hinzuzufügen, wenn sie nach meinem Namen suchen",
 				"discoverableByEmail": "Erlaube anderen Benutzer:innen, mich als Mitglied zu Teams oder Projekten hinzuzufügen, wenn sie nach meiner vollständigen E-Mail Adresse suchen",
 				"playSoundWhenDone": "Einen Ton abspielen, wenn Aufgaben als erledigt markiert werden",
+				"allowIconChanges": "Zu bestimmten Zeiten spezielle Logos anzeigen",
 				"weekStart": "Woche beginnt am",
 				"weekStartSunday": "Sonntag",
 				"weekStartMonday": "Montag",
