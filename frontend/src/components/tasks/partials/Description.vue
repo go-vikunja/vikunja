@@ -115,7 +115,7 @@ async function save() {
 async function uploadCallback(files: File[] | FileList): Promise<string[]> {
 	const uploadPromises: Promise<string>[] = []
 
-	files.forEach((file: File) => {
+	Array.from(files).forEach((file: File) => {
 		const promise = new Promise<string>((resolve) => {
 			props.attachmentUpload(file, (uploadedFileUrl: string) => resolve(uploadedFileUrl))
 		})
