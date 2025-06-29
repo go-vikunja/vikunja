@@ -1076,6 +1076,12 @@
 			"labels": "Labels aufrufen",
 			"teams": "Teams aufrufen",
 			"projects": "Projekte aufrufen"
+		},
+		"list": {
+			"title": "Aufgabenliste",
+			"navigateDown": "Nächste Aufgabe hervorheben",
+			"navigateUp": "Vorherige Aufgabe hervorheben",
+			"open": "Markierte Aufgabe öffnen"
 		}
 	},
 	"update": {

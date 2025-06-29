@@ -1076,6 +1076,12 @@
 			"labels": "Etiketlere git",
 			"teams": "Takımlara git",
 			"projects": "Projelere git"
+		},
+		"list": {
+			"title": "Görev Listesi",
+			"navigateDown": "Sonraki görevi vurgula",
+			"navigateUp": "Önceki görevi vurgula",
+			"open": "Vurgulanan görevi aç"
 		}
 	},
 	"update": {
