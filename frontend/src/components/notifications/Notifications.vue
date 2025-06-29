@@ -142,7 +142,7 @@ async function loadNotifications() {
 	}
 	// We're recreating the notification service here to make sure it uses the latest api user token
 	const notificationService = new NotificationService()
-	allNotifications.value = await notificationService.getAll()
+	allNotifications.value = await notificationService.getAll({} as any)
 }
 
 function hidePopup(e: MouseEvent) {
