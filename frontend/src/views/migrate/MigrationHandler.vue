@@ -111,11 +111,15 @@
 </template>
 
 <script lang="ts">
+import type {RouteLocationNormalized, NavigationGuardNext} from 'vue-router'
+import {MIGRATORS} from './migrators'
+
 export default {
-	beforeRouteEnter(to) {
+	beforeRouteEnter(to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) {
 		if (MIGRATORS[to.params.service as string] === undefined) {
-			return {name: 'not-found'}
+			return next({name: 'not-found'})
 		}
+		next()
 	},
 }
 </script>
@@ -126,6 +130,7 @@ import {useI18n} from 'vue-i18n'
 
 import Logo from '@/assets/logo.svg?component'
 import Message from '@/components/misc/Message.vue'
+import XButton from '@/components/input/Button.vue'
 
 import AbstractMigrationService, {type MigrationConfig} from '@/services/migrator/abstractMigration'
 import AbstractMigrationFileService from '@/services/migrator/abstractMigrationFile'
@@ -176,7 +181,7 @@ async function initMigration() {
 	const TOKEN_HASH_PREFIX = '#token='
 	migratorAuthCode.value = location.hash.startsWith(TOKEN_HASH_PREFIX)
 		? location.hash.substring(TOKEN_HASH_PREFIX.length)
-		: props.code as string
+		: props.code || ''
 
 	if (!migratorAuthCode.value) {
 		return
@@ -215,7 +220,11 @@ async function migrate() {
 		if (uploadInput.value?.files?.length === 0) {
 			return
 		}
-		migrationConfig = uploadInput.value?.files?.[0] as File
+		if (uploadInput.value?.files?.[0]) {
+			migrationConfig = uploadInput.value.files[0]
+		} else {
+			return
+		}
 	}
 
 	try {
