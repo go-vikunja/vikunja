@@ -38,13 +38,13 @@ interface MatchedAssignee extends IUser {
 }
 
 // IDEA: maybe use a small fuzzy search here to prevent errors
-function findPropertyByValue(object, key, value, fuzzy = false) {
+function findPropertyByValue(object: any, key: string, value: string, fuzzy = false) {
 	return Object.values(object).find(l => {
 		if (fuzzy) {
-			return l[key]?.toLowerCase().includes(value.toLowerCase())
+			return (l as any)[key]?.toLowerCase().includes(value.toLowerCase())
 		}
 	
-		return l[key]?.toLowerCase() === value.toLowerCase()
+		return (l as any)[key]?.toLowerCase() === value.toLowerCase()
 	})
 }
 
@@ -91,16 +91,16 @@ async function findAssignees(parsedTaskAssignees: string[], projectId: number): 
 
 	const userService = new ProjectUserService()
 	const assignees = parsedTaskAssignees.map(async a => {
-		const users = (await userService.getAll({projectId}, {s: a}))
+		const users = (await userService.getAll({projectId} as any, {s: a}))
 			.map(u => ({
 				...u,
 				match: a,
 			}))
-		return validateUser(users, a)
+		return validateUser(users as unknown as IUser[], a)
 	})
 
 	const validatedUsers = await Promise.all(assignees) 
-	return validatedUsers.filter((item) => Boolean(item))
+	return validatedUsers.filter((item) => Boolean(item)) as MatchedAssignee[]
 }
 
 export const useTaskStore = defineStore('task', () => {
@@ -137,14 +137,18 @@ export const useTaskStore = defineStore('task', () => {
 
 		const cancel = setModuleLoading(setIsLoading)
 		try {
-			const model = {}
+			const model: any = {}
 			let taskCollectionService = new TaskService()
 			if (projectId !== null) {
 				model.projectId = projectId
-				taskCollectionService = new TaskCollectionService()
+				taskCollectionService = new TaskCollectionService() as any
 			}
-			tasks.value = await taskCollectionService.getAll(model, params)
-			baseStore.setHasTasks(tasks.value.length > 0)
+			const taskResults = await taskCollectionService.getAll(model as any, params)
+			tasks.value = Array.isArray(taskResults) ? taskResults.reduce((acc, task) => {
+				acc[task.id] = task
+				return acc
+			}, {} as { [id: number]: ITask }) : taskResults
+			baseStore.setHasTasks(Object.keys(tasks.value).length > 0)
 			return tasks.value
 		} finally {
 			cancel()
@@ -194,7 +198,7 @@ export const useTaskStore = defineStore('task', () => {
 					attachments,
 				},
 			}
-			kanbanStore.setTaskInBucketByIndex(newTask)
+			kanbanStore.setTaskInBucketByIndex(newTask as any)
 		}
 		attachmentStore.add(attachment)
 	}
@@ -232,7 +236,7 @@ export const useTaskStore = defineStore('task', () => {
 						user,
 					],
 				},
-			})
+			} as any)
 
 			return r
 		} finally {
@@ -261,7 +265,7 @@ export const useTaskStore = defineStore('task', () => {
 			return response
 		}
 
-		const assignees = t.task.assignees.filter(({ id }) => id !== user.id)
+		const assignees = t.task.assignees.filter(({ id }: any) => id !== user.id)
 
 		kanbanStore.setTaskInBucketByIndex({
 			...t,
@@ -269,7 +273,7 @@ export const useTaskStore = defineStore('task', () => {
 				...t.task,
 				assignees,
 			},
-		})
+		} as any)
 		return response
 
 	}
@@ -304,7 +308,7 @@ export const useTaskStore = defineStore('task', () => {
 					label,
 				],
 			},
-		})
+		} as any)
 
 		return r
 	}
@@ -328,7 +332,7 @@ export const useTaskStore = defineStore('task', () => {
 		}
 
 		// Remove the label from the project
-		const labels = t.task.labels.filter(({ id }) => id !== label.id)
+		const labels = t.task.labels.filter(({ id }: any) => id !== label.id)
 
 		kanbanStore.setTaskInBucketByIndex({
 			...t,
@@ -336,7 +340,7 @@ export const useTaskStore = defineStore('task', () => {
 				...t.task,
 				labels,
 			},
-		})
+		} as any)
 
 		return response
 	}
@@ -355,7 +359,7 @@ export const useTaskStore = defineStore('task', () => {
 			}
 			return label
 		})
-		return Promise.all(mustCreateLabel)
+		return Promise.all(mustCreateLabel) as Promise<LabelModel[]>
 	}
 
 	// Do everything that is involved in finding, creating and adding the label to the task
@@ -425,7 +429,7 @@ export const useTaskStore = defineStore('task', () => {
 	) {
 		const cancel = setModuleLoading(setIsLoading)
 		const quickAddMagicMode = authStore.settings.frontendSettings.quickAddMagicMode
-		const parsedTask = parseTaskText(title, quickAddMagicMode)
+		const parsedTask = parseTaskText(title || '', quickAddMagicMode)
 
 		if(parsedTask.text === '') {
 			const taskService = new TaskService()
@@ -443,7 +447,7 @@ export const useTaskStore = defineStore('task', () => {
 		}
 	
 		const foundProjectId = await findProjectId({
-			project: parsedTask.project,
+			project: parsedTask.project || '',
 			projectId: projectId || 0,
 		})
 		
@@ -464,19 +468,19 @@ export const useTaskStore = defineStore('task', () => {
 		}
 
 		// I don't know why, but it all goes up in flames when I just pass in the date normally.
-		const dueDate = parsedTask.date !== null ? new Date(parsedTask.date).toISOString() : null
+		const dueDate = parsedTask.date !== null ? new Date(parsedTask.date) : null
 	
 		const task = new TaskModel({
 			title: cleanedTitle,
 			projectId: foundProjectId,
 			dueDate,
-			priority: parsedTask.priority,
+			priority: parsedTask.priority as any,
 			assignees,
 			bucketId: bucketId || 0,
 			position,
 			index,
 		})
-		task.repeatAfter = parsedTask.repeats
+		task.repeatAfter = parsedTask.repeats || 0
 
 		if (parsedTask.repeats?.type === REPEAT_TYPES.Months && parsedTask.repeats?.amount === 1) {
 			task.repeatMode = TASK_REPEAT_MODES.REPEAT_MODE_MONTH

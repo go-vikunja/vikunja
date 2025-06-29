@@ -54,7 +54,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 			return {
 				bucketIndex,
 				taskIndex,
-				task: bucketIndex !== null && taskIndex !== null && buckets.value[bucketIndex]?.tasks?.[taskIndex] || null,
+				task: bucketIndex !== null && taskIndex !== null && buckets.value[bucketIndex]?.tasks?.[taskIndex!] || null,
 			}
 		}
 	})
@@ -124,7 +124,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 
 		let found = false
 
-		const findAndUpdate = b => {
+		const findAndUpdate = (b: any) => {
 			for (const t in buckets.value[b].tasks) {
 				if (buckets.value[b].tasks[t].id === task.id) {
 					const bucket = buckets.value[b]
@@ -164,7 +164,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 		if (bucketIndex === null) return
 		const currentTaskBucket = buckets.value[bucketIndex]
 		
-		const currentView: IProjectView = baseStore.currentProject?.views.find(v => v.id === baseStore.currentProjectViewId)
+		const currentView = baseStore.currentProject?.views.find(v => v.id === baseStore.currentProjectViewId) as IProjectView
 		if(typeof currentView === 'undefined') return
 		
 		// If the task is done, make sure it is in the done bucket
@@ -231,13 +231,13 @@ export const useKanbanStore = defineStore('kanban', () => {
 		if (
 			bucketIndex === null ||
 			taskIndex === null ||
-			(buckets.value[bucketIndex]?.tasks[taskIndex]?.id !== task.id)
+			(buckets.value[bucketIndex]?.tasks[taskIndex!]?.id !== task.id)
 		) {
 			return
 		}
 
-		buckets.value[bucketIndex].tasks.splice(taskIndex, 1)
-		buckets.value[bucketIndex].count--
+		buckets.value[bucketIndex!].tasks.splice(taskIndex!, 1)
+		buckets.value[bucketIndex!].count--
 	}
 
 	function setBucketLoading({bucketId, loading}: { bucketId: IBucket['id'], loading: boolean }) {
@@ -252,7 +252,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 		allTasksLoadedForBucket.value[bucketId] = true
 	}
 
-	async function loadBucketsForProject(projectId: IProject['id'], viewId: IProjectView['id'], params) {
+	async function loadBucketsForProject(projectId: IProject['id'], viewId: IProjectView['id'], params: any) {
 		const cancel = setModuleLoading(setIsLoading)
 
 		// Clear everything to prevent having old buckets in the project if loading the buckets from this project takes a few moments
@@ -260,11 +260,11 @@ export const useKanbanStore = defineStore('kanban', () => {
 
 		const taskCollectionService = new TaskCollectionService()
 		try {
-			const newBuckets = await taskCollectionService.getAll({projectId, viewId}, {
+			const newBuckets = await taskCollectionService.getAll({projectId, viewId} as any, {
 				...params,
 				per_page: TASKS_PER_BUCKET,
 			})
-			setBuckets(newBuckets)
+			setBuckets(newBuckets as unknown as IBucket[])
 			setProjectId(projectId)
 			return newBuckets
 		} finally {
@@ -303,7 +303,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 
 		const taskService = new TaskCollectionService()
 		try {
-			const tasks = await taskService.getAll({projectId, viewId}, params, page)
+			const tasks = await taskService.getAll({projectId, viewId} as any, params, page)
 			addTasksToBucket(tasks, bucketId)
 			setTasksLoadedForBucketPage({bucketId, page})
 			if (taskService.totalPages <= page) {
@@ -329,7 +329,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 		}
 	}
 
-	async function deleteBucket({bucket, params}: { bucket: IBucket, params }) {
+	async function deleteBucket({bucket, params}: { bucket: IBucket, params: any }) {
 		const cancel = setModuleLoading(setIsLoading)
 
 		const bucketService = new BucketService()
@@ -347,7 +347,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 	async function updateBucket(updatedBucketData: Partial<IBucket>) {
 		const cancel = setModuleLoading(setIsLoading)
 
-		const bucketIndex = findIndexById(buckets.value, updatedBucketData.id)
+		const bucketIndex = findIndexById(buckets.value, updatedBucketData.id!)
 		const oldBucket = klona(buckets.value[bucketIndex])
 
 		const updatedBucket = {
