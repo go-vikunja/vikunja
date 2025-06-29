@@ -256,7 +256,7 @@ if (props.shareType === 'user') {
 	}
 } else if (props.shareType === 'team') {
 	searchService = new TeamService()
-	sharable = ref(new TeamModel())
+	sharable = ref(new TeamModel() as any)
 	searchLabel.value = 'name'
 
 	if (props.type === 'project') {
@@ -272,7 +272,7 @@ if (props.shareType === 'user') {
 load()
 
 async function load() {
-	const result = await stuffService.getAll(stuffModel)
+	const result = await stuffService.getAll(stuffModel as any)
 	sharables.value = result as (UserProjectWithUser | TeamProjectWithTeam)[]
 	sharables.value.forEach(({id, right}) =>
 		selectedRight.value[id] = right,
