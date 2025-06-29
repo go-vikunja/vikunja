@@ -143,7 +143,7 @@
 						width="48"
 					>
 					<figcaption class="tw-sr-only">
-						{{ $t('misc.avatarOfUser', {user: getDisplayName(authStore.info)}) }}
+						{{ $t('misc.avatarOfUser', {user: authStore.info ? getDisplayName(authStore.info) : ''}) }}
 					</figcaption>
 				</figure>
 				<div class="media-content">
@@ -276,7 +276,7 @@ watch(() => authStore.info, async (nu) => {
 	userAvatar.value = await fetchAvatarBlobUrl(nu, 48)
 }, {immediate: true})
 
-const currentUserId = computed(() => authStore.info.id)
+const currentUserId = computed(() => authStore.info?.id)
 const enabled = computed(() => configStore.taskCommentsEnabled)
 const actions = computed(() => {
 	if (!props.canWrite) {
@@ -303,7 +303,7 @@ async function attachmentUpload(files: File[] | FileList): (Promise<string[]>) {
 
 	const uploadPromises: Promise<string>[] = []
 
-	files.forEach((file: File) => {
+	Array.from(files).forEach((file: File) => {
 		const promise = new Promise<string>((resolve) => {
 			uploadFile(props.taskId, file, (uploadedFileUrl: string) => resolve(uploadedFileUrl))
 		})
@@ -329,7 +329,9 @@ async function loadComments(taskId: ITask['id']) {
 		return
 	}
 
-	comments.value = await taskCommentService.getAll({taskId}, {}, currentPage.value)
+	const tempComment = new TaskCommentModel()
+	tempComment.taskId = taskId
+	comments.value = await taskCommentService.getAll(tempComment, {}, currentPage.value)
 }
 
 async function changePage(page: number) {

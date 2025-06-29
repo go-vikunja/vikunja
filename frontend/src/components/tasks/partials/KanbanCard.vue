@@ -44,7 +44,7 @@
 				</div>
 			</div>
 			<span
-				v-if="task.dueDate > 0"
+				v-if="task.dueDate !== null"
 				v-tooltip="formatDateLong(task.dueDate)"
 				:class="{'overdue': isOverdue}"
 				class="due-date"
@@ -93,7 +93,7 @@
 					<Icon icon="align-left" />
 				</span>
 				<span
-					v-if="task.repeatAfter.amount > 0"
+					v-if="typeof task.repeatAfter === 'object' && task.repeatAfter?.amount > 0"
 					class="icon"
 				>
 					<Icon icon="history" />
@@ -154,7 +154,7 @@ const projectTitle = computed(() => {
 	return project?.title
 })
 
-const showTaskPosition = computed(() => window.DEBUG_TASK_POSITION)
+const showTaskPosition = computed(() => (window as any).DEBUG_TASK_POSITION)
 
 const {now} = useGlobalNow()
 const isOverdue = computed(() => (
@@ -202,7 +202,7 @@ async function maybeDownloadCoverImage() {
 	}
 
 	const attachmentService = new AttachmentService()
-	coverImageBlobUrl.value = await attachmentService.getBlobUrl(attachment, PREVIEW_SIZE.LG)
+	coverImageBlobUrl.value = await attachmentService.getBlobUrl(attachment, PREVIEW_SIZE.LG) as string
 }
 
 watch(
