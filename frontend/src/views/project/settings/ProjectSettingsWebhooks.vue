@@ -51,7 +51,7 @@ const webhookService = new WebhookService()
 const availableEvents = ref<string[]>()
 
 async function loadWebhooks() {
-	webhooks.value = await webhookService.getAll({projectId: project.value.id})
+	webhooks.value = await webhookService.getAll({projectId: project.value!.id} as any)
 	availableEvents.value = await webhookService.getAvailableEvents()
 }
 
@@ -60,8 +60,8 @@ const webhookIdToDelete = ref<number>()
 
 async function deleteWebhook() {
 	await webhookService.delete({
-		id: webhookIdToDelete.value,
-		projectId: project.value.id,
+		id: webhookIdToDelete.value!,
+		projectId: project.value!.id,
 	})
 	showDeleteModal.value = false
 	success({message: t('project.webhooks.deleteSuccess')})
@@ -69,7 +69,7 @@ async function deleteWebhook() {
 }
 
 const newWebhook = ref(new WebhookModel())
-const newWebhookEvents = ref({})
+const newWebhookEvents = ref<Record<string, boolean>>({})
 
 async function create() {
 
@@ -79,16 +79,16 @@ async function create() {
 	}
 
 	const selectedEvents = getSelectedEventsArray()
-	newWebhook.value.events = selectedEvents
+	newWebhook.value.events = selectedEvents as any
 
 	validateSelectedEvents()
 	if (!selectedEventsValid.value) {
 		return
 	}
 
-	newWebhook.value.projectId = project.value.id
-	const created = await webhookService.create(newWebhook.value)
-	webhooks.value.push(created)
+	newWebhook.value.projectId = project.value!.id
+	const created = await webhookService.create(newWebhook.value as any)
+	webhooks.value!.push(created)
 	newWebhook.value = new WebhookModel()
 	showNewForm.value = false
 }
