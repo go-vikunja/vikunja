@@ -3,7 +3,7 @@
 		<div
 			v-for="(r, index) in reminders"
 			:key="index"
-			:class="{ 'overdue': r.reminder < now }"
+			:class="{ 'overdue': r.reminder && r.reminder < now }"
 			class="reminder-input"
 		>
 			<ReminderDetail
@@ -92,8 +92,8 @@ function updateData() {
 	})
 }
 
-function addNewReminder(newReminder: ITaskReminder|null) {
-	if (newReminder === null) {
+function addNewReminder(newReminder: ITaskReminder|null|undefined) {
+	if (!newReminder) {
 		return
 	}
 	reminders.value.push(newReminder)
