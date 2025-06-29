@@ -143,7 +143,7 @@ useTitle(() => t('project.background.title'))
 
 const backgroundService = shallowReactive(new BackgroundUnsplashService())
 const backgroundSearchTerm = ref('')
-const backgroundSearchResult = ref([])
+const backgroundSearchResult = ref<any[]>([])
 const backgroundThumbs = ref<Record<string, string>>({})
 const backgroundBlurHashes = ref<Record<string, string>>({})
 const currentPage = ref(1)
@@ -159,7 +159,7 @@ const configStore = useConfigStore()
 const unsplashBackgroundEnabled = computed(() => configStore.enabledBackgroundProviders.includes('unsplash'))
 const uploadBackgroundEnabled = computed(() => configStore.enabledBackgroundProviders.includes('upload'))
 const currentProject = computed(() => baseStore.currentProject)
-const hasBackground = computed(() => !!currentProject.value.backgroundInformation)
+const hasBackground = computed(() => !!(currentProject.value && currentProject.value.backgroundInformation))
 
 // Show the default collection of backgrounds
 newBackgroundSearch()
@@ -176,8 +176,8 @@ function newBackgroundSearch() {
 
 async function searchBackgrounds(page = 1) {
 	currentPage.value = page
-	const result = await backgroundService.getAll({}, {s: backgroundSearchTerm.value, p: page})
-	backgroundSearchResult.value = backgroundSearchResult.value.concat(result)
+	const result = await backgroundService.getAll({} as any, {s: backgroundSearchTerm.value, p: page})
+	backgroundSearchResult.value = backgroundSearchResult.value.concat(result as any)
 	result.forEach((background: BackgroundImageModel) => {
 		getBlobFromBlurHash(background.blurHash)
 			.then((b) => {
