@@ -45,7 +45,7 @@ export async function refreshToken(persist: boolean): Promise<AxiosResponse> {
 		return response
 
 	} catch(e) {
-		throw new Error('Error renewing token: ', { cause: e })
+		throw new Error('Error renewing token: ' + (e as any)?.message || String(e))
 	}
 }
 

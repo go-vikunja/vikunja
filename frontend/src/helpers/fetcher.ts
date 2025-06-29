@@ -22,7 +22,7 @@ export function AuthenticatedHTTPFactory() {
 		config.headers = {
 			...config.headers,
 			'Content-Type': 'application/json',
-		}
+		} as any
 
 		// Set the default auth header if we have a token
 		const token = getToken()

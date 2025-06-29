@@ -1,5 +1,6 @@
 import type {DateISO} from '@/types/DateISO'
-import type {DateKebab} from '@/types/DateKebab'
+// import type {DateKebab} from '@/types/DateKebab'
+type DateKebab = string
 
 export function parseDateProp(kebabDate: DateKebab | undefined): string | undefined {
 	try {
@@ -9,7 +10,7 @@ export function parseDateProp(kebabDate: DateKebab | undefined): string | undefi
 		}
 		const dateValues = kebabDate.split('-')
 		const [, monthString, dateString] = dateValues
-		const [year, month, date] = dateValues.map(val => Number(val))
+		const [year, month, date] = dateValues.map((val: string) => Number(val))
 		const dateValuesAreValid = (
 			!Number.isNaN(year) &&
 			monthString.length >= 1 && monthString.length <= 2 &&

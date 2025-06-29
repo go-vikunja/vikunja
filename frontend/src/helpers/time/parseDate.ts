@@ -91,7 +91,7 @@ export const parseDate = (text: string, now: Date = new Date()): dateParseResult
 		}
 
 		return {
-			newText: replaceAll(text, parsed.foundText, ''),
+			newText: replaceAll(text, parsed.foundText || '', ''),
 			date: parsed.date,
 		}
 	}

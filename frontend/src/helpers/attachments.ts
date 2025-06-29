@@ -21,7 +21,7 @@ export async function uploadFiles(
 	const response = await attachmentService.create(attachmentModel, files)
 	console.debug(`Uploaded attachments for task ${taskId}, response was`, response)
 
-	response.success?.map((attachment: IAttachment) => {
+	(response as any).success?.map((attachment: IAttachment) => {
 		useTaskStore().addTaskAttachment({
 			taskId,
 			attachment,
@@ -29,8 +29,8 @@ export async function uploadFiles(
 		onSuccess?.(generateAttachmentUrl(taskId, attachment.id))
 	})
 
-	if (response.errors !== null) {
-		throw Error(response.errors)
+	if ((response as any).errors !== null) {
+		throw Error((response as any).errors)
 	}
 }
 
