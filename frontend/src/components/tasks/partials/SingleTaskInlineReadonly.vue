@@ -12,7 +12,7 @@
 
 			<ColorBubble
 				v-if="task.hexColor !== ''"
-				:color="getHexColor(task.hexColor)"
+				:color="getHexColor(task.hexColor) as any"
 				class="mr-1"
 			/>
 
@@ -49,13 +49,13 @@
 		/>
 
 		<span
-			v-if="+new Date(task.dueDate) > 0"
-			v-tooltip="formatDateLong(task.dueDate)"
+			v-if="task.dueDate && +new Date(task.dueDate) > 0"
+			v-tooltip="task.dueDate ? formatDateLong(task.dueDate) : ''"
 			class="dueDate"
 		>
 			<time
-				:datetime="formatISO(task.dueDate)"
-				:class="{'overdue': task.dueDate <= new Date() && !task.done}"
+				:datetime="task.dueDate ? formatISO(task.dueDate) : ''"
+				:class="{'overdue': task.dueDate && task.dueDate <= new Date() && !task.done}"
 				class="is-italic"
 			>
 				– {{ $t('task.detail.due', {at: formatDateSince(task.dueDate)}) }}
@@ -76,7 +76,7 @@
 				<Icon icon="align-left" />
 			</span>
 			<span
-				v-if="task.repeatAfter.amount > 0"
+				v-if="(typeof task.repeatAfter === 'object' && task.repeatAfter.amount > 0) || (typeof task.repeatAfter === 'number' && task.repeatAfter > 0)"
 				class="project-task-icon"
 			>
 				<Icon icon="history" />

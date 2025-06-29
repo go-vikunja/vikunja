@@ -39,7 +39,7 @@
 
 					<ColorBubble
 						v-if="task.hexColor !== ''"
-						:color="getHexColor(task.hexColor)"
+						:color="getHexColor(task.hexColor) as any"
 						class="mr-1"
 					/>
 	
@@ -74,7 +74,7 @@
 				/>
 
 				<Popup
-					v-if="+new Date(task.dueDate) > 0"
+					v-if="task.dueDate && +new Date(task.dueDate) > 0"
 				>
 					<template #trigger="{toggle, isOpen}">
 						<BaseButton
@@ -83,8 +83,8 @@
 							@click.prevent.stop="toggle()"
 						>	
 							<time
-								:datetime="formatISO(task.dueDate)"
-								:class="{'overdue': task.dueDate <= new Date() && !task.done}"
+								:datetime="task.dueDate ? formatISO(task.dueDate) : ''"
+								:class="{'overdue': task.dueDate && task.dueDate <= new Date() && !task.done}"
 								class="is-italic"
 								:aria-expanded="isOpen ? 'true' : 'false'"
 							>
@@ -96,7 +96,7 @@
 						<DeferTask
 							v-if="isOpen"
 							v-model="task"
-							@update:modelValue="deferTaskUpdate"
+							@update:modelValue="(updatedTask: ITask) => { task = updatedTask; emit('taskUpdated', updatedTask) }"
 						/>
 					</template>
 				</Popup>
@@ -169,7 +169,7 @@
 				<template v-if="getTaskById(subtask.id)">
 					<single-task-in-project
 						:key="subtask.id"
-						:the-task="getTaskById(subtask.id)"
+						:the-task="getTaskById(subtask.id)!"
 						:disabled="disabled"
 						:can-mark-as-done="canMarkAsDone"
 						:all-tasks="allTasks"
@@ -234,7 +234,7 @@ const emit = defineEmits<{
 
 function getTaskById(taskId: number): ITask | undefined {
 	if (typeof props.allTasks === 'undefined' || props.allTasks.length === 0) {
-		return null
+		return undefined
 	}
 
 	return props.allTasks.find(t => t.id === taskId)
@@ -245,7 +245,13 @@ const {t} = useI18n({useScope: 'global'})
 const taskService = shallowReactive(new TaskService())
 const task = ref<ITask>(new TaskModel())
 
-const isRepeating = computed(() => task.value.repeatAfter.amount > 0 || (task.value.repeatAfter.amount === 0 && task.value.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH))
+const isRepeating = computed(() => {
+	const repeatAfter = task.value.repeatAfter
+	if (typeof repeatAfter === 'number') {
+		return repeatAfter > 0
+	}
+	return repeatAfter.amount > 0 || (repeatAfter.amount === 0 && task.value.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH)
+})
 
 watch(
 	() => props.theTask,
@@ -297,7 +303,7 @@ onMounted(updateDueDate)
 
 watch(() => task.value.dueDate, updateDueDate)
 
-let oldTask
+let oldTask: ITask | null = null
 
 async function markAsDone(checked: boolean, wasReverted: boolean = false) {
 	const updateFunc = async () => {
@@ -335,7 +341,7 @@ async function markAsDone(checked: boolean, wasReverted: boolean = false) {
 }
 
 function undoDone(checked: boolean) {
-	if (isRepeating.value) {
+	if (isRepeating.value && oldTask) {
 		task.value = {...oldTask}
 	}
 	task.value.done = !task.value.done
@@ -351,7 +357,9 @@ const taskRoot = ref<HTMLElement | null>(null)
 const taskLinkRef = ref<HTMLElement | null>(null)
 
 function hasTextSelected() {
-	const isTextSelected = window.getSelection().toString()
+	const selection = window.getSelection()
+	if (!selection) return false
+	const isTextSelected = selection.toString()
 	return !(typeof isTextSelected === 'undefined' || isTextSelected === '' || isTextSelected === '\n')
 }
 
@@ -363,7 +371,9 @@ function openTaskDetail(event: MouseEvent | KeyboardEvent) {
 		}
 	}
 
-	taskLinkRef.value?.$el.click()
+	if (taskLinkRef.value && 'click' in taskLinkRef.value) {
+		(taskLinkRef.value as any).click()
+	}
 }
 
 defineExpose({

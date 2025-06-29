@@ -28,7 +28,7 @@
 			</XButton>
 		</div>
 		<flat-pickr
-			v-model="dueDate"
+			v-model="dueDate as any"
 			:class="{ disabled: taskService.loading }"
 			:config="flatPickerConfig"
 			:disabled="taskService.loading || undefined"
@@ -105,9 +105,11 @@ const flatPickerConfig = computed(() => ({
 }))
 
 function deferDays(days: number) {
-	dueDate.value = new Date(dueDate.value)
+	if (!dueDate.value) {
+		dueDate.value = new Date()
+	}
 	const currentDate = new Date(dueDate.value).getDate()
-	dueDate.value = new Date(dueDate.value).setDate(currentDate + days)
+	dueDate.value = new Date(new Date(dueDate.value).setDate(currentDate + days))
 	updateDueDate()
 }
 
@@ -116,14 +118,14 @@ async function updateDueDate() {
 		return
 	}
 
-	if (+new Date(dueDate.value) === +lastValue.value) {
+	if (lastValue.value && +new Date(dueDate.value) === +lastValue.value) {
 		return
 	}
 
 	const newTask = await taskService.update({
-		...task.value,
+		...task.value!,
 		dueDate: new Date(dueDate.value),
-	})
+	} as ITask)
 	lastValue.value = newTask.dueDate
 	task.value = newTask
 	emit('update:modelValue', newTask)

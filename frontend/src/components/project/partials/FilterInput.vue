@@ -97,7 +97,7 @@ const highlightedFilterQuery = computed(() => {
 	DATE_FIELDS
 		.forEach(o => {
 			const pattern = new RegExp(o + '(\\s*)' + FILTER_OPERATORS_REGEX + '(\\s*)([\'"]?)([^\'"\\s]+\\1?)?', 'ig')
-			highlighted = highlighted.replaceAll(pattern, (match, spacesBefore, token, spacesAfter, start, value, position) => {
+			highlighted = highlighted.replace(pattern, (match: string, spacesBefore: string, token: string, spacesAfter: string, start: string, value: string, position: number) => {
 				if (typeof value === 'undefined') {
 					value = ''
 				}
@@ -116,7 +116,7 @@ const highlightedFilterQuery = computed(() => {
 	ASSIGNEE_FIELDS
 		.forEach(f => {
 			const pattern = new RegExp(f + '\\s*' + FILTER_OPERATORS_REGEX + '\\s*([\'"]?)([^\'"\\s]+\\1?)?', 'ig')
-			highlighted = highlighted.replaceAll(pattern, (match, token, start, value) => {
+			highlighted = highlighted.replace(pattern, (match: string, token: string, start: string, value: string) => {
 				if (typeof value === 'undefined') {
 					value = ''
 				}
@@ -127,12 +127,12 @@ const highlightedFilterQuery = computed(() => {
 	FILTER_JOIN_OPERATOR
 		.map(o => escapeHtml(o))
 		.forEach(o => {
-			highlighted = highlighted.replaceAll(o, `<span class="filter-query__join-operator">${o}</span>`)
+			highlighted = highlighted.replace(new RegExp(o.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), `<span class="filter-query__join-operator">${o}</span>`)
 		})
 	LABEL_FIELDS
 		.forEach(f => {
 			const pattern = getFilterFieldRegexPattern(f)
-			highlighted = highlighted.replaceAll(pattern, (match, prefix, operator, space, value) => {
+			highlighted = highlighted.replace(pattern, (match: string, prefix: string, operator: string, space: string, value: string) => {
 
 				if (typeof value === 'undefined') {
 					value = ''
@@ -156,10 +156,10 @@ const highlightedFilterQuery = computed(() => {
 	FILTER_OPERATORS
 		.map(o => ` ${escapeHtml(o)} `)
 		.forEach(o => {
-			highlighted = highlighted.replaceAll(o, `<span class="filter-query__operator">${o}</span>`)
+			highlighted = highlighted.replace(new RegExp(o.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), `<span class="filter-query__operator">${o}</span>`)
 		})
 	AVAILABLE_FILTER_FIELDS.forEach(f => {
-		highlighted = highlighted.replaceAll(f, `<span class="filter-query__field">${f}</span>`)
+		highlighted = highlighted.replace(new RegExp(f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), `<span class="filter-query__field">${f}</span>`)
 	})
 	return highlighted
 })

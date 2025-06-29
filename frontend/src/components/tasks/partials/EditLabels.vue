@@ -4,7 +4,7 @@
 		:loading="loading"
 		:placeholder="$t('task.label.placeholder')"
 		:multiple="true"
-		:search-results="foundLabels"
+		:search-results="foundLabels as any"
 		label="title"
 		:creatable="creatable"
 		:create-placeholder="$t('task.label.createPlaceholder')"
@@ -12,7 +12,7 @@
 		:close-after-select="false"
 		:disabled="disabled"
 		@search="findLabel"
-		@select="addLabel"
+		@select="(label: any) => addLabel(label as ILabel)"
 		@create="createAndAddLabel"
 	>
 		<template #tag="{item: label}">
@@ -38,7 +38,7 @@
 			</span>
 			<span
 				v-else
-				:style="{'background': option.hexColor, 'color': option.textColor}"
+				:style="{'background': option.hexColor, 'color': option.textColor} as any"
 				class="tag search-result"
 			>
 				<span>{{ option.title }}</span>
@@ -86,7 +86,7 @@ const query = ref('')
 watch(
 	() => props.modelValue,
 	(value) => {
-		labels.value = Array.from(new Map(value.map(label => [label.id, label])).values())
+		labels.value = value ? Array.from(new Map(value.map(label => [label.id, label])).values()) : []
 	},
 	{
 		immediate: true,
@@ -124,7 +124,7 @@ async function removeLabel(label: ILabel) {
 
 	for (const l in labels.value) {
 		if (labels.value[l].id === label.id) {
-			labels.value.splice(l, 1) // FIXME: l should be index
+			labels.value.splice(parseInt(l), 1)
 		}
 	}
 	emit('update:modelValue', labels.value)
