@@ -738,12 +738,12 @@ watch(
 		}
 
 		try {
-			const loaded = await taskService.get({id}, {expand: ['reactions', 'comments']})
+			const loaded = await taskService.get({id} as any, {expand: ['reactions', 'comments']})
 			Object.assign(task.value, loaded)
 			attachmentStore.set(task.value.attachments)
 			taskColor.value = task.value.hexColor
 			setActiveFields()
-		} catch (e) {
+		} catch (e: any) {
 			if (e?.response?.status === 404) {
 				router.replace({name: 'not-found'})
 				return
@@ -803,7 +803,7 @@ function setActiveFields() {
 	activeFields.priority = task.value.priority !== PRIORITIES.UNSET
 	activeFields.relatedTasks = Object.keys(task.value.relatedTasks).length > 0
 	activeFields.reminders = task.value.reminders.length > 0
-	activeFields.repeatAfter = task.value.repeatAfter?.amount > 0 || task.value.repeatMode !== TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
+	activeFields.repeatAfter = (typeof task.value.repeatAfter === 'object' ? task.value.repeatAfter?.amount > 0 : task.value.repeatAfter > 0) || task.value.repeatMode !== TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
 	activeFields.startDate = task.value.startDate !== null
 }
 
@@ -823,7 +823,7 @@ const activeFieldElements: { [id in FieldType]: HTMLElement | null } = reactive(
 	startDate: null,
 })
 
-function setFieldRef(name, e) {
+function setFieldRef(name: keyof typeof activeFieldElements, e: any) {
 	activeFieldElements[name] = unrefElement(e)
 }
 
@@ -938,7 +938,11 @@ async function setPercentDone(percentDone: number) {
 }
 
 async function removeRepeatAfter() {
-	task.value.repeatAfter.amount = 0
+	if (typeof task.value.repeatAfter === 'object') {
+		task.value.repeatAfter.amount = 0
+	} else {
+		task.value.repeatAfter = 0
+	}
 	task.value.repeatMode = TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
 	await saveTask()
 }
@@ -948,9 +952,9 @@ function setRelatedTasksActive() {
 
 	// If the related tasks are already available, show the form again
 	const el = activeFieldElements['relatedTasks']
-	for (const child in el?.children) {
-		if (el?.children[child]?.id === 'showRelatedTasksFormButton') {
-			el?.children[child]?.click()
+	for (let i = 0; i < (el?.children?.length || 0); i++) {
+		if (el?.children[i]?.id === 'showRelatedTasksFormButton') {
+			(el?.children[i] as HTMLElement)?.click()
 			break
 		}
 	}
