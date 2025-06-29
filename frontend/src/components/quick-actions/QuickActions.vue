@@ -410,7 +410,7 @@ function searchTasks() {
 	}
 
 	taskSearchTimeout.value = setTimeout(async () => {
-		const r = await taskService.getAll(undefined, params) as DoAction<ITask>[]
+		const r = await taskService.getAll({} as any, params) as DoAction<ITask>[]
 		foundTasks.value = r.map((t) => {
 			t.type = ACTION_TYPE.TASK
 			return t
@@ -438,7 +438,7 @@ function searchTeams() {
 	const {assignees} = parsedQuery.value
 	teamSearchTimeout.value = setTimeout(async () => {
 		const teamSearchPromises = assignees.map((t) =>
-			teamService.getAll(undefined, {s: t}),
+			teamService.getAll({} as any, {s: t}),
 		)
 		const teamsResult = await Promise.all(teamSearchPromises)
 		foundTeams.value = teamsResult.flat().map((team) => {
