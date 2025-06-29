@@ -24,11 +24,11 @@
 				class="subtitle"
 			>
 				<template
-					v-for="p in projectStore.getAncestors(project)"
+					v-for="p in projectStore.getAncestors(project as any)"
 					:key="p.id"
 				>
 					<a
-						v-if="router.options.history.state.back?.includes('/projects/'+p.id+'/') || false"
+						v-if="(router.options.history.state.back as string)?.includes('/projects/'+p.id+'/') || false"
 						v-shortcut="p.id === project?.id ? 'u' : ''"
 						@click="router.back()"
 					>
@@ -97,7 +97,7 @@
 									:ref="e => setFieldRef('priority', e)"
 									v-model="task.priority"
 									:disabled="!canWrite"
-									@update:modelValue="setPriority"
+									@update:modelValue="(priority: any) => setPriority(priority)"
 								/>
 							</div>
 						</CustomTransition>
@@ -322,7 +322,7 @@
 						<Description
 							:model-value="task"
 							:can-write="canWrite"
-							:attachment-upload="attachmentUpload"
+							:attachment-upload="attachmentUpload as any"
 							@update:modelValue="Object.assign(task, $event)"
 						/>
 					</div>
@@ -421,7 +421,7 @@
 							entity="task"
 							:entity-id="task.id"
 							:model-value="task.subscription"
-							@update:modelValue="sub => task.subscription = sub"
+							@update:modelValue="(sub: any) => task.subscription = sub"
 						/>
 						<XButton
 							v-shortcut="'s'"
@@ -672,7 +672,7 @@ const taskTitle = computed(() => task.value.title)
 useTitle(taskTitle)
 
 // See https://github.com/github/hotkey/discussions/85#discussioncomment-5214660
-function saveTaskViaHotkey(event) {
+function saveTaskViaHotkey(event: any) {
 	const hotkeyString = eventToHotkeyString(event)
 	if (!hotkeyString) return
 	if (hotkeyString !== 'Control+s' && hotkeyString !== 'Meta+s') return
@@ -709,7 +709,7 @@ const canWrite = computed(() => (
 
 const color = computed(() => {
 	const color = task.value.getHexColor
-		? task.value.getHexColor()
+		? task.value.getHexColor() as any
 		: undefined
 
 	return color
