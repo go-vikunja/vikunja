@@ -51,7 +51,7 @@
 					:key="s.id"
 				>
 					<template v-if="shareType === 'user'">
-						<td>{{ getDisplayName(s as UserProjectWithUser) }}</td>
+						<td>{{ (s as UserProjectWithUser).name || (s as UserProjectWithUser).username }}</td>
 						<td>
 							<template v-if="s.id === userInfo?.id">
 								<b class="is-success">{{ $t('project.share.userTeam.you') }}</b>
@@ -123,12 +123,7 @@
 						<XButton
 							class="is-danger"
 							icon="trash-alt"
-							@click="
-								() => {
-									sharable = s
-									showDeleteModal = true
-								}
-							"
+							@click="prepareDelete(s)"
 						/>
 					</td>
 				</tr>
@@ -277,7 +272,8 @@ if (props.shareType === 'user') {
 load()
 
 async function load() {
-	sharables.value = await stuffService.getAll(stuffModel)
+	const result = await stuffService.getAll(stuffModel)
+	sharables.value = result as (UserProjectWithUser | TeamProjectWithTeam)[]
 	sharables.value.forEach(({id, right}) =>
 		selectedRight.value[id] = right,
 	)
@@ -285,17 +281,17 @@ async function load() {
 
 async function deleteSharable() {
 	if (props.shareType === 'user') {
-		stuffModel.userId = (sharable.value as IUser).username
+		(stuffModel as IUserProject).userId = (sharable.value as IUser).id
 	} else if (props.shareType === 'team') {
-		stuffModel.teamId = (sharable.value as ITeam).id
+		(stuffModel as ITeamProject).teamId = (sharable.value as ITeam).id
 	}
 
-	await stuffService.delete(stuffModel)
+	await stuffService.delete(stuffModel as any)
 	showDeleteModal.value = false
 	for (const i in sharables.value) {
 		if (
-			((sharables.value[i] as UserProjectWithUser).username === stuffModel.userId && props.shareType === 'user') ||
-			(sharables.value[i].id === stuffModel.teamId && props.shareType === 'team')
+			((sharables.value[i] as UserProjectWithUser).id === (stuffModel as IUserProject).userId && props.shareType === 'user') ||
+			(sharables.value[i].id === (stuffModel as ITeamProject).teamId && props.shareType === 'team')
 		) {
 			sharables.value.splice(Number(i), 1)
 		}
@@ -315,12 +311,12 @@ async function add(admin: boolean) {
 	}
 
 	if (props.shareType === 'user') {
-		stuffModel.userId = sharable.value.username
+		(stuffModel as IUserProject).userId = (sharable.value as IUser).id
 	} else if (props.shareType === 'team') {
-		stuffModel.teamId = sharable.value.id
+		(stuffModel as ITeamProject).teamId = (sharable.value as ITeam).id
 	}
 
-	await stuffService.create(stuffModel)
+	await stuffService.create(stuffModel as any)
 	success({message: t('project.share.userTeam.addedSuccess', {type: shareTypeName.value})})
 	await load()
 }
@@ -336,18 +332,18 @@ async function toggleType(sharable: UserProjectWithUser | TeamProjectWithTeam) {
 	stuffModel.right = selectedRight.value[sharable.id]
 
 	if (props.shareType === 'user') {
-		stuffModel.userId = (sharable as UserProjectWithUser).username
+		(stuffModel as IUserProject).userId = (sharable as UserProjectWithUser).id
 	} else if (props.shareType === 'team') {
-		stuffModel.teamId = sharable.id
+		(stuffModel as ITeamProject).teamId = sharable.id
 	}
 
-	const r = await stuffService.update(stuffModel)
+	const r = await stuffService.update(stuffModel as any)
 	for (const i in sharables.value) {
 		if (
-			((sharables.value[i] as UserProjectWithUser).username ===
-				stuffModel.userId &&
+			((sharables.value[i] as UserProjectWithUser).id ===
+				(stuffModel as IUserProject).userId &&
 				props.shareType === 'user') ||
-			(sharables.value[i].id === stuffModel.teamId &&
+			(sharables.value[i].id === (stuffModel as ITeamProject).teamId &&
 				props.shareType === 'team')
 		) {
 			sharables.value[i].right = r.right
@@ -358,7 +354,7 @@ async function toggleType(sharable: UserProjectWithUser | TeamProjectWithTeam) {
 
 const found = ref<(IUser | ITeam)[]>([])
 
-const currentUserId = computed(() => authStore.info.id)
+const currentUserId = computed(() => authStore.info?.id)
 async function find(query: string) {
 	if (query === '') {
 		found.value = []
@@ -368,9 +364,9 @@ async function find(query: string) {
 	// Include public teams here if we are sharing with teams and its enabled in the config
 	let results = []
 	if (props.shareType === 'team' && configStore.publicTeamsEnabled) {
-		results = await searchService.getAll({}, {s: query, includePublic: true})
+		results = await searchService.getAll({} as any, {s: query, includePublic: true})
 	} else {
-		results = await searchService.getAll({}, {s: query})
+		results = await searchService.getAll({} as any, {s: query})
 	}
 
 	found.value = results
@@ -381,5 +377,40 @@ async function find(query: string) {
 			
 			return typeof sharables.value.find(s => s.id === m.id) === 'undefined'
 		})
+}
+
+function prepareDelete(s: UserProjectWithUser | TeamProjectWithTeam) {
+	if (props.shareType === 'user') {
+		const userShare = s as UserProjectWithUser
+		sharable.value = {
+			id: userShare.id,
+			username: userShare.username,
+			name: userShare.name,
+			email: userShare.email,
+			exp: 0,
+			type: 0,
+			created: new Date(),
+			updated: new Date(),
+			settings: {} as any,
+			isLocalUser: false,
+			deletionScheduledAt: null
+		} as IUser
+	} else {
+		const teamShare = s as TeamProjectWithTeam
+		sharable.value = {
+			id: teamShare.id,
+			name: teamShare.name,
+			description: '',
+			members: [],
+			right: 0,
+			externalId: '',
+			isPublic: false,
+			createdBy: {} as IUser,
+			created: new Date(),
+			updated: new Date(),
+			maxRight: null
+		} as ITeam
+	}
+	showDeleteModal.value = true
 }
 </script>
