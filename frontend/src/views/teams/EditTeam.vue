@@ -4,7 +4,7 @@
 		:class="{ 'is-loading': teamService.loading }"
 	>
 		<Card
-			v-if="userIsAdmin && !team.oidcId"
+			v-if="userIsAdmin && team"
 			class="is-fullwidth"
 			:title="title"
 		>
@@ -17,7 +17,7 @@
 					<div class="control">
 						<input
 							id="teamtext"
-							v-model="team.name"
+							v-model="team!.name"
 							v-focus
 							:class="{ disabled: teamMemberService.loading }"
 							:disabled="teamMemberService.loading || undefined"
@@ -46,7 +46,7 @@
 						:class="{ 'is-loading': teamService.loading }"
 					>
 						<FancyCheckbox
-							v-model="team.isPublic"
+							v-model="team!.isPublic"
 							:disabled="teamMemberService.loading || undefined"
 							:class="{ 'disabled': teamService.loading }"
 						>
@@ -62,7 +62,7 @@
 					<div class="control">
 						<Editor
 							id="teamdescription"
-							v-model="team.description"
+							v-model="team!.description"
 							:class="{ disabled: teamService.loading }"
 							:disabled="teamService.loading"
 							:placeholder="$t('team.attributes.descriptionPlaceholder')"
@@ -98,24 +98,24 @@
 			:padding="false"
 		>
 			<form
-				v-if="userIsAdmin && !team.oidcId"
+				v-if="userIsAdmin && team"
 				class="p-4"
 				@submit.prevent="addUser"
 			>
 				<div class="field has-addons">
 					<div class="control is-expanded">
 						<Multiselect
-							v-model="newMember"
+							v-model="newMember as any"
 							:loading="userService.loading"
 							:placeholder="$t('team.edit.search')"
-							:search-results="foundUsers"
+							:search-results="foundUsers as any"
 							label="username"
 							@search="findUser"
 						>
 							<template #searchResult="{option: user}">
 								<User
 									:avatar-size="24"
-									:user="user as IUser"
+									:user="user as unknown as IUser"
 									class="m-0"
 								/>
 							</template>
@@ -332,7 +332,7 @@ async function save() {
 	}
 	showErrorTeamnameRequired.value = false
 
-	team.value = await teamService.value.update(team.value!)
+	team.value = await teamService.value.update(team.value! as any)
 	success({message: t('team.edit.success')})
 }
 
@@ -347,7 +347,7 @@ async function deleteMember() {
 		await teamMemberService.value.delete({
 			teamId: teamId.value,
 			username: memberToDelete.value!.username,
-		})
+		} as any)
 		success({message: t('team.edit.deleteUser.success')})
 		await loadTeam()
 	} finally {
@@ -364,7 +364,7 @@ async function addUser() {
 	await teamMemberService.value.create({
 		teamId: teamId.value,
 		username: newMember.value!.username,
-	})
+	} as any)
 	newMember.value = undefined
 	await loadTeam()
 	success({message: t('team.edit.userAddedSuccess')})
@@ -394,7 +394,7 @@ async function findUser(query: string) {
 		return
 	}
 
-	const users = await userService.value.getAll({}, {s: query})
+	const users = await userService.value.getAll({} as any, {s: query})
 	foundUsers.value = users.filter((u: IUser) => u.id !== userInfo.value?.id)
 }
 
