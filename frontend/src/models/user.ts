@@ -30,9 +30,9 @@ export async function fetchAvatarBlobUrl(user: IUser, size = 50) {
 	// Create a new request
 	const requestPromise = avatarService.getBlobUrl(`/avatar/${user.username}?size=${size}`)
 		.then(url => {
-			avatarCache.set(key, url)
+			avatarCache.set(key, url as string)
 			pendingRequests.delete(key)
-			return url
+			return url as string
 		})
 		.catch(error => {
 			pendingRequests.delete(key)
@@ -77,12 +77,12 @@ export default class UserModel extends AbstractModel<IUser> implements IUser {
 	exp = 0
 	type: AuthType = AUTH_TYPES.UNKNOWN
 
-	created: Date
-	updated: Date
-	settings: IUserSettings
+	created: Date = new Date()
+	updated: Date = new Date()
+	settings: IUserSettings = {} as any
 
-	isLocalUser: boolean
-	deletionScheduledAt: null
+	isLocalUser: boolean = false
+	deletionScheduledAt: null = null
 
 	constructor(data: Partial<IUser> = {}) {
 		super()
