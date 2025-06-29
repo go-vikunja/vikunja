@@ -30,11 +30,11 @@ function prepareParams(params: Record<string, unknown | unknown[]>) {
 
 	for (const p in params) {
 		if (Array.isArray(params[p])) {
-			params[p] = params[p].map(convertObject)
+			params[p] = (params[p] as any[]).map((item: any) => convertObject(item as Record<string, unknown>))
 			continue
 		}
 
-		params[p] = convertObject(params[p])
+		params[p] = convertObject(params[p] as Record<string, unknown>)
 	}
 
 	return objectToSnakeCase(params)
@@ -301,11 +301,11 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 	 * This is a more abstract implementation which only does a get request.
 	 * Services which need more flexibility can use this.
 	 */
-	async getM(url : string, model : Model = new AbstractModel({}), params: Record<string, unknown> = {}) {
+	async getM(url : string, model : Model, params: Record<string, unknown> = {}) {
 		const cancel = this.setLoading()
 
 		model = this.beforeGet(model)
-		const finalUrl = this.getReplacedRoute(url, model)
+		const finalUrl = this.getReplacedRoute(url, model as any)
 
 		try {
 			const response = await this.http.get(finalUrl, {params: prepareParams(params)})
@@ -345,7 +345,7 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 	 * @param params Optional query parameters
 	 * @param page The page to get
 	 */
-	async getAll(model : Model = new AbstractModel({}), params = {}, page = 1): Promise<Model[]> {
+	async getAll(model : Model, params: any = {}, page = 1): Promise<Model[]> {
 		if (this.paths.getAll === '') {
 			throw new Error('This model is not able to get data.')
 		}
@@ -354,7 +354,7 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 
 		const cancel = this.setLoading()
 		model = this.beforeGet(model)
-		const finalUrl = this.getReplacedRoute(this.paths.getAll, model)
+		const finalUrl = this.getReplacedRoute(this.paths.getAll, model as any)
 
 		try {
 			const response = await this.http.get(finalUrl, {params: prepareParams(params)})
@@ -381,7 +381,7 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 		}
 
 		const cancel = this.setLoading()
-		const finalUrl = this.getReplacedRoute(this.paths.create, model)
+		const finalUrl = this.getReplacedRoute(this.paths.create, model as any)
 
 		try {
 			const response = await this.http.put(finalUrl, model)
@@ -422,7 +422,7 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 			throw new Error('This model is not able to update data.')
 		}
 
-		const finalUrl = this.getReplacedRoute(this.paths.update, model)
+		const finalUrl = this.getReplacedRoute(this.paths.update, model as any)
 		return this.post(finalUrl, model)
 	}
 
@@ -435,10 +435,10 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 		}
 
 		const cancel = this.setLoading()
-		const finalUrl = this.getReplacedRoute(this.paths.delete, model)
+		const finalUrl = this.getReplacedRoute(this.paths.delete, model as any)
 
 		try {
-			const {data} = await this.http.delete(finalUrl, model)
+			const {data} = await this.http.delete(finalUrl)
 			return data
 		} finally {
 			cancel()
@@ -476,7 +476,7 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 				{
 					headers: {
 						'Content-Type':
-							'multipart/form-data; boundary=' + formData._boundary,
+							'multipart/form-data; boundary=' + (formData as any)._boundary,
 					},
 					// fix upload issue after upgrading to axios to 1.0.0
 					// see: https://github.com/axios/axios/issues/4885#issuecomment-1222419132
