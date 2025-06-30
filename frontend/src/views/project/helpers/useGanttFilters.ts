@@ -11,7 +11,7 @@ import type {IProject} from '@/modelTypes/IProject'
 import type {TaskFilterParams} from '@/services/taskCollection'
 
 import type {DateISO} from '@/types/DateISO'
-import type {DateKebab} from '@/types/DateKebab'
+type DateKebab = string
 import type {IProjectView} from '@/modelTypes/IProjectView'
 
 // convenient internal filter object

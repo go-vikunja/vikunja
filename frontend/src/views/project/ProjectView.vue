@@ -73,8 +73,8 @@ watch(
 		}
 		
 		baseStore.handleSetCurrentProject({
-			project: newCurrentProject,
-			currentProjectViewId: newViewId,
+			project: newCurrentProject as any,
+			currentProjectViewId: newViewId as number | undefined,
 		})
 	}, {
 		deep: true,

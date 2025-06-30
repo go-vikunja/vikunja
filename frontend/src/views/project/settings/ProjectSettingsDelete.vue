@@ -41,6 +41,7 @@ import Loading from '@/components/misc/Loading.vue'
 import Modal from '@/components/misc/Modal.vue'
 import {useProjectStore} from '@/stores/projects'
 import TaskService from '@/services/task'
+import type {IProject} from '@/modelTypes/IProject'
 
 const {t} = useI18n({useScope: 'global'})
 const projectStore = useProjectStore()
@@ -92,7 +93,7 @@ async function deleteProject() {
 		return
 	}
 
-	await projectStore.deleteProject(project.value)
+	await projectStore.deleteProject(project.value as any)
 	success({message: t('project.delete.success')})
 	router.push({name: 'home'})
 }

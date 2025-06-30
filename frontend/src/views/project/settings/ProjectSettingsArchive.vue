@@ -24,6 +24,7 @@ import Modal from '@/components/misc/Modal.vue'
 
 import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
+import type {IProject} from '@/modelTypes/IProject'
 
 defineOptions({name: 'ProjectSettingArchive'})
 
@@ -43,7 +44,7 @@ async function archiveProject() {
 		const newProject = await projectStore.updateProject({
 			...project.value,
 			isArchived: !project.value.isArchived,
-		})
+		} as IProject)
 		useBaseStore().setCurrentProject(newProject)
 		success({message: t('project.archive.success')})
 		await projectStore.loadAllProjects()

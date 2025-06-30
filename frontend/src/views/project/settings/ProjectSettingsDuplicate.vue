@@ -37,7 +37,7 @@ const parentProject = ref<IProject | null>(null)
 watch(
 	() => project.parentProjectId,
 	parentProjectId => {
-		parentProject.value = parentProjectId ? projectStore.projects[parentProjectId] || null : null
+		parentProject.value = parentProjectId ? (projectStore.projects[parentProjectId] as any) || null : null
 	},
 	{immediate: true},
 )

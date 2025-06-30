@@ -159,13 +159,13 @@ async function totpEnroll() {
 }
 
 async function totpConfirm() {
-	await totpService.enable({passcode: totpConfirmPasscode.value})
+	await totpService.enable({passcode: totpConfirmPasscode.value} as any)
 	totp.value.enabled = true
 	success({message: t('user.settings.totp.confirmSuccess')})
 }
 
 async function totpDisable() {
-	await totpService.disable({password: totpDisablePassword.value})
+	await totpService.disable({password: totpDisablePassword.value} as any)
 	totpEnrolled.value = false
 	totp.value = new TotpModel()
 	success({message: t('user.settings.totp.disableSuccess')})

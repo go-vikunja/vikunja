@@ -52,7 +52,7 @@ useTitle(() => t('team.title'))
 
 const teams = ref<ITeam[]>([])
 const teamService = shallowReactive(new TeamService())
-teamService.getAll().then((result) => {
+teamService.getAll({} as any).then((result) => {
 	teams.value = result
 })
 </script>

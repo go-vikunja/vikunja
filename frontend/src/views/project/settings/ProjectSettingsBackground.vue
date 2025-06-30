@@ -203,8 +203,8 @@ async function setBackground(backgroundId: string) {
 		id: backgroundId,
 		projectId: Number(route.params.projectId),
 	} as any)
-	await baseStore.handleSetCurrentProject({project, forceUpdate: true})
-	projectStore.setProject(project)
+	await baseStore.handleSetCurrentProject({project: project as any, forceUpdate: true})
+	projectStore.setProject(project as any)
 	success({message: t('project.background.success')})
 }
 
@@ -218,15 +218,15 @@ async function uploadBackground() {
 		Number(route.params.projectId),
 		backgroundUploadInput.value?.files?.[0] as File,
 	)
-	await baseStore.handleSetCurrentProject({project, forceUpdate: true})
-	projectStore.setProject(project)
+	await baseStore.handleSetCurrentProject({project: project as any, forceUpdate: true})
+	projectStore.setProject(project as any)
 	success({message: t('project.background.success')})
 }
 
 async function removeBackground() {
 	const project = await projectService.value.removeBackground(currentProject.value as any)
-	await baseStore.handleSetCurrentProject({project, forceUpdate: true})
-	projectStore.setProject(project)
+	await baseStore.handleSetCurrentProject({project: project as any, forceUpdate: true})
+	projectStore.setProject(project as any)
 	success({message: t('project.background.removeSuccess')})
 	router.back()
 }
