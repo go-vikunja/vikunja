@@ -708,9 +708,10 @@ const canWrite = computed(() => (
 ))
 
 const color = computed(() => {
-	const color = task.value.getHexColor
-		? task.value.getHexColor() as any
-		: undefined
+	const taskValue = task.value as any
+	const color = taskValue.getHexColor
+		? taskValue.getHexColor()
+		: task.value.hexColor
 
 	return color
 })

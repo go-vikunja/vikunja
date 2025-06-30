@@ -134,8 +134,8 @@ const pageTitle = computed(() => {
 	return showAll.value
 		? t('task.show.titleCurrent')
 		: t('task.show.fromuntil', {
-			from: formatDate(props.dateFrom, 'LL'),
-			until: formatDate(props.dateTo, 'LL'),
+			from: formatDate(props.dateFrom || new Date(), 'LL'),
+			until: formatDate(props.dateTo || new Date(), 'LL'),
 		})
 })
 const hasTasks = computed(() => tasks.value && tasks.value.length > 0)
@@ -143,8 +143,8 @@ const userAuthenticated = computed(() => authStore.authenticated)
 const loading = computed(() => taskStore.isLoading || taskCollectionService.value.loading)
 
 interface DateStrings {
-	dateFrom: string,
-	dateTo: string,
+	dateFrom: string | Date | null,
+	dateTo: string | Date | null,
 }
 
 function setDate(dates: DateStrings) {
@@ -214,8 +214,8 @@ async function loadPendingTasks(from: Date|string, to: Date|string) {
 		projectId = filterId
 	}
 
-	tasks.value = await taskStore.loadTasks(params, projectId)
-	emit('tasksLoaded', true)
+	tasks.value = await taskStore.loadTasks(params, projectId) as any
+	emit('tasksLoaded')
 }
 
 // FIXME: this modification should happen in the store
@@ -233,7 +233,7 @@ function updateTasks(updatedTask: ITask) {
 	}
 }
 
-watchEffect(() => loadPendingTasks(props.dateFrom, props.dateTo))
+watchEffect(() => loadPendingTasks(props.dateFrom || new Date(), props.dateTo || new Date()))
 watchEffect(() => setTitle(pageTitle.value))
 </script>
 

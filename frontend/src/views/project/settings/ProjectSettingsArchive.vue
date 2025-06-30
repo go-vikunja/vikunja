@@ -20,6 +20,7 @@ import {useI18n} from 'vue-i18n'
 
 import {success} from '@/message'
 import {useTitle} from '@/composables/useTitle'
+import Modal from '@/components/misc/Modal.vue'
 
 import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
@@ -31,7 +32,7 @@ const projectStore = useProjectStore()
 const router = useRouter()
 const route = useRoute()
 
-const project = computed(() => projectStore.projects[route.params.projectId])
+const project = computed(() => projectStore.projects[route.params.projectId as string])
 useTitle(() => t('project.archive.title', {project: project.value.title}))
 
 async function archiveProject() {
