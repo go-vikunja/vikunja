@@ -32,20 +32,20 @@ export interface Action {
 	callback: () => void,
 }
 
-export function error(e, actions: Action[] = []) {
+export function error(e: any, actions: Action[] = []) {
 	notify({
 		type: 'error',
 		title: i18n.global.t('error.error'),
-		text: [getErrorText(e)],
+		text: getErrorText(e),
 		actions: actions,
 	})
 }
 
-export function success(e, actions: Action[] = []) {
+export function success(e: any, actions: Action[] = []) {
 	notify({
 		type: 'success',
 		title: i18n.global.t('error.success'),
-		text: [getErrorText(e)],
+		text: getErrorText(e),
 		data: {
 			actions: actions,
 		},

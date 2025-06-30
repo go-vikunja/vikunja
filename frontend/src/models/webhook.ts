@@ -8,18 +8,20 @@ export default class WebhookModel extends AbstractModel<IWebhook> implements IWe
 	secret = ''
 	targetUrl = ''
 	events = []
-	createdBy = null
+	createdBy: any = null
 
-	created: Date
-	updated: Date
+	created: Date = new Date()
+	updated: Date = new Date()
 
 	constructor(data: Partial<IWebhook> = {}) {
 		super()
 		this.assignData(data)
 		
-		this.createdBy = new UserModel(this.createdBy)
+		if (this.createdBy) {
+			this.createdBy = new UserModel(this.createdBy)
+		}
 
-		this.created = new Date(this.created)
-		this.updated = new Date(this.updated)
+		this.created = new Date(this.created || Date.now())
+		this.updated = new Date(this.updated || Date.now())
 	}
 }
