@@ -149,7 +149,7 @@ const migratorAuthCode = ref('')
 const migrationJustStarted = ref(false)
 const migrationError = ref('')
 
-const migrator = computed<Migrator>(() => MIGRATORS[props.service])
+const migrator = computed<Migrator>(() => MIGRATORS[props.service as keyof typeof MIGRATORS])
 
 // eslint-disable-next-line vue/no-ref-object-reactivity-loss
 const migrationService = shallowReactive(new AbstractMigrationService(migrator.value.id))
