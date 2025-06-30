@@ -13,10 +13,10 @@ export default async function setupSentry(app: App, router: Router) {
 		release: (import.meta.env as any).VITE_PLUGIN_SENTRY_CONFIG?.release,
 		dist: (import.meta.env as any).VITE_PLUGIN_SENTRY_CONFIG?.dist,
 		integrations: [
-			new Integrations.BrowserTracing({
-				routingInstrumentation: Sentry.vueRouterInstrumentation(router),
+			new (Integrations as any).BrowserTracing({
+				routingInstrumentation: (Sentry as any).vueRouterInstrumentation(router),
 				tracingOrigins: ['localhost', /^\//],
-			}),
+			}) as any,
 		],
 		tracesSampleRate: 1.0,
 		beforeSend(event: any, hint: any) {

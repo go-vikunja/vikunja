@@ -37,8 +37,8 @@ export function error(e: any, actions: Action[] = []) {
 		type: 'error',
 		title: i18n.global.t('error.error'),
 		text: getErrorText(e),
-		actions: actions,
-	})
+		data: { actions },
+	} as any)
 }
 
 export function success(e: any, actions: Action[] = []) {
