@@ -12,11 +12,11 @@ export default class PasswordResetService extends AbstractService<IPasswordReset
 		}
 	}
 
-	modelFactory(data) {
+	modelFactory(data: any) {
 		return new PasswordResetModel(data)
 	}
 
-	async resetPassword(model) {
+	async resetPassword(model: any) {
 		const cancel = this.setLoading()
 		try {
 			const response = await this.http.post(this.paths.reset, model)
@@ -26,7 +26,7 @@ export default class PasswordResetService extends AbstractService<IPasswordReset
 		}
 	}
 
-	async requestResetPassword(model) {
+	async requestResetPassword(model: any) {
 		const cancel = this.setLoading()
 		try {
 			const response = await this.http.post(this.paths.requestReset, model)
