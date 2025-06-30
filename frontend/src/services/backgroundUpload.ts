@@ -22,10 +22,10 @@ export default class BackgroundUploadService extends AbstractService {
 	/**
 	 * Uploads a file to the server
 	 */
-	create(projectId: IProject['id'], file: IFile) {
+	create(projectId: IProject['id'], file: IFile | File) {
 		return this.uploadFile(
 			this.getReplacedRoute(this.paths.create, {projectId}),
-			file,
+			file as File,
 			'background',
 		)
 	}

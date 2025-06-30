@@ -36,15 +36,15 @@ export default class AttachmentService extends AbstractService<IAttachment> {
 		return new AttachmentModel(data)
 	}
 
-	modelCreateFactory(data) {
+	modelCreateFactory(data: any) {
 		// Success contains the uploaded attachments
-		data.success = (data.success === null ? [] : data.success).map(a => {
+		data.success = (data.success === null ? [] : data.success).map((a: any) => {
 			return this.modelFactory(a)
 		})
 		return data
 	}
 
-	getBlobUrl(model: IAttachment, size?: PREVIEW_SIZE) {
+	getBlobUrl(model: IAttachment, size?: PREVIEW_SIZE): Promise<string> {
 		let mainUrl = '/tasks/' + model.taskId + '/attachments/' + model.id
 		if (size !== undefined) {
 			mainUrl += `?preview_size=${size}`
@@ -55,7 +55,7 @@ export default class AttachmentService extends AbstractService<IAttachment> {
 
 	async download(model: IAttachment) {
 		const url = await this.getBlobUrl(model)
-		return downloadBlob(url, model.file.name)
+		return downloadBlob(url as string, model.file.name)
 	}
 
 	/**
@@ -63,7 +63,7 @@ export default class AttachmentService extends AbstractService<IAttachment> {
 	 * @param files
 	 * @returns {Promise<any|never>}
 	 */
-	create(model: IAttachment, files: File[] | FileList) {
+	create(model: IAttachment, files: File[] | FileList): Promise<any> {
 		const data = new FormData()
 		for (let i = 0; i < files.length; i++) {
 			// TODO: Validation of file size
@@ -71,7 +71,7 @@ export default class AttachmentService extends AbstractService<IAttachment> {
 		}
 
 		return this.uploadFormData(
-			this.getReplacedRoute(this.paths.create, model),
+			this.getReplacedRoute(this.paths.create, model as any),
 			data,
 		)
 	}

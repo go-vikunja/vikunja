@@ -12,8 +12,8 @@ export default class WebhookService extends AbstractService<IWebhook> {
 		})
 	}
 
-	modelFactory(data) {
-		return new WebhookModel(data)
+	modelFactory(data: any): IWebhook {
+		return new WebhookModel(data) as IWebhook
 	}
 
 	async getAvailableEvents(): Promise<string[]> {
