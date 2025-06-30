@@ -110,18 +110,18 @@ jobs:
         with:
           s3-access-key-id: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           s3-secret-access-key: ${{ secrets.HETZNER_S3_SECRET_KEY }}
-          s3-endpoint: 'https://fsn1.your-objectstorage.com'
-          s3-bucket: 'vikunja'
-          s3-region: 'fsn1'
+          s3-endpoint: "https://fsn1.your-objectstorage.com"
+          s3-bucket: "vikunja"
+          s3-region: "fsn1"
           target-path: /vikunja/${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}
-          files: 'dist/zip/*'
+          files: "dist/zip/*"
           strip-path-prefix: dist/zip/
       - name: Store Binaries
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: vikunja_bins
           path: ./dist/binaries/*
-  
+
   os-package:
     runs-on: ubuntu-latest
     needs:
@@ -133,7 +133,7 @@ jobs:
           - deb
           - apk
           - archlinux
-    
+
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
       - name: Download Vikunja Binary
@@ -169,11 +169,11 @@ jobs:
         with:
           s3-access-key-id: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           s3-secret-access-key: ${{ secrets.HETZNER_S3_SECRET_KEY }}
-          s3-endpoint: 'https://fsn1.your-objectstorage.com'
-          s3-bucket: 'vikunja'
-          s3-region: 'fsn1'
+          s3-endpoint: "https://fsn1.your-objectstorage.com"
+          s3-bucket: "vikunja"
+          s3-region: "fsn1"
           target-path: /vikunja/${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}
-          files: 'dist/os-packages/*'
+          files: "dist/os-packages/*"
           strip-path-prefix: dist/os-packages/
 
   config-yaml:
@@ -196,11 +196,11 @@ jobs:
         with:
           s3-access-key-id: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           s3-secret-access-key: ${{ secrets.HETZNER_S3_SECRET_KEY }}
-          s3-endpoint: 'https://fsn1.your-objectstorage.com'
-          s3-bucket: 'vikunja'
-          s3-region: 'fsn1'
+          s3-endpoint: "https://fsn1.your-objectstorage.com"
+          s3-bucket: "vikunja"
+          s3-region: "fsn1"
           target-path: /vikunja/${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}
-          files: 'config.yml.sample'
+          files: "config.yml.sample"
 
   desktop:
     strategy:
@@ -228,7 +228,9 @@ jobs:
           cache-dependency-path: desktop/pnpm-lock.yaml
       - name: Install Linux dependencies
         if: ${{ runner.os == 'Linux' }}
-        run: sudo apt-get install --no-install-recommends -y libopenjp2-tools rpm libarchive-tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y libopenjp2-tools rpm libarchive-tools
       - name: get frontend
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
@@ -244,14 +246,14 @@ jobs:
         with:
           s3-access-key-id: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           s3-secret-access-key: ${{ secrets.HETZNER_S3_SECRET_KEY }}
-          s3-endpoint: 'https://fsn1.your-objectstorage.com'
-          s3-bucket: 'vikunja'
-          s3-region: 'fsn1'
-          files: 'desktop/dist/Vikunja*'
+          s3-endpoint: "https://fsn1.your-objectstorage.com"
+          s3-bucket: "vikunja"
+          s3-region: "fsn1"
+          files: "desktop/dist/Vikunja*"
           target-path: /desktop/${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}
           strip-path-prefix: desktop/dist/
-          exclude: 'desktop/dist/*.blockmap'
-  
+          exclude: "desktop/dist/*.blockmap"
+
   generate-swagger-docs:
     runs-on: ubuntu-latest
     permissions:
