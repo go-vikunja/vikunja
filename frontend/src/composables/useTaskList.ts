@@ -38,7 +38,7 @@ const SORT_BY_DEFAULT: SortBy = {
 // This makes sure an id sort order is always sorted last.
 // When tasks would be sorted first by id and then by whatever else was specified, the id sort takes
 // precedence over everything else, making any other sort columns pretty useless.
-function formatSortOrder(sortBy, params) {
+function formatSortOrder(sortBy: any, params: any) {
 	let hasIdFilter = false
 	const sortKeys = Object.keys(sortBy)
 	for (const s of sortKeys) {
@@ -117,7 +117,7 @@ export function useTaskList(
 			tasks.value = []
 		}
 		try {
-			tasks.value = await taskCollectionService.getAll(...getAllTasksParams.value)
+			tasks.value = await taskCollectionService.getAll(...(getAllTasksParams.value as any))
 		} catch (e) {
 			error(e)
 		}
@@ -138,7 +138,7 @@ export function useTaskList(
 			page.value = Number(pageQueryValue)
 		}
 		if (filter !== undefined) {
-			params.value.filter = filter
+			params.value.filter = filter as string
 		}
 	}, { immediate: true })
 
