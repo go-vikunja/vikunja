@@ -6,7 +6,7 @@ import type { IUserSettings } from '@/modelTypes/IUserSettings'
 import AvatarService from '@/services/avatar'
 
 const avatarService = new AvatarService()
-let avatarCache = new Map<string, string>()
+const avatarCache = new Map<string, string>()
 const pendingRequests = new Map<string, Promise<string>>()
 
 export async function fetchAvatarBlobUrl(user: IUser, size = 50) {
