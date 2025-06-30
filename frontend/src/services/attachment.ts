@@ -38,7 +38,7 @@ export default class AttachmentService extends AbstractService<IAttachment> {
 
 	modelCreateFactory(data: any) {
 		// Success contains the uploaded attachments
-		data.success = (data.success === null ? [] : data.success).map((a: any) => {
+		data.success = (data.success === null ? [] : data.success).map((a: Partial<IAttachment>) => {
 			return this.modelFactory(a)
 		})
 		return data
@@ -71,7 +71,7 @@ export default class AttachmentService extends AbstractService<IAttachment> {
 		}
 
 		return this.uploadFormData(
-			this.getReplacedRoute(this.paths.create, model as any),
+			this.getReplacedRoute(this.paths.create, model),
 			data,
 		)
 	}

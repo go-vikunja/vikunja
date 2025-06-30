@@ -15,11 +15,11 @@ export default class ProjectService extends AbstractService<IProject> {
 		})
 	}
 
-	modelFactory(data: any) {
+	modelFactory(data: Partial<IProject>) {
 		return new ProjectModel(data)
 	}
 
-	beforeUpdate(model: any) {
+	beforeUpdate(model: IProject) {
 		if(typeof model.tasks !== 'undefined') {
 			const taskService = new TaskService()
 			model.tasks = model.tasks.map((task: any) => {
@@ -34,7 +34,7 @@ export default class ProjectService extends AbstractService<IProject> {
 		return model
 	}
 
-	beforeCreate(project: any) {
+	beforeCreate(project: IProject) {
 		project.hexColor = colorFromHex(project.hexColor)
 		return project
 	}
