@@ -62,7 +62,8 @@ setLanguage(browserLanguage).then(() => {
 	app.directive('cy', cypress)
 
 	app.component('Icon', FontAwesomeIcon)
-	app.component('XButton', Button)
+	// @ts-ignore
+app.component('XButton', Button)
 	app.component('Modal', Modal)
 	app.component('Card', Card)
 
