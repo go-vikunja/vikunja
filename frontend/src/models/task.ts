@@ -89,7 +89,7 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 		entityId: 0,
 		user: new UserModel(),
 		created: new Date(),
-		maxRight: null
+		maxRight: null,
 	}
 
 	position = 0

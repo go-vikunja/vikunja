@@ -104,36 +104,36 @@ export default class NotificationModel extends AbstractModel<INotification> impl
 			case NOTIFICATION_NAMES.TASK_COMMENT:
 				return `commented on ${(this.notification as any).task.getTextIdentifier()}`
 			case NOTIFICATION_NAMES.TASK_ASSIGNED:
-				{
-					const notification = this.notification as any
-					who = `${getDisplayName(notification.assignee)}`
+			{
+				const notification = this.notification as any
+				who = `${getDisplayName(notification.assignee)}`
 
-					if (user !== null && user.id === notification.assignee.id) {
-						who = 'you'
-					}
-
-					return `assigned ${who} to ${notification.task.getTextIdentifier()}`
+				if (user !== null && user.id === notification.assignee.id) {
+					who = 'you'
 				}
+
+				return `assigned ${who} to ${notification.task.getTextIdentifier()}`
+			}
 			case NOTIFICATION_NAMES.TASK_DELETED:
 				return `deleted ${(this.notification as any).task.getTextIdentifier()}`
 			case NOTIFICATION_NAMES.PROJECT_CREATED:
 				return `created ${(this.notification as any).project.title}`
 			case NOTIFICATION_NAMES.TEAM_MEMBER_ADDED:
-				{
-					const notification = this.notification as any
-					who = `${getDisplayName(notification.member)}`
+			{
+				const notification = this.notification as any
+				who = `${getDisplayName(notification.member)}`
 
-					if (user !== null && user.id === notification.member.id) {
-						who = 'you'
-					}
-
-					return `added ${who} to the ${notification.team.name} team`
+				if (user !== null && user.id === notification.member.id) {
+					who = 'you'
 				}
+
+				return `added ${who} to the ${notification.team.name} team`
+			}
 			case NOTIFICATION_NAMES.TASK_REMINDER:
-				{
-					const notification = this.notification as any
-					return `Reminder for ${notification.task.getTextIdentifier()} ${notification.task.title} (${notification.project.title})`
-				}
+			{
+				const notification = this.notification as any
+				return `Reminder for ${notification.task.getTextIdentifier()} ${notification.task.title} (${notification.project.title})`
+			}
 			case NOTIFICATION_NAMES.TASK_MENTIONED:
 				return `${getDisplayName((this.notification as any).doer)} mentioned you on ${(this.notification as any).task.getTextIdentifier()}`
 		}
