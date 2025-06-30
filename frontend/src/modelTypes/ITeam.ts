@@ -12,7 +12,7 @@ export interface ITeam extends IAbstract {
 	externalId: string
 	isPublic: boolean
 
-	createdBy: IUser
+	createdBy: IUser | null
 	created: Date
 	updated: Date
 }

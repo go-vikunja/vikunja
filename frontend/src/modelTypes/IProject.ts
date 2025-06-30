@@ -16,7 +16,7 @@ export interface IProject extends IAbstract {
 	identifier: string
 	backgroundInformation: unknown | null // FIXME: improve type
 	isFavorite: boolean
-	subscription: ISubscription
+	subscription: ISubscription | null
 	position: number
 	backgroundBlurHash: string
 	parentProjectId: number
