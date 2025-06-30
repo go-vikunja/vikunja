@@ -5,7 +5,7 @@ const nullTitleToIdResolver = (title: string) => null
 const nullIdToTitleResolver = (id: number) => null
 describe('Filter Transformation', () => {
 
-	const fieldCases = {
+	const fieldCases: Record<string, string> = {
 		'done': 'done',
 		'priority': 'priority',
 		'percentDone': 'percent_done',

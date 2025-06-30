@@ -33,7 +33,7 @@ precacheAndRoute(self.__WB_MANIFEST)
 )
 
 // This code listens for the user's confirmation to update the app.
-self.addEventListener('message', (e) => {
+self.addEventListener('message', (e: any) => {
 	if (!e.data) {
 		return
 	}
@@ -49,7 +49,7 @@ self.addEventListener('message', (e) => {
 })
 
 // Notification action
-self.addEventListener('notificationclick', function (event) {
+self.addEventListener('notificationclick', function (event: any) {
 	const taskId = event.notification.data.taskId
 	event.notification.close()
 

@@ -388,7 +388,7 @@ const router = createRouter({
 	],
 })
 
-export async function getAuthForRoute(to: RouteLocation, authStore) {
+export async function getAuthForRoute(to: RouteLocation, authStore: any) {
 	if (authStore.authUser || authStore.authLinkShare) {
 		return
 	}

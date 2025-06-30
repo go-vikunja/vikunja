@@ -105,7 +105,7 @@ async function saveView(view: IProjectView) {
 	success({message: t('project.views.updateSuccess')})
 }
 
-async function saveViewPosition(e) {
+async function saveViewPosition(e: any) {
 	const view = views.value[e.newIndex]
 	const viewBefore = views.value[e.newIndex - 1]
 	const viewAfter = views.value[e.newIndex + 1]

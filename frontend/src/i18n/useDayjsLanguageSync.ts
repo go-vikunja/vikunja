@@ -61,14 +61,14 @@ export const DAYJS_LANGUAGE_IMPORTS = {
 	'tr-tr': () => import('dayjs/locale/tr'),
 	'fi-fi': () => import('dayjs/locale/fi'),
 	'he-il': () => import('dayjs/locale/he'),
-} as Record<SupportedLocale, () => Promise<ILocale>>
+} as Record<SupportedLocale, () => Promise<any>>
 
 export async function loadDayJsLocale(language: SupportedLocale) {
 	if (language === 'en') {
 		return
 	}
 
-	await DAYJS_LANGUAGE_IMPORTS[language.toLowerCase()]()
+	await DAYJS_LANGUAGE_IMPORTS[language.toLowerCase() as SupportedLocale]()
 }
 
 export function useDayjsLanguageSync(dayjsGlobal: typeof dayjs) {
@@ -80,12 +80,12 @@ export function useDayjsLanguageSync(dayjsGlobal: typeof dayjs) {
 			if (!dayjsGlobal) {
 				return
 			}
-			const dayjsLanguageCode = DAYJS_LOCALE_MAPPING[currentLanguage.toLowerCase()] || currentLanguage.toLowerCase()
+			const dayjsLanguageCode = DAYJS_LOCALE_MAPPING[currentLanguage.toLowerCase() as SupportedLocale] || currentLanguage.toLowerCase()
 			dayjsLanguageLoaded.value = dayjsGlobal.locale() === dayjsLanguageCode
 			if (dayjsLanguageLoaded.value) {
 				return
 			}
-			await loadDayJsLocale(currentLanguage)
+			await loadDayJsLocale(currentLanguage as SupportedLocale)
 			dayjsGlobal.locale(dayjsLanguageCode)
 			dayjsLanguageLoaded.value = true
 		},
