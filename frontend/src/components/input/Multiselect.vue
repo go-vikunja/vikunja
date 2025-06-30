@@ -124,7 +124,6 @@
 </template>
 
 <script setup lang="ts" generic="T extends Record<string, unknown>">
-// @ts-nocheck
 import {computed, onBeforeUnmount, onMounted, ref, toRefs, watch, type ComponentPublicInstance} from 'vue'
 import {useI18n} from 'vue-i18n'
 
