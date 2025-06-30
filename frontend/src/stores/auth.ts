@@ -150,6 +150,7 @@ export const useAuthStore = defineStore('auth', () => {
 		if (!info.value || !info.value.username) {
 			return
 		}
+		invalidateAvatarCache(info.value)
 		avatarUrl.value = await fetchAvatarBlobUrl(info.value, 40)
 	}
 
@@ -371,9 +372,9 @@ export const useAuthStore = defineStore('auth', () => {
 		settings,
 		showMessage = true,
 	}: {
-                settings: IUserSettings
-                showMessage : boolean
-        }) {
+		settings: IUserSettings,
+		showMessage: boolean,
+	}) {
 		const userSettingsService = new UserSettingsService()
 
 		const cancel = setModuleLoading(setIsLoadingGeneralSettings)
@@ -393,7 +394,6 @@ export const useAuthStore = defineStore('auth', () => {
 			if (oldName !== undefined && oldName !== settingsUpdate.name) {
 				const {avatarProvider} = await (new AvatarService()).get({})
 				if (avatarProvider === 'initials') {
-					invalidateAvatarCache(info.value as IUser)
 					await reloadAvatar()
 				}
 			}

@@ -6,7 +6,7 @@ import type { IUserSettings } from '@/modelTypes/IUserSettings'
 import AvatarService from '@/services/avatar'
 
 const avatarService = new AvatarService()
-const avatarCache = new Map<string, string>()
+let avatarCache = new Map<string, string>()
 const pendingRequests = new Map<string, Promise<string>>()
 
 export async function fetchAvatarBlobUrl(user: IUser, size = 50) {
@@ -25,6 +25,8 @@ export async function fetchAvatarBlobUrl(user: IUser, size = 50) {
 		return await pendingRequests.get(key) as string
 	}
 	
+	invalidateAvatarCache(user)
+	
 	// Create a new request
 	const requestPromise = avatarService.getBlobUrl(`/avatar/${user.username}?size=${size}`)
 		.then(url => {
@@ -41,15 +43,8 @@ export async function fetchAvatarBlobUrl(user: IUser, size = 50) {
 	return await requestPromise
 }
 
-export function invalidateAvatarCache(user: IUser, size?: number) {
+export function invalidateAvatarCache(user: IUser) {
 	if (!user || !user.username) {
-		return
-	}
-
-	if (typeof size === 'number') {
-		const key = `${user.username}-${size}`
-		avatarCache.delete(key)
-		pendingRequests.delete(key)
 		return
 	}
 
