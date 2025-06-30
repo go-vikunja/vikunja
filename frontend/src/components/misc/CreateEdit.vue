@@ -64,7 +64,7 @@ const _props = defineProps({
 	},
 	primaryIcon: {
 		type: Object as PropType<IconProp>,
-		default: () => 'plus',
+		default: () => ({ iconName: 'plus', prefix: 'fas' } as IconProp),
 	},
 	primaryDisabled: {
 		type: Boolean,

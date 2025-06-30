@@ -47,7 +47,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 const _props = defineProps({
 	triggerIcon: {
 		type: Object as PropType<IconProp>,
-		default: () => 'ellipsis-h',
+		default: () => ({ iconName: 'ellipsis-h', prefix: 'fas' } as IconProp),
 	},
 })
 
