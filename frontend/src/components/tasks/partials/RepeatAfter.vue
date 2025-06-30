@@ -125,10 +125,12 @@ const repeatAfter = reactive({
 
 watch(
 	() => props.modelValue,
-	(value: ITask) => {
-		task.value = value
-		if (typeof value.repeatAfter !== 'undefined') {
-			Object.assign(repeatAfter, value.repeatAfter)
+	(value: ITask | undefined) => {
+		if (value) {
+			task.value = value
+			if (typeof value.repeatAfter !== 'undefined') {
+				Object.assign(repeatAfter, value.repeatAfter)
+			}
 		}
 	},
 	{

@@ -10,7 +10,10 @@
 			v-if="!showAll"
 			class="show-tasks-options"
 		>
-			<DatepickerWithRange @update:modelValue="(dates: any) => setDate(dates)">
+			<DatepickerWithRange 
+				:model-value="dateRangeValue"
+				@update:modelValue="(dates: DateStrings) => setDate(dates)"
+			>
 				<template #trigger="{toggle}">
 					<XButton
 						variant="primary"
@@ -103,7 +106,7 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-	'tasksLoaded': true,
+	'tasksLoaded': [],
 }>()
 
 const authStore = useAuthStore()
@@ -121,6 +124,11 @@ const taskCollectionService = ref(new TaskCollectionService())
 setTimeout(() => showNothingToDo.value = true, 100)
 
 const showAll = computed(() => typeof props.dateFrom === 'undefined' || typeof props.dateTo === 'undefined')
+
+const dateRangeValue = computed(() => ({
+	dateFrom: props.dateFrom || new Date(),
+	dateTo: props.dateTo || new Date(),
+}))
 
 const pageTitle = computed(() => {
 	// We need to define "key" because it is the first parameter in the array and we need the second
@@ -214,8 +222,8 @@ async function loadPendingTasks(from: Date|string, to: Date|string) {
 		projectId = filterId
 	}
 
-	tasks.value = await taskStore.loadTasks(params, projectId) as any
-	emit('tasksLoaded', true)
+	tasks.value = await taskStore.loadTasks(params, projectId) as ITask[]
+	emit('tasksLoaded')
 }
 
 // FIXME: this modification should happen in the store

@@ -8,6 +8,7 @@ import {useAuthStore} from '@/stores/auth'
 
 import {saveProjectView} from '@/helpers/projectView'
 import ProjectService from '@/services/project'
+import ProjectModel from '@/models/project'
 
 import ProjectList from '@/components/project/views/ProjectList.vue'
 import ProjectGantt from '@/components/project/views/ProjectGantt.vue'
@@ -51,7 +52,7 @@ watch(
 		}
 
 		try {
-			const loadedProject = await projectService.get({id: projectIdToLoad})
+			const loadedProject = await projectService.get(new ProjectModel({id: projectIdToLoad}))
 
 			// Here, we only set the new project in the projectStore.
 			// Setting that projet as the current one in the baseStore is handled by the watcher below.
