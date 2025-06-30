@@ -15,8 +15,8 @@ export default class LabelService extends AbstractService<ILabel> {
 	}
 
 	processModel(label: ILabel) {
-		label.created = new Date(label.created).toISOString()
-		label.updated = new Date(label.updated).toISOString()
+		label.created = new Date(label.created)
+		label.updated = new Date(label.updated)
 		label.hexColor = colorFromHex(label.hexColor)
 		return label
 	}

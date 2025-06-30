@@ -17,7 +17,7 @@ export default class TeamProjectService extends AbstractService<ITeamProject> {
 		return new TeamProjectModel(data)
 	}
 
-	modelGetAllFactory(data: any) {
+	modelGetAllFactory(data: any): any {
 		return new TeamModel(data)
 	}
 }

@@ -15,7 +15,7 @@ export default class BackgroundUnsplashService extends AbstractService<IBackgrou
 		return new BackgroundImageModel(data)
 	}
 
-	modelUpdateFactory(data: any) {
+	modelUpdateFactory(data: any): any {
 		return new ProjectModel(data)
 	}
 

@@ -16,7 +16,7 @@ export default class TotpService extends AbstractService<ITotp> {
 	}
 
 	enroll(): Promise<any> {
-		return this.post(`${this.urlPrefix}/enroll`, {})
+		return this.post(`${this.urlPrefix}/enroll`, {} as any)
 	}
 
 	enable(model: ITotp): Promise<any> {

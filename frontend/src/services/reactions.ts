@@ -17,16 +17,16 @@ export default class ReactionService extends AbstractService {
 		return new ReactionModel(data)
 	}
 
-	modelGetAllFactory(data: Partial<IReactionPerEntity>): Partial<IReactionPerEntity> {
+	modelGetAllFactory(data: any): any {
 		Object.keys(data).forEach(reaction => {
-			data[reaction] = data[reaction]?.map(u => new UserModel(u))
+			data[reaction] = data[reaction]?.map((u: any) => new UserModel(u))
 		})
 
 		return data
 	}
 
 	async delete(model: IAbstract) {
-		const finalUrl = this.getReplacedRoute(this.paths.delete, model)
+		const finalUrl = this.getReplacedRoute(this.paths.delete, model as any)
 		return super.post(finalUrl, model)
 	}
 }
