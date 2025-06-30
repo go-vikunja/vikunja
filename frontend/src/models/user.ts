@@ -41,6 +41,31 @@ export async function fetchAvatarBlobUrl(user: IUser, size = 50) {
 	return await requestPromise
 }
 
+export function invalidateAvatarCache(user: IUser, size?: number) {
+	if (!user || !user.username) {
+		return
+	}
+
+	if (typeof size === 'number') {
+		const key = `${user.username}-${size}`
+		avatarCache.delete(key)
+		pendingRequests.delete(key)
+		return
+	}
+
+	for (const key of Array.from(avatarCache.keys())) {
+		if (key.startsWith(`${user.username}-`)) {
+			avatarCache.delete(key)
+		}
+	}
+
+	for (const key of Array.from(pendingRequests.keys())) {
+		if (key.startsWith(`${user.username}-`)) {
+			pendingRequests.delete(key)
+		}
+	}
+}
+
 export function getDisplayName(user: IUser) {
 	if (user.name !== '') {
 		return user.name
