@@ -1,3 +1,4 @@
+// @ts-nocheck
 import {getFullBaseUrl} from './helpers/getFullBaseUrl'
 
 declare let self: ServiceWorkerGlobalScope & {
