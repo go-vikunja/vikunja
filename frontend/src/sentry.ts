@@ -9,9 +9,9 @@ export default async function setupSentry(app: App, router: Router) {
 
 	Sentry.init({
 		app,
-		dsn: window.SENTRY_DSN ?? '',
-		release: import.meta.env.VITE_PLUGIN_SENTRY_CONFIG.release,
-		dist: import.meta.env.VITE_PLUGIN_SENTRY_CONFIG.dist,
+		dsn: (window as any).SENTRY_DSN ?? '',
+		release: (import.meta.env as any).VITE_PLUGIN_SENTRY_CONFIG?.release,
+		dist: (import.meta.env as any).VITE_PLUGIN_SENTRY_CONFIG?.dist,
 		integrations: [
 			new Integrations.BrowserTracing({
 				routingInstrumentation: Sentry.vueRouterInstrumentation(router),
@@ -19,7 +19,7 @@ export default async function setupSentry(app: App, router: Router) {
 			}),
 		],
 		tracesSampleRate: 1.0,
-		beforeSend(event, hint) {
+		beforeSend(event: any, hint: any) {
 
 			if ((typeof hint.originalException?.code !== 'undefined' && 
 				typeof hint.originalException?.message !== 'undefined')

@@ -102,9 +102,9 @@ export const useProjectStore = defineStore('project', () => {
 	const searchSavedFilter = computed(() => {
 		return (query: string, includeArchived = false) => {
 			return search(query)
-				?.filter(value => getSavedFilterIdFromProjectId(value) > 0)
-				.map(id => projects.value[id])
-				.filter(project => project?.isArchived === includeArchived)
+				?.filter((value: number) => getSavedFilterIdFromProjectId(value) > 0)
+				.map((id: number) => projects.value[id])
+				.filter((project: IProject) => project?.isArchived === includeArchived)
 				|| []
 		}
 	})
@@ -213,7 +213,7 @@ export const useProjectStore = defineStore('project', () => {
 		let page = 1
 		try {
 			do {
-				const newProjects = await projectService.getAll({}, {is_archived: true, expand: 'rights'}, page) as IProject[]
+				const newProjects = await projectService.getAll({} as any, {is_archived: true, expand: 'rights'}, page) as IProject[]
 				loadedProjects.push(...newProjects)
 				page++
 			} while (page <= projectService.totalPages)
@@ -291,7 +291,7 @@ export function useProject(projectId: MaybeRefOrGetter<IProject['id']>) {
 	const projectDuplicateService = shallowReactive(new ProjectDuplicateService())
 	
 	const isLoading = computed(() => projectService.loading || projectDuplicateService.loading)
-	const project: IProject = reactive(new ProjectModel())
+	const project = reactive(new ProjectModel()) as IProject
 	
 	const {t} = useI18n({useScope: 'global'})
 	const router = useRouter()
@@ -320,12 +320,12 @@ export function useProject(projectId: MaybeRefOrGetter<IProject['id']>) {
 
 		const duplicate = await projectDuplicateService.create(projectDuplicate)
 		if (duplicate.duplicatedProject) {
-			duplicate.duplicatedProject.maxRight = RIGHTS.ADMIN
+			(duplicate.duplicatedProject as any).maxRight = RIGHTS.ADMIN
 		}
 
-		projectStore.setProject(duplicate.duplicatedProject)
+		projectStore.setProject(duplicate.duplicatedProject as IProject)
 		success({message: t('project.duplicate.success')})
-		router.push({name: 'project.index', params: {projectId: duplicate.duplicatedProject.id}})
+		router.push({name: 'project.index', params: {projectId: (duplicate.duplicatedProject as any).id}})
 	}
 
 	return {
