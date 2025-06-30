@@ -53,7 +53,7 @@
 import type {IconProp} from '@fortawesome/fontawesome-svg-core'
 import {type PropType} from 'vue'
 
-const props = defineProps({
+const _props = defineProps({
 	title: {
 		type: String,
 		required: true,
@@ -64,7 +64,7 @@ const props = defineProps({
 	},
 	primaryIcon: {
 		type: Object as PropType<IconProp>,
-		default: 'plus',
+		default: () => 'plus',
 	},
 	primaryDisabled: {
 		type: Boolean,

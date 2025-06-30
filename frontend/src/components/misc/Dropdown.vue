@@ -44,10 +44,10 @@ import type {IconProp} from '@fortawesome/fontawesome-svg-core'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
-const props = defineProps({
+const _props = defineProps({
 	triggerIcon: {
 		type: Object as PropType<IconProp>,
-		default: 'ellipsis-h',
+		default: () => 'ellipsis-h',
 	},
 })
 
