@@ -200,7 +200,7 @@ async function submit() {
 
 	try {
 		await authStore.register(toRaw(credentials))
-	} catch (e: any) {
+	} catch (e: unknown) {
 		errorMessage.value = e?.message || t('user.auth.registerError')
 	}
 }

@@ -141,7 +141,7 @@ import {useAuthStore} from '@/stores/auth'
 import {RIGHTS} from '@/constants/rights'
 
 const props = defineProps<{
-	project: IProject | any
+	project: IProject
 }>()
 
 const projectStore = useProjectStore()

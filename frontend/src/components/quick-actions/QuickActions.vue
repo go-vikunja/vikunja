@@ -223,7 +223,7 @@ const foundCommands = computed(() => availableCmds.value.filter((a) =>
 interface Result {
 	type: ACTION_TYPE
 	title: string
-	items: any[]
+	items: Record<string, unknown>[]
 }
 
 const results = computed<Result[]>(() => {
@@ -409,7 +409,7 @@ function searchTasks() {
 	}
 
 	taskSearchTimeout.value = setTimeout(async () => {
-		const r = await taskService.getAll({} as any, params) as DoAction<ITask>[]
+		const r = await taskService.getAll({}, params) as DoAction<ITask>[]
 		foundTasks.value = r.map((t) => {
 			t.type = ACTION_TYPE.TASK
 			return t
@@ -437,11 +437,11 @@ function searchTeams() {
 	const {assignees} = parsedQuery.value
 	teamSearchTimeout.value = setTimeout(async () => {
 		const teamSearchPromises = assignees.map((t) =>
-			teamService.getAll({} as any, {s: t}),
+			teamService.getAll({}, {s: t}),
 		)
 		const teamsResult = await Promise.all(teamSearchPromises)
 		foundTeams.value = teamsResult.flat().map((team) => {
-			(team as any).title = team.name
+			(team as Record<string, unknown>).title = team.name
 			return team
 		})
 	}, 150)
@@ -454,7 +454,7 @@ function search() {
 
 const searchInput = ref<HTMLElement | null>(null)
 
-async function doAction(type: ACTION_TYPE, item: DoAction<any>) {
+async function doAction(type: ACTION_TYPE, item: DoAction<Record<string, unknown>>) {
 	switch (type) {
 		case ACTION_TYPE.PROJECT:
 			closeQuickActions()

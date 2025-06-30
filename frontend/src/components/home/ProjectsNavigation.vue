@@ -45,7 +45,7 @@ import type {IProject} from '@/modelTypes/IProject'
 import {useProjectStore} from '@/stores/projects'
 
 const props = defineProps<{
-	modelValue?: IProject[] | any,
+	modelValue?: IProject[],
 	canEditOrder: boolean,
 	canCollapse?: boolean,
 }>()

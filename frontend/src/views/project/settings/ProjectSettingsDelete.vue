@@ -68,7 +68,7 @@ watchEffect(
 		projectIdsToDelete.value.push(parseInt(route.params.projectId as string))
 
 		const taskService = new TaskService()
-		await taskService.getAll({} as any, {filter: `project in ${projectIdsToDelete.value.join(',')}`})
+		await taskService.getAll({}, {filter: `project in ${projectIdsToDelete.value.join(',')}`})
 		totalTasks.value = taskService.totalPages * taskService.resultCount
 	},
 )
@@ -92,7 +92,7 @@ async function deleteProject() {
 		return
 	}
 
-	await projectStore.deleteProject(project.value as any)
+	await projectStore.deleteProject(project.value)
 	success({message: t('project.delete.success')})
 	router.push({name: 'home'})
 }
