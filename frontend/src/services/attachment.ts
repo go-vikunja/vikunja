@@ -36,7 +36,7 @@ export default class AttachmentService extends AbstractService<IAttachment> {
 		return new AttachmentModel(data)
 	}
 
-	modelCreateFactory(data: any) {
+	modelCreateFactory(data: {success: Partial<IAttachment>[] | null}) {
 		// Success contains the uploaded attachments
 		data.success = (data.success === null ? [] : data.success).map((a: Partial<IAttachment>) => {
 			return this.modelFactory(a)
@@ -45,8 +45,8 @@ export default class AttachmentService extends AbstractService<IAttachment> {
 	}
 
 	getBlobUrl(model: IAttachment, size?: PREVIEW_SIZE): Promise<unknown>
-	getBlobUrl(url: string, method?: any, data?: any): Promise<unknown>
-	getBlobUrl(modelOrUrl: IAttachment | string, sizeOrMethod?: PREVIEW_SIZE | any, data?: any): Promise<unknown> {
+	getBlobUrl(url: string, method?: string, data?: unknown): Promise<unknown>
+	getBlobUrl(modelOrUrl: IAttachment | string, sizeOrMethod?: PREVIEW_SIZE | string, data?: unknown): Promise<unknown> {
 		if (typeof modelOrUrl === 'string') {
 			return super.getBlobUrl(modelOrUrl, sizeOrMethod, data)
 		}
@@ -83,7 +83,7 @@ export default class AttachmentService extends AbstractService<IAttachment> {
 		}
 
 		return this.uploadFormData(
-			this.getReplacedRoute(this.paths.create, model as any),
+			this.getReplacedRoute(this.paths.create, model as Record<string, unknown>),
 			data,
 		)
 	}

@@ -10,15 +10,15 @@ export default class NotificationService extends AbstractService<NotificationMod
 		})
 	}
 
-	modelFactory(data: any) {
+	modelFactory(data: Partial<INotification>) {
 		return new NotificationModel(data)
 	}
 
-	modelGetAllFactory(data: any) {
+	modelGetAllFactory(data: Partial<INotification>) {
 		return new NotificationModel(data)
 	}
 
-	beforeUpdate(model: any) {
+	beforeUpdate(model: INotification) {
 		if (!model) {
 			return model
 		}
@@ -29,6 +29,6 @@ export default class NotificationService extends AbstractService<NotificationMod
 	}
 	
 	async markAllRead() {
-		return this.post('/notifications', false as any)
+		return this.post('/notifications', {} as INotification)
 	}
 }
