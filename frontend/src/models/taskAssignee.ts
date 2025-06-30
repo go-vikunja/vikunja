@@ -5,7 +5,7 @@ import type {IUser} from '@/modelTypes/IUser'
 import type {ITask} from '@/modelTypes/ITask'
 
 export default class TaskAssigneeModel extends AbstractModel<ITaskAssignee> implements ITaskAssignee {
-	created: Date = null
+	created: Date = new Date()
 	userId: IUser['id'] = 0
 	taskId: ITask['id'] = 0
 
