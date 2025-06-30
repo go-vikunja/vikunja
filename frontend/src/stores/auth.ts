@@ -4,7 +4,8 @@ import {acceptHMRUpdate, defineStore} from 'pinia'
 import {AuthenticatedHTTPFactory, HTTPFactory} from '@/helpers/fetcher'
 import {getBrowserLanguage, i18n, setLanguage} from '@/i18n'
 import {objectToSnakeCase} from '@/helpers/case'
-import UserModel, {getDisplayName, fetchAvatarBlobUrl} from '@/models/user'
+import UserModel, {getDisplayName, fetchAvatarBlobUrl, invalidateAvatarCache} from '@/models/user'
+import AvatarService from '@/services/avatar'
 import UserSettingsService from '@/services/userSettings'
 import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
 import {setModuleLoading} from '@/stores/helper'
@@ -149,6 +150,7 @@ export const useAuthStore = defineStore('auth', () => {
 		if (!info.value || !info.value.username) {
 			return
 		}
+		invalidateAvatarCache(info.value)
 		avatarUrl.value = await fetchAvatarBlobUrl(info.value, 40)
 	}
 
@@ -370,13 +372,14 @@ export const useAuthStore = defineStore('auth', () => {
 		settings,
 		showMessage = true,
 	}: {
-		settings: IUserSettings
-		showMessage : boolean
+		settings: IUserSettings,
+		showMessage: boolean,
 	}) {
 		const userSettingsService = new UserSettingsService()
 
 		const cancel = setModuleLoading(setIsLoadingGeneralSettings)
 		try {
+			const oldName = info.value?.name
 			let settingsUpdate = {...settings}
 			if (configStore.demoModeEnabled) {
 				settingsUpdate = {
@@ -388,6 +391,12 @@ export const useAuthStore = defineStore('auth', () => {
 			setUserSettings(settingsUpdate)
 			await setLanguage(settings.language)
 			await updateSettingsPromise
+			if (oldName !== undefined && oldName !== settingsUpdate.name) {
+				const {avatarProvider} = await (new AvatarService()).get({})
+				if (avatarProvider === 'initials') {
+					await reloadAvatar()
+				}
+			}
 			if (showMessage) {
 				success({message: i18n.global.t('user.settings.general.savedSuccess')})
 			}

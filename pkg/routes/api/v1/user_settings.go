@@ -201,6 +201,8 @@ func UpdateGeneralUserSettings(c echo.Context) error {
 		return handler.HandleHTTPError(err)
 	}
 
+	invalidateAvatar := user.AvatarProvider == "initials" && user.Name != us.Name
+
 	user.Name = us.Name
 	user.EmailRemindersEnabled = us.EmailRemindersEnabled
 	user.DiscoverableByEmail = us.DiscoverableByEmail
@@ -222,6 +224,10 @@ func UpdateGeneralUserSettings(c echo.Context) error {
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err)
+	}
+
+	if invalidateAvatar {
+		avatar.FlushAllCaches(user)
 	}
 
 	return c.JSON(http.StatusOK, &models.Message{Message: "The settings were updated successfully."})

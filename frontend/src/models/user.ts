@@ -25,6 +25,8 @@ export async function fetchAvatarBlobUrl(user: IUser, size = 50) {
 		return await pendingRequests.get(key) as string
 	}
 	
+	invalidateAvatarCache(user)
+	
 	// Create a new request
 	const requestPromise = avatarService.getBlobUrl(`/avatar/${user.username}?size=${size}`)
 		.then(url => {
@@ -39,6 +41,24 @@ export async function fetchAvatarBlobUrl(user: IUser, size = 50) {
 	
 	pendingRequests.set(key, requestPromise)
 	return await requestPromise
+}
+
+export function invalidateAvatarCache(user: IUser) {
+	if (!user || !user.username) {
+		return
+	}
+
+	for (const key of Array.from(avatarCache.keys())) {
+		if (key.startsWith(`${user.username}-`)) {
+			avatarCache.delete(key)
+		}
+	}
+
+	for (const key of Array.from(pendingRequests.keys())) {
+		if (key.startsWith(`${user.username}-`)) {
+			pendingRequests.delete(key)
+		}
+	}
 }
 
 export function getDisplayName(user: IUser) {
