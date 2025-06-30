@@ -5,17 +5,17 @@ import type {IUserShareBase} from '@/modelTypes/IUserShareBase'
 import type {IUser} from '@/modelTypes/IUser'
 
 export default class UserShareBaseModel extends AbstractModel<IUserShareBase> implements IUserShareBase {
-	userId: IUser['id'] = ''
+	userId: IUser['id'] = 0
 	right: Right = RIGHTS.READ
 
-	created: Date = null
-	updated: Date = null
+	created: Date = new Date()
+	updated: Date = new Date()
 
 	constructor(data: Partial<IUserShareBase>) {
 		super()
 		this.assignData(data)
 	
-		this.created = new Date(this.created)
-		this.updated = new Date(this.updated)
+		this.created = new Date(this.created || Date.now())
+		this.updated = new Date(this.updated || Date.now())
 	}
 }
