@@ -10,7 +10,7 @@ export default class TaskRelationService extends AbstractService<ITaskRelation> 
 		})
 	}
 
-	modelFactory(data) {
+	modelFactory(data: any) {
 		return new TaskRelationModel(data)
 	}
 }

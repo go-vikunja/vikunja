@@ -13,7 +13,7 @@ export default class TeamService extends AbstractService<ITeam> {
 		})
 	}
 
-	modelFactory(data) {
+	modelFactory(data: any) {
 		return new TeamModel(data)
 	}
 }

@@ -8,7 +8,7 @@ export default class ProjectUserService extends AbstractService {
 		})
 	}
 
-	modelFactory(data) {
+	modelFactory(data: any) {
 		return new UserModel(data)
 	}
 }
