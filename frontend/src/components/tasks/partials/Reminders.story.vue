@@ -7,7 +7,7 @@ import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 
 const reminderNow = ref({reminder: new Date(), relativePeriod: 0, relativeTo: null, maxRight: null } as ITaskReminder)
 const relativeReminder = ref({reminder: null, relativePeriod: 1, relativeTo: 'due_date', maxRight: null } as ITaskReminder)
-const newReminder = ref(null as ITaskReminder | null)
+const newReminder = ref({reminder: null, relativePeriod: 0, relativeTo: null, maxRight: null } as ITaskReminder)
 const mockTask = ref({} as ITask)
 </script>
 
