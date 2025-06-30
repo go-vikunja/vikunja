@@ -32,7 +32,10 @@ const projectStore = useProjectStore()
 const router = useRouter()
 const route = useRoute()
 
-const project = computed(() => projectStore.projects[route.params.projectId as string])
+const project = computed(() => {
+	const projectId = Array.isArray(route.params.projectId) ? route.params.projectId[0] : route.params.projectId
+	return projectStore.projects[Number(projectId)]
+})
 useTitle(() => t('project.archive.title', {project: project.value.title}))
 
 async function archiveProject() {

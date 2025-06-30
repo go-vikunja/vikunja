@@ -55,7 +55,7 @@
 						<BaseButton
 							v-if="backgroundThumbs[im.id]"
 							class="image-search__image-button"
-							@click="setBackground(im.id)"
+							@click="setBackground(im.id.toString())"
 						>
 							<img
 								class="image-search__image"
@@ -181,7 +181,9 @@ async function searchBackgrounds(page = 1) {
 	result.forEach((background: IBackgroundImage) => {
 		getBlobFromBlurHash(background.blurHash)
 			.then((b) => {
-				backgroundBlurHashes.value[background.id] = window.URL.createObjectURL(b)
+				if (b !== null) {
+					backgroundBlurHashes.value[background.id] = window.URL.createObjectURL(b)
+				}
 			})
 
 		backgroundService.thumb(background).then(b => {
