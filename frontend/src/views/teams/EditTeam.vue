@@ -320,7 +320,7 @@ const title = ref('')
 loadTeam()
 
 async function loadTeam() {
-	team.value = await teamService.value.get(new TeamModel({id: teamId.value}))
+	team.value = await teamService.value.get(new TeamModel({id: teamId.value}) as any)
 	title.value = t('team.edit.title', {team: team.value?.name})
 	useTitle(() => title.value)
 }
@@ -403,7 +403,7 @@ async function leave() {
 		await teamMemberService.value.delete({
 			teamId: teamId.value,
 			username: userInfo.value!.username,
-		})
+		} as any)
 		success({message: t('team.edit.leave.success')})
 		await router.push({name: 'home'})
 	} finally {

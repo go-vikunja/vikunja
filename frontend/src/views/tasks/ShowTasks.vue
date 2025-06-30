@@ -10,7 +10,7 @@
 			v-if="!showAll"
 			class="show-tasks-options"
 		>
-			<DatepickerWithRange @update:modelValue="setDate">
+			<DatepickerWithRange @update:modelValue="(dates: any) => setDate(dates)">
 				<template #trigger="{toggle}">
 					<XButton
 						variant="primary"
@@ -151,8 +151,8 @@ function setDate(dates: DateStrings) {
 	router.push({
 		name: route.name || 'home',
 		query: {
-			from: dates.dateFrom ?? props.dateFrom,
-			to: dates.dateTo ?? props.dateTo,
+			from: (dates.dateFrom ?? props.dateFrom)?.toString() || '',
+			to: (dates.dateTo ?? props.dateTo)?.toString() || '',
 			showOverdue: props.showOverdue ? 'true' : 'false',
 			showNulls: props.showNulls ? 'true' : 'false',
 		},
@@ -215,7 +215,7 @@ async function loadPendingTasks(from: Date|string, to: Date|string) {
 	}
 
 	tasks.value = await taskStore.loadTasks(params, projectId) as any
-	emit('tasksLoaded')
+	emit('tasksLoaded', true)
 }
 
 // FIXME: this modification should happen in the store
