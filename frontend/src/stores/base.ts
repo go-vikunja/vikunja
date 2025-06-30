@@ -151,7 +151,7 @@ export const useBaseStore = defineStore('base', () => {
 				error.value = t('apiConfig.error')
 				return
 			}
-			error.value = String(e.message)
+			error.value = String((e as Error).message || e)
 		}
 	}
 
