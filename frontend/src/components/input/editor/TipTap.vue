@@ -355,7 +355,8 @@ const PasteHandler = Extension.create({
 						// Handle images pasted from clipboard
 						if (typeof props.uploadCallback !== 'undefined' && event.clipboardData?.items && event.clipboardData.items.length > 0) {
 
-							for (const item of event.clipboardData.items) {
+							// @ts-ignore
+						for (const item of event.clipboardData.items) {
 								if (item.kind === 'file' && item.type.startsWith('image/')) {
 									const file = item.getAsFile()
 									if (file) {
