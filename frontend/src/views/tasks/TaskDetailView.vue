@@ -24,7 +24,7 @@
 				class="subtitle"
 			>
 				<template
-					v-for="p in projectStore.getAncestors(project as any)"
+					v-for="p in projectStore.getAncestors(project as IProject)"
 					:key="p.id"
 				>
 					<a
@@ -97,7 +97,7 @@
 									:ref="e => setFieldRef('priority', e)"
 									v-model="task.priority"
 									:disabled="!canWrite"
-									@update:modelValue="(priority: any) => setPriority(priority)"
+									@update:modelValue="(priority: Priority) => setPriority(priority)"
 								/>
 							</div>
 						</CustomTransition>
@@ -322,7 +322,7 @@
 						<Description
 							:model-value="task"
 							:can-write="canWrite"
-							:attachment-upload="attachmentUpload as any"
+							:attachment-upload="attachmentUpload"
 							@update:modelValue="Object.assign(task, $event)"
 						/>
 					</div>
@@ -421,7 +421,7 @@
 							entity="task"
 							:entity-id="task.id"
 							:model-value="task.subscription"
-							@update:modelValue="(sub: any) => task.subscription = sub"
+							@update:modelValue="(sub: ISubscription) => task.subscription = sub"
 						/>
 						<XButton
 							v-shortcut="'s'"
@@ -588,7 +588,7 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted, onBeforeUnmount} from 'vue'
+import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted, onBeforeUnmount, type ComponentPublicInstance} from 'vue'
 import {useRouter, type RouteLocation} from 'vue-router'
 import {storeToRefs} from 'pinia'
 import {useI18n} from 'vue-i18n'
@@ -601,6 +601,7 @@ import TaskModel from '@/models/task'
 
 import type {ITask} from '@/modelTypes/ITask'
 import type {IProject} from '@/modelTypes/IProject'
+import type {ISubscription} from '@/modelTypes/ISubscription'
 
 import {PRIORITIES, type Priority} from '@/constants/priorities'
 import {RIGHTS} from '@/constants/rights'
@@ -672,7 +673,7 @@ const taskTitle = computed(() => task.value.title)
 useTitle(taskTitle)
 
 // See https://github.com/github/hotkey/discussions/85#discussioncomment-5214660
-function saveTaskViaHotkey(event: any) {
+function saveTaskViaHotkey(event: KeyboardEvent) {
 	const hotkeyString = eventToHotkeyString(event)
 	if (!hotkeyString) return
 	if (hotkeyString !== 'Control+s' && hotkeyString !== 'Meta+s') return
@@ -708,7 +709,7 @@ const canWrite = computed(() => (
 ))
 
 const color = computed(() => {
-	const taskValue = task.value as any
+	const taskValue = task.value as ITask & {getHexColor?: () => string}
 	const color = taskValue.getHexColor
 		? taskValue.getHexColor()
 		: task.value.hexColor
@@ -739,13 +740,13 @@ watch(
 		}
 
 		try {
-			const loaded = await taskService.get({id} as any, {expand: ['reactions', 'comments']})
+			const loaded = await taskService.get({id} as Pick<ITask, 'id'>, {expand: ['reactions', 'comments']})
 			Object.assign(task.value, loaded)
 			attachmentStore.set(task.value.attachments)
 			taskColor.value = task.value.hexColor
 			setActiveFields()
-		} catch (e: any) {
-			if (e?.response?.status === 404) {
+		} catch (e: unknown) {
+			if ((e as {response?: {status?: number}})?.response?.status === 404) {
 				router.replace({name: 'not-found'})
 				return
 			}
@@ -824,7 +825,7 @@ const activeFieldElements: { [id in FieldType]: HTMLElement | null } = reactive(
 	startDate: null,
 })
 
-function setFieldRef(name: keyof typeof activeFieldElements, e: any) {
+function setFieldRef(name: keyof typeof activeFieldElements, e: Element | ComponentPublicInstance | null) {
 	activeFieldElements[name] = unrefElement(e)
 }
 

@@ -133,7 +133,7 @@ async function totpStatus() {
 		return
 	}
 	try {
-		totp.value = await totpService.get({} as any)
+		totp.value = await totpService.get({})
 		totpSetQrCode()
 	} catch(e: unknown) {
 		// Error code 1016 means totp is not enabled, we don't need an error in that case.
@@ -159,13 +159,13 @@ async function totpEnroll() {
 }
 
 async function totpConfirm() {
-	await totpService.enable({passcode: totpConfirmPasscode.value} as any)
+	await totpService.enable({passcode: totpConfirmPasscode.value})
 	totp.value.enabled = true
 	success({message: t('user.settings.totp.confirmSuccess')})
 }
 
 async function totpDisable() {
-	await totpService.disable({password: totpDisablePassword.value} as any)
+	await totpService.disable({password: totpDisablePassword.value})
 	totpEnrolled.value = false
 	totp.value = new TotpModel()
 	success({message: t('user.settings.totp.disableSuccess')})

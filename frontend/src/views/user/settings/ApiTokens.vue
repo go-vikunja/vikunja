@@ -18,12 +18,12 @@ const service = new ApiTokenService()
 const tokens = ref<IApiToken[]>([])
 const apiDocsUrl = window.API_URL + '/docs'
 const showCreateForm = ref(false)
-const availableRoutes = ref<{[key: string]: any} | null>(null)
+const availableRoutes = ref<{[key: string]: string[]} | null>(null)
 const newToken = ref<IApiToken>(new ApiTokenModel() as unknown as IApiToken)
 const newTokenExpiry = ref<string | number>(30)
 const newTokenExpiryCustom = ref(new Date())
-const newTokenPermissions = ref<{[key: string]: any}>({})
-const newTokenPermissionsGroup = ref<{[key: string]: any}>({})
+const newTokenPermissions = ref<{[key: string]: boolean}>({})
+const newTokenPermissionsGroup = ref<{[key: string]: boolean}>({})
 const newTokenTitleValid = ref(true)
 const newTokenPermissionValid = ref(true)
 const apiTokenTitle = ref()
@@ -47,10 +47,10 @@ const flatPickerConfig = computed(() => ({
 }))
 
 onMounted(async () => {
-	tokens.value = await service.getAll({} as any)
+	tokens.value = await service.getAll({})
 	const allRoutes = await service.getAvailableRoutes()
 
-	const routesAvailable: {[key: string]: any} = {}
+	const routesAvailable: {[key: string]: string[]} = {}
 	const keys = Object.keys(allRoutes)
 	keys.sort((a, b) => (a === 'other' ? 1 : b === 'other' ? -1 : 0))
 	keys.forEach(key => {

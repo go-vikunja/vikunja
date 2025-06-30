@@ -122,7 +122,7 @@ useTitle(() => `${t('user.settings.caldav.title')} - ${t('user.settings.title')}
 const service = shallowReactive(new CaldavTokenService())
 const tokens = ref<ICaldavToken[]>([])
 
-service.getAll({} as any).then((result: ICaldavToken[]) => {
+service.getAll({}).then((result: ICaldavToken[]) => {
 	tokens.value = result
 })
 
