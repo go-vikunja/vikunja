@@ -16,9 +16,9 @@ export default class BucketModel extends AbstractModel<IBucket> implements IBuck
 	count = 0
 	projectViewId = 0
 	
-	createdBy: IUser | null = null
-	created: Date | null = null
-	updated: Date | null = null
+	createdBy: IUser = new UserModel({}) as IUser
+	created: Date = new Date()
+	updated: Date = new Date()
 
 	constructor(data: Partial<IBucket>) {
 		super()

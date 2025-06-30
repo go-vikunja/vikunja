@@ -13,12 +13,12 @@ export default class LabelModel extends AbstractModel<ILabel> implements ILabel 
 	// that way it gets never send to the server db and is easier to change in future versions.
 	hexColor = ''
 	description = ''
-	createdBy: IUser
+	createdBy: IUser = new UserModel({}) as IUser
 	projectId = 0
 	textColor = ''
 
-	created: Date = null
-	updated: Date = null
+	created: Date = new Date()
+	updated: Date = new Date()
 
 	constructor(data: Partial<ILabel> = {}) {
 		super()
@@ -38,9 +38,9 @@ export default class LabelModel extends AbstractModel<ILabel> implements ILabel 
 				: 'hsl(220, 13%, 91%)' // grey-200
 		}
 
-		this.createdBy = new UserModel(this.createdBy)
+		if (this.createdBy) this.createdBy = new UserModel(this.createdBy) as IUser
 
-		this.created = new Date(this.created)
-		this.updated = new Date(this.updated)
+		if (this.created) this.created = new Date(this.created)
+		if (this.updated) this.updated = new Date(this.updated)
 	}
 }

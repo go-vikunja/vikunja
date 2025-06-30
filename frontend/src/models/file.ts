@@ -6,7 +6,7 @@ export default class FileModel extends AbstractModel<IFile> implements IFile {
 	mime = ''
 	name = ''
 	size = 0
-	created: Date | null = null
+	created: Date = new Date()
 
 	constructor(data: Partial<IFile>) {
 		super()
