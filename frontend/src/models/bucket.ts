@@ -16,9 +16,9 @@ export default class BucketModel extends AbstractModel<IBucket> implements IBuck
 	count = 0
 	projectViewId = 0
 	
-	createdBy: IUser = null
-	created: Date = null
-	updated: Date = null
+	createdBy: IUser | null = null
+	created: Date | null = null
+	updated: Date | null = null
 
 	constructor(data: Partial<IBucket>) {
 		super()
@@ -26,8 +26,8 @@ export default class BucketModel extends AbstractModel<IBucket> implements IBuck
 
 		this.tasks = this.tasks.map(t => new TaskModel(t))
 
-		this.createdBy = new UserModel(this.createdBy)
-		this.created = new Date(this.created)
-		this.updated = new Date(this.updated)
+		if (this.createdBy) this.createdBy = new UserModel(this.createdBy)
+		if (this.created) this.created = new Date(this.created)
+		if (this.updated) this.updated = new Date(this.updated)
 	}
 }

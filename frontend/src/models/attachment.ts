@@ -14,9 +14,9 @@ export function canPreview(attachment: IAttachment): boolean {
 export default class AttachmentModel extends AbstractModel<IAttachment> implements IAttachment {
 	id = 0
 	taskId = 0
-	createdBy: IUser = UserModel
-	file: IFile = FileModel
-	created: Date = null
+	createdBy: IUser = new UserModel() as IUser
+	file: IFile = new FileModel() as IFile
+	created: Date | null = null
 
 	constructor(data: Partial<IAttachment>) {
 		super()
@@ -24,6 +24,6 @@ export default class AttachmentModel extends AbstractModel<IAttachment> implemen
 
 		this.createdBy = new UserModel(this.createdBy)
 		this.file = new FileModel(this.file)
-		this.created = new Date(this.created)
+		if (this.created) this.created = new Date(this.created)
 	}
 }
