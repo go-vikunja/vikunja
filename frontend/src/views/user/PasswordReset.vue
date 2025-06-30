@@ -31,7 +31,7 @@
 					for="password"
 				>{{ $t('user.auth.password') }}</label>
 				<Password
-					:modelValue="credentials.password"
+					:model-value="credentials.password"
 					@submit="resetPassword"
 					@update:modelValue="v => credentials.password = v"
 				/>

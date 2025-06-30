@@ -73,7 +73,7 @@
 					for="password"
 				>{{ $t('user.auth.password') }}</label>
 				<Password
-					:modelValue="credentials.password"
+					:model-value="credentials.password"
 					:validate-initially="validatePasswordInitially"
 					@submit="submit"
 					@update:modelValue="v => credentials.password = v"

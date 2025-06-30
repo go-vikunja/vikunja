@@ -393,7 +393,7 @@ function prepareDelete(s: UserProjectWithUser | TeamProjectWithTeam) {
 			updated: new Date(),
 			settings: {} as any,
 			isLocalUser: false,
-			deletionScheduledAt: null
+			deletionScheduledAt: null,
 		} as IUser
 	} else {
 		const teamShare = s as TeamProjectWithTeam
@@ -408,7 +408,7 @@ function prepareDelete(s: UserProjectWithUser | TeamProjectWithTeam) {
 			createdBy: {} as IUser,
 			created: new Date(),
 			updated: new Date(),
-			maxRight: null
+			maxRight: null,
 		} as ITeam
 	}
 	showDeleteModal.value = true
