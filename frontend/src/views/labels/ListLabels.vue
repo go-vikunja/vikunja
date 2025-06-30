@@ -32,12 +32,12 @@
 				<span
 					v-for="label in labelStore.labelsArray"
 					:key="label.id"
-					:class="{'disabled': userInfo.id !== label.createdBy.id}"
+					:class="{'disabled': userInfo?.id !== label.createdBy.id}"
 					:style="{'background': label.hexColor, 'color': label.textColor}"
 					class="tag"
 				>
 					<span
-						v-if="userInfo.id !== label.createdBy.id"
+						v-if="userInfo?.id !== label.createdBy.id"
 						v-tooltip.bottom="$t('label.edit.forbidden')"
 					>
 						{{ label.title }}
@@ -50,7 +50,7 @@
 						{{ label.title }}
 					</BaseButton>
 					<BaseButton
-						v-if="userInfo.id === label.createdBy.id"
+						v-if="userInfo?.id === label.createdBy.id"
 						class="delete is-small"
 						@click="showDeleteDialoge(label)"
 					/>
@@ -142,6 +142,9 @@ import {useI18n} from 'vue-i18n'
 import BaseButton from '@/components/base/BaseButton.vue'
 import Editor from '@/components/input/AsyncEditor'
 import ColorPicker from '@/components/input/ColorPicker.vue'
+import Card from '@/components/misc/Card.vue'
+import Modal from '@/components/misc/Modal.vue'
+import XButton from '@/components/input/Button.vue'
 
 import LabelModel from '@/models/label'
 import type {ILabel} from '@/modelTypes/ILabel'
@@ -183,7 +186,7 @@ function editLabelSubmit() {
 }
 
 function editLabel(label: ILabel) {
-	if (label.createdBy.id !== userInfo.value.id) {
+	if (label.createdBy.id !== userInfo.value?.id) {
 		return
 	}
 	// Duplicating the label to make sure it does not look like changes take effect immediatly as the label 
@@ -191,8 +194,8 @@ function editLabel(label: ILabel) {
 	labelEditLabel.value = new LabelModel({
 		...label,
 		// The model does not support passing dates into it directly so we need to convert them first				
-		created: +label.created,
-		updated: +label.updated,
+		created: label.created instanceof Date ? label.created : new Date(label.created),
+		updated: label.updated instanceof Date ? label.updated : new Date(label.updated),
 	})
 	isLabelEdit.value = true
 

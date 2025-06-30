@@ -81,7 +81,11 @@ const parentProject = ref<IProject | null>(null)
 
 watch(
 	() => props.parentProjectId,
-	() => parentProject.value = projectStore.projects[props.parentProjectId],
+	() => {
+		if (props.parentProjectId !== undefined) {
+			parentProject.value = projectStore.projects[props.parentProjectId] || null
+		}
+	},
 	{immediate: true},
 )
 

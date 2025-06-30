@@ -110,19 +110,6 @@
 	</div>
 </template>
 
-<script lang="ts">
-import type {RouteLocationNormalized, NavigationGuardNext} from 'vue-router'
-import {MIGRATORS} from './migrators'
-
-export default {
-	beforeRouteEnter(to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) {
-		if (MIGRATORS[to.params.service as string] === undefined) {
-			return next({name: 'not-found'})
-		}
-		next()
-	},
-}
-</script>
 
 <script setup lang="ts">
 import {computed, ref, shallowReactive} from 'vue'
@@ -176,7 +163,7 @@ async function initMigration() {
 		return
 	}
 
-	authUrl.value = await migrationService.getAuthUrl().then(({url}) => url)
+	authUrl.value = await migrationService.getAuthUrl().then((result: any) => result.url)
 
 	const TOKEN_HASH_PREFIX = '#token='
 	migratorAuthCode.value = location.hash.startsWith(TOKEN_HASH_PREFIX)
@@ -186,7 +173,8 @@ async function initMigration() {
 	if (!migratorAuthCode.value) {
 		return
 	}
-	const {started_at, finished_at} = await migrationService.getStatus()
+	const status = await migrationService.getStatus() as any
+	const {started_at, finished_at} = status
 	if (started_at) {
 		lastMigrationStartedAt.value = parseDateOrNull(started_at)
 	}
@@ -229,7 +217,7 @@ async function migrate() {
 
 	try {
 		if (migrator.value.isFileMigrator) {
-			const result = await migrationFileService.migrate(migrationConfig as File)
+			const result = await migrationFileService.migrate(migrationConfig as File) as any
 			message.value = result.message
 			const projectStore = useProjectStore()
 			return projectStore.loadAllProjects()
