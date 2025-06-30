@@ -1,6 +1,7 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
 
-import {ParsedTaskText, parseTaskText, PrefixMode} from './parseTaskText'
+import {parseTaskText, PrefixMode} from './parseTaskText'
+import type {ParsedTaskText} from './parseTaskText'
 import {parseDate} from '../helpers/time/parseDate'
 import {calculateDayInterval} from '../helpers/time/calculateDayInterval'
 import {PRIORITIES} from '@/constants/priorities'
@@ -528,7 +529,8 @@ describe('Parse Task Text', () => {
 						return
 					}
 
-					expect(`${date?.getFullYear()}-${date?.getMonth() + 1}-${date?.getDate()}`).toBe(cases[c])
+					expect(date).not.toBeNull()
+					expect(`${date!.getFullYear()}-${date!.getMonth() + 1}-${date!.getDate()}`).toBe(cases[c])
 					expect(text.trim()).toBe('Lorem Ipsum')
 				}
 				
@@ -584,14 +586,16 @@ describe('Parse Task Text', () => {
 						return
 					}
 
-					expect(`${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}`).toBe(cases[c])
+					expect(date).not.toBeNull()
+				expect(`${date!.getFullYear()}-${date!.getMonth() + 1}-${date!.getDate()} ${date!.getHours()}:${date!.getMinutes()}`).toBe(cases[c])
 				})
 			}
 
 			it('should replace the text in title case', () => {
 				const {date, newText} = parseDate('Some task Mar 8th', now)
 
-				expect(`${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}`).toBe('2021-3-8 12:0')
+				expect(date).not.toBeNull()
+				expect(`${date!.getFullYear()}-${date!.getMonth() + 1}-${date!.getDate()} ${date!.getHours()}:${date!.getMinutes()}`).toBe('2021-3-8 12:0')
 				expect(newText).toBe('Some task')
 			})
 
