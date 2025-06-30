@@ -44,7 +44,7 @@ export default class AttachmentService extends AbstractService<IAttachment> {
 		return data
 	}
 
-	getBlobUrl(model: IAttachment, size?: PREVIEW_SIZE): Promise<string> {
+	getBlobUrl(model: IAttachment, size?: PREVIEW_SIZE): Promise<unknown> {
 		let mainUrl = '/tasks/' + model.taskId + '/attachments/' + model.id
 		if (size !== undefined) {
 			mainUrl += `?preview_size=${size}`
@@ -63,7 +63,7 @@ export default class AttachmentService extends AbstractService<IAttachment> {
 	 * @param files
 	 * @returns {Promise<any|never>}
 	 */
-	create(model: IAttachment, files: File[] | FileList): Promise<any> {
+	create(model: IAttachment, files: File[] | FileList): Promise<unknown> {
 		const data = new FormData()
 		for (let i = 0; i < files.length; i++) {
 			// TODO: Validation of file size

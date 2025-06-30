@@ -5,14 +5,14 @@ const DOWNLOAD_NAME = 'vikunja-export.zip'
 
 export default class DataExportService extends AbstractService {
 	request(password: string) {
-		return this.post('/user/export/request', {password})
+		return this.post('/user/export/request', {password} as any)
 	}
 	
 	async download(password: string) {
 		const clear = this.setLoading()
 		try {
 			const url = await this.getBlobUrl('/user/export/download', 'POST', {password})
-			downloadBlob(url, DOWNLOAD_NAME)
+			downloadBlob(url as string, DOWNLOAD_NAME)
 		} finally {
 			clear()
 		}
