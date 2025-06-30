@@ -8,11 +8,14 @@ import TeamModel from '@/models/team'
 
 import {NOTIFICATION_NAMES, type INotification} from '@/modelTypes/INotification'
 import type { IUser } from '@/modelTypes/IUser'
+import type { ITeam } from '@/modelTypes/ITeam'
+import type { IProject } from '@/modelTypes/IProject'
+import type { ITaskComment } from '@/modelTypes/ITaskComment'
 
 export default class NotificationModel extends AbstractModel<INotification> implements INotification {
 	id = 0
 	name = ''
-	notification: INotification['notification'] = {} as any
+	notification!: INotification['notification']
 	read = false
 	readAt: Date | null = null
 
@@ -22,79 +25,61 @@ export default class NotificationModel extends AbstractModel<INotification> impl
 		super()
 		this.assignData(data)
 
+		// Transform raw notification data into proper model instances
+		const rawNotification = this.notification as Record<string, unknown>
+		
 		switch (this.name) {
 			case NOTIFICATION_NAMES.TASK_COMMENT:
-				{
-					const notification = this.notification as any
-					this.notification = {
-						doer: new UserModel(notification.doer),
-						task: new TaskModel(notification.task),
-						comment: new TaskCommentModel(notification.comment),
-					}
+				this.notification = {
+					doer: new UserModel(rawNotification.doer as Partial<IUser>),
+					task: new TaskModel(rawNotification.task as Partial<INotification['notification']['task']>),
+					comment: new TaskCommentModel(rawNotification.comment as Partial<ITaskComment>),
 				}
 				break
 			case NOTIFICATION_NAMES.TASK_ASSIGNED:
-				{
-					const notification = this.notification as any
-					this.notification = {
-						doer: new UserModel(notification.doer),
-						task: new TaskModel(notification.task),
-						assignee: new UserModel(notification.assignee),
-					}
+				this.notification = {
+					doer: new UserModel(rawNotification.doer as Partial<IUser>),
+					task: new TaskModel(rawNotification.task as Partial<INotification['notification']['task']>),
+					assignee: new UserModel(rawNotification.assignee as Partial<IUser>),
 				}
 				break
 			case NOTIFICATION_NAMES.TASK_DELETED:
-				{
-					const notification = this.notification as any
-					this.notification = {
-						doer: new UserModel(notification.doer),
-						task: new TaskModel(notification.task),
-					}
+				this.notification = {
+					doer: new UserModel(rawNotification.doer as Partial<IUser>),
+					task: new TaskModel(rawNotification.task as Partial<INotification['notification']['task']>),
 				}
 				break
 			case NOTIFICATION_NAMES.PROJECT_CREATED:
-				{
-					const notification = this.notification as any
-					this.notification = {
-						doer: new UserModel(notification.doer),
-						task: new TaskModel(notification.task),
-						project: new ProjectModel(notification.project),
-					} as any
+				this.notification = {
+					doer: new UserModel(rawNotification.doer as Partial<IUser>),
+					task: new TaskModel(rawNotification.task as Partial<INotification['notification']['task']>),
+					project: new ProjectModel(rawNotification.project as Partial<IProject>),
 				}
 				break
 			case NOTIFICATION_NAMES.TEAM_MEMBER_ADDED:
-				{
-					const notification = this.notification as any
-					this.notification = {
-						doer: new UserModel(notification.doer),
-						member: new UserModel(notification.member),
-						team: new TeamModel(notification.team) as any,
-					}
+				this.notification = {
+					doer: new UserModel(rawNotification.doer as Partial<IUser>),
+					member: new UserModel(rawNotification.member as Partial<IUser>),
+					team: new TeamModel(rawNotification.team as Partial<ITeam>),
 				}
 				break
 			case NOTIFICATION_NAMES.TASK_REMINDER:
-				{
-					const notification = this.notification as any
-					this.notification = {
-						doer: new UserModel(notification.doer),
-						task: new TaskModel(notification.task),
-						project: new ProjectModel(notification.project),
-					} as any
+				this.notification = {
+					doer: new UserModel(rawNotification.doer as Partial<IUser>),
+					task: new TaskModel(rawNotification.task as Partial<INotification['notification']['task']>),
+					project: new ProjectModel(rawNotification.project as Partial<IProject>),
 				}
 				break
 			case NOTIFICATION_NAMES.TASK_MENTIONED:
-				{
-					const notification = this.notification as any
-					this.notification = {
-						doer: new UserModel(notification.doer),
-						task: new TaskModel(notification.task),
-					}
+				this.notification = {
+					doer: new UserModel(rawNotification.doer as Partial<IUser>),
+					task: new TaskModel(rawNotification.task as Partial<INotification['notification']['task']>),
 				}
 				break
 		}
 
 		this.created = new Date(this.created)
-		this.readAt = parseDateOrNull(this.readAt as any)
+		this.readAt = parseDateOrNull(this.readAt as string | Date | null)
 	}
 
 	toText(user: IUser | null = null) {
