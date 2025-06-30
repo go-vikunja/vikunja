@@ -84,7 +84,7 @@ useTitle(() => currentProject.value?.id ? getProjectTitle(currentProject.value) 
 
 const views = computed(() => projectStore.projects[props.projectId]?.views)
 
-function getViewTitle(view: any) {
+function getViewTitle(view: Record<string, unknown>) {
 	switch (view.title) {
 		case 'List':
 			return t('project.list.title')

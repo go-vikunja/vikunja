@@ -91,7 +91,7 @@ function getReactionTooltip(users: IUser[], value: string) {
 }
 
 const showEmojiPicker = ref(false)
-const emojiPickerRef = ref<any>(null)
+const emojiPickerRef = ref<HTMLElement | null>(null)
 
 function hideEmojiPicker(e: MouseEvent) {
 	if (showEmojiPicker.value) {
@@ -102,8 +102,8 @@ function hideEmojiPicker(e: MouseEvent) {
 onMounted(() => document.addEventListener('click', hideEmojiPicker))
 onBeforeUnmount(() => document.removeEventListener('click', hideEmojiPicker))
 
-const emojiPickerButtonRef = ref<any>(null)
-const reactionContainerRef = ref<any>(null)
+const emojiPickerButtonRef = ref<HTMLElement | null>(null)
+const reactionContainerRef = ref<HTMLElement | null>(null)
 const emojiPickerPosition = ref()
 
 function toggleEmojiPicker() {

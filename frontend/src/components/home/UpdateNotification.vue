@@ -23,7 +23,7 @@ import {useBaseStore} from '@/stores/base'
 const baseStore = useBaseStore()
 
 const updateAvailable = computed(() => baseStore.updateAvailable)
-const registration = ref<any>(null)
+const registration = ref<ServiceWorkerRegistration | null>(null)
 const refreshing = ref(false)
 
 document.addEventListener('swUpdated', showRefreshUI as EventListener, {once: true})

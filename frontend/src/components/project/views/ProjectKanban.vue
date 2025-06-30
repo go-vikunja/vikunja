@@ -461,7 +461,7 @@ function updateTasks(bucketId: IBucket['id'], tasks: IBucket['tasks']) {
 	})
 }
 
-async function updateTaskPosition(e: any) {
+async function updateTaskPosition(e: Event) {
 	drag.value = false
 
 	// While we could just pass the bucket index in through the function call, this would not give us the

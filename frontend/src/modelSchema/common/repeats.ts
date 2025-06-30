@@ -1,5 +1,5 @@
 import {SECONDS_A_HOUR, SECONDS_A_DAY, SECONDS_A_WEEK, SECONDS_A_MONTH, SECONDS_A_YEAR} from '@/constants/date'
-import { REPEAT_TYPES, type IRepeatAfter } from '@/types/IRepeatAfter'
+import { type IRepeatAfter } from '@/types/IRepeatAfter'
 // import { nativeEnum, number, object, preprocess } from 'zod'
 
 /**

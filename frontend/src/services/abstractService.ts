@@ -2,7 +2,6 @@ import {AuthenticatedHTTPFactory} from '@/helpers/fetcher'
 import type {Method} from 'axios'
 
 import {objectToSnakeCase} from '@/helpers/case'
-import AbstractModel from '@/models/abstractModel'
 import type {IAbstract} from '@/modelTypes/IAbstract'
 import type {Right} from '@/constants/rights'
 

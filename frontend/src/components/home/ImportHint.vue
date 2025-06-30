@@ -27,7 +27,7 @@ onMounted(async () => {
 	}
 
 	const taskService = new TaskService()
-	const tasks = await taskService.getAll({} as any, {per_page: 1})
+	const tasks = await taskService.getAll({}, {per_page: 1})
 	show.value = tasks.length === 0
 })
 </script>

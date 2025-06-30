@@ -161,7 +161,7 @@ import UserProjectModel from '@/models/userProject'
 import type {IUserProject} from '@/modelTypes/IUserProject'
 
 import UserService from '@/services/user'
-import UserModel, { getDisplayName } from '@/models/user'
+import UserModel from '@/models/user'
 import type {IUser} from '@/modelTypes/IUser'
 
 import TeamProjectService from '@/services/teamProject'
@@ -204,7 +204,7 @@ let searchService: UserService | TeamService
 let sharable: Ref<IUser | ITeam>
 
 const searchLabel = ref('')
-const selectedRight = ref<Record<number, any>>({})
+const selectedRight = ref<Record<number, number>>({})
 
 
 // This holds either teams or users who this namepace or project is shared with
@@ -364,9 +364,9 @@ async function find(query: string) {
 	// Include public teams here if we are sharing with teams and its enabled in the config
 	let results = []
 	if (props.shareType === 'team' && configStore.publicTeamsEnabled) {
-		results = await searchService.getAll({} as any, {s: query, includePublic: true})
+		results = await searchService.getAll({}, {s: query, includePublic: true})
 	} else {
-		results = await searchService.getAll({} as any, {s: query})
+		results = await searchService.getAll({}, {s: query})
 	}
 
 	found.value = results
@@ -391,7 +391,7 @@ function prepareDelete(s: UserProjectWithUser | TeamProjectWithTeam) {
 			type: 0,
 			created: new Date(),
 			updated: new Date(),
-			settings: {} as any,
+			settings: {},
 			isLocalUser: false,
 			deletionScheduledAt: null,
 		} as IUser

@@ -125,7 +125,6 @@ import {success} from '@/message'
 import type {ITeam} from '@/modelTypes/ITeam'
 import type {ITask} from '@/modelTypes/ITask'
 import type {IProject} from '@/modelTypes/IProject'
-import type {IAbstract} from '@/modelTypes/IAbstract'
 import {isSavedFilter} from '@/services/savedFilter'
 
 const {t} = useI18n({useScope: 'global'})

@@ -44,7 +44,7 @@ withDefaults(defineProps<{
 	currentPage: 0,
 })
 
-function getRouteForPagination(page: number = 1, type: string | null = null): any {
+function getRouteForPagination(page: number = 1, type: string | null = null): Record<string, unknown> {
 	return {
 		name: type ?? undefined,
 		params: {

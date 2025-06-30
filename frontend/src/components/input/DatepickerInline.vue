@@ -104,7 +104,7 @@ watch(
 	{immediate: true},
 )
 
-const flatPickrRef = ref<any>(null)
+const flatPickrRef = ref<HTMLElement | null>(null)
 const flatPickerConfig = computed(() => ({
 	altFormat: t('date.altFormatLong'),
 	altInput: true,

@@ -1,7 +1,6 @@
 import AbstractService from '@/services/abstractService'
 import type {IAbstract} from '@/modelTypes/IAbstract'
 import ReactionModel from '@/models/reaction'
-import type {IReactionPerEntity} from '@/modelTypes/IReaction'
 import UserModel from '@/models/user'
 
 export default class ReactionService extends AbstractService {

@@ -111,7 +111,7 @@ const {t} = useI18n()
 
 const allNotifications = ref<NotificationModel[]>([])
 const showNotifications = ref(false)
-const popup = ref(null)
+const popup = ref<HTMLElement | null>(null)
 
 const unreadNotifications = computed(() => {
 	return notifications.value.filter(n => n.readAt === null).length
@@ -142,7 +142,7 @@ async function loadNotifications() {
 	}
 	// We're recreating the notification service here to make sure it uses the latest api user token
 	const notificationService = new NotificationService()
-	allNotifications.value = await notificationService.getAll({} as any)
+	allNotifications.value = await notificationService.getAll({})
 }
 
 function hidePopup(e: MouseEvent) {
@@ -154,7 +154,7 @@ function hidePopup(e: MouseEvent) {
 function to(n: NotificationModel, index: number) {
 	const to = {
 		name: '',
-		params: {} as any,
+		params: {},
 	}
 
 	switch (n.name) {

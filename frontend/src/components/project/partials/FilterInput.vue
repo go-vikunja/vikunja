@@ -243,10 +243,10 @@ function handleFieldInput() {
 		if (matched.startsWith('assignee')) {
 			autocompleteResultType.value = 'assignees'
 			if (props.projectId) {
-				projectUserService.getAll({} as any, {projectId: props.projectId, s: search})
+				projectUserService.getAll({}, {projectId: props.projectId, s: search})
 					.then(users => autocompleteResults.value = users.length > 1 ? users : [])
 			} else {
-				userService.getAll({} as any, {s: search})
+				userService.getAll({}, {s: search})
 					.then(users => autocompleteResults.value = users.length > 1 ? users : [])
 			}
 		}
@@ -259,7 +259,7 @@ function handleFieldInput() {
 	})
 }
 
-function autocompleteSelect(value: any) {
+function autocompleteSelect(value: Record<string, unknown>) {
 	filterQuery.value = filterQuery.value.substring(0, autocompleteMatchPosition.value + 1) +
 		(autocompleteResultType.value === 'assignees'
 			? value.username
