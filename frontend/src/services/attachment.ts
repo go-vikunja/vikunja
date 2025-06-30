@@ -2,6 +2,7 @@ import AbstractService from './abstractService'
 import AttachmentModel from '../models/attachment'
 
 import type { IAttachment } from '@/modelTypes/IAttachment'
+import type { Method } from 'axios'
 
 import {downloadBlob} from '@/helpers/downloadBlob'
 
@@ -36,7 +37,13 @@ export default class AttachmentService extends AbstractService<IAttachment> {
 		return new AttachmentModel(data)
 	}
 
-	modelCreateFactory(data: {success: Partial<IAttachment>[] | null}) {
+	modelCreateFactory(data: Partial<IAttachment>) {
+		// For standard create operations, use the base factory
+		return this.modelFactory(data)
+	}
+
+	// Special factory for file upload responses
+	processUploadResponse(data: {success: Partial<IAttachment>[] | null}) {
 		// Success contains the uploaded attachments
 		data.success = (data.success === null ? [] : data.success).map((a: Partial<IAttachment>) => {
 			return this.modelFactory(a)
@@ -48,7 +55,7 @@ export default class AttachmentService extends AbstractService<IAttachment> {
 	getBlobUrl(url: string, method?: string, data?: unknown): Promise<unknown>
 	getBlobUrl(modelOrUrl: IAttachment | string, sizeOrMethod?: PREVIEW_SIZE | string, data?: unknown): Promise<unknown> {
 		if (typeof modelOrUrl === 'string') {
-			return super.getBlobUrl(modelOrUrl, sizeOrMethod, data)
+			return super.getBlobUrl(modelOrUrl, sizeOrMethod as Method, data)
 		}
 		
 		const model = modelOrUrl
@@ -57,7 +64,7 @@ export default class AttachmentService extends AbstractService<IAttachment> {
 			mainUrl += `?preview_size=${sizeOrMethod}`
 		}
 
-		return super.getBlobUrl(mainUrl)
+		return super.getBlobUrl(mainUrl, 'GET', {})
 	}
 
 	async download(model: IAttachment) {
@@ -83,7 +90,7 @@ export default class AttachmentService extends AbstractService<IAttachment> {
 		}
 
 		return this.uploadFormData(
-			this.getReplacedRoute(this.paths.create, model as Record<string, unknown>),
+			this.getReplacedRoute(this.paths.create, model as unknown as Record<string, unknown>),
 			data,
 		)
 	}

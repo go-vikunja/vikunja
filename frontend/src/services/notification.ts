@@ -18,17 +18,22 @@ export default class NotificationService extends AbstractService<NotificationMod
 		return new NotificationModel(data)
 	}
 
-	beforeUpdate(model: INotification) {
+	beforeUpdate(model: NotificationModel) {
 		if (!model) {
 			return model
 		}
 		
-		model.created = new Date(model.created).toISOString()
-		model.readAt = new Date(model.readAt).toISOString()
+		// Convert dates to ISO strings if they are not null
+		if (model.created) {
+			(model as any).created = new Date(model.created).toISOString()
+		}
+		if (model.readAt) {
+			(model as any).readAt = new Date(model.readAt).toISOString()
+		}
 		return model
 	}
 	
 	async markAllRead() {
-		return this.post('/notifications', {} as INotification)
+		return this.post('/notifications', new NotificationModel({}))
 	}
 }

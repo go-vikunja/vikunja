@@ -12,7 +12,7 @@ import {colorFromHex} from '@/helpers/color/colorFromHex'
 import {SECONDS_A_DAY, SECONDS_A_HOUR, SECONDS_A_WEEK} from '@/constants/date'
 import {objectToSnakeCase} from '@/helpers/case'
 
-const parseDate = (date: string | Date | null | undefined) => {
+const parseDate = (date: string | Date | null | undefined): string | null => {
 	if (date) {
 		return new Date(date).toISOString()
 	}
@@ -50,20 +50,24 @@ export default class TaskService extends AbstractService<ITask> {
 	processModel(updatedModel: ITask) {
 		const model = {...updatedModel}
 
-		model.title = model.title?.trim()
+		if (model.title) {
+			model.title = model.title.trim()
+		}
 
 		// Ensure that projectId is an int
-		model.projectId = Number(model.projectId)
+		if (model.projectId !== null && model.projectId !== undefined) {
+			model.projectId = Number(model.projectId)
+		}
 
 		// Convert dates into an iso string
-		model.dueDate = parseDate(model.dueDate)
-		model.startDate = parseDate(model.startDate)
-		model.endDate = parseDate(model.endDate)
-		model.doneAt = parseDate(model.doneAt)
-		model.created = new Date(model.created || Date.now()).toISOString()
-		model.updated = new Date(model.updated || Date.now()).toISOString()
+		(model as any).dueDate = parseDate(model.dueDate)
+		(model as any).startDate = parseDate(model.startDate)
+		(model as any).endDate = parseDate(model.endDate)
+		(model as any).doneAt = parseDate(model.doneAt)
+		(model as any).created = new Date(model.created || Date.now()).toISOString()
+		(model as any).updated = new Date(model.updated || Date.now()).toISOString()
 
-		model.reminderDates = null
+		(model as any).reminderDates = null
 		// remove all nulls, these would create empty reminders
 		if (model.reminders) {
 			for (const index in model.reminders) {
@@ -76,14 +80,14 @@ export default class TaskService extends AbstractService<ITask> {
 		if (model.reminders && model.reminders.length > 0) {
 			model.reminders.forEach((r: ITaskReminder) => {
 				if (r && r.reminder) {
-					r.reminder = new Date(r.reminder).toISOString()
+					(r as any).reminder = new Date(r.reminder).toISOString()
 				}
 			})
 		}
 
 		// Make the repeating amount to seconds
 		let repeatAfterSeconds = 0
-		if (model.repeatAfter !== null && (model.repeatAfter.amount !== null || model.repeatAfter.amount !== 0)) {
+		if (model.repeatAfter !== null && typeof model.repeatAfter === 'object' && model.repeatAfter.amount !== null && model.repeatAfter.amount !== 0) {
 			switch (model.repeatAfter.type) {
 				case 'hours':
 					repeatAfterSeconds = model.repeatAfter.amount * SECONDS_A_HOUR
@@ -96,23 +100,26 @@ export default class TaskService extends AbstractService<ITask> {
 					break
 			}
 		}
-		model.repeatAfter = repeatAfterSeconds
+		(model as any).repeatAfter = repeatAfterSeconds
 
 		model.hexColor = colorFromHex(model.hexColor)
 
 		// Do the same for all related tasks
 		if (model.relatedTasks) {
 			Object.keys(model.relatedTasks).forEach(relationKind => {
-				model.relatedTasks[relationKind] = model.relatedTasks[relationKind]!.map((t: ITask) => {
-					return this.processModel(t)
-				})
+				const tasks = (model.relatedTasks as any)[relationKind]
+				if (tasks) {
+					(model.relatedTasks as any)[relationKind] = tasks.map((t: ITask) => {
+						return this.processModel(t)
+					})
+				}
 			})
 		}
 
 		// Process all attachments to prevent parsing errors
 		if (model.attachments && model.attachments.length > 0) {
 			const attachmentService = new AttachmentService()
-			model.attachments = model.attachments.map((a: IAttachment) => {
+			;(model as any).attachments = model.attachments.map((a: IAttachment) => {
 				return attachmentService.processModel(a)
 			})
 		}
@@ -120,7 +127,7 @@ export default class TaskService extends AbstractService<ITask> {
 		// Preprocess all labels
 		if (model.labels && model.labels.length > 0) {
 			const labelService = new LabelService()
-			model.labels = model.labels.map((l: ILabel) => labelService.processModel(l))
+			;(model as any).labels = model.labels.map((l: ILabel) => labelService.processModel(l))
 		}
 
 		const transformed = objectToSnakeCase(model)
