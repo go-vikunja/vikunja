@@ -63,7 +63,7 @@ setLanguage(browserLanguage).then(() => {
 
 	app.component('Icon', FontAwesomeIcon)
 	// @ts-ignore
-app.component('XButton', Button)
+	app.component('XButton', Button)
 	app.component('Modal', Modal)
 	app.component('Card', Card)
 

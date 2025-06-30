@@ -46,7 +46,7 @@ const parentProjectForSearch = computed({
 	get: () => parentProject.value || new ProjectModel(),
 	set: (value: IProject) => {
 		parentProject.value = value.id === 0 ? null : value
-	}
+	},
 })
 
 async function duplicate() {
