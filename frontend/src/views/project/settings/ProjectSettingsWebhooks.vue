@@ -33,8 +33,8 @@ const showNewForm = ref(false)
 async function loadProject(projectId: number) {
 	const projectService = new ProjectService()
 	const newProject = await projectService.get(new ProjectModel({id: projectId}))
-	await useBaseStore().handleSetCurrentProject({project: newProject})
-	project.value = newProject
+	await useBaseStore().handleSetCurrentProject({project: newProject as any})
+	project.value = newProject as IProject
 	await loadWebhooks()
 }
 
@@ -46,7 +46,7 @@ const projectId = computed(() => route.params.projectId !== undefined
 
 watchEffect(() => projectId.value !== undefined && loadProject(projectId.value))
 
-const webhooks = ref<IWebhook[]>()
+const webhooks = ref<IWebhook[]>([])
 const webhookService = new WebhookService()
 const availableEvents = ref<string[]>()
 
@@ -62,7 +62,7 @@ async function deleteWebhook() {
 	await webhookService.delete({
 		id: webhookIdToDelete.value!,
 		projectId: project.value!.id,
-	})
+	} as IWebhook)
 	showDeleteModal.value = false
 	success({message: t('project.webhooks.deleteSuccess')})
 	await loadWebhooks()

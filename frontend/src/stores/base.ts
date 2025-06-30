@@ -101,7 +101,7 @@ export const useBaseStore = defineStore('base', () => {
 		{project, forceUpdate = false, currentProjectViewId = undefined}: {project: IProject | null, forceUpdate?: boolean, currentProjectViewId?: IProjectView['id']},
 	) {
 		if (project === null || typeof project === 'undefined') {
-			setCurrentProject({})
+			setCurrentProject(null)
 			setBackground('')
 			setBlurHash('')
 			return
@@ -118,7 +118,7 @@ export const useBaseStore = defineStore('base', () => {
 					}
 
 					const projectService = new ProjectService()
-					const background = await projectService.background(project)
+					const background = await projectService.background(project as any)
 					setBackground(background)
 				} catch (e) {
 					console.error('Error getting background image for project', project.id, e)
