@@ -7,7 +7,7 @@ export default class ProjectViewModel extends AbstractModel<IProjectView> implem
 	projectId = 0
 	viewKind: ProjectViewKind =  'list'
 
-	filter: IProjectView['filters'] = {
+	filter: IProjectView['filter'] = {
 		sort_by: [],
 		order_by: [],
 		filter: '',
@@ -34,7 +34,7 @@ export default class ProjectViewModel extends AbstractModel<IProjectView> implem
 	}
 
 	static createWithDefaultFilter(data: Partial<IProjectView> = {}): ProjectViewModel {
-		const defaultFilter: IProjectView['filters'] = {
+		const defaultFilter: IProjectView['filter'] = {
 			sort_by: ['done', 'id'],
 			order_by: ['asc', 'desc'],
 			filter: 'done = false',

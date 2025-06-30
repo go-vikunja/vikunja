@@ -11,7 +11,7 @@ export default class TaskCommentModel extends AbstractModel<ITaskComment> implem
 	comment = ''
 	author: IUser = new UserModel()
 	
-	reactions = {}
+	reactions: ITaskComment['reactions'] = {}
 
 	created: Date = new Date()
 	updated: Date = new Date()
