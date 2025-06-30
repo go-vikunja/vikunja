@@ -1076,6 +1076,12 @@
 			"labels": "Navegar para etiquetas",
 			"teams": "Navegar para equipas",
 			"projects": "Navegar para projetos"
+		},
+		"list": {
+			"title": "Lista de tarefas",
+			"navigateDown": "Destacar a tarefa seguinte",
+			"navigateUp": "Destacar a tarefa anterior",
+			"open": "Abrir tarefa destacada"
 		}
 	},
 	"update": {
