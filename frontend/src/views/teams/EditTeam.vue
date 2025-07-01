@@ -105,10 +105,10 @@
 				<div class="field has-addons">
 					<div class="control is-expanded">
 						<Multiselect
-							v-model="newMember as any"
+							v-model="newMember"
 							:loading="userService.loading"
 							:placeholder="$t('team.edit.search')"
-							:search-results="foundUsers as any"
+							:search-results="foundUsers"
 							label="username"
 							@search="findUser"
 						>
@@ -272,6 +272,7 @@ import TeamService from '@/services/team'
 import TeamMemberService from '@/services/teamMember'
 import UserService from '@/services/user'
 import TeamModel from '@/models/team'
+import UserModel from '@/models/user'
 
 import {RIGHTS as Rights} from '@/constants/rights'
 
@@ -320,7 +321,7 @@ const title = ref('')
 loadTeam()
 
 async function loadTeam() {
-	team.value = await teamService.value.get(new TeamModel({id: teamId.value}) as any)
+	team.value = await teamService.value.get(new TeamModel({id: teamId.value}))
 	title.value = t('team.edit.title', {team: team.value?.name})
 	useTitle(() => title.value)
 }
@@ -332,7 +333,7 @@ async function save() {
 	}
 	showErrorTeamnameRequired.value = false
 
-	team.value = await teamService.value.update(team.value! as any)
+	team.value = await teamService.value.update(team.value!)
 	success({message: t('team.edit.success')})
 }
 
@@ -347,7 +348,7 @@ async function deleteMember() {
 		await teamMemberService.value.delete({
 			teamId: teamId.value,
 			username: memberToDelete.value!.username,
-		} as any)
+		})
 		success({message: t('team.edit.deleteUser.success')})
 		await loadTeam()
 	} finally {
@@ -394,7 +395,7 @@ async function findUser(query: string) {
 		return
 	}
 
-	const users = await userService.value.getAll({} as any, {s: query})
+	const users = await userService.value.getAll(new UserModel(), {s: query})
 	foundUsers.value = users.filter((u: IUser) => u.id !== userInfo.value?.id)
 }
 
@@ -403,7 +404,7 @@ async function leave() {
 		await teamMemberService.value.delete({
 			teamId: teamId.value,
 			username: userInfo.value!.username,
-		} as any)
+		})
 		success({message: t('team.edit.leave.success')})
 		await router.push({name: 'home'})
 	} finally {
