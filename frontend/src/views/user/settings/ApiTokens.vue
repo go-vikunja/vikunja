@@ -22,7 +22,7 @@ const availableRoutes = ref<{[key: string]: string[]} | null>(null)
 const newToken = ref<IApiToken>(new ApiTokenModel() as unknown as IApiToken)
 const newTokenExpiry = ref<string | number>(30)
 const newTokenExpiryCustom = ref(new Date())
-const newTokenPermissions = ref<{[key: string]: boolean}>({})
+const newTokenPermissions = ref<{[key: string]: {[key: string]: boolean}}>({})
 const newTokenPermissionsGroup = ref<{[key: string]: boolean}>({})
 const newTokenTitleValid = ref(true)
 const newTokenPermissionValid = ref(true)
@@ -47,7 +47,7 @@ const flatPickerConfig = computed(() => ({
 }))
 
 onMounted(async () => {
-	tokens.value = await service.getAll({})
+	tokens.value = await service.getAll(new ApiTokenModel() as IApiToken)
 	const allRoutes = await service.getAvailableRoutes()
 
 	const routesAvailable: {[key: string]: string[]} = {}
@@ -63,11 +63,11 @@ onMounted(async () => {
 })
 
 function resetPermissions() {
-	newTokenPermissions.value = {}
+	newTokenPermissions.value = {} as {[key: string]: {[key: string]: boolean}}
 	if (!availableRoutes.value) return
 	Object.entries(availableRoutes.value).forEach(entry => {
 		const [group, routes] = entry
-		newTokenPermissions.value[group] = {}
+		newTokenPermissions.value[group] = {} as {[key: string]: boolean}
 		Object.keys(routes).forEach(r => {
 			newTokenPermissions.value[group][r] = false
 		})
