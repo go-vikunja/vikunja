@@ -97,7 +97,7 @@
 									:ref="e => setFieldRef('priority', e)"
 									v-model="task.priority"
 									:disabled="!canWrite"
-									@update:modelValue="(priority: Priority) => setPriority(priority)"
+									@update:modelValue="(priority: number) => setPriority(priority as Priority)"
 								/>
 							</div>
 						</CustomTransition>
@@ -421,7 +421,7 @@
 							entity="task"
 							:entity-id="task.id"
 							:model-value="task.subscription"
-							@update:modelValue="(sub: ISubscription) => task.subscription = sub"
+							@update:modelValue="(sub: ISubscription | null) => { if (sub) task.subscription = sub }"
 						/>
 						<XButton
 							v-shortcut="'s'"
@@ -602,6 +602,7 @@ import TaskModel from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
 import type {IProject} from '@/modelTypes/IProject'
 import type {ISubscription} from '@/modelTypes/ISubscription'
+import type {AttachmentUploadResponse} from '@/types/service-types'
 
 import {PRIORITIES, type Priority} from '@/constants/priorities'
 import {RIGHTS} from '@/constants/rights'
@@ -719,8 +720,11 @@ const color = computed(() => {
 
 const isModal = computed(() => Boolean(props.backdropView))
 
-function attachmentUpload(file: File, onSuccess?: (url: string) => void) {
-	return uploadFile(props.taskId, file, onSuccess)
+async function attachmentUpload(file: File, onSuccess?: (url: string) => void): Promise<string> {
+	await uploadFile(props.taskId, file, onSuccess)
+	// uploadFile handles the onSuccess callback internally, we just need to return something
+	// The AttachmentUploadFunction expects a Promise<string>, but the actual value isn't used
+	return ''
 }
 
 const heading = ref<HTMLElement | null>(null)
@@ -740,7 +744,7 @@ watch(
 		}
 
 		try {
-			const loaded = await taskService.get({id} as Pick<ITask, 'id'>, {expand: ['reactions', 'comments']})
+			const loaded = await taskService.get(new TaskModel({id}), {expand: ['reactions', 'comments']})
 			Object.assign(task.value, loaded)
 			attachmentStore.set(task.value.attachments)
 			taskColor.value = task.value.hexColor
@@ -826,7 +830,8 @@ const activeFieldElements: { [id in FieldType]: HTMLElement | null } = reactive(
 })
 
 function setFieldRef(name: keyof typeof activeFieldElements, e: Element | ComponentPublicInstance | null) {
-	activeFieldElements[name] = unrefElement(e)
+	const element = unrefElement(e as any)
+	activeFieldElements[name] = (element instanceof HTMLElement) ? element : null
 }
 
 function setFieldActive(fieldName: keyof typeof activeFields) {
