@@ -41,7 +41,7 @@ export function useGanttTaskList<F extends Filters>(
 			params.filter_timezone = authStore.settings.timezone
 		}
 		
-		const tasks = await taskCollectionService.getAll({projectId: filters.value.projectId, viewId: viewId.value} as any, params, page) as ITask[]
+		const tasks = await taskCollectionService.getAll({projectId: filters.value.projectId, viewId: viewId.value} as any, params as unknown as Record<string, unknown>, page) as ITask[]
 		if (loadAll && page < taskCollectionService.totalPages) {
 			const nextTasks = await fetchTasks(params, page + 1)
 			return tasks.concat(nextTasks)
