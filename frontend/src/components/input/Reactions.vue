@@ -145,7 +145,7 @@ async function toggleReaction(value: string) {
 		class="reactions"
 	>
 		<BaseButton
-			v-for="(users, value) in (model as IReactionPerEntity)"
+			v-for="(users, value) in model"
 			:key="'button' + String(value)"
 			v-tooltip="getReactionTooltip(users, String(value))"
 			class="reaction-button"

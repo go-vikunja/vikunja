@@ -39,7 +39,7 @@
 
 					<ColorBubble
 						v-if="task.hexColor !== ''"
-						:color="getHexColor(task.hexColor) as any"
+						:color="getHexColor(task.hexColor)"
 						class="mr-1"
 					/>
 	

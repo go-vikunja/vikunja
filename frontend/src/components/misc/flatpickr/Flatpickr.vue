@@ -30,7 +30,7 @@ function arrayify<T = unknown>(obj: T) {
 }
 
 function nullify<T = unknown>(value: T) {
-	return (value && (value as unknown[]).length)
+	return (value && Array.isArray(value) && value.length) || (value && typeof value === 'string' && value.length)
 		? value
 		: null
 }
@@ -144,7 +144,7 @@ onMounted(() => {
 	 * Bind on parent element if wrap is true
 	 */
 	const element = props.config.wrap
-		? root.value.parentNode
+		? root.value?.parentNode as Element
 		: root.value
 
 	// Init flatpickr
