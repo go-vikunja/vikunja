@@ -6,6 +6,7 @@ import BaseButton from './BaseButton.vue'
 
 function setupApp({ app }: { app: Record<string, unknown> }) {
 	// Router mock
+	// @ts-expect-error
 	app.use(createRouter({
 		history: createMemoryHistory(),
 		routes: [

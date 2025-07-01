@@ -22,7 +22,7 @@ export function objectToCamelCase(object: Record<string, unknown>): Record<strin
 
 		// Call it again for arrays
 		if (Array.isArray(object[m])) {
-				parsedObject[camelCase(m)] = (object[m] as unknown[]).map((o: Record<string, unknown>) => objectToCamelCase(o))
+			parsedObject[camelCase(m)] = (object[m] as unknown[]).map((o: Record<string, unknown>) => objectToCamelCase(o))
 			// Because typeof [] === 'object' is true for arrays, we leave the loop here to prevent converting arrays to objects.
 			continue
 		}
@@ -60,7 +60,7 @@ export function objectToSnakeCase(object: Record<string, unknown>): Record<strin
 
 		// Call it again for arrays
 		if (Array.isArray(object[m])) {
-				parsedObject[snakeCase(m)] = (object[m] as unknown[]).map((o: Record<string, unknown>) => objectToSnakeCase(o))
+			parsedObject[snakeCase(m)] = (object[m] as unknown[]).map((o: Record<string, unknown>) => objectToSnakeCase(o))
 			// Because typeof [] === 'object' is true for arrays, we leave the loop here to prevent converting arrays to objects.
 			continue
 		}

@@ -3,7 +3,7 @@ import type {IProjectView} from '@/modelTypes/IProjectView'
 import type {IFilters} from '@/modelTypes/ISavedFilter'
 import XButton from '@/components/input/Button.vue'
 import FilterInput from '@/components/project/partials/FilterInput.vue'
-import {onBeforeMount, ref} from 'vue'
+import {onBeforeMount, ref, toRaw} from 'vue'
 import {hasFilterQuery, transformFilterStringForApi, transformFilterStringFromApi} from '@/helpers/filters'
 import {useLabelStore} from '@/stores/labels'
 import {useProjectStore} from '@/stores/projects'
@@ -23,7 +23,7 @@ const emit = defineEmits<{
 	'cancel': [],
 }>()
 
-const view = ref<IProjectView>({...props.modelValue})
+const view = ref<IProjectView>({...toRaw(props.modelValue)})
 
 const labelStore = useLabelStore()
 const projectStore = useProjectStore()
