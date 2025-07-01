@@ -602,7 +602,6 @@ import TaskModel from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
 import type {IProject} from '@/modelTypes/IProject'
 import type {ISubscription} from '@/modelTypes/ISubscription'
-import type {AttachmentUploadResponse} from '@/types/service-types'
 
 import {PRIORITIES, type Priority} from '@/constants/priorities'
 import {RIGHTS} from '@/constants/rights'
@@ -830,7 +829,7 @@ const activeFieldElements: { [id in FieldType]: HTMLElement | null } = reactive(
 })
 
 function setFieldRef(name: keyof typeof activeFieldElements, e: Element | ComponentPublicInstance | null) {
-	const element = unrefElement(e as any)
+	const element = unrefElement(e as Element | ComponentPublicInstance | null)
 	activeFieldElements[name] = (element instanceof HTMLElement) ? element : null
 }
 
