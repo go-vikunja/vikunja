@@ -3,6 +3,7 @@ import TaskModel from '@/models/task'
 
 import type {ITask} from '@/modelTypes/ITask'
 import BucketModel from '@/models/bucket'
+import type {IBucket} from '@/modelTypes/IBucket'
 
 export type ExpandTaskFilterParam = 'subtasks' | 'buckets' | 'reactions' | null
 
@@ -44,7 +45,7 @@ export default class TaskCollectionService extends AbstractService<ITask> {
 		return super.getReplacedRoute(path, pathparams)
 	}
 
-	modelFactory(data: any): any {
+	modelFactory(data: Partial<ITask | IBucket>): ITask | IBucket {
 		// FIXME: There must be a better way for this…
 		if (typeof data.project_view_id !== 'undefined') {
 			return new BucketModel(data)

@@ -9,7 +9,7 @@ export default class UserService extends AbstractService<IUser> {
 		})
 	}
 
-	modelFactory(data: any): IUser {
-		return new UserModel(data) as IUser
+	modelFactory(data: Partial<IUser>): IUser {
+		return new UserModel(data)
 	}
 }
