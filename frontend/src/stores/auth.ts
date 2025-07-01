@@ -176,7 +176,7 @@ export const useAuthStore = defineStore('auth', () => {
 
 			// Tell others the user is authenticated
 			await checkAuth()
-		} catch (e: any) {
+		} catch (e: unknown) {
 			if (
 				e.response &&
 				e.response.data.code === 1017 &&
@@ -195,7 +195,7 @@ export const useAuthStore = defineStore('auth', () => {
 	 * Registers a new user and logs them in.
 	 * Not sure if this is the right place to put the logic in, maybe a separate js component would be better suited. 
 	 */
-	async function register(credentials: any, language: string|null = null) {
+	async function register(credentials: ILoginCredentials & {email: string}, language: string|null = null) {
 		const HTTP = HTTPFactory()
 		setIsLoading(true)
 		
@@ -209,7 +209,7 @@ export const useAuthStore = defineStore('auth', () => {
 				language,
 			})
 			return login(credentials)
-		} catch (e: any) {
+		} catch (e: unknown) {
 			if (e.response?.data?.code === 2002 && e.response?.data?.invalid_fields[0]?.startsWith('language:')) {
 				return register(credentials, 'en')
 			}
@@ -224,7 +224,7 @@ export const useAuthStore = defineStore('auth', () => {
 		}
 	}
 
-	async function openIdAuth({provider, code}: {provider: any, code: any}) {
+	async function openIdAuth({provider, code}: {provider: string, code: string}) {
 		const HTTP = HTTPFactory()
 		setIsLoading(true)
 		setLoggedInVia(null)
@@ -251,7 +251,7 @@ export const useAuthStore = defineStore('auth', () => {
 		}
 	}
 
-	async function linkShareAuth({hash, password}: {hash: any, password: any}) {
+	async function linkShareAuth({hash, password}: {hash: string, password: string}) {
 		const HTTP = HTTPFactory()
 		const response = await HTTP.post('/shares/' + hash + '/auth', {
 			password: password,
@@ -332,14 +332,14 @@ export const useAuthStore = defineStore('auth', () => {
 			updateLastUserRefresh()
 
 			return newUser
-		} catch (e: any) {
+		} catch (e: unknown) {
 			if((e?.response?.status >= 400 && e?.response?.status < 500) ||
 				e?.response?.data?.message === 'missing, malformed, expired or otherwise invalid token provided') {
 				await logout()
 				return
 			}
 			
-			const cause: any = {e}
+			const cause: {e: unknown} = {e}
 			
 			if (typeof e?.response?.data?.message !== 'undefined') {
 				cause.message = e.response.data.message
@@ -425,7 +425,7 @@ export const useAuthStore = defineStore('auth', () => {
 			try {
 				await refreshToken(!isLinkShareAuth.value)
 				await checkAuth()
-			} catch (e: any) {
+			} catch (e: unknown) {
 				// Don't logout on network errors as the user would then get logged out if they don't have
 				// internet for a short period of time - such as when the laptop is still reconnecting
 				if (e?.request?.status) {
