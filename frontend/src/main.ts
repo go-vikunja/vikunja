@@ -63,7 +63,7 @@ setLanguage(browserLanguage).then(() => {
 	app.directive('cy', cypress)
 
 	app.component('Icon', FontAwesomeIcon)
-	// @ts-ignore
+	// @ts-expect-error: Component registration type issue
 	app.component('XButton', Button)
 	app.component('Modal', Modal)
 	app.component('Card', Card)

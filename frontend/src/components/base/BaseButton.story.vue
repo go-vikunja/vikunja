@@ -6,7 +6,7 @@ import BaseButton from './BaseButton.vue'
 
 function setupApp({ app }: { app: Record<string, unknown> }) {
 	// Router mock
-	// @ts-expect-error
+	// @ts-expect-error: Type mismatch in story environment
 	app.use(createRouter({
 		history: createMemoryHistory(),
 		routes: [
