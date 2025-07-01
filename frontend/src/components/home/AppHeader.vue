@@ -37,7 +37,7 @@
 			<ProjectSettingsDropdown
 				v-if="canWriteCurrentProject && currentProject.id !== -1"
 				class="project-title-dropdown"
-				:project="currentProject"
+				:project="currentProject as IProject"
 			>
 				<template #trigger="{ toggleOpen }">
 					<BaseButton
@@ -129,6 +129,7 @@ import OpenQuickActions from '@/components/misc/OpenQuickActions.vue'
 
 import { getProjectTitle } from '@/helpers/getProjectTitle'
 import { isEditorContentEmpty } from '@/helpers/editorContentEmpty'
+import type { IProject } from '@/modelTypes/IProject'
 
 import { useBaseStore } from '@/stores/base'
 import { useConfigStore } from '@/stores/config'

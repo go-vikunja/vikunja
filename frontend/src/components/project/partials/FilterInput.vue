@@ -260,11 +260,16 @@ function handleFieldInput() {
 	})
 }
 
-function autocompleteSelect(value: Record<string, unknown>) {
+function autocompleteSelect(value: string | undefined | Record<string, unknown>) {
+	if (typeof value === 'string' || value === undefined) {
+		return // Handle string case if needed
+	}
+	
+	const valueObj = value as Record<string, unknown>
 	filterQuery.value = filterQuery.value.substring(0, autocompleteMatchPosition.value + 1) +
 		(autocompleteResultType.value === 'assignees'
-			? value.username
-			: value.title) +
+			? valueObj.username
+			: valueObj.title) +
 		filterQuery.value.substring(autocompleteMatchPosition.value + autocompleteMatchText.value.length + 1)
 
 	autocompleteResults.value = []

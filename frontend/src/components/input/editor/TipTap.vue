@@ -355,7 +355,6 @@ const PasteHandler = Extension.create({
 						// Handle images pasted from clipboard
 						if (typeof props.uploadCallback !== 'undefined' && event.clipboardData?.items && event.clipboardData.items.length > 0) {
 
-							// @ts-expect-error - DataTransferItemList iterator is not fully supported in TypeScript
 							for (const item of event.clipboardData.items) {
 								if (item.kind === 'file' && item.type.startsWith('image/')) {
 									const file = item.getAsFile()
