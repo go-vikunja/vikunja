@@ -8,8 +8,10 @@ export default class TotpService extends AbstractService<ITotp> {
 	urlPrefix = '/user/settings/totp'
 
 	constructor() {
-		super({})
+		const urlPrefix = '/user/settings/totp'
+		super({get: urlPrefix})
 
+		this.urlPrefix = urlPrefix
 		this.paths.get = this.urlPrefix
 	}
 
@@ -18,15 +20,15 @@ export default class TotpService extends AbstractService<ITotp> {
 	}
 
 	enroll(): Promise<ITotp> {
-		return this.post(`${this.urlPrefix}/enroll`, {})
+		return this.post(`${this.urlPrefix}/enroll`, new TotpModel())
 	}
 
 	enable(passcode: ITotpPasscode): Promise<{message: string}> {
-		return this.post(`${this.urlPrefix}/enable`, passcode)
+		return this.post(`${this.urlPrefix}/enable`, passcode as unknown as ITotp) as unknown as Promise<{message: string}>
 	}
 
 	disable(credentials: ITotpDisable): Promise<{message: string}> {
-		return this.post(`${this.urlPrefix}/disable`, credentials)
+		return this.post(`${this.urlPrefix}/disable`, credentials as unknown as ITotp) as unknown as Promise<{message: string}>
 	}
 
 	async qrcode() {

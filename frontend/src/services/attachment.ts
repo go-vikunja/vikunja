@@ -1,7 +1,7 @@
 import AbstractService from './abstractService'
 import AttachmentModel from '../models/attachment'
 
-import type { IAttachment } from '@/modelTypes/IAttachment'
+import type { IAttachment, IAttachmentUploadResponse } from '@/modelTypes/IAttachment'
 import type { Method } from 'axios'
 
 import {downloadBlob} from '@/helpers/downloadBlob'
@@ -37,17 +37,23 @@ export default class AttachmentService extends AbstractService<IAttachment> {
 		return new AttachmentModel(data)
 	}
 
-	modelCreateFactory(data: Partial<IAttachment>) {
+	modelCreateFactory(data: Partial<IAttachment> | IAttachmentUploadResponse): IAttachment | IAttachmentUploadResponse {
+		// If this is an upload response (has success/errors properties), process it specially
+		if (typeof data === 'object' && data !== null && ('success' in data || 'errors' in data)) {
+			return this.processUploadResponse(data as IAttachmentUploadResponse)
+		}
 		// For standard create operations, use the base factory
-		return this.modelFactory(data)
+		return this.modelFactory(data as Partial<IAttachment>)
 	}
 
 	// Special factory for file upload responses
-	processUploadResponse(data: {success: Partial<IAttachment>[] | null}) {
+	processUploadResponse(data: IAttachmentUploadResponse): IAttachmentUploadResponse {
 		// Success contains the uploaded attachments
-		data.success = (data.success === null ? [] : data.success).map((a: Partial<IAttachment>) => {
-			return this.modelFactory(a)
-		})
+		if (data.success) {
+			data.success = data.success.map((a: Partial<IAttachment>) => {
+				return this.modelFactory(a)
+			})
+		}
 		return data
 	}
 
@@ -55,7 +61,7 @@ export default class AttachmentService extends AbstractService<IAttachment> {
 	getBlobUrl(url: string, method?: string, data?: unknown): Promise<unknown>
 	getBlobUrl(modelOrUrl: IAttachment | string, sizeOrMethod?: PREVIEW_SIZE | string, data?: unknown): Promise<unknown> {
 		if (typeof modelOrUrl === 'string') {
-			return super.getBlobUrl(modelOrUrl, sizeOrMethod as Method, data)
+			return super.getBlobUrl(modelOrUrl, sizeOrMethod as Method, data as {} | undefined)
 		}
 		
 		const model = modelOrUrl
@@ -75,11 +81,11 @@ export default class AttachmentService extends AbstractService<IAttachment> {
 	/**
 	 * Uploads a file to the server
 	 * @param files
-	 * @returns {Promise<any|never>}
+	 * @returns {Promise<IAttachment|IAttachmentUploadResponse>}
 	 */
 	create(model: IAttachment): Promise<IAttachment>
-	create(model: IAttachment, files: File[] | FileList): Promise<unknown>
-	create(model: IAttachment, files?: File[] | FileList): Promise<unknown> {
+	create(model: IAttachment, files: File[] | FileList): Promise<IAttachmentUploadResponse>
+	create(model: IAttachment, files?: File[] | FileList): Promise<IAttachment | IAttachmentUploadResponse> {
 		if (!files) {
 			return super.create(model)
 		}
