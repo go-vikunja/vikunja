@@ -63,7 +63,7 @@
 							:key="key"
 							:ref="(el: Element | ComponentPublicInstance | null) => setResultRefs(el, k, Number(key))"
 							class="result-item-button"
-							:class="{'is-strikethrough': (i as any)?.done}"
+							:class="{'is-strikethrough': i.done}"
 							@keydown.up.prevent="select(k, Number(key) - 1)"
 							@keydown.down.prevent="select(k, Number(key) + 1)"
 							@click.prevent.stop="doAction(r.type, i)"
@@ -71,22 +71,22 @@
 							@keyup.prevent.esc="searchInput?.focus()"
 						>
 							<template v-if="r.type === ACTION_TYPE.LABELS && i">
-								<XLabel :label="i as any" />
+								<XLabel :label="i as unknown as ILabel" />
 							</template>
 							<template v-else-if="r.type === ACTION_TYPE.TASK && i">
 								<SingleTaskInlineReadonly
-									:task="i as any"
+									:task="i as unknown as ITask"
 									:show-project="true"
 								/>
 							</template>
 							<template v-else>
 								<span
-									v-if="i && (i as any).id < -1"
+									v-if="i && i.id < -1"
 									class="saved-filter-icon icon"
 								>
 									<Icon icon="filter" />
 								</span>
-								{{ i ? (i as any).title : '' }}
+								{{ i ? i.title : '' }}
 							</template>
 						</BaseButton>
 					</div>
@@ -125,6 +125,8 @@ import {success} from '@/message'
 import type {ITeam} from '@/modelTypes/ITeam'
 import type {ITask} from '@/modelTypes/ITask'
 import type {IProject} from '@/modelTypes/IProject'
+import type {ILabel} from '@/modelTypes/ILabel'
+import TaskModel from '@/models/task'
 import {isSavedFilter} from '@/services/savedFilter'
 
 const {t} = useI18n({useScope: 'global'})
@@ -137,6 +139,13 @@ const taskStore = useTaskStore()
 const authStore = useAuthStore()
 
 type DoAction<Type> = { type: ACTION_TYPE } & Type
+
+interface SearchResult {
+	id: number
+	title: string
+	done?: boolean
+	[key: string]: unknown
+}
 
 enum ACTION_TYPE {
 	CMD = 'cmd',
@@ -223,7 +232,7 @@ const foundCommands = computed(() => availableCmds.value.filter((a) =>
 interface Result {
 	type: ACTION_TYPE
 	title: string
-	items: Record<string, unknown>[]
+	items: SearchResult[]
 }
 
 const results = computed<Result[]>(() => {
@@ -441,8 +450,10 @@ function searchTeams() {
 		)
 		const teamsResult = await Promise.all(teamSearchPromises)
 		foundTeams.value = teamsResult.flat().map((team) => {
-			(team as Record<string, unknown>).title = team.name
-			return team
+			return {
+				...team,
+				title: team.name,
+			}
 		})
 	}, 150)
 }
@@ -454,32 +465,32 @@ function search() {
 
 const searchInput = ref<HTMLElement | null>(null)
 
-async function doAction(type: ACTION_TYPE, item: DoAction<Record<string, unknown>>) {
+async function doAction(type: ACTION_TYPE, item: SearchResult) {
 	switch (type) {
 		case ACTION_TYPE.PROJECT:
 			closeQuickActions()
 			await router.push({
 				name: 'project.index',
-				params: {projectId: (item as DoAction<IProject>).id},
+				params: {projectId: item.id},
 			})
 			break
 		case ACTION_TYPE.TASK:
 			closeQuickActions()
 			await router.push({
 				name: 'task.detail',
-				params: {id: (item as DoAction<ITask>).id},
+				params: {id: item.id},
 			})
 			break
 		case ACTION_TYPE.TEAM:
 			closeQuickActions()
 			await router.push({
 				name: 'teams.edit',
-				params: {id: (item as DoAction<ITeam>).id},
+				params: {id: item.id},
 			})
 			break
 		case ACTION_TYPE.CMD:
 			query.value = ''
-			selectedCmd.value = item as DoAction<Command>
+			selectedCmd.value = item as unknown as Command
 			searchInput.value?.focus()
 			break
 		case ACTION_TYPE.LABELS:
@@ -497,7 +508,7 @@ async function doAction(type: ACTION_TYPE, item: DoAction<Record<string, unknown
 async function doCmd() {
 	if (results.value.length === 1 && results.value[0].items.length === 1) {
 		const result = results.value[0]
-		doAction(result.type, result.items[0])
+		doAction(result.type, result.items[0] as SearchResult)
 		return
 	}
 
@@ -533,7 +544,7 @@ async function newProject() {
 
 async function newTeam() {
 	const newTeam = new TeamModel({name: query.value})
-	const team = await teamService.create(newTeam as ITeam)
+	const team = await teamService.create(newTeam)
 	await router.push({
 		name: 'teams.edit',
 		params: {id: team.id},
