@@ -44,7 +44,7 @@ import {success} from '@/message'
 import {useTaskStore} from '@/stores/tasks'
 
 import type {IUser} from '@/modelTypes/IUser'
-import {getDisplayName} from '@/models/user'
+import UserModel, {getDisplayName} from '@/models/user'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 
 const props = withDefaults(defineProps<{
@@ -108,7 +108,7 @@ async function removeAssignee(user: IUser) {
 }
 
 async function findUser(query: string) {
-	const response = await projectUserService.getAll({} as any, {projectId: props.projectId, s: query}) as IUser[]
+	const response = await projectUserService.getAll(new UserModel(), {projectId: props.projectId, s: query}) as IUser[]
 
 	// Filter the results to not include users who are already assigned
 	foundUsers.value = response
