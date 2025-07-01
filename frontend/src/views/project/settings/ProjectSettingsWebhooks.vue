@@ -33,7 +33,7 @@ const showNewForm = ref(false)
 async function loadProject(projectId: number) {
 	const projectService = new ProjectService()
 	const newProject = await projectService.get(new ProjectModel({id: projectId}))
-	await useBaseStore().handleSetCurrentProject({project: newProject as any})
+	await useBaseStore().handleSetCurrentProject({project: newProject})
 	project.value = newProject as IProject
 	await loadWebhooks()
 }
@@ -51,7 +51,7 @@ const webhookService = new WebhookService()
 const availableEvents = ref<string[]>()
 
 async function loadWebhooks() {
-	webhooks.value = await webhookService.getAll({projectId: project.value!.id} as any)
+	webhooks.value = await webhookService.getAll(new WebhookModel({projectId: project.value!.id}))
 	availableEvents.value = await webhookService.getAvailableEvents()
 }
 
@@ -79,7 +79,7 @@ async function create() {
 	}
 
 	const selectedEvents = getSelectedEventsArray()
-	newWebhook.value.events = selectedEvents as any
+	newWebhook.value.events = selectedEvents
 
 	validateSelectedEvents()
 	if (!selectedEventsValid.value) {
@@ -87,7 +87,7 @@ async function create() {
 	}
 
 	newWebhook.value.projectId = project.value!.id
-	const created = await webhookService.create(newWebhook.value as any)
+	const created = await webhookService.create(newWebhook.value)
 	webhooks.value!.push(created)
 	newWebhook.value = new WebhookModel()
 	showNewForm.value = false

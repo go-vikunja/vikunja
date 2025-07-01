@@ -209,8 +209,7 @@ function updateDateInQuery(newDate: string | Date | null) {
 const autocompleteMatchPosition = ref(0)
 const autocompleteMatchText = ref('')
 const autocompleteResultType = ref<'labels' | 'assignees' | 'projects' | null>(null)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const autocompleteResults = ref<any[]>([])
+const autocompleteResults = ref<Record<string, unknown>[]>([])
 
 function handleFieldInput() {
 	if (!filterInput.value) return
@@ -265,7 +264,7 @@ function autocompleteSelect(value: string | undefined | Record<string, unknown>)
 		return // Handle string case if needed
 	}
 	
-	const valueObj = value as Record<string, unknown>
+	const valueObj = value
 	filterQuery.value = filterQuery.value.substring(0, autocompleteMatchPosition.value + 1) +
 		(autocompleteResultType.value === 'assignees'
 			? valueObj.username

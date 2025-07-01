@@ -12,7 +12,7 @@
 
 			<ColorBubble
 				v-if="task.hexColor !== ''"
-				:color="getHexColor(task.hexColor) as any"
+				:color="getHexColor(task.hexColor)"
 				class="mr-1"
 			/>
 
@@ -26,7 +26,7 @@
 				v-if="typeof task.relatedTasks?.parenttask !== 'undefined'"
 				class="parent-tasks"
 			>
-				<template v-for="(pt, i) in task.relatedTasks.parenttask">
+				<template v-for="(pt, i) in task.relatedTasks.parenttask" :key="pt.id">
 					{{ pt.title }}<template v-if="(i + 1) < task.relatedTasks.parenttask.length">,&nbsp;</template>
 				</template>
 				&rsaquo;

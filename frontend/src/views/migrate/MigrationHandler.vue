@@ -163,7 +163,7 @@ async function initMigration() {
 		return
 	}
 
-	authUrl.value = await migrationService.getAuthUrl().then((result: any) => result.url)
+	authUrl.value = await migrationService.getAuthUrl().then((result: {url: string}) => result.url)
 
 	const TOKEN_HASH_PREFIX = '#token='
 	migratorAuthCode.value = location.hash.startsWith(TOKEN_HASH_PREFIX)
@@ -173,7 +173,7 @@ async function initMigration() {
 	if (!migratorAuthCode.value) {
 		return
 	}
-	const status = await migrationService.getStatus() as any
+	const status = await migrationService.getStatus() as {started_at?: string, finished_at?: string}
 	const {started_at, finished_at} = status
 	if (started_at) {
 		lastMigrationStartedAt.value = parseDateOrNull(started_at)
@@ -217,7 +217,7 @@ async function migrate() {
 
 	try {
 		if (migrator.value.isFileMigrator) {
-			const result = await migrationFileService.migrate(migrationConfig as File) as any
+			const result = await migrationFileService.migrate(migrationConfig as File) as {message: string}
 			message.value = result.message
 			const projectStore = useProjectStore()
 			return projectStore.loadAllProjects()
