@@ -308,7 +308,6 @@ async function markAsDone(checked: boolean, wasReverted: boolean = false) {
 		updateDueDate()
 
 		if (wasReverted) {
-			success({message: t('task.revertSuccess')})
 			return
 		}
 
