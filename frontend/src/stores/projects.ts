@@ -213,7 +213,7 @@ export const useProjectStore = defineStore('project', () => {
 		let page = 1
 		try {
 			do {
-				const newProjects = await projectService.getAll({} as any, {is_archived: true, expand: 'rights'}, page) as IProject[]
+				const newProjects = await projectService.getAll(new ProjectModel(), {is_archived: true, expand: 'rights'}, page) as IProject[]
 				loadedProjects.push(...newProjects)
 				page++
 			} while (page <= projectService.totalPages)
@@ -320,12 +320,12 @@ export function useProject(projectId: MaybeRefOrGetter<IProject['id']>) {
 
 		const duplicate = await projectDuplicateService.create(projectDuplicate)
 		if (duplicate.duplicatedProject) {
-			(duplicate.duplicatedProject as any).maxRight = RIGHTS.ADMIN
+			(duplicate.duplicatedProject as IProject).maxRight = RIGHTS.ADMIN
 		}
 
 		projectStore.setProject(duplicate.duplicatedProject as IProject)
 		success({message: t('project.duplicate.success')})
-		router.push({name: 'project.index', params: {projectId: (duplicate.duplicatedProject as any).id}})
+		router.push({name: 'project.index', params: {projectId: (duplicate.duplicatedProject as IProject).id}})
 	}
 
 	return {
