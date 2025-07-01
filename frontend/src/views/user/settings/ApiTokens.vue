@@ -47,7 +47,7 @@ const flatPickerConfig = computed(() => ({
 }))
 
 onMounted(async () => {
-	tokens.value = await service.getAll(new ApiTokenModel() as IApiToken)
+	tokens.value = await service.getAll(new ApiTokenModel() as unknown as IApiToken)
 	const allRoutes = await service.getAvailableRoutes()
 
 	const routesAvailable: {[key: string]: string[]} = {}

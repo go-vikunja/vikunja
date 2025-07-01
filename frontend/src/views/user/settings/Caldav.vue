@@ -109,6 +109,7 @@ import {success} from '@/message'
 import BaseButton from '@/components/base/BaseButton.vue'
 import Message from '@/components/misc/Message.vue'
 import CaldavTokenService from '@/services/caldavToken'
+import CaldavTokenModel from '@/models/caldavToken'
 import { formatDateShort } from '@/helpers/time/formatDate'
 import type {ICaldavToken} from '@/modelTypes/ICaldavToken'
 import {useConfigStore} from '@/stores/config'
@@ -122,7 +123,7 @@ useTitle(() => `${t('user.settings.caldav.title')} - ${t('user.settings.title')}
 const service = shallowReactive(new CaldavTokenService())
 const tokens = ref<ICaldavToken[]>([])
 
-service.getAll({}).then((result: ICaldavToken[]) => {
+service.getAll(new CaldavTokenModel({})).then((result: ICaldavToken[]) => {
 	tokens.value = result
 })
 

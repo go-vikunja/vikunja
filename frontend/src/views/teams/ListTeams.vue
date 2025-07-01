@@ -44,6 +44,7 @@ import {ref, shallowReactive} from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import TeamService from '@/services/team'
+import TeamModel from '@/models/team'
 import { useTitle } from '@/composables/useTitle'
 import type {ITeam} from '@/modelTypes/ITeam'
 
@@ -52,7 +53,7 @@ useTitle(() => t('team.title'))
 
 const teams = ref<ITeam[]>([])
 const teamService = shallowReactive(new TeamService())
-teamService.getAll({}).then((result) => {
+teamService.getAll(new TeamModel()).then((result) => {
 	teams.value = result
 })
 </script>
