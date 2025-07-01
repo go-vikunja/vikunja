@@ -61,7 +61,7 @@ export default class AttachmentService extends AbstractService<IAttachment> {
 	getBlobUrl(url: string, method?: string, data?: unknown): Promise<unknown>
 	getBlobUrl(modelOrUrl: IAttachment | string, sizeOrMethod?: PREVIEW_SIZE | string, data?: unknown): Promise<unknown> {
 		if (typeof modelOrUrl === 'string') {
-			return super.getBlobUrl(modelOrUrl, sizeOrMethod as Method, data as {} | undefined)
+			return super.getBlobUrl(modelOrUrl, sizeOrMethod as Method, data as Record<string, unknown> | undefined)
 		}
 		
 		const model = modelOrUrl

@@ -8,6 +8,10 @@ import AutocompleteDropdown from '@/components/input/AutocompleteDropdown.vue'
 import {useLabelStore} from '@/stores/labels'
 import XLabel from '@/components/tasks/partials/Label.vue'
 import User from '@/components/misc/User.vue'
+import type {ILabel} from '@/modelTypes/ILabel'
+import type {IUser} from '@/modelTypes/IUser'
+import type {IProject} from '@/modelTypes/IProject'
+import type {IAbstract} from '@/modelTypes/IAbstract'
 import ProjectUserService from '@/services/projectUsers'
 import {useProjectStore} from '@/stores/projects'
 import {
@@ -209,7 +213,7 @@ function updateDateInQuery(newDate: string | Date | null) {
 const autocompleteMatchPosition = ref(0)
 const autocompleteMatchText = ref('')
 const autocompleteResultType = ref<'labels' | 'assignees' | 'projects' | null>(null)
-const autocompleteResults = ref<Record<string, unknown>[]>([])
+const autocompleteResults = ref<(ILabel | IUser | IProject | IAbstract)[]>([])
 
 function handleFieldInput() {
 	if (!filterInput.value) return
@@ -259,16 +263,16 @@ function handleFieldInput() {
 	})
 }
 
-function autocompleteSelect(value: string | undefined | Record<string, unknown>) {
+function autocompleteSelect(value: string | undefined | ILabel | IUser | IProject | IAbstract) {
 	if (typeof value === 'string' || value === undefined) {
 		return // Handle string case if needed
 	}
 	
-	const valueObj = value
+	const valueObj = value as ILabel | IUser | IProject | IAbstract
 	filterQuery.value = filterQuery.value.substring(0, autocompleteMatchPosition.value + 1) +
 		(autocompleteResultType.value === 'assignees'
-			? valueObj.username
-			: valueObj.title) +
+			? (valueObj as IUser).username
+			: (valueObj as ILabel | IProject).title) +
 		filterQuery.value.substring(autocompleteMatchPosition.value + autocompleteMatchText.value.length + 1)
 
 	autocompleteResults.value = []

@@ -13,7 +13,7 @@ export default class AbstractMigrationFileService extends AbstractService {
 	}
 
 	getStatus() {
-		return this.getM('/migration/' + this.serviceUrlKey + '/status', {} as any)
+		return this.getM('/migration/' + this.serviceUrlKey + '/status', {})
 	}
 	
 	useCreateInterceptor() {
