@@ -90,7 +90,7 @@ async function resetPassword() {
 		await passwordResetService.resetPassword(passwordReset)
 		successMessage.value = t('user.auth.resetPasswordSuccess')
 	} catch (e: unknown) {
-		errorMsg.value = e.response?.data?.message || t('user.auth.resetPasswordError')
+		errorMsg.value = (e instanceof Error && 'response' in e ? (e as {response: {data: {message: string}}}).response.data.message : String(e)) || t('user.auth.resetPasswordError')
 	}
 }
 </script>

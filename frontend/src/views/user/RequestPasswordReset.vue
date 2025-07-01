@@ -83,7 +83,7 @@ async function requestPasswordReset() {
 		await passwordResetService.requestResetPassword(passwordReset.value)
 		isSuccess.value = true
 	} catch (e: unknown) {
-		errorMsg.value = e.response?.data?.message || t('user.auth.requestPasswordResetError')
+		errorMsg.value = (e instanceof Error && 'response' in e ? (e as {response: {data: {message: string}}}).response.data.message : String(e)) || t('user.auth.requestPasswordResetError')
 	}
 }
 </script>
