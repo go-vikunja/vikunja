@@ -361,8 +361,14 @@ export const useAuthStore = defineStore('auth', () => {
 			try {
 				await HTTPFactory().post('user/confirm', {token: emailVerifyToken})
 				return true
-			} catch(e: any) {
-				throw new Error(e.response.data.message)
+			} catch(e: unknown) {
+				const message = e instanceof Error && 'response' in e && 
+					e.response && typeof e.response === 'object' && 
+					'data' in e.response && e.response.data &&
+					typeof e.response.data === 'object' && 'message' in e.response.data
+					? String(e.response.data.message) 
+					: 'Verification failed'
+				throw new Error(message)
 			} finally {
 				localStorage.removeItem('emailConfirmToken')
 				stopLoading()

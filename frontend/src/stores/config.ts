@@ -103,7 +103,7 @@ export const useConfigStore = defineStore('config', () => {
 			throw new InvalidApiUrlProvidedError()
 		}
 
-		setConfig(objectToCamelCase(config) as any)
+		setConfig(objectToCamelCase(config) as ConfigState)
 		return !!config
 	}
 

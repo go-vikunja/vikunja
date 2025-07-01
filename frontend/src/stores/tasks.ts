@@ -333,7 +333,7 @@ export const useTaskStore = defineStore('task', () => {
 		}
 
 		// Remove the label from the project
-		const labels = t.task.labels.filter(({ id }: any) => id !== label.id)
+		const labels = t.task.labels.filter(({ id }: ILabel) => id !== label.id)
 
 		kanbanStore.setTaskInBucketByIndex({
 			...t,

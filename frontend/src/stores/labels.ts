@@ -2,6 +2,7 @@ import {computed, readonly, ref} from 'vue'
 import {acceptHMRUpdate, defineStore} from 'pinia'
 
 import LabelService from '@/services/label'
+import LabelModel from '@/models/label'
 import {success} from '@/message'
 import {i18n} from '@/i18n'
 import {createNewIndexer} from '@/indexes'
@@ -12,7 +13,7 @@ const {add, remove, update, search} = createNewIndexer('labels', ['title', 'desc
 
 async function getAllLabels(page = 1): Promise<ILabel[]> {
 	const labelService = new LabelService()
-	const labels  = await labelService.getAll({} as any, {}, page) as ILabel[]
+	const labels  = await labelService.getAll(new LabelModel(), {}, page)
 	if (page < labelService.totalPages) {
 		const nextLabels = await getAllLabels(page + 1)
 		return labels.concat(nextLabels)

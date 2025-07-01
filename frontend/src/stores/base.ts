@@ -118,7 +118,7 @@ export const useBaseStore = defineStore('base', () => {
 					}
 
 					const projectService = new ProjectService()
-					const background = await projectService.background(project as any)
+					const background = await projectService.background(project)
 					setBackground(background)
 				} catch (e) {
 					console.error('Error getting background image for project', project.id, e)
