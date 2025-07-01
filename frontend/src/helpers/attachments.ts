@@ -1,5 +1,5 @@
 import AttachmentModel from '@/models/attachment'
-import type {IAttachment} from '@/modelTypes/IAttachment'
+import type {IAttachment, IAttachmentUploadResponse} from '@/modelTypes/IAttachment'
 
 import AttachmentService from '@/services/attachment'
 import {useTaskStore} from '@/stores/tasks'
@@ -18,10 +18,10 @@ export async function uploadFiles(
 	onSuccess?: (attachmentUrl: string) => void,
 ) {
 	const attachmentModel = new AttachmentModel({taskId})
-	const response = await attachmentService.create(attachmentModel, files)
-	console.debug(`Uploaded attachments for task ${taskId}, response was`, response as any)
+	const response = await attachmentService.create(attachmentModel, files) as IAttachmentUploadResponse
+	console.debug(`Uploaded attachments for task ${taskId}, response was`, response)
 
-	;(response as any).success?.map((attachment: IAttachment) => {
+	response.success?.forEach((attachment: IAttachment) => {
 		useTaskStore().addTaskAttachment({
 			taskId,
 			attachment,
@@ -29,8 +29,8 @@ export async function uploadFiles(
 		onSuccess?.(generateAttachmentUrl(taskId, attachment.id))
 	})
 
-	if ((response as any).errors !== null) {
-		throw Error((response as any).errors)
+	if (response.errors !== null && response.errors !== undefined && response.errors.length > 0) {
+		throw new Error(response.errors.map(error => error.message).join(', '))
 	}
 }
 
