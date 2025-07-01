@@ -39,7 +39,7 @@
 					class="field"
 				>
 					<Multiselect
-						v-model="newTaskRelation.task as any"
+						v-model="newTaskRelation.task"
 						v-focus
 						:placeholder="$t('task.relation.searchPlaceholder')"
 						:loading="taskService.loading"
@@ -249,7 +249,7 @@ const foundTasks = ref<ITask[]>([])
 
 async function findTasks(newQuery: string) {
 	query.value = newQuery
-	const result = await taskService.getAll({} as any, {
+	const result = await taskService.getAll(new TaskModel(), {
 		s: newQuery,
 		sort_by: 'done',
 	})
