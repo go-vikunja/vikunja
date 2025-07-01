@@ -11,11 +11,11 @@ export default class TeamMemberService extends AbstractService<ITeamMember> {
 		})
 	}
 
-	modelFactory(data: any) {
+	modelFactory(data: Partial<ITeamMember>): ITeamMember {
 		return new TeamMemberModel(data)
 	}
 
-	beforeCreate(model: any) {
+	beforeCreate(model: Partial<ITeamMember>): Partial<ITeamMember> {
 		model.userId = model.id // The api wants to get the user id as user_Id
 		model.admin = model.admin === null ? false : model.admin
 		return model

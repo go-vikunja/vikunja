@@ -9,11 +9,11 @@ export default class PasswordResetService extends AbstractService<IPasswordReset
 		// Note: Custom paths not available in base Paths interface
 	}
 
-	modelFactory(data: any) {
+	modelFactory(data: Partial<IPasswordReset>): IPasswordReset {
 		return new PasswordResetModel(data)
 	}
 
-	async resetPassword(model: any) {
+	async resetPassword(model: Partial<IPasswordReset>) {
 		const cancel = this.setLoading()
 		try {
 			const response = await this.http.post('/user/password/reset', model)
@@ -23,7 +23,7 @@ export default class PasswordResetService extends AbstractService<IPasswordReset
 		}
 	}
 
-	async requestResetPassword(model: any) {
+	async requestResetPassword(model: Partial<IPasswordReset>) {
 		const cancel = this.setLoading()
 		try {
 			const response = await this.http.post('/user/password/token', model)
