@@ -251,9 +251,9 @@ async function addTask() {
 		Object.values(createdTasks).forEach(task => {
 			emit('taskAdded', task)
 		})
-	} catch (e: any) {
+	} catch (e: unknown) {
 		newTaskTitle.value = taskTitleBackup
-		if (e?.message === 'NO_PROJECT') {
+		if (e instanceof Error && e.message === 'NO_PROJECT') {
 			errorMessage.value = t('project.create.addProjectRequired')
 			return
 		}
