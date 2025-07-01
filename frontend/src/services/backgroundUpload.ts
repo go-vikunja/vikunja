@@ -24,8 +24,8 @@ export default class BackgroundUploadService extends AbstractService {
 	 * Uploads a file to the server
 	 */
 	create(model: IAbstract): Promise<IAbstract>
-	create(projectId: IProject['id'], file: IFile | File): Promise<any>
-	create(modelOrProjectId: IAbstract | IProject['id'], file?: IFile | File): Promise<any> {
+	create(projectId: IProject['id'], file: IFile | File): Promise<IProject>
+	create(modelOrProjectId: IAbstract | IProject['id'], file?: IFile | File): Promise<IAbstract | IProject> {
 		if (typeof modelOrProjectId === 'object') {
 			return super.create(modelOrProjectId)
 		}

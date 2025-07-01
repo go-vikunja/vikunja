@@ -25,10 +25,10 @@ export default class NotificationService extends AbstractService<NotificationMod
 		
 		// Convert dates to ISO strings if they are not null
 		if (model.created) {
-			(model as any).created = new Date(model.created).toISOString()
+			(model as NotificationModel & {created: string}).created = new Date(model.created).toISOString()
 		}
 		if (model.readAt) {
-			(model as any).readAt = new Date(model.readAt).toISOString()
+			(model as NotificationModel & {readAt: string}).readAt = new Date(model.readAt).toISOString()
 		}
 		return model
 	}

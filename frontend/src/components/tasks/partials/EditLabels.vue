@@ -4,7 +4,7 @@
 		:loading="loading"
 		:placeholder="$t('task.label.placeholder')"
 		:multiple="true"
-		:search-results="foundLabels as any"
+		:search-results="foundLabels"
 		label="title"
 		:creatable="creatable"
 		:create-placeholder="$t('task.label.createPlaceholder')"
@@ -12,7 +12,7 @@
 		:close-after-select="false"
 		:disabled="disabled"
 		@search="findLabel"
-		@select="(label: any) => addLabel(label as ILabel)"
+		@select="(label: ILabel) => addLabel(label)"
 		@create="createAndAddLabel"
 	>
 		<template #tag="{item: label}">
@@ -38,7 +38,7 @@
 			</span>
 			<span
 				v-else
-				:style="{'background': option.hexColor, 'color': option.textColor} as any"
+				:style="{'background': option.hexColor, 'color': option.textColor}"
 				class="tag search-result"
 			>
 				<span>{{ option.title }}</span>
