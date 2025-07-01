@@ -23,6 +23,8 @@ import SubscriptionModel from './subscription'
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 import TaskReminderModel from '@/models/taskReminder'
 import TaskCommentModel from '@/models/taskComment.ts'
+import type {IReactionPerEntity} from '@/modelTypes/IReaction'
+import type {ITaskComment} from '@/modelTypes/ITaskComment'
 
 export function	getHexColor(hexColor: string): string | undefined {
 	if (hexColor === '' || hexColor === '#') {
@@ -94,8 +96,8 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 
 	position = 0
 	
-	reactions: any = {}
-	comments: any[] = []
+	reactions: IReactionPerEntity = {}
+	comments: ITaskComment[] = []
 
 	createdBy: IUser = new UserModel()
 	created: Date = new Date()
@@ -110,7 +112,7 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 
 		this.id = Number(this.id)
 		this.title = this.title?.trim()
-		this.doneAt = parseDateOrNull(this.doneAt as any)
+		this.doneAt = parseDateOrNull(this.doneAt as Date | string | null)
 
 		this.labels = this.labels
 			.map(l => new LabelModel(l))
@@ -121,9 +123,9 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 			return new UserModel(a)
 		})
 
-		this.dueDate = parseDateOrNull(this.dueDate as any)
-		this.startDate = parseDateOrNull(this.startDate as any)
-		this.endDate = parseDateOrNull(this.endDate as any)
+		this.dueDate = parseDateOrNull(this.dueDate as Date | string | null)
+		this.startDate = parseDateOrNull(this.startDate as Date | string | null)
+		this.endDate = parseDateOrNull(this.endDate as Date | string | null)
 
 		// Parse the repeat after into something usable
 		this.repeatAfter = parseRepeatAfter(this.repeatAfter as number)
@@ -138,7 +140,7 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 		Object.keys(this.relatedTasks).forEach(relationKind => {
 			const key = relationKind as keyof typeof this.relatedTasks
 			if (this.relatedTasks[key]) {
-				this.relatedTasks[key] = this.relatedTasks[key]!.map((t: any) => {
+				this.relatedTasks[key] = this.relatedTasks[key]!.map((t: Partial<ITask>) => {
 					return new TaskModel(t)
 				})
 			}
@@ -167,7 +169,7 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 		// We can't convert emojis to camel case, hence we do this manually
 		this.reactions = {}
 		Object.keys(data.reactions || {}).forEach(reaction => {
-			this.reactions[reaction] = (data.reactions as any)?.[reaction]?.map((u: any) => new UserModel(u)) || []
+			this.reactions[reaction] = (data.reactions as IReactionPerEntity)?.[reaction]?.map((u: Partial<IUser>) => new UserModel(u)) || []
 		})
 	}
 
