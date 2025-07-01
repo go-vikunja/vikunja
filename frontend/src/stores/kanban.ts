@@ -6,6 +6,7 @@ import {findById, findIndexById} from '@/helpers/utils'
 
 import BucketService from '@/services/bucket'
 import TaskCollectionService, {type TaskFilterParams} from '@/services/taskCollection'
+import TaskModel from '@/models/task'
 
 import {setModuleLoading} from '@/stores/helper'
 
@@ -124,7 +125,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 
 		let found = false
 
-		const findAndUpdate = (b: any) => {
+		const findAndUpdate = (b: number) => {
 			for (const t in buckets.value[b].tasks) {
 				if (buckets.value[b].tasks[t].id === task.id) {
 					const bucket = buckets.value[b]
@@ -252,7 +253,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 		allTasksLoadedForBucket.value[bucketId] = true
 	}
 
-	async function loadBucketsForProject(projectId: IProject['id'], viewId: IProjectView['id'], params: any) {
+	async function loadBucketsForProject(projectId: IProject['id'], viewId: IProjectView['id'], params: TaskFilterParams) {
 		const cancel = setModuleLoading(setIsLoading)
 
 		// Clear everything to prevent having old buckets in the project if loading the buckets from this project takes a few moments
@@ -260,7 +261,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 
 		const taskCollectionService = new TaskCollectionService()
 		try {
-			const newBuckets = await taskCollectionService.getAll({projectId, viewId} as any, {
+			const newBuckets = await taskCollectionService.getAll(new TaskModel({projectId, viewId}), {
 				...params,
 				per_page: TASKS_PER_BUCKET,
 			})
@@ -303,7 +304,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 
 		const taskService = new TaskCollectionService()
 		try {
-			const tasks = await taskService.getAll({projectId, viewId} as any, params, page)
+			const tasks = await taskService.getAll(new TaskModel({projectId, viewId}), params as unknown as Record<string, unknown>, page)
 			addTasksToBucket(tasks, bucketId)
 			setTasksLoadedForBucketPage({bucketId, page})
 			if (taskService.totalPages <= page) {
@@ -329,7 +330,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 		}
 	}
 
-	async function deleteBucket({bucket, params}: { bucket: IBucket, params: any }) {
+	async function deleteBucket({bucket, params}: { bucket: IBucket, params: TaskFilterParams }) {
 		const cancel = setModuleLoading(setIsLoading)
 
 		const bucketService = new BucketService()
