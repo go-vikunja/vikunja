@@ -63,7 +63,7 @@
 							:key="key"
 							:ref="(el: Element | ComponentPublicInstance | null) => setResultRefs(el, k, Number(key))"
 							class="result-item-button"
-							:class="{'is-strikethrough': i.done}"
+							:class="{'is-strikethrough': i && typeof i === 'object' && 'done' in i && (i as {done: boolean}).done}"
 							@keydown.up.prevent="select(k, Number(key) - 1)"
 							@keydown.down.prevent="select(k, Number(key) + 1)"
 							@click.prevent.stop="doAction(r.type, i)"
@@ -81,12 +81,12 @@
 							</template>
 							<template v-else>
 								<span
-									v-if="i && i.id < -1"
+									v-if="i && typeof i === 'object' && 'id' in i && (i as {id: number}).id < -1"
 									class="saved-filter-icon icon"
 								>
 									<Icon icon="filter" />
 								</span>
-								{{ i ? i.title : '' }}
+								{{ i && typeof i === 'object' && 'title' in i ? (i as {title: string}).title : '' }}
 							</template>
 						</BaseButton>
 					</div>
