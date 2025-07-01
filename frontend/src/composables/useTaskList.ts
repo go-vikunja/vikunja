@@ -51,8 +51,8 @@ function formatSortOrder(sortBy: SortBy, params: TaskFilterParams) {
 	if (hasIdFilter) {
 		sortKeys.push('id')
 	}
-	params.sort_by = sortKeys as any
-	params.order_by = sortKeys.map(s => (sortBy as any)[s])
+	params.sort_by = sortKeys as TaskFilterParams['sort_by']
+	params.order_by = sortKeys.map(s => sortBy[s as keyof SortBy]!) as TaskFilterParams['order_by']
 
 	return params
 }
@@ -117,7 +117,8 @@ export function useTaskList(
 			tasks.value = []
 		}
 		try {
-			tasks.value = await taskCollectionService.getAll(...getAllTasksParams.value as [any, any, any])
+			const [model, params, page] = getAllTasksParams.value
+		tasks.value = await taskCollectionService.getAll(model, params, page)
 		} catch (e) {
 			error(e)
 		}
