@@ -71,7 +71,7 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, onBeforeUnmount, onMounted, ref, toRef, watch} from 'vue'
+import {computed, onBeforeUnmount, onMounted, ref, toRef, watch, type ComponentPublicInstance} from 'vue'
 import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
 
@@ -104,7 +104,7 @@ watch(
 	{immediate: true},
 )
 
-const flatPickrRef = ref<HTMLElement | null>(null)
+const flatPickrRef = ref<ComponentPublicInstance | null>(null)
 const flatPickerConfig = computed(() => ({
 	altFormat: t('date.altFormatLong'),
 	altInput: true,

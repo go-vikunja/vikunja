@@ -316,6 +316,13 @@ import ProjectViewModel from '@/models/projectView'
 import TaskBucketService from '@/services/taskBucket'
 import TaskBucketModel from '@/models/taskBucket'
 
+// Sortable.js drag event interface
+interface SortableEvent extends Event {
+	to: HTMLElement & { dataset: { bucketIndex: string } }
+	newIndex: number
+	oldIndex: number
+}
+
 const props = defineProps<{
 	isLoadingProject: boolean,
 	projectId: number,
@@ -461,7 +468,7 @@ function updateTasks(bucketId: IBucket['id'], tasks: IBucket['tasks']) {
 	})
 }
 
-async function updateTaskPosition(e: Event) {
+async function updateTaskPosition(e: SortableEvent) {
 	drag.value = false
 
 	// While we could just pass the bucket index in through the function call, this would not give us the

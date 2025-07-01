@@ -63,7 +63,7 @@ const availableProjects = ref<IProject[]>([])
 watch(
 	() => props.modelValue,
 	projects => {
-		availableProjects.value = projects || []
+		availableProjects.value = projects ? [...projects] : []
 	},
 	{immediate: true},
 )

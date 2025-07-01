@@ -83,7 +83,7 @@
 				class="menu"
 			>
 				<ProjectsNavigation
-					:model-value="favoriteProjects" 
+					:model-value="favoriteProjects as IProject[]" 
 					:can-edit-order="false"
 					:can-collapse="false"
 				/>
@@ -94,7 +94,7 @@
 				class="menu"
 			>
 				<ProjectsNavigation
-					:model-value="savedFilterProjects"
+					:model-value="savedFilterProjects as IProject[]"
 					:can-edit-order="false"
 					:can-collapse="false"
 				/>
@@ -102,7 +102,7 @@
 
 			<nav class="menu">
 				<ProjectsNavigation
-					:model-value="projects"
+					:model-value="projects as IProject[]"
 					:can-edit-order="true"
 					:can-collapse="true"
 				/>
@@ -126,6 +126,7 @@ import Loading from '@/components/misc/Loading.vue'
 import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
 import ProjectsNavigation from '@/components/home/ProjectsNavigation.vue'
+import type {IProject} from '@/modelTypes/IProject'
 
 const baseStore = useBaseStore()
 const projectStore = useProjectStore()

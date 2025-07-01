@@ -829,7 +829,8 @@ const activeFieldElements: { [id in FieldType]: HTMLElement | null } = reactive(
 })
 
 function setFieldRef(name: keyof typeof activeFieldElements, e: Element | ComponentPublicInstance | null) {
-	const element = unrefElement(e as Element | ComponentPublicInstance | null)
+	// If it's a Vue component, get its root element; otherwise use the element directly
+	const element = (e as ComponentPublicInstance)?.$el || e
 	activeFieldElements[name] = (element instanceof HTMLElement) ? element : null
 }
 
