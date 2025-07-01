@@ -19,6 +19,7 @@ import type {ITask} from '@/modelTypes/ITask'
 import type {IUser} from '@/modelTypes/IUser'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {IProject} from '@/modelTypes/IProject'
+import type {Priority} from '@/constants/priorities'
 
 import {setModuleLoading} from '@/stores/helper'
 import {useLabelStore} from '@/stores/labels'
@@ -38,13 +39,13 @@ interface MatchedAssignee extends IUser {
 }
 
 // IDEA: maybe use a small fuzzy search here to prevent errors
-function findPropertyByValue(object: any, key: string, value: string, fuzzy = false) {
+function findPropertyByValue(object: Record<string, Record<string, string>>, key: string, value: string, fuzzy = false) {
 	return Object.values(object).find(l => {
 		if (fuzzy) {
-			return (l as any)[key]?.toLowerCase().includes(value.toLowerCase())
+			return (l as Record<string, string>)[key]?.toLowerCase().includes(value.toLowerCase())
 		}
 	
-		return (l as any)[key]?.toLowerCase() === value.toLowerCase()
+		return (l as Record<string, string>)[key]?.toLowerCase() === value.toLowerCase()
 	})
 }
 
@@ -91,7 +92,7 @@ async function findAssignees(parsedTaskAssignees: string[], projectId: number): 
 
 	const userService = new ProjectUserService()
 	const assignees = parsedTaskAssignees.map(async a => {
-		const users = (await userService.getAll({projectId} as any, {s: a}))
+		const users = (await userService.getAll(new TaskModel({projectId}), {s: a}))
 			.map(u => ({
 				...u,
 				match: a,
@@ -137,13 +138,13 @@ export const useTaskStore = defineStore('task', () => {
 
 		const cancel = setModuleLoading(setIsLoading)
 		try {
-			const model: any = {}
+			const model: Partial<{projectId: number}> = {}
 			let taskCollectionService = new TaskService()
 			if (projectId !== null) {
 				model.projectId = projectId
-				taskCollectionService = new TaskCollectionService() as any
+				taskCollectionService = new TaskCollectionService()
 			}
-			const taskResults = await taskCollectionService.getAll(model as any, params)
+			const taskResults = await taskCollectionService.getAll(new TaskModel(model), params as unknown as Record<string, unknown>)
 			tasks.value = Array.isArray(taskResults) ? taskResults.reduce((acc, task) => {
 				acc[task.id] = task
 				return acc
@@ -198,7 +199,7 @@ export const useTaskStore = defineStore('task', () => {
 					attachments,
 				},
 			}
-			kanbanStore.setTaskInBucketByIndex(newTask as any)
+			kanbanStore.setTaskInBucketByIndex(newTask)
 		}
 		attachmentStore.add(attachment)
 	}
@@ -236,7 +237,7 @@ export const useTaskStore = defineStore('task', () => {
 						user,
 					],
 				},
-			} as any)
+			})
 
 			return r
 		} finally {
@@ -265,7 +266,7 @@ export const useTaskStore = defineStore('task', () => {
 			return response
 		}
 
-		const assignees = t.task.assignees.filter(({ id }: any) => id !== user.id)
+		const assignees = t.task.assignees.filter(({ id }: IUser) => id !== user.id)
 
 		kanbanStore.setTaskInBucketByIndex({
 			...t,
@@ -273,7 +274,7 @@ export const useTaskStore = defineStore('task', () => {
 				...t.task,
 				assignees,
 			},
-		} as any)
+		})
 		return response
 
 	}
@@ -308,7 +309,7 @@ export const useTaskStore = defineStore('task', () => {
 					label,
 				],
 			},
-		} as any)
+		})
 
 		return r
 	}
@@ -340,7 +341,7 @@ export const useTaskStore = defineStore('task', () => {
 				...t.task,
 				labels,
 			},
-		} as any)
+		})
 
 		return response
 	}
@@ -474,7 +475,7 @@ export const useTaskStore = defineStore('task', () => {
 			title: cleanedTitle,
 			projectId: foundProjectId,
 			dueDate,
-			priority: parsedTask.priority as any,
+			priority: parsedTask.priority as Priority,
 			assignees,
 			bucketId: bucketId || 0,
 			position,
