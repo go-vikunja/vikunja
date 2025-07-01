@@ -123,6 +123,7 @@
 	</div>
 </template>
 
+<!-- @ts-expect-error - Vue 3 generic component export inference issue -->
 <script setup lang="ts" generic="T extends Record<string, unknown>">
 import {computed, onBeforeUnmount, onMounted, ref, toRefs, watch, type ComponentPublicInstance} from 'vue'
 import {useI18n} from 'vue-i18n'
@@ -205,6 +206,10 @@ const emit = defineEmits<{
 	 */
 	'remove': [value: T],
 }>()
+
+defineOptions({
+	name: 'Multiselect',
+})
 
 function elementInResults(elem: string | T, label: string, query: string): boolean {
 	// Don't make create available if we have an exact match in our search results.
