@@ -491,15 +491,17 @@ async function doAction(type: ACTION_TYPE, item: SearchResult) {
 			selectedCmd.value = item as unknown as Command
 			searchInput.value?.focus()
 			break
-		case ACTION_TYPE.LABELS:
-			if (/\s/.test(item.title)) {
-				query.value = '*"' + item.title + '"'
+		case ACTION_TYPE.LABELS: {
+			const label = item as {title: string}
+			if (/\s/.test(label.title)) {
+				query.value = '*"' + label.title + '"'
 			} else {
-				query.value = '*' + item.title
+				query.value = '*' + label.title
 			}
 			searchInput.value?.focus()
 			searchTasks()
 			break
+		}
 	}
 }
 
