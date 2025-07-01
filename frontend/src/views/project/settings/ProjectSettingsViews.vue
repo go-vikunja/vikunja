@@ -27,7 +27,7 @@ const views = ref<IProjectView[]>([])
 watch(
 	() => projectStore.projects[props.projectId]?.views || [],
 	allViews => {
-		views.value = [...allViews]
+		views.value = [...allViews] as IProjectView[]
 	},
 	{
 		deep: true,
