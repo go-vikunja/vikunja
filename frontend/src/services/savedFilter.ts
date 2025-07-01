@@ -51,7 +51,7 @@ export default class SavedFilterService extends AbstractService<ISavedFilter> {
 		})
 	}
 
-	modelFactory(data: any) {
+	modelFactory(data: Partial<ISavedFilter>): ISavedFilter {
 		return new SavedFilterModel(data)
 	}
 }

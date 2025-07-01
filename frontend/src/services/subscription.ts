@@ -10,7 +10,7 @@ export default class SubscriptionService extends AbstractService<ISubscription> 
 		})
 	}
 
-	modelFactory(data: any) {
+	modelFactory(data: Partial<ISubscription>): ISubscription {
 		return new SubscriptionModel(data)
 	}
 }
