@@ -21,18 +21,18 @@ export const formatDate = (date: Date | string | null, f: string) => {
 
 	date = createDateFromString(date!)
 	
-	const locale = (DAYJS_LOCALE_MAPPING as any)[i18n.global.locale.value.toLowerCase()] ?? 'en'
+	const locale = (DAYJS_LOCALE_MAPPING as Record<string, string>)[i18n.global.locale.value.toLowerCase()] ?? 'en'
 
 	return date 
 		? dayjs(date).locale(locale).format(f) 
 		: ''
 }
 
-export function formatDateLong(date: any) {
+export function formatDateLong(date: Date | string | null) {
 	return formatDate(date, 'LLLL')
 }
 
-export function formatDateShort(date: any) {
+export function formatDateShort(date: Date | string | null) {
 	return formatDate(date, 'lll')
 }
 
@@ -43,14 +43,14 @@ export const formatDateSince = (date: Date | string | null) => {
 
 	date = createDateFromString(date!)
 
-	const locale = (DAYJS_LOCALE_MAPPING as any)[i18n.global.locale.value.toLowerCase()] ?? 'en'
+	const locale = (DAYJS_LOCALE_MAPPING as Record<string, string>)[i18n.global.locale.value.toLowerCase()] ?? 'en'
 
 	return date
 		? dayjs(date).locale(locale).fromNow()
 		: ''
 }
 
-export function formatISO(date: any) {
+export function formatISO(date: Date | string | null) {
 	return date ? new Date(date).toISOString() : ''
 }
 
