@@ -98,7 +98,7 @@
 								<XButton
 									:loading="loading"
 									class="is-fullwidth"
-									@click="editLabelSubmit()"
+									type="submit"
 								>
 									{{ $t('misc.save') }}
 								</XButton>
