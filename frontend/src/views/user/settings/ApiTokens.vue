@@ -57,7 +57,7 @@ onMounted(async () => {
 		routesAvailable[key] = allRoutes[key]
 	})
 	
-	availableRoutes.value = routesAvailable as {[key: string]: any}
+	availableRoutes.value = routesAvailable
 	
 	resetPermissions()
 })
