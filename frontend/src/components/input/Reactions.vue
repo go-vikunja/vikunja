@@ -94,7 +94,7 @@ const showEmojiPicker = ref(false)
 const emojiPickerRef = ref<ComponentPublicInstance | null>(null)
 
 function hideEmojiPicker(e: MouseEvent) {
-	if (showEmojiPicker.value) {
+	if (showEmojiPicker.value && emojiPickerRef.value?.$el) {
 		closeWhenClickedOutside(e, emojiPickerRef.value.$el, () => showEmojiPicker.value = false)
 	}
 }
@@ -108,12 +108,13 @@ const emojiPickerPosition = ref()
 
 function toggleEmojiPicker() {
 	if (!showEmojiPicker.value) {
-		const rect = emojiPickerButtonRef.value?.$el.getBoundingClientRect()
+		const rect = emojiPickerButtonRef.value?.$el?.getBoundingClientRect()
 		const container = reactionContainerRef.value?.getBoundingClientRect()
-		const left = rect.left - container.left + rect.width
-
-		emojiPickerPosition.value = {
-			left: left === 0 ? undefined : left,
+		if (rect && container) {
+			const left = rect.left - container.left + rect.width
+			emojiPickerPosition.value = {
+				left: left === 0 ? undefined : left,
+			}
 		}
 	}
 

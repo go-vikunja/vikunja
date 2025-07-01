@@ -142,7 +142,7 @@ async function loadNotifications() {
 	}
 	// We're recreating the notification service here to make sure it uses the latest api user token
 	const notificationService = new NotificationService()
-	allNotifications.value = await notificationService.getAll({})
+	allNotifications.value = await notificationService.getAll(new NotificationModel())
 }
 
 function hidePopup(e: MouseEvent) {
@@ -154,7 +154,7 @@ function hidePopup(e: MouseEvent) {
 function to(n: NotificationModel, index: number) {
 	const to = {
 		name: '',
-		params: {},
+		params: {} as Record<string, unknown>,
 	}
 
 	switch (n.name) {
@@ -163,18 +163,18 @@ function to(n: NotificationModel, index: number) {
 		case names.TASK_REMINDER:
 		case names.TASK_MENTIONED:
 			to.name = 'task.detail'
-			to.params.id = (n.notification as any).task.id
+			to.params.id = (n.notification as Record<string, {id: unknown}>).task?.id
 			break
 		case names.TASK_DELETED:
 			// Nothing
 			break
 		case names.PROJECT_CREATED:
 			to.name = 'task.index'
-			to.params.projectId = (n.notification as any).project.id
+			to.params.projectId = (n.notification as Record<string, {id: unknown}>).project?.id
 			break
 		case names.TEAM_MEMBER_ADDED:
 			to.name = 'teams.edit'
-			to.params.id = (n.notification as any).team.id
+			to.params.id = (n.notification as Record<string, {id: unknown}>).team?.id
 			break
 	}
 

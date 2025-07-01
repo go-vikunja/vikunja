@@ -3,6 +3,7 @@ import {computed, nextTick, ref, watch} from 'vue'
 import {useAutoHeightTextarea} from '@/composables/useAutoHeightTextarea'
 import DatepickerWithValues from '@/components/date/DatepickerWithValues.vue'
 import UserService from '@/services/user'
+import UserModel from '@/models/user'
 import AutocompleteDropdown from '@/components/input/AutocompleteDropdown.vue'
 import {useLabelStore} from '@/stores/labels'
 import XLabel from '@/components/tasks/partials/Label.vue'
@@ -243,10 +244,10 @@ function handleFieldInput() {
 		if (matched.startsWith('assignee')) {
 			autocompleteResultType.value = 'assignees'
 			if (props.projectId) {
-				projectUserService.getAll({}, {projectId: props.projectId, s: search})
+				projectUserService.getAll(new UserModel(), {projectId: props.projectId, s: search})
 					.then(users => autocompleteResults.value = users.length > 1 ? users : [])
 			} else {
-				userService.getAll({}, {s: search})
+				userService.getAll(new UserModel(), {s: search})
 					.then(users => autocompleteResults.value = users.length > 1 ? users : [])
 			}
 		}
