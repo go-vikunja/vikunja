@@ -1,12 +1,12 @@
 import {i18n} from '@/i18n'
 import {notify} from '@kyvg/vue3-notification'
 
-export function getErrorText(r: any): string {
+export function getErrorText(r: unknown): string {
 	const data = r?.reason?.response?.data || r?.response?.data
 
 	if (data?.code) {
 		const path = `error.${data.code}`
-		// @ts-ignore
+		// @ts-expect-error - Translation key may not exist, fallback handles this
 		let message = i18n.global.t(path)
 
 		if (data?.code && data?.message && (data.code === 4016 || data.code === 4017 || data.code === 4018 || data.code === 4019 || data.code === 4024)) {
@@ -33,16 +33,16 @@ export interface Action {
 	callback: () => void,
 }
 
-export function error(e: any, actions: Action[] = []) {
+export function error(e: unknown, actions: Action[] = []) {
 	notify({
 		type: 'error',
 		title: i18n.global.t('error.error'),
 		text: getErrorText(e),
 		data: { actions },
-	} as any)
+	})
 }
 
-export function success(e: any, actions: Action[] = []) {
+export function success(e: unknown, actions: Action[] = []) {
 	notify({
 		type: 'success',
 		title: i18n.global.t('error.success'),
