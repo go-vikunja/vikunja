@@ -79,7 +79,7 @@ export default class UserModel extends AbstractModel<IUser> implements IUser {
 
 	created: Date = new Date()
 	updated: Date = new Date()
-	settings: IUserSettings = {} as any
+	settings: IUserSettings = {} as IUserSettings
 
 	isLocalUser: boolean = false
 	deletionScheduledAt: null = null

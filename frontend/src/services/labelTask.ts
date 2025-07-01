@@ -11,7 +11,7 @@ export default class LabelTaskService extends AbstractService<ILabelTask> {
 		})
 	}
 
-	modelFactory(data: any) {
+	modelFactory(data: Partial<ILabelTask>): ILabelTask {
 		return new LabelTask(data)
 	}
 }

@@ -12,7 +12,7 @@ export default class LinkShareService extends AbstractService<ILinkShare> {
 		})
 	}
 
-	modelFactory(data: any) {
+	modelFactory(data: Partial<ILinkShare>): ILinkShare {
 		return new LinkShareModel(data)
 	}
 }

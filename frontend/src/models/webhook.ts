@@ -8,7 +8,7 @@ export default class WebhookModel extends AbstractModel<IWebhook> implements IWe
 	secret = ''
 	targetUrl = ''
 	events = []
-	createdBy: any = null
+	createdBy: IUser | null = null
 
 	created: Date = new Date()
 	updated: Date = new Date()

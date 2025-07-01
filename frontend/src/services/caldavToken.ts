@@ -11,7 +11,7 @@ export default class CaldavTokenService extends AbstractService<ICaldavToken> {
 		})
 	}
 
-	modelFactory(data: any) {
+	modelFactory(data: Partial<ICaldavToken>): ICaldavToken {
 		return new CaldavTokenModel(data)
 	}
 }
