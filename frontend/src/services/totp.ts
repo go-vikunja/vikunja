@@ -1,6 +1,8 @@
 import AbstractService from './abstractService'
 import TotpModel from '@/models/totp'
 import type {ITotp} from '@/modelTypes/ITotp'
+import type {ITotpPasscode} from '@/modelTypes/ITotpPasscode'
+import type {ITotpDisable} from '@/modelTypes/ITotpDisable'
 
 export default class TotpService extends AbstractService<ITotp> {
 	urlPrefix = '/user/settings/totp'
@@ -15,16 +17,16 @@ export default class TotpService extends AbstractService<ITotp> {
 		return new TotpModel(data) as ITotp
 	}
 
-	enroll(): Promise<any> {
-		return this.post(`${this.urlPrefix}/enroll`, {} as any)
+	enroll(): Promise<ITotp> {
+		return this.post(`${this.urlPrefix}/enroll`, {})
 	}
 
-	enable(model: ITotp): Promise<any> {
-		return this.post(`${this.urlPrefix}/enable`, model)
+	enable(passcode: ITotpPasscode): Promise<{message: string}> {
+		return this.post(`${this.urlPrefix}/enable`, passcode)
 	}
 
-	disable(model: ITotp): Promise<any> {
-		return this.post(`${this.urlPrefix}/disable`, model)
+	disable(credentials: ITotpDisable): Promise<{message: string}> {
+		return this.post(`${this.urlPrefix}/disable`, credentials)
 	}
 
 	async qrcode() {
