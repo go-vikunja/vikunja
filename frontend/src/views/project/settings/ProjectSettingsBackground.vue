@@ -123,6 +123,8 @@ import BackgroundUnsplashService from '@/services/backgroundUnsplash'
 import BackgroundUploadService from '@/services/backgroundUpload'
 import ProjectService from '@/services/project'
 import type {IBackgroundImage} from '@/modelTypes/IBackgroundImage'
+import type {IProject} from '@/modelTypes/IProject'
+import BackgroundImageModel from '@/models/backgroundImage'
 
 import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'
 import {useTitle} from '@/composables/useTitle'
@@ -176,7 +178,7 @@ function newBackgroundSearch() {
 
 async function searchBackgrounds(page = 1) {
 	currentPage.value = page
-	const result = await backgroundService.getAll({} as any, {s: backgroundSearchTerm.value, p: page})
+	const result = await backgroundService.getAll(new BackgroundImageModel(), {s: backgroundSearchTerm.value, p: page})
 	backgroundSearchResult.value = backgroundSearchResult.value.concat(result as IBackgroundImage[])
 	result.forEach((background: IBackgroundImage) => {
 		getBlobFromBlurHash(background.blurHash)
@@ -202,9 +204,9 @@ async function setBackground(backgroundId: string) {
 	const project = await backgroundService.update({
 		id: backgroundId,
 		projectId: Number(route.params.projectId),
-	} as any)
-	await baseStore.handleSetCurrentProject({project: project as any, forceUpdate: true})
-	projectStore.setProject(project as any)
+	})
+	await baseStore.handleSetCurrentProject({project: project, forceUpdate: true})
+	projectStore.setProject(project)
 	success({message: t('project.background.success')})
 }
 
@@ -218,15 +220,15 @@ async function uploadBackground() {
 		Number(route.params.projectId),
 		backgroundUploadInput.value?.files?.[0] as File,
 	)
-	await baseStore.handleSetCurrentProject({project: project as any, forceUpdate: true})
-	projectStore.setProject(project as any)
+	await baseStore.handleSetCurrentProject({project: project, forceUpdate: true})
+	projectStore.setProject(project)
 	success({message: t('project.background.success')})
 }
 
 async function removeBackground() {
-	const project = await projectService.value.removeBackground(currentProject.value as any)
-	await baseStore.handleSetCurrentProject({project: project as any, forceUpdate: true})
-	projectStore.setProject(project as any)
+	const project = await projectService.value.removeBackground(currentProject.value!)
+	await baseStore.handleSetCurrentProject({project: project, forceUpdate: true})
+	projectStore.setProject(project)
 	success({message: t('project.background.removeSuccess')})
 	router.back()
 }
