@@ -83,6 +83,7 @@ export default class UserModel extends AbstractModel<IUser> implements IUser {
 
 	isLocalUser: boolean = false
 	deletionScheduledAt: null = null
+	authProvider: string = ''
 
 	constructor(data: Partial<IUser> = {}) {
 		super()

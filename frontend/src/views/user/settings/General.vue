@@ -26,7 +26,7 @@
 				v-if="isExternalUser"
 				class="help"
 			>
-				{{ $t('user.settings.general.externalUserNameChange', {provider: (authStore.info as {authProvider?: string})?.authProvider || 'unknown'}) }}
+				{{ $t('user.settings.general.externalUserNameChange', {provider: authStore.info?.authProvider || 'unknown'}) }}
 			</p>
 		</div>
 		<div class="field">

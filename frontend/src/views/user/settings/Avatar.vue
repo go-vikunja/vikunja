@@ -5,7 +5,7 @@
 		</Message>
 
 		<Message v-else-if="avatarProvider === 'openid'">
-			{{ $t('user.settings.avatar.openid', {provider: (authStore.info as any)?.authProvider || 'unknown'}) }}
+			{{ $t('user.settings.avatar.openid', {provider: authStore.info?.authProvider || 'unknown'}) }}
 		</Message>
 
 		<template v-else>
