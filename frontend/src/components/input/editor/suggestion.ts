@@ -1,5 +1,5 @@
 import {VueRenderer} from '@tiptap/vue-3'
-import tippy from 'tippy.js'
+import tippy, {type Instance} from 'tippy.js'
 import type {Editor, Range} from '@tiptap/core'
 
 import CommandsList from './CommandsList.vue'
@@ -156,7 +156,11 @@ export default function suggestionSetup(t: (key: string) => string) {
 
 		render: () => {
 			let component: VueRenderer
-			let popup: unknown[]
+			let popup: Instance | Instance[]
+
+			const getPopupInstance = (): Instance => {
+				return Array.isArray(popup) ? popup[0] : popup
+			}
 
 			return {
 				onStart: (props: {editor: Editor, clientRect?: () => DOMRect, decorationNode?: Element}) => {
@@ -172,15 +176,16 @@ export default function suggestionSetup(t: (key: string) => string) {
 						return
 					}
 
-					popup = tippy(document.body, {
+					const tippyOptions = {
 						getReferenceClientRect: props.clientRect,
 						appendTo: () => document.body,
 						content: component.element,
 						showOnCreate: true,
 						interactive: true,
-						trigger: 'manual',
-						placement: 'bottom-start',
-					})
+						trigger: 'manual' as const,
+						placement: 'bottom-start' as const,
+					}
+					popup = tippy(document.body, tippyOptions)
 				},
 
 				onUpdate(props: {editor: Editor, clientRect?: () => DOMRect}) {
@@ -190,14 +195,14 @@ export default function suggestionSetup(t: (key: string) => string) {
 						return
 					}
 
-					popup[0].setProps({
+					getPopupInstance().setProps({
 						getReferenceClientRect: props.clientRect,
 					})
 				},
 
 				onKeyDown(props: {event: KeyboardEvent}) {
 					if (props.event.key === 'Escape') {
-						popup[0].hide()
+						getPopupInstance().hide()
 
 						return true
 					}
@@ -206,7 +211,7 @@ export default function suggestionSetup(t: (key: string) => string) {
 				},
 
 				onExit() {
-					popup[0].destroy()
+					getPopupInstance().destroy()
 					component.destroy()
 				},
 			}
