@@ -11,6 +11,14 @@ on:
     branches:
       - main
 
+concurrency:
+  # main merges use a unique run_id so they don't cancel each other
+  # other branches or PRs share a group to auto-cancel old runs
+  group: ${{ github.ref == 'refs/heads/main' &&
+    format('{0}-{1}', github.workflow, github.run_id) ||
+    format('{0}-{1}', github.workflow, github.event.pull_request.number || github.ref) }}
+  cancel-in-progress: true
+
 jobs:
   test:
     name: Test
