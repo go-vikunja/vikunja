@@ -372,7 +372,7 @@ function openTaskDetail(event: MouseEvent | KeyboardEvent) {
 	}
 
 	if (taskLinkRef.value && 'click' in taskLinkRef.value) {
-		(taskLinkRef.value as any).click()
+		taskLinkRef.value.click()
 	}
 }
 
