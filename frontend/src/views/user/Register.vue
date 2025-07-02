@@ -146,6 +146,7 @@ const credentials = reactive({
 	username: '',
 	email: '',
 	password: '',
+	longToken: false,
 })
 
 const isLoading = computed(() => authStore.isLoading)
