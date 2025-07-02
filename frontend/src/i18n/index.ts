@@ -73,7 +73,7 @@ export const i18n = createI18n({
 	},
 	messages: {
 		[DEFAULT_LANGUAGE]: langEN,
-	} as Record<string, Record<string, unknown>>,
+	},
 })
 
 export async function setLanguage(lang: SupportedLocale): Promise<SupportedLocale | undefined> {

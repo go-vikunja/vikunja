@@ -37,7 +37,7 @@ export function getErrorText(r: unknown): string {
 		message += ' ' + errorResponse.cause.message
 	}
 
-	return message
+	return message || ''
 }
 
 export interface Action {
