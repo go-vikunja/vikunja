@@ -1,19 +1,38 @@
-// @ts-nocheck
 import {getFullBaseUrl} from './helpers/getFullBaseUrl'
 
 declare let self: ServiceWorkerGlobalScope & {
-	__WB_MANIFEST: any
-	__precacheManifest: any
+	__WB_MANIFEST: unknown[]
+	__precacheManifest: unknown[]
 }
 
-declare const workbox: any
-declare const clients: any
+// @ts-expect-error: Workbox is injected globally via importScripts
+declare const workbox: {
+	setConfig: (config: { modulePathPrefix: string }) => void
+	routing: {
+		registerRoute: (matcher: RegExp, strategy: unknown) => void
+	}
+	strategies: {
+		StaleWhileRevalidate: new () => unknown
+		NetworkOnly: new () => unknown
+	}
+	core: {
+		clientsClaim: () => void
+	}
+	precaching: {
+		precacheAndRoute: (manifest: unknown[], options: Record<string, unknown>) => void
+	}
+}
+
+// @ts-expect-error: Clients API is part of service worker global scope
+declare const clients: {
+	openWindow: (url: string) => void
+}
 
 const fullBaseUrl = getFullBaseUrl()
 const workboxVersion = 'v7.3.0'
 
 importScripts(`${fullBaseUrl}workbox-${workboxVersion}/workbox-sw.js`)
-;(workbox as any).setConfig({
+workbox.setConfig({
 	modulePathPrefix: `${fullBaseUrl}workbox-${workboxVersion}`,
 })
 
@@ -21,20 +40,20 @@ import { precacheAndRoute } from 'workbox-precaching'
 precacheAndRoute(self.__WB_MANIFEST)
 
 // Cache assets
-;(workbox as any).routing.registerRoute(
+workbox.routing.registerRoute(
 	// This regexp matches all files in precache-manifest
 	new RegExp('.+\\.(css|json|js|svg|woff2|png|html|txt|wav)$'),
-	new (workbox as any).strategies.StaleWhileRevalidate(),
+	new workbox.strategies.StaleWhileRevalidate(),
 )
 
 // Always send api requests through the network
-;(workbox as any).routing.registerRoute(
+workbox.routing.registerRoute(
 	new RegExp('api\\/v1\\/.*$'),
-	new (workbox as any).strategies.NetworkOnly(),
+	new workbox.strategies.NetworkOnly(),
 )
 
 // This code listens for the user's confirmation to update the app.
-self.addEventListener('message', (e: any) => {
+self.addEventListener('message', (e: MessageEvent) => {
 	if (!e.data) {
 		return
 	}
@@ -50,8 +69,8 @@ self.addEventListener('message', (e: any) => {
 })
 
 // Notification action
-self.addEventListener('notificationclick', function (event: any) {
-	const taskId = event.notification.data.taskId
+self.addEventListener('notificationclick', function (event: NotificationEvent) {
+	const taskId = (event.notification.data as { taskId: string }).taskId
 	event.notification.close()
 
 	switch (event.action) {
@@ -61,8 +80,8 @@ self.addEventListener('notificationclick', function (event: any) {
 	}
 })
 
-;(workbox as any).core.clientsClaim()
+workbox.core.clientsClaim()
 // The precaching code provided by Workbox.
 self.__precacheManifest = [].concat(self.__precacheManifest || [])
-;(workbox as any).precaching.precacheAndRoute(self.__precacheManifest, {})
+workbox.precaching.precacheAndRoute(self.__precacheManifest, {})
 
