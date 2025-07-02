@@ -374,24 +374,23 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	}
 
 	// fetch subtasks when expanding
-	if expandSubtasks {
+	if expandSubtasks && len(tasks) > 0 {
 		subtasks := []*Task{}
 
-		taskIDs := []int64{}
+		taskIDs := []any{}
 		for _, task := range tasks {
 			taskIDs = append(taskIDs, task.ID)
 		}
 
-		inQuery := builder.Dialect(db.GetDialect()).
-			Select("*").
-			From("task_relations").
-			Where(builder.In("task_id", taskIDs))
-		inSQL, inArgs, err := inQuery.ToSQL()
-		if err != nil {
-			return nil, totalCount, err
-		}
+		var inPlaceholders = strings.Repeat("?,", len(taskIDs))
+		inPlaceholders = inPlaceholders[:len(inPlaceholders)-1]
 
-		inSQL = strings.TrimPrefix(inSQL, "SELECT * FROM task_relations WHERE")
+		var notIn = strings.Repeat("?,", len(taskIDs))
+		notIn = notIn[:len(notIn)-1]
+
+		allArgs := make([]any, 0, len(taskIDs)*2)
+		allArgs = append(allArgs, taskIDs...)
+		allArgs = append(allArgs, taskIDs...)
 
 		err = d.s.SQL(`SELECT * FROM tasks WHERE id IN (WITH RECURSIVE sub_tasks AS (
 		SELECT task_id,
@@ -400,7 +399,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 			created_by_id,
 			created
 		FROM task_relations
-		WHERE `+inSQL+`
+		WHERE task_id IN (`+inPlaceholders+`)
 		AND relation_kind = '`+string(RelationKindSubtask)+`'
 
 		UNION ALL
@@ -415,7 +414,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		sub_tasks st ON tr.task_id = st.other_task_id
 		WHERE tr.relation_kind = '`+string(RelationKindSubtask)+`')
 		SELECT other_task_id
-		FROM sub_tasks)`, inArgs...).Find(&subtasks)
+		FROM sub_tasks) AND id NOT IN (`+notIn+`)`, allArgs...).Find(&subtasks)
 		if err != nil {
 			return nil, totalCount, err
 		}
