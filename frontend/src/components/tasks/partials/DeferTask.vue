@@ -28,7 +28,7 @@
 			</XButton>
 		</div>
 		<flat-pickr
-			v-model="dueDate as any"
+			v-model="dueDate"
 			:class="{ disabled: taskService.loading }"
 			:config="flatPickerConfig"
 			:disabled="taskService.loading || undefined"

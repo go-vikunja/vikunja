@@ -4,7 +4,7 @@
 			<div class="tw-flex tw-items-center tw-gap-2">
 				<ColorBubble
 					v-if="task.hexColor !== ''"
-					:color="getHexColor(task.hexColor) as any"
+					:color="getHexColor(task.hexColor)"
 				/>
 				<BaseButton @click="copyUrl">
 					<h1 class="title task-id">
