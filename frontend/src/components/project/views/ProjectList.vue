@@ -160,22 +160,8 @@ watch(
 		if (props.projectId < 0) {
 			return
 		}
-		const tasksById = {}
-		tasks.value.forEach(t => tasksById[t.id] = true)
-
 		tasks.value = tasks.value.filter(t => {
-			if (typeof t.relatedTasks?.parenttask === 'undefined') {
-				return true
-			}
-
-			// If the task is a subtask, make sure the parent task is available in the current view as well
-			for (const pt of t.relatedTasks.parenttask) {
-				if (typeof tasksById[pt.id] === 'undefined') {
-					return true
-				}
-			}
-
-			return false
+			return !((t.relatedTasks?.parenttask?.length ?? 0) > 0)
 		})
 	},
 )
