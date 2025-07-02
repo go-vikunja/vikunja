@@ -7,7 +7,7 @@ export interface IWebhook extends IAbstract {
 	secret: string
 	targetUrl: string
 	events: string[]
-	createdBy: IUser
+	createdBy: IUser | null
 
 	created: Date
 	updated: Date
