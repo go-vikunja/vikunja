@@ -1,8 +1,21 @@
 import {i18n} from '@/i18n'
 import {notify} from '@kyvg/vue3-notification'
 
+interface ErrorData {
+	code?: number
+	message?: string
+}
+
+interface ErrorResponse {
+	reason?: { response?: { data?: ErrorData } }
+	response?: { data?: ErrorData }
+	message?: string
+	cause?: { message?: string }
+}
+
 export function getErrorText(r: unknown): string {
-	const data = (r as any)?.reason?.response?.data || (r as any)?.response?.data
+	const errorResponse = r as ErrorResponse
+	const data = errorResponse?.reason?.response?.data || errorResponse?.response?.data
 
 	if (data?.code) {
 		const path = `error.${data.code}`
@@ -18,10 +31,10 @@ export function getErrorText(r: unknown): string {
 		}
 	}
 	
-	let message = data?.message || (r as any)?.message
+	let message = data?.message || errorResponse?.message
 	
-	if (typeof (r as any)?.cause?.message !== 'undefined') {
-		message += ' ' + (r as any).cause.message
+	if (typeof errorResponse?.cause?.message !== 'undefined') {
+		message += ' ' + errorResponse.cause.message
 	}
 
 	return message

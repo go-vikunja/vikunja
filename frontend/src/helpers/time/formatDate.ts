@@ -21,7 +21,7 @@ export const formatDate = (date: Date | string | null, f: string) => {
 
 	date = createDateFromString(date!)
 	
-	// @ts-ignore - Vue i18n locale type issue
+	// @ts-expect-error - Vue i18n locale type issue
 	const locale = (DAYJS_LOCALE_MAPPING as Record<string, string>)[i18n.global.locale.value.toLowerCase()] ?? 'en'
 
 	return date 
@@ -44,7 +44,7 @@ export const formatDateSince = (date: Date | string | null) => {
 
 	date = createDateFromString(date!)
 
-	// @ts-ignore - Vue i18n locale type issue
+	// @ts-expect-error - Vue i18n locale type issue
 	const locale = (DAYJS_LOCALE_MAPPING as Record<string, string>)[i18n.global.locale.value.toLowerCase()] ?? 'en'
 
 	return date
@@ -61,7 +61,7 @@ export function formatISO(date: Date | string | null) {
  * by creating a shared composable.
  */
 export const useDateTimeFormatter = createSharedComposable((options?: MaybeRefOrGetter<Intl.DateTimeFormatOptions>) => {
-	// @ts-ignore - Vue i18n locale type issue
+	// @ts-expect-error - Vue i18n locale type issue
 	return computed(() => new Intl.DateTimeFormat(i18n.global.locale.value, toValue(options)))
 })
 

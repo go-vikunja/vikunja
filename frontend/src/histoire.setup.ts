@@ -22,7 +22,8 @@ export const setupVue3 = defineSetupVue3(({ app }) => {
 	app.directive('cy', cypress)
 
 	app.component('Icon', FontAwesomeIcon)
-	app.component('XButton', XButton as any)
+	// @ts-expect-error - Vue component type mismatch
+	app.component('XButton', XButton)
 	app.component('Modal', Modal)
 	app.component('Card', Card)
 })
