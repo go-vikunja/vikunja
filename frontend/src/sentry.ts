@@ -25,7 +25,6 @@ export default async function setupSentry(app: App, router: Router) {
 			}) as any,
 		],
 		tracesSampleRate: 1.0,
-		// @ts-expect-error: Sentry event and hint types are complex
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		beforeSend(event: any, hint: any) {
 
