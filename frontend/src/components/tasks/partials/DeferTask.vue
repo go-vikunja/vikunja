@@ -29,11 +29,11 @@
 		</div>
 		<flat-pickr
 			:model-value="dueDate ?? null"
-			@update:model-value="dueDate = $event"
 			:class="{ disabled: taskService.loading }"
 			:config="flatPickerConfig"
 			:disabled="taskService.loading || undefined"
 			class="input"
+			@update:modelValue="dueDate = $event"
 		/>
 	</div>
 </template>
