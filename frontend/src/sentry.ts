@@ -9,13 +9,10 @@ export default async function setupSentry(app: App, router: Router) {
 
 	Sentry.init({
 		app,
-		// @ts-expect-error: Sentry configuration injected globally
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		dsn: (window as any).SENTRY_DSN ?? '',
-		// @ts-expect-error: Vite plugin configuration not typed
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		release: (import.meta.env as any).VITE_PLUGIN_SENTRY_CONFIG?.release,
-		// @ts-expect-error: Vite plugin configuration not typed
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		dist: (import.meta.env as any).VITE_PLUGIN_SENTRY_CONFIG?.dist,
 		integrations: [
