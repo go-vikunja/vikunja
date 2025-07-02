@@ -346,10 +346,7 @@ async function deleteTeam() {
 
 async function deleteMember() {
 	try {
-		await teamMemberService.value.delete({
-			teamId: teamId.value,
-			username: memberToDelete.value!.username,
-		})
+		await teamMemberService.value.delete(memberToDelete.value!)
 		success({message: t('team.edit.deleteUser.success')})
 		await loadTeam()
 	} finally {
@@ -403,8 +400,9 @@ async function findUser(query: string) {
 async function leave() {
 	try {
 		await teamMemberService.value.delete({
+			...userInfo.value!,
+			admin: false, // This doesn't matter for deletion
 			teamId: teamId.value,
-			username: userInfo.value!.username,
 		})
 		success({message: t('team.edit.leave.success')})
 		await router.push({name: 'home'})

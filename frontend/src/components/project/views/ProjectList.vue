@@ -265,11 +265,11 @@ function prepareFiltersAndLoadTasks() {
 const taskRefs = ref<(InstanceType<typeof SingleTaskInProject> | null)[]>([])
 const focusedIndex = ref(-1)
 
-function setTaskRef(el: InstanceType<typeof SingleTaskInProject> | null, index: number) {
-	if (el === null) {
+function setTaskRef(el: unknown, index: number) {
+	if (el === null || !(el && typeof el === 'object' && '$props' in el)) {
 		delete taskRefs.value[index]
 	} else {
-		taskRefs.value[index] = el
+		taskRefs.value[index] = el as InstanceType<typeof SingleTaskInProject>
 	}
 }
 
