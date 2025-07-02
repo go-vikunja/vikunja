@@ -396,7 +396,16 @@ func (Test) Coverage() {
 func (Test) Web() {
 	mg.Deps(initVars)
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
-	runAndStreamOutput("go", "test", Goflags[0], "-p", "1", "-timeout", "45m", PACKAGE+"/pkg/webtests")
+	args := []string{"test", Goflags[0], "-p", "1", "-timeout", "45m", PACKAGE + "/pkg/webtests"}
+	runAndStreamOutput("go", args...)
+}
+
+func (Test) Filter(filter string) {
+	mg.Deps(initVars)
+	setApiPackages()
+	// We run everything sequentially and not in parallel to prevent issues with real test databases
+	args := append([]string{"test", Goflags[0], "-p", "1", "-timeout", "45m", "-run", filter}, ApiPackages...)
+	runAndStreamOutput("go", args...)
 }
 
 func (Test) All() {
