@@ -76,9 +76,17 @@ async function authenticateWithCode() {
 	}
 
 	try {
+		const provider = Array.isArray(route.params.provider) ? route.params.provider[0] : route.params.provider
+		const code = Array.isArray(route.query.code) ? route.query.code[0] : route.query.code
+		
+		if (!provider || !code) {
+			errorMessage.value = t('user.auth.openIdGeneralError')
+			return
+		}
+		
 		await authStore.openIdAuth({
-			provider: Array.isArray(route.params.provider) ? route.params.provider[0] : (route.params.provider || ''),
-			code: Array.isArray(route.query.code) ? route.query.code[0] : (route.query.code || ''),
+			provider,
+			code,
 		})
 		redirectIfSaved()
 	} catch(e) {

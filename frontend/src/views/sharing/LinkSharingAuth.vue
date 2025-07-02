@@ -120,8 +120,14 @@ function useAuth() {
 		loading.value = true
 
 		try {
+			const share = Array.isArray(route.params.share) ? route.params.share[0] : route.params.share
+			if (!share) {
+				errorMessage.value = t('sharing.invalidHash')
+				return
+			}
+			
 			const {project_id: projectId} = await authStore.linkShareAuth({
-				hash: route.params.share,
+				hash: share,
 				password: password.value,
 			})
 			const logoVisible = route.query.logoVisible
