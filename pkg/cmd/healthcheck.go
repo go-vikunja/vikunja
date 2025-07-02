@@ -34,7 +34,7 @@ var healthcheckCmd = &cobra.Command{
 	Use:   "healthcheck",
 	Short: "Preform a healthcheck on the Vikunja api server",
 	PreRun: func(_ *cobra.Command, _ []string) {
-		initialize.LightInit()
+		initialize.FullInitWithoutAsync()
 	},
 	Run: func(_ *cobra.Command, _ []string) {
 		if err := health.Check(); err != nil {
