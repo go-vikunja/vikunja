@@ -63,11 +63,11 @@
 							:key="key"
 							:ref="(el: Element | ComponentPublicInstance | null) => setResultRefs(el, k, Number(key))"
 							class="result-item-button"
-							:class="{'is-strikethrough': isDoneItem(i)}"
+							:class="{'is-strikethrough': isDoneItem(i as SearchResult | Command)}"
 							@keydown.up.prevent="select(k, Number(key) - 1)"
 							@keydown.down.prevent="select(k, Number(key) + 1)"
-							@click.prevent.stop="doAction(r.type, i)"
-							@keyup.prevent.enter="doAction(r.type, i)"
+							@click.prevent.stop="doAction(r.type, i as SearchResult | Command)"
+							@keyup.prevent.enter="doAction(r.type, i as SearchResult | Command)"
 							@keyup.prevent.esc="searchInput?.focus()"
 						>
 							<template v-if="r.type === ACTION_TYPE.LABELS && i">
@@ -81,12 +81,12 @@
 							</template>
 							<template v-else>
 								<span
-									v-if="isSavedFilterItem(i)"
+									v-if="isSavedFilterItem(i as SearchResult | Command)"
 									class="saved-filter-icon icon"
 								>
 									<Icon icon="filter" />
 								</span>
-								{{ getItemTitle(i) }}
+								{{ getItemTitle(i as SearchResult | Command) }}
 							</template>
 						</BaseButton>
 					</div>
@@ -106,6 +106,7 @@ import TeamService from '@/services/team'
 
 import TeamModel from '@/models/team'
 import ProjectModel from '@/models/project'
+import TaskModel from '@/models/task'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import QuickAddMagic from '@/components/tasks/partials/QuickAddMagic.vue'
@@ -230,10 +231,10 @@ const foundCommands = computed(() => availableCmds.value.filter((a) =>
 interface Result {
 	type: ACTION_TYPE
 	title: string
-	items: SearchResult[]
+	items: SearchResult[] | Command[]
 }
 
-const results = computed<Result[]>(() => {
+const results = computed(() => {
 	return [
 		{
 			type: ACTION_TYPE.CMD,
@@ -416,7 +417,7 @@ function searchTasks() {
 	}
 
 	taskSearchTimeout.value = setTimeout(async () => {
-		const r = await taskService.getAll({}, params) as DoAction<ITask>[]
+		const r = await taskService.getAll(new TaskModel(), params) as DoAction<ITask>[]
 		foundTasks.value = r.map((t) => {
 			t.type = ACTION_TYPE.TASK
 			return t
@@ -444,7 +445,7 @@ function searchTeams() {
 	const {assignees} = parsedQuery.value
 	teamSearchTimeout.value = setTimeout(async () => {
 		const teamSearchPromises = assignees.map((t) =>
-			teamService.getAll({}, {s: t}),
+			teamService.getAll(new TeamModel(), {s: t}),
 		)
 		const teamsResult = await Promise.all(teamSearchPromises)
 		foundTeams.value = teamsResult.flat().map((team) => {
@@ -463,27 +464,36 @@ function search() {
 
 const searchInput = ref<HTMLElement | null>(null)
 
-async function doAction(type: ACTION_TYPE, item: SearchResult) {
+async function doAction(type: ACTION_TYPE, item: SearchResult | Command) {
+	// Handle commands differently
+	if ('action' in item && typeof item.action === 'function') {
+		closeQuickActions()
+		await item.action()
+		return
+	}
+	
+	// If we get here, item is a SearchResult
+	const searchResult = item as SearchResult
 	switch (type) {
 		case ACTION_TYPE.PROJECT:
 			closeQuickActions()
 			await router.push({
 				name: 'project.index',
-				params: {projectId: item.id},
+				params: {projectId: searchResult.id},
 			})
 			break
 		case ACTION_TYPE.TASK:
 			closeQuickActions()
 			await router.push({
 				name: 'task.detail',
-				params: {id: item.id},
+				params: {id: searchResult.id},
 			})
 			break
 		case ACTION_TYPE.TEAM:
 			closeQuickActions()
 			await router.push({
 				name: 'teams.edit',
-				params: {id: item.id},
+				params: {id: searchResult.id},
 			})
 			break
 		case ACTION_TYPE.CMD:
@@ -599,15 +609,23 @@ function reset() {
 }
 
 // Helper functions for template
-function isDoneItem(item: SearchResult): boolean {
+function isDoneItem(item: SearchResult | Command): boolean {
+	if ('action' in item) {
+		// This is a Command, commands are never "done"
+		return false
+	}
 	return item && typeof item === 'object' && 'done' in item && Boolean(item.done)
 }
 
-function isSavedFilterItem(item: SearchResult): boolean {
+function isSavedFilterItem(item: SearchResult | Command): boolean {
+	if ('action' in item) {
+		// Commands are not saved filter items
+		return false
+	}
 	return item && typeof item === 'object' && 'id' in item && typeof item.id === 'number' && item.id < -1
 }
 
-function getItemTitle(item: SearchResult): string {
+function getItemTitle(item: SearchResult | Command): string {
 	return item && typeof item === 'object' && 'title' in item && typeof item.title === 'string' ? item.title : ''
 }
 </script>
