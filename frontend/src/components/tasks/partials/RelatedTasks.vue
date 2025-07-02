@@ -39,7 +39,7 @@
 					class="field"
 				>
 					<Multiselect
-						v-model="newTaskRelation.task"
+						v-model="newTaskRelation.task as unknown as Record<string, unknown>"
 						v-focus
 						:placeholder="$t('task.relation.searchPlaceholder')"
 						:loading="taskService.loading"
