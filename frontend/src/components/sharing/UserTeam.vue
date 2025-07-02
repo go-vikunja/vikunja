@@ -288,9 +288,9 @@ async function deleteSharable() {
 		(stuffModel as ITeamProject).teamId = (sharable.value as ITeam).id
 	}
 
-	props.shareType === 'user' 
-		? await (stuffService as UserProjectService).delete(stuffModel as IUserProject)
-		: await (stuffService as TeamProjectService).delete(stuffModel as ITeamProject)
+	await (props.shareType === 'user' 
+		? (stuffService as UserProjectService).delete(stuffModel as IUserProject)
+		: (stuffService as TeamProjectService).delete(stuffModel as ITeamProject))
 	showDeleteModal.value = false
 	for (const i in sharables.value) {
 		if (
@@ -320,9 +320,9 @@ async function add(admin: boolean) {
 		(stuffModel as ITeamProject).teamId = (sharable.value as ITeam).id
 	}
 
-	props.shareType === 'user' 
-		? await (stuffService as UserProjectService).create(stuffModel as IUserProject)
-		: await (stuffService as TeamProjectService).create(stuffModel as ITeamProject)
+	await (props.shareType === 'user' 
+		? (stuffService as UserProjectService).create(stuffModel as IUserProject)
+		: (stuffService as TeamProjectService).create(stuffModel as ITeamProject))
 	success({message: t('project.share.userTeam.addedSuccess', {type: shareTypeName.value})})
 	await load()
 }

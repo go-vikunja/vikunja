@@ -21,7 +21,8 @@ export const formatDate = (date: Date | string | null, f: string) => {
 
 	date = createDateFromString(date!)
 	
-	const locale = (DAYJS_LOCALE_MAPPING as Record<string, string>)[((i18n.global.locale as any).value as string).toLowerCase()] ?? 'en'
+	// @ts-ignore - Vue i18n locale type issue
+	const locale = (DAYJS_LOCALE_MAPPING as Record<string, string>)[i18n.global.locale.value.toLowerCase()] ?? 'en'
 
 	return date 
 		? dayjs(date).locale(locale).format(f) 
@@ -43,7 +44,8 @@ export const formatDateSince = (date: Date | string | null) => {
 
 	date = createDateFromString(date!)
 
-	const locale = (DAYJS_LOCALE_MAPPING as Record<string, string>)[((i18n.global.locale as any).value as string).toLowerCase()] ?? 'en'
+	// @ts-ignore - Vue i18n locale type issue
+	const locale = (DAYJS_LOCALE_MAPPING as Record<string, string>)[i18n.global.locale.value.toLowerCase()] ?? 'en'
 
 	return date
 		? dayjs(date).locale(locale).fromNow()
@@ -59,7 +61,8 @@ export function formatISO(date: Date | string | null) {
  * by creating a shared composable.
  */
 export const useDateTimeFormatter = createSharedComposable((options?: MaybeRefOrGetter<Intl.DateTimeFormatOptions>) => {
-	return computed(() => new Intl.DateTimeFormat(((i18n.global.locale as any).value as string), toValue(options)))
+	// @ts-ignore - Vue i18n locale type issue
+	return computed(() => new Intl.DateTimeFormat(i18n.global.locale.value, toValue(options)))
 })
 
 export function useWeekDayFromDate() {

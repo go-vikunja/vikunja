@@ -82,7 +82,8 @@ export async function setLanguage(lang: SupportedLocale): Promise<SupportedLocal
 	}
 
 	// do not change language to the current one
-	if ((i18n.global.locale as any).value === lang) {
+	// @ts-ignore - Vue i18n locale type issue
+	if (i18n.global.locale.value === lang) {
 		return
 	}
 
@@ -99,7 +100,8 @@ export async function setLanguage(lang: SupportedLocale): Promise<SupportedLocal
 	
 	await loadDayJsLocale(lang)
 
-	(i18n.global.locale as any).value = lang
+	// @ts-ignore - Vue i18n locale type issue
+	i18n.global.locale.value = lang
 	document.documentElement.lang = lang
 	return lang
 }
