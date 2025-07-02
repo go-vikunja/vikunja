@@ -123,7 +123,6 @@ import BackgroundUnsplashService from '@/services/backgroundUnsplash'
 import BackgroundUploadService from '@/services/backgroundUpload'
 import ProjectService from '@/services/project'
 import type {IBackgroundImage} from '@/modelTypes/IBackgroundImage'
-import type {IProject} from '@/modelTypes/IProject'
 import BackgroundImageModel from '@/models/backgroundImage'
 
 import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'

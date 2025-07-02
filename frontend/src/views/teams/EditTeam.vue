@@ -272,6 +272,7 @@ import TeamService from '@/services/team'
 import TeamMemberService from '@/services/teamMember'
 import UserService from '@/services/user'
 import TeamModel from '@/models/team'
+import TeamMemberModel from '@/models/teamMember'
 import UserModel from '@/models/user'
 
 import {RIGHTS as Rights} from '@/constants/rights'
@@ -362,10 +363,10 @@ async function addUser() {
 		showMustSelectUserError.value = true
 		return
 	}
-	await teamMemberService.value.create({
+	await teamMemberService.value.create(new TeamMemberModel({
 		teamId: teamId.value,
 		username: newMember.value!.username,
-	} as any)
+	}))
 	newMember.value = undefined
 	await loadTeam()
 	success({message: t('team.edit.userAddedSuccess')})
