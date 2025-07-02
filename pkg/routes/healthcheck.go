@@ -20,9 +20,14 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+
+	"code.vikunja.io/api/pkg/health"
 )
 
 // HealthcheckHandler handles healthckeck 'OK' response
 func HealthcheckHandler(c echo.Context) error {
+	if err := health.Check(); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
+	}
 	return c.String(http.StatusOK, "OK")
 }

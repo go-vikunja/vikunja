@@ -14,29 +14,33 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package webtests
+package health
 
 import (
-	"net/http"
-	"testing"
+	"context"
+	"errors"
 
-	"code.vikunja.io/api/pkg/health"
-	"code.vikunja.io/api/pkg/routes"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/red"
 )
 
-func TestHealthcheck(t *testing.T) {
-	t.Run("function", func(t *testing.T) {
-		_, err := setupTestEnv()
-		require.NoError(t, err)
-		require.NoError(t, health.Check())
-	})
+// Check verifies the main service dependencies are reachable.
+func Check() error {
+	s := db.NewSession()
+	defer s.Close()
+	if err := s.Ping(); err != nil {
+		return err
+	}
 
-	t.Run("route", func(t *testing.T) {
-		rec, err := newTestRequest(t, http.MethodGet, routes.HealthcheckHandler, ``, nil, nil)
-		require.NoError(t, err)
-		assert.Contains(t, rec.Body.String(), "OK")
-	})
+	if config.RedisEnabled.GetBool() {
+		r := red.GetRedis()
+		if r == nil {
+			return errors.New("redis not initialized")
+		}
+		if err := r.Ping(context.Background()).Err(); err != nil {
+			return err
+		}
+	}
+	return nil
 }

@@ -18,11 +18,9 @@ package cmd
 
 import (
 	"fmt"
-	"net/http"
 	"os"
-	"time"
 
-	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/health"
 	"code.vikunja.io/api/pkg/initialize"
 
 	"github.com/spf13/cobra"
@@ -39,26 +37,13 @@ var healthcheckCmd = &cobra.Command{
 		initialize.LightInit()
 	},
 	Run: func(_ *cobra.Command, _ []string) {
-		client := &http.Client{
-			Timeout: 5 * time.Second,
-		}
-		host := config.ServiceInterface.GetString()
-		url := "http://%s/health"
-		resp, err := client.Get(fmt.Sprintf(url, host))
-		if err != nil {
+		if err := health.Check(); err != nil {
 			fmt.Printf("API server is not healthy: %v\n", err)
 			os.Exit(1)
 			return
 		}
-		defer resp.Body.Close()
 
-		// Check the response status
-		if resp.StatusCode == http.StatusOK {
-			fmt.Println("API server is healthy")
-			os.Exit(0)
-			return
-		}
-		fmt.Printf("API server is not healthy: HTTP %d\n", resp.StatusCode)
-		os.Exit(1)
+		fmt.Println("API server is healthy")
+		os.Exit(0)
 	},
 }
