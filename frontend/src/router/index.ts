@@ -449,7 +449,11 @@ router.beforeEach(async (to, from) => {
 		}
 	}
 
-	const newRoute = await getAuthForRoute(to, authStore)
+	const newRoute = await getAuthForRoute(to, {
+		authUser: !!authStore.authUser,
+		authLinkShare: !!authStore.authLinkShare, 
+		checkAuth: authStore.checkAuth
+	})
 	if(newRoute) {
 		return {
 			...newRoute,
