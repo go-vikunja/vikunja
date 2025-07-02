@@ -21,7 +21,6 @@ export default async function setupSentry(app: App, router: Router) {
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				routingInstrumentation: (Sentry as any).vueRouterInstrumentation(router),
 				tracingOrigins: ['localhost', /^\//],
-			// @ts-expect-error: Integration return type issues
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			}) as any,
 		],

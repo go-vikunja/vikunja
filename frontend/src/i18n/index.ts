@@ -90,7 +90,6 @@ export async function setLanguage(lang: SupportedLocale): Promise<SupportedLocal
 	if (!i18n.global.availableLocales.includes(lang)) {
 		try {
 			const messages = await import(`./lang/${lang}.json`)
-			// @ts-expect-error - Vue i18n locale parameter type is more restrictive than our SupportedLocale
 			i18n.global.setLocaleMessage(lang, messages.default)
 		} catch (e) {
 			console.error(`Failed to load language ${lang}:`, e)
