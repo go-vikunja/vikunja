@@ -16,10 +16,8 @@ export default async function setupSentry(app: App, router: Router) {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		dist: (import.meta.env as any).VITE_PLUGIN_SENTRY_CONFIG?.dist,
 		integrations: [
-			// @ts-expect-error: Sentry tracing integration type issues
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			new (Integrations as any).BrowserTracing({
-				// @ts-expect-error: Vue router instrumentation type issues
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				routingInstrumentation: (Sentry as any).vueRouterInstrumentation(router),
 				tracingOrigins: ['localhost', /^\//],
