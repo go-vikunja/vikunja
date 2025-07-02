@@ -118,7 +118,7 @@ export function useTaskList(
 		}
 		try {
 			const [model, params, page] = getAllTasksParams.value
-			tasks.value = await taskCollectionService.getAll(model as unknown as ITask, params, page)
+			tasks.value = await taskCollectionService.getAll(model as unknown as ITask, params as Record<string, unknown>, page as number)
 		} catch (e) {
 			error(e)
 		}
