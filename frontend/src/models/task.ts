@@ -112,7 +112,7 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 
 		this.id = Number(this.id)
 		this.title = this.title?.trim()
-		this.doneAt = parseDateOrNull(this.doneAt as Date | string | null)
+		this.doneAt = this.doneAt ? parseDateOrNull(this.doneAt as Date | string) : null
 
 		this.labels = this.labels
 			.map(l => new LabelModel(l))
@@ -123,9 +123,9 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 			return new UserModel(a)
 		})
 
-		this.dueDate = parseDateOrNull(this.dueDate as Date | string | null)
-		this.startDate = parseDateOrNull(this.startDate as Date | string | null)
-		this.endDate = parseDateOrNull(this.endDate as Date | string | null)
+		this.dueDate = this.dueDate ? parseDateOrNull(this.dueDate as Date | string) : null
+		this.startDate = this.startDate ? parseDateOrNull(this.startDate as Date | string) : null
+		this.endDate = this.endDate ? parseDateOrNull(this.endDate as Date | string) : null
 
 		// Parse the repeat after into something usable
 		this.repeatAfter = parseRepeatAfter(this.repeatAfter as number)
