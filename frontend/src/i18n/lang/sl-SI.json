@@ -739,7 +739,6 @@
 		"addReminder": "Dodaj nov opomnik…",
 		"doneSuccess": "Naloga je bila uspešno označena kot opravljena.",
 		"undoneSuccess": "Naloga je bila uspešno odznačena kot opravljena.",
-		"revertSuccess": "Sprememba opravila je bila uspešno razveljavljena.",
 		"undo": "Razveljavi",
 		"openDetail": "Odpri pogled podrobnosti nalog",
 		"checklistTotal": "{checked} od {total} nalog",

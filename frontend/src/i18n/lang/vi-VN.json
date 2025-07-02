@@ -744,7 +744,6 @@
 		"addReminder": "Thêm một nhắc nhở…",
 		"doneSuccess": "Công việc đã được đánh dấu Hoàn thành.",
 		"undoneSuccess": "Công việc đã được bỏ đánh dấu Hoàn thành.",
-		"revertSuccess": "Tác vụ được hoàn tác thành công.",
 		"undo": "Hoàn tác",
 		"openDetail": "Xem chi tiết công việc",
 		"checklistTotal": "{checked} trong số {total} công việc",

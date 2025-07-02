@@ -749,7 +749,6 @@
 		"addReminder": "Legg til påminnelse…",
 		"doneSuccess": "Oppgaven ble markert som ferdig.",
 		"undoneSuccess": "Oppgaven ble fjernet som ferdig.",
-		"revertSuccess": "Oppgaveendringen ble omgjort.",
 		"undo": "Angre",
 		"openDetail": "Åpne detaljvisning",
 		"checklistTotal": "{checked} av {total} oppgaver",

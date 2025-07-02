@@ -666,7 +666,6 @@
 		"addReminder": "リマイダーを作成…",
 		"doneSuccess": "タスクを完了にしました。",
 		"undoneSuccess": "タスクを未完了に戻しました。",
-		"revertSuccess": "タスクは正常に未完了へ戻されました。",
 		"undo": "元に戻す",
 		"openDetail": "タスクの詳細を表示",
 		"checklistTotal": "{total}件中{checked}件のタスク",

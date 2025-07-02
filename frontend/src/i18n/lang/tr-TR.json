@@ -752,7 +752,6 @@
 		"addReminder": "Bir hatırlatıcı ekle…",
 		"doneSuccess": "Görev başarıyla tamamlandı olarak işaretlendi.",
 		"undoneSuccess": "Görev başarıyla tamamlanmadı olarak işaretlendi.",
-		"revertSuccess": "Görev değişikliği başarıyla geri alındı.",
 		"undo": "Geri al",
 		"openDetail": "Görev detay görünümünü aç",
 		"checklistTotal": "{checked}/{total} görev",

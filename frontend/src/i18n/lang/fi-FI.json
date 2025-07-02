@@ -648,7 +648,6 @@
 		"addReminder": "Lisää muistutus…",
 		"doneSuccess": "Tehtävä merkittiin onnistuneesti valmiiksi.",
 		"undoneSuccess": "Tehtävä merkittiin onnistuneesti keskeneräiseksi.",
-		"revertSuccess": "Tehtävän muutos peruutettiin onnistuneesti.",
 		"undo": "Kumoa",
 		"checklistTotal": "{checked} tehtävää {total} tehtävästä",
 		"checklistAllDone": "{total} tehtävää",

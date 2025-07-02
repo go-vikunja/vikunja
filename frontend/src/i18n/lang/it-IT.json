@@ -750,7 +750,6 @@
 		"addReminder": "Aggiungi un promemoria…",
 		"doneSuccess": "Attività segnata come completata.",
 		"undoneSuccess": "Attività segnata come non completata.",
-		"revertSuccess": "La modifica dell'attività è stata annullata con successo.",
 		"undo": "Annulla",
 		"openDetail": "Apri vista dettagli attività",
 		"checklistTotal": "{checked} di {total} attività",

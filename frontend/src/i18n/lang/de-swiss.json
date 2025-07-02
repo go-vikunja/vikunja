@@ -752,7 +752,6 @@
 		"addReminder": "Eine Erinnerung hinzufügen…",
 		"doneSuccess": "Die Uufgab isch erfolgriich als \"Fertig\" markiert wordä.",
 		"undoneSuccess": "Die Uufgaab isch nüme als fertig markiert.",
-		"revertSuccess": "Die Änderung der Aufgabe wurde erfolgreich rückgängig gemacht.",
 		"undo": "Rückgängig",
 		"openDetail": "Uufgab i de Detailaahsicht öffne",
 		"checklistTotal": "{checked} von {total} Aufgaben",

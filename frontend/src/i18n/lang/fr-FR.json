@@ -750,7 +750,6 @@
 		"addReminder": "Ajouter un rappel…",
 		"doneSuccess": "Tâche marquée comme terminée.",
 		"undoneSuccess": "Tâche marquée comme non terminée.",
-		"revertSuccess": "La modification de tâche a bien été annulée.",
 		"undo": "Annuler",
 		"openDetail": "Ouvrir la vue détaillée de la tâche",
 		"checklistTotal": "{checked} sur {total} tâches",

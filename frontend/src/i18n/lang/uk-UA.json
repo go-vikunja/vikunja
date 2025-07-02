@@ -733,7 +733,6 @@
 		"addReminder": "Обрати…",
 		"doneSuccess": "Завдання закінчено.",
 		"undoneSuccess": "Завдання поновлено.",
-		"revertSuccess": "Зміну завдання повернуто.",
 		"undo": "Повернути",
 		"openDetail": "Відкрити подробиці завдання",
 		"checklistTotal": "{checked} з {total} завдань",

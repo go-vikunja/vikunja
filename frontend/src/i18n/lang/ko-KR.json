@@ -749,7 +749,6 @@
 		"addReminder": "미리알림 추가...",
 		"doneSuccess": "할 일이 완료된 것으로 성공적으로 표시되었습니다.",
 		"undoneSuccess": "할 일이 완료된 것으로 성공적으로 표시 해제되었습니다.",
-		"revertSuccess": "할 일 변경이 성공적으로 취소되었습니다.",
 		"undo": "되돌리기",
 		"openDetail": "할 일 세부 정보 열기",
 		"checklistTotal": "{total} 의 {checked} 할 일",

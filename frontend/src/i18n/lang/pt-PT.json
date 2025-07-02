@@ -752,7 +752,6 @@
 		"addReminder": "Adicionar um lembrete…",
 		"doneSuccess": "A tarefa foi marcada como concluída.",
 		"undoneSuccess": "A tarefa foi desmarcada como concluída.",
-		"revertSuccess": "A alteração da tarefa foi anulada com sucesso.",
 		"undo": "Desfazer",
 		"openDetail": "Abrir vista detalhada da tarefa",
 		"checklistTotal": "{checked} de {total} tarefas",

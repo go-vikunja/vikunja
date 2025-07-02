@@ -746,7 +746,6 @@
 		"addReminder": "Pridėti priminimą…",
 		"doneSuccess": "Užduotis buvo sėkmingai pažymėta kaip baigta.",
 		"undoneSuccess": "Užduotis buvo sėkmingai atžymėta kaip atlikta.",
-		"revertSuccess": "Užduoties pakeitimai buvo sėkmingai pakeisti.",
 		"undo": "Anuliuoti",
 		"openDetail": "Atidaryti užduoties duomenų vaizdą",
 		"checklistTotal": "{checked} iš {total} užduočių",
