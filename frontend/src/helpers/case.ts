@@ -22,14 +22,14 @@ export function objectToCamelCase(object: Record<string, unknown>): Record<strin
 
 		// Call it again for arrays
 		if (Array.isArray(object[m])) {
-			parsedObject[camelCase(m)] = (object[m] as unknown[]).map((o: Record<string, unknown>) => objectToCamelCase(o))
+			parsedObject[camelCase(m)] = (object[m] as unknown[]).map((o: unknown) => objectToCamelCase(o as Record<string, unknown>))
 			// Because typeof [] === 'object' is true for arrays, we leave the loop here to prevent converting arrays to objects.
 			continue
 		}
 
 		// Call it again for nested objects
 		if (typeof object[m] === 'object') {
-			parsedObject[camelCase(m)] = objectToCamelCase(object[m])
+			parsedObject[camelCase(m)] = objectToCamelCase(object[m] as Record<string, unknown>)
 		}
 	}
 	return parsedObject
@@ -60,14 +60,14 @@ export function objectToSnakeCase(object: Record<string, unknown>): Record<strin
 
 		// Call it again for arrays
 		if (Array.isArray(object[m])) {
-			parsedObject[snakeCase(m)] = (object[m] as unknown[]).map((o: Record<string, unknown>) => objectToSnakeCase(o))
+			parsedObject[snakeCase(m)] = (object[m] as unknown[]).map((o: unknown) => objectToSnakeCase(o as Record<string, unknown>))
 			// Because typeof [] === 'object' is true for arrays, we leave the loop here to prevent converting arrays to objects.
 			continue
 		}
 
 		// Call it again for nested objects
 		if (typeof object[m] === 'object') {
-			parsedObject[snakeCase(m)] = objectToSnakeCase(object[m])
+			parsedObject[snakeCase(m)] = objectToSnakeCase(object[m] as Record<string, unknown>)
 		}
 	}
 
