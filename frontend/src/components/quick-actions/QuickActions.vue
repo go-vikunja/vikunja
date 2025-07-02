@@ -228,7 +228,7 @@ const foundCommands = computed(() => availableCmds.value.filter((a) =>
 	a.title.toLowerCase().includes(query.value.toLowerCase()),
 ))
 
-interface Result {
+interface _Result {
 	type: ACTION_TYPE
 	title: string
 	items: SearchResult[] | Command[]
