@@ -19,7 +19,13 @@ export default class AvatarService extends AbstractService<IAvatar> {
 		return false
 	}
 
-	create(blob: Blob) {
+	create(model: IAvatar) {
+		// For avatar uploads, we don't use the standard create flow
+		// This method should not be called directly for blob uploads
+		return super.create(model)
+	}
+
+	uploadAvatar(blob: Blob) {
 		return this.uploadBlob(
 			this.paths.create,
 			blob,

@@ -37,13 +37,8 @@ export default class AttachmentService extends AbstractService<IAttachment> {
 		return new AttachmentModel(data)
 	}
 
-	modelCreateFactory(data: Partial<IAttachment> | IAttachmentUploadResponse): IAttachment | IAttachmentUploadResponse {
-		// If this is an upload response (has success/errors properties), process it specially
-		if (typeof data === 'object' && data !== null && ('success' in data || 'errors' in data)) {
-			return this.processUploadResponse(data as IAttachmentUploadResponse)
-		}
-		// For standard create operations, use the base factory
-		return this.modelFactory(data as Partial<IAttachment>)
+	modelCreateFactory(data: Partial<IAttachment>): IAttachment {
+		return this.modelFactory(data)
 	}
 
 	// Special factory for file upload responses

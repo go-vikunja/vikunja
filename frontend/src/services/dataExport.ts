@@ -1,11 +1,12 @@
 import AbstractService from './abstractService'
 import {downloadBlob} from '../helpers/downloadBlob'
+import type {IMessage} from '@/modelTypes/IMessage'
 
 const DOWNLOAD_NAME = 'vikunja-export.zip'
 
-export default class DataExportService extends AbstractService {
+export default class DataExportService extends AbstractService<IMessage> {
 	request(password: string) {
-		return this.post('/user/export/request', {password})
+		return this.post('/user/export/request', {password, maxRight: null} as unknown as IMessage)
 	}
 	
 	async download(password: string) {

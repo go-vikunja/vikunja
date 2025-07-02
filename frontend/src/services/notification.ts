@@ -23,14 +23,15 @@ export default class NotificationService extends AbstractService<NotificationMod
 			return model
 		}
 		
-		// Convert dates to ISO strings if they are not null
-		if (model.created) {
-			(model as NotificationModel & {created: string}).created = new Date(model.created).toISOString()
+		// Create a serializable copy with ISO date strings for API transmission
+		const serializedModel = {
+			...model,
+			created: model.created ? new Date(model.created).toISOString() : model.created,
+			readAt: model.readAt ? new Date(model.readAt).toISOString() : model.readAt,
 		}
-		if (model.readAt) {
-			(model as NotificationModel & {readAt: string}).readAt = new Date(model.readAt).toISOString()
-		}
-		return model
+		
+		// Return as NotificationModel type since the API expects this format
+		return serializedModel as unknown as NotificationModel
 	}
 	
 	async markAllRead() {

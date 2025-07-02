@@ -18,9 +18,9 @@ export default class BucketService extends AbstractService<IBucket> {
 		return new BucketModel(data)
 	}
 
-	beforeUpdate(model: Partial<IBucket>): Partial<IBucket> {
+	beforeUpdate(model: IBucket): IBucket {
 		const taskService = new TaskService()
-		model.tasks = model.tasks?.map((t: Partial<ITask>) => taskService.processModel(t))
+		model.tasks = model.tasks?.map((t: ITask) => taskService.processModel(t))
 		return model
 	}
 }
