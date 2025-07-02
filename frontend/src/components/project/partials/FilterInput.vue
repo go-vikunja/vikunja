@@ -335,15 +335,15 @@ const blurDebounced = useDebounceFn(() => emit('blur'), 500)
 			>
 				<XLabel
 					v-if="autocompleteResultType === 'labels'"
-					:label="item"
+					:label="item as ILabel"
 				/>
 				<User
 					v-else-if="autocompleteResultType === 'assignees'"
-					:user="item"
+					:user="item as IUser"
 					:avatar-size="25"
 				/>
 				<template v-else>
-					{{ item.title }}
+					{{ (item as IProject).title }}
 				</template>
 			</template>
 		</AutocompleteDropdown>
