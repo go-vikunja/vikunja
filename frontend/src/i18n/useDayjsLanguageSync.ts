@@ -75,7 +75,6 @@ export function useDayjsLanguageSync(dayjsGlobal: typeof dayjs) {
 
 	const dayjsLanguageLoaded = ref(false)
 	watch(
-		// @ts-expect-error - Vue i18n locale type issue
 		() => i18n.global.locale.value,
 		async (currentLanguage: string) => {
 			if (!dayjsGlobal) {

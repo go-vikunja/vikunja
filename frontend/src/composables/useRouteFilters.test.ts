@@ -1,7 +1,10 @@
 import {describe, it, expectTypeOf} from 'vitest'
 import {useRouteFilters, type UseRouteFiltersReturn} from './useRouteFilters'
 
-interface DummyFilters {foo: string}
+interface DummyFilters {
+	foo: string
+	[key: string]: unknown
+}
 
 describe('useRouteFilters type inference', () => {
 	it('should infer return types based on filter interface', () => {
