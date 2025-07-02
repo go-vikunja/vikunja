@@ -14,36 +14,33 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package cmd
+package health
 
 import (
-	"fmt"
-	"os"
+	"context"
+	"errors"
 
-	"code.vikunja.io/api/pkg/health"
-	"code.vikunja.io/api/pkg/initialize"
-
-	"github.com/spf13/cobra"
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/red"
 )
 
-func init() {
-	rootCmd.AddCommand(healthcheckCmd)
-}
+// Check verifies the main service dependencies are reachable.
+func Check() error {
+	s := db.NewSession()
+	defer s.Close()
+	if err := s.Ping(); err != nil {
+		return err
+	}
 
-var healthcheckCmd = &cobra.Command{
-	Use:   "healthcheck",
-	Short: "Preform a healthcheck on the Vikunja api server",
-	PreRun: func(_ *cobra.Command, _ []string) {
-		initialize.FullInitWithoutAsync()
-	},
-	Run: func(_ *cobra.Command, _ []string) {
-		if err := health.Check(); err != nil {
-			fmt.Printf("API server is not healthy: %v\n", err)
-			os.Exit(1)
-			return
+	if config.RedisEnabled.GetBool() {
+		r := red.GetRedis()
+		if r == nil {
+			return errors.New("redis not initialized")
 		}
-
-		fmt.Println("API server is healthy")
-		os.Exit(0)
-	},
+		if err := r.Ping(context.Background()).Err(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
