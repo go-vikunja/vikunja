@@ -48,7 +48,6 @@ in {
 		enable = true;
 		settings = {
 			forwardPorts = [ 4173 3456 ];
-			image = "ghcr.io/cachix/devenv/devcontainer:main";
 			portsAttributes = {
 				"4173" = {
 					label = "Vikunja Frontend dev server";
