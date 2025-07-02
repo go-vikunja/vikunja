@@ -89,7 +89,7 @@ export default class NotificationModel extends AbstractModel<INotification> impl
 		switch (this.name) {
 			case NOTIFICATION_NAMES.TASK_COMMENT:
 				if ('task' in this.notification) {
-					return `commented on ${this.notification.task.getTextIdentifier()}`
+					return `commented on ${(this.notification.task as TaskModel).getTextIdentifier()}`
 				}
 				return 'commented on a task'
 			case NOTIFICATION_NAMES.TASK_ASSIGNED:
@@ -101,13 +101,13 @@ export default class NotificationModel extends AbstractModel<INotification> impl
 						who = 'you'
 					}
 
-					return `assigned ${who} to ${this.notification.task.getTextIdentifier()}`
+					return `assigned ${who} to ${(this.notification.task as TaskModel).getTextIdentifier()}`
 				}
 				return 'assigned someone to a task'
 			}
 			case NOTIFICATION_NAMES.TASK_DELETED:
 				if ('task' in this.notification) {
-					return `deleted ${this.notification.task.getTextIdentifier()}`
+					return `deleted ${(this.notification.task as TaskModel).getTextIdentifier()}`
 				}
 				return 'deleted a task'
 			case NOTIFICATION_NAMES.PROJECT_CREATED:
@@ -131,13 +131,13 @@ export default class NotificationModel extends AbstractModel<INotification> impl
 			case NOTIFICATION_NAMES.TASK_REMINDER:
 			{
 				if ('task' in this.notification && 'project' in this.notification) {
-					return `Reminder for ${this.notification.task.getTextIdentifier()} ${this.notification.task.title} (${this.notification.project.title})`
+					return `Reminder for ${(this.notification.task as TaskModel).getTextIdentifier()} ${this.notification.task.title} (${this.notification.project.title})`
 				}
 				return 'Task reminder'
 			}
 			case NOTIFICATION_NAMES.TASK_MENTIONED:
 				if ('doer' in this.notification && 'task' in this.notification) {
-					return `${getDisplayName(this.notification.doer)} mentioned you on ${this.notification.task.getTextIdentifier()}`
+					return `${getDisplayName(this.notification.doer)} mentioned you on ${(this.notification.task as TaskModel).getTextIdentifier()}`
 				}
 				return 'Someone mentioned you on a task'
 		}
