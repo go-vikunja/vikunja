@@ -377,41 +377,40 @@ func Fmt() {
 type Test mg.Namespace
 
 // Runs the feature tests
-func (Test) Feature(filter string) {
+func (Test) Feature() {
 	mg.Deps(initVars)
 	setApiPackages()
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
-	args := []string{"test", Goflags[0], "-p", "1", "-coverprofile", "cover.out", "-timeout", "45m"}
-	if strings.TrimSpace(filter) != "" {
-		args = append(args, "-run", filter)
-	}
-	args = append(args, ApiPackages...)
+	args := append([]string{"test", Goflags[0], "-p", "1", "-coverprofile", "cover.out", "-timeout", "45m"}, ApiPackages...)
 	runAndStreamOutput("go", args...)
 }
 
 // Runs the tests and builds the coverage html file from coverage output
 func (Test) Coverage() {
 	mg.Deps(initVars)
-	Test{}.Feature("")
+	mg.Deps(Test.Feature)
 	runAndStreamOutput("go", "tool", "cover", "-html=cover.out", "-o", "cover.html")
 }
 
 // Runs the web tests
-func (Test) Web(filter string) {
+func (Test) Web() {
 	mg.Deps(initVars)
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
-	args := []string{"test", Goflags[0], "-p", "1", "-timeout", "45m"}
-	if strings.TrimSpace(filter) != "" {
-		args = append(args, "-run", filter)
-	}
-	args = append(args, PACKAGE+"/pkg/webtests")
+	args := []string{"test", Goflags[0], "-p", "1", "-timeout", "45m", PACKAGE + "/pkg/webtests"}
+	runAndStreamOutput("go", args...)
+}
+
+func (Test) Filter(filter string) {
+	mg.Deps(initVars)
+	setApiPackages()
+	// We run everything sequentially and not in parallel to prevent issues with real test databases
+	args := append([]string{"test", Goflags[0], "-p", "1", "-timeout", "45m", "-run", filter}, ApiPackages...)
 	runAndStreamOutput("go", args...)
 }
 
 func (Test) All() {
 	mg.Deps(initVars)
-	Test{}.Feature("")
-	Test{}.Web("")
+	mg.Deps(Test.Feature, Test.Web)
 }
 
 type Check mg.Namespace

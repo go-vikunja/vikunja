@@ -15,9 +15,9 @@ The project consists of:
 
 ### Backend (Go)
 - **Build**: `mage build` - Builds the Go binary
-- **Test**: `mage test:feature` - Runs feature tests
+- **Test Features**: `mage test:feature` - Runs feature tests
 - **Test Web**: `mage test:web` - Runs web tests
-- **Test All**: `mage test:all` - Runs all tests
+- You can run specific tests with `mage test:filter <filter>` where `<filter>` is a go test filter string.
 - **Lint**: `mage lint` - Runs golangci-lint
 - **Lint Fix**: `mage lint:fix` - Runs golangci-lint with auto-fix
 - **Generate Swagger Docs**: `mage generate:swagger-docs` - Updates API documentation (Generally you won't need to run this unless the user tells you to. It is updated automatically in the CI workflow)
