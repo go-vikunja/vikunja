@@ -185,6 +185,7 @@ export default function suggestionSetup(t: (key: string) => string) {
 						trigger: 'manual' as const,
 						placement: 'bottom-start' as const,
 					}
+					// @ts-expect-error: Tippy.js type definitions don't fully match our usage 
 					popup = tippy(document.body, tippyOptions)
 				},
 

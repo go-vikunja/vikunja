@@ -272,7 +272,7 @@ if (props.shareType === 'user') {
 load()
 
 async function load() {
-	const result = await stuffService.getAll(stuffModel as IUserProject | ITeamProject)
+	const result = await stuffService.getAll(stuffModel as any)
 	sharables.value = result as (UserProjectWithUser | TeamProjectWithTeam)[]
 	sharables.value.forEach(({id, right}) =>
 		selectedRight.value[id] = right,
@@ -286,7 +286,7 @@ async function deleteSharable() {
 		(stuffModel as ITeamProject).teamId = (sharable.value as ITeam).id
 	}
 
-	await stuffService.delete(stuffModel as IUserProject | ITeamProject)
+	await stuffService.delete(stuffModel as any)
 	showDeleteModal.value = false
 	for (const i in sharables.value) {
 		if (
@@ -316,7 +316,7 @@ async function add(admin: boolean) {
 		(stuffModel as ITeamProject).teamId = (sharable.value as ITeam).id
 	}
 
-	await stuffService.create(stuffModel as IUserProject | ITeamProject)
+	await stuffService.create(stuffModel as any)
 	success({message: t('project.share.userTeam.addedSuccess', {type: shareTypeName.value})})
 	await load()
 }
@@ -337,7 +337,7 @@ async function toggleType(sharable: UserProjectWithUser | TeamProjectWithTeam) {
 		(stuffModel as ITeamProject).teamId = sharable.id
 	}
 
-	const r = await stuffService.update(stuffModel as IUserProject | ITeamProject)
+	const r = await stuffService.update(stuffModel as any)
 	for (const i in sharables.value) {
 		if (
 			((sharables.value[i] as UserProjectWithUser).id ===
