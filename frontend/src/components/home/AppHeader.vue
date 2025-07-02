@@ -22,7 +22,7 @@
 			class="project-title-wrapper"
 		>
 			<h1 class="project-title">
-				{{ currentProject.title === '' ? $t('misc.loading') : getProjectTitle(currentProject) }}
+				{{ currentProject.title === '' ? $t('misc.loading') : (currentProjectMutable ? getProjectTitle(currentProjectMutable) : '') }}
 			</h1>
 
 			<BaseButton
@@ -35,9 +35,9 @@
 			</BaseButton>
 
 			<ProjectSettingsDropdown
-				v-if="canWriteCurrentProject && currentProject.id !== -1"
+				v-if="canWriteCurrentProject && currentProject.id !== -1 && currentProjectMutable"
 				class="project-title-dropdown"
-				:project="currentProject as IProject"
+				:project="currentProjectMutable"
 			>
 				<template #trigger="{ toggleOpen }">
 					<BaseButton
@@ -137,6 +137,11 @@ import { useAuthStore } from '@/stores/auth'
 
 const baseStore = useBaseStore()
 const currentProject = computed(() => baseStore.currentProject)
+// Create a mutable reference for components that need mutable IProject
+const currentProjectMutable = computed(() => {
+	const project = baseStore.currentProject
+	return project ? { ...project } as IProject : null
+})
 const background = computed(() => baseStore.background)
 const canWriteCurrentProject = computed(() => (baseStore.currentProject?.maxRight ?? 0) > Rights.READ)
 const menuActive = computed(() => baseStore.menuActive)
