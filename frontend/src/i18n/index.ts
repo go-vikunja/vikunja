@@ -73,7 +73,7 @@ export const i18n = createI18n({
 	},
 	messages: {
 		[DEFAULT_LANGUAGE]: langEN,
-	} as Record<SupportedLocale, Record<string, unknown>>,
+	} as Record<string, Record<string, unknown>>,
 })
 
 export async function setLanguage(lang: SupportedLocale): Promise<SupportedLocale | undefined> {
@@ -82,7 +82,7 @@ export async function setLanguage(lang: SupportedLocale): Promise<SupportedLocal
 	}
 
 	// do not change language to the current one
-	if (i18n.global.locale.value === lang) {
+	if ((i18n.global.locale as any).value === lang) {
 		return
 	}
 
@@ -99,7 +99,7 @@ export async function setLanguage(lang: SupportedLocale): Promise<SupportedLocal
 	
 	await loadDayJsLocale(lang)
 
-	i18n.global.locale.value = lang
+	(i18n.global.locale as any).value = lang
 	document.documentElement.lang = lang
 	return lang
 }

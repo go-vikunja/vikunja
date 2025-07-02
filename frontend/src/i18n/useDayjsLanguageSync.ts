@@ -75,7 +75,7 @@ export function useDayjsLanguageSync(dayjsGlobal: typeof dayjs) {
 
 	const dayjsLanguageLoaded = ref(false)
 	watch(
-		() => i18n.global.locale.value,
+		() => (i18n.global.locale as any).value,
 		async (currentLanguage: string) => {
 			if (!dayjsGlobal) {
 				return

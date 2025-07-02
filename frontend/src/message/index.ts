@@ -2,11 +2,10 @@ import {i18n} from '@/i18n'
 import {notify} from '@kyvg/vue3-notification'
 
 export function getErrorText(r: unknown): string {
-	const data = r?.reason?.response?.data || r?.response?.data
+	const data = (r as any)?.reason?.response?.data || (r as any)?.response?.data
 
 	if (data?.code) {
 		const path = `error.${data.code}`
-		// @ts-expect-error - Translation key may not exist, fallback handles this
 		let message = i18n.global.t(path)
 
 		if (data?.code && data?.message && (data.code === 4016 || data.code === 4017 || data.code === 4018 || data.code === 4019 || data.code === 4024)) {
@@ -19,10 +18,10 @@ export function getErrorText(r: unknown): string {
 		}
 	}
 	
-	let message = data?.message || r.message
+	let message = data?.message || (r as any)?.message
 	
-	if (typeof r.cause?.message !== 'undefined') {
-		message += ' ' + r.cause.message
+	if (typeof (r as any)?.cause?.message !== 'undefined') {
+		message += ' ' + (r as any).cause.message
 	}
 
 	return message
