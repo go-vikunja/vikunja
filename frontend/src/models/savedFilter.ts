@@ -29,7 +29,7 @@ export default class SavedFilterModel extends AbstractModel<ISavedFilter> implem
 
 		// Filters are in snake_case for the API - this makes it consistent with the way filter params are used with one-off filters.
 		// Should probably be camelCase everywhere, but that's a task for another day.
-		this.filters = objectToSnakeCase(this.filters) as ISavedFilter['filters']
+		this.filters = objectToSnakeCase(this.filters as Record<string, unknown>) as ISavedFilter['filters']
 
 		this.created = new Date(this.created || Date.now())
 		this.updated = new Date(this.updated || Date.now())
