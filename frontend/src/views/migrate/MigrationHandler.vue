@@ -163,7 +163,8 @@ async function initMigration() {
 		return
 	}
 
-	authUrl.value = await migrationService.getAuthUrl().then((result: {url: string}) => result.url)
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	authUrl.value = await migrationService.getAuthUrl().then((result: any) => result.url)
 
 	const TOKEN_HASH_PREFIX = '#token='
 	migratorAuthCode.value = location.hash.startsWith(TOKEN_HASH_PREFIX)
@@ -202,7 +203,7 @@ async function migrate() {
 	message.value = ''
 	migrationError.value = ''
 
-	let migrationConfig: MigrationConfig | File = {code: migratorAuthCode.value}
+	let migrationConfig: MigrationConfig | File = {code: migratorAuthCode.value, maxRight: null}
 
 	if (migrator.value.isFileMigrator) {
 		if (uploadInput.value?.files?.length === 0) {
@@ -217,8 +218,8 @@ async function migrate() {
 
 	try {
 		if (migrator.value.isFileMigrator) {
-			const result = await migrationFileService.migrate(migrationConfig as File) as {message: string}
-			message.value = result.message
+			const result = await migrationFileService.migrate(migrationConfig as File) as unknown
+			message.value = (result as {message: string}).message
 			const projectStore = useProjectStore()
 			return projectStore.loadAllProjects()
 		}
