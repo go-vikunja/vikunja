@@ -209,6 +209,29 @@ func IsErrInvalidEmailConfirmToken(err error) bool {
 	return ok
 }
 
+// ErrInvalidAccountDeletionToken is an error where the account deletion token is invalid
+type ErrInvalidAccountDeletionToken struct {
+	Token string
+}
+
+func (err ErrInvalidAccountDeletionToken) Error() string {
+	return fmt.Sprintf("Invalid account deletion token [Token: %s]", err.Token)
+}
+
+// ErrCodeInvalidAccountDeletionToken holds the unique world-error code of this error
+const ErrCodeInvalidAccountDeletionToken = 1027
+
+// HTTPError holds the http error description
+func (err ErrInvalidAccountDeletionToken) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeInvalidAccountDeletionToken, Message: "Invalid account deletion token."}
+}
+
+// IsErrInvalidAccountDeletionToken checks if an error is a ErrInvalidAccountDeletionToken.
+func IsErrInvalidAccountDeletionToken(err error) bool {
+	_, ok := err.(ErrInvalidAccountDeletionToken)
+	return ok
+}
+
 // ErrWrongUsernameOrPassword is an error where the email was not confirmed
 type ErrWrongUsernameOrPassword struct {
 }

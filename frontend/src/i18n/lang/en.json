@@ -1178,6 +1178,7 @@
     "1023": "You can't do that as a link share.",
     "1024": "Invalid claim data for field {field} of type {type}.",
     "1025": "The timezone '{timezone}' is invalid. Please select a valid timezone from the list.",
+    "1027": "Invalid account deletion token.",
     "2001": "ID cannot be empty or 0.",
     "2002": "Some of the request data was invalid.",
     "2003": "The timezone '{timezone}' is invalid.",
