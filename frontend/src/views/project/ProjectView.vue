@@ -9,6 +9,7 @@ import {useAuthStore} from '@/stores/auth'
 import {saveProjectView} from '@/helpers/projectView'
 import ProjectService from '@/services/project'
 import ProjectModel from '@/models/project'
+import type {IProject} from '@/modelTypes/IProject'
 
 import ProjectList from '@/components/project/views/ProjectList.vue'
 import ProjectGantt from '@/components/project/views/ProjectGantt.vue'
@@ -72,10 +73,13 @@ watch(
 			return
 		}
 		
-		baseStore.handleSetCurrentProject({
-			project: newCurrentProject,
-			currentProjectViewId: newViewId as number | undefined,
-		})
+		// Only set the project if it's a complete project object, not just a number
+		if (typeof newCurrentProject === 'object') {
+			baseStore.handleSetCurrentProject({
+				project: newCurrentProject as IProject,
+				currentProjectViewId: newViewId as number | undefined,
+			})
+		}
 	}, {
 		deep: true,
 		immediate: true,
