@@ -253,8 +253,7 @@ func GetTimeZone() *time.Location {
 	if timezone == nil {
 		loc, err := time.LoadLocation(ServiceTimeZone.GetString())
 		if err != nil {
-			fmt.Printf("Error parsing time zone: %s", err)
-			os.Exit(1)
+			log.Fatalf("Error parsing time zone: %s", err)
 		}
 		timezone = loc
 	}
