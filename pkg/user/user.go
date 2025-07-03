@@ -581,7 +581,7 @@ func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *U
 			"email",
 			"avatar_provider",
 			"avatar_file_id",
-			"is_active",
+			"status",
 			"name",
 			"email_reminders_enabled",
 			"discoverable_by_name",

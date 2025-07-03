@@ -54,7 +54,7 @@ func ConfirmEmail(s *xorm.Session, c *EmailConfirm) (err error) {
 	}
 	_, err = s.
 		Where("id = ?", user.ID).
-		Cols("is_active").
+		Cols("status").
 		Update(user)
 	return
 }
