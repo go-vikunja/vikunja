@@ -238,6 +238,7 @@ function validateSelectedEvents() {
 					<td>{{ formatDateShort(w.created) }}</td>
 					<td>
 						<User
+							v-if="w.createdBy"
 							:avatar-size="25"
 							:user="w.createdBy"
 						/>

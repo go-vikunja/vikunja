@@ -105,10 +105,10 @@
 				<div class="field has-addons">
 					<div class="control is-expanded">
 						<Multiselect
-							v-model="newMember"
+							v-model="newMember as any"
 							:loading="userService.loading"
 							:placeholder="$t('team.edit.search')"
-							:search-results="foundUsers"
+							:search-results="foundUsers as any"
 							label="username"
 							@search="findUser"
 						>
