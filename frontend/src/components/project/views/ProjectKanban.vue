@@ -153,7 +153,7 @@
 									tag="ul"
 									:item-key="(task: ITask) => `bucket${bucket.id}-task${task.id}`"
 									:component-data="getTaskDraggableTaskComponentData(bucket)"
-									@update:modelValue="(tasks) => updateTasks(bucket.id, tasks)"
+									@update:modelValue="(tasks: IBucket['tasks']) => updateTasks(bucket.id, tasks)"
 									@start="() => dragstart(bucket)"
 									@end="updateTaskPosition"
 								>

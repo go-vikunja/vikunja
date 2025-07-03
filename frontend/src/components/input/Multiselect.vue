@@ -124,7 +124,7 @@
 </template>
 
 <!-- @ts-expect-error - Vue 3 generic component export inference issue -->
-<script setup lang="ts" generic="T extends Record<string, unknown>">
+<script setup lang="ts" generic="T extends Record<string, unknown> = Record<string, unknown>">
 import {computed, onBeforeUnmount, onMounted, ref, toRefs, watch, type ComponentPublicInstance} from 'vue'
 import {useI18n} from 'vue-i18n'
 
@@ -440,6 +440,11 @@ function remove(item: T) {
 function focus() {
 	searchInput.value?.focus()
 }
+</script>
+
+<script lang="ts">
+import type { Component } from 'vue'
+export default {} as Component
 </script>
 
 <style lang="scss" scoped>
