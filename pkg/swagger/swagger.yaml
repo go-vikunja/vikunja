@@ -6447,7 +6447,7 @@ paths:
       tags:
       - user
   /user/settings/token/caldav/{id}:
-    get:
+    delete:
       consumes:
       - application/json
       parameters:

@@ -7033,7 +7033,7 @@ const docTemplate = `{
             }
         },
         "/user/settings/token/caldav/{id}": {
-            "get": {
+            "delete": {
                 "security": [
                     {
                         "JWTKeyAuth": []
