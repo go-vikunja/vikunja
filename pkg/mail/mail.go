@@ -84,11 +84,12 @@ func getClient() (*mail.Client, error) {
 
 // StartMailDaemon starts the mail daemon
 func StartMailDaemon() {
-	Queue = make(chan *mail.Msg, config.MailerQueuelength.GetInt())
-
 	if !config.MailerEnabled.GetBool() {
+		Queue = nil
 		return
 	}
+
+	Queue = make(chan *mail.Msg, config.MailerQueuelength.GetInt())
 
 	if config.MailerHost.GetString() == "" {
 		log.Warning("Mailer seems to be not configured! Please see the config docs for more details.")
