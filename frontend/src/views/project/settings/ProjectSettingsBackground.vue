@@ -178,7 +178,7 @@ function newBackgroundSearch() {
 
 async function searchBackgrounds(page = 1) {
 	currentPage.value = page
-	const result = await backgroundService.getAll(new BackgroundImageModel(), {s: backgroundSearchTerm.value, p: page})
+	const result = await backgroundService.getAll(new BackgroundImageModel({}), {s: backgroundSearchTerm.value, p: page})
 	backgroundSearchResult.value = backgroundSearchResult.value.concat(result as IBackgroundImage[])
 	result.forEach((background: IBackgroundImage) => {
 		getBlobFromBlurHash(background.blurHash)
@@ -188,7 +188,7 @@ async function searchBackgrounds(page = 1) {
 				}
 			})
 
-		backgroundService.thumb(background).then(b => {
+		backgroundService.thumb({id: background.id.toString()}).then(b => {
 			backgroundThumbs.value[background.id] = b
 		})
 	})
@@ -203,8 +203,9 @@ async function setBackground(backgroundId: string) {
 
 	const project = await backgroundService.update({
 		id: backgroundId,
-		projectId: Number(route.params.projectId),
-	})
+		projectId: currentProject.value?.id,
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	} as any) as unknown as IProject
 	await baseStore.handleSetCurrentProject({project: project, forceUpdate: true})
 	projectStore.setProject(project)
 	success({message: t('project.background.success')})
