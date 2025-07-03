@@ -123,6 +123,7 @@ import BackgroundUnsplashService from '@/services/backgroundUnsplash'
 import BackgroundUploadService from '@/services/backgroundUpload'
 import ProjectService from '@/services/project'
 import type {IBackgroundImage} from '@/modelTypes/IBackgroundImage'
+import type {IProject} from '@/modelTypes/IProject'
 import BackgroundImageModel from '@/models/backgroundImage'
 
 import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'
@@ -225,7 +226,7 @@ async function uploadBackground() {
 }
 
 async function removeBackground() {
-	const project = await projectService.value.removeBackground(currentProject.value!)
+	const project = await projectService.value.removeBackground(currentProject.value! as IProject)
 	await baseStore.handleSetCurrentProject({project: project, forceUpdate: true})
 	projectStore.setProject(project)
 	success({message: t('project.background.removeSuccess')})
