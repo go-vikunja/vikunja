@@ -17,7 +17,6 @@ in {
     golangci-lint mage
     # Desktop
     electron
-		claude-code
   ] ++ lib.optionals (!pkgs.stdenv.isDarwin) [
     # Frontend tools (exclude on Darwin)
     cypress
