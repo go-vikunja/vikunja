@@ -3,9 +3,18 @@ import {getFullBaseUrl} from './helpers/getFullBaseUrl'
 declare let self: ServiceWorkerGlobalScope & {
 	__WB_MANIFEST: unknown[]
 	__precacheManifest: unknown[]
+	importScripts: (...urls: string[]) => void
+	addEventListener: (type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions) => void
+	skipWaiting: () => void
 }
 
-// @ts-expect-error: Workbox is injected globally via importScripts
+declare global {
+	interface NotificationEvent extends Event {
+		readonly action: string
+		readonly notification: Notification
+	}
+}
+
 declare const workbox: {
 	setConfig: (config: { modulePathPrefix: string }) => void
 	routing: {
@@ -23,7 +32,6 @@ declare const workbox: {
 	}
 }
 
-// @ts-expect-error: Clients API is part of service worker global scope
 declare const clients: {
 	openWindow: (url: string) => void
 }
@@ -31,7 +39,7 @@ declare const clients: {
 const fullBaseUrl = getFullBaseUrl()
 const workboxVersion = 'v7.3.0'
 
-importScripts(`${fullBaseUrl}workbox-${workboxVersion}/workbox-sw.js`)
+self.importScripts(`${fullBaseUrl}workbox-${workboxVersion}/workbox-sw.js`)
 workbox.setConfig({
 	modulePathPrefix: `${fullBaseUrl}workbox-${workboxVersion}`,
 })
@@ -53,7 +61,8 @@ workbox.routing.registerRoute(
 )
 
 // This code listens for the user's confirmation to update the app.
-self.addEventListener('message', (e: MessageEvent) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+self.addEventListener('message', (e: any) => {
 	if (!e.data) {
 		return
 	}
@@ -69,7 +78,8 @@ self.addEventListener('message', (e: MessageEvent) => {
 })
 
 // Notification action
-self.addEventListener('notificationclick', function (event: NotificationEvent) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+self.addEventListener('notificationclick', function (event: any) {
 	const taskId = (event.notification.data as { taskId: string }).taskId
 	event.notification.close()
 
@@ -82,6 +92,6 @@ self.addEventListener('notificationclick', function (event: NotificationEvent) {
 
 workbox.core.clientsClaim()
 // The precaching code provided by Workbox.
-self.__precacheManifest = [].concat(self.__precacheManifest || [])
+self.__precacheManifest = ([] as unknown[]).concat(self.__precacheManifest || [])
 workbox.precaching.precacheAndRoute(self.__precacheManifest, {})
 
