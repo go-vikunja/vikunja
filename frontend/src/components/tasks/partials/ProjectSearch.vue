@@ -12,12 +12,12 @@
 	>
 		<template #searchResult="{option}">
 			<span
-				v-if="projectStore.getAncestors(option).length > 1"
+				v-if="typeof option === 'object' && option && projectStore.getAncestors(option as IProject).length > 1"
 				class="has-text-grey"
 			>
-				{{ projectStore.getAncestors(option).filter(p => p.id !== option.id).map(p => getProjectTitle(p)).join(' &gt; ') }} &gt;
+				{{ projectStore.getAncestors(option as IProject).filter(p => p.id !== (option as IProject).id).map(p => getProjectTitle(p)).join(' &gt; ') }} &gt;
 			</span>
-			{{ getProjectTitle(option) }}
+			{{ typeof option === 'string' ? option : getProjectTitle(option as IProject) }}
 		</template>
 	</Multiselect>
 </template>

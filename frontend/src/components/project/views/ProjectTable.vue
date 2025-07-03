@@ -304,7 +304,25 @@ const props = defineProps<{
 	viewId: IProjectView['id'],
 }>()
 
-const ACTIVE_COLUMNS_DEFAULT = {
+interface ActiveColumns {
+	index: boolean,
+	done: boolean,
+	title: boolean,
+	priority: boolean,
+	labels: boolean,
+	assignees: boolean,
+	dueDate: boolean,
+	startDate: boolean,
+	endDate: boolean,
+	percentDone: boolean,
+	created: boolean,
+	updated: boolean,
+	createdBy: boolean,
+	doneAt: boolean,
+	[key: string]: boolean,
+}
+
+const ACTIVE_COLUMNS_DEFAULT: ActiveColumns = {
 	index: true,
 	done: true,
 	title: true,
@@ -325,7 +343,7 @@ const SORT_BY_DEFAULT: SortBy = {
 	index: 'desc',
 }
 
-const activeColumns = useStorage('tableViewColumns', {...ACTIVE_COLUMNS_DEFAULT})
+const activeColumns = useStorage<ActiveColumns>('tableViewColumns', {...ACTIVE_COLUMNS_DEFAULT})
 const sortBy = useStorage<SortBy>('tableViewSortBy', {...SORT_BY_DEFAULT})
 
 const taskList = useTaskList(() => props.projectId, () => props.viewId, sortBy.value)
@@ -378,9 +396,9 @@ function setActiveColumnsSortParam() {
 	sortByParam.value = Object.keys(sortBy.value)
 		.filter(prop => activeColumns.value[camelCase(prop)])
 		.reduce((obj, key) => {
-			obj[key] = sortBy.value[key]
+			obj[key as keyof SortBy] = sortBy.value[key as keyof SortBy]
 			return obj
-		}, {})
+		}, {} as SortBy)
 }
 
 // TODO: re-enable opening task detail in modal

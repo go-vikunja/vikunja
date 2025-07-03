@@ -3,10 +3,10 @@ import AbstractModel from './abstractModel'
 import type {ICaldavToken} from '@/modelTypes/ICaldavToken'
 
 export default class CaldavTokenModel extends AbstractModel<ICaldavToken> implements ICaldavToken {
-	id: number
-	created: Date
+	id: number = 0
+	created: Date = new Date()
 
-	constructor(data: Partial<CaldavTokenModel>) {
+	constructor(data: Partial<ICaldavToken>) {
 		super()
 		this.assignData(data)
 		

@@ -9,17 +9,24 @@ export default async function setupSentry(app: App, router: Router) {
 
 	Sentry.init({
 		app,
-		dsn: window.SENTRY_DSN ?? '',
-		release: import.meta.env.VITE_PLUGIN_SENTRY_CONFIG.release,
-		dist: import.meta.env.VITE_PLUGIN_SENTRY_CONFIG.dist,
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		dsn: (window as any).SENTRY_DSN ?? '',
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		release: (import.meta.env as any).VITE_PLUGIN_SENTRY_CONFIG?.release,
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		dist: (import.meta.env as any).VITE_PLUGIN_SENTRY_CONFIG?.dist,
 		integrations: [
-			new Integrations.BrowserTracing({
-				routingInstrumentation: Sentry.vueRouterInstrumentation(router),
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			new (Integrations as any).BrowserTracing({
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				routingInstrumentation: (Sentry as any).vueRouterInstrumentation(router),
 				tracingOrigins: ['localhost', /^\//],
-			}),
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			}) as any,
 		],
 		tracesSampleRate: 1.0,
-		beforeSend(event, hint) {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		beforeSend(event: any, hint: any) {
 
 			if ((typeof hint.originalException?.code !== 'undefined' && 
 				typeof hint.originalException?.message !== 'undefined')

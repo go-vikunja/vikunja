@@ -1,7 +1,7 @@
 <template>
 	<CreateEdit
 		:title="$t('project.edit.header')"
-		primary-icon=""
+		:primary-icon="undefined"
 		:primary-label="$t('misc.save')"
 		:tertiary="project.maxRight === RIGHTS.ADMIN ? $t('misc.delete') : undefined"
 		@primary="save"
@@ -115,12 +115,12 @@ const {t} = useI18n({useScope: 'global'})
 
 const {project, save: saveProject, isLoading} = useProject(() => props.projectId)
 
-const parentProject = ref<IProject | null>(null)
+const parentProject = ref<IProject | undefined>(undefined)
 watch(
 	() => project.parentProjectId,
 	parentProjectId => {
 		if (parentProjectId) {
-			parentProject.value = projectStore.projects[parentProjectId]
+			parentProject.value = projectStore.projects[parentProjectId] as IProject
 		}
 	},
 	{immediate: true},

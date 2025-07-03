@@ -8,7 +8,7 @@
 		<template #header>
 			<div class="filter-container">
 				<FilterPopup
-					v-if="!isSavedFilter(project)"
+					v-if="project && !isSavedFilter(project as IProject)"
 					v-model="params"
 					:view-id="viewId"
 					:project-id="projectId"
@@ -153,7 +153,7 @@
 									tag="ul"
 									:item-key="(task: ITask) => `bucket${bucket.id}-task${task.id}`"
 									:component-data="getTaskDraggableTaskComponentData(bucket)"
-									@update:modelValue="(tasks) => updateTasks(bucket.id, tasks)"
+									@update:modelValue="(tasks: IBucket['tasks']) => updateTasks(bucket.id, tasks)"
 									@start="() => dragstart(bucket)"
 									@end="updateTaskPosition"
 								>
@@ -306,6 +306,7 @@ import {isSavedFilter} from '@/services/savedFilter'
 import {success} from '@/message'
 import {useProjectStore} from '@/stores/projects'
 import type {TaskFilterParams} from '@/services/taskCollection'
+import type {IProject} from '@/modelTypes/IProject'
 import type {IProjectView} from '@/modelTypes/IProjectView'
 import TaskPositionService from '@/services/taskPosition'
 import TaskPositionModel from '@/models/taskPosition'
@@ -314,6 +315,13 @@ import ProjectViewService from '@/services/projectViews'
 import ProjectViewModel from '@/models/projectView'
 import TaskBucketService from '@/services/taskBucket'
 import TaskBucketModel from '@/models/taskBucket'
+
+// Sortable.js drag event interface
+interface SortableEvent extends Event {
+	to: HTMLElement & { dataset: { bucketIndex: string } }
+	newIndex: number
+	oldIndex: number
+}
 
 const props = defineProps<{
 	isLoadingProject: boolean,
@@ -398,7 +406,7 @@ const bucketDraggableComponentData = computed(() => ({
 }))
 const project = computed(() => props.projectId ? projectStore.projects[props.projectId] : null)
 const view = computed(() => project.value?.views.find(v => v.id === props.viewId) as IProjectView || null)
-const canWrite = computed(() => baseStore.currentProject?.maxRight > Rights.READ && view.value.bucketConfigurationMode === 'manual')
+const canWrite = computed(() => (baseStore.currentProject?.maxRight ?? 0) > Rights.READ && view.value?.bucketConfigurationMode === 'manual')
 const canCreateTasks = computed(() => canWrite.value && props.projectId > 0)
 const buckets = computed(() => kanbanStore.buckets)
 const loading = computed(() => kanbanStore.isLoading)
@@ -460,7 +468,7 @@ function updateTasks(bucketId: IBucket['id'], tasks: IBucket['tasks']) {
 	})
 }
 
-async function updateTaskPosition(e) {
+async function updateTaskPosition(e: SortableEvent) {
 	drag.value = false
 
 	// While we could just pass the bucket index in through the function call, this would not give us the
@@ -526,7 +534,7 @@ async function updateTaskPosition(e) {
 				taskId: newTask.id,
 				bucketId: newTask.bucketId,
 				projectViewId: props.viewId,
-				projectId: project.value.id,
+				projectId: project.value?.id ?? 0,
 			}))
 			Object.assign(newTask, updatedTaskBucket.task)
 			newTask.bucketId = updatedTaskBucket.bucketId
@@ -575,7 +583,7 @@ async function addTaskToBucket(bucketId: IBucket['id']) {
 	const task = await taskStore.createNewTask({
 		title: newTaskText.value,
 		bucketId,
-		projectId: project.value.id,
+		projectId: project.value?.id ?? 0,
 	})
 	newTaskText.value = ''
 	kanbanStore.addTaskToBucket(task)
@@ -602,7 +610,7 @@ async function createNewBucket() {
 
 	await kanbanStore.createBucket(new BucketModel({
 		title: newBucketTitle.value,
-		projectId: project.value.id,
+		projectId: project.value?.id ?? 0,
 		projectViewId: props.viewId,
 	}))
 	newBucketTitle.value = ''
@@ -622,7 +630,7 @@ async function deleteBucket() {
 		await kanbanStore.deleteBucket({
 			bucket: new BucketModel({
 				id: bucketToDelete.value,
-				projectId: project.value.id,
+				projectId: project.value?.id ?? 0,
 				projectViewId: props.viewId,
 			}),
 			params: params.value,
@@ -708,7 +716,7 @@ async function setBucketLimit(bucketId: IBucket['id'], now: boolean = false) {
 		return saveBucketLimit(bucketId, limit)
 	}
 
-	setBucketLimitCancel.value = setTimeout(saveBucketLimit, 2500, bucketId, limit)
+	setBucketLimitCancel.value = setTimeout(saveBucketLimit, 2500, bucketId, limit) as unknown as number
 }
 
 function shouldAcceptDrop(bucket: IBucket) {
@@ -738,13 +746,13 @@ async function toggleDefaultBucket(bucket: IBucket) {
 		defaultBucketId,
 	}))
 
-	const views = project.value.views.map(v => v.id === view.value?.id ? updatedView : v)
+	const views = project.value?.views.map(v => v.id === view.value?.id ? updatedView : v) ?? []
 	const updatedProject = {
-		...project.value,
+		...(project.value ?? {}),
 		views,
 	}
 
-	projectStore.setProject(updatedProject)
+	projectStore.setProject(updatedProject as IProject)
 
 	success({message: t('project.kanban.defaultBucketSavedSuccess')})
 }
@@ -760,20 +768,20 @@ async function toggleDoneBucket(bucket: IBucket) {
 		doneBucketId,
 	}))
 	
-	const views = project.value.views.map(v => v.id === view.value?.id ? updatedView : v)
+	const views = project.value?.views.map(v => v.id === view.value?.id ? updatedView : v) ?? []
 	const updatedProject = {
-		...project.value,
+		...(project.value ?? {}),
 		views,
 	}
 	
-	projectStore.setProject(updatedProject)
+	projectStore.setProject(updatedProject as IProject)
 	
 	success({message: t('project.kanban.doneBucketSavedSuccess')})
 }
 
 function collapseBucket(bucket: IBucket) {
 	collapsedBuckets.value[bucket.id] = true
-	saveCollapsedBucketState(project.value.id, collapsedBuckets.value)
+	saveCollapsedBucketState(project.value?.id ?? 0, collapsedBuckets.value)
 }
 
 function unCollapseBucket(bucket: IBucket) {
@@ -782,7 +790,7 @@ function unCollapseBucket(bucket: IBucket) {
 	}
 
 	collapsedBuckets.value[bucket.id] = false
-	saveCollapsedBucketState(project.value.id, collapsedBuckets.value)
+	saveCollapsedBucketState(project.value?.id ?? 0, collapsedBuckets.value)
 }
 </script>
 

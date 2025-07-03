@@ -30,7 +30,7 @@
 		</header>
 
 		<ProjectCardGrid
-			:projects="projects"
+			:projects="projects as any"
 			:show-archived="showArchived"
 		/>
 	</div>
@@ -42,6 +42,7 @@ import {useI18n} from 'vue-i18n'
 
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import ProjectCardGrid from '@/components/project/partials/ProjectCardGrid.vue'
+import XButton from '@/components/input/Button.vue'
 
 import {useTitle} from '@/composables/useTitle'
 import {useStorage} from '@vueuse/core'

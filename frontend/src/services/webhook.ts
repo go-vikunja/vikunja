@@ -12,7 +12,7 @@ export default class WebhookService extends AbstractService<IWebhook> {
 		})
 	}
 
-	modelFactory(data) {
+	modelFactory(data: Partial<IWebhook>): IWebhook {
 		return new WebhookModel(data)
 	}
 

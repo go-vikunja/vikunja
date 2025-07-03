@@ -152,7 +152,7 @@
 
 			<template #text>
 				<p>
-					{{ $t('task.attachment.deleteText1', {filename: attachmentToDelete.file.name}) }}<br>
+					{{ $t('task.attachment.deleteText1', {filename: attachmentToDelete?.file.name}) }}<br>
 					<strong class="has-text-white">{{ $t('misc.cannotBeUndone') }}</strong>
 				</p>
 			</template>
@@ -164,7 +164,7 @@
 			@close="attachmentImageBlobUrl = null"
 		>
 			<img
-				:src="attachmentImageBlobUrl"
+				:src="attachmentImageBlobUrl || undefined"
 				alt=""
 			>
 		</Modal>
@@ -268,7 +268,7 @@ const attachmentImageBlobUrl = ref<string | null>(null)
 
 async function viewOrDownload(attachment: IAttachment) {
 	if (canPreview(attachment)) {
-		attachmentImageBlobUrl.value = await attachmentService.getBlobUrl(attachment)
+		attachmentImageBlobUrl.value = await attachmentService.getBlobUrl(attachment) as string
 	} else {
 		downloadAttachment(attachment)
 	}

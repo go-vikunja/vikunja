@@ -19,13 +19,14 @@
     "importHelpers": true,
     "sourceMap": true,
     "strictNullChecks": true,
+    "skipLibCheck": true,
     
     "paths": {
       "@/*": ["./src/*"]
     },
     "types": [
       // https://github.com/ikenfin/vite-plugin-sentry#typescript
-      "vite-plugin-sentry/client"
+      // "vite-plugin-sentry/client" // Using local type declaration instead
     ],
   }
 }

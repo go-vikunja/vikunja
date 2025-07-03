@@ -17,6 +17,7 @@ import {
 } from '@/helpers/redirectToProvider'
 import {AUTH_TYPES, type IUser} from '@/modelTypes/IUser'
 import type {IUserSettings} from '@/modelTypes/IUserSettings'
+import type {ILoginCredentials} from '@/modelTypes/ILoginCredentials'
 import router from '@/router'
 import {useConfigStore} from '@/stores/config'
 import UserSettingsModel from '@/models/userSettings'
@@ -123,14 +124,16 @@ export const useAuthStore = defineStore('auth', () => {
 	}
 	
 	function loadSettings(newSettings: IUserSettings) {
+		const defaultFrontendSettings = {
+			playSoundWhenDone: true,
+			quickAddMagicMode: PrefixMode.Default,
+			colorSchema: 'auto' as const,
+		}
+		
 		settings.value = new UserSettingsModel({
 			...newSettings,
 			frontendSettings: {
-				// Need to set default settings here in case the user does not have any saved in the api already
-				playSoundWhenDone: true,
-				quickAddMagicMode: PrefixMode.Default,
-				colorSchema: 'auto',
-				allowIconChanges: true,
+				...defaultFrontendSettings,
 				...newSettings.frontendSettings,
 			},
 		})
@@ -159,7 +162,7 @@ export const useAuthStore = defineStore('auth', () => {
 	}
 
 	// Logs a user in with a set of credentials.
-	async function login(credentials) {
+	async function login(credentials: ILoginCredentials) {
 		const HTTP = HTTPFactory()
 		setIsLoading(true)
 
@@ -167,16 +170,17 @@ export const useAuthStore = defineStore('auth', () => {
 		removeToken()
 
 		try {
-			const response = await HTTP.post('login', objectToSnakeCase(credentials))
+			const response = await HTTP.post('login', objectToSnakeCase(credentials as unknown as Record<string, unknown>))
 			// Save the token to local storage for later use
 			saveToken(response.data.token, true)
 
 			// Tell others the user is authenticated
 			await checkAuth()
-		} catch (e) {
+		} catch (e: unknown) {
+			const axiosError = e as { response?: { data?: { code?: number } } }
 			if (
-				e.response &&
-				e.response.data.code === 1017 &&
+				axiosError.response &&
+				axiosError.response.data?.code === 1017 &&
 				!credentials.totpPasscode
 			) {
 				setNeedsTotpPasscode(true)
@@ -192,7 +196,7 @@ export const useAuthStore = defineStore('auth', () => {
 	 * Registers a new user and logs them in.
 	 * Not sure if this is the right place to put the logic in, maybe a separate js component would be better suited. 
 	 */
-	async function register(credentials, language: string|null = null) {
+	async function register(credentials: ILoginCredentials & {email: string}, language: string|null = null) {
 		const HTTP = HTTPFactory()
 		setIsLoading(true)
 		
@@ -206,13 +210,14 @@ export const useAuthStore = defineStore('auth', () => {
 				language,
 			})
 			return login(credentials)
-		} catch (e) {
-			if (e.response?.data?.code === 2002 && e.response?.data?.invalid_fields[0]?.startsWith('language:')) {
+		} catch (e: unknown) {
+			const axiosError = e as { response?: { data?: { code?: number; invalid_fields?: string[]; message?: string } } }
+			if (axiosError.response?.data?.code === 2002 && axiosError.response?.data?.invalid_fields?.[0]?.startsWith('language:')) {
 				return register(credentials, 'en')
 			}
 			
-			if (e.response?.data?.message) {
-				throw e.response.data
+			if (axiosError.response?.data?.message) {
+				throw axiosError.response.data
 			}
 
 			throw e
@@ -221,12 +226,12 @@ export const useAuthStore = defineStore('auth', () => {
 		}
 	}
 
-	async function openIdAuth({provider, code}) {
+	async function openIdAuth({provider, code}: {provider: string, code: string}) {
 		const HTTP = HTTPFactory()
 		setIsLoading(true)
 		setLoggedInVia(null)
 
-		const fullProvider: IProvider = configStore.auth.openidConnect.providers.find((p: IProvider) => p.key === provider)
+		const fullProvider: IProvider = configStore.auth.openidConnect.providers.find((p: IProvider) => p.key === provider)!
 
 		const data = {
 			code: code,
@@ -248,7 +253,7 @@ export const useAuthStore = defineStore('auth', () => {
 		}
 	}
 
-	async function linkShareAuth({hash, password}) {
+	async function linkShareAuth({hash, password}: {hash: string, password: string}) {
 		const HTTP = HTTPFactory()
 		const response = await HTTP.post('/shares/' + hash + '/auth', {
 			password: password,
@@ -329,22 +334,23 @@ export const useAuthStore = defineStore('auth', () => {
 			updateLastUserRefresh()
 
 			return newUser
-		} catch (e) {
-			if((e?.response?.status >= 400 && e?.response?.status < 500) ||
-				e?.response?.data?.message === 'missing, malformed, expired or otherwise invalid token provided') {
+		} catch (e: unknown) {
+			const axiosError = e as { response?: { status?: number; data?: { message?: string } } }
+			if((axiosError.response?.status && axiosError.response.status >= 400 && axiosError.response.status < 500) ||
+				axiosError.response?.data?.message === 'missing, malformed, expired or otherwise invalid token provided') {
 				await logout()
 				return
 			}
 			
-			const cause = {e}
+			const cause: {e: unknown; message?: string} = {e}
 			
-			if (typeof e?.response?.data?.message !== 'undefined') {
-				cause.message = e.response.data.message
+			if (typeof axiosError.response?.data?.message !== 'undefined') {
+				cause.message = axiosError.response.data.message
 			}
 			
 			console.error('Error refreshing user info:', e)
 			
-			throw new Error('Error while refreshing user info:', {cause})
+			throw new Error('Error while refreshing user info')
 		}
 	}
 
@@ -358,8 +364,14 @@ export const useAuthStore = defineStore('auth', () => {
 			try {
 				await HTTPFactory().post('user/confirm', {token: emailVerifyToken})
 				return true
-			} catch(e) {
-				throw new Error(e.response.data.message)
+			} catch(e: unknown) {
+				const message = e instanceof Error && 'response' in e && 
+					e.response && typeof e.response === 'object' && 
+					'data' in e.response && e.response.data &&
+					typeof e.response.data === 'object' && 'message' in e.response.data
+					? String(e.response.data.message) 
+					: 'Verification failed'
+				throw new Error(message)
 			} finally {
 				localStorage.removeItem('emailConfirmToken')
 				stopLoading()
@@ -389,10 +401,13 @@ export const useAuthStore = defineStore('auth', () => {
 			}
 			const updateSettingsPromise = userSettingsService.update(settingsUpdate)
 			setUserSettings(settingsUpdate)
-			await setLanguage(settings.language)
+			await setLanguage(settings.language || 'en')
 			await updateSettingsPromise
 			if (oldName !== undefined && oldName !== settingsUpdate.name) {
-				const {avatarProvider} = await (new AvatarService()).get({})
+				const {avatarProvider} = await (new AvatarService()).get({
+					avatarProvider: 'default' as const,
+					maxRight: null,
+				})
 				if (avatarProvider === 'initials') {
 					await reloadAvatar()
 				}
@@ -422,10 +437,11 @@ export const useAuthStore = defineStore('auth', () => {
 			try {
 				await refreshToken(!isLinkShareAuth.value)
 				await checkAuth()
-			} catch (e) {
+			} catch (e: unknown) {
 				// Don't logout on network errors as the user would then get logged out if they don't have
 				// internet for a short period of time - such as when the laptop is still reconnecting
-				if (e?.request?.status) {
+				const axiosError = e as { request?: { status?: number } }
+				if (axiosError.request?.status) {
 					await logout()
 				}
 			}

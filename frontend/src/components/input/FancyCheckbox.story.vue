@@ -11,7 +11,7 @@ const isCheckedInitiallyEnabled = ref(true)
 
 const isCheckedDisabled = ref(false)
 
-const withoutInitialState = ref<boolean | undefined>()
+const withoutInitialState = ref<boolean>(false)
 </script>
 
 

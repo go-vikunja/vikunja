@@ -19,7 +19,7 @@
 				:class="{ 'is-active': editor.isActive('bold') }"
 				@click="() => editor?.chain().focus().toggleBold().run()"
 			>
-				<Icon :icon="['fa', 'fa-bold']" />
+				<Icon :icon="['fas', 'bold']" />
 			</BaseButton>
 			<BaseButton
 				v-tooltip="$t('input.editor.italic')"
@@ -27,7 +27,7 @@
 				:class="{ 'is-active': editor.isActive('italic') }"
 				@click="() => editor?.chain().focus().toggleItalic().run()"
 			>
-				<Icon :icon="['fa', 'fa-italic']" />
+				<Icon :icon="['fas', 'italic']" />
 			</BaseButton>
 			<BaseButton
 				v-tooltip="$t('input.editor.underline')"
@@ -35,7 +35,7 @@
 				:class="{ 'is-active': editor.isActive('underline') }"
 				@click="() => editor?.chain().focus().toggleUnderline().run()"
 			>
-				<Icon :icon="['fa', 'fa-underline']" />
+				<Icon :icon="['fas', 'underline']" />
 			</BaseButton>
 			<BaseButton
 				v-tooltip="$t('input.editor.strikethrough')"
@@ -43,7 +43,7 @@
 				:class="{ 'is-active': editor.isActive('strike') }"
 				@click="() => editor?.chain().focus().toggleStrike().run()"
 			>
-				<Icon :icon="['fa', 'fa-strikethrough']" />
+				<Icon :icon="['fas', 'strikethrough']" />
 			</BaseButton>
 			<BaseButton
 				v-tooltip="$t('input.editor.code')"
@@ -51,7 +51,7 @@
 				:class="{ 'is-active': editor.isActive('code') }"
 				@click="() => editor?.chain().focus().toggleCode().run()"
 			>
-				<Icon :icon="['fa', 'fa-code']" />
+				<Icon :icon="['fas', 'code']" />
 			</BaseButton>
 			<BaseButton
 				v-tooltip="$t('input.editor.link')"
@@ -59,7 +59,7 @@
 				:class="{ 'is-active': editor.isActive('link') }"
 				@click="setLink"
 			>
-				<Icon :icon="['fa', 'fa-link']" />
+				<Icon :icon="['fas', 'link']" />
 			</BaseButton>
 		</BubbleMenu>
 
@@ -276,10 +276,12 @@ const CustomImage = Image.extend({
 					const attachment = new AttachmentModel({taskId: taskId, id: attachmentId})
 
 					const attachmentService = new AttachmentService()
-					loadedAttachments.value[cacheKey] = await attachmentService.getBlobUrl(attachment)
+					loadedAttachments.value[cacheKey] = await attachmentService.getBlobUrl(attachment) as string
 				}
 
-				img.src = loadedAttachments.value[cacheKey]
+				if (img instanceof HTMLImageElement) {
+					img.src = loadedAttachments.value[cacheKey]
+				}
 			})
 
 			return ['img', mergeAttributes(this.options.HTMLAttributes, {
@@ -351,9 +353,10 @@ const PasteHandler = Extension.create({
 					handlePaste: (view, event) => {
 						
 						// Handle images pasted from clipboard
-						if (typeof props.uploadCallback !== 'undefined' && event.clipboardData?.items?.length > 0) {
+						if (typeof props.uploadCallback !== 'undefined' && event.clipboardData?.items && event.clipboardData.items.length > 0) {
 
-							for (const item of event.clipboardData.items) {
+							for (let i = 0; i < event.clipboardData.items.length; i++) {
+								const item = event.clipboardData.items[i]
 								if (item.kind === 'file' && item.type.startsWith('image/')) {
 									const file = item.getAsFile()
 									if (file) {
@@ -601,7 +604,7 @@ function uploadAndInsertFiles(files: File[] | FileList) {
 	})
 }
 
-function triggerImageInput(event) {
+function triggerImageInput(event: Event) {
 	if (typeof props.uploadCallback !== 'undefined') {
 		uploadInputRef.value?.click()
 		return
@@ -610,7 +613,7 @@ function triggerImageInput(event) {
 	addImage(event)
 }
 
-async function addImage(event) {
+async function addImage(event: Event) {
 
 	if (typeof props.uploadCallback !== 'undefined') {
 		const files = uploadInputRef.value?.files
@@ -624,7 +627,8 @@ async function addImage(event) {
 		return
 	}
 
-	const url = await inputPrompt(event.target.getBoundingClientRect())
+	const target = event.target as HTMLElement
+	const url = await inputPrompt(target.getBoundingClientRect())
 
 	if (url) {
 		editor.value?.chain().focus().setImage({src: url}).run()
@@ -632,8 +636,9 @@ async function addImage(event) {
 	}
 }
 
-function setLink(event) {
-	setLinkInEditor(event.target.getBoundingClientRect(), editor.value)
+function setLink(event: Event) {
+	const target = event.target as HTMLElement
+	setLinkInEditor(target.getBoundingClientRect(), editor.value || null)
 }
 
 onMounted(async () => {
@@ -659,17 +664,19 @@ function setModeAndValue(value: string) {
 
 
 // See https://github.com/github/hotkey/discussions/85#discussioncomment-5214660
-function setFocusToEditor(event) {
-	if (event.target.shadowRoot) {
+function setFocusToEditor(event: KeyboardEvent) {
+	if (event.target && (event.target as Element & {shadowRoot?: ShadowRoot}).shadowRoot) {
 		return
 	}
 
 	const hotkeyString = eventToHotkeyString(event)
 	if (!hotkeyString) return
+	
+	const target = event.target as HTMLElement
 	if (hotkeyString !== props.editShortcut ||
-		event.target.tagName.toLowerCase() === 'input' ||
-		event.target.tagName.toLowerCase() === 'textarea' ||
-		event.target.contentEditable === 'true') {
+		target.tagName.toLowerCase() === 'input' ||
+		target.tagName.toLowerCase() === 'textarea' ||
+		target.contentEditable === 'true') {
 		return
 	}
 
@@ -688,14 +695,15 @@ function focusIfEditing() {
 	}
 }
 
-function clickTasklistCheckbox(event) {
+function clickTasklistCheckbox(event: Event) {
 	event.stopImmediatePropagation()
 
-	if (event.target.localName !== 'p') {
+	const target = event.target as HTMLElement
+	if (target.localName !== 'p') {
 		return
 	}
 
-	event.target.parentNode.parentNode.firstChild.click()
+	(target.parentNode?.parentNode?.firstChild as HTMLElement)?.click()
 }
 
 watch(

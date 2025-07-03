@@ -1,11 +1,45 @@
 import {getFullBaseUrl} from './helpers/getFullBaseUrl'
 
-declare let self: ServiceWorkerGlobalScope
+declare let self: ServiceWorkerGlobalScope & {
+	__WB_MANIFEST: unknown[]
+	__precacheManifest: unknown[]
+	importScripts: (...urls: string[]) => void
+	addEventListener: (type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions) => void
+	skipWaiting: () => void
+}
+
+declare global {
+	interface NotificationEvent extends Event {
+		readonly action: string
+		readonly notification: Notification
+	}
+}
+
+declare const workbox: {
+	setConfig: (config: { modulePathPrefix: string }) => void
+	routing: {
+		registerRoute: (matcher: RegExp, strategy: unknown) => void
+	}
+	strategies: {
+		StaleWhileRevalidate: new () => unknown
+		NetworkOnly: new () => unknown
+	}
+	core: {
+		clientsClaim: () => void
+	}
+	precaching: {
+		precacheAndRoute: (manifest: unknown[], options: Record<string, unknown>) => void
+	}
+}
+
+declare const clients: {
+	openWindow: (url: string) => void
+}
 
 const fullBaseUrl = getFullBaseUrl()
 const workboxVersion = 'v7.3.0'
 
-importScripts(`${fullBaseUrl}workbox-${workboxVersion}/workbox-sw.js`)
+self.importScripts(`${fullBaseUrl}workbox-${workboxVersion}/workbox-sw.js`)
 workbox.setConfig({
 	modulePathPrefix: `${fullBaseUrl}workbox-${workboxVersion}`,
 })
@@ -27,7 +61,8 @@ workbox.routing.registerRoute(
 )
 
 // This code listens for the user's confirmation to update the app.
-self.addEventListener('message', (e) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+self.addEventListener('message', (e: any) => {
 	if (!e.data) {
 		return
 	}
@@ -43,8 +78,9 @@ self.addEventListener('message', (e) => {
 })
 
 // Notification action
-self.addEventListener('notificationclick', function (event) {
-	const taskId = event.notification.data.taskId
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+self.addEventListener('notificationclick', function (event: any) {
+	const taskId = (event.notification.data as { taskId: string }).taskId
 	event.notification.close()
 
 	switch (event.action) {
@@ -56,6 +92,6 @@ self.addEventListener('notificationclick', function (event) {
 
 workbox.core.clientsClaim()
 // The precaching code provided by Workbox.
-self.__precacheManifest = [].concat(self.__precacheManifest || [])
+self.__precacheManifest = ([] as unknown[]).concat(self.__precacheManifest || [])
 workbox.precaching.precacheAndRoute(self.__precacheManifest, {})
 

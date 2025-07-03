@@ -255,7 +255,10 @@ const showNewForm = ref(false)
 
 const projectStore = useProjectStore()
 
-const availableViews = computed<IProjectView[]>(() => projectStore.projects[props.projectId]?.views || [])
+const availableViews = computed<IProjectView[]>(() => {
+	const views = projectStore.projects[props.projectId]?.views || []
+	return JSON.parse(JSON.stringify(views))
+})
 const copy = useCopyToClipboard()
 watch(
 	() => props.projectId,
@@ -272,10 +275,10 @@ async function load(projectId: IProject['id']) {
 		return
 	}
 
-	linkShares.value = await linkShareService.getAll({projectId})
+	linkShares.value = await linkShareService.getAll({projectId} as ILinkShare)
 }
 
-type SelectedViewMapper = Record<IProject['id'], IProjectView['id']>
+type SelectedViewMapper = Record<IProject['id'], IProjectView['id'] | null>
 
 const selectedViews = ref<SelectedViewMapper>({})
 

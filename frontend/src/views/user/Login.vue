@@ -149,6 +149,7 @@
 import {computed, onBeforeMount, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useDebounceFn} from '@vueuse/core'
+import {AxiosError} from 'axios'
 
 import Message from '@/components/misc/Message.vue'
 import Password from '@/components/input/Password.vue'
@@ -161,6 +162,8 @@ import {useAuthStore} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
 
 import {useTitle} from '@/composables/useTitle'
+import type {ILoginCredentials} from '@/modelTypes/ILoginCredentials'
+import type {IApiErrorResponse} from '@/modelTypes/IApiError'
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => t('user.auth.login'))
@@ -213,7 +216,7 @@ async function submit() {
 	// Some browsers prevent Vue bindings from working with autofilled values.
 	// To work around this, we're manually getting the values here instead of relying on vue bindings.
 	// For more info, see https://kolaente.dev/vikunja/frontend/issues/78
-	const credentials = {
+	const credentials: ILoginCredentials = {
 		username: usernameRef.value?.value,
 		password: password.value,
 		longToken: rememberMe.value,
@@ -233,8 +236,9 @@ async function submit() {
 	try {
 		await authStore.login(credentials)
 		authStore.setNeedsTotpPasscode(false)
-	} catch (e) {
-		if (e.response?.data.code === 1017 && !credentials.totpPasscode) {
+	} catch (e: unknown) {
+		const axiosError = e as AxiosError<IApiErrorResponse>
+		if (axiosError.response?.data?.code === 1017 && !credentials.totpPasscode) {
 			return
 		}
 

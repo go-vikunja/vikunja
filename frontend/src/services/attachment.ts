@@ -1,7 +1,8 @@
 import AbstractService from './abstractService'
 import AttachmentModel from '../models/attachment'
 
-import type { IAttachment } from '@/modelTypes/IAttachment'
+import type { IAttachment, IAttachmentUploadResponse } from '@/modelTypes/IAttachment'
+import type { Method } from 'axios'
 
 import {downloadBlob} from '@/helpers/downloadBlob'
 
@@ -24,7 +25,7 @@ export default class AttachmentService extends AbstractService<IAttachment> {
 	processModel(model: IAttachment) {
 		return {
 			...model,
-			created: new Date(model.created).toISOString(),
+			created: new Date(model.created),
 		}
 	}
 
@@ -36,34 +37,53 @@ export default class AttachmentService extends AbstractService<IAttachment> {
 		return new AttachmentModel(data)
 	}
 
-	modelCreateFactory(data) {
+	modelCreateFactory(data: Partial<IAttachment>): IAttachment {
+		return this.modelFactory(data)
+	}
+
+	// Special factory for file upload responses
+	processUploadResponse(data: IAttachmentUploadResponse): IAttachmentUploadResponse {
 		// Success contains the uploaded attachments
-		data.success = (data.success === null ? [] : data.success).map(a => {
-			return this.modelFactory(a)
-		})
+		if (data.success) {
+			data.success = data.success.map((a: Partial<IAttachment>) => {
+				return this.modelFactory(a)
+			})
+		}
 		return data
 	}
 
-	getBlobUrl(model: IAttachment, size?: PREVIEW_SIZE) {
+	getBlobUrl(model: IAttachment, size?: PREVIEW_SIZE): Promise<unknown>
+	getBlobUrl(url: string, method?: string, data?: unknown): Promise<unknown>
+	getBlobUrl(modelOrUrl: IAttachment | string, sizeOrMethod?: PREVIEW_SIZE | string, data?: unknown): Promise<unknown> {
+		if (typeof modelOrUrl === 'string') {
+			return super.getBlobUrl(modelOrUrl, sizeOrMethod as Method, data as Record<string, unknown> | undefined)
+		}
+		
+		const model = modelOrUrl
 		let mainUrl = '/tasks/' + model.taskId + '/attachments/' + model.id
-		if (size !== undefined) {
-			mainUrl += `?preview_size=${size}`
+		if (sizeOrMethod !== undefined) {
+			mainUrl += `?preview_size=${sizeOrMethod}`
 		}
 
-		return AbstractService.prototype.getBlobUrl.call(this, mainUrl)
+		return super.getBlobUrl(mainUrl, 'GET', {})
 	}
 
 	async download(model: IAttachment) {
 		const url = await this.getBlobUrl(model)
-		return downloadBlob(url, model.file.name)
+		return downloadBlob(url as string, model.file.name)
 	}
 
 	/**
 	 * Uploads a file to the server
 	 * @param files
-	 * @returns {Promise<any|never>}
+	 * @returns {Promise<IAttachment|IAttachmentUploadResponse>}
 	 */
-	create(model: IAttachment, files: File[] | FileList) {
+	create(model: IAttachment): Promise<IAttachment>
+	create(model: IAttachment, files: File[] | FileList): Promise<IAttachmentUploadResponse>
+	create(model: IAttachment, files?: File[] | FileList): Promise<IAttachment | IAttachmentUploadResponse> {
+		if (!files) {
+			return super.create(model)
+		}
 		const data = new FormData()
 		for (let i = 0; i < files.length; i++) {
 			// TODO: Validation of file size
@@ -71,7 +91,7 @@ export default class AttachmentService extends AbstractService<IAttachment> {
 		}
 
 		return this.uploadFormData(
-			this.getReplacedRoute(this.paths.create, model),
+			this.getReplacedRoute(this.paths.create, model as unknown as Record<string, unknown>),
 			data,
 		)
 	}

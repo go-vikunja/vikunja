@@ -28,7 +28,7 @@ export default function inputPrompt(pos: ClientRect, oldValue: string = ''): Pro
 				return
 			}
 
-			const url = event.target.value
+			const url = (event.target as HTMLInputElement)?.value || ''
 
 			resolve(url)
 

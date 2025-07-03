@@ -87,13 +87,14 @@
 
 <script lang="ts" setup>
 import {computed, onMounted, onUnmounted, ref} from 'vue'
-import {useRouter} from 'vue-router'
+import {useRouter, type RouteLocationRaw} from 'vue-router'
 
 import NotificationService from '@/services/notification'
 import BaseButton from '@/components/base/BaseButton.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import User from '@/components/misc/User.vue'
-import { NOTIFICATION_NAMES as names, type INotification} from '@/modelTypes/INotification'
+import { NOTIFICATION_NAMES as names, type INotification as _INotification} from '@/modelTypes/INotification'
+import NotificationModel from '@/models/notification'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
 import {getDisplayName} from '@/models/user'
@@ -108,9 +109,9 @@ const authStore = useAuthStore()
 const router = useRouter()
 const {t} = useI18n()
 
-const allNotifications = ref<INotification[]>([])
+const allNotifications = ref<NotificationModel[]>([])
 const showNotifications = ref(false)
-const popup = ref(null)
+const popup = ref<HTMLElement | null>(null)
 
 const unreadNotifications = computed(() => {
 	return notifications.value.filter(n => n.readAt === null).length
@@ -141,19 +142,19 @@ async function loadNotifications() {
 	}
 	// We're recreating the notification service here to make sure it uses the latest api user token
 	const notificationService = new NotificationService()
-	allNotifications.value = await notificationService.getAll()
+	allNotifications.value = await notificationService.getAll(new NotificationModel({}))
 }
 
-function hidePopup(e) {
-	if (showNotifications.value) {
+function hidePopup(e: MouseEvent) {
+	if (showNotifications.value && popup.value) {
 		closeWhenClickedOutside(e, popup.value, () => showNotifications.value = false)
 	}
 }
 
-function to(n, index) {
+function to(n: NotificationModel, index: number) {
 	const to = {
 		name: '',
-		params: {},
+		params: {} as Record<string, unknown>,
 	}
 
 	switch (n.name) {
@@ -162,24 +163,24 @@ function to(n, index) {
 		case names.TASK_REMINDER:
 		case names.TASK_MENTIONED:
 			to.name = 'task.detail'
-			to.params.id = n.notification.task.id
+			to.params.id = (n.notification as {task: {id: unknown}}).task.id
 			break
 		case names.TASK_DELETED:
 			// Nothing
 			break
 		case names.PROJECT_CREATED:
 			to.name = 'task.index'
-			to.params.projectId = n.notification.project.id
+			to.params.projectId = (n.notification as {project: {id: unknown}}).project.id
 			break
 		case names.TEAM_MEMBER_ADDED:
 			to.name = 'teams.edit'
-			to.params.id = n.notification.team.id
+			to.params.id = (n.notification as {team: {id: unknown}}).team.id
 			break
 	}
 
 	return async () => {
 		if (to.name !== '') {
-			router.push(to)
+			router.push(to as RouteLocationRaw)
 		}
 
 		n.read = true

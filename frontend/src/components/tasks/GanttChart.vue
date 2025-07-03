@@ -123,6 +123,7 @@ const GANTT_COLOR_SCHEME: ColorScheme = {
 	hoverHighlight: 'var(--grey-700)',
 	text: 'var(--grey-800)',
 	background: 'var(--white)',
+	markerCurrentTime: 'var(--primary)',
 } as const
 
 /**

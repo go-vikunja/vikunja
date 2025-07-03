@@ -33,7 +33,7 @@ const blobUrl = ref<string | undefined>(undefined)
 
 watchEffect(async () => {
 	if (props.modelValue && canPreview(props.modelValue)) {
-		blobUrl.value = await attachmentService.getBlobUrl(props.modelValue, PREVIEW_SIZE.MD)
+		blobUrl.value = await attachmentService.getBlobUrl(props.modelValue, PREVIEW_SIZE.MD) as string | undefined
 	}
 })
 </script>

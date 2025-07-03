@@ -19,6 +19,7 @@ import type {ITask} from '@/modelTypes/ITask'
 import type {IUser} from '@/modelTypes/IUser'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {IProject} from '@/modelTypes/IProject'
+import type {Priority} from '@/constants/priorities'
 
 import {setModuleLoading} from '@/stores/helper'
 import {useLabelStore} from '@/stores/labels'
@@ -38,13 +39,14 @@ interface MatchedAssignee extends IUser {
 }
 
 // IDEA: maybe use a small fuzzy search here to prevent errors
-function findPropertyByValue(object, key, value, fuzzy = false) {
-	return Object.values(object).find(l => {
+function findPropertyByValue<T, K extends keyof T>(array: T[], key: K, value: string, fuzzy = false): T | undefined {
+	return array.find(item => {
+		const itemValue = String(item[key])
 		if (fuzzy) {
-			return l[key]?.toLowerCase().includes(value.toLowerCase())
+			return itemValue?.toLowerCase().includes(value.toLowerCase())
 		}
 	
-		return l[key]?.toLowerCase() === value.toLowerCase()
+		return itemValue?.toLowerCase() === value.toLowerCase()
 	})
 }
 
@@ -91,16 +93,16 @@ async function findAssignees(parsedTaskAssignees: string[], projectId: number): 
 
 	const userService = new ProjectUserService()
 	const assignees = parsedTaskAssignees.map(async a => {
-		const users = (await userService.getAll({projectId}, {s: a}))
+		const users = (await userService.getAll(new TaskModel({projectId}), {s: a}))
 			.map(u => ({
 				...u,
 				match: a,
 			}))
-		return validateUser(users, a)
+		return validateUser(users as unknown as IUser[], a)
 	})
 
 	const validatedUsers = await Promise.all(assignees) 
-	return validatedUsers.filter((item) => Boolean(item))
+	return validatedUsers.filter((item) => Boolean(item)) as MatchedAssignee[]
 }
 
 export const useTaskStore = defineStore('task', () => {
@@ -137,14 +139,18 @@ export const useTaskStore = defineStore('task', () => {
 
 		const cancel = setModuleLoading(setIsLoading)
 		try {
-			const model = {}
-			let taskCollectionService = new TaskService()
+			const model: Partial<{projectId: number}> = {}
+			let taskCollectionService: TaskService | TaskCollectionService = new TaskService()
 			if (projectId !== null) {
 				model.projectId = projectId
 				taskCollectionService = new TaskCollectionService()
 			}
-			tasks.value = await taskCollectionService.getAll(model, params)
-			baseStore.setHasTasks(tasks.value.length > 0)
+			const taskResults = await taskCollectionService.getAll(new TaskModel(model), params as unknown as Record<string, unknown>)
+			tasks.value = Array.isArray(taskResults) ? taskResults.reduce((acc, task) => {
+				acc[task.id] = task
+				return acc
+			}, {} as { [id: number]: ITask }) : taskResults
+			baseStore.setHasTasks(Object.keys(tasks.value).length > 0)
 			return tasks.value
 		} finally {
 			cancel()
@@ -181,20 +187,20 @@ export const useTaskStore = defineStore('task', () => {
 		attachment: IAttachment
 	}) {
 		const t = kanbanStore.getTaskById(taskId)
-		if (t.task !== null) {
+		if (t.task !== null && t.bucketIndex !== null && t.taskIndex !== null) {
 			const attachments = [
 				...t.task.attachments,
 				attachment,
 			]
 
-			const newTask = {
-				...t,
+			kanbanStore.setTaskInBucketByIndex({
+				bucketIndex: t.bucketIndex as number,
+				taskIndex: t.taskIndex as number,
 				task: {
 					...t.task,
 					attachments,
 				},
-			}
-			kanbanStore.setTaskInBucketByIndex(newTask)
+			})
 		}
 		attachmentStore.add(attachment)
 	}
@@ -215,7 +221,7 @@ export const useTaskStore = defineStore('task', () => {
 				taskId: taskId,
 			}))
 			const t = kanbanStore.getTaskById(taskId)
-			if (t.task === null) {
+			if (t.task === null || t.bucketIndex === null || t.taskIndex === null) {
 				// Don't try further adding a label if the task is not in kanban
 				// Usually this means the kanban board hasn't been accessed until now.
 				// Vuex seems to have its difficulties with that, so we just log the error and fail silently.
@@ -224,7 +230,8 @@ export const useTaskStore = defineStore('task', () => {
 			}
 
 			kanbanStore.setTaskInBucketByIndex({
-				...t,
+				bucketIndex: t.bucketIndex as number,
+				taskIndex: t.taskIndex as number,
 				task: {
 					...t.task,
 					assignees: [
@@ -253,7 +260,7 @@ export const useTaskStore = defineStore('task', () => {
 			taskId: taskId,
 		}))
 		const t = kanbanStore.getTaskById(taskId)
-		if (t.task === null) {
+		if (t.task === null || t.bucketIndex === null || t.taskIndex === null) {
 			// Don't try further adding a label if the task is not in kanban
 			// Usually this means the kanban board hasn't been accessed until now.
 			// Vuex seems to have its difficulties with that, so we just log the error and fail silently.
@@ -261,10 +268,11 @@ export const useTaskStore = defineStore('task', () => {
 			return response
 		}
 
-		const assignees = t.task.assignees.filter(({ id }) => id !== user.id)
+		const assignees = t.task.assignees.filter(({ id }: IUser) => id !== user.id)
 
 		kanbanStore.setTaskInBucketByIndex({
-			...t,
+			bucketIndex: t.bucketIndex as number,
+			taskIndex: t.taskIndex as number,
 			task: {
 				...t.task,
 				assignees,
@@ -287,7 +295,7 @@ export const useTaskStore = defineStore('task', () => {
 			labelId: label.id,
 		}))
 		const t = kanbanStore.getTaskById(taskId)
-		if (t.task === null) {
+		if (t.task === null || t.bucketIndex === null || t.taskIndex === null) {
 			// Don't try further adding a label if the task is not in kanban
 			// Usually this means the kanban board hasn't been accessed until now.
 			// Vuex seems to have its difficulties with that, so we just log the error and fail silently.
@@ -296,7 +304,8 @@ export const useTaskStore = defineStore('task', () => {
 		}
 
 		kanbanStore.setTaskInBucketByIndex({
-			...t,
+			bucketIndex: t.bucketIndex as number,
+			taskIndex: t.taskIndex as number,
 			task: {
 				...t.task,
 				labels: [
@@ -319,7 +328,7 @@ export const useTaskStore = defineStore('task', () => {
 			label.id,
 		}))
 		const t = kanbanStore.getTaskById(taskId)
-		if (t.task === null) {
+		if (t.task === null || t.bucketIndex === null || t.taskIndex === null) {
 			// Don't try further adding a label if the task is not in kanban
 			// Usually this means the kanban board hasn't been accessed until now.
 			// Vuex seems to have its difficulties with that, so we just log the error and fail silently.
@@ -328,10 +337,11 @@ export const useTaskStore = defineStore('task', () => {
 		}
 
 		// Remove the label from the project
-		const labels = t.task.labels.filter(({ id }) => id !== label.id)
+		const labels = t.task.labels.filter(({ id }: ILabel) => id !== label.id)
 
 		kanbanStore.setTaskInBucketByIndex({
-			...t,
+			bucketIndex: t.bucketIndex as number,
+			taskIndex: t.taskIndex as number,
 			task: {
 				...t.task,
 				labels,
@@ -355,7 +365,7 @@ export const useTaskStore = defineStore('task', () => {
 			}
 			return label
 		})
-		return Promise.all(mustCreateLabel)
+		return Promise.all(mustCreateLabel) as Promise<LabelModel[]>
 	}
 
 	// Do everything that is involved in finding, creating and adding the label to the task
@@ -425,7 +435,7 @@ export const useTaskStore = defineStore('task', () => {
 	) {
 		const cancel = setModuleLoading(setIsLoading)
 		const quickAddMagicMode = authStore.settings.frontendSettings.quickAddMagicMode
-		const parsedTask = parseTaskText(title, quickAddMagicMode)
+		const parsedTask = parseTaskText(title || '', quickAddMagicMode)
 
 		if(parsedTask.text === '') {
 			const taskService = new TaskService()
@@ -443,7 +453,7 @@ export const useTaskStore = defineStore('task', () => {
 		}
 	
 		const foundProjectId = await findProjectId({
-			project: parsedTask.project,
+			project: parsedTask.project || '',
 			projectId: projectId || 0,
 		})
 		
@@ -464,19 +474,19 @@ export const useTaskStore = defineStore('task', () => {
 		}
 
 		// I don't know why, but it all goes up in flames when I just pass in the date normally.
-		const dueDate = parsedTask.date !== null ? new Date(parsedTask.date).toISOString() : null
+		const dueDate = parsedTask.date !== null ? new Date(parsedTask.date) : null
 	
 		const task = new TaskModel({
 			title: cleanedTitle,
 			projectId: foundProjectId,
 			dueDate,
-			priority: parsedTask.priority,
+			priority: parsedTask.priority as Priority,
 			assignees,
 			bucketId: bucketId || 0,
 			position,
 			index,
 		})
-		task.repeatAfter = parsedTask.repeats
+		task.repeatAfter = parsedTask.repeats || 0
 
 		if (parsedTask.repeats?.type === REPEAT_TYPES.Months && parsedTask.repeats?.amount === 1) {
 			task.repeatMode = TASK_REPEAT_MODES.REPEAT_MODE_MONTH

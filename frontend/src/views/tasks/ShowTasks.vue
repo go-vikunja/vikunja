@@ -10,7 +10,10 @@
 			v-if="!showAll"
 			class="show-tasks-options"
 		>
-			<DatepickerWithRange @update:modelValue="setDate">
+			<DatepickerWithRange 
+				:model-value="dateRangeValue"
+				@update:modelValue="(dates: DateStrings) => setDate(dates)"
+			>
 				<template #trigger="{toggle}">
 					<XButton
 						variant="primary"
@@ -81,6 +84,8 @@ import SingleTaskInProject from '@/components/tasks/partials/SingleTaskInProject
 import DatepickerWithRange from '@/components/date/DatepickerWithRange.vue'
 import {DATE_RANGES} from '@/components/date/dateRanges'
 import LlamaCool from '@/assets/llama-cool.svg?component'
+import Card from '@/components/misc/Card.vue'
+import XButton from '@/components/input/Button.vue'
 import type {ITask} from '@/modelTypes/ITask'
 import {useAuthStore} from '@/stores/auth'
 import {useTaskStore} from '@/stores/tasks'
@@ -101,7 +106,7 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-	'tasksLoaded': true,
+	'tasksLoaded': [],
 }>()
 
 const authStore = useAuthStore()
@@ -120,6 +125,11 @@ setTimeout(() => showNothingToDo.value = true, 100)
 
 const showAll = computed(() => typeof props.dateFrom === 'undefined' || typeof props.dateTo === 'undefined')
 
+const dateRangeValue = computed(() => ({
+	dateFrom: props.dateFrom || new Date(),
+	dateTo: props.dateTo || new Date(),
+}))
+
 const pageTitle = computed(() => {
 	// We need to define "key" because it is the first parameter in the array and we need the second
 	const predefinedRange = Object.entries(DATE_RANGES)
@@ -132,25 +142,25 @@ const pageTitle = computed(() => {
 	return showAll.value
 		? t('task.show.titleCurrent')
 		: t('task.show.fromuntil', {
-			from: formatDate(props.dateFrom, 'LL'),
-			until: formatDate(props.dateTo, 'LL'),
+			from: formatDate(props.dateFrom || new Date(), 'LL'),
+			until: formatDate(props.dateTo || new Date(), 'LL'),
 		})
 })
 const hasTasks = computed(() => tasks.value && tasks.value.length > 0)
 const userAuthenticated = computed(() => authStore.authenticated)
 const loading = computed(() => taskStore.isLoading || taskCollectionService.value.loading)
 
-interface dateStrings {
-	dateFrom: string,
-	dateTo: string,
+interface DateStrings {
+	dateFrom: string | Date | null,
+	dateTo: string | Date | null,
 }
 
-function setDate(dates: dateStrings) {
+function setDate(dates: DateStrings) {
 	router.push({
-		name: route.name as string,
+		name: route.name || 'home',
 		query: {
-			from: dates.dateFrom ?? props.dateFrom,
-			to: dates.dateTo ?? props.dateTo,
+			from: (dates.dateFrom ?? props.dateFrom)?.toString() || '',
+			to: (dates.dateTo ?? props.dateTo)?.toString() || '',
 			showOverdue: props.showOverdue ? 'true' : 'false',
 			showNulls: props.showNulls ? 'true' : 'false',
 		},
@@ -159,7 +169,7 @@ function setDate(dates: dateStrings) {
 
 function setShowOverdue(show: boolean) {
 	router.push({
-		name: route.name as string,
+		name: route.name || 'home',
 		query: {
 			...route.query,
 			showOverdue: show ? 'true' : 'false',
@@ -169,7 +179,7 @@ function setShowOverdue(show: boolean) {
 
 function setShowNulls(show: boolean) {
 	router.push({
-		name: route.name as string,
+		name: route.name || 'home',
 		query: {
 			...route.query,
 			showNulls: show ? 'true' : 'false',
@@ -208,22 +218,22 @@ async function loadPendingTasks(from: Date|string, to: Date|string) {
 	
 	let projectId = null
 	const filterId = authStore.settings.frontendSettings.filterIdUsedOnOverview
-	if (showAll.value && filterId && typeof projectStore.projects[filterId] !== 'undefined') {
+	if (showAll.value && filterId && typeof filterId === 'number' && typeof projectStore.projects[filterId] !== 'undefined') {
 		projectId = filterId
 	}
 
-	tasks.value = await taskStore.loadTasks(params, projectId)
-	emit('tasksLoaded', true)
+	tasks.value = await taskStore.loadTasks(params, projectId) as ITask[]
+	emit('tasksLoaded')
 }
 
 // FIXME: this modification should happen in the store
 function updateTasks(updatedTask: ITask) {
-	for (const t in tasks.value) {
-		if (tasks.value[t].id === updatedTask.id) {
-			tasks.value[t] = updatedTask
+	for (let i = 0; i < tasks.value.length; i++) {
+		if (tasks.value[i].id === updatedTask.id) {
+			tasks.value[i] = updatedTask
 			// Move the task to the end of the done tasks if it is now done
 			if (updatedTask.done) {
-				tasks.value.splice(t, 1)
+				tasks.value.splice(i, 1)
 				tasks.value.push(updatedTask)
 			}
 			break
@@ -231,7 +241,7 @@ function updateTasks(updatedTask: ITask) {
 	}
 }
 
-watchEffect(() => loadPendingTasks(props.dateFrom, props.dateTo))
+watchEffect(() => loadPendingTasks(props.dateFrom || new Date(), props.dateTo || new Date()))
 watchEffect(() => setTitle(pageTitle.value))
 </script>
 

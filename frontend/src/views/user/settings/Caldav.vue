@@ -74,7 +74,7 @@
 			v-if="newToken"
 			class="mb-4"
 		>
-			{{ $t('user.settings.caldav.tokenCreated', {token: newToken.token}) }}<br>
+			{{ $t('user.settings.caldav.tokenCreated', {token: (newToken as any).token}) }}<br>
 			{{ $t('user.settings.caldav.wontSeeItAgain') }}
 		</Message>
 
@@ -109,6 +109,7 @@ import {success} from '@/message'
 import BaseButton from '@/components/base/BaseButton.vue'
 import Message from '@/components/misc/Message.vue'
 import CaldavTokenService from '@/services/caldavToken'
+import CaldavTokenModel from '@/models/caldavToken'
 import { formatDateShort } from '@/helpers/time/formatDate'
 import type {ICaldavToken} from '@/modelTypes/ICaldavToken'
 import {useConfigStore} from '@/stores/config'
@@ -122,13 +123,13 @@ useTitle(() => `${t('user.settings.caldav.title')} - ${t('user.settings.title')}
 const service = shallowReactive(new CaldavTokenService())
 const tokens = ref<ICaldavToken[]>([])
 
-service.getAll().then((result: ICaldavToken[]) => {
+service.getAll(new CaldavTokenModel({})).then((result: ICaldavToken[]) => {
 	tokens.value = result
 })
 
 const newToken = ref<ICaldavToken>()
 async function createToken() {
-	newToken.value = await service.create({}) as ICaldavToken
+	newToken.value = await service.create({} as ICaldavToken) as ICaldavToken
 	tokens.value.push(newToken.value)
 }
 

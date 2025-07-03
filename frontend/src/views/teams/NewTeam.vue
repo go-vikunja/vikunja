@@ -60,6 +60,7 @@ import {useI18n} from 'vue-i18n'
 
 import TeamModel from '@/models/team'
 import TeamService from '@/services/team'
+import type {ITeam} from '@/modelTypes/ITeam'
 
 import CreateEdit from '@/components/misc/CreateEdit.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
@@ -90,7 +91,7 @@ async function newTeam() {
 	}
 	showError.value = false
 
-	const response = await teamService.create(team)
+	const response = await teamService.create(team as ITeam)
 	router.push({
 		name: 'teams.edit',
 		params: { id: response.id },

@@ -24,11 +24,11 @@
 				class="subtitle"
 			>
 				<template
-					v-for="p in projectStore.getAncestors(project)"
+					v-for="p in projectStore.getAncestors(project as IProject)"
 					:key="p.id"
 				>
 					<a
-						v-if="router.options.history.state.back?.includes('/projects/'+p.id+'/') || false"
+						v-if="(router.options.history.state.back as string)?.includes('/projects/'+p.id+'/') || false"
 						v-shortcut="p.id === project?.id ? 'u' : ''"
 						@click="router.back()"
 					>
@@ -97,7 +97,7 @@
 									:ref="e => setFieldRef('priority', e)"
 									v-model="task.priority"
 									:disabled="!canWrite"
-									@update:modelValue="setPriority"
+									@update:modelValue="(priority: number) => setPriority(priority as Priority)"
 								/>
 							</div>
 						</CustomTransition>
@@ -421,7 +421,7 @@
 							entity="task"
 							:entity-id="task.id"
 							:model-value="task.subscription"
-							@update:modelValue="sub => task.subscription = sub"
+							@update:modelValue="(sub: ISubscription | null) => { if (sub) task.subscription = sub }"
 						/>
 						<XButton
 							v-shortcut="'s'"
@@ -588,7 +588,7 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted, onBeforeUnmount} from 'vue'
+import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted, onBeforeUnmount, type ComponentPublicInstance} from 'vue'
 import {useRouter, type RouteLocation} from 'vue-router'
 import {storeToRefs} from 'pinia'
 import {useI18n} from 'vue-i18n'
@@ -601,6 +601,7 @@ import TaskModel from '@/models/task'
 
 import type {ITask} from '@/modelTypes/ITask'
 import type {IProject} from '@/modelTypes/IProject'
+import type {ISubscription} from '@/modelTypes/ISubscription'
 
 import {PRIORITIES, type Priority} from '@/constants/priorities'
 import {RIGHTS} from '@/constants/rights'
@@ -672,7 +673,7 @@ const taskTitle = computed(() => task.value.title)
 useTitle(taskTitle)
 
 // See https://github.com/github/hotkey/discussions/85#discussioncomment-5214660
-function saveTaskViaHotkey(event) {
+function saveTaskViaHotkey(event: KeyboardEvent) {
 	const hotkeyString = eventToHotkeyString(event)
 	if (!hotkeyString) return
 	if (hotkeyString !== 'Control+s' && hotkeyString !== 'Meta+s') return
@@ -708,17 +709,21 @@ const canWrite = computed(() => (
 ))
 
 const color = computed(() => {
-	const color = task.value.getHexColor
-		? task.value.getHexColor()
-		: undefined
+	const taskValue = task.value as ITask & {getHexColor?: () => string}
+	const color = taskValue.getHexColor
+		? taskValue.getHexColor()
+		: task.value.hexColor
 
 	return color
 })
 
 const isModal = computed(() => Boolean(props.backdropView))
 
-function attachmentUpload(file: File, onSuccess?: (url: string) => void) {
-	return uploadFile(props.taskId, file, onSuccess)
+async function attachmentUpload(file: File, onSuccess?: (url: string) => void): Promise<string> {
+	await uploadFile(props.taskId, file, onSuccess)
+	// uploadFile handles the onSuccess callback internally, we just need to return something
+	// The AttachmentUploadFunction expects a Promise<string>, but the actual value isn't used
+	return ''
 }
 
 const heading = ref<HTMLElement | null>(null)
@@ -738,13 +743,13 @@ watch(
 		}
 
 		try {
-			const loaded = await taskService.get({id}, {expand: ['reactions', 'comments']})
+			const loaded = await taskService.get(new TaskModel({id}), {expand: ['reactions', 'comments']})
 			Object.assign(task.value, loaded)
 			attachmentStore.set(task.value.attachments)
 			taskColor.value = task.value.hexColor
 			setActiveFields()
-		} catch (e) {
-			if (e?.response?.status === 404) {
+		} catch (e: unknown) {
+			if ((e as {response?: {status?: number}})?.response?.status === 404) {
 				router.replace({name: 'not-found'})
 				return
 			}
@@ -803,7 +808,7 @@ function setActiveFields() {
 	activeFields.priority = task.value.priority !== PRIORITIES.UNSET
 	activeFields.relatedTasks = Object.keys(task.value.relatedTasks).length > 0
 	activeFields.reminders = task.value.reminders.length > 0
-	activeFields.repeatAfter = task.value.repeatAfter?.amount > 0 || task.value.repeatMode !== TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
+	activeFields.repeatAfter = (typeof task.value.repeatAfter === 'object' ? task.value.repeatAfter?.amount > 0 : task.value.repeatAfter > 0) || task.value.repeatMode !== TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
 	activeFields.startDate = task.value.startDate !== null
 }
 
@@ -823,8 +828,10 @@ const activeFieldElements: { [id in FieldType]: HTMLElement | null } = reactive(
 	startDate: null,
 })
 
-function setFieldRef(name, e) {
-	activeFieldElements[name] = unrefElement(e)
+function setFieldRef(name: keyof typeof activeFieldElements, e: Element | ComponentPublicInstance | null) {
+	// If it's a Vue component, get its root element; otherwise use the element directly
+	const element = (e as ComponentPublicInstance)?.$el || e
+	activeFieldElements[name] = (element instanceof HTMLElement) ? element : null
 }
 
 function setFieldActive(fieldName: keyof typeof activeFields) {
@@ -938,7 +945,11 @@ async function setPercentDone(percentDone: number) {
 }
 
 async function removeRepeatAfter() {
-	task.value.repeatAfter.amount = 0
+	if (typeof task.value.repeatAfter === 'object') {
+		task.value.repeatAfter.amount = 0
+	} else {
+		task.value.repeatAfter = 0
+	}
 	task.value.repeatMode = TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
 	await saveTask()
 }
@@ -948,9 +959,9 @@ function setRelatedTasksActive() {
 
 	// If the related tasks are already available, show the form again
 	const el = activeFieldElements['relatedTasks']
-	for (const child in el?.children) {
-		if (el?.children[child]?.id === 'showRelatedTasksFormButton') {
-			el?.children[child]?.click()
+	for (let i = 0; i < (el?.children?.length || 0); i++) {
+		if (el?.children[i]?.id === 'showRelatedTasksFormButton') {
+			(el?.children[i] as HTMLElement)?.click()
 			break
 		}
 	}

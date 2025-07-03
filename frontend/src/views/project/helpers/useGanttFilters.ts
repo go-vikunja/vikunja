@@ -11,7 +11,7 @@ import type {IProject} from '@/modelTypes/IProject'
 import type {TaskFilterParams} from '@/services/taskCollection'
 
 import type {DateISO} from '@/types/DateISO'
-import type {DateKebab} from '@/types/DateKebab'
+type DateKebab = string
 import type {IProjectView} from '@/modelTypes/IProjectView'
 
 // convenient internal filter object
@@ -21,6 +21,7 @@ export interface GanttFilters {
 	dateFrom: DateISO
 	dateTo: DateISO
 	showTasksWithoutDates: boolean
+	[key: string]: unknown
 }
 
 const DEFAULT_SHOW_TASKS_WITHOUT_DATES = false
@@ -90,6 +91,7 @@ function ganttFiltersToApiParams(filters: GanttFilters): TaskFilterParams {
 		order_by: ['asc', 'asc', 'desc'],
 		filter: 'start_date >= "' + isoToKebabDate(filters.dateFrom) + '" && start_date <= "' + isoToKebabDate(filters.dateTo) + '"',
 		filter_include_nulls: filters.showTasksWithoutDates,
+		s: '',
 	}
 }
 

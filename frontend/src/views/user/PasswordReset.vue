@@ -31,6 +31,7 @@
 					for="password"
 				>{{ $t('user.auth.password') }}</label>
 				<Password
+					:model-value="credentials.password"
 					@submit="resetPassword"
 					@update:modelValue="v => credentials.password = v"
 				/>
@@ -86,10 +87,10 @@ async function resetPassword() {
 
 	const passwordReset = new PasswordResetModel({newPassword: credentials.password, token: token})
 	try {
-		const {message} = await passwordResetService.resetPassword(passwordReset)
-		successMessage.value = message
-	} catch (e) {
-		errorMsg.value = e.response.data.message
+		await passwordResetService.resetPassword(passwordReset)
+		successMessage.value = t('user.auth.resetPasswordSuccess')
+	} catch (e: unknown) {
+		errorMsg.value = (e instanceof Error && 'response' in e ? (e as {response: {data: {message: string}}}).response.data.message : String(e)) || t('user.auth.resetPasswordError')
 	}
 }
 </script>

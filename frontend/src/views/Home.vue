@@ -31,7 +31,7 @@
 			<h3>{{ $t('home.lastViewed') }}</h3>
 			<ProjectCardGrid
 				v-cy="'projectCardGrid'"
-				:projects="projectHistory"
+				:projects="projectHistory as any"
 				:show-even-number-of-projects="true"
 			/>
 		</div>
@@ -79,7 +79,10 @@ const projectHistory = computed(() => {
 
 const tasksLoaded = ref(false)
 
-const deletionScheduledAt = computed(() => parseDateOrNull(authStore.info?.deletionScheduledAt))
+const deletionScheduledAt = computed(() => {
+	const date = authStore.info?.deletionScheduledAt
+	return date ? parseDateOrNull(date) : null
+})
 
 // This is to reload the tasks list after adding a new task through the global task add.
 // FIXME: Should use pinia (somehow?)

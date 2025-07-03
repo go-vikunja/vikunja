@@ -120,8 +120,14 @@ function useAuth() {
 		loading.value = true
 
 		try {
+			const share = Array.isArray(route.params.share) ? route.params.share[0] : route.params.share
+			if (!share) {
+				errorMessage.value = t('sharing.invalidHash')
+				return
+			}
+			
 			const {project_id: projectId} = await authStore.linkShareAuth({
-				hash: route.params.share,
+				hash: share,
 				password: password.value,
 			})
 			const logoVisible = route.query.logoVisible
@@ -131,17 +137,18 @@ function useAuth() {
 
 			return redirectToProject(projectId)
 		} catch (e) {
-			if (e?.response?.data?.code === 13001) {
+			const error = e as {response?: {data?: {code?: number, message?: string}}}
+			if (error?.response?.data?.code === 13001) {
 				authenticateWithPassword.value = true
 				return
 			}
 
 			// TODO: Put this logic in a global errorMessage handler method which checks all auth codes
 			let err = t('sharing.error')
-			if (e?.response?.data?.message) {
-				err = e.response.data.message
+			if (error?.response?.data?.message) {
+				err = error.response.data.message
 			}
-			if (e?.response?.data?.code === 13002) {
+			if (error?.response?.data?.code === 13002) {
 				err = t('sharing.invalidPassword')
 			}
 			errorMessage.value = err

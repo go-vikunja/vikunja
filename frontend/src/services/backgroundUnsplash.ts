@@ -2,6 +2,7 @@ import AbstractService from './abstractService'
 import BackgroundImageModel from '../models/backgroundImage'
 import ProjectModel from '@/models/project'
 import type { IBackgroundImage } from '@/modelTypes/IBackgroundImage'
+import type { IProject } from '@/modelTypes/IProject'
 
 export default class BackgroundUnsplashService extends AbstractService<IBackgroundImage> {
 	constructor() {
@@ -15,11 +16,16 @@ export default class BackgroundUnsplashService extends AbstractService<IBackgrou
 		return new BackgroundImageModel(data)
 	}
 
-	modelUpdateFactory(data) {
+	modelUpdateFactory(data: Partial<IBackgroundImage>): IBackgroundImage {
+		return this.modelFactory(data)
+	}
+
+	// Special method for project updates when setting background
+	processProjectUpdate(data: Partial<IProject>): IProject {
 		return new ProjectModel(data)
 	}
 
-	async thumb(model) {
+	async thumb(model: {id: string}) {
 		const response = await this.http({
 			url: `/backgrounds/unsplash/images/${model.id}/thumb`,
 			method: 'GET',

@@ -73,6 +73,7 @@
 					for="password"
 				>{{ $t('user.auth.password') }}</label>
 				<Password
+					:model-value="credentials.password"
 					:validate-initially="validatePasswordInitially"
 					@submit="submit"
 					@update:modelValue="v => credentials.password = v"
@@ -145,6 +146,7 @@ const credentials = reactive({
 	username: '',
 	email: '',
 	password: '',
+	longToken: false,
 })
 
 const isLoading = computed(() => authStore.isLoading)
@@ -199,8 +201,8 @@ async function submit() {
 
 	try {
 		await authStore.register(toRaw(credentials))
-	} catch (e) {
-		errorMessage.value = e?.message
+	} catch (e: unknown) {
+		errorMessage.value = (e instanceof Error ? e.message : String(e)) || t('user.auth.registerError')
 	}
 }
 </script>

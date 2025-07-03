@@ -388,7 +388,7 @@ const router = createRouter({
 	],
 })
 
-export async function getAuthForRoute(to: RouteLocation, authStore) {
+export async function getAuthForRoute(to: RouteLocation, authStore: {authUser: boolean, authLinkShare: boolean, checkAuth: () => Promise<void>}) {
 	if (authStore.authUser || authStore.authLinkShare) {
 		return
 	}
@@ -449,7 +449,11 @@ router.beforeEach(async (to, from) => {
 		}
 	}
 
-	const newRoute = await getAuthForRoute(to, authStore)
+	const newRoute = await getAuthForRoute(to, {
+		authUser: !!authStore.authUser,
+		authLinkShare: !!authStore.authLinkShare, 
+		checkAuth: async () => { await authStore.checkAuth() },
+	})
 	if(newRoute) {
 		return {
 			...newRoute,

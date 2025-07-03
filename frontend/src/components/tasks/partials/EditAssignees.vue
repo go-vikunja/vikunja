@@ -25,7 +25,7 @@
 			<User
 				:avatar-size="24"
 				:show-username="true"
-				:user="user"
+				:user="user as IUser"
 			/>
 		</template>
 	</Multiselect>
@@ -44,7 +44,7 @@ import {success} from '@/message'
 import {useTaskStore} from '@/stores/tasks'
 
 import type {IUser} from '@/modelTypes/IUser'
-import {getDisplayName} from '@/models/user'
+import UserModel, {getDisplayName} from '@/models/user'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 
 const props = withDefaults(defineProps<{
@@ -71,7 +71,7 @@ let isAdding = false
 watch(
 	() => props.modelValue,
 	(value) => {
-		assignees.value = value
+		assignees.value = value || []
 	},
 	{
 		immediate: true,
@@ -101,14 +101,14 @@ async function removeAssignee(user: IUser) {
 	// Remove the assignee from the project
 	for (const a in assignees.value) {
 		if (assignees.value[a].id === user.id) {
-			assignees.value.splice(a, 1)
+			assignees.value.splice(parseInt(a), 1)
 		}
 	}
 	success({message: t('task.assignee.unassignSuccess')})
 }
 
 async function findUser(query: string) {
-	const response = await projectUserService.getAll({projectId: props.projectId}, {s: query}) as IUser[]
+	const response = await projectUserService.getAll(new UserModel(), {projectId: props.projectId, s: query}) as IUser[]
 
 	// Filter the results to not include users who are already assigned
 	foundUsers.value = response

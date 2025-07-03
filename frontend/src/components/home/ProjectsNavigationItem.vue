@@ -25,7 +25,7 @@
 				/>
 				<div
 					class="color-bubble-handle-wrapper"
-					:class="{'is-draggable': project.id > 0 && project.maxRight > RIGHTS.READ}"
+					:class="{'is-draggable': project.id > 0 && (project.maxRight ?? 0) > RIGHTS.READ}"
 				>
 					<ColorBubble
 						v-if="project.hexColor !== ''"
@@ -39,7 +39,7 @@
 						<Icon icon="filter" />
 					</span>
 					<span
-						v-if="project.id > 0 && project.maxRight > RIGHTS.READ"
+						v-if="project.id > 0 && (project.maxRight ?? 0) > RIGHTS.READ"
 						class="icon menu-item-icon handle"
 						:class="{'has-color-bubble': project.hexColor !== ''}"
 					>
@@ -49,7 +49,7 @@
 				<span class="project-menu-title">{{ getProjectTitle(project) }}</span>
 			</BaseButton>
 			<BaseButton
-				v-if="project.id > 0 && project.maxRight > RIGHTS.READ"
+				v-if="project.id > 0 && (project.maxRight ?? 0) > RIGHTS.READ"
 				class="favorite"
 				:class="{'is-favorite': project.isFavorite}"
 				@click="projectStore.toggleProjectFavorite(project)"
@@ -58,7 +58,7 @@
 				<Icon :icon="project.isFavorite ? 'star' : ['far', 'star']" />
 			</BaseButton>
 			<ProjectSettingsDropdown
-				v-if="project.maxRight > RIGHTS.READ"
+				v-if="(project.maxRight ?? 0) > RIGHTS.READ"
 				class="menu-list-dropdown"
 				:project="project"
 			>

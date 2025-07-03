@@ -1,30 +1,34 @@
 import AbstractService from './abstractService'
 import TotpModel from '@/models/totp'
 import type {ITotp} from '@/modelTypes/ITotp'
+import type {ITotpPasscode} from '@/modelTypes/ITotpPasscode'
+import type {ITotpDisable} from '@/modelTypes/ITotpDisable'
 
 export default class TotpService extends AbstractService<ITotp> {
 	urlPrefix = '/user/settings/totp'
 
 	constructor() {
-		super({})
+		const urlPrefix = '/user/settings/totp'
+		super({get: urlPrefix})
 
+		this.urlPrefix = urlPrefix
 		this.paths.get = this.urlPrefix
 	}
 
-	modelFactory(data) {
-		return new TotpModel(data)
+	modelFactory(data: Partial<ITotp>): ITotp {
+		return new TotpModel(data) as ITotp
 	}
 
-	enroll() {
-		return this.post(`${this.urlPrefix}/enroll`, {})
+	enroll(): Promise<ITotp> {
+		return this.post(`${this.urlPrefix}/enroll`, new TotpModel())
 	}
 
-	enable(model) {
-		return this.post(`${this.urlPrefix}/enable`, model)
+	enable(passcode: ITotpPasscode): Promise<{message: string}> {
+		return this.post(`${this.urlPrefix}/enable`, passcode as unknown as ITotp) as unknown as Promise<{message: string}>
 	}
 
-	disable(model) {
-		return this.post(`${this.urlPrefix}/disable`, model)
+	disable(credentials: ITotpDisable): Promise<{message: string}> {
+		return this.post(`${this.urlPrefix}/disable`, credentials as unknown as ITotp) as unknown as Promise<{message: string}>
 	}
 
 	async qrcode() {

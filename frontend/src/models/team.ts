@@ -17,8 +17,8 @@ export default class TeamModel extends AbstractModel<ITeam> implements ITeam {
 	isPublic: boolean = false
 
 	createdBy: IUser | null = null
-	created: Date = null
-	updated: Date = null
+	created: Date = new Date()
+	updated: Date = new Date()
 
 	constructor(data: Partial<ITeam> = {}) {
 		super()
@@ -28,9 +28,11 @@ export default class TeamModel extends AbstractModel<ITeam> implements ITeam {
 		this.members = this.members.map(m => {
 			return new TeamMemberModel(m)
 		})
-		this.createdBy = new UserModel(this.createdBy)
+		if (this.createdBy) {
+			this.createdBy = new UserModel(this.createdBy)
+		}
 
-		this.created = new Date(this.created)
-		this.updated = new Date(this.updated)
+		this.created = new Date(this.created || Date.now())
+		this.updated = new Date(this.updated || Date.now())
 	}
 }

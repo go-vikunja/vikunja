@@ -110,15 +110,6 @@
 	</div>
 </template>
 
-<script lang="ts">
-export default {
-	beforeRouteEnter(to) {
-		if (MIGRATORS[to.params.service as string] === undefined) {
-			return {name: 'not-found'}
-		}
-	},
-}
-</script>
 
 <script setup lang="ts">
 import {computed, ref, shallowReactive} from 'vue'
@@ -126,6 +117,7 @@ import {useI18n} from 'vue-i18n'
 
 import Logo from '@/assets/logo.svg?component'
 import Message from '@/components/misc/Message.vue'
+import XButton from '@/components/input/Button.vue'
 
 import AbstractMigrationService, {type MigrationConfig} from '@/services/migrator/abstractMigration'
 import AbstractMigrationFileService from '@/services/migrator/abstractMigrationFile'
@@ -157,7 +149,7 @@ const migratorAuthCode = ref('')
 const migrationJustStarted = ref(false)
 const migrationError = ref('')
 
-const migrator = computed<Migrator>(() => MIGRATORS[props.service])
+const migrator = computed<Migrator>(() => MIGRATORS[props.service as keyof typeof MIGRATORS])
 
 // eslint-disable-next-line vue/no-ref-object-reactivity-loss
 const migrationService = shallowReactive(new AbstractMigrationService(migrator.value.id))
@@ -171,17 +163,19 @@ async function initMigration() {
 		return
 	}
 
-	authUrl.value = await migrationService.getAuthUrl().then(({url}) => url)
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	authUrl.value = await migrationService.getAuthUrl().then((result: any) => result.url)
 
 	const TOKEN_HASH_PREFIX = '#token='
 	migratorAuthCode.value = location.hash.startsWith(TOKEN_HASH_PREFIX)
 		? location.hash.substring(TOKEN_HASH_PREFIX.length)
-		: props.code as string
+		: props.code || ''
 
 	if (!migratorAuthCode.value) {
 		return
 	}
-	const {started_at, finished_at} = await migrationService.getStatus()
+	const status = await migrationService.getStatus() as {started_at?: string, finished_at?: string}
+	const {started_at, finished_at} = status
 	if (started_at) {
 		lastMigrationStartedAt.value = parseDateOrNull(started_at)
 	}
@@ -209,19 +203,23 @@ async function migrate() {
 	message.value = ''
 	migrationError.value = ''
 
-	let migrationConfig: MigrationConfig | File = {code: migratorAuthCode.value}
+	let migrationConfig: MigrationConfig | File = {code: migratorAuthCode.value, maxRight: null}
 
 	if (migrator.value.isFileMigrator) {
 		if (uploadInput.value?.files?.length === 0) {
 			return
 		}
-		migrationConfig = uploadInput.value?.files?.[0] as File
+		if (uploadInput.value?.files?.[0]) {
+			migrationConfig = uploadInput.value.files[0]
+		} else {
+			return
+		}
 	}
 
 	try {
 		if (migrator.value.isFileMigrator) {
-			const result = await migrationFileService.migrate(migrationConfig as File)
-			message.value = result.message
+			const result = await migrationFileService.migrate(migrationConfig as File) as unknown
+			message.value = (result as {message: string}).message
 			const projectStore = useProjectStore()
 			return projectStore.loadAllProjects()
 		}

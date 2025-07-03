@@ -27,7 +27,7 @@ const views = ref<IProjectView[]>([])
 watch(
 	() => projectStore.projects[props.projectId]?.views || [],
 	allViews => {
-		views.value = [...allViews]
+		views.value = [...allViews] as IProjectView[]
 	},
 	{
 		deep: true,
@@ -105,7 +105,7 @@ async function saveView(view: IProjectView) {
 	success({message: t('project.views.updateSuccess')})
 }
 
-async function saveViewPosition(e) {
+async function saveViewPosition(e: {newIndex: number}) {
 	const view = views.value[e.newIndex]
 	const viewBefore = views.value[e.newIndex - 1]
 	const viewAfter = views.value[e.newIndex + 1]
@@ -218,7 +218,7 @@ async function saveViewPosition(e) {
 	<Modal
 		:enabled="showDeleteModal"
 		@close="showDeleteModal = false"
-		@submit="deleteView(viewIdToDelete)"
+		@submit="deleteView(viewIdToDelete!)"
 	>
 		<template #header>
 			<span>{{ $t('project.views.delete') }}</span>

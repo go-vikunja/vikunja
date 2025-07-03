@@ -1,5 +1,6 @@
 import type {DateISO} from '@/types/DateISO'
-import type {DateKebab} from '@/types/DateKebab'
+// import type {DateKebab} from '@/types/DateKebab'
+type DateKebab = string
 
 // ✅ Format a date to YYYY-MM-DD (or any other format)
 function padTo2Digits(num: number) {

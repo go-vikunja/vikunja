@@ -9,13 +9,15 @@ export default class ProjectDuplicateService extends AbstractService<IProjectDup
 		})
 	}
 
-	beforeCreate(model) {
-
-		model.project = null
-		return model
+	beforeCreate(model: IProjectDuplicate): IProjectDuplicate {
+		const updatedModel = {
+			...model,
+			duplicatedProject: null,
+		}
+		return updatedModel
 	}
 
-	modelFactory(data) {
+	modelFactory(data: Partial<IProjectDuplicate>): IProjectDuplicate {
 		return new projectDuplicateModel(data)
 	}
 }

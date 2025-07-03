@@ -34,7 +34,7 @@ async function loadProject(projectId: number) {
 	const projectService = new ProjectService()
 	const newProject = await projectService.get(new ProjectModel({id: projectId}))
 	await useBaseStore().handleSetCurrentProject({project: newProject})
-	project.value = newProject
+	project.value = newProject as IProject
 	await loadWebhooks()
 }
 
@@ -46,12 +46,12 @@ const projectId = computed(() => route.params.projectId !== undefined
 
 watchEffect(() => projectId.value !== undefined && loadProject(projectId.value))
 
-const webhooks = ref<IWebhook[]>()
+const webhooks = ref<IWebhook[]>([])
 const webhookService = new WebhookService()
 const availableEvents = ref<string[]>()
 
 async function loadWebhooks() {
-	webhooks.value = await webhookService.getAll({projectId: project.value.id})
+	webhooks.value = await webhookService.getAll(new WebhookModel({projectId: project.value!.id}))
 	availableEvents.value = await webhookService.getAvailableEvents()
 }
 
@@ -60,16 +60,16 @@ const webhookIdToDelete = ref<number>()
 
 async function deleteWebhook() {
 	await webhookService.delete({
-		id: webhookIdToDelete.value,
-		projectId: project.value.id,
-	})
+		id: webhookIdToDelete.value!,
+		projectId: project.value!.id,
+	} as IWebhook)
 	showDeleteModal.value = false
 	success({message: t('project.webhooks.deleteSuccess')})
 	await loadWebhooks()
 }
 
 const newWebhook = ref(new WebhookModel())
-const newWebhookEvents = ref({})
+const newWebhookEvents = ref<Record<string, boolean>>({})
 
 async function create() {
 
@@ -86,9 +86,9 @@ async function create() {
 		return
 	}
 
-	newWebhook.value.projectId = project.value.id
+	newWebhook.value.projectId = project.value!.id
 	const created = await webhookService.create(newWebhook.value)
-	webhooks.value.push(created)
+	webhooks.value!.push(created)
 	newWebhook.value = new WebhookModel()
 	showNewForm.value = false
 }
@@ -238,6 +238,7 @@ function validateSelectedEvents() {
 					<td>{{ formatDateShort(w.created) }}</td>
 					<td>
 						<User
+							v-if="w.createdBy"
 							:avatar-size="25"
 							:user="w.createdBy"
 						/>

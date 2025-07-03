@@ -27,7 +27,8 @@ export interface SortBy {
 	percent_done?: Order
 	created?: Order
 	updated?: Order
-	done_at?: Order,
+	done_at?: Order
+	position?: Order,
 }
 
 const SORT_BY_DEFAULT: SortBy = {
@@ -37,12 +38,12 @@ const SORT_BY_DEFAULT: SortBy = {
 // This makes sure an id sort order is always sorted last.
 // When tasks would be sorted first by id and then by whatever else was specified, the id sort takes
 // precedence over everything else, making any other sort columns pretty useless.
-function formatSortOrder(sortBy, params) {
+function formatSortOrder(sortBy: SortBy, params: TaskFilterParams) {
 	let hasIdFilter = false
 	const sortKeys = Object.keys(sortBy)
 	for (const s of sortKeys) {
 		if (s === 'id') {
-			sortKeys.splice(s, 1)
+			sortKeys.splice(sortKeys.indexOf(s), 1)
 			hasIdFilter = true
 			break
 		}
@@ -50,8 +51,8 @@ function formatSortOrder(sortBy, params) {
 	if (hasIdFilter) {
 		sortKeys.push('id')
 	}
-	params.sort_by = sortKeys
-	params.order_by = sortKeys.map(s => sortBy[s])
+	params.sort_by = sortKeys as TaskFilterParams['sort_by']
+	params.order_by = sortKeys.map(s => sortBy[s as keyof SortBy]!) as TaskFilterParams['order_by']
 
 	return params
 }
@@ -116,7 +117,8 @@ export function useTaskList(
 			tasks.value = []
 		}
 		try {
-			tasks.value = await taskCollectionService.getAll(...getAllTasksParams.value)
+			const [model, params, page] = getAllTasksParams.value
+			tasks.value = await taskCollectionService.getAll(model as unknown as ITask, params as Record<string, unknown>, page as number)
 		} catch (e) {
 			error(e)
 		}
@@ -137,7 +139,7 @@ export function useTaskList(
 			page.value = Number(pageQueryValue)
 		}
 		if (filter !== undefined) {
-			params.value.filter = filter
+			params.value.filter = filter as string
 		}
 	}, { immediate: true })
 

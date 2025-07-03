@@ -18,19 +18,19 @@ const service = new ApiTokenService()
 const tokens = ref<IApiToken[]>([])
 const apiDocsUrl = window.API_URL + '/docs'
 const showCreateForm = ref(false)
-const availableRoutes = ref(null)
-const newToken = ref<IApiToken>(new ApiTokenModel())
+const availableRoutes = ref<{[key: string]: string[]} | null>(null)
+const newToken = ref<IApiToken>(new ApiTokenModel() as unknown as IApiToken)
 const newTokenExpiry = ref<string | number>(30)
 const newTokenExpiryCustom = ref(new Date())
-const newTokenPermissions = ref({})
-const newTokenPermissionsGroup = ref({})
+const newTokenPermissions = ref<{[key: string]: {[key: string]: boolean}}>({})
+const newTokenPermissionsGroup = ref<{[key: string]: boolean}>({})
 const newTokenTitleValid = ref(true)
 const newTokenPermissionValid = ref(true)
 const apiTokenTitle = ref()
 const tokenCreatedSuccessMessage = ref('')
 
 const showDeleteModal = ref<boolean>(false)
-const tokenToDelete = ref<IApiToken>()
+const tokenToDelete = ref<IApiToken | undefined>()
 
 const {t} = useI18n()
 
@@ -47,10 +47,10 @@ const flatPickerConfig = computed(() => ({
 }))
 
 onMounted(async () => {
-	tokens.value = await service.getAll()
+	tokens.value = await service.getAll(new ApiTokenModel() as unknown as IApiToken)
 	const allRoutes = await service.getAvailableRoutes()
 
-	const routesAvailable = {}
+	const routesAvailable: {[key: string]: string[]} = {}
 	const keys = Object.keys(allRoutes)
 	keys.sort((a, b) => (a === 'other' ? 1 : b === 'other' ? -1 : 0))
 	keys.forEach(key => {
@@ -63,10 +63,11 @@ onMounted(async () => {
 })
 
 function resetPermissions() {
-	newTokenPermissions.value = {}
+	newTokenPermissions.value = {} as {[key: string]: {[key: string]: boolean}}
+	if (!availableRoutes.value) return
 	Object.entries(availableRoutes.value).forEach(entry => {
 		const [group, routes] = entry
-		newTokenPermissions.value[group] = {}
+		newTokenPermissions.value[group] = {} as {[key: string]: boolean}
 		Object.keys(routes).forEach(r => {
 			newTokenPermissions.value[group][r] = false
 		})
@@ -74,10 +75,11 @@ function resetPermissions() {
 }
 
 async function deleteToken() {
+	if (!tokenToDelete.value) return
 	await service.delete(tokenToDelete.value)
 	showDeleteModal.value = false
-	const index = tokens.value.findIndex(el => el.id === tokenToDelete.value.id)
-	tokenToDelete.value = null
+	const index = tokens.value.findIndex(el => el.id === tokenToDelete.value!.id)
+	tokenToDelete.value = undefined
 	if (index === -1) {
 		return
 	}
@@ -119,7 +121,7 @@ async function createToken() {
 
 	const token = await service.create(newToken.value)
 	tokenCreatedSuccessMessage.value = t('user.settings.apiTokens.tokenCreatedSuccess', {token: token.token})
-	newToken.value = new ApiTokenModel()
+	newToken.value = new ApiTokenModel() as unknown as IApiToken
 	newTokenExpiry.value = 30
 	newTokenExpiryCustom.value = new Date()
 	resetPermissions()
@@ -128,10 +130,11 @@ async function createToken() {
 }
 
 function formatPermissionTitle(title: string): string {
-	return title.replaceAll('_', ' ')
+	return title.replace(/_/g, ' ')
 }
 
 function selectPermissionGroup(group: string, checked: boolean) {
+	if (!availableRoutes.value) return
 	Object.entries(availableRoutes.value[group]).forEach(entry => {
 		const [key] = entry
 		newTokenPermissions.value[group][key] = checked
@@ -142,6 +145,7 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 	if (checked) {
 		// Check if all permissions of that group are checked and check the "select all" checkbox in that case
 		let allChecked = true
+		if (!availableRoutes.value) return
 		Object.entries(availableRoutes.value[group]).forEach(entry => {
 			const [key] = entry
 			if (!newTokenPermissions.value[group][key]) {
@@ -201,7 +205,7 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 						v-for="(v, p) in tk.permissions"
 						:key="'permission-' + p"
 					>
-						<strong>{{ formatPermissionTitle(p) }}:</strong>
+						<strong>{{ formatPermissionTitle(String(p)) }}:</strong>
 						{{ v.map(formatPermissionTitle).join(', ') }}
 						<br>
 					</template>
@@ -311,9 +315,9 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 						<FancyCheckbox
 							v-model="newTokenPermissionsGroup[group]"
 							class="mr-2 is-capitalized has-text-weight-bold"
-							@update:modelValue="checked => selectPermissionGroup(group, checked)"
+							@update:modelValue="checked => selectPermissionGroup(String(group), checked)"
 						>
-							{{ formatPermissionTitle(group) }}
+							{{ formatPermissionTitle(String(group)) }}
 						</FancyCheckbox>
 						<br>
 					</template>
@@ -324,9 +328,9 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 						<FancyCheckbox
 							v-model="newTokenPermissions[group][route]"
 							class="ml-4 mr-2 is-capitalized"
-							@update:modelValue="checked => toggleGroupPermissionsFromChild(group, checked)"
+							@update:modelValue="checked => toggleGroupPermissionsFromChild(String(group), checked)"
 						>
-							{{ formatPermissionTitle(route) }}
+							{{ formatPermissionTitle(String(route)) }}
 						</FancyCheckbox>
 						<br>
 					</template>
@@ -368,7 +372,7 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 
 			<template #text>
 				<p>
-					{{ $t('user.settings.apiTokens.delete.text1', {token: tokenToDelete.title}) }}<br>
+					{{ $t('user.settings.apiTokens.delete.text1', {token: tokenToDelete?.title}) }}<br>
 					{{ $t('user.settings.apiTokens.delete.text2') }}
 				</p>
 			</template>

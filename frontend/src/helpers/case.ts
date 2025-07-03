@@ -3,16 +3,14 @@ import {camelCase, snakeCase} from 'change-case'
 /**
  * Transforms field names to camel case.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function objectToCamelCase(object: Record<string, any>) {
+export function objectToCamelCase(object: Record<string, unknown>): Record<string, unknown> {
 
 	// When calling recursively, this can be called without being and object or array in which case we just return the value
 	if (typeof object !== 'object') {
 		return object
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const parsedObject: Record<string, any> = {}
+	const parsedObject: Record<string, unknown> = {}
 	for (const m in object) {
 		parsedObject[camelCase(m)] = object[m]
 
@@ -24,15 +22,14 @@ export function objectToCamelCase(object: Record<string, any>) {
 
 		// Call it again for arrays
 		if (Array.isArray(object[m])) {
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			parsedObject[camelCase(m)] = object[m].map((o: Record<string, any>) => objectToCamelCase(o))
+			parsedObject[camelCase(m)] = (object[m] as unknown[]).map((o: unknown) => objectToCamelCase(o as Record<string, unknown>))
 			// Because typeof [] === 'object' is true for arrays, we leave the loop here to prevent converting arrays to objects.
 			continue
 		}
 
 		// Call it again for nested objects
 		if (typeof object[m] === 'object') {
-			parsedObject[camelCase(m)] = objectToCamelCase(object[m])
+			parsedObject[camelCase(m)] = objectToCamelCase(object[m] as Record<string, unknown>)
 		}
 	}
 	return parsedObject
@@ -41,16 +38,14 @@ export function objectToCamelCase(object: Record<string, any>) {
 /**
  * Transforms field names to snake case - used before making an api request.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function objectToSnakeCase(object: Record<string, any>) {
+export function objectToSnakeCase(object: Record<string, unknown>): Record<string, unknown> {
 
 	// When calling recursively, this can be called without being and object or array in which case we just return the value
 	if (typeof object !== 'object') {
 		return object
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const parsedObject: Record<string, any> = {}
+	const parsedObject: Record<string, unknown> = {}
 	for (const m in object) {
 		parsedObject[snakeCase(m)] = object[m]
 
@@ -65,15 +60,14 @@ export function objectToSnakeCase(object: Record<string, any>) {
 
 		// Call it again for arrays
 		if (Array.isArray(object[m])) {
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			parsedObject[snakeCase(m)] = object[m].map((o: Record<string, any>) => objectToSnakeCase(o))
+			parsedObject[snakeCase(m)] = (object[m] as unknown[]).map((o: unknown) => objectToSnakeCase(o as Record<string, unknown>))
 			// Because typeof [] === 'object' is true for arrays, we leave the loop here to prevent converting arrays to objects.
 			continue
 		}
 
 		// Call it again for nested objects
 		if (typeof object[m] === 'object') {
-			parsedObject[snakeCase(m)] = objectToSnakeCase(object[m])
+			parsedObject[snakeCase(m)] = objectToSnakeCase(object[m] as Record<string, unknown>)
 		}
 	}
 

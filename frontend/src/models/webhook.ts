@@ -1,5 +1,6 @@
 import AbstractModel from '@/models/abstractModel'
 import type {IWebhook} from '@/modelTypes/IWebhook'
+import type {IUser} from '@/modelTypes/IUser'
 import UserModel from '@/models/user'
 
 export default class WebhookModel extends AbstractModel<IWebhook> implements IWebhook {
@@ -7,19 +8,21 @@ export default class WebhookModel extends AbstractModel<IWebhook> implements IWe
 	projectId = 0
 	secret = ''
 	targetUrl = ''
-	events = []
-	createdBy = null
+	events: string[] = []
+	createdBy: IUser | null = null
 
-	created: Date
-	updated: Date
+	created: Date = new Date()
+	updated: Date = new Date()
 
 	constructor(data: Partial<IWebhook> = {}) {
 		super()
 		this.assignData(data)
 		
-		this.createdBy = new UserModel(this.createdBy)
+		if (this.createdBy) {
+			this.createdBy = new UserModel(this.createdBy)
+		}
 
-		this.created = new Date(this.created)
-		this.updated = new Date(this.updated)
+		this.created = new Date(this.created || Date.now())
+		this.updated = new Date(this.updated || Date.now())
 	}
 }

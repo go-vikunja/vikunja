@@ -11,46 +11,46 @@ export function dateIsValid(date: Date | null) {
 		return false
 	}
 
-	return date instanceof Date && !isNaN(date)
+	return date instanceof Date && !isNaN(date.getTime())
 }
 
 export const formatDate = (date: Date | string | null, f: string) => {
-	if (!dateIsValid(date)) {
+	if (!dateIsValid(date as Date)) {
 		return ''
 	}
 
-	date = createDateFromString(date)
+	date = createDateFromString(date!)
 	
-	const locale = DAYJS_LOCALE_MAPPING[i18n.global.locale.value.toLowerCase()] ?? 'en'
+	const locale = (DAYJS_LOCALE_MAPPING as Record<string, string>)[i18n.global.locale.value.toLowerCase()] ?? 'en'
 
 	return date 
 		? dayjs(date).locale(locale).format(f) 
 		: ''
 }
 
-export function formatDateLong(date) {
+export function formatDateLong(date: Date | string | null) {
 	return formatDate(date, 'LLLL')
 }
 
-export function formatDateShort(date) {
+export function formatDateShort(date: Date | string | null) {
 	return formatDate(date, 'lll')
 }
 
 export const formatDateSince = (date: Date | string | null) => {
-	if (!dateIsValid(date)) {
+	if (!dateIsValid(date as Date)) {
 		return ''
 	}
 
-	date = createDateFromString(date)
+	date = createDateFromString(date!)
 
-	const locale = DAYJS_LOCALE_MAPPING[i18n.global.locale.value.toLowerCase()] ?? 'en'
+	const locale = (DAYJS_LOCALE_MAPPING as Record<string, string>)[i18n.global.locale.value.toLowerCase()] ?? 'en'
 
 	return date
 		? dayjs(date).locale(locale).fromNow()
 		: ''
 }
 
-export function formatISO(date) {
+export function formatISO(date: Date | string | null) {
 	return date ? new Date(date).toISOString() : ''
 }
 

@@ -61,7 +61,7 @@ export const FILTER_JOIN_OPERATOR = [
 export const FILTER_OPERATORS_REGEX = '(&lt;|&gt;|&lt;=|&gt;=|=|!=|not in|in)'
 
 export function hasFilterQuery(filter: string): boolean {
-	return FILTER_OPERATORS.find(o => filter.includes(o)) || false
+	return Boolean(FILTER_OPERATORS.find(o => filter.includes(o)))
 }
 
 export function getFilterFieldRegexPattern(field: string): RegExp {
@@ -146,7 +146,7 @@ export function transformFilterStringForApi(
 
 	// Transform all attributes to snake case
 	AVAILABLE_FILTER_FIELDS.forEach(f => {
-		filter = filter.replaceAll(f, snakeCase(f))
+		filter = filter.replace(new RegExp(f, 'g'), snakeCase(f))
 	})
 
 	return filter
@@ -164,7 +164,7 @@ export function transformFilterStringFromApi(
 
 	// Transform all attributes from snake case
 	AVAILABLE_FILTER_FIELDS.forEach(f => {
-		filter = filter.replaceAll(snakeCase(f), f)
+		filter = filter.replace(new RegExp(snakeCase(f), 'g'), f)
 	})
 
 	// Function to transform fields to their titles

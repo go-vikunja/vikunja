@@ -30,7 +30,7 @@ function arrayify<T = unknown>(obj: T) {
 }
 
 function nullify<T = unknown>(value: T) {
-	return (value && (value as unknown[]).length)
+	return (value && Array.isArray(value) && value.length) || (value && typeof value === 'string' && value.length)
 		? value
 		: null
 }
@@ -144,11 +144,13 @@ onMounted(() => {
 	 * Bind on parent element if wrap is true
 	 */
 	const element = props.config.wrap
-		? root.value.parentNode
+		? root.value?.parentNode as Element
 		: root.value
 
 	// Init flatpickr
-	fp.value = flatpickr(element, safeConfig.value)
+	if (element) {
+		fp.value = flatpickr(element, safeConfig.value)
+	}
 })
 onBeforeUnmount(() => fp.value?.destroy())
 
@@ -211,7 +213,9 @@ watch(
 		if (!root.value || newValue === nullify(root.value.value)) return
 		// Make sure we have a flatpickr instance and
 		// notify flatpickr instance that there is a change in value
-		fp.value?.setDate(newValue, true)
+		if (newValue !== null) {
+			fp.value?.setDate(newValue, true)
+		}
 	},
 	{deep: true},
 )

@@ -77,11 +77,15 @@ const showError = ref(false)
 const project = reactive(new ProjectModel())
 const projectService = shallowReactive(new ProjectService())
 const projectStore = useProjectStore()
-const parentProject = ref<IProject | null>(null)
+const parentProject = ref<IProject | undefined>(undefined)
 
 watch(
 	() => props.parentProjectId,
-	() => parentProject.value = projectStore.projects[props.parentProjectId],
+	() => {
+		if (props.parentProjectId !== undefined) {
+			parentProject.value = projectStore.projects[props.parentProjectId] as IProject || undefined
+		}
+	},
 	{immediate: true},
 )
 
@@ -96,7 +100,7 @@ async function createNewProject() {
 		project.parentProjectId = parentProject.value.id
 	}
 
-	await projectStore.createProject(project)
+	await projectStore.createProject(project as IProject)
 	success({message: t('project.create.createdSuccess')})
 }
 </script>

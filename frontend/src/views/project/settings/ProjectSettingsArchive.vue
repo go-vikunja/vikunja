@@ -20,9 +20,11 @@ import {useI18n} from 'vue-i18n'
 
 import {success} from '@/message'
 import {useTitle} from '@/composables/useTitle'
+import Modal from '@/components/misc/Modal.vue'
 
 import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
+import type {IProject} from '@/modelTypes/IProject'
 
 defineOptions({name: 'ProjectSettingArchive'})
 
@@ -31,7 +33,10 @@ const projectStore = useProjectStore()
 const router = useRouter()
 const route = useRoute()
 
-const project = computed(() => projectStore.projects[route.params.projectId])
+const project = computed(() => {
+	const projectId = Array.isArray(route.params.projectId) ? route.params.projectId[0] : route.params.projectId
+	return projectStore.projects[Number(projectId)]
+})
 useTitle(() => t('project.archive.title', {project: project.value.title}))
 
 async function archiveProject() {
@@ -39,7 +44,7 @@ async function archiveProject() {
 		const newProject = await projectStore.updateProject({
 			...project.value,
 			isArchived: !project.value.isArchived,
-		})
+		} as IProject)
 		useBaseStore().setCurrentProject(newProject)
 		success({message: t('project.archive.success')})
 		await projectStore.loadAllProjects()

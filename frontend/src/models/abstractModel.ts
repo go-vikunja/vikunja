@@ -15,7 +15,7 @@ export default abstract class AbstractModel<Model extends IAbstract = IAbstract>
 	* Takes an object and merges its data with the default data of this model.
 	*/
 	assignData(data: Partial<Model>) {
-		data = objectToCamelCase(data)
+		data = objectToCamelCase(data) as Partial<Model>
 
 		// Put all data in our model while overriding those with a value of null or undefined with their defaults
 		Object.assign(this, omitBy(data, isNil))

@@ -7,7 +7,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import type {IUser} from '@/modelTypes/IUser'
 import {getDisplayName} from '@/models/user'
 import {useI18n} from 'vue-i18n'
-import {nextTick, onBeforeUnmount, onMounted, ref} from 'vue'
+import {nextTick, onBeforeUnmount, onMounted, ref, type ComponentPublicInstance} from 'vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {useAuthStore} from '@/stores/auth'
@@ -42,9 +42,9 @@ async function addReaction(value: string) {
 	}
 
 	if (typeof model.value[reaction.value] === 'undefined') {
-		model.value[reaction.value] = [authStore.info]
+		model.value[reaction.value] = [authStore.info!]
 	} else {
-		model.value[reaction.value].push(authStore.info)
+		model.value[reaction.value].push(authStore.info!)
 	}
 }
 
@@ -56,6 +56,8 @@ async function removeReaction(value: string) {
 	})
 	await reactionService.delete(reaction)
 	showEmojiPicker.value = false
+	
+	if (!model.value || !model.value[reaction.value]) return
 	
 	const userIndex = model.value[reaction.value].findIndex(u => u.id === authStore.info?.id)
 	if (userIndex !== -1) {
@@ -89,10 +91,10 @@ function getReactionTooltip(users: IUser[], value: string) {
 }
 
 const showEmojiPicker = ref(false)
-const emojiPickerRef = ref<HTMLElement | null>(null)
+const emojiPickerRef = ref<ComponentPublicInstance | null>(null)
 
 function hideEmojiPicker(e: MouseEvent) {
-	if (showEmojiPicker.value) {
+	if (showEmojiPicker.value && emojiPickerRef.value?.$el) {
 		closeWhenClickedOutside(e, emojiPickerRef.value.$el, () => showEmojiPicker.value = false)
 	}
 }
@@ -100,18 +102,19 @@ function hideEmojiPicker(e: MouseEvent) {
 onMounted(() => document.addEventListener('click', hideEmojiPicker))
 onBeforeUnmount(() => document.removeEventListener('click', hideEmojiPicker))
 
-const emojiPickerButtonRef = ref<HTMLElement | null>(null)
+const emojiPickerButtonRef = ref<ComponentPublicInstance | null>(null)
 const reactionContainerRef = ref<HTMLElement | null>(null)
 const emojiPickerPosition = ref()
 
 function toggleEmojiPicker() {
 	if (!showEmojiPicker.value) {
-		const rect = emojiPickerButtonRef.value?.$el.getBoundingClientRect()
+		const rect = emojiPickerButtonRef.value?.$el?.getBoundingClientRect()
 		const container = reactionContainerRef.value?.getBoundingClientRect()
-		const left = rect.left - container.left + rect.width
-
-		emojiPickerPosition.value = {
-			left: left === 0 ? undefined : left,
+		if (rect && container) {
+			const left = rect.left - container.left + rect.width
+			emojiPickerPosition.value = {
+				left: left === 0 ? undefined : left,
+			}
 		}
 	}
 
@@ -119,7 +122,11 @@ function toggleEmojiPicker() {
 }
 
 function hasCurrentUserReactedWithEmoji(value: string): boolean {
-	const user = model.value[value].find(u => u.id === authStore.info.id)
+	if (!model.value || !model.value[value] || !authStore.info) {
+		return false
+	}
+	const currentUserId = authStore.info.id
+	const user = model.value[value].find(u => u.id === currentUserId)
 	return typeof user !== 'undefined'
 }
 
@@ -138,13 +145,13 @@ async function toggleReaction(value: string) {
 		class="reactions"
 	>
 		<BaseButton
-			v-for="(users, value) in (model as IReactionPerEntity)"
-			:key="'button' + value"
-			v-tooltip="getReactionTooltip(users, value)"
+			v-for="(users, value) in model"
+			:key="'button' + String(value)"
+			v-tooltip="getReactionTooltip(users, String(value))"
 			class="reaction-button"
-			:class="{'current-user-has-reacted': hasCurrentUserReactedWithEmoji(value)}"
+			:class="{'current-user-has-reacted': hasCurrentUserReactedWithEmoji(String(value))}"
 			:disabled
-			@click="toggleReaction(value)"
+			@click="toggleReaction(String(value))"
 		>
 			{{ value }} {{ users.length }}
 		</BaseButton>

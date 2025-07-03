@@ -1,8 +1,21 @@
 import {i18n} from '@/i18n'
 import {notify} from '@kyvg/vue3-notification'
 
-export function getErrorText(r): string {
-	const data = r?.reason?.response?.data || r?.response?.data
+interface ErrorData {
+	code?: number
+	message?: string
+}
+
+interface ErrorResponse {
+	reason?: { response?: { data?: ErrorData } }
+	response?: { data?: ErrorData }
+	message?: string
+	cause?: { message?: string }
+}
+
+export function getErrorText(r: unknown): string {
+	const errorResponse = r as ErrorResponse
+	const data = errorResponse?.reason?.response?.data || errorResponse?.response?.data
 
 	if (data?.code) {
 		const path = `error.${data.code}`
@@ -18,13 +31,13 @@ export function getErrorText(r): string {
 		}
 	}
 	
-	let message = data?.message || r.message
+	let message = data?.message || errorResponse?.message
 	
-	if (typeof r.cause?.message !== 'undefined') {
-		message += ' ' + r.cause.message
+	if (typeof errorResponse?.cause?.message !== 'undefined') {
+		message += ' ' + errorResponse.cause.message
 	}
 
-	return message
+	return message || ''
 }
 
 export interface Action {
@@ -32,20 +45,20 @@ export interface Action {
 	callback: () => void,
 }
 
-export function error(e, actions: Action[] = []) {
+export function error(e: unknown, actions: Action[] = []) {
 	notify({
 		type: 'error',
 		title: i18n.global.t('error.error'),
-		text: [getErrorText(e)],
-		actions: actions,
+		text: getErrorText(e),
+		data: { actions },
 	})
 }
 
-export function success(e, actions: Action[] = []) {
+export function success(e: unknown, actions: Action[] = []) {
 	notify({
 		type: 'success',
 		title: i18n.global.t('error.success'),
-		text: [getErrorText(e)],
+		text: getErrorText(e),
 		data: {
 			actions: actions,
 		},
