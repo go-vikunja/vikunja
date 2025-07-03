@@ -20,7 +20,7 @@ import {useBaseStore} from '@/stores/base'
 const TASKS_PER_BUCKET = 25
 
 function getTaskIndicesById(buckets: IBucket[], taskId: ITask['id']) {
-	let taskIndex
+	let taskIndex: number | undefined
 	const bucketIndex = buckets.findIndex(({tasks}) => {
 		taskIndex = findIndexById(tasks, taskId)
 		return taskIndex !== -1
@@ -28,7 +28,7 @@ function getTaskIndicesById(buckets: IBucket[], taskId: ITask['id']) {
 
 	return {
 		bucketIndex: bucketIndex !== -1 ? bucketIndex : null,
-		taskIndex: taskIndex !== -1 ? taskIndex : null,
+		taskIndex: (taskIndex !== undefined && taskIndex !== -1) ? taskIndex : null,
 	}
 }
 
@@ -261,7 +261,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 
 		const taskCollectionService = new TaskCollectionService()
 		try {
-			const newBuckets = await taskCollectionService.getAll(new TaskModel({projectId} as Partial<ITask> & {viewId}), {
+			const newBuckets = await taskCollectionService.getAll(new TaskModel({projectId, viewId} as Partial<ITask> & {viewId: IProjectView['id']}), {
 				...params,
 				per_page: TASKS_PER_BUCKET,
 			})
@@ -304,7 +304,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 
 		const taskService = new TaskCollectionService()
 		try {
-			const tasks = await taskService.getAll(new TaskModel({projectId} as Partial<ITask> & {viewId}), params as unknown as Record<string, unknown>, page)
+			const tasks = await taskService.getAll(new TaskModel({projectId, viewId} as Partial<ITask> & {viewId: IProjectView['id']}), params as unknown as Record<string, unknown>, page)
 			addTasksToBucket(tasks, bucketId)
 			setTasksLoadedForBucketPage({bucketId, page})
 			if (taskService.totalPages <= page) {
