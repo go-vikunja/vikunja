@@ -77,7 +77,7 @@ func GetCaldavTokens(c echo.Context) error {
 		return handler.HandleHTTPError(err)
 	}
 
-	return c.JSON(http.StatusCreated, tokens)
+	return c.JSON(http.StatusOK, tokens)
 }
 
 // DeleteCaldavToken is the handler to delete a caldv token
