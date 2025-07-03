@@ -3,7 +3,6 @@ import {acceptHMRUpdate, defineStore} from 'pinia'
 import router from '@/router'
 
 import TaskService from '@/services/task'
-import TaskCollectionService from '@/services/taskCollection'
 import TaskAssigneeService from '@/services/taskAssignee'
 import LabelTaskService from '@/services/labelTask'
 
@@ -40,7 +39,7 @@ interface MatchedAssignee extends IUser {
 }
 
 // IDEA: maybe use a small fuzzy search here to prevent errors
-function findPropertyByValue<T extends Record<string, string | number>>(array: T[], key: keyof T, value: string, fuzzy = false): T | undefined {
+function findPropertyByValue<T, K extends keyof T>(array: T[], key: K, value: string, fuzzy = false): T | undefined {
 	return array.find(item => {
 		const itemValue = String(item[key])
 		if (fuzzy) {
@@ -188,20 +187,20 @@ export const useTaskStore = defineStore('task', () => {
 		attachment: IAttachment
 	}) {
 		const t = kanbanStore.getTaskById(taskId)
-		if (t.task !== null) {
+		if (t.task !== null && t.bucketIndex !== null && t.taskIndex !== null) {
 			const attachments = [
 				...t.task.attachments,
 				attachment,
 			]
 
-			const newTask = {
-				...t,
+			kanbanStore.setTaskInBucketByIndex({
+				bucketIndex: t.bucketIndex as number,
+				taskIndex: t.taskIndex as number,
 				task: {
 					...t.task,
 					attachments,
 				},
-			}
-			kanbanStore.setTaskInBucketByIndex(newTask)
+			})
 		}
 		attachmentStore.add(attachment)
 	}
@@ -222,7 +221,7 @@ export const useTaskStore = defineStore('task', () => {
 				taskId: taskId,
 			}))
 			const t = kanbanStore.getTaskById(taskId)
-			if (t.task === null) {
+			if (t.task === null || t.bucketIndex === null || t.taskIndex === null) {
 				// Don't try further adding a label if the task is not in kanban
 				// Usually this means the kanban board hasn't been accessed until now.
 				// Vuex seems to have its difficulties with that, so we just log the error and fail silently.
@@ -231,7 +230,8 @@ export const useTaskStore = defineStore('task', () => {
 			}
 
 			kanbanStore.setTaskInBucketByIndex({
-				...t,
+				bucketIndex: t.bucketIndex as number,
+				taskIndex: t.taskIndex as number,
 				task: {
 					...t.task,
 					assignees: [
@@ -260,7 +260,7 @@ export const useTaskStore = defineStore('task', () => {
 			taskId: taskId,
 		}))
 		const t = kanbanStore.getTaskById(taskId)
-		if (t.task === null) {
+		if (t.task === null || t.bucketIndex === null || t.taskIndex === null) {
 			// Don't try further adding a label if the task is not in kanban
 			// Usually this means the kanban board hasn't been accessed until now.
 			// Vuex seems to have its difficulties with that, so we just log the error and fail silently.
@@ -271,7 +271,8 @@ export const useTaskStore = defineStore('task', () => {
 		const assignees = t.task.assignees.filter(({ id }: IUser) => id !== user.id)
 
 		kanbanStore.setTaskInBucketByIndex({
-			...t,
+			bucketIndex: t.bucketIndex as number,
+			taskIndex: t.taskIndex as number,
 			task: {
 				...t.task,
 				assignees,
@@ -294,7 +295,7 @@ export const useTaskStore = defineStore('task', () => {
 			labelId: label.id,
 		}))
 		const t = kanbanStore.getTaskById(taskId)
-		if (t.task === null) {
+		if (t.task === null || t.bucketIndex === null || t.taskIndex === null) {
 			// Don't try further adding a label if the task is not in kanban
 			// Usually this means the kanban board hasn't been accessed until now.
 			// Vuex seems to have its difficulties with that, so we just log the error and fail silently.
@@ -303,7 +304,8 @@ export const useTaskStore = defineStore('task', () => {
 		}
 
 		kanbanStore.setTaskInBucketByIndex({
-			...t,
+			bucketIndex: t.bucketIndex as number,
+			taskIndex: t.taskIndex as number,
 			task: {
 				...t.task,
 				labels: [
@@ -326,7 +328,7 @@ export const useTaskStore = defineStore('task', () => {
 			label.id,
 		}))
 		const t = kanbanStore.getTaskById(taskId)
-		if (t.task === null) {
+		if (t.task === null || t.bucketIndex === null || t.taskIndex === null) {
 			// Don't try further adding a label if the task is not in kanban
 			// Usually this means the kanban board hasn't been accessed until now.
 			// Vuex seems to have its difficulties with that, so we just log the error and fail silently.
@@ -338,7 +340,8 @@ export const useTaskStore = defineStore('task', () => {
 		const labels = t.task.labels.filter(({ id }: ILabel) => id !== label.id)
 
 		kanbanStore.setTaskInBucketByIndex({
-			...t,
+			bucketIndex: t.bucketIndex as number,
+			taskIndex: t.taskIndex as number,
 			task: {
 				...t.task,
 				labels,
