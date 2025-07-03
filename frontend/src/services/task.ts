@@ -60,7 +60,9 @@ export default class TaskService extends AbstractService<ITask> {
 		}
 
 		// Convert dates into an iso string
-		const processedModel = model as ITask & {
+		const processedModel = {
+			...model,
+		} as unknown as Omit<ITask, 'dueDate' | 'startDate' | 'endDate' | 'doneAt' | 'created' | 'updated'> & {
 			dueDate: string | null
 			startDate: string | null
 			endDate: string | null
@@ -89,7 +91,7 @@ export default class TaskService extends AbstractService<ITask> {
 		if (model.reminders && model.reminders.length > 0) {
 			model.reminders.forEach((r: ITaskReminder) => {
 				if (r && r.reminder) {
-					(r as ITaskReminder & {reminder: string}).reminder = new Date(r.reminder).toISOString()
+					;(r as unknown as { reminder: string }).reminder = new Date(r.reminder).toISOString()
 				}
 			})
 		}
@@ -141,13 +143,14 @@ export default class TaskService extends AbstractService<ITask> {
 
 		const transformed = objectToSnakeCase(processedModel)
 
-		// We can't convert emojis to skane case, hence we add them back again
-		transformed.reactions = {}
+		// We can't convert emojis to snake case, hence we add them back again
+		const transformedTyped = transformed as Record<string, unknown> & { reactions: Record<string, unknown> }
+		transformedTyped.reactions = {}
 		Object.keys(processedModel.reactions || {}).forEach(reaction => {
-			transformed.reactions[reaction] = processedModel.reactions[reaction].map((u: IUser) => objectToSnakeCase(u))
+			transformedTyped.reactions[reaction] = processedModel.reactions![reaction].map((u: IUser) => objectToSnakeCase(u as unknown as Record<string, unknown>))
 		})
 
-		return transformed as ITask
+		return transformedTyped as unknown as ITask
 	}
 }
 

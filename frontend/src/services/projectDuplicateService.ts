@@ -12,7 +12,7 @@ export default class ProjectDuplicateService extends AbstractService<IProjectDup
 	beforeCreate(model: IProjectDuplicate): IProjectDuplicate {
 		const updatedModel = {
 			...model,
-			duplicatedProject: null
+			duplicatedProject: null,
 		}
 		return updatedModel
 	}

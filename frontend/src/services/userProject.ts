@@ -1,8 +1,6 @@
 import AbstractService from './abstractService'
 import UserProjectModel from '@/models/userProject'
 import type {IUserProject} from '@/modelTypes/IUserProject'
-import type {IUser} from '@/modelTypes/IUser'
-import UserModel from '@/models/user'
 
 export default class UserProjectService extends AbstractService<IUserProject> {
 	constructor() {
@@ -18,7 +16,7 @@ export default class UserProjectService extends AbstractService<IUserProject> {
 		return new UserProjectModel(data) as IUserProject
 	}
 
-	modelGetAllFactory(data: Partial<IUser>): IUser {
-		return new UserModel(data)
+	modelGetAllFactory(data: Partial<IUserProject>): IUserProject {
+		return new UserProjectModel(data) as IUserProject
 	}
 }

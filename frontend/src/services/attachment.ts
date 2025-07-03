@@ -25,7 +25,7 @@ export default class AttachmentService extends AbstractService<IAttachment> {
 	processModel(model: IAttachment) {
 		return {
 			...model,
-			created: new Date(model.created).toISOString(),
+			created: new Date(model.created),
 		}
 	}
 

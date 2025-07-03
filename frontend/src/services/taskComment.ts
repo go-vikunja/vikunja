@@ -1,6 +1,7 @@
 import AbstractService from './abstractService'
 import TaskCommentModel from '@/models/taskComment'
 import type {ITaskComment} from '@/modelTypes/ITaskComment'
+import type {IUser} from '@/modelTypes/IUser'
 import {objectToSnakeCase} from '@/helpers/case'
 
 export default class TaskCommentService extends AbstractService<ITaskComment> {
@@ -25,14 +26,15 @@ export default class TaskCommentService extends AbstractService<ITaskComment> {
 	beforeUpdate(model: ITaskComment) {
 		const transformed = objectToSnakeCase({...model})
 
-		// We can't convert emojis to skane case, hence we add them back again
-		transformed.reactions = {}
+		// We can't convert emojis to snake case, hence we add them back again
+		const transformedTyped = transformed as Record<string, unknown> & { reactions: Record<string, unknown> }
+		transformedTyped.reactions = {}
 		Object.keys(model.reactions || {}).forEach(reaction => {
-			transformed.reactions[reaction] = model.reactions[reaction].map(u => objectToSnakeCase(u))
+			transformedTyped.reactions[reaction] = model.reactions![reaction].map((u: IUser) => objectToSnakeCase(u as unknown as Record<string, unknown>))
 		})
 		
 		console.log()
 
-		return transformed as ITaskComment
+		return transformedTyped as unknown as ITaskComment
 	}
 }

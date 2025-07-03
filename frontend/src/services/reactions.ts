@@ -1,10 +1,11 @@
 import AbstractService from '@/services/abstractService'
 import type {IAbstract} from '@/modelTypes/IAbstract'
 import type {IUser} from '@/modelTypes/IUser'
+import type {IReactionPerEntity} from '@/modelTypes/IReaction'
 import ReactionModel from '@/models/reaction'
 import UserModel from '@/models/user'
 
-export default class ReactionService extends AbstractService {
+export default class ReactionService extends AbstractService<IAbstract> {
 	constructor() {
 		super({
 			getAll: '{kind}/{id}/reactions',
@@ -17,12 +18,23 @@ export default class ReactionService extends AbstractService {
 		return new ReactionModel(data)
 	}
 
-	modelGetAllFactory(data: Record<string, Partial<IUser>[]>): Record<string, IUser[]> {
-		Object.keys(data).forEach(reaction => {
-			data[reaction] = data[reaction]?.map((u: Partial<IUser>) => new UserModel(u))
+	// Override with different signature for reaction-specific data structure
+	modelGetAllFactory(data: Record<string, Partial<IUser>[]>): IReactionPerEntity
+	modelGetAllFactory(data: Partial<IAbstract>): IAbstract
+	modelGetAllFactory(data: Record<string, Partial<IUser>[]> | Partial<IAbstract>): IReactionPerEntity | IAbstract {
+		// Handle reactions data structure
+		if (data && typeof data === 'object' && !Array.isArray(data) && 'id' in data) {
+			// Standard IAbstract data - delegate to base implementation
+			return this.modelFactory(data as Partial<IAbstract>)
+		}
+		
+		// Handle reactions data structure
+		const reactionData = data as Record<string, Partial<IUser>[]>
+		Object.keys(reactionData).forEach(reaction => {
+			reactionData[reaction] = reactionData[reaction]?.map((u: Partial<IUser>) => new UserModel(u))
 		})
 
-		return data as Record<string, IUser[]>
+		return reactionData as IReactionPerEntity
 	}
 
 	async delete(model: IAbstract) {
