@@ -156,9 +156,17 @@ function transformTaskToGanttBar(t: ITask) {
 		}
 	}
 	
+	const endDate = t.endDate ? new Date(t.endDate) : new Date(props.defaultTaskEndDate)
+	// vue-ganttastic expects the end date to be exclusive when using
+	// day based precision. To correctly show tasks which end at 23:59:59
+	// we add one day when transforming the end date for the chart.
+	if (t.endDate) {
+		endDate.setDate(endDate.getDate() + 1)
+	}
+
 	return [{
 		startDate: isoToKebabDate(t.startDate ? t.startDate.toISOString() : props.defaultTaskStartDate),
-		endDate: isoToKebabDate(t.endDate ? t.endDate.toISOString() : props.defaultTaskEndDate),
+		endDate: isoToKebabDate(endDate.toISOString()),
 		ganttBarConfig: {
 			id: String(t.id),
 			label: t.title,
@@ -178,10 +186,17 @@ async function updateGanttTask(e: {
 	e: MouseEvent;
 	datetime?: string | undefined;
 }) {
+	const end = new Date(e.bar.endDate)
+	// vue-ganttastic provides the end date as exclusive when dragging bars
+	// subtract one day so the stored end date matches the expected day with
+	// an inclusive 23:59:59 time.
+	end.setDate(end.getDate() - 1)
+	end.setHours(23,59,59,0)
+
 	emit('update:task', {
 		id: Number(e.bar.ganttBarConfig.id),
 		startDate: new Date((new Date(e.bar.startDate)).setHours(0,0,0,0)),
-		endDate: new Date((new Date(e.bar.endDate)).setHours(23,59,0,0)),
+		endDate: end,
 	})
 }
 
