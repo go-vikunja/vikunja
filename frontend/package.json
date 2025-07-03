@@ -28,7 +28,7 @@
     "serve": "pnpm run dev",
     "preview": "vite preview --port 4173",
     "preview:dev": "vite preview --outDir dist-dev --mode development --port 4173",
-    "preview:vikunja": "cd .. && mage build && ./vikunja",
+    "preview:vikunja": "cd .. && mage build && VIKUNJA_SERVICE_TESTINGTOKEN=averyLongSecretToSe33dtheDB ./vikunja",
     "build": "vite build && workbox copyLibraries dist/",
     "build:dev": "vite build --mode development --outDir dist-dev/",
     "lint": "eslint 'src/**/*.{js,ts,vue}'",
