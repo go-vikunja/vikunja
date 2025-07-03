@@ -4,32 +4,29 @@
 		:class="[
 			variantClass,
 			{
-				'is-loading': props.loading,
-				'has-no-shadow': !props.shadow || props.variant === 'tertiary',
+				'is-loading': loading,
+				'has-no-shadow': !shadow || variant === 'tertiary',
 			}
 		]"
-		:disabled="props.disabled || props.loading"
+		:disabled="disabled || loading"
 		:style="{
-			'--button-white-space': props.wrap ? 'break-spaces' : 'nowrap',
+			'--button-white-space': wrap ? 'break-spaces' : 'nowrap',
 		}"
-		:type="props.type"
-		:to="props.to"
-		:href="props.href"
-		:open-external-in-new-tab="props.openExternalInNewTab"
+		v-bind="$attrs"
 	>
-		<template v-if="props.icon">
+		<template v-if="icon">
 			<Icon
 				v-if="!$slots.default"
-				:icon="props.icon"
-				:style="{color: props.iconColor}"
+				:icon="icon"
+				:style="{color: iconColor}"
 			/>
 			<span
 				v-else
 				class="icon is-small"
 			>
 				<Icon
-					:icon="props.icon"
-					:style="{color: props.iconColor}"
+					:icon="icon"
+					:style="{color: iconColor}"
 				/>
 			</span>
 		</template>
@@ -41,12 +38,13 @@
 import {computed, type PropType} from 'vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import type {IconProp} from '@fortawesome/fontawesome-svg-core'
-import type {RouteLocationRaw} from 'vue-router'
+
+export type ButtonTypes = keyof typeof VARIANT_CLASS_MAP
 
 const props = defineProps({
 	variant: {
-		type: String as PropType<'primary' | 'secondary' | 'tertiary'>,
-		default: 'primary',
+		type: String as PropType<ButtonTypes>,
+		default: 'primary' as ButtonTypes,
 	},
 	icon: {
 		type: Object as PropType<IconProp>,
@@ -72,25 +70,9 @@ const props = defineProps({
 		type: Boolean,
 		default: true,
 	},
-	type: {
-		type: String as PropType<'button' | 'submit' | undefined>,
-		default: undefined,
-	},
-	to: {
-		type: Object as PropType<RouteLocationRaw>,
-		default: undefined,
-	},
-	href: {
-		type: String,
-		default: undefined,
-	},
-	openExternalInNewTab: {
-		type: Boolean,
-		default: true,
-	},
 })
 
-defineOptions({name: 'XButton'})
+defineOptions({name: 'XButton', inheritAttrs: false})
 
 const VARIANT_CLASS_MAP = {
 	primary: 'is-primary',
