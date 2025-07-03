@@ -5,6 +5,14 @@ export default defineConfig({
 		API_URL: 'http://localhost:3456/api/v1',
 		TEST_SECRET: 'averyLongSecretToSe33dtheDB',
 	},
+	// TypeScript configuration for Cypress
+	typescript: {
+		transpileOnly: true,
+		compilerOptions: {
+			module: 'commonjs',
+			moduleResolution: 'node',
+		},
+	},
 	video: false,
 	retries: {
 		runMode: 2,
