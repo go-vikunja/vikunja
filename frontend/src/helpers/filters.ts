@@ -61,11 +61,11 @@ export const FILTER_JOIN_OPERATOR = [
 export const FILTER_OPERATORS_REGEX = '(&lt;|&gt;|&lt;=|&gt;=|=|!=|not in|in)'
 
 export function hasFilterQuery(filter: string): boolean {
-	return FILTER_OPERATORS.find(o => filter.includes(o)) || false
+	return FILTER_OPERATORS.some(o => filter.includes(o)) || false
 }
 
 export function getFilterFieldRegexPattern(field: string): RegExp {
-	return new RegExp('(' + field + '\\s*' + FILTER_OPERATORS_REGEX + '\\s*)([\'"]?)([^\'"&|()<]+\\1?)?', 'ig')
+	return new RegExp('(' + field + '\\s*' + FILTER_OPERATORS_REGEX + '\\s*)([^&|()]+)', 'ig')
 }
 
 export function transformFilterStringForApi(
@@ -98,7 +98,7 @@ export function transformFilterStringForApi(
 
 			while ((match = pattern.exec(filter)) !== null) {
 				// eslint-disable-next-line @typescript-eslint/no-unused-vars
-				const [matched, prefix, operator, space, keyword] = match
+				const [matched, prefix, operator, keyword] = match
 				if (!keyword) {
 					continue
 				}
@@ -178,7 +178,7 @@ export function transformFilterStringFromApi(
 			let match: RegExpExecArray | null
 			while ((match = pattern.exec(filter)) !== null) {
 				// eslint-disable-next-line @typescript-eslint/no-unused-vars
-				const [matched, prefix, operator, space, keyword] = match
+				const [matched, prefix, operator, keyword] = match
 				if (keyword) {
 					let keywords = [keyword.trim()]
 					if (operator === 'in' || operator === '?=' || operator === 'not in' || operator === '?!=') {
