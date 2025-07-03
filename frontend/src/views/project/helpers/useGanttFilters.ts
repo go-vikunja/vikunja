@@ -21,6 +21,7 @@ export interface GanttFilters {
 	dateFrom: DateISO
 	dateTo: DateISO
 	showTasksWithoutDates: boolean
+	[key: string]: unknown
 }
 
 const DEFAULT_SHOW_TASKS_WITHOUT_DATES = false
