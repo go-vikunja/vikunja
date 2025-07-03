@@ -118,7 +118,7 @@ func BenchmarkTaskSearch(b *testing.B) {
 		if err := CreateTypesenseCollections(); err != nil {
 			b.Skipf("typesense server not available: %v", err)
 		}
-		if err := ReindexAllTasks(); err != nil {
+		if err := ReindexAllTasks(nil); err != nil {
 			b.Skipf("typesense server not available: %v", err)
 		}
 	}

@@ -21,19 +21,19 @@ import (
 	"code.vikunja.io/api/pkg/initialize"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+	"github.com/schollz/progressbar/v3"
 
 	"github.com/spf13/cobra"
 )
 
 func init() {
-	rootCmd.AddCommand(indexCmd)
+	rootCmd.AddCommand(reindexSentinelCmd)
 }
 
-var indexPartialFlag bool
-
-var indexCmd = &cobra.Command{
-	Use:   "index",
-	Short: "Reindex all of Vikunja's data into Typesense. This will remove any existing index.",
+var reindexSentinelCmd = &cobra.Command{
+	Use:   "reindex-sentinel",
+	Short: "Reindex all tasks with sentinel dates",
+	Long:  "Rebuilds the Typesense index using the -1 sentinel for tasks without a due date.",
 	PreRun: func(_ *cobra.Command, _ []string) {
 		initialize.FullInitWithoutAsync()
 	},
@@ -43,31 +43,16 @@ var indexCmd = &cobra.Command{
 			return
 		}
 
-		err := models.CreateTypesenseCollections()
-		if err != nil {
+		if err := models.CreateTypesenseCollections(); err != nil {
 			log.Criticalf("Could not create Typesense collections: %s", err.Error())
 			return
 		}
-		if indexPartialFlag {
-			log.Infof("Indexing changed tasks… This may take a while.")
-			err = models.SyncUpdatedTasksIntoTypesense()
-			if err != nil {
-				log.Criticalf("Could not reindex all changed tasks into Typesense: %s", err.Error())
-				return
-			}
-		} else {
-			log.Infof("Indexing all tasks… This may take a while.")
-			err = models.ReindexAllTasks(nil)
-			if err != nil {
-				log.Criticalf("Could not reindex all tasks into Typesense: %s", err.Error())
-				return
-			}
-		}
 
+		bar := progressbar.Default(-1)
+		if err := models.ReindexAllTasks(bar); err != nil {
+			log.Criticalf("Could not reindex all tasks: %s", err.Error())
+			return
+		}
 		log.Infof("Done!")
 	},
-}
-
-func init() {
-	indexCmd.Flags().BoolVarP(&indexPartialFlag, "partial", "p", false, "If provided, Vikunja will only index those tasks which are not present in the index. It will not remove any existing tasks.")
 }
