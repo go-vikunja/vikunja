@@ -494,14 +494,14 @@ func convertFilterValues(value interface{}) string {
 
 // Parsing and rebuilding the filter for Typesense has the advantage that we have more control over
 // what Typesense finally gets to see.
-func convertParsedFilterToTypesense(rawFilters []*taskFilter) (filterBy string, err error) {
+func convertParsedFilterToTypesense(rawFilters []*taskFilter, includeNulls bool) (filterBy string, err error) {
 
 	filters := []string{}
 
 	for _, f := range rawFilters {
 
 		if nested, is := f.value.([]*taskFilter); is {
-			nestedDBFilters, err := convertParsedFilterToTypesense(nested)
+			nestedDBFilters, err := convertParsedFilterToTypesense(nested, includeNulls)
 			if err != nil {
 				return "", err
 			}
@@ -562,6 +562,10 @@ func convertParsedFilterToTypesense(rawFilters []*taskFilter) (filterBy string, 
 			filter += "]"
 		}
 
+		if f.field == "due_date" && includeNulls {
+			filter = fmt.Sprintf("(due_date:%d || %s)", dueDateSentinel, filter)
+		}
+
 		filters = append(filters, filter)
 	}
 
@@ -592,7 +596,7 @@ func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, 
 		projectIDStrings = append(projectIDStrings, strconv.FormatInt(id, 10))
 	}
 
-	filter, err := convertParsedFilterToTypesense(opts.parsedFilters)
+	filter, err := convertParsedFilterToTypesense(opts.parsedFilters, opts.filterIncludeNulls)
 	if err != nil {
 		return nil, 0, err
 	}
