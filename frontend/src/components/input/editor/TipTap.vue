@@ -137,7 +137,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue'
+import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch, watchEffect} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {eventToHotkeyString} from '@github/hotkey'
 
@@ -184,7 +184,6 @@ import inputPrompt from '@/helpers/inputPrompt'
 import {setLinkInEditor} from '@/components/input/editor/setLinkInEditor'
 
 const props = withDefaults(defineProps<{
-	modelValue: string,
 	uploadCallback?: UploadCallback,
 	isEditEnabled?: boolean,
 	bottomActions?: BottomAction[],
@@ -202,8 +201,8 @@ const props = withDefaults(defineProps<{
 	enableDiscardShortcut: false,
 })
 
-const emit = defineEmits(['update:modelValue', 'save'])
-
+const emit = defineEmits(['save'])
+const modelValue = defineModel<string>({ default: '' })
 const tiptapInstanceRef = ref<HTMLInputElement | null>(null)
 
 const {t} = useI18n()
@@ -267,7 +266,7 @@ const CustomImage = Image.extend({
 
 			nextTick(async () => {
 
-				const img = document.getElementById(id)
+				const img = document.getElementById(id) as HTMLImageElement | null
 
 				if (!img) return
 
@@ -315,7 +314,7 @@ const UPLOAD_PLACEHOLDER_ELEMENT = '<p>UPLOAD_PLACEHOLDER</p>'
 let lastSavedState = ''
 
 watch(
-	() => props.modelValue,
+	modelValue,
 	(newValue) => {
 		if (!contentHasChanged.value) {
 			lastSavedState = newValue
@@ -506,16 +505,10 @@ const editor = useEditor({
 	},
 })
 
-watch(
-	() => isEditing.value,
-	() => {
-		editor.value?.setEditable(isEditing.value)
-	},
-	{immediate: true},
-)
+watchEffect(() => editor.value?.setEditable(isEditing.value))
 
 watch(
-	() => props.modelValue,
+	modelValue,
 	value => {
 		if (!editor?.value) return
 
@@ -529,13 +522,13 @@ watch(
 )
 
 function bubbleNow() {
-	if (editor.value?.getHTML() === props.modelValue ||
-		(editor.value?.getHTML() === '<p></p>') && props.modelValue === '') {
+	if (editor.value?.getHTML() === modelValue.value ||
+		(editor.value?.getHTML() === '<p></p>') && modelValue.value === '') {
 		return
 	}
 
 	contentHasChanged.value = true
-	emit('update:modelValue', editor.value?.getHTML())
+	modelValue.value = editor.value?.getHTML() ?? ''
 }
 
 function bubbleSave() {
@@ -643,7 +636,7 @@ onMounted(async () => {
 
 	await nextTick()
 
-	setModeAndValue(props.modelValue)
+	setModeAndValue(modelValue.value)
 })
 
 onBeforeUnmount(() => {
