@@ -389,7 +389,6 @@
 			"targetUrl": "Hedef URL",
 			"targetUrlInvalid": "Lütfen geçerli bir URL girin.",
 			"events": "Olaylar",
-			"eventsHint": "Bu web kancasının (mevcut proje içinde) güncellemeleri alması gereken tüm olayları seçin.",
 			"mustSelectEvents": "En az bir olay seçmelisiniz.",
 			"delete": "Bu web kancasını sil",
 			"deleteText": "Bu web kancasını silmek istediğinizden emin misiniz? Harici hedefler artık olaylarından haberdar edilmeyecek.",
@@ -485,9 +484,7 @@
 					"greaterThanOrEqual": "Büyük veya eşit",
 					"lessThan": "Küçüktür",
 					"lessThanOrEqual": "Küçük veya eşit",
-					"like": "Bir kalıpla eşleşir (% joker karakteri kullanılarak)",
-					"in": "Virgülle ayrılmış bir değer listesindeki herhangi bir değerle eşleşir",
-					"notIn": "Virgülle ayrılmış bir değer listesinde bulunmayan herhangi bir değerle eşleşir"
+					"like": "Bir kalıpla eşleşir (% joker karakteri kullanılarak)"
 				},
 				"logicalOperators": {
 					"intro": "Birden fazla koşulu birleştirmek için aşağıdaki mantıksal operatörleri kullanabilirsiniz:",

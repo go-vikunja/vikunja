@@ -349,7 +349,6 @@
 			"targetUrl": "目标 Url",
 			"targetUrlInvalid": "请提供有效的URL。",
 			"events": "事件",
-			"eventsHint": "选择此 webhook 应该接收更新的所有事件 (在当前项目内)。",
 			"mustSelectEvents": "您必须选择至少一个事件。",
 			"delete": "删除此 webhook？",
 			"deleteText": "您确定要删除此Webhook吗？外部目标将不再收到其事件通知。",
@@ -435,8 +434,7 @@
 					"greaterThanOrEqual": "大于或等于",
 					"lessThan": "小于",
 					"lessThanOrEqual": "小于或等于",
-					"like": "匹配模式 (使用通配符%)",
-					"in": "匹配任意一个逗号分隔的值列表"
+					"like": "匹配模式 (使用通配符%)"
 				},
 				"logicalOperators": {
 					"intro": "若要合并多个条件，您可以使用以下逻辑运算符：",

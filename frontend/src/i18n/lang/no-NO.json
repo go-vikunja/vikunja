@@ -386,7 +386,6 @@
 			"targetUrl": "Mål-URL",
 			"targetUrlInvalid": "Oppgi en gyldig URL.",
 			"events": "Hendelser",
-			"eventsHint": "Velg alle hendelser denne webhooken skal motta oppdateringer for (innenfor gjeldende prosjekt).",
 			"mustSelectEvents": "Velg minst en hendelse.",
 			"delete": "Slett denne webhooken",
 			"deleteText": "Er du sikker på at du vil slette denne webhooken? Eksterne mål vil ikke bli varslet om hendelsene lenger.",
@@ -482,9 +481,7 @@
 					"greaterThanOrEqual": "Større enn eller lik",
 					"lessThan": "Mindre enn",
 					"lessThanOrEqual": "Mindre enn eller lik",
-					"like": "Samsvarer med et mønster (ved hjelp av jokertegn %)",
-					"in": "Samsvarer med alle verdier i en kommaseparert liste over verdier",
-					"notIn": "Samsvarer med hvilken som helst verdi som ikke finnes i en kommaseparert liste over verdier"
+					"like": "Samsvarer med et mønster (ved hjelp av jokertegn %)"
 				},
 				"logicalOperators": {
 					"intro": "For å kombinere flere betingelser kan du bruke følgende logiske operatører:",

@@ -356,7 +356,6 @@
 			"targetUrl": "Cílová URL",
 			"targetUrlInvalid": "Zadejte prosím platnou URL adresu.",
 			"events": "Události",
-			"eventsHint": "Vyberte všechny události, pro které by tento webhook měl dostávat aktualizace (v rámci aktuálního projektu).",
 			"mustSelectEvents": "Musíte zvolit alespoň jednu událost.",
 			"delete": "Smazat tento webhook",
 			"deleteText": "Opravdu chcete odstranit tento webhook? Externí cíle již nebudou informovány o jeho událostech.",
@@ -444,8 +443,7 @@
 					"greaterThanOrEqual": "Větší nebo rovno než",
 					"lessThan": "Menší než",
 					"lessThanOrEqual": "Menší nebo rovno než",
-					"like": "Odpovídá vzoru (s použitím zástupného znaku %)",
-					"in": "Odpovídá libovolné hodnotě v seznamu hodnot oddělených čárkou"
+					"like": "Odpovídá vzoru (s použitím zástupného znaku %)"
 				},
 				"logicalOperators": {
 					"intro": "Pro kombinování více podmínek můžete použít tyto logické operátory:",

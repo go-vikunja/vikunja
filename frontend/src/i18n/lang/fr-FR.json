@@ -387,7 +387,6 @@
 			"targetUrl": "URL cible",
 			"targetUrlInvalid": "Veuillez fournir une URL valide.",
 			"events": "Évènements",
-			"eventsHint": "Sélectionnez tous les événements pour lesquels ce webhook devrait recevoir des mises à jour (dans le projet actuel).",
 			"mustSelectEvents": "Vous devez sélectionner au moins un évènement.",
 			"delete": "Supprimer ce webhook",
 			"deleteText": "Êtes-vous sûr de vouloir supprimer ce webhook? Les cibles externes ne seront plus notifiées des événements.",
@@ -483,9 +482,7 @@
 					"greaterThanOrEqual": "Plus grand ou égal à",
 					"lessThan": "Inférieur à",
 					"lessThanOrEqual": "Inférieur ou égal à",
-					"like": "Correspond à un modèle (utilise des métacaractères %)",
-					"in": "Correspond à une valeur dans une liste de valeurs séparée par des virgules",
-					"notIn": "Correspond lorsqu'une valeur n'est pas présente dans une liste de valeurs séparée par des virgules"
+					"like": "Correspond à un modèle (utilise des métacaractères %)"
 				},
 				"logicalOperators": {
 					"intro": "Pour combiner plusieurs conditions, vous pouvez utiliser les opérateurs logiques suivants :",

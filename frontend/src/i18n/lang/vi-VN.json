@@ -382,7 +382,6 @@
 			"targetUrl": "URL đích",
 			"targetUrlInvalid": "Cung cấp một URL hợp lệ.",
 			"events": "Sự kiện",
-			"eventsHint": "Chon tất cả các sự kiện mà webhook này sẽ nhận cập nhật (trong phạm vi dự án hiện tại).",
 			"mustSelectEvents": "Bạn cần chọn ít nhất một sự kiện.",
 			"delete": "Xóa webhook này",
 			"deleteText": "Bạn có chắc muốn xóa webhook này? Các bên khác sẽ không thể nhận thông báo về các sự kiện được nữa.",
@@ -477,9 +476,7 @@
 					"greaterThanOrEqual": "Lớn hơn hoặc bằng",
 					"lessThan": "Nhỏ hơn",
 					"lessThanOrEqual": "Nhỏ hơn hoặc bằng",
-					"like": "Khớp với một kí tự (sử dụng kí tự %)",
-					"in": "Khớp với bất kì giá trị nào trong danh sách các gía trị được phân cách bởi dấu phẩy",
-					"notIn": "Khớp với bất kì giá trị nào không có trong danh sách các giá trị được phân cách bởi dấu phẩy"
+					"like": "Khớp với một kí tự (sử dụng kí tự %)"
 				},
 				"logicalOperators": {
 					"intro": "Để kết hợp nhiều điều kiện, bạn có thể sử dụng các chức năng lọc luận lý:",

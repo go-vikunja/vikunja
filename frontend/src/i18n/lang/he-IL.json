@@ -468,9 +468,7 @@
 					"greaterThan": "גדול מ ",
 					"greaterThanOrEqual": "גדול או יותר",
 					"lessThan": "פחות מ ",
-					"lessThanOrEqual": "פחות או שווה ל ",
-					"in": "מתאים לכל ערך ברשימה מופרדת פסיקים (csv)",
-					"notIn": "מתאים לכל ערך לא נוכח ברשימת ערכים מופרדת פסיקים (csv)"
+					"lessThanOrEqual": "פחות או שווה ל "
 				},
 				"logicalOperators": {
 					"intro": "אפשר להשתמש באופרטורים הבאים כדי לחבר ריבוי תנאים:",

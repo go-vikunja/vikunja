@@ -383,7 +383,6 @@
 			"targetUrl": "Tikslinė nuoroda",
 			"targetUrlInvalid": "Prašome nurodyti veikiančia nuorodą.",
 			"events": "Įvykiai",
-			"eventsHint": "Parinkti visus įvykius, kuriuos šis webhook'as turėtų gauti atnaujinimus (su dabartiniu projektu).",
 			"mustSelectEvents": "Turi pasirinkti bent vieną įvykį.",
 			"delete": "Ištrinti šį webhook'ą",
 			"deleteText": "Ar tikrai nori ištrinti šį webhook'ą? Išoriniai naudotojai daugiau nebus informuoti apie tolimesnius įvykius.",
@@ -479,9 +478,7 @@
 					"greaterThanOrEqual": "Daugiau už ar lygu",
 					"lessThan": "Mažiau nei",
 					"lessThanOrEqual": "Mažiau negu ar lygu",
-					"like": "Atitinka šabloną (nadojama wildcard %)",
-					"in": "Sutampa su bet kuria verte kableliu atskirtuose verčių sąrašuose",
-					"notIn": "Sutampa su bet kuria neesančia verte kableliu atskirtuose verčių sąrašuose"
+					"like": "Atitinka šabloną (nadojama wildcard %)"
 				},
 				"logicalOperators": {
 					"intro": "Norint sujungti kelias sąlygas, galite naudoti žemiau esančius operandus:",

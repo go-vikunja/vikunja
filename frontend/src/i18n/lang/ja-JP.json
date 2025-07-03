@@ -381,7 +381,6 @@
 			"targetUrl": "ターゲットURL",
 			"targetUrlInvalid": "有効なURLを入力してください。",
 			"events": "イベント",
-			"eventsHint": "Webhookが受信する (現在のプロジェクト内での) イベントを選択します。",
 			"mustSelectEvents": "イベントを少なくとも1つ選択する必要があります。",
 			"delete": "Webhookの削除",
 			"deleteText": "このWebhookを削除して本当によろしいですか？このWebhookのターゲットURLにはイベントは送信されなくなります。",

@@ -349,7 +349,6 @@
 			"targetUrl": "Cél URL",
 			"targetUrlInvalid": "Kérjük adjon meg egy érvényes URL-t.",
 			"events": "Események",
-			"eventsHint": "Válassza ki az összes olyan eseményt, amelyhez ez a webhook frissítéseket kap (az aktuális projekten belül).",
 			"mustSelectEvents": "Legalább egy eseményt ki kell választania.",
 			"delete": "Webhook törlése",
 			"deleteText": "Biztosan törli ezt a webhook-ot? A külső célpontok többé nem kapnak értesítést az eseményeiről.",
@@ -435,8 +434,7 @@
 					"greaterThanOrEqual": "Nagyobb, vagy egyenlő",
 					"lessThan": "Kevesebb, mint",
 					"lessThanOrEqual": "Kevesebb, vagy egyenlő mint",
-					"like": "Megfelel egy mintának (helyettesítő karakterrel %)",
-					"in": "A vesszővel elválasztott értéklistában szereplő bármely értéknek megfelel"
+					"like": "Megfelel egy mintának (helyettesítő karakterrel %)"
 				},
 				"logicalOperators": {
 					"intro": "Több feltétel kombinálásához a következő logikai operátorokat használhatja:",

@@ -345,7 +345,6 @@
 			"targetUrl": "URL destino",
 			"targetUrlInvalid": "Por favor, insira uma URL válida.",
 			"events": "Eventos",
-			"eventsHint": "Selecionar todos os eventos que este webhook deve receber atualizações (no projeto atual).",
 			"mustSelectEvents": "Você precisa selecionar ao menos um evento.",
 			"delete": "Excluir este webhook",
 			"deleteText": "Tem certeza de que deseja excluir este webhook? Os destinos externos não serão mais notificados sobre seus eventos.",

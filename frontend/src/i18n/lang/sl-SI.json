@@ -377,7 +377,6 @@
 			"targetUrl": "Ciljni URL",
 			"targetUrlInvalid": "Navedi veljaven URL.",
 			"events": "Dogodki",
-			"eventsHint": "Izberite vse dogodke, za katere naj ta webhook prejema posodobitve (znotraj trenutnega projekta).",
 			"mustSelectEvents": "Izbrati moraš vsaj en dogodek.",
 			"delete": "Izbriši ta webhook",
 			"deleteText": "Ali ste prepričani, da želite izbrisati ta webhook? Zunanji cilji ne bodo več obveščeni o njegovih dogodkih.",
@@ -473,9 +472,7 @@
 					"greaterThanOrEqual": "Večje ali enako kot",
 					"lessThan": "Manj kot",
 					"lessThanOrEqual": "Manjše ali enako kot",
-					"like": "Ujema se z vzorcem (z nadomestnimi znaki %)",
-					"in": "Ujema se s katero koli vrednostjo na seznamu vrednosti, ločenih z vejico",
-					"notIn": "Ujema se s katero koli vrednostjo na seznamu vrednosti, ločenih z vejico"
+					"like": "Ujema se z vzorcem (z nadomestnimi znaki %)"
 				},
 				"logicalOperators": {
 					"intro": "Če želite združiti več pogojev, lahko uporabite naslednje logične operatorje:",
