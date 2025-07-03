@@ -140,7 +140,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 		}
 
 		for (const b in buckets.value) {
-			findAndUpdate(b)
+			findAndUpdate(Number(b))
 			if (found) {
 				return
 			}
@@ -261,7 +261,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 
 		const taskCollectionService = new TaskCollectionService()
 		try {
-			const newBuckets = await taskCollectionService.getAll(new TaskModel({projectId, viewId}), {
+			const newBuckets = await taskCollectionService.getAll(new TaskModel({projectId} as Partial<ITask> & {viewId}), {
 				...params,
 				per_page: TASKS_PER_BUCKET,
 			})
@@ -304,7 +304,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 
 		const taskService = new TaskCollectionService()
 		try {
-			const tasks = await taskService.getAll(new TaskModel({projectId, viewId}), params as unknown as Record<string, unknown>, page)
+			const tasks = await taskService.getAll(new TaskModel({projectId} as Partial<ITask> & {viewId}), params as unknown as Record<string, unknown>, page)
 			addTasksToBucket(tasks, bucketId)
 			setTasksLoadedForBucketPage({bucketId, page})
 			if (taskService.totalPages <= page) {

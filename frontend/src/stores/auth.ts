@@ -170,16 +170,17 @@ export const useAuthStore = defineStore('auth', () => {
 		removeToken()
 
 		try {
-			const response = await HTTP.post('login', objectToSnakeCase(credentials))
+			const response = await HTTP.post('login', objectToSnakeCase(credentials as unknown as Record<string, unknown>))
 			// Save the token to local storage for later use
 			saveToken(response.data.token, true)
 
 			// Tell others the user is authenticated
 			await checkAuth()
 		} catch (e: unknown) {
+			const axiosError = e as { response?: { data?: { code?: number } } }
 			if (
-				e.response &&
-				e.response.data.code === 1017 &&
+				axiosError.response &&
+				axiosError.response.data?.code === 1017 &&
 				!credentials.totpPasscode
 			) {
 				setNeedsTotpPasscode(true)
@@ -210,12 +211,13 @@ export const useAuthStore = defineStore('auth', () => {
 			})
 			return login(credentials)
 		} catch (e: unknown) {
-			if (e.response?.data?.code === 2002 && e.response?.data?.invalid_fields[0]?.startsWith('language:')) {
+			const axiosError = e as { response?: { data?: { code?: number; invalid_fields?: string[]; message?: string } } }
+			if (axiosError.response?.data?.code === 2002 && axiosError.response?.data?.invalid_fields?.[0]?.startsWith('language:')) {
 				return register(credentials, 'en')
 			}
 			
-			if (e.response?.data?.message) {
-				throw e.response.data
+			if (axiosError.response?.data?.message) {
+				throw axiosError.response.data
 			}
 
 			throw e
@@ -333,16 +335,17 @@ export const useAuthStore = defineStore('auth', () => {
 
 			return newUser
 		} catch (e: unknown) {
-			if((e?.response?.status >= 400 && e?.response?.status < 500) ||
-				e?.response?.data?.message === 'missing, malformed, expired or otherwise invalid token provided') {
+			const axiosError = e as { response?: { status?: number; data?: { message?: string } } }
+			if((axiosError.response?.status && axiosError.response.status >= 400 && axiosError.response.status < 500) ||
+				axiosError.response?.data?.message === 'missing, malformed, expired or otherwise invalid token provided') {
 				await logout()
 				return
 			}
 			
-			const cause: {e: unknown} = {e}
+			const cause: {e: unknown; message?: string} = {e}
 			
-			if (typeof e?.response?.data?.message !== 'undefined') {
-				cause.message = e.response.data.message
+			if (typeof axiosError.response?.data?.message !== 'undefined') {
+				cause.message = axiosError.response.data.message
 			}
 			
 			console.error('Error refreshing user info:', e)
@@ -401,7 +404,10 @@ export const useAuthStore = defineStore('auth', () => {
 			await setLanguage(settings.language || 'en')
 			await updateSettingsPromise
 			if (oldName !== undefined && oldName !== settingsUpdate.name) {
-				const {avatarProvider} = await (new AvatarService()).get({})
+				const {avatarProvider} = await (new AvatarService()).get({
+					avatarProvider: 'default' as const,
+					maxRight: null,
+				})
 				if (avatarProvider === 'initials') {
 					await reloadAvatar()
 				}
@@ -434,7 +440,8 @@ export const useAuthStore = defineStore('auth', () => {
 			} catch (e: unknown) {
 				// Don't logout on network errors as the user would then get logged out if they don't have
 				// internet for a short period of time - such as when the laptop is still reconnecting
-				if (e?.request?.status) {
+				const axiosError = e as { request?: { status?: number } }
+				if (axiosError.request?.status) {
 					await logout()
 				}
 			}

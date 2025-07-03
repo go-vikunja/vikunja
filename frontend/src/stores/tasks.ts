@@ -3,6 +3,7 @@ import {acceptHMRUpdate, defineStore} from 'pinia'
 import router from '@/router'
 
 import TaskService from '@/services/task'
+import TaskCollectionService from '@/services/taskCollection'
 import TaskAssigneeService from '@/services/taskAssignee'
 import LabelTaskService from '@/services/labelTask'
 
@@ -39,13 +40,14 @@ interface MatchedAssignee extends IUser {
 }
 
 // IDEA: maybe use a small fuzzy search here to prevent errors
-function findPropertyByValue(object: Record<string, Record<string, string>>, key: string, value: string, fuzzy = false) {
-	return Object.values(object).find(l => {
+function findPropertyByValue<T extends Record<string, string | number>>(array: T[], key: keyof T, value: string, fuzzy = false): T | undefined {
+	return array.find(item => {
+		const itemValue = String(item[key])
 		if (fuzzy) {
-			return (l as Record<string, string>)[key]?.toLowerCase().includes(value.toLowerCase())
+			return itemValue?.toLowerCase().includes(value.toLowerCase())
 		}
 	
-		return (l as Record<string, string>)[key]?.toLowerCase() === value.toLowerCase()
+		return itemValue?.toLowerCase() === value.toLowerCase()
 	})
 }
 
@@ -139,7 +141,7 @@ export const useTaskStore = defineStore('task', () => {
 		const cancel = setModuleLoading(setIsLoading)
 		try {
 			const model: Partial<{projectId: number}> = {}
-			let taskCollectionService = new TaskService()
+			let taskCollectionService: TaskService | TaskCollectionService = new TaskService()
 			if (projectId !== null) {
 				model.projectId = projectId
 				taskCollectionService = new TaskCollectionService()
