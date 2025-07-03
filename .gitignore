@@ -39,3 +39,8 @@ devenv.local.nix
 
 # pre-commit
 .pre-commit-config.yaml
+
+# AI Tools
+/.claude/
+PLAN.md
+
