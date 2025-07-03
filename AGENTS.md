@@ -41,7 +41,7 @@ Navigate to `frontend/` directory:
 - **Lint Fix**: `pnpm lint:fix` - ESLint with auto-fix
 - **Type Check**: `pnpm typecheck` - Vue TypeScript checking
 - **Test Unit**: `pnpm test:unit` - Vitest unit tests
-- **Test E2E**: `pnpm test:e2e` - Cypress end-to-end tests
+- **Test E2E**: `pnpm test:e2e-headless` - Cypress end-to-end tests
 - **Test E2E Dev**: `pnpm test:e2e-dev` - Interactive Cypress testing
 
 ### Pre-commit Checks
@@ -197,4 +197,3 @@ After adjusting the source string, you need to call the respective translation l
 - Event listeners in `pkg/*/listeners.go` must be registered properly
 - CORS settings in backend must allow frontend domain
 - API tokens have different scopes - check permissions carefully
-
