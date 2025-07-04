@@ -221,24 +221,51 @@ func restoreTableData(tables map[string]*zip.File) error {
 						continue
 					}
 
-					var decoded []byte
-					decoded, err = base64.StdEncoding.DecodeString(content[i][f].(string))
-					if err != nil && !errors.Is(err, base64.CorruptInputError(0)) {
-						return fmt.Errorf("could not decode field '%s' %s: %w", f, content[i][f], err)
-					}
-
-					if err != nil && errors.Is(err, base64.CorruptInputError(0)) {
-						decoded = []byte(content[i][f].(string))
-					}
-
+					// Check if this is a float field and the value is already a number
 					if isFloat {
-						val, err := strconv.ParseFloat(string(decoded), 64)
-						if err != nil {
-							return fmt.Errorf("could not parse double value for field '%s': %w", f, err)
+						switch v := content[i][f].(type) {
+						case float64:
+							// Already a float64, no need to process
+							content[i][f] = v
+							continue
+						case int:
+							// Convert int to float64
+							content[i][f] = float64(v)
+							continue
+						case string:
+							// Try to decode from base64 string and convert to float
+							decoded, err := base64.StdEncoding.DecodeString(v)
+							if err != nil && !errors.Is(err, base64.CorruptInputError(0)) {
+								return fmt.Errorf("could not decode field '%s' %s: %w", f, content[i][f], err)
+							}
+							if err != nil && errors.Is(err, base64.CorruptInputError(0)) {
+								decoded = []byte(v)
+							}
+							val, err := strconv.ParseFloat(string(decoded), 64)
+							if err != nil {
+								return fmt.Errorf("could not parse double value for field '%s': %w", f, err)
+							}
+							content[i][f] = val
+							continue
+						default:
+							return fmt.Errorf("unexpected type for float field '%s': %T", f, v)
 						}
-						content[i][f] = val
-					} else {
+					}
+
+					// Handle JSON fields (non-float)
+					var decoded []byte
+					switch v := content[i][f].(type) {
+					case string:
+						decoded, err = base64.StdEncoding.DecodeString(v)
+						if err != nil && !errors.Is(err, base64.CorruptInputError(0)) {
+							return fmt.Errorf("could not decode field '%s' %s: %w", f, content[i][f], err)
+						}
+						if err != nil && errors.Is(err, base64.CorruptInputError(0)) {
+							decoded = []byte(v)
+						}
 						content[i][f] = string(decoded)
+					default:
+						return fmt.Errorf("expected string for JSON field '%s', got %T", f, v)
 					}
 				}
 			}
