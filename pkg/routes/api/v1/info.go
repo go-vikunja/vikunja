@@ -46,6 +46,7 @@ type vikunjaInfos struct {
 	CaldavEnabled              bool      `json:"caldav_enabled"`
 	AuthInfo                   authInfo  `json:"auth"`
 	EmailRemindersEnabled      bool      `json:"email_reminders_enabled"`
+	WebhookRemindersEnabled    bool      `json:"webhook_reminders_enabled"`
 	UserDeletionEnabled        bool      `json:"user_deletion_enabled"`
 	TaskCommentsEnabled        bool      `json:"task_comments_enabled"`
 	DemoModeEnabled            bool      `json:"demo_mode_enabled"`
@@ -87,20 +88,21 @@ type legalInfo struct {
 // @Router /info [get]
 func Info(c echo.Context) error {
 	info := vikunjaInfos{
-		Version:                version.Version,
-		FrontendURL:            config.ServicePublicURL.GetString(),
-		Motd:                   config.ServiceMotd.GetString(),
-		LinkSharingEnabled:     config.ServiceEnableLinkSharing.GetBool(),
-		MaxFileSize:            config.FilesMaxSize.GetString(),
-		TaskAttachmentsEnabled: config.ServiceEnableTaskAttachments.GetBool(),
-		TotpEnabled:            config.ServiceEnableTotp.GetBool(),
-		CaldavEnabled:          config.ServiceEnableCaldav.GetBool(),
-		EmailRemindersEnabled:  config.ServiceEnableEmailReminders.GetBool(),
-		UserDeletionEnabled:    config.ServiceEnableUserDeletion.GetBool(),
-		TaskCommentsEnabled:    config.ServiceEnableTaskComments.GetBool(),
-		DemoModeEnabled:        config.ServiceDemoMode.GetBool(),
-		WebhooksEnabled:        config.WebhooksEnabled.GetBool(),
-		PublicTeamsEnabled:     config.ServiceEnablePublicTeams.GetBool(),
+		Version:                 version.Version,
+		FrontendURL:             config.ServicePublicURL.GetString(),
+		Motd:                    config.ServiceMotd.GetString(),
+		LinkSharingEnabled:      config.ServiceEnableLinkSharing.GetBool(),
+		MaxFileSize:             config.FilesMaxSize.GetString(),
+		TaskAttachmentsEnabled:  config.ServiceEnableTaskAttachments.GetBool(),
+		TotpEnabled:             config.ServiceEnableTotp.GetBool(),
+		CaldavEnabled:           config.ServiceEnableCaldav.GetBool(),
+		EmailRemindersEnabled:   config.ServiceEnableEmailReminders.GetBool(),
+		WebhookRemindersEnabled: config.ServiceEnableWebhookReminders.GetBool(),
+		UserDeletionEnabled:     config.ServiceEnableUserDeletion.GetBool(),
+		TaskCommentsEnabled:     config.ServiceEnableTaskComments.GetBool(),
+		DemoModeEnabled:         config.ServiceDemoMode.GetBool(),
+		WebhooksEnabled:         config.WebhooksEnabled.GetBool(),
+		PublicTeamsEnabled:      config.ServiceEnablePublicTeams.GetBool(),
 		AvailableMigrators: []string{
 			(&vikunja_file.FileMigrator{}).Name(),
 			(&ticktick.Migrator{}).Name(),
