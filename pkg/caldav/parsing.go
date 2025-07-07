@@ -457,23 +457,20 @@ func caldavTimeToTimestamp(ianaProperty ics.IANAProperty) time.Time {
 	var err error
 	tzParameter := ianaProperty.ICalParameters["TZID"]
 	if len(tzParameter) > 0 {
-		loc, err := time.LoadLocation(tzParameter[0])
-		if err != nil {
-			log.Warningf("Error while parsing caldav timezone %s: %s", tzParameter[0], err)
+		loc, locErr := time.LoadLocation(tzParameter[0])
+		if locErr != nil {
+			log.Warningf("Error while parsing caldav timezone %s: %s", tzParameter[0], locErr)
 		} else {
 			t, err = time.ParseInLocation(format, tstring, loc)
-			if err != nil {
-				log.Warningf("Error while parsing caldav time %s to TimeStamp: %s at location %s", tstring, loc, err)
-			} else {
-				t = t.In(config.GetTimeZone())
-				return t
-			}
 		}
+	} else {
+		t, err = time.ParseInLocation(format, tstring, config.GetTimeZone())
 	}
-	t, err = time.Parse(format, tstring)
+
 	if err != nil {
 		log.Warningf("Error while parsing caldav time %s to TimeStamp: %s", tstring, err)
 		return time.Time{}
 	}
-	return t
+
+	return t.In(config.GetTimeZone())
 }
