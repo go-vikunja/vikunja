@@ -92,6 +92,7 @@
 				"discoverableByName": "Permetti agli altri utenti di aggiungermi a gruppi o progetti cercando il mio nome",
 				"discoverableByEmail": "Permetti agli altri di aggiungermi a gruppi o progetti cercando il mio indirizzo email",
 				"playSoundWhenDone": "Riproduci un suono quando le attività vengono contrassegnate come completate",
+				"allowIconChanges": "Mostra loghi speciali durante determinati periodi",
 				"weekStart": "La settimana inizia di",
 				"weekStartSunday": "Domenica",
 				"weekStartMonday": "Lunedì",
@@ -139,7 +140,8 @@
 				"uploadAvatar": "Carica Avatar",
 				"statusUpdateSuccess": "Avatar aggiornato!",
 				"setSuccess": "L'avatar è stato impostato con successo!",
-				"ldap": "Il tuo avatar è sincronizzato automaticamente dal servizio di directory della tua organizzazione (LDAP). Puoi chiedere al tuo team IT informazioni su come cambiarlo."
+				"ldap": "Il tuo avatar è sincronizzato automaticamente dal servizio di directory della tua organizzazione (LDAP). Puoi chiedere al tuo team IT informazioni su come cambiarlo.",
+				"openid": "Il tuo avatar viene sincronizzato automaticamente dal tuo provider di accesso ({provider}). Per modificarlo, aggiornalo da lì."
 			},
 			"quickAddMagic": {
 				"title": "Modalità di aggiunta rapida",
@@ -387,6 +389,7 @@
 			"targetUrl": "URL di destinazione",
 			"targetUrlInvalid": "Si prega di fornire un URL valido.",
 			"events": "Eventi",
+			"eventsHint": "Seleziona tutti gli eventi per cui questo webhook dovrebbe ricevere aggiornamenti (all'interno del progetto corrente).",
 			"mustSelectEvents": "Devi selezionare almeno un evento.",
 			"delete": "Elimina questo webhook",
 			"deleteText": "Sei sicuro di voler eliminare questo webhook? I destinatari esterni non saranno più avvisati dei suoi eventi.",
@@ -482,7 +485,9 @@
 					"greaterThanOrEqual": "Maggiore o uguale a",
 					"lessThan": "Minore di",
 					"lessThanOrEqual": "Minore o uguale a",
-					"like": "Corrisponde a un modello (utilizzando wildcard %)."
+					"like": "Corrisponde a un modello (utilizzando wildcard %).",
+					"in": "Corrisponde a qualsiasi valore in un elenco di valori separati da virgola",
+					"notIn": "Corrisponde a qualsiasi valore non presente in un elenco di valori separati da virgola"
 				},
 				"logicalOperators": {
 					"intro": "Per combinare più condizioni, puoi utilizzare i seguenti operatori logici:",
@@ -1053,6 +1058,7 @@
 			"delete": "Elimina questa attività",
 			"priority": "Modifica la priorità di questa attività",
 			"favorite": "Segna questa attività come preferita o non preferita",
+			"openProject": "Apri il progetto di questa attività",
 			"save": "Salva attività corrente"
 		},
 		"project": {
@@ -1069,6 +1075,12 @@
 			"labels": "Passa a \"Etichette\"",
 			"teams": "Passa a \"Gruppi\"",
 			"projects": "Passa a \"Progetti\""
+		},
+		"list": {
+			"title": "Elenco Attività",
+			"navigateDown": "Evidenzia l'attività successiva",
+			"navigateUp": "Evidenzia l'attività precedente",
+			"open": "Apri l'attività evidenziata"
 		}
 	},
 	"update": {
@@ -1230,7 +1242,9 @@
 	},
 	"about": {
 		"title": "Informazioni",
-		"version": "Versione: {version}"
+		"version": "Versione: {version}",
+		"frontendVersion": "Versione Frontend: {version}",
+		"apiVersion": "Versione API: {version}"
 	},
 	"time": {
 		"units": {
