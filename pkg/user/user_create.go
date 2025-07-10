@@ -108,7 +108,7 @@ func CreateUser(s *xorm.Session, user *User) (newUser *User, err error) {
 
 	_, err = s.
 		Where("id = ?", user.ID).
-		Cols("email", "is_active").
+		Cols("email", "status").
 		Update(user)
 	if err != nil {
 		return
