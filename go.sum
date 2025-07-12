@@ -252,6 +252,8 @@ github.com/jackc/puddle v1.1.3/go.mod h1:m4B5Dj62Y0fbyuIc15OsIqK0+JU8nkqQjsgx7dv
 github.com/jackc/puddle v1.3.0/go.mod h1:m4B5Dj62Y0fbyuIc15OsIqK0+JU8nkqQjsgx7dvjSWk=
 github.com/jaswdr/faker/v2 v2.5.0 h1:KUYfnleIZMSHNp/q+rDk7XEuqUUL5FhfT19iTTFqF5o=
 github.com/jaswdr/faker/v2 v2.5.0/go.mod h1:ROK8xwQV0hYOLDUtxCQgHGcl10jbVzIvqHxcIDdwY2Q=
+github.com/jaswdr/faker/v2 v2.6.0 h1:19MkwsI6I2vrJhYZqsJpspzRb/fDlax2q1iBhPMxGy0=
+github.com/jaswdr/faker/v2 v2.6.0/go.mod h1:jZq+qzNQr8/P+5fHd9t3txe2GNPnthrTfohtnJ7B+68=
 github.com/jcmturner/aescts/v2 v2.0.0 h1:9YKLH6ey7H4eDBXW8khjYslgyqG2xZikXP0EQFKrle8=
 github.com/jcmturner/aescts/v2 v2.0.0/go.mod h1:AiaICIRyfYg35RUkr8yESTqvSy7csK90qZ5xfvvsoNs=
 github.com/jcmturner/dnsutils/v2 v2.0.0 h1:lltnkeZGL0wILNvrNiVCR6Ro5PGU/SeBvVO/8c/iPbo=
