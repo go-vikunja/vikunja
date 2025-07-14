@@ -419,6 +419,10 @@ func CheckUserPassword(user *User, password string) error {
 
 // GetCurrentUserFromDB gets a user from jwt claims and returns the full user from the db.
 func GetCurrentUserFromDB(s *xorm.Session, c echo.Context) (user *User, err error) {
+	if apiUser, ok := c.Get("api_user").(*User); ok {
+		return apiUser, nil
+	}
+
 	u, err := GetCurrentUser(c)
 	if err != nil {
 		return nil, err
@@ -429,6 +433,10 @@ func GetCurrentUserFromDB(s *xorm.Session, c echo.Context) (user *User, err erro
 
 // GetCurrentUser returns the current user based on its jwt token
 func GetCurrentUser(c echo.Context) (user *User, err error) {
+	if apiUser, ok := c.Get("api_user").(*User); ok {
+		return apiUser, nil
+	}
+
 	jwtinf := c.Get("user").(*jwt.Token)
 	claims := jwtinf.Claims.(jwt.MapClaims)
 	return GetUserFromClaims(claims)

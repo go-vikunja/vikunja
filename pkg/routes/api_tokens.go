@@ -25,6 +25,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/user"
 
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
@@ -87,7 +88,13 @@ func checkAPITokenAndPutItInContext(tokenHeaderValue string, c echo.Context) err
 		return echo.NewHTTPError(http.StatusUnauthorized)
 	}
 
+	u, err := user.GetUserByID(s, token.OwnerID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
+	}
+
 	c.Set("api_token", token)
+	c.Set("api_user", u)
 
 	return nil
 }
