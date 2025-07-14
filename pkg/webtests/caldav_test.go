@@ -322,7 +322,7 @@ END:VCALENDAR`
 	})
 }
 
-func TestCaldavReport(t *testing.T) {
+func TestCaldavProjectReport(t *testing.T) {
 	t.Run("REPORT calendar-query returns all tasks", func(t *testing.T) {
 		e, _ := setupTestEnv()
 
@@ -368,7 +368,7 @@ func TestCaldavReport(t *testing.T) {
 		err = xml.Unmarshal([]byte(responseBody), &multistatus)
 		require.NoError(t, err)
 
-		assert.Equal(t, len(multistatus.Response), 5, "Should have all tasks from the project")
+		assert.Len(t, multistatus.Response, 5, "Should have all tasks from the project")
 
 		for i, response := range multistatus.Response {
 			assert.NotEmpty(t, response.Href, "Response %d should have an href", i)
