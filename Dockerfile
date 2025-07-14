@@ -10,9 +10,7 @@ ENV CYPRESS_INSTALL_BINARY=0
 COPY frontend/pnpm-lock.yaml frontend/package.json frontend/.npmrc ./ 
 COPY frontend/patches ./patches
 RUN npm install -g corepack && corepack enable && \
-    pnpm fetch # installs into cache only
-
-RUN pnpm install --frozen-lockfile --offline
+    pnpm install --frozen-lockfile
 COPY frontend/ ./
 ARG RELEASE_VERSION=dev
 RUN echo "{\"VERSION\": \"$RELEASE_VERSION\"}" > src/version.json && pnpm run build
