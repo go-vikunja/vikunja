@@ -600,7 +600,7 @@ func (vlra *VikunjaProjectResourceAdapter) CalculateEtag() string {
 
 // GetContent returns the content string of a resource (a task in our case)
 func (vlra *VikunjaProjectResourceAdapter) GetContent() string {
-	if vlra.project != nil && vlra.project.Tasks != nil {
+	if vlra.project != nil && vlra.projectTasks != nil {
 		return caldav.GetCaldavTodosForTasks(vlra.project, vlra.projectTasks)
 	}
 
