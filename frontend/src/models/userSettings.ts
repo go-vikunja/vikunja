@@ -9,6 +9,8 @@ import {PRIORITIES} from '@/constants/priorities'
 export default class UserSettingsModel extends AbstractModel<IUserSettings> implements IUserSettings {
 	name = ''
 	emailRemindersEnabled = true
+	webhookRemindersEnabled = false
+	webhookReminderUrl = ''
 	discoverableByName = false
 	discoverableByEmail = false
 	overdueTasksRemindersEnabled = true
