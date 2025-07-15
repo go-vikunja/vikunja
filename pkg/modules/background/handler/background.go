@@ -52,6 +52,15 @@ import (
 	"xorm.io/xorm"
 )
 
+var allowedImageMimes = []string{
+	"image/jpeg",
+	"image/png",
+	"image/gif",
+	"image/bmp",
+	"image/tiff",
+	"image/webp",
+}
+
 // BackgroundProvider represents a thing which holds a background provider
 // Lets us get a new fresh provider every time we need one.
 type BackgroundProvider struct {
@@ -202,12 +211,26 @@ func (bp *BackgroundProvider) UploadBackground(c echo.Context) error {
 		_ = s.Rollback()
 		return c.JSON(http.StatusBadRequest, models.Message{Message: "Uploaded file is no image."})
 	}
+	supported := false
+	for _, m := range allowedImageMimes {
+		if mime.Is(m) {
+			supported = true
+			break
+		}
+	}
+	if !supported {
+		_ = s.Rollback()
+		return c.JSON(http.StatusBadRequest, models.Message{Message: "Unsupported image format. Allowed: " + strings.Join(allowedImageMimes, ",")})
+	}
 
 	err = SaveBackgroundFile(s, auth, project, srcf, file.Filename, uint64(file.Size))
 	if err != nil {
 		_ = s.Rollback()
 		if files.IsErrFileIsTooLarge(err) {
 			return echo.ErrBadRequest
+		}
+		if IsErrFileUnsupportedImageFormat(err) {
+			return c.JSON(http.StatusBadRequest, models.Message{Message: "Unsupported image format. Allowed: " + strings.Join(allowedImageMimes, ",")})
 		}
 
 		return handler.HandleHTTPError(err)
@@ -228,9 +251,13 @@ func (bp *BackgroundProvider) UploadBackground(c echo.Context) error {
 }
 
 func SaveBackgroundFile(s *xorm.Session, auth web.Auth, project *models.Project, srcf io.ReadSeeker, filename string, filesize uint64) (err error) {
+	mime, _ := mimetype.DetectReader(srcf)
 	_, _ = srcf.Seek(0, io.SeekStart)
 	src, err := imaging.Decode(srcf)
 	if err != nil {
+		if strings.Contains(err.Error(), "unknown format") {
+			return ErrFileUnsupportedImageFormat{Mime: mime.String()}
+		}
 		return err
 	}
 
