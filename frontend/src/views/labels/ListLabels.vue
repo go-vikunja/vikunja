@@ -33,10 +33,7 @@
 					v-for="label in labelStore.labelsArray"
 					:key="label.id"
 					:class="{'disabled': userInfo.id !== label.createdBy.id}"
-					:style="{
-						'background': label.hexColor || 'var(--grey-200)',
-						'color': label.textColor || 'var(--grey-800)',
-					}"
+					:style="getLabelStyles(label)"
 					class="tag"
 				>
 					<span
@@ -152,6 +149,7 @@ import {useAuthStore} from '@/stores/auth'
 import {useLabelStore} from '@/stores/labels'
 
 import { useTitle } from '@/composables/useTitle'
+import {useLabelStyles} from '@/composables/useLabelStyles'
 
 const {t} = useI18n({useScope: 'global'})
 
@@ -170,6 +168,7 @@ const labelStore = useLabelStore()
 labelStore.loadAllLabels()
 
 const loading = computed(() => labelStore.isLoading)
+const {getLabelStyles} = useLabelStyles()
 
 function deleteLabel(label?: ILabel) {
 	if (!label) {
