@@ -429,7 +429,21 @@ func GetCurrentUserFromDB(s *xorm.Session, c echo.Context) (user *User, err erro
 
 // GetCurrentUser returns the current user based on its jwt token
 func GetCurrentUser(c echo.Context) (user *User, err error) {
-	jwtinf := c.Get("user").(*jwt.Token)
+	if apiUser, ok := c.Get("api_user").(*User); ok {
+		return apiUser, nil
+	}
+
+	jwtinf, is := c.Get("user").(*jwt.Token)
+	if jwtinf == nil {
+		log.Error("No user found in context")
+		return nil, ErrInvalidUserContext{Reason: "no user found in context"}
+	}
+
+	if !is {
+		log.Errorf("User in context is not a JWT token, got type: %T", jwtinf)
+		return nil, ErrInvalidUserContext{Reason: "user in context is not a JWT token"}
+	}
+
 	claims := jwtinf.Claims.(jwt.MapClaims)
 	return GetUserFromClaims(claims)
 }

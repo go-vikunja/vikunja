@@ -632,3 +632,30 @@ const ErrorCodeUsernameReserved = 1026
 func (err ErrUsernameReserved) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrorCodeUsernameReserved, Message: "This username is reserved and cannot be used."}
 }
+
+// ErrInvalidUserContext represents an error where the user context is invalid or missing
+type ErrInvalidUserContext struct {
+	Reason string
+}
+
+// IsErrInvalidUserContext checks if an error is a ErrInvalidUserContext.
+func IsErrInvalidUserContext(err error) bool {
+	_, ok := err.(ErrInvalidUserContext)
+	return ok
+}
+
+func (err ErrInvalidUserContext) Error() string {
+	return fmt.Sprintf("Invalid user context: %s", err.Reason)
+}
+
+// ErrorCodeInvalidUserContext holds the unique world-error code of this error
+const ErrorCodeInvalidUserContext = 1027
+
+// HTTPError holds the http error description
+func (err ErrInvalidUserContext) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusUnauthorized,
+		Code:     ErrorCodeInvalidUserContext,
+		Message:  "Invalid user context. Please make sure the passed token is valid and try again.",
+	}
+}
