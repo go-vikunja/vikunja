@@ -199,7 +199,7 @@
 		"searchSelect": "Kattintson, vagy nyomja meg az Enter billentyűt a projekt kiválasztásához",
 		"shared": "Megosztott projektek",
 		"noDescriptionAvailable": "A projekt leírása nem áll rendelkezésre.",
-		"inboxTitle": "Beérkezett üzenetek",
+		"inboxTitle": "Beérkezett feladatok",
 		"create": {
 			"header": "Új projekt",
 			"titlePlaceholder": "Írja be a projekt címét…",
