@@ -28,15 +28,10 @@ export default class LabelModel extends AbstractModel<ILabel> implements ILabel 
 			this.hexColor = '#' + this.hexColor
 		}
 
-		if (this.hexColor === '') {
-			this.hexColor = 'var(--grey-200)'
-			this.textColor = 'var(--grey-800)'
-		} else {
-			this.textColor = colorIsDark(this.hexColor)
-				// Fixed colors to avoid flipping in dark mode
-				? 'hsl(215, 27.9%, 16.9%)' // grey-800
-				: 'hsl(220, 13%, 91%)' // grey-200
-		}
+		this.textColor = colorIsDark(this.hexColor)
+		// Fixed colors to avoid flipping in dark mode
+			? 'hsl(215, 27.9%, 16.9%)' // grey-800
+			: 'hsl(220, 13%, 91%)' // grey-200
 
 		this.createdBy = new UserModel(this.createdBy)
 

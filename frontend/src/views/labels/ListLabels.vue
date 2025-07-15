@@ -33,7 +33,7 @@
 					v-for="label in labelStore.labelsArray"
 					:key="label.id"
 					:class="{'disabled': userInfo.id !== label.createdBy.id}"
-					:style="{'background': label.hexColor, 'color': label.textColor}"
+					:style="{'background': label.hexColor || 'var(--grey-200)', 'color': label.textColor}"
 					class="tag"
 				>
 					<span

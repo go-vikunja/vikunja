@@ -9,7 +9,7 @@ defineProps<{
 <template>
 	<span
 		:key="label.id"
-		:style="{'background': label.hexColor, 'color': label.textColor}"
+		:style="{'background': label.hexColor || 'var(--grey-200)', 'color': label.textColor}"
 		class="tag"
 	>
 		<span>{{ label.title }}</span>
