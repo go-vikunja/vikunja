@@ -536,7 +536,7 @@ func (l *AddTaskToTypesense) Handle(msg *message.Message) (err error) {
 	task := make(map[int64]*Task, 1)
 	task[event.Task.ID] = event.Task // Will be filled with all data by the Typesense connector
 
-	return reindexTasksInTypesense(s, task)
+	return reindexTasksInTypesense(s, task, nil)
 }
 
 // UpdateTaskInTypesense  represents a listener
@@ -562,7 +562,7 @@ func (l *UpdateTaskInTypesense) Handle(msg *message.Message) (err error) {
 	task := make(map[int64]*Task, 1)
 	task[event.Task.ID] = event.Task // Will be filled with all data by the Typesense connector
 
-	return reindexTasksInTypesense(s, task)
+	return reindexTasksInTypesense(s, task, nil)
 }
 
 // UpdateTaskPositionsInTypesense  represents a listener
@@ -597,7 +597,7 @@ func (l *UpdateTaskPositionsInTypesense) Handle(msg *message.Message) (err error
 		taskMap[task.ID] = task
 	}
 
-	return reindexTasksInTypesense(s, taskMap)
+	return reindexTasksInTypesense(s, taskMap, nil)
 }
 
 // IncreaseAttachmentCounter  represents a listener
@@ -747,7 +747,7 @@ func (l *UpdateTaskInSavedFilterViews) Handle(msg *message.Message) (err error) 
 		task := make(map[int64]*Task, 1)
 		task[event.Task.ID] = event.Task // Will be filled with all data by the Typesense connector
 
-		return reindexTasksInTypesense(s, task)
+		return reindexTasksInTypesense(s, task, nil)
 	}
 
 	return nil
