@@ -8175,7 +8175,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "title": {
-                    "description": "The title of the lable. You'll see this one on tasks associated with it.",
+                    "description": "The title of the label. You'll see this one on tasks associated with it.",
                     "type": "string",
                     "maxLength": 250,
                     "minLength": 1
