@@ -17,7 +17,10 @@
 	>
 		<template #tag="{item: label}">
 			<span
-				:style="{'background': label.hexColor || 'var(--grey-200)', 'color': label.textColor}"
+				:style="{
+					'background': label.hexColor || 'var(--grey-200)',
+					'color': label.textColor || 'var(--grey-800)',
+				}"
 				class="tag"
 			>
 				<span>{{ label.title }}</span>
@@ -38,7 +41,10 @@
 			</span>
 			<span
 				v-else
-				:style="{'background': option.hexColor || 'var(--grey-200)', 'color': option.textColor}"
+				:style="{
+					'background': option.hexColor || 'var(--grey-200)',
+					'color': option.textColor || 'var(--grey-800)',
+				}"
 				class="tag search-result"
 			>
 				<span>{{ option.title }}</span>
