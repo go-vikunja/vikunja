@@ -353,7 +353,7 @@ definitions:
         description: The unique, numeric id of this label.
         type: integer
       title:
-        description: The title of the lable. You'll see this one on tasks associated
+        description: The title of the label. You'll see this one on tasks associated
           with it.
         maxLength: 250
         minLength: 1
