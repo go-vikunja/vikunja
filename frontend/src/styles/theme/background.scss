@@ -55,5 +55,6 @@
 
   &.is-visible {
     opacity: 1;
+    filter: brightness(40%);
   }
 }
