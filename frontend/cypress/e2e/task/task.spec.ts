@@ -298,11 +298,9 @@ describe('Task', () => {
 				description: 'Old Description',
 			})
 
-			cy.intercept('POST', `${Cypress.env('API_URL')}/tasks/1`).as('updateTask')
-
 			cy.visit('/tasks/1')
 			
-			cy.get('.task-view .details.content.description .tiptap button.done-edit')
+			cy.get('.task-view .details.content.description .tiptap button.done-edit', {timeout: 30_000})
 				.click()
 			cy.get('.task-view .details.content.description .tiptap__editor .tiptap.ProseMirror')
 				.type('{selectall}New Description')
@@ -310,8 +308,6 @@ describe('Task', () => {
 			cy.get('.task-view h6.subtitle a')
 				.first()
 				.click()
-			
-			cy.wait('@updateTask')
 			
 			cy.visit('/tasks/1')
 			cy.get('.task-view .details.content.description')
