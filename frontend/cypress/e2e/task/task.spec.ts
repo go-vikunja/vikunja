@@ -316,7 +316,7 @@ describe('Task', () => {
 			cy.visit('/tasks/1')
 			cy.get('.task-view .details.content.description')
 				.should('contain.text', 'New Description')
-})
+		})
 
 		it('Shows an empty editor when the description of a task is empty', () => {
 			const tasks = TaskFactory.create(1, {
