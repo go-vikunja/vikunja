@@ -17,6 +17,12 @@ in {
     golangci-lint mage
     # Desktop
     electron
+    # Font processing tools
+    wget
+    python3
+    python3Packages.pip
+    python3Packages.fonttools
+    python3Packages.brotli
   ] ++ lib.optionals (!pkgs.stdenv.isDarwin) [
     # Frontend tools (exclude on Darwin)
     cypress
