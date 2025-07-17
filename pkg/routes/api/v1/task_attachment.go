@@ -22,7 +22,6 @@ import (
 	"strings"
 
 	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	auth2 "code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/web/handler"
@@ -160,13 +159,11 @@ func GetTaskAttachment(c echo.Context) error {
 		return handler.HandleHTTPError(err)
 	}
 
-	// If the preview query parameter is set and the preview was already generated and cached, return the cached preview image
+	// If the preview query parameter is set, get the preview (cached or generate)
 	previewSize := models.GetPreviewSizeFromString(c.QueryParam("preview_size"))
 	if previewSize != models.PreviewSizeUnknown && strings.HasPrefix(taskAttachment.File.Mime, "image") {
-		previewFileBytes := taskAttachment.GetPreviewFromCache(previewSize)
+		previewFileBytes := taskAttachment.GetPreview(previewSize)
 		if previewFileBytes != nil {
-			log.Debugf("Cached attachment image preview found for task attachment %v", taskAttachment.ID)
-
 			return c.Blob(http.StatusOK, "image/png", previewFileBytes)
 		}
 	}
@@ -181,14 +178,6 @@ func GetTaskAttachment(c echo.Context) error {
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err)
-	}
-
-	// If a preview is requested and the preview was not cached, we create the preview and cache it
-	if previewSize != models.PreviewSizeUnknown {
-		previewFileBytes := taskAttachment.GenerateAndSavePreviewToCache(previewSize)
-		if previewFileBytes != nil {
-			return c.Blob(http.StatusOK, "image/png", previewFileBytes)
-		}
 	}
 
 	http.ServeContent(c.Response(), c.Request(), taskAttachment.File.Name, taskAttachment.File.Created, taskAttachment.File.File)
