@@ -117,7 +117,29 @@ echo "# Install required libs"
 echo "###################################################"
 echo ""
 
-pip install fonttools brotli
+# Check if fonttools is available
+if ! command -v fonttools >/dev/null 2>&1; then
+	echo "fonttools not found, installing..."
+	pip install fonttools
+else
+	echo "fonttools already available"
+fi
+
+# Check if pyftsubset is available (part of fonttools)
+if ! command -v pyftsubset >/dev/null 2>&1; then
+	echo "pyftsubset not found, installing fonttools..."
+	pip install fonttools
+else
+	echo "pyftsubset already available"
+fi
+
+# Check if brotli is available
+if ! python3 -c "import brotli" >/dev/null 2>&1; then
+	echo "brotli not found, installing..."
+	pip install brotli
+else
+	echo "brotli already available"
+fi
 
 echo ""
 echo "###################################################"
@@ -129,6 +151,21 @@ echo "###################################################"
 echo ""
 
 mkdir -p $TEMP_FOLDER
+
+echo ""
+echo "###################################################"
+echo "# Collect existing font files for cleanup"
+echo "###################################################"
+echo ""
+
+# Collect existing font files to remove later
+OLD_FONT_FILES=$(find $FONT_FOLDER -name "*.woff2" -type f 2>/dev/null || true)
+if [ -n "$OLD_FONT_FILES" ]; then
+    echo "Found existing font files to remove after generation:"
+    echo "$OLD_FONT_FILES"
+else
+    echo "No existing font files found"
+fi
 
 echo "\nOpen Sans"
 # we drop the wdth axis for all
@@ -158,6 +195,86 @@ instance_and_subset "${ORIGINAL_FONTS}/Quicksand[wght].ttf" "wght=600" "Quicksan
 instance_and_subset "${ORIGINAL_FONTS}/Quicksand[wght].ttf" "wght=700" "Quicksand-Bold"
 
 echo "\nSubsetting files complete"
+
+echo ""
+echo "###################################################"
+echo "# Clean up old font files"
+echo "###################################################"
+echo ""
+
+# Remove only the old font files we collected earlier
+if [ -n "$OLD_FONT_FILES" ]; then
+    echo "Removing old font files..."
+    echo "$OLD_FONT_FILES" | while read -r file; do
+        if [ -f "$file" ]; then
+            echo "Removing: $file"
+            rm -f "$file"
+        fi
+    done
+else
+    echo "No old font files to remove"
+fi
+
+echo ""
+echo "###################################################"
+echo "# Update fonts.scss with new font files"
+echo "###################################################"
+echo ""
+
+FONTS_SCSS="./src/styles/fonts.scss"
+
+echo "Updating $FONTS_SCSS with new font files..."
+
+# Function to update font file references in SCSS
+update_font_reference() {
+    local pattern="$1"
+    local new_file="$2"
+    
+    # Use sed to replace the font file reference, preserving the rest of the line
+    sed -i "s|${pattern}_[a-f0-9]\{8\}\.woff2|${new_file}|g" "$FONTS_SCSS"
+}
+
+# Update each font file reference with the new checksum
+for file in $FONT_FOLDER/*.woff2; do
+    if [ -f "$file" ]; then
+        basename=$(basename "$file")
+        
+        case $basename in
+            OpenSans\[wght\]_*.woff2)
+                update_font_reference "OpenSans\[wght\]" "$basename"
+                ;;
+            OpenSans-Italic\[wght\]_*.woff2)
+                update_font_reference "OpenSans-Italic\[wght\]" "$basename"
+                ;;
+            Quicksand\[wght\]_*.woff2)
+                update_font_reference "Quicksand\[wght\]" "$basename"
+                ;;
+            Quicksand-Regular_*.woff2)
+                update_font_reference "Quicksand-Regular" "$basename"
+                ;;
+            Quicksand-SemiBold_*.woff2)
+                update_font_reference "Quicksand-SemiBold" "$basename"
+                ;;
+            Quicksand-Bold_*.woff2)
+                update_font_reference "Quicksand-Bold" "$basename"
+                ;;
+            OpenSans-Regular_*.woff2)
+                update_font_reference "OpenSans-Regular" "$basename"
+                ;;
+            OpenSans-RegularItalic_*.woff2)
+                update_font_reference "OpenSans-RegularItalic" "$basename"
+                ;;
+            OpenSans-Bold_*.woff2)
+                update_font_reference "OpenSans-Bold" "$basename"
+                ;;
+            OpenSans-BoldItalic_*.woff2)
+                update_font_reference "OpenSans-BoldItalic" "$basename"
+                ;;
+        esac
+    fi
+done
+
+echo "fonts.scss updated with new font files"
 
 # remove temp folder
 rm -r $TEMP_FOLDER
