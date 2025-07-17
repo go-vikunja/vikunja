@@ -271,12 +271,12 @@ describe('Task', () => {
 				.should('contain', `${projects[0].identifier}-${tasks[0].index}`)
 		})
 
-		it('Can edit the description', () => {
-			const tasks = TaskFactory.create(1, {
-				id: 1,
-				description: 'Lorem ipsum dolor sit amet.',
-			})
-			cy.visit(`/tasks/${tasks[0].id}`)
+                it('Can edit the description', () => {
+                        const tasks = TaskFactory.create(1, {
+                                id: 1,
+                                description: 'Lorem ipsum dolor sit amet.',
+                        })
+                        cy.visit(`/tasks/${tasks[0].id}`)
 
 			cy.get('.task-view .details.content.description .tiptap button.done-edit')
 				.click()
@@ -286,10 +286,37 @@ describe('Task', () => {
 				.contains('Save')
 				.click()
 
-			cy.get('.task-view .details.content.description h3 span.is-small.has-text-success')
-				.contains('Saved!')
-				.should('exist')
-		})
+                        cy.get('.task-view .details.content.description h3 span.is-small.has-text-success')
+                                .contains('Saved!')
+                                .should('exist')
+                })
+
+                it('autosaves the description when leaving the task view', () => {
+                        TaskFactory.create(1, {
+                                id: 1,
+                                project_id: projects[0].id,
+                                description: 'Old Description',
+                        })
+
+                        cy.intercept('POST', `${Cypress.env('API_URL')}/tasks/1`).as('updateTask')
+
+                        cy.visit('/tasks/1')
+
+                        cy.get('.task-view .details.content.description .tiptap button.done-edit')
+                                .click()
+                        cy.get('.task-view .details.content.description .tiptap__editor .tiptap.ProseMirror')
+                                .type('{selectall}New Description')
+
+                        cy.get('.task-view h6.subtitle a')
+                                .first()
+                                .click()
+
+                        cy.wait('@updateTask')
+
+                        cy.visit('/tasks/1')
+                        cy.get('.task-view .details.content.description')
+                                .should('contain.text', 'New Description')
+                })
 
 		it('Shows an empty editor when the description of a task is empty', () => {
 			const tasks = TaskFactory.create(1, {

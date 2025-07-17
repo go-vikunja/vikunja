@@ -38,7 +38,8 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, watchEffect, onBeforeUnmount} from 'vue'
+import {ref, computed, watchEffect, onMounted, onBeforeUnmount} from 'vue'
+import {onBeforeRouteLeave} from 'vue-router'
 
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import Editor from '@/components/input/AsyncEditor'
@@ -73,6 +74,10 @@ const loading = computed(() => taskStore.isLoading)
 
 const changeTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
 
+onMounted(() => {
+	window.addEventListener('beforeunload', save)
+})
+
 async function saveWithDelay() {
 	if (changeTimeout.value !== null) {
 		clearTimeout(changeTimeout.value)
@@ -87,6 +92,12 @@ onBeforeUnmount(() => {
 	if (changeTimeout.value !== null) {
 		clearTimeout(changeTimeout.value)
 	}
+	window.removeEventListener('beforeunload', save)
+})
+
+onBeforeRouteLeave(() => {
+	// Save the latest changes before leaving the route
+	void save()
 })
 
 async function save() {
