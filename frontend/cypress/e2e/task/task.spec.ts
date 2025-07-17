@@ -421,6 +421,7 @@ describe('Task', () => {
 			cy.get('.task-view .column.assignees .multiselect input')
 				.type(users[1].username)
 			cy.get('.task-view .column.assignees .multiselect .search-results')
+				.should('be.visible')
 				.children()
 				.first()
 				.click()
