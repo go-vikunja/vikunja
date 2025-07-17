@@ -51,28 +51,19 @@ type CachedAvatar struct {
 
 // GetAvatar returns an uploaded user avatar
 func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType string, err error) {
-
 	cacheKey := CacheKeyPrefix + strconv.Itoa(int(u.ID))
 
-	var cached map[int64]*CachedAvatar
-	exists, err := keyvalue.GetWithValue(cacheKey, &cached)
+	result, err := keyvalue.Remember(cacheKey, func() (any, error) {
+		return make(map[int64]*CachedAvatar), nil
+	})
 	if err != nil {
 		return nil, "", err
 	}
 
-	if !exists {
-		// Nothing ever cached for this user so we need to create the size map to avoid panics
-		cached = make(map[int64]*CachedAvatar)
-	} else {
-		a := cached
-		if a != nil && a[size] != nil {
-			log.Debugf("Serving uploaded avatar for user %d and size %d from cache.", u.ID, size)
-			return a[size].Content, a[size].MimeType, nil
-		}
-		// This means we have a map for the user, but nothing in it.
-		if a == nil {
-			cached = make(map[int64]*CachedAvatar)
-		}
+	cached := result.(map[int64]*CachedAvatar)
+	if cached[size] != nil {
+		log.Debugf("Serving uploaded avatar for user %d and size %d from cache.", u.ID, size)
+		return cached[size].Content, cached[size].MimeType, nil
 	}
 
 	log.Debugf("Uploaded avatar for user %d and size %d not cached, resizing and caching.", u.ID, size)

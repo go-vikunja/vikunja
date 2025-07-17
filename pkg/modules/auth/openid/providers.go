@@ -89,22 +89,23 @@ func GetAllProviders() (providers []*Provider, err error) {
 
 // GetProvider retrieves a provider from keyvalue
 func GetProvider(key string) (provider *Provider, err error) {
-	provider = &Provider{}
-	exists, err := keyvalue.GetWithValue("openid_provider_"+key, provider)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		_, err = GetAllProviders() // This will put all providers in cache
+	result, err := keyvalue.Remember("openid_provider_"+key, func() (any, error) {
+		_, err := GetAllProviders() // This will put all providers in cache
 		if err != nil {
 			return nil, err
 		}
 
+		provider := &Provider{}
 		_, err = keyvalue.GetWithValue("openid_provider_"+key, provider)
 		if err != nil {
 			return nil, err
 		}
+		return provider, nil
+	})
+	if err != nil {
+		return nil, err
 	}
+	provider = result.(*Provider)
 
 	err = provider.setOicdProvider()
 	return
