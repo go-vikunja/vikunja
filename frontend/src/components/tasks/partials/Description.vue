@@ -95,10 +95,7 @@ onBeforeUnmount(() => {
 	window.removeEventListener('beforeunload', save)
 })
 
-onBeforeRouteLeave(() => {
-	// Save the latest changes before leaving the route
-	void save()
-})
+onBeforeRouteLeave(() => save())
 
 async function save() {
 	if (changeTimeout.value !== null) {
