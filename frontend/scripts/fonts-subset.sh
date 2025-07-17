@@ -38,7 +38,9 @@ mkdir -p $TEMP_FOLDER
 # this is the same as the latin subset range that google uses on GoogleFonts
 # see for examle the unicode-range definition here:
 # https://fonts.googleapis.com/css2?family=Open+Sans
-UNICODE_LATIN_SUBSET="U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,\
+# Include the basic latin range plus latin-ext characters so glyphs with
+# diacritics (used for example in Polish) are present in the generated fonts.
+UNICODE_LATIN_SUBSET="U+0000-00FF,U+0100-017F,U+0131,U+0152-0153,U+02BB-02BC,\
 U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,\
 U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD"
 
