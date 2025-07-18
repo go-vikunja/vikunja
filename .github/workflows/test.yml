@@ -193,7 +193,7 @@ jobs:
         ports:
           - 5432:5432
       db-paradedb:
-        image: paradedb/paradedb:latest-pg17
+        image: paradedb/paradedb:latest-pg17@sha256:9627c2afa57f14bc9028dd948d03d392406f2c0ccb307282fbefb98fb3e5e779
         env:
           POSTGRES_PASSWORD: vikunjatest
           POSTGRES_DB: vikunjatest
