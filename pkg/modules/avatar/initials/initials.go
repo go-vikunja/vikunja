@@ -144,12 +144,20 @@ func getAvatarForUser(u *user.User) (fullSizeAvatar *image.RGBA64, err error) {
 		firstRune := []rune(strings.ToUpper(avatarText))[0]
 		bg := avatarBgColors[int(u.ID)%len(avatarBgColors)] // Random color based on the user id
 
-		return drawImage(firstRune, bg)
+		res, err := drawImage(firstRune, bg)
+		if err != nil {
+			return nil, err
+		}
+
+		return *res, nil
 	})
 	if err != nil {
 		return nil, err
 	}
-	return result.(*image.RGBA64), nil
+
+	aa := result.(image.RGBA64)
+
+	return &aa, nil
 }
 
 // CachedAvatar represents a cached avatar with its content and mime type
