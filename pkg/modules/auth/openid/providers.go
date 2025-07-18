@@ -95,7 +95,7 @@ func GetProvider(key string) (provider *Provider, err error) {
 			return nil, err
 		}
 
-		provider := &Provider{}
+		provider := Provider{}
 		_, err = keyvalue.GetWithValue("openid_provider_"+key, provider)
 		if err != nil {
 			return nil, err
@@ -105,7 +105,9 @@ func GetProvider(key string) (provider *Provider, err error) {
 	if err != nil {
 		return nil, err
 	}
-	provider = result.(*Provider)
+	pp := result.(Provider)
+
+	provider = &pp
 
 	err = provider.setOicdProvider()
 	return
