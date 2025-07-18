@@ -115,6 +115,13 @@ async function save() {
 		setTimeout(() => {
 			saved.value = false
 		}, 2000)
+	} catch (error) {
+		// If the task was deleted (404), silently skip saving
+		if (error?.response?.status === 404) {
+			return
+		}
+		// Re-throw other errors
+		throw error
 	} finally {
 		saving.value = false
 	}
