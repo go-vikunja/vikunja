@@ -238,6 +238,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task6 := &Task{
 		ID:           6,
 		Title:        "task #6 lower due date",
+		Description:  "This has something unique",
 		Identifier:   "test1-6",
 		Index:        6,
 		CreatedByID:  1,
