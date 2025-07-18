@@ -51,57 +51,50 @@ type CachedAvatar struct {
 
 // GetAvatar returns an uploaded user avatar
 func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType string, err error) {
-	cacheKey := CacheKeyPrefix + strconv.Itoa(int(u.ID))
+	cacheKey := CacheKeyPrefix + strconv.Itoa(int(u.ID)) + "_" + strconv.FormatInt(size, 10)
 
 	result, err := keyvalue.Remember(cacheKey, func() (any, error) {
-		return make(map[int64]*CachedAvatar), nil
+		log.Debugf("Uploaded avatar for user %d and size %d not cached, resizing and caching.", u.ID, size)
+
+		// If we get this far, the avatar is either not cached at all or not in this size
+		f := &files.File{ID: u.AvatarFileID}
+		if err := f.LoadFileByID(); err != nil {
+			return nil, err
+		}
+
+		if err := f.LoadFileMetaByID(); err != nil {
+			return nil, err
+		}
+
+		img, _, err := image.Decode(f.File)
+		if err != nil {
+			return nil, err
+		}
+		resizedImg := imaging.Resize(img, 0, int(size), imaging.Lanczos)
+		buf := &bytes.Buffer{}
+		if err := png.Encode(buf, resizedImg); err != nil {
+			return nil, err
+		}
+
+		avatar, err = io.ReadAll(buf)
+		if err != nil {
+			return nil, err
+		}
+
+		// Always use image/png for resized avatars since we're encoding with png
+		mimeType = "image/png"
+		return CachedAvatar{
+			Content:  avatar,
+			MimeType: mimeType,
+		}, nil
 	})
 	if err != nil {
 		return nil, "", err
 	}
 
-	cached := result.(map[int64]*CachedAvatar)
-	if cached[size] != nil {
-		log.Debugf("Serving uploaded avatar for user %d and size %d from cache.", u.ID, size)
-		return cached[size].Content, cached[size].MimeType, nil
-	}
+	cachedAvatar := result.(CachedAvatar)
 
-	log.Debugf("Uploaded avatar for user %d and size %d not cached, resizing and caching.", u.ID, size)
-
-	// If we get this far, the avatar is either not cached at all or not in this size
-	f := &files.File{ID: u.AvatarFileID}
-	if err := f.LoadFileByID(); err != nil {
-		return nil, "", err
-	}
-
-	if err := f.LoadFileMetaByID(); err != nil {
-		return nil, "", err
-	}
-
-	img, _, err := image.Decode(f.File)
-	if err != nil {
-		return nil, "", err
-	}
-	resizedImg := imaging.Resize(img, 0, int(size), imaging.Lanczos)
-	buf := &bytes.Buffer{}
-	if err := png.Encode(buf, resizedImg); err != nil {
-		return nil, "", err
-	}
-
-	avatar, err = io.ReadAll(buf)
-	if err != nil {
-		return nil, "", err
-	}
-
-	// Always use image/png for resized avatars since we're encoding with png
-	mimeType = "image/png"
-	cached[size] = &CachedAvatar{
-		Content:  avatar,
-		MimeType: mimeType,
-	}
-
-	err = keyvalue.Put(cacheKey, cached)
-	return avatar, mimeType, err
+	return cachedAvatar.Content, cachedAvatar.MimeType, nil
 }
 
 func StoreAvatarFile(s *xorm.Session, u *user.User, src io.Reader) (err error) {
