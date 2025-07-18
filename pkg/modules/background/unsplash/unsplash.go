@@ -126,12 +126,15 @@ func getUnsplashPhotoInfoByID(photoID string) (photo *Photo, err error) {
 		log.Debugf("Image information for unsplash photo %s not cached, requesting from unsplash...", photoID)
 		photo := &Photo{}
 		err := doGet("photos/"+photoID, photo)
-		return photo, err
+		return *photo, err
 	})
 	if err != nil {
 		return nil, err
 	}
-	return result.(*Photo), nil
+
+	p := result.(Photo)
+
+	return &p, nil
 }
 
 // Search is the implementation to search on unsplash
