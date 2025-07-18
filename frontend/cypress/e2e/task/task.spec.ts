@@ -291,6 +291,29 @@ describe('Task', () => {
 				.should('exist')
 		})
 
+		it('autosaves the description when leaving the task view', () => {
+			TaskFactory.create(1, {
+				id: 1,
+				project_id: projects[0].id,
+				description: 'Old Description',
+			})
+
+			cy.visit('/tasks/1')
+			
+			cy.get('.task-view .details.content.description .tiptap button.done-edit', {timeout: 30_000})
+				.click()
+			cy.get('.task-view .details.content.description .tiptap__editor .tiptap.ProseMirror')
+				.type('{selectall}New Description')
+			
+			cy.get('.task-view h6.subtitle a')
+				.first()
+				.click()
+			
+			cy.visit('/tasks/1')
+			cy.get('.task-view .details.content.description')
+				.should('contain.text', 'New Description')
+		})
+
 		it('Shows an empty editor when the description of a task is empty', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
