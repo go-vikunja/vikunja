@@ -317,7 +317,7 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 	}
 
 	async getBlobUrl(url : string, method : Method = 'GET', data = {}) {
-		const response = await this.http({
+		const response = await this.http.request({
 			url,
 			method,
 			responseType: 'blob',

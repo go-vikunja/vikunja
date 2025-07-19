@@ -28,7 +28,7 @@ export default class TotpService extends AbstractService<ITotp> {
 	}
 
 	async qrcode() {
-		const response = await this.http({
+		const response = await this.http.request({
 			url: `${this.urlPrefix}/qrcode`,
 			method: 'GET',
 			responseType: 'blob',
