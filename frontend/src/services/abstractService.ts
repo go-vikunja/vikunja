@@ -1,5 +1,4 @@
-import {AuthenticatedHTTPFactory} from '@/helpers/fetcher'
-import type {Method} from 'axios'
+import {AuthenticatedHTTPFactory, type Method} from '@/helpers/fetcher'
 
 import {objectToSnakeCase} from '@/helpers/case'
 import AbstractModel from '@/models/abstractModel'
@@ -74,7 +73,7 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 		// Set the interceptors to process every request
 		this.http.interceptors.request.use((config) => {
 			switch (config.method) {
-				case 'post':
+				case 'POST':
 					if (this.useUpdateInterceptor()) {
 						config.data = this.beforeUpdate(config.data)
 						if(this.autoTransformBeforePost()) {
@@ -82,7 +81,7 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 						}
 					}
 					break
-				case 'put':
+				case 'PUT':
 					if (this.useCreateInterceptor()) {
 						config.data = this.beforeCreate(config.data)
 						if(this.autoTransformBeforePut()) {
@@ -90,7 +89,7 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 						}
 					}
 					break
-				case 'delete':
+				case 'DELETE':
 					if (this.useDeleteInterceptor()) {
 						config.data = this.beforeDelete(config.data)
 						if(this.autoTransformBeforeDelete()) {
