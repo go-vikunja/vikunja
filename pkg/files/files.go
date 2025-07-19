@@ -143,7 +143,7 @@ func (f *File) Delete(s *xorm.Session) (err error) {
 		var perr *os.PathError
 		if errors.As(err, &perr) {
 			// Don't fail when removing the file failed
-			log.Errorf("Error deleting file %d: %w", f.ID, err)
+			log.Errorf("Error deleting file %d: %s", f.ID, err)
 			return s.Commit()
 		}
 

@@ -137,6 +137,7 @@ const (
 	LogEnabled       Key = `log.enabled`
 	LogStandard      Key = `log.standard`
 	LogLevel         Key = `log.level`
+	LogFormat        Key = `log.format`
 	LogDatabase      Key = `log.database`
 	LogDatabaseLevel Key = `log.databaselevel`
 	LogHTTP          Key = `log.http`
@@ -400,6 +401,7 @@ func InitDefaultConfig() {
 	LogEnabled.setDefault(true)
 	LogStandard.setDefault("stdout")
 	LogLevel.setDefault("INFO")
+	LogFormat.setDefault("text")
 	LogDatabase.setDefault("off")
 	LogDatabaseLevel.setDefault("WARNING")
 	LogHTTP.setDefault("stdout")
@@ -537,7 +539,7 @@ func InitConfig() {
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
 
-	log.ConfigureLogger(LogEnabled.GetBool(), LogStandard.GetString(), LogPath.GetString(), LogLevel.GetString())
+	log.ConfigureStandardLogger(LogEnabled.GetBool(), LogStandard.GetString(), LogPath.GetString(), LogLevel.GetString(), LogFormat.GetString())
 
 	// Load the config file
 	viper.AddConfigPath(ServiceRootpath.GetString())
@@ -562,7 +564,7 @@ func InitConfig() {
 			log.Warning(err.Error())
 			log.Warning("Using default config.")
 		} else {
-			log.ConfigureLogger(LogEnabled.GetBool(), LogStandard.GetString(), LogPath.GetString(), LogLevel.GetString())
+			log.ConfigureStandardLogger(LogEnabled.GetBool(), LogStandard.GetString(), LogPath.GetString(), LogLevel.GetString(), LogFormat.GetString())
 		}
 	} else {
 		log.Info("No config file found, using default or config from environment variables.")
