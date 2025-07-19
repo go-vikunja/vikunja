@@ -42,9 +42,9 @@ func CreateHandler(writer io.Writer, level slog.Level, format string) slog.Handl
 	handlerOpts := &slog.HandlerOptions{Level: level}
 	if strings.ToLower(format) == "structured" {
 		return slog.NewJSONHandler(writer, handlerOpts)
-	} else {
-		return slog.NewTextHandler(writer, handlerOpts)
 	}
+
+	return slog.NewTextHandler(writer, handlerOpts)
 }
 
 // NewHTTPLogger creates and initializes a new HTTP logger
@@ -57,7 +57,6 @@ func NewHTTPLogger(configLogEnabled bool, configLogHTTP string, configLogFormat 
 	handler := CreateHandler(writer, slog.LevelInfo, configLogFormat)
 	return slog.New(handler).With("component", "http")
 }
-
 
 // wrapLogger is used for libraries requiring a Debugf method.
 type wrapLogger struct{}
