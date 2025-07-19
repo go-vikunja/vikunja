@@ -51,7 +51,7 @@ func (m *messageHandleFailedError) Error() string {
 
 // InitEvents sets up everything needed to work with events
 func InitEvents() (err error) {
-	logger := log.NewWatermillLogger(config.LogEnabled.GetBool(), config.LogEvents.GetString(), config.LogEventsLevel.GetString())
+	logger := log.NewWatermillLogger(config.LogEnabled.GetBool(), config.LogEvents.GetString(), config.LogEventsLevel.GetString(), config.LogFormat.GetString())
 
 	router, err := message.NewRouter(
 		message.RouterConfig{},

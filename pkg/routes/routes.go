@@ -53,6 +53,7 @@ package routes
 
 import (
 	"errors"
+	"log/slog"
 	"net/url"
 	"strings"
 	"time"
@@ -85,6 +86,30 @@ import (
 	"github.com/ulule/limiter/v3"
 )
 
+// slogHTTPMiddleware creates a custom HTTP logging middleware using slog
+func slogHTTPMiddleware(logger *slog.Logger) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return echo.HandlerFunc(func(c echo.Context) error {
+			start := time.Now()
+
+			err := next(c)
+
+			req := c.Request()
+			res := c.Response()
+
+			logger.InfoContext(c.Request().Context(),
+				req.Method+" "+req.RequestURI,
+				"status", res.Status,
+				"remote_ip", c.RealIP(),
+				"latency", time.Since(start),
+				"user_agent", req.UserAgent(),
+			)
+
+			return err
+		})
+	}
+}
+
 // NewEcho registers a new Echo instance
 func NewEcho() *echo.Echo {
 	e := echo.New()
@@ -101,11 +126,9 @@ func NewEcho() *echo.Echo {
 	}
 
 	// Logger
-	if !config.LogEnabled.GetBool() || config.LogHTTP.GetString() != "off" {
-		e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
-			Format: log.WebFmt + "\n",
-			Output: log.GetLogWriter(config.LogHTTP.GetString(), "http"),
-		}))
+	if config.LogEnabled.GetBool() && config.LogHTTP.GetString() != "off" {
+		httpLogger := log.NewHTTPLogger(config.LogEnabled.GetBool(), config.LogHTTP.GetString(), config.LogFormat.GetString())
+		e.Use(slogHTTPMiddleware(httpLogger))
 	}
 
 	// panic recover
