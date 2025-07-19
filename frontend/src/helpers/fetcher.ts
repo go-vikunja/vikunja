@@ -102,17 +102,21 @@ class HttpClient {
 		const url = this.buildUrl(config)
 		const init: RequestInit = {method: config.method, headers: config.headers}
 
-		const body = this.prepareRequestBody(config.data, config.transformRequest)
+		// GET and HEAD requests cannot have a body
+		const method = config.method?.toUpperCase()
+		if (method !== 'GET' && method !== 'HEAD') {
+			const body = this.prepareRequestBody(config.data, config.transformRequest)
 
-		if (typeof body !== 'undefined') {
-			if (body instanceof FormData || body instanceof Blob) {
-				init.body = body as BodyInit
-			} else if (typeof body === 'string') {
-				init.body = body
-			} else {
-				init.body = JSON.stringify(body)
-				if (init.headers && !(init.headers as Record<string, string>)['Content-Type']) {
-					(init.headers as Record<string, string>)['Content-Type'] = 'application/json'
+			if (typeof body !== 'undefined') {
+				if (body instanceof FormData || body instanceof Blob) {
+					init.body = body as BodyInit
+				} else if (typeof body === 'string') {
+					init.body = body
+				} else {
+					init.body = JSON.stringify(body)
+					if (init.headers && !(init.headers as Record<string, string>)['Content-Type']) {
+						(init.headers as Record<string, string>)['Content-Type'] = 'application/json'
+					}
 				}
 			}
 		}
@@ -170,13 +174,19 @@ class HttpClient {
 				reject(err)
 			}
 
-			const body = this.prepareRequestBody(config.data, config.transformRequest)
-			if (body instanceof FormData || body instanceof Blob) {
-				xhr.send(body as BodyInit)
-			} else if (typeof body === 'string' || typeof body === 'undefined') {
-				xhr.send(body)
+			// GET and HEAD requests cannot have a body
+			const method = config.method?.toUpperCase()
+			if (method === 'GET' || method === 'HEAD') {
+				xhr.send()
 			} else {
-				xhr.send(JSON.stringify(body))
+				const body = this.prepareRequestBody(config.data, config.transformRequest)
+				if (body instanceof FormData || body instanceof Blob) {
+					xhr.send(body as BodyInit)
+				} else if (typeof body === 'string' || typeof body === 'undefined') {
+					xhr.send(body)
+				} else {
+					xhr.send(JSON.stringify(body))
+				}
 			}
 		})
 	}
