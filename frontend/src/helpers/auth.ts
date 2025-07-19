@@ -1,5 +1,4 @@
-import {AuthenticatedHTTPFactory} from '@/helpers/fetcher'
-import type {AxiosResponse} from 'axios'
+import {AuthenticatedHTTPFactory, type HttpResponse} from '@/helpers/fetcher'
 
 let savedToken: string | null = null
 
@@ -37,7 +36,7 @@ export const removeToken = () => {
 /**
  * Refreshes an auth token while ensuring it is updated everywhere.
  */
-export async function refreshToken(persist: boolean): Promise<AxiosResponse> {
+export async function refreshToken(persist: boolean): Promise<HttpResponse> {
 	const HTTP = AuthenticatedHTTPFactory()
 	try {
 		const response = await HTTP.post('user/token')

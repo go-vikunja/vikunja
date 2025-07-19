@@ -20,7 +20,7 @@ export default class BackgroundUnsplashService extends AbstractService<IBackgrou
 	}
 
 	async thumb(model) {
-		const response = await this.http({
+		const response = await this.http.request({
 			url: `/backgrounds/unsplash/images/${model.id}/thumb`,
 			method: 'GET',
 			responseType: 'blob',
