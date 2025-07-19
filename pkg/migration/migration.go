@@ -58,7 +58,7 @@ func initMigration(x *xorm.Engine) *xormigrate.Xormigrate {
 	})
 
 	m := xormigrate.New(x, migrations)
-	logger := log.NewXormLogger(config.LogEnabled.GetBool(), config.LogEvents.GetString(), config.LogEventsLevel.GetString())
+	logger := log.NewXormLogger(config.LogEnabled.GetBool(), config.LogEvents.GetString(), config.LogEventsLevel.GetString(), config.LogFormat.GetString())
 	m.SetLogger(logger)
 	m.InitSchema(initSchema)
 	return m

@@ -55,7 +55,6 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.28
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/olekukonko/tablewriter v1.0.8
-	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/pquerna/otp v1.5.0
 	github.com/prometheus/client_golang v1.22.0
 	github.com/redis/go-redis/v9 v9.11.0
@@ -115,8 +114,6 @@ require (
 	github.com/goccy/go-yaml v1.18.0 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
-	github.com/hashicorp/errwrap v1.1.0 // indirect
-	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/huandu/go-clone v1.7.3 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect

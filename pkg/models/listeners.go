@@ -704,7 +704,7 @@ func (l *UpdateTaskInSavedFilterViews) Handle(msg *message.Message) (err error) 
 				IsErrInvalidTaskFilterConcatinator(err) ||
 				IsErrInvalidTaskFilterComparator(err) ||
 				IsErrInvalidTaskField(err) {
-				log.Debugf("Invalid filter expression for view %d, expression: %s", view.ID, view.Filter)
+				log.Debugf("Invalid filter expression for view %d, expression: %v", view.ID, view.Filter)
 				continue
 			}
 
