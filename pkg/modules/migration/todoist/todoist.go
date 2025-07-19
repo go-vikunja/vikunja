@@ -610,7 +610,7 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 				// we can't show them individually and the api returns a 404.
 				buf := bytes.Buffer{}
 				_, _ = buf.ReadFrom(resp.Body)
-				log.Debugf("[Todoist Migration] Could not retrieve task details for task %d: %s", i.TaskID, buf.String())
+				log.Debugf("[Todoist Migration] Could not retrieve task details for task %s: %s", i.TaskID, buf.String())
 				continue
 			}
 

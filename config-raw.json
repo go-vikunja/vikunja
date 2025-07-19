@@ -396,6 +396,11 @@
                     "comment": "Change the log level. Possible values (case-insensitive) are CRITICAL, ERROR, WARNING, NOTICE, INFO, DEBUG."
                 },
                 {
+                    "key": "format",
+                    "default_value": "text",
+                    "comment": "Logging format. Can be either `text` or `structured` to output JSON."
+                },
+                {
                     "key": "database",
                     "default_value": "off",
                     "comment": "Whether or not to log database queries. Useful for debugging. Possible values are stdout, stderr, file or off to disable database logging."

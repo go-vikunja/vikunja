@@ -130,7 +130,7 @@ To define the thing which gets the appropriate auth object, you need to call a m
 
 #### Logging
 
-You can provide your own instance of `logger.Logger` (using [go-logging](https://github.com/op/go-logging)) to the handler.
+You can provide your own instance of `slog.Logger` from Go's standard library to the handler.
 It will use this instance to log errors which are not better specified or things like users trying to do something they're
 not allowed to do and so on.
 

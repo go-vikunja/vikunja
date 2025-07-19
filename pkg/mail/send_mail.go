@@ -98,7 +98,7 @@ func getMessage(opts *Opts) *mail.Msg {
 	for name, fs := range opts.EmbedFS {
 		err := m.EmbedFromEmbedFS(name, fs)
 		if err != nil {
-			log.Errorf("Error embedding %s via embed.FS into mail: %v", err)
+			log.Errorf("Error embedding %s via embed.FS into mail: %v", name, err)
 		}
 	}
 

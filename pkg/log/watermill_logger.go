@@ -18,44 +18,22 @@ package log
 
 import (
 	"fmt"
-	"strings"
-	"time"
+	"log/slog"
 
 	"github.com/ThreeDotsLabs/watermill"
-	"github.com/op/go-logging"
 )
 
-const watermillFmt = `%{color}%{time:` + time.RFC3339Nano + `}: %{level}` + "\t" + `▶ [EVENTS] %{id:03x}%{color:reset} %{message}`
-
-const watermillLogModule = `vikunja_events`
-
 type WatermillLogger struct {
-	logger *logging.Logger
+	logger *slog.Logger
 }
 
-// NewXormLogger creates and initializes a new watermill logger
-func NewWatermillLogger(configLogEnabled bool, configLogEvents string, configLogEventsLevel string) *WatermillLogger {
-	lvl := strings.ToUpper(configLogEventsLevel)
-	level, err := logging.LogLevel(lvl)
-	if err != nil {
-		Criticalf("Error setting events log level %s: %s", lvl, err.Error())
-	}
+// NewWatermillLogger creates and initializes a new watermill logger
+func NewWatermillLogger(configLogEnabled bool, configLogEvents string, configLogEventsLevel string, configLogFormat string) *WatermillLogger {
+	handler, _ := makeLogHandler(configLogEnabled, configLogEvents, configLogEventsLevel, configLogFormat)
 
 	watermillLogger := &WatermillLogger{
-		logger: logging.MustGetLogger(watermillLogModule),
+		logger: slog.New(handler).With("component", "events"),
 	}
-
-	var backend logging.Backend
-	backend = &NoopBackend{}
-	if configLogEnabled && configLogEvents != "off" {
-		logBackend := logging.NewLogBackend(GetLogWriter(configLogEvents, "events"), "", 0)
-		backend = logging.NewBackendFormatter(logBackend, logging.MustStringFormatter(watermillFmt+"\n"))
-	}
-
-	backendLeveled := logging.AddModuleLevel(backend)
-	backendLeveled.SetLevel(level, watermillLogModule)
-
-	watermillLogger.logger.SetBackend(backendLeveled)
 
 	return watermillLogger
 }
@@ -75,19 +53,19 @@ func concatFields(fields watermill.LogFields) string {
 }
 
 func (w *WatermillLogger) Error(msg string, err error, fields watermill.LogFields) {
-	w.logger.Errorf("%s: %s, %s", msg, err, concatFields(fields))
+	w.logger.Error(fmt.Sprintf("%s: %s, %s", msg, err, concatFields(fields)))
 }
 
 func (w *WatermillLogger) Info(msg string, fields watermill.LogFields) {
-	w.logger.Infof("%s, %s", msg, concatFields(fields))
+	w.logger.Info(fmt.Sprintf("%s, %s", msg, concatFields(fields)))
 }
 
 func (w *WatermillLogger) Debug(msg string, fields watermill.LogFields) {
-	w.logger.Debugf("%s, %s", msg, concatFields(fields))
+	w.logger.Debug(fmt.Sprintf("%s, %s", msg, concatFields(fields)))
 }
 
 func (w *WatermillLogger) Trace(msg string, fields watermill.LogFields) {
-	w.logger.Debugf("%s, %s", msg, concatFields(fields))
+	w.logger.Debug(fmt.Sprintf("%s, %s", msg, concatFields(fields)))
 }
 
 func (w *WatermillLogger) With(_ watermill.LogFields) watermill.LoggerAdapter {

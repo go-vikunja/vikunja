@@ -29,6 +29,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
@@ -64,6 +65,10 @@ func setupTestEnv() (e *echo.Echo, err error) {
 	config.InitDefaultConfig()
 	// We need to set the root path even if we're not using the config, otherwise fixtures are not loaded correctly
 	config.ServiceRootpath.Set(os.Getenv("VIKUNJA_SERVICE_ROOTPATH"))
+
+	// Initialize logger for tests
+	log.InitLogger()
+
 	// Some tests use the file engine, so we'll need to initialize that
 	files.InitTests()
 	user.InitTests()
