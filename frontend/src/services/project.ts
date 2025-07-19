@@ -44,7 +44,7 @@ export default class ProjectService extends AbstractService<IProject> {
 			return ''
 		}
 
-		const response = await this.http({
+		const response = await this.http.request({
 			url: `/projects/${project.id}/background`,
 			method: 'GET',
 			responseType: 'blob',
