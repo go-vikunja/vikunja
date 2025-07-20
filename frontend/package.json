@@ -130,7 +130,7 @@
     "caniuse-lite": "1.0.30001727",
     "csstype": "3.1.3",
     "cypress": "14.5.2",
-    "esbuild": "0.25.7",
+    "esbuild": "0.25.8",
     "eslint": "9.31.0",
     "eslint-plugin-vue": "10.3.0",
     "happy-dom": "18.0.1",
