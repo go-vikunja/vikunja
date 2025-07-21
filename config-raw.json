@@ -416,11 +416,6 @@
                     "comment": "Whether to log http requests or not. Possible values are stdout, stderr, file or off to disable http logging."
                 },
                 {
-                    "key": "echo",
-                    "default_value": "off",
-                    "comment": "Echo has its own logging which usually is unnecessary, which is why it is disabled by default. Possible values are stdout, stderr, file or off to disable standard logging."
-                },
-                {
                     "key": "events",
                     "default_value": "off",
                     "comment": "Whether or not to log events. Useful for debugging. Possible values are stdout, stderr, file or off to disable events logging."
