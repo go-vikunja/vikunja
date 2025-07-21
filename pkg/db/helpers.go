@@ -85,3 +85,18 @@ func MultiFieldSearchWithTableAlias(fields []string, search, tableAlias string) 
 	}
 	return builder.Or(conditions...)
 }
+
+// IsMySQLDuplicateEntryError checks if the given error is a MySQL duplicate entry error
+// for the specified unique key constraint.
+func IsMySQLDuplicateEntryError(err error, constraintName string) bool {
+	if err == nil {
+		return false
+	}
+	
+	errStr := strings.ToLower(err.Error())
+	
+	// Check for MySQL Error 1062 (duplicate entry) and the specific constraint
+	return strings.Contains(errStr, "error 1062") && 
+		   strings.Contains(errStr, "duplicate entry") && 
+		   strings.Contains(errStr, strings.ToLower(constraintName))
+}

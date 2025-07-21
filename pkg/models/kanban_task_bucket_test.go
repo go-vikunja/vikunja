@@ -157,3 +157,22 @@ func TestTaskBucket_Update(t *testing.T) {
 		}, false)
 	})
 }
+
+func TestTaskBucket_UpsertDuplicateError(t *testing.T) {
+	t.Run("test constraint violation detection", func(t *testing.T) {
+		// Test that our error detection identifies the correct error
+		tb1 := ErrTaskAlreadyExistsInBucket{
+			TaskID:        1,
+			ProjectViewID: 1,
+		}
+		
+		// Verify error properties
+		assert.True(t, IsErrTaskAlreadyExistsInBucket(tb1))
+		assert.Contains(t, tb1.Error(), "Task already exists in a bucket for this project view")
+		
+		httpErr := tb1.HTTPError()
+		assert.Equal(t, 400, httpErr.HTTPCode)
+		assert.Equal(t, ErrCodeTaskAlreadyExistsInBucket, httpErr.Code)
+		assert.Equal(t, "This task already exists in a bucket for this project view.", httpErr.Message)
+	})
+}

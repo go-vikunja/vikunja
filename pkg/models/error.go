@@ -1701,6 +1701,34 @@ func (err *ErrOnlyOneDoneBucketPerProject) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrTaskAlreadyExistsInBucket represents an error where a task already exists in a bucket for a project view
+type ErrTaskAlreadyExistsInBucket struct {
+	TaskID        int64
+	ProjectViewID int64
+}
+
+// IsErrTaskAlreadyExistsInBucket checks if an error is ErrTaskAlreadyExistsInBucket.
+func IsErrTaskAlreadyExistsInBucket(err error) bool {
+	_, ok := err.(ErrTaskAlreadyExistsInBucket)
+	return ok
+}
+
+func (err ErrTaskAlreadyExistsInBucket) Error() string {
+	return fmt.Sprintf("Task already exists in a bucket for this project view [TaskID: %d, ProjectViewID: %d]", err.TaskID, err.ProjectViewID)
+}
+
+// ErrCodeTaskAlreadyExistsInBucket holds the unique world-error code of this error
+const ErrCodeTaskAlreadyExistsInBucket = 10006
+
+// HTTPError holds the http error description
+func (err ErrTaskAlreadyExistsInBucket) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeTaskAlreadyExistsInBucket,
+		Message:  "This task already exists in a bucket for this project view.",
+	}
+}
+
 // =============
 // Saved Filters
 // =============
