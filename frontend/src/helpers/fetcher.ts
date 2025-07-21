@@ -55,7 +55,8 @@ class HttpClient {
 	private buildUrl(config: RequestConfig) {
 		let url = config.url
 		if (!url.startsWith('http')) {
-			url = (config.baseURL ?? this.baseURL ?? '') + url
+			const baseURL = config.baseURL ?? this.baseURL ?? ''
+			url = baseURL + (baseURL.endsWith('/') || url.startsWith('/') ? '' : '/') + url
 		}
 		if (config.params) {
 			const qs = new URLSearchParams(config.params as Record<string, string>).toString()
