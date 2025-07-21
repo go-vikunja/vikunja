@@ -82,7 +82,6 @@ import (
 	sentryecho "github.com/getsentry/sentry-go/echo"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	elog "github.com/labstack/gommon/log"
 	"github.com/ulule/limiter/v3"
 )
 
@@ -116,14 +115,7 @@ func NewEcho() *echo.Echo {
 
 	e.HideBanner = true
 
-	if l, ok := e.Logger.(*elog.Logger); ok {
-		if !config.LogEnabled.GetBool() || config.LogEcho.GetString() == "off" {
-			l.SetLevel(elog.OFF)
-		}
-		l.EnableColor()
-		l.SetHeader(log.ErrFmt)
-		l.SetOutput(log.GetLogWriter(config.LogEcho.GetString(), "echo"))
-	}
+	e.Logger = log.NewEchoLogger(config.LogEnabled.GetBool(), config.LogHTTP.GetString(), config.LogFormat.GetString())
 
 	// Logger
 	if config.LogEnabled.GetBool() && config.LogHTTP.GetString() != "off" {
