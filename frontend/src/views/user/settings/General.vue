@@ -166,7 +166,7 @@
 				<span>
 					{{ $t('user.settings.general.weekStart') }}
 				</span>
-				<div class="select ml-2">
+				<div class="select ms-2">
 					<select v-model.number="settings.weekStart">
 						<option value="0">{{ $t('user.settings.general.weekStartSunday') }}</option>
 						<option value="1">{{ $t('user.settings.general.weekStartMonday') }}</option>
@@ -179,7 +179,7 @@
 				<span>
 					{{ $t('user.settings.general.language') }}
 				</span>
-				<div class="select ml-2">
+				<div class="select ms-2">
 					<select v-model="settings.language">
 						<option
 							v-for="lang in availableLanguageOptions"
@@ -196,7 +196,7 @@
 				<span>
 					{{ $t('user.settings.quickAddMagic.title') }}
 				</span>
-				<div class="select ml-2">
+				<div class="select ms-2">
 					<select v-model="settings.frontendSettings.quickAddMagicMode">
 						<option
 							v-for="set in PrefixMode"
@@ -214,7 +214,7 @@
 				<span>
 					{{ $t('user.settings.appearance.title') }}
 				</span>
-				<div class="select ml-2">
+				<div class="select ms-2">
 					<select v-model="settings.frontendSettings.colorSchema">
 						<!-- TODO: use the Vikunja logo in color scheme as option buttons -->
 						<option
@@ -238,7 +238,7 @@
 					:placeholder="$t('user.settings.general.timezone')"
 					:search-results="timezoneSearchResults"
 					:show-empty="true"
-					class="ml-2 timezone-select"
+					class="ms-2 timezone-select"
 					label="label"
 					@search="searchTimezones"
 				/>

@@ -111,7 +111,7 @@
         .icon {
           height: 1rem;
           vertical-align: middle;
-          padding-right: 0.5rem;
+          padding-inline-end: 0.5rem;
         }
 
         &.router-link-exact-active .icon:not(.handle) {
@@ -134,7 +134,7 @@
     }
     
     menu {
-      border-left: 0;
+      border-inline-start: 0;
     }
   }
 }
