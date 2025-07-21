@@ -26,7 +26,7 @@
 		<ImportHint v-if="tasksLoaded" />
 		<div
 			v-if="projectHistory.length > 0"
-			class="is-max-width-desktop has-text-left mt-4"
+			class="is-max-width-desktop has-text-start mt-4"
 		>
 			<h3>{{ $t('home.lastViewed') }}</h3>
 			<ProjectCardGrid

@@ -49,6 +49,12 @@ export const DEFAULT_LANGUAGE: SupportedLocale= 'en'
 
 export type ISOLanguage = string
 
+const RTL_LANGUAGES = ['ar-SA', 'he-IL'] as const
+
+export function isRTLLanguage(locale: SupportedLocale): boolean {
+	return RTL_LANGUAGES.includes(locale as typeof RTL_LANGUAGES[number])
+}
+
 // we load all messages async
 export const i18n = createI18n({
 	fallbackLocale: DEFAULT_LANGUAGE,
@@ -102,6 +108,7 @@ export async function setLanguage(lang: SupportedLocale): Promise<SupportedLocal
 
 	i18n.global.locale.value = lang
 	document.documentElement.lang = lang
+	document.documentElement.dir = isRTLLanguage(lang) ? 'rtl' : 'ltr'
 	return lang
 }
 

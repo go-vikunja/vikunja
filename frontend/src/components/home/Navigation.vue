@@ -163,6 +163,12 @@ const savedFilterProjects = computed(() => projectStore.savedFilterProjects)
 	width: $navbar-width;
 	overflow-y: auto;
 
+	[dir="rtl"] & {
+		left: auto;
+		right: 0;
+		transform: translateX(100%);
+	}
+
 	@media screen and (max-width: $tablet) {
 		top: 0;
 		width: 70vw;
@@ -183,7 +189,7 @@ const savedFilterProjects = computed(() => projectStore.savedFilterProjects)
 
 	.list-menu-link,
 	li > a {
-		padding-left: 2rem;
+		padding-inline-start: 2rem;
 		display: inline-block;
 
 		.icon {

@@ -15,7 +15,7 @@
 	}
 
 	td.actions {
-		text-align: right;
+		text-align: end;
 	}
 }
 
@@ -26,5 +26,5 @@
 
 .content blockquote {
   background-color: var(--grey-200);
-  border-left: .25rem solid var(--grey-300);
+  border-inline-start: .25rem solid var(--grey-300);
 }

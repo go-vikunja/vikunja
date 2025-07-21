@@ -186,7 +186,7 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 				<th>{{ $t('user.settings.apiTokens.attributes.permissions') }}</th>
 				<th>{{ $t('user.settings.apiTokens.attributes.expiresAt') }}</th>
 				<th>{{ $t('misc.created') }}</th>
-				<th class="has-text-right">
+				<th class="has-text-end">
 					{{ $t('misc.actions') }}
 				</th>
 			</tr>
@@ -216,7 +216,7 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 					</p>
 				</td>
 				<td>{{ formatDisplayDate(tk.created) }}</td>
-				<td class="has-text-right">
+				<td class="has-text-end">
 					<XButton
 						variant="secondary"
 						@click="() => {tokenToDelete = tk; showDeleteModal = true}"
@@ -290,7 +290,7 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 					<flat-pickr
 						v-if="newTokenExpiry === 'custom'"
 						v-model="newTokenExpiryCustom"
-						class="ml-2"
+						class="ms-2"
 						:config="flatPickerConfig"
 					/>
 				</div>
@@ -310,7 +310,7 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 					>
 						<FancyCheckbox
 							v-model="newTokenPermissionsGroup[group]"
-							class="mr-2 is-capitalized has-text-weight-bold"
+							class="me-2 is-capitalized has-text-weight-bold"
 							@update:modelValue="checked => selectPermissionGroup(group, checked)"
 						>
 							{{ formatPermissionTitle(group) }}
@@ -323,7 +323,7 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 					>
 						<FancyCheckbox
 							v-model="newTokenPermissions[group][route]"
-							class="ml-4 mr-2 is-capitalized"
+							class="ms-4 me-2 is-capitalized"
 							@update:modelValue="checked => toggleGroupPermissionsFromChild(group, checked)"
 						>
 							{{ formatPermissionTitle(route) }}
