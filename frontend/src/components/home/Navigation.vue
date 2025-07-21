@@ -139,8 +139,8 @@ const savedFilterProjects = computed(() => projectStore.savedFilterProjects)
 .logo {
 	display: block;
 
-	padding-left: 1rem;
-	margin-right: 1rem;
+	padding-inline-start: 1rem;
+	margin-inline-end: 1rem;
 	margin-bottom: 1rem;
 
 	@media screen and (min-width: $tablet) {
