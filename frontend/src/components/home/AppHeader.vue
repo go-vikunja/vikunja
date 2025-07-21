@@ -74,7 +74,7 @@
 						>
 						<span class="username">{{ authStore.userDisplayName }}</span>
 						<span
-							class="ml-1 dropdown-icon icon is-small"
+							class="ms-1 dropdown-icon icon is-small"
 							:style="{
 								transform: open ? 'rotate(180deg)' : 'rotate(0)',
 							}"
@@ -167,7 +167,7 @@ $user-dropdown-width-mobile: 5rem;
 	background: var(--site-background);
 
 	@media screen and (min-width: $tablet) {
-		padding-left: 2rem;
+		padding-inline-start: 2rem;
 		align-items: stretch;
 	}
 
@@ -193,17 +193,17 @@ $user-dropdown-width-mobile: 5rem;
 		align-self: stretch;
 		display: flex;
 		align-items: center;
-		margin-right: .5rem;
+		margin-inline-end: .5rem;
 	}
 }
 
 .menu-button {
-	margin-right: auto;
+	margin-inline-end: auto;
 	align-self: stretch;
 	flex: 0 0 auto;
 
 	@media screen and (max-width: $tablet) {
-		margin-left: 1rem;
+		margin-inline-start: 1rem;
 	}
 }
 
@@ -252,7 +252,7 @@ $user-dropdown-width-mobile: 5rem;
 }
 
 .navbar-end {
-	margin-left: auto;
+	margin-inline-start: auto;
 	flex: 0 0 auto;
 	display: flex;
 	align-items: stretch;
@@ -263,18 +263,18 @@ $user-dropdown-width-mobile: 5rem;
 }
 
 .username-dropdown-trigger {
-	padding-left: .75rem;
+	padding-inline-start: .75rem;
 	display: inline-flex;
 	align-items: center;
 	font-size: .85rem;
 	font-weight: 700;
 
 	@media screen and (max-width: $tablet) {
-		padding-right: .5rem;
+		padding-inline-end: .5rem;
 	}
 
 	@media screen and (min-width: $tablet) {
-		padding-right: .75rem;
+		padding-inline-end: .75rem;
 	}
 }
 
@@ -294,6 +294,6 @@ $user-dropdown-width-mobile: 5rem;
 	border-radius: 100%;
 	vertical-align: middle;
 	height: 40px;
-	margin-right: .5rem;
+	margin-inline-end: .5rem;
 }
 </style>
