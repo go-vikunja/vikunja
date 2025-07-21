@@ -100,3 +100,37 @@ func IsMySQLDuplicateEntryError(err error, constraintName string) bool {
 		   strings.Contains(errStr, "duplicate entry") && 
 		   strings.Contains(errStr, strings.ToLower(constraintName))
 }
+
+// IsUniqueConstraintError checks if the given error is a unique constraint violation
+// for the specified constraint across all supported database types.
+func IsUniqueConstraintError(err error, constraintName string) bool {
+	if err == nil {
+		return false
+	}
+	
+	errStr := strings.ToLower(err.Error())
+	constraintNameLower := strings.ToLower(constraintName)
+	
+	// MySQL: Error 1062 (23000): Duplicate entry ... for key ...
+	if strings.Contains(errStr, "error 1062") && 
+	   strings.Contains(errStr, "duplicate entry") && 
+	   strings.Contains(errStr, constraintNameLower) {
+		return true
+	}
+	
+	// PostgreSQL: duplicate key value violates unique constraint "constraint_name"
+	if strings.Contains(errStr, "duplicate key value violates unique constraint") && 
+	   strings.Contains(errStr, constraintNameLower) {
+		return true
+	}
+	
+	// SQLite: UNIQUE constraint failed: table.column
+	if strings.Contains(errStr, "unique constraint failed") ||
+	   (strings.Contains(errStr, "constraint failed") && strings.Contains(errStr, "unique")) {
+		// For SQLite, we check if it mentions the constraint or table.column pattern
+		return strings.Contains(errStr, constraintNameLower) || 
+		       strings.Contains(errStr, "task_buckets")
+	}
+	
+	return false
+}

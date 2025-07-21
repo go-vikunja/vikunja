@@ -111,3 +111,84 @@ func TestIsMySQLDuplicateEntryError(t *testing.T) {
 		})
 	}
 }
+
+func TestIsUniqueConstraintError(t *testing.T) {
+	tests := []struct {
+		name           string
+		err            error
+		constraintName string
+		expected       bool
+	}{
+		{
+			name:           "nil error",
+			err:            nil,
+			constraintName: "UQE_task_buckets_task_project_view",
+			expected:       false,
+		},
+		// MySQL tests
+		{
+			name:           "MySQL duplicate entry error",
+			err:            errors.New("Error 1062 (23000): Duplicate entry '424-557' for key 'UQE_task_buckets_task_project_view'"),
+			constraintName: "UQE_task_buckets_task_project_view",
+			expected:       true,
+		},
+		{
+			name:           "MySQL duplicate entry error with different constraint",
+			err:            errors.New("Error 1062 (23000): Duplicate entry '424-557' for key 'some_other_constraint'"),
+			constraintName: "UQE_task_buckets_task_project_view",
+			expected:       false,
+		},
+		// PostgreSQL tests
+		{
+			name:           "PostgreSQL duplicate key error",
+			err:            errors.New(`duplicate key value violates unique constraint "UQE_task_buckets_task_project_view"`),
+			constraintName: "UQE_task_buckets_task_project_view",
+			expected:       true,
+		},
+		{
+			name:           "PostgreSQL duplicate key error with different constraint",
+			err:            errors.New(`duplicate key value violates unique constraint "some_other_constraint"`),
+			constraintName: "UQE_task_buckets_task_project_view",
+			expected:       false,
+		},
+		// SQLite tests
+		{
+			name:           "SQLite unique constraint failed",
+			err:            errors.New("UNIQUE constraint failed: task_buckets.task_id, task_buckets.project_view_id"),
+			constraintName: "UQE_task_buckets_task_project_view",
+			expected:       true,
+		},
+		{
+			name:           "SQLite constraint failed with unique",
+			err:            errors.New("constraint failed: UNIQUE constraint failed: task_buckets.task_id"),
+			constraintName: "UQE_task_buckets_task_project_view",
+			expected:       true, // Should match on task_buckets table pattern
+		},
+		// General tests
+		{
+			name:           "non-constraint error",
+			err:            errors.New("some other database error"),
+			constraintName: "UQE_task_buckets_task_project_view",
+			expected:       false,
+		},
+		{
+			name:           "case insensitive matching - MySQL",
+			err:            errors.New("ERROR 1062 (23000): DUPLICATE ENTRY '424-557' FOR KEY 'UQE_TASK_BUCKETS_TASK_PROJECT_VIEW'"),
+			constraintName: "uqe_task_buckets_task_project_view",
+			expected:       true,
+		},
+		{
+			name:           "case insensitive matching - PostgreSQL",
+			err:            errors.New(`DUPLICATE KEY VALUE VIOLATES UNIQUE CONSTRAINT "UQE_TASK_BUCKETS_TASK_PROJECT_VIEW"`),
+			constraintName: "uqe_task_buckets_task_project_view",
+			expected:       true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := IsUniqueConstraintError(tt.err, tt.constraintName)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}

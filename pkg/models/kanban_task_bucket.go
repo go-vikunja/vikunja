@@ -69,8 +69,8 @@ func (b *TaskBucket) upsert(s *xorm.Session) (err error) {
 	if count == 0 {
 		_, err = s.Insert(b)
 		if err != nil {
-			// Check if this is a MySQL duplicate entry error for the unique constraint
-			if db.IsMySQLDuplicateEntryError(err, "UQE_task_buckets_task_project_view") {
+			// Check if this is a unique constraint violation for the task_buckets table
+			if db.IsUniqueConstraintError(err, "UQE_task_buckets_task_project_view") {
 				return ErrTaskAlreadyExistsInBucket{
 					TaskID:        b.TaskID,
 					ProjectViewID: b.ProjectViewID,
