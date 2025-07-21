@@ -1,10 +1,10 @@
 .field.has-addons .button {
   height: 2.5rem;
-  margin-left: 0 !important;
+  margin-inline-start: 0 !important;
 }
 
 .field.has-addons .select select {
-  margin-right: 0;
+  margin-inline-end: 0;
 }
 
 .input,
@@ -67,7 +67,7 @@
 
 // Buttons icons
 .button .icon.is-small {
-  margin-right: 0.05rem !important;
+  margin-inline-end: 0.05rem !important;
 }
 
 // FIXME: used for
