@@ -160,19 +160,38 @@ func TestTaskBucket_Update(t *testing.T) {
 
 func TestTaskBucket_UpsertDuplicateError(t *testing.T) {
 	t.Run("test constraint violation detection", func(t *testing.T) {
-		// Test that our error detection identifies the correct error
-		tb1 := ErrTaskAlreadyExistsInBucket{
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Try to insert a task that's already in one of the fixture buckets
+		// From fixtures: task_id: 1, project_view_id: 4, bucket_id: 1
+		tb := &TaskBucket{
 			TaskID:        1,
-			ProjectViewID: 1,
+			ProjectViewID: 4,
+			BucketID:      2, // Different bucket, but same task_id + project_view_id combination
 		}
-		
-		// Verify error properties
-		assert.True(t, IsErrTaskAlreadyExistsInBucket(tb1))
-		assert.Contains(t, tb1.Error(), "Task already exists in a bucket for this project view")
-		
-		httpErr := tb1.HTTPError()
-		assert.Equal(t, 400, httpErr.HTTPCode)
-		assert.Equal(t, ErrCodeTaskAlreadyExistsInBucket, httpErr.Code)
-		assert.Equal(t, "This task already exists in a bucket for this project view.", httpErr.Message)
+
+		// Directly insert to trigger constraint violation, bypassing the upsert logic
+		_, err := s.Insert(tb)
+		require.Error(t, err)
+
+		// Check if this is a unique constraint violation for the task_buckets table
+		if db.IsUniqueConstraintError(err, "UQE_task_buckets_task_project_view") {
+			convertedErr := ErrTaskAlreadyExistsInBucket{
+				TaskID:        tb.TaskID,
+				ProjectViewID: tb.ProjectViewID,
+			}
+
+			// Verify the error properties
+			assert.True(t, IsErrTaskAlreadyExistsInBucket(convertedErr))
+
+			httpErr := convertedErr.HTTPError()
+			assert.Equal(t, 400, httpErr.HTTPCode)
+			assert.Equal(t, ErrCodeTaskAlreadyExistsInBucket, httpErr.Code)
+			assert.Equal(t, "This task already exists in a bucket for this project view.", httpErr.Message)
+		} else {
+			t.Fatalf("Expected unique constraint violation, got: %v", err)
+		}
 	})
 }
