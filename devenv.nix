@@ -25,7 +25,7 @@ in {
     python3Packages.brotli
   ] ++ lib.optionals (!pkgs.stdenv.isDarwin) [
     # Frontend tools (exclude on Darwin)
-    cypress
+    pkgs-unstable.cypress
   ];
   
   languages = {
