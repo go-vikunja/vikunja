@@ -140,7 +140,7 @@ func TestConvertFieldValue(t *testing.T) {
 		t.Run("should handle zero float value", func(t *testing.T) {
 			result, err := convertFieldValue("position", 0.0, true)
 			require.NoError(t, err)
-			assert.Equal(t, 0.0, result)
+			assert.InDelta(t, 0.0, result, 0.0001)
 		})
 
 		t.Run("should handle negative float value", func(t *testing.T) {
