@@ -80,6 +80,24 @@ func TestConvertFieldValue(t *testing.T) {
 			assert.JSONEq(t, jsonData, result.(string))
 		})
 
+		t.Run("should return nil for 'null' string", func(t *testing.T) {
+			result, err := convertFieldValue("bucket_configuration", "null", false)
+			require.NoError(t, err)
+			assert.Nil(t, result)
+		})
+
+		t.Run("should return nil for 'NULL' string", func(t *testing.T) {
+			result, err := convertFieldValue("bucket_configuration", "NULL", false)
+			require.NoError(t, err)
+			assert.Nil(t, result)
+		})
+
+		t.Run("should return nil for 'Null' string", func(t *testing.T) {
+			result, err := convertFieldValue("bucket_configuration", "Null", false)
+			require.NoError(t, err)
+			assert.Nil(t, result)
+		})
+
 		t.Run("should return error for non-string type", func(t *testing.T) {
 			_, err := convertFieldValue("permissions", 123, false)
 			require.Error(t, err)
@@ -103,6 +121,32 @@ func TestConvertFieldValue(t *testing.T) {
 			result, err := convertFieldValue("permissions", invalidBase64, false)
 			require.NoError(t, err)
 			assert.Equal(t, invalidBase64, result)
+		})
+	})
+
+	t.Run("Edge cases", func(t *testing.T) {
+		t.Run("should handle empty string for JSON field", func(t *testing.T) {
+			result, err := convertFieldValue("permissions", "", false)
+			require.NoError(t, err)
+			assert.Empty(t, result)
+		})
+
+		t.Run("should handle empty string for float field", func(t *testing.T) {
+			_, err := convertFieldValue("position", "", true)
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), "could not parse double value")
+		})
+
+		t.Run("should handle zero float value", func(t *testing.T) {
+			result, err := convertFieldValue("position", 0.0, true)
+			require.NoError(t, err)
+			assert.InDelta(t, 0.0, result, 0.0001)
+		})
+
+		t.Run("should handle negative float value", func(t *testing.T) {
+			result, err := convertFieldValue("position", -123.45, true)
+			require.NoError(t, err)
+			assert.InEpsilon(t, -123.45, result, 0.0001)
 		})
 	})
 }
