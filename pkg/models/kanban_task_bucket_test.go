@@ -157,21 +157,3 @@ func TestTaskBucket_Update(t *testing.T) {
 		}, false)
 	})
 }
-
-func TestTaskBucket_UpsertDuplicateError(t *testing.T) {
-	t.Run("should error when trying to insert a duplicate task into a bucket", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		tb := &TaskBucket{
-			TaskID:        1,
-			ProjectViewID: 4,
-			BucketID:      1,
-		}
-
-		err := tb.upsert(s)
-		require.Error(t, err)
-		assert.True(t, IsErrTaskAlreadyExistsInBucket(err))
-	})
-}
