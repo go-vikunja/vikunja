@@ -159,94 +159,19 @@ func TestTaskBucket_Update(t *testing.T) {
 }
 
 func TestTaskBucket_UpsertDuplicateError(t *testing.T) {
-	t.Run("test constraint violation in upsert method", func(t *testing.T) {
+	t.Run("should error when trying to insert a duplicate task into a bucket", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
 
-		// Create two concurrent sessions to simulate race condition in upsert
-		s1 := db.NewSession()
-		defer s1.Close()
-		s2 := db.NewSession()
-		defer s2.Close()
-
-		// Use task/project_view combination that doesn't exist in fixtures
-		taskID := int64(999)
-		projectViewID := int64(4) // Exists in fixtures
-
-		tb1 := &TaskBucket{
-			TaskID:        taskID,
-			ProjectViewID: projectViewID,
+		tb := &TaskBucket{
+			TaskID:        1,
+			ProjectViewID: 4,
 			BucketID:      1,
 		}
 
-		tb2 := &TaskBucket{
-			TaskID:        taskID,
-			ProjectViewID: projectViewID,
-			BucketID:      2, // Different bucket ID
-		}
-
-		// First upsert should succeed (INSERT path)
-		err := tb1.upsert(s1)
-		require.NoError(t, err)
-
-		// Second upsert with same task_id, project_view_id should succeed (UPDATE path)
-		err = tb2.upsert(s2)
-		require.NoError(t, err)
-
-		// Now test the error handling in upsert by directly triggering the constraint violation scenario
-		// Since we can't easily simulate the race condition, we'll test the constraint detection
-		// that the upsert method uses by calling it on a new task combination and then
-		// simulating the constraint violation that would occur in the race condition
-
-		taskID2 := int64(1000)
-		tb3 := &TaskBucket{
-			TaskID:        taskID2,
-			ProjectViewID: projectViewID,
-			BucketID:      1,
-		}
-
-		// First upsert succeeds
-		err = tb3.upsert(s1)
-		require.NoError(t, err)
-
-		// Create a duplicate record manually to test the constraint violation handling
-		// This simulates what would happen if a race condition occurred in upsert
-		tb4 := &TaskBucket{
-			TaskID:        taskID2,
-			ProjectViewID: projectViewID,
-			BucketID:      2,
-		}
-
-		// Direct insert should fail with constraint violation
-		_, err = s1.Insert(tb4)
+		err := tb.upsert(s)
 		require.Error(t, err)
-
-		// Verify this is the constraint violation that upsert method would handle
-		if db.IsUniqueConstraintError(err, "UQE_task_buckets_task_project_view") {
-			// This is exactly how the upsert method converts the error
-			convertedErr := ErrTaskAlreadyExistsInBucket{
-				TaskID:        tb4.TaskID,
-				ProjectViewID: tb4.ProjectViewID,
-			}
-
-			// Verify the converted error properties
-			assert.True(t, IsErrTaskAlreadyExistsInBucket(convertedErr))
-
-			httpErr := convertedErr.HTTPError()
-			assert.Equal(t, 400, httpErr.HTTPCode)
-			assert.Equal(t, ErrCodeTaskAlreadyExistsInBucket, httpErr.Code)
-			assert.Equal(t, "This task already exists in a bucket for this project view.", httpErr.Message)
-
-			// Additional verification: ensure the upsert method would handle this correctly
-			// by testing the same error conversion logic it uses
-			if db.IsUniqueConstraintError(err, "UQE_task_buckets_task_project_view") {
-				upsertErr := ErrTaskAlreadyExistsInBucket{
-					TaskID:        tb4.TaskID,
-					ProjectViewID: tb4.ProjectViewID,
-				}
-				assert.True(t, IsErrTaskAlreadyExistsInBucket(upsertErr))
-			}
-		} else {
-			t.Fatalf("Expected unique constraint violation, got: %v", err)
-		}
+		assert.True(t, IsErrTaskAlreadyExistsInBucket(err))
 	})
 }
