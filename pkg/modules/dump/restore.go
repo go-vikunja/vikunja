@@ -224,8 +224,8 @@ func convertFieldValue(fieldName string, value interface{}, isFloat bool) (inter
 	// Handle JSON fields (non-float)
 	switch v := value.(type) {
 	case string:
-		// Check if the string is "null" and return nil for SQL NULL
-		if v == "null" {
+		// Check if the string is "null" (case insensitive) and return nil for SQL NULL
+		if strings.ToLower(v) == "null" {
 			return nil, nil
 		}
 
