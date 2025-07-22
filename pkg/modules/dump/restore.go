@@ -228,7 +228,7 @@ func convertFieldValue(fieldName string, value interface{}, isFloat bool) (inter
 		if v == "null" {
 			return nil, nil
 		}
-		
+				
 		decoded, err := base64.StdEncoding.DecodeString(v)
 		if err != nil {
 			var corruptErr base64.CorruptInputError
