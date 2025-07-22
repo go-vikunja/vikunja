@@ -224,6 +224,11 @@ func convertFieldValue(fieldName string, value interface{}, isFloat bool) (inter
 	// Handle JSON fields (non-float)
 	switch v := value.(type) {
 	case string:
+		// Check if the string is "null" and return nil for SQL NULL
+		if v == "null" {
+			return nil, nil
+		}
+		
 		decoded, err := base64.StdEncoding.DecodeString(v)
 		if err != nil {
 			var corruptErr base64.CorruptInputError
