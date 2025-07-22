@@ -161,7 +161,7 @@ func TestTaskBucket_Update(t *testing.T) {
 func TestTaskBucket_UpsertDuplicateError(t *testing.T) {
 	t.Run("test constraint violation in upsert method", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		
+
 		// Create two concurrent sessions to simulate race condition in upsert
 		s1 := db.NewSession()
 		defer s1.Close()
