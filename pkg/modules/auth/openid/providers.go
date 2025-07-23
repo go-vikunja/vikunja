@@ -105,7 +105,16 @@ func GetProvider(key string) (provider *Provider, err error) {
 	if err != nil {
 		return nil, err
 	}
-	provider = result.(*Provider)
+
+	// Handle type assertion safely - the memory backend strips pointer info when storing
+	switch v := result.(type) {
+	case *Provider:
+		provider = v
+	case Provider:
+		provider = &v
+	default:
+		return nil, fmt.Errorf("invalid cached provider type: %T", result)
+	}
 
 	err = provider.setOicdProvider()
 	return
