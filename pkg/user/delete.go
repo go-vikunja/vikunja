@@ -106,8 +106,16 @@ func ConfirmDeletion(s *xorm.Session, user *User, token string) (err error) {
 	}
 
 	if tk == nil {
-		// TODO: return invalid token error
-		return
+		return ErrInvalidDeletionToken{
+			Token: token,
+		}
+	}
+
+	if tk.UserID != user.ID {
+		return ErrTokenUserMismatch{
+			TokenUserID: tk.UserID,
+			UserID:      user.ID,
+		}
 	}
 
 	err = removeTokens(s, user, TokenAccountDeletion)

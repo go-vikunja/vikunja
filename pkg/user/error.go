@@ -659,3 +659,58 @@ func (err ErrInvalidUserContext) HTTPError() web.HTTPError {
 		Message:  "Invalid user context. Please make sure the passed token is valid and try again.",
 	}
 }
+
+// ErrInvalidDeletionToken represents an error where the deletion token is invalid
+type ErrInvalidDeletionToken struct {
+	Token string
+}
+
+// IsErrInvalidDeletionToken checks if an error is a ErrInvalidDeletionToken.
+func IsErrInvalidDeletionToken(err error) bool {
+	_, ok := err.(ErrInvalidDeletionToken)
+	return ok
+}
+
+func (err ErrInvalidDeletionToken) Error() string {
+	return fmt.Sprintf("Invalid deletion token [Token: %s]", err.Token)
+}
+
+// ErrorCodeInvalidDeletionToken holds the unique world-error code of this error
+const ErrorCodeInvalidDeletionToken = 1028
+
+// HTTPError holds the http error description
+func (err ErrInvalidDeletionToken) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrorCodeInvalidDeletionToken,
+		Message:  "Invalid deletion token provided.",
+	}
+}
+
+// ErrTokenUserMismatch represents an error where the token doesn't belong to the user
+type ErrTokenUserMismatch struct {
+	TokenUserID int64
+	UserID      int64
+}
+
+// IsErrTokenUserMismatch checks if an error is a ErrTokenUserMismatch.
+func IsErrTokenUserMismatch(err error) bool {
+	_, ok := err.(ErrTokenUserMismatch)
+	return ok
+}
+
+func (err ErrTokenUserMismatch) Error() string {
+	return fmt.Sprintf("Token user mismatch [Token User ID: %d, User ID: %d]", err.TokenUserID, err.UserID)
+}
+
+// ErrorCodeTokenUserMismatch holds the unique world-error code of this error
+const ErrorCodeTokenUserMismatch = 1029
+
+// HTTPError holds the http error description
+func (err ErrTokenUserMismatch) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusForbidden,
+		Code:     ErrorCodeTokenUserMismatch,
+		Message:  "This deletion token does not belong to your account.",
+	}
+}

@@ -597,3 +597,62 @@ func TestUserPasswordReset(t *testing.T) {
 		assert.True(t, IsErrInvalidPasswordResetToken(err))
 	})
 }
+
+func TestConfirmDeletion(t *testing.T) {
+	t.Run("normal", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		user := &User{ID: 1}
+		err := ConfirmDeletion(s, user, "deletiontesttoken")
+		require.NoError(t, err)
+
+		updatedUser, err := GetUserByID(s, 1)
+		require.NoError(t, err)
+		assert.False(t, updatedUser.DeletionScheduledAt.IsZero())
+	})
+	t.Run("invalid token", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		user := &User{ID: 1}
+		err := ConfirmDeletion(s, user, "invalidtoken")
+		require.Error(t, err)
+		assert.True(t, IsErrInvalidDeletionToken(err))
+
+		invalidErr := err.(ErrInvalidDeletionToken)
+		assert.Equal(t, "invalidtoken", invalidErr.Token)
+	})
+	t.Run("token user mismatch", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		user := &User{ID: 3}
+		err := ConfirmDeletion(s, user, "deletiontesttoken")
+		require.Error(t, err)
+		assert.True(t, IsErrTokenUserMismatch(err))
+
+		mismatchErr := err.(ErrTokenUserMismatch)
+		assert.Equal(t, int64(1), mismatchErr.TokenUserID)
+		assert.Equal(t, int64(3), mismatchErr.UserID)
+	})
+	t.Run("removes token after successful confirmation", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		token := "deletiontesttoken"
+
+		user := &User{ID: 1}
+		err := ConfirmDeletion(s, user, token)
+		require.NoError(t, err)
+
+		db.AssertMissing(t, "user_tokens", map[string]interface{}{
+			"token": token,
+			"kind":  TokenAccountDeletion,
+		})
+	})
+}
