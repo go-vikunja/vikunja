@@ -31,7 +31,7 @@ jobs:
         with:
           name: mage_bin
           path: ./mage-static
-  
+
   api-build:
     runs-on: ubuntu-latest
     needs: mage
@@ -40,7 +40,7 @@ jobs:
       - name: Download Mage Binary
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
-          name: mage_bin 
+          name: mage_bin
       - name: Git describe
         id: ghd
         uses: proudust/gh-describe@v2
@@ -76,8 +76,8 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@4afd733a84b1f43292c63897423277bb7f4313a9 # v8
         with:
-          version: v2.1.0
-  
+          version: v2.2.
+
   api-check-translations:
     runs-on: ubuntu-latest
     needs: mage
@@ -90,8 +90,8 @@ jobs:
       - name: Check
         run: |
           chmod +x ./mage-static
-          ./mage-static check:translations    
-          
+          ./mage-static check:translations
+
   test-migration-smoke:
     runs-on: ubuntu-latest
     needs:
@@ -146,7 +146,7 @@ jobs:
             done
             echo "MySQL is ready!"
           fi
-          
+
           # Wait for PostgreSQL to be ready if using PostgreSQL
           if [ "$VIKUNJA_DATABASE_TYPE" = "postgres" ]; then
             echo "Waiting for PostgreSQL to be ready..."
@@ -161,7 +161,7 @@ jobs:
           # Run the migrations from the binary built in the step before
           chmod +x vikunja
           ./vikunja migrate
-  
+
   test-api:
     runs-on: ubuntu-latest
     needs:
@@ -237,13 +237,13 @@ jobs:
           VIKUNJA_AUTH_LDAP_BASEDN: dc=planetexpress,dc=com
           VIKUNJA_AUTH_LDAP_BINDDN: uid=gitea,ou=service,dc=planetexpress,dc=com
           VIKUNJA_AUTH_LDAP_BINDPASSWORD: password
-          VIKUNJA_AUTH_LDAP_USERFILTER: '(&(objectclass=inetorgperson)(uid=%s))'
+          VIKUNJA_AUTH_LDAP_USERFILTER: "(&(objectclass=inetorgperson)(uid=%s))"
         run: |
           mkdir -p frontend/dist
           touch frontend/dist/index.html
           chmod +x mage-static
           ./mage-static test:${{ matrix.test }}
-  
+
   frontend-lint:
     runs-on: ubuntu-latest
     steps:
@@ -332,7 +332,7 @@ jobs:
           CYPRESS_API_URL: http://127.0.0.1:3456/api/v1
           CYPRESS_TEST_SECRET: averyLongSecretToSe33dtheDB
           CYPRESS_DEFAULT_COMMAND_TIMEOUT: 60000
-          CYPRESS_CI_BUILD_ID: '${{ github.workflow }}-${{ github.run_id }}-${{ github.run_attempt }}' # see https://github.com/cypress-io/github-action/issues/431
+          CYPRESS_CI_BUILD_ID: "${{ github.workflow }}-${{ github.run_id }}-${{ github.run_attempt }}" # see https://github.com/cypress-io/github-action/issues/431
           VIKUNJA_SERVICE_TESTINGTOKEN: averyLongSecretToSe33dtheDB
           VIKUNJA_LOG_LEVEL: DEBUG
           VIKUNJA_CORS_ENABLE: 1
@@ -350,8 +350,8 @@ jobs:
             pnpm run preview
           wait-on: http://127.0.0.1:4173,http://127.0.0.1:3456/api/v1/info
           wait-on-timeout: 10
-  
-  # This step only exists so that we can make it required, because we can't make 
+
+  # This step only exists so that we can make it required, because we can't make
   # the actual test step required due to the matrix
   test-frontend-e2e-success:
     runs-on: ubuntu-latest
