@@ -945,6 +945,21 @@
                     "comment": "A duration when certificates should be renewed before they expire. Valid time units are `ns`, `us` (or `µs`), `ms`, `s`, `m`, `h`."
                 }
             ]
+        },
+        {
+            "key": "plugins",
+            "children": [
+                {
+                    "key": "enabled",
+                    "default_value": "false",
+                    "comment": "Whether to enable the plugin system."
+                },
+                {
+                    "key": "dir",
+                    "default_value": "<rootpath>plugins",
+                    "comment": "The directory where plugins are stored."
+                }
+            ]
         }
     ]
 }
