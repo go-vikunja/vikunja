@@ -207,6 +207,9 @@ const (
 	AutoTLSEnabled     Key = `autotls.enabled`
 	AutoTLSEmail       Key = `autotls.email`
 	AutoTLSRenewBefore Key = `autotls.renewbefore`
+
+	PluginsEnabled Key = `plugins.enabled`
+	PluginsDir     Key = `plugins.dir`
 )
 
 // GetString returns a string config value
@@ -446,6 +449,9 @@ func InitDefaultConfig() {
 	WebhooksTimeoutSeconds.setDefault(30)
 	// AutoTLS
 	AutoTLSRenewBefore.setDefault("720h") // 30days in hours
+	// Plugins
+	PluginsEnabled.setDefault(false)
+	PluginsDir.setDefault(filepath.Join(ServiceRootpath.GetString(), "plugins"))
 }
 
 func GetConfigValueFromFile(configKey string) string {
