@@ -113,6 +113,7 @@ func GetProvider(key string) (provider *Provider, err error) {
 	case Provider:
 		provider = &v
 	default:
+		log.Debugf("stored cached provider has an invalid type %T, value: %v", result, result)
 		return nil, fmt.Errorf("invalid cached provider type: %T", result)
 	}
 
