@@ -26,8 +26,8 @@ importers:
         specifier: 7.0.0
         version: 7.0.0
       '@fortawesome/vue-fontawesome':
-        specifier: 3.0.8
-        version: 3.0.8(@fortawesome/fontawesome-svg-core@7.0.0)(vue@3.5.18(typescript@5.8.3))
+        specifier: 3.1.1
+        version: 3.1.1(@fortawesome/fontawesome-svg-core@7.0.0)(vue@3.5.18(typescript@5.8.3))
       '@github/hotkey':
         specifier: 3.1.1
         version: 3.1.1(patch_hash=145ab3233cbcd3bc934b4961cd8710e2b15e4ae5dd20862a8d1d6621d7f9d4a8)
@@ -1573,10 +1573,10 @@ packages:
     resolution: {integrity: sha512-njSLAllkOddYDCXgTFboXn54Oe5FcvpkWq+FoetOHR64PbN0608kM02Lze0xtISGpXgP+i26VyXRQA0Irh3Obw==}
     engines: {node: '>=6'}
 
-  '@fortawesome/vue-fontawesome@3.0.8':
-    resolution: {integrity: sha512-yyHHAj4G8pQIDfaIsMvQpwKMboIZtcHTUvPqXjOHyldh1O1vZfH4W03VDPv5RvI9P6DLTzJQlmVgj9wCf7c2Fw==}
+  '@fortawesome/vue-fontawesome@3.1.1':
+    resolution: {integrity: sha512-U5azn4mcUVpjHe4JO0Wbe7Ih8e3VbN83EH7OTBtA5/QGw9qcPGffqcmwsLyZYgEkpVkYbq/6dX1Iyl5KUGMp6Q==}
     peerDependencies:
-      '@fortawesome/fontawesome-svg-core': ~1 || ~6
+      '@fortawesome/fontawesome-svg-core': ~1 || ~6 || ~7
       vue: '>= 3.0.0 < 4'
 
   '@ghostery/adblocker-content@2.5.0':
@@ -8279,7 +8279,7 @@ snapshots:
     dependencies:
       '@fortawesome/fontawesome-common-types': 7.0.0
 
-  '@fortawesome/vue-fontawesome@3.0.8(@fortawesome/fontawesome-svg-core@7.0.0)(vue@3.5.18(typescript@5.8.3))':
+  '@fortawesome/vue-fontawesome@3.1.1(@fortawesome/fontawesome-svg-core@7.0.0)(vue@3.5.18(typescript@5.8.3))':
     dependencies:
       '@fortawesome/fontawesome-svg-core': 7.0.0
       vue: 3.5.18(typescript@5.8.3)
