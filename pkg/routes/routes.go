@@ -73,6 +73,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/migration/todoist"
 	"code.vikunja.io/api/pkg/modules/migration/trello"
 	vikunja_file "code.vikunja.io/api/pkg/modules/migration/vikunja-file"
+	"code.vikunja.io/api/pkg/plugins"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/api/pkg/routes/caldav"
 	"code.vikunja.io/api/pkg/version"
@@ -644,6 +645,17 @@ func registerAPIRoutes(a *echo.Group) {
 		},
 	}
 	a.POST("/projects/:project/views/:view/buckets/:bucket/tasks", taskBucketProvider.UpdateWeb)
+
+	// Plugin routes
+	if config.PluginsEnabled.GetBool() {
+		// Authenticated plugin routes
+		authenticatedPluginGroup := a.Group("/plugins")
+
+		// Unauthenticated plugin routes (with basic IP rate limiting)
+		unauthenticatedPluginGroup := n.Group("/plugins")
+
+		plugins.RegisterPluginRoutes(authenticatedPluginGroup, unauthenticatedPluginGroup)
+	}
 }
 
 func registerMigrations(m *echo.Group) {
