@@ -17,6 +17,7 @@
 package plugins
 
 import (
+	"github.com/labstack/echo/v4"
 	"src.techknowlogick.com/xormigrate"
 )
 
@@ -32,4 +33,16 @@ type Plugin interface {
 type MigrationPlugin interface {
 	Plugin
 	Migrations() []*xormigrate.Migration
+}
+
+// AuthenticatedRouterPlugin lets a plugin register authenticated web handlers and routes.
+type AuthenticatedRouterPlugin interface {
+	Plugin
+	RegisterAuthenticatedRoutes(g *echo.Group)
+}
+
+// UnauthenticatedRouterPlugin lets a plugin register unauthenticated web handlers and routes.
+type UnauthenticatedRouterPlugin interface {
+	Plugin
+	RegisterUnauthenticatedRoutes(g *echo.Group)
 }

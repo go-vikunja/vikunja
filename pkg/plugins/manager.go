@@ -25,12 +25,16 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/migration"
+
+	"github.com/labstack/echo/v4"
 )
 
 // Manager handles loading and managing plugins.
 type Manager struct {
-	plugins        []Plugin
-	migrationPlugs []MigrationPlugin
+	plugins                    []Plugin
+	migrationPlugs             []MigrationPlugin
+	authenticatedRouterPlugs   []AuthenticatedRouterPlugin
+	unauthenticatedRouterPlugs []UnauthenticatedRouterPlugin
 }
 
 var manager = &Manager{}
@@ -67,6 +71,21 @@ func Shutdown() {
 		if err := p.Shutdown(); err != nil {
 			log.Errorf("Plugin %s shutdown failed: %s", p.Name(), err)
 		}
+	}
+}
+
+// RegisterPluginRoutes registers routes from all router plugins.
+func RegisterPluginRoutes(authenticated *echo.Group, unauthenticated *echo.Group) {
+	// Register authenticated routes
+	for _, p := range manager.authenticatedRouterPlugs {
+		p.RegisterAuthenticatedRoutes(authenticated)
+		log.Debugf("Registered authenticated routes for plugin %s", p.Name())
+	}
+
+	// Register unauthenticated routes
+	for _, p := range manager.unauthenticatedRouterPlugs {
+		p.RegisterUnauthenticatedRoutes(unauthenticated)
+		log.Debugf("Registered unauthenticated routes for plugin %s", p.Name())
 	}
 }
 
@@ -111,6 +130,14 @@ func (m *Manager) loadPlugin(path string) error {
 	if mp, ok := p.(MigrationPlugin); ok {
 		m.migrationPlugs = append(m.migrationPlugs, mp)
 		migration.AddPluginMigrations(mp.Migrations())
+	}
+
+	if arp, ok := p.(AuthenticatedRouterPlugin); ok {
+		m.authenticatedRouterPlugs = append(m.authenticatedRouterPlugs, arp)
+	}
+
+	if urp, ok := p.(UnauthenticatedRouterPlugin); ok {
+		m.unauthenticatedRouterPlugs = append(m.unauthenticatedRouterPlugs, urp)
 	}
 
 	log.Infof("Loaded plugin %s", p.Name())
