@@ -29,6 +29,7 @@ os-packages/
 mage_output_file.go
 mage-static
 .DS_Store
+/plugins/*
 
 # Devenv
 .devenv*
@@ -44,3 +45,4 @@ devenv.local.nix
 /.claude/
 PLAN.md
 /.crush/
+
