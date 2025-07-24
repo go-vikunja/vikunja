@@ -324,8 +324,8 @@ importers:
         specifier: 3.0.3
         version: 3.0.3(typescript@5.8.3)
       wait-on:
-        specifier: 8.0.3
-        version: 8.0.3(debug@4.4.1)
+        specifier: 8.0.4
+        version: 8.0.4
       workbox-cli:
         specifier: 7.3.0
         version: 7.3.0
@@ -6737,6 +6737,11 @@ packages:
 
   wait-on@8.0.3:
     resolution: {integrity: sha512-nQFqAFzZDeRxsu7S3C7LbuxslHhk+gnJZHyethuGKAn2IVleIbTB9I3vJSQiSR+DifUqmdzfPMoMPJfLqMF2vw==}
+    engines: {node: '>=12.0.0'}
+    hasBin: true
+
+  wait-on@8.0.4:
+    resolution: {integrity: sha512-8f9LugAGo4PSc0aLbpKVCVtzayd36sSCp4WLpVngkYq6PK87H79zt77/tlCU6eKCLqR46iFvcl0PU5f+DmtkwA==}
     engines: {node: '>=12.0.0'}
     hasBin: true
 
@@ -14027,6 +14032,16 @@ snapshots:
       xml-name-validator: 5.0.0
 
   wait-on@8.0.3(debug@4.4.1):
+    dependencies:
+      axios: 1.11.0(debug@4.4.1)
+      joi: 17.13.3
+      lodash: 4.17.21
+      minimist: 1.2.8
+      rxjs: 7.8.2
+    transitivePeerDependencies:
+      - debug
+
+  wait-on@8.0.4:
     dependencies:
       axios: 1.11.0(debug@4.4.1)
       joi: 17.13.3
