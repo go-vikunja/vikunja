@@ -29,6 +29,7 @@ os-packages/
 mage_output_file.go
 mage-static
 .DS_Store
+/plugins/*
 
 # Devenv
 .devenv*
@@ -43,4 +44,3 @@ devenv.local.nix
 # AI Tools
 /.claude/
 PLAN.md
-

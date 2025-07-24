@@ -33,6 +33,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	migrationHandler "code.vikunja.io/api/pkg/modules/migration/handler"
+	"code.vikunja.io/api/pkg/plugins"
 	"code.vikunja.io/api/pkg/red"
 	"code.vikunja.io/api/pkg/user"
 )
@@ -98,6 +99,9 @@ func FullInitWithoutAsync() {
 
 	// Load translations
 	i18n.Init()
+
+	// Initialize plugins
+	plugins.Initialize()
 }
 
 // FullInit initializes all kinds of things in the right order

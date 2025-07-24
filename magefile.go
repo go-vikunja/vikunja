@@ -73,6 +73,7 @@ var (
 		"dev:make-event":              Dev.MakeEvent,
 		"dev:make-listener":           Dev.MakeListener,
 		"dev:make-notification":       Dev.MakeNotification,
+		"plugins:build":               Plugins.Build,
 		"lint":                        Check.Golangci,
 		"lint:fix":                    Check.GolangciFix,
 		"generate:config-yaml":        Generate.ConfigYAML,
@@ -1392,4 +1393,27 @@ func generateConfigYAMLFromJSON(yamlPath string, commented bool) {
 // Create a yaml config file from the config-raw.json definition
 func (Generate) ConfigYAML(commented bool) {
 	generateConfigYAMLFromJSON(DefaultConfigYAMLSamplePath, commented)
+}
+
+type Plugins mg.Namespace
+
+// Build compiles a Go plugin at the provided path.
+func (Plugins) Build(pathToSourceFiles string) error {
+	mg.Deps(initVars)
+	if pathToSourceFiles == "" {
+		return fmt.Errorf("please provide a plugin path")
+	}
+	
+	// Convert relative path to absolute path
+	if !strings.HasPrefix(pathToSourceFiles, "/") {
+		absPath, err := filepath.Abs(pathToSourceFiles)
+		if err != nil {
+			return fmt.Errorf("failed to resolve absolute path: %v", err)
+		}
+		pathToSourceFiles = absPath
+	}
+	
+	out := filepath.Join(RootPath, "plugins", filepath.Base(pathToSourceFiles)+".so")
+	runAndStreamOutput("go", "build", "-buildmode=plugin", "-o", out, pathToSourceFiles)
+	return nil
 }

@@ -30,6 +30,7 @@ import (
 	"code.vikunja.io/api/pkg/cron"
 	"code.vikunja.io/api/pkg/initialize"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/plugins"
 	"code.vikunja.io/api/pkg/routes"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/version"
@@ -160,5 +161,6 @@ var webCmd = &cobra.Command{
 			e.Logger.Fatal(err)
 		}
 		cron.Stop()
+		plugins.Shutdown()
 	},
 }
