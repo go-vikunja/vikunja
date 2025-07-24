@@ -17,12 +17,17 @@
 package main
 
 import (
+	"net/http"
+
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/plugins"
+	"code.vikunja.io/api/pkg/user"
 
 	"github.com/ThreeDotsLabs/watermill/message"
+	"github.com/labstack/echo/v4"
 )
 
 type ExamplePlugin struct{}
@@ -37,6 +42,55 @@ func (p *ExamplePlugin) Init() error {
 	return nil
 }
 func (p *ExamplePlugin) Shutdown() error { return nil }
+
+// RegisterAuthenticatedRoutes implements the AuthenticatedRouterPlugin interface
+func (p *ExamplePlugin) RegisterAuthenticatedRoutes(g *echo.Group) {
+	g.GET("/user-info", handleUserInfo)
+
+	log.Infof("example plugin authenticated routes registered")
+}
+
+// RegisterUnauthenticatedRoutes implements the UnauthenticatedRouterPlugin interface
+func (p *ExamplePlugin) RegisterUnauthenticatedRoutes(g *echo.Group) {
+	g.GET("/status", handleStatus)
+
+	log.Infof("example plugin unauthenticated routes registered")
+}
+
+// Authenticated route handlers
+func handleUserInfo(c echo.Context) error {
+
+	s := db.NewSession()
+	defer s.Close()
+
+	// Get the authenticated user from context
+	u, err := user.GetCurrentUserFromDB(s, c)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, "User not found")
+	}
+
+	p := &ExamplePlugin{}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message": "Hello from example plugin!",
+		"user":    u,
+		"plugin":  p.Name(),
+		"version": p.Version(),
+	})
+}
+
+// Unauthenticated route handlers
+func handleStatus(c echo.Context) error {
+
+	p := &ExamplePlugin{}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"status":  "ok",
+		"plugin":  p.Name(),
+		"version": p.Version(),
+		"message": "Example plugin is running",
+	})
+}
 
 func NewPlugin() plugins.Plugin { return &ExamplePlugin{} }
 
