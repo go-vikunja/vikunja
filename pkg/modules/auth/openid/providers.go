@@ -55,10 +55,16 @@ func GetAllProviders() (providers []*Provider, err error) {
 			// JSON config is a map[string]interface{}, other providers are not. Under the hood they are all strings so
 			// it is safe to cast.
 			if !is {
-				pis := p.(map[interface{}]interface{})
-				pi = make(map[string]interface{}, len(pis))
-				for i, s := range pis {
-					pi[i.(string)] = s
+				// Check if it's a map[interface{}]interface{} before casting
+				if pis, isMap := p.(map[interface{}]interface{}); isMap {
+					pi = make(map[string]interface{}, len(pis))
+					for i, s := range pis {
+						pi[i.(string)] = s
+					}
+				} else {
+					// If it's not a map, log the error and skip this provider
+					log.Errorf("Skipping openid provider %s: expected map but got %T", key, p)
+					continue
 				}
 			}
 
