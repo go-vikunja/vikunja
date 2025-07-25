@@ -1,0 +1,22 @@
+issuer: http://dex:5556/dex
+storage:
+  type: memory
+web:
+  http: 0.0.0.0:5556
+  allowedOrigins:
+    - http://localhost:4173
+    - http://127.0.0.1:4173
+oauth2:
+  skipApprovalScreen: true
+staticClients:
+  - id: vikunja
+    redirectURIs:
+      - http://localhost:4173/auth/openid/dex
+    name: Vikunja Cypress Test
+    secret: secret
+enablePasswordDB: true
+staticPasswords:
+  - email: test@example.com
+    hash: "$2y$10$XFNacca2LZoHh4StWWYaU.x4wYaOT.nMhcCpxad9qA4G2W."
+    username: test
+    userID: "1234"

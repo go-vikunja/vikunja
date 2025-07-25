@@ -6,8 +6,20 @@ services:
     environment:
       VIKUNJA_LOG_LEVEL: DEBUG
       VIKUNJA_SERVICE_TESTINGTOKEN: averyLongSecretToSe33dtheDB
+      VIKUNJA_AUTH_OPENID_ENABLED: '1'
+      VIKUNJA_AUTH_OPENID_PROVIDERS_DEX_NAME: Dex
+      VIKUNJA_AUTH_OPENID_PROVIDERS_DEX_AUTHURL: http://dex:5556/dex
+      VIKUNJA_AUTH_OPENID_PROVIDERS_DEX_CLIENTID: vikunja
+      VIKUNJA_AUTH_OPENID_PROVIDERS_DEX_CLIENTSECRET: secret
     ports:
       - 3456:3456
+  dex:
+    image: ghcr.io/dexidp/dex:v2.39.0
+    command: serve /etc/dex/cfg/config.yaml
+    volumes:
+      - ./dex.yaml:/etc/dex/cfg/config.yaml:ro
+    ports:
+      - 5556:5556
   cypress:
     image: cypress/browsers:node18.12.0-chrome107@sha256:bfdbf9b64fdaad364f6e76e3c2a75fbce7c8018644d71e41ef43bba0ae8f4e38
     volumes:
