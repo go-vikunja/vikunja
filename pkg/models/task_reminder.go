@@ -160,7 +160,7 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64, cond builder.Cond) (
 	return
 }
 
-func getTasksWithRemindersDueAndTheirUsers(s *xorm.Session, now time.Time) (reminderNotifications []*ReminderDueNotification, err error) {
+func getTasksWithRemindersDueAndTheirUsers(s *xorm.Session, now time.Time, cond builder.Cond) (reminderNotifications []*ReminderDueNotification, err error) {
 	now = utils.GetTimeWithoutNanoSeconds(now)
 	reminderNotifications = []*ReminderDueNotification{}
 
@@ -194,7 +194,7 @@ func getTasksWithRemindersDueAndTheirUsers(s *xorm.Session, now time.Time) (remi
 		return
 	}
 
-	usersWithReminders, err := getTaskUsersForTasks(s, taskIDs, builder.Eq{"users.email_reminders_enabled": true})
+	usersWithReminders, err := getTaskUsersForTasks(s, taskIDs, cond)
 	if err != nil {
 		return
 	}
@@ -243,12 +243,15 @@ func getTasksWithRemindersDueAndTheirUsers(s *xorm.Session, now time.Time) (remi
 				tzs[u.User.Timezone] = tz
 			}
 
-			actualReminder := r.Reminder.In(tz)
-			if (actualReminder.After(now) && actualReminder.Before(now.Add(time.Minute))) || actualReminder.Equal(now) {
+			actualReminder := r.Reminder.In(tz).Truncate(time.Minute)
+			nowTruncated := now.Truncate(time.Minute)
+
+			if (actualReminder.After(nowTruncated) && actualReminder.Before(nowTruncated.Add(time.Minute))) || actualReminder.Equal(nowTruncated) {
 				reminderNotifications = append(reminderNotifications, &ReminderDueNotification{
-					User:    u.User,
-					Task:    u.Task,
-					Project: projects[u.Task.ProjectID],
+					User:         u.User,
+					Task:         u.Task,
+					Project:      projects[u.Task.ProjectID],
+					TaskReminder: r,
 				})
 			}
 		}
@@ -258,15 +261,37 @@ func getTasksWithRemindersDueAndTheirUsers(s *xorm.Session, now time.Time) (remi
 }
 
 // RegisterReminderCron registers a cron function which runs every minute to check if any reminders are due the
-// next minute to send emails.
+// next minute to send emails and webhook notifications.
 func RegisterReminderCron() {
-	if !config.ServiceEnableEmailReminders.GetBool() {
+	emailEnabled := config.ServiceEnableEmailReminders.GetBool() && config.MailerEnabled.GetBool()
+	webhookEnabled := config.ServiceEnableWebhookReminders.GetBool() && config.WebhooksEnabled.GetBool()
+
+	if !emailEnabled && !webhookEnabled {
+		if !config.ServiceEnableEmailReminders.GetBool() || !config.MailerEnabled.GetBool() {
+			log.Info("Mailer is disabled, not sending reminders per mail")
+		}
+
+		if !config.ServiceEnableWebhookReminders.GetBool() || !config.WebhooksEnabled.GetBool() {
+			log.Info("Webhook reminder is disabled, not sending reminders per webhook")
+		}
+
 		return
 	}
 
-	if !config.MailerEnabled.GetBool() {
+	if config.ServiceEnableEmailReminders.GetBool() && !config.MailerEnabled.GetBool() {
 		log.Info("Mailer is disabled, not sending reminders per mail")
-		return
+	}
+
+	if !config.ServiceEnableEmailReminders.GetBool() && config.MailerEnabled.GetBool() {
+		log.Info("Mailer reminder is enabled, but mailer is disabled, not sending reminders per mail")
+	}
+
+	if config.ServiceEnableWebhookReminders.GetBool() && !config.WebhooksEnabled.GetBool() {
+		log.Info("Webhook reminder is disabled, not sending reminders per webhook")
+	}
+
+	if !config.ServiceEnableWebhookReminders.GetBool() && config.WebhooksEnabled.GetBool() {
+		log.Info("Webhook reminder is enabled, but webhooks are disabled, not sending reminders per webhook")
 	}
 
 	tz := config.GetTimeZone()
@@ -278,26 +303,66 @@ func RegisterReminderCron() {
 		defer s.Close()
 
 		now := time.Now()
-		reminders, err := getTasksWithRemindersDueAndTheirUsers(s, now)
-		if err != nil {
-			log.Errorf("[Task Reminder Cron] Could not get tasks with reminders in the next minute: %s", err)
-			return
-		}
 
-		if len(reminders) == 0 {
-			return
-		}
-
-		log.Debugf("[Task Reminder Cron] Sending %d reminders", len(reminders))
-
-		for _, n := range reminders {
-			err = notifications.Notify(n.User, n)
+		// Handle email reminders
+		if emailEnabled {
+			reminders, err := getTasksWithRemindersDueAndTheirUsers(s, now, builder.Eq{"users.email_reminders_enabled": true})
 			if err != nil {
-				log.Errorf("[Task Reminder Cron] Could not notify user %d: %s", n.User.ID, err)
+				log.Errorf("[Task Reminder Cron] Could not get tasks with reminders in the next minute: %s", err)
 				return
 			}
 
-			log.Debugf("[Task Reminder Cron] Sent reminder email for task %d to user %d", n.Task.ID, n.User.ID)
+			if len(reminders) > 0 {
+				log.Debugf("[Task Reminder Cron] Sending %d email reminders", len(reminders))
+
+				for _, n := range reminders {
+					err = notifications.Notify(n.User, n)
+					if err != nil {
+						log.Errorf("[Task Reminder Cron] Could not notify user %d: %s", n.User.ID, err)
+						return
+					}
+
+					log.Debugf("[Task Reminder Cron] Sent reminder email for task %d to user %d", n.Task.ID, n.User.ID)
+				}
+			}
+		}
+
+		// Handle webhook reminders
+		if webhookEnabled {
+			reminders, err := getTasksWithRemindersDueAndTheirUsers(s, now, builder.And(
+				builder.Eq{"users.webhook_reminders_enabled": true},
+				builder.Neq{"users.webhook_reminder_url": ""},
+				builder.NotNull{"users.webhook_reminder_url"},
+			))
+			if err != nil {
+				log.Errorf("[Task Reminder Cron - Webhook] Could not get tasks with reminders in the next minute: %s", err)
+				return
+			}
+
+			if len(reminders) > 0 {
+				log.Debugf("[Task Reminder Cron - Webhook] Sending %d webhook reminders", len(reminders))
+
+				for _, n := range reminders {
+					// Double-check that this user has webhook reminders enabled and has a valid URL
+					if !n.User.WebhookRemindersEnabled || n.User.WebhookReminderURL == "" {
+						log.Debugf("[Task Reminder Cron - Webhook] Skipping webhook for user %d: webhook reminders disabled or no URL configured", n.User.ID)
+						continue
+					}
+
+					err = notifications.NotifyListener(n.User, n, &UserWebhookReminderListener{
+						EventName: "notification.reminder",
+						UserID:    n.User.ID,
+						TargetURL: n.User.WebhookReminderURL,
+					})
+
+					if err != nil {
+						log.Errorf("[Task Reminder Cron - Webhook] Could not notify user %d: %s", n.User.ID, err)
+						return
+					}
+
+					log.Debugf("[Task Reminder Cron - Webhook] Sent reminder webhook for task %d to user %d", n.Task.ID, n.User.ID)
+				}
+			}
 		}
 	})
 	if err != nil {

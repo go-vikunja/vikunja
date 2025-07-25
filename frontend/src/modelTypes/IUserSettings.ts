@@ -1,4 +1,3 @@
-
 import type {IAbstract} from './IAbstract'
 import type {IProject} from './IProject'
 import type {PrefixMode} from '@/modules/parseTaskText'
@@ -29,4 +28,6 @@ export interface IUserSettings extends IAbstract {
 	timezone: string
 	language: SupportedLocale | null
 	frontendSettings: IFrontendSettings
+	webhookRemindersEnabled: boolean
+	webhookReminderUrl: string
 }
