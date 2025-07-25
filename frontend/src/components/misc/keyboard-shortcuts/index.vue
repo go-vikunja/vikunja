@@ -4,6 +4,8 @@
 			class="has-background-white keyboard-shortcuts"
 			:shadow="false"
 			:title="$t('keyboardShortcuts.title')"
+			:show-close="true"
+			@close="close()"
 		>
 			<template
 				v-for="(s, i) in shortcuts"
