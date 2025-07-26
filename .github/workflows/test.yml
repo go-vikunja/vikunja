@@ -298,6 +298,16 @@ jobs:
     needs:
       - api-build
       - frontend-build
+    services:
+      dex:
+        image: ghcr.io/dexidp/dex:v2.39.0
+        options: >-
+          --health-cmd="wget -qO- http://localhost:5556/dex/.well-known/openid-configuration || exit 1"
+          --health-interval=10s --health-timeout=5s --health-retries=5
+        volumes:
+          - ./frontend/cypress/dex.yaml:/etc/dex/cfg/config.yaml:ro
+        ports:
+          - 5556:5556
     strategy:
       # when one test fails, DO NOT cancel the other
       # containers, because this will kill Cypress processes
@@ -339,6 +349,11 @@ jobs:
           VIKUNJA_DATABASE_PATH: memory
           VIKUNJA_DATABASE_TYPE: sqlite
           VIKUNJA_RATELIMIT_NOAUTHLIMIT: 1000
+          VIKUNJA_AUTH_OPENID_ENABLED: 1
+          VIKUNJA_AUTH_OPENID_PROVIDERS_DEX_NAME: Dex
+          VIKUNJA_AUTH_OPENID_PROVIDERS_DEX_AUTHURL: http://127.0.0.1:5556/dex
+          VIKUNJA_AUTH_OPENID_PROVIDERS_DEX_CLIENTID: vikunja
+          VIKUNJA_AUTH_OPENID_PROVIDERS_DEX_CLIENTSECRET: secret
         with:
           install: false
           working-directory: frontend
