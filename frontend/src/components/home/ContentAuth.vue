@@ -135,6 +135,11 @@ projectStore.loadAllProjects()
 	top: 0.5rem;
 	right: 0.5rem;
 	z-index: 31;
+	
+	[dir="rtl"] & {
+		right: auto;
+		left: 0.5rem;
+	}
 	width: 3rem;
 	height: 3rem;
 	display: flex;
@@ -170,9 +175,14 @@ projectStore.loadAllProjects()
 	padding: 1.5rem 0.5rem 0;
 	// TODO refactor: DRY `transition-timing-function` with `./Navigation.vue`.
 	transition: margin-left $transition-duration;
+	
+	[dir="rtl"] & {
+		transition: margin-right $transition-duration;
+	}
 
 	@media screen and (max-width: $tablet) {
 		margin-left: 0;
+		margin-right: 0;
 		min-height: calc(100vh - 4rem);
 	}
 
@@ -183,6 +193,13 @@ projectStore.loadAllProjects()
 	&.is-menu-enabled {
 		@media screen and (min-width: $tablet) {
 			margin-left: $navbar-width;
+		}
+		
+		[dir="rtl"] & {
+			@media screen and (min-width: $tablet) {
+				margin-left: 0;
+				margin-right: $navbar-width;
+			}
 		}
 	}
 
@@ -222,6 +239,11 @@ projectStore.loadAllProjects()
 	bottom: calc(1rem - 4px);
 	right: 1rem;
 	z-index: 4500; // The modal has a z-index of 4000
+	
+	[dir="rtl"] & {
+		right: auto;
+		left: 1rem;
+	}
 
 	color: var(--grey-500);
 	transition: color $transition;
