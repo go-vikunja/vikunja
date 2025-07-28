@@ -305,7 +305,7 @@ jobs:
           --health-cmd="wget -qO- http://localhost:5556/dex/.well-known/openid-configuration || exit 1"
           --health-interval=10s --health-timeout=5s --health-retries=5
         volumes:
-          - ./frontend/cypress/dex.yaml:/etc/dex/config.docker.yaml
+          - ${{ github.workspace }}/frontend/cypress/dex.yaml:/etc/dex/config.docker.yaml
         ports:
           - 5556:5556
     strategy:
