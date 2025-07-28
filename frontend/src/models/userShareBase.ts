@@ -5,7 +5,7 @@ import type {IUserShareBase} from '@/modelTypes/IUserShareBase'
 import type {IUser} from '@/modelTypes/IUser'
 
 export default class UserShareBaseModel extends AbstractModel<IUserShareBase> implements IUserShareBase {
-	userId: IUser['id'] = ''
+	username: IUser['username'] = ''
 	right: Right = RIGHTS.READ
 
 	created: Date = null

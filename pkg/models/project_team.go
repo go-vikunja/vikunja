@@ -20,10 +20,9 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
-
 	"code.vikunja.io/api/pkg/events"
-
 	"code.vikunja.io/api/pkg/web"
+
 	"xorm.io/xorm"
 )
 
