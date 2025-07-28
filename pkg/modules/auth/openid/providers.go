@@ -89,32 +89,21 @@ func GetAllProviders() (providers []*Provider, err error) {
 
 // GetProvider retrieves a provider from keyvalue
 func GetProvider(key string) (provider *Provider, err error) {
-	result, err := keyvalue.Remember("openid_provider_"+key, func() (any, error) {
-		_, err := GetAllProviders() // This will put all providers in cache
+	provider = &Provider{}
+	exists, err := keyvalue.GetWithValue("openid_provider_"+key, provider)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		_, err = GetAllProviders() // This will put all providers in cache
 		if err != nil {
 			return nil, err
 		}
 
-		provider := &Provider{}
 		_, err = keyvalue.GetWithValue("openid_provider_"+key, provider)
 		if err != nil {
 			return nil, err
 		}
-		return provider, nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	// Handle type assertion safely - the memory backend strips pointer info when storing
-	switch v := result.(type) {
-	case *Provider:
-		provider = v
-	case Provider:
-		provider = &v
-	default:
-		log.Debugf("stored cached provider has an invalid type %T, value: %v", result, result)
-		return nil, fmt.Errorf("invalid cached provider type: %T", result)
 	}
 
 	err = provider.setOicdProvider()
