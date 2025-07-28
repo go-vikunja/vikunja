@@ -4,7 +4,7 @@ context('OpenID Login', () => {
     cy.contains('Dex').click()
     cy.origin('http://dex:5556', () => {
       cy.get('input[name="login"]').type('test')
-      cy.get('input[name="password"]').type('password')
+      cy.get('input[name="password"]').type('12345678')
       cy.get('button[type="submit"]').click()
     })
     cy.url().should('include', '/')
