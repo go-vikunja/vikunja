@@ -8404,7 +8404,7 @@ const docTemplate = `{
                     "description": "A timestamp when this relation was last updated. You cannot change this value.",
                     "type": "string"
                 },
-                "user_id": {
+                "username": {
                     "description": "The username.",
                     "type": "string"
                 }
