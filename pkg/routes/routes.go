@@ -92,6 +92,9 @@ func slogHTTPMiddleware(logger *slog.Logger) echo.MiddlewareFunc {
 			start := time.Now()
 
 			err := next(c)
+			if err != nil {
+				c.Error(err)
+			}
 
 			req := c.Request()
 			res := c.Response()
