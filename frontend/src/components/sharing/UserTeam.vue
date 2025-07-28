@@ -282,7 +282,7 @@ async function load() {
 
 async function deleteSharable() {
 	if (props.shareType === 'user') {
-		stuffModel.userId = sharable.value.username
+		stuffModel.username = sharable.value.username
 	} else if (props.shareType === 'team') {
 		stuffModel.teamId = sharable.value.id
 	}
@@ -291,7 +291,7 @@ async function deleteSharable() {
 	showDeleteModal.value = false
 	for (const i in sharables.value) {
 		if (
-			(sharables.value[i].username === stuffModel.userId && props.shareType === 'user') ||
+			(sharables.value[i].username === stuffModel.username && props.shareType === 'user') ||
 			(sharables.value[i].id === stuffModel.teamId && props.shareType === 'team')
 		) {
 			sharables.value.splice(i, 1)
@@ -315,7 +315,7 @@ async function add(admin) {
 	}
 
 	if (props.shareType === 'user') {
-		stuffModel.userId = sharable.value.username
+		stuffModel.username = sharable.value.username
 	} else if (props.shareType === 'team') {
 		stuffModel.teamId = sharable.value.id
 	}
@@ -336,7 +336,7 @@ async function toggleType(sharable) {
 	stuffModel.right = selectedRight.value[sharable.id]
 
 	if (props.shareType === 'user') {
-		stuffModel.userId = sharable.username
+		stuffModel.username = sharable.username
 	} else if (props.shareType === 'team') {
 		stuffModel.teamId = sharable.id
 	}
@@ -345,7 +345,7 @@ async function toggleType(sharable) {
 	for (const i in sharables.value) {
 		if (
 			(sharables.value[i].username ===
-				stuffModel.userId &&
+				stuffModel.username &&
 				props.shareType === 'user') ||
 			(sharables.value[i].id === stuffModel.teamId &&
 				props.shareType === 'team')
