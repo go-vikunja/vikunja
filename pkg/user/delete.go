@@ -123,6 +123,10 @@ func ConfirmDeletion(s *xorm.Session, user *User, token string) (err error) {
 		return err
 	}
 
+	return ScheduleDeletion(s, user)
+}
+
+func ScheduleDeletion(s *xorm.Session, user *User) (err error) {
 	user.DeletionScheduledAt = time.Now().Add(3 * 24 * time.Hour)
 	_, err = s.Where("id = ?", user.ID).
 		Cols("deletion_scheduled_at").
