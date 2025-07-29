@@ -73,6 +73,14 @@ export function useWeekDayFromDate() {
 export function formatDisplayDate(date: Date | string | null) {
 	const {store} = useDateDisplay()
 	const current = store.value
+	
+	if (typeof date === 'string') {
+		date = createDateFromString(date)
+	}
+	
+	if (date === null || !dateIsValid(date)) {
+		return ''
+	}
 
 	switch (current) {
 		case DATE_DISPLAY.MM_DD_YYYY:
@@ -88,14 +96,10 @@ export function formatDisplayDate(date: Date | string | null) {
 		case DATE_DISPLAY.YYYY_SLASH_MM_DD:
 			return formatDate(date, 'YYYY/MM/DD')
 		case DATE_DISPLAY.DAY_MONTH_YEAR: {
-			if (!dateIsValid(date)) return ''
-			const d = createDateFromString(date)
-			return new Intl.DateTimeFormat(i18n.global.locale.value, {day: 'numeric', month: 'long', year: 'numeric'}).format(d)
+			return new Intl.DateTimeFormat(i18n.global.locale.value, {day: 'numeric', month: 'long', year: 'numeric'}).format(date)
 		}
 		case DATE_DISPLAY.WEEKDAY_DAY_MONTH_YEAR: {
-			if (!dateIsValid(date)) return ''
-			const d = createDateFromString(date)
-			return new Intl.DateTimeFormat(i18n.global.locale.value, {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'}).format(d)
+			return new Intl.DateTimeFormat(i18n.global.locale.value, {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'}).format(date)
 		}
 		case DATE_DISPLAY.RELATIVE:
 		default:
