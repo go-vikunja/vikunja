@@ -152,6 +152,7 @@ linters:
       - builtin$
       - examples$
       - pkg/routes/api/v1/docs.go
+      - plugins-dev/..*
 formatters:
   enable:
     - gofmt
