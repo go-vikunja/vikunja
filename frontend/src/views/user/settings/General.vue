@@ -285,6 +285,7 @@ import Multiselect from '@/components/input/Multiselect.vue'
 import {SUPPORTED_LOCALES} from '@/i18n'
 import {createRandomID} from '@/helpers/randomId'
 import {AuthenticatedHTTPFactory} from '@/helpers/fetcher'
+import {formatDisplayDateFormat} from '@/helpers/time/formatDate'
 
 import {useTitle} from '@/composables/useTitle'
 
@@ -317,8 +318,8 @@ const dateDisplaySettings = computed(() => ({
 	[DATE_DISPLAY.MM_SLASH_DD_YYYY]: t('user.settings.general.dateDisplayOptions.mm/dd/yyyy'),
 	[DATE_DISPLAY.DD_SLASH_MM_YYYY]: t('user.settings.general.dateDisplayOptions.dd/mm/yyyy'),
 	[DATE_DISPLAY.YYYY_SLASH_MM_DD]: t('user.settings.general.dateDisplayOptions.yyyy/mm/dd'),
-	[DATE_DISPLAY.DAY_MONTH_YEAR]: t('user.settings.general.dateDisplayOptions.dayMonthYear'),
-	[DATE_DISPLAY.WEEKDAY_DAY_MONTH_YEAR]: t('user.settings.general.dateDisplayOptions.weekdayDayMonthYear'),
+	[DATE_DISPLAY.DAY_MONTH_YEAR]: formatDisplayDateFormat(new Date(), DATE_DISPLAY.DAY_MONTH_YEAR),
+	[DATE_DISPLAY.WEEKDAY_DAY_MONTH_YEAR]: formatDisplayDateFormat(new Date(), DATE_DISPLAY.WEEKDAY_DAY_MONTH_YEAR),
 }))
 
 const authStore = useAuthStore()

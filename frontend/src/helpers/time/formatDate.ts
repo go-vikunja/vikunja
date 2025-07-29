@@ -5,7 +5,7 @@ import {i18n} from '@/i18n'
 import {createSharedComposable} from '@vueuse/core'
 import {computed, toValue, type MaybeRefOrGetter} from 'vue'
 import {useDateDisplay} from '@/composables/useDateDisplay'
-import {DATE_DISPLAY} from '@/constants/dateDisplay'
+import {DATE_DISPLAY, type DateDisplay} from '@/constants/dateDisplay'
 import {DAYJS_LOCALE_MAPPING} from '@/i18n/useDayjsLanguageSync.ts'
 
 export function dateIsValid(date: Date | null) {
@@ -73,7 +73,11 @@ export function useWeekDayFromDate() {
 export function formatDisplayDate(date: Date | string | null) {
 	const {store} = useDateDisplay()
 	const current = store.value
-	
+
+	return formatDisplayDateFormat(date, current)	
+}
+
+export function formatDisplayDateFormat(date: Date | string | null, format: DateDisplay) {
 	if (typeof date === 'string') {
 		date = createDateFromString(date)
 	}
@@ -82,7 +86,7 @@ export function formatDisplayDate(date: Date | string | null) {
 		return ''
 	}
 
-	switch (current) {
+	switch (format) {
 		case DATE_DISPLAY.MM_DD_YYYY:
 			return formatDate(date, 'MM-DD-YYYY')
 		case DATE_DISPLAY.DD_MM_YYYY:
