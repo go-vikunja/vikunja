@@ -9,7 +9,7 @@
 					{{
 						$t('user.deletion.scheduled', {
 							date: formatDisplayDate(deletionScheduledAt),
-							dateSince: formatDisplayDate(deletionScheduledAt),
+							dateSince: formatDateSince(deletionScheduledAt),
 						})
 					}}
 				</p>
@@ -116,7 +116,7 @@ import {useI18n} from 'vue-i18n'
 
 import AccountDeleteService from '@/services/accountDelete'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
-import {formatDisplayDate} from '@/helpers/time/formatDate'
+import {formatDateSince, formatDisplayDate} from '@/helpers/time/formatDate'
 import {useTitle} from '@/composables/useTitle'
 import {success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
