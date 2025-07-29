@@ -30,6 +30,7 @@ mage_output_file.go
 mage-static
 .DS_Store
 /plugins/*
+/plugins-dev/*
 
 # Devenv
 .devenv*
