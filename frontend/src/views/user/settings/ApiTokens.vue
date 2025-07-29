@@ -2,7 +2,7 @@
 import ApiTokenService from '@/services/apiToken'
 import {computed, onMounted, ref} from 'vue'
 import {useFlatpickrLanguage} from '@/helpers/useFlatpickrLanguage'
-import {formatDisplayDate} from '@/helpers/time/formatDate'
+import {formatDateSince, formatDisplayDate} from '@/helpers/time/formatDate'
 import XButton from '@/components/input/Button.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import ApiTokenModel from '@/models/apiTokenModel'
@@ -212,7 +212,7 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 						v-if="tk.expiresAt < new Date()"
 						class="has-text-danger"
 					>
-						{{ $t('user.settings.apiTokens.expired', {ago: formatDisplayDate(tk.expiresAt)}) }}
+						{{ $t('user.settings.apiTokens.expired', {ago: formatDateSince(tk.expiresAt)}) }}
 					</p>
 				</td>
 				<td>{{ formatDisplayDate(tk.created) }}</td>
