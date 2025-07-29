@@ -15,8 +15,8 @@ export interface IFrontendSettings {
 	allowIconChanges: boolean
 	filterIdUsedOnOverview: IProject['id'] | null
 	defaultView?: DefaultProjectViewKind
-        minimumPriority: Priority
-       dateDisplay: DateDisplay
+	minimumPriority: Priority
+	dateDisplay: DateDisplay
 }
 
 export interface IUserSettings extends IAbstract {
