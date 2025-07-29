@@ -22,6 +22,7 @@ import {useConfigStore} from '@/stores/config'
 import UserSettingsModel from '@/models/userSettings'
 import {MILLISECONDS_A_SECOND} from '@/constants/date'
 import {PrefixMode} from '@/modules/parseTaskText'
+import {DATE_DISPLAY} from '@/constants/dateDisplay'
 import type {IProvider} from '@/types/IProvider'
 
 function redirectToSpecifiedProvider() {
@@ -131,6 +132,7 @@ export const useAuthStore = defineStore('auth', () => {
 				quickAddMagicMode: PrefixMode.Default,
 				colorSchema: 'auto',
 				allowIconChanges: true,
+				dateDisplay: DATE_DISPLAY.RELATIVE,
 				...newSettings.frontendSettings,
 			},
 		})

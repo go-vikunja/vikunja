@@ -5,7 +5,7 @@
 			:disabled="disabled || undefined"
 			@click.stop="toggleDatePopup"
 		>
-			{{ date === null ? chooseDateLabel : formatDateShort(date) }}
+			{{ date === null ? chooseDateLabel : formatDisplayDate(date) }}
 		</SimpleButton>
 
 		<CustomTransition name="fade">
@@ -39,7 +39,7 @@ import CustomTransition from '@/components/misc/CustomTransition.vue'
 import DatepickerInline from '@/components/input/DatepickerInline.vue'
 import SimpleButton from '@/components/input/SimpleButton.vue'
 
-import {formatDateShort} from '@/helpers/time/formatDate'
+import {formatDisplayDate} from '@/helpers/time/formatDate'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {createDateFromString} from '@/helpers/time/createDateFromString'
 import {useI18n} from 'vue-i18n'

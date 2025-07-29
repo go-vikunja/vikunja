@@ -201,7 +201,7 @@ import Popup from '@/components/misc/Popup.vue'
 
 import TaskService from '@/services/task'
 
-import {formatDateSince, formatISO, formatDateLong} from '@/helpers/time/formatDate'
+import {formatDisplayDate, formatISO, formatDateLong} from '@/helpers/time/formatDate'
 import {success} from '@/message'
 
 import {useProjectStore} from '@/stores/projects'
@@ -286,7 +286,7 @@ function updateDueDate() {
 		return
 	}
 
-	dueDateFormatted.value = formatDateSince(task.value.dueDate)
+	dueDateFormatted.value = formatDisplayDate(task.value.dueDate)
 }
 
 const dueDateFormatted = ref('')

@@ -59,7 +59,7 @@
 							v-tooltip="formatDateLong(n.created)"
 							class="created"
 						>
-							{{ formatDateSince(n.created) }}
+							{{ formatDisplayDate(n.created) }}
 						</span>
 					</div>
 				</div>
@@ -95,7 +95,7 @@ import CustomTransition from '@/components/misc/CustomTransition.vue'
 import User from '@/components/misc/User.vue'
 import { NOTIFICATION_NAMES as names, type INotification} from '@/modelTypes/INotification'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
-import {formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
+import {formatDateLong, formatDisplayDate} from '@/helpers/time/formatDate'
 import {getDisplayName} from '@/models/user'
 import {useAuthStore} from '@/stores/auth'
 import XButton from '@/components/input/Button.vue'

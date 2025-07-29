@@ -11,8 +11,8 @@
 		>
 			{{
 				$t('user.deletion.scheduled', {
-					date: formatDateShort(deletionScheduledAt),
-					dateSince: formatDateSince(deletionScheduledAt),
+					date: formatDisplayDate(deletionScheduledAt),
+					dateSince: formatDisplayDate(deletionScheduledAt),
 				})
 			}}
 			<RouterLink :to="{name: 'user.settings.deletion'}">
@@ -55,7 +55,7 @@ import ImportHint from '@/components/home/ImportHint.vue'
 
 import {getHistory} from '@/modules/projectHistory'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
-import {formatDateShort, formatDateSince} from '@/helpers/time/formatDate'
+import {formatDisplayDate} from '@/helpers/time/formatDate'
 import {useDaytimeSalutation} from '@/composables/useDaytimeSalutation'
 
 import {useProjectStore} from '@/stores/projects'
