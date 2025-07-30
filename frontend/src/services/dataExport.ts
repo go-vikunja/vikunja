@@ -9,7 +9,7 @@ export default class DataExportService extends AbstractService {
 	}
 
 	status() {
-		return this.get('/user/export')
+		return this.getM('/user/export')
 	}
 	
 	async download(password: string) {
