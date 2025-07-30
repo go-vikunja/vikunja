@@ -34,17 +34,18 @@
 		<XButton
 			v-focus
 			:loading="dataExportService.loading"
-			class="mt-4"
+			class="mt-4 mr-4"
 			@click="download()"
 		>
 			{{ $t('misc.download') }}
 		</XButton>
-		<RouterLink
+		<XButton
 			class="button mt-4"
 			:to="{name:'user.settings.data-export'}"
+			variant="tertary"
 		>
 			{{ $t('user.export.requestNew') }}
-		</RouterLink>
+		</XButton>
 	</div>
 </template>
 
