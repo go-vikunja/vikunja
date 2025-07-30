@@ -36,6 +36,6 @@ func TestUserExportStatus(t *testing.T) {
 	t.Run("with export", func(t *testing.T) {
 		rec, err := newTestRequestWithUser(t, http.MethodGet, apiv1.GetUserExportStatus, &testuser1, "", nil, nil)
 		require.NoError(t, err)
-		assert.Contains(t, rec.Body.String(), `"id":1"`)
+		assert.Contains(t, rec.Body.String(), `"id":1`)
 	})
 }
