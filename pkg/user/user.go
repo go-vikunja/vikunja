@@ -92,7 +92,10 @@ type User struct {
 	Issuer  string `xorm:"text null" json:"-"`
 	Subject string `xorm:"text null" json:"-"`
 
-	EmailRemindersEnabled        bool   `xorm:"bool default true" json:"-"`
+	EmailRemindersEnabled   bool `xorm:"bool default true" json:"-"`
+	WebhookRemindersEnabled bool `xorm:"'webhook_reminders_enabled' bool default true" json:"-"`
+	// The URL where webhook reminder notifications will be sent for this user
+	WebhookReminderURL           string `xorm:"'webhook_reminder_url' text null" json:"-"`
 	DiscoverableByName           bool   `xorm:"bool default false index" json:"-"`
 	DiscoverableByEmail          bool   `xorm:"bool default false index" json:"-"`
 	OverdueTasksRemindersEnabled bool   `xorm:"bool default true index" json:"-"`
@@ -598,6 +601,8 @@ func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *U
 			"is_active",
 			"name",
 			"email_reminders_enabled",
+			"webhook_reminders_enabled",
+			"webhook_reminder_url",
 			"discoverable_by_name",
 			"discoverable_by_email",
 			"overdue_tasks_reminders_enabled",

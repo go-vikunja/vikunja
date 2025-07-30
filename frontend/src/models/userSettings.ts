@@ -10,6 +10,8 @@ import {DATE_DISPLAY} from '@/constants/dateDisplay'
 export default class UserSettingsModel extends AbstractModel<IUserSettings> implements IUserSettings {
 	name = ''
 	emailRemindersEnabled = true
+	webhookRemindersEnabled = false
+	webhookReminderUrl = ''
 	discoverableByName = false
 	discoverableByEmail = false
 	overdueTasksRemindersEnabled = true
