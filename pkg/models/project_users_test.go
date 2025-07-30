@@ -155,6 +155,7 @@ func TestProjectUser_ReadAll(t *testing.T) {
 			OverdueTasksRemindersTime:    "09:00",
 			Created:                      testCreatedTime,
 			Updated:                      testUpdatedTime,
+			ExportFileID:                 1,
 		},
 		Right: RightRead,
 	}
