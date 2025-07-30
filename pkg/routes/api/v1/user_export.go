@@ -18,6 +18,7 @@ package v1
 
 import (
 	"net/http"
+	"time"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
@@ -138,4 +139,46 @@ func DownloadUserDataExport(c echo.Context) error {
 
 	http.ServeContent(c.Response(), c.Request(), exportFile.Name, exportFile.Created, exportFile.File)
 	return nil
+}
+
+type UserExportStatus struct {
+	ID      int64     `json:"id"`
+	Size    uint64    `json:"size"`
+	Created time.Time `json:"created"`
+	Expires time.Time `json:"expires"`
+}
+
+// GetUserExportStatus returns metadata about the current user export if it exists
+// @Summary Get current user data export
+// @tags user
+// @Produce json
+// @Security JWTKeyAuth
+// @Success 200 {object} v1.UserExportStatus
+// @Router /user/export [get]
+func GetUserExportStatus(c echo.Context) error {
+	s := db.NewSession()
+	defer s.Close()
+
+	u, err := user.GetCurrentUserFromDB(s, c)
+	if err != nil {
+		return handler.HandleHTTPError(err)
+	}
+
+	if u.ExportFileID == 0 {
+		return c.JSON(http.StatusOK, struct{}{})
+	}
+
+	exportFile := &files.File{ID: u.ExportFileID}
+	if err := exportFile.LoadFileMetaByID(); err != nil {
+		return handler.HandleHTTPError(err)
+	}
+
+	status := UserExportStatus{
+		ID:      exportFile.ID,
+		Size:    exportFile.Size,
+		Created: exportFile.Created,
+		Expires: exportFile.Created.Add(7 * 24 * time.Hour),
+	}
+
+	return c.JSON(http.StatusOK, status)
 }

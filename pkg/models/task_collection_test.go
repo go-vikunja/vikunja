@@ -46,6 +46,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		OverdueTasksRemindersTime:    "09:00",
 		Created:                      testCreatedTime,
 		Updated:                      testUpdatedTime,
+		ExportFileID:                 1,
 	}
 	user2 := &user.User{
 		ID:                           2,

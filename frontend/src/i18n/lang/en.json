@@ -219,7 +219,9 @@
       "descriptionPasswordRequired": "Please enter your password to proceed:",
       "request": "Request a copy of my Vikunja Data",
       "success": "You've successfully requested your Vikunja Data! We will send you an email once it's ready to download.",
-      "downloadTitle": "Download your exported Vikunja data"
+      "downloadTitle": "Download your exported Vikunja data",
+      "ready": "Your export is ready to download. You can download it until {0}.",
+      "requestNew": "Request another export"
     }
   },
   "project": {
