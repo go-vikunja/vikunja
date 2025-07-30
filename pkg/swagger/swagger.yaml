@@ -1408,6 +1408,17 @@ definitions:
       token:
         type: string
     type: object
+  v1.UserExportStatus:
+    properties:
+      created:
+        type: string
+      expires:
+        type: string
+      id:
+        type: integer
+      size:
+        type: integer
+    type: object
   v1.UserPassword:
     properties:
       new_password:
@@ -6063,6 +6074,20 @@ paths:
           schema:
             $ref: '#/definitions/models.Message'
       summary: Request the deletion of the user
+      tags:
+      - user
+  /user/export:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.UserExportStatus'
+      security:
+      - JWTKeyAuth: []
+      summary: Get current user data export
       tags:
       - user
   /user/export/download:
