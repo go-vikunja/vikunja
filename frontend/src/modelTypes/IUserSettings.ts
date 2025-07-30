@@ -6,6 +6,7 @@ import type {BasicColorSchema} from '@vueuse/core'
 import type {SupportedLocale} from '@/i18n'
 import type {DefaultProjectViewKind} from '@/modelTypes/IProjectView'
 import type {Priority} from '@/constants/priorities'
+import type {DateDisplay} from '@/constants/dateDisplay'
 
 export interface IFrontendSettings {
 	playSoundWhenDone: boolean
@@ -15,6 +16,7 @@ export interface IFrontendSettings {
 	filterIdUsedOnOverview: IProject['id'] | null
 	defaultView?: DefaultProjectViewKind
 	minimumPriority: Priority
+	dateDisplay: DateDisplay
 }
 
 export interface IUserSettings extends IAbstract {

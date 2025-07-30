@@ -56,7 +56,7 @@
 								scope="global"
 							>
 								<span v-tooltip="formatDateLong(a.created)">
-									{{ formatDateSince(a.created) }}
+									{{ formatDisplayDate(a.created) }}
 								</span>
 								<User
 									:avatar-size="24"
@@ -185,7 +185,7 @@ import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {ITask} from '@/modelTypes/ITask'
 
 import {useAttachmentStore} from '@/stores/attachments'
-import {formatDateSince, formatDateLong} from '@/helpers/time/formatDate'
+import {formatDisplayDate, formatDateLong} from '@/helpers/time/formatDate'
 import {uploadFiles, generateAttachmentUrl} from '@/helpers/attachments'
 import {getHumanSize} from '@/helpers/getHumanSize'
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'

@@ -11,7 +11,7 @@
 		>
 			{{
 				$t('user.deletion.scheduled', {
-					date: formatDateShort(deletionScheduledAt),
+					date: formatDisplayDate(deletionScheduledAt),
 					dateSince: formatDateSince(deletionScheduledAt),
 				})
 			}}
@@ -55,7 +55,7 @@ import ImportHint from '@/components/home/ImportHint.vue'
 
 import {getHistory} from '@/modules/projectHistory'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
-import {formatDateShort, formatDateSince} from '@/helpers/time/formatDate'
+import {formatDateSince, formatDisplayDate} from '@/helpers/time/formatDate'
 import {useDaytimeSalutation} from '@/composables/useDaytimeSalutation'
 
 import {useProjectStore} from '@/stores/projects'

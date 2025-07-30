@@ -58,7 +58,7 @@
 				:class="{'overdue': task.dueDate <= new Date() && !task.done}"
 				class="is-italic"
 			>
-				– {{ $t('task.detail.due', {at: formatDateSince(task.dueDate)}) }}
+				– {{ $t('task.detail.due', {at: formatDisplayDate(task.dueDate)}) }}
 			</time>
 		</span>
 
@@ -108,7 +108,7 @@ import ChecklistSummary from '@/components/tasks/partials/ChecklistSummary.vue'
 
 import ColorBubble from '@/components/misc/ColorBubble.vue'
 
-import {formatDateSince, formatISO, formatDateLong} from '@/helpers/time/formatDate'
+import {formatDisplayDate, formatISO, formatDateLong} from '@/helpers/time/formatDate'
 
 import {useProjectStore} from '@/stores/projects'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'

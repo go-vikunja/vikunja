@@ -103,6 +103,16 @@
         "overdueTasksRemindersTime": "Overdue tasks reminder email time",
         "filterUsedOnOverview": "Saved filter used on the overview page",
         "minimumPriority": "Minimum visible task priority",
+        "dateDisplay": "Date display format",
+        "dateDisplayOptions": {
+          "relative": "Relative (e.g. 3 days ago)",
+          "mm-dd-yyyy": "MM-DD-YYYY",
+          "dd-mm-yyyy": "DD-MM-YYYY",
+          "yyyy-mm-dd": "YYYY-MM-DD",
+          "mm\/dd\/yyyy": "MM\/DD\/YYYY",
+          "dd\/mm\/yyyy": "DD\/MM\/YYYY",
+          "yyyy\/mm\/dd": "YYYY\/MM\/DD"
+        },
         "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
       },
       "totp": {

@@ -53,13 +53,13 @@
 							v-tooltip="formatDateLong(c.created)"
 							class="has-text-grey"
 						>
-							{{ formatDateSince(c.created) }}
+							{{ formatDisplayDate(c.created) }}
 						</span>
 						<span
 							v-if="+new Date(c.created) !== +new Date(c.updated)"
 							v-tooltip="formatDateLong(c.updated)"
 						>
-							· {{ $t('task.comment.edited', {date: formatDateSince(c.updated)}) }}
+							· {{ $t('task.comment.edited', {date: formatDisplayDate(c.updated)}) }}
 						</span>
 						<a
 							v-tooltip="$t('task.comment.permalink')"
@@ -221,7 +221,7 @@ import type {ITask} from '@/modelTypes/ITask'
 
 import {uploadFile} from '@/helpers/attachments'
 import {success} from '@/message'
-import {formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
+import {formatDateLong, formatDisplayDate} from '@/helpers/time/formatDate'
 import {fetchAvatarBlobUrl, getDisplayName} from '@/models/user'
 import type {IUser} from '@/modelTypes/IUser'
 import {useConfigStore} from '@/stores/config'

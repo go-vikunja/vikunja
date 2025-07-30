@@ -231,6 +231,22 @@
 		<div class="field">
 			<label class="is-flex is-align-items-center">
 				<span>
+					{{ $t('user.settings.general.dateDisplay') }}
+				</span>
+				<div class="select ml-2">
+					<select v-model="settings.frontendSettings.dateDisplay">
+						<option
+							v-for="(label, value) in dateDisplaySettings"
+							:key="value"
+							:value="value"
+						>{{ label }}</option>
+					</select>
+				</div>
+			</label>
+		</div>
+		<div class="field">
+			<label class="is-flex is-align-items-center">
+				<span>
 					{{ $t('user.settings.general.timezone') }}
 				</span>
 				<Multiselect
@@ -269,6 +285,7 @@ import Multiselect from '@/components/input/Multiselect.vue'
 import {SUPPORTED_LOCALES} from '@/i18n'
 import {createRandomID} from '@/helpers/randomId'
 import {AuthenticatedHTTPFactory} from '@/helpers/fetcher'
+import {formatDisplayDateFormat} from '@/helpers/time/formatDate'
 
 import {useTitle} from '@/composables/useTitle'
 
@@ -278,6 +295,7 @@ import type {IUserSettings} from '@/modelTypes/IUserSettings'
 import {isSavedFilter} from '@/services/savedFilter'
 import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/modelTypes/IProjectView'
 import {PRIORITIES} from '@/constants/priorities'
+import {DATE_DISPLAY} from '@/constants/dateDisplay'
 
 defineOptions({name: 'UserSettingsGeneral'})
 
@@ -290,6 +308,18 @@ const colorSchemeSettings = computed(() => ({
 	light: t('user.settings.appearance.colorScheme.light'),
 	auto: t('user.settings.appearance.colorScheme.system'),
 	dark: t('user.settings.appearance.colorScheme.dark'),
+}))
+
+const dateDisplaySettings = computed(() => ({
+	[DATE_DISPLAY.RELATIVE]: t('user.settings.general.dateDisplayOptions.relative'),
+	[DATE_DISPLAY.MM_DD_YYYY]: t('user.settings.general.dateDisplayOptions.mm-dd-yyyy'),
+	[DATE_DISPLAY.DD_MM_YYYY]: t('user.settings.general.dateDisplayOptions.dd-mm-yyyy'),
+	[DATE_DISPLAY.YYYY_MM_DD]: t('user.settings.general.dateDisplayOptions.yyyy-mm-dd'),
+	[DATE_DISPLAY.MM_SLASH_DD_YYYY]: t('user.settings.general.dateDisplayOptions.mm/dd/yyyy'),
+	[DATE_DISPLAY.DD_SLASH_MM_YYYY]: t('user.settings.general.dateDisplayOptions.dd/mm/yyyy'),
+	[DATE_DISPLAY.YYYY_SLASH_MM_DD]: t('user.settings.general.dateDisplayOptions.yyyy/mm/dd'),
+	[DATE_DISPLAY.DAY_MONTH_YEAR]: formatDisplayDateFormat(new Date(), DATE_DISPLAY.DAY_MONTH_YEAR),
+	[DATE_DISPLAY.WEEKDAY_DAY_MONTH_YEAR]: formatDisplayDateFormat(new Date(), DATE_DISPLAY.WEEKDAY_DAY_MONTH_YEAR),
 }))
 
 const authStore = useAuthStore()
@@ -306,6 +336,7 @@ const settings = ref<IUserSettings>({
 		minimumPriority: authStore.settings.frontendSettings.minimumPriority ?? PRIORITIES.MEDIUM,
 		// Add fallback for old settings that don't have the logo change setting set
 		allowIconChanges: authStore.settings.frontendSettings.allowIconChanges ?? true,
+		dateDisplay: authStore.settings.frontendSettings.dateDisplay ?? DATE_DISPLAY.RELATIVE,
 	},
 })
 

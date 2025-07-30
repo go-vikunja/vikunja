@@ -53,7 +53,7 @@
 					<Icon :icon="['far', 'calendar-alt']" />
 				</span>
 				<time :datetime="formatISO(task.dueDate)">
-					{{ formatDateSince(task.dueDate) }}
+					{{ formatDisplayDate(task.dueDate) }}
 				</time>
 			</span>
 			<h3>{{ task.title }}</h3>
@@ -121,7 +121,7 @@ import type {IProject} from '@/modelTypes/IProject'
 import {SUPPORTED_IMAGE_SUFFIX} from '@/models/attachment'
 import AttachmentService, {PREVIEW_SIZE} from '@/services/attachment'
 
-import {formatDateLong, formatDateSince, formatISO} from '@/helpers/time/formatDate'
+import {formatDateLong, formatDisplayDate, formatISO} from '@/helpers/time/formatDate'
 import {colorIsDark} from '@/helpers/color/colorIsDark'
 import {useTaskStore} from '@/stores/tasks'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
