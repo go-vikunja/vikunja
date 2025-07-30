@@ -7,6 +7,10 @@ export default class DataExportService extends AbstractService {
 	request(password: string) {
 		return this.post('/user/export/request', {password})
 	}
+
+	status() {
+		return this.get('/user/export')
+	}
 	
 	async download(password: string) {
 		const clear = this.setLoading()

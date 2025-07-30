@@ -39,6 +39,12 @@
 		>
 			{{ $t('misc.download') }}
 		</XButton>
+		<RouterLink
+			class="button mt-4"
+			:to="{name:'user.settings.data-export'}"
+		>
+			{{ $t('user.export.requestNew') }}
+		</RouterLink>
 	</div>
 </template>
 

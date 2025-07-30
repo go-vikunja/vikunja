@@ -322,6 +322,7 @@ func registerAPIRoutes(a *echo.Group) {
 	u.POST("/settings/general", apiv1.UpdateGeneralUserSettings)
 	u.POST("/export/request", apiv1.RequestUserDataExport)
 	u.POST("/export/download", apiv1.DownloadUserDataExport)
+	u.GET("/export", apiv1.GetUserExportStatus)
 	u.GET("/timezones", apiv1.GetAvailableTimezones)
 	u.PUT("/settings/token/caldav", apiv1.GenerateCaldavToken)
 	u.GET("/settings/token/caldav", apiv1.GetCaldavTokens)
