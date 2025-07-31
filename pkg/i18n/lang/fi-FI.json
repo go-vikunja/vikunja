@@ -79,12 +79,18 @@
 			"overdue": {
 				"subject": "Tehtävä \"%[1]s\" (%[2]s) on erääntynyt",
 				"multiple_subject": "Myöhässä olevat tehtäväsi",
-				"multiple_message": "Sinulla on seuraavat erääntyneet tehtävät:"
+				"multiple_message": "Sinulla on seuraavat erääntyneet tehtävät:",
+				"overdue_now": "nyt"
 			}
 		},
 		"team": {
 			"member_added": {
 				"message": "%[1]s on juuri lisännyt sinut %[2]s tiimiin Vikunjassa."
+			}
+		},
+		"data_export": {
+			"ready": {
+				"availability": "Lataus on saatavilla seuraavan 7 päivän ajan."
 			}
 		},
 		"migration": {
@@ -103,9 +109,16 @@
 				"open_vikunja": "Avaa Vikunja",
 				"open_project": "Avaa Projekti",
 				"open_team": "Avaa Tiimi",
+				"download": "Lataa",
+				"reset_password": "Palauta salasanasi",
+				"go_to_settings": "Siirry asetuksiin",
 				"confirm_email": "Vahvista sähköpostiosoitteesi",
+				"abort_deletion": "Keskeytä poisto",
 				"confirm_account_deletion": "Vahvista tilini poistaminen"
 			}
 		}
+	},
+	"time": {
+		"list_last_separator": "ja"
 	}
 }
