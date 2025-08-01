@@ -312,26 +312,31 @@
 	</Card>
 
 	<div class="sticky-save">
-		<XButton
-			v-cy="'saveGeneralSettings'"
-			:loading="loading"
-			class="is-fullwidth"
-			@click="updateSettings()"
-		>
-			{{ $t('misc.save') }}
-		</XButton>
+		<CustomTransition name="fade">
+			<XButton
+				v-if="isDirty"
+				v-cy="'saveGeneralSettings'"
+				:loading="loading"
+				class="is-fullwidth"
+				@click="updateSettings()"
+			>
+				{{ $t('misc.save') }}
+			</XButton>
+		</CustomTransition>
 	</div>
 </template>
 
 
 <script setup lang="ts">
-import {computed, watch, ref} from 'vue'
+import {computed, watch, ref, onBeforeMount} from 'vue'
 import {useI18n} from 'vue-i18n'
+import isEqual from 'fast-deep-equal'
 
 import {PrefixMode} from '@/modules/parseTaskText'
 
 import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
 import Multiselect from '@/components/input/Multiselect.vue'
+import CustomTransition from '@/components/misc/CustomTransition.vue'
 
 import {SUPPORTED_LOCALES} from '@/i18n'
 import {createRandomID} from '@/helpers/randomId'
@@ -390,6 +395,39 @@ const settings = ref<IUserSettings>({
 		dateDisplay: authStore.settings.frontendSettings.dateDisplay ?? DATE_DISPLAY.RELATIVE,
 	},
 })
+
+const initialSettings = ref<IUserSettings>()
+const isDirty = ref(false)
+
+onBeforeMount(() => {
+	initialSettings.value = JSON.parse(JSON.stringify(settings.value))
+	isDirty.value = false
+})
+
+watch(
+	() => settings.value,
+	() => {
+		isDirty.value = !isEqual(settings.value, initialSettings.value)
+	},
+	{deep: true},
+)
+
+watch(
+	() => authStore.settings,
+	(newVal) => {
+		if (Object.keys(settings.value).length !== 0) {
+			return
+		}
+		initialSettings.value = JSON.parse(JSON.stringify({
+			...newVal,
+			frontendSettings: {
+				...newVal.frontendSettings,
+			},
+		}))
+		isDirty.value = !isEqual(settings.value, initialSettings.value)
+	},
+	{deep: true},
+)
 
 function useAvailableTimezones(settingsRef: Ref<IUserSettings>) {
 	const availableTimezones = ref<{value: string, label: string}[]>([])
@@ -495,6 +533,8 @@ async function updateSettings() {
 	await authStore.saveUserSettings({
 		settings: {...settings.value},
 	})
+	initialSettings.value = JSON.parse(JSON.stringify(settings.value))
+	isDirty.value = false
 }
 </script>
 
