@@ -43,3 +43,4 @@ devenv.local.nix
 # AI Tools
 /.claude/
 PLAN.md
+/.crush/

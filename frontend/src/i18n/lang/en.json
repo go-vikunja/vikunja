@@ -115,6 +115,13 @@
         },
         "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
       },
+      "sections": {
+        "personalInformation": "Personal Information",
+        "taskAndNotifications": "Projects & Tasks",
+        "privacy": "Privacy",
+        "localization": "Localization",
+        "appearance": "Appearance & Behavior"
+      },
       "totp": {
         "title": "Two Factor Authentication",
         "enroll": "Enroll",
