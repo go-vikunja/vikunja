@@ -103,6 +103,16 @@
 				"overdueTasksRemindersTime": "Zeit der E-Mail-Zusammenfassung der überfälligen Aufgaben",
 				"filterUsedOnOverview": "Gespeicherter Filter, der für die Startseite verwendet wird",
 				"minimumPriority": "Minimal sichtbare Aufgaben-Priorität",
+				"dateDisplay": "Datumsformat",
+				"dateDisplayOptions": {
+					"relative": "Relativ (z.B. vor 3 Tagen)",
+					"mm-dd-yyyy": "MM-TT-JJJJ",
+					"dd-mm-yyyy": "TT-MM-JJJJ",
+					"yyyy-mm-dd": "JJJJ-MM-TT",
+					"mm/dd/yyyy": "MM/TT/JJJJ",
+					"dd/mm/yyyy": "TT/MM/JJJJ",
+					"yyyy/mm/dd": "JJJJ/MM/TT"
+				},
 				"externalUserNameChange": "Dein Name wird von deinem Login-Provider verwaltet ({provider}). Um ihn zu ändern, aktualisiere ihn bitte dort."
 			},
 			"totp": {
@@ -209,7 +219,9 @@
 			"descriptionPasswordRequired": "Bitte gib dein Passwort ein, um fortzufahren:",
 			"request": "Eine Kopie meiner Vikunja Daten anfordern",
 			"success": "Du hast deine Daten bei Vikunja erfolgreich angefordert! Wir schicken dir eine E-Mail, sobald sie zum Download bereitstehen.",
-			"downloadTitle": "Lade deine exportierten Vikunja-Daten herunter"
+			"downloadTitle": "Lade deine exportierten Vikunja-Daten herunter",
+			"ready": "Dein Export steht zum Download bereit. Du kannst ihn bis {0} herunterladen.",
+			"requestNew": "Einen weiteren Export anfordern"
 		}
 	},
 	"project": {

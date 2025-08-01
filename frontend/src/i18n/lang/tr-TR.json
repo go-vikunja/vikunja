@@ -103,6 +103,16 @@
 				"overdueTasksRemindersTime": "Gecikmiş görevler hatırlatma e-posta zamanı",
 				"filterUsedOnOverview": "Genel bakış sayfasında kullanılan kaydedilmiş filtre",
 				"minimumPriority": "Minimum görünür görev önceliği",
+				"dateDisplay": "Tarih gösterim biçimi",
+				"dateDisplayOptions": {
+					"relative": "Göreli (örn. 3 gün önce)",
+					"mm-dd-yyyy": "AA-GG-YYYY",
+					"dd-mm-yyyy": "GG-AA-YYYY",
+					"yyyy-mm-dd": "YYYY-AA-GG",
+					"mm/dd/yyyy": "AA/GG/YYYY",
+					"dd/mm/yyyy": "GG/AA/YYYY",
+					"yyyy/mm/dd": "YYYY/AA/GG"
+				},
 				"externalUserNameChange": "Adınız, oturum açma sağlayıcınız ({provider}) tarafından yönetiliyor. Değiştirmek için lütfen orada güncelleyin."
 			},
 			"totp": {
@@ -209,7 +219,9 @@
 			"descriptionPasswordRequired": "Devam etmek için lütfen şifrenizi girin:",
 			"request": "Vikunja Verilerimin bir kopyasını iste",
 			"success": "Vikunja Verilerinizi başarıyla talep ettiniz! İndirilmeye hazır olduğunda size bir e-posta göndereceğiz.",
-			"downloadTitle": "Dışa aktarılmış Vikunja verilerinizi indirin"
+			"downloadTitle": "Dışa aktarılmış Vikunja verilerinizi indirin",
+			"ready": "Dışa aktarımınız indirilmeye hazır. {0} tarihine kadar indirebilirsiniz.",
+			"requestNew": "Başka bir dışa aktarım talep et"
 		}
 	},
 	"project": {
