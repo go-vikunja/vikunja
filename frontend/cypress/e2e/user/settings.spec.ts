@@ -31,6 +31,7 @@ describe('User Settings', () => {
 		cy.get('.general-settings .control input.input')
 			.first()
 			.type('Lorem Ipsum')
+			.blur() // triggers the appearing of the save button
 		cy.get('[data-cy="saveGeneralSettings"]')
 			.contains('Save')
 			.click()
