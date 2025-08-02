@@ -132,11 +132,11 @@ async function saveViewPosition(e) {
 		<ViewEditForm
 			v-if="showCreateForm"
 			v-model="newView"
-			class="mb-4"
+			class="mbe-4"
 		/>
 		<div
 			v-if="isAdmin"
-			class="is-flex is-justify-content-end mb-4"
+			class="is-flex is-justify-content-end mbe-4"
 		>
 			<XButton
 				:loading="projectViewService.loading"
@@ -178,7 +178,7 @@ async function saveViewPosition(e) {
 							<td colspan="3">
 								<ViewEditForm
 									v-model="viewToEdit"
-									class="mb-4"
+									class="mbe-4"
 									:loading="projectViewService.loading"
 									:show-save-buttons="true"
 									@cancel="viewToEdit = null"
@@ -192,7 +192,7 @@ async function saveViewPosition(e) {
 							<td class="has-text-end actions">
 								<XButton
 									v-if="isAdmin"
-									class="is-danger me-2"
+									class="is-danger mie-2"
 									icon="trash-alt"
 									@click="() => {
 										viewIdToDelete = v.id

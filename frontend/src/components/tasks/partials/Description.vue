@@ -10,7 +10,7 @@
 					v-if="loading && saving"
 					class="is-small is-inline-flex"
 				>
-					<span class="loader is-inline-block me-2" />
+					<span class="loader is-inline-block mie-2" />
 					{{ $t('misc.saving') }}
 				</span>
 				<span

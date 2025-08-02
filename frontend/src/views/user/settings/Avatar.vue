@@ -9,7 +9,7 @@
 		</Message>
 
 		<template v-else>
-			<div class="control mb-4">
+			<div class="control mbe-4">
 				<label
 					v-for="(label, providerId) in AVATAR_PROVIDERS"
 					:key="providerId"
@@ -46,7 +46,7 @@
 						ref="cropper"
 						:src="avatarToCrop"
 						:stencil-props="{aspectRatio: 1}"
-						class="mb-4 cropper"
+						class="mbe-4 cropper"
 						@ready="() => loading = false"
 					/>
 					<XButton
@@ -61,7 +61,7 @@
 
 			<div
 				v-else
-				class="mt-2"
+				class="mbs-2"
 			>
 				<XButton
 					:loading="avatarService.loading || loading"

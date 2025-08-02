@@ -4,14 +4,14 @@
 			v-if="confirmedEmailSuccess"
 			variant="success"
 			text-align="center"
-			class="mb-4"
+			class="mbe-4"
 		>
 			{{ $t('user.auth.confirmEmailSuccess') }}
 		</Message>
 		<Message
 			v-if="errorMessage"
 			variant="danger"
-			class="mb-4"
+			class="mbe-4"
 		>
 			{{ errorMessage }}
 		</Message>
@@ -100,7 +100,7 @@
 					<input
 						v-model="rememberMe"
 						type="checkbox"
-						class="me-1"
+						class="mie-1"
 					>
 					{{ $t('user.auth.remember') }}
 				</label>
@@ -115,7 +115,7 @@
 			</XButton>
 			<p
 				v-if="registrationEnabled"
-				class="mt-2"
+				class="mbs-2"
 			>
 				{{ $t('user.auth.noAccountYet') }}
 				<RouterLink
@@ -130,13 +130,13 @@
 
 		<div
 			v-if="hasOpenIdProviders"
-			class="mt-4"
+			class="mbs-4"
 		>
 			<XButton
 				v-for="(p, k) in openidConnect.providers"
 				:key="k"
 				variant="secondary"
-				class="is-fullwidth mt-2"
+				class="is-fullwidth mbs-2"
 				@click="redirectToProvider(p)"
 			>
 				{{ $t('user.auth.loginWith', {provider: p.name}) }}

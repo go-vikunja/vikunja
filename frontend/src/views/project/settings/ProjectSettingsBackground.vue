@@ -8,7 +8,7 @@
 	>
 		<div
 			v-if="uploadBackgroundEnabled"
-			class="mb-4"
+			class="mbe-4"
 		>
 			<input
 				ref="backgroundUploadInput"
@@ -76,7 +76,7 @@
 			<XButton
 				v-if="backgroundSearchResult.length > 0"
 				:disabled="backgroundService.loading"
-				class="is-load-more-button mt-4"
+				class="is-load-more-button mbs-4"
 				:shadow="false"
 				variant="secondary"
 				@click="searchBackgrounds(currentPage + 1)"

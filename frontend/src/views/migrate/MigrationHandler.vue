@@ -10,7 +10,7 @@
 					<Message
 						v-if="migrationError"
 						variant="danger"
-						class="mb-4"
+						class="mbe-4"
 					>
 						{{ migrationError }}
 					</Message>
@@ -62,7 +62,7 @@
 			</div>
 		</template>
 		<div v-else-if="!migrationJustStarted && lastMigrationStartedAt && lastMigrationFinishedAt === null">
-			<Message class="mb-4">
+			<Message class="mbe-4">
 				{{ $t('migrate.migrationInProgress') }}
 			</Message>
 			<XButton :to="{name: 'home'}">
@@ -92,13 +92,13 @@
 		<div v-else>
 			<Message
 				v-if="migrator.isFileMigrator"
-				class="mb-4"
+				class="mbe-4"
 			>
 				{{ message }}
 			</Message>
 			<Message
 				v-else
-				class="mb-4"
+				class="mbe-4"
 			>
 				{{ $t('migrate.migrationStartedWillReciveEmail', {service: migrator.name}) }}
 			</Message>

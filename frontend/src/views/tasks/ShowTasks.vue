@@ -3,7 +3,7 @@
 		v-cy="'showTasks'"
 		class="is-max-width-desktop has-text-start"
 	>
-		<h3 class="mb-2 title">
+		<h3 class="mbe-2 title">
 			{{ pageTitle }}
 		</h3>
 		<p
@@ -15,7 +15,7 @@
 					<XButton
 						variant="primary"
 						:shadow="false"
-						class="mb-2"
+						class="mbe-2"
 						@click.prevent.stop="toggle()"
 					>
 						{{ $t('task.show.select') }}
@@ -24,7 +24,7 @@
 			</DatepickerWithRange>
 			<FancyCheckbox
 				:model-value="showNulls"
-				class="me-2"
+				class="mie-2"
 				@update:modelValue="setShowNulls"
 			>
 				{{ $t('task.show.noDates') }}
@@ -37,7 +37,7 @@
 			</FancyCheckbox>
 		</p>
 		<template v-if="!loading && (!tasks || tasks.length === 0) && showNothingToDo">
-			<h3 class="has-text-centered mt-6">
+			<h3 class="has-text-centered mbs-6">
 				{{ $t('task.show.noTasks') }}
 			</h3>
 			<LlamaCool class="llama-cool" />

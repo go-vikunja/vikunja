@@ -2,20 +2,20 @@
 	<div>
 		<Message
 			v-if="errorMsg"
-			class="mb-4"
+			class="mbe-4"
 		>
 			{{ errorMsg }}
 		</Message>
 		<div
 			v-if="successMessage"
-			class="has-text-centered mb-4"
+			class="has-text-centered mbe-4"
 		>
 			<Message variant="success">
 				{{ successMessage }}
 			</Message>
 			<XButton
 				:to="{ name: 'user.login' }"
-				class="mt-4"
+				class="mbs-4"
 			>
 				{{ $t('user.auth.login') }}
 			</XButton>

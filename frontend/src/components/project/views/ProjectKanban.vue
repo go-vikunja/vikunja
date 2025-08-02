@@ -46,7 +46,7 @@
 									<span
 										v-if="bucket.id !== 0 && view?.doneBucketId === bucket.id"
 										v-tooltip="$t('project.kanban.doneBucketHint')"
-										class="icon is-small has-text-success me-2"
+										class="icon is-small has-text-success mie-2"
 									>
 										<Icon icon="check-double" />
 									</span>

@@ -60,7 +60,7 @@
 
 		<XButton
 			:loading="passwordUpdateService.loading"
-			class="is-fullwidth mt-4"
+			class="is-fullwidth mbs-4"
 			@click="updatePassword"
 		>
 			{{ $t('misc.save') }}

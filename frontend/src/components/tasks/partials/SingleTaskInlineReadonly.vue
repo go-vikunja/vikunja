@@ -5,7 +5,7 @@
 				v-if="showProject && typeof project !== 'undefined'"
 				v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
 				class="task-project"
-				:class="{'me-2': task.hexColor !== ''}"
+				:class="{'mie-2': task.hexColor !== ''}"
 			>
 				{{ project.title }}
 			</span>
@@ -13,7 +13,7 @@
 			<ColorBubble
 				v-if="task.hexColor !== ''"
 				:color="getHexColor(task.hexColor)"
-				class="me-1"
+				class="mie-1"
 			/>
 
 			<PriorityLabel
@@ -36,7 +36,7 @@
 
 		<Labels
 			v-if="task.labels.length > 0"
-			class="labels ms-2 me-1"
+			class="labels mis-2 mie-1"
 			:labels="task.labels"
 		/>
 
@@ -44,7 +44,7 @@
 			v-if="task.assignees.length > 0"
 			:assignees="task.assignees"
 			:avatar-size="20"
-			class="ms-1"
+			class="mis-1"
 			:inline="true"
 		/>
 

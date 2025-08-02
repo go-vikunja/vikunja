@@ -44,7 +44,7 @@
 						<div>
 							<span
 								v-if="n.notification.doer"
-								class="has-text-weight-bold me-1"
+								class="has-text-weight-bold mie-1"
 							>
 								{{ getDisplayName(n.notification.doer) }}
 							</span>
@@ -66,7 +66,7 @@
 				<XButton
 					v-if="notifications.length > 0 && unreadNotifications > 0"
 					variant="tertiary"
-					class="mt-2 is-fullwidth" 
+					class="mbs-2 is-fullwidth" 
 					@click="markAllRead"
 				>
 					{{ $t('notification.markAllRead') }}

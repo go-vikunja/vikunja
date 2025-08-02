@@ -71,7 +71,7 @@
 				</div>
 			</form>
 
-			<div class="field has-addons mt-4">
+			<div class="field has-addons mbs-4">
 				<div class="control is-fullwidth">
 					<XButton
 						:loading="teamService.loading"
@@ -176,7 +176,7 @@
 							<XButton
 								v-if="m.id !== userInfo.id"
 								:loading="teamMemberService.loading"
-								class="me-2"
+								class="mie-2"
 								@click="() => toggleUserType(m)"
 							>
 								{{ m.admin ? $t('team.edit.makeMember') : $t('team.edit.makeAdmin') }}

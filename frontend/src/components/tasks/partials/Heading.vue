@@ -1,7 +1,7 @@
 <template>
 	<div class="heading">
-		<div class="tw-flex tw-items-center md:tw-items-stretch tw-flex-col tw-gap-1 task-properties">
-			<div class="tw-flex tw-items-center tw-gap-2">
+		<div class="tw-flex tw-itemis-center md:tw-itemis-stretch tw-flex-col tw-gap-1 task-properties">
+			<div class="tw-flex tw-itemis-center tw-gap-2">
 				<ColorBubble
 					v-if="task.hexColor !== ''"
 					:color="getHexColor(task.hexColor)"
@@ -44,9 +44,9 @@
 		<CustomTransition name="fade">
 			<span
 				v-if="loading && saving"
-				class="is-inline-flex is-align-items-center"
+				class="is-inline-flex is-align-itemis-center"
 			>
-				<span class="loader is-inline-block me-2" />
+				<span class="loader is-inline-block mie-2" />
 				{{ $t('misc.saving') }}
 			</span>
 			<span
@@ -55,7 +55,7 @@
 			>
 				<Icon
 					icon="check"
-					class="me-2"
+					class="mie-2"
 				/>
 				{{ $t('misc.saved') }}
 			</span>

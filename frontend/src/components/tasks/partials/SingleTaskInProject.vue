@@ -18,7 +18,7 @@
 			<ColorBubble
 				v-if="!showProjectSeparately && projectColor !== '' && currentProject?.id !== task.projectId"
 				:color="projectColor"
-				class="me-1"
+				class="mie-1"
 			/>
 
 			<div
@@ -30,8 +30,8 @@
 						v-if="showProject && typeof project !== 'undefined'"
 						v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
 						:to="{ name: 'project.index', params: { projectId: task.projectId } }"
-						class="task-project me-1"
-						:class="{'me-2': task.hexColor !== ''}"
+						class="task-project mie-1"
+						:class="{'mie-2': task.hexColor !== ''}"
 						@click.stop
 					>
 						{{ project.title }}
@@ -40,13 +40,13 @@
 					<ColorBubble
 						v-if="task.hexColor !== ''"
 						:color="getHexColor(task.hexColor)"
-						class="me-1"
+						class="mie-1"
 					/>
 	
 					<PriorityLabel
 						:priority="task.priority"
 						:done="task.done"
-						class="pe-2"
+						class="pis-2"
 					/>
 
 					<RouterLink
@@ -61,7 +61,7 @@
 
 				<Labels
 					v-if="task.labels.length > 0"
-					class="labels ms-2 me-1"
+					class="labels mis-2 mie-1"
 					:labels="task.labels"
 				/>
 
@@ -69,7 +69,7 @@
 					v-if="task.assignees.length > 0"
 					:assignees="task.assignees"
 					:avatar-size="25"
-					class="ms-1"
+					class="mis-1"
 					:inline="true"
 				/>
 
@@ -134,7 +134,7 @@
 			<ColorBubble
 				v-if="showProjectSeparately && projectColor !== '' && currentProject?.id !== task.projectId"
 				:color="projectColor"
-				class="me-1"
+				class="mie-1"
 			/>
 
 			<RouterLink

@@ -15,7 +15,7 @@
 
 				<Message
 					v-if="s.available"
-					class="mb-4"
+					class="mbe-4"
 				>
 					{{
 						typeof s.available === 'undefined' ?

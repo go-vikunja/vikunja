@@ -38,7 +38,7 @@
 						variant="primary"
 						:icon="primaryIcon"
 						:disabled="primaryDisabled || loading"
-						class="ms-2"
+						class="mis-2"
 						@click.prevent.stop="primary"
 					>
 						{{ primaryLabel || $t('misc.create') }}

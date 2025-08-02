@@ -43,7 +43,7 @@
 
 		<table
 			v-if="sharables.length > 0"
-			class="table has-actions is-striped is-hoverable is-fullwidth mb-4"
+			class="table has-actions is-striped is-hoverable is-fullwidth mbe-4"
 		>
 			<tbody>
 				<tr
@@ -97,7 +97,7 @@
 						<div class="select">
 							<select
 								v-model="selectedRight[s.id]"
-								class="me-2"
+								class="mie-2"
 								@change="toggleType(s)"
 							>
 								<option

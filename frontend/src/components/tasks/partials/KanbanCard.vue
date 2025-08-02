@@ -68,13 +68,13 @@
 				<PriorityLabel
 					:priority="task.priority"
 					:done="task.done"
-					class="is-inline-flex is-align-items-center"
+					class="is-inline-flex is-align-itemis-center"
 				/>
 				<AssigneeList
 					v-if="task.assignees.length > 0"
 					:assignees="task.assignees"
 					:avatar-size="24"
-					class="me-1"
+					class="mie-1"
 				/>
 				<ChecklistSummary
 					:task="task"
