@@ -100,7 +100,7 @@
 					<input
 						v-model="rememberMe"
 						type="checkbox"
-						class="mr-1"
+						class="me-1"
 					>
 					{{ $t('user.auth.remember') }}
 				</label>
@@ -255,10 +255,10 @@ async function submit() {
 .label-with-link {
 	display: flex;
 	justify-content: space-between;
-	margin-bottom: .5rem;
+	margin-block-end: .5rem;
 
 	.label {
-		margin-bottom: 0;
+		margin-block-end: 0;
 	}
 }
 </style>

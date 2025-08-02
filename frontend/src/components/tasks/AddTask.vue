@@ -285,7 +285,7 @@ defineExpose({
 .task-add,
 	// overwrite bulma styles
 .task-add .add-task__field {
-	margin-bottom: 0;
+	margin-block-end: 0;
 }
 
 .add-task-button {

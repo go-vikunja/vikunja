@@ -90,7 +90,7 @@ const variantClass = computed(() => VARIANT_CLASS_MAP[props.variant])
 	}
 
 	&.fullheight {
-		padding-right: 7px;
+		padding-inline-end: 7px;
 		height: 100%;
 	}
 

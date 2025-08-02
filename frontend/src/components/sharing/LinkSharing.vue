@@ -4,7 +4,7 @@
 			{{ $t('project.share.links.title') }}
 			<span
 				v-tooltip="$t('project.share.links.explanation')"
-				class="is-size-7 has-text-grey is-italic ml-3"
+				class="is-size-7 has-text-grey is-italic ms-3"
 			>
 				{{ $t('project.share.links.what') }}
 			</span>

@@ -420,7 +420,7 @@ defineExpose({
 
 		.dueDate {
 			display: inline-block;
-			margin-left: 5px;
+			margin-inline-start: 5px;
 
 			&:focus-visible {
 				box-shadow: none;
@@ -447,16 +447,16 @@ defineExpose({
 	.avatar {
 		border-radius: 50%;
 		vertical-align: bottom;
-		margin-left: 5px;
+		margin-inline-start: 5px;
 		height: 27px;
 		width: 27px;
 	}
 
 	.project-task-icon {
-		margin-left: 6px;
+		margin-inline-start: 6px;
 
 		&:not(:first-of-type) {
-			margin-left: 8px;
+			margin-inline-start: 8px;
 		}
 
 	}
@@ -503,8 +503,8 @@ defineExpose({
 
 	:deep(.fancy-checkbox) {
 		height: 18px;
-		padding-top: 0;
-		padding-right: .5rem;
+		padding-block-start: 0;
+		padding-inline-end: .5rem;
 
 		span {
 			display: none;
@@ -522,7 +522,7 @@ defineExpose({
 	}
 
 	.show-project .parent-tasks {
-		padding-left: .25rem;
+		padding-inline-start: .25rem;
 	}
 
 	.remove {
@@ -550,7 +550,7 @@ defineExpose({
 }
 
 .subtask-nested {
-	margin-left: 1.75rem;
+	margin-inline-start: 1.75rem;
 }
 
 :deep(.popup) {

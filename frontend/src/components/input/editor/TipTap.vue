@@ -782,7 +782,7 @@ watch(
 	}
 
 	> * + * {
-		margin-top: 0.75em;
+		margin-block-start: 0.75em;
 	}
 
 	ul,
@@ -882,8 +882,8 @@ watch(
 	}
 
 	blockquote {
-		padding-left: 1rem;
-		border-left: 2px solid rgba(#0d0d0d, 0.1);
+		padding-inline-start: 1rem;
+		border-inline-start: 2px solid rgba(#0d0d0d, 0.1);
 	}
 
 	hr {
@@ -913,13 +913,13 @@ watch(
 			position: relative;
 
 			> * {
-				margin-bottom: 0;
+				margin-block-end: 0;
 			}
 		}
 
 		th {
 			font-weight: bold;
-			text-align: left;
+			text-align: start;
 			background-color: var(--grey-200);
 		}
 
@@ -953,15 +953,15 @@ watch(
 	// Lists
 
 	ul {
-		margin-left: .5rem;
-		margin-top: 0 !important;
+		margin-inline-start: .5rem;
+		margin-block-start: 0 !important;
 
 		li {
-			margin-top: 0;
+			margin-block-start: 0;
 		}
 
 		p {
-			margin-bottom: 0 !important;
+			margin-block-end: 0 !important;
 		}
 	}
 }
@@ -979,7 +979,7 @@ watch(
 ul[data-type='taskList'] {
 	list-style: none;
 	padding: 0;
-	margin-left: 0;
+	margin-inline-start: 0;
 
 	li[data-checked='true'] {
 		color: var(--grey-500);
@@ -988,11 +988,11 @@ ul[data-type='taskList'] {
 
 	li {
 		display: flex;
-		margin-top: 0.25rem;
+		margin-block-start: 0.25rem;
 
 		> label {
 			flex: 0 0 auto;
-			margin-right: 0.5rem;
+			margin-inline-end: 0.5rem;
 			user-select: none;
 		}
 

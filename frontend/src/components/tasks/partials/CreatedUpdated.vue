@@ -64,6 +64,6 @@ const doneFormatted = computed(() => formatDateLong(props.task.doneAt))
 .created {
 	font-size: .75rem;
 	color: var(--grey-500);
-	text-align: right;
+	text-align: end;
 }
 </style>

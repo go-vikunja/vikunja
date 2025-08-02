@@ -28,7 +28,7 @@
 						>
 							<span
 								:key="`item${key}`"
-								class="tag ml-2 mt-2"
+								class="tag ms-2 mt-2"
 							>
 								{{ label !== '' ? item[label] : item }}
 								<BaseButton
@@ -484,7 +484,7 @@ function focus() {
 		max-width: 250px;
 
 		input {
-			padding-left: 0;
+			padding-inline-start: 0;
 		}
 	}
 
@@ -529,7 +529,7 @@ function focus() {
 
 .search-result-button {
 	background: transparent;
-	text-align: left;
+	text-align: start;
 	box-shadow: none;
 	border-radius: 0;
 	text-transform: none;
@@ -572,7 +572,7 @@ function focus() {
 	font-size: .75rem;
 	color: transparent;
 	transition: color $transition;
-	padding-left: .5rem;
+	padding-inline-start: .5rem;
 }
 
 .has-removal-button {

@@ -77,7 +77,7 @@ useTitle(() => title.value)
 	place-items: center;
 
 	@media screen and (max-width: $fullhd) {
-		padding-bottom: 15rem;
+		padding-block-end: 15rem;
 	}
 }
 

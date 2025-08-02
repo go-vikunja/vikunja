@@ -240,7 +240,7 @@ function getWeekdayFromStringInterval(dateString: string) {
 		font-size: .85rem;
 		display: flex;
 		justify-content: space-between;
-		padding-right: .25rem;
+		padding-inline-end: .25rem;
 
 		.weekday {
 			color: var(--text-light);

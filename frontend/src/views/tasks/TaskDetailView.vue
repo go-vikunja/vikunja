@@ -961,15 +961,15 @@ function setRelatedTasksActive() {
 .task-view-container {
 	// simulate sass lighten($primary, 30) by increasing lightness 30% to 73%
 	--primary-light: hsla(var(--primary-h), var(--primary-s), 73%, var(--primary-a));
-	padding-bottom: 0;
+	padding-block-end: 0;
 
 	@media screen and (min-width: $desktop) {
-		padding-bottom: 1rem;
+		padding-block-end: 1rem;
 	}
 }
 
 .task-view {
-	padding-top: 1rem;
+	padding-block-start: 1rem;
 	padding-inline: .5rem;
 	background-color: var(--site-background);
 
@@ -1000,7 +1000,7 @@ function setRelatedTasksActive() {
 
 .subtitle {
 	color: var(--grey-500);
-	margin-bottom: 1rem;
+	margin-block-end: 1rem;
 
 	a {
 		color: var(--grey-800);
@@ -1023,7 +1023,7 @@ h3 .button {
 .remove {
 	color: var(--danger);
 	vertical-align: middle;
-	padding-left: .5rem;
+	padding-inline-start: .5rem;
 	line-height: 1;
 }
 
@@ -1038,7 +1038,7 @@ h3 .button {
 		display: block;
 		margin: .1rem 0;
 		width: 100%;
-		text-align: left;
+		text-align: start;
 
 		&:hover {
 			background: var(--white);
@@ -1051,9 +1051,9 @@ h3 .button {
 }
 
 .details {
-	padding-bottom: 0.75rem;
+	padding-block-end: 0.75rem;
 	flex-flow: row wrap;
-	margin-bottom: 0;
+	margin-block-end: 0;
 
 	.detail-title {
 		display: block;
@@ -1125,7 +1125,7 @@ h3 .button {
 }
 
 .attachments {
-	margin-bottom: 0;
+	margin-block-end: 0;
 
 	table tr:last-child td {
 		border-bottom: none;
@@ -1141,7 +1141,7 @@ h3 .button {
 
 	.button {
 		width: 100%;
-		margin-bottom: .5rem;
+		margin-block-end: .5rem;
 		justify-content: left;
 
 		&.has-light-text {
@@ -1163,7 +1163,7 @@ h3 .button {
 }
 
 .checklist-summary {
-	padding-left: .25rem;
+	padding-inline-start: .25rem;
 }
 
 .detail-content {

@@ -285,7 +285,7 @@ function handleBubbleSave() {
 		>
 			<XButton
 				variant="tertiary"
-				class="mr-2"
+				class="me-2"
 				@click="emit('cancel')"
 			>
 				{{ $t('misc.cancel') }}
@@ -308,12 +308,12 @@ function handleBubbleSave() {
 		background: transparent;
 		border: none;
 		color: var(--danger);
-		padding-right: .75rem;
+		padding-inline-end: .75rem;
 		cursor: pointer;
 	}
 
 	&-form {
-		margin-bottom: .5rem;
+		margin-block-end: .5rem;
 		padding: .5rem;
 		border: 1px solid var(--grey-200);
 		border-radius: $radius;

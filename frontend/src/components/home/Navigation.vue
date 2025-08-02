@@ -141,7 +141,7 @@ const savedFilterProjects = computed(() => projectStore.savedFilterProjects)
 
 	padding-inline-start: 1rem;
 	margin-inline-end: 1rem;
-	margin-bottom: 1rem;
+	margin-block-end: 1rem;
 
 	@media screen and (min-width: $tablet) {
 		display: none;
@@ -193,12 +193,12 @@ const savedFilterProjects = computed(() => projectStore.savedFilterProjects)
 		display: inline-block;
 
 		.icon {
-			padding-bottom: .25rem;
+			padding-block-end: .25rem;
 		}
 	}
 }
 
 .menu + .menu {
-	padding-top: math.div($navbar-padding, 2);
+	padding-block-start: math.div($navbar-padding, 2);
 }
 </style>

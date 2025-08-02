@@ -73,7 +73,7 @@ async function createTask() {
 	max-width: 450px;
 
 	.input {
-		margin-right: .7rem;
+		margin-inline-end: .7rem;
 		font-size: .8rem;
 	}
 

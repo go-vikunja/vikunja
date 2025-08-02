@@ -92,6 +92,6 @@ function updateTaskKey() {
 
 <style scoped lang="scss">
 .show-tasks {
-	margin-top: 2rem;
+	margin-block-start: 2rem;
 }
 </style>

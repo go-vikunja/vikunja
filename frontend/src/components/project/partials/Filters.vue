@@ -37,7 +37,7 @@
 		>
 			<XButton
 				variant="secondary"
-				class="mr-2"
+				class="me-2"
 				:disabled="filterQuery === ''"
 				@click.prevent.stop="clearFiltersAndEmit"
 			>

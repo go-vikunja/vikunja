@@ -136,7 +136,7 @@ async function requestDataExport() {
 	gap: .5rem;
 	
 	> p {
-		margin-bottom: 0;
+		margin-block-end: 0;
 	}
 	
 	@media (max-width: $mobile) {
@@ -144,7 +144,7 @@ async function requestDataExport() {
 		align-items: flex-start;
 		
 		> p {
-			margin-bottom: 1rem;
+			margin-block-end: 1rem;
 		}
 		
 		> :deep(.button) {

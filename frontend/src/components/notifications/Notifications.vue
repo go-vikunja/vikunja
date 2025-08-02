@@ -44,12 +44,12 @@
 						<div>
 							<span
 								v-if="n.notification.doer"
-								class="has-text-weight-bold mr-1"
+								class="has-text-weight-bold me-1"
 							>
 								{{ getDisplayName(n.notification.doer) }}
 							</span>
 							<BaseButton
-								class="has-text-left"
+								class="has-text-start"
 								@click="() => to(n, index)()"
 							>
 								{{ n.toText(userInfo) }}
@@ -283,7 +283,7 @@ async function markAllRead() {
 				}
 
 				img {
-					margin-right: 0;
+					margin-inline-end: 0;
 				}
 			}
 
@@ -292,7 +292,7 @@ async function markAllRead() {
 			}
 
 			&:last-child {
-				margin-bottom: .25rem;
+				margin-block-end: .25rem;
 			}
 
 			a {

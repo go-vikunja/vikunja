@@ -97,7 +97,7 @@
 						<div class="select">
 							<select
 								v-model="selectedRight[s.id]"
-								class="mr-2"
+								class="me-2"
 								@change="toggleType(s)"
 							>
 								<option

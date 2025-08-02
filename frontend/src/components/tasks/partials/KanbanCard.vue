@@ -34,7 +34,7 @@
 					</template>
 					<span
 						v-if="showTaskPosition"
-						class="tw-text-red-600 tw-pl-2"
+						class="tw-text-red-600 tw-ps-2"
 					>
 						{{ task.position }}
 					</span>
@@ -74,7 +74,7 @@
 					v-if="task.assignees.length > 0"
 					:assignees="task.assignees"
 					:avatar-size="24"
-					class="mr-1"
+					class="me-1"
 				/>
 				<ChecklistSummary
 					:task="task"
@@ -248,7 +248,7 @@ $task-background: var(--white);
 		align-items: center;
 
 		.icon {
-			margin-right: .25rem;
+			margin-inline-end: .25rem;
 		}
 
 		&.overdue {
@@ -266,18 +266,18 @@ $task-background: var(--white);
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
-		margin-top: .25rem;
+		margin-block-start: .25rem;
 
 		:deep(.tag),
 		:deep(.checklist-summary),
 		.assignees,
 		.icon,
 		.priority-label {
-			margin-right: .25rem;
+			margin-inline-end: .25rem;
 		}
 
 		:deep(.checklist-summary) {
-			padding-left: 0;
+			padding-inline-start: 0;
 		}
 
 		.assignees {
@@ -295,7 +295,7 @@ $task-background: var(--white);
 
 		// FIXME: should be in Labels.vue
 		:deep(.tag) {
-			margin-left: 0;
+			margin-inline-start: 0;
 		}
 
 		.priority-label {
@@ -305,7 +305,7 @@ $task-background: var(--white);
 			.icon {
 				height: 1rem;
 				padding: 0 .25rem;
-				margin-top: 0;
+				margin-block-start: 0;
 			}
 		}
 	}
@@ -325,7 +325,7 @@ $task-background: var(--white);
 	.task-id {
 		color: var(--grey-500);
 		font-size: .8rem;
-		margin-bottom: .25rem;
+		margin-block-end: .25rem;
 		display: flex;
 	}
 
@@ -378,7 +378,7 @@ $task-background: var(--white);
 }
 
 .kanban-card__done {
-	margin-right: .25rem;
+	margin-inline-end: .25rem;
 }
 
 .task-progress {

@@ -49,7 +49,7 @@
 			<tr>
 				<th>{{ $t('misc.id') }}</th>
 				<th>{{ $t('misc.created') }}</th>
-				<th class="has-text-right">
+				<th class="has-text-end">
 					{{ $t('misc.actions') }}
 				</th>
 			</tr>
@@ -59,7 +59,7 @@
 			>
 				<td>{{ tk.id }}</td>
 				<td>{{ formatDateShort(tk.created) }}</td>
-				<td class="has-text-right">
+				<td class="has-text-end">
 					<XButton
 						variant="secondary"
 						@click="deleteToken(tk)"

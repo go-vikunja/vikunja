@@ -111,7 +111,7 @@ export default {
 	align-items: center;
 	margin: 0;
 	width: 100%;
-	text-align: left;
+	text-align: start;
 	background: transparent;
 	border-radius: $radius;
 	border: 0;
@@ -129,7 +129,7 @@ export default {
 		height: 2rem;
 		border: 1px solid var(--grey-300);
 		padding: .5rem;
-		margin-right: .5rem;
+		margin-inline-end: .5rem;
 		border-radius: $radius;
 		color: var(--grey-700);
 	}

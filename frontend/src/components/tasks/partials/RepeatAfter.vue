@@ -54,7 +54,7 @@
 			v-if="task.repeatMode !== TASK_REPEAT_MODES.REPEAT_MODE_MONTH"
 			class="is-flex"
 		>
-			<p class="pr-4">
+			<p class="pe-4">
 				{{ $t('task.repeat.each') }}
 			</p>
 			<div class="field has-addons is-fullwidth">
@@ -162,7 +162,7 @@ function setRepeatAfter(amount: number, type: IRepeatAfter['type']) {
 
 <style lang="scss" scoped>
 p {
-	padding-top: 6px;
+	padding-block-start: 6px;
 }
 
 .input {

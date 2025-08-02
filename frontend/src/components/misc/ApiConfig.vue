@@ -127,12 +127,12 @@ async function setApiUrl() {
 
 <style lang="scss" scoped>
 .api-config {
-	margin-bottom: .75rem;
+	margin-block-end: .75rem;
 }
 
 .api-url-info {
 	font-size: .9rem;
-	text-align: right;
+	text-align: end;
 }
 
 .url {
