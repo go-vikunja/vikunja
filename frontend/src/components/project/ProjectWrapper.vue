@@ -34,7 +34,7 @@
 			<Message
 				v-if="currentProject?.isArchived"
 				variant="warning"
-				class="mb-4"
+				class="mbe-4"
 			>
 				{{ $t('project.archivedMessage') }}
 			</Message>
@@ -103,7 +103,7 @@ function getViewTitle(view: IProjectView) {
 <style lang="scss" scoped>
 .switch-view-container {
 	min-height: $switch-view-height;
-	margin-bottom: 1rem;
+	margin-block-end: 1rem;
 	
 	display: flex;
 	justify-content: space-between;
@@ -132,7 +132,7 @@ function getViewTitle(view: IProjectView) {
 	transition: all 100ms;
 
 	&:not(:last-child) {
-		margin-right: .5rem;
+		margin-inline-end: .5rem;
 	}
 
 	&:hover {
@@ -150,14 +150,14 @@ function getViewTitle(view: IProjectView) {
 
 // FIXME: this should be in notification and set via a prop
 .is-archived .notification.is-warning {
-	margin-bottom: 1rem;
+	margin-block-end: 1rem;
 }
 
 .project-title-print {
 	display: none;
 	font-size: 1.75rem;
 	text-align: center;
-	margin-bottom: .5rem;
+	margin-block-end: .5rem;
 
 	@media print {
 		display: block;

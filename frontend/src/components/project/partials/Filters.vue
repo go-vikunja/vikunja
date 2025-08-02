@@ -13,7 +13,7 @@
 		
 		<div 
 			v-if="filterFromView"
-			class="tw-text-sm tw-mb-2"
+			class="tw-text-sm tw-mbe-2"
 		>
 			{{ $t('filters.fromView') }}
 			<code>{{ filterFromView }}</code><br>
@@ -37,7 +37,7 @@
 		>
 			<XButton
 				variant="secondary"
-				class="mr-2"
+				class="mie-2"
 				:disabled="filterQuery === ''"
 				@click.prevent.stop="clearFiltersAndEmit"
 			>

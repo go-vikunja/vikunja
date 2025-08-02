@@ -26,7 +26,7 @@
 			<Message
 				v-else
 				variant="danger"
-				class="mb-4"
+				class="mbe-4"
 			>
 				<p>
 					{{ $t('ready.errorOccured') }}<br>
@@ -90,13 +90,13 @@ const baseStore = useBaseStore()
 }
 
 .logo {
-	margin-bottom: 1rem;
+	margin-block-end: 1rem;
 	width: 100px;
 	height: 100px;
 }
 
 .loader-container {
-	margin-right: 1rem;
+	margin-inline-end: 1rem;
 
 	&.is-loading::after {
 		border-left-color: var(--grey-400);

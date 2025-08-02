@@ -83,7 +83,7 @@
 				</XButton>
 				<XButton
 					variant="tertiary"
-					class="ml-2"
+					class="mis-2"
 					@click="totpDisableForm = false"
 				>
 					{{ $t('misc.cancel') }}

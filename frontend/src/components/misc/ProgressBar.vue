@@ -66,7 +66,7 @@ withDefaults(defineProps<{
 		background-color: var(--progress-value-background-color);
 	}
 
-	&::-ms-fill {
+	&::-mis-fill {
 		background-color: var(--progress-value-background-color);
 		border: none;
 	}
@@ -110,7 +110,7 @@ withDefaults(defineProps<{
 			background-color: transparent;
 		}
 
-		&::-ms-fill {
+		&::-mis-fill {
 			animation-name: none;
 		}
 	}

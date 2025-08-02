@@ -28,7 +28,7 @@
 					<ApiConfig v-if="showApiConfig" />
 					<Message
 						v-if="motd !== ''"
-						class="is-hidden-tablet mb-4"
+						class="is-hidden-tablet mbe-4"
 					>
 						{{ motd }}
 					</Message>
@@ -77,7 +77,7 @@ useTitle(() => title.value)
 	place-items: center;
 
 	@media screen and (max-width: $fullhd) {
-		padding-bottom: 15rem;
+		padding-block-end: 15rem;
 	}
 }
 

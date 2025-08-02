@@ -75,6 +75,6 @@ const filteredProjects = computed(() => {
 
 .project-grid-item {
 	display: grid;
-	margin-top: 0; // remove padding coming form .content li + li
+	margin-block-start: 0; // remove padding coming form .content li + li
 }
 </style>

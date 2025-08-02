@@ -357,7 +357,7 @@ onBeforeUnmount(() => {
 	.handle {
 		opacity: 1;
 		transition: opacity $transition;
-		margin-right: .25rem;
+		margin-inline-end: .25rem;
 		cursor: grab;
 	}
 
@@ -373,10 +373,10 @@ onBeforeUnmount(() => {
 }
 
 .list-view {
-	padding-bottom: 1rem;
+	padding-block-end: 1rem;
 
 	:deep(.card) {
-		margin-bottom: 0;
+		margin-block-end: 0;
 	}
 }
 </style>

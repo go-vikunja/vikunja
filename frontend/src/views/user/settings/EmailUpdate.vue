@@ -40,7 +40,7 @@
 
 		<XButton
 			:loading="emailUpdateService.loading"
-			class="is-fullwidth mt-4"
+			class="is-fullwidth mbs-4"
 			@click="updateEmail"
 		>
 			{{ $t('misc.save') }}

@@ -46,7 +46,7 @@
 		<Expandable :open="errorMessage !== ''">
 			<p
 				v-if="errorMessage !== ''"
-				class="pt-3 mt-0 help is-danger"
+				class="pbs-3 mbs-0 help is-danger"
 			>
 				{{ errorMessage }}
 			</p>
@@ -285,7 +285,7 @@ defineExpose({
 .task-add,
 	// overwrite bulma styles
 .task-add .add-task__field {
-	margin-bottom: 0;
+	margin-block-end: 0;
 }
 
 .add-task-button {

@@ -58,6 +58,6 @@ watch(() => [props.user, props.avatarSize], loadAvatar, { immediate: true })
 .avatar {
 	border-radius: 100%;
 	vertical-align: middle;
-	margin-right: .5rem;
+	margin-inline-end: .5rem;
 }
 </style>

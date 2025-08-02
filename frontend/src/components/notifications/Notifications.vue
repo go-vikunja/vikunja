@@ -44,12 +44,12 @@
 						<div>
 							<span
 								v-if="n.notification.doer"
-								class="has-text-weight-bold mr-1"
+								class="has-text-weight-bold mie-1"
 							>
 								{{ getDisplayName(n.notification.doer) }}
 							</span>
 							<BaseButton
-								class="has-text-left"
+								class="has-text-start"
 								@click="() => to(n, index)()"
 							>
 								{{ n.toText(userInfo) }}
@@ -66,7 +66,7 @@
 				<XButton
 					v-if="notifications.length > 0 && unreadNotifications > 0"
 					variant="tertiary"
-					class="mt-2 is-fullwidth" 
+					class="mbs-2 is-fullwidth" 
 					@click="markAllRead"
 				>
 					{{ $t('notification.markAllRead') }}
@@ -283,7 +283,7 @@ async function markAllRead() {
 				}
 
 				img {
-					margin-right: 0;
+					margin-inline-end: 0;
 				}
 			}
 
@@ -292,7 +292,7 @@ async function markAllRead() {
 			}
 
 			&:last-child {
-				margin-bottom: .25rem;
+				margin-block-end: .25rem;
 			}
 
 			a {

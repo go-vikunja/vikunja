@@ -70,7 +70,7 @@ defineEmits<{
 .card {
 	background-color: var(--white);
 	border-radius: $radius;
-	margin-bottom: 1rem;
+	margin-block-end: 1rem;
 	border: 1px solid var(--card-border-color);
 	box-shadow: var(--shadow-sm);
 

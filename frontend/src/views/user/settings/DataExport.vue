@@ -2,7 +2,7 @@
 	<Card :title="$t('user.export.title')">
 		<Message
 			v-if="exportInfo"
-			class="mb-4"
+			class="mbe-4"
 		>
 			<div class="export-message">
 				<p>
@@ -63,7 +63,7 @@
 
 		<XButton
 			:loading="dataExportService.loading"
-			class="is-fullwidth mt-4"
+			class="is-fullwidth mbs-4"
 			@click="requestDataExport()"
 		>
 			{{ $t('user.export.request') }}
@@ -136,7 +136,7 @@ async function requestDataExport() {
 	gap: .5rem;
 	
 	> p {
-		margin-bottom: 0;
+		margin-block-end: 0;
 	}
 	
 	@media (max-width: $mobile) {
@@ -144,7 +144,7 @@ async function requestDataExport() {
 		align-items: flex-start;
 		
 		> p {
-			margin-bottom: 1rem;
+			margin-block-end: 1rem;
 		}
 		
 		> :deep(.button) {

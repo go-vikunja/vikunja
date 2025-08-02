@@ -34,7 +34,7 @@ onMounted(async () => {
 
 <template>
 	<template v-if="show && !loading">
-		<p class="mt-4">
+		<p class="mbs-4">
 			{{ $t('home.project.importText') }}
 		</p>
 		<XButton

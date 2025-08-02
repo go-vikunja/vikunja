@@ -124,7 +124,7 @@ function validateSelectedEvents() {
 		<XButton
 			v-if="!(webhooks?.length === 0 || showNewForm)"
 			icon="plus"
-			class="mb-4"
+			class="mbe-4"
 			@click="showNewForm = true"
 		>
 			{{ $t('project.webhooks.create') }}
@@ -272,7 +272,7 @@ function validateSelectedEvents() {
 
 <style lang="scss" scoped>
 .available-events-check {
-	margin-right: .5rem;
+	margin-inline-end: .5rem;
 	width: 12.5rem;
 }
 </style>

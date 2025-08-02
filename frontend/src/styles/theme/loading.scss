@@ -33,8 +33,8 @@
     @include loader;
     width: 2rem;
     height: 2rem;
-    margin-left: calc(50% - 1rem);
-    margin-top: 1rem;
+    margin-inline-start: calc(50% - 1rem);
+    margin-block-start: 1rem;
     border-width: 0.25rem;
   }
 }

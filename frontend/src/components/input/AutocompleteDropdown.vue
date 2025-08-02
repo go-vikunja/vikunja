@@ -197,7 +197,7 @@ function onUpdateField(e) {
 		z-index: 100;
 		max-width: 100%;
 		min-width: 100%;
-		margin-top: -2px;
+		margin-block-start: -2px;
 
 		button {
 			width: 100%;
@@ -207,7 +207,7 @@ function onUpdateField(e) {
 			font-size: .9rem;
 			width: 100%;
 			color: var(--grey-800);
-			text-align: left;
+			text-align: start;
 			box-shadow: none;
 			text-transform: none;
 			font-family: $family-sans-serif;

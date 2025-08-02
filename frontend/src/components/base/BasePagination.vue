@@ -77,7 +77,7 @@ const pages = computed(() => createPagination(props.totalPages, props.currentPag
 
 <style lang="scss" scoped>
 .pagination {
-	padding-bottom: 1rem;
+	padding-block-end: 1rem;
 }
 
 .pagination-previous,
@@ -90,7 +90,7 @@ const pages = computed(() => createPagination(props.totalPages, props.currentPag
 
 .pagination-list {
 	&, & li {
-		margin-top: 0;
+		margin-block-start: 0;
 	}
 }
 </style>

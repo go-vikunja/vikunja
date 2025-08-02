@@ -173,7 +173,7 @@ const childProjects = computed(() => {
 	display: flex;
 	align-items: center;
 	justify-content: flex-start;
-	margin-right: .25rem;
+	margin-inline-end: .25rem;
 	flex-shrink: 0;
 
 	.color-bubble, .icon {

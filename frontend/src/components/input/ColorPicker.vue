@@ -55,7 +55,7 @@
 		<XButton
 			v-if="!isEmpty"
 			:disabled="isEmpty"
-			class="is-small ml-2"
+			class="is-small mis-2"
 			:shadow="false"
 			variant="secondary"
 			@click="reset"

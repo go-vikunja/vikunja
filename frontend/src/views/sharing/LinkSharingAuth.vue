@@ -1,14 +1,14 @@
 <template>
 	<div>
 		<Message v-if="loading">
-			{{ $t('sharing.authenticating') }}
+			{{ $t("sharing.authenticating") }}
 		</Message>
 		<div
 			v-if="authenticateWithPassword"
 			class="box"
 		>
-			<p class="pb-2">
-				{{ $t('sharing.passwordRequired') }}
+			<p class="pbe-2">
+				{{ $t("sharing.passwordRequired") }}
 			</p>
 			<div class="field">
 				<div class="control">
@@ -28,13 +28,13 @@
 				:loading="loading"
 				@click="authenticate()"
 			>
-				{{ $t('user.auth.login') }}
+				{{ $t("user.auth.login") }}
 			</XButton>
 
 			<Message
 				v-if="errorMessage !== ''"
 				variant="danger"
-				class="mt-4"
+				class="mbs-4"
 			>
 				{{ errorMessage }}
 			</Message>
@@ -43,22 +43,22 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, computed} from 'vue'
-import {useRoute, useRouter} from 'vue-router'
-import {useI18n} from 'vue-i18n'
-import {useTitle} from '@vueuse/core'
+import { ref, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+import { useTitle } from '@vueuse/core'
 
 import Message from '@/components/misc/Message.vue'
-import {LINK_SHARE_HASH_PREFIX} from '@/constants/linkShareHash'
+import { LINK_SHARE_HASH_PREFIX } from '@/constants/linkShareHash'
 
-import {useBaseStore} from '@/stores/base'
-import {useAuthStore} from '@/stores/auth'
-import {useRedirectToLastVisited} from '@/composables/useRedirectToLastVisited'
-import type {IProject} from '@/modelTypes/IProject.ts'
+import { useBaseStore } from '@/stores/base'
+import { useAuthStore } from '@/stores/auth'
+import { useRedirectToLastVisited } from '@/composables/useRedirectToLastVisited'
+import type { IProject } from '@/modelTypes/IProject.ts'
 
-const {t} = useI18n({useScope: 'global'})
+const { t } = useI18n({ useScope: 'global' })
 useTitle(t('sharing.authenticating'))
-const {getLastVisitedRoute} = useRedirectToLastVisited()
+const { getLastVisitedRoute } = useRedirectToLastVisited()
 
 function useAuth() {
 	const baseStore = useBaseStore()
@@ -72,12 +72,13 @@ function useAuth() {
 	const password = ref('')
 
 	const authLinkShare = computed(() => authStore.authLinkShare)
-	
+
 	function redirectToProject(projectId: IProject['id']) {
 		const hash = LINK_SHARE_HASH_PREFIX + route.params.share
-		
-		const viewId = new URLSearchParams(window.location.search).get('view') || null
-		
+
+		const viewId =
+			new URLSearchParams(window.location.search).get('view') || null
+
 		const last = getLastVisitedRoute()
 		if (last) {
 			return router.push({
@@ -85,8 +86,8 @@ function useAuth() {
 				hash,
 			})
 		}
-		
-		if(viewId) {
+
+		if (viewId) {
 			return router.push({
 				name: 'project.view',
 				params: {
@@ -120,7 +121,7 @@ function useAuth() {
 		loading.value = true
 
 		try {
-			const {project_id: projectId} = await authStore.linkShareAuth({
+			const { project_id: projectId } = await authStore.linkShareAuth({
 				hash: route.params.share,
 				password: password.value,
 			})

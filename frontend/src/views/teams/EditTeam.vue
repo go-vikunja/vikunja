@@ -71,7 +71,7 @@
 				</div>
 			</form>
 
-			<div class="field has-addons mt-4">
+			<div class="field has-addons mbs-4">
 				<div class="control is-fullwidth">
 					<XButton
 						:loading="teamService.loading"
@@ -176,7 +176,7 @@
 							<XButton
 								v-if="m.id !== userInfo.id"
 								:loading="teamMemberService.loading"
-								class="mr-2"
+								class="mie-2"
 								@click="() => toggleUserType(m)"
 							>
 								{{ m.admin ? $t('team.edit.makeMember') : $t('team.edit.makeAdmin') }}
@@ -413,7 +413,7 @@ async function leave() {
 
 <style lang="scss" scoped>
 .card.is-fullwidth {
-	margin-bottom: 1rem;
+	margin-block-end: 1rem;
 
 	.content {
 		padding: 0;
