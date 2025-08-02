@@ -1,0 +1,42 @@
+:root {
+  --size-0: 0;
+  --size-1: 0.25rem;
+  --size-2: 0.5rem;
+  --size-3: 0.75rem;
+  --size-4: 1rem;
+  --size-5: 1.5rem;
+  --size-6: 3rem;
+}
+
+$bulma-sizes: (
+  0: var(--size-0),
+  1: var(--size-1),
+  2: var(--size-2),
+  3: var(--size-3),
+  4: var(--size-4),
+  5: var(--size-5),
+  6: var(--size-6),
+);
+
+$types: (
+  p: padding,
+  m: margin,
+  b: border,
+);
+
+@each $name, $val in $bulma-sizes {
+  @each $type, $property in $types {
+    .#{$type}-is-#{$name} {
+      #{$property}-inline-start: #{$val};
+    }
+    .#{$type}-ie-#{$name} {
+      #{$property}-inline-end: #{$val};
+    }
+    .#{$type}-bs-#{$name} {
+      #{$property}-block-start: #{$val};
+    }
+    .#{$type}-be-#{$name} {
+      #{$property}-block-end: #{$val};
+    }
+  }
+}
