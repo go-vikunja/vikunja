@@ -151,7 +151,7 @@
     "vite-plugin-vue-devtools": "8.0.0",
     "vite-svg-loader": "5.1.0",
     "vitest": "3.2.4",
-    "vue-tsc": "3.0.4",
+    "vue-tsc": "3.0.5",
     "wait-on": "8.0.4",
     "workbox-cli": "7.3.0"
   },
