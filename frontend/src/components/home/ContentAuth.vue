@@ -174,11 +174,7 @@ projectStore.loadAllProjects()
 	position: relative;
 	padding: 1.5rem 0.5rem 0;
 	// TODO refactor: DRY `transition-timing-function` with `./Navigation.vue`.
-	transition: margin-left $transition-duration;
-	
-	[dir="rtl"] & {
-		transition: margin-right $transition-duration;
-	}
+	transition: margin-inline-start $transition-duration;
 
 	@media screen and (max-width: $tablet) {
 		margin-inline-start: 0;
@@ -193,13 +189,6 @@ projectStore.loadAllProjects()
 	&.is-menu-enabled {
 		@media screen and (min-width: $tablet) {
 			margin-inline-start: $navbar-width;
-		}
-		
-		[dir="rtl"] & {
-			@media screen and (min-width: $tablet) {
-				margin-inline-start: 0;
-				margin-inline-end: $navbar-width;
-			}
 		}
 	}
 

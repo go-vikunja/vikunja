@@ -252,6 +252,7 @@ $user-dropdown-width-mobile: 5rem;
 }
 
 .navbar-end {
+	margin-left: 0;
 	margin-inline-start: auto;
 	flex: 0 0 auto;
 	display: flex;
