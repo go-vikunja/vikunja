@@ -177,10 +177,10 @@ function handleBubbleSave() {
 			v-model="view.filter.filter"
 			:project-id="view.projectId"
 			:input-label="$t('project.views.filter')"
-			class="mb-1"
+			class="mbe-1"
 		/>
 
-		<div class="is-size-7 mb-3">
+		<div class="is-size-7 mbe-3">
 			<FilterInputDocs />
 		</div>
 
@@ -260,7 +260,7 @@ function handleBubbleSave() {
 							v-model="view.bucketConfiguration[index].filter.filter"
 							:project-id="view.projectId"
 							:input-label="$t('project.views.filter')"
-							class="mb-2"
+							class="mbe-2"
 						/>
 
 						<div class="is-size-7">
@@ -285,7 +285,7 @@ function handleBubbleSave() {
 		>
 			<XButton
 				variant="tertiary"
-				class="me-2"
+				class="mie-2"
 				@click="emit('cancel')"
 			>
 				{{ $t('misc.cancel') }}

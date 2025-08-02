@@ -110,7 +110,7 @@
 		</template>
 
 		<PoweredByLink
-			class="mt-auto"
+			class="mbs-auto"
 			utm-medium="navigation"
 		/>
 	</aside>

@@ -74,7 +74,7 @@
 						>
 						<span class="username">{{ authStore.userDisplayName }}</span>
 						<span
-							class="ms-1 dropdown-icon icon is-small"
+							class="mis-1 dropdown-icon icon is-small"
 							:style="{
 								transform: open ? 'rotate(180deg)' : 'rotate(0)',
 							}"

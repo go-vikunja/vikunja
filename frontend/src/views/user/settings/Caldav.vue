@@ -25,7 +25,7 @@
 			</div>
 		</div>
 
-		<h5 class="mt-5 mb-4 has-text-weight-bold">
+		<h5 class="mbs-5 mbe-4 has-text-weight-bold">
 			{{ $t('user.settings.caldav.tokens') }}
 		</h5>
 
@@ -72,7 +72,7 @@
 
 		<Message
 			v-if="newToken"
-			class="mb-4"
+			class="mbe-4"
 		>
 			{{ $t('user.settings.caldav.tokenCreated', {token: newToken.token}) }}<br>
 			{{ $t('user.settings.caldav.wontSeeItAgain') }}
@@ -80,7 +80,7 @@
 
 		<XButton
 			icon="plus"
-			class="mb-4"
+			class="mbe-4"
 			:loading="service.loading"
 			@click="createToken"
 		>

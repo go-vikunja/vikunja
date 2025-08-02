@@ -26,7 +26,7 @@
 			<Message
 				v-else
 				variant="danger"
-				class="mb-4"
+				class="mbe-4"
 			>
 				<p>
 					{{ $t('ready.errorOccured') }}<br>

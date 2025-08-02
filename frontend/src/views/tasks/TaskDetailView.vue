@@ -51,7 +51,7 @@
 			<ChecklistSummary :task="task" />
 
 			<!-- Content and buttons -->
-			<div class="columns mt-2">
+			<div class="columns mbs-2">
 				<!-- Content -->
 				<div
 					:class="{'is-two-thirds': canWrite}"
@@ -77,7 +77,7 @@
 							<AssigneeList
 								v-else
 								:assignees="task.assignees"
-								class="mt-2"
+								class="mbs-2"
 							/>
 						</div>
 						<CustomTransition
@@ -352,7 +352,7 @@
 					<!-- Related Tasks -->
 					<div
 						v-if="activeFields.relatedTasks"
-						class="content details mb-0"
+						class="content details mbe-0"
 					>
 						<h3>
 							<span class="icon is-grey">
@@ -576,7 +576,7 @@
 			</template>
 
 			<template #text>
-				<p class="tw-text-balance !tw-mb-0">
+				<p class="tw-text-balance !tw-mbe-0">
 					{{ $t('task.detail.delete.text1') }}
 				</p>
 				<p class="tw-text-balance">

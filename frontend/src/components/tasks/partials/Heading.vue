@@ -46,7 +46,7 @@
 				v-if="loading && saving"
 				class="is-inline-flex is-align-items-center"
 			>
-				<span class="loader is-inline-block me-2" />
+				<span class="loader is-inline-block mie-2" />
 				{{ $t('misc.saving') }}
 			</span>
 			<span
@@ -55,7 +55,7 @@
 			>
 				<Icon
 					icon="check"
-					class="me-2"
+					class="mie-2"
 				/>
 				{{ $t('misc.saved') }}
 			</span>

@@ -113,7 +113,7 @@
 		<XButton
 			v-if="editEnabled"
 			:disabled="loading"
-			class="mb-4"
+			class="mbe-4"
 			icon="cloud-upload-alt"
 			variant="secondary"
 			:shadow="false"

@@ -74,7 +74,7 @@
 					v-if="task.assignees.length > 0"
 					:assignees="task.assignees"
 					:avatar-size="24"
-					class="me-1"
+					class="mie-1"
 				/>
 				<ChecklistSummary
 					:task="task"
