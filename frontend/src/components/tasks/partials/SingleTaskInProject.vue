@@ -25,7 +25,7 @@
 				:class="{ 'done': task.done, 'show-project': showProject && project}"
 				class="tasktext"
 			>
-				<span>
+				<span class="is-inline-flex is-align-items-center">
 					<RouterLink
 						v-if="showProject && typeof project !== 'undefined'"
 						v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
