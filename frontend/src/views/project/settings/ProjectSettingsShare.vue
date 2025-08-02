@@ -19,7 +19,7 @@
 		<LinkSharing
 			v-if="linkSharingEnabled"
 			:project-id="projectId"
-			class="mt-4"
+			class="mbs-4"
 		/>
 	</CreateEdit>
 </template>

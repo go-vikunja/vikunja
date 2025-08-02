@@ -51,7 +51,7 @@
 
 			<XButton
 				:loading="accountDeleteService.loading"
-				class="is-fullwidth mt-4"
+				class="is-fullwidth mbs-4"
 				@click="cancelDeletion()"
 			>
 				{{ $t('user.deletion.scheduledCancelConfirm') }}
@@ -101,7 +101,7 @@
 
 			<XButton
 				:loading="accountDeleteService.loading"
-				class="is-fullwidth mt-4 is-danger"
+				class="is-fullwidth mbs-4 is-danger"
 				@click="deleteAccount()"
 			>
 				{{ $t('user.deletion.confirm') }}

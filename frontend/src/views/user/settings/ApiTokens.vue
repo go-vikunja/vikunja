@@ -162,7 +162,7 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 	<Card :title="$t('user.settings.apiTokens.title')">
 		<Message
 			v-if="tokenCreatedSuccessMessage !== ''"
-			class="has-text-centered mb-4"
+			class="has-text-centered mbe-4"
 		>
 			{{ tokenCreatedSuccessMessage }}<br>
 			{{ $t('user.settings.apiTokens.tokenCreatedNotSeeAgain') }}
@@ -290,7 +290,7 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 					<flat-pickr
 						v-if="newTokenExpiry === 'custom'"
 						v-model="newTokenExpiryCustom"
-						class="ms-2"
+						class="mis-2"
 						:config="flatPickerConfig"
 					/>
 				</div>
@@ -303,14 +303,14 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 				<div
 					v-for="(routes, group) in availableRoutes"
 					:key="group"
-					class="mb-2"
+					class="mbe-2"
 				>
 					<template
 						v-if="Object.keys(routes).length >= 1"
 					>
 						<FancyCheckbox
 							v-model="newTokenPermissionsGroup[group]"
-							class="me-2 is-capitalized has-text-weight-bold"
+							class="mie-2 is-capitalized has-text-weight-bold"
 							@update:modelValue="checked => selectPermissionGroup(group, checked)"
 						>
 							{{ formatPermissionTitle(group) }}
@@ -323,7 +323,7 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 					>
 						<FancyCheckbox
 							v-model="newTokenPermissions[group][route]"
-							class="ms-4 me-2 is-capitalized"
+							class="mis-4 mie-2 is-capitalized"
 							@update:modelValue="checked => toggleGroupPermissionsFromChild(group, checked)"
 						>
 							{{ formatPermissionTitle(route) }}
@@ -350,7 +350,7 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 		<XButton
 			v-else
 			icon="plus"
-			class="mb-4"
+			class="mbe-4"
 			:loading="service.loading"
 			@click="() => showCreateForm = true"
 		>

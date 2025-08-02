@@ -28,7 +28,7 @@
 						>
 							<span
 								:key="`item${key}`"
-								class="tag ms-2 mt-2"
+								class="tag mis-2 mbs-2"
 							>
 								{{ label !== '' ? item[label] : item }}
 								<BaseButton

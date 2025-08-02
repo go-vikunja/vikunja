@@ -28,7 +28,7 @@
 					<ApiConfig v-if="showApiConfig" />
 					<Message
 						v-if="motd !== ''"
-						class="is-hidden-tablet mb-4"
+						class="is-hidden-tablet mbe-4"
 					>
 						{{ motd }}
 					</Message>

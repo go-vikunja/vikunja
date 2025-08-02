@@ -34,7 +34,7 @@
 			<Message
 				v-if="currentProject?.isArchived"
 				variant="warning"
-				class="mb-4"
+				class="mbe-4"
 			>
 				{{ $t('project.archivedMessage') }}
 			</Message>

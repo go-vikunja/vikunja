@@ -53,7 +53,7 @@
 		<Message
 			v-if="errorMsg !== ''"
 			variant="danger"
-			class="mt-2"
+			class="mbs-2"
 		>
 			{{ errorMsg }}
 		</Message>

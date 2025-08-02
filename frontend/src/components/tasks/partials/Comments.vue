@@ -16,9 +16,9 @@
 		<div class="comments">
 			<span
 				v-if="taskCommentService.loading && saving === null && !creating"
-				class="is-flex is-align-items-center my-4 ms-2"
+				class="is-flex is-align-items-center my-4 mis-2"
 			>
-				<span class="loader is-inline-block me-2" />
+				<span class="loader is-inline-block mie-2" />
 				{{ $t('task.comment.loading') }}
 			</span>
 			<div
@@ -79,7 +79,7 @@
 								"
 								class="is-inline-flex"
 							>
-								<span class="loader is-inline-block me-2" />
+								<span class="loader is-inline-block mie-2" />
 								{{ $t('misc.saving') }}
 							</span>
 							<span
@@ -115,7 +115,7 @@
 					/>
 					<Reactions 
 						v-model="c.reactions"
-						class="mt-2" 
+						class="mbs-2" 
 						entity-kind="comments"
 						:entity-id="c.id"
 						:disabled="!canWrite"
@@ -153,7 +153,7 @@
 								v-if="taskCommentService.loading && creating"
 								class="is-inline-flex"
 							>
-								<span class="loader is-inline-block me-2" />
+								<span class="loader is-inline-block mie-2" />
 								{{ $t('task.comment.creating') }}
 							</span>
 						</CustomTransition>

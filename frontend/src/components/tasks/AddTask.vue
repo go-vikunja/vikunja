@@ -46,7 +46,7 @@
 		<Expandable :open="errorMessage !== ''">
 			<p
 				v-if="errorMessage !== ''"
-				class="pt-3 mt-0 help is-danger"
+				class="pbs-3 mbs-0 help is-danger"
 			>
 				{{ errorMessage }}
 			</p>

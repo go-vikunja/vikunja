@@ -3,7 +3,7 @@
 		<Message
 			v-if="errorMessage !== ''"
 			variant="danger"
-			class="mb-4"
+			class="mbe-4"
 		>
 			{{ errorMessage }}
 		</Message>
@@ -82,7 +82,7 @@
 			<XButton
 				id="register-submit"
 				:loading="isLoading"
-				class="me-2"
+				class="mie-2"
 				:disabled="!everythingValid"
 				@click="submit"
 			>
@@ -92,14 +92,14 @@
 			<Message
 				v-if="configStore.demoModeEnabled"
 				variant="warning"
-				class="mt-4"
+				class="mbs-4"
 			>
 				{{ $t('demo.title') }}
 				{{ $t('demo.accountWillBeDeleted') }}<br>
 				<strong class="is-uppercase">{{ $t('demo.everythingWillBeDeleted') }}</strong>
 			</Message>
 
-			<p class="mt-2">
+			<p class="mbs-2">
 				{{ $t('user.auth.alreadyHaveAnAccount') }}
 				<RouterLink :to="{ name: 'user.login' }">
 					{{ $t('user.auth.login') }}

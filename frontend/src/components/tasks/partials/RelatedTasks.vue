@@ -23,7 +23,7 @@
 							v-if="taskRelationService.loading"
 							class="is-inline-flex"
 						>
-							<span class="loader is-inline-block me-2" />
+							<span class="loader is-inline-block mie-2" />
 							{{ $t('misc.saving') }}
 						</span>
 						<span
@@ -80,7 +80,7 @@
 				</div>
 				<div
 					key="field-kind"
-					class="field has-addons mb-4"
+					class="field has-addons mbe-4"
 				>
 					<div class="control is-expanded">
 						<div class="select is-fullwidth has-defaults">
