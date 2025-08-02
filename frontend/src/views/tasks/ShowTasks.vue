@@ -1,7 +1,7 @@
 <template>
 	<div
 		v-cy="'showTasks'"
-		class="is-max-width-desktop has-text-left"
+		class="is-max-width-desktop has-text-start"
 	>
 		<h3 class="mb-2 title">
 			{{ pageTitle }}
@@ -24,7 +24,7 @@
 			</DatepickerWithRange>
 			<FancyCheckbox
 				:model-value="showNulls"
-				class="mr-2"
+				class="me-2"
 				@update:modelValue="setShowNulls"
 			>
 				{{ $t('task.show.noDates') }}

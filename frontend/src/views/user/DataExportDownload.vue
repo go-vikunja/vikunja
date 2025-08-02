@@ -34,7 +34,7 @@
 		<XButton
 			v-focus
 			:loading="dataExportService.loading"
-			class="mt-4 mr-4"
+			class="mt-4 me-4"
 			@click="download()"
 		>
 			{{ $t('misc.download') }}

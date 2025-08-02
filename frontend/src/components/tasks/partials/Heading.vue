@@ -46,7 +46,7 @@
 				v-if="loading && saving"
 				class="is-inline-flex is-align-items-center"
 			>
-				<span class="loader is-inline-block mr-2" />
+				<span class="loader is-inline-block me-2" />
 				{{ $t('misc.saving') }}
 			</span>
 			<span
@@ -55,7 +55,7 @@
 			>
 				<Icon
 					icon="check"
-					class="mr-2"
+					class="me-2"
 				/>
 				{{ $t('misc.saved') }}
 			</span>
@@ -152,13 +152,13 @@ async function cancel(element: HTMLInputElement) {
 }
 
 .title {
-	margin-bottom: 0;
+	margin-block-end: 0;
 }
 
 .title.input {
 	// 1.8rem is the font-size, 1.125 is the line-height, .3rem padding everywhere, 1px border around the whole thing.
 	min-height: calc(1.8rem * 1.125 + .6rem + 2px);
-	margin-right: 0;
+	margin-inline-end: 0;
 
 	@media screen and (max-width: $tablet) {
 		margin: 0 -.3rem .5rem -.3rem; // the title has 0.3rem padding - this make the text inside of it align with the rest
@@ -177,7 +177,7 @@ async function cancel(element: HTMLInputElement) {
 
 .close {
 	font-size: 2rem;
-	margin-left: 0.5rem;
+	margin-inline-start: 0.5rem;
 	line-height: 1;
 
 	@media screen and (max-width: $tablet) {

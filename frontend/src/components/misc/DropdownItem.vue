@@ -60,7 +60,7 @@ defineProps<DropDownItemProps>()
 }
 
 .icon {
-	padding-right: .5rem;
+	padding-inline-end: .5rem;
 	color: var(--grey-300);
 }
 

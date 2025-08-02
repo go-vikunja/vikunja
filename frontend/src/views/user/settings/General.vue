@@ -549,7 +549,7 @@ async function updateSettings() {
 }
 
 .section-block + .section-block {
-	margin-top: 1.5rem;
+	margin-block-start: 1.5rem;
 }
 
 .field-group {
@@ -566,7 +566,7 @@ async function updateSettings() {
 
 .two-col {
 	flex: 0 0 50%;
-	margin-left: .5rem;
+	margin-inline-start: .5rem;
 }
 
 .sticky-save {

@@ -22,7 +22,7 @@ const {getLabelStyles} = useLabelStyles()
 <style scoped lang="scss">
 .tag {
 	& + & {
-		margin-left: 0.5rem;
+		margin-inline-start: 0.5rem;
 	}
 }
 </style>

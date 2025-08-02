@@ -46,7 +46,7 @@
 									<span
 										v-if="bucket.id !== 0 && view?.doneBucketId === bucket.id"
 										v-tooltip="$t('project.kanban.doneBucketHint')"
-										class="icon is-small has-text-success mr-2"
+										class="icon is-small has-text-success me-2"
 									>
 										<Icon icon="check-double" />
 									</span>
@@ -875,11 +875,11 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 			padding: .25rem .5rem;
 
 			&:first-of-type {
-				padding-top: .5rem;
+				padding-block-start: .5rem;
 			}
 
 			&:last-of-type {
-				padding-bottom: .5rem;
+				padding-block-end: .5rem;
 			}
 		}
 
@@ -912,7 +912,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 			transform: rotate(90deg) translateY(-100%);
 			transform-origin: top left;
 			// Using negative margins instead of translateY here to make all other buckets fill the empty space
-			margin-right: calc((#{$bucket-width} - #{$bucket-header-height} - #{$bucket-right-margin}) * -1);
+			margin-inline-end: calc((#{$bucket-width} - #{$bucket-header-height} - #{$bucket-right-margin}) * -1);
 			cursor: pointer;
 
 			.tasks, .bucket-footer {

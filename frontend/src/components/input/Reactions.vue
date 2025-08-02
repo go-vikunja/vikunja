@@ -174,8 +174,8 @@ async function toggleReaction(value: string) {
 
 <style scoped lang="scss">
 .reaction-button {
-	margin-right: .25rem;
-	margin-bottom: .25rem;
+	margin-inline-end: .25rem;
+	margin-block-end: .25rem;
 	padding: .175rem .5rem .15rem;
 	border: 1px solid var(--grey-400);
 	background: var(--grey-100);
@@ -191,6 +191,6 @@ async function toggleReaction(value: string) {
 .emoji-picker {
 	position: absolute;
 	z-index: 99;
-	margin-top: .5rem;
+	margin-block-start: .5rem;
 }
 </style>

@@ -82,7 +82,7 @@
 			<XButton
 				id="register-submit"
 				:loading="isLoading"
-				class="mr-2"
+				class="me-2"
 				:disabled="!everythingValid"
 				@click="submit"
 			>

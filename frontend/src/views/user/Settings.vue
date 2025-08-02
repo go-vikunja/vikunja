@@ -132,11 +132,11 @@ const extraSettingsLinks = computed(() => authStore.settings.extraSettingsLinks)
 
 .navigation {
 	width: 25%;
-	padding-right: 1rem;
+	padding-inline-end: 1rem;
 
 	@media screen and (max-width: $tablet) {
 		width: 100%;
-		padding-left: 0;
+		padding-inline-start: 0;
 	}
 }
 
@@ -145,7 +145,7 @@ const extraSettingsLinks = computed(() => authStore.settings.extraSettingsLinks)
 	padding: .5rem;
 	color: var(--text);
 	width: 100%;
-	border-left: 3px solid transparent;
+	border-inline-start: 3px solid transparent;
 
 	&:hover,
 	&.router-link-active {
@@ -159,8 +159,8 @@ const extraSettingsLinks = computed(() => authStore.settings.extraSettingsLinks)
 
 	@media screen and (max-width: $tablet) {
 		width: 100%;
-		padding-left: 0;
-		padding-top: 1rem;
+		padding-inline-start: 0;
+		padding-block-start: 1rem;
 	}
 }
 </style>

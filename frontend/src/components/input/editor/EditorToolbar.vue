@@ -397,9 +397,9 @@ function setLink(event) {
 	flex-wrap: wrap;
 
 	> * + * {
-		border-left: 1px solid var(--grey-200);
-		margin-left: 6px;
-		padding-left: 6px;
+		border-inline-start: 1px solid var(--grey-200);
+		margin-inline-start: 6px;
+		padding-inline-start: 6px;
 	}
 }
 
@@ -411,7 +411,7 @@ function setLink(event) {
 	color: var(--grey-700);
 	transition: all $transition;
 	background: transparent;
-	margin-right: .25rem;
+	margin-inline-end: .25rem;
 
 	&:hover {
 		background: var(--grey-100);
@@ -432,11 +432,11 @@ function setLink(event) {
 }
 
 .editor-toolbar__table-buttons {
-	margin-top: .5rem;
+	margin-block-start: .5rem;
 
 	> .editor-toolbar__button {
-		margin-right: .5rem;
-		margin-bottom: .5rem;
+		margin-inline-end: .5rem;
+		margin-block-end: .5rem;
 		padding: 0 .25rem;
 		border: 1px solid var(--grey-400);
 		font-size: .75rem;

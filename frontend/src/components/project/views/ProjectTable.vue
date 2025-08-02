@@ -12,7 +12,7 @@
 						<XButton
 							icon="th"
 							variant="secondary"
-							class="mr-2"
+							class="me-2"
 							@click.prevent.stop="toggle()"
 						>
 							{{ $t('project.table.columns') }}
@@ -219,7 +219,7 @@
 											v-if="t.assignees.length > 0"
 											:assignees="t.assignees"
 											:avatar-size="28"
-											class="ml-1"
+											class="ms-1"
 											:inline="true"
 										/>
 									</td>

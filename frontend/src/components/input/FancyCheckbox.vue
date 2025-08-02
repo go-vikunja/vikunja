@@ -40,8 +40,8 @@ const emit = defineEmits<{
 <style lang="scss" scoped>
 .fancy-checkbox {
   display: inline-block;
-  padding-right: 5px;
-  padding-top: 3px;
+  padding-inline-end: 5px;
+  padding-block-start: 3px;
 
 	&.is-block {
 		display: block;
@@ -52,7 +52,7 @@ const emit = defineEmits<{
 .fancy-checkbox__content {
 	font-size: 0.8rem;
 	vertical-align: top;
-	padding-left: .5rem;
+	padding-inline-start: .5rem;
 }
 
 .fancy-checkbox__icon:deep() {

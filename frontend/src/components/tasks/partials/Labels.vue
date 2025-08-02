@@ -29,8 +29,8 @@ const displayLabels = computed(() =>
 	display: inline;
 	
 	:deep(.tag) {
-		margin-top: .125rem;
-		margin-bottom: .125rem;
+		margin-block-start: .125rem;
+		margin-block-end: .125rem;
 	}
 }
 </style>
