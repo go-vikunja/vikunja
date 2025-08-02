@@ -134,7 +134,7 @@ const textOnlyDescription = computed(() => {
 	line-height: var(--title-line-height);
 	color: var(--text);
 	width: 100%;
-	margin-bottom: 0;
+	margin-block-end: 0;
 	max-height: calc(100% - (var(--project-card-padding) + 1rem)); // padding & height of the "is archived" badge
 	overflow: hidden;
 	text-overflow: ellipsis;

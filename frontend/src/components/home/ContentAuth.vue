@@ -164,7 +164,7 @@ projectStore.loadAllProjects()
 	min-height: calc(100vh - 65px);
 
 	@media screen and (max-width: $tablet) {
-		padding-top: $navbar-height;
+		padding-block-start: $navbar-height;
 	}
 }
 
@@ -181,8 +181,8 @@ projectStore.loadAllProjects()
 	}
 
 	@media screen and (max-width: $tablet) {
-		margin-left: 0;
-		margin-right: 0;
+		margin-inline-start: 0;
+		margin-inline-end: 0;
 		min-height: calc(100vh - 4rem);
 	}
 
@@ -192,13 +192,13 @@ projectStore.loadAllProjects()
 
 	&.is-menu-enabled {
 		@media screen and (min-width: $tablet) {
-			margin-left: $navbar-width;
+			margin-inline-start: $navbar-width;
 		}
 		
 		[dir="rtl"] & {
 			@media screen and (min-width: $tablet) {
-				margin-left: 0;
-				margin-right: $navbar-width;
+				margin-inline-start: 0;
+				margin-inline-end: $navbar-width;
 			}
 		}
 	}

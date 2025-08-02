@@ -301,7 +301,7 @@ async function setCoverImage(attachment: IAttachment | null) {
 }
 
 .files {
-	margin-bottom: 1rem;
+	margin-block-end: 1rem;
 }
 
 .attachment {
@@ -329,7 +329,7 @@ async function setCoverImage(attachment: IAttachment | null) {
 	font-weight: bold;
 	height: 2rem;
 	color: var(--text);
-	text-align: left;
+	text-align: start;
 }
 
 .info {
@@ -339,7 +339,7 @@ async function setCoverImage(attachment: IAttachment | null) {
 	flex-direction: column;
 
 	p {
-		margin-bottom: 0;
+		margin-block-end: 0;
 		display: flex;
 
 		> span,
@@ -472,7 +472,7 @@ async function setCoverImage(attachment: IAttachment | null) {
 .is-task-cover {
 	background: var(--primary);
 	color: var(--white);
-	margin-left: .25rem;
+	margin-inline-start: .25rem;
 	padding: .25rem .35rem;
 	border-radius: 4px;
 	font-size: .75rem;

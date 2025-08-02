@@ -68,7 +68,7 @@ const projects = computed(() => {
 	justify-content: space-between;
 	align-items: center;
 	gap: 1rem;
-	margin-bottom: 1rem;
+	margin-block-end: 1rem;
 
 	@media screen and (max-width: $tablet) {
 		flex-direction: column;
@@ -88,7 +88,7 @@ const projects = computed(() => {
 }
 
 .project:not(:first-child) {
-	margin-top: 1rem;
+	margin-block-start: 1rem;
 }
 
 .project-title {
@@ -104,6 +104,6 @@ const projects = computed(() => {
 	border-radius: 3px;
 	font-family: $vikunja-font;
 	background: var(--white-translucent);
-	margin-left: .5rem;
+	margin-inline-start: .5rem;
 }
 </style>

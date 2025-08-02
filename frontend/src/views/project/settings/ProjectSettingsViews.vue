@@ -159,7 +159,7 @@ async function saveViewPosition(e) {
 				<tr>
 					<th>{{ $t('project.views.title') }}</th>
 					<th>{{ $t('project.views.kind') }}</th>
-					<th class="has-text-right">
+					<th class="has-text-end">
 						{{ $t('project.views.actions') }}
 					</th>
 				</tr>
@@ -189,10 +189,10 @@ async function saveViewPosition(e) {
 						<template v-else>
 							<td>{{ v.title }}</td>
 							<td>{{ v.viewKind }}</td>
-							<td class="has-text-right actions">
+							<td class="has-text-end actions">
 								<XButton
 									v-if="isAdmin"
-									class="is-danger mr-2"
+									class="is-danger me-2"
 									icon="trash-alt"
 									@click="() => {
 										viewIdToDelete = v.id
@@ -233,7 +233,7 @@ async function saveViewPosition(e) {
 <style scoped>
 .handle {
 	cursor: grab;
-	margin-left: .25rem;
+	margin-inline-start: .25rem;
 }
 
 .actions {

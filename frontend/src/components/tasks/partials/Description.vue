@@ -10,7 +10,7 @@
 					v-if="loading && saving"
 					class="is-small is-inline-flex"
 				>
-					<span class="loader is-inline-block mr-2" />
+					<span class="loader is-inline-block me-2" />
 					{{ $t('misc.saving') }}
 				</span>
 				<span
@@ -146,6 +146,6 @@ async function uploadCallback(files: File[] | FileList): Promise<string[]> {
 .tiptap__task-description {
 	// The exact amount of pixels we need to make the description icon align with the buttons and the form inside the editor.
 	// The icon is not exactly the same length on all sides so we need to hack our way around it.
-	margin-left: 4px;
+	margin-inline-start: 4px;
 }
 </style>

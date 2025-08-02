@@ -23,7 +23,7 @@
 							v-if="taskRelationService.loading"
 							class="is-inline-flex"
 						>
-							<span class="loader is-inline-block mr-2" />
+							<span class="loader is-inline-block me-2" />
 							{{ $t('misc.saving') }}
 						</span>
 						<span
@@ -388,7 +388,7 @@ async function toggleTaskDone(task: ITask) {
 
 <style lang="scss" scoped>
 .add-task-relation-button {
-	margin-top: -3rem;
+	margin-block-start: -3rem;
 
 	svg {
 		transition: transform $transition;
@@ -462,6 +462,6 @@ async function toggleTaskDone(task: ITask) {
 .task-done-checkbox {
 	padding: 0;
 	height: 18px; // The exact height of the checkbox in the container
-	margin-right: .75rem;
+	margin-inline-end: .75rem;
 }
 </style>

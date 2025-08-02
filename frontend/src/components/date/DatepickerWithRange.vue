@@ -227,7 +227,7 @@ const buttonText = computed<string>(() => {
 
 :deep(.popup) {
 	z-index: 10;
-	margin-top: 1rem;
+	margin-block-start: 1rem;
 	border-radius: $radius;
 	border: 1px solid var(--grey-200);
 	background-color: var(--white);
@@ -253,7 +253,7 @@ const buttonText = computed<string>(() => {
 
 .flatpickr-container {
 	width: 70%;
-	border-left: 1px solid var(--grey-200);
+	border-inline-start: 1px solid var(--grey-200);
 	padding: 1rem;
 	font-size: .9rem;
 
@@ -282,13 +282,13 @@ const buttonText = computed<string>(() => {
 	width: 30%;
 	display: flex;
 	flex-direction: column;
-	padding-top: .5rem;
+	padding-block-start: .5rem;
 	overflow-y: scroll;
 
 	button {
 		display: block;
 		width: 100%;
-		text-align: left;
+		text-align: start;
 		padding: .5rem 1rem;
 		transition: $transition;
 		font-size: .9rem;

@@ -205,7 +205,7 @@ $modal-width: 1024px;
 	z-index: 4600;
 
 	:deep(.card-content) {
-		text-align: left;
+		text-align: start;
 
 		.info {
 			font-style: italic;
@@ -259,7 +259,7 @@ $modal-width: 1024px;
 	display: flex;
 	flex-direction: column;
 	justify-content: space-between;
-	margin-bottom: 0 !important;
+	margin-block-end: 0 !important;
   }
 }
 

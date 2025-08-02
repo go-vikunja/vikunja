@@ -123,6 +123,6 @@ async function findUser(query: string) {
 
 <style lang="scss">
 .edit-assignees.has-assignees.multiselect .input {
-	padding-left: 0;
+	padding-inline-start: 0;
 }
 </style>

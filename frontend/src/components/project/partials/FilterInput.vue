@@ -373,7 +373,7 @@ const blurDebounced = useDebounceFn(() => emit('blur'), 500)
 	button.filter-query__date_value {
 		border-radius: $radius;
 		position: absolute;
-		margin-top: calc((0.25em - 0.125rem) * -1);
+		margin-block-start: calc((0.25em - 0.125rem) * -1);
 		height: 1.75rem;
 		padding: 0;
 		border: 0;

@@ -16,9 +16,9 @@
 		<div class="comments">
 			<span
 				v-if="taskCommentService.loading && saving === null && !creating"
-				class="is-flex is-align-items-center my-4 ml-2"
+				class="is-flex is-align-items-center my-4 ms-2"
 			>
-				<span class="loader is-inline-block mr-2" />
+				<span class="loader is-inline-block me-2" />
 				{{ $t('task.comment.loading') }}
 			</span>
 			<div
@@ -79,7 +79,7 @@
 								"
 								class="is-inline-flex"
 							>
-								<span class="loader is-inline-block mr-2" />
+								<span class="loader is-inline-block me-2" />
 								{{ $t('misc.saving') }}
 							</span>
 							<span
@@ -153,7 +153,7 @@
 								v-if="taskCommentService.loading && creating"
 								class="is-inline-flex"
 							>
-								<span class="loader is-inline-block mr-2" />
+								<span class="loader is-inline-block me-2" />
 								{{ $t('task.comment.creating') }}
 							</span>
 						</CustomTransition>
@@ -460,8 +460,8 @@ function getCommentUrl(commentId: string) {
 			display: block;
 			width: 20px;
 			height: 20px;
-			padding-right: 0;
-			margin-right: .5rem;
+			padding-inline-end: 0;
+			margin-inline-end: .5rem;
 		}
 
 		@media screen and (min-width: $tablet) {
@@ -498,6 +498,6 @@ function getCommentUrl(commentId: string) {
 }
 
 .comments-container {
-	scroll-margin-top: 4rem;
+	scroll-margin-block-start: 4rem;
 }
 </style>
