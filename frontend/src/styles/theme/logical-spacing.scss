@@ -38,3 +38,10 @@ $types: (
 .has-text-end {
   text-align: end;
 }
+
+[dir="rtl"] .is-mirrored-rtl {
+  &,
+  > svg {
+    transform: scaleX(-1);
+  }
+}
