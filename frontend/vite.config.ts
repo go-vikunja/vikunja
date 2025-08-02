@@ -107,7 +107,11 @@ function getBuildConfig(env: Record<string, string>) {
 				plugins: [
 					tailwindcss(),
 					postcssEasingGradients(),
-					postcssPresetEnv(),
+					postcssPresetEnv({
+						features: {
+							'logical-properties-and-values': false,
+						}
+					}),
 				],
 			},
 		},
