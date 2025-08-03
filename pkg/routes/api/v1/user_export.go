@@ -112,6 +112,7 @@ func RequestUserDataExport(c echo.Context) error {
 // @Param password body v1.UserPasswordConfirmation true "User password to confirm the download."
 // @Success 200 {object} models.Message
 // @Failure 400 {object} web.HTTPError "Something's invalid."
+// @Failure 404 {object} web.HTTPError "No user data export found."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/export/download [post]
 func DownloadUserDataExport(c echo.Context) error {
@@ -126,10 +127,18 @@ func DownloadUserDataExport(c echo.Context) error {
 		return handler.HandleHTTPError(err)
 	}
 
+	// Check if user has an export file
+	if u.ExportFileID == 0 {
+		return echo.NewHTTPError(http.StatusNotFound, "No user data export found.")
+	}
+
 	// Download
 	exportFile := &files.File{ID: u.ExportFileID}
 	err = exportFile.LoadFileMetaByID()
 	if err != nil {
+		if files.IsErrFileDoesNotExist(err) {
+			return echo.NewHTTPError(http.StatusNotFound, "User data export file not found.")
+		}
 		return handler.HandleHTTPError(err)
 	}
 	err = exportFile.LoadFileByID()
