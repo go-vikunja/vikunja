@@ -505,7 +505,7 @@ function focus() {
 	background: var(--white) !important;
 
 	&, &:focus-within {
-		border-bottom-color: var(--grey-200) !important;
+		border-block-end-color: var(--grey-200) !important;
 	}
 }
 
