@@ -28,6 +28,9 @@ $types: (
     .#{$type}be-#{$name} {
       #{$property}-block-end: #{$val};
     }
+    .#{$type}-#{$name} {
+      #{$property}: #{$val};
+    }
   }
 }
 
