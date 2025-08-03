@@ -18,6 +18,7 @@ package v1
 
 import (
 	"net/http"
+	"os"
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
@@ -112,6 +113,7 @@ func RequestUserDataExport(c echo.Context) error {
 // @Param password body v1.UserPasswordConfirmation true "User password to confirm the download."
 // @Success 200 {object} models.Message
 // @Failure 400 {object} web.HTTPError "Something's invalid."
+// @Failure 404 {object} web.HTTPError "No user data export found."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/export/download [post]
 func DownloadUserDataExport(c echo.Context) error {
@@ -126,14 +128,26 @@ func DownloadUserDataExport(c echo.Context) error {
 		return handler.HandleHTTPError(err)
 	}
 
+	// Check if user has an export file
+	exportNotFoundError := echo.NewHTTPError(http.StatusNotFound, "No user data export found.")
+	if u.ExportFileID == 0 {
+		return exportNotFoundError
+	}
+
 	// Download
 	exportFile := &files.File{ID: u.ExportFileID}
 	err = exportFile.LoadFileMetaByID()
 	if err != nil {
+		if files.IsErrFileDoesNotExist(err) {
+			return exportNotFoundError
+		}
 		return handler.HandleHTTPError(err)
 	}
 	err = exportFile.LoadFileByID()
 	if err != nil {
+		if os.IsNotExist(err) {
+			return exportNotFoundError
+		}
 		return handler.HandleHTTPError(err)
 	}
 
