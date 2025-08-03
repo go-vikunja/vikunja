@@ -190,7 +190,7 @@ function onUpdateField(e) {
 		background: var(--white);
 		border-radius: 0 0 var(--input-radius) var(--input-radius);
 		border: 1px solid var(--primary);
-		border-top: none;
+		border-block-start: none;
 
 		max-height: 50vh;
 		overflow-x: auto;

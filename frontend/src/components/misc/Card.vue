@@ -88,7 +88,7 @@ defineEmits<{
 
 .card-footer {
 	background-color: var(--grey-50);
-	border-top: 0;
+	border-block-start: 0;
 	padding: var(--modal-card-head-padding);
 	display: flex;
 	justify-content: flex-end;

@@ -513,7 +513,7 @@ function focus() {
 	background: var(--white);
 	border-radius: 0 0 $radius $radius;
 	border: 1px solid var(--primary);
-	border-top: none;
+	border-block-start: none;
 
 	max-height: 50vh;
 	overflow-x: auto;
