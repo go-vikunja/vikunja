@@ -354,7 +354,7 @@ async function setCoverImage(attachment: IAttachment | null) {
 	background: hsla(var(--grey-100-hsl), 0.8);
 	inset-block-start: 0;
 	inset-inline-start: 0;
-	bottom: 0;
+	inset-block-end: 0;
 	right: 0;
 	z-index: 4001; // modal z-index is 4000
 	text-align: center;
@@ -366,7 +366,7 @@ async function setCoverImage(attachment: IAttachment | null) {
 
 .drop-hint {
 	position: absolute;
-	bottom: 0;
+	inset-block-end: 0;
 	inset-inline-start: 0;
 	inset-inline-end: 0;
 

@@ -930,7 +930,7 @@ watch(
 			inset-inline-start: 0;
 			inset-inline-end: 0;
 			inset-block-start: 0;
-			bottom: 0;
+			inset-block-end: 0;
 			background: rgba(200, 200, 255, 0.4);
 			pointer-events: none;
 		}
@@ -939,7 +939,7 @@ watch(
 			position: absolute;
 			inset-inline-end: -2px;
 			inset-block-start: 0;
-			bottom: -2px;
+			inset-block-end: -2px;
 			width: 4px;
 			background-color: #adf;
 			pointer-events: none;

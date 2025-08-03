@@ -207,7 +207,7 @@ projectStore.loadAllProjects()
 	display: none;
 	position: fixed;
 	inset-block-start: 0;
-	bottom: 0;
+	inset-block-end: 0;
 	inset-inline-start: 0;
 	inset-inline-end: 0;
 	height: 100vh;
@@ -225,7 +225,7 @@ projectStore.loadAllProjects()
 
 .keyboard-shortcuts-button {
 	position: fixed;
-	bottom: calc(1rem - 4px);
+	inset-block-end: calc(1rem - 4px);
 	inset-inline-end: 1rem;
 	z-index: 4500; // The modal has a z-index of 4000
 	

@@ -157,7 +157,7 @@ const savedFilterProjects = computed(() => projectStore.savedFilterProjects)
 	transition: transform $transition-duration ease-in;
 	position: fixed;
 	inset-block-start: $navbar-height;
-	bottom: 0;
+	inset-block-end: 0;
 	inset-inline-start: 0;
 	transform: translateX(-100%);
 	width: $navbar-width;
