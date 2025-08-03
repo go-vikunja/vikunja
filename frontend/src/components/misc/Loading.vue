@@ -33,7 +33,7 @@ withDefaults(defineProps<{
 		&.is-loading::after {
 			width: 3rem;
 			height: 3rem;
-			top: calc(50% - 1.5rem);
+			inset-block-start: calc(50% - 1.5rem);
 			inset-inline-start: calc(50% - 1.5rem);
 			border-width: 3px;
 		}

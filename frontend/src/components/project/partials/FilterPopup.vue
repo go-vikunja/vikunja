@@ -107,7 +107,7 @@ $filter-bubble-size: .75rem;
 	&::after {
 		content: '';
 		position: absolute;
-		top: math.div($filter-bubble-size, -2);
+		inset-block-start: math.div($filter-bubble-size, -2);
 		right: math.div($filter-bubble-size, -2);
 
 		width: $filter-bubble-size;

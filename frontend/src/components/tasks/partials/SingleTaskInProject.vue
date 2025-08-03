@@ -540,7 +540,7 @@ defineExpose({
 	}
 
 	&.loader-container.is-loading:after {
-		top: calc(50% - 1rem);
+		inset-block-start: calc(50% - 1rem);
 		inset-inline-start: calc(50% - 1rem);
 		width: 2rem;
 		height: 2rem;
@@ -558,7 +558,7 @@ defineExpose({
 	background-color: var(--white);
 	box-shadow: var(--shadow-lg);
 	color: var(--text);
-	top: unset;
+	inset-block-start: unset;
 	
 	&.is-open {
 		padding: 1rem;

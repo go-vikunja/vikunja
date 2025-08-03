@@ -230,7 +230,7 @@ $task-background: var(--white);
 	&.loader-container.is-loading::after {
 		width: 1.5rem;
 		height: 1.5rem;
-		top: calc(50% - .75rem);
+		inset-block-start: calc(50% - .75rem);
 		inset-inline-start: calc(50% - .75rem);
 		border-width: 2px;
 	}

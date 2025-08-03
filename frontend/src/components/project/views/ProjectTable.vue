@@ -431,6 +431,6 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 }
 
 .filter-container :deep(.popup) {
-	top: 7rem;
+	inset-block-start: 7rem;
 }
 </style>

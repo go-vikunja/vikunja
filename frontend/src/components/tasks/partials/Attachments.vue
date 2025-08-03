@@ -352,7 +352,7 @@ async function setCoverImage(attachment: IAttachment | null) {
 .dropzone {
 	position: fixed;
 	background: hsla(var(--grey-100-hsl), 0.8);
-	top: 0;
+	inset-block-start: 0;
 	inset-inline-start: 0;
 	bottom: 0;
 	right: 0;

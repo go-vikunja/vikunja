@@ -46,7 +46,7 @@ $size: $lineWidth + 1rem;
 	}
 
 	&::before {
-		top: 50%;
+		inset-block-start: 50%;
 		transform: $transformX translateY(-0.4rem)
 	}
 

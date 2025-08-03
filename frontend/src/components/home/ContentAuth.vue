@@ -132,7 +132,7 @@ projectStore.loadAllProjects()
 <style lang="scss" scoped>
 .menu-hide-button {
 	position: fixed;
-	top: 0.5rem;
+	inset-block-start: 0.5rem;
 	right: 0.5rem;
 	z-index: 31;
 	
@@ -206,7 +206,7 @@ projectStore.loadAllProjects()
 .mobile-overlay {
 	display: none;
 	position: fixed;
-	top: 0;
+	inset-block-start: 0;
 	bottom: 0;
 	inset-inline-start: 0;
 	right: 0;

@@ -193,7 +193,7 @@ async function cancel(element: HTMLInputElement) {
 	display: none;
 	position: absolute;
 	right: 1.25rem;
-	top: 1.1rem;
+	inset-block-start: 1.1rem;
 
 	@media screen and (max-width: $tablet) {
 		display: block;

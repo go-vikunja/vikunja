@@ -46,6 +46,6 @@ const enabled = computed(() => configStore.demoModeEnabled && !hide.value)
 	cursor: pointer;
 	position: absolute;
 	right: .5rem;
-	top: .25rem;
+	inset-block-start: .25rem;
 }
 </style>

@@ -1135,7 +1135,7 @@ h3 .button {
 .action-buttons {
 	@media screen and (min-width: $tablet) {
 		position: sticky;
-		top: $navbar-height + 1.5rem;
+		inset-block-start: $navbar-height + 1.5rem;
 		align-self: flex-start;
 	}
 
@@ -1153,12 +1153,12 @@ h3 .button {
 .is-modal .action-buttons {
 	// we need same top margin for the modal close button 
 	@media screen and (min-width: $tablet) {
-		top: 6.5rem;
+		inset-block-start: 6.5rem;
 	}
 	// this is the moment when the fixed close button is outside the modal
 	// => we can fill up the space again
 	@media screen and (min-width: calc(#{$desktop} + 84px)) {
-		top: 0;
+		inset-block-start: 0;
 	}
 }
 

@@ -261,7 +261,7 @@ function translateUnit(amount: number, unit: PeriodUnit): string {
 }
 
 :deep(.popup) {
-	top: unset;
+	inset-block-start: unset;
 }
 
 .reminder-options-popup {

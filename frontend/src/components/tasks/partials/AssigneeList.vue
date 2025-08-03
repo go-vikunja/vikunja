@@ -79,7 +79,7 @@ defineEmits<{
 
 .remove-assignee {
 	position: absolute;
-	top: 4px;
+	inset-block-start: 4px;
 	inset-inline-start: 2px;
 	color: var(--danger);
 	background: var(--white);

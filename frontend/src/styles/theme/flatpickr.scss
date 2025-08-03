@@ -64,7 +64,7 @@
 
 .numInputWrapper span.arrowDown:after {
   border-block-start: 4px solid var(--grey-200) !important;
-  top: 40% !important;
+  inset-block-start: 40% !important;
 }
 
 .numInputWrapper span svg path {
