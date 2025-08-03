@@ -34,7 +34,7 @@ withDefaults(defineProps<{
 			width: 3rem;
 			height: 3rem;
 			top: calc(50% - 1.5rem);
-			left: calc(50% - 1.5rem);
+			inset-inline-start: calc(50% - 1.5rem);
 			border-width: 3px;
 		}
 	}

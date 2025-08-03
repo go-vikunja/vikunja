@@ -138,7 +138,7 @@ projectStore.loadAllProjects()
 	
 	[dir="rtl"] & {
 		right: auto;
-		left: 0.5rem;
+		inset-inline-start: 0.5rem;
 	}
 	width: 3rem;
 	height: 3rem;
@@ -208,7 +208,7 @@ projectStore.loadAllProjects()
 	position: fixed;
 	top: 0;
 	bottom: 0;
-	left: 0;
+	inset-inline-start: 0;
 	right: 0;
 	height: 100vh;
 	width: 100vw;
@@ -231,7 +231,7 @@ projectStore.loadAllProjects()
 	
 	[dir="rtl"] & {
 		right: auto;
-		left: 1rem;
+		inset-inline-start: 1rem;
 	}
 
 	color: var(--grey-500);

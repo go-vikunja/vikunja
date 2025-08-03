@@ -843,7 +843,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 			top: 0.25rem;
 			right: 0.5rem;
 			bottom: 0.25rem;
-			left: 0.5rem;
+			inset-inline-start: 0.5rem;
 			border: 3px dashed var(--grey-300);
 			border-radius: $radius;
 		}

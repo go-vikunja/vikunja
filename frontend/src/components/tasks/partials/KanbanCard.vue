@@ -231,7 +231,7 @@ $task-background: var(--white);
 		width: 1.5rem;
 		height: 1.5rem;
 		top: calc(50% - .75rem);
-		left: calc(50% - .75rem);
+		inset-inline-start: calc(50% - .75rem);
 		border-width: 2px;
 	}
 
