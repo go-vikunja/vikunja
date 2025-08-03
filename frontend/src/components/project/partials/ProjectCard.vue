@@ -117,7 +117,7 @@ const textOnlyDescription = computed(() => {
 	position: absolute;
 	inset-block-start: 0;
 	inset-inline-end: 0;
-	bottom: 0;
+	inset-block-end: 0;
 	inset-inline-start: 0;
 }
 

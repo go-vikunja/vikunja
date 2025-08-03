@@ -59,7 +59,7 @@ function refreshApp() {
 	// at least define it centrally
 	// the highest z-index of a modal is .hint-modal with 4500
 	z-index: 5000;
-	bottom: 1rem;
+	inset-block-end: 1rem;
 	inset-inline: 1rem;
 	max-width: max-content;
 	margin-inline: auto;

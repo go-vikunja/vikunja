@@ -842,7 +842,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 			display: block;
 			inset-block-start: 0.25rem;
 			inset-inline-end: 0.5rem;
-			bottom: 0.25rem;
+			inset-block-end: 0.25rem;
 			inset-inline-start: 0.5rem;
 			border: 3px dashed var(--grey-300);
 			border-radius: $radius;
@@ -953,7 +953,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 
 	.bucket-footer {
 		position: sticky;
-		bottom: 0;
+		inset-block-end: 0;
 		height: min-content;
 		padding: .5rem;
 		background-color: var(--grey-100);

@@ -170,7 +170,7 @@ $ease-in-out-quint: cubic-bezier(0.83, 0, 0.17, 1);
     position: absolute;
     height: 40px;
     width: 100%;
-    bottom: 0;
+    inset-block-end: 0;
   }
 }
 

@@ -51,7 +51,7 @@ $size: $lineWidth + 1rem;
 	}
 
 	&::after {
-		bottom: 50%;
+		inset-block-end: 50%;
 		transform: $transformX translateY(0.4rem)
 	}
 

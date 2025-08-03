@@ -83,7 +83,7 @@ const baseStore = useBaseStore()
 	position: fixed;
 	inset-block-start: 0;
 	inset-inline-start: 0;
-	bottom: 0;
+	inset-block-end: 0;
 	inset-inline-end: 0;
 	background: var(--grey-100);
 	z-index: 99;
@@ -114,7 +114,7 @@ const baseStore = useBaseStore()
 	text-align: center;
 	position: absolute;
 	width: 100vw;
-	bottom: 5vh;
+	inset-block-end: 5vh;
 	color: $white;
 	padding: 0 1rem;
 }

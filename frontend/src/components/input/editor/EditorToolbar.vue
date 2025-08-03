@@ -424,7 +424,7 @@ function setLink(event) {
 		.icon__lower-text {
 			font-size: .75rem;
 			position: absolute;
-			bottom: -3px;
+			inset-block-end: -3px;
 			inset-inline-end: -2px;
 			font-weight: bold;
 		}
