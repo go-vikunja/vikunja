@@ -269,6 +269,15 @@ $user-dropdown-width-mobile: 5rem;
 	align-items: center;
 	font-size: .85rem;
 	font-weight: 700;
+	gap: .5rem;
+	
+	:deep(.avatar) {
+		margin-inline-end: 0;
+	}
+	
+	[dir="rtl"] & {
+		flex-direction: row-reverse;
+	}
 
 	@media screen and (max-width: $tablet) {
 		padding-inline-end: .5rem;
