@@ -30,7 +30,7 @@ func TestDownloadUserDataExportLogic(t *testing.T) {
 			ID:           1,
 			ExportFileID: 0,
 		}
-		
+
 		// This simulates the check we added in the fix
 		assert.Equal(t, int64(0), u.ExportFileID)
 	})
