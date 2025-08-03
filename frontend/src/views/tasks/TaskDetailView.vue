@@ -1128,7 +1128,7 @@ h3 .button {
 	margin-block-end: 0;
 
 	table tr:last-child td {
-		border-bottom: none;
+		border-inline-end: none;
 	}
 }
 

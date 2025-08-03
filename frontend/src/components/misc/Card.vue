@@ -82,7 +82,7 @@ defineEmits<{
 
 .card-header {
 	box-shadow: none;
-	border-bottom: 1px solid var(--card-border-color);
+	border-inline-end: 1px solid var(--card-border-color);
 	border-radius: $radius $radius 0 0;
 }
 
