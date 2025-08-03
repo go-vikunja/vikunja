@@ -115,6 +115,13 @@
 				},
 				"externalUserNameChange": "Adınız, oturum açma sağlayıcınız ({provider}) tarafından yönetiliyor. Değiştirmek için lütfen orada güncelleyin."
 			},
+			"sections": {
+				"personalInformation": "Kişisel Bilgiler",
+				"taskAndNotifications": "Projeler ve Görevler",
+				"privacy": "Gizlilik",
+				"localization": "Yerelleştirme",
+				"appearance": "Görünüm ve Davranış"
+			},
 			"totp": {
 				"title": "İki Faktörlü Kimlik Doğrulama",
 				"enroll": "Kaydol",

@@ -115,6 +115,13 @@
 				},
 				"externalUserNameChange": "O teu nome é gerido pelo teu fornecedor de início de sessão ({provider}). Para o alterar, atualiza-o antes lá."
 			},
+			"sections": {
+				"personalInformation": "Informação Pessoal",
+				"taskAndNotifications": "Projetos e Tarefas",
+				"privacy": "Privacidade",
+				"localization": "Localização",
+				"appearance": "Aparência e Comportamento"
+			},
 			"totp": {
 				"title": "Autenticação de Dois Fatores",
 				"enroll": "Registar",

@@ -115,6 +115,13 @@
 				},
 				"externalUserNameChange": "Dein Name wird von deinem Login-Provider verwaltet ({provider}). Um ihn zu ändern, aktualisiere ihn bitte dort."
 			},
+			"sections": {
+				"personalInformation": "Persönliche Angaben",
+				"taskAndNotifications": "Projekte & Aufgaben",
+				"privacy": "Privatsphäre",
+				"localization": "Sprachauswahl",
+				"appearance": "Aussehen & Verhalten"
+			},
 			"totp": {
 				"title": "Zwei-Faktor-Authentifizierung",
 				"enroll": "Aktivieren",
