@@ -9642,6 +9642,11 @@ const docTemplate = `{
                     "description": "If enabled, sends email reminders of tasks to the user.",
                     "type": "boolean"
                 },
+                "extra_settings_links": {
+                    "description": "Additional settings links as provided by openid",
+                    "type": "object",
+                    "additionalProperties": {}
+                },
                 "frontend_settings": {
                     "description": "Additional settings only used by the frontend"
                 },
