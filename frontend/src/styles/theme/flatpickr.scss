@@ -10,7 +10,7 @@
 }
 
 .flatpickr-calendar.hasTime .flatpickr-time {
-  border-top: 1px solid var(--grey-200) !important;
+  border-block-start: 1px solid var(--grey-200) !important;
 }
 
 .flatpickr-calendar.arrowTop:before {
@@ -63,7 +63,7 @@
 }
 
 .numInputWrapper span.arrowDown:after {
-  border-top: 4px solid var(--grey-200) !important;
+  border-block-start: 4px solid var(--grey-200) !important;
   top: 40% !important;
 }
 
