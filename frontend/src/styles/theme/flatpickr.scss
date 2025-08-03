@@ -14,11 +14,11 @@
 }
 
 .flatpickr-calendar.arrowTop:before {
-  border-bottom-color: var(--grey-200) !important;
+  border-block-end-color: var(--grey-200) !important;
 }
 
 .flatpickr-calendar.arrowTop:after {
-  border-bottom-color: var(--white) !important;
+  border-block-end-color: var(--white) !important;
 }
 
 .flatpickr-calendar.arrowBottom:before {
@@ -80,7 +80,7 @@
 }
 
 .flatpickr-current-month .numInputWrapper span.arrowUp:after {
-  border-bottom-color: var(--grey-900) !important;
+  border-block-end-color: var(--grey-900) !important;
 }
 
 .flatpickr-current-month .numInputWrapper span.arrowDown:after {
@@ -197,7 +197,7 @@ span.flatpickr-weekday {
 }
 
 .flatpickr-time .numInputWrapper span.arrowUp:after {
-  border-bottom-color: var(--grey-500) !important;
+  border-block-end-color: var(--grey-500) !important;
 }
 
 .flatpickr-time .numInputWrapper span.arrowDown:after {
