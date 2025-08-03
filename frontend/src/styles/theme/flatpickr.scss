@@ -22,11 +22,11 @@
 }
 
 .flatpickr-calendar.arrowBottom:before {
-  border-top-color: var(--grey-200) !important;
+  border-block-start-color: var(--grey-200) !important;
 }
 
 .flatpickr-calendar.arrowBottom:after {
-  border-top-color: var(--white) !important;
+  border-block-start-color: var(--white) !important;
 }
 
 .flatpickr-months .flatpickr-month,
@@ -84,7 +84,7 @@
 }
 
 .flatpickr-current-month .numInputWrapper span.arrowDown:after {
-  border-top-color: var(--grey-900) !important;
+  border-block-start-color: var(--grey-900) !important;
 }
 
 .flatpickr-current-month input.cur-year[disabled],
@@ -201,7 +201,7 @@ span.flatpickr-weekday {
 }
 
 .flatpickr-time .numInputWrapper span.arrowDown:after {
-  border-top-color: var(--grey-500) !important;
+  border-block-start-color: var(--grey-500) !important;
 }
 
 .flatpickr-time input {
