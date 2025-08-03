@@ -263,7 +263,7 @@ const dateIsToday = computed(() => (date: Date) => {
 }
 
 .g-gantt-row > .g-gantt-row-bars-container {
-	border-bottom: none !important;
+	border-inline-end: none !important;
 	border-block-start: none !important;
 }
 
