@@ -425,7 +425,7 @@ function setLink(event) {
 			font-size: .75rem;
 			position: absolute;
 			bottom: -3px;
-			right: -2px;
+			inset-inline-end: -2px;
 			font-weight: bold;
 		}
 	}

@@ -133,7 +133,7 @@ projectStore.loadAllProjects()
 .menu-hide-button {
 	position: fixed;
 	inset-block-start: 0.5rem;
-	right: 0.5rem;
+	inset-inline-end: 0.5rem;
 	z-index: 31;
 	
 	[dir="rtl"] & {
@@ -209,7 +209,7 @@ projectStore.loadAllProjects()
 	inset-block-start: 0;
 	bottom: 0;
 	inset-inline-start: 0;
-	right: 0;
+	inset-inline-end: 0;
 	height: 100vh;
 	width: 100vw;
 	background: hsla(var(--grey-100-hsl), 0.8);
@@ -226,7 +226,7 @@ projectStore.loadAllProjects()
 .keyboard-shortcuts-button {
 	position: fixed;
 	bottom: calc(1rem - 4px);
-	right: 1rem;
+	inset-inline-end: 1rem;
 	z-index: 4500; // The modal has a z-index of 4000
 	
 	[dir="rtl"] & {

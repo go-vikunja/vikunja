@@ -209,7 +209,7 @@ async function markAllRead() {
 	.unread-indicator {
 		position: absolute;
 		inset-block-start: 1rem;
-		right: .5rem;
+		inset-inline-end: .5rem;
 		width: .75rem;
 		height: .75rem;
 
@@ -220,7 +220,7 @@ async function markAllRead() {
 
 	.notifications-list {
 		position: absolute;
-		right: 1rem;
+		inset-inline-end: 1rem;
 		inset-block-start: calc(100% + 1rem);
 		max-height: 400px;
 		overflow-y: auto;

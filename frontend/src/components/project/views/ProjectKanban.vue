@@ -790,7 +790,7 @@ function unCollapseBucket(bucket: IBucket) {
 .control.is-loading {
   &::after {
     inset-block-start: 30%;
-    right: 50%;
+    inset-inline-end: 50%;
     transform: translate(-50%, 0);
 	--loader-border-color: var(--grey-500);
   }
@@ -841,7 +841,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 			position: absolute;
 			display: block;
 			inset-block-start: 0.25rem;
-			right: 0.5rem;
+			inset-inline-end: 0.5rem;
 			bottom: 0.25rem;
 			inset-inline-start: 0.5rem;
 			border: 3px dashed var(--grey-300);

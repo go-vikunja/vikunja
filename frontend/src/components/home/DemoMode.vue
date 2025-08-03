@@ -45,7 +45,7 @@ const enabled = computed(() => configStore.demoModeEnabled && !hide.value)
 	padding: .25rem .5rem;
 	cursor: pointer;
 	position: absolute;
-	right: .5rem;
+	inset-inline-end: .5rem;
 	inset-block-start: .25rem;
 }
 </style>

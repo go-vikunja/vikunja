@@ -88,7 +88,7 @@ function handleInput(e: Event) {
 	position: absolute;
 	color: var(--grey-400);
 	inset-block-start: 50%;
-	right: 1rem;
+	inset-inline-end: 1rem;
 	transform: translateY(-50%);
 }
 </style>

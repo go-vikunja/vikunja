@@ -321,6 +321,6 @@ defineExpose({
 
 <style>
 button.show-helper-text {
-	right: 0;
+	inset-inline-end: 0;
 }
 </style>
