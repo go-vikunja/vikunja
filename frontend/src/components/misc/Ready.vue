@@ -99,8 +99,8 @@ const baseStore = useBaseStore()
 	margin-inline-end: 1rem;
 
 	&.is-loading::after {
-		border-left-color: var(--grey-400);
-		border-bottom-color: var(--grey-400);
+		border-inline-start-color: var(--grey-400);
+		border-block-end-color: var(--grey-400);
 	}
 }
 
