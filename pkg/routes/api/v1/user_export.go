@@ -48,8 +48,7 @@ func checkExportRequest(c echo.Context) (s *xorm.Session, u *user.User, err erro
 
 	// Users authenticated with a third-party are unable to provide their password.
 	if u.Issuer != user.IssuerLocal {
-		_ = s.Rollback()
-		return nil, nil, echo.NewHTTPError(http.StatusForbidden, "Third-party authenticated users cannot download exports.")
+		return
 	}
 
 	var pass UserPasswordConfirmation
@@ -130,8 +129,9 @@ func DownloadUserDataExport(c echo.Context) error {
 	}
 
 	// Check if user has an export file
+	exportNotFoundError := echo.NewHTTPError(http.StatusNotFound, "No user data export found.")
 	if u.ExportFileID == 0 {
-		return echo.NewHTTPError(http.StatusNotFound, "No user data export found.")
+		return exportNotFoundError
 	}
 
 	// Download
@@ -139,14 +139,14 @@ func DownloadUserDataExport(c echo.Context) error {
 	err = exportFile.LoadFileMetaByID()
 	if err != nil {
 		if files.IsErrFileDoesNotExist(err) {
-			return echo.NewHTTPError(http.StatusNotFound, "User data export file not found.")
+			return exportNotFoundError
 		}
 		return handler.HandleHTTPError(err)
 	}
 	err = exportFile.LoadFileByID()
 	if err != nil {
 		if os.IsNotExist(err) {
-			return echo.NewHTTPError(http.StatusNotFound, "User data export file not found.")
+			return exportNotFoundError
 		}
 		return handler.HandleHTTPError(err)
 	}

@@ -44,6 +44,6 @@ func TestUserExportDownload(t *testing.T) {
 		require.Error(t, err)
 		// This should return 404 when the physical file doesn't exist
 		assert.Equal(t, http.StatusNotFound, err.(*echo.HTTPError).Code)
-		assert.Contains(t, err.(*echo.HTTPError).Message, "User data export file not found")
+		assert.Contains(t, err.(*echo.HTTPError).Message, "No user data export found")
 	})
 }
