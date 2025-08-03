@@ -544,8 +544,8 @@ defineExpose({
 		inset-inline-start: calc(50% - 1rem);
 		width: 2rem;
 		height: 2rem;
-		border-left-color: var(--grey-300);
-		border-bottom-color: var(--grey-300);
+		border-inline-start-color: var(--grey-300);
+		border-block-end-color: var(--grey-300);
 	}
 }
 

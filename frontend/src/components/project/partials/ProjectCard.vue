@@ -6,7 +6,7 @@
 			'has-background': blurHashUrl !== '' || background !== null
 		}"
 		:style="{
-			'border-left': project.hexColor ? `0.25rem solid ${project.hexColor}` : undefined,
+			'border-inline-start': project.hexColor ? `0.25rem solid ${project.hexColor}` : undefined,
 			'background-image': blurHashUrl !== '' ? `url(${blurHashUrl})` : undefined,
 		}"
 	>
