@@ -158,7 +158,7 @@ $user-dropdown-width-mobile: 5rem;
 	position: fixed;
 	inset-block-start: 0;
 	inset-inline-start: 0;
-	right: 0;
+	inset-inline-end: 0;
 
 	display: flex;
 	justify-content: space-between;

@@ -368,7 +368,7 @@ async function setCoverImage(attachment: IAttachment | null) {
 	position: absolute;
 	bottom: 0;
 	inset-inline-start: 0;
-	right: 0;
+	inset-inline-end: 0;
 
 	.icon {
 		width: 100%;

@@ -119,7 +119,7 @@ useTitle(() => title.value)
 			position: absolute;
 			inset-block-start: 0;
 			inset-inline-start: 0;
-			right: 0;
+			inset-inline-end: 0;
 			bottom: 0;
 			background-color: rgba(0, 0, 0, .2);
 		}

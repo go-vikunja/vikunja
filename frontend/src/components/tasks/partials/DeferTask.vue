@@ -140,7 +140,7 @@ $defer-task-max-width: 350px + 100px;
 
 	@media screen and (max-width: ($defer-task-max-width)) {
 		inset-inline-start: .5rem;
-		right: .5rem;
+		inset-inline-end: .5rem;
 		max-width: 100%;
 		width: calc(100vw - 1rem - 2rem);
 	}

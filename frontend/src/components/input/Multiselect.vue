@@ -581,7 +581,7 @@ function focus() {
 
 .removal-button {
 	position: absolute;
-	right: .5rem;
+	inset-inline-end: .5rem;
 	color: var(--danger);
 }
 </style>

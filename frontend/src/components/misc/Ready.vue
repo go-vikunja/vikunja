@@ -84,7 +84,7 @@ const baseStore = useBaseStore()
 	inset-block-start: 0;
 	inset-inline-start: 0;
 	bottom: 0;
-	right: 0;
+	inset-inline-end: 0;
 	background: var(--grey-100);
 	z-index: 99;
 }

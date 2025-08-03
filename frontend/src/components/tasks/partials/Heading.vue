@@ -192,7 +192,7 @@ async function cancel(element: HTMLInputElement) {
 .task-properties .close {
 	display: none;
 	position: absolute;
-	right: 1.25rem;
+	inset-inline-end: 1.25rem;
 	inset-block-start: 1.1rem;
 
 	@media screen and (max-width: $tablet) {

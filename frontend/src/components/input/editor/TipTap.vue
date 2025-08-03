@@ -928,7 +928,7 @@ watch(
 			position: absolute;
 			content: '';
 			inset-inline-start: 0;
-			right: 0;
+			inset-inline-end: 0;
 			inset-block-start: 0;
 			bottom: 0;
 			background: rgba(200, 200, 255, 0.4);
@@ -937,7 +937,7 @@ watch(
 
 		.column-resize-handle {
 			position: absolute;
-			right: -2px;
+			inset-inline-end: -2px;
 			inset-block-start: 0;
 			bottom: -2px;
 			width: 4px;

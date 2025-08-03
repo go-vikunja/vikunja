@@ -217,13 +217,13 @@ $modal-width: 1024px;
 	$close-button-padding: 26px;
 	position: fixed;
 	inset-block-start: .5rem;
-	right: $close-button-padding;
+	inset-inline-end: $close-button-padding;
 	color: var(--white);
 	font-size: 2rem;
 
 	@media screen and (min-width: $desktop) and (max-width: calc(#{$desktop	} + #{$close-button-min-space})) {
 		inset-block-start: calc(5px + $modal-margin);
-		right: 50%;
+		inset-inline-end: 50%;
 		// we align the close button to the modal until there is enough space outside for it
 		transform: translateX(calc((#{$modal-width} / 2) - #{$close-button-padding}));
 	}
