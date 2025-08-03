@@ -541,7 +541,7 @@ defineExpose({
 
 	&.loader-container.is-loading:after {
 		top: calc(50% - 1rem);
-		left: calc(50% - 1rem);
+		inset-inline-start: calc(50% - 1rem);
 		width: 2rem;
 		height: 2rem;
 		border-left-color: var(--grey-300);

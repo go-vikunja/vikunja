@@ -98,7 +98,7 @@ onClickOutside(dropdown, (e) => {
 	top: 100%;
 	z-index: 20;
 	display: block;
-	left: auto;
+	inset-inline-start: auto;
 	right: 0;
 }
 

@@ -8,7 +8,7 @@
     @include loader;
     position: absolute;
     top: calc(50% - 2.5rem);
-    left: calc(50% - 2.5rem);
+    inset-inline-start: calc(50% - 2.5rem);
     width: 5rem;
     height: 5rem;
     border-width: 0.25rem;
@@ -19,7 +19,7 @@
       width: 1.5rem;
       height: 1.5rem;
       top: calc(50% - .75rem);
-      left: calc(50% - .75rem);
+      inset-inline-start: calc(50% - .75rem);
       border-width: 2px;
     }
   }

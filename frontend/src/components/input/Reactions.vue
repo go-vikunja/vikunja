@@ -111,7 +111,7 @@ function toggleEmojiPicker() {
 		const left = rect.left - container.left + rect.width
 
 		emojiPickerPosition.value = {
-			left: left === 0 ? undefined : left,
+			'inset-inline-start': left === 0 ? undefined : left,
 		}
 	}
 
@@ -163,7 +163,7 @@ async function toggleReaction(value: string) {
 				v-if="showEmojiPicker"
 				ref="emojiPickerRef"
 				class="emoji-picker"
-				:style="{left: emojiPickerPosition?.left + 'px'}"
+				:style="{'inset-inline-start': emojiPickerPosition?.left + 'px'}"
 				data-source="/emojis.json"
 				:is-dark="isDark"
 				@emojiClick="detail => addReaction(detail.unicode)"

@@ -927,7 +927,7 @@ watch(
 			z-index: 2;
 			position: absolute;
 			content: '';
-			left: 0;
+			inset-inline-start: 0;
 			right: 0;
 			top: 0;
 			bottom: 0;

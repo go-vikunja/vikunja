@@ -157,7 +157,7 @@ $user-dropdown-width-mobile: 5rem;
 
 	position: fixed;
 	top: 0;
-	left: 0;
+	inset-inline-start: 0;
 	right: 0;
 
 	display: flex;
@@ -252,7 +252,7 @@ $user-dropdown-width-mobile: 5rem;
 }
 
 .navbar-end {
-	margin-left: 0;
+	margin-left: 0; // overrides bulma core styles
 	margin-inline-start: auto;
 	flex: 0 0 auto;
 	display: flex;

@@ -131,7 +131,7 @@ $modal-width: 1024px;
 	position: fixed;
 	z-index: 4000;
 	top: 0;
-	left: 0;
+	inset-inline-start: 0;
 	width: 100%;
 	height: 100%;
 	background-color: rgba(0, 0, 0, .8);
@@ -153,7 +153,7 @@ $modal-width: 1024px;
 	text-align: center;
 	position: absolute;
 	top: 50%;
-	left: 50%;
+	inset-inline-start: 50%;
 	transform: translate(-50%, -50%);
 
 	@media screen and (max-width: $tablet) {

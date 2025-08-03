@@ -158,13 +158,13 @@ const savedFilterProjects = computed(() => projectStore.savedFilterProjects)
 	position: fixed;
 	top: $navbar-height;
 	bottom: 0;
-	left: 0;
+	inset-inline-start: 0;
 	transform: translateX(-100%);
 	width: $navbar-width;
 	overflow-y: auto;
 
 	[dir="rtl"] & {
-		left: auto;
+		inset-inline-start: auto;
 		right: 0;
 		transform: translateX(100%);
 	}
