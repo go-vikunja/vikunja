@@ -18,11 +18,11 @@ package webtests
 
 import (
 	"net/http"
-	"strings"
 	"testing"
 
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 
+	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -31,18 +31,19 @@ func TestUserExportDownload(t *testing.T) {
 	t.Run("no export file", func(t *testing.T) {
 		// Use testuser15 which has no export file (ExportFileID = 0)
 		body := `{"password": "12345678"}`
-		rec, err := newTestRequestWithUser(t, http.MethodPost, apiv1.DownloadUserDataExport, &testuser15, "", nil, strings.NewReader(body))
-		require.NoError(t, err)
-		assert.Equal(t, http.StatusNotFound, rec.Code)
-		assert.Contains(t, rec.Body.String(), "No user data export found")
+		_, err := newTestRequestWithUser(t, http.MethodPost, apiv1.DownloadUserDataExport, &testuser15, body, nil, nil)
+		require.Error(t, err)
+		assert.Equal(t, http.StatusNotFound, err.(*echo.HTTPError).Code)
+		assert.Contains(t, err.(*echo.HTTPError).Message, "No user data export found")
 	})
 
 	t.Run("export file metadata exists but physical file does not exist", func(t *testing.T) {
 		// Use testuser1 which has export_file_id = 1, and file metadata exists but physical file doesn't exist
 		body := `{"password": "12345678"}`
-		rec, err := newTestRequestWithUser(t, http.MethodPost, apiv1.DownloadUserDataExport, &testuser1, "", nil, strings.NewReader(body))
-		require.NoError(t, err)
-		// This should fail when trying to load the actual file after successfully loading metadata
-		assert.Equal(t, http.StatusInternalServerError, rec.Code)
+		_, err := newTestRequestWithUser(t, http.MethodPost, apiv1.DownloadUserDataExport, &testuser1, body, nil, nil)
+		require.Error(t, err)
+		// This should return 404 when the physical file doesn't exist
+		assert.Equal(t, http.StatusNotFound, err.(*echo.HTTPError).Code)
+		assert.Contains(t, err.(*echo.HTTPError).Message, "User data export file not found")
 	})
 }

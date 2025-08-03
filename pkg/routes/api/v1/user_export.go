@@ -18,6 +18,7 @@ package v1
 
 import (
 	"net/http"
+	"os"
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
@@ -47,7 +48,8 @@ func checkExportRequest(c echo.Context) (s *xorm.Session, u *user.User, err erro
 
 	// Users authenticated with a third-party are unable to provide their password.
 	if u.Issuer != user.IssuerLocal {
-		return
+		_ = s.Rollback()
+		return nil, nil, echo.NewHTTPError(http.StatusForbidden, "Third-party authenticated users cannot download exports.")
 	}
 
 	var pass UserPasswordConfirmation
@@ -143,6 +145,9 @@ func DownloadUserDataExport(c echo.Context) error {
 	}
 	err = exportFile.LoadFileByID()
 	if err != nil {
+		if os.IsNotExist(err) {
+			return echo.NewHTTPError(http.StatusNotFound, "User data export file not found.")
+		}
 		return handler.HandleHTTPError(err)
 	}
 
