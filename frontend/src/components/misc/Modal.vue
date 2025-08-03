@@ -130,7 +130,7 @@ $modal-width: 1024px;
 .modal-mask {
 	position: fixed;
 	z-index: 4000;
-	top: 0;
+	inset-block-start: 0;
 	inset-inline-start: 0;
 	width: 100%;
 	height: 100%;
@@ -152,7 +152,7 @@ $modal-width: 1024px;
 .hint-modal .modal-content {
 	text-align: center;
 	position: absolute;
-	top: 50%;
+	inset-block-start: 50%;
 	inset-inline-start: 50%;
 	transform: translate(-50%, -50%);
 
@@ -216,20 +216,20 @@ $modal-width: 1024px;
 .close {
 	$close-button-padding: 26px;
 	position: fixed;
-	top: .5rem;
+	inset-block-start: .5rem;
 	right: $close-button-padding;
 	color: var(--white);
 	font-size: 2rem;
 
 	@media screen and (min-width: $desktop) and (max-width: calc(#{$desktop	} + #{$close-button-min-space})) {
-		top: calc(5px + $modal-margin);
+		inset-block-start: calc(5px + $modal-margin);
 		right: 50%;
 		// we align the close button to the modal until there is enough space outside for it
 		transform: translateX(calc((#{$modal-width} / 2) - #{$close-button-padding}));
 	}
 
 	@media screen and (min-width: $tablet) and (max-width: #{$desktop + $close-button-min-space}) {
-		top: .75rem;
+		inset-block-start: .75rem;
 	}
 }
 

@@ -115,7 +115,7 @@ const textOnlyDescription = computed(() => {
 .project-background,
 .project-button {
 	position: absolute;
-	top: 0;
+	inset-block-start: 0;
 	right: 0;
 	bottom: 0;
 	inset-inline-start: 0;
@@ -159,7 +159,7 @@ const textOnlyDescription = computed(() => {
 
 .favorite {
 	position: absolute;
-	top: var(--project-card-padding);
+	inset-block-start: var(--project-card-padding);
 	right: var(--project-card-padding);
 	transition: opacity $transition, color $transition;
 	opacity: 1;

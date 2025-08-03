@@ -599,7 +599,7 @@ function reset() {
 
 	// FIXME: changed position should be an option of the modal
 	:deep(.modal-content) {
-		top: 3rem;
+		inset-block-start: 3rem;
 		transform: translate(-50%, 0);
 	}
 }

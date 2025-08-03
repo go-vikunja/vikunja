@@ -156,7 +156,7 @@ $user-dropdown-width-mobile: 5rem;
 	--navbar-icon-size: 1.25rem;
 
 	position: fixed;
-	top: 0;
+	inset-block-start: 0;
 	inset-inline-start: 0;
 	right: 0;
 

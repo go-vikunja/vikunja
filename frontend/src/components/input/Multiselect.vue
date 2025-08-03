@@ -439,7 +439,7 @@ function focus() {
 	position: relative;
 
 	.control.is-loading::after {
-		top: .75rem;
+		inset-block-start: .75rem;
 	}
 
 	&.is-disabled {

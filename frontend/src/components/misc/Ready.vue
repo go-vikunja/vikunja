@@ -81,7 +81,7 @@ const baseStore = useBaseStore()
 	width: 100vw;
 	flex-direction: column;
 	position: fixed;
-	top: 0;
+	inset-block-start: 0;
 	inset-inline-start: 0;
 	bottom: 0;
 	right: 0;

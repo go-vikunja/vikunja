@@ -929,7 +929,7 @@ watch(
 			content: '';
 			inset-inline-start: 0;
 			right: 0;
-			top: 0;
+			inset-block-start: 0;
 			bottom: 0;
 			background: rgba(200, 200, 255, 0.4);
 			pointer-events: none;
@@ -938,7 +938,7 @@ watch(
 		.column-resize-handle {
 			position: absolute;
 			right: -2px;
-			top: 0;
+			inset-block-start: 0;
 			bottom: -2px;
 			width: 4px;
 			background-color: #adf;

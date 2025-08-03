@@ -83,7 +83,7 @@ onClickOutside(popup, () => close())
 	height: 0;
 	overflow: hidden;
 	position: absolute;
-	top: 1rem;
+	inset-block-start: 1rem;
 	z-index: 100;
 
 	&.is-open {
