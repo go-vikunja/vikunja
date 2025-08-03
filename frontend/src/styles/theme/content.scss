@@ -28,3 +28,8 @@
   background-color: var(--grey-200);
   border-inline-start: .25rem solid var(--grey-300);
 }
+
+.content ul {
+	margin-left: 0; // override bulma styles
+	margin-inline-start: 2rem;
+}
