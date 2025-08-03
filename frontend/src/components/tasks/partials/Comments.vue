@@ -16,7 +16,7 @@
 		<div class="comments">
 			<span
 				v-if="taskCommentService.loading && saving === null && !creating"
-				class="is-flex is-align-items-center my-4 mis-2"
+				class="is-flex is-align-items-center mbs-4 mbe-4 mis-2"
 			>
 				<span class="loader is-inline-block mie-2" />
 				{{ $t('task.comment.loading') }}
