@@ -6504,6 +6504,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/web.HTTPError"
                         }
                     },
+                    "404": {
+                        "description": "No user data export found.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
                     "500": {
                         "description": "Internal server error.",
                         "schema": {
