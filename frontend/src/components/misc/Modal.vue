@@ -152,8 +152,9 @@ $modal-width: 1024px;
 .hint-modal .modal-content {
 	text-align: center;
 	position: absolute;
-	inset-block-start: 50%;
-	inset-inline-start: 50%;
+	// fine to use top/left since we're only using this to position it centered
+	top: 50%;
+	left: 50%;
 	transform: translate(-50%, -50%);
 
 	@media screen and (max-width: $tablet) {
