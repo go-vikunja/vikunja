@@ -135,11 +135,6 @@ projectStore.loadAllProjects()
 	inset-block-start: 0.5rem;
 	inset-inline-end: 0.5rem;
 	z-index: 31;
-	
-	[dir="rtl"] & {
-		right: auto;
-		inset-inline-start: 0.5rem;
-	}
 	width: 3rem;
 	height: 3rem;
 	display: flex;
@@ -228,12 +223,6 @@ projectStore.loadAllProjects()
 	inset-block-end: calc(1rem - 4px);
 	inset-inline-end: 1rem;
 	z-index: 4500; // The modal has a z-index of 4000
-	
-	[dir="rtl"] & {
-		right: auto;
-		inset-inline-start: 1rem;
-	}
-
 	color: var(--grey-500);
 	transition: color $transition;
 
