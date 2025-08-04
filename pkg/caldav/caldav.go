@@ -104,6 +104,28 @@ func formatDuration(duration time.Duration) string {
 		strconv.FormatFloat(seconds, 'f', 0, 64) + `S`
 }
 
+func getRruleFromInterval(interval int64) (freq string, newInterval int64) {
+	const (
+		minute = 60
+		hour   = minute * 60
+		day    = hour * 24
+		week   = day * 7
+	)
+
+	switch {
+	case interval%week == 0:
+		return "WEEKLY", interval / week
+	case interval%day == 0:
+		return "DAILY", interval / day
+	case interval%hour == 0:
+		return "HOURLY", interval / hour
+	case interval%minute == 0:
+		return "MINUTELY", interval / minute
+	default:
+		return "SECONDLY", interval
+	}
+}
+
 // ParseTodos returns a caldav vcalendar string with todos
 func ParseTodos(config *Config, todos []*Todo) (caldavtodos string) {
 	caldavtodos = `BEGIN:VCALENDAR
@@ -172,8 +194,9 @@ PRIORITY:` + strconv.Itoa(mapPriorityToCaldav(t.Priority))
 				caldavtodos += `
 RRULE:FREQ=MONTHLY;BYMONTHDAY=` + t.DueDate.Format("02") // Day of the month
 			} else {
+				freq, interval := getRruleFromInterval(t.RepeatAfter)
 				caldavtodos += `
-RRULE:FREQ=SECONDLY;INTERVAL=` + strconv.FormatInt(t.RepeatAfter, 10)
+RRULE:FREQ=` + freq + `;INTERVAL=` + strconv.FormatInt(interval, 10)
 			}
 		}
 
