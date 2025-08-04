@@ -38,7 +38,12 @@ func TestUpdateEmailStatusPersistence(t *testing.T) {
 		err := UpdateEmail(s, &EmailUpdate{User: &User{ID: 1}, NewEmail: "new1@example.com"})
 		require.NoError(t, err)
 
-		updated, err := GetUserByID(s, 1)
+		err = s.Commit()
+		require.NoError(t, err)
+
+		s2 := db.NewSession()
+		defer s2.Close()
+		updated, err := GetUserWithEmail(s2, &User{ID: 1})
 		require.NoError(t, err)
 		assert.Equal(t, StatusEmailConfirmationRequired, updated.Status)
 		assert.Equal(t, "new1@example.com", updated.Email)
@@ -54,7 +59,12 @@ func TestUpdateEmailStatusPersistence(t *testing.T) {
 		err := UpdateEmail(s, &EmailUpdate{User: &User{ID: 2}, NewEmail: "new2@example.com"})
 		require.NoError(t, err)
 
-		updated, err := GetUserByID(s, 2)
+		err = s.Commit()
+		require.NoError(t, err)
+
+		s2 := db.NewSession()
+		defer s2.Close()
+		updated, err := GetUserWithEmail(s2, &User{ID: 2})
 		require.NoError(t, err)
 		assert.Equal(t, StatusActive, updated.Status)
 		assert.Equal(t, "new2@example.com", updated.Email)

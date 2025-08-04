@@ -21,7 +21,9 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/mail"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
+	"code.vikunja.io/api/pkg/notifications"
 )
 
 // InitTests handles the actual bootstrapping of the test env
@@ -42,6 +44,8 @@ func InitTests() {
 	}
 
 	events.Fake()
+	mail.Fake()
+	notifications.Fake()
 
 	keyvalue.InitStorage()
 
