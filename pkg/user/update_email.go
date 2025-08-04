@@ -55,22 +55,24 @@ func UpdateEmail(s *xorm.Session, update *EmailUpdate) (err error) {
 
 	// Send the confirmation mail
 	if !config.MailerEnabled.GetBool() {
+		update.User.Status = StatusActive
 		_, err = s.
 			Where("id = ?", update.User.ID).
-			Cols("email").
+			Cols("email", "status").
 			Update(update.User)
 		return
 	}
 
 	update.User.Status = StatusEmailConfirmationRequired
-	token, err := generateToken(s, update.User, TokenEmailConfirm)
+	_, err = s.
+		Where("id = ?", update.User.ID).
+		Cols("email", "status").
+		Update(update.User)
 	if err != nil {
 		return
 	}
-	_, err = s.
-		Where("id = ?", update.User.ID).
-		Cols("email", "is_active"). // TODO: Status change
-		Update(update.User)
+
+	token, err := generateToken(s, update.User, TokenEmailConfirm)
 	if err != nil {
 		return
 	}
