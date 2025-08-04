@@ -87,8 +87,8 @@ function handleInput(e: Event) {
 .password-field-type-toggle {
 	position: absolute;
 	color: var(--grey-400);
-	top: 50%;
-	right: 1rem;
+	inset-block-start: 50%;
+	inset-inline-end: 1rem;
 	transform: translateY(-50%);
 }
 </style>

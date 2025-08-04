@@ -396,6 +396,11 @@
                     "comment": "Change the log level. Possible values (case-insensitive) are CRITICAL, ERROR, WARNING, NOTICE, INFO, DEBUG."
                 },
                 {
+                    "key": "format",
+                    "default_value": "text",
+                    "comment": "Logging format. Can be either `text` or `structured` to output JSON."
+                },
+                {
                     "key": "database",
                     "default_value": "off",
                     "comment": "Whether or not to log database queries. Useful for debugging. Possible values are stdout, stderr, file or off to disable database logging."
@@ -409,11 +414,6 @@
                     "key": "http",
                     "default_value": "stdout",
                     "comment": "Whether to log http requests or not. Possible values are stdout, stderr, file or off to disable http logging."
-                },
-                {
-                    "key": "echo",
-                    "default_value": "off",
-                    "comment": "Echo has its own logging which usually is unnecessary, which is why it is disabled by default. Possible values are stdout, stderr, file or off to disable standard logging."
                 },
                 {
                     "key": "events",
@@ -943,6 +943,21 @@
                     "key": "renewbefore",
                     "default_value": "30d",
                     "comment": "A duration when certificates should be renewed before they expire. Valid time units are `ns`, `us` (or `µs`), `ms`, `s`, `m`, `h`."
+                }
+            ]
+        },
+        {
+            "key": "plugins",
+            "children": [
+                {
+                    "key": "enabled",
+                    "default_value": "false",
+                    "comment": "Whether to enable the plugin system."
+                },
+                {
+                    "key": "dir",
+                    "default_value": "<rootpath>plugins",
+                    "comment": "The directory where plugins are stored."
                 }
             ]
         }

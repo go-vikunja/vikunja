@@ -132,12 +132,14 @@
 				"title": "Profiilikuva",
 				"initials": "Etukirjaimet",
 				"gravatar": "Gravatar",
+				"marble": "Marble",
 				"upload": "Lataa",
 				"uploadAvatar": "Lataa Profiilikuva",
 				"statusUpdateSuccess": "Profiilikuvan tila päivitettiin onnistuneesti!",
 				"setSuccess": "Profiilikuva on asetettu onnistuneesti!"
 			},
 			"quickAddMagic": {
+				"title": "Nopean Lisäyksen Tyyli",
 				"disabled": "Pois käytöstä",
 				"todoist": "Todoist",
 				"vikunja": "Vikunja"
@@ -220,6 +222,7 @@
 		"unfavorite": "Poista tämä projekti suosikeista",
 		"openSettingsMenu": "Avaa projektin asetusvalikko",
 		"description": "Projektin kuvaus",
+		"favoriteDescription": "Kaikki tämän projektin tehtävät on merkkitty suosikeiksi.",
 		"create": {
 			"header": "Uusi projekti ",
 			"titlePlaceholder": "Projektin otsikko menee tähän…",
@@ -284,6 +287,7 @@
 				"name": "Nimi (valinnainen)",
 				"namePlaceholder": "esim. Lorem Ipsum",
 				"password": "Salasana (valinnainen)",
+				"passwordExplanation": "Käyttäjän kirjautuessa sisään, heidän on syötettävä tämä salasana.",
 				"noName": "Nimeä ei ole asetettu",
 				"remove": "Poista jako linkki",
 				"removeText": "Haluatko varmasti poistaa tämän linkki jaon? Tähän projektiin ei enää voi päästä käsiksi tällä linkki jaolla. Tätä ei voi peruuttaa!",
@@ -325,7 +329,8 @@
 			"month": "Kuukausi",
 			"day": "Päivä",
 			"hour": "Tunti",
-			"range": "Ajanjakso"
+			"range": "Ajanjakso",
+			"noDates": "Tähän tehtävään ei ole asetettu päivämääriä."
 		},
 		"table": {
 			"title": "Taulukko",
@@ -343,6 +348,7 @@
 			"defaultBucketHint": "Kun uusia tehtäviä luodaan määrittelemättä saraketta, ne lisätään tähän sarakkeeseen.",
 			"defaultBucketSavedSuccess": "Oletus sarake tallennettiin onnistuneesti.",
 			"deleteLast": "Et voi poistaa viimeistä saraketta.",
+			"addTaskPlaceholder": "Syötä tehtävän uusi otsikko…",
 			"addTask": "Lisää tehtävä",
 			"addAnotherTask": "Lisää toinen tehtävä",
 			"addBucket": "Luo sarake",
@@ -360,6 +366,11 @@
 			"favorites": {
 				"title": "Suosikit"
 			}
+		},
+		"webhooks": {
+			"targetUrl": "Kohde URL",
+			"events": "Tapahtumat",
+			"mustSelectEvents": "Sinun on valittava ainakin yksi tapahtuma."
 		},
 		"views": {
 			"header": "Muokkaa näkymiä",
@@ -390,16 +401,22 @@
 			"includeNulls": "Sisällytä tehtävät, joille ei ole asetettu arvoa",
 			"requireAll": "Vaadi kaikkia suodattimia olemaan tosi, jotta tehtävä näkyy",
 			"showDoneTasks": "Näytä Valmiit Tehtävät",
-			"sortAlphabetically": "Lajittele Aakkosjärjestykseen"
+			"sortAlphabetically": "Lajittele Aakkosjärjestykseen",
+			"dueDateRange": "Erääntymispäivämäärä Väli",
+			"startDateRange": "Aloituspäivämäärä Väli",
+			"endDateRange": "Päättymispäivämäärä Väli",
+			"reminderRange": "Muistutuspäivämäärä Väli"
 		},
 		"create": {
 			"title": "Uusi Tallennettu Suodatin",
 			"description": "Tallennettu suodatin on virtuaalinen projekti, joka muodostetaan suodattimia hyödyntäen joka kerta kun sitä kutsutaan.",
-			"action": "Luo tallennettu suodatin"
+			"action": "Luo tallennettu suodatin",
+			"titleRequired": "Ole hyvä ja anna suodattimelle otsikko."
 		},
 		"delete": {
 			"header": "Poista tämä tallennettu suodatin",
-			"text": "Haluatko varmasti poistaa tämä tallennetun suodattimen?"
+			"text": "Haluatko varmasti poistaa tämä tallennetun suodattimen?",
+			"success": "Suodatin poistettiin onnistuneesti."
 		},
 		"edit": {
 			"title": "Muokkaa Tätä Tallennettua Suodinta",

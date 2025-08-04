@@ -53,7 +53,7 @@ func CreateTestEngine() (engine *xorm.Engine, err error) {
 	}
 
 	engine.SetMapper(names.GonicMapper{})
-	logger := log.NewXormLogger(config.LogEnabled.GetBool(), config.LogDatabase.GetString(), "DEBUG")
+	logger := log.NewXormLogger(config.LogEnabled.GetBool(), config.LogDatabase.GetString(), "DEBUG", config.LogFormat.GetString())
 	logger.ShowSQL(os.Getenv("TESTS_VERBOSE") == "1")
 	engine.SetLogger(logger)
 	engine.SetTZLocation(config.GetTimeZone())

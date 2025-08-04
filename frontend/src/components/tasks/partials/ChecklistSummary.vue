@@ -64,14 +64,14 @@ const label = computed(() => {
 	color: var(--grey-500);
 	display: inline-flex;
 	align-items: center;
-	padding-left: .5rem;
+	padding-inline-start: .5rem;
 	font-size: .9rem;
 }
 
 svg {
 	transform: rotate(-90deg);
 	transition: stroke-dashoffset 0.35s;
-	margin-right: .25rem;
+	margin-inline-end: .25rem;
 }
 
 circle {

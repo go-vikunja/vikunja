@@ -8,7 +8,7 @@
 				keypath="task.detail.created"
 				scope="global"
 			>
-				<span>{{ formatDateSince(task.created) }}</span>
+				<span>{{ formatDisplayDate(task.created) }}</span>
 				{{ getDisplayName(task.createdBy) }}
 			</i18n-t>
 		</time>
@@ -46,7 +46,7 @@
 <script lang="ts" setup>
 import {computed} from 'vue'
 import type {ITask} from '@/modelTypes/ITask'
-import {formatISO, formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
+import {formatISO, formatDateLong, formatDisplayDate} from '@/helpers/time/formatDate'
 import {getDisplayName} from '@/models/user'
 
 const props = defineProps<{
@@ -54,9 +54,9 @@ const props = defineProps<{
 }>()
 
 // Computed properties to show the actual date every time it gets updated
-const updatedSince = computed(() => formatDateSince(props.task.updated))
+const updatedSince = computed(() => formatDisplayDate(props.task.updated))
 const updatedFormatted = computed(() => formatDateLong(props.task.updated))
-const doneSince = computed(() => formatDateSince(props.task.doneAt))
+const doneSince = computed(() => formatDisplayDate(props.task.doneAt))
 const doneFormatted = computed(() => formatDateLong(props.task.doneAt))
 </script>
 
@@ -64,6 +64,6 @@ const doneFormatted = computed(() => formatDateLong(props.task.doneAt))
 .created {
 	font-size: .75rem;
 	color: var(--grey-500);
-	text-align: right;
+	text-align: end;
 }
 </style>

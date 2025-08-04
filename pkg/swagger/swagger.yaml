@@ -353,7 +353,7 @@ definitions:
         description: The unique, numeric id of this label.
         type: integer
       title:
-        description: The title of the lable. You'll see this one on tasks associated
+        description: The title of the label. You'll see this one on tasks associated
           with it.
         maxLength: 250
         minLength: 1
@@ -530,7 +530,7 @@ definitions:
         description: A timestamp when this relation was last updated. You cannot change
           this value.
         type: string
-      user_id:
+      username:
         description: The username.
         type: string
     type: object
@@ -1408,6 +1408,17 @@ definitions:
       token:
         type: string
     type: object
+  v1.UserExportStatus:
+    properties:
+      created:
+        type: string
+      expires:
+        type: string
+      id:
+        type: integer
+      size:
+        type: integer
+    type: object
   v1.UserPassword:
     properties:
       new_password:
@@ -1463,6 +1474,10 @@ definitions:
       email_reminders_enabled:
         description: If enabled, sends email reminders of tasks to the user.
         type: boolean
+      extra_settings_links:
+        additionalProperties: {}
+        description: Additional settings links as provided by openid
+        type: object
       frontend_settings:
         description: Additional settings only used by the frontend
       language:
@@ -6065,6 +6080,20 @@ paths:
       summary: Request the deletion of the user
       tags:
       - user
+  /user/export:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.UserExportStatus'
+      security:
+      - JWTKeyAuth: []
+      summary: Get current user data export
+      tags:
+      - user
   /user/export/download:
     post:
       consumes:
@@ -6085,6 +6114,10 @@ paths:
             $ref: '#/definitions/models.Message'
         "400":
           description: Something's invalid.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: No user data export found.
           schema:
             $ref: '#/definitions/web.HTTPError'
         "500":
@@ -6447,7 +6480,7 @@ paths:
       tags:
       - user
   /user/settings/token/caldav/{id}:
-    get:
+    delete:
       consumes:
       - application/json
       parameters:

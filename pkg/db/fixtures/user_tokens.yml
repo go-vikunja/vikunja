@@ -16,3 +16,9 @@
   token: 'tiepiQueed8ahc7zeeFe1eveiy4Ein8osooxegiephauph2Aei'
   kind: 2
   created: 2021-07-12 00:00:13
+-
+  id: 4
+  user_id: 1
+  token: 'deletiontesttoken'
+  kind: 3
+  created: 2021-07-12 00:00:14

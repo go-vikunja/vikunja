@@ -110,7 +110,7 @@
 		</template>
 
 		<PoweredByLink
-			class="mt-auto"
+			class="mbs-auto"
 			utm-medium="navigation"
 		/>
 	</aside>
@@ -139,9 +139,9 @@ const savedFilterProjects = computed(() => projectStore.savedFilterProjects)
 .logo {
 	display: block;
 
-	padding-left: 1rem;
-	margin-right: 1rem;
-	margin-bottom: 1rem;
+	padding-inline-start: 1rem;
+	margin-inline-end: 1rem;
+	margin-block-end: 1rem;
 
 	@media screen and (min-width: $tablet) {
 		display: none;
@@ -156,15 +156,21 @@ const savedFilterProjects = computed(() => projectStore.savedFilterProjects)
 	padding: 1rem 0;
 	transition: transform $transition-duration ease-in;
 	position: fixed;
-	top: $navbar-height;
-	bottom: 0;
-	left: 0;
+	inset-block-start: $navbar-height;
+	inset-block-end: 0;
+	inset-inline-start: 0;
 	transform: translateX(-100%);
 	width: $navbar-width;
 	overflow-y: auto;
 
+	[dir="rtl"] & {
+		inset-inline-start: auto;
+		right: 0;
+		transform: translateX(100%);
+	}
+
 	@media screen and (max-width: $tablet) {
-		top: 0;
+		inset-block-start: 0;
 		width: 70vw;
 		z-index: 20;
 	}
@@ -183,16 +189,16 @@ const savedFilterProjects = computed(() => projectStore.savedFilterProjects)
 
 	.list-menu-link,
 	li > a {
-		padding-left: 2rem;
+		padding-inline-start: 2rem;
 		display: inline-block;
 
 		.icon {
-			padding-bottom: .25rem;
+			padding-block-end: .25rem;
 		}
 	}
 }
 
 .menu + .menu {
-	padding-top: math.div($navbar-padding, 2);
+	padding-block-start: math.div($navbar-padding, 2);
 }
 </style>

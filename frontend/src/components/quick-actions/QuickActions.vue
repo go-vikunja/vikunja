@@ -599,7 +599,7 @@ function reset() {
 
 	// FIXME: changed position should be an option of the modal
 	:deep(.modal-content) {
-		top: 3rem;
+		inset-block-start: 3rem;
 		transform: translate(-50%, 0);
 	}
 }
@@ -613,12 +613,12 @@ function reset() {
 		font-size: 1.5rem;
 		
 		@media screen and (max-width: $tablet) {
-			padding-right: .25rem;
+			padding-inline-end: .25rem;
 		}
 	}
 
 	&.has-active-cmd .input {
-		padding-left: .5rem;
+		padding-inline-start: .5rem;
 	}
 
 	.close {
@@ -633,13 +633,13 @@ function reset() {
 
 .active-cmd {
 	font-size: 1.25rem;
-	margin-left: .5rem;
+	margin-inline-start: .5rem;
 	background-color: var(--grey-100);
 	color: var(--grey-800);
 }
 
 .results {
-	text-align: left;
+	text-align: start;
 	width: 100%;
 	color: var(--grey-800);
 }
@@ -656,7 +656,7 @@ function reset() {
 	width: 100%;
 	background: transparent;
 	color: var(--grey-800);
-	text-align: left;
+	text-align: start;
 	box-shadow: none;
 	border-radius: 0;
 	text-transform: none;
@@ -679,7 +679,7 @@ function reset() {
 	.saved-filter-icon {
 		font-size: .75rem;
 		width: .75rem;
-		margin-right: .25rem;
+		margin-inline-end: .25rem;
 		color: var(--grey-400)
 	}
 	

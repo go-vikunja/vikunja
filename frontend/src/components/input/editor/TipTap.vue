@@ -125,7 +125,7 @@
 		<XButton
 			v-else-if="isEditing && showSave"
 			v-cy="'saveEditor'"
-			class="mt-4"
+			class="mbs-4"
 			variant="secondary"
 			:shadow="false"
 			:disabled="!contentHasChanged"
@@ -782,7 +782,7 @@ watch(
 	}
 
 	> * + * {
-		margin-top: 0.75em;
+		margin-block-start: 0.75em;
 	}
 
 	ul,
@@ -882,13 +882,13 @@ watch(
 	}
 
 	blockquote {
-		padding-left: 1rem;
-		border-left: 2px solid rgba(#0d0d0d, 0.1);
+		padding-inline-start: 1rem;
+		border-inline-start: 2px solid rgba(#0d0d0d, 0.1);
 	}
 
 	hr {
 		border: none;
-		border-top: 2px solid rgba(#0d0d0d, 0.1);
+		border-block-start: 2px solid rgba(#0d0d0d, 0.1);
 		margin: 2rem 0;
 	}
 }
@@ -913,13 +913,13 @@ watch(
 			position: relative;
 
 			> * {
-				margin-bottom: 0;
+				margin-block-end: 0;
 			}
 		}
 
 		th {
 			font-weight: bold;
-			text-align: left;
+			text-align: start;
 			background-color: var(--grey-200);
 		}
 
@@ -927,19 +927,19 @@ watch(
 			z-index: 2;
 			position: absolute;
 			content: '';
-			left: 0;
-			right: 0;
-			top: 0;
-			bottom: 0;
+			inset-inline-start: 0;
+			inset-inline-end: 0;
+			inset-block-start: 0;
+			inset-block-end: 0;
 			background: rgba(200, 200, 255, 0.4);
 			pointer-events: none;
 		}
 
 		.column-resize-handle {
 			position: absolute;
-			right: -2px;
-			top: 0;
-			bottom: -2px;
+			inset-inline-end: -2px;
+			inset-block-start: 0;
+			inset-block-end: -2px;
 			width: 4px;
 			background-color: #adf;
 			pointer-events: none;
@@ -953,15 +953,15 @@ watch(
 	// Lists
 
 	ul {
-		margin-left: .5rem;
-		margin-top: 0 !important;
+		margin-inline-start: .5rem;
+		margin-block-start: 0 !important;
 
 		li {
-			margin-top: 0;
+			margin-block-start: 0;
 		}
 
 		p {
-			margin-bottom: 0 !important;
+			margin-block-end: 0 !important;
 		}
 	}
 }
@@ -979,7 +979,7 @@ watch(
 ul[data-type='taskList'] {
 	list-style: none;
 	padding: 0;
-	margin-left: 0;
+	margin-inline-start: 0;
 
 	li[data-checked='true'] {
 		color: var(--grey-500);
@@ -988,11 +988,11 @@ ul[data-type='taskList'] {
 
 	li {
 		display: flex;
-		margin-top: 0.25rem;
+		margin-block-start: 0.25rem;
 
 		> label {
 			flex: 0 0 auto;
-			margin-right: 0.5rem;
+			margin-inline-end: 0.5rem;
 			user-select: none;
 		}
 

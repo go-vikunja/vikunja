@@ -233,7 +233,7 @@ const dateIsToday = computed(() => (date: Date) => {
 
 .g-upper-timeunit {
 	font-weight: bold;
-	border-right: 1px solid var(--grey-200);
+	border-inline-end: 1px solid var(--grey-200);
 	padding: .5rem 0;
 }
 
@@ -263,8 +263,8 @@ const dateIsToday = computed(() => (date: Date) => {
 }
 
 .g-gantt-row > .g-gantt-row-bars-container {
-	border-bottom: none !important;
-	border-top: none !important;
+	border-inline-end: none !important;
+	border-block-start: none !important;
 }
 
 .g-gantt-row:nth-child(odd) {
@@ -282,7 +282,7 @@ const dateIsToday = computed(() => (date: Date) => {
 		height: 75% !important;
 		opacity: .75 !important;
 		border-radius: $radius !important;
-		margin-top: 4px;
+		margin-block-start: 4px;
 	}
 }
 </style>

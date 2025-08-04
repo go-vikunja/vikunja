@@ -8,7 +8,7 @@
 	>
 		<div
 			v-if="uploadBackgroundEnabled"
-			class="mb-4"
+			class="mbe-4"
 		>
 			<input
 				ref="backgroundUploadInput"
@@ -76,7 +76,7 @@
 			<XButton
 				v-if="backgroundSearchResult.length > 0"
 				:disabled="backgroundService.loading"
-				class="is-load-more-button mt-4"
+				class="is-load-more-button mbs-4"
 				:shadow="false"
 				variant="secondary"
 				@click="searchBackgrounds(currentPage + 1)"
@@ -232,7 +232,7 @@ async function removeBackground() {
 
 <style lang="scss" scoped>
 .unsplash-credit {
-	text-align: right;
+	text-align: end;
 	font-size: .8rem;
 }
 
@@ -259,7 +259,7 @@ async function removeBackground() {
 }
 
 .image-search__result-item {
-	margin-top: 0; // FIXME: removes padding from .content
+	margin-block-start: 0; // FIXME: removes padding from .content
 	aspect-ratio: 16 / 10;
 	background-size: cover;
 	background-position: center;

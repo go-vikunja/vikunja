@@ -143,11 +143,16 @@ linters:
       - linters:
           - recvcheck
         text: the methods of "SubscriptionEntityType" use pointer receiver and non-pointer receiver.
+      - linters:
+          - revive
+        path: pkg/utils/*
+        text: 'var-naming: avoid meaningless package names'
     paths:
       - third_party$
       - builtin$
       - examples$
       - pkg/routes/api/v1/docs.go
+      - plugins-dev/..*
 formatters:
   enable:
     - gofmt

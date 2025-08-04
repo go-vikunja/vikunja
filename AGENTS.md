@@ -154,9 +154,7 @@ Use the **Conventional Commits** style when committing changes (for example, `fe
 
 ## Frontend Development Guidelines
 
-The web client lives in `frontend/` and uses Vue.js 3 in combination with TypeScript.
-
-Check the `frontend/.editorconfig` file and obey the formatting rules outlined there.
+The web client lives in `frontend/` and uses Vue 3 + TypeScript. ESLint rules enforce: single quotes, trailing commas, no semicolons, tab indent, Vue <script lang="ts">, PascalCase component names, camelCase events. See `frontend/eslint.config.js` and `frontend/.editorconfig` and obey formatting rules outlined there.
 
 ## Translations
 
@@ -175,8 +173,8 @@ After adjusting the source string, you need to call the respective translation l
 - Use `pkg/config/` for configuration management
 
 **Code Style:**
-- Go: Standard Go formatting with golangci-lint
-- Vue: ESLint with TypeScript and Vue-specific rules
+- Go: golangci-lint per `.golangci.yml`; use goimports; wrap errors with `fmt.Errorf("...: %w", err)`; enforce rights checks in models; never log secrets; do not edit generated `pkg/swagger/*`
+- Vue: ESLint + TS; single quotes, trailing commas, no semicolons, tab indent; script setup + lang ts; keep services/models in sync with backend
 - Follow existing patterns for consistency
 
 **Naming Conventions:**

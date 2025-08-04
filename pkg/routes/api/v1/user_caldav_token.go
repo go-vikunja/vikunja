@@ -77,7 +77,7 @@ func GetCaldavTokens(c echo.Context) error {
 		return handler.HandleHTTPError(err)
 	}
 
-	return c.JSON(http.StatusCreated, tokens)
+	return c.JSON(http.StatusOK, tokens)
 }
 
 // DeleteCaldavToken is the handler to delete a caldv token
@@ -91,7 +91,7 @@ func GetCaldavTokens(c echo.Context) error {
 // @Failure 400 {object} web.HTTPError "Something's invalid."
 // @Failure 404 {object} web.HTTPError "User does not exist."
 // @Failure 500 {object} models.Message "Internal server error."
-// @Router /user/settings/token/caldav/{id} [get]
+// @Router /user/settings/token/caldav/{id} [delete]
 func DeleteCaldavToken(c echo.Context) error {
 	u, err := user.GetCurrentUser(c)
 	if err != nil {

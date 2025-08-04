@@ -56,7 +56,7 @@ func getClient() (*mail.Client, error) {
 		}),
 		mail.WithPort(config.MailerPort.GetInt()),
 		mail.WithTimeout((config.MailerQueueTimeout.GetDuration() + 3) * time.Second), // 3s more for us to close before mail server timeout
-		mail.WithLogger(log.NewMailLogger(config.LogEnabled.GetBool(), config.LogMail.GetString(), config.LogMailLevel.GetString())),
+		mail.WithLogger(log.NewMailLogger(config.LogEnabled.GetBool(), config.LogMail.GetString(), config.LogMailLevel.GetString(), config.LogFormat.GetString())),
 		mail.WithDebugLog(),
 	}
 

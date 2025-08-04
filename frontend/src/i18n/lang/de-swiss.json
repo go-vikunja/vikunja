@@ -103,7 +103,24 @@
 				"overdueTasksRemindersTime": "Zeit der E-Mail-Zusammenfassung der überfälligen Aufgaben",
 				"filterUsedOnOverview": "Gespeicherter Filter, der für die Startseite verwendet wird",
 				"minimumPriority": "Minimal sichtbare Aufgaben-Priorität",
+				"dateDisplay": "Datumsformat",
+				"dateDisplayOptions": {
+					"relative": "Relativ (z.B. vor 3 Tagen)",
+					"mm-dd-yyyy": "MM-TT-JJJJ",
+					"dd-mm-yyyy": "TT-MM-JJJJ",
+					"yyyy-mm-dd": "JJJJ-MM-TT",
+					"mm/dd/yyyy": "MM/TT/JJJJ",
+					"dd/mm/yyyy": "TT/MM/JJJJ",
+					"yyyy/mm/dd": "JJJJ/MM/TT"
+				},
 				"externalUserNameChange": "Dein Name wird von deinem Login-Provider verwaltet ({provider}). Um ihn zu ändern, aktualisiere ihn bitte dort."
+			},
+			"sections": {
+				"personalInformation": "Persönliche Angaben",
+				"taskAndNotifications": "Projekte & Aufgaben",
+				"privacy": "Privatsphäre",
+				"localization": "Sprachauswahl",
+				"appearance": "Aussehen & Verhalten"
 			},
 			"totp": {
 				"title": "Zweifaktor Authentifizierig",
@@ -209,7 +226,9 @@
 			"descriptionPasswordRequired": "Bitte gib dein Passwort ein, um fortzufahren:",
 			"request": "Eine Kopie meiner Vikunja Daten anfordern",
 			"success": "Du hast deine Daten bei Vikunja erfolgreich angefordert! Wir schicken dir eine E-Mail, sobald sie zum Download bereitstehen.",
-			"downloadTitle": "Lade deine exportierten Vikunja-Daten herunter"
+			"downloadTitle": "Lade deine exportierten Vikunja-Daten herunter",
+			"ready": "Dein Export steht zum Download bereit. Du kannst ihn bis {0} herunterladen.",
+			"requestNew": "Einen weiteren Export anfordern"
 		}
 	},
 	"project": {
@@ -389,6 +408,7 @@
 			"targetUrl": "Ziel-URL",
 			"targetUrlInvalid": "Bitte gib eine gültige URL an.",
 			"events": "Ereignisse",
+			"eventsHint": "Wähle alle Ereignisse aus, für die dieser Webhook Updates erhalten soll (innerhalb des aktuellen Projekts).",
 			"mustSelectEvents": "Du musst mindestens ein Ereignis auswählen.",
 			"delete": "Diesen Webhook löschen",
 			"deleteText": "Bist du sicher, dass du diesen Webhook löschen möchtest? Externe Ziele werden nicht mehr über Ereignisse benachrichtigt.",
@@ -484,7 +504,9 @@
 					"greaterThanOrEqual": "Größer oder gleich",
 					"lessThan": "Kleiner als",
 					"lessThanOrEqual": "Kleiner als oder gleich",
-					"like": "Vergleicht zu einem Muster (mit Platzhalter %)"
+					"like": "Vergleicht zu einem Muster (mit Platzhalter %)",
+					"in": "Filtert einen beliebigen Wert in einer kommaseparierten Liste",
+					"notIn": "Filtert einen beliebigen Wert, der nicht in einer kommaseparierten Liste vorkommt"
 				},
 				"logicalOperators": {
 					"intro": "Um mehrere Bedingungen zu kombinieren, kannst du folgende logische Operatoren verwenden:",

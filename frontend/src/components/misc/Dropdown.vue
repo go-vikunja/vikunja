@@ -93,20 +93,20 @@ onClickOutside(dropdown, (e) => {
 
 .dropdown-menu {
 	min-width: 12rem;
-	padding-top: 4px;
+	padding-block-start: 4px;
 	position: absolute;
-	top: 100%;
+	inset-block-start: 100%;
 	z-index: 20;
 	display: block;
-	left: auto;
-	right: 0;
+	inset-inline-start: auto;
+	inset-inline-end: 0;
 }
 
 .dropdown-content {
 	background-color: var(--scheme-main);
 	border-radius: $radius;
-	padding-bottom: .5rem;
-	padding-top: .5rem;
+	padding-block-end: .5rem;
+	padding-block-start: .5rem;
 	box-shadow: var(--shadow-md);
 }
 

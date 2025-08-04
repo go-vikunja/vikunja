@@ -8,7 +8,7 @@
 			:title="title"
 			:shadow="false"
 			:padding="false"
-			class="has-text-left"
+			class="has-text-start"
 			:loading="loading"
 			:show-close="true"
 			@close="$router.back()"
@@ -38,7 +38,7 @@
 						variant="primary"
 						:icon="primaryIcon"
 						:disabled="primaryDisabled || loading"
-						class="ml-2"
+						class="mis-2"
 						@click.prevent.stop="primary"
 					>
 						{{ primaryLabel || $t('misc.create') }}

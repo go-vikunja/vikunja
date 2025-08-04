@@ -103,7 +103,24 @@
 				"overdueTasksRemindersTime": "Horário do e-mail de lembrete de tarefas pendentes",
 				"filterUsedOnOverview": "Salvo filtro utilizado na vista geral",
 				"minimumPriority": "Prioridade mínima de tarefa a visualizar",
+				"dateDisplay": "Formato de exibição da data",
+				"dateDisplayOptions": {
+					"relative": "Relativo (ex. 3 dias atrás)",
+					"mm-dd-yyyy": "MM-DD-AAAA",
+					"dd-mm-yyyy": "DD-MM-AAAA",
+					"yyyy-mm-dd": "AAAA-MM-DD",
+					"mm/dd/yyyy": "MM/DD/AAAA",
+					"dd/mm/yyyy": "DD/MM/AAAA",
+					"yyyy/mm/dd": "AAAA/MM/DD"
+				},
 				"externalUserNameChange": "O teu nome é gerido pelo teu fornecedor de início de sessão ({provider}). Para o alterar, atualiza-o antes lá."
+			},
+			"sections": {
+				"personalInformation": "Informação Pessoal",
+				"taskAndNotifications": "Projetos e Tarefas",
+				"privacy": "Privacidade",
+				"localization": "Localização",
+				"appearance": "Aparência e Comportamento"
 			},
 			"totp": {
 				"title": "Autenticação de Dois Fatores",
@@ -209,7 +226,9 @@
 			"descriptionPasswordRequired": "Por favor, introduz a tua palavra-passe para continuar:",
 			"request": "Solicitar uma cópia dos meus dados do Vikunja",
 			"success": "Solicitaste com sucesso os teus dados do Vikunja! Enviaremos um e-mail assim que estiverem prontos para transferência.",
-			"downloadTitle": "Transferir os teus dados exportados"
+			"downloadTitle": "Transferir os teus dados exportados",
+			"ready": "A tua exportação está pronta para transferência. Podes transferi-la até {0}.",
+			"requestNew": "Solicita outra exportação"
 		}
 	},
 	"project": {
@@ -389,6 +408,7 @@
 			"targetUrl": "URL de destino",
 			"targetUrlInvalid": "Por favor, fornece um URL válido.",
 			"events": "Eventos",
+			"eventsHint": "Seleciona todos os eventos para os quais esta webhook deve receber atualizações (dentro do projeto atual).",
 			"mustSelectEvents": "Tens de selecionar pelo menos um evento.",
 			"delete": "Eliminar este webhook",
 			"deleteText": "Tens a certeza de que pretendes eliminar este webhook? Os alvos externos deixarão de ser notificados dos seus eventos.",
@@ -484,7 +504,9 @@
 					"greaterThanOrEqual": "Maior ou igual a",
 					"lessThan": "Menor que",
 					"lessThanOrEqual": "Menor ou igual a",
-					"like": "Corresponde a um padrão (utilizando o carater universal %)"
+					"like": "Corresponde a um padrão (utilizando o carater universal %)",
+					"in": "Faz corresponder qualquer valor presente numa lista de valores separada por vírgulas",
+					"notIn": "Faz corresponder qualquer valor não presente numa lista de valores separada por vírgulas"
 				},
 				"logicalOperators": {
 					"intro": "Para combinar várias condições, pode utilizar os seguintes operadores lógicos:",

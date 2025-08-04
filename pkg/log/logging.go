@@ -17,27 +17,15 @@
 package log
 
 import (
+	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"strings"
-	"time"
-
-	"github.com/op/go-logging"
 )
 
-// ErrFmt holds the format for all the console logging
-const ErrFmt = `${time_rfc3339}: ${level} ` + "\t" + `▶ ${prefix} ${short_file}:${line}`
-
-// WebFmt holds the format for all logging related to web requests
-const WebFmt = `${time_rfc3339}: WEB ` + "\t" + `▶ ${remote_ip} ${id} ${method} ${status} ${uri} ${latency_human} - ${user_agent}`
-
-// Fmt is the general log format
-const Fmt = `%{color}%{time:` + time.RFC3339 + `}: %{level}` + "\t" + `▶ %{id:03x}%{color:reset} %{message}`
-
-const logModule = `vikunja`
-
-// loginstance is the instance of the logger which is used under the hood to log
-var logInstance = logging.MustGetLogger(logModule)
+// logInstance is the instance of the logger which is used under the hood to log
+var logInstance *slog.Logger
 
 // logpath is the path in which log files will be written.
 // This value is a mere fallback for other modules that could but shouldn't be used before calling ConfigureLogger
@@ -45,45 +33,74 @@ var logPath = "."
 
 // InitLogger initializes the global log handler
 func InitLogger() {
-	// This show correct caller functions
-	logInstance.ExtraCalldepth = 1
-
-	// Init with stdout and INFO as default format and level
-	logBackend := logging.NewLogBackend(os.Stdout, "", 0)
-	backend := logging.NewBackendFormatter(logBackend, logging.MustStringFormatter(Fmt+"\n"))
-
-	backendLeveled := logging.AddModuleLevel(backend)
-	backendLeveled.SetLevel(logging.INFO, logModule)
-
-	logInstance.SetBackend(backendLeveled)
+	handler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})
+	logInstance = slog.New(handler)
 }
 
-// ConfigureLogger configures the global log handler
-func ConfigureLogger(configLogEnabled bool, configLogStandard string, configLogPath string, configLogLevel string) {
-	lvl := strings.ToUpper(configLogLevel)
-	level, err := logging.LogLevel(lvl)
-	if err != nil {
-		Fatalf("Error setting standard log level %s: %s", lvl, err.Error())
+func makeLogHandler(enabled bool, output string, level string, format string) (slog.Handler, io.Writer) {
+	var slogLevel slog.Level
+	switch strings.ToUpper(level) {
+	case "CRITICAL", "ERROR":
+		slogLevel = slog.LevelError
+	case "WARNING":
+		slogLevel = slog.LevelWarn
+	case "NOTICE", "INFO":
+		slogLevel = slog.LevelInfo
+	case "DEBUG":
+		slogLevel = slog.LevelDebug
+	default:
+		slogLevel = slog.LevelInfo
 	}
 
-	logPath = configLogPath
-
-	// The backend is the part which actually handles logging the log entries somewhere.
-	var backend logging.Backend
-	backend = &NoopBackend{}
-	if configLogEnabled && configLogStandard != "off" {
-		logBackend := logging.NewLogBackend(GetLogWriter(configLogStandard, "standard"), "", 0)
-		backend = logging.NewBackendFormatter(logBackend, logging.MustStringFormatter(Fmt+"\n"))
+	format = strings.ToLower(format)
+	if format == "" {
+		format = "text"
+	}
+	if format != "text" && format != "structured" {
+		Fatalf("invalid log format %s", format)
 	}
 
-	backendLeveled := logging.AddModuleLevel(backend)
-	backendLeveled.SetLevel(level, logModule)
+	writer := io.Discard
+	if enabled && output != "off" {
+		writer = getLogWriter(output, "standard")
+	}
 
-	logInstance.SetBackend(backendLeveled)
+	return createHandler(writer, slogLevel, format), writer
+}
+
+// createHandler creates a consistent slog handler for all loggers
+func createHandler(writer io.Writer, level slog.Level, format string) slog.Handler {
+	handlerOpts := &slog.HandlerOptions{Level: level}
+	if strings.ToLower(format) == "structured" {
+		return slog.NewJSONHandler(writer, handlerOpts)
+	}
+
+	return slog.NewTextHandler(writer, handlerOpts)
+}
+
+// NewHTTPLogger creates and initializes a new HTTP logger
+func NewHTTPLogger(enabled bool, output string, format string) *slog.Logger {
+	handler, _ := makeLogHandler(enabled, output, "DEBUG", format)
+
+	return slog.New(handler).With("component", "http")
+}
+
+// ConfigureStandardLogger configures the global log handler
+func ConfigureStandardLogger(enabled bool, output string, path string, level string, format string) {
+	handler, _ := makeLogHandler(enabled, output, level, format)
+	logInstance = slog.New(handler)
+	logPath = path
+}
+
+// wrapLogger is used for libraries requiring a Debugf method.
+type wrapLogger struct{}
+
+func (wrapLogger) Debugf(format string, args ...interface{}) {
+	logInstance.Debug(fmt.Sprintf(format, args...))
 }
 
 // GetLogWriter returns the writer to where the normal log goes, depending on the config
-func GetLogWriter(logfmt string, logfile string) (writer io.Writer) {
+func getLogWriter(logfmt string, logfile string) (writer io.Writer) {
 	writer = os.Stdout // Set the default case to prevent nil pointer panics
 	switch logfmt {
 	case "file":
@@ -106,68 +123,72 @@ func GetLogWriter(logfmt string, logfile string) (writer io.Writer) {
 }
 
 // GetLogger returns the logging instance. DO NOT USE THIS TO LOG STUFF.
-func GetLogger() *logging.Logger {
-	return logInstance
+// GetLogger returns a logger which can be used by external libraries expecting a Debugf method.
+// It only implements Debugf and forwards to the global logger.
+func GetLogger() interface{ Debugf(string, ...interface{}) } {
+	return wrapLogger{}
 }
 
 // The following functions are to be used as an "eye-candy", so one can just write log.Error() instead of log.Log.Error()
 
 // Debug is for debug messages
 func Debug(args ...interface{}) {
-	logInstance.Debug(args...)
+	logInstance.Debug(fmt.Sprint(args...))
 }
 
 // Debugf is for debug messages
 func Debugf(format string, args ...interface{}) {
-	logInstance.Debugf(format, args...)
+	logInstance.Debug(fmt.Sprintf(format, args...))
 }
 
 // Info is for info messages
 func Info(args ...interface{}) {
-	logInstance.Info(args...)
+	logInstance.Info(fmt.Sprint(args...))
 }
 
 // Infof is for info messages
 func Infof(format string, args ...interface{}) {
-	logInstance.Infof(format, args...)
+	logInstance.Info(fmt.Sprintf(format, args...))
 }
 
 // Error is for error messages
 func Error(args ...interface{}) {
-	logInstance.Error(args...)
+	logInstance.Error(fmt.Sprint(args...))
 }
 
 // Errorf is for error messages
 func Errorf(format string, args ...interface{}) {
-	logInstance.Errorf(format, args...)
+	logInstance.Error(fmt.Sprintf(format, args...))
 }
 
 // Warning is for warning messages
 func Warning(args ...interface{}) {
-	logInstance.Warning(args...)
+	logInstance.Warn(fmt.Sprint(args...))
 }
 
 // Warningf is for warning messages
 func Warningf(format string, args ...interface{}) {
-	logInstance.Warningf(format, args...)
+	logInstance.Warn(fmt.Sprintf(format, args...))
 }
 
 // Critical is for critical messages
 func Critical(args ...interface{}) {
-	logInstance.Critical(args...)
+	logInstance.Error(fmt.Sprint(args...))
 }
 
 // Criticalf is for critical messages
 func Criticalf(format string, args ...interface{}) {
-	logInstance.Criticalf(format, args...)
+	logInstance.Error(fmt.Sprintf(format, args...))
 }
 
 // Fatal is for fatal messages
 func Fatal(args ...interface{}) {
-	logInstance.Fatal(args...)
+	logInstance.Error(fmt.Sprint(args...))
+	os.Exit(1)
 }
 
 // Fatalf is for fatal messages
 func Fatalf(format string, args ...interface{}) {
-	logInstance.Fatalf(format, args...)
+	logInstance.Error(fmt.Sprintf(format, args...))
+	os.Exit(1)
 }

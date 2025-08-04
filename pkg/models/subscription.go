@@ -359,7 +359,7 @@ subscription_hierarchy AS (
         ph.task_id
     FROM subscriptions s
              INNER JOIN project_hierarchy ph ON s.entity_id = ph.id
-    WHERE s.entity_type = ?
+    WHERE s.entity_type = ?`+sUserCond+`
 )
 
 SELECT

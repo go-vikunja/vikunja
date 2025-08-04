@@ -28,7 +28,7 @@
 					<ApiConfig v-if="showApiConfig" />
 					<Message
 						v-if="motd !== ''"
-						class="is-hidden-tablet mb-4"
+						class="is-hidden-tablet mbe-4"
 					>
 						{{ motd }}
 					</Message>
@@ -77,7 +77,7 @@ useTitle(() => title.value)
 	place-items: center;
 
 	@media screen and (max-width: $fullhd) {
-		padding-bottom: 15rem;
+		padding-block-end: 15rem;
 	}
 }
 
@@ -117,10 +117,10 @@ useTitle(() => title.value)
 		&::before {
 			content: '';
 			position: absolute;
-			top: 0;
-			left: 0;
-			right: 0;
-			bottom: 0;
+			inset-block-start: 0;
+			inset-inline-start: 0;
+			inset-inline-end: 0;
+			inset-block-end: 0;
 			background-color: rgba(0, 0, 0, .2);
 		}
 

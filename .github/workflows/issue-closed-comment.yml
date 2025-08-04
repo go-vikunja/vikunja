@@ -1,0 +1,135 @@
+name: Comment on PR when issue is closed
+
+on:
+  issues:
+    types: [closed]
+
+jobs:
+  comment-on-issue-closure:
+    runs-on: ubuntu-latest
+    # Only run if the issue was closed by a commit (not manually)
+    if: ${{ github.event.issue.closed_by.type == 'Bot' || github.event.issue.closed_by.login != null }}
+    steps:
+      - name: Check if issue was closed by commit
+        id: check-commit
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issueNumber = context.payload.issue.number;
+
+            // Get the issue events to find the "closed" event with commit_id
+            const { data: events } = await github.rest.issues.listEvents({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber
+            });
+
+            // Find the most recent "closed" event
+            const closedEvent = events
+              .filter(event => event.event === 'closed')
+              .pop(); // Get the last (most recent) closed event
+
+            if (closedEvent && closedEvent.commit_id) {
+              console.log(`✅ Issue #${issueNumber} was closed by commit: ${closedEvent.commit_id}`);
+              
+              // Get commit details
+              const { data: commit } = await github.rest.git.getCommit({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                commit_sha: closedEvent.commit_id
+              });
+              
+              core.setOutput('closed_by_commit', 'true');
+              core.setOutput('commit_sha', closedEvent.commit_id);
+              core.setOutput('commit_message', commit.message);
+              core.setOutput('commit_url', closedEvent.commit_url);
+            } else {
+              console.log(`ℹ️  Issue #${issueNumber} was closed manually (not by commit)`);
+              core.setOutput('closed_by_commit', 'false');
+            }
+
+      - name: Determine closure method and comment on issue
+        if: steps.check-commit.outputs.closed_by_commit == 'true'
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issueNumber = context.payload.issue.number;
+            const commitSha = '${{ steps.check-commit.outputs.commit_sha }}';
+            const commitMessage = '${{ steps.check-commit.outputs.commit_message }}';
+            const commitUrl = '${{ steps.check-commit.outputs.commit_url }}';
+
+            try {
+              // Find PRs that include this commit
+              const { data: prs } = await github.rest.pulls.list({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'all',
+                sort: 'updated',
+                direction: 'desc',
+                per_page: 100
+              });
+              
+              let closingPR = null;
+              
+              // Check each PR to see if it contains our commit
+              for (const pr of prs) {
+                try {
+                  const { data: commits } = await github.rest.pulls.listCommits({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    pull_number: pr.number
+                  });
+                  
+                  if (commits.some(commit => commit.sha === commitSha)) {
+                    closingPR = pr;
+                    console.log(`✅ Found PR #${pr.number} containing commit ${commitSha.substring(0, 7)}`);
+                    break;
+                  }
+                } catch (error) {
+                  console.log(`Error checking commits for PR #${pr.number}: ${error.message}`);
+                }
+              }
+              
+              // If no PR found with the exact commit, try alternative approaches
+              if (!closingPR) {
+                console.log(`🔍 No PR found with exact commit ${commitSha.substring(0, 7)}, trying alternative search...`);
+                
+                // Try to find a merged PR that mentions this issue
+                const relatedPRs = prs.filter(pr => 
+                  pr.state === 'closed' && 
+                  pr.merged_at &&
+                  (pr.title.includes(`#${issueNumber}`) || 
+                   pr.body?.includes(`#${issueNumber}`))
+                );
+                
+                if (relatedPRs.length > 0) {
+                  closingPR = relatedPRs[0];
+                  console.log(`✅ Found related PR #${closingPR.number} that mentions issue #${issueNumber}`);
+                }
+              }
+              
+              const closedRef = closingPR
+                ? `#${closingPR.number}`
+                : `[\`${commitSha.substring(0, 7)}\`](${commitUrl})`
+              
+              const comment = `This issue has been fixed in ${closedRef}, please check with the next unstable build (should be ready for deployment in ~30min, also on [the demo](https://try.vikunja.io).`
+              
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                body: comment,
+              });
+              
+              if (closingPR) {
+                console.log(`✅ Added comment to issue #${issueNumber} (closed by PR #${closingPR.number})`);
+              } else {
+                console.log(`✅ Added comment to issue #${issueNumber} (closed by direct commit ${commitSha.substring(0, 7)})`);
+              }
+              
+            } catch (error) {
+              console.error(`❌ Error processing issue #${issueNumber}: ${error.message}`);
+              throw error;
+            }

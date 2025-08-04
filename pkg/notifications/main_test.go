@@ -45,6 +45,9 @@ func SetupTests() {
 
 // TestMain is the main test function used to bootstrap the test env
 func TestMain(m *testing.M) {
+	// Initialize logger for tests
+	log.InitLogger()
+
 	// Set default config
 	config.InitDefaultConfig()
 	// We need to set the root path even if we're not using the config, otherwise fixtures are not loaded correctly

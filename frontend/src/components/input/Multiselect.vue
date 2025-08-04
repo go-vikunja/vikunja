@@ -28,7 +28,7 @@
 						>
 							<span
 								:key="`item${key}`"
-								class="tag ml-2 mt-2"
+								class="tag mis-2 mbs-2"
 							>
 								{{ label !== '' ? item[label] : item }}
 								<BaseButton
@@ -439,7 +439,7 @@ function focus() {
 	position: relative;
 
 	.control.is-loading::after {
-		top: .75rem;
+		inset-block-start: .75rem;
 	}
 
 	&.is-disabled {
@@ -484,7 +484,7 @@ function focus() {
 		max-width: 250px;
 
 		input {
-			padding-left: 0;
+			padding-inline-start: 0;
 		}
 	}
 
@@ -505,7 +505,7 @@ function focus() {
 	background: var(--white) !important;
 
 	&, &:focus-within {
-		border-bottom-color: var(--grey-200) !important;
+		border-block-end-color: var(--grey-200) !important;
 	}
 }
 
@@ -513,7 +513,7 @@ function focus() {
 	background: var(--white);
 	border-radius: 0 0 $radius $radius;
 	border: 1px solid var(--primary);
-	border-top: none;
+	border-block-start: none;
 
 	max-height: 50vh;
 	overflow-x: auto;
@@ -529,7 +529,7 @@ function focus() {
 
 .search-result-button {
 	background: transparent;
-	text-align: left;
+	text-align: start;
 	box-shadow: none;
 	border-radius: 0;
 	text-transform: none;
@@ -572,7 +572,7 @@ function focus() {
 	font-size: .75rem;
 	color: transparent;
 	transition: color $transition;
-	padding-left: .5rem;
+	padding-inline-start: .5rem;
 }
 
 .has-removal-button {
@@ -581,7 +581,7 @@ function focus() {
 
 .removal-button {
 	position: absolute;
-	right: .5rem;
+	inset-inline-end: .5rem;
 	color: var(--danger);
 }
 </style>

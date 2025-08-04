@@ -53,6 +53,7 @@ package routes
 
 import (
 	"errors"
+	"log/slog"
 	"net/url"
 	"strings"
 	"time"
@@ -72,6 +73,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/migration/todoist"
 	"code.vikunja.io/api/pkg/modules/migration/trello"
 	vikunja_file "code.vikunja.io/api/pkg/modules/migration/vikunja-file"
+	"code.vikunja.io/api/pkg/plugins"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/api/pkg/routes/caldav"
 	"code.vikunja.io/api/pkg/version"
@@ -81,9 +83,35 @@ import (
 	sentryecho "github.com/getsentry/sentry-go/echo"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	elog "github.com/labstack/gommon/log"
 	"github.com/ulule/limiter/v3"
 )
+
+// slogHTTPMiddleware creates a custom HTTP logging middleware using slog
+func slogHTTPMiddleware(logger *slog.Logger) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return echo.HandlerFunc(func(c echo.Context) error {
+			start := time.Now()
+
+			err := next(c)
+			if err != nil {
+				c.Error(err)
+			}
+
+			req := c.Request()
+			res := c.Response()
+
+			logger.InfoContext(c.Request().Context(),
+				req.Method+" "+req.RequestURI,
+				"status", res.Status,
+				"remote_ip", c.RealIP(),
+				"latency", time.Since(start),
+				"user_agent", req.UserAgent(),
+			)
+
+			return err
+		})
+	}
+}
 
 // NewEcho registers a new Echo instance
 func NewEcho() *echo.Echo {
@@ -91,21 +119,12 @@ func NewEcho() *echo.Echo {
 
 	e.HideBanner = true
 
-	if l, ok := e.Logger.(*elog.Logger); ok {
-		if !config.LogEnabled.GetBool() || config.LogEcho.GetString() == "off" {
-			l.SetLevel(elog.OFF)
-		}
-		l.EnableColor()
-		l.SetHeader(log.ErrFmt)
-		l.SetOutput(log.GetLogWriter(config.LogEcho.GetString(), "echo"))
-	}
+	e.Logger = log.NewEchoLogger(config.LogEnabled.GetBool(), config.LogHTTP.GetString(), config.LogFormat.GetString())
 
 	// Logger
-	if !config.LogEnabled.GetBool() || config.LogHTTP.GetString() != "off" {
-		e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
-			Format: log.WebFmt + "\n",
-			Output: log.GetLogWriter(config.LogHTTP.GetString(), "http"),
-		}))
+	if config.LogEnabled.GetBool() && config.LogHTTP.GetString() != "off" {
+		httpLogger := log.NewHTTPLogger(config.LogEnabled.GetBool(), config.LogHTTP.GetString(), config.LogFormat.GetString())
+		e.Use(slogHTTPMiddleware(httpLogger))
 	}
 
 	// panic recover
@@ -304,6 +323,7 @@ func registerAPIRoutes(a *echo.Group) {
 	u.POST("/settings/general", apiv1.UpdateGeneralUserSettings)
 	u.POST("/export/request", apiv1.RequestUserDataExport)
 	u.POST("/export/download", apiv1.DownloadUserDataExport)
+	u.GET("/export", apiv1.GetUserExportStatus)
 	u.GET("/timezones", apiv1.GetAvailableTimezones)
 	u.PUT("/settings/token/caldav", apiv1.GenerateCaldavToken)
 	u.GET("/settings/token/caldav", apiv1.GetCaldavTokens)
@@ -625,6 +645,17 @@ func registerAPIRoutes(a *echo.Group) {
 		},
 	}
 	a.POST("/projects/:project/views/:view/buckets/:bucket/tasks", taskBucketProvider.UpdateWeb)
+
+	// Plugin routes
+	if config.PluginsEnabled.GetBool() {
+		// Authenticated plugin routes
+		authenticatedPluginGroup := a.Group("/plugins")
+
+		// Unauthenticated plugin routes (with basic IP rate limiting)
+		unauthenticatedPluginGroup := n.Group("/plugins")
+
+		plugins.RegisterPluginRoutes(authenticatedPluginGroup, unauthenticatedPluginGroup)
+	}
 }
 
 func registerMigrations(m *echo.Group) {

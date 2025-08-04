@@ -56,7 +56,7 @@
 								scope="global"
 							>
 								<span v-tooltip="formatDateLong(a.created)">
-									{{ formatDateSince(a.created) }}
+									{{ formatDisplayDate(a.created) }}
 								</span>
 								<User
 									:avatar-size="24"
@@ -113,7 +113,7 @@
 		<XButton
 			v-if="editEnabled"
 			:disabled="loading"
-			class="mb-4"
+			class="mbe-4"
 			icon="cloud-upload-alt"
 			variant="secondary"
 			:shadow="false"
@@ -185,7 +185,7 @@ import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {ITask} from '@/modelTypes/ITask'
 
 import {useAttachmentStore} from '@/stores/attachments'
-import {formatDateSince, formatDateLong} from '@/helpers/time/formatDate'
+import {formatDisplayDate, formatDateLong} from '@/helpers/time/formatDate'
 import {uploadFiles, generateAttachmentUrl} from '@/helpers/attachments'
 import {getHumanSize} from '@/helpers/getHumanSize'
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
@@ -301,7 +301,7 @@ async function setCoverImage(attachment: IAttachment | null) {
 }
 
 .files {
-	margin-bottom: 1rem;
+	margin-block-end: 1rem;
 }
 
 .attachment {
@@ -329,7 +329,7 @@ async function setCoverImage(attachment: IAttachment | null) {
 	font-weight: bold;
 	height: 2rem;
 	color: var(--text);
-	text-align: left;
+	text-align: start;
 }
 
 .info {
@@ -339,7 +339,7 @@ async function setCoverImage(attachment: IAttachment | null) {
 	flex-direction: column;
 
 	p {
-		margin-bottom: 0;
+		margin-block-end: 0;
 		display: flex;
 
 		> span,
@@ -352,9 +352,9 @@ async function setCoverImage(attachment: IAttachment | null) {
 .dropzone {
 	position: fixed;
 	background: hsla(var(--grey-100-hsl), 0.8);
-	top: 0;
-	left: 0;
-	bottom: 0;
+	inset-block-start: 0;
+	inset-inline-start: 0;
+	inset-block-end: 0;
 	right: 0;
 	z-index: 4001; // modal z-index is 4000
 	text-align: center;
@@ -366,9 +366,9 @@ async function setCoverImage(attachment: IAttachment | null) {
 
 .drop-hint {
 	position: absolute;
-	bottom: 0;
-	left: 0;
-	right: 0;
+	inset-block-end: 0;
+	inset-inline-start: 0;
+	inset-inline-end: 0;
 
 	.icon {
 		width: 100%;
@@ -472,7 +472,7 @@ async function setCoverImage(attachment: IAttachment | null) {
 .is-task-cover {
 	background: var(--primary);
 	color: var(--white);
-	margin-left: .25rem;
+	margin-inline-start: .25rem;
 	padding: .25rem .35rem;
 	border-radius: 4px;
 	font-size: .75rem;

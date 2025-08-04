@@ -8,7 +8,7 @@
 				<p>
 					{{
 						$t('user.deletion.scheduled', {
-							date: formatDateShort(deletionScheduledAt),
+							date: formatDisplayDate(deletionScheduledAt),
 							dateSince: formatDateSince(deletionScheduledAt),
 						})
 					}}
@@ -51,7 +51,7 @@
 
 			<XButton
 				:loading="accountDeleteService.loading"
-				class="is-fullwidth mt-4"
+				class="is-fullwidth mbs-4"
 				@click="cancelDeletion()"
 			>
 				{{ $t('user.deletion.scheduledCancelConfirm') }}
@@ -101,7 +101,7 @@
 
 			<XButton
 				:loading="accountDeleteService.loading"
-				class="is-fullwidth mt-4 is-danger"
+				class="is-fullwidth mbs-4 is-danger"
 				@click="deleteAccount()"
 			>
 				{{ $t('user.deletion.confirm') }}
@@ -116,7 +116,7 @@ import {useI18n} from 'vue-i18n'
 
 import AccountDeleteService from '@/services/accountDelete'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
-import {formatDateShort, formatDateSince} from '@/helpers/time/formatDate'
+import {formatDateSince, formatDisplayDate} from '@/helpers/time/formatDate'
 import {useTitle} from '@/composables/useTitle'
 import {success} from '@/message'
 import {useAuthStore} from '@/stores/auth'

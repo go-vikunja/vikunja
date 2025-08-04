@@ -5,7 +5,7 @@
 				v-if="showProject && typeof project !== 'undefined'"
 				v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
 				class="task-project"
-				:class="{'mr-2': task.hexColor !== ''}"
+				:class="{'mie-2': task.hexColor !== ''}"
 			>
 				{{ project.title }}
 			</span>
@@ -13,7 +13,7 @@
 			<ColorBubble
 				v-if="task.hexColor !== ''"
 				:color="getHexColor(task.hexColor)"
-				class="mr-1"
+				class="mie-1"
 			/>
 
 			<PriorityLabel
@@ -36,7 +36,7 @@
 
 		<Labels
 			v-if="task.labels.length > 0"
-			class="labels ml-2 mr-1"
+			class="labels mis-2 mie-1"
 			:labels="task.labels"
 		/>
 
@@ -44,7 +44,7 @@
 			v-if="task.assignees.length > 0"
 			:assignees="task.assignees"
 			:avatar-size="20"
-			class="ml-1"
+			class="mis-1"
 			:inline="true"
 		/>
 
@@ -58,7 +58,7 @@
 				:class="{'overdue': task.dueDate <= new Date() && !task.done}"
 				class="is-italic"
 			>
-				– {{ $t('task.detail.due', {at: formatDateSince(task.dueDate)}) }}
+				– {{ $t('task.detail.due', {at: formatDisplayDate(task.dueDate)}) }}
 			</time>
 		</span>
 
@@ -108,7 +108,7 @@ import ChecklistSummary from '@/components/tasks/partials/ChecklistSummary.vue'
 
 import ColorBubble from '@/components/misc/ColorBubble.vue'
 
-import {formatDateSince, formatISO, formatDateLong} from '@/helpers/time/formatDate'
+import {formatDisplayDate, formatISO, formatDateLong} from '@/helpers/time/formatDate'
 
 import {useProjectStore} from '@/stores/projects'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
@@ -148,7 +148,7 @@ const project = computed(() => projectStore.projects[props.task.projectId])
 
 	.dueDate {
 		display: inline-block;
-		margin-left: 5px;
+		margin-inline-start: 5px;
 	}
 
 	.overdue {
@@ -165,16 +165,16 @@ const project = computed(() => projectStore.projects[props.task.projectId])
 	.avatar {
 		border-radius: 50%;
 		vertical-align: bottom;
-		margin-left: .5rem;
+		margin-inline-start: .5rem;
 		height: 21px;
 		width: 21px;
 	}
 
 	.project-task-icon {
-		margin-left: 6px;
+		margin-inline-start: 6px;
 
 		&:not(:first-of-type) {
-			margin-left: 8px;
+			margin-inline-start: 8px;
 		}
 
 	}
@@ -196,7 +196,7 @@ const project = computed(() => projectStore.projects[props.task.projectId])
 	span.parent-tasks {
 		color: var(--grey-500);
 		width: auto;
-		margin-left: .25rem;
+		margin-inline-start: .25rem;
 	}
 }
 </style>

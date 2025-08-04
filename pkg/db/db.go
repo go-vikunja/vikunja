@@ -38,8 +38,13 @@ import (
 	_ "github.com/mattn/go-sqlite3"    // Because.
 )
 
-// We only want one instance of the engine, so we can reate it once and reuse it
-var x *xorm.Engine
+var (
+	// We only want one instance of the engine, so we can create it once and reuse it
+	x *xorm.Engine
+	// paradedbInstalled marks whether the paradedb extension is available
+	// and can be used for full text search.
+	paradedbInstalled bool
+)
 
 // CreateDBEngine initializes a db engine from the config
 func CreateDBEngine() (engine *xorm.Engine, err error) {
@@ -82,7 +87,7 @@ func CreateDBEngine() (engine *xorm.Engine, err error) {
 	}
 	engine.SetTZDatabase(loc)
 	engine.SetMapper(names.GonicMapper{})
-	logger := log.NewXormLogger(config.LogEnabled.GetBool(), config.LogDatabase.GetString(), config.LogDatabaseLevel.GetString())
+	logger := log.NewXormLogger(config.LogEnabled.GetBool(), config.LogDatabase.GetString(), config.LogDatabaseLevel.GetString(), config.LogFormat.GetString())
 	engine.SetLogger(logger)
 
 	x = engine
@@ -174,6 +179,8 @@ func initPostgresEngine() (engine *xorm.Engine, err error) {
 		return
 	}
 	engine.SetConnMaxLifetime(maxLifetime)
+
+	checkParadeDB(engine)
 	return
 }
 
@@ -240,4 +247,64 @@ func GetDialect() string {
 	}
 
 	return dialect
+}
+
+func checkParadeDB(engine *xorm.Engine) {
+	if engine.Dialect().URI().DBType != schemas.POSTGRES {
+		return
+	}
+
+	exists := false
+	if _, err := engine.SQL("SELECT EXISTS (SELECT 1 FROM pg_extension WHERE extname='pg_search')").Get(&exists); err != nil {
+		log.Errorf("could not check for paradedb extension: %v", err)
+		return
+	}
+
+	if !exists {
+		return
+	}
+
+	paradedbInstalled = true
+	log.Debug("ParadeDB extension detected, using @@@ search operator")
+}
+
+func CreateParadeDBIndexes() error {
+	if !paradedbInstalled {
+		return nil
+	}
+	// ParadeDB only allows one bm25 index per table, so we create a single index covering both fields
+	// Use optimized configuration with fast fields and field boosting for better performance
+	indexSQL := `CREATE INDEX IF NOT EXISTS idx_tasks_paradedb ON tasks USING bm25 (id, title, description, project_id, done) 
+	WITH (
+		key_field='id',
+		text_fields='{
+			"title": {"fast": true, "record": "freq"}, 
+			"description": {"fast": true, "record": "freq"}
+		}',
+		numeric_fields='{
+			"project_id": {"fast": true}
+		}',
+		boolean_fields='{
+			"done": {"fast": true}
+		}'
+	)`
+	if _, err := x.Exec(indexSQL); err != nil {
+		return fmt.Errorf("could not ensure paradedb task index: %w", err)
+	}
+
+	// Create ParadeDB index for projects table
+	projectIndexSQL := `CREATE INDEX IF NOT EXISTS idx_projects_paradedb ON projects USING bm25 (id, title, description, identifier) 
+	WITH (
+		key_field='id',
+		text_fields='{
+			"title": {"fast": true, "record": "freq"}, 
+			"description": {"fast": true, "record": "freq"},
+			"identifier": {"fast": true, "record": "freq"}
+		}'
+	)`
+	if _, err := x.Exec(projectIndexSQL); err != nil {
+		return fmt.Errorf("could not ensure paradedb project index: %w", err)
+	}
+
+	return nil
 }

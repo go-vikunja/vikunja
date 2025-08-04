@@ -39,6 +39,11 @@ import (
 
 var migrations []*xormigrate.Migration
 
+// AddPluginMigrations adds migrations provided by plugins to the global list.
+func AddPluginMigrations(ms []*xormigrate.Migration) {
+	migrations = append(migrations, ms...)
+}
+
 // A helper function because we need a migration in various places which we can't really solve with an init() function.
 func initMigration(x *xorm.Engine) *xormigrate.Xormigrate {
 	// Get our own xorm engine if we don't have one
@@ -58,7 +63,7 @@ func initMigration(x *xorm.Engine) *xormigrate.Xormigrate {
 	})
 
 	m := xormigrate.New(x, migrations)
-	logger := log.NewXormLogger(config.LogEnabled.GetBool(), config.LogEvents.GetString(), config.LogEventsLevel.GetString())
+	logger := log.NewXormLogger(config.LogEnabled.GetBool(), config.LogEvents.GetString(), config.LogEventsLevel.GetString(), config.LogFormat.GetString())
 	m.SetLogger(logger)
 	m.InitSchema(initSchema)
 	return m

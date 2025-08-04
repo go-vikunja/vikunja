@@ -135,13 +135,7 @@ func getCacheKey(prefix string, keys ...int64) string {
 func getAvatarForUser(u *user.User) (fullSizeAvatar *image.RGBA64, err error) {
 	cacheKey := getCacheKey("full", u.ID)
 
-	fullSizeAvatar = &image.RGBA64{}
-	exists, err := keyvalue.GetWithValue(cacheKey, fullSizeAvatar)
-	if err != nil {
-		return nil, err
-	}
-
-	if !exists {
+	result, err := keyvalue.Remember(cacheKey, func() (any, error) {
 		log.Debugf("Initials avatar for user %d not cached, creating...", u.ID)
 		avatarText := u.Name
 		if avatarText == "" {
@@ -150,17 +144,20 @@ func getAvatarForUser(u *user.User) (fullSizeAvatar *image.RGBA64, err error) {
 		firstRune := []rune(strings.ToUpper(avatarText))[0]
 		bg := avatarBgColors[int(u.ID)%len(avatarBgColors)] // Random color based on the user id
 
-		fullSizeAvatar, err = drawImage(firstRune, bg)
+		res, err := drawImage(firstRune, bg)
 		if err != nil {
 			return nil, err
 		}
-		err = keyvalue.Put(cacheKey, fullSizeAvatar)
-		if err != nil {
-			return nil, err
-		}
+
+		return *res, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
-	return fullSizeAvatar, nil
+	aa := result.(image.RGBA64)
+
+	return &aa, nil
 }
 
 // CachedAvatar represents a cached avatar with its content and mime type
@@ -173,41 +170,33 @@ type CachedAvatar struct {
 func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType string, err error) {
 	cacheKey := getCacheKey("resized", u.ID, size)
 
-	var cachedAvatar CachedAvatar
-	exists, err := keyvalue.GetWithValue(cacheKey, &cachedAvatar)
+	result, err := keyvalue.Remember(cacheKey, func() (any, error) {
+		log.Debugf("Initials avatar for user %d and size %d not cached, creating...", u.ID, size)
+		fullAvatar, err := getAvatarForUser(u)
+		if err != nil {
+			return nil, err
+		}
+
+		img := imaging.Resize(fullAvatar, int(size), int(size), imaging.Lanczos)
+		buf := &bytes.Buffer{}
+		err = png.Encode(buf, img)
+		if err != nil {
+			return nil, err
+		}
+		avatar := buf.Bytes()
+		mimeType := "image/png"
+
+		cachedAvatar := CachedAvatar{
+			Content:  avatar,
+			MimeType: mimeType,
+		}
+
+		return cachedAvatar, nil
+	})
 	if err != nil {
 		return nil, "", err
 	}
 
-	if exists && len(cachedAvatar.Content) > 0 {
-		log.Debugf("Serving initials avatar for user %d and size %d from cache", u.ID, size)
-		return cachedAvatar.Content, cachedAvatar.MimeType, nil
-	}
-
-	log.Debugf("Initials avatar for user %d and size %d not cached, creating...", u.ID, size)
-	fullAvatar, err := getAvatarForUser(u)
-	if err != nil {
-		return nil, "", err
-	}
-
-	img := imaging.Resize(fullAvatar, int(size), int(size), imaging.Lanczos)
-	buf := &bytes.Buffer{}
-	err = png.Encode(buf, img)
-	if err != nil {
-		return nil, "", err
-	}
-	avatar = buf.Bytes()
-	mimeType = "image/png"
-
-	cachedAvatar = CachedAvatar{
-		Content:  avatar,
-		MimeType: mimeType,
-	}
-
-	err = keyvalue.Put(cacheKey, cachedAvatar)
-	if err != nil {
-		return nil, "", err
-	}
-
-	return avatar, mimeType, nil
+	cachedAvatar := result.(CachedAvatar)
+	return cachedAvatar.Content, cachedAvatar.MimeType, nil
 }

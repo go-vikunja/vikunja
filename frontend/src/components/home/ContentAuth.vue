@@ -59,7 +59,7 @@
 					class="keyboard-shortcuts-button d-print-none"
 					@click="showKeyboardShortcuts()"
 				>
-					<span class="sr-only">{{ $t('keyboardShortcuts.title') }}</span>
+					<span class="is-sr-only">{{ $t('keyboardShortcuts.title') }}</span>
 					<Icon icon="keyboard" />
 				</BaseButton>
 			</main>
@@ -132,8 +132,8 @@ projectStore.loadAllProjects()
 <style lang="scss" scoped>
 .menu-hide-button {
 	position: fixed;
-	top: 0.5rem;
-	right: 0.5rem;
+	inset-block-start: 0.5rem;
+	inset-inline-end: 0.5rem;
 	z-index: 31;
 	width: 3rem;
 	height: 3rem;
@@ -159,7 +159,7 @@ projectStore.loadAllProjects()
 	min-height: calc(100vh - 65px);
 
 	@media screen and (max-width: $tablet) {
-		padding-top: $navbar-height;
+		padding-block-start: $navbar-height;
 	}
 }
 
@@ -169,10 +169,11 @@ projectStore.loadAllProjects()
 	position: relative;
 	padding: 1.5rem 0.5rem 0;
 	// TODO refactor: DRY `transition-timing-function` with `./Navigation.vue`.
-	transition: margin-left $transition-duration;
+	transition: margin-inline-start $transition-duration;
 
 	@media screen and (max-width: $tablet) {
-		margin-left: 0;
+		margin-inline-start: 0;
+		margin-inline-end: 0;
 		min-height: calc(100vh - 4rem);
 	}
 
@@ -182,7 +183,7 @@ projectStore.loadAllProjects()
 
 	&.is-menu-enabled {
 		@media screen and (min-width: $tablet) {
-			margin-left: $navbar-width;
+			margin-inline-start: $navbar-width;
 		}
 	}
 
@@ -200,10 +201,10 @@ projectStore.loadAllProjects()
 .mobile-overlay {
 	display: none;
 	position: fixed;
-	top: 0;
-	bottom: 0;
-	left: 0;
-	right: 0;
+	inset-block-start: 0;
+	inset-block-end: 0;
+	inset-inline-start: 0;
+	inset-inline-end: 0;
 	height: 100vh;
 	width: 100vw;
 	background: hsla(var(--grey-100-hsl), 0.8);
@@ -219,10 +220,9 @@ projectStore.loadAllProjects()
 
 .keyboard-shortcuts-button {
 	position: fixed;
-	bottom: calc(1rem - 4px);
-	right: 1rem;
+	inset-block-end: calc(1rem - 4px);
+	inset-inline-end: 1rem;
 	z-index: 4500; // The modal has a z-index of 4000
-
 	color: var(--grey-500);
 	transition: color $transition;
 

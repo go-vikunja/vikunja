@@ -6,6 +6,7 @@ import {
 	faArchive,
 	faArrowLeft,
 	faArrowUpFromBracket,
+	faArrowUpRightFromSquare,
 	faBold,
 	faItalic,
 	faStrikethrough,
@@ -195,6 +196,7 @@ library.add(faRulerHorizontal)
 library.add(faUnderline)
 library.add(faFaceLaugh)
 library.add(faExclamation)
+library.add(faArrowUpRightFromSquare)
 
 // overwriting the wrong types
 export default FontAwesomeIcon as unknown as FontAwesomeIconFixedTypes

@@ -472,9 +472,19 @@ func getUserProjectsStatement(userID int64, search string, getArchived bool) *bu
 			ids = append(ids, v)
 		}
 
-		filterCond := db.ILIKE("l.title", search)
+		var filterCond builder.Cond
 		if len(ids) > 0 {
 			filterCond = builder.In("l.id", ids)
+		} else {
+			filterCond = db.MultiFieldSearchWithTableAlias(
+				[]string{
+					"title",
+					"description",
+					"identifier",
+				},
+				search,
+				"l",
+			)
 		}
 
 		parentCondition := builder.Or(

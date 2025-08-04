@@ -17,20 +17,20 @@
 package v1
 
 import (
-	"fmt"
 	"net/http"
 
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 )
 
-// CheckToken checks prints a message if the token is valid or not. Currently only used for testing pourposes.
+// CheckToken checks prints a message if the token is valid or not. Currently only used for testing purposes.
 func CheckToken(c echo.Context) error {
 
 	user := c.Get("user").(*jwt.Token)
 
-	fmt.Println(user.Valid)
+	log.Debugf("token valid: %t", user.Valid)
 
 	return c.JSON(418, models.Message{Message: "🍵"})
 }

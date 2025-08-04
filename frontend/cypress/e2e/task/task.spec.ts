@@ -1,5 +1,10 @@
 import {createFakeUserAndLogin} from '../../support/authenticateUser'
 
+import dayjs from 'dayjs'
+import relativeTime from 'dayjs/plugin/relativeTime'
+
+dayjs.extend(relativeTime)
+
 import {TaskFactory} from '../../factories/task'
 import {ProjectFactory} from '../../factories/project'
 import {TaskCommentFactory} from '../../factories/task_comment'
@@ -291,6 +296,29 @@ describe('Task', () => {
 				.should('exist')
 		})
 
+		it('autosaves the description when leaving the task view', () => {
+			TaskFactory.create(1, {
+				id: 1,
+				project_id: projects[0].id,
+				description: 'Old Description',
+			})
+
+			cy.visit('/tasks/1')
+			
+			cy.get('.task-view .details.content.description .tiptap button.done-edit', {timeout: 30_000})
+				.click()
+			cy.get('.task-view .details.content.description .tiptap__editor .tiptap.ProseMirror')
+				.type('{selectall}New Description')
+			
+			cy.get('.task-view h6.subtitle a')
+				.first()
+				.click()
+			
+			cy.visit('/tasks/1')
+			cy.get('.task-view .details.content.description')
+				.should('contain.text', 'New Description')
+		})
+
 		it('Shows an empty editor when the description of a task is empty', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
@@ -421,6 +449,7 @@ describe('Task', () => {
 			cy.get('.task-view .column.assignees .multiselect input')
 				.type(users[1].username)
 			cy.get('.task-view .column.assignees .multiselect .search-results')
+				.should('be.visible')
 				.children()
 				.first()
 				.click()
@@ -605,10 +634,9 @@ describe('Task', () => {
 				.click()
 
 			const today = new Date()
-			const day = today.toLocaleString('default', {day: 'numeric'})
-			const month = today.toLocaleString('default', {month: 'short'})
-			const year = today.toLocaleString('default', {year: 'numeric'})
-			const date = `${month} ${day}, ${year} 12:00 PM`
+			today.setHours(12)
+			today.setMinutes(0)
+			today.setSeconds(0)
 			cy.get('.task-view .columns.details .column')
 				.contains('Due Date')
 				.get('.date-input .datepicker-popup')
@@ -616,7 +644,7 @@ describe('Task', () => {
 			cy.get('.task-view .columns.details .column')
 				.contains('Due Date')
 				.get('.date-input')
-				.should('contain.text', date)
+				.should('contain.text', dayjs(today).fromNow())
 			cy.get('.global-notification')
 				.should('contain', 'Success')
 		})
@@ -634,6 +662,9 @@ describe('Task', () => {
 			})
 
 			const today = new Date(2025, 2, 5)
+			today.setHours(12)
+			today.setMinutes(0)
+			today.setSeconds(0)
 
 			cy.visit(`/tasks/${tasks[0].id}`)
 
@@ -650,10 +681,6 @@ describe('Task', () => {
 				.contains('Confirm')
 				.click()
 
-			const day = today.toLocaleString('default', {day: 'numeric'})
-			const month = today.toLocaleString('default', {month: 'short'})
-			const year = today.toLocaleString('default', {year: 'numeric'})
-			const date = `${month} ${day}, ${year} 12:00 PM`
 			cy.get('.task-view .columns.details .column')
 				.contains('Due Date')
 				.get('.date-input .datepicker-popup')
@@ -661,7 +688,7 @@ describe('Task', () => {
 			cy.get('.task-view .columns.details .column')
 				.contains('Due Date')
 				.get('.date-input')
-				.should('contain.text', date)
+				.should('contain.text', dayjs(today).fromNow())
 			cy.get('.global-notification')
 				.should('contain', 'Success')
 		})

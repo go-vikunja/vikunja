@@ -44,6 +44,7 @@
   due_date: 2018-12-01 03:58:44
 - id: 6
   title: 'task #6 lower due date'
+  description: 'This has something unique'
   done: false
   created_by_id: 1
   project_id: 1

@@ -341,3 +341,25 @@ func TestSubscriptionGet(t *testing.T) {
 		assert.Equal(t, int64(9), sub.ID)
 	})
 }
+
+func TestSubscription_NoCrossUserProjectInheritance(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	user1 := &user.User{ID: 1}
+	user2 := &user.User{ID: 2}
+
+	sb := &Subscription{
+		Entity:   "project",
+		EntityID: 3,
+	}
+	can, err := sb.CanCreate(s, user1)
+	require.NoError(t, err)
+	require.True(t, can)
+	require.NoError(t, sb.Create(s, user1))
+
+	sub, err := GetSubscriptionForUser(s, SubscriptionEntityTask, 32, user2)
+	require.NoError(t, err)
+	assert.Nil(t, sub)
+}

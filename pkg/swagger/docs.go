@@ -6439,6 +6439,30 @@ const docTemplate = `{
                 }
             }
         },
+        "/user/export": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Get current user data export",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1.UserExportStatus"
+                        }
+                    }
+                }
+            }
+        },
         "/user/export/download": {
             "post": {
                 "security": [
@@ -6476,6 +6500,12 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Something's invalid.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "No user data export found.",
                         "schema": {
                             "$ref": "#/definitions/web.HTTPError"
                         }
@@ -7033,7 +7063,7 @@ const docTemplate = `{
             }
         },
         "/user/settings/token/caldav/{id}": {
-            "get": {
+            "delete": {
                 "security": [
                     {
                         "JWTKeyAuth": []
@@ -8175,7 +8205,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "title": {
-                    "description": "The title of the lable. You'll see this one on tasks associated with it.",
+                    "description": "The title of the label. You'll see this one on tasks associated with it.",
                     "type": "string",
                     "maxLength": 250,
                     "minLength": 1
@@ -8404,7 +8434,7 @@ const docTemplate = `{
                     "description": "A timestamp when this relation was last updated. You cannot change this value.",
                     "type": "string"
                 },
-                "user_id": {
+                "username": {
                     "description": "The username.",
                     "type": "string"
                 }
@@ -9537,6 +9567,23 @@ const docTemplate = `{
                 }
             }
         },
+        "v1.UserExportStatus": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "type": "string"
+                },
+                "expires": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "integer"
+                }
+            }
+        },
         "v1.UserPassword": {
             "type": "object",
             "properties": {
@@ -9600,6 +9647,11 @@ const docTemplate = `{
                 "email_reminders_enabled": {
                     "description": "If enabled, sends email reminders of tasks to the user.",
                     "type": "boolean"
+                },
+                "extra_settings_links": {
+                    "description": "Additional settings links as provided by openid",
+                    "type": "object",
+                    "additionalProperties": {}
                 },
                 "frontend_settings": {
                     "description": "Additional settings only used by the frontend"

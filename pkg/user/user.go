@@ -105,7 +105,8 @@ type User struct {
 	DeletionScheduledAt      time.Time `xorm:"datetime null" json:"-"`
 	DeletionLastReminderSent time.Time `xorm:"datetime null" json:"-"`
 
-	FrontendSettings interface{} `xorm:"json null" json:"-"`
+	FrontendSettings   interface{}    `xorm:"json null" json:"-"`
+	ExtraSettingsLinks map[string]any `xorm:"json null" json:"-"`
 
 	ExportFileID int64 `xorm:"bigint null" json:"-"`
 
@@ -429,7 +430,21 @@ func GetCurrentUserFromDB(s *xorm.Session, c echo.Context) (user *User, err erro
 
 // GetCurrentUser returns the current user based on its jwt token
 func GetCurrentUser(c echo.Context) (user *User, err error) {
-	jwtinf := c.Get("user").(*jwt.Token)
+	if apiUser, ok := c.Get("api_user").(*User); ok {
+		return apiUser, nil
+	}
+
+	jwtinf, is := c.Get("user").(*jwt.Token)
+	if jwtinf == nil {
+		log.Error("No user found in context")
+		return nil, ErrInvalidUserContext{Reason: "no user found in context"}
+	}
+
+	if !is {
+		log.Errorf("User in context is not a JWT token, got type: %T", jwtinf)
+		return nil, ErrInvalidUserContext{Reason: "user in context is not a JWT token"}
+	}
+
 	claims := jwtinf.Claims.(jwt.MapClaims)
 	return GetUserFromClaims(claims)
 }
@@ -593,6 +608,7 @@ func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *U
 			"timezone",
 			"overdue_tasks_reminders_time",
 			"frontend_settings",
+			"extra_settings_links",
 		).
 		Update(user)
 	if err != nil {

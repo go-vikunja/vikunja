@@ -26,7 +26,7 @@
 			<Message
 				v-else
 				variant="danger"
-				class="mb-4"
+				class="mbe-4"
 			>
 				<p>
 					{{ $t('ready.errorOccured') }}<br>
@@ -81,26 +81,26 @@ const baseStore = useBaseStore()
 	width: 100vw;
 	flex-direction: column;
 	position: fixed;
-	top: 0;
-	left: 0;
-	bottom: 0;
-	right: 0;
+	inset-block-start: 0;
+	inset-inline-start: 0;
+	inset-block-end: 0;
+	inset-inline-end: 0;
 	background: var(--grey-100);
 	z-index: 99;
 }
 
 .logo {
-	margin-bottom: 1rem;
+	margin-block-end: 1rem;
 	width: 100px;
 	height: 100px;
 }
 
 .loader-container {
-	margin-right: 1rem;
+	margin-inline-end: 1rem;
 
 	&.is-loading::after {
-		border-left-color: var(--grey-400);
-		border-bottom-color: var(--grey-400);
+		border-inline-start-color: var(--grey-400);
+		border-block-end-color: var(--grey-400);
 	}
 }
 
@@ -114,7 +114,7 @@ const baseStore = useBaseStore()
 	text-align: center;
 	position: absolute;
 	width: 100vw;
-	bottom: 5vh;
+	inset-block-end: 5vh;
 	color: $white;
 	padding: 0 1rem;
 }

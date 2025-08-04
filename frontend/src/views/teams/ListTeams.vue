@@ -59,13 +59,13 @@ teamService.getAll().then((result) => {
 <style lang="scss" scoped>
 ul.teams {
   padding: 0;
-  margin-left: 0;
+  margin-inline-start: 0;
   overflow: hidden;
 
   li {
     list-style: none;
     margin: 0;
-    border-bottom: 1px solid var(--grey-200);
+    border-inline-end: 1px solid var(--grey-200);
 
     a {
       color: var(--text);
@@ -80,7 +80,7 @@ ul.teams {
   }
 
   li:last-child {
-    border-bottom: none;
+    border-inline-end: none;
   }
 }
 </style>

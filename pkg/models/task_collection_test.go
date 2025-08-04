@@ -46,6 +46,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		OverdueTasksRemindersTime:    "09:00",
 		Created:                      testCreatedTime,
 		Updated:                      testUpdatedTime,
+		ExportFileID:                 1,
 	}
 	user2 := &user.User{
 		ID:                           2,
@@ -238,6 +239,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task6 := &Task{
 		ID:           6,
 		Title:        "task #6 lower due date",
+		Description:  "This has something unique",
 		Identifier:   "test1-6",
 		Index:        6,
 		CreatedByID:  1,
@@ -1440,19 +1442,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:   "search for task index",
-			fields: fields{},
-			args: args{
-				search: "number #17",
-				a:      &user.User{ID: 1},
-				page:   0,
-			},
-			want: []*Task{
-				task33, // has the index 17
-			},
-			wantErr: false,
-		},
-		{
 			name: "order by position",
 			fields: fields{
 				SortBy:        []string{"position", "id"},
@@ -1603,6 +1592,40 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		// TODO date magic
 	}
 
+	// Here we're explicitly testing search with and without paradeDB. Both return different results but that's
+	// expected - paradeDB returns more results than other databases with a naive like-search.
+
+	if db.ParadeDBAvailable() {
+		tests = append(tests, testcase{
+			name:   "search for task index",
+			fields: fields{},
+			args: args{
+				search: "number #17",
+				a:      &user.User{ID: 1},
+				page:   0,
+			},
+			want: []*Task{
+				task17, // has the text #17 in the title
+				task33, // has the index 17
+			},
+			wantErr: false,
+		})
+	} else {
+		tests = append(tests, testcase{
+			name:   "search for task index",
+			fields: fields{},
+			args: args{
+				search: "number #17",
+				a:      &user.User{ID: 1},
+				page:   0,
+			},
+			want: []*Task{
+				task33, // has the index 17
+			},
+			wantErr: false,
+		})
+	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
@@ -1629,7 +1652,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				t.Errorf("Test %s, Task.ReadAll() error = %v, wantErr %v", tt.name, err, tt.wantErr)
 				return
 			}
-			if diff, equal := messagediff.PrettyDiff(got, tt.want); !equal {
+			if diff, equal := messagediff.PrettyDiff(tt.want, got); !equal {
 				var is bool
 				var gotTasks []*Task
 				gotTasks, is = got.([]*Task)
@@ -1656,7 +1679,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 					return gotIDs[i] < gotIDs[j]
 				})
 
-				diffIDs, _ := messagediff.PrettyDiff(gotIDs, wantIDs)
+				diffIDs, _ := messagediff.PrettyDiff(wantIDs, gotIDs)
 
 				t.Errorf("Test %s, Task.ReadAll() = %v, \nwant %v, \ndiff: %v \n\n diffIDs: %v", tt.name, got, tt.want, diff, diffIDs)
 			}

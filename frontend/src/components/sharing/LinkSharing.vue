@@ -4,7 +4,7 @@
 			{{ $t('project.share.links.title') }}
 			<span
 				v-tooltip="$t('project.share.links.explanation')"
-				class="is-size-7 has-text-grey is-italic ml-3"
+				class="is-size-7 has-text-grey is-italic mis-3"
 			>
 				{{ $t('project.share.links.what') }}
 			</span>
@@ -14,7 +14,7 @@
 			<XButton
 				v-if="!(linkShares.length === 0 || showNewForm)"
 				icon="plus"
-				class="mb-4"
+				class="mbe-4"
 				@click="showNewForm = true"
 			>
 				{{ $t('project.share.links.create') }}
@@ -114,12 +114,12 @@
 						<td>
 							<p
 								v-if="s.name !== ''"
-								class="mb-2 is-italic"
+								class="mbe-2 is-italic"
 							>
 								{{ s.name }}
 							</p>
 
-							<p class="mb-2">
+							<p class="mbe-2">
 								<i18n-t
 									keypath="project.share.links.sharedBy"
 									scope="global"
@@ -128,7 +128,7 @@
 								</i18n-t>
 							</p>
 
-							<p class="mb-2">
+							<p class="mbe-2">
 								<template v-if="s.right === RIGHTS.ADMIN">
 									<span class="icon is-small">
 										<Icon icon="lock" />

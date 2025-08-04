@@ -111,7 +111,7 @@ function toggleEmojiPicker() {
 		const left = rect.left - container.left + rect.width
 
 		emojiPickerPosition.value = {
-			left: left === 0 ? undefined : left,
+			'inset-inline-start': left === 0 ? undefined : left,
 		}
 	}
 
@@ -155,7 +155,7 @@ async function toggleReaction(value: string) {
 			class="reaction-button"
 			@click.stop="toggleEmojiPicker"
 		>
-			<span class="tw-sr-only">{{ $t('reaction.add') }}</span>
+			<span class="is-sr-only">{{ $t('reaction.add') }}</span>
 			<Icon :icon="['far', 'face-laugh']" />
 		</BaseButton>
 		<CustomTransition name="fade">
@@ -163,7 +163,7 @@ async function toggleReaction(value: string) {
 				v-if="showEmojiPicker"
 				ref="emojiPickerRef"
 				class="emoji-picker"
-				:style="{left: emojiPickerPosition?.left + 'px'}"
+				:style="{'inset-inline-start': emojiPickerPosition?.left + 'px'}"
 				data-source="/emojis.json"
 				:is-dark="isDark"
 				@emojiClick="detail => addReaction(detail.unicode)"
@@ -174,8 +174,8 @@ async function toggleReaction(value: string) {
 
 <style scoped lang="scss">
 .reaction-button {
-	margin-right: .25rem;
-	margin-bottom: .25rem;
+	margin-inline-end: .25rem;
+	margin-block-end: .25rem;
 	padding: .175rem .5rem .15rem;
 	border: 1px solid var(--grey-400);
 	background: var(--grey-100);
@@ -191,6 +191,6 @@ async function toggleReaction(value: string) {
 .emoji-picker {
 	position: absolute;
 	z-index: 99;
-	margin-top: .5rem;
+	margin-block-start: .5rem;
 }
 </style>

@@ -12,7 +12,7 @@
 						<XButton
 							icon="th"
 							variant="secondary"
-							class="mr-2"
+							class="mie-2"
 							@click.prevent.stop="toggle()"
 						>
 							{{ $t('project.table.columns') }}
@@ -87,7 +87,7 @@
 					:has-content="false"
 				>
 					<div class="has-horizontal-overflow">
-						<table class="table has-actions is-hoverable is-fullwidth mb-0">
+						<table class="table has-actions is-hoverable is-fullwidth mbe-0">
 							<thead>
 								<tr>
 									<th v-if="activeColumns.index">
@@ -219,7 +219,7 @@
 											v-if="t.assignees.length > 0"
 											:assignees="t.assignees"
 											:avatar-size="28"
-											class="ml-1"
+											class="mis-1"
 											:inline="true"
 										/>
 									</td>
@@ -431,6 +431,6 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 }
 
 .filter-container :deep(.popup) {
-	top: 7rem;
+	inset-block-start: 7rem;
 }
 </style>

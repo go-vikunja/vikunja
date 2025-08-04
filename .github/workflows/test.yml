@@ -31,7 +31,7 @@ jobs:
         with:
           name: mage_bin
           path: ./mage-static
-  
+
   api-build:
     runs-on: ubuntu-latest
     needs: mage
@@ -40,7 +40,7 @@ jobs:
       - name: Download Mage Binary
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
-          name: mage_bin 
+          name: mage_bin
       - name: Git describe
         id: ghd
         uses: proudust/gh-describe@v2
@@ -76,8 +76,8 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@4afd733a84b1f43292c63897423277bb7f4313a9 # v8
         with:
-          version: v2.1.0
-  
+          version: v2.2.2
+
   api-check-translations:
     runs-on: ubuntu-latest
     needs: mage
@@ -90,8 +90,8 @@ jobs:
       - name: Check
         run: |
           chmod +x ./mage-static
-          ./mage-static check:translations    
-          
+          ./mage-static check:translations
+
   test-migration-smoke:
     runs-on: ubuntu-latest
     needs:
@@ -104,14 +104,14 @@ jobs:
           - mysql
     services:
       migration-smoke-db-mysql:
-        image: mariadb:11@sha256:1e4ec03d1b73af8e7a63137b8ef4820ac7d54c654a1e99eb76235f210f7f0a06
+        image: mariadb:11@sha256:2bcbaec92bd9d4f6591bc8103d3a8e6d0512ee2235506e47a2e129d190444405
         env:
           MYSQL_ROOT_PASSWORD: vikunjatest
           MYSQL_DATABASE: vikunjatest
         ports:
           - 3306:3306
       migration-smoke-db-postgres:
-        image: postgres:17@sha256:3962158596daaef3682838cc8eb0e719ad1ce520f88e34596ce8d5de1b6330a1
+        image: postgres:17@sha256:4d89c904835259bc58876520e56267ca07a4ebd6a027f7814bbbf91b50d685be
         env:
           POSTGRES_PASSWORD: vikunjatest
           POSTGRES_DB: vikunjatest
@@ -146,7 +146,7 @@ jobs:
             done
             echo "MySQL is ready!"
           fi
-          
+
           # Wait for PostgreSQL to be ready if using PostgreSQL
           if [ "$VIKUNJA_DATABASE_TYPE" = "postgres" ]; then
             echo "Waiting for PostgreSQL to be ready..."
@@ -161,7 +161,7 @@ jobs:
           # Run the migrations from the binary built in the step before
           chmod +x vikunja
           ./vikunja migrate
-  
+
   test-api:
     runs-on: ubuntu-latest
     needs:
@@ -173,24 +173,32 @@ jobs:
           - sqlite
           - postgres
           - mysql
+          - paradedb
         test:
           - feature
           - web
     services:
       db-mysql:
-        image: mariadb:11@sha256:1e4ec03d1b73af8e7a63137b8ef4820ac7d54c654a1e99eb76235f210f7f0a06
+        image: mariadb:11@sha256:2bcbaec92bd9d4f6591bc8103d3a8e6d0512ee2235506e47a2e129d190444405
         env:
           MYSQL_ROOT_PASSWORD: vikunjatest
           MYSQL_DATABASE: vikunjatest
         ports:
           - 3306:3306
       db-postgres:
-        image: postgres:17@sha256:3962158596daaef3682838cc8eb0e719ad1ce520f88e34596ce8d5de1b6330a1
+        image: postgres:17@sha256:4d89c904835259bc58876520e56267ca07a4ebd6a027f7814bbbf91b50d685be
         env:
           POSTGRES_PASSWORD: vikunjatest
           POSTGRES_DB: vikunjatest
         ports:
           - 5432:5432
+      db-paradedb:
+        image: paradedb/paradedb:latest-pg17@sha256:99008f7be2d427178dbff1c195812e43298024bec659ba1c7f45f767c7e9c9f2
+        env:
+          POSTGRES_PASSWORD: vikunjatest
+          POSTGRES_DB: vikunjatest
+        ports:
+          - 5433:5432
       test-ldap:
         image: gitea/test-openldap@sha256:b66527e298d6062d5289dc411d1b8da1c593f8140a3d1f863e8d9d021234122f
         ports:
@@ -206,35 +214,36 @@ jobs:
         with:
           go-version: stable
       - name: Configure Postgres for faster tests
-        if: matrix.db == 'postgres'
+        if: matrix.db == 'postgres' || matrix.db == 'paradedb'
         run: |
           # Connect to Postgres and disable fsync, full_page_writes, and synchronous_commit for faster tests
-          PGPASSWORD=vikunjatest psql -h localhost -U postgres -d vikunjatest -c "ALTER SYSTEM SET fsync = off;"
-          PGPASSWORD=vikunjatest psql -h localhost -U postgres -d vikunjatest -c "ALTER SYSTEM SET full_page_writes = off;"
-          PGPASSWORD=vikunjatest psql -h localhost -U postgres -d vikunjatest -c "ALTER SYSTEM SET synchronous_commit = off;"
+          PGPASSWORD=vikunjatest psql -h localhost ${{ matrix.db == 'paradedb' && ' -p 5433' || '' }} -U postgres -d vikunjatest -c "ALTER SYSTEM SET fsync = off;"
+          PGPASSWORD=vikunjatest psql -h localhost ${{ matrix.db == 'paradedb' && ' -p 5433' || '' }} -U postgres -d vikunjatest -c "ALTER SYSTEM SET full_page_writes = off;"
+          PGPASSWORD=vikunjatest psql -h localhost ${{ matrix.db == 'paradedb' && ' -p 5433' || '' }} -U postgres -d vikunjatest -c "ALTER SYSTEM SET synchronous_commit = off;"
           # Reload the configuration
-          PGPASSWORD=vikunjatest psql -h localhost -U postgres -d vikunjatest -c "SELECT pg_reload_conf();"
+          PGPASSWORD=vikunjatest psql -h localhost ${{ matrix.db == 'paradedb' && ' -p 5433' || '' }} -U postgres -d vikunjatest -c "SELECT pg_reload_conf();"
       - name: test
         env:
           VIKUNJA_TESTS_USE_CONFIG: ${{ matrix.db != 'sqlite-in-memory' && 1 || 0 }}
-          VIKUNJA_DATABASE_TYPE: ${{ matrix.db }}
-          VIKUNJA_DATABASE_USER: ${{ matrix.db == 'postgres' && 'postgres' || 'root' }}
+          VIKUNJA_DATABASE_TYPE: ${{ matrix.db == 'paradedb' && 'postgres' || matrix.db }}
+          VIKUNJA_DATABASE_USER: ${{ matrix.db == 'mysql' && 'root' || 'postgres' }}
           VIKUNJA_DATABASE_PASSWORD: vikunjatest
           VIKUNJA_DATABASE_DATABASE: vikunjatest
           VIKUNJA_DATABASE_SSLMODE: disable
+          VIKUNJA_DATABASE_HOST: localhost${{ matrix.db == 'paradedb' && ':5433' || '' }}
           VIKUNJA_AUTH_LDAP_ENABLED: 1
           VIKUNJA_AUTH_LDAP_HOST: localhost
           VIKUNJA_AUTH_LDAP_USETLS: 0
           VIKUNJA_AUTH_LDAP_BASEDN: dc=planetexpress,dc=com
           VIKUNJA_AUTH_LDAP_BINDDN: uid=gitea,ou=service,dc=planetexpress,dc=com
           VIKUNJA_AUTH_LDAP_BINDPASSWORD: password
-          VIKUNJA_AUTH_LDAP_USERFILTER: '(&(objectclass=inetorgperson)(uid=%s))'
+          VIKUNJA_AUTH_LDAP_USERFILTER: "(&(objectclass=inetorgperson)(uid=%s))"
         run: |
           mkdir -p frontend/dist
           touch frontend/dist/index.html
           chmod +x mage-static
           ./mage-static test:${{ matrix.test }}
-  
+
   frontend-lint:
     runs-on: ubuntu-latest
     steps:
@@ -289,6 +298,11 @@ jobs:
     needs:
       - api-build
       - frontend-build
+    services:
+      dex:
+        image: ghcr.io/go-vikunja/dex-testing:main@sha256:9cdd39c0914239cdbd01b0b6a8dd42d5cdc4ba9c865a86ba42fcc4fa6c68dc32
+        ports:
+          - 5556:5556
     strategy:
       # when one test fails, DO NOT cancel the other
       # containers, because this will kill Cypress processes
@@ -298,7 +312,7 @@ jobs:
       matrix:
         containers: [1, 2, 3, 4]
     container:
-      image: cypress/browsers:latest@sha256:95587c1ce688ce6f59934cc234a753a32a1782ca1c7959707a7d2332e69f6f63
+      image: cypress/browsers:latest@sha256:a0f4875f9012ea8e88f004d2b357d563d1142f60f84588cfc2ca468a9bdc3b51
       options: --user 1001
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
@@ -323,13 +337,18 @@ jobs:
           CYPRESS_API_URL: http://127.0.0.1:3456/api/v1
           CYPRESS_TEST_SECRET: averyLongSecretToSe33dtheDB
           CYPRESS_DEFAULT_COMMAND_TIMEOUT: 60000
-          CYPRESS_CI_BUILD_ID: '${{ github.workflow }}-${{ github.run_id }}-${{ github.run_attempt }}' # see https://github.com/cypress-io/github-action/issues/431
+          CYPRESS_CI_BUILD_ID: "${{ github.workflow }}-${{ github.run_id }}-${{ github.run_attempt }}" # see https://github.com/cypress-io/github-action/issues/431
           VIKUNJA_SERVICE_TESTINGTOKEN: averyLongSecretToSe33dtheDB
           VIKUNJA_LOG_LEVEL: DEBUG
           VIKUNJA_CORS_ENABLE: 1
           VIKUNJA_DATABASE_PATH: memory
           VIKUNJA_DATABASE_TYPE: sqlite
           VIKUNJA_RATELIMIT_NOAUTHLIMIT: 1000
+          VIKUNJA_AUTH_OPENID_ENABLED: 1
+          VIKUNJA_AUTH_OPENID_PROVIDERS_DEX_NAME: Dex
+          VIKUNJA_AUTH_OPENID_PROVIDERS_DEX_AUTHURL: http://dex:5556
+          VIKUNJA_AUTH_OPENID_PROVIDERS_DEX_CLIENTID: vikunja
+          VIKUNJA_AUTH_OPENID_PROVIDERS_DEX_CLIENTSECRET: secret
         with:
           install: false
           working-directory: frontend
@@ -341,8 +360,8 @@ jobs:
             pnpm run preview
           wait-on: http://127.0.0.1:4173,http://127.0.0.1:3456/api/v1/info
           wait-on-timeout: 10
-  
-  # This step only exists so that we can make it required, because we can't make 
+
+  # This step only exists so that we can make it required, because we can't make
   # the actual test step required due to the matrix
   test-frontend-e2e-success:
     runs-on: ubuntu-latest

@@ -26,6 +26,7 @@ import (
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/i18n"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
 )
 
@@ -53,6 +54,9 @@ func setupTime() {
 func TestMain(m *testing.M) {
 
 	setupTime()
+
+	// Initialize logger for tests
+	log.InitLogger()
 
 	// Set default config
 	config.InitDefaultConfig()

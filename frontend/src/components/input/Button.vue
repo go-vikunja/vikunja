@@ -29,7 +29,9 @@
 				/>
 			</span>
 		</template>
-		<slot />
+		<span>
+			<slot />
+		</span>
 	</BaseButton>
 </template>
 
@@ -84,13 +86,22 @@ const variantClass = computed(() => VARIANT_CLASS_MAP[props.variant])
 	display: inline-flex;
 	white-space: var(--button-white-space);
 	line-height: 1;
+	display: inline-flex;
+	padding-left: 0; // override bulma style
+	padding-right: 0; // override bulma style
+	padding-inline: .5rem;
+	gap: .25rem;
+
+	[dir="rtl"] & {
+		flex-direction: row-reverse;
+	}
 
 	&:hover {
 		box-shadow: var(--shadow-md);
 	}
 
 	&.fullheight {
-		padding-right: 7px;
+		padding-inline-end: 7px;
 		height: 100%;
 	}
 
@@ -104,6 +115,10 @@ const variantClass = computed(() => VARIANT_CLASS_MAP[props.variant])
 
 	&.is-primary.is-outlined:hover {
 		color: var(--white);
+	}
+
+	.icon {
+		margin: 0 !important;
 	}
 }
 

@@ -190,6 +190,60 @@ func Restore(filename string) error {
 	return nil
 }
 
+func convertFieldValue(fieldName string, value interface{}, isFloat bool) (interface{}, error) {
+	// Check if this is a float field and the value is already a number
+	if isFloat {
+		switch v := value.(type) {
+		case float64:
+			// Already a float64, no need to process
+			return v, nil
+		case int:
+			// Convert int to float64
+			return float64(v), nil
+		case string:
+			// Try to decode from base64 string and convert to float
+			decoded, err := base64.StdEncoding.DecodeString(v)
+			if err != nil {
+				var corruptErr base64.CorruptInputError
+				if !errors.As(err, &corruptErr) {
+					return nil, fmt.Errorf("could not decode field '%s' %s: %w", fieldName, value, err)
+				}
+				// If it's a CorruptInputError, treat the string as raw data
+				decoded = []byte(v)
+			}
+			val, err := strconv.ParseFloat(string(decoded), 64)
+			if err != nil {
+				return nil, fmt.Errorf("could not parse double value for field '%s': %w", fieldName, err)
+			}
+			return val, nil
+		default:
+			return nil, fmt.Errorf("unexpected type for float field '%s': %T", fieldName, v)
+		}
+	}
+
+	// Handle JSON fields (non-float)
+	switch v := value.(type) {
+	case string:
+		// Check if the string is "null" (case insensitive) and return nil for SQL NULL
+		if strings.ToLower(v) == "null" {
+			return nil, nil
+		}
+
+		decoded, err := base64.StdEncoding.DecodeString(v)
+		if err != nil {
+			var corruptErr base64.CorruptInputError
+			if !errors.As(err, &corruptErr) {
+				return nil, fmt.Errorf("could not decode field '%s' %s: %w", fieldName, value, err)
+			}
+			// If it's a CorruptInputError, treat the string as raw data
+			decoded = []byte(v)
+		}
+		return string(decoded), nil
+	default:
+		return nil, fmt.Errorf("expected string for JSON field '%s', got %T", fieldName, v)
+	}
+}
+
 func restoreTableData(tables map[string]*zip.File) error {
 	jsonFields := map[string][]string{
 		"api_tokens":    {"permissions"},
@@ -221,25 +275,11 @@ func restoreTableData(tables map[string]*zip.File) error {
 						continue
 					}
 
-					var decoded []byte
-					decoded, err = base64.StdEncoding.DecodeString(content[i][f].(string))
-					if err != nil && !errors.Is(err, base64.CorruptInputError(0)) {
-						return fmt.Errorf("could not decode field '%s' %s: %w", f, content[i][f], err)
+					convertedValue, err := convertFieldValue(f, content[i][f], isFloat)
+					if err != nil {
+						return err
 					}
-
-					if err != nil && errors.Is(err, base64.CorruptInputError(0)) {
-						decoded = []byte(content[i][f].(string))
-					}
-
-					if isFloat {
-						val, err := strconv.ParseFloat(string(decoded), 64)
-						if err != nil {
-							return fmt.Errorf("could not parse double value for field '%s': %w", f, err)
-						}
-						content[i][f] = val
-					} else {
-						content[i][f] = string(decoded)
-					}
+					content[i][f] = convertedValue
 				}
 			}
 			return nil

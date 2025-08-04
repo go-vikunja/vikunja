@@ -16,9 +16,9 @@
 		<div class="comments">
 			<span
 				v-if="taskCommentService.loading && saving === null && !creating"
-				class="is-flex is-align-items-center my-4 ml-2"
+				class="is-flex is-align-items-center mbs-4 mbe-4 mis-2"
 			>
-				<span class="loader is-inline-block mr-2" />
+				<span class="loader is-inline-block mie-2" />
 				{{ $t('task.comment.loading') }}
 			</span>
 			<div
@@ -35,7 +35,7 @@
 						height="48"
 						width="48"
 					>
-					<figcaption class="tw-sr-only">
+					<figcaption class="is-sr-only">
 						{{ $t('misc.avatarOfUser', {user: getDisplayName(c.author)}) }}
 					</figcaption>
 				</figure>
@@ -53,13 +53,13 @@
 							v-tooltip="formatDateLong(c.created)"
 							class="has-text-grey"
 						>
-							{{ formatDateSince(c.created) }}
+							{{ formatDisplayDate(c.created) }}
 						</span>
 						<span
 							v-if="+new Date(c.created) !== +new Date(c.updated)"
 							v-tooltip="formatDateLong(c.updated)"
 						>
-							· {{ $t('task.comment.edited', {date: formatDateSince(c.updated)}) }}
+							· {{ $t('task.comment.edited', {date: formatDisplayDate(c.updated)}) }}
 						</span>
 						<a
 							v-tooltip="$t('task.comment.permalink')"
@@ -68,7 +68,7 @@
 							:title="$t('task.comment.permalink')"
 							@click.prevent.stop="copy(getCommentUrl(`${c.id}`))"
 						>
-							<span class="tw-sr-only">{{ $t('task.comment.permalink') }}</span>
+							<span class="is-sr-only">{{ $t('task.comment.permalink') }}</span>
 							<Icon icon="link" />
 						</a>
 						<CustomTransition name="fade">
@@ -79,7 +79,7 @@
 								"
 								class="is-inline-flex"
 							>
-								<span class="loader is-inline-block mr-2" />
+								<span class="loader is-inline-block mie-2" />
 								{{ $t('misc.saving') }}
 							</span>
 							<span
@@ -115,7 +115,7 @@
 					/>
 					<Reactions 
 						v-model="c.reactions"
-						class="mt-2" 
+						class="mbs-2" 
 						entity-kind="comments"
 						:entity-id="c.id"
 						:disabled="!canWrite"
@@ -142,7 +142,7 @@
 						height="48"
 						width="48"
 					>
-					<figcaption class="tw-sr-only">
+					<figcaption class="is-sr-only">
 						{{ $t('misc.avatarOfUser', {user: getDisplayName(authStore.info)}) }}
 					</figcaption>
 				</figure>
@@ -153,7 +153,7 @@
 								v-if="taskCommentService.loading && creating"
 								class="is-inline-flex"
 							>
-								<span class="loader is-inline-block mr-2" />
+								<span class="loader is-inline-block mie-2" />
 								{{ $t('task.comment.creating') }}
 							</span>
 						</CustomTransition>
@@ -221,7 +221,7 @@ import type {ITask} from '@/modelTypes/ITask'
 
 import {uploadFile} from '@/helpers/attachments'
 import {success} from '@/message'
-import {formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
+import {formatDateLong, formatDisplayDate} from '@/helpers/time/formatDate'
 import {fetchAvatarBlobUrl, getDisplayName} from '@/models/user'
 import type {IUser} from '@/modelTypes/IUser'
 import {useConfigStore} from '@/stores/config'
@@ -460,8 +460,8 @@ function getCommentUrl(commentId: string) {
 			display: block;
 			width: 20px;
 			height: 20px;
-			padding-right: 0;
-			margin-right: .5rem;
+			padding-inline-end: 0;
+			margin-inline-end: .5rem;
 		}
 
 		@media screen and (min-width: $tablet) {
@@ -498,6 +498,6 @@ function getCommentUrl(commentId: string) {
 }
 
 .comments-container {
-	scroll-margin-top: 4rem;
+	scroll-margin-block-start: 4rem;
 }
 </style>

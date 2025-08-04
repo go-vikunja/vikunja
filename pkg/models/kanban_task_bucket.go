@@ -19,6 +19,7 @@ package models
 import (
 	"time"
 
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
@@ -68,6 +69,13 @@ func (b *TaskBucket) upsert(s *xorm.Session) (err error) {
 	if count == 0 {
 		_, err = s.Insert(b)
 		if err != nil {
+			// Check if this is a unique constraint violation for the task_buckets table
+			if db.IsUniqueConstraintError(err, "UQE_task_buckets_task_project_view") {
+				return ErrTaskAlreadyExistsInBucket{
+					TaskID:        b.TaskID,
+					ProjectViewID: b.ProjectViewID,
+				}
+			}
 			return
 		}
 	}

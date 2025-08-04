@@ -86,3 +86,27 @@ func ListKeys(prefix string) ([]string, error) {
 func DelPrefix(prefix string) error {
 	return store.DelPrefix(prefix)
 }
+
+// Remember returns the value for a key if it exists.
+// If the key is not present, it executes fn to calculate the value,
+// stores it and then returns it.
+func Remember(key string, fn func() (any, error)) (any, error) {
+	val, exists, err := Get(key)
+	if err != nil {
+		return nil, err
+	}
+	if exists {
+		return val, nil
+	}
+
+	val, err = fn()
+	if err != nil {
+		return nil, err
+	}
+
+	if err := Put(key, val); err != nil {
+		return nil, err
+	}
+
+	return val, nil
+}

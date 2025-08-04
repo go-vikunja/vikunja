@@ -22,12 +22,16 @@ import (
 
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 )
 
 // TestMain is the main test function used to bootstrap the test env
 func TestMain(m *testing.M) {
+	// Initialize logger for tests
+	log.InitLogger()
+
 	user.InitTests()
 	files.InitTests()
 	models.SetupTests()

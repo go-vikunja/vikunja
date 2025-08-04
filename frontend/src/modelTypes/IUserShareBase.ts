@@ -3,7 +3,7 @@ import type {IUser} from './IUser'
 import type {Right} from '@/constants/rights'
 
 export interface IUserShareBase extends IAbstract {
-	userId: IUser['id']
+	username: IUser['username']
 	right: Right
 
 	created: Date

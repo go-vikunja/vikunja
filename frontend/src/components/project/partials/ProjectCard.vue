@@ -6,7 +6,7 @@
 			'has-background': blurHashUrl !== '' || background !== null
 		}"
 		:style="{
-			'border-left': project.hexColor ? `0.25rem solid ${project.hexColor}` : undefined,
+			'border-inline-start': project.hexColor ? `0.25rem solid ${project.hexColor}` : undefined,
 			'background-image': blurHashUrl !== '' ? `url(${blurHashUrl})` : undefined,
 		}"
 	>
@@ -115,10 +115,10 @@ const textOnlyDescription = computed(() => {
 .project-background,
 .project-button {
 	position: absolute;
-	top: 0;
-	right: 0;
-	bottom: 0;
-	left: 0;
+	inset-block-start: 0;
+	inset-inline-end: 0;
+	inset-block-end: 0;
+	inset-inline-start: 0;
 }
 
 .is-archived {
@@ -134,7 +134,7 @@ const textOnlyDescription = computed(() => {
 	line-height: var(--title-line-height);
 	color: var(--text);
 	width: 100%;
-	margin-bottom: 0;
+	margin-block-end: 0;
 	max-height: calc(100% - (var(--project-card-padding) + 1rem)); // padding & height of the "is archived" badge
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -159,8 +159,8 @@ const textOnlyDescription = computed(() => {
 
 .favorite {
 	position: absolute;
-	top: var(--project-card-padding);
-	right: var(--project-card-padding);
+	inset-block-start: var(--project-card-padding);
+	inset-inline-end: var(--project-card-padding);
 	transition: opacity $transition, color $transition;
 	opacity: 1;
 

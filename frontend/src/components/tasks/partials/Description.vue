@@ -10,7 +10,7 @@
 					v-if="loading && saving"
 					class="is-small is-inline-flex"
 				>
-					<span class="loader is-inline-block mr-2" />
+					<span class="loader is-inline-block mie-2" />
 					{{ $t('misc.saving') }}
 				</span>
 				<span
@@ -38,7 +38,8 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, watchEffect, onBeforeUnmount} from 'vue'
+import {ref, computed, watchEffect, onMounted, onBeforeUnmount} from 'vue'
+import {onBeforeRouteLeave} from 'vue-router'
 
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import Editor from '@/components/input/AsyncEditor'
@@ -73,6 +74,10 @@ const loading = computed(() => taskStore.isLoading)
 
 const changeTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
 
+onMounted(() => {
+	window.addEventListener('beforeunload', save)
+})
+
 async function saveWithDelay() {
 	if (changeTimeout.value !== null) {
 		clearTimeout(changeTimeout.value)
@@ -87,7 +92,10 @@ onBeforeUnmount(() => {
 	if (changeTimeout.value !== null) {
 		clearTimeout(changeTimeout.value)
 	}
+	window.removeEventListener('beforeunload', save)
 })
+
+onBeforeRouteLeave(() => save())
 
 async function save() {
 	if (changeTimeout.value !== null) {
@@ -107,6 +115,13 @@ async function save() {
 		setTimeout(() => {
 			saved.value = false
 		}, 2000)
+	} catch (error) {
+		// If the task was deleted (404), silently skip saving
+		if (error?.response?.status === 404) {
+			return
+		}
+		// Re-throw other errors
+		throw error
 	} finally {
 		saving.value = false
 	}
@@ -131,6 +146,6 @@ async function uploadCallback(files: File[] | FileList): Promise<string[]> {
 .tiptap__task-description {
 	// The exact amount of pixels we need to make the description icon align with the buttons and the form inside the editor.
 	// The icon is not exactly the same length on all sides so we need to hack our way around it.
-	margin-left: 4px;
+	margin-inline-start: 4px;
 }
 </style>

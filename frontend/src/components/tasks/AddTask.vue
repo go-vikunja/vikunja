@@ -3,14 +3,17 @@
 		ref="taskAdd"
 		class="task-add"
 	>
-		<div class="add-task__field field is-grouped">
-			<p class="control has-icons-left has-icons-right is-expanded">
+		<div class="add-task__field field">
+			<p class="control task-input-wrapper">
 				<label
-					class="tw-sr-only"
+					class="is-sr-only"
 					:for="textareaId"
 				>
 					{{ $t('project.list.addPlaceholder') }}
 				</label>
+				<span class="icon is-small task-icon">
+					<Icon icon="tasks" />
+				</span>
 				<textarea
 					:id="textareaId"
 					ref="newTaskInput"
@@ -23,10 +26,9 @@
 					@keydown="resetEmptyTitleError"
 					@keydown.enter="handleEnter"
 				/>
-				<span class="icon is-small is-left">
-					<Icon icon="tasks" />
-				</span>
-				<QuickAddMagic :highlight-hint-icon="taskAddHovered" />
+				<QuickAddMagic
+					:highlight-hint-icon="taskAddHovered"
+				/>
 			</p>
 			<p class="control">
 				<XButton
@@ -46,7 +48,7 @@
 		<Expandable :open="errorMessage !== ''">
 			<p
 				v-if="errorMessage !== ''"
-				class="pt-3 mt-0 help is-danger"
+				class="pbs-3 mbs-0 help is-danger"
 			>
 				{{ errorMessage }}
 			</p>
@@ -285,13 +287,52 @@ defineExpose({
 .task-add,
 	// overwrite bulma styles
 .task-add .add-task__field {
-	margin-bottom: 0;
+	margin-block-end: 0;
+}
+
+.task-add .add-task__field {
+	display: flex;
+	justify-content: flex-start;
+	gap: .75rem;
+
+	.control {
+		flex-shrink: 0;
+		margin-bottom: 0;
+	}
+}
+
+.task-input-wrapper {
+	position: relative;
+	flex-shrink: 1;
+	flex-grow: 1;
+
+	textarea {
+		padding-inline: 2.5rem;
+	}
+
+	.icon {
+		color: var(--grey-300);
+	}
+
+	.task-icon, 
+	:deep(.quick-add-magic-trigger-btn) {
+		position: absolute;
+		inset-block-start: .75rem;
+	}
+
+	:deep(.quick-add-magic-trigger-btn) {
+		inset-inline-end: .75rem;
+	}
+
+	.task-icon {
+		inset-inline-start: 1rem;
+	}
 }
 
 .add-task-button {
 	height: 100% !important;
 
-	@media screen and (max-width: $mobile) {
+	@media screen and (max-width: $tablet) {
 		.button-text {
 			display: none;
 		}
@@ -313,14 +354,14 @@ defineExpose({
 	text-overflow: ellipsis;
 }
 
-.control.has-icons-left .icon,
-.control.has-icons-right .icon {
+.control .icon {
 	transition: all $transition;
+	z-index: 4;
 }
 </style>
 
 <style>
 button.show-helper-text {
-	right: 0;
+	inset-inline-end: 0;
 }
 </style>

@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1@sha256:9857836c9ee4268391bb5b09f9f157f3c91bb15821bb77969642813b0d00518d
-FROM --platform=$BUILDPLATFORM node:22.17.0-alpine@sha256:5340cbfc2df14331ab021555fdd9f83f072ce811488e705b0e736b11adeec4bb AS frontendbuilder
+FROM --platform=$BUILDPLATFORM node:22.17.1-alpine@sha256:5539840ce9d013fa13e3b9814c9353024be7ac75aca5db6d039504a56c04ea59 AS frontendbuilder
 
 WORKDIR /build
 
@@ -10,13 +10,12 @@ ENV CYPRESS_INSTALL_BINARY=0
 COPY frontend/pnpm-lock.yaml frontend/package.json frontend/.npmrc ./ 
 COPY frontend/patches ./patches
 RUN npm install -g corepack && corepack enable && \
-    pnpm fetch # installs into cache only
-
-RUN pnpm install --frozen-lockfile --offline
+    pnpm install --frozen-lockfile
 COPY frontend/ ./
-RUN	pnpm run build
+ARG RELEASE_VERSION=dev
+RUN echo "{\"VERSION\": \"$RELEASE_VERSION\"}" > src/version.json && pnpm run build
 
-FROM --platform=$BUILDPLATFORM ghcr.io/techknowlogick/xgo:go-1.23.x@sha256:a56d0c3e60531c3a7ff4bfde6bc73f4f1a91165e58818f4ba6eb56750a3b49e4 AS apibuilder
+FROM --platform=$BUILDPLATFORM ghcr.io/techknowlogick/xgo:go-1.23.x@sha256:55a8e62ff9e468ff6ca6e9ecb846f853273161fe90b688f94c67b34f88d658b7 AS apibuilder
 
 RUN go install github.com/magefile/mage@latest && \
     mv /go/bin/mage /usr/local/go/bin

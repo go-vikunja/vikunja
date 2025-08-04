@@ -1,6 +1,6 @@
 <template>
 	<div class="control repeat-after-input">
-		<div class="buttons has-addons is-centered mt-2">
+		<div class="buttons has-addons is-centered mbs-2">
 			<XButton
 				variant="secondary"
 				class="is-small"
@@ -23,7 +23,7 @@
 				{{ $t('task.repeat.every30d') }}
 			</XButton>
 		</div>
-		<div class="is-flex is-align-items-center mb-2">
+		<div class="is-flex is-align-items-center mbe-2">
 			<label
 				for="repeatMode"
 				class="is-fullwidth"
@@ -54,7 +54,7 @@
 			v-if="task.repeatMode !== TASK_REPEAT_MODES.REPEAT_MODE_MONTH"
 			class="is-flex"
 		>
-			<p class="pr-4">
+			<p class="pis-4">
 				{{ $t('task.repeat.each') }}
 			</p>
 			<div class="field has-addons is-fullwidth">
@@ -162,7 +162,7 @@ function setRepeatAfter(amount: number, type: IRepeatAfter['type']) {
 
 <style lang="scss" scoped>
 p {
-	padding-top: 6px;
+	padding-block-start: 6px;
 }
 
 .input {

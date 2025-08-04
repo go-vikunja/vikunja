@@ -46,7 +46,7 @@
 									<span
 										v-if="bucket.id !== 0 && view?.doneBucketId === bucket.id"
 										v-tooltip="$t('project.kanban.doneBucketHint')"
-										class="icon is-small has-text-success mr-2"
+										class="icon is-small has-text-success mie-2"
 									>
 										<Icon icon="check-double" />
 									</span>
@@ -789,8 +789,8 @@ function unCollapseBucket(bucket: IBucket) {
 <style lang="scss" scoped>
 .control.is-loading {
   &::after {
-    top: 30%;
-    right: 50%;
+    inset-block-start: 30%;
+    inset-inline-end: 50%;
     transform: translate(-50%, 0);
 	--loader-border-color: var(--grey-500);
   }
@@ -840,10 +840,10 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 			content: '';
 			position: absolute;
 			display: block;
-			top: 0.25rem;
-			right: 0.5rem;
-			bottom: 0.25rem;
-			left: 0.5rem;
+			inset-block-start: 0.25rem;
+			inset-inline-end: 0.5rem;
+			inset-block-end: 0.25rem;
+			inset-inline-start: 0.5rem;
 			border: 3px dashed var(--grey-300);
 			border-radius: $radius;
 		}
@@ -875,11 +875,11 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 			padding: .25rem .5rem;
 
 			&:first-of-type {
-				padding-top: .5rem;
+				padding-block-start: .5rem;
 			}
 
 			&:last-of-type {
-				padding-bottom: .5rem;
+				padding-block-end: .5rem;
 			}
 		}
 
@@ -912,7 +912,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 			transform: rotate(90deg) translateY(-100%);
 			transform-origin: top left;
 			// Using negative margins instead of translateY here to make all other buckets fill the empty space
-			margin-right: calc((#{$bucket-width} - #{$bucket-header-height} - #{$bucket-right-margin}) * -1);
+			margin-inline-end: calc((#{$bucket-width} - #{$bucket-header-height} - #{$bucket-right-margin}) * -1);
 			cursor: pointer;
 
 			.tasks, .bucket-footer {
@@ -953,7 +953,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 
 	.bucket-footer {
 		position: sticky;
-		bottom: 0;
+		inset-block-end: 0;
 		height: min-content;
 		padding: .5rem;
 		background-color: var(--grey-100);

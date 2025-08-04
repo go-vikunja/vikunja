@@ -53,7 +53,7 @@
 		<Message
 			v-if="errorMsg !== ''"
 			variant="danger"
-			class="mt-2"
+			class="mbs-2"
 		>
 			{{ errorMsg }}
 		</Message>
@@ -127,16 +127,16 @@ async function setApiUrl() {
 
 <style lang="scss" scoped>
 .api-config {
-	margin-bottom: .75rem;
+	margin-block-end: .75rem;
 }
 
 .api-url-info {
 	font-size: .9rem;
-	text-align: right;
+	text-align: end;
 }
 
 .url {
-	border-bottom: 1px dashed var(--primary);
+	border-inline-end: 1px dashed var(--primary);
 }
 
 .api-config__change-button {

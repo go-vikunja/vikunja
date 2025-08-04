@@ -16,13 +16,11 @@
 
 package log
 
-import (
-	"github.com/op/go-logging"
-)
+import "log/slog"
 
 // NoopBackend doesn't log anything. Used in cases where we want to disable logging completely.
 type NoopBackend struct{}
 
-func (n *NoopBackend) Log(_ logging.Level, _ int, _ *logging.Record) error {
+func (n *NoopBackend) Log(_ slog.Level, _ int, _ *slog.Record) error {
 	return nil
 }

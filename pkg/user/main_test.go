@@ -19,10 +19,15 @@ package user
 import (
 	"os"
 	"testing"
+
+	"code.vikunja.io/api/pkg/log"
 )
 
 // TestMain is the main test function used to bootstrap the test env
 func TestMain(m *testing.M) {
+	// Initialize logger for tests
+	log.InitLogger()
+
 	InitTests()
 	os.Exit(m.Run())
 }

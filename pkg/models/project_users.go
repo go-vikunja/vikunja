@@ -20,11 +20,10 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
-
 	"code.vikunja.io/api/pkg/events"
-
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
+
 	"xorm.io/xorm"
 )
 
@@ -33,7 +32,7 @@ type ProjectUser struct {
 	// The unique, numeric id of this project <-> user relation.
 	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id"`
 	// The username.
-	Username string `xorm:"-" json:"user_id" param:"user"`
+	Username string `xorm:"-" json:"username" param:"user"`
 	// Used internally to reference the user
 	UserID int64 `xorm:"bigint not null INDEX" json:"-"`
 	// The project id.

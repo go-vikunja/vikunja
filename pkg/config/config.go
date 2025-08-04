@@ -137,10 +137,10 @@ const (
 	LogEnabled       Key = `log.enabled`
 	LogStandard      Key = `log.standard`
 	LogLevel         Key = `log.level`
+	LogFormat        Key = `log.format`
 	LogDatabase      Key = `log.database`
 	LogDatabaseLevel Key = `log.databaselevel`
 	LogHTTP          Key = `log.http`
-	LogEcho          Key = `log.echo`
 	LogPath          Key = `log.path`
 	LogEvents        Key = `log.events`
 	LogEventsLevel   Key = `log.eventslevel`
@@ -207,6 +207,9 @@ const (
 	AutoTLSEnabled     Key = `autotls.enabled`
 	AutoTLSEmail       Key = `autotls.email`
 	AutoTLSRenewBefore Key = `autotls.renewbefore`
+
+	PluginsEnabled Key = `plugins.enabled`
+	PluginsDir     Key = `plugins.dir`
 )
 
 // GetString returns a string config value
@@ -253,8 +256,7 @@ func GetTimeZone() *time.Location {
 	if timezone == nil {
 		loc, err := time.LoadLocation(ServiceTimeZone.GetString())
 		if err != nil {
-			fmt.Printf("Error parsing time zone: %s", err)
-			os.Exit(1)
+			log.Fatalf("Error parsing time zone: %s", err)
 		}
 		timezone = loc
 	}
@@ -401,10 +403,10 @@ func InitDefaultConfig() {
 	LogEnabled.setDefault(true)
 	LogStandard.setDefault("stdout")
 	LogLevel.setDefault("INFO")
+	LogFormat.setDefault("text")
 	LogDatabase.setDefault("off")
 	LogDatabaseLevel.setDefault("WARNING")
 	LogHTTP.setDefault("stdout")
-	LogEcho.setDefault("off")
 	LogPath.setDefault(ServiceRootpath.GetString() + "/logs")
 	LogEvents.setDefault("off")
 	LogEventsLevel.setDefault("INFO")
@@ -447,6 +449,9 @@ func InitDefaultConfig() {
 	WebhooksTimeoutSeconds.setDefault(30)
 	// AutoTLS
 	AutoTLSRenewBefore.setDefault("720h") // 30days in hours
+	// Plugins
+	PluginsEnabled.setDefault(false)
+	PluginsDir.setDefault(filepath.Join(ServiceRootpath.GetString(), "plugins"))
 }
 
 func GetConfigValueFromFile(configKey string) string {
@@ -538,7 +543,7 @@ func InitConfig() {
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
 
-	log.ConfigureLogger(LogEnabled.GetBool(), LogStandard.GetString(), LogPath.GetString(), LogLevel.GetString())
+	log.ConfigureStandardLogger(LogEnabled.GetBool(), LogStandard.GetString(), LogPath.GetString(), LogLevel.GetString(), LogFormat.GetString())
 
 	// Load the config file
 	viper.AddConfigPath(ServiceRootpath.GetString())
@@ -563,7 +568,7 @@ func InitConfig() {
 			log.Warning(err.Error())
 			log.Warning("Using default config.")
 		} else {
-			log.ConfigureLogger(LogEnabled.GetBool(), LogStandard.GetString(), LogPath.GetString(), LogLevel.GetString())
+			log.ConfigureStandardLogger(LogEnabled.GetBool(), LogStandard.GetString(), LogPath.GetString(), LogLevel.GetString(), LogFormat.GetString())
 		}
 	} else {
 		log.Info("No config file found, using default or config from environment variables.")

@@ -9,7 +9,7 @@
 		<Message
 			v-if="errorMessageFromQuery"
 			variant="danger"
-			class="mt-2"
+			class="mbs-2"
 		>
 			{{ errorMessageFromQuery }}
 		</Message>

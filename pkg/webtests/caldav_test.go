@@ -17,11 +17,14 @@
 package webtests
 
 import (
+	"encoding/xml"
 	"net/http"
+	"strings"
 	"testing"
 
 	"code.vikunja.io/api/pkg/routes/caldav"
 
+	ics "github.com/arran4/golang-ical"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -316,5 +319,78 @@ END:VCALENDAR`
 		assert.Equal(t, 200, rec.Result().StatusCode)
 		assert.Contains(t, rec.Body.String(), "UID:uid-caldav-test-child-task-another-list")
 		assert.Contains(t, rec.Body.String(), "RELATED-TO;RELTYPE=PARENT:uid-caldav-test-parent-task-another-list")
+	})
+}
+
+func TestCaldavProjectReport(t *testing.T) {
+	t.Run("REPORT calendar-query returns all tasks", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		// CalDAV REPORT request for calendar-query
+		reportBody := `<?xml version="1.0" encoding="utf-8" ?>
+<C:calendar-query xmlns:C="urn:ietf:params:xml:ns:caldav">
+    <D:prop xmlns:D="DAV:">
+        <D:getetag/>
+        <C:calendar-data/>
+    </D:prop>
+    <C:filter>
+        <C:comp-filter name="VCALENDAR">
+            <C:comp-filter name="VTODO"/>
+        </C:comp-filter>
+    </C:filter>
+</C:calendar-query>`
+
+		rec, err := newCaldavTestRequestWithUser(t, e, "REPORT", caldav.ProjectHandler, &testuser15, reportBody, nil, map[string]string{"project": "36"})
+		require.NoError(t, err)
+		assert.Equal(t, 207, rec.Result().StatusCode) // Multi-Status response
+
+		responseBody := rec.Body.String()
+
+		assert.Contains(t, responseBody, "multistatus")
+		assert.Contains(t, responseBody, "response")
+		assert.Contains(t, responseBody, "href")
+		assert.Contains(t, responseBody, "propstat")
+
+		// Parse XML to verify structure
+		type Multistatus struct {
+			Response []struct {
+				Href     string `xml:"href"`
+				Propstat struct {
+					Prop struct {
+						Getetag      string `xml:"getetag"`
+						CalendarData string `xml:"calendar-data"`
+					} `xml:"prop"`
+				} `xml:"propstat"`
+			} `xml:"response"`
+		}
+
+		var multistatus Multistatus
+		err = xml.Unmarshal([]byte(responseBody), &multistatus)
+		require.NoError(t, err)
+
+		assert.Len(t, multistatus.Response, 5, "Should have all tasks from the project")
+
+		for i, response := range multistatus.Response {
+			assert.NotEmpty(t, response.Href, "Response %d should have an href", i)
+			assert.NotEmpty(t, response.Propstat.Prop.CalendarData, "Response %d should have calendar-data", i)
+			assert.NotEmpty(t, response.Propstat.Prop.Getetag, "Response %d should have an ETag", i)
+
+			calendarData := response.Propstat.Prop.CalendarData
+
+			cal, err := ics.ParseCalendar(strings.NewReader(calendarData))
+			require.NoError(t, err, "Response %d should contain valid iCalendar data", i)
+
+			require.Len(t, cal.Components, 1, "Response %d should contain exactly one VTODO component")
+
+			component := cal.Components[0]
+			require.IsType(t, &ics.VTodo{}, component)
+
+			vtodo, _ := component.(*ics.VTodo)
+			uid := vtodo.GetProperty(ics.ComponentPropertyUniqueId)
+			assert.NotEmpty(t, uid.Value, "Response %d VTODO UID should not be empty", i)
+
+			summary := vtodo.GetProperty(ics.ComponentPropertySummary)
+			assert.NotEmpty(t, summary.Value, "Response %d VTODO SUMMARY should not be empty", i)
+		}
 	})
 }

@@ -17,7 +17,7 @@
 	>
 		<template #tag="{item: label}">
 			<span
-				:style="{'background': label.hexColor, 'color': label.textColor}"
+				:style="getLabelStyles(label)"
 				class="tag"
 			>
 				<span>{{ label.title }}</span>
@@ -38,7 +38,7 @@
 			</span>
 			<span
 				v-else
-				:style="{'background': option.hexColor, 'color': option.textColor}"
+				:style="getLabelStyles(option)"
 				class="tag search-result"
 			>
 				<span>{{ option.title }}</span>
@@ -61,6 +61,7 @@ import type {ILabel} from '@/modelTypes/ILabel'
 import {useLabelStore} from '@/stores/labels'
 import {useTaskStore} from '@/stores/tasks'
 import {getRandomColorHex} from '@/helpers/color/randomColor'
+import {useLabelStyles} from '@/composables/useLabelStyles'
 
 const props = withDefaults(defineProps<{
 	modelValue: ILabel[] | undefined
@@ -96,6 +97,7 @@ watch(
 
 const taskStore = useTaskStore()
 const labelStore = useLabelStore()
+const {getLabelStyles} = useLabelStyles()
 
 const foundLabels = computed(() => labelStore.filterLabelsByQuery(labels.value, query.value))
 const loading = computed(() => labelTaskService.loading || labelStore.isLoading)

@@ -38,7 +38,7 @@ $size: $lineWidth + 1rem;
 		position: absolute;
 		height: 3px;
 		width: $lineWidth;
-		left: 50%;
+		inset-inline-start: 50%;
 		transform: $transformX;
 		background-color: var(--grey-400);
 		border-radius: 2px;
@@ -46,12 +46,12 @@ $size: $lineWidth + 1rem;
 	}
 
 	&::before {
-		top: 50%;
+		inset-block-start: 50%;
 		transform: $transformX translateY(-0.4rem)
 	}
 
 	&::after {
-		bottom: 50%;
+		inset-block-end: 50%;
 		transform: $transformX translateY(0.4rem)
 	}
 
