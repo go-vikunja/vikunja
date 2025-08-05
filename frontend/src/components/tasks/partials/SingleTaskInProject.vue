@@ -106,7 +106,7 @@
 						v-if="task.attachments.length > 0"
 						class="project-task-icon"
 					>
-						<Icon icon="paperclip"/>
+						<Icon icon="paperclip" />
 					</span>
 					<span
 						v-if="!isEditorContentEmpty(task.description)"

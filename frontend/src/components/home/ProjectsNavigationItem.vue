@@ -14,6 +14,15 @@
 					:class="{ 'project-is-collapsed': !childProjectsOpen }"
 				/>
 			</BaseButton>
+			<span
+				v-if="project.id > 0 && project.maxRight > RIGHTS.READ"
+				class="icon menu-item-icon handle drag-handle-standalone"
+				@mousedown.stop
+				@click.stop.prevent
+				@touchstart.stop
+			>
+				<Icon icon="grip-lines" />
+			</span>
 			<BaseButton
 				:to="{ name: 'project.index', params: { projectId: project.id} }"
 				class="list-menu-link"
@@ -23,10 +32,7 @@
 					v-if="!canCollapse || childProjects?.length === 0"
 					class="collapse-project-button-placeholder"
 				/>
-				<div
-					class="color-bubble-handle-wrapper"
-					:class="{'is-draggable': project.id > 0 && project.maxRight > RIGHTS.READ}"
-				>
+				<div class="color-bubble-wrapper">
 					<ColorBubble
 						v-if="project.hexColor !== ''"
 						:color="project.hexColor"
@@ -37,13 +43,6 @@
 						class="saved-filter-icon icon menu-item-icon"
 					>
 						<Icon icon="filter" />
-					</span>
-					<span
-						v-if="project.id > 0 && project.maxRight > RIGHTS.READ"
-						class="icon menu-item-icon handle"
-						:class="{'has-color-bubble': project.hexColor !== ''}"
-					>
-						<Icon icon="grip-lines" />
 					</span>
 				</div>
 				<span class="project-menu-title">{{ getProjectTitle(project) }}</span>
@@ -155,7 +154,11 @@ const childProjects = computed(() => {
 	opacity: 1;
 }
 
-.list-menu:hover > div > a > .color-bubble-handle-wrapper.is-draggable > {
+.list-menu:hover > div > .drag-handle-standalone {
+	opacity: 1;
+}
+
+.list-menu:hover .color-bubble-wrapper > {
 	.saved-filter-icon,
 	.color-bubble {
 		opacity: 0;
@@ -166,7 +169,7 @@ const childProjects = computed(() => {
 	opacity: 1 !important;
 }
 
-.color-bubble-handle-wrapper {
+.color-bubble-wrapper {
 	position: relative;
 	width: 1rem;
 	height: 1rem;
@@ -185,6 +188,22 @@ const childProjects = computed(() => {
 	}
 }
 
+.drag-handle-standalone {
+	width: 1rem;
+	height: 1rem;
+	opacity: 0;
+	cursor: grab;
+	transition: opacity $transition;
+	z-index: 2;
+
+	position: absolute;
+	inset-inline-start: 1.75rem;
+
+	&:active {
+		cursor: grabbing;
+	}
+}
+
 .project-menu-title {
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -195,8 +214,14 @@ const childProjects = computed(() => {
 	font-size: .75rem;
 }
 
-.is-touch .handle.has-color-bubble {
-	display: none !important;
+@media (pointer: coarse) {
+	.drag-handle-standalone {
+		display: none !important;
+	}
+}
+
+.navigation-item {
+	position: relative;
 }
 
 .navigation-item:has(*:focus-visible) {
