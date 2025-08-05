@@ -57,7 +57,7 @@ require (
 	github.com/olekukonko/tablewriter v1.0.9
 	github.com/pquerna/otp v1.5.0
 	github.com/prometheus/client_golang v1.23.0
-	github.com/redis/go-redis/v9 v9.11.0
+	github.com/redis/go-redis/v9 v9.12.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/samedi/caldav-go v3.0.0+incompatible
 	github.com/spf13/afero v1.14.0
