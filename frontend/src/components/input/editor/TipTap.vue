@@ -11,8 +11,8 @@
 		<BubbleMenu
 			v-if="editor && isEditing"
 			:editor="editor"
-			class="editor-bubble__wrapper"
 		>
+			<div class="editor-bubble__wrapper">
 			<BaseButton
 				v-tooltip="$t('input.editor.bold')"
 				class="editor-bubble__button"
@@ -61,6 +61,7 @@
 			>
 				<Icon :icon="['fa', 'fa-link']" />
 			</BaseButton>
+			</div>
 		</BubbleMenu>
 
 		<EditorContent
@@ -1021,8 +1022,8 @@ ul[data-type='taskList'] {
 	svg {
 		box-sizing: border-box;
 		display: block;
-		width: 1rem;
-		height: 1rem;
+		width: 2rem;
+		height: 2rem;
 		padding: .5rem;
 		margin: 0;
 	}
