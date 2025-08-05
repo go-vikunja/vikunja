@@ -1,5 +1,5 @@
 import {VueRenderer} from '@tiptap/vue-3'
-import tippy from 'tippy.js'
+import {computePosition, flip, shift, offset, autoUpdate} from '@floating-ui/dom'
 
 import CommandsList from './CommandsList.vue'
 
@@ -155,7 +155,21 @@ export default function suggestionSetup(t) {
 
 		render: () => {
 			let component: VueRenderer
-			let popup
+			let popupElement: HTMLElement | null = null
+			let cleanupFloating: (() => void) | null = null
+
+			const virtualReference = {
+				getBoundingClientRect: () => ({
+					width: 0,
+					height: 0,
+					x: 0,
+					y: 0,
+					top: 0,
+					left: 0,
+					right: 0,
+					bottom: 0,
+				} as DOMRect),
+			}
 
 			return {
 				onStart: props => {
@@ -171,32 +185,57 @@ export default function suggestionSetup(t) {
 						return
 					}
 
-					popup = tippy('body', {
-						getReferenceClientRect: props.clientRect,
-						appendTo: () => document.body,
-						content: component.element,
-						showOnCreate: true,
-						interactive: true,
-						trigger: 'manual',
-						placement: 'bottom-start',
-					})
+					// Create popup element
+					popupElement = document.createElement('div')
+					popupElement.style.position = 'absolute'
+					popupElement.style.top = '0'
+					popupElement.style.left = '0'
+					popupElement.style.zIndex = '1000'
+					popupElement.appendChild(component.element!)
+					document.body.appendChild(popupElement)
+
+					// Update virtual reference
+					const rect = props.clientRect()
+					virtualReference.getBoundingClientRect = () => rect
+
+					// Set up floating positioning
+					const updatePosition = () => {
+						computePosition(virtualReference, popupElement!, {
+							placement: 'bottom-start',
+							middleware: [
+								offset(8),
+								flip(),
+								shift({ padding: 8 }),
+							],
+						}).then(({ x, y }) => {
+							if (popupElement) {
+								popupElement.style.left = `${x}px`
+								popupElement.style.top = `${y}px`
+							}
+						})
+					}
+
+					updatePosition()
+					cleanupFloating = autoUpdate(virtualReference, popupElement, updatePosition)
 				},
 
 				onUpdate(props) {
 					component.updateProps(props)
 
-					if (!props.clientRect) {
+					if (!props.clientRect || !popupElement) {
 						return
 					}
 
-					popup[0].setProps({
-						getReferenceClientRect: props.clientRect,
-					})
+					// Update virtual reference
+					const rect = props.clientRect()
+					virtualReference.getBoundingClientRect = () => rect
 				},
 
 				onKeyDown(props) {
 					if (props.event.key === 'Escape') {
-						popup[0].hide()
+						if (popupElement) {
+							popupElement.style.display = 'none'
+						}
 
 						return true
 					}
@@ -205,7 +244,13 @@ export default function suggestionSetup(t) {
 				},
 
 				onExit() {
-					popup[0].destroy()
+					if (cleanupFloating) {
+						cleanupFloating()
+					}
+					if (popupElement) {
+						document.body.removeChild(popupElement)
+						popupElement = null
+					}
 					component.destroy()
 				},
 			}

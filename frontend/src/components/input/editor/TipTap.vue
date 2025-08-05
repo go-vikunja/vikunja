@@ -145,8 +145,7 @@ import EditorToolbar from './EditorToolbar.vue'
 
 import StarterKit from '@tiptap/starter-kit'
 import {Extension, mergeAttributes} from '@tiptap/core'
-import {EditorContent, type Extensions, useEditor} from '@tiptap/vue-3'
-import {BubbleMenu} from '@tiptap/vue-3/menus'
+import {BubbleMenu, EditorContent, type Extensions, useEditor} from '@tiptap/vue-3'
 import {Plugin, PluginKey} from '@tiptap/pm/state'
 import {marked} from 'marked'
 
