@@ -1,3 +1,5 @@
+@use 'sass:list';
+
 .field.has-addons .button {
   height: 2.5rem;
   margin-inline-start: 0 !important;
@@ -20,8 +22,8 @@
   }
 
   @each $name, $pair in $colors {
-    $color: nth($pair, 1);
-    $color-invert: nth($pair, 2);
+    $color: list.nth($pair, 1);
+    $color-invert: list.nth($pair, 2);
 
     &.is-#{$name} {
       &.is-active,
