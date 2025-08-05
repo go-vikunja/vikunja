@@ -11,56 +11,57 @@
 		<BubbleMenu
 			v-if="editor && isEditing"
 			:editor="editor"
-			class="editor-bubble__wrapper"
 		>
-			<BaseButton
-				v-tooltip="$t('input.editor.bold')"
-				class="editor-bubble__button"
-				:class="{ 'is-active': editor.isActive('bold') }"
-				@click="() => editor?.chain().focus().toggleBold().run()"
-			>
-				<Icon :icon="['fa', 'fa-bold']" />
-			</BaseButton>
-			<BaseButton
-				v-tooltip="$t('input.editor.italic')"
-				class="editor-bubble__button"
-				:class="{ 'is-active': editor.isActive('italic') }"
-				@click="() => editor?.chain().focus().toggleItalic().run()"
-			>
-				<Icon :icon="['fa', 'fa-italic']" />
-			</BaseButton>
-			<BaseButton
-				v-tooltip="$t('input.editor.underline')"
-				class="editor-bubble__button"
-				:class="{ 'is-active': editor.isActive('underline') }"
-				@click="() => editor?.chain().focus().toggleUnderline().run()"
-			>
-				<Icon :icon="['fa', 'fa-underline']" />
-			</BaseButton>
-			<BaseButton
-				v-tooltip="$t('input.editor.strikethrough')"
-				class="editor-bubble__button"
-				:class="{ 'is-active': editor.isActive('strike') }"
-				@click="() => editor?.chain().focus().toggleStrike().run()"
-			>
-				<Icon :icon="['fa', 'fa-strikethrough']" />
-			</BaseButton>
-			<BaseButton
-				v-tooltip="$t('input.editor.code')"
-				class="editor-bubble__button"
-				:class="{ 'is-active': editor.isActive('code') }"
-				@click="() => editor?.chain().focus().toggleCode().run()"
-			>
-				<Icon :icon="['fa', 'fa-code']" />
-			</BaseButton>
-			<BaseButton
-				v-tooltip="$t('input.editor.link')"
-				class="editor-bubble__button"
-				:class="{ 'is-active': editor.isActive('link') }"
-				@click="setLink"
-			>
-				<Icon :icon="['fa', 'fa-link']" />
-			</BaseButton>
+			<div class="editor-bubble__wrapper">
+				<BaseButton
+					v-tooltip="$t('input.editor.bold')"
+					class="editor-bubble__button"
+					:class="{ 'is-active': editor.isActive('bold') }"
+					@click="() => editor?.chain().focus().toggleBold().run()"
+				>
+					<Icon :icon="['fa', 'fa-bold']" />
+				</BaseButton>
+				<BaseButton
+					v-tooltip="$t('input.editor.italic')"
+					class="editor-bubble__button"
+					:class="{ 'is-active': editor.isActive('italic') }"
+					@click="() => editor?.chain().focus().toggleItalic().run()"
+				>
+					<Icon :icon="['fa', 'fa-italic']" />
+				</BaseButton>
+				<BaseButton
+					v-tooltip="$t('input.editor.underline')"
+					class="editor-bubble__button"
+					:class="{ 'is-active': editor.isActive('underline') }"
+					@click="() => editor?.chain().focus().toggleUnderline().run()"
+				>
+					<Icon :icon="['fa', 'fa-underline']" />
+				</BaseButton>
+				<BaseButton
+					v-tooltip="$t('input.editor.strikethrough')"
+					class="editor-bubble__button"
+					:class="{ 'is-active': editor.isActive('strike') }"
+					@click="() => editor?.chain().focus().toggleStrike().run()"
+				>
+					<Icon :icon="['fa', 'fa-strikethrough']" />
+				</BaseButton>
+				<BaseButton
+					v-tooltip="$t('input.editor.code')"
+					class="editor-bubble__button"
+					:class="{ 'is-active': editor.isActive('code') }"
+					@click="() => editor?.chain().focus().toggleCode().run()"
+				>
+					<Icon :icon="['fa', 'fa-code']" />
+				</BaseButton>
+				<BaseButton
+					v-tooltip="$t('input.editor.link')"
+					class="editor-bubble__button"
+					:class="{ 'is-active': editor.isActive('link') }"
+					@click="setLink"
+				>
+					<Icon :icon="['fa', 'fa-link']" />
+				</BaseButton>
+			</div>
 		</BubbleMenu>
 
 		<EditorContent
@@ -145,23 +146,20 @@ import EditorToolbar from './EditorToolbar.vue'
 
 import StarterKit from '@tiptap/starter-kit'
 import {Extension, mergeAttributes} from '@tiptap/core'
-import {BubbleMenu, EditorContent, type Extensions, useEditor} from '@tiptap/vue-3'
+import {EditorContent, type Extensions, useEditor} from '@tiptap/vue-3'
 import {Plugin, PluginKey} from '@tiptap/pm/state'
 import {marked} from 'marked'
+import {BubbleMenu} from '@tiptap/vue-3/menus'
 
 import Link from '@tiptap/extension-link'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
-import Table from '@tiptap/extension-table'
-import TableCell from '@tiptap/extension-table-cell'
-import TableHeader from '@tiptap/extension-table-header'
-import TableRow from '@tiptap/extension-table-row'
+import {Table, TableRow, TableCell, TableHeader} from '@tiptap/extension-table'
 import Typography from '@tiptap/extension-typography'
 import Image from '@tiptap/extension-image'
 import Underline from '@tiptap/extension-underline'
-import {Placeholder} from '@tiptap/extension-placeholder'
+import {Placeholder} from '@tiptap/extensions'
 
-import TaskItem from '@tiptap/extension-task-item'
-import TaskList from '@tiptap/extension-task-list'
+import {TaskItem, TaskList} from '@tiptap/extension-list'
 import HardBreak from '@tiptap/extension-hard-break'
 
 import {Node} from '@tiptap/pm/model'
@@ -1024,8 +1022,8 @@ ul[data-type='taskList'] {
 	svg {
 		box-sizing: border-box;
 		display: block;
-		width: 1rem;
-		height: 1rem;
+		width: 2rem;
+		height: 2rem;
 		padding: .5rem;
 		margin: 0;
 	}
