@@ -58,7 +58,7 @@
     "@kyvg/vue3-notification": "3.4.1",
     "@sentry/tracing": "7.120.4",
     "@sentry/vue": "10.1.0",
-    "@floating-ui/dom": "^1.6.0",
+    "@floating-ui/dom": "1.7.3",
     "@tiptap/core": "^3.0.0",
     "@tiptap/extension-code-block-lowlight": "^3.0.0",
     "@tiptap/extension-hard-break": "^3.0.0",

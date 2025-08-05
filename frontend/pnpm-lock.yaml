@@ -17,7 +17,7 @@ importers:
   .:
     dependencies:
       '@floating-ui/dom':
-        specifier: ^1.6.0
+        specifier: 1.7.3
         version: 1.7.3
       '@fortawesome/fontawesome-svg-core':
         specifier: 7.0.0
@@ -1392,9 +1392,6 @@ packages:
     resolution: {integrity: sha512-OEl393iCOoo/z8bMezRlJu+GlRGlsKbUAN7jKB6LhnKoqKve5DXRpalbItIIcwnCjs1k/FOPjFzcA6Qn+H+YbA==}
     engines: {node: '>=18.0.0', npm: '>=9.0.0'}
 
-  '@floating-ui/core@1.6.7':
-    resolution: {integrity: sha512-yDzVT/Lm101nQ5TCVeK65LtdN7Tj4Qpr9RTXJ2vPFLqtLxwOrpoxAHAJI8J3yYWUc40J0BDBheaitK5SJmno2g==}
-
   '@floating-ui/core@1.7.3':
     resolution: {integrity: sha512-sGnvb5dmrJaKEZ+LDIpguvdX3bDlEllmv4/ClQ9awcmCZrlx5jQyyMWFM5kBI+EyNOCDDiKk8il0zeuX3Zlg/w==}
 
@@ -1406,9 +1403,6 @@ packages:
 
   '@floating-ui/utils@0.2.10':
     resolution: {integrity: sha512-aGTxbpbg8/b5JfU1HXSrbH3wXZuLPJcNEcZQFMxLs3oSzgtVu6nFPkbbGGUvBcUjKV2YyB9Wxxabo+HEH9tcRQ==}
-
-  '@floating-ui/utils@0.2.7':
-    resolution: {integrity: sha512-X8R8Oj771YRl/w+c1HqAC1szL8zWQRwFvgDwT129k9ACdBoud/+/rX9V0qiMl6LWUdP9voC2nDVZYPMQQsb6eA==}
 
   '@fortawesome/fontawesome-common-types@7.0.0':
     resolution: {integrity: sha512-PGMrIYXLGA5K8RWy8zwBkd4vFi4z7ubxtet6Yn13Plf6krRTwPbdlCwlcfmoX0R7B4Z643QvrtHmdQ5fNtfFCg==}
@@ -7960,17 +7954,13 @@ snapshots:
 
   '@faker-js/faker@9.9.0': {}
 
-  '@floating-ui/core@1.6.7':
-    dependencies:
-      '@floating-ui/utils': 0.2.7
-
   '@floating-ui/core@1.7.3':
     dependencies:
       '@floating-ui/utils': 0.2.10
 
   '@floating-ui/dom@1.1.1':
     dependencies:
-      '@floating-ui/core': 1.6.7
+      '@floating-ui/core': 1.7.3
 
   '@floating-ui/dom@1.7.3':
     dependencies:
@@ -7978,8 +7968,6 @@ snapshots:
       '@floating-ui/utils': 0.2.10
 
   '@floating-ui/utils@0.2.10': {}
-
-  '@floating-ui/utils@0.2.7': {}
 
   '@fortawesome/fontawesome-common-types@7.0.0': {}
 
