@@ -145,9 +145,10 @@ import EditorToolbar from './EditorToolbar.vue'
 
 import StarterKit from '@tiptap/starter-kit'
 import {Extension, mergeAttributes} from '@tiptap/core'
-import {BubbleMenu, EditorContent, type Extensions, useEditor} from '@tiptap/vue-3'
+import {EditorContent, type Extensions, useEditor} from '@tiptap/vue-3'
 import {Plugin, PluginKey} from '@tiptap/pm/state'
 import {marked} from 'marked'
+import {BubbleMenu} from '@tiptap/vue-3/menus'
 
 import Link from '@tiptap/extension-link'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
