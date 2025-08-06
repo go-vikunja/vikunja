@@ -39,6 +39,8 @@ Navigate to `frontend/` directory:
 - **Build Dev**: `pnpm build:dev` - Development build  
 - **Lint**: `pnpm lint` - ESLint check
 - **Lint Fix**: `pnpm lint:fix` - ESLint with auto-fix
+- **Lint Styles**: `pnpm lint:styles` - Stylelint check for CSS/SCSS
+- **Lint Styles Fix**: `pnpm lint:styles:fix` - Stylelint with auto-fix
 - **Type Check**: `pnpm typecheck` - Vue TypeScript checking
 - **Test Unit**: `pnpm test:unit` - Vitest unit tests
 - **Test E2E**: `pnpm test:e2e` - Cypress end-to-end tests
@@ -51,12 +53,12 @@ Always run both lint before committing:
 mage lint:fix
 
 # Frontend  
-cd frontend && pnpm lint:fix
+cd frontend && pnpm lint:fix && pnpm lint:styles:fix
 ```
 
 Fix any errors the lint commands report, then try comitting again.
 
-You only need to run the lint for the backend when changing backend code, and the lint for the frontend only when changing frontend code.
+You only need to run the lint for the backend when changing backend code, and the lint for the frontend only when changing frontend code. Similarly, only run style linting when modifying CSS/SCSS files or Vue component styles.
 
 ## Architecture Overview
 
