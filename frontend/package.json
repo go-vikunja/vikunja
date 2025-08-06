@@ -136,7 +136,7 @@
     "postcss-preset-env": "10.2.4",
     "rollup": "4.46.2",
     "rollup-plugin-visualizer": "6.0.3",
-    "sass-embedded": "1.89.2",
+    "sass-embedded": "1.90.0",
     "start-server-and-test": "2.0.13",
     "typescript": "5.9.2",
     "unplugin-inject-preload": "3.0.0",
