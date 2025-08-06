@@ -404,8 +404,8 @@ function setLink(event) {
 }
 
 .editor-toolbar__button {
-	min-width: 2rem;
-	height: 2rem;
+	min-inline-size: 2rem;
+	block-size: 2rem;
 	border-radius: $radius;
 	border: 1px solid transparent;
 	color: var(--grey-700);
@@ -440,7 +440,7 @@ function setLink(event) {
 		padding: 0 .25rem;
 		border: 1px solid var(--grey-400);
 		font-size: .75rem;
-		height: 1.5rem;
+		block-size: 1.5rem;
 	}
 }
 </style>

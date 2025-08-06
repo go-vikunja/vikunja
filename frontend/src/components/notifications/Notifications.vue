@@ -202,7 +202,7 @@ async function markAllRead() {
 	display: flex;
 
 	.trigger-button {
-		width: 100%;
+		inline-size: 100%;
 		position: relative;
 	}
 
@@ -210,8 +210,8 @@ async function markAllRead() {
 		position: absolute;
 		inset-block-start: 1rem;
 		inset-inline-end: .5rem;
-		width: .75rem;
-		height: .75rem;
+		inline-size: .75rem;
+		block-size: .75rem;
 
 		background: var(--primary);
 		border-radius: 100%;
@@ -222,19 +222,19 @@ async function markAllRead() {
 		position: absolute;
 		inset-inline-end: 1rem;
 		inset-block-start: calc(100% + 1rem);
-		max-height: 400px;
+		max-block-size: 400px;
 		overflow-y: auto;
 
 		background: var(--white);
-		width: 350px;
-		max-width: calc(100vw - 2rem);
+		inline-size: 350px;
+		max-inline-size: calc(100vw - 2rem);
 		padding: .75rem .25rem;
 		border-radius: $radius;
 		box-shadow: var(--shadow-sm);
 		font-size: .85rem;
 
 		@media screen and (max-width: $tablet) {
-			max-height: calc(100vh - 1rem - #{$navbar-height});
+			max-block-size: calc(100vh - 1rem - #{$navbar-height});
 		}
 
 		.head {
@@ -256,8 +256,8 @@ async function markAllRead() {
 			}
 
 			.read-indicator {
-				width: .35rem;
-				height: .35rem;
+				inline-size: .35rem;
+				block-size: .35rem;
 				background: var(--primary);
 				border-radius: 100%;
 				margin: 0 .5rem;
@@ -271,7 +271,7 @@ async function markAllRead() {
 			.user {
 				display: inline-flex;
 				align-items: center;
-				width: auto;
+				inline-size: auto;
 				margin: 0 .5rem;
 
 				span {
@@ -279,7 +279,7 @@ async function markAllRead() {
 				}
 
 				.avatar {
-					height: 16px;
+					block-size: 16px;
 				}
 
 				img {

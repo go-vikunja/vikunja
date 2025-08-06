@@ -131,7 +131,7 @@ const childProjects = computed(() => {
 
 <style lang="scss" scoped>
 .list-setting-spacer {
-	width: 5rem;
+	inline-size: 5rem;
 	flex-shrink: 0;
 }
 
@@ -171,8 +171,8 @@ const childProjects = computed(() => {
 
 .color-bubble-wrapper {
 	position: relative;
-	width: 1rem;
-	height: 1rem;
+	inline-size: 1rem;
+	block-size: 1rem;
 	display: flex;
 	align-items: center;
 	justify-content: flex-start;
@@ -182,15 +182,15 @@ const childProjects = computed(() => {
 	.color-bubble, .icon {
 		transition: all $transition;
 		position: absolute;
-		width: 12px;
+		inline-size: 12px;
 		margin: 0 !important;
 		padding: 0 !important;
 	}
 }
 
 .drag-handle-standalone {
-	width: 1rem;
-	height: 1rem;
+	inline-size: 1rem;
+	block-size: 1rem;
 	opacity: 0;
 	cursor: grab;
 	transition: opacity $transition;

@@ -984,7 +984,7 @@ function setRelatedTasksActive() {
 	color: var(--text);
 	background-color: var(--site-background) !important;
 
-	@media screen and (max-width: calc(#{$desktop} + 1px)) {
+	@media screen and (width <= calc(#{$desktop} + 1px)) {
 		border-radius: 0;
 	}
 }
@@ -1028,7 +1028,7 @@ h3 .button {
 }
 
 :deep(.datepicker) {
-	width: 100%;
+	inline-size: 100%;
 
 	.show {
 		color: var(--text);
@@ -1037,7 +1037,7 @@ h3 .button {
 		border-radius: $radius;
 		display: block;
 		margin: .1rem 0;
-		width: 100%;
+		inline-size: 100%;
 		text-align: start;
 
 		&:hover {
@@ -1076,7 +1076,7 @@ h3 .button {
 .assignees {
 	:deep(.multiselect) {
 		.input-wrapper {
-			&:not(:focus-within):not(:hover) {
+			&:not(:focus-within, :hover) {
 				background: transparent;
 				border-color: transparent;
 			}
@@ -1140,7 +1140,7 @@ h3 .button {
 	}
 
 	.button {
-		width: 100%;
+		inline-size: 100%;
 		margin-block-end: .5rem;
 		justify-content: left;
 
@@ -1157,7 +1157,7 @@ h3 .button {
 	}
 	// this is the moment when the fixed close button is outside the modal
 	// => we can fill up the space again
-	@media screen and (min-width: calc(#{$desktop} + 84px)) {
+	@media screen and (width >= calc(#{$desktop} + 84px)) {
 		inset-block-start: 0;
 	}
 }
@@ -1168,7 +1168,7 @@ h3 .button {
 
 .detail-content {
 	@media print {
-		width: 100% !important;
+		inline-size: 100% !important;
 	}
 }
 

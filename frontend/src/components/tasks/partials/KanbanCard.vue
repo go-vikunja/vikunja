@@ -228,8 +228,8 @@ $task-background: var(--white);
 	overflow: hidden;
 
 	&.loader-container.is-loading::after {
-		width: 1.5rem;
-		height: 1.5rem;
+		inline-size: 1.5rem;
+		block-size: 1.5rem;
 		inset-block-start: calc(50% - .75rem);
 		inset-inline-start: calc(50% - .75rem);
 		border-width: 2px;
@@ -243,9 +243,10 @@ $task-background: var(--white);
 
 
 	.due-date {
-		float: right;
+		float: inline-end;
 		display: flex;
 		align-items: center;
+		padding: 0 .25rem;
 
 		.icon {
 			margin-inline-end: .25rem;
@@ -303,7 +304,7 @@ $task-background: var(--white);
 			padding: 0 .5rem 0 .25rem;
 
 			.icon {
-				height: 1rem;
+				block-size: 1rem;
 				padding: 0 .25rem;
 				margin-block-start: 0;
 			}
@@ -318,10 +319,6 @@ $task-background: var(--white);
 		padding: 0 .5rem;
 	}
 
-	.due-date {
-		padding: 0 .25rem;
-	}
-
 	.task-id {
 		color: var(--grey-500);
 		font-size: .8rem;
@@ -334,7 +331,7 @@ $task-background: var(--white);
 	}
 
 	span {
-		width: auto;
+		inline-size: auto;
 	}
 
 	&.has-custom-background-color {
@@ -382,8 +379,8 @@ $task-background: var(--white);
 }
 
 .task-progress {
-	margin: 8px 0 0 0;
-	width: 100%;
-	height: 0.5rem;
+	margin: 8px 0 0;
+	inline-size: 100%;
+	block-size: 0.5rem;
 }
 </style>

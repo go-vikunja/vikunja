@@ -401,7 +401,7 @@ async function toggleTaskDone(task: ITask) {
 
 .different-project {
 	color: var(--grey-500);
-	width: auto;
+	inline-size: auto;
 }
 
 .title {
@@ -461,7 +461,7 @@ async function toggleTaskDone(task: ITask) {
 //  of the component.
 .task-done-checkbox {
 	padding: 0;
-	height: 18px; // The exact height of the checkbox in the container
+	block-size: 18px; // The exact height of the checkbox in the container
 	margin-inline-end: .75rem;
 }
 </style>

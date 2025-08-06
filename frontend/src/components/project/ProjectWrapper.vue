@@ -102,7 +102,7 @@ function getViewTitle(view: IProjectView) {
 
 <style lang="scss" scoped>
 .switch-view-container {
-	min-height: $switch-view-height;
+	min-block-size: $switch-view-height;
 	margin-block-end: 1rem;
 	
 	display: flex;

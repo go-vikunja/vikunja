@@ -192,15 +192,15 @@ const flatPickerConfig = computed(() => ({
 
 .field {
 	margin-block-end: 0;
-	width: 33%;
+	inline-size: 33%;
 
 	&:not(:last-child) {
 		padding-inline-end: .5rem;
 	}
 
 	@media screen and (max-width: $tablet) {
-		width: 100%;
-		max-width: 100%;
+		inline-size: 100%;
+		max-inline-size: 100%;
 		margin-block-start: .5rem;
 		padding-inline-end: 0 !important;
 	}
@@ -211,8 +211,8 @@ const flatPickerConfig = computed(() => ({
 
 	.select,
 	.select select {
-		height: auto;
-		width: 100%;
+		block-size: auto;
+		inline-size: 100%;
 		font-size: .8rem;
 	}
 

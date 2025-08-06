@@ -435,7 +435,7 @@ function focus() {
 
 <style lang="scss" scoped>
 .multiselect {
-	width: 100%;
+	inline-size: 100%;
 	position: relative;
 
 	.control.is-loading::after {
@@ -460,7 +460,7 @@ function focus() {
 	background: var(--white);
 	border-color: var(--grey-200);
 	flex-wrap: wrap;
-	height: auto;
+	block-size: auto;
 
 	&:hover {
 		border-color: var(--grey-300) !important;
@@ -468,12 +468,12 @@ function focus() {
 
 	.input {
 		display: flex;
-		max-width: 100%;
-		width: 100%;
+		max-inline-size: 100%;
+		inline-size: 100%;
 		align-items: center;
 		border: none !important;
 		background: transparent;
-		height: auto;
+		block-size: auto;
 
 		&::placeholder {
 			font-style: normal !important;
@@ -481,7 +481,7 @@ function focus() {
 	}
 
 	&.has-multiple .input {
-		max-width: 250px;
+		max-inline-size: 250px;
 
 		input {
 			padding-inline-start: 0;
@@ -515,12 +515,12 @@ function focus() {
 	border: 1px solid var(--primary);
 	border-block-start: none;
 
-	max-height: 50vh;
+	max-block-size: 50vh;
 	overflow-x: auto;
 	position: absolute;
 	z-index: 100;
-	max-width: 100%;
-	min-width: 100%;
+	max-inline-size: 100%;
+	min-inline-size: 100%;
 }
 
 .search-results-inline {

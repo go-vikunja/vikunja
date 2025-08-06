@@ -34,12 +34,12 @@ withDefaults(defineProps<{
 	appearance: none;
 	border: none;
 	border-radius: var(--progress-border-radius);
-	height: var(--progress-height);
+	block-size: var(--progress-height);
 	overflow: hidden;
 	padding: 0;
-	min-width: 6vw;
+	min-inline-size: 6vw;
 
-	width: 50px;
+	inline-size: 50px;
 	margin: 0 .5rem 0 0;
 	flex: 3 1 auto;
 
@@ -49,9 +49,9 @@ withDefaults(defineProps<{
 	}
 
 	@media screen and (max-width: $tablet) {
-		margin: 0.5rem 0 0 0;
+		margin: 0.5rem 0 0;
 		order: 1;
-		width: 100%;
+		inline-size: 100%;
 	}
 
 	&::-webkit-progress-bar {
@@ -73,6 +73,7 @@ withDefaults(defineProps<{
 
 	// Colors
 	@each $name, $pair in $colors {
+		// stylelint-disable-next-line function-no-unknown
 		$color: nth($pair, 1);
 		&.is-#{$name} {
 			--progress-value-background-color: var(--#{$name}, #{$color});
@@ -90,7 +91,7 @@ withDefaults(defineProps<{
 	&:indeterminate {
 		animation-duration: var(--progress-indeterminate-duration);
 		animation-iteration-count: infinite;
-		animation-name: moveIndeterminate;
+		animation-name: move-indeterminate;
 		animation-timing-function: linear;
 		background-color: var(--progress-bar-background-color);
 		background-image: linear-gradient(
@@ -120,7 +121,7 @@ withDefaults(defineProps<{
 	}
 }
 
-@keyframes moveIndeterminate {
+@keyframes move-indeterminate {
 	from {
 		background-position: 200% 0;
 	}

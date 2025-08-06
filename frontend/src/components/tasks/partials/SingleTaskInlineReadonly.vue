@@ -156,7 +156,7 @@ const project = computed(() => projectStore.projects[props.task.projectId])
 	}
 
 	.task-project {
-		width: auto;
+		inline-size: auto;
 		color: var(--grey-400);
 		font-size: .9rem;
 		white-space: nowrap;
@@ -166,8 +166,8 @@ const project = computed(() => projectStore.projects[props.task.projectId])
 		border-radius: 50%;
 		vertical-align: bottom;
 		margin-inline-start: .5rem;
-		height: 21px;
-		width: 21px;
+		block-size: 21px;
+		inline-size: 21px;
 	}
 
 	.project-task-icon {
@@ -195,7 +195,7 @@ const project = computed(() => projectStore.projects[props.task.projectId])
 
 	span.parent-tasks {
 		color: var(--grey-500);
-		width: auto;
+		inline-size: auto;
 		margin-inline-start: .25rem;
 	}
 }

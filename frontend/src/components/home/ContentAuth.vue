@@ -135,8 +135,8 @@ projectStore.loadAllProjects()
 	inset-block-start: 0.5rem;
 	inset-inline-end: 0.5rem;
 	z-index: 31;
-	width: 3rem;
-	height: 3rem;
+	inline-size: 3rem;
+	block-size: 3rem;
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -156,7 +156,7 @@ projectStore.loadAllProjects()
 }
 
 .app-container {
-	min-height: calc(100vh - 65px);
+	min-block-size: calc(100vh - 65px);
 
 	@media screen and (max-width: $tablet) {
 		padding-block-start: $navbar-height;
@@ -174,7 +174,7 @@ projectStore.loadAllProjects()
 	@media screen and (max-width: $tablet) {
 		margin-inline-start: 0;
 		margin-inline-end: 0;
-		min-height: calc(100vh - 4rem);
+		min-block-size: calc(100vh - 4rem);
 	}
 
 	@media screen and (min-width: $tablet) {
@@ -189,7 +189,7 @@ projectStore.loadAllProjects()
 
 	// Used to make sure the spinner is always in the middle while loading
 	> .loader-container {
-		min-height: calc(100vh - #{$navbar-height + 1.5rem + 1rem});
+		min-block-size: calc(100vh - #{$navbar-height + 1.5rem + 1rem});
 	}
 
 	// FIXME: This should be somehow defined inside Card.vue
@@ -205,8 +205,8 @@ projectStore.loadAllProjects()
 	inset-block-end: 0;
 	inset-inline-start: 0;
 	inset-inline-end: 0;
-	height: 100vh;
-	width: 100vw;
+	block-size: 100vh;
+	inline-size: 100vw;
 	background: hsla(var(--grey-100-hsl), 0.8);
 	z-index: 5;
 	opacity: 0;

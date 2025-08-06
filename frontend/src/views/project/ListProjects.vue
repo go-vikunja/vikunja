@@ -81,7 +81,7 @@ const projects = computed(() => {
 	gap: 1rem;
 
 	@media screen and (max-width: $tablet) {
-		width: 100%;
+		inline-size: 100%;
 		flex-direction: column;
 		align-items: stretch;
 	}

@@ -72,10 +72,10 @@ const isFullWidth = computed(() => {
 }
 
 .logo {
-	max-width: 300px;
-	width: 90%;
+	max-inline-size: 300px;
+	inline-size: 90%;
 	margin: 1rem auto 2rem;
-	height: 100px;
+	block-size: 100px;
 }
 
 .title {
@@ -83,14 +83,14 @@ const isFullWidth = computed(() => {
 }
 
 .link-share-view {
-	width: 100%;
-	max-width: $desktop;
+	inline-size: 100%;
+	max-inline-size: $desktop;
 	margin: 0 auto;
 }
 
 .link-share-container.link-share-is-fullwidth {
 	.link-share-view {
-		max-width: 100vw;
+		max-inline-size: 100vw;
 	}
 }
 

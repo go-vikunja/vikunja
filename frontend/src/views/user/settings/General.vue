@@ -540,11 +540,11 @@ async function updateSettings() {
 
 <style scoped>
 .select select {
-	width: 100%;
+	inline-size: 100%;
 }
 
 .timezone-select {
-	min-width: 200px;
+	min-inline-size: 200px;
 	flex-grow: 1;
 }
 
@@ -571,7 +571,7 @@ async function updateSettings() {
 
 .sticky-save {
 	position: sticky;
-	bottom: 0;
+	inset-block-end: 0;
 	padding: .25rem 1rem 1rem;
 }
 </style>

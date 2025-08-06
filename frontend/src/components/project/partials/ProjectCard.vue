@@ -123,7 +123,7 @@ const textOnlyDescription = computed(() => {
 
 .is-archived {
 	font-size: .75rem;
-	float: left;
+	float: inline-start;
 }
 
 .project-title {
@@ -133,9 +133,9 @@ const textOnlyDescription = computed(() => {
 	font-size: 1.5rem;
 	line-height: var(--title-line-height);
 	color: var(--text);
-	width: 100%;
+	inline-size: 100%;
 	margin-block-end: 0;
-	max-height: calc(100% - (var(--project-card-padding) + 1rem)); // padding & height of the "is archived" badge
+	max-block-size: calc(100% - (var(--project-card-padding) + 1rem)); // padding & height of the "is archived" badge
 	overflow: hidden;
 	text-overflow: ellipsis;
 	word-break: break-word;

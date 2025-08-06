@@ -458,8 +458,8 @@ function getCommentUrl(commentId: string) {
 	img {
 		@media screen and (max-width: $tablet) {
 			display: block;
-			width: 20px;
-			height: 20px;
+			inline-size: 20px;
+			block-size: 20px;
 			padding-inline-end: 0;
 			margin-inline-end: .5rem;
 		}
@@ -494,7 +494,7 @@ function getCommentUrl(commentId: string) {
 }
 
 .media-content {
-	width: calc(100% - 48px - 2rem);
+	inline-size: calc(100% - 48px - 2rem);
 }
 
 .comments-container {

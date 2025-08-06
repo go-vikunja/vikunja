@@ -147,15 +147,15 @@ function reset() {
 		border: none;
 	}
 
-	$PICKER_SIZE: 24px;
-	$BORDER_WIDTH: 1px;
+	$picker-size: 24px;
+	$border-width: 1px;
 	.picker {
 		display: grid;
-		width: $PICKER_SIZE;
-		height: $PICKER_SIZE;
+		inline-size: $picker-size;
+		block-size: $picker-size;
 		overflow: hidden;
 		border-radius: 100%;
-		border: $BORDER_WIDTH solid var(--grey-300);
+		border: $border-width solid var(--grey-300);
 		box-shadow: $shadow;
 
 		& > * {
@@ -166,8 +166,8 @@ function reset() {
 
 	input.picker__input {
 		padding: 0;
-		width: $PICKER_SIZE - 2 * $BORDER_WIDTH;
-		height: $PICKER_SIZE - 2 * $BORDER_WIDTH;
+		inline-size: $picker-size - 2 * $border-width;
+		block-size: $picker-size - 2 * $border-width;
 	}
 
 	.picker__input.is-empty {

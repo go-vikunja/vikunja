@@ -53,7 +53,7 @@ const shouldShowMessage = computed(() => {
 	z-index: 5000;
 	inset-block-end: 1rem;
 	inset-inline: 1rem;
-	max-width: max-content;
+	max-inline-size: max-content;
 	margin-inline: auto;
 
 	display: flex;

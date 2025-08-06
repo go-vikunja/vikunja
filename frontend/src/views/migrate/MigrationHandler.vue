@@ -238,7 +238,7 @@ async function migrate() {
 
 <style lang="scss" scoped>
 .migration-in-progress-container {
-	max-width: 400px;
+	max-inline-size: 400px;
 	margin: 4rem auto 0;
 	text-align: center;
 }
@@ -246,7 +246,7 @@ async function migrate() {
 .migration-in-progress {
 	text-align: center;
 	display: flex;
-	max-width: 400px;
+	max-inline-size: 400px;
 	justify-content: space-between;
 	align-items: center;
 	margin-block-end: 2rem;
@@ -254,20 +254,20 @@ async function migrate() {
 
 .logo {
 	display: block;
-	max-height: 100px;
-	max-width: 100px;
+	max-block-size: 100px;
+	max-inline-size: 100px;
 }
 
 .progress-dots {
-	height: 40px;
-	width: 140px;
+	block-size: 40px;
+	inline-size: 140px;
 	overflow: visible;
 
 	span {
 		transition: all 500ms ease;
 		background: var(--grey-500);
-		height: 10px;
-		width: 10px;
+		block-size: 10px;
+		inline-size: 10px;
 		display: inline-block;
 		border-radius: 10px;
 		animation: wave 2s ease infinite;

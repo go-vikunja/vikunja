@@ -68,9 +68,9 @@ async function createTask() {
 
 <style scoped lang="scss">
 .add-new-task {
-	padding: 1rem .7rem .4rem .7rem;
+	padding: 1rem .7rem .4rem;
 	display: flex;
-	max-width: 450px;
+	max-inline-size: 450px;
 
 	.input {
 		margin-inline-end: .7rem;

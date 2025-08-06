@@ -132,19 +132,19 @@ $modal-width: 1024px;
 	z-index: 4000;
 	inset-block-start: 0;
 	inset-inline-start: 0;
-	width: 100%;
-	height: 100%;
+	inline-size: 100%;
+	block-size: 100%;
 	background-color: rgba(0, 0, 0, .8);
 	transition: opacity 150ms ease;
-	color: #fff;
+	color: #ffffff;
 }
 
 .modal-container {
 	transition: all 150ms ease;
 	position: relative;
-	width: 100%;
-	height: 100%;
-	max-height: 100vh;
+	inline-size: 100%;
+	block-size: 100%;
+	max-block-size: 100vh;
 	overflow: auto;
 }
 
@@ -153,8 +153,8 @@ $modal-width: 1024px;
 	text-align: center;
 	position: absolute;
 	// fine to use top/left since we're only using this to position it centered
-	top: 50%;
-	left: 50%;
+	inset-block-start: 50%;
+	inset-inline-start: 50%;
 	transform: translate(-50%, -50%);
 
 	@media screen and (max-width: $tablet) {
@@ -176,20 +176,20 @@ $modal-width: 1024px;
 // scrolling-content
 // used e.g. for <TaskDetailViewModal>
 .scrolling .modal-content {
-	width: 100%;
+	inline-size: 100%;
 	margin: $modal-margin auto;
 
-	max-height: none; // reset bulma
+	max-block-size: none; // reset bulma
 	overflow: visible; // reset bulma
 	
 	@media not print {
-		max-width: $modal-width;
+		max-inline-size: $modal-width;
 	}
 
 	@media screen and (min-width: $tablet) {
-		max-height: none; // reset bulma
+		max-block-size: none; // reset bulma
 		margin: $modal-margin auto; // reset bulma
-		width: 100%;
+		inline-size: 100%;
 	}
 
 	@media screen and (max-width: $desktop), print {
@@ -198,8 +198,8 @@ $modal-width: 1024px;
 }
 
 .is-wide {
-	max-width: $desktop;
-	width: calc(100% - 2rem);
+	max-inline-size: $desktop;
+	inline-size: calc(100% - 2rem);
 }
 
 .hint-modal {
@@ -222,7 +222,7 @@ $modal-width: 1024px;
 	color: var(--white);
 	font-size: 2rem;
 
-	@media screen and (min-width: $desktop) and (max-width: calc(#{$desktop	} + #{$close-button-min-space})) {
+	@media screen and (min-width: $desktop) and (width <= calc(#{$desktop	} + #{$close-button-min-space})) {
 		inset-block-start: calc(5px + $modal-margin);
 		inset-inline-end: 50%;
 		// we align the close button to the modal until there is enough space outside for it
@@ -240,13 +240,13 @@ $modal-width: 1024px;
   }
 
   .modal-container {
-    height: auto;
-	min-height: 100vh;
+    block-size: auto;
+	min-block-size: 100vh;
   }
 
   .modal-content {
     position: static;
-	max-height: none;
+	max-block-size: none;
   }
 
   .close {
@@ -256,7 +256,7 @@ $modal-width: 1024px;
   :deep(.card) {
 	border: none !important; 
 	border-radius: 0 !important;
-	min-height: 100vh;
+	min-block-size: 100vh;
 	display: flex;
 	flex-direction: column;
 	justify-content: space-between;
@@ -269,7 +269,7 @@ $modal-width: 1024px;
 	flex-direction: column;
 	justify-content: center;
 	padding: 0 1rem;
-	min-height: 100vh
+	min-block-size: 100vh
 }
 
 .modal-content :deep(.card .card-header-icon.close) {

@@ -128,19 +128,19 @@ function close() {
 .datepicker-popup {
 	position: absolute;
 	z-index: 99;
-	width: 320px;
+	inline-size: 320px;
 	background: var(--white);
 	border-radius: $radius;
 	box-shadow: $shadow;
 
 	@media screen and (max-width: ($tablet)) {
-		width: calc(100vw - 5rem);
+		inline-size: calc(100vw - 5rem);
 	}
 }
 
 .datepicker__close-button {
 	margin: 1rem;
-	width: calc(100% - 2rem);
+	inline-size: calc(100% - 2rem);
 }
 
 :deep(.flatpickr-calendar) {

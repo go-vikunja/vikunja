@@ -222,8 +222,8 @@ function getWeekdayFromStringInterval(dateString: string) {
 	display: flex;
 	align-items: center;
 	padding: 0 .5rem;
-	width: 100%;
-	height: 2.25rem;
+	inline-size: 100%;
+	block-size: 2.25rem;
 	color: var(--text);
 	transition: all $transition;
 
@@ -236,7 +236,7 @@ function getWeekdayFromStringInterval(dateString: string) {
 	}
 
 	.text {
-		width: 100%;
+		inline-size: 100%;
 		font-size: .85rem;
 		display: flex;
 		justify-content: space-between;
@@ -249,7 +249,7 @@ function getWeekdayFromStringInterval(dateString: string) {
 	}
 
 	.icon {
-		width: 2rem;
+		inline-size: 2rem;
 		text-align: center;
 	}
 }

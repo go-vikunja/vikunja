@@ -289,13 +289,13 @@ async function setCoverImage(attachment: IAttachment | null) {
 
 <style lang="scss" scoped>
 .attachments {
-	input[type=file] {
+	input[type="file"] {
 		display: none;
 	}
 
 	@media screen and (max-width: $tablet) {
 		.button {
-			width: 100%;
+			inline-size: 100%;
 		}
 	}
 }
@@ -308,7 +308,7 @@ async function setCoverImage(attachment: IAttachment | null) {
 	display: grid;
 	grid-template-columns: 9rem 1fr;
 	align-items: center;
-	width: 100%;
+	inline-size: 100%;
 	
 	padding: .5rem;
 	
@@ -327,7 +327,7 @@ async function setCoverImage(attachment: IAttachment | null) {
 	display: flex;
 	align-items: center;
 	font-weight: bold;
-	height: 2rem;
+	block-size: 2rem;
 	color: var(--text);
 	text-align: start;
 }
@@ -355,7 +355,7 @@ async function setCoverImage(attachment: IAttachment | null) {
 	inset-block-start: 0;
 	inset-inline-start: 0;
 	inset-block-end: 0;
-	right: 0;
+	inset-inline-end: 0;
 	z-index: 4001; // modal z-index is 4000
 	text-align: center;
 
@@ -371,9 +371,9 @@ async function setCoverImage(attachment: IAttachment | null) {
 	inset-inline-end: 0;
 
 	.icon {
-		width: 100%;
+		inline-size: 100%;
 		font-size: 5rem;
-		height: auto;
+		block-size: auto;
 		text-shadow: var(--shadow-md);
 		animation: bounce 2s infinite;
 
@@ -389,8 +389,8 @@ async function setCoverImage(attachment: IAttachment | null) {
 		background: var(--primary);
 		padding: 1rem;
 		color: $white; // Should always be white because of the background, regardless of the theme
-		width: 100%;
-		max-width: 300px;
+		inline-size: 100%;
+		max-inline-size: 300px;
 	}
 }
 
@@ -435,11 +435,11 @@ async function setCoverImage(attachment: IAttachment | null) {
 }
 
 @keyframes bounce {
-	from,
+	0%,
 	20%,
 	53%,
 	80%,
-	to {
+	100% {
 		animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
 		transform: translate3d(0, 0, 0);
 	}
@@ -461,12 +461,12 @@ async function setCoverImage(attachment: IAttachment | null) {
 }
 
 .preview-column {
-	max-width: 8rem;
-	height: 5.2rem;
+	max-inline-size: 8rem;
+	block-size: 5.2rem;
 }
 
 .attachment-preview {
-	height: 100%;
+	block-size: 100%;
 }
 
 .is-task-cover {

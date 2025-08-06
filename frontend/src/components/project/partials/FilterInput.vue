@@ -374,7 +374,7 @@ const blurDebounced = useDebounceFn(() => emit('blur'), 500)
 		border-radius: $radius;
 		position: absolute;
 		margin-block-start: calc((0.25em - 0.125rem) * -1);
-		height: 1.75rem;
+		block-size: 1.75rem;
 		padding: 0;
 		border: 0;
 		background: transparent;
@@ -393,11 +393,9 @@ const blurDebounced = useDebounceFn(() => emit('blur'), 500)
 		position: absolute;
 		background: transparent !important;
 		resize: none;
-		text-fill-color: transparent;
 		-webkit-text-fill-color: transparent;
 
 		&::placeholder {
-			text-fill-color: var(--input-placeholder-color);
 			-webkit-text-fill-color: var(--input-placeholder-color);
 		}
 
@@ -408,7 +406,7 @@ const blurDebounced = useDebounceFn(() => emit('blur'), 500)
 
 	.filter-input-highlight {
 		background: var(--white);
-		height: 2.5em;
+		block-size: 2.5em;
 		line-height: 1.5;
 		padding: .5em .75em;
 		word-break: break-word;

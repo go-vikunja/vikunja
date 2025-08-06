@@ -268,19 +268,19 @@ async function removeBackground() {
 }
 
 .image-search__image-button {
-	width: 100%;
+	inline-size: 100%;
 }
 
 .image-search__image {
-	width: 100%;
-	height: 100%;
+	inline-size: 100%;
+	block-size: 100%;
 	object-fit: cover;
 }
 
 .image-search__info {
 	position: absolute;
-	bottom: 0;
-	width: 100%;
+	inset-block-end: 0;
+	inline-size: 100%;
 	padding: .25rem 0;
 	opacity: 0;
 	text-align: center;
@@ -297,6 +297,6 @@ async function removeBackground() {
 .is-load-more-button {
 	margin: 1rem auto 0 !important;
 	display: block;
-	width: 200px;
+	inline-size: 200px;
 }
 </style>

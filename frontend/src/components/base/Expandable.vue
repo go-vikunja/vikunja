@@ -168,14 +168,14 @@ $ease-in-out-quint: cubic-bezier(0.83, 0, 0.17, 1);
       v-bind(computedBackgroundColor)
     );
     position: absolute;
-    height: 40px;
-    width: 100%;
+    block-size: 40px;
+    inline-size: 100%;
     inset-block-end: 0;
   }
 }
 
 .expandable-initial-height--expanded {
-  height: 100% !important;
+  block-size: 100% !important;
 
   &::after {
     display: none;
