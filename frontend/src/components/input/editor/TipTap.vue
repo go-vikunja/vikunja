@@ -747,7 +747,7 @@ watch(
 	border-radius: $radius;
 	
 	&.tiptap__editor-is-edit-enabled {
-		min-height: 10rem;
+		min-block-size: 10rem;
 
 		.ProseMirror {
 			padding: .5rem;
@@ -767,8 +767,8 @@ watch(
 	content: attr(data-placeholder);
 	color: var(--grey-400);
 	pointer-events: none;
-	height: 0;
-	float: left;
+	block-size: 0;
+	float: inline-start;
 }
 
 // Basic editor styles
@@ -806,7 +806,7 @@ watch(
 	pre {
 		background: var(--grey-200);
 		color: var(--grey-700);
-		font-family: 'JetBrainsMono', monospace;
+		font-family: JetBrainsMono, monospace;
 		padding: 0.75rem 1rem;
 		border-radius: $radius;
 
@@ -829,7 +829,6 @@ watch(
 		.hljs-name,
 		.hljs-regexp,
 		.hljs-link,
-		.hljs-name,
 		.hljs-selector-id,
 		.hljs-selector-class {
 			color: var(--code-variable);
@@ -871,8 +870,8 @@ watch(
 	}
 
 	img {
-		max-width: 100%;
-		height: auto;
+		max-inline-size: 100%;
+		block-size: auto;
 
 		&.ProseMirror-selectednode {
 			outline: 3px solid var(--primary);
@@ -889,21 +888,18 @@ watch(
 		border-block-start: 2px solid rgba(#0d0d0d, 0.1);
 		margin: 2rem 0;
 	}
-}
-
-.ProseMirror {
-	/* Table-specific styling */
-
+	
+	// Table-specific styling
 	table {
 		border-collapse: collapse;
 		table-layout: fixed;
-		width: 100%;
+		inline-size: 100%;
 		margin: 0;
 		overflow: hidden;
 
 		td,
 		th {
-			min-width: 1em;
+			min-inline-size: 1em;
 			border: 2px solid var(--grey-300) !important;
 			padding: 3px 5px;
 			vertical-align: top;
@@ -938,8 +934,8 @@ watch(
 			inset-inline-end: -2px;
 			inset-block-start: 0;
 			inset-block-end: -2px;
-			width: 4px;
-			background-color: #adf;
+			inline-size: 4px;
+			background-color: #aaddff;
 			pointer-events: none;
 		}
 
@@ -1022,8 +1018,8 @@ ul[data-type='taskList'] {
 	svg {
 		box-sizing: border-box;
 		display: block;
-		width: 2rem;
-		height: 2rem;
+		inline-size: 2rem;
+		block-size: 2rem;
 		padding: .5rem;
 		margin: 0;
 	}

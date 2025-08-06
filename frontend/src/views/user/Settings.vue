@@ -131,11 +131,11 @@ const extraSettingsLinks = computed(() => authStore.settings.extraSettingsLinks)
 }
 
 .navigation {
-	width: 25%;
+	inline-size: 25%;
 	padding-inline-end: 1rem;
 
 	@media screen and (max-width: $tablet) {
-		width: 100%;
+		inline-size: 100%;
 		padding-inline-start: 0;
 	}
 }
@@ -144,7 +144,7 @@ const extraSettingsLinks = computed(() => authStore.settings.extraSettingsLinks)
 	display: block;
 	padding: .5rem;
 	color: var(--text);
-	width: 100%;
+	inline-size: 100%;
 	border-inline-start: 3px solid transparent;
 
 	&:hover,
@@ -155,10 +155,10 @@ const extraSettingsLinks = computed(() => authStore.settings.extraSettingsLinks)
 }
 
 .view {
-	width: 75%;
+	inline-size: 75%;
 
 	@media screen and (max-width: $tablet) {
-		width: 100%;
+		inline-size: 100%;
 		padding-inline-start: 0;
 		padding-block-start: 1rem;
 	}

@@ -273,6 +273,6 @@ function validateSelectedEvents() {
 <style lang="scss" scoped>
 .available-events-check {
 	margin-inline-end: .5rem;
-	width: 12.5rem;
+	inline-size: 12.5rem;
 }
 </style>

@@ -214,7 +214,7 @@ $user-dropdown-width-mobile: 5rem;
 
 	// this makes the truncated text of the project title work
 	// inside the flexbox parent
-	min-width: 0;
+	min-inline-size: 0;
 
 	@media screen and (min-width: $tablet) {
 		padding-inline: var(--navbar-gap-width);
@@ -243,7 +243,7 @@ $user-dropdown-width-mobile: 5rem;
 
 .project-title-button {
 	align-self: stretch;
-	min-width: var(--navbar-button-min-width);
+	min-inline-size: var(--navbar-button-min-width);
 	display: flex;
 	place-items: center;
 	justify-content: center;
@@ -252,14 +252,14 @@ $user-dropdown-width-mobile: 5rem;
 }
 
 .navbar-end {
-	margin-left: 0; // overrides bulma core styles
+	margin-inline-start: 0; // overrides bulma core styles
 	margin-inline-start: auto;
 	flex: 0 0 auto;
 	display: flex;
 	align-items: stretch;
 
 	>* {
-		min-width: var(--navbar-button-min-width);
+		min-inline-size: var(--navbar-button-min-width);
 	}
 }
 
@@ -303,7 +303,7 @@ $user-dropdown-width-mobile: 5rem;
 .avatar {
 	border-radius: 100%;
 	vertical-align: middle;
-	height: 40px;
+	block-size: 40px;
 	margin-inline-end: .5rem;
 }
 </style>

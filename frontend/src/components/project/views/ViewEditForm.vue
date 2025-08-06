@@ -317,7 +317,7 @@ function handleBubbleSave() {
 		padding: .5rem;
 		border: 1px solid var(--grey-200);
 		border-radius: $radius;
-		width: 100%;
+		inline-size: 100%;
 	}
 }
 </style>

@@ -640,7 +640,7 @@ function reset() {
 
 .results {
 	text-align: start;
-	width: 100%;
+	inline-size: 100%;
 	color: var(--grey-800);
 }
 
@@ -653,7 +653,7 @@ function reset() {
 
 .result-item-button {
 	font-size: .9rem;
-	width: 100%;
+	inline-size: 100%;
 	background: transparent;
 	color: var(--grey-800);
 	text-align: start;
@@ -678,7 +678,7 @@ function reset() {
 	
 	.saved-filter-icon {
 		font-size: .75rem;
-		width: .75rem;
+		inline-size: .75rem;
 		margin-inline-end: .25rem;
 		color: var(--grey-400)
 	}

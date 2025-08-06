@@ -160,18 +160,18 @@ const savedFilterProjects = computed(() => projectStore.savedFilterProjects)
 	inset-block-end: 0;
 	inset-inline-start: 0;
 	transform: translateX(-100%);
-	width: $navbar-width;
+	inline-size: $navbar-width;
 	overflow-y: auto;
 
 	[dir="rtl"] & {
 		inset-inline-start: auto;
-		right: 0;
+		inset-inline-end: 0;
 		transform: translateX(100%);
 	}
 
 	@media screen and (max-width: $tablet) {
 		inset-block-start: 0;
-		width: 70vw;
+		inline-size: 70vw;
 		z-index: 20;
 	}
 

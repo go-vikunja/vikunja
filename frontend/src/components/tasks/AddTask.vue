@@ -297,7 +297,7 @@ defineExpose({
 
 	.control {
 		flex-shrink: 0;
-		margin-bottom: 0;
+		margin-block-end: 0;
 	}
 }
 
@@ -330,7 +330,7 @@ defineExpose({
 }
 
 .add-task-button {
-	height: 100% !important;
+	block-size: 100% !important;
 
 	@media screen and (max-width: $tablet) {
 		.button-text {

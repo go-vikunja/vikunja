@@ -265,11 +265,11 @@ function translateUnit(amount: number, unit: PeriodUnit): string {
 }
 
 .reminder-options-popup {
-	width: 310px;
+	inline-size: 310px;
 	z-index: 99;
 
 	@media screen and (max-width: ($tablet)) {
-		width: calc(100vw - 5rem);
+		inline-size: calc(100vw - 5rem);
 	}
 
 	.option-button {
@@ -286,7 +286,7 @@ function translateUnit(amount: number, unit: PeriodUnit): string {
 
 .reminder__close-button {
 	margin: .5rem;
-	width: calc(100% - 1rem);
+	inline-size: calc(100% - 1rem);
 }
 
 .currently-active {

@@ -157,11 +157,11 @@ async function cancel(element: HTMLInputElement) {
 
 .title.input {
 	// 1.8rem is the font-size, 1.125 is the line-height, .3rem padding everywhere, 1px border around the whole thing.
-	min-height: calc(1.8rem * 1.125 + .6rem + 2px);
+	min-block-size: calc(1.8rem * 1.125 + .6rem + 2px);
 	margin-inline-end: 0;
 
 	@media screen and (max-width: $tablet) {
-		margin: 0 -.3rem .5rem -.3rem; // the title has 0.3rem padding - this make the text inside of it align with the rest
+		margin: 0 -.3rem .5rem; // the title has 0.3rem padding - this make the text inside of it align with the rest
 	}
 }
 
@@ -171,8 +171,8 @@ async function cancel(element: HTMLInputElement) {
 }
 
 .color-bubble {
-	height: .75rem;
-	width: .75rem;
+	block-size: .75rem;
+	inline-size: .75rem;
 }
 
 .close {

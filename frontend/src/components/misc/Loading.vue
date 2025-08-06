@@ -15,24 +15,24 @@ withDefaults(defineProps<{
 
 <style scoped lang="scss">
 .loader-container {
-	height: 100%;
-	min-height: 200px;
-	width: 100%;
-	min-width: 600px;
-	max-width: 100vw;
+	block-size: 100%;
+	min-block-size: 200px;
+	inline-size: 100%;
+	min-inline-size: 600px;
+	max-inline-size: 100vw;
 
 	&.is-loading-small {
-		min-height: 50px;
-		min-width: 100px;
+		min-block-size: 50px;
+		min-inline-size: 100px;
 	}
 
 	&.is-small {
-		min-width: 100%;
-		height: 150px;
+		min-inline-size: 100%;
+		block-size: 150px;
 
 		&.is-loading::after {
-			width: 3rem;
-			height: 3rem;
+			inline-size: 3rem;
+			block-size: 3rem;
 			inset-block-start: calc(50% - 1.5rem);
 			inset-inline-start: calc(50% - 1.5rem);
 			border-width: 3px;

@@ -166,6 +166,6 @@ p {
 }
 
 .input {
-	min-width: 2rem;
+	min-inline-size: 2rem;
 }
 </style>

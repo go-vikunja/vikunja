@@ -135,14 +135,14 @@ async function updateDueDate() {
 $defer-task-max-width: 350px + 100px;
 
 .defer-task {
-	width: 100%;
-	max-width: $defer-task-max-width;
+	inline-size: 100%;
+	max-inline-size: $defer-task-max-width;
 
 	@media screen and (max-width: ($defer-task-max-width)) {
 		inset-inline-start: .5rem;
 		inset-inline-end: .5rem;
-		max-width: 100%;
-		width: calc(100vw - 1rem - 2rem);
+		max-inline-size: 100%;
+		inline-size: calc(100vw - 1rem - 2rem);
 	}
 }
 
@@ -162,11 +162,11 @@ $defer-task-max-width: 350px + 100px;
 		box-shadow: none;
 
 		@media screen and (max-width: ($defer-task-max-width)) {
-			max-width: 100%;
+			max-inline-size: 100%;
 		}
 
 		span {
-			width: auto !important;
+			inline-size: auto !important;
 		}
 
 	}

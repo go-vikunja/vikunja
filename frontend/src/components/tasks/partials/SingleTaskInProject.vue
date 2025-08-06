@@ -438,7 +438,7 @@ defineExpose({
 	}
 
 	.task-project {
-		width: auto;
+		inline-size: auto;
 		color: var(--grey-400);
 		font-size: .9rem;
 		white-space: nowrap;
@@ -448,8 +448,8 @@ defineExpose({
 		border-radius: 50%;
 		vertical-align: bottom;
 		margin-inline-start: 5px;
-		height: 27px;
-		width: 27px;
+		block-size: 27px;
+		inline-size: 27px;
 	}
 
 	.project-task-icon {
@@ -473,7 +473,7 @@ defineExpose({
 	.favorite {
 		opacity: 1;
 		text-align: center;
-		width: 27px;
+		inline-size: 27px;
 		transition: opacity $transition, color $transition;
 		border-radius: $radius;
 
@@ -502,7 +502,7 @@ defineExpose({
 	}
 
 	:deep(.fancy-checkbox) {
-		height: 18px;
+		block-size: 18px;
 		padding-block-start: 0;
 		padding-inline-end: .5rem;
 
@@ -518,7 +518,7 @@ defineExpose({
 
 	span.parent-tasks {
 		color: var(--grey-500);
-		width: auto;
+		inline-size: auto;
 	}
 
 	.show-project .parent-tasks {
@@ -534,16 +534,16 @@ defineExpose({
 	}
 
 	.settings {
-		float: right;
-		width: 24px;
+		float: inline-end;
+		inline-size: 24px;
 		cursor: pointer;
 	}
 
 	&.loader-container.is-loading:after {
 		inset-block-start: calc(50% - 1rem);
 		inset-inline-start: calc(50% - 1rem);
-		width: 2rem;
-		height: 2rem;
+		inline-size: 2rem;
+		block-size: 2rem;
 		border-inline-start-color: var(--grey-300);
 		border-block-end-color: var(--grey-300);
 	}

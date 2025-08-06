@@ -61,7 +61,7 @@ function refreshApp() {
 	z-index: 5000;
 	inset-block-end: 1rem;
 	inset-inline: 1rem;
-	max-width: max-content;
+	max-inline-size: max-content;
 	margin-inline: auto;
 
 	display: flex;
@@ -76,7 +76,7 @@ function refreshApp() {
 }
 
 .update-notification__message {
-	width: 100%;
+	inline-size: 100%;
 	text-align: center;
 }
 </style>

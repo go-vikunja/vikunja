@@ -53,7 +53,7 @@ const minimumPriority = computed(() => {
 <style lang="scss" scoped>
 .high-priority {
 	color: var(--danger);
-	width: auto !important; // To override the width set in tasks
+	inline-size: auto !important; // To override the width set in tasks
 }
 
 .not-so-high {
@@ -66,7 +66,7 @@ const minimumPriority = computed(() => {
 
 .icon {
 	vertical-align: top;
-	width: auto !important;
+	inline-size: auto !important;
 	padding-inline-end: .5rem;
 }
 </style>

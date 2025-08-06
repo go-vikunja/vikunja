@@ -92,7 +92,7 @@ onClickOutside(dropdown, (e) => {
 }
 
 .dropdown-menu {
-	min-width: 12rem;
+	min-inline-size: 12rem;
 	padding-block-start: 4px;
 	position: absolute;
 	inset-block-start: 100%;
@@ -114,7 +114,7 @@ onClickOutside(dropdown, (e) => {
 	background-color: var(--border-light);
 	border: none;
 	display: block;
-	height: 1px;
+	block-size: 1px;
 	margin: 0.5rem 0;
 }
 </style>

@@ -73,12 +73,14 @@ const baseStore = useBaseStore()
 </script>
 
 <style lang="scss" scoped>
+// stylelint-disable no-invalid-position-declaration
+
 .vikunja-loading {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	height: 100vh;
-	width: 100vw;
+	block-size: 100vh;
+	inline-size: 100vw;
 	flex-direction: column;
 	position: fixed;
 	inset-block-start: 0;
@@ -91,8 +93,8 @@ const baseStore = useBaseStore()
 
 .logo {
 	margin-block-end: 1rem;
-	width: 100px;
-	height: 100px;
+	inline-size: 100px;
+	block-size: 100px;
 }
 
 .loader-container {
@@ -107,21 +109,19 @@ const baseStore = useBaseStore()
 .offline {
 	background: url('@/assets/llama-nightscape.jpg') no-repeat center;
 	background-size: cover;
-	height: 100vh;
+	block-size: 100vh;
 }
 
 .offline-message {
 	text-align: center;
 	position: absolute;
-	width: 100vw;
+	inline-size: 100vw;
 	inset-block-end: 5vh;
 	color: $white;
 	padding: 0 1rem;
 }
 
 .title {
-	font-weight: bold;
-	font-size: 1.5rem;
 	text-align: center;
 	color: $white;
 	font-weight: 700 !important;

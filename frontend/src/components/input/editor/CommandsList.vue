@@ -110,7 +110,7 @@ export default {
 	display: flex;
 	align-items: center;
 	margin: 0;
-	width: 100%;
+	inline-size: 100%;
 	text-align: start;
 	background: transparent;
 	border-radius: $radius;
@@ -125,8 +125,8 @@ export default {
 	
 	> svg {
 		box-sizing: border-box;
-		width: 2rem;
-		height: 2rem;
+		inline-size: 2rem;
+		block-size: 2rem;
 		border: 1px solid var(--grey-300);
 		padding: .5rem;
 		margin-inline-end: .5rem;

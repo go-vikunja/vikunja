@@ -40,7 +40,7 @@ watchEffect(async () => {
 
 <style scoped lang="scss">
 img {
-	width: 100%;
+	inline-size: 100%;
 	border-radius: $radius;
 	object-fit: cover;
 }

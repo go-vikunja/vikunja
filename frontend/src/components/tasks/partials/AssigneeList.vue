@@ -87,8 +87,8 @@ defineEmits<{
 	display: block;
 	border-radius: 100%;
 	font-size: .75rem;
-	width: 18px;
-	height: 18px;
+	inline-size: 18px;
+	block-size: 18px;
 	z-index: 100;
 }
 </style>

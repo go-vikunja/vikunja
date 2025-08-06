@@ -171,7 +171,7 @@ function cropAvatar() {
 
 <style lang="scss">
 .cropper {
-	height: 80vh;
+	block-size: 80vh;
 	background: transparent;
 }
 

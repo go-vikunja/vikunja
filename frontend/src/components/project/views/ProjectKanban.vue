@@ -792,6 +792,7 @@ function unCollapseBucket(bucket: IBucket) {
     inset-block-start: 30%;
     inset-inline-end: 50%;
     transform: translate(-50%, 0);
+
 	--loader-border-color: var(--grey-500);
   }
 }
@@ -803,7 +804,6 @@ $ease-out: all .3s cubic-bezier(0.23, 1, 0.32, 1);
 $bucket-width: 300px;
 $bucket-header-height: 60px;
 $bucket-right-margin: 1rem;
-
 $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1rem - 1.5rem - 11px';
 $crazy-height-calculation-tasks: '#{$crazy-height-calculation} - 1rem - 2.5rem - 2rem - #{$button-height} - 1rem';
 $filter-container-height: '1rem - #{$switch-view-height}';
@@ -811,7 +811,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 .kanban {
 	overflow-x: auto;
 	overflow-y: hidden;
-	height: calc(#{$crazy-height-calculation});
+	block-size: calc(#{$crazy-height-calculation});
 	margin: 0 -1.5rem;
 	padding: 0 1.5rem;
 
@@ -820,7 +820,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 	}
 
 	@media screen and (max-width: $tablet) {
-		height: calc(#{$crazy-height-calculation} - #{$filter-container-height} + 9px);
+		block-size: calc(#{$crazy-height-calculation} - #{$filter-container-height} + 9px);
 		scroll-snap-type: x mandatory;
 		margin: 0 -0.5rem;
 	}
@@ -854,9 +854,9 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		position: relative;
 
 		margin: 0 $bucket-right-margin 0 0;
-		max-height: calc(100% - 1rem); // 1rem spacing to the bottom
-		min-height: 20px;
-		width: $bucket-width;
+		max-block-size: calc(100% - 1rem); // 1rem spacing to the bottom
+		min-block-size: 20px;
+		inline-size: $bucket-width;
 		display: flex;
 		flex-direction: column;
 		overflow: hidden; // Make sure the edges are always rounded
@@ -867,7 +867,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 
 		.tasks {
 			overflow: hidden auto;
-			height: 100%;
+			block-size: 100%;
 		}
 
 		.task-item {
@@ -898,12 +898,12 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 			// To make it still look like it has some, we modify the container to have a padding of 1rem,
 			// which is the same as the margin it should have. Then we make the container itself bigger
 			// to hide the fact we just made the button smaller.
-			min-width: calc(#{$bucket-width} + 1rem);
+			min-inline-size: calc(#{$bucket-width} + 1rem);
 			background: transparent;
 
 			.button {
 				background: var(--grey-100);
-				width: 100%;
+				inline-size: 100%;
 			}
 		}
 
@@ -923,12 +923,11 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 
 	.bucket-header {
 		background-color: var(--grey-100);
-		height: min-content;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		padding: .5rem;
-		height: $bucket-header-height;
+		block-size: $bucket-header-height;
 
 		.limit {
 			padding: 0 .5rem;
@@ -940,7 +939,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		}
 
 		.title.input {
-			height: auto;
+			block-size: auto;
 			padding: .4rem .5rem;
 			display: inline-block;
 			cursor: pointer;
@@ -954,11 +953,11 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 	.bucket-footer {
 		position: sticky;
 		inset-block-end: 0;
-		height: min-content;
+		block-size: min-content;
 		padding: .5rem;
 		background-color: var(--grey-100);
-		border-bottom-left-radius: $radius;
-		border-bottom-right-radius: $radius;
+		border-end-start-radius: $radius;
+		border-end-end-radius: $radius;
 		transform: none;
 
 		.button {

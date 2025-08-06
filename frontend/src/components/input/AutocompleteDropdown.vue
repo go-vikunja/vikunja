@@ -192,20 +192,18 @@ function onUpdateField(e) {
 		border: 1px solid var(--primary);
 		border-block-start: none;
 
-		max-height: 50vh;
+		max-block-size: 50vh;
 		overflow-x: auto;
 		z-index: 100;
-		max-width: 100%;
-		min-width: 100%;
+		max-inline-size: 100%;
+		min-inline-size: 100%;
 		margin-block-start: -2px;
 
 		button {
-			width: 100%;
 			background: transparent;
-			border: 0;
 
 			font-size: .9rem;
-			width: 100%;
+			inline-size: 100%;
 			color: var(--grey-800);
 			text-align: start;
 			box-shadow: none;

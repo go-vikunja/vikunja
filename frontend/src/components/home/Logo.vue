@@ -39,7 +39,7 @@ const CustomLogo = computed(() => window.CUSTOM_LOGO_URL)
 <style lang="scss" scoped>
 .logo {
 	color: var(--logo-text-color);
-	max-width: 168px;
-	max-height: 48px;
+	max-inline-size: 168px;
+	max-block-size: 48px;
 }
 </style>
