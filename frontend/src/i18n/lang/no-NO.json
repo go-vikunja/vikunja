@@ -67,7 +67,8 @@
 			"noAccountYet": "Har du ikke konto ennå?",
 			"alreadyHaveAnAccount": "Har du allerede en konto?",
 			"remember": "Hold meg innlogget",
-			"registrationDisabled": "Registrering er slått av."
+			"registrationDisabled": "Registrering er slått av.",
+			"passwordResetTokenMissing": "Plassholder for tilbakestilling av passord mangler."
 		},
 		"settings": {
 			"title": "Innstillinger",
@@ -101,7 +102,24 @@
 				"overdueTasksRemindersTime": "Påminnelsestid for utløpte oppgaver",
 				"filterUsedOnOverview": "Lagret filter brukt på siden med oversikt",
 				"minimumPriority": "Minimum synlig oppgaveprioritet",
+				"dateDisplay": "Datovisningsformat",
+				"dateDisplayOptions": {
+					"relative": "Relativ (f.eks. 3 dager siden)",
+					"mm-dd-yyyy": "MM-DD-ÅÅÅÅ",
+					"dd-mm-yyyy": "DD-MM-ÅÅÅÅ",
+					"yyyy-mm-dd": "ÅÅÅÅ-MM-DD",
+					"mm/dd/yyyy": "MM / DD / ÅÅÅÅ",
+					"dd/mm/yyyy": "DD / MM / ÅÅÅÅ",
+					"yyyy/mm/dd": "ÅÅÅÅ/MM/DD"
+				},
 				"externalUserNameChange": "Navnet ditt blir administrert av din innloggingsleverandør ({provider}). For å endre det, vennligst oppdater det hos leverandøren."
+			},
+			"sections": {
+				"personalInformation": "Personlig informasjon",
+				"taskAndNotifications": "Prosjekter & oppgaver",
+				"privacy": "Personvern",
+				"localization": "Språkoppsett",
+				"appearance": "Utseende og oppførsel"
 			},
 			"totp": {
 				"title": "To-faktor-autentisering",
@@ -122,7 +140,7 @@
 				"howTo": "Du kan koble Vikunja til CalDAV-klienter for å se og administrere alle oppgaver fra forskjellige kunder. Skriv inn denne Url'en til din klient:",
 				"more": "Mer informasjon om CalDAV i Vikunja",
 				"tokens": "CalDAV-plassholdere",
-				"tokensHowTo": "Du kan bruke et CalDAV token til å bruke istedet for passord for å logge på det ovennevnte endepunktet.",
+				"tokensHowTo": "Du kan bruke en CalDAV-plassholder til å bruke istedet for passord for å logge på det ovennevnte endepunktet.",
 				"createToken": "Opprett plassholder",
 				"tokenCreated": "Her er din plassholder: {token}",
 				"wontSeeItAgain": "Skriv den ned, du vil ikke kunne se den igjen.",
@@ -206,7 +224,9 @@
 			"descriptionPasswordRequired": "Skriv inn passordet for å fortsette:",
 			"request": "Be om kopi av mine Vikunja data",
 			"success": "Du har spurt om dine Vikunja data! Vi sender deg en e-post når den er klar til å laste ned.",
-			"downloadTitle": "Last ned dine eksporterte Vikunja data"
+			"downloadTitle": "Last ned dine eksporterte Vikunja data",
+			"ready": "Eksporten din er klar til å lastes ned. Du kan laste den ned til {0}.",
+			"requestNew": "Be om en ny eksport"
 		}
 	},
 	"project": {
@@ -1052,6 +1072,7 @@
 			"delete": "Slett denne oppgaven",
 			"priority": "Endre prioritet på denne oppgaven",
 			"favorite": "Marker denne oppgaven som favoritt/ikke favoritt",
+			"openProject": "Åpne prosjektet til denne oppgaven",
 			"save": "Lagre gjeldende oppgave"
 		},
 		"project": {
@@ -1068,6 +1089,12 @@
 			"labels": "Gå til etiketter",
 			"teams": "Gå til til grupper",
 			"projects": "Gå til prosjekter"
+		},
+		"list": {
+			"title": "Oppgaveliste",
+			"navigateDown": "Uthev neste oppgave",
+			"navigateUp": "Uthev forrige oppgave",
+			"open": "Åpne uthevet oppgave"
 		}
 	},
 	"update": {
@@ -1229,7 +1256,9 @@
 	},
 	"about": {
 		"title": "Om",
-		"version": "Versjon: {version}"
+		"version": "Versjon: {version}",
+		"frontendVersion": "Frontend versjon: {version}",
+		"apiVersion": "API versjon: {version}"
 	},
 	"time": {
 		"units": {
