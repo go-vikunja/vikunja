@@ -282,19 +282,19 @@ importers:
         specifier: 2.0.13
         version: 2.0.13
       stylelint:
-        specifier: ^16.23.0
+        specifier: 16.23.0
         version: 16.23.0(typescript@5.9.2)
       stylelint-config-property-sort-order-smacss:
-        specifier: ^10.0.0
+        specifier: 10.0.0
         version: 10.0.0(stylelint@16.23.0(typescript@5.9.2))
       stylelint-config-recommended-vue:
-        specifier: ^1.6.1
+        specifier: 1.6.1
         version: 1.6.1(postcss-html@1.8.0)(stylelint@16.23.0(typescript@5.9.2))
       stylelint-config-standard-scss:
-        specifier: ^15.0.1
+        specifier: 15.0.1
         version: 15.0.1(postcss@8.5.6)(stylelint@16.23.0(typescript@5.9.2))
       stylelint-use-logical:
-        specifier: ^2.1.2
+        specifier: 2.1.2
         version: 2.1.2(stylelint@16.23.0(typescript@5.9.2))
       typescript:
         specifier: 5.9.2
@@ -9194,7 +9194,7 @@ snapshots:
       '@typescript-eslint/visitor-keys': 8.35.1
       eslint: 9.32.0(jiti@2.4.2)
       graphemer: 1.4.0
-      ignore: 7.0.3
+      ignore: 7.0.5
       natural-compare: 1.4.0
       ts-api-utils: 2.1.0(typescript@5.9.2)
       typescript: 5.9.2
