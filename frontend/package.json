@@ -60,7 +60,7 @@
     "@intlify/unplugin-vue-i18n": "6.0.8",
     "@kyvg/vue3-notification": "3.4.1",
     "@sentry/tracing": "7.120.4",
-    "@sentry/vue": "10.2.0",
+    "@sentry/vue": "10.3.0",
     "@tiptap/core": "3.0.9",
     "@tiptap/extension-code-block-lowlight": "3.0.9",
     "@tiptap/extension-hard-break": "3.0.9",
