@@ -72,7 +72,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, toRefs} from 'vue'
+import {computed, ref, toRefs, markRaw} from 'vue'
 import type Flatpickr from 'flatpickr'
 import {useI18n} from 'vue-i18n'
 import type {RouteLocationNormalized} from 'vue-router'
@@ -155,14 +155,14 @@ const flatPickerDateRange = computed<Date[]>({
 const initialDateRange = [filters.value.dateFrom, filters.value.dateTo]
 
 const {t} = useI18n({useScope: 'global'})
-const flatPickerConfig = computed(() => ({
+const flatPickerConfig = computed(() => markRaw<Options>({
 	altFormat: t('date.altFormatShort'),
 	altInput: true,
 	defaultDate: initialDateRange,
 	enableTime: false,
 	mode: 'range',
 	locale: useFlatpickrLanguage().value,
-} as Options))
+}))
 </script>
 
 <style lang="scss" scoped>
