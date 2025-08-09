@@ -574,7 +574,7 @@ func upsertRelatedTaskProperties(s *xorm.Session, logPrefix string, newTaskBucke
 			taskMap[t.ID] = t
 		}
 
-		err = reindexTasksInTypesense(s, taskMap)
+		err = reindexTasksInTypesense(s, taskMap, nil)
 		if err != nil {
 			log.Errorf("%sError reindexing tasks into Typesense: %s", logPrefix, err)
 			return

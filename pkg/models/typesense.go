@@ -27,6 +27,8 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
 
+	"github.com/schollz/progressbar/v3"
+
 	"github.com/typesense/typesense-go/v2/typesense"
 	"github.com/typesense/typesense-go/v2/typesense/api"
 	"github.com/typesense/typesense-go/v2/typesense/api/pointer"
@@ -40,6 +42,9 @@ type TypesenseSync struct {
 }
 
 var typesenseClient *typesense.Client
+
+// dueDateSentinel represents "no due date" in the Typesense index
+const dueDateSentinel int64 = -1
 
 func InitTypesense() {
 	if !config.TypesenseEnabled.GetBool() {
@@ -83,7 +88,7 @@ func CreateTypesenseCollections() error {
 			{
 				Name:     "due_date",
 				Type:     "int64", // unix timestamp
-				Optional: pointer.True(),
+				Optional: pointer.False(),
 			},
 			{
 				Name: "project_id",
@@ -202,7 +207,7 @@ func CreateTypesenseCollections() error {
 	return err
 }
 
-func ReindexAllTasks() (err error) {
+func ReindexAllTasks(bar *progressbar.ProgressBar) (err error) {
 	s := db.NewSession()
 	defer s.Close()
 
@@ -231,7 +236,7 @@ func ReindexAllTasks() (err error) {
 		return fmt.Errorf("could not index dummy task: %w", err)
 	}
 
-	err = reindexTasksInTypesense(s, tasks)
+	err = reindexTasksInTypesense(s, tasks, bar)
 	if err != nil {
 		return fmt.Errorf("could not reindex all tasks: %s", err.Error())
 	}
@@ -244,10 +249,14 @@ func ReindexAllTasks() (err error) {
 		return fmt.Errorf("could update last sync state: %s", err.Error())
 	}
 
+	if bar != nil {
+		_ = bar.Finish()
+	}
+
 	return
 }
 
-func reindexTasksInTypesense(s *xorm.Session, tasks map[int64]*Task) (err error) {
+func reindexTasksInTypesense(s *xorm.Session, tasks map[int64]*Task, bar *progressbar.ProgressBar) (err error) {
 
 	if !config.TypesenseEnabled.GetBool() {
 		return
@@ -267,6 +276,9 @@ func reindexTasksInTypesense(s *xorm.Session, tasks map[int64]*Task) (err error)
 	}
 
 	typesenseTasks := []interface{}{}
+	if bar != nil {
+		bar.ChangeMax(len(tasks))
+	}
 
 	positionsByTask, err := getPositionsByTask(s)
 	if err != nil {
@@ -286,6 +298,9 @@ func reindexTasksInTypesense(s *xorm.Session, tasks map[int64]*Task) (err error)
 		}
 
 		typesenseTasks = append(typesenseTasks, ttask)
+		if bar != nil {
+			_ = bar.Add(1)
+		}
 	}
 
 	response, err := typesenseClient.Collection("tasks").
@@ -360,6 +375,7 @@ func indexDummyTask() (err error) {
 	dummyTask := &typesenseTask{
 		ID:      "-100",
 		Title:   "Dummytask",
+		DueDate: pointer.Int64(dueDateSentinel),
 		Created: time.Now().Unix(),
 		Updated: time.Now().Unix(),
 		Reminders: []*TaskReminder{
@@ -471,13 +487,18 @@ type typesenseTask struct {
 
 func convertTaskToTypesenseTask(task *Task, positions []*TaskPositionWithView, buckets []*TaskBucket) *typesenseTask {
 
+	secDue := dueDateSentinel
+	if !task.DueDate.IsZero() {
+		secDue = task.DueDate.UTC().Unix()
+	}
+
 	tt := &typesenseTask{
 		ID:                     fmt.Sprintf("%d", task.ID),
 		Title:                  task.Title,
 		Description:            task.Description,
 		Done:                   task.Done,
 		DoneAt:                 pointer.Int64(task.DoneAt.UTC().Unix()),
-		DueDate:                pointer.Int64(task.DueDate.UTC().Unix()),
+		DueDate:                pointer.Int64(secDue),
 		ProjectID:              task.ProjectID,
 		RepeatAfter:            task.RepeatAfter,
 		RepeatMode:             int(task.RepeatMode),
@@ -504,9 +525,6 @@ func convertTaskToTypesenseTask(task *Task, positions []*TaskPositionWithView, b
 
 	if task.DoneAt.IsZero() {
 		tt.DoneAt = nil
-	}
-	if task.DueDate.IsZero() {
-		tt.DueDate = nil
 	}
 	if task.StartDate.IsZero() {
 		tt.StartDate = nil
@@ -574,7 +592,7 @@ func SyncUpdatedTasksIntoTypesense() (err error) {
 	if len(tasks) > 0 {
 		log.Debugf("[Typesense Sync] Updating %d tasks", len(tasks))
 
-		err = reindexTasksInTypesense(s, tasks)
+		err = reindexTasksInTypesense(s, tasks, nil)
 		if err != nil {
 			_ = s.Rollback()
 			return
