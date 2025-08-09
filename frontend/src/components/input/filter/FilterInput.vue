@@ -100,6 +100,14 @@ const editor = useEditor({
 			addKeyboardShortcuts() {
 				return {
 					'Enter': () => {
+						const popup = document.getElementById('filter-autocomplete-popup')
+						const isAutocompleteVisible = popup && popup.style.display !== 'none'
+						
+						if (isAutocompleteVisible) {
+							// Let the autocomplete handle the Enter key
+							return false
+						}
+						
 						blurDebounced()
 						return true
 					},

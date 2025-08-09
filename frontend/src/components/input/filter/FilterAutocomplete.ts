@@ -224,6 +224,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 				popupElement.style.top = '0'
 				popupElement.style.left = '0'
 				popupElement.style.zIndex = '20000'
+				popupElement.id = 'filter-autocomplete-popup'
 				popupElement.appendChild(component.element!)
 				document.body.appendChild(popupElement)
 
