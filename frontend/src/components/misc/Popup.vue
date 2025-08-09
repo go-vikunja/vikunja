@@ -76,12 +76,12 @@ function toggle() {
 const popup = ref<HTMLElement | null>(null)
 
 onClickOutside(popup, (event) => {
-		const target = event.target as HTMLElement
-		// Check if the click target has any of the ignored classes
-		if (target?.classList && props.ignoreClickClasses.some(className => target.classList.contains(className))) {
-			return
-		}
-		close()
+	const target = event.target as HTMLElement
+	// Check if the click target has any of the ignored classes
+	if (target?.classList && props.ignoreClickClasses.some(className => target.classList.contains(className))) {
+		return
+	}
+	close()
 })
 </script>
 

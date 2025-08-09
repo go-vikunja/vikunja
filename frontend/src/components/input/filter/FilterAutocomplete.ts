@@ -155,7 +155,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 								const transaction = view.state.tr.replaceWith(
 									searchStart,
 									searchStart + item.context.search.length,
-									view.state.schema.text(newValue)
+									view.state.schema.text(newValue),
 								)
 								view.dispatch(transaction)
 							}
