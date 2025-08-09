@@ -107,7 +107,7 @@
   },
   "devDependencies": {
     "@4tw/cypress-drag-drop": "2.3.0",
-    "@cypress/vite-dev-server": "6.0.3",
+    "@cypress/vite-dev-server": "7.0.0",
     "@cypress/vue": "6.0.2",
     "@faker-js/faker": "9.9.0",
     "@histoire/plugin-screenshot": "1.0.0-alpha.3",
