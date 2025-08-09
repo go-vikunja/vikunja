@@ -103,6 +103,13 @@
 				"minimumPriority": "Pienin prioriteetti, jolla tehtävä näkyy",
 				"externalUserNameChange": "Nimeäsi hallinnoi kirjautumisoperaattori ({provider}). Muuttaaksesi sen, päivitä se siellä."
 			},
+			"sections": {
+				"personalInformation": "Henkilökohtaiset Tiedot",
+				"taskAndNotifications": "Projektit & Tehtävät",
+				"privacy": "Yksityisyys",
+				"localization": "Kielivalinnat",
+				"appearance": "Ulkoasu & Käyttäytyminen"
+			},
 			"totp": {
 				"title": "Kaksivaiheinen Tunnistautuminen",
 				"enroll": "Ota käyttöön",
@@ -685,6 +692,7 @@
 			"done": "Merkitse tehtävä valmiiksi!",
 			"undone": "Merkitse tehtävä keskeneräiseksi",
 			"created": "Luotu {0} käyttäjältä {1}",
+			"updated": "Päivitetty {0}",
 			"updateSuccess": "Tehtävä tallennettiin onnistuneesti.",
 			"deleteSuccess": "Tehtävä poistettiin onnistuneesti.",
 			"belongsToProject": "Tämä tehtävä kuuluu '{project}' projektiin",
@@ -862,6 +870,7 @@
 			"success": "Tiimi luotiin onnistuneesti."
 		},
 		"edit": {
+			"success": "Tiimi päivitettiin onnistuneesti.",
 			"mustSelectUser": "Ole hyvä ja valitse käyttäjä.",
 			"delete": {
 				"header": "Poista tiimi",
