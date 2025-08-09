@@ -21,6 +21,16 @@ export interface FilterAutocompleteOptions {
 	projectId?: number
 }
 
+interface AutocompleteContext {
+		field: string
+		prefix: string
+		keyword: string
+		search: string
+		operator: string
+		startPos: number
+		endPos: number
+}
+
 export default Extension.create<FilterAutocompleteOptions>({
 	name: 'filterAutocomplete',
 
@@ -38,7 +48,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 
 		let popupElement: HTMLElement | null = null
 		let component: VueRenderer | null = null
-		let currentAutocompleteContext: any = null
+		let currentAutocompleteContext: AutocompleteContext | null = null
 		let cleanupFloating: (() => void) | null = null
 		let suppressNextAutocomplete = false
 		let clickOutsideHandler: ((event: MouseEvent) => void) | null = null
@@ -99,27 +109,27 @@ export default Extension.create<FilterAutocompleteOptions>({
 			}
 		}
 
-		const fetchSuggestions = async (autocompleteContext: any, fieldType: 'labels' | 'assignees' | 'projects') => {
-			let suggestions: any[] = []
+		const fetchSuggestions = async (autocompleteContext: AutocompleteContext, fieldType: 'labels' | 'assignees' | 'projects') => {
+			let suggestions: Array<{id: number, title?: string, username?: string, name?: string}> = []
 
 			try {
 				if (fieldType === 'labels') {
 					// Local search, no debouncing needed
 					suggestions = labelStore.filterLabelsByQuery([], autocompleteContext.search)
 				} else if (fieldType === 'assignees') {
-					// API call, use debouncing
+
 					if (debounceTimer) {
 						clearTimeout(debounceTimer)
 					}
 
 					return new Promise((resolve) => {
 						debounceTimer = setTimeout(async () => {
-							let assigneeSuggestions: any[] = []
+							let assigneeSuggestions: Array<{id: number, username: string, name?: string}> = []
 							try {
 								if (this.options.projectId) {
-									assigneeSuggestions = await projectUserService.getAll({projectId: this.options.projectId} as any, {s: autocompleteContext.search})
+									assigneeSuggestions = await projectUserService.getAll({projectId: this.options.projectId}, {s: autocompleteContext.search})
 								} else {
-									assigneeSuggestions = await userService.getAll({} as any, {s: autocompleteContext.search})
+									assigneeSuggestions = await userService.getAll({}, {s: autocompleteContext.search})
 								}
 								// For assignees, show suggestions even with empty search, but limit if we have many
 								if (autocompleteContext.search === '' && assigneeSuggestions.length > 10) {
@@ -146,7 +156,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 
 		const updatePosition = async () => {
 			if (!popupElement) return
-			await computePosition(virtualReference as any, popupElement, {
+			await computePosition(virtualReference, popupElement, {
 				placement: 'bottom-start',
 				strategy: 'fixed',
 				middleware: [
@@ -162,7 +172,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 			})
 		}
 
-		const updateAutocomplete = async (view: any, force = false) => {
+		const updateAutocomplete = async (view: {state: {selection: {from: number}, doc: {textContent: string}}, coordsAtPos: (pos: number) => {left: number, top: number, bottom: number}, dispatch: (tr: unknown) => void, focus: () => void}, force = false) => {
 			if (suppressNextAutocomplete) {
 				suppressNextAutocomplete = false
 				hidePopup()
@@ -247,7 +257,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 				component = new VueRenderer(FilterCommandsList, {
 					props: {
 						items,
-						command: (item: any) => {
+						command: (item: {id: number, title: string, description: string, item: {id: number, title?: string, username?: string, name?: string}, fieldType: string, context: {field: string, prefix: string, keyword: string, search: string, operator: string, startPos: number, endPos: number}}) => {
 							// Handle selection
 							const newValue = item.fieldType === 'assignees' ? item.item.username : item.item.title
 							const {from} = view.state.selection
@@ -255,8 +265,8 @@ export default Extension.create<FilterAutocompleteOptions>({
 							const operator = context.operator
 							
 							let insertValue = newValue
-							let replaceFrom = Math.max(0, from - context.search.length)
-							let replaceTo = from
+							const replaceFrom = Math.max(0, from - context.search.length)
+							const replaceTo = from
 							
 							// Handle multi-value operators
 							const isMultiValueOperator = operator === 'in' || operator === '?=' || operator === 'not in' || operator === '?!='
@@ -326,7 +336,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 				popupElement.appendChild(component.element!)
 				document.body.appendChild(popupElement)
 
-				cleanupFloating = autoUpdate(virtualReference as any, popupElement, updatePosition)
+				cleanupFloating = autoUpdate(virtualReference, popupElement, updatePosition)
 			}
 
 			// Update virtual reference to start of the current search token
@@ -394,8 +404,8 @@ export default Extension.create<FilterAutocompleteOptions>({
 						}
 
 						// Forward key events to the component
-						if ((component as any)?.ref?.onKeyDown) {
-							return (component as any).ref.onKeyDown({event})
+						if ((component as VueRenderer & {ref?: {onKeyDown?: (params: {event: KeyboardEvent}) => boolean}})?.ref?.onKeyDown) {
+							return (component as VueRenderer & {ref: {onKeyDown: (params: {event: KeyboardEvent}) => boolean}}).ref.onKeyDown({event})
 						}
 
 						return false

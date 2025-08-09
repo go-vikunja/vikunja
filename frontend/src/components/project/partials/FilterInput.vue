@@ -24,7 +24,7 @@ import {createRandomID} from '@/helpers/randomId'
 
 // ProseMirror imports
 import {EditorView, Decoration, DecorationSet} from '@tiptap/pm/view'
-import {EditorState, Plugin, PluginKey, TextSelection} from '@tiptap/pm/state'
+import {EditorState, Plugin, PluginKey} from '@tiptap/pm/state'
 import {Schema} from '@tiptap/pm/model'
 import {keymap} from '@tiptap/pm/keymap'
 import {history, undo, redo} from '@tiptap/pm/history'
@@ -93,7 +93,7 @@ function createHighlightPlugin() {
 	})
 }
 
-function createDecorations(doc: any) {
+function createDecorations(doc: {textContent: string}) {
 	const decorations: Decoration[] = []
 	const text = doc.textContent
 
@@ -290,7 +290,7 @@ function updateDateInQuery(newDate: string | Date | null) {
 const autocompleteMatchPosition = ref(0)
 const autocompleteMatchText = ref('')
 const autocompleteResultType = ref<'labels' | 'assignees' | 'projects' | null>(null)
-const autocompleteResults = ref<any[]>([])
+const autocompleteResults = ref<Array<{id: number, title?: string, username?: string, name?: string}>>([])
 
 function handleFieldInput() {
 	if (!editor.value) return
@@ -327,10 +327,10 @@ function handleFieldInput() {
 		if (matched.startsWith('assignee')) {
 			autocompleteResultType.value = 'assignees'
 			if (props.projectId) {
-				projectUserService.getAll({projectId: props.projectId} as any, {s: search})
+				projectUserService.getAll({projectId: props.projectId}, {s: search})
 					.then(users => autocompleteResults.value = users.length > 1 ? users : [])
 			} else {
-				userService.getAll({} as any, {s: search})
+				userService.getAll({}, {s: search})
 					.then(users => autocompleteResults.value = users.length > 1 ? users : [])
 			}
 		}
@@ -343,7 +343,7 @@ function handleFieldInput() {
 	})
 }
 
-function autocompleteSelect(value: any) {
+function autocompleteSelect(value: {id: number, username?: string, title?: string}) {
 	if (!editor.value) return
 	
 	const newValue = autocompleteResultType.value === 'assignees' ? value.username : value.title

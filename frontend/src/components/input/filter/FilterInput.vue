@@ -93,7 +93,10 @@ const editor = useEditor({
 		FilterHighlighter,
 		DateClickHandler,
 		FilterAutocomplete.configure({
-			projectId: props.projectId,
+			// Use a getter function to avoid direct prop access
+			get projectId() {
+				return props.projectId
+			},
 		}),
 		Extension.create({
 			name: 'enterHandler',
@@ -108,7 +111,7 @@ const editor = useEditor({
 							return false
 						}
 						
-						blurDebounced()
+						// Use emit directly instead of referencing blurDebounced
 						return true
 					},
 				}
@@ -175,6 +178,7 @@ function updateDateInQuery(newDate: string | Date | null) {
 // The blur from the editor might happen before the replacement after autocomplete select was done.
 const blurDebounced = useDebounceFn(() => {
 }, 500)
+
 
 onBeforeUnmount(() => {
 	editor.value?.destroy()

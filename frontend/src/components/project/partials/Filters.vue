@@ -12,7 +12,7 @@
 		<FilterInput
 			v-model="filterQuery"
 			:project-id="projectId"
-			update:modelValue="() => change('modelValue')"
+			@update:modelValue="() => change('modelValue')"
 		/>
 		<pre>{{ filterQuery }}</pre>
 		<div 
@@ -72,7 +72,6 @@ import {useProjectStore} from '@/stores/projects'
 import {
 	hasFilterQuery,
 	transformFilterStringForApi,
-	transformFilterStringFromApi,
 } from '@/helpers/filters'
 import FilterInputDocs from '@/components/project/partials/FilterInputDocs.vue'
 import FilterInput from '@/components/input/filter/FilterInput.vue'
