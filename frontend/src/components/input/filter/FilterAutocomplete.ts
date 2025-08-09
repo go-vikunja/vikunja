@@ -41,6 +41,8 @@ export default Extension.create<FilterAutocompleteOptions>({
 		let currentAutocompleteContext: any = null
 		let cleanupFloating: (() => void) | null = null
 		let suppressNextAutocomplete = false
+		let clickOutsideHandler: ((event: MouseEvent) => void) | null = null
+		let debounceTimer: NodeJS.Timeout | null = null
 
 		const virtualReference = {
 			getBoundingClientRect: () => ({
@@ -60,12 +62,86 @@ export default Extension.create<FilterAutocompleteOptions>({
 				popupElement.style.display = 'none'
 			}
 			currentAutocompleteContext = null
+			
+			// Remove click outside handler
+			if (clickOutsideHandler) {
+				document.removeEventListener('mousedown', clickOutsideHandler)
+				clickOutsideHandler = null
+			}
+			
+			// Clear component items to avoid stale state
+			if (component) {
+				component.updateProps({
+					items: [],
+				})
+			}
 		}
 
 		const showPopup = () => {
 			if (popupElement) {
 				popupElement.style.display = 'block'
+				
+				// Add click outside handler if not already added
+				if (!clickOutsideHandler) {
+					clickOutsideHandler = (event: MouseEvent) => {
+						const target = event.target as Node
+						const editorElement = (this.editor?.view?.dom) as Node
+						
+						// Don't hide if clicking inside the popup or the editor
+						if (popupElement?.contains(target) || editorElement?.contains(target)) {
+							return
+						}
+						
+						hidePopup()
+					}
+					document.addEventListener('mousedown', clickOutsideHandler)
+				}
 			}
+		}
+
+		const fetchSuggestions = async (autocompleteContext: any, fieldType: 'labels' | 'assignees' | 'projects') => {
+			let suggestions: any[] = []
+
+			try {
+				if (fieldType === 'labels') {
+					// Local search, no debouncing needed
+					suggestions = labelStore.filterLabelsByQuery([], autocompleteContext.search)
+				} else if (fieldType === 'assignees') {
+					// API call, use debouncing
+					if (debounceTimer) {
+						clearTimeout(debounceTimer)
+					}
+
+					return new Promise((resolve) => {
+						debounceTimer = setTimeout(async () => {
+							let assigneeSuggestions: any[] = []
+							try {
+								if (this.options.projectId) {
+									assigneeSuggestions = await projectUserService.getAll({projectId: this.options.projectId} as any, {s: autocompleteContext.search})
+								} else {
+									assigneeSuggestions = await userService.getAll({} as any, {s: autocompleteContext.search})
+								}
+								// For assignees, show suggestions even with empty search, but limit if we have many
+								if (autocompleteContext.search === '' && assigneeSuggestions.length > 10) {
+									assigneeSuggestions = assigneeSuggestions.slice(0, 10)
+								}
+							} catch (error) {
+								console.error('Error fetching assignee suggestions:', error)
+								assigneeSuggestions = []
+							}
+							resolve(assigneeSuggestions)
+						}, 300) // 300ms debounce delay
+					})
+				} else if (fieldType === 'projects' && !this.options.projectId) {
+					// Local search, no debouncing needed
+					suggestions = projectStore.searchProject(autocompleteContext.search)
+				}
+			} catch (error) {
+				console.error('Error fetching suggestions:', error)
+				suggestions = []
+			}
+
+			return suggestions
 		}
 
 		const updatePosition = async () => {
@@ -119,6 +195,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 						prefix,
 						keyword,
 						search,
+						operator,
 						startPos: match.index + prefix.length,
 						endPos: match.index + prefix.length + keyword.length,
 					}
@@ -147,29 +224,8 @@ export default Extension.create<FilterAutocompleteOptions>({
 				return
 			}
 
-			// Get suggestions based on field type
-			let suggestions: any[] = []
-
-			try {
-				if (fieldType === 'labels') {
-					suggestions = labelStore.filterLabelsByQuery([], autocompleteContext.search)
-				} else if (fieldType === 'assignees') {
-					if (this.options.projectId) {
-						suggestions = await projectUserService.getAll({projectId: this.options.projectId} as any, {s: autocompleteContext.search})
-					} else {
-						suggestions = await userService.getAll({} as any, {s: autocompleteContext.search})
-					}
-					// For assignees, show suggestions even with empty search, but limit if we have many
-					if (autocompleteContext.search === '' && suggestions.length > 10) {
-						suggestions = suggestions.slice(0, 10)
-					}
-				} else if (fieldType === 'projects' && !this.options.projectId) {
-					suggestions = projectStore.searchProject(autocompleteContext.search)
-				}
-			} catch (error) {
-				console.error('Error fetching suggestions:', error)
-				suggestions = []
-			}
+			// Get suggestions based on field type (debounced for API calls only)
+			const suggestions = await fetchSuggestions(autocompleteContext, fieldType)
 
 			// Transform suggestions to match CommandsList format
 			const items = suggestions.map(item => ({
@@ -195,18 +251,60 @@ export default Extension.create<FilterAutocompleteOptions>({
 							// Handle selection
 							const newValue = item.fieldType === 'assignees' ? item.item.username : item.item.title
 							const {from} = view.state.selection
-							const searchLength = item.context.search.length
-							const replaceFrom = Math.max(0, from - searchLength)
-							const replaceTo = from
+							const context = item.context
+							const operator = context.operator
+							
+							let insertValue = newValue
+							let replaceFrom = Math.max(0, from - context.search.length)
+							let replaceTo = from
+							
+							// Handle multi-value operators
+							const isMultiValueOperator = operator === 'in' || operator === '?=' || operator === 'not in' || operator === '?!='
+							if (isMultiValueOperator && context.keyword.includes(',')) {
+								// For multi-value fields, we need to replace only the current search term
+								const keywords = context.keyword.split(',')
+								const currentKeywordIndex = keywords.length - 1
+								
+								// If we're not adding the first item, add comma prefix
+								if (currentKeywordIndex > 0 && keywords[currentKeywordIndex].trim() === context.search.trim()) {
+									// We're replacing the last incomplete keyword
+									insertValue = newValue
+								} else {
+									// We're adding to existing keywords
+									insertValue = ',' + newValue
+								}
+							}
+							
 							const tr = view.state.tr.replaceWith(
 								replaceFrom,
 								replaceTo,
-								view.state.schema.text(newValue),
+								view.state.schema.text(insertValue),
 							)
+							// Position cursor after the inserted text
+							const newPos = replaceFrom + insertValue.length
+							tr.setSelection(view.state.selection.constructor.near(tr.doc.resolve(newPos)))
 							view.dispatch(tr)
 
-							suppressNextAutocomplete = true
-							hidePopup()
+							// Return focus to editor and position cursor
+							setTimeout(() => {
+								view.focus()
+							}, 0)
+
+							// For multi-value operators, don't suppress autocomplete to keep dropdown open
+							if (isMultiValueOperator) {
+								// Add comma and space for next entry if not already present
+								setTimeout(() => {
+									const currentText = view.state.doc.textContent
+									const currentPos = view.state.selection.from
+									if (currentText.charAt(currentPos) !== ',') {
+										const tr = view.state.tr.insertText(',', currentPos)
+										view.dispatch(tr)
+									}
+								}, 10)
+							} else {
+								suppressNextAutocomplete = true
+								hidePopup()
+							}
 						},
 					},
 					editor: this.editor,
@@ -269,11 +367,20 @@ export default Extension.create<FilterAutocompleteOptions>({
 							if (cleanupFloating) {
 								cleanupFloating()
 							}
+							if (clickOutsideHandler) {
+								document.removeEventListener('mousedown', clickOutsideHandler)
+								clickOutsideHandler = null
+							}
+							if (debounceTimer) {
+								clearTimeout(debounceTimer)
+								debounceTimer = null
+							}
 							if (popupElement && popupElement.parentNode) {
 								popupElement.parentNode.removeChild(popupElement)
 							}
 							popupElement = null
 							suppressNextAutocomplete = false
+							currentAutocompleteContext = null
 							if (component) {
 								component.destroy()
 							}
