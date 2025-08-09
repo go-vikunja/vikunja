@@ -262,16 +262,16 @@ onBeforeUnmount(() => {
 
 	.user-value {
 		position: relative;
-		padding-left: 1.5em;
+		padding-inline-start: 1.5em;
 
 		&::before {
 			content: attr(data-user);
 			position: absolute;
-			left: 0;
-			top: 50%;
+			inset-inline-start: 0;
+			inset-block-start: 50%;
 			transform: translateY(-50%);
-			width: 1.2em;
-			height: 1.2em;
+			inline-size: 1.2em;
+			block-size: 1.2em;
 			background-color: #3b82f6;
 			color: white;
 			border-radius: 50%;
@@ -286,8 +286,8 @@ onBeforeUnmount(() => {
 	p.is-editor-empty:first-child::before {
 		color: var(--grey-500);
 		content: attr(data-placeholder);
-		float: left;
-		height: 0;
+		float: inline-start;
+		block-size: 0;
 		pointer-events: none;
 	}
 }

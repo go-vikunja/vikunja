@@ -419,7 +419,7 @@ const blurDebounced = useDebounceFn(() => emit('blur'), 500)
 
 <style lang="scss">
 .filter-editor-container {
-	min-height: 2.5em;
+	min-block-size: 2.5em;
 	border: 1px solid var(--input-border-color);
 	border-radius: var(--input-radius);
 	padding: .5em .75em;
@@ -437,7 +437,7 @@ const blurDebounced = useDebounceFn(() => emit('blur'), 500)
 
 	.filter-prosemirror {
 		outline: none;
-		min-height: 1.5em;
+		min-block-size: 1.5em;
 		line-height: 1.5;
 
 		// Placeholder support
@@ -495,7 +495,7 @@ const blurDebounced = useDebounceFn(() => emit('blur'), 500)
 	// ProseMirror base styles
 	.ProseMirror {
 		outline: none;
-		min-height: 1.5em;
+		min-block-size: 1.5em;
 
 		p {
 			margin: 0;

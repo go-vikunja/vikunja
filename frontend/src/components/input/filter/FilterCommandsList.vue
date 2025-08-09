@@ -124,7 +124,7 @@ export default {
 	font-size: 0.875rem;
 	box-shadow: var(--shadow-md);
 	border: 1px solid var(--grey-200);
-	max-height: 12rem;
+	max-block-size: 12rem;
 	overflow-y: auto;
 }
 
@@ -132,8 +132,8 @@ export default {
 	display: flex;
 	align-items: center;
 	margin: 0;
-	width: 100%;
-	text-align: left;
+	inline-size: 100%;
+	text-align: start;
 	background: transparent;
 	border-radius: $radius;
 	border: 0;
@@ -159,7 +159,7 @@ export default {
 .filter-autocomplete__content {
 	display: flex;
 	align-items: center;
-	width: 100%;
+	inline-size: 100%;
 }
 
 .filter-autocomplete__label {
