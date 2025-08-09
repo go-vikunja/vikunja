@@ -11,12 +11,12 @@
 				<div class="filter-autocomplete__content">
 					<XLabel
 						v-if="item.fieldType === 'labels'"
-						:label="item.item"
+						:label="(item.item as unknown as ILabel)"
 						class="filter-autocomplete__label"
 					/>
 					<User
 						v-else-if="item.fieldType === 'assignees'"
-						:user="item.item"
+						:user="(item.item as unknown as IUser)"
 						:avatar-size="20"
 						class="filter-autocomplete__user"
 					/>
@@ -42,16 +42,30 @@
 /* eslint-disable vue/component-api-style */
 import XLabel from '@/components/tasks/partials/Label.vue'
 import User from '@/components/misc/User.vue'
+import type { PropType } from 'vue'
+import type { ILabel } from '@/modelTypes/ILabel'
+import type { IUser } from '@/modelTypes/IUser'
+import type { IProject } from '@/modelTypes/IProject'
 
+type FieldType = 'labels' | 'assignees' | 'projects'
+interface AutocompleteItem {
+  id: number | string
+  title: string
+  description: string
+    item: ILabel | IUser | IProject
+  fieldType: FieldType
+  context: unknown
+ }
+ 
 export default {
 	components: {
 		XLabel,
 		User,
 	},
-	
+   
 	props: {
 		items: {
-			type: Array,
+			type: Array as PropType<AutocompleteItem[]>,
 			required: true,
 		},
 		command: {
@@ -59,52 +73,58 @@ export default {
 			required: true,
 		},
 	},
-
+ 
 	data() {
 		return {
 			selectedIndex: 0,
 		}
 	},
-
+ 
 	watch: {
 		items() {
 			this.selectedIndex = 0
 		},
 	},
-
+ 
 	methods: {
-		onKeyDown({event}) {
+		onKeyDown({event}: { event: KeyboardEvent }) {
 			if (event.key === 'ArrowUp') {
+				event.preventDefault()
+				event.stopPropagation()
 				this.upHandler()
 				return true
 			}
-
+ 
 			if (event.key === 'ArrowDown') {
+				event.preventDefault()
+				event.stopPropagation()
 				this.downHandler()
 				return true
 			}
-
+ 
 			if (event.key === 'Enter') {
+				event.preventDefault()
+				event.stopPropagation()
 				this.enterHandler()
 				return true
 			}
-
+ 
 			return false
 		},
-
+ 
 		upHandler() {
 			this.selectedIndex = ((this.selectedIndex + this.items.length) - 1) % this.items.length
 		},
-
+ 
 		downHandler() {
 			this.selectedIndex = (this.selectedIndex + 1) % this.items.length
 		},
-
+ 
 		enterHandler() {
 			this.selectItem(this.selectedIndex)
 		},
-
-		selectItem(index) {
+	
+		selectItem(index: number) {
 			const item = this.items[index]
 			if (item) {
 				this.command(item)

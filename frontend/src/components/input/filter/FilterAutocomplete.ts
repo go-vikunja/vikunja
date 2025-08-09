@@ -40,6 +40,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 		let component: VueRenderer | null = null
 		let currentAutocompleteContext: any = null
 		let cleanupFloating: (() => void) | null = null
+		let suppressNextAutocomplete = false
 
 		const virtualReference = {
 			getBoundingClientRect: () => ({
@@ -58,6 +59,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 			if (popupElement) {
 				popupElement.style.display = 'none'
 			}
+			currentAutocompleteContext = null
 		}
 
 		const showPopup = () => {
@@ -70,6 +72,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 			if (!popupElement) return
 			await computePosition(virtualReference as any, popupElement, {
 				placement: 'bottom-start',
+				strategy: 'fixed',
 				middleware: [
 					offset(25),
 					flip(),
@@ -84,6 +87,11 @@ export default Extension.create<FilterAutocompleteOptions>({
 		}
 
 		const updateAutocomplete = async (view: any, force = false) => {
+			if (suppressNextAutocomplete) {
+				suppressNextAutocomplete = false
+				hidePopup()
+				return
+			}
 			const {from} = view.state.selection
 			const text = view.state.doc.textContent
 			const textUpToCursor = text.substring(0, from)
@@ -186,19 +194,18 @@ export default Extension.create<FilterAutocompleteOptions>({
 						command: (item: any) => {
 							// Handle selection
 							const newValue = item.fieldType === 'assignees' ? item.item.username : item.item.title
-							const currentText = view.state.doc.textContent
-							
-							// Find the search term and replace it
-							const searchStart = currentText.lastIndexOf(item.context.search, from) + 1
-							if (searchStart !== -1) {
-								const transaction = view.state.tr.replaceWith(
-									searchStart,
-									searchStart + item.context.search.length,
-									view.state.schema.text(newValue),
-								)
-								view.dispatch(transaction)
-							}
+							const {from} = view.state.selection
+							const searchLength = item.context.search.length
+							const replaceFrom = Math.max(0, from - searchLength)
+							const replaceTo = from
+							const tr = view.state.tr.replaceWith(
+								replaceFrom,
+								replaceTo,
+								view.state.schema.text(newValue),
+							)
+							view.dispatch(tr)
 
+							suppressNextAutocomplete = true
 							hidePopup()
 						},
 					},
@@ -213,18 +220,19 @@ export default Extension.create<FilterAutocompleteOptions>({
 			// Create popup element on demand
 			if (!popupElement) {
 				popupElement = document.createElement('div')
-				popupElement.style.position = 'absolute'
+				popupElement.style.position = 'fixed'
 				popupElement.style.top = '0'
 				popupElement.style.left = '0'
-				popupElement.style.zIndex = '1000'
+				popupElement.style.zIndex = '20000'
 				popupElement.appendChild(component.element!)
 				document.body.appendChild(popupElement)
 
 				cleanupFloating = autoUpdate(virtualReference as any, popupElement, updatePosition)
 			}
 
-			// Update virtual reference to current cursor position
-			const coords = view.coordsAtPos(from)
+			// Update virtual reference to start of the current search token
+			const anchorFrom = autocompleteContext ? Math.max(0, from - (autocompleteContext.search?.length || 0)) : from
+			const coords = view.coordsAtPos(anchorFrom)
 			const rect = {
 				width: 0,
 				height: 0,
@@ -264,6 +272,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 								popupElement.parentNode.removeChild(popupElement)
 							}
 							popupElement = null
+							suppressNextAutocomplete = false
 							if (component) {
 								component.destroy()
 							}
