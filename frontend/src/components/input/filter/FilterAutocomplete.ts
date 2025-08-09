@@ -29,6 +29,7 @@ interface AutocompleteContext {
 		operator: string
 		startPos: number
 		endPos: number
+		isComplete: boolean
 }
 
 export default Extension.create<FilterAutocompleteOptions>({
@@ -53,6 +54,8 @@ export default Extension.create<FilterAutocompleteOptions>({
 		let suppressNextAutocomplete = false
 		let clickOutsideHandler: ((event: MouseEvent) => void) | null = null
 		let debounceTimer: NodeJS.Timeout | null = null
+		let lastSelectionPosition = -1
+		let lastSelectionTime = 0
 
 		const virtualReference = {
 			getBoundingClientRect: () => ({
@@ -65,6 +68,42 @@ export default Extension.create<FilterAutocompleteOptions>({
 				right: 0,
 				bottom: 0,
 			} as DOMRect),
+		}
+
+		const isFilterExpressionComplete = (textAfterExpression: string, keyword: string, operator: string): boolean => {
+			// If the keyword is empty, it's definitely not complete
+			if (!keyword.trim()) {
+				return false
+			}
+
+			// Check if we're immediately after a recent selection
+			const timeSinceLastSelection = Date.now() - lastSelectionTime
+			if (timeSinceLastSelection < 1000) { // 1 second grace period
+				return true
+			}
+
+			// For multi-value operators, check if we're in the middle of typing multiple values
+			const isMultiValueOperator = operator === 'in' || operator === '?=' || operator === 'not in' || operator === '?!='
+			if (isMultiValueOperator && keyword.includes(',')) {
+				const lastValue = keyword.split(',').pop()?.trim() || ''
+				// If the last value after comma is empty or very short, we're likely still typing
+				return lastValue.length > 1
+			}
+
+			// Check what comes after the expression
+			const trimmedAfter = textAfterExpression.trim()
+			
+			// If there's a logical operator or end of string immediately after, it's likely complete
+			if (trimmedAfter === '' || trimmedAfter.startsWith('&&') || trimmedAfter.startsWith('||') || trimmedAfter.startsWith(')')) {
+				return keyword.trim().length > 1
+			}
+
+			// If there's a space followed by non-operator text, it's likely complete
+			if (trimmedAfter.startsWith(' ') && !trimmedAfter.match(/^\s*[&|()]/)) {
+				return true
+			}
+
+			return false
 		}
 
 		const hidePopup = () => {
@@ -173,12 +212,24 @@ export default Extension.create<FilterAutocompleteOptions>({
 		}
 
 		const updateAutocomplete = async (view: {state: {selection: {from: number}, doc: {textContent: string}}, coordsAtPos: (pos: number) => {left: number, top: number, bottom: number}, dispatch: (tr: unknown) => void, focus: () => void}, force = false) => {
+			const {from} = view.state.selection
+			
+			// Enhanced suppression logic
 			if (suppressNextAutocomplete) {
 				suppressNextAutocomplete = false
 				hidePopup()
 				return
 			}
-			const {from} = view.state.selection
+			
+			// Check if we're too close to a recent selection (position-based suppression)
+			if (lastSelectionPosition >= 0 && Math.abs(from - lastSelectionPosition) <= 2) {
+				const timeSinceLastSelection = Date.now() - lastSelectionTime
+				if (timeSinceLastSelection < 500) { // 500ms grace period for nearby positions
+					hidePopup()
+					return
+				}
+			}
+			
 			const text = view.state.doc.textContent
 			const textUpToCursor = text.substring(0, from)
 
@@ -194,11 +245,15 @@ export default Extension.create<FilterAutocompleteOptions>({
 					const [, prefix, , , keyword = ''] = match
 					
 					let search = keyword.trim()
-					const operator = match[0].match(new RegExp(FILTER_OPERATORS_REGEX))?.[0]
+					const operator = match[0].match(new RegExp(FILTER_OPERATORS_REGEX))?.[0] || ''
 					if (operator === 'in' || operator === '?=') {
 						const keywords = keyword.split(',')
 						search = keywords[keywords.length - 1].trim()
 					}
+					
+					// Check if this expression is complete
+					const textAfterExpression = text.substring(from)
+					const isComplete = isFilterExpressionComplete(textAfterExpression, keyword, operator)
 					
 					autocompleteContext = {
 						field,
@@ -208,6 +263,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 						operator,
 						startPos: match.index + prefix.length,
 						endPos: match.index + prefix.length + keyword.length,
+						isComplete,
 					}
 
 					if (LABEL_FIELDS.includes(field)) {
@@ -228,8 +284,8 @@ export default Extension.create<FilterAutocompleteOptions>({
 
 			currentAutocompleteContext = autocompleteContext
 
-			// Hide popup if no context
-			if (!autocompleteContext || !fieldType) {
+			// Hide popup if no context or if the expression is already complete
+			if (!autocompleteContext || !fieldType || autocompleteContext.isComplete) {
 				hidePopup()
 				return
 			}
@@ -257,7 +313,14 @@ export default Extension.create<FilterAutocompleteOptions>({
 				component = new VueRenderer(FilterCommandsList, {
 					props: {
 						items,
-						command: (item: {id: number, title: string, description: string, item: {id: number, title?: string, username?: string, name?: string}, fieldType: string, context: {field: string, prefix: string, keyword: string, search: string, operator: string, startPos: number, endPos: number}}) => {
+						command: (item: {
+							id: number, 
+							title: string,
+							description: string,
+							item: {id: number, title?: string, username?: string, name?: string},
+							fieldType: string,
+							context: AutocompleteContext
+						}) => {
 							// Handle selection
 							const newValue = item.fieldType === 'assignees' ? item.item.username : item.item.title
 							const {from} = view.state.selection
@@ -294,6 +357,10 @@ export default Extension.create<FilterAutocompleteOptions>({
 							const newPos = replaceFrom + insertValue.length
 							tr.setSelection(view.state.selection.constructor.near(tr.doc.resolve(newPos)))
 							view.dispatch(tr)
+							
+							// Update selection tracking
+							lastSelectionPosition = newPos
+							lastSelectionTime = Date.now()
 
 							// Return focus to editor and position cursor
 							setTimeout(() => {
@@ -309,6 +376,9 @@ export default Extension.create<FilterAutocompleteOptions>({
 									if (currentText.charAt(currentPos) !== ',') {
 										const tr = view.state.tr.insertText(',', currentPos)
 										view.dispatch(tr)
+										// Update position after comma insertion
+										lastSelectionPosition = currentPos + 1
+										lastSelectionTime = Date.now()
 									}
 								}, 10)
 							} else {
@@ -391,6 +461,8 @@ export default Extension.create<FilterAutocompleteOptions>({
 							popupElement = null
 							suppressNextAutocomplete = false
 							currentAutocompleteContext = null
+							lastSelectionPosition = -1
+							lastSelectionTime = 0
 							if (component) {
 								component.destroy()
 							}
