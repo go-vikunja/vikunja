@@ -76,7 +76,6 @@ import {
 } from '@/helpers/filters'
 import FilterInputDocs from '@/components/project/partials/FilterInputDocs.vue'
 import FilterInput from '@/components/input/filter/FilterInput.vue'
-import { filter } from 'node_modules/cypress/types/bluebird'
 
 const props = withDefaults(defineProps<{
 	modelValue: TaskFilterParams,
