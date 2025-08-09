@@ -4,13 +4,17 @@
 		:title="hasTitle ? $t('filters.title') : ''"
 		role="search"
 	>
+		<!--		<FilterInput-->
+		<!--			v-model="filterQuery"-->
+		<!--			:project-id="projectId"-->
+		<!--			@blur="() => change('blur')"-->
+		<!--		/>-->
 		<FilterInput
 			v-model="filterQuery"
 			:project-id="projectId"
 			@update:modelValue="() => change('modelValue')"
-			@blur="() => change('blur')"
 		/>
-		
+		<pre>{{ filterQuery }}</pre>
 		<div 
 			v-if="filterFromView"
 			class="tw-text-sm tw-mbe-2"
@@ -60,7 +64,7 @@ export const ALPHABETICAL_SORT = 'title'
 <script setup lang="ts">
 import {computed, ref, watch} from 'vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
-import FilterInput from '@/components/project/partials/FilterInput.vue'
+// import FilterInput from '@/components/project/partials/FilterInput.vue'
 import {useRoute} from 'vue-router'
 import type {TaskFilterParams} from '@/services/taskCollection'
 import {useLabelStore} from '@/stores/labels'
@@ -68,9 +72,9 @@ import {useProjectStore} from '@/stores/projects'
 import {
 	hasFilterQuery,
 	transformFilterStringForApi,
-	transformFilterStringFromApi,
 } from '@/helpers/filters'
 import FilterInputDocs from '@/components/project/partials/FilterInputDocs.vue'
+import FilterInput from '@/components/input/filter/FilterInput.vue'
 
 const props = withDefaults(defineProps<{
 	modelValue: TaskFilterParams,
@@ -125,11 +129,11 @@ watch(
 	() => props.modelValue,
 	(value: TaskFilterParams) => {
 		const val = {...value}
-		val.filter = transformFilterStringFromApi(
-			val?.filter || '',
-			labelId => labelStore.getLabelById(labelId)?.title || null,
-			projectId => projectStore.projects[projectId]?.title || null,
-		)
+		//val.filter = transformFilterStringFromApi(
+		//	val?.filter || '',
+		//	labelId => labelStore.getLabelById(labelId)?.title || null,
+		//	projectId => projectStore.projects[projectId]?.title || null,
+		//)
 		params.value = val
 	},
 	{
