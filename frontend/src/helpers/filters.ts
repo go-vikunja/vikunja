@@ -1,5 +1,16 @@
 import {snakeCase} from 'change-case'
 
+function trimQuotes(str: string): string {
+
+	str = str.trim()
+
+	if ((str.startsWith('"') && str.endsWith('"')) || 
+		(str.startsWith('\'') && str.endsWith('\''))) {
+		return str.slice(1, -1)
+	}
+	return str
+}
+
 export const DATE_FIELDS = [
 	'dueDate',
 	'startDate',
@@ -70,7 +81,7 @@ export function hasFilterQuery(filter: string): boolean {
 }
 
 export function getFilterFieldRegexPattern(field: string): RegExp {
-	return new RegExp('\\b(' + field + ')\\s*' + FILTER_OPERATORS_REGEX + '\\s*([\'"]?)([^\'"&|()<]+?)(?=\\s*(?:&&|\\|\\||$))', 'ig')
+	return new RegExp('\\b(' + field + ')\\s*' + FILTER_OPERATORS_REGEX + '\\s*(?:(["\'])((?:\\\\.|(?!\\3)[^\\\\])*?)\\3|([^&|()<]+?))(?=\\s*(?:&&|\\||$))', 'g')
 }
 
 export function transformFilterStringForApi(
@@ -86,7 +97,8 @@ export function transformFilterStringForApi(
 	}
 
 	AVAILABLE_FILTER_FIELDS.forEach(f => {
-		filter = filter.replace(new RegExp(f, 'ig'), f)
+		const fieldPattern = new RegExp('\\b(' + f + ')\\b(?=\\s*' + FILTER_OPERATORS_REGEX + ')', 'gi')
+		filter = filter.replace(fieldPattern, f)
 	})
 
 	// Transform labels and projects to ids
@@ -102,8 +114,8 @@ export function transformFilterStringForApi(
 			const replacements: { start: number, length: number, replacement: string }[] = []
 
 			while ((match = pattern.exec(filter)) !== null) {
-				// eslint-disable-next-line @typescript-eslint/no-unused-vars
-				const [matched, fieldName, operator, quotes, keyword] = match
+				const [matched, fieldName, operator, quotes, quotedContent, unquotedContent] = match
+				const keyword = quotedContent || unquotedContent
 				if (!keyword) {
 					continue
 				}
@@ -115,11 +127,18 @@ export function transformFilterStringForApi(
 
 				let replaced = keyword
 
+				const transformedKeywords: string[] = []
 				keywords.forEach(k => {
-					const id = resolver(k)
-					if (id !== null) {
-						replaced = replaced.replace(k, String(id))
+					let id = resolver(k)
+					if (id === null && k.includes('\\')) {
+						id = resolver(k.replaceAll('\\', ''))
 					}
+					if (id === null) {
+						transformedKeywords.push(k)
+						return
+					}
+				
+					transformedKeywords.push(String(id))
 				})
 				
 				// Join the transformed keywords back together
@@ -143,11 +162,10 @@ export function transformFilterStringForApi(
 					continue
 				}
 
-				const actualKeywordStart = (match?.index || 0) + matched.length - keyword.length
 				replacements.push({
-					start: actualKeywordStart,
-					length: keyword.length,
-					replacement: replaced,
+					start: match.index!,
+					length: matched.length,
+					replacement: reconstructedMatch,
 				})
 			}
 
@@ -170,9 +188,10 @@ export function transformFilterStringForApi(
 	// Transform projects to ids
 	filter = transformFieldToIds(PROJECT_FIELDS, projectResolver, filter)
 
-	// Transform all attributes to snake case
+	// Transform all field names (not values) to snake case
 	AVAILABLE_FILTER_FIELDS.forEach(f => {
-		filter = filter.replaceAll(f, snakeCase(f))
+		const fieldPattern = new RegExp('\\b' + f + '\\b(?=\\s*' + FILTER_OPERATORS_REGEX + ')', 'gi')
+		filter = filter.replace(fieldPattern, snakeCase(f))
 	})
 
 	return filter
@@ -204,7 +223,8 @@ export function transformFilterStringFromApi(
 			let match: RegExpExecArray | null
 			while ((match = pattern.exec(filter)) !== null) {
 				// eslint-disable-next-line @typescript-eslint/no-unused-vars
-				const [matched, fieldName, operator, quotes, keyword] = match
+				const [matched, fieldName, operator, quotes, quotedContent, unquotedContent] = match
+				const keyword = quotedContent || unquotedContent
 				if (keyword) {
 					let keywords = [keyword.trim()]
 					if (isMultiValueOperator(operator)) {
