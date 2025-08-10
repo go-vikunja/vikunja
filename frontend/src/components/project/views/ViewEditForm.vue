@@ -1,13 +1,16 @@
 <script setup lang="ts">
-import type {IProjectView} from '@/modelTypes/IProjectView'
-import type {IFilter} from '@/modelTypes/ISavedFilter'
-import XButton from '@/components/input/Button.vue'
-import FilterInput from '@/components/project/partials/FilterInput.vue'
 import {onBeforeMount, ref} from 'vue'
+
+import type {IProjectView} from '@/modelTypes/IProjectView'
+import type {IFilters} from '@/modelTypes/ISavedFilter'
+
 import {hasFilterQuery, transformFilterStringForApi, transformFilterStringFromApi} from '@/helpers/filters'
 import {useLabelStore} from '@/stores/labels'
 import {useProjectStore} from '@/stores/projects'
+
+import XButton from '@/components/input/Button.vue'
 import FilterInputDocs from '@/components/project/partials/FilterInputDocs.vue'
+import FilterInput from '@/components/input/filter/FilterInput.vue'
 
 const props = withDefaults(defineProps<{
 	modelValue: IProjectView,
@@ -29,14 +32,14 @@ const labelStore = useLabelStore()
 const projectStore = useProjectStore()
 
 onBeforeMount(() => {
-	const transformFilterFromApi = (filterInput: IFilter): IFilter => {
+	const transformFilterFromApi = (filterInput: IFilters): IFilter => {
 		const filterString = transformFilterStringFromApi(
 			filterInput.filter,
 			labelId => labelStore.getLabelById(labelId)?.title || null,
 			projectId => projectStore.projects[projectId]?.title || null,
 		)
 		
-		const filter: IFilter = {
+		const filter: IFilters = {
 			filter: '',
 			s: '',
 		}
@@ -72,7 +75,7 @@ onBeforeMount(() => {
 })
 
 function save() {
-	const transformFilterForApi = (filterQuery: string): IFilter => {
+	const transformFilterForApi = (filterQuery: string): IFilters => {
 		const filterString = transformFilterStringForApi(
 			filterQuery,
 			labelTitle => labelStore.getLabelByExactTitle(labelTitle)?.id || null,
@@ -81,7 +84,7 @@ function save() {
 				return found?.id || null
 			},
 		)
-		const filter: IFilter = {}
+		const filter: IFilters = {}
 		if (hasFilterQuery(filterString)) {
 			filter.filter = filterString
 		} else {
@@ -173,10 +176,16 @@ function handleBubbleSave() {
 			</div>
 		</div>
 
+		<label
+			class="label"
+			for="filter"
+		>
+			{{ $t('project.views.filter') }}
+		</label>
 		<FilterInput
+			id="filter"
 			v-model="view.filter.filter"
 			:project-id="view.projectId"
-			:input-label="$t('project.views.filter')"
 			class="mbe-1"
 		/>
 
