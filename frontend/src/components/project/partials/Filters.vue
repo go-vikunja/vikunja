@@ -68,7 +68,7 @@ import {
 	hasFilterQuery,
 	transformFilterStringForApi,
 } from '@/helpers/filters'
-import FilterInputDocs from '@/components/project/partials/FilterInputDocs.vue'
+import FilterInputDocs from '@/components/input/filter/FilterInputDocs.vue'
 import FilterInput from '@/components/input/filter/FilterInput.vue'
 
 const props = withDefaults(defineProps<{
