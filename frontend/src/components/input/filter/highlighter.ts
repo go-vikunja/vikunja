@@ -80,11 +80,34 @@ function decorateDocument(doc: Node) {
 		const pattern = getFilterFieldRegexPattern(labelField)
 		let labelMatch
 		while ((labelMatch = pattern.exec(text)) !== null) {
-			const labelValue = labelMatch[5]?.trim()
-			const operator = labelMatch[2]?.trim()
+			const labelValue = labelMatch[4]?.trim()
+			if (labelValue) { // If there's a value
+				const valueStart = labelMatch.index + labelMatch[0].indexOf(labelValue)
+				const valueEnd = valueStart + labelValue.length
 
-			if (!labelValue) {
-				continue
+				// Find the label by its title
+				const label = labelStore.getLabelByExactTitle(labelValue)
+
+				const from = findPosForIndex(doc, valueStart)
+				const to = findPosForIndex(doc, valueEnd)
+
+				if (from !== null && to !== null) {
+					if (label) {
+						// Use label color if found
+						decorations.push(
+							Decoration.inline(from, to, {
+								class: 'label-value',
+								style: `background-color: ${label.hexColor}; color: ${label.hexColor && colorIsDark(label.hexColor) ? 'white' : 'black'};`,
+							}),
+						)
+					} else {
+						// Fallback to generic value styling
+						decorations.push(
+							Decoration.inline(from, to, {class: 'value'}),
+						)
+					}
+					valueRanges.push({start: valueStart, end: valueEnd})
+				}
 			}
 
 			const valueStart = labelMatch.index + labelMatch[0].lastIndexOf(labelValue)
