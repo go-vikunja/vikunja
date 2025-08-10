@@ -5,6 +5,7 @@ import {
 	DATE_FIELDS,
 	FILTER_JOIN_OPERATOR,
 	FILTER_OPERATORS,
+	FILTER_OPERATORS_REGEX,
 	getFilterFieldRegexPattern,
 	LABEL_FIELDS,
 } from '@/helpers/filters'
@@ -83,7 +84,7 @@ function decorateDocument(doc: Node) {
 			const labelValue = labelMatch[4]?.trim()
 			const operator = labelMatch[2]?.trim()
 			if (labelValue) { // If there's a value
-				const valueStart = labelMatch.index + labelMatch[0].indexOf(labelValue)
+				const valueStart = labelMatch.index + labelMatch[0].lastIndexOf(labelValue)
 				const valueEnd = valueStart + labelValue.length
 
 				const addLabelDecoration = (labelValue: string, start: number, end: number) => {
@@ -95,6 +96,8 @@ function decorateDocument(doc: Node) {
 					if (from === null || to === null) {
 						return
 					}
+					
+					valueRanges.push({start, end})
 
 					if (label) {
 						// Use label color if found
@@ -104,7 +107,7 @@ function decorateDocument(doc: Node) {
 								style: `background-color: ${label.hexColor}; color: ${label.hexColor && colorIsDark(label.hexColor) ? 'white' : 'black'};`,
 							}),
 						)
-
+						
 						return
 					}
 
@@ -112,7 +115,6 @@ function decorateDocument(doc: Node) {
 					decorations.push(
 						Decoration.inline(from, to, {class: 'value'}),
 					)
-					valueRanges.push({start, end})
 				}
 
 				// Check if this is a multi-value operator and the value contains commas
@@ -135,7 +137,6 @@ function decorateDocument(doc: Node) {
 						}
 					})
 					
-					valueRanges.push({start: valueStart, end: valueEnd})
 					continue
 				}
 				
@@ -202,7 +203,7 @@ function decorateDocument(doc: Node) {
 		}
 	})
 
-	// Match other values - anything coming after an operator (excluding labels)
+	// Match other values - anything coming after an operator (excluding labels and dates)
 	fieldValueRegex.lastIndex = 0
 	while ((match = fieldValueRegex.exec(text)) !== null) {
 		const [fullMatch, field, operator, value] = match

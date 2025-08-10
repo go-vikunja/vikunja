@@ -58,14 +58,19 @@ export const FILTER_JOIN_OPERATOR = [
 	')',
 ]
 
-export const FILTER_OPERATORS_REGEX = '('+FILTER_OPERATORS.map(op => op.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')+')'
+export const FILTER_OPERATORS_REGEX = '('+FILTER_OPERATORS.map(op => {
+	// Only add word boundaries for operators that are words (like 'in', 'like', 'not in')
+	const needsWordBoundary = /^[a-zA-Z]/.test(op) || /[a-zA-Z]$/.test(op)
+	const escaped = op.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+	return needsWordBoundary ? '\\b' + escaped + '\\b' : escaped
+}).join('|')+')'
 
 export function hasFilterQuery(filter: string): boolean {
 	return FILTER_OPERATORS.find(o => filter.includes(o)) || false
 }
 
 export function getFilterFieldRegexPattern(field: string): RegExp {
-	return new RegExp('(' + field + ')\\s*' + FILTER_OPERATORS_REGEX + '\\s*([\'"]?)([^\'"&|()<]+?)(?=\\s*(?:&&|\\|\\||$))', 'ig')
+	return new RegExp('\\b(' + field + ')\\s*' + FILTER_OPERATORS_REGEX + '\\s*([\'"]?)([^\'"&|()<]+?)(?=\\s*(?:&&|\\|\\||$))', 'ig')
 }
 
 export function transformFilterStringForApi(
