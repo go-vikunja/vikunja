@@ -15,7 +15,7 @@
 		@close="() => modalOpen = false"
 	>
 		<Filters
-			ref="filters"
+			ref="filtersRef"
 			v-model="value"
 			:has-title="true"
 			class="filter-popup"
@@ -27,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watch} from 'vue'
+import {computed, ref, watch, nextTick} from 'vue'
 
 import Filters from '@/components/project/partials/Filters.vue'
 
@@ -49,6 +49,7 @@ const emit = defineEmits<{
 const projectStore = useProjectStore()
 
 const value = ref<TaskFilterParams>({})
+const filtersRef = ref()
 
 watch(
 	() => props.modelValue,
@@ -67,6 +68,15 @@ const hasFilters = computed(() => {
 })
 
 const modalOpen = ref(false)
+
+// Auto-focus filter input when modal opens
+watch(modalOpen, (isOpen) => {
+	if (isOpen) {
+		nextTick(() => {
+			filtersRef.value?.focusFilterInput()
+		})
+	}
+})
 
 function showResults() {
 	emit('update:modelValue', {

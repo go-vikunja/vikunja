@@ -5,6 +5,7 @@
 		role="search"
 	>
 		<FilterInput
+			ref="filterInputRef"
 			v-model="filterQuery"
 			:project-id="projectId"
 			@update:modelValue="() => change('modelValue')"
@@ -118,6 +119,8 @@ watch(
 const labelStore = useLabelStore()
 const projectStore = useProjectStore()
 
+const filterInputRef = ref()
+
 // Using watchDebounced to prevent the filter re-triggering itself.
 watch(
 	() => props.modelValue,
@@ -184,4 +187,12 @@ function clearFiltersAndEmit() {
 	filterQuery.value = ''
 	changeAndEmitButton()
 }
+
+function focusFilterInput() {
+	filterInputRef.value?.focus()
+}
+
+defineExpose({
+	focusFilterInput,
+})
 </script>
