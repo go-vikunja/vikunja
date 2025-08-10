@@ -189,6 +189,182 @@ describe('Filter Transformation', () => {
 		})
 	})
 
+	describe('Special Characters', () => {
+		const apostropheResolver = (title: string) => {
+			switch (title.toLowerCase()) {
+				case "john's task":
+					return 1
+				case "mary's project":
+					return 2
+				case "user's label":
+					return 3
+				case "it's working":
+					return 4
+				default:
+					return null
+			}
+		}
+
+		const apostropheIdResolver = (id: number) => {
+			switch (id) {
+				case 1:
+					return "John's Task"
+				case 2:
+					return "Mary's Project"
+				case 3:
+					return "User's Label"
+				case 4:
+					return "It's Working"
+				default:
+					return null
+			}
+		}
+
+		describe('Apostrophes in quoted values', () => {
+			it('should handle double-quoted labels with apostrophes', () => {
+				const transformed = transformFilterStringForApi(
+					'labels = "John\'s Task"',
+					apostropheResolver,
+					nullTitleToIdResolver,
+				)
+
+				expect(transformed).toBe('labels = 1')
+			})
+
+			it('should handle single-quoted labels with apostrophes', () => {
+				const transformed = transformFilterStringForApi(
+					"labels = 'Mary\\'s Project'",
+					apostropheResolver,
+					nullTitleToIdResolver,
+				)
+
+				expect(transformed).toBe('labels = 2')
+			})
+
+			it('should handle projects with apostrophes in double quotes', () => {
+				const transformed = transformFilterStringForApi(
+					'project = "User\'s Label"',
+					nullTitleToIdResolver,
+					apostropheResolver,
+				)
+
+				expect(transformed).toBe('project = 3')
+			})
+		})
+
+		describe('Apostrophes in unquoted values', () => {
+			it('should handle unquoted labels with apostrophes', () => {
+				const transformed = transformFilterStringForApi(
+					'labels = John\'s',
+					(title: string) => title === 'John\'s' ? 1 : null,
+					nullTitleToIdResolver,
+				)
+
+				expect(transformed).toBe('labels = 1')
+			})
+
+			it('should handle unquoted projects with apostrophes', () => {
+				const transformed = transformFilterStringForApi(
+					'project = Mary\'s',
+					nullTitleToIdResolver,
+					(title: string) => title === 'Mary\'s' ? 2 : null,
+				)
+
+				expect(transformed).toBe('project = 2')
+			})
+		})
+
+		describe('Multiple values with apostrophes', () => {
+			it('should handle multiple labels with apostrophes using in operator', () => {
+				const transformed = transformFilterStringForApi(
+					'labels in "John\'s Task", "Mary\'s Project"',
+					apostropheResolver,
+					nullTitleToIdResolver,
+				)
+
+				expect(transformed).toBe('labels in 1, 2')
+			})
+
+			it('should handle multiple labels with apostrophes using not in operator', () => {
+				const transformed = transformFilterStringForApi(
+					'labels not in "User\'s Label", "It\'s Working"',
+					apostropheResolver,
+					nullTitleToIdResolver,
+				)
+
+				expect(transformed).toBe('labels not in 3, 4')
+			})
+
+			it('should handle mixed quoted and unquoted values with apostrophes', () => {
+				const mixedResolver = (title: string) => {
+					if (title === "John's Task") return 1
+					if (title === "Mary's") return 2
+					return null
+				}
+
+				const transformed = transformFilterStringForApi(
+					'labels in "John\'s Task", Mary\'s',
+					mixedResolver,
+					nullTitleToIdResolver,
+				)
+
+				expect(transformed).toBe('labels in 1, 2')
+			})
+		})
+
+		it('should handle apostrophes in complex filter queries', () => {
+			const transformed = transformFilterStringForApi(
+				'labels = "John\'s Task" && project = "Mary\'s Project" || priority = 1',
+				apostropheResolver,
+				apostropheResolver,
+			)
+
+			expect(transformed).toBe('labels = 1 && project = 2 || priority = 1')
+		})
+
+		describe('Reverse transformation with apostrophes', () => {
+			it('should transform labels with apostrophes from API to frontend', () => {
+				const transformed = transformFilterStringFromApi(
+					'labels = 1',
+					apostropheIdResolver,
+					nullIdToTitleResolver,
+				)
+
+				expect(transformed).toBe('labels = John\'s Task')
+			})
+
+			it('should transform projects with apostrophes from API to frontend', () => {
+				const transformed = transformFilterStringFromApi(
+					'project = 2',
+					nullIdToTitleResolver,
+					apostropheIdResolver,
+				)
+
+				expect(transformed).toBe('project = Mary\'s Project')
+			})
+
+			it('should handle multiple values with apostrophes in reverse transformation', () => {
+				const transformed = transformFilterStringFromApi(
+					'labels in 1, 2',
+					apostropheIdResolver,
+					nullIdToTitleResolver,
+				)
+
+				expect(transformed).toBe('labels in John\'s Task, Mary\'s Project')
+			})
+
+			it('should handle complex queries with apostrophes in reverse transformation', () => {
+				const transformed = transformFilterStringFromApi(
+					'labels = 1 && project = 2 || priority = 1',
+					apostropheIdResolver,
+					apostropheIdResolver,
+				)
+
+				expect(transformed).toBe('labels = John\'s Task && project = Mary\'s Project || priority = 1')
+			})
+		})
+	})
+
 	describe('To API', () => {
 		for (const c in fieldCases) {
 			it('should transform all filter params for ' + c + ' to snake_case', () => {

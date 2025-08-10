@@ -576,7 +576,7 @@
 			</template>
 
 			<template #text>
-				<p class="tw-text-balance !tw-mbe-0">
+				<p class="tw-text-balance">
 					{{ $t('task.detail.delete.text1') }}
 				</p>
 				<p class="tw-text-balance">

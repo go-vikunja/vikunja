@@ -8,12 +8,12 @@
 			ref="filterInputRef"
 			v-model="filterQuery"
 			:project-id="projectId"
+			class="mbe-2"
 			@update:modelValue="() => change('modelValue')"
 		/>
-		<pre>{{ filterQuery }}</pre>
 		<div 
 			v-if="filterFromView"
-			class="tw-text-sm tw-mbe-2"
+			class="tw-text-sm mbe-2"
 		>
 			{{ $t('filters.fromView') }}
 			<code>{{ filterFromView }}</code><br>
