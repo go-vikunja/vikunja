@@ -179,8 +179,16 @@ function updateDateInQuery(newDate: string | Date | null) {
 const blurDebounced = useDebounceFn(() => {
 }, 500)
 
+function focus() {
+	editor.value?.commands.focus()
+}
+
 onBeforeUnmount(() => {
 	editor.value?.destroy()
+})
+
+defineExpose({
+	focus,
 })
 </script>
 
