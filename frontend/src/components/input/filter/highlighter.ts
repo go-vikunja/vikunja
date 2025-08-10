@@ -81,17 +81,21 @@ function decorateDocument(doc: Node) {
 		let labelMatch
 		while ((labelMatch = pattern.exec(text)) !== null) {
 			const labelValue = labelMatch[4]?.trim()
+			const operator = labelMatch[2]?.trim()
 			if (labelValue) { // If there's a value
 				const valueStart = labelMatch.index + labelMatch[0].indexOf(labelValue)
 				const valueEnd = valueStart + labelValue.length
 
-				// Find the label by its title
-				const label = labelStore.getLabelByExactTitle(labelValue)
+				const addLabelDecoration = (labelValue: string, start: number, end: number) => {
+					const label = labelStore.getLabelByExactTitle(labelValue)
 
-				const from = findPosForIndex(doc, valueStart)
-				const to = findPosForIndex(doc, valueEnd)
+					const from = findPosForIndex(doc, start)
+					const to = findPosForIndex(doc, end)
 
-				if (from !== null && to !== null) {
+					if (from === null || to === null) {
+						return
+					}
+
 					if (label) {
 						// Use label color if found
 						decorations.push(
@@ -100,14 +104,42 @@ function decorateDocument(doc: Node) {
 								style: `background-color: ${label.hexColor}; color: ${label.hexColor && colorIsDark(label.hexColor) ? 'white' : 'black'};`,
 							}),
 						)
-					} else {
-						// Fallback to generic value styling
-						decorations.push(
-							Decoration.inline(from, to, {class: 'value'}),
-						)
+
+						return
 					}
-					valueRanges.push({start: valueStart, end: valueEnd})
+
+					// Fallback to generic value styling
+					decorations.push(
+						Decoration.inline(from, to, {class: 'value'}),
+					)
+					valueRanges.push({start, end})
 				}
+
+				// Check if this is a multi-value operator and the value contains commas
+				const isMultiValueOperator = ['in', '?=', 'not in', '?!='].includes(operator)
+				if (isMultiValueOperator && labelValue.includes(',')) {
+					// Split by commas and create decorations for each individual label
+					const labels = labelValue.split(',').map(l => l.trim()).filter(l => l.length > 0)
+					let currentOffset = 0
+					
+					labels.forEach(individualLabel => {
+						// Find the position of this individual label within the full value
+						const labelIndex = labelValue.indexOf(individualLabel, currentOffset)
+						if (labelIndex !== -1) {
+							const individualStart = valueStart + labelIndex
+							const individualEnd = individualStart + individualLabel.length
+
+							addLabelDecoration(individualLabel, individualStart, individualEnd)
+							
+							currentOffset = labelIndex + individualLabel.length
+						}
+					})
+					
+					valueRanges.push({start: valueStart, end: valueEnd})
+					continue
+				}
+				
+				addLabelDecoration(labelValue, valueStart, valueEnd)
 			}
 
 			const valueStart = labelMatch.index + labelMatch[0].lastIndexOf(labelValue)
