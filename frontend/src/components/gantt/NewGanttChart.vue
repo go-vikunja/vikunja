@@ -33,7 +33,6 @@
 						:id="rowId"
 						:key="rowId"
 						:index="index"
-						:selected="false"
 						@select="onRowSelect"
 						@focus="onRowFocus"
 					>
@@ -488,9 +487,6 @@ onUnmounted(() => {
 	--bar-bg-drag: var(--primary-light);
 	--bar-stroke-focus: var(--primary);
 	--text-on-bar: var(--grey-800);
-	--row-bg: var(--white);
-	--row-alt-bg: hsla(var(--grey-100-hsl), .5);
-	--row-selected-bg: var(--primary-light);
 }
 
 .gantt-chart-wrapper {
@@ -498,8 +494,6 @@ onUnmounted(() => {
 	min-width: 100%;
 	position: relative;
 }
-
-
 
 .gantt-rows {
 	position: relative;
@@ -511,22 +505,4 @@ onUnmounted(() => {
 	min-height: 40px;
 	width: 100%;
 }
-
-
-// Ensure rows have minimum height and proper styling
-:deep(.gantt-row) {
-	min-height: 40px;
-	position: relative;
-	border-bottom: 1px solid var(--grey-200);
-	z-index: 2;
-	
-	&:nth-child(odd) {
-		background: var(--row-alt-bg);
-	}
-	
-	&:nth-child(even) {
-		background: var(--row-bg);
-	}
-}
-
 </style>

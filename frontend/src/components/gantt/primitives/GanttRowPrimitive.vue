@@ -12,15 +12,18 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
+
 const props = defineProps<{ 
   id: string
-  selected: boolean 
 }>()
 
 const emit = defineEmits<{
   select: [id: string]
   focus: [id: string]
 }>()
+
+const selected = ref(false)
 
 function onSelect() { 
 	emit('select', props.id) 
