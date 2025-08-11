@@ -6,6 +6,7 @@
 		:aria-rowcount="rows.length"
 		:aria-colcount="cellsCount"
 		@keydown="onKeyDown"
+		@click="initializeFocus"
 	>
 		<slot
 			:focused-row="focusedRow"
@@ -42,10 +43,49 @@ onClickOutside(chartRef, () => {
 
 function onKeyDown(e: KeyboardEvent) {
 	if (focusedRowIndex.value === null || focusedCellIndex.value === null) return
-	if (e.key === 'ArrowRight') focusedCellIndex.value++
-	if (e.key === 'ArrowLeft') focusedCellIndex.value--
-	if (e.key === 'ArrowDown') focusedRowIndex.value++
-	if (e.key === 'ArrowUp') focusedRowIndex.value--
+	
+	let newRowIndex = focusedRowIndex.value
+	let newCellIndex = focusedCellIndex.value
+	
+	if (e.key === 'ArrowRight') {
+		newCellIndex = Math.min(newCellIndex + 1, cellsCount.value - 1)
+	}
+	if (e.key === 'ArrowLeft') {
+		newCellIndex = Math.max(newCellIndex - 1, 0)
+	}
+	if (e.key === 'ArrowDown') {
+		newRowIndex = Math.min(newRowIndex + 1, props.rows.length - 1)
+	}
+	if (e.key === 'ArrowUp') {
+		newRowIndex = Math.max(newRowIndex - 1, 0)
+	}
+	
+	focusedRowIndex.value = newRowIndex
+	focusedCellIndex.value = newCellIndex
 	emit('update:focused', {row: focusedRow.value, cell: focusedCellIndex.value})
 }
+
+function initializeFocus() {
+	// Only initialize focus if not already set and there are rows
+	if (focusedRowIndex.value === null && props.rows.length > 0) {
+		focusedRowIndex.value = 0
+		focusedCellIndex.value = 0
+		emit('update:focused', {row: focusedRow.value, cell: focusedCellIndex.value})
+	}
+}
+
+function setFocus(rowId: string, cellIndex: number = 0) {
+	const rowIndex = props.rows.indexOf(rowId)
+	if (rowIndex !== -1) {
+		focusedRowIndex.value = rowIndex
+		focusedCellIndex.value = Math.max(0, Math.min(cellIndex, cellsCount.value - 1))
+		emit('update:focused', {row: focusedRow.value, cell: focusedCellIndex.value})
+	}
+}
+
+// Expose methods for parent components
+defineExpose({
+	setFocus,
+	initializeFocus,
+})
 </script>

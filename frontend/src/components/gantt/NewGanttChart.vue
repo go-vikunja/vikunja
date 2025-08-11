@@ -23,33 +23,40 @@
 
 			<!-- Gantt Chart Body -->
 			<GanttChartBody
+				ref="ganttChartBodyRef"
 				:rows="ganttRows"
 				:cells-by-row="cellsByRow"
+				@update:focused="handleFocusChange"
 			>
-				<div class="gantt-rows">
-					<GanttRow
-						v-for="(rowId, index) in ganttRows"
-						:id="rowId"
-						:key="rowId"
-						:index="index"
-					>
-						<!-- Row content with relative positioning -->
-						<div class="gantt-row-content">
-							<GanttRowBars
-								:bars="ganttBars[index]"
-								:total-width="totalWidth"
-								:date-from-date="dateFromDate"
-								:date-to-date="dateToDate"
-								:day-width-pixels="DAY_WIDTH_PIXELS"
-								:is-dragging="isDragging"
-								:is-resizing="isResizing"
-								:drag-state="dragState"
-								@barPointerDown="handleBarPointerDown"
-								@startResize="startResize"
-							/>
-						</div>
-					</GanttRow>
-				</div>
+				<template #default="{ focusedRow, focusedCell }">
+					<div class="gantt-rows">
+						<GanttRow
+							v-for="(rowId, index) in ganttRows"
+							:id="rowId"
+							:key="rowId"
+							:index="index"
+						>
+							<!-- Row content with relative positioning -->
+							<div class="gantt-row-content">
+								<GanttRowBars
+									:bars="ganttBars[index]"
+									:total-width="totalWidth"
+									:date-from-date="dateFromDate"
+									:date-to-date="dateToDate"
+									:day-width-pixels="DAY_WIDTH_PIXELS"
+									:is-dragging="isDragging"
+									:is-resizing="isResizing"
+									:drag-state="dragState"
+									:focused-row="focusedRow"
+									:focused-cell="focusedCell"
+									:row-id="rowId"
+									@barPointerDown="handleBarPointerDown"
+									@startResize="startResize"
+								/>
+							</div>
+						</GanttRow>
+					</div>
+				</template>
 			</GanttChartBody>
 		</div>
 	</div>
@@ -93,11 +100,17 @@ const {tasks, filters} = toRefs(props)
 
 const dayjsLanguageLoading = useDayjsLanguageSync(dayjs)
 const ganttContainer = ref(null)
+const ganttChartBodyRef = ref<InstanceType<typeof GanttChartBody> | null>(null)
 const router = useRouter()
 
 // Reactive drag state
 const isDragging = ref(false)
 const isResizing = ref(false)
+
+// Focus state
+const currentFocusedRow = ref<string | null>(null)
+const currentFocusedCell = ref<number | null>(null)
+
 const dragState = ref<{
 	barId: string
 	startX: number
@@ -160,9 +173,6 @@ function transformTaskToGanttBar(t: ITask): GanttBarModel {
 	return bar
 }
 
-/**
- * Update ganttBars when tasks change
- */
 watch(
 	[tasks, filters],
 	() => {
@@ -233,6 +243,12 @@ let dragStarted = false
 
 function handleBarPointerDown(bar: GanttBarModel, event: PointerEvent) {
 	event.preventDefault()
+	
+	// Set focus to the clicked task's row
+	const barIndex = ganttBars.value.findIndex(barGroup => barGroup.some(b => b.id === bar.id))
+	if (barIndex !== -1 && ganttRows.value[barIndex]) {
+		setFocusToRow(ganttRows.value[barIndex])
+	}
 	
 	const currentTime = Date.now()
 	const timeDiff = currentTime - lastClickTime
@@ -443,6 +459,15 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 	
 	document.addEventListener('pointermove', handleMove)
 	document.addEventListener('pointerup', handleStop)
+}
+
+function handleFocusChange(payload: { row: string | null; cell: number | null }) {
+	currentFocusedRow.value = payload.row
+	currentFocusedCell.value = payload.cell
+}
+
+function setFocusToRow(rowId: string) {
+	ganttChartBodyRef.value?.setFocus(rowId, 0)
 }
 
 // Cleanup event listeners on component unmount

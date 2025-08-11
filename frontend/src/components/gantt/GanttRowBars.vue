@@ -103,12 +103,17 @@ const props = defineProps<{
 		currentDays: number
 		edge?: 'start' | 'end'
 	} | null
+	focusedRow: string | null
+	focusedCell: number | null
+	rowId: string
 }>()
 
 const emit = defineEmits<{
 	(e: 'barPointerDown', bar: GanttBarModel, event: PointerEvent): void
 	(e: 'startResize', bar: GanttBarModel, edge: 'start' | 'end', event: PointerEvent): void
 }>()
+
+const isRowFocused = computed(() => props.focusedRow === props.rowId)
 
 // Direct SVG bar rendering functions
 function computeBarX(startDate: Date) {
@@ -176,6 +181,9 @@ function getBarFill(bar: GanttBarModel) {
 }
 
 function getBarStroke(bar: GanttBarModel) {
+	if (isRowFocused.value) {
+		return 'var(--primary)'
+	}
 	if (!bar.meta?.hasActualDates) {
 		return 'var(--grey-300)' // Gray for dashed border
 	}
@@ -183,6 +191,9 @@ function getBarStroke(bar: GanttBarModel) {
 }
 
 function getBarStrokeWidth(bar: GanttBarModel) {
+	if (isRowFocused.value) {
+		return '3'
+	}
 	if (!bar.meta?.hasActualDates) {
 		return '2'
 	}
