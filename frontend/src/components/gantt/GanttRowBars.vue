@@ -230,8 +230,8 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 <style scoped lang="scss">
 .gantt-row-bars {
 	position: absolute;
-	top: 0;
-	left: 0;
+	inset-block-start: 0;
+	inset-inline-start: 0;
 	pointer-events: none;
 	z-index: 4;
 	

@@ -102,9 +102,9 @@ const monthGroups = computed(() => {
 <style scoped lang="scss">
 .gantt-timeline {
 	background: var(--white);
-	border-bottom: 1px solid var(--grey-200);
+	border-block-end: 1px solid var(--grey-200);
 	position: sticky;
-	top: 0;
+	inset-block-start: 0;
 	z-index: 10;
 }
 
@@ -115,7 +115,7 @@ const monthGroups = computed(() => {
 		background: var(--white);
 		font-family: $vikunja-font;
 		font-weight: bold;
-		border-right: 1px solid var(--grey-200);
+		border-inline-end: 1px solid var(--grey-200);
 		padding: 0.5rem 0;
 		text-align: center;
 		font-size: 1rem;
@@ -133,7 +133,7 @@ const monthGroups = computed(() => {
 			display: flex;
 			flex-direction: column;
 			align-items: center;
-			width: 100%;
+			inline-size: 100%;
 			font-family: $vikunja-font;
 			
 			&.today {

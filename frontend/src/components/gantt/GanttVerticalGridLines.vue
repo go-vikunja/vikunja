@@ -33,14 +33,14 @@ defineProps<{
 <style scoped lang="scss">
 .gantt-grid-lines {
 	position: absolute;
-	left: 0;
+	inset-inline-start: 0;
 	z-index: 1;
 	pointer-events: none;
 }
 
 .gantt-vertical-lines {
 	position: absolute;
-	top: 0;
-	left: 0;
+	inset-block-start: 0;
+	inset-inline-start: 0;
 }
 </style>

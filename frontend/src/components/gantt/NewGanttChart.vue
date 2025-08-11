@@ -491,8 +491,8 @@ onUnmounted(() => {
 }
 
 .gantt-chart-wrapper {
-	width: max-content;
-	min-width: 100%;
+	inline-size: max-content;
+	min-inline-size: 100%;
 	position: relative;
 }
 
@@ -503,7 +503,7 @@ onUnmounted(() => {
 
 .gantt-row-content {
 	position: relative;
-	min-height: 40px;
-	width: 100%;
+	min-block-size: 40px;
+	inline-size: 100%;
 }
 </style>
