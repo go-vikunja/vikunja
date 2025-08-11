@@ -481,12 +481,6 @@ onUnmounted(() => {
 <style scoped lang="scss">
 .gantt-container {
 	overflow-x: auto;
-	
-	--bar-bg: var(--grey-100);
-	--bar-bg-active: var(--primary);
-	--bar-bg-drag: var(--primary-light);
-	--bar-stroke-focus: var(--primary);
-	--text-on-bar: var(--grey-800);
 }
 
 .gantt-chart-wrapper {
