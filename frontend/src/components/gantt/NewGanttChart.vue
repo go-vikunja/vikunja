@@ -25,7 +25,6 @@
 			<GanttChartBody
 				:rows="ganttRows"
 				:cells-by-row="cellsByRow"
-				@update:focused="onFocusChanged"
 			>
 				<div class="gantt-rows">
 					<GanttRow
@@ -33,8 +32,6 @@
 						:id="rowId"
 						:key="rowId"
 						:index="index"
-						@select="onRowSelect"
-						@focus="onRowFocus"
 					>
 						<!-- Row content with relative positioning -->
 						<div class="gantt-row-content">
@@ -229,19 +226,6 @@ function openTask(bar: GanttBarModel) {
 		state: {backdropView: router.currentRoute.value.fullPath},
 	})
 }
-
-function onFocusChanged() {
-	// Handle focus changes if needed
-}
-
-function onRowSelect() {
-	// Handle row selection if needed
-}
-
-function onRowFocus() {
-	// Handle row focus if needed
-}
-
 
 // Double-click and drag detection
 let lastClickTime = 0
