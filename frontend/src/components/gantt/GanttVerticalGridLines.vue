@@ -22,14 +22,12 @@
 </template>
 
 <script setup lang="ts">
-interface GanttVerticalGridLinesProps {
+defineProps<{
 	timelineData: Date[]
 	totalWidth: number
 	height: number
 	dayWidthPixels: number
-}
-
-defineProps<GanttVerticalGridLinesProps>()
+}>()
 </script>
 
 <style scoped lang="scss">

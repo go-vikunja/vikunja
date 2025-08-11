@@ -41,12 +41,10 @@ import { useGlobalNow } from '@/composables/useGlobalNow'
 import { useWeekDayFromDate } from '@/helpers/time/formatDate'
 import dayjs from 'dayjs'
 
-interface Props {
+const props = defineProps<{
 	timelineData: Date[]
 	dayWidthPixels: number
-}
-
-const props = defineProps<Props>()
+}>()
 
 const weekDayFromDate = useWeekDayFromDate()
 const { now: today } = useGlobalNow()

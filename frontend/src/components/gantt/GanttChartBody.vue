@@ -12,7 +12,7 @@
 import GanttChartPrimitive from '@/components/gantt/primitives/GanttChartPrimitive.vue'
 
 defineProps<{ 
-	rows: string[]; 
+	rows: string[]
 	cellsByRow: Record<string, string[]> 
 }>()
 defineEmits<{

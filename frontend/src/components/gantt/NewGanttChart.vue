@@ -80,15 +80,13 @@ import {MILLISECONDS_A_DAY} from '@/constants/date'
 import dayjs from 'dayjs'
 import {useDayjsLanguageSync} from '@/i18n/useDayjsLanguageSync'
 
-export interface GanttChartProps {
+const props = defineProps<{
 	isLoading: boolean,
 	filters: GanttFilters,
 	tasks: Map<ITask['id'], ITask>,
 	defaultTaskStartDate: DateISO
 	defaultTaskEndDate: DateISO
-}
-
-const props = defineProps<GanttChartProps>()
+}>()
 
 const emit = defineEmits<{
   (e: 'update:task', task: ITaskPartialWithId): void

@@ -87,7 +87,7 @@ import {colorIsDark} from '@/helpers/color/colorIsDark'
 
 import GanttBarPrimitive from './primitives/GanttBarPrimitive.vue'
 
-interface Props {
+const props = defineProps<{
 	bars: GanttBarModel[]
 	totalWidth: number
 	dateFromDate: Date
@@ -103,9 +103,7 @@ interface Props {
 		currentDays: number
 		edge?: 'start' | 'end'
 	} | null
-}
-
-const props = defineProps<Props>()
+}>()
 
 const emit = defineEmits<{
 	(e: 'barPointerDown', bar: GanttBarModel, event: PointerEvent): void

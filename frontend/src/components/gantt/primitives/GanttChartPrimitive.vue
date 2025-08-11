@@ -18,7 +18,10 @@
 import {ref, computed} from 'vue'
 import {onClickOutside} from '@vueuse/core'
 
-const props = defineProps<{ rows: string[]; cellsByRow: Record<string,string[]> }>()
+const props = defineProps<{ 
+	rows: string[]
+	cellsByRow: Record<string,string[]>
+}>()
 const emit = defineEmits<{
   (e:'update:focused', payload:{row:string|null;cell:number|null}):void
 }>()
