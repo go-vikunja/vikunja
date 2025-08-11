@@ -73,9 +73,38 @@ describe('Project View Gantt', () => {
 
 		cy.get('.gantt-rows .gantt-row-bars .gantt-bar')
 			.first()
-			.trigger('pointerdown', {which: 1, pointerId: 1})
-			.trigger('pointermove', {clientX: 500, clientY: 0, pointerId: 1})
-			.trigger('pointerup', {force: true, pointerId: 1})
+			.then($bar => {
+				// Get the current position of the bar
+				const rect = $bar[0].getBoundingClientRect()
+				const startX = rect.left + rect.width / 2
+				const startY = rect.top + rect.height / 2
+				
+				// Trigger pointer events with proper coordinates and delays
+				cy.wrap($bar)
+					.trigger('pointerdown', {
+						clientX: startX,
+						clientY: startY,
+						pointerId: 1,
+						which: 1
+					})
+					.wait(100) // Wait to ensure double-click detection doesn't interfere
+					.trigger('pointermove', {
+						clientX: startX + 10, // Small initial movement to trigger drag
+						clientY: startY,
+						pointerId: 1
+					})
+					.trigger('pointermove', {
+						clientX: startX + 150, // Move 150px to the right (about 5 days)
+						clientY: startY,
+						pointerId: 1
+					})
+					.trigger('pointerup', {
+						clientX: startX + 150,
+						clientY: startY,
+						pointerId: 1,
+						force: true
+					})
+			})
 		cy.wait('@taskUpdate')
 	})
 
