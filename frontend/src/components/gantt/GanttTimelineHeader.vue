@@ -72,12 +72,9 @@ const props = defineProps<{
 const weekDayFromDate = useWeekDayFromDate()
 const { now: today } = useGlobalNow()
 
-const dateIsToday = computed(() => (date: Date) => {
-	return (
-		date.getDate() === today.value.getDate() &&
-        date.getMonth() === today.value.getMonth() &&
-        date.getFullYear() === today.value.getFullYear()
-	)
+const dateIsToday = computed(() => {
+	const todayStr = today.value.toDateString()
+	return (date: Date) => date.toDateString() === todayStr
 })
 
 const monthGroups = computed(() => {
