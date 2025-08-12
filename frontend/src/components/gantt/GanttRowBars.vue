@@ -100,9 +100,10 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import dayjs from 'dayjs'
+
 import type { GanttBarModel } from '@/composables/useGanttBar'
 import { getTextColor, LIGHT } from '@/helpers/color/getTextColor'
-import dayjs from 'dayjs'
 
 import GanttBarPrimitive from './primitives/GanttBarPrimitive.vue'
 
@@ -142,8 +143,13 @@ function computeBarX(startDate: Date) {
 	return x
 }
 
+function getDaysDifference(startDate: Date, endDate: Date): number {
+	const msPerDay = 1000 * 60 * 60 * 24
+	return Math.floor((endDate.getTime() - startDate.getTime()) / msPerDay)
+}
+
 function computeBarWidth(bar: GanttBarModel) {
-	const diff = (bar.end.getTime() - bar.start.getTime()) / (1000 * 60 * 60 * 24)
+	const diff = getDaysDifference(bar.start, bar.end)
 	const width = diff * props.dayWidthPixels
 	return width
 }
