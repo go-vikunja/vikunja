@@ -133,7 +133,6 @@ const totalWidth = computed(() => {
 	return dateDiff * DAY_WIDTH_PIXELS
 })
 
-// Generate timeline data (array of dates)
 const timelineData = computed(() => {
 	const dates: Date[] = []
 	const currentDate = new Date(dateFromDate.value)
@@ -151,8 +150,12 @@ const ganttRows = ref<string[]>([])
 const cellsByRow = ref<Record<string, string[]>>({})
 
 function transformTaskToGanttBar(t: ITask): GanttBarModel {
-	const startDate = t.startDate ? new Date(t.startDate) : new Date(props.defaultTaskStartDate)
-	const endDate = t.endDate ? new Date(t.endDate) : new Date(props.defaultTaskEndDate)
+	const startDate = t.startDate 
+		? new Date(t.startDate) 
+		: new Date(props.defaultTaskStartDate)
+	const endDate = t.endDate 
+		? new Date(t.endDate) 
+		: new Date(props.defaultTaskEndDate)
 	
 	const taskColor = getHexColor(t.hexColor)
 	
@@ -180,17 +183,20 @@ watch(
 		const cells: Record<string, string[]> = {}
 		
 		const filteredTasks = Array.from(tasks.value.values()).filter(task => {
-			// If showTasksWithoutDates is false, only show tasks with actual dates
 			if (!filters.value.showTasksWithoutDates && (!task.startDate || !task.endDate)) {
 				return false
 			}
 			
-			// Check if task is within the date range
-			const taskStart = task.startDate ? new Date(task.startDate) : new Date(props.defaultTaskStartDate)
-			const taskEnd = task.endDate ? new Date(task.endDate) : new Date(props.defaultTaskEndDate)
+			const taskStart = task.startDate 
+				? new Date(task.startDate) 
+				: new Date(props.defaultTaskStartDate)
+			const taskEnd = task.endDate 
+				? new Date(task.endDate) 
+				: new Date(props.defaultTaskEndDate)
 			
 			// Task is visible if it overlaps with the current date range
-			return taskStart <= dateToDate.value && taskEnd >= dateFromDate.value
+			return taskStart <= dateToDate.value 
+				&& taskEnd >= dateFromDate.value
 		})
 		
 		filteredTasks.forEach((t, index) => {
@@ -200,7 +206,6 @@ watch(
 			const rowId = `row-${index}`
 			rows.push(rowId)
 			
-			// Create cells for each day in the timeline
 			const rowCells: string[] = []
 			timelineData.value.forEach((date, dayIndex) => {
 				rowCells.push(`${rowId}-cell-${dayIndex}`)
@@ -267,7 +272,7 @@ function handleBarPointerDown(bar: GanttBarModel, event: PointerEvent) {
 		const diffX = Math.abs(e.clientX - startX)
 		const diffY = Math.abs(e.clientY - startY)
 		
-		// Start drag if mouse moved more than 5 pixels
+		// Start drag if mouse moved more than threshhold
 		if (!dragStarted && (diffX > DRAG_THRESHOLD_PIXELS || diffY > DRAG_THRESHOLD_PIXELS)) {	
 			dragStarted = true
 			document.removeEventListener('pointermove', handleMove)
