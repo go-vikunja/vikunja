@@ -39,7 +39,5 @@ function onKeyDown(e: KeyboardEvent) {
 		e.preventDefault()
 		onSelect()
 	}
-
-	console.log('row primitive')
 }
 </script>

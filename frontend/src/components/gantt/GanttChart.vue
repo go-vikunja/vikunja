@@ -53,7 +53,6 @@
 									:row-id="rowId"
 									@barPointerDown="handleBarPointerDown"
 									@startResize="startResize"
-									@updateTask="updateGanttTask"
 								/>
 							</div>
 						</GanttRow>
