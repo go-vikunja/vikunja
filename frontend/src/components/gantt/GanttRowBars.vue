@@ -103,6 +103,7 @@ import dayjs from 'dayjs'
 
 import type {GanttBarModel} from '@/composables/useGanttBar'
 import {getTextColor, LIGHT} from '@/helpers/color/getTextColor'
+import {MILLISECONDS_A_DAY} from '@/constants/date'
 
 import GanttBarPrimitive from './primitives/GanttBarPrimitive.vue'
 
@@ -151,8 +152,7 @@ function computeBarX(startDate: Date) {
 }
 
 function getDaysDifference(startDate: Date, endDate: Date): number {
-	const msPerDay = 1000 * 60 * 60 * 24
-	return Math.floor((endDate.getTime() - startDate.getTime()) / msPerDay)
+	return Math.floor((endDate.getTime() - startDate.getTime()) / MILLISECONDS_A_DAY)
 }
 
 function computeBarWidth(bar: GanttBarModel) {
