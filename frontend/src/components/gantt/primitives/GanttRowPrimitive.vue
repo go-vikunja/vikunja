@@ -23,7 +23,12 @@ const emit = defineEmits<{
   focus: [id: string]
 }>()
 
-const selected = ref(false)
+const props = defineProps<{ 
+  id: string
+  selected?: boolean
+}>()
+
+const selected = computed(() => props.selected ?? false)
 
 function onSelect() { 
 	emit('select', props.id) 
