@@ -28,6 +28,7 @@
 				:rows="ganttRows"
 				:cells-by-row="cellsByRow"
 				@update:focused="handleFocusChange"
+				@enterPressed="handleEnterPressed"
 			>
 				<template #default="{ focusedRow, focusedCell }">
 					<div class="gantt-rows">
@@ -447,6 +448,14 @@ function handleFocusChange(payload: { row: string | null; cell: number | null })
 
 function setFocusToRow(rowId: string) {
 	ganttChartBodyRef.value?.setFocus(rowId, 0)
+}
+
+function handleEnterPressed(payload: { row: string; cell: number }) {
+	const rowIndex = ganttRows.value.indexOf(payload.row)
+	if (rowIndex !== -1 && ganttBars.value[rowIndex]?.[0]) {
+		const bar = ganttBars.value[rowIndex][0]
+		openTask(bar)
+	}
 }
 
 onUnmounted(() => {

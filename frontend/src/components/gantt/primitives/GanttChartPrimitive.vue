@@ -25,6 +25,7 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{
 	(e: 'update:focused', payload: { row: string | null; cell: number | null }): void
+	(e: 'enterPressed', payload: { row: string; cell: number }): void
 }>()
 
 const chartRef = ref<HTMLElement | null>(null)
@@ -46,6 +47,12 @@ onClickOutside(chartRef, () => {
 
 function onKeyDown(e: KeyboardEvent) {
 	if (focusedRowIndex.value === null || focusedCellIndex.value === null) return
+
+	if (e.key === 'Enter') {
+		e.preventDefault()
+		emit('enterPressed', { row: focusedRow.value!, cell: focusedCellIndex.value })
+		return
+	}
 
 	let newRowIndex = focusedRowIndex.value
 	let newCellIndex = focusedCellIndex.value

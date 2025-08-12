@@ -4,6 +4,7 @@
 		:rows="rows"
 		:cells-by-row="cellsByRow"
 		@update:focused="$emit('update:focused', $event)"
+		@enterPressed="$emit('enterPressed', $event)"
 	>
 		<template #default="{ focusedRow, focusedCell }">
 			<slot
@@ -25,6 +26,7 @@ defineProps<{
 }>()
 defineEmits<{
 	'update:focused': [payload: { row: string | null; cell: number | null }],
+	'enterPressed': [payload: { row: string; cell: number }],
 }>()
 
 const primitiveRef = ref<InstanceType<typeof GanttChartPrimitive> | null>(null)
