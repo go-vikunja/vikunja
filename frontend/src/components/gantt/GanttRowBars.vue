@@ -260,30 +260,22 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 	pointer-events: none;
 	z-index: 4;
 
-	:deep(.gantt-bar) {
-		pointer-events: all;
+	.gantt-bar {
 		cursor: grab;
+		pointer-events: all;
 
 		&:hover {
 			opacity: 0.8;
+		}
+
+		&:active {
+			cursor: grabbing;
 		}
 	}
 
 	:deep(text) {
 		pointer-events: none;
 		user-select: none;
-	}
-}
-
-.gantt-bar {
-	cursor: grab;
-
-	&:hover {
-		opacity: 0.8;
-	}
-
-	&:active {
-		cursor: grabbing;
 	}
 }
 
