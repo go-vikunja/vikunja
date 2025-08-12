@@ -53,6 +53,7 @@
 									:row-id="rowId"
 									@barPointerDown="handleBarPointerDown"
 									@startResize="startResize"
+									@updateTask="updateGanttTask"
 								/>
 							</div>
 						</GanttRow>
@@ -243,7 +244,7 @@ function handleBarPointerDown(bar: GanttBarModel, event: PointerEvent) {
 	
 	const barIndex = ganttBars.value.findIndex(barGroup => barGroup.some(b => b.id === bar.id))
 	if (barIndex !== -1 && ganttRows.value[barIndex]) {
-		setFocusToRow(ganttRows.value[barIndex])
+		focusTaskBar(ganttRows.value[barIndex])
 	}
 	
 	const currentTime = Date.now()
@@ -446,16 +447,21 @@ function handleFocusChange(payload: { row: string | null; cell: number | null })
 	currentFocusedCell.value = payload.cell
 }
 
-function setFocusToRow(rowId: string) {
-	ganttChartBodyRef.value?.setFocus(rowId, 0)
-}
-
 function handleEnterPressed(payload: { row: string; cell: number }) {
 	const rowIndex = ganttRows.value.indexOf(payload.row)
 	if (rowIndex !== -1 && ganttBars.value[rowIndex]?.[0]) {
 		const bar = ganttBars.value[rowIndex][0]
 		openTask(bar)
 	}
+}
+
+function focusTaskBar(rowId: string) {
+	setTimeout(() => {
+		const taskBarElement = document.querySelector(`[data-row-id="${rowId}"] [role="slider"]`) as HTMLElement
+		if (taskBarElement) {
+			taskBarElement.focus()
+		}
+	}, 0)
 }
 
 onUnmounted(() => {

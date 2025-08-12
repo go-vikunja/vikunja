@@ -6,6 +6,7 @@
 		xmlns="http://www.w3.org/2000/svg"
 		role="img"
 		:aria-label="$t('project.gantt.taskBarsForRow', { rowId })"
+		:data-row-id="rowId"
 	>
 		<GanttBarPrimitive
 			v-for="bar in bars"
@@ -13,6 +14,7 @@
 			:model="bar"
 			:timeline-start="dateFromDate"
 			:timeline-end="dateToDate"
+			:on-update="(id, start, end) => emit('updateTask', id, start, end)"
 		>
 			<!-- Main bar -->
 			<rect
@@ -34,7 +36,6 @@
 					dateType: bar.meta?.hasActualDates ? $t('project.gantt.scheduledDates') : $t('project.gantt.estimatedDates')
 				})"
 				:aria-pressed="isRowFocused"
-				tabindex="0"
 				@pointerdown="handleBarPointerDown(bar, $event)"
 			/>
 
@@ -51,7 +52,6 @@
 				class="gantt-resize-handle gantt-resize-left"
 				role="button"
 				:aria-label="$t('project.gantt.resizeStartDate', { task: bar.meta?.label || bar.id })"
-				tabindex="0"
 				@pointerdown="startResize(bar, 'start', $event)"
 			/>
 
@@ -68,7 +68,6 @@
 				class="gantt-resize-handle gantt-resize-right"
 				role="button"
 				:aria-label="$t('project.gantt.resizeEndDate', { task: bar.meta?.label || bar.id })"
-				tabindex="0"
 				@pointerdown="startResize(bar, 'end', $event)"
 			/>
 
@@ -131,6 +130,7 @@ const props = defineProps<{
 const emit = defineEmits<{
 	(e: 'barPointerDown', bar: GanttBarModel, event: PointerEvent): void
 	(e: 'startResize', bar: GanttBarModel, edge: 'start' | 'end', event: PointerEvent): void
+	(e: 'updateTask', id: string, newStart: Date, newEnd: Date): void
 }>()
 
 const RESIZE_HANDLE_OFFSET = 3

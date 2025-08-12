@@ -53,26 +53,6 @@ function onKeyDown(e: KeyboardEvent) {
 		emit('enterPressed', { row: focusedRow.value!, cell: focusedCellIndex.value })
 		return
 	}
-
-	let newRowIndex = focusedRowIndex.value
-	let newCellIndex = focusedCellIndex.value
-
-	if (e.key === 'ArrowRight') {
-		newCellIndex = Math.min(newCellIndex + 1, cellsCount.value - 1)
-	}
-	if (e.key === 'ArrowLeft') {
-		newCellIndex = Math.max(newCellIndex - 1, 0)
-	}
-	if (e.key === 'ArrowDown') {
-		newRowIndex = Math.min(newRowIndex + 1, props.rows.length - 1)
-	}
-	if (e.key === 'ArrowUp') {
-		newRowIndex = Math.max(newRowIndex - 1, 0)
-	}
-
-	focusedRowIndex.value = newRowIndex
-	focusedCellIndex.value = newCellIndex
-	emit('update:focused', { row: focusedRow.value, cell: focusedCellIndex.value })
 }
 
 function initializeFocus() {

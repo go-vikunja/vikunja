@@ -16,6 +16,7 @@ export interface UseGanttBarOptions {
 	model: GanttBarModel
 	timelineStart: Date
 	timelineEnd: Date
+	onUpdate?: (id: string, newStart: Date, newEnd: Date) => void
 }
 
 export function useGanttBar(options: UseGanttBarOptions) {
@@ -33,7 +34,6 @@ export function useGanttBar(options: UseGanttBarOptions) {
 
 	function onKeyDown(e: KeyboardEvent) {
 		if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-
 			e.preventDefault()
 
 			const dir = e.key === 'ArrowRight' ? 1 : -1
@@ -44,6 +44,10 @@ export function useGanttBar(options: UseGanttBarOptions) {
 
 			options.model.start = newStart
 			options.model.end = newEnd
+
+			if (options.onUpdate) {
+				options.onUpdate(options.model.id, newStart, newEnd)
+			}
 		}
 	}
 
