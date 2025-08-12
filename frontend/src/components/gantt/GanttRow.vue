@@ -21,7 +21,10 @@ const props = defineProps<{
 	id: string
 	index: number 
 }>()
-const emit = defineEmits(['focus','select'])
+const emit = defineEmits<{
+  (e: 'focus', id: string): void
+  (e: 'select', id: string): void
+}>()
 const onFocus = () => emit('focus', props.id)
 const onSelect = () => emit('select', props.id)
 </script>
