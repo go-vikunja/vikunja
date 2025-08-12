@@ -378,7 +378,9 @@
       "daysRow": "Days row",
       "monthLabel": "Month: {month}",
       "dayLabel": "Day: {date}, {weekday}",
-      "dayLabelToday": "Today: {date}, {weekday}"
+      "dayLabelToday": "Today: {date}, {weekday}",
+      "taskAriaLabel": "Task: {task}",
+      "taskAriaLabelById": "Task {id}"
     },
     "table": {
       "title": "Table",
