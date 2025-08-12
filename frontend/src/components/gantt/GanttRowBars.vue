@@ -40,7 +40,7 @@
 
 			<!-- Left resize handle -->
 			<rect
-				:x="getBarX(bar) - 3"
+				:x="getBarX(bar) - RESIZE_HANDLE_OFFSET"
 				:y="4"
 				:width="6"
 				:height="32"
@@ -57,7 +57,7 @@
 
 			<!-- Right resize handle -->
 			<rect
-				:x="getBarX(bar) + getBarWidth(bar) - 3"
+				:x="getBarX(bar) + getBarWidth(bar) - RESIZE_HANDLE_OFFSET"
 				:y="4"
 				:width="6"
 				:height="32"
@@ -131,6 +131,8 @@ const emit = defineEmits<{
 	(e: 'barPointerDown', bar: GanttBarModel, event: PointerEvent): void
 	(e: 'startResize', bar: GanttBarModel, edge: 'start' | 'end', event: PointerEvent): void
 }>()
+
+const RESIZE_HANDLE_OFFSET = 3
 
 const isRowFocused = computed(() => props.focusedRow === props.rowId)
 
