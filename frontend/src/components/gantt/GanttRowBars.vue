@@ -4,6 +4,8 @@
 		:width="totalWidth"
 		height="40"
 		xmlns="http://www.w3.org/2000/svg"
+		role="img"
+		:aria-label="$t('project.gantt.taskBarsForRow', {rowId})"
 	>
 		<GanttBarPrimitive
 			v-for="bar in bars"
@@ -24,6 +26,15 @@
 				:stroke-width="getBarStrokeWidth(bar)"
 				:stroke-dasharray="!bar.meta?.hasActualDates ? '5,5' : 'none'"
 				class="gantt-bar"
+				role="button"
+				:aria-label="$t('project.gantt.taskBarLabel', {
+					task: bar.meta?.label || bar.id,
+					startDate: bar.start.toLocaleDateString(),
+					endDate: bar.end.toLocaleDateString(),
+					dateType: bar.meta?.hasActualDates ? t('project.gantt.scheduledDates') : t('project.gantt.estimatedDates')
+				})"
+				:aria-pressed="isRowFocused"
+				tabindex="0"
 				@pointerdown="handleBarPointerDown(bar, $event)"
 			/>
 			
@@ -38,6 +49,9 @@
 				stroke="var(--primary)"
 				stroke-width="1"
 				class="gantt-resize-handle gantt-resize-left"
+				role="button"
+				:aria-label="$t('project.gantt.resizeStartDate', {task: bar.meta?.label || bar.id})"
+				tabindex="0"
 				@pointerdown="startResize(bar, 'start', $event)"
 			/>
 			
@@ -52,6 +66,9 @@
 				stroke="var(--primary)"
 				stroke-width="1"
 				class="gantt-resize-handle gantt-resize-right"
+				role="button"
+				:aria-label="$t('project.gantt.resizeEndDate', {task: bar.meta?.label || bar.id})"
+				tabindex="0"
 				@pointerdown="startResize(bar, 'end', $event)"
 			/>
 			
@@ -73,6 +90,7 @@
 				class="gantt-bar-text"
 				:fill="getBarTextColor(bar)"
 				:clip-path="`url(#clip-${bar.id})`"
+				aria-hidden="true"
 			>
 				{{ bar.meta?.label || bar.id }}
 			</text>

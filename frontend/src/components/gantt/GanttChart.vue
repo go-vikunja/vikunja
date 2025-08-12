@@ -7,6 +7,8 @@
 		v-else
 		ref="ganttContainer"
 		class="gantt-container"
+		role="application"
+		:aria-label="$t('project.gantt.chartLabel')"
 	>
 		<div class="gantt-chart-wrapper">
 			<GanttTimelineHeader

@@ -1,24 +1,48 @@
 <template>
-	<div class="gantt-timeline">
+	<div
+		class="gantt-timeline"
+		role="columnheader"
+		:aria-label="$t('project.gantt.timelineHeader')"
+	>
 		<!-- Upper timeunit for months -->
-		<div class="gantt-timeline-months">
+		<div
+			class="gantt-timeline-months"
+			role="row"
+			:aria-label="$t('project.gantt.monthsRow')"
+		>
 			<div
 				v-for="monthGroup in monthGroups"
 				:key="monthGroup.key"
 				class="timeunit-month"
 				:style="{ width: `${monthGroup.width}px` }"
+				role="columnheader"
+				:aria-label="$t('project.gantt.monthLabel', {month: monthGroup.label})"
 			>
 				{{ monthGroup.label }}
 			</div>
 		</div>
         
 		<!-- Lower timeunit for days -->
-		<div class="gantt-timeline-days">
+		<div
+			class="gantt-timeline-days"
+			role="row"
+			:aria-label="$t('project.gantt.daysRow')"
+		>
 			<div
 				v-for="date in timelineData"
 				:key="date.toISOString()"
 				class="timeunit"
 				:style="{ width: `${dayWidthPixels}px` }"
+				role="columnheader"
+				:aria-label="dateIsToday(date) 
+					? $t('project.gantt.dayLabelToday', {
+						date: date.toLocaleDateString(),
+						weekday: weekDayFromDate(date)
+					})
+					: $t('project.gantt.dayLabel', {
+						date: date.toLocaleDateString(),
+						weekday: weekDayFromDate(date)
+					})"
 			>
 				<div
 					class="timeunit-wrapper"

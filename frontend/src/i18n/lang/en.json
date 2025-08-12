@@ -366,7 +366,19 @@
       "day": "Day",
       "hour": "Hour",
       "range": "Date Range",
-      "noDates": "This task has no dates set."
+      "chartLabel": "Project Gantt Chart",
+      "taskBarsForRow": "Task bars for row {rowId}",
+      "taskBarLabel": "Task: {task}. From {startDate} to {endDate}. {dateType}. Click to edit, drag to move.",
+      "scheduledDates": "Scheduled dates",
+      "estimatedDates": "Estimated dates",
+      "resizeStartDate": "Resize start date for task {task}",
+      "resizeEndDate": "Resize end date for task {task}",
+      "timelineHeader": "Timeline header with months and days",
+      "monthsRow": "Months row",
+      "daysRow": "Days row",
+      "monthLabel": "Month: {month}",
+      "dayLabel": "Day: {date}, {weekday}",
+      "dayLabelToday": "Today: {date}, {weekday}"
     },
     "table": {
       "title": "Table",
