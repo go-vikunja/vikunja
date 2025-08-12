@@ -54,6 +54,21 @@ function onKeyDown(e: KeyboardEvent) {
 		return
 	}
 
+	// Check if a task bar currently has focus (indicated by activeElement being a child of our chart)
+	const activeElement = document.activeElement
+	const isTaskBarFocused = activeElement && 
+		activeElement !== chartRef.value && 
+		chartRef.value?.contains(activeElement) &&
+		activeElement.closest('[role="slider"]')
+
+	// If a task bar is focused and it's a left/right arrow, let the task bar handle it
+	if (isTaskBarFocused && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+		// Don't handle the event - let it bubble to the task bar
+		return
+	}
+
+	console.log('chart primitie')
+
 	let newRowIndex = focusedRowIndex.value
 	let newCellIndex = focusedCellIndex.value
 

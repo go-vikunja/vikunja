@@ -34,11 +34,13 @@ const props = withDefaults(
 		timelineStart: Date
 		timelineEnd: Date
 		onDoubleClick?: (model: GanttBarModel) => void
+		onUpdate?: (id: string, newStart: Date, newEnd: Date) => void
 		as?: string
 	}>(),
 	{
 		as: 'g',
 		onDoubleClick: undefined,
+		onUpdate: undefined,
 	},
 )
 const attrs = useAttrs()
@@ -56,6 +58,7 @@ const {
 	model: props.model,
 	timelineStart: props.timelineStart,
 	timelineEnd: props.timelineEnd,
+	onUpdate: props.onUpdate,
 })
 const ariaMin = computed(() => props.timelineStart.valueOf())
 const ariaMax = computed(() => props.timelineEnd.valueOf())
