@@ -1115,6 +1115,15 @@
       "navigateDown": "Highlight next task",
       "navigateUp": "Highlight previous task",
       "open": "Open highlighted task"
+    },
+    "gantt": {
+      "title": "Gantt Chart",
+      "moveTaskLeft": "Move task to earlier date",
+      "moveTaskRight": "Move task to later date",
+      "expandTaskLeft": "Expand task start date earlier",
+      "expandTaskRight": "Expand task end date later",
+      "shrinkTaskLeft": "Shrink task from start date",
+      "shrinkTaskRight": "Shrink task from end date"
     }
   },
   "update": {
