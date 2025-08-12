@@ -290,10 +290,6 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 	opacity: 0;
 	transition: opacity 0.2s ease;
 	pointer-events: all; // Ensure they receive pointer events
-
-	&:hover {
-		opacity: 1;
-	}
 }
 
 // Show resize handles on bar hover
