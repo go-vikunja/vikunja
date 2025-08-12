@@ -59,7 +59,11 @@ const ariaMin = computed(() => props.timelineStart.valueOf())
 const ariaMax = computed(() => props.timelineEnd.valueOf())
 const ariaNow = computed(() => props.model.start.valueOf())
 const ariaValueText = computed(() => `${props.model.start.toLocaleString()} – ${props.model.end.toLocaleString()}`)
-const ariaLabel = computed(() => `Task ${props.model.id}`)
+const ariaLabel = computed(() =>
+  props.model.meta?.label
+    ? `Task: ${props.model.meta.label}`
+    : `Task ${props.model.id}`
+)
 const dataState = computed(() =>
 	[
 		dragging.value && 'dragging',
