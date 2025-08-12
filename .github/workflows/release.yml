@@ -121,6 +121,12 @@ jobs:
         with:
           name: vikunja_bins
           path: ./dist/binaries/*
+      - name: Store Binary Packages
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: ${{ github.ref_type == 'tag' }}
+        with:
+          name: vikunja_bin_packages
+          path: ./dist/zip/*
 
   os-package:
     runs-on: ubuntu-latest
@@ -175,6 +181,12 @@ jobs:
           target-path: /vikunja/${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}
           files: "dist/os-packages/*"
           strip-path-prefix: dist/os-packages/
+      - name: Store OS Packages
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: ${{ github.ref_type == 'tag' }}
+        with:
+          name: vikunja_os_package_${{ matrix.package }}
+          path: ./dist/os-packages/*
 
   config-yaml:
     runs-on: ubuntu-latest
@@ -253,6 +265,14 @@ jobs:
           target-path: /desktop/${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}
           strip-path-prefix: desktop/dist/
           exclude: "desktop/dist/*.blockmap"
+      - name: Store Desktop Package
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: ${{ github.ref_type == 'tag' }}
+        with:
+          name: vikunja_desktop_packages_${{ matrix.os }}
+          path: |
+            ./desktop/dist/Vikunja*
+            !./desktop/dist/*.blockmap
 
   generate-swagger-docs:
     runs-on: ubuntu-latest
@@ -298,3 +318,66 @@ jobs:
         with:
           ssh: true
           branch: ${{ github.ref }}
+
+  create-release:
+    runs-on: ubuntu-latest
+    needs:
+      - binaries
+      - os-package
+      - desktop
+    if: ${{ github.ref_type == 'tag' }}
+    permissions:
+      contents: write
+    steps:
+      - name: Download Binaries
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        with:
+          name: vikunja_bin_packages
+      
+      - name: Download OS Package rpm
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        with:
+          name: vikunja_os_package_rpm
+      
+      - name: Download OS Package deb
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        with:
+          name: vikunja_os_package_deb
+      
+      - name: Download OS Package apk
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        with:
+          name: vikunja_os_package_apk
+      
+      - name: Download OS Package archlinux
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        with:
+          name: vikunja_os_package_archlinux
+      
+      - name: Download Desktop Package Linux
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        with:
+          name: vikunja_desktop_packages_ubuntu-latest
+      
+      - name: Download Desktop Package MacOS
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        with:
+          name: vikunja_desktop_packages_macos-latest
+      
+      - name: Download Desktop Package Windows
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        with:
+          name: vikunja_desktop_packages_windows-latest
+      
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref_type == 'tag'
+        with:
+          draft: true
+          files: |
+            vikunja*.zip
+            vikunja*.rpm
+            vikunja*.deb
+            vikunja*.apk
+            vikunja*.archlinux
+            Vikunja Desktop*
