@@ -101,7 +101,7 @@
 <script setup lang="ts">
 import {computed} from 'vue'
 import type {GanttBarModel} from '@/composables/useGanttBar'
-import {DARK, getTextColor, LIGHT} from '@/helpers/color/getTextColor'
+import {getTextColor, LIGHT} from '@/helpers/color/getTextColor'
 
 import GanttBarPrimitive from './primitives/GanttBarPrimitive.vue'
 
