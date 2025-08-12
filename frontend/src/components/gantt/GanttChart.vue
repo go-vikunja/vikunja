@@ -234,6 +234,9 @@ function openTask(bar: GanttBarModel) {
 let lastClickTime = 0
 let dragStarted = false
 
+const DOUBLE_CLICK_THRESHOLD_MS = 500
+const DRAG_THRESHOLD_PIXELS = 5
+
 function handleBarPointerDown(bar: GanttBarModel, event: PointerEvent) {
 	event.preventDefault()
 	
@@ -245,7 +248,7 @@ function handleBarPointerDown(bar: GanttBarModel, event: PointerEvent) {
 	const currentTime = Date.now()
 	const timeDiff = currentTime - lastClickTime
 	
-	if (timeDiff < 500) {
+	if (timeDiff < DOUBLE_CLICK_THRESHOLD_MS) {	
 		openTask(bar)
 		lastClickTime = 0
 		return
@@ -262,7 +265,7 @@ function handleBarPointerDown(bar: GanttBarModel, event: PointerEvent) {
 		const diffY = Math.abs(e.clientY - startY)
 		
 		// Start drag if mouse moved more than 5 pixels
-		if (!dragStarted && (diffX > 5 || diffY > 5)) {
+		if (!dragStarted && (diffX > DRAG_THRESHOLD_PIXELS || diffY > DRAG_THRESHOLD_PIXELS)) {	
 			dragStarted = true
 			document.removeEventListener('pointermove', handleMove)
 			document.removeEventListener('pointerup', handleStop)
