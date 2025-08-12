@@ -53,7 +53,7 @@
 					:padding="false"
 					class="has-overflow"
 				>
-					<NewGanttChart
+					<GanttChart
 						:filters="filters"
 						:tasks="tasks"
 						:is-loading="isLoading"
@@ -85,7 +85,7 @@ import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import TaskForm from '@/components/tasks/TaskForm.vue'
 
-import NewGanttChart from '@/components/gantt/NewGanttChart.vue'
+import GanttChart from '@/components/gantt/GanttChart.vue'
 import {useGanttFilters} from '../../../views/project/helpers/useGanttFilters'
 import {RIGHTS} from '@/constants/rights'
 
