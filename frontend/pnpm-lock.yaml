@@ -3477,6 +3477,9 @@ packages:
   domutils@3.1.0:
     resolution: {integrity: sha512-H78uMmQtI2AhgDJjWeQmHwJJ2bLPD3GMmO7Zja/ZZh84wkm+4ut+IUnUdRa8uCGX88DiVx1j6FRe1XfxEgjEZA==}
 
+  domutils@3.2.2:
+    resolution: {integrity: sha512-6kZKyUajlDuqlHKVX1w7gyslj9MPIXzIFiz/rGu35uC1wMi+kMhQwGhl4lt9unC9Vb9INnY9Z3/ZA3+FhASLaw==}
+
   dot-prop@5.3.0:
     resolution: {integrity: sha512-QM8q3zDe58hqUqjraQOmzZ1LIH9SWQJTlEKCH4kJ2oQvLZk7RbQXvtDM2XEq3fwkV9CCvvH4LA0AV+ogFsBM2Q==}
     engines: {node: '>=8'}
@@ -6303,8 +6306,8 @@ packages:
     resolution: {integrity: sha512-jRCJlojKnZ3addtTOjdIqoRuPEKBvNXcGYqzO6zWZX8KfKEpnGY5jfggJQ3EjKuu8D4bJRr0y+cYJFmYbImXGw==}
     engines: {node: '>=0.6.0'}
 
-  tmp@0.2.3:
-    resolution: {integrity: sha512-nZD7m9iCPC5g0pYmcaxogYKggSfLsdxl8of3Q/oIbqCqLLIO9IAF0GWjX1z9NZRHPiXv8Wex4yDCaZsgEw0Y8w==}
+  tmp@0.2.5:
+    resolution: {integrity: sha512-voyz6MApa1rQGUxT3E+BK7/ROe8itEx7vD8/HEvt4xwXucvQ5G5oeEiHkmHZJuBO21RpOf+YYm9MOivj709jow==}
     engines: {node: '>=14.14'}
 
   to-readable-stream@1.0.0:
@@ -10325,7 +10328,7 @@ snapshots:
       request-progress: 3.0.0
       semver: 7.7.1
       supports-color: 8.1.1
-      tmp: 0.2.3
+      tmp: 0.2.5
       tree-kill: 1.2.2
       untildify: 4.0.0
       yauzl: 2.10.0
@@ -10495,6 +10498,12 @@ snapshots:
       domhandler: 4.3.1
 
   domutils@3.1.0:
+    dependencies:
+      dom-serializer: 2.0.0
+      domelementtype: 2.3.0
+      domhandler: 5.0.3
+
+  domutils@3.2.2:
     dependencies:
       dom-serializer: 2.0.0
       domelementtype: 2.3.0
@@ -11321,7 +11330,7 @@ snapshots:
     dependencies:
       domelementtype: 2.3.0
       domhandler: 5.0.3
-      domutils: 3.1.0
+      domutils: 3.2.2
       entities: 4.5.0
 
   http-cache-semantics@4.1.1: {}
@@ -13672,7 +13681,7 @@ snapshots:
     dependencies:
       os-tmpdir: 1.0.2
 
-  tmp@0.2.3: {}
+  tmp@0.2.5: {}
 
   to-readable-stream@1.0.0: {}
 
