@@ -135,6 +135,13 @@ const emit = defineEmits<{
 
 const RESIZE_HANDLE_OFFSET = 3
 
+function addDays(dateOrValue: Date | string | number, days: number): Date {
+	const date = new Date(dateOrValue)
+	const newDate = new Date(date)
+	newDate.setDate(newDate.getDate() + days)
+	return newDate
+}
+
 const isRowFocused = computed(() => props.focusedRow === props.rowId)
 
 function computeBarX(startDate: Date) {
@@ -161,8 +168,7 @@ const getBarX = computed(() => (bar: GanttBarModel) => {
 		return originalX + offset
 	}
 	if (props.isResizing && props.dragState?.barId === bar.id && props.dragState.edge === 'start') {
-		const newStart = new Date(props.dragState.originalStart)
-		newStart.setDate(newStart.getDate() + props.dragState.currentDays)
+		const newStart = addDays(props.dragState.originalStart, props.dragState.currentDays)
 		return computeBarX(newStart)
 	}
 	return computeBarX(bar.start)
@@ -171,14 +177,12 @@ const getBarX = computed(() => (bar: GanttBarModel) => {
 const getBarWidth = computed(() => (bar: GanttBarModel) => {
 	if (props.isResizing && props.dragState?.barId === bar.id) {
 		if (props.dragState.edge === 'start') {
-			const newStart = new Date(props.dragState.originalStart)
-			newStart.setDate(newStart.getDate() + props.dragState.currentDays)
+			const newStart = addDays(props.dragState.originalStart, props.dragState.currentDays)
 			const originalEndX = computeBarX(props.dragState.originalEnd)
 			const newStartX = computeBarX(newStart)
 			return Math.max(0, originalEndX - newStartX)
 		} else {
-			const newEnd = new Date(props.dragState.originalEnd)
-			newEnd.setDate(newEnd.getDate() + props.dragState.currentDays)
+			const newEnd = addDays(props.dragState.originalEnd, props.dragState.currentDays)
 			const originalStartX = computeBarX(props.dragState.originalStart)
 			const newEndX = computeBarX(newEnd)
 			return Math.max(0, newEndX - originalStartX)
