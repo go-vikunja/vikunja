@@ -79,7 +79,7 @@ const dateIsToday = computed(() => {
 
 const monthGroups = computed(() => {
 	const groups = props.timelineData.reduce(
-		(groups, date, index) => {
+		(groups, date) => {
 			const month = date.getMonth()
 			const year = date.getFullYear()
 			const key = `${year}-${month}`
@@ -97,7 +97,7 @@ const monthGroups = computed(() => {
 
 			return groups
 		},
-		[] as Array<{key: string; label: string; width: number}>
+		[] as Array<{key: string; label: string; width: number}>,
 	)
 
 	return groups
