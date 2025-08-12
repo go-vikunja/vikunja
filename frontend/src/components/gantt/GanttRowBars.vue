@@ -31,7 +31,7 @@
 					task: bar.meta?.label || bar.id,
 					startDate: bar.start.toLocaleDateString(),
 					endDate: bar.end.toLocaleDateString(),
-					dateType: bar.meta?.hasActualDates ? t('project.gantt.scheduledDates') : t('project.gantt.estimatedDates')
+					dateType: bar.meta?.hasActualDates ? $t('project.gantt.scheduledDates') : $t('project.gantt.estimatedDates')
 				})"
 				:aria-pressed="isRowFocused"
 				tabindex="0"
