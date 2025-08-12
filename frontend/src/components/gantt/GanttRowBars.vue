@@ -214,7 +214,7 @@ function getBarStrokeWidth(bar: GanttBarModel) {
 
 function getBarTextColor(bar: GanttBarModel) {
 	if (!bar.meta?.hasActualDates) {
-		return DARK
+		return 'var(--grey-800)'
 	}
 	
 	if (bar.meta?.color) {
