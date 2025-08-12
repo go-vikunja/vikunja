@@ -20,9 +20,20 @@ export interface UseGanttReturn {
 }
 
 function createRange(start: Date, end: Date, unit: 'hour' | 'day'): Date[] {
+	if (start > end) {
+		throw new Error('Start date must be before or equal to end date')
+	}
+
 	const range: Date[] = []
 	const current = new Date(start)
+	const maxIterations = unit === 'hour' ? 8760 : 365 // Reasonable limits
+	let iterations = 0
+
 	while (current <= end) {
+		if (iterations++ > maxIterations) {
+			console.warn('createRange: Maximum iterations reached, breaking loop')
+			break
+		}
 		range.push(new Date(current))
 		if (unit === 'hour') {
 			current.setHours(current.getHours() + 1)
