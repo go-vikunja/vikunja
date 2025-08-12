@@ -40,7 +40,6 @@ defineProps<{
 
 .gantt-vertical-lines {
 	position: absolute;
-	inset-block-start: 0;
-	inset-inline-start: 0;
+	inset: 0;
 }
 </style>
