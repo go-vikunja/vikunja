@@ -98,6 +98,8 @@ const emit = defineEmits<{
   (e: 'update:task', task: ITaskPartialWithId): void
 }>()
 
+const DAY_WIDTH_PIXELS = 30
+
 const {tasks, filters} = toRefs(props)
 
 const dayjsLanguageLoading = useDayjsLanguageSync(dayjs)
@@ -126,7 +128,6 @@ let dragStopHandler: (() => void) | null = null
 const dateFromDate = computed(() => dayjs(filters.value.dateFrom).startOf('day').toDate())
 const dateToDate = computed(() => dayjs(filters.value.dateTo).endOf('day').toDate())
 
-const DAY_WIDTH_PIXELS = 30
 const totalWidth = computed(() => {
 	const dateDiff = Math.ceil((dateToDate.value.valueOf() - dateFromDate.value.valueOf()) / MILLISECONDS_A_DAY)
 	return dateDiff * DAY_WIDTH_PIXELS
