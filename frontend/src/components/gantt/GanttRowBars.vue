@@ -212,9 +212,6 @@ function getBarFill(bar: GanttBarModel) {
 }
 
 function getBarStroke(bar: GanttBarModel) {
-	if (isRowFocused.value) {
-		return 'var(--primary)'
-	}
 	if (!bar.meta?.hasActualDates) {
 		return 'var(--grey-300)' // Gray for dashed border
 	}
@@ -222,9 +219,6 @@ function getBarStroke(bar: GanttBarModel) {
 }
 
 function getBarStrokeWidth(bar: GanttBarModel) {
-	if (isRowFocused.value) {
-		return '3'
-	}
 	if (!bar.meta?.hasActualDates) {
 		return '2'
 	}
@@ -299,6 +293,16 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 	&:hover {
 		opacity: 1;
 		cursor: inherit; // Use the specific cursor defined above
+	}
+}
+
+// Focus styles for task bars
+:deep(g[role="slider"]:focus) {
+	outline: none; // Remove default browser outline
+	
+	.gantt-bar {
+		stroke: var(--primary) !important;
+		stroke-width: 3 !important;
 	}
 }
 </style>
