@@ -1,11 +1,12 @@
 <template>
 	<div
-		role="row"
-		:aria-selected="selected"
-		tabindex="-1"
-		:data-state="selected ? 'selected' : null"
+		role="row" 
+		:aria-selected="selected" 
+		tabindex="-1" 
+		:data-state="selected ? 'selected' : null" 
 		@click="onSelect"
 		@focus="onFocus"
+		@keydown="onKeyDown"
 	>
 		<slot :selected="selected" />
 	</div>
@@ -14,27 +15,29 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-const props = defineProps<{ 
-  id: string
+const props = defineProps<{
+	id: string
 }>()
 
 const emit = defineEmits<{
-  select: [id: string]
-  focus: [id: string]
+	select: [id: string]
+	focus: [id: string]
 }>()
 
-const props = defineProps<{ 
-  id: string
-  selected?: boolean
-}>()
+const selected = ref(false)
 
-const selected = computed(() => props.selected ?? false)
-
-function onSelect() { 
-	emit('select', props.id) 
+function onSelect() {
+	emit('select', props.id)
 }
 
-function onFocus() { 
-	emit('focus', props.id) 
+function onFocus() {
+	emit('focus', props.id)
+}
+
+function onKeyDown(e: KeyboardEvent) {
+	if (e.key === 'Enter' || e.key === ' ') {
+		e.preventDefault()
+		onSelect()
+	}
 }
 </script>
