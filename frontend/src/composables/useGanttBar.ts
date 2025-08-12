@@ -33,8 +33,8 @@ export function useGanttBar(options: UseGanttBarOptions) {
 	}
 
 	function changeSize(direction: 'left' | 'right', modifier: -1 | 1) {
-		let newStart = new Date(options.model.start)
-		let newEnd = new Date(options.model.end)
+		const newStart = new Date(options.model.start)
+		const newEnd = new Date(options.model.end)
 
 		if (direction === 'left') {
 			// Shift+Left: Expand task to the left (move start date earlier)
