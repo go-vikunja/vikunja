@@ -32,8 +32,54 @@ export function useGanttBar(options: UseGanttBarOptions) {
 		focused.value = false
 	}
 
+	function changeSize(direction: 'left' | 'right', modifier: -1 | 1) {
+		let newStart = new Date(options.model.start)
+		let newEnd = new Date(options.model.end)
+
+		if (direction === 'left') {
+			// Shift+Left: Expand task to the left (move start date earlier)
+			newStart.setDate(newStart.getDate() - 1 * modifier)
+		} else {
+			// Shift+Right: Expand task to the right (move end date later)  
+			newEnd.setDate(newEnd.getDate() + 1 * modifier)
+		}
+
+		// Validate that start is before end (maintain minimum 1 day duration)
+		if (newStart < newEnd) {
+			options.model.start = newStart
+			options.model.end = newEnd
+
+			if (options.onUpdate) {
+				options.onUpdate(options.model.id, newStart, newEnd)
+			}
+		}
+	}
+
 	function onKeyDown(e: KeyboardEvent) {
-		if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+		// task expanding
+		if (e.shiftKey) {
+			if (e.key === 'ArrowLeft') {
+				e.preventDefault()
+				changeSize('left', 1)
+			}
+			if (e.key === 'ArrowRight') {
+				e.preventDefault()
+				changeSize('right', 1)
+			}
+		}
+		// task shrinking
+		else if (e.ctrlKey) {
+			if (e.key === 'ArrowLeft') {
+				e.preventDefault()
+				changeSize('left', -1)
+			}
+			if (e.key === 'ArrowRight') {
+				e.preventDefault()
+				changeSize('right', -1)
+			}
+		}
+		// task movement
+		else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
 			e.preventDefault()
 
 			const dir = e.key === 'ArrowRight' ? 1 : -1
