@@ -33,11 +33,17 @@ export function useGanttBar(options: UseGanttBarOptions) {
 
 	function onKeyDown(e: KeyboardEvent) {
 		if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+
+			e.preventDefault()
+
 			const dir = e.key === 'ArrowRight' ? 1 : -1
 			const newStart = new Date(options.model.start)
 			newStart.setDate(newStart.getDate() + dir)
 			const newEnd = new Date(options.model.end)
 			newEnd.setDate(newEnd.getDate() + dir)
+
+			options.model.start = newStart
+			options.model.end = newEnd
 		}
 	}
 
