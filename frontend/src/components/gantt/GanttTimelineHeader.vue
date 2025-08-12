@@ -1,20 +1,19 @@
 <template>
-	<!-- Timeline Header -->
 	<div class="gantt-timeline">
 		<!-- Upper timeunit for months -->
-		<div class="gantt-timeline-upper">
+		<div class="gantt-timeline-months">
 			<div
 				v-for="monthGroup in monthGroups"
 				:key="monthGroup.key"
-				class="upper-timeunit"
+				class="timeunit-month"
 				:style="{ width: `${monthGroup.width}px` }"
 			>
 				{{ monthGroup.label }}
 			</div>
 		</div>
-		
+        
 		<!-- Lower timeunit for days -->
-		<div class="gantt-timeline-lower">
+		<div class="gantt-timeline-days">
 			<div
 				v-for="date in timelineData"
 				:key="date.toISOString()"
@@ -42,8 +41,8 @@ import { useWeekDayFromDate } from '@/helpers/time/formatDate'
 import dayjs from 'dayjs'
 
 const props = defineProps<{
-	timelineData: Date[]
-	dayWidthPixels: number
+    timelineData: Date[]
+    dayWidthPixels: number
 }>()
 
 const weekDayFromDate = useWeekDayFromDate()
@@ -52,33 +51,32 @@ const { now: today } = useGlobalNow()
 const dateIsToday = computed(() => (date: Date) => {
 	return (
 		date.getDate() === today.value.getDate() &&
-		date.getMonth() === today.value.getMonth() &&
-		date.getFullYear() === today.value.getFullYear()
+        date.getMonth() === today.value.getMonth() &&
+        date.getFullYear() === today.value.getFullYear()
 	)
 })
 
-// Generate month groups for the upper timeline
 const monthGroups = computed(() => {
 	const groups: Array<{key: string; label: string; width: number}> = []
 	let currentMonth = -1
 	let currentYear = -1
 	let dayCount = 0
-	
+    
 	props.timelineData.forEach((date, index) => {
 		const month = date.getMonth()
 		const year = date.getFullYear()
-		
+        
 		if (month !== currentMonth || year !== currentYear) {
 			// Finish previous group
 			if (currentMonth !== -1) {
 				groups[groups.length - 1].width = dayCount * props.dayWidthPixels
 			}
-			
+            
 			// Start new group
 			currentMonth = month
 			currentYear = year
 			dayCount = 1
-			
+            
 			const monthName = dayjs(date).format('MMMM YYYY')
 			groups.push({
 				key: `${year}-${month}`,
@@ -88,13 +86,13 @@ const monthGroups = computed(() => {
 		} else {
 			dayCount++
 		}
-		
+        
 		// Handle last group
 		if (index === props.timelineData.length - 1) {
 			groups[groups.length - 1].width = dayCount * props.dayWidthPixels
 		}
 	})
-	
+    
 	return groups
 })
 </script>
@@ -108,10 +106,10 @@ const monthGroups = computed(() => {
 	z-index: 10;
 }
 
-.gantt-timeline-upper {
+.gantt-timeline-months {
 	display: flex;
-	
-	.upper-timeunit {
+
+	.timeunit-month {
 		background: var(--white);
 		font-family: $vikunja-font;
 		font-weight: bold;
@@ -123,10 +121,10 @@ const monthGroups = computed(() => {
 	}
 }
 
-.gantt-timeline-lower {
+.gantt-timeline-days {
 	display: flex;
-	
-	.timeunit {	
+
+	.timeunit {
 		.timeunit-wrapper {
 			padding: 0.5rem 0;
 			font-size: 1rem;
@@ -135,14 +133,14 @@ const monthGroups = computed(() => {
 			align-items: center;
 			inline-size: 100%;
 			font-family: $vikunja-font;
-			
+
 			&.today {
 				background: var(--primary);
 				color: var(--white);
 				border-radius: 5px 5px 0 0;
 				font-weight: bold;
 			}
-			
+
 			.weekday {
 				font-size: 0.8rem;
 			}

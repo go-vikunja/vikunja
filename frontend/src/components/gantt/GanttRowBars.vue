@@ -11,6 +11,7 @@
 			:model="bar"
 			:timeline-start="dateFromDate"
 			:timeline-end="dateToDate"
+			:pixels-per-day="dayWidthPixels"
 		>
 			<!-- Main bar -->
 			<rect
@@ -83,7 +84,7 @@
 <script setup lang="ts">
 import {computed} from 'vue'
 import type {GanttBarModel} from '@/composables/useGanttBar'
-import {colorIsDark} from '@/helpers/color/colorIsDark'
+import {DARK, getTextColor, LIGHT} from '@/helpers/color/getTextColor'
 
 import GanttBarPrimitive from './primitives/GanttBarPrimitive.vue'
 
@@ -115,7 +116,6 @@ const emit = defineEmits<{
 
 const isRowFocused = computed(() => props.focusedRow === props.rowId)
 
-// Direct SVG bar rendering functions
 function computeBarX(startDate: Date) {
 	const x = (startDate.getTime() - props.dateFromDate.getTime()) / (1000*60*60*24) * props.dayWidthPixels
 	return x
@@ -127,7 +127,6 @@ function computeBarWidth(bar: GanttBarModel) {
 	return width
 }
 
-// Computed properties for dynamic bar positions during drag/resize
 const getBarX = computed(() => (bar: GanttBarModel) => {
 	if (props.isDragging && props.dragState?.barId === bar.id) {
 		const originalX = computeBarX(props.dragState.originalStart)
@@ -166,17 +165,13 @@ const getBarTextX = computed(() => (bar: GanttBarModel) => {
 })
 
 function getBarFill(bar: GanttBarModel) {
-	// For tasks with actual dates
 	if (bar.meta?.hasActualDates) {
-		// Use task color if available
 		if (bar.meta?.color) {
 			return bar.meta.color
 		}
-		// Default to primary color if no task color
 		return 'var(--primary)'
 	}
 	
-	// For tasks without dates, use gray
 	return 'var(--grey-100)'
 }
 
@@ -201,21 +196,15 @@ function getBarStrokeWidth(bar: GanttBarModel) {
 }
 
 function getBarTextColor(bar: GanttBarModel) {
-	const black = 'var(--grey-800)'
-	
-	// For tasks without actual dates, use dark text on gray background
 	if (!bar.meta?.hasActualDates) {
-		return black
+		return DARK
 	}
 	
-	// For tasks with actual dates
 	if (bar.meta?.color) {
-		// Use colorIsDark to determine text color based on background
-		return colorIsDark(bar.meta.color) ? black : 'white'
+		return getTextColor(bar.meta.color)
 	}
 	
-	// Default for primary color background (white text)
-	return 'white'
+	return LIGHT
 }
 
 function handleBarPointerDown(bar: GanttBarModel, event: PointerEvent) {
@@ -250,7 +239,6 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 	}
 }
 
-// SVG bar styling
 .gantt-bar {
 	cursor: grab;
 	
@@ -269,7 +257,6 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 	user-select: none;
 }
 
-// Resize handles
 :deep(.gantt-resize-handle) {
 	cursor: col-resize !important;
 	opacity: 0;

@@ -15,12 +15,13 @@
 </template>
 
 <script setup lang="ts">
-import {ref} from 'vue'
+import { ref } from 'vue'
+
 import GanttChartPrimitive from '@/components/gantt/primitives/GanttChartPrimitive.vue'
 
-defineProps<{ 
+defineProps<{
 	rows: string[]
-	cellsByRow: Record<string, string[]> 
+	cellsByRow: Record<string, string[]>
 }>()
 defineEmits<{
 	'update:focused': [payload: { row: string | null; cell: number | null }],

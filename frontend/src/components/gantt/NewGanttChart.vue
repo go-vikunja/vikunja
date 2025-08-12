@@ -21,7 +21,6 @@
 				:day-width-pixels="DAY_WIDTH_PIXELS"
 			/>
 
-			<!-- Gantt Chart Body -->
 			<GanttChartBody
 				ref="ganttChartBodyRef"
 				:rows="ganttRows"
@@ -36,7 +35,6 @@
 							:key="rowId"
 							:index="index"
 						>
-							<!-- Row content with relative positioning -->
 							<div class="gantt-row-content">
 								<GanttRowBars
 									:bars="ganttBars[index]"
@@ -65,6 +63,8 @@
 <script setup lang="ts">
 import {computed, ref, watch, toRefs, onUnmounted} from 'vue'
 import {useRouter} from 'vue-router'
+import dayjs from 'dayjs'
+import {useDayjsLanguageSync} from '@/i18n/useDayjsLanguageSync'
 
 import {getHexColor} from '@/models/task'
 
@@ -81,8 +81,6 @@ import GanttTimelineHeader from '@/components/gantt/GanttTimelineHeader.vue'
 import Loading from '@/components/misc/Loading.vue'
 
 import {MILLISECONDS_A_DAY} from '@/constants/date'
-import dayjs from 'dayjs'
-import {useDayjsLanguageSync} from '@/i18n/useDayjsLanguageSync'
 
 const props = defineProps<{
 	isLoading: boolean,
@@ -103,11 +101,9 @@ const ganttContainer = ref(null)
 const ganttChartBodyRef = ref<InstanceType<typeof GanttChartBody> | null>(null)
 const router = useRouter()
 
-// Reactive drag state
 const isDragging = ref(false)
 const isResizing = ref(false)
 
-// Focus state
 const currentFocusedRow = ref<string | null>(null)
 const currentFocusedCell = ref<number | null>(null)
 
@@ -120,7 +116,6 @@ const dragState = ref<{
 	edge?: 'start' | 'end'
 } | null>(null)
 
-// Event listener cleanup functions
 let dragMoveHandler: ((e: PointerEvent) => void) | null = null
 let dragStopHandler: (() => void) | null = null
 
@@ -146,7 +141,6 @@ const timelineData = computed(() => {
 	return dates
 })
 
-// Transform tasks to gantt bars
 const ganttBars = ref<GanttBarModel[][]>([])
 const ganttRows = ref<string[]>([])
 const cellsByRow = ref<Record<string, string[]>>({})
@@ -180,7 +174,6 @@ watch(
 		const rows: string[] = []
 		const cells: Record<string, string[]> = {}
 		
-		// Filter tasks based on current filters
 		const filteredTasks = Array.from(tasks.value.values()).filter(task => {
 			// If showTasksWithoutDates is false, only show tasks with actual dates
 			if (!filters.value.showTasksWithoutDates && (!task.startDate || !task.endDate)) {
@@ -195,8 +188,6 @@ watch(
 			return taskStart <= dateToDate.value && taskEnd >= dateFromDate.value
 		})
 		
-		// For now, create one row per task (simple implementation)
-		// In the future, this could group tasks by project, parent task, etc.
 		filteredTasks.forEach((t, index) => {
 			const bar = transformTaskToGanttBar(t)
 			bars.push(bar)
@@ -244,7 +235,6 @@ let dragStarted = false
 function handleBarPointerDown(bar: GanttBarModel, event: PointerEvent) {
 	event.preventDefault()
 	
-	// Set focus to the clicked task's row
 	const barIndex = ganttBars.value.findIndex(barGroup => barGroup.some(b => b.id === bar.id))
 	if (barIndex !== -1 && ganttRows.value[barIndex]) {
 		setFocusToRow(ganttRows.value[barIndex])
@@ -253,7 +243,6 @@ function handleBarPointerDown(bar: GanttBarModel, event: PointerEvent) {
 	const currentTime = Date.now()
 	const timeDiff = currentTime - lastClickTime
 	
-	// Double-click detection (within 500ms)
 	if (timeDiff < 500) {
 		openTask(bar)
 		lastClickTime = 0
@@ -292,7 +281,6 @@ function handleBarPointerDown(bar: GanttBarModel, event: PointerEvent) {
 function startDrag(bar: GanttBarModel, event: PointerEvent) {
 	event.preventDefault()
 	
-	// Initialize reactive drag state
 	isDragging.value = true
 	dragState.value = {
 		barId: bar.id,
@@ -302,10 +290,8 @@ function startDrag(bar: GanttBarModel, event: PointerEvent) {
 		currentDays: 0,
 	}
 	
-	// Set grabbing cursor during drag
 	document.body.style.setProperty('cursor', 'grabbing', 'important')
 	
-	// Find the bar element and set cursor directly for SVG elements
 	const barGroup = (event.target as Element).closest('g')
 	const barElement = barGroup?.querySelector('.gantt-bar')
 	if (barElement) {
@@ -318,7 +304,6 @@ function startDrag(bar: GanttBarModel, event: PointerEvent) {
 		const diff = e.clientX - dragState.value.startX
 		const days = Math.round(diff / DAY_WIDTH_PIXELS)
 		
-		// Update reactive state - this will automatically update the template
 		if (days !== dragState.value.currentDays) {
 			dragState.value.currentDays = days
 		}
@@ -334,13 +319,11 @@ function startDrag(bar: GanttBarModel, event: PointerEvent) {
 			dragStopHandler = null
 		}
 		
-		// Reset cursor
 		document.body.style.removeProperty('cursor')
 		if (barElement) {
 			(barElement as HTMLElement).style.removeProperty('cursor')
 		}
 		
-		// Only dispatch update when drag is finished
 		if (dragState.value && dragState.value.currentDays !== 0) {
 			const newStart = new Date(dragState.value.originalStart)
 			newStart.setDate(newStart.getDate() + dragState.value.currentDays)
@@ -350,7 +333,6 @@ function startDrag(bar: GanttBarModel, event: PointerEvent) {
 			updateGanttTask(bar.id, newStart, newEnd)
 		}
 		
-		// Reset drag state
 		isDragging.value = false
 		dragState.value = null
 	}
@@ -367,7 +349,6 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 	event.preventDefault()
 	event.stopPropagation() // Prevent drag from triggering
 	
-	// Initialize reactive resize state
 	isResizing.value = true
 	dragState.value = {
 		barId: bar.id,
@@ -378,7 +359,6 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 		edge,
 	}
 	
-	// Set col-resize cursor during resize
 	document.body.style.setProperty('cursor', 'col-resize', 'important')
 	
 	// Find the bar element and set cursor directly for SVG elements
@@ -394,7 +374,6 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 		const diff = e.clientX - dragState.value.startX
 		const days = Math.round(diff / DAY_WIDTH_PIXELS)
 		
-		// Validate resize bounds
 		if (edge === 'start') {
 			const newStart = new Date(dragState.value.originalStart)
 			newStart.setDate(newStart.getDate() + days)
@@ -405,7 +384,6 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 			if (newEnd <= dragState.value.originalStart) return
 		}
 		
-		// Update reactive state - this will automatically update the template
 		if (days !== dragState.value.currentDays) {
 			dragState.value.currentDays = days
 		}
@@ -421,13 +399,11 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 			dragStopHandler = null
 		}
 		
-		// Reset cursor
 		document.body.style.removeProperty('cursor')
 		if (barElement) {
 			(barElement as HTMLElement).style.removeProperty('cursor')
 		}
 		
-		// Only dispatch update when resize is finished
 		if (dragState.value && dragState.value.currentDays !== 0) {
 			if (edge === 'start') {
 				const newStart = new Date(dragState.value.originalStart)
@@ -448,7 +424,6 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 			}
 		}
 		
-		// Reset resize state
 		isResizing.value = false
 		dragState.value = null
 	}
@@ -470,7 +445,6 @@ function setFocusToRow(rowId: string) {
 	ganttChartBodyRef.value?.setFocus(rowId, 0)
 }
 
-// Cleanup event listeners on component unmount
 onUnmounted(() => {
 	if (dragMoveHandler) {
 		document.removeEventListener('pointermove', dragMoveHandler)
@@ -480,7 +454,6 @@ onUnmounted(() => {
 		document.removeEventListener('pointerup', dragStopHandler)
 		dragStopHandler = null
 	}
-	// Reset cursor if component unmounts during drag
 	document.body.style.removeProperty('cursor')
 })
 </script>

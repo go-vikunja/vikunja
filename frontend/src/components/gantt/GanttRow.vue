@@ -16,6 +16,7 @@
 
 <script setup lang="ts">
 import GanttRowPrimitive from '@/components/gantt/primitives/GanttRowPrimitive.vue'
+
 const props = defineProps<{ 
 	id: string
 	index: number 

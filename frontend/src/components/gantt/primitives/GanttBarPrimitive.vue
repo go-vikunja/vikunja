@@ -30,11 +30,12 @@ import { useGanttBar, type GanttBarModel } from '@/composables/useGanttBar'
 
 const props = withDefaults(
 	defineProps<{
-		model: GanttBarModel;
-		timelineStart: Date;
-		timelineEnd: Date;
-		onDoubleClick?: (model: GanttBarModel) => void;
-		as?: string;
+		model: GanttBarModel
+		timelineStart: Date
+		timelineEnd: Date
+		onDoubleClick?: (model: GanttBarModel) => void
+		as?: string
+		pixelsPerDay: number
 	}>(),
 	{
 		as: 'g',
@@ -42,7 +43,7 @@ const props = withDefaults(
 	},
 )
 const attrs = useAttrs()
- 
+
 const {
 	dragging,
 	selected,
@@ -56,6 +57,7 @@ const {
 	model: props.model,
 	timelineStart: props.timelineStart,
 	timelineEnd: props.timelineEnd,
+	pixelsPerDay: props.pixelsPerDay,
 })
 const ariaMin = computed(() => props.timelineStart.valueOf())
 const ariaMax = computed(() => props.timelineEnd.valueOf())
