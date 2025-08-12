@@ -366,7 +366,21 @@
       "day": "Day",
       "hour": "Hour",
       "range": "Date Range",
-      "noDates": "This task has no dates set."
+      "chartLabel": "Project Gantt Chart",
+      "taskBarsForRow": "Task bars for row {rowId}",
+      "taskBarLabel": "Task: {task}. From {startDate} to {endDate}. {dateType}. Click to edit, drag to move.",
+      "scheduledDates": "Scheduled dates",
+      "estimatedDates": "Estimated dates",
+      "resizeStartDate": "Resize start date for task {task}",
+      "resizeEndDate": "Resize end date for task {task}",
+      "timelineHeader": "Timeline header with months and days",
+      "monthsRow": "Months row",
+      "daysRow": "Days row",
+      "monthLabel": "Month: {month}",
+      "dayLabel": "Day: {date}, {weekday}",
+      "dayLabelToday": "Today: {date}, {weekday}",
+      "taskAriaLabel": "Task: {task}",
+      "taskAriaLabelById": "Task {id}"
     },
     "table": {
       "title": "Table",
@@ -1101,6 +1115,15 @@
       "navigateDown": "Highlight next task",
       "navigateUp": "Highlight previous task",
       "open": "Open highlighted task"
+    },
+    "gantt": {
+      "title": "Gantt Chart",
+      "moveTaskLeft": "Move task to earlier date",
+      "moveTaskRight": "Move task to later date",
+      "expandTaskLeft": "Expand task start date earlier",
+      "expandTaskRight": "Expand task end date later",
+      "shrinkTaskLeft": "Shrink task from start date",
+      "shrinkTaskRight": "Shrink task from end date"
     }
   },
   "update": {

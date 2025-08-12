@@ -13,7 +13,7 @@ describe('Project View Gantt', () => {
 		const tasks = TaskFactory.create(1)
 		cy.visit('/projects/1/2')
 
-		cy.get('.g-gantt-rows-container')
+		cy.get('.gantt-rows')
 			.should('not.contain', tasks[0].title)
 	})
 
@@ -27,9 +27,9 @@ describe('Project View Gantt', () => {
 
 		cy.visit('/projects/1/2')
 
-		cy.get('.g-timeunits-container')
-			.should('contain', dayjs(now).format('MMMM'))
-			.should('contain', dayjs(nextMonth).format('MMMM'))
+		cy.get('.gantt-timeline-months')
+			.should('contain', dayjs(now).format('MMMM YYYY'))
+			.should('contain', dayjs(nextMonth).format('MMMM YYYY'))
 	})
 
 	it('Shows tasks with dates', () => {
@@ -40,7 +40,7 @@ describe('Project View Gantt', () => {
 		})
 		cy.visit('/projects/1/2')
 
-		cy.get('.g-gantt-rows-container')
+		cy.get('.gantt-rows')
 			.should('not.be.empty')
 			.should('contain', tasks[0].title)
 	})
@@ -56,7 +56,7 @@ describe('Project View Gantt', () => {
 			.contains('Show tasks without dates')
 			.click()
 
-		cy.get('.g-gantt-rows-container')
+		cy.get('.gantt-rows')
 			.should('not.be.empty')
 			.should('contain', tasks[0].title)
 	})
@@ -71,11 +71,40 @@ describe('Project View Gantt', () => {
 		})
 		cy.visit('/projects/1/2')
 
-		cy.get('.g-gantt-rows-container .g-gantt-row .g-gantt-row-bars-container div .g-gantt-bar')
+		cy.get('.gantt-rows .gantt-row-bars .gantt-bar')
 			.first()
-			.trigger('mousedown', {which: 1})
-			.trigger('mousemove', {clientX: 500, clientY: 0})
-			.trigger('mouseup', {force: true})
+			.then($bar => {
+				// Get the current position of the bar
+				const rect = $bar[0].getBoundingClientRect()
+				const startX = rect.left + rect.width / 2
+				const startY = rect.top + rect.height / 2
+				
+				// Trigger pointer events with proper coordinates and delays
+				cy.wrap($bar)
+					.trigger('pointerdown', {
+						clientX: startX,
+						clientY: startY,
+						pointerId: 1,
+						which: 1
+					})
+					.wait(100) // Wait to ensure double-click detection doesn't interfere
+					.trigger('pointermove', {
+						clientX: startX + 10, // Small initial movement to trigger drag
+						clientY: startY,
+						pointerId: 1
+					})
+					.trigger('pointermove', {
+						clientX: startX + 150, // Move 150px to the right (about 5 days)
+						clientY: startY,
+						pointerId: 1
+					})
+					.trigger('pointerup', {
+						clientX: startX + 150,
+						clientY: startY,
+						pointerId: 1,
+						force: true
+					})
+			})
 		cy.wait('@taskUpdate')
 	})
 
@@ -101,7 +130,7 @@ describe('Project View Gantt', () => {
 	it('Should change the date range based on date query parameters', () => {
 		cy.visit('/projects/1/2?dateFrom=2022-09-25&dateTo=2022-11-05')
 
-		cy.get('.g-timeunits-container')
+		cy.get('.gantt-timeline-months')
 			.should('contain', 'September 2022')
 			.should('contain', 'October 2022')
 			.should('contain', 'November 2022')
@@ -117,7 +146,7 @@ describe('Project View Gantt', () => {
 		})
 		cy.visit('/projects/1/2')
 
-		cy.get('.gantt-container .g-gantt-chart .g-gantt-row-bars-container .g-gantt-bar')
+		cy.get('.gantt-container .gantt-row-bars .gantt-bar')
 			.dblclick()
 
 		cy.url()

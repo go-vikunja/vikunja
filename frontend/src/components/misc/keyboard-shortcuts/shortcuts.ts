@@ -115,6 +115,36 @@ export const KEYBOARD_SHORTCUTS: ShortcutGroup[] = [
 		],
 	},
 	{
+		title: 'keyboardShortcuts.gantt.title',
+		available: (route) => route.name === 'project.view',
+		shortcuts: [
+			{
+				title: 'keyboardShortcuts.gantt.moveTaskLeft',
+				keys: ['←'],
+			},
+			{
+				title: 'keyboardShortcuts.gantt.moveTaskRight',
+				keys: ['→'],
+			},
+			{
+				title: 'keyboardShortcuts.gantt.expandTaskLeft',
+				keys: ['shift', '←'],
+			},
+			{
+				title: 'keyboardShortcuts.gantt.expandTaskRight',
+				keys: ['shift', '→'],
+			},
+			{
+				title: 'keyboardShortcuts.gantt.shrinkTaskLeft',
+				keys: [ctrl, '←'],
+			},
+			{
+				title: 'keyboardShortcuts.gantt.shrinkTaskRight',
+				keys: [ctrl, '→'],
+			},
+		],
+	},
+	{
 		title: 'keyboardShortcuts.task.title',
 		available: (route) => route.name === 'task.detail',
 		shortcuts: [
