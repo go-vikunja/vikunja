@@ -27,7 +27,7 @@ describe('Project View Gantt', () => {
 
 		cy.visit('/projects/1/2')
 
-		cy.get('.gantt-timeline-upper')
+		cy.get('.gantt-timeline-months')
 			.should('contain', dayjs(now).format('MMMM YYYY'))
 			.should('contain', dayjs(nextMonth).format('MMMM YYYY'))
 	})
@@ -130,7 +130,7 @@ describe('Project View Gantt', () => {
 	it('Should change the date range based on date query parameters', () => {
 		cy.visit('/projects/1/2?dateFrom=2022-09-25&dateTo=2022-11-05')
 
-		cy.get('.gantt-timeline-upper')
+		cy.get('.gantt-timeline-months')
 			.should('contain', 'September 2022')
 			.should('contain', 'October 2022')
 			.should('contain', 'November 2022')
