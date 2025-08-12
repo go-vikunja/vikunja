@@ -59,9 +59,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useGlobalNow } from '@/composables/useGlobalNow'
-import { useWeekDayFromDate } from '@/helpers/time/formatDate'
+import {computed} from 'vue'
+import {useGlobalNow} from '@/composables/useGlobalNow'
+import {useWeekDayFromDate} from '@/helpers/time/formatDate'
 import dayjs from 'dayjs'
 
 const props = defineProps<{

@@ -16,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import {ref} from 'vue'
 
 import GanttChartPrimitive from '@/components/gantt/primitives/GanttChartPrimitive.vue'
 

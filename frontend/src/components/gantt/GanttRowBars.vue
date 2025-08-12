@@ -98,11 +98,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import {computed} from 'vue'
 import dayjs from 'dayjs'
 
-import type { GanttBarModel } from '@/composables/useGanttBar'
-import { getTextColor, LIGHT } from '@/helpers/color/getTextColor'
+import type {GanttBarModel} from '@/composables/useGanttBar'
+import {getTextColor, LIGHT} from '@/helpers/color/getTextColor'
 
 import GanttBarPrimitive from './primitives/GanttBarPrimitive.vue'
 

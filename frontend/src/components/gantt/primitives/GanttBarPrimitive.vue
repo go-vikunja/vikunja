@@ -24,9 +24,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, useAttrs } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { useGanttBar, type GanttBarModel } from '@/composables/useGanttBar'
+import {computed, useAttrs} from 'vue'
+import {useI18n} from 'vue-i18n'
+import {useGanttBar, type GanttBarModel} from '@/composables/useGanttBar'
 
 const props = withDefaults(
 	defineProps<{
