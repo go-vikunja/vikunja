@@ -60,9 +60,9 @@ func TestTeamProject_ReadAll(t *testing.T) {
 	})
 	t.Run("no access", func(t *testing.T) {
 		tl := TeamProject{
-			TeamID:    1,
-			ProjectID: 5,
-			Right:     RightAdmin,
+			TeamID:     1,
+			ProjectID:  5,
+			Permission: PermissionAdmin,
 		}
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -80,7 +80,7 @@ func TestTeamProject_ReadAll(t *testing.T) {
 		teams, _, _, err := tl.ReadAll(s, u, "TEAM9", 1, 50)
 		require.NoError(t, err)
 		assert.Equal(t, reflect.Slice, reflect.TypeOf(teams).Kind())
-		ts := teams.([]*TeamWithRight)
+		ts := teams.([]*TeamWithPermission)
 		assert.Len(t, ts, 1)
 		assert.Equal(t, int64(9), ts[0].ID)
 		_ = s.Close()
@@ -93,9 +93,9 @@ func TestTeamProject_Create(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		tl := TeamProject{
-			TeamID:    1,
-			ProjectID: 1,
-			Right:     RightAdmin,
+			TeamID:     1,
+			ProjectID:  1,
+			Permission: PermissionAdmin,
 		}
 		allowed, _ := tl.CanCreate(s, u)
 		assert.True(t, allowed)
@@ -106,33 +106,33 @@ func TestTeamProject_Create(t *testing.T) {
 		db.AssertExists(t, "team_projects", map[string]interface{}{
 			"team_id":    1,
 			"project_id": 1,
-			"right":      RightAdmin,
+			"permission": PermissionAdmin,
 		}, false)
 	})
 	t.Run("team already has access", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		tl := TeamProject{
-			TeamID:    1,
-			ProjectID: 3,
-			Right:     RightAdmin,
+			TeamID:     1,
+			ProjectID:  3,
+			Permission: PermissionAdmin,
 		}
 		err := tl.Create(s, u)
 		require.Error(t, err)
 		assert.True(t, IsErrTeamAlreadyHasAccess(err))
 		_ = s.Close()
 	})
-	t.Run("wrong rights", func(t *testing.T) {
+	t.Run("wrong permissions", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		tl := TeamProject{
-			TeamID:    1,
-			ProjectID: 1,
-			Right:     RightUnknown,
+			TeamID:     1,
+			ProjectID:  1,
+			Permission: PermissionUnknown,
 		}
 		err := tl.Create(s, u)
 		require.Error(t, err)
-		assert.True(t, IsErrInvalidRight(err))
+		assert.True(t, IsErrInvalidPermission(err))
 		_ = s.Close()
 	})
 	t.Run("nonexistant team", func(t *testing.T) {
@@ -208,14 +208,14 @@ func TestTeamProject_Delete(t *testing.T) {
 
 func TestTeamProject_Update(t *testing.T) {
 	type fields struct {
-		ID        int64
-		TeamID    int64
-		ProjectID int64
-		Right     Right
-		Created   time.Time
-		Updated   time.Time
-		CRUDable  web.CRUDable
-		Rights    web.Rights
+		ID          int64
+		TeamID      int64
+		ProjectID   int64
+		Permission  Permission
+		Created     time.Time
+		Updated     time.Time
+		CRUDable    web.CRUDable
+		Permissions web.Permissions
 	}
 	tests := []struct {
 		name    string
@@ -226,36 +226,36 @@ func TestTeamProject_Update(t *testing.T) {
 		{
 			name: "Test Update Normally",
 			fields: fields{
-				ProjectID: 3,
-				TeamID:    1,
-				Right:     RightAdmin,
+				ProjectID:  3,
+				TeamID:     1,
+				Permission: PermissionAdmin,
 			},
 		},
 		{
 			name: "Test Update to write",
 			fields: fields{
-				ProjectID: 3,
-				TeamID:    1,
-				Right:     RightWrite,
+				ProjectID:  3,
+				TeamID:     1,
+				Permission: PermissionWrite,
 			},
 		},
 		{
 			name: "Test Update to Read",
 			fields: fields{
-				ProjectID: 3,
-				TeamID:    1,
-				Right:     RightRead,
+				ProjectID:  3,
+				TeamID:     1,
+				Permission: PermissionRead,
 			},
 		},
 		{
-			name: "Test Update with invalid right",
+			name: "Test Update with invalid permission",
 			fields: fields{
-				ProjectID: 3,
-				TeamID:    1,
-				Right:     500,
+				ProjectID:  3,
+				TeamID:     1,
+				Permission: 500,
 			},
 			wantErr: true,
-			errType: IsErrInvalidRight,
+			errType: IsErrInvalidPermission,
 		},
 	}
 	for _, tt := range tests {
@@ -264,14 +264,14 @@ func TestTeamProject_Update(t *testing.T) {
 			s := db.NewSession()
 
 			tl := &TeamProject{
-				ID:        tt.fields.ID,
-				TeamID:    tt.fields.TeamID,
-				ProjectID: tt.fields.ProjectID,
-				Right:     tt.fields.Right,
-				Created:   tt.fields.Created,
-				Updated:   tt.fields.Updated,
-				CRUDable:  tt.fields.CRUDable,
-				Rights:    tt.fields.Rights,
+				ID:          tt.fields.ID,
+				TeamID:      tt.fields.TeamID,
+				ProjectID:   tt.fields.ProjectID,
+				Permission:  tt.fields.Permission,
+				Created:     tt.fields.Created,
+				Updated:     tt.fields.Updated,
+				CRUDable:    tt.fields.CRUDable,
+				Permissions: tt.fields.Permissions,
 			}
 			err := tl.Update(s, &user.User{ID: 1})
 			if (err != nil) != tt.wantErr {
@@ -286,7 +286,7 @@ func TestTeamProject_Update(t *testing.T) {
 				db.AssertExists(t, "team_projects", map[string]interface{}{
 					"project_id": tt.fields.ProjectID,
 					"team_id":    tt.fields.TeamID,
-					"right":      tt.fields.Right,
+					"permission": tt.fields.Permission,
 				}, false)
 			}
 		})

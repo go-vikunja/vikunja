@@ -1,7 +1,7 @@
 - id: 1
   hash: test
   project_id: 1
-  right: 0
+  permission: 0
   sharing_type: 1
   shared_by_id: 1
   created: 2018-12-01 15:13:12
@@ -9,7 +9,7 @@
 - id: 2
   hash: test2
   project_id: 2
-  right: 1
+  permission: 1
   sharing_type: 1
   shared_by_id: 1
   created: 2018-12-01 15:13:12
@@ -17,7 +17,7 @@
 - id: 3
   hash: test3
   project_id: 3
-  right: 2
+  permission: 2
   sharing_type: 1
   shared_by_id: 1
   created: 2018-12-01 15:13:12
@@ -26,7 +26,7 @@
   hash: testWithPassword
   name: testWithPassword
   project_id: 1
-  right: 0
+  permission: 0
   password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6' # 12345678
   sharing_type: 2
   shared_by_id: 1

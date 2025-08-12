@@ -42,7 +42,7 @@ func (b *Bucket) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 	return b.canDoBucket(s, a)
 }
 
-// canDoBucket checks if the bucket exists and if the user has the right to act on it
+// canDoBucket checks if the bucket exists and if the user has the permission to act on it
 func (b *Bucket) canDoBucket(s *xorm.Session, a web.Auth) (bool, error) {
 	bb, err := getBucketByID(s, b.ID)
 	if err != nil {

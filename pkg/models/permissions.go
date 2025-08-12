@@ -22,38 +22,38 @@ import (
 	"strconv"
 )
 
-// Right defines the rights users/teams can have for projects
-type Right int
+// Permission defines the permissions users/teams can have for projects
+type Permission int
 
-// define unknown right
+// define unknown permission
 const (
-	RightUnknown = -1
+	PermissionUnknown = -1
 	// Can read projects in a
-	RightRead Right = iota - 1
+	PermissionRead Permission = iota - 1
 	// Can write in a like projects and tasks. Cannot create new projects.
-	RightWrite
+	PermissionWrite
 	// Can manage a project, can do everything
-	RightAdmin
+	PermissionAdmin
 )
 
-func (r Right) isValid() error {
-	if r != RightAdmin && r != RightRead && r != RightWrite {
-		return ErrInvalidRight{r}
+func (r Permission) isValid() error {
+	if r != PermissionAdmin && r != PermissionRead && r != PermissionWrite {
+		return ErrInvalidPermission{r}
 	}
 
 	return nil
 }
 
 // MarshalJSON marshals the enum as a quoted json string
-func (r Right) MarshalJSON() ([]byte, error) {
-	if r == RightUnknown {
+func (r Permission) MarshalJSON() ([]byte, error) {
+	if r == PermissionUnknown {
 		return []byte(`null`), nil
 	}
 	return []byte(strconv.Itoa(int(r))), nil
 }
 
 // UnmarshalJSON unmarshals a quoted json string to the enum value
-func (r *Right) UnmarshalJSON(data []byte) error {
+func (r *Permission) UnmarshalJSON(data []byte) error {
 	var s int
 	if err := json.Unmarshal(data, &s); err != nil {
 		return err
@@ -61,15 +61,15 @@ func (r *Right) UnmarshalJSON(data []byte) error {
 
 	switch s {
 	case -1:
-		*r = RightUnknown
+		*r = PermissionUnknown
 	case 0:
-		*r = RightRead
+		*r = PermissionRead
 	case 1:
-		*r = RightWrite
+		*r = PermissionWrite
 	case 2:
-		*r = RightAdmin
+		*r = PermissionAdmin
 	default:
-		return fmt.Errorf("invalid Right %q", s)
+		return fmt.Errorf("invalid Permission %q", s)
 	}
 	return nil
 }

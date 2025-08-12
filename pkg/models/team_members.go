@@ -132,7 +132,7 @@ func (tm *TeamMember) MembershipExists(s *xorm.Session) (exists bool, err error)
 // @Security JWTKeyAuth
 // @Param id path int true "Team ID"
 // @Param userID path int true "User ID"
-// @Success 200 {object} models.Message "The member right was successfully changed."
+// @Success 200 {object} models.Message "The member permission was successfully changed."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams/{id}/members/{userID}/admin [post]
 func (tm *TeamMember) Update(s *xorm.Session, _ web.Auth) (err error) {
@@ -143,7 +143,7 @@ func (tm *TeamMember) Update(s *xorm.Session, _ web.Auth) (err error) {
 	}
 	tm.UserID = user.ID
 
-	// Get the full member object and change the admin right
+	// Get the full member object and change the admin permission
 	ttm := &TeamMember{}
 	_, err = s.
 		Where("team_id = ? AND user_id = ?", tm.TeamID, tm.UserID).
@@ -158,6 +158,6 @@ func (tm *TeamMember) Update(s *xorm.Session, _ web.Auth) (err error) {
 		Where("team_id = ? AND user_id = ?", tm.TeamID, tm.UserID).
 		Cols("admin").
 		Update(ttm)
-	tm.Admin = ttm.Admin // Since we're returning the updated rights object
+	tm.Admin = ttm.Admin // Since we're returning the updated permissions object
 	return
 }

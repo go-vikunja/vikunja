@@ -191,7 +191,7 @@ func TestSavedFilter_Delete(t *testing.T) {
 	})
 }
 
-func TestSavedFilter_Rights(t *testing.T) {
+func TestSavedFilter_Permissions(t *testing.T) {
 	user1 := &user.User{ID: 1}
 	user2 := &user.User{ID: 2}
 	ls := &LinkSharing{ID: 1}
@@ -216,9 +216,9 @@ func TestSavedFilter_Rights(t *testing.T) {
 				ID:    1,
 				Title: "Lorem",
 			}
-			can, maxRight, err := sf.CanRead(s, user1)
+			can, maxPermission, err := sf.CanRead(s, user1)
 			require.NoError(t, err)
-			assert.Equal(t, int(RightAdmin), maxRight)
+			assert.Equal(t, int(PermissionAdmin), maxPermission)
 			assert.True(t, can)
 		})
 		t.Run("not owner", func(t *testing.T) {

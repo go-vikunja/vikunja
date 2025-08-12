@@ -171,26 +171,26 @@ func ensureProjectAdminUser(s *xorm.Session, l *Project) (hadUsers bool, err err
 	}
 
 	for _, lu := range projectUsers {
-		if lu.Right == RightAdmin {
+		if lu.Permission == PermissionAdmin {
 			// Project already has more than one admin, no need to do anything
 			return true, nil
 		}
 	}
 
 	for _, lu := range projectUsers {
-		if lu.Right == RightWrite {
-			lu.Right = RightAdmin
+		if lu.Permission == PermissionWrite {
+			lu.Permission = PermissionAdmin
 			_, err = s.Where("id = ?", lu.ID).
-				Cols("right").
+				Cols("permission").
 				Update(lu)
 			return true, err
 		}
 	}
 
 	firstUser := projectUsers[0]
-	firstUser.Right = RightAdmin
+	firstUser.Permission = PermissionAdmin
 	_, err = s.Where("id = ?", firstUser.ID).
-		Cols("right").
+		Cols("permission").
 		Update(firstUser)
 	if err != nil {
 		return true, err
@@ -218,26 +218,26 @@ func ensureProjectAdminTeam(s *xorm.Session, l *Project) (hadTeams bool, err err
 	}
 
 	for _, lu := range projectTeams {
-		if lu.Right == RightAdmin {
+		if lu.Permission == PermissionAdmin {
 			// Project already has more than one admin, no need to do anything
 			return true, nil
 		}
 	}
 
 	for _, lu := range projectTeams {
-		if lu.Right == RightWrite {
-			lu.Right = RightAdmin
+		if lu.Permission == PermissionWrite {
+			lu.Permission = PermissionAdmin
 			_, err = s.Where("id = ?", lu.ID).
-				Cols("right").
+				Cols("permission").
 				Update(lu)
 			return true, err
 		}
 	}
 
 	firstTeam := projectTeams[0]
-	firstTeam.Right = RightAdmin
+	firstTeam.Permission = PermissionAdmin
 	_, err = s.Where("id = ?", firstTeam.ID).
-		Cols("right").
+		Cols("permission").
 		Update(firstTeam)
 	return true, err
 }

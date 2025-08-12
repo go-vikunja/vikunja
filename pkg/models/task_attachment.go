@@ -48,8 +48,8 @@ type TaskAttachment struct {
 
 	Created time.Time `xorm:"created" json:"created"`
 
-	web.CRUDable `xorm:"-" json:"-"`
-	web.Rights   `xorm:"-" json:"-"`
+	web.CRUDable    `xorm:"-" json:"-"`
+	web.Permissions `xorm:"-" json:"-"`
 }
 
 // TableName returns the table name for task attachments

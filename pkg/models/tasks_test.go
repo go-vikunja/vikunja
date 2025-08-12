@@ -36,7 +36,7 @@ func TestTask_Create(t *testing.T) {
 		Email:    "user1@example.com",
 	}
 
-	// We only test creating a task here, the rights are all well tested in the web tests.
+	// We only test creating a task here, the permissions are all well tested in the web tests.
 
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)

@@ -109,8 +109,8 @@ type Subscription struct {
 	// A timestamp when this subscription was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`
 
-	web.CRUDable `xorm:"-" json:"-"`
-	web.Rights   `xorm:"-" json:"-"`
+	web.CRUDable    `xorm:"-" json:"-"`
+	web.Permissions `xorm:"-" json:"-"`
 }
 
 type SubscriptionWithUser struct {
@@ -145,7 +145,7 @@ func (sb *Subscription) TableName() string {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /subscriptions/{entity}/{entityID} [put]
 func (sb *Subscription) Create(s *xorm.Session, auth web.Auth) (err error) {
-	// Rights method already does the validation of the entity type, so we don't need to do that here
+	// Permissions method already does the validation of the entity type, so we don't need to do that here
 
 	sb.ID = 0
 	sb.UserID = auth.GetID()

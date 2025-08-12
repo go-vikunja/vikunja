@@ -61,8 +61,8 @@ type Bucket struct {
 	// Including the task collection type so we can use task filters on kanban
 	TaskCollection `xorm:"-" json:"-"`
 
-	web.Rights   `xorm:"-" json:"-"`
-	web.CRUDable `xorm:"-" json:"-"`
+	web.Permissions `xorm:"-" json:"-"`
+	web.CRUDable    `xorm:"-" json:"-"`
 }
 
 // TableName returns the table name for this bucket.

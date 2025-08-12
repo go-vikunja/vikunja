@@ -21,8 +21,8 @@ import (
 	"xorm.io/xorm"
 )
 
-// Rights defines rights methods
-type Rights interface {
+// Permissions defines permissions methods
+type Permissions interface {
 	CanRead(*xorm.Session, Auth) (bool, int, error)
 	CanDelete(*xorm.Session, Auth) (bool, error)
 	CanUpdate(*xorm.Session, Auth) (bool, error)

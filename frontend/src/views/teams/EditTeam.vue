@@ -272,7 +272,7 @@ import TeamService from '@/services/team'
 import TeamMemberService from '@/services/teamMember'
 import UserService from '@/services/user'
 
-import {RIGHTS as Rights} from '@/constants/rights'
+import {PERMISSIONS as Permissions} from '@/constants/permissions'
 
 import {useTitle} from '@/composables/useTitle'
 import {success} from '@/message'
@@ -292,8 +292,8 @@ const {t} = useI18n({useScope: 'global'})
 const userIsAdmin = computed(() => {
 	return (
 		team.value &&
-		team.value.maxRight &&
-		team.value.maxRight > Rights.READ
+		team.value.maxPermission &&
+		team.value.maxPermission > Permissions.READ
 	)
 })
 const userInfo = computed(() => authStore.info)

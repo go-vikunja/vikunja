@@ -78,7 +78,7 @@ func UserList(c echo.Context) error {
 // @Param id path int true "Project ID"
 // @Success 200 {array} user.User "All (found) users."
 // @Failure 400 {object} web.HTTPError "Something's invalid."
-// @Failure 401 {object} web.HTTPError "The user does not have the right to see the project."
+// @Failure 401 {object} web.HTTPError "The user does not have the permission to see the project."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /projects/{id}/projectusers [get]
 func ListUsersForProject(c echo.Context) error {

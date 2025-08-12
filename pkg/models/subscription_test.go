@@ -136,7 +136,7 @@ func TestSubscription_Create(t *testing.T) {
 		assert.True(t, IsErrTaskDoesNotExist(err))
 		assert.False(t, can)
 	})
-	t.Run("no rights to see project", func(t *testing.T) {
+	t.Run("no permissions to see project", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
@@ -151,7 +151,7 @@ func TestSubscription_Create(t *testing.T) {
 		require.NoError(t, err)
 		assert.False(t, can)
 	})
-	t.Run("no rights to see task", func(t *testing.T) {
+	t.Run("no permissions to see task", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()

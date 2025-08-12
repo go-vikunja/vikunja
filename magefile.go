@@ -1403,7 +1403,7 @@ func (Plugins) Build(pathToSourceFiles string) error {
 	if pathToSourceFiles == "" {
 		return fmt.Errorf("please provide a plugin path")
 	}
-	
+
 	// Convert relative path to absolute path
 	if !strings.HasPrefix(pathToSourceFiles, "/") {
 		absPath, err := filepath.Abs(pathToSourceFiles)
@@ -1412,7 +1412,7 @@ func (Plugins) Build(pathToSourceFiles string) error {
 		}
 		pathToSourceFiles = absPath
 	}
-	
+
 	out := filepath.Join(RootPath, "plugins", filepath.Base(pathToSourceFiles)+".so")
 	runAndStreamOutput("go", "build", "-buildmode=plugin", "-o", out, pathToSourceFiles)
 	return nil

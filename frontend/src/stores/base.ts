@@ -12,7 +12,7 @@ import {useMenuActive} from '@/composables/useMenuActive'
 
 import {useAuthStore} from '@/stores/auth'
 import type {IProject} from '@/modelTypes/IProject'
-import type {Right} from '@/constants/rights'
+import type {Permission} from '@/constants/permissions'
 import type {IProjectView} from '@/modelTypes/IProjectView'
 
 export const useBaseStore = defineStore('base', () => {
@@ -40,19 +40,19 @@ export const useBaseStore = defineStore('base', () => {
 	const updateAvailable = ref(false)
 
 	function setCurrentProject(newCurrentProject: IProject | null, currentViewId?: IProjectView['id']) {
-		// Server updates don't return the right. Therefore, the right is reset after updating the project which is
-		// confusing because all the buttons will disappear in that case. To prevent this, we're keeping the right
+		// Server updates don't return the permission. Therefore, the permission is reset after updating the project which is
+		// confusing because all the buttons will disappear in that case. To prevent this, we're keeping the permission
 		// when updating the project in global state.
-		let maxRight: Right | null = newCurrentProject?.maxRight || null
+		let maxPermission: Permission | null = newCurrentProject?.maxPermission || null
 		if (
-			typeof currentProject.value?.maxRight !== 'undefined' &&
+			typeof currentProject.value?.maxPermission !== 'undefined' &&
 			newCurrentProject !== null &&
 			(
-				typeof newCurrentProject.maxRight === 'undefined' ||
-				newCurrentProject.maxRight === null
+				typeof newCurrentProject.maxPermission === 'undefined' ||
+				newCurrentProject.maxPermission === null
 			)
 		) {
-			maxRight = currentProject.value.maxRight
+			maxPermission = currentProject.value.maxPermission
 		}
 		if (newCurrentProject === null) {
 			currentProject.value = null
@@ -60,7 +60,7 @@ export const useBaseStore = defineStore('base', () => {
 		}
 		currentProject.value = {
 			...newCurrentProject,
-			maxRight,
+			maxPermission,
 		}
 		setCurrentProjectViewId(currentViewId)
 	}

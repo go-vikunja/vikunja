@@ -15,7 +15,7 @@
 				/>
 			</BaseButton>
 			<span
-				v-if="project.id > 0 && project.maxRight > RIGHTS.READ"
+				v-if="project.id > 0 && project.maxPermission > PERMISSIONS.READ"
 				class="icon menu-item-icon handle drag-handle-standalone"
 				@mousedown.stop
 				@click.stop.prevent
@@ -48,7 +48,7 @@
 				<span class="project-menu-title">{{ getProjectTitle(project) }}</span>
 			</BaseButton>
 			<BaseButton
-				v-if="project.id > 0 && project.maxRight > RIGHTS.READ"
+				v-if="project.id > 0 && project.maxPermission > PERMISSIONS.READ"
 				class="favorite"
 				:class="{'is-favorite': project.isFavorite}"
 				@click="projectStore.toggleProjectFavorite(project)"
@@ -57,7 +57,7 @@
 				<Icon :icon="project.isFavorite ? 'star' : ['far', 'star']" />
 			</BaseButton>
 			<ProjectSettingsDropdown
-				v-if="project.maxRight > RIGHTS.READ"
+				v-if="project.maxPermission > PERMISSIONS.READ"
 				class="menu-list-dropdown"
 				:project="project"
 			>
@@ -97,7 +97,7 @@ import ProjectSettingsDropdown from '@/components/project/ProjectSettingsDropdow
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 import ColorBubble from '@/components/misc/ColorBubble.vue'
 import ProjectsNavigation from '@/components/home/ProjectsNavigation.vue'
-import {RIGHTS} from '@/constants/rights'
+import {PERMISSIONS} from '@/constants/permissions'
 
 const props = defineProps<{
 	project: IProject,

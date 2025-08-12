@@ -22,13 +22,12 @@ import (
 	"encoding/hex"
 	"time"
 
-	"xorm.io/builder"
-
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/utils"
-
 	"code.vikunja.io/api/pkg/web"
+
 	"golang.org/x/crypto/pbkdf2"
+	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
@@ -46,7 +45,7 @@ type APIToken struct {
 	TokenHash      string `xorm:"not null unique" json:"-"`
 	TokenLastEight string `xorm:"not null index varchar(8)" json:"-"`
 	// The permissions this token has. Possible values are available via the /routes endpoint and consist of the keys of the list from that endpoint. For example, if the token should be able to read all tasks as well as update existing tasks, you should add `{"tasks":["read_all","update"]}`.
-	Permissions APIPermissions `xorm:"json not null" json:"permissions" valid:"required"`
+	APIPermissions APIPermissions `xorm:"json not null" json:"permissions" valid:"required"`
 	// The date when this key expires.
 	ExpiresAt time.Time `xorm:"not null" json:"expires_at" valid:"required"`
 
@@ -55,8 +54,8 @@ type APIToken struct {
 
 	OwnerID int64 `xorm:"bigint not null" json:"-"`
 
-	web.Rights   `xorm:"-" json:"-"`
-	web.CRUDable `xorm:"-" json:"-"`
+	web.Permissions `xorm:"-" json:"-"`
+	web.CRUDable    `xorm:"-" json:"-"`
 }
 
 const APITokenPrefix = `tk_`
@@ -102,7 +101,7 @@ func (t *APIToken) Create(s *xorm.Session, a web.Auth) (err error) {
 
 	t.OwnerID = a.GetID()
 
-	if err := PermissionsAreValid(t.Permissions); err != nil {
+	if err := PermissionsAreValid(t.APIPermissions); err != nil {
 		return err
 	}
 

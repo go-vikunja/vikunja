@@ -34,7 +34,7 @@ type WebHandler struct {
 // CObject is the definition of our object, holds the structs
 type CObject interface {
 	web.CRUDable
-	web.Rights
+	web.Permissions
 }
 
 // HandleHTTPError does what it says

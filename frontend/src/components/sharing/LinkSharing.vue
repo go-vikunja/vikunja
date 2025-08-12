@@ -29,22 +29,22 @@
 						class="label"
 						for="linkShareRight"
 					>
-						{{ $t('project.share.right.title') }}
+						{{ $t('project.share.permission.title') }}
 					</label>
 					<div class="control">
 						<div class="select">
 							<select
 								id="linkShareRight"
-								v-model="selectedRight"
+								v-model="selectedPermission"
 							>
-								<option :value="RIGHTS.READ">
-									{{ $t('project.share.right.read') }}
+								<option :value="PERMISSIONS.READ">
+									{{ $t('project.share.permission.read') }}
 								</option>
-								<option :value="RIGHTS.READ_WRITE">
-									{{ $t('project.share.right.readWrite') }}
+								<option :value="PERMISSIONS.READ_WRITE">
+									{{ $t('project.share.permission.readWrite') }}
 								</option>
-								<option :value="RIGHTS.ADMIN">
-									{{ $t('project.share.right.admin') }}
+								<option :value="PERMISSIONS.ADMIN">
+									{{ $t('project.share.permission.admin') }}
 								</option>
 							</select>
 						</div>
@@ -129,23 +129,23 @@
 							</p>
 
 							<p class="mbe-2">
-								<template v-if="s.right === RIGHTS.ADMIN">
+								<template v-if="s.permission === PERMISSIONS.ADMIN">
 									<span class="icon is-small">
 										<Icon icon="lock" />
 									</span>&nbsp;
-									{{ $t('project.share.right.admin') }}
+									{{ $t('project.share.permission.admin') }}
 								</template>
-								<template v-else-if="s.right === RIGHTS.READ_WRITE">
+								<template v-else-if="s.permission === PERMISSIONS.READ_WRITE">
 									<span class="icon is-small">
 										<Icon icon="pen" />
 									</span>&nbsp;
-									{{ $t('project.share.right.readWrite') }}
+									{{ $t('project.share.permission.readWrite') }}
 								</template>
 								<template v-else>
 									<span class="icon is-small">
 										<Icon icon="users" />
 									</span>&nbsp;
-									{{ $t('project.share.right.read') }}
+									{{ $t('project.share.permission.read') }}
 								</template>
 							</p>
 						
@@ -221,7 +221,7 @@
 import {ref, watch, computed, shallowReactive} from 'vue'
 import {useI18n} from 'vue-i18n'
 
-import {RIGHTS} from '@/constants/rights'
+import {PERMISSIONS} from '@/constants/permissions'
 import LinkShareModel from '@/models/linkShare'
 
 import type {ILinkShare} from '@/modelTypes/ILinkShare'
@@ -246,7 +246,7 @@ const {t} = useI18n({useScope: 'global'})
 
 const linkShares = ref<ILinkShare[]>([])
 const linkShareService = shallowReactive(new LinkShareService())
-const selectedRight = ref(RIGHTS.READ)
+const selectedPermission = ref(PERMISSIONS.READ)
 const name = ref('')
 const password = ref('')
 const showDeleteModal = ref(false)
@@ -296,13 +296,13 @@ watch(() => ([linkShares.value, availableViews.value]), ([newLinkShares, newProj
 
 async function add(projectId: IProject['id']) {
 	const newLinkShare = new LinkShareModel({
-		right: selectedRight.value,
+		permission: selectedPermission.value,
 		projectId,
 		name: name.value,
 		password: password.value,
 	})
 	await linkShareService.create(newLinkShare)
-	selectedRight.value = RIGHTS.READ
+	selectedPermission.value = PERMISSIONS.READ
 	name.value = ''
 	password.value = ''
 	showNewForm.value = false

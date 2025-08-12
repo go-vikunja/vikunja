@@ -109,7 +109,7 @@ import Pagination from '@/components/misc/Pagination.vue'
 import {ALPHABETICAL_SORT} from '@/components/project/partials/Filters.vue'
 
 import {useTaskList} from '@/composables/useTaskList'
-import {RIGHTS as Rights} from '@/constants/rights'
+import {PERMISSIONS as Permissions} from '@/constants/permissions'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 import type {ITask} from '@/modelTypes/ITask'
 import {isSavedFilter} from '@/services/savedFilter'
@@ -182,7 +182,7 @@ const baseStore = useBaseStore()
 const project = computed(() => baseStore.currentProject)
 
 const canWrite = computed(() => {
-	return project.value.maxRight > Rights.READ && project.value.id > 0
+	return project.value.maxPermission > Permissions.READ && project.value.id > 0
 })
 
 const isPseudoProject = computed(() => (project.value && isSavedFilter(project.value)) || project.value?.id === -1)

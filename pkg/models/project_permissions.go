@@ -22,6 +22,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web"
+
 	"xorm.io/xorm"
 )
 
@@ -33,7 +34,7 @@ func (p *Project) CanWrite(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, nil
 	}
 
-	// Get the project and check the right
+	// Get the project and check the permission
 	originalProject, err := GetProjectSimpleByID(s, p.ID)
 	if err != nil {
 		return false, err
@@ -49,7 +50,7 @@ func (p *Project) CanWrite(s *xorm.Session, a web.Auth) (bool, error) {
 	shareAuth, ok := a.(*LinkSharing)
 	if ok {
 		return originalProject.ID == shareAuth.ProjectID &&
-			(shareAuth.Right == RightWrite || shareAuth.Right == RightAdmin), errIsArchived
+			(shareAuth.Permission == PermissionWrite || shareAuth.Permission == PermissionAdmin), errIsArchived
 	}
 
 	u := &user.User{ID: a.GetID()}
@@ -63,7 +64,7 @@ func (p *Project) CanWrite(s *xorm.Session, a web.Auth) (bool, error) {
 		return canWrite, errIsArchived
 	}
 
-	canWrite, _, err = originalProject.checkRight(s, u, RightWrite, RightAdmin)
+	canWrite, _, err = originalProject.checkPermission(s, u, PermissionWrite, PermissionAdmin)
 	if err != nil {
 		return false, err
 	}
@@ -82,7 +83,7 @@ func (p *Project) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
 
 		*p = FavoritesPseudoProject
 		p.Owner = owner
-		return true, int(RightRead), nil
+		return true, int(PermissionRead), nil
 	}
 
 	// Saved Filter Projects need a special case
@@ -104,10 +105,10 @@ func (p *Project) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
 	shareAuth, ok := a.(*LinkSharing)
 	if ok {
 		return p.ID == shareAuth.ProjectID &&
-			(shareAuth.Right == RightRead || shareAuth.Right == RightWrite || shareAuth.Right == RightAdmin), int(shareAuth.Right), nil
+			(shareAuth.Permission == PermissionRead || shareAuth.Permission == PermissionWrite || shareAuth.Permission == PermissionAdmin), int(shareAuth.Permission), nil
 	}
 
-	return p.checkRight(s, &user.User{ID: a.GetID()}, RightRead, RightWrite, RightAdmin)
+	return p.checkPermission(s, &user.User{ID: a.GetID()}, PermissionRead, PermissionWrite, PermissionAdmin)
 }
 
 // CanUpdate checks if the user can update a project
@@ -175,7 +176,7 @@ func (p *Project) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 	return true, nil
 }
 
-// IsAdmin returns whether the user has admin rights on the project or not
+// IsAdmin returns whether the user has admin permissions on the project or not
 func (p *Project) IsAdmin(s *xorm.Session, a web.Auth) (bool, error) {
 	// The favorite project can't be edited
 	if p.ID == FavoritesPseudoProject.ID {
@@ -190,7 +191,7 @@ func (p *Project) IsAdmin(s *xorm.Session, a web.Auth) (bool, error) {
 	// Check if we're dealing with a share auth
 	shareAuth, ok := a.(*LinkSharing)
 	if ok {
-		return originalProject.ID == shareAuth.ProjectID && shareAuth.Right == RightAdmin, nil
+		return originalProject.ID == shareAuth.ProjectID && shareAuth.Permission == PermissionAdmin, nil
 	}
 
 	u := &user.User{ID: a.GetID()}
@@ -201,7 +202,7 @@ func (p *Project) IsAdmin(s *xorm.Session, a web.Auth) (bool, error) {
 	if originalProject.isOwner(u) {
 		return true, nil
 	}
-	is, _, err := originalProject.checkRight(s, u, RightAdmin)
+	is, _, err := originalProject.checkPermission(s, u, PermissionAdmin)
 	return is, err
 }
 
@@ -210,33 +211,33 @@ func (p *Project) isOwner(u *user.User) bool {
 	return p.OwnerID == u.ID
 }
 
-// Checks n different rights for any given user
-func (p *Project) checkRight(s *xorm.Session, u *user.User, rights ...Right) (bool, int, error) {
-	projectRights, err := checkRightsForProjects(s, u, []int64{p.ID})
+// Checks n different permissions for any given user
+func (p *Project) checkPermission(s *xorm.Session, u *user.User, permissions ...Permission) (bool, int, error) {
+	projectPermissions, err := checkPermissionsForProjects(s, u, []int64{p.ID})
 	if err != nil {
 		return false, 0, err
 	}
-	right, has := projectRights[p.ID]
+	permission, has := projectPermissions[p.ID]
 	if !has {
 		return false, 0, nil
 	}
 
-	for _, r := range rights {
-		if r == right.MaxRight {
-			return true, int(right.MaxRight), nil
+	for _, r := range permissions {
+		if r == permission.MaxPermission {
+			return true, int(permission.MaxPermission), nil
 		}
 	}
 
 	return false, 0, nil
 }
 
-type projectRight struct {
-	ID       int64 `xorm:"pk autoincr"`
-	MaxRight Right
+type projectPermission struct {
+	ID            int64 `xorm:"pk autoincr"`
+	MaxPermission Permission
 }
 
-func checkRightsForProjects(s *xorm.Session, u *user.User, projectIDs []int64) (projectRightMap map[int64]*projectRight, err error) {
-	projectRightMap = make(map[int64]*projectRight)
+func checkPermissionsForProjects(s *xorm.Session, u *user.User, projectIDs []int64) (projectPermissionMap map[int64]*projectPermission, err error) {
+	projectPermissionMap = make(map[int64]*projectPermission)
 
 	if len(projectIDs) < 1 {
 		return
@@ -277,9 +278,9 @@ WITH RECURSIVE
                                    ph.original_project_id,
                                    CASE
                                        WHEN p.owner_id = ? THEN 2
-                                       WHEN COALESCE(ul.right, 0) > COALESCE(tl.right, 0) THEN ul.right
-                                       ELSE COALESCE(tl.right, 0)
-                                       END AS project_right,
+                                       WHEN COALESCE(ul.permission, 0) > COALESCE(tl.permission, 0) THEN ul.permission
+                                       ELSE COALESCE(tl.permission, 0)
+                                       END AS project_permission,
             CASE
                 WHEN p.owner_id = ? THEN 1  -- Direct project ownership
                 ELSE ph.level + 1  -- Derived from parent project
@@ -293,12 +294,12 @@ WITH RECURSIVE
                             WHERE p.owner_id = ? OR ul.user_id = ? OR tm.user_id = ?)
 
 SELECT ph.original_project_id AS id,
-       COALESCE(MAX(pp.project_right), -1) AS max_right
+       COALESCE(MAX(pp.project_permission), -1) AS max_permission
 FROM project_hierarchy ph
          LEFT JOIN (SELECT *,
                            ROW_NUMBER() OVER (PARTITION BY original_project_id ORDER BY priority) AS rn
                     FROM project_permissions) pp ON ph.id = pp.id AND pp.rn = 1
 GROUP BY ph.original_project_id`, args...).
-		Find(&projectRightMap)
+		Find(&projectPermissionMap)
 	return
 }

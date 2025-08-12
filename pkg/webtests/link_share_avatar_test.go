@@ -33,7 +33,7 @@ func TestLinkShareAvatar(t *testing.T) {
 		ID:          1,
 		Hash:        "test",
 		ProjectID:   1,
-		Right:       models.RightRead,
+		Permission:  models.PermissionRead,
 		SharingType: models.SharingTypeWithoutPassword,
 		SharedByID:  1,
 	}

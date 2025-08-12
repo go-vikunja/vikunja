@@ -61,7 +61,7 @@ func (l *Label) isLabelOwner(s *xorm.Session, a web.Auth) (bool, error) {
 }
 
 // Helper method to check if a user can see a specific label
-func (l *Label) hasAccessToLabel(s *xorm.Session, a web.Auth) (has bool, maxRight int, err error) {
+func (l *Label) hasAccessToLabel(s *xorm.Session, a web.Auth) (has bool, maxPermission int, err error) {
 
 	linkShare, isLinkShare := a.(*LinkSharing)
 
@@ -93,10 +93,10 @@ func (l *Label) hasAccessToLabel(s *xorm.Session, a web.Auth) (has bool, maxRigh
 		return
 	}
 
-	// Since the right depends on the task the label is associated with, we need to check that too.
+	// Since the permission depends on the task the label is associated with, we need to check that too.
 	if ll.TaskID > 0 {
 		t := &Task{ID: ll.TaskID}
-		_, maxRight, err = t.CanRead(s, a)
+		_, maxPermission, err = t.CanRead(s, a)
 		if err != nil {
 			return
 		}

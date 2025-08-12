@@ -116,7 +116,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { RIGHTS as Rights } from '@/constants/rights'
+import { PERMISSIONS as Permissions } from '@/constants/permissions'
 
 import ProjectSettingsDropdown from '@/components/project/ProjectSettingsDropdown.vue'
 import Dropdown from '@/components/misc/Dropdown.vue'
@@ -137,7 +137,7 @@ import { useAuthStore } from '@/stores/auth'
 const baseStore = useBaseStore()
 const currentProject = computed(() => baseStore.currentProject)
 const background = computed(() => baseStore.background)
-const canWriteCurrentProject = computed(() => baseStore.currentProject?.maxRight > Rights.READ)
+const canWriteCurrentProject = computed(() => baseStore.currentProject?.maxPermission > Permissions.READ)
 const menuActive = computed(() => baseStore.menuActive)
 
 const authStore = useAuthStore()

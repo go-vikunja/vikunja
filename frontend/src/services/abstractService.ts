@@ -4,7 +4,7 @@ import type {Method} from 'axios'
 import {objectToSnakeCase} from '@/helpers/case'
 import AbstractModel from '@/models/abstractModel'
 import type {IAbstract} from '@/modelTypes/IAbstract'
-import type {Right} from '@/constants/rights'
+import type {Permission} from '@/constants/permissions'
 
 interface Paths {
 	create : string
@@ -310,7 +310,7 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 		try {
 			const response = await this.http.get(finalUrl, {params: prepareParams(params)})
 			const result = this.modelGetFactory(response.data)
-			result.maxRight = Number(response.headers['x-max-right']) as Right
+			result.maxPermission = Number(response.headers['x-max-permission']) as Permission
 			return result
 		} finally {
 			cancel()
@@ -386,8 +386,8 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 		try {
 			const response = await this.http.put(finalUrl, model)
 			const result = this.modelCreateFactory(response.data)
-			if (typeof model.maxRight !== 'undefined') {
-				result.maxRight = model.maxRight
+			if (typeof model.maxPermission !== 'undefined') {
+				result.maxPermission = model.maxPermission
 			}
 			return result
 		} finally {
@@ -405,8 +405,8 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 		try {
 			const response = await this.http.post(url, model)
 			const result = this.modelUpdateFactory(response.data)
-			if (typeof model.maxRight !== 'undefined') {
-				result.maxRight = model.maxRight
+			if (typeof model.maxPermission !== 'undefined') {
+				result.maxPermission = model.maxPermission
 			}
 			return result
 		} finally {

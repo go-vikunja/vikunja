@@ -53,8 +53,8 @@ type SavedFilter struct {
 	// A timestamp when this filter was last updated. You cannot change this value.
 	Updated time.Time `xorm:"updated not null" json:"updated"`
 
-	web.CRUDable `xorm:"-" json:"-"`
-	web.Rights   `xorm:"-" json:"-"`
+	web.CRUDable    `xorm:"-" json:"-"`
+	web.Permissions `xorm:"-" json:"-"`
 }
 
 // TableName returns a better table name for saved filters
@@ -170,7 +170,7 @@ func GetSavedFilterSimpleByID(s *xorm.Session, id int64) (sf *SavedFilter, err e
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /filters/{id} [get]
 func (sf *SavedFilter) ReadOne(s *xorm.Session, _ web.Auth) error {
-	// s already contains almost the full saved filter from the rights check, we only need to add the user
+	// s already contains almost the full saved filter from the permissions check, we only need to add the user
 	u, err := user.GetUserByID(s, sf.OwnerID)
 	sf.Owner = u
 	return err

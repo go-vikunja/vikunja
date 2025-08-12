@@ -60,8 +60,8 @@ type TaskCollection struct {
 
 	isSavedFilter bool
 
-	web.CRUDable `xorm:"-" json:"-"`
-	web.Rights   `xorm:"-" json:"-"`
+	web.CRUDable    `xorm:"-" json:"-"`
+	web.Permissions `xorm:"-" json:"-"`
 }
 
 type TaskCollectionExpandable string

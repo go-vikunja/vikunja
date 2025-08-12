@@ -34,7 +34,7 @@ func TestLinkSharing(t *testing.T) {
 		ID:          1,
 		Hash:        "test1",
 		ProjectID:   1,
-		Right:       models.RightRead,
+		Permission:  models.PermissionRead,
 		SharingType: models.SharingTypeWithoutPassword,
 		SharedByID:  1,
 	}
@@ -43,7 +43,7 @@ func TestLinkSharing(t *testing.T) {
 		ID:          2,
 		Hash:        "test2",
 		ProjectID:   2,
-		Right:       models.RightWrite,
+		Permission:  models.PermissionWrite,
 		SharingType: models.SharingTypeWithoutPassword,
 		SharedByID:  1,
 	}
@@ -52,7 +52,7 @@ func TestLinkSharing(t *testing.T) {
 		ID:          3,
 		Hash:        "test3",
 		ProjectID:   3,
-		Right:       models.RightAdmin,
+		Permission:  models.PermissionAdmin,
 		SharingType: models.SharingTypeWithoutPassword,
 		SharedByID:  1,
 	}
@@ -67,68 +67,68 @@ func TestLinkSharing(t *testing.T) {
 		}
 		t.Run("Forbidden", func(t *testing.T) {
 			t.Run("read only", func(t *testing.T) {
-				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "20"}, `{"right":0}`)
+				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "20"}, `{"permission":0}`)
 				require.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("write", func(t *testing.T) {
-				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "20"}, `{"right":1}`)
+				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "20"}, `{"permission":1}`)
 				require.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("admin", func(t *testing.T) {
-				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "20"}, `{"right":2}`)
+				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "20"}, `{"permission":2}`)
 				require.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 		})
 		t.Run("Read only access", func(t *testing.T) {
 			t.Run("read only", func(t *testing.T) {
-				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "9"}, `{"right":0}`)
+				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "9"}, `{"permission":0}`)
 				require.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("write", func(t *testing.T) {
-				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "9"}, `{"right":1}`)
+				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "9"}, `{"permission":1}`)
 				require.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("admin", func(t *testing.T) {
-				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "9"}, `{"right":2}`)
+				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "9"}, `{"permission":2}`)
 				require.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 		})
 		t.Run("Write access", func(t *testing.T) {
 			t.Run("read only", func(t *testing.T) {
-				req, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "10"}, `{"right":0}`)
+				req, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "10"}, `{"permission":0}`)
 				require.NoError(t, err)
 				assert.Contains(t, req.Body.String(), `"hash":`)
 			})
 			t.Run("write", func(t *testing.T) {
-				req, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "10"}, `{"right":1}`)
+				req, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "10"}, `{"permission":1}`)
 				require.NoError(t, err)
 				assert.Contains(t, req.Body.String(), `"hash":`)
 			})
 			t.Run("admin", func(t *testing.T) {
-				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "10"}, `{"right":2}`)
+				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "10"}, `{"permission":2}`)
 				require.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 		})
 		t.Run("Admin access", func(t *testing.T) {
 			t.Run("read only", func(t *testing.T) {
-				req, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "11"}, `{"right":0}`)
+				req, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "11"}, `{"permission":0}`)
 				require.NoError(t, err)
 				assert.Contains(t, req.Body.String(), `"hash":`)
 			})
 			t.Run("write", func(t *testing.T) {
-				req, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "11"}, `{"right":1}`)
+				req, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "11"}, `{"permission":1}`)
 				require.NoError(t, err)
 				assert.Contains(t, req.Body.String(), `"hash":`)
 			})
 			t.Run("admin", func(t *testing.T) {
-				req, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "11"}, `{"right":2}`)
+				req, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "11"}, `{"permission":2}`)
 				require.NoError(t, err)
 				assert.Contains(t, req.Body.String(), `"hash":`)
 			})
@@ -192,12 +192,12 @@ func TestLinkSharing(t *testing.T) {
 				require.Error(t, err)
 				assertHandlerErrorCode(t, err, models.ErrCodeProjectDoesNotExist)
 			})
-			t.Run("Rights check", func(t *testing.T) {
+			t.Run("Permissions check", func(t *testing.T) {
 				t.Run("Forbidden", func(t *testing.T) {
 					// Project 2, not shared with this token
 					_, err := testHandlerProjectReadOnly.testReadOneWithLinkShare(nil, map[string]string{"project": "2"})
 					require.Error(t, err)
-					assert.Contains(t, err.(*echo.HTTPError).Message, `You don't have the right to see this`)
+					assert.Contains(t, err.(*echo.HTTPError).Message, `You don't have the permission to see this`)
 				})
 				t.Run("Shared readonly", func(t *testing.T) {
 					rec, err := testHandlerProjectReadOnly.testReadOneWithLinkShare(nil, map[string]string{"project": "1"})
@@ -222,7 +222,7 @@ func TestLinkSharing(t *testing.T) {
 				require.Error(t, err)
 				assertHandlerErrorCode(t, err, models.ErrCodeProjectDoesNotExist)
 			})
-			t.Run("Rights check", func(t *testing.T) {
+			t.Run("Permissions check", func(t *testing.T) {
 				t.Run("Forbidden", func(t *testing.T) {
 					_, err := testHandlerProjectReadOnly.testUpdateWithLinkShare(nil, map[string]string{"project": "2"}, `{"title":"TestLoremIpsum"}`)
 					require.Error(t, err)
@@ -251,7 +251,7 @@ func TestLinkSharing(t *testing.T) {
 				require.Error(t, err)
 				assertHandlerErrorCode(t, err, models.ErrCodeProjectDoesNotExist)
 			})
-			t.Run("Rights check", func(t *testing.T) {
+			t.Run("Permissions check", func(t *testing.T) {
 				t.Run("Forbidden", func(t *testing.T) {
 					_, err := testHandlerProjectReadOnly.testDeleteWithLinkShare(nil, map[string]string{"project": "1"})
 					require.Error(t, err)
@@ -282,7 +282,7 @@ func TestLinkSharing(t *testing.T) {
 				require.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
-			t.Run("Rights check", func(t *testing.T) {
+			t.Run("Permissions check", func(t *testing.T) {
 				t.Run("Shared readonly", func(t *testing.T) {
 					_, err := testHandlerProjectReadOnly.testCreateWithLinkShare(nil, map[string]string{"namespace": "1"}, `{"title":"Lorem","description":"Lorem Ipsum"}`)
 					require.Error(t, err)
@@ -301,7 +301,7 @@ func TestLinkSharing(t *testing.T) {
 			})
 		})
 
-		t.Run("Right Management", func(t *testing.T) {
+		t.Run("Permission Management", func(t *testing.T) {
 			t.Run("Users", func(t *testing.T) {
 				testHandlerProjectUserReadOnly := webHandlerTest{
 					linkShare: linkshareRead,

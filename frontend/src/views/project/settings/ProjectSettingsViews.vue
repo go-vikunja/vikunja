@@ -10,7 +10,7 @@ import XButton from '@/components/input/Button.vue'
 import {error, success} from '@/message'
 import {useI18n} from 'vue-i18n'
 import ProjectService from '@/services/project'
-import {RIGHTS} from '@/constants/rights'
+import {PERMISSIONS} from '@/constants/permissions'
 import ProjectModel from '@/models/project'
 import Message from '@/components/misc/Message.vue'
 import draggable from 'zhyswan-vuedraggable'
@@ -49,7 +49,7 @@ watch(
 	async () => {
 		const projectService = new ProjectService()
 		const project = await projectService.get(new ProjectModel({id: props.projectId}))
-		isAdmin.value = project.maxRight === RIGHTS.ADMIN
+		isAdmin.value = project.maxPermission === PERMISSIONS.ADMIN
 	},
 	{immediate: true},
 )

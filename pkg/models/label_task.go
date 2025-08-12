@@ -40,8 +40,8 @@ type LabelTask struct {
 	// A timestamp when this task was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`
 
-	web.CRUDable `xorm:"-" json:"-"`
-	web.Rights   `xorm:"-" json:"-"`
+	web.CRUDable    `xorm:"-" json:"-"`
+	web.Permissions `xorm:"-" json:"-"`
 }
 
 // TableName makes a pretty table name
@@ -127,14 +127,14 @@ func (lt *LabelTask) Create(s *xorm.Session, auth web.Auth) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{task}/labels [get]
 func (lt *LabelTask) ReadAll(s *xorm.Session, a web.Auth, search string, page int, _ int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
-	// Check if the user has the right to see the task
+	// Check if the user has the permission to see the task
 	task := Task{ID: lt.TaskID}
 	canRead, _, err := task.CanRead(s, a)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 	if !canRead {
-		return nil, 0, 0, ErrNoRightToSeeTask{lt.TaskID, a.GetID()}
+		return nil, 0, 0, ErrNoPermissionToSeeTask{lt.TaskID, a.GetID()}
 	}
 
 	return GetLabelsByTaskIDs(s, &LabelByTaskIDsOptions{
@@ -377,7 +377,7 @@ func (t *Task) UpdateTaskLabels(s *xorm.Session, creator web.Auth, labels []*Lab
 			return err
 		}
 
-		// Check if the user has the rights to see the label he is about to add
+		// Check if the user has the permissions to see the label he is about to add
 		hasAccessToLabel, _, err := label.hasAccessToLabel(s, creator)
 		if err != nil {
 			return err
@@ -413,8 +413,8 @@ type LabelTaskBulk struct {
 	Labels []*Label `json:"labels"`
 	TaskID int64    `json:"-" param:"projecttask"`
 
-	web.CRUDable `json:"-"`
-	web.Rights   `json:"-"`
+	web.CRUDable    `json:"-"`
+	web.Permissions `json:"-"`
 }
 
 // Create updates a bunch of labels on a task at once

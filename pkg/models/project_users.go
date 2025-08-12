@@ -37,16 +37,16 @@ type ProjectUser struct {
 	UserID int64 `xorm:"bigint not null INDEX" json:"-"`
 	// The project id.
 	ProjectID int64 `xorm:"bigint not null INDEX" json:"-" param:"project"`
-	// The right this user has. 0 = Read only, 1 = Read & Write, 2 = Admin. See the docs for more details.
-	Right Right `xorm:"bigint INDEX not null default 0" json:"right" valid:"length(0|2)" maximum:"2" default:"0"`
+	// The permission this user has. 0 = Read only, 1 = Read & Write, 2 = Admin. See the docs for more details.
+	Permission Permission `xorm:"bigint INDEX not null default 0" json:"permission" valid:"length(0|2)" maximum:"2" default:"0"`
 
 	// A timestamp when this relation was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`
 	// A timestamp when this relation was last updated. You cannot change this value.
 	Updated time.Time `xorm:"updated not null" json:"updated"`
 
-	web.CRUDable `xorm:"-" json:"-"`
-	web.Rights   `xorm:"-" json:"-"`
+	web.CRUDable    `xorm:"-" json:"-"`
+	web.Permissions `xorm:"-" json:"-"`
 }
 
 // TableName is the table name for ProjectUser
@@ -54,10 +54,10 @@ func (*ProjectUser) TableName() string {
 	return "users_projects"
 }
 
-// UserWithRight represents a user in combination with the right it can have on a project
-type UserWithRight struct {
-	user.User `xorm:"extends"`
-	Right     Right `json:"right"`
+// UserWithPermission represents a user in combination with the permission it can have on a project
+type UserWithPermission struct {
+	user.User  `xorm:"extends"`
+	Permission Permission `json:"permission"`
 }
 
 // Create creates a new project <-> user relation
@@ -77,8 +77,8 @@ type UserWithRight struct {
 // @Router /projects/{id}/users [put]
 func (lu *ProjectUser) Create(s *xorm.Session, a web.Auth) (err error) {
 
-	// Check if the right is valid
-	if err := lu.Right.isValid(); err != nil {
+	// Check if the permission is valid
+	if err := lu.Permission.isValid(); err != nil {
 		return err
 	}
 
@@ -183,8 +183,8 @@ func (lu *ProjectUser) Delete(s *xorm.Session, _ web.Auth) (err error) {
 // @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search users by its name."
 // @Security JWTKeyAuth
-// @Success 200 {array} models.UserWithRight "The users with the right they have."
-// @Failure 403 {object} web.HTTPError "No right to see the project."
+// @Success 200 {array} models.UserWithPermission "The users with the permission they have."
+// @Failure 403 {object} web.HTTPError "No permission to see the project."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/users [get]
 func (lu *ProjectUser) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
@@ -201,7 +201,7 @@ func (lu *ProjectUser) ReadAll(s *xorm.Session, a web.Auth, search string, page 
 	limit, start := getLimitFromPageIndex(page, perPage)
 
 	// Get all users
-	all := []*UserWithRight{}
+	all := []*UserWithPermission{}
 	query := s.
 		Join("INNER", "users_projects", "user_id = users.id").
 		Where("users_projects.project_id = ?", lu.ProjectID).
@@ -223,14 +223,14 @@ func (lu *ProjectUser) ReadAll(s *xorm.Session, a web.Auth, search string, page 
 		Join("INNER", "users_projects", "user_id = users.id").
 		Where("users_projects.project_id = ?", lu.ProjectID).
 		Where("users.username LIKE ?", "%"+search+"%").
-		Count(&UserWithRight{})
+		Count(&UserWithPermission{})
 
 	return all, len(all), numberOfTotalItems, err
 }
 
 // Update updates a user <-> project relation
 // @Summary Update a user <-> project relation
-// @Description Update a user <-> project relation. Mostly used to update the right that user has.
+// @Description Update a user <-> project relation. Mostly used to update the permission that user has.
 // @tags sharing
 // @Accept json
 // @Produce json
@@ -245,8 +245,8 @@ func (lu *ProjectUser) ReadAll(s *xorm.Session, a web.Auth, search string, page 
 // @Router /projects/{projectID}/users/{userID} [post]
 func (lu *ProjectUser) Update(s *xorm.Session, _ web.Auth) (err error) {
 
-	// Check if the right is valid
-	if err := lu.Right.isValid(); err != nil {
+	// Check if the permission is valid
+	if err := lu.Permission.isValid(); err != nil {
 		return err
 	}
 
@@ -259,7 +259,7 @@ func (lu *ProjectUser) Update(s *xorm.Session, _ web.Auth) (err error) {
 
 	_, err = s.
 		Where("project_id = ? AND user_id = ?", lu.ProjectID, lu.UserID).
-		Cols("right").
+		Cols("permission").
 		Update(lu)
 	if err != nil {
 		return err

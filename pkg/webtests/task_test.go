@@ -41,7 +41,7 @@ func TestTask(t *testing.T) {
 			ID:          2,
 			Hash:        "test2",
 			ProjectID:   2,
-			Right:       models.RightWrite,
+			Permission:  models.PermissionWrite,
 			SharingType: models.SharingTypeWithoutPassword,
 			SharedByID:  1,
 		},
@@ -219,7 +219,7 @@ func TestTask(t *testing.T) {
 			require.Error(t, err)
 			assertHandlerErrorCode(t, err, models.ErrCodeTaskDoesNotExist)
 		})
-		t.Run("Rights check", func(t *testing.T) {
+		t.Run("Permissions check", func(t *testing.T) {
 			t.Run("Forbidden", func(t *testing.T) {
 				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "14"}, `{"title":"Lorem Ipsum"}`)
 				require.Error(t, err)
@@ -319,7 +319,7 @@ func TestTask(t *testing.T) {
 			require.Error(t, err)
 			assertHandlerErrorCode(t, err, models.ErrCodeTaskDoesNotExist)
 		})
-		t.Run("Rights check", func(t *testing.T) {
+		t.Run("Permissions check", func(t *testing.T) {
 			t.Run("Forbidden", func(t *testing.T) {
 				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"projecttask": "14"})
 				require.Error(t, err)
@@ -401,7 +401,7 @@ func TestTask(t *testing.T) {
 			require.Error(t, err)
 			assertHandlerErrorCode(t, err, models.ErrCodeProjectDoesNotExist)
 		})
-		t.Run("Rights check", func(t *testing.T) {
+		t.Run("Permissions check", func(t *testing.T) {
 			t.Run("Forbidden", func(t *testing.T) {
 				// Owned by user13
 				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "20"}, `{"title":"Lorem Ipsum"}`)

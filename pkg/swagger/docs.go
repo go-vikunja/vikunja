@@ -8270,7 +8270,7 @@ const docTemplate = `{
                     "maximum": 2,
                     "allOf": [
                         {
-                            "$ref": "#/definitions/models.Right"
+                            "$ref": "#/definitions/models.Permission"
                         }
                     ]
                 },
@@ -8349,7 +8349,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "max_right": {
-                    "$ref": "#/definitions/models.Right"
+                    "$ref": "#/definitions/models.Permission"
                 },
                 "owner": {
                     "description": "The user who created this project.",
@@ -8426,7 +8426,7 @@ const docTemplate = `{
                     "maximum": 2,
                     "allOf": [
                         {
-                            "$ref": "#/definitions/models.Right"
+                            "$ref": "#/definitions/models.Permission"
                         }
                     ]
                 },
@@ -8606,7 +8606,7 @@ const docTemplate = `{
                 "ReminderRelationEndDate"
             ]
         },
-        "models.Right": {
+        "models.Permission": {
             "type": "integer",
             "enum": [
                 0,
@@ -9166,7 +9166,7 @@ const docTemplate = `{
                     "maximum": 2,
                     "allOf": [
                         {
-                            "$ref": "#/definitions/models.Right"
+                            "$ref": "#/definitions/models.Permission"
                         }
                     ]
                 },
@@ -9266,7 +9266,7 @@ const docTemplate = `{
                     "minLength": 1
                 },
                 "right": {
-                    "$ref": "#/definitions/models.Right"
+                    "$ref": "#/definitions/models.Permission"
                 },
                 "updated": {
                     "description": "A timestamp when this relation was last updated. You cannot change this value.",
@@ -9295,7 +9295,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "right": {
-                    "$ref": "#/definitions/models.Right"
+                    "$ref": "#/definitions/models.Permission"
                 },
                 "updated": {
                     "description": "A timestamp when this task was last updated. You cannot change this value.",

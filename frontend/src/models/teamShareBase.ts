@@ -1,6 +1,6 @@
 import AbstractModel from './abstractModel'
 
-import {RIGHTS, type Right} from '@/constants/rights'
+import {PERMISSIONS, type Permission} from '@/constants/permissions'
 import type {ITeamShareBase} from '@/modelTypes/ITeamShareBase'
 import type {ITeam} from '@/modelTypes/ITeam'
 
@@ -10,7 +10,7 @@ import type {ITeam} from '@/modelTypes/ITeam'
  */
 export default class TeamShareBaseModel extends AbstractModel<ITeamShareBase> implements ITeamShareBase {
 	teamId: ITeam['id'] = 0
-	right: Right = RIGHTS.READ
+	permission: Permission = PERMISSIONS.READ
 
 	created: Date = null
 	updated: Date = null

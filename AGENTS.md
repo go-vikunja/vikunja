@@ -73,7 +73,7 @@ The Go backend follows a layered architecture with clear separation of concerns:
 
 **Key Patterns:**
 - **Generic CRUD**: Models implement `CRUDable` interface for standardized database operations
-- **Rights System**: Three-tier permissions (Read/Write/Admin) enforced across all operations
+- **Permissions System**: Three-tier permissions (Read/Write/Admin) enforced across all operations
 - **Event-Driven**: Event system for notifications, webhooks, and cross-cutting concerns
 - **Modular Design**: Pluggable authentication, avatar providers, migration tools
 
@@ -115,7 +115,7 @@ Modern Vue 3 composition API application with TypeScript:
 ### Adding New Features
 
 **Backend Changes:**
-1. Create/modify models in `pkg/models/` with proper CRUD and Rights interfaces as required
+1. Create/modify models in `pkg/models/` with proper CRUD and Permissions interfaces as required
 2. Add database migration if needed: `mage dev:make-migration <StructName>`
 3. Create/update services in `pkg/services/` for complex business logic
 4. Add API routes in `pkg/routes/api/v1/` following existing patterns
@@ -137,7 +137,7 @@ Modern Vue 3 composition API application with TypeScript:
 ### API Development
 - All API endpoints follow RESTful conventions under `/api/v1/`
 - Use generic web handlers in `pkg/web/handler/` for standard CRUD operations
-- Implement proper rights checking using the Rights interface
+- Implement proper permissions checking using the Permissions interface
 - Add Swagger annotations for automatic documentation generation
 
 ### Testing
@@ -175,7 +175,7 @@ After adjusting the source string, you need to call the respective translation l
 - Use `pkg/config/` for configuration management
 
 **Code Style:**
-- Go: golangci-lint per `.golangci.yml`; use goimports; wrap errors with `fmt.Errorf("...: %w", err)`; enforce rights checks in models; never log secrets; do not edit generated `pkg/swagger/*`
+- Go: golangci-lint per `.golangci.yml`; use goimports; wrap errors with `fmt.Errorf("...: %w", err)`; enforce permissions checks in models; never log secrets; do not edit generated `pkg/swagger/*`
 - Vue: ESLint + TS; single quotes, trailing commas, no semicolons, tab indent; script setup + lang ts; keep services/models in sync with backend
 - Follow existing patterns for consistency
 
@@ -184,16 +184,16 @@ After adjusting the source string, you need to call the respective translation l
 - Vue: PascalCase for components, camelCase for composables
 - API endpoints: kebab-case in URLs, camelCase in JSON
 
-**Rights and Permissions:**
-- Always implement Rights interface for new models
+**Permissions and Permissions:**
+- Always implement Permissions interface for new models
 - Use `CanRead`, `CanWrite`, `CanCreate`, `CanDelete` methods
-- Rights are enforced at the model level, not just routes
+- Permissions are enforced at the model level, not just routes
 
 ## Common Gotchas
 
 - Database migrations are irreversible in production - test thoroughly
 - Frontend services must match backend model structure exactly
-- Rights checking is mandatory for all CRUD operations
+- Permissions checking is mandatory for all CRUD operations
 - Event listeners in `pkg/*/listeners.go` must be registered properly
 - CORS settings in backend must allow frontend domain
 - API tokens have different scopes - check permissions carefully

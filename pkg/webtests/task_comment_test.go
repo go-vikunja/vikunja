@@ -41,7 +41,7 @@ func TestTaskComments(t *testing.T) {
 			ID:          2,
 			Hash:        "test2",
 			ProjectID:   2,
-			Right:       models.RightWrite,
+			Permission:  models.PermissionWrite,
 			SharingType: models.SharingTypeWithoutPassword,
 			SharedByID:  1,
 		},
@@ -63,7 +63,7 @@ func TestTaskComments(t *testing.T) {
 			require.Error(t, err)
 			assertHandlerErrorCode(t, err, models.ErrCodeTaskDoesNotExist)
 		})
-		t.Run("Rights check", func(t *testing.T) {
+		t.Run("Permissions check", func(t *testing.T) {
 			// Only the own comments can be updated
 			t.Run("Forbidden", func(t *testing.T) {
 				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"task": "14", "commentid": "2"}, `{"comment":"Lorem Ipsum"}`)
@@ -146,7 +146,7 @@ func TestTaskComments(t *testing.T) {
 			require.Error(t, err)
 			assertHandlerErrorCode(t, err, models.ErrCodeTaskDoesNotExist)
 		})
-		t.Run("Rights check", func(t *testing.T) {
+		t.Run("Permissions check", func(t *testing.T) {
 			// Only the own comments can be deleted
 			t.Run("Forbidden", func(t *testing.T) {
 				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"task": "14", "commentid": "2"})
@@ -229,7 +229,7 @@ func TestTaskComments(t *testing.T) {
 			require.Error(t, err)
 			assertHandlerErrorCode(t, err, models.ErrCodeTaskDoesNotExist)
 		})
-		t.Run("Rights check", func(t *testing.T) {
+		t.Run("Permissions check", func(t *testing.T) {
 			t.Run("Forbidden", func(t *testing.T) {
 				// Owned by user13
 				_, err := testHandler.testCreateWithUser(nil, map[string]string{"task": "34"}, `{"comment":"Lorem Ipsum"}`)

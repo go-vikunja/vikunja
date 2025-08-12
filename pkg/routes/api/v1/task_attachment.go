@@ -50,7 +50,7 @@ func UploadTaskAttachment(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "No task ID provided").SetInternal(err)
 	}
 
-	// Rights check
+	// Permissions check
 	auth, err := auth2.GetAuthFromClaims(c)
 	if err != nil {
 		return handler.HandleHTTPError(err)
@@ -134,7 +134,7 @@ func GetTaskAttachment(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "No task ID provided").SetInternal(err)
 	}
 
-	// Rights check
+	// Permissions check
 	auth, err := auth2.GetAuthFromClaims(c)
 	if err != nil {
 		return handler.HandleHTTPError(err)

@@ -21,25 +21,25 @@ import (
 	"xorm.io/xorm"
 )
 
-// CanRead checks if a user has the right to read a saved filter
+// CanRead checks if a user has the permission to read a saved filter
 func (sf *SavedFilter) CanRead(s *xorm.Session, auth web.Auth) (bool, int, error) {
 	can, err := sf.canDoFilter(s, auth)
-	return can, int(RightAdmin), err
+	return can, int(PermissionAdmin), err
 }
 
-// CanDelete checks if a user has the right to delete a saved filter
+// CanDelete checks if a user has the permission to delete a saved filter
 func (sf *SavedFilter) CanDelete(s *xorm.Session, auth web.Auth) (bool, error) {
 	return sf.canDoFilter(s, auth)
 }
 
-// CanUpdate checks if a user has the right to update a saved filter
+// CanUpdate checks if a user has the permission to update a saved filter
 func (sf *SavedFilter) CanUpdate(s *xorm.Session, auth web.Auth) (bool, error) {
 	// A normal check would replace the passed struct which in our case would override the values we want to update.
 	sff := &SavedFilter{ID: sf.ID}
 	return sff.canDoFilter(s, auth)
 }
 
-// CanCreate checks if a user has the right to update a saved filter
+// CanCreate checks if a user has the permission to update a saved filter
 func (sf *SavedFilter) CanCreate(_ *xorm.Session, auth web.Auth) (bool, error) {
 	if _, is := auth.(*LinkSharing); is {
 		return false, nil
@@ -48,7 +48,7 @@ func (sf *SavedFilter) CanCreate(_ *xorm.Session, auth web.Auth) (bool, error) {
 	return true, nil
 }
 
-// Helper function to check saved filter rights sind they all have the same logic
+// Helper function to check saved filter permissions sind they all have the same logic
 func (sf *SavedFilter) canDoFilter(s *xorm.Session, auth web.Auth) (can bool, err error) {
 	// Link shares can't view or modify saved filters, therefore we can error out right away
 	if _, is := auth.(*LinkSharing); is {

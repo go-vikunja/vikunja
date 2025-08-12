@@ -1,14 +1,14 @@
 import AbstractModel from './abstractModel'
 import UserModel from './user'
 
-import {RIGHTS, type Right} from '@/constants/rights'
+import {PERMISSIONS, type Permission} from '@/constants/permissions'
 import type {ILinkShare} from '@/modelTypes/ILinkShare'
 import type {IUser} from '@/modelTypes/IUser'
 
 export default class LinkShareModel extends AbstractModel<ILinkShare> implements ILinkShare {
 	id = 0
 	hash = ''
-	right: Right = RIGHTS.READ
+	permission: Permission = PERMISSIONS.READ
 	sharedBy: IUser = UserModel
 	sharingType = 0 // FIXME: use correct numbers
 	projectId = 0

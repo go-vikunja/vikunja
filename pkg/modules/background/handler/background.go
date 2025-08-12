@@ -115,14 +115,14 @@ func (bp *BackgroundProvider) setBackgroundPreparations(s *xorm.Session, c echo.
 		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, "Invalid project ID: "+err.Error()).SetInternal(err)
 	}
 
-	// Check if the user has the right to change the project background
+	// Check if the user has the permission to change the project background
 	project = &models.Project{ID: projectID}
 	can, err := project.CanUpdate(s, auth)
 	if err != nil {
 		return
 	}
 	if !can {
-		log.Infof("Tried to update project background of project %d while not having the rights for it (User: %v)", projectID, auth)
+		log.Infof("Tried to update project background of project %d while not having the permissions for it (User: %v)", projectID, auth)
 		return project, auth, models.ErrGenericForbidden{}
 	}
 	// Load the project
@@ -309,7 +309,7 @@ func checkProjectBackgroundRights(s *xorm.Session, c echo.Context) (project *mod
 		return nil, auth, echo.NewHTTPError(http.StatusBadRequest, "Invalid project ID: "+err.Error()).SetInternal(err)
 	}
 
-	// Check if a background for this project exists + Rights
+	// Check if a background for this project exists + Permissions
 	project = &models.Project{ID: projectID}
 	can, _, err := project.CanRead(s, auth)
 	if err != nil {
@@ -318,7 +318,7 @@ func checkProjectBackgroundRights(s *xorm.Session, c echo.Context) (project *mod
 	}
 	if !can {
 		_ = s.Rollback()
-		log.Infof("Tried to get project background of project %d while not having the rights for it (User: %v)", projectID, auth)
+		log.Infof("Tried to get project background of project %d while not having the permissions for it (User: %v)", projectID, auth)
 		return nil, auth, echo.NewHTTPError(http.StatusForbidden)
 	}
 

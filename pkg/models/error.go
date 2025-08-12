@@ -564,31 +564,31 @@ func (err ErrBulkTasksNeedAtLeastOne) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeBulkTasksNeedAtLeastOne, Message: "Need at least one tasks to do bulk editing."}
 }
 
-// ErrNoRightToSeeTask represents an error where a user does not have the right to see a task
-type ErrNoRightToSeeTask struct {
+// ErrNoPermissionToSeeTask represents an error where a user does not have the permission to see a task
+type ErrNoPermissionToSeeTask struct {
 	TaskID int64
 	UserID int64
 }
 
-// IsErrNoRightToSeeTask checks if an error is ErrNoRightToSeeTask.
-func IsErrNoRightToSeeTask(err error) bool {
-	_, ok := err.(ErrNoRightToSeeTask)
+// IsErrNoPermissionToSeeTask checks if an error is ErrNoPermissionToSeeTask.
+func IsErrNoPermissionToSeeTask(err error) bool {
+	_, ok := err.(ErrNoPermissionToSeeTask)
 	return ok
 }
 
-func (err ErrNoRightToSeeTask) Error() string {
-	return fmt.Sprintf("User does not have the right to see the task [TaskID: %v, ID: %v]", err.TaskID, err.UserID)
+func (err ErrNoPermissionToSeeTask) Error() string {
+	return fmt.Sprintf("User does not have the permission to see the task [TaskID: %v, ID: %v]", err.TaskID, err.UserID)
 }
 
 // ErrCodeNoRightToSeeTask holds the unique world-error code of this error
 const ErrCodeNoRightToSeeTask = 4005
 
 // HTTPError holds the http error description
-func (err ErrNoRightToSeeTask) HTTPError() web.HTTPError {
+func (err ErrNoPermissionToSeeTask) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusForbidden,
 		Code:     ErrCodeNoRightToSeeTask,
-		Message:  "You don't have the right to see this task.",
+		Message:  "You don't have the permission to see this task.",
 	}
 }
 
@@ -1497,7 +1497,7 @@ func (err ErrLabelDoesNotExist) HTTPError() web.HTTPError {
 	}
 }
 
-// ErrUserHasNoAccessToLabel represents an error where a user does not have the right to see a label
+// ErrUserHasNoAccessToLabel represents an error where a user does not have the permission to see a label
 type ErrUserHasNoAccessToLabel struct {
 	LabelID int64
 	UserID  int64
@@ -1526,33 +1526,33 @@ func (err ErrUserHasNoAccessToLabel) HTTPError() web.HTTPError {
 }
 
 // ========
-// Rights
+// Permissions
 // ========
 
-// ErrInvalidRight represents an error where a right is invalid
-type ErrInvalidRight struct {
-	Right Right
+// ErrInvalidPermission represents an error where a permission is invalid
+type ErrInvalidPermission struct {
+	Permission Permission
 }
 
-// IsErrInvalidRight checks if an error is ErrInvalidRight.
-func IsErrInvalidRight(err error) bool {
-	_, ok := err.(ErrInvalidRight)
+// IsErrInvalidPermission checks if an error is ErrInvalidPermission.
+func IsErrInvalidPermission(err error) bool {
+	_, ok := err.(ErrInvalidPermission)
 	return ok
 }
 
-func (err ErrInvalidRight) Error() string {
-	return fmt.Sprintf("Right invalid [Right: %d]", err.Right)
+func (err ErrInvalidPermission) Error() string {
+	return fmt.Sprintf("Permission invalid [Permission: %d]", err.Permission)
 }
 
 // ErrCodeInvalidRight holds the unique world-error code of this error
 const ErrCodeInvalidRight = 9001
 
 // HTTPError holds the http error description
-func (err ErrInvalidRight) HTTPError() web.HTTPError {
+func (err ErrInvalidPermission) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusBadRequest,
 		Code:     ErrCodeInvalidRight,
-		Message:  "The right is invalid.",
+		Message:  "The permission is invalid.",
 	}
 }
 

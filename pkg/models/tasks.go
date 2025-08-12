@@ -141,8 +141,8 @@ type Task struct {
 	CreatedBy   *user.User `xorm:"-" json:"created_by" valid:"-"`
 	CreatedByID int64      `xorm:"bigint not null" json:"-"` // ID of the user who put that task on the project
 
-	web.CRUDable `xorm:"-" json:"-"`
-	web.Rights   `xorm:"-" json:"-"`
+	web.CRUDable    `xorm:"-" json:"-"`
+	web.Permissions `xorm:"-" json:"-"`
 }
 
 type TaskWithComments struct {
@@ -1184,7 +1184,7 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 	//
 	// Maybe FIXME:
 	// I've disabled this for now, because it requires significant changes in the way we do updates (using the
-	// Update() function. We need a user object in updateTaskLabels to check if the user has the right to see
+	// Update() function. We need a user object in updateTaskLabels to check if the user has the permission to see
 	// the label it is currently adding. To do this, we'll need to update the webhandler to let it pass the current
 	// user object (like it's already the case with the create method). However when we change it, that'll break
 	// a lot of existing code which we'll then need to refactor.

@@ -197,7 +197,7 @@ func TestTaskAttachment_Delete(t *testing.T) {
 	})
 }
 
-func TestTaskAttachment_Rights(t *testing.T) {
+func TestTaskAttachment_Permissions(t *testing.T) {
 	u := &user.User{ID: 1}
 	t.Run("Can Read", func(t *testing.T) {
 		t.Run("Allowed", func(t *testing.T) {

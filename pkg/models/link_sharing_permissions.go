@@ -21,7 +21,7 @@ import (
 	"xorm.io/xorm"
 )
 
-// CanRead implements the read right check for a link share
+// CanRead implements the read permission check for a link share
 func (share *LinkSharing) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
 	// Don't allow creating link shares if the user itself authenticated with a link share
 	if _, is := a.(*LinkSharing); is {
@@ -35,17 +35,17 @@ func (share *LinkSharing) CanRead(s *xorm.Session, a web.Auth) (bool, int, error
 	return l.CanRead(s, a)
 }
 
-// CanDelete implements the delete right check for a link share
+// CanDelete implements the delete permission check for a link share
 func (share *LinkSharing) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 	return share.canDoLinkShare(s, a)
 }
 
-// CanUpdate implements the update right check for a link share
+// CanUpdate implements the update permission check for a link share
 func (share *LinkSharing) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 	return share.canDoLinkShare(s, a)
 }
 
-// CanCreate implements the create right check for a link share
+// CanCreate implements the create permission check for a link share
 func (share *LinkSharing) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 	return share.canDoLinkShare(s, a)
 }
@@ -61,8 +61,8 @@ func (share *LinkSharing) canDoLinkShare(s *xorm.Session, a web.Auth) (bool, err
 		return false, err
 	}
 
-	// Check if the user is admin when the link right is admin
-	if share.Right == RightAdmin {
+	// Check if the user is admin when the link permission is admin
+	if share.Permission == PermissionAdmin {
 		return l.IsAdmin(s, a)
 	}
 
