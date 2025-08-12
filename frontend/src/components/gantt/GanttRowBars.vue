@@ -5,7 +5,7 @@
 		height="40"
 		xmlns="http://www.w3.org/2000/svg"
 		role="img"
-		:aria-label="$t('project.gantt.taskBarsForRow', {rowId})"
+		:aria-label="$t('project.gantt.taskBarsForRow', { rowId })"
 	>
 		<GanttBarPrimitive
 			v-for="bar in bars"
@@ -37,7 +37,7 @@
 				tabindex="0"
 				@pointerdown="handleBarPointerDown(bar, $event)"
 			/>
-			
+
 			<!-- Left resize handle -->
 			<rect
 				:x="getBarX(bar) - 3"
@@ -50,11 +50,11 @@
 				stroke-width="1"
 				class="gantt-resize-handle gantt-resize-left"
 				role="button"
-				:aria-label="$t('project.gantt.resizeStartDate', {task: bar.meta?.label || bar.id})"
+				:aria-label="$t('project.gantt.resizeStartDate', { task: bar.meta?.label || bar.id })"
 				tabindex="0"
 				@pointerdown="startResize(bar, 'start', $event)"
 			/>
-			
+
 			<!-- Right resize handle -->
 			<rect
 				:x="getBarX(bar) + getBarWidth(bar) - 3"
@@ -67,11 +67,11 @@
 				stroke-width="1"
 				class="gantt-resize-handle gantt-resize-right"
 				role="button"
-				:aria-label="$t('project.gantt.resizeEndDate', {task: bar.meta?.label || bar.id})"
+				:aria-label="$t('project.gantt.resizeEndDate', { task: bar.meta?.label || bar.id })"
 				tabindex="0"
 				@pointerdown="startResize(bar, 'end', $event)"
 			/>
-			
+
 			<!-- Task label with clipping -->
 			<defs>
 				<clipPath :id="`clip-${bar.id}`">
@@ -99,9 +99,10 @@
 </template>
 
 <script setup lang="ts">
-import {computed} from 'vue'
-import type {GanttBarModel} from '@/composables/useGanttBar'
-import {getTextColor, LIGHT} from '@/helpers/color/getTextColor'
+import { computed } from 'vue'
+import type { GanttBarModel } from '@/composables/useGanttBar'
+import { getTextColor, LIGHT } from '@/helpers/color/getTextColor'
+import dayjs from 'dayjs'
 
 import GanttBarPrimitive from './primitives/GanttBarPrimitive.vue'
 
@@ -134,12 +135,13 @@ const emit = defineEmits<{
 const isRowFocused = computed(() => props.focusedRow === props.rowId)
 
 function computeBarX(startDate: Date) {
-	const x = (startDate.getTime() - props.dateFromDate.getTime()) / (1000*60*60*24) * props.dayWidthPixels
+	const daysDiff = dayjs(startDate).diff(dayjs(props.dateFromDate), 'day')
+	const x = daysDiff * props.dayWidthPixels
 	return x
 }
 
 function computeBarWidth(bar: GanttBarModel) {
-	const diff = (bar.end.getTime() - bar.start.getTime()) / (1000*60*60*24)
+	const diff = (bar.end.getTime() - bar.start.getTime()) / (1000 * 60 * 60 * 24)
 	const width = diff * props.dayWidthPixels
 	return width
 }
@@ -188,7 +190,7 @@ function getBarFill(bar: GanttBarModel) {
 		}
 		return 'var(--primary)'
 	}
-	
+
 	return 'var(--grey-100)'
 }
 
@@ -216,11 +218,11 @@ function getBarTextColor(bar: GanttBarModel) {
 	if (!bar.meta?.hasActualDates) {
 		return 'var(--grey-800)'
 	}
-	
+
 	if (bar.meta?.color) {
 		return getTextColor(bar.meta.color)
 	}
-	
+
 	return LIGHT
 }
 
@@ -240,11 +242,11 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 	inset-inline-start: 0;
 	pointer-events: none;
 	z-index: 4;
-	
+
 	:deep(.gantt-bar) {
 		pointer-events: all;
 		cursor: grab;
-		
+
 		&:hover {
 			opacity: 0.8;
 		}
@@ -258,11 +260,11 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 
 .gantt-bar {
 	cursor: grab;
-	
+
 	&:hover {
 		opacity: 0.8;
 	}
-	
+
 	&:active {
 		cursor: grabbing;
 	}
@@ -279,7 +281,7 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 	opacity: 0;
 	transition: opacity 0.2s ease;
 	pointer-events: all; // Ensure they receive pointer events
-	
+
 	&:hover {
 		opacity: 1;
 	}
@@ -288,7 +290,7 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 // Show resize handles on bar hover
 :deep(g:hover) .gantt-resize-handle {
 	opacity: 0.8;
-	
+
 	&:hover {
 		opacity: 1;
 		cursor: inherit; // Use the specific cursor defined above
