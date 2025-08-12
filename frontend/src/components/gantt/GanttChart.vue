@@ -1,6 +1,6 @@
 <template>
 	<Loading
-		v-if="isLoading || !ganttBars.length || dayjsLanguageLoading"
+		v-if="isLoading && !ganttBars.length || dayjsLanguageLoading"
 		class="gantt-container"
 	/>
 	<div
