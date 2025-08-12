@@ -10,7 +10,6 @@
 		:aria-label="ariaLabel"
 		:data-state="dataState"
 		v-bind="attrs"
-		@pointerdown="onPointerDown"
 		@dblclick="() => props.onDoubleClick?.(props.model)"
 		@focus="onFocus"
 		@blur="onBlur"
@@ -35,7 +34,6 @@ const props = withDefaults(
 		timelineEnd: Date
 		onDoubleClick?: (model: GanttBarModel) => void
 		as?: string
-		pixelsPerDay: number
 	}>(),
 	{
 		as: 'g',
@@ -48,7 +46,6 @@ const {
 	dragging,
 	selected,
 	focused,
-	onPointerDown,
 	onFocus,
 	onBlur,
 	onKeyDown,
@@ -57,7 +54,6 @@ const {
 	model: props.model,
 	timelineStart: props.timelineStart,
 	timelineEnd: props.timelineEnd,
-	pixelsPerDay: props.pixelsPerDay,
 })
 const ariaMin = computed(() => props.timelineStart.valueOf())
 const ariaMax = computed(() => props.timelineEnd.valueOf())

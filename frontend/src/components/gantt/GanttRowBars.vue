@@ -11,7 +11,6 @@
 			:model="bar"
 			:timeline-start="dateFromDate"
 			:timeline-end="dateToDate"
-			:pixels-per-day="dayWidthPixels"
 		>
 			<!-- Main bar -->
 			<rect

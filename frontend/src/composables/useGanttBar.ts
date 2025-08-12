@@ -16,33 +16,12 @@ export interface UseGanttBarOptions {
 	model: GanttBarModel
 	timelineStart: Date
 	timelineEnd: Date
-	pixelsPerDay: number
 }
 
 export function useGanttBar(options: UseGanttBarOptions) {
 	const dragging = ref(false)
 	const selected = ref(false)
 	const focused = ref(false)
-
-	function onPointerDown(e: PointerEvent) {
-		dragging.value = true
-		const startX = e.clientX
-		const handleMove = (evt: PointerEvent) => {
-			const diff = evt.clientX - startX
-			const days = Math.round(diff / options.pixelsPerDay)
-			const newStart = new Date(options.model.start)
-			newStart.setDate(newStart.getDate() + days)
-			const newEnd = new Date(options.model.end)
-			newEnd.setDate(newEnd.getDate() + days)
-		}
-		const stop = () => {
-			dragging.value = false
-			window.removeEventListener('pointermove', handleMove)
-			window.removeEventListener('pointerup', stop)
-		}
-		window.addEventListener('pointermove', handleMove)
-		window.addEventListener('pointerup', stop)
-	}
 
 	function onFocus() {
 		focused.value = true
@@ -66,7 +45,6 @@ export function useGanttBar(options: UseGanttBarOptions) {
 		dragging,
 		selected,
 		focused,
-		onPointerDown,
 		onFocus,
 		onBlur,
 		onKeyDown,
