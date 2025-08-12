@@ -81,42 +81,28 @@ const dateIsToday = computed(() => (date: Date) => {
 })
 
 const monthGroups = computed(() => {
-	const groups: Array<{key: string; label: string; width: number}> = []
-	let currentMonth = -1
-	let currentYear = -1
-	let dayCount = 0
-    
-	props.timelineData.forEach((date, index) => {
-		const month = date.getMonth()
-		const year = date.getFullYear()
-        
-		if (month !== currentMonth || year !== currentYear) {
-			// Finish previous group
-			if (currentMonth !== -1) {
-				groups[groups.length - 1].width = dayCount * props.dayWidthPixels
+	const groups = props.timelineData.reduce(
+		(groups, date, index) => {
+			const month = date.getMonth()
+			const year = date.getFullYear()
+			const key = `${year}-${month}`
+
+			const lastGroup = groups[groups.length - 1]
+			if (lastGroup?.key === key) {
+				lastGroup.width += props.dayWidthPixels
+			} else {
+				groups.push({
+					key,
+					label: dayjs(date).format('MMMM YYYY'),
+					width: props.dayWidthPixels,
+				})
 			}
-            
-			// Start new group
-			currentMonth = month
-			currentYear = year
-			dayCount = 1
-            
-			const monthName = dayjs(date).format('MMMM YYYY')
-			groups.push({
-				key: `${year}-${month}`,
-				label: monthName,
-				width: 0, // Will be set when we finish the group
-			})
-		} else {
-			dayCount++
-		}
-        
-		// Handle last group
-		if (index === props.timelineData.length - 1) {
-			groups[groups.length - 1].width = dayCount * props.dayWidthPixels
-		}
-	})
-    
+
+			return groups
+		},
+		[] as Array<{key: string; label: string; width: number}>
+	)
+
 	return groups
 })
 </script>
