@@ -186,6 +186,82 @@ func renameTable(x *xorm.Engine, oldName, newName string) error {
 	return nil
 }
 
+// Checks if a column exists in a table
+func columnExists(x *xorm.Engine, tableName, columnName string) (bool, error) {
+	switch config.DatabaseType.GetString() {
+	case "sqlite":
+		results, err := x.Query("PRAGMA table_info(" + tableName + ")")
+		if err != nil {
+			return false, err
+		}
+
+		for _, row := range results {
+			if name, ok := row["name"]; ok && string(name) == columnName {
+				return true, nil
+			}
+		}
+		return false, nil
+	case "mysql":
+		results, err := x.Query("SHOW COLUMNS FROM `" + tableName + "` LIKE '" + columnName + "'")
+		if err != nil {
+			return false, err
+		}
+		return len(results) > 0, nil
+	case "postgres":
+		results, err := x.Query("SELECT column_name FROM information_schema.columns WHERE table_name = '" + tableName + "' AND column_name = '" + columnName + "'")
+		if err != nil {
+			return false, err
+		}
+		return len(results) > 0, nil
+	default:
+		log.Fatal("Unknown db.")
+		return false, nil
+	}
+}
+
+func renameColumn(x *xorm.Engine, tableName, oldColumn, newColumn string) error {
+	// Check if old column exists
+	exists, err := columnExists(x, tableName, oldColumn)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		log.Debugf("Column %s in table %s does not exist, skipping rename", oldColumn, tableName)
+		return nil
+	}
+
+	// Check if new column already exists
+	newExists, err := columnExists(x, tableName, newColumn)
+	if err != nil {
+		return err
+	}
+	if newExists {
+		log.Debugf("Column %s in table %s already exists, skipping rename", newColumn, tableName)
+		return nil
+	}
+
+	switch config.DatabaseType.GetString() {
+	case "sqlite":
+		_, err := x.Exec("ALTER TABLE \"" + tableName + "\" RENAME COLUMN \"" + oldColumn + "\" TO \"" + newColumn + "\"")
+		if err != nil {
+			return err
+		}
+	case "mysql":
+		_, err := x.Exec("ALTER TABLE `" + tableName + "` CHANGE `" + oldColumn + "` `" + newColumn + "` BIGINT NOT NULL DEFAULT 0")
+		if err != nil {
+			return err
+		}
+	case "postgres":
+		_, err := x.Exec("ALTER TABLE \"" + tableName + "\" RENAME COLUMN \"" + oldColumn + "\" TO \"" + newColumn + "\"")
+		if err != nil {
+			return err
+		}
+	default:
+		log.Fatal("Unknown db.")
+	}
+	return nil
+}
+
 func initSchema(tx *xorm.Engine) error {
 	schemeBeans := []interface{}{}
 	schemeBeans = append(schemeBeans, models.GetTables()...)
