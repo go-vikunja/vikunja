@@ -108,6 +108,8 @@ github.com/getsentry/sentry-go/echo v0.34.1 h1:QmRs8A6SK7YYbc6Dtuyh2RTFd4Fe9v9VH
 github.com/getsentry/sentry-go/echo v0.34.1/go.mod h1:4kdQH/69jXiWE7Ve5nwkWa9U4A38FK/Eu/zSQ4tcaHc=
 github.com/getsentry/sentry-go/echo v0.35.0 h1:3ZXdOwy6EbYebgCVrRkNMaTc1wQ5Up1rmIs1WxCfRt4=
 github.com/getsentry/sentry-go/echo v0.35.0/go.mod h1:RCIdhBnJDy6pU8c+GcLM6IJ36i3or3gT4v9nsc4Fjzc=
+github.com/getsentry/sentry-go/echo v0.35.1 h1:MIhSUyo7cpCdcw0/lIeAw5fukrDt3x9G7qbiyjbVllI=
+github.com/getsentry/sentry-go/echo v0.35.1/go.mod h1:IjdEzgvwlP2/7A32tWk75UmSUsBqvKFdpkN6WhB1e6M=
 github.com/go-asn1-ber/asn1-ber v1.5.8-0.20250403174932-29230038a667 h1:BP4M0CvQ4S3TGls2FvczZtj5Re/2ZzkV9VwqPHH/3Bo=
 github.com/go-asn1-ber/asn1-ber v1.5.8-0.20250403174932-29230038a667/go.mod h1:hEBeB/ic+5LoWskz+yKT7vGhhPYkProFKoKdwZRWMe0=
 github.com/go-chi/chi/v5 v5.2.2 h1:CMwsvRVTbXVytCk1Wd72Zy1LAsAh9GxMmSNWLHCG618=

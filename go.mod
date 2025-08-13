@@ -32,7 +32,7 @@ require (
 	github.com/gabriel-vasile/mimetype v1.4.9
 	github.com/ganigeorgiev/fexpr v0.5.0
 	github.com/getsentry/sentry-go v0.35.1
-	github.com/getsentry/sentry-go/echo v0.35.0
+	github.com/getsentry/sentry-go/echo v0.35.1
 	github.com/go-ldap/ldap/v3 v3.4.11
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/go-testfixtures/testfixtures/v3 v3.17.0
