@@ -401,12 +401,12 @@ definitions:
         description: The password of this link share. You can only set it, not retrieve
           it after the link share has been created.
         type: string
-      right:
+      permission:
         allOf:
-        - $ref: '#/definitions/models.Right'
+        - $ref: '#/definitions/models.Permission'
         default: 0
-        description: The right this project is shared with. 0 = Read only, 1 = Read
-          & Write, 2 = Admin. See the docs for more details.
+        description: The permission this project is shared with. 0 = Read only, 1
+          = Read & Write, 2 = Admin. See the docs for more details.
         maximum: 2
       shared_by:
         allOf:
@@ -430,6 +430,16 @@ definitions:
         description: A standard message.
         type: string
     type: object
+  models.Permission:
+    enum:
+    - 0
+    - 1
+    - 2
+    type: integer
+    x-enum-varnames:
+    - PermissionRead
+    - PermissionWrite
+    - PermissionAdmin
   models.Project:
     properties:
       background_blur_hash:
@@ -468,8 +478,8 @@ definitions:
           a separate parent project. This value depends on the user making the call
           to the api.
         type: boolean
-      max_right:
-        $ref: '#/definitions/models.Right'
+      max_permission:
+        $ref: '#/definitions/models.Permission'
       owner:
         allOf:
         - $ref: '#/definitions/user.User'
@@ -519,12 +529,12 @@ definitions:
       id:
         description: The unique, numeric id of this project <-> user relation.
         type: integer
-      right:
+      permission:
         allOf:
-        - $ref: '#/definitions/models.Right'
+        - $ref: '#/definitions/models.Permission'
         default: 0
-        description: The right this user has. 0 = Read only, 1 = Read & Write, 2 =
-          Admin. See the docs for more details.
+        description: The permission this user has. 0 = Read only, 1 = Read & Write,
+          2 = Admin. See the docs for more details.
         maximum: 2
       updated:
         description: A timestamp when this relation was last updated. You cannot change
@@ -667,16 +677,6 @@ definitions:
     - ReminderRelationDueDate
     - ReminderRelationStartDate
     - ReminderRelationEndDate
-  models.Right:
-    enum:
-    - 0
-    - 1
-    - 2
-    type: integer
-    x-enum-varnames:
-    - RightRead
-    - RightWrite
-    - RightAdmin
   models.RouteDetail:
     properties:
       method:
@@ -1101,12 +1101,12 @@ definitions:
       id:
         description: The unique, numeric id of this project <-> team relation.
         type: integer
-      right:
+      permission:
         allOf:
-        - $ref: '#/definitions/models.Right'
+        - $ref: '#/definitions/models.Permission'
         default: 0
-        description: The right this team has. 0 = Read only, 1 = Read & Write, 2 =
-          Admin. See the docs for more details.
+        description: The permission this team has. 0 = Read only, 1 = Read & Write,
+          2 = Admin. See the docs for more details.
         maximum: 2
       team_id:
         description: The team id.
@@ -1146,7 +1146,7 @@ definitions:
         minLength: 1
         type: string
     type: object
-  models.TeamWithRight:
+  models.TeamWithPermission:
     properties:
       created:
         description: A timestamp when this relation was created. You cannot change
@@ -1184,14 +1184,14 @@ definitions:
         maxLength: 250
         minLength: 1
         type: string
-      right:
-        $ref: '#/definitions/models.Right'
+      permission:
+        $ref: '#/definitions/models.Permission'
       updated:
         description: A timestamp when this relation was last updated. You cannot change
           this value.
         type: string
     type: object
-  models.UserWithRight:
+  models.UserWithPermission:
     properties:
       created:
         description: A timestamp when this task was created. You cannot change this
@@ -1207,8 +1207,8 @@ definitions:
       name:
         description: The full name of the user.
         type: string
-      right:
-        $ref: '#/definitions/models.Right'
+      permission:
+        $ref: '#/definitions/models.Permission'
       updated:
         description: A timestamp when this task was last updated. You cannot change
           this value.
@@ -1634,9 +1634,9 @@ info:
     Every endpoint capable of pagination will return two headers:
     * `x-pagination-total-pages`: The total number of available pages for this request
     * `x-pagination-result-count`: The number of items returned for this request.
-    # Rights
-    All endpoints which return a single item (project, task, etc.) - no array - will also return a `x-max-right` header with the max right the user has on this item as an int where `0` is `Read Only`, `1` is `Read & Write` and `2` is `Admin`.
-    This can be used to show or hide ui elements based on the rights the user has.
+    # Permissions
+    All endpoints which return a single item (project, task, etc.) - no array - will also return a `x-max-permission` header with the max permission the user has on this item as an int where `0` is `Read Only`, `1` is `Read & Write` and `2` is `Admin`.
+    This can be used to show or hide ui elements based on the permissions the user has.
     # Errors
     All errors have an error code and a human-readable error message in addition to the http status code. You should always check for the status code in the response, not only the http status code.
     Due to limitations in the swagger library we're using for this document, only one error per http status code is documented here. Make sure to check the [error docs](https://vikunja.io/docs/errors/) in Vikunja's documentation for a full list of available error codes.
@@ -2718,8 +2718,9 @@ paths:
         in: query
         name: is_archived
         type: boolean
-      - description: If set to `rights`, Vikunja will return the max right the current
-          user has on this project. You can currently only set this to `rights`.
+      - description: If set to `permissions`, Vikunja will return the max permission
+          the current user has on this project. You can currently only set this to
+          `permissions`.
         in: query
         name: expand
         type: string
@@ -3067,7 +3068,7 @@ paths:
           schema:
             $ref: '#/definitions/web.HTTPError'
         "401":
-          description: The user does not have the right to see the project.
+          description: The user does not have the permission to see the project.
           schema:
             $ref: '#/definitions/web.HTTPError'
         "500":
@@ -3149,13 +3150,13 @@ paths:
       - application/json
       responses:
         "200":
-          description: The teams with their right.
+          description: The teams with their permission.
           schema:
             items:
-              $ref: '#/definitions/models.TeamWithRight'
+              $ref: '#/definitions/models.TeamWithPermission'
             type: array
         "403":
-          description: No right to see the project.
+          description: No permission to see the project.
           schema:
             $ref: '#/definitions/web.HTTPError'
         "500":
@@ -3240,13 +3241,13 @@ paths:
       - application/json
       responses:
         "200":
-          description: The users with the right they have.
+          description: The users with the permission they have.
           schema:
             items:
-              $ref: '#/definitions/models.UserWithRight'
+              $ref: '#/definitions/models.UserWithPermission'
             type: array
         "403":
-          description: No right to see the project.
+          description: No permission to see the project.
           schema:
             $ref: '#/definitions/web.HTTPError'
         "500":
@@ -4019,9 +4020,9 @@ paths:
       consumes:
       - application/json
       description: Copies the project, tasks, files, kanban data, assignees, comments,
-        attachments, labels, relations, backgrounds, user/team rights and link shares
-        from one project to a new one. The user needs read access in the project and
-        write access in the parent of the new project.
+        attachments, labels, relations, backgrounds, user/team permissions and link
+        shares from one project to a new one. The user needs read access in the project
+        and write access in the parent of the new project.
       parameters:
       - description: The project ID to duplicate
         in: path
@@ -4100,7 +4101,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Update a team <-> project relation. Mostly used to update the right
+      description: Update a team <-> project relation. Mostly used to update the permission
         that team has.
       parameters:
       - description: Project ID
@@ -4185,7 +4186,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Update a user <-> project relation. Mostly used to update the right
+      description: Update a user <-> project relation. Mostly used to update the permission
         that user has.
       parameters:
       - description: Project ID
@@ -5329,9 +5330,9 @@ paths:
       consumes:
       - application/json
       description: Creates a new relation between two tasks. The user needs to have
-        update rights on the base task and at least read rights on the other task.
-        Both tasks do not need to be on the same project. Take a look at the docs
-        for available task relation kinds.
+        update permissions on the base task and at least read permissions on the other
+        task. Both tasks do not need to be on the same project. Take a look at the
+        docs for available task relation kinds.
       parameters:
       - description: The relation object
         in: body
@@ -5760,7 +5761,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: The member right was successfully changed.
+          description: The member permission was successfully changed.
           schema:
             $ref: '#/definitions/models.Message'
         "500":

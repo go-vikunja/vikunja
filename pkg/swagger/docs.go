@@ -1417,7 +1417,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "If set to ` + "`" + `rights` + "`" + `, Vikunja will return the max right the current user has on this project. You can currently only set this to ` + "`" + `rights` + "`" + `.",
+                        "description": "If set to ` + "`" + `permissions` + "`" + `, Vikunja will return the max permission the current user has on this project. You can currently only set this to ` + "`" + `permissions` + "`" + `.",
                         "name": "expand",
                         "in": "query"
                     }
@@ -1947,7 +1947,7 @@ const docTemplate = `{
                         }
                     },
                     "401": {
-                        "description": "The user does not have the right to see the project.",
+                        "description": "The user does not have the permission to see the project.",
                         "schema": {
                             "$ref": "#/definitions/web.HTTPError"
                         }
@@ -2072,16 +2072,16 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "The teams with their right.",
+                        "description": "The teams with their permission.",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.TeamWithRight"
+                                "$ref": "#/definitions/models.TeamWithPermission"
                             }
                         }
                     },
                     "403": {
-                        "description": "No right to see the project.",
+                        "description": "No permission to see the project.",
                         "schema": {
                             "$ref": "#/definitions/web.HTTPError"
                         }
@@ -2210,16 +2210,16 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "The users with the right they have.",
+                        "description": "The users with the permission they have.",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.UserWithRight"
+                                "$ref": "#/definitions/models.UserWithPermission"
                             }
                         }
                     },
                     "403": {
-                        "description": "No right to see the project.",
+                        "description": "No permission to see the project.",
                         "schema": {
                             "$ref": "#/definitions/web.HTTPError"
                         }
@@ -2761,7 +2761,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Copies the project, tasks, files, kanban data, assignees, comments, attachments, labels, relations, backgrounds, user/team rights and link shares from one project to a new one. The user needs read access in the project and write access in the parent of the new project.",
+                "description": "Copies the project, tasks, files, kanban data, assignees, comments, attachments, labels, relations, backgrounds, user/team permissions and link shares from one project to a new one. The user needs read access in the project and write access in the parent of the new project.",
                 "consumes": [
                     "application/json"
                 ],
@@ -2825,7 +2825,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Update a team \u003c-\u003e project relation. Mostly used to update the right that team has.",
+                "description": "Update a team \u003c-\u003e project relation. Mostly used to update the permission that team has.",
                 "consumes": [
                     "application/json"
                 ],
@@ -2953,7 +2953,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Update a user \u003c-\u003e project relation. Mostly used to update the right that user has.",
+                "description": "Update a user \u003c-\u003e project relation. Mostly used to update the permission that user has.",
                 "consumes": [
                     "application/json"
                 ],
@@ -5284,7 +5284,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Creates a new relation between two tasks. The user needs to have update rights on the base task and at least read rights on the other task. Both tasks do not need to be on the same project. Take a look at the docs for available task relation kinds.",
+                "description": "Creates a new relation between two tasks. The user needs to have update permissions on the base task and at least read permissions on the other task. Both tasks do not need to be on the same project. Take a look at the docs for available task relation kinds.",
                 "consumes": [
                     "application/json"
                 ],
@@ -5958,7 +5958,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "The member right was successfully changed.",
+                        "description": "The member permission was successfully changed.",
                         "schema": {
                             "$ref": "#/definitions/models.Message"
                         }
@@ -8264,8 +8264,8 @@ const docTemplate = `{
                     "description": "The password of this link share. You can only set it, not retrieve it after the link share has been created.",
                     "type": "string"
                 },
-                "right": {
-                    "description": "The right this project is shared with. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
+                "permission": {
+                    "description": "The permission this project is shared with. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
                     "default": 0,
                     "maximum": 2,
                     "allOf": [
@@ -8306,6 +8306,19 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "models.Permission": {
+            "type": "integer",
+            "enum": [
+                0,
+                1,
+                2
+            ],
+            "x-enum-varnames": [
+                "PermissionRead",
+                "PermissionWrite",
+                "PermissionAdmin"
+            ]
         },
         "models.Project": {
             "type": "object",
@@ -8348,7 +8361,7 @@ const docTemplate = `{
                     "description": "True if a project is a favorite. Favorite projects show up in a separate parent project. This value depends on the user making the call to the api.",
                     "type": "boolean"
                 },
-                "max_right": {
+                "max_permission": {
                     "$ref": "#/definitions/models.Permission"
                 },
                 "owner": {
@@ -8420,8 +8433,8 @@ const docTemplate = `{
                     "description": "The unique, numeric id of this project \u003c-\u003e user relation.",
                     "type": "integer"
                 },
-                "right": {
-                    "description": "The right this user has. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
+                "permission": {
+                    "description": "The permission this user has. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
                     "default": 0,
                     "maximum": 2,
                     "allOf": [
@@ -8604,19 +8617,6 @@ const docTemplate = `{
                 "ReminderRelationDueDate",
                 "ReminderRelationStartDate",
                 "ReminderRelationEndDate"
-            ]
-        },
-        "models.Permission": {
-            "type": "integer",
-            "enum": [
-                0,
-                1,
-                2
-            ],
-            "x-enum-varnames": [
-                "RightRead",
-                "RightWrite",
-                "RightAdmin"
             ]
         },
         "models.RouteDetail": {
@@ -9160,8 +9160,8 @@ const docTemplate = `{
                     "description": "The unique, numeric id of this project \u003c-\u003e team relation.",
                     "type": "integer"
                 },
-                "right": {
-                    "description": "The right this team has. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
+                "permission": {
+                    "description": "The permission this team has. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
                     "default": 0,
                     "maximum": 2,
                     "allOf": [
@@ -9216,7 +9216,7 @@ const docTemplate = `{
                 }
             }
         },
-        "models.TeamWithRight": {
+        "models.TeamWithPermission": {
             "type": "object",
             "properties": {
                 "created": {
@@ -9265,7 +9265,7 @@ const docTemplate = `{
                     "maxLength": 250,
                     "minLength": 1
                 },
-                "right": {
+                "permission": {
                     "$ref": "#/definitions/models.Permission"
                 },
                 "updated": {
@@ -9274,7 +9274,7 @@ const docTemplate = `{
                 }
             }
         },
-        "models.UserWithRight": {
+        "models.UserWithPermission": {
             "type": "object",
             "properties": {
                 "created": {
@@ -9294,7 +9294,7 @@ const docTemplate = `{
                     "description": "The full name of the user.",
                     "type": "string"
                 },
-                "right": {
+                "permission": {
                     "$ref": "#/definitions/models.Permission"
                 },
                 "updated": {
@@ -9880,7 +9880,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
 	Title:            "Vikunja API",
-	Description:      "# Pagination\nEvery endpoint capable of pagination will return two headers:\n* `x-pagination-total-pages`: The total number of available pages for this request\n* `x-pagination-result-count`: The number of items returned for this request.\n# Rights\nAll endpoints which return a single item (project, task, etc.) - no array - will also return a `x-max-right` header with the max right the user has on this item as an int where `0` is `Read Only`, `1` is `Read & Write` and `2` is `Admin`.\nThis can be used to show or hide ui elements based on the rights the user has.\n# Errors\nAll errors have an error code and a human-readable error message in addition to the http status code. You should always check for the status code in the response, not only the http status code.\nDue to limitations in the swagger library we're using for this document, only one error per http status code is documented here. Make sure to check the [error docs](https://vikunja.io/docs/errors/) in Vikunja's documentation for a full list of available error codes.\n# Authorization\n**JWT-Auth:** Main authorization method, used for most of the requests. Needs `Authorization: Bearer <jwt-token>`-header to authenticate successfully.\n\n**API Token:** You can create scoped API tokens for your user and use the token to make authenticated requests in the context of that user. The token must be provided via an `Authorization: Bearer <token>` header, similar to jwt auth. See the documentation for the `api` group to manage token creation and revocation.\n\n**BasicAuth:** Only used when requesting tasks via CalDAV.\n<!-- ReDoc-Inject: <security-definitions> -->",
+	Description:      "# Pagination\nEvery endpoint capable of pagination will return two headers:\n* `x-pagination-total-pages`: The total number of available pages for this request\n* `x-pagination-result-count`: The number of items returned for this request.\n# Permissions\nAll endpoints which return a single item (project, task, etc.) - no array - will also return a `x-max-permission` header with the max permission the user has on this item as an int where `0` is `Read Only`, `1` is `Read & Write` and `2` is `Admin`.\nThis can be used to show or hide ui elements based on the permissions the user has.\n# Errors\nAll errors have an error code and a human-readable error message in addition to the http status code. You should always check for the status code in the response, not only the http status code.\nDue to limitations in the swagger library we're using for this document, only one error per http status code is documented here. Make sure to check the [error docs](https://vikunja.io/docs/errors/) in Vikunja's documentation for a full list of available error codes.\n# Authorization\n**JWT-Auth:** Main authorization method, used for most of the requests. Needs `Authorization: Bearer <jwt-token>`-header to authenticate successfully.\n\n**API Token:** You can create scoped API tokens for your user and use the token to make authenticated requests in the context of that user. The token must be provided via an `Authorization: Bearer <token>` header, similar to jwt auth. See the documentation for the `api` group to manage token creation and revocation.\n\n**BasicAuth:** Only used when requesting tasks via CalDAV.\n<!-- ReDoc-Inject: <security-definitions> -->",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
