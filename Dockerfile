@@ -13,7 +13,7 @@ RUN npm install -g corepack && corepack enable && \
     pnpm install --frozen-lockfile
 COPY frontend/ ./
 ARG RELEASE_VERSION=dev
-RUN echo "{\"VERSION\": \"$RELEASE_VERSION\"}" > src/version.json && pnpm run build
+RUN echo "{\"VERSION\": \"${RELEASE_VERSION/-g/-}\"}" > src/version.json && pnpm run build
 
 FROM --platform=$BUILDPLATFORM ghcr.io/techknowlogick/xgo:go-1.23.x@sha256:37bfe9dccce00f473c55369be10018e5c8f653409d5c5e5467b1a3be06318652 AS apibuilder
 
