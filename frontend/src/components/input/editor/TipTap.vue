@@ -336,6 +336,7 @@ const additionalLinkProtocols = [
 	'git',
 	'obsidian',
 	'notion',
+	'message',
 ]
 
 const PasteHandler = Extension.create({
