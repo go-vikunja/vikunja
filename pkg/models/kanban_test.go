@@ -120,9 +120,9 @@ func TestBucket_ReadAll(t *testing.T) {
 		defer s.Close()
 
 		linkShare := &LinkSharing{
-			ID:        1,
-			ProjectID: 1,
-			Right:     RightRead,
+			ID:         1,
+			ProjectID:  1,
+			Permission: PermissionRead,
 		}
 		b := &TaskCollection{
 			ProjectID:     1,

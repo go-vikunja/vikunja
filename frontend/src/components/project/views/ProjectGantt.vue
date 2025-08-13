@@ -87,7 +87,7 @@ import TaskForm from '@/components/tasks/TaskForm.vue'
 
 import GanttChart from '@/components/gantt/GanttChart.vue'
 import {useGanttFilters} from '../../../views/project/helpers/useGanttFilters'
-import {RIGHTS} from '@/constants/rights'
+import {PERMISSIONS} from '@/constants/permissions'
 
 import type {DateISO} from '@/types/DateISO'
 import type {ITask} from '@/modelTypes/ITask'
@@ -103,7 +103,7 @@ const props = defineProps<{
 
 
 const baseStore = useBaseStore()
-const canWrite = computed(() => baseStore.currentProject?.maxRight > RIGHTS.READ)
+const canWrite = computed(() => baseStore.currentProject?.maxPermission > PERMISSIONS.READ)
 
 const {route, viewId} = toRefs(props)
 const {

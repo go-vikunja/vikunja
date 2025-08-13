@@ -41,7 +41,7 @@ func TestBucket(t *testing.T) {
 			ID:          2,
 			Hash:        "test2",
 			ProjectID:   2,
-			Right:       models.RightWrite,
+			Permission:  models.PermissionWrite,
 			SharingType: models.SharingTypeWithoutPassword,
 			SharedByID:  1,
 		},
@@ -92,7 +92,7 @@ func TestBucket(t *testing.T) {
 			require.Error(t, err)
 			assert.Contains(t, err.(*echo.HTTPError).Message.(models.ValidationHTTPError).InvalidFields, "title: non zero value required")
 		})
-		t.Run("Rights check", func(t *testing.T) {
+		t.Run("Permissions check", func(t *testing.T) {
 			t.Run("Forbidden", func(t *testing.T) {
 				// Owned by user13
 				_, err := testHandler.testUpdateWithUser(nil, map[string]string{
@@ -231,7 +231,7 @@ func TestBucket(t *testing.T) {
 			require.Error(t, err)
 			assertHandlerErrorCode(t, err, models.ErrCodeBucketDoesNotExist)
 		})
-		t.Run("Rights check", func(t *testing.T) {
+		t.Run("Permissions check", func(t *testing.T) {
 			t.Run("Forbidden", func(t *testing.T) {
 				// Owned by user13
 				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"project": "20", "bucket": "5"})
@@ -372,7 +372,7 @@ func TestBucket(t *testing.T) {
 			require.Error(t, err)
 			assertHandlerErrorCode(t, err, models.ErrCodeProjectViewDoesNotExist)
 		})
-		t.Run("Rights check", func(t *testing.T) {
+		t.Run("Permissions check", func(t *testing.T) {
 			t.Run("Forbidden", func(t *testing.T) {
 				// Owned by user13
 				_, err := testHandler.testCreateWithUser(nil, map[string]string{

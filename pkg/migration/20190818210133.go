@@ -26,7 +26,7 @@ type linkSharing20190818210133 struct {
 	ID          int64              `xorm:"int(11) autoincr not null unique pk" json:"id"`
 	Hash        string             `xorm:"varchar(40) not null unique" json:"hash" param:"hash"`
 	ListID      int64              `xorm:"int(11) not null" json:"list_id"`
-	Right       models.Right       `xorm:"int(11) INDEX not null default 0" json:"right" valid:"length(0|2)" maximum:"2" default:"0"`
+	Right       models.Permission  `xorm:"int(11) INDEX not null default 0" json:"right" valid:"length(0|2)" maximum:"2" default:"0"`
 	SharingType models.SharingType `xorm:"int(11) INDEX not null default 0" json:"sharing_type" valid:"length(0|2)" maximum:"2" default:"0"`
 	SharedByID  int64              `xorm:"int(11) INDEX not null"`
 	Created     int64              `xorm:"created not null" json:"created"`

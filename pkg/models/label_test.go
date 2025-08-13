@@ -40,7 +40,7 @@ func TestLabel_ReadAll(t *testing.T) {
 		Created     time.Time
 		Updated     time.Time
 		CRUDable    web.CRUDable
-		Rights      web.Rights
+		Permissions web.Permissions
 	}
 	type args struct {
 		search string
@@ -146,7 +146,7 @@ func TestLabel_ReadAll(t *testing.T) {
 				Created:     tt.fields.Created,
 				Updated:     tt.fields.Updated,
 				CRUDable:    tt.fields.CRUDable,
-				Rights:      tt.fields.Rights,
+				Permissions: tt.fields.Permissions,
 			}
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
@@ -177,7 +177,7 @@ func TestLabel_ReadOne(t *testing.T) {
 		Created     time.Time
 		Updated     time.Time
 		CRUDable    web.CRUDable
-		Rights      web.Rights
+		Permissions web.Permissions
 	}
 	user1 := &user.User{
 		ID:                           1,
@@ -226,7 +226,7 @@ func TestLabel_ReadOne(t *testing.T) {
 			auth:          &user.User{ID: 1},
 		},
 		{
-			name: "no rights",
+			name: "no permissions",
 			fields: fields{
 				ID: 3,
 			},
@@ -272,7 +272,7 @@ func TestLabel_ReadOne(t *testing.T) {
 				Created:     tt.fields.Created,
 				Updated:     tt.fields.Updated,
 				CRUDable:    tt.fields.CRUDable,
-				Rights:      tt.fields.Rights,
+				Permissions: tt.fields.Permissions,
 			}
 
 			s := db.NewSession()
@@ -308,7 +308,7 @@ func TestLabel_Create(t *testing.T) {
 		Created     time.Time
 		Updated     time.Time
 		CRUDable    web.CRUDable
-		Rights      web.Rights
+		Permissions web.Permissions
 	}
 	type args struct {
 		a web.Auth
@@ -344,7 +344,7 @@ func TestLabel_Create(t *testing.T) {
 				Created:     tt.fields.Created,
 				Updated:     tt.fields.Updated,
 				CRUDable:    tt.fields.CRUDable,
-				Rights:      tt.fields.Rights,
+				Permissions: tt.fields.Permissions,
 			}
 			s := db.NewSession()
 			allowed, _ := l.CanCreate(s, tt.args.a)
@@ -378,7 +378,7 @@ func TestLabel_Update(t *testing.T) {
 		Created     time.Time
 		Updated     time.Time
 		CRUDable    web.CRUDable
-		Rights      web.Rights
+		Permissions web.Permissions
 	}
 	tests := []struct {
 		name          string
@@ -406,7 +406,7 @@ func TestLabel_Update(t *testing.T) {
 			wantErr:       true,
 		},
 		{
-			name: "no rights",
+			name: "no permissions",
 			fields: fields{
 				ID:    3,
 				Title: "new and better",
@@ -415,7 +415,7 @@ func TestLabel_Update(t *testing.T) {
 			wantForbidden: true,
 		},
 		{
-			name: "no rights other creator but access",
+			name: "no permissions other creator but access",
 			fields: fields{
 				ID:    4,
 				Title: "new and better",
@@ -436,7 +436,7 @@ func TestLabel_Update(t *testing.T) {
 				Created:     tt.fields.Created,
 				Updated:     tt.fields.Updated,
 				CRUDable:    tt.fields.CRUDable,
-				Rights:      tt.fields.Rights,
+				Permissions: tt.fields.Permissions,
 			}
 			s := db.NewSession()
 			allowed, _ := l.CanUpdate(s, tt.auth)
@@ -468,7 +468,7 @@ func TestLabel_Delete(t *testing.T) {
 		Created     time.Time
 		Updated     time.Time
 		CRUDable    web.CRUDable
-		Rights      web.Rights
+		Permissions web.Permissions
 	}
 	tests := []struct {
 		name          string
@@ -494,7 +494,7 @@ func TestLabel_Delete(t *testing.T) {
 			wantForbidden: true, // When the label does not exist, it is forbidden. We should fix this, but for everything.
 		},
 		{
-			name: "no rights",
+			name: "no permissions",
 			fields: fields{
 				ID: 3,
 			},
@@ -502,7 +502,7 @@ func TestLabel_Delete(t *testing.T) {
 			wantForbidden: true,
 		},
 		{
-			name: "no rights but visible",
+			name: "no permissions but visible",
 			fields: fields{
 				ID: 4,
 			},
@@ -522,7 +522,7 @@ func TestLabel_Delete(t *testing.T) {
 				Created:     tt.fields.Created,
 				Updated:     tt.fields.Updated,
 				CRUDable:    tt.fields.CRUDable,
-				Rights:      tt.fields.Rights,
+				Permissions: tt.fields.Permissions,
 			}
 			s := db.NewSession()
 			allowed, _ := l.CanDelete(s, tt.auth)

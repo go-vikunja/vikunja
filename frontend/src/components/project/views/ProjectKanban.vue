@@ -279,7 +279,7 @@ import {useI18n} from 'vue-i18n'
 import draggable from 'zhyswan-vuedraggable'
 import {klona} from 'klona/lite'
 
-import {RIGHTS as Rights} from '@/constants/rights'
+import {PERMISSIONS as Permissions} from '@/constants/permissions'
 import BucketModel from '@/models/bucket'
 
 import type {IBucket} from '@/modelTypes/IBucket'
@@ -398,7 +398,7 @@ const bucketDraggableComponentData = computed(() => ({
 }))
 const project = computed(() => props.projectId ? projectStore.projects[props.projectId] : null)
 const view = computed(() => project.value?.views.find(v => v.id === props.viewId) as IProjectView || null)
-const canWrite = computed(() => baseStore.currentProject?.maxRight > Rights.READ && view.value.bucketConfigurationMode === 'manual')
+const canWrite = computed(() => baseStore.currentProject?.maxPermission > Permissions.READ && view.value.bucketConfigurationMode === 'manual')
 const canCreateTasks = computed(() => canWrite.value && props.projectId > 0)
 const buckets = computed(() => kanbanStore.buckets)
 const loading = computed(() => kanbanStore.isLoading)

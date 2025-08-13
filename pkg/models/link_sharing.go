@@ -52,8 +52,8 @@ type LinkSharing struct {
 	Name string `xorm:"text null" json:"name"`
 	// The ID of the shared project
 	ProjectID int64 `xorm:"bigint not null" json:"-" param:"project"`
-	// The right this project is shared with. 0 = Read only, 1 = Read & Write, 2 = Admin. See the docs for more details.
-	Right Right `xorm:"bigint INDEX not null default 0" json:"right" valid:"length(0|2)" maximum:"2" default:"0"`
+	// The permission this project is shared with. 0 = Read only, 1 = Read & Write, 2 = Admin. See the docs for more details.
+	Permission Permission `xorm:"bigint INDEX not null default 0" json:"permission" valid:"length(0|2)" maximum:"2" default:"0"`
 
 	// The kind of this link. 0 = undefined, 1 = without password, 2 = with password.
 	SharingType SharingType `xorm:"bigint INDEX not null default 0" json:"sharing_type" valid:"length(0|2)" maximum:"2" default:"0"`
@@ -70,8 +70,8 @@ type LinkSharing struct {
 	// A timestamp when this share was last updated. You cannot change this value.
 	Updated time.Time `xorm:"updated not null" json:"updated"`
 
-	web.CRUDable `xorm:"-" json:"-"`
-	web.Rights   `xorm:"-" json:"-"`
+	web.CRUDable    `xorm:"-" json:"-"`
+	web.Permissions `xorm:"-" json:"-"`
 }
 
 // TableName holds the table name
@@ -95,7 +95,7 @@ func GetLinkShareFromClaims(claims jwt.MapClaims) (share *LinkSharing, err error
 	share.ID = int64(claims["id"].(float64))
 	share.Hash = claims["hash"].(string)
 	share.ProjectID = int64(projectID)
-	share.Right = Right(claims["right"].(float64))
+	share.Permission = Permission(claims["permission"].(float64))
 	share.SharedByID = int64(claims["sharedByID"].(float64))
 	return
 }
@@ -138,7 +138,7 @@ func (share *LinkSharing) toUser() *user.User {
 // @Router /projects/{project}/shares [put]
 func (share *LinkSharing) Create(s *xorm.Session, a web.Auth) (err error) {
 
-	err = share.Right.isValid()
+	err = share.Permission.isValid()
 	if err != nil {
 		return
 	}

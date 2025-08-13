@@ -26,12 +26,12 @@ func (t *Task) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 	return t.canDoTask(s, a)
 }
 
-// CanUpdate determines if a user has the right to update a project task
+// CanUpdate determines if a user has the permission to update a project task
 func (t *Task) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 	return t.canDoTask(s, a)
 }
 
-// CanCreate determines if a user has the right to create a project task
+// CanCreate determines if a user has the permission to create a project task
 func (t *Task) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 	// A user can do a task if he has write acces to its project
 	l := &Project{ID: t.ProjectID}
@@ -39,7 +39,7 @@ func (t *Task) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 }
 
 // CanRead determines if a user can read a task
-func (t *Task) CanRead(s *xorm.Session, a web.Auth) (canRead bool, maxRight int, err error) {
+func (t *Task) CanRead(s *xorm.Session, a web.Auth) (canRead bool, maxPermission int, err error) {
 	expand := t.Expand
 	// Get the task, error out if it doesn't exist
 	*t, err = GetTaskByIDSimple(s, t.ID)
@@ -67,7 +67,7 @@ func (t *Task) canDoTask(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, err
 	}
 
-	// Check if we're moving the task into a different project to check if the user has sufficient rights for that on the new project
+	// Check if we're moving the task into a different project to check if the user has sufficient permissions for that on the new project
 	if t.ProjectID != 0 && t.ProjectID != ot.ProjectID {
 		newProject := &Project{ID: t.ProjectID}
 		can, err := newProject.CanWrite(s, a)

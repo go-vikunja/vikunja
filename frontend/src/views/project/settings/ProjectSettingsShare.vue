@@ -34,7 +34,7 @@ import {useTitle} from '@vueuse/core'
 import ProjectService from '@/services/project'
 import ProjectModel from '@/models/project'
 import type {IProject} from '@/modelTypes/IProject'
-import {RIGHTS} from '@/constants/rights'
+import {PERMISSIONS} from '@/constants/permissions'
 
 import CreateEdit from '@/components/misc/CreateEdit.vue'
 import LinkSharing from '@/components/sharing/LinkSharing.vue'
@@ -57,7 +57,7 @@ useTitle(title)
 const configStore = useConfigStore()
 
 const linkSharingEnabled = computed(() => configStore.linkSharingEnabled)
-const userIsAdmin = computed(() => project?.value?.maxRight === RIGHTS.ADMIN)
+const userIsAdmin = computed(() => project?.value?.maxPermission === PERMISSIONS.ADMIN)
 
 async function loadProject(projectId: number) {
 	const projectService = new ProjectService()

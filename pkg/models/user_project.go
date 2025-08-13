@@ -56,14 +56,14 @@ func ListUsersFromProject(s *xorm.Session, l *Project, currentUser *user.User, s
 			// The actual condition
 			Where(
 				builder.Or(
-					builder.Or(builder.Eq{"ul.right": RightRead}),
-					builder.Or(builder.Eq{"tl.right": RightRead}),
+					builder.Or(builder.Eq{"ul.permission": PermissionRead}),
+					builder.Or(builder.Eq{"tl.permission": PermissionRead}),
 
-					builder.Or(builder.Eq{"ul.right": RightWrite}),
-					builder.Or(builder.Eq{"tl.right": RightWrite}),
+					builder.Or(builder.Eq{"ul.permission": PermissionWrite}),
+					builder.Or(builder.Eq{"tl.permission": PermissionWrite}),
 
-					builder.Or(builder.Eq{"ul.right": RightAdmin}),
-					builder.Or(builder.Eq{"tl.right": RightAdmin}),
+					builder.Or(builder.Eq{"ul.permission": PermissionAdmin}),
+					builder.Or(builder.Eq{"tl.permission": PermissionAdmin}),
 				),
 				builder.Eq{"l.id": currentProject.ID},
 			).

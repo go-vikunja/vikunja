@@ -69,10 +69,10 @@ func (t *Team) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
 		And("user_id = ?", a.GetID()).
 		Get(tm)
 
-	maxRights := 0
+	maxPermissions := 0
 	if tm.Admin {
-		maxRights = int(RightAdmin)
+		maxPermissions = int(PermissionAdmin)
 	}
 
-	return can, maxRights, err
+	return can, maxPermissions, err
 }

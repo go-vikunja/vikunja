@@ -59,7 +59,7 @@ describe('Project View List', () => {
 		UserProjectFactory.create(1, {
 			project_id: 2,
 			user_id: 1,
-			right: 0,
+			permission: 0,
 		})
 		const projects = ProjectFactory.create(2, {
 			owner_id: '{increment}',

@@ -2,7 +2,7 @@ import AbstractModel from './abstractModel'
 import UserModel from './user'
 import TeamMemberModel from './teamMember'
 
-import {RIGHTS, type Right} from '@/constants/rights'
+import {PERMISSIONS, type Permission} from '@/constants/permissions'
 import type {ITeam} from '@/modelTypes/ITeam'
 import type {ITeamMember} from '@/modelTypes/ITeamMember'
 import type {IUser} from '@/modelTypes/IUser'
@@ -12,7 +12,7 @@ export default class TeamModel extends AbstractModel<ITeam> implements ITeam {
 	name = ''
 	description = ''
 	members: ITeamMember[] = []
-	right: Right = RIGHTS.READ
+	permission: Permission = PERMISSIONS.READ
 	externalId = ''
 	isPublic: boolean = false
 

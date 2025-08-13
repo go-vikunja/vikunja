@@ -11,7 +11,7 @@ function prepareLinkShare() {
 	})
 	const linkShares = LinkShareFactory.create(1, {
 		project_id: projects[0].id,
-		right: 0,
+		permission: 0,
 	})
 	
 	return {

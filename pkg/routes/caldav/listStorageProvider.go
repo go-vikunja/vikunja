@@ -293,7 +293,7 @@ func (vcls *VikunjaCaldavProjectStorage) CreateResource(rpath, content string) (
 
 	vTask.ProjectID = vcls.project.ID
 
-	// Check the rights
+	// Check the permissions
 	canCreate, err := vTask.CanCreate(s, vcls.user)
 	if err != nil {
 		return nil, err
@@ -354,7 +354,7 @@ func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (
 	s := db.NewSession()
 	defer s.Close()
 
-	// Check the rights
+	// Check the permissions
 	canUpdate, err := vTask.CanUpdate(s, vcls.user)
 	if err != nil {
 		_ = s.Rollback()
@@ -403,7 +403,7 @@ func (vcls *VikunjaCaldavProjectStorage) DeleteResource(_ string) error {
 		s := db.NewSession()
 		defer s.Close()
 
-		// Check the rights
+		// Check the permissions
 		canDelete, err := vcls.task.CanDelete(s, vcls.user)
 		if err != nil {
 			_ = s.Rollback()

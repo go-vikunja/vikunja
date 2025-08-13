@@ -661,8 +661,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 
 		Expand []TaskCollectionExpandable
 
-		CRUDable web.CRUDable
-		Rights   web.Rights
+		CRUDable    web.CRUDable
+		Permissions web.Permissions
 	}
 	type args struct {
 		search string
@@ -1644,8 +1644,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 
 				Expand: tt.fields.Expand,
 
-				CRUDable: tt.fields.CRUDable,
-				Rights:   tt.fields.Rights,
+				CRUDable:    tt.fields.CRUDable,
+				Permissions: tt.fields.Permissions,
 			}
 			got, _, _, err := lt.ReadAll(s, tt.args.a, tt.args.search, tt.args.page, 50)
 			if (err != nil) != tt.wantErr {

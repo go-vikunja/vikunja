@@ -26,18 +26,16 @@ import (
 	"code.vikunja.io/api/pkg/web"
 )
 
-func TestTeam_CanDoSomething(t *testing.T) {
+func TestProjectUser_CanDoSomething(t *testing.T) {
 	type fields struct {
 		ID          int64
-		Name        string
-		Description string
-		CreatedByID int64
-		CreatedBy   *user.User
-		Members     []*TeamUser
+		UserID      int64
+		ProjectID   int64
+		Permission  Permission
 		Created     time.Time
 		Updated     time.Time
 		CRUDable    web.CRUDable
-		Rights      web.Rights
+		Permissions web.Permissions
 	}
 	type args struct {
 		a web.Auth
@@ -51,58 +49,59 @@ func TestTeam_CanDoSomething(t *testing.T) {
 		{
 			name: "CanDoSomething Normally",
 			fields: fields{
-				ID: 1,
+				ProjectID: 3,
 			},
 			args: args{
-				a: &user.User{ID: 1},
+				a: &user.User{ID: 3},
 			},
-			want: map[string]bool{"CanCreate": true, "IsAdmin": true, "CanRead": true, "CanDelete": true, "CanUpdate": true},
+			want: map[string]bool{"CanCreate": true, "CanDelete": true, "CanUpdate": true},
 		},
 		{
-			name: "CanDoSomething where the user does not have the rights",
+			name: "CanDoSomething for a nonexistant project",
 			fields: fields{
-				ID: 1,
+				ProjectID: 300,
+			},
+			args: args{
+				a: &user.User{ID: 3},
+			},
+			want: map[string]bool{"CanCreate": false, "CanDelete": false, "CanUpdate": false},
+		},
+		{
+			name: "CanDoSomething where the user does not have the permissions",
+			fields: fields{
+				ProjectID: 3,
 			},
 			args: args{
 				a: &user.User{ID: 4},
 			},
-			want: map[string]bool{"CanCreate": true, "IsAdmin": false, "CanRead": false, "CanDelete": false, "CanUpdate": false},
+			want: map[string]bool{"CanCreate": false, "CanDelete": false, "CanUpdate": false},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
-			defer s.Close()
 
-			tm := &Team{
+			lu := &ProjectUser{
 				ID:          tt.fields.ID,
-				Name:        tt.fields.Name,
-				Description: tt.fields.Description,
-				CreatedByID: tt.fields.CreatedByID,
-				CreatedBy:   tt.fields.CreatedBy,
-				Members:     tt.fields.Members,
+				UserID:      tt.fields.UserID,
+				ProjectID:   tt.fields.ProjectID,
+				Permission:  tt.fields.Permission,
 				Created:     tt.fields.Created,
 				Updated:     tt.fields.Updated,
 				CRUDable:    tt.fields.CRUDable,
-				Rights:      tt.fields.Rights,
+				Permissions: tt.fields.Permissions,
 			}
-
-			if got, _ := tm.CanCreate(s, tt.args.a); got != tt.want["CanCreate"] { // CanCreate is currently always true
-				t.Errorf("Team.CanCreate() = %v, want %v", got, tt.want["CanCreate"])
+			if got, _ := lu.CanCreate(s, tt.args.a); got != tt.want["CanCreate"] {
+				t.Errorf("ProjectUser.CanCreate() = %v, want %v", got, tt.want["CanCreate"])
 			}
-			if got, _ := tm.CanDelete(s, tt.args.a); got != tt.want["CanDelete"] {
-				t.Errorf("Team.CanDelete() = %v, want %v", got, tt.want["CanDelete"])
+			if got, _ := lu.CanDelete(s, tt.args.a); got != tt.want["CanDelete"] {
+				t.Errorf("ProjectUser.CanDelete() = %v, want %v", got, tt.want["CanDelete"])
 			}
-			if got, _ := tm.CanUpdate(s, tt.args.a); got != tt.want["CanUpdate"] {
-				t.Errorf("Team.CanUpdate() = %v, want %v", got, tt.want["CanUpdate"])
+			if got, _ := lu.CanUpdate(s, tt.args.a); got != tt.want["CanUpdate"] {
+				t.Errorf("ProjectUser.CanUpdate() = %v, want %v", got, tt.want["CanUpdate"])
 			}
-			if got, _, _ := tm.CanRead(s, tt.args.a); got != tt.want["CanRead"] {
-				t.Errorf("Team.CanRead() = %v, want %v", got, tt.want["CanRead"])
-			}
-			if got, _ := tm.IsAdmin(s, tt.args.a); got != tt.want["IsAdmin"] {
-				t.Errorf("Team.IsAdmin() = %v, want %v", got, tt.want["IsAdmin"])
-			}
+			_ = s.Close()
 		})
 	}
 }

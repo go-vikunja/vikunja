@@ -30,8 +30,8 @@ type DatabaseNotifications struct {
 	// True is read, false is unread.
 	Read bool `xorm:"-" json:"read"`
 
-	web.CRUDable `xorm:"-" json:"-"`
-	web.Rights   `xorm:"-" json:"-"`
+	web.CRUDable    `xorm:"-" json:"-"`
+	web.Permissions `xorm:"-" json:"-"`
 }
 
 // ReadAll returns all database notifications for a user

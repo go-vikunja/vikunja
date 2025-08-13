@@ -17,7 +17,7 @@ import {success} from '@/message'
 import {useBaseStore} from '@/stores/base'
 import {getSavedFilterIdFromProjectId} from '@/services/savedFilter'
 import type {IProjectView} from '@/modelTypes/IProjectView'
-import {RIGHTS} from '@/constants/rights.ts'
+import {PERMISSIONS} from '@/constants/permissions.ts'
 
 const {add, remove, search, update} = createNewIndexer('projects', ['title', 'description'])
 
@@ -213,7 +213,7 @@ export const useProjectStore = defineStore('project', () => {
 		let page = 1
 		try {
 			do {
-				const newProjects = await projectService.getAll({}, {is_archived: true, expand: 'rights'}, page) as IProject[]
+				const newProjects = await projectService.getAll({}, {is_archived: true, expand: 'permissions'}, page) as IProject[]
 				loadedProjects.push(...newProjects)
 				page++
 			} while (page <= projectService.totalPages)
@@ -320,7 +320,7 @@ export function useProject(projectId: MaybeRefOrGetter<IProject['id']>) {
 
 		const duplicate = await projectDuplicateService.create(projectDuplicate)
 		if (duplicate.duplicatedProject) {
-			duplicate.duplicatedProject.maxRight = RIGHTS.ADMIN
+			duplicate.duplicatedProject.maxPermission = PERMISSIONS.ADMIN
 		}
 
 		projectStore.setProject(duplicate.duplicatedProject)

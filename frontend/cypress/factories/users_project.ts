@@ -10,7 +10,7 @@ export class UserProjectFactory extends Factory {
 			id: '{increment}',
 			project_id: 1,
 			user_id: 1,
-			right: 0,
+			permission: 0,
 			created: now.toISOString(),
 			updated: now.toISOString(),
 		}

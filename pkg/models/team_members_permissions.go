@@ -39,7 +39,7 @@ func (tm *TeamMember) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 	return tm.IsAdmin(s, a)
 }
 
-// CanUpdate checks if the user can modify a team member's right
+// CanUpdate checks if the user can modify a team member's permission
 func (tm *TeamMember) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 	return tm.IsAdmin(s, a)
 }

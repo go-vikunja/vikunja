@@ -41,8 +41,8 @@ type TaskPosition struct {
 	// endpoint, otherwise they will always be 0. To update them, take a look at the Task Position endpoint.
 	Position float64 `xorm:"double not null" json:"position"`
 
-	web.CRUDable `xorm:"-" json:"-"`
-	web.Rights   `xorm:"-" json:"-"`
+	web.CRUDable    `xorm:"-" json:"-"`
+	web.Permissions `xorm:"-" json:"-"`
 }
 
 func (tp *TaskPosition) TableName() string {

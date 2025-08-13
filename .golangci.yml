@@ -139,7 +139,7 @@ linters:
         text: 'G115: integer overflow conversion int -> uint64'
       - linters:
           - recvcheck
-        text: the methods of "Right" use pointer receiver and non-pointer receiver.
+        text: the methods of "Permission" use pointer receiver and non-pointer receiver.
       - linters:
           - recvcheck
         text: the methods of "SubscriptionEntityType" use pointer receiver and non-pointer receiver.

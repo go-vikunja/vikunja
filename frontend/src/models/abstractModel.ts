@@ -1,15 +1,15 @@
 import {objectToCamelCase} from '@/helpers/case'
 import {omitBy, isNil} from '@/helpers/utils'
-import type {Right} from '@/constants/rights'
+import type {Permission} from '@/constants/permissions'
 import type {IAbstract} from '@/modelTypes/IAbstract'
 
 export default abstract class AbstractModel<Model extends IAbstract = IAbstract> implements IAbstract {
 
 
 	/**
-	 * The max right the user has on this object, as returned by the x-max-right header from the api.
+	 * The max permission the user has on this object, as returned by the x-max-permission header from the api.
 	 */
-	maxRight: Right | null = null
+	maxPermission: Permission | null = null
 	
 	/**
 	* Takes an object and merges its data with the default data of this model.

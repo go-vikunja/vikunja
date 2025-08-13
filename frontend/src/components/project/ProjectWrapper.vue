@@ -77,7 +77,7 @@ const currentProject = computed<IProject>(() => {
 		id: 0,
 		title: '',
 		isArchived: false,
-		maxRight: null,
+		maxPermission: null,
 	} : baseStore.currentProject
 })
 useTitle(() => currentProject.value?.id ? getProjectTitle(currentProject.value) : '')

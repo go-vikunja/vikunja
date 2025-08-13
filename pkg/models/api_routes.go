@@ -244,9 +244,9 @@ func CanDoAPIRoute(c echo.Context, token *APIToken) (can bool) {
 		routeGroupName = "other"
 	}
 
-	group, hasGroup := token.Permissions[routeGroupName]
+	group, hasGroup := token.APIPermissions[routeGroupName]
 	if !hasGroup {
-		group, hasGroup = token.Permissions[routeParts[0]]
+		group, hasGroup = token.APIPermissions[routeParts[0]]
 		if !hasGroup {
 			return false
 		}
@@ -276,7 +276,7 @@ func CanDoAPIRoute(c echo.Context, token *APIToken) (can bool) {
 		}
 	}
 
-	log.Debugf("[auth] Token %d tried to use route %s which requires permission %s but has only %v", token.ID, path, route, token.Permissions)
+	log.Debugf("[auth] Token %d tried to use route %s which requires permission %s but has only %v", token.ID, path, route, token.APIPermissions)
 
 	return false
 }

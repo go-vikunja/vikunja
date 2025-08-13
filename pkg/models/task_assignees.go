@@ -35,8 +35,8 @@ type TaskAssginee struct {
 	UserID  int64     `xorm:"bigint INDEX not null" json:"user_id" param:"user"`
 	Created time.Time `xorm:"created not null"`
 
-	web.CRUDable `xorm:"-" json:"-"`
-	web.Rights   `xorm:"-" json:"-"`
+	web.CRUDable    `xorm:"-" json:"-"`
+	web.Permissions `xorm:"-" json:"-"`
 }
 
 // TableName makes a pretty table name
@@ -355,8 +355,8 @@ type BulkAssignees struct {
 	Assignees []*user.User `json:"assignees"`
 	TaskID    int64        `json:"-" param:"projecttask"`
 
-	web.CRUDable `json:"-"`
-	web.Rights   `json:"-"`
+	web.CRUDable    `json:"-"`
+	web.Permissions `json:"-"`
 }
 
 // Create adds new assignees to a task

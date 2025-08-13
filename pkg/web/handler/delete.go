@@ -48,7 +48,7 @@ func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid model provided.").SetInternal(err)
 	}
 
-	// Check if the user has the right to delete
+	// Check if the user has the permission to delete
 	currentAuth, err := auth.GetAuthFromClaims(ctx)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
@@ -70,7 +70,7 @@ func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
 	}
 	if !canDelete {
 		_ = s.Rollback()
-		log.Warningf("Tried to delete while not having the rights for it (User: %v)", currentAuth)
+		log.Warningf("Tried to delete while not having the permissions for it (User: %v)", currentAuth)
 		return echo.NewHTTPError(http.StatusForbidden)
 	}
 

@@ -1,12 +1,12 @@
 import AbstractModel from './abstractModel'
 
-import {RIGHTS, type Right} from '@/constants/rights'
+import {PERMISSIONS, type Permission} from '@/constants/permissions'
 import type {IUserShareBase} from '@/modelTypes/IUserShareBase'
 import type {IUser} from '@/modelTypes/IUser'
 
 export default class UserShareBaseModel extends AbstractModel<IUserShareBase> implements IUserShareBase {
 	username: IUser['username'] = ''
-	right: Right = RIGHTS.READ
+	permission: Permission = PERMISSIONS.READ
 
 	created: Date = null
 	updated: Date = null

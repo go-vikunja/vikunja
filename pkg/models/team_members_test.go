@@ -130,7 +130,7 @@ func TestTeamMember_Update(t *testing.T) {
 		}
 		err := tm.Update(s, u)
 		require.NoError(t, err)
-		assert.False(t, tm.Admin) // Since this endpoint toggles the right, we should get a false for admin back.
+		assert.False(t, tm.Admin) // Since this endpoint toggles the permission, we should get a false for admin back.
 		err = s.Commit()
 		require.NoError(t, err)
 

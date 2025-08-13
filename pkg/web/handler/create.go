@@ -63,7 +63,7 @@ func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 		}
 	}()
 
-	// Check rights
+	// Check permissions
 	canCreate, err := currentStruct.CanCreate(s, currentAuth)
 	if err != nil {
 		_ = s.Rollback()
@@ -71,7 +71,7 @@ func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 	}
 	if !canCreate {
 		_ = s.Rollback()
-		log.Warningf("Tried to create while not having the rights for it (User: %v)", currentAuth)
+		log.Warningf("Tried to create while not having the permissions for it (User: %v)", currentAuth)
 		return echo.NewHTTPError(http.StatusForbidden)
 	}
 

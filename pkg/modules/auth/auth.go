@@ -94,7 +94,7 @@ func NewLinkShareJWTAuthtoken(share *models.LinkSharing) (token string, err erro
 	claims["id"] = share.ID
 	claims["hash"] = share.Hash
 	claims["project_id"] = share.ProjectID
-	claims["right"] = share.Right
+	claims["permission"] = share.Permission
 	claims["sharedByID"] = share.SharedByID
 	claims["exp"] = exp
 	claims["isLocalUser"] = true // Link shares are always local

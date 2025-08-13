@@ -49,7 +49,7 @@ func (c *WebHandler) UpdateWeb(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err).SetInternal(err)
 	}
 
-	// Check if the user has the right to do that
+	// Check if the user has the permission to do that
 	currentAuth, err := auth.GetAuthFromClaims(ctx)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.").SetInternal(err)
@@ -71,7 +71,7 @@ func (c *WebHandler) UpdateWeb(ctx echo.Context) error {
 	}
 	if !canUpdate {
 		_ = s.Rollback()
-		log.Warningf("Tried to update while not having the rights for it (User: %v)", currentAuth)
+		log.Warningf("Tried to update while not having the permissions for it (User: %v)", currentAuth)
 		return echo.NewHTTPError(http.StatusForbidden)
 	}
 

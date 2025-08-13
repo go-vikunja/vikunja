@@ -603,7 +603,7 @@ import type {ITask} from '@/modelTypes/ITask'
 import type {IProject} from '@/modelTypes/IProject'
 
 import {PRIORITIES, type Priority} from '@/constants/priorities'
-import {RIGHTS} from '@/constants/rights'
+import {PERMISSIONS} from '@/constants/permissions'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 
@@ -703,8 +703,8 @@ const visible = ref(false)
 const project = computed(() => projectStore.projects[task.value.projectId])
 
 const canWrite = computed(() => (
-	task.value.maxRight !== null &&
-	task.value.maxRight > RIGHTS.READ
+	task.value.maxPermission !== null &&
+	task.value.maxPermission > PERMISSIONS.READ
 ))
 
 const color = computed(() => {

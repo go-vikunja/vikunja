@@ -32,15 +32,15 @@ import (
 
 func TestProjectUser_Create(t *testing.T) {
 	type fields struct {
-		ID        int64
-		UserID    int64
-		Username  string
-		ProjectID int64
-		Right     Right
-		Created   time.Time
-		Updated   time.Time
-		CRUDable  web.CRUDable
-		Rights    web.Rights
+		ID          int64
+		UserID      int64
+		Username    string
+		ProjectID   int64
+		Permission  Permission
+		Created     time.Time
+		Updated     time.Time
+		CRUDable    web.CRUDable
+		Permissions web.Permissions
 	}
 	type args struct {
 		a web.Auth
@@ -69,14 +69,14 @@ func TestProjectUser_Create(t *testing.T) {
 			errType: IsErrUserAlreadyHasAccess,
 		},
 		{
-			name: "ListUsers Create with invalid right",
+			name: "ListUsers Create with invalid permission",
 			fields: fields{
-				Username:  "user1",
-				ProjectID: 2,
-				Right:     500,
+				Username:   "user1",
+				ProjectID:  2,
+				Permission: 500,
 			},
 			wantErr: true,
-			errType: IsErrInvalidRight,
+			errType: IsErrInvalidPermission,
 		},
 		{
 			name: "ListUsers Create with inexisting project",
@@ -112,15 +112,15 @@ func TestProjectUser_Create(t *testing.T) {
 			s := db.NewSession()
 
 			ul := &ProjectUser{
-				ID:        tt.fields.ID,
-				UserID:    tt.fields.UserID,
-				Username:  tt.fields.Username,
-				ProjectID: tt.fields.ProjectID,
-				Right:     tt.fields.Right,
-				Created:   tt.fields.Created,
-				Updated:   tt.fields.Updated,
-				CRUDable:  tt.fields.CRUDable,
-				Rights:    tt.fields.Rights,
+				ID:          tt.fields.ID,
+				UserID:      tt.fields.UserID,
+				Username:    tt.fields.Username,
+				ProjectID:   tt.fields.ProjectID,
+				Permission:  tt.fields.Permission,
+				Created:     tt.fields.Created,
+				Updated:     tt.fields.Updated,
+				CRUDable:    tt.fields.CRUDable,
+				Permissions: tt.fields.Permissions,
 			}
 			err := ul.Create(s, tt.args.a)
 			if (err != nil) != tt.wantErr {
@@ -144,7 +144,7 @@ func TestProjectUser_Create(t *testing.T) {
 }
 
 func TestProjectUser_ReadAll(t *testing.T) {
-	user1Read := &UserWithRight{
+	user1Read := &UserWithPermission{
 		User: user.User{
 			ID:                           1,
 			Username:                     "user1",
@@ -157,9 +157,9 @@ func TestProjectUser_ReadAll(t *testing.T) {
 			Updated:                      testUpdatedTime,
 			ExportFileID:                 1,
 		},
-		Right: RightRead,
+		Permission: PermissionRead,
 	}
-	user2Read := &UserWithRight{
+	user2Read := &UserWithPermission{
 		User: user.User{
 			ID:                           2,
 			Username:                     "user2",
@@ -172,18 +172,18 @@ func TestProjectUser_ReadAll(t *testing.T) {
 			Created:                      testCreatedTime,
 			Updated:                      testUpdatedTime,
 		},
-		Right: RightRead,
+		Permission: PermissionRead,
 	}
 
 	type fields struct {
-		ID        int64
-		UserID    int64
-		ProjectID int64
-		Right     Right
-		Created   time.Time
-		Updated   time.Time
-		CRUDable  web.CRUDable
-		Rights    web.Rights
+		ID          int64
+		UserID      int64
+		ProjectID   int64
+		Permission  Permission
+		Created     time.Time
+		Updated     time.Time
+		CRUDable    web.CRUDable
+		Permissions web.Permissions
 	}
 	type args struct {
 		search string
@@ -206,7 +206,7 @@ func TestProjectUser_ReadAll(t *testing.T) {
 			args: args{
 				a: &user.User{ID: 3},
 			},
-			want: []*UserWithRight{
+			want: []*UserWithPermission{
 				user1Read,
 				user2Read,
 			},
@@ -231,7 +231,7 @@ func TestProjectUser_ReadAll(t *testing.T) {
 				a:      &user.User{ID: 3},
 				search: "USER2",
 			},
-			want: []*UserWithRight{
+			want: []*UserWithPermission{
 				user2Read,
 			},
 		},
@@ -242,14 +242,14 @@ func TestProjectUser_ReadAll(t *testing.T) {
 			s := db.NewSession()
 
 			ul := &ProjectUser{
-				ID:        tt.fields.ID,
-				UserID:    tt.fields.UserID,
-				ProjectID: tt.fields.ProjectID,
-				Right:     tt.fields.Right,
-				Created:   tt.fields.Created,
-				Updated:   tt.fields.Updated,
-				CRUDable:  tt.fields.CRUDable,
-				Rights:    tt.fields.Rights,
+				ID:          tt.fields.ID,
+				UserID:      tt.fields.UserID,
+				ProjectID:   tt.fields.ProjectID,
+				Permission:  tt.fields.Permission,
+				Created:     tt.fields.Created,
+				Updated:     tt.fields.Updated,
+				CRUDable:    tt.fields.CRUDable,
+				Permissions: tt.fields.Permissions,
 			}
 			got, _, _, err := ul.ReadAll(s, tt.args.a, tt.args.search, tt.args.page, 50)
 			if (err != nil) != tt.wantErr {
@@ -268,14 +268,14 @@ func TestProjectUser_ReadAll(t *testing.T) {
 
 func TestProjectUser_Update(t *testing.T) {
 	type fields struct {
-		ID        int64
-		Username  string
-		ProjectID int64
-		Right     Right
-		Created   time.Time
-		Updated   time.Time
-		CRUDable  web.CRUDable
-		Rights    web.Rights
+		ID          int64
+		Username    string
+		ProjectID   int64
+		Permission  Permission
+		Created     time.Time
+		Updated     time.Time
+		CRUDable    web.CRUDable
+		Permissions web.Permissions
 	}
 	tests := []struct {
 		name    string
@@ -286,36 +286,36 @@ func TestProjectUser_Update(t *testing.T) {
 		{
 			name: "Test Update Normally",
 			fields: fields{
-				ProjectID: 3,
-				Username:  "user1",
-				Right:     RightAdmin,
+				ProjectID:  3,
+				Username:   "user1",
+				Permission: PermissionAdmin,
 			},
 		},
 		{
 			name: "Test Update to write",
 			fields: fields{
-				ProjectID: 3,
-				Username:  "user1",
-				Right:     RightWrite,
+				ProjectID:  3,
+				Username:   "user1",
+				Permission: PermissionWrite,
 			},
 		},
 		{
 			name: "Test Update to Read",
 			fields: fields{
-				ProjectID: 3,
-				Username:  "user1",
-				Right:     RightRead,
+				ProjectID:  3,
+				Username:   "user1",
+				Permission: PermissionRead,
 			},
 		},
 		{
-			name: "Test Update with invalid right",
+			name: "Test Update with invalid permission",
 			fields: fields{
-				ProjectID: 3,
-				Username:  "user1",
-				Right:     500,
+				ProjectID:  3,
+				Username:   "user1",
+				Permission: 500,
 			},
 			wantErr: true,
-			errType: IsErrInvalidRight,
+			errType: IsErrInvalidPermission,
 		},
 	}
 	for _, tt := range tests {
@@ -324,14 +324,14 @@ func TestProjectUser_Update(t *testing.T) {
 			s := db.NewSession()
 
 			lu := &ProjectUser{
-				ID:        tt.fields.ID,
-				Username:  tt.fields.Username,
-				ProjectID: tt.fields.ProjectID,
-				Right:     tt.fields.Right,
-				Created:   tt.fields.Created,
-				Updated:   tt.fields.Updated,
-				CRUDable:  tt.fields.CRUDable,
-				Rights:    tt.fields.Rights,
+				ID:          tt.fields.ID,
+				Username:    tt.fields.Username,
+				ProjectID:   tt.fields.ProjectID,
+				Permission:  tt.fields.Permission,
+				Created:     tt.fields.Created,
+				Updated:     tt.fields.Updated,
+				CRUDable:    tt.fields.CRUDable,
+				Permissions: tt.fields.Permissions,
 			}
 			err := lu.Update(s, &user.User{ID: 1})
 			if (err != nil) != tt.wantErr {
@@ -348,7 +348,7 @@ func TestProjectUser_Update(t *testing.T) {
 				db.AssertExists(t, "users_projects", map[string]interface{}{
 					"project_id": tt.fields.ProjectID,
 					"user_id":    lu.UserID,
-					"right":      tt.fields.Right,
+					"permission": tt.fields.Permission,
 				}, false)
 			}
 		})
@@ -357,15 +357,15 @@ func TestProjectUser_Update(t *testing.T) {
 
 func TestProjectUser_Delete(t *testing.T) {
 	type fields struct {
-		ID        int64
-		Username  string
-		UserID    int64
-		ProjectID int64
-		Right     Right
-		Created   time.Time
-		Updated   time.Time
-		CRUDable  web.CRUDable
-		Rights    web.Rights
+		ID          int64
+		Username    string
+		UserID      int64
+		ProjectID   int64
+		Permission  Permission
+		Created     time.Time
+		Updated     time.Time
+		CRUDable    web.CRUDable
+		Permissions web.Permissions
 	}
 	tests := []struct {
 		name    string
@@ -406,14 +406,14 @@ func TestProjectUser_Delete(t *testing.T) {
 			s := db.NewSession()
 
 			lu := &ProjectUser{
-				ID:        tt.fields.ID,
-				Username:  tt.fields.Username,
-				ProjectID: tt.fields.ProjectID,
-				Right:     tt.fields.Right,
-				Created:   tt.fields.Created,
-				Updated:   tt.fields.Updated,
-				CRUDable:  tt.fields.CRUDable,
-				Rights:    tt.fields.Rights,
+				ID:          tt.fields.ID,
+				Username:    tt.fields.Username,
+				ProjectID:   tt.fields.ProjectID,
+				Permission:  tt.fields.Permission,
+				Created:     tt.fields.Created,
+				Updated:     tt.fields.Updated,
+				CRUDable:    tt.fields.CRUDable,
+				Permissions: tt.fields.Permissions,
 			}
 			err := lu.Delete(s, &user.User{ID: 1})
 			if (err != nil) != tt.wantErr {

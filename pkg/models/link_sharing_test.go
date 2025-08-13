@@ -36,8 +36,8 @@ func TestLinkSharing_Create(t *testing.T) {
 		defer s.Close()
 
 		share := &LinkSharing{
-			ProjectID: 1,
-			Right:     RightRead,
+			ProjectID:  1,
+			Permission: PermissionRead,
 		}
 		err := share.Create(s, doer)
 
@@ -49,19 +49,19 @@ func TestLinkSharing_Create(t *testing.T) {
 			"id": share.ID,
 		}, false)
 	})
-	t.Run("invalid right", func(t *testing.T) {
+	t.Run("invalid permission", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
 
 		share := &LinkSharing{
-			ProjectID: 1,
-			Right:     Right(123),
+			ProjectID:  1,
+			Permission: Permission(123),
 		}
 		err := share.Create(s, doer)
 
 		require.Error(t, err)
-		assert.True(t, IsErrInvalidRight(err))
+		assert.True(t, IsErrInvalidPermission(err))
 	})
 	t.Run("password should be hashed", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -69,9 +69,9 @@ func TestLinkSharing_Create(t *testing.T) {
 		defer s.Close()
 
 		share := &LinkSharing{
-			ProjectID: 1,
-			Right:     RightRead,
-			Password:  "somePassword",
+			ProjectID:  1,
+			Permission: PermissionRead,
+			Password:   "somePassword",
 		}
 		err := share.Create(s, doer)
 

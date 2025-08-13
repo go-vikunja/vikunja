@@ -14,35 +14,31 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package handler
+package migration
 
 import (
-	"net/http"
-
-	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/web"
-
-	"github.com/labstack/echo/v4"
+	"src.techknowlogick.com/xormigrate"
+	"xorm.io/xorm"
 )
 
-// WebHandler defines the webhandler object
-// This does web stuff, aka returns json etc. Uses CRUDable Methods to get the data
-type WebHandler struct {
-	EmptyStruct func() CObject
-}
+func init() {
+	migrations = append(migrations, &xormigrate.Migration{
+		ID:          "20250813093602",
+		Description: "rename 'right' column to 'permission' in link_shares, users_projects, and team_projects tables",
+		Migrate: func(tx *xorm.Engine) error {
+			tables := []string{"link_shares", "users_projects", "team_projects"}
 
-// CObject is the definition of our object, holds the structs
-type CObject interface {
-	web.CRUDable
-	web.Permissions
-}
+			for _, table := range tables {
+				err := renameColumn(tx, table, "right", "permission")
+				if err != nil {
+					return err
+				}
+			}
 
-// HandleHTTPError does what it says
-func HandleHTTPError(err error) *echo.HTTPError {
-	log.Error(err.Error())
-	if a, has := err.(web.HTTPErrorProcessor); has {
-		errDetails := a.HTTPError()
-		return echo.NewHTTPError(errDetails.HTTPCode, errDetails).SetInternal(err)
-	}
-	return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
+			return nil
+		},
+		Rollback: func(tx *xorm.Engine) error {
+			return nil
+		},
+	})
 }

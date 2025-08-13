@@ -45,7 +45,7 @@ type Opts struct {
 // ContentType represents mail content types
 type ContentType int
 
-// Enumerate all the team rights
+// Enumerate all the team permissions
 const (
 	ContentTypePlain ContentType = iota
 	ContentTypeHTML

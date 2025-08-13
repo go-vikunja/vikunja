@@ -41,8 +41,8 @@ type TaskBucket struct {
 	ProjectID     int64 `xorm:"-" json:"-" param:"project"`
 	Task          *Task `xorm:"-" json:"task"`
 
-	web.Rights   `xorm:"-" json:"-"`
-	web.CRUDable `xorm:"-" json:"-"`
+	web.Permissions `xorm:"-" json:"-"`
+	web.CRUDable    `xorm:"-" json:"-"`
 }
 
 func (b *TaskBucket) TableName() string {

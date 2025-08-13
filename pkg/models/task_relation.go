@@ -95,8 +95,8 @@ type TaskRelation struct {
 	// A timestamp when this label was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`
 
-	web.CRUDable `xorm:"-" json:"-"`
-	web.Rights   `xorm:"-" json:"-"`
+	web.CRUDable    `xorm:"-" json:"-"`
+	web.Permissions `xorm:"-" json:"-"`
 }
 
 // TableName holds the table name for the task relation table
@@ -188,7 +188,7 @@ func checkTaskRelationCycle(s *xorm.Session, relation *TaskRelation, otherTaskID
 
 // Create creates a new task relation
 // @Summary Create a new relation between two tasks
-// @Description Creates a new relation between two tasks. The user needs to have update rights on the base task and at least read rights on the other task. Both tasks do not need to be on the same project. Take a look at the docs for available task relation kinds.
+// @Description Creates a new relation between two tasks. The user needs to have update permissions on the base task and at least read permissions on the other task. Both tasks do not need to be on the same project. Take a look at the docs for available task relation kinds.
 // @tags task
 // @Accept json
 // @Produce json

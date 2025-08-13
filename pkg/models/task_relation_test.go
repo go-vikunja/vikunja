@@ -347,7 +347,7 @@ func TestTaskRelation_CanCreate(t *testing.T) {
 		require.NoError(t, err)
 		assert.True(t, can)
 	})
-	t.Run("No update rights on base task", func(t *testing.T) {
+	t.Run("No update permissions on base task", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
@@ -361,7 +361,7 @@ func TestTaskRelation_CanCreate(t *testing.T) {
 		require.NoError(t, err)
 		assert.False(t, can)
 	})
-	t.Run("No update rights on base task, but read rights", func(t *testing.T) {
+	t.Run("No update permissions on base task, but read permissions", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
@@ -375,7 +375,7 @@ func TestTaskRelation_CanCreate(t *testing.T) {
 		require.NoError(t, err)
 		assert.False(t, can)
 	})
-	t.Run("No read rights on other task", func(t *testing.T) {
+	t.Run("No read permissions on other task", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
