@@ -6,21 +6,19 @@
 	>
 		<div class="field-group">
 			<div class="field">
-				<label :for="`newName${id}`">
+				<label :for="`newName${id}`" class="two-col">
 					<span>
 						{{ $t('user.settings.general.name') }}
 					</span>
-					<div class="ml-auto two-col">
-						<input
-							:id="`newName${id}`"
-							v-model="settings.name"
-							:disabled="isExternalUser"
-							class="input"
-							:placeholder="$t('user.settings.general.newName')"
-							type="text"
-							@keyup.enter="updateSettings"
-						>
-					</div>
+					<input
+						:id="`newName${id}`"
+						v-model="settings.name"
+						:disabled="isExternalUser"
+						class="input"
+						:placeholder="$t('user.settings.general.newName')"
+						type="text"
+						@keyup.enter="updateSettings"
+					>
 				</label>
 				<p
 					v-if="isExternalUser"
@@ -30,13 +28,11 @@
 				</p>
 			</div>
 			<div class="field">
-				<label>
+				<label class="two-col">
 					<span>
 						{{ $t('user.settings.general.defaultProject') }}
 					</span>
-					<div class="ml-auto two-col">
-						<ProjectSearch v-model="defaultProject" />
-					</div>
+					<ProjectSearch v-model="defaultProject" />
 				</label>
 			</div>
 		</div>
@@ -49,11 +45,11 @@
 	>
 		<div class="field-group">
 			<div class="field">
-				<label>
+				<label class="two-col">
 					<span>
 						{{ $t('user.settings.general.defaultView') }}
 					</span>
-					<div class="select ml-auto two-col">
+					<div class="select">
 						<select v-model="settings.frontendSettings.defaultView">
 							<option
 								v-for="view in DEFAULT_PROJECT_VIEW_SETTINGS"
@@ -67,11 +63,11 @@
 				</label>
 			</div>
 			<div class="field">
-				<label>
+				<label class="two-col">
 					<span>
 						{{ $t('user.settings.general.minimumPriority') }}
 					</span>
-					<div class="select ml-auto two-col">
+					<div class="select">
 						<select v-model="settings.frontendSettings.minimumPriority">
 							<option :value="PRIORITIES.LOW">
 								{{ $t('task.priority.low') }}
@@ -96,16 +92,14 @@
 				v-if="hasFilters"
 				class="field"
 			>
-				<label>
+				<label class="two-col">
 					<span>
 						{{ $t('user.settings.general.filterUsedOnOverview') }}
 					</span>
-					<div class="ml-auto two-col">
-						<ProjectSearch
-							v-model="filterUsedInOverview"
-							:saved-filters-only="true"
-						/>
-					</div>
+					<ProjectSearch
+						v-model="filterUsedInOverview"
+						:saved-filters-only="true"
+					/>
 				</label>
 			</div>
 			<div class="field">
@@ -130,19 +124,17 @@
 				v-if="settings.overdueTasksRemindersEnabled"
 				class="field"
 			>
-				<label for="overdueTasksReminderTime">
+				<label for="overdueTasksReminderTime" class="two-col">
 					<span>
 						{{ $t('user.settings.general.overdueTasksRemindersTime') }}
 					</span>
-					<div class="ml-auto two-col">
-						<input
-							id="overdueTasksReminderTime"
-							v-model="settings.overdueTasksRemindersTime"
-							class="input"
-							type="time"
-							@keyup.enter="updateSettings"
-						>
-					</div>
+					<input
+						id="overdueTasksReminderTime"
+						v-model="settings.overdueTasksRemindersTime"
+						class="input"
+						type="time"
+						@keyup.enter="updateSettings"
+					>
 				</label>
 			</div>
 		</div>
@@ -155,11 +147,11 @@
 	>
 		<div class="field-group">
 			<div class="field">
-				<label>
+				<label class="two-col">
 					<span>
 						{{ $t('user.settings.general.language') }}
 					</span>
-					<div class="select ml-auto two-col">
+					<div class="select">
 						<select v-model="settings.language">
 							<option
 								v-for="lang in availableLanguageOptions"
@@ -172,29 +164,27 @@
 				</label>
 			</div>
 			<div class="field">
-				<label>
+				<label class="two-col">
 					<span>
 						{{ $t('user.settings.general.timezone') }}
 					</span>
-					<div class="ml-auto two-col">
-						<Multiselect
-							v-model="timezoneObject"
-							:placeholder="$t('user.settings.general.timezone')"
-							:search-results="timezoneSearchResults"
-							:show-empty="true"
-							class="timezone-select"
-							label="label"
-							@search="searchTimezones"
-						/>
-					</div>
+					<Multiselect
+						v-model="timezoneObject"
+						:placeholder="$t('user.settings.general.timezone')"
+						:search-results="timezoneSearchResults"
+						:show-empty="true"
+						class="timezone-select"
+						label="label"
+						@search="searchTimezones"
+					/>
 				</label>
 			</div>
 			<div class="field">
-				<label>
+				<label class="two-col">
 					<span>
 						{{ $t('user.settings.general.weekStart') }}
 					</span>
-					<div class="select ml-auto two-col">
+					<div class="select">
 						<select v-model.number="settings.weekStart">
 							<option value="0">{{ $t('user.settings.general.weekStartSunday') }}</option>
 							<option value="1">{{ $t('user.settings.general.weekStartMonday') }}</option>
@@ -203,11 +193,11 @@
 				</label>
 			</div>
 			<div class="field">
-				<label>
+				<label class="two-col">
 					<span>
 						{{ $t('user.settings.general.dateDisplay') }}
 					</span>
-					<div class="select ml-auto two-col">
+					<div class="select">
 						<select v-model="settings.frontendSettings.dateDisplay">
 							<option
 								v-for="(label, value) in dateDisplaySettings"
@@ -228,11 +218,11 @@
 	>
 		<div class="field-group">
 			<div class="field">
-				<label>
+				<label class="two-col">
 					<span>
 						{{ $t('user.settings.appearance.title') }}
 					</span>
-					<div class="select ml-auto two-col">
+					<div class="select">
 						<select v-model="settings.frontendSettings.colorSchema">
 							<option
 								v-for="(title, schemeId) in colorSchemeSettings"
@@ -246,11 +236,11 @@
 				</label>
 			</div>
 			<div class="field">
-				<label>
+				<label class="two-col">
 					<span>
 						{{ $t('user.settings.quickAddMagic.title') }}
 					</span>
-					<div class="select ml-auto two-col">
+					<div class="select">
 						<select v-model="settings.frontendSettings.quickAddMagicMode">
 							<option
 								v-for="set in PrefixMode"
@@ -538,7 +528,7 @@ async function updateSettings() {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .select select {
 	inline-size: 100%;
 }
@@ -555,18 +545,21 @@ async function updateSettings() {
 .field-group {
 	display: grid;
 	grid-template-columns: 1fr;
-	gap: 0.5rem;
 }
 
-.field > label {
+.field > label.two-col {
 	display: flex;
 	align-items: center;
-	gap: 0.5rem;
-}
+	gap: .5rem;
 
-.two-col {
-	flex: 0 0 50%;
-	margin-inline-start: .5rem;
+	> span {
+		flex: 0 0 50%;
+	}
+
+	input, .input, .select, .timezone-select, :deep(.multiselect) {
+		flex: 0 0 50%;
+		box-sizing: border-box;
+	}
 }
 
 .sticky-save {
