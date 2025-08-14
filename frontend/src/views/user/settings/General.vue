@@ -562,6 +562,11 @@ async function updateSettings() {
 	}
 }
 
+label.checkbox {
+	display: flex;
+	gap: .5rem;
+}
+
 .sticky-save {
 	position: sticky;
 	inset-block-end: 0;
