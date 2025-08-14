@@ -365,8 +365,7 @@
 			"month": "Monat",
 			"day": "Tag",
 			"hour": "Stunde",
-			"range": "Zeitraum",
-			"noDates": "Diese Aufgabe hat keine Daten definiert."
+			"range": "Zeitraum"
 		},
 		"table": {
 			"title": "Tabelle",
@@ -441,6 +440,7 @@
 		"title": "Filter",
 		"clear": "Filter zurücksetzen",
 		"showResults": "Ergebnisse anzeigen",
+		"noResults": "Keine Ergebnisse",
 		"fromView": "Die aktuelle Ansicht hat bereits einen Filter gesetzt:",
 		"fromViewBoth": "Er wird in Kombination mit dem, was du hier setzt, verwendet.",
 		"attributes": {

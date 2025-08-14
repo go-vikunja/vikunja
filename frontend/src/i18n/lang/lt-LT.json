@@ -340,8 +340,7 @@
 			"month": "Mėnuo",
 			"day": "Diena",
 			"hour": "Valanda",
-			"range": "Datos intervalas",
-			"noDates": "Ši užduotis dar neturi nurodytos datos."
+			"range": "Datos intervalas"
 		},
 		"table": {
 			"title": "Lentelė",

@@ -344,8 +344,7 @@
 			"month": "Mois",
 			"day": "Jour",
 			"hour": "Heure",
-			"range": "Intervalle",
-			"noDates": "Aucune date n’a été fixée pour cette tâche."
+			"range": "Intervalle"
 		},
 		"table": {
 			"title": "Tableau",

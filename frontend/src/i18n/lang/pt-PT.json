@@ -365,8 +365,7 @@
 			"month": "Mês",
 			"day": "Dia",
 			"hour": "Hora",
-			"range": "Intervalo de Datas",
-			"noDates": "Esta tarefa não tem datas definidas."
+			"range": "Intervalo de Datas"
 		},
 		"table": {
 			"title": "Tabela",
@@ -441,6 +440,7 @@
 		"title": "Filtros",
 		"clear": "Limpar Filtros",
 		"showResults": "Mostrar resultados",
+		"noResults": "Sem resultados",
 		"fromView": "A vista atual tem também um filtro definido:",
 		"fromViewBoth": "Será utilizado em combinação com o que inserires aqui.",
 		"attributes": {

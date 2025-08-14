@@ -334,8 +334,7 @@
 			"month": "Mesec",
 			"day": "Dan",
 			"hour": "Ura",
-			"range": "Datumski obseg",
-			"noDates": "Naloga nima nastavljenih datumov."
+			"range": "Datumski obseg"
 		},
 		"table": {
 			"title": "Tabela",

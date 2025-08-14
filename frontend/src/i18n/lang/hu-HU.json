@@ -308,8 +308,7 @@
 			"month": "Hónap",
 			"day": "Nap",
 			"hour": "Óra",
-			"range": "Időintervallum",
-			"noDates": "Ennek a feladatnak nincsenek beállítva a dátumai."
+			"range": "Időintervallum"
 		},
 		"table": {
 			"title": "Táblázat",

@@ -307,8 +307,7 @@
 			"month": "Mjesec",
 			"day": "Dan",
 			"hour": "Sat",
-			"range": "Raspon datuma",
-			"noDates": "Ovaj zadatak nema postavljene datume."
+			"range": "Raspon datuma"
 		},
 		"table": {
 			"title": "Tablica",

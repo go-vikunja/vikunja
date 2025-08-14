@@ -336,8 +336,7 @@
 			"month": "Kuukausi",
 			"day": "Päivä",
 			"hour": "Tunti",
-			"range": "Ajanjakso",
-			"noDates": "Tähän tehtävään ei ole asetettu päivämääriä."
+			"range": "Ajanjakso"
 		},
 		"table": {
 			"title": "Taulukko",

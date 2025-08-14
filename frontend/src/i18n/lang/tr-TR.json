@@ -365,8 +365,7 @@
 			"month": "Ay",
 			"day": "Gün",
 			"hour": "Saat",
-			"range": "Tarih Aralığı",
-			"noDates": "Bu görevin tarihi belirlenmemiş."
+			"range": "Tarih Aralığı"
 		},
 		"table": {
 			"title": "Tablo",
@@ -441,6 +440,7 @@
 		"title": "Filtreler",
 		"clear": "Filtreleri Temizle",
 		"showResults": "Sonuçları göster",
+		"noResults": "Sonuç yok",
 		"fromView": "Mevcut görünümde de bir filtre ayarlanmış:",
 		"fromViewBoth": "Burada girdiğinizle birlikte kullanılacak.",
 		"attributes": {

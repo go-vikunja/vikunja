@@ -4,7 +4,7 @@
 		"text": "Siden du ba om finnes ikke."
 	},
 	"home": {
-		"welcomeNight": "Hei {username}!",
+		"welcomeNight": "God kveld {username}!",
 		"welcomeMorning": "Hei {username}!",
 		"welcomeDay": "Hei {username}!",
 		"welcomeEvening": "Hei {username}!",
@@ -363,8 +363,7 @@
 			"month": "Måned",
 			"day": "Dag",
 			"hour": "Time",
-			"range": "Datointervall",
-			"noDates": "Denne oppgaven har ingen datoer satt."
+			"range": "Datointervall"
 		},
 		"table": {
 			"title": "Tabell",

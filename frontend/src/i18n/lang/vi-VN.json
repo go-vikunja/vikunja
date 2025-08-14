@@ -339,8 +339,7 @@
 			"month": "Tháng",
 			"day": "Ngày",
 			"hour": "Giờ",
-			"range": "Khoảng thời gian",
-			"noDates": "Đầu việc này không có thiết lập ngày."
+			"range": "Khoảng thời gian"
 		},
 		"table": {
 			"title": "Bảng",

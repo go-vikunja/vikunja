@@ -318,8 +318,7 @@
 			"month": "Miesiąc",
 			"day": "Dzień",
 			"hour": "Godzina",
-			"range": "Zakres dat",
-			"noDates": "To zadanie nie ma ustawionych dat."
+			"range": "Zakres dat"
 		},
 		"table": {
 			"title": "Tabela",
