@@ -6,7 +6,10 @@
 	>
 		<div class="field-group">
 			<div class="field">
-				<label :for="`newName${id}`" class="two-col">
+				<label
+					:for="`newName${id}`"
+					class="two-col"
+				>
 					<span>
 						{{ $t('user.settings.general.name') }}
 					</span>
@@ -124,7 +127,10 @@
 				v-if="settings.overdueTasksRemindersEnabled"
 				class="field"
 			>
-				<label for="overdueTasksReminderTime" class="two-col">
+				<label
+					for="overdueTasksReminderTime"
+					class="two-col"
+				>
 					<span>
 						{{ $t('user.settings.general.overdueTasksRemindersTime') }}
 					</span>

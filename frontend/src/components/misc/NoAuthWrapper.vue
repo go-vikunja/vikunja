@@ -1,8 +1,15 @@
 <template>
 	<div class="no-auth-wrapper">
-		<Logo class="logo" width="200" height="58" />
+		<Logo
+			class="logo"
+			width="200"
+			height="58"
+		/>
 		<div class="noauth-container">
-			<section class="image" :class="{ 'has-message': motd !== '' }">
+			<section
+				class="image"
+				:class="{ 'has-message': motd !== '' }"
+			>
 				<Message v-if="motd !== ''">
 					{{ motd }}
 				</Message>
@@ -12,11 +19,17 @@
 			</section>
 			<section class="content">
 				<div>
-					<h2 v-if="title" class="title">
+					<h2
+						v-if="title"
+						class="title"
+					>
 						{{ title }}
 					</h2>
 					<ApiConfig v-if="showApiConfig" />
-					<Message v-if="motd !== ''" class="is-hidden-tablet mbe-4">
+					<Message
+						v-if="motd !== ''"
+						class="is-hidden-tablet mbe-4"
+					>
 						{{ motd }}
 					</Message>
 					<slot />
@@ -28,17 +41,17 @@
 </template>
 
 <script lang="ts" setup>
-import { computed } from "vue";
-import { useRoute } from "vue-router";
-import { useI18n } from "vue-i18n";
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 
-import Logo from "@/components/home/Logo.vue";
-import Message from "@/components/misc/Message.vue";
-import Legal from "@/components/misc/Legal.vue";
-import ApiConfig from "@/components/misc/ApiConfig.vue";
+import Logo from '@/components/home/Logo.vue'
+import Message from '@/components/misc/Message.vue'
+import Legal from '@/components/misc/Legal.vue'
+import ApiConfig from '@/components/misc/ApiConfig.vue'
 
-import { useTitle } from "@/composables/useTitle";
-import { useConfigStore } from "@/stores/config";
+import { useTitle } from '@/composables/useTitle'
+import { useConfigStore } from '@/stores/config'
 
 withDefaults(
 	defineProps<{
@@ -47,16 +60,16 @@ withDefaults(
 	{
 		showApiConfig: false,
 	},
-);
-const configStore = useConfigStore();
-const motd = computed(() => configStore.motd);
+)
+const configStore = useConfigStore()
+const motd = computed(() => configStore.motd)
 
-const route = useRoute();
-const { t } = useI18n({ useScope: "global" });
+const route = useRoute()
+const { t } = useI18n({ useScope: 'global' })
 const title = computed(() =>
-	route.meta?.title ? t(route.meta.title as string) : "",
-);
-useTitle(() => title.value);
+	route.meta?.title ? t(route.meta.title as string) : '',
+)
+useTitle(() => title.value)
 </script>
 
 <style lang="scss" scoped>
