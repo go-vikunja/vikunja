@@ -91,11 +91,16 @@ func GetLinkShareFromClaims(claims jwt.MapClaims) (share *LinkSharing, err error
 		return nil, &ErrLinkShareTokenInvalid{}
 	}
 
+	permissionFloat, is := claims["permission"].(float64)
+	if !is {
+		return nil, &ErrLinkShareTokenInvalid{}
+	}
+
 	share = &LinkSharing{}
 	share.ID = int64(claims["id"].(float64))
 	share.Hash = claims["hash"].(string)
 	share.ProjectID = int64(projectID)
-	share.Permission = Permission(claims["permission"].(float64))
+	share.Permission = Permission(permissionFloat)
 	share.SharedByID = int64(claims["sharedByID"].(float64))
 	return
 }
