@@ -143,3 +143,11 @@ func CancelDeletion(s *xorm.Session, user *User) (err error) {
 		Update(user)
 	return
 }
+
+// DeleteUser deletes a user from the database
+func DeleteUser(s *xorm.Session, user *User) (err error) {
+	_, err = s.
+		Where("id = ?", user.ID).
+		Delete(&User{})
+	return
+}

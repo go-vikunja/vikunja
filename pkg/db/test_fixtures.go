@@ -31,10 +31,10 @@ import (
 var fixtures *testfixtures.Loader
 
 // InitFixtures initialize test fixtures for a test database
-func InitFixtures(tablenames ...string) (err error) {
+func InitFixtures(root string, tablenames ...string) (err error) {
 
 	var testfiles func(loader *testfixtures.Loader) error
-	dir := filepath.Join(config.ServiceRootpath.GetString(), "pkg", "db", "fixtures")
+	dir := filepath.Join(root, "pkg", "db", "fixtures")
 
 	// If fixture table names are specified, load them
 	// Otherwise, load all fixtures

@@ -18,14 +18,30 @@ package vikunjafile
 
 import (
 	"os"
+	"path/filepath"
+	"runtime"
 	"testing"
 
-	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/require"
 )
+
+func getProjectRoot() string {
+	_, b, _, _ := runtime.Caller(0)
+	d := filepath.Dir(b)
+	for {
+		if _, err := os.Stat(filepath.Join(d, "..", "..", "..", "go.mod")); err == nil {
+			return filepath.Join(d, "..", "..", "..")
+		}
+		d = filepath.Dir(d)
+		if d == "/" || d == "." || d == "" {
+			break
+		}
+	}
+	return ""
+}
 
 func TestVikunjaFileMigrator_Migrate(t *testing.T) {
 	t.Run("migrate successfully", func(t *testing.T) {
@@ -34,7 +50,7 @@ func TestVikunjaFileMigrator_Migrate(t *testing.T) {
 		m := &FileMigrator{}
 		u := &user.User{ID: 1}
 
-		f, err := os.Open(config.ServiceRootpath.GetString() + "/pkg/modules/migration/vikunja-file/export.zip")
+		f, err := os.Open(filepath.Join(getProjectRoot(), "pkg/modules/migration/vikunja-file/export.zip"))
 		if err != nil {
 			t.Fatalf("Could not open file: %s", err)
 		}
@@ -81,7 +97,7 @@ func TestVikunjaFileMigrator_Migrate(t *testing.T) {
 		m := &FileMigrator{}
 		u := &user.User{ID: 1}
 
-		f, err := os.Open(config.ServiceRootpath.GetString() + "/pkg/modules/migration/vikunja-file/export_pre_0.21.0.zip")
+		f, err := os.Open(filepath.Join(getProjectRoot(), "pkg/modules/migration/vikunja-file/export_pre_0.21.0.zip"))
 		if err != nil {
 			t.Fatalf("Could not open file: %s", err)
 		}

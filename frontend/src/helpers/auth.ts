@@ -40,7 +40,7 @@ export const removeToken = () => {
 export async function refreshToken(persist: boolean): Promise<AxiosResponse> {
 	const HTTP = AuthenticatedHTTPFactory()
 	try {
-		const response = await HTTP.post('user/token')
+		const response = await HTTP.post('auth/token/renew')
 		saveToken(response.data.token, persist)
 		return response
 

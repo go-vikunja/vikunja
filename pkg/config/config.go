@@ -66,6 +66,7 @@ const (
 	ServiceEnablePublicTeams              Key = `service.enablepublicteams`
 	ServiceBcryptRounds                   Key = `service.bcryptrounds`
 	ServiceEnableOpenIDTeamUserOnlySearch Key = `service.enableopenidteamusersearch`
+	ServiceUserAdmins                     Key = `service.useradmins`
 
 	SentryEnabled         Key = `sentry.enabled`
 	SentryDsn             Key = `sentry.dsn`
@@ -242,6 +243,11 @@ func (k Key) GetStringSlice() []string {
 	return viper.GetStringSlice(string(k))
 }
 
+// GetInt64Slice returns an int64 slice from a config option
+func (k Key) GetInt64Slice() []int64 {
+	return viper.Get(string(k)).([]int64)
+}
+
 // Get returns the raw value from a config option
 func (k Key) Get() interface{} {
 	return viper.Get(string(k))
@@ -341,6 +347,7 @@ func InitDefaultConfig() {
 	ServiceEnablePublicTeams.setDefault(false)
 	ServiceBcryptRounds.setDefault(11)
 	ServiceEnableOpenIDTeamUserOnlySearch.setDefault(false)
+	ServiceUserAdmins.setDefault([]int64{})
 
 	// Sentry
 	SentryDsn.setDefault("https://440eedc957d545a795c17bbaf477497c@o1047380.ingest.sentry.io/4504254983634944")

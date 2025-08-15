@@ -20,6 +20,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
+	"runtime"
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
@@ -61,15 +63,33 @@ func CreateTestEngine() (engine *xorm.Engine, err error) {
 	return
 }
 
+func getProjectRoot() string {
+	_, b, _, _ := runtime.Caller(0)
+	d := filepath.Dir(b)
+	for {
+		if _, err := os.Stat(filepath.Join(d, "go.mod")); err == nil {
+			return d
+		}
+		d = filepath.Dir(d)
+		if d == "/" || d == "." || d == "" {
+			break
+		}
+	}
+	return ""
+}
+
 // InitTestFixtures populates the db with all fixtures from the fixtures folder
 func InitTestFixtures(tablenames ...string) (err error) {
 	// Create all fixtures
 	config.InitDefaultConfig()
 	// We need to set the root path even if we're not using the config, otherwise fixtures are not loaded correctly
-	config.ServiceRootpath.Set(os.Getenv("VIKUNJA_SERVICE_ROOTPATH"))
+	root := getProjectRoot()
+	if root == "" {
+		log.Fatal("Could not find project root")
+	}
 
 	// Sync fixtures
-	err = InitFixtures(tablenames...)
+	err = InitFixtures(root, tablenames...)
 	if err != nil {
 		log.Fatal(err)
 	}

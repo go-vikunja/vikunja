@@ -7,11 +7,11 @@ import {colorFromHex} from '@/helpers/color/colorFromHex'
 export default class ProjectService extends AbstractService<IProject> {
 	constructor() {
 		super({
-			create: '/projects',
-			get: '/projects/{id}',
-			getAll: '/projects',
-			update: '/projects/{id}',
-			delete: '/projects/{id}',
+			create: 'projects',
+			get: 'projects/{id}',
+			getAll: 'projects',
+			update: 'projects/{id}',
+			delete: 'projects/{id}',
 		})
 	}
 
@@ -19,51 +19,51 @@ export default class ProjectService extends AbstractService<IProject> {
 		return new ProjectModel(data)
 	}
 
-	beforeUpdate(model) {
-		if(typeof model.tasks !== 'undefined') {
-			const taskService = new TaskService()
-			model.tasks = model.tasks.map(task => {
-				return taskService.beforeUpdate(task)
-			})
-		}
+	// beforeUpdate(model) {
+	// 	if(typeof model.tasks !== 'undefined') {
+	// 		const taskService = new TaskService()
+	// 		model.tasks = model.tasks.map(task => {
+	// 			return taskService.beforeUpdate(task)
+	// 		})
+	// 	}
 		
-		if(typeof model.hexColor !== 'undefined') {
-			model.hexColor = colorFromHex(model.hexColor)
-		}
+	// 	if(typeof model.hexColor !== 'undefined') {
+	// 		model.hexColor = colorFromHex(model.hexColor)
+	// 	}
 		
-		return model
-	}
+	// 	return model
+	// }
 
-	beforeCreate(project) {
-		project.hexColor = colorFromHex(project.hexColor)
-		return project
-	}
+	// beforeCreate(project) {
+	// 	project.hexColor = colorFromHex(project.hexColor)
+	// 	return project
+	// }
 
-	async background(project: Pick<IProject, 'id' | 'backgroundInformation'>) {
-		if (project.backgroundInformation === null) {
-			return ''
-		}
+	// async background(project: Pick<IProject, 'id' | 'backgroundInformation'>) {
+	// 	if (project.backgroundInformation === null) {
+	// 		return ''
+	// 	}
 
-		const response = await this.http({
-			url: `/projects/${project.id}/background`,
-			method: 'GET',
-			responseType: 'blob',
-		})
-		return window.URL.createObjectURL(new Blob([response.data]))
-	}
+	// 	const response = await this.http({
+	// 		url: `/api/v2/projects/${project.id}/background`,
+	// 		method: 'GET',
+	// 		responseType: 'blob',
+	// 	})
+	// 	return window.URL.createObjectURL(new Blob([response.data]))
+	// }
 
-	async removeBackground(project: IProject) {
-		const cancel = this.setLoading()
+	// async removeBackground(project: IProject) {
+	// 	const cancel = this.setLoading()
 
-		try {
-			await this.http.delete(`/projects/${project.id}/background`)
-			return {
-				...project,
-				backgroundInformation: null,
-				backgroundBlurHash: '',
-			}
-		} finally {
-			cancel()
-		}
-	}
+	// 	try {
+	// 		await this.http.delete(`/api/v2/projects/${project.id}/background`)
+	// 		return {
+	// 			...project,
+	// 			backgroundInformation: null,
+	// 			backgroundBlurHash: '',
+	// 		}
+	// 	} finally {
+	// 		cancel()
+	// 	}
+	// }
 }

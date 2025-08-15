@@ -18,6 +18,8 @@ package todoist
 
 import (
 	"os"
+	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 
@@ -29,6 +31,21 @@ import (
 	"github.com/stretchr/testify/require"
 	"gopkg.in/d4l3k/messagediff.v1"
 )
+
+func getProjectRoot() string {
+	_, b, _, _ := runtime.Caller(0)
+	d := filepath.Dir(b)
+	for {
+		if _, err := os.Stat(filepath.Join(d, "..", "..", "..", "go.mod")); err == nil {
+			return filepath.Join(d, "..", "..", "..")
+		}
+		d = filepath.Dir(d)
+		if d == "/" || d == "." || d == "" {
+			break
+		}
+	}
+	return ""
+}
 
 func TestConvertTodoistToVikunja(t *testing.T) {
 
@@ -48,7 +65,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 	dueTimeWithTime = dueTimeWithTime.In(config.GetTimeZone())
 	nilTime, err := time.Parse(time.RFC3339Nano, "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
-	exampleFile, err := os.ReadFile(config.ServiceRootpath.GetString() + "/pkg/modules/migration/testimage.jpg")
+	exampleFile, err := os.ReadFile(filepath.Join(getProjectRoot(), "pkg/modules/migration/testimage.jpg"))
 	require.NoError(t, err)
 
 	makeTestItem := func(id, projectId string, hasDueDate, hasLabels, done bool) *item {

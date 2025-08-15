@@ -19,6 +19,8 @@ package trello
 import (
 	"bytes"
 	"os"
+	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 
@@ -237,10 +239,25 @@ func getTestBoard(t *testing.T) ([]*trello.Board, time.Time) {
 	return trelloData, time1
 }
 
+func getProjectRoot() string {
+	_, b, _, _ := runtime.Caller(0)
+	d := filepath.Dir(b)
+	for {
+		if _, err := os.Stat(filepath.Join(d, "..", "..", "..", "go.mod")); err == nil {
+			return filepath.Join(d, "..", "..", "..")
+		}
+		d = filepath.Dir(d)
+		if d == "/" || d == "." || d == "" {
+			break
+		}
+	}
+	return ""
+}
+
 func TestConvertTrelloToVikunja(t *testing.T) {
 	trelloData, time1 := getTestBoard(t)
 
-	exampleFile, err := os.ReadFile(config.ServiceRootpath.GetString() + "/pkg/modules/migration/testimage.jpg")
+	exampleFile, err := os.ReadFile(filepath.Join(getProjectRoot(), "pkg/modules/migration/testimage.jpg"))
 	require.NoError(t, err)
 
 	expectedHierarchyOrg := map[string][]*models.ProjectWithTasksAndBuckets{

@@ -75,6 +75,7 @@ import (
 	vikunja_file "code.vikunja.io/api/pkg/modules/migration/vikunja-file"
 	"code.vikunja.io/api/pkg/plugins"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
+	v2 "code.vikunja.io/api/pkg/routes/api/v2"
 	"code.vikunja.io/api/pkg/routes/caldav"
 	"code.vikunja.io/api/pkg/version"
 	"code.vikunja.io/api/pkg/web/handler"
@@ -224,6 +225,8 @@ func RegisterRoutes(e *echo.Echo) {
 }
 
 func registerAPIRoutes(a *echo.Group) {
+	apiV2 := a.Group("/v2")
+	v2.RegisterRoutes(apiV2)
 
 	// This is the group with no auth
 	// It is its own group to be able to rate limit this based on different heuristics

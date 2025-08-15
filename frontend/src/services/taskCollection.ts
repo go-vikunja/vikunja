@@ -32,16 +32,8 @@ export function getDefaultTaskFilterParams(): TaskFilterParams {
 export default class TaskCollectionService extends AbstractService<ITask> {
 	constructor() {
 		super({
-			getAll: '/projects/{projectId}/views/{viewId}/tasks',
-			// /projects/{projectId}/tasks when viewId is not provided
+			getAll: 'projects/{projectId}/tasks',
 		})
-	}
-
-	getReplacedRoute(path: string, pathparams: Record<string, unknown>): string {
-		if (!pathparams.viewId) {
-			return super.getReplacedRoute('/projects/{projectId}/tasks', pathparams)
-		}
-		return super.getReplacedRoute(path, pathparams)
 	}
 
 	modelFactory(data) {

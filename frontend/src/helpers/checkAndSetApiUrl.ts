@@ -57,25 +57,25 @@ export const checkAndSetApiUrl = (pUrl: string | undefined | null): Promise<stri
 	return configStore.update()
 		.catch(e => {
 			console.warn(`Could not fetch 'info' from the provided endpoint ${pUrl} on ${window.API_URL}/info. Some automatic fallback will be tried.`)
-			// Check if it is reachable at /api/v1 and http
+			// Check if it is reachable at /api/v2 and http
 			if (
-				!urlToCheck.pathname.endsWith('/api/v1') &&
-				!urlToCheck.pathname.endsWith('/api/v1/')
+				!urlToCheck.pathname.endsWith('/api/v2') &&
+				!urlToCheck.pathname.endsWith('/api/v2/')
 			) {
-				urlToCheck.pathname = `${urlToCheck.pathname}api/v1`
+				urlToCheck.pathname = `${urlToCheck.pathname}api/v2`
 				window.API_URL = urlToCheck.toString()
 				return configStore.update()
 			}
 			throw e
 		})
 		.catch(e => {
-			// Check if it is reachable at /api/v1 and https
+			// Check if it is reachable at /api/v2 and https
 			urlToCheck.pathname = origUrlToCheck.pathname
 			if (
-				!urlToCheck.pathname.endsWith('/api/v1') &&
-				!urlToCheck.pathname.endsWith('/api/v1/')
+				!urlToCheck.pathname.endsWith('/api/v2') &&
+				!urlToCheck.pathname.endsWith('/api/v2/')
 			) {
-				urlToCheck.pathname = `${urlToCheck.pathname}api/v1`
+				urlToCheck.pathname = `${urlToCheck.pathname}api/v2`
 				window.API_URL = urlToCheck.toString()
 				return configStore.update()
 			}
@@ -91,13 +91,13 @@ export const checkAndSetApiUrl = (pUrl: string | undefined | null): Promise<stri
 			throw e
 		})
 		.catch(e => {
-			// Check if it is reachable at :API_DEFAULT_PORT and /api/v1
+			// Check if it is reachable at :API_DEFAULT_PORT and /api/v2
 			urlToCheck.pathname = origUrlToCheck.pathname
 			if (
-				!urlToCheck.pathname.endsWith('/api/v1') &&
-				!urlToCheck.pathname.endsWith('/api/v1/')
+				!urlToCheck.pathname.endsWith('/api/v2') &&
+				!urlToCheck.pathname.endsWith('/api/v2/')
 			) {
-				urlToCheck.pathname = `${urlToCheck.pathname}api/v1`
+				urlToCheck.pathname = `${urlToCheck.pathname}api/v2`
 				window.API_URL = urlToCheck.toString()
 				return configStore.update()
 			}

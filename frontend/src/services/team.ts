@@ -5,11 +5,11 @@ import type {ITeam} from '@/modelTypes/ITeam'
 export default class TeamService extends AbstractService<ITeam> {
 	constructor() {
 		super({
-			create: '/teams',
-			get: '/teams/{id}',
-			getAll: '/teams',
-			update: '/teams/{id}',
-			delete: '/teams/{id}',
+			create: 'teams',
+			get: 'teams/{id}',
+			getAll: 'teams',
+			update: 'teams/{id}',
+			delete: 'teams/{id}',
 		})
 	}
 

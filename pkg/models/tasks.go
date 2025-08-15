@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
@@ -183,21 +184,6 @@ const (
 	filterConcatOr  taskFilterConcatinator = "or"
 )
 
-type taskSearchOptions struct {
-	search             string
-	page               int
-	perPage            int
-	sortby             []*sortParam
-	parsedFilters      []*taskFilter
-	filterIncludeNulls bool
-	filter             string
-	filterTimezone     string
-	isSavedFilter      bool
-	projectIDs         []int64
-	expand             []TaskCollectionExpandable
-	projectViewID      int64
-}
-
 // ReadAll is a dummy function to still have that endpoint documented
 // @Summary Get tasks
 // @Description Returns all tasks on any project the user has access to.
@@ -270,7 +256,7 @@ func getTaskIndexFromSearchString(s string) (index int64) {
 	return
 }
 
-func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts *taskSearchOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {
+func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts *TaskSearchOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {
 
 	// If the user does not have any projects, don't try to get any tasks
 	if len(projects) == 0 {
@@ -278,26 +264,26 @@ func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, op
 	}
 
 	// Get all project IDs and get the tasks
-	opts.projectIDs = []int64{}
+	opts.ProjectIDs = []int64{}
 	var hasFavoritesProject bool
 	for _, p := range projects {
 		if p.ID == FavoritesPseudoProject.ID {
 			hasFavoritesProject = true
 			continue
 		}
-		opts.projectIDs = append(opts.projectIDs, p.ID)
+		opts.ProjectIDs = append(opts.ProjectIDs, p.ID)
 	}
 
 	// Add the id parameter as the last parameter to sortby by default, but only if it is not already passed as the last parameter.
-	if len(opts.sortby) == 0 ||
-		len(opts.sortby) > 0 && opts.sortby[len(opts.sortby)-1].sortBy != taskPropertyID {
-		opts.sortby = append(opts.sortby, &sortParam{
+	if len(opts.Sortby) == 0 ||
+		len(opts.Sortby) > 0 && opts.Sortby[len(opts.Sortby)-1].sortBy != taskPropertyID {
+		opts.Sortby = append(opts.Sortby, &sortParam{
 			sortBy:  taskPropertyID,
 			orderBy: orderAscending,
 		})
 	}
 
-	opts.search = strings.TrimSpace(opts.search)
+	opts.Search = strings.TrimSpace(opts.Search)
 
 	var dbSearcher taskSearcher = &dbTaskSearcher{
 		s:                   s,
@@ -324,7 +310,7 @@ func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, op
 	return tasks, len(tasks), totalItems, err
 }
 
-func getTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts *taskSearchOptions, view *ProjectView) (tasks []*Task, resultCount int, totalItems int64, err error) {
+func GetTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts *TaskSearchOptions, view *ProjectView) (tasks []*Task, resultCount int, totalItems int64, err error) {
 	tasks, resultCount, totalItems, err = getRawTasksForProjects(s, projects, a, opts)
 	if err != nil {
 		return nil, 0, 0, err
@@ -335,7 +321,7 @@ func getTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts 
 		taskMap[t.ID] = t
 	}
 
-	err = addMoreInfoToTasks(s, taskMap, a, view, opts.expand)
+	err = addMoreInfoToTasks(s, taskMap, a, view, opts.Expand)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -644,7 +630,7 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 
 	taskReminders, err := getTaskReminderMap(s, taskIDs)
 	if err != nil {
-		return err
+		return
 	}
 
 	taskFavorites, err := getFavorites(s, taskIDs, a, FavoriteKindTask)
@@ -1650,7 +1636,7 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 	// Delete task attachments
 	attachments, err := getTaskAttachmentsByTaskIDs(s, []int64{t.ID})
 	if err != nil {
-		return err
+		return
 	}
 	for _, attachment := range attachments {
 		// Using the attachment delete method here because that takes care of removing all files properly
@@ -1702,7 +1688,7 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 		Doer: doer,
 	})
 	if err != nil {
-		return
+		return err
 	}
 
 	err = updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
@@ -1773,4 +1759,166 @@ func triggerTaskUpdatedEventForTaskID(s *xorm.Session, auth web.Auth, taskID int
 		Doer: doer,
 	})
 	return err
+}
+
+type dbTaskSearcher struct {
+	s                   *xorm.Session
+	a                   web.Auth
+	hasFavoritesProject bool
+}
+
+func (ts *dbTaskSearcher) Search(opts *TaskSearchOptions) (tasks []*Task, totalItems int64, err error) {
+	searcher := ts.s.Join("INNER", "projects", "tasks.project_id = projects.id")
+	if len(opts.ProjectIDs) > 0 {
+		searcher.In("tasks.project_id", opts.ProjectIDs)
+	}
+
+	if opts.Search != "" {
+		taskIndex := getTaskIndexFromSearchString(opts.Search)
+		searcher.And(
+			builder.Or(
+				db.MultiFieldSearchWithTableAlias(
+					[]string{
+						"title",
+						"description",
+					},
+					opts.Search,
+					"tasks",
+				),
+				builder.In("tasks.project_id",
+					builder.Select("id").
+						From("projects").
+						Where(db.MultiFieldSearch(
+							[]string{
+								"title",
+								"description",
+								"identifier",
+							},
+							opts.Search,
+						)),
+				),
+				builder.In("tasks.id",
+					builder.Select("task_id").
+						From("labels_tasks").
+						Where(
+							builder.In("label_id",
+								builder.Select("id").
+									From("labels").
+									Where(db.MultiFieldSearch(
+										[]string{
+											"title",
+											"description",
+										},
+										opts.Search,
+									)),
+							),
+						),
+				),
+				builder.Eq{"tasks.index": taskIndex},
+			),
+		)
+	}
+
+	if opts.IsSavedFilter {
+		// Because we're using a union here, we need to make sure the user has access to the projects.
+		// That is already done before calling this function.
+		// We also don't need to add the favorites pseudo project here because that is also handled before.
+		searcher.And(builder.In("tasks.project_id", opts.ProjectIDs))
+	} else if ts.hasFavoritesProject {
+		searcher.And(
+			builder.Or(
+				builder.In("tasks.project_id", opts.ProjectIDs),
+				builder.In("tasks.id", builder.Select("task_id").From("favorites").Where(builder.Eq{"user_id": ts.a.GetID()})),
+			),
+		)
+	}
+
+	if len(opts.ParsedFilters) > 0 {
+		var filterCond builder.Cond = &builder.Eq{}
+		var concat taskFilterConcatinator
+
+		for _, f := range opts.ParsedFilters {
+			cond, err := getFilterCond(f, opts.FilterIncludeNulls)
+			if err != nil {
+				return nil, 0, err
+			}
+			switch f.concat {
+			case filterConcatAnd:
+				filterCond = builder.And(filterCond, cond)
+			case filterConcatOr:
+				filterCond = builder.Or(filterCond, cond)
+			}
+			concat = f.concat
+		}
+		if concat == filterConcatAnd {
+			searcher.And(filterCond)
+		} else {
+			searcher.Or(filterCond)
+		}
+	}
+
+	for _, sort := range opts.Sortby {
+		searcher.OrderBy(sort.GetSortQuery("tasks"))
+	}
+
+	limit, start := getLimitFromPageIndex(opts.Page, opts.PerPage)
+	if limit > 0 {
+		searcher.Limit(limit, start)
+	}
+
+	err = searcher.Find(&tasks)
+	if err != nil {
+		return
+	}
+
+	totalItems, err = searcher.Count(new(Task))
+	return
+}
+type typesenseTaskSearcher struct {
+	s *xorm.Session
+}
+
+func (ts *typesenseTaskSearcher) Search(opts *TaskSearchOptions) (tasks []*Task, totalItems int64, err error) {
+	client, err := getTypesenseClient()
+	if err != nil {
+		return nil, 0, err
+	}
+
+	searchRequests := &typesense.MultiSearchRequests{
+		Searches: []typesense.MultiSearchCollectionParameters{
+			{
+				Query:             opts.Search,
+				QueryBy:           "title,description",
+				FilterBy:          buildFilterBy(opts.ProjectIDs, "project_id"),
+				SortBy:            "created:desc",
+				Page:              &opts.Page,
+				PerPage:           &opts.PerPage,
+				IncludeFields:     "id",
+				Collection:        getCollectionName("tasks"),
+				HighlightFullText: true,
+			},
+		},
+	}
+
+	res, err := client.MultiSearch.Perform(searchRequests, &typesense.MultiSearchParameters{})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if len(res.Results) == 0 {
+		return nil, 0, nil
+	}
+
+	taskIDs := make([]int64, len(res.Results[0].Hits))
+	for i, hit := range res.Results[0].Hits {
+		id, _ := strconv.ParseInt((*hit.Document)["id"].(string), 10, 64)
+		taskIDs[i] = id
+	}
+
+	err = ts.s.In("id", taskIDs).Find(&tasks)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return tasks, int64(*res.Results[0].Found), nil
 }

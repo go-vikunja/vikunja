@@ -359,6 +359,15 @@ func (u *User) IsLocalUser() bool {
 	return u.Issuer == IssuerLocal
 }
 
+func (u *User) IsAdmin() bool {
+	for _, adminID := range config.ServiceUserAdmins.GetInt64Slice() {
+		if u.ID == adminID {
+			return true
+		}
+	}
+	return false
+}
+
 func handleFailedPassword(user *User) {
 	key := user.GetFailedPasswordAttemptsKey()
 	err := keyvalue.IncrBy(key, 1)
