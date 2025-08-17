@@ -7,6 +7,13 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 All releases can be found on https://code.vikunja.io/vikunja/releases.
 
+## [1.0.0-rc1] - 2025-08-17
+
+### Bug Fixes
+
+* *(desktop)* Correctly parse release rename flag
+* *(desktop)* Do not try to publish release artifacts on tag
+
 ## [1.0.0-rc0] - 2025-08-17
 
 ### Breaking Changes
