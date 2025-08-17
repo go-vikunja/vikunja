@@ -14,7 +14,7 @@
   "scripts": {
     "start": "electron .",
     "pack": "electron-builder --dir",
-    "dist": "electron-builder"
+    "dist": "electron-builder --publish never"
   },
   "build": {
     "appId": "io.vikunja.desktop",
