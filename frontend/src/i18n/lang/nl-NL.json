@@ -4,10 +4,26 @@
 		"text": "De opgevraagde pagina bestaat niet."
 	},
 	"home": {
-		"lastViewed": "Laatst bekeken"
+		"welcomeNight": "Goedenacht {username}!",
+		"welcomeMorning": "Goedemorgen {username}!",
+		"welcomeDay": "Hallo {username}!",
+		"welcomeEvening": "Goedenavond {username}!",
+		"lastViewed": "Laatst bekeken",
+		"addToHomeScreen": "Voeg deze app toe aan je startscherm voor snellere toegang en verbeterde ervaring.",
+		"goToOverview": "Ga naar overzicht",
+		"project": {
+			"importText": "Importeer je projecten en taken van andere diensten naar Vikunja:",
+			"import": "Importeer je gegevens in Vikunja"
+		}
+	},
+	"demo": {
+		"title": "Deze instantie is in demo-modus. Gebruik dit niet voor echte gegevens!",
+		"everythingWillBeDeleted": "Alles zal regelmatig worden verwijderd!",
+		"accountWillBeDeleted": "Je account zal worden verwijderd, inclusief alle projecten, taken en bijlagen."
 	},
 	"ready": {
 		"loading": "Vikunja is aan het laden…",
+		"errorOccured": "Er is een fout opgetreden:",
 		"checkApiUrl": "Controleer of de API URL juist is.",
 		"noApiUrlConfigured": "Er is geen API URL geconfigureerd. Stel er hieronder een in:"
 	},
@@ -20,20 +36,38 @@
 			"username": "Gebruikersnaam",
 			"usernameEmail": "Gebruikersnaam of e-mailadres",
 			"usernamePlaceholder": "bv. frederick",
+			"email": "E-mailadres",
 			"emailPlaceholder": "bv. frederic{'@'}vikunja.io",
 			"password": "Wachtwoord",
 			"passwordPlaceholder": "bv. •••••••••••",
 			"forgotPassword": "Wachtwoord vergeten?",
 			"resetPassword": "Je wachtwoord opnieuw instellen",
 			"resetPasswordAction": "Stuur me een wachtwoord reset link",
+			"resetPasswordSuccess": "Controleer je inbox! Als het goed is heb je een e-mail met instructies om je wachtwoord te resetten.",
 			"passwordsDontMatch": "Wachtwoorden komen niet overeen",
 			"confirmEmailSuccess": "Je hebt met succes je e-mailadres bevestigd! Je kunt nu inloggen.",
 			"totpTitle": "Twee-factor-authenticatie code",
 			"totpPlaceholder": "bv. 123456",
 			"login": "Inloggen",
+			"createAccount": "Account aanmaken",
 			"loginWith": "Inloggen met {provider}",
 			"authenticating": "Authenticeren…",
-			"logout": "Uitloggen"
+			"openIdStateError": "Status komt niet overeen, weigert door te gaan!",
+			"openIdGeneralError": "Er was een fout tijdens het authenticeren bij de derde partij.",
+			"logout": "Uitloggen",
+			"emailInvalid": "Vul een geldig e-mailadres in.",
+			"usernameRequired": "Geef een gebruikersnaam op.",
+			"usernameMustNotContainSpace": "De gebruikersnaam mag geen spaties bevatten.",
+			"usernameMustNotLookLikeUrl": "De gebruikersnaam mag er niet uitzien als een URL.",
+			"passwordRequired": "Geef een wachtwoord op.",
+			"passwordNotMin": "Wachtwoord moet tenminste 8 tekens bevatten.",
+			"passwordNotMax": "Wachtwoord mag maximaal 72 tekens bevatten.",
+			"showPassword": "Toon wachtwoord",
+			"hidePassword": "Verberg wachtwoord",
+			"noAccountYet": "Heb je nog geen account?",
+			"alreadyHaveAnAccount": "Heb je al een account?",
+			"remember": "Ingelogd blijven",
+			"registrationDisabled": "Registratie is uitgeschakeld."
 		},
 		"settings": {
 			"title": "Instellingen",
@@ -49,7 +83,8 @@
 				"weekStart": "Week begint op",
 				"weekStartSunday": "Zondag",
 				"weekStartMonday": "Maandag",
-				"language": "Taal"
+				"language": "Taal",
+				"minimumPriority": "Minimale zichtbare taakprioriteit"
 			},
 			"totp": {
 				"title": "Twee-factor-authenticatie",
@@ -67,7 +102,9 @@
 				"upload": "Uploaden",
 				"uploadAvatar": "Upload avatar",
 				"statusUpdateSuccess": "Avatar status is succesvol bijgewerkt!",
-				"setSuccess": "De avatar is succesvol ingesteld!"
+				"setSuccess": "De avatar is succesvol ingesteld!",
+				"ldap": "Je avatar wordt automatisch gesynchroniseerd via de directory van je organisatie (LDAP). Je kunt je IT-team vragen hoe je deze kunt wijzigen.",
+				"openid": "Je avatar wordt gesynchroniseerd vanuit je inlogprovider ({provider}). Om het te wijzigen moet je het daar aanpassen."
 			},
 			"quickAddMagic": {
 				"title": "Magische Modus Snel Toevoegen",
@@ -83,26 +120,77 @@
 					"system": "Systeem",
 					"dark": "Donker"
 				}
+			},
+			"apiTokens": {
+				"title": "API tokens",
+				"general": "Met API tokens kun je Vikunja's API gebruiken zonder gebruikersnaam en wachtwoord.",
+				"apiDocs": "Bekijk de API-documentatie",
+				"createAToken": "Token aanmaken",
+				"createToken": "Token aanmaken",
+				"30d": "30 dagen",
+				"60d": "60 dagen",
+				"90d": "90 dagen",
+				"permissionExplanation": "Machtigingen maken het mogelijk om te bepalen wat een API-token mag doen.",
+				"titleRequired": "Titel is verplicht",
+				"permissionRequired": "Selecteer minstens één machtiging uit de lijst.",
+				"expired": "Dit token is verlopen {ago}.",
+				"tokenCreatedSuccess": "Hier is je API-token: {token}",
+				"tokenCreatedNotSeeAgain": "Bewaar het op een veilige locatie, het wordt slechts één keer getoond!",
+				"selectAll": "Alles selecteren",
+				"delete": {
+					"header": "Dit token verwijderen",
+					"text1": "Weet je zeker dat je token \"{token}\" wilt verwijderen?",
+					"text2": "Dit zal de toegang intrekken voor alle applicaties of integraties die het gebruiken. Je kunt dit niet ongedaan maken."
+				},
+				"attributes": {
+					"title": "Titel",
+					"titlePlaceholder": "Voer een herkenbare titel in",
+					"expiresAt": "Verloopt op",
+					"permissions": "Machtigingen"
+				}
 			}
 		},
 		"deletion": {
 			"title": "Verwijder je Vikunja account",
+			"text1": "Het verwijderen van je account is permanent en kan niet ongedaan worden gemaakt. We zullen al je projecten, lijsten, taken en alles wat ermee verbonden is verwijderen.",
 			"text2": "Graag je wachtwoord invullen om verder te gaan. Je zult een e-mail ontvangen met verdere instructies.",
+			"text3": "Druk op de knop hieronder om verder te gaan. Je ontvangt een e-mail met instructies.",
 			"confirm": "Verwijder mijn account",
 			"requestSuccess": "Het verzoek was succesvol. Je ontvangt een e-mail met verdere instructies.",
 			"passwordRequired": "Voer alsjeblieft je wachtwoord in.",
 			"confirmSuccess": "Je hebt de verwijdering van je account met succes bevestigd. We verwijderen je account over drie dagen.",
 			"scheduled": "We zullen je Vikunja account op {date} ({dateSince}) verwijderen.",
 			"scheduledCancel": "Klik hier om de verwijdering van je account te annuleren.",
+			"scheduledCancelText": "Om het verwijderen van je account te annuleren, voer hieronder je wachtwoord in:",
+			"scheduledCancelButton": "Om het verwijderen van je account te annuleren, druk op onderstaande knop:",
 			"scheduledCancelConfirm": "Annuleer de verwijdering van mijn account",
 			"scheduledCancelSuccess": "We zullen je account niet verwijderen."
 		},
 		"export": {
 			"title": "Je Vikunja gegevens exporteren",
+			"description": "Je kunt een kopie van al je Vikunja-gegevens opvragen. Dit omvat projecten, taken en alles wat eraan verbonden is. Je kunt deze gegevens importeren in elke Vikunja-instantie via de migratiefunctie.",
 			"descriptionPasswordRequired": "Voer je wachtwoord in om door te gaan:",
 			"request": "Een kopie van mijn Vikunja gegevens opvragen",
 			"success": "Je hebt met succes je Vikunja Data aangevraagd! We sturen je een e-mail zodra het klaar is om te downloaden.",
-			"downloadTitle": "Download je geëxporteerde Vikunja gegevens"
+			"downloadTitle": "Download je geëxporteerde Vikunja gegevens",
+			"ready": "Je export is klaar om te downloaden. Je kunt deze downloaden tot {0}.",
+			"requestNew": "Een andere export aanvragen"
+		}
+	},
+	"project": {
+		"archivedMessage": "Dit project is gearchiveerd. Het is niet mogelijk om nieuwe taken aan te maken of te bewerken.",
+		"archived": "Gearchiveerd",
+		"showArchived": "Toon gearchiveerd",
+		"title": "Titel",
+		"color": "Kleur",
+		"projects": "Projecten",
+		"parent": "Hoofdproject",
+		"search": "Typ om naar een project te zoeken…",
+		"searchSelect": "Klik of druk op Enter om dit project te selecteren",
+		"gantt": {
+			"taskBarsForRow": "Taakbalken voor rij {rowId}",
+			"taskBarLabel": "Taak: {task}. Van {startDate} tot {endDate}. {dateType}. Klik om te bewerken, sleep om te verplaatsen.",
+			"scheduledDates": "Geplande datums"
 		}
 	},
 	"filters": {
@@ -117,6 +205,11 @@
 		},
 		"edit": {
 			"success": "Het filter is succesvol opgeslagen."
+		},
+		"query": {
+			"help": {
+				"intro": "Om taken te filteren, kun je een querysyntaxis gebruiken vergelijkbaar met SQL. De beschikbare velden om te filteren zijn:"
+			}
 		}
 	},
 	"migrate": {
