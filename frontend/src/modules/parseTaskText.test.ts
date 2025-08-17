@@ -650,6 +650,20 @@ describe('Parse Task Text', () => {
 			expect(result.labels).toHaveLength(1)
 			expect(result.labels[0]).toBe('today')
 		})
+		it('should parse labels with parentheses and remove them from text', () => {
+			const result = parseTaskText('a *"a (a)"')
+
+			expect(result.text).toBe('a')
+			expect(result.labels).toHaveLength(1)
+			expect(result.labels[0]).toBe('a (a)')
+		})
+		it('should parse labels with parentheses from the start', () => {
+			const result = parseTaskText('*"a (a)" a')
+
+			expect(result.text).toBe('a')
+			expect(result.labels).toHaveLength(1)
+			expect(result.labels[0]).toBe('a (a)')
+		})
 	})
 
 	describe('Project', () => {
