@@ -168,31 +168,19 @@ else
 fi
 
 echo "\nOpen Sans"
-# we drop the wdth axis for all
+# we drop the wdth axis and keep only variable weight range
 
 instance_and_subset "${ORIGINAL_FONTS}/OpenSans[wdth,wght].ttf" "wdth=drop wght=400:700" "OpenSans[wght]"
 
-# we restrict the wght range
-instance_and_subset "${ORIGINAL_FONTS}/OpenSans[wdth,wght].ttf" "wdth=drop wght=400" "OpenSans-Regular"
-instance_and_subset "${ORIGINAL_FONTS}/OpenSans[wdth,wght].ttf" "wdth=drop wght=700" "OpenSans-Bold"
-
 echo "\nOpen Sans Italic"
-# we drop the wdth axis for all
+# we drop the wdth axis and keep only variable weight range
 
 instance_and_subset "${ORIGINAL_FONTS}/OpenSans-Italic[wdth,wght].ttf" "wdth=drop wght=400:700" "OpenSans-Italic[wght]"
 
-# we restrict the wght range
-instance_and_subset "${ORIGINAL_FONTS}/OpenSans-Italic[wdth,wght].ttf" "wdth=drop wght=400" "OpenSans-RegularItalic"
-instance_and_subset "${ORIGINAL_FONTS}/OpenSans-Italic[wdth,wght].ttf" "wdth=drop wght=700" "OpenSans-BoldItalic"
-
 echo "\nQuicksand"
+# keep only variable weight range
 
 instance_and_subset "${ORIGINAL_FONTS}/Quicksand[wght].ttf" "wght=400:700"
-
-# we restrict the wght range
-instance_and_subset "${ORIGINAL_FONTS}/Quicksand[wght].ttf" "wght=400" "Quicksand-Regular"
-instance_and_subset "${ORIGINAL_FONTS}/Quicksand[wght].ttf" "wght=600" "Quicksand-SemiBold"
-instance_and_subset "${ORIGINAL_FONTS}/Quicksand[wght].ttf" "wght=700" "Quicksand-Bold"
 
 echo "\nSubsetting files complete"
 
@@ -248,27 +236,6 @@ for file in $FONT_FOLDER/*.woff2; do
                 ;;
             Quicksand\[wght\]_*.woff2)
                 update_font_reference "Quicksand\[wght\]" "$basename"
-                ;;
-            Quicksand-Regular_*.woff2)
-                update_font_reference "Quicksand-Regular" "$basename"
-                ;;
-            Quicksand-SemiBold_*.woff2)
-                update_font_reference "Quicksand-SemiBold" "$basename"
-                ;;
-            Quicksand-Bold_*.woff2)
-                update_font_reference "Quicksand-Bold" "$basename"
-                ;;
-            OpenSans-Regular_*.woff2)
-                update_font_reference "OpenSans-Regular" "$basename"
-                ;;
-            OpenSans-RegularItalic_*.woff2)
-                update_font_reference "OpenSans-RegularItalic" "$basename"
-                ;;
-            OpenSans-Bold_*.woff2)
-                update_font_reference "OpenSans-Bold" "$basename"
-                ;;
-            OpenSans-BoldItalic_*.woff2)
-                update_font_reference "OpenSans-BoldItalic" "$basename"
                 ;;
         esac
     fi

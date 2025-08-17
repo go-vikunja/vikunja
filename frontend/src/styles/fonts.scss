@@ -7,99 +7,31 @@ $unicode-range: "U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,\
   U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,\
   U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD";
 
-@supports (font-variation-settings: normal) {
-  @font-face {
-    font-family: 'Quicksand';
-    src: url($font-files-path + 'Quicksand[wght]_6d82d68f.woff2') format('woff2-variations');
-    src: url($font-files-path + 'Quicksand[wght]_6d82d68f.woff2') format('woff2') tech('variations');
-    font-style: normal;
-    font-weight: 400 700;
-    font-display: swap;
-    unicode-range: $unicode-range;
-  }
-
-  @font-face {
-    font-family: 'Open Sans';
-    src: url($font-files-path + 'OpenSans[wght]_e4849d7d.woff2') format('woff2-variations');
-    src: url($font-files-path + 'OpenSans[wght]_e4849d7d.woff2') format('woff2') tech('variations');
-    font-weight: 400 700;
-    font-display: swap;
-    unicode-range: $unicode-range;
-  }
-
-  @font-face {
-    font-family: 'Open Sans';
-    src: url($font-files-path + 'OpenSans-Italic[wght]_efd8026f.woff2') format('woff2-variations');
-    src: url($font-files-path + 'OpenSans-Italic[wght]_efd8026f.woff2') format('woff2') tech('variations');
-    font-weight: 400 700;
-    font-style: italic;
-    font-display: swap;
-    unicode-range: $unicode-range;
-  }
+@font-face {
+  font-family: 'Quicksand';
+  src: url($font-files-path + 'Quicksand[wght]_6d82d68f.woff2') format('woff2-variations');
+  src: url($font-files-path + 'Quicksand[wght]_6d82d68f.woff2') format('woff2') tech('variations');
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  unicode-range: $unicode-range;
 }
 
-/* Set up for old browsers */
-@supports not (font-variation-settings: normal) {
-  @font-face {
-    font-family: 'Quicksand';
-    src: url($font-files-path + 'Quicksand-Regular_92ba564e.woff2') format('woff2');
-    font-style: normal;
-    font-weight: 400;
-    font-display: swap;
-    unicode-range: $unicode-range;
-  }
+@font-face {
+  font-family: 'Open Sans';
+  src: url($font-files-path + 'OpenSans[wght]_e4849d7d.woff2') format('woff2-variations');
+  src: url($font-files-path + 'OpenSans[wght]_e4849d7d.woff2') format('woff2') tech('variations');
+  font-weight: 400 700;
+  font-display: swap;
+  unicode-range: $unicode-range;
+}
 
-  @font-face {
-    font-family: 'Quicksand';
-    src: url($font-files-path + 'Quicksand-SemiBold_c2a9a8d5.woff2') format('woff2');
-    font-style: normal;
-    font-weight: 600;
-    font-display: swap;
-    unicode-range: $unicode-range;
-  }
-
-  @font-face {
-    font-family: 'Quicksand';
-    src: url($font-files-path + 'Quicksand-Bold_f945eaa4.woff2') format('woff2');
-    font-style: normal;
-    font-weight: 700;
-    font-display: swap;
-    unicode-range: $unicode-range;
-  }
-
-  @font-face {
-    font-family: 'Open Sans';
-    src: url($font-files-path + 'OpenSans-Regular_d6704d12.woff2') format('woff2');
-    font-style: normal;
-    font-weight: 400;
-    font-display: swap;
-    unicode-range: $unicode-range;
-  }
-
-  @font-face {
-    font-family: 'Open Sans';
-    src: url($font-files-path + 'OpenSans-RegularItalic_27fb479d.woff2') format('woff2');
-    font-style: italic;
-    font-weight: 400;
-    font-display: swap;
-    unicode-range: $unicode-range;
-  }
-
-  @font-face {
-    font-family: 'Open Sans';
-    src: url($font-files-path + 'OpenSans-Bold_a05578f2.woff2') format('woff2');
-    font-style: normal;
-    font-weight: 700;
-    font-display: swap;
-    unicode-range: $unicode-range;
-  }
-
-  @font-face {
-    font-family: 'Open Sans';
-    src: url($font-files-path + 'OpenSans-BoldItalic_fbf2c1b1.woff2') format('woff2');
-    font-style: italic;
-    font-weight: 700;
-    font-display: swap;
-    unicode-range: $unicode-range;
-  }
+@font-face {
+  font-family: 'Open Sans';
+  src: url($font-files-path + 'OpenSans-Italic[wght]_efd8026f.woff2') format('woff2-variations');
+  src: url($font-files-path + 'OpenSans-Italic[wght]_efd8026f.woff2') format('woff2') tech('variations');
+  font-weight: 400 700;
+  font-style: italic;
+  font-display: swap;
+  unicode-range: $unicode-range;
 }
