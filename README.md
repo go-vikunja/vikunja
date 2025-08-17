@@ -2,7 +2,7 @@
 
 [![Build Status](https://drone.kolaente.de/api/badges/vikunja/vikunjaa/status.svg)](https://drone.kolaente.de/vikunja/vikunja)
 [![License: AGPL-3.0-or-later](https://img.shields.io/badge/License-AGPL--3.0--or--later-blue.svg)](LICENSE)
-[![Install](https://img.shields.io/badge/download-v0.24.6-brightgreen.svg)](https://vikunja.io/docs/installing)
+[![Install](https://img.shields.io/badge/download-v1.0.0rc0-brightgreen.svg)](https://vikunja.io/docs/installing)
 [![Docker Pulls](https://img.shields.io/docker/pulls/vikunja/vikunja.svg)](https://hub.docker.com/r/vikunja/vikunja/)
 [![Swagger Docs](https://img.shields.io/badge/swagger-docs-brightgreen.svg)](https://try.vikunja.io/api/v1/docs)
 [![Go Report Card](https://goreportcard.com/badge/kolaente.dev/vikunja/vikunja)](https://goreportcard.com/report/kolaente.dev/vikunja/vikunja)
