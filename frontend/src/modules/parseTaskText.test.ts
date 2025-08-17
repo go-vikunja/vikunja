@@ -643,7 +643,7 @@ describe('Parse Task Text', () => {
 			expect(result.labels).toHaveLength(1)
 			expect(result.labels[0]).toBe('label with space')
 		})
-        it('should not parse labels called date expressions as dates', () => {
+		it('should not parse labels called date expressions as dates', () => {
 			const result = parseTaskText('Lorem Ipsum *today')
 
 			expect(result.text).toBe('Lorem Ipsum')
