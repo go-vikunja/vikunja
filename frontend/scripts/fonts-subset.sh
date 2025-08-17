@@ -34,15 +34,18 @@ trap err_report ERR
 
 mkdir -p $TEMP_FOLDER
 
-# the latin subset that google uses on GoogleFonts
-# this is the same as the latin subset range that google uses on GoogleFonts
-# see for examle the unicode-range definition here:
-# https://fonts.googleapis.com/css2?family=Open+Sans
-# Include the basic latin range plus latin-ext characters so glyphs with
-# diacritics (used for example in Polish) are present in the generated fonts.
+# Includes basic Latin, extended Latin, Cyrillic, CJK, Arabic, Hebrew, and other scripts
+# to support all languages supported by Vikunja
 UNICODE_LATIN_SUBSET="U+0000-00FF,U+0100-017F,U+0131,U+0152-0153,U+02BB-02BC,\
 U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,\
-U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD"
+U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD,\
+U+0180-024F,U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,\
+U+1EA0-1EF9,U+0400-04FF,U+0500-052F,U+2DE0-2DFF,U+A640-A69F,\
+U+4E00-9FFF,U+3400-4DBF,U+20000-2A6DF,U+2A700-2B73F,U+2B740-2B81F,U+2B820-2CEAF,\
+U+3040-309F,U+30A0-30FF,U+31F0-31FF,U+3200-32FF,U+3300-33FF,U+FF00-FFEF,\
+AC00-D7AF,U+1100-11FF,U+3130-318F,U+A960-A97F,U+D7B0-D7FF,\
+U+0600-06FF,U+0750-077F,U+08A0-08FF,U+FB50-FDFF,U+FE70-FEFF,\
+U+0590-05FF,U+FB1D-FB4F"
 
 get_filename_without_type() {
 	filename=$1
