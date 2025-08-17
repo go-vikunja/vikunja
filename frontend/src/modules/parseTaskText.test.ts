@@ -643,28 +643,28 @@ describe('Parse Task Text', () => {
 			expect(result.labels).toHaveLength(1)
 			expect(result.labels[0]).toBe('label with space')
 		})
-                it('should not parse labels called date expressions as dates', () => {
-                        const result = parseTaskText('Lorem Ipsum *today')
+        it('should not parse labels called date expressions as dates', () => {
+			const result = parseTaskText('Lorem Ipsum *today')
 
-                        expect(result.text).toBe('Lorem Ipsum')
-                        expect(result.labels).toHaveLength(1)
-                        expect(result.labels[0]).toBe('today')
-                })
-               it('should parse labels with parentheses and remove them from text', () => {
-                       const result = parseTaskText('a *"a (a)"')
+			expect(result.text).toBe('Lorem Ipsum')
+			expect(result.labels).toHaveLength(1)
+			expect(result.labels[0]).toBe('today')
+		})
+		it('should parse labels with parentheses and remove them from text', () => {
+			const result = parseTaskText('a *"a (a)"')
 
-                       expect(result.text).toBe('a')
-                       expect(result.labels).toHaveLength(1)
-                       expect(result.labels[0]).toBe('a (a)')
-               })
-               it('should parse labels with parentheses from the start', () => {
-                       const result = parseTaskText('*"a (a)" a')
+			expect(result.text).toBe('a')
+			expect(result.labels).toHaveLength(1)
+			expect(result.labels[0]).toBe('a (a)')
+		})
+		it('should parse labels with parentheses from the start', () => {
+			const result = parseTaskText('*"a (a)" a')
 
-                       expect(result.text).toBe('a')
-                       expect(result.labels).toHaveLength(1)
-                       expect(result.labels[0]).toBe('a (a)')
-               })
-        })
+			expect(result.text).toBe('a')
+			expect(result.labels).toHaveLength(1)
+			expect(result.labels[0]).toBe('a (a)')
+		})
+	})
 
 	describe('Project', () => {
 		it('should parse a project', () => {
