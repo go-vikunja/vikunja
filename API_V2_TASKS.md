@@ -89,10 +89,10 @@ Each task in this list corresponds to a single API endpoint. When working on a t
     *   `POST /api/v2/projects/{id}/users`
     *   `PUT /api/v2/projects/{id}/users/{userId}`
     *   `DELETE /api/v2/projects/{id}/users/{userId}`
-    *   `GET /api/v2/projects/{id}/teams`
-    *   `POST /api/v2/projects/{id}/teams`
-    *   `PUT /api/v2/projects/{id}/teams/{teamId}`
-    *   `DELETE /api/v2/projects/{id}/teams/{teamId}`
+    *   [x] `GET /api/v2/projects/{id}/teams`
+    *   [x] `POST /api/v2/projects/{id}/teams`
+    *   [x] `PUT /api/v2/projects/{id}/teams/{teamId}`
+    *   [x] `DELETE /api/v2/projects/{id}/teams/{teamId}`
 *   **Description:** Manage user and team associations for a project.
 *   **V1 Equivalents:** `GET /projects/:project/projectusers`, `PUT /projects/:project/users`, etc.
 *   **Tests:**
