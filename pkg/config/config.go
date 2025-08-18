@@ -19,6 +19,7 @@ package config
 import (
 	"crypto/rand"
 	"fmt"
+	"net/url"
 	"os"
 	"os/exec"
 	"path"
@@ -585,8 +586,18 @@ func InitConfig() {
 		RateLimitStore.Set(KeyvalueType.GetString())
 	}
 
-	if ServicePublicURL.GetString() != "" && !strings.HasSuffix(ServicePublicURL.GetString(), "/") {
-		ServicePublicURL.Set(ServicePublicURL.GetString() + "/")
+	if ServicePublicURL.GetString() != "" {
+		if !strings.HasSuffix(ServicePublicURL.GetString(), "/") {
+			ServicePublicURL.Set(ServicePublicURL.GetString() + "/")
+		}
+
+		parsed, err := url.Parse(ServicePublicURL.GetString())
+		if err != nil {
+			log.Fatalf("Could not parse publicurl: %s", err)
+		}
+		if parsed.Scheme != "http" && parsed.Scheme != "https" {
+			log.Fatalf("service.publicurl must include http:// or https:// scheme, got: %s", ServicePublicURL.GetString())
+		}
 	}
 
 	if MigrationTodoistRedirectURL.GetString() == "" {
