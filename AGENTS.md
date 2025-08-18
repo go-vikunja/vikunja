@@ -225,3 +225,4 @@ This section provides instructions for setting up the development environment an
 3.  **Run Tests**:
     *   **Unit Tests**: Navigate to the `frontend` directory and run `pnpm test:unit`.
     *   **End-to-End Tests**: The e2e tests require a running backend. For detailed instructions on how to run the e2e tests, please refer to the official documentation and the `frontend/cypress/README.md` file. The recommended way is to use Docker, as described in the README.
+    *   **Note**: Due to environmental constraints (disk space), it is not possible to run the e2e tests in the current environment. Please skip the e2e tests and notify the user that they need to be run manually.
