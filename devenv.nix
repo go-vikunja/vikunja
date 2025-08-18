@@ -13,6 +13,7 @@ in {
     actionlint
     crowdin-cli
     nfpm
+		air
     # API tools
     golangci-lint mage
     # Desktop
@@ -50,6 +51,17 @@ in {
     package = pkgs-unstable.mailpit;
   };
 	
+  # Starts the API and frontend
+  processes = {
+    api = {
+      #exec = "mage build && ./vikunja";
+      exec = "air";
+    };
+    frontend = {
+      exec = "pnpm --dir frontend run serve";
+    };
+  };
+
 	devcontainer = {
 		enable = true;
 		settings = {
