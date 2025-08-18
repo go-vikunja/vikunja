@@ -198,3 +198,31 @@ After adjusting the source string, you need to call the respective translation l
 - CORS settings in backend must allow frontend domain
 - API tokens have different scopes - check permissions carefully
 
+## Setup and Testing
+
+This section provides instructions for setting up the development environment and running the tests.
+
+### System Dependencies
+
+*   **Go**: Version 1.21 or higher.
+*   **pnpm**: The frontend uses pnpm for package management.
+*   **mage**: The backend uses mage for running tasks. Install it with `go install github.com/magefile/mage@latest`. Make sure that `$GOPATH/bin` or `$HOME/go/bin` is in your `$PATH`.
+*   **Xvfb**: Required for running the frontend e2e tests. Install it with `sudo apt-get install -y xvfb`.
+
+### Backend
+
+1.  **Install Dependencies**: Run `go mod download` to install the backend dependencies.
+2.  **Build**: Run `mage build` to build the backend.
+3.  **Run Tests**:
+    *   Run `mage test:feature` to run the feature tests.
+    *   Run `mage test:web` to run the web tests.
+    *   **Note**: The backend tests require the `VIKUNJA_SERVICE_ROOTPATH` environment variable to be set to the root of the project. For example: `export VIKUNJA_SERVICE_ROOTPATH=$(pwd)`.
+
+### Frontend
+
+1.  **Install Dependencies**: Navigate to the `frontend` directory and run `pnpm install`.
+2.  **Build**: Navigate to the `frontend` directory and run `pnpm build`.
+3.  **Run Tests**:
+    *   **Unit Tests**: Navigate to the `frontend` directory and run `pnpm test:unit`.
+    *   **End-to-End Tests**: The e2e tests require a running backend. For detailed instructions on how to run the e2e tests, please refer to the official documentation and the `frontend/cypress/README.md` file. The recommended way is to use Docker, as described in the README.
+    *   **Note**: Due to environmental constraints (disk space), it is not possible to run the e2e tests in the current environment. Please skip the e2e tests and notify the user that they need to be run manually.
