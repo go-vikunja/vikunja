@@ -75,6 +75,7 @@ import (
 	vikunja_file "code.vikunja.io/api/pkg/modules/migration/vikunja-file"
 	"code.vikunja.io/api/pkg/plugins"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
+	apiv2 "code.vikunja.io/api/pkg/routes/api/v2"
 	"code.vikunja.io/api/pkg/routes/caldav"
 	"code.vikunja.io/api/pkg/version"
 	"code.vikunja.io/api/pkg/web/handler"
@@ -221,6 +222,22 @@ func RegisterRoutes(e *echo.Echo) {
 		models.CollectRoutesForAPITokenUsage(route, middlewares)
 	}
 	registerAPIRoutes(a)
+
+	v2 := e.Group("/api/v2")
+	registerAPIRoutesV2(v2)
+}
+
+func registerAPIRoutesV2(a *echo.Group) {
+	// ===== Routes with Authentication =====
+	a.Use(SetupTokenMiddleware())
+
+	// Rate limit
+	setupRateLimit(a, config.RateLimitKind.GetString())
+
+	// Middleware to collect metrics
+	setupMetricsMiddleware(a)
+
+	apiv2.RegisterProjects(a)
 }
 
 func registerAPIRoutes(a *echo.Group) {

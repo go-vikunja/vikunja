@@ -169,9 +169,9 @@ func getRelevantProjectsFromCollection(s *xorm.Session, a web.Auth, tf *TaskColl
 	if tf.ProjectID == 0 || tf.isSavedFilter {
 		projects, _, _, err = getRawProjectsForUser(
 			s,
-			&projectOptions{
-				user: &user.User{ID: a.GetID()},
-				page: -1,
+			&ProjectOptions{
+				User: &user.User{ID: a.GetID()},
+				Page: -1,
 			},
 		)
 		return projects, err

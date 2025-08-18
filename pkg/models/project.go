@@ -189,7 +189,7 @@ func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 
 	/////////////////
 	// Add project details (favorite state, among other things)
-	err = addProjectDetails(s, prs, a)
+	err = AddProjectDetails(s, prs, a)
 	if err != nil {
 		return
 	}
@@ -225,7 +225,7 @@ func getAllRawProjects(s *xorm.Session, a web.Auth, search string, page int, per
 			return nil, 0, 0, err
 		}
 		projects := []*Project{project}
-		err = addProjectDetails(s, projects, a)
+		err = AddProjectDetails(s, projects, a)
 		if err == nil && len(projects) > 0 {
 			projects[0].ParentProjectID = 0
 		}
@@ -239,12 +239,12 @@ func getAllRawProjects(s *xorm.Session, a web.Auth, search string, page int, per
 
 	prs, resultCount, totalItems, err := getRawProjectsForUser(
 		s,
-		&projectOptions{
-			search:      search,
-			user:        doer,
-			page:        page,
-			perPage:     perPage,
-			getArchived: isArchived,
+		&ProjectOptions{
+			Search:      search,
+			User:        doer,
+			Page:        page,
+			PerPage:     perPage,
+			GetArchived: isArchived,
 		})
 	if err != nil {
 		return nil, 0, 0, err
@@ -441,12 +441,12 @@ func GetProjectsByIDs(s *xorm.Session, projectIDs []int64) (projects []*Project,
 	return
 }
 
-type projectOptions struct {
-	search      string
-	user        *user.User
-	page        int
-	perPage     int
-	getArchived bool
+type ProjectOptions struct {
+	Search      string
+	User        *user.User
+	Page        int
+	PerPage     int
+	GetArchived bool
 }
 
 func getUserProjectsStatement(userID int64, search string, getArchived bool) *builder.Builder {
@@ -520,10 +520,10 @@ func getUserProjectsStatement(userID int64, search string, getArchived bool) *bu
 		GroupBy("l.id")
 }
 
-func getAllProjectsForUser(s *xorm.Session, userID int64, opts *projectOptions) (projects []*Project, totalCount int64, err error) {
+func GetAllProjectsForUser(s *xorm.Session, userID int64, opts *ProjectOptions) (projects []*Project, totalCount int64, err error) {
 
-	limit, start := getLimitFromPageIndex(opts.page, opts.perPage)
-	query := getUserProjectsStatement(userID, opts.search, opts.getArchived)
+	limit, start := getLimitFromPageIndex(opts.Page, opts.PerPage)
+	query := getUserProjectsStatement(userID, opts.Search, opts.GetArchived)
 
 	querySQLString, args, err := query.ToSQL()
 	if err != nil {
@@ -579,20 +579,20 @@ SELECT COUNT(DISTINCT all_projects.id) FROM all_projects`, args...).
 }
 
 // Gets the projects with their children without any tasks
-func getRawProjectsForUser(s *xorm.Session, opts *projectOptions) (projects []*Project, resultCount int, totalItems int64, err error) {
-	fullUser, err := user.GetUserByID(s, opts.user.ID)
+func getRawProjectsForUser(s *xorm.Session, opts *ProjectOptions) (projects []*Project, resultCount int, totalItems int64, err error) {
+	fullUser, err := user.GetUserByID(s, opts.User.ID)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 
-	allProjects, totalItems, err := getAllProjectsForUser(s, fullUser.ID, opts)
+	allProjects, totalItems, err := GetAllProjectsForUser(s, fullUser.ID, opts)
 	if err != nil {
 		return
 	}
 
 	favoriteCount, err := s.
 		Where(builder.And(
-			builder.Eq{"user_id": opts.user.ID},
+			builder.Eq{"user_id": opts.User.ID},
 			builder.Eq{"kind": FavoriteKindTask},
 		)).
 		Count(&Favorite{})
@@ -654,7 +654,7 @@ func GetAllParentProjects(s *xorm.Session, projectID int64) (allProjects map[int
 }
 
 // addProjectDetails adds owner user objects and project tasks to all projects in the slice
-func addProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err error) {
+func AddProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err error) {
 	if len(projects) == 0 {
 		return
 	}

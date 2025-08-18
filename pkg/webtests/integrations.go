@@ -17,7 +17,9 @@
 package webtests
 
 import (
+	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -34,6 +36,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/routes"
+	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/api/pkg/routes/caldav"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
@@ -64,7 +67,11 @@ var (
 func setupTestEnv() (e *echo.Echo, err error) {
 	config.InitDefaultConfig()
 	// We need to set the root path even if we're not using the config, otherwise fixtures are not loaded correctly
-	config.ServiceRootpath.Set(os.Getenv("VIKUNJA_SERVICE_ROOTPATH"))
+	if os.Getenv("VIKUNJA_SERVICE_ROOTPATH") == "" {
+		config.ServiceRootpath.Set("../../") // Default for running from pkg/webtests
+	} else {
+		config.ServiceRootpath.Set(os.Getenv("VIKUNJA_SERVICE_ROOTPATH"))
+	}
 
 	// Initialize logger for tests
 	log.InitLogger()
@@ -259,4 +266,47 @@ func (h *webHandlerTest) testUpdateWithLinkShare(queryParams url.Values, urlPara
 func (h *webHandlerTest) testDeleteWithLinkShare(queryParams url.Values, urlParams map[string]string) (rec *httptest.ResponseRecorder, err error) {
 	hndl := h.getHandler()
 	return newTestRequestWithLinkShare(h.t, http.MethodDelete, hndl.DeleteWeb, h.linkShare, "", queryParams, urlParams)
+}
+
+type testHelper struct {
+	t     *testing.T
+	e     *echo.Echo
+	token string
+}
+
+func NewTestHelper(t *testing.T) (th *testHelper) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+
+	return &testHelper{t: t, e: e}
+}
+
+func (th *testHelper) Login(t *testing.T, user *user.User) {
+	payload := `{"username":"` + user.Username + `","password":"12345678"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/login", strings.NewReader(payload))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := th.e.NewContext(req, rec)
+
+	err := apiv1.Login(c)
+	require.NoError(t, err)
+
+	var loginResponse map[string]string
+	err = json.Unmarshal(rec.Body.Bytes(), &loginResponse)
+	require.NoError(t, err)
+	th.token = loginResponse["token"]
+}
+
+func (th *testHelper) Request(t *testing.T, method, path string, payload io.Reader) (*httptest.ResponseRecorder, error) {
+	req := httptest.NewRequest(method, path, payload)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	if th.token != "" {
+		req.Header.Set("Authorization", "Bearer "+th.token)
+	}
+	rec := httptest.NewRecorder()
+	th.e.ServeHTTP(rec, req)
+	if rec.Code >= 400 {
+		return rec, errors.New(rec.Body.String())
+	}
+	return rec, nil
 }
