@@ -46,14 +46,14 @@
 			"resetPasswordSuccess": "Controleer je inbox! Als het goed is heb je een e-mail met instructies om je wachtwoord te resetten.",
 			"passwordsDontMatch": "Wachtwoorden komen niet overeen",
 			"confirmEmailSuccess": "Je hebt met succes je e-mailadres bevestigd! Je kunt nu inloggen.",
-			"totpTitle": "Twee-factor-authenticatie code",
+			"totpTitle": "Code tweestapsverificatie",
 			"totpPlaceholder": "bv. 123456",
 			"login": "Inloggen",
 			"createAccount": "Account aanmaken",
 			"loginWith": "Inloggen met {provider}",
 			"authenticating": "Authenticeren…",
 			"openIdStateError": "Status komt niet overeen, weigert door te gaan!",
-			"openIdGeneralError": "Er was een fout tijdens het authenticeren bij de derde partij.",
+			"openIdGeneralError": "Er was een fout tijdens het authenticeren bij de externe applicatie.",
 			"logout": "Uitloggen",
 			"emailInvalid": "Vul een geldig e-mailadres in.",
 			"usernameRequired": "Geef een gebruikersnaam op.",
@@ -67,38 +67,92 @@
 			"noAccountYet": "Heb je nog geen account?",
 			"alreadyHaveAnAccount": "Heb je al een account?",
 			"remember": "Ingelogd blijven",
-			"registrationDisabled": "Registratie is uitgeschakeld."
+			"registrationDisabled": "Registratie is uitgeschakeld.",
+			"passwordResetTokenMissing": "Wachtwoord reset token ontbreekt."
 		},
 		"settings": {
 			"title": "Instellingen",
 			"newPasswordTitle": "Je wachtwoord bijwerken",
+			"newPassword": "Nieuw wachtwoord",
+			"newPasswordConfirm": "Nieuw wachtwoord bevestigen",
+			"currentPassword": "Huidig wachtwoord",
 			"currentPasswordPlaceholder": "Je huidige wachtwoord",
 			"passwordsDontMatch": "Het nieuwe wachtwoord en de bevestiging ervan komen niet overeen.",
 			"passwordUpdateSuccess": "Het wachtwoord is succesvol bijgewerkt.",
+			"updateEmailTitle": "Je e-mailadres bijwerken",
+			"updateEmailNew": "Nieuw e-mailadres",
 			"updateEmailSuccess": "Je e-mailadres is succesvol bijgewerkt. We hebben je een link gestuurd om het te bevestigen.",
 			"general": {
 				"title": "Algemene instellingen",
+				"name": "Mijn naam",
+				"newName": "Nieuwe naam",
 				"savedSuccess": "De instellingen zijn succesvol bijgewerkt.",
+				"emailReminders": "Stuur me herinneringen voor taken via e-mail",
+				"overdueReminders": "Stuur me dagelijks een overzicht van mijn ongedaan gemaakte achterstallige taken",
+				"discoverableByName": "Sta andere gebruikers toe om mij als lid toe te voegen aan teams of projecten door mijn naam te zoeken",
+				"discoverableByEmail": "Andere gebruikers toestaan mij als lid toe te voegen aan teams of projecten door mijn volledige e-mail te zoeken",
 				"playSoundWhenDone": "Een geluid afspelen wanneer taken als voltooid gemarkeerd worden",
+				"allowIconChanges": "Toon speciale logo's op bepaalde momenten",
 				"weekStart": "Week begint op",
 				"weekStartSunday": "Zondag",
 				"weekStartMonday": "Maandag",
 				"language": "Taal",
-				"minimumPriority": "Minimale zichtbare taakprioriteit"
+				"defaultProject": "Standaardproject",
+				"defaultView": "Standaardweergave",
+				"timezone": "Tijdzone",
+				"overdueTasksRemindersTime": "Tijdstip herinneringsmail voor achterstallige taken",
+				"filterUsedOnOverview": "Opgeslagen filter toegepast op de overzichtspagina",
+				"minimumPriority": "Minimale zichtbare taakprioriteit",
+				"dateDisplay": "Datumweergave",
+				"dateDisplayOptions": {
+					"relative": "Relatief (bv. 3 dagen geleden)",
+					"mm-dd-yyyy": "MM-DD-YYYY",
+					"dd-mm-yyyy": "DD-MM-YYYY",
+					"yyyy-mm-dd": "YYYY-MM-DD",
+					"mm/dd/yyyy": "MM/DD/YYYY",
+					"dd/mm/yyyy": "DD/MM/YYYY",
+					"yyyy/mm/dd": "YYYY/MM/DD"
+				},
+				"externalUserNameChange": "Je gebruikersnaam wordt beheerd via je inlogprovider ({provider}). Om het te wijzigen moet je het daar aanpassen."
+			},
+			"sections": {
+				"personalInformation": "Persoonlijke gegevens",
+				"taskAndNotifications": "Projecten & taken",
+				"privacy": "Privacy",
+				"localization": "Lokalisatie",
+				"appearance": "Uiterlijk & gedrag"
 			},
 			"totp": {
-				"title": "Twee-factor-authenticatie",
+				"title": "Tweestapsverificatie",
 				"enroll": "Activeren",
+				"finishSetupPart1": "Gebruik dit geheim in je TOTP app (Google Authenticator of vergelijkbaar), om de installatie te voltooien:",
 				"finishSetupPart2": "Daarna voert u hieronder een code van je app in.",
 				"scanQR": "Als alternatief kan je ook deze QR code scannen:",
 				"passcode": "Je toegangscode",
+				"passcodePlaceholder": "Een code gegenereerd door je TOTP-app",
+				"setupSuccess": "Je hebt tweestapsverificatie succesvol ingesteld!",
 				"enterPassword": "Voer alsjeblieft je wachtwoord in",
-				"disable": "Tweestapsverificatie uitschakelen"
+				"disable": "Tweestapsverificatie uitschakelen",
+				"confirmSuccess": "Je hebt je TOTP-configuratie succesvol bevestigd en kunt het van nu gebruiken!",
+				"disableSuccess": "Uitschakelen tweestapsverificatie is geslaagd."
+			},
+			"caldav": {
+				"title": "CalDAV",
+				"howTo": "Je kunt Vikunja verbinden met CalDAV-clients om alle taken van verschillende clients te bekijken en beheren. Voer deze url in bij je client:",
+				"more": "Meer informatie over CalDAV in Vikunja",
+				"tokens": "CalDAV tokens",
+				"tokensHowTo": "Je kunt een CalDAV-token gebruiken in plaats van een wachtwoord om in te loggen op het bovenstaande eindpunt.",
+				"createToken": "Token aanmaken",
+				"tokenCreated": "Hier is je token: {token}",
+				"wontSeeItAgain": "Noteer het want je kunt het niet opnieuw bekijken.",
+				"mustUseToken": "Je moet een CalDAV-token aanmaken als je CalDAV wilt gebruiken met een externe applicatie. Gebruik het token als wachtwoord.",
+				"usernameIs": "Je gebruikersnaam is: {0}"
 			},
 			"avatar": {
 				"title": "Avatar",
 				"initials": "Initialen",
 				"gravatar": "Gravatar",
+				"marble": "Marmer",
 				"upload": "Uploaden",
 				"uploadAvatar": "Upload avatar",
 				"statusUpdateSuccess": "Avatar status is succesvol bijgewerkt!",
@@ -184,51 +238,340 @@
 		"title": "Titel",
 		"color": "Kleur",
 		"projects": "Projecten",
-		"parent": "Hoofdproject",
+		"parent": "Bovenliggend project",
 		"search": "Typ om naar een project te zoeken…",
 		"searchSelect": "Klik of druk op Enter om dit project te selecteren",
+		"shared": "Gedeelde projecten",
+		"noDescriptionAvailable": "Geen projectbeschrijving beschikbaar.",
+		"inboxTitle": "Inbox",
+		"favorite": "Project toevoegen aan favorieten",
+		"unfavorite": "Project verwijderen uit favorieten",
+		"openSettingsMenu": "Open projectinstellingenmenu",
+		"description": "Projectbeschrijving",
+		"favoriteDescription": "Dit project heeft alle taken gemarkeerd als favorieten.",
+		"create": {
+			"header": "Nieuw project",
+			"titlePlaceholder": "De projecttitel komt hier…",
+			"addTitleRequired": "Voer een titel in.",
+			"createdSuccess": "Project succesvol aangemaakt.",
+			"addProjectRequired": "Geef een project op of kies standaardproject in de instellingen."
+		},
+		"archive": {
+			"title": "Archiveer \"{project}\"",
+			"archive": "Archiveer dit project",
+			"unarchive": "Archivering opheffen van dit project",
+			"unarchiveText": "Je kunt dan taken maken of bewerken.",
+			"archiveText": "Je kunt dit project niet bewerken of taken aanmaken totdat de archivering is opgeheven.",
+			"success": "Project succesvol gearchiveerd."
+		},
+		"background": {
+			"title": "Kies achtergrond project",
+			"remove": "Achtergrond verwijderen",
+			"upload": "Kies een achtergrond vanuit je pc",
+			"searchPlaceholder": "Zoek naar een achtergrond…",
+			"poweredByUnsplash": "Mogelijk gemaakt door Unsplash",
+			"loadMore": "Meer foto's laden",
+			"success": "De achtergrond is succesvol ingesteld!",
+			"removeSuccess": "De achtergrond is succesvol verwijderd!"
+		},
+		"delete": {
+			"title": "Verwijder \"{project}\"",
+			"header": "Dit project verwijderen",
+			"text1": "Weet u zeker dat u dit project en alle inhoud wilt verwijderen?",
+			"text2": "Dit omvat alle taken en KAN NIET ONGEDAAN GEMAAKT WORDEN!",
+			"success": "Het project is succesvol verwijderd.",
+			"tasksToDelete": "Hiermee worden ca. {count} taken onherroepelijk verwijderd.",
+			"tasksAndChildProjectsToDelete": "Dit verwijdert onherroepelijk ca. {tasks} taken en {projects} projecten.",
+			"noTasksToDelete": "Dit project bevat geen taken, het kan veilig verwijderd worden."
+		},
+		"duplicate": {
+			"title": "Dit project dupliceren",
+			"label": "Dupliceer",
+			"text": "Selecteer een bovenliggend project voor het gedupliceerde project:",
+			"success": "Project succesvol gedupliceerd."
+		},
+		"edit": {
+			"header": "Project bewerken",
+			"title": "Bewerk \"{project}\"",
+			"titlePlaceholder": "De projecttitel komt hier…",
+			"identifierTooltip": "Het project-id kan worden gebruikt om een taak uniek te identificeren over de projecten heen. Je kunt dit leeg laten om het uit te schakelen.",
+			"identifier": "Project-id",
+			"identifierPlaceholder": "Het project-id komt hier…",
+			"description": "Beschrijving",
+			"descriptionPlaceholder": "Geef een beschrijving voor dit project, druk op '/' voor meer opties…",
+			"color": "Kleur",
+			"success": "Project succesvol bijgewerkt."
+		},
+		"share": {
+			"header": "Deel dit project",
+			"title": "Deel \"{project}\"",
+			"share": "Delen",
+			"links": {
+				"title": "Deelbare koppelingen",
+				"what": "Wat is een deelbare koppeling?",
+				"explanation": "Met deelbare koppelingen kun je gemakkelijk een project delen met andere gebruikers die geen account hebben op Vikunja.",
+				"create": "Nieuwe deelbare koppeling maken",
+				"name": "Naam (optioneel)",
+				"namePlaceholder": "bv. Lorem Ipsum",
+				"nameExplanation": "Alle acties die gedaan worden via deze koppeling worden getoond met de naam.",
+				"password": "Wachtwoord (optioneel)",
+				"passwordExplanation": "Bij het inloggen is de gebruiker verplicht om dit wachtwoord in te voeren.",
+				"noName": "Geen naam ingevoerd",
+				"remove": "Verwijder een deelbare koppeling",
+				"removeText": "Weet je zeker dat je deze deelbare koppeling wilt verwijderen? Het zal niet langer mogelijk zijn om toegang te krijgen tot dit project via deze koppeling. Dit kan niet ongedaan worden gemaakt!",
+				"createSuccess": "Deelbare koppeling succesvol aangemaakt.",
+				"deleteSuccess": "Deelbare koppeling succesvol verwijderd",
+				"view": "Weergeven",
+				"sharedBy": "Gedeeld door {0}"
+			},
+			"userTeam": {
+				"typeUser": "gebruiker | gebruikers",
+				"typeTeam": "team | teams",
+				"shared": "Gedeeld met deze {type}",
+				"you": "Jij",
+				"notShared": "Nog niet gedeeld met een {type}.",
+				"removeHeader": "Verwijder een {type} uit de {sharable}",
+				"removeText": "Weet je zeker dat je dit {sharable} uit de {type} wilt verwijderen? Dit kan niet ongedaan worden gemaakt!",
+				"removeSuccess": "Verwijderen {sharable} uit {type} is geslaagd.",
+				"addedSuccess": "{type} succesvol toegevoegd.",
+				"updatedSuccess": "{type} succesvol toegevoegd."
+			},
+			"right": {
+				"title": "Machtiging",
+				"read": "Alleen-lezen",
+				"readWrite": "Lezen & schrijven",
+				"admin": "Beheerder"
+			},
+			"attributes": {
+				"link": "Koppeling",
+				"delete": "Verwijder"
+			}
+		},
+		"first": {
+			"title": "Eerste weergave"
+		},
+		"list": {
+			"title": "Lijst",
+			"add": "Toevoegen",
+			"addPlaceholder": "Taak toevoegen…",
+			"empty": "Dit project is momenteel leeg.",
+			"newTaskCta": "Taak aanmaken.",
+			"editTask": "Taak bewerken"
+		},
 		"gantt": {
+			"title": "Gantt",
+			"size": "Grootte",
+			"default": "Standaard",
+			"month": "Maand",
+			"day": "Dag",
+			"hour": "Uur",
+			"range": "Datumbereik",
+			"chartLabel": "Project Gantt-diagram",
 			"taskBarsForRow": "Taakbalken voor rij {rowId}",
 			"taskBarLabel": "Taak: {task}. Van {startDate} tot {endDate}. {dateType}. Klik om te bewerken, sleep om te verplaatsen.",
-			"scheduledDates": "Geplande datums"
+			"scheduledDates": "Geplande datums",
+			"estimatedDates": "Geschatte datums",
+			"resizeStartDate": "Grootte van startdatum wijzigen voor taak {task}",
+			"resizeEndDate": "Grootte van einddatum wijzigen voor taak {task}",
+			"timelineHeader": "Tijdlijn kop met maanden en dagen",
+			"monthsRow": "Rij met maanden",
+			"daysRow": "Rij met dagen",
+			"monthLabel": "Maand: {month}",
+			"dayLabel": "Dag: {date}, {weekday}",
+			"dayLabelToday": "Vandaag: {date}, {weekday}",
+			"taskAriaLabel": "Taak: {task}",
+			"taskAriaLabelById": "Taak {id}"
+		},
+		"table": {
+			"title": "Tabel",
+			"columns": "Kolommen"
+		},
+		"kanban": {
+			"title": "Kanban",
+			"limit": "Limiet: {limit}",
+			"noLimit": "Niet ingesteld",
+			"doneBucket": "Categorie 'voltooid'",
+			"doneBucketHint": "Alle taken die je naar deze categorie verplaatst worden automatisch als 'voltooid' gemarkeerd.",
+			"doneBucketHintExtended": "Taken die je verplaatst naar de categorie 'voltooid' worden automatisch gemarkeerd als voltooid. Ook taken die je elders als voltooid aanmerkt, worden hierheen verplaatst.",
+			"doneBucketSavedSuccess": "Categorie 'voltooid' successvol opgeslagen.",
+			"defaultBucket": "Standaardcategorie",
+			"defaultBucketHint": "Bij het maken van taken zonder een categorie op te geven, worden ze aan deze categorie toegevoegd.",
+			"defaultBucketSavedSuccess": "Standaardcategorie succesvol opgeslagen.",
+			"deleteLast": "Je kunt de laatste categorie niet verwijderen.",
+			"addTaskPlaceholder": "Voer de nieuwe taaktitel in…",
+			"addTask": "Taak toevoegen",
+			"addAnotherTask": "Nog een taak toevoegen",
+			"addBucket": "Maak een categorie",
+			"addBucketPlaceholder": "Voer de nieuwe categorietitel in…",
+			"deleteHeaderBucket": "Categorie verwijderen",
+			"deleteBucketText1": "Weet je zeker dat je deze categorie wilt verwijderen?",
+			"deleteBucketText2": "Dit verwijdert geen taken maar verplaatst ze naar de standaardcategorie.",
+			"deleteBucketSuccess": "De categorie is succesvol verwijderd.",
+			"bucketTitleSavedSuccess": "De categorietitel is succesvol opgeslagen.",
+			"bucketLimitSavedSuccess": "De categorielimiet is succesvol opgeslagen.",
+			"collapse": "Deze categorie inklappen",
+			"bucketLimitReached": "U heeft de categorielimiet bereikt. Verwijder taken of verhoog de limiet om nieuwe taken toe te voegen."
+		},
+		"pseudo": {
+			"favorites": {
+				"title": "Favorieten"
+			}
+		},
+		"webhooks": {
+			"title": "Webhooks",
+			"targetUrl": "Doel-URL",
+			"targetUrlInvalid": "Vul een geldige URL in.",
+			"events": "Gebeurtenissen",
+			"eventsHint": "Selecteer alle gebeurtenissen waar deze webhook updates voor moet ontvangen (binnen het huidige project).",
+			"mustSelectEvents": "U moet ten minste één evenement selecteren.",
+			"delete": "Verwijder deze webhook",
+			"deleteText": "Weet je zeker dat je deze webhook wilt verwijderen? Externe partijen krijgen geen updates meer.",
+			"deleteSuccess": "De webhook is succesvol verwijderd.",
+			"create": "Maak webhook",
+			"secret": "Geheim",
+			"secretHint": "Indien opgegeven, zullen alle aanvragen naar de webhook doel-URL worden ondertekend via HMAC.",
+			"secretDocs": "Bekijk de documentatie voor meer informatie over het gebruik van geheimen."
+		},
+		"views": {
+			"header": "Weergaven bewerken",
+			"title": "Titel",
+			"actions": "Acties",
+			"kind": "Soort",
+			"bucketConfigMode": "Categorie configureren",
+			"bucketConfig": "Instellingen categorie",
+			"bucketConfigManual": "Handmatig",
+			"filter": "Filter",
+			"create": "Weergave maken",
+			"createSuccess": "De weergave is succesvol aangemaakt.",
+			"titleRequired": "Voer een titel in.",
+			"delete": "Deze weergave verwijderen",
+			"deleteText": "Weet je zeker dat je deze weergave wilt verwijderen? Je kunt de weergave dan niet meer gebruiken in dit project. Deze actie zal geen taken verwijderen. Dit kan niet ongedaan worden gemaakt!",
+			"deleteSuccess": "De weergave is succesvol verwijderd.",
+			"onlyAdminsCanEdit": "Alleen projectbeheerders kunnen weergaven bewerken.",
+			"updateSuccess": "De weergave is succesvol bijgewerkt."
 		}
 	},
 	"filters": {
 		"title": "Filters",
+		"clear": "Filters wissen",
+		"showResults": "Toon resultaten",
+		"noResults": "Geen resultaten",
+		"fromView": "De huidige weergave heeft ook een filterset:",
+		"fromViewBoth": "Het wordt gebruikt in combinatie met wat je hier invoert.",
 		"attributes": {
 			"title": "Titel",
+			"titlePlaceholder": "De titel voor het opgeslagen filter komt hier…",
 			"description": "Beschrijving",
-			"sortAlphabetically": "Alfabetisch sorteren"
+			"descriptionPlaceholder": "Geef een beschrijving voor dit filter, druk op '/' voor meer opties…",
+			"includeNulls": "Inclusief taken die geen waarde ingesteld hebben",
+			"requireAll": "Alle filters moeten waar zijn om een taak weer te geven",
+			"showDoneTasks": "Voltooide taken weergeven",
+			"sortAlphabetically": "Alfabetisch sorteren",
+			"enablePriority": "Filter op prioriteit inschakelen",
+			"enablePercentDone": "Filter op voortgang inschakelen",
+			"dueDateRange": "Deadline bereik",
+			"startDateRange": "Startdatum bereik",
+			"endDateRange": "Einddatum bereik",
+			"reminderRange": "Herinneringsdatum bereik"
+		},
+		"create": {
+			"title": "Nieuw opgeslagen filter",
+			"description": "Een opgeslagen filter is een virtueel project dat wordt samengesteld zodra je het aanroept, via een reeks filters.",
+			"action": "Maak opgeslagen filter",
+			"titleRequired": "Geef een titel voor het filter."
 		},
 		"delete": {
+			"header": "Verwijder dit opgeslagen filter",
+			"text": "Weet je zeker dat je dit opgeslagen filter wilt verwijderen?",
 			"success": "Het filter is succesvol verwijderd."
 		},
 		"edit": {
+			"title": "Bewerk dit opgeslagen filter",
 			"success": "Het filter is succesvol opgeslagen."
 		},
 		"query": {
+			"title": "Zoekopdracht",
+			"placeholder": "Typ een zoekopdracht of filter…",
 			"help": {
-				"intro": "Om taken te filteren, kun je een querysyntaxis gebruiken vergelijkbaar met SQL. De beschikbare velden om te filteren zijn:"
+				"intro": "Om taken te filteren, kun je een querysyntaxis gebruiken vergelijkbaar met SQL. De beschikbare velden om te filteren zijn:",
+				"link": "Hoe werkt dit?",
+				"canUseDatemath": "Je kunt datumberekeningen gebruiken om relatieve datums in te stellen. Klik op de datumwaarde in een zoekopdracht voor meer informatie.",
+				"fields": {
+					"done": "Of de taak voltooid is of niet",
+					"priority": "Het prioriteitsniveau van de taak (1-5)",
+					"percentDone": "Het percentage van voltooiing van de taak (0-100)",
+					"dueDate": "De vervaldatum van de taak",
+					"startDate": "De startdatum van de taak",
+					"endDate": "De einddatum van de taak",
+					"doneAt": "De datum en tijd waarop de taak is voltooid",
+					"assignees": "De verantwoordelijken van de taak",
+					"labels": "De labels die zijn gekoppeld aan de taak",
+					"project": "Het project waar de taak bij hoort (alleen beschikbaar voor opgeslagen filters, niet op projectniveau)",
+					"reminders": "De taakherinneringen als datumveld, zal alle taken opleveren met tenminste één herinnering die past in de zoekopdracht",
+					"created": "De tijd en datum waarop de taak is aangemaakt",
+					"updated": "De tijd en datum waarop de taak voor het laatst is gewijzigd"
+				},
+				"operators": {
+					"intro": "De beschikbare operators voor het filteren zijn:",
+					"notEqual": "Is niet gelijk aan",
+					"equal": "Is gelijk aan",
+					"greaterThan": "Groter dan",
+					"greaterThanOrEqual": "Groter dan of gelijk aan",
+					"lessThan": "Kleiner dan",
+					"lessThanOrEqual": "Kleiner dan of gelijk aan",
+					"like": "Voldoet aan een patroon (met jokerteken %)",
+					"in": "Voldoet bij elke overeenkomst in een kommagescheiden lijst met waarden",
+					"notIn": "Voldoet bij elke waarde die niet voorkomt in een kommagescheiden lijst met waarden"
+				},
+				"logicalOperators": {
+					"intro": "Om meerdere voorwaarden te combineren, kun je de volgende logische operatoren gebruiken:",
+					"and": "AND operator, voldoet als alle voorwaarden waar zijn",
+					"or": "OR operator, voldoet als een van de voorwaarden waar is",
+					"parentheses": "Haakjes voor groeperen voorwaarden"
+				},
+				"examples": {
+					"intro": "Hier zijn enkele voorbeelden van filterquery's:",
+					"priorityEqual": "Voldoet bij taken met prioriteit 4",
+					"dueDatePast": "Voldoet bij taken met een vervaldatum in het verleden",
+					"undoneHighPriority": "Voldoet bij ongedane taken met prioriteit 3 of hoger",
+					"assigneesIn": "Voldoet bij taken toegewezen aan \"gebruiker1\" of \"gebruiker2\"",
+					"priorityOneOrTwoPastDue": "Voldoet bij taken van prioriteit 1 of 2 en een vervaldatum in het verleden"
+				}
 			}
 		}
 	},
 	"migrate": {
+		"title": "Importeer vanuit een andere dienst",
 		"titleService": "Importeer je gegevens van {name} naar Vikunja",
 		"import": "Importeer je data in Vikunja",
+		"description": "Klik op het logo van een van de externe diensten hieronder om te beginnen.",
+		"descriptionDo": "Vikunja zal alle lijsten, taken, notities, herinneringen en bestanden importeren waar je toegang toe hebt.",
+		"authorize": "Om Vikunja toegang te geven tot je {name} -account, klik op de knop hieronder.",
 		"getStarted": "Aan de slag",
 		"inProgress": "Bezig met importeren…",
+		"alreadyMigrated1": "Het lijkt erop dat je je spullen van {name} al hebt geïmporteerd op {date}.",
+		"alreadyMigrated2": "Opnieuw importeren is mogelijk, maar kan duplicaten maken. Weet je het zeker?",
 		"confirm": "Ik weet het zeker, begin nu met migreren!",
-		"upload": "Bestand uploaden"
+		"importUpload": "Om gegevens van {name} te importeren in Vikunja, klik je op de knop hieronder om een bestand te kiezen.",
+		"upload": "Bestand uploaden",
+		"migrationStartedWillReciveEmail": "Vikunja gaat nu je lijsten/projecten, taken, notities, herinneringen en bestanden van {service} importeren. Omdat dit een tijdje zal duren, sturen we je een e-mail zodra het klaar is. Je kunt dit venster nu sluiten.",
+		"migrationInProgress": "Er is momenteel een migratie aan de gang. Wacht tot dit voltooid is."
 	},
 	"label": {
 		"title": "Labels",
 		"manage": "Labels beheren",
+		"description": "Klik op een label om het te bewerken. Je kunt de labels bewerken die je zelf hebt aangemaakt, en je kunt alle labels gebruiken van taken in projecten waar je toegang tot hebt.",
 		"newCTA": "Je hebt momenteel geen labels.",
+		"search": "Typ om te zoeken naar een label…",
 		"create": {
-			"header": "Nieuw label"
+			"header": "Nieuw label",
+			"title": "Label aanmaken",
+			"titleRequired": "Voer een titel in.",
+			"success": "Het label is succesvol aangemaakt."
 		},
 		"edit": {
 			"header": "Bewerk label",
+			"forbidden": "Je bent niet bevoegd om dit label te bewerken omdat je niet de eigenaar bent.",
 			"success": "Het label is succesvol bijgewerkt."
 		},
 		"deleteSuccess": "Het label is succesvol verwijderd.",
@@ -242,12 +585,15 @@
 	},
 	"sharing": {
 		"authenticating": "Authenticeren…",
+		"passwordRequired": "Dit gedeelde project vereist een wachtwoord. Voer het hieronder in:",
+		"error": "Er is een fout opgetreden.",
 		"invalidPassword": "Het wachtwoord is ongeldig."
 	},
 	"navigation": {
 		"overview": "Overzicht",
 		"upcoming": "Aankomend",
 		"settings": "Instellingen",
+		"imprint": "Imprint",
 		"privacy": "Privacybeleid"
 	},
 	"misc": {
@@ -259,6 +605,7 @@
 		"refresh": "Vernieuwen",
 		"disable": "Uitschakelen",
 		"copy": "Kopiëren naar klembord",
+		"copyError": "Kopiëren naar klembord mislukt",
 		"search": "Zoeken",
 		"searchPlaceholder": "Typ om te zoeken…",
 		"previous": "Vorige",
@@ -275,7 +622,14 @@
 		"showMenu": "Menu weergeven",
 		"hideMenu": "Menu verbergen",
 		"forExample": "Bijvoorbeeld:",
-		"welcomeBack": "Welkom terug!"
+		"welcomeBack": "Welkom terug!",
+		"custom": "Aangepast",
+		"id": "ID",
+		"created": "Aangemaakt op",
+		"createdBy": "Aangemaakt door {0}",
+		"actions": "Acties",
+		"cannotBeUndone": "Dit kan niet ongedaan gemaakt worden!",
+		"avatarOfUser": "{user}'s profielfoto"
 	},
 	"input": {
 		"resetColor": "Kleur resetten",
@@ -292,48 +646,196 @@
 			"edit": "Bewerken",
 			"done": "Voltooid",
 			"heading1": "Kop 1",
+			"heading1Tooltip": "Grote sectiekop.",
 			"heading2": "Kop 2",
+			"heading2Tooltip": "Middelgrote sectiekop.",
 			"heading3": "Kop 3",
+			"heading3Tooltip": "Kleinere sectiekop.",
+			"headingSmaller": "Koptekst kleiner",
+			"headingBigger": "Koptekst groter",
 			"bold": "Dikgedrukt",
 			"italic": "Cursief",
 			"strikethrough": "Doorgestreept",
+			"underline": "Onderstrepen",
 			"code": "Code",
+			"codeTooltip": "Codefragment vastleggen.",
 			"quote": "Citaat",
+			"quoteTooltip": "Quote vastleggen.",
+			"bulletList": "Opsommingslijst",
+			"bulletListTooltip": "Maak een eenvoudige opsommingslijst aan.",
+			"unorderedList": "Ongeordende lijst",
+			"orderedList": "Geordende lijst",
+			"orderedListTooltip": "Maak een lijst met nummering.",
+			"cleanBlock": "Blok opschonen",
+			"link": "Koppeling",
 			"image": "Afbeelding",
+			"imageTooltip": "Afbeelding vanaf je computer uploaden.",
 			"horizontalRule": "Horizontale lijn",
+			"horizontalRuleTooltip": "Een sectie verdelen.",
 			"sideBySide": "Naast elkaar",
-			"guide": "Handleiding"
+			"guide": "Handleiding",
+			"text": "Tekst",
+			"textTooltip": "Begin met typen van platte tekst.",
+			"taskList": "Takenlijst",
+			"taskListTooltip": "Volg taken met een to-do-lijst.",
+			"undo": "Herstel",
+			"redo": "Herhalen",
+			"placeholder": "Begin met typen of druk op '/' voor meer opties…",
+			"table": {
+				"title": "Tabel",
+				"insert": "Tabel invoegen",
+				"addColumnBefore": "Kolom toevoegen voor",
+				"addColumnAfter": "Kolom toevoegen na",
+				"deleteColumn": "Kolom verwijderen",
+				"addRowBefore": "Rij invoegen boven",
+				"addRowAfter": "Rij invoegen onder",
+				"deleteRow": "Rij verwijderen",
+				"deleteTable": "Tabel verwijderen",
+				"mergeCells": "Cellen samenvoegen",
+				"splitCell": "Cel splitsen",
+				"toggleHeaderColumn": "Kolomkoppen in-/uitschakelen",
+				"toggleHeaderRow": "Rijkopteksten in-/uitschakelen",
+				"toggleHeaderCell": "Celkopteksten in-/uitschakelen",
+				"mergeOrSplit": "Samenvoegen of splitsen",
+				"fixTables": "Tabellen repareren"
+			}
 		},
 		"multiselect": {
+			"createPlaceholder": "Aanmaken",
 			"selectPlaceholder": "Klik of druk op enter om te selecteren"
+		},
+		"datepickerRange": {
+			"to": "Aan",
+			"from": "Van",
+			"fromto": "{from} naar {to}",
+			"date": "Datum",
+			"ranges": {
+				"today": "Vandaag",
+				"thisWeek": "Deze week",
+				"restOfThisWeek": "De rest van deze week",
+				"nextWeek": "Volgende week",
+				"next7Days": "Komende 7 dagen",
+				"lastWeek": "Vorige week",
+				"thisMonth": "Deze maand",
+				"restOfThisMonth": "De rest van deze maand",
+				"nextMonth": "Volgende maand",
+				"next30Days": "Komende 30 dagen",
+				"lastMonth": "Vorige maand",
+				"thisYear": "Dit jaar",
+				"restOfThisYear": "De rest van dit jaar"
+			},
+			"values": {
+				"now": "Nu",
+				"startOfToday": "Begin van vandaag",
+				"endOfToday": "Eind van vandaag",
+				"beginningOflastWeek": "Begin van vorige week",
+				"endOfLastWeek": "Eind van vorige week",
+				"beginningOfThisWeek": "Begin van deze week",
+				"endOfThisWeek": "Eind van deze week",
+				"startOfNextWeek": "Begin van volgende week",
+				"endOfNextWeek": "Eind van volgende week",
+				"in7Days": "Over 7 dagen",
+				"beginningOfLastMonth": "Begin van vorige maand",
+				"endOfLastMonth": "Eind van vorige maand",
+				"startOfThisMonth": "Begin van deze maand",
+				"endOfThisMonth": "Eind van deze maand",
+				"startOfNextMonth": "Begin van volgende maand",
+				"endOfNextMonth": "Eind van volgende maand",
+				"in30Days": "Over 30 dagen",
+				"startOfThisYear": "Begin van dit jaar",
+				"endOfThisYear": "Eind van dit jaar"
+			}
+		},
+		"datemathHelp": {
+			"canuse": "Je kunt datumberekeningen gebruiken om te filteren op relatieve datums.",
+			"learnhow": "Bekijk hoe het werkt",
+			"title": "Datumberekeningen",
+			"intro": "Geef relatieve datums op die door Vikunja direct worden omgezet wanneer het filter wordt toegepast.",
+			"expression": "Elke uitdrukking voor een datumberekening begint met een ankerdatum, dit kan zijn {0} of een datumstring die eindigt met {1}. Deze ankerdatum kan optioneel gevolgd worden door één of meer rekenkundige uitdrukkingen.",
+			"similar": "Deze uitdrukkingen zijn vergelijkbaar met die van {0} en {1}.",
+			"add1Day": "Eén dag optellen",
+			"minus1Day": "Eén dag aftrekken",
+			"roundDay": "Naar beneden afronden op de dichtstbijzijnde dag",
+			"supportedUnits": "Ondersteunde tijdseenheden",
+			"someExamples": "Voorbeelden van tijdsuitdrukkingen",
+			"units": {
+				"seconds": "Seconden",
+				"minutes": "Minuten",
+				"hours": "Uren",
+				"days": "Dagen",
+				"weeks": "Weken",
+				"months": "Maanden",
+				"years": "Jaren"
+			},
+			"examples": {
+				"now": "Nu",
+				"in24h": "Over 24u",
+				"today": "Vandaag om 00:00",
+				"beginningOfThisWeek": "Begin van deze week om 00:00",
+				"endOfThisWeek": "Eind van deze week",
+				"in30Days": "Over 30 dagen",
+				"datePlusMonth": "{0} plus 1 maand om 00:00 van die dag"
+			}
 		}
 	},
 	"task": {
 		"task": "Taak",
+		"new": "Taak aanmaken",
 		"delete": "Deze taak verwijderen",
 		"createSuccess": "De taak is succesvol aangemaakt.",
+		"addReminder": "Herinnering toevoegen…",
+		"doneSuccess": "De taak is succesvol aangemerkt als voltooid.",
+		"undoneSuccess": "Het voltooien van de taak is succesvol teruggedraaid.",
+		"undo": "Ongedaan maken",
+		"openDetail": "Open taak detailweergave",
 		"checklistTotal": "{checked} van {total} taken",
 		"checklistAllDone": "{total} taken",
 		"show": {
 			"titleCurrent": "Huidige taken",
-			"noDates": "Taken zonder datums tonen"
+			"titleDates": "Taken van {from} tot {to}",
+			"noDates": "Taken zonder datums tonen",
+			"overdue": "Toon achterstallige taken",
+			"fromuntil": "Taken van {from} tot {until}",
+			"select": "Selecteer datumbereik",
+			"noTasks": "Niets te doen - fijne dag!"
 		},
 		"detail": {
 			"chooseDueDate": "Klik hier om een vervaldatum in te stellen",
 			"chooseStartDate": "Klik hier om een begindatum in te stellen",
 			"chooseEndDate": "Klik hier om een einddatum in te stellen",
+			"move": "Verplaats taak naar een ander project",
+			"done": "Markeer taak als voltooid!",
 			"undone": "Markeer als niet voltooid",
+			"created": "Gemaakt op {0} door {1}",
+			"updated": "{0} bijgewerkt",
+			"doneAt": "{0} voltooid",
 			"updateSuccess": "De taak is succesvol opgeslagen.",
 			"deleteSuccess": "De taak is succesvol verwijderd.",
+			"belongsToProject": "Deze taak hoort bij project '{project}'",
 			"due": "Vervalt {at}",
+			"closePopup": "Popup sluiten",
+			"organization": "Organisatie",
+			"management": "Beheer",
+			"dateAndTime": "Datum en tijd",
 			"delete": {
 				"header": "Verwijder deze taak",
-				"text1": "Weet je zeker dat je deze taak wilt verwijderen?"
+				"text1": "Weet je zeker dat je deze taak wilt verwijderen?",
+				"text2": "Dit zal ook alle bijlagen, herinneringen en relaties met deze taak verwijderen en kan niet ongedaan worden gemaakt!"
 			},
 			"actions": {
+				"assign": "Toewijzen aan gebruiker",
+				"label": "Labels toevoegen",
 				"priority": "Prioriteit instellen",
 				"dueDate": "Vervaldatum instellen",
+				"startDate": "Startdatum instellen",
+				"endDate": "Einddatum instellen",
 				"reminders": "Herinneringen instellen",
+				"repeatAfter": "Herhalingsinterval instellen",
+				"percentDone": "Voortgang instellen",
+				"attachments": "Bijlagen toevoegen",
+				"relatedTasks": "Relatie toevoegen",
+				"moveProject": "Verplaatsen",
+				"color": "Kleur instellen",
 				"delete": "Verwijder",
 				"favorite": "Toevoegen aan favorieten",
 				"unfavorite": "Verwijder uit favorieten"
@@ -346,31 +848,60 @@
 			"createdBy": "Aangemaakt door",
 			"description": "Beschrijving",
 			"done": "Voltooid",
+			"dueDate": "Vervaldatum",
+			"endDate": "Einddatum",
 			"labels": "Labels",
+			"percentDone": "Voortgang",
 			"priority": "Prioriteit",
 			"relatedTasks": "Verwante Taken",
 			"reminders": "Herinneringen",
 			"repeat": "Herhalen",
 			"startDate": "Begindatum",
 			"title": "Titel",
-			"updated": "Bijgewerkt"
+			"updated": "Bijgewerkt",
+			"doneAt": "Voltooid op"
+		},
+		"subscription": {
+			"subscribedTaskThroughParentProject": "Je kunt hier niet uitschrijven omdat je via het project op deze taak bent geabonneerd.",
+			"subscribedProject": "Je bent momenteel geabonneerd op dit project en ontvangt meldingen bij wijzigingen.",
+			"notSubscribedProject": "Je bent niet geabonneerd op dit project en ontvangt geen meldingen bij wijzigingen.",
+			"subscribedTask": "Je bent momenteel geabonneerd op deze taak en ontvangt meldingen bij wijzigingen.",
+			"notSubscribedTask": "Je bent niet geabonneerd op deze taak en ontvangt geen meldingen bij wijzigingen.",
+			"subscribe": "Abonneren",
+			"unsubscribe": "Afmelden",
+			"subscribeSuccessProject": "Je bent nu geabonneerd op dit project",
+			"unsubscribeSuccessProject": "Je bent nu uitgeschreven voor dit project",
+			"subscribeSuccessTask": "Je bent nu geabonneerd op deze taak",
+			"unsubscribeSuccessTask": "Je bent nu uitgeschreven voor deze taak"
 		},
 		"attachment": {
 			"title": "Bijlagen",
+			"createdBy": "aangemaakt op {0} door {1}",
+			"downloadTooltip": "Deze bijlage downloaden",
 			"upload": "Upload bijlage",
 			"drop": "Sleep bestanden hierheen om te uploaden",
 			"delete": "Bijlage verwijderen",
 			"deleteTooltip": "Verwijder deze bijlage",
 			"deleteText1": "Weet je zeker dat je de bijlage {filename} wilt verwijderen?",
-			"copyUrl": "URL kopiëren"
+			"copyUrl": "URL kopiëren",
+			"copyUrlTooltip": "Kopieer de URL van deze bijlage voor gebruik in tekst",
+			"setAsCover": "Omslagfoto instellen",
+			"unsetAsCover": "Omslagfoto verwijderen",
+			"successfullyChangedCoverImage": "De omslagfoto is succesvol aangepast.",
+			"usedAsCover": "Omslagfoto"
 		},
 		"comment": {
 			"title": "Reacties",
 			"loading": "Bezig met laden van reacties…",
+			"edited": "bewerkt op {date}",
+			"creating": "Opmerking maken…",
+			"placeholder": "Voeg je reactie toe, druk op '/' voor meer opties…",
 			"comment": "Reactie",
 			"delete": "Verwijder deze reactie",
 			"deleteText1": "Weet je zeker dat je deze reactie wilt verwijderen?",
-			"addedSuccess": "De reactie is succesvol toegevoegd."
+			"deleteSuccess": "De opmerking is succesvol verwijderd.",
+			"addedSuccess": "De reactie is succesvol toegevoegd.",
+			"permalink": "Kopieer permalink naar deze reactie"
 		},
 		"deferDueDate": {
 			"title": "Vervaldatum uitstellen",
@@ -379,6 +910,7 @@
 			"1week": "1 week"
 		},
 		"description": {
+			"placeholder": "Voer een beschrijving in, klik op '/' voor meer opties…",
 			"empty": "Nog geen beschrijving beschikbaar."
 		},
 		"assignee": {
@@ -388,44 +920,109 @@
 			"unassignSuccess": "De toewijzing van de gebruiker is met succes ingetrokken."
 		},
 		"label": {
-			"createPlaceholder": "Dit toevoegen als nieuw label"
+			"placeholder": "Typ om een label toe te voegen…",
+			"createPlaceholder": "Dit toevoegen als nieuw label",
+			"addSuccess": "Het label is succesvol toegevoegd.",
+			"createSuccess": "Het label is succesvol aangemaakt.",
+			"removeSuccess": "Het label is succesvol verwijderd.",
+			"addCreateSuccess": "Het label is succesvol aangemaakt en toegevoegd.",
+			"delete": {
+				"header": "Dit label verwijderen",
+				"text1": "Weet je zeker dat je dit label wilt verwijderen?",
+				"text2": "Dit zal het van alle taken verwijderen en kan niet worden hersteld."
+			}
 		},
 		"priority": {
+			"unset": "Niet ingesteld",
 			"low": "Laag",
 			"medium": "Gemiddeld",
+			"high": "Hoog",
 			"urgent": "Dringend",
 			"doNow": "NU DOEN"
 		},
 		"relation": {
+			"add": "Nieuwe taakrelatie toevoegen",
 			"new": "Nieuwe taakrelatie",
+			"searchPlaceholder": "Zoek taak om als nieuwe taakrelatie toe te voegen…",
+			"createPlaceholder": "Voeg dit toe als gerelateerde taak",
+			"differentProject": "Deze taak hoort bij een ander project.",
 			"noneYet": "Nog geen taakrelaties.",
 			"delete": "Taak relatie verwijderen",
 			"deleteText1": "Weet je zeker dat je deze taakrelatie wilt verwijderen?",
-			"select": "Selecteer een relatietype"
+			"select": "Selecteer een relatietype",
+			"taskRequired": "Selecteer een taak of voer een nieuwe taaktitel in.",
+			"kinds": {
+				"subtask": "Subtaak | Subtaken",
+				"parenttask": "Bovenliggende taak | Bovenliggende taken",
+				"related": "Gerelateerde taak | Gerelateerde taken",
+				"duplicateof": "Duplicaat van | Duplicaten van",
+				"duplicates": "Duplicaten | Duplicaten",
+				"blocking": "Blokkerend | Blokkerend",
+				"blocked": "Geblokkeerd door | Geblokkeerd door",
+				"precedes": "Gaat vooraf aan | Gaat vooraf aan",
+				"follows": "Volgt | Volgt",
+				"copiedfrom": "Gekopieerd van | Gekopieerd van",
+				"copiedto": "Gekopieerd naar | Gekopieerd naar"
+			}
+		},
+		"reminder": {
+			"before": "{amount} {unit} voor {type}",
+			"after": "{amount} {unit} na {type}",
+			"beforeShort": "voor",
+			"afterShort": "na",
+			"onDueDate": "Op de vervaldatum",
+			"onStartDate": "Op de startdatum",
+			"onEndDate": "Op de einddatum",
+			"custom": "Aangepast",
+			"dateAndTime": "Datum en tijd"
 		},
 		"repeat": {
 			"everyDay": "Elke dag",
 			"everyWeek": "Elke week",
+			"every30d": "Elke 30 dagen",
 			"mode": "Herhaalmodus",
 			"monthly": "Maandelijks",
+			"fromCurrentDate": "Vanaf voltooiingsdatum",
+			"each": "Elke",
+			"specifyAmount": "Kies hoeveelheid…",
 			"hours": "Uren",
 			"days": "Dagen",
 			"weeks": "Weken",
 			"months": "Maanden",
-			"years": "Jaren"
+			"years": "Jaren",
+			"invalidAmount": "Voer meer dan nul in."
 		},
 		"quickAddMagic": {
+			"hint": "Gebruik magische prefixes om vervaldata, toegewezen personen en andere taakeigenschappen te definiëren.",
+			"title": "Snel-toevoegen magie",
+			"intro": "Bij het aanmaken van een taak kun je speciale trefwoorden gebruiken om direct kenmerken toe te voegen aan de nieuwe taak. Hiermee kun je veelgebruikte kenmerken veel sneller toevoegen aan taken.",
 			"multiple": "Je kan dit meerdere keren gebruiken.",
+			"label1": "Om een label toe te voegen, prefix de naam van het label met {prefix}.",
+			"label2": "Vikunja zal eerst controleren of het label al bestaat en maakt het aan als dat niet zo is.",
+			"label3": "Om spaties te gebruiken gebruik je \" of ' rond de naam van het label.",
+			"label4": "Bijvoorbeeld: {prefix}\"Label met spaties\".",
 			"priority1": "Om prioriteit aan een taak te geven voeg je een nummer tussen 1-5 toe, beginnend met een {prefix}.",
 			"priority2": "Hoe hoger het getal, hoe hoger de prioriteit.",
+			"assignees": "Om de taak rechtstreeks aan een gebruiker toe te wijzen, zet je hun gebruikersnaam voorafgegaan door {prefix} bij de taak.",
+			"project1": "Om het ​​project in te stellen waar de taak bij hoort, voer je de projectnaam in voorafgegaan door {prefix}.",
+			"project2": "Dit geeft een foutmelding als het project niet bestaat.",
+			"project3": "Om spaties te gebruiken gebruik je \" of ' rond de naam van het project.",
+			"project4": "Bijvoorbeeld: {prefix}\"Project met spaties\".",
 			"dateAndTime": "Datum en tijd",
-			"dateCurrentYear": "zal het huidige jaar gebruiken"
+			"date": "Een datum zal worden gebruikt als vervaldatum van de nieuwe taak. Je kunt datums in al deze formats gebruiken:",
+			"dateWeekday": "elke dag van de week, gebruikt de volgende datum met die dag",
+			"dateCurrentYear": "zal het huidige jaar gebruiken",
+			"dateNth": "gebruikt de {day}e van de huidige maand",
+			"dateTime": "Combineer een datumnotatie met \"{time}\" (of {timePM}) om een tijd in te stellen.",
+			"repeats": "Herhalende taken",
+			"repeatsDescription": "Om een ​​taak in te stellen als herhalend in een interval, voeg je '{suffix}' toe aan de taaktekst. Het aantal moet een getal zijn en kan worden weggelaten om alleen het type te gebruiken (zie voorbeelden)."
 		}
 	},
 	"team": {
 		"title": "Teams",
 		"noTeams": "Je maakt momenteel geen deel uit van een team.",
 		"create": {
+			"title": "Team aanmaken",
 			"success": "Het team is succesvol aangemaakt."
 		},
 		"edit": {
@@ -439,22 +1036,98 @@
 			"userAddedSuccess": "Het teamlid is succesvol toegevoegd.",
 			"madeMember": "Het teamlid is succesvol tot lid gemaakt.",
 			"madeAdmin": "Het teamlid is succesvol beheerder gemaakt.",
+			"mustSelectUser": "Kies een gebruiker.",
 			"delete": {
-				"header": "Verwijder het team"
+				"header": "Verwijder het team",
+				"text1": "Weet je zeker dat je dit team en alle leden wilt verwijderen?",
+				"text2": "Alle teamleden verliezen toegang tot projecten die met dit team zijn gedeeld. Dit KAN NIET ONGEDAAN WORDEN GEMAAKT!",
+				"success": "Het team is succesvol verwijderd."
 			},
 			"deleteUser": {
 				"header": "Verwijder een gebruiker uit het team",
-				"text1": "Weet je zeker dat je deze gebruiker wilt verwijderen uit het team?"
+				"text1": "Weet je zeker dat je deze gebruiker wilt verwijderen uit het team?",
+				"text2": "Ze verliezen toegang tot alle projecten waartoe dit team toegang heeft. Dit KAN NIET ONGEDAAN WORDEN GEMAAAKT!",
+				"success": "De gebruiker is succesvol uit het team verwijderd."
+			},
+			"leave": {
+				"title": "Team verlaten",
+				"text1": "Weet je zeker dat je dit team wilt verlaten?",
+				"text2": "Je verliest toegang tot alle projecten waartoe dit team toegang heeft. Als je van gedachten verandert, heb je een teambeheerder nodig om je opnieuw toe te voegen.",
+				"success": "Je hebt het team verlaten."
 			}
 		},
 		"attributes": {
 			"name": "Teamnaam",
+			"namePlaceholder": "De naam van het team komt hier…",
+			"nameRequired": "Geef een naam op.",
 			"description": "Beschrijving",
+			"descriptionPlaceholder": "Beschrijf het team hier, druk op '/' voor meer opties…",
 			"admin": "Beheerder",
-			"member": "Lid"
+			"member": "Lid",
+			"isPublic": "Openbaar team",
+			"isPublicDescription": "Maak het team openbaar vindbaar. Wanneer ingeschakeld, kan iedereen projecten delen met dit team, zelfs als ze niet rechtstreeks lid zijn."
+		}
+	},
+	"keyboardShortcuts": {
+		"title": "Sneltoetsen",
+		"general": "Algemeen",
+		"allPages": "Deze snelkoppelingen werken op alle pagina's.",
+		"currentPageOnly": "Deze snelkoppelingen werken alleen op de huidige pagina.",
+		"somePagesOnly": "Deze snelkoppelingen werken alleen op sommige pagina's.",
+		"toggleMenu": "Menu in-/uitschakelen",
+		"quickSearch": "Open de zoek-/snelle actiebalk",
+		"then": "vervolgens",
+		"task": {
+			"title": "Taakpagina",
+			"done": "Markeer taak voltooid/onvoltooid",
+			"assign": "Deze taak toewijzen aan een gebruiker",
+			"labels": "Labels aan deze taak toevoegen",
+			"dueDate": "Wijzig de vervaldatum van deze taak",
+			"attachment": "Voeg een bijlage toe aan deze taak",
+			"related": "Gerelateerde taken van deze taak aanpassen",
+			"color": "Verander de kleur van deze taak",
+			"move": "Verplaats deze taak naar een ander project",
+			"reminder": "Beheer herinneringen van deze taak",
+			"description": "Bewerken van de taakbeschrijving in-/uitschakelen",
+			"delete": "Verwijder deze taak",
+			"priority": "Wijzig de prioriteit van deze taak",
+			"favorite": "Markeer deze taak als favoriet / niet-favoriet",
+			"openProject": "Open het project van deze taak",
+			"save": "Huidige taak opslaan"
+		},
+		"project": {
+			"title": "Projectweergaven",
+			"switchToListView": "Overschakelen naar lijstweergave",
+			"switchToGanttView": "Overschakelen naar Gantt-weergave",
+			"switchToKanbanView": "Overschakelen naar Kanban-weergave",
+			"switchToTableView": "Overschakelen naar tabelweergave"
+		},
+		"navigation": {
+			"title": "Navigatie",
+			"overview": "Navigeer naar overzicht",
+			"upcoming": "Navigeer naar aankomende taken",
+			"labels": "Navigeer naar labels",
+			"teams": "Navigeer naar teams",
+			"projects": "Navigeer naar projecten"
+		},
+		"list": {
+			"title": "Takenlijst",
+			"navigateDown": "Volgende taak markeren",
+			"navigateUp": "Vorige taak markeren",
+			"open": "Gemarkeerde taak openen"
+		},
+		"gantt": {
+			"title": "Gannt diagram",
+			"moveTaskLeft": "Verplaats taak naar eerdere datum",
+			"moveTaskRight": "Verplaats taak naar latere datum",
+			"expandTaskLeft": "Uitbreiden taak startdatum eerder",
+			"expandTaskRight": "Uitbreiden taak einddatum later",
+			"shrinkTaskLeft": "Verklein taak vanaf startdatum",
+			"shrinkTaskRight": "Verklein taak vanaf einddatum"
 		}
 	},
 	"update": {
+		"available": "Er is een update beschikbaar!",
 		"do": "Nu bijwerken"
 	},
 	"menu": {
@@ -463,56 +1136,168 @@
 		"duplicate": "Dupliceer",
 		"delete": "Verwijderen",
 		"unarchive": "Archivering opheffen",
-		"share": "Delen"
+		"setBackground": "Achtergrondinstellingen",
+		"share": "Delen",
+		"newProject": "Nieuw project",
+		"createProject": "Project aanmaken",
+		"cantArchiveIsDefault": "Je kunt dit niet archiveren omdat het jouw standaardproject is.",
+		"cantDeleteIsDefault": "Je kunt dit niet verwijderen omdat het jouw standaardproject is.",
+		"views": "Weergaven"
 	},
 	"apiConfig": {
 		"url": "Vikunja URL",
 		"urlPlaceholder": "bv. https://localhost:3456",
-		"change": "wijzigen"
+		"change": "wijzigen",
+		"use": "Gebruikt Vikunja-installatie op {0}",
+		"error": "Kon Vikunja-installatie niet vinden of gebruiken op \"{domain}\". Controleer of de URL het juiste formaat heeft en het rechtstreeks te benaderen is. Probeer het opnieuw.",
+		"success": "Gebruikt Vikunja installatie op \"{domain}\".",
+		"urlRequired": "Een URL is vereist."
 	},
 	"loadingError": {
+		"failed": "Laden mislukt, alsjeblieft {0}. Als de fout zich blijft voordoen, {1}.",
 		"tryAgain": "probeer opnieuw",
 		"contact": "neem contact met ons op"
 	},
 	"notification": {
 		"title": "Notificaties",
-		"none": "Je hebt geen meldingen. Fijne dag!"
+		"none": "Je hebt geen meldingen. Fijne dag!",
+		"explainer": "Hier verschijnen meldingen als acties, projecten of taken waarop u bent geabonneerd worden uitgevoerd.",
+		"markAllRead": "Markeer alle meldingen als gelezen",
+		"markAllReadSuccess": "Alle meldingen zijn als gelezen gemarkeerd."
 	},
 	"quickActions": {
+		"commands": "Opdrachten",
+		"placeholder": "Typ een opdracht of zoek…",
+		"hint": "Je kunt {project} gebruiken om het zoeken te beperken tot een project. Combineer {project} of {label} (labels) met een zoekopdracht om te zoeken naar een taak met deze labels of op dat project. Gebruik {assignee} om alleen te zoeken naar teams.",
 		"tasks": "Taken",
+		"projects": "Projecten",
 		"teams": "Teams",
+		"labels": "Labels",
+		"newProject": "Voer de titel in van het nieuwe project…",
+		"newTask": "Voer de titel van de nieuwe taak in…",
+		"newTeam": "Voer de naam van het nieuwe team in…",
+		"createTask": "Maak een taak in het huidige project ({title})",
+		"createProject": "Project aanmaken",
 		"cmds": {
 			"newTask": "Nieuwe taak",
+			"newProject": "Nieuw project",
 			"newTeam": "Nieuw team"
 		}
+	},
+	"date": {
+		"altFormatLong": "j M Y, H:i",
+		"altFormatShort": "j M Y"
+	},
+	"reaction": {
+		"reactedWith": "{user} reageerde met {value}",
+		"reactedWithAnd": "{users} en {lastUser} hebben gereageerd met {value}",
+		"reactedWithAndMany": "{users} en {num} anderen hebben gereageerd met {value}",
+		"add": "Voeg je reactie toe"
 	},
 	"error": {
 		"1001": "Er bestaat al een gebruiker met deze naam.",
 		"1002": "Er bestaat al een gebruiker met dit e-mailadres.",
 		"1004": "Geen gebruikersnaam en wachtwoord opgegeven.",
 		"1005": "De gebruiker bestaat niet.",
+		"1006": "Kon het gebruikers-id niet ophalen.",
+		"1008": "Geen wachtwoord reset token opgegeven.",
+		"1009": "Ongeldig wachtwoord reset token.",
 		"1010": "Ongeldig bevestigingstoken voor e-mail.",
 		"1011": "Ongeldige gebruikersnaam of wachtwoord.",
 		"1012": "E-mailadres van de gebruiker is niet bevestigd.",
 		"1013": "Nieuw wachtwoord is leeg.",
 		"1014": "Oude wachtwoord is leeg.",
+		"1015": "TOTP is al ingeschakeld voor deze gebruiker.",
+		"1016": "TOTP is niet ingeschakeld voor deze gebruiker.",
+		"1017": "TOTP-code is ongeldig.",
+		"1018": "Het gebruiker avatartype is ongeldig.",
+		"1019": "Er is geen e-mailadres meegegeven door de OpenID-provider. Zorg ervoor dat de OpenID-provider een e-mailadres doorgeeft voor uw account.",
+		"1020": "Dit account is uitgeschakeld. Controleer je e-mail of vraag je beheerder.",
+		"1021": "Dit account wordt beheerd door een externe authenticatieprovider.",
+		"1022": "De gebruikersnaam mag geen spaties bevatten.",
+		"1023": "Je kunt dat niet doen als een deelbare koppeling.",
+		"1024": "Ongeldige claimgegevens voor veld {field} van type {type}.",
+		"1025": "De tijdzone '{timezone}' is ongeldig. Selecteer een geldige tijdzone uit de lijst.",
+		"2001": "ID kan niet leeg of 0 zijn.",
+		"2002": "Sommige request data was ongeldig.",
+		"2003": "De tijdzone '{timezone}' is ongeldig.",
+		"3001": "Project bestaat niet.",
+		"3004": "Je moet leesrechten voor dat project hebben om die actie uit te voeren.",
+		"3005": "De projecttitel mag niet leeg zijn.",
+		"3006": "Het gedeelde project bestaat niet.",
+		"3007": "Er bestaat al een project met dit ID",
+		"3008": "Het project is gearchiveerd en kan daarom alleen als alleen-lezen worden geopend. Dit geldt ook voor alle taken die aan dit project zijn gekoppeld.",
+		"4001": "De titel van de taak mag niet leeg zijn.",
+		"4002": "De taak bestaat niet.",
+		"4003": "Alle bulkbewerkingstaken moeten deel uitmaken van hetzelfde project.",
+		"4004": "Minstens één taak nodig bij het bulk-bewerken van taken.",
+		"4005": "U heeft niet het recht om de taak te zien.",
+		"4006": "Je kunt geen bovenliggende taak als de taak zelf instellen.",
+		"4007": "Je kunt geen taakrelatie maken met een ongeldig relatietype.",
+		"4008": "Je kunt geen taakrelatie maken die al bestaat.",
 		"4009": "Deze taakrelatie bestaat niet.",
 		"4010": "Kan een taak niet met zichzelf relatëren.",
+		"4011": "De taakbijlage bestaat niet.",
+		"4012": "De bijlage van de taak is te groot.",
+		"4013": "Taak sorteer parameter is ongeldig.",
 		"4014": "De sorteervolgorde van taken is ongeldig.",
+		"4015": "De taakopmerking bestaat niet.",
 		"4016": "Ongeldig taakveld.",
+		"4017": "Ongeldige taak-filter vergelijker.",
+		"4018": "Ongeldige taak filter samenvoeger.",
 		"4019": "Ongeldige taakfilter waarde.",
+		"4020": "Deze bijlage hoort niet bij die taak.",
+		"4021": "Deze gebruiker is al toegewezen aan die taak.",
+		"4022": "Geef aan waar de herinneringsdatum relatief aan is.",
+		"4023": "Kan geen taakrelatiecyclus maken.",
+		"6001": "De teamnaam mag niet leeg zijn.",
 		"6002": "Het team bestaat niet.",
+		"6004": "Het team heeft al toegang tot dat project.",
+		"6005": "De gebruiker is al lid van dat team.",
 		"6006": "Kan het laatste teamlid niet verwijderen.",
+		"6007": "Het team heeft geen toegang tot het project om die actie uit te voeren.",
+		"6008": "Er kon geen team worden gevonden voor het opgegeven OIDC-ID en uitgever.",
+		"6009": "Geen teams met eigenschap OIDC-ID gevonden voor de gebruiker.",
+		"7002": "De gebruiker heeft al toegang tot dat project.",
+		"7003": "Je hebt geen toegang tot dat project.",
 		"8001": "Dit label bestaat al voor die taak.",
 		"8002": "Het label bestaat niet.",
 		"8003": "Je hebt geen toegang tot dit label.",
 		"9001": "Ongeldige rechten.",
+		"10001": "De categorie bestaat niet.",
+		"10002": "De categorie hoort niet bij dat project.",
+		"10003": "Je kunt de laatste categorie in een project niet verwijderen.",
+		"10004": "Je kunt de taak niet aan deze categorie toevoegen omdat deze de taaklimiet heeft overschreden.",
+		"10005": "Er kan slechts één categorie 'voltooid' per project zijn.",
 		"11001": "Het opgeslagen filter bestaat niet.",
+		"11002": "Opgeslagen filters zijn niet beschikbaar als deelbare koppelingen.",
+		"12001": "Het inschrijvings-entiteitstype is ongeldig.",
+		"12002": "Je bent al ingeschreven op de entiteit zelf of een bovenliggende entiteit.",
+		"12003": "Je moet een gebruiker opgeven om abonnementen op te halen.",
+		"13001": "Deze gedeelde koppeling vereist een wachtwoord, maar er is niets opgegeven.",
+		"13002": "Het opgegeven wachtwoord voor de deelbare koppeling is ongeldig.",
+		"13003": "Het opgegeven token van de gedeelde koppeling is ongeldig.",
+		"14001": "Het verstrekte API-token is ongeldig.",
+		"14002": "De machtiging {permission} van groep {group} is ongeldig.",
 		"error": "Fout",
 		"success": "Succes",
 		"0001": "Je hebt geen toestemming om dat te doen."
 	},
 	"about": {
-		"title": "Over"
+		"title": "Over",
+		"version": "Versie: {version}",
+		"frontendVersion": "Frontend versie: {version}",
+		"apiVersion": "API-versie: {version}"
+	},
+	"time": {
+		"units": {
+			"seconds": "seconde|seconden",
+			"minutes": "minuut|minuten",
+			"hours": "uur|uren",
+			"days": "dag|dagen",
+			"weeks": "week|weken",
+			"months": "maand|maanden",
+			"years": "jaar|jaren"
+		}
 	}
 }
