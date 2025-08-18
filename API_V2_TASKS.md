@@ -17,6 +17,7 @@ Each task in this list corresponds to a single API endpoint. When working on a t
 
 *   **Description:** Retrieve all projects for the current user.
 *   **V1 Equivalent:** `GET /projects`
+*   **Status:** Done
 *   **Requirements:**
     *   Implement pagination.
     *   Allow filtering by `is_archived`.
@@ -30,6 +31,7 @@ Each task in this list corresponds to a single API endpoint. When working on a t
 
 *   **Description:** Create a new project.
 *   **V1 Equivalent:** `PUT /projects`
+*   **Status:** Done
 *   **Requirements:**
     *   Handle creation of parent projects.
     *   Set default views upon creation.
@@ -41,6 +43,7 @@ Each task in this list corresponds to a single API endpoint. When working on a t
 
 *   **Description:** Retrieve a single project by its ID.
 *   **V1 Equivalent:** `GET /projects/:project`
+*   **Status:** Done
 *   **Requirements:**
     *   Include the project owner and views in the response.
 *   **Tests:**
@@ -51,6 +54,7 @@ Each task in this list corresponds to a single API endpoint. When working on a t
 
 *   **Description:** Update a project.
 *   **V1 Equivalent:** `POST /projects/:project`
+*   **Status:** Done
 *   **Requirements:**
     *   Support archiving and unarchiving.
     *   Handle updates to the background image.
@@ -62,6 +66,7 @@ Each task in this list corresponds to a single API endpoint. When working on a t
 
 *   **Description:** Delete a project.
 *   **V1 Equivalent:** `DELETE /projects/:project`
+*   **Status:** Done
 *   **Requirements:**
     *   Ensure all associated tasks and other resources are deleted.
 *   **Tests:**
@@ -72,6 +77,7 @@ Each task in this list corresponds to a single API endpoint. When working on a t
 
 *   **Description:** Duplicate a project.
 *   **V1 Equivalent:** `PUT /projects/:projectid/duplicate`
+*   **Status:** Done
 *   **Tests:**
     *   Unit test for the handler.
     *   Integration test to verify project duplication.
