@@ -713,7 +713,6 @@
 		"show": {
 			"titleCurrent": "Aktuální úkoly",
 			"titleDates": "Úkoly od {from} do {to}",
-			"noDates": "Zobrazit úkoly bez datumu",
 			"overdue": "Zobrazit zpožděné úkoly",
 			"fromuntil": "Úkoly od {from} do {until}",
 			"select": "Vyberte rozsah dat",
@@ -929,7 +928,6 @@
 			"project4": "Například: {prefix}\"Projekt s mezerami\".",
 			"dateAndTime": "Datum a čas",
 			"date": "Jakékoliv datum bude použito jako datum dokončení nového úkolu. Můžete použít data v kterémkoli z těchto formátů:",
-			"dateWeekday": "každý pracovní den použije další datum s tímto datem",
 			"dateCurrentYear": "použije aktuální rok",
 			"dateNth": "použije {day}. den aktuálního měsíce",
 			"dateTime": "Pro nastavení času zkombinujte libovolný formát data s \"{time}\" (nebo {timePM}).",
@@ -1064,7 +1062,6 @@
 	"notification": {
 		"title": "Oznámení",
 		"none": "Nemáte žádná oznámení. Mějte příjemný den!",
-		"explainer": "Upozornění se zobrazí zde, když proběhne akce na projektech nebo úkolech, ke kterým jste se přihlásili.",
 		"markAllRead": "Označit všechna oznámení za přečtená",
 		"markAllReadSuccess": "Všechna oznámení byla označena jako přečtená."
 	},

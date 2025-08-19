@@ -72,7 +72,7 @@
 		},
 		"settings": {
 			"title": "Paramètres",
-			"newPasswordTitle": "Mets à jour ton mot de passe",
+			"newPasswordTitle": "Mettre à jour votre mot de passe",
 			"newPassword": "Nouveau mot de passe",
 			"newPasswordConfirm": "Confirmation du nouveau mot de passe",
 			"currentPassword": "Mot de passe actuel",
@@ -92,6 +92,7 @@
 				"discoverableByName": "Autoriser d’autres utilisateurs ou utilisatrices à m’ajouter en tant que membre aux équipes ou aux projets lorsqu’ils recherchent mon nom",
 				"discoverableByEmail": "Autoriser d’autres utilisateurs ou utilisatrices à m’ajouter en tant que membre aux équipes ou aux projets lorsqu’ils recherchent mon adresse électronique complète",
 				"playSoundWhenDone": "Jouer un son lorsqu’une tâche est marquée comme terminée",
+				"allowIconChanges": "Afficher des logos spéciaux pendant certaines périodes",
 				"weekStart": "La semaine commence le",
 				"weekStartSunday": "dimanche",
 				"weekStartMonday": "lundi",
@@ -102,7 +103,24 @@
 				"overdueTasksRemindersTime": "Heure du courriel de rappel des tâches en retard",
 				"filterUsedOnOverview": "Filtre enregistré utilisé sur la vue d’ensemble",
 				"minimumPriority": "Priorité minimale de la tâche visible",
+				"dateDisplay": "Format d'affichage de la date",
+				"dateDisplayOptions": {
+					"relative": "Relatif (par exemple, il y a 3 jours)",
+					"mm-dd-yyyy": "MM-JJ-AAAA",
+					"dd-mm-yyyy": "JJ-MM-AAAA",
+					"yyyy-mm-dd": "AAAA-MM-JJ",
+					"mm/dd/yyyy": "MM/JJ/AAAA",
+					"dd/mm/yyyy": "JJ/MM/AAAA",
+					"yyyy/mm/dd": "AAAA/MM/JJ"
+				},
 				"externalUserNameChange": "Votre nom est géré par votre fournisseur de connexion ({provider}). Pour le modifier, veuillez le mettre à jour auprès de celui-ci."
+			},
+			"sections": {
+				"personalInformation": "Informations personnelles",
+				"taskAndNotifications": "Projets & Tâches",
+				"privacy": "Confidentialité",
+				"localization": "Paramètres régionaux",
+				"appearance": "Apparence et comportement"
 			},
 			"totp": {
 				"title": "Authentification à deux facteurs",
@@ -139,7 +157,8 @@
 				"uploadAvatar": "Téléverser l’avatar",
 				"statusUpdateSuccess": "Statut de l’avatar mis à jour.",
 				"setSuccess": "Avatar défini.",
-				"ldap": "Votre avatar est automatiquement synchronisé à partir du service d'annuaire de votre organisation (LDAP). Vous pouvez demander à votre équipe informatique des informations pour savoir comment le modifier."
+				"ldap": "Votre avatar est automatiquement synchronisé à partir du service d'annuaire de votre organisation (LDAP). Vous pouvez demander à votre équipe informatique des informations pour savoir comment le modifier.",
+				"openid": "Votre avatar est automagiquement synchronisé avec votre fournisseur de connexion ({provider}). Pour le modifier, veuillez le mettre à jour là-bas."
 			},
 			"quickAddMagic": {
 				"title": "Ajout rapide en mode magique",
@@ -207,7 +226,9 @@
 			"descriptionPasswordRequired": "Saisissez votre mot de passe pour continuer :",
 			"request": "Demander une copie de mes données Vikunja",
 			"success": "Vous avez bien demandé vos données Vikunja ! Nous vous enverrons un courriel dès qu’elles seront prêtes à être téléchargées.",
-			"downloadTitle": "Télécharger vos données exportées de Vikunja"
+			"downloadTitle": "Télécharger vos données exportées de Vikunja",
+			"ready": "Votre export est prêt à être téléchargé. Vous pouvez le télécharger jusqu'à {0}.",
+			"requestNew": "Demander un autre export"
 		}
 	},
 	"project": {
@@ -344,7 +365,22 @@
 			"month": "Mois",
 			"day": "Jour",
 			"hour": "Heure",
-			"range": "Intervalle"
+			"range": "Intervalle",
+			"chartLabel": "Diagramme de Gantt du projet",
+			"taskBarsForRow": "Barres de tâches pour la ligne {rowId}",
+			"taskBarLabel": "Tâche : {task}. De {startDate} à {endDate}. {dateType}. Cliquez pour modifier, faites glisser pour déplacer.",
+			"scheduledDates": "Dates prévues",
+			"estimatedDates": "Dates estimées",
+			"resizeStartDate": "Redimensionner la date de début de la tâche {task}",
+			"resizeEndDate": "Redimensionner la date de fin de la tâche {task}",
+			"timelineHeader": "En-tête de la chronologie avec mois et jours",
+			"monthsRow": "Ligne des mois",
+			"daysRow": "Lignes des jours",
+			"monthLabel": "Mois : {month}",
+			"dayLabel": "Jour : {date}, {weekday}",
+			"dayLabelToday": "Aujourd'hui : {date}, {weekday}",
+			"taskAriaLabel": "Tâche : {task}",
+			"taskAriaLabelById": "Tâche {id}"
 		},
 		"table": {
 			"title": "Tableau",
@@ -386,6 +422,7 @@
 			"targetUrl": "URL cible",
 			"targetUrlInvalid": "Veuillez fournir une URL valide.",
 			"events": "Évènements",
+			"eventsHint": "Sélectionnez tous les événements pour lesquels ce webhook devrait recevoir des mises à jour (dans le projet actuel).",
 			"mustSelectEvents": "Vous devez sélectionner au moins un évènement.",
 			"delete": "Supprimer ce webhook",
 			"deleteText": "Êtes-vous sûr de vouloir supprimer ce webhook? Les cibles externes ne seront plus notifiées des événements.",
@@ -418,6 +455,7 @@
 		"title": "Filtres",
 		"clear": "Effacer les filtres",
 		"showResults": "Afficher les résultats",
+		"noResults": "Aucun résultat",
 		"fromView": "La vue active utilise également un filtre :",
 		"fromViewBoth": "Il sera utilisé en combinaison avec ce que vous saisissez ici.",
 		"attributes": {
@@ -481,7 +519,9 @@
 					"greaterThanOrEqual": "Plus grand ou égal à",
 					"lessThan": "Inférieur à",
 					"lessThanOrEqual": "Inférieur ou égal à",
-					"like": "Correspond à un modèle (utilise des métacaractères %)"
+					"like": "Correspond à un modèle (utilise des métacaractères %)",
+					"in": "Correspond à une valeur dans une liste de valeurs séparée par des virgules",
+					"notIn": "Correspond lorsqu'une valeur n'est pas présente dans une liste de valeurs séparée par des virgules"
 				},
 				"logicalOperators": {
 					"intro": "Pour combiner plusieurs conditions, vous pouvez utiliser les opérateurs logiques suivants :",
@@ -753,7 +793,6 @@
 		"show": {
 			"titleCurrent": "Tâches actuelles",
 			"titleDates": "Tâches du {from} au {to}",
-			"noDates": "Afficher les tâches sans date",
 			"overdue": "Montrer les tâches en retard",
 			"fromuntil": "Tâches du {from} au {until}",
 			"select": "Choisissez une période",
@@ -970,7 +1009,6 @@
 			"project4": "Par exemple : {prefix}\"Projet avec espaces\".",
 			"dateAndTime": "Date et heure",
 			"date": "Toute date sera utilisée comme date d’échéance de la nouvelle tâche. Vous pouvez utiliser des dates dans un des formats suivants :",
-			"dateWeekday": "n’importe quel jour de la semaine, utilisera la date suivante avec cette date",
 			"dateCurrentYear": "utilisera l’année en cours",
 			"dateNth": "utilisera le {day} du mois en cours",
 			"dateTime": "Combinez n’importe lequel des formats de date avec « {time} » (ou {timePM}) pour définir une heure.",
@@ -1052,6 +1090,7 @@
 			"delete": "Supprimer cette tâche",
 			"priority": "Changer la priorité de cette tâche",
 			"favorite": "Marquer cette tâche comme favorite ou non",
+			"openProject": "Ouvrir le projet de cette tâche",
 			"save": "Enregistrer la tâche en cours"
 		},
 		"project": {
@@ -1068,6 +1107,21 @@
 			"labels": "Accéder aux étiquettes",
 			"teams": "Accéder aux équipes",
 			"projects": "Accéder aux projets"
+		},
+		"list": {
+			"title": "Liste des tâches",
+			"navigateDown": "Mettre en surbrillance la tâche suivante",
+			"navigateUp": "Mettre en surbrillance la tâche précédente",
+			"open": "Ouvrir la tâche en surbrillance"
+		},
+		"gantt": {
+			"title": "Diagramme de Gantt",
+			"moveTaskLeft": "Déplacer la tâche vers une date antérieure",
+			"moveTaskRight": "Déplacer la tâche vers une date ultérieure",
+			"expandTaskLeft": "Étendre la date de début de la tâche",
+			"expandTaskRight": "Étendre la date de fin de la tâche",
+			"shrinkTaskLeft": "Réduire la tâche à partir de la date de début",
+			"shrinkTaskRight": "Réduire la tâche à partir de la date de fin"
 		}
 	},
 	"update": {
@@ -1105,7 +1159,6 @@
 	"notification": {
 		"title": "Notifications",
 		"none": "Vous n’avez pas de notification. Passez une bonne journée !",
-		"explainer": "Les notifications apparaîtront ici lorsque des actions auxquelles vous êtes abonné·e se produisent.",
 		"markAllRead": "Marquer toutes les notifications comme lues",
 		"markAllReadSuccess": "Toutes les notifications ont bien été marquées comme lues."
 	},
@@ -1229,7 +1282,9 @@
 	},
 	"about": {
 		"title": "À propos",
-		"version": "Version : {version}"
+		"version": "Version : {version}",
+		"frontendVersion": "Version de l'interface : {version}",
+		"apiVersion": "Version de l'API : {version}"
 	},
 	"time": {
 		"units": {

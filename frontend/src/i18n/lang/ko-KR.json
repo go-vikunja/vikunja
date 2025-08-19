@@ -752,7 +752,6 @@
 		"show": {
 			"titleCurrent": "현재 할 일",
 			"titleDates": "{from}부터 {to}까지의 할 일",
-			"noDates": "날짜 없이 할 일 표시",
 			"overdue": "기한이 지난 할 일 표시",
 			"fromuntil": "{from}부터 {until}까지의 할 일",
 			"select": "날짜 범위 선택",
@@ -969,7 +968,6 @@
 			"project4": "예제: {prefix} \"공백이 포함된 프로젝트\".",
 			"dateAndTime": "날짜와 시간",
 			"date": "모든 날짜가 새 할 일의 마감일로 사용됩니다. 이러한 형식의 날짜를 사용할 수 있습니다:",
-			"dateWeekday": "평일인 경우 해당 날짜의 다음 날짜를 사용합니다.",
 			"dateCurrentYear": "현재 연도를 사용할 것입니다",
 			"dateNth": "현재 달의 {day}일을 사용할 것입니다.",
 			"dateTime": "날짜 형식 중 하나에 \" {time} \" (또는 {timePM})을 결합하여 시간을 설정하세요.",
@@ -1104,7 +1102,6 @@
 	"notification": {
 		"title": "알림",
 		"none": "알림이 없습니다. 좋은 하루 되세요!",
-		"explainer": "구독한 할 일 프로젝트 또는 할 일이 발생하면 여기에 알림이 표시됩니다.",
 		"markAllRead": "모든 알림을 읽음으로 표시",
 		"markAllReadSuccess": "모든 알림을 읽음으로 표시하는 데 성공했습니다."
 	},

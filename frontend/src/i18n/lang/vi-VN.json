@@ -747,7 +747,6 @@
 		"show": {
 			"titleCurrent": "Công việc hiện tại",
 			"titleDates": "Công việc từ {from} cho đến {to}",
-			"noDates": "Hiển thị công việc không có ngày tháng",
 			"overdue": "Hiển thị công việc quá hạn",
 			"fromuntil": "Công việc từ {from} cho đến {until}",
 			"select": "Chọn khoảng ngày",
@@ -964,7 +963,6 @@
 			"project4": "Ví dụ: {prefix} \"Dự án có dấu cách\".",
 			"dateAndTime": "Ngày và giờ",
 			"date": "Bất kỳ ngày nào sẽ được sử dụng làm ngày hết hạn của nhiệm vụ mới. Bạn có thể sử dụng ngày ở bất kỳ định dạng nào sau đây:",
-			"dateWeekday": "bất kỳ ngày nào trong tuần, sẽ sử dụng ngày tiếp theo với ngày đó",
 			"dateCurrentYear": "sẽ sử dụng năm hiện tại",
 			"dateNth": "sẽ sử dụng ngày {day} của tháng hiện tại",
 			"dateTime": "Kết hợp bất kì đinh dạng ngày với \"{time}\" (hoặc {timePM}) để thiết lập thời gian.",
@@ -1099,7 +1097,6 @@
 	"notification": {
 		"title": "Thông báo",
 		"none": "Bạn không có thông báo nào. Chúc một ngày tốt lành!",
-		"explainer": "Thông báo sẽ xuất hiện tại đây khi các hành động dự án và tác vụ bạn theo dõi diễn ra.",
 		"markAllRead": "Đánh dẫu tất cả đã đọc",
 		"markAllReadSuccess": "Đánh dấu tất cả đã đọc thành công."
 	},

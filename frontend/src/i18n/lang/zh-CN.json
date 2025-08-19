@@ -699,7 +699,6 @@
 		"show": {
 			"titleCurrent": "当前任务",
 			"titleDates": "从 {from} 到 {to} 的任务",
-			"noDates": "显示无日期的任务",
 			"overdue": "显示过期任务",
 			"fromuntil": "从 {from} 到 {until} 的任务",
 			"select": "选择一个日期范围",
@@ -911,7 +910,6 @@
 			"project4": "例如：{prefix} “带空格的项目”。",
 			"dateAndTime": "日期与时间",
 			"date": "任何日期都将当做新任务的截止日期。 可以使用以下格式的日期：",
-			"dateWeekday": "任意工作日，将使用该日期的下一个日期",
 			"dateCurrentYear": "将使用当前年份",
 			"dateNth": "将使用当月的第 {day} 天",
 			"dateTime": "将日期格式与 “{time}”（或 {timePM}）组合以设置时间。",
@@ -1044,7 +1042,6 @@
 	"notification": {
 		"title": "通知",
 		"none": "没有任何通知。 祝你今天过得愉快！",
-		"explainer": "当您订阅项目或任务发生时，通知将会显示在这里。",
 		"markAllRead": "将所有通知标为已读",
 		"markAllReadSuccess": "成功标记所有通知为已读。"
 	},

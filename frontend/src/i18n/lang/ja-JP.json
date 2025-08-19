@@ -671,7 +671,6 @@
 		"show": {
 			"titleCurrent": "現在のタスク",
 			"titleDates": "{from} 〜 {to} までのタスク",
-			"noDates": "指定日が未設定のタスクを表示",
 			"overdue": "期限切れタスクを表示",
 			"fromuntil": "{from} 〜 {until} までのタスク",
 			"select": "期間の選択",
@@ -963,8 +962,7 @@
 	},
 	"notification": {
 		"title": "通知",
-		"none": "通知はありません。よい一日を！",
-		"explainer": "購読しているプロジェクトやタスクが変更されると通知されます。"
+		"none": "通知はありません。よい一日を！"
 	},
 	"quickActions": {
 		"commands": "コマンド",

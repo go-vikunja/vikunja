@@ -677,7 +677,6 @@
 		"show": {
 			"titleCurrent": "Nykyiset Tehtävät",
 			"titleDates": "Tehtävät väliltä {from} - {to}",
-			"noDates": "Näytä tehtävät joilla ei ole päivämäärää",
 			"overdue": "Näytä erääntyneet tehtävät",
 			"fromuntil": "Tehtävät väliltä {from} - {until}",
 			"select": "Valitse päivämäärä väli",
@@ -951,7 +950,6 @@
 	"notification": {
 		"title": "Ilmoitukset",
 		"none": "Sinulla ei ole ilmoituksia. Mukavaa päivää!",
-		"explainer": "Ilmoitukset näkyvät täällä kun tilaamissasi projekteissa tai tehtävissä tapahtuu jotain.",
 		"markAllRead": "Merkitse kaikki ilmoitukset luetuiksi",
 		"markAllReadSuccess": "Kaikki ilmoitukset merkittiin onnistuneesti luetuiksi."
 	},

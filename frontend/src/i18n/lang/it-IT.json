@@ -103,7 +103,24 @@
 				"overdueTasksRemindersTime": "Orario d'invio delle e-mail per attività scadute",
 				"filterUsedOnOverview": "Filtro utilizzato nella panoramica",
 				"minimumPriority": "Priorità minima delle attività visibili",
+				"dateDisplay": "Formato data",
+				"dateDisplayOptions": {
+					"relative": "Relativa (es. 3 giorni fa)",
+					"mm-dd-yyyy": "MM-GG-AAAA",
+					"dd-mm-yyyy": "GG-MM-AAAA",
+					"yyyy-mm-dd": "AAAA-MM-GG",
+					"mm/dd/yyyy": "MM/GG/AAAA",
+					"dd/mm/yyyy": "GG/MM/AAAA",
+					"yyyy/mm/dd": "AAAA/MM/GG"
+				},
 				"externalUserNameChange": "Il tuo nome è gestito dal tuo provider di autenticazione ({provider}). Per cambiarlo, aggiorna il tuo nome lì."
+			},
+			"sections": {
+				"personalInformation": "Informazioni Personali",
+				"taskAndNotifications": "Progetti e Attività",
+				"privacy": "Privacy",
+				"localization": "Posizione",
+				"appearance": "Aspetto e comportamento"
 			},
 			"totp": {
 				"title": "Autenticazione a due fattori",
@@ -209,7 +226,9 @@
 			"descriptionPasswordRequired": "Inserisci la tua password per procedere:",
 			"request": "Richiedi una copia dei tuoi dati",
 			"success": "Hai richiesto con successo i tuoi dati Vikunja! Ti invieremo un'e-mail una volta che saranno pronti da scaricare.",
-			"downloadTitle": "Scarica i tuoi dati esportati da Vikunja"
+			"downloadTitle": "Scarica i tuoi dati esportati da Vikunja",
+			"ready": "La tua esportazione è pronta per il download. Puoi scaricarla fino al {0}.",
+			"requestNew": "Richiedi un'altra esportazione"
 		}
 	},
 	"project": {
@@ -346,7 +365,22 @@
 			"month": "Mese",
 			"day": "Giorno",
 			"hour": "Ora",
-			"range": "Intervallo di date"
+			"range": "Intervallo di date",
+			"chartLabel": "Progetto diagramma di Gantt",
+			"taskBarsForRow": "Barre delle attività per riga {rowId}",
+			"taskBarLabel": "Attività: {task}. Da {startDate} a {endDate}. {dateType}. Clicca per modificare, trascina per spostare.",
+			"scheduledDates": "Date previste",
+			"estimatedDates": "Date stimate",
+			"resizeStartDate": "Ridimensiona la data di inizio per l'attività {task}",
+			"resizeEndDate": "Ridimensiona la data di fine per l'attività {task}",
+			"timelineHeader": "Intestazione linea temporale con mesi e giorni",
+			"monthsRow": "Riga mesi",
+			"daysRow": "Riga giorni",
+			"monthLabel": "Mese: {month}",
+			"dayLabel": "Giorno: {weekday}, {date}",
+			"dayLabelToday": "Oggi: {weekday}, {date}",
+			"taskAriaLabel": "Attività: {task}",
+			"taskAriaLabelById": "Attività {id}"
 		},
 		"table": {
 			"title": "Tabella",
@@ -421,6 +455,7 @@
 		"title": "Filtri",
 		"clear": "Pulisci Filtri",
 		"showResults": "Mostra risultati",
+		"noResults": "Nessun risultato",
 		"fromView": "La vista corrente ha un filtro impostato:",
 		"fromViewBoth": "Sarà usato in combinazione con quello che inserisci qui.",
 		"attributes": {
@@ -758,7 +793,6 @@
 		"show": {
 			"titleCurrent": "Attività correnti",
 			"titleDates": "Attività dal {from} al {to}",
-			"noDates": "Mostra attività senza date",
 			"overdue": "Mostra attività scadute",
 			"fromuntil": "Attività dal {from} al {until}",
 			"select": "Seleziona intervallo di date",
@@ -975,7 +1009,6 @@
 			"project4": "Per esempio: {prefix}\"Progetto con spazi\".",
 			"dateAndTime": "Data e ora",
 			"date": "Qualsiasi data inserita sarà considerata come data di scadenza della nuova attività. È possibile utilizzare le date in uno dei seguenti formati:",
-			"dateWeekday": "qualsiasi giorno della settimana, userà la data più vicina",
 			"dateCurrentYear": "userà l’anno corrente",
 			"dateNth": "userà il {day} del mese corrente",
 			"dateTime": "Combina uno qualsiasi dei formati di data con \"{time}\" (o {timePM}) per specificare un orario.",
@@ -1080,6 +1113,15 @@
 			"navigateDown": "Evidenzia l'attività successiva",
 			"navigateUp": "Evidenzia l'attività precedente",
 			"open": "Apri l'attività evidenziata"
+		},
+		"gantt": {
+			"title": "Diagramma di Gantt",
+			"moveTaskLeft": "Sposta attività a data precedente",
+			"moveTaskRight": "Sposta l'attività in data successiva",
+			"expandTaskLeft": "Espandi inizio attività a data precedente",
+			"expandTaskRight": "Espandi fine attività a data successiva",
+			"shrinkTaskLeft": "Riduci l'attività dalla data di inizio",
+			"shrinkTaskRight": "Riduci l'attività dalla data di fine"
 		}
 	},
 	"update": {
@@ -1117,7 +1159,6 @@
 	"notification": {
 		"title": "Notifiche",
 		"none": "Nessuna notifica. Buona giornata!",
-		"explainer": "Le notifiche appariranno qui in caso di aggiornamenti nei progetti o nelle attività a cui sei iscritto.",
 		"markAllRead": "Segna tutte le notifiche come lette",
 		"markAllReadSuccess": "Tutte le notifiche sono state contrassegnate come lette."
 	},

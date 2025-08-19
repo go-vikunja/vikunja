@@ -793,7 +793,6 @@
 		"show": {
 			"titleCurrent": "Mevcut Görevler",
 			"titleDates": "{from} ile {to} arasındaki görevler",
-			"noDates": "Tarihi olmayan görevleri göster",
 			"overdue": "Gecikmiş görevleri göster",
 			"fromuntil": "{from} ile {until} arasındaki görevler",
 			"select": "Bir tarih aralığı seçin",
@@ -1010,7 +1009,6 @@
 			"project4": "Örneğin: {prefix}\"Boşluklu Proje\".",
 			"dateAndTime": "Tarih ve saat",
 			"date": "Herhangi bir tarih, yeni görevin bitiş tarihi olarak kullanılacaktır. Şu formatlardan herhangi birinde tarih kullanabilirsiniz:",
-			"dateWeekday": "herhangi bir hafta günü, o günün bir sonraki tarihini kullanır",
 			"dateCurrentYear": "mevcut yılı kullanır",
 			"dateNth": "mevcut ayın {day}. gününü kullanır",
 			"dateTime": "Bir tarihi \"{time}\" (veya {timePM}) ile birleştirerek saat ayarlayın.",
@@ -1161,7 +1159,6 @@
 	"notification": {
 		"title": "Bildirimler",
 		"none": "Hiç bildiriminiz yok. İyi günler!",
-		"explainer": "Abone olduğunuz projeler veya görevlerle ilgili eylemler gerçekleştiğinde bildirimler burada görünecek.",
 		"markAllRead": "Tüm bildirimleri okundu olarak işaretle",
 		"markAllReadSuccess": "Tüm bildirimler başarıyla okundu olarak işaretlendi."
 	},

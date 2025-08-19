@@ -699,7 +699,6 @@
 		"show": {
 			"titleCurrent": "Jelenlegi feladatok",
 			"titleDates": "Feladatok {from} és {to} között",
-			"noDates": "Feladatok megjelenítése, amiknél nincs dátum megadva",
 			"overdue": "A lejárt feladatok megjelenítése",
 			"fromuntil": "Feladatok {from} és {until} között",
 			"select": "Dátumtartomány kiválasztása",
@@ -911,7 +910,6 @@
 			"project4": "Például: {prefix}\"Projekt szóközökkel\".",
 			"dateAndTime": "Dátum és idő",
 			"date": "Bármely dátum az új feladat határidejeként lesz használva. A dátumokat az alábbi formátumok bármelyikében használhatja:",
-			"dateWeekday": "bármely hétköznap, a következő dátumot fogja használni ezzel a dátummal",
 			"dateCurrentYear": "az aktuális évet fogja használni",
 			"dateNth": "az aktuális hónap {day}. napját fogja használni",
 			"dateTime": "Kombinálja a dátumformátumok bármelyikét a „{time}” (vagy {timePM}) paraméterrel az idő beállításához.",
@@ -1044,7 +1042,6 @@
 	"notification": {
 		"title": "Értesítések",
 		"none": "Nincsenek értesítései. Legyen szép napja!",
-		"explainer": "Az értesítések itt jelennek meg, amikor olyan projektek vagy feladatok történnek, amelyekre feliratkozott.",
 		"markAllRead": "Minden értesítés megjelölése olvasottként",
 		"markAllReadSuccess": "Az összes értesítést olvasottként jelölte meg."
 	},

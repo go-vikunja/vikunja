@@ -742,7 +742,6 @@
 		"show": {
 			"titleCurrent": "Trenutna naloga",
 			"titleDates": "Naloge od {from} do {to}",
-			"noDates": "Prikaži naloge brez datumov",
 			"overdue": "Prikaži naloge čez rok",
 			"fromuntil": "Naloge od {from} do {until}",
 			"select": "Izberi časovno obdobje",
@@ -959,7 +958,6 @@
 			"project4": "Na primer: {prefix}\"Projekt s presledki\".",
 			"dateAndTime": "Datum in čas",
 			"date": "Kateri koli datum bo uporabljen kot rok zapadlosti nove naloge. Datume lahko uporabite v kateri koli od teh oblik:",
-			"dateWeekday": "katerikoli delovni dan, bom uporabil naslednji datum s tem datumom",
 			"dateCurrentYear": "bom uporabil tekoče leto",
 			"dateNth": "bom uporabil {day} v tekočem mesecu",
 			"dateTime": "Da nastavite čas, združite katerikoli format datuma z \"{time}\" (ali {timePM}).",
@@ -1094,7 +1092,6 @@
 	"notification": {
 		"title": "Obvestila",
 		"none": "Nimaš nobenih obvestil. Imej lep dan še naprej!",
-		"explainer": "Ko bodo izvedeni projekti dejanj ali naloge, na katere ste se naročili, se bodo tukaj pojavila obvestila.",
 		"markAllRead": "Vsa obvestila označi kot prebrana",
 		"markAllReadSuccess": "Vsa obvestila so bila uspešno označena kot prebrana."
 	},

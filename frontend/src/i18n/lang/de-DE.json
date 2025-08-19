@@ -793,7 +793,6 @@
 		"show": {
 			"titleCurrent": "Aktuelle Aufgaben",
 			"titleDates": "Aufgaben von {from} bis {to}",
-			"noDates": "Aufgaben ohne Datum anzeigen",
 			"overdue": "Überfällige Aufgaben anzeigen",
 			"fromuntil": "Aufgaben von {from} bis {until}",
 			"select": "Datumsbereich wählen",
@@ -1010,7 +1009,6 @@
 			"project4": "Zum Beispiel: {prefix}\"Projekt mit Leerzeichen\".",
 			"dateAndTime": "Datum und Uhrzeit",
 			"date": "Jedes Datum wird als Enddatum der neuen Aufgabe verwendet. Du kannst Daten in jedem dieser Formate verwenden:",
-			"dateWeekday": "jeder Wochentag, wird das nächste Datum mit diesem Tag verwenden",
 			"dateCurrentYear": "wird das laufende Jahr nutzen",
 			"dateNth": "wird den {day}. des aktuellen Monats verwenden",
 			"dateTime": "Kombiniere eines der Datumsformate mit \"{time}\" (oder {timePM}), um eine Zeit festzulegen.",
@@ -1161,7 +1159,6 @@
 	"notification": {
 		"title": "Benachrichtigungen",
 		"none": "Du hast keine Benachrichtigungen. Einen schönen Tag noch!",
-		"explainer": "Benachrichtigungen werden hier angezeigt, wenn Aktionen für Projekte oder Aufgaben, die du abonniert hast, ausgeführt werden.",
 		"markAllRead": "Alle Benachrichtigungen als gelesen markieren",
 		"markAllReadSuccess": "Alle Benachrichtigungen erfolgreich als gelesen markiert."
 	},

@@ -638,7 +638,6 @@
 		"show": {
 			"titleCurrent": "Trenutni zadaci",
 			"titleDates": "Zadaci od {from} do {to}",
-			"noDates": "Prikaži zadatke bez datuma",
 			"overdue": "Prikaži zakašnjele zadatke",
 			"fromuntil": "Zadaci od {from} do {until}",
 			"select": "Odaberi vremenski raspon",

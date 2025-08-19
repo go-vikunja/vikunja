@@ -731,7 +731,6 @@
 		"show": {
 			"titleCurrent": "מטלות עדכניות",
 			"titleDates": "מטלות מ-{from} ועד {to}",
-			"noDates": "הצג מטלות בלי תאריך",
 			"overdue": "הצג מטלות באיחור",
 			"fromuntil": "מטלות מ-{from} ועד {until}",
 			"select": "בחירת טווח תאריכים",

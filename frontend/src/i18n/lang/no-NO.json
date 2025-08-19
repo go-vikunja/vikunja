@@ -772,7 +772,6 @@
 		"show": {
 			"titleCurrent": "Pågående oppgaver",
 			"titleDates": "Oppgaver fra {from} til {to}",
-			"noDates": "Vis oppgaver uten dato",
 			"overdue": "Vis forfalte oppgaver",
 			"fromuntil": "Oppgaver fra {from} til {until}",
 			"select": "Velg et datoområde",
@@ -989,7 +988,6 @@
 			"project4": "For eksempel: {prefix}\"Prosjekt med mellomrom\".",
 			"dateAndTime": "Dato og tid",
 			"date": "Hvilken som helst dato vil bli brukt som forfallsdato for den nye oppgaven. Du kan bruke datoer i hvilket som helst format:",
-			"dateWeekday": "hver ukedag vil bruke neste dato med den datoen",
 			"dateCurrentYear": "vil bruke inneværende år",
 			"dateNth": "vil bruke den {day} i den gjeldende måneden",
 			"dateTime": "Kombiner hvilke som helst av datoformatene med \"{time}\" (eller {timePM}) til å velge et klokkeslett.",
@@ -1131,7 +1129,6 @@
 	"notification": {
 		"title": "Varsler",
 		"none": "Du har ingen varsler på dette tidspunktet!",
-		"explainer": "Varsler vil vises her når det skjer noe i prosjekter eller oppgaver du abonnerer på.",
 		"markAllRead": "Marker alle varslinger som lest",
 		"markAllReadSuccess": "Alle meldinger ble markert som lest."
 	},

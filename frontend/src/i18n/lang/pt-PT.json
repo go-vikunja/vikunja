@@ -778,7 +778,6 @@
 		"show": {
 			"titleCurrent": "Tarefas Atuais",
 			"titleDates": "Tarefas de {from} até {to}",
-			"noDates": "Mostrar tarefas sem datas",
 			"overdue": "Mostrar tarefas em atraso",
 			"fromuntil": "Tarefas de {from} a {until}",
 			"select": "Escolha um intervalo de datas",
@@ -995,7 +994,6 @@
 			"project4": "Por exemplo: {prefix}\"Projeto com espaços\".",
 			"dateAndTime": "Data e hora",
 			"date": "Qualquer data será utilizada como data de vencimento da nova tarefa. Podes utilizar datas em qualquer dos seguintes formatos:",
-			"dateWeekday": "qualquer dia de semana, usará a próxima data com essa data",
 			"dateCurrentYear": "usará o ano atual",
 			"dateNth": "usará o {day} do mês atual",
 			"dateTime": "Combina qualquer um dos formatos de data com \"{time}\" (ou {timePM}) para definir uma hora.",
@@ -1137,7 +1135,6 @@
 	"notification": {
 		"title": "Notificações",
 		"none": "Não tens nenhuma notificação. Tem um bom dia!",
-		"explainer": "As notificações aparecerão aqui quando ocorrem ações em projetos ou tarefas às quais estejas subscrito.",
 		"markAllRead": "Marcar todas as notificações como lidas",
 		"markAllReadSuccess": "Todas as notificações foram marcadas como lidas."
 	},

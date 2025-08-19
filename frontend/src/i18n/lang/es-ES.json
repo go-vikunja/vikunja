@@ -518,7 +518,6 @@
 		"show": {
 			"titleCurrent": "Tareas en Curso",
 			"titleDates": "Tareas desde el {from} hasta el {to}",
-			"noDates": "Mostrar tareas sin fechas",
 			"overdue": "Mostrar tareas vencidas",
 			"fromuntil": "Tareas desde {from} hasta {until}",
 			"select": "Seleccionar un rango de fechas",
@@ -723,7 +722,6 @@
 			"project4": "Por ejemplo: {prefix}\"Proyecto con espacios\".",
 			"dateAndTime": "Fecha y hora",
 			"date": "Cualquier fecha se utilizará como fecha de vencimiento de la tarea nueva. Puede utilizar fechas en cualquiera de estos formatos:",
-			"dateWeekday": "cualquier día de la semana, usará la siguiente fecha a esa fecha",
 			"dateCurrentYear": "se usará el año actual",
 			"dateNth": "se usará el {day}º del mes actual",
 			"dateTime": "Combina cualquiera de los formatos de fecha con \"{time}\" (o {timePM}) para establecer la hora.",
@@ -847,8 +845,7 @@
 	},
 	"notification": {
 		"title": "Notificaciones",
-		"none": "No tienes notificaciones. ¡Que tengas un buen día!",
-		"explainer": "Las notificaciones aparecerán aquí cuando se realicen acciones en proyectos o tareas a las que te hayas suscrito."
+		"none": "No tienes notificaciones. ¡Que tengas un buen día!"
 	},
 	"quickActions": {
 		"commands": "Comandos",

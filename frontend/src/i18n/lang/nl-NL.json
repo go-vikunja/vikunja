@@ -793,7 +793,6 @@
 		"show": {
 			"titleCurrent": "Huidige taken",
 			"titleDates": "Taken van {from} tot {to}",
-			"noDates": "Taken zonder datums tonen",
 			"overdue": "Toon achterstallige taken",
 			"fromuntil": "Taken van {from} tot {until}",
 			"select": "Selecteer datumbereik",
@@ -1010,7 +1009,6 @@
 			"project4": "Bijvoorbeeld: {prefix}\"Project met spaties\".",
 			"dateAndTime": "Datum en tijd",
 			"date": "Een datum zal worden gebruikt als vervaldatum van de nieuwe taak. Je kunt datums in al deze formats gebruiken:",
-			"dateWeekday": "elke dag van de week, gebruikt de volgende datum met die dag",
 			"dateCurrentYear": "zal het huidige jaar gebruiken",
 			"dateNth": "gebruikt de {day}e van de huidige maand",
 			"dateTime": "Combineer een datumnotatie met \"{time}\" (of {timePM}) om een tijd in te stellen.",
@@ -1161,7 +1159,6 @@
 	"notification": {
 		"title": "Notificaties",
 		"none": "Je hebt geen meldingen. Fijne dag!",
-		"explainer": "Hier verschijnen meldingen als acties, projecten of taken waarop u bent geabonneerd worden uitgevoerd.",
 		"markAllRead": "Markeer alle meldingen als gelezen",
 		"markAllReadSuccess": "Alle meldingen zijn als gelezen gemarkeerd."
 	},
