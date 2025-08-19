@@ -56,6 +56,12 @@ var (
 		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		Email:    "user1@example.com",
 	}
+	testuser2 = user.User{
+		ID:       2,
+		Username: "user2",
+		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+		Email:    "user2@example.com",
+	}
 	testuser15 = user.User{
 		ID:       15,
 		Username: "user15",
@@ -305,8 +311,5 @@ func (th *testHelper) Request(t *testing.T, method, path string, payload io.Read
 	}
 	rec := httptest.NewRecorder()
 	th.e.ServeHTTP(rec, req)
-	if rec.Code >= 400 {
-		return rec, errors.New(rec.Body.String())
-	}
 	return rec, nil
 }

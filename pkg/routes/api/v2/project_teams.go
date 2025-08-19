@@ -30,11 +30,11 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// ProjectUsers is a struct to handle project user routes
-type ProjectUsers struct{}
+// ProjectTeams is a struct to handle project team routes
+type ProjectTeams struct{}
 
-// Get returns all users for a project
-func (pu *ProjectUsers) Get(c echo.Context) error {
+// Get handles getting all teams in a project
+func (pt *ProjectTeams) Get(c echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
@@ -67,43 +67,42 @@ func (pu *ProjectUsers) Get(c echo.Context) error {
 	}
 	search := c.QueryParam("s")
 
-	puModel := &models.ProjectUser{ProjectID: projectID}
-
-	users, resultCount, totalItems, err := puModel.ReadAll(s, auth, search, page, perPage)
+	tp := &models.TeamProject{ProjectID: projectID}
+	teams, resultCount, total, err := tp.ReadAll(s, auth, search, page, perPage)
 	if err != nil {
 		return handler.HandleHTTPError(err)
 	}
 
-	c.Response().Header().Set("x-pagination-total-pages", strconv.FormatFloat(math.Ceil(float64(totalItems)/float64(perPage)), 'f', 0, 64))
+	c.Response().Header().Set("x-pagination-total-pages", strconv.FormatFloat(math.Ceil(float64(total)/float64(perPage)), 'f', 0, 64))
 	c.Response().Header().Set("x-pagination-result-count", strconv.Itoa(resultCount))
 	c.Response().Header().Set("Access-Control-Expose-Headers", "x-pagination-total-pages, x-pagination-result-count")
 
-	usersResponse := make([]*ProjectUserResponse, len(users.([]*models.UserWithPermission)))
-	for i, u := range users.([]*models.UserWithPermission) {
-		usersResponse[i] = &ProjectUserResponse{
-			UserWithPermission: u,
-			Links: &ProjectUserLinks{
-				Self:    fmt.Sprintf("/api/v2/users/%d", u.User.ID),
+	teamsResponse := make([]*ProjectTeamResponse, len(teams.([]*models.TeamWithPermission)))
+	for i, t := range teams.([]*models.TeamWithPermission) {
+		teamsResponse[i] = &ProjectTeamResponse{
+			TeamWithPermission: t,
+			Links: &ProjectTeamLinks{
+				Self:    fmt.Sprintf("/api/v2/teams/%d", t.Team.ID),
 				Project: fmt.Sprintf("/api/v2/projects/%d", projectID),
 			},
 		}
 	}
 
-	return c.JSON(http.StatusOK, usersResponse)
+	return c.JSON(http.StatusOK, teamsResponse)
 }
 
-type ProjectUserLinks struct {
+type ProjectTeamLinks struct {
 	Self    string `json:"self"`
 	Project string `json:"project"`
 }
 
-type ProjectUserResponse struct {
-	*models.UserWithPermission
-	Links *ProjectUserLinks `json:"_links"`
+type ProjectTeamResponse struct {
+	*models.TeamWithPermission
+	Links *ProjectTeamLinks `json:"_links"`
 }
 
-// Post adds a user to a project
-func (pu *ProjectUsers) Post(c echo.Context) error {
+// Post adds a team to a project
+func (pt *ProjectTeams) Post(c echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
@@ -126,17 +125,17 @@ func (pu *ProjectUsers) Post(c echo.Context) error {
 		return echo.ErrForbidden
 	}
 
-	puModel := new(models.ProjectUser)
-	if err := c.Bind(puModel); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid project user object provided.").SetInternal(err)
+	tp := new(models.TeamProject)
+	if err := c.Bind(tp); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid team project object provided.").SetInternal(err)
 	}
-	puModel.ProjectID = projectID
+	tp.ProjectID = projectID
 
-	if err := c.Validate(puModel); err != nil {
+	if err := c.Validate(tp); err != nil {
 		return err
 	}
 
-	if err := puModel.Create(s, auth); err != nil {
+	if err := tp.Create(s, auth); err != nil {
 		return handler.HandleHTTPError(err)
 	}
 
@@ -144,11 +143,11 @@ func (pu *ProjectUsers) Post(c echo.Context) error {
 		return handler.HandleHTTPError(err)
 	}
 
-	return c.JSON(http.StatusCreated, puModel)
+	return c.JSON(http.StatusCreated, tp)
 }
 
-// Put updates a user's permissions on a project
-func (pu *ProjectUsers) Put(c echo.Context) error {
+// Put updates a team on a project
+func (pt *ProjectTeams) Put(c echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
@@ -162,9 +161,9 @@ func (pu *ProjectUsers) Put(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid project ID").SetInternal(err)
 	}
 
-	userID, err := strconv.ParseInt(c.Param("userid"), 10, 64)
+	teamID, err := strconv.ParseInt(c.Param("teamid"), 10, 64)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user ID").SetInternal(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid team ID").SetInternal(err)
 	}
 
 	p := &models.Project{ID: projectID}
@@ -176,18 +175,18 @@ func (pu *ProjectUsers) Put(c echo.Context) error {
 		return echo.ErrForbidden
 	}
 
-	puModel := new(models.ProjectUser)
-	if err := c.Bind(puModel); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid project user object provided.").SetInternal(err)
+	tp := new(models.TeamProject)
+	if err := c.Bind(tp); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid team project object provided.").SetInternal(err)
 	}
-	puModel.ProjectID = projectID
-	puModel.UserID = userID
+	tp.ProjectID = projectID
+	tp.TeamID = teamID
 
-	if err := c.Validate(puModel); err != nil {
+	if err := c.Validate(tp); err != nil {
 		return err
 	}
 
-	if err := puModel.Update(s, auth); err != nil {
+	if err := tp.Update(s, auth); err != nil {
 		return handler.HandleHTTPError(err)
 	}
 
@@ -195,11 +194,11 @@ func (pu *ProjectUsers) Put(c echo.Context) error {
 		return handler.HandleHTTPError(err)
 	}
 
-	return c.JSON(http.StatusOK, puModel)
+	return c.JSON(http.StatusOK, tp)
 }
 
-// Delete removes a user from a project
-func (pu *ProjectUsers) Delete(c echo.Context) error {
+// Delete removes a team from a project
+func (pt *ProjectTeams) Delete(c echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
@@ -213,9 +212,9 @@ func (pu *ProjectUsers) Delete(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid project ID").SetInternal(err)
 	}
 
-	userID, err := strconv.ParseInt(c.Param("userid"), 10, 64)
+	teamID, err := strconv.ParseInt(c.Param("teamid"), 10, 64)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user ID").SetInternal(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid team ID").SetInternal(err)
 	}
 
 	p := &models.Project{ID: projectID}
@@ -227,12 +226,12 @@ func (pu *ProjectUsers) Delete(c echo.Context) error {
 		return echo.ErrForbidden
 	}
 
-	puModel := &models.ProjectUser{
+	tp := &models.TeamProject{
 		ProjectID: projectID,
-		UserID:    userID,
+		TeamID:    teamID,
 	}
 
-	if err := puModel.Delete(s, auth); err != nil {
+	if err := tp.Delete(s, auth); err != nil {
 		return handler.HandleHTTPError(err)
 	}
 

@@ -204,7 +204,8 @@ func (lu *ProjectUser) ReadAll(s *xorm.Session, a web.Auth, search string, page 
 	// Get all users
 	all := []*UserWithPermission{}
 	query := s.
-		Join("INNER", "users_projects", "user_id = users.id").
+		Select("users.*, users_projects.permission").
+		Join("INNER", "users_projects", "users_projects.user_id = users.id").
 		Where("users_projects.project_id = ?", lu.ProjectID).
 		Where(db.ILIKE("users.username", search))
 	if limit > 0 {

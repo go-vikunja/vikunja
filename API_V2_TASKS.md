@@ -110,11 +110,11 @@ Each task in this list corresponds to a single API endpoint or a group of relate
 *   **Description:** Manage user and team associations for a project.
 *   **V1 Equivalents:** `GET /projects/:project/projectusers`, `PUT /projects/:project/users`, etc.
 *   **Tasks:**
-    *   [ ] `GET /api/v2/projects/{id}/users`
-    *   [ ] `POST /api/v2/projects/{id}/users`
-    *   [ ] `PUT /api/v2/projects/{id}/users/{userId}`
-    *   [ ] `DELETE /api/v2/projects/{id}/users/{userId}`
-    *   [ ] Update the frontend client to use these endpoints.
+    *   [x] `GET /api/v2/projects/{id}/users`
+    *   [x] `POST /api/v2/projects/{id}/users`
+    *   [x] `PUT /api/v2/projects/{id}/users/{userId}`
+    *   [x] `DELETE /api/v2/projects/{id}/users/{userId}`
+    *   [x] Update the frontend client to use these endpoints.
     *   [x] `GET /api/v2/projects/{id}/teams`
     *   [x] `POST /api/v2/projects/{id}/teams`
     *   [x] `PUT /api/v2/projects/{id}/teams/{teamId}`

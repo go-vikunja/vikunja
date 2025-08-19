@@ -50,11 +50,12 @@ func RegisterProjects(a *echo.Group) {
 	projectUsersGroup.DELETE("/:userid", projectUsersHandler.Delete)
 
 	// Project Teams
+	projectTeamsHandler := &ProjectTeams{}
 	projectTeams := projects.Group("/:id/teams")
-	projectTeams.GET("", GetProjectTeams)
-	projectTeams.POST("", AddProjectTeam)
-	projectTeams.PUT("/:teamid", UpdateProjectTeam)
-	projectTeams.DELETE("/:teamid", RemoveProjectTeam)
+	projectTeams.GET("", projectTeamsHandler.Get)
+	projectTeams.POST("", projectTeamsHandler.Post)
+	projectTeams.PUT("/:teamid", projectTeamsHandler.Put)
+	projectTeams.DELETE("/:teamid", projectTeamsHandler.Delete)
 }
 
 type ProjectLinks struct {
@@ -169,7 +170,7 @@ func CreateProject(c echo.Context) error {
 	}
 
 	if err := c.Validate(p); err != nil {
-		return err
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error()).SetInternal(err)
 	}
 
 	if err := p.Create(s, auth); err != nil {
@@ -263,7 +264,7 @@ func UpdateProject(c echo.Context) error {
 	updatePayload.ID = projectID
 
 	if err := c.Validate(updatePayload); err != nil {
-		return err
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error()).SetInternal(err)
 	}
 
 	// The CanUpdate method checks permissions and loads the project.
@@ -339,163 +340,3 @@ func DuplicateProject(c echo.Context) error {
 }
 
 
-// GetProjectTeams handles getting all teams in a project
-func GetProjectTeams(c echo.Context) error {
-	s := db.NewSession()
-	defer s.Close()
-
-	auth, err := auth.GetAuthFromClaims(c)
-	if err != nil {
-		return handler.HandleHTTPError(err)
-	}
-
-	projectID, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid project ID").SetInternal(err)
-	}
-
-	pageStr := c.QueryParam("page")
-	if pageStr == "" {
-		pageStr = "1"
-	}
-	page, err := strconv.Atoi(pageStr)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid page number").SetInternal(err)
-	}
-
-	perPageStr := c.QueryParam("per_page")
-	if perPageStr == "" {
-		perPageStr = "20"
-	}
-	perPage, err := strconv.Atoi(perPageStr)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid per_page number").SetInternal(err)
-	}
-	search := c.QueryParam("s")
-
-	tp := &models.TeamProject{ProjectID: projectID}
-	teams, resultCount, total, err := tp.ReadAll(s, auth, search, page, perPage)
-	if err != nil {
-		return handler.HandleHTTPError(err)
-	}
-
-	c.Response().Header().Set("x-pagination-total-pages", strconv.FormatFloat(math.Ceil(float64(total)/float64(perPage)), 'f', 0, 64))
-	c.Response().Header().Set("x-pagination-result-count", strconv.Itoa(resultCount))
-	c.Response().Header().Set("Access-Control-Expose-Headers", "x-pagination-total-pages, x-pagination-result-count")
-
-	return c.JSON(http.StatusOK, teams)
-}
-
-// AddProjectTeam adds a team to a project
-func AddProjectTeam(c echo.Context) error {
-	s := db.NewSession()
-	defer s.Close()
-
-	auth, err := auth.GetAuthFromClaims(c)
-	if err != nil {
-		return handler.HandleHTTPError(err)
-	}
-
-	projectID, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid project ID").SetInternal(err)
-	}
-
-	tp := new(models.TeamProject)
-	if err := c.Bind(tp); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid team project object provided.").SetInternal(err)
-	}
-	tp.ProjectID = projectID
-
-	if err := c.Validate(tp); err != nil {
-		return err
-	}
-
-	if err := tp.Create(s, auth); err != nil {
-		return handler.HandleHTTPError(err)
-	}
-
-	if err := s.Commit(); err != nil {
-		return handler.HandleHTTPError(err)
-	}
-
-	return c.JSON(http.StatusCreated, tp)
-}
-
-// UpdateProjectTeam updates a team on a project
-func UpdateProjectTeam(c echo.Context) error {
-	s := db.NewSession()
-	defer s.Close()
-
-	auth, err := auth.GetAuthFromClaims(c)
-	if err != nil {
-		return handler.HandleHTTPError(err)
-	}
-
-	projectID, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid project ID").SetInternal(err)
-	}
-
-	teamID, err := strconv.ParseInt(c.Param("teamid"), 10, 64)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid team ID").SetInternal(err)
-	}
-
-	tp := new(models.TeamProject)
-	if err := c.Bind(tp); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid team project object provided.").SetInternal(err)
-	}
-	tp.ProjectID = projectID
-	tp.TeamID = teamID
-
-	if err := c.Validate(tp); err != nil {
-		return err
-	}
-
-	if err := tp.Update(s, auth); err != nil {
-		return handler.HandleHTTPError(err)
-	}
-
-	if err := s.Commit(); err != nil {
-		return handler.HandleHTTPError(err)
-	}
-
-	return c.JSON(http.StatusOK, tp)
-}
-
-// RemoveProjectTeam removes a team from a project
-func RemoveProjectTeam(c echo.Context) error {
-	s := db.NewSession()
-	defer s.Close()
-
-	auth, err := auth.GetAuthFromClaims(c)
-	if err != nil {
-		return handler.HandleHTTPError(err)
-	}
-
-	projectID, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid project ID").SetInternal(err)
-	}
-
-	teamID, err := strconv.ParseInt(c.Param("teamid"), 10, 64)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid team ID").SetInternal(err)
-	}
-
-	tp := &models.TeamProject{
-		ProjectID: projectID,
-		TeamID:    teamID,
-	}
-
-	if err := tp.Delete(s, auth); err != nil {
-		return handler.HandleHTTPError(err)
-	}
-
-	if err := s.Commit(); err != nil {
-		return handler.HandleHTTPError(err)
-	}
-
-	return c.NoContent(http.StatusNoContent)
-}

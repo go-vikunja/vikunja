@@ -36,15 +36,17 @@ func TestGetProjectUsers(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusOK, rec.Code)
 
-	var users []*models.UserWithPermission
+	var users []map[string]interface{}
 	err = json.Unmarshal(rec.Body.Bytes(), &users)
 	require.NoError(t, err)
 
 	assert.Len(t, users, 2)
-	assert.Equal(t, int64(1), users[0].ID)
-	assert.Equal(t, models.PermissionAdmin, users[0].Permission)
-	assert.Equal(t, int64(2), users[1].ID)
-	assert.Equal(t, models.PermissionRead, users[1].Permission)
+	assert.Equal(t, float64(1), users[0]["id"])
+	assert.Equal(t, float64(2), users[0]["permission"])
+	assert.NotNil(t, users[0]["_links"])
+	assert.Equal(t, float64(2), users[1]["id"])
+	assert.Equal(t, float64(0), users[1]["permission"])
+	assert.NotNil(t, users[1]["_links"])
 }
 
 func TestAddProjectUser(t *testing.T) {
@@ -90,4 +92,51 @@ func TestRemoveProjectUser(t *testing.T) {
 	rec, err := th.Request(t, "DELETE", "/api/v2/projects/3/users/2", nil)
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusNoContent, rec.Code)
+}
+
+func TestGetProjectUsersWrongProject(t *testing.T) {
+	th := NewTestHelper(t)
+	th.Login(t, &testuser1)
+
+	rec, err := th.Request(t, "GET", "/api/v2/projects/999/users", nil)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusNotFound, rec.Code)
+}
+
+func TestGetProjectUsersNoPermission(t *testing.T) {
+	th := NewTestHelper(t)
+	th.Login(t, &testuser2)
+
+	rec, err := th.Request(t, "GET", "/api/v2/projects/1/users", nil)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusForbidden, rec.Code)
+}
+
+func TestAddProjectUserNoPermission(t *testing.T) {
+	th := NewTestHelper(t)
+	th.Login(t, &testuser2)
+
+	body := `{"username": "user3", "permission": 1}`
+	rec, err := th.Request(t, "POST", "/api/v2/projects/1/users", strings.NewReader(body))
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusForbidden, rec.Code)
+}
+
+func TestUpdateProjectUserNoPermission(t *testing.T) {
+	th := NewTestHelper(t)
+	th.Login(t, &testuser2)
+
+	body := `{"permission": 2}`
+	rec, err := th.Request(t, "PUT", "/api/v2/projects/3/users/2", strings.NewReader(body))
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusForbidden, rec.Code)
+}
+
+func TestRemoveProjectUserNoPermission(t *testing.T) {
+	th := NewTestHelper(t)
+	th.Login(t, &testuser2)
+
+	rec, err := th.Request(t, "DELETE", "/api/v2/projects/3/users/2", nil)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusForbidden, rec.Code)
 }

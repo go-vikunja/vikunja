@@ -49,16 +49,18 @@ func TestGetProjectTeamsWrongProject(t *testing.T) {
 	th := NewTestHelper(t)
 	th.Login(t, &testuser1)
 
-	_, err := th.Request(t, "GET", "/api/v2/projects/999/teams", nil)
-	require.Error(t, err)
+	rec, err := th.Request(t, "GET", "/api/v2/projects/999/teams", nil)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusNotFound, rec.Code)
 }
 
 func TestGetProjectTeamsNoPermission(t *testing.T) {
 	th := NewTestHelper(t)
 	th.Login(t, &testuser1)
 
-	_, err := th.Request(t, "GET", "/api/v2/projects/5/teams", nil)
-	require.Error(t, err)
+	rec, err := th.Request(t, "GET", "/api/v2/projects/5/teams", nil)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusForbidden, rec.Code)
 }
 
 func TestAddProjectTeam(t *testing.T) {

@@ -157,7 +157,7 @@ func TestProjectUser_ReadAll(t *testing.T) {
 			Updated:                      testUpdatedTime,
 			ExportFileID:                 1,
 		},
-		Permission: PermissionRead,
+		Permission: PermissionAdmin,
 	}
 	user2Read := &UserWithPermission{
 		User: user.User{
