@@ -302,3 +302,22 @@ This section covers the remaining resources that need to be implemented for full
 *   **[ ] Unit Tests:** Ensure all new v2 handlers and models have comprehensive unit tests.
 *   **[ ] Integration Tests:** Write integration tests to ensure the v2 API works correctly as a whole.
 *   **[ ] Regression Testing:** Run the full test suite to catch any regressions in the v1 API.
+
+## V. User & Info
+
+*   **[ ] Info:**
+    *   [ ] Implement `GET /api/v2/info`
+    *   [ ] Update the frontend client to use this endpoint.
+*   **[ ] Timezones:**
+    *   [ ] Implement `GET /api/v2/timezones`
+    *   [ ] Update the frontend client to use this endpoint.
+*   **[ ] Avatars:**
+    *   [ ] Implement `GET /api/v2/users/{username}/avatar`
+    *   [ ] Update the frontend client to use this endpoint.
+
+## VI. Subscriptions
+
+*   **[ ] Subscriptions:**
+    *   [ ] Implement `POST /api/v2/{entityType}/{entityId}/subscription`
+    *   [ ] Implement `DELETE /api/v2/{entityType}/{entityId}/subscription`
+    *   [ ] Update the frontend client to use these endpoints.

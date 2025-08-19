@@ -1,0 +1,12 @@
+# .air.toml
+root = "."
+tmp_dir = "tmp"
+
+[build]
+cmd = "go build -o ./tmp/vikunja ."
+bin = "./tmp/vikunja"
+include_dir = ["pkg", "rest", "cmd"]
+exclude_dir = ["frontend", "tmp", "dist", "desktop"]
+
+[log]
+color = true
