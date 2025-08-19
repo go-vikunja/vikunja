@@ -1,6 +1,6 @@
 import {AuthenticatedHTTPFactory} from '@/helpers/fetcher'
 import type {Method} from 'axios'
-
+import {useConfigStore} from '@/stores/config'
 import {objectToSnakeCase} from '@/helpers/case'
 import AbstractModel from '@/models/abstractModel'
 import type {IAbstract} from '@/modelTypes/IAbstract'
@@ -59,6 +59,7 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 	// This contains the total number of pages and the number of results for the current page
 	totalPages = 0
 	resultCount = 0
+	basePath = '/api/v1'
 
 	/////////////
 	// Service init
@@ -188,6 +189,11 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 		)
 	}
 
+	getFullUrl(path: string): string {
+		const configStore = useConfigStore()
+		return `${configStore.apiBase}${this.basePath}${path}`
+	}
+
 	/**
 	 * setLoading is a method which sets the loading variable to true, after a timeout of 100ms.
 	 * It has the timeout to prevent the loading indicator from showing for only a blink of an eye in the
@@ -305,7 +311,7 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 		const cancel = this.setLoading()
 
 		model = this.beforeGet(model)
-		const finalUrl = this.getReplacedRoute(url, model)
+		const finalUrl = this.getFullUrl(this.getReplacedRoute(url, model))
 
 		try {
 			const response = await this.http.get(finalUrl, {params: prepareParams(params)})
@@ -319,7 +325,7 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 
 	async getBlobUrl(url : string, method : Method = 'GET', data = {}) {
 		const response = await this.http({
-			url,
+			url: this.getFullUrl(url),
 			method,
 			responseType: 'blob',
 			data,
@@ -354,7 +360,7 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 
 		const cancel = this.setLoading()
 		model = this.beforeGet(model)
-		const finalUrl = this.getReplacedRoute(this.paths.getAll, model)
+		const finalUrl = this.getFullUrl(this.getReplacedRoute(this.paths.getAll, model))
 
 		try {
 			const response = await this.http.get(finalUrl, {params: prepareParams(params)})
@@ -381,7 +387,7 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 		}
 
 		const cancel = this.setLoading()
-		const finalUrl = this.getReplacedRoute(this.paths.create, model)
+		const finalUrl = this.getFullUrl(this.getReplacedRoute(this.paths.create, model))
 
 		try {
 			const response = await this.http.put(finalUrl, model)
@@ -403,7 +409,7 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 		const cancel = this.setLoading()
 
 		try {
-			const response = await this.http.post(url, model)
+			const response = await this.http.post(this.getFullUrl(url), model)
 			const result = this.modelUpdateFactory(response.data)
 			if (typeof model.maxPermission !== 'undefined') {
 				result.maxPermission = model.maxPermission
@@ -435,10 +441,10 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 		}
 
 		const cancel = this.setLoading()
-		const finalUrl = this.getReplacedRoute(this.paths.delete, model)
+		const finalUrl = this.getFullUrl(this.getReplacedRoute(this.paths.delete, model))
 
 		try {
-			const {data} = await this.http.delete(finalUrl, model)
+			const {data} = await this.http.delete(finalUrl, { data: model })
 			return data
 		} finally {
 			cancel()
@@ -471,7 +477,7 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 		const cancel = this.setLoading()
 		try {
 			const response = await this.http.put(
-				url,
+				this.getFullUrl(url),
 				formData,
 				{
 					headers: {
