@@ -142,13 +142,14 @@ func (lu *ProjectUser) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{projectID}/users/{userID} [delete]
 func (lu *ProjectUser) Delete(s *xorm.Session, _ web.Auth) (err error) {
-
-	// Check if the user exists
-	u, err := user.GetUserByUsername(s, lu.Username)
-	if err != nil {
-		return
+	if lu.UserID == 0 {
+		// Check if the user exists
+		u, err := user.GetUserByUsername(s, lu.Username)
+		if err != nil {
+			return err
+		}
+		lu.UserID = u.ID
 	}
-	lu.UserID = u.ID
 
 	// Check if the user has access to the project
 	has, err := s.
@@ -243,28 +244,29 @@ func (lu *ProjectUser) ReadAll(s *xorm.Session, a web.Auth, search string, page 
 // @Failure 404 {object} web.HTTPError "User or project does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{projectID}/users/{userID} [post]
-func (lu *ProjectUser) Update(s *xorm.Session, _ web.Auth) (err error) {
+func (pu *ProjectUser) Update(s *xorm.Session, _ web.Auth) (err error) {
+	if pu.UserID == 0 {
+		// Check if the user exists
+		u, err := user.GetUserByUsername(s, pu.Username)
+		if err != nil {
+			return err
+		}
+		pu.UserID = u.ID
+	}
 
 	// Check if the permission is valid
-	if err := lu.Permission.isValid(); err != nil {
+	if err := pu.Permission.isValid(); err != nil {
 		return err
 	}
-
-	// Check if the user exists
-	u, err := user.GetUserByUsername(s, lu.Username)
-	if err != nil {
-		return err
-	}
-	lu.UserID = u.ID
 
 	_, err = s.
-		Where("project_id = ? AND user_id = ?", lu.ProjectID, lu.UserID).
+		Where("project_id = ? AND user_id = ?", pu.ProjectID, pu.UserID).
 		Cols("permission").
-		Update(lu)
+		Update(pu)
 	if err != nil {
 		return err
 	}
 
-	err = updateProjectLastUpdated(s, &Project{ID: lu.ProjectID})
+	err = updateProjectLastUpdated(s, &Project{ID: pu.ProjectID})
 	return
 }

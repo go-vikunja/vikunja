@@ -118,8 +118,8 @@ func TestProjectV2Delete(t *testing.T) {
 	t.Run("Forbidden", func(t *testing.T) {
 		th := NewTestHelper(t)
 		th.Login(t, &testuser1)
-		// User 1 is not an admin on project 3
-		_, err := th.Request(t, "DELETE", "/api/v2/projects/3", nil)
+		// User 1 has no permissions on project 2
+		_, err := th.Request(t, "DELETE", "/api/v2/projects/2", nil)
 		require.Error(t, err)
 	})
 }
