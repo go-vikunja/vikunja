@@ -311,5 +311,8 @@ func (th *testHelper) Request(t *testing.T, method, path string, payload io.Read
 	}
 	rec := httptest.NewRecorder()
 	th.e.ServeHTTP(rec, req)
+	if rec.Code >= 400 {
+		return rec, errors.New(rec.Body.String())
+	}
 	return rec, nil
 }
