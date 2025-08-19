@@ -22,7 +22,6 @@ Each task in this list corresponds to a single API endpoint or a group of relate
 
 *   **Description:** Retrieve all projects for the current user.
 *   **V1 Equivalent:** `GET /projects`
-*   **Status:** Done
 *   **Tasks:**
     *   [x] Implement the backend endpoint.
     *   [ ] Update the frontend client to use this endpoint.
@@ -39,7 +38,6 @@ Each task in this list corresponds to a single API endpoint or a group of relate
 
 *   **Description:** Create a new project.
 *   **V1 Equivalent:** `PUT /projects`
-*   **Status:** Done
 *   **Tasks:**
     *   [x] Implement the backend endpoint.
     *   [ ] Update the frontend client to use this endpoint.
@@ -54,7 +52,6 @@ Each task in this list corresponds to a single API endpoint or a group of relate
 
 *   **Description:** Retrieve a single project by its ID.
 *   **V1 Equivalent:** `GET /projects/:project`
-*   **Status:** Done
 *   **Tasks:**
     *   [x] Implement the backend endpoint.
     *   [ ] Update the frontend client to use this endpoint.
@@ -68,7 +65,6 @@ Each task in this list corresponds to a single API endpoint or a group of relate
 
 *   **Description:** Update a project.
 *   **V1 Equivalent:** `POST /projects/:project`
-*   **Status:** Done
 *   **Tasks:**
     *   [x] Implement the backend endpoint.
     *   [ ] Update the frontend client to use this endpoint.
@@ -83,7 +79,6 @@ Each task in this list corresponds to a single API endpoint or a group of relate
 
 *   **Description:** Delete a project.
 *   **V1 Equivalent:** `DELETE /projects/:project`
-*   **Status:** Done
 *   **Tasks:**
     *   [x] Implement the backend endpoint.
     *   [ ] Update the frontend client to use this endpoint.
@@ -97,7 +92,6 @@ Each task in this list corresponds to a single API endpoint or a group of relate
 
 *   **Description:** Duplicate a project.
 *   **V1 Equivalent:** `PUT /projects/:projectid/duplicate`
-*   **Status:** Done
 *   **Tasks:**
     *   [x] Implement the backend endpoint.
     *   [ ] Update the frontend client to use this endpoint.
@@ -141,7 +135,6 @@ Each task in this list corresponds to a single API endpoint or a group of relate
 
 *   **Description:** Retrieve all tasks for a project.
 *   **V1 Equivalent:** `GET /projects/:project/tasks`, `GET /projects/:project/views/:view/tasks`
-*   **Status:** Done
 *   **Tasks:**
     *   [x] Implement the backend endpoint.
     *   [ ] Update the frontend client to use this endpoint.
