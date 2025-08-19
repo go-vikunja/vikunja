@@ -13,7 +13,7 @@ in {
     actionlint
     crowdin-cli
     nfpm
-		pkgs-unstable.watchexec
+		pkgs-unstable.air
     # API tools
     golangci-lint mage
     # Desktop
@@ -63,7 +63,8 @@ in {
   processes = {
     api = {
       #exec = "mage build && ./vikunja";
-      exec = "watchexec -r -e go -- 'go run .'";
+      #exec = "watchexec -r -e go -- 'go run .'";
+			exec = "air";
     };
     frontend = {
       exec = "pnpm --dir frontend run serve";
