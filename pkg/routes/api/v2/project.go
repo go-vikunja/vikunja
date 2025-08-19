@@ -42,11 +42,12 @@ func RegisterProjects(a *echo.Group) {
 	projects.POST("/:id/duplicate", DuplicateProject)
 
 	// Project Users
-	projectUsers := projects.Group("/:id/users")
-	projectUsers.GET("", GetProjectUsers)
-	projectUsers.POST("", AddProjectUser)
-	projectUsers.PUT("/:userid", UpdateProjectUser)
-	projectUsers.DELETE("/:userid", RemoveProjectUser)
+	projectUsersHandler := &ProjectUsers{}
+	projectUsersGroup := projects.Group("/:id/users")
+	projectUsersGroup.GET("", projectUsersHandler.Get)
+	projectUsersGroup.POST("", projectUsersHandler.Post)
+	projectUsersGroup.PUT("/:userid", projectUsersHandler.Put)
+	projectUsersGroup.DELETE("/:userid", projectUsersHandler.Delete)
 
 	// Project Teams
 	projectTeams := projects.Group("/:id/teams")
@@ -337,25 +338,6 @@ func DuplicateProject(c echo.Context) error {
 	return c.String(http.StatusNotImplemented, "Not Implemented")
 }
 
-// GetProjectUsers is a stub handler
-func GetProjectUsers(c echo.Context) error {
-	return c.String(http.StatusNotImplemented, "Not Implemented")
-}
-
-// AddProjectUser is a stub handler
-func AddProjectUser(c echo.Context) error {
-	return c.String(http.StatusNotImplemented, "Not Implemented")
-}
-
-// UpdateProjectUser is a stub handler
-func UpdateProjectUser(c echo.Context) error {
-	return c.String(http.StatusNotImplemented, "Not Implemented")
-}
-
-// RemoveProjectUser is a stub handler
-func RemoveProjectUser(c echo.Context) error {
-	return c.String(http.StatusNotImplemented, "Not Implemented")
-}
 
 // GetProjectTeams handles getting all teams in a project
 func GetProjectTeams(c echo.Context) error {

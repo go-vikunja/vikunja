@@ -1,7 +1,7 @@
 - id: 1
   user_id: 1
   project_id: 3
-  permission: 0
+  permission: 2
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 - id: 2
