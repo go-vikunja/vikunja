@@ -124,7 +124,7 @@ Each task in this list corresponds to a single API endpoint or a group of relate
 *   **Description:** Retrieve all tasks for the current user.
 *   **V1 Equivalent:** `GET /tasks/all`
 *   **Tasks:**
-    *   [ ] Implement the backend endpoint.
+    *   [x] Implement the backend endpoint.
     *   [ ] Update the frontend client to use this endpoint.
 *   **Requirements:**
     *   Implement pagination and filtering.
