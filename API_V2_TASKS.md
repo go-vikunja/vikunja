@@ -141,8 +141,9 @@ Each task in this list corresponds to a single API endpoint or a group of relate
 
 *   **Description:** Retrieve all tasks for a project.
 *   **V1 Equivalent:** `GET /projects/:project/tasks`, `GET /projects/:project/views/:view/tasks`
+*   **Status:** Done
 *   **Tasks:**
-    *   [ ] Implement the backend endpoint.
+    *   [x] Implement the backend endpoint.
     *   [ ] Update the frontend client to use this endpoint.
 *   **Requirements:**
     *   Implement pagination and filtering.

@@ -56,6 +56,9 @@ func RegisterProjects(a *echo.Group) {
 	projectTeams.POST("", projectTeamsHandler.Post)
 	projectTeams.PUT("/:teamid", projectTeamsHandler.Put)
 	projectTeams.DELETE("/:teamid", projectTeamsHandler.Delete)
+
+	// Project Tasks
+	projects.GET("/:id/tasks", GetProjectTasks)
 }
 
 type ProjectLinks struct {

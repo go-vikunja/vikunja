@@ -241,7 +241,25 @@ func getFilterValueForBucketFilter(filter string, view *ProjectView) (newFilter 
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/views/{view}/tasks [get]
 func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
+	if tf.ProjectID != 0 {
+		p, err := GetProjectSimpleByID(s, tf.ProjectID)
+		if err != nil {
+			return nil, 0, 0, err
+		}
+		tasks, resultCount, totalItems, err := getTasksForProjects(s, []*Project{p}, a, &taskSearchOptions{
+			search:  search,
+			page:    page,
+			perPage: perPage,
+		}, nil)
+		if err != nil {
+			return nil, 0, 0, err
+		}
+		return tasks, resultCount, totalItems, nil
+	}
+	return tf.ReadAllTasks(s, a, search, page, perPage)
+}
 
+func (tf *TaskCollection) ReadAllTasks(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
 	// If the project id is < -1 this means we're dealing with a saved filter - in that case we get and populate the filter
 	// -1 is the favorites project which works as intended
 	if !tf.isSavedFilter && tf.ProjectID < -1 {
