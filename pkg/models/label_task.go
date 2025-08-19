@@ -192,8 +192,8 @@ func GetLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*Lab
 		if isLinkShareAuth {
 			projectIDs = []int64{linkShare.ProjectID}
 		} else {
-			projects, _, _, err := getRawProjectsForUser(s, &projectOptions{
-				user: &user.User{ID: opts.User.GetID()},
+			projects, _, _, err := getRawProjectsForUser(s, &ProjectOptions{
+				User: &user.User{ID: opts.User.GetID()},
 			})
 			if err != nil {
 				return nil, 0, 0, err

@@ -1,9 +1,9 @@
-import AbstractService from './abstractService'
+import AbstractServiceV2 from './abstractServiceV2'
 import TeamProjectModel from '@/models/teamProject'
 import type {ITeamProject} from '@/modelTypes/ITeamProject'
 import TeamModel from '@/models/team'
 
-export default class TeamProjectService extends AbstractService<ITeamProject> {
+export default class TeamProjectService extends AbstractServiceV2<ITeamProject> {
 	constructor() {
 		super({
 			create: '/projects/{projectId}/teams',

@@ -127,9 +127,9 @@ func BenchmarkTaskSearch(b *testing.B) {
 	s := db.NewSession()
 	projects, _, _, err := getRawProjectsForUser(
 		s,
-		&projectOptions{
-			user: auth,
-			page: -1,
+		&ProjectOptions{
+			User: auth,
+			Page: -1,
 		},
 	)
 	s.Close()

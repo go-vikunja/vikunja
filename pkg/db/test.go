@@ -67,7 +67,6 @@ func InitTestFixtures(tablenames ...string) (err error) {
 	config.InitDefaultConfig()
 	// We need to set the root path even if we're not using the config, otherwise fixtures are not loaded correctly
 	config.ServiceRootpath.Set(os.Getenv("VIKUNJA_SERVICE_ROOTPATH"))
-
 	// Sync fixtures
 	err = InitFixtures(tablenames...)
 	if err != nil {

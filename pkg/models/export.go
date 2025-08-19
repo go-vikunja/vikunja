@@ -132,12 +132,12 @@ func exportProjectsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (task
 	// Get all projects
 	rawProjects, _, _, err := getRawProjectsForUser(
 		s,
-		&projectOptions{
-			search:      "",
-			user:        u,
-			page:        0,
-			perPage:     -1,
-			getArchived: true,
+		&ProjectOptions{
+			Search:      "",
+			User:        u,
+			Page:        0,
+			PerPage:     -1,
+			GetArchived: true,
 		})
 	if err != nil {
 		return taskIDs, err
@@ -336,9 +336,9 @@ func exportSavedFilters(s *xorm.Session, u *user.User, wr *zip.Writer) (err erro
 func exportProjectBackgrounds(s *xorm.Session, u *user.User, wr *zip.Writer) (err error) {
 	projects, _, _, err := getRawProjectsForUser(
 		s,
-		&projectOptions{
-			user: u,
-			page: -1,
+		&ProjectOptions{
+			User: u,
+			Page: -1,
 		},
 	)
 	if err != nil {

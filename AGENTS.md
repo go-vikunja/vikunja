@@ -212,11 +212,13 @@ This section provides instructions for setting up the development environment an
 ### Backend
 
 1.  **Install Dependencies**: Run `go mod download` to install the backend dependencies.
-2.  **Build**: Run `mage build` to build the backend.
-3.  **Run Tests**:
+2.  **Build Frontend**: The backend tests require the frontend to be built first. Navigate to the `frontend` directory, run `pnpm install` and then `pnpm build`.
+3.  **Build**: Run `mage build` to build the backend.
+4.  **Run Tests**:
     *   Run `mage test:feature` to run the feature tests.
     *   Run `mage test:web` to run the web tests.
-    *   **Note**: The backend tests require the `VIKUNJA_SERVICE_ROOTPATH` environment variable to be set to the root of the project. For example: `export VIKUNJA_SERVICE_ROOTPATH=$(pwd)`.
+    *   **Note**: The backend tests require the `VIKUNJA_SERVICE_ROOTPATH` environment variable to be set to the root of the project. You also need to ensure that the `mage` binary is in your `PATH`.
+    *   Example: `export VIKUNJA_SERVICE_ROOTPATH=$(pwd) && export PATH=$PATH:$(go env GOPATH)/bin && mage test:web`
 
 ### Frontend
 
