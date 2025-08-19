@@ -238,6 +238,7 @@ func registerAPIRoutesV2(a *echo.Group) {
 	setupMetricsMiddleware(a)
 
 	apiv2.RegisterProjects(a)
+	apiv2.RegisterTasks(a)
 }
 
 func registerAPIRoutes(a *echo.Group) {
