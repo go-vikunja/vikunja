@@ -793,6 +793,7 @@
 		"show": {
 			"titleCurrent": "Attività correnti",
 			"titleDates": "Attività dal {from} al {to}",
+			"noDates": "Mostra attività senza data",
 			"overdue": "Mostra attività scadute",
 			"fromuntil": "Attività dal {from} al {until}",
 			"select": "Seleziona intervallo di date",
@@ -1009,6 +1010,7 @@
 			"project4": "Per esempio: {prefix}\"Progetto con spazi\".",
 			"dateAndTime": "Data e ora",
 			"date": "Qualsiasi data inserita sarà considerata come data di scadenza della nuova attività. È possibile utilizzare le date in uno dei seguenti formati:",
+			"dateWeekday": "ogni giorno della settimana, userà la prossima data con quel giorno",
 			"dateCurrentYear": "userà l’anno corrente",
 			"dateNth": "userà il {day} del mese corrente",
 			"dateTime": "Combina uno qualsiasi dei formati di data con \"{time}\" (o {timePM}) per specificare un orario.",
@@ -1159,6 +1161,7 @@
 	"notification": {
 		"title": "Notifiche",
 		"none": "Nessuna notifica. Buona giornata!",
+		"explainer": "Le notifiche appariranno qui in caso di aggiornamenti nei progetti o nelle attività a cui sei iscritto.",
 		"markAllRead": "Segna tutte le notifiche come lette",
 		"markAllReadSuccess": "Tutte le notifiche sono state contrassegnate come lette."
 	},

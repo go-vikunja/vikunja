@@ -793,6 +793,7 @@
 		"show": {
 			"titleCurrent": "Momentani Uufgabe",
 			"titleDates": "Uufgabe vo {from} bis {to}",
+			"noDates": "Aufgaben ohne Datum anzeigen",
 			"overdue": "Überfällige Aufgaben anzeigen",
 			"fromuntil": "Aufgaben von {from} bis {until}",
 			"select": "Datumsbereich wählen",
@@ -1009,6 +1010,7 @@
 			"project4": "Zum Beispiel: {prefix}\"Projekt mit Leerzeichen\".",
 			"dateAndTime": "Datum und Ziit",
 			"date": "Jedes Datum wird als Abgabedatum für di neu Uufgab gnoh. Du chasch Date i de folgende Format verwende:",
+			"dateWeekday": "jeder Wochentag, wird das nächste Datum mit diesem Tag verwenden",
 			"dateCurrentYear": "nimmt das laufende Jahr",
 			"dateNth": "nimmt de {day}ti vom jetzige Monet",
 			"dateTime": "Kombiniere irgendeis vo dene Datumsformat mit \"{time}\" (oder {timePM}) um e Ziit z'setze.",
@@ -1159,6 +1161,7 @@
 	"notification": {
 		"title": "Benachrichtigunge",
 		"none": "Du hesch kei neui Benachrichtunge. Heb e schös Tägli!",
+		"explainer": "Benachrichtigungen werden hier angezeigt, wenn Aktionen für Projekte oder Aufgaben, die du abonniert hast, ausgeführt werden.",
 		"markAllRead": "Alle Benachrichtigungen als gelesen markieren",
 		"markAllReadSuccess": "Alle Benachrichtigungen erfolgreich als gelesen markiert."
 	},
