@@ -1,6 +1,6 @@
-import {useConfigStore} from '@/stores/config'
-
-const API_DEFAULT_PORT = '3456'
+import { useConfigStore } from '@/stores/config'
+import { HTTPFactory } from '@/helpers/fetcher'
+import { objectToCamelCase } from '@/helpers/case'
 
 export const ERROR_NO_API_URL = 'noApiUrlProvided'
 
@@ -20,9 +20,21 @@ export class InvalidApiUrlProvidedError extends Error {
 	}
 }
 
-export const checkAndSetApiUrl = (pUrl: string | undefined | null): Promise<string> => {
+// Tries to fetch the /info endpoint from a given URL.
+async function testUrl(url: string): Promise<any> {
+	const http = HTTPFactory()
+	const response = await http.get(`${url}/info`, {
+		headers: { 'Accept': 'application/json' },
+	})
+	if (typeof response.data.version === 'undefined') {
+		throw new Error('Invalid info response')
+	}
+	return response.data
+}
+
+export const checkAndSetApiUrl = async (pUrl: string | undefined | null): Promise<string> => {
 	let url = pUrl
-	if (url === '' || url === null || typeof url === 'undefined') {
+	if (!url) {
 		throw new NoApiUrlProvidedError()
 	}
 
@@ -30,88 +42,42 @@ export const checkAndSetApiUrl = (pUrl: string | undefined | null): Promise<stri
 		url = window.location.host + url
 	}
 
-	// Check if the url has a http prefix
-	if (
-		!url.startsWith('http://') &&
-		!url.startsWith('https://')
-	) {
+	if (!url.startsWith('http://') && !url.startsWith('https://')) {
 		url = `${window.location.protocol}//${url}`
 	}
-	
-	let urlToCheck: URL
+
+	// Candidate URLs to test
+	const candidates = [
+		url,
+		url.endsWith('/') ? `${url}api/v1` : `${url}/api/v1`,
+	]
+	// Also test without any path
 	try {
-		urlToCheck = new URL(url)
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	} catch (e) {
-		throw new InvalidApiUrlProvidedError()
+		const parsed = new URL(url)
+		candidates.push(`${parsed.protocol}//${parsed.host}`)
+	} catch(e) {
+		// ignore parsing errors, we'll catch the invalid url later
 	}
 
-	const origUrlToCheck = urlToCheck
 
-	const configStore = useConfigStore()
-	const oldUrl = configStore.apiBase
-	configStore.setApiUrl(urlToCheck.toString())
+	for (const candidate of [...new Set(candidates)]) {
+		try {
+			const info = await testUrl(candidate)
 
-	// Check if the api is reachable at the provided url
-	return configStore.update()
-		.catch(e => {
-			console.warn(`Could not fetch 'info' from the provided endpoint ${pUrl} on ${configStore.apiBase}/info. Some automatic fallback will be tried.`)
-			// Check if it is reachable at /api/v1 and http
-			if (
-				!urlToCheck.pathname.endsWith('/api/v1') &&
-				!urlToCheck.pathname.endsWith('/api/v1/')
-			) {
-				urlToCheck.pathname = `${urlToCheck.pathname}api/v1`
-				configStore.setApiUrl(urlToCheck.toString())
-				return configStore.update()
-			}
-			throw e
-		})
-		.catch(e => {
-			// Check if it is reachable at /api/v1 and https
-			urlToCheck.pathname = origUrlToCheck.pathname
-			if (
-				!urlToCheck.pathname.endsWith('/api/v1') &&
-				!urlToCheck.pathname.endsWith('/api/v1/')
-			) {
-				urlToCheck.pathname = `${urlToCheck.pathname}api/v1`
-				configStore.setApiUrl(urlToCheck.toString())
-				return configStore.update()
-			}
-			throw e
-		})
-		.catch(e => {
-			// Check if it is reachable at port API_DEFAULT_PORT and https
-			if (urlToCheck.port !== API_DEFAULT_PORT) {
-				urlToCheck.port = API_DEFAULT_PORT
-				configStore.setApiUrl(urlToCheck.toString())
-				return configStore.update()
-			}
-			throw e
-		})
-		.catch(e => {
-			// Check if it is reachable at :API_DEFAULT_PORT and /api/v1
-			urlToCheck.pathname = origUrlToCheck.pathname
-			if (
-				!urlToCheck.pathname.endsWith('/api/v1') &&
-				!urlToCheck.pathname.endsWith('/api/v1/')
-			) {
-				urlToCheck.pathname = `${urlToCheck.pathname}api/v1`
-				configStore.setApiUrl(urlToCheck.toString())
-				return configStore.update()
-			}
-			throw e
-		})
-		.catch(e => {
-			configStore.setApiUrl(oldUrl)
-			throw e
-		})
-		.then(success => {
-			if (success) {
-				localStorage.setItem('API_URL', configStore.apiBase)
-				return configStore.apiBase
-			}
+			// We found a working URL. Now, strip any path to get the base.
+			const parsed = new URL(candidate)
+			const baseUrl = `${parsed.protocol}//${parsed.host}`
 
-			throw new InvalidApiUrlProvidedError()
-		})
+			const configStore = useConfigStore()
+			configStore.setApiUrl(baseUrl)
+			configStore.setConfig(objectToCamelCase(info))
+			localStorage.setItem('API_URL', baseUrl)
+			return baseUrl
+		} catch (e) {
+			console.warn(`Attempted to connect to ${candidate}, but failed.`, e)
+		}
+	}
+
+	// If we get here, all candidates failed.
+	throw new InvalidApiUrlProvidedError()
 }

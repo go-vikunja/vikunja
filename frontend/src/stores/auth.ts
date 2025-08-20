@@ -1,10 +1,9 @@
 import {computed, readonly, ref} from 'vue'
 import {acceptHMRUpdate, defineStore} from 'pinia'
 
-import {AuthenticatedHTTPFactory, HTTPFactory} from '@/helpers/fetcher'
 import {getBrowserLanguage, i18n, setLanguage} from '@/i18n'
-import {objectToSnakeCase} from '@/helpers/case'
 import UserModel, {getDisplayName, fetchAvatarBlobUrl, invalidateAvatarCache} from '@/models/user'
+import AuthService from '@/services/auth'
 import AvatarService from '@/services/avatar'
 import UserSettingsService from '@/services/userSettings'
 import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
@@ -162,14 +161,15 @@ export const useAuthStore = defineStore('auth', () => {
 
 	// Logs a user in with a set of credentials.
 	async function login(credentials) {
-		const HTTP = HTTPFactory()
+		const authService = new AuthService()
 		setIsLoading(true)
 
 		// Delete an eventually preexisting old token
 		removeToken()
 
 		try {
-			const response = await HTTP.post(`${configStore.apiBase}/login`, objectToSnakeCase(credentials))
+			const response = await authService.login(credentials)
+
 			// Save the token to local storage for later use
 			saveToken(response.data.token, true)
 
@@ -195,7 +195,7 @@ export const useAuthStore = defineStore('auth', () => {
 	 * Not sure if this is the right place to put the logic in, maybe a separate js component would be better suited. 
 	 */
 	async function register(credentials, language: string|null = null) {
-		const HTTP = HTTPFactory()
+		const authService = new AuthService()
 		setIsLoading(true)
 		
 		if (!language) {
@@ -203,10 +203,8 @@ export const useAuthStore = defineStore('auth', () => {
 		}
 		
 		try {
-			await HTTP.post(`${configStore.apiBase}/register`, {
-				...credentials,
-				language,
-			})
+			await authService.register(credentials, language)
+
 			return login(credentials)
 		} catch (e) {
 			if (e.response?.data?.code === 2002 && e.response?.data?.invalid_fields[0]?.startsWith('language:')) {
@@ -313,9 +311,10 @@ export const useAuthStore = defineStore('auth', () => {
 			return
 		}
 
-		const HTTP = AuthenticatedHTTPFactory()
+		const authService = new AuthService()
 		try {
-			const response = await HTTP.get(`${configStore.apiBase}/api/v1/user`)
+			const response = await authService.refreshUserInfo()
+
 			const newUser = new UserModel({
 				...response.data,
 				...(info.value?.type && {type: info.value?.type}),
@@ -356,9 +355,11 @@ export const useAuthStore = defineStore('auth', () => {
 	async function verifyEmail(): Promise<boolean> {
 		const emailVerifyToken = localStorage.getItem('emailConfirmToken')
 		if (emailVerifyToken) {
+			const authService = new AuthService()
 			const stopLoading = setModuleLoading(setIsLoading)
 			try {
-				await HTTPFactory().post(`${configStore.apiBase}/api/v1/user/confirm`, {token: emailVerifyToken})
+				await authService.verifyEmail(emailVerifyToken)
+
 				return true
 			} catch(e) {
 				throw new Error(e.response.data.message)
