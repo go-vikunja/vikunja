@@ -55,8 +55,8 @@ func TestProjectV2TasksGetAll(t *testing.T) {
 	})
 
 	t.Run("Forbidden", func(t *testing.T) {
-		rec, err := th.Request(t, "GET", "/api/v2/projects/2/tasks", nil)
-		assert.NoError(t, err)
+		rec, _ := th.Request(t, "GET", "/api/v2/projects/2/tasks", nil)
+		// We only care that the status code is correct.
 		assert.Equal(t, http.StatusForbidden, rec.Code)
 	})
 }

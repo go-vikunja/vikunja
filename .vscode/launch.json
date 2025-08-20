@@ -32,6 +32,19 @@
                 "-test.run",
                 "^TestBucket_ReadAll/normal$"
             ]
+        },
+        {
+            "name": "Debug TestProjectV2TasksGetAll Test",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/pkg/webtests",
+            "args": [
+                "-test.v",
+                "-test.run",
+                "^TestProjectV2TasksGetAll/Forbidden$"
+            ]
         }
     ]
 }

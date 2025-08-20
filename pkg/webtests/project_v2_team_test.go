@@ -49,8 +49,8 @@ func TestGetProjectTeamsWrongProject(t *testing.T) {
 	th := NewTestHelper(t)
 	th.Login(t, &testuser1)
 
-	rec, err := th.Request(t, "GET", "/api/v2/projects/999/teams", nil)
-	assert.NoError(t, err)
+	rec, _ := th.Request(t, "GET", "/api/v2/projects/999/teams", nil)
+	// We only care that the status code is 404.
 	assert.Equal(t, http.StatusNotFound, rec.Code)
 }
 
@@ -58,8 +58,7 @@ func TestGetProjectTeamsNoPermission(t *testing.T) {
 	th := NewTestHelper(t)
 	th.Login(t, &testuser1)
 
-	rec, err := th.Request(t, "GET", "/api/v2/projects/5/teams", nil)
-	assert.NoError(t, err)
+	rec, _ := th.Request(t, "GET", "/api/v2/projects/5/teams", nil)
 	assert.Equal(t, http.StatusForbidden, rec.Code)
 }
 

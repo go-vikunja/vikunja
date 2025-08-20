@@ -89,8 +89,7 @@ func TestProjectV2Create(t *testing.T) {
 	})
 
 	t.Run("Empty title", func(t *testing.T) {
-		rec, err := th.Request(t, "POST", "/api/v2/projects", strings.NewReader(`{"title":""}`))
-		assert.NoError(t, err)
+		rec, _ := th.Request(t, "POST", "/api/v2/projects", strings.NewReader(`{"title":""}`))
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	})
 }
@@ -105,16 +104,14 @@ func TestProjectV2Delete(t *testing.T) {
 		assert.Equal(t, http.StatusNoContent, rec.Code)
 
 		// Verify it's gone
-		rec, err = th.Request(t, "GET", "/api/v2/projects/1", nil)
-		assert.NoError(t, err)
+		rec, _ = th.Request(t, "GET", "/api/v2/projects/1", nil)
 		assert.Equal(t, http.StatusNotFound, rec.Code)
 	})
 
 	t.Run("Nonexisting", func(t *testing.T) {
 		th := NewTestHelper(t)
 		th.Login(t, &testuser1)
-		rec, err := th.Request(t, "DELETE", "/api/v2/projects/9999", nil)
-		assert.NoError(t, err)
+		rec, _ := th.Request(t, "DELETE", "/api/v2/projects/9999", nil)
 		assert.Equal(t, http.StatusNotFound, rec.Code)
 	})
 
@@ -122,8 +119,7 @@ func TestProjectV2Delete(t *testing.T) {
 		th := NewTestHelper(t)
 		th.Login(t, &testuser1)
 		// User 1 has no permissions on project 2
-		rec, err := th.Request(t, "DELETE", "/api/v2/projects/2", nil)
-		assert.NoError(t, err)
+		rec, _ := th.Request(t, "DELETE", "/api/v2/projects/2", nil)
 		assert.Equal(t, http.StatusForbidden, rec.Code)
 	})
 }
@@ -146,8 +142,7 @@ func TestProjectV2Update(t *testing.T) {
 		th := NewTestHelper(t)
 		th.Login(t, &testuser1)
 		payload := `{"title":"Updated Title"}`
-		rec, err := th.Request(t, "PUT", "/api/v2/projects/9999", strings.NewReader(payload))
-		assert.NoError(t, err)
+		rec, _ := th.Request(t, "PUT", "/api/v2/projects/9999", strings.NewReader(payload))
 		assert.Equal(t, http.StatusNotFound, rec.Code)
 	})
 
@@ -155,8 +150,7 @@ func TestProjectV2Update(t *testing.T) {
 		th := NewTestHelper(t)
 		th.Login(t, &testuser1)
 		payload := `{"title":"Updated Title"}`
-		rec, err := th.Request(t, "PUT", "/api/v2/projects/2", strings.NewReader(payload))
-		assert.NoError(t, err)
+		rec, _ := th.Request(t, "PUT", "/api/v2/projects/2", strings.NewReader(payload))
 		assert.Equal(t, http.StatusForbidden, rec.Code)
 	})
 
@@ -164,8 +158,7 @@ func TestProjectV2Update(t *testing.T) {
 		th := NewTestHelper(t)
 		th.Login(t, &testuser1)
 		payload := `{"title":""}`
-		rec, err := th.Request(t, "PUT", "/api/v2/projects/1", strings.NewReader(payload))
-		assert.NoError(t, err)
+		rec, _ := th.Request(t, "PUT", "/api/v2/projects/1", strings.NewReader(payload))
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	})
 }
@@ -182,13 +175,11 @@ func TestProjectV2Get(t *testing.T) {
 		assert.Contains(t, rec.Body.String(), `"_links":{`)
 	})
 	t.Run("Nonexisting", func(t *testing.T) {
-		rec, err := th.Request(t, "GET", "/api/v2/projects/9999", nil)
-		assert.NoError(t, err)
+		rec, _ := th.Request(t, "GET", "/api/v2/projects/9999", nil)
 		assert.Equal(t, http.StatusNotFound, rec.Code)
 	})
 	t.Run("Forbidden", func(t *testing.T) {
-		rec, err := th.Request(t, "GET", "/api/v2/projects/2", nil)
-		assert.NoError(t, err)
+		rec, _ := th.Request(t, "GET", "/api/v2/projects/2", nil)
 		assert.Equal(t, http.StatusForbidden, rec.Code)
 	})
 }

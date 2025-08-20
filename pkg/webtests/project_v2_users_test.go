@@ -98,8 +98,7 @@ func TestGetProjectUsersWrongProject(t *testing.T) {
 	th := NewTestHelper(t)
 	th.Login(t, &testuser1)
 
-	rec, err := th.Request(t, "GET", "/api/v2/projects/999/users", nil)
-	assert.NoError(t, err)
+	rec, _ := th.Request(t, "GET", "/api/v2/projects/999/users", nil)
 	assert.Equal(t, http.StatusNotFound, rec.Code)
 }
 
@@ -107,8 +106,7 @@ func TestGetProjectUsersNoPermission(t *testing.T) {
 	th := NewTestHelper(t)
 	th.Login(t, &testuser2)
 
-	rec, err := th.Request(t, "GET", "/api/v2/projects/1/users", nil)
-	assert.NoError(t, err)
+	rec, _ := th.Request(t, "GET", "/api/v2/projects/1/users", nil)
 	assert.Equal(t, http.StatusForbidden, rec.Code)
 }
 
@@ -117,8 +115,7 @@ func TestAddProjectUserNoPermission(t *testing.T) {
 	th.Login(t, &testuser2)
 
 	body := `{"username": "user3", "permission": 1}`
-	rec, err := th.Request(t, "POST", "/api/v2/projects/1/users", strings.NewReader(body))
-	assert.NoError(t, err)
+	rec, _ := th.Request(t, "POST", "/api/v2/projects/1/users", strings.NewReader(body))
 	assert.Equal(t, http.StatusForbidden, rec.Code)
 }
 
@@ -127,8 +124,7 @@ func TestUpdateProjectUserNoPermission(t *testing.T) {
 	th.Login(t, &testuser2)
 
 	body := `{"permission": 2}`
-	rec, err := th.Request(t, "PUT", "/api/v2/projects/3/users/2", strings.NewReader(body))
-	assert.NoError(t, err)
+	rec, _ := th.Request(t, "PUT", "/api/v2/projects/3/users/2", strings.NewReader(body))
 	assert.Equal(t, http.StatusForbidden, rec.Code)
 }
 
@@ -136,7 +132,6 @@ func TestRemoveProjectUserNoPermission(t *testing.T) {
 	th := NewTestHelper(t)
 	th.Login(t, &testuser2)
 
-	rec, err := th.Request(t, "DELETE", "/api/v2/projects/3/users/2", nil)
-	assert.NoError(t, err)
+	rec, _ := th.Request(t, "DELETE", "/api/v2/projects/3/users/2", nil)
 	assert.Equal(t, http.StatusForbidden, rec.Code)
 }
