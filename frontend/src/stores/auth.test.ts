@@ -30,7 +30,7 @@ describe('auth store', () => {
 
 	it('login action should call post with the full url', async () => {
 		const configStore = useConfigStore()
-		configStore.setApiUrl('http://localhost:3456/api/v1')
+		configStore.setApiUrl('http://localhost:3456')
 
 		const authStore = useAuthStore()
 		await authStore.login({ username: 'test', password: 'password' })
@@ -43,7 +43,7 @@ describe('auth store', () => {
 
 	it('register action should call post with the full url', async () => {
 		const configStore = useConfigStore()
-		configStore.setApiUrl('http://localhost:3456/api/v1')
+		configStore.setApiUrl('http://localhost:3456')
 
 		const authStore = useAuthStore()
 		await authStore.register({ username: 'test', password: 'password' })

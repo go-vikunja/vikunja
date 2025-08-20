@@ -1,5 +1,6 @@
 import {AuthenticatedHTTPFactory} from '@/helpers/fetcher'
 import type {AxiosResponse} from 'axios'
+import {useConfigStore} from '@/stores/config'
 
 let savedToken: string | null = null
 
@@ -39,8 +40,9 @@ export const removeToken = () => {
  */
 export async function refreshToken(persist: boolean): Promise<AxiosResponse> {
 	const HTTP = AuthenticatedHTTPFactory()
+	const configStore = useConfigStore()
 	try {
-		const response = await HTTP.post('user/token')
+		const response = await HTTP.post(`${configStore.apiBase}/api/v1/user/token`)
 		saveToken(response.data.token, persist)
 		return response
 

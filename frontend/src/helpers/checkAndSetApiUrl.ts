@@ -63,11 +63,11 @@ export const checkAndSetApiUrl = async (pUrl: string | undefined | null): Promis
 	for (const candidate of [...new Set(candidates)]) {
 		try {
 			const info = await testUrl(candidate)
-
+			
 			// We found a working URL. Now, strip any path to get the base.
 			const parsed = new URL(candidate)
 			const baseUrl = `${parsed.protocol}//${parsed.host}`
-
+			
 			const configStore = useConfigStore()
 			configStore.setApiUrl(baseUrl)
 			configStore.setConfig(objectToCamelCase(info))

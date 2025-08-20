@@ -27,7 +27,7 @@ export default class ApiTokenService extends AbstractService<IApiToken> {
 		const cancel = this.setLoading()
 
 		try {
-			const response = await this.http.get('/routes')
+			const response = await this.http.get(this.getFullUrl('/routes'))
 			return response.data
 		} finally {
 			cancel()

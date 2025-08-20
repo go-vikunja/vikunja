@@ -169,7 +169,6 @@ export const useAuthStore = defineStore('auth', () => {
 
 		try {
 			const response = await authService.login(credentials)
-
 			// Save the token to local storage for later use
 			saveToken(response.data.token, true)
 
@@ -204,7 +203,6 @@ export const useAuthStore = defineStore('auth', () => {
 		
 		try {
 			await authService.register(credentials, language)
-
 			return login(credentials)
 		} catch (e) {
 			if (e.response?.data?.code === 2002 && e.response?.data?.invalid_fields[0]?.startsWith('language:')) {
@@ -314,7 +312,6 @@ export const useAuthStore = defineStore('auth', () => {
 		const authService = new AuthService()
 		try {
 			const response = await authService.refreshUserInfo()
-
 			const newUser = new UserModel({
 				...response.data,
 				...(info.value?.type && {type: info.value?.type}),
@@ -359,7 +356,6 @@ export const useAuthStore = defineStore('auth', () => {
 			const stopLoading = setModuleLoading(setIsLoading)
 			try {
 				await authService.verifyEmail(emailVerifyToken)
-
 				return true
 			} catch(e) {
 				throw new Error(e.response.data.message)

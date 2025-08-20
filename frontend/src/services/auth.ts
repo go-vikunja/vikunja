@@ -8,12 +8,12 @@ export default class AuthService {
 	private configStore = useConfigStore()
 
 	async login(credentials) {
-		const url = `${this.configStore.apiBase}/login`
+		const url = `${this.configStore.apiBase}/api/v1/login`
 		return this.http.post(url, objectToSnakeCase(credentials))
 	}
 
 	async register(credentials, language: string | null) {
-		const url = `${this.configStore.apiBase}/register`
+		const url = `${this.configStore.apiBase}/api/v1/register`
 		return this.http.post(url, {
 			...credentials,
 			language,
