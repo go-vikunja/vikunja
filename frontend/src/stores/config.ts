@@ -97,7 +97,9 @@ export const useConfigStore = defineStore('config', () => {
 
 	async function update(): Promise<boolean> {
 		const HTTP = HTTPFactory()
-		const {data: config} = await HTTP.get('info')
+		const {data: config} = await HTTP.get(`${window.API_URL}/info`, {
+			headers: { 'Accept': 'application/json' },
+		})
 
 		if (typeof config.version === 'undefined') {
 			throw new InvalidApiUrlProvidedError()
