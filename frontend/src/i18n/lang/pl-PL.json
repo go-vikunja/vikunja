@@ -295,6 +295,12 @@
 				"readWrite": "Odczyt i zapis",
 				"admin": "Administrator"
 			},
+			"permission": {
+				"title": "Uprawnienie",
+				"read": "Tylko do odczytu",
+				"readWrite": "Odczyt i zapis",
+				"admin": "Administrator"
+			},
 			"attributes": {
 				"link": "Link",
 				"delete": "Usuń"
