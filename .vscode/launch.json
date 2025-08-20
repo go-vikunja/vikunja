@@ -19,6 +19,19 @@
             "program": "${workspaceRoot}",
             "env": {},
             "args": []
+        },
+        {
+            "name": "Debug Bucket_ReadAll Test",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/pkg/models",
+            "args": [
+                "-test.v",
+                "-test.run",
+                "^TestBucket_ReadAll/normal$"
+            ]
         }
     ]
 }
