@@ -13,6 +13,7 @@ in {
     actionlint
     crowdin-cli
     nfpm
+		pkgs-unstable.air
     # API tools
     golangci-lint mage
     # Desktop
@@ -49,7 +50,27 @@ in {
     enable = true;
     package = pkgs-unstable.mailpit;
   };
-	
+
+	# Global environment variables
+	env = {
+    VIKUNJA_SERVICE_FRONTENDURL = "http://localhost:4173";
+    VIKUNJA_DATABASE_TYPE = "sqlite";
+    VIKUNJA_DATABASE_PATH = "/tmp/vikunja.db";
+		VIKUNJA_SERVICE_INTERFACE = "127.0.0.1:3456";
+  };
+
+  # Starts the API and frontend
+  processes = {
+    api = {
+      #exec = "mage build && ./vikunja";
+      #exec = "watchexec -r -e go -- 'go run .'";
+			exec = "air";
+    };
+    frontend = {
+      exec = "pnpm --dir frontend run serve";
+    };
+  };
+
 	devcontainer = {
 		enable = true;
 		settings = {

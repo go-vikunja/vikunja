@@ -20,7 +20,7 @@ export default class TeamProjectService extends AbstractServiceV2<ITeamProject> 
 	modelGetAllFactory(data) {
 		return new TeamModel(data)
 	}
-
+  
 	/**
 	 * Performs a post request to the url specified before
 	 * @returns {Promise<any | never>}
