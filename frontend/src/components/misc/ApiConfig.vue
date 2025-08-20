@@ -64,6 +64,7 @@
 import {ref, computed, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {parseURL} from 'ufo'
+import {useConfigStore} from '@/stores/config'
 
 import {checkAndSetApiUrl} from '@/helpers/checkAndSetApiUrl'
 import {success} from '@/message'
@@ -80,8 +81,10 @@ const emit = defineEmits<{
 	'foundApi': [url: string],
 }>()
 
-const apiUrl = ref(window.API_URL)
-const configureApi = ref(window.API_URL === '')
+const configStore = useConfigStore()
+
+const apiUrl = ref(configStore.apiBase)
+const configureApi = ref(configStore.apiBase === '')
 
 // Because we're only using this to parse the hostname, it should be fine to just prefix with http:// 
 // regardless of whether the url is actually reachable under http.

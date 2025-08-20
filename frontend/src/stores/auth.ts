@@ -169,7 +169,7 @@ export const useAuthStore = defineStore('auth', () => {
 		removeToken()
 
 		try {
-			const response = await HTTP.post('login', objectToSnakeCase(credentials))
+			const response = await HTTP.post(`${configStore.apiBase}/login`, objectToSnakeCase(credentials))
 			// Save the token to local storage for later use
 			saveToken(response.data.token, true)
 
@@ -203,7 +203,7 @@ export const useAuthStore = defineStore('auth', () => {
 		}
 		
 		try {
-			await HTTP.post('register', {
+			await HTTP.post(`${configStore.apiBase}/register`, {
 				...credentials,
 				language,
 			})
@@ -315,7 +315,7 @@ export const useAuthStore = defineStore('auth', () => {
 
 		const HTTP = AuthenticatedHTTPFactory()
 		try {
-			const response = await HTTP.get('user')
+			const response = await HTTP.get(`${configStore.apiBase}/api/v1/user`)
 			const newUser = new UserModel({
 				...response.data,
 				...(info.value?.type && {type: info.value?.type}),
@@ -358,7 +358,7 @@ export const useAuthStore = defineStore('auth', () => {
 		if (emailVerifyToken) {
 			const stopLoading = setModuleLoading(setIsLoading)
 			try {
-				await HTTPFactory().post('user/confirm', {token: emailVerifyToken})
+				await HTTPFactory().post(`${configStore.apiBase}/api/v1/user/confirm`, {token: emailVerifyToken})
 				return true
 			} catch(e) {
 				throw new Error(e.response.data.message)

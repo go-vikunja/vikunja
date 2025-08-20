@@ -11,12 +11,14 @@ import {checkAndSetApiUrl, ERROR_NO_API_URL, InvalidApiUrlProvidedError, NoApiUr
 import {useMenuActive} from '@/composables/useMenuActive'
 
 import {useAuthStore} from '@/stores/auth'
+import {useConfigStore} from '@/stores/config'
 import type {IProject} from '@/modelTypes/IProject'
 import type {Permission} from '@/constants/permissions'
 import type {IProjectView} from '@/modelTypes/IProjectView'
 
 export const useBaseStore = defineStore('base', () => {
 	const authStore = useAuthStore()
+	const configStore = useConfigStore()
 	
 	const {t} = useI18n()
 
@@ -139,7 +141,7 @@ export const useBaseStore = defineStore('base', () => {
 
 	async function loadApp() {
 		try {
-			await checkAndSetApiUrl(window.API_URL)
+			await checkAndSetApiUrl(configStore.apiUrl)
 			await authStore.checkAuth()
 			ready.value = true
 		} catch (e: unknown) {

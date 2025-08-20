@@ -48,22 +48,21 @@ export const checkAndSetApiUrl = (pUrl: string | undefined | null): Promise<stri
 
 	const origUrlToCheck = urlToCheck
 
-	const oldUrl = window.API_URL
-	window.API_URL = urlToCheck.toString()
-
 	const configStore = useConfigStore()
+	const oldUrl = configStore.apiBase
+	configStore.setApiUrl(urlToCheck.toString())
 
 	// Check if the api is reachable at the provided url
 	return configStore.update()
 		.catch(e => {
-			console.warn(`Could not fetch 'info' from the provided endpoint ${pUrl} on ${window.API_URL}/info. Some automatic fallback will be tried.`)
+			console.warn(`Could not fetch 'info' from the provided endpoint ${pUrl} on ${configStore.apiBase}/info. Some automatic fallback will be tried.`)
 			// Check if it is reachable at /api/v1 and http
 			if (
 				!urlToCheck.pathname.endsWith('/api/v1') &&
 				!urlToCheck.pathname.endsWith('/api/v1/')
 			) {
 				urlToCheck.pathname = `${urlToCheck.pathname}api/v1`
-				window.API_URL = urlToCheck.toString()
+				configStore.setApiUrl(urlToCheck.toString())
 				return configStore.update()
 			}
 			throw e
@@ -76,7 +75,7 @@ export const checkAndSetApiUrl = (pUrl: string | undefined | null): Promise<stri
 				!urlToCheck.pathname.endsWith('/api/v1/')
 			) {
 				urlToCheck.pathname = `${urlToCheck.pathname}api/v1`
-				window.API_URL = urlToCheck.toString()
+				configStore.setApiUrl(urlToCheck.toString())
 				return configStore.update()
 			}
 			throw e
@@ -85,7 +84,7 @@ export const checkAndSetApiUrl = (pUrl: string | undefined | null): Promise<stri
 			// Check if it is reachable at port API_DEFAULT_PORT and https
 			if (urlToCheck.port !== API_DEFAULT_PORT) {
 				urlToCheck.port = API_DEFAULT_PORT
-				window.API_URL = urlToCheck.toString()
+				configStore.setApiUrl(urlToCheck.toString())
 				return configStore.update()
 			}
 			throw e
@@ -98,19 +97,19 @@ export const checkAndSetApiUrl = (pUrl: string | undefined | null): Promise<stri
 				!urlToCheck.pathname.endsWith('/api/v1/')
 			) {
 				urlToCheck.pathname = `${urlToCheck.pathname}api/v1`
-				window.API_URL = urlToCheck.toString()
+				configStore.setApiUrl(urlToCheck.toString())
 				return configStore.update()
 			}
 			throw e
 		})
 		.catch(e => {
-			window.API_URL = oldUrl
+			configStore.setApiUrl(oldUrl)
 			throw e
 		})
 		.then(success => {
 			if (success) {
-				localStorage.setItem('API_URL', window.API_URL)
-				return window.API_URL
+				localStorage.setItem('API_URL', configStore.apiBase)
+				return configStore.apiBase
 			}
 
 			throw new InvalidApiUrlProvidedError()
