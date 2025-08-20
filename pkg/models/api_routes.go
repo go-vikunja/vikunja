@@ -19,6 +19,7 @@ package models
 import (
 	"net/http"
 	"reflect"
+	"regexp"
 	"runtime"
 	"strings"
 
@@ -27,7 +28,11 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-var apiTokenRoutes = map[string]APITokenRoute{}
+var (
+	apiTokenRoutes   = map[string]APITokenRoute{}
+	apiPrefixRegex   = regexp.MustCompile(`^/api/v[0-9]+/`)
+	apiV1PrefixRegex = regexp.MustCompile(`^/api/v1/`)
+)
 
 func init() {
 	apiTokenRoutes = make(map[string]APITokenRoute)
@@ -41,7 +46,8 @@ type RouteDetail struct {
 }
 
 func getRouteGroupName(path string) (finalName string, filteredParts []string) {
-	parts := strings.Split(strings.TrimPrefix(path, "/api/v1/"), "/")
+	path = apiPrefixRegex.ReplaceAllString(path, "")
+	parts := strings.Split(path, "/")
 	filteredParts = []string{}
 	for _, part := range parts {
 		if strings.HasPrefix(part, ":") {
