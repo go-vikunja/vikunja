@@ -114,3 +114,61 @@ func GetProjectTasks(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, tasks)
 }
+
+// CreateProjectTask creates a new task in a project
+// @Summary Create a new task in a project
+// @Description Creates a new task in a project.
+// @tags project
+// @Accept  json
+// @Produce  json
+// @Param id path int64 true "The project id"
+// @Param task body models.Task true "The task to create"
+// @Success 201 {object} models.Task
+// @Failure 400 {object} web.HTTPError
+// @Failure 401 {object} web.HTTPError
+// @Failure 403 {object} web.HTTPError
+// @Failure 404 {object} web.HTTPError
+// @Router /projects/{id}/tasks [post]
+func CreateProjectTask(c echo.Context) error {
+	s := db.NewSession()
+	defer s.Close()
+
+	auth, err := auth.GetAuthFromClaims(c)
+	if err != nil {
+		return handler.HandleHTTPError(err)
+	}
+
+	projectID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid project ID").SetInternal(err)
+	}
+
+	p := &models.Project{ID: projectID}
+	can, err := p.CanWrite(s, auth)
+	if err != nil {
+		return handler.HandleHTTPError(err)
+	}
+	if !can {
+		return echo.ErrForbidden
+	}
+
+	t := new(models.Task)
+	if err := c.Bind(t); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid task object provided.").SetInternal(err)
+	}
+	t.ProjectID = projectID
+
+	if err := c.Validate(t); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error()).SetInternal(err)
+	}
+
+	if err := t.Create(s, auth); err != nil {
+		return handler.HandleHTTPError(err)
+	}
+
+	if err := s.Commit(); err != nil {
+		return handler.HandleHTTPError(err)
+	}
+
+	return c.JSON(http.StatusCreated, t)
+}
