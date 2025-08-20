@@ -2,6 +2,7 @@
 .idea/*/*
 .idea/httpRequests
 .history/
+/frontend/.pnpm-store/
 tmp/
 config.yml
 config.yaml

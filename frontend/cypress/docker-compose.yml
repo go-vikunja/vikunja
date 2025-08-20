@@ -4,7 +4,7 @@ services:
     ports:
       - 5556:5556
   cypress:
-    image: cypress/browsers:latest@sha256:2c4e1047f7187ca028dcd968cbd3aafc9430bbd30a3ec4d6b41f9eabfdb39e59
+    build: . # Use the Dockerfile in the current directory
     volumes:
       - ..:/project
       - $HOME/.cache:/home/node/.cache/
@@ -12,4 +12,5 @@ services:
     working_dir: /project
     environment:
       CYPRESS_API_URL: http://api:3456/api/v1
-      CYPRESS_TEST_SECRET: averyLongSecretToSe33dtheDB
+      CYPRESS_TEST_SECRET: averyLongSecretToSe33dtheDB 
+    command: sh -c "pnpm install && bash"
