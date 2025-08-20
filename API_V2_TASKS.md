@@ -148,7 +148,7 @@ Each task in this list corresponds to a single API endpoint or a group of relate
 *   **Description:** Create a new task in a project.
 *   **V1 Equivalent:** `PUT /projects/:project/tasks`
 *   **Tasks:**
-    *   [ ] Implement the backend endpoint.
+    *   [x] Implement the backend endpoint.
     *   [ ] Update the frontend client to use this endpoint.
 *   **Requirements:**
     *   Handle setting assignees, labels, and reminders.
