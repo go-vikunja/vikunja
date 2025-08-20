@@ -24,15 +24,13 @@ declare global {
 	}
 }
 
+import {useConfigStore} from '@/stores/config'
+
 // Check if we have an api url in local storage and use it if that's the case
 const apiUrlFromStorage = localStorage.getItem('API_URL')
-if (apiUrlFromStorage !== null) {
-	window.API_URL = apiUrlFromStorage
-}
-
-// Make sure the api url does not contain a / at the end
-if (window.API_URL.endsWith('/')) {
-	window.API_URL = window.API_URL.slice(0, -1)
+if (apiUrlFromStorage) {
+	const configStore = useConfigStore(pinia)
+	configStore.setApiUrl(apiUrlFromStorage)
 }
 
 // directives

@@ -1,4 +1,4 @@
-import {computed, reactive, toRefs} from 'vue'
+import {computed, reactive, readonly, ref, toRefs} from 'vue'
 import {acceptHMRUpdate, defineStore} from 'pinia'
 import {parseURL} from 'ufo'
 
@@ -81,14 +81,21 @@ export const useConfigStore = defineStore('config', () => {
 		publicTeamsEnabled: false,
 	})
 
+	const apiUrl = ref('')
+
+	function setApiUrl (url: string) {
+		apiUrl.value = url
+	}
+
 	const migratorsEnabled = computed(() => state.availableMigrators?.length > 0)
 	const apiBase = computed(() => {
-		const {host, protocol, href} = parseURL(window.API_URL)
+		if (!apiUrl.value) return ''
 
-		const cleanHref = href ? (href.endsWith('/') 
-			? href.slice(0, -1) 
-			: href) : ''
-		return `${protocol}//${host}${cleanHref ? `/${cleanHref}` : ''}`
+		if (apiUrl.value.endsWith('/')) {
+			return apiUrl.value.slice(0, -1)
+		}
+
+		return apiUrl.value
 	})
 
 	function setConfig(config: ConfigState) {
@@ -97,7 +104,9 @@ export const useConfigStore = defineStore('config', () => {
 
 	async function update(): Promise<boolean> {
 		const HTTP = HTTPFactory()
-		const {data: config} = await HTTP.get('info')
+		const {data: config} = await HTTP.get(`${apiBase.value}/info`, {
+			headers: { 'Accept': 'application/json' },
+		})
 
 		if (typeof config.version === 'undefined') {
 			throw new InvalidApiUrlProvidedError()
@@ -110,9 +119,11 @@ export const useConfigStore = defineStore('config', () => {
 	return {
 		...toRefs(state),
 
+		apiUrl: readonly(apiUrl),
 		migratorsEnabled,
 		apiBase,
 		setConfig,
+		setApiUrl,
 		update,
 	}
 

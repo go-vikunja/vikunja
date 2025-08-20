@@ -1,15 +1,15 @@
-import AbstractService from './abstractService'
+import AbstractServiceV2 from './abstractServiceV2'
 import TeamProjectModel from '@/models/teamProject'
 import type {ITeamProject} from '@/modelTypes/ITeamProject'
 import TeamModel from '@/models/team'
 
-export default class TeamProjectService extends AbstractService<ITeamProject> {
+export default class TeamProjectService extends AbstractServiceV2<ITeamProject> {
 	constructor() {
 		super({
-			create: '/api/v2/projects/{projectId}/teams',
-			getAll: '/api/v2/projects/{projectId}/teams',
-			update: '/api/v2/projects/{projectId}/teams/{teamId}',
-			delete: '/api/v2/projects/{projectId}/teams/{teamId}',
+			create: '/projects/{projectId}/teams',
+			getAll: '/projects/{projectId}/teams',
+			update: '/projects/{projectId}/teams/{teamId}',
+			delete: '/projects/{projectId}/teams/{teamId}',
 		})
 	}
 
@@ -31,7 +31,7 @@ export default class TeamProjectService extends AbstractService<ITeamProject> {
 		}
 
 		const cancel = this.setLoading()
-		const finalUrl = this.getReplacedRoute(this.paths.create, model)
+		const finalUrl = this.getFullUrl(this.getReplacedRoute(this.paths.create, model))
 
 		try {
 			const response = await this.http.post(finalUrl, model)
