@@ -289,7 +289,7 @@
 				"addedSuccess": "{type} został pomyślnie dodany.",
 				"updatedSuccess": "{type} został pomyślnie zaktualizowany."
 			},
-			"permission": {
+			"right": {
 				"title": "Uprawnienie",
 				"read": "Tylko do odczytu",
 				"readWrite": "Odczyt i zapis",
