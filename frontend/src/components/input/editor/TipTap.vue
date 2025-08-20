@@ -180,6 +180,9 @@ import XButton from '@/components/input/Button.vue'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import inputPrompt from '@/helpers/inputPrompt'
 import {setLinkInEditor} from '@/components/input/editor/setLinkInEditor'
+import {useConfigStore} from '@/stores/config'
+
+const configStore = useConfigStore()
 
 const props = withDefaults(defineProps<{
 	modelValue: string,
@@ -253,11 +256,11 @@ const CustomImage = Image.extend({
 		}
 	},
 	renderHTML({HTMLAttributes}) {
-		if (HTMLAttributes.src?.startsWith(window.API_URL) || HTMLAttributes['data-src']?.startsWith(window.API_URL)) {
+		if (HTMLAttributes.src?.startsWith(configStore.apiBase) || HTMLAttributes['data-src']?.startsWith(configStore.apiBase)) {
 			const imageUrl = HTMLAttributes['data-src'] ?? HTMLAttributes.src
 
 			// The url is something like /tasks/<id>/attachments/<id>
-			const parts = imageUrl.slice(window.API_URL.length + 1).split('/')
+			const parts = imageUrl.slice(configStore.apiBase.length + 1).split('/')
 			const taskId = Number(parts[1])
 			const attachmentId = Number(parts[3])
 			const cacheKey: CacheKey = `${taskId}-${attachmentId}`

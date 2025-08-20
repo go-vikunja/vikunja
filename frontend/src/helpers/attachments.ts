@@ -3,6 +3,7 @@ import type {IAttachment} from '@/modelTypes/IAttachment'
 
 import AttachmentService from '@/services/attachment'
 import {useTaskStore} from '@/stores/tasks'
+import {useConfigStore} from '@/stores/config'
 
 export async function uploadFile(taskId: number, file: File, onSuccess?: (url: string) => void) {
 	const attachmentService = new AttachmentService()
@@ -35,5 +36,6 @@ export async function uploadFiles(
 }
 
 export function generateAttachmentUrl(taskId: number, attachmentId: number) {
-	return `${window.API_URL}/tasks/${taskId}/attachments/${attachmentId}`
+	const configStore = useConfigStore()
+	return `${configStore.apiBase}/tasks/${taskId}/attachments/${attachmentId}`
 }

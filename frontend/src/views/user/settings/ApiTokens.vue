@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import ApiTokenService from '@/services/apiToken'
 import {computed, onMounted, ref} from 'vue'
+import {useConfigStore} from '@/stores/config'
 import {useFlatpickrLanguage} from '@/helpers/useFlatpickrLanguage'
 import {formatDateSince, formatDisplayDate} from '@/helpers/time/formatDate'
 import XButton from '@/components/input/Button.vue'
@@ -16,7 +17,8 @@ import type {IApiToken} from '@/modelTypes/IApiToken'
 
 const service = new ApiTokenService()
 const tokens = ref<IApiToken[]>([])
-const apiDocsUrl = window.API_URL + '/docs'
+const configStore = useConfigStore()
+const apiDocsUrl = computed(() => `${configStore.apiBase}/docs`)
 const showCreateForm = ref(false)
 const availableRoutes = ref(null)
 const newToken = ref<IApiToken>(new ApiTokenModel())
