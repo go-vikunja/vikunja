@@ -289,18 +289,6 @@
 				"addedSuccess": "{type} został pomyślnie dodany.",
 				"updatedSuccess": "{type} został pomyślnie zaktualizowany."
 			},
-			"right": {
-				"title": "Uprawnienia",
-				"read": "Tylko do odczytu",
-				"readWrite": "Odczyt i zapis",
-				"admin": "Administracja"
-			},
-			"permission": {
-				"title": "Uprawnienia",
-				"read": "Tylko do odczytu",
-				"readWrite": "Odczyt i zapis",
-				"admin": "Administracja"
-			},
 			"attributes": {
 				"link": "Link",
 				"delete": "Usuń"

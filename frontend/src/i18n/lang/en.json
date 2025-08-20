@@ -336,12 +336,6 @@
         "addedSuccess": "The {type} was successfully added.",
         "updatedSuccess": "The {type} was successfully added."
       },
-      "right": {
-        "title": "Permission",
-        "read": "Read only",
-        "readWrite": "Read & write",
-        "admin": "Admin"
-      },
       "permission": {
         "title": "Permission",
         "read": "Read only",
