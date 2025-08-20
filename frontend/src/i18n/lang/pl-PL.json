@@ -290,16 +290,16 @@
 				"updatedSuccess": "{type} został pomyślnie zaktualizowany."
 			},
 			"right": {
-				"title": "Uprawnienie",
+				"title": "Uprawnienia",
 				"read": "Tylko do odczytu",
 				"readWrite": "Odczyt i zapis",
-				"admin": "Administrator"
+				"admin": "Administracja"
 			},
 			"permission": {
-				"title": "Uprawnienie",
+				"title": "Uprawnienia",
 				"read": "Tylko do odczytu",
 				"readWrite": "Odczyt i zapis",
-				"admin": "Administrator"
+				"admin": "Administracja"
 			},
 			"attributes": {
 				"link": "Link",
