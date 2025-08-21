@@ -184,6 +184,9 @@ func setupSentry(e *echo.Echo) {
 
 // RegisterRoutes registers all routes for the application
 func RegisterRoutes(e *echo.Echo) {
+	e.OnAddRouteHandler = func(_ string, route echo.Route, _ echo.HandlerFunc, middlewares []echo.MiddlewareFunc) {
+		models.CollectRoutesForAPITokenUsage(route, middlewares)
+	}
 
 	if config.ServiceEnableCaldav.GetBool() {
 		// Caldav routes
@@ -218,9 +221,6 @@ func RegisterRoutes(e *echo.Echo) {
 
 	// API Routes
 	a := e.Group("/api/v1")
-	e.OnAddRouteHandler = func(_ string, route echo.Route, _ echo.HandlerFunc, middlewares []echo.MiddlewareFunc) {
-		models.CollectRoutesForAPITokenUsage(route, middlewares)
-	}
 	registerAPIRoutes(a)
 
 	v2 := e.Group("/api/v2")
