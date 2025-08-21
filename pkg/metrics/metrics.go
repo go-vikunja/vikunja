@@ -34,6 +34,7 @@ const (
 	TeamCountKey        = `team_count`
 	FilesCountKey       = `files_count`
 	AttachmentsCountKey = `attachments_count`
+	TasksCompletedCountKey = `tasks_completed_total`
 )
 
 var registry *prometheus.Registry
@@ -71,6 +72,7 @@ func InitMetrics() {
 	registerPromMetric(TeamCountKey, "The total number of teams on this instance")
 	registerPromMetric(FilesCountKey, "The total number of files on this instance")
 	registerPromMetric(AttachmentsCountKey, "The total number of attachments on this instance")
+	registerPromMetric(TasksCompletedCountKey, "The total number of completed tasks on this instance")
 
 	setupActiveUsersMetric()
 	setupActiveLinkSharesMetric()
@@ -98,4 +100,12 @@ func GetCount(key string) (count int64, err error) {
 // SetCount sets the project count to a given value
 func SetCount(count int64, key string) error {
 	return keyvalue.Put(key, count)
+}
+// IncCount increments the given key by one
+func IncCount(key string) error {
+	count, err := GetCount(key)
+	if err != nil {
+		return err
+	}
+	return SetCount(count+1, key)
 }
