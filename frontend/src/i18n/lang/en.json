@@ -191,6 +191,7 @@
         "tokenCreatedSuccess": "Here is your new api token: {token}",
         "tokenCreatedNotSeeAgain": "Store it in a secure location, you won't see it again!",
         "selectAll": "Select all",
+        "toggleAll": "Toggle All",
         "delete": {
           "header": "Delete this token",
           "text1": "Are you sure you want to delete the token \"{token}\"?",

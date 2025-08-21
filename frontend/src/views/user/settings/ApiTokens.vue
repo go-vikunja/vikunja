@@ -26,6 +26,7 @@ const newTokenExpiry = ref<string | number>(30)
 const newTokenExpiryCustom = ref(new Date())
 const newTokenPermissions = ref({})
 const newTokenPermissionsGroup = ref({})
+const allPermissions = ref(false)
 const newTokenTitleValid = ref(true)
 const newTokenPermissionValid = ref(true)
 const apiTokenTitle = ref()
@@ -135,11 +136,31 @@ function formatPermissionTitle(title: string): string {
 	return title.replaceAll('_', ' ')
 }
 
+function toggleAllPermissions(checked: boolean) {
+	Object.keys(availableRoutes.value).forEach(group => {
+		newTokenPermissionsGroup.value[group] = checked
+		Object.keys(availableRoutes.value[group]).forEach(key => {
+			newTokenPermissions.value[group][key] = checked
+		})
+	})
+}
+
+function checkAllPermissions() {
+	let allGroupsChecked = true
+	Object.keys(availableRoutes.value).forEach(group => {
+		if (!newTokenPermissionsGroup.value[group]) {
+			allGroupsChecked = false
+		}
+	})
+	allPermissions.value = allGroupsChecked
+}
+
 function selectPermissionGroup(group: string, checked: boolean) {
 	Object.entries(availableRoutes.value[group]).forEach(entry => {
 		const [key] = entry
 		newTokenPermissions.value[group][key] = checked
 	})
+	checkAllPermissions()
 }
 
 function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
@@ -159,6 +180,7 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 	} else {
 		newTokenPermissionsGroup.value[group] = false
 	}
+	checkAllPermissions()
 }
 </script>
 
@@ -304,6 +326,15 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 			<div class="field">
 				<label class="label">{{ $t('user.settings.apiTokens.attributes.permissions') }}</label>
 				<p>{{ $t('user.settings.apiTokens.permissionExplanation') }}</p>
+				<FancyCheckbox
+					v-model="allPermissions"
+					class="mie-2 is-capitalized has-text-weight-bold"
+					@update:model-value="toggleAllPermissions"
+				>
+					{{ $t('user.settings.apiTokens.toggleAll') }}
+				</FancyCheckbox>
+				<br>
+				<br>
 				<div
 					v-for="(routes, group) in availableRoutes"
 					:key="group"
