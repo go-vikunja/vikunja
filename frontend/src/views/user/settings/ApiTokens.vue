@@ -55,7 +55,17 @@ onMounted(async () => {
 
 	const routesAvailable = {}
 	const keys = Object.keys(allRoutes)
-	keys.sort((a, b) => (a === 'other' ? 1 : b === 'other' ? -1 : 0))
+	keys.sort((a, b) => {
+		const aIsOther = a.endsWith('other')
+		const bIsOther = b.endsWith('other')
+		if (aIsOther && !bIsOther) {
+			return 1
+		}
+		if (!aIsOther && bIsOther) {
+			return -1
+		}
+		return a.localeCompare(b)
+	})
 	keys.forEach(key => {
 		routesAvailable[key] = allRoutes[key]
 	})
@@ -133,6 +143,11 @@ async function createToken() {
 }
 
 function formatPermissionTitle(title: string): string {
+	const titleWithoutVersion = title.replace(/^v[0-9]+_/, '')
+	const version = title.match(/^v[0-9]+/)
+	if (version) {
+		return `${version[0]} ${titleWithoutVersion.replaceAll('_', ' ')}`
+	}
 	return title.replaceAll('_', ' ')
 }
 
@@ -329,7 +344,7 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 				<FancyCheckbox
 					v-model="allPermissions"
 					class="mie-2 is-capitalized has-text-weight-bold"
-					@update:model-value="toggleAllPermissions"
+					@update:modelValue="toggleAllPermissions"
 				>
 					{{ $t('user.settings.apiTokens.toggleAll') }}
 				</FancyCheckbox>

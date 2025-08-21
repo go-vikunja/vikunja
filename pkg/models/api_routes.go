@@ -29,13 +29,13 @@ import (
 )
 
 var (
-	apiTokenRoutes   = map[string]APITokenRoute{}
-	apiPrefixRegex   = regexp.MustCompile(`^/api/v[0-9]+/`)
-	apiV1PrefixRegex = regexp.MustCompile(`^/api/v1/`)
+	apiTokenRoutes  = map[string]map[string]APITokenRoute{}
+	apiPrefixRegex  = regexp.MustCompile(`^/api/v[0-9]+/`)
+	apiVersionRegex = regexp.MustCompile(`^/api/(v[0-9]+)/`)
 )
 
 func init() {
-	apiTokenRoutes = make(map[string]APITokenRoute)
+	apiTokenRoutes = make(map[string]map[string]APITokenRoute)
 }
 
 type APITokenRoute map[string]*RouteDetail
@@ -43,6 +43,14 @@ type APITokenRoute map[string]*RouteDetail
 type RouteDetail struct {
 	Path   string `json:"path"`
 	Method string `json:"method"`
+}
+
+func getRouteAPIVersion(path string) string {
+	matches := apiVersionRegex.FindStringSubmatch(path)
+	if len(matches) > 1 {
+		return matches[1]
+	}
+	return ""
 }
 
 func getRouteGroupName(path string) (finalName string, filteredParts []string) {
@@ -106,9 +114,12 @@ func getRouteDetail(route echo.Route) (method string, detail *RouteDetail) {
 	}
 }
 
-func ensureAPITokenRoutesGroup(group string) {
-	if _, has := apiTokenRoutes[group]; !has {
-		apiTokenRoutes[group] = make(APITokenRoute)
+func ensureAPITokenRoutesGroup(version, group string) {
+	if _, has := apiTokenRoutes[version]; !has {
+		apiTokenRoutes[version] = make(map[string]APITokenRoute)
+	}
+	if _, has := apiTokenRoutes[version][group]; !has {
+		apiTokenRoutes[version][group] = make(APITokenRoute)
 	}
 }
 
@@ -131,12 +142,45 @@ func CollectRoutesForAPITokenUsage(route echo.Route, middlewares []echo.Middlewa
 	}
 
 	routeGroupName, routeParts := getRouteGroupName(route.Path)
+	apiVersion := getRouteAPIVersion(route.Path)
+	if apiVersion == "" {
+		// No api version, no tokens
+		return
+	}
 
 	if routeGroupName == "tokenTest" ||
 		routeGroupName == "subscriptions" ||
 		routeGroupName == "tokens" ||
 		routeGroupName == "*" ||
 		strings.HasPrefix(routeGroupName, "user_") {
+		return
+	}
+
+	if apiVersion == "v2" {
+		method := ""
+		switch route.Method {
+		case http.MethodPost:
+			method = "create"
+		case http.MethodGet:
+			method = "read_all"
+			if strings.Contains(route.Path, "/:") {
+				method = "read_one"
+			}
+		case http.MethodPut:
+			method = "update"
+		case http.MethodDelete:
+			method = "delete"
+		}
+		if method == "" {
+			return
+		}
+
+		ensureAPITokenRoutesGroup(apiVersion, routeGroupName)
+		routeDetail := &RouteDetail{
+			Path:   route.Path,
+			Method: route.Method,
+		}
+		apiTokenRoutes[apiVersion][routeGroupName][method] = routeDetail
 		return
 	}
 
@@ -152,65 +196,60 @@ func CollectRoutesForAPITokenUsage(route echo.Route, middlewares []echo.Middlewa
 		// Otherwise, we add it to the "other" key.
 		if len(routeParts) == 1 {
 			if routeGroupName == "notifications" && route.Method == http.MethodPost {
-				ensureAPITokenRoutesGroup("notifications")
+				ensureAPITokenRoutesGroup(apiVersion, "notifications")
 
-				apiTokenRoutes["notifications"]["mark_all_as_read"] = routeDetail
+				apiTokenRoutes[apiVersion]["notifications"]["mark_all_as_read"] = routeDetail
 				return
 			}
 
-			ensureAPITokenRoutesGroup("other")
+			ensureAPITokenRoutesGroup(apiVersion, "other")
 
-			_, exists := apiTokenRoutes["other"][routeGroupName]
+			_, exists := apiTokenRoutes[apiVersion]["other"][routeGroupName]
 			if exists {
 				routeGroupName += "_" + strings.ToLower(route.Method)
 			}
-			apiTokenRoutes["other"][routeGroupName] = routeDetail
+			apiTokenRoutes[apiVersion]["other"][routeGroupName] = routeDetail
 			return
 		}
 
 		subkey := strings.Join(routeParts[1:], "_")
 
-		if _, has := apiTokenRoutes[routeParts[0]]; !has {
-			apiTokenRoutes[routeParts[0]] = make(APITokenRoute)
-		}
+		ensureAPITokenRoutesGroup(apiVersion, routeParts[0])
 
-		if _, has := apiTokenRoutes[routeParts[0]][subkey]; has {
+		if _, has := apiTokenRoutes[apiVersion][routeParts[0]][subkey]; has {
 			subkey += "_" + strings.ToLower(route.Method)
 		}
 
-		apiTokenRoutes[routeParts[0]][subkey] = routeDetail
+		apiTokenRoutes[apiVersion][routeParts[0]][subkey] = routeDetail
 
 		return
 	}
 
 	if strings.HasSuffix(routeGroupName, "_bulk") {
 		parent := strings.TrimSuffix(routeGroupName, "_bulk")
-		ensureAPITokenRoutesGroup(parent)
+		ensureAPITokenRoutesGroup(apiVersion, parent)
 
 		method, routeDetail := getRouteDetail(route)
-		apiTokenRoutes[parent][method+"_bulk"] = routeDetail
+		apiTokenRoutes[apiVersion][parent][method+"_bulk"] = routeDetail
 		return
 	}
 
-	_, has := apiTokenRoutes[routeGroupName]
-	if !has {
-		apiTokenRoutes[routeGroupName] = make(APITokenRoute)
-	}
+	ensureAPITokenRoutesGroup(apiVersion, routeGroupName)
 
 	method, routeDetail := getRouteDetail(route)
 	if method != "" {
-		apiTokenRoutes[routeGroupName][method] = routeDetail
+		apiTokenRoutes[apiVersion][routeGroupName][method] = routeDetail
 	}
 
 	if routeGroupName == "tasks_attachments" {
 		if strings.Contains(route.Name, "UploadTaskAttachment") {
-			apiTokenRoutes[routeGroupName]["create"] = &RouteDetail{
+			apiTokenRoutes[apiVersion][routeGroupName]["create"] = &RouteDetail{
 				Path:   route.Path,
 				Method: route.Method,
 			}
 		}
 		if strings.Contains(route.Name, "GetTaskAttachment") {
-			apiTokenRoutes[routeGroupName]["read_one"] = &RouteDetail{
+			apiTokenRoutes[apiVersion][routeGroupName]["read_one"] = &RouteDetail{
 				Path:   route.Path,
 				Method: route.Method,
 			}
@@ -228,7 +267,15 @@ func CollectRoutesForAPITokenUsage(route echo.Route, middlewares []echo.Middlewa
 // @Success 200 {array} models.APITokenRoute "The list of all routes."
 // @Router /routes [get]
 func GetAvailableAPIRoutesForToken(c echo.Context) error {
-	return c.JSON(http.StatusOK, apiTokenRoutes)
+	// We merge all versions into one map to make it easier for the frontend
+	// to display the routes.
+	mergedRoutes := make(map[string]APITokenRoute)
+	for version, groups := range apiTokenRoutes {
+		for group, routes := range groups {
+			mergedRoutes[version+"_"+group] = routes
+		}
+	}
+	return c.JSON(http.StatusOK, mergedRoutes)
 }
 
 // CanDoAPIRoute checks if a token is allowed to use the current api route
@@ -241,6 +288,7 @@ func CanDoAPIRoute(c echo.Context, token *APIToken) (can bool) {
 	}
 
 	routeGroupName, routeParts := getRouteGroupName(path)
+	apiVersion := getRouteAPIVersion(path)
 
 	routeGroupName = strings.TrimSuffix(routeGroupName, "_bulk")
 
@@ -250,18 +298,26 @@ func CanDoAPIRoute(c echo.Context, token *APIToken) (can bool) {
 		routeGroupName = "other"
 	}
 
-	group, hasGroup := token.APIPermissions[routeGroupName]
+	// The frontend sends permissions with the version prefixed, like "v1_projects"
+	group, hasGroup := token.APIPermissions[apiVersion+"_"+routeGroupName]
 	if !hasGroup {
-		group, hasGroup = token.APIPermissions[routeParts[0]]
+		group, hasGroup = token.APIPermissions[apiVersion+"_"+routeParts[0]]
 		if !hasGroup {
-			return false
+			// For backwards compatibility, we also check without the version prefix
+			group, hasGroup = token.APIPermissions[routeGroupName]
+			if !hasGroup {
+				group, hasGroup = token.APIPermissions[routeParts[0]]
+				if !hasGroup {
+					return false
+				}
+			}
 		}
 	}
 
 	var route string
-	routes, has := apiTokenRoutes[routeGroupName]
+	routes, has := apiTokenRoutes[apiVersion][routeGroupName]
 	if !has {
-		routes, has = apiTokenRoutes[routeParts[0]]
+		routes, has = apiTokenRoutes[apiVersion][routeParts[0]]
 		if !has {
 			return false
 		}
@@ -273,9 +329,15 @@ func CanDoAPIRoute(c echo.Context, token *APIToken) (can bool) {
 		route = "read_all"
 	}
 
+	// We need to remove the /api/v... prefix from the path to compare it with the stored path.
+	pathWithoutPrefix := apiPrefixRegex.ReplaceAllString(path, "")
 	for _, p := range group {
-		if route == "" && routes[p] != nil && routes[p].Path == path && routes[p].Method == c.Request().Method {
-			return true
+		if route == "" && routes[p] != nil {
+			// We only check the path without the version prefix, because the version is already checked.
+			routePathWithoutPrefix := apiPrefixRegex.ReplaceAllString(routes[p].Path, "")
+			if routePathWithoutPrefix == pathWithoutPrefix && routes[p].Method == c.Request().Method {
+				return true
+			}
 		}
 		if route != "" && p == route {
 			return true
@@ -288,9 +350,23 @@ func CanDoAPIRoute(c echo.Context, token *APIToken) (can bool) {
 }
 
 func PermissionsAreValid(permissions APIPermissions) (err error) {
-
 	for key, methods := range permissions {
-		routes, has := apiTokenRoutes[key]
+		parts := strings.SplitN(key, "_", 2)
+		if len(parts) != 2 {
+			return &ErrInvalidAPITokenPermission{
+				Group: key,
+			}
+		}
+		version, group := parts[0], parts[1]
+
+		versionedRoutes, has := apiTokenRoutes[version]
+		if !has {
+			return &ErrInvalidAPITokenPermission{
+				Group: key,
+			}
+		}
+
+		routes, has := versionedRoutes[group]
 		if !has {
 			return &ErrInvalidAPITokenPermission{
 				Group: key,

@@ -101,6 +101,12 @@ func (t *APIToken) Create(s *xorm.Session, a web.Auth) (err error) {
 
 	t.OwnerID = a.GetID()
 
+	if len(t.APIPermissions) == 0 {
+		return &ErrInvalidAPITokenPermission{
+			Group: "permissions",
+		}
+	}
+
 	if err := PermissionsAreValid(t.APIPermissions); err != nil {
 		return err
 	}
