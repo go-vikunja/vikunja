@@ -336,7 +336,8 @@
 			"month": "Місяць",
 			"day": "День",
 			"hour": "Година",
-			"range": "Проміжок днів"
+			"range": "Проміжок днів",
+			"monthLabel": "Місяць: {month}"
 		},
 		"table": {
 			"title": "Таблиця",
@@ -1174,7 +1175,8 @@
 	},
 	"about": {
 		"title": "Про",
-		"version": "Відміна: {version}"
+		"version": "Відміна: {version}",
+		"apiVersion": "API версія: {version}"
 	},
 	"time": {
 		"units": {
