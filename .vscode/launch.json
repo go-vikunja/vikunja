@@ -17,7 +17,7 @@
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceRoot}",
-            "env": {},
+            "env": { "VIKUNJA_SERVICE_INTERFACE": "127.0.0.1:3456" },
             "args": []
         },
         {
