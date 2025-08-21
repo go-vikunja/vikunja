@@ -17,6 +17,7 @@
 package models
 
 import (
+	"strconv"
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
@@ -24,6 +25,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
+	"github.com/labstack/echo/v4"
 	"xorm.io/xorm"
 )
 
@@ -54,10 +56,14 @@ func (*ProjectUser) TableName() string {
 	return "users_projects"
 }
 
+
 // UserWithPermission represents a user in combination with the permission it can have on a project
 type UserWithPermission struct {
 	user.User  `xorm:"extends"`
 	Permission Permission `json:"permission"`
+
+	// A list of links related to this user.
+	Links Links `json:"_links,omitempty" xorm:"-"`
 }
 
 // Create creates a new project <-> user relation

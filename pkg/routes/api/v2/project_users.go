@@ -17,7 +17,6 @@
 package v2
 
 import (
-	"fmt"
 	"math"
 	"net/http"
 	"strconv"
@@ -78,28 +77,11 @@ func (pu *ProjectUsers) Get(c echo.Context) error {
 	c.Response().Header().Set("x-pagination-result-count", strconv.Itoa(resultCount))
 	c.Response().Header().Set("Access-Control-Expose-Headers", "x-pagination-total-pages, x-pagination-result-count")
 
-	usersResponse := make([]*ProjectUserResponse, len(users.([]*models.UserWithPermission)))
-	for i, u := range users.([]*models.UserWithPermission) {
-		usersResponse[i] = &ProjectUserResponse{
-			UserWithPermission: u,
-			Links: &ProjectUserLinks{
-				Self:    fmt.Sprintf("/api/v2/users/%d", u.User.ID),
-				Project: fmt.Sprintf("/api/v2/projects/%d", projectID),
-			},
-		}
+	for _, u := range users.([]*models.UserWithPermission) {
+		u.User.Links = map[string]interface{}{"self": map[string]string{"href": "/api/v2/users/" + strconv.FormatInt(u.User.ID, 10), "method": "GET"}}
 	}
 
-	return c.JSON(http.StatusOK, usersResponse)
-}
-
-type ProjectUserLinks struct {
-	Self    string `json:"self"`
-	Project string `json:"project"`
-}
-
-type ProjectUserResponse struct {
-	*models.UserWithPermission
-	Links *ProjectUserLinks `json:"_links"`
+	return c.JSON(http.StatusOK, users)
 }
 
 // Post adds a user to a project

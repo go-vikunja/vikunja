@@ -112,6 +112,10 @@ func GetProjectTasks(c echo.Context) error {
 	c.Response().Header().Set("x-pagination-result-count", strconv.Itoa(resultCount))
 	c.Response().Header().Set("Access-Control-Expose-Headers", "x-pagination-total-pages, x-pagination-result-count")
 
+	for _, t := range tasks.([]*models.Task) {
+		t.AddLinks(auth)
+	}
+
 	return c.JSON(http.StatusOK, tasks)
 }
 
@@ -169,6 +173,8 @@ func CreateProjectTask(c echo.Context) error {
 	if err := s.Commit(); err != nil {
 		return handler.HandleHTTPError(err)
 	}
+
+	t.AddLinks(auth)
 
 	return c.JSON(http.StatusCreated, t)
 }

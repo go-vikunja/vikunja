@@ -20,6 +20,7 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/web"
 
 	"github.com/labstack/echo/v4"
@@ -42,6 +43,12 @@ func HandleHTTPError(err error) *echo.HTTPError {
 	log.Error(err.Error())
 	if a, has := err.(web.HTTPErrorProcessor); has {
 		errDetails := a.HTTPError()
+		if el, has := err.(models.ErrorLinkable); has {
+			errDetails.Links = make(map[string]interface{})
+			for key, link := range el.GetLinks() {
+				errDetails.Links[key] = link
+			}
+		}
 		return echo.NewHTTPError(errDetails.HTTPCode, errDetails).SetInternal(err)
 	}
 	return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)

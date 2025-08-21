@@ -23,6 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/web"
 
+	"github.com/labstack/echo/v4"
 	"xorm.io/xorm"
 )
 
@@ -55,6 +56,11 @@ func (*TeamProject) TableName() string {
 type TeamWithPermission struct {
 	Team       `xorm:"extends"`
 	Permission Permission `json:"permission"`
+}
+
+// AddLinks adds HATEOAS links to the team.
+func (tp *TeamWithPermission) AddLinks(c echo.Context) {
+	tp.Team.AddLinks(c)
 }
 
 // Create creates a new team <-> project relation

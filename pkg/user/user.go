@@ -115,6 +115,7 @@ type User struct {
 	// A timestamp when this task was last updated. You cannot change this value.
 	Updated time.Time `xorm:"updated not null" json:"updated"`
 
+	Links map[string]interface{} `json:"_links,omitempty" xorm:"-"`
 	web.Auth `xorm:"-" json:"-"`
 }
 
@@ -158,6 +159,7 @@ func (u *User) Lang() string {
 func (u *User) GetID() int64 {
 	return u.ID
 }
+
 
 // TableName returns the table name for users
 func (*User) TableName() string {

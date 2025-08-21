@@ -17,11 +17,13 @@
 package models
 
 import (
+	"strconv"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
@@ -61,12 +63,16 @@ type Team struct {
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
+
+	// A list of links related to this team.
+	Links Links `json:"_links,omitempty" xorm:"-"`
 }
 
 // TableName makes beautiful table names
 func (*Team) TableName() string {
 	return "teams"
 }
+
 
 // TeamMember defines the relationship between a user and a team
 type TeamMember struct {

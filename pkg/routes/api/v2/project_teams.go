@@ -17,7 +17,6 @@
 package v2
 
 import (
-	"fmt"
 	"math"
 	"net/http"
 	"strconv"
@@ -77,28 +76,11 @@ func (pt *ProjectTeams) Get(c echo.Context) error {
 	c.Response().Header().Set("x-pagination-result-count", strconv.Itoa(resultCount))
 	c.Response().Header().Set("Access-Control-Expose-Headers", "x-pagination-total-pages, x-pagination-result-count")
 
-	teamsResponse := make([]*ProjectTeamResponse, len(teams.([]*models.TeamWithPermission)))
-	for i, t := range teams.([]*models.TeamWithPermission) {
-		teamsResponse[i] = &ProjectTeamResponse{
-			TeamWithPermission: t,
-			Links: &ProjectTeamLinks{
-				Self:    fmt.Sprintf("/api/v2/teams/%d", t.Team.ID),
-				Project: fmt.Sprintf("/api/v2/projects/%d", projectID),
-			},
-		}
+	for _, t := range teams.([]*models.TeamWithPermission) {
+		t.AddLinks(c)
 	}
 
-	return c.JSON(http.StatusOK, teamsResponse)
-}
-
-type ProjectTeamLinks struct {
-	Self    string `json:"self"`
-	Project string `json:"project"`
-}
-
-type ProjectTeamResponse struct {
-	*models.TeamWithPermission
-	Links *ProjectTeamLinks `json:"_links"`
+	return c.JSON(http.StatusOK, teams)
 }
 
 // Post adds a team to a project

@@ -1146,6 +1146,16 @@ func (err ErrInvalidReactionEntityKind) HTTPError() web.HTTPError {
 	}
 }
 
+// GetLinks returns the links for this error.
+func (err ErrProjectDoesNotExist) GetLinks() Links {
+	return Links{
+		"create": Link{
+			HREF:   "/api/v2/projects",
+			Method: "POST",
+		},
+	}
+}
+
 // ErrMustHaveProjectViewToSortByPosition represents an error where no project view id was supplied
 type ErrMustHaveProjectViewToSortByPosition struct{}
 

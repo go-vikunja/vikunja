@@ -45,9 +45,10 @@ type HTTPErrorProcessor interface {
 
 // HTTPError holds information about an http error
 type HTTPError struct {
-	HTTPCode int    `json:"-"`
-	Code     int    `json:"code"`
-	Message  string `json:"message"`
+	HTTPCode int                    `json:"-"`
+	Code     int                    `json:"code"`
+	Message  string                 `json:"message"`
+	Links    map[string]interface{} `json:"_links,omitempty"`
 }
 
 type HTTPErrorWithDetails struct {

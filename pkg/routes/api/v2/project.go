@@ -17,7 +17,6 @@
 package v2
 
 import (
-	"fmt"
 	"math"
 	"net/http"
 	"strconv"
@@ -60,18 +59,6 @@ func RegisterProjects(a *echo.Group) {
 	// Project Tasks
 	projects.GET("/:id/tasks", GetProjectTasks)
 	projects.POST("/:id/tasks", CreateProjectTask)
-}
-
-type ProjectLinks struct {
-	Self  string `json:"self"`
-	Tasks string `json:"tasks"`
-	Users string `json:"users"`
-	Teams string `json:"teams"`
-}
-
-type ProjectResponse struct {
-	*models.Project
-	Links *ProjectLinks `json:"_links"`
 }
 
 // GetAllProjects handles retrieving all projects for a user
@@ -142,20 +129,11 @@ func GetAllProjects(c echo.Context) error {
 	c.Response().Header().Set("x-pagination-result-count", strconv.Itoa(resultCount))
 	c.Response().Header().Set("Access-Control-Expose-Headers", "x-pagination-total-pages, x-pagination-result-count")
 
-	projectsResponse := make([]*ProjectResponse, len(projects))
-	for i, p := range projects {
-		projectsResponse[i] = &ProjectResponse{
-			Project: p,
-			Links: &ProjectLinks{
-				Self:  fmt.Sprintf("/api/v2/projects/%d", p.ID),
-				Tasks: fmt.Sprintf("/api/v2/projects/%d/tasks", p.ID),
-				Users: fmt.Sprintf("/api/v2/projects/%d/users", p.ID),
-				Teams: fmt.Sprintf("/api/v2/projects/%d/teams", p.ID),
-			},
-		}
+	for _, p := range projects {
+		p.AddLinks(c)
 	}
 
-	return c.JSON(http.StatusOK, projectsResponse)
+	return c.JSON(http.StatusOK, projects)
 }
 
 // CreateProject creates a new project
@@ -185,17 +163,9 @@ func CreateProject(c echo.Context) error {
 		return handler.HandleHTTPError(err)
 	}
 
-	response := &ProjectResponse{
-		Project: p,
-		Links: &ProjectLinks{
-			Self:  fmt.Sprintf("/api/v2/projects/%d", p.ID),
-			Tasks: fmt.Sprintf("/api/v2/projects/%d/tasks", p.ID),
-			Users: fmt.Sprintf("/api/v2/projects/%d/users", p.ID),
-			Teams: fmt.Sprintf("/api/v2/projects/%d/teams", p.ID),
-		},
-	}
+	p.AddLinks(c)
 
-	return c.JSON(http.StatusCreated, response)
+	return c.JSON(http.StatusCreated, p)
 }
 
 // GetProject retrieves a single project by its ID
@@ -231,17 +201,9 @@ func GetProject(c echo.Context) error {
 		return handler.HandleHTTPError(err)
 	}
 
-	response := &ProjectResponse{
-		Project: p,
-		Links: &ProjectLinks{
-			Self:  fmt.Sprintf("/api/v2/projects/%d", p.ID),
-			Tasks: fmt.Sprintf("/api/v2/projects/%d/tasks", p.ID),
-			Users: fmt.Sprintf("/api/v2/projects/%d/users", p.ID),
-			Teams: fmt.Sprintf("/api/v2/projects/%d/teams", p.ID),
-		},
-	}
+	p.AddLinks(c)
 
-	return c.JSON(http.StatusOK, response)
+	return c.JSON(http.StatusOK, p)
 }
 
 // UpdateProject handles updating a project
@@ -288,17 +250,9 @@ func UpdateProject(c echo.Context) error {
 		return handler.HandleHTTPError(err)
 	}
 
-	response := &ProjectResponse{
-		Project: updatePayload,
-		Links: &ProjectLinks{
-			Self:  fmt.Sprintf("/api/v2/projects/%d", updatePayload.ID),
-			Tasks: fmt.Sprintf("/api/v2/projects/%d/tasks", updatePayload.ID),
-			Users: fmt.Sprintf("/api/v2/projects/%d/users", updatePayload.ID),
-			Teams: fmt.Sprintf("/api/v2/projects/%d/teams", updatePayload.ID),
-		},
-	}
+	updatePayload.AddLinks(c)
 
-	return c.JSON(http.StatusOK, response)
+	return c.JSON(http.StatusOK, updatePayload)
 }
 
 // DeleteProject handles deleting a project

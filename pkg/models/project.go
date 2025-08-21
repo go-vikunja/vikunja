@@ -27,10 +27,12 @@ import (
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web"
 
+	"github.com/labstack/echo/v4"
 	"xorm.io/builder"
 	"xorm.io/xorm"
 )
@@ -85,6 +87,9 @@ type Project struct {
 	// A timestamp when this project was last updated. You cannot change this value.
 	Updated time.Time `xorm:"updated not null" json:"updated"`
 
+	// A list of links related to this project.
+	Links Links `json:"_links,omitempty" xorm:"-"`
+
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
 }
@@ -110,6 +115,7 @@ type ProjectWithTasksAndBuckets struct {
 func (p *Project) TableName() string {
 	return "projects"
 }
+
 
 // ProjectBackgroundType holds a project background type
 type ProjectBackgroundType struct {

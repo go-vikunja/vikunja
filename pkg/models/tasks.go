@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
@@ -36,6 +37,7 @@ import (
 	"github.com/google/uuid"
 	clone "github.com/huandu/go-clone/generic"
 	"github.com/jinzhu/copier"
+	"github.com/labstack/echo/v4"
 	"github.com/typesense/typesense-go/v2/typesense"
 	"xorm.io/builder"
 	"xorm.io/xorm"
@@ -143,6 +145,9 @@ type Task struct {
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
+
+	// A list of links related to this task.
+	Links Links `json:"_links,omitempty" xorm:"-"`
 }
 
 type TaskWithComments struct {
@@ -154,6 +159,7 @@ type TaskWithComments struct {
 func (*Task) TableName() string {
 	return "tasks"
 }
+
 
 // GetFullIdentifier returns the task identifier if the task has one and the index prefixed with # otherwise.
 func (t *Task) GetFullIdentifier() string {
