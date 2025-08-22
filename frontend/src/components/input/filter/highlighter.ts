@@ -141,6 +141,8 @@ function decorateDocument(doc: Node) {
 				}
 				
 				addLabelDecoration(labelValue, valueStart, valueEnd)
+			} else { // Otherwise if there is no value
+				continue
 			}
 
 			const valueStart = labelMatch.index + labelMatch[0].lastIndexOf(labelValue)
