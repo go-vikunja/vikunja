@@ -52,6 +52,23 @@ func TestArchived(t *testing.T) {
 	th := NewTestHelper(t)
 	th.Login(t, &testuser1)
 
+	// TODO: A previous version of this test file contained a comprehensive suite of tests
+	// to ensure that tasks within archived projects could not be modified in any way.
+	// These tests were removed during a refactoring and need to be re-added.
+	//
+	// The missing tests, which should be run for both "archived parent project" and
+	// "archived individually" scenarios, include:
+	//   - Editing a task
+	//   - Deleting a task
+	//   - Adding new labels to a task
+	//   - Removing labels from a task
+	//   - Adding assignees to a task
+	//   - Removing assignees from a task
+	//   - Adding a relation to a task
+	//   - Removing a relation from a task
+	//   - Adding a comment to a task
+	//   - Removing a comment from a task
+
 	// The project belongs to an archived parent project
 	t.Run("archived parent project", func(t *testing.T) {
 		t.Run("not editable", func(t *testing.T) {
