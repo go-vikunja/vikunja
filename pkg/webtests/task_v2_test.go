@@ -53,4 +53,9 @@ func TestTaskV2All(t *testing.T) {
 		assert.Contains(t, rec.Body.String(), `"title":"task #1"`)
 		assert.NotContains(t, rec.Body.String(), `"title":"task #2 done"`)
 	})
+
+	// TODO: Add integration test for sorting once the API is stable.
+	t.Run("Sorting", func(t *testing.T) {
+		t.Skip("Skipping sorting integration test until API v2 is fully stabilized.")
+	})
 }
