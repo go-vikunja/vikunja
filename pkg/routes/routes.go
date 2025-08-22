@@ -319,6 +319,7 @@ func registerAPIRoutes(a *echo.Group) {
 	setupMetricsMiddleware(a)
 
 	apiv1.RegisterProjects(a)
+	apiv1.RegisterTasks(a)
 
 	a.GET("/token/test", apiv1.TestToken)
 	a.POST("/token/test", apiv1.CheckToken)
