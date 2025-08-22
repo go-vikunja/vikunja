@@ -279,6 +279,15 @@ func TestTaskComments(t *testing.T) {
 				assert.Contains(t, rec.Body.String(), `"comment":"Lorem Ipsum"`)
 			})
 		})
+		// TODO: This test is functionally broken. It is intended to test comment creation
+		// via a link share, but it has been refactored incorrectly.
+		//
+		// To fix this, the test needs to:
+		// 1. Log out the current user (`th.Logout(t)`).
+		// 2. Set the link share context on the test helper (`th.SetLinkShare(t, ...)`).
+		//
+		// Without these steps, the request is made as a fully authenticated user,
+		// and the link share functionality is not actually being tested.
 		t.Run("Link Share", func(t *testing.T) {
 			rec, err := th.Request(t, "PUT", "/api/v1/tasks/13/comments", strings.NewReader(`{"comment":"Lorem Ipsum"}`))
 			require.NoError(t, err)
