@@ -17,52 +17,52 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/web"
+	"code.vikunja.io/api/pkg/user"
 	"xorm.io/xorm"
 )
 
-func (pv *ProjectView) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
+func (pv *ProjectView) CanRead(s *xorm.Session, u *user.User) (bool, int, error) {
 	filterID := GetSavedFilterIDFromProjectID(pv.ProjectID)
 	if filterID > 0 {
 		sf := &SavedFilter{ID: filterID}
-		return sf.CanRead(s, a)
+		return sf.CanRead(s, u)
 	}
 
 	pp := pv.getProject()
-	return pp.CanRead(s, a)
+	return pp.CanRead(s, u)
 }
 
-func (pv *ProjectView) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+func (pv *ProjectView) CanDelete(s *xorm.Session, u *user.User) (bool, error) {
 	filterID := GetSavedFilterIDFromProjectID(pv.ProjectID)
 	if filterID > 0 {
 		sf := &SavedFilter{ID: filterID}
-		return sf.CanDelete(s, a)
+		return sf.CanDelete(s, u)
 	}
 
 	pp := pv.getProject()
-	return pp.IsAdmin(s, a)
+	return pp.IsAdmin(s, u)
 }
 
-func (pv *ProjectView) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
+func (pv *ProjectView) CanUpdate(s *xorm.Session, u *user.User) (bool, error) {
 	filterID := GetSavedFilterIDFromProjectID(pv.ProjectID)
 	if filterID > 0 {
 		sf := &SavedFilter{ID: filterID}
-		return sf.CanUpdate(s, a)
+		return sf.CanUpdate(s, u)
 	}
 
 	pp := pv.getProject()
-	return pp.IsAdmin(s, a)
+	return pp.IsAdmin(s, u)
 }
 
-func (pv *ProjectView) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+func (pv *ProjectView) CanCreate(s *xorm.Session, u *user.User) (bool, error) {
 	filterID := GetSavedFilterIDFromProjectID(pv.ProjectID)
 	if filterID > 0 {
 		sf := &SavedFilter{ID: filterID}
-		return sf.CanUpdate(s, a)
+		return sf.CanUpdate(s, u)
 	}
 
 	pp := pv.getProject()
-	return pp.IsAdmin(s, a)
+	return pp.IsAdmin(s, u)
 }
 
 func (pv *ProjectView) getProject() (pp *Project) {

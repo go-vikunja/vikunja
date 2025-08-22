@@ -17,23 +17,23 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/web"
+	"code.vikunja.io/api/pkg/user"
 	"xorm.io/xorm"
 )
 
 // CanCreate checks if a user can add a label to a task
-func (lt *LabelTask) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+func (lt *LabelTask) CanCreate(s *xorm.Session, u *user.User) (bool, error) {
 	label, err := getLabelByIDSimple(s, lt.LabelID)
 	if err != nil {
 		return false, err
 	}
 
-	hasAccessTolabel, _, err := label.hasAccessToLabel(s, a)
+	hasAccessTolabel, _, err := label.hasAccessToLabel(s, u)
 	if err != nil || !hasAccessTolabel { // If the user doesn't have access to the label, we can error out here
 		return false, err
 	}
 
-	canDoLabelTask, err := canDoLabelTask(s, lt.TaskID, a)
+	canDoLabelTask, err := canDoLabelTask(s, lt.TaskID, u)
 	if err != nil {
 		return false, err
 	}
@@ -42,8 +42,8 @@ func (lt *LabelTask) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 }
 
 // CanDelete checks if a user can delete a label from a task
-func (lt *LabelTask) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
-	canDoLabelTask, err := canDoLabelTask(s, lt.TaskID, a)
+func (lt *LabelTask) CanDelete(s *xorm.Session, u *user.User) (bool, error) {
+	canDoLabelTask, err := canDoLabelTask(s, lt.TaskID, u)
 	if err != nil {
 		return false, err
 	}
@@ -61,18 +61,18 @@ func (lt *LabelTask) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 }
 
 // CanCreate determines if a user can update a labeltask
-func (ltb *LabelTaskBulk) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
-	return canDoLabelTask(s, ltb.TaskID, a)
+func (ltb *LabelTaskBulk) CanCreate(s *xorm.Session, u *user.User) (bool, error) {
+	return canDoLabelTask(s, ltb.TaskID, u)
 }
 
 // Helper function to check if a user can write to a task
 // + is able to see the label
 // always the same check for either deleting or adding a label to a task
-func canDoLabelTask(s *xorm.Session, taskID int64, a web.Auth) (bool, error) {
+func canDoLabelTask(s *xorm.Session, taskID int64, u *user.User) (bool, error) {
 	// A user can add a label to a task if he can write to the task
 	task, err := GetTaskByIDSimple(s, taskID)
 	if err != nil {
 		return false, err
 	}
-	return task.CanUpdate(s, a)
+	return task.CanUpdate(s, u)
 }

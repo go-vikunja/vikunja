@@ -17,13 +17,13 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/web"
+	"code.vikunja.io/api/pkg/user"
 	"xorm.io/xorm"
 )
 
 // CanCreate checks if a user can subscribe to an entity
-func (sb *Subscription) CanCreate(s *xorm.Session, a web.Auth) (can bool, err error) {
-	if _, is := a.(*LinkSharing); is {
+func (sb *Subscription) CanCreate(s *xorm.Session, u *user.User) (can bool, err error) {
+	if u == nil {
 		return false, ErrGenericForbidden{}
 	}
 
@@ -32,10 +32,10 @@ func (sb *Subscription) CanCreate(s *xorm.Session, a web.Auth) (can bool, err er
 	switch sb.EntityType {
 	case SubscriptionEntityProject:
 		l := &Project{ID: sb.EntityID}
-		can, _, err = l.CanRead(s, a)
+		can, _, err = l.CanRead(s, u)
 	case SubscriptionEntityTask:
 		t := &Task{ID: sb.EntityID}
-		can, _, err = t.CanRead(s, a)
+		can, _, err = t.CanRead(s, u)
 	default:
 		return false, &ErrUnknownSubscriptionEntityType{EntityType: sb.EntityType}
 	}
@@ -44,8 +44,8 @@ func (sb *Subscription) CanCreate(s *xorm.Session, a web.Auth) (can bool, err er
 }
 
 // CanDelete checks if a user can delete a subscription
-func (sb *Subscription) CanDelete(s *xorm.Session, a web.Auth) (can bool, err error) {
-	if _, is := a.(*LinkSharing); is {
+func (sb *Subscription) CanDelete(s *xorm.Session, u *user.User) (can bool, err error) {
+	if u == nil {
 		return false, ErrGenericForbidden{}
 	}
 
@@ -53,7 +53,7 @@ func (sb *Subscription) CanDelete(s *xorm.Session, a web.Auth) (can bool, err er
 
 	realSb := &Subscription{}
 	exists, err := s.
-		Where("entity_id = ? AND entity_type = ? AND user_id = ?", sb.EntityID, sb.EntityType, a.GetID()).
+		Where("entity_id = ? AND entity_type = ? AND user_id = ?", sb.EntityID, sb.EntityType, u.ID).
 		Get(realSb)
 	if err != nil {
 		return false, err

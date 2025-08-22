@@ -111,14 +111,14 @@ func getDefaultBucketID(s *xorm.Session, view *ProjectView) (bucketID int64, err
 // @Success 200 {array} models.Bucket "The buckets"
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /projects/{id}/views/{view}/buckets [get]
-func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, _ string, _ int, _ int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
+func (b *Bucket) ReadAll(s *xorm.Session, u *user.User, _ string, _ int, _ int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 
 	view, err := GetProjectViewByIDAndProject(s, b.ProjectViewID, b.ProjectID)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 
-	can, _, err := view.CanRead(s, auth)
+	can, _, err := view.CanRead(s, u)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -155,7 +155,7 @@ func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, _ string, _ int, _ int)
 	return buckets, len(buckets), int64(len(buckets)), nil
 }
 
-func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, projects []*Project, opts *taskSearchOptions, auth web.Auth) (bucketsWithTasks []*Bucket, err error) {
+func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, projects []*Project, opts *taskSearchOptions, u *user.User) (bucketsWithTasks []*Bucket, err error) {
 	// Get all buckets for this project
 	buckets := []*Bucket{}
 
@@ -176,7 +176,7 @@ func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, projects []*Pr
 				Title:         bc.Title,
 				ProjectViewID: view.ID,
 				Position:      float64(id),
-				CreatedByID:   auth.GetID(),
+				CreatedByID:   u.ID,
 				Created:       time.Now(),
 				Updated:       time.Now(),
 			})
@@ -257,7 +257,7 @@ func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, projects []*Pr
 			}
 		}
 
-		ts, _, total, err := getRawTasksForProjects(s, projects, auth, opts)
+		ts, _, total, err := getRawTasksForProjects(s, projects, u, opts)
 		if err != nil {
 			return nil, err
 		}
@@ -276,7 +276,7 @@ func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, projects []*Pr
 		taskMap[t.ID] = t
 	}
 
-	err = addMoreInfoToTasks(s, taskMap, auth, view, opts.expand)
+	err = addMoreInfoToTasks(s, taskMap, u, view, opts.expand)
 	if err != nil {
 		return nil, err
 	}
@@ -311,12 +311,9 @@ func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, projects []*Pr
 // @Failure 404 {object} web.HTTPError "The project does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/views/{view}/buckets [put]
-func (b *Bucket) Create(s *xorm.Session, a web.Auth) (err error) {
-	b.CreatedBy, err = GetUserOrLinkShareUser(s, a)
-	if err != nil {
-		return
-	}
-	b.CreatedByID = b.CreatedBy.ID
+func (b *Bucket) Create(s *xorm.Session, u *user.User) (err error) {
+	b.CreatedBy = u
+	b.CreatedByID = u.ID
 
 	b.ID = 0
 	_, err = s.Insert(b)
@@ -345,7 +342,7 @@ func (b *Bucket) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "The bucket does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{projectID}/views/{view}/buckets/{bucketID} [post]
-func (b *Bucket) Update(s *xorm.Session, _ web.Auth) (err error) {
+func (b *Bucket) Update(s *xorm.Session) (err error) {
 	_, err = s.
 		Where("id = ?", b.ID).
 		Cols(
@@ -372,7 +369,7 @@ func (b *Bucket) Update(s *xorm.Session, _ web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "The bucket does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{projectID}/views/{view}/buckets/{bucketID} [delete]
-func (b *Bucket) Delete(s *xorm.Session, a web.Auth) (err error) {
+func (b *Bucket) Delete(s *xorm.Session, u *user.User) (err error) {
 
 	// Prevent removing the last bucket
 	total, err := s.Where("project_view_id = ?", b.ProjectViewID).Count(&Bucket{})
@@ -401,7 +398,7 @@ func (b *Bucket) Delete(s *xorm.Session, a web.Auth) (err error) {
 		updateProjectView = true
 	}
 	if updateProjectView {
-		err = pv.Update(s, a)
+		err = pv.Update(s)
 		if err != nil {
 			return
 		}

@@ -49,13 +49,13 @@ func (b *TaskBucket) TableName() string {
 	return "task_buckets"
 }
 
-func (b *TaskBucket) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
+func (b *TaskBucket) CanUpdate(s *xorm.Session, u *user.User) (bool, error) {
 	bucket := Bucket{
 		ID:            b.BucketID,
 		ProjectID:     b.ProjectID,
 		ProjectViewID: b.ProjectViewID,
 	}
-	return bucket.canDoBucket(s, a)
+	return bucket.canDoBucket(s, u)
 }
 
 func (b *TaskBucket) upsert(s *xorm.Session) (err error) {
@@ -98,7 +98,7 @@ func (b *TaskBucket) upsert(s *xorm.Session) (err error) {
 // @Failure 400 {object} web.HTTPError "Invalid task bucket object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/views/{view}/buckets/{bucket}/tasks [post]
-func (b *TaskBucket) Update(s *xorm.Session, a web.Auth) (err error) {
+func (b *TaskBucket) Update(s *xorm.Session, u *user.User) (err error) {
 
 	oldTaskBucket := &TaskBucket{}
 	_, err = s.
@@ -132,7 +132,7 @@ func (b *TaskBucket) Update(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	task := &Task{ID: b.TaskID}
-	err = task.ReadOne(s, a)
+	err = task.ReadOne(s, u)
 	if err != nil {
 		return err
 	}
@@ -140,7 +140,7 @@ func (b *TaskBucket) Update(s *xorm.Session, a web.Auth) (err error) {
 	// Check the bucket limit
 	// Only check the bucket limit if the task is being moved between buckets, allow reordering the task within a bucket
 	if b.BucketID != 0 && b.BucketID != oldTaskBucket.BucketID {
-		taskCount, err := checkBucketLimit(s, a, task, bucket)
+		taskCount, err := checkBucketLimit(s, u, task, bucket)
 		if err != nil {
 			return err
 		}
@@ -227,9 +227,8 @@ func (b *TaskBucket) Update(s *xorm.Session, a web.Auth) (err error) {
 	b.Task = task
 	b.Bucket = bucket
 
-	doer, _ := user.GetFromAuth(a)
 	return events.Dispatch(&TaskUpdatedEvent{
 		Task: task,
-		Doer: doer,
+		Doer: u,
 	})
 }

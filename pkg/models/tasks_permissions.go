@@ -17,29 +17,29 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/web"
+	"code.vikunja.io/api/pkg/user"
 	"xorm.io/xorm"
 )
 
 // CanDelete checks if the user can delete an task
-func (t *Task) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
-	return t.canDoTask(s, a)
+func (t *Task) CanDelete(s *xorm.Session, u *user.User) (bool, error) {
+	return t.canDoTask(s, u)
 }
 
 // CanUpdate determines if a user has the permission to update a project task
-func (t *Task) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
-	return t.canDoTask(s, a)
+func (t *Task) CanUpdate(s *xorm.Session, u *user.User) (bool, error) {
+	return t.canDoTask(s, u)
 }
 
 // CanCreate determines if a user has the permission to create a project task
-func (t *Task) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+func (t *Task) CanCreate(s *xorm.Session, u *user.User) (bool, error) {
 	// A user can do a task if he has write acces to its project
 	l := &Project{ID: t.ProjectID}
-	return l.CanWrite(s, a)
+	return l.CanWrite(s, u)
 }
 
 // CanRead determines if a user can read a task
-func (t *Task) CanRead(s *xorm.Session, a web.Auth) (canRead bool, maxPermission int, err error) {
+func (t *Task) CanRead(s *xorm.Session, u *user.User) (canRead bool, maxPermission int, err error) {
 	expand := t.Expand
 	// Get the task, error out if it doesn't exist
 	*t, err = GetTaskByIDSimple(s, t.ID)
@@ -51,16 +51,16 @@ func (t *Task) CanRead(s *xorm.Session, a web.Auth) (canRead bool, maxPermission
 
 	// A user can read a task if it has access to the project
 	l := &Project{ID: t.ProjectID}
-	return l.CanRead(s, a)
+	return l.CanRead(s, u)
 }
 
 // CanWrite checks if a user has write access to a task
-func (t *Task) CanWrite(s *xorm.Session, a web.Auth) (canWrite bool, err error) {
-	return t.canDoTask(s, a)
+func (t *Task) CanWrite(s *xorm.Session, u *user.User) (canWrite bool, err error) {
+	return t.canDoTask(s, u)
 }
 
 // Helper function to check if a user can do stuff on a project task
-func (t *Task) canDoTask(s *xorm.Session, a web.Auth) (bool, error) {
+func (t *Task) canDoTask(s *xorm.Session, u *user.User) (bool, error) {
 	// Get the task
 	ot, err := GetTaskByIDSimple(s, t.ID)
 	if err != nil {
@@ -70,7 +70,7 @@ func (t *Task) canDoTask(s *xorm.Session, a web.Auth) (bool, error) {
 	// Check if we're moving the task into a different project to check if the user has sufficient permissions for that on the new project
 	if t.ProjectID != 0 && t.ProjectID != ot.ProjectID {
 		newProject := &Project{ID: t.ProjectID}
-		can, err := newProject.CanWrite(s, a)
+		can, err := newProject.CanWrite(s, u)
 		if err != nil {
 			return false, err
 		}
@@ -81,5 +81,5 @@ func (t *Task) canDoTask(s *xorm.Session, a web.Auth) (bool, error) {
 
 	// A user can do a task if it has write acces to its project
 	l := &Project{ID: ot.ProjectID}
-	return l.CanWrite(s, a)
+	return l.CanWrite(s, u)
 }

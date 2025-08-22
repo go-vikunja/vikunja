@@ -19,7 +19,6 @@ package models
 import (
 	"code.vikunja.io/api/pkg/events"
 	user2 "code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/web"
 
 	"xorm.io/xorm"
 )
@@ -38,7 +37,7 @@ import (
 // @Failure 403 {object} web.HTTPError "The user does not have access to the team"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams/{id}/members [put]
-func (tm *TeamMember) Create(s *xorm.Session, a web.Auth) (err error) {
+func (tm *TeamMember) Create(s *xorm.Session, u *user2.User) (err error) {
 
 	// Check if the team extst
 	team, err := GetTeamByID(s, tm.TeamID)
@@ -69,11 +68,10 @@ func (tm *TeamMember) Create(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	doer, _ := user2.GetFromAuth(a)
 	return events.Dispatch(&TeamMemberAddedEvent{
 		Team:   team,
 		Member: member,
-		Doer:   doer,
+		Doer:   u,
 	})
 }
 
@@ -88,7 +86,7 @@ func (tm *TeamMember) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Success 200 {object} models.Message "The user was successfully removed from the team."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams/{id}/members/{username} [delete]
-func (tm *TeamMember) Delete(s *xorm.Session, _ web.Auth) (err error) {
+func (tm *TeamMember) Delete(s *xorm.Session) (err error) {
 
 	t, err := GetTeamByID(s, tm.TeamID)
 	if err != nil {
@@ -135,7 +133,7 @@ func (tm *TeamMember) MembershipExists(s *xorm.Session) (exists bool, err error)
 // @Success 200 {object} models.Message "The member permission was successfully changed."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams/{id}/members/{userID}/admin [post]
-func (tm *TeamMember) Update(s *xorm.Session, _ web.Auth) (err error) {
+func (tm *TeamMember) Update(s *xorm.Session) (err error) {
 	// Find the numeric user id
 	user, err := user2.GetUserByUsername(s, tm.Username)
 	if err != nil {

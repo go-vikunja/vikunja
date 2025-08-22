@@ -150,27 +150,27 @@ func getTaskFilterOptsFromCollection(tf *TaskCollection, projectView *ProjectVie
 	return opts, err
 }
 
-func getTaskOrTasksInBuckets(s *xorm.Session, a web.Auth, projects []*Project, view *ProjectView, opts *taskSearchOptions, filteringForBucket bool) (tasks interface{}, resultCount int, totalItems int64, err error) {
+func getTaskOrTasksInBuckets(s *xorm.Session, u *user.User, projects []*Project, view *ProjectView, opts *taskSearchOptions, filteringForBucket bool) (tasks interface{}, resultCount int, totalItems int64, err error) {
 	if filteringForBucket {
-		return getTasksForProjects(s, projects, a, opts, view)
+		return getTasksForProjects(s, projects, u, opts, view)
 	}
 
 	if view != nil && !strings.Contains(opts.filter, taskPropertyBucketID) {
 		if view.BucketConfigurationMode != BucketConfigurationModeNone {
-			tasksInBuckets, err := GetTasksInBucketsForView(s, view, projects, opts, a)
+			tasksInBuckets, err := GetTasksInBucketsForView(s, view, projects, opts, u)
 			return tasksInBuckets, len(tasksInBuckets), int64(len(tasksInBuckets)), err
 		}
 	}
 
-	return getTasksForProjects(s, projects, a, opts, view)
+	return getTasksForProjects(s, projects, u, opts, view)
 }
 
-func getRelevantProjectsFromCollection(s *xorm.Session, a web.Auth, tf *TaskCollection) (projects []*Project, err error) {
+func getRelevantProjectsFromCollection(s *xorm.Session, u *user.User, tf *TaskCollection) (projects []*Project, err error) {
 	if tf.ProjectID == 0 || tf.isSavedFilter {
 		projects, _, _, err = getRawProjectsForUser(
 			s,
 			&ProjectOptions{
-				User: &user.User{ID: a.GetID()},
+				User: u,
 				Page: -1,
 			},
 		)
@@ -179,14 +179,14 @@ func getRelevantProjectsFromCollection(s *xorm.Session, a web.Auth, tf *TaskColl
 
 	// Check the project exists and the user has access on it
 	project := &Project{ID: tf.ProjectID}
-	canRead, _, err := project.CanRead(s, a)
+	canRead, _, err := project.CanRead(s, u)
 	if err != nil {
 		return nil, err
 	}
 	if !canRead {
 		return nil, ErrUserDoesNotHaveAccessToProject{
 			ProjectID: tf.ProjectID,
-			UserID:    a.GetID(),
+			UserID:    u.ID,
 		}
 	}
 
@@ -240,13 +240,13 @@ func getFilterValueForBucketFilter(filter string, view *ProjectView) (newFilter 
 // @Success 200 {array} models.Task "The tasks"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/views/{view}/tasks [get]
-func (tf *TaskCollection) ReadAllTasks(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
+func (tf *TaskCollection) ReadAllTasks(s *xorm.Session, u *user.User, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
 	if tf.ProjectID != 0 {
 		p, err := GetProjectSimpleByID(s, tf.ProjectID)
 		if err != nil {
 			return nil, 0, 0, err
 		}
-		tasks, resultCount, totalItems, err := getTasksForProjects(s, []*Project{p}, a, &taskSearchOptions{
+		tasks, resultCount, totalItems, err := getTasksForProjects(s, []*Project{p}, u, &taskSearchOptions{
 			search:  search,
 			page:    page,
 			perPage: perPage,
@@ -256,10 +256,10 @@ func (tf *TaskCollection) ReadAllTasks(s *xorm.Session, a web.Auth, search strin
 		}
 		return tasks, resultCount, totalItems, nil
 	}
-	return tf.ReadAllTasks(s, a, search, page, perPage)
+	return tf.ReadAllTasks(s, u, search, page, perPage)
 }
 
-func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
+func (tf *TaskCollection) ReadAll(s *xorm.Session, u *user.User, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
 	// If the project id is < -1 this means we're dealing with a saved filter - in that case we get and populate the filter
 	// -1 is the favorites project which works as intended
 	if !tf.isSavedFilter && tf.ProjectID < -1 {
@@ -268,7 +268,7 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 			return nil, 0, 0, err
 		}
 
-		canRead, _, err := sf.CanRead(s, a)
+		canRead, _, err := sf.CanRead(s, u)
 		if err != nil {
 			return nil, 0, 0, err
 		}
@@ -293,10 +293,6 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		sf.Filters.OrderByArr = nil
 
 		if sf.Filters.FilterTimezone == "" {
-			u, err := user.GetUserByID(s, a.GetID())
-			if err != nil {
-				return nil, 0, 0, err
-			}
 			sf.Filters.FilterTimezone = u.Timezone
 		}
 
@@ -313,7 +309,7 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 			}
 		}
 
-		return tc.ReadAll(s, a, search, page, perPage)
+		return tc.ReadAll(s, u, search, page, perPage)
 	}
 
 	var view *ProjectView
@@ -390,19 +386,15 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		}
 	}
 
-	shareAuth, is := a.(*LinkSharing)
-	if is {
-		project, err := GetProjectSimpleByID(s, shareAuth.ProjectID)
-		if err != nil {
-			return nil, 0, 0, err
-		}
-		return getTaskOrTasksInBuckets(s, a, []*Project{project}, view, opts, filteringForBucket)
+	if u == nil {
+		// This should not happen, because we check for link shares before, but better be safe than sorry
+		return nil, 0, 0, ErrGenericForbidden{}
 	}
 
-	projects, err := getRelevantProjectsFromCollection(s, a, tf)
+	projects, err := getRelevantProjectsFromCollection(s, u, tf)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 
-	return getTaskOrTasksInBuckets(s, a, projects, view, opts, filteringForBucket)
+	return getTaskOrTasksInBuckets(s, u, projects, view, opts, filteringForBucket)
 }

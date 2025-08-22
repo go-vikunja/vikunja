@@ -17,33 +17,32 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/web"
+	"code.vikunja.io/api/pkg/user"
 	"xorm.io/xorm"
 )
 
-func (w *Webhook) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
+func (w *Webhook) CanRead(s *xorm.Session, u *user.User) (bool, int, error) {
 	p := &Project{ID: w.ProjectID}
-	return p.CanRead(s, a)
+	return p.CanRead(s, u)
 }
 
-func (w *Webhook) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
-	return w.canDoWebhook(s, a)
+func (w *Webhook) CanDelete(s *xorm.Session, u *user.User) (bool, error) {
+	return w.canDoWebhook(s, u)
 }
 
-func (w *Webhook) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
-	return w.canDoWebhook(s, a)
+func (w *Webhook) CanUpdate(s *xorm.Session, u *user.User) (bool, error) {
+	return w.canDoWebhook(s, u)
 }
 
-func (w *Webhook) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
-	return w.canDoWebhook(s, a)
+func (w *Webhook) CanCreate(s *xorm.Session, u *user.User) (bool, error) {
+	return w.canDoWebhook(s, u)
 }
 
-func (w *Webhook) canDoWebhook(s *xorm.Session, a web.Auth) (bool, error) {
-	_, isShareAuth := a.(*LinkSharing)
-	if isShareAuth {
+func (w *Webhook) canDoWebhook(s *xorm.Session, u *user.User) (bool, error) {
+	if u == nil {
 		return false, nil
 	}
 
 	p := &Project{ID: w.ProjectID}
-	return p.CanUpdate(s, a)
+	return p.CanUpdate(s, u)
 }

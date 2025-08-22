@@ -19,7 +19,6 @@ package models
 import (
 	"time"
 
-	"code.vikunja.io/api/pkg/web"
 	"xorm.io/builder"
 	"xorm.io/xorm"
 
@@ -52,9 +51,6 @@ type Reaction struct {
 
 	// A timestamp when this reaction was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`
-
-	web.CRUDable    `xorm:"-" json:"-"`
-	web.Permissions `xorm:"-" json:"-"`
 }
 
 func (*Reaction) TableName() string {
@@ -76,9 +72,9 @@ type ReactionMap map[string][]*user.User
 // @Failure 403 {object} web.HTTPError "The user does not have access to the entity"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /{kind}/{id}/reactions [get]
-func (r *Reaction) ReadAll(s *xorm.Session, a web.Auth, _ string, _ int, _ int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
+func (r *Reaction) ReadAll(s *xorm.Session, u *user.User, _ string, _ int, _ int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 
-	can, _, err := r.CanRead(s, a)
+	can, _, err := r.CanRead(s, u)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -151,8 +147,8 @@ func getReactionsForEntityIDs(s *xorm.Session, entityKind ReactionKind, entityID
 // @Failure 403 {object} web.HTTPError "The user does not have access to the entity"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /{kind}/{id}/reactions/delete [post]
-func (r *Reaction) Delete(s *xorm.Session, a web.Auth) (err error) {
-	r.UserID = a.GetID()
+func (r *Reaction) Delete(s *xorm.Session, u *user.User) (err error) {
+	r.UserID = u.ID
 
 	_, err = s.Where("user_id = ? AND entity_id = ? AND entity_kind = ? AND value = ?", r.UserID, r.EntityID, r.EntityKind, r.Value).
 		Delete(&Reaction{})
@@ -173,8 +169,8 @@ func (r *Reaction) Delete(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the entity"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /{kind}/{id}/reactions [put]
-func (r *Reaction) Create(s *xorm.Session, a web.Auth) (err error) {
-	r.UserID = a.GetID()
+func (r *Reaction) Create(s *xorm.Session, u *user.User) (err error) {
+	r.UserID = u.ID
 
 	exists, err := s.Where("user_id = ? AND entity_id = ? AND entity_kind = ? AND value = ?", r.UserID, r.EntityID, r.EntityKind, r.Value).
 		Exist(&Reaction{})

@@ -17,32 +17,32 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/web"
+	"code.vikunja.io/api/pkg/user"
 	"xorm.io/xorm"
 )
 
 // CanCreate checks if the user can create a new user <-> project relation
-func (lu *ProjectUser) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
-	return lu.canDoProjectUser(s, a)
+func (lu *ProjectUser) CanCreate(s *xorm.Session, u *user.User) (bool, error) {
+	return lu.canDoProjectUser(s, u)
 }
 
 // CanDelete checks if the user can delete a user <-> project relation
-func (lu *ProjectUser) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
-	return lu.canDoProjectUser(s, a)
+func (lu *ProjectUser) CanDelete(s *xorm.Session, u *user.User) (bool, error) {
+	return lu.canDoProjectUser(s, u)
 }
 
 // CanUpdate checks if the user can update a user <-> project relation
-func (lu *ProjectUser) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
-	return lu.canDoProjectUser(s, a)
+func (lu *ProjectUser) CanUpdate(s *xorm.Session, u *user.User) (bool, error) {
+	return lu.canDoProjectUser(s, u)
 }
 
-func (lu *ProjectUser) canDoProjectUser(s *xorm.Session, a web.Auth) (bool, error) {
+func (lu *ProjectUser) canDoProjectUser(s *xorm.Session, u *user.User) (bool, error) {
 	// Link shares aren't allowed to do anything
-	if _, is := a.(*LinkSharing); is {
+	if u == nil {
 		return false, nil
 	}
 
 	// Get the project and check if the user has write access on it
 	l := Project{ID: lu.ProjectID}
-	return l.IsAdmin(s, a)
+	return l.IsAdmin(s, u)
 }

@@ -23,6 +23,7 @@ import (
 
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 )
 
@@ -49,9 +50,9 @@ func (tp *TaskPosition) TableName() string {
 	return "task_positions"
 }
 
-func (tp *TaskPosition) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
+func (tp *TaskPosition) CanUpdate(s *xorm.Session, u *user.User) (bool, error) {
 	t := &Task{ID: tp.TaskID}
-	return t.CanUpdate(s, a)
+	return t.CanUpdate(s, u)
 }
 
 // Update is the handler to update a task position
@@ -67,7 +68,7 @@ func (tp *TaskPosition) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 // @Failure 400 {object} web.HTTPError "Invalid task position object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id}/position [post]
-func (tp *TaskPosition) Update(s *xorm.Session, a web.Auth) (err error) {
+func (tp *TaskPosition) Update(s *xorm.Session, u *user.User) (err error) {
 
 	// Update all positions if the newly saved position is < 0.1
 	var shouldRecalculate bool
@@ -93,7 +94,7 @@ func (tp *TaskPosition) Update(s *xorm.Session, a web.Auth) (err error) {
 			return
 		}
 		if shouldRecalculate {
-			return RecalculateTaskPositions(s, view, a)
+			return RecalculateTaskPositions(s, view, u)
 		}
 		return nil
 	}
@@ -107,13 +108,13 @@ func (tp *TaskPosition) Update(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	if shouldRecalculate {
-		return RecalculateTaskPositions(s, view, a)
+		return RecalculateTaskPositions(s, view, u)
 	}
 
-	return triggerTaskUpdatedEventForTaskID(s, a, tp.TaskID)
+	return triggerTaskUpdatedEventForTaskID(s, u, tp.TaskID)
 }
 
-func RecalculateTaskPositions(s *xorm.Session, view *ProjectView, a web.Auth) (err error) {
+func RecalculateTaskPositions(s *xorm.Session, view *ProjectView, u *user.User) (err error) {
 
 	log.Debugf("Recalculating task positions for view %d", view.ID)
 
@@ -153,7 +154,7 @@ func RecalculateTaskPositions(s *xorm.Session, view *ProjectView, a web.Auth) (e
 		}
 	}
 
-	projects, err := getRelevantProjectsFromCollection(s, a, tc)
+	projects, err := getRelevantProjectsFromCollection(s, u, tc)
 	if err != nil {
 		return err
 	}
@@ -164,7 +165,7 @@ func RecalculateTaskPositions(s *xorm.Session, view *ProjectView, a web.Auth) (e
 
 	dbSearcher := &dbTaskSearcher{
 		s: s,
-		a: a,
+		u: u,
 	}
 
 	// We're directly using the db here, even if Typesense is configured, because in some edge cases Typesense
@@ -221,7 +222,7 @@ func getPositionsForView(s *xorm.Session, view *ProjectView) (positions []*TaskP
 	return
 }
 
-func calculateNewPositionForTask(s *xorm.Session, a web.Auth, t *Task, view *ProjectView) (*TaskPosition, error) {
+func calculateNewPositionForTask(s *xorm.Session, u *user.User, t *Task, view *ProjectView) (*TaskPosition, error) {
 	if t.Position == 0 {
 		lowestPosition := &TaskPosition{}
 		exists, err := s.Where("project_view_id = ?", view.ID).
@@ -232,7 +233,7 @@ func calculateNewPositionForTask(s *xorm.Session, a web.Auth, t *Task, view *Pro
 		}
 		if exists {
 			if lowestPosition.Position == 0 {
-				err = RecalculateTaskPositions(s, view, a)
+				err = RecalculateTaskPositions(s, view, u)
 				if err != nil {
 					return nil, err
 				}

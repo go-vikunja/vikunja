@@ -63,27 +63,24 @@ func (tc *TaskComment) TableName() string {
 // @Failure 400 {object} web.HTTPError "Invalid task comment object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/comments [put]
-func (tc *TaskComment) Create(s *xorm.Session, a web.Auth) (err error) {
+func (tc *TaskComment) Create(s *xorm.Session, u *user.User) (err error) {
 
 	tc.ID = 0
 	tc.Created = time.Time{}
 	tc.Updated = time.Time{}
 
-	return tc.CreateWithTimestamps(s, a)
+	return tc.CreateWithTimestamps(s, u)
 }
 
-func (tc *TaskComment) CreateWithTimestamps(s *xorm.Session, a web.Auth) (err error) {
+func (tc *TaskComment) CreateWithTimestamps(s *xorm.Session, u *user.User) (err error) {
 	// Check if the task exists
 	task, err := GetTaskSimple(s, &Task{ID: tc.TaskID})
 	if err != nil {
 		return err
 	}
 
-	tc.Author, err = GetUserOrLinkShareUser(s, a)
-	if err != nil {
-		return err
-	}
-	tc.AuthorID = tc.Author.ID
+	tc.Author = u
+	tc.AuthorID = u.ID
 
 	if !tc.Created.IsZero() && !tc.Updated.IsZero() {
 		_, err = s.NoAutoTime().Insert(tc)
@@ -118,7 +115,7 @@ func (tc *TaskComment) CreateWithTimestamps(s *xorm.Session, a web.Auth) (err er
 // @Failure 404 {object} web.HTTPError "The task comment was not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/comments/{commentID} [delete]
-func (tc *TaskComment) Delete(s *xorm.Session, _ web.Auth) error {
+func (tc *TaskComment) Delete(s *xorm.Session) error {
 	deleted, err := s.
 		ID(tc.ID).
 		NoAutoCondition().
@@ -157,7 +154,7 @@ func (tc *TaskComment) Delete(s *xorm.Session, _ web.Auth) error {
 // @Failure 404 {object} web.HTTPError "The task comment was not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/comments/{commentID} [post]
-func (tc *TaskComment) Update(s *xorm.Session, _ web.Auth) error {
+func (tc *TaskComment) Update(s *xorm.Session) error {
 	updated, err := s.
 		ID(tc.ID).
 		Cols("comment").
@@ -214,7 +211,7 @@ func getTaskCommentSimple(s *xorm.Session, tc *TaskComment) error {
 // @Failure 404 {object} web.HTTPError "The task comment was not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/comments/{commentID} [get]
-func (tc *TaskComment) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
+func (tc *TaskComment) ReadOne(s *xorm.Session) (err error) {
 	err = getTaskCommentSimple(s, tc)
 	if err != nil {
 		return err
@@ -240,10 +237,10 @@ func (tc *TaskComment) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
 // @Success 200 {array} models.TaskComment "The array with all task comments"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/comments [get]
-func (tc *TaskComment) ReadAll(s *xorm.Session, auth web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
+func (tc *TaskComment) ReadAll(s *xorm.Session, u *user.User, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 
 	// Check if the user has access to the task
-	canRead, _, err := tc.CanRead(s, auth)
+	canRead, _, err := tc.CanRead(s, u)
 	if err != nil {
 		return nil, 0, 0, err
 	}

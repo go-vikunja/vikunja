@@ -17,7 +17,7 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/web"
+	"code.vikunja.io/api/pkg/user"
 	"xorm.io/xorm"
 )
 
@@ -36,28 +36,28 @@ func (r *Reaction) setEntityKindFromString() (err error) {
 	}
 }
 
-func (r *Reaction) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
+func (r *Reaction) CanRead(s *xorm.Session, u *user.User) (bool, int, error) {
 	t, err := r.getTask(s)
 	if err != nil {
 		return false, 0, err
 	}
-	return t.CanRead(s, a)
+	return t.CanRead(s, u)
 }
 
-func (r *Reaction) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+func (r *Reaction) CanDelete(s *xorm.Session, u *user.User) (bool, error) {
 	t, err := r.getTask(s)
 	if err != nil {
 		return false, err
 	}
-	return t.CanUpdate(s, a)
+	return t.CanUpdate(s, u)
 }
 
-func (r *Reaction) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+func (r *Reaction) CanCreate(s *xorm.Session, u *user.User) (bool, error) {
 	t, err := r.getTask(s)
 	if err != nil {
 		return false, err
 	}
-	return t.CanUpdate(s, a)
+	return t.CanUpdate(s, u)
 }
 
 func (r *Reaction) getTask(s *xorm.Session) (t *Task, err error) {

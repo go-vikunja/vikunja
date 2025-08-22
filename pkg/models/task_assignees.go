@@ -61,7 +61,7 @@ func getRawTaskAssigneesForTasks(s *xorm.Session, taskIDs []int64) (taskAssignee
 }
 
 // Create or update a bunch of task assignees
-func (t *Task) updateTaskAssignees(s *xorm.Session, assignees []*user.User, doer web.Auth) (err error) {
+func (t *Task) updateTaskAssignees(s *xorm.Session, assignees []*user.User, doer *user.User) (err error) {
 
 	// Load the current assignees
 	currentAssignees, err := getRawTaskAssigneesForTasks(s, []int64{t.ID})
@@ -170,7 +170,7 @@ func (t *Task) setTaskAssignees(assignees []*user.User) {
 // @Failure 403 {object} web.HTTPError "Not allowed to delete the assignee."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/assignees/{userID} [delete]
-func (la *TaskAssginee) Delete(s *xorm.Session, a web.Auth) (err error) {
+func (la *TaskAssginee) Delete(s *xorm.Session, u *user.User) (err error) {
 	_, err = s.Delete(&TaskAssginee{TaskID: la.TaskID, UserID: la.UserID})
 	if err != nil {
 		return err
@@ -181,7 +181,6 @@ func (la *TaskAssginee) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	doer, _ := user.GetFromAuth(a)
 	task, err := GetTaskByIDSimple(s, la.TaskID)
 	if err != nil {
 		return err
@@ -190,14 +189,14 @@ func (la *TaskAssginee) Delete(s *xorm.Session, a web.Auth) (err error) {
 	err = events.Dispatch(&TaskAssigneeDeletedEvent{
 		Task:     &task,
 		Assignee: &user.User{ID: la.UserID},
-		Doer:     doer,
+		Doer:     u,
 	})
 	if err != nil {
 		return err
 	}
 	return events.Dispatch(&TaskUpdatedEvent{
 		Task: &task,
-		Doer: doer,
+		Doer: u,
 	})
 }
 
@@ -214,7 +213,7 @@ func (la *TaskAssginee) Delete(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 400 {object} web.HTTPError "Invalid assignee object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/assignees [put]
-func (la *TaskAssginee) Create(s *xorm.Session, a web.Auth) (err error) {
+func (la *TaskAssginee) Create(s *xorm.Session, u *user.User) (err error) {
 
 	// Get the project to perform later checks
 	project, err := GetProjectSimpleByTaskID(s, la.TaskID)
@@ -223,10 +222,10 @@ func (la *TaskAssginee) Create(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	task := &Task{ID: la.TaskID}
-	return task.addNewAssigneeByID(s, la.UserID, project, a)
+	return task.addNewAssigneeByID(s, la.UserID, project, u)
 }
 
-func (t *Task) addNewAssigneeByID(s *xorm.Session, newAssigneeID int64, project *Project, auth web.Auth) (err error) {
+func (t *Task) addNewAssigneeByID(s *xorm.Session, newAssigneeID int64, project *Project, doer *user.User) (err error) {
 	// Check if the user exists and has access to the project
 	newAssignee, err := user.GetUserByID(s, newAssigneeID)
 	if err != nil {
@@ -272,7 +271,6 @@ func (t *Task) addNewAssigneeByID(s *xorm.Session, newAssigneeID int64, project 
 		return err
 	}
 
-	doer, _ := user.GetFromAuth(auth)
 	task, err := GetTaskSimple(s, &Task{ID: t.ID})
 	if err != nil {
 		return err
@@ -311,13 +309,13 @@ func (t *Task) addNewAssigneeByID(s *xorm.Session, newAssigneeID int64, project 
 // @Success 200 {array} user.User "The assignees"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/assignees [get]
-func (la *TaskAssginee) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
+func (la *TaskAssginee) ReadAll(s *xorm.Session, u *user.User, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 	task, err := GetProjectSimpleByTaskID(s, la.TaskID)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 
-	can, _, err := task.CanRead(s, a)
+	can, _, err := task.CanRead(s, u)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -372,7 +370,7 @@ type BulkAssignees struct {
 // @Failure 400 {object} web.HTTPError "Invalid assignee object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/assignees/bulk [post]
-func (ba *BulkAssignees) Create(s *xorm.Session, a web.Auth) (err error) {
+func (ba *BulkAssignees) Create(s *xorm.Session, u *user.User) (err error) {
 	task, err := GetTaskByIDSimple(s, ba.TaskID)
 	if err != nil {
 		return
@@ -385,6 +383,6 @@ func (ba *BulkAssignees) Create(s *xorm.Session, a web.Auth) (err error) {
 		task.Assignees = append(task.Assignees, &assignees[i].User)
 	}
 
-	err = task.updateTaskAssignees(s, ba.Assignees, a)
+	err = task.updateTaskAssignees(s, ba.Assignees, u)
 	return
 }

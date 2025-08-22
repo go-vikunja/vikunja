@@ -24,6 +24,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
+	"code.vikunja.io/api/pkg/services"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web/handler"
 
@@ -90,32 +91,14 @@ func GetAllProjects(c echo.Context) error {
 	}
 
 	search := c.QueryParam("s")
-	isArchived, _ := strconv.ParseBool(c.QueryParam("is_archived"))
+	p := new(models.Project)
+	_ = c.Bind(p)
 
-	u, err := user.GetFromAuth(auth)
+	ps := services.NewProjectService()
+	projects, resultCount, total, err := ps.GetAll(s, auth, p, search, page, perPage)
 	if err != nil {
 		return handler.HandleHTTPError(err)
 	}
-
-	opts := &models.ProjectOptions{
-		User:        u,
-		Search:      search,
-		Page:        page,
-		PerPage:     perPage,
-		GetArchived: isArchived,
-	}
-
-	projects, total, err := models.GetAllProjectsForUser(s, auth.GetID(), opts)
-	if err != nil {
-		return handler.HandleHTTPError(err)
-	}
-
-	err = models.AddProjectDetails(s, projects, auth)
-	if err != nil {
-		return handler.HandleHTTPError(err)
-	}
-
-	resultCount := len(projects)
 
 	var numberOfPages = math.Ceil(float64(total) / float64(perPage))
 	if page < 0 {
@@ -128,10 +111,6 @@ func GetAllProjects(c echo.Context) error {
 	c.Response().Header().Set("x-pagination-total-pages", strconv.FormatFloat(numberOfPages, 'f', 0, 64))
 	c.Response().Header().Set("x-pagination-result-count", strconv.Itoa(resultCount))
 	c.Response().Header().Set("Access-Control-Expose-Headers", "x-pagination-total-pages, x-pagination-result-count")
-
-	for _, p := range projects {
-		p.AddLinks(c)
-	}
 
 	return c.JSON(http.StatusOK, projects)
 }

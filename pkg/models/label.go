@@ -67,12 +67,7 @@ func (*Label) TableName() string {
 // @Failure 400 {object} web.HTTPError "Invalid label object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /labels [put]
-func (l *Label) Create(s *xorm.Session, a web.Auth) (err error) {
-	u, err := user.GetFromAuth(a)
-	if err != nil {
-		return
-	}
-
+func (l *Label) Create(s *xorm.Session, u *user.User) (err error) {
 	l.ID = 0
 	l.HexColor = utils.NormalizeHex(l.HexColor)
 	l.CreatedBy = u
@@ -97,7 +92,7 @@ func (l *Label) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "Label not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /labels/{id} [put]
-func (l *Label) Update(s *xorm.Session, a web.Auth) (err error) {
+func (l *Label) Update(s *xorm.Session) (err error) {
 
 	l.HexColor = utils.NormalizeHex(l.HexColor)
 
@@ -113,7 +108,7 @@ func (l *Label) Update(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
-	err = l.ReadOne(s, a)
+	err = l.ReadOne(s)
 	return
 }
 
@@ -130,7 +125,7 @@ func (l *Label) Update(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "Label not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /labels/{id} [delete]
-func (l *Label) Delete(s *xorm.Session, _ web.Auth) (err error) {
+func (l *Label) Delete(s *xorm.Session) (err error) {
 	_, err = s.ID(l.ID).Delete(&Label{})
 	return err
 }
@@ -148,10 +143,10 @@ func (l *Label) Delete(s *xorm.Session, _ web.Auth) (err error) {
 // @Success 200 {array} models.Label "The labels"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /labels [get]
-func (l *Label) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (ls interface{}, resultCount int, numberOfEntries int64, err error) {
+func (l *Label) ReadAll(s *xorm.Session, u *user.User, search string, page int, perPage int) (ls interface{}, resultCount int, numberOfEntries int64, err error) {
 	return GetLabelsByTaskIDs(s, &LabelByTaskIDsOptions{
 		Search:              []string{search},
-		User:                a,
+		User:                u,
 		Page:                page,
 		PerPage:             perPage,
 		GetUnusedLabels:     true,
@@ -173,7 +168,7 @@ func (l *Label) ReadAll(s *xorm.Session, a web.Auth, search string, page int, pe
 // @Failure 404 {object} web.HTTPError "Label not found"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /labels/{id} [get]
-func (l *Label) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
+func (l *Label) ReadOne(s *xorm.Session) (err error) {
 	label, err := getLabelByIDSimple(s, l.ID)
 	if err != nil {
 		return

@@ -17,39 +17,38 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/web"
+	"code.vikunja.io/api/pkg/user"
 	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
 // CanUpdate checks if a user can update a label
-func (l *Label) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
-	return l.isLabelOwner(s, a) // Only owners should be allowed to update a label
+func (l *Label) CanUpdate(s *xorm.Session, u *user.User) (bool, error) {
+	return l.isLabelOwner(s, u) // Only owners should be allowed to update a label
 }
 
 // CanDelete checks if a user can delete a label
-func (l *Label) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
-	return l.isLabelOwner(s, a) // Only owners should be allowed to delete a label
+func (l *Label) CanDelete(s *xorm.Session, u *user.User) (bool, error) {
+	return l.isLabelOwner(s, u) // Only owners should be allowed to delete a label
 }
 
 // CanRead checks if a user can read a label
-func (l *Label) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
-	return l.hasAccessToLabel(s, a)
+func (l *Label) CanRead(s *xorm.Session, u *user.User) (bool, int, error) {
+	return l.hasAccessToLabel(s, u)
 }
 
 // CanCreate checks if the user can create a label
 // Currently a dummy.
-func (l *Label) CanCreate(_ *xorm.Session, a web.Auth) (bool, error) {
-	if _, is := a.(*LinkSharing); is {
+func (l *Label) CanCreate(_ *xorm.Session, u *user.User) (bool, error) {
+	if u == nil {
 		return false, nil
 	}
 
 	return true, nil
 }
 
-func (l *Label) isLabelOwner(s *xorm.Session, a web.Auth) (bool, error) {
-
-	if _, is := a.(*LinkSharing); is {
+func (l *Label) isLabelOwner(s *xorm.Session, u *user.User) (bool, error) {
+	if u == nil {
 		return false, nil
 	}
 
@@ -57,21 +56,16 @@ func (l *Label) isLabelOwner(s *xorm.Session, a web.Auth) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return lorig.CreatedByID == a.GetID(), nil
+	return lorig.CreatedByID == u.ID, nil
 }
 
 // Helper method to check if a user can see a specific label
-func (l *Label) hasAccessToLabel(s *xorm.Session, a web.Auth) (has bool, maxPermission int, err error) {
-
-	linkShare, isLinkShare := a.(*LinkSharing)
-
+func (l *Label) hasAccessToLabel(s *xorm.Session, u *user.User) (has bool, maxPermission int, err error) {
 	var where builder.Cond
 	var createdByID int64
-	if isLinkShare {
-		where = builder.Eq{"project_id": linkShare.ProjectID}
-	} else {
-		where = builder.In("project_id", getUserProjectsStatement(a.GetID(), "", false).Select("l.id"))
-		createdByID = a.GetID()
+	if u != nil {
+		where = builder.In("project_id", getUserProjectsStatement(u.ID, "", false).Select("l.id"))
+		createdByID = u.ID
 	}
 
 	cond := builder.In("label_tasks.task_id",
@@ -96,7 +90,7 @@ func (l *Label) hasAccessToLabel(s *xorm.Session, a web.Auth) (has bool, maxPerm
 	// Since the permission depends on the task the label is associated with, we need to check that too.
 	if ll.TaskID > 0 {
 		t := &Task{ID: ll.TaskID}
-		_, maxPermission, err = t.CanRead(s, a)
+		_, maxPermission, err = t.CanRead(s, u)
 		if err != nil {
 			return
 		}

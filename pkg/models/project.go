@@ -27,12 +27,10 @@ import (
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web"
 
-	"github.com/labstack/echo/v4"
 	"xorm.io/builder"
 	"xorm.io/xorm"
 )
@@ -180,74 +178,16 @@ var FavoritesPseudoProject = Project{
 // @Failure 403 {object} web.HTTPError "The user does not have access to the project"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects [get]
-func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
-	prs, resultCount, totalItems, err := getAllRawProjects(s, a, search, page, perPage, p.IsArchived)
-	if err != nil {
-		return nil, 0, 0, err
-	}
-
-	_, is := a.(*LinkSharing)
-	if is {
-		// If we're dealing with a link share, we should just return the list of projects
-		// (which will contain only one) here because it would not do anything meaningful afterward.
-		return prs, resultCount, totalItems, nil
-	}
-
-	/////////////////
-	// Add project details (favorite state, among other things)
-	err = AddProjectDetails(s, prs, a)
-	if err != nil {
-		return
-	}
-
-	if p.Expand == ProjectExpandableRights {
-		var doer *user.User
-		doer, err = user.GetFromAuth(a)
-		if err != nil {
-			return
-		}
-		err = addMaxPermissionToProjects(s, prs, doer)
-		if err != nil {
-			return
-		}
-	} else {
-		for _, pr := range prs {
-			pr.MaxPermission = PermissionUnknown
-		}
-	}
-
-	//////////////////////////
-	// Putting it all together
-
-	return prs, resultCount, totalItems, err
+func (p *Project) ReadAll(s *xorm.Session, u *user.User, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
+	return getAllRawProjects(s, u, search, page, perPage, p.IsArchived)
 }
 
-func getAllRawProjects(s *xorm.Session, a web.Auth, search string, page int, perPage int, isArchived bool) (projects []*Project, resultCount int, totalItems int64, err error) {
-	// Check if we're dealing with a share auth
-	shareAuth, is := a.(*LinkSharing)
-	if is {
-		project, err := GetProjectSimpleByID(s, shareAuth.ProjectID)
-		if err != nil {
-			return nil, 0, 0, err
-		}
-		projects := []*Project{project}
-		err = AddProjectDetails(s, projects, a)
-		if err == nil && len(projects) > 0 {
-			projects[0].ParentProjectID = 0
-		}
-		return projects, 0, 0, err
-	}
-
-	doer, err := user.GetFromAuth(a)
-	if err != nil {
-		return nil, 0, 0, err
-	}
-
+func getAllRawProjects(s *xorm.Session, u *user.User, search string, page int, perPage int, isArchived bool) (projects []*Project, resultCount int, totalItems int64, err error) {
 	prs, resultCount, totalItems, err := getRawProjectsForUser(
 		s,
 		&ProjectOptions{
 			Search:      search,
-			User:        doer,
+			User:        u,
 			Page:        page,
 			PerPage:     perPage,
 			GetArchived: isArchived,
@@ -259,7 +199,7 @@ func getAllRawProjects(s *xorm.Session, a web.Auth, search string, page int, per
 	/////////////////
 	// Saved Filters
 
-	savedFiltersProject, err := getSavedFilterProjects(s, doer, search)
+	savedFiltersProject, err := getSavedFilterProjects(s, u, search)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -283,7 +223,7 @@ func getAllRawProjects(s *xorm.Session, a web.Auth, search string, page int, per
 // @Failure 403 {object} web.HTTPError "The user does not have access to the project"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id} [get]
-func (p *Project) ReadOne(s *xorm.Session, a web.Auth) (err error) {
+func (p *Project) ReadOne(s *xorm.Session, u *user.User) (err error) {
 
 	if p.ID == FavoritesPseudoProject.ID {
 		p.Views = FavoritesPseudoProject.Views
@@ -304,11 +244,6 @@ func (p *Project) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 		p.Created = sf.Created
 		p.Updated = sf.Updated
 		p.OwnerID = sf.OwnerID
-	}
-
-	_, isShareAuth := a.(*LinkSharing)
-	if isShareAuth {
-		p.ParentProjectID = 0
 	}
 
 	// Get project owner
@@ -340,12 +275,12 @@ func (p *Project) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 		}
 	}
 
-	p.IsFavorite, err = isFavorite(s, p.ID, a, FavoriteKindProject)
+	p.IsFavorite, err = isFavorite(s, p.ID, u, FavoriteKindProject)
 	if err != nil {
 		return
 	}
 
-	subs, err := GetSubscriptionForUser(s, SubscriptionEntityProject, p.ID, a)
+	subs, err := GetSubscriptionForUser(s, SubscriptionEntityProject, p.ID, u)
 	if err != nil && IsErrProjectDoesNotExist(err) && isFilter {
 		return nil
 	}
@@ -660,7 +595,7 @@ func GetAllParentProjects(s *xorm.Session, projectID int64) (allProjects map[int
 }
 
 // addProjectDetails adds owner user objects and project tasks to all projects in the slice
-func AddProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err error) {
+func AddProjectDetails(s *xorm.Session, projects []*Project, u *user.User) (err error) {
 	if len(projects) == 0 {
 		return
 	}
@@ -679,14 +614,13 @@ func AddProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err er
 		return err
 	}
 
-	favs, err := getFavorites(s, projectIDs, a, FavoriteKindProject)
+	favs, err := getFavorites(s, projectIDs, u, FavoriteKindProject)
 	if err != nil {
 		return err
 	}
 
 	var subscriptions = make(map[int64][]*Subscription)
-	u, is := a.(*user.User)
-	if is {
+	if u != nil {
 		subscriptionsWithUser, err := GetSubscriptionsForEntitiesAndUser(s, SubscriptionEntityProject, projectIDs, u)
 		if err != nil {
 			log.Errorf("An error occurred while getting project subscriptions for a project: %s", err.Error())
@@ -771,7 +705,7 @@ func AddProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err er
 	return
 }
 
-func addMaxPermissionToProjects(s *xorm.Session, projects []*Project, u *user.User) (err error) {
+func AddMaxPermissionToProjects(s *xorm.Session, projects []*Project, u *user.User) (err error) {
 	projectIDs := make([]int64, 0, len(projects))
 	for _, project := range projects {
 		if GetSavedFilterIDFromProjectID(project.ID) > 0 {
@@ -874,20 +808,15 @@ func checkProjectBeforeUpdateOrDelete(s *xorm.Session, project *Project) (err er
 	return nil
 }
 
-func CreateProject(s *xorm.Session, project *Project, auth web.Auth, createBacklogBucket bool, createDefaultViews bool) (err error) {
+func CreateProject(s *xorm.Session, project *Project, u *user.User, createBacklogBucket bool, createDefaultViews bool) (err error) {
 	err = project.CheckIsArchived(s)
 	if err != nil {
 		return err
 	}
 
-	doer, err := user.GetFromAuth(auth)
-	if err != nil {
-		return err
-	}
-
 	project.ID = 0
-	project.OwnerID = doer.ID
-	project.Owner = doer
+	project.OwnerID = u.ID
+	project.Owner = u
 
 	err = checkProjectBeforeUpdateOrDelete(s, project)
 	if err != nil {
@@ -907,13 +836,13 @@ func CreateProject(s *xorm.Session, project *Project, auth web.Auth, createBackl
 		return
 	}
 	if project.IsFavorite {
-		if err := addToFavorites(s, project.ID, auth, FavoriteKindProject); err != nil {
+		if err := addToFavorites(s, project.ID, u, FavoriteKindProject); err != nil {
 			return err
 		}
 	}
 
 	if createDefaultViews {
-		err = CreateDefaultViewsForProject(s, project, auth, createBacklogBucket, true)
+		err = CreateDefaultViewsForProject(s, project, u, createBacklogBucket, true)
 		if err != nil {
 			return
 		}
@@ -921,7 +850,7 @@ func CreateProject(s *xorm.Session, project *Project, auth web.Auth, createBackl
 
 	return events.Dispatch(&ProjectCreatedEvent{
 		Project: project,
-		Doer:    doer,
+		Doer:    u,
 	})
 }
 
@@ -945,7 +874,7 @@ func CreateNewProjectForUser(s *xorm.Session, u *user.User) (err error) {
 	return err
 }
 
-func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProjectBackground bool) (err error) {
+func UpdateProject(s *xorm.Session, project *Project, u *user.User, updateProjectBackground bool) (err error) {
 	err = checkProjectBeforeUpdateOrDelete(s, project)
 	if err != nil {
 		return
@@ -993,18 +922,18 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 		}
 	}
 
-	wasFavorite, err := isFavorite(s, project.ID, auth, FavoriteKindProject)
+	wasFavorite, err := isFavorite(s, project.ID, u, FavoriteKindProject)
 	if err != nil {
 		return err
 	}
 	if project.IsFavorite && !wasFavorite {
-		if err := addToFavorites(s, project.ID, auth, FavoriteKindProject); err != nil {
+		if err := addToFavorites(s, project.ID, u, FavoriteKindProject); err != nil {
 			return err
 		}
 	}
 
 	if !project.IsFavorite && wasFavorite {
-		if err := removeFromFavorite(s, project.ID, auth, FavoriteKindProject); err != nil {
+		if err := removeFromFavorite(s, project.ID, u, FavoriteKindProject); err != nil {
 			return err
 		}
 	}
@@ -1021,7 +950,7 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 
 	err = events.Dispatch(&ProjectUpdatedEvent{
 		Project: project,
-		Doer:    auth,
+		Doer:    u,
 	})
 	if err != nil {
 		return err
@@ -1033,7 +962,7 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 	}
 
 	*project = *l
-	err = project.ReadOne(s, auth)
+	err = project.ReadOne(s, u)
 	return
 }
 
@@ -1079,7 +1008,7 @@ func recalculateProjectPositions(s *xorm.Session, parentProjectID int64) (err er
 // @Failure 403 {object} web.HTTPError "The user does not have access to the project"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id} [post]
-func (p *Project) Update(s *xorm.Session, a web.Auth) (err error) {
+func (p *Project) Update(s *xorm.Session, u *user.User) (err error) {
 	fid := GetSavedFilterIDFromProjectID(p.ID)
 	if fid > 0 {
 		f, err := GetSavedFilterSimpleByID(s, fid)
@@ -1090,7 +1019,7 @@ func (p *Project) Update(s *xorm.Session, a web.Auth) (err error) {
 		f.Title = p.Title
 		f.Description = p.Description
 		f.IsFavorite = p.IsFavorite
-		err = f.Update(s, a)
+		err = f.Update(s)
 		if err != nil {
 			return err
 		}
@@ -1099,7 +1028,7 @@ func (p *Project) Update(s *xorm.Session, a web.Auth) (err error) {
 		return nil
 	}
 
-	return UpdateProject(s, p, a, false)
+	return UpdateProject(s, p, u, false)
 }
 
 func updateProjectLastUpdated(s *xorm.Session, project *Project) error {
@@ -1130,8 +1059,8 @@ func updateProjectByTaskID(s *xorm.Session, taskID int64) (err error) {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the project"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects [put]
-func (p *Project) Create(s *xorm.Session, a web.Auth) (err error) {
-	err = CreateProject(s, p, a, true, true)
+func (p *Project) Create(s *xorm.Session, u *user.User) (err error) {
+	err = CreateProject(s, p, u, true, true)
 	if err != nil {
 		return
 	}
@@ -1141,7 +1070,7 @@ func (p *Project) Create(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
-	return fullProject.ReadOne(s, a)
+	return fullProject.ReadOne(s, u)
 }
 
 func (p *Project) isDefaultProject(s *xorm.Session) (is bool, err error) {
@@ -1162,26 +1091,26 @@ func (p *Project) isDefaultProject(s *xorm.Session) (is bool, err error) {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the project"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id} [delete]
-func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
+func (p *Project) Delete(s *xorm.Session, u *user.User) (err error) {
 
 	isDefaultProject, err := p.isDefaultProject(s)
 	if err != nil {
 		return err
 	}
 	// Owners should be allowed to delete the default project
-	if isDefaultProject && p.OwnerID != a.GetID() {
+	if isDefaultProject && p.OwnerID != u.ID {
 		return &ErrCannotDeleteDefaultProject{ProjectID: p.ID}
 	}
 
 	// Delete all tasks on that project
 	// Using the loop to make sure all related entities to all tasks are properly deleted as well.
-	tasks, _, _, err := getRawTasksForProjects(s, []*Project{p}, a, &taskSearchOptions{})
+	tasks, _, _, err := getRawTasksForProjects(s, []*Project{p}, u, &taskSearchOptions{})
 	if err != nil {
 		return
 	}
 
 	for _, task := range tasks {
-		err = task.Delete(s, a)
+		err = task.Delete(s, u)
 		if err != nil {
 			return err
 		}
@@ -1227,7 +1156,7 @@ func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
-	err = removeFromFavorite(s, p.ID, a, FavoriteKindProject)
+	err = removeFromFavorite(s, p.ID, u, FavoriteKindProject)
 	if err != nil {
 		return
 	}
@@ -1255,7 +1184,7 @@ func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	err = events.Dispatch(&ProjectDeletedEvent{
 		Project: fullProject,
-		Doer:    a,
+		Doer:    u,
 	})
 	if err != nil {
 		return
@@ -1268,7 +1197,7 @@ func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	for _, child := range childProjects {
-		err = child.Delete(s, a)
+		err = child.Delete(s, u)
 		if err != nil {
 			return
 		}

@@ -141,14 +141,14 @@ func (share *LinkSharing) toUser() *user.User {
 // @Failure 404 {object} web.HTTPError "The project does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/shares [put]
-func (share *LinkSharing) Create(s *xorm.Session, a web.Auth) (err error) {
+func (share *LinkSharing) Create(s *xorm.Session, u *user.User) (err error) {
 
 	err = share.Permission.isValid()
 	if err != nil {
 		return
 	}
 
-	share.SharedByID = a.GetID()
+	share.SharedByID = u.ID
 	hash, err := utils.CryptoRandomString(40)
 	if err != nil {
 		return err
@@ -168,7 +168,7 @@ func (share *LinkSharing) Create(s *xorm.Session, a web.Auth) (err error) {
 	share.ID = 0
 	_, err = s.Insert(share)
 	share.Password = ""
-	share.SharedBy, _ = user.GetFromAuth(a)
+	share.SharedBy = u
 	return
 }
 
@@ -186,7 +186,7 @@ func (share *LinkSharing) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "Share Link not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/shares/{share} [get]
-func (share *LinkSharing) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
+func (share *LinkSharing) ReadOne(s *xorm.Session) (err error) {
 	exists, err := s.Where("id = ?", share.ID).Get(share)
 	if err != nil {
 		return err
@@ -212,9 +212,9 @@ func (share *LinkSharing) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
 // @Success 200 {array} models.LinkSharing "The share links"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/shares [get]
-func (share *LinkSharing) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
+func (share *LinkSharing) ReadAll(s *xorm.Session, u *user.User, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
 	project := &Project{ID: share.ProjectID}
-	can, _, err := project.CanRead(s, a)
+	can, _, err := project.CanRead(s, u)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -288,7 +288,7 @@ func (share *LinkSharing) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 // @Failure 404 {object} web.HTTPError "Share Link not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/shares/{share} [delete]
-func (share *LinkSharing) Delete(s *xorm.Session, _ web.Auth) (err error) {
+func (share *LinkSharing) Delete(s *xorm.Session) (err error) {
 	_, err = s.Where("id = ?", share.ID).Delete(share)
 	return
 }

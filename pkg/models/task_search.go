@@ -25,7 +25,7 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/web"
+	"code.vikunja.io/api/pkg/user"
 
 	"github.com/typesense/typesense-go/v2/typesense/api"
 	"github.com/typesense/typesense-go/v2/typesense/api/pointer"
@@ -95,7 +95,7 @@ type taskSearcher interface {
 
 type dbTaskSearcher struct {
 	s                   *xorm.Session
-	a                   web.Auth
+	u                   *user.User
 	hasFavoritesProject bool
 }
 
@@ -301,7 +301,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 			From("favorites").
 			Where(
 				builder.And(
-					builder.Eq{"user_id": d.a.GetID()},
+					builder.Eq{"user_id": d.u.ID},
 					builder.Eq{"kind": FavoriteKindTask},
 				))
 

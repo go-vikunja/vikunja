@@ -59,10 +59,10 @@ func (*TaskAttachment) TableName() string {
 
 // NewAttachment creates a new task attachment
 // Note: I'm not sure if only accepting an io.ReadCloser and not an afero.File or os.File instead is a good way of doing things.
-func (ta *TaskAttachment) NewAttachment(s *xorm.Session, f io.ReadCloser, realname string, realsize uint64, a web.Auth) error {
+func (ta *TaskAttachment) NewAttachment(s *xorm.Session, f io.ReadCloser, realname string, realsize uint64, u *user.User) error {
 
 	// Store the file
-	file, err := files.Create(f, realname, realsize, a)
+	file, err := files.Create(f, realname, realsize, u)
 	if err != nil {
 		if files.IsErrFileIsTooLarge(err) {
 			return ErrTaskAttachmentIsTooLarge{Size: realsize}
@@ -74,15 +74,8 @@ func (ta *TaskAttachment) NewAttachment(s *xorm.Session, f io.ReadCloser, realna
 	// Add an entry to the db
 	ta.FileID = file.ID
 
-	ta.CreatedBy, err = GetUserOrLinkShareUser(s, a)
-	if err != nil {
-		// remove the  uploaded file if adding it to the db fails
-		if err2 := file.Delete(s); err2 != nil {
-			return err2
-		}
-		return err
-	}
-	ta.CreatedByID = ta.CreatedBy.ID
+	ta.CreatedBy = u
+	ta.CreatedByID = u.ID
 
 	_, err = s.Insert(ta)
 	if err != nil {
@@ -106,7 +99,7 @@ func (ta *TaskAttachment) NewAttachment(s *xorm.Session, f io.ReadCloser, realna
 }
 
 // ReadOne returns a task attachment
-func (ta *TaskAttachment) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
+func (ta *TaskAttachment) ReadOne(s *xorm.Session) (err error) {
 	exists, err := s.Where("id = ?", ta.ID).Get(ta)
 	if err != nil {
 		return
@@ -139,9 +132,9 @@ func (ta *TaskAttachment) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
 // @Failure 404 {object} models.Message "The task does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id}/attachments [get]
-func (ta *TaskAttachment) ReadAll(s *xorm.Session, a web.Auth, _ string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
+func (ta *TaskAttachment) ReadAll(s *xorm.Session, u *user.User, _ string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 	task := Task{ID: ta.TaskID}
-	canRead, _, err := task.CanRead(s, a)
+	canRead, _, err := task.CanRead(s, u)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -308,9 +301,9 @@ func resizeImage(img image.Image, width int) *image.NRGBA {
 // @Failure 404 {object} models.Message "The task does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id}/attachments/{attachmentID} [delete]
-func (ta *TaskAttachment) Delete(s *xorm.Session, a web.Auth) error {
+func (ta *TaskAttachment) Delete(s *xorm.Session, u *user.User) error {
 	// Load the attachment
-	err := ta.ReadOne(s, a)
+	err := ta.ReadOne(s)
 	if err != nil && !files.IsErrFileDoesNotExist(err) {
 		return err
 	}
@@ -333,7 +326,6 @@ func (ta *TaskAttachment) Delete(s *xorm.Session, a web.Auth) error {
 		return err
 	}
 
-	doer, _ := user.GetFromAuth(a)
 	task, err := GetTaskByIDSimple(s, ta.TaskID)
 	if err != nil {
 		return err
@@ -342,7 +334,7 @@ func (ta *TaskAttachment) Delete(s *xorm.Session, a web.Auth) error {
 	return events.Dispatch(&TaskAttachmentDeletedEvent{
 		Task:       &task,
 		Attachment: ta,
-		Doer:       doer,
+		Doer:       u,
 	})
 }
 

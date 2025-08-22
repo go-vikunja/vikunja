@@ -17,7 +17,7 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/web"
+	"code.vikunja.io/api/pkg/user"
 
 	"dario.cat/mergo"
 	"xorm.io/xorm"
@@ -54,7 +54,7 @@ func (bt *BulkTask) checkIfTasksAreOnTheSameProject(s *xorm.Session) (err error)
 }
 
 // CanUpdate checks if a user is allowed to update a task
-func (bt *BulkTask) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
+func (bt *BulkTask) CanUpdate(s *xorm.Session, u *user.User) (bool, error) {
 
 	err := bt.checkIfTasksAreOnTheSameProject(s)
 	if err != nil {
@@ -63,7 +63,7 @@ func (bt *BulkTask) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 
 	// A user can update an task if he has write acces to its project
 	l := &Project{ID: bt.Tasks[0].ProjectID}
-	return l.CanWrite(s, a)
+	return l.CanWrite(s, u)
 }
 
 // Update updates a bunch of tasks at once
@@ -79,14 +79,14 @@ func (bt *BulkTask) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the task (aka its project)"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/bulk [post]
-func (bt *BulkTask) Update(s *xorm.Session, a web.Auth) (err error) {
+func (bt *BulkTask) Update(s *xorm.Session, u *user.User) (err error) {
 	for _, oldtask := range bt.Tasks {
 
 		// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
 		updateDone(oldtask, &bt.Task)
 
 		// Update the assignees
-		if err := oldtask.updateTaskAssignees(s, bt.Assignees, a); err != nil {
+		if err := oldtask.updateTaskAssignees(s, bt.Assignees, u); err != nil {
 			return err
 		}
 

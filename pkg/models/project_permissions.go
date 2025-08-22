@@ -21,13 +21,12 @@ import (
 
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
-	"code.vikunja.io/api/pkg/web"
 
 	"xorm.io/xorm"
 )
 
 // CanWrite return whether the user can write on that project or not
-func (p *Project) CanWrite(s *xorm.Session, a web.Auth) (bool, error) {
+func (p *Project) CanWrite(s *xorm.Session, u *user.User) (bool, error) {
 
 	// The favorite project can't be edited
 	if p.ID == FavoritesPseudoProject.ID {
@@ -46,15 +45,6 @@ func (p *Project) CanWrite(s *xorm.Session, a web.Auth) (bool, error) {
 
 	var canWrite bool
 
-	// Check if we're dealing with a share auth
-	shareAuth, ok := a.(*LinkSharing)
-	if ok {
-		return originalProject.ID == shareAuth.ProjectID &&
-			(shareAuth.Permission == PermissionWrite || shareAuth.Permission == PermissionAdmin), errIsArchived
-	}
-
-	u := &user.User{ID: a.GetID()}
-
 	// Check if the user is either owner or can write to the project
 	if originalProject.isOwner(u) {
 		canWrite = true
@@ -72,24 +62,19 @@ func (p *Project) CanWrite(s *xorm.Session, a web.Auth) (bool, error) {
 }
 
 // CanRead checks if a user has read access to a project
-func (p *Project) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
+func (p *Project) CanRead(s *xorm.Session, u *user.User) (bool, int, error) {
 
 	// The favorite project needs a special treatment
 	if p.ID == FavoritesPseudoProject.ID {
-		owner, err := user.GetFromAuth(a)
-		if err != nil {
-			return false, 0, err
-		}
-
 		*p = FavoritesPseudoProject
-		p.Owner = owner
+		p.Owner = u
 		return true, int(PermissionRead), nil
 	}
 
 	// Saved Filter Projects need a special case
 	if GetSavedFilterIDFromProjectID(p.ID) > 0 {
 		sf := &SavedFilter{ID: GetSavedFilterIDFromProjectID(p.ID)}
-		return sf.CanRead(s, a)
+		return sf.CanRead(s, u)
 	}
 
 	// Check if the user is either owner or can read
@@ -101,18 +86,11 @@ func (p *Project) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
 
 	*p = *originalProject
 
-	// Check if we're dealing with a share auth
-	shareAuth, ok := a.(*LinkSharing)
-	if ok {
-		return p.ID == shareAuth.ProjectID &&
-			(shareAuth.Permission == PermissionRead || shareAuth.Permission == PermissionWrite || shareAuth.Permission == PermissionAdmin), int(shareAuth.Permission), nil
-	}
-
-	return p.checkPermission(s, &user.User{ID: a.GetID()}, PermissionRead, PermissionWrite, PermissionAdmin)
+	return p.checkPermission(s, u, PermissionRead, PermissionWrite, PermissionAdmin)
 }
 
 // CanUpdate checks if the user can update a project
-func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err error) {
+func (p *Project) CanUpdate(s *xorm.Session, u *user.User) (canUpdate bool, err error) {
 	// The favorite project can't be edited
 	if p.ID == FavoritesPseudoProject.ID {
 		return false, nil
@@ -125,7 +103,7 @@ func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err er
 			return false, err
 		}
 
-		return sf.CanUpdate(s, a)
+		return sf.CanUpdate(s, u)
 	}
 
 	// Get the project
@@ -138,7 +116,7 @@ func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err er
 	// If that is the case, we need to verify permissions to do so.
 	if p.ParentProjectID != 0 && p.ParentProjectID != ol.ParentProjectID {
 		newProject := &Project{ID: p.ParentProjectID}
-		can, err := newProject.CanWrite(s, a)
+		can, err := newProject.CanWrite(s, u)
 		if err != nil {
 			return false, err
 		}
@@ -147,7 +125,7 @@ func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err er
 		}
 	}
 
-	canUpdate, err = p.CanWrite(s, a)
+	canUpdate, err = p.CanWrite(s, u)
 	// If the project is archived and the user tries to un-archive it, let the request through
 	archivedErr := ErrProjectIsArchived{}
 	is := errors.As(err, &archivedErr)
@@ -158,26 +136,21 @@ func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err er
 }
 
 // CanDelete checks if the user can delete a project
-func (p *Project) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
-	return p.IsAdmin(s, a)
+func (p *Project) CanDelete(s *xorm.Session, u *user.User) (bool, error) {
+	return p.IsAdmin(s, u)
 }
 
 // CanCreate checks if the user can create a project
-func (p *Project) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+func (p *Project) CanCreate(s *xorm.Session, u *user.User) (bool, error) {
 	if p.ParentProjectID != 0 {
 		parent := &Project{ID: p.ParentProjectID}
-		return parent.CanWrite(s, a)
-	}
-	// Check if we're dealing with a share auth
-	_, is := a.(*LinkSharing)
-	if is {
-		return false, nil
+		return parent.CanWrite(s, u)
 	}
 	return true, nil
 }
 
 // IsAdmin returns whether the user has admin permissions on the project or not
-func (p *Project) IsAdmin(s *xorm.Session, a web.Auth) (bool, error) {
+func (p *Project) IsAdmin(s *xorm.Session, u *user.User) (bool, error) {
 	// The favorite project can't be edited
 	if p.ID == FavoritesPseudoProject.ID {
 		return false, nil
@@ -187,14 +160,6 @@ func (p *Project) IsAdmin(s *xorm.Session, a web.Auth) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-
-	// Check if we're dealing with a share auth
-	shareAuth, ok := a.(*LinkSharing)
-	if ok {
-		return originalProject.ID == shareAuth.ProjectID && shareAuth.Permission == PermissionAdmin, nil
-	}
-
-	u := &user.User{ID: a.GetID()}
 
 	// Check all the things
 	// Check if the user is either owner or can write to the project

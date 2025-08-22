@@ -17,7 +17,6 @@
 package models
 
 import (
-	"strconv"
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
@@ -25,7 +24,6 @@ import (
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
-	"github.com/labstack/echo/v4"
 	"xorm.io/xorm"
 )
 
@@ -81,7 +79,7 @@ type UserWithPermission struct {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the project"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/users [put]
-func (lu *ProjectUser) Create(s *xorm.Session, a web.Auth) (err error) {
+func (lu *ProjectUser) Create(s *xorm.Session, u *user.User) (err error) {
 
 	// Check if the permission is valid
 	if err := lu.Permission.isValid(); err != nil {
@@ -95,11 +93,11 @@ func (lu *ProjectUser) Create(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	// Check if the user exists
-	u, err := user.GetUserByUsername(s, lu.Username)
+	userForProject, err := user.GetUserByUsername(s, lu.Username)
 	if err != nil {
 		return err
 	}
-	lu.UserID = u.ID
+	lu.UserID = userForProject.ID
 
 	// Check if the user already has access or is owner of that project
 	// We explicitly DONT check for teams here
@@ -123,8 +121,8 @@ func (lu *ProjectUser) Create(s *xorm.Session, a web.Auth) (err error) {
 
 	err = events.Dispatch(&ProjectSharedWithUserEvent{
 		Project: l,
-		User:    u,
-		Doer:    a,
+		User:    userForProject,
+		Doer:    u,
 	})
 	if err != nil {
 		return err
@@ -147,7 +145,7 @@ func (lu *ProjectUser) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "user or project does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{projectID}/users/{userID} [delete]
-func (lu *ProjectUser) Delete(s *xorm.Session, _ web.Auth) (err error) {
+func (lu *ProjectUser) Delete(s *xorm.Session) (err error) {
 	if lu.UserID == 0 {
 		// Check if the user exists
 		u, err := user.GetUserByUsername(s, lu.Username)
@@ -194,15 +192,15 @@ func (lu *ProjectUser) Delete(s *xorm.Session, _ web.Auth) (err error) {
 // @Failure 403 {object} web.HTTPError "No permission to see the project."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/users [get]
-func (lu *ProjectUser) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
+func (lu *ProjectUser) ReadAll(s *xorm.Session, u *user.User, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 	// Check if the user has access to the project
 	l := &Project{ID: lu.ProjectID}
-	canRead, _, err := l.CanRead(s, a)
+	canRead, _, err := l.CanRead(s, u)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 	if !canRead {
-		return nil, 0, 0, ErrNeedToHaveProjectReadAccess{UserID: a.GetID(), ProjectID: lu.ProjectID}
+		return nil, 0, 0, ErrNeedToHaveProjectReadAccess{UserID: u.ID, ProjectID: lu.ProjectID}
 	}
 
 	limit, start := getLimitFromPageIndex(page, perPage)
@@ -251,7 +249,7 @@ func (lu *ProjectUser) ReadAll(s *xorm.Session, a web.Auth, search string, page 
 // @Failure 404 {object} web.HTTPError "User or project does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{projectID}/users/{userID} [post]
-func (pu *ProjectUser) Update(s *xorm.Session, _ web.Auth) (err error) {
+func (pu *ProjectUser) Update(s *xorm.Session) (err error) {
 	if pu.UserID == 0 {
 		// Check if the user exists
 		u, err := user.GetUserByUsername(s, pu.Username)

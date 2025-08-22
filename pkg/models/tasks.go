@@ -26,7 +26,6 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
@@ -37,7 +36,6 @@ import (
 	"github.com/google/uuid"
 	clone "github.com/huandu/go-clone/generic"
 	"github.com/jinzhu/copier"
-	"github.com/labstack/echo/v4"
 	"github.com/typesense/typesense-go/v2/typesense"
 	"xorm.io/builder"
 	"xorm.io/xorm"
@@ -276,7 +274,7 @@ func getTaskIndexFromSearchString(s string) (index int64) {
 	return
 }
 
-func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts *taskSearchOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {
+func getRawTasksForProjects(s *xorm.Session, projects []*Project, u *user.User, opts *taskSearchOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {
 
 	// If the user does not have any projects, don't try to get any tasks
 	if len(projects) == 0 {
@@ -307,7 +305,7 @@ func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, op
 
 	var dbSearcher taskSearcher = &dbTaskSearcher{
 		s:                   s,
-		a:                   a,
+		u:                   u,
 		hasFavoritesProject: hasFavoritesProject,
 	}
 	if config.TypesenseEnabled.GetBool() {
@@ -330,8 +328,8 @@ func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, op
 	return tasks, len(tasks), totalItems, err
 }
 
-func getTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts *taskSearchOptions, view *ProjectView) (tasks []*Task, resultCount int, totalItems int64, err error) {
-	tasks, resultCount, totalItems, err = getRawTasksForProjects(s, projects, a, opts)
+func getTasksForProjects(s *xorm.Session, projects []*Project, u *user.User, opts *taskSearchOptions, view *ProjectView) (tasks []*Task, resultCount int, totalItems int64, err error) {
+	tasks, resultCount, totalItems, err = getRawTasksForProjects(s, projects, u, opts)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -341,7 +339,7 @@ func getTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts 
 		taskMap[t.ID] = t
 	}
 
-	err = addMoreInfoToTasks(s, taskMap, a, view, opts.expand)
+	err = addMoreInfoToTasks(s, taskMap, u, view, opts.expand)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -406,7 +404,7 @@ func GetTaskSimpleByUUID(s *xorm.Session, uid string) (task *Task, err error) {
 }
 
 // GetTasksByUIDs gets all tasks from a bunch of uids
-func GetTasksByUIDs(s *xorm.Session, uids []string, a web.Auth) (tasks []*Task, err error) {
+func GetTasksByUIDs(s *xorm.Session, uids []string, u *user.User) (tasks []*Task, err error) {
 	tasks = []*Task{}
 	err = s.In("uid", uids).Find(&tasks)
 	if err != nil {
@@ -418,7 +416,7 @@ func GetTasksByUIDs(s *xorm.Session, uids []string, a web.Auth) (tasks []*Task, 
 		taskMap[t.ID] = t
 	}
 
-	err = addMoreInfoToTasks(s, taskMap, a, nil, nil)
+	err = addMoreInfoToTasks(s, taskMap, u, nil, nil)
 	return
 }
 
@@ -503,7 +501,7 @@ func getTaskReminderMap(s *xorm.Session, taskIDs []int64) (taskReminders map[int
 	return
 }
 
-func addRelatedTasksToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Task, a web.Auth) (err error) {
+func addRelatedTasksToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Task, u *user.User) (err error) {
 	relatedTasks := []*TaskRelation{}
 	err = s.In("task_id", taskIDs).Find(&relatedTasks)
 	if err != nil {
@@ -526,7 +524,7 @@ func addRelatedTasksToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]
 		return
 	}
 
-	taskFavorites, err := getFavorites(s, relatedTaskIDs, a, FavoriteKindTask)
+	taskFavorites, err := getFavorites(s, relatedTaskIDs, u, FavoriteKindTask)
 	if err != nil {
 		return err
 	}
@@ -557,7 +555,7 @@ func addRelatedTasksToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]
 	return
 }
 
-func addBucketsToTasks(s *xorm.Session, a web.Auth, taskIDs []int64, taskMap map[int64]*Task) (err error) {
+func addBucketsToTasks(s *xorm.Session, u *user.User, taskIDs []int64, taskMap map[int64]*Task) (err error) {
 	if len(taskIDs) == 0 {
 		return nil
 	}
@@ -573,7 +571,7 @@ func addBucketsToTasks(s *xorm.Session, a web.Auth, taskIDs []int64, taskMap map
 	// We need to fetch all projects for that user to make sure they only
 	// get to see buckets that they have permission to see.
 	projectIDs := []int64{}
-	allProjects, _, _, err := getAllRawProjects(s, a, "", 0, -1, false)
+	allProjects, _, _, err := getAllRawProjects(s, u, "", 0, -1, false)
 	if err != nil {
 		return err
 	}
@@ -609,7 +607,7 @@ func addBucketsToTasks(s *xorm.Session, a web.Auth, taskIDs []int64, taskMap map
 
 // This function takes a map with pointers and returns a slice with pointers to tasks
 // It adds more stuff like assignees/labels/etc to a bunch of tasks
-func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, view *ProjectView, expand []TaskCollectionExpandable) (err error) {
+func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, u *user.User, view *ProjectView, expand []TaskCollectionExpandable) (err error) {
 
 	// No need to iterate over users and stuff if the project doesn't have tasks
 	if len(taskMap) == 0 {
@@ -653,7 +651,7 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 		return err
 	}
 
-	taskFavorites, err := getFavorites(s, taskIDs, a, FavoriteKindTask)
+	taskFavorites, err := getFavorites(s, taskIDs, u, FavoriteKindTask)
 	if err != nil {
 		return err
 	}
@@ -687,7 +685,7 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 			case TaskCollectionExpandSubtasks:
 				// already dealt with earlier
 			case TaskCollectionExpandBuckets:
-				err = addBucketsToTasks(s, a, taskIDs, taskMap)
+				err = addBucketsToTasks(s, u, taskIDs, taskMap)
 				if err != nil {
 					return err
 				}
@@ -739,12 +737,12 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 	}
 
 	// Get all related tasks
-	err = addRelatedTasksToTasks(s, taskIDs, taskMap, a)
+	err = addRelatedTasksToTasks(s, taskIDs, taskMap, u)
 	return
 }
 
 // Checks if adding a new task would exceed the bucket limit
-func checkBucketLimit(s *xorm.Session, a web.Auth, t *Task, bucket *Bucket) (taskCount int64, err error) {
+func checkBucketLimit(s *xorm.Session, u *user.User, t *Task, bucket *Bucket) (taskCount int64, err error) {
 	view, err := GetProjectViewByID(s, bucket.ProjectViewID)
 	if err != nil {
 		return 0, err
@@ -756,7 +754,7 @@ func checkBucketLimit(s *xorm.Session, a web.Auth, t *Task, bucket *Bucket) (tas
 			ProjectViewID: bucket.ProjectViewID,
 		}
 
-		_, _, taskCount, err = tc.ReadAll(s, a, "", 1, 1)
+		_, _, taskCount, err = tc.ReadAll(s, u, "", 1, 1)
 		if err != nil {
 			return 0, err
 		}
@@ -835,11 +833,11 @@ func setNewTaskIndex(s *xorm.Session, t *Task) (err error) {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the project"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/tasks [put]
-func (t *Task) Create(s *xorm.Session, a web.Auth) (err error) {
-	return createTask(s, t, a, true, true)
+func (t *Task) Create(s *xorm.Session, u *user.User) (err error) {
+	return createTask(s, t, u, true, true)
 }
 
-func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setBucket bool) (err error) {
+func createTask(s *xorm.Session, t *Task, u *user.User, updateAssignees bool, setBucket bool) (err error) {
 
 	t.ID = 0
 
@@ -854,11 +852,7 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setB
 		return err
 	}
 
-	createdBy, err := GetUserOrLinkShareUser(s, a)
-	if err != nil {
-		return err
-	}
-	t.CreatedByID = createdBy.ID
+	t.CreatedByID = u.ID
 
 	// Generate a uuid if we don't already have one
 	if t.UID == "" {
@@ -884,13 +878,13 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setB
 			return
 		}
 
-		_, err = checkBucketLimit(s, a, t, providedBucket)
+		_, err = checkBucketLimit(s, u, t, providedBucket)
 		if err != nil {
 			return
 		}
 	}
 
-	positions, taskBuckets, err := setTaskInBucketInViews(s, t, a, setBucket, providedBucket)
+	positions, taskBuckets, err := setTaskInBucketInViews(s, t, u, setBucket, providedBucket)
 	if err != nil {
 		return err
 	}
@@ -909,11 +903,11 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setB
 		}
 	}
 
-	t.CreatedBy = createdBy
+	t.CreatedBy = u
 
 	// Update the assignees
 	if updateAssignees {
-		if err := t.updateTaskAssignees(s, t.Assignees, a); err != nil {
+		if err := t.updateTaskAssignees(s, t.Assignees, u); err != nil {
 			return err
 		}
 	}
@@ -926,14 +920,14 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setB
 	t.setIdentifier(p)
 
 	if t.IsFavorite {
-		if err := addToFavorites(s, t.ID, createdBy, FavoriteKindTask); err != nil {
+		if err := addToFavorites(s, t.ID, u, FavoriteKindTask); err != nil {
 			return err
 		}
 	}
 
 	err = events.Dispatch(&TaskCreatedEvent{
 		Task: t,
-		Doer: createdBy,
+		Doer: u,
 	})
 	if err != nil {
 		return err
@@ -943,7 +937,7 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setB
 	return
 }
 
-func setTaskInBucketInViews(s *xorm.Session, t *Task, a web.Auth, setBucket bool, providedBucket *Bucket) ([]*TaskPosition, []*TaskBucket, error) {
+func setTaskInBucketInViews(s *xorm.Session, t *Task, u *user.User, setBucket bool, providedBucket *Bucket) ([]*TaskPosition, []*TaskBucket, error) {
 	views, err := getViewsForProject(s, t.ProjectID)
 	if err != nil {
 		return nil, nil, err
@@ -980,7 +974,7 @@ func setTaskInBucketInViews(s *xorm.Session, t *Task, a web.Auth, setBucket bool
 					return nil, nil, err
 				}
 
-				err = t.moveTaskToDoneBuckets(s, a, views)
+				err = t.moveTaskToDoneBuckets(s, u, views)
 				if err != nil {
 					return nil, nil, err
 				}
@@ -997,7 +991,7 @@ func setTaskInBucketInViews(s *xorm.Session, t *Task, a web.Auth, setBucket bool
 			})
 		}
 
-		newPosition, err := calculateNewPositionForTask(s, a, t, view)
+		newPosition, err := calculateNewPositionForTask(s, u, t, view)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -1028,7 +1022,7 @@ func setTaskInBucketInViews(s *xorm.Session, t *Task, a web.Auth, setBucket bool
 // @Router /tasks/{id} [post]
 //
 //nolint:gocyclo
-func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
+func (t *Task) Update(s *xorm.Session, u *user.User) (err error) {
 
 	// Check if the task exists and get the old values
 	ot, err := GetTaskByIDSimple(s, t.ID)
@@ -1050,7 +1044,7 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 	ot.Reminders = reminders
 
 	// Update the assignees
-	if err := ot.updateTaskAssignees(s, t.Assignees, a); err != nil {
+	if err := ot.updateTaskAssignees(s, t.Assignees, u); err != nil {
 		return err
 	}
 
@@ -1120,17 +1114,17 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 				ProjectViewID: view.ID,
 				ProjectID:     t.ProjectID,
 			}
-			err = tb.Update(s, a)
+			err = tb.Update(s, u)
 			if err != nil {
 				return err
 			}
 
-			tp, err := calculateNewPositionForTask(s, a, t, view)
+			tp, err := calculateNewPositionForTask(s, u, t, view)
 			if err != nil {
 				return err
 			}
 
-			err = tp.Update(s, a)
+			err = tp.Update(s, u)
 			if err != nil {
 				return err
 			}
@@ -1139,7 +1133,7 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 
 	// When a task changed its done status, make sure it is in the correct bucket
 	if t.ProjectID == ot.ProjectID && !t.isRepeating() && t.Done != ot.Done {
-		err = t.moveTaskToDoneBuckets(s, a, views)
+		err = t.moveTaskToDoneBuckets(s, u, views)
 		if err != nil {
 			return
 		}
@@ -1170,18 +1164,18 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 		}
 	}
 
-	wasFavorite, err := isFavorite(s, t.ID, a, FavoriteKindTask)
+	wasFavorite, err := isFavorite(s, t.ID, u, FavoriteKindTask)
 	if err != nil {
 		return
 	}
 	if t.IsFavorite && !wasFavorite {
-		if err := addToFavorites(s, t.ID, a, FavoriteKindTask); err != nil {
+		if err := addToFavorites(s, t.ID, u, FavoriteKindTask); err != nil {
 			return err
 		}
 	}
 
 	if !t.IsFavorite && wasFavorite {
-		if err := removeFromFavorite(s, t.ID, a, FavoriteKindTask); err != nil {
+		if err := removeFromFavorite(s, t.ID, u, FavoriteKindTask); err != nil {
 			return err
 		}
 	}
@@ -1282,10 +1276,9 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 	}
 	t.Updated = nt.Updated
 
-	doer, _ := user.GetFromAuth(a)
 	err = events.Dispatch(&TaskUpdatedEvent{
 		Task: t,
-		Doer: doer,
+		Doer: u,
 	})
 	if err != nil {
 		return err
@@ -1294,7 +1287,7 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 	return updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
 }
 
-func (t *Task) moveTaskToDoneBuckets(s *xorm.Session, a web.Auth, views []*ProjectView) error {
+func (t *Task) moveTaskToDoneBuckets(s *xorm.Session, u *user.User, views []*ProjectView) error {
 	for _, view := range views {
 		currentTaskBucket := &TaskBucket{}
 		_, err := s.Where("task_id = ? AND project_view_id = ?", t.ID, view.ID).
@@ -1334,7 +1327,7 @@ func (t *Task) moveTaskToDoneBuckets(s *xorm.Session, a web.Auth, views []*Proje
 			ProjectViewID: view.ID,
 			ProjectID:     t.ProjectID,
 		}
-		err = tb.Update(s, a)
+		err = tb.Update(s, u)
 		if err != nil {
 			return err
 		}
@@ -1344,7 +1337,7 @@ func (t *Task) moveTaskToDoneBuckets(s *xorm.Session, a web.Auth, views []*Proje
 			ProjectViewID: view.ID,
 			Position:      calculateDefaultPosition(t.Index, t.Position),
 		}
-		err = tp.Update(s, a)
+		err = tp.Update(s, u)
 		if err != nil {
 			return err
 		}
@@ -1627,11 +1620,11 @@ func updateTaskLastUpdated(s *xorm.Session, task *Task) error {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the project"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id} [delete]
-func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
+func (t *Task) Delete(s *xorm.Session, u *user.User) (err error) {
 
 	// duplicate the task for the event
 	fullTask := &Task{ID: t.ID}
-	err = fullTask.ReadOne(s, a)
+	err = fullTask.ReadOne(s, u)
 	if err != nil {
 		return err
 	}
@@ -1642,7 +1635,7 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	// Delete Favorites
-	err = removeFromFavorite(s, t.ID, a, FavoriteKindTask)
+	err = removeFromFavorite(s, t.ID, u, FavoriteKindTask)
 	if err != nil {
 		return
 	}
@@ -1660,7 +1653,7 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 	}
 	for _, attachment := range attachments {
 		// Using the attachment delete method here because that takes care of removing all files properly
-		err = attachment.Delete(s, a)
+		err = attachment.Delete(s, u)
 		if err != nil && !IsErrTaskAttachmentDoesNotExist(err) {
 			return err
 		}
@@ -1702,10 +1695,9 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	doer, _ := user.GetFromAuth(a)
 	err = events.Dispatch(&TaskDeletedEvent{
 		Task: fullTask,
-		Doer: doer,
+		Doer: u,
 	})
 	if err != nil {
 		return
@@ -1728,7 +1720,7 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 404 {object} models.Message "Task not found"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id} [get]
-func (t *Task) ReadOne(s *xorm.Session, a web.Auth) (err error) {
+func (t *Task) ReadOne(s *xorm.Session, u *user.User) (err error) {
 
 	expand := t.Expand
 	*t, err = GetTaskByIDSimple(s, t.ID)
@@ -1745,7 +1737,7 @@ func (t *Task) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 		}
 	}
 
-	err = addMoreInfoToTasks(s, taskMap, a, nil, expand)
+	err = addMoreInfoToTasks(s, taskMap, u, nil, expand)
 	if err != nil {
 		return
 	}
@@ -1756,7 +1748,7 @@ func (t *Task) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 
 	*t = *taskMap[t.ID]
 
-	subs, err := GetSubscriptionForUser(s, SubscriptionEntityTask, t.ID, a)
+	subs, err := GetSubscriptionForUser(s, SubscriptionEntityTask, t.ID, u)
 	if err != nil && IsErrProjectDoesNotExist(err) {
 		return nil
 	}
@@ -1767,16 +1759,15 @@ func (t *Task) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 	return
 }
 
-func triggerTaskUpdatedEventForTaskID(s *xorm.Session, auth web.Auth, taskID int64) error {
+func triggerTaskUpdatedEventForTaskID(s *xorm.Session, u *user.User, taskID int64) error {
 	t, err := GetTaskByIDSimple(s, taskID)
 	if err != nil {
 		return err
 	}
 
-	doer, _ := user.GetFromAuth(auth)
 	err = events.Dispatch(&TaskUpdatedEvent{
 		Task: &t,
-		Doer: doer,
+		Doer: u,
 	})
 	return err
 }

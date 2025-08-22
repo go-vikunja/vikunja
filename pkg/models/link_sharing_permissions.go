@@ -17,14 +17,14 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/web"
+	"code.vikunja.io/api/pkg/user"
 	"xorm.io/xorm"
 )
 
 // CanRead implements the read permission check for a link share
-func (share *LinkSharing) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
+func (share *LinkSharing) CanRead(s *xorm.Session, u *user.User) (bool, int, error) {
 	// Don't allow creating link shares if the user itself authenticated with a link share
-	if _, is := a.(*LinkSharing); is {
+	if u == nil {
 		return false, 0, nil
 	}
 
@@ -32,27 +32,27 @@ func (share *LinkSharing) CanRead(s *xorm.Session, a web.Auth) (bool, int, error
 	if err != nil {
 		return false, 0, err
 	}
-	return l.CanRead(s, a)
+	return l.CanRead(s, u)
 }
 
 // CanDelete implements the delete permission check for a link share
-func (share *LinkSharing) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
-	return share.canDoLinkShare(s, a)
+func (share *LinkSharing) CanDelete(s *xorm.Session, u *user.User) (bool, error) {
+	return share.canDoLinkShare(s, u)
 }
 
 // CanUpdate implements the update permission check for a link share
-func (share *LinkSharing) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
-	return share.canDoLinkShare(s, a)
+func (share *LinkSharing) CanUpdate(s *xorm.Session, u *user.User) (bool, error) {
+	return share.canDoLinkShare(s, u)
 }
 
 // CanCreate implements the create permission check for a link share
-func (share *LinkSharing) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
-	return share.canDoLinkShare(s, a)
+func (share *LinkSharing) CanCreate(s *xorm.Session, u *user.User) (bool, error) {
+	return share.canDoLinkShare(s, u)
 }
 
-func (share *LinkSharing) canDoLinkShare(s *xorm.Session, a web.Auth) (bool, error) {
+func (share *LinkSharing) canDoLinkShare(s *xorm.Session, u *user.User) (bool, error) {
 	// Don't allow creating link shares if the user itself authenticated with a link share
-	if _, is := a.(*LinkSharing); is {
+	if u == nil {
 		return false, nil
 	}
 
@@ -63,8 +63,8 @@ func (share *LinkSharing) canDoLinkShare(s *xorm.Session, a web.Auth) (bool, err
 
 	// Check if the user is admin when the link permission is admin
 	if share.Permission == PermissionAdmin {
-		return l.IsAdmin(s, a)
+		return l.IsAdmin(s, u)
 	}
 
-	return l.CanWrite(s, a)
+	return l.CanWrite(s, u)
 }

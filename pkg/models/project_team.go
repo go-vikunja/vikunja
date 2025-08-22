@@ -21,9 +21,9 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
-	"github.com/labstack/echo/v4"
 	"xorm.io/xorm"
 )
 
@@ -58,11 +58,6 @@ type TeamWithPermission struct {
 	Permission Permission `json:"permission"`
 }
 
-// AddLinks adds HATEOAS links to the team.
-func (tp *TeamWithPermission) AddLinks(c echo.Context) {
-	tp.Team.AddLinks(c)
-}
-
 // Create creates a new team <-> project relation
 // @Summary Add a team to a project
 // @Description Gives a team access to a project.
@@ -78,7 +73,7 @@ func (tp *TeamWithPermission) AddLinks(c echo.Context) {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the project"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/teams [put]
-func (tl *TeamProject) Create(s *xorm.Session, a web.Auth) (err error) {
+func (tl *TeamProject) Create(s *xorm.Session, u *user.User) (err error) {
 
 	// Check if the permissions are valid
 	if err = tl.Permission.isValid(); err != nil {
@@ -118,7 +113,7 @@ func (tl *TeamProject) Create(s *xorm.Session, a web.Auth) (err error) {
 	err = events.Dispatch(&ProjectSharedWithTeamEvent{
 		Project: l,
 		Team:    team,
-		Doer:    a,
+		Doer:    u,
 	})
 	if err != nil {
 		return err
@@ -141,7 +136,7 @@ func (tl *TeamProject) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "Team or project does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{projectID}/teams/{teamID} [delete]
-func (tl *TeamProject) Delete(s *xorm.Session, _ web.Auth) (err error) {
+func (tl *TeamProject) Delete(s *xorm.Session) (err error) {
 
 	// Check if the team exists
 	_, err = GetTeamByID(s, tl.TeamID)
@@ -187,15 +182,15 @@ func (tl *TeamProject) Delete(s *xorm.Session, _ web.Auth) (err error) {
 // @Failure 403 {object} web.HTTPError "No permission to see the project."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/teams [get]
-func (tl *TeamProject) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
+func (tl *TeamProject) ReadAll(s *xorm.Session, u *user.User, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
 	// Check if the user can read the project
 	l := &Project{ID: tl.ProjectID}
-	canRead, _, err := l.CanRead(s, a)
+	canRead, _, err := l.CanRead(s, u)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 	if !canRead {
-		return nil, 0, 0, ErrNeedToHaveProjectReadAccess{ProjectID: tl.ProjectID, UserID: a.GetID()}
+		return nil, 0, 0, ErrNeedToHaveProjectReadAccess{ProjectID: tl.ProjectID, UserID: u.ID}
 	}
 
 	limit, start := getLimitFromPageIndex(page, perPage)
@@ -253,7 +248,7 @@ func (tl *TeamProject) ReadAll(s *xorm.Session, a web.Auth, search string, page 
 // @Failure 404 {object} web.HTTPError "Team or project does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{projectID}/teams/{teamID} [post]
-func (tl *TeamProject) Update(s *xorm.Session, _ web.Auth) (err error) {
+func (tl *TeamProject) Update(s *xorm.Session) (err error) {
 
 	// Check if the permission is valid
 	if err := tl.Permission.isValid(); err != nil {

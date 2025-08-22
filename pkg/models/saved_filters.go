@@ -89,13 +89,12 @@ func getProjectIDFromSavedFilterID(filterID int64) (projectID int64) {
 	return
 }
 
-func getSavedFiltersForUser(s *xorm.Session, auth web.Auth, search string) (filters []*SavedFilter, err error) {
-	// Link shares can't view or modify saved filters, therefore we can error out right away
-	if _, is := auth.(*LinkSharing); is {
-		return nil, ErrSavedFilterNotAvailableForLinkShare{LinkShareID: auth.GetID()}
+func getSavedFiltersForUser(s *xorm.Session, u *user.User, search string) (filters []*SavedFilter, err error) {
+	if u == nil {
+		return nil, ErrSavedFilterNotAvailableForLinkShare{}
 	}
 
-	query := s.Where("owner_id = ?", auth.GetID())
+	query := s.Where("owner_id = ?", u.ID)
 	if search != "" {
 		query = query.And("title LIKE ?", "%"+search+"%")
 	}
@@ -126,20 +125,20 @@ func (sf *SavedFilter) ToProject() *Project {
 // @Failure 403 {object} web.HTTPError "The user does not have access to that saved filter."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /filters [put]
-func (sf *SavedFilter) Create(s *xorm.Session, auth web.Auth) (err error) {
+func (sf *SavedFilter) Create(s *xorm.Session, u *user.User) (err error) {
 	_, err = getTaskFiltersFromFilterString(sf.Filters.Filter, sf.Filters.FilterTimezone)
 	if err != nil {
 		return
 	}
 
-	sf.OwnerID = auth.GetID()
+	sf.OwnerID = u.ID
 	sf.ID = 0
 	_, err = s.Insert(sf)
 	if err != nil {
 		return
 	}
 
-	err = CreateDefaultViewsForProject(s, &Project{ID: getProjectIDFromSavedFilterID(sf.ID)}, auth, true, false)
+	err = CreateDefaultViewsForProject(s, &Project{ID: getProjectIDFromSavedFilterID(sf.ID)}, u, true, false)
 	return err
 }
 
@@ -169,7 +168,7 @@ func GetSavedFilterSimpleByID(s *xorm.Session, id int64) (sf *SavedFilter, err e
 // @Failure 403 {object} web.HTTPError "The user does not have access to that saved filter."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /filters/{id} [get]
-func (sf *SavedFilter) ReadOne(s *xorm.Session, _ web.Auth) error {
+func (sf *SavedFilter) ReadOne(s *xorm.Session) error {
 	// s already contains almost the full saved filter from the permissions check, we only need to add the user
 	u, err := user.GetUserByID(s, sf.OwnerID)
 	sf.Owner = u
@@ -189,7 +188,7 @@ func (sf *SavedFilter) ReadOne(s *xorm.Session, _ web.Auth) error {
 // @Failure 404 {object} web.HTTPError "The saved filter does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /filters/{id} [post]
-func (sf *SavedFilter) Update(s *xorm.Session, _ web.Auth) error {
+func (sf *SavedFilter) Update(s *xorm.Session) error {
 	origFilter, err := GetSavedFilterSimpleByID(s, sf.ID)
 	if err != nil {
 		return err
@@ -307,7 +306,7 @@ func (sf *SavedFilter) Update(s *xorm.Session, _ web.Auth) error {
 // @Failure 404 {object} web.HTTPError "The saved filter does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /filters/{id} [delete]
-func (sf *SavedFilter) Delete(s *xorm.Session, _ web.Auth) error {
+func (sf *SavedFilter) Delete(s *xorm.Session) error {
 	_, err := s.
 		Where("id = ?", sf.ID).
 		Delete(sf)

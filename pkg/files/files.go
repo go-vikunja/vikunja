@@ -29,8 +29,7 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
-
-	"code.vikunja.io/api/pkg/web"
+	"code.vikunja.io/api/pkg/user"
 	"github.com/c2h5oh/datasize"
 	"github.com/spf13/afero"
 	"xorm.io/xorm"
@@ -80,16 +79,16 @@ func (f *File) LoadFileMetaByID() (err error) {
 }
 
 // Create creates a new file from an FileHeader
-func Create(f io.Reader, realname string, realsize uint64, a web.Auth) (file *File, err error) {
-	return CreateWithMime(f, realname, realsize, a, "")
+func Create(f io.Reader, realname string, realsize uint64, u *user.User) (file *File, err error) {
+	return CreateWithMime(f, realname, realsize, u, "")
 }
 
 // CreateWithMime creates a new file from an FileHeader and sets its mime type
-func CreateWithMime(f io.Reader, realname string, realsize uint64, a web.Auth, mime string) (file *File, err error) {
+func CreateWithMime(f io.Reader, realname string, realsize uint64, u *user.User, mime string) (file *File, err error) {
 	s := db.NewSession()
 	defer s.Close()
 
-	file, err = CreateWithMimeAndSession(s, f, realname, realsize, a, mime, true)
+	file, err = CreateWithMimeAndSession(s, f, realname, realsize, u, mime, true)
 	if err != nil {
 		_ = s.Rollback()
 		return
@@ -97,7 +96,7 @@ func CreateWithMime(f io.Reader, realname string, realsize uint64, a web.Auth, m
 	return
 }
 
-func CreateWithMimeAndSession(s *xorm.Session, f io.Reader, realname string, realsize uint64, a web.Auth, mime string, checkFileSizeLimit bool) (file *File, err error) {
+func CreateWithMimeAndSession(s *xorm.Session, f io.Reader, realname string, realsize uint64, u *user.User, mime string, checkFileSizeLimit bool) (file *File, err error) {
 	// Get and parse the configured file size
 	var maxSize datasize.ByteSize
 	err = maxSize.UnmarshalText([]byte(config.FilesMaxSize.GetString()))
@@ -112,7 +111,7 @@ func CreateWithMimeAndSession(s *xorm.Session, f io.Reader, realname string, rea
 	file = &File{
 		Name:        realname,
 		Size:        realsize,
-		CreatedByID: a.GetID(),
+		CreatedByID: u.ID,
 		Mime:        mime,
 	}
 

@@ -63,13 +63,13 @@ func (*LabelTask) TableName() string {
 // @Failure 404 {object} web.HTTPError "Label not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{task}/labels/{label} [delete]
-func (lt *LabelTask) Delete(s *xorm.Session, auth web.Auth) (err error) {
+func (lt *LabelTask) Delete(s *xorm.Session, u *user.User) (err error) {
 	_, err = s.Delete(&LabelTask{LabelID: lt.LabelID, TaskID: lt.TaskID})
 	if err != nil {
 		return err
 	}
 
-	return triggerTaskUpdatedEventForTaskID(s, auth, lt.TaskID)
+	return triggerTaskUpdatedEventForTaskID(s, u, lt.TaskID)
 }
 
 // Create adds a label to a task
@@ -87,7 +87,7 @@ func (lt *LabelTask) Delete(s *xorm.Session, auth web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "The label does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{task}/labels [put]
-func (lt *LabelTask) Create(s *xorm.Session, auth web.Auth) (err error) {
+func (lt *LabelTask) Create(s *xorm.Session, u *user.User) (err error) {
 	// Check if the label is already added
 	exists, err := s.Exist(&LabelTask{LabelID: lt.LabelID, TaskID: lt.TaskID})
 	if err != nil {
@@ -103,7 +103,7 @@ func (lt *LabelTask) Create(s *xorm.Session, auth web.Auth) (err error) {
 		return err
 	}
 
-	err = triggerTaskUpdatedEventForTaskID(s, auth, lt.TaskID)
+	err = triggerTaskUpdatedEventForTaskID(s, u, lt.TaskID)
 	if err != nil {
 		return err
 	}
@@ -126,19 +126,19 @@ func (lt *LabelTask) Create(s *xorm.Session, auth web.Auth) (err error) {
 // @Success 200 {array} models.Label "The labels"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{task}/labels [get]
-func (lt *LabelTask) ReadAll(s *xorm.Session, a web.Auth, search string, page int, _ int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
+func (lt *LabelTask) ReadAll(s *xorm.Session, u *user.User, search string, page int, _ int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 	// Check if the user has the permission to see the task
 	task := Task{ID: lt.TaskID}
-	canRead, _, err := task.CanRead(s, a)
+	canRead, _, err := task.CanRead(s, u)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 	if !canRead {
-		return nil, 0, 0, ErrNoPermissionToSeeTask{lt.TaskID, a.GetID()}
+		return nil, 0, 0, ErrNoPermissionToSeeTask{lt.TaskID, u.ID}
 	}
 
 	return GetLabelsByTaskIDs(s, &LabelByTaskIDsOptions{
-		User:    a,
+		User:    u,
 		Search:  []string{search},
 		Page:    page,
 		TaskIDs: []int64{lt.TaskID},
@@ -153,7 +153,7 @@ type LabelWithTaskID struct {
 
 // LabelByTaskIDsOptions is a struct to not clutter the function with too many optional parameters.
 type LabelByTaskIDsOptions struct {
-	User                web.Auth
+	User                *user.User
 	Search              []string
 	Page                int
 	PerPage             int
@@ -166,9 +166,6 @@ type LabelByTaskIDsOptions struct {
 // GetLabelsByTaskIDs is a helper function to get all labels for a set of tasks
 // Used when getting all labels for one task as well when getting all labels
 func GetLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*LabelWithTaskID, resultCount int, totalEntries int64, err error) {
-
-	linkShare, isLinkShareAuth := opts.User.(*LinkSharing)
-
 	// We still need the task ID when we want to get all labels for a task, but because of this, we get the same label
 	// multiple times when it is associated to more than one task.
 	// Because of this whole thing, we need this extra switch here to only group by Task IDs if needed.
@@ -187,21 +184,15 @@ func GetLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*Lab
 		cond = builder.And(builder.In("label_tasks.task_id", opts.TaskIDs), cond)
 	}
 	if opts.GetForUser {
-
-		var projectIDs []int64
-		if isLinkShareAuth {
-			projectIDs = []int64{linkShare.ProjectID}
-		} else {
-			projects, _, _, err := getRawProjectsForUser(s, &ProjectOptions{
-				User: &user.User{ID: opts.User.GetID()},
-			})
-			if err != nil {
-				return nil, 0, 0, err
-			}
-			projectIDs = make([]int64, 0, len(projects))
-			for _, project := range projects {
-				projectIDs = append(projectIDs, project.ID)
-			}
+		projects, _, _, err := getRawProjectsForUser(s, &ProjectOptions{
+			User: opts.User,
+		})
+		if err != nil {
+			return nil, 0, 0, err
+		}
+		projectIDs := make([]int64, 0, len(projects))
+		for _, project := range projects {
+			projectIDs = append(projectIDs, project.ID)
 		}
 
 		cond = builder.And(builder.In("label_tasks.task_id",
@@ -211,8 +202,8 @@ func GetLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*Lab
 				Where(builder.In("project_id", projectIDs)),
 		), cond)
 	}
-	if opts.GetUnusedLabels && !isLinkShareAuth {
-		cond = builder.Or(cond, builder.Eq{"labels.created_by_id": opts.User.GetID()})
+	if opts.GetUnusedLabels {
+		cond = builder.Or(cond, builder.Eq{"labels.created_by_id": opts.User.ID})
 	}
 
 	ids := []int64{}
@@ -310,7 +301,7 @@ func GetLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*Lab
 }
 
 // Create or update a bunch of task labels
-func (t *Task) UpdateTaskLabels(s *xorm.Session, creator web.Auth, labels []*Label) (err error) {
+func (t *Task) UpdateTaskLabels(s *xorm.Session, creator *user.User, labels []*Label) (err error) {
 
 	// If we don't have any new labels, delete everything right away. Saves us some hassle.
 	if len(labels) == 0 && len(t.Labels) > 0 {
@@ -383,8 +374,7 @@ func (t *Task) UpdateTaskLabels(s *xorm.Session, creator web.Auth, labels []*Lab
 			return err
 		}
 		if !hasAccessToLabel {
-			user, _ := creator.(*user.User)
-			return ErrUserHasNoAccessToLabel{LabelID: l.ID, UserID: user.ID}
+			return ErrUserHasNoAccessToLabel{LabelID: l.ID, UserID: creator.ID}
 		}
 
 		// Insert it
@@ -430,13 +420,14 @@ type LabelTaskBulk struct {
 // @Failure 400 {object} web.HTTPError "Invalid label object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/labels/bulk [post]
-func (ltb *LabelTaskBulk) Create(s *xorm.Session, a web.Auth) (err error) {
+func (ltb *LabelTaskBulk) Create(s *xorm.Session, u *user.User) (err error) {
 	task, err := GetTaskByIDSimple(s, ltb.TaskID)
 	if err != nil {
 		return
 	}
 	labels, _, _, err := GetLabelsByTaskIDs(s, &LabelByTaskIDsOptions{
 		TaskIDs: []int64{ltb.TaskID},
+		User:    u,
 	})
 	if err != nil {
 		return err
@@ -444,5 +435,5 @@ func (ltb *LabelTaskBulk) Create(s *xorm.Session, a web.Auth) (err error) {
 	for i := range labels {
 		task.Labels = append(task.Labels, &labels[i].Label)
 	}
-	return task.UpdateTaskLabels(s, a, ltb.Labels)
+	return task.UpdateTaskLabels(s, u, ltb.Labels)
 }

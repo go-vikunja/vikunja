@@ -19,6 +19,7 @@ package models
 import (
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web"
 
@@ -40,10 +41,10 @@ type ProjectDuplicate struct {
 }
 
 // CanCreate checks if a user has the permission to duplicate a project
-func (pd *ProjectDuplicate) CanCreate(s *xorm.Session, a web.Auth) (canCreate bool, err error) {
+func (pd *ProjectDuplicate) CanCreate(s *xorm.Session, u *user.User) (canCreate bool, err error) {
 	// Project Exists + user has read access to project
 	pd.Project = &Project{ID: pd.ProjectID}
-	canRead, _, err := pd.Project.CanRead(s, a)
+	canRead, _, err := pd.Project.CanRead(s, u)
 	if err != nil || !canRead {
 		return canRead, err
 	}
@@ -54,7 +55,7 @@ func (pd *ProjectDuplicate) CanCreate(s *xorm.Session, a web.Auth) (canCreate bo
 
 	// Parent project exists + user has write access to is (-> can create new projects)
 	parent := &Project{ID: pd.ParentProjectID}
-	return parent.CanCreate(s, a)
+	return parent.CanCreate(s, u)
 }
 
 // Create duplicates a project
@@ -73,7 +74,7 @@ func (pd *ProjectDuplicate) CanCreate(s *xorm.Session, a web.Auth) (canCreate bo
 // @Router /projects/{projectID}/duplicate [put]
 //
 //nolint:gocyclo
-func (pd *ProjectDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
+func (pd *ProjectDuplicate) Create(s *xorm.Session, doer *user.User) (err error) {
 
 	log.Debugf("Duplicating project %d", pd.ProjectID)
 
@@ -81,7 +82,7 @@ func (pd *ProjectDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 	pd.Project.Identifier = "" // Reset the identifier to trigger regenerating a new one
 	pd.Project.ParentProjectID = pd.ParentProjectID
 	// Set the owner to the current user
-	pd.Project.OwnerID = doer.GetID()
+	pd.Project.OwnerID = doer.ID
 	pd.Project.Title += " - duplicate"
 	err = CreateProject(s, pd.Project, doer, false, false)
 	if err != nil {
@@ -102,7 +103,7 @@ func (pd *ProjectDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 
 	log.Debugf("Duplicated all tasks from project %d into %d", pd.ProjectID, pd.Project.ID)
 
-	err = duplicateViews(s, pd, doer, newTaskIDs)
+	err = duplicateViews(s, doer, pd, newTaskIDs)
 	if err != nil {
 		return
 	}
@@ -169,7 +170,7 @@ func (pd *ProjectDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 	return
 }
 
-func duplicateViews(s *xorm.Session, pd *ProjectDuplicate, doer web.Auth, taskMap map[int64]int64) (err error) {
+func duplicateViews(s *xorm.Session, doer *user.User, pd *ProjectDuplicate, taskMap map[int64]int64) (err error) {
 	// Duplicate Views
 	views := make(map[int64]*ProjectView)
 	err = s.Where("project_id = ?", pd.ProjectID).Find(&views)
@@ -230,7 +231,7 @@ func duplicateViews(s *xorm.Session, pd *ProjectDuplicate, doer web.Auth, taskMa
 		}
 
 		if view.DefaultBucketID != 0 || view.DoneBucketID != 0 {
-			err = view.Update(s, doer)
+			err = view.Update(s)
 			if err != nil {
 				return err
 			}
@@ -280,7 +281,7 @@ func duplicateViews(s *xorm.Session, pd *ProjectDuplicate, doer web.Auth, taskMa
 	return
 }
 
-func duplicateProjectBackground(s *xorm.Session, pd *ProjectDuplicate, doer web.Auth) (err error) {
+func duplicateProjectBackground(s *xorm.Session, pd *ProjectDuplicate, doer *user.User) (err error) {
 	if pd.Project.BackgroundFileID == 0 {
 		return
 	}
@@ -328,7 +329,7 @@ func duplicateProjectBackground(s *xorm.Session, pd *ProjectDuplicate, doer web.
 	return
 }
 
-func duplicateTasks(s *xorm.Session, doer web.Auth, ld *ProjectDuplicate) (newTaskIDs map[int64]int64, err error) {
+func duplicateTasks(s *xorm.Session, doer *user.User, ld *ProjectDuplicate) (newTaskIDs map[int64]int64, err error) {
 	// Get all tasks + all task details
 	tasks, _, _, err := getTasksForProjects(s, []*Project{{ID: ld.ProjectID}}, doer, &taskSearchOptions{}, nil)
 	if err != nil {

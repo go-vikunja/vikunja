@@ -167,7 +167,7 @@ func getOrCreateTeamsByIssuer(s *xorm.Session, teamData []*Team, u *user.User, i
 			t.Description = externalTeam.Description
 		}
 
-		err = t.Update(s, u)
+		err = t.Update(s)
 		if err != nil {
 			return nil, err
 		}

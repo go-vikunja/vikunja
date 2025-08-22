@@ -144,13 +144,13 @@ func (sb *Subscription) TableName() string {
 // @Failure 412 {object} web.HTTPError "The subscription entity is invalid."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /subscriptions/{entity}/{entityID} [put]
-func (sb *Subscription) Create(s *xorm.Session, auth web.Auth) (err error) {
+func (sb *Subscription) Create(s *xorm.Session, u *user.User) (err error) {
 	// Permissions method already does the validation of the entity type, so we don't need to do that here
 
 	sb.ID = 0
-	sb.UserID = auth.GetID()
+	sb.UserID = u.ID
 
-	sub, err := GetSubscriptionForUser(s, sb.EntityType, sb.EntityID, auth)
+	sub, err := GetSubscriptionForUser(s, sb.EntityType, sb.EntityID, u)
 	if err != nil {
 		return err
 	}
@@ -180,8 +180,8 @@ func (sb *Subscription) Create(s *xorm.Session, auth web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "The subscription does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /subscriptions/{entity}/{entityID} [delete]
-func (sb *Subscription) Delete(s *xorm.Session, auth web.Auth) (err error) {
-	sb.UserID = auth.GetID()
+func (sb *Subscription) Delete(s *xorm.Session, u *user.User) (err error) {
+	sb.UserID = u.ID
 
 	_, err = s.
 		Where("entity_id = ? AND entity_type = ? AND user_id = ?", sb.EntityID, sb.EntityType, sb.UserID).
@@ -189,9 +189,8 @@ func (sb *Subscription) Delete(s *xorm.Session, auth web.Auth) (err error) {
 	return
 }
 
-func GetSubscriptionForUser(s *xorm.Session, entityType SubscriptionEntityType, entityID int64, a web.Auth) (subscription *SubscriptionWithUser, err error) {
-	u, is := a.(*user.User)
-	if !is || u == nil {
+func GetSubscriptionForUser(s *xorm.Session, entityType SubscriptionEntityType, entityID int64, u *user.User) (subscription *SubscriptionWithUser, err error) {
+	if u == nil {
 		return
 	}
 

@@ -17,30 +17,30 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/web"
+	"code.vikunja.io/api/pkg/user"
 	"xorm.io/xorm"
 )
 
 // CanCreate checks if a user can add a new assignee
-func (la *TaskAssginee) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
-	return canDoTaskAssingee(s, la.TaskID, a)
+func (la *TaskAssginee) CanCreate(s *xorm.Session, u *user.User) (bool, error) {
+	return canDoTaskAssingee(s, la.TaskID, u)
 }
 
 // CanCreate checks if a user can add a new assignee
-func (ba *BulkAssignees) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
-	return canDoTaskAssingee(s, ba.TaskID, a)
+func (ba *BulkAssignees) CanCreate(s *xorm.Session, u *user.User) (bool, error) {
+	return canDoTaskAssingee(s, ba.TaskID, u)
 }
 
 // CanDelete checks if a user can delete an assignee
-func (la *TaskAssginee) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
-	return canDoTaskAssingee(s, la.TaskID, a)
+func (la *TaskAssginee) CanDelete(s *xorm.Session, u *user.User) (bool, error) {
+	return canDoTaskAssingee(s, la.TaskID, u)
 }
 
-func canDoTaskAssingee(s *xorm.Session, taskID int64, a web.Auth) (bool, error) {
+func canDoTaskAssingee(s *xorm.Session, taskID int64, u *user.User) (bool, error) {
 	// Check if the current user can edit the project
 	project, err := GetProjectSimpleByTaskID(s, taskID)
 	if err != nil {
 		return false, err
 	}
-	return project.CanUpdate(s, a)
+	return project.CanUpdate(s, u)
 }

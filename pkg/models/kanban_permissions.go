@@ -17,33 +17,33 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/web"
+	"code.vikunja.io/api/pkg/user"
 	"xorm.io/xorm"
 )
 
 // CanCreate checks if a user can create a new bucket
-func (b *Bucket) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+func (b *Bucket) CanCreate(s *xorm.Session, u *user.User) (bool, error) {
 	pv, err := GetProjectViewByIDAndProject(s, b.ProjectViewID, b.ProjectID)
 	if err != nil {
 		return false, err
 	}
 
 	p := &Project{ID: pv.ProjectID}
-	return p.CanUpdate(s, a)
+	return p.CanUpdate(s, u)
 }
 
 // CanUpdate checks if a user can update an existing bucket
-func (b *Bucket) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
-	return b.canDoBucket(s, a)
+func (b *Bucket) CanUpdate(s *xorm.Session, u *user.User) (bool, error) {
+	return b.canDoBucket(s, u)
 }
 
 // CanDelete checks if a user can delete an existing bucket
-func (b *Bucket) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
-	return b.canDoBucket(s, a)
+func (b *Bucket) CanDelete(s *xorm.Session, u *user.User) (bool, error) {
+	return b.canDoBucket(s, u)
 }
 
 // canDoBucket checks if the bucket exists and if the user has the permission to act on it
-func (b *Bucket) canDoBucket(s *xorm.Session, a web.Auth) (bool, error) {
+func (b *Bucket) canDoBucket(s *xorm.Session, u *user.User) (bool, error) {
 	bb, err := getBucketByID(s, b.ID)
 	if err != nil {
 		return false, err
@@ -56,5 +56,5 @@ func (b *Bucket) canDoBucket(s *xorm.Session, a web.Auth) (bool, error) {
 	// TODO saved filter check
 
 	p := &Project{ID: pv.ProjectID}
-	return p.CanUpdate(s, a)
+	return p.CanUpdate(s, u)
 }

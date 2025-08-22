@@ -115,7 +115,7 @@ func GetAvailableWebhookEvents() []string {
 // @Failure 400 {object} web.HTTPError "Invalid webhook object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/webhooks [put]
-func (w *Webhook) Create(s *xorm.Session, a web.Auth) (err error) {
+func (w *Webhook) Create(s *xorm.Session, u *user.User) (err error) {
 
 	if !strings.HasPrefix(w.TargetURL, "http") {
 		return InvalidFieldError([]string{"target_url"})
@@ -127,14 +127,14 @@ func (w *Webhook) Create(s *xorm.Session, a web.Auth) (err error) {
 		}
 	}
 
-	w.CreatedByID = a.GetID()
+	w.CreatedByID = u.ID
 	w.ID = 0
 	_, err = s.Insert(w)
 	if err != nil {
 		return err
 	}
 
-	w.CreatedBy, err = user.GetUserByID(s, a.GetID())
+	w.CreatedBy = u
 	return
 }
 
@@ -151,9 +151,9 @@ func (w *Webhook) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Success 200 {array} models.Webhook "The list of all webhook targets"
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /projects/{id}/webhooks [get]
-func (w *Webhook) ReadAll(s *xorm.Session, a web.Auth, _ string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
+func (w *Webhook) ReadAll(s *xorm.Session, u *user.User, _ string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 	p := &Project{ID: w.ProjectID}
-	can, _, err := p.CanRead(s, a)
+	can, _, err := p.CanRead(s, u)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -208,7 +208,7 @@ func (w *Webhook) ReadAll(s *xorm.Session, a web.Auth, _ string, page int, perPa
 // @Failure 404 {object} web.HTTPError "The webhok target does not exist"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/webhooks/{webhookID} [post]
-func (w *Webhook) Update(s *xorm.Session, _ web.Auth) (err error) {
+func (w *Webhook) Update(s *xorm.Session) (err error) {
 	for _, event := range w.Events {
 		if _, has := availableWebhookEvents[event]; !has {
 			return InvalidFieldError([]string{"events"})
@@ -234,7 +234,7 @@ func (w *Webhook) Update(s *xorm.Session, _ web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "The webhok target does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/webhooks/{webhookID} [delete]
-func (w *Webhook) Delete(s *xorm.Session, _ web.Auth) (err error) {
+func (w *Webhook) Delete(s *xorm.Session) (err error) {
 	_, err = s.Where("id = ?", w.ID).Delete(&Webhook{})
 	return
 }

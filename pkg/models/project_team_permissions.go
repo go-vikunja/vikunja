@@ -17,31 +17,26 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/web"
+	"code.vikunja.io/api/pkg/user"
 	"xorm.io/xorm"
 )
 
 // CanCreate checks if the user can create a team <-> project relation
-func (tl *TeamProject) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
-	return tl.canDoTeamProject(s, a)
+func (tl *TeamProject) CanCreate(s *xorm.Session, u *user.User) (bool, error) {
+	return tl.canDoTeamProject(s, u)
 }
 
 // CanDelete checks if the user can delete a team <-> project relation
-func (tl *TeamProject) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
-	return tl.canDoTeamProject(s, a)
+func (tl *TeamProject) CanDelete(s *xorm.Session, u *user.User) (bool, error) {
+	return tl.canDoTeamProject(s, u)
 }
 
 // CanUpdate checks if the user can update a team <-> project relation
-func (tl *TeamProject) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
-	return tl.canDoTeamProject(s, a)
+func (tl *TeamProject) CanUpdate(s *xorm.Session, u *user.User) (bool, error) {
+	return tl.canDoTeamProject(s, u)
 }
 
-func (tl *TeamProject) canDoTeamProject(s *xorm.Session, a web.Auth) (bool, error) {
-	// Link shares aren't allowed to do anything
-	if _, is := a.(*LinkSharing); is {
-		return false, nil
-	}
-
+func (tl *TeamProject) canDoTeamProject(s *xorm.Session, u *user.User) (bool, error) {
 	l := Project{ID: tl.ProjectID}
-	return l.IsAdmin(s, a)
+	return l.IsAdmin(s, u)
 }

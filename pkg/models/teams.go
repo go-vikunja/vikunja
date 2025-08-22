@@ -17,13 +17,11 @@
 package models
 
 import (
-	"strconv"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
-	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
@@ -193,35 +191,29 @@ func addMoreInfoToTeams(s *xorm.Session, teams []*Team) (err error) {
 // If firstUserShouldBeAdmin is true, the user will be an admin of the team
 // Note: this function has been extracted from the Create method to allow
 // an additional parameter to control whether the user should become admin of the team
-func (t *Team) CreateNewTeam(s *xorm.Session, a web.Auth, firstUserShouldBeAdmin bool) (err error) {
-
-	doer, err := user.GetFromAuth(a)
-	if err != nil {
-		return err
-	}
-
+func (t *Team) CreateNewTeam(s *xorm.Session, u *user.User, firstUserShouldBeAdmin bool) (err error) {
 	// Check if we have a name
 	if t.Name == "" {
 		return ErrTeamNameCannotBeEmpty{}
 	}
 
 	t.ID = 0
-	t.CreatedByID = doer.ID
-	t.CreatedBy = doer
+	t.CreatedByID = u.ID
+	t.CreatedBy = u
 
 	_, err = s.Insert(t)
 	if err != nil {
 		return
 	}
 
-	tm := TeamMember{TeamID: t.ID, Username: doer.Username, Admin: firstUserShouldBeAdmin}
-	if err = tm.Create(s, doer); err != nil {
+	tm := TeamMember{TeamID: t.ID, Username: u.Username, Admin: firstUserShouldBeAdmin}
+	if err = tm.Create(s, u); err != nil {
 		return err
 	}
 
 	return events.Dispatch(&TeamCreatedEvent{
 		Team: t,
-		Doer: a,
+		Doer: u,
 	})
 }
 
@@ -237,7 +229,7 @@ func (t *Team) CreateNewTeam(s *xorm.Session, a web.Auth, firstUserShouldBeAdmin
 // @Failure 403 {object} web.HTTPError "The user does not have access to the team"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams/{id} [get]
-func (t *Team) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
+func (t *Team) ReadOne(s *xorm.Session) (err error) {
 	team, err := GetTeamByID(s, t.ID)
 	if team != nil {
 		*t = *team
@@ -258,11 +250,7 @@ func (t *Team) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
 // @Success 200 {array} models.Team "The teams."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams [get]
-func (t *Team) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
-	if _, is := a.(*LinkSharing); is {
-		return nil, 0, 0, ErrGenericForbidden{}
-	}
-
+func (t *Team) ReadAll(s *xorm.Session, u *user.User, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 	limit, start := getLimitFromPageIndex(page, perPage)
 	all := []*Team{}
 
@@ -276,11 +264,11 @@ func (t *Team) ReadAll(s *xorm.Session, a web.Auth, search string, page int, per
 		query = query.Where(
 			builder.Or(
 				builder.Eq{"teams.is_public": true},
-				builder.Eq{"team_members.user_id": a.GetID()},
+				builder.Eq{"team_members.user_id": u.ID},
 			),
 		)
 	} else {
-		query = query.Where("team_members.user_id = ?", a.GetID())
+		query = query.Where("team_members.user_id = ?", u.ID)
 	}
 
 	if limit > 0 {
@@ -299,7 +287,7 @@ func (t *Team) ReadAll(s *xorm.Session, a web.Auth, search string, page int, per
 	numberOfTotalItems, err = s.
 		Table("teams").
 		Join("INNER", "team_members", "team_members.team_id = teams.id").
-		Where("team_members.user_id = ?", a.GetID()).
+		Where("team_members.user_id = ?", u.ID).
 		Where("teams.name LIKE ?", "%"+search+"%").
 		Count(&Team{})
 	return all, len(all), numberOfTotalItems, err
@@ -317,9 +305,9 @@ func (t *Team) ReadAll(s *xorm.Session, a web.Auth, search string, page int, per
 // @Failure 400 {object} web.HTTPError "Invalid team object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams [put]
-func (t *Team) Create(s *xorm.Session, a web.Auth) (err error) {
+func (t *Team) Create(s *xorm.Session, u *user.User) (err error) {
 
-	err = t.CreateNewTeam(s, a, true)
+	err = t.CreateNewTeam(s, u, true)
 	if err != nil {
 		return err
 	}
@@ -338,7 +326,7 @@ func (t *Team) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 400 {object} web.HTTPError "Invalid team object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams/{id} [delete]
-func (t *Team) Delete(s *xorm.Session, a web.Auth) (err error) {
+func (t *Team) Delete(s *xorm.Session, u *user.User) (err error) {
 
 	// Delete the team
 	_, err = s.ID(t.ID).Delete(&Team{})
@@ -360,7 +348,7 @@ func (t *Team) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	return events.Dispatch(&TeamDeletedEvent{
 		Team: t,
-		Doer: a,
+		Doer: u,
 	})
 }
 
@@ -377,7 +365,7 @@ func (t *Team) Delete(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 400 {object} web.HTTPError "Invalid team object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams/{id} [post]
-func (t *Team) Update(s *xorm.Session, _ web.Auth) (err error) {
+func (t *Team) Update(s *xorm.Session) (err error) {
 	// Check if we have a name
 	if t.Name == "" {
 		return ErrTeamNameCannotBeEmpty{}

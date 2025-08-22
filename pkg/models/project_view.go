@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"time"
 
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
 	"xorm.io/xorm"
@@ -185,10 +186,10 @@ func getViewsForProject(s *xorm.Session, projectID int64) (views []*ProjectView,
 // @Success 200 {array} models.ProjectView "The project views"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/views [get]
-func (pv *ProjectView) ReadAll(s *xorm.Session, a web.Auth, _ string, _ int, _ int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
+func (pv *ProjectView) ReadAll(s *xorm.Session, u *user.User, _ string, _ int, _ int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 
 	pp := &Project{ID: pv.ProjectID}
-	can, _, err := pp.CanRead(s, a)
+	can, _, err := pp.CanRead(s, u)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -224,7 +225,7 @@ func (pv *ProjectView) ReadAll(s *xorm.Session, a web.Auth, _ string, _ int, _ i
 // @Failure 403 {object} web.HTTPError "The user does not have access to this project view"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/views/{id} [get]
-func (pv *ProjectView) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
+func (pv *ProjectView) ReadOne(s *xorm.Session) (err error) {
 	view, err := GetProjectViewByIDAndProject(s, pv.ID, pv.ProjectID)
 	if err != nil {
 		return err
@@ -277,11 +278,11 @@ func (pv *ProjectView) Delete(s *xorm.Session, _ web.Auth) (err error) {
 // @Failure 403 {object} web.HTTPError "The user does not have access to create a project view"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/views [put]
-func (pv *ProjectView) Create(s *xorm.Session, a web.Auth) (err error) {
-	return createProjectView(s, pv, a, true, true)
+func (pv *ProjectView) Create(s *xorm.Session, u *user.User) (err error) {
+	return createProjectView(s, pv, u, true, true)
 }
 
-func createProjectView(s *xorm.Session, p *ProjectView, a web.Auth, createBacklogBucket bool, addExistingTasksToView bool) (err error) {
+func createProjectView(s *xorm.Session, p *ProjectView, u *user.User, createBacklogBucket bool, addExistingTasksToView bool) (err error) {
 	if p.Filter != nil && p.Filter.Filter != "" {
 		_, err = getTaskFiltersFromFilterString(p.Filter.Filter, p.Filter.FilterTimezone)
 		if err != nil {
@@ -313,7 +314,7 @@ func createProjectView(s *xorm.Session, p *ProjectView, a web.Auth, createBacklo
 			Title:         "To-Do",
 			Position:      100,
 		}
-		err = backlog.Create(s, a)
+		err = backlog.Create(s, u)
 		if err != nil {
 			return
 		}
@@ -323,7 +324,7 @@ func createProjectView(s *xorm.Session, p *ProjectView, a web.Auth, createBacklo
 			Title:         "Doing",
 			Position:      200,
 		}
-		err = doing.Create(s, a)
+		err = doing.Create(s, u)
 		if err != nil {
 			return
 		}
@@ -333,7 +334,7 @@ func createProjectView(s *xorm.Session, p *ProjectView, a web.Auth, createBacklo
 			Title:         "Done",
 			Position:      300,
 		}
-		err = done.Create(s, a)
+		err = done.Create(s, u)
 		if err != nil {
 			return
 		}
@@ -348,7 +349,7 @@ func createProjectView(s *xorm.Session, p *ProjectView, a web.Auth, createBacklo
 
 		// Move all tasks into the new bucket when the project already has tasks
 		if addExistingTasksToView {
-			err = addTasksToView(s, a, p, backlog)
+			err = addTasksToView(s, u, p, backlog)
 			if err != nil {
 				return
 			}
@@ -356,17 +357,17 @@ func createProjectView(s *xorm.Session, p *ProjectView, a web.Auth, createBacklo
 	}
 
 	if addExistingTasksToView {
-		return RecalculateTaskPositions(s, p, a)
+		return RecalculateTaskPositions(s, p, u)
 	}
 
 	return
 }
 
-func addTasksToView(s *xorm.Session, a web.Auth, pv *ProjectView, b *Bucket) (err error) {
+func addTasksToView(s *xorm.Session, u *user.User, pv *ProjectView, b *Bucket) (err error) {
 	c := &TaskCollection{
 		ProjectID: pv.ProjectID,
 	}
-	ts, _, _, err := c.ReadAll(s, a, "", 0, -1)
+	ts, _, _, err := c.ReadAll(s, u, "", 0, -1)
 	if err != nil {
 		return err
 	}
@@ -403,7 +404,7 @@ func addTasksToView(s *xorm.Session, a web.Auth, pv *ProjectView, b *Bucket) (er
 // @Failure 400 {object} web.HTTPError "Invalid project view object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/views/{id} [post]
-func (pv *ProjectView) Update(s *xorm.Session, _ web.Auth) (err error) {
+func (pv *ProjectView) Update(s *xorm.Session) (err error) {
 	if pv.Filter != nil && pv.Filter.Filter != "" {
 		_, err = getTaskFiltersFromFilterString(pv.Filter.Filter, pv.Filter.FilterTimezone)
 		if err != nil {
@@ -483,7 +484,7 @@ func GetProjectViewByID(s *xorm.Session, id int64) (view *ProjectView, err error
 	return
 }
 
-func CreateDefaultViewsForProject(s *xorm.Session, project *Project, a web.Auth, createBacklogBucket bool, createDefaultListFilter bool) (err error) {
+func CreateDefaultViewsForProject(s *xorm.Session, project *Project, u *user.User, createBacklogBucket bool, createDefaultListFilter bool) (err error) {
 	list := &ProjectView{
 		ProjectID: project.ID,
 		Title:     "List",
@@ -495,7 +496,7 @@ func CreateDefaultViewsForProject(s *xorm.Session, project *Project, a web.Auth,
 			Filter: "done = false",
 		}
 	}
-	err = createProjectView(s, list, a, createBacklogBucket, true)
+	err = createProjectView(s, list, u, createBacklogBucket, true)
 	if err != nil {
 		return
 	}
@@ -506,7 +507,7 @@ func CreateDefaultViewsForProject(s *xorm.Session, project *Project, a web.Auth,
 		ViewKind:  ProjectViewKindGantt,
 		Position:  200,
 	}
-	err = createProjectView(s, gantt, a, createBacklogBucket, true)
+	err = createProjectView(s, gantt, u, createBacklogBucket, true)
 	if err != nil {
 		return
 	}
@@ -517,7 +518,7 @@ func CreateDefaultViewsForProject(s *xorm.Session, project *Project, a web.Auth,
 		ViewKind:  ProjectViewKindTable,
 		Position:  300,
 	}
-	err = createProjectView(s, table, a, createBacklogBucket, true)
+	err = createProjectView(s, table, u, createBacklogBucket, true)
 	if err != nil {
 		return
 	}
@@ -529,7 +530,7 @@ func CreateDefaultViewsForProject(s *xorm.Session, project *Project, a web.Auth,
 		Position:                400,
 		BucketConfigurationMode: BucketConfigurationModeManual,
 	}
-	err = createProjectView(s, kanban, a, createBacklogBucket, true)
+	err = createProjectView(s, kanban, u, createBacklogBucket, true)
 	if err != nil {
 		return
 	}
