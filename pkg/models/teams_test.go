@@ -87,15 +87,13 @@ func TestTeam_Create(t *testing.T) {
 }
 
 func TestTeam_ReadOne(t *testing.T) {
-	u := &user.User{ID: 1}
-
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
 
 		team := &Team{ID: 1}
-		err := team.ReadOne(s, u)
+		err := team.ReadOne(s)
 		require.NoError(t, err)
 		assert.Equal(t, "testteam1", team.Name)
 		assert.Equal(t, "Lorem Ipsum", team.Description)
@@ -108,7 +106,7 @@ func TestTeam_ReadOne(t *testing.T) {
 		defer s.Close()
 
 		team := &Team{ID: -1}
-		err := team.ReadOne(s, u)
+		err := team.ReadOne(s)
 		require.Error(t, err)
 		assert.True(t, IsErrTeamDoesNotExist(err))
 	})
@@ -118,7 +116,7 @@ func TestTeam_ReadOne(t *testing.T) {
 		defer s.Close()
 
 		team := &Team{ID: 99999}
-		err := team.ReadOne(s, u)
+		err := team.ReadOne(s)
 		require.Error(t, err)
 		assert.True(t, IsErrTeamDoesNotExist(err))
 	})
@@ -204,8 +202,6 @@ func TestTeam_ReadAll(t *testing.T) {
 }
 
 func TestTeam_Update(t *testing.T) {
-	u := &user.User{ID: 1}
-
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -215,7 +211,7 @@ func TestTeam_Update(t *testing.T) {
 			ID:   1,
 			Name: "SomethingNew",
 		}
-		err := team.Update(s, u)
+		err := team.Update(s)
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
@@ -233,7 +229,7 @@ func TestTeam_Update(t *testing.T) {
 			ID:   1,
 			Name: "",
 		}
-		err := team.Update(s, u)
+		err := team.Update(s)
 		require.Error(t, err)
 		assert.True(t, IsErrTeamNameCannotBeEmpty(err))
 	})
@@ -246,7 +242,7 @@ func TestTeam_Update(t *testing.T) {
 			ID:   9999,
 			Name: "SomethingNew",
 		}
-		err := team.Update(s, u)
+		err := team.Update(s)
 		require.Error(t, err)
 		assert.True(t, IsErrTeamDoesNotExist(err))
 	})

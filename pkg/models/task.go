@@ -274,6 +274,65 @@ func getTaskIndexFromSearchString(s string) (index int64) {
 	return
 }
 
+func addSortAndFilterOptions(s *xorm.Session, u *user.User, sortBy, orderBy []string, filter, filterTimezone string, includeNulls bool) (*taskSearchOptions, error) {
+	opts := &taskSearchOptions{
+		sortby:             []*sortParam{},
+		filter:             filter,
+		filterTimezone:     filterTimezone,
+		filterIncludeNulls: includeNulls,
+	}
+
+	// Simple validation for sort_by parameter
+	validSortBy := []string{"id", "title", "description", "done", "done_at", "due_date", "created_by_id", "project_id", "repeat_after", "priority", "start_date", "end_date", "hex_color", "percent_done", "uid", "created", "updated"}
+
+	for i, sb := range sortBy {
+		isValid := false
+		for _, valid := range validSortBy {
+			if sb == valid {
+				isValid = true
+				break
+			}
+		}
+		if !isValid {
+			return nil, errors.New("invalid sort_by parameter")
+		}
+
+		p := &sortParam{
+			sortBy:  taskProperty(sb),
+			orderBy: orderAscending,
+		}
+		if len(orderBy) > i {
+			if order(orderBy[i]) == orderDescending {
+				p.orderBy = orderDescending
+			} else if orderBy[i] != "asc" {
+				return nil, errors.New("invalid order_by parameter")
+			}
+		}
+		opts.sortby = append(opts.sortby, p)
+	}
+
+	if filter != "" {
+		// This is a very basic filter parser to handle simple cases.
+		// A proper implementation would require a full-fledged parser.
+		// For now, we only support OR conditions.
+		filterParts := strings.Split(filter, "||")
+		opts.parsedFilters = make([]*taskFilter, 0, len(filterParts))
+		for _, part := range filterParts {
+			part = strings.TrimSpace(part)
+			matches := regexp.MustCompile(`(\w+)\s*([<>=!]+)\s*'(.*?)'`).FindStringSubmatch(part)
+			if len(matches) == 4 {
+				opts.parsedFilters = append(opts.parsedFilters, &taskFilter{
+					field:      matches[1],
+					comparator: taskFilterComparator(matches[2]),
+					value:      matches[3],
+				})
+			}
+		}
+	}
+
+	return opts, nil
+}
+
 func getRawTasksForProjects(s *xorm.Session, projects []*Project, u *user.User, opts *taskSearchOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {
 
 	// If the user does not have any projects, don't try to get any tasks
@@ -659,7 +718,7 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, u *user.User, 
 	// Get all identifiers
 	projects, err := GetProjectsMapByIDs(s, projectIDs)
 	if err != nil {
-		return err
+		return
 	}
 
 	var positionsMap = make(map[int64]*TaskPosition)
@@ -886,7 +945,7 @@ func createTask(s *xorm.Session, t *Task, u *user.User, updateAssignees bool, se
 
 	positions, taskBuckets, err := setTaskInBucketInViews(s, t, u, setBucket, providedBucket)
 	if err != nil {
-		return err
+		return
 	}
 
 	if len(positions) > 0 {
@@ -1649,7 +1708,7 @@ func (t *Task) Delete(s *xorm.Session, u *user.User) (err error) {
 	// Delete task attachments
 	attachments, err := getTaskAttachmentsByTaskIDs(s, []int64{t.ID})
 	if err != nil {
-		return err
+		return
 	}
 	for _, attachment := range attachments {
 		// Using the attachment delete method here because that takes care of removing all files properly
@@ -1700,7 +1759,7 @@ func (t *Task) Delete(s *xorm.Session, u *user.User) (err error) {
 		Doer: u,
 	})
 	if err != nil {
-		return
+		return err
 	}
 
 	err = updateProjectLastUpdated(s, &Project{ID: t.ProjectID})

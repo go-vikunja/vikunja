@@ -1647,7 +1647,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				CRUDable:    tt.fields.CRUDable,
 				Permissions: tt.fields.Permissions,
 			}
-			got, _, _, err := lt.ReadAll(s, tt.args.a, tt.args.search, tt.args.page, 50)
+			u, err := user.GetFromAuth(tt.args.a)
+			if err != nil {
+				t.Fatalf("unexpected error getting user from auth: %v", err)
+			}
+			got, _, _, err := lt.ReadAll(s, u, tt.args.search, tt.args.page, 50)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Test %s, Task.ReadAll() error = %v, wantErr %v", tt.name, err, tt.wantErr)
 				return

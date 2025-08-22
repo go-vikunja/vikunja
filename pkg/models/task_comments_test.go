@@ -95,8 +95,6 @@ func TestTaskComment_Create(t *testing.T) {
 }
 
 func TestTaskComment_Delete(t *testing.T) {
-	u := &user.User{ID: 1}
-
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -138,8 +136,6 @@ func TestTaskComment_Delete(t *testing.T) {
 }
 
 func TestTaskComment_Update(t *testing.T) {
-	u := &user.User{ID: 1}
-
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -184,8 +180,6 @@ func TestTaskComment_Update(t *testing.T) {
 }
 
 func TestTaskComment_ReadOne(t *testing.T) {
-	u := &user.User{ID: 1}
-
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -203,7 +197,7 @@ func TestTaskComment_ReadOne(t *testing.T) {
 		defer s.Close()
 
 		tc := &TaskComment{ID: 9999}
-		err := tc.ReadOne(s, u)
+		err := tc.ReadOne(s)
 		require.Error(t, err)
 		assert.True(t, IsErrTaskCommentDoesNotExist(err))
 	})
