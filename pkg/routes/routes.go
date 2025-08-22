@@ -360,6 +360,7 @@ func registerAPIRoutes(a *echo.Group) {
 		u.POST("/deletion/confirm", apiv1.UserConfirmDeletion)
 		u.POST("/deletion/cancel", apiv1.UserCancelDeletion)
 	}
+	apiv1.RegisterLabels(a)
 	/*
 		projectHandler := &handler.WebHandler{
 			EmptyStruct: func() handler.CObject {
@@ -499,17 +500,6 @@ func registerAPIRoutes(a *echo.Group) {
 			a.POST("/tasks/:task/comments/:commentid", taskCommentHandler.UpdateWeb)
 			a.GET("/tasks/:task/comments/:commentid", taskCommentHandler.ReadOneWeb)
 		}
-
-		labelHandler := &handler.WebHandler{
-			EmptyStruct: func() handler.CObject {
-				return &models.Label{}
-			},
-		}
-		a.GET("/labels", labelHandler.ReadAllWeb)
-		a.GET("/labels/:label", labelHandler.ReadOneWeb)
-		a.PUT("/labels", labelHandler.CreateWeb)
-		a.DELETE("/labels/:label", labelHandler.DeleteWeb)
-		a.POST("/labels/:label", labelHandler.UpdateWeb)
 
 		projectTeamHandler := &handler.WebHandler{
 			EmptyStruct: func() handler.CObject {
