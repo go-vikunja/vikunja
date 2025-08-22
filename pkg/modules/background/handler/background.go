@@ -22,6 +22,7 @@ import (
 	_ "image/jpeg" // To make sure the decoder used for generating blurHashes recognizes jpgs
 	_ "image/png"  // To make sure the decoder used for generating blurHashes recognizes pngs
 
+	"code.vikunja.io/api/pkg/user"
 	"github.com/disintegration/imaging"
 
 	_ "golang.org/x/image/bmp"  // To make sure the decoder used for generating blurHashes recognizes bmps
@@ -109,6 +110,10 @@ func (bp *BackgroundProvider) setBackgroundPreparations(s *xorm.Session, c echo.
 	if err != nil {
 		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, "Invalid auth token: "+err.Error()).SetInternal(err)
 	}
+	u, err := user.GetFromAuth(auth)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	projectID, err := strconv.ParseInt(c.Param("project"), 10, 64)
 	if err != nil {
@@ -117,7 +122,7 @@ func (bp *BackgroundProvider) setBackgroundPreparations(s *xorm.Session, c echo.
 
 	// Check if the user has the permission to change the project background
 	project = &models.Project{ID: projectID}
-	can, err := project.CanUpdate(s, auth)
+	can, err := project.CanUpdate(s, u)
 	if err != nil {
 		return
 	}
@@ -155,8 +160,12 @@ func (bp *BackgroundProvider) SetBackground(c echo.Context) error {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err)
 	}
+	u, err := user.GetFromAuth(auth)
+	if err != nil {
+		return handler.HandleHTTPError(err)
+	}
 
-	err = project.ReadOne(s, auth)
+	err = project.ReadOne(s, u)
 	if err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err)
@@ -235,8 +244,12 @@ func (bp *BackgroundProvider) UploadBackground(c echo.Context) error {
 
 		return handler.HandleHTTPError(err)
 	}
+	u, err := user.GetFromAuth(auth)
+	if err != nil {
+		return handler.HandleHTTPError(err)
+	}
 
-	err = project.ReadOne(s, auth)
+	err = project.ReadOne(s, u)
 	if err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err)
@@ -278,8 +291,12 @@ func SaveBackgroundFile(s *xorm.Session, auth web.Auth, project *models.Project,
 	if err != nil {
 		return err
 	}
+	u, err := user.GetFromAuth(auth)
+	if err != nil {
+		return err
+	}
 
-	f, err := files.Create(&buf, filename, filesize, auth)
+	f, err := files.Create(&buf, filename, filesize, u)
 	if err != nil {
 		return err
 	}
@@ -303,6 +320,10 @@ func checkProjectBackgroundRights(s *xorm.Session, c echo.Context) (project *mod
 	if err != nil {
 		return nil, auth, echo.NewHTTPError(http.StatusBadRequest, "Invalid auth token: "+err.Error()).SetInternal(err)
 	}
+	u, err := user.GetFromAuth(auth)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	projectID, err := strconv.ParseInt(c.Param("project"), 10, 64)
 	if err != nil {
@@ -311,7 +332,7 @@ func checkProjectBackgroundRights(s *xorm.Session, c echo.Context) (project *mod
 
 	// Check if a background for this project exists + Permissions
 	project = &models.Project{ID: projectID}
-	can, _, err := project.CanRead(s, auth)
+	can, _, err := project.CanRead(s, u)
 	if err != nil {
 		_ = s.Rollback()
 		return nil, auth, handler.HandleHTTPError(err)
@@ -415,7 +436,11 @@ func RemoveProjectBackground(c echo.Context) error {
 	project.BackgroundFileID = 0
 	project.BackgroundInformation = nil
 	project.BackgroundBlurHash = ""
-	err = models.UpdateProject(s, project, auth, true)
+	u, err := user.GetFromAuth(auth)
+	if err != nil {
+		return err
+	}
+	err = models.UpdateProject(s, project, u, true)
 	if err != nil {
 		return err
 	}

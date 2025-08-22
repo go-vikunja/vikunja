@@ -38,7 +38,7 @@ func TestProjectUser_CanDoSomething(t *testing.T) {
 		Permissions web.Permissions
 	}
 	type args struct {
-		a web.Auth
+		a *user.User
 	}
 	tests := []struct {
 		name   string

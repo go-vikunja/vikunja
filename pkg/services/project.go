@@ -17,10 +17,12 @@
 package services
 
 import (
+	"strconv"
+
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
-
+	"github.com/labstack/echo/v4"
 	"xorm.io/xorm"
 )
 
@@ -63,4 +65,89 @@ func (ps *ProjectService) GetAll(s *xorm.Session, a web.Auth, p *models.Project,
 		}
 	}
 	return projects, resultCount, totalItems, err
+}
+
+func (ps *ProjectService) Create(s *xorm.Session, p *models.Project, a web.Auth) (*models.Project, error) {
+	u, err := user.GetFromAuth(a)
+	if err != nil {
+		return nil, err
+	}
+	if err := p.Create(s, u); err != nil {
+		return nil, err
+	}
+	return p, nil
+}
+
+func (ps *ProjectService) Get(s *xorm.Session, projectID int64, a web.Auth) (*models.Project, error) {
+	u, err := user.GetFromAuth(a)
+	if err != nil {
+		return nil, err
+	}
+
+	p := &models.Project{ID: projectID}
+	can, _, err := p.CanRead(s, u)
+	if err != nil {
+		return nil, err
+	}
+	if !can {
+		return nil, echo.ErrForbidden
+	}
+
+	if err = p.ReadOne(s, u); err != nil {
+		return nil, err
+	}
+	return p, nil
+}
+
+func (ps *ProjectService) Update(s *xorm.Session, p *models.Project, a web.Auth) (*models.Project, error) {
+	u, err := user.GetFromAuth(a)
+	if err != nil {
+		return nil, err
+	}
+
+	can, err := p.CanUpdate(s, u)
+	if err != nil {
+		return nil, err
+	}
+	if !can {
+		return nil, echo.ErrForbidden
+	}
+
+	if err := models.UpdateProject(s, p, u, false); err != nil {
+		return nil, err
+	}
+	return p, nil
+}
+
+func (ps *ProjectService) Delete(s *xorm.Session, projectID int64, a web.Auth) error {
+	u, err := user.GetFromAuth(a)
+	if err != nil {
+		return err
+	}
+	p := &models.Project{ID: projectID}
+	can, err := p.CanDelete(s, u)
+	if err != nil {
+		return err
+	}
+	if !can {
+		return echo.ErrForbidden
+	}
+	return p.Delete(s, u)
+}
+
+func AddProjectLinks(c echo.Context, p *models.Project) {
+	p.Links = models.Links{
+		"self": {
+			HREF:   "/api/v2/projects/" + strconv.FormatInt(p.ID, 10),
+			Method: "GET",
+		},
+		"update": {
+			HREF:   "/api/v2/projects/" + strconv.FormatInt(p.ID, 10),
+			Method: "PUT",
+		},
+		"delete": {
+			HREF:   "/api/v2/projects/" + strconv.FormatInt(p.ID, 10),
+			Method: "DELETE",
+		},
+	}
 }

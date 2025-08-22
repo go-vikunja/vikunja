@@ -32,8 +32,6 @@ import (
 )
 
 func TestTaskAttachment_ReadOne(t *testing.T) {
-	u := &user.User{ID: 1}
-
 	t.Run("Normal File", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -43,7 +41,7 @@ func TestTaskAttachment_ReadOne(t *testing.T) {
 		ta := &TaskAttachment{
 			ID: 1,
 		}
-		err := ta.ReadOne(s, u)
+		err := ta.ReadOne(s)
 		require.NoError(t, err)
 		assert.NotNil(t, ta.File)
 		assert.True(t, ta.File.ID == ta.FileID && ta.FileID != 0)
@@ -67,7 +65,7 @@ func TestTaskAttachment_ReadOne(t *testing.T) {
 		ta := &TaskAttachment{
 			ID: 9999,
 		}
-		err := ta.ReadOne(s, u)
+		err := ta.ReadOne(s)
 		require.Error(t, err)
 		assert.True(t, IsErrTaskAttachmentDoesNotExist(err))
 	})
@@ -80,7 +78,7 @@ func TestTaskAttachment_ReadOne(t *testing.T) {
 		ta := &TaskAttachment{
 			ID: 2,
 		}
-		err := ta.ReadOne(s, u)
+		err := ta.ReadOne(s)
 		require.Error(t, err)
 		require.EqualError(t, err, "file 9999 does not exist")
 	})

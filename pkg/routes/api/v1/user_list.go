@@ -95,11 +95,15 @@ func ListUsersForProject(c echo.Context) error {
 	if err != nil {
 		return handler.HandleHTTPError(err)
 	}
+	u, err := user.GetFromAuth(auth)
+	if err != nil {
+		return handler.HandleHTTPError(err)
+	}
 
 	s := db.NewSession()
 	defer s.Close()
 
-	canRead, _, err := project.CanRead(s, auth)
+	canRead, _, err := project.CanRead(s, u)
 	if err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err)

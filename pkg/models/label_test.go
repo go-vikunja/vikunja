@@ -44,7 +44,7 @@ func TestLabel_ReadAll(t *testing.T) {
 	}
 	type args struct {
 		search string
-		a      web.Auth
+		a      *user.User
 		page   int
 	}
 	user1 := &user.User{
@@ -197,7 +197,7 @@ func TestLabel_ReadOne(t *testing.T) {
 		want          *Label
 		wantErr       bool
 		errType       func(error) bool
-		auth          web.Auth
+		auth          *user.User
 		wantForbidden bool
 	}{
 		{
@@ -281,7 +281,7 @@ func TestLabel_ReadOne(t *testing.T) {
 			if !allowed && !tt.wantForbidden {
 				t.Errorf("Label.CanRead() forbidden, want %v", tt.wantForbidden)
 			}
-			err := l.ReadOne(s, tt.auth)
+			err := l.ReadOne(s)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Label.ReadOne() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -311,7 +311,7 @@ func TestLabel_Create(t *testing.T) {
 		Permissions web.Permissions
 	}
 	type args struct {
-		a web.Auth
+		a *user.User
 	}
 	tests := []struct {
 		name          string
@@ -384,7 +384,7 @@ func TestLabel_Update(t *testing.T) {
 		name          string
 		fields        fields
 		wantErr       bool
-		auth          web.Auth
+		auth          *user.User
 		wantForbidden bool
 	}{
 		{
@@ -474,7 +474,7 @@ func TestLabel_Delete(t *testing.T) {
 		name          string
 		fields        fields
 		wantErr       bool
-		auth          web.Auth
+		auth          *user.User
 		wantForbidden bool
 	}{
 

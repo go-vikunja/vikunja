@@ -110,7 +110,7 @@ func TestSavedFilter_ReadOne(t *testing.T) {
 	// canRead pre-populates the struct
 	_, _, err := sf.CanRead(s, user1)
 	require.NoError(t, err)
-	err = sf.ReadOne(s, user1)
+	err = sf.ReadOne(s)
 	require.NoError(t, err)
 	assert.NotNil(t, sf.Owner)
 }
@@ -127,7 +127,7 @@ func TestSavedFilter_Update(t *testing.T) {
 			Description: "", // Explicitly reset the description
 			Filters:     &TaskCollection{},
 		}
-		err := sf.Update(s, &user.User{ID: 1})
+		err := sf.Update(s)
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
@@ -147,7 +147,7 @@ func TestSavedFilter_Update(t *testing.T) {
 			IsFavorite: true,
 			Filters:    &TaskCollection{},
 		}
-		err := sf.Update(s, &user.User{ID: 1})
+		err := sf.Update(s)
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
@@ -169,7 +169,7 @@ func TestSavedFilter_Update(t *testing.T) {
 				Filter: "foo = bar",
 			},
 		}
-		err := sf.Update(s, &user.User{ID: 1})
+		err := sf.Update(s)
 		require.Error(t, err)
 	})
 }

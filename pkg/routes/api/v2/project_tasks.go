@@ -24,6 +24,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
+	"code.vikunja.io/api/pkg/services"
 	"code.vikunja.io/api/pkg/web/handler"
 	"github.com/labstack/echo/v4"
 )
@@ -58,15 +59,6 @@ func GetProjectTasks(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid project ID").SetInternal(err)
 	}
 
-	p := &models.Project{ID: projectID}
-	can, _, err := p.CanRead(s, auth)
-	if err != nil {
-		return handler.HandleHTTPError(err)
-	}
-	if !can {
-		return echo.ErrForbidden
-	}
-
 	pageStr := c.QueryParam("page")
 	if pageStr == "" {
 		pageStr = "1"
@@ -85,17 +77,8 @@ func GetProjectTasks(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid per_page number").SetInternal(err)
 	}
 
-	tc := &models.TaskCollection{
-		ProjectID: projectID,
-	}
-
-	tasks, resultCount, totalItems, err := tc.ReadAll(
-		s,
-		auth,
-		c.QueryParam("s"),
-		page,
-		perPage,
-	)
+	ts := services.NewTaskService()
+	tasks, resultCount, totalItems, err := ts.GetByProject(s, projectID, auth, c.QueryParam("s"), page, perPage)
 	if err != nil {
 		return handler.HandleHTTPError(err)
 	}
@@ -112,8 +95,10 @@ func GetProjectTasks(c echo.Context) error {
 	c.Response().Header().Set("x-pagination-result-count", strconv.Itoa(resultCount))
 	c.Response().Header().Set("Access-Control-Expose-Headers", "x-pagination-total-pages, x-pagination-result-count")
 
-	for _, t := range tasks.([]*models.Task) {
-		t.AddLinks(auth)
+	if tasks, ok := tasks.([]*models.Task); ok {
+		for _, t := range tasks {
+			services.AddTaskLinks(auth, t)
+		}
 	}
 
 	return c.JSON(http.StatusOK, tasks)
@@ -147,15 +132,6 @@ func CreateProjectTask(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid project ID").SetInternal(err)
 	}
 
-	p := &models.Project{ID: projectID}
-	can, err := p.CanWrite(s, auth)
-	if err != nil {
-		return handler.HandleHTTPError(err)
-	}
-	if !can {
-		return echo.ErrForbidden
-	}
-
 	t := new(models.Task)
 	if err := c.Bind(t); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid task object provided.").SetInternal(err)
@@ -166,7 +142,9 @@ func CreateProjectTask(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error()).SetInternal(err)
 	}
 
-	if err := t.Create(s, auth); err != nil {
+	ts := services.NewTaskService()
+	t, err = ts.Create(s, t, auth)
+	if err != nil {
 		return handler.HandleHTTPError(err)
 	}
 
@@ -174,7 +152,7 @@ func CreateProjectTask(c echo.Context) error {
 		return handler.HandleHTTPError(err)
 	}
 
-	t.AddLinks(auth)
+	services.AddTaskLinks(auth, t)
 
 	return c.JSON(http.StatusCreated, t)
 }

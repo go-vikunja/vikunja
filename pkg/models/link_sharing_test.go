@@ -124,8 +124,6 @@ func TestLinkSharing_ReadAll(t *testing.T) {
 }
 
 func TestLinkSharing_ReadOne(t *testing.T) {
-	doer := &user.User{ID: 1}
-
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -134,7 +132,7 @@ func TestLinkSharing_ReadOne(t *testing.T) {
 		share := &LinkSharing{
 			ID: 1,
 		}
-		err := share.ReadOne(s, doer)
+		err := share.ReadOne(s)
 
 		require.NoError(t, err)
 		assert.NotEmpty(t, share.Hash)
@@ -148,7 +146,7 @@ func TestLinkSharing_ReadOne(t *testing.T) {
 		share := &LinkSharing{
 			ID: 4,
 		}
-		err := share.ReadOne(s, doer)
+		err := share.ReadOne(s)
 
 		require.NoError(t, err)
 		assert.NotEmpty(t, share.Hash)

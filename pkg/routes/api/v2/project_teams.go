@@ -24,6 +24,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
+	"code.vikunja.io/api/pkg/services"
 	"code.vikunja.io/api/pkg/web/handler"
 
 	"github.com/labstack/echo/v4"
@@ -66,8 +67,8 @@ func (pt *ProjectTeams) Get(c echo.Context) error {
 	}
 	search := c.QueryParam("s")
 
-	tp := &models.TeamProject{ProjectID: projectID}
-	teams, resultCount, total, err := tp.ReadAll(s, auth, search, page, perPage)
+	ts := services.NewTeamService()
+	teams, resultCount, total, err := ts.GetByProject(s, projectID, auth, search, page, perPage)
 	if err != nil {
 		return handler.HandleHTTPError(err)
 	}
@@ -76,8 +77,10 @@ func (pt *ProjectTeams) Get(c echo.Context) error {
 	c.Response().Header().Set("x-pagination-result-count", strconv.Itoa(resultCount))
 	c.Response().Header().Set("Access-Control-Expose-Headers", "x-pagination-total-pages, x-pagination-result-count")
 
-	for _, t := range teams.([]*models.TeamWithPermission) {
-		t.AddLinks(c)
+	if teams, ok := teams.([]*models.TeamWithPermission); ok {
+		for _, t := range teams {
+			services.AddTeamLinks(c, t)
+		}
 	}
 
 	return c.JSON(http.StatusOK, teams)
@@ -98,15 +101,6 @@ func (pt *ProjectTeams) Post(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid project ID").SetInternal(err)
 	}
 
-	p := &models.Project{ID: projectID}
-	_, perm, err := p.CanRead(s, auth)
-	if err != nil {
-		return handler.HandleHTTPError(err)
-	}
-	if perm < int(models.PermissionAdmin) {
-		return echo.ErrForbidden
-	}
-
 	tp := new(models.TeamProject)
 	if err := c.Bind(tp); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid team project object provided.").SetInternal(err)
@@ -117,7 +111,9 @@ func (pt *ProjectTeams) Post(c echo.Context) error {
 		return err
 	}
 
-	if err := tp.Create(s, auth); err != nil {
+	ts := services.NewTeamService()
+	tp, err = ts.Create(s, tp, auth)
+	if err != nil {
 		return handler.HandleHTTPError(err)
 	}
 
@@ -148,15 +144,6 @@ func (pt *ProjectTeams) Put(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid team ID").SetInternal(err)
 	}
 
-	p := &models.Project{ID: projectID}
-	_, perm, err := p.CanRead(s, auth)
-	if err != nil {
-		return handler.HandleHTTPError(err)
-	}
-	if perm < int(models.PermissionAdmin) {
-		return echo.ErrForbidden
-	}
-
 	tp := new(models.TeamProject)
 	if err := c.Bind(tp); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid team project object provided.").SetInternal(err)
@@ -168,7 +155,9 @@ func (pt *ProjectTeams) Put(c echo.Context) error {
 		return err
 	}
 
-	if err := tp.Update(s, auth); err != nil {
+	ts := services.NewTeamService()
+	tp, err = ts.Update(s, tp, auth)
+	if err != nil {
 		return handler.HandleHTTPError(err)
 	}
 
@@ -199,21 +188,8 @@ func (pt *ProjectTeams) Delete(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid team ID").SetInternal(err)
 	}
 
-	p := &models.Project{ID: projectID}
-	_, perm, err := p.CanRead(s, auth)
-	if err != nil {
-		return handler.HandleHTTPError(err)
-	}
-	if perm < int(models.PermissionAdmin) {
-		return echo.ErrForbidden
-	}
-
-	tp := &models.TeamProject{
-		ProjectID: projectID,
-		TeamID:    teamID,
-	}
-
-	if err := tp.Delete(s, auth); err != nil {
+	ts := services.NewTeamService()
+	if err := ts.Delete(s, projectID, teamID, auth); err != nil {
 		return handler.HandleHTTPError(err)
 	}
 

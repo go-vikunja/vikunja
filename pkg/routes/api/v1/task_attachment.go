@@ -24,6 +24,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	auth2 "code.vikunja.io/api/pkg/modules/auth"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web/handler"
 
 	"github.com/labstack/echo/v4"
@@ -55,11 +56,15 @@ func UploadTaskAttachment(c echo.Context) error {
 	if err != nil {
 		return handler.HandleHTTPError(err)
 	}
+	u, err := user.GetFromAuth(auth)
+	if err != nil {
+		return handler.HandleHTTPError(err)
+	}
 
 	s := db.NewSession()
 	defer s.Close()
 
-	can, err := taskAttachment.CanCreate(s, auth)
+	can, err := taskAttachment.CanCreate(s, u)
 	if err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err)
@@ -97,7 +102,7 @@ func UploadTaskAttachment(c echo.Context) error {
 		}
 		defer f.Close()
 
-		err = ta.NewAttachment(s, f, file.Filename, uint64(file.Size), auth)
+		err = ta.NewAttachment(s, f, file.Filename, uint64(file.Size), u)
 		if err != nil {
 			r.Errors = append(r.Errors, handler.HandleHTTPError(err))
 			continue
@@ -139,11 +144,15 @@ func GetTaskAttachment(c echo.Context) error {
 	if err != nil {
 		return handler.HandleHTTPError(err)
 	}
+	u, err := user.GetFromAuth(auth)
+	if err != nil {
+		return handler.HandleHTTPError(err)
+	}
 
 	s := db.NewSession()
 	defer s.Close()
 
-	can, _, err := taskAttachment.CanRead(s, auth)
+	can, _, err := taskAttachment.CanRead(s, u)
 	if err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err)
@@ -153,7 +162,7 @@ func GetTaskAttachment(c echo.Context) error {
 	}
 
 	// Get the attachment incl file
-	err = taskAttachment.ReadOne(s, auth)
+	err = taskAttachment.ReadOne(s)
 	if err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err)

@@ -60,7 +60,7 @@ func TestLabelTask_ReadAll(t *testing.T) {
 	}
 	type args struct {
 		search string
-		a      web.Auth
+		a      *user.User
 		page   int
 	}
 	tests := []struct {
@@ -165,7 +165,7 @@ func TestLabelTask_Create(t *testing.T) {
 		Permissions web.Permissions
 	}
 	type args struct {
-		a web.Auth
+		a *user.User
 	}
 	tests := []struct {
 		name          string
@@ -273,7 +273,7 @@ func TestLabelTask_Delete(t *testing.T) {
 		fields        fields
 		wantErr       bool
 		errType       func(error) bool
-		auth          web.Auth
+		auth          *user.User
 		wantForbidden bool
 	}{
 		{

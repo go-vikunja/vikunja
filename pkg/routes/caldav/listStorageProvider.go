@@ -27,7 +27,6 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	user2 "code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/web"
 	"github.com/samedi/caldav-go/data"
 	"github.com/samedi/caldav-go/errs"
 	"xorm.io/xorm"
@@ -426,16 +425,12 @@ func (vcls *VikunjaCaldavProjectStorage) DeleteResource(_ string) error {
 	return nil
 }
 
-func persistLabels(s *xorm.Session, a web.Auth, task *models.Task, labels []*models.Label) (err error) {
+func persistLabels(s *xorm.Session, u *user2.User, task *models.Task, labels []*models.Label) (err error) {
 
 	labelTitles := []string{}
 
 	for _, label := range labels {
 		labelTitles = append(labelTitles, label.Title)
-	}
-
-	u := &user2.User{
-		ID: a.GetID(),
 	}
 
 	// Using readall ensures the current user has the permission to see the labels they provided via caldav.
@@ -461,22 +456,22 @@ func persistLabels(s *xorm.Session, a web.Auth, task *models.Task, labels []*mod
 			continue
 		}
 
-		err = label.Create(s, a)
+		err = label.Create(s, u)
 		if err != nil {
 			return err
 		}
 	}
 
 	// Create the label <-> task relation
-	return task.UpdateTaskLabels(s, a, labels)
+	return task.UpdateTaskLabels(s, u, labels)
 }
 
-func removeStaleRelations(s *xorm.Session, a web.Auth, task *models.Task, newRelations map[models.RelationKind][]*models.Task) (err error) {
+func removeStaleRelations(s *xorm.Session, u *user2.User, task *models.Task, newRelations map[models.RelationKind][]*models.Task) (err error) {
 
 	// Get the existing task with details:
 	existingTask := &models.Task{ID: task.ID}
 	// FIXME: Optimize to get only required attributes (ie. RelatedTasks).
-	err = existingTask.ReadOne(s, a)
+	err = existingTask.ReadOne(s, u)
 	if err != nil {
 		return
 	}
@@ -492,7 +487,7 @@ func removeStaleRelations(s *xorm.Session, a web.Auth, task *models.Task, newRel
 					OtherTaskID:  relatedTask.ID,
 					RelationKind: relationKind,
 				}
-				err = rel.Delete(s, a)
+				err = rel.Delete(s, u)
 				if err != nil {
 					return
 				}
@@ -504,9 +499,9 @@ func removeStaleRelations(s *xorm.Session, a web.Auth, task *models.Task, newRel
 }
 
 // Persist new relations provided by the VTODO entry:
-func persistRelations(s *xorm.Session, a web.Auth, task *models.Task, newRelations map[models.RelationKind][]*models.Task) (err error) {
+func persistRelations(s *xorm.Session, u *user2.User, task *models.Task, newRelations map[models.RelationKind][]*models.Task) (err error) {
 
-	err = removeStaleRelations(s, a, task, newRelations)
+	err = removeStaleRelations(s, u, task, newRelations)
 	if err != nil {
 		return err
 	}
@@ -535,7 +530,7 @@ func persistRelations(s *xorm.Session, a web.Auth, task *models.Task, newRelatio
 			if createDummy {
 				relatedTask.ProjectID = task.ProjectID
 				relatedTask.Title = "DUMMY-UID-" + relatedTask.UID
-				err = relatedTask.Create(s, a)
+				err = relatedTask.Create(s, u)
 				if err != nil {
 					return err
 				}
@@ -547,7 +542,7 @@ func persistRelations(s *xorm.Session, a web.Auth, task *models.Task, newRelatio
 				OtherTaskID:  relatedTask.ID,
 				RelationKind: relationType,
 			}
-			err = rel.Create(s, a)
+			err = rel.Create(s, u)
 			if err != nil && !models.IsErrRelationAlreadyExists(err) {
 				return err
 			}

@@ -25,7 +25,6 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/services"
-	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web/handler"
 
 	"github.com/labstack/echo/v4"
@@ -100,6 +99,13 @@ func GetAllProjects(c echo.Context) error {
 		return handler.HandleHTTPError(err)
 	}
 
+	if projects, ok := projects.([]*models.Project); ok {
+		for _, p := range projects {
+			services.AddProjectLinks(c, p)
+		}
+	}
+
+
 	var numberOfPages = math.Ceil(float64(total) / float64(perPage))
 	if page < 0 {
 		numberOfPages = 1
@@ -134,7 +140,9 @@ func CreateProject(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error()).SetInternal(err)
 	}
 
-	if err := p.Create(s, auth); err != nil {
+	ps := services.NewProjectService()
+	p, err = ps.Create(s, p, auth)
+	if err != nil {
 		return handler.HandleHTTPError(err)
 	}
 
@@ -142,7 +150,7 @@ func CreateProject(c echo.Context) error {
 		return handler.HandleHTTPError(err)
 	}
 
-	p.AddLinks(c)
+	services.AddProjectLinks(c, p)
 
 	return c.JSON(http.StatusCreated, p)
 }
@@ -162,25 +170,13 @@ func GetProject(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid project ID").SetInternal(err)
 	}
 
-	p := &models.Project{ID: projectID}
-
-	// The CanRead method is responsible for checking if the user has read permissions
-	// and for loading the actual project data into the struct.
-	can, _, err := p.CanRead(s, auth)
+	ps := services.NewProjectService()
+	p, err := ps.Get(s, projectID, auth)
 	if err != nil {
 		return handler.HandleHTTPError(err)
 	}
-	if !can {
-		return echo.ErrForbidden
-	}
 
-	// Now that the project is loaded and permissions are checked,
-	// we can populate the rest of the details.
-	if err = p.ReadOne(s, auth); err != nil {
-		return handler.HandleHTTPError(err)
-	}
-
-	p.AddLinks(c)
+	services.AddProjectLinks(c, p)
 
 	return c.JSON(http.StatusOK, p)
 }
@@ -212,16 +208,9 @@ func UpdateProject(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error()).SetInternal(err)
 	}
 
-	// The CanUpdate method checks permissions and loads the project.
-	can, err := updatePayload.CanUpdate(s, auth)
+	ps := services.NewProjectService()
+	p, err := ps.Update(s, updatePayload, auth)
 	if err != nil {
-		return handler.HandleHTTPError(err)
-	}
-	if !can {
-		return echo.ErrForbidden
-	}
-
-	if err := models.UpdateProject(s, updatePayload, auth, false); err != nil {
 		return handler.HandleHTTPError(err)
 	}
 
@@ -229,9 +218,9 @@ func UpdateProject(c echo.Context) error {
 		return handler.HandleHTTPError(err)
 	}
 
-	updatePayload.AddLinks(c)
+	services.AddProjectLinks(c, p)
 
-	return c.JSON(http.StatusOK, updatePayload)
+	return c.JSON(http.StatusOK, p)
 }
 
 // DeleteProject handles deleting a project
@@ -249,18 +238,8 @@ func DeleteProject(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid project ID").SetInternal(err)
 	}
 
-	p := &models.Project{ID: projectID}
-
-	// The CanDelete method checks permissions and loads the project.
-	can, err := p.CanDelete(s, auth)
-	if err != nil {
-		return handler.HandleHTTPError(err)
-	}
-	if !can {
-		return echo.ErrForbidden
-	}
-
-	if err := p.Delete(s, auth); err != nil {
+	ps := services.NewProjectService()
+	if err := ps.Delete(s, projectID, auth); err != nil {
 		return handler.HandleHTTPError(err)
 	}
 
@@ -275,5 +254,3 @@ func DeleteProject(c echo.Context) error {
 func DuplicateProject(c echo.Context) error {
 	return c.String(http.StatusNotImplemented, "Not Implemented")
 }
-
-

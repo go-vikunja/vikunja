@@ -240,7 +240,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 			}
 
 			bucket.ProjectViewID = newView.ID
-			err = bucket.Update(s, user)
+			err = bucket.Update(s)
 			if err != nil {
 				return
 			}
@@ -259,7 +259,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 			if view.ViewKind == models.ProjectViewKindKanban {
 				for _, b := range bucketsByOldID {
 					b.ProjectViewID = view.ID
-					err = b.Update(s, user)
+					err = b.Update(s)
 					if err != nil {
 						return
 					}

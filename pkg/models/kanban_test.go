@@ -119,16 +119,12 @@ func TestBucket_ReadAll(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		linkShare := &LinkSharing{
-			ID:         1,
-			ProjectID:  1,
-			Permission: PermissionRead,
-		}
+		testuser := &user.User{ID: 1}
 		b := &TaskCollection{
 			ProjectID:     1,
 			ProjectViewID: 4,
 		}
-		result, _, _, err := b.ReadAll(s, linkShare, "", 0, 0)
+		result, _, _, err := b.ReadAll(s, testuser, "", 0, 0)
 		require.NoError(t, err)
 		buckets, _ := result.([]*Bucket)
 		assert.Len(t, buckets, 3)
@@ -226,7 +222,7 @@ func TestBucket_Delete(t *testing.T) {
 func TestBucket_Update(t *testing.T) {
 
 	testAndAssertBucketUpdate := func(t *testing.T, b *Bucket, s *xorm.Session) {
-		err := b.Update(s, &user.User{ID: 1})
+		err := b.Update(s)
 		require.NoError(t, err)
 
 		err = s.Commit()

@@ -24,6 +24,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
+	"code.vikunja.io/api/pkg/services"
 	"code.vikunja.io/api/pkg/web/handler"
 
 	"github.com/labstack/echo/v4"
@@ -66,9 +67,8 @@ func (pu *ProjectUsers) Get(c echo.Context) error {
 	}
 	search := c.QueryParam("s")
 
-	puModel := &models.ProjectUser{ProjectID: projectID}
-
-	users, resultCount, totalItems, err := puModel.ReadAll(s, auth, search, page, perPage)
+	pus := services.NewProjectUsersService()
+	users, resultCount, totalItems, err := pus.Get(s, projectID, auth, search, page, perPage)
 	if err != nil {
 		return handler.HandleHTTPError(err)
 	}
@@ -77,8 +77,10 @@ func (pu *ProjectUsers) Get(c echo.Context) error {
 	c.Response().Header().Set("x-pagination-result-count", strconv.Itoa(resultCount))
 	c.Response().Header().Set("Access-Control-Expose-Headers", "x-pagination-total-pages, x-pagination-result-count")
 
-	for _, u := range users.([]*models.UserWithPermission) {
-		u.User.Links = map[string]interface{}{"self": map[string]string{"href": "/api/v2/users/" + strconv.FormatInt(u.User.ID, 10), "method": "GET"}}
+	if users, ok := users.([]*models.UserWithPermission); ok {
+		for _, u := range users {
+			u.User.Links = map[string]interface{}{"self": map[string]string{"href": "/api/v2/users/" + strconv.FormatInt(u.User.ID, 10), "method": "GET"}}
+		}
 	}
 
 	return c.JSON(http.StatusOK, users)
@@ -99,15 +101,6 @@ func (pu *ProjectUsers) Post(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid project ID").SetInternal(err)
 	}
 
-	p := &models.Project{ID: projectID}
-	_, perm, err := p.CanRead(s, auth)
-	if err != nil {
-		return handler.HandleHTTPError(err)
-	}
-	if perm < int(models.PermissionAdmin) {
-		return echo.ErrForbidden
-	}
-
 	puModel := new(models.ProjectUser)
 	if err := c.Bind(puModel); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid project user object provided.").SetInternal(err)
@@ -118,7 +111,9 @@ func (pu *ProjectUsers) Post(c echo.Context) error {
 		return err
 	}
 
-	if err := puModel.Create(s, auth); err != nil {
+	pus := services.NewProjectUsersService()
+	puModel, err = pus.Create(s, puModel, auth)
+	if err != nil {
 		return handler.HandleHTTPError(err)
 	}
 
@@ -149,15 +144,6 @@ func (pu *ProjectUsers) Put(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user ID").SetInternal(err)
 	}
 
-	p := &models.Project{ID: projectID}
-	_, perm, err := p.CanRead(s, auth)
-	if err != nil {
-		return handler.HandleHTTPError(err)
-	}
-	if perm < int(models.PermissionAdmin) {
-		return echo.ErrForbidden
-	}
-
 	puModel := new(models.ProjectUser)
 	if err := c.Bind(puModel); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid project user object provided.").SetInternal(err)
@@ -169,7 +155,9 @@ func (pu *ProjectUsers) Put(c echo.Context) error {
 		return err
 	}
 
-	if err := puModel.Update(s, auth); err != nil {
+	pus := services.NewProjectUsersService()
+	puModel, err = pus.Update(s, puModel, auth)
+	if err != nil {
 		return handler.HandleHTTPError(err)
 	}
 
@@ -200,21 +188,8 @@ func (pu *ProjectUsers) Delete(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user ID").SetInternal(err)
 	}
 
-	p := &models.Project{ID: projectID}
-	_, perm, err := p.CanRead(s, auth)
-	if err != nil {
-		return handler.HandleHTTPError(err)
-	}
-	if perm < int(models.PermissionAdmin) {
-		return echo.ErrForbidden
-	}
-
-	puModel := &models.ProjectUser{
-		ProjectID: projectID,
-		UserID:    userID,
-	}
-
-	if err := puModel.Delete(s, auth); err != nil {
+	pus := services.NewProjectUsersService()
+	if err := pus.Delete(s, projectID, userID, auth); err != nil {
 		return handler.HandleHTTPError(err)
 	}
 

@@ -26,6 +26,7 @@ import (
 	"strings"
 	"time"
 
+	"code.vikunja.io/api/pkg/user"
 	"xorm.io/xorm"
 
 	"code.vikunja.io/api/pkg/config"
@@ -279,8 +280,13 @@ func (p *Provider) Set(s *xorm.Session, image *background.Image, project *models
 	}
 	log.Debugf("Pinged unsplash download endpoint for photo %s", image.ID)
 
+	u, err := user.GetFromAuth(auth)
+	if err != nil {
+		return err
+	}
+
 	// Save it as a file in vikunja
-	file, err := files.Create(resp.Body, "", 0, auth)
+	file, err := files.Create(resp.Body, "", 0, u)
 	if err != nil {
 		return
 	}

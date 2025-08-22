@@ -43,7 +43,7 @@ func TestProjectUser_Create(t *testing.T) {
 		Permissions web.Permissions
 	}
 	type args struct {
-		a web.Auth
+		a *user.User
 	}
 	tests := []struct {
 		name    string
@@ -58,6 +58,7 @@ func TestProjectUser_Create(t *testing.T) {
 				Username:  "user1",
 				ProjectID: 2,
 			},
+			args: args{a: &user.User{ID: 1}},
 		},
 		{
 			name: "ListUsers Create for duplicate",
@@ -67,6 +68,7 @@ func TestProjectUser_Create(t *testing.T) {
 			},
 			wantErr: true,
 			errType: IsErrUserAlreadyHasAccess,
+			args:    args{a: &user.User{ID: 1}},
 		},
 		{
 			name: "ListUsers Create with invalid permission",
@@ -77,6 +79,7 @@ func TestProjectUser_Create(t *testing.T) {
 			},
 			wantErr: true,
 			errType: IsErrInvalidPermission,
+			args:    args{a: &user.User{ID: 1}},
 		},
 		{
 			name: "ListUsers Create with inexisting project",
@@ -86,6 +89,7 @@ func TestProjectUser_Create(t *testing.T) {
 			},
 			wantErr: true,
 			errType: IsErrProjectDoesNotExist,
+			args:    args{a: &user.User{ID: 1}},
 		},
 		{
 			name: "ListUsers Create with inexisting user",
@@ -95,6 +99,7 @@ func TestProjectUser_Create(t *testing.T) {
 			},
 			wantErr: true,
 			errType: user.IsErrUserDoesNotExist,
+			args:    args{a: &user.User{ID: 1}},
 		},
 		{
 			name: "ListUsers Create with the owner as shared user",
@@ -104,6 +109,7 @@ func TestProjectUser_Create(t *testing.T) {
 			},
 			wantErr: true,
 			errType: IsErrUserAlreadyHasAccess,
+			args:    args{a: &user.User{ID: 1}},
 		},
 	}
 	for _, tt := range tests {
@@ -187,7 +193,7 @@ func TestProjectUser_ReadAll(t *testing.T) {
 	}
 	type args struct {
 		search string
-		a      web.Auth
+		a      *user.User
 		page   int
 	}
 	tests := []struct {
@@ -333,7 +339,7 @@ func TestProjectUser_Update(t *testing.T) {
 				CRUDable:    tt.fields.CRUDable,
 				Permissions: tt.fields.Permissions,
 			}
-			err := lu.Update(s, &user.User{ID: 1})
+			err := lu.Update(s)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ProjectUser.Update() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -415,7 +421,7 @@ func TestProjectUser_Delete(t *testing.T) {
 				CRUDable:    tt.fields.CRUDable,
 				Permissions: tt.fields.Permissions,
 			}
-			err := lu.Delete(s, &user.User{ID: 1})
+			err := lu.Delete(s)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ProjectUser.Delete() error = %v, wantErr %v", err, tt.wantErr)
 			}

@@ -24,6 +24,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
+	"code.vikunja.io/api/pkg/services"
 	"code.vikunja.io/api/pkg/web/handler"
 	"github.com/labstack/echo/v4"
 )
@@ -73,15 +74,8 @@ func GetTasks(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid per_page number").SetInternal(err)
 	}
 
-	tc := &models.TaskCollection{}
-
-	tasks, resultCount, totalItems, err := tc.ReadAll(
-		s,
-		auth,
-		c.QueryParam("s"),
-		page,
-		perPage,
-	)
+	ts := services.NewTaskService()
+	tasks, resultCount, totalItems, err := ts.GetAll(s, auth, c.QueryParam("s"), page, perPage)
 	if err != nil {
 		return handler.HandleHTTPError(err)
 	}
@@ -98,8 +92,10 @@ func GetTasks(c echo.Context) error {
 	c.Response().Header().Set("x-pagination-result-count", strconv.Itoa(resultCount))
 	c.Response().Header().Set("Access-Control-Expose-Headers", "x-pagination-total-pages, x-pagination-result-count")
 
-	for _, t := range tasks.([]*models.Task) {
-		t.AddLinks(c)
+	if tasks, ok := tasks.([]*models.Task); ok {
+		for _, t := range tasks {
+			services.AddTaskLinks(auth, t)
+		}
 	}
 
 	return c.JSON(http.StatusOK, tasks)

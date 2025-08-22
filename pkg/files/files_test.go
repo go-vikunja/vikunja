@@ -22,7 +22,7 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
-
+	"code.vikunja.io/api/pkg/user"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -45,22 +45,14 @@ func (t *testfile) Close() error {
 	return nil
 }
 
-type testauth struct {
-	id int64
-}
-
-func (a *testauth) GetID() int64 {
-	return a.id
-}
-
 func TestCreate(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {
 		initFixtures(t)
 		tf := &testfile{
 			content: []byte("testfile"),
 		}
-		ta := &testauth{id: 1}
-		createdFile, err := Create(tf, "testfile", 100, ta)
+		u := &user.User{ID: 1}
+		createdFile, err := Create(tf, "testfile", 100, u)
 		require.NoError(t, err)
 
 		// Check the file was created correctly
@@ -77,8 +69,8 @@ func TestCreate(t *testing.T) {
 		tf := &testfile{
 			content: []byte("testfile"),
 		}
-		ta := &testauth{id: 1}
-		_, err := Create(tf, "testfile", 99999999999, ta)
+		u := &user.User{ID: 1}
+		_, err := Create(tf, "testfile", 99999999999, u)
 		require.Error(t, err)
 		assert.True(t, IsErrFileIsTooLarge(err))
 	})

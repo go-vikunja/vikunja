@@ -92,7 +92,7 @@ func TestSubscription_Create(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		linkShare := &LinkSharing{}
+		testUser := &user.User{ID: -1}
 
 		sb := &Subscription{
 			Entity:   "task",
@@ -100,7 +100,7 @@ func TestSubscription_Create(t *testing.T) {
 			UserID:   u.ID,
 		}
 
-		can, err := sb.CanCreate(s, linkShare)
+		can, err := sb.CanCreate(s, testUser)
 		require.Error(t, err)
 		assert.False(t, can)
 	})
@@ -219,7 +219,7 @@ func TestSubscription_Delete(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		linkShare := &LinkSharing{}
+		testUser := &user.User{ID: -1}
 
 		sb := &Subscription{
 			Entity:   "task",
@@ -227,7 +227,7 @@ func TestSubscription_Delete(t *testing.T) {
 			UserID:   1,
 		}
 
-		can, err := sb.CanDelete(s, linkShare)
+		can, err := sb.CanDelete(s, testUser)
 		require.Error(t, err)
 		assert.False(t, can)
 	})
