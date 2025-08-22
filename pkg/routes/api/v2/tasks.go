@@ -75,7 +75,12 @@ func GetTasks(c echo.Context) error {
 	}
 
 	ts := services.NewTaskService()
-	tasks, resultCount, totalItems, err := ts.GetAll(s, auth, c.QueryParam("s"), page, perPage)
+	var options services.TaskOptions
+	if err := c.Bind(&options); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid options").SetInternal(err)
+	}
+
+	tasks, resultCount, totalItems, err := ts.GetAll(s, auth, c.QueryParam("s"), page, perPage, options)
 	if err != nil {
 		return handler.HandleHTTPError(err)
 	}

@@ -17,7 +17,9 @@
 package services
 
 import (
+	"fmt"
 	"strconv"
+	"strings"
 
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
@@ -35,6 +37,33 @@ func NewTaskService() *TaskService {
 	return &TaskService{}
 }
 
+// TaskOptions holds all the options for getting tasks
+type TaskOptions struct {
+	models.TaskSortBy
+	models.TaskFilterBy
+	models.TaskPagination
+}
+
+func (ts *TaskService) applyTaskOptions(q *xorm.Session, options TaskOptions) (*xorm.Session, error) {
+	for _, sortBy := range options.SortBy {
+		var direction = " ASC"
+		var field = sortBy
+		if strings.HasPrefix(sortBy, "-") {
+			direction = " DESC"
+			field = field[1:]
+		}
+
+		err := models.ValidateTaskFieldForSorting(field)
+		if err != nil {
+			return nil, err
+		}
+		q = q.OrderBy(fmt.Sprintf("%s %s", field, direction))
+	}
+
+	// TODO: Add filtering
+
+	return q, nil
+}
 func (ts *TaskService) Get(s *xorm.Session, taskID int64, a web.Auth) (*models.Task, error) {
 	u, err := user.GetFromAuth(a)
 	if err != nil {
@@ -56,16 +85,22 @@ func (ts *TaskService) Get(s *xorm.Session, taskID int64, a web.Auth) (*models.T
 	return t, nil
 }
 
-func (ts *TaskService) GetAll(s *xorm.Session, a web.Auth, search string, page, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
-	u, err := user.GetFromAuth(a)
+func (ts *TaskService) GetAll(s *xorm.Session, a web.Auth, search string, page, perPage int, options TaskOptions) (result interface{}, resultCount int, totalItems int64, err error) {
+	s, err = ts.applyTaskOptions(s, options)
 	if err != nil {
 		return nil, 0, 0, err
 	}
-	tc := &models.TaskCollection{}
-	return tc.ReadAll(s, u, search, page, perPage)
+
+	var tasks []*models.Task
+	totalItems, err = s.FindAndCount(&tasks)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	return tasks, len(tasks), totalItems, nil
 }
 
-func (ts *TaskService) GetByProject(s *xorm.Session, projectID int64, a web.Auth, search string, page, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
+func (ts *TaskService) GetByProject(s *xorm.Session, projectID int64, a web.Auth, search string, page, perPage int, options TaskOptions) (result interface{}, resultCount int, totalItems int64, err error) {
 	u, err := user.GetFromAuth(a)
 	if err != nil {
 		return nil, 0, 0, err
@@ -80,11 +115,19 @@ func (ts *TaskService) GetByProject(s *xorm.Session, projectID int64, a web.Auth
 		return nil, 0, 0, echo.ErrForbidden
 	}
 
-	tc := &models.TaskCollection{
-		ProjectID: projectID,
+	s = s.Where("project_id = ?", projectID)
+	s, err = ts.applyTaskOptions(s, options)
+	if err != nil {
+		return nil, 0, 0, err
 	}
 
-	return tc.ReadAll(s, u, search, page, perPage)
+	var tasks []*models.Task
+	totalItems, err = s.FindAndCount(&tasks)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	return tasks, len(tasks), totalItems, nil
 }
 
 func (ts *TaskService) Create(s *xorm.Session, t *models.Task, a web.Auth) (*models.Task, error) {

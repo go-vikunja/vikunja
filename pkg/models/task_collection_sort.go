@@ -17,12 +17,6 @@
 package models
 
 type (
-	sortParam struct {
-		sortBy        string
-		orderBy       sortOrder // asc or desc
-		projectViewID int64
-	}
-
 	sortOrder string
 )
 
@@ -53,39 +47,8 @@ const (
 	taskPropertyReminders     string = "reminders"
 )
 
-const (
-	orderInvalid    sortOrder = "invalid"
-	orderAscending  sortOrder = "asc"
-	orderDescending sortOrder = "desc"
-)
 
-func (o sortOrder) String() string {
-	return string(o)
-}
-
-func getSortOrderFromString(s string) sortOrder {
-	if s == "asc" {
-		return orderAscending
-	}
-	if s == "desc" {
-		return orderDescending
-	}
-	return orderInvalid
-}
-
-func (sp *sortParam) validate() error {
-	if sp.orderBy != orderDescending && sp.orderBy != orderAscending {
-		return ErrInvalidSortOrder{OrderBy: sp.orderBy}
-	}
-
-	if sp.sortBy == taskPropertyPosition && sp.projectViewID == 0 {
-		return ErrMustHaveProjectViewToSortByPosition{}
-	}
-
-	return validateTaskFieldForSorting(sp.sortBy)
-}
-
-func validateTaskFieldForSorting(fieldName string) error {
+func ValidateTaskFieldForSorting(fieldName string) error {
 	switch fieldName {
 	case
 		taskPropertyID,

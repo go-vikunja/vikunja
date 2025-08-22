@@ -119,15 +119,16 @@ func getOrderByDBStatement(opts *taskSearchOptions) (orderby string, err error) 
 	// As a workaround to prevent this, we check for valid column names here prior to passing it to the db.
 	for i, param := range opts.sortby {
 		// Validate the params
-		if err := param.validate(); err != nil {
+		err := ValidateTaskFieldForSorting(param)
+		if err != nil {
 			return "", err
 		}
 
 		var prefix string
-		switch param.sortBy {
-		case taskPropertyPosition:
+		switch param {
+		case "position":
 			prefix = "task_positions."
-		case taskPropertyBucketID:
+		case "bucket_id":
 			prefix = "task_buckets."
 		default:
 			prefix = "tasks."
@@ -137,10 +138,10 @@ func getOrderByDBStatement(opts *taskSearchOptions) (orderby string, err error) 
 		// Because it does not have support for NULLS FIRST or NULLS LAST we work around this by
 		// first sorting for null (or not null) values and then the order we actually want to.
 		if db.Type() == schemas.MYSQL {
-			orderby += prefix + "`" + param.sortBy + "` IS NULL, "
+			orderby += prefix + "`" + param + "` IS NULL, "
 		}
 
-		orderby += prefix + "`" + param.sortBy + "` " + param.orderBy.String()
+		orderby += prefix + "`" + param + "`"
 
 		// Postgres and sqlite allow us to control how columns with null values are sorted.
 		// To make that consistent with the sort order we have and other dbms, we're adding a separate clause here.
@@ -339,8 +340,8 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	}
 
 	for _, param := range opts.sortby {
-		if param.sortBy == taskPropertyPosition {
-			query = query.Join("LEFT", "task_positions", "task_positions.task_id = tasks.id AND task_positions.project_view_id = ?", param.projectViewID)
+		if param == "position" {
+			query = query.Join("LEFT", "task_positions", "task_positions.task_id = tasks.id AND task_positions.project_view_id = ?", opts.projectViewID)
 			break
 		}
 	}
@@ -603,27 +604,28 @@ func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, 
 	var usedParams int
 	for _, param := range opts.sortby {
 
-		if opts.isSavedFilter && param.sortBy == taskPropertyPosition {
+		if opts.isSavedFilter && param == "position" {
 			continue
 		}
 
 		// Validate the params
-		if err := param.validate(); err != nil {
+		err := ValidateTaskFieldForSorting(param)
+		if err != nil {
 			return nil, totalCount, err
 		}
 
-		sortBy := param.sortBy
+		sortBy := param
 
 		// Typesense does not allow sorting by ID, so we sort by created timestamp instead
-		if param.sortBy == taskPropertyID {
-			sortBy = taskPropertyCreated
+		if param == "id" {
+			sortBy = "created"
 		}
 
-		if param.sortBy == taskPropertyPosition {
-			sortBy = "positions.view_" + strconv.FormatInt(param.projectViewID, 10)
+		if param == "position" {
+			sortBy = "positions.view_" + strconv.FormatInt(opts.projectViewID, 10)
 		}
 
-		sortbyFields = append(sortbyFields, sortBy+"(missing_values:last):"+param.orderBy.String())
+		sortbyFields = append(sortbyFields, sortBy+"(missing_values:last):asc")
 
 		if usedParams == 2 {
 			// Typesense supports up to 3 sorting parameters
@@ -698,8 +700,8 @@ func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, 
 		OrderBy(orderby)
 
 	for _, param := range opts.sortby {
-		if param.sortBy == taskPropertyPosition {
-			query = query.Join("LEFT", "task_positions", "task_positions.task_id = tasks.id AND task_positions.project_view_id = ?", param.projectViewID)
+		if param == "position" {
+			query = query.Join("LEFT", "task_positions", "task_positions.task_id = tasks.id AND task_positions.project_view_id = ?", opts.projectViewID)
 			break
 		}
 	}
