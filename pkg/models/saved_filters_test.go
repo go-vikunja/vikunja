@@ -182,7 +182,7 @@ func TestSavedFilter_Delete(t *testing.T) {
 	sf := &SavedFilter{
 		ID: 1,
 	}
-	err := sf.Delete(s, &user.User{ID: 1})
+	err := sf.Delete(s)
 	require.NoError(t, err)
 	err = s.Commit()
 	require.NoError(t, err)

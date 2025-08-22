@@ -443,7 +443,7 @@ func TestLabel_Update(t *testing.T) {
 			if !allowed && !tt.wantForbidden {
 				t.Errorf("Label.CanUpdate() forbidden, want %v", tt.wantForbidden)
 			}
-			if err := l.Update(s, tt.auth); (err != nil) != tt.wantErr {
+			if err := l.Update(s); (err != nil) != tt.wantErr {
 				t.Errorf("Label.Update() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if !tt.wantErr && !tt.wantForbidden {
@@ -529,7 +529,7 @@ func TestLabel_Delete(t *testing.T) {
 			if !allowed && !tt.wantForbidden {
 				t.Errorf("Label.CanDelete() forbidden, want %v", tt.wantForbidden)
 			}
-			if err := l.Delete(s, tt.auth); (err != nil) != tt.wantErr {
+			if err := l.Delete(s); (err != nil) != tt.wantErr {
 				t.Errorf("Label.Delete() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if !tt.wantErr && !tt.wantForbidden {
