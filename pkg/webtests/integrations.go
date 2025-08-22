@@ -303,6 +303,16 @@ func (th *testHelper) Login(t *testing.T, user *user.User) {
 	th.token = loginResponse["token"]
 }
 
+func (th *testHelper) Logout(t *testing.T) {
+	th.token = ""
+}
+
+func (th *testHelper) SetLinkShare(t *testing.T, ls *models.LinkSharing) {
+	token, err := auth.NewLinkShareJWTAuthtoken(ls)
+	require.NoError(t, err)
+	th.token = token
+}
+
 func (th *testHelper) Request(t *testing.T, method, path string, payload io.Reader) (*httptest.ResponseRecorder, error) {
 	req := httptest.NewRequest(method, path, payload)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)

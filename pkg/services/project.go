@@ -135,6 +135,14 @@ func (ps *ProjectService) Delete(s *xorm.Session, projectID int64, a web.Auth) e
 	return p.Delete(s, u)
 }
 
+func (ps *ProjectService) GetMaxPermission(s *xorm.Session, projectID int64, a web.Auth) (models.Permission, error) {
+	u, err := user.GetFromAuth(a)
+	if err != nil {
+		return models.PermissionUnknown, err
+	}
+	return models.GetMaxPermissionForProject(s, u, projectID)
+}
+
 func AddProjectLinks(c echo.Context, p *models.Project) {
 	p.Links = models.Links{
 		"self": {

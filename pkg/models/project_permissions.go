@@ -137,7 +137,8 @@ func (p *Project) CanUpdate(s *xorm.Session, u *user.User) (canUpdate bool, err 
 
 // CanDelete checks if the user can delete a project
 func (p *Project) CanDelete(s *xorm.Session, u *user.User) (bool, error) {
-	return p.IsAdmin(s, u)
+	can, _, err := p.checkPermission(s, u, PermissionAdmin)
+	return can, err
 }
 
 // CanCreate checks if the user can create a project
@@ -224,7 +225,6 @@ WITH RECURSIVE
         -- Base case: Start with the specified projects
         SELECT id,
                parent_project_id,
-               0  AS level,
                id AS original_project_id
         FROM projects
         WHERE id IN (`+utils.JoinInt64Slice(projectIDs, ", ")+`)
@@ -234,36 +234,24 @@ WITH RECURSIVE
         -- Recursive case: Traverse up the hierarchy
         SELECT p.id,
                p.parent_project_id,
-               ph.level + 1,
                ph.original_project_id
         FROM projects p
-                 INNER JOIN project_hierarchy ph ON p.id = ph.parent_project_id),
+                 INNER JOIN project_hierarchy ph ON p.id = ph.parent_project_id)
 
-    project_permissions AS (SELECT ph.id,
-                                   ph.original_project_id,
-                                   CASE
-                                       WHEN p.owner_id = ? THEN 2
-                                       WHEN COALESCE(ul.permission, 0) > COALESCE(tl.permission, 0) THEN ul.permission
-                                       ELSE COALESCE(tl.permission, 0)
-                                       END AS project_permission,
-            CASE
-                WHEN p.owner_id = ? THEN 1  -- Direct project ownership
-                ELSE ph.level + 1  -- Derived from parent project
-            END AS priority
-                            FROM project_hierarchy ph
-                                LEFT JOIN projects p
-                            ON ph.id = p.id
-                                LEFT JOIN users_projects ul ON ul.project_id = ph.id AND ul.user_id = ?
-                                LEFT JOIN team_projects tl ON tl.project_id = ph.id
-                                LEFT JOIN team_members tm ON tm.team_id = tl.team_id AND tm.user_id = ?
-                            WHERE p.owner_id = ? OR ul.user_id = ? OR tm.user_id = ?)
-
-SELECT ph.original_project_id AS id,
-       COALESCE(MAX(pp.project_permission), -1) AS max_permission
+SELECT ph.original_project_id                                                                   AS id,
+       COALESCE(MAX(CASE
+                        WHEN p.owner_id = ? THEN 2
+                        WHEN COALESCE(ul.permission, -1) > COALESCE(tl.permission, -1) THEN ul.permission
+                        ELSE COALESCE(tl.permission, -1)
+           END), -1) AS max_permission
 FROM project_hierarchy ph
-         LEFT JOIN (SELECT *,
-                           ROW_NUMBER() OVER (PARTITION BY original_project_id ORDER BY priority) AS rn
-                    FROM project_permissions) pp ON ph.id = pp.id AND pp.rn = 1
+         LEFT JOIN projects p ON ph.id = p.id
+         LEFT JOIN users_projects ul ON ul.project_id = ph.id AND ul.user_id = ?
+         LEFT JOIN team_projects tl ON tl.project_id = ph.id
+         LEFT JOIN team_members tm ON tm.team_id = tl.team_id AND tm.user_id = ?
+WHERE p.owner_id = ?
+   OR ul.user_id = ?
+   OR tm.user_id = ?
 GROUP BY ph.original_project_id`, args...).
 		Find(&projectPermissionMap)
 	return
