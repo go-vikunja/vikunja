@@ -86,6 +86,28 @@ func (ts *TaskService) Get(s *xorm.Session, taskID int64, a web.Auth) (*models.T
 }
 
 func (ts *TaskService) GetAll(s *xorm.Session, a web.Auth, search string, page, perPage int, options TaskOptions) (result interface{}, resultCount int, totalItems int64, err error) {
+	u, err := user.GetFromAuth(a)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	// Get all projects the user has access to
+	projects, _, err := models.GetAllProjectsForUser(s, u.ID, &models.ProjectOptions{})
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	if len(projects) == 0 {
+		return []*models.Task{}, 0, 0, nil
+	}
+
+	projectIDs := make([]int64, len(projects))
+	for i, p := range projects {
+		projectIDs[i] = p.ID
+	}
+
+	s = s.In("project_id", projectIDs)
+
 	s, err = ts.applyTaskOptions(s, options)
 	if err != nil {
 		return nil, 0, 0, err
@@ -93,6 +115,16 @@ func (ts *TaskService) GetAll(s *xorm.Session, a web.Auth, search string, page, 
 
 	var tasks []*models.Task
 	totalItems, err = s.FindAndCount(&tasks)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	taskMap := make(map[int64]*models.Task, len(tasks))
+	for _, t := range tasks {
+		taskMap[t.ID] = t
+	}
+
+	err = models.AddMoreInfoToTasks(s, taskMap, u, nil, nil)
 	if err != nil {
 		return nil, 0, 0, err
 	}

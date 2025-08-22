@@ -25,6 +25,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/services"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web/handler"
 	"github.com/labstack/echo/v4"
 )
@@ -36,6 +37,42 @@ func RegisterProjects(a *echo.Group) {
 	a.POST("/projects/:project", UpdateProject)
 	a.DELETE("/projects/:project", DeleteProject)
 	a.PUT("/projects", CreateProject)
+	a.GET("/projects/:project/projectusers", ListUsersForProject)
+
+	a.PUT("/projects/:project/shares", CreateShare)
+	a.GET("/projects/:project/shares", GetShares)
+	a.GET("/projects/:project/shares/:share", GetShare)
+	a.DELETE("/projects/:project/shares/:share", DeleteShare)
+
+	a.GET("/projects/:project/views/:view/buckets", GetBuckets)
+	a.PUT("/projects/:project/views/:view/buckets", CreateBucket)
+	a.POST("/projects/:project/views/:view/buckets/:bucket", UpdateBucket)
+	a.DELETE("/projects/:project/views/:view/buckets/:bucket", DeleteBucket)
+
+	a.PUT("/projects/:projectid/duplicate", DuplicateProject)
+
+	a.GET("/projects/:project/teams", GetProjectTeams)
+	a.PUT("/projects/:project/teams", AddProjectTeam)
+	a.DELETE("/projects/:project/teams/:team", DeleteProjectTeam)
+	a.POST("/projects/:project/teams/:team", UpdateProjectTeam)
+
+	a.GET("/projects/:project/users", GetProjectUsers)
+	a.PUT("/projects/:project/users", AddProjectUser)
+	a.DELETE("/projects/:project/users/:user", DeleteProjectUser)
+	a.POST("/projects/:project/users/:user", UpdateProjectUser)
+
+	a.GET("/projects/:project/webhooks", GetProjectWebhooks)
+	a.PUT("/projects/:project/webhooks", AddProjectWebhook)
+	a.DELETE("/projects/:project/webhooks/:webhook", DeleteProjectWebhook)
+	a.POST("/projects/:project/webhooks/:webhook", UpdateProjectWebhook)
+
+	a.GET("/projects/:project/views", GetProjectViews)
+	a.GET("/projects/:project/views/:view", GetProjectView)
+	a.PUT("/projects/:project/views", CreateProjectView)
+	a.DELETE("/projects/:project/views/:view", DeleteProjectView)
+	a.POST("/projects/:project/views/:view", UpdateProjectView)
+
+	a.POST("/projects/:project/views/:view/buckets/:bucket/tasks", UpdateTaskBucket)
 }
 
 func GetAllProjects(c echo.Context) error {
@@ -219,4 +256,164 @@ func CreateProject(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusCreated, p)
+}
+
+func ListUsersForProject(c echo.Context) error {
+	projectID, err := strconv.ParseInt(c.Param("project"), 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"message": "Invalid project ID",
+			"details": err.Error(),
+		})
+	}
+
+	project := models.Project{ID: projectID}
+	auth, err := auth.GetAuthFromClaims(c)
+	if err != nil {
+		return handler.HandleHTTPError(err)
+	}
+	u, err := user.GetFromAuth(auth)
+	if err != nil {
+		return handler.HandleHTTPError(err)
+	}
+
+	s := db.NewSession()
+	defer s.Close()
+
+	canRead, _, err := project.CanRead(s, u)
+	if err != nil {
+		_ = s.Rollback()
+		return handler.HandleHTTPError(err)
+	}
+	if !canRead {
+		return echo.ErrForbidden
+	}
+
+	currentUser, err := user.GetCurrentUser(c)
+	if err != nil {
+		_ = s.Rollback()
+		return handler.HandleHTTPError(err)
+	}
+
+	search := c.QueryParam("s")
+	users, err := models.ListUsersFromProject(s, &project, currentUser, search)
+	if err != nil {
+		_ = s.Rollback()
+		return handler.HandleHTTPError(err)
+	}
+
+	if err := s.Commit(); err != nil {
+		_ = s.Rollback()
+		return handler.HandleHTTPError(err)
+	}
+
+	return c.JSON(http.StatusOK, users)
+}
+
+func CreateShare(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func GetShares(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func GetShare(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func DeleteShare(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func GetBuckets(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func CreateBucket(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func UpdateBucket(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func DeleteBucket(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func DuplicateProject(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func GetProjectTeams(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func AddProjectTeam(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func DeleteProjectTeam(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func UpdateProjectTeam(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func GetProjectUsers(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func AddProjectUser(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func DeleteProjectUser(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func UpdateProjectUser(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func GetProjectWebhooks(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func AddProjectWebhook(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func DeleteProjectWebhook(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func UpdateProjectWebhook(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func GetProjectViews(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func GetProjectView(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func CreateProjectView(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func DeleteProjectView(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func UpdateProjectView(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func UpdateTaskBucket(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
 }

@@ -36,6 +36,28 @@ func RegisterTasks(a *echo.Group) {
 	a.POST("/tasks/:task", UpdateTask)
 	a.DELETE("/tasks/:task", DeleteTask)
 	a.GET("/tasks", GetAllTasks)
+
+	a.GET("/projects/:project/views/:view/tasks", GetTasksByProjectView)
+	a.GET("/tasks/all", GetAllTasks) // This already exists, but the old route was `/tasks/all`. The new one is `/tasks`. I'll add the old one back for compatibility.
+	a.POST("/tasks/:task/position", UpdateTaskPosition)
+	a.POST("/tasks/bulk", BulkUpdateTasks)
+	a.PUT("/tasks/:task/assignees", AddAssignee)
+	a.DELETE("/tasks/:task/assignees/:user", RemoveAssignee)
+	a.GET("/tasks/:task/assignees", GetAssignees)
+	a.POST("/tasks/:task/assignees/bulk", BulkAddAssignees)
+	a.PUT("/tasks/:task/labels", AddLabelToTask)
+	a.DELETE("/tasks/:task/labels/:label", RemoveLabelFromTask)
+	a.GET("/tasks/:task/labels", GetTaskLabels)
+	a.POST("/tasks/:task/labels/bulk", BulkAddLabelsToTask)
+	a.PUT("/tasks/:task/relations", AddTaskRelation)
+	a.DELETE("/tasks/:task/relations/:relationKind/:otherTask", DeleteTaskRelation)
+	a.GET("/tasks/:task/attachments", GetTaskAttachments)
+	a.DELETE("/tasks/:task/attachments/:attachment", DeleteTaskAttachment)
+	a.GET("/tasks/:task/comments", GetTaskComments)
+	a.PUT("/tasks/:task/comments", CreateTaskComment)
+	a.DELETE("/tasks/:task/comments/:commentid", DeleteTaskComment)
+	a.POST("/tasks/:task/comments/:commentid", UpdateTaskComment)
+	a.GET("/tasks/:task/comments/:commentid", GetTaskComment)
 }
 
 func GetTask(c echo.Context) error {
@@ -85,7 +107,7 @@ func GetAllTasksByProject(c echo.Context) error {
 	search := c.QueryParam("s")
 
 	ts := services.NewTaskService()
-	tasks, _, _, err := ts.GetByProject(s, projectID, auth, search, page, perPage)
+	tasks, _, _, err := ts.GetByProject(s, projectID, auth, search, page, perPage, services.TaskOptions{})
 	if err != nil {
 		return handler.HandleHTTPError(err)
 	}
@@ -113,7 +135,7 @@ func GetAllTasks(c echo.Context) error {
 	search := c.QueryParam("s")
 
 	ts := services.NewTaskService()
-	tasks, _, _, err := ts.GetAll(s, auth, search, page, perPage)
+	tasks, _, _, err := ts.GetAll(s, auth, search, page, perPage, services.TaskOptions{})
 	if err != nil {
 		return handler.HandleHTTPError(err)
 	}
@@ -219,4 +241,84 @@ func DeleteTask(c echo.Context) error {
 	}
 
 	return c.NoContent(http.StatusNoContent)
+}
+
+func GetTasksByProjectView(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func UpdateTaskPosition(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func BulkUpdateTasks(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func AddAssignee(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func RemoveAssignee(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func GetAssignees(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func BulkAddAssignees(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func AddLabelToTask(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func RemoveLabelFromTask(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func GetTaskLabels(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func BulkAddLabelsToTask(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func AddTaskRelation(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func DeleteTaskRelation(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func GetTaskAttachments(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func DeleteTaskAttachment(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func GetTaskComments(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func CreateTaskComment(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func DeleteTaskComment(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func UpdateTaskComment(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
+}
+
+func GetTaskComment(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "Not implemented")
 }
