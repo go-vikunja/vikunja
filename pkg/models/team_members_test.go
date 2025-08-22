@@ -103,7 +103,7 @@ func TestTeamMember_Delete(t *testing.T) {
 			TeamID:   1,
 			Username: "user1",
 		}
-		err := tm.Delete(s, &user.User{ID: 1})
+		err := tm.Delete(s)
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
@@ -116,8 +116,6 @@ func TestTeamMember_Delete(t *testing.T) {
 }
 
 func TestTeamMember_Update(t *testing.T) {
-	u := &user.User{ID: 1}
-
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -128,7 +126,7 @@ func TestTeamMember_Update(t *testing.T) {
 			Username: "user1",
 			Admin:    true,
 		}
-		err := tm.Update(s, u)
+		err := tm.Update(s)
 		require.NoError(t, err)
 		assert.False(t, tm.Admin) // Since this endpoint toggles the permission, we should get a false for admin back.
 		err = s.Commit()
@@ -152,7 +150,7 @@ func TestTeamMember_Update(t *testing.T) {
 			Username: "user1",
 			Admin:    true,
 		}
-		err := tm.Update(s, u)
+		err := tm.Update(s)
 		require.NoError(t, err)
 		assert.False(t, tm.Admin)
 		err = s.Commit()

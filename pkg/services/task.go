@@ -42,7 +42,7 @@ func (ts *TaskService) Get(s *xorm.Session, taskID int64, a web.Auth) (*models.T
 	}
 
 	t := &models.Task{ID: taskID}
-	can, err := t.CanRead(s, u)
+	can, _, err := t.CanRead(s, u)
 	if err != nil {
 		return nil, err
 	}
