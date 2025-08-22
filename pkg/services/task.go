@@ -35,6 +35,27 @@ func NewTaskService() *TaskService {
 	return &TaskService{}
 }
 
+func (ts *TaskService) Get(s *xorm.Session, taskID int64, a web.Auth) (*models.Task, error) {
+	u, err := user.GetFromAuth(a)
+	if err != nil {
+		return nil, err
+	}
+
+	t := &models.Task{ID: taskID}
+	can, err := t.CanRead(s, u)
+	if err != nil {
+		return nil, err
+	}
+	if !can {
+		return nil, echo.ErrForbidden
+	}
+
+	if err := t.ReadOne(s, u); err != nil {
+		return nil, err
+	}
+	return t, nil
+}
+
 func (ts *TaskService) GetAll(s *xorm.Session, a web.Auth, search string, page, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
 	u, err := user.GetFromAuth(a)
 	if err != nil {
@@ -85,6 +106,42 @@ func (ts *TaskService) Create(s *xorm.Session, t *models.Task, a web.Auth) (*mod
 		return nil, err
 	}
 	return t, nil
+}
+
+func (ts *TaskService) Update(s *xorm.Session, t *models.Task, a web.Auth) (*models.Task, error) {
+	u, err := user.GetFromAuth(a)
+	if err != nil {
+		return nil, err
+	}
+
+	can, err := t.CanUpdate(s, u)
+	if err != nil {
+		return nil, err
+	}
+	if !can {
+		return nil, echo.ErrForbidden
+	}
+
+	if err := t.Update(s, u); err != nil {
+		return nil, err
+	}
+	return t, nil
+}
+
+func (ts *TaskService) Delete(s *xorm.Session, taskID int64, a web.Auth) error {
+	u, err := user.GetFromAuth(a)
+	if err != nil {
+		return err
+	}
+	t := &models.Task{ID: taskID}
+	can, err := t.CanDelete(s, u)
+	if err != nil {
+		return err
+	}
+	if !can {
+		return echo.ErrForbidden
+	}
+	return t.Delete(s, u)
 }
 
 func AddTaskLinks(a web.Auth, t *models.Task) {
