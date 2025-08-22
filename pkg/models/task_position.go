@@ -120,17 +120,7 @@ func RecalculateTaskPositions(s *xorm.Session, view *ProjectView, u *user.User) 
 
 	opts := &taskSearchOptions{
 		projectViewID: view.ID,
-		sortby: []*sortParam{
-			{
-				projectViewID: view.ID,
-				sortBy:        taskPropertyPosition,
-				orderBy:       orderAscending,
-			},
-			{
-				sortBy:  taskPropertyID,
-				orderBy: orderAscending,
-			},
-		},
+		sortby:        []string{"position", "id"},
 	}
 
 	// Using the collection so that we get all tasks, even in cases where we're dealing with a saved filter underneath

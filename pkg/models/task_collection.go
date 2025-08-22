@@ -96,7 +96,7 @@ func validateTaskField(fieldName string) error {
 		return nil
 	}
 
-	return validateTaskFieldForSorting(fieldName)
+	return ValidateTaskFieldForSorting(fieldName)
 }
 
 func getTaskFilterOptsFromCollection(tf *TaskCollection, projectView *ProjectView) (opts *taskSearchOptions, err error) {
@@ -108,35 +108,8 @@ func getTaskFilterOptsFromCollection(tf *TaskCollection, projectView *ProjectVie
 		tf.OrderBy = append(tf.OrderBy, tf.OrderByArr...)
 	}
 
-	var sort = make([]*sortParam, 0, len(tf.SortBy))
-	for i, s := range tf.SortBy {
-		param := &sortParam{
-			sortBy:  s,
-			orderBy: orderAscending,
-		}
-		// This checks if tf.OrderBy has an entry with the same index as the current entry from tf.SortBy
-		// Taken from https://stackoverflow.com/a/27252199/10924593
-		if len(tf.OrderBy) > i {
-			param.orderBy = getSortOrderFromString(tf.OrderBy[i])
-		}
-
-		if s == taskPropertyPosition && projectView != nil && projectView.ID < 0 {
-			continue
-		}
-
-		if s == taskPropertyPosition && projectView != nil {
-			param.projectViewID = projectView.ID
-		}
-
-		// Param validation
-		if err := param.validate(); err != nil {
-			return nil, err
-		}
-		sort = append(sort, param)
-	}
-
 	opts = &taskSearchOptions{
-		sortby:             sort,
+		sortby:             tf.SortBy,
 		filterIncludeNulls: tf.FilterIncludeNulls,
 		filter:             tf.Filter,
 		filterTimezone:     tf.FilterTimezone,
@@ -372,17 +345,13 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, u *user.User, search string, 
 	if view != nil {
 		var hasOrderByPosition bool
 		for _, param := range opts.sortby {
-			if param.sortBy == taskPropertyPosition {
+			if param == "position" {
 				hasOrderByPosition = true
 				break
 			}
 		}
 		if !hasOrderByPosition {
-			opts.sortby = append(opts.sortby, &sortParam{
-				projectViewID: view.ID,
-				sortBy:        taskPropertyPosition,
-				orderBy:       orderAscending,
-			})
+			opts.sortby = append(opts.sortby, "position")
 		}
 	}
 
