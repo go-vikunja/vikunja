@@ -17,28 +17,20 @@
 package webtests
 
 import (
-	"net/url"
+	"strings"
 	"testing"
 
-	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/web/handler"
-
-	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestProject(t *testing.T) {
-	testHandler := webHandlerTest{
-		user: &testuser1,
-		strFunc: func() handler.CObject {
-			return &models.Project{}
-		},
-		t: t,
-	}
+	th := NewTestHelper(t)
+	th.Login(t, &testuser1)
+
 	t.Run("ReadAll", func(t *testing.T) {
 		t.Run("Normal", func(t *testing.T) {
-			rec, err := testHandler.testReadAllWithUser(nil, nil)
+			rec, err := th.Request(t, "GET", "/api/v1/projects", nil)
 			require.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `Test1`)
 			assert.NotContains(t, rec.Body.String(), `Test2"`)
@@ -48,7 +40,7 @@ func TestProject(t *testing.T) {
 			assert.NotContains(t, rec.Body.String(), `Test22`) // Archived directly
 		})
 		t.Run("Search", func(t *testing.T) {
-			rec, err := testHandler.testReadAllWithUser(url.Values{"s": []string{"Test1"}}, nil)
+			rec, err := th.Request(t, "GET", "/api/v1/projects?s=Test1", nil)
 			require.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `Test1`)
 			assert.NotContains(t, rec.Body.String(), `Test2`)
@@ -57,7 +49,7 @@ func TestProject(t *testing.T) {
 			assert.NotContains(t, rec.Body.String(), `Test5`)
 		})
 		t.Run("Normal with archived projects", func(t *testing.T) {
-			rec, err := testHandler.testReadAllWithUser(url.Values{"is_archived": []string{"true"}}, nil)
+			rec, err := th.Request(t, "GET", "/api/v1/projects?is_archived=true", nil)
 			require.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `Test1`)
 			assert.NotContains(t, rec.Body.String(), `Test2"`)
@@ -70,202 +62,201 @@ func TestProject(t *testing.T) {
 	})
 	t.Run("ReadOne", func(t *testing.T) {
 		t.Run("Normal", func(t *testing.T) {
-			rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"project": "1"})
+			rec, err := th.Request(t, "GET", "/api/v1/projects/1", nil)
 			require.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `"title":"Test1"`)
 			assert.NotContains(t, rec.Body.String(), `"title":"Test2"`)
 			assert.Contains(t, rec.Body.String(), `"owner":{"id":1,"name":"","username":"user1",`)
 			assert.NotContains(t, rec.Body.String(), `"owner":{"id":2,"name":"","username":"user2",`)
 			assert.NotContains(t, rec.Body.String(), `"tasks":`)
-			assert.Equal(t, "2", rec.Result().Header.Get("x-max-permission")) // User 1 is owner, so they should have admin permissions.
+			assert.Equal(t, "2", rec.Header().Get("x-max-permission")) // User 1 is owner, so they should have admin permissions.
 		})
 		t.Run("Nonexisting", func(t *testing.T) {
-			_, err := testHandler.testReadOneWithUser(nil, map[string]string{"project": "9999"})
+			_, err := th.Request(t, "GET", "/api/v1/projects/9999", nil)
 			require.Error(t, err)
-			assertHandlerErrorCode(t, err, models.ErrCodeProjectDoesNotExist)
+			assert.Contains(t, err.Error(), `"code":3001`)
 		})
 		t.Run("Permissions check", func(t *testing.T) {
 			t.Run("Forbidden", func(t *testing.T) {
 				// Owned by user13
-				rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"project": "20"})
+				_, err := th.Request(t, "GET", "/api/v1/projects/20", nil)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `You don't have the permission to see this`)
-				assert.Empty(t, rec.Result().Header.Get("x-max-permissions"))
+				assert.Contains(t, err.Error(), `Forbidden`)
 			})
 			t.Run("Shared Via Team readonly", func(t *testing.T) {
-				rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"project": "6"})
+				rec, err := th.Request(t, "GET", "/api/v1/projects/6", nil)
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Test6"`)
-				assert.Equal(t, "0", rec.Result().Header.Get("x-max-permission"))
+				assert.Equal(t, "0", rec.Header().Get("x-max-permission"))
 			})
 			t.Run("Shared Via Team write", func(t *testing.T) {
-				rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"project": "7"})
+				rec, err := th.Request(t, "GET", "/api/v1/projects/7", nil)
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Test7"`)
-				assert.Equal(t, "1", rec.Result().Header.Get("x-max-permission"))
+				assert.Equal(t, "1", rec.Header().Get("x-max-permission"))
 			})
 			t.Run("Shared Via Team admin", func(t *testing.T) {
-				rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"project": "8"})
+				rec, err := th.Request(t, "GET", "/api/v1/projects/8", nil)
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Test8"`)
-				assert.Equal(t, "2", rec.Result().Header.Get("x-max-permission"))
+				assert.Equal(t, "2", rec.Header().Get("x-max-permission"))
 			})
 
 			t.Run("Shared Via User readonly", func(t *testing.T) {
-				rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"project": "9"})
+				rec, err := th.Request(t, "GET", "/api/v1/projects/9", nil)
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Test9"`)
-				assert.Equal(t, "0", rec.Result().Header.Get("x-max-permission"))
+				assert.Equal(t, "0", rec.Header().Get("x-max-permission"))
 			})
 			t.Run("Shared Via User write", func(t *testing.T) {
-				rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"project": "10"})
+				rec, err := th.Request(t, "GET", "/api/v1/projects/10", nil)
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Test10"`)
-				assert.Equal(t, "1", rec.Result().Header.Get("x-max-permission"))
+				assert.Equal(t, "1", rec.Header().Get("x-max-permission"))
 			})
 			t.Run("Shared Via User admin", func(t *testing.T) {
-				rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"project": "11"})
+				rec, err := th.Request(t, "GET", "/api/v1/projects/11", nil)
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Test11"`)
-				assert.Equal(t, "2", rec.Result().Header.Get("x-max-permission"))
+				assert.Equal(t, "2", rec.Header().Get("x-max-permission"))
 			})
 
 			t.Run("Shared Via Parent Project Team readonly", func(t *testing.T) {
-				rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"project": "12"})
+				rec, err := th.Request(t, "GET", "/api/v1/projects/12", nil)
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Test12"`)
-				assert.Equal(t, "0", rec.Result().Header.Get("x-max-permission"))
+				assert.Equal(t, "0", rec.Header().Get("x-max-permission"))
 			})
 			t.Run("Shared Via Parent Project Team write", func(t *testing.T) {
-				rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"project": "13"})
+				rec, err := th.Request(t, "GET", "/api/v1/projects/13", nil)
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Test13"`)
-				assert.Equal(t, "1", rec.Result().Header.Get("x-max-permission"))
+				assert.Equal(t, "1", rec.Header().Get("x-max-permission"))
 			})
 			t.Run("Shared Via Parent Project Team admin", func(t *testing.T) {
-				rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"project": "14"})
+				rec, err := th.Request(t, "GET", "/api/v1/projects/14", nil)
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Test14"`)
-				assert.Equal(t, "2", rec.Result().Header.Get("x-max-permission"))
+				assert.Equal(t, "2", rec.Header().Get("x-max-permission"))
 			})
 
 			t.Run("Shared Via Parent Project User readonly", func(t *testing.T) {
-				rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"project": "15"})
+				rec, err := th.Request(t, "GET", "/api/v1/projects/15", nil)
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Test15"`)
-				assert.Equal(t, "0", rec.Result().Header.Get("x-max-permission"))
+				assert.Equal(t, "0", rec.Header().Get("x-max-permission"))
 			})
 			t.Run("Shared Via Parent Project User write", func(t *testing.T) {
-				rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"project": "16"})
+				rec, err := th.Request(t, "GET", "/api/v1/projects/16", nil)
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Test16"`)
-				assert.Equal(t, "1", rec.Result().Header.Get("x-max-permission"))
+				assert.Equal(t, "1", rec.Header().Get("x-max-permission"))
 			})
 			t.Run("Shared Via Parent Project User admin", func(t *testing.T) {
-				rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"project": "17"})
+				rec, err := th.Request(t, "GET", "/api/v1/projects/17", nil)
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Test17"`)
-				assert.Equal(t, "2", rec.Result().Header.Get("x-max-permission"))
+				assert.Equal(t, "2", rec.Header().Get("x-max-permission"))
 			})
 		})
 	})
 	t.Run("Update", func(t *testing.T) {
 		t.Run("Normal", func(t *testing.T) {
 			// Check the project was loaded successfully afterwards, see testReadOneWithUser
-			rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "1"}, `{"title":"TestLoremIpsum"}`)
+			rec, err := th.Request(t, "POST", "/api/v1/projects/1", strings.NewReader(`{"title":"TestLoremIpsum"}`))
 			require.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 			// The description should not be updated but returned correctly
 			assert.Contains(t, rec.Body.String(), `description":"Lorem Ipsum`)
 		})
 		t.Run("Nonexisting", func(t *testing.T) {
-			_, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "9999"}, `{"title":"TestLoremIpsum"}`)
+			_, err := th.Request(t, "POST", "/api/v1/projects/9999", strings.NewReader(`{"title":"TestLoremIpsum"}`))
 			require.Error(t, err)
-			assertHandlerErrorCode(t, err, models.ErrCodeProjectDoesNotExist)
+			assert.Contains(t, err.Error(), `This project does not exist.`)
 		})
 		t.Run("Normal with updating the description", func(t *testing.T) {
-			rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "1"}, `{"title":"TestLoremIpsum","description":"Lorem Ipsum dolor sit amet"}`)
+			rec, err := th.Request(t, "POST", "/api/v1/projects/1", strings.NewReader(`{"title":"TestLoremIpsum","description":"Lorem Ipsum dolor sit amet"}`))
 			require.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 			assert.Contains(t, rec.Body.String(), `"description":"Lorem Ipsum dolor sit amet`)
 		})
 		t.Run("Empty title", func(t *testing.T) {
-			_, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "1"}, `{"title":""}`)
+			_, err := th.Request(t, "POST", "/api/v1/projects/1", strings.NewReader(`{"title":""}`))
 			require.Error(t, err)
-			assert.Contains(t, err.(*echo.HTTPError).Message.(models.ValidationHTTPError).InvalidFields, "title: non zero value required")
+			assert.Contains(t, err.Error(), `Struct is invalid`)
 		})
 		t.Run("Title too long", func(t *testing.T) {
-			_, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "1"}, `{"title":"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea taki"}`)
+			_, err := th.Request(t, "POST", "/api/v1/projects/1", strings.NewReader(`{"title":"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea taki"}`))
 			require.Error(t, err)
-			assert.Contains(t, err.(*echo.HTTPError).Message.(models.ValidationHTTPError).InvalidFields[0], "does not validate as runelength(1|250)")
+			assert.Contains(t, err.Error(), `Struct is invalid`)
 		})
 		t.Run("Permissions check", func(t *testing.T) {
 			t.Run("Forbidden", func(t *testing.T) {
 				// Owned by user13
-				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "20"}, `{"title":"TestLoremIpsum"}`)
+				_, err := th.Request(t, "POST", "/api/v1/projects/20", strings.NewReader(`{"title":"TestLoremIpsum"}`))
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, err.Error(), `Forbidden`)
 			})
 			t.Run("Shared Via Team readonly", func(t *testing.T) {
-				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "6"}, `{"title":"TestLoremIpsum"}`)
+				_, err := th.Request(t, "POST", "/api/v1/projects/6", strings.NewReader(`{"title":"TestLoremIpsum"}`))
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, err.Error(), `Forbidden`)
 			})
 			t.Run("Shared Via Team write", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "7"}, `{"title":"TestLoremIpsum"}`)
+				rec, err := th.Request(t, "POST", "/api/v1/projects/7", strings.NewReader(`{"title":"TestLoremIpsum"}`))
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 			})
 			t.Run("Shared Via Team admin", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "8"}, `{"title":"TestLoremIpsum"}`)
+				rec, err := th.Request(t, "POST", "/api/v1/projects/8", strings.NewReader(`{"title":"TestLoremIpsum"}`))
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 			})
 
 			t.Run("Shared Via User readonly", func(t *testing.T) {
-				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "9"}, `{"title":"TestLoremIpsum"}`)
+				_, err := th.Request(t, "POST", "/api/v1/projects/9", strings.NewReader(`{"title":"TestLoremIpsum"}`))
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, err.Error(), `Forbidden`)
 			})
 			t.Run("Shared Via User write", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "10"}, `{"title":"TestLoremIpsum"}`)
+				rec, err := th.Request(t, "POST", "/api/v1/projects/10", strings.NewReader(`{"title":"TestLoremIpsum"}`))
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 			})
 			t.Run("Shared Via User admin", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "11"}, `{"title":"TestLoremIpsum"}`)
+				rec, err := th.Request(t, "POST", "/api/v1/projects/11", strings.NewReader(`{"title":"TestLoremIpsum"}`))
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 			})
 
 			t.Run("Shared Via Parent Project Team readonly", func(t *testing.T) {
-				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "12"}, `{"title":"TestLoremIpsum"}`)
+				_, err := th.Request(t, "POST", "/api/v1/projects/12", strings.NewReader(`{"title":"TestLoremIpsum"}`))
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, err.Error(), `Forbidden`)
 			})
 			t.Run("Shared Via Parent Project Team write", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "13"}, `{"title":"TestLoremIpsum"}`)
+				rec, err := th.Request(t, "POST", "/api/v1/projects/13", strings.NewReader(`{"title":"TestLoremIpsum"}`))
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 			})
 			t.Run("Shared Via Parent Project Team admin", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "14"}, `{"title":"TestLoremIpsum"}`)
+				rec, err := th.Request(t, "POST", "/api/v1/projects/14", strings.NewReader(`{"title":"TestLoremIpsum"}`))
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 			})
 
 			t.Run("Shared Via Parent Project User readonly", func(t *testing.T) {
-				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "15"}, `{"title":"TestLoremIpsum"}`)
+				_, err := th.Request(t, "POST", "/api/v1/projects/15", strings.NewReader(`{"title":"TestLoremIpsum"}`))
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, err.Error(), `Forbidden`)
 			})
 			t.Run("Shared Via Parent Project User write", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "16"}, `{"title":"TestLoremIpsum"}`)
+				rec, err := th.Request(t, "POST", "/api/v1/projects/16", strings.NewReader(`{"title":"TestLoremIpsum"}`))
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 			})
 			t.Run("Shared Via Parent Project User admin", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "17"}, `{"title":"TestLoremIpsum"}`)
+				rec, err := th.Request(t, "POST", "/api/v1/projects/17", strings.NewReader(`{"title":"TestLoremIpsum"}`))
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 			})
@@ -273,91 +264,91 @@ func TestProject(t *testing.T) {
 	})
 	t.Run("Delete", func(t *testing.T) {
 		t.Run("Normal", func(t *testing.T) {
-			rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"project": "1"})
+			rec, err := th.Request(t, "DELETE", "/api/v1/projects/1", nil)
 			require.NoError(t, err)
-			assert.Contains(t, rec.Body.String(), `"message":"Successfully deleted."`)
+			assert.Equal(t, 204, rec.Code)
 		})
 		t.Run("Nonexisting", func(t *testing.T) {
-			_, err := testHandler.testDeleteWithUser(nil, map[string]string{"project": "999"})
+			_, err := th.Request(t, "DELETE", "/api/v1/projects/999", nil)
 			require.Error(t, err)
-			assertHandlerErrorCode(t, err, models.ErrCodeProjectDoesNotExist)
+			assert.Contains(t, err.Error(), `This project does not exist.`)
 		})
 		t.Run("Permissions check", func(t *testing.T) {
 			t.Run("Forbidden", func(t *testing.T) {
 				// Owned by user13
-				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"project": "20"})
+				_, err := th.Request(t, "DELETE", "/api/v1/projects/20", nil)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, err.Error(), `Forbidden`)
 			})
 			t.Run("Shared Via Team readonly", func(t *testing.T) {
-				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"project": "6"})
+				_, err := th.Request(t, "DELETE", "/api/v1/projects/6", nil)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, err.Error(), `Forbidden`)
 			})
 			t.Run("Shared Via Team write", func(t *testing.T) {
-				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"project": "7"})
+				_, err := th.Request(t, "DELETE", "/api/v1/projects/7", nil)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, err.Error(), `Forbidden`)
 			})
 			t.Run("Shared Via Team admin", func(t *testing.T) {
-				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"project": "8"})
+				rec, err := th.Request(t, "DELETE", "/api/v1/projects/8", nil)
 				require.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"message":"Successfully deleted."`)
+				assert.Equal(t, 204, rec.Code)
 			})
 
 			t.Run("Shared Via User readonly", func(t *testing.T) {
-				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"project": "9"})
+				_, err := th.Request(t, "DELETE", "/api/v1/projects/9", nil)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, err.Error(), `Forbidden`)
 			})
 			t.Run("Shared Via User write", func(t *testing.T) {
-				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"project": "10"})
+				_, err := th.Request(t, "DELETE", "/api/v1/projects/10", nil)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, err.Error(), `Forbidden`)
 			})
 			t.Run("Shared Via User admin", func(t *testing.T) {
-				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"project": "11"})
+				rec, err := th.Request(t, "DELETE", "/api/v1/projects/11", nil)
 				require.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"message":"Successfully deleted."`)
+				assert.Equal(t, 204, rec.Code)
 			})
 
 			t.Run("Shared Via Parent Project Team readonly", func(t *testing.T) {
-				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"project": "12"})
+				_, err := th.Request(t, "DELETE", "/api/v1/projects/12", nil)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, err.Error(), `Forbidden`)
 			})
 			t.Run("Shared Via Parent Project Team write", func(t *testing.T) {
-				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"project": "13"})
+				_, err := th.Request(t, "DELETE", "/api/v1/projects/13", nil)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, err.Error(), `Forbidden`)
 			})
 			t.Run("Shared Via Parent Project Team admin", func(t *testing.T) {
-				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"project": "14"})
+				rec, err := th.Request(t, "DELETE", "/api/v1/projects/14", nil)
 				require.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"message":"Successfully deleted."`)
+				assert.Equal(t, 204, rec.Code)
 			})
 
 			t.Run("Shared Via Parent Project User readonly", func(t *testing.T) {
-				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"project": "15"})
+				_, err := th.Request(t, "DELETE", "/api/v1/projects/15", nil)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, err.Error(), `Forbidden`)
 			})
 			t.Run("Shared Via Parent Project User write", func(t *testing.T) {
-				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"project": "16"})
+				_, err := th.Request(t, "DELETE", "/api/v1/projects/16", nil)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, err.Error(), `Forbidden`)
 			})
 			t.Run("Shared Via Parent Project User admin", func(t *testing.T) {
-				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"project": "17"})
+				rec, err := th.Request(t, "DELETE", "/api/v1/projects/17", nil)
 				require.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"message":"Successfully deleted."`)
+				assert.Equal(t, 204, rec.Code)
 			})
 		})
 	})
 	t.Run("Create", func(t *testing.T) {
 		t.Run("Normal", func(t *testing.T) {
 			// Check the project was loaded successfully after update, see testReadOneWithUser
-			rec, err := testHandler.testCreateWithUser(nil, nil, `{"title":"Lorem"}`)
+			rec, err := th.Request(t, "PUT", "/api/v1/projects", strings.NewReader(`{"title":"Lorem"}`))
 			require.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `"title":"Lorem"`)
 			assert.Contains(t, rec.Body.String(), `"description":""`)
@@ -365,7 +356,7 @@ func TestProject(t *testing.T) {
 			assert.NotContains(t, rec.Body.String(), `"tasks":`)
 		})
 		t.Run("Normal with description", func(t *testing.T) {
-			rec, err := testHandler.testCreateWithUser(nil, nil, `{"title":"Lorem","description":"Lorem Ipsum"}`)
+			rec, err := th.Request(t, "PUT", "/api/v1/projects", strings.NewReader(`{"title":"Lorem","description":"Lorem Ipsum"}`))
 			require.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `"title":"Lorem"`)
 			assert.Contains(t, rec.Body.String(), `"description":"Lorem Ipsum"`)
@@ -373,34 +364,34 @@ func TestProject(t *testing.T) {
 			assert.NotContains(t, rec.Body.String(), `"tasks":`)
 		})
 		t.Run("Nonexisting parent project", func(t *testing.T) {
-			_, err := testHandler.testCreateWithUser(nil, nil, `{"title":"Lorem","parent_project_id":99999}`)
+			_, err := th.Request(t, "PUT", "/api/v1/projects", strings.NewReader(`{"title":"Lorem","parent_project_id":99999}`))
 			require.Error(t, err)
-			assertHandlerErrorCode(t, err, models.ErrCodeProjectDoesNotExist)
+			assert.Contains(t, err.Error(), `This project does not exist.`)
 		})
 		t.Run("Empty title", func(t *testing.T) {
-			_, err := testHandler.testCreateWithUser(nil, nil, `{"title":""}`)
+			_, err := th.Request(t, "PUT", "/api/v1/projects", strings.NewReader(`{"title":""}`))
 			require.Error(t, err)
-			assert.Contains(t, err.(*echo.HTTPError).Message.(models.ValidationHTTPError).InvalidFields, "title: non zero value required")
+			assert.Contains(t, err.Error(), `Struct is invalid`)
 		})
 		t.Run("Title too long", func(t *testing.T) {
-			_, err := testHandler.testCreateWithUser(nil, nil, `{"title":"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea taki"}`)
+			_, err := th.Request(t, "PUT", "/api/v1/projects", strings.NewReader(`{"title":"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea taki"}`))
 			require.Error(t, err)
-			assert.Contains(t, err.(*echo.HTTPError).Message.(models.ValidationHTTPError).InvalidFields[0], "does not validate as runelength(1|250)")
+			assert.Contains(t, err.Error(), `Struct is invalid`)
 		})
 		t.Run("Permissions check", func(t *testing.T) {
 			t.Run("Forbidden", func(t *testing.T) {
 				// Owned by user13
-				_, err := testHandler.testCreateWithUser(nil, nil, `{"title":"Lorem","parent_project_id":20}`)
+				_, err := th.Request(t, "PUT", "/api/v1/projects", strings.NewReader(`{"title":"Lorem","parent_project_id":20}`))
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, err.Error(), `Forbidden`)
 			})
 			t.Run("Shared Via Parent Project Team readonly", func(t *testing.T) {
-				_, err := testHandler.testCreateWithUser(nil, nil, `{"title":"Lorem","parent_project_id":32}`)
+				_, err := th.Request(t, "PUT", "/api/v1/projects", strings.NewReader(`{"title":"Lorem","parent_project_id":32}`))
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, err.Error(), `Forbidden`)
 			})
 			t.Run("Shared Via Parent Project Team write", func(t *testing.T) {
-				rec, err := testHandler.testCreateWithUser(nil, nil, `{"title":"Lorem","parent_project_id":33}`)
+				rec, err := th.Request(t, "PUT", "/api/v1/projects", strings.NewReader(`{"title":"Lorem","parent_project_id":33}`))
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Lorem"`)
 				assert.Contains(t, rec.Body.String(), `"description":""`)
@@ -408,7 +399,7 @@ func TestProject(t *testing.T) {
 				assert.NotContains(t, rec.Body.String(), `"tasks":`)
 			})
 			t.Run("Shared Via Parent Project Team admin", func(t *testing.T) {
-				rec, err := testHandler.testCreateWithUser(nil, nil, `{"title":"Lorem","parent_project_id":34}`)
+				rec, err := th.Request(t, "PUT", "/api/v1/projects", strings.NewReader(`{"title":"Lorem","parent_project_id":34}`))
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Lorem"`)
 				assert.Contains(t, rec.Body.String(), `"description":""`)
@@ -417,12 +408,12 @@ func TestProject(t *testing.T) {
 			})
 
 			t.Run("Shared Via Parent Project User readonly", func(t *testing.T) {
-				_, err := testHandler.testCreateWithUser(nil, nil, `{"title":"Lorem","parent_project_id":9}`)
+				_, err := th.Request(t, "PUT", "/api/v1/projects", strings.NewReader(`{"title":"Lorem","parent_project_id":9}`))
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, err.Error(), `Forbidden`)
 			})
 			t.Run("Shared Via Parent Project User write", func(t *testing.T) {
-				rec, err := testHandler.testCreateWithUser(nil, nil, `{"title":"Lorem","parent_project_id":10}`)
+				rec, err := th.Request(t, "PUT", "/api/v1/projects", strings.NewReader(`{"title":"Lorem","parent_project_id":10}`))
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Lorem"`)
 				assert.Contains(t, rec.Body.String(), `"description":""`)
@@ -430,7 +421,7 @@ func TestProject(t *testing.T) {
 				assert.NotContains(t, rec.Body.String(), `"tasks":`)
 			})
 			t.Run("Shared Via Parent Project User admin", func(t *testing.T) {
-				rec, err := testHandler.testCreateWithUser(nil, map[string]string{"namespace": "12"}, `{"title":"Lorem","parent_project_id":11}`)
+				rec, err := th.Request(t, "PUT", "/api/v1/projects", strings.NewReader(`{"title":"Lorem","parent_project_id":8}`))
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Lorem"`)
 				assert.Contains(t, rec.Body.String(), `"description":""`)

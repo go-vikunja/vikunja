@@ -79,7 +79,7 @@ func (pu *ProjectUsers) Get(c echo.Context) error {
 
 	if users, ok := users.([]*models.UserWithPermission); ok {
 		for _, u := range users {
-			u.User.Links = map[string]interface{}{"self": map[string]string{"href": "/api/v2/users/" + strconv.FormatInt(u.User.ID, 10), "method": "GET"}}
+			u.Links = models.Links{"self": {HREF: "/api/v2/users/" + strconv.FormatInt(u.User.ID, 10), Method: "GET"}}
 		}
 	}
 

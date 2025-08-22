@@ -30,7 +30,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web"
-
+	"github.com/labstack/echo/v4"
 	"xorm.io/builder"
 	"xorm.io/xorm"
 )
@@ -306,6 +306,21 @@ func GetProjectSimpleByID(s *xorm.Session, projectID int64) (project *Project, e
 	return
 }
 
+func GetMaxPermissionForProject(s *xorm.Session, u *user.User, projectID int64) (Permission, error) {
+	if GetSavedFilterIDFromProjectID(projectID) > 0 {
+		return PermissionAdmin, nil
+	}
+	permissions, err := checkPermissionsForProjects(s, u, []int64{projectID})
+	if err != nil {
+		return PermissionUnknown, err
+	}
+	permission, has := permissions[projectID]
+	if has {
+		return permission.MaxPermission, nil
+	}
+	return PermissionUnknown, nil
+}
+
 func getProjectSimple(s *xorm.Session, cond builder.Cond) (project *Project, exists bool, err error) {
 	project = &Project{}
 	exists, err = s.
@@ -531,21 +546,6 @@ func getRawProjectsForUser(s *xorm.Session, opts *ProjectOptions) (projects []*P
 		return
 	}
 
-	favoriteCount, err := s.
-		Where(builder.And(
-			builder.Eq{"user_id": opts.User.ID},
-			builder.Eq{"kind": FavoriteKindTask},
-		)).
-		Count(&Favorite{})
-	if err != nil {
-		return
-	}
-
-	if favoriteCount > 0 {
-		favoritesProject := &Project{}
-		*favoritesProject = FavoritesPseudoProject
-		allProjects = append(allProjects, favoritesProject)
-	}
 
 	if len(allProjects) == 0 {
 		return nil, 0, totalItems, nil
@@ -809,6 +809,15 @@ func checkProjectBeforeUpdateOrDelete(s *xorm.Session, project *Project) (err er
 }
 
 func CreateProject(s *xorm.Session, project *Project, u *user.User, createBacklogBucket bool, createDefaultViews bool) (err error) {
+	if project.ParentProjectID != 0 {
+		can, err := (&Project{ID: project.ParentProjectID}).CanUpdate(s, u)
+		if err != nil {
+			return err
+		}
+		if !can {
+			return echo.ErrForbidden
+		}
+	}
 	err = project.CheckIsArchived(s)
 	if err != nil {
 		return err

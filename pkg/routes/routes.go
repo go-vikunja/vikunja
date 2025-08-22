@@ -241,7 +241,6 @@ func registerAPIRoutesV2(a *echo.Group) {
 }
 
 func registerAPIRoutes(a *echo.Group) {
-
 	// This is the group with no auth
 	// It is its own group to be able to rate limit this based on different heuristics
 	n := a.Group("")
@@ -318,6 +317,8 @@ func registerAPIRoutes(a *echo.Group) {
 
 	// Middleware to collect metrics
 	setupMetricsMiddleware(a)
+
+	apiv1.RegisterProjects(a)
 
 	a.GET("/token/test", apiv1.TestToken)
 	a.POST("/token/test", apiv1.CheckToken)

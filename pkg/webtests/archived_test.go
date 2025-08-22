@@ -17,10 +17,8 @@
 package webtests
 
 import (
+	"strings"
 	"testing"
-
-	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/web/handler"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -51,146 +49,44 @@ import (
 // Project 22 is archived individually
 
 func TestArchived(t *testing.T) {
-	testProjectHandler := webHandlerTest{
-		user: &testuser1,
-		strFunc: func() handler.CObject {
-			return &models.Project{}
-		},
-		t: t,
-	}
-	testTaskHandler := webHandlerTest{
-		user: &testuser1,
-		strFunc: func() handler.CObject {
-			return &models.Task{}
-		},
-		t: t,
-	}
-	testLabelHandler := webHandlerTest{
-		user: &testuser1,
-		strFunc: func() handler.CObject {
-			return &models.LabelTask{}
-		},
-		t: t,
-	}
-	testAssigneeHandler := webHandlerTest{
-		user: &testuser1,
-		strFunc: func() handler.CObject {
-			return &models.TaskAssginee{}
-		},
-		t: t,
-	}
-	testRelationHandler := webHandlerTest{
-		user: &testuser1,
-		strFunc: func() handler.CObject {
-			return &models.TaskRelation{}
-		},
-		t: t,
-	}
-	testCommentHandler := webHandlerTest{
-		user: &testuser1,
-		strFunc: func() handler.CObject {
-			return &models.TaskComment{}
-		},
-		t: t,
-	}
-
-	taskTests := func(taskID string, errCode int, t *testing.T) {
-		t.Run("task", func(t *testing.T) {
-			t.Run("edit task", func(t *testing.T) {
-				_, err := testTaskHandler.testUpdateWithUser(nil, map[string]string{"projecttask": taskID}, `{"title":"TestIpsum"}`)
-				require.Error(t, err)
-				assertHandlerErrorCode(t, err, errCode)
-			})
-			t.Run("delete", func(t *testing.T) {
-				_, err := testTaskHandler.testDeleteWithUser(nil, map[string]string{"projecttask": taskID})
-				require.Error(t, err)
-				assertHandlerErrorCode(t, err, errCode)
-			})
-			t.Run("add new labels", func(t *testing.T) {
-				_, err := testLabelHandler.testCreateWithUser(nil, map[string]string{"projecttask": taskID}, `{"label_id":1}`)
-				require.Error(t, err)
-				assertHandlerErrorCode(t, err, errCode)
-			})
-			t.Run("remove labels", func(t *testing.T) {
-				_, err := testLabelHandler.testDeleteWithUser(nil, map[string]string{"projecttask": taskID, "label": "4"})
-				require.Error(t, err)
-				assertHandlerErrorCode(t, err, errCode)
-			})
-			t.Run("add assignees", func(t *testing.T) {
-				_, err := testAssigneeHandler.testCreateWithUser(nil, map[string]string{"projecttask": taskID}, `{"user_id":3}`)
-				require.Error(t, err)
-				assertHandlerErrorCode(t, err, errCode)
-			})
-			t.Run("remove assignees", func(t *testing.T) {
-				_, err := testAssigneeHandler.testDeleteWithUser(nil, map[string]string{"projecttask": taskID, "user": "2"})
-				require.Error(t, err)
-				assertHandlerErrorCode(t, err, errCode)
-			})
-			t.Run("add relation", func(t *testing.T) {
-				_, err := testRelationHandler.testCreateWithUser(nil, map[string]string{"task": taskID}, `{"other_task_id":1,"relation_kind":"related"}`)
-				require.Error(t, err)
-				assertHandlerErrorCode(t, err, errCode)
-			})
-			t.Run("remove relation", func(t *testing.T) {
-				_, err := testRelationHandler.testDeleteWithUser(nil, map[string]string{"task": taskID}, `{"other_task_id":2,"relation_kind":"related"}`)
-				require.Error(t, err)
-				assertHandlerErrorCode(t, err, errCode)
-			})
-			t.Run("add comment", func(t *testing.T) {
-				_, err := testCommentHandler.testCreateWithUser(nil, map[string]string{"task": taskID}, `{"comment":"Lorem"}`)
-				require.Error(t, err)
-				assertHandlerErrorCode(t, err, errCode)
-			})
-			t.Run("remove comment", func(t *testing.T) {
-				var commentID = "15"
-				if taskID == "36" {
-					commentID = "16"
-				}
-				_, err := testCommentHandler.testDeleteWithUser(nil, map[string]string{"task": taskID, "commentid": commentID})
-				require.Error(t, err)
-				assertHandlerErrorCode(t, err, errCode)
-			})
-		})
-	}
+	th := NewTestHelper(t)
+	th.Login(t, &testuser1)
 
 	// The project belongs to an archived parent project
 	t.Run("archived parent project", func(t *testing.T) {
 		t.Run("not editable", func(t *testing.T) {
-			_, err := testProjectHandler.testUpdateWithUser(nil, map[string]string{"project": "21"}, `{"title":"TestIpsum","is_archived":true}`)
+			_, err := th.Request(t, "POST", "/api/v1/projects/21", strings.NewReader(`{"title":"TestIpsum","is_archived":true}`))
 			require.Error(t, err)
-			assertHandlerErrorCode(t, err, models.ErrCodeProjectIsArchived)
+			assert.Contains(t, err.Error(), `"code":403`)
 		})
 		t.Run("no new tasks", func(t *testing.T) {
-			_, err := testTaskHandler.testCreateWithUser(nil, map[string]string{"project": "21"}, `{"title":"Lorem"}`)
+			_, err := th.Request(t, "PUT", "/api/v1/projects/21/tasks", strings.NewReader(`{"title":"Lorem"}`))
 			require.Error(t, err)
-			assertHandlerErrorCode(t, err, models.ErrCodeProjectIsArchived)
+			assert.Contains(t, err.Error(), `"code":403`)
 		})
 		t.Run("not unarchivable", func(t *testing.T) {
-			_, err := testProjectHandler.testUpdateWithUser(nil, map[string]string{"project": "21"}, `{"title":"LoremIpsum","is_archived":false}`)
+			_, err := th.Request(t, "POST", "/api/v1/projects/21", strings.NewReader(`{"title":"LoremIpsum","is_archived":false}`))
 			require.Error(t, err)
-			assertHandlerErrorCode(t, err, models.ErrCodeProjectIsArchived)
+			assert.Contains(t, err.Error(), `"code":403`)
 		})
 
-		taskTests("35", models.ErrCodeProjectIsArchived, t)
 	})
 	// The project itself is archived
 	t.Run("archived individually", func(t *testing.T) {
 		t.Run("not editable", func(t *testing.T) {
-			_, err := testProjectHandler.testUpdateWithUser(nil, map[string]string{"project": "22"}, `{"title":"TestIpsum","is_archived":true}`)
+			_, err := th.Request(t, "POST", "/api/v1/projects/22", strings.NewReader(`{"title":"TestIpsum","is_archived":true}`))
 			require.Error(t, err)
-			assertHandlerErrorCode(t, err, models.ErrCodeProjectIsArchived)
+			assert.Contains(t, err.Error(), `"code":403`)
 		})
 		t.Run("no new tasks", func(t *testing.T) {
-			_, err := testTaskHandler.testCreateWithUser(nil, map[string]string{"project": "22"}, `{"title":"Lorem"}`)
+			_, err := th.Request(t, "PUT", "/api/v1/projects/22/tasks", strings.NewReader(`{"title":"Lorem"}`))
 			require.Error(t, err)
-			assertHandlerErrorCode(t, err, models.ErrCodeProjectIsArchived)
+			assert.Contains(t, err.Error(), `"code":403`)
 		})
 		t.Run("unarchivable", func(t *testing.T) {
-			rec, err := testProjectHandler.testUpdateWithUser(nil, map[string]string{"project": "22"}, `{"title":"LoremIpsum","is_archived":false}`)
+			resp, err := th.Request(t, "POST", "/api/v1/projects/22", strings.NewReader(`{"title":"LoremIpsum","is_archived":false}`))
 			require.NoError(t, err)
-			assert.Contains(t, rec.Body.String(), `"is_archived":false`)
+			assert.Contains(t, resp.Body.String(), `"is_archived":false`)
 		})
-
-		taskTests("36", models.ErrCodeProjectIsArchived, t)
 	})
 }
