@@ -163,6 +163,7 @@ func (p *Project) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 }
 
 // CanCreate checks if the user can create a project
+// @Deprecated
 func (p *Project) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 	if p.ParentProjectID != 0 {
 		parent := &Project{ID: p.ParentProjectID}

@@ -868,6 +868,7 @@ func checkProjectBeforeUpdateOrDelete(s *xorm.Session, project *Project) (err er
 	return nil
 }
 
+// @Deprecated
 func CreateProject(s *xorm.Session, project *Project, auth web.Auth, createBacklogBucket bool, createDefaultViews bool) (err error) {
 	err = project.CheckIsArchived(s)
 	if err != nil {
@@ -1112,18 +1113,7 @@ func updateProjectByTaskID(s *xorm.Session, taskID int64) (err error) {
 }
 
 // Create implements the create method of CRUDable
-// @Summary Creates a new project
-// @Description Creates a new project. If a parent project is provided the user needs to have write access to that project.
-// @tags project
-// @Accept json
-// @Produce json
-// @Security JWTKeyAuth
-// @Param project body models.Project true "The project you want to create."
-// @Success 201 {object} models.Project "The created project."
-// @Failure 400 {object} web.HTTPError "Invalid project object provided."
-// @Failure 403 {object} web.HTTPError "The user does not have access to the project"
-// @Failure 500 {object} models.Message "Internal error"
-// @Router /projects [put]
+// @Deprecated
 func (p *Project) Create(s *xorm.Session, a web.Auth) (err error) {
 	err = CreateProject(s, p, a, true, true)
 	if err != nil {
