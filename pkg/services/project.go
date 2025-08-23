@@ -17,12 +17,18 @@
 package services
 
 import (
+	"fmt"
 	"math"
+	"strconv"
+	"strings"
 
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
+	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
@@ -38,25 +44,248 @@ func (p *Project) Get(s *xorm.Session, projectID int64, u *user.User) (*models.P
 
 // GetByID gets a project by its ID.
 func (p *Project) GetByID(s *xorm.Session, projectID int64, u *user.User) (*models.Project, error) {
-	project := &models.Project{ID: projectID}
-	can, _, err := project.CanRead(s, u)
+	project, err := models.GetProjectSimpleByID(s, projectID)
 	if err != nil {
 		return nil, err
 	}
-	if !can {
-		return nil, models.ErrProjectDoesNotExist{ID: projectID}
+
+	// Permission check
+	if project.OwnerID != u.ID {
+		has, err := s.Where("project_id = ? AND user_id = ?", projectID, u.ID).Exist(&models.ProjectUser{})
+		if err != nil {
+			return nil, err
+		}
+		if !has {
+			// Check team permissions
+			has, err = s.
+				Table("team_members").
+				Join("INNER", "team_projects", "team_members.team_id = team_projects.team_id").
+				Where("team_members.user_id = ? AND team_projects.project_id = ?", u.ID, projectID).
+				Exist()
+			if err != nil {
+				return nil, err
+			}
+			if !has {
+				return nil, models.ErrProjectDoesNotExist{ID: projectID}
+			}
+		}
 	}
-	return project, project.ReadOne(s, u)
+
+	if err := models.AddProjectDetails(s, []*models.Project{project}, u); err != nil {
+		return nil, err
+	}
+	return project, nil
+}
+
+// getLimitFromPageIndex is a helper function to calculate the limit and offset for a given page and items per page
+func getLimitFromPageIndex(page int, perPage int) (limit int, start int) {
+	if page == 0 {
+		page = 1
+	}
+	if perPage == 0 {
+		perPage = 20
+	}
+	start = (page - 1) * perPage
+	return perPage, start
+}
+
+func (p *Project) getUserProjectsStatement(userID int64, search string, getArchived bool) *builder.Builder {
+	dialect := db.GetDialect()
+
+	conds := []builder.Cond{
+		builder.Or(
+			builder.Eq{"tm2.user_id": userID},
+			builder.Eq{"ul.user_id": userID},
+			builder.Eq{"l.owner_id": userID},
+		),
+	}
+
+	ids := []int64{}
+	if search != "" {
+		vals := strings.Split(search, ",")
+		for _, val := range vals {
+			v, err := strconv.ParseInt(val, 10, 64)
+			if err != nil {
+				log.Debugf("Project search string part '%s' is not a number: %s", val, err)
+				continue
+			}
+			ids = append(ids, v)
+		}
+
+		var filterCond builder.Cond
+		if len(ids) > 0 {
+			filterCond = builder.In("l.id", ids)
+		} else {
+			filterCond = db.MultiFieldSearchWithTableAlias(
+				[]string{
+					"title",
+					"description",
+					"identifier",
+				},
+				search,
+				"l",
+			)
+		}
+
+		parentCondition := builder.Or(
+			builder.IsNull{"l.parent_project_id"},
+			builder.Eq{"l.parent_project_id": 0},
+			// else check for shared sub projects with a parent
+			builder.And(
+				builder.Or(
+					builder.NotNull{"tm2.user_id"},
+					builder.NotNull{"ul.user_id"},
+				),
+				builder.NotNull{"l.parent_project_id"},
+			),
+		)
+		conds = append(conds, filterCond, parentCondition)
+	}
+
+	if !getArchived {
+		conds = append(conds,
+			builder.And(
+				builder.Eq{"l.is_archived": false},
+			),
+		)
+	}
+
+	return builder.Dialect(dialect).
+		Select("l.*").
+		From("projects", "l").
+		Join("LEFT", "team_projects tl", "tl.project_id = l.id").
+		Join("LEFT", "team_members tm2", "tm2.team_id = tl.team_id").
+		Join("LEFT", "users_projects ul", "ul.project_id = l.id").
+		Where(builder.And(conds...)).
+		GroupBy("l.id")
+}
+
+func (p *Project) getAllProjectsForUserInternal(s *xorm.Session, userID int64, search string, page int, perPage int, isArchived bool) (projects []*models.Project, totalCount int64, err error) {
+	limit, start := getLimitFromPageIndex(page, perPage)
+	query := p.getUserProjectsStatement(userID, search, isArchived)
+
+	querySQLString, args, err := query.ToSQL()
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var limitSQL string
+	if limit > 0 {
+		limitSQL = fmt.Sprintf("LIMIT %d OFFSET %d", limit, start)
+	}
+
+	baseQuery := querySQLString + `
+UNION ALL
+SELECT p.* FROM projects p
+INNER JOIN all_projects ap ON p.parent_project_id = ap.id`
+
+	columnStr := strings.Join([]string{
+		"all_projects.id",
+		"all_projects.title",
+		"all_projects.description",
+		"all_projects.identifier",
+		"all_projects.hex_color",
+		"all_projects.owner_id",
+		"CASE WHEN all_projects.parent_project_id IS NULL THEN 0 ELSE all_projects.parent_project_id END AS parent_project_id",
+		"all_projects.is_archived",
+		"all_projects.background_file_id",
+		"all_projects.background_blur_hash",
+		"all_projects.position",
+		"all_projects.created",
+		"all_projects.updated",
+	}, ", ")
+	currentProjects := []*models.Project{}
+	err = s.SQL(`WITH RECURSIVE all_projects as (`+baseQuery+`)
+SELECT DISTINCT `+columnStr+` FROM all_projects
+ORDER BY all_projects.position `+limitSQL, args...).Find(&currentProjects)
+	if err != nil {
+		return
+	}
+
+	if len(currentProjects) == 0 {
+		return nil, 0, err
+	}
+
+	totalCount, err = s.
+		SQL(`WITH RECURSIVE all_projects as (`+baseQuery+`)
+SELECT COUNT(DISTINCT all_projects.id) FROM all_projects`, args...).
+		Count(&models.Project{})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return currentProjects, totalCount, err
+}
+
+func (p *Project) getSavedFiltersForUser(s *xorm.Session, u *user.User, search string) (fs []*models.SavedFilter, err error) {
+	var cond builder.Cond = builder.Eq{"owner_id": u.ID}
+	if search != "" {
+		cond = builder.And(cond, db.MultiFieldSearch([]string{"title", "description"}, search))
+	}
+	err = s.Where(cond).Find(&fs)
+	return
+}
+
+func (p *Project) getSavedFilterProjects(s *xorm.Session, doer *user.User, search string) (savedFiltersProjects []*models.Project, err error) {
+	savedFilters, err := p.getSavedFiltersForUser(s, doer, search)
+	if err != nil {
+		return
+	}
+
+	if len(savedFilters) == 0 {
+		return nil, nil
+	}
+
+	for _, filter := range savedFilters {
+		filterProject := filter.ToProject()
+		filterProject.Owner = doer
+		savedFiltersProjects = append(savedFiltersProjects, filterProject)
+	}
+
+	return
 }
 
 // GetAllForUser returns all projects for a user
 func (p *Project) GetAllForUser(s *xorm.Session, u *user.User, search string, page int, perPage int, isArchived bool) (projects []*models.Project, resultCount int, totalItems int64, err error) {
-	projects, resultCount, totalItems, err = models.GetAllRawProjects(s, u, search, page, perPage, isArchived)
+	projects, totalItems, err = p.getAllProjectsForUserInternal(s, u.ID, search, page, perPage, isArchived)
 	if err != nil {
 		return nil, 0, 0, err
 	}
+	resultCount = len(projects)
 
-	/////////////////
+	// Saved Filters
+	savedFiltersProject, err := p.getSavedFilterProjects(s, u, search)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+	totalItems += int64(len(savedFiltersProject))
+
+	// Favorite projects
+	favoriteCount, err := s.
+		Where(builder.And(
+			builder.Eq{"user_id": u.ID},
+			builder.Eq{"kind": models.FavoriteKindTask},
+		)).
+		Count(&models.Favorite{})
+	if err != nil {
+		return
+	}
+	if favoriteCount > 0 {
+		totalItems++
+	}
+
+	if page == 1 || page == 0 { // Only add to the first page
+		if len(savedFiltersProject) > 0 {
+			projects = append(projects, savedFiltersProject...)
+		}
+
+		if favoriteCount > 0 {
+			favoritesProject := &models.Project{}
+			*favoritesProject = models.FavoritesPseudoProject
+			projects = append(projects, favoritesProject)
+		}
+	}
+
 	// Add project details (favorite state, among other things)
 	err = models.AddProjectDetails(s, projects, u)
 	if err != nil {
@@ -68,7 +297,7 @@ func (p *Project) GetAllForUser(s *xorm.Session, u *user.User, search string, pa
 		return
 	}
 
-	return
+	return projects, resultCount, totalItems, err
 }
 
 // Create creates a new project.

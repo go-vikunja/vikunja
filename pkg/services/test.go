@@ -18,6 +18,7 @@ package services
 
 import (
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
@@ -31,6 +32,7 @@ func InitTests() {
 	}
 
 	tables := append(models.GetTables(), user.GetTables()...)
+	tables = append(tables, &files.File{})
 	err = x.Sync(tables...)
 	if err != nil {
 		log.Fatal(err)
