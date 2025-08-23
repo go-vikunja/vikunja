@@ -567,7 +567,7 @@ func addBucketsToTasks(s *xorm.Session, a web.Auth, taskIDs []int64, taskMap map
 	// We need to fetch all projects for that user to make sure they only
 	// get to see buckets that they have permission to see.
 	projectIDs := []int64{}
-	allProjects, _, _, err := getAllRawProjects(s, a, "", 0, -1, false)
+	allProjects, _, _, err := GetAllRawProjects(s, a, "", 0, -1, false)
 	if err != nil {
 		return err
 	}
