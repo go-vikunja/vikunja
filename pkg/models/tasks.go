@@ -920,7 +920,7 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setB
 	t.setIdentifier(p)
 
 	if t.IsFavorite {
-		if err := addToFavorites(s, t.ID, createdBy, FavoriteKindTask); err != nil {
+		if err := AddToFavorites(s, t.ID, createdBy, FavoriteKindTask); err != nil {
 			return err
 		}
 	}
@@ -1164,18 +1164,18 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 		}
 	}
 
-	wasFavorite, err := isFavorite(s, t.ID, a, FavoriteKindTask)
+	wasFavorite, err := IsFavorite(s, t.ID, a, FavoriteKindTask)
 	if err != nil {
 		return
 	}
 	if t.IsFavorite && !wasFavorite {
-		if err := addToFavorites(s, t.ID, a, FavoriteKindTask); err != nil {
+		if err := AddToFavorites(s, t.ID, a, FavoriteKindTask); err != nil {
 			return err
 		}
 	}
 
 	if !t.IsFavorite && wasFavorite {
-		if err := removeFromFavorite(s, t.ID, a, FavoriteKindTask); err != nil {
+		if err := RemoveFromFavorite(s, t.ID, a, FavoriteKindTask); err != nil {
 			return err
 		}
 	}
@@ -1636,7 +1636,7 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	// Delete Favorites
-	err = removeFromFavorite(s, t.ID, a, FavoriteKindTask)
+	err = RemoveFromFavorite(s, t.ID, a, FavoriteKindTask)
 	if err != nil {
 		return
 	}

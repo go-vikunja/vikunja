@@ -42,6 +42,167 @@ func (p *Project) Get(s *xorm.Session, projectID int64, u *user.User) (*models.P
 	return nil, nil
 }
 
+// Update updates a project.
+func (p *Project) Update(s *xorm.Session, project *models.Project, u *user.User) (*models.Project, error) {
+	// Permission check
+	can, err := project.CanUpdate(s, u)
+	if err != nil {
+		return nil, err
+	}
+	if !can {
+		return nil, &models.ErrGenericForbidden{}
+	}
+
+	err = p.validate(s, project)
+	if err != nil {
+		return nil, err
+	}
+
+	if project.IsArchived {
+		isDefaultProject, err := project.IsDefaultProject(s)
+		if err != nil {
+			return nil, err
+		}
+
+		if isDefaultProject {
+			return nil, &models.ErrCannotArchiveDefaultProject{ProjectID: project.ID}
+		}
+	}
+
+	err = SetArchiveStateForProjectDescendants(s, project.ID, project.IsArchived)
+	if err != nil {
+		return nil, err
+	}
+
+	// We need to specify the cols we want to update here to be able to un-archive projects
+	colsToUpdate := []string{
+		"title",
+		"is_archived",
+		"identifier",
+		"hex_color",
+		"parent_project_id",
+		"position",
+	}
+	if project.Description != "" {
+		colsToUpdate = append(colsToUpdate, "description")
+	}
+
+	if project.Position < 0.1 {
+		err = recalculateProjectPositions(s, project.ParentProjectID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	wasFavorite, err := models.IsFavorite(s, project.ID, u, models.FavoriteKindProject)
+	if err != nil {
+		return nil, err
+	}
+	if project.IsFavorite && !wasFavorite {
+		if err := models.AddToFavorites(s, project.ID, u, models.FavoriteKindProject); err != nil {
+			return nil, err
+		}
+	}
+
+	if !project.IsFavorite && wasFavorite {
+		if err := models.RemoveFromFavorite(s, project.ID, u, models.FavoriteKindProject); err != nil {
+			return nil, err
+		}
+	}
+
+	project.HexColor = utils.NormalizeHex(project.HexColor)
+
+	_, err = s.
+		ID(project.ID).
+		Cols(colsToUpdate...).
+		Update(project)
+	if err != nil {
+		return nil, err
+	}
+
+	err = events.Dispatch(&models.ProjectUpdatedEvent{
+		Project: project,
+		Doer:    u,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	l, err := models.GetProjectSimpleByID(s, project.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	*project = *l
+	err = project.ReadOne(s, u)
+	return project, err
+}
+
+func recalculateProjectPositions(s *xorm.Session, parentProjectID int64) (err error) {
+
+	allProjects := []*models.Project{}
+	err = s.
+		Where("parent_project_id = ?", parentProjectID).
+		OrderBy("position asc").
+		Find(&allProjects)
+	if err != nil {
+		return
+	}
+
+	maxPosition := math.Pow(2, 32)
+
+	for i, project := range allProjects {
+
+		currentPosition := maxPosition / float64(len(allProjects)) * (float64(i+1))
+
+		_, err = s.Cols("position").
+			Where("id = ?", project.ID).
+			Update(&models.Project{Position: currentPosition})
+		if err != nil {
+			return
+		}
+	}
+
+	return
+}
+
+// SetArchiveStateForProjectDescendants uses a recursive CTE to find and set the archived status of all descendant projects.
+func SetArchiveStateForProjectDescendants(s *xorm.Session, parentProjectID int64, shouldBeArchived bool) error {
+	var descendantIDs []int64
+	err := s.SQL(
+		`
+WITH RECURSIVE descendant_ids (id) AS (
+    SELECT id
+    FROM projects
+    WHERE parent_project_id = ?
+    UNION ALL
+    SELECT p.id
+    FROM projects p
+    INNER JOIN descendant_ids di ON p.parent_project_id = di.id
+)
+SELECT id FROM descendant_ids`,
+		parentProjectID,
+	).Find(&descendantIDs)
+	if err != nil {
+		log.Errorf("Error finding descendant projects for parent ID %d: %v", parentProjectID, err)
+		return fmt.Errorf("failed to find descendant projects for parent ID %d: %w", parentProjectID, err)
+	}
+
+	if len(descendantIDs) == 0 {
+		return nil
+	}
+
+	_, err = s.In("id", descendantIDs).
+		And("is_archived != ?", shouldBeArchived).
+		Cols("is_archived").
+		Update(&models.Project{IsArchived: shouldBeArchived})
+	if err != nil {
+		log.Errorf("Error updating is_archived for descendant projects for parent ID %d to %t: %v", parentProjectID, shouldBeArchived, err)
+		return fmt.Errorf("failed to update is_archived for descendant projects for parent ID %d to %t: %w", parentProjectID, shouldBeArchived, err)
+	}
+	return nil
+}
+
 // GetByID gets a project by its ID.
 func (p *Project) GetByID(s *xorm.Session, projectID int64, u *user.User) (*models.Project, error) {
 	project, err := models.GetProjectSimpleByID(s, projectID)
@@ -336,7 +497,7 @@ func (p *Project) Create(s *xorm.Session, project *models.Project, u *user.User)
 		return nil, err
 	}
 	if project.IsFavorite {
-		if err := addToFavorites(s, project.ID, u, models.FavoriteKindProject); err != nil {
+		if err := models.AddToFavorites(s, project.ID, u, models.FavoriteKindProject); err != nil {
 			return nil, err
 		}
 	}
@@ -363,6 +524,10 @@ func (p *Project) Create(s *xorm.Session, project *models.Project, u *user.User)
 }
 
 func (p *Project) validate(s *xorm.Session, project *models.Project) (err error) {
+	if project.Title == "" {
+		return &models.ErrProjectTitleCannotBeEmpty{}
+	}
+
 	if project.ParentProjectID < 0 {
 		return &ErrProjectCannotBelongToAPseudoParentProject{ProjectID: project.ID, ParentProjectID: project.ParentProjectID}
 	}
@@ -410,7 +575,7 @@ func (p *Project) validate(s *xorm.Session, project *models.Project) (err error)
 			return err
 		}
 		if exists {
-			return ErrProjectIdentifierIsNotUnique{Identifier: project.Identifier}
+			return &models.ErrProjectIdentifierIsNotUnique{Identifier: project.Identifier}
 		}
 	}
 

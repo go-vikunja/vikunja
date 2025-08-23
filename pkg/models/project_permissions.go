@@ -112,6 +112,7 @@ func (p *Project) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
 }
 
 // CanUpdate checks if the user can update a project
+// Deprecated: use services.Project.Update instead.
 func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err error) {
 	// The favorite project can't be edited
 	if p.ID == FavoritesPseudoProject.ID {
