@@ -365,7 +365,22 @@
 			"month": "Mês",
 			"day": "Dia",
 			"hour": "Hora",
-			"range": "Intervalo de Datas"
+			"range": "Intervalo de Datas",
+			"chartLabel": "Gráfico de Gantt do projeto",
+			"taskBarsForRow": "Barras de tarefas para a linha {rowId}",
+			"taskBarLabel": "Tarefa: {task}. De {startDate} a {endDate}. {dateType}. Clica para editar, arrasta para mover.",
+			"scheduledDates": "Datas programadas",
+			"estimatedDates": "Datas estimadas",
+			"resizeStartDate": "Redimensionar data de início para a tarefa {task}",
+			"resizeEndDate": "Redimensionar data de fim para a tarefa {task}",
+			"timelineHeader": "Cabeçalho da linha de tempo com meses e dias",
+			"monthsRow": "Linha de meses",
+			"daysRow": "Linha de dias",
+			"monthLabel": "Mês: {month}",
+			"dayLabel": "Dia: {weekday}, {date}",
+			"dayLabelToday": "Hoje: {weekday}, {date}",
+			"taskAriaLabel": "Tarefa: {task}",
+			"taskAriaLabelById": "Tarefa {id}"
 		},
 		"table": {
 			"title": "Tabela",
@@ -778,6 +793,7 @@
 		"show": {
 			"titleCurrent": "Tarefas Atuais",
 			"titleDates": "Tarefas de {from} até {to}",
+			"noDates": "Mostrar tarefas sem data",
 			"overdue": "Mostrar tarefas em atraso",
 			"fromuntil": "Tarefas de {from} a {until}",
 			"select": "Escolha um intervalo de datas",
@@ -994,6 +1010,7 @@
 			"project4": "Por exemplo: {prefix}\"Projeto com espaços\".",
 			"dateAndTime": "Data e hora",
 			"date": "Qualquer data será utilizada como data de vencimento da nova tarefa. Podes utilizar datas em qualquer dos seguintes formatos:",
+			"dateWeekday": "qualquer dia da semana, utilizará a próxima data com esse dia",
 			"dateCurrentYear": "usará o ano atual",
 			"dateNth": "usará o {day} do mês atual",
 			"dateTime": "Combina qualquer um dos formatos de data com \"{time}\" (ou {timePM}) para definir uma hora.",
@@ -1098,6 +1115,15 @@
 			"navigateDown": "Destacar a tarefa seguinte",
 			"navigateUp": "Destacar a tarefa anterior",
 			"open": "Abrir tarefa destacada"
+		},
+		"gantt": {
+			"title": "Gráfico de Gantt",
+			"moveTaskLeft": "Mover tarefa para data anterior",
+			"moveTaskRight": "Mover tarefa para data posterior",
+			"expandTaskLeft": "Expandir tarefa a partir da data de início",
+			"expandTaskRight": "Expandir tarefa a partir da data de fim",
+			"shrinkTaskLeft": "Encolher tarefa a partir da data de início",
+			"shrinkTaskRight": "Encolher tarefa a partir da data de fim"
 		}
 	},
 	"update": {
@@ -1135,6 +1161,7 @@
 	"notification": {
 		"title": "Notificações",
 		"none": "Não tens nenhuma notificação. Tem um bom dia!",
+		"explainer": "As notificações aparecerão aqui quando ações, projetos ou tarefas que subscreves-te ocorrerem.",
 		"markAllRead": "Marcar todas as notificações como lidas",
 		"markAllReadSuccess": "Todas as notificações foram marcadas como lidas."
 	},
