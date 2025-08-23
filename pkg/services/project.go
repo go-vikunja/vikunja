@@ -36,6 +36,41 @@ func (p *Project) Get(s *xorm.Session, projectID int64, u *user.User) (*models.P
 	return nil, nil
 }
 
+// GetByID gets a project by its ID.
+func (p *Project) GetByID(s *xorm.Session, projectID int64, u *user.User) (*models.Project, error) {
+	project := &models.Project{ID: projectID}
+	can, _, err := project.CanRead(s, u)
+	if err != nil {
+		return nil, err
+	}
+	if !can {
+		return nil, models.ErrProjectDoesNotExist{ID: projectID}
+	}
+	return project, project.ReadOne(s, u)
+}
+
+// GetAllForUser returns all projects for a user
+func (p *Project) GetAllForUser(s *xorm.Session, u *user.User, search string, page int, perPage int, isArchived bool) (projects []*models.Project, resultCount int, totalItems int64, err error) {
+	projects, resultCount, totalItems, err = models.GetAllRawProjects(s, u, search, page, perPage, isArchived)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	/////////////////
+	// Add project details (favorite state, among other things)
+	err = models.AddProjectDetails(s, projects, u)
+	if err != nil {
+		return
+	}
+
+	err = models.AddMaxPermissionToProjects(s, projects, u)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
 // Create creates a new project.
 func (p *Project) Create(s *xorm.Session, project *models.Project, u *user.User) (*models.Project, error) {
 	if project.ParentProjectID != 0 {

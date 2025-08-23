@@ -57,3 +57,67 @@ func TestProject_Create(t *testing.T) {
 	assert.Equal(t, newProject.Description, createdProject.Description)
 	assert.Equal(t, u.ID, createdProject.OwnerID)
 }
+
+func TestProject_GetByID(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	p := &Project{DB: db.GetEngine()}
+
+	t.Run("should get a project by its id", func(t *testing.T) {
+		proj, err := p.GetByID(s, 1, &user.User{ID: 1})
+		assert.NoError(t, err)
+		assert.NotNil(t, proj)
+		assert.Equal(t, int64(1), proj.ID)
+	})
+
+	t.Run("should return an error if the project does not exist", func(t *testing.T) {
+		_, err := p.GetByID(s, 999, &user.User{ID: 1})
+		assert.Error(t, err)
+		assert.True(t, models.IsErrProjectDoesNotExist(err))
+	})
+
+	t.Run("should return an error if the user does not have access to the project", func(t *testing.T) {
+		_, err := p.GetByID(s, 2, &user.User{ID: 1})
+		assert.Error(t, err)
+	})
+}
+
+func TestProject_GetAllForUser(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	p := &Project{DB: db.GetEngine()}
+
+	t.Run("should get all projects for a user", func(t *testing.T) {
+		projects, count, total, err := p.GetAllForUser(s, &user.User{ID: 1}, "", 1, 10, false)
+		assert.NoError(t, err)
+		assert.Equal(t, 28, count)
+		assert.Equal(t, int64(28), total)
+		assert.Len(t, projects, 28)
+	})
+
+	t.Run("should get all projects for a user with pagination", func(t *testing.T) {
+		projects, count, total, err := p.GetAllForUser(s, &user.User{ID: 1}, "", 2, 10, false)
+		assert.NoError(t, err)
+		assert.Equal(t, 10, count)
+		assert.Equal(t, int64(28), total)
+		assert.Len(t, projects, 10)
+	})
+
+	t.Run("should get all projects for a user with search", func(t *testing.T) {
+		projects, count, total, err := p.GetAllForUser(s, &user.User{ID: 1}, "Test10", 1, 10, false)
+		assert.NoError(t, err)
+		assert.Equal(t, 2, count)
+		assert.Equal(t, int64(2), total)
+		assert.Len(t, projects, 2)
+	})
+
+	t.Run("should get archived projects", func(t *testing.T) {
+		projects, _, _, err := p.GetAllForUser(s, &user.User{ID: 6}, "", 1, 50, true)
+		assert.NoError(t, err)
+		assert.Len(t, projects, 26)
+	})
+}

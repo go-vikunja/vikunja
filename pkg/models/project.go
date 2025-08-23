@@ -175,7 +175,7 @@ var FavoritesPseudoProject = Project{
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects [get]
 func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
-	prs, resultCount, totalItems, err := getAllRawProjects(s, a, search, page, perPage, p.IsArchived)
+	prs, resultCount, totalItems, err := GetAllRawProjects(s, a, search, page, perPage, p.IsArchived)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -200,7 +200,7 @@ func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 		if err != nil {
 			return
 		}
-		err = addMaxPermissionToProjects(s, prs, doer)
+		err = AddMaxPermissionToProjects(s, prs, doer)
 		if err != nil {
 			return
 		}
@@ -216,7 +216,7 @@ func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 	return prs, resultCount, totalItems, err
 }
 
-func getAllRawProjects(s *xorm.Session, a web.Auth, search string, page int, perPage int, isArchived bool) (projects []*Project, resultCount int, totalItems int64, err error) {
+func GetAllRawProjects(s *xorm.Session, a web.Auth, search string, page int, perPage int, isArchived bool) (projects []*Project, resultCount int, totalItems int64, err error) {
 	// Check if we're dealing with a share auth
 	shareAuth, is := a.(*LinkSharing)
 	if is {
@@ -653,7 +653,7 @@ func GetAllParentProjects(s *xorm.Session, projectID int64) (allProjects map[int
 	return
 }
 
-// addProjectDetails adds owner user objects and project tasks to all projects in the slice
+// AddProjectDetails adds owner user objects and project tasks to all projects in the slice
 func AddProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err error) {
 	if len(projects) == 0 {
 		return
@@ -765,7 +765,7 @@ func AddProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err er
 	return
 }
 
-func addMaxPermissionToProjects(s *xorm.Session, projects []*Project, u *user.User) (err error) {
+func AddMaxPermissionToProjects(s *xorm.Session, projects []*Project, u *user.User) (err error) {
 	projectIDs := make([]int64, 0, len(projects))
 	for _, project := range projects {
 		if GetSavedFilterIDFromProjectID(project.ID) > 0 {
