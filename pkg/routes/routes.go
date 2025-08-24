@@ -372,7 +372,7 @@ func registerAPIRoutes(a *echo.Group) {
 	a.GET("/projects", projectHandler.ReadAllWeb)
 	a.GET("/projects/:project", projectHandler.ReadOneWeb)
 	a.POST("/projects/:project", apiv1project.UpdateProject)
-	a.DELETE("/projects/:project", projectHandler.DeleteWeb)
+	a.DELETE("/projects/:project", apiv1project.DeleteProject)
 	a.PUT("/projects", project.CreateProject)
 	a.GET("/projects/:project/projectusers", apiv1.ListUsersForProject)
 

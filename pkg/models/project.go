@@ -812,13 +812,15 @@ func (p *Project) CheckIsArchived(s *xorm.Session) (err error) {
 	return nil
 }
 
-// @Deprecated
+// @Deprecated: This validation logic has been moved to the service layer.
+// Use services.Project methods instead of model-level validation.
 func (p *Project) validate(s *xorm.Session, project *Project) (err error) {
 	// This is a placeholder for the real validation logic which is in the service.
 	return nil
 }
 
-// @Deprecated
+// @Deprecated: This creation logic has been moved to the service layer.
+// Use services.Project.Create instead of this model-level function.
 func CreateProject(s *xorm.Session, project *Project, auth web.Auth, createBacklogBucket bool, createDefaultViews bool) (err error) {
 	err = project.CheckIsArchived(s)
 	if err != nil {
@@ -1011,7 +1013,8 @@ func updateProjectByTaskID(s *xorm.Session, taskID int64) (err error) {
 }
 
 // Create implements the create method of CRUDable
-// @Deprecated
+// @Deprecated: This creation logic has been moved to the service layer.
+// Use services.Project.Create instead of this model-level method.
 func (p *Project) Create(s *xorm.Session, a web.Auth) (err error) {
 	err = CreateProject(s, p, a, true, true)
 	if err != nil {
@@ -1044,6 +1047,8 @@ func (p *Project) IsDefaultProject(s *xorm.Session) (is bool, err error) {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the project"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id} [delete]
+// Deprecated: This logic has been moved to services.ProjectService.Delete.
+// This method will be removed in a future version once all callers have been updated.
 func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	isDefaultProject, err := p.IsDefaultProject(s)

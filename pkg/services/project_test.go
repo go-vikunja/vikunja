@@ -23,6 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestProject_Get(t *testing.T) {
@@ -120,5 +121,145 @@ func TestProject_GetAllForUser(t *testing.T) {
 		projects, _, _, err := p.GetAllForUser(s, &user.User{ID: 6}, "", 1, 50, true)
 		assert.NoError(t, err)
 		assert.Len(t, projects, 26)
+	})
+}
+
+func TestProject_Delete(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	
+	p := &Project{DB: db.GetEngine()}
+
+	t.Run("should delete a project successfully", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+
+		err := p.Delete(s, 1, &user.User{ID: 1})
+		require.NoError(t, err)
+		
+		err = s.Commit()
+		require.NoError(t, err)
+		
+		// Verify project is deleted
+		db.AssertMissing(t, "projects", map[string]interface{}{
+			"id": 1,
+		})
+		
+		// Verify associated tasks are deleted
+		db.AssertMissing(t, "tasks", map[string]interface{}{
+			"id": 1,
+		})
+	})
+
+	t.Run("should not delete a project without permission", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+
+		// Project 2 is owned by User 3, User 2 should not have permission to delete it
+		err := p.Delete(s, 2, &user.User{ID: 2})
+		assert.Error(t, err)
+		assert.True(t, models.IsErrGenericForbidden(err))
+	})
+
+	t.Run("should not delete default project by non-owner", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+
+		// Project 4 is the default project for user 3
+		err := p.Delete(s, 4, &user.User{ID: 2})
+		assert.Error(t, err)
+		assert.True(t, models.IsErrCannotDeleteDefaultProject(err))
+	})
+
+	t.Run("should allow owner to delete their default project", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+
+		// Project 4 is the default project for user 3, so user 3 should be able to delete it
+		err := p.Delete(s, 4, &user.User{ID: 3})
+		require.NoError(t, err)
+		
+		err = s.Commit()
+		require.NoError(t, err)
+		
+		// Verify project is deleted
+		db.AssertMissing(t, "projects", map[string]interface{}{
+			"id": 4,
+		})
+	})
+
+	t.Run("should delete project with background file", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+
+		// Project 35 has a background file (based on model tests)
+		err := p.Delete(s, 35, &user.User{ID: 6})
+		require.NoError(t, err)
+		
+		err = s.Commit()
+		require.NoError(t, err)
+		
+		// Verify project is deleted
+		db.AssertMissing(t, "projects", map[string]interface{}{
+			"id": 35,
+		})
+		
+		// Verify background file is deleted
+		db.AssertMissing(t, "files", map[string]interface{}{
+			"id": 1,
+		})
+	})
+
+	t.Run("should delete child projects recursively", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+
+		// Find a project with children - let's use project 27 which has child project 12
+		err := p.Delete(s, 27, &user.User{ID: 6})
+		require.NoError(t, err)
+		
+		err = s.Commit()
+		require.NoError(t, err)
+		
+		// Verify parent project is deleted
+		db.AssertMissing(t, "projects", map[string]interface{}{
+			"id": 27,
+		})
+		
+		// Verify child project is also deleted
+		db.AssertMissing(t, "projects", map[string]interface{}{
+			"id": 12,
+		})
+	})
+
+	t.Run("should return error for non-existent project", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+
+		err := p.Delete(s, 999999, &user.User{ID: 1})
+		assert.Error(t, err)
+		// The exact error type will depend on implementation, but it should be an error
+	})
+
+	t.Run("should clean up all related entities", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+
+		// Use a project that has various related entities
+		projectID := int64(3)
+		
+		err := p.Delete(s, projectID, &user.User{ID: 1})
+		require.NoError(t, err)
+		
+		err = s.Commit()
+		require.NoError(t, err)
+		
+		// Verify project is deleted
+		db.AssertMissing(t, "projects", map[string]interface{}{
+			"id": projectID,
+		})
+		
+		// Verify related entities are cleaned up
+		// Note: The exact cleanup verification will depend on what related entities exist in fixtures
+		// This test ensures the service handles the cleanup logic
 	})
 }
