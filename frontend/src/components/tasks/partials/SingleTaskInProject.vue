@@ -46,7 +46,7 @@
 					<PriorityLabel
 						:priority="task.priority"
 						:done="task.done"
-						class="pis-2"
+						class="pis-2 mie-1"
 					/>
 
 					<RouterLink
