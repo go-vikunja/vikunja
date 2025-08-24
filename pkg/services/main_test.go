@@ -22,7 +22,9 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 )
 
 func TestMain(m *testing.M) {
@@ -36,6 +38,8 @@ func TestMain(m *testing.M) {
 
 	InitTests()
 
+	files.InitFileHandler()
+	keyvalue.InitStorage()
 	events.Fake()
 
 	os.Exit(m.Run())
