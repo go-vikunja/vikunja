@@ -899,6 +899,24 @@ func (p *Project) checkDeletePermission(s *xorm.Session, project *models.Project
 	return permission.MaxPermission >= int(models.PermissionAdmin), nil
 }
 
+// HasPermission checks if a user has a given permission on a project.
+func (p *Project) HasPermission(s *xorm.Session, projectID int64, u *user.User, requiredPermission models.Permission) (bool, error) {
+	projectPermissions, err := p.checkPermissionsForProjects(s, u, []int64{projectID})
+	if err != nil {
+		return false, err
+	}
+	permission, has := projectPermissions[projectID]
+	if !has {
+		return false, nil
+	}
+
+	if int(requiredPermission) <= permission.MaxPermission {
+		return true, nil
+	}
+
+	return false, nil
+}
+
 // checkPermissionsForProjects implements the same permission checking logic as the model layer
 // This is extracted from pkg/models/project_permissions.go to avoid circular dependencies
 func (p *Project) checkPermissionsForProjects(s *xorm.Session, u *user.User, projectIDs []int64) (map[int64]*projectPermission, error) {
