@@ -110,7 +110,7 @@ func (tp *TaskPosition) Update(s *xorm.Session, a web.Auth) (err error) {
 		return RecalculateTaskPositions(s, view, a)
 	}
 
-	return triggerTaskUpdatedEventForTaskID(s, a, tp.TaskID)
+	return TriggerTaskUpdatedEventForTaskID(s, a, tp.TaskID)
 }
 
 func RecalculateTaskPositions(s *xorm.Session, view *ProjectView, a web.Auth) (err error) {

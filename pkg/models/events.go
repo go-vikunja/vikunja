@@ -193,8 +193,8 @@ func (l *ProjectCreatedEvent) Name() string {
 
 // ProjectUpdatedEvent represents an event where a project has been updated
 type ProjectUpdatedEvent struct {
-	Project *Project `json:"project"`
-	Doer    web.Auth `json:"doer"`
+	Project *Project   `json:"project"`
+	Doer    *user.User `json:"doer"`
 }
 
 // Name defines the name for ProjectUpdatedEvent
@@ -204,8 +204,8 @@ func (p *ProjectUpdatedEvent) Name() string {
 
 // ProjectDeletedEvent represents an event where a project has been deleted
 type ProjectDeletedEvent struct {
-	Project *Project `json:"project"`
-	Doer    web.Auth `json:"doer"`
+	Project *Project   `json:"project"`
+	Doer    *user.User `json:"doer"`
 }
 
 // Name defines the name for ProjectDeletedEvent
@@ -287,4 +287,41 @@ type UserDataExportRequestedEvent struct {
 // Name defines the name for UserDataExportRequestedEvent
 func (t *UserDataExportRequestedEvent) Name() string {
 	return "user.export.requested"
+}
+
+//////////////////
+// Label Events //
+//////////////////
+
+// LabelCreatedEvent represents a label created event
+type LabelCreatedEvent struct {
+	Label *Label
+	Doer  *user.User
+}
+
+// Name defines the name for LabelCreatedEvent
+func (l *LabelCreatedEvent) Name() string {
+	return "label.created"
+}
+
+// LabelUpdatedEvent represents a label updated event
+type LabelUpdatedEvent struct {
+	Label *Label
+	Doer  *user.User
+}
+
+// Name defines the name for LabelUpdatedEvent
+func (l *LabelUpdatedEvent) Name() string {
+	return "label.updated"
+}
+
+// LabelDeletedEvent represents a label deleted event
+type LabelDeletedEvent struct {
+	Label *Label
+	Doer  *user.User
+}
+
+// Name defines the name for LabelDeletedEvent
+func (l *LabelDeletedEvent) Name() string {
+	return "label.deleted"
 }

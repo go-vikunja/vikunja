@@ -448,7 +448,7 @@ type ProjectOptions struct {
 	GetArchived bool
 }
 
-func getUserProjectsStatement(userID int64, search string, getArchived bool) *builder.Builder {
+func GetUserProjectsStatement(userID int64, search string, getArchived bool) *builder.Builder {
 	dialect := db.GetDialect()
 
 	conds := []builder.Cond{
@@ -522,7 +522,7 @@ func getUserProjectsStatement(userID int64, search string, getArchived bool) *bu
 func GetAllProjectsForUser(s *xorm.Session, userID int64, opts *ProjectOptions) (projects []*Project, totalCount int64, err error) {
 
 	limit, start := getLimitFromPageIndex(opts.Page, opts.PerPage)
-	query := getUserProjectsStatement(userID, opts.Search, opts.GetArchived)
+	query := GetUserProjectsStatement(userID, opts.Search, opts.GetArchived)
 
 	querySQLString, args, err := query.ToSQL()
 	if err != nil {
@@ -910,6 +910,11 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 		}
 	}
 
+	doer, err := user.GetFromAuth(auth)
+	if err != nil {
+		return err
+	}
+
 	// We need to specify the cols we want to update here to be able to un-archive projects
 	colsToUpdate := []string{
 		"title",
@@ -957,7 +962,7 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 
 	err = events.Dispatch(&ProjectUpdatedEvent{
 		Project: project,
-		Doer:    auth,
+		Doer:    doer,
 	})
 	if err != nil {
 		return err
@@ -1002,7 +1007,7 @@ func updateProjectLastUpdated(s *xorm.Session, project *Project) error {
 	return err
 }
 
-func updateProjectByTaskID(s *xorm.Session, taskID int64) (err error) {
+func UpdateProjectByTaskID(s *xorm.Session, taskID int64) (err error) {
 	// need to get the task to update the project last updated timestamp
 	task, err := GetTaskByIDSimple(s, taskID)
 	if err != nil {
@@ -1055,8 +1060,14 @@ func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 	if err != nil {
 		return err
 	}
+
+	u, err := user.GetFromAuth(a)
+	if err != nil {
+		return err
+	}
+
 	// Owners should be allowed to delete the default project
-	if isDefaultProject && p.OwnerID != a.GetID() {
+	if isDefaultProject && p.OwnerID != u.ID {
 		return &ErrCannotDeleteDefaultProject{ProjectID: p.ID}
 	}
 
@@ -1142,7 +1153,7 @@ func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	err = events.Dispatch(&ProjectDeletedEvent{
 		Project: fullProject,
-		Doer:    a,
+		Doer:    u,
 	})
 	if err != nil {
 		return

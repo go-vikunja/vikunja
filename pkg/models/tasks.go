@@ -1761,7 +1761,7 @@ func (t *Task) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 	return
 }
 
-func triggerTaskUpdatedEventForTaskID(s *xorm.Session, auth web.Auth, taskID int64) error {
+func TriggerTaskUpdatedEventForTaskID(s *xorm.Session, auth web.Auth, taskID int64) error {
 	t, err := GetTaskByIDSimple(s, taskID)
 	if err != nil {
 		return err

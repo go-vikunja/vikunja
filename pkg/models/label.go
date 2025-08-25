@@ -50,6 +50,21 @@ type Label struct {
 	web.Permissions `xorm:"-" json:"-"`
 }
 
+// LabelCreateFunc is a function variable that can be set to delegate label creation to a service
+var LabelCreateFunc func(s *xorm.Session, l *Label, a web.Auth) error
+
+// LabelUpdateFunc is a function variable that can be set to delegate label updates to a service
+var LabelUpdateFunc func(s *xorm.Session, l *Label, a web.Auth) error
+
+// LabelDeleteFunc is a function variable that can be set to delegate label deletion to a service
+var LabelDeleteFunc func(s *xorm.Session, l *Label, a web.Auth) error
+
+// LabelReadAllFunc is a function variable that can be set to delegate reading all labels to a service
+var LabelReadAllFunc func(s *xorm.Session, a web.Auth, search string, page int, perPage int) (ls interface{}, resultCount int, numberOfEntries int64, err error)
+
+// LabelReadOneFunc is a function variable that can be set to delegate reading one label to a service
+var LabelReadOneFunc func(s *xorm.Session, l *Label, a web.Auth) error
+
 // TableName makes a pretty table name
 func (*Label) TableName() string {
 	return "labels"
@@ -67,7 +82,12 @@ func (*Label) TableName() string {
 // @Failure 400 {object} web.HTTPError "Invalid label object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /labels [put]
+// @Deprecated This method is deprecated. Use the Label service instead.
 func (l *Label) Create(s *xorm.Session, a web.Auth) (err error) {
+	if LabelCreateFunc != nil {
+		return LabelCreateFunc(s, l, a)
+	}
+
 	u, err := user.GetFromAuth(a)
 	if err != nil {
 		return
@@ -82,22 +102,10 @@ func (l *Label) Create(s *xorm.Session, a web.Auth) (err error) {
 	return
 }
 
-// Update updates a label
-// @Summary Update a label
-// @Description Update an existing label. The user needs to be the creator of the label to be able to do this.
-// @tags labels
-// @Accept json
-// @Produce json
-// @Security JWTKeyAuth
-// @Param id path int true "Label ID"
-// @Param label body models.Label true "The label object"
-// @Success 200 {object} models.Label "The created label object."
-// @Failure 400 {object} web.HTTPError "Invalid label object provided."
-// @Failure 403 {object} web.HTTPError "Not allowed to update the label."
-// @Failure 404 {object} web.HTTPError "Label not found."
-// @Failure 500 {object} models.Message "Internal error"
-// @Router /labels/{id} [put]
 func (l *Label) Update(s *xorm.Session, a web.Auth) (err error) {
+	if LabelUpdateFunc != nil {
+		return LabelUpdateFunc(s, l, a)
+	}
 
 	l.HexColor = utils.NormalizeHex(l.HexColor)
 
@@ -130,35 +138,46 @@ func (l *Label) Update(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "Label not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /labels/{id} [delete]
-func (l *Label) Delete(s *xorm.Session, _ web.Auth) (err error) {
+// @Deprecated This method is deprecated. Use the Label service instead.
+func (l *Label) Delete(s *xorm.Session, a web.Auth) (err error) {
+	// Get the user from auth
+	if LabelDeleteFunc != nil {
+		return LabelDeleteFunc(s, l, a)
+	}
+
 	_, err = s.ID(l.ID).Delete(&Label{})
 	return err
 }
 
-// ReadAll gets all labels a user can use
-// @Summary Get all labels a user has access to
-// @Description Returns all labels which are either created by the user or associated with a task the user has at least read-access to.
-// @tags labels
-// @Accept json
-// @Produce json
-// @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
-// @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
-// @Param s query string false "Search labels by label text."
-// @Security JWTKeyAuth
-// @Success 200 {array} models.Label "The labels"
-// @Failure 500 {object} models.Message "Internal error"
-// @Router /labels [get]
-func (l *Label) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (ls interface{}, resultCount int, numberOfEntries int64, err error) {
-	return GetLabelsByTaskIDs(s, &LabelByTaskIDsOptions{
-		Search:              []string{search},
-		User:                a,
-		Page:                page,
-		PerPage:             perPage,
-		GetUnusedLabels:     true,
-		GroupByLabelIDsOnly: true,
-		GetForUser:          true,
-	})
-}
+ // ReadAll gets all labels a user can use
+ // @Summary Get all labels a user has access to
+ // @Description Returns all labels which are either created by the user or associated with a task the user has at least read-access to.
+ // @tags labels
+ // @Accept json
+ // @Produce json
+ // @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
+ // @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
+ // @Param s query string false "Search labels by label text."
+ // @Security JWTKeyAuth
+ // @Success 200 {array} models.Label "The labels"
+ // @Failure 500 {object} models.Message "Internal error"
+ // @Router /labels [get]
+ // @Deprecated This method is deprecated. Use the Label service instead.
+ func (l *Label) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (ls interface{}, resultCount int, numberOfEntries int64, err error) {
+ 	if LabelReadAllFunc != nil {
+ 		return LabelReadAllFunc(s, a, search, page, perPage)
+ 	}
+
+ 	return GetLabelsByTaskIDs(s, &LabelByTaskIDsOptions{
+ 		Search:              []string{search},
+ 		User:                a,
+ 		Page:                page,
+ 		PerPage:             perPage,
+ 		GetUnusedLabels:     true,
+ 		GroupByLabelIDsOnly: true,
+ 		GetForUser:          true,
+ 	})
+ }
 
 // ReadOne gets one label
 // @Summary Gets one label
@@ -173,7 +192,12 @@ func (l *Label) ReadAll(s *xorm.Session, a web.Auth, search string, page int, pe
 // @Failure 404 {object} web.HTTPError "Label not found"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /labels/{id} [get]
-func (l *Label) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
+// @Deprecated This method is deprecated. Use the Label service instead.
+func (l *Label) ReadOne(s *xorm.Session, a web.Auth) (err error) {
+	if LabelReadOneFunc != nil {
+		return LabelReadOneFunc(s, l, a)
+	}
+
 	label, err := getLabelByIDSimple(s, l.ID)
 	if err != nil {
 		return
@@ -188,7 +212,12 @@ func (l *Label) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
 	l.CreatedBy = u
 	return
 }
-
+// @Security JWTKeyAuth
+// @Success 200 {object} models.Label "The label"
+// @Failure 403 {object} web.HTTPError "The user does not have access to the label"
+// @Failure 404 {object} web.HTTPError "Label not found"
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /labels/{id} [get]
 func getLabelByIDSimple(s *xorm.Session, labelID int64) (*Label, error) {
 	return GetLabelSimple(s, &Label{ID: labelID})
 }
