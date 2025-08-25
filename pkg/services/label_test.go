@@ -88,3 +88,99 @@ func TestLabelService_Get(t *testing.T) {
 		assert.True(t, errors.Is(err, ErrAccessDenied))
 	})
 }
+
+func TestLabelService_Delete(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	ls := NewLabelService(testEngine)
+	u := &user.User{ID: 1}
+
+	t.Run("should delete a label", func(t *testing.T) {
+		newLabel := &models.Label{Title: "to delete", CreatedByID: u.ID}
+		_, err := s.InsertOne(newLabel)
+		assert.NoError(t, err)
+
+		err = ls.Delete(s, newLabel, u)
+		assert.NoError(t, err)
+
+		var deletedLabel models.Label
+		exists, err := s.ID(newLabel.ID).Get(&deletedLabel)
+		assert.NoError(t, err)
+		assert.False(t, exists)
+	})
+
+	t.Run("should not delete a label without access", func(t *testing.T) {
+		otherUser := &user.User{ID: 2}
+		labelToDelete := &models.Label{ID: 1, CreatedByID: 1}
+		err := ls.Delete(s, labelToDelete, otherUser)
+		assert.Error(t, err)
+		assert.True(t, errors.Is(err, ErrAccessDenied))
+	})
+}
+
+func TestLabelService_GetAll(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	ls := NewLabelService(testEngine)
+	u := &user.User{ID: 1}
+
+	t.Run("should get all labels for a user", func(t *testing.T) {
+		newLabel := &models.Label{Title: "to get all", CreatedByID: u.ID}
+		_, err := s.InsertOne(newLabel)
+		assert.NoError(t, err)
+
+		labels, err := ls.GetAll(s, u)
+		assert.NoError(t, err)
+		assert.NotNil(t, labels)
+		assert.Len(t, labels, 2) // 1 from fixtures, 1 created
+	})
+
+	t.Run("should return an empty slice for a user with no labels", func(t *testing.T) {
+		otherUser := &user.User{ID: 2}
+		labels, err := ls.GetAll(s, otherUser)
+		assert.NoError(t, err)
+		assert.NotNil(t, labels)
+		assert.Len(t, labels, 0)
+	})
+}
+
+func TestLabelService_Update(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	ls := NewLabelService(testEngine)
+	u := &user.User{ID: 1}
+
+	t.Run("should update a label", func(t *testing.T) {
+		newLabel := &models.Label{Title: "to update", CreatedByID: u.ID}
+		_, err := s.InsertOne(newLabel)
+		assert.NoError(t, err)
+
+		newLabel.Title = "Updated Title"
+		err = ls.Update(s, newLabel, u)
+		assert.NoError(t, err)
+
+		var updatedLabel models.Label
+		exists, err := s.ID(newLabel.ID).Get(&updatedLabel)
+		assert.NoError(t, err)
+		assert.True(t, exists)
+		assert.Equal(t, "Updated Title", updatedLabel.Title)
+	})
+
+	t.Run("should not update a label without access", func(t *testing.T) {
+		otherUser := &user.User{ID: 2}
+		labelToUpdate := &models.Label{
+			ID:          1,
+			Title:       "Updated Title by other user",
+			CreatedByID: 1,
+		}
+		err := ls.Update(s, labelToUpdate, otherUser)
+		assert.Error(t, err)
+		assert.True(t, errors.Is(err, ErrAccessDenied))
+	})
+}

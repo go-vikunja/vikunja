@@ -76,3 +76,57 @@ func (lp *LabelPermissions) Read() (bool, error) {
 	}
 	return lp.label.CreatedByID == lp.user.ID, nil
 }
+
+func (lp *LabelPermissions) Write() (bool, error) {
+	if lp.user == nil {
+		return false, nil
+	}
+	return lp.label.CreatedByID == lp.user.ID, nil
+}
+
+func (lp *LabelPermissions) ReadAll() (bool, error) {
+	if lp.user == nil {
+		return false, nil
+	}
+	return true, nil
+}
+
+func (ls *LabelService) GetAll(s *xorm.Session, u *user.User) ([]*models.Label, error) {
+	can, err := ls.Can(s, nil, u).ReadAll()
+	if err != nil {
+		return nil, err
+	}
+	if !can {
+		return nil, ErrAccessDenied
+	}
+
+	labels := make([]*models.Label, 0)
+	err = s.Where("created_by_id = ?", u.ID).Find(&labels)
+	return labels, err
+}
+
+func (ls *LabelService) Update(s *xorm.Session, label *models.Label, u *user.User) error {
+	can, err := ls.Can(s, label, u).Write()
+	if err != nil {
+		return err
+	}
+	if !can {
+		return ErrAccessDenied
+	}
+
+	_, err = s.ID(label.ID).AllCols().Update(label)
+	return err
+}
+
+func (ls *LabelService) Delete(s *xorm.Session, label *models.Label, u *user.User) error {
+	can, err := ls.Can(s, label, u).Write()
+	if err != nil {
+		return err
+	}
+	if !can {
+		return ErrAccessDenied
+	}
+
+	_, err = s.Delete(label)
+	return err
+}
