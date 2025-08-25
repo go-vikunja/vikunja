@@ -235,11 +235,6 @@ func NewSession() *xorm.Session {
 	return x.NewSession()
 }
 
-// GetEngine returns the current xorm engine
-func GetEngine() *xorm.Engine {
-	return x
-}
-
 // Type returns the db type of the currently configured db
 func Type() schemas.DBType {
 	return x.Dialect().URI().DBType

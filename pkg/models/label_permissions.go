@@ -70,7 +70,7 @@ func (l *Label) hasAccessToLabel(s *xorm.Session, a web.Auth) (has bool, maxPerm
 	if isLinkShare {
 		where = builder.Eq{"project_id": linkShare.ProjectID}
 	} else {
-		where = builder.In("project_id", GetUserProjectsStatement(a.GetID(), "", false).Select("l.id"))
+		where = builder.In("project_id", getUserProjectsStatement(a.GetID(), "", false).Select("l.id"))
 		createdByID = a.GetID()
 	}
 

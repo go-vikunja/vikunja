@@ -44,29 +44,11 @@ type LabelTask struct {
 	web.Permissions `xorm:"-" json:"-"`
 }
 
-// LabelWithTaskID represents a label with its associated task ID
-type LabelWithTaskID struct {
-	Label `xorm:"extends"`
-	TaskID int64 `xorm:"label_tasks.task_id" json:"task_id"`
-}
-
 // TableName makes a pretty table name
 func (*LabelTask) TableName() string {
 	return "label_tasks"
 }
 
-// LabelTaskCreateFunc is a function variable that can be set to delegate label task creation to a service
-var LabelTaskCreateFunc func(s *xorm.Session, lt *LabelTask, auth web.Auth) error
-
-// LabelTaskDeleteFunc is a function variable that can be set to delegate label task deletion to a service
-var LabelTaskDeleteFunc func(s *xorm.Session, lt *LabelTask, auth web.Auth) error
-
-// LabelTaskReadAllFunc is a function variable that can be set to delegate reading all label tasks to a service
-var LabelTaskReadAllFunc func(s *xorm.Session, taskID int64, a web.Auth, search string, page int) (result interface{}, resultCount int, numberOfTotalItems int64, err error)
-
-// LabelTaskBulkCreateFunc is a function variable that can be set to delegate bulk label task creation to a service
-var LabelTaskBulkCreateFunc func(s *xorm.Session, taskID int64, labels []*Label, auth web.Auth) error
-
 // Delete deletes a label on a task
 // @Summary Remove a label from a task
 // @Description Remove a label from a task. The user needs to have write-access to the project to be able do this.
@@ -81,32 +63,13 @@ var LabelTaskBulkCreateFunc func(s *xorm.Session, taskID int64, labels []*Label,
 // @Failure 404 {object} web.HTTPError "Label not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{task}/labels/{label} [delete]
-// Delete deletes a label on a task
-// @Summary Remove a label from a task
-// @Description Remove a label from a task. The user needs to have write-access to the project to be able do this.
-// @tags labels
-// @Accept json
-// @Produce json
-// @Security JWTKeyAuth
-// @Param task path int true "Task ID"
-// @Param label path int true "Label ID"
-// @Success 200 {object} models.Message "The label was successfully removed."
-// @Failure 403 {object} web.HTTPError "Not allowed to remove the label."
-// @Failure 404 {object} web.HTTPError "Label not found."
-// @Failure 500 {object} models.Message "Internal error"
-// @Router /tasks/{task}/labels/{label} [delete]
-// @Deprecated This method is deprecated. Use the Label service instead.
 func (lt *LabelTask) Delete(s *xorm.Session, auth web.Auth) (err error) {
-	if LabelTaskDeleteFunc != nil {
-		return LabelTaskDeleteFunc(s, lt, auth)
-	}
-
 	_, err = s.Delete(&LabelTask{LabelID: lt.LabelID, TaskID: lt.TaskID})
 	if err != nil {
 		return err
 	}
 
-	return TriggerTaskUpdatedEventForTaskID(s, auth, lt.TaskID)
+	return triggerTaskUpdatedEventForTaskID(s, auth, lt.TaskID)
 }
 
 // Create adds a label to a task
@@ -124,6 +87,31 @@ func (lt *LabelTask) Delete(s *xorm.Session, auth web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "The label does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{task}/labels [put]
+func (lt *LabelTask) Create(s *xorm.Session, auth web.Auth) (err error) {
+	// Check if the label is already added
+	exists, err := s.Exist(&LabelTask{LabelID: lt.LabelID, TaskID: lt.TaskID})
+	if err != nil {
+		return err
+	}
+	if exists {
+		return ErrLabelIsAlreadyOnTask{lt.LabelID, lt.TaskID}
+	}
+
+	lt.ID = 0
+	_, err = s.Insert(lt)
+	if err != nil {
+		return err
+	}
+
+	err = triggerTaskUpdatedEventForTaskID(s, auth, lt.TaskID)
+	if err != nil {
+		return err
+	}
+
+	err = updateProjectByTaskID(s, lt.TaskID)
+	return
+}
+
 // ReadAll gets all labels on a task
 // @Summary Get all labels on a task
 // @Description Returns all labels which are assicociated with a given task.
@@ -138,12 +126,7 @@ func (lt *LabelTask) Delete(s *xorm.Session, auth web.Auth) (err error) {
 // @Success 200 {array} models.Label "The labels"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{task}/labels [get]
-// @Deprecated This method is deprecated. Use the Label service instead.
 func (lt *LabelTask) ReadAll(s *xorm.Session, a web.Auth, search string, page int, _ int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
-	if LabelTaskReadAllFunc != nil {
-		return LabelTaskReadAllFunc(s, lt.TaskID, a, search, page)
-	}
-
 	// Check if the user has the permission to see the task
 	task := Task{ID: lt.TaskID}
 	canRead, _, err := task.CanRead(s, a)
@@ -162,20 +145,11 @@ func (lt *LabelTask) ReadAll(s *xorm.Session, a web.Auth, search string, page in
 	})
 }
 
-// ReadAll gets all labels on a task
-// @Summary Get all labels on a task
-// @Description Returns all labels which are assicociated with a given task.
-// @tags labels
-// @Accept json
-// @Produce json
-// @Param task path int true "Task ID"
-// @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
-// @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
-// @Param s query string false "Search labels by label text."
-// @Security JWTKeyAuth
-// @Success 200 {array} models.Label "The labels"
-// @Failure 500 {object} models.Message "Internal error"
-// @Router /tasks/{task}/labels [get]
+// LabelWithTaskID is a helper struct, contains the label + its task ID
+type LabelWithTaskID struct {
+	TaskID int64 `json:"-"`
+	Label  `xorm:"extends"`
+}
 
 // LabelByTaskIDsOptions is a struct to not clutter the function with too many optional parameters.
 type LabelByTaskIDsOptions struct {
@@ -424,7 +398,7 @@ func (t *Task) UpdateTaskLabels(s *xorm.Session, creator web.Auth, labels []*Lab
 		t.Labels = append(t.Labels, label)
 	}
 
-	err = TriggerTaskUpdatedEventForTaskID(s, creator, t.ID)
+	err = triggerTaskUpdatedEventForTaskID(s, creator, t.ID)
 	if err != nil {
 		return
 	}
@@ -457,10 +431,6 @@ type LabelTaskBulk struct {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/labels/bulk [post]
 func (ltb *LabelTaskBulk) Create(s *xorm.Session, a web.Auth) (err error) {
-	if LabelTaskBulkCreateFunc != nil {
-		return LabelTaskBulkCreateFunc(s, ltb.TaskID, ltb.Labels, a)
-	}
-
 	task, err := GetTaskByIDSimple(s, ltb.TaskID)
 	if err != nil {
 		return

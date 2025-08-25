@@ -44,7 +44,7 @@ func (t *Favorite) TableName() string {
 	return "favorites"
 }
 
-func AddToFavorites(s *xorm.Session, entityID int64, a web.Auth, kind FavoriteKind) error {
+func addToFavorites(s *xorm.Session, entityID int64, a web.Auth, kind FavoriteKind) error {
 	u, err := user.GetFromAuth(a)
 	if err != nil {
 		// Only error GetFromAuth is if it's a link share and we want to ignore that
@@ -61,7 +61,7 @@ func AddToFavorites(s *xorm.Session, entityID int64, a web.Auth, kind FavoriteKi
 	return err
 }
 
-func RemoveFromFavorite(s *xorm.Session, entityID int64, a web.Auth, kind FavoriteKind) error {
+func removeFromFavorite(s *xorm.Session, entityID int64, a web.Auth, kind FavoriteKind) error {
 	u, err := user.GetFromAuth(a)
 	if err != nil {
 		// Only error GetFromAuth is if it's a link share and we want to ignore that
@@ -74,7 +74,7 @@ func RemoveFromFavorite(s *xorm.Session, entityID int64, a web.Auth, kind Favori
 	return err
 }
 
-func IsFavorite(s *xorm.Session, entityID int64, a web.Auth, kind FavoriteKind) (is bool, err error) {
+func isFavorite(s *xorm.Session, entityID int64, a web.Auth, kind FavoriteKind) (is bool, err error) {
 	u, err := user.GetFromAuth(a)
 	if err != nil {
 		// Only error GetFromAuth is if it's a link share and we want to ignore that

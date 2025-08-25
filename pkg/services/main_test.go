@@ -20,27 +20,21 @@ import (
 	"os"
 	"testing"
 
-	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
-	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/modules/keyvalue"
+	"code.vikunja.io/api/pkg/models"
+	"xorm.io/xorm"
 )
 
+var testEngine *xorm.Engine
+
 func TestMain(m *testing.M) {
-	// Initialize logger for tests
-	log.InitLogger()
-
-	// Set default config
-	config.InitDefaultConfig()
-	// We need to set the root path even if we're not using the config, otherwise fixtures are not loaded correctly
-	config.ServiceRootpath.Set(os.Getenv("VIKUNJA_SERVICE_ROOTPATH"))
-
-	InitTests()
-
-	files.InitFileHandler()
-	keyvalue.InitStorage()
-	events.Fake()
-
+	var err error
+	testEngine, err = db.CreateTestEngine()
+	if err != nil {
+		panic(err)
+	}
+	models.SetupTests()
+	files.InitTests()
 	os.Exit(m.Run())
 }

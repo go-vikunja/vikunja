@@ -25,7 +25,6 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
-	"code.vikunja.io/api/pkg/services"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web/handler"
 
@@ -312,20 +311,23 @@ func DeleteProject(c echo.Context) error {
 		return handler.HandleHTTPError(err)
 	}
 
-	// Get the user from auth
-	u, err := user.GetFromAuth(auth)
-	if err != nil {
-		return handler.HandleHTTPError(err)
-	}
-
 	projectID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid project ID").SetInternal(err)
 	}
 
-	// Use the new Project service Delete method
-	projectService := &services.Project{}
-	if err := projectService.Delete(s, projectID, u); err != nil {
+	p := &models.Project{ID: projectID}
+
+	// The CanDelete method checks permissions and loads the project.
+	can, err := p.CanDelete(s, auth)
+	if err != nil {
+		return handler.HandleHTTPError(err)
+	}
+	if !can {
+		return echo.ErrForbidden
+	}
+
+	if err := p.Delete(s, auth); err != nil {
 		return handler.HandleHTTPError(err)
 	}
 

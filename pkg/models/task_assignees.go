@@ -176,7 +176,7 @@ func (la *TaskAssginee) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	err = UpdateProjectByTaskID(s, la.TaskID)
+	err = updateProjectByTaskID(s, la.TaskID)
 	if err != nil {
 		return err
 	}
