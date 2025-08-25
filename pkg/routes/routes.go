@@ -239,6 +239,7 @@ func registerAPIRoutesV2(a *echo.Group) {
 
 	apiv2.RegisterProjects(a)
 	apiv2.RegisterTasks(a)
+	apiv2.RegisterLabels(a)
 }
 
 func registerAPIRoutes(a *echo.Group) {
@@ -319,6 +320,8 @@ func registerAPIRoutes(a *echo.Group) {
 
 	// Middleware to collect metrics
 	setupMetricsMiddleware(a)
+
+	apiv1.RegisterLabels(a)
 
 	a.GET("/token/test", apiv1.TestToken)
 	a.POST("/token/test", apiv1.CheckToken)
@@ -452,21 +455,6 @@ func registerAPIRoutes(a *echo.Group) {
 	}
 	a.POST("/tasks/:projecttask/assignees/bulk", bulkAssigneeHandler.CreateWeb)
 
-	labelTaskHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.LabelTask{}
-		},
-	}
-	a.PUT("/tasks/:projecttask/labels", labelTaskHandler.CreateWeb)
-	a.DELETE("/tasks/:projecttask/labels/:label", labelTaskHandler.DeleteWeb)
-	a.GET("/tasks/:projecttask/labels", labelTaskHandler.ReadAllWeb)
-
-	bulkLabelTaskHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.LabelTaskBulk{}
-		},
-	}
-	a.POST("/tasks/:projecttask/labels/bulk", bulkLabelTaskHandler.CreateWeb)
 
 	taskRelationHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
@@ -501,16 +489,6 @@ func registerAPIRoutes(a *echo.Group) {
 		a.GET("/tasks/:task/comments/:commentid", taskCommentHandler.ReadOneWeb)
 	}
 
-	labelHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.Label{}
-		},
-	}
-	a.GET("/labels", labelHandler.ReadAllWeb)
-	a.GET("/labels/:label", labelHandler.ReadOneWeb)
-	a.PUT("/labels", labelHandler.CreateWeb)
-	a.DELETE("/labels/:label", labelHandler.DeleteWeb)
-	a.POST("/labels/:label", labelHandler.UpdateWeb)
 
 	projectTeamHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
