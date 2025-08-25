@@ -55,7 +55,7 @@ in {
 	env = {
     VIKUNJA_SERVICE_FRONTENDURL = "http://localhost:4173";
     VIKUNJA_DATABASE_TYPE = "sqlite";
-    VIKUNJA_DATABASE_PATH = "/tmp/vikunja.db";
+    VIKUNJA_DATABASE_PATH = "vikunja.db";
 		VIKUNJA_SERVICE_INTERFACE = "127.0.0.1:3456";
   };
 

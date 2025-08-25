@@ -397,6 +397,8 @@ func (Test) Coverage() {
 func (Test) Web() {
 	mg.Deps(initVars)
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
+	// TODO: Restore cover report when agents not involved:
+	// args := append([]string{"test", Goflags[0], "-p", "1", "-coverprofile", "cover.out", "-timeout", "45m"}, ApiPackages...)
 	args := []string{"test", Goflags[0], "-p", "1", "-timeout", "45m", PACKAGE + "/pkg/webtests"}
 	runAndStreamOutput("go", args...)
 }
