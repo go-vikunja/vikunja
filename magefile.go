@@ -382,7 +382,9 @@ func (Test) Feature() {
 	mg.Deps(initVars)
 	setApiPackages()
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
-	args := append([]string{"test", Goflags[0], "-p", "1", "-coverprofile", "cover.out", "-timeout", "45m"}, ApiPackages...)
+	// TODO: Restore cover report when agents not involved:
+	// args := append([]string{"test", Goflags[0], "-p", "1", "-coverprofile", "cover.out", "-timeout", "45m"}, ApiPackages...)
+	args := append([]string{"test", Goflags[0], "-p", "1", "-timeout", "45m"}, ApiPackages...)
 	runAndStreamOutput("go", args...)
 }
 
