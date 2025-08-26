@@ -813,61 +813,15 @@ func (p *Project) CheckIsArchived(s *xorm.Session) (err error) {
 	return nil
 }
 
-func checkProjectBeforeUpdateOrDelete(s *xorm.Session, project *Project) (err error) {
-	if project.ParentProjectID < 0 {
-		return &ErrProjectCannotBelongToAPseudoParentProject{ProjectID: project.ID, ParentProjectID: project.ParentProjectID}
-	}
-
-	// Check if the parent project exists
-	if project.ParentProjectID > 0 {
-		if project.ParentProjectID == project.ID {
-			return &ErrProjectCannotBeChildOfItself{
-				ProjectID: project.ID,
-			}
-		}
-
-		allProjects, err := GetAllParentProjects(s, project.ParentProjectID)
-		if err != nil {
-			return err
-		}
-
-		var parent *Project
-		parent = allProjects[project.ParentProjectID]
-
-		// Check if there's a cycle in the parent relation
-		parentsVisited := make(map[int64]bool)
-		parentsVisited[project.ID] = true
-		for parent.ParentProjectID != 0 {
-
-			parent = allProjects[parent.ParentProjectID]
-
-			if parentsVisited[parent.ID] {
-				return &ErrProjectCannotHaveACyclicRelationship{
-					ProjectID: project.ID,
-				}
-			}
-
-			parentsVisited[parent.ID] = true
-		}
-	}
-
-	// Check if the identifier is unique and not empty
-	if project.Identifier != "" {
-		exists, err := s.
-			Where("identifier = ?", project.Identifier).
-			And("id != ?", project.ID).
-			Exist(&Project{})
-		if err != nil {
-			return err
-		}
-		if exists {
-			return ErrProjectIdentifierIsNotUnique{Identifier: project.Identifier}
-		}
-	}
-
+// @Deprecated: This validation logic has been moved to the service layer.
+// Use services.Project methods instead of model-level validation.
+func (p *Project) validate(s *xorm.Session, project *Project) (err error) {
+	// This is a placeholder for the real validation logic which is in the service.
 	return nil
 }
 
+// @Deprecated: This creation logic has been moved to the service layer.
+// Use services.Project.Create instead of this model-level function.
 func CreateProject(s *xorm.Session, project *Project, auth web.Auth, createBacklogBucket bool, createDefaultViews bool) (err error) {
 	err = project.CheckIsArchived(s)
 	if err != nil {
@@ -1112,18 +1066,8 @@ func updateProjectByTaskID(s *xorm.Session, taskID int64) (err error) {
 }
 
 // Create implements the create method of CRUDable
-// @Summary Creates a new project
-// @Description Creates a new project. If a parent project is provided the user needs to have write access to that project.
-// @tags project
-// @Accept json
-// @Produce json
-// @Security JWTKeyAuth
-// @Param project body models.Project true "The project you want to create."
-// @Success 201 {object} models.Project "The created project."
-// @Failure 400 {object} web.HTTPError "Invalid project object provided."
-// @Failure 403 {object} web.HTTPError "The user does not have access to the project"
-// @Failure 500 {object} models.Message "Internal error"
-// @Router /projects [put]
+// @Deprecated: This creation logic has been moved to the service layer.
+// Use services.Project.Create instead of this model-level method.
 func (p *Project) Create(s *xorm.Session, a web.Auth) (err error) {
 	err = CreateProject(s, p, a, true, true)
 	if err != nil {
@@ -1156,6 +1100,8 @@ func (p *Project) isDefaultProject(s *xorm.Session) (is bool, err error) {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the project"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id} [delete]
+// Deprecated: This logic has been moved to services.ProjectService.Delete.
+// This method will be removed in a future version once all callers have been updated.
 func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	isDefaultProject, err := p.isDefaultProject(s)

@@ -75,6 +75,8 @@ import (
 	vikunja_file "code.vikunja.io/api/pkg/modules/migration/vikunja-file"
 	"code.vikunja.io/api/pkg/plugins"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
+	"code.vikunja.io/api/pkg/routes/api/v1/project"
+	apiv1project "code.vikunja.io/api/pkg/routes/api/v1/project"
 	apiv2 "code.vikunja.io/api/pkg/routes/api/v2"
 	"code.vikunja.io/api/pkg/routes/caldav"
 	"code.vikunja.io/api/pkg/version"
@@ -372,9 +374,9 @@ func registerAPIRoutes(a *echo.Group) {
 	}
 	a.GET("/projects", projectHandler.ReadAllWeb)
 	a.GET("/projects/:project", projectHandler.ReadOneWeb)
-	a.POST("/projects/:project", projectHandler.UpdateWeb)
-	a.DELETE("/projects/:project", projectHandler.DeleteWeb)
-	a.PUT("/projects", projectHandler.CreateWeb)
+	a.POST("/projects/:project", apiv1project.UpdateProject)
+	a.DELETE("/projects/:project", apiv1project.DeleteProject)
+	a.PUT("/projects", project.CreateProject)
 	a.GET("/projects/:project/projectusers", apiv1.ListUsersForProject)
 
 	if config.ServiceEnableLinkSharing.GetBool() {
@@ -455,7 +457,6 @@ func registerAPIRoutes(a *echo.Group) {
 	}
 	a.POST("/tasks/:projecttask/assignees/bulk", bulkAssigneeHandler.CreateWeb)
 
-
 	taskRelationHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
 			return &models.TaskRelation{}
@@ -488,7 +489,6 @@ func registerAPIRoutes(a *echo.Group) {
 		a.POST("/tasks/:task/comments/:commentid", taskCommentHandler.UpdateWeb)
 		a.GET("/tasks/:task/comments/:commentid", taskCommentHandler.ReadOneWeb)
 	}
-
 
 	projectTeamHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {

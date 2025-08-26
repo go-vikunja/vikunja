@@ -158,11 +158,15 @@ func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err er
 }
 
 // CanDelete checks if the user can delete a project
+// Deprecated: This logic has been moved to services.ProjectService.Delete.
+// This method will be removed in a future version once all callers have been updated.
 func (p *Project) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 	return p.IsAdmin(s, a)
 }
 
 // CanCreate checks if the user can create a project
+// @Deprecated: This permission logic has been moved to the service layer.
+// Use services.Project methods instead of model-level permission checks.
 func (p *Project) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 	if p.ParentProjectID != 0 {
 		parent := &Project{ID: p.ParentProjectID}
