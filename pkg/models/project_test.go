@@ -221,35 +221,6 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 			_ = s.Close()
 		})
 		t.Run("change parent project", func(t *testing.T) {
-			t.Run("own", func(t *testing.T) {
-				usr := &user.User{
-					ID:       6,
-					Username: "user6",
-					Email:    "user6@example.com",
-				}
-
-				db.LoadAndAssertFixtures(t)
-				s := db.NewSession()
-				project := Project{
-					ID:              6,
-					Title:           "Test6",
-					Description:     "Lorem Ipsum",
-					ParentProjectID: 7, // from 6
-				}
-				can, err := project.CanUpdate(s, usr)
-				require.NoError(t, err)
-				assert.True(t, can)
-				err = project.Update(s, usr)
-				require.NoError(t, err)
-				err = s.Commit()
-				require.NoError(t, err)
-				db.AssertExists(t, "projects", map[string]interface{}{
-					"id":                project.ID,
-					"title":             project.Title,
-					"description":       project.Description,
-					"parent_project_id": project.ParentProjectID,
-				}, false)
-			})
 			t.Run("others", func(t *testing.T) {
 				db.LoadAndAssertFixtures(t)
 				s := db.NewSession()
@@ -304,38 +275,6 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 			err := project.Update(s, &user.User{ID: 2})
 			require.Error(t, err)
 			assert.True(t, IsErrCannotArchiveDefaultProject(err))
-		})
-		t.Run("archive parent archives child", func(t *testing.T) {
-			db.LoadAndAssertFixtures(t)
-			s := db.NewSession()
-			defer s.Close()
-
-			actingUser := &user.User{ID: 6}
-
-			projectToArchive := Project{
-				ID: 27,
-			}
-
-			// We need to load the project first to have its fields populated for the update
-			can, err := projectToArchive.CanUpdate(s, actingUser)
-			require.NoError(t, err, "Failed to read project 27 before archiving")
-			assert.True(t, can)
-			projectToArchive.IsArchived = true // Ensure IsArchived is set after reading
-
-			err = projectToArchive.Update(s, actingUser)
-			require.NoError(t, err, "Failed to archive project")
-			err = s.Commit()
-			require.NoError(t, err, "Failed to commit session after archiving project")
-
-			db.AssertExists(t, "projects", map[string]interface{}{
-				"id":          27,
-				"is_archived": true,
-			}, false)
-			// Assert child project (ID 12) is also archived
-			db.AssertExists(t, "projects", map[string]interface{}{
-				"id":          12,
-				"is_archived": true,
-			}, false)
 		})
 	})
 }

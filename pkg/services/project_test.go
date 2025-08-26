@@ -262,4 +262,43 @@ func TestProject_Delete(t *testing.T) {
 		// Note: The exact cleanup verification will depend on what related entities exist in fixtures
 		// This test ensures the service handles the cleanup logic
 	})
+
+}
+
+func TestProject_Update_ArchiveParentArchivesChild(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	p := &Project{DB: db.GetEngine()}
+	actingUser := &user.User{ID: 6}
+
+	// First, let's load the existing project to get all its fields
+	existingProject, err := models.GetProjectSimpleByID(s, 27)
+	require.NoError(t, err, "Failed to load project 27")
+	require.NotNil(t, existingProject, "Project 27 should exist")
+
+	// Set the archive flag
+	existingProject.IsArchived = true
+
+	// Test archiving a parent project (ID 27) should also archive its child (ID 12)
+	updatedProject, err := p.Update(s, existingProject, actingUser)
+	assert.NoError(t, err, "Failed to archive project")
+	assert.NotNil(t, updatedProject)
+	assert.True(t, updatedProject.IsArchived)
+
+	err = s.Commit()
+	assert.NoError(t, err, "Failed to commit session after archiving project")
+
+	// Verify parent project (ID 27) is archived
+	db.AssertExists(t, "projects", map[string]interface{}{
+		"id":          27,
+		"is_archived": true,
+	}, false)
+
+	// Verify child project (ID 12) is also archived
+	db.AssertExists(t, "projects", map[string]interface{}{
+		"id":          12,
+		"is_archived": true,
+	}, false)
 }

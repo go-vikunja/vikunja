@@ -33,6 +33,15 @@ import (
 	"xorm.io/xorm"
 )
 
+func init() {
+	// Set up dependency injection for models to use service layer functions
+	models.ProjectUpdateFunc = func(s *xorm.Session, project *models.Project, u *user.User) (*models.Project, error) {
+		projectService := &Project{DB: s.Engine()}
+		return projectService.Update(s, project, u)
+	}
+	models.SetArchiveStateForProjectDescendantsFunc = SetArchiveStateForProjectDescendants
+}
+
 // Project is a service for projects.
 type Project struct {
 	DB *xorm.Engine

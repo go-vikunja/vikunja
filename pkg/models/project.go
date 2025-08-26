@@ -34,6 +34,14 @@ import (
 	"xorm.io/xorm"
 )
 
+// ProjectUpdateFunc is a function variable that can be set by the services package
+// to provide the implementation for project updates. This breaks the circular import.
+var ProjectUpdateFunc func(s *xorm.Session, project *Project, u *user.User) (*Project, error)
+
+// SetArchiveStateForProjectDescendantsFunc is a function variable that can be set by the services package
+// to provide the implementation for cascading archive operations. This breaks the circular import.
+var SetArchiveStateForProjectDescendantsFunc func(s *xorm.Session, parentProjectID int64, shouldBeArchived bool) error
+
 // Project represents a project of tasks
 type Project struct {
 	// The unique, numeric id of this project.
@@ -815,7 +823,82 @@ func (p *Project) CheckIsArchived(s *xorm.Session) (err error) {
 // @Deprecated: This validation logic has been moved to the service layer.
 // Use services.Project methods instead of model-level validation.
 func (p *Project) validate(s *xorm.Session, project *Project) (err error) {
-	// This is a placeholder for the real validation logic which is in the service.
+	// For updates, we need to load the existing project to get complete data
+	var existingProject *Project
+	if project.ID != 0 {
+		existingProject, err = GetProjectSimpleByID(s, project.ID)
+		if err != nil {
+			return err
+		}
+
+		// Merge the existing data with the update data
+		// Only validate fields that are actually being changed
+		if project.Title == "" {
+			project.Title = existingProject.Title
+		}
+		if project.ParentProjectID == 0 && existingProject.ParentProjectID != 0 {
+			project.ParentProjectID = existingProject.ParentProjectID
+		}
+		if project.Identifier == "" {
+			project.Identifier = existingProject.Identifier
+		}
+	}
+
+	if project.Title == "" {
+		return ErrProjectTitleCannotBeEmpty{}
+	}
+
+	if project.ParentProjectID < 0 {
+		return &ErrProjectCannotBelongToAPseudoParentProject{ProjectID: project.ID, ParentProjectID: project.ParentProjectID}
+	}
+
+	// Check if the parent project exists
+	if project.ParentProjectID > 0 {
+		if project.ParentProjectID == project.ID {
+			return &ErrProjectCannotBeChildOfItself{
+				ProjectID: project.ID,
+			}
+		}
+
+		allProjects, err := GetAllParentProjects(s, project.ParentProjectID)
+		if err != nil {
+			return err
+		}
+
+		var parent *Project
+		parent = allProjects[project.ParentProjectID]
+
+		// Check if there's a cycle in the parent relation
+		parentsVisited := make(map[int64]bool)
+		parentsVisited[project.ID] = true
+		for parent.ParentProjectID != 0 {
+
+			parent = allProjects[parent.ParentProjectID]
+
+			if parentsVisited[parent.ID] {
+				return &ErrProjectCannotHaveACyclicRelationship{
+					ProjectID: project.ID,
+				}
+			}
+
+			parentsVisited[parent.ID] = true
+		}
+	}
+
+	// Check if the identifier is unique and not empty
+	if project.Identifier != "" {
+		exists, err := s.
+			Where("identifier = ?", project.Identifier).
+			And("id != ?", project.ID).
+			Exist(&Project{})
+		if err != nil {
+			return err
+		}
+		if exists {
+			return ErrProjectIdentifierIsNotUnique{Identifier: project.Identifier}
+		}
+	}
+
 	return nil
 }
 
@@ -908,6 +991,14 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 		if isDefaultProject {
 			return &ErrCannotArchiveDefaultProject{ProjectID: project.ID}
 		}
+
+		// Use dependency inversion to call the service layer function
+		if SetArchiveStateForProjectDescendantsFunc != nil {
+			err = SetArchiveStateForProjectDescendantsFunc(s, project.ID, project.IsArchived)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	// We need to specify the cols we want to update here to be able to un-archive projects
@@ -973,7 +1064,6 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 	return
 }
 
-// Deprecated: use services.Project.Update instead.
 func (p *Project) Update(s *xorm.Session, a web.Auth) (err error) {
 	fid := GetSavedFilterIDFromProjectID(p.ID)
 	if fid > 0 {
@@ -1196,3 +1286,5 @@ func SetProjectBackground(s *xorm.Session, projectID int64, background *files.Fi
 		Update(l)
 	return
 }
+
+

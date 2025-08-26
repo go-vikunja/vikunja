@@ -20,59 +20,37 @@ import (
 	"net/http"
 	"strconv"
 
-	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/services"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web/handler"
 
 	"github.com/labstack/echo/v4"
+	"xorm.io/xorm"
 )
 
 // RegisterLabels registers all label routes
 func RegisterLabels(a *echo.Group) {
-	a.GET("/labels", GetAllLabels)
-	a.POST("/labels", CreateLabel)
-	a.GET("/labels/:id", GetLabel)
-	a.PUT("/labels/:id", UpdateLabel)
-	a.DELETE("/labels/:id", DeleteLabel)
+	a.GET("/labels", handler.WithDBAndUser(getAllLabelsLogic, false))
+	a.POST("/labels", handler.WithDBAndUser(createLabelLogic, true))
+	a.GET("/labels/:id", handler.WithDBAndUser(getLabelLogic, false))
+	a.PUT("/labels/:id", handler.WithDBAndUser(updateLabelLogic, true))
+	a.DELETE("/labels/:id", handler.WithDBAndUser(deleteLabelLogic, true))
 }
 
-// GetAllLabels handles retrieving all labels for a user
-func GetAllLabels(c echo.Context) error {
-	s := db.NewSession()
-	defer s.Close()
-
-	auth, err := auth.GetAuthFromClaims(c)
-	if err != nil {
-		return handler.HandleHTTPError(err)
-	}
-
-	u, err := user.GetFromAuth(auth)
-	if err != nil {
-		return handler.HandleHTTPError(err)
-	}
-
+// getAllLabelsLogic handles retrieving all labels for a user
+func getAllLabelsLogic(s *xorm.Session, u *user.User, c echo.Context) error {
 	labelService := services.NewLabelService(s.Engine())
 	labels, err := labelService.GetAll(s, u)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return c.JSON(http.StatusOK, labels)
 }
 
-// CreateLabel creates a new label
-func CreateLabel(c echo.Context) error {
-	s := db.NewSession()
-	defer s.Close()
-
-	auth, err := auth.GetAuthFromClaims(c)
-	if err != nil {
-		return handler.HandleHTTPError(err)
-	}
-
+// createLabelLogic creates a new label
+func createLabelLogic(s *xorm.Session, u *user.User, c echo.Context) error {
 	l := new(models.Label)
 	if err := c.Bind(l); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid label object provided.").SetInternal(err)
@@ -82,62 +60,32 @@ func CreateLabel(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error()).SetInternal(err)
 	}
 
-	u, err := user.GetFromAuth(auth)
-	if err != nil {
-		return handler.HandleHTTPError(err)
-	}
-
 	labelService := services.NewLabelService(s.Engine())
 	if err := labelService.Create(s, l, u); err != nil {
-		return handler.HandleHTTPError(err)
-	}
-
-	if err := s.Commit(); err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return c.JSON(http.StatusCreated, l)
 }
 
-// GetLabel retrieves a single label by its ID
-func GetLabel(c echo.Context) error {
-	s := db.NewSession()
-	defer s.Close()
-
-	auth, err := auth.GetAuthFromClaims(c)
-	if err != nil {
-		return handler.HandleHTTPError(err)
-	}
-
+// getLabelLogic retrieves a single label by its ID
+func getLabelLogic(s *xorm.Session, u *user.User, c echo.Context) error {
 	labelID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid label ID").SetInternal(err)
 	}
 
-	u, err := user.GetFromAuth(auth)
-	if err != nil {
-		return handler.HandleHTTPError(err)
-	}
-
 	labelService := services.NewLabelService(s.Engine())
 	label, err := labelService.Get(s, labelID, u)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return c.JSON(http.StatusOK, label)
 }
 
-// UpdateLabel handles updating a label
-func UpdateLabel(c echo.Context) error {
-	s := db.NewSession()
-	defer s.Close()
-
-	auth, err := auth.GetAuthFromClaims(c)
-	if err != nil {
-		return handler.HandleHTTPError(err)
-	}
-
+// updateLabelLogic handles updating a label
+func updateLabelLogic(s *xorm.Session, u *user.User, c echo.Context) error {
 	labelID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid label ID").SetInternal(err)
@@ -153,51 +101,25 @@ func UpdateLabel(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error()).SetInternal(err)
 	}
 
-	u, err := user.GetFromAuth(auth)
-	if err != nil {
-		return handler.HandleHTTPError(err)
-	}
-
 	labelService := services.NewLabelService(s.Engine())
 	if err := labelService.Update(s, updatePayload, u); err != nil {
-		return handler.HandleHTTPError(err)
-	}
-
-	if err := s.Commit(); err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return c.JSON(http.StatusOK, updatePayload)
 }
 
-// DeleteLabel handles deleting a label
-func DeleteLabel(c echo.Context) error {
-	s := db.NewSession()
-	defer s.Close()
-
-	auth, err := auth.GetAuthFromClaims(c)
-	if err != nil {
-		return handler.HandleHTTPError(err)
-	}
-
+// deleteLabelLogic handles deleting a label
+func deleteLabelLogic(s *xorm.Session, u *user.User, c echo.Context) error {
 	labelID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid label ID").SetInternal(err)
 	}
 
-	u, err := user.GetFromAuth(auth)
-	if err != nil {
-		return handler.HandleHTTPError(err)
-	}
-
 	labelService := services.NewLabelService(s.Engine())
 	label := &models.Label{ID: labelID, CreatedByID: u.ID}
 	if err := labelService.Delete(s, label, u); err != nil {
-		return handler.HandleHTTPError(err)
-	}
-
-	if err := s.Commit(); err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return c.NoContent(http.StatusNoContent)

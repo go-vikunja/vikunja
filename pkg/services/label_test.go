@@ -136,11 +136,11 @@ func TestLabelService_GetAll(t *testing.T) {
 		labels, err := ls.GetAll(s, u)
 		assert.NoError(t, err)
 		assert.NotNil(t, labels)
-		assert.Len(t, labels, 2) // 1 from fixtures, 1 created
+		assert.Len(t, labels, 3) // 2 from fixtures, 1 created
 	})
 
 	t.Run("should return an empty slice for a user with no labels", func(t *testing.T) {
-		otherUser := &user.User{ID: 2}
+		otherUser := &user.User{ID: 999} // Use a user ID that doesn't exist in fixtures
 		labels, err := ls.GetAll(s, otherUser)
 		assert.NoError(t, err)
 		assert.NotNil(t, labels)

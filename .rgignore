@@ -1,0 +1,58 @@
+# .rgignore for a Go + Vue (pnpm) project
+
+# =================
+# Frontend (Vue.js with pnpm) 📦
+# =================
+
+# This is still the most important rule. pnpm creates a node_modules
+# directory with symlinks that ripgrep should ignore.
+node_modules/
+
+# Standard build output directory for Vue.
+dist/
+
+# Directory for Nuxt.js, if you're using it.
+.nuxt/
+
+# The pnpm-specific lockfile.
+pnpm-lock.yaml
+
+# pnpm debug logs.
+pnpm-debug.log*
+
+# Test coverage reports.
+coverage/
+
+
+# =================
+# Backend (Go) 🐹
+# =================
+
+# Compiled Go binaries (e.g., your main executable).
+/bin/
+*.exe
+
+# Go's dependency directory if you are vendoring.
+vendor/
+
+# Go module checksum database.
+go.sum
+
+# Go test coverage output.
+coverage.out
+profile.out
+
+
+# =================
+# General / Tooling
+# =================
+
+# Git's internal directory.
+.git/
+
+# IDE-specific metadata folders.
+.vscode/
+.idea/
+
+# Generic log files.
+*.log

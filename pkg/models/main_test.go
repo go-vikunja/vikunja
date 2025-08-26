@@ -52,7 +52,6 @@ func setupTime() {
 }
 
 func TestMain(m *testing.M) {
-
 	setupTime()
 
 	// Initialize logger for tests
