@@ -530,13 +530,13 @@ func (p *Project) validate(s *xorm.Session, project *models.Project) (err error)
 	}
 
 	if project.ParentProjectID < 0 {
-		return &ErrProjectCannotBelongToAPseudoParentProject{ProjectID: project.ID, ParentProjectID: project.ParentProjectID}
+		return &models.ErrProjectCannotBelongToAPseudoParentProject{ProjectID: project.ID, ParentProjectID: project.ParentProjectID}
 	}
 
 	// Check if the parent project exists
 	if project.ParentProjectID > 0 {
 		if project.ParentProjectID == project.ID {
-			return &ErrProjectCannotBeChildOfItself{
+			return &models.ErrProjectCannotBeChildOfItself{
 				ProjectID: project.ID,
 			}
 		}
@@ -557,7 +557,7 @@ func (p *Project) validate(s *xorm.Session, project *models.Project) (err error)
 			parent = allProjects[parent.ParentProjectID]
 
 			if parentsVisited[parent.ID] {
-				return &ErrProjectCannotHaveACyclicRelationship{
+				return &models.ErrProjectCannotHaveACyclicRelationship{
 					ProjectID: project.ID,
 				}
 			}

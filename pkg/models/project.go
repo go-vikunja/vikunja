@@ -18,7 +18,6 @@ package models
 
 import (
 	"fmt"
-	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -175,7 +174,7 @@ var FavoritesPseudoProject = Project{
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects [get]
 func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
-	prs, resultCount, totalItems, err := getAllRawProjects(s, a, search, page, perPage, p.IsArchived)
+	prs, resultCount, totalItems, err := GetAllRawProjects(s, a, search, page, perPage, p.IsArchived)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -200,7 +199,7 @@ func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 		if err != nil {
 			return
 		}
-		err = addMaxPermissionToProjects(s, prs, doer)
+		err = AddMaxPermissionToProjects(s, prs, doer)
 		if err != nil {
 			return
 		}
@@ -216,7 +215,7 @@ func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 	return prs, resultCount, totalItems, err
 }
 
-func getAllRawProjects(s *xorm.Session, a web.Auth, search string, page int, perPage int, isArchived bool) (projects []*Project, resultCount int, totalItems int64, err error) {
+func GetAllRawProjects(s *xorm.Session, a web.Auth, search string, page int, perPage int, isArchived bool) (projects []*Project, resultCount int, totalItems int64, err error) {
 	// Check if we're dealing with a share auth
 	shareAuth, is := a.(*LinkSharing)
 	if is {
@@ -334,7 +333,7 @@ func (p *Project) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 		}
 	}
 
-	p.IsFavorite, err = isFavorite(s, p.ID, a, FavoriteKindProject)
+	p.IsFavorite, err = IsFavorite(s, p.ID, a, FavoriteKindProject)
 	if err != nil {
 		return
 	}
@@ -653,7 +652,7 @@ func GetAllParentProjects(s *xorm.Session, projectID int64) (allProjects map[int
 	return
 }
 
-// addProjectDetails adds owner user objects and project tasks to all projects in the slice
+// AddProjectDetails adds owner user objects and project tasks to all projects in the slice
 func AddProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err error) {
 	if len(projects) == 0 {
 		return
@@ -765,7 +764,7 @@ func AddProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err er
 	return
 }
 
-func addMaxPermissionToProjects(s *xorm.Session, projects []*Project, u *user.User) (err error) {
+func AddMaxPermissionToProjects(s *xorm.Session, projects []*Project, u *user.User) (err error) {
 	projectIDs := make([]int64, 0, len(projects))
 	for _, project := range projects {
 		if GetSavedFilterIDFromProjectID(project.ID) > 0 {
@@ -837,7 +836,7 @@ func CreateProject(s *xorm.Session, project *Project, auth web.Auth, createBackl
 	project.OwnerID = doer.ID
 	project.Owner = doer
 
-	err = checkProjectBeforeUpdateOrDelete(s, project)
+	err = project.validate(s, project)
 	if err != nil {
 		return
 	}
@@ -855,7 +854,7 @@ func CreateProject(s *xorm.Session, project *Project, auth web.Auth, createBackl
 		return
 	}
 	if project.IsFavorite {
-		if err := addToFavorites(s, project.ID, auth, FavoriteKindProject); err != nil {
+		if err := AddToFavorites(s, project.ID, auth, FavoriteKindProject); err != nil {
 			return err
 		}
 	}
@@ -893,14 +892,15 @@ func CreateNewProjectForUser(s *xorm.Session, u *user.User) (err error) {
 	return err
 }
 
+// Deprecated: use services.Project.Update instead.
 func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProjectBackground bool) (err error) {
-	err = checkProjectBeforeUpdateOrDelete(s, project)
+	err = project.validate(s, project)
 	if err != nil {
 		return
 	}
 
 	if project.IsArchived {
-		isDefaultProject, err := project.isDefaultProject(s)
+		isDefaultProject, err := project.IsDefaultProject(s)
 		if err != nil {
 			return err
 		}
@@ -908,11 +908,6 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 		if isDefaultProject {
 			return &ErrCannotArchiveDefaultProject{ProjectID: project.ID}
 		}
-	}
-
-	err = setArchiveStateForProjectDescendants(s, project.ID, project.IsArchived)
-	if err != nil {
-		return err
 	}
 
 	// We need to specify the cols we want to update here to be able to un-archive projects
@@ -934,25 +929,18 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 		colsToUpdate = append(colsToUpdate, "background_file_id", "background_blur_hash")
 	}
 
-	if project.Position < 0.1 {
-		err = recalculateProjectPositions(s, project.ParentProjectID)
-		if err != nil {
-			return err
-		}
-	}
-
-	wasFavorite, err := isFavorite(s, project.ID, auth, FavoriteKindProject)
+	wasFavorite, err := IsFavorite(s, project.ID, auth, FavoriteKindProject)
 	if err != nil {
 		return err
 	}
 	if project.IsFavorite && !wasFavorite {
-		if err := addToFavorites(s, project.ID, auth, FavoriteKindProject); err != nil {
+		if err := AddToFavorites(s, project.ID, auth, FavoriteKindProject); err != nil {
 			return err
 		}
 	}
 
 	if !project.IsFavorite && wasFavorite {
-		if err := removeFromFavorite(s, project.ID, auth, FavoriteKindProject); err != nil {
+		if err := RemoveFromFavorite(s, project.ID, auth, FavoriteKindProject); err != nil {
 			return err
 		}
 	}
@@ -985,48 +973,7 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 	return
 }
 
-func recalculateProjectPositions(s *xorm.Session, parentProjectID int64) (err error) {
-
-	allProjects := []*Project{}
-	err = s.
-		Where("parent_project_id = ?", parentProjectID).
-		OrderBy("position asc").
-		Find(&allProjects)
-	if err != nil {
-		return
-	}
-
-	maxPosition := math.Pow(2, 32)
-
-	for i, project := range allProjects {
-
-		currentPosition := maxPosition / float64(len(allProjects)) * (float64(i + 1))
-
-		_, err = s.Cols("position").
-			Where("id = ?", project.ID).
-			Update(&Project{Position: currentPosition})
-		if err != nil {
-			return
-		}
-	}
-
-	return
-}
-
-// Update implements the update method of CRUDable
-// @Summary Updates a project
-// @Description Updates a project. This does not include adding a task (see below).
-// @tags project
-// @Accept json
-// @Produce json
-// @Security JWTKeyAuth
-// @Param id path int true "Project ID"
-// @Param project body models.Project true "The project with updated values you want to update."
-// @Success 200 {object} models.Project "The updated project."
-// @Failure 400 {object} web.HTTPError "Invalid project object provided."
-// @Failure 403 {object} web.HTTPError "The user does not have access to the project"
-// @Failure 500 {object} models.Message "Internal error"
-// @Router /projects/{id} [post]
+// Deprecated: use services.Project.Update instead.
 func (p *Project) Update(s *xorm.Session, a web.Auth) (err error) {
 	fid := GetSavedFilterIDFromProjectID(p.ID)
 	if fid > 0 {
@@ -1082,7 +1029,7 @@ func (p *Project) Create(s *xorm.Session, a web.Auth) (err error) {
 	return fullProject.ReadOne(s, a)
 }
 
-func (p *Project) isDefaultProject(s *xorm.Session) (is bool, err error) {
+func (p *Project) IsDefaultProject(s *xorm.Session) (is bool, err error) {
 	return s.
 		Where("default_project_id = ?", p.ID).
 		Exist(&user.User{})
@@ -1104,7 +1051,7 @@ func (p *Project) isDefaultProject(s *xorm.Session) (is bool, err error) {
 // This method will be removed in a future version once all callers have been updated.
 func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 
-	isDefaultProject, err := p.isDefaultProject(s)
+	isDefaultProject, err := p.IsDefaultProject(s)
 	if err != nil {
 		return err
 	}
@@ -1167,7 +1114,7 @@ func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
-	err = removeFromFavorite(s, p.ID, a, FavoriteKindProject)
+	err = RemoveFromFavorite(s, p.ID, a, FavoriteKindProject)
 	if err != nil {
 		return
 	}
@@ -1248,41 +1195,4 @@ func SetProjectBackground(s *xorm.Session, projectID int64, background *files.Fi
 		Cols("background_file_id", "background_blur_hash").
 		Update(l)
 	return
-}
-
-// setArchiveStateForProjectDescendants uses a recursive CTE to find and set the archived status of all descendant projects.
-func setArchiveStateForProjectDescendants(s *xorm.Session, parentProjectID int64, shouldBeArchived bool) error {
-	var descendantIDs []int64
-	err := s.SQL(
-		`
-WITH RECURSIVE descendant_ids (id) AS (
-    SELECT id
-    FROM projects
-    WHERE parent_project_id = ?
-    UNION ALL
-    SELECT p.id
-    FROM projects p
-    INNER JOIN descendant_ids di ON p.parent_project_id = di.id
-)
-SELECT id FROM descendant_ids`,
-		parentProjectID,
-	).Find(&descendantIDs)
-	if err != nil {
-		log.Errorf("Error finding descendant projects for parent ID %d: %v", parentProjectID, err)
-		return fmt.Errorf("failed to find descendant projects for parent ID %d: %w", parentProjectID, err)
-	}
-
-	if len(descendantIDs) == 0 {
-		return nil
-	}
-
-	_, err = s.In("id", descendantIDs).
-		And("is_archived != ?", shouldBeArchived).
-		Cols("is_archived").
-		Update(&Project{IsArchived: shouldBeArchived})
-	if err != nil {
-		log.Errorf("Error updating is_archived for descendant projects for parent ID %d to %t: %v", parentProjectID, shouldBeArchived, err)
-		return fmt.Errorf("failed to update is_archived for descendant projects for parent ID %d to %t: %w", parentProjectID, shouldBeArchived, err)
-	}
-	return nil
 }
