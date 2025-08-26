@@ -424,7 +424,7 @@ func registerAPIRoutes(a *echo.Group) {
 	a.GET("/tasks/:projecttask", taskHandler.ReadOneWeb)
 	a.GET("/tasks/all", taskCollectionHandler.ReadAllWeb)
 	a.DELETE("/tasks/:projecttask", taskHandler.DeleteWeb)
-	a.POST("/tasks/:projecttask", taskHandler.UpdateWeb)
+	apiv1.RegisterTasks(a)
 
 	taskPositionHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
