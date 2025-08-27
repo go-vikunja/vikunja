@@ -625,7 +625,7 @@ func TestLinkSharing(t *testing.T) {
 			t.Run("Shared readonly", func(t *testing.T) {
 				_, err := testHandlerTaskReadOnly.testDeleteWithLinkShare(nil, map[string]string{"projecttask": "1"})
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.ErrorContains(t, err, `Forbidden`)
 			})
 			t.Run("Shared write", func(t *testing.T) {
 				rec, err := testHandlerTaskWrite.testDeleteWithLinkShare(nil, map[string]string{"projecttask": "13"})

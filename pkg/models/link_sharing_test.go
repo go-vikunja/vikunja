@@ -157,7 +157,7 @@ func TestLinkSharing_ReadOne(t *testing.T) {
 	})
 }
 
-func TestLinkSharing_toUser(t *testing.T) {
+func TestLinkSharing_ToUser(t *testing.T) {
 	t.Run("empty name", func(t *testing.T) {
 		share := &LinkSharing{
 			ID:      1,
@@ -166,7 +166,7 @@ func TestLinkSharing_toUser(t *testing.T) {
 			Updated: time.Now(),
 		}
 
-		user := share.toUser()
+		user := share.ToUser()
 
 		assert.Equal(t, "link-share-1", user.Username)
 		assert.Equal(t, "Link Share", user.Name)
@@ -181,7 +181,7 @@ func TestLinkSharing_toUser(t *testing.T) {
 			Updated: time.Now(),
 		}
 
-		user := share.toUser()
+		user := share.ToUser()
 
 		assert.Equal(t, "link-share-2", user.Username)
 		assert.Equal(t, "My Test Share (Link Share)", user.Name)

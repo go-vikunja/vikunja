@@ -21,9 +21,7 @@ package caldav
 import (
 	"testing"
 
-	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 
@@ -40,10 +38,6 @@ func TestSubTask_Create(t *testing.T) {
 		Email:    "user15@example.com",
 	}
 
-	config.InitDefaultConfig()
-	files.InitTests()
-	user.InitTests()
-	models.SetupTests()
 
 	//
 	// Create a subtask

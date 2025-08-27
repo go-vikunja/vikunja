@@ -109,7 +109,7 @@ func (share *LinkSharing) getUserID() int64 {
 	return share.ID * -1
 }
 
-func (share *LinkSharing) toUser() *user.User {
+func (share *LinkSharing) ToUser() *user.User {
 	suffix := "Link Share"
 	if share.Name != "" {
 		suffix = " (" + suffix + ")"

@@ -34,45 +34,20 @@ func GetUserOrLinkShareUser(s *xorm.Session, a web.Auth) (uu *user.User, err err
 		if err != nil {
 			return nil, err
 		}
-		return l.toUser(), nil
+		return l.ToUser(), nil
 	}
 
 	return
 }
 
+// GetUsersOrLinkSharesFromIDsFunc is a function that returns all users or pseudo link shares from a slice of ids.
+// It is used to break the dependency cycle between the models and services packages.
+var GetUsersOrLinkSharesFromIDsFunc func(s *xorm.Session, ids []int64) (users map[int64]*user.User, err error)
+
 // Returns all users or pseudo link shares from a slice of ids. ids < 0 are considered to be a link share in that case.
 func GetUsersOrLinkSharesFromIDs(s *xorm.Session, ids []int64) (users map[int64]*user.User, err error) {
-	users = make(map[int64]*user.User)
-	var userIDs []int64
-	var linkShareIDs []int64
-	for _, id := range ids {
-		if id < 0 {
-			linkShareIDs = append(linkShareIDs, id*-1)
-			continue
-		}
-
-		userIDs = append(userIDs, id)
+	if GetUsersOrLinkSharesFromIDsFunc == nil {
+		panic("GetUsersOrLinkSharesFromIDsFunc is not set")
 	}
-
-	if len(userIDs) > 0 {
-		users, err = user.GetUsersByIDs(s, userIDs)
-		if err != nil {
-			return
-		}
-	}
-
-	if len(linkShareIDs) == 0 {
-		return
-	}
-
-	shares, err := GetLinkSharesByIDs(s, linkShareIDs)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, share := range shares {
-		users[share.ID*-1] = share.toUser()
-	}
-
-	return
+	return GetUsersOrLinkSharesFromIDsFunc(s, ids)
 }
