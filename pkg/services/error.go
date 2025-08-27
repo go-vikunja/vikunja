@@ -1,8 +1,11 @@
 package services
 
-import "errors"
+import (
+	"code.vikunja.io/api/pkg/models"
+	"errors"
+)
 
 var (
-	ErrAccessDenied = errors.New("access denied")
+	ErrAccessDenied  = models.ErrGenericForbidden{}
 	ErrLabelNotFound = errors.New("label not found")
 )

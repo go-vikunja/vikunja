@@ -323,12 +323,12 @@ func TestTask(t *testing.T) {
 			t.Run("Forbidden", func(t *testing.T) {
 				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"projecttask": "14"})
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.ErrorContains(t, err, `Forbidden`)
 			})
 			t.Run("Shared Via Team readonly", func(t *testing.T) {
 				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"projecttask": "15"})
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.ErrorContains(t, err, `Forbidden`)
 			})
 			t.Run("Shared Via Team write", func(t *testing.T) {
 				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"projecttask": "16"})
@@ -344,7 +344,7 @@ func TestTask(t *testing.T) {
 			t.Run("Shared Via User readonly", func(t *testing.T) {
 				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"projecttask": "18"})
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.ErrorContains(t, err, `Forbidden`)
 			})
 			t.Run("Shared Via User write", func(t *testing.T) {
 				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"projecttask": "19"})
@@ -360,7 +360,7 @@ func TestTask(t *testing.T) {
 			t.Run("Shared Via Parent Project Team readonly", func(t *testing.T) {
 				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"projecttask": "21"})
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.ErrorContains(t, err, `Forbidden`)
 			})
 			t.Run("Shared Via Parent Project Team write", func(t *testing.T) {
 				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"projecttask": "22"})
@@ -376,7 +376,7 @@ func TestTask(t *testing.T) {
 			t.Run("Shared Via Parent Project User readonly", func(t *testing.T) {
 				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"projecttask": "24"})
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.ErrorContains(t, err, `Forbidden`)
 			})
 			t.Run("Shared Via Parent Project User write", func(t *testing.T) {
 				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"projecttask": "25"})

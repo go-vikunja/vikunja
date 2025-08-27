@@ -28,6 +28,7 @@ import (
 	"code.vikunja.io/api/pkg/i18n"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
+	"xorm.io/xorm"
 )
 
 func setupTime() {
@@ -70,6 +71,44 @@ func TestMain(m *testing.M) {
 	user.InitTests()
 
 	SetupTests()
+
+	// Set up a mock for the GetUsersOrLinkSharesFromIDsFunc for model tests,
+	// as they should not depend on the services package.
+	GetUsersOrLinkSharesFromIDsFunc = func(s *xorm.Session, ids []int64) (map[int64]*user.User, error) {
+		usersMap := make(map[int64]*user.User)
+		var userIDs []int64
+		var linkShareIDs []int64
+		for _, id := range ids {
+			if id < 0 {
+				linkShareIDs = append(linkShareIDs, id*-1)
+				continue
+			}
+			userIDs = append(userIDs, id)
+		}
+
+		if len(userIDs) > 0 {
+			var err error
+			usersMap, err = user.GetUsersByIDs(s, userIDs)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		if len(linkShareIDs) == 0 {
+			return usersMap, nil
+		}
+
+		shares, err := GetLinkSharesByIDs(s, linkShareIDs)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, share := range shares {
+			usersMap[share.ID*-1] = share.ToUser()
+		}
+
+		return usersMap, nil
+	}
 
 	events.Fake()
 
