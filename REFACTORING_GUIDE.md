@@ -103,6 +103,17 @@ Our testing strategy is layered to match the architecture.
   * **Test Environment Setup:**
     Tests require a specific setup to run correctly.
 
-    1.  **Run Command:** Always run tests using the `mage` commands (`mage test:feature`, `mage test:web`) or by setting the environment variable: `VIKUNJA_SERVICE_ROOTPATH=$(pwd) go test ./...`
-    2.  **`TestMain` for Setup:** Each test package (`models`, `services`, etc.) should have a `main_test.go` file with a `TestMain` function that initializes the database and other dependencies (`models.SetupTests()`, `user.InitTests()`, etc.).
-    3.  **The "Master Switch" (`pkg/testutil`):** For test suites that need the dependency inversion to work (like the `models` tests), the `main_test.go` file must contain a blank import to our test utility package: `_ "code.vikunja.io/api/pkg/testutil"`. This safely triggers the `init()` functions from the `services` package.
+    1.  **Test Prerequisites (Building the Frontend):** Some test suites, especially the end-to-end web tests (`mage test:web`), require the frontend assets to be built first. If these are missing, you may see errors like `pattern dist: no matching files found`. To fix this, run the following commands from the project root **once** at the beginning of your task:
+
+        ```bash
+        cd frontend
+        pnpm install
+        pnpm run build
+        cd ..
+        ```
+
+    2.  **Run Command:** Always run tests using the `mage` commands (`mage test:feature` for backend, `mage test:web` for end-to-end) or by setting the environment variable: `VIKUNJA_SERVICE_ROOTPATH=$(pwd) go test ./...`
+
+    3.  **`TestMain` for Setup:** Each test package (`models`, `services`, etc.) should have a `main_test.go` file with a `TestMain` function that initializes the database and other dependencies (`models.SetupTests()`, `user.InitTests()`, etc.).
+
+    4.  **The "Master Switch" (`pkg/testutil`):** For test suites that need the dependency inversion to work (like the `models` tests), the `main_test.go` file must contain a blank import to our test utility package: `_ "code.vikunja.io/api/pkg/testutil"`. This safely triggers the `init()` functions from the `services` package.
