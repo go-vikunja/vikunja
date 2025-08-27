@@ -34,17 +34,26 @@ func GetUserOrLinkShareUser(s *xorm.Session, a web.Auth) (uu *user.User, err err
 		if err != nil {
 			return nil, err
 		}
-		return l.ToUser(), nil
+		if NewUserProxyFromLinkShareFunc == nil {
+			panic("NewUserProxyFromLinkShareFunc is not set")
+		}
+		return NewUserProxyFromLinkShareFunc(l), nil
 	}
 
 	return
 }
+
+// NewUserProxyFromLinkShareFunc is a function that returns a user proxy from a link share.
+// It is used to break the dependency cycle between the models and services packages.
+var NewUserProxyFromLinkShareFunc func(share *LinkSharing) *user.User
 
 // GetUsersOrLinkSharesFromIDsFunc is a function that returns all users or pseudo link shares from a slice of ids.
 // It is used to break the dependency cycle between the models and services packages.
 var GetUsersOrLinkSharesFromIDsFunc func(s *xorm.Session, ids []int64) (users map[int64]*user.User, err error)
 
 // Returns all users or pseudo link shares from a slice of ids. ids < 0 are considered to be a link share in that case.
+//
+// @Deprecated This function is deprecated and will be removed in a future version. Use services.UserService.GetUsersAndProxiesFromIDs instead.
 func GetUsersOrLinkSharesFromIDs(s *xorm.Session, ids []int64) (users map[int64]*user.User, err error) {
 	if GetUsersOrLinkSharesFromIDsFunc == nil {
 		panic("GetUsersOrLinkSharesFromIDsFunc is not set")
