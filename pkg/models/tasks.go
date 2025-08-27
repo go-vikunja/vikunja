@@ -637,7 +637,7 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 		return
 	}
 
-	users, err := getUsersOrLinkSharesFromIDs(s, userIDs)
+	users, err := GetUsersOrLinkSharesFromIDs(s, userIDs)
 	if err != nil {
 		return
 	}
@@ -1621,6 +1621,7 @@ func updateTaskLastUpdated(s *xorm.Session, task *Task) error {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the project"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id} [delete]
+// @Deprecated
 func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	// duplicate the task for the event

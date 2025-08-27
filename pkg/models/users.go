@@ -41,7 +41,7 @@ func GetUserOrLinkShareUser(s *xorm.Session, a web.Auth) (uu *user.User, err err
 }
 
 // Returns all users or pseudo link shares from a slice of ids. ids < 0 are considered to be a link share in that case.
-func getUsersOrLinkSharesFromIDs(s *xorm.Session, ids []int64) (users map[int64]*user.User, err error) {
+func GetUsersOrLinkSharesFromIDs(s *xorm.Session, ids []int64) (users map[int64]*user.User, err error) {
 	users = make(map[int64]*user.User)
 	var userIDs []int64
 	var linkShareIDs []int64

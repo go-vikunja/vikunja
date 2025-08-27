@@ -308,7 +308,7 @@ func getAllCommentsForTasksWithoutPermissionCheck(s *xorm.Session, taskIDs []int
 		commentIDs = append(commentIDs, comment.ID)
 	}
 
-	authors, err := getUsersOrLinkSharesFromIDs(s, authorIDs)
+	authors, err := GetUsersOrLinkSharesFromIDs(s, authorIDs)
 	if err != nil {
 		return
 	}
