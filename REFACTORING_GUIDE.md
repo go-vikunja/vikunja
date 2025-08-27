@@ -2,6 +2,17 @@
 
 This document serves as the **source of truth** for all refactoring work in the Vikunja project. It documents the core architectural patterns, dependency management strategies, and testing philosophies established during the service layer refactor.
 
+> ## The Golden Rule: Move Logic, Don't Expose It
+>
+> This is the most important rule of the entire refactor.
+>
+> When a service needs logic that is currently inside a private `models` function, the solution is **always** to **MOVE** the logic from the model into the service.
+>
+> You must **NEVER** solve this problem by making the model function public and calling it from the service. This violates the architecture and re-introduces the problems we are trying to fix.
+>
+> * **Correct ✅:** Copying the permission-checking code from a model method into a new service method.
+> * **Incorrect ❌:** Making a model's `CanRead()` or `CanWrite()` method public and calling it from a service.
+
 ## Table of Contents
 
 1.  [The Core Architecture ("Chef, Waiter, Pantry")](#1-the-core-architecture-chef-waiter-pantry)
