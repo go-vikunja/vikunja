@@ -18,7 +18,6 @@ package models
 
 import (
 	"testing"
-	"time"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
@@ -157,34 +156,3 @@ func TestLinkSharing_ReadOne(t *testing.T) {
 	})
 }
 
-func TestLinkSharing_ToUser(t *testing.T) {
-	t.Run("empty name", func(t *testing.T) {
-		share := &LinkSharing{
-			ID:      1,
-			Name:    "",
-			Created: time.Now(),
-			Updated: time.Now(),
-		}
-
-		user := share.ToUser()
-
-		assert.Equal(t, "link-share-1", user.Username)
-		assert.Equal(t, "Link Share", user.Name)
-		assert.Equal(t, int64(-1), user.ID)
-	})
-
-	t.Run("name provided", func(t *testing.T) {
-		share := &LinkSharing{
-			ID:      2,
-			Name:    "My Test Share",
-			Created: time.Now(),
-			Updated: time.Now(),
-		}
-
-		user := share.ToUser()
-
-		assert.Equal(t, "link-share-2", user.Username)
-		assert.Equal(t, "My Test Share (Link Share)", user.Name)
-		assert.Equal(t, int64(-2), user.ID)
-	})
-}

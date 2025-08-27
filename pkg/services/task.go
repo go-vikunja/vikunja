@@ -59,17 +59,17 @@ func (ts *TaskService) Update(s *xorm.Session, task *models.Task, u *user.User) 
 
 // Delete deletes a task.
 func (ts *TaskService) Delete(s *xorm.Session, task *models.Task, a web.Auth) error {
-	t, err := models.GetTaskByIDSimple(s, task.ID)
-	if err != nil {
-		return err
-	}
-
 	can, err := ts.canWriteTask(s, task.ID, a)
 	if err != nil {
 		return err
 	}
 	if !can {
 		return ErrAccessDenied
+	}
+
+	t, err := models.GetTaskByIDSimple(s, task.ID)
+	if err != nil {
+		return err
 	}
 
 	// duplicate the task for the event

@@ -17,6 +17,8 @@
 package services
 
 import (
+	"strconv"
+
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"xorm.io/xorm"
@@ -31,6 +33,27 @@ func init() {
 	models.GetUsersOrLinkSharesFromIDsFunc = func(s *xorm.Session, ids []int64) (map[int64]*user.User, error) {
 		userService := &UserService{DB: s.Engine()}
 		return userService.GetUsersAndProxiesFromIDs(s, ids)
+	}
+	models.NewUserProxyFromLinkShareFunc = func(share *models.LinkSharing) *user.User {
+		userService := &UserService{}
+		return userService.NewUserProxyFromLinkShare(share)
+	}
+}
+
+func (us *UserService) NewUserProxyFromLinkShare(share *models.LinkSharing) *user.User {
+	suffix := "Link Share"
+	if share.Name != "" {
+		suffix = " (" + suffix + ")"
+	}
+
+	username := "link-share-" + strconv.FormatInt(share.ID, 10)
+
+	return &user.User{
+		ID:       share.ID * -1,
+		Name:     share.Name + suffix,
+		Username: username,
+		Created:  share.Created,
+		Updated:  share.Updated,
 	}
 }
 
@@ -70,7 +93,7 @@ func (us *UserService) GetUsersAndProxiesFromIDs(s *xorm.Session, ids []int64) (
 	}
 
 	for _, share := range shares {
-		users[share.ID*-1] = share.ToUser()
+		users[share.ID*-1] = us.NewUserProxyFromLinkShare(share)
 	}
 
 	return
