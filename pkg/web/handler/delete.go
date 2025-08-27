@@ -23,7 +23,9 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
+	"code.vikunja.io/api/pkg/services"
 
 	"github.com/labstack/echo/v4"
 )
@@ -63,18 +65,24 @@ func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
 		}
 	}()
 
-	canDelete, err := currentStruct.CanDelete(s, currentAuth)
-	if err != nil {
-		_ = s.Rollback()
-		return HandleHTTPError(err)
-	}
-	if !canDelete {
-		_ = s.Rollback()
-		log.Warningf("Tried to delete while not having the permissions for it (User: %v)", currentAuth)
-		return echo.NewHTTPError(http.StatusForbidden)
-	}
+	switch v := currentStruct.(type) {
+	case *models.Task:
+		ts := services.NewTaskService(s.Engine())
+		err = ts.Delete(s, v, currentAuth)
+	default:
+		canDelete, err := currentStruct.CanDelete(s, currentAuth)
+		if err != nil {
+			_ = s.Rollback()
+			return HandleHTTPError(err)
+		}
+		if !canDelete {
+			_ = s.Rollback()
+			log.Warningf("Tried to delete while not having the permissions for it (User: %v)", currentAuth)
+			return echo.NewHTTPError(http.StatusForbidden)
+		}
 
-	err = currentStruct.Delete(s, currentAuth)
+		err = currentStruct.Delete(s, currentAuth)
+	}
 	if err != nil {
 		_ = s.Rollback()
 		return HandleHTTPError(err)

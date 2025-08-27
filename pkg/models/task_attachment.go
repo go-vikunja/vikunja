@@ -180,7 +180,7 @@ func (ta *TaskAttachment) ReadAll(s *xorm.Session, a web.Auth, _ string, page in
 		return nil, 0, 0, err
 	}
 
-	users, err := getUsersOrLinkSharesFromIDs(s, userIDs)
+	users, err := GetUsersOrLinkSharesFromIDs(s, userIDs)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -373,7 +373,7 @@ func getTaskAttachmentsByTaskIDs(s *xorm.Session, taskIDs []int64) (attachments 
 		return
 	}
 
-	users, err := getUsersOrLinkSharesFromIDs(s, userIDs)
+	users, err := GetUsersOrLinkSharesFromIDs(s, userIDs)
 	if err != nil {
 		return nil, err
 	}

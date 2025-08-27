@@ -141,7 +141,7 @@ func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, _ string, _ int, _ int)
 	}
 
 	// Get all users
-	users, err := getUsersOrLinkSharesFromIDs(s, userIDs)
+	users, err := GetUsersOrLinkSharesFromIDs(s, userIDs)
 	if err != nil {
 		return
 	}
@@ -192,7 +192,7 @@ func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, projects []*Pr
 	}
 
 	// Get all users
-	users, err := getUsersOrLinkSharesFromIDs(s, userIDs)
+	users, err := GetUsersOrLinkSharesFromIDs(s, userIDs)
 	if err != nil {
 		return
 	}
