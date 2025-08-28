@@ -76,6 +76,7 @@ import (
 	"code.vikunja.io/api/pkg/plugins"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	apiv1project "code.vikunja.io/api/pkg/routes/api/v1/project"
+	apiv1task "code.vikunja.io/api/pkg/routes/api/v1/task"
 	apiv2 "code.vikunja.io/api/pkg/routes/api/v2"
 	"code.vikunja.io/api/pkg/routes/caldav"
 	"code.vikunja.io/api/pkg/version"
@@ -423,7 +424,7 @@ func registerAPIRoutes(a *echo.Group) {
 	a.PUT("/projects/:project/tasks", taskHandler.CreateWeb)
 	a.GET("/tasks/:projecttask", taskHandler.ReadOneWeb)
 	a.GET("/tasks/all", taskCollectionHandler.ReadAllWeb)
-	a.DELETE("/tasks/:projecttask", taskHandler.DeleteWeb)
+	a.DELETE("/tasks/:projecttask", handler.WithDBAndUser(apiv1task.Delete, true))
 	apiv1.RegisterTasks(a)
 
 	taskPositionHandler := &handler.WebHandler{
