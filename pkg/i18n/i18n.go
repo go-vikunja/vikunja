@@ -21,7 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/fs"
-	"path/filepath"
+	"path"
 	"strings"
 	"sync"
 
@@ -97,7 +97,7 @@ func Init() {
 			continue
 		}
 
-		filePath := filepath.Join(dir, entry.Name())
+		filePath := path.Join(dir, entry.Name())
 
 		err = translator.loadFile(localeFS, langCode, filePath)
 		if err != nil {
