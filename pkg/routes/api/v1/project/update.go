@@ -43,7 +43,7 @@ func UpdateProject(c echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
-	projectService := services.Project{DB: db.GetEngine()}
+	projectService := services.ProjectService{DB: db.GetEngine()}
 	updatedProject, err := projectService.Update(s, p, u)
 	if err != nil {
 		return handler.HandleHTTPError(err)

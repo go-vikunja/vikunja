@@ -43,7 +43,7 @@ func DeleteProject(c echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
-	projectService := &services.Project{}
+	projectService := &services.ProjectService{}
 	if err := projectService.Delete(s, projectID, u); err != nil {
 		return handler.HandleHTTPError(err)
 	}

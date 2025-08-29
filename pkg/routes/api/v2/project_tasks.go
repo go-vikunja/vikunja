@@ -24,6 +24,8 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
+	"code.vikunja.io/api/pkg/services"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web/handler"
 	"github.com/labstack/echo/v4"
 )
@@ -58,20 +60,13 @@ func GetProjectTasks(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid project ID").SetInternal(err)
 	}
 
-	p := &models.Project{ID: projectID}
-	can, _, err := p.CanRead(s, auth)
-	if err != nil {
-		return handler.HandleHTTPError(err)
-	}
-	if !can {
-		return echo.ErrForbidden
-	}
+	var page, perPage int
 
 	pageStr := c.QueryParam("page")
 	if pageStr == "" {
 		pageStr = "1"
 	}
-	page, err := strconv.Atoi(pageStr)
+	page, err = strconv.Atoi(pageStr)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid page number").SetInternal(err)
 	}
@@ -80,22 +75,19 @@ func GetProjectTasks(c echo.Context) error {
 	if perPageStr == "" {
 		perPageStr = "20"
 	}
-	perPage, err := strconv.Atoi(perPageStr)
+	perPage, err = strconv.Atoi(perPageStr)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid per_page number").SetInternal(err)
 	}
 
-	tc := &models.TaskCollection{
-		ProjectID: projectID,
+	// Since we are not in a handler.WithDBAndUser wrapper, we need to get the user manually.
+	u, err := user.GetFromAuth(auth)
+	if err != nil {
+		return handler.HandleHTTPError(err)
 	}
 
-	tasks, resultCount, totalItems, err := tc.ReadAll(
-		s,
-		auth,
-		c.QueryParam("s"),
-		page,
-		perPage,
-	)
+	taskService := services.NewTaskService(s.Engine())
+	tasks, resultCount, totalItems, err := taskService.GetAllByProject(s, projectID, u, page, perPage, c.QueryParam("s"))
 	if err != nil {
 		return handler.HandleHTTPError(err)
 	}
