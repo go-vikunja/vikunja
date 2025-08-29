@@ -586,6 +586,10 @@ func InitConfig() {
 		RateLimitStore.Set(KeyvalueType.GetString())
 	}
 
+	if CorsEnable.GetBool() && ServicePublicURL.GetString() == "" {
+		log.Fatalf("service.publicurl is required when cors.enable is true")
+	}
+
 	if ServicePublicURL.GetString() != "" {
 		if !strings.HasSuffix(ServicePublicURL.GetString(), "/") {
 			ServicePublicURL.Set(ServicePublicURL.GetString() + "/")
