@@ -397,7 +397,7 @@ func registerAPIRoutes(a *echo.Group) {
 		},
 	}
 	a.GET("/projects/:project/views/:view/tasks", taskCollectionHandler.ReadAllWeb)
-	a.GET("/projects/:project/tasks", taskCollectionHandler.ReadAllWeb)
+	a.GET("/projects/:project/tasks", handler.WithDBAndUser(apiv1project.GetTasks, true))
 
 	kanbanBucketHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
@@ -422,7 +422,7 @@ func registerAPIRoutes(a *echo.Group) {
 		},
 	}
 	a.PUT("/projects/:project/tasks", taskHandler.CreateWeb)
-	a.GET("/tasks/:projecttask", taskHandler.ReadOneWeb)
+	a.GET("/tasks/:projecttask", handler.WithDBAndUser(apiv1task.Get, true))
 	a.GET("/tasks/all", taskCollectionHandler.ReadAllWeb)
 	a.DELETE("/tasks/:projecttask", handler.WithDBAndUser(apiv1task.Delete, true))
 	apiv1.RegisterTasks(a)

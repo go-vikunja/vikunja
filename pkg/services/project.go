@@ -36,24 +36,54 @@ import (
 func init() {
 	// Set up dependency injection for models to use service layer functions
 	models.ProjectUpdateFunc = func(s *xorm.Session, project *models.Project, u *user.User) (*models.Project, error) {
-		projectService := &Project{DB: s.Engine()}
+		projectService := &ProjectService{DB: s.Engine()}
 		return projectService.Update(s, project, u)
 	}
 	models.SetArchiveStateForProjectDescendantsFunc = SetArchiveStateForProjectDescendants
 }
 
-// Project is a service for projects.
-type Project struct {
+// ProjectService is a service for projects.
+type ProjectService struct {
 	DB *xorm.Engine
 }
 
+// NewProjectService creates a new ProjectService.
+func NewProjectService(db *xorm.Engine) *ProjectService {
+	return &ProjectService{DB: db}
+}
+
+// HasPermission checks if a user has a given permission on a project.
+func (p *ProjectService) HasPermission(s *xorm.Session, projectID int64, u *user.User, permission models.Permission) (bool, error) {
+	project, err := models.GetProjectSimpleByID(s, projectID)
+	if err != nil {
+		return false, err
+	}
+	// The owner of a project always has all permissions.
+	if project.OwnerID == u.ID {
+		return true, nil
+	}
+
+	// We need to check the database for permissions.
+	projectPermissions, err := p.checkPermissionsForProjects(s, u, []int64{projectID})
+	if err != nil {
+		return false, err
+	}
+
+	perm, ok := projectPermissions[projectID]
+	if !ok {
+		return false, nil
+	}
+
+	return perm.MaxPermission >= int(permission), nil
+}
+
 // Get gets a project by its ID.
-func (p *Project) Get(s *xorm.Session, projectID int64, u *user.User) (*models.Project, error) {
+func (p *ProjectService) Get(s *xorm.Session, projectID int64, u *user.User) (*models.Project, error) {
 	return nil, nil
 }
 
 // Update updates a project.
-func (p *Project) Update(s *xorm.Session, project *models.Project, u *user.User) (*models.Project, error) {
+func (p *ProjectService) Update(s *xorm.Session, project *models.Project, u *user.User) (*models.Project, error) {
 	// Permission check
 	can, err := project.CanUpdate(s, u)
 	if err != nil {
@@ -214,7 +244,7 @@ SELECT id FROM descendant_ids`,
 }
 
 // GetByID gets a project by its ID.
-func (p *Project) GetByID(s *xorm.Session, projectID int64, u *user.User) (*models.Project, error) {
+func (p *ProjectService) GetByID(s *xorm.Session, projectID int64, u *user.User) (*models.Project, error) {
 	project, err := models.GetProjectSimpleByID(s, projectID)
 	if err != nil {
 		return nil, err
@@ -260,7 +290,7 @@ func getLimitFromPageIndex(page int, perPage int) (limit int, start int) {
 	return perPage, start
 }
 
-func (p *Project) getUserProjectsStatement(userID int64, search string, getArchived bool) *builder.Builder {
+func (p *ProjectService) getUserProjectsStatement(userID int64, search string, getArchived bool) *builder.Builder {
 	dialect := db.GetDialect()
 
 	conds := []builder.Cond{
@@ -331,7 +361,7 @@ func (p *Project) getUserProjectsStatement(userID int64, search string, getArchi
 		GroupBy("l.id")
 }
 
-func (p *Project) getAllProjectsForUserInternal(s *xorm.Session, userID int64, search string, page int, perPage int, isArchived bool) (projects []*models.Project, totalCount int64, err error) {
+func (p *ProjectService) getAllProjectsForUserInternal(s *xorm.Session, userID int64, search string, page int, perPage int, isArchived bool) (projects []*models.Project, totalCount int64, err error) {
 	limit, start := getLimitFromPageIndex(page, perPage)
 	query := p.getUserProjectsStatement(userID, search, isArchived)
 
@@ -388,7 +418,7 @@ SELECT COUNT(DISTINCT all_projects.id) FROM all_projects`, args...).
 	return currentProjects, totalCount, err
 }
 
-func (p *Project) getSavedFiltersForUser(s *xorm.Session, u *user.User, search string) (fs []*models.SavedFilter, err error) {
+func (p *ProjectService) getSavedFiltersForUser(s *xorm.Session, u *user.User, search string) (fs []*models.SavedFilter, err error) {
 	var cond builder.Cond = builder.Eq{"owner_id": u.ID}
 	if search != "" {
 		cond = builder.And(cond, db.MultiFieldSearch([]string{"title", "description"}, search))
@@ -397,7 +427,7 @@ func (p *Project) getSavedFiltersForUser(s *xorm.Session, u *user.User, search s
 	return
 }
 
-func (p *Project) getSavedFilterProjects(s *xorm.Session, doer *user.User, search string) (savedFiltersProjects []*models.Project, err error) {
+func (p *ProjectService) getSavedFilterProjects(s *xorm.Session, doer *user.User, search string) (savedFiltersProjects []*models.Project, err error) {
 	savedFilters, err := p.getSavedFiltersForUser(s, doer, search)
 	if err != nil {
 		return
@@ -417,7 +447,7 @@ func (p *Project) getSavedFilterProjects(s *xorm.Session, doer *user.User, searc
 }
 
 // GetAllForUser returns all projects for a user
-func (p *Project) GetAllForUser(s *xorm.Session, u *user.User, search string, page int, perPage int, isArchived bool) (projects []*models.Project, resultCount int, totalItems int64, err error) {
+func (p *ProjectService) GetAllForUser(s *xorm.Session, u *user.User, search string, page int, perPage int, isArchived bool) (projects []*models.Project, resultCount int, totalItems int64, err error) {
 	projects, totalItems, err = p.getAllProjectsForUserInternal(s, u.ID, search, page, perPage, isArchived)
 	if err != nil {
 		return nil, 0, 0, err
@@ -472,7 +502,7 @@ func (p *Project) GetAllForUser(s *xorm.Session, u *user.User, search string, pa
 }
 
 // Create creates a new project.
-func (p *Project) Create(s *xorm.Session, project *models.Project, u *user.User) (*models.Project, error) {
+func (p *ProjectService) Create(s *xorm.Session, project *models.Project, u *user.User) (*models.Project, error) {
 	if project.ParentProjectID != 0 {
 		// parent := &models.Project{ID: project.ParentProjectID}
 		// TODO: Move this to the service
@@ -533,7 +563,7 @@ func (p *Project) Create(s *xorm.Session, project *models.Project, u *user.User)
 	return fullProject, err
 }
 
-func (p *Project) validate(s *xorm.Session, project *models.Project) (err error) {
+func (p *ProjectService) validate(s *xorm.Session, project *models.Project) (err error) {
 	if project.Title == "" {
 		return &models.ErrProjectTitleCannotBeEmpty{}
 	}
@@ -726,7 +756,7 @@ Transaction Safety:
 This method should be called within a database transaction to ensure
 atomicity. If any step fails, the entire operation should be rolled back.
 */
-func (p *Project) Delete(s *xorm.Session, projectID int64, u *user.User) error {
+func (p *ProjectService) Delete(s *xorm.Session, projectID int64, u *user.User) error {
 	// Load the project
 	project, err := models.GetProjectSimpleByID(s, projectID)
 	if err != nil {
@@ -882,7 +912,7 @@ func (p *Project) Delete(s *xorm.Session, projectID int64, u *user.User) error {
 
 // checkDeletePermission implements the permission checking logic directly in the service layer
 // This replaces the need to call project.CanDelete() from the model layer
-func (p *Project) checkDeletePermission(s *xorm.Session, project *models.Project, u *user.User) (bool, error) {
+func (p *ProjectService) checkDeletePermission(s *xorm.Session, project *models.Project, u *user.User) (bool, error) {
 	// The favorite project can't be deleted
 	if project.ID == models.FavoritesPseudoProject.ID {
 		return false, nil
@@ -910,7 +940,7 @@ func (p *Project) checkDeletePermission(s *xorm.Session, project *models.Project
 
 // checkPermissionsForProjects implements the same permission checking logic as the model layer
 // This is extracted from pkg/models/project_permissions.go to avoid circular dependencies
-func (p *Project) checkPermissionsForProjects(s *xorm.Session, u *user.User, projectIDs []int64) (map[int64]*projectPermission, error) {
+func (p *ProjectService) checkPermissionsForProjects(s *xorm.Session, u *user.User, projectIDs []int64) (map[int64]*projectPermission, error) {
 	projectPermissionMap := make(map[int64]*projectPermission)
 
 	if len(projectIDs) < 1 {

@@ -23,6 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
+	"fmt"
 	"strconv"
 	"xorm.io/xorm"
 )
@@ -35,6 +36,78 @@ type TaskService struct {
 // NewTaskService creates a new TaskService.
 func NewTaskService(db *xorm.Engine) *TaskService {
 	return &TaskService{DB: db}
+}
+
+// GetByID gets a single task by its ID, checking permissions.
+func (ts *TaskService) GetByID(s *xorm.Session, taskID int64, u *user.User) (*models.Task, error) {
+	// Use a simple model function to get the raw data
+	task := new(models.Task)
+	has, err := s.ID(taskID).Get(task)
+	if err != nil {
+		return nil, err
+	}
+	if !has {
+		return nil, models.ErrTaskDoesNotExist{ID: taskID}
+	}
+
+	// Permission Check: The TaskService asks the ProjectService for a decision.
+	projectService := NewProjectService(ts.DB)
+	can, err := projectService.HasPermission(s, task.ProjectID, u, models.PermissionRead)
+	if err != nil {
+		return nil, fmt.Errorf("checking task read permission: %w", err)
+	}
+	if !can {
+		return nil, ErrAccessDenied
+	}
+
+	// Business Logic: Enrich the task with related data.
+	// This logic should be moved from the old models.Task.ReadOne method.
+	err = ts.addDetailsToTasks(s, []*models.Task{task}, u)
+	if err != nil {
+		return nil, err
+	}
+
+	return task, nil
+}
+
+// GetAllByProject gets all tasks in a given project, checking permissions.
+func (ts *TaskService) GetAllByProject(s *xorm.Session, projectID int64, u *user.User, page, perPage int, search string) ([]*models.Task, int, int64, error) {
+	// Permission Check: First, check if the user can even read the project.
+	projectService := NewProjectService(ts.DB)
+	can, err := projectService.HasPermission(s, projectID, u, models.PermissionRead)
+	if err != nil {
+		return nil, 0, 0, fmt.Errorf("checking project read permission: %w", err)
+	}
+	if !can {
+		return nil, 0, 0, ErrAccessDenied
+	}
+
+	tc := &models.TaskCollection{
+		ProjectID: projectID,
+	}
+
+	result, resultCount, totalItems, err := tc.ReadAll(
+		s,
+		u,
+		search,
+		page,
+		perPage,
+	)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	tasks, ok := result.([]*models.Task)
+	if !ok {
+		return nil, 0, 0, fmt.Errorf("unexpected type from ReadAll: %T", result)
+	}
+
+	err = ts.addDetailsToTasks(s, tasks, u)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	return tasks, resultCount, totalItems, nil
 }
 
 // Update updates a task.
@@ -186,6 +259,19 @@ func (tp *TaskPermissions) Write() (bool, error) {
 	}
 	can, err := tp.task.CanWrite(tp.s, tp.user)
 	return can, err
+}
+
+func (ts *TaskService) addDetailsToTasks(s *xorm.Session, tasks []*models.Task, u *user.User) error {
+	if len(tasks) == 0 {
+		return nil
+	}
+
+	taskMap := make(map[int64]*models.Task, len(tasks))
+	for _, t := range tasks {
+		taskMap[t.ID] = t
+	}
+
+	return models.addMoreInfoToTasks(s, taskMap, u, nil, nil)
 }
 
 func (ts *TaskService) updateProjectLastUpdated(s *xorm.Session, project *models.Project) error {

@@ -68,3 +68,57 @@ func TestTaskService_Update(t *testing.T) {
 		assert.Error(t, err, "should not be able to update task")
 	})
 }
+
+func TestTaskService_GetByID(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	ts := NewTaskService(testEngine)
+	u := &user.User{ID: 1}
+
+	t.Run("should get a task by id", func(t *testing.T) {
+		task, err := ts.GetByID(s, 1, u)
+		assert.NoError(t, err)
+		assert.Equal(t, int64(1), task.ID)
+	})
+
+	t.Run("should not get a task without access", func(t *testing.T) {
+		otherUser := &user.User{ID: 2}
+		_, err := ts.GetByID(s, 1, otherUser)
+		assert.ErrorIs(t, err, ErrAccessDenied)
+	})
+
+	t.Run("should return an error for a non-existent task", func(t *testing.T) {
+		_, err := ts.GetByID(s, 9999, u)
+		assert.Error(t, err)
+	})
+}
+
+func TestTaskService_GetAllByProject(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	ts := NewTaskService(testEngine)
+	u := &user.User{ID: 1}
+
+	t.Run("should get all tasks in a project", func(t *testing.T) {
+		tasks, err := ts.GetAllByProject(s, 1, u)
+		assert.NoError(t, err)
+		assert.Len(t, tasks, 3)
+	})
+
+	t.Run("should not get tasks without access", func(t *testing.T) {
+		otherUser := &user.User{ID: 2}
+		_, err := ts.GetAllByProject(s, 1, otherUser)
+		assert.ErrorIs(t, err, ErrAccessDenied)
+	})
+
+	t.Run("should return an empty slice for a project with no tasks", func(t *testing.T) {
+		// Project 2 has no tasks
+		tasks, err := ts.GetAllByProject(s, 2, u)
+		assert.NoError(t, err)
+		assert.Len(t, tasks, 0)
+	})
+}

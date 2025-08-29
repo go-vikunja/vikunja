@@ -198,7 +198,8 @@ type taskSearchOptions struct {
 	projectViewID      int64
 }
 
-// ReadAll is a dummy function to still have that endpoint documented
+// ReadAll is a dummy function to still have that endpoint documented.
+// @Deprecated: Use services.TaskService.GetAllByProject instead.
 // @Summary Get tasks
 // @Description Returns all tasks on any project the user has access to.
 // @tags task
@@ -1710,7 +1711,8 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 	return
 }
 
-// ReadOne gets one task by its ID
+// ReadOne gets one task by its ID.
+// @Deprecated: Use services.TaskService.GetByID instead.
 // @Summary Get one task
 // @Description Returns one task by its ID
 // @tags task
