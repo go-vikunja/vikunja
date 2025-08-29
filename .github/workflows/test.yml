@@ -136,6 +136,7 @@ jobs:
           VIKUNJA_DATABASE_SSLMODE: disable
           VIKUNJA_LOG_DATABASE: stdout
           VIKUNJA_LOG_DATABASELEVEL: debug
+          VIKUNJA_SERVICE_PUBLICURL: http://127.0.0.1:3456
         run: |
           # Wait for MySQL to be ready if using MySQL
           if [ "$VIKUNJA_DATABASE_TYPE" = "mysql" ]; then
