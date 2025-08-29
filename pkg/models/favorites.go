@@ -86,6 +86,7 @@ func IsFavorite(s *xorm.Session, entityID int64, a web.Auth, kind FavoriteKind) 
 		Exist(&Favorite{})
 }
 
+// @Deprecated: This function is deprecated and will be removed in a future release. Use FavoriteService.GetForUserByType instead.
 func getFavorites(s *xorm.Session, entityIDs []int64, a web.Auth, kind FavoriteKind) (favorites map[int64]bool, err error) {
 	favorites = make(map[int64]bool)
 	u, err := user.GetFromAuth(a)

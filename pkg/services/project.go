@@ -29,6 +29,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
+	"code.vikunja.io/api/pkg/web"
 	"xorm.io/builder"
 	"xorm.io/xorm"
 )
@@ -40,6 +41,10 @@ func init() {
 		return projectService.Update(s, project, u)
 	}
 	models.SetArchiveStateForProjectDescendantsFunc = SetArchiveStateForProjectDescendants
+	models.AddProjectDetailsFunc = func(s *xorm.Session, projects []*models.Project, a web.Auth) error {
+		ps := NewProjectService(s.Engine())
+		return ps.AddDetails(s, projects, a)
+	}
 }
 
 // ProjectService is a service for projects.
@@ -490,7 +495,7 @@ func (p *ProjectService) GetAllForUser(s *xorm.Session, u *user.User, search str
 	// Add project details (favorite state, among other things)
 	err = models.AddProjectDetails(s, projects, u)
 	if err != nil {
-		return
+		return nil, 0, 0, err
 	}
 
 	err = models.AddMaxPermissionToProjects(s, projects, u)
@@ -1018,4 +1023,129 @@ GROUP BY ph.original_project_id`, args...).
 type projectPermission struct {
 	ID            int64 `xorm:"id"`
 	MaxPermission int   `xorm:"max_permission"`
+}
+
+// AddDetails adds all details to a slice of projects.
+func (p *ProjectService) AddDetails(s *xorm.Session, projects []*models.Project, a web.Auth) (err error) {
+	if len(projects) == 0 {
+		return
+	}
+
+	var ownerIDs []int64
+	var projectIDs []int64
+	var fileIDs []int64
+	for _, p := range projects {
+		ownerIDs = append(ownerIDs, p.OwnerID)
+		projectIDs = append(projectIDs, p.ID)
+		fileIDs = append(fileIDs, p.BackgroundFileID)
+	}
+
+	owners, err := user.GetUsersByIDs(s, ownerIDs)
+	if err != nil {
+		return err
+	}
+
+	u, err := user.GetFromAuth(a)
+	if err != nil {
+		// Only error GetFromAuth is if it's a link share and we want to ignore that
+		u = nil
+	}
+
+	var favs map[int64]bool
+	if u != nil {
+		favService := NewFavoriteService()
+		favoriteSl, err := favService.GetForUserByType(s, u, models.FavoriteKindProject)
+		if err != nil {
+			return err
+		}
+		favs = make(map[int64]bool, len(favoriteSl))
+		for _, fav := range favoriteSl {
+			favs[fav.EntityID] = true
+		}
+	}
+
+	var subscriptions = make(map[int64][]*models.Subscription)
+	if u != nil {
+		subscriptionsWithUser, err := models.GetSubscriptionsForEntitiesAndUser(s, models.SubscriptionEntityProject, projectIDs, u)
+		if err != nil {
+			log.Errorf("An error occurred while getting project subscriptions for a project: %s", err.Error())
+		}
+		if err == nil {
+			for pID, subs := range subscriptionsWithUser {
+				for _, sub := range subs {
+					if _, has := subscriptions[pID]; !has {
+						subscriptions[pID] = []*models.Subscription{}
+					}
+					subscriptions[pID] = append(subscriptions[pID], &sub.Subscription)
+				}
+			}
+		}
+	}
+
+	views := []*models.ProjectView{}
+	err = s.
+		In("project_id", projectIDs).
+		OrderBy("position asc").
+		Find(&views)
+	if err != nil {
+		return
+	}
+
+	viewMap := make(map[int64][]*models.ProjectView)
+	for _, v := range views {
+		if _, has := viewMap[v.ProjectID]; !has {
+			viewMap[v.ProjectID] = []*models.ProjectView{}
+		}
+
+		viewMap[v.ProjectID] = append(viewMap[v.ProjectID], v)
+	}
+
+	for _, p := range projects {
+		if o, exists := owners[p.OwnerID]; exists {
+			p.Owner = o
+		}
+		if p.BackgroundFileID != 0 {
+			p.BackgroundInformation = &models.ProjectBackgroundType{Type: models.ProjectBackgroundUpload}
+		}
+
+		// Don't override the favorite state if it was already set from before (favorite saved filters do this)
+		if p.IsFavorite {
+			continue
+		}
+		p.IsFavorite = favs[p.ID]
+
+		if subscription, exists := subscriptions[p.ID]; exists && len(subscription) > 0 {
+			p.Subscription = subscription[0]
+		}
+
+		vs, has := viewMap[p.ID]
+		if has {
+			p.Views = vs
+		}
+	}
+
+	if len(fileIDs) == 0 {
+		return
+	}
+
+	// Unsplash background file info
+	us := []*models.UnsplashPhoto{}
+	err = s.In("file_id", fileIDs).Find(&us)
+	if err != nil {
+		return
+	}
+	unsplashPhotos := make(map[int64]*models.UnsplashPhoto, len(us))
+	for _, u := range us {
+		unsplashPhotos[u.FileID] = u
+	}
+
+	// Build it all into the projects slice
+	for _, l := range projects {
+		// Only override the file info if we have info for unsplash backgrounds
+		if _, exists := unsplashPhotos[l.BackgroundFileID]; exists {
+			l.BackgroundInformation = unsplashPhotos[l.BackgroundFileID]
+		}
+	}
+
+	return
 }

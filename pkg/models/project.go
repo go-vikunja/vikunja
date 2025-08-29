@@ -42,6 +42,10 @@ var ProjectUpdateFunc func(s *xorm.Session, project *Project, u *user.User) (*Pr
 // to provide the implementation for cascading archive operations. This breaks the circular import.
 var SetArchiveStateForProjectDescendantsFunc func(s *xorm.Session, parentProjectID int64, shouldBeArchived bool) error
 
+// AddProjectDetailsFunc is a function that can be set by other packages to provide an implementation for adding details to projects.
+// This is used to break a circular dependency between the models and services packages.
+var AddProjectDetailsFunc func(s *xorm.Session, projects []*Project, a web.Auth) error
+
 // Project represents a project of tasks
 type Project struct {
 	// The unique, numeric id of this project.
@@ -662,114 +666,10 @@ func GetAllParentProjects(s *xorm.Session, projectID int64) (allProjects map[int
 
 // AddProjectDetails adds owner user objects and project tasks to all projects in the slice
 func AddProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err error) {
-	if len(projects) == 0 {
-		return
+	if AddProjectDetailsFunc != nil {
+		return AddProjectDetailsFunc(s, projects, a)
 	}
-
-	var ownerIDs []int64
-	var projectIDs []int64
-	var fileIDs []int64
-	for _, p := range projects {
-		ownerIDs = append(ownerIDs, p.OwnerID)
-		projectIDs = append(projectIDs, p.ID)
-		fileIDs = append(fileIDs, p.BackgroundFileID)
-	}
-
-	owners, err := user.GetUsersByIDs(s, ownerIDs)
-	if err != nil {
-		return err
-	}
-
-	favs, err := getFavorites(s, projectIDs, a, FavoriteKindProject)
-	if err != nil {
-		return err
-	}
-
-	var subscriptions = make(map[int64][]*Subscription)
-	u, is := a.(*user.User)
-	if is {
-		subscriptionsWithUser, err := GetSubscriptionsForEntitiesAndUser(s, SubscriptionEntityProject, projectIDs, u)
-		if err != nil {
-			log.Errorf("An error occurred while getting project subscriptions for a project: %s", err.Error())
-		}
-		if err == nil {
-			for pID, subs := range subscriptionsWithUser {
-				for _, sub := range subs {
-					if _, has := subscriptions[pID]; !has {
-						subscriptions[pID] = []*Subscription{}
-					}
-					subscriptions[pID] = append(subscriptions[pID], &sub.Subscription)
-				}
-			}
-		}
-	}
-
-	views := []*ProjectView{}
-	err = s.
-		In("project_id", projectIDs).
-		OrderBy("position asc").
-		Find(&views)
-	if err != nil {
-		return
-	}
-
-	viewMap := make(map[int64][]*ProjectView)
-	for _, v := range views {
-		if _, has := viewMap[v.ProjectID]; !has {
-			viewMap[v.ProjectID] = []*ProjectView{}
-		}
-
-		viewMap[v.ProjectID] = append(viewMap[v.ProjectID], v)
-	}
-
-	for _, p := range projects {
-		if o, exists := owners[p.OwnerID]; exists {
-			p.Owner = o
-		}
-		if p.BackgroundFileID != 0 {
-			p.BackgroundInformation = &ProjectBackgroundType{Type: ProjectBackgroundUpload}
-		}
-
-		// Don't override the favorite state if it was already set from before (favorite saved filters do this)
-		if p.IsFavorite {
-			continue
-		}
-		p.IsFavorite = favs[p.ID]
-
-		if subscription, exists := subscriptions[p.ID]; exists && len(subscription) > 0 {
-			p.Subscription = subscription[0]
-		}
-
-		vs, has := viewMap[p.ID]
-		if has {
-			p.Views = vs
-		}
-	}
-
-	if len(fileIDs) == 0 {
-		return
-	}
-
-	// Unsplash background file info
-	us := []*UnsplashPhoto{}
-	err = s.In("file_id", fileIDs).Find(&us)
-	if err != nil {
-		return
-	}
-	unsplashPhotos := make(map[int64]*UnsplashPhoto, len(us))
-	for _, u := range us {
-		unsplashPhotos[u.FileID] = u
-	}
-
-	// Build it all into the projects slice
-	for _, l := range projects {
-		// Only override the file info if we have info for unsplash backgrounds
-		if _, exists := unsplashPhotos[l.BackgroundFileID]; exists {
-			l.BackgroundInformation = unsplashPhotos[l.BackgroundFileID]
-		}
-	}
-
-	return
+	return nil
 }
 
 func AddMaxPermissionToProjects(s *xorm.Session, projects []*Project, u *user.User) (err error) {
