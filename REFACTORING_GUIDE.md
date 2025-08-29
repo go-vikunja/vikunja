@@ -2,6 +2,19 @@
 
 This document serves as the **source of truth** for all refactoring work in the Vikunja project. It documents the core architectural patterns, dependency management strategies, and testing philosophies established during the service layer refactor.
 
+## Table of Contents
+
+1.  [Important Agent Instructions](#1-important-agent-instructions)
+2.  [The Core Architecture ("Chef, Waiter, Pantry")](#2-the-core-architecture-chef-waiter-pantry)
+3.  [Key Patterns & Implementation](#3-key-patterns--implementation)
+      * [A. Handler Wrappers (Eliminating Boilerplate)](#a-handler-wrappers-eliminating-boilerplate)
+      * [B. Dependency Inversion (For Backward Compatibility)](#b-dependency-inversion-for-backward-compatibility)
+4.  [The Testing Philosophy](#4-the-testing-philosophy)
+
+---
+
+# 1\. Important Agent Instructions
+
 > ## The Golden Rule: Move Logic, Don't Expose It
 >
 > This is the most important rule of the entire refactor.
@@ -13,17 +26,17 @@ This document serves as the **source of truth** for all refactoring work in the 
 > * **Correct ✅:** Copying the permission-checking code from a model method into a new service method.
 > * **Incorrect ❌:** Making a model's `CanRead()` or `CanWrite()` method public and calling it from a service.
 
-## Table of Contents
+> ## Plan Management & Progress Reporting
+>
+> Once your plan is approved, you must use it as your active checklist. The following process is mandatory:
+>
+> 1.  **State Your Step:** At the beginning of each action, you must state which step of the approved plan you are working on (e.g., "Now executing Step 2: Implement the `Update` method.").
+> 2.  **Update on Change:** If you encounter a problem or need to change your approach, you must first state the problem and then **use your tool to update the plan** before proceeding.
+> 3.  **Final Report:** Before submitting your final work for review, you must provide a final summary of the plan, marking each step as complete (✅).
 
-1.  [The Core Architecture ("Chef, Waiter, Pantry")](#1-the-core-architecture-chef-waiter-pantry)
-2.  [Key Patterns & Implementation](#2-key-patterns--implementation)
-      * [A. Handler Wrappers (Eliminating Boilerplate)](#a-handler-wrappers-eliminating-boilerplate)
-      * [B. Dependency Inversion (For Backward Compatibility)](#b-dependency-inversion-for-backward-compatibility)
-3.  [The Testing Philosophy](#3-the-testing-philosophy)
 
----
 
-## 1\. The Core Architecture ("Chef, Waiter, Pantry")
+## 2\. The Core Architecture ("Chef, Waiter, Pantry")
 
 Our architecture separates concerns into three distinct layers:
 
@@ -38,7 +51,7 @@ Our architecture separates concerns into three distinct layers:
 
 ---
 
-## 2\. Key Patterns & Implementation
+## 3\. Key Patterns & Implementation
 
 ### A. Handler Wrappers (Eliminating Boilerplate)
 
@@ -101,7 +114,7 @@ func init() {
 
 -----
 
-## 3\. The Testing Philosophy
+## 4\. The Testing Philosophy
 
 Our testing strategy is layered to match the architecture.
 
