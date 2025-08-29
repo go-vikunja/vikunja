@@ -238,6 +238,7 @@ jobs:
           VIKUNJA_AUTH_LDAP_BINDDN: uid=gitea,ou=service,dc=planetexpress,dc=com
           VIKUNJA_AUTH_LDAP_BINDPASSWORD: password
           VIKUNJA_AUTH_LDAP_USERFILTER: "(&(objectclass=inetorgperson)(uid=%s))"
+          VIKUNJA_SERVICE_PUBLICURL: http://127.0.0.1:3456
         run: |
           mkdir -p frontend/dist
           touch frontend/dist/index.html
@@ -350,6 +351,7 @@ jobs:
           VIKUNJA_SERVICE_TESTINGTOKEN: averyLongSecretToSe33dtheDB
           VIKUNJA_LOG_LEVEL: DEBUG
           VIKUNJA_CORS_ENABLE: 1
+          VIKUNJA_SERVICE_PUBLICURL: http://127.0.0.1:3456
           VIKUNJA_DATABASE_PATH: memory
           VIKUNJA_DATABASE_TYPE: sqlite
           VIKUNJA_RATELIMIT_NOAUTHLIMIT: 1000
