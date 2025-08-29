@@ -324,7 +324,7 @@ func DeleteProject(c echo.Context) error {
 	}
 
 	// Use the new Project service Delete method
-	projectService := &services.Project{}
+	projectService := services.NewProjectService(s.Engine())
 	if err := projectService.Delete(s, projectID, u); err != nil {
 		return handler.HandleHTTPError(err)
 	}

@@ -14,40 +14,30 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package project
+package task
 
 import (
 	"net/http"
+	"strconv"
 
-	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/services"
 	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/web/handler"
-
 	"github.com/labstack/echo/v4"
+	"xorm.io/xorm"
 )
 
-// CreateProject is the handler to create a project
-func CreateProject(c echo.Context) error {
-	p := new(models.Project)
-	if err := c.Bind(p); err != nil {
-		return err
+// Get is the handler to get a single task.
+func Get(s *xorm.Session, u *user.User, c echo.Context) error {
+	taskID, err := strconv.ParseInt(c.Param("projecttask"), 10, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid task ID").SetInternal(err)
 	}
 
-	u, err := user.GetCurrentUser(c)
+	taskService := services.NewTaskService(s.Engine())
+	task, err := taskService.GetByID(s, taskID, u)
 	if err != nil {
 		return err
 	}
 
-	s := db.NewSession()
-	defer s.Close()
-
-	projectService := services.ProjectService{DB: db.GetEngine()}
-	createdProject, err := projectService.Create(s, p, u)
-	if err != nil {
-		return handler.HandleHTTPError(err)
-	}
-
-	return c.JSON(http.StatusCreated, createdProject)
+	return c.JSON(http.StatusOK, task)
 }
