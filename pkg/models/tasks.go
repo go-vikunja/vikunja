@@ -53,9 +53,7 @@ const (
 // It allows the models layer to call into the services without introducing an import cycle.
 var AddMoreInfoToTasksFunc func(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, view *ProjectView, expand []TaskCollectionExpandable) error
 
-// GetUsersOrLinkSharesFromIDsFunc is a function variable used to plug the service implementation into the models layer.
-// It allows the models layer to get users and link shares without introducing an import cycle.
-var GetUsersOrLinkSharesFromIDsFunc func(s *xorm.Session, ids []int64) (map[int64]*user.User, error)
+
 
 // AddMoreInfoToTasks delegates to the service implementation via AddMoreInfoToTasksFunc.
 // @Deprecated: Use services.TaskService.AddDetailsToTasks instead. This remains for backward compatibility during the refactor.
@@ -665,10 +663,10 @@ The models layer now delegates to the service via AddMoreInfoToTasksFunc to avoi
 // 		return
 // 	}
 
-	users, err := GetUsersOrLinkSharesFromIDs(s, userIDs)
-	if err != nil {
-		return
-	}
+	// 	users, err := GetUsersOrLinkSharesFromIDs(s, userIDs)
+	// 	if err != nil {
+	// 		return
+	// 	}
 
 // 	taskReminders, err := getTaskReminderMap(s, taskIDs)
 // 	if err != nil {

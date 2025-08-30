@@ -1053,7 +1053,7 @@ func (p *ProjectService) AddDetails(s *xorm.Session, projects []*models.Project,
 
 	var favs map[int64]bool
 	if u != nil {
-		favService := NewFavoriteService()
+		favService := NewFavoriteService(p.DB)
 		favoriteSl, err := favService.GetForUserByType(s, u, models.FavoriteKindProject)
 		if err != nil {
 			return err

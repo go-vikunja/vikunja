@@ -1,5 +1,4 @@
 // Vikunja is a to-do list application to facilitate your life.
-// Adding a comment to force a recompile and check the line number of the error.
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -20,8 +19,10 @@ package services
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
@@ -86,6 +87,51 @@ func (ts *TaskService) GetByID(s *xorm.Session, taskID int64, u *user.User) (*mo
 	return task, nil
 }
 
+// GetAllByProject gets all tasks for a project with pagination and filtering
+func (ts *TaskService) GetAllByProject(s *xorm.Session, projectID int64, u *user.User, page int, perPage int, search string) ([]*models.Task, int, int64, error) {
+	// Permission Check: Use ProjectService for proper inter-service communication
+	projectService := NewProjectService(ts.DB)
+	canRead, err := projectService.HasPermission(s, projectID, u, models.PermissionRead)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+	if !canRead {
+		return nil, 0, 0, ErrAccessDenied
+	}
+
+	// Calculate offset for pagination
+	offset := (page - 1) * perPage
+
+	// Query tasks directly from the database
+	var tasks []*models.Task
+	query := s.Where("project_id = ?", projectID)
+
+	// Add search filter if provided
+	if search != "" {
+		query = query.And(builder.Or(
+			builder.Like{"title", "%" + search + "%"},
+			builder.Like{"description", "%" + search + "%"},
+		))
+	}
+
+	// Get total count for pagination
+	totalCount, err := query.Count(&models.Task{})
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	// Get the actual tasks with pagination
+	err = query.
+		OrderBy("id ASC").
+		Limit(perPage, offset).
+		Find(&tasks)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	return tasks, len(tasks), totalCount, nil
+}
+
 // Update updates a task.
 func (ts *TaskService) Update(s *xorm.Session, task *models.Task, u *user.User) (*models.Task, error) {
 	can, err := ts.Can(s, task, u).Write()
@@ -137,7 +183,7 @@ func (ts *TaskService) Delete(s *xorm.Session, task *models.Task, a web.Auth) er
 		return err
 	}
 
-	// Delete Favorites
+	// Delete Favorites using the service
 	err = ts.FavoriteService.RemoveFromFavorite(s, task.ID, a, models.FavoriteKindTask)
 	if err != nil {
 		return err
@@ -216,29 +262,36 @@ type TaskPermissions struct {
 	s    *xorm.Session
 	task *models.Task
 	user *user.User
+	ts   *TaskService
 }
 
 // Can returns a new TaskPermissions struct.
 func (ts *TaskService) Can(s *xorm.Session, task *models.Task, u *user.User) *TaskPermissions {
-	return &TaskPermissions{s: s, task: task, user: u}
+	return &TaskPermissions{s: s, task: task, user: u, ts: ts}
 }
 
 // Read checks if the user can read the task.
+// This implements the "Move Logic, Don't Expose It" principle by moving permission logic from models to services.
 func (tp *TaskPermissions) Read() (bool, error) {
 	if tp.user == nil {
 		return false, nil
 	}
-	can, _, err := tp.task.CanRead(tp.s, tp.user)
-	return can, err
+
+	// Use ProjectService for permission checking instead of calling model methods
+	projectService := NewProjectService(tp.ts.DB)
+	return projectService.HasPermission(tp.s, tp.task.ProjectID, tp.user, models.PermissionRead)
 }
 
 // Write checks if the user can write to the task.
+// This implements the "Move Logic, Don't Expose It" principle by moving permission logic from models to services.
 func (tp *TaskPermissions) Write() (bool, error) {
 	if tp.user == nil {
 		return false, nil
 	}
-	can, err := tp.task.CanWrite(tp.s, tp.user)
-	return can, err
+
+	// Use ProjectService for permission checking instead of calling model methods
+	projectService := NewProjectService(tp.ts.DB)
+	return projectService.HasPermission(tp.s, tp.task.ProjectID, tp.user, models.PermissionWrite)
 }
 
 func (ts *TaskService) addDetailsToTasks(s *xorm.Session, tasks []*models.Task, u *user.User) error {
@@ -343,46 +396,6 @@ func (ts *TaskService) AddDetailsToTasks(s *xorm.Session, taskMap map[int64]*mod
 	return nil
 }
 
-// GetAllByProject gets all tasks for a project with pagination and filtering
-func (ts *TaskService) GetAllByProject(s *xorm.Session, projectID int64, u *user.User, page int, perPage int, search string) ([]*models.Task, int, int64, error) {
-	// Permission Check: The TaskService asks the ProjectService for a decision.
-	projectService := NewProjectService(ts.DB)
-	can, err := projectService.HasPermission(s, projectID, u, models.PermissionRead)
-	if err != nil {
-		return nil, 0, 0, fmt.Errorf("checking project read permission: %w", err)
-	}
-	if !can {
-		return nil, 0, 0, ErrAccessDenied
-	}
-
-	tc := &models.TaskCollection{
-		ProjectID: projectID,
-	}
-
-	result, resultCount, totalItems, err := tc.ReadAll(
-		s,
-		u,
-		search,
-		page,
-		perPage,
-	)
-	if err != nil {
-		return nil, 0, 0, err
-	}
-
-	tasks, ok := result.([]*models.Task)
-	if !ok {
-		return nil, 0, 0, fmt.Errorf("unexpected type from ReadAll: %T", result)
-	}
-
-	err = ts.addDetailsToTasks(s, tasks, u)
-	if err != nil {
-		return nil, 0, 0, err
-	}
-
-	return tasks, resultCount, totalItems, nil
-}
-
 // Helper methods moved from models package
 
 func (ts *TaskService) addAssigneesToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*models.Task) error {
@@ -463,32 +476,76 @@ func (ts *TaskService) getFavorites(s *xorm.Session, entityIDs []int64, a web.Au
 	return favorites, err
 }
 
-// canWriteTask checks if a user can write to a task
 func (ts *TaskService) canWriteTask(s *xorm.Session, taskID int64, u *user.User) (bool, error) {
-	task := &models.Task{ID: taskID}
-	has, err := s.Get(task)
+	project, err := models.GetProjectSimpleByTaskID(s, taskID)
 	if err != nil {
+		if models.IsErrProjectDoesNotExist(err) {
+			return false, nil
+		}
 		return false, err
 	}
-	if !has {
-		return false, models.ErrTaskDoesNotExist{ID: taskID}
-	}
 
-	// Check project permissions
+	// Check project permissions using ProjectService
 	projectService := NewProjectService(ts.DB)
-	return projectService.HasPermission(s, task.ProjectID, u, models.PermissionWrite)
+	return projectService.HasPermission(s, project.ID, u, models.PermissionWrite)
 }
 
-// getTaskAttachmentsByTaskIDs is a placeholder for getting task attachments
-func (ts *TaskService) getTaskAttachmentsByTaskIDs(s *xorm.Session, taskIDs []int64) ([]*models.TaskAttachment, error) {
-	// TODO: Implement attachment retrieval when the attachment system is available
-	return []*models.TaskAttachment{}, nil
+// getTaskAttachmentsByTaskIDs gets task attachments with full details
+func (ts *TaskService) getTaskAttachmentsByTaskIDs(s *xorm.Session, taskIDs []int64) (attachments []*models.TaskAttachment, err error) {
+	attachments = []*models.TaskAttachment{}
+	err = s.
+		In("task_id", taskIDs).
+		Find(&attachments)
+	if err != nil {
+		return
+	}
+
+	if len(attachments) == 0 {
+		return
+	}
+
+	fileIDs := []int64{}
+	userIDs := []int64{}
+	for _, a := range attachments {
+		userIDs = append(userIDs, a.CreatedByID)
+		fileIDs = append(fileIDs, a.FileID)
+	}
+
+	// Get all files
+	fs := make(map[int64]*files.File)
+	err = s.In("id", fileIDs).Find(&fs)
+	if err != nil {
+		return
+	}
+
+	users, err := ts.getUsersOrLinkSharesFromIDs(s, userIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	// Obfuscate all user emails
+	for _, u := range users {
+		u.Email = ""
+	}
+
+	for _, a := range attachments {
+		if createdBy, has := users[a.CreatedByID]; has {
+			a.CreatedBy = createdBy
+		}
+		a.File = fs[a.FileID]
+	}
+
+	return
 }
 
 // updateProjectLastUpdated updates the last updated timestamp of a project
 func (ts *TaskService) updateProjectLastUpdated(s *xorm.Session, projectID int64) error {
-	// TODO: Implement project last updated logic
-	return nil
+	project := &models.Project{
+		ID:      projectID,
+		Updated: time.Now(),
+	}
+	_, err := s.ID(projectID).Cols("updated").Update(project)
+	return err
 }
 
 // getUsersOrLinkSharesFromIDs gets users and link shares from their IDs.
@@ -522,8 +579,29 @@ func (ts *TaskService) getUsersOrLinkSharesFromIDs(s *xorm.Session, ids []int64)
 	}
 
 	for _, share := range shares {
-		users[share.ID*-1] = share.ToUser()
+		users[share.ID*-1] = ts.toUser(share)
 	}
 
 	return
+}
+
+func (ts *TaskService) toUser(share *models.LinkSharing) *user.User {
+	suffix := "Link Share"
+	if share.Name != "" {
+		suffix = " (" + suffix + ")"
+	}
+
+	username := "link-share-" + strconv.FormatInt(share.ID, 10)
+
+	return &user.User{
+		ID:       ts.getUserID(share),
+		Name:     share.Name + suffix,
+		Username: username,
+		Created:  share.Created,
+		Updated:  share.Updated,
+	}
+}
+
+func (ts *TaskService) getUserID(share *models.LinkSharing) int64 {
+	return share.ID * -1
 }

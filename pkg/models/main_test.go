@@ -19,7 +19,6 @@ package models
 import (
 	"fmt"
 	"os"
-	"strconv"
 	"testing"
 	"time"
 
@@ -55,6 +54,7 @@ func setupTime() {
 }
 
 func TestMain(m *testing.M) {
+
 	setupTime()
 
 	// Initialize logger for tests
@@ -123,21 +123,4 @@ func TestMain(m *testing.M) {
 	events.Fake()
 
 	os.Exit(m.Run())
-}
-
-func NewUserProxyFromLinkShare(share *LinkSharing) *user.User {
-	suffix := "Link Share"
-	if share.Name != "" {
-		suffix = " (" + suffix + ")"
-	}
-
-	username := "link-share-" + strconv.FormatInt(share.ID, 10)
-
-	return &user.User{
-		ID:       share.ID * -1,
-		Name:     share.Name + suffix,
-		Username: username,
-		Created:  share.Created,
-		Updated:  share.Updated,
-	}
 }

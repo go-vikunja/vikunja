@@ -109,10 +109,13 @@ func (share *LinkSharing) getUserID() int64 {
 	return share.ID * -1
 }
 
-// ToUser returns a user object from a link share.
-//
-// @Deprecated This function is deprecated and will be removed in a future version. Use services.UserService.NewUserProxyFromLinkShare instead.
+// ToUser converts a LinkSharing to a User representation.
+// This is a public wrapper around the private toUser method for use by services.
 func (share *LinkSharing) ToUser() *user.User {
+	return share.toUser()
+}
+
+func (share *LinkSharing) toUser() *user.User {
 	suffix := "Link Share"
 	if share.Name != "" {
 		suffix = " (" + suffix + ")"
