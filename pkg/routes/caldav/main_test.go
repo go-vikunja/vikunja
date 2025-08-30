@@ -26,7 +26,6 @@ import (
 	"code.vikunja.io/api/pkg/i18n"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
-	_ "code.vikunja.io/api/pkg/services" // Blank import to ensure init() is called
 	"code.vikunja.io/api/pkg/user"
 )
 
