@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/i18n"
@@ -50,6 +51,9 @@ func TestMain(m *testing.M) {
 
 	models.SetupTests()
 	events.Fake()
+
+	// Initialize testEngine for service tests
+	testEngine = db.GetEngine()
 
 	os.Exit(m.Run())
 }

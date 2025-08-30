@@ -99,7 +99,11 @@ func (b *TaskBucket) upsert(s *xorm.Session) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/views/{view}/buckets/{bucket}/tasks [post]
 func (b *TaskBucket) Update(s *xorm.Session, a web.Auth) (err error) {
+	if MoveTaskToBucketFunc != nil {
+		return MoveTaskToBucketFunc(s, b, a)
+	}
 
+	// Fallback to original implementation if function not wired
 	oldTaskBucket := &TaskBucket{}
 	_, err = s.
 		Where("task_id = ? AND project_view_id = ?", b.TaskID, b.ProjectViewID).

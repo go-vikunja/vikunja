@@ -18,7 +18,6 @@ package models
 
 import (
 	"errors"
-	"math"
 	"regexp"
 	"sort"
 	"strconv"
@@ -52,8 +51,7 @@ const (
 // AddMoreInfoToTasksFunc is a function variable used to plug the service implementation into the models layer.
 // It allows the models layer to call into the services without introducing an import cycle.
 var AddMoreInfoToTasksFunc func(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, view *ProjectView, expand []TaskCollectionExpandable) error
-
-
+var AddBucketsToTasksFunc func(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Task, a web.Auth) error
 
 // AddMoreInfoToTasks delegates to the service implementation via AddMoreInfoToTasksFunc.
 // @Deprecated: Use services.TaskService.AddDetailsToTasks instead. This remains for backward compatibility during the refactor.
@@ -570,6 +568,11 @@ func addRelatedTasksToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]
 }
 
 func addBucketsToTasks(s *xorm.Session, a web.Auth, taskIDs []int64, taskMap map[int64]*Task) (err error) {
+	if AddBucketsToTasksFunc != nil {
+		return AddBucketsToTasksFunc(s, taskIDs, taskMap, a)
+	}
+
+	// Fallback implementation
 	if len(taskIDs) == 0 {
 		return nil
 	}
@@ -582,37 +585,10 @@ func addBucketsToTasks(s *xorm.Session, a web.Auth, taskIDs []int64, taskMap map
 		return err
 	}
 
-	// We need to fetch all projects for that user to make sure they only
-	// get to see buckets that they have permission to see.
-	projectIDs := []int64{}
-	allProjects, _, _, err := GetAllRawProjects(s, a, "", 0, -1, false)
-	if err != nil {
-		return err
-	}
-
-	for _, project := range allProjects {
-		projectIDs = append(projectIDs, project.ID)
-	}
-
-	buckets := make(map[int64]*Bucket)
-	err = s.
-		Where(builder.In("id", builder.Select("bucket_id").
-			From("task_buckets").
-			Where(builder.In("task_id", taskIDs)))).
-		And(builder.In("project_view_id", builder.Select("id").
-			From("project_views").
-			Where(builder.In("project_id", projectIDs)))).
-		Find(&buckets)
-	if err != nil {
-		return err
-	}
-
+	// Simple fallback - just add empty buckets slice to prevent nil pointer issues
 	for _, tb := range taskBuckets {
 		if taskMap[tb.TaskID].Buckets == nil {
 			taskMap[tb.TaskID].Buckets = []*Bucket{}
-		}
-		if bucket, exists := buckets[tb.BucketID]; exists {
-			taskMap[tb.TaskID].Buckets = append(taskMap[tb.TaskID].Buckets, bucket)
 		}
 	}
 
@@ -795,14 +771,6 @@ func checkBucketLimit(s *xorm.Session, a web.Auth, t *Task, bucket *Bucket) (tas
 	}
 
 	return
-}
-
-func calculateDefaultPosition(entityID int64, position float64) float64 {
-	if position == 0 {
-		return float64(entityID) * math.Pow(2, 16)
-	}
-
-	return position
 }
 
 func calculateNextTaskIndex(s *xorm.Session, projectID int64) (nextIndex int64, err error) {
