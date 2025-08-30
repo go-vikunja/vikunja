@@ -717,6 +717,11 @@
                                             "key": "forceuserinfo",
                                             "default_value": "false",
                                             "comment": "This option forces the use of the OpenID Connect UserInfo endpoint to retrieve user information instead of relying on claims from the ID token. When set to `true`, user data (email, name, username) will always be obtained from the UserInfo endpoint even if the information is available in the token claims. This is useful for providers that don't include complete user information in their tokens or when you need the most up-to-date user data. Allowed value is either `true` or `false`."
+                                        },
+                                        {
+                                            "key": "requireavailability",
+                                            "default_value": "false",
+                                            "comment": "This option requires the OpenID Connect provider to be available during Vikunja startup. When set to `true`, Vikunja will crash if it cannot connect to the provider during initialization, allowing container orchestrators like Kubernetes to handle the failure by restarting the application. This is useful in environments where you want to ensure all authentication providers are available before the application starts serving requests. Allowed value is either `true` or `false`."
                                         }
                                     ]
                                 }
