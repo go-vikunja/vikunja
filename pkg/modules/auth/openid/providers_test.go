@@ -28,11 +28,11 @@ func TestGetAllProvidersTypeSafety(t *testing.T) {
 	defer func() {
 		CleanupSavedOpenIDProviders()
 	}()
-	
+
 	t.Run("should handle []interface{} without panic", func(t *testing.T) {
 		// Setup config with OpenID enabled
 		config.AuthOpenIDEnabled.Set(true)
-		
+
 		// Mock the config value to be []interface{} which causes the original panic
 		configValue := []interface{}{
 			map[string]interface{}{
@@ -43,42 +43,42 @@ func TestGetAllProvidersTypeSafety(t *testing.T) {
 			},
 		}
 		config.AuthOpenIDProviders.Set(configValue)
-		
+
 		// Clear keyvalue cache to force reading from config
-		keyvalue.Del("openid_providers")
-		
+		_ = keyvalue.Del("openid_providers")
+
 		// This should not panic, but should handle gracefully and return empty
 		providers, err := GetAllProviders()
-		
+
 		// Should return empty providers since the config format is invalid
 		if err != nil {
 			t.Errorf("Expected no error, got: %v", err)
 		}
-		
+
 		if len(providers) != 0 {
 			t.Errorf("Expected empty providers list, got: %d", len(providers))
 		}
 	})
-	
+
 	t.Run("should handle other invalid types without panic", func(t *testing.T) {
 		// Setup config with OpenID enabled
 		config.AuthOpenIDEnabled.Set(true)
-		
+
 		// Mock the config value to be a string (another invalid type)
 		configValue := "invalid-config"
 		config.AuthOpenIDProviders.Set(configValue)
-		
+
 		// Clear keyvalue cache to force reading from config
-		keyvalue.Del("openid_providers")
-		
+		_ = keyvalue.Del("openid_providers")
+
 		// This should not panic
 		providers, err := GetAllProviders()
-		
+
 		// Should return empty providers since the config format is invalid
 		if err != nil {
 			t.Errorf("Expected no error, got: %v", err)
 		}
-		
+
 		if len(providers) != 0 {
 			t.Errorf("Expected empty providers list, got: %d", len(providers))
 		}
