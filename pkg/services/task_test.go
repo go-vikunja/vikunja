@@ -104,20 +104,20 @@ func TestTaskService_GetAllByProject(t *testing.T) {
 	u := &user.User{ID: 1}
 
 	t.Run("should get all tasks in a project", func(t *testing.T) {
-		tasks, err := ts.GetAllByProject(s, 1, u)
+		tasks, _, _, err := ts.GetAllByProject(s, 1, u, 1, 10, "")
 		assert.NoError(t, err)
 		assert.Len(t, tasks, 3)
 	})
 
 	t.Run("should not get tasks without access", func(t *testing.T) {
 		otherUser := &user.User{ID: 2}
-		_, err := ts.GetAllByProject(s, 1, otherUser)
+		_, _, _, err := ts.GetAllByProject(s, 1, otherUser, 1, 10, "")
 		assert.ErrorIs(t, err, ErrAccessDenied)
 	})
 
 	t.Run("should return an empty slice for a project with no tasks", func(t *testing.T) {
 		// Project 2 has no tasks
-		tasks, err := ts.GetAllByProject(s, 2, u)
+		tasks, _, _, err := ts.GetAllByProject(s, 2, u, 1, 10, "")
 		assert.NoError(t, err)
 		assert.Len(t, tasks, 0)
 	})

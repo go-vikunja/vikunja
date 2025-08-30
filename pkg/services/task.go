@@ -18,13 +18,14 @@
 package services
 
 import (
+	"fmt"
+	"strconv"
+
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
-	"fmt"
-	"strconv"
 	"xorm.io/xorm"
 )
 
@@ -128,7 +129,6 @@ func (ts *TaskService) Update(s *xorm.Session, task *models.Task, u *user.User) 
 	}
 	return task, nil
 }
-
 
 // Delete deletes a task.
 func (ts *TaskService) Delete(s *xorm.Session, task *models.Task, a web.Auth) error {
@@ -271,7 +271,7 @@ func (ts *TaskService) addDetailsToTasks(s *xorm.Session, tasks []*models.Task, 
 		taskMap[t.ID] = t
 	}
 
-	return models.addMoreInfoToTasks(s, taskMap, u, nil, nil)
+	return models.AddMoreInfoToTasks(s, taskMap, u, nil, nil)
 }
 
 func (ts *TaskService) updateProjectLastUpdated(s *xorm.Session, project *models.Project) error {

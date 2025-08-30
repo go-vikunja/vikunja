@@ -258,7 +258,7 @@ func reindexTasksInTypesense(s *xorm.Session, tasks map[int64]*Task) (err error)
 		return
 	}
 
-	err = addMoreInfoToTasks(s, tasks, &user.User{ID: 1}, nil, []TaskCollectionExpandable{
+	err = AddMoreInfoToTasks(s, tasks, &user.User{ID: 1}, nil, []TaskCollectionExpandable{
 		TaskCollectionExpandReactions,
 		TaskCollectionExpandComments,
 	})

@@ -336,7 +336,7 @@ func getTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts 
 		taskMap[t.ID] = t
 	}
 
-	err = addMoreInfoToTasks(s, taskMap, a, view, opts.expand)
+	err = AddMoreInfoToTasks(s, taskMap, a, view, opts.expand)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -413,7 +413,7 @@ func GetTasksByUIDs(s *xorm.Session, uids []string, a web.Auth) (tasks []*Task, 
 		taskMap[t.ID] = t
 	}
 
-	err = addMoreInfoToTasks(s, taskMap, a, nil, nil)
+	err = AddMoreInfoToTasks(s, taskMap, a, nil, nil)
 	return
 }
 
@@ -604,7 +604,7 @@ func addBucketsToTasks(s *xorm.Session, a web.Auth, taskIDs []int64, taskMap map
 
 // This function takes a map with pointers and returns a slice with pointers to tasks
 // It adds more stuff like assignees/labels/etc to a bunch of tasks
-func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, view *ProjectView, expand []TaskCollectionExpandable) (err error) {
+func AddMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, view *ProjectView, expand []TaskCollectionExpandable) (err error) {
 
 	// No need to iterate over users and stuff if the project doesn't have tasks
 	if len(taskMap) == 0 {
@@ -1742,7 +1742,7 @@ func (t *Task) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 		}
 	}
 
-	err = addMoreInfoToTasks(s, taskMap, a, nil, expand)
+	err = AddMoreInfoToTasks(s, taskMap, a, nil, expand)
 	if err != nil {
 		return
 	}

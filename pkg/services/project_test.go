@@ -29,7 +29,7 @@ import (
 func TestProject_Get(t *testing.T) {
 	s := db.NewSession()
 	defer s.Close()
-	p := Project{
+	p := ProjectService{
 		DB: db.GetEngine(),
 	}
 
@@ -41,7 +41,7 @@ func TestProject_Get(t *testing.T) {
 func TestProject_Create(t *testing.T) {
 	s := db.NewSession()
 	defer s.Close()
-	p := Project{
+	p := ProjectService{
 		DB: db.GetEngine(),
 	}
 
@@ -64,7 +64,7 @@ func TestProject_GetByID(t *testing.T) {
 	s := db.NewSession()
 	defer s.Close()
 
-	p := &Project{DB: db.GetEngine()}
+	p := &ProjectService{DB: db.GetEngine()}
 
 	t.Run("should get a project by its id", func(t *testing.T) {
 		proj, err := p.GetByID(s, 1, &user.User{ID: 1})
@@ -90,7 +90,7 @@ func TestProject_GetAllForUser(t *testing.T) {
 	s := db.NewSession()
 	defer s.Close()
 
-	p := &Project{DB: db.GetEngine()}
+	p := &ProjectService{DB: db.GetEngine()}
 
 	t.Run("should get all projects for a user", func(t *testing.T) {
 		projects, count, total, err := p.GetAllForUser(s, &user.User{ID: 1}, "", 1, 10, false)
@@ -127,7 +127,7 @@ func TestProject_GetAllForUser(t *testing.T) {
 func TestProject_Delete(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 
-	p := &Project{DB: db.GetEngine()}
+	p := &ProjectService{DB: db.GetEngine()}
 
 	t.Run("should delete a project successfully", func(t *testing.T) {
 		s := db.NewSession()
@@ -270,7 +270,7 @@ func TestProject_Update_ArchiveParentArchivesChild(t *testing.T) {
 	s := db.NewSession()
 	defer s.Close()
 
-	p := &Project{DB: db.GetEngine()}
+	p := &ProjectService{DB: db.GetEngine()}
 	actingUser := &user.User{ID: 6}
 
 	// First, let's load the existing project to get all its fields
