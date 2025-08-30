@@ -52,20 +52,20 @@ type Callback struct {
 
 // Provider is the structure of an OpenID Connect provider
 type Provider struct {
-	Name               string `json:"name"`
-	Key                string `json:"key"`
-	OriginalAuthURL    string `json:"-"`
-	AuthURL            string `json:"auth_url"`
-	LogoutURL          string `json:"logout_url"`
-	ClientID           string `json:"client_id"`
-	Scope              string `json:"scope"`
-	EmailFallback      bool   `json:"email_fallback"`
-	UsernameFallback   bool   `json:"username_fallback"`
-	ForceUserInfo      bool   `json:"force_user_info"`
-	ForceAvailability  bool   `json:"-"`
-	ClientSecret       string `json:"-"`
-	openIDProvider     *oidc.Provider
-	Oauth2Config       *oauth2.Config `json:"-"`
+	Name              string `json:"name"`
+	Key               string `json:"key"`
+	OriginalAuthURL   string `json:"-"`
+	AuthURL           string `json:"auth_url"`
+	LogoutURL         string `json:"logout_url"`
+	ClientID          string `json:"client_id"`
+	Scope             string `json:"scope"`
+	EmailFallback     bool   `json:"email_fallback"`
+	UsernameFallback  bool   `json:"username_fallback"`
+	ForceUserInfo     bool   `json:"force_user_info"`
+	ForceAvailability bool   `json:"-"`
+	ClientSecret      string `json:"-"`
+	openIDProvider    *oidc.Provider
+	Oauth2Config      *oauth2.Config `json:"-"`
 }
 
 type claims struct {
