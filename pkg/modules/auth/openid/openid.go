@@ -62,7 +62,7 @@ type Provider struct {
 	EmailFallback      bool   `json:"email_fallback"`
 	UsernameFallback   bool   `json:"username_fallback"`
 	ForceUserInfo      bool   `json:"force_user_info"`
-	ForceAvailability  bool   `json:"force_availability"`
+	ForceAvailability  bool   `json:"-"`
 	ClientSecret       string `json:"-"`
 	openIDProvider     *oidc.Provider
 	Oauth2Config       *oauth2.Config `json:"-"`
