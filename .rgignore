@@ -10,6 +10,7 @@ node_modules/
 
 # Standard build output directory for Vue.
 dist/
+tmp/
 
 # Directory for Nuxt.js, if you're using it.
 .nuxt/
@@ -49,10 +50,14 @@ profile.out
 
 # Git's internal directory.
 .git/
+.github/
 
 # IDE-specific metadata folders.
 .vscode/
 .idea/
+.history/
+.devenv/
+.zed/
 
 # Generic log files.
 *.log

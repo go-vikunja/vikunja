@@ -29,6 +29,7 @@ import (
 	"code.vikunja.io/api/pkg/i18n"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/web"
 	"xorm.io/xorm"
 )
 
@@ -105,10 +106,18 @@ func TestMain(m *testing.M) {
 		}
 
 		for _, share := range shares {
-			usersMap[share.ID*-1] = NewUserProxyFromLinkShare(share)
+			usersMap[share.ID*-1] = share.ToUser()
 		}
 
 		return usersMap, nil
+	}
+
+	// Set up a mock for AddMoreInfoToTasksFunc for model tests,
+	// as they should not depend on the services package.
+	AddMoreInfoToTasksFunc = func(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, view *ProjectView, expand []TaskCollectionExpandable) error {
+		// This is a minimal mock that just returns nil - no additional task details are added in tests
+		// Individual tests can override this if they need specific behavior
+		return nil
 	}
 
 	events.Fake()

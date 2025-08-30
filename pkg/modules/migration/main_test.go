@@ -27,6 +27,9 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
+	
+	// Master Switch: ensures service init() functions run during tests
+	_ "code.vikunja.io/api/pkg/testutil"
 )
 
 // TestMain is the main test function used to bootstrap the test env
