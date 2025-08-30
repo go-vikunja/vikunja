@@ -52,20 +52,20 @@ type Callback struct {
 
 // Provider is the structure of an OpenID Connect provider
 type Provider struct {
-	Name              string `json:"name"`
-	Key               string `json:"key"`
-	OriginalAuthURL   string `json:"-"`
-	AuthURL           string `json:"auth_url"`
-	LogoutURL         string `json:"logout_url"`
-	ClientID          string `json:"client_id"`
-	Scope             string `json:"scope"`
-	EmailFallback     bool   `json:"email_fallback"`
-	UsernameFallback  bool   `json:"username_fallback"`
-	ForceUserInfo     bool   `json:"force_user_info"`
-	ForceAvailability bool   `json:"-"`
-	ClientSecret      string `json:"-"`
-	openIDProvider    *oidc.Provider
-	Oauth2Config      *oauth2.Config `json:"-"`
+	Name                string `json:"name"`
+	Key                 string `json:"key"`
+	OriginalAuthURL     string `json:"-"`
+	AuthURL             string `json:"auth_url"`
+	LogoutURL           string `json:"logout_url"`
+	ClientID            string `json:"client_id"`
+	Scope               string `json:"scope"`
+	EmailFallback       bool   `json:"email_fallback"`
+	UsernameFallback    bool   `json:"username_fallback"`
+	ForceUserInfo       bool   `json:"force_user_info"`
+	RequireAvailability bool   `json:"-"`
+	ClientSecret        string `json:"-"`
+	openIDProvider      *oidc.Provider
+	Oauth2Config        *oauth2.Config `json:"-"`
 }
 
 type claims struct {
@@ -84,8 +84,8 @@ func init() {
 
 func (p *Provider) setOicdProvider() (err error) {
 	p.openIDProvider, err = oidc.NewProvider(context.Background(), p.OriginalAuthURL)
-	if err != nil && p.ForceAvailability {
-		log.Fatalf("OpenID Connect provider '%s' is not available and force_availability is enabled: %s", p.Name, err)
+	if err != nil && p.RequireAvailability {
+		log.Fatalf("OpenID Connect provider '%s' is not available and require_availability is enabled: %s", p.Name, err)
 	}
 	return err
 }

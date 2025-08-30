@@ -126,7 +126,7 @@ func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provid
 			"emailfallback",
 			"usernamefallback",
 			"forceuserinfo",
-			"forceavailability",
+			"requireavailability",
 		},
 		requiredKeys...,
 	)
@@ -194,29 +194,29 @@ func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provid
 		}
 	}
 
-	var forceAvailability = false
-	forceAvailabilityValue, exists := pi["forceavailability"]
+	var requireAvailability = false
+	requireAvailabilityValue, exists := pi["requireavailability"]
 	if exists {
-		forceAvailabilityTypedValue, ok := forceAvailabilityValue.(bool)
+		requireAvailabilityTypedValue, ok := requireAvailabilityValue.(bool)
 		if ok {
-			forceAvailability = forceAvailabilityTypedValue
+			requireAvailability = requireAvailabilityTypedValue
 		} else {
-			log.Errorf("forceavailability is not a boolean for provider %s, value: %v", key, forceAvailabilityValue)
+			log.Errorf("requireavailability is not a boolean for provider %s, value: %v", key, requireAvailabilityValue)
 		}
 	}
 
 	provider = &Provider{
-		Name:              name,
-		Key:               key,
-		AuthURL:           pi["authurl"].(string),
-		OriginalAuthURL:   pi["authurl"].(string),
-		ClientSecret:      pi["clientsecret"].(string),
-		LogoutURL:         logoutURL,
-		Scope:             scope,
-		EmailFallback:     emailFallback,
-		UsernameFallback:  usernameFallback,
-		ForceUserInfo:     forceUserInfo,
-		ForceAvailability: forceAvailability,
+		Name:                name,
+		Key:                 key,
+		AuthURL:             pi["authurl"].(string),
+		OriginalAuthURL:     pi["authurl"].(string),
+		ClientSecret:        pi["clientsecret"].(string),
+		LogoutURL:           logoutURL,
+		Scope:               scope,
+		EmailFallback:       emailFallback,
+		UsernameFallback:    usernameFallback,
+		ForceUserInfo:       forceUserInfo,
+		RequireAvailability: requireAvailability,
 	}
 
 	cl, is := pi["clientid"].(int)
