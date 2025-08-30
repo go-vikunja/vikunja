@@ -1,0 +1,37 @@
+# Example configuration for OpenID Connect Force Availability
+
+# This configuration demonstrates how to use the new forceavailability option
+# for OpenID Connect providers in Vikunja.
+
+auth:
+  openid:
+    enabled: true
+    providers:
+      # Example provider with force availability enabled
+      # This provider MUST be available during startup or Vikunja will crash
+      keycloak:
+        name: "Keycloak SSO"
+        authurl: "https://auth.example.com/realms/vikunja"
+        clientid: "vikunja-client"
+        clientsecret: "your-client-secret"
+        forceavailability: true  # This will crash Vikunja if provider is unavailable
+        
+      # Example provider with force availability disabled (default behavior)
+      # This provider can be unavailable during startup without crashing Vikunja
+      optional_provider:
+        name: "Optional Provider"
+        authurl: "https://optional.example.com/oidc"
+        clientid: "optional-client"
+        clientsecret: "optional-secret"
+        forceavailability: false  # Default: continues even if provider is unavailable
+
+# When forceavailability is true:
+# - Vikunja will attempt to connect to the provider during startup
+# - If connection fails, Vikunja will crash with a clear error message
+# - Kubernetes/orchestrators can automatically restart the pod
+# - This ensures all authentication providers are working before serving requests
+
+# When forceavailability is false (default):
+# - Vikunja will log an error if provider connection fails
+# - Vikunja will continue to start and serve requests
+# - Provider connection will be retried during actual authentication attempts
