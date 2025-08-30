@@ -49,6 +49,23 @@ const (
 	TaskRepeatModeFromCurrentDate
 )
 
+// AddMoreInfoToTasksFunc is a function variable used to plug the service implementation into the models layer.
+// It allows the models layer to call into the services without introducing an import cycle.
+var AddMoreInfoToTasksFunc func(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, view *ProjectView, expand []TaskCollectionExpandable) error
+
+// GetUsersOrLinkSharesFromIDsFunc is a function variable used to plug the service implementation into the models layer.
+// It allows the models layer to get users and link shares without introducing an import cycle.
+var GetUsersOrLinkSharesFromIDsFunc func(s *xorm.Session, ids []int64) (map[int64]*user.User, error)
+
+// AddMoreInfoToTasks delegates to the service implementation via AddMoreInfoToTasksFunc.
+// @Deprecated: Use services.TaskService.AddDetailsToTasks instead. This remains for backward compatibility during the refactor.
+func AddMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, view *ProjectView, expand []TaskCollectionExpandable) (err error) {
+	if AddMoreInfoToTasksFunc == nil {
+		return errors.New("AddMoreInfoToTasksFunc not initialized")
+	}
+	return AddMoreInfoToTasksFunc(s, taskMap, a, view, expand)
+}
+
 // Task represents a task in a project
 type Task struct {
 	// The unique, numeric id of this task.
@@ -335,7 +352,7 @@ func getTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts 
 		taskMap[t.ID] = t
 	}
 
-	err = addMoreInfoToTasks(s, taskMap, a, view, opts.expand)
+	err = AddMoreInfoToTasks(s, taskMap, a, view, opts.expand)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -412,7 +429,7 @@ func GetTasksByUIDs(s *xorm.Session, uids []string, a web.Auth) (tasks []*Task, 
 		taskMap[t.ID] = t
 	}
 
-	err = addMoreInfoToTasks(s, taskMap, a, nil, nil)
+	err = AddMoreInfoToTasks(s, taskMap, a, nil, nil)
 	return
 }
 
@@ -603,139 +620,147 @@ func addBucketsToTasks(s *xorm.Session, a web.Auth, taskIDs []int64, taskMap map
 
 // This function takes a map with pointers and returns a slice with pointers to tasks
 // It adds more stuff like assignees/labels/etc to a bunch of tasks
-func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, view *ProjectView, expand []TaskCollectionExpandable) (err error) {
+/*
+NOTE: addMoreInfoToTasks has been moved to services.TaskService.AddDetailsToTasks.
+The models layer now delegates to the service via AddMoreInfoToTasksFunc to avoid import cycles.
+*/
+// func AddMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, view *ProjectView, expand []TaskCollectionExpandable) (err error) {
+//   // Moved to service layer. See services.TaskService.AddDetailsToTasks
+// }
+// Original logic below:
+// func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, view *ProjectView, expand []TaskCollectionExpandable) (err error) {
 
-	// No need to iterate over users and stuff if the project doesn't have tasks
-	if len(taskMap) == 0 {
-		return
-	}
+// 	// No need to iterate over users and stuff if the project doesn't have tasks
+// 	if len(taskMap) == 0 {
+// 		return
+// 	}
 
-	// Get all users & task ids and put them into the array
-	var userIDs []int64
-	var taskIDs []int64
-	var projectIDs []int64
-	for _, i := range taskMap {
-		taskIDs = append(taskIDs, i.ID)
-		if i.CreatedByID != 0 {
-			userIDs = append(userIDs, i.CreatedByID)
-		}
-		projectIDs = append(projectIDs, i.ProjectID)
-	}
+// 	// Get all users & task ids and put them into the array
+// 	var userIDs []int64
+// 	var taskIDs []int64
+// 	var projectIDs []int64
+// 	for _, i := range taskMap {
+// 		taskIDs = append(taskIDs, i.ID)
+// 		if i.CreatedByID != 0 {
+// 			userIDs = append(userIDs, i.CreatedByID)
+// 		}
+// 		projectIDs = append(projectIDs, i.ProjectID)
+// 	}
 
-	err = addAssigneesToTasks(s, taskIDs, taskMap)
-	if err != nil {
-		return
-	}
+// 	err = addAssigneesToTasks(s, taskIDs, taskMap)
+// 	if err != nil {
+// 		return
+// 	}
 
-	err = addLabelsToTasks(s, taskIDs, taskMap)
-	if err != nil {
-		return
-	}
+// 	err = addLabelsToTasks(s, taskIDs, taskMap)
+// 	if err != nil {
+// 		return
+// 	}
 
-	err = addAttachmentsToTasks(s, taskIDs, taskMap)
-	if err != nil {
-		return
-	}
+// 	err = addAttachmentsToTasks(s, taskIDs, taskMap)
+// 	if err != nil {
+// 		return
+// 	}
 
-	users, err := getUsersOrLinkSharesFromIDs(s, userIDs)
-	if err != nil {
-		return
-	}
+// 	users, err := getUsersOrLinkSharesFromIDs(s, userIDs)
+// 	if err != nil {
+// 		return
+// 	}
 
-	taskReminders, err := getTaskReminderMap(s, taskIDs)
-	if err != nil {
-		return err
-	}
+// 	taskReminders, err := getTaskReminderMap(s, taskIDs)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	taskFavorites, err := getFavorites(s, taskIDs, a, FavoriteKindTask)
-	if err != nil {
-		return err
-	}
+// 	taskFavorites, err := getFavorites(s, taskIDs, a, FavoriteKindTask)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	// Get all identifiers
-	projects, err := GetProjectsMapByIDs(s, projectIDs)
-	if err != nil {
-		return err
-	}
+// 	// Get all identifiers
+// 	projects, err := GetProjectsMapByIDs(s, projectIDs)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	var positionsMap = make(map[int64]*TaskPosition)
-	if view != nil {
-		positions, err := getPositionsForView(s, view)
-		if err != nil {
-			return err
-		}
-		for _, position := range positions {
-			positionsMap[position.TaskID] = position
-		}
-	}
+// 	var positionsMap = make(map[int64]*TaskPosition)
+// 	if view != nil {
+// 		positions, err := getPositionsForView(s, view)
+// 		if err != nil {
+// 			return err
+// 		}
+// 		for _, position := range positions {
+// 			positionsMap[position.TaskID] = position
+// 		}
+// 	}
 
-	var reactions map[int64]ReactionMap
-	if expand != nil {
-		expanded := make(map[TaskCollectionExpandable]bool)
-		for _, expandable := range expand {
-			if expanded[expandable] {
-				continue
-			}
+// 	var reactions map[int64]ReactionMap
+// 	if expand != nil {
+// 		expanded := make(map[TaskCollectionExpandable]bool)
+// 		for _, expandable := range expand {
+// 			if expanded[expandable] {
+// 				continue
+// 			}
 
-			switch expandable {
-			case TaskCollectionExpandSubtasks:
-				// already dealt with earlier
-			case TaskCollectionExpandBuckets:
-				err = addBucketsToTasks(s, a, taskIDs, taskMap)
-				if err != nil {
-					return err
-				}
-			case TaskCollectionExpandReactions:
-				reactions, err = getReactionsForEntityIDs(s, ReactionKindTask, taskIDs)
-				if err != nil {
-					return
-				}
-			case TaskCollectionExpandComments:
-				err = addCommentsToTasks(s, taskIDs, taskMap)
-				if err != nil {
-					return err
-				}
-			}
-			expanded[expandable] = true
-		}
-	}
+// 			switch expandable {
+// 			case TaskCollectionExpandSubtasks:
+// 				// already dealt with earlier
+// 			case TaskCollectionExpandBuckets:
+// 				err = addBucketsToTasks(s, a, taskIDs, taskMap)
+// 				if err != nil {
+// 					return err
+// 				}
+// 			case TaskCollectionExpandReactions:
+// 				reactions, err = getReactionsForEntityIDs(s, ReactionKindTask, taskIDs)
+// 				if err != nil {
+// 					return
+// 				}
+// 			case TaskCollectionExpandComments:
+// 				err = addCommentsToTasks(s, taskIDs, taskMap)
+// 				if err != nil {
+// 					return err
+// 				}
+// 			}
+// 			expanded[expandable] = true
+// 		}
+// 	}
 
-	// Add all objects to their tasks
-	for _, task := range taskMap {
+// 	// Add all objects to their tasks
+// 	for _, task := range taskMap {
 
-		// Make created by user objects
-		if createdBy, has := users[task.CreatedByID]; has {
-			task.CreatedBy = createdBy
-		}
+// 		// Make created by user objects
+// 		if createdBy, has := users[task.CreatedByID]; has {
+// 			task.CreatedBy = createdBy
+// 		}
 
-		// Add the reminders
-		task.Reminders = taskReminders[task.ID]
+// 		// Add the reminders
+// 		task.Reminders = taskReminders[task.ID]
 
-		// Prepare the subtasks
-		task.RelatedTasks = make(RelatedTaskMap)
+// 		// Prepare the subtasks
+// 		task.RelatedTasks = make(RelatedTaskMap)
 
-		// Build the task identifier from the project identifier and task index
-		task.setIdentifier(projects[task.ProjectID])
+// 		// Build the task identifier from the project identifier and task index
+// 		task.setIdentifier(projects[task.ProjectID])
 
-		task.IsFavorite = taskFavorites[task.ID]
+// 		task.IsFavorite = taskFavorites[task.ID]
 
-		if reactions != nil {
-			r, has := reactions[task.ID]
-			if has {
-				task.Reactions = r
-			}
-		}
+// 		if reactions != nil {
+// 			r, has := reactions[task.ID]
+// 			if has {
+// 				task.Reactions = r
+// 			}
+// 		}
 
-		p, has := positionsMap[task.ID]
-		if has {
-			task.Position = p.Position
-		}
-	}
+// 		p, has := positionsMap[task.ID]
+// 		if has {
+// 			task.Position = p.Position
+// 		}
+// 	}
 
-	// Get all related tasks
-	err = addRelatedTasksToTasks(s, taskIDs, taskMap, a)
-	return
-}
+// 	// Get all related tasks
+// 	err = addRelatedTasksToTasks(s, taskIDs, taskMap, a)
+// 	return
+// }
 
 // Checks if adding a new task would exceed the bucket limit
 func checkBucketLimit(s *xorm.Session, a web.Auth, t *Task, bucket *Bucket) (taskCount int64, err error) {
@@ -1739,7 +1764,7 @@ func (t *Task) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 		}
 	}
 
-	err = addMoreInfoToTasks(s, taskMap, a, nil, expand)
+	err = AddMoreInfoToTasks(s, taskMap, a, nil, expand)
 	if err != nil {
 		return
 	}

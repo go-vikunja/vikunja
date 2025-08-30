@@ -276,7 +276,7 @@ func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, projects []*Pr
 		taskMap[t.ID] = t
 	}
 
-	err = addMoreInfoToTasks(s, taskMap, auth, view, opts.expand)
+	err = AddMoreInfoToTasks(s, taskMap, auth, view, opts.expand)
 	if err != nil {
 		return nil, err
 	}

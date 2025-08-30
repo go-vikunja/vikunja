@@ -14,38 +14,37 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package migration
+package services
 
 import (
-	"os"
-	"testing"
-
-	"code.vikunja.io/api/pkg/events"
-
-	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/files"
-	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
-	
-	// Master Switch: ensures service init() functions run during tests
-	_ "code.vikunja.io/api/pkg/testutil"
+	"xorm.io/xorm"
 )
 
-// TestMain is the main test function used to bootstrap the test env
-func TestMain(m *testing.M) {
-	// Initialize logger for tests
-	log.InitLogger()
+// ProjectService is a service for managing projects.
+type ProjectService struct {
+	DB *xorm.Engine
+}
 
-	// Set default config
-	config.InitDefaultConfig()
-	// We need to set the root path even if we're not using the config, otherwise fixtures are not loaded correctly
-	config.ServiceRootpath.Set(os.Getenv("VIKUNJA_SERVICE_ROOTPATH"))
+// NewProjectService creates a new ProjectService.
+func NewProjectService(db *xorm.Engine) *ProjectService {
+	return &ProjectService{DB: db}
+}
 
-	// Some tests use the file engine, so we'll need to initialize that
-	files.InitTests()
-	user.InitTests()
-	models.SetupTests()
-	events.Fake()
-	os.Exit(m.Run())
+// HasPermission checks if a user has a specific permission on a project.
+func (ps *ProjectService) HasPermission(s *xorm.Session, projectID int64, u *user.User, permission models.Permission) (bool, error) {
+	// For now, delegate to the existing model method
+	// TODO: Move the permission logic to the service layer
+	project := &models.Project{ID: projectID}
+
+	switch permission {
+	case models.PermissionRead:
+		canRead, _, err := project.CanRead(s, u)
+		return canRead, err
+	case models.PermissionWrite:
+		return project.CanWrite(s, u)
+	default:
+		return false, nil
+	}
 }
