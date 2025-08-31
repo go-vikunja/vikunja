@@ -501,15 +501,7 @@ func registerAPIRoutes(a *echo.Group) {
 	a.DELETE("/projects/:project/users/:user", projectUserHandler.DeleteWeb)
 	a.POST("/projects/:project/users/:user", projectUserHandler.UpdateWeb)
 
-	savedFiltersHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.SavedFilter{}
-		},
-	}
-	a.GET("/filters/:filter", savedFiltersHandler.ReadOneWeb)
-	a.PUT("/filters", savedFiltersHandler.CreateWeb)
-	a.DELETE("/filters/:filter", savedFiltersHandler.DeleteWeb)
-	a.POST("/filters/:filter", savedFiltersHandler.UpdateWeb)
+	apiv1.RegisterSavedFilters(a)
 
 	teamHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {

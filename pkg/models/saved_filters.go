@@ -115,6 +115,18 @@ func (sf *SavedFilter) ToProject() *Project {
 	}
 }
 
+var (
+	// CreateSavedFilterFunc is a function that creates a saved filter.
+	// It is used to avoid import cycles.
+	CreateSavedFilterFunc func(*xorm.Session, *SavedFilter, *user.User) error
+	// UpdateSavedFilterFunc is a function that updates a saved filter.
+	// It is used to avoid import cycles.
+	UpdateSavedFilterFunc func(*xorm.Session, *SavedFilter, *user.User) error
+	// DeleteSavedFilterFunc is a function that deletes a saved filter.
+	// It is used to avoid import cycles.
+	DeleteSavedFilterFunc func(*xorm.Session, int64, *user.User) error
+)
+
 // Create creates a new saved filter
 // @Summary Creates a new saved filter
 // @Description Creates a new saved filter
@@ -127,6 +139,14 @@ func (sf *SavedFilter) ToProject() *Project {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /filters [put]
 func (sf *SavedFilter) Create(s *xorm.Session, auth web.Auth) (err error) {
+	if CreateSavedFilterFunc != nil {
+		u, err := user.GetFromAuth(auth)
+		if err != nil {
+			return err
+		}
+		return CreateSavedFilterFunc(s, sf, u)
+	}
+	// Legacy implementation
 	_, err = getTaskFiltersFromFilterString(sf.Filters.Filter, sf.Filters.FilterTimezone)
 	if err != nil {
 		return
@@ -189,7 +209,15 @@ func (sf *SavedFilter) ReadOne(s *xorm.Session, _ web.Auth) error {
 // @Failure 404 {object} web.HTTPError "The saved filter does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /filters/{id} [post]
-func (sf *SavedFilter) Update(s *xorm.Session, _ web.Auth) error {
+func (sf *SavedFilter) Update(s *xorm.Session, auth web.Auth) error {
+	if UpdateSavedFilterFunc != nil {
+		u, err := user.GetFromAuth(auth)
+		if err != nil {
+			return err
+		}
+		return UpdateSavedFilterFunc(s, sf, u)
+	}
+	// Legacy implementation
 	origFilter, err := GetSavedFilterSimpleByID(s, sf.ID)
 	if err != nil {
 		return err
@@ -307,7 +335,15 @@ func (sf *SavedFilter) Update(s *xorm.Session, _ web.Auth) error {
 // @Failure 404 {object} web.HTTPError "The saved filter does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /filters/{id} [delete]
-func (sf *SavedFilter) Delete(s *xorm.Session, _ web.Auth) error {
+func (sf *SavedFilter) Delete(s *xorm.Session, auth web.Auth) error {
+	if DeleteSavedFilterFunc != nil {
+		u, err := user.GetFromAuth(auth)
+		if err != nil {
+			return err
+		}
+		return DeleteSavedFilterFunc(s, sf.ID, u)
+	}
+	// Legacy implementation
 	_, err := s.
 		Where("id = ?", sf.ID).
 		Delete(sf)

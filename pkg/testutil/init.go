@@ -27,11 +27,13 @@ import "code.vikunja.io/api/pkg/services"
 //
 // The initialization order is carefully chosen to respect dependencies:
 // 1. UserService (foundational, used by others)
-// 2. TaskService (depends on user service)
-// 3. ProjectService (depends on user service)
-// 4. KanbanService (depends on user and task services)
+// 2. SavedFilterService (depends on user service)
+// 3. TaskService (depends on user service)
+// 4. ProjectService (depends on user service)
+// 5. KanbanService (depends on user and task services)
 func Init() {
 	services.InitUserService()
+	services.InitSavedFilterService()
 	services.InitTaskService()
 	services.InitProjectService()
 	services.InitKanbanService()
