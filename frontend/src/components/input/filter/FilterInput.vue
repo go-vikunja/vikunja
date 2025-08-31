@@ -227,6 +227,79 @@ defineExpose({
 	.filter-datepicker {
 		position: absolute;
 	}
+
+	.ProseMirror {
+		outline: none;
+		white-space: pre-wrap;
+		padding: 0 !important;
+		
+		.field {
+			color: var(--code-literal);
+		}
+		
+		.operator {
+			color: var(--code-keyword);
+		}
+		
+		.value {
+			border-radius: $radius;
+			padding: .125rem .25rem;
+			background: var(--grey-100);
+		}
+		
+		.label-value {
+			border-radius: $radius;
+			padding: .125rem .25rem;
+		}
+		
+		.date-value {
+			background-color: var(--primary);
+			color: var(--white);
+			border-radius: $radius;
+			padding: 0.125em 0.25em;
+			cursor: pointer;
+			transition: background-color var(--transition);
+			
+			&:hover {
+				background-color: var(--primary-dark);
+			}
+		}
+		
+		.grouping, .logical {
+			color: var(--code-section);
+		}
+		
+		.user-value {
+			position: relative;
+			padding-inline-start: 1.5em;
+			
+			&::before {
+				content: attr(data-user);
+				position: absolute;
+				inset-inline-start: 0;
+				inset-block-start: 50%;
+				transform: translateY(-50%);
+				inline-size: 1.2em;
+				block-size: 1.2em;
+				background-color: #3b82f6;
+				color: white;
+				border-radius: 50%;
+				font-size: 0.8em;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				text-transform: uppercase;
+			}
+		}
+		
+		p.is-editor-empty:first-child::before {
+			color: var(--grey-500);
+			content: attr(data-placeholder);
+			float: inline-start;
+			block-size: 0;
+			pointer-events: none;
+		}
+	}
 }
 
 .editor-wrapper {
@@ -236,78 +309,5 @@ defineExpose({
 .editor-content {
 	line-height: 1.5;
 	padding: .5rem .75rem;
-}
-
-.ProseMirror {
-	outline: none;
-	white-space: pre-wrap;
-	padding: 0 !important;
-
-	.field {
-		color: var(--code-literal);
-	}
-
-	.operator {
-		color: var(--code-keyword);
-	}
-
-	.value {
-		border-radius: $radius;
-		padding: .125rem .25rem;
-		background: var(--grey-100);
-	}
-
-	.label-value {
-		border-radius: $radius;
-		padding: .125rem .25rem;
-	}
-
-	.date-value {
-		background-color: var(--primary);
-		color: var(--white);
-		border-radius: $radius;
-		padding: 0.125em 0.25em;
-		cursor: pointer;
-		transition: background-color var(--transition);
-
-		&:hover {
-			background-color: var(--primary-dark);
-		}
-	}
-
-	.grouping, .logical {
-		color: var(--code-section);
-	}
-
-	.user-value {
-		position: relative;
-		padding-inline-start: 1.5em;
-
-		&::before {
-			content: attr(data-user);
-			position: absolute;
-			inset-inline-start: 0;
-			inset-block-start: 50%;
-			transform: translateY(-50%);
-			inline-size: 1.2em;
-			block-size: 1.2em;
-			background-color: #3b82f6;
-			color: white;
-			border-radius: 50%;
-			font-size: 0.8em;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			text-transform: uppercase;
-		}
-	}
-
-	p.is-editor-empty:first-child::before {
-		color: var(--grey-500);
-		content: attr(data-placeholder);
-		float: inline-start;
-		block-size: 0;
-		pointer-events: none;
-	}
 }
 </style>
