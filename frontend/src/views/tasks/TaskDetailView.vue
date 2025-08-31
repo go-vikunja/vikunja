@@ -743,6 +743,10 @@ watch(
 			attachmentStore.set(task.value.attachments)
 			taskColor.value = task.value.hexColor
 			setActiveFields()
+
+			if (project.value) {
+				await baseStore.handleSetCurrentProject({project: project.value})
+			}
 		} catch (e) {
 			if (e?.response?.status === 404) {
 				router.replace({name: 'not-found'})
