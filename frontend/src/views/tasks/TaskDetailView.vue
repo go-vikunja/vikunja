@@ -28,7 +28,7 @@
 					:key="p.id"
 				>
 					<a
-						v-if="router.options.history.state.back?.includes('/projects/'+p.id+'/') || false"
+						v-if="router.options.history.state?.back?.includes('/projects/'+p.id+'/') || false"
 						v-shortcut="p.id === project?.id ? 'u' : ''"
 						@click="router.back()"
 					>
