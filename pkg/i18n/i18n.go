@@ -201,13 +201,18 @@ func HasLanguage(lang string) bool {
 
 // TP returns the appropriate pluralized translation string for the specified key, count, and language.
 // It expects pluralization rules to be encoded in the translation string using '|' as a separator.
+// The specific use of the rules depends on the language.
+// For Russian:
+//   - 3 forms: "one | few | many"
+//   - 4 forms: "zero | one | few | many"
+//
+// For other languages:
 //   - For "singular | plural" (2 forms): uses the first for count 1, second otherwise.
 //   - For "zero | one | other" (3 forms): uses the first for count 0, second for count 1, third otherwise.
 //
-// If the translation string for the key does not contain '|', it's returned as
 // If the translation string for the key does not contain '|', it's returned as is.
 // If the key is not found, the key itself is returned.
-// If the pluralization string is malformed (e.g. contains '|' but not 2 or 3 valid parts), the key is returned and a warning is logged.
+// If the pluralization string is malformed (e.g. contains '|' but not the expected number of parts), the key is returned and a warning is logged.
 // This function does NOT perform any variable interpolation (e.g., replacing "{count}" with the actual number).
 func TP(lang, key string, count int64, params ...any) string {
 	translator.mu.RLock()
@@ -215,12 +220,14 @@ func TP(lang, key string, count int64, params ...any) string {
 
 	var rawTranslation string
 	var found bool
+	var usedLang string
 
 	// Try requested language
 	if langMap, exists := translator.translations[lang]; exists {
 		if translation, keyFound := langMap[key]; keyFound {
 			rawTranslation = translation
 			found = true
+			usedLang = lang
 		}
 	}
 
@@ -230,6 +237,7 @@ func TP(lang, key string, count int64, params ...any) string {
 			if translation, keyFound := langMap[key]; keyFound {
 				rawTranslation = translation
 				found = true
+				usedLang = translator.fallbackLang
 			}
 		}
 	}
@@ -250,35 +258,64 @@ func TP(lang, key string, count int64, params ...any) string {
 	choices := strings.Split(rawTranslation, "|")
 	numChoices := len(choices)
 
-	var selectedChoice string
+	var selectedChoiceIndex int
 
-	switch numChoices {
-	case 2: // Example: "car | cars" (singular | plural)
-		// Handles cases like "1 car" vs "0 cars", "2 cars".
-		if count == 1 {
-			selectedChoice = choices[0]
-		} else {
-			selectedChoice = choices[1]
-		}
-	case 3: // Example: "no apples | one apple | {count} apples" (zero | one | other)
-		// Handles cases like "0 apples", "1 apple", "10 apples".
-		switch count {
-		case 0:
-			selectedChoice = choices[0]
-		case 1:
-			selectedChoice = choices[1]
+	switch usedLang {
+	case "ru-RU":
+		switch {
+		case numChoices == 4 && count == 0:
+			selectedChoiceIndex = 0
+		case numChoices == 3 || numChoices == 4:
+			n := count % 100
+			if n < 0 {
+				n = -n
+			}
+			switch {
+			case n > 10 && n < 20:
+				selectedChoiceIndex = 2
+			case n%10 == 1:
+				selectedChoiceIndex = 0
+			case n%10 >= 2 && n%10 <= 4:
+				selectedChoiceIndex = 1
+			default:
+				selectedChoiceIndex = 2
+			}
+			if numChoices == 4 {
+				selectedChoiceIndex++
+			}
 		default:
-			selectedChoice = choices[2]
+			log.Errorf("Malformed plural string for key '%s' in lang '%s': %d parts found (expected 3 or 4). Raw string: '%s'", key, usedLang, numChoices, rawTranslation)
+			return key
 		}
 	default:
-		// This case is reached if strings.Contains(rawTranslation, "|") is true,
-		// but the number of resulting parts from split is not 2 or 3.
-		// This indicates a malformed pluralization string in the translation file.
-		log.Errorf("Malformed plural string for key '%s' in lang '%s': %d parts found (expected 2 or 3). Raw string: '%s'", key, lang, numChoices, rawTranslation)
-		return key // Return the key to indicate an issue with the translation data.
+		switch numChoices {
+		case 2: // Example: "car | cars" (singular | plural)
+			// Handles cases like "1 car" vs "0 cars", "2 cars".
+			if count == 1 {
+				selectedChoiceIndex = 0
+			} else {
+				selectedChoiceIndex = 1
+			}
+		case 3: // Example: "no apples | one apple | {count} apples" (zero | one | other)
+			// Handles cases like "0 apples", "1 apple", "10 apples".
+			switch count {
+			case 0:
+				selectedChoiceIndex = 0
+			case 1:
+				selectedChoiceIndex = 1
+			default:
+				selectedChoiceIndex = 2
+			}
+		default:
+			// This case is reached if strings.Contains(rawTranslation, "|") is true,
+			// but the number of resulting parts from split is not 2 or 3.
+			// This indicates a malformed pluralization string in the translation file.
+			log.Errorf("Malformed plural string for key '%s' in lang '%s': %d parts found (expected 2 or 3). Raw string: '%s'", key, usedLang, numChoices, rawTranslation)
+			return key // Return the key to indicate an issue with the translation data.
+		}
 	}
 
-	selectedChoice = strings.TrimSpace(selectedChoice)
+	selectedChoice := strings.TrimSpace(choices[selectedChoiceIndex])
 
 	if len(params) > 0 && strings.Contains(selectedChoice, "%") {
 		return fmt.Sprintf(selectedChoice, params...)
