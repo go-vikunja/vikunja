@@ -17,6 +17,7 @@
 package models
 
 import (
+	"fmt"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
@@ -269,4 +270,25 @@ func TestTaskComment_ReadAll(t *testing.T) {
 		resultComment := result.([]*TaskComment)
 		assert.Equal(t, int64(15), resultComment[0].ID)
 	})
+}
+
+func TestAddCommentsToTasksLimit(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	taskID := int64(1)
+
+	// Add a bunch of comments to exceed the pagination limit
+	for i := 0; i < 60; i++ {
+		_, err := s.Insert(&TaskComment{Comment: fmt.Sprintf("bulk %d", i), TaskID: taskID, AuthorID: 1})
+		require.NoError(t, err)
+	}
+
+	task := &Task{ID: taskID}
+	taskMap := map[int64]*Task{taskID: task}
+
+	err := addCommentsToTasks(s, []int64{taskID}, taskMap)
+	require.NoError(t, err)
+	assert.Len(t, task.Comments, 50)
 }
