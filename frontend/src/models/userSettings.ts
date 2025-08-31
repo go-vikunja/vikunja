@@ -6,6 +6,7 @@ import {PrefixMode} from '@/modules/parseTaskText'
 import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/modelTypes/IProjectView'
 import {PRIORITIES} from '@/constants/priorities'
 import {DATE_DISPLAY} from '@/constants/dateDisplay'
+import {RELATION_KIND} from '@/types/IRelationKind'
 
 export default class UserSettingsModel extends AbstractModel<IUserSettings> implements IUserSettings {
 	name = ''
@@ -26,6 +27,7 @@ export default class UserSettingsModel extends AbstractModel<IUserSettings> impl
 		defaultView: DEFAULT_PROJECT_VIEW_SETTINGS.FIRST,
 		minimumPriority: PRIORITIES.MEDIUM,
 		dateDisplay: DATE_DISPLAY.RELATIVE,
+		defaultTaskRelationType: RELATION_KIND.RELATED,
 	}
 	extraSettingsLinks = {}
 

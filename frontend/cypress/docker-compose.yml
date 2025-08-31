@@ -1,10 +1,10 @@
 services:
   dex:
-    image: ghcr.io/go-vikunja/dex-testing:main@sha256:4abbc4f1e6a3f3e66565754f06a258c5b0211ea8b9792dd3a8874e8322ce165c
+    image: ghcr.io/go-vikunja/dex-testing:main@sha256:3877beee650f6005ee82c93170f4cbc4232ea4bb00cf4deb73698d2cf7521b85
     ports:
       - 5556:5556
   cypress:
-    image: cypress/browsers:latest@sha256:2c4e1047f7187ca028dcd968cbd3aafc9430bbd30a3ec4d6b41f9eabfdb39e59
+    image: cypress/browsers:latest@sha256:eeb9b35c998e2f9b78f15448202e90a9ab2b7fe79932d437ed94ee152e7d9cff
     volumes:
       - ..:/project
       - $HOME/.cache:/home/node/.cache/

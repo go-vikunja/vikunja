@@ -97,6 +97,12 @@ func FullInitWithoutAsync() {
 	// Connect to ldap if enabled
 	ldap.InitializeLDAPConnection()
 
+	// Check all OpenID Connect providers at startup
+	_, err := openid.GetAllProviders()
+	if err != nil {
+		log.Errorf("Error initializing OpenID Connect providers: %s", err)
+	}
+
 	// Load translations
 	i18n.Init()
 

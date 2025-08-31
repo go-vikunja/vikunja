@@ -136,6 +136,7 @@ jobs:
           VIKUNJA_DATABASE_SSLMODE: disable
           VIKUNJA_LOG_DATABASE: stdout
           VIKUNJA_LOG_DATABASELEVEL: debug
+          VIKUNJA_SERVICE_PUBLICURL: http://127.0.0.1:3456
         run: |
           # Wait for MySQL to be ready if using MySQL
           if [ "$VIKUNJA_DATABASE_TYPE" = "mysql" ]; then
@@ -193,7 +194,7 @@ jobs:
         ports:
           - 5432:5432
       db-paradedb:
-        image: paradedb/paradedb:latest-pg17@sha256:6c9cd0ad90ae2a6fa40acd5fc79c5f5f19be37721986061a8d8a6a2bf5e513a0
+        image: paradedb/paradedb:latest-pg17@sha256:744e637a06142b33ce5f93374a3fc84c7b526968a7ed2e865d5ff7e00c4db80b
         env:
           POSTGRES_PASSWORD: vikunjatest
           POSTGRES_DB: vikunjatest
@@ -238,6 +239,7 @@ jobs:
           VIKUNJA_AUTH_LDAP_BINDDN: uid=gitea,ou=service,dc=planetexpress,dc=com
           VIKUNJA_AUTH_LDAP_BINDPASSWORD: password
           VIKUNJA_AUTH_LDAP_USERFILTER: "(&(objectclass=inetorgperson)(uid=%s))"
+          VIKUNJA_SERVICE_PUBLICURL: http://127.0.0.1:3456
         run: |
           mkdir -p frontend/dist
           touch frontend/dist/index.html
@@ -309,7 +311,7 @@ jobs:
       - frontend-build
     services:
       dex:
-        image: ghcr.io/go-vikunja/dex-testing:main@sha256:4abbc4f1e6a3f3e66565754f06a258c5b0211ea8b9792dd3a8874e8322ce165c
+        image: ghcr.io/go-vikunja/dex-testing:main@sha256:3877beee650f6005ee82c93170f4cbc4232ea4bb00cf4deb73698d2cf7521b85
         ports:
           - 5556:5556
     strategy:
@@ -321,7 +323,7 @@ jobs:
       matrix:
         containers: [1, 2, 3, 4]
     container:
-      image: cypress/browsers:latest@sha256:2c4e1047f7187ca028dcd968cbd3aafc9430bbd30a3ec4d6b41f9eabfdb39e59
+      image: cypress/browsers:latest@sha256:eeb9b35c998e2f9b78f15448202e90a9ab2b7fe79932d437ed94ee152e7d9cff
       options: --user 1001
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
@@ -350,6 +352,7 @@ jobs:
           VIKUNJA_SERVICE_TESTINGTOKEN: averyLongSecretToSe33dtheDB
           VIKUNJA_LOG_LEVEL: DEBUG
           VIKUNJA_CORS_ENABLE: 1
+          VIKUNJA_SERVICE_PUBLICURL: http://127.0.0.1:3456
           VIKUNJA_DATABASE_PATH: memory
           VIKUNJA_DATABASE_TYPE: sqlite
           VIKUNJA_RATELIMIT_NOAUTHLIMIT: 1000

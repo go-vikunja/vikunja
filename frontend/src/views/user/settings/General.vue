@@ -260,6 +260,24 @@
 				</label>
 			</div>
 			<div class="field">
+				<label class="two-col">
+					<span>
+						{{ $t('user.settings.general.defaultTaskRelationType') }}
+					</span>
+					<div class="select">
+						<select v-model="settings.frontendSettings.defaultTaskRelationType">
+							<option
+								v-for="relationKind in RELATION_KINDS"
+								:key="relationKind"
+								:value="relationKind"
+							>
+								{{ $t(`task.relation.kinds.${relationKind}`, 1) }}
+							</option>
+						</select>
+					</div>
+				</label>
+			</div>
+			<div class="field">
 				<label class="checkbox">
 					<input
 						v-model="settings.frontendSettings.playSoundWhenDone"
@@ -348,6 +366,7 @@ import {isSavedFilter} from '@/services/savedFilter'
 import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/modelTypes/IProjectView'
 import {PRIORITIES} from '@/constants/priorities'
 import {DATE_DISPLAY} from '@/constants/dateDisplay'
+import {RELATION_KINDS} from '@/types/IRelationKind'
 
 defineOptions({name: 'UserSettingsGeneral'})
 
@@ -389,6 +408,8 @@ const settings = ref<IUserSettings>({
 		// Add fallback for old settings that don't have the logo change setting set
 		allowIconChanges: authStore.settings.frontendSettings.allowIconChanges ?? true,
 		dateDisplay: authStore.settings.frontendSettings.dateDisplay ?? DATE_DISPLAY.RELATIVE,
+		// Add fallback for old settings that don't have the default task relation type set
+		defaultTaskRelationType: authStore.settings.frontendSettings.defaultTaskRelationType ?? 'related',
 	},
 })
 
