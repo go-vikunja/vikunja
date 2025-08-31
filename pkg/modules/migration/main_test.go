@@ -27,9 +27,7 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
-	
-	// Master Switch: ensures service init() functions run during tests
-	_ "code.vikunja.io/api/pkg/testutil"
+	"code.vikunja.io/api/pkg/testutil"
 )
 
 // TestMain is the main test function used to bootstrap the test env
@@ -41,6 +39,9 @@ func TestMain(m *testing.M) {
 	config.InitDefaultConfig()
 	// We need to set the root path even if we're not using the config, otherwise fixtures are not loaded correctly
 	config.ServiceRootpath.Set(os.Getenv("VIKUNJA_SERVICE_ROOTPATH"))
+
+	// Initialize service dependency injection explicitly
+	testutil.Init()
 
 	// Some tests use the file engine, so we'll need to initialize that
 	files.InitTests()

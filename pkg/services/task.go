@@ -45,7 +45,9 @@ func NewTaskService(db *xorm.Engine) *TaskService {
 }
 
 // Wire models.AddMoreInfoToTasksFunc to the service implementation via dependency inversion
-func init() {
+// InitTaskService sets up dependency injection for task-related model functions.
+// This function must be called during test initialization to ensure models can call services.
+func InitTaskService() {
 	models.AddMoreInfoToTasksFunc = func(s *xorm.Session, taskMap map[int64]*models.Task, a web.Auth, view *models.ProjectView, expand []models.TaskCollectionExpandable) error {
 		return NewTaskService(nil).AddDetailsToTasks(s, taskMap, a, view, expand)
 	}

@@ -29,7 +29,9 @@ type UserService struct {
 	DB *xorm.Engine
 }
 
-func init() {
+func InitUserService() {
+	// InitUserService sets up dependency injection for user-related model functions.
+	// This function must be called during test initialization to ensure models can call services.
 	models.GetUsersOrLinkSharesFromIDsFunc = func(s *xorm.Session, ids []int64) (map[int64]*user.User, error) {
 		userService := &UserService{DB: s.Engine()}
 		return userService.GetUsersAndProxiesFromIDs(s, ids)

@@ -14,10 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// Package testutil provides the "Master Switch" for test environments.
-// This package ensures that service init() functions are called during tests,
-// which sets up the dependency inversion patterns needed for models to call services.
+// Package testutil provides explicit initialization for test environments.
+// This package ensures that service dependency injection is set up in a
+// deterministic order, replacing the fragile init() function pattern.
 package testutil
 
-// This blank import triggers the services package init() functions during tests
-import _ "code.vikunja.io/api/pkg/services"
+import "code.vikunja.io/api/pkg/services"
+
+// Init initializes all service dependency injection in a deterministic order.
+// This function replaces the fragile init() function pattern and must be called
+// explicitly in TestMain functions that need dependency injection to work.
+//
+// The initialization order is carefully chosen to respect dependencies:
+// 1. UserService (foundational, used by others)
+// 2. TaskService (depends on user service)
+// 3. ProjectService (depends on user service)
+// 4. KanbanService (depends on user and task services)
+func Init() {
+	services.InitUserService()
+	services.InitTaskService()
+	services.InitProjectService()
+	services.InitKanbanService()
+}

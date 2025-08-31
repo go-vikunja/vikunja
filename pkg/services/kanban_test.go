@@ -172,7 +172,7 @@ func TestKanbanService_DeleteBucket(t *testing.T) {
 		// Let's first check how many buckets exist
 		buckets, err := ks.GetAllBuckets(s, 1, 1, u)
 		require.NoError(t, err)
-		
+
 		// If there's only one bucket, this test should fail with the expected error
 		if len(buckets) == 1 {
 			err = ks.DeleteBucket(s, bucket.ID, 1, u)
@@ -339,7 +339,7 @@ func TestKanbanService_AddBucketsToTasks(t *testing.T) {
 		err = ks.AddBucketsToTasks(s, taskIDs, taskMap, u)
 		assert.NoError(t, err)
 		assert.NotNil(t, task.Buckets)
-		
+
 		// The test should check that buckets were added, but the exact bucket might vary
 		// due to fixtures, so let's just check that buckets exist
 		assert.Greater(t, len(task.Buckets), 0, "Task should have at least one bucket")

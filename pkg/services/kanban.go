@@ -610,8 +610,12 @@ func (ks *KanbanService) getUserID(share *models.LinkSharing) int64 {
 	return -share.ID
 }
 
-// Wire models functions to the service implementation via dependency inversion
-func init() {
+/*
+Wire models functions to the service implementation via dependency inversion
+InitKanbanService sets up dependency injection for kanban-related model functions.
+This function must be called during test initialization to ensure models can call services.
+*/
+func InitKanbanService() {
 	// Wire Bucket CRUD operations
 	models.CreateBucketFunc = func(s *xorm.Session, bucket *models.Bucket, a web.Auth) error {
 		u, err := user.GetFromAuth(a)

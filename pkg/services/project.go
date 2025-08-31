@@ -34,7 +34,10 @@ import (
 	"xorm.io/xorm"
 )
 
-func init() {
+
+// InitProjectService sets up dependency injection for project-related model functions.
+// This function must be called during test initialization to ensure models can call services.
+func InitProjectService() {
 	// Set up dependency injection for models to use service layer functions
 	models.ProjectUpdateFunc = func(s *xorm.Session, project *models.Project, u *user.User) (*models.Project, error) {
 		projectService := &ProjectService{DB: s.Engine()}

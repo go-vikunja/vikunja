@@ -26,7 +26,7 @@ import (
 	"code.vikunja.io/api/pkg/i18n"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
-	_ "code.vikunja.io/api/pkg/services" // Blank import to ensure init() is called
+	"code.vikunja.io/api/pkg/testutil"
 	"code.vikunja.io/api/pkg/user"
 )
 
@@ -34,6 +34,10 @@ func TestMain(m *testing.M) {
 	log.InitLogger()
 	config.InitDefaultConfig()
 	config.ServiceRootpath.Set(os.Getenv("VIKUNJA_SERVICE_ROOTPATH"))
+
+	// Initialize service dependency injection explicitly
+	testutil.Init()
+
 	i18n.Init()
 	files.InitTests()
 	user.InitTests()
