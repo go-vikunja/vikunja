@@ -38,7 +38,7 @@ func TestFavoriteService_GetForUserByType(t *testing.T) {
 		// Note: The fixtures may not be loading properly for the favorites table,
 		// so we manually insert a test favorite for now
 		testFavorite := &models.Favorite{
-			EntityID: 23,
+			EntityID: 24,
 			UserID:   1,
 			Kind:     models.FavoriteKindProject,
 		}
@@ -47,8 +47,8 @@ func TestFavoriteService_GetForUserByType(t *testing.T) {
 
 		favorites, err := fs.GetForUserByType(s, u, models.FavoriteKindProject)
 		assert.NoError(t, err)
-		assert.Len(t, favorites, 1)
-		assert.Equal(t, int64(23), favorites[0].EntityID)
+		assert.Len(t, favorites, 2) // One from fixture, one inserted
+		assert.Equal(t, int64(24), favorites[1].EntityID)
 	})
 
 	t.Run("should return an empty slice when there are no favorites", func(t *testing.T) {

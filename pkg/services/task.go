@@ -26,6 +26,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
+	"github.com/jinzhu/copier"
 	"xorm.io/builder"
 	"xorm.io/xorm"
 )
@@ -106,24 +107,34 @@ func (ts *TaskService) GetAllByProject(s *xorm.Session, projectID int64, u *user
 
 	// Query tasks directly from the database
 	var tasks []*models.Task
-	query := s.Where("project_id = ?", projectID)
 
 	// Add search filter if provided
+	searchCondition := builder.NewCond()
 	if search != "" {
-		query = query.And(builder.Or(
+		searchCondition = builder.Or(
 			builder.Like{"title", "%" + search + "%"},
 			builder.Like{"description", "%" + search + "%"},
-		))
+		)
 	}
 
-	// Get total count for pagination
-	totalCount, err := query.Count(&models.Task{})
+	// Get total count for pagination (use separate query to avoid session corruption)
+	countQuery := s.Where("project_id = ?", projectID)
+	if search != "" {
+		countQuery = countQuery.And(searchCondition)
+	}
+	totalCount, err := countQuery.Count(&models.Task{})
 	if err != nil {
 		return nil, 0, 0, err
 	}
 
+	// Create fresh query for finding tasks to avoid any session corruption
+	findQuery := s.Where("project_id = ?", projectID)
+	if search != "" {
+		findQuery = findQuery.And(searchCondition)
+	}
+
 	// Get the actual tasks with pagination
-	err = query.
+	err = findQuery.
 		OrderBy("id ASC").
 		Limit(perPage, offset).
 		Find(&tasks)
@@ -413,6 +424,12 @@ func (ts *TaskService) AddDetailsToTasks(s *xorm.Session, taskMap map[int64]*mod
 		}
 	}
 
+	// Add related tasks
+	err = ts.addRelatedTasksToTasks(s, taskIDs, taskMap, a)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -507,6 +524,56 @@ func (ts *TaskService) getFavorites(s *xorm.Session, entityIDs []int64, a web.Au
 		favorites[fav.EntityID] = true
 	}
 	return favorites, err
+}
+
+func (ts *TaskService) addRelatedTasksToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*models.Task, a web.Auth) error {
+	relatedTasks := []*models.TaskRelation{}
+	err := s.In("task_id", taskIDs).Find(&relatedTasks)
+	if err != nil {
+		return err
+	}
+
+	// Collect all related task IDs, so we can get all related task headers in one go
+	var relatedTaskIDs []int64
+	for _, rt := range relatedTasks {
+		relatedTaskIDs = append(relatedTaskIDs, rt.OtherTaskID)
+	}
+
+	if len(relatedTaskIDs) == 0 {
+		return nil
+	}
+
+	fullRelatedTasks := make(map[int64]*models.Task)
+	err = s.In("id", relatedTaskIDs).Find(&fullRelatedTasks)
+	if err != nil {
+		return err
+	}
+
+	taskFavorites, err := ts.getFavorites(s, relatedTaskIDs, a, models.FavoriteKindTask)
+	if err != nil {
+		return err
+	}
+
+	// Go through all task relations and put them into the task objects
+	for _, rt := range relatedTasks {
+		_, has := fullRelatedTasks[rt.OtherTaskID]
+		if !has {
+			continue
+		}
+		fullRelatedTasks[rt.OtherTaskID].IsFavorite = taskFavorites[rt.OtherTaskID]
+
+		// We're duplicating the other task to avoid cycles as these can't be represented properly in json
+		// and would thus fail with an error.
+		otherTask := &models.Task{}
+		err = copier.Copy(otherTask, fullRelatedTasks[rt.OtherTaskID])
+		if err != nil {
+			continue
+		}
+		otherTask.RelatedTasks = nil
+		taskMap[rt.TaskID].RelatedTasks[rt.RelationKind] = append(taskMap[rt.TaskID].RelatedTasks[rt.RelationKind], otherTask)
+	}
+
+	return nil
 }
 
 func (ts *TaskService) canWriteTask(s *xorm.Session, taskID int64, u *user.User) (bool, error) {

@@ -122,6 +122,28 @@ func (b *Bucket) Update(s *xorm.Session, a web.Auth) (err error) {
 	return
 }
 
+func (b *Bucket) ReadAll(s *xorm.Session, a web.Auth, _ string, _ int, _ int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
+	if GetAllBucketsFunc != nil {
+		buckets, err := GetAllBucketsFunc(s, b.ProjectViewID, b.ProjectID, a)
+		if err != nil {
+			return nil, 0, 0, err
+		}
+		return buckets, len(buckets), int64(len(buckets)), nil
+	}
+
+	// Fallback implementation
+	buckets := []*Bucket{}
+	err = s.
+		Where("project_view_id = ?", b.ProjectViewID).
+		OrderBy("position").
+		Find(&buckets)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	return buckets, len(buckets), int64(len(buckets)), nil
+}
+
 func (b *Bucket) Delete(s *xorm.Session, a web.Auth) (err error) {
 	if DeleteBucketFunc != nil {
 		return DeleteBucketFunc(s, b.ID, b.ProjectID, a)

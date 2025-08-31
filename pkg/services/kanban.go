@@ -17,6 +17,7 @@
 package services
 
 import (
+	"strconv"
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
@@ -56,7 +57,24 @@ func (ks *KanbanService) CreateBucket(s *xorm.Session, bucket *models.Bucket, u 
 		return err
 	}
 	if !can {
-		return ErrAccessDenied
+		// Check if this is a link share user (negative ID)
+		if u.ID < 0 {
+			// For link shares, check permission directly
+			linkShareID := u.ID * -1 // Convert back to positive ID
+			linkShare, err := models.GetLinkShareByID(s, linkShareID)
+			if err != nil {
+				return err
+			}
+			if linkShare.ProjectID != pv.ProjectID {
+				return ErrAccessDenied
+			}
+			if linkShare.Permission < models.PermissionWrite {
+				return ErrAccessDenied
+			}
+			// Link share has write permission, allow creation
+		} else {
+			return ErrAccessDenied
+		}
 	}
 
 	// Set the created by user
@@ -610,15 +628,74 @@ func (ks *KanbanService) getUserID(share *models.LinkSharing) int64 {
 	return -share.ID
 }
 
+// getUserOrLinkShareUser converts a web.Auth to a *user.User, handling both regular users and link shares
+func getUserOrLinkShareUser(a web.Auth) (*user.User, error) {
+	// Try to get as regular user first
+	u, err := user.GetFromAuth(a)
+	if err == nil {
+		return u, nil
+	}
+
+	// Check if it's a link share
+	if share, ok := a.(*models.LinkSharing); ok {
+		suffix := "Link Share"
+		if share.Name != "" {
+			suffix = " (" + suffix + ")"
+		}
+
+		username := "link-share-" + strconv.FormatInt(share.ID, 10)
+
+		return &user.User{
+			ID:       share.ID * -1, // Negative ID for link shares
+			Name:     share.Name + suffix,
+			Username: username,
+			Created:  share.Created,
+			Updated:  share.Updated,
+		}, nil
+	}
+
+	return nil, err
+}
+
 /*
 Wire models functions to the service implementation via dependency inversion
+// getUserOrLinkShareUser converts a web.Auth to a *user.User, handling both regular users and link shares
+
+	func getUserOrLinkShareUser(a web.Auth) (*user.User, error) {
+		// Try to get as regular user first
+		u, err := user.GetFromAuth(a)
+		if err == nil {
+			return u, nil
+		}
+
+		// Check if it's a link share
+		if share, ok := a.(*models.LinkSharing); ok {
+			suffix := "Link Share"
+			if share.Name != "" {
+				suffix = " (" + suffix + ")"
+			}
+
+			username := "link-share-" + strconv.FormatInt(share.ID, 10)
+
+			return &user.User{
+				ID:       share.ID * -1, // Negative ID for link shares
+				Name:     share.Name + suffix,
+				Username: username,
+				Created:  share.Created,
+				Updated:  share.Updated,
+			}, nil
+		}
+
+		return nil, err
+	}
+
 InitKanbanService sets up dependency injection for kanban-related model functions.
 This function must be called during test initialization to ensure models can call services.
 */
 func InitKanbanService() {
 	// Wire Bucket CRUD operations
 	models.CreateBucketFunc = func(s *xorm.Session, bucket *models.Bucket, a web.Auth) error {
-		u, err := user.GetFromAuth(a)
+		u, err := getUserOrLinkShareUser(a)
 		if err != nil {
 			return err
 		}
@@ -627,7 +704,7 @@ func InitKanbanService() {
 	}
 
 	models.UpdateBucketFunc = func(s *xorm.Session, bucket *models.Bucket, a web.Auth) error {
-		u, err := user.GetFromAuth(a)
+		u, err := getUserOrLinkShareUser(a)
 		if err != nil {
 			return err
 		}
@@ -636,7 +713,7 @@ func InitKanbanService() {
 	}
 
 	models.DeleteBucketFunc = func(s *xorm.Session, bucketID int64, projectID int64, a web.Auth) error {
-		u, err := user.GetFromAuth(a)
+		u, err := getUserOrLinkShareUser(a)
 		if err != nil {
 			return err
 		}
@@ -645,7 +722,7 @@ func InitKanbanService() {
 	}
 
 	models.GetAllBucketsFunc = func(s *xorm.Session, projectViewID int64, projectID int64, a web.Auth) ([]*models.Bucket, error) {
-		u, err := user.GetFromAuth(a)
+		u, err := getUserOrLinkShareUser(a)
 		if err != nil {
 			return nil, err
 		}
@@ -655,7 +732,7 @@ func InitKanbanService() {
 
 	// Wire TaskBucket operations
 	models.MoveTaskToBucketFunc = func(s *xorm.Session, taskBucket *models.TaskBucket, a web.Auth) error {
-		u, err := user.GetFromAuth(a)
+		u, err := getUserOrLinkShareUser(a)
 		if err != nil {
 			return err
 		}
@@ -665,7 +742,7 @@ func InitKanbanService() {
 
 	// Wire task-related bucket functions
 	models.AddBucketsToTasksFunc = func(s *xorm.Session, taskIDs []int64, taskMap map[int64]*models.Task, a web.Auth) error {
-		u, err := user.GetFromAuth(a)
+		u, err := getUserOrLinkShareUser(a)
 		if err != nil {
 			return err
 		}

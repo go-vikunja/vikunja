@@ -38,6 +38,7 @@ import (
 	"code.vikunja.io/api/pkg/routes"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/api/pkg/routes/caldav"
+	"code.vikunja.io/api/pkg/testutil"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 	"code.vikunja.io/api/pkg/web/handler"
@@ -86,6 +87,7 @@ func setupTestEnv() (e *echo.Echo, err error) {
 	files.InitTests()
 	user.InitTests()
 	models.SetupTests()
+	testutil.Init()
 	events.Fake()
 	keyvalue.InitStorage()
 

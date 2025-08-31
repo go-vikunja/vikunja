@@ -26,6 +26,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/services"
 	user2 "code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 	"github.com/samedi/caldav-go/data"
@@ -53,6 +54,37 @@ type VikunjaCaldavProjectStorage struct {
 
 // GetResources returns either all projects, links to the principal, or only one project, depending on the request
 func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, withChildren bool) ([]data.Resource, error) {
+	// If requesting the DAV base path, return all projects
+	if rpath == DavBasePath || rpath == "/" {
+		s := db.NewSession()
+		defer s.Close()
+
+		// Get all projects
+		theprojects, _, _, err := models.GetAllRawProjects(s, vcls.user, "", -1, -1, false)
+		if err != nil {
+			_ = s.Rollback()
+			return nil, err
+		}
+		if err := s.Commit(); err != nil {
+			return nil, err
+		}
+		projects := theprojects
+
+		var resources []data.Resource
+		for _, l := range projects {
+			rr := VikunjaProjectResourceAdapter{
+				project: &models.ProjectWithTasksAndBuckets{
+					Project: *l,
+				},
+				isCollection: true,
+			}
+			r := data.NewResource(ProjectBasePath+"/"+strconv.FormatInt(l.ID, 10), &rr)
+			r.Name = l.Title
+			resources = append(resources, r)
+		}
+
+		return resources, nil
+	}
 
 	// It looks like we need to have the same handler for returning both the calendar home set and the user principal
 	// Since the client seems to ignore the whatever is being returned in the first request and just makes a second one
@@ -145,7 +177,6 @@ func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, withChildren
 
 // GetResourcesByList fetches a list of resources from a slice of paths
 func (vcls *VikunjaCaldavProjectStorage) GetResourcesByList(rpaths []string) (resources []data.Resource, err error) {
-
 	// Parse the set of resourcepaths into usable uids
 	// A path looks like this: /dav/projects/10/a6eb526d5748a5c499da202fe74f36ed1aea2aef.ics
 	// So we split the url in parts, take the last one and strip the ".ics" at the end
@@ -189,19 +220,19 @@ func (vcls *VikunjaCaldavProjectStorage) GetResourcesByList(rpaths []string) (re
 
 // GetResourcesByFilters fetches a project of resources with a filter
 func (vcls *VikunjaCaldavProjectStorage) GetResourcesByFilters(rpath string, _ *data.ResourceFilter) ([]data.Resource, error) {
-
 	// If we already have a project saved, that means the user is making a REPORT request to find out if
 	// anything changed, in that case we need to return all tasks.
 	// That project is coming from a previous "getProjectRessource" in L177
 	if vcls.project.Tasks != nil {
 		var resources []data.Resource
 		for i := range vcls.project.Tasks {
+			task := &vcls.project.Tasks[i].Task
 			rr := VikunjaProjectResourceAdapter{
 				project:      vcls.project,
-				task:         &vcls.project.Tasks[i].Task,
+				task:         task,
 				isCollection: false,
 			}
-			r := data.NewResource(getTaskURL(&vcls.project.Tasks[i].Task), &rr)
+			r := data.NewResource(getTaskURL(task), &rr)
 			r.Name = vcls.project.Tasks[i].Title
 			resources = append(resources, r)
 		}
@@ -656,19 +687,15 @@ func (vcls *VikunjaCaldavProjectStorage) getProjectRessource(isCollection bool) 
 
 	projectTasks := vcls.project.Tasks
 	if projectTasks == nil {
-		tk := models.TaskCollection{
-			ProjectID: vcls.project.ID,
-		}
-		iface, _, _, err := tk.ReadAll(s, vcls.user, "", 0, -1)
+		// Use TaskService instead of TaskCollection.ReadAll to follow service layer architecture
+		taskService := services.NewTaskService(db.GetEngine())
+		tasks, _, _, err := taskService.GetAllByProject(s, vcls.project.ID, vcls.user, 1, -1, "")
 		if err != nil {
 			_ = s.Rollback()
 			return rr, err
 		}
-		tasks, ok := iface.([]*models.Task)
-		if !ok {
-			panic("Tasks returned from TaskCollection.ReadAll are not []*models.Task!")
-		}
 
+		// Convert []*models.Task to []*models.TaskWithComments
 		for _, t := range tasks {
 			projectTasks = append(projectTasks, &models.TaskWithComments{Task: *t})
 		}
