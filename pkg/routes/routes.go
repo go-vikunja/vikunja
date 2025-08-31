@@ -75,7 +75,6 @@ import (
 	vikunja_file "code.vikunja.io/api/pkg/modules/migration/vikunja-file"
 	"code.vikunja.io/api/pkg/plugins"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
-	apiv1project "code.vikunja.io/api/pkg/routes/api/v1/project"
 	apiv1task "code.vikunja.io/api/pkg/routes/api/v1/task"
 	apiv2 "code.vikunja.io/api/pkg/routes/api/v2"
 	"code.vikunja.io/api/pkg/routes/caldav"
@@ -368,16 +367,8 @@ func registerAPIRoutes(a *echo.Group) {
 		u.POST("/deletion/cancel", apiv1.UserCancelDeletion)
 	}
 
-	projectHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.Project{}
-		},
-	}
-	a.GET("/projects", projectHandler.ReadAllWeb)
-	a.GET("/projects/:project", projectHandler.ReadOneWeb)
-	a.POST("/projects/:project", apiv1project.UpdateProject)
-	a.DELETE("/projects/:project", apiv1project.DeleteProject)
-	a.PUT("/projects", apiv1project.CreateProject)
+	// Project routes - using new consolidated handler
+	apiv1.RegisterProjects(a)
 	a.GET("/projects/:project/projectusers", apiv1.ListUsersForProject)
 
 	if config.ServiceEnableLinkSharing.GetBool() {
@@ -386,10 +377,11 @@ func registerAPIRoutes(a *echo.Group) {
 				return &models.LinkSharing{}
 			},
 		}
-		a.PUT("/projects/:project/shares", projectSharingHandler.CreateWeb)
 		a.GET("/projects/:project/shares", projectSharingHandler.ReadAllWeb)
 		a.GET("/projects/:project/shares/:share", projectSharingHandler.ReadOneWeb)
+		a.PUT("/projects/:project/shares/:share", projectSharingHandler.UpdateWeb)
 		a.DELETE("/projects/:project/shares/:share", projectSharingHandler.DeleteWeb)
+		a.PUT("/projects/:project/shares", projectSharingHandler.CreateWeb)
 	}
 
 	taskCollectionHandler := &handler.WebHandler{
@@ -398,7 +390,6 @@ func registerAPIRoutes(a *echo.Group) {
 		},
 	}
 	a.GET("/projects/:project/views/:view/tasks", taskCollectionHandler.ReadAllWeb)
-	a.GET("/projects/:project/tasks", handler.WithDBAndUser(apiv1project.GetTasks, true))
 
 	projectDuplicateHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
