@@ -2,6 +2,10 @@
 	<div
 		:class="{ 'is-loading': taskService.loading }"
 		class="defer-task loading-container"
+		@click.stop
+		@mousedown.stop
+		@pointerdown.stop
+		@touchstart.stop
 	>
 		<label class="label">{{ $t('task.deferDueDate.title') }}</label>
 		<div class="defer-days">
