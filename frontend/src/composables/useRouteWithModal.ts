@@ -6,7 +6,7 @@ import {useProjectStore} from '@/stores/projects'
 export function useRouteWithModal() {
 	const router = useRouter()
 	const route = useRoute()
-	const backdropView = computed(() => route.fullPath ? window.history.state.backdropView : undefined)
+	const backdropView = computed(() => route.fullPath ? window.history.state?.backdropView : undefined)
 	const baseStore = useBaseStore()
 	const projectStore = useProjectStore()
 
