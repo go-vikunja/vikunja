@@ -44,8 +44,18 @@ func GetAllProviders() (providers []*Provider, err error) {
 
 		rawProvider, is := rawProviders.(map[string]interface{})
 		if !is {
-			log.Criticalf("It looks like your openid configuration is in the wrong format. Please check the docs for the correct format.")
-			return
+			// Try to convert from map[interface{}]interface{} (YAML format)
+			if rawProviderInterface, ok := rawProviders.(map[interface{}]interface{}); ok {
+				rawProvider = make(map[string]interface{}, len(rawProviderInterface))
+				for k, v := range rawProviderInterface {
+					if key, keyOK := k.(string); keyOK {
+						rawProvider[key] = v
+					}
+				}
+			} else {
+				log.Criticalf("It looks like your openid configuration is in the wrong format. Please check the docs for the correct format.")
+				return
+			}
 		}
 
 		for key, p := range rawProvider {
@@ -55,10 +65,16 @@ func GetAllProviders() (providers []*Provider, err error) {
 			// JSON config is a map[string]interface{}, other providers are not. Under the hood they are all strings so
 			// it is safe to cast.
 			if !is {
-				pis := p.(map[interface{}]interface{})
-				pi = make(map[string]interface{}, len(pis))
-				for i, s := range pis {
-					pi[i.(string)] = s
+				if pis, pisOK := p.(map[interface{}]interface{}); pisOK {
+					pi = make(map[string]interface{}, len(pis))
+					for i, s := range pis {
+						if key, keyOK := i.(string); keyOK {
+							pi[key] = s
+						}
+					}
+				} else {
+					log.Errorf("Provider %s has invalid configuration format, skipping", key)
+					continue
 				}
 			}
 
