@@ -19,6 +19,7 @@ package services
 import (
 	"testing"
 	"time"
+	"errors"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
@@ -193,31 +194,19 @@ func TestKanbanService_GetAllBuckets(t *testing.T) {
 
 	ks := NewKanbanService(testEngine)
 
-	t.Run("successful bucket retrieval", func(t *testing.T) {
-		// Create test buckets
-		bucket1 := &models.Bucket{
-			Title:         "Bucket 1",
-			ProjectID:     1,
-			ProjectViewID: 1,
-			Position:      1000,
-		}
-		bucket2 := &models.Bucket{
-			Title:         "Bucket 2",
-			ProjectID:     1,
-			ProjectViewID: 1,
-			Position:      2000,
-		}
-
-		u := &user.User{ID: 1}
-		err := ks.CreateBucket(s, bucket1, u)
-		require.NoError(t, err)
-		err = ks.CreateBucket(s, bucket2, u)
+	t.Run("from a project view with multiple buckets", func(t *testing.T) {
+		buckets, err := ks.GetAllBuckets(s, 4, 1, &user.User{ID: 1})
 		require.NoError(t, err)
 
-		// Get all buckets
-		buckets, err := ks.GetAllBuckets(s, 1, 1, u)
-		assert.NoError(t, err)
-		assert.GreaterOrEqual(t, len(buckets), 2) // At least our 2 buckets
+		assert.Len(t, buckets, 3)
+		assert.Equal(t, int64(1), buckets[0].ID)
+		assert.Equal(t, int64(2), buckets[1].ID)
+		assert.Equal(t, int64(3), buckets[2].ID)
+
+		// Assert that we have a user for each bucket
+		assert.Equal(t, int64(1), buckets[0].CreatedBy.ID)
+		assert.Equal(t, int64(1), buckets[1].CreatedBy.ID)
+		assert.Equal(t, int64(1), buckets[2].CreatedBy.ID)
 	})
 
 	t.Run("permission denied", func(t *testing.T) {
@@ -226,6 +215,7 @@ func TestKanbanService_GetAllBuckets(t *testing.T) {
 		buckets, err := ks.GetAllBuckets(s, 1, 1, u)
 		assert.Error(t, err)
 		assert.Nil(t, buckets)
+		assert.True(t, errors.Is(err, ErrAccessDenied))
 	})
 }
 

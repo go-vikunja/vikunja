@@ -324,6 +324,7 @@ func registerAPIRoutes(a *echo.Group) {
 	setupMetricsMiddleware(a)
 
 	apiv1.RegisterLabels(a)
+	apiv1.RegisterKanbanRoutes(a)
 
 	a.GET("/token/test", apiv1.TestToken)
 	a.POST("/token/test", apiv1.CheckToken)
@@ -398,16 +399,6 @@ func registerAPIRoutes(a *echo.Group) {
 	}
 	a.GET("/projects/:project/views/:view/tasks", taskCollectionHandler.ReadAllWeb)
 	a.GET("/projects/:project/tasks", handler.WithDBAndUser(apiv1project.GetTasks, true))
-
-	kanbanBucketHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.Bucket{}
-		},
-	}
-	a.GET("/projects/:project/views/:view/buckets", kanbanBucketHandler.ReadAllWeb)
-	a.PUT("/projects/:project/views/:view/buckets", kanbanBucketHandler.CreateWeb)
-	a.POST("/projects/:project/views/:view/buckets/:bucket", kanbanBucketHandler.UpdateWeb)
-	a.DELETE("/projects/:project/views/:view/buckets/:bucket", kanbanBucketHandler.DeleteWeb)
 
 	projectDuplicateHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
@@ -633,14 +624,6 @@ func registerAPIRoutes(a *echo.Group) {
 	a.PUT("/projects/:project/views", projectViewProvider.CreateWeb)
 	a.DELETE("/projects/:project/views/:view", projectViewProvider.DeleteWeb)
 	a.POST("/projects/:project/views/:view", projectViewProvider.UpdateWeb)
-
-	// Kanban Task Bucket Relation
-	taskBucketProvider := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.TaskBucket{}
-		},
-	}
-	a.POST("/projects/:project/views/:view/buckets/:bucket/tasks", taskBucketProvider.UpdateWeb)
 
 	// Plugin routes
 	if config.PluginsEnabled.GetBool() {
