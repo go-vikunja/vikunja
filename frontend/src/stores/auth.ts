@@ -23,6 +23,7 @@ import UserSettingsModel from '@/models/userSettings'
 import {MILLISECONDS_A_SECOND} from '@/constants/date'
 import {PrefixMode} from '@/modules/parseTaskText'
 import {DATE_DISPLAY} from '@/constants/dateDisplay'
+import {RELATION_KIND} from '@/types/IRelationKind'
 import type {IProvider} from '@/types/IProvider'
 
 function redirectToSpecifiedProvider() {
@@ -133,6 +134,7 @@ export const useAuthStore = defineStore('auth', () => {
 				colorSchema: 'auto',
 				allowIconChanges: true,
 				dateDisplay: DATE_DISPLAY.RELATIVE,
+				defaultTaskRelationType: RELATION_KIND.RELATED,
 				...newSettings.frontendSettings,
 			},
 		})

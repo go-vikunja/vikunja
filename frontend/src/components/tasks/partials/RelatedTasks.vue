@@ -191,7 +191,7 @@ import TaskService from '@/services/task'
 import TaskModel from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
 import type {ITaskRelation} from '@/modelTypes/ITaskRelation'
-import {RELATION_KINDS, RELATION_KIND, type IRelationKind} from '@/types/IRelationKind'
+import {RELATION_KINDS, type IRelationKind} from '@/types/IRelationKind'
 
 import TaskRelationService from '@/services/taskRelation'
 import TaskRelationModel from '@/models/taskRelation'
@@ -204,6 +204,7 @@ import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import {error, success} from '@/message'
 import {useTaskStore} from '@/stores/tasks'
 import {useProjectStore} from '@/stores/projects'
+import {useAuthStore} from '@/stores/auth'
 import {playPopSound} from '@/helpers/playPop'
 
 const props = withDefaults(defineProps<{
@@ -219,6 +220,7 @@ const props = withDefaults(defineProps<{
 
 const taskStore = useTaskStore()
 const projectStore = useProjectStore()
+const authStore = useAuthStore()
 const route = useRoute()
 const {t} = useI18n({useScope: 'global'})
 
@@ -229,7 +231,7 @@ const taskService = shallowReactive(new TaskService())
 const relatedTasks = ref<ITask['relatedTasks']>({})
 
 const newTaskRelation: TaskRelation = reactive({
-	kind: RELATION_KIND.RELATED,
+	kind: authStore.settings.frontendSettings.defaultTaskRelationType as IRelationKind,
 	task: new TaskModel(),
 })
 
@@ -318,6 +320,7 @@ async function addTaskRelation() {
 		newTaskRelation.task,
 	]
 	newTaskRelation.task = new TaskModel()
+	newTaskRelation.kind = authStore.settings.frontendSettings.defaultTaskRelationType as IRelationKind
 	saved.value = true
 	showNewRelationForm.value = false
 	setTimeout(() => {
