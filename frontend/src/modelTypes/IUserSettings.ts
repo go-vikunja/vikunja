@@ -16,7 +16,7 @@ export interface IFrontendSettings {
 	allowIconChanges: boolean
 	filterIdUsedOnOverview: IProject['id'] | null
 	defaultView?: DefaultProjectViewKind
-	minimumPriority: Priority
+	minimumPriority?: Priority
 	dateDisplay: DateDisplay
 	defaultTaskRelationType: IRelationKind
 }
