@@ -18,7 +18,7 @@ module code.vikunja.io/api
 
 require (
 	dario.cat/mergo v1.0.2
-	github.com/ThreeDotsLabs/watermill v1.4.7
+	github.com/ThreeDotsLabs/watermill v1.5.0
 	github.com/adlio/trello v1.12.0
 	github.com/arran4/golang-ical v0.3.2
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
@@ -95,6 +95,7 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/boombuler/barcode v1.0.1 // indirect
 	github.com/cenkalti/backoff/v3 v3.2.2 // indirect
+	github.com/cenkalti/backoff/v5 v5.0.2 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.6 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
