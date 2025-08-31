@@ -336,7 +336,7 @@ function select(object: T | null) {
 	}
 }
 
-function setSelectedObject(object: string | T | null, resetOnly = false) {
+function setSelectedObject(object: string | T | null | undefined, resetOnly = false) {
 	internalValue.value = object
 
 	// We assume we're getting an array when multiple is enabled and can therefore leave the query
@@ -346,7 +346,7 @@ function setSelectedObject(object: string | T | null, resetOnly = false) {
 		return
 	}
 
-	if (object === null) {
+	if (object === null || typeof object === 'undefined') {
 		query.value = ''
 		return
 	}
