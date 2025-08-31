@@ -1,143 +1,100 @@
-# Vikunja Service Layer Refactoring Guide
+# **Vikunja Service Layer Refactoring Guide**
 
-This document serves as the **source of truth** for all refactoring work in the Vikunja project. It documents the core architectural patterns, dependency management strategies, and testing philosophies established during the service layer refactor.
+This document is the **source of truth** for the Vikunja service layer refactor. It documents the core architectural patterns and the mandatory workflow that all agents must follow.
 
-## Table of Contents
+## **1\. Critical Agent Instructions & Workflow**
 
-1.  [Important Agent Instructions](#1-important-agent-instructions)
-2.  [The Core Architecture ("Chef, Waiter, Pantry")](#2-the-core-architecture-chef-waiter-pantry)
-3.  [Key Patterns & Implementation](#3-key-patterns--implementation)
-      * [A. Handler Wrappers (Eliminating Boilerplate)](#a-handler-wrappers-eliminating-boilerplate)
-      * [B. Dependency Inversion (For Backward Compatibility)](#b-dependency-inversion-for-backward-compatibility)
-4.  [The Testing Philosophy](#4-the-testing-philosophy)
+This section contains the most important, non-negotiable rules. You must understand and follow these at all times.
 
----
+### **The Golden Rule: Move Logic, Don't Expose It**
 
-# 1\. Important Agent Instructions
+This is the most important rule of the entire refactor. When a service needs logic that is currently inside a private models function, the solution is **always** to **MOVE** that logic into the service.
 
-> ## The Golden Rule: Move Logic, Don't Expose It
->
-> This is the most important rule of the entire refactor.
->
-> When a service needs logic that is currently inside a private `models` function, the solution is **always** to **MOVE** the logic from the model into the service.
->
-> You must **NEVER** solve this problem by making the model function public and calling it from the service. This violates the architecture and re-introduces the problems we are trying to fix.
->
-> * **Correct ✅:** Copying the permission-checking code from a model method into a new service method.
-> * **Incorrect ❌:** Making a model's `CanRead()` or `CanWrite()` method public and calling it from a service.
+You must **NEVER** solve this by making the model function public and calling it from the service.
 
-> ## Plan Management & Progress Reporting
->
-> Once your plan is approved, you must use it as your active checklist. The following process is mandatory:
->
-> 1.  **State Your Step:** At the beginning of each action, you must state which step of the approved plan you are working on (e.g., "Now executing Step 2: Implement the `Update` method.").
-> 2.  **Update on Change:** If you encounter a problem or need to change your approach, you must first state the problem and then **use your tool to update the plan** before proceeding.
-> 3.  **Final Report:** Before submitting your final work for review, you must provide a final summary of the plan, marking each step as complete (✅).
+* **Correct ✅:** Copying the permission-checking code from a model method into a new service method.  
+* **Incorrect ❌:** Making a model's CanRead() or CanWrite() method public and calling it from a service.
 
+### **Plan Management & Progress Reporting**
 
+Once your plan is approved, you must use it as your active checklist. The following process is mandatory:
 
-## 2\. The Core Architecture ("Chef, Waiter, Pantry")
+1. **State Your Step:** At the beginning of each action, you must state which step of the approved plan you are working on.  
+2. **Update on Change:** If you encounter a problem, you must first state the problem and then **use your tool to update the plan** before proceeding.  
+3. **Final Report:** Before submitting your work, you must provide a final summary of the plan, marking each step as complete (✅).
+
+### **Running Tests: The Pre-Flight Checklist**
+
+You must follow these steps **every time** you need to run tests to avoid common environment failures.
+
+1. **Enter the Dev Shell:** Ensure you are in the correct environment by running:  
+   devenv shell
+
+2. **Set the Root Path:** Before running any test command, you **must** set the environment variable. This is critical for loading test fixtures.  
+   export VIKUNJA\_SERVICE\_ROOTPATH=$(pwd)
+
+3. **Build Frontend (for Web Tests ONLY):** If you are about to run the full end-to-end web tests (mage test:web), you must build the frontend assets first.  
+   cd frontend && pnpm install && pnpm run build && cd ..
+
+4. **Run the Correct Command:**  
+   * For backend-only tests: mage test:feature  
+   * For end-to-end web tests: mage test:web  
+   * For a specific package: go test ./pkg/services/...
+
+## **2\. The Core Architecture ("Chef, Waiter, Pantry")**
 
 Our architecture separates concerns into three distinct layers:
 
-### 🧑‍🍳 Services (`pkg/services`) - The "Chef"
-    This is the "brains" of the application. It contains **ALL** business logic, including permission checks, validation, and orchestrating complex operations. Services are decoupled from the web layer and use `*user.User`.
+* **🧑‍🍳 Services (pkg/services) \- The "Chef":** Contains **ALL** business logic. Decoupled from the web layer, uses \*user.User.  
+* **🧑‍💼 Handlers (pkg/routes) \- The "Waiter":** A thin "glue" layer. Parses requests, calls services, returns responses. Uses **handler wrappers**.  
+* **🏪 Models (pkg/models) \- The "Pantry":** A "dumb" data layer for basic database access (CRUD) only. Contains **no** business logic.
 
-### 🧑‍💼 Handlers (`pkg/routes`) - The "Waiter"
-    This is a thin "glue" layer. Its only job is to parse HTTP requests, call the appropriate service method, and return an HTTP response. We use **handler wrappers** to eliminate boilerplate.
+## **3\. Key Patterns & Implementation**
 
-### 🏪 Models (`pkg/models`) - The "Pantry"
-    This is a "dumb" data layer. Its only job is to define data structures and provide basic, low-level database access (CRUD) functions. Models **must not** contain business logic or permission checks.
+### **A. Handler Wrappers (Eliminating Boilerplate)**
 
----
+This is the **required pattern** for all new handlers.
 
-## 3\. Key Patterns & Implementation
+// The wrapper in pkg/web/handler/wrapper.go  
+func WithDBAndUser(logicFunc func(s \*xorm.Session, u \*user.User, c echo.Context) error, needsTransaction bool) echo.HandlerFunc { /\* ... \*/ }
 
-### A. Handler Wrappers (Eliminating Boilerplate)
-
-To keep handlers clean, we use a wrapper function. This is the **required pattern** for all new handlers.
-
-**The Wrapper (`pkg/web/handler/wrapper.go`):**
-
-```go
-// WithDBAndUser handles session creation, user auth, and error handling.
-func WithDBAndUser(logicFunc func(s *xorm.Session, u *user.User, c echo.Context) error, needsTransaction bool) echo.HandlerFunc {
-    return func(c echo.Context) error {
-        // ... boilerplate for session, user, transaction, and error handling ...
-        return logicFunc(s, u, c)
-    }
-}
-```
-
-**Usage (in `pkg/routes/api/v1/...`):**
-
-```go
-// The handler is now a simple, clean function containing only business logic.
-func getProject(s *xorm.Session, u *user.User, c echo.Context) error {
-    // ... parse params, call service, return response ...
-}
-
-// The route registration uses the wrapper.
+// Usage in a route file  
+func getProject(s \*xorm.Session, u \*user.User, c echo.Context) error { /\* ... \*/ }  
 a.GET("/projects/:id", handler.WithDBAndUser(getProject, false))
-```
 
-### B. Dependency Inversion (For Backward Compatibility)
+### **B. Dependency Inversion (For Backward Compatibility)**
 
-When a refactored service needs to be called by an old, deprecated model method, we must break the `models` -\> `services` import cycle.
+To break the models \-\> services import cycle when deprecating model methods, we use this pattern.
 
-**The Solution:** Use a function variable in the model, set by the service's `init()` function.
+**1\. In the Model (pkg/models/tasks.go):**
 
-**1. In the Model (`pkg/models/tasks.go`):**
+var TaskUpdateFunc func(s \*xorm.Session, t \*Task, u \*user.User) error
 
-```go
-// 1. Define a public function variable "placeholder".
-var TaskUpdateFunc func(s *xorm.Session, t *Task, u *user.User) error
+// @Deprecated: Use services.TaskService.Update instead.  
+func (t \*Task) Update(s \*xorm.Session, u \*user.User) error { /\* calls TaskUpdateFunc \*/ }
 
-// 2. The deprecated method just calls the placeholder.
-// @Deprecated: Use services.TaskService.Update instead.
-func (t *Task) Update(s *xorm.Session, u *user.User) error {
-    if TaskUpdateFunc != nil {
-        return TaskUpdateFunc(s, t, u)
-    }
-    return errors.New("TaskUpdateFunc not initialized")
+**2\. In the Service (pkg/services/task.go):**
+
+func init() {  
+    models.TaskUpdateFunc \= NewTaskService(nil).Update  
 }
-```
 
-**2. In the Service (`pkg/services/task.go`):**
-
-```go
-// 3. The service's init() function "plugs in" the real implementation.
-func init() {
-    models.TaskUpdateFunc = NewTaskService(nil).Update
-}
-```
-
------
-
-## 4\. The Testing Philosophy
+## **4\. The Testing Philosophy**
 
 Our testing strategy is layered to match the architecture.
 
-  * **Model Tests (`pkg/models/`):**
-    Simple **unit tests** only. They should verify struct tags, defaults, and very basic database interactions. They must not have complex dependencies.
+* **Model Tests (pkg/models/):** Simple **unit tests** only.  
+* **Service Tests (pkg/services/):** This is the home for our complex **integration tests**.
 
-  * **Service Tests (`pkg/services/`):**
-    This is the home for our **integration tests**. These tests verify the complete business logic, including permission checks, side effects (like event dispatching), and interactions between different models.
+### **Test Setup Components**
 
-  * **Test Environment Setup:**
-    Tests require a specific setup to run correctly.
+* **TestMain for Setup:** Each test package must have a main\_test.go with a TestMain function that initializes the environment (models.SetupTests(), user.InitTests(), etc.).  
+* **The "Master Switch" (pkg/testutil):** For test suites that need dependency inversion to work (like models tests), the TestMain function must explicitly call testutil.Init(). This deterministically sets up service dependencies. **Do not use blank imports.**  
+  // In a main\_test.go file  
+  import "code.vikunja.io/api/pkg/testutil"
 
-    1.  **Test Prerequisites (Building the Frontend):** Some test suites, especially the end-to-end web tests (`mage test:web`), require the frontend assets to be built first. If these are missing, you may see errors like `pattern dist: no matching files found`. To fix this, run the following commands from the project root **once** at the beginning of your task:
-
-        ```bash
-        cd frontend
-        pnpm install
-        pnpm run build
-        cd ..
-        ```
-
-    2.  **Run Command:** Always run tests using the `mage` commands (`mage test:feature` for backend, `mage test:web` for end-to-end) or by setting the environment variable: `VIKUNJA_SERVICE_ROOTPATH=$(pwd) go test ./...`
-
-    3.  **`TestMain` for Setup:** Each test package (`models`, `services`, etc.) should have a `main_test.go` file with a `TestMain` function that initializes the database and other dependencies (`models.SetupTests()`, `user.InitTests()`, etc.).
-
-    4.  **The "Master Switch" (`pkg/testutil`):** For test suites that need the dependency inversion to work (like the `models` tests), the `main_test.go` file must contain a blank import to our test utility package: `_ "code.vikunja.io/api/pkg/testutil"`. This safely triggers the `init()` functions from the `services` package.
+  func TestMain(m \*testing.M) {  
+      // ... other setup ...  
+      testutil.Init() // Initialize service dependency injection  
+      // ... rest of setup ...  
+  }  

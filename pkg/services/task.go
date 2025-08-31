@@ -131,6 +131,18 @@ func (ts *TaskService) GetAllByProject(s *xorm.Session, projectID int64, u *user
 		return nil, 0, 0, err
 	}
 
+	// Add details to all tasks (CreatedBy, Labels, Attachments, etc.)
+	if len(tasks) > 0 {
+		taskMap := make(map[int64]*models.Task)
+		for _, task := range tasks {
+			taskMap[task.ID] = task
+		}
+		err = ts.AddDetailsToTasks(s, taskMap, u, nil, nil)
+		if err != nil {
+			return nil, 0, 0, err
+		}
+	}
+
 	return tasks, len(tasks), totalCount, nil
 }
 
@@ -340,6 +352,12 @@ func (ts *TaskService) AddDetailsToTasks(s *xorm.Session, taskMap map[int64]*mod
 		return err
 	}
 
+	// Add attachments
+	err = ts.addAttachmentsToTasks(s, taskIDs, taskMap)
+	if err != nil {
+		return err
+	}
+
 	// Get users for CreatedBy field
 	users, err := ts.getUsersOrLinkSharesFromIDs(s, userIDs)
 	if err != nil {
@@ -434,6 +452,19 @@ func (ts *TaskService) addLabelsToTasks(s *xorm.Session, taskIDs []int64, taskMa
 		if l != nil {
 			taskMap[l.TaskID].Labels = append(taskMap[l.TaskID].Labels, &labels[i].Label)
 		}
+	}
+
+	return nil
+}
+
+func (ts *TaskService) addAttachmentsToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*models.Task) error {
+	attachments, err := ts.getTaskAttachmentsByTaskIDs(s, taskIDs)
+	if err != nil {
+		return err
+	}
+
+	for _, a := range attachments {
+		taskMap[a.TaskID].Attachments = append(taskMap[a.TaskID].Attachments, a)
 	}
 
 	return nil

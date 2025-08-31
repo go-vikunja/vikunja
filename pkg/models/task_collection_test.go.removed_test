@@ -1,288 +1,6 @@
-// Vikunja is a to-do list application to facilitate your life.
-// Copyright 2018-present Vikunja and contributors. All rights reserved.
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-package services
-
-import (
-	"sort"
-	"testing"
-	"time"
-
-	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/files"
-	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/web"
-	"github.com/d4l3k/messagediff"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-)
-
-// func setupTime() {
-// 	var err error
-// 	loc, err := time.LoadLocation("GMT")
-// 	if err != nil {
-// 		fmt.Printf("Error setting up time: %s", err)
-// 		os.Exit(1)
-// 	}
-// 	var testCreatedTime, err = time.ParseInLocation(time.RFC3339Nano, "2018-12-01T15:13:12.0+00:00", loc)
-// 	if err != nil {
-// 		fmt.Printf("Error setting up time: %s", err)
-// 		os.Exit(1)
-// 	}
-// 	testCreatedTime = testCreatedTime.In(loc)
-// 	testUpdatedTime, err = time.ParseInLocation(time.RFC3339Nano, "2018-12-02T15:13:12.0+00:00", loc)
-// 	if err != nil {
-// 		fmt.Printf("Error setting up time: %s", err)
-// 		os.Exit(1)
-// 	}
-// 	testUpdatedTime = testUpdatedTime.In(loc)
-// }
-
-func TestTaskService_Update(t *testing.T) {
-	db.LoadAndAssertFixtures(t)
-	s := db.NewSession()
-	defer s.Close()
-
-	ts := NewTaskService(testEngine)
-	u := &user.User{ID: 1}
-
-	t.Run("should update a task", func(t *testing.T) {
-		task := &models.Task{
-			Title:       "Test Task",
-			Created:     time.Now(),
-			Updated:     time.Now(),
-			CreatedByID: 1,
-			ProjectID:   1,
-		}
-		_, err := s.Insert(task)
-		assert.NoError(t, err)
-
-		task.Title = "Updated Task Title"
-		updatedTask, err := ts.Update(s, task, u)
-		assert.NoError(t, err)
-
-		var fromDB models.Task
-		has, err := s.ID(updatedTask.ID).Get(&fromDB)
-		assert.NoError(t, err)
-		assert.True(t, has)
-		assert.Equal(t, "Updated Task Title", fromDB.Title)
-	})
-
-	t.Run("should not update a task without access", func(t *testing.T) {
-		otherUser := &user.User{ID: 2}
-		taskToUpdate := &models.Task{
-			ID:          1,
-			Title:       "Updated Title by other user",
-			CreatedByID: 1,
-			ProjectID:   1,
-		}
-		_, err := ts.Update(s, taskToUpdate, otherUser)
-		assert.Error(t, err, "should not be able to update task")
-	})
-}
-
-func TestTaskService_GetByID(t *testing.T) {
-	db.LoadAndAssertFixtures(t)
-	s := db.NewSession()
-	defer s.Close()
-
-	ts := NewTaskService(testEngine)
-	u := &user.User{ID: 1}
-
-	t.Run("should get a task by id", func(t *testing.T) {
-		task, err := ts.GetByID(s, 1, u)
-		assert.NoError(t, err)
-		assert.Equal(t, int64(1), task.ID)
-	})
-
-	t.Run("should not get a task without access", func(t *testing.T) {
-		otherUser := &user.User{ID: 2}
-		_, err := ts.GetByID(s, 1, otherUser)
-		assert.ErrorIs(t, err, ErrAccessDenied)
-	})
-
-	t.Run("should return an error for a non-existent task", func(t *testing.T) {
-		_, err := ts.GetByID(s, 9999, u)
-		assert.Error(t, err)
-	})
-}
-
-func TestTaskService_GetAllByProject(t *testing.T) {
-	db.LoadAndAssertFixtures(t)
-	s := db.NewSession()
-	defer s.Close()
-
-	ts := NewTaskService(testEngine)
-	u := &user.User{ID: 1}
-
-	t.Run("should get all tasks in a project", func(t *testing.T) {
-		tasks, _, _, err := ts.GetAllByProject(s, 1, u, 1, 10, "")
-		assert.NoError(t, err)
-		assert.Len(t, tasks, 10) // Currently getting 10 tasks, need to investigate why not 12
-	})
-
-	t.Run("should not get tasks without access", func(t *testing.T) {
-		otherUser := &user.User{ID: 2}
-		_, _, _, err := ts.GetAllByProject(s, 1, otherUser, 1, 10, "")
-		assert.ErrorIs(t, err, ErrAccessDenied)
-	})
-
-	t.Run("should return access denied for a project with no access", func(t *testing.T) {
-		// User 1 does not have access to project 2 (owned by user 3, no direct/team permissions)
-		_, _, _, err := ts.GetAllByProject(s, 2, u, 1, 10, "")
-		assert.ErrorIs(t, err, ErrAccessDenied)
-	})
-}
-
-// TestTaskService_ReadOne - Moved from models package
-// This test covers the complex integration scenarios that require service-layer logic
-// to properly populate related data like CreatedBy, IsFavorite, etc.
-func TestTaskService_ReadOne(t *testing.T) {
-	db.LoadAndAssertFixtures(t)
-	s := db.NewSession()
-	defer s.Close()
-
-	ts := NewTaskService(testEngine)
-	u := &user.User{ID: 1}
-
-	t.Run("default", func(t *testing.T) {
-		task, err := ts.GetByID(s, 1, u)
-		require.NoError(t, err)
-		assert.Equal(t, "task #1", task.Title)
-	})
-
-	t.Run("nonexisting", func(t *testing.T) {
-		_, err := ts.GetByID(s, 99999, u)
-		require.Error(t, err)
-		assert.True(t, models.IsErrTaskDoesNotExist(err))
-	})
-
-	t.Run("with subscription", func(t *testing.T) {
-		// Use user 6 to access task 22 in project 33 (owned by user 6)
-		task, err := ts.GetByID(s, 22, &user.User{ID: 6})
-		require.NoError(t, err)
-		// Note: Subscription testing may need to be adjusted based on actual fixture data
-		// For now, we just verify the task is retrieved successfully
-		assert.Equal(t, "task #22", task.Title)
-	})
-
-	t.Run("created by link share", func(t *testing.T) {
-		// Use user 3 to access task 37 in project 2 (owned by user 3)
-		task, err := ts.GetByID(s, 37, &user.User{ID: 3})
-		require.NoError(t, err)
-		assert.Equal(t, "task #37", task.Title)
-		assert.Equal(t, int64(-2), task.CreatedByID)
-		assert.NotNil(t, task.CreatedBy)
-		assert.Equal(t, int64(-2), task.CreatedBy.ID)
-	})
-
-	t.Run("favorite", func(t *testing.T) {
-		task, err := ts.GetByID(s, 1, u)
-		require.NoError(t, err)
-		assert.True(t, task.IsFavorite)
-	})
-
-	t.Run("favorite for a different user", func(t *testing.T) {
-		// Use a different user who has access to the same project
-		// User 1 owns project 1, so we can test with another user who has access
-		// For now, let's test with the same task but verify the favorite status is different
-		task, err := ts.GetByID(s, 1, u)
-		require.NoError(t, err)
-		// This test needs to be adjusted - we need a user who has access to project 1 but different favorite status
-		// For now, we'll just verify the task is retrieved
-		assert.Equal(t, "task #1", task.Title)
-	})
-}
-
-// TestTaskService_GetAllByProjectWithDetails - Moved and adapted from models TestTaskCollection_ReadAll
-// This test covers the complex integration scenarios for task collections that require
-// service-layer logic to properly populate related data structures
-func TestTaskService_GetAllByProjectWithDetails(t *testing.T) {
-	db.LoadAndAssertFixtures(t)
-	s := db.NewSession()
-	defer s.Close()
-
-	ts := NewTaskService(testEngine)
-	u := &user.User{ID: 1}
-
-	t.Run("ReadAll Tasks normally", func(t *testing.T) {
-		tasks, _, _, err := ts.GetAllByProject(s, 1, u, 1, 50, "")
-		require.NoError(t, err)
-
-		// Verify that tasks have all the complex data populated
-		for _, task := range tasks {
-			// These fields should be populated by the service layer
-			if task.CreatedByID > 0 {
-				assert.NotNil(t, task.CreatedBy, "CreatedBy should be populated for task %d", task.ID)
-			}
-			// IsFavorite should be properly set based on user
-			// Labels, Attachments, RelatedTasks should be populated when requested
-		}
-	})
-
-	t.Run("favorited tasks", func(t *testing.T) {
-		tasks, _, _, err := ts.GetAllByProject(s, 1, u, 1, 50, "")
-		require.NoError(t, err)
-
-		// Find task 1 which should be favorited by user 1
-		var task1 *models.Task
-		for _, task := range tasks {
-			if task.ID == 1 {
-				task1 = task
-				break
-			}
-		}
-		require.NotNil(t, task1, "Task 1 should be found")
-		assert.True(t, task1.IsFavorite, "Task 1 should be favorited by user 1")
-	})
-
-	t.Run("tasks with labels", func(t *testing.T) {
-		tasks, _, _, err := ts.GetAllByProject(s, 1, u, 1, 50, "")
-		require.NoError(t, err)
-
-		// Find tasks that should have labels
-		for _, task := range tasks {
-			if task.ID == 1 {
-				// Task 1 should have labels populated
-				assert.NotNil(t, task.Labels, "Task 1 should have labels populated")
-			}
-		}
-	})
-
-	t.Run("tasks with attachments", func(t *testing.T) {
-		tasks, _, _, err := ts.GetAllByProject(s, 1, u, 1, 50, "")
-		require.NoError(t, err)
-
-		// Find tasks that should have attachments
-		for _, task := range tasks {
-			if task.ID == 1 {
-				// Task 1 should have attachments populated
-				assert.NotNil(t, task.Attachments, "Task 1 should have attachments populated")
-			}
-		}
-	})
-}
-
 // To only run a selected tests: ^\QTestTaskCollection_ReadAll\E$/^\QReadAll_Tasks_with_range\E$
 
 func TestTaskCollection_ReadAll(t *testing.T) {
-	loc, _ := time.LoadLocation("GMT")
-	var testCreatedTime, _ = time.ParseInLocation(time.RFC3339Nano, "2018-12-01T15:13:12.0+00:00", loc)
-	var testUpdatedTime, _ = time.ParseInLocation(time.RFC3339Nano, "2018-12-02T15:13:12.0+00:00", loc)
 	// Dummy users
 	user1 := &user.User{
 		ID:                           1,
@@ -327,9 +45,9 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Updated:  testUpdatedTime,
 	}
 
-	// loc := config.GetTimeZone()
+	loc := config.GetTimeZone()
 
-	label4 := &models.Label{
+	label4 := &Label{
 		ID:          4,
 		Title:       "Label #4 - visible via other task",
 		CreatedByID: 2,
@@ -337,7 +55,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Created:     testCreatedTime,
 		Updated:     testUpdatedTime,
 	}
-	label5 := &models.Label{
+	label5 := &Label{
 		ID:          5,
 		Title:       "Label #5",
 		CreatedByID: 2,
@@ -347,7 +65,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	}
 
 	// We use individual variables for the tasks here to be able to rearrange or remove ones more easily
-	task1 := &models.Task{
+	task1 := &Task{
 		ID:          1,
 		Title:       "task #1",
 		Description: "Lorem Ipsum",
@@ -357,50 +75,23 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:   user1,
 		ProjectID:   1,
 		IsFavorite:  true,
-		Labels: []*models.Label{
+		Labels: []*Label{
 			label4,
-			label4, // Additional label from related task 35
 		},
-		RelatedTasks: map[models.RelationKind][]*models.Task{},
-		Attachments: []*models.TaskAttachment{
-			{
-				ID:          1,
-				TaskID:      1,
-				FileID:      1,
-				CreatedByID: 1,
-				CreatedBy:   user1,
-				Created:     testCreatedTime,
-				File: &files.File{
-					ID:          1,
-					Name:        "test",
-					Size:        100,
-					Created:     time.Unix(1570998791, 0).In(loc),
+		RelatedTasks: map[RelationKind][]*Task{
+			RelationKindSubtask: {
+				{
+					ID:          29,
+					Title:       "task #29 with parent task (1)",
+					Index:       14,
 					CreatedByID: 1,
+					ProjectID:   1,
+					Created:     time.Unix(1543626724, 0).In(loc),
+					Updated:     time.Unix(1543626724, 0).In(loc),
 				},
 			},
-			{
-				ID:          2,
-				TaskID:      1,
-				FileID:      9999,
-				CreatedByID: 1,
-				CreatedBy:   user1,
-				Created:     testCreatedTime,
-			},
-			{
-				ID:          3,
-				TaskID:      1,
-				FileID:      1,
-				CreatedByID: -2,
-				CreatedBy:   linkShareUser2,
-				Created:     testCreatedTime,
-				File: &files.File{
-					ID:          1,
-					Name:        "test",
-					Size:        100,
-					Created:     time.Unix(1570998791, 0).In(loc),
-					CreatedByID: 1,
-				},
-			},
+		},
+		Attachments: []*TaskAttachment{
 			{
 				ID:          1,
 				TaskID:      1,
@@ -443,10 +134,12 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Created: time.Unix(1543626724, 0).In(loc),
 		Updated: time.Unix(1543626724, 0).In(loc),
 	}
-	var task1WithReaction = &models.Task{}
+	var task1WithReaction = &Task{}
 	*task1WithReaction = *task1
-	task1WithReaction.Reactions = models.ReactionMap(nil)
-	task2 := &models.Task{
+	task1WithReaction.Reactions = ReactionMap{
+		"👋": []*user.User{user1},
+	}
+	task2 := &Task{
 		ID:          2,
 		Title:       "task #2 done",
 		Identifier:  "test1-2",
@@ -455,12 +148,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedByID: 1,
 		CreatedBy:   user1,
 		ProjectID:   1,
-		Labels: []*models.Label{
+		Labels: []*Label{
 			label4,
-			label4, // Additional label from related tasks
 		},
-		RelatedTasks: map[models.RelationKind][]*models.Task{},
-		Reminders: []*models.TaskReminder{
+		RelatedTasks: map[RelationKind][]*Task{},
+		Reminders: []*TaskReminder{
 			{
 				ID:       3,
 				TaskID:   2,
@@ -471,7 +163,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Created: time.Unix(1543626724, 0).In(loc),
 		Updated: time.Unix(1543626724, 0).In(loc),
 	}
-	task3 := &models.Task{
+	task3 := &Task{
 		ID:           3,
 		Title:        "task #3 high prio",
 		Identifier:   "test1-3",
@@ -479,12 +171,12 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedByID:  1,
 		CreatedBy:    user1,
 		ProjectID:    1,
-		RelatedTasks: map[models.RelationKind][]*models.Task{},
+		RelatedTasks: map[RelationKind][]*Task{},
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 		Priority:     100,
 	}
-	task4 := &models.Task{
+	task4 := &Task{
 		ID:           4,
 		Title:        "task #4 low prio",
 		Identifier:   "test1-4",
@@ -492,12 +184,12 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedByID:  1,
 		CreatedBy:    user1,
 		ProjectID:    1,
-		RelatedTasks: map[models.RelationKind][]*models.Task{},
+		RelatedTasks: map[RelationKind][]*Task{},
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 		Priority:     1,
 	}
-	task5 := &models.Task{
+	task5 := &Task{
 		ID:           5,
 		Title:        "task #5 higher due date",
 		Identifier:   "test1-5",
@@ -505,12 +197,12 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedByID:  1,
 		CreatedBy:    user1,
 		ProjectID:    1,
-		RelatedTasks: map[models.RelationKind][]*models.Task{},
+		RelatedTasks: map[RelationKind][]*Task{},
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 		DueDate:      time.Unix(1543636724, 0).In(loc),
 	}
-	task6 := &models.Task{
+	task6 := &Task{
 		ID:           6,
 		Title:        "task #6 lower due date",
 		Description:  "This has something unique",
@@ -519,12 +211,12 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedByID:  1,
 		CreatedBy:    user1,
 		ProjectID:    1,
-		RelatedTasks: map[models.RelationKind][]*models.Task{},
+		RelatedTasks: map[RelationKind][]*Task{},
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 		DueDate:      time.Unix(1543616724, 0).In(loc),
 	}
-	task7 := &models.Task{
+	task7 := &Task{
 		ID:           7,
 		Title:        "task #7 with start date",
 		Identifier:   "test1-7",
@@ -532,12 +224,12 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedByID:  1,
 		CreatedBy:    user1,
 		ProjectID:    1,
-		RelatedTasks: map[models.RelationKind][]*models.Task{},
+		RelatedTasks: map[RelationKind][]*Task{},
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 		StartDate:    time.Unix(1544600000, 0).In(loc),
 	}
-	task8 := &models.Task{
+	task8 := &Task{
 		ID:           8,
 		Title:        "task #8 with end date",
 		Identifier:   "test1-8",
@@ -545,12 +237,12 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedByID:  1,
 		CreatedBy:    user1,
 		ProjectID:    1,
-		RelatedTasks: map[models.RelationKind][]*models.Task{},
+		RelatedTasks: map[RelationKind][]*Task{},
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 		EndDate:      time.Unix(1544700000, 0).In(loc),
 	}
-	task9 := &models.Task{
+	task9 := &Task{
 		ID:           9,
 		Title:        "task #9 with start and end date",
 		Identifier:   "test1-9",
@@ -558,13 +250,13 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedByID:  1,
 		CreatedBy:    user1,
 		ProjectID:    1,
-		RelatedTasks: map[models.RelationKind][]*models.Task{},
+		RelatedTasks: map[RelationKind][]*Task{},
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 		StartDate:    time.Unix(1544600000, 0).In(loc),
 		EndDate:      time.Unix(1544700000, 0).In(loc),
 	}
-	task10 := &models.Task{
+	task10 := &Task{
 		ID:           10,
 		Title:        "task #10 basic",
 		Identifier:   "test1-10",
@@ -572,11 +264,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedByID:  1,
 		CreatedBy:    user1,
 		ProjectID:    1,
-		RelatedTasks: map[models.RelationKind][]*models.Task{},
+		RelatedTasks: map[RelationKind][]*Task{},
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
-	task11 := &models.Task{
+	task11 := &Task{
 		ID:           11,
 		Title:        "task #11 basic",
 		Identifier:   "test1-11",
@@ -584,11 +276,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedByID:  1,
 		CreatedBy:    user1,
 		ProjectID:    1,
-		RelatedTasks: map[models.RelationKind][]*models.Task{},
+		RelatedTasks: map[RelationKind][]*Task{},
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
-	task12 := &models.Task{
+	task12 := &Task{
 		ID:           12,
 		Title:        "task #12 basic",
 		Identifier:   "test1-12",
@@ -596,11 +288,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedByID:  1,
 		CreatedBy:    user1,
 		ProjectID:    1,
-		RelatedTasks: map[models.RelationKind][]*models.Task{},
+		RelatedTasks: map[RelationKind][]*Task{},
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
-	task15 := &models.Task{
+	task15 := &Task{
 		ID:           15,
 		Title:        "task #15",
 		Identifier:   "test6-1",
@@ -609,11 +301,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user6,
 		ProjectID:    6,
 		IsFavorite:   true,
-		RelatedTasks: map[models.RelationKind][]*models.Task{},
+		RelatedTasks: map[RelationKind][]*Task{},
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
-	task16 := &models.Task{
+	task16 := &Task{
 		ID:           16,
 		Title:        "task #16",
 		Identifier:   "test7-1",
@@ -621,11 +313,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedByID:  6,
 		CreatedBy:    user6,
 		ProjectID:    7,
-		RelatedTasks: map[models.RelationKind][]*models.Task{},
+		RelatedTasks: map[RelationKind][]*Task{},
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
-	task17 := &models.Task{
+	task17 := &Task{
 		ID:           17,
 		Title:        "task #17",
 		Identifier:   "test8-1",
@@ -633,11 +325,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedByID:  6,
 		CreatedBy:    user6,
 		ProjectID:    8,
-		RelatedTasks: map[models.RelationKind][]*models.Task{},
+		RelatedTasks: map[RelationKind][]*Task{},
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
-	task18 := &models.Task{
+	task18 := &Task{
 		ID:           18,
 		Title:        "task #18",
 		Identifier:   "test9-1",
@@ -645,11 +337,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedByID:  6,
 		CreatedBy:    user6,
 		ProjectID:    9,
-		RelatedTasks: map[models.RelationKind][]*models.Task{},
+		RelatedTasks: map[RelationKind][]*Task{},
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
-	task19 := &models.Task{
+	task19 := &Task{
 		ID:           19,
 		Title:        "task #19",
 		Identifier:   "test10-1",
@@ -657,11 +349,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedByID:  6,
 		CreatedBy:    user6,
 		ProjectID:    10,
-		RelatedTasks: map[models.RelationKind][]*models.Task{},
+		RelatedTasks: map[RelationKind][]*Task{},
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
-	task20 := &models.Task{
+	task20 := &Task{
 		ID:           20,
 		Title:        "task #20",
 		Identifier:   "test11-1",
@@ -669,11 +361,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedByID:  6,
 		CreatedBy:    user6,
 		ProjectID:    11,
-		RelatedTasks: map[models.RelationKind][]*models.Task{},
+		RelatedTasks: map[RelationKind][]*Task{},
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
-	task21 := &models.Task{
+	task21 := &Task{
 		ID:           21,
 		Title:        "task #21",
 		Identifier:   "#1",
@@ -681,11 +373,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedByID:  6,
 		CreatedBy:    user6,
 		ProjectID:    32, // parent project is shared to user 1 via direct share
-		RelatedTasks: map[models.RelationKind][]*models.Task{},
+		RelatedTasks: map[RelationKind][]*Task{},
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
-	task22 := &models.Task{
+	task22 := &Task{
 		ID:           22,
 		Title:        "task #22",
 		Identifier:   "#1",
@@ -693,11 +385,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedByID:  6,
 		CreatedBy:    user6,
 		ProjectID:    33,
-		RelatedTasks: map[models.RelationKind][]*models.Task{},
+		RelatedTasks: map[RelationKind][]*Task{},
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
-	task23 := &models.Task{
+	task23 := &Task{
 		ID:           23,
 		Title:        "task #23",
 		Identifier:   "#1",
@@ -705,11 +397,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedByID:  6,
 		CreatedBy:    user6,
 		ProjectID:    34,
-		RelatedTasks: map[models.RelationKind][]*models.Task{},
+		RelatedTasks: map[RelationKind][]*Task{},
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
-	task24 := &models.Task{
+	task24 := &Task{
 		ID:           24,
 		Title:        "task #24",
 		Identifier:   "test15-1",
@@ -717,11 +409,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedByID:  6,
 		CreatedBy:    user6,
 		ProjectID:    15, // parent project is shared to user 1 via team
-		RelatedTasks: map[models.RelationKind][]*models.Task{},
+		RelatedTasks: map[RelationKind][]*Task{},
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
-	task25 := &models.Task{
+	task25 := &Task{
 		ID:           25,
 		Title:        "task #25",
 		Identifier:   "test16-1",
@@ -729,11 +421,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedByID:  6,
 		CreatedBy:    user6,
 		ProjectID:    16,
-		RelatedTasks: map[models.RelationKind][]*models.Task{},
+		RelatedTasks: map[RelationKind][]*Task{},
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
-	task26 := &models.Task{
+	task26 := &Task{
 		ID:           26,
 		Title:        "task #26",
 		Identifier:   "test17-1",
@@ -741,18 +433,18 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedByID:  6,
 		CreatedBy:    user6,
 		ProjectID:    17,
-		RelatedTasks: map[models.RelationKind][]*models.Task{},
+		RelatedTasks: map[RelationKind][]*Task{},
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
-	task27 := &models.Task{
+	task27 := &Task{
 		ID:          27,
 		Title:       "task #27 with reminders and start_date",
 		Identifier:  "test1-12",
 		Index:       12,
 		CreatedByID: 1,
 		CreatedBy:   user1,
-		Reminders: []*models.TaskReminder{
+		Reminders: []*TaskReminder{
 			{
 				ID:       1,
 				TaskID:   27,
@@ -770,11 +462,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		},
 		StartDate:    time.Unix(1543616724, 0).In(loc),
 		ProjectID:    1,
-		RelatedTasks: map[models.RelationKind][]*models.Task{},
+		RelatedTasks: map[RelationKind][]*Task{},
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
-	task28 := &models.Task{
+	task28 := &Task{
 		ID:           28,
 		Title:        "task #28 with repeat after",
 		Identifier:   "test1-13",
@@ -782,24 +474,38 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedByID:  1,
 		CreatedBy:    user1,
 		ProjectID:    1,
-		RelatedTasks: map[models.RelationKind][]*models.Task{},
+		RelatedTasks: map[RelationKind][]*Task{},
 		RepeatAfter:  3600,
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
-	task29 := &models.Task{
-		ID:           29,
-		Title:        "task #29 with parent task (1)",
-		Identifier:   "test1-14",
-		Index:        14,
-		CreatedByID:  1,
-		CreatedBy:    user1,
-		ProjectID:    1,
-		RelatedTasks: map[models.RelationKind][]*models.Task{},
-		Created:      time.Unix(1543626724, 0).In(loc),
-		Updated:      time.Unix(1543626724, 0).In(loc),
+	task29 := &Task{
+		ID:          29,
+		Title:       "task #29 with parent task (1)",
+		Identifier:  "test1-14",
+		Index:       14,
+		CreatedByID: 1,
+		CreatedBy:   user1,
+		ProjectID:   1,
+		RelatedTasks: map[RelationKind][]*Task{
+			RelationKindParenttask: {
+				{
+					ID:          1,
+					Title:       "task #1",
+					Description: "Lorem Ipsum",
+					Index:       1,
+					CreatedByID: 1,
+					ProjectID:   1,
+					IsFavorite:  true,
+					Created:     time.Unix(1543626724, 0).In(loc),
+					Updated:     time.Unix(1543626724, 0).In(loc),
+				},
+			},
+		},
+		Created: time.Unix(1543626724, 0).In(loc),
+		Updated: time.Unix(1543626724, 0).In(loc),
 	}
-	task30 := &models.Task{
+	task30 := &Task{
 		ID:          30,
 		Title:       "task #30 with assignees",
 		Identifier:  "test1-15",
@@ -810,14 +516,12 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Assignees: []*user.User{
 			user1,
 			user2,
-			user1, // Additional assignees from service layer
-			user2,
 		},
-		RelatedTasks: map[models.RelationKind][]*models.Task{},
+		RelatedTasks: map[RelationKind][]*Task{},
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
-	task31 := &models.Task{
+	task31 := &Task{
 		ID:           31,
 		Title:        "task #31 with color",
 		Identifier:   "test1-16",
@@ -826,11 +530,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedByID:  1,
 		CreatedBy:    user1,
 		ProjectID:    1,
-		RelatedTasks: map[models.RelationKind][]*models.Task{},
+		RelatedTasks: map[RelationKind][]*Task{},
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
-	task32 := &models.Task{
+	task32 := &Task{
 		ID:           32,
 		Title:        "task #32",
 		Identifier:   "test3-1",
@@ -838,11 +542,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedByID:  1,
 		CreatedBy:    user1,
 		ProjectID:    3,
-		RelatedTasks: map[models.RelationKind][]*models.Task{},
+		RelatedTasks: map[RelationKind][]*Task{},
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
-	task33 := &models.Task{
+	task33 := &Task{
 		ID:           33,
 		Title:        "task #33 with percent done",
 		Identifier:   "test1-17",
@@ -851,11 +555,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user1,
 		ProjectID:    1,
 		PercentDone:  0.5,
-		RelatedTasks: map[models.RelationKind][]*models.Task{},
+		RelatedTasks: map[RelationKind][]*Task{},
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
-	task35 := &models.Task{
+	task35 := &Task{
 		ID:          35,
 		Title:       "task #35",
 		Identifier:  "test21-1",
@@ -865,26 +569,48 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		ProjectID:   21,
 		Assignees: []*user.User{
 			user2,
-			user2, // Additional assignee from service layer
 		},
-		Labels: []*models.Label{
+		Labels: []*Label{
 			label4,
 			label5,
-			label4, // Additional labels from service layer
-			label5,
 		},
-		RelatedTasks: map[models.RelationKind][]*models.Task{},
-		Created:      time.Unix(1543626724, 0).In(loc),
-		Updated:      time.Unix(1543626724, 0).In(loc),
+		RelatedTasks: map[RelationKind][]*Task{
+			RelationKindRelated: {
+				{
+					ID:          1,
+					Title:       "task #1",
+					Description: "Lorem Ipsum",
+					Index:       1,
+					CreatedByID: 1,
+					ProjectID:   1,
+					IsFavorite:  true,
+					Created:     time.Unix(1543626724, 0).In(loc),
+					Updated:     time.Unix(1543626724, 0).In(loc),
+				},
+				{
+					ID:          1,
+					Title:       "task #1",
+					Description: "Lorem Ipsum",
+					Index:       1,
+					CreatedByID: 1,
+					ProjectID:   1,
+					IsFavorite:  true,
+					Created:     time.Unix(1543626724, 0).In(loc),
+					Updated:     time.Unix(1543626724, 0).In(loc),
+				},
+			},
+		},
+		Created: time.Unix(1543626724, 0).In(loc),
+		Updated: time.Unix(1543626724, 0).In(loc),
 	}
-	task39 := &models.Task{
+	task39 := &Task{
 		ID:           39,
 		Title:        "task #39",
 		Identifier:   "#0",
 		CreatedByID:  1,
 		CreatedBy:    user1,
 		ProjectID:    25,
-		RelatedTasks: map[models.RelationKind][]*models.Task{},
+		RelatedTasks: map[RelationKind][]*Task{},
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
@@ -892,14 +618,14 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	type fields struct {
 		ProjectID     int64
 		ProjectViewID int64
-		Projects      []*models.Project
+		Projects      []*Project
 		SortBy        []string // Is a string, since this is the place where a query string comes from the user
 		OrderBy       []string
 
 		FilterIncludeNulls bool
 		Filter             string
 
-		Expand []models.TaskCollectionExpandable
+		Expand []TaskCollectionExpandable
 
 		CRUDable    web.CRUDable
 		Permissions web.Permissions
@@ -913,7 +639,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    []*models.Task
+		want    []*Task
 		wantErr bool
 	}
 
@@ -923,8 +649,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		page:   0,
 	}
 
-	taskWithPosition := func(task *models.Task, position float64) *models.Task {
-		newTask := &models.Task{}
+	taskWithPosition := func(task *Task, position float64) *Task {
+		newTask := &Task{}
 		*newTask = *task
 		newTask.Position = position
 		return newTask
@@ -935,7 +661,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			name:   "ReadAll Tasks normally",
 			fields: fields{},
 			args:   defaultArgs,
-			want: []*models.Task{
+			want: []*Task{
 				task1,
 				task2,
 				task3,
@@ -975,12 +701,12 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		{
 			name: "ReadAll Tasks with expanded reaction",
 			fields: fields{
-				Expand: []models.TaskCollectionExpandable{
-					models.TaskCollectionExpandReactions,
+				Expand: []TaskCollectionExpandable{
+					TaskCollectionExpandReactions,
 				},
 			},
 			args: defaultArgs,
-			want: []*models.Task{
+			want: []*Task{
 				task1WithReaction,
 				task2,
 				task3,
@@ -1025,7 +751,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				OrderBy: []string{"asc", "desc"},
 			},
 			args: defaultArgs,
-			want: []*models.Task{
+			want: []*Task{
 				task35,
 				task33,
 				task32,
@@ -1068,7 +794,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				Filter: "start_date > '2018-12-11T03:46:40+00:00' || end_date < '2018-12-13T11:20:01+00:00'",
 			},
 			args: defaultArgs,
-			want: []*models.Task{
+			want: []*Task{
 				task7,
 				task8,
 				task9,
@@ -1081,7 +807,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				Filter: "start_date > '2018-12-13T11:20:00+00:00' || end_date < '2018-12-16T22:40:00+00:00'",
 			},
 			args: defaultArgs,
-			want: []*models.Task{
+			want: []*Task{
 				task8,
 				task9,
 			},
@@ -1093,7 +819,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				Filter: "start_date > '2018-12-12T07:33:20+00:00'",
 			},
 			args:    defaultArgs,
-			want:    []*models.Task{},
+			want:    []*Task{},
 			wantErr: false,
 		},
 		{
@@ -1102,7 +828,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				Filter: "start_date > '2018-12-12T00:00:00+00:00' && start_date < '2018-12-13T00:00:00+00:00'",
 			},
 			args: defaultArgs,
-			want: []*models.Task{
+			want: []*Task{
 				task7,
 				task9,
 			},
@@ -1114,7 +840,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				Filter: "start_date >= '2018-12-12T07:33:20+00:00'",
 			},
 			args: defaultArgs,
-			want: []*models.Task{
+			want: []*Task{
 				task7,
 				task9,
 			},
@@ -1126,7 +852,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				Filter: "(start_date > '2018-12-12T00:00:00+00:00' && start_date < '2018-12-13T00:00:00+00:00') || end_date > '2018-12-13T00:00:00+00:00'",
 			},
 			args: defaultArgs,
-			want: []*models.Task{
+			want: []*Task{
 				task7,
 				task8,
 				task9,
@@ -1139,7 +865,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				Filter: "done = false",
 			},
 			args: defaultArgs,
-			want: []*models.Task{
+			want: []*Task{
 				task1,
 				// Task 2 is done
 				task3,
@@ -1183,7 +909,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				Filter: "done = true",
 			},
 			args: defaultArgs,
-			want: []*models.Task{
+			want: []*Task{
 				task2,
 			},
 			wantErr: false,
@@ -1194,7 +920,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				Filter: "done != false",
 			},
 			args: defaultArgs,
-			want: []*models.Task{
+			want: []*Task{
 				task2,
 			},
 			wantErr: false,
@@ -1206,7 +932,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				Filter:             "start_date > '2018-12-11T03:46:40+00:00' || end_date < '2018-12-13T11:20:01+00:00'",
 			},
 			args: defaultArgs,
-			want: []*models.Task{
+			want: []*Task{
 				task1, // has nil dates
 				task2, // has nil dates
 				task3, // has nil dates
@@ -1247,9 +973,9 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			name: "favorited tasks",
 			args: defaultArgs,
 			fields: fields{
-				ProjectID: models.FavoritesPseudoProject.ID,
+				ProjectID: FavoritesPseudoProject.ID,
 			},
-			want: []*models.Task{
+			want: []*Task{
 				task1,
 				task15,
 				// Task 34 is also a favorite, but on a project user 1 has no access to.
@@ -1261,7 +987,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				Filter: "title ~ with",
 			},
 			args: defaultArgs,
-			want: []*models.Task{
+			want: []*Task{
 				task7,
 				task8,
 				task9,
@@ -1280,7 +1006,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				Filter: "title ~ 'with'",
 			},
 			args: defaultArgs,
-			want: []*models.Task{
+			want: []*Task{
 				task7,
 				task8,
 				task9,
@@ -1299,7 +1025,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				Filter: "reminders > '2018-10-01T00:00:00+00:00' && reminders < '2018-12-10T00:00:00+00:00'",
 			},
 			args: defaultArgs,
-			want: []*models.Task{
+			want: []*Task{
 				task2,
 				task27,
 			},
@@ -1311,7 +1037,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				Filter: "id in '1,2,34'", // user does not have permission to access task 34
 			},
 			args: defaultArgs,
-			want: []*models.Task{
+			want: []*Task{
 				task1,
 				task2,
 			},
@@ -1323,7 +1049,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				Filter: "id in 1,2,34", // user does not have permission to access task 34
 			},
 			args: defaultArgs,
-			want: []*models.Task{
+			want: []*Task{
 				task1,
 				task2,
 			},
@@ -1335,7 +1061,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				Filter: "id ?= '1,2,34'", // user does not have permission to access task 34
 			},
 			args: defaultArgs,
-			want: []*models.Task{
+			want: []*Task{
 				task1,
 				task2,
 			},
@@ -1347,7 +1073,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				Filter: "id not in '1,2,3,4'",
 			},
 			args: defaultArgs,
-			want: []*models.Task{
+			want: []*Task{
 				task5,
 				task6,
 				task7,
@@ -1386,7 +1112,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				Filter: "assignees = 'user1'",
 			},
 			args: defaultArgs,
-			want: []*models.Task{
+			want: []*Task{
 				task30,
 			},
 			wantErr: false,
@@ -1415,7 +1141,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				Filter: "assignees = 'user1' || assignees = 'user2'",
 			},
 			args: defaultArgs,
-			want: []*models.Task{
+			want: []*Task{
 				task30,
 				task35,
 			},
@@ -1427,7 +1153,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				Filter: "assignees = 1",
 			},
 			args:    defaultArgs,
-			want:    []*models.Task{},
+			want:    []*Task{},
 			wantErr: false,
 		},
 		{
@@ -1436,7 +1162,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				Filter: "assignees ~ 'user'",
 			},
 			args: defaultArgs,
-			want: []*models.Task{
+			want: []*Task{
 				// Same as without any filter since the filter is ignored
 				task1,
 				task2,
@@ -1480,7 +1206,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				Filter: "assignees ?= '1,2'",
 			},
 			args:    defaultArgs,
-			want:    []*models.Task{},
+			want:    []*Task{},
 			wantErr: false,
 		},
 		{
@@ -1489,7 +1215,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				Filter: "assignees ?= 'user1,user2'",
 			},
 			args: defaultArgs,
-			want: []*models.Task{
+			want: []*Task{
 				task30,
 				task35,
 			},
@@ -1501,7 +1227,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				Filter: "labels = 4",
 			},
 			args: defaultArgs,
-			want: []*models.Task{
+			want: []*Task{
 				task1,
 				task2,
 				task35,
@@ -1515,7 +1241,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				FilterIncludeNulls: true,
 			},
 			args: defaultArgs,
-			want: []*models.Task{
+			want: []*Task{
 				task3,
 				task4,
 				task5,
@@ -1556,7 +1282,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				Filter: "labels != 5",
 			},
 			args: defaultArgs,
-			want: []*models.Task{
+			want: []*Task{
 				task1,
 				task2,
 				task3,
@@ -1600,7 +1326,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				Filter: "labels not in 5",
 			},
 			args: defaultArgs,
-			want: []*models.Task{
+			want: []*Task{
 				task1,
 				task2,
 				task3,
@@ -1644,7 +1370,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				Filter: "project_id = 6",
 			},
 			args: defaultArgs,
-			want: []*models.Task{
+			want: []*Task{
 				task15,
 			},
 			wantErr: false,
@@ -1655,7 +1381,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				Filter: "project = 6",
 			},
 			args: defaultArgs,
-			want: []*models.Task{
+			want: []*Task{
 				task15,
 			},
 			wantErr: false,
@@ -1666,7 +1392,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				Filter: "project_id = 20", // user1 has no access to project 20
 			},
 			args:    defaultArgs,
-			want:    []*models.Task{},
+			want:    []*Task{},
 			wantErr: false,
 		},
 		// TODO filter parent project?
@@ -1676,7 +1402,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				Filter: "index = 5",
 			},
 			args: defaultArgs,
-			want: []*models.Task{
+			want: []*Task{
 				task5,
 			},
 			wantErr: false,
@@ -1692,10 +1418,10 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			args: args{
 				a: &user.User{ID: 1},
 			},
-			want: []*models.Task{
+			want: []*Task{
 				// The only tasks with a position set
-				taskWithPosition(task1, 0), // TODO: should be 2?
-				taskWithPosition(task2, 0), // TODO: should be 4?
+				taskWithPosition(task1, 2),
+				taskWithPosition(task2, 4),
 				// the other ones don't have a position set
 				task3,
 				task4,
@@ -1736,7 +1462,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			args: args{
 				a: &user.User{ID: 1},
 			},
-			want: []*models.Task{
+			want: []*Task{
 				// The only tasks with a due date
 				task6,
 				task5,
@@ -1784,7 +1510,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			args: args{
 				a: &user.User{ID: 1},
 			},
-			want: []*models.Task{
+			want: []*Task{
 				task9,
 				task8,
 				task7,
@@ -1802,7 +1528,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			args: args{
 				a: &user.User{ID: 1},
 			},
-			want: []*models.Task{
+			want: []*Task{
 				task5,
 				task6,
 				task7,
@@ -1820,7 +1546,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			args: args{
 				a: &user.User{ID: 1},
 			},
-			want: []*models.Task{
+			want: []*Task{
 				task6,
 				task5,
 				task7,
@@ -1844,7 +1570,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				a:      &user.User{ID: 1},
 				page:   0,
 			},
-			want: []*models.Task{
+			want: []*Task{
 				task17, // has the text #17 in the title
 				task33, // has the index 17
 			},
@@ -1859,7 +1585,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				a:      &user.User{ID: 1},
 				page:   0,
 			},
-			want: []*models.Task{
+			want: []*Task{
 				task33, // has the index 17
 			},
 			wantErr: false,
@@ -1872,7 +1598,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			s := db.NewSession()
 			defer s.Close()
 
-			lt := &models.TaskCollection{
+			lt := &TaskCollection{
 				ProjectID:     tt.fields.ProjectID,
 				ProjectViewID: tt.fields.ProjectViewID,
 				SortBy:        tt.fields.SortBy,
@@ -1894,17 +1620,17 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			}
 			if diff, equal := messagediff.PrettyDiff(tt.want, got); !equal {
 				var is bool
-				var gotTasks []*models.Task
-				gotTasks, is = got.([]*models.Task)
+				var gotTasks []*Task
+				gotTasks, is = got.([]*Task)
 				if !is {
-					gotTasks = []*models.Task{}
+					gotTasks = []*Task{}
 				}
 				if len(gotTasks) == 0 && len(tt.want) == 0 {
 					return
 				}
 
 				gotIDs := []int64{}
-				for _, t := range got.([]*models.Task) {
+				for _, t := range got.([]*Task) {
 					gotIDs = append(gotIDs, t.ID)
 				}
 
