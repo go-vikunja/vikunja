@@ -337,7 +337,7 @@
         "addedSuccess": "The {type} was successfully added.",
         "updatedSuccess": "The {type} was successfully added."
       },
-      "right": {
+      "permission": {
         "title": "Permission",
         "read": "Read only",
         "readWrite": "Read & write",
