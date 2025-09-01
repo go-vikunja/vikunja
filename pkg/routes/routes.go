@@ -391,6 +391,7 @@ func registerAPIRoutes(a *echo.Group) {
 
 	// Register the new declarative task routes
 	apiv1.RegisterTasks(a)
+	a.GET("/tasks/all", taskCollectionHandler.ReadAllWeb)
 
 	taskPositionHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {

@@ -31,7 +31,8 @@ import (
 
 // TaskRoutes defines all task API routes with their explicit permission scopes.
 var TaskRoutes = []APIRoute{
-	{Method: "GET", Path: "/tasks/all", Handler: handler.WithDBAndUser(getAllTasksLogic, false), PermissionScope: "read_all"},
+	// {Method: "GET", Path: "/tasks/all", Handler: handler.WithDBAndUser(getAllTasksLogic, false), PermissionScope: "read_all"},
+	// read_all is handled by TaskCollection ?
 	{Method: "PUT", Path: "/projects/:project/tasks", Handler: handler.WithDBAndUser(createTaskLogic, true), PermissionScope: "create"},
 	{Method: "GET", Path: "/tasks/:taskid", Handler: handler.WithDBAndUser(getTaskLogic, false), PermissionScope: "read_one"},
 	{Method: "POST", Path: "/tasks/:taskid", Handler: handler.WithDBAndUser(updateTaskLogic, true), PermissionScope: "update"},
