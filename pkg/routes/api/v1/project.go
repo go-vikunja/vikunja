@@ -30,14 +30,20 @@ import (
 	"xorm.io/xorm"
 )
 
+// ProjectRoutes defines all project API routes with their explicit permission scopes.
+// This replaces the old implicit permission detection with explicit declarations.
+var ProjectRoutes = []APIRoute{
+	{Method: "GET", Path: "/projects", Handler: handler.WithDBAndUser(getAllProjectsLogic, false), PermissionScope: "read_all"},
+	{Method: "GET", Path: "/projects/:project", Handler: handler.WithDBAndUser(getProjectLogic, false), PermissionScope: "read_one"},
+	{Method: "PUT", Path: "/projects", Handler: handler.WithDBAndUser(createProjectLogic, true), PermissionScope: "create"},
+	{Method: "POST", Path: "/projects/:project", Handler: handler.WithDBAndUser(updateProjectLogic, true), PermissionScope: "update"},
+	{Method: "DELETE", Path: "/projects/:project", Handler: handler.WithDBAndUser(deleteProjectLogic, true), PermissionScope: "delete"},
+	{Method: "GET", Path: "/projects/:project/tasks", Handler: handler.WithDBAndUser(getProjectTasksLogic, false), PermissionScope: "read_all"},
+}
+
 // RegisterProjects registers all project routes
 func RegisterProjects(a *echo.Group) {
-	a.GET("/projects", handler.WithDBAndUser(getAllProjectsLogic, false))
-	a.GET("/projects/:project", handler.WithDBAndUser(getProjectLogic, false))
-	a.PUT("/projects", handler.WithDBAndUser(createProjectLogic, true))
-	a.POST("/projects/:project", handler.WithDBAndUser(updateProjectLogic, true))
-	a.DELETE("/projects/:project", handler.WithDBAndUser(deleteProjectLogic, true))
-	a.GET("/projects/:project/tasks", handler.WithDBAndUser(getProjectTasksLogic, false))
+	registerRoutes(a, ProjectRoutes)
 }
 
 // getAllProjectsLogic handles retrieving all projects for a user
