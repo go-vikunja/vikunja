@@ -643,10 +643,10 @@ The models layer now delegates to the service via AddMoreInfoToTasksFunc to avoi
 // 		return
 // 	}
 
-	// 	users, err := GetUsersOrLinkSharesFromIDs(s, userIDs)
-	// 	if err != nil {
-	// 		return
-	// 	}
+// 	users, err := GetUsersOrLinkSharesFromIDs(s, userIDs)
+// 	if err != nil {
+// 		return
+// 	}
 
 // 	taskReminders, err := getTaskReminderMap(s, taskIDs)
 // 	if err != nil {

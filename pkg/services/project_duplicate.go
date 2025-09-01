@@ -169,25 +169,25 @@ func (pds *ProjectDuplicateService) duplicateTasksAndRelatedData(s *xorm.Session
 	// It is used to map old task items to new ones.
 	newTaskIDs := make(map[int64]int64, len(tasks))
 	oldTaskIDs := make([]int64, 0, len(tasks))
-	
+
 	// Create all tasks using TaskService.Create (proper inter-service communication)
 	for _, t := range tasks {
 		oldID := t.ID
 		t.ID = 0
 		t.ProjectID = targetProjectID
 		t.UID = "" // Reset UID to generate a new one
-		
+
 		// Clear assignees and bucket data - they will be duplicated separately later
 		t.Assignees = nil
-		t.BucketID = 0  // Reset bucket ID to use default bucket
-		
-		// Use TaskService.CreateWithoutPermissionCheck since we've already verified permissions 
+		t.BucketID = 0 // Reset bucket ID to use default bucket
+
+		// Use TaskService.CreateWithoutPermissionCheck since we've already verified permissions
 		// at the beginning of the duplication process
 		createdTask, err := pds.TaskService.CreateWithoutPermissionCheck(s, t, u)
 		if err != nil {
 			return nil, err
 		}
-		
+
 		newTaskIDs[oldID] = createdTask.ID
 		oldTaskIDs = append(oldTaskIDs, oldID)
 	}
@@ -230,7 +230,7 @@ func (pds *ProjectDuplicateService) duplicateTasksAndRelatedData(s *xorm.Session
 // duplicateTaskAttachments handles the duplication of task attachments and their underlying files.
 func (pds *ProjectDuplicateService) duplicateTaskAttachments(s *xorm.Session, oldTaskIDs []int64, taskIDMap map[int64]int64, sourceProjectID int64, targetProjectID int64, u *user.User) error {
 	// Get all attachments for the old tasks by direct query for now
-	// TODO: Use TaskService method when attachment handling is properly refactored  
+	// TODO: Use TaskService method when attachment handling is properly refactored
 	attachments := []*models.TaskAttachment{}
 	err := s.In("task_id", oldTaskIDs).Find(&attachments)
 	if err != nil {
@@ -246,7 +246,7 @@ func (pds *ProjectDuplicateService) duplicateTaskAttachments(s *xorm.Session, ol
 			log.Debugf("Error duplicating attachment %d from old task %d to new task: Old task <-> new task does not seem to exist.", oldAttachmentID, attachment.TaskID)
 			continue
 		}
-		
+
 		// Load the file metadata and content
 		attachment.File = &files.File{ID: attachment.FileID}
 		if err := attachment.File.LoadFileMetaByID(); err != nil {
@@ -307,10 +307,10 @@ func (pds *ProjectDuplicateService) duplicateTaskAssignees(s *xorm.Session, oldT
 	if err != nil {
 		return err
 	}
-	
+
 	for _, a := range assignees {
 		newTaskID := taskIDMap[a.TaskID]
-		
+
 		// Check if the user being assigned has access to the target project
 		assigneeUser := &user.User{ID: a.UserID}
 		canRead, err := pds.ProjectService.HasPermission(s, targetProjectID, assigneeUser, models.PermissionRead)
@@ -322,13 +322,13 @@ func (pds *ProjectDuplicateService) duplicateTaskAssignees(s *xorm.Session, oldT
 			log.Debugf("Skipping assignee %d for task %d because they don't have access to project %d", a.UserID, newTaskID, targetProjectID)
 			continue
 		}
-		
+
 		// Create new assignee record
 		newAssignee := &models.TaskAssginee{
 			TaskID: newTaskID,
 			UserID: a.UserID,
 		}
-		
+
 		if _, err := s.Insert(newAssignee); err != nil {
 			return err
 		}
@@ -345,7 +345,7 @@ func (pds *ProjectDuplicateService) duplicateTaskComments(s *xorm.Session, oldTa
 	if err != nil {
 		return err
 	}
-	
+
 	for _, c := range comments {
 		c.ID = 0
 		c.TaskID = taskIDMap[c.TaskID]
@@ -368,7 +368,7 @@ func (pds *ProjectDuplicateService) duplicateTaskRelations(s *xorm.Session, oldT
 	if err != nil {
 		return err
 	}
-	
+
 	for _, r := range relations {
 		otherTaskID, exists := taskIDMap[r.OtherTaskID]
 		if !exists {
@@ -423,7 +423,7 @@ func (pds *ProjectDuplicateService) duplicateProjectViews(s *xorm.Session, sourc
 	// Used to map the newly created tasks to their new buckets
 	bucketMap := make(map[int64]int64)
 	oldBucketIDs := []int64{}
-	
+
 	for _, b := range buckets {
 		oldBucketID := b.ID
 		oldViewID := b.ProjectViewID
@@ -474,7 +474,7 @@ func (pds *ProjectDuplicateService) duplicateProjectViews(s *xorm.Session, sourc
 		if !taskExists {
 			continue // Skip if the task wasn't duplicated
 		}
-		
+
 		taskBuckets = append(taskBuckets, &models.TaskBucket{
 			BucketID:      bucketMap[tb.BucketID],
 			TaskID:        newTaskID,
@@ -502,7 +502,7 @@ func (pds *ProjectDuplicateService) duplicateProjectViews(s *xorm.Session, sourc
 		if !taskExists {
 			continue // Skip if the task wasn't duplicated
 		}
-		
+
 		taskPositions = append(taskPositions, &models.TaskPosition{
 			ProjectViewID: viewMap[tp.ProjectViewID],
 			TaskID:        newTaskID,
@@ -611,7 +611,7 @@ func (pds *ProjectDuplicateService) duplicateUserPermissions(s *xorm.Session, so
 	if err != nil {
 		return err
 	}
-	
+
 	for _, u := range users {
 		u.ID = 0
 		u.ProjectID = targetProjectID
@@ -631,7 +631,7 @@ func (pds *ProjectDuplicateService) duplicateTeamPermissions(s *xorm.Session, so
 	if err != nil {
 		return err
 	}
-	
+
 	for _, t := range teams {
 		t.ID = 0
 		t.ProjectID = targetProjectID
@@ -652,7 +652,7 @@ func (pds *ProjectDuplicateService) duplicateLinkShares(s *xorm.Session, sourceP
 	if err != nil {
 		return err
 	}
-	
+
 	for _, share := range linkShares {
 		share.ID = 0
 		share.ProjectID = targetProjectID
