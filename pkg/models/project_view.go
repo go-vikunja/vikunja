@@ -310,30 +310,66 @@ func createProjectView(s *xorm.Session, p *ProjectView, a web.Auth, createBacklo
 		// Create default buckets for kanban view
 		backlog := &Bucket{
 			ProjectViewID: p.ID,
+			ProjectID:     p.ProjectID,
 			Title:         "To-Do",
 			Position:      100,
 		}
-		err = backlog.Create(s, a)
+		// Use direct database insert to avoid service layer validation during view creation
+		backlog.CreatedBy, err = GetUserOrLinkShareUser(s, a)
+		if err != nil {
+			return
+		}
+		backlog.CreatedByID = backlog.CreatedBy.ID
+		_, err = s.Insert(backlog)
+		if err != nil {
+			return
+		}
+		backlog.Position = calculateDefaultPosition(backlog.ID, backlog.Position)
+		_, err = s.Where("id = ?", backlog.ID).Update(backlog)
 		if err != nil {
 			return
 		}
 
 		doing := &Bucket{
 			ProjectViewID: p.ID,
+			ProjectID:     p.ProjectID,
 			Title:         "Doing",
 			Position:      200,
 		}
-		err = doing.Create(s, a)
+		// Use direct database insert to avoid service layer validation during view creation
+		doing.CreatedBy, err = GetUserOrLinkShareUser(s, a)
+		if err != nil {
+			return
+		}
+		doing.CreatedByID = doing.CreatedBy.ID
+		_, err = s.Insert(doing)
+		if err != nil {
+			return
+		}
+		doing.Position = calculateDefaultPosition(doing.ID, doing.Position)
+		_, err = s.Where("id = ?", doing.ID).Update(doing)
 		if err != nil {
 			return
 		}
 
 		done := &Bucket{
 			ProjectViewID: p.ID,
+			ProjectID:     p.ProjectID,
 			Title:         "Done",
 			Position:      300,
 		}
-		err = done.Create(s, a)
+		// Use direct database insert to avoid service layer validation during view creation
+		done.CreatedBy, err = GetUserOrLinkShareUser(s, a)
+		if err != nil {
+			return
+		}
+		done.CreatedByID = done.CreatedBy.ID
+		_, err = s.Insert(done)
+		if err != nil {
+			return
+		}
+		done.Position = calculateDefaultPosition(done.ID, done.Position)
+		_, err = s.Where("id = ?", done.ID).Update(done)
 		if err != nil {
 			return
 		}

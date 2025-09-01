@@ -24,6 +24,7 @@ import (
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/services"
 	"code.vikunja.io/api/pkg/user"
 )
 
@@ -36,5 +37,9 @@ func TestMain(m *testing.M) {
 	files.InitTests()
 	models.SetupTests()
 	events.Fake()
+
+	// Initialize service dependency injection
+	services.InitTaskService()
+
 	os.Exit(m.Run())
 }

@@ -18,6 +18,7 @@ package migration
 
 import (
 	"bytes"
+	"errors"
 	"io"
 
 	"xorm.io/xorm"
@@ -151,7 +152,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		err = models.CreateProject(s, &project.Project, user, false, false)
 	}
 	if err != nil {
-		return
+		return errors.New("error creating project: " + err.Error())
 	}
 
 	if wasArchived {
@@ -160,6 +161,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 
 	log.Debugf("[creating structure] Created project %d", project.ID)
 
+	log.Debugf("[creating structure] About to handle background file")
 	bf, is := originalBackgroundInformation.(*bytes.Buffer)
 	if is {
 
@@ -175,6 +177,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		log.Debugf("[creating structure] Created a background file for project %d", project.ID)
 	}
 
+	log.Debugf("[creating structure] About to create buckets")
 	// Create all buckets
 	bucketsByOldID := make(map[int64]*models.Bucket) // old bucket id is the key
 	if len(project.Buckets) > 0 {
@@ -187,9 +190,35 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		}
 
 		oldID := bucket.ID
+		log.Debugf("[creating structure] Creating bucket with original ProjectViewID: %d", bucket.ProjectViewID)
+
+		// Reset invalid ProjectViewIDs to 0 during migration
+		// They will be assigned to the correct view later
+		if bucket.ProjectViewID != 0 {
+			bucket.ProjectViewID = 0
+		}
+
 		bucket.ID = 0 // We want a new id
 		bucket.ProjectID = project.ID
-		err = bucket.Create(s, user)
+
+		// Use direct database insert during migration to avoid service layer validation
+		// The ProjectViewID will be set correctly later after views are created
+		bucket.CreatedBy, err = models.GetUserOrLinkShareUser(s, user)
+		if err != nil {
+			return
+		}
+		bucket.CreatedByID = bucket.CreatedBy.ID
+
+		_, err = s.Insert(bucket)
+		if err != nil {
+			return
+		}
+
+		// Update position using the same logic as the model's Create method
+		if bucket.Position == 0 {
+			bucket.Position = float64(bucket.ID)
+		}
+		_, err = s.Where("id = ?", bucket.ID).Cols("position").Update(bucket)
 		if err != nil {
 			return
 		}
@@ -198,9 +227,11 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		log.Debugf("[creating structure] Created bucket %d, old ID was %d", bucket.ID, oldID)
 	}
 
+	log.Debugf("[creating structure] Finished creating buckets, about to create views")
 	// Create all views, create default views if we don't have any
 	viewsByOldIDs := make(map[int64]*models.ProjectView, len(oldViews))
 	if len(oldViews) > 0 {
+		log.Debugf("[creating structure] Creating %d existing views", len(oldViews))
 		for _, view := range oldViews {
 			oldID := view.ID
 			view.ID = 0
@@ -221,8 +252,10 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 
 			view.ProjectID = project.ID
 
+			log.Debugf("[creating structure] About to create view: %s", view.Title)
 			err = view.Create(s, user)
 			if err != nil {
+				log.Errorf("[creating structure] Error creating view %s: %v", view.Title, err)
 				return
 			}
 			viewsByOldIDs[oldID] = view
@@ -240,7 +273,8 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 			}
 
 			bucket.ProjectViewID = newView.ID
-			err = bucket.Update(s, user)
+			// Use direct database update during migration to avoid service layer validation
+			_, err = s.Where("id = ?", bucket.ID).Cols("project_view_id").Update(bucket)
 			if err != nil {
 				return
 			}
@@ -259,7 +293,8 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 			if view.ViewKind == models.ProjectViewKindKanban {
 				for _, b := range bucketsByOldID {
 					b.ProjectViewID = view.ID
-					err = b.Update(s, user)
+					// Use direct database update during migration to avoid service layer validation
+					_, err = s.Where("id = ?", b.ID).Cols("project_view_id").Update(b)
 					if err != nil {
 						return
 					}
@@ -283,9 +318,15 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 				ProjectID:     task.ProjectID,
 				ProjectViewID: bucket.ProjectViewID,
 			}
-			err = tb.Update(s, user)
+			// Use direct database operation during migration to avoid service layer validation
+			_, err = s.Where("task_id = ? AND project_view_id = ?", tb.TaskID, tb.ProjectViewID).Delete(&models.TaskBucket{})
 			if err != nil {
-				log.Debugf("[creating structure] Error while updating task bucket %d for task %d: %s", bucketID, task.ID, err.Error())
+				log.Debugf("[creating structure] Error while deleting old task bucket for task %d: %s", task.ID, err.Error())
+				return
+			}
+			_, err = s.Insert(tb)
+			if err != nil {
+				log.Debugf("[creating structure] Error while inserting task bucket %d for task %d: %s", bucketID, task.ID, err.Error())
 				return
 			}
 		} else if bucketID > 0 {

@@ -32,7 +32,7 @@ type APIRoute struct {
 
 // Register takes a slice of APIRoute structs and registers them with both the Echo router
 // and our token permission system. This replaces the old implicit permission detection.
-func Register(a *echo.Group, routes []APIRoute) {
+func RegisterApiRoutes(a *echo.Group, routes []APIRoute) {
 	for _, route := range routes {
 		// 1. Register the route with the Echo web server
 		a.Add(route.Method, route.Path, route.Handler)
