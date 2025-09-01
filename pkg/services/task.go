@@ -162,6 +162,24 @@ func (ts *TaskService) GetAllByProject(s *xorm.Session, projectID int64, u *user
 	return tasks, len(tasks), totalCount, nil
 }
 
+// GetAllWithFilters gets all tasks with complex filtering, sorting and expansion options
+// This method replicates the functionality of models.TaskCollection.ReadAll() at the service layer
+func (ts *TaskService) GetAllWithFilters(s *xorm.Session, collection *models.TaskCollection, a web.Auth, search string, page int, perPage int) ([]*models.Task, int, int64, error) {
+	// For now, delegate to the models layer since moving all this logic is complex
+	// In the future, this should contain all the business logic from models.TaskCollection.ReadAll()
+	result, resultCount, totalItems, err := collection.ReadAll(s, a, search, page, perPage)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	tasks, ok := result.([]*models.Task)
+	if !ok {
+		return nil, 0, 0, fmt.Errorf("unexpected result type from TaskCollection.ReadAll")
+	}
+
+	return tasks, resultCount, totalItems, nil
+}
+
 // Update updates a task.
 func (ts *TaskService) Update(s *xorm.Session, task *models.Task, u *user.User) (*models.Task, error) {
 	can, err := ts.Can(s, task, u).Write()

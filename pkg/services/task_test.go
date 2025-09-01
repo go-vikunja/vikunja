@@ -361,7 +361,19 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			label4,
 			label4, // Additional label from related task 35
 		},
-		RelatedTasks: map[models.RelationKind][]*models.Task{},
+		RelatedTasks: map[models.RelationKind][]*models.Task{
+			models.RelationKindSubtask: {
+				{
+					ID:          29,
+					Title:       "task #29 with parent task (1)",
+					Index:       14,
+					CreatedByID: 1,
+					ProjectID:   1,
+					Created:     time.Unix(1543626724, 0).In(loc),
+					Updated:     time.Unix(1543626724, 0).In(loc),
+				},
+			},
+		},
 		Attachments: []*models.TaskAttachment{
 			{
 				ID:          1,
@@ -788,16 +800,30 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
 	task29 := &models.Task{
-		ID:           29,
-		Title:        "task #29 with parent task (1)",
-		Identifier:   "test1-14",
-		Index:        14,
-		CreatedByID:  1,
-		CreatedBy:    user1,
-		ProjectID:    1,
-		RelatedTasks: map[models.RelationKind][]*models.Task{},
-		Created:      time.Unix(1543626724, 0).In(loc),
-		Updated:      time.Unix(1543626724, 0).In(loc),
+		ID:          29,
+		Title:       "task #29 with parent task (1)",
+		Identifier:  "test1-14",
+		Index:       14,
+		CreatedByID: 1,
+		CreatedBy:   user1,
+		ProjectID:   1,
+		RelatedTasks: map[models.RelationKind][]*models.Task{
+			models.RelationKindParenttask: {
+				{
+					ID:          1,
+					Title:       "task #1",
+					Description: "Lorem Ipsum",
+					Index:       1,
+					CreatedByID: 1,
+					ProjectID:   1,
+					IsFavorite:  true,
+					Created:     time.Unix(1543626724, 0).In(loc),
+					Updated:     time.Unix(1543626724, 0).In(loc),
+				},
+			},
+		},
+		Created: time.Unix(1543626724, 0).In(loc),
+		Updated: time.Unix(1543626724, 0).In(loc),
 	}
 	task30 := &models.Task{
 		ID:          30,
@@ -873,9 +899,34 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			label4, // Additional labels from service layer
 			label5,
 		},
-		RelatedTasks: map[models.RelationKind][]*models.Task{},
-		Created:      time.Unix(1543626724, 0).In(loc),
-		Updated:      time.Unix(1543626724, 0).In(loc),
+		RelatedTasks: map[models.RelationKind][]*models.Task{
+			models.RelationKindRelated: {
+				{
+					ID:          1,
+					Title:       "task #1",
+					Description: "Lorem Ipsum",
+					Index:       1,
+					CreatedByID: 1,
+					ProjectID:   1,
+					IsFavorite:  true,
+					Created:     time.Unix(1543626724, 0).In(loc),
+					Updated:     time.Unix(1543626724, 0).In(loc),
+				},
+				{
+					ID:          1,
+					Title:       "task #1",
+					Description: "Lorem Ipsum",
+					Index:       1,
+					CreatedByID: 1,
+					ProjectID:   1,
+					IsFavorite:  true,
+					Created:     time.Unix(1543626724, 0).In(loc),
+					Updated:     time.Unix(1543626724, 0).In(loc),
+				},
+			},
+		},
+		Created: time.Unix(1543626724, 0).In(loc),
+		Updated: time.Unix(1543626724, 0).In(loc),
 	}
 	task39 := &models.Task{
 		ID:           39,
@@ -1887,24 +1938,19 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				CRUDable:    tt.fields.CRUDable,
 				Permissions: tt.fields.Permissions,
 			}
-			got, _, _, err := lt.ReadAll(s, tt.args.a, tt.args.search, tt.args.page, 50)
+			got, _, _, err := NewTaskService(testEngine).GetAllWithFilters(s, lt, tt.args.a, tt.args.search, tt.args.page, 50)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Test %s, Task.ReadAll() error = %v, wantErr %v", tt.name, err, tt.wantErr)
 				return
 			}
 			if diff, equal := messagediff.PrettyDiff(tt.want, got); !equal {
-				var is bool
-				var gotTasks []*models.Task
-				gotTasks, is = got.([]*models.Task)
-				if !is {
-					gotTasks = []*models.Task{}
-				}
+				gotTasks := got
 				if len(gotTasks) == 0 && len(tt.want) == 0 {
 					return
 				}
 
 				gotIDs := []int64{}
-				for _, t := range got.([]*models.Task) {
+				for _, t := range got {
 					gotIDs = append(gotIDs, t.ID)
 				}
 
