@@ -75,7 +75,6 @@ import (
 	vikunja_file "code.vikunja.io/api/pkg/modules/migration/vikunja-file"
 	"code.vikunja.io/api/pkg/plugins"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
-	apiv1task "code.vikunja.io/api/pkg/routes/api/v1/task"
 	apiv2 "code.vikunja.io/api/pkg/routes/api/v2"
 	"code.vikunja.io/api/pkg/routes/caldav"
 	"code.vikunja.io/api/pkg/version"
@@ -390,15 +389,7 @@ func registerAPIRoutes(a *echo.Group) {
 	}
 	a.PUT("/projects/:projectid/duplicate", projectDuplicateHandler.CreateWeb)
 
-	taskHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.Task{}
-		},
-	}
-	a.PUT("/projects/:project/tasks", taskHandler.CreateWeb)
-	a.GET("/tasks/:projecttask", handler.WithDBAndUser(apiv1task.Get, true))
-	a.GET("/tasks/all", taskCollectionHandler.ReadAllWeb)
-	a.DELETE("/tasks/:projecttask", handler.WithDBAndUser(apiv1task.Delete, true))
+	// Register the new declarative task routes
 	apiv1.RegisterTasks(a)
 
 	taskPositionHandler := &handler.WebHandler{
