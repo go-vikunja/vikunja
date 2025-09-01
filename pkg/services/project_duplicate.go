@@ -114,19 +114,23 @@ func (pds *ProjectDuplicateService) Duplicate(s *xorm.Session, projectID int64, 
 
 	log.Debugf("Duplicated project %d into new project %d", projectID, createdProject.ID)
 
-	// Duplicate all tasks and their related data
-	taskIDMap, err := pds.duplicateTasksAndRelatedData(s, projectID, createdProject.ID, u)
+	// Duplicate views first so they exist when tasks are created
+	// Create empty task ID map for now
+	taskIDMap := make(map[int64]int64)
+	err = pds.duplicateProjectViews(s, projectID, createdProject.ID, u, taskIDMap)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Debugf("Duplicated all views from project %d into %d", projectID, createdProject.ID)
+
+	// Now duplicate all tasks and their related data
+	taskIDMap, err = pds.duplicateTasksAndRelatedData(s, projectID, createdProject.ID, u)
 	if err != nil {
 		return nil, err
 	}
 
 	log.Debugf("Duplicated all tasks from project %d into %d", projectID, createdProject.ID)
-
-	// Duplicate views and kanban data
-	err = pds.duplicateProjectViews(s, projectID, createdProject.ID, u, taskIDMap)
-	if err != nil {
-		return nil, err
-	}
 
 	log.Debugf("Duplicated all views, buckets and positions from project %d into %d", projectID, createdProject.ID)
 
@@ -173,8 +177,13 @@ func (pds *ProjectDuplicateService) duplicateTasksAndRelatedData(s *xorm.Session
 		t.ProjectID = targetProjectID
 		t.UID = "" // Reset UID to generate a new one
 		
-		// Use TaskService.Create instead of calling models directly
-		createdTask, err := pds.TaskService.Create(s, t, u)
+		// Clear assignees and bucket data - they will be duplicated separately later
+		t.Assignees = nil
+		t.BucketID = 0  // Reset bucket ID to use default bucket
+		
+		// Use TaskService.CreateWithoutPermissionCheck since we've already verified permissions 
+		// at the beginning of the duplication process
+		createdTask, err := pds.TaskService.CreateWithoutPermissionCheck(s, t, u)
 		if err != nil {
 			return nil, err
 		}

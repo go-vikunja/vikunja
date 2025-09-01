@@ -713,6 +713,7 @@ func (ts *TaskService) getUserID(share *models.LinkSharing) int64 {
 
 // Create creates a new task with proper permission checking and business logic.
 // This method provides the service layer interface for task creation.
+// Create creates a new task with permission checks.
 func (ts *TaskService) Create(s *xorm.Session, task *models.Task, u *user.User) (*models.Task, error) {
 	// Permission check: Use ProjectService for proper inter-service communication
 	projectService := NewProjectService(ts.DB)
@@ -727,6 +728,19 @@ func (ts *TaskService) Create(s *xorm.Session, task *models.Task, u *user.User) 
 	// For now, use the existing model method
 	// Later, we'll move all the business logic into this service method
 	err = task.Create(s, u)
+	if err != nil {
+		return nil, err
+	}
+
+	return task, nil
+}
+
+// CreateWithoutPermissionCheck creates a new task without permission checks.
+// This is intended for internal service use where permissions have already been verified.
+func (ts *TaskService) CreateWithoutPermissionCheck(s *xorm.Session, task *models.Task, u *user.User) (*models.Task, error) {
+	// For now, use the existing model method
+	// Later, we'll move all the business logic into this service method
+	err := task.Create(s, u)
 	if err != nil {
 		return nil, err
 	}
