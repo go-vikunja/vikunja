@@ -29,13 +29,41 @@ import (
 	"xorm.io/xorm"
 )
 
+// APIRoute defines the metadata for a single API endpoint.
+// This is a local copy to avoid import cycle issues.
+type APIRoute struct {
+	Method          string
+	Path            string
+	Handler         echo.HandlerFunc
+	PermissionScope string
+}
+
+// LabelRoutes defines all label API routes with their explicit permission scopes.
+// This replaces the old implicit permission detection with explicit declarations.
+var LabelRoutes = []APIRoute{
+	{Method: "GET", Path: "/labels", Handler: handler.WithDBAndUser(getAllLabelsLogic, false), PermissionScope: "read_all"},
+	{Method: "POST", Path: "/labels", Handler: handler.WithDBAndUser(createLabelLogic, true), PermissionScope: "create"},
+	{Method: "GET", Path: "/labels/:id", Handler: handler.WithDBAndUser(getLabelLogic, false), PermissionScope: "read_one"},
+	{Method: "PUT", Path: "/labels/:id", Handler: handler.WithDBAndUser(updateLabelLogic, true), PermissionScope: "update"},
+	{Method: "DELETE", Path: "/labels/:id", Handler: handler.WithDBAndUser(deleteLabelLogic, true), PermissionScope: "delete"},
+}
+
+// registerRoutes takes a slice of APIRoute structs and registers them with both the Echo router
+// and our token permission system. This is a local helper to avoid import cycles.
+func registerRoutes(a *echo.Group, routes []APIRoute) {
+	for _, route := range routes {
+		// 1. Register the route with the Echo web server
+		a.Add(route.Method, route.Path, route.Handler)
+
+		// 2. Explicitly register the route and its permission scope
+		//    with our API token system. This replaces the old "magic".
+		models.CollectRoute(route.Method, route.Path, route.PermissionScope)
+	}
+}
+
 // RegisterLabels registers all label routes
 func RegisterLabels(a *echo.Group) {
-	a.GET("/labels", handler.WithDBAndUser(getAllLabelsLogic, false))
-	a.POST("/labels", handler.WithDBAndUser(createLabelLogic, true))
-	a.GET("/labels/:id", handler.WithDBAndUser(getLabelLogic, false))
-	a.PUT("/labels/:id", handler.WithDBAndUser(updateLabelLogic, true))
-	a.DELETE("/labels/:id", handler.WithDBAndUser(deleteLabelLogic, true))
+	registerRoutes(a, LabelRoutes)
 }
 
 // getAllLabelsLogic handles retrieving all labels for a user

@@ -76,6 +76,39 @@ func getRouteGroupName(path string) (finalName string, filteredParts []string) {
 	}
 }
 
+// CollectRoute explicitly registers a route and its permission scope with our API token system.
+// This function replaces the complex logic in getRouteDetail() with explicit permission registration.
+// It directly stores the provided permission scope without any "guessing" or "magic" detection.
+func CollectRoute(method, path, permissionScope string) {
+	routeGroupName, _ := getRouteGroupName(path)
+	apiVersion := getRouteAPIVersion(path)
+	
+	if apiVersion == "" {
+		// No api version, no tokens
+		return
+	}
+
+	// Skip routes that should not be available for API tokens
+	if routeGroupName == "tokenTest" ||
+		routeGroupName == "subscriptions" ||
+		routeGroupName == "tokens" ||
+		routeGroupName == "*" ||
+		strings.HasPrefix(routeGroupName, "user_") {
+		return
+	}
+
+	ensureAPITokenRoutesGroup(apiVersion, routeGroupName)
+	routeDetail := &RouteDetail{
+		Path:   path,
+		Method: method,
+	}
+	apiTokenRoutes[apiVersion][routeGroupName][permissionScope] = routeDetail
+}
+
+// getRouteDetail attempts to guess the permission scope for a route based on patterns.
+// @Deprecated: This function uses fragile "magic" detection and should be replaced
+// with explicit permission declarations using CollectRoute(). New routes should use
+// the declarative APIRoute pattern instead of relying on this function.
 func getRouteDetail(route echo.Route) (method string, detail *RouteDetail) {
 	// Handle old WebHandler pattern
 	if strings.Contains(route.Name, "CreateWeb") {

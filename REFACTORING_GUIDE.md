@@ -51,16 +51,27 @@ Our architecture separates concerns into three distinct layers:
 
 ## **3\. Key Patterns & Implementation**
 
-### **A. Handler Wrappers (Eliminating Boilerplate)**
+### A. Declarative Routing & Handler Wrappers
 
-This is the **required pattern** for all new handlers.
+To keep handlers clean and permissions explicit, we use a declarative routing pattern combined with a handler wrapper. This is the **required pattern** for all new handlers.
 
-// The wrapper in pkg/web/handler/wrapper.go  
-func WithDBAndUser(logicFunc func(s \*xorm.Session, u \*user.User, c echo.Context) error, needsTransaction bool) echo.HandlerFunc { /\* ... \*/ }
+This pattern uses the `APIRoute` struct and a `routes.Register` helper function to define all routes and their permission scopes in a single, clear, and maintainable way.
 
-// Usage in a route file  
-func getProject(s \*xorm.Session, u \*user.User, c echo.Context) error { /\* ... \*/ }  
-a.GET("/projects/:id", handler.WithDBAndUser(getProject, false))
+**For a complete explanation and implementation guide for this pattern, you must refer to the `API_ROUTE_REFACTORING.md` file.**
+
+**Example (`pkg/routes/api/v1/label.go`):**
+
+```go
+var LabelRoutes = []routes.APIRoute{
+    {Method: "GET",  Path: "/labels", Handler: handler.WithDBAndUser(getAllLabelsLogic, false), PermissionScope: "read_all"},
+    {Method: "POST", Path: "/labels", Handler: handler.WithDBAndUser(createLabelLogic, true),  PermissionScope: "create"},
+    // ... all other label routes are defined in this slice
+}
+
+func RegisterLabels(a *echo.Group) {
+    routes.Register(a, LabelRoutes)
+}
+```
 
 ### **B. Dependency Inversion (For Backward Compatibility)**
 
@@ -83,18 +94,40 @@ func init() {
 
 Our testing strategy is layered to match the architecture.
 
-* **Model Tests (pkg/models/):** Simple **unit tests** only.  
-* **Service Tests (pkg/services/):** This is the home for our complex **integration tests**.
+* **Model Tests (pkg/models/):** Simple **unit tests** only. They must remain fully decoupled from the service layer.  
+* **Service & Integration Tests (pkg/services/, pkg/webtests/):** This is the home for our complex **integration tests**. They verify the complete business logic and end-to-end functionality.
 
-### **Test Setup Components**
+### **Test Environment Setup**
 
-* **TestMain for Setup:** Each test package must have a main\_test.go with a TestMain function that initializes the environment (models.SetupTests(), user.InitTests(), etc.).  
-* **The "Master Switch" (pkg/testutil):** For test suites that need dependency inversion to work (like models tests), the TestMain function must explicitly call testutil.Init(). This deterministically sets up service dependencies. **Do not use blank imports.**  
-  // In a main\_test.go file  
-  import "code.vikunja.io/api/pkg/testutil"
+#### **For Service & Integration Tests (Most Packages)**
 
-  func TestMain(m \*testing.M) {  
-      // ... other setup ...  
-      testutil.Init() // Initialize service dependency injection  
-      // ... rest of setup ...  
-  }  
+These test suites need the full application to be "wired up." Their TestMain function **must** call our "Master Switch" to initialize all service dependencies.
+
+// In a main\_test.go file for a package like \`services\` or \`migration\`  
+import "code.vikunja.io/api/pkg/testutil"
+
+func TestMain(m \*testing.M) {  
+    // ... other setup ...  
+    testutil.Init() // Initialize service dependency injection  
+    // ... rest of setup ...  
+}
+
+#### **For Model Tests (The Exception)**
+
+The pkg/models test suite **must not** call testutil.Init(), as this would create a circular dependency. Instead, if a model test needs to verify a function that calls a dependency-injected function variable, we provide a **simple mock** in the test setup.
+
+// In pkg/models/main\_test.go  
+func TestMain(m \*testing.M) {  
+    // ... other setup ...
+
+    // Set up a mock for the TaskCreateFunc for model tests,  
+    // as they should not depend on the services package.  
+    TaskCreateFunc \= func(s \*xorm.Session, t \*Task, u \*user.User) error {  
+        // This is a simple mock. It does not contain real logic.  
+        t.ID \= 999 // Give it a fake ID to signify success  
+        return nil  
+    }
+
+    // ... rest of TestMain ...  
+    os.Exit(m.Run())  
+}  
