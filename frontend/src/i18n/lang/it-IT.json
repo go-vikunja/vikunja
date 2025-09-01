@@ -336,12 +336,6 @@
 				"addedSuccess": "{type} aggiunto con successo.",
 				"updatedSuccess": "{type} aggiunto con successo."
 			},
-			"right": {
-				"title": "Permessi",
-				"read": "Solo lettura",
-				"readWrite": "Lettura e scrittura",
-				"admin": "Amministratore"
-			},
 			"attributes": {
 				"link": "Link",
 				"delete": "Elimina"

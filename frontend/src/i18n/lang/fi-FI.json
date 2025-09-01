@@ -308,12 +308,6 @@
 				"addedSuccess": "{type} lisättiin onnistuneesti.",
 				"updatedSuccess": "{type} lisättiin onnistuneesti."
 			},
-			"right": {
-				"title": "Oikeudet",
-				"read": "Vain luku",
-				"readWrite": "Luku & kirjoitus",
-				"admin": "Ylläpitäjä"
-			},
 			"attributes": {
 				"delete": "Poista"
 			}

@@ -288,12 +288,6 @@
 				"addedSuccess": "{type} byl úspěšně přidán.",
 				"updatedSuccess": "{type} byl úspěšně přidán."
 			},
-			"right": {
-				"title": "Oprávnění",
-				"read": "Pouze pro čtení",
-				"readWrite": "Čtení a zápis",
-				"admin": "Administrátor"
-			},
 			"attributes": {
 				"link": "Odkaz",
 				"delete": "Smazat"

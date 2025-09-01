@@ -314,12 +314,6 @@
 				"addedSuccess": "이 {type} 성공적으로 추가되었습니다.",
 				"updatedSuccess": "이 {type} 성공적으로 추가되었습니다."
 			},
-			"right": {
-				"title": "권한",
-				"read": "읽기 전용",
-				"readWrite": "읽기 & 쓰기",
-				"admin": "관리자"
-			},
 			"attributes": {
 				"link": "링크",
 				"delete": "삭제"

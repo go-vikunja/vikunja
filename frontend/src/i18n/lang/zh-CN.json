@@ -284,12 +284,6 @@
 				"addedSuccess": "{type} 已成功添加。",
 				"updatedSuccess": "{type} 已成功添加。"
 			},
-			"right": {
-				"title": "权限",
-				"read": "只读",
-				"readWrite": "可读并可写",
-				"admin": "管理员"
-			},
 			"attributes": {
 				"link": "链接",
 				"delete": "删除"

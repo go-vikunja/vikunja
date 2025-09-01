@@ -336,12 +336,6 @@
 				"addedSuccess": "{type} succesvol toegevoegd.",
 				"updatedSuccess": "{type} succesvol toegevoegd."
 			},
-			"right": {
-				"title": "Machtiging",
-				"read": "Alleen-lezen",
-				"readWrite": "Lezen & schrijven",
-				"admin": "Beheerder"
-			},
 			"attributes": {
 				"link": "Koppeling",
 				"delete": "Verwijder"

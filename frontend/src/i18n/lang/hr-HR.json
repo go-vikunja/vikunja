@@ -283,12 +283,6 @@
 				"addedSuccess": "{type} je uspješno dodan.",
 				"updatedSuccess": "{type} je uspješno dodan."
 			},
-			"right": {
-				"title": "Dopuštenja",
-				"read": "Samo za čitanje",
-				"readWrite": "Čitanje i pisanje",
-				"admin": "Administrator"
-			},
 			"attributes": {
 				"link": "Poveznica",
 				"delete": "Obriši"

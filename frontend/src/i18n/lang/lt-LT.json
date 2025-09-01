@@ -311,12 +311,6 @@
 				"addedSuccess": "{type} buvo sėkmingai pridėti.",
 				"updatedSuccess": "{type} buvo sėkmingai pridėti."
 			},
-			"right": {
-				"title": "Prieigos teisės",
-				"read": "Tik skaitymas",
-				"readWrite": "Skaityti & rašyti",
-				"admin": "Administratorius"
-			},
 			"attributes": {
 				"link": "Nuoroda",
 				"delete": "Ištrinti"

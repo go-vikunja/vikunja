@@ -310,12 +310,6 @@
 				"addedSuccess": "{type} đã được thêm thành công.",
 				"updatedSuccess": "{type} đã được thêm thành công."
 			},
-			"right": {
-				"title": "Quyền",
-				"read": "Chỉ đọc",
-				"readWrite": "Đọc & ghi",
-				"admin": "Quản trị viên"
-			},
 			"attributes": {
 				"link": "Liên kết",
 				"delete": "Xóa"

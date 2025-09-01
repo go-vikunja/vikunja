@@ -305,12 +305,6 @@
 				"addedSuccess": "{type} je bil uspešno dodan.",
 				"updatedSuccess": "{type} je bil uspešno dodan."
 			},
-			"right": {
-				"title": "Dovoljenje",
-				"read": "Samo za branje",
-				"readWrite": "Branje in pisanje",
-				"admin": "Administrator"
-			},
 			"attributes": {
 				"link": "Povezava",
 				"delete": "Izbriši"

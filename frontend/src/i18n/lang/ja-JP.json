@@ -309,12 +309,6 @@
 				"addedSuccess": "{type} は正常に追加されました。",
 				"updatedSuccess": "{type} は正常に追加されました。"
 			},
-			"right": {
-				"title": "権限",
-				"read": "読み取り専用",
-				"readWrite": "読み取りと書き込み",
-				"admin": "管理者"
-			},
 			"attributes": {
 				"link": "リンク",
 				"delete": "削除"

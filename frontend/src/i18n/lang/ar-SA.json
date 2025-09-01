@@ -277,12 +277,6 @@
 				"addedSuccess": "تم إضافة {type} بنجاح.",
 				"updatedSuccess": "تم تحديث {type} بنجاح."
 			},
-			"right": {
-				"title": "الصلاحية",
-				"read": "القراءة فقط",
-				"readWrite": "القراءة والكتابة",
-				"admin": "مشرف"
-			},
 			"attributes": {
 				"link": "رابط",
 				"delete": "حذف"

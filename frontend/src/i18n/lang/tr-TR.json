@@ -336,12 +336,6 @@
 				"addedSuccess": "{type} başarıyla eklendi.",
 				"updatedSuccess": "{type} başarıyla güncellendi."
 			},
-			"right": {
-				"title": "İzin",
-				"read": "Salt okunur",
-				"readWrite": "Okuma ve yazma",
-				"admin": "Yönetici"
-			},
 			"attributes": {
 				"link": "Bağlantı",
 				"delete": "Sil"

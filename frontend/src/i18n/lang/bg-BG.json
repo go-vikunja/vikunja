@@ -305,12 +305,6 @@
 				"addedSuccess": "{type} беше успешно добавен.",
 				"updatedSuccess": "{type} беше успешно актуализиран."
 			},
-			"right": {
-				"title": "Права",
-				"read": "Само четене",
-				"readWrite": "Четене и писане",
-				"admin": "Администратор"
-			},
 			"attributes": {
 				"link": "Връзка",
 				"delete": "Изтриване"

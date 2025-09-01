@@ -309,12 +309,6 @@
 				"addedSuccess": "ה-{type} נתווסף בהצלחה.",
 				"updatedSuccess": "ה-{type} נתווסף בהצלחה."
 			},
-			"right": {
-				"title": "הרשאה",
-				"read": "קריאה בלבד",
-				"readWrite": "קריאה וכתיבה",
-				"admin": "מנהל"
-			},
 			"attributes": {
 				"link": "לינק",
 				"delete": "מחיקה"

@@ -244,12 +244,6 @@
 				"addedSuccess": "El {type} se ha añadido correctamente.",
 				"updatedSuccess": "El {type} se ha añadido correctamente."
 			},
-			"right": {
-				"title": "Permiso",
-				"read": "Sólo lectura",
-				"readWrite": "Lectura y escritura",
-				"admin": "Admin"
-			},
 			"attributes": {
 				"link": "Enlace",
 				"delete": "Eliminar"

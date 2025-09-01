@@ -336,12 +336,6 @@
 				"addedSuccess": "{type} wurde erfolgreich hinzugefügt.",
 				"updatedSuccess": "{type} wurde erfolgreich hinzugefügt."
 			},
-			"right": {
-				"title": "Berechtigung",
-				"read": "Nur Leserechte",
-				"readWrite": "Lesen & Schreiben",
-				"admin": "Admin"
-			},
 			"attributes": {
 				"link": "Link",
 				"delete": "Löschen"

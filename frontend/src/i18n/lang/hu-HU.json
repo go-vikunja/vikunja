@@ -284,12 +284,6 @@
 				"addedSuccess": "A {type} sikeresen hozzá lett adva.",
 				"updatedSuccess": "A {type} sikeresen hozzá lett adva."
 			},
-			"right": {
-				"title": "Engedély",
-				"read": "Csak olvasható",
-				"readWrite": "Olvasás és írás",
-				"admin": "Adminisztrátor"
-			},
 			"attributes": {
 				"link": "Hivatkozás",
 				"delete": "Törlés"

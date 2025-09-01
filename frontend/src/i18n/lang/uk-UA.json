@@ -307,12 +307,6 @@
 				"addedSuccess": "{type} додано.",
 				"updatedSuccess": "{type} додано."
 			},
-			"right": {
-				"title": "Дозволи",
-				"read": "Читати",
-				"readWrite": "Читати й записувати",
-				"admin": "Очільник"
-			},
 			"attributes": {
 				"link": "Посилання",
 				"delete": "Вилучити"

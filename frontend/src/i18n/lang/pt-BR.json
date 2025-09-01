@@ -280,12 +280,6 @@
 				"addedSuccess": "O {type} foi adicionado com sucesso.",
 				"updatedSuccess": "O {type} foi adicionado com sucesso."
 			},
-			"right": {
-				"title": "Permissão",
-				"read": "Somente leitura",
-				"readWrite": "Leitura e Escrita",
-				"admin": "Administrador"
-			},
 			"attributes": {
 				"link": "Link",
 				"delete": "Excluir"
