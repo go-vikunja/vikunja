@@ -143,13 +143,14 @@ var userListCmd = &cobra.Command{
 
 		if userFlagEmail != "" {
 			u, err := user.GetUserWithEmail(s, &user.User{Email: userFlagEmail})
-			if err != nil && !user.IsErrUserDoesNotExist(err) {
+			if err != nil {
+				if user.IsErrUserDoesNotExist(err) {
+					log.Fatalf("No user found with email %s", userFlagEmail)
+				}
 				log.Fatalf("Error getting user: %s", err)
 			}
 
-			if u != nil {
-				users = []*user.User{u}
-			}
+			users = []*user.User{u}
 		} else {
 			var err error
 			users, err = user.ListAllUsers(s)
