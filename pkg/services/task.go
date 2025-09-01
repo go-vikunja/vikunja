@@ -56,6 +56,11 @@ func InitTaskService() {
 	models.GetUsersOrLinkSharesFromIDsFunc = func(s *xorm.Session, ids []int64) (map[int64]*user.User, error) {
 		return NewTaskService(nil).getUsersOrLinkSharesFromIDs(s, ids)
 	}
+
+	models.TaskCreateFunc = func(s *xorm.Session, task *models.Task, u *user.User) error {
+		_, err := NewTaskService(s.Engine()).Create(s, task, u)
+		return err
+	}
 }
 
 // GetByID gets a single task by its ID, checking permissions.
@@ -704,4 +709,27 @@ func (ts *TaskService) toUser(share *models.LinkSharing) *user.User {
 
 func (ts *TaskService) getUserID(share *models.LinkSharing) int64 {
 	return share.ID * -1
+}
+
+// Create creates a new task with proper permission checking and business logic.
+// This method provides the service layer interface for task creation.
+func (ts *TaskService) Create(s *xorm.Session, task *models.Task, u *user.User) (*models.Task, error) {
+	// Permission check: Use ProjectService for proper inter-service communication
+	projectService := NewProjectService(ts.DB)
+	canWrite, err := projectService.HasPermission(s, task.ProjectID, u, models.PermissionWrite)
+	if err != nil {
+		return nil, fmt.Errorf("checking project write permission: %w", err)
+	}
+	if !canWrite {
+		return nil, ErrAccessDenied
+	}
+
+	// For now, use the existing model method
+	// Later, we'll move all the business logic into this service method
+	err = task.Create(s, u)
+	if err != nil {
+		return nil, err
+	}
+
+	return task, nil
 }

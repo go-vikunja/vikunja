@@ -31,10 +31,12 @@ import "code.vikunja.io/api/pkg/services"
 // 3. TaskService (depends on user service)
 // 4. ProjectService (depends on user service)
 // 5. KanbanService (depends on user and task services)
+// 6. ProjectDuplicateService (depends on project and task services)
 func Init() {
 	services.InitUserService()
 	services.InitSavedFilterService()
 	services.InitTaskService()
 	services.InitProjectService()
 	services.InitKanbanService()
+	services.InitProjectDuplicateService()
 }

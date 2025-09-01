@@ -53,6 +53,10 @@ const (
 var AddMoreInfoToTasksFunc func(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, view *ProjectView, expand []TaskCollectionExpandable) error
 var AddBucketsToTasksFunc func(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Task, a web.Auth) error
 
+// TaskCreateFunc is a function variable used to plug the service implementation into the models layer.
+// It allows the models layer to call the TaskService.Create method without introducing an import cycle.
+var TaskCreateFunc func(s *xorm.Session, task *Task, u *user.User) error
+
 // AddMoreInfoToTasks delegates to the service implementation via AddMoreInfoToTasksFunc.
 // @Deprecated: Use services.TaskService.AddDetailsToTasks instead. This remains for backward compatibility during the refactor.
 func AddMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, view *ProjectView, expand []TaskCollectionExpandable) (err error) {
