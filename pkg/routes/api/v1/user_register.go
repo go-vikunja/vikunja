@@ -23,6 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/services"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web/handler"
 
@@ -82,8 +83,9 @@ func RegisterUser(c echo.Context) error {
 		return handler.HandleHTTPError(err)
 	}
 
-	// Create their initial project
-	err = models.CreateNewProjectForUser(s, newUser)
+	// Create their initial project using the service layer
+	projectService := services.NewProjectService(s.Engine())
+	err = projectService.CreateInboxProjectForUser(s, newUser)
 	if err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err)

@@ -38,6 +38,10 @@ import (
 // to provide the implementation for project updates. This breaks the circular import.
 var ProjectUpdateFunc func(s *xorm.Session, project *Project, u *user.User) (*Project, error)
 
+// ProjectCreateFunc is a function variable that can be set by the services package
+// to provide the implementation for project creation. This breaks the circular import.
+var ProjectCreateFunc func(s *xorm.Session, project *Project, a web.Auth) (*Project, error)
+
 // SetArchiveStateForProjectDescendantsFunc is a function variable that can be set by the services package
 // to provide the implementation for cascading archive operations. This breaks the circular import.
 var SetArchiveStateForProjectDescendantsFunc func(s *xorm.Session, parentProjectID int64, shouldBeArchived bool) error
@@ -1006,6 +1010,18 @@ func updateProjectByTaskID(s *xorm.Session, taskID int64) (err error) {
 // @Deprecated: This creation logic has been moved to the service layer.
 // Use services.Project.Create instead of this model-level method.
 func (p *Project) Create(s *xorm.Session, a web.Auth) (err error) {
+	// Use dependency injection if service function is available
+	if ProjectCreateFunc != nil {
+		createdProject, err := ProjectCreateFunc(s, p, a)
+		if err != nil {
+			return err
+		}
+		// Copy the result back to this struct
+		*p = *createdProject
+		return nil
+	}
+
+	// Fallback to old logic if service function not available
 	err = CreateProject(s, p, a, true, true)
 	if err != nil {
 		return
@@ -1186,5 +1202,3 @@ func SetProjectBackground(s *xorm.Session, projectID int64, background *files.Fi
 		Update(l)
 	return
 }
-
-

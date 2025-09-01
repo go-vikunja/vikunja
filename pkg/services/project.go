@@ -34,14 +34,17 @@ import (
 	"xorm.io/xorm"
 )
 
-
 // InitProjectService sets up dependency injection for project-related model functions.
 // This function must be called during test initialization to ensure models can call services.
 func InitProjectService() {
 	// Set up dependency injection for models to use service layer functions
-	models.ProjectUpdateFunc = func(s *xorm.Session, project *models.Project, u *user.User) (*models.Project, error) {
+	models.ProjectCreateFunc = func(s *xorm.Session, project *models.Project, a web.Auth) (*models.Project, error) {
 		projectService := &ProjectService{DB: s.Engine()}
-		return projectService.Update(s, project, u)
+		u, err := user.GetFromAuth(a)
+		if err != nil {
+			return nil, err
+		}
+		return projectService.Create(s, project, u)
 	}
 	models.SetArchiveStateForProjectDescendantsFunc = SetArchiveStateForProjectDescendants
 	models.AddProjectDetailsFunc = func(s *xorm.Session, projects []*models.Project, a web.Auth) error {
@@ -568,7 +571,13 @@ func (p *ProjectService) Create(s *xorm.Session, project *models.Project, u *use
 		return nil, err
 	}
 
-	return fullProject, err
+	// Load full project details including owner, views, etc.
+	err = fullProject.ReadOne(s, u)
+	if err != nil {
+		return nil, err
+	}
+
+	return fullProject, nil
 }
 
 func (p *ProjectService) validate(s *xorm.Session, project *models.Project) (err error) {
@@ -1151,4 +1160,26 @@ func (p *ProjectService) AddDetails(s *xorm.Session, projects []*models.Project,
 	}
 
 	return
+}
+
+// CreateInboxProjectForUser creates a new inbox project for a user during registration.
+// This replaces the model-layer CreateNewProjectForUser function to follow service architecture.
+func (ps *ProjectService) CreateInboxProjectForUser(s *xorm.Session, u *user.User) error {
+	p := &models.Project{
+		Title: "Inbox",
+	}
+
+	createdProject, err := ps.Create(s, p, u)
+	if err != nil {
+		return err
+	}
+
+	// Set as default project if user doesn't have one
+	if u.DefaultProjectID != 0 {
+		return nil
+	}
+
+	u.DefaultProjectID = createdProject.ID
+	_, err = user.UpdateUser(s, u, false)
+	return err
 }
