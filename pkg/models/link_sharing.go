@@ -161,7 +161,7 @@ func (share *LinkSharing) Create(s *xorm.Session, a web.Auth) (err error) {
 			return LinkShareCreateFunc(s, share, u)
 		}
 	}
-	
+
 	// Fallback to original logic for backward compatibility
 	err = share.Permission.isValid()
 	if err != nil {
@@ -216,7 +216,7 @@ func (share *LinkSharing) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
 		*share = *foundShare
 		return nil
 	}
-	
+
 	// Fallback to original logic for backward compatibility
 	exists, err := s.Where("id = ?", share.ID).Get(share)
 	if err != nil {
@@ -330,7 +330,7 @@ func GetLinkShareByHash(s *xorm.Session, hash string) (share *LinkSharing, err e
 	if LinkShareGetByHashFunc != nil {
 		return LinkShareGetByHashFunc(s, hash)
 	}
-	
+
 	// Fallback to original logic for backward compatibility
 	share = &LinkSharing{}
 	has, err := s.Where("hash = ?", hash).Get(share)
@@ -360,7 +360,7 @@ func GetLinkShareByID(s *xorm.Session, id int64) (share *LinkSharing, err error)
 	if LinkShareGetByIDFunc != nil {
 		return LinkShareGetByIDFunc(s, id)
 	}
-	
+
 	// Fallback to original logic for backward compatibility
 	share = &LinkSharing{}
 	has, err := s.Where("id = ?", id).Get(share)

@@ -119,7 +119,7 @@ func (lss *LinkShareService) Create(s *xorm.Session, share *models.LinkSharing, 
 	// Clear password from response and set shared by user
 	share.Password = ""
 	share.SharedBy, _ = user.GetFromAuth(u)
-	
+
 	return nil
 }
 
@@ -133,7 +133,7 @@ func (lss *LinkShareService) GetByID(s *xorm.Session, id int64) (*models.LinkSha
 	if !exists {
 		return nil, &models.ErrProjectShareDoesNotExist{ID: id}
 	}
-	
+
 	// Always clear password from responses
 	share.Password = ""
 	return share, nil
