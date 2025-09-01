@@ -31,13 +31,15 @@ import (
 
 // KanbanService represents a service for managing kanban buckets and task-bucket relations.
 type KanbanService struct {
-	DB *xorm.Engine
+	DB               *xorm.Engine
+	LinkShareService *LinkShareService
 }
 
 // NewKanbanService creates a new KanbanService.
 func NewKanbanService(db *xorm.Engine) *KanbanService {
 	return &KanbanService{
-		DB: db,
+		DB:               db,
+		LinkShareService: NewLinkShareService(db),
 	}
 }
 
@@ -61,7 +63,7 @@ func (ks *KanbanService) CreateBucket(s *xorm.Session, bucket *models.Bucket, u 
 		if u.ID < 0 {
 			// For link shares, check permission directly
 			linkShareID := u.ID * -1 // Convert back to positive ID
-			linkShare, err := models.GetLinkShareByID(s, linkShareID)
+			linkShare, err := ks.LinkShareService.GetByID(s, linkShareID)
 			if err != nil {
 				return err
 			}
@@ -575,57 +577,7 @@ func (ks *KanbanService) updateTaskReminders(s *xorm.Session, task *models.Task)
 
 // getUsersOrLinkSharesFromIDs gets users or link shares from their IDs
 func (ks *KanbanService) getUsersOrLinkSharesFromIDs(s *xorm.Session, ids []int64) (users map[int64]*user.User, err error) {
-	if len(ids) == 0 {
-		return make(map[int64]*user.User), nil
-	}
-
-	users = make(map[int64]*user.User, len(ids))
-
-	// Get all users
-	userMap := make(map[int64]*user.User)
-	err = s.In("id", ids).Find(&userMap)
-	if err != nil {
-		return
-	}
-
-	// Get all link shares
-	linkShares := []*models.LinkSharing{}
-	err = s.In("id", ids).Find(&linkShares)
-	if err != nil {
-		return
-	}
-
-	// Convert link shares to users
-	for _, share := range linkShares {
-		users[share.ID] = ks.toUser(share)
-	}
-
-	// Add regular users
-	for id, u := range userMap {
-		users[id] = u
-	}
-
-	return
-}
-
-// toUser converts a link sharing to a user representation
-func (ks *KanbanService) toUser(share *models.LinkSharing) *user.User {
-	name := share.Name
-	if name == "" {
-		name = "Shared via link"
-	}
-
-	return &user.User{
-		ID:       ks.getUserID(share),
-		Name:     name,
-		Username: name,
-	}
-}
-
-// getUserID gets a unique user ID for a link share
-func (ks *KanbanService) getUserID(share *models.LinkSharing) int64 {
-	// Use negative IDs for link shares to avoid conflicts with real user IDs
-	return -share.ID
+	return ks.LinkShareService.GetUsersOrLinkSharesFromIDs(s, ids)
 }
 
 // getUserOrLinkShareUser converts a web.Auth to a *user.User, handling both regular users and link shares

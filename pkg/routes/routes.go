@@ -372,16 +372,8 @@ func registerAPIRoutes(a *echo.Group) {
 	a.GET("/projects/:project/projectusers", apiv1.ListUsersForProject)
 
 	if config.ServiceEnableLinkSharing.GetBool() {
-		projectSharingHandler := &handler.WebHandler{
-			EmptyStruct: func() handler.CObject {
-				return &models.LinkSharing{}
-			},
-		}
-		a.GET("/projects/:project/shares", projectSharingHandler.ReadAllWeb)
-		a.GET("/projects/:project/shares/:share", projectSharingHandler.ReadOneWeb)
-		a.PUT("/projects/:project/shares/:share", projectSharingHandler.UpdateWeb)
-		a.DELETE("/projects/:project/shares/:share", projectSharingHandler.DeleteWeb)
-		a.PUT("/projects/:project/shares", projectSharingHandler.CreateWeb)
+		// Link share routes - using new service-based handler
+		apiv1.RegisterLinkShares(a)
 	}
 
 	taskCollectionHandler := &handler.WebHandler{

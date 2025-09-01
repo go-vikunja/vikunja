@@ -42,6 +42,13 @@ const (
 	SharingTypeWithPassword
 )
 
+// These function variables are injected by services for dependency inversion
+var LinkShareCreateFunc func(s *xorm.Session, share *LinkSharing, u *user.User) error
+var LinkShareUpdateFunc func(s *xorm.Session, share *LinkSharing, u *user.User) error
+var LinkShareDeleteFunc func(s *xorm.Session, shareID int64, u *user.User) error
+var LinkShareGetByIDFunc func(s *xorm.Session, id int64) (*LinkSharing, error)
+var LinkShareGetByHashFunc func(s *xorm.Session, hash string) (*LinkSharing, error)
+
 // LinkSharing represents a shared project
 type LinkSharing struct {
 	// The ID of the shared thing
@@ -147,8 +154,15 @@ func (share *LinkSharing) toUser() *user.User {
 // @Failure 404 {object} web.HTTPError "The project does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/shares [put]
+// @Deprecated: Use services.LinkShareService.Create instead.
 func (share *LinkSharing) Create(s *xorm.Session, a web.Auth) (err error) {
-
+	if LinkShareCreateFunc != nil {
+		if u, userErr := user.GetFromAuth(a); userErr == nil {
+			return LinkShareCreateFunc(s, share, u)
+		}
+	}
+	
+	// Fallback to original logic for backward compatibility
 	err = share.Permission.isValid()
 	if err != nil {
 		return
@@ -192,7 +206,18 @@ func (share *LinkSharing) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "Share Link not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/shares/{share} [get]
+// @Deprecated: Use services.LinkShareService.GetByID instead.
 func (share *LinkSharing) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
+	if LinkShareGetByIDFunc != nil {
+		foundShare, err := LinkShareGetByIDFunc(s, share.ID)
+		if err != nil {
+			return err
+		}
+		*share = *foundShare
+		return nil
+	}
+	
+	// Fallback to original logic for backward compatibility
 	exists, err := s.Where("id = ?", share.ID).Get(share)
 	if err != nil {
 		return err
@@ -300,7 +325,13 @@ func (share *LinkSharing) Delete(s *xorm.Session, _ web.Auth) (err error) {
 }
 
 // GetLinkShareByHash returns a link share by hash
+// @Deprecated: Use services.LinkShareService.GetByHash instead.
 func GetLinkShareByHash(s *xorm.Session, hash string) (share *LinkSharing, err error) {
+	if LinkShareGetByHashFunc != nil {
+		return LinkShareGetByHashFunc(s, hash)
+	}
+	
+	// Fallback to original logic for backward compatibility
 	share = &LinkSharing{}
 	has, err := s.Where("hash = ?", hash).Get(share)
 	if err != nil {
@@ -324,7 +355,13 @@ func GetProjectByShareHash(s *xorm.Session, hash string) (project *Project, err 
 }
 
 // GetLinkShareByID returns a link share by its id.
+// @Deprecated: Use services.LinkShareService.GetByID instead.
 func GetLinkShareByID(s *xorm.Session, id int64) (share *LinkSharing, err error) {
+	if LinkShareGetByIDFunc != nil {
+		return LinkShareGetByIDFunc(s, id)
+	}
+	
+	// Fallback to original logic for backward compatibility
 	share = &LinkSharing{}
 	has, err := s.Where("id = ?", id).Get(share)
 	if err != nil {
@@ -344,6 +381,7 @@ func GetLinkSharesByIDs(s *xorm.Session, ids []int64) (shares map[int64]*LinkSha
 }
 
 // VerifyLinkSharePassword checks if a password of a link share matches a provided one.
+// @Deprecated: Use services.LinkShareService.VerifyPassword instead.
 func VerifyLinkSharePassword(share *LinkSharing, password string) (err error) {
 	if password == "" {
 		return &ErrLinkSharePasswordRequired{ShareID: share.ID}
