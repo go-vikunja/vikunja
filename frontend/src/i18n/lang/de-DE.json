@@ -93,6 +93,7 @@
 				"discoverableByEmail": "Erlaube anderen Benutzer:innen, mich als Mitglied zu Teams oder Projekten hinzuzufügen, wenn sie nach meiner vollständigen E-Mail Adresse suchen",
 				"playSoundWhenDone": "Einen Ton abspielen, wenn Aufgaben als erledigt markiert werden",
 				"allowIconChanges": "Zu bestimmten Zeiten spezielle Logos anzeigen",
+				"defaultTaskRelationType": "Standard-Aufgabenbeziehungstyp",
 				"weekStart": "Woche beginnt am",
 				"weekStartSunday": "Sonntag",
 				"weekStartMonday": "Montag",
@@ -335,6 +336,12 @@
 				"removeSuccess": "{sharable} wurde erfolgreich von {type} entfernt.",
 				"addedSuccess": "{type} wurde erfolgreich hinzugefügt.",
 				"updatedSuccess": "{type} wurde erfolgreich hinzugefügt."
+			},
+			"permission": {
+				"title": "Berechtigung",
+				"read": "Nur Leserechte",
+				"readWrite": "Lesen & Schreiben",
+				"admin": "Admin"
 			},
 			"attributes": {
 				"link": "Link",
