@@ -34,6 +34,7 @@ import (
 var LabelRoutes = []APIRoute{
 	{Method: "GET", Path: "/labels", Handler: handler.WithDBAndUser(getAllLabelsLogic, false), PermissionScope: "read_all"},
 	{Method: "POST", Path: "/labels", Handler: handler.WithDBAndUser(createLabelLogic, true), PermissionScope: "create"},
+	{Method: "PUT", Path: "/labels", Handler: handler.WithDBAndUser(createLabelLogic, true), PermissionScope: "create"}, // Frontend compatibility: PUT for creation
 	{Method: "GET", Path: "/labels/:id", Handler: handler.WithDBAndUser(getLabelLogic, false), PermissionScope: "read_one"},
 	{Method: "PUT", Path: "/labels/:id", Handler: handler.WithDBAndUser(updateLabelLogic, true), PermissionScope: "update"},
 	{Method: "DELETE", Path: "/labels/:id", Handler: handler.WithDBAndUser(deleteLabelLogic, true), PermissionScope: "delete"},
