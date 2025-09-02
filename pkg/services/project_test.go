@@ -96,15 +96,15 @@ func TestProject_GetAllForUser(t *testing.T) {
 		projects, count, total, err := p.GetAllForUser(s, &user.User{ID: 1}, "", 1, 10, false)
 		assert.NoError(t, err)
 		assert.Equal(t, 10, count)
-		assert.Equal(t, int64(28), total)
-		assert.Len(t, projects, 12)
+		assert.Equal(t, int64(29), total) // Updated to account for the new saved filter fixture
+		assert.Len(t, projects, 13)       // Updated to account for the new saved filter fixture
 	})
 
 	t.Run("should get all projects for a user with pagination", func(t *testing.T) {
 		projects, count, total, err := p.GetAllForUser(s, &user.User{ID: 1}, "", 2, 10, false)
 		assert.NoError(t, err)
 		assert.Equal(t, 10, count)
-		assert.Equal(t, int64(28), total)
+		assert.Equal(t, int64(29), total) // Updated to account for the new saved filter fixture
 		assert.Len(t, projects, 10)
 	})
 

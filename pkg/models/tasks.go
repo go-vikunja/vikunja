@@ -215,6 +215,27 @@ type taskSearchOptions struct {
 	projectViewID      int64
 }
 
+// TaskSearchOptions is an exported alias for taskSearchOptions for service layer use
+type TaskSearchOptions = taskSearchOptions
+
+// NewTaskSearchOptions creates a new TaskSearchOptions instance for service layer use
+func NewTaskSearchOptions(search string, page int, perPage int, sortby []*sortParam, parsedFilters []*taskFilter, filterIncludeNulls bool, filter string, filterTimezone string, isSavedFilter bool, projectIDs []int64, expand []TaskCollectionExpandable, projectViewID int64) *TaskSearchOptions {
+	return &TaskSearchOptions{
+		search:             search,
+		page:               page,
+		perPage:            perPage,
+		sortby:             sortby,
+		parsedFilters:      parsedFilters,
+		filterIncludeNulls: filterIncludeNulls,
+		filter:             filter,
+		filterTimezone:     filterTimezone,
+		isSavedFilter:      isSavedFilter,
+		projectIDs:         projectIDs,
+		expand:             expand,
+		projectViewID:      projectViewID,
+	}
+}
+
 // ReadAll is a dummy function to still have that endpoint documented.
 // @Deprecated: Use services.TaskService.GetAllByProject instead.
 // @Summary Get tasks
@@ -286,6 +307,12 @@ func getTaskIndexFromSearchString(s string) (index int64) {
 	stringIndex := strings.ReplaceAll(in, "#", "")
 	index, _ = strconv.ParseInt(stringIndex, 10, 64)
 	return
+}
+
+// GetRawTasksForProjectsForService exposes getRawTasksForProjects for service layer use
+// This is a temporary bridge function during the refactoring process
+func GetRawTasksForProjectsForService(s *xorm.Session, projects []*Project, a web.Auth, opts *taskSearchOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {
+	return getRawTasksForProjects(s, projects, a, opts)
 }
 
 func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts *taskSearchOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {

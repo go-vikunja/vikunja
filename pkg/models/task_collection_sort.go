@@ -19,11 +19,11 @@ package models
 type (
 	sortParam struct {
 		sortBy        string
-		orderBy       sortOrder // asc or desc
+		orderBy       SortOrder // asc or desc
 		projectViewID int64
 	}
 
-	sortOrder string
+	SortOrder string
 )
 
 const (
@@ -54,16 +54,16 @@ const (
 )
 
 const (
-	orderInvalid    sortOrder = "invalid"
-	orderAscending  sortOrder = "asc"
-	orderDescending sortOrder = "desc"
+	orderInvalid    SortOrder = "invalid"
+	orderAscending  SortOrder = "asc"
+	orderDescending SortOrder = "desc"
 )
 
-func (o sortOrder) String() string {
+func (o SortOrder) String() string {
 	return string(o)
 }
 
-func getSortOrderFromString(s string) sortOrder {
+func getSortOrderFromString(s string) SortOrder {
 	if s == "asc" {
 		return orderAscending
 	}

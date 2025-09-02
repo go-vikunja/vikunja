@@ -394,12 +394,12 @@ func TestProject_ReadAll(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, reflect.Slice, reflect.TypeOf(projects3).Kind())
 		ls := projects3.([]*Project)
-		assert.Len(t, ls, 28)
+		assert.Len(t, ls, 29)               // Updated for additional saved filter fixture
 		assert.Equal(t, int64(3), ls[0].ID) // Project 3 has a position of 1 and should be sorted first
 		assert.Equal(t, int64(1), ls[1].ID)
 		assert.Equal(t, int64(6), ls[2].ID)
-		assert.Equal(t, int64(-1), ls[26].ID)
-		assert.Equal(t, int64(-2), ls[27].ID)
+		assert.Equal(t, int64(-2), ls[27].ID) // Saved filter 1 -> project -2
+		assert.Equal(t, int64(-3), ls[28].ID) // Saved filter 2 -> project -3
 		_ = s.Close()
 	})
 	t.Run("projects for nonexistent user", func(t *testing.T) {
@@ -435,7 +435,7 @@ func TestProject_ReadAll(t *testing.T) {
 
 		require.NoError(t, err)
 		ls := projects3.([]*Project)
-		require.Len(t, ls, 2)
+		require.Len(t, ls, 3) // Updated for additional saved filter fixture
 		assert.Equal(t, int64(-1), ls[0].ID)
 		assert.Equal(t, int64(-2), ls[1].ID)
 		_ = s.Close()

@@ -817,7 +817,7 @@ func (err ErrInvalidSortParam) HTTPError() web.HTTPError {
 
 // ErrInvalidSortOrder represents an error where the provided sort order is invalid
 type ErrInvalidSortOrder struct {
-	OrderBy sortOrder
+	OrderBy SortOrder
 }
 
 // IsErrInvalidSortOrder checks if an error is ErrInvalidSortOrder.

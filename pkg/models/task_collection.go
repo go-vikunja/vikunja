@@ -27,6 +27,10 @@ import (
 	"xorm.io/xorm"
 )
 
+// Dependency injection for service layer functions
+// Following the pattern established in the refactoring guide
+var TaskCollectionReadAllFunc func(s *xorm.Session, tf *TaskCollection, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error)
+
 // TaskCollection is a struct used to hold filter details and not clutter the Task struct with information not related to actual tasks.
 type TaskCollection struct {
 	ProjectID     int64 `param:"project" json:"-"`
@@ -260,6 +264,17 @@ func (tf *TaskCollection) ReadAllTasks(s *xorm.Session, a web.Auth, search strin
 }
 
 func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
+	// @Deprecated: This method now delegates to services.TaskService.GetAllWithFullFiltering
+	// All business logic has been moved to the service layer following the refactoring guide
+
+	// For now, use dependency injection to call the service
+	if TaskCollectionReadAllFunc != nil {
+		return TaskCollectionReadAllFunc(s, tf, a, search, page, perPage)
+	}
+
+	// Fallback to original implementation if function not injected
+	// This ensures compatibility during the transition
+
 	// If the project id is < -1 this means we're dealing with a saved filter - in that case we get and populate the filter
 	// -1 is the favorites project which works as intended
 	if !tf.isSavedFilter && tf.ProjectID < -1 {
@@ -405,4 +420,122 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 	}
 
 	return getTaskOrTasksInBuckets(s, a, projects, view, opts, filteringForBucket)
+}
+
+// CallGetTaskOrTasksInBuckets exposes getTaskOrTasksInBuckets for service layer use during refactoring
+// This is a temporary bridge function during the refactoring process
+func CallGetTaskOrTasksInBuckets(s *xorm.Session, a web.Auth, projects []*Project, view *ProjectView, tf *TaskCollection, filteringForBucket bool) (result interface{}, resultCount int, totalItems int64, err error) {
+	// Convert TaskCollection to taskSearchOptions with all the necessary fields populated
+	opts, err := getTaskFilterOptsFromCollection(tf, view)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	// Set additional options that are passed from the service layer
+	opts.expand = tf.Expand
+	opts.isSavedFilter = tf.isSavedFilter
+
+	// Also need to properly set search, page, and perPage from the tf if they have them
+	// These would be set when the service layer calls this function
+	if tf.Search != "" {
+		opts.search = tf.Search
+	}
+
+	return getTaskOrTasksInBuckets(s, a, projects, view, opts, filteringForBucket)
+}
+
+// CallGetTaskOrTasksInBucketsWithPagination exposes getTaskOrTasksInBuckets with explicit pagination params
+func CallGetTaskOrTasksInBucketsWithPagination(s *xorm.Session, a web.Auth, projects []*Project, view *ProjectView, tf *TaskCollection, filteringForBucket bool, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
+	// Convert TaskCollection to taskSearchOptions with all the necessary fields populated
+	opts, err := getTaskFilterOptsFromCollection(tf, view)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	// Set pagination and search parameters explicitly
+	opts.search = search
+	opts.page = page
+	opts.perPage = perPage
+	opts.expand = tf.Expand
+	opts.isSavedFilter = tf.isSavedFilter
+
+	return getTaskOrTasksInBuckets(s, a, projects, view, opts, filteringForBucket)
+}
+
+// CallGetRawTasksForProjects exposes getRawTasksForProjects for service layer use
+func CallGetRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, search string, page int, perPage int, sortby []string, orderby []string, filterIncludeNulls bool, filter string, filterTimezone string, expand []TaskCollectionExpandable) (tasks []*Task, resultCount int, totalItems int64, err error) {
+	// Create a temporary TaskCollection to use existing conversion logic
+	tf := &TaskCollection{
+		Search:             search,
+		SortBy:             sortby,
+		OrderBy:            orderby,
+		FilterIncludeNulls: filterIncludeNulls,
+		Filter:             filter,
+		FilterTimezone:     filterTimezone,
+		Expand:             expand,
+	}
+
+	// Convert to taskSearchOptions
+	opts, err := getTaskFilterOptsFromCollection(tf, nil)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	// Set pagination and search parameters explicitly
+	opts.search = search
+	opts.page = page
+	opts.perPage = perPage
+	opts.expand = expand
+
+	// Call getRawTasksForProjects directly - this doesn't add extra info
+	return getRawTasksForProjects(s, projects, a, opts)
+}
+
+// CallGetTasksForProjects exposes getTasksForProjects with details for service layer use
+func CallGetTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, search string, page int, perPage int, sortby []string, orderby []string, filterIncludeNulls bool, filter string, filterTimezone string, expand []TaskCollectionExpandable) (tasks []*Task, resultCount int, totalItems int64, err error) {
+	return CallGetTasksForProjectsWithViewID(s, projects, a, search, page, perPage, sortby, orderby, filterIncludeNulls, filter, filterTimezone, expand, 0)
+}
+
+// CallGetTasksForProjectsWithViewID exposes getTasksForProjects with view ID support for service layer use
+func CallGetTasksForProjectsWithViewID(s *xorm.Session, projects []*Project, a web.Auth, search string, page int, perPage int, sortby []string, orderby []string, filterIncludeNulls bool, filter string, filterTimezone string, expand []TaskCollectionExpandable, projectViewID int64) (tasks []*Task, resultCount int, totalItems int64, err error) {
+	// Create a temporary TaskCollection to use existing conversion logic
+	tf := &TaskCollection{
+		Search:             search,
+		SortBy:             sortby,
+		OrderBy:            orderby,
+		FilterIncludeNulls: filterIncludeNulls,
+		Filter:             filter,
+		FilterTimezone:     filterTimezone,
+		Expand:             expand,
+		ProjectViewID:      projectViewID,
+	}
+
+	// Load project view if provided
+	var view *ProjectView
+	if projectViewID != 0 {
+		// For bridge function, we may not have a specific project, so we'll try to load the view directly
+		view = &ProjectView{ID: projectViewID}
+		exists, err := s.Get(view)
+		if err != nil {
+			return nil, 0, 0, err
+		}
+		if !exists {
+			view = nil
+		}
+	}
+
+	// Convert to taskSearchOptions
+	opts, err := getTaskFilterOptsFromCollection(tf, view)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	// Set pagination and search parameters explicitly
+	opts.search = search
+	opts.page = page
+	opts.perPage = perPage
+	opts.expand = expand
+
+	// Call getTasksForProjects which includes additional details
+	return getTasksForProjects(s, projects, a, opts, view)
 }

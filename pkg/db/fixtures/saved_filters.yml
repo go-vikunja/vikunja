@@ -4,3 +4,9 @@
   owner_id: 1
   updated: 2020-09-08 15:13:12
   created: 2020-09-08 14:13:12
+- id: 2
+  filters: '{"sort_by":null,"order_by":null,"filter":"project_id = 1","filter_include_nulls":false}'
+  title: testfilter2
+  owner_id: 1
+  updated: 2020-09-08 15:13:12
+  created: 2020-09-08 14:13:12
