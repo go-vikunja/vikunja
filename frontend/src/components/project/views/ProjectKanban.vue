@@ -47,6 +47,7 @@
 										v-if="bucket.id !== 0 && view?.doneBucketId === bucket.id"
 										v-tooltip="$t('project.kanban.doneBucketHint')"
 										class="icon is-small has-text-success mie-2"
+										@click.stop="() => collapseBucket(bucket)"
 									>
 										<Icon icon="check-double" />
 									</span>
@@ -928,6 +929,10 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		justify-content: space-between;
 		padding: .5rem;
 		block-size: $bucket-header-height;
+
+		.icon.has-text-success {
+			cursor: pointer;
+		}
 
 		.limit {
 			padding: 0 .5rem;
