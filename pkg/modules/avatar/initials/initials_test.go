@@ -61,10 +61,10 @@ func TestGetAvatar(t *testing.T) {
 
 		// The function should handle the type assertion failure gracefully
 		// and regenerate the avatar successfully
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotNil(t, avatar)
 		assert.Equal(t, "image/png", mimeType)
-		assert.True(t, len(avatar) > 0, "Avatar should contain image data")
+		assert.Positive(t, len(avatar), "Avatar should contain image data")
 	})
 
 	t.Run("handles valid cached type", func(t *testing.T) {
@@ -106,10 +106,10 @@ func TestGetAvatar(t *testing.T) {
 		}
 
 		avatar1, mimeType1, err1 := provider.GetAvatar(testUser1, 128)
-		assert.NoError(t, err1)
+		require.NoError(t, err1)
 		assert.NotNil(t, avatar1)
 		assert.Equal(t, "image/png", mimeType1)
-		assert.True(t, len(avatar1) > 0)
+		assert.Positive(t, len(avatar1))
 
 		// Test with username when name is empty
 		testUser2 := &user.User{
@@ -119,10 +119,10 @@ func TestGetAvatar(t *testing.T) {
 		}
 
 		avatar2, mimeType2, err2 := provider.GetAvatar(testUser2, 128)
-		assert.NoError(t, err2)
+		require.NoError(t, err2)
 		assert.NotNil(t, avatar2)
 		assert.Equal(t, "image/png", mimeType2)
-		assert.True(t, len(avatar2) > 0)
+		assert.Positive(t, len(avatar2))
 	})
 }
 
@@ -149,7 +149,7 @@ func TestGetAvatarForUser(t *testing.T) {
 
 		// The function should handle the type assertion failure gracefully
 		// and generate a new avatar successfully
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotNil(t, fullAvatar)
 		assert.IsType(t, &image.RGBA64{}, fullAvatar)
 	})
@@ -172,7 +172,7 @@ func TestGetAvatarForUser(t *testing.T) {
 		fullAvatar, err := getAvatarForUser(testUser)
 
 		// Should return the cached image successfully
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotNil(t, fullAvatar)
 		assert.IsType(t, &image.RGBA64{}, fullAvatar)
 	})
