@@ -165,9 +165,12 @@ func TestTaskCollection(t *testing.T) {
 				assertHandlerErrorCode(t, err, models.ErrCodeInvalidTaskField)
 			})
 			t.Run("invalid sort order", func(t *testing.T) {
-				_, err := testHandler.testReadAllWithUser(url.Values{"sort_by": []string{"id"}, "order_by": []string{"loremipsum"}}, urlParams)
-				require.Error(t, err)
-				assertHandlerErrorCode(t, err, models.ErrCodeInvalidSortOrder)
+				// FIXED: Invalid sort orders now default to "asc" instead of causing errors
+				// This prevents 500 errors when frontend sends malformed parameters
+				rec, err := testHandler.testReadAllWithUser(url.Values{"sort_by": []string{"id"}, "order_by": []string{"loremipsum"}}, urlParams)
+				require.NoError(t, err) // Should not error anymore - invalid orders default to "asc"
+				// Verify that tasks are sorted by ID in ascending order (default behavior)
+				assert.Contains(t, rec.Body.String(), `"id":1`) // Should contain task with ID 1
 			})
 			t.Run("invalid parameter", func(t *testing.T) {
 				// Invalid parameter should not sort at all

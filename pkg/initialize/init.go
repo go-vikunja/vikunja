@@ -35,6 +35,7 @@ import (
 	migrationHandler "code.vikunja.io/api/pkg/modules/migration/handler"
 	"code.vikunja.io/api/pkg/plugins"
 	"code.vikunja.io/api/pkg/red"
+	"code.vikunja.io/api/pkg/services"
 	"code.vikunja.io/api/pkg/user"
 )
 
@@ -87,6 +88,9 @@ func FullInitWithoutAsync() {
 
 	// Set Engine
 	InitEngines()
+
+	// Initialize service layer dependency injection
+	services.InitTaskService()
 
 	// Init Typesense
 	models.InitTypesense()

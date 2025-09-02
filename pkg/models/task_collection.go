@@ -104,13 +104,27 @@ func validateTaskField(fieldName string) error {
 }
 
 func getTaskFilterOptsFromCollection(tf *TaskCollection, projectView *ProjectView) (opts *taskSearchOptions, err error) {
+	// Fix for critical bug: Prevent duplicate array merging
+	// When Echo binds query parameters like sort_by[]=value, it populates both SortBy and SortByArr
+	// with the same values. We need to avoid duplicating them.
+
+	// Use SortByArr if it has values, otherwise use SortBy (don't merge both)
+	var finalSortBy []string
+	var finalOrderBy []string
+
 	if len(tf.SortByArr) > 0 {
-		tf.SortBy = append(tf.SortBy, tf.SortByArr...)
+		// Use the array version (sort_by[]) - this is what the frontend sends
+		finalSortBy = tf.SortByArr
+		finalOrderBy = tf.OrderByArr
+	} else if len(tf.SortBy) > 0 {
+		// Use the non-array version as fallback for backward compatibility
+		finalSortBy = tf.SortBy
+		finalOrderBy = tf.OrderBy
 	}
 
-	if len(tf.OrderByArr) > 0 {
-		tf.OrderBy = append(tf.OrderBy, tf.OrderByArr...)
-	}
+	// Update the TaskCollection with the final values to avoid confusion
+	tf.SortBy = finalSortBy
+	tf.OrderBy = finalOrderBy
 
 	var sort = make([]*sortParam, 0, len(tf.SortBy))
 	for i, s := range tf.SortBy {

@@ -172,11 +172,10 @@ func getSortOrderFromString(s string) sortOrder {
 		return orderAscending
 	case "desc", "descending":
 		return orderDescending
-	case "": // Only handle empty/missing case gracefully
-		return orderAscending
 	default:
-		// For invalid values, return them as-is so validation can catch them
-		return sortOrder(normalized)
+		// For invalid or empty values, default to ascending for better UX
+		// This prevents 500 errors when frontend sends malformed parameters
+		return orderAscending
 	}
 }
 
