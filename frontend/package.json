@@ -51,9 +51,9 @@
   },
   "dependencies": {
     "@floating-ui/dom": "1.7.4",
-    "@fortawesome/fontawesome-svg-core": "7.0.0",
-    "@fortawesome/free-regular-svg-icons": "7.0.0",
-    "@fortawesome/free-solid-svg-icons": "7.0.0",
+    "@fortawesome/fontawesome-svg-core": "7.0.1",
+    "@fortawesome/free-regular-svg-icons": "7.0.1",
+    "@fortawesome/free-solid-svg-icons": "7.0.1",
     "@fortawesome/vue-fontawesome": "3.1.1",
     "@github/hotkey": "3.1.1",
     "@intlify/unplugin-vue-i18n": "6.0.8",
