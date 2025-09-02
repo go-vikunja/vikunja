@@ -52,6 +52,15 @@ type CachedAvatar struct {
 
 // GetAvatar returns an uploaded user avatar
 func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType string, err error) {
+	return p.getAvatarWithDepth(u, size, 0)
+}
+
+func (p *Provider) getAvatarWithDepth(u *user.User, size int64, recursionDepth int) (avatar []byte, mimeType string, err error) {
+	// Prevent infinite recursion - max 3 attempts
+	if recursionDepth >= 3 {
+		return nil, "", fmt.Errorf("maximum recursion depth reached while generating avatar for user %d, size %d", u.ID, size)
+	}
+
 	cacheKey := CacheKeyPrefix + strconv.Itoa(int(u.ID)) + "_" + strconv.FormatInt(size, 10)
 
 	result, err := keyvalue.Remember(cacheKey, func() (any, error) {
@@ -103,14 +112,14 @@ func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType 
 	if !ok {
 		// Log the type mismatch with the actual stored value for debugging
 		log.Errorf("Invalid cached avatar type for user %d, size %d. Expected CachedAvatar, got %T with value: %+v. Clearing cache and regenerating.", u.ID, size, result, result)
-		
+
 		// Clear the invalid cache entry
 		if err := keyvalue.Del(cacheKey); err != nil {
 			log.Errorf("Failed to clear invalid cache entry for key %s: %v", cacheKey, err)
 		}
-		
+
 		// Regenerate the avatar by calling the function again (without the corrupted cache)
-		return p.GetAvatar(u, size)
+		return p.getAvatarWithDepth(u, size, recursionDepth+1)
 	}
 
 	return cachedAvatar.Content, cachedAvatar.MimeType, nil
