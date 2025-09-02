@@ -59,7 +59,7 @@ func TestGetAvatar(t *testing.T) {
 
 		// The function should handle the type assertion failure gracefully
 		// and attempt to regenerate the avatar (which will fail due to no file)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Nil(t, avatar)
 		assert.Empty(t, mimeType)
 	})
@@ -86,7 +86,7 @@ func TestGetAvatar(t *testing.T) {
 		avatar, mimeType, err := provider.GetAvatar(testUser, 32)
 
 		// Should return the cached data successfully
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, []byte("fake_image_data"), avatar)
 		assert.Equal(t, "image/png", mimeType)
 	})

@@ -64,7 +64,7 @@ func TestGetAvatar(t *testing.T) {
 		require.NoError(t, err)
 		assert.NotNil(t, avatar)
 		assert.Equal(t, "image/png", mimeType)
-		assert.Positive(t, len(avatar), "Avatar should contain image data")
+		assert.NotEmpty(t, avatar, "Avatar should contain image data")
 	})
 
 	t.Run("handles valid cached type", func(t *testing.T) {
@@ -90,7 +90,7 @@ func TestGetAvatar(t *testing.T) {
 		avatar, mimeType, err := provider.GetAvatar(testUser, 32)
 
 		// Should return the cached data successfully
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, []byte("fake_image_data"), avatar)
 		assert.Equal(t, "image/png", mimeType)
 	})
@@ -109,7 +109,7 @@ func TestGetAvatar(t *testing.T) {
 		require.NoError(t, err1)
 		assert.NotNil(t, avatar1)
 		assert.Equal(t, "image/png", mimeType1)
-		assert.Positive(t, len(avatar1))
+		assert.NotEmpty(t, avatar1)
 
 		// Test with username when name is empty
 		testUser2 := &user.User{
@@ -122,7 +122,7 @@ func TestGetAvatar(t *testing.T) {
 		require.NoError(t, err2)
 		assert.NotNil(t, avatar2)
 		assert.Equal(t, "image/png", mimeType2)
-		assert.Positive(t, len(avatar2))
+		assert.NotEmpty(t, avatar2)
 	})
 }
 
