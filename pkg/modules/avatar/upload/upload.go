@@ -18,6 +18,7 @@ package upload
 
 import (
 	"bytes"
+	"fmt"
 	"image"
 	"image/png"
 	"io"
@@ -51,10 +52,24 @@ type CachedAvatar struct {
 
 // GetAvatar returns an uploaded user avatar
 func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType string, err error) {
+	return p.getAvatarWithDepth(u, size, 0)
+}
+
+func (p *Provider) getAvatarWithDepth(u *user.User, size int64, recursionDepth int) (avatar []byte, mimeType string, err error) {
+	// Prevent infinite recursion - max 3 attempts
+	if recursionDepth >= 3 {
+		return nil, "", fmt.Errorf("maximum recursion depth reached while generating avatar for user %d, size %d", u.ID, size)
+	}
+
 	cacheKey := CacheKeyPrefix + strconv.Itoa(int(u.ID)) + "_" + strconv.FormatInt(size, 10)
 
 	result, err := keyvalue.Remember(cacheKey, func() (any, error) {
 		log.Debugf("Uploaded avatar for user %d and size %d not cached, resizing and caching.", u.ID, size)
+
+		// Check if user has an avatar file ID
+		if u.AvatarFileID == 0 {
+			return nil, fmt.Errorf("user %d has no avatar file", u.ID)
+		}
 
 		// If we get this far, the avatar is either not cached at all or not in this size
 		f := &files.File{ID: u.AvatarFileID}
@@ -92,7 +107,20 @@ func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType 
 		return nil, "", err
 	}
 
-	cachedAvatar := result.(CachedAvatar)
+	// Safe type assertion to handle cases where cached data might be corrupted or in legacy format
+	cachedAvatar, ok := result.(CachedAvatar)
+	if !ok {
+		// Log the type mismatch with the actual stored value for debugging
+		log.Errorf("Invalid cached avatar type for user %d, size %d. Expected CachedAvatar, got %T with value: %+v. Clearing cache and regenerating.", u.ID, size, result, result)
+
+		// Clear the invalid cache entry
+		if err := keyvalue.Del(cacheKey); err != nil {
+			log.Errorf("Failed to clear invalid cache entry for key %s: %v", cacheKey, err)
+		}
+
+		// Regenerate the avatar by calling the function again (without the corrupted cache)
+		return p.getAvatarWithDepth(u, size, recursionDepth+1)
+	}
 
 	return cachedAvatar.Content, cachedAvatar.MimeType, nil
 }
