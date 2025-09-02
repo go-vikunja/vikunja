@@ -444,16 +444,7 @@ func registerAPIRoutes(a *echo.Group) {
 	}
 
 	if config.ServiceEnableTaskComments.GetBool() {
-		taskCommentHandler := &handler.WebHandler{
-			EmptyStruct: func() handler.CObject {
-				return &models.TaskComment{}
-			},
-		}
-		a.GET("/tasks/:task/comments", taskCommentHandler.ReadAllWeb)
-		a.PUT("/tasks/:task/comments", taskCommentHandler.CreateWeb)
-		a.DELETE("/tasks/:task/comments/:commentid", taskCommentHandler.DeleteWeb)
-		a.POST("/tasks/:task/comments/:commentid", taskCommentHandler.UpdateWeb)
-		a.GET("/tasks/:task/comments/:commentid", taskCommentHandler.ReadOneWeb)
+		apiv1.RegisterComments(a)
 	}
 
 	projectTeamHandler := &handler.WebHandler{

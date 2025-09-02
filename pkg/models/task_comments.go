@@ -50,6 +50,21 @@ func (tc *TaskComment) TableName() string {
 	return "task_comments"
 }
 
+// Function variables for dependency inversion to break models -> services import cycle
+// These are wired to service implementations via dependency injection.
+
+// TaskCommentCreateFunc is the function variable for creating comments
+var TaskCommentCreateFunc func(s *xorm.Session, comment *TaskComment, u *user.User) error
+
+// TaskCommentUpdateFunc is the function variable for updating comments
+var TaskCommentUpdateFunc func(s *xorm.Session, comment *TaskComment, u *user.User) error
+
+// TaskCommentDeleteFunc is the function variable for deleting comments
+var TaskCommentDeleteFunc func(s *xorm.Session, commentID int64, u *user.User) error
+
+// TaskCommentReadAllFunc is the function variable for reading all comments for a task
+var TaskCommentReadAllFunc func(s *xorm.Session, taskID int64, auth web.Auth, search string, page int, perPage int) (interface{}, int, int64, error)
+
 // Create creates a new task comment
 // @Summary Create a new task comment
 // @Description Create a new task comment. The user doing this need to have at least write access to the task this comment should belong to.
@@ -63,8 +78,17 @@ func (tc *TaskComment) TableName() string {
 // @Failure 400 {object} web.HTTPError "Invalid task comment object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/comments [put]
+// @Deprecated: Use services.CommentService.Create instead.
 func (tc *TaskComment) Create(s *xorm.Session, a web.Auth) (err error) {
+	if TaskCommentCreateFunc != nil {
+		u, err := GetUserOrLinkShareUser(s, a)
+		if err != nil {
+			return err
+		}
+		return TaskCommentCreateFunc(s, tc, u)
+	}
 
+	// Fallback to original implementation
 	tc.ID = 0
 	tc.Created = time.Time{}
 	tc.Updated = time.Time{}
@@ -118,7 +142,17 @@ func (tc *TaskComment) CreateWithTimestamps(s *xorm.Session, a web.Auth) (err er
 // @Failure 404 {object} web.HTTPError "The task comment was not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/comments/{commentID} [delete]
-func (tc *TaskComment) Delete(s *xorm.Session, _ web.Auth) error {
+// @Deprecated: Use services.CommentService.Delete instead.
+func (tc *TaskComment) Delete(s *xorm.Session, a web.Auth) error {
+	if TaskCommentDeleteFunc != nil {
+		u, err := GetUserOrLinkShareUser(s, a)
+		if err != nil {
+			return err
+		}
+		return TaskCommentDeleteFunc(s, tc.ID, u)
+	}
+
+	// Fallback to original implementation
 	deleted, err := s.
 		ID(tc.ID).
 		NoAutoCondition().
@@ -157,7 +191,17 @@ func (tc *TaskComment) Delete(s *xorm.Session, _ web.Auth) error {
 // @Failure 404 {object} web.HTTPError "The task comment was not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/comments/{commentID} [post]
-func (tc *TaskComment) Update(s *xorm.Session, _ web.Auth) error {
+// @Deprecated: Use services.CommentService.Update instead.
+func (tc *TaskComment) Update(s *xorm.Session, a web.Auth) error {
+	if TaskCommentUpdateFunc != nil {
+		u, err := GetUserOrLinkShareUser(s, a)
+		if err != nil {
+			return err
+		}
+		return TaskCommentUpdateFunc(s, tc, u)
+	}
+
+	// Fallback to original implementation
 	updated, err := s.
 		ID(tc.ID).
 		Cols("comment").
@@ -240,8 +284,13 @@ func (tc *TaskComment) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
 // @Success 200 {array} models.TaskComment "The array with all task comments"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/comments [get]
+// @Deprecated: Use services.CommentService.GetAllForTask instead.
 func (tc *TaskComment) ReadAll(s *xorm.Session, auth web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
+	if TaskCommentReadAllFunc != nil {
+		return TaskCommentReadAllFunc(s, tc.TaskID, auth, search, page, perPage)
+	}
 
+	// Fallback to original implementation
 	// Check if the user has access to the task
 	canRead, _, err := tc.CanRead(s, auth)
 	if err != nil {
