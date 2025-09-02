@@ -35,6 +35,15 @@ import (
 	"xorm.io/xorm"
 )
 
+// Dependency injection variables for service layer integration
+var (
+	// AttachmentCreateFunc is the injected function for creating attachments
+	AttachmentCreateFunc func(s *xorm.Session, attachment *TaskAttachment, f io.ReadCloser, filename string, size uint64, u *user.User) (*TaskAttachment, error)
+
+	// AttachmentDeleteFunc is the injected function for deleting attachments
+	AttachmentDeleteFunc func(s *xorm.Session, attachmentID int64, taskID int64, u *user.User) error
+)
+
 // TaskAttachment is the definition of a task attachment
 type TaskAttachment struct {
 	ID     int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"attachment"`
@@ -60,7 +69,24 @@ func (*TaskAttachment) TableName() string {
 // NewAttachment creates a new task attachment
 // Note: I'm not sure if only accepting an io.ReadCloser and not an afero.File or os.File instead is a good way of doing things.
 func (ta *TaskAttachment) NewAttachment(s *xorm.Session, f io.ReadCloser, realname string, realsize uint64, a web.Auth) error {
+	// Use injected service function if available (new service layer)
+	if AttachmentCreateFunc != nil {
+		user, err := user.GetFromAuth(a)
+		if err != nil {
+			return err
+		}
 
+		result, err := AttachmentCreateFunc(s, ta, f, realname, realsize, user)
+		if err != nil {
+			return err
+		}
+
+		// Copy the result back to this instance
+		*ta = *result
+		return nil
+	}
+
+	// Legacy implementation (backward compatibility)
 	// Store the file
 	file, err := files.Create(f, realname, realsize, a)
 	if err != nil {
@@ -309,6 +335,17 @@ func resizeImage(img image.Image, width int) *image.NRGBA {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id}/attachments/{attachmentID} [delete]
 func (ta *TaskAttachment) Delete(s *xorm.Session, a web.Auth) error {
+	// Use injected service function if available (new service layer)
+	if AttachmentDeleteFunc != nil {
+		user, err := user.GetFromAuth(a)
+		if err != nil {
+			return err
+		}
+
+		return AttachmentDeleteFunc(s, ta.ID, ta.TaskID, user)
+	}
+
+	// Legacy implementation (backward compatibility)
 	// Load the attachment
 	err := ta.ReadOne(s, a)
 	if err != nil && !files.IsErrFileDoesNotExist(err) {

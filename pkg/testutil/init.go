@@ -32,6 +32,7 @@ import "code.vikunja.io/api/pkg/services"
 // 4. ProjectService (depends on user service)
 // 5. KanbanService (depends on user and task services)
 // 6. ProjectDuplicateService (depends on project and task services)
+// 7. AttachmentService (depends on user and task services)
 func Init() {
 	services.InitUserService()
 	services.InitSavedFilterService()
@@ -39,4 +40,5 @@ func Init() {
 	services.InitProjectService()
 	services.InitKanbanService()
 	services.InitProjectDuplicateService()
+	services.InitAttachmentService()
 }

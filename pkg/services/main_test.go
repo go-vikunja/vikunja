@@ -52,8 +52,14 @@ func TestMain(m *testing.M) {
 	models.SetupTests()
 	events.Fake()
 
-	// Initialize service dependency injection
+	// Initialize service dependency injection in the correct order
+	InitUserService()
+	InitSavedFilterService()
 	InitTaskService()
+	InitProjectService()
+	InitKanbanService()
+	InitProjectDuplicateService()
+	InitAttachmentService()
 
 	// Initialize testEngine for service tests
 	testEngine = db.GetEngine()

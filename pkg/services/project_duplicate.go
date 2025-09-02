@@ -29,17 +29,19 @@ import (
 // This service orchestrates the complex process of copying a project, including tasks,
 // attachments, labels, assignees, comments, relations, views, and permissions.
 type ProjectDuplicateService struct {
-	DB             *xorm.Engine
-	ProjectService *ProjectService
-	TaskService    *TaskService
+	DB                *xorm.Engine
+	ProjectService    *ProjectService
+	TaskService       *TaskService
+	AttachmentService *AttachmentService
 }
 
 // NewProjectDuplicateService creates a new ProjectDuplicateService.
 func NewProjectDuplicateService(db *xorm.Engine) *ProjectDuplicateService {
 	return &ProjectDuplicateService{
-		DB:             db,
-		ProjectService: NewProjectService(db),
-		TaskService:    NewTaskService(db),
+		DB:                db,
+		ProjectService:    NewProjectService(db),
+		TaskService:       NewTaskService(db),
+		AttachmentService: NewAttachmentService(db),
 	}
 }
 
@@ -260,11 +262,14 @@ func (pds *ProjectDuplicateService) duplicateTaskAttachments(s *xorm.Session, ol
 			return err
 		}
 
-		// Create new attachment with duplicated file
-		err := attachment.NewAttachment(s, attachment.File.File, attachment.File.Name, attachment.File.Size, u)
+		// Create new attachment with duplicated file using AttachmentService
+		createdAttachment, err := pds.AttachmentService.CreateWithoutPermissionCheck(s, attachment, attachment.File.File, attachment.File.Name, attachment.File.Size, u)
 		if err != nil {
 			return err
 		}
+
+		// Update the attachment ID for logging
+		attachment.ID = createdAttachment.ID
 
 		// Close the file handle
 		if attachment.File.File != nil {

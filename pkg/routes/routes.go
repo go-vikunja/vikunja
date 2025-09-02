@@ -432,15 +432,7 @@ func registerAPIRoutes(a *echo.Group) {
 	a.DELETE("/tasks/:task/relations/:relationKind/:otherTask", taskRelationHandler.DeleteWeb)
 
 	if config.ServiceEnableTaskAttachments.GetBool() {
-		taskAttachmentHandler := &handler.WebHandler{
-			EmptyStruct: func() handler.CObject {
-				return &models.TaskAttachment{}
-			},
-		}
-		a.GET("/tasks/:task/attachments", taskAttachmentHandler.ReadAllWeb)
-		a.DELETE("/tasks/:task/attachments/:attachment", taskAttachmentHandler.DeleteWeb)
-		a.PUT("/tasks/:task/attachments", apiv1.UploadTaskAttachment)
-		a.GET("/tasks/:task/attachments/:attachment", apiv1.GetTaskAttachment)
+		apiv1.RegisterAttachments(a)
 	}
 
 	if config.ServiceEnableTaskComments.GetBool() {
