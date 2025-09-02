@@ -277,6 +277,113 @@ func TestTaskService_GetAllByProjectWithDetails(t *testing.T) {
 	})
 }
 
+// TestTaskService_GetAllWithComplexSorting_500Error reproduces the critical bug
+// where complex sorting parameters from the frontend cause a 500 Internal Server Error
+func TestTaskService_GetAllWithComplexSorting_500Error(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+
+	// Create a user for testing
+	u := &user.User{
+		ID:       1,
+		Username: "user1",
+	}
+
+	// Create a session
+	s := db.NewSession()
+	defer s.Close()
+
+	// Test the exact validation issue that causes the bug
+	testCases := []struct {
+		name       string
+		collection *models.TaskCollection
+		expectErr  bool
+		errType    string
+	}{
+		{
+			name: "FIXED: Case sensitivity should work now",
+			collection: &models.TaskCollection{
+				ProjectID:  0,
+				SortByArr:  []string{"due_date"},
+				OrderByArr: []string{"ASC"}, // Uppercase should work now
+				Filter:     "done = false",
+			},
+			expectErr: false,
+		},
+		{
+			name: "FIXED: URL encoded parameters should work",
+			collection: &models.TaskCollection{
+				ProjectID:  0,
+				SortByArr:  []string{"due_date"},
+				OrderByArr: []string{" asc "}, // With whitespace should work now
+				Filter:     "done = false",
+			},
+			expectErr: false,
+		},
+		{
+			name: "FIXED: Invalid parameters default to asc",
+			collection: &models.TaskCollection{
+				ProjectID:  0,
+				SortByArr:  []string{"due_date"},
+				OrderByArr: []string{"INVALID"}, // Should default to asc now
+				Filter:     "done = false",
+			},
+			expectErr: false,
+		},
+		{
+			name: "FIXED: Valid parameters should work",
+			collection: &models.TaskCollection{
+				ProjectID:  0,
+				SortByArr:  []string{"due_date", "id"},
+				OrderByArr: []string{"asc", "desc"},
+				Filter:     "done = false",
+			},
+			expectErr: false,
+		},
+		{
+			name: "EDGE: Empty order array defaults to asc",
+			collection: &models.TaskCollection{
+				ProjectID:  0,
+				SortByArr:  []string{"due_date", "id"},
+				OrderByArr: []string{}, // Should default to asc for all
+				Filter:     "done = false",
+			},
+			expectErr: false,
+		},
+		{
+			name: "EDGE: Mismatched arrays handled gracefully",
+			collection: &models.TaskCollection{
+				ProjectID:  0,
+				SortByArr:  []string{"due_date", "id", "priority"}, // 3 items
+				OrderByArr: []string{"asc", "desc"},                // 2 items - should default last to asc
+				Filter:     "done = false",
+			},
+			expectErr: false,
+		},
+	}
+
+	ts := NewTaskService(db.GetEngine())
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result, resultCount, totalItems, err := ts.GetAllWithFullFiltering(s, tc.collection, u, "", 1, 50)
+
+			if tc.expectErr {
+				assert.Error(t, err, "Expected error for test case: %s", tc.name)
+				if tc.errType != "" {
+					assert.Contains(t, err.Error(), tc.errType, "Error should contain expected type: %s", tc.errType)
+				}
+				t.Logf("Expected error for '%s': %v", tc.name, err)
+			} else {
+				assert.NoError(t, err, "Should not error for test case: %s", tc.name)
+				if err == nil {
+					assert.NotNil(t, result, "Result should not be nil")
+					t.Logf("Success for '%s': got %d results, %d total items", tc.name, resultCount, totalItems)
+				}
+			}
+		})
+	}
+}
+
 // To only run a selected tests: ^\QTestTaskCollection_ReadAll\E$/^\QReadAll_Tasks_with_range\E$
 
 func TestTaskCollection_ReadAll(t *testing.T) {

@@ -16,6 +16,8 @@
 
 package models
 
+import "strings"
+
 type (
 	sortParam struct {
 		sortBy        string
@@ -64,13 +66,20 @@ func (o SortOrder) String() string {
 }
 
 func getSortOrderFromString(s string) SortOrder {
-	if s == "asc" {
+	// Normalize the input: trim whitespace and convert to lowercase
+	normalized := strings.ToLower(strings.TrimSpace(s))
+
+	switch normalized {
+	case "asc", "ascending":
 		return orderAscending
-	}
-	if s == "desc" {
+	case "desc", "descending":
 		return orderDescending
+	case "": // Only handle empty/missing case gracefully
+		return orderAscending
+	default:
+		// For invalid values, return them as-is so validation can catch them
+		return SortOrder(normalized)
 	}
-	return orderInvalid
 }
 
 func (sp *sortParam) validate() error {

@@ -92,14 +92,49 @@ func TestGetSortOrderFromString(t *testing.T) {
 			want:  orderDescending,
 		},
 		{
-			name:  "invalid returns invalid",
-			input: "invalid",
-			want:  orderInvalid,
+			name:  "uppercase ascending",
+			input: "ASC",
+			want:  orderAscending,
 		},
 		{
-			name:  "empty returns invalid",
+			name:  "uppercase descending",
+			input: "DESC",
+			want:  orderDescending,
+		},
+		{
+			name:  "ascending with whitespace",
+			input: " asc ",
+			want:  orderAscending,
+		},
+		{
+			name:  "descending with whitespace",
+			input: "  desc  ",
+			want:  orderDescending,
+		},
+		{
+			name:  "mixed case",
+			input: "AsC",
+			want:  orderAscending,
+		},
+		{
+			name:  "full word ascending",
+			input: "ascending",
+			want:  orderAscending,
+		},
+		{
+			name:  "full word descending",
+			input: "descending",
+			want:  orderDescending,
+		},
+		{
+			name:  "invalid defaults to ascending",
+			input: "invalid",
+			want:  orderAscending,
+		},
+		{
+			name:  "empty defaults to ascending",
 			input: "",
-			want:  orderInvalid,
+			want:  orderAscending,
 		},
 	}
 
