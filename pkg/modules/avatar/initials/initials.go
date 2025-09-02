@@ -155,7 +155,20 @@ func getAvatarForUser(u *user.User) (fullSizeAvatar *image.RGBA64, err error) {
 		return nil, err
 	}
 
-	aa := result.(image.RGBA64)
+	// Safe type assertion to handle cases where cached data might be corrupted or in legacy format
+	aa, ok := result.(image.RGBA64)
+	if !ok {
+		// Log the type mismatch with the actual stored value for debugging
+		log.Errorf("Invalid cached image type for user %d. Expected image.RGBA64, got %T with value: %+v. Clearing cache and regenerating.", u.ID, result, result)
+		
+		// Clear the invalid cache entry
+		if err := keyvalue.Del(cacheKey); err != nil {
+			log.Errorf("Failed to clear invalid cache entry for key %s: %v", cacheKey, err)
+		}
+		
+		// Regenerate the avatar by calling the function again (without the corrupted cache)
+		return getAvatarForUser(u)
+	}
 
 	return &aa, nil
 }
@@ -197,6 +210,20 @@ func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType 
 		return nil, "", err
 	}
 
-	cachedAvatar := result.(CachedAvatar)
+	// Safe type assertion to handle cases where cached data might be corrupted or in legacy format
+	cachedAvatar, ok := result.(CachedAvatar)
+	if !ok {
+		// Log the type mismatch with the actual stored value for debugging
+		log.Errorf("Invalid cached avatar type for user %d, size %d. Expected CachedAvatar, got %T with value: %+v. Clearing cache and regenerating.", u.ID, size, result, result)
+		
+		// Clear the invalid cache entry
+		if err := keyvalue.Del(cacheKey); err != nil {
+			log.Errorf("Failed to clear invalid cache entry for key %s: %v", cacheKey, err)
+		}
+		
+		// Regenerate the avatar by calling the function again (without the corrupted cache)
+		return p.GetAvatar(u, size)
+	}
+
 	return cachedAvatar.Content, cachedAvatar.MimeType, nil
 }
