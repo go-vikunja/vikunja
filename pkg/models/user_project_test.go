@@ -32,6 +32,7 @@ func TestListUsersFromProject(t *testing.T) {
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,
+		TodayTasksRemindersEnabled:   true,
 		TodayTasksRemindersTime:      "09:00",
 		Created:                      testCreatedTime,
 		Updated:                      testUpdatedTime,
