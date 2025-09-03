@@ -123,26 +123,34 @@
 					{{ $t('user.settings.general.overdueReminders') }}
 				</label>
 			</div>
-			<div
-				v-if="settings.overdueTasksRemindersEnabled"
-				class="field"
-			>
-				<label
-					for="overdueTasksReminderTime"
-					class="two-col"
-				>
-					<span>
-						{{ $t('user.settings.general.overdueTasksRemindersTime') }}
-					</span>
+			<div class="field">
+				<label class="checkbox">
 					<input
-						id="overdueTasksReminderTime"
-						v-model="settings.overdueTasksRemindersTime"
-						class="input"
-						type="time"
-						@keyup.enter="updateSettings"
+						v-model="settings.todayTasksRemindersEnabled"
+						type="checkbox"
 					>
+					{{ $t('user.settings.general.todayReminders') }}
 				</label>
 			</div>
+			<template v-if="settings.overdueTasksRemindersEnabled || settings.todayTasksRemindersEnabled">
+				<div class="field">
+					<label
+						for="overdueTasksReminderTime"
+						class="two-col"
+					>
+						<span>
+							{{ $t('user.settings.general.overdueTasksRemindersTime') }}
+						</span>
+						<input
+							id="overdueTasksReminderTime"
+							v-model="settings.overdueTasksRemindersTime"
+							class="input"
+							type="time"
+							@keyup.enter="updateSettings"
+						>
+					</label>
+				</div>
+			</template>
 		</div>
 	</Card>
 

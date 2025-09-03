@@ -89,6 +89,7 @@
         "savedSuccess": "The settings were successfully updated.",
         "emailReminders": "Send me reminders for tasks via email",
         "overdueReminders": "Send me a summary of my undone overdue tasks every day",
+        "todayReminders": "Include tasks due today in reminder email",
         "discoverableByName": "Allow other users to add me as a member to teams or projects when they search for my name",
         "discoverableByEmail": "Allow other users to add me as a member to teams or projects when they search for my full email",
         "playSoundWhenDone": "Play a sound when marking tasks as done",
