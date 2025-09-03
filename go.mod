@@ -172,4 +172,4 @@ replace github.com/labstack/echo/v4 => github.com/kolaente/echo/v4 v4.0.0-202501
 
 go 1.23.0
 
-toolchain go1.25.0
+toolchain go1.25.1
