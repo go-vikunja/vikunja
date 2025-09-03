@@ -32,7 +32,7 @@ func TestListUsersFromProject(t *testing.T) {
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,
-		OverdueTasksRemindersTime:    "09:00",
+		TodayTasksRemindersTime:      "09:00",
 		Created:                      testCreatedTime,
 		Updated:                      testUpdatedTime,
 		ExportFileID:                 1,
@@ -44,7 +44,7 @@ func TestListUsersFromProject(t *testing.T) {
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,
-		OverdueTasksRemindersTime:    "09:00",
+		TodayTasksRemindersTime:      "09:00",
 		DefaultProjectID:             4,
 		Created:                      testCreatedTime,
 		Updated:                      testUpdatedTime,
@@ -56,7 +56,7 @@ func TestListUsersFromProject(t *testing.T) {
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,
-		OverdueTasksRemindersTime:    "09:00",
+		TodayTasksRemindersTime:      "09:00",
 		DefaultProjectID:             4,
 		Created:                      testCreatedTime,
 		Updated:                      testUpdatedTime,
@@ -69,7 +69,7 @@ func TestListUsersFromProject(t *testing.T) {
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,
-		OverdueTasksRemindersTime:    "09:00",
+		TodayTasksRemindersTime:      "09:00",
 		Created:                      testCreatedTime,
 		Updated:                      testUpdatedTime,
 	}
@@ -81,7 +81,7 @@ func TestListUsersFromProject(t *testing.T) {
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,
-		OverdueTasksRemindersTime:    "09:00",
+		TodayTasksRemindersTime:      "09:00",
 		Created:                      testCreatedTime,
 		Updated:                      testUpdatedTime,
 	}
@@ -92,7 +92,7 @@ func TestListUsersFromProject(t *testing.T) {
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,
-		OverdueTasksRemindersTime:    "09:00",
+		TodayTasksRemindersTime:      "09:00",
 		Created:                      testCreatedTime,
 		Updated:                      testUpdatedTime,
 	}
@@ -104,7 +104,7 @@ func TestListUsersFromProject(t *testing.T) {
 		EmailRemindersEnabled:        true,
 		DiscoverableByEmail:          true,
 		OverdueTasksRemindersEnabled: true,
-		OverdueTasksRemindersTime:    "09:00",
+		TodayTasksRemindersTime:      "09:00",
 		Created:                      testCreatedTime,
 		Updated:                      testUpdatedTime,
 	}
@@ -115,7 +115,7 @@ func TestListUsersFromProject(t *testing.T) {
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,
-		OverdueTasksRemindersTime:    "09:00",
+		TodayTasksRemindersTime:      "09:00",
 		Created:                      testCreatedTime,
 		Updated:                      testUpdatedTime,
 	}
@@ -126,7 +126,7 @@ func TestListUsersFromProject(t *testing.T) {
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,
-		OverdueTasksRemindersTime:    "09:00",
+		TodayTasksRemindersTime:      "09:00",
 		Created:                      testCreatedTime,
 		Updated:                      testUpdatedTime,
 	}
@@ -137,7 +137,7 @@ func TestListUsersFromProject(t *testing.T) {
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,
-		OverdueTasksRemindersTime:    "09:00",
+		TodayTasksRemindersTime:      "09:00",
 		Created:                      testCreatedTime,
 		Updated:                      testUpdatedTime,
 	}
@@ -149,7 +149,7 @@ func TestListUsersFromProject(t *testing.T) {
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,
-		OverdueTasksRemindersTime:    "09:00",
+		TodayTasksRemindersTime:      "09:00",
 		Created:                      testCreatedTime,
 		Updated:                      testUpdatedTime,
 	}
@@ -162,7 +162,7 @@ func TestListUsersFromProject(t *testing.T) {
 		EmailRemindersEnabled:        true,
 		DiscoverableByName:           true,
 		OverdueTasksRemindersEnabled: true,
-		OverdueTasksRemindersTime:    "09:00",
+		TodayTasksRemindersTime:      "09:00",
 		Created:                      testCreatedTime,
 		Updated:                      testUpdatedTime,
 	}
@@ -173,7 +173,7 @@ func TestListUsersFromProject(t *testing.T) {
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,
-		OverdueTasksRemindersTime:    "09:00",
+		TodayTasksRemindersTime:      "09:00",
 		Created:                      testCreatedTime,
 		Updated:                      testUpdatedTime,
 	}
