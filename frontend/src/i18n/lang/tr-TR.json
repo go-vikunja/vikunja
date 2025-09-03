@@ -93,6 +93,7 @@
 				"discoverableByEmail": "Diğer kullanıcıların beni tam e-posta adresimle arayarak takımlara veya projelere üye olarak eklemesine izin ver",
 				"playSoundWhenDone": "Görevleri tamamlandı olarak işaretlerken ses çal",
 				"allowIconChanges": "Belirli zamanlarda özel logoları göster",
+				"defaultTaskRelationType": "Varsayılan görev ilişkisi türü",
 				"weekStart": "Hafta başlangıcı",
 				"weekStartSunday": "Pazar",
 				"weekStartMonday": "Pazartesi",
@@ -335,6 +336,12 @@
 				"removeSuccess": "{sharable} öğesi {type} üzerinden başarıyla kaldırıldı.",
 				"addedSuccess": "{type} başarıyla eklendi.",
 				"updatedSuccess": "{type} başarıyla güncellendi."
+			},
+			"permission": {
+				"title": "İzin",
+				"read": "Salt okunur",
+				"readWrite": "Okuma ve yazma",
+				"admin": "Yönetici"
 			},
 			"attributes": {
 				"link": "Bağlantı",

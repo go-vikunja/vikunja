@@ -92,6 +92,8 @@
 				"discoverableByName": "Tillat andre brukere å legge meg til som medlem i grupper eller prosjekter når det søkes etter mitt navn",
 				"discoverableByEmail": "Tillat andre brukere å legge meg til som medlem i grupper eller prosjekter når det søkes etter min e-postadresse",
 				"playSoundWhenDone": "Spill av en lyd når oppgaver markeres som ferdig",
+				"allowIconChanges": "Vis spesiallogoer i visse tidsrom",
+				"defaultTaskRelationType": "Standard type oppgaverelasjon",
 				"weekStart": "Uken starter på",
 				"weekStartSunday": "Søndag",
 				"weekStartMonday": "Mandag",
@@ -156,7 +158,8 @@
 				"uploadAvatar": "Last opp avatar",
 				"statusUpdateSuccess": "Avatar-status ble oppdatert!",
 				"setSuccess": "Avataren ble satt!",
-				"ldap": "Avataren din er automatisk synkronisert fra organisasjonens katalogtjeneste (LDAP). Du kan be IT-avdelingen din om informasjon om hvordan den kan endres."
+				"ldap": "Avataren din er automatisk synkronisert fra organisasjonens katalogtjeneste (LDAP). Du kan be IT-avdelingen din om informasjon om hvordan den kan endres.",
+				"openid": "Avartaren blir administrert av din innloggingsleverandør ({provider}). For å endre må du oppdatere den hos leverandøren."
 			},
 			"quickAddMagic": {
 				"title": "Legg til hurtig/magisk modus",
@@ -334,6 +337,12 @@
 				"addedSuccess": "{type} ble lagt til.",
 				"updatedSuccess": "{type} ble lagt til."
 			},
+			"permission": {
+				"title": "Rettighet",
+				"read": "Kun lesetilgang",
+				"readWrite": "Lese og skrive",
+				"admin": "Admin"
+			},
 			"attributes": {
 				"link": "Lenke",
 				"delete": "Slett"
@@ -357,7 +366,22 @@
 			"month": "Måned",
 			"day": "Dag",
 			"hour": "Time",
-			"range": "Datointervall"
+			"range": "Datointervall",
+			"chartLabel": "Gantt-kart for prosjekt",
+			"taskBarsForRow": "Oppgavelinjer for rad {rowId}",
+			"taskBarLabel": "Oppgave: {task}. Fra {startDate} til {endDate}. {dateType}. Klikk for å redigere, dra for å flytte.",
+			"scheduledDates": "Planlagte datoer",
+			"estimatedDates": "Beregnede datoer",
+			"resizeStartDate": "Endre startdato for oppgaven {task}",
+			"resizeEndDate": "Endre sluttdatoen for oppgaven {task}",
+			"timelineHeader": "Tidslinje overskrift med måneder og dager",
+			"monthsRow": "Måneder rad",
+			"daysRow": "Dager rad",
+			"monthLabel": "Måned: {month}",
+			"dayLabel": "Dag: {date}, {weekday}",
+			"dayLabelToday": "I dag: {date}, {weekday}",
+			"taskAriaLabel": "Oppgave: {task}",
+			"taskAriaLabelById": "Oppgave {id}"
 		},
 		"table": {
 			"title": "Tabell",
@@ -399,6 +423,7 @@
 			"targetUrl": "Mål-URL",
 			"targetUrlInvalid": "Oppgi en gyldig URL.",
 			"events": "Hendelser",
+			"eventsHint": "Velg alle hendelser denne webhooken skal motta oppdateringer for (innenfor gjeldende prosjekt).",
 			"mustSelectEvents": "Velg minst en hendelse.",
 			"delete": "Slett denne webhooken",
 			"deleteText": "Er du sikker på at du vil slette denne webhooken? Eksterne mål vil ikke bli varslet om hendelsene lenger.",
@@ -431,6 +456,7 @@
 		"title": "Filtre",
 		"clear": "Fjern filtre",
 		"showResults": "Vis resultater",
+		"noResults": "Ingen resultater",
 		"fromView": "Gjeldende visning har også et filter:",
 		"fromViewBoth": "Den brukes i kombinasjon med det du skriver inn her.",
 		"attributes": {
@@ -494,7 +520,9 @@
 					"greaterThanOrEqual": "Større enn eller lik",
 					"lessThan": "Mindre enn",
 					"lessThanOrEqual": "Mindre enn eller lik",
-					"like": "Samsvarer med et mønster (ved hjelp av jokertegn %)"
+					"like": "Samsvarer med et mønster (ved hjelp av jokertegn %)",
+					"in": "Samsvarer med alle verdier i en kommaseparert liste over verdier",
+					"notIn": "Samsvarer med hvilken som helst verdi som ikke finnes i en kommaseparert liste over verdier"
 				},
 				"logicalOperators": {
 					"intro": "For å kombinere flere betingelser kan du bruke følgende logiske operatører:",
@@ -766,6 +794,7 @@
 		"show": {
 			"titleCurrent": "Pågående oppgaver",
 			"titleDates": "Oppgaver fra {from} til {to}",
+			"noDates": "Vis oppgaver uten dato",
 			"overdue": "Vis forfalte oppgaver",
 			"fromuntil": "Oppgaver fra {from} til {until}",
 			"select": "Velg et datoområde",
@@ -920,7 +949,7 @@
 			"differentProject": "Denne oppgaven tilhører et annet prosjekt.",
 			"noneYet": "Ingen oppgaverelasjoner ennå.",
 			"delete": "Slett oppgaverelasjon",
-			"deleteText1": "Er du sikker på at du vil slette denneoppgaverelasjonen?",
+			"deleteText1": "Er du sikker på at du vil slette denne oppgaverelasjonen?",
 			"select": "Velg en relasjonstype",
 			"taskRequired": "Velg en oppgave eller angi en ny oppgavetittel.",
 			"kinds": {
@@ -982,6 +1011,7 @@
 			"project4": "For eksempel: {prefix}\"Prosjekt med mellomrom\".",
 			"dateAndTime": "Dato og tid",
 			"date": "Hvilken som helst dato vil bli brukt som forfallsdato for den nye oppgaven. Du kan bruke datoer i hvilket som helst format:",
+			"dateWeekday": "hvilken som helst ukedag vil bruke neste dato med den dagen",
 			"dateCurrentYear": "vil bruke inneværende år",
 			"dateNth": "vil bruke den {day} i den gjeldende måneden",
 			"dateTime": "Kombiner hvilke som helst av datoformatene med \"{time}\" (eller {timePM}) til å velge et klokkeslett.",
@@ -1086,6 +1116,15 @@
 			"navigateDown": "Uthev neste oppgave",
 			"navigateUp": "Uthev forrige oppgave",
 			"open": "Åpne uthevet oppgave"
+		},
+		"gantt": {
+			"title": "Gantt-diagram",
+			"moveTaskLeft": "Flytt oppgave til tidligere dato",
+			"moveTaskRight": "Flytt oppgave til senere dato",
+			"expandTaskLeft": "Utvide startdato for oppgave tidligere",
+			"expandTaskRight": "Utvid sluttdato for oppgaven senere",
+			"shrinkTaskLeft": "Krymp oppgave fra startdato",
+			"shrinkTaskRight": "Krymp oppgave fra sluttdato"
 		}
 	},
 	"update": {
@@ -1123,6 +1162,7 @@
 	"notification": {
 		"title": "Varsler",
 		"none": "Du har ingen varsler på dette tidspunktet!",
+		"explainer": "Varsler vil vises her når det skjer noe i prosjekter eller oppgaver du abonnerer på.",
 		"markAllRead": "Marker alle varslinger som lest",
 		"markAllReadSuccess": "Alle meldinger ble markert som lest."
 	},
