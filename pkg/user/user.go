@@ -96,7 +96,7 @@ type User struct {
 	DiscoverableByName           bool   `xorm:"bool default false index" json:"-"`
 	DiscoverableByEmail          bool   `xorm:"bool default false index" json:"-"`
 	OverdueTasksRemindersEnabled bool   `xorm:"bool default true index" json:"-"`
-	OverdueTasksRemindersTime    string `xorm:"varchar(5) not null default '09:00'" json:"-"`
+	TodayTasksRemindersTime      string `xorm:"varchar(5) not null default '09:00'" json:"-"`
 	TodayTasksRemindersEnabled   bool   `xorm:"bool default false index" json:"-"`
 	DefaultProjectID             int64  `xorm:"bigint null index" json:"-"`
 	WeekStart                    int    `xorm:"null" json:"-"`
@@ -297,8 +297,8 @@ func getUser(s *xorm.Session, user *User, withEmail bool) (userOut *User, err er
 		userOut.Email = ""
 	}
 
-	if userOut.OverdueTasksRemindersTime == "" {
-		userOut.OverdueTasksRemindersTime = "9:00"
+	if userOut.TodayTasksRemindersTime == "" {
+		userOut.TodayTasksRemindersTime = "9:00"
 	}
 
 	return userOut, err
@@ -608,7 +608,7 @@ func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *U
 			"week_start",
 			"language",
 			"timezone",
-			"overdue_tasks_reminders_time",
+			"today_tasks_reminders_time",
 			"frontend_settings",
 			"extra_settings_links",
 		).

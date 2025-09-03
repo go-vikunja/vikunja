@@ -885,9 +885,9 @@
                     "comment": "If set to true, include tasks due today in the daily overdue reminder email."
                },
                 {
-                    "key": "overdue_tasks_reminders_time",
+                    "key": "today_tasks_reminders_time",
                     "default_value": "9:00",
-                    "comment": "When to send the overdue task reminder email."
+                    "comment": "When to send the daily tasks reminder email."
                 },
                 {
                     "key": "default_project_id",

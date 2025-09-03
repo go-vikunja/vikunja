@@ -199,7 +199,7 @@ const (
 	DefaultSettingsWeekStart                   Key = `defaultsettings.week_start`
 	DefaultSettingsLanguage                    Key = `defaultsettings.language`
 	DefaultSettingsTimezone                    Key = `defaultsettings.timezone`
-	DefaultSettingsOverdueTaskRemindersTime    Key = `defaultsettings.overdue_tasks_reminders_time`
+	DefaultSettingsTodayTaskRemindersTime      Key = `defaultsettings.today_tasks_reminders_time`
 
 	WebhooksEnabled        Key = `webhooks.enabled`
 	WebhooksTimeoutSeconds Key = `webhooks.timeoutseconds`
@@ -445,7 +445,7 @@ func InitDefaultConfig() {
 	// Settings
 	DefaultSettingsAvatarProvider.setDefault("initials")
 	DefaultSettingsOverdueTaskRemindersEnabled.setDefault(true)
-	DefaultSettingsOverdueTaskRemindersTime.setDefault("9:00")
+	DefaultSettingsTodayTaskRemindersTime.setDefault("9:00")
 	// Webhook
 	WebhooksEnabled.setDefault(true)
 	WebhooksTimeoutSeconds.setDefault(30)

@@ -135,15 +135,15 @@
 			<template v-if="settings.overdueTasksRemindersEnabled || settings.todayTasksRemindersEnabled">
 				<div class="field">
 					<label
-						for="overdueTasksReminderTime"
+						for="todayTasksReminderTime"
 						class="two-col"
 					>
 						<span>
-							{{ $t('user.settings.general.overdueTasksRemindersTime') }}
+							{{ $t('user.settings.general.todayTasksRemindersTime') }}
 						</span>
 						<input
-							id="overdueTasksReminderTime"
-							v-model="settings.overdueTasksRemindersTime"
+							id="todayTasksReminderTime"
+							v-model="settings.todayTasksRemindersTime"
 							class="input"
 							type="time"
 							@keyup.enter="updateSettings"

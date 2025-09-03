@@ -83,7 +83,7 @@ func getTasksForDailyReminder(s *xorm.Session, now time.Time) (usersWithTasks ma
 		}
 
 		// If it is time for that current user, add the task to their project of overdue tasks
-		tm, err := time.Parse("15:04", t.User.OverdueTasksRemindersTime)
+		tm, err := time.Parse("15:04", t.User.TodayTasksRemindersTime)
 		if err != nil {
 			return nil, err
 		}
