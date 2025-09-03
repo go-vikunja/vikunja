@@ -217,78 +217,72 @@ func getOverdueSinceString(until time.Duration, language string) (overdueSince s
 }
 
 // UndoneTaskOverdueNotification represents a UndoneTaskOverdueNotification notification
-type UndoneTaskOverdueNotification struct {
-	User    *user.User
-	Task    *Task
-	Project *Project
+type DailyTasksReminderNotification struct {
+	User         *user.User
+	OverdueTasks map[int64]*Task
+	DueToday     map[int64]*Task
+	Projects     map[int64]*Project
 }
 
-// ToMail returns the mail notification for UndoneTaskOverdueNotification
-func (n *UndoneTaskOverdueNotification) ToMail(lang string) *notifications.Mail {
-	until := time.Until(n.Task.DueDate).Round(1*time.Hour) * -1
-	return notifications.NewMail().
-		IncludeLinkToSettings(lang).
-		Subject(i18n.T(lang, "notifications.task.overdue.subject", n.Task.Title, n.Project.Title)).
-		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
-		Line(i18n.T(lang, "notifications.task.overdue.message", n.Task.Title, n.Project.Title, getOverdueSinceString(until, n.User.Language))).
-		Action(i18n.T(lang, "notifications.common.actions.open_task"), config.ServicePublicURL.GetString()+"tasks/"+strconv.FormatInt(n.Task.ID, 10)).
-		Line(i18n.T(lang, "notifications.common.have_nice_day"))
-}
+// ToMail returns the mail notification for DailyTasksReminderNotification
+func (n *DailyTasksReminderNotification) ToMail(lang string) *notifications.Mail {
 
-// ToDB returns the UndoneTaskOverdueNotification notification in a format which can be saved in the db
-func (n *UndoneTaskOverdueNotification) ToDB() interface{} {
-	return nil
-}
-
-// Name returns the name of the notification
-func (n *UndoneTaskOverdueNotification) Name() string {
-	return "task.undone.overdue"
-}
-
-// UndoneTasksOverdueNotification represents a UndoneTasksOverdueNotification notification
-type UndoneTasksOverdueNotification struct {
-	User     *user.User
-	Tasks    map[int64]*Task
-	Projects map[int64]*Project
-}
-
-// ToMail returns the mail notification for UndoneTasksOverdueNotification
-func (n *UndoneTasksOverdueNotification) ToMail(lang string) *notifications.Mail {
-
-	sortedTasks := make([]*Task, 0, len(n.Tasks))
-	for _, task := range n.Tasks {
-		sortedTasks = append(sortedTasks, task)
+	sortedOverdue := make([]*Task, 0, len(n.OverdueTasks))
+	for _, task := range n.OverdueTasks {
+		sortedOverdue = append(sortedOverdue, task)
 	}
+	sort.Slice(sortedOverdue, func(i, j int) bool {
+		return sortedOverdue[i].DueDate.Before(sortedOverdue[j].DueDate)
+	})
 
-	sort.Slice(sortedTasks, func(i, j int) bool {
-		return sortedTasks[i].DueDate.Before(sortedTasks[j].DueDate)
+	sortedToday := make([]*Task, 0, len(n.DueToday))
+	for _, task := range n.DueToday {
+		sortedToday = append(sortedToday, task)
+	}
+	sort.Slice(sortedToday, func(i, j int) bool {
+		return sortedToday[i].DueDate.Before(sortedToday[j].DueDate)
 	})
 
 	overdueLine := ""
-	for _, task := range sortedTasks {
+	for _, task := range sortedOverdue {
 		until := time.Until(task.DueDate).Round(1*time.Hour) * -1
 		overdueLine += `* [` + task.Title + `](` + config.ServicePublicURL.GetString() + "tasks/" + strconv.FormatInt(task.ID, 10) + `) (` + n.Projects[task.ProjectID].Title + `), ` + i18n.T("notifications.task.overdue.overdue", getOverdueSinceString(until, n.User.Language)) + "\n"
 	}
 
-	return notifications.NewMail().
+	todayLine := ""
+	for _, task := range sortedToday {
+		todayLine += `* [` + task.Title + `](` + config.ServicePublicURL.GetString() + "tasks/" + strconv.FormatInt(task.ID, 10) + `) (` + n.Projects[task.ProjectID].Title + `)\n`
+	}
+
+	subject := i18n.T(lang, "notifications.task.overdue.multiple_subject")
+	if len(n.OverdueTasks) == 0 {
+		subject = i18n.T(lang, "notifications.task.reminder.only_due_today_subject")
+	}
+
+	m := notifications.NewMail().
 		IncludeLinkToSettings(lang).
-		Subject(i18n.T(lang, "notifications.task.overdue.multiple_subject")).
-		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
-		Line(i18n.T(lang, "notifications.task.overdue.multiple_message")).
-		Line(overdueLine).
-		Action(i18n.T(lang, "notifications.common.actions.open_vikunja"), config.ServicePublicURL.GetString()).
+		Subject(subject).
+		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName()))
+
+	if overdueLine != "" {
+		m.Line(i18n.T(lang, "notifications.task.reminder.overdue_intro"))
+		m.Line(overdueLine)
+	}
+	if todayLine != "" {
+		m.Line(i18n.T(lang, "notifications.task.reminder.today_intro"))
+		m.Line(todayLine)
+	}
+
+	m.Action(i18n.T(lang, "notifications.common.actions.open_vikunja"), config.ServicePublicURL.GetString()).
 		Line(i18n.T(lang, "notifications.common.have_nice_day"))
+	return m
 }
 
-// ToDB returns the UndoneTasksOverdueNotification notification in a format which can be saved in the db
-func (n *UndoneTasksOverdueNotification) ToDB() interface{} {
-	return nil
-}
+// ToDB returns the DailyTasksReminderNotification notification in a format which can be saved in the db
+func (n *DailyTasksReminderNotification) ToDB() interface{} { return nil }
 
 // Name returns the name of the notification
-func (n *UndoneTasksOverdueNotification) Name() string {
-	return "task.undone.overdue"
-}
+func (n *DailyTasksReminderNotification) Name() string { return "task.daily.reminder" }
 
 // UserMentionedInTaskNotification represents a UserMentionedInTaskNotification notification
 type UserMentionedInTaskNotification struct {

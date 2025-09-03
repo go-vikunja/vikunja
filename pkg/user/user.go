@@ -97,6 +97,7 @@ type User struct {
 	DiscoverableByEmail          bool   `xorm:"bool default false index" json:"-"`
 	OverdueTasksRemindersEnabled bool   `xorm:"bool default true index" json:"-"`
 	OverdueTasksRemindersTime    string `xorm:"varchar(5) not null default '09:00'" json:"-"`
+	TodayTasksRemindersEnabled   bool   `xorm:"bool default false index" json:"-"`
 	DefaultProjectID             int64  `xorm:"bigint null index" json:"-"`
 	WeekStart                    int    `xorm:"null" json:"-"`
 	Language                     string `xorm:"varchar(50) null" json:"-" valid:"language"`
@@ -602,6 +603,7 @@ func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *U
 			"discoverable_by_name",
 			"discoverable_by_email",
 			"overdue_tasks_reminders_enabled",
+			"today_tasks_reminders_enabled",
 			"default_project_id",
 			"week_start",
 			"language",

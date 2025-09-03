@@ -879,6 +879,11 @@
                     "default_value": "true",
                     "comment": "If set to true will send an email every day with all overdue tasks at a configured time."
                 },
+               {
+                    "key": "today_tasks_reminders_enabled",
+                    "default_value": "false",
+                    "comment": "If set to true, include tasks due today in the daily overdue reminder email."
+               },
                 {
                     "key": "overdue_tasks_reminders_time",
                     "default_value": "9:00",

@@ -409,3 +409,14 @@
   due_date: 2023-03-01 15:00:00
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
+
+# Task due later today for reminders
+- id: 47
+  title: 'task #47 due today'
+  done: false
+  created_by_id: 1
+  project_id: 1
+  index: 13
+  created: 2018-12-01 01:12:04
+  updated: 2018-12-01 01:12:04
+  due_date: 2018-12-01 23:00:00

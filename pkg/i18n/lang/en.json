@@ -98,6 +98,11 @@
                 "overdue_since": "since %[1]s",
                 "overdue_now": "now",
                 "overdue": "overdue %[1]s"
+            },
+            "reminder": {
+                "only_due_today_subject": "Tasks due today",
+                "overdue_intro": "You have the following overdue tasks:",
+                "today_intro": "You have the following tasks due today:"
             }
         },
         "project": {

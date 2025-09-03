@@ -194,6 +194,7 @@ const (
 	DefaultSettingsDiscoverableByName          Key = `defaultsettings.discoverable_by_name`
 	DefaultSettingsDiscoverableByEmail         Key = `defaultsettings.discoverable_by_email`
 	DefaultSettingsOverdueTaskRemindersEnabled Key = `defaultsettings.overdue_tasks_reminders_enabled`
+	DefaultSettingsTodayTasksRemindersEnabled  Key = `defaultsettings.today_tasks_reminders_enabled`
 	DefaultSettingsDefaultProjectID            Key = `defaultsettings.default_project_id`
 	DefaultSettingsWeekStart                   Key = `defaultsettings.week_start`
 	DefaultSettingsLanguage                    Key = `defaultsettings.language`
