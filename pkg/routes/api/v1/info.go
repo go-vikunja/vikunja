@@ -38,6 +38,7 @@ type vikunjaInfos struct {
 	Motd                       string    `json:"motd"`
 	LinkSharingEnabled         bool      `json:"link_sharing_enabled"`
 	MaxFileSize                string    `json:"max_file_size"`
+	MaxItemsPerPage            int       `json:"max_items_per_page"`
 	AvailableMigrators         []string  `json:"available_migrators"`
 	TaskAttachmentsEnabled     bool      `json:"task_attachments_enabled"`
 	EnabledBackgroundProviders []string  `json:"enabled_background_providers"`
@@ -92,6 +93,7 @@ func Info(c echo.Context) error {
 		Motd:                   config.ServiceMotd.GetString(),
 		LinkSharingEnabled:     config.ServiceEnableLinkSharing.GetBool(),
 		MaxFileSize:            config.FilesMaxSize.GetString(),
+		MaxItemsPerPage:        config.ServiceMaxItemsPerPage.GetInt(),
 		TaskAttachmentsEnabled: config.ServiceEnableTaskAttachments.GetBool(),
 		TotpEnabled:            config.ServiceEnableTotp.GetBool(),
 		CaldavEnabled:          config.ServiceEnableCaldav.GetBool(),
