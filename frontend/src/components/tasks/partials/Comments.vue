@@ -347,7 +347,7 @@ async function changePage(page: number) {
 }
 
 watch(
-	() => props.taskId,
+	() => [props.taskId, props.initialComments],
 	() => {
 		currentPage.value = 1 // Reset to first page when task changes
 		loadComments(props.taskId)
