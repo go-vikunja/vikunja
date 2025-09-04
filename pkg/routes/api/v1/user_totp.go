@@ -45,7 +45,10 @@ import (
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/totp/enroll [post]
 func UserTOTPEnroll(c echo.Context) error {
-	u, err := user.GetCurrentUser(c)
+	s := db.NewSession()
+	defer s.Close()
+
+	u, err := user.GetCurrentUserFromDB(s, c)
 	if err != nil {
 		return handler.HandleHTTPError(err)
 	}
@@ -54,9 +57,6 @@ func UserTOTPEnroll(c echo.Context) error {
 	if !u.IsLocalUser() {
 		return handler.HandleHTTPError(&user.ErrAccountIsNotLocal{UserID: u.ID})
 	}
-
-	s := db.NewSession()
-	defer s.Close()
 
 	t, err := user.EnrollTOTP(s, u)
 	if err != nil {
@@ -87,7 +87,10 @@ func UserTOTPEnroll(c echo.Context) error {
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/totp/enable [post]
 func UserTOTPEnable(c echo.Context) error {
-	u, err := user.GetCurrentUser(c)
+	s := db.NewSession()
+	defer s.Close()
+
+	u, err := user.GetCurrentUserFromDB(s, c)
 	if err != nil {
 		return handler.HandleHTTPError(err)
 	}
@@ -108,9 +111,6 @@ func UserTOTPEnable(c echo.Context) error {
 		}
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid model provided.").SetInternal(err)
 	}
-
-	s := db.NewSession()
-	defer s.Close()
 
 	err = user.EnableTOTP(s, passcode)
 	if err != nil {
@@ -150,7 +150,10 @@ func UserTOTPDisable(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid model provided.").SetInternal(err)
 	}
 
-	u, err := user.GetCurrentUser(c)
+	s := db.NewSession()
+	defer s.Close()
+
+	u, err := user.GetCurrentUserFromDB(s, c)
 	if err != nil {
 		return handler.HandleHTTPError(err)
 	}
@@ -159,11 +162,6 @@ func UserTOTPDisable(c echo.Context) error {
 	if !u.IsLocalUser() {
 		return handler.HandleHTTPError(&user.ErrAccountIsNotLocal{UserID: u.ID})
 	}
-
-	s := db.NewSession()
-	defer s.Close()
-
-	u, err = user.GetUserByID(s, u.ID)
 	if err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err)
@@ -200,7 +198,10 @@ func UserTOTPDisable(c echo.Context) error {
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/totp/qrcode [get]
 func UserTOTPQrCode(c echo.Context) error {
-	u, err := user.GetCurrentUser(c)
+	s := db.NewSession()
+	defer s.Close()
+
+	u, err := user.GetCurrentUserFromDB(s, c)
 	if err != nil {
 		return handler.HandleHTTPError(err)
 	}
@@ -209,9 +210,6 @@ func UserTOTPQrCode(c echo.Context) error {
 	if !u.IsLocalUser() {
 		return handler.HandleHTTPError(&user.ErrAccountIsNotLocal{UserID: u.ID})
 	}
-
-	s := db.NewSession()
-	defer s.Close()
 
 	qrcode, err := user.GetTOTPQrCodeForUser(s, u)
 	if err != nil {
@@ -245,7 +243,10 @@ func UserTOTPQrCode(c echo.Context) error {
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/totp [get]
 func UserTOTP(c echo.Context) error {
-	u, err := user.GetCurrentUser(c)
+	s := db.NewSession()
+	defer s.Close()
+
+	u, err := user.GetCurrentUserFromDB(s, c)
 	if err != nil {
 		return handler.HandleHTTPError(err)
 	}
@@ -254,9 +255,6 @@ func UserTOTP(c echo.Context) error {
 	if !u.IsLocalUser() {
 		return handler.HandleHTTPError(&user.ErrAccountIsNotLocal{UserID: u.ID})
 	}
-
-	s := db.NewSession()
-	defer s.Close()
 
 	t, err := user.GetTOTPForUser(s, u)
 	if err != nil {
