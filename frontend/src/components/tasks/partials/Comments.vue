@@ -299,6 +299,7 @@ const currentPage = ref(1)
 
 const commentsRef = ref<HTMLElement | null>(null)
 
+
 async function attachmentUpload(files: File[] | FileList): (Promise<string[]>) {
 
 	const uploadPromises: Promise<string>[] = []
@@ -321,12 +322,19 @@ async function loadComments(taskId: ITask['id']) {
 		return
 	}
 
+	if (currentPage.value === 1) {
+		taskCommentService.totalPages = 0
+		taskCommentService.resultCount = 0
+	}
+
 	commentEdit.taskId = taskId
 	commentToDelete.taskId = taskId
-	
-	if(typeof props.initialComments !== 'undefined' && currentPage.value === 1) {
-		comments.value = props.initialComments
-		return
+
+	if (typeof props.initialComments !== 'undefined' && currentPage.value === 1) {
+		if (props.initialComments.length < configStore.maxItemsPerPage) {
+			comments.value = props.initialComments
+			return
+		}
 	}
 
 	comments.value = await taskCommentService.getAll({taskId}, {}, currentPage.value)
