@@ -15,7 +15,7 @@ describe('Task comment pagination', () => {
 	})
 
 	it('shows pagination when more comments than configured page size', () => {
-		cy.request('/api/v1/info').then((response) => {
+		cy.request(`${Cypress.env('API_URL')}/info`).then((response) => {
 			const pageSize = response.body.max_items_per_page
 			TaskCommentFactory.create(pageSize + 10)
 			cy.visit('/tasks/1')
@@ -24,7 +24,7 @@ describe('Task comment pagination', () => {
 	})
 
 	it('hides pagination when comments equal or fewer than configured page size', () => {
-		cy.request('/api/v1/info').then((response) => {
+		cy.request(`${Cypress.env('API_URL')}/info`).then((response) => {
 			const pageSize = response.body.max_items_per_page
 			TaskCommentFactory.create(Math.max(1, pageSize - 10))
 			cy.visit('/tasks/1')
