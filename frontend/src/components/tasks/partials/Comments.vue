@@ -321,8 +321,6 @@ async function loadComments(taskId: ITask['id']) {
 		return
 	}
 
-	console.log('load comments', props.initialComments)
-
 	commentEdit.taskId = taskId
 	commentToDelete.taskId = taskId
 	
