@@ -321,6 +321,8 @@ async function loadComments(taskId: ITask['id']) {
 		return
 	}
 
+	console.log('load comments', props.initialComments)
+
 	commentEdit.taskId = taskId
 	commentToDelete.taskId = taskId
 	
@@ -339,7 +341,7 @@ async function changePage(page: number) {
 }
 
 watch(
-	() => props.taskId,
+	() => [props.taskId, props.initialComments],
 	() => {
 		currentPage.value = 1 // Reset to first page when task changes
 		loadComments(props.taskId)
