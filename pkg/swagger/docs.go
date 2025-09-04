@@ -9823,6 +9823,9 @@ const docTemplate = `{
                 "max_file_size": {
                     "type": "string"
                 },
+                "max_items_per_page": {
+                    "type": "integer"
+                },
                 "motd": {
                     "type": "string"
                 },
