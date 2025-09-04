@@ -745,7 +745,7 @@ watch(
 			setActiveFields()
 
 			if (project.value) {
-				await baseStore.handleSetCurrentProject({project: project.value})
+				await baseStore.handleSetCurrentProjectIfNotSet(project.value)
 			}
 		} catch (e) {
 			if (e?.response?.status === 404) {

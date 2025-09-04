@@ -137,6 +137,12 @@ export const useBaseStore = defineStore('base', () => {
 		setCurrentProject(project, currentProjectViewId)
 	}
 
+	async function handleSetCurrentProjectIfNotSet(project: IProject) {
+		if (currentProject.value?.id !== project.id) {
+			await handleSetCurrentProject({project})
+		}
+	}
+
 	async function loadApp() {
 		try {
 			await checkAndSetApiUrl(window.API_URL)
@@ -184,6 +190,7 @@ export const useBaseStore = defineStore('base', () => {
 		setUpdateAvailable,
 
 		handleSetCurrentProject,
+		handleSetCurrentProjectIfNotSet,
 
 		...useMenuActive(),
 	}
