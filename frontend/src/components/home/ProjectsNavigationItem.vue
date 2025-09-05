@@ -15,7 +15,7 @@
 				/>
 			</BaseButton>
 			<span
-				v-if="project.id > 0 && project.maxPermission > PERMISSIONS.READ"
+				v-if="canEditOrder && project.id > 0 && project.maxPermission > PERMISSIONS.READ"
 				class="icon menu-item-icon handle drag-handle-standalone"
 				@mousedown.stop
 				@click.stop.prevent
@@ -100,9 +100,10 @@ import ProjectsNavigation from '@/components/home/ProjectsNavigation.vue'
 import {PERMISSIONS} from '@/constants/permissions'
 
 const props = defineProps<{
-	project: IProject,
-	isLoading?: boolean,
-	canCollapse?: boolean,
+        project: IProject,
+        isLoading?: boolean,
+        canCollapse?: boolean,
+        canEditOrder?: boolean,
 }>()
 
 const projectStore = useProjectStore()
