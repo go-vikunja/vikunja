@@ -100,10 +100,10 @@ import ProjectsNavigation from '@/components/home/ProjectsNavigation.vue'
 import {PERMISSIONS} from '@/constants/permissions'
 
 const props = defineProps<{
-        project: IProject,
-        isLoading?: boolean,
-        canCollapse?: boolean,
-        canEditOrder?: boolean,
+	project: IProject,
+	isLoading?: boolean,
+	canCollapse?: boolean,
+	canEditOrder?: boolean,
 }>()
 
 const projectStore = useProjectStore()
