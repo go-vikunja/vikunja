@@ -143,6 +143,7 @@ func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provid
 			"usernamefallback",
 			"forceuserinfo",
 			"requireavailability",
+			"authissuer",
 		},
 		requiredKeys...,
 	)
@@ -221,6 +222,15 @@ func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provid
 		}
 	}
 
+	var authIssuer string
+	authIssuerValue, exists := pi["authissuer"]
+	if exists {
+		authIssuerURL, ok := authIssuerValue.(string)
+		if ok {
+			authIssuer = authIssuerURL
+		}
+	}
+
 	provider = &Provider{
 		Name:                name,
 		Key:                 key,
@@ -233,6 +243,7 @@ func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provid
 		UsernameFallback:    usernameFallback,
 		ForceUserInfo:       forceUserInfo,
 		RequireAvailability: requireAvailability,
+		AuthIssuer:          authIssuer,
 	}
 
 	cl, is := pi["clientid"].(int)
