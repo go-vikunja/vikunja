@@ -63,6 +63,7 @@ type Provider struct {
 	UsernameFallback    bool   `json:"username_fallback"`
 	ForceUserInfo       bool   `json:"force_user_info"`
 	RequireAvailability bool   `json:"-"`
+	AuthIssuer          string `json:"-"`
 	ClientSecret        string `json:"-"`
 	openIDProvider      *oidc.Provider
 	Oauth2Config        *oauth2.Config `json:"-"`
@@ -83,7 +84,15 @@ func init() {
 }
 
 func (p *Provider) setOicdProvider() (err error) {
-	p.openIDProvider, err = oidc.NewProvider(context.Background(), p.OriginalAuthURL)
+	// If a custom issuer is configured, we need to skip issuer validation during discovery
+	// to avoid issues where the discovery URL differs from the actual token issuer
+	ctx := context.Background()
+	if p.AuthIssuer != "" {
+		// Use insecure context to skip issuer validation during discovery
+		ctx = oidc.InsecureIssuerURLContext(ctx, p.OriginalAuthURL)
+	}
+
+	p.openIDProvider, err = oidc.NewProvider(ctx, p.OriginalAuthURL)
 	if err != nil && p.RequireAvailability {
 		log.Fatalf("OpenID Connect provider '%s' is not available and require_availability is enabled: %s", p.Name, err)
 	}
@@ -91,6 +100,11 @@ func (p *Provider) setOicdProvider() (err error) {
 }
 
 func (p *Provider) Issuer() (issuerURL string, err error) {
+	// If a custom issuer is configured, return it directly
+	if p.AuthIssuer != "" {
+		return p.AuthIssuer, nil
+	}
+
 	type Issuer struct {
 		Issuer string `json:"issuer"`
 	}
@@ -155,7 +169,12 @@ func HandleCallback(c echo.Context) error {
 
 	teamData := getTeamDataFromToken(cl.VikunjaGroups, provider)
 
-	err = models.SyncExternalTeamsForUser(s, u, teamData, idToken.Issuer, "OIDC")
+	teamIssuer := idToken.Issuer
+	if provider.AuthIssuer != "" {
+		teamIssuer = provider.AuthIssuer
+	}
+
+	err = models.SyncExternalTeamsForUser(s, u, teamData, teamIssuer, "OIDC")
 	if err != nil {
 		return handler.HandleHTTPError(err)
 	}
@@ -268,9 +287,13 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 	alreadyCreatedFromIssuer := false
 
 	// first check if the user already signed up using the provider
+	expectedIssuer := idToken.Issuer
+	if provider.AuthIssuer != "" {
+		expectedIssuer = provider.AuthIssuer
+	}
 
 	u, err = user.GetUserWithEmail(s, &user.User{
-		Issuer:  idToken.Issuer,
+		Issuer:  expectedIssuer,
 		Subject: idToken.Subject,
 	})
 	if err != nil && !user.IsErrUserDoesNotExist(err) {
@@ -308,12 +331,17 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 	if !alreadyCreatedFromIssuer && !fallbackMatchFound {
 
 		// If no user exists, create one with the preferred username if it is not already taken
+		userIssuer := idToken.Issuer
+		if provider.AuthIssuer != "" {
+			userIssuer = provider.AuthIssuer
+		}
+
 		uu := &user.User{
 			Username:           strings.ReplaceAll(cl.PreferredUsername, " ", "-"),
 			Email:              cl.Email,
 			Name:               cl.Name,
 			Status:             user.StatusActive,
-			Issuer:             idToken.Issuer,
+			Issuer:             userIssuer,
 			Subject:            idToken.Subject,
 			ExtraSettingsLinks: cl.ExtraSettingsLinks,
 		}
@@ -467,11 +495,25 @@ func getProviderAndOidcTokens(c echo.Context) (*Provider, *oauth2.Token, *oidc.I
 
 	verifier := provider.openIDProvider.Verifier(&oidc.Config{ClientID: provider.ClientID})
 
+	// If a custom issuer is configured, use it to override the issuer verification
+	if provider.AuthIssuer != "" {
+		verifier = provider.openIDProvider.Verifier(&oidc.Config{
+			ClientID:        provider.ClientID,
+			SkipIssuerCheck: true,
+		})
+	}
+
 	// Parse and verify ID Token payload.
 	idToken, err := verifier.Verify(context.Background(), rawIDToken)
 	if err != nil {
 		log.Errorf("Error verifying token for provider %s: %v", provider.Name, err)
 		return nil, nil, nil, err
+	}
+
+	// If a custom issuer is configured, manually verify the issuer matches
+	if provider.AuthIssuer != "" && idToken.Issuer != provider.AuthIssuer {
+		log.Errorf("Error verifying token issuer for provider %s: expected %s, got %s", provider.Name, provider.AuthIssuer, idToken.Issuer)
+		return nil, nil, nil, fmt.Errorf("issuer mismatch: expected %s, got %s", provider.AuthIssuer, idToken.Issuer)
 	}
 
 	return provider, oauth2Token, idToken, nil
