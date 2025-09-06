@@ -31,13 +31,13 @@ import (
 	"xorm.io/xorm"
 )
 
-func getUndoneOverdueTasks(s *xorm.Session, now time.Time) (usersWithTasks map[int64]*userWithTasks, err error) {
+func getTasksForDailyReminder(s *xorm.Session, now time.Time) (usersWithTasks map[int64]*userWithTasks, err error) {
 	now = utils.GetTimeWithoutSeconds(now)
 	nextMinute := now.Add(1 * time.Minute)
 
 	var tasks []*Task
 	err = s.
-		Where("due_date is not null AND due_date < ? AND projects.is_archived = false", nextMinute.Add(time.Hour*14).Format(dbTimeFormat)).
+		Where("due_date is not null AND due_date < ? AND projects.is_archived = false", nextMinute.Add(time.Hour*38).Format(dbTimeFormat)).
 		Join("LEFT", "projects", "projects.id = tasks.project_id").
 		And("done = false").
 		Find(&tasks)
@@ -54,7 +54,10 @@ func getUndoneOverdueTasks(s *xorm.Session, now time.Time) (usersWithTasks map[i
 		taskIDs = append(taskIDs, task.ID)
 	}
 
-	users, err := getTaskUsersForTasks(s, taskIDs, builder.Eq{"users.overdue_tasks_reminders_enabled": true})
+	users, err := getTaskUsersForTasks(s, taskIDs, builder.Or(
+		builder.Eq{"users.overdue_tasks_reminders_enabled": true},
+		builder.Eq{"users.today_tasks_reminders_enabled": true},
+	))
 	if err != nil {
 		return
 	}
@@ -80,23 +83,32 @@ func getUndoneOverdueTasks(s *xorm.Session, now time.Time) (usersWithTasks map[i
 		}
 
 		// If it is time for that current user, add the task to their project of overdue tasks
-		tm, err := time.Parse("15:04", t.User.OverdueTasksRemindersTime)
+		tm, err := time.Parse("15:04", t.User.TodayTasksRemindersTime)
 		if err != nil {
 			return nil, err
 		}
-		overdueMailTime := time.Date(now.Year(), now.Month(), now.Day(), tm.Hour(), tm.Minute(), 0, 0, tz)
-		isTimeForReminder := overdueMailTime.After(now) || overdueMailTime.Equal(now.In(tz))
-		wasTimeForReminder := overdueMailTime.Before(nextMinute)
-		taskIsOverdueInUserTimezone := overdueMailTime.After(t.Task.DueDate.In(tz))
-		if isTimeForReminder && wasTimeForReminder && taskIsOverdueInUserTimezone {
+		reminderTime := time.Date(now.Year(), now.Month(), now.Day(), tm.Hour(), tm.Minute(), 0, 0, tz)
+		isTimeForReminder := reminderTime.After(now) || reminderTime.Equal(now.In(tz))
+		wasTimeForReminder := reminderTime.Before(nextMinute)
+		taskDue := t.Task.DueDate.In(tz)
+		endOfDay := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 0, tz)
+		if isTimeForReminder && wasTimeForReminder {
 			_, exists := uts[t.User.ID]
 			if !exists {
 				uts[t.User.ID] = &userWithTasks{
-					user:  t.User,
-					tasks: make(map[int64]*Task),
+					user:     t.User,
+					overdue:  make(map[int64]*Task),
+					dueToday: make(map[int64]*Task),
 				}
 			}
-			uts[t.User.ID].tasks[t.Task.ID] = t.Task
+
+			if t.User.OverdueTasksRemindersEnabled && reminderTime.After(taskDue) {
+				uts[t.User.ID].overdue[t.Task.ID] = t.Task
+				continue
+			}
+			if t.User.TodayTasksRemindersEnabled && taskDue.After(reminderTime) && taskDue.Before(endOfDay) {
+				uts[t.User.ID].dueToday[t.Task.ID] = t.Task
+			}
 		}
 	}
 
@@ -104,11 +116,12 @@ func getUndoneOverdueTasks(s *xorm.Session, now time.Time) (usersWithTasks map[i
 }
 
 type userWithTasks struct {
-	user  *user.User
-	tasks map[int64]*Task
+	user     *user.User
+	overdue  map[int64]*Task
+	dueToday map[int64]*Task
 }
 
-// RegisterOverdueReminderCron registers a function which checks once a day for tasks that are overdue and not done.
+// RegisterOverdueReminderCron registers a function which checks once a day for overdue tasks and tasks due today and sends reminders.
 func RegisterOverdueReminderCron() {
 	if !config.ServiceEnableEmailReminders.GetBool() {
 		return
@@ -124,56 +137,52 @@ func RegisterOverdueReminderCron() {
 		defer s.Close()
 
 		now := time.Now()
-		uts, err := getUndoneOverdueTasks(s, now)
+		uts, err := getTasksForDailyReminder(s, now)
 		if err != nil {
-			log.Errorf("[Undone Overdue Tasks Reminder] Could not get undone overdue tasks in the next minute: %s", err)
+			log.Errorf("[Daily Tasks Reminder] Could not get tasks for daily reminder: %s", err)
 			return
 		}
 
-		log.Debugf("[Undone Overdue Tasks Reminder] Sending reminders to %d users", len(uts))
+		log.Debugf("[Daily Tasks Reminder] Sending reminders to %d users", len(uts))
 
 		taskIDs := []int64{}
 		for _, ut := range uts {
-			for _, t := range ut.tasks {
+			for _, t := range ut.overdue {
+				taskIDs = append(taskIDs, t.ID)
+			}
+			for _, t := range ut.dueToday {
 				taskIDs = append(taskIDs, t.ID)
 			}
 		}
 
 		projects, err := GetProjectsMapSimpleByTaskIDs(s, taskIDs)
 		if err != nil {
-			log.Errorf("[Undone Overdue Tasks Reminder] Could not get projects for tasks: %s", err)
+			log.Errorf("[Daily Tasks Reminder] Could not get projects for tasks: %s", err)
 			return
 		}
 
 		for _, ut := range uts {
-			var n notifications.Notification = &UndoneTasksOverdueNotification{
-				User:     ut.user,
-				Tasks:    ut.tasks,
-				Projects: projects,
+			n := &DailyTasksReminderNotification{
+				User:         ut.user,
+				OverdueTasks: ut.overdue,
+				DueToday:     ut.dueToday,
+				Projects:     projects,
 			}
 
-			if len(ut.tasks) == 1 {
-				// We know there's only one entry in the map so this is actually O(1) and we can use it to get the
-				// first entry without knowing the key of it.
-				for _, t := range ut.tasks {
-					n = &UndoneTaskOverdueNotification{
-						User:    ut.user,
-						Task:    t,
-						Project: projects[t.ProjectID],
-					}
-				}
+			if len(ut.overdue) == 0 && len(ut.dueToday) == 0 {
+				continue
 			}
 
 			err = notifications.Notify(ut.user, n)
 			if err != nil {
-				log.Errorf("[Undone Overdue Tasks Reminder] Could not notify user %d: %s", ut.user.ID, err)
+				log.Errorf("[Daily Tasks Reminder] Could not notify user %d: %s", ut.user.ID, err)
 				return
 			}
 
-			log.Debugf("[Undone Overdue Tasks Reminder] Sent reminder email for %d tasks to user %d", len(ut.tasks), ut.user.ID)
+			log.Debugf("[Daily Tasks Reminder] Sent reminder email to user %d (overdue: %d, today: %d)", ut.user.ID, len(ut.overdue), len(ut.dueToday))
 		}
 	})
 	if err != nil {
-		log.Fatalf("Could not register undone overdue tasks reminder cron: %s", err)
+		log.Fatalf("Could not register daily tasks reminder cron: %s", err)
 	}
 }
