@@ -325,6 +325,13 @@ jobs:
     container:
       image: cypress/browsers:latest@sha256:eeb9b35c998e2f9b78f15448202e90a9ab2b7fe79932d437ed94ee152e7d9cff
       options: --user 1001
+
+    # Evaluate once, at job startup
+    env:
+      # true when this is an in-repo PR (or a push)
+      RECORD_RUN: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+      # precompute build id so format() only runs once
+      CI_BUILD_ID: ${{ format('{0}-{1}', github.run_id, github.job) }}
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
       - name: Download Vikunja Binary
@@ -365,8 +372,14 @@ jobs:
           install: false
           working-directory: frontend
           browser: chrome
-          record: true
-          parallel: true
+          # Only record if this is not a forked PR
+          record: ${{ env.RECORD_RUN }}
+                    # only supply ci-build-id when RECORD_RUN == 'true'
+          ci-build-id: ${{ env.RECORD_RUN && env.CI_BUILD_ID }}
+          # same for parallel/group/tag
+          parallel:    ${{ env.RECORD_RUN }}
+          group:       ${{ env.RECORD_RUN && github.workflow }}
+          tag:         ${{ env.RECORD_RUN && github.head_ref }}
           start: |
             pnpm run preview:vikunja
             pnpm run preview
