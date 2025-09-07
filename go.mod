@@ -72,7 +72,7 @@ require (
 	github.com/yuin/goldmark v1.7.13
 	golang.org/x/crypto v0.41.0
 	golang.org/x/image v0.30.0
-	golang.org/x/oauth2 v0.30.0
+	golang.org/x/oauth2 v0.31.0
 	golang.org/x/sync v0.16.0
 	golang.org/x/sys v0.35.0
 	golang.org/x/term v0.34.0
@@ -172,6 +172,6 @@ replace github.com/samedi/caldav-go => github.com/kolaente/caldav-go v3.0.1-0.20
 
 replace github.com/labstack/echo/v4 => github.com/kolaente/echo/v4 v4.0.0-20250124112709-682dfde74c31 // https://github.com/labstack/echo/pull/2738
 
-go 1.23.0
+go 1.24.0
 
 toolchain go1.25.0
