@@ -111,7 +111,7 @@ jobs:
         ports:
           - 3306:3306
       migration-smoke-db-postgres:
-        image: postgres:17@sha256:d17be73073d6e73a005c239c67b8c9f0331925d05bd874964f445a9f698fbf72
+        image: postgres:17@sha256:5250e6187084ddf4ba407027d07eed2419d4656e30821afef43825c6c0d127df
         env:
           POSTGRES_PASSWORD: vikunjatest
           POSTGRES_DB: vikunjatest
@@ -187,7 +187,7 @@ jobs:
         ports:
           - 3306:3306
       db-postgres:
-        image: postgres:17@sha256:d17be73073d6e73a005c239c67b8c9f0331925d05bd874964f445a9f698fbf72
+        image: postgres:17@sha256:5250e6187084ddf4ba407027d07eed2419d4656e30821afef43825c6c0d127df
         env:
           POSTGRES_PASSWORD: vikunjatest
           POSTGRES_DB: vikunjatest
