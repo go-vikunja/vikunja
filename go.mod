@@ -71,7 +71,7 @@ require (
 	github.com/wneessen/go-mail v0.6.2
 	github.com/yuin/goldmark v1.7.13
 	golang.org/x/crypto v0.41.0
-	golang.org/x/image v0.30.0
+	golang.org/x/image v0.31.0
 	golang.org/x/oauth2 v0.31.0
 	golang.org/x/sync v0.17.0
 	golang.org/x/sys v0.36.0
