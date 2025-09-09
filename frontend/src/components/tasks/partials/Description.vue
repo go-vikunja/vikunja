@@ -88,7 +88,8 @@ async function saveWithDelay() {
 	}, 5000)
 }
 
-onBeforeUnmount(() => {
+onBeforeUnmount(async () => {
+	await save() // Save before unmounting to handle modal race condition
 	if (changeTimeout.value !== null) {
 		clearTimeout(changeTimeout.value)
 	}
