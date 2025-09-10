@@ -1004,7 +1004,11 @@ func setTaskInBucketInViews(s *xorm.Session, t *Task, a web.Auth, setBucket bool
 // @Failure 403 {object} web.HTTPError "The user does not have access to the task (aka its project)"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id} [post]
-//
+// Update updates a project task by delegating to the shared bulk helper.
+func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
+	return t.updateSingleTask(s, a, nil)
+}
+
 //nolint:gocyclo
 func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (err error) {
 
@@ -1332,16 +1336,6 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	}
 
 	return updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
-}
-
-// Update updates a project task by delegating to the shared bulk helper.
-func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
-	tasks, err := updateTasks(s, a, t, []int64{t.ID}, nil)
-	if err != nil {
-		return err
-	}
-	*t = *tasks[0]
-	return nil
 }
 
 // updateTasks updates multiple tasks with the same payload.
