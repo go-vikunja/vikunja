@@ -4167,7 +4167,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Updates a bunch of tasks at once. This includes marking them as done. Note: although you could supply another ID, it will be ignored. Use task_ids instead.",
+                "description": "Updates multiple tasks atomically. All provided tasks must be writable by the user.",
                 "consumes": [
                     "application/json"
                 ],
@@ -4177,11 +4177,11 @@ const docTemplate = `{
                 "tags": [
                     "task"
                 ],
-                "summary": "Update a bunch of tasks at once",
+                "summary": "Update multiple tasks",
                 "parameters": [
                     {
-                        "description": "The task object. Looks like a normal task, the only difference is it uses an array of project_ids to update.",
-                        "name": "task",
+                        "description": "Bulk task update payload",
+                        "name": "bulkTask",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -4191,19 +4191,22 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "The updated task object.",
+                        "description": "Updated tasks",
                         "schema": {
-                            "$ref": "#/definitions/models.Task"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Task"
+                            }
                         }
                     },
                     "400": {
-                        "description": "Invalid task object provided.",
+                        "description": "Invalid request",
                         "schema": {
                             "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "403": {
-                        "description": "The user does not have access to the task (aka its project)",
+                        "description": "The user does not have access to the tasks",
                         "schema": {
                             "$ref": "#/definitions/web.HTTPError"
                         }
@@ -7971,180 +7974,26 @@ const docTemplate = `{
         "models.BulkTask": {
             "type": "object",
             "properties": {
-                "assignees": {
-                    "description": "An array of users who are assigned to this task",
+                "fields": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/user.User"
+                        "type": "string"
                     }
-                },
-                "attachments": {
-                    "description": "All attachments this task has. This property is read-onlym, you must use the separate endpoint to add attachments to a task.",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.TaskAttachment"
-                    }
-                },
-                "bucket_id": {
-                    "description": "The bucket id. Will only be populated when the task is accessed via a view with buckets.\nCan be used to move a task between buckets. In that case, the new bucket must be in the same view as the old one.",
-                    "type": "integer"
-                },
-                "buckets": {
-                    "description": "All buckets across all views this task is part of. Only present when fetching tasks with the ` + "`" + `expand` + "`" + ` parameter set to ` + "`" + `buckets` + "`" + `.",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Bucket"
-                    }
-                },
-                "comments": {
-                    "description": "All comments of this task. Only present when fetching tasks with the ` + "`" + `expand` + "`" + ` parameter set to ` + "`" + `comments` + "`" + `.",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.TaskComment"
-                    }
-                },
-                "cover_image_attachment_id": {
-                    "description": "If this task has a cover image, the field will return the id of the attachment that is the cover image.",
-                    "type": "integer"
-                },
-                "created": {
-                    "description": "A timestamp when this task was created. You cannot change this value.",
-                    "type": "string"
-                },
-                "created_by": {
-                    "description": "The user who initially created the task.",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/user.User"
-                        }
-                    ]
-                },
-                "description": {
-                    "description": "The task description.",
-                    "type": "string"
-                },
-                "done": {
-                    "description": "Whether a task is done or not.",
-                    "type": "boolean"
-                },
-                "done_at": {
-                    "description": "The time when a task was marked as done.",
-                    "type": "string"
-                },
-                "due_date": {
-                    "description": "The time when the task is due.",
-                    "type": "string"
-                },
-                "end_date": {
-                    "description": "When this task ends.",
-                    "type": "string"
-                },
-                "hex_color": {
-                    "description": "The task color in hex",
-                    "type": "string",
-                    "maxLength": 7
-                },
-                "id": {
-                    "description": "The unique, numeric id of this task.",
-                    "type": "integer"
-                },
-                "identifier": {
-                    "description": "The task identifier, based on the project identifier and the task's index",
-                    "type": "string"
-                },
-                "index": {
-                    "description": "The task index, calculated per project",
-                    "type": "integer"
-                },
-                "is_favorite": {
-                    "description": "True if a task is a favorite task. Favorite tasks show up in a separate \"Important\" project. This value depends on the user making the call to the api.",
-                    "type": "boolean"
-                },
-                "labels": {
-                    "description": "An array of labels which are associated with this task. This property is read-only, you must use the separate endpoint to add labels to a task.",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Label"
-                    }
-                },
-                "percent_done": {
-                    "description": "Determines how far a task is left from being done",
-                    "type": "number"
-                },
-                "position": {
-                    "description": "The position of the task - any task project can be sorted as usual by this parameter.\nWhen accessing tasks via views with buckets, this is primarily used to sort them based on a range.\nPositions are always saved per view. They will automatically be set if you request the tasks through a view\nendpoint, otherwise they will always be 0. To update them, take a look at the Task Position endpoint.",
-                    "type": "number"
-                },
-                "priority": {
-                    "description": "The task priority. Can be anything you want, it is possible to sort by this later.",
-                    "type": "integer"
-                },
-                "project_id": {
-                    "description": "The project this task belongs to.",
-                    "type": "integer"
-                },
-                "reactions": {
-                    "description": "Reactions on that task.",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/models.ReactionMap"
-                        }
-                    ]
-                },
-                "related_tasks": {
-                    "description": "All related tasks, grouped by their relation kind",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/models.RelatedTaskMap"
-                        }
-                    ]
-                },
-                "reminders": {
-                    "description": "An array of reminders that are associated with this task.",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.TaskReminder"
-                    }
-                },
-                "repeat_after": {
-                    "description": "An amount in seconds this task repeats itself. If this is set, when marking the task as done, it will mark itself as \"undone\" and then increase all remindes and the due date by its amount.",
-                    "type": "integer"
-                },
-                "repeat_mode": {
-                    "description": "Can have three possible values which will trigger when the task is marked as done: 0 = repeats after the amount specified in repeat_after, 1 = repeats all dates each months (ignoring repeat_after), 3 = repeats from the current date rather than the last set date.",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/models.TaskRepeatMode"
-                        }
-                    ]
-                },
-                "start_date": {
-                    "description": "When this task starts.",
-                    "type": "string"
-                },
-                "subscription": {
-                    "description": "The subscription status for the user reading this task. You can only read this property, use the subscription endpoints to modify it.\nWill only returned when retrieving one task.",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/models.Subscription"
-                        }
-                    ]
                 },
                 "task_ids": {
-                    "description": "A project of task ids to update",
                     "type": "array",
                     "items": {
                         "type": "integer"
                     }
                 },
-                "title": {
-                    "description": "The task text. This is what you'll see in the project.",
-                    "type": "string",
-                    "minLength": 1
+                "tasks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Task"
+                    }
                 },
-                "updated": {
-                    "description": "A timestamp when this task was last updated. You cannot change this value.",
-                    "type": "string"
+                "values": {
+                    "$ref": "#/definitions/models.Task"
                 }
             }
         },

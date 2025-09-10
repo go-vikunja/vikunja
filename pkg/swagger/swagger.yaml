@@ -162,151 +162,20 @@ definitions:
     type: object
   models.BulkTask:
     properties:
-      assignees:
-        description: An array of users who are assigned to this task
+      fields:
         items:
-          $ref: '#/definitions/user.User'
+          type: string
         type: array
-      attachments:
-        description: All attachments this task has. This property is read-onlym, you
-          must use the separate endpoint to add attachments to a task.
-        items:
-          $ref: '#/definitions/models.TaskAttachment'
-        type: array
-      bucket_id:
-        description: |-
-          The bucket id. Will only be populated when the task is accessed via a view with buckets.
-          Can be used to move a task between buckets. In that case, the new bucket must be in the same view as the old one.
-        type: integer
-      buckets:
-        description: All buckets across all views this task is part of. Only present
-          when fetching tasks with the `expand` parameter set to `buckets`.
-        items:
-          $ref: '#/definitions/models.Bucket'
-        type: array
-      comments:
-        description: All comments of this task. Only present when fetching tasks with
-          the `expand` parameter set to `comments`.
-        items:
-          $ref: '#/definitions/models.TaskComment'
-        type: array
-      cover_image_attachment_id:
-        description: If this task has a cover image, the field will return the id
-          of the attachment that is the cover image.
-        type: integer
-      created:
-        description: A timestamp when this task was created. You cannot change this
-          value.
-        type: string
-      created_by:
-        allOf:
-        - $ref: '#/definitions/user.User'
-        description: The user who initially created the task.
-      description:
-        description: The task description.
-        type: string
-      done:
-        description: Whether a task is done or not.
-        type: boolean
-      done_at:
-        description: The time when a task was marked as done.
-        type: string
-      due_date:
-        description: The time when the task is due.
-        type: string
-      end_date:
-        description: When this task ends.
-        type: string
-      hex_color:
-        description: The task color in hex
-        maxLength: 7
-        type: string
-      id:
-        description: The unique, numeric id of this task.
-        type: integer
-      identifier:
-        description: The task identifier, based on the project identifier and the
-          task's index
-        type: string
-      index:
-        description: The task index, calculated per project
-        type: integer
-      is_favorite:
-        description: True if a task is a favorite task. Favorite tasks show up in
-          a separate "Important" project. This value depends on the user making the
-          call to the api.
-        type: boolean
-      labels:
-        description: An array of labels which are associated with this task. This
-          property is read-only, you must use the separate endpoint to add labels
-          to a task.
-        items:
-          $ref: '#/definitions/models.Label'
-        type: array
-      percent_done:
-        description: Determines how far a task is left from being done
-        type: number
-      position:
-        description: |-
-          The position of the task - any task project can be sorted as usual by this parameter.
-          When accessing tasks via views with buckets, this is primarily used to sort them based on a range.
-          Positions are always saved per view. They will automatically be set if you request the tasks through a view
-          endpoint, otherwise they will always be 0. To update them, take a look at the Task Position endpoint.
-        type: number
-      priority:
-        description: The task priority. Can be anything you want, it is possible to
-          sort by this later.
-        type: integer
-      project_id:
-        description: The project this task belongs to.
-        type: integer
-      reactions:
-        allOf:
-        - $ref: '#/definitions/models.ReactionMap'
-        description: Reactions on that task.
-      related_tasks:
-        allOf:
-        - $ref: '#/definitions/models.RelatedTaskMap'
-        description: All related tasks, grouped by their relation kind
-      reminders:
-        description: An array of reminders that are associated with this task.
-        items:
-          $ref: '#/definitions/models.TaskReminder'
-        type: array
-      repeat_after:
-        description: An amount in seconds this task repeats itself. If this is set,
-          when marking the task as done, it will mark itself as "undone" and then
-          increase all remindes and the due date by its amount.
-        type: integer
-      repeat_mode:
-        allOf:
-        - $ref: '#/definitions/models.TaskRepeatMode'
-        description: 'Can have three possible values which will trigger when the task
-          is marked as done: 0 = repeats after the amount specified in repeat_after,
-          1 = repeats all dates each months (ignoring repeat_after), 3 = repeats from
-          the current date rather than the last set date.'
-      start_date:
-        description: When this task starts.
-        type: string
-      subscription:
-        allOf:
-        - $ref: '#/definitions/models.Subscription'
-        description: |-
-          The subscription status for the user reading this task. You can only read this property, use the subscription endpoints to modify it.
-          Will only returned when retrieving one task.
       task_ids:
-        description: A project of task ids to update
         items:
           type: integer
         type: array
-      title:
-        description: The task text. This is what you'll see in the project.
-        minLength: 1
-        type: string
-      updated:
-        description: A timestamp when this task was last updated. You cannot change
-          this value.
-        type: string
+      tasks:
+        items:
+          $ref: '#/definitions/models.Task'
+        type: array
+      values:
+        $ref: '#/definitions/models.Task'
     type: object
   models.DatabaseNotifications:
     properties:
@@ -5504,14 +5373,12 @@ paths:
     post:
       consumes:
       - application/json
-      description: 'Updates a bunch of tasks at once. This includes marking them as
-        done. Note: although you could supply another ID, it will be ignored. Use
-        task_ids instead.'
+      description: Updates multiple tasks atomically. All provided tasks must be writable
+        by the user.
       parameters:
-      - description: The task object. Looks like a normal task, the only difference
-          is it uses an array of project_ids to update.
+      - description: Bulk task update payload
         in: body
-        name: task
+        name: bulkTask
         required: true
         schema:
           $ref: '#/definitions/models.BulkTask'
@@ -5519,15 +5386,17 @@ paths:
       - application/json
       responses:
         "200":
-          description: The updated task object.
+          description: Updated tasks
           schema:
-            $ref: '#/definitions/models.Task'
+            items:
+              $ref: '#/definitions/models.Task'
+            type: array
         "400":
-          description: Invalid task object provided.
+          description: Invalid request
           schema:
             $ref: '#/definitions/web.HTTPError'
         "403":
-          description: The user does not have access to the task (aka its project)
+          description: The user does not have access to the tasks
           schema:
             $ref: '#/definitions/web.HTTPError'
         "500":
@@ -5536,7 +5405,7 @@ paths:
             $ref: '#/definitions/models.Message'
       security:
       - JWTKeyAuth: []
-      summary: Update a bunch of tasks at once
+      summary: Update multiple tasks
       tags:
       - task
   /teams:
