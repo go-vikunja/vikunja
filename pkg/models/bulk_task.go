@@ -18,16 +18,19 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/web"
+
 	"xorm.io/xorm"
 )
 
 // BulkTask represents a bulk task update payload.
 type BulkTask struct {
-	*Task   `json:"-" xorm:"-"`
 	TaskIDs []int64  `json:"task_ids"`
 	Fields  []string `json:"fields"`
 	Values  *Task    `json:"values"`
 	Tasks   []*Task  `json:"tasks,omitempty"`
+
+	web.CRUDable    `xorm:"-" json:"-"`
+	web.Permissions `xorm:"-" json:"-"`
 }
 
 // CanUpdate checks if the user can update all provided tasks.
@@ -39,22 +42,24 @@ func (bt *BulkTask) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 	if len(tasks) == 0 {
 		return false, ErrBulkTasksNeedAtLeastOne{}
 	}
+
 	// ensure user can write to each involved project
 	projects := map[int64]struct{}{}
 	for _, t := range tasks {
 		projects[t.ProjectID] = struct{}{}
 	}
 	for pid := range projects {
-		l := &Project{ID: pid}
-		can, err := l.CanWrite(s, a)
+		p := &Project{ID: pid}
+		can, err := p.CanWrite(s, a)
 		if err != nil || !can {
 			return false, err
 		}
 	}
+
 	// if tasks are moved to another project, check destination permission
 	if bt.Values != nil && bt.Values.ProjectID != 0 {
-		l := &Project{ID: bt.Values.ProjectID}
-		can, err := l.CanWrite(s, a)
+		p := &Project{ID: bt.Values.ProjectID}
+		can, err := p.CanWrite(s, a)
 		if err != nil || !can {
 			return false, err
 		}

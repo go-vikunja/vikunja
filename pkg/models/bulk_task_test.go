@@ -21,6 +21,7 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -33,8 +34,10 @@ func TestBulkTask_Update(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
+		u := &user.User{ID: 6}
+
 		bt := &BulkTask{
-			TaskIDs: []int64{10, 13},
+			TaskIDs: []int64{15, 16},
 			Fields:  []string{"title"},
 			Values:  &Task{Title: "bulkupdated"},
 		}
@@ -47,8 +50,8 @@ func TestBulkTask_Update(t *testing.T) {
 		require.NoError(t, err)
 		require.NoError(t, s.Commit())
 
-		db.AssertExists(t, "tasks", map[string]interface{}{"id": 10, "title": "bulkupdated", "done": false}, false)
-		db.AssertExists(t, "tasks", map[string]interface{}{"id": 13, "title": "bulkupdated", "done": false}, false)
+		db.AssertExists(t, "tasks", map[string]interface{}{"id": 15, "title": "bulkupdated", "done": false}, false)
+		db.AssertExists(t, "tasks", map[string]interface{}{"id": 16, "title": "bulkupdated", "done": false}, false)
 	})
 
 	t.Run("unauthorized task prevents update", func(t *testing.T) {
