@@ -146,7 +146,7 @@
     "stylelint-use-logical": "2.1.2",
     "typescript": "5.9.2",
     "unplugin-inject-preload": "3.0.0",
-    "vite": "7.1.2",
+    "vite": "7.1.5",
     "vite-plugin-pwa": "1.0.2",
     "vite-plugin-sentry": "1.4.1",
     "vite-plugin-vue-devtools": "8.0.0",
