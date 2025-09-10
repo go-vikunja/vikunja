@@ -18,6 +18,7 @@ package models
 
 import (
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
@@ -116,4 +117,31 @@ func TestBulkTask_Update(t *testing.T) {
 		assert.NotZero(t, bt.Tasks[0].DoneAt)
 		assert.NotZero(t, bt.Tasks[1].DoneAt)
 	})
+}
+
+func TestBulkTaskDoneAtOverride(t *testing.T) {
+	u := &user.User{ID: 1}
+
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	userProvidedTime := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
+	bt := &BulkTask{
+		TaskIDs: []int64{1, 3},
+		Fields:  []string{"done", "done_at"},
+		Values:  &Task{Done: true, DoneAt: userProvidedTime},
+	}
+
+	err := bt.Update(s, u)
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+
+	require.Len(t, bt.Tasks, 2)
+	assert.True(t, bt.Tasks[0].Done)
+	assert.True(t, bt.Tasks[1].Done)
+	assert.NotEqual(t, userProvidedTime, bt.Tasks[0].DoneAt)
+	assert.NotEqual(t, userProvidedTime, bt.Tasks[1].DoneAt)
+	assert.WithinDuration(t, time.Now(), bt.Tasks[0].DoneAt, time.Second*2)
+	assert.WithinDuration(t, time.Now(), bt.Tasks[1].DoneAt, time.Second*2)
 }

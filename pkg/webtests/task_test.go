@@ -17,7 +17,11 @@
 package webtests
 
 import (
+	"encoding/json"
+	"net/http"
+	"net/url"
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
@@ -27,6 +31,24 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestTaskUpdateDoneAtOverride(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+
+	h := handler.WebHandler{EmptyStruct: func() handler.CObject { return &models.Task{} }}
+
+	c, rec := createRequest(e, http.MethodPost, `{"done": true, "done_at": "2023-01-01T00:00:00Z"}`, url.Values{}, map[string]string{"projecttask": "1"})
+	addUserTokenToContext(t, &testuser1, c)
+	err = h.UpdateWeb(c)
+	require.NoError(t, err)
+
+	task := &models.Task{}
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), task))
+	assert.True(t, task.Done)
+	assert.NotEqual(t, "2023-01-01T00:00:00Z", task.DoneAt.Format(time.RFC3339))
+	assert.WithinDuration(t, time.Now(), task.DoneAt, time.Second*2)
+}
 
 func TestTask(t *testing.T) {
 	testHandler := webHandlerTest{

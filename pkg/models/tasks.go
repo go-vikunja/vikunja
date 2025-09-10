@@ -59,7 +59,7 @@ type Task struct {
 	Description string `xorm:"longtext null" json:"description"`
 	// Whether a task is done or not.
 	Done bool `xorm:"INDEX null" json:"done"`
-	// The time when a task was marked as done.
+	// The time when a task was marked as done. This field is system-controlled and cannot be set via API.
 	DoneAt time.Time `xorm:"INDEX null 'done_at'" json:"done_at"`
 	// The time when the task is due.
 	DueDate time.Time `xorm:"DATETIME INDEX null 'due_date'" json:"due_date"`
@@ -1005,6 +1005,7 @@ func setTaskInBucketInViews(s *xorm.Session, t *Task, a web.Auth, setBucket bool
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id} [post]
 // Update updates a project task by delegating to the shared bulk helper.
+// Note: Some fields like done_at are system-controlled and ignore user-provided values.
 func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 	return t.updateSingleTask(s, a, nil)
 }
@@ -1017,6 +1018,9 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	if err != nil {
 		return
 	}
+
+	// Ensure done_at cannot be overridden by user-provided values
+	t.DoneAt = ot.DoneAt
 
 	if t.ProjectID == 0 {
 		t.ProjectID = ot.ProjectID
@@ -1307,6 +1311,10 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	// Attachment cover image
 	if t.CoverImageAttachmentID == 0 {
 		ot.CoverImageAttachmentID = 0
+	}
+	// Done at timestamp - always system controlled
+	if !t.Done {
+		ot.DoneAt = time.Time{}
 	}
 
 	_, err = s.ID(t.ID).
