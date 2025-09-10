@@ -472,6 +472,20 @@ func TestTask_Delete(t *testing.T) {
 	})
 }
 
+func TestUpdateTasksHelper(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	u := &user.User{ID: 1}
+	updates := &Task{Title: "helper"}
+	updated, err := updateTasks(s, u, updates, []int64{10}, []string{"title"})
+	require.NoError(t, err)
+	require.Len(t, updated, 1)
+	assert.Equal(t, "helper", updated[0].Title)
+	assert.False(t, updated[0].Done)
+}
+
 func TestUpdateDone(t *testing.T) {
 	t.Run("marking a task as done", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)

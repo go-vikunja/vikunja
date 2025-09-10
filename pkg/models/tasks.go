@@ -371,22 +371,6 @@ func GetTasksSimpleByIDs(s *xorm.Session, ids []int64) (tasks []*Task, err error
 	return
 }
 
-// GetTasksByIDs returns all tasks for a project of ids
-func (bt *BulkTask) GetTasksByIDs(s *xorm.Session) (err error) {
-	for _, id := range bt.IDs {
-		if id < 1 {
-			return ErrTaskDoesNotExist{id}
-		}
-	}
-
-	err = s.In("id", bt.IDs).Find(&bt.Tasks)
-	if err != nil {
-		return
-	}
-
-	return
-}
-
 func GetTaskSimpleByUUID(s *xorm.Session, uid string) (task *Task, err error) {
 	var has bool
 	task = &Task{}
@@ -1020,9 +1004,13 @@ func setTaskInBucketInViews(s *xorm.Session, t *Task, a web.Auth, setBucket bool
 // @Failure 403 {object} web.HTTPError "The user does not have access to the task (aka its project)"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id} [post]
-//
-//nolint:gocyclo
+// Update updates a project task by delegating to the shared bulk helper.
 func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
+	return t.updateSingleTask(s, a, nil)
+}
+
+//nolint:gocyclo
+func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (err error) {
 
 	// Check if the task exists and get the old values
 	ot, err := GetTaskByIDSimple(s, t.ID)
@@ -1065,6 +1053,68 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 		"bucket_id",
 		"repeat_mode",
 		"cover_image_attachment_id",
+	}
+
+	// Validate fields if provided
+	if len(fields) > 0 {
+		allowed := map[string]bool{}
+		for _, c := range colsToUpdate {
+			allowed[c] = true
+		}
+		cols := []string{}
+		fieldSet := map[string]bool{}
+		for _, f := range fields {
+			if !allowed[f] {
+				return ErrInvalidTaskColumn{Column: f}
+			}
+			cols = append(cols, f)
+			fieldSet[f] = true
+		}
+		colsToUpdate = cols
+
+		if !fieldSet["title"] {
+			t.Title = ot.Title
+		}
+		if !fieldSet["description"] {
+			t.Description = ot.Description
+		}
+		if !fieldSet["done"] {
+			t.Done = ot.Done
+			t.DoneAt = ot.DoneAt
+		}
+		if !fieldSet["due_date"] {
+			t.DueDate = ot.DueDate
+		}
+		if !fieldSet["repeat_after"] {
+			t.RepeatAfter = ot.RepeatAfter
+		}
+		if !fieldSet["priority"] {
+			t.Priority = ot.Priority
+		}
+		if !fieldSet["start_date"] {
+			t.StartDate = ot.StartDate
+		}
+		if !fieldSet["end_date"] {
+			t.EndDate = ot.EndDate
+		}
+		if !fieldSet["hex_color"] {
+			t.HexColor = ot.HexColor
+		}
+		if !fieldSet["percent_done"] {
+			t.PercentDone = ot.PercentDone
+		}
+		if !fieldSet["project_id"] {
+			t.ProjectID = ot.ProjectID
+		}
+		if !fieldSet["bucket_id"] {
+			t.BucketID = ot.BucketID
+		}
+		if !fieldSet["repeat_mode"] {
+			t.RepeatMode = ot.RepeatMode
+		}
+		if !fieldSet["cover_image_attachment_id"] {
+			t.CoverImageAttachmentID = ot.CoverImageAttachmentID
+		}
 	}
 
 	// If the task is being moved between projects, make sure to move the bucket + index as well
@@ -1286,6 +1336,20 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	return updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
+}
+
+// updateTasks updates multiple tasks with the same payload.
+// If fields is nil, it updates the default set of columns.
+func updateTasks(s *xorm.Session, a web.Auth, t *Task, ids []int64, fields []string) (tasks []*Task, err error) {
+	for _, id := range ids {
+		nt := clone.Clone(t)
+		nt.ID = id
+		if err := nt.updateSingleTask(s, a, fields); err != nil {
+			return []*Task{}, err
+		}
+		tasks = append(tasks, nt)
+	}
+	return tasks, nil
 }
 
 func (t *Task) moveTaskToDoneBuckets(s *xorm.Session, a web.Auth, views []*ProjectView) error {
