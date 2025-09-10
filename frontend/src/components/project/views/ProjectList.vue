@@ -113,6 +113,7 @@ import {PERMISSIONS as Permissions} from '@/constants/permissions'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 import type {ITask} from '@/modelTypes/ITask'
 import {isSavedFilter} from '@/services/savedFilter'
+import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 
 import {useBaseStore} from '@/stores/base'
 
@@ -216,9 +217,31 @@ function updateTaskList(task: ITask) {
 
 function updateTasks(updatedTask: ITask) {
 	if (props.projectId < 0) {
-		// In the case of a filter, we'll reload the filter in the background to avoid tasks which do 
-		// not match the filter show up here
-		loadTasks(false)
+		const originalTask = allTasks.value.find(t => t.id === updatedTask.id)
+		const isRecurringTask = originalTask && (originalTask.repeatAfter.amount > 0 || originalTask.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH)
+		
+		const filterContainsDateFields = project.value && isSavedFilter(project.value) && 
+			project.value.title &&
+			(params.value.filter?.includes('due_date') || 
+			 params.value.filter?.includes('start_date') || 
+			 params.value.filter?.includes('end_date'))
+
+		console.log({isRecurringTask, filterContainsDateFields, filter: params.value.filter, projectFilter: project.value})
+		
+		if (isRecurringTask && filterContainsDateFields) {
+			// In the case of a filter, we'll reload the filter in the background to avoid tasks which do 
+			// not match the filter show up here
+			loadTasks(false)
+			return
+		}
+		
+		// For other updates in saved filters, just update the task in place
+		for (const t in allTasks.value) {
+			if (allTasks.value[t].id === updatedTask.id) {
+				allTasks.value[t] = updatedTask
+				break
+			}
+		}
 		return
 	}
 

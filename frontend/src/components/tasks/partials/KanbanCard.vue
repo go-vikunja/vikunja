@@ -128,6 +128,7 @@ import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import {playPopSound} from '@/helpers/playPop'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import {useProjectStore} from '@/stores/projects'
+import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 
 const props = withDefaults(defineProps<{
 	task: ITask,
@@ -136,6 +137,10 @@ const props = withDefaults(defineProps<{
 }>(), {
 	loading: false,
 })
+
+const emit = defineEmits<{
+	'taskCompletedRecurring': [task: ITask]
+}>()
 
 const router = useRouter()
 
@@ -165,6 +170,9 @@ const isOverdue = computed(() => (
 ))
 
 async function toggleTaskDone(task: ITask) {
+	const isRecurringTask = task.repeatAfter.amount > 0 || task.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH
+	const wasBeingMarkedDone = !task.done
+	
 	loadingInternal.value = true
 	try {
 		const updatedTask = await useTaskStore().update({
@@ -174,6 +182,11 @@ async function toggleTaskDone(task: ITask) {
 
 		if (updatedTask.done) {
 			playPopSound()
+		}
+		
+		// Emit event if this was a recurring task being marked as done
+		if (isRecurringTask && wasBeingMarkedDone && updatedTask.done) {
+			emit('taskCompletedRecurring', updatedTask)
 		}
 	} finally {
 		loadingInternal.value = false

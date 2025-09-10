@@ -215,6 +215,7 @@
 												:task="task"
 												:loading="taskUpdating[task.id] ?? false"
 												:project-id="projectId"
+												@taskCompletedRecurring="handleRecurringTaskCompletion"
 											/>
 										</div>
 									</template>
@@ -662,6 +663,24 @@ async function saveBucketTitle(bucketId: IBucket['id'], bucketTitle: string) {
 function updateBuckets(value: IBucket[]) {
 	// (1) buckets get updated in store and tasks positions get invalidated
 	kanbanStore.setBuckets(value)
+}
+
+function handleRecurringTaskCompletion(task: ITask) {
+	// Only reload if we're in a saved filter and the filter contains date fields
+	if (!isSavedFilter(project.value)) {
+		return
+	}
+
+	// Prompt: The saved filter query is not in the params. Instead, it uses the filter property that's stored with the filter. Since the filter project does not contain that by default, in the respective methods, fetch the filter (similar to how it's fetched when editing) store it in pinia and check with the   filter value instead of the params. update the value in store when updating the filter through settings. Only fetch it when it is not yet in the store
+
+	const filterContainsDateFields = params.value.filter?.includes('due_date') || 
+			params.value.filter?.includes('start_date') || 
+			params.value.filter?.includes('end_date')
+		
+	if (filterContainsDateFields) {
+		// Reload the kanban board to refresh tasks that now match/don't match the filter
+		kanbanStore.loadBucketsForProject(props.projectId, props.viewId, params.value)
+	}
 }
 
 // TODO: fix type
