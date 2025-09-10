@@ -18,105 +18,71 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/web"
-
-	"dario.cat/mergo"
 	"xorm.io/xorm"
 )
 
-// BulkTask is the definition of a bulk update task
+// BulkTask represents a bulk task update payload.
 type BulkTask struct {
-	// A project of task ids to update
-	IDs   []int64 `json:"task_ids"`
-	Tasks []*Task `json:"-"`
-	Task
+	*Task   `json:"-" xorm:"-"`
+	TaskIDs []int64  `json:"task_ids"`
+	Fields  []string `json:"fields"`
+	Values  *Task    `json:"values"`
+	Tasks   []*Task  `json:"tasks,omitempty"`
 }
 
-func (bt *BulkTask) checkIfTasksAreOnTheSameProject(s *xorm.Session) (err error) {
-	// Get the tasks
-	err = bt.GetTasksByIDs(s)
-	if err != nil {
-		return err
-	}
-
-	if len(bt.Tasks) == 0 {
-		return ErrBulkTasksNeedAtLeastOne{}
-	}
-
-	// Check if all tasks are in the same project
-	var firstProjectID = bt.Tasks[0].ProjectID
-	for _, t := range bt.Tasks {
-		if t.ProjectID != firstProjectID {
-			return ErrBulkTasksMustBeInSameProject{firstProjectID, t.ProjectID}
-		}
-	}
-
-	return nil
-}
-
-// CanUpdate checks if a user is allowed to update a task
+// CanUpdate checks if the user can update all provided tasks.
 func (bt *BulkTask) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
-
-	err := bt.checkIfTasksAreOnTheSameProject(s)
+	tasks, err := GetTasksSimpleByIDs(s, bt.TaskIDs)
 	if err != nil {
 		return false, err
 	}
-
-	// A user can update an task if he has write acces to its project
-	l := &Project{ID: bt.Tasks[0].ProjectID}
-	return l.CanWrite(s, a)
+	if len(tasks) == 0 {
+		return false, ErrBulkTasksNeedAtLeastOne{}
+	}
+	// ensure user can write to each involved project
+	projects := map[int64]struct{}{}
+	for _, t := range tasks {
+		projects[t.ProjectID] = struct{}{}
+	}
+	for pid := range projects {
+		l := &Project{ID: pid}
+		can, err := l.CanWrite(s, a)
+		if err != nil || !can {
+			return false, err
+		}
+	}
+	// if tasks are moved to another project, check destination permission
+	if bt.Values != nil && bt.Values.ProjectID != 0 {
+		l := &Project{ID: bt.Values.ProjectID}
+		can, err := l.CanWrite(s, a)
+		if err != nil || !can {
+			return false, err
+		}
+	}
+	return true, nil
 }
 
-// Update updates a bunch of tasks at once
-// @Summary Update a bunch of tasks at once
-// @Description Updates a bunch of tasks at once. This includes marking them as done. Note: although you could supply another ID, it will be ignored. Use task_ids instead.
+// Update updates multiple tasks at once.
+// @Summary Update multiple tasks
+// @Description Updates multiple tasks atomically. All provided tasks must be writable by the user.
 // @tags task
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
-// @Param task body models.BulkTask true "The task object. Looks like a normal task, the only difference is it uses an array of project_ids to update."
-// @Success 200 {object} models.Task "The updated task object."
-// @Failure 400 {object} web.HTTPError "Invalid task object provided."
-// @Failure 403 {object} web.HTTPError "The user does not have access to the task (aka its project)"
+// @Param bulkTask body models.BulkTask true "Bulk task update payload"
+// @Success 200 {array} models.Task "Updated tasks"
+// @Failure 400 {object} web.HTTPError "Invalid request"
+// @Failure 403 {object} web.HTTPError "The user does not have access to the tasks"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/bulk [post]
 func (bt *BulkTask) Update(s *xorm.Session, a web.Auth) (err error) {
-	for _, oldtask := range bt.Tasks {
-
-		// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
-		updateDone(oldtask, &bt.Task)
-
-		// Update the assignees
-		if err := oldtask.updateTaskAssignees(s, bt.Assignees, a); err != nil {
-			return err
-		}
-
-		// For whatever reason, xorm dont detect if done is updated, so we need to update this every time by hand
-		// Which is why we merge the actual task struct with the one we got from the
-		// The user struct overrides values in the actual one.
-		if err := mergo.Merge(oldtask, &bt.Task, mergo.WithOverride); err != nil {
-			return err
-		}
-
-		// And because a false is considered to be a null value, we need to explicitly check that case here.
-		if !bt.Done {
-			oldtask.Done = false
-		}
-
-		_, err = s.ID(oldtask.ID).
-			Cols("title",
-				"description",
-				"done",
-				"due_date",
-				"reminders",
-				"repeat_after",
-				"priority",
-				"start_date",
-				"end_date").
-			Update(oldtask)
-		if err != nil {
-			return err
-		}
+	if bt.Values == nil {
+		bt.Values = &Task{}
 	}
-
-	return
+	tasks, err := updateTasks(s, a, bt.Values, bt.TaskIDs, bt.Fields)
+	if err != nil {
+		return err
+	}
+	bt.Tasks = tasks
+	return nil
 }

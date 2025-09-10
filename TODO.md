@@ -1,0 +1,3 @@
+- [x] Phase 1: Extract shared update logic
+- [x] Phase 2: Rewrite bulk update model
+ - [x] Phase 3: Testing
