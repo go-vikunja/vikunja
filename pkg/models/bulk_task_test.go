@@ -89,4 +89,31 @@ func TestBulkTask_Update(t *testing.T) {
 		require.Error(t, err)
 		assert.IsType(t, ErrInvalidTaskColumn{}, err)
 	})
+
+	t.Run("update done_at when bulk marking tasks done", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		bt := &BulkTask{
+			TaskIDs: []int64{1, 3},
+			Fields:  []string{"done"},
+			Values:  &Task{Done: true},
+		}
+
+		allowed, err := bt.CanUpdate(s, u)
+		require.NoError(t, err)
+		require.True(t, allowed)
+
+		err = bt.Update(s, u)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		db.AssertMissing(t, "tasks", map[string]interface{}{"id": 1, "done": false, "done_at": nil})
+		db.AssertMissing(t, "tasks", map[string]interface{}{"id": 3, "done": false, "done_at": nil})
+
+		require.Len(t, bt.Tasks, 2)
+		assert.NotZero(t, bt.Tasks[0].DoneAt)
+		assert.NotZero(t, bt.Tasks[1].DoneAt)
+	})
 }
