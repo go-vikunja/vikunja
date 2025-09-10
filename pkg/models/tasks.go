@@ -1005,7 +1005,6 @@ func setTaskInBucketInViews(s *xorm.Session, t *Task, a web.Auth, setBucket bool
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id} [post]
 // Update updates a project task by delegating to the shared bulk helper.
-// Note: Some fields like done_at are system-controlled and ignore user-provided values.
 func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 	return t.updateSingleTask(s, a, nil)
 }
