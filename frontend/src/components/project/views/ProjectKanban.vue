@@ -304,7 +304,7 @@ import {
 } from '@/helpers/saveCollapsedBucketState'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 
-import {isSavedFilter} from '@/services/savedFilter'
+import {isSavedFilter, useSavedFilter} from '@/services/savedFilter'
 import {success} from '@/message'
 import {useProjectStore} from '@/stores/projects'
 import type {TaskFilterParams} from '@/services/taskCollection'
@@ -342,6 +342,9 @@ const taskStore = useTaskStore()
 const projectStore = useProjectStore()
 const taskPositionService = ref(new TaskPositionService())
 const taskBucketService = ref(new TaskBucketService())
+
+// Saved filter composable for accessing filter data
+const {filter: savedFilter} = useSavedFilter(() => props.projectId)
 
 const taskContainerRefs = ref<{ [id: IBucket['id']]: HTMLElement }>({})
 const bucketLimitInputRef = ref<HTMLInputElement | null>(null)
@@ -665,17 +668,15 @@ function updateBuckets(value: IBucket[]) {
 	kanbanStore.setBuckets(value)
 }
 
-function handleRecurringTaskCompletion(task: ITask) {
+function handleRecurringTaskCompletion() {
 	// Only reload if we're in a saved filter and the filter contains date fields
 	if (!isSavedFilter(project.value)) {
 		return
 	}
 
-	// Prompt: The saved filter query is not in the params. Instead, it uses the filter property that's stored with the filter. Since the filter project does not contain that by default, in the respective methods, fetch the filter (similar to how it's fetched when editing) store it in pinia and check with the   filter value instead of the params. update the value in store when updating the filter through settings. Only fetch it when it is not yet in the store
-
-	const filterContainsDateFields = params.value.filter?.includes('due_date') || 
-			params.value.filter?.includes('start_date') || 
-			params.value.filter?.includes('end_date')
+	const filterContainsDateFields = savedFilter.value.filters?.filter?.includes('due_date') || 
+			savedFilter.value.filters?.filter?.includes('start_date') || 
+			savedFilter.value.filters?.filter?.includes('end_date')
 		
 	if (filterContainsDateFields) {
 		// Reload the kanban board to refresh tasks that now match/don't match the filter

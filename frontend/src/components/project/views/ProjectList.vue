@@ -112,7 +112,7 @@ import {useTaskList} from '@/composables/useTaskList'
 import {PERMISSIONS as Permissions} from '@/constants/permissions'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 import type {ITask} from '@/modelTypes/ITask'
-import {isSavedFilter} from '@/services/savedFilter'
+import {isSavedFilter, useSavedFilter} from '@/services/savedFilter'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 
 import {useBaseStore} from '@/stores/base'
@@ -152,6 +152,9 @@ const {
 )
 
 const taskPositionService = ref(new TaskPositionService())
+
+// Saved filter composable for accessing filter data
+const {filter: savedFilter} = useSavedFilter(() => props.projectId)
 
 const tasks = ref<ITask[]>([])
 watch(
@@ -222,11 +225,10 @@ function updateTasks(updatedTask: ITask) {
 		
 		const filterContainsDateFields = project.value && isSavedFilter(project.value) && 
 			project.value.title &&
-			(params.value.filter?.includes('due_date') || 
-			 params.value.filter?.includes('start_date') || 
-			 params.value.filter?.includes('end_date'))
+			(savedFilter.value.filters?.filter?.includes('due_date') || 
+			 savedFilter.value.filters?.filter?.includes('start_date') || 
+			 savedFilter.value.filters?.filter?.includes('end_date'))
 
-		console.log({isRecurringTask, filterContainsDateFields, filter: params.value.filter, projectFilter: project.value})
 		
 		if (isRecurringTask && filterContainsDateFields) {
 			// In the case of a filter, we'll reload the filter in the background to avoid tasks which do 
