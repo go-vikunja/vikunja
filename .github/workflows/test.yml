@@ -311,7 +311,7 @@ jobs:
       - frontend-build
     services:
       dex:
-        image: ghcr.io/go-vikunja/dex-testing:main@sha256:10cc6d553e6a904e454a0ab1bbb0802fc8bd0e6f199485826149c2108bcf3333
+        image: ghcr.io/go-vikunja/dex-testing:main@sha256:408e9994943b8d56671b2ffacd35b5c908cb84bb5ad1387bc2377764b13458c9
         ports:
           - 5556:5556
     strategy:
