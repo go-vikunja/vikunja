@@ -85,6 +85,7 @@ import GanttTimelineHeader from '@/components/gantt/GanttTimelineHeader.vue'
 import Loading from '@/components/misc/Loading.vue'
 
 import {MILLISECONDS_A_DAY} from '@/constants/date'
+import {roundToNaturalDayBoundary} from '@/helpers/time/roundToNaturalDayBoundary'
 
 const props = defineProps<{
 	isLoading: boolean,
@@ -150,13 +151,13 @@ const ganttRows = ref<string[]>([])
 const cellsByRow = ref<Record<string, string[]>>({})
 
 function transformTaskToGanttBar(t: ITask): GanttBarModel {
-	const startDate = t.startDate 
-		? new Date(t.startDate) 
-		: new Date(props.defaultTaskStartDate)
-	const endDate = t.endDate 
-		? new Date(t.endDate) 
-		: new Date(props.defaultTaskEndDate)
-	
+	const startDate = roundToNaturalDayBoundary(
+		t.startDate ? new Date(t.startDate) : new Date(props.defaultTaskStartDate),
+	)
+	const endDate = roundToNaturalDayBoundary(
+		t.endDate ? new Date(t.endDate) : new Date(props.defaultTaskEndDate),
+	)
+
 	const taskColor = getHexColor(t.hexColor)
 	
 	const bar = {
@@ -187,12 +188,12 @@ watch(
 				return false
 			}
 			
-			const taskStart = task.startDate 
-				? new Date(task.startDate) 
-				: new Date(props.defaultTaskStartDate)
-			const taskEnd = task.endDate 
-				? new Date(task.endDate) 
-				: new Date(props.defaultTaskEndDate)
+			const taskStart = roundToNaturalDayBoundary(
+				task.startDate ? new Date(task.startDate) : new Date(props.defaultTaskStartDate),
+			)
+			const taskEnd = roundToNaturalDayBoundary(
+				task.endDate ? new Date(task.endDate) : new Date(props.defaultTaskEndDate),
+			)
 			
 			// Task is visible if it overlaps with the current date range
 			return taskStart <= dateToDate.value 
@@ -225,8 +226,8 @@ watch(
 function updateGanttTask(id: string, newStart: Date, newEnd: Date) {
 	emit('update:task', {
 		id: Number(id),
-		startDate: dayjs(newStart).startOf('day').toDate(),
-		endDate: dayjs(newEnd).endOf('day').toDate(),
+		startDate: roundToNaturalDayBoundary(newStart),
+		endDate: roundToNaturalDayBoundary(newEnd),
 	})
 }
 
