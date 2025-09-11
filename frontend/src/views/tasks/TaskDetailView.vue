@@ -600,7 +600,7 @@ import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted, on
 import {useRouter, type RouteLocation} from 'vue-router'
 import {storeToRefs} from 'pinia'
 import {useI18n} from 'vue-i18n'
-import {unrefElement} from '@vueuse/core'
+import {unrefElement, useMediaQuery} from '@vueuse/core'
 import {klona} from 'klona/lite'
 import {eventToHotkeyString} from '@github/hotkey'
 
