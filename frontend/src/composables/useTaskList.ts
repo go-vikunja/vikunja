@@ -74,7 +74,9 @@ export function useTaskList(
 	const filter = useRouteQuery('filter')
 	const s = useRouteQuery('s')
 
-	watch([filter, s], () => { page.value = 1 })
+	watch([filter, s], () => {
+		page.value = 1
+	})
 
 	watch(filter, v => { params.value.filter = v ?? '' }, { immediate: true })
 	watch(s, v => { params.value.s = v ?? '' }, { immediate: true })
