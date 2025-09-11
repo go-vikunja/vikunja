@@ -1018,9 +1018,6 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		return
 	}
 
-	// Ensure done_at cannot be overridden by user-provided values
-	t.DoneAt = ot.DoneAt
-
 	if t.ProjectID == 0 {
 		t.ProjectID = ot.ProjectID
 	}
@@ -1050,7 +1047,6 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		"start_date",
 		"end_date",
 		"hex_color",
-		"done_at",
 		"percent_done",
 		"project_id",
 		"bucket_id",
@@ -1193,7 +1189,10 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	}
 
 	// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
-	updateDone(&ot, t)
+	updateDoneAt := updateDone(&ot, t)
+	if updateDoneAt {
+		colsToUpdate = append(colsToUpdate, "done_at")
+	}
 
 	// Update the reminders
 	if err := ot.updateReminders(s, t); err != nil {
@@ -1310,10 +1309,6 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	// Attachment cover image
 	if t.CoverImageAttachmentID == 0 {
 		ot.CoverImageAttachmentID = 0
-	}
-	// Done at timestamp - always system controlled
-	if !t.Done {
-		ot.DoneAt = time.Time{}
 	}
 
 	_, err = s.ID(t.ID).
@@ -1570,7 +1565,7 @@ func setTaskDatesFromCurrentDateRepeat(oldTask, newTask *Task) {
 // We make a few assumptions here:
 //  1. Everything in oldTask is the truth - we figure out if we update anything at all if oldTask.RepeatAfter has a value > 0
 //  2. Because of 1., this functions should not be used to update values other than Done in the same go
-func updateDone(oldTask *Task, newTask *Task) {
+func updateDone(oldTask *Task, newTask *Task) (updateDoneAt bool) {
 	if !oldTask.Done && newTask.Done {
 		switch oldTask.RepeatMode {
 		case TaskRepeatModeMonth:
@@ -1588,6 +1583,8 @@ func updateDone(oldTask *Task, newTask *Task) {
 	if oldTask.Done && !newTask.Done {
 		newTask.DoneAt = time.Time{}
 	}
+
+	return newTask.Done != oldTask.Done
 }
 
 // Set the absolute trigger dates for Reminders with relative period
