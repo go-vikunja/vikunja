@@ -154,8 +154,8 @@ function computeBarX(startDate: Date) {
 
 function getDaysDifference(startDate: Date, endDate: Date): number {
 	return Math.ceil(
-		(roundToNaturalDayBoundary(endDate).getTime() - roundToNaturalDayBoundary(startDate).getTime()) /
-		MILLISECONDS_A_DAY,
+		(roundToNaturalDayBoundary(endDate).getTime() - roundToNaturalDayBoundary(startDate, true).getTime()) /
+MILLISECONDS_A_DAY,
 	)
 }
 

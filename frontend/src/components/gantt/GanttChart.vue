@@ -150,16 +150,16 @@ const ganttBars = ref<GanttBarModel[][]>([])
 const ganttRows = ref<string[]>([])
 const cellsByRow = ref<Record<string, string[]>>({})
 
+function getRoundedDate(value: string | Date | undefined, fallback: Date, isStart: boolean) {
+	return roundToNaturalDayBoundary(value ? new Date(value) : new Date(fallback), isStart)
+}
+
 function transformTaskToGanttBar(t: ITask): GanttBarModel {
-	const startDate = roundToNaturalDayBoundary(
-		t.startDate ? new Date(t.startDate) : new Date(props.defaultTaskStartDate),
-	)
-	const endDate = roundToNaturalDayBoundary(
-		t.endDate ? new Date(t.endDate) : new Date(props.defaultTaskEndDate),
-	)
+	const startDate = getRoundedDate(t.startDate, props.defaultTaskStartDate, true)
+	const endDate = getRoundedDate(t.endDate, props.defaultTaskEndDate, false)
 
 	const taskColor = getHexColor(t.hexColor)
-	
+
 	const bar = {
 		id: String(t.id),
 		start: startDate,
@@ -172,7 +172,7 @@ function transformTaskToGanttBar(t: ITask): GanttBarModel {
 			isDone: t.done,
 		},
 	}
-	
+
 	return bar
 }
 
@@ -182,22 +182,18 @@ watch(
 		const bars: GanttBarModel[] = []
 		const rows: string[] = []
 		const cells: Record<string, string[]> = {}
-		
+
 		const filteredTasks = Array.from(tasks.value.values()).filter(task => {
 			if (!filters.value.showTasksWithoutDates && (!task.startDate || !task.endDate)) {
 				return false
 			}
-			
-			const taskStart = roundToNaturalDayBoundary(
-				task.startDate ? new Date(task.startDate) : new Date(props.defaultTaskStartDate),
-			)
-			const taskEnd = roundToNaturalDayBoundary(
-				task.endDate ? new Date(task.endDate) : new Date(props.defaultTaskEndDate),
-			)
-			
+
+			const taskStart = getRoundedDate(task.startDate, props.defaultTaskStartDate, true)
+			const taskEnd = getRoundedDate(task.endDate, props.defaultTaskEndDate, false)
+
 			// Task is visible if it overlaps with the current date range
-			return taskStart <= dateToDate.value 
-				&& taskEnd >= dateFromDate.value
+			return taskStart <= dateToDate.value
+&& taskEnd >= dateFromDate.value
 		})
 		
 		filteredTasks.forEach((t, index) => {
@@ -226,7 +222,7 @@ watch(
 function updateGanttTask(id: string, newStart: Date, newEnd: Date) {
 	emit('update:task', {
 		id: Number(id),
-		startDate: roundToNaturalDayBoundary(newStart),
+		startDate: roundToNaturalDayBoundary(newStart, true),
 		endDate: roundToNaturalDayBoundary(newEnd),
 	})
 }
