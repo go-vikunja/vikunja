@@ -277,7 +277,11 @@ $modal-width: 1024px;
 }
 
 .modal-content :deep(.card .card-header-icon.close) {
-	display: block;
+	display: none;
+	
+	@media screen and (max-width: $tablet) {
+		display: block;
+	}
 }
 </style>
 
