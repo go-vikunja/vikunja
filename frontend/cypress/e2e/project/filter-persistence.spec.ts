@@ -7,7 +7,7 @@ describe('Filter Persistence Across Views', () => {
 	
 	// Helper function to open filters popup
 	const openFilters = () => {
-		cy.get('button').contains('Filters').click()
+		cy.get('.filter-container button').click()
 		cy.get('.filter-popup').should('be.visible')
 	}
 	
