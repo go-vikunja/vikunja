@@ -24,13 +24,14 @@ Based on comprehensive codebase analysis, the link share system consists of:
 After implementation:
 - **Clear Error Feedback**: All 403 errors show user-friendly messages with retry options
 - **Reliable Project Display**: Project names always appear correctly after successful authentication
-- **Intuitive Navigation**: Project titles are clickable and provide clear navigation back to project views
-- **Consistent UX**: Link share behavior matches main application navigation patterns
+- **Seamless Navigation**: All existing navigation works identically for link share users as it does for authenticated users
+- **Consistent UX**: Link share behavior matches main application navigation patterns without requiring special handling
 
 ### Verification Criteria:
 - No more blank screens on authentication failures
 - Project names always visible after successful auth
-- Clicking project title navigates back to main project view
+- All existing navigation patterns work for link share users
+- Navigation state is preserved across route changes
 - All error states provide actionable feedback
 
 ## What We're NOT Doing
@@ -354,78 +355,39 @@ function getProjectRoute() {
 
 ---
 
-## Phase 4: Improved Task-to-Project Navigation
+## Phase 4: Ensure Standard Navigation Works for Link Share Users
 
 ### Overview
-Add breadcrumb-style navigation and improve the user experience when navigating from task detail back to project views.
+Ensure that existing navigation patterns work seamlessly for link share users, maintaining the same user experience as authenticated users without requiring special breadcrumb implementations.
 
 ### Changes Required:
 
-#### 1. Add Breadcrumb Navigation to Task Detail
-**File**: `frontend/src/views/tasks/TaskDetailView.vue`
-**Changes**: Enhance breadcrumb navigation for link share context
+#### 1. Verify Navigation State Preservation
+**File**: `frontend/src/stores/auth.ts`
+**Changes**: Ensure link share authentication state is properly maintained during navigation
 
-```vue
-<!-- Find the existing breadcrumb section and enhance it for link share -->
-<nav
-    v-if="currentProject && !isLinkShareAuth"
-    class="breadcrumb"
-    aria-label="breadcrumbs"
->
-    <!-- Existing breadcrumb code -->
-</nav>
-
-<!-- Add link share specific breadcrumb -->
-<nav
-    v-if="currentProject && isLinkShareAuth"
-    class="breadcrumb"
-    aria-label="breadcrumbs"
->
-    <ul>
-        <li>
-            <BaseButton
-                :to="{ 
-                    name: 'project.index', 
-                    params: { projectId: currentProject.id },
-                    hash: $route.hash 
-                }"
-                variant="text"
-                class="breadcrumb-link"
-            >
-                <Icon icon="arrow-left" class="mie-2" />
-                {{ getProjectTitle(currentProject) }}
-            </BaseButton>
-        </li>
-        <li class="is-active">
-            <a>{{ task.title }}</a>
-        </li>
-    </ul>
-</nav>
+```typescript
+// Ensure link share tokens are preserved during route navigation
+// This should already work but verify no special handling breaks it
 ```
 
-#### 2. Add Link Share Detection
-**File**: `frontend/src/views/tasks/TaskDetailView.vue`
-**Changes**: Add computed property to detect link share mode
-
-```vue
-<!-- Add to script setup -->
-import {useAuthStore} from '@/stores/auth'
-
-const authStore = useAuthStore()
-const isLinkShareAuth = computed(() => authStore.isLinkShareAuth)
-```
+#### 2. Test Existing Navigation Components
+**Files to verify**:
+- `frontend/src/components/home/ProjectsNavigationItem.vue` - Should work with link share projects
+- Task detail navigation buttons - Should preserve link share context
+- Project view switcher - Should maintain authentication
 
 ### Success Criteria:
 
 #### Automated Verification:
 - [ ] Frontend linting passes: `cd frontend && pnpm lint`
-- [ ] Task detail E2E tests pass: `cd frontend && pnpm test:e2e --spec="cypress/e2e/task/task.spec.ts"`
+- [ ] Navigation E2E tests pass: `cd frontend && pnpm test:e2e`
 
 #### Manual Verification:
-- [ ] Task detail view shows clear navigation back to project
-- [ ] Back navigation preserves link share context
-- [ ] Breadcrumb navigation is intuitive and visually clear
-- [ ] Navigation works from all project view types
+- [ ] All existing navigation works the same for link share users as authenticated users
+- [ ] Link share authentication is preserved during navigation
+- [ ] No broken links or navigation dead-ends for link share users
+- [ ] Project switching and view navigation work seamlessly
 
 ---
 
@@ -439,7 +401,8 @@ const isLinkShareAuth = computed(() => authStore.isLinkShareAuth)
 ### Integration Tests:
 - Test complete authentication flow with error scenarios
 - Test project loading after successful authentication
-- Test navigation between task detail and project views
+- Test that all existing navigation patterns work for link share users
+- Test navigation state preservation across route changes
 
 ### Manual Testing Steps:
 1. **Test Error Scenarios**:
@@ -454,8 +417,9 @@ const isLinkShareAuth = computed(() => authStore.isLinkShareAuth)
 
 3. **Test Navigation**:
    - Click project title → should navigate to main project view
-   - Navigate to task detail → should show back navigation
-   - Test navigation preservation of link share context
+   - Navigate between different views → should work seamlessly
+   - Navigate to task detail and back → should preserve link share context
+   - Test all existing navigation patterns work identically to authenticated users
 
 ## Performance Considerations
 
