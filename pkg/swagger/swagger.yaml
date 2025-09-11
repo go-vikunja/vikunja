@@ -661,7 +661,8 @@ definitions:
         description: Whether a task is done or not.
         type: boolean
       done_at:
-        description: The time when a task was marked as done.
+        description: The time when a task was marked as done. This field is system-controlled
+          and cannot be set via API.
         type: string
       due_date:
         description: The time when the task is due.
