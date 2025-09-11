@@ -380,17 +380,26 @@ const oneTaskUpdating = ref(false)
 const filter = useRouteQuery('filter')
 const s = useRouteQuery('s')
 
-// Computed params that includes URL values
-const params = computed<TaskFilterParams>(() => ({
+const params = ref<TaskFilterParams>({
 	sort_by: [],
 	order_by: [],
-	filter: filter.value ?? '',
+	filter: '',
 	filter_include_nulls: false,
-	s: s.value ?? '',
-}))
+	s: '',
+})
+
+// Initialize params from URL on mount
+watch([filter, s], ([filterValue, sValue]) => {
+	params.value.filter = filterValue ?? ''
+	params.value.s = sValue ?? ''
+}, { immediate: true })
 
 // Bidirectional sync between FilterPopup and URL
 function updateFilters(newParams: TaskFilterParams) {
+	// Update all params (preserves non-URL-synced parameters like sort_by, order_by, etc.)
+	params.value = { ...newParams }
+	
+	// Sync only filter and s to URL
 	filter.value = newParams.filter || undefined
 	s.value = newParams.s || undefined
 }
