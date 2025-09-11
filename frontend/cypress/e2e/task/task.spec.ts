@@ -253,7 +253,7 @@ describe('Task', () => {
 				.first()
 				.click()
 			cy.get('.task-view .back-button')
-				.should('not.be.visible')
+				.should('not.exist')
 		})
 
 		it('Shows a 404 page for nonexisting tasks', () => {
