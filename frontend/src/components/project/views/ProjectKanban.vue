@@ -677,8 +677,8 @@ function handleRecurringTaskCompletion() {
 	}
 
 	const filterContainsDateFields = savedFilter.value?.filters?.filter?.includes('due_date') ||
-                        savedFilter.value?.filters?.filter?.includes('start_date') ||
-                        savedFilter.value?.filters?.filter?.includes('end_date')
+		savedFilter.value?.filters?.filter?.includes('start_date') ||
+		savedFilter.value?.filters?.filter?.includes('end_date')
 		
 	if (filterContainsDateFields) {
 		// Reload the kanban board to refresh tasks that now match/don't match the filter
