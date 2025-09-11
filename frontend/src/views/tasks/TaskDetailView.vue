@@ -668,6 +668,7 @@ const authStore = useAuthStore()
 const baseStore = useBaseStore()
 
 const task = ref<ITask>(new TaskModel())
+const taskNotFound = ref(false)
 const taskTitle = computed(() => task.value.title)
 useTitle(taskTitle)
 
@@ -690,6 +691,10 @@ onBeforeUnmount(() => {
 })
 
 onBeforeRouteLeave(async () => {
+	if (taskNotFound.value) {
+		return
+	}
+
 	if (!project.value) {
 		await new Promise<void>((resolve) => {
 			const timeout = setTimeout(() => {
@@ -772,6 +777,7 @@ watch(
 			}
 		} catch (e) {
 			if (e?.response?.status === 404) {
+				taskNotFound.value = true
 				router.replace({name: 'not-found'})
 				return
 			}
