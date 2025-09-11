@@ -260,7 +260,7 @@ $modal-width: 1024px;
 	:deep(.card) {
 		border: none !important;
 		border-radius: 0 !important;
-		min-block-size: 100dvh;
+		min-block-size: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
 		display: flex;
 		flex-direction: column;
 		justify-content: space-between;
@@ -273,7 +273,7 @@ $modal-width: 1024px;
 	flex-direction: column;
 	justify-content: center;
 	padding: 0 1rem;
-	min-block-size: 100dvh;
+	min-block-size: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
 }
 
 .modal-content :deep(.card .card-header-icon.close) {
