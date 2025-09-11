@@ -18,6 +18,7 @@ package models
 
 import (
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
@@ -115,5 +116,22 @@ func TestBulkTask_Update(t *testing.T) {
 		require.Len(t, bt.Tasks, 2)
 		assert.NotZero(t, bt.Tasks[0].DoneAt)
 		assert.NotZero(t, bt.Tasks[1].DoneAt)
+	})
+
+	t.Run("don't update done_at when bulk marking tasks done", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		userProvidedTime := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
+		bt := &BulkTask{
+			TaskIDs: []int64{1, 3},
+			Fields:  []string{"done", "done_at"},
+			Values:  &Task{Done: true, DoneAt: userProvidedTime},
+		}
+
+		err := bt.Update(s, u)
+		require.Error(t, err)
+		assert.IsType(t, ErrInvalidTaskColumn{}, err)
 	})
 }

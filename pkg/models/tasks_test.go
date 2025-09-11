@@ -334,6 +334,40 @@ func TestTask_Update(t *testing.T) {
 			"bucket_id": 1,
 		}, false)
 	})
+	t.Run("repeating tasks should set done_at when marked done", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Get the task before updating to check done_at was empty
+		taskBefore := &Task{ID: 28}
+		err := taskBefore.ReadOne(s, u)
+		require.NoError(t, err)
+		assert.True(t, taskBefore.DoneAt.IsZero())
+		assert.False(t, taskBefore.Done)
+
+		// Mark the repeating task as done
+		task := &Task{
+			ID:          28,
+			Done:        true,
+			RepeatAfter: 3600,
+		}
+		err = task.Update(s, u)
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+
+		// Task should be reset to not done (because it repeats) but done_at should be set
+		assert.False(t, task.Done)
+		assert.False(t, task.DoneAt.IsZero(), "done_at should be set for repeating tasks when marked as done")
+
+		// Verify in database
+		updatedTask := &Task{ID: 28}
+		err = updatedTask.ReadOne(s, u)
+		require.NoError(t, err)
+		assert.False(t, updatedTask.Done)
+		assert.False(t, updatedTask.DoneAt.IsZero(), "done_at should be persisted in database for repeating tasks")
+	})
 	t.Run("moving a task between projects should give it a correct index", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -449,6 +483,44 @@ func TestTask_Update(t *testing.T) {
 		assert.Equal(t, time.Date(2023, time.March, 8, 8, 4, 0, 0, time.UTC), task.Reminders[0].Reminder)
 		err = s.Commit()
 		require.NoError(t, err)
+	})
+	t.Run("don't allow done_at change when passing fields", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{
+			ID:     1,
+			DoneAt: time.Now(),
+		}
+
+		err := task.updateSingleTask(s, u, []string{"done_at"})
+
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), `Task column done_at is invalid`)
+		require.NoError(t, s.Commit())
+	})
+	t.Run("ignore done_at when updating unrelated values", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{
+			ID:     1,
+			Title:  "updated",
+			DoneAt: time.Now(),
+		}
+
+		err := task.Update(s, u)
+
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		updatedTask := &Task{ID: 1}
+		err = updatedTask.ReadOne(s, u)
+		require.NoError(t, err)
+		assert.Equal(t, "updated", updatedTask.Title)
+		assert.True(t, updatedTask.DoneAt.IsZero())
 	})
 }
 

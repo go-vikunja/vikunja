@@ -59,7 +59,7 @@ type Task struct {
 	Description string `xorm:"longtext null" json:"description"`
 	// Whether a task is done or not.
 	Done bool `xorm:"INDEX null" json:"done"`
-	// The time when a task was marked as done.
+	// The time when a task was marked as done. This field is system-controlled and cannot be set via API.
 	DoneAt time.Time `xorm:"INDEX null 'done_at'" json:"done_at"`
 	// The time when the task is due.
 	DueDate time.Time `xorm:"DATETIME INDEX null 'due_date'" json:"due_date"`
@@ -1047,7 +1047,6 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		"start_date",
 		"end_date",
 		"hex_color",
-		"done_at",
 		"percent_done",
 		"project_id",
 		"bucket_id",
@@ -1190,7 +1189,10 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	}
 
 	// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
-	updateDone(&ot, t)
+	updateDoneAt := updateDone(&ot, t)
+	if updateDoneAt {
+		colsToUpdate = append(colsToUpdate, "done_at")
+	}
 
 	// Update the reminders
 	if err := ot.updateReminders(s, t); err != nil {
@@ -1563,7 +1565,10 @@ func setTaskDatesFromCurrentDateRepeat(oldTask, newTask *Task) {
 // We make a few assumptions here:
 //  1. Everything in oldTask is the truth - we figure out if we update anything at all if oldTask.RepeatAfter has a value > 0
 //  2. Because of 1., this functions should not be used to update values other than Done in the same go
-func updateDone(oldTask *Task, newTask *Task) {
+func updateDone(oldTask *Task, newTask *Task) (updateDoneAt bool) {
+	// Track if the done status changed before repeat helpers modify it
+	doneStatusChanged := oldTask.Done != newTask.Done
+
 	if !oldTask.Done && newTask.Done {
 		switch oldTask.RepeatMode {
 		case TaskRepeatModeMonth:
@@ -1581,6 +1586,8 @@ func updateDone(oldTask *Task, newTask *Task) {
 	if oldTask.Done && !newTask.Done {
 		newTask.DoneAt = time.Time{}
 	}
+
+	return doneStatusChanged
 }
 
 // Set the absolute trigger dates for Reminders with relative period
