@@ -5,10 +5,17 @@ import {ProjectFactory} from '../../factories/project'
 describe('Filter Persistence Across Views', () => {
 	createFakeUserAndLogin()
 	
-	// Helper function to open filters popup
-	const openFilters = () => {
-		cy.get('.filter-container button').click()
-		cy.get('.filter-popup').should('be.visible')
+	const openAndSetFilters = () => {
+		cy.get('.filter-container button')
+			.contains('Filters')
+			.click()
+		cy.get('.filter-popup')
+			.should('be.visible')
+		cy.get('.filter-popup .filter-input')
+			.type('done = true')
+		cy.get('.filter-popup button')
+			.contains('Show results')
+			.click()
 	}
 	
 	beforeEach(() => {
@@ -26,70 +33,50 @@ describe('Filter Persistence Across Views', () => {
 	})
 
 	it('should persist filters in List view after page refresh', () => {
-		// Apply filter in List view
-		openFilters()
-		cy.get('input[placeholder*="Filter"]').type('Test Task 1')
-		cy.get('button').contains('Show results').click()
-		
-		// Verify query parameters appear
+		openAndSetFilters()
+
 		cy.url().should('include', 'filter=')
-		
-		// Refresh page
+
 		cy.reload()
-		
-		// Verify filter persists in URL
+
 		cy.url().should('include', 'filter=')
 	})
 
 	it('should persist filters in Table view after page refresh', () => {
-		// Switch to Table view
-		cy.visit('/projects/1/table')
-		
-		// Apply filter in Table view
-		openFilters()
-		cy.get('input[placeholder*="Filter"]').type('Test Task 2')
-		cy.get('button').contains('Show results').click()
-		
-		// Verify query parameters appear
+		cy.visit('/projects/1/3')
+
+		openAndSetFilters()
+
 		cy.url().should('include', 'filter=')
-		
-		// Refresh page
+
 		cy.reload()
-		
-		// Verify filter persists in URL
+
 		cy.url().should('include', 'filter=')
 	})
 
 	it('should persist filters in Kanban view after page refresh', () => {
-		// Switch to Kanban view
-		cy.visit('/projects/1/kanban')
-		
-		// Apply filter in Kanban view
-		openFilters()
-		cy.get('input[placeholder*="Filter"]').type('Test Task 3')
-		cy.get('button').contains('Show results').click()
-		
-		// Verify query parameters appear
+		cy.visit('/projects/1/4')
+
+		openAndSetFilters()
+
 		cy.url().should('include', 'filter=')
-		
-		// Refresh page
+
 		cy.reload()
-		
-		// Verify filter persists in URL
+
 		cy.url().should('include', 'filter=')
 	})
 
 	it('should handle URL sharing with filters', () => {
 		// Visit URL with pre-existing filter parameters
-		cy.visit('/projects/1/kanban?filter=Test%20Task&s=Test')
+		cy.visit('/projects/1/4?filter=done%3Dtrue&s=Test')
 		
 		// Verify URL parameters are preserved
-		cy.url().should('include', 'filter=Test%20Task')
+		cy.url().should('include', 'filter=done%3Dtrue')
 		cy.url().should('include', 's=Test')
 		
 		// Switch views and verify parameters persist
-		cy.visit('/projects/1/table?filter=Test%20Task&s=Test')
-		cy.url().should('include', 'filter=Test%20Task')
+		cy.visit('/projects/1/table?filter=done%3Dtrue&s=Test')
+		cy.url().should('include', 'filter=done%3Dtrue')
 		cy.url().should('include', 's=Test')
 	})
 })
