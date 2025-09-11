@@ -149,23 +149,26 @@ func (b *TaskBucket) Update(s *xorm.Session, a web.Auth) (err error) {
 
 	var updateBucket = true
 
-	// mark task done if moved into the done bucket
+	// mark task done if moved into or out of the done bucket
+	// Only change the done state if the task's done value actually changes
 	var doneChanged bool
-	if view.DoneBucketID == b.BucketID {
-		doneChanged = true
-		task.Done = true
-		if task.isRepeating() {
-			oldTask := task
-			oldTask.Done = false
-			updateDone(oldTask, task)
-			updateBucket = false
-			b.BucketID = oldTaskBucket.BucketID
+	if view.DoneBucketID != 0 {
+		if view.DoneBucketID == b.BucketID && !task.Done {
+			doneChanged = true
+			task.Done = true
+			if task.isRepeating() {
+				oldTask := task
+				oldTask.Done = false
+				updateDone(oldTask, task)
+				updateBucket = false
+				b.BucketID = oldTaskBucket.BucketID
+			}
 		}
-	}
 
-	if oldTaskBucket.BucketID == view.DoneBucketID {
-		doneChanged = true
-		task.Done = false
+		if oldTaskBucket.BucketID == view.DoneBucketID && task.Done && b.BucketID != view.DoneBucketID {
+			doneChanged = true
+			task.Done = false
+		}
 	}
 
 	if doneChanged {
