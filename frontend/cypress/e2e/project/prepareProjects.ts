@@ -34,8 +34,9 @@ export function createDefaultViews(projectId) {
 	]
 }
 
-export function createProjects() {
+export function createProjects(projectId: number | null = null) {
 	const projects = ProjectFactory.create(1, {
+		id: projectId,
 		title: 'First Project'
 	})
 	TaskFactory.truncate()
