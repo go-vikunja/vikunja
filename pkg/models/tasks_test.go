@@ -450,6 +450,44 @@ func TestTask_Update(t *testing.T) {
 		err = s.Commit()
 		require.NoError(t, err)
 	})
+	t.Run("don't allow done_at change when passing fields", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{
+			ID:     1,
+			DoneAt: time.Now(),
+		}
+
+		err := task.updateSingleTask(s, u, []string{"done_at"})
+
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), `Task column done_at is invalid`)
+		require.NoError(t, s.Commit())
+	})
+	t.Run("ignore done_at when updating unrelated values", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{
+			ID:     1,
+			Title:  "updated",
+			DoneAt: time.Now(),
+		}
+
+		err := task.Update(s, u)
+
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		updatedTask := &Task{ID: 1}
+		err = updatedTask.ReadOne(s, u)
+		require.NoError(t, err)
+		assert.Equal(t, "updated", updatedTask.Title)
+		assert.True(t, updatedTask.DoneAt.IsZero())
+	})
 }
 
 func TestTask_Delete(t *testing.T) {

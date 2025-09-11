@@ -212,11 +212,6 @@ func TestTask(t *testing.T) {
 				assert.Contains(t, rec.Body.String(), `"percent_done":0,`)
 				assert.NotContains(t, rec.Body.String(), `"percent_done":0.1`)
 			})
-			t.Run("DoneAt", func(t *testing.T) {
-				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "1"}, `{"done_at":"2023-01-01T00:00:00Z"}`)
-				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `The task field 'done_at' is invalid.`)
-			})
 		})
 
 		t.Run("Nonexisting", func(t *testing.T) {
