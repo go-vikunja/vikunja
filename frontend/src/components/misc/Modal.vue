@@ -144,8 +144,10 @@ $modal-width: 1024px;
 	position: relative;
 	inline-size: 100%;
 	block-size: 100%;
-	max-block-size: 100vh;
+	max-block-size: 100dvh;
 	overflow: auto;
+	padding-block-start: env(safe-area-inset-top);
+	padding-block-end: env(safe-area-inset-bottom);
 }
 
 .default .modal-content,
@@ -235,33 +237,35 @@ $modal-width: 1024px;
 }
 
 @media print, screen and (max-width: $tablet) {
-  .modal-mask {
-    overflow: visible !important;
-  }
+	.modal-mask {
+		overflow: visible !important;
+	}
 
-  .modal-container {
-    block-size: auto;
-	min-block-size: 100vh;
-  }
+	.modal-container {
+		block-size: auto;
+		min-block-size: 100dvh;
+		padding-block-start: env(safe-area-inset-top);
+		padding-block-end: env(safe-area-inset-bottom);
+	}
 
-  .modal-content {
-    position: static;
-	max-block-size: none;
-  }
+	.modal-content {
+		position: static;
+		max-block-size: none;
+	}
 
-  .close {
-    display: none;
-  }
+	.close {
+		display: none;
+	}
 
-  :deep(.card) {
-	border: none !important; 
-	border-radius: 0 !important;
-	min-block-size: 100vh;
-	display: flex;
-	flex-direction: column;
-	justify-content: space-between;
-	margin-block-end: 0 !important;
-  }
+	:deep(.card) {
+		border: none !important;
+		border-radius: 0 !important;
+		min-block-size: 100dvh;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		margin-block-end: 0 !important;
+	}
 }
 
 .modal-content:has(.modal-header) {
@@ -269,15 +273,11 @@ $modal-width: 1024px;
 	flex-direction: column;
 	justify-content: center;
 	padding: 0 1rem;
-	min-block-size: 100vh
+	min-block-size: 100dvh;
 }
 
 .modal-content :deep(.card .card-header-icon.close) {
-	display: none;
-	
-	@media screen and (max-width: $tablet) {
-		display: block;
-	}
+	display: block;
 }
 </style>
 

@@ -3,6 +3,8 @@
 		class="filters has-overflow"
 		:title="hasTitle ? $t('filters.title') : ''"
 		role="search"
+		:show-close="showClose"
+		@close="$emit('close')"
 	>
 		<FilterInput
 			ref="filterInputRef"
@@ -77,16 +79,19 @@ const props = withDefaults(defineProps<{
 	hasFooter?: boolean,
 	changeImmediately?: boolean,
 	filterFromView?: string,
+	showClose?: boolean,
 }>(), {
 	hasTitle: false,
 	hasFooter: true,
 	changeImmediately: false,
 	filterFromView: undefined,
+	showClose: false,
 })
 
 const emit = defineEmits<{
 	'update:modelValue': [value: TaskFilterParams],
 	'showResults': [],
+	'close': [],
 }>()
 
 const route = useRoute()

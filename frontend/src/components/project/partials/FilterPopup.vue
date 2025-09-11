@@ -21,6 +21,8 @@
 			class="filter-popup"
 			:change-immediately="false"
 			:filter-from-view="filterFromView"
+			show-close
+			@close="modalOpen = false"
 			@showResults="showResults"
 		/>
 	</Modal>
