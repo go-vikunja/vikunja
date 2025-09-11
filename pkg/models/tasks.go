@@ -1566,6 +1566,9 @@ func setTaskDatesFromCurrentDateRepeat(oldTask, newTask *Task) {
 //  1. Everything in oldTask is the truth - we figure out if we update anything at all if oldTask.RepeatAfter has a value > 0
 //  2. Because of 1., this functions should not be used to update values other than Done in the same go
 func updateDone(oldTask *Task, newTask *Task) (updateDoneAt bool) {
+	// Track if the done status changed before repeat helpers modify it
+	doneStatusChanged := oldTask.Done != newTask.Done
+
 	if !oldTask.Done && newTask.Done {
 		switch oldTask.RepeatMode {
 		case TaskRepeatModeMonth:
@@ -1584,7 +1587,7 @@ func updateDone(oldTask *Task, newTask *Task) (updateDoneAt bool) {
 		newTask.DoneAt = time.Time{}
 	}
 
-	return newTask.Done != oldTask.Done
+	return doneStatusChanged
 }
 
 // Set the absolute trigger dates for Reminders with relative period
