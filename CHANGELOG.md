@@ -7,6 +7,165 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 All releases can be found on https://code.vikunja.io/vikunja/releases.
 
+## [1.0.0-rc2] - 2025-09-12
+
+### Bug Fixes
+
+* *(auth)* Do not panic with invalid openid provider configuration (#1354)
+* *(avatar)* Recover gracefully from broken avatar cache (#1379)
+* *(editor)* Do not apply filter input styles to all editor instances
+* *(filter)* Don't crash when filtering for labels in (#1333)
+* *(filter)* Add close button for filter popup on mobile with accurate spacing (#1466)
+* *(filter)* Ensure filter query param is added to the page correctly (#1471)
+* *(filters)* Initialize task positions for saved filters (#1477)
+* *(filters)* Persist url filter query across views (#1482)
+* *(frontend)* Add missing permission translation keys (#1320)
+* *(frontend)* Hide drag handle for fixed project lists (#1421)
+* *(kanban)* Update task on board when changing details
+* *(kanban)* Guard task modal race conditions (#1472)
+* *(link share)* Add better error handling, ensure projects are shown  (#1481)
+* *(multiselect)* Do not try getting label when value is undefined
+* *(task)* Set project after loading task details
+* *(task)* Priority label task link spacing (#1322)
+* *(task)* Default to medium priority when none is configured
+* *(task)* Only load first comments page when loading comments with task
+* *(task)* Update task comment when switching between related tasks
+* *(task)* Autosave description when closing task modal
+* *(task)* Ensure done_at can never be set by user (#1461)
+* *(task)* Only save description when clicking away if it actually changed
+* *(task)* Preserve done timestamp when moving tasks between projects (#1470)
+* *(task)* Provide back button when opening task detail (#1475)
+* *(user)* Do not reject 2fa for local users
+* Set test fixture in e2e test ([c1ce330](c1ce33019c5e8bdfb7d07c657799255b3a53c41e))
+* Use correct filepath ([fd8a36c](fd8a36c9bb89b1510906cad805ca782956a42e9e))
+* Require publicurl when cors enabled (#1351) ([e29561e](e29561e49c3cedfdac18d0301019863bb50ceced))
+* Stop event propagation for clicks inside the DeferTask popup (#1338) ([07d6630](07d66308910dc53f597a5f8b197eef49cb269d0e))
+* Prevent null history.state errors in modal routing and task navigation (#1368) ([14e1bd2](14e1bd2f55f28407482120af8e675fa8566f3cb3))
+* Fix(task): do not parse task comment reactions so that they actually appear([3baf6cd](3baf6cd477f62eccb43854f20fa1dfeab05c454d))
+* Mobile device  minimum width (#1337) ([fda440b](fda440bd0818c58996160bda4bca08a8195dbc1f))
+* Show error when user list filter is empty (#1372) ([bd310f5](bd310f50ad05fe4263b44853e9a8721dd93ba346))
+* Bypass Typesense in user export (#1385) ([15ea381](15ea38183cc99b87006dd8767abcefe78fe1d0cd))
+* Remove leftover console.log ([12842a5](12842a5e3573b7279cbe52697e86e106d8b938fb))
+* Show pagination controls for task comments (#1413) ([bd74733](bd7473363226720cb7d1778e78082f1f8ea86166))
+* Reload list view when marking recurring task done (#1457) ([6914bad](6914badeb7cfa2cdef1ebfb620d303ab396de32d))
+* Guard saved filter requests (#1462) ([4353b1e](4353b1e9c7dde177308ca2dfea436adfbacbac0e))
+
+### Dependencies
+
+* *(deps)* Bump github.com/go-viper/mapstructure/v2 from 2.3.0 to 2.4.0 (#1331)
+* *(deps)* Update actions/github-script action to v8 (#1417)
+* *(deps)* Update actions/setup-go action to v6 (#1407)
+* *(deps)* Update actions/setup-node action to v5 (#1408)
+* *(deps)* Update crowdin/github-action digest to 0749939 (#1396)
+* *(deps)* Update crowdin/github-action digest to 9787f4f (#1347)
+* *(deps)* Update cypress/browsers:latest docker digest to 34cbe59 (#1454)
+* *(deps)* Update cypress/browsers:latest docker digest to 4e0a347 (#1297)
+* *(deps)* Update cypress/browsers:latest docker digest to eeb9b35 (#1352)
+* *(deps)* Update dependency @floating-ui/dom to v1.7.4 (#1332)
+* *(deps)* Update dependency @fortawesome/vue-fontawesome to v3.1.2 (#1474)
+* *(deps)* Update dependency @intlify/unplugin-vue-i18n to v11 (#1418)
+* *(deps)* Update dependency @sentry/vue to v10.10.0 (#1416)
+* *(deps)* Update dependency @sentry/vue to v10.8.0 (#1361)
+* *(deps)* Update dependency @sentry/vue to v10.9.0 (#1400)
+* *(deps)* Update dependency dayjs to v1.11.15 (#1349)
+* *(deps)* Update dependency dayjs to v1.11.17 (#1355)
+* *(deps)* Update dependency dayjs to v1.11.18 (#1360)
+* *(deps)* Update dependency electron to v37.3.1 [security] (#1404)
+* *(deps)* Update dependency marked to v16.2.0 (#1304)
+* *(deps)* Update dependency marked to v16.2.1 (#1350)
+* *(deps)* Update dependency vite to v7.1.5 [security] (#1451)
+* *(deps)* Update dependency vue to v3.5.20 (#1327)
+* *(deps)* Update dependency vue to v3.5.21 (#1382)
+* *(deps)* Update dependency vue-i18n to v11.1.12 (#1420)
+* *(deps)* Update dev-dependencies (#1298)
+* *(deps)* Update dev-dependencies (#1310)
+* *(deps)* Update devenv
+* *(deps)* Update docker/dockerfile:1 docker digest to dabfc09 (#1479)
+* *(deps)* Update font awesome to v7.0.1 (#1394)
+* *(deps)* Update ghcr.io/go-vikunja/dex-testing:main docker digest to 10cc6d5 (#1377)
+* *(deps)* Update ghcr.io/go-vikunja/dex-testing:main docker digest to 3877bee (#1348)
+* *(deps)* Update ghcr.io/go-vikunja/dex-testing:main docker digest to 408e999 (#1444)
+* *(deps)* Update ghcr.io/go-vikunja/dex-testing:main docker digest to 4abbc4f (#1312)
+* *(deps)* Update mariadb:12 docker digest to a5af517 (#1376)
+* *(deps)* Update module github.com/gabriel-vasile/mimetype to v1.4.10 (#1353)
+* *(deps)* Update module github.com/getsentry/sentry-go to v0.35.2 (#1480)
+* *(deps)* Update module github.com/go-testfixtures/testfixtures/v3 to v3.18.0 (#1362)
+* *(deps)* Update module github.com/prometheus/client_golang to v1.23.1 (#1411)
+* *(deps)* Update module github.com/prometheus/client_golang to v1.23.2 (#1426)
+* *(deps)* Update module github.com/redis/go-redis/v9 to v9.13.0 (#1401)
+* *(deps)* Update module github.com/spf13/afero to v1.15.0 (#1441)
+* *(deps)* Update module github.com/spf13/cobra to v1.10.1 (#1373)
+* *(deps)* Update module github.com/spf13/viper to v1.21.0 (#1442)
+* *(deps)* Update module github.com/stretchr/testify to v1.11.1 (#1363)
+* *(deps)* Update module github.com/threedotslabs/watermill to v1.5.0 (#1365)
+* *(deps)* Update module github.com/threedotslabs/watermill to v1.5.1 (#1391)
+* *(deps)* Update module golang.org/x/crypto to v0.42.0 (#1438)
+* *(deps)* Update module golang.org/x/image to v0.31.0 (#1439)
+* *(deps)* Update module golang.org/x/oauth2 to v0.31.0 (#1429)
+* *(deps)* Update module golang.org/x/sync to v0.17.0 (#1430)
+* *(deps)* Update module golang.org/x/sys to v0.36.0 (#1432)
+* *(deps)* Update module golang.org/x/term to v0.35.0 (#1434)
+* *(deps)* Update module golang.org/x/text to v0.29.0 (#1435)
+* *(deps)* Update node.js to v22.19.0 (#1356)
+* *(deps)* Update paradedb/paradedb:latest-pg17 docker digest to 12f4078 (#1308)
+* *(deps)* Update paradedb/paradedb:latest-pg17 docker digest to 5d3cc02 (#1370)
+* *(deps)* Update paradedb/paradedb:latest-pg17 docker digest to 646cd3f (#1405)
+* *(deps)* Update paradedb/paradedb:latest-pg17 docker digest to 6c9cd0a (#1309)
+* *(deps)* Update paradedb/paradedb:latest-pg17 docker digest to 744e637 (#1325)
+* *(deps)* Update paradedb/paradedb:latest-pg17 docker digest to aaa1861 (#1425)
+* *(deps)* Update paradedb/paradedb:latest-pg17 docker digest to cdad8f0 (#1473)
+* *(deps)* Update pnpm to v10.15.0 (#1314)
+* *(deps)* Update pnpm to v10.15.1 (#1371)
+* *(deps)* Update postgres:17 docker digest to 5250e61 (#1433)
+* *(deps)* Update postgres:17 docker digest to ab24d83 (#1443)
+* *(deps)* Update postgres:17 docker digest to d17be73 (#1427)
+* *(deps)* Update postgres:17 docker digest to feff5b2 (#1445)
+* *(deps)* Update softprops/action-gh-release digest to 6cbd405 (#1428)
+* *(deps)* Update tiptap to v3.3.0 (#1366)
+* *(deps)* Update tiptap to v3.3.1 (#1386)
+* *(deps)* Update tiptap to v3.4.0 (#1406)
+* *(deps)* Update tiptap to v3.4.1 (#1412)
+* *(deps)* Update tiptap to v3.4.2 (#1446)
+* *(deps)* Update vueuse to v13.7.0 (#1305)
+* *(deps)* Update vueuse to v13.8.0 (#1367)
+* *(deps)* Update vueuse to v13.9.0 (#1374)
+* *(deps-dev)* Bump electron from 37.3.0 to 37.3.1 in /desktop (#1415)
+
+### Documentation
+
+* Add GitHub actions status badge to readme ([5a385ac](5a385aca1c104a8494cdaf85c54627d42c5756f2))
+* Clarify publicurl requirements ([ea4f7f2](ea4f7f2c8751f14eda3ea877e0792b4acbf29150))
+
+### Features
+
+* *(auth)* Add oauth require availability configuration on startup (#1358)
+* *(config)* Validate publicurl
+* *(gantt)* Natural day-boundary rounding in Gantt chart (#1476)
+* *(i18n)* Add pluralization rules for Russian (#1334)
+* *(kanban)* Allow folding done column by clicking green checkmarks in Kanban view (#1393)
+* *(task)* Make default project relation configurable
+* Use variable fonts ([f01f2af](f01f2af4cf5a7862803349c1990e326e95b01f09))
+* Add subsets for all supported languages ([eb676ae](eb676aebef4864e12827c4e9c51f3d561cd29cdf))
+* Share logic for bulk update (#1456) ([db12367](db123674a7ece09022e4e1f4d48e72c5b5539b85))
+
+### Miscellaneous Tasks
+
+* *(dev)* Update devenv
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Improve wording
+* *(i18n)* Clarify wording
+* *(i18n)* Update translations via Crowdin
+* Add feature issue template ([523dad5](523dad5134454e42321116426e0189c94d515402))
+* Update magefile to reference up to date golangci lint ([74189b6](74189b6cf9d58b8d6eba1c56c2109f0409b9e535))
+
+### Other
+
+* *(other)* [skip ci] Updated swagger docs
+
+### Refactor
+
+* Use helper function to check user local ([1b5a9db](1b5a9dbdeadf476dc2fee19326508f956d3b79d0))
+
 ## [1.0.0-rc1] - 2025-08-17
 
 ### Bug Fixes
