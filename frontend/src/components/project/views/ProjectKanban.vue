@@ -276,7 +276,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, nextTick, ref, watch} from 'vue'
+import {computed, nextTick, ref, watch, toRef} from 'vue'
 import {useI18n} from 'vue-i18n'
 import draggable from 'zhyswan-vuedraggable'
 import {klona} from 'klona/lite'
@@ -323,6 +323,8 @@ const props = defineProps<{
 	viewId: IProjectView['id'],
 }>()
 
+const projectId = toRef(props, 'projectId')
+
 const DRAG_OPTIONS = {
 	// sortable options
 	animation: 150,
@@ -344,7 +346,7 @@ const taskPositionService = ref(new TaskPositionService())
 const taskBucketService = ref(new TaskBucketService())
 
 // Saved filter composable for accessing filter data
-const {filter: savedFilter} = useSavedFilter(() => props.projectId)
+const savedFilter = useSavedFilter(() => projectId.value < 0 ? projectId.value : undefined).filter
 
 const taskContainerRefs = ref<{ [id: IBucket['id']]: HTMLElement }>({})
 const bucketLimitInputRef = ref<HTMLInputElement | null>(null)
@@ -401,10 +403,10 @@ const bucketDraggableComponentData = computed(() => ({
 		{'dragging-disabled': !canWrite.value},
 	],
 }))
-const project = computed(() => props.projectId ? projectStore.projects[props.projectId] : null)
+const project = computed(() => projectId.value ? projectStore.projects[projectId.value] : null)
 const view = computed(() => project.value?.views.find(v => v.id === props.viewId) as IProjectView || null)
 const canWrite = computed(() => baseStore.currentProject?.maxPermission > Permissions.READ && view.value.bucketConfigurationMode === 'manual')
-const canCreateTasks = computed(() => canWrite.value && props.projectId > 0)
+const canCreateTasks = computed(() => canWrite.value && projectId.value > 0)
 const buckets = computed(() => kanbanStore.buckets)
 const loading = computed(() => kanbanStore.isLoading)
 
@@ -413,7 +415,7 @@ const taskLoading = computed(() => taskStore.isLoading || taskPositionService.va
 watch(
 	() => ({
 		params: params.value,
-		projectId: props.projectId,
+		projectId: projectId.value,
 		viewId: props.viewId,
 	}),
 	({params, projectId, viewId}) => {
@@ -445,7 +447,7 @@ function handleTaskContainerScroll(id: IBucket['id'], el: HTMLElement) {
 	}
 
 	kanbanStore.loadNextTasksForBucket(
-		props.projectId,
+		projectId.value,
 		props.viewId,
 		params.value,
 		id,
@@ -657,7 +659,7 @@ async function saveBucketTitle(bucketId: IBucket['id'], bucketTitle: string) {
 	await kanbanStore.updateBucket({
 		id: bucketId,
 		title: bucketTitle,
-		projectId: props.projectId,
+		projectId: projectId.value,
 	})
 	success({message: i18n.global.t('project.kanban.bucketTitleSavedSuccess')})
 	bucketTitleEditable.value = false
@@ -674,13 +676,13 @@ function handleRecurringTaskCompletion() {
 		return
 	}
 
-	const filterContainsDateFields = savedFilter.value.filters?.filter?.includes('due_date') || 
-			savedFilter.value.filters?.filter?.includes('start_date') || 
-			savedFilter.value.filters?.filter?.includes('end_date')
+	const filterContainsDateFields = savedFilter.value?.filters?.filter?.includes('due_date') ||
+		savedFilter.value?.filters?.filter?.includes('start_date') ||
+		savedFilter.value?.filters?.filter?.includes('end_date')
 		
 	if (filterContainsDateFields) {
 		// Reload the kanban board to refresh tasks that now match/don't match the filter
-		kanbanStore.loadBucketsForProject(props.projectId, props.viewId, params.value)
+		kanbanStore.loadBucketsForProject(projectId.value, props.viewId, params.value)
 	}
 }
 
@@ -695,7 +697,7 @@ function updateBucketPosition(e: { newIndex: number }) {
 
 	kanbanStore.updateBucket({
 		id: bucket.id,
-		projectId: props.projectId,
+		projectId: projectId.value,
 		position: calculateItemPosition(
 			bucketBefore !== null ? bucketBefore.position : null,
 			bucketAfter !== null ? bucketAfter.position : null,
@@ -710,7 +712,7 @@ async function saveBucketLimit(bucketId: IBucket['id'], limit: number) {
 
 	await kanbanStore.updateBucket({
 		...kanbanStore.getBucketById(bucketId),
-		projectId: props.projectId,
+		projectId: projectId.value,
 		limit,
 	})
 	success({message: t('project.kanban.bucketLimitSavedSuccess')})
