@@ -589,7 +589,7 @@
 
 <script lang="ts" setup>
 import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted, onBeforeUnmount} from 'vue'
-import {useRouter, type RouteLocation} from 'vue-router'
+import {useRouter, type RouteLocation, onBeforeRouteLeave} from 'vue-router'
 import {storeToRefs} from 'pinia'
 import {useI18n} from 'vue-i18n'
 import {unrefElement} from '@vueuse/core'
@@ -687,6 +687,23 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
 	document.removeEventListener('keydown', saveTaskViaHotkey)
+})
+
+onBeforeRouteLeave(async () => {
+	if (!project.value) {
+		await new Promise<void>((resolve) => {
+			const stop = watch(project, (p) => {
+				if (p) {
+					stop()
+					resolve()
+				}
+			})
+		})
+	}
+
+	if (project.value) {
+		await baseStore.handleSetCurrentProjectIfNotSet(project.value)
+	}
 })
 
 // We doubled the task color property here because verte does not have a real change property, leading

@@ -1,4 +1,4 @@
-import {computed, h, shallowRef, type VNode, watchEffect} from 'vue'
+import {computed, defineAsyncComponent, h, shallowRef, type VNode, watchEffect} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
@@ -46,7 +46,11 @@ export function useRouteWithModal() {
 
 		routeProps.backdropView = backdropView.value
 
-		const component = route.matched[0]?.components?.default
+		let component = route.matched[0]?.components?.default
+
+		if (typeof component === 'function') {
+			component = defineAsyncComponent(component)
+		}
 
 		if (!component) {
 			currentModal.value = undefined
