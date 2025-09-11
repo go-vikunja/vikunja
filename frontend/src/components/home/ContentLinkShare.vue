@@ -12,12 +12,37 @@
 				v-if="logoVisible"
 				class="logo"
 			/>
-			<h1
+			<Message
+				v-if="projectLoadError"
+				variant="danger"
+				class="mbe-4"
+			>
+				{{ $t('sharing.projectLoadError') }}
+				<BaseButton
+					variant="secondary"
+					class="mls-2"
+					@click="retryProjectLoad"
+				>
+					{{ $t('sharing.retry') }}
+				</BaseButton>
+			</Message>
+			<BaseButton
+				v-if="!projectLoadError && currentProject"
+				:to="getProjectRoute()"
+				variant="text"
+				class="project-title-button"
 				:class="{'m-0': !logoVisible}"
-				:style="{ 'opacity': currentProject?.title === '' ? '0': '1' }"
+			>
+				<h1 class="title clickable-title">
+					{{ currentProject?.title === '' ? $t('misc.loading') : currentProject?.title }}
+				</h1>
+			</BaseButton>
+			<h1
+				v-else-if="!projectLoadError"
+				:class="{'m-0': !logoVisible}"
 				class="title"
 			>
-				{{ currentProject?.title === '' ? $t('misc.loading') : currentProject?.title }}
+				{{ $t('misc.loading') }}
 			</h1>
 			<div class="box has-text-start view">
 				<RouterView />
@@ -28,29 +53,88 @@
 </template>
 
 <script lang="ts" setup>
-import {computed} from 'vue'
+import {computed, ref, watch, onMounted} from 'vue'
+import {useRoute} from 'vue-router'
 
 import {useBaseStore} from '@/stores/base'
-import {useRoute} from 'vue-router'
+import {useProjectStore} from '@/stores/projects'
+import {useLabelStore} from '@/stores/labels'
+import {useAuthStore} from '@/stores/auth'
 
 import Logo from '@/components/home/Logo.vue'
 import PoweredByLink from './PoweredByLink.vue'
-import {useProjectStore} from '@/stores/projects'
-import {useLabelStore} from '@/stores/labels'
+import BaseButton from '@/components/base/BaseButton.vue'
+import Message from '@/components/misc/Message.vue'
 import {PROJECT_VIEW_KINDS} from '@/modelTypes/IProjectView'
 
 const baseStore = useBaseStore()
+const projectStore = useProjectStore()
+const authStore = useAuthStore()
+const route = useRoute()
+
 const currentProject = computed(() => baseStore.currentProject)
 const background = computed(() => baseStore.background)
 const logoVisible = computed(() => baseStore.logoVisible)
+const projectLoadError = ref(false)
 
-const projectStore = useProjectStore()
 projectStore.loadAllProjects()
 
 const labelStore = useLabelStore()
 labelStore.loadAllLabels()
 
-const route = useRoute()
+// Ensure project is loaded for link share
+async function ensureProjectLoaded() {
+	if (!authStore.authLinkShare || !route.params.projectId) {
+		return
+	}
+	
+	try {
+		projectLoadError.value = false
+		
+		// Load project if not already loaded
+		const projectId = Number(route.params.projectId)
+		if (!currentProject.value || currentProject.value.id !== projectId) {
+			await projectStore.loadProject(projectId)
+		}
+	} catch (e) {
+		console.error('Failed to load project for link share:', e)
+		projectLoadError.value = true
+	}
+}
+
+async function retryProjectLoad() {
+	await ensureProjectLoaded()
+}
+
+// Watch for route changes and ensure project is loaded
+watch(() => route.params.projectId, ensureProjectLoaded, { immediate: true })
+
+onMounted(ensureProjectLoaded)
+
+function getProjectRoute() {
+	if (!currentProject.value) return null
+	
+	const hash = route.hash // Preserve link share hash
+	
+	// Default to the first available view or list view
+	const projectId = currentProject.value.id
+	const firstView = projectStore.projects[projectId]?.views?.[0]
+	
+	if (firstView) {
+		return {
+			name: 'project.view',
+			params: { projectId, viewId: firstView.id },
+			hash,
+		}
+	}
+	
+	return {
+		name: 'project.index', 
+		params: { projectId },
+		hash,
+	}
+}
+
 const isFullWidth = computed(() => {
 	const viewId = route.params?.viewId ?? null
 	const projectId = route.params?.projectId ?? null
@@ -80,6 +164,27 @@ const isFullWidth = computed(() => {
 
 .title {
 	text-shadow: 0 0 1rem var(--white);
+}
+
+.project-title-button {
+	background: none !important;
+	border: none !important;
+	padding: 0 !important;
+	text-decoration: none !important;
+	
+	&:hover .clickable-title {
+		opacity: 0.8;
+		cursor: pointer;
+	}
+}
+
+.clickable-title {
+	text-shadow: 0 0 1rem var(--white);
+	margin: 0;
+	
+	&:hover {
+		text-decoration: underline;
+	}
 }
 
 .link-share-view {

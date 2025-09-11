@@ -255,6 +255,24 @@ export const useProjectStore = defineStore('project', () => {
 			views: updatedViews,
 		})
 	}
+
+	// Add method to ensure single project loading works for link shares
+	async function loadProject(projectId: number) {
+		const project = projects.value[projectId]
+		if (project) {
+			return project
+		}
+
+		try {
+			const projectService = new ProjectService()
+			const loadedProject = await projectService.get({id: projectId})
+			setProject(loadedProject)
+			return loadedProject
+		} catch (e) {
+			console.error(`Failed to load project ${projectId}:`, e)
+			throw e
+		}
+	}
 	
 	return {
 		isLoading: readonly(isLoading),
@@ -277,6 +295,7 @@ export const useProjectStore = defineStore('project', () => {
 		removeProjectById,
 		toggleProjectFavorite,
 		loadAllProjects,
+		loadProject,
 		createProject,
 		updateProject,
 		deleteProject,
