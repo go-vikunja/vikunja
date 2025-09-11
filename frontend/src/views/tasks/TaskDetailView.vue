@@ -11,6 +11,14 @@
 			v-if="visible"
 			class="task-view"
 		>
+			<BaseButton
+				v-if="!isModal"
+				class="back-button mbs-2"
+				:to="projectRoute"
+			>
+				<Icon icon="arrow-left" />
+				{{ $t('task.detail.back') }}
+			</BaseButton>
 			<Heading
 				ref="heading"
 				:task="task"
@@ -701,6 +709,11 @@ const taskColor = ref<ITask['hexColor']>('')
 const visible = ref(false)
 
 const project = computed(() => projectStore.projects[task.value.projectId])
+
+const projectRoute = computed(() => ({
+	name: 'project.index',
+	params: {projectId: task.value.projectId},
+}))
 
 const canWrite = computed(() => (
 	task.value.maxPermission !== null &&

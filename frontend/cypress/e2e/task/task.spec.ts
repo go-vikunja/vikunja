@@ -194,6 +194,19 @@ describe('Task', () => {
 			LabelTaskFactory.truncate()
 			TaskAttachmentFactory.truncate()
 		})
+
+		it('provides back navigation to the project', () => {
+			const tasks = TaskFactory.create(1)
+			cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
+			cy.visit('/projects/1/3')
+			cy.wait('@loadTasks')
+			cy.intercept(`**/tasks/${tasks[0].id}`).as('loadTask')
+			cy.get('tbody tr').first().find('a').first().click()
+			cy.wait('@loadTask')
+			cy.get('.task-view .back-button').should('be.visible').click()
+			cy.location('pathname').should('match', /\/projects\/1\/\d+/)
+		})
+
 		it('Shows a 404 page for nonexisting tasks', () => {
 
 			cy.visit('/tasks/9999')
@@ -201,6 +214,7 @@ describe('Task', () => {
 			cy.contains('Not found')
 				.should('be.visible')
 		})
+
 		it('Shows all task details', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
