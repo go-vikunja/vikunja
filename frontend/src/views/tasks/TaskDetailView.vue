@@ -589,7 +589,7 @@
 
 <script lang="ts" setup>
 import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted, onBeforeUnmount} from 'vue'
-import {useRouter, type RouteLocation} from 'vue-router'
+import {useRouter, type RouteLocation, onBeforeRouteLeave} from 'vue-router'
 import {storeToRefs} from 'pinia'
 import {useI18n} from 'vue-i18n'
 import {unrefElement} from '@vueuse/core'
@@ -668,6 +668,7 @@ const authStore = useAuthStore()
 const baseStore = useBaseStore()
 
 const task = ref<ITask>(new TaskModel())
+const taskNotFound = ref(false)
 const taskTitle = computed(() => task.value.title)
 useTitle(taskTitle)
 
@@ -687,6 +688,33 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
 	document.removeEventListener('keydown', saveTaskViaHotkey)
+})
+
+onBeforeRouteLeave(async () => {
+	if (taskNotFound.value) {
+		return
+	}
+
+	if (!project.value) {
+		await new Promise<void>((resolve) => {
+			const timeout = setTimeout(() => {
+				stop()
+				resolve()
+			}, 5000) // 5 second timeout
+			
+			const stop = watch(project, (p) => {
+				if (p) {
+					clearTimeout(timeout)
+					stop()
+					resolve()
+				}
+			})
+		})
+	}
+
+	if (project.value) {
+		await baseStore.handleSetCurrentProjectIfNotSet(project.value)
+	}
 })
 
 // We doubled the task color property here because verte does not have a real change property, leading
@@ -749,6 +777,7 @@ watch(
 			}
 		} catch (e) {
 			if (e?.response?.status === 404) {
+				taskNotFound.value = true
 				router.replace({name: 'not-found'})
 				return
 			}
