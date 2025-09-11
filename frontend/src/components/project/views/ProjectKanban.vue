@@ -318,9 +318,9 @@ import TaskBucketService from '@/services/taskBucket'
 import TaskBucketModel from '@/models/taskBucket'
 
 const props = defineProps<{
-        isLoadingProject: boolean,
-        projectId: number,
-        viewId: IProjectView['id'],
+	isLoadingProject: boolean,
+	projectId: number,
+	viewId: IProjectView['id'],
 }>()
 
 const projectId = toRef(props, 'projectId')
