@@ -74,10 +74,6 @@ export function useTaskList(
 	const filter = useRouteQuery('filter')
 	const s = useRouteQuery('s')
 
-	watch([filter, s], () => {
-		page.value = 1
-	})
-
 	watch(filter, v => { params.value.filter = v ?? '' }, { immediate: true })
 	watch(s, v => { params.value.s = v ?? '' }, { immediate: true })
 
@@ -91,13 +87,15 @@ export function useTaskList(
 
 		return formatSortOrder(sortBy.value, loadParams)
 	})
-	
+
 	watch(
-		() => allParams.value,
-		() => {
-			// When parameters change, the page should always be the first
-			page.value = 1
+		[params, sortBy, page],
+		([, , newPage], [, , oldPage]) => {
+			if (newPage === oldPage) {
+				page.value = 1
+			}
 		},
+		{deep: true},
 	)
 	
 	const authStore = useAuthStore()
