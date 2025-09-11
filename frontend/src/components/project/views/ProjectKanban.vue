@@ -215,6 +215,7 @@
 												:task="task"
 												:loading="taskUpdating[task.id] ?? false"
 												:project-id="projectId"
+												@taskCompletedRecurring="handleRecurringTaskCompletion"
 											/>
 										</div>
 									</template>
@@ -303,7 +304,7 @@ import {
 } from '@/helpers/saveCollapsedBucketState'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 
-import {isSavedFilter} from '@/services/savedFilter'
+import {isSavedFilter, useSavedFilter} from '@/services/savedFilter'
 import {success} from '@/message'
 import {useProjectStore} from '@/stores/projects'
 import type {TaskFilterParams} from '@/services/taskCollection'
@@ -341,6 +342,9 @@ const taskStore = useTaskStore()
 const projectStore = useProjectStore()
 const taskPositionService = ref(new TaskPositionService())
 const taskBucketService = ref(new TaskBucketService())
+
+// Saved filter composable for accessing filter data
+const {filter: savedFilter} = useSavedFilter(() => props.projectId)
 
 const taskContainerRefs = ref<{ [id: IBucket['id']]: HTMLElement }>({})
 const bucketLimitInputRef = ref<HTMLInputElement | null>(null)
@@ -662,6 +666,22 @@ async function saveBucketTitle(bucketId: IBucket['id'], bucketTitle: string) {
 function updateBuckets(value: IBucket[]) {
 	// (1) buckets get updated in store and tasks positions get invalidated
 	kanbanStore.setBuckets(value)
+}
+
+function handleRecurringTaskCompletion() {
+	// Only reload if we're in a saved filter and the filter contains date fields
+	if (!isSavedFilter(project.value)) {
+		return
+	}
+
+	const filterContainsDateFields = savedFilter.value.filters?.filter?.includes('due_date') || 
+			savedFilter.value.filters?.filter?.includes('start_date') || 
+			savedFilter.value.filters?.filter?.includes('end_date')
+		
+	if (filterContainsDateFields) {
+		// Reload the kanban board to refresh tasks that now match/don't match the filter
+		kanbanStore.loadBucketsForProject(props.projectId, props.viewId, params.value)
+	}
 }
 
 // TODO: fix type
