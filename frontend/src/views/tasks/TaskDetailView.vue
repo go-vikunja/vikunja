@@ -12,7 +12,7 @@
 			class="task-view"
 		>
 			<BaseButton
-				v-if="!isModal"
+				v-if="!isModal || isMobile"
 				class="back-button mbs-2"
 				:to="projectRoute"
 			>
@@ -729,6 +729,7 @@ const color = computed(() => {
 })
 
 const isModal = computed(() => Boolean(props.backdropView))
+const isMobile = useMediaQuery('(max-width: 1024px)')
 
 function attachmentUpload(file: File, onSuccess?: (url: string) => void) {
 	return uploadFile(props.taskId, file, onSuccess)
