@@ -194,6 +194,68 @@ describe('Task', () => {
 			LabelTaskFactory.truncate()
 			TaskAttachmentFactory.truncate()
 		})
+		
+		it('provides back navigation to the project in the list view', () => {
+			const tasks = TaskFactory.create(1)
+			cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
+			cy.visit('/projects/1/1')
+			cy.wait('@loadTasks')
+			cy.get('.list-view .task')
+				.first()
+				.find('a.task-link')
+				.click()
+			cy.get('.task-view .back-button')
+				.should('be.visible')
+				.click()
+			cy.location('pathname').should('match', /\/projects\/1\/\d+/)
+		})
+
+		it('provides back navigation to the project in the table view', () => {
+			const tasks = TaskFactory.create(1)
+			cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
+			cy.visit('/projects/1/3')
+			cy.wait('@loadTasks')
+			cy.get('tbody tr')
+				.first()
+				.find('a')
+				.first()
+				.click()
+			cy.get('.task-view .back-button')
+				.should('be.visible')
+				.click()
+			cy.location('pathname').should('match', /\/projects\/1\/\d+/)
+		})
+
+		it('provides back navigation to the project in the kanban view on mobile', () => {
+			cy.viewport('iphone-8')
+
+			const tasks = TaskFactory.create(1)
+			cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
+			cy.visit('/projects/1/4')
+			cy.wait('@loadTasks')
+			cy.get('.kanban-view .tasks .task')
+				.first()
+				.click()
+			cy.get('.task-view .back-button')
+				.should('be.visible')
+				.click()
+			cy.location('pathname').should('match', /\/projects\/1\/\d+/)
+		})
+		
+		it('does not provide back navigation to the project in the kanban view on desktop', () => {
+			cy.viewport('macbook-15')
+
+			const tasks = TaskFactory.create(1)
+			cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
+			cy.visit('/projects/1/4')
+			cy.wait('@loadTasks')
+			cy.get('.kanban-view .tasks .task')
+				.first()
+				.click()
+			cy.get('.task-view .back-button')
+				.should('not.exist')
+		})
+
 		it('Shows a 404 page for nonexisting tasks', () => {
 
 			cy.visit('/tasks/9999')
@@ -201,6 +263,7 @@ describe('Task', () => {
 			cy.contains('Not found')
 				.should('be.visible')
 		})
+
 		it('Shows all task details', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,

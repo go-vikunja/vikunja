@@ -11,6 +11,14 @@
 			v-if="visible"
 			class="task-view"
 		>
+			<BaseButton
+				v-if="!isModal || isMobile"
+				class="back-button mbs-2"
+				:to="projectRoute"
+			>
+				<Icon icon="arrow-left" />
+				{{ $t('task.detail.back') }}
+			</BaseButton>
 			<Heading
 				ref="heading"
 				:task="task"
@@ -592,7 +600,7 @@ import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted, on
 import {useRouter, type RouteLocation, onBeforeRouteLeave} from 'vue-router'
 import {storeToRefs} from 'pinia'
 import {useI18n} from 'vue-i18n'
-import {unrefElement} from '@vueuse/core'
+import {unrefElement, useMediaQuery} from '@vueuse/core'
 import {klona} from 'klona/lite'
 import {eventToHotkeyString} from '@github/hotkey'
 
@@ -730,6 +738,11 @@ const visible = ref(false)
 
 const project = computed(() => projectStore.projects[task.value.projectId])
 
+const projectRoute = computed(() => ({
+	name: 'project.index',
+	params: {projectId: task.value.projectId},
+}))
+
 const canWrite = computed(() => (
 	task.value.maxPermission !== null &&
 	task.value.maxPermission > PERMISSIONS.READ
@@ -744,6 +757,7 @@ const color = computed(() => {
 })
 
 const isModal = computed(() => Boolean(props.backdropView))
+const isMobile = useMediaQuery('(max-width: 1024px)')
 
 function attachmentUpload(file: File, onSuccess?: (url: string) => void) {
 	return uploadFile(props.taskId, file, onSuccess)

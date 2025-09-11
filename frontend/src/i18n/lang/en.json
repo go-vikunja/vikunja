@@ -813,6 +813,7 @@
       "updateSuccess": "The task was saved successfully.",
       "deleteSuccess": "The task has been deleted successfully.",
       "belongsToProject": "This task belongs to project '{project}'",
+      "back": "Back to project",
       "due": "Due {at}",
       "closePopup": "Close popup",
       "organization": "Organization",
