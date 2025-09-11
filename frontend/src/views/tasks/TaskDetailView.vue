@@ -692,8 +692,14 @@ onBeforeUnmount(() => {
 onBeforeRouteLeave(async () => {
 	if (!project.value) {
 		await new Promise<void>((resolve) => {
+			const timeout = setTimeout(() => {
+				stop()
+				resolve()
+			}, 5000) // 5 second timeout
+			
 			const stop = watch(project, (p) => {
 				if (p) {
+					clearTimeout(timeout)
 					stop()
 					resolve()
 				}
