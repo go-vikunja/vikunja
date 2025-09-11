@@ -588,7 +588,11 @@
     "authenticating": "Authenticating…",
     "passwordRequired": "This shared project requires a password. Please enter it below:",
     "error": "An error occurred.",
-    "invalidPassword": "The password is invalid."
+    "invalidPassword": "The password is invalid.",
+    "accessDenied": "Access denied. Please check your permissions and try again.",
+    "serverError": "Server error occurred. Please try again later.",
+    "projectLoadError": "Failed to load project information.",
+    "retry": "Retry"
   },
   "navigation": {
     "overview": "Overview",
