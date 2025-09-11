@@ -1,6 +1,6 @@
-import {createFakeUserAndLogin} from '../../../support/authenticateUser'
-import {TaskFactory} from '../../../factories/task'
-import {ProjectFactory} from '../../../factories/project'
+import {createFakeUserAndLogin} from '../../support/authenticateUser'
+import {TaskFactory} from '../../factories/task'
+import {ProjectFactory} from '../../factories/project'
 
 describe('Filter Persistence Across Views', () => {
 	createFakeUserAndLogin()
