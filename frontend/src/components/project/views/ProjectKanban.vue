@@ -388,15 +388,13 @@ const params = ref<TaskFilterParams>({
 	s: '',
 })
 
-// Initialize params from URL on mount
 watch([filter, s], ([filterValue, sValue]) => {
 	params.value.filter = filterValue ?? ''
 	params.value.s = sValue ?? ''
 }, { immediate: true })
 
-// Bidirectional sync between FilterPopup and URL
 function updateFilters(newParams: TaskFilterParams) {
-	// Update all params (preserves non-URL-synced parameters like sort_by, order_by, etc.)
+	// Update all params
 	params.value = { ...newParams }
 	
 	// Sync only filter and s to URL
