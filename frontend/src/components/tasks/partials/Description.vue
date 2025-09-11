@@ -60,8 +60,10 @@ const emit = defineEmits<{
 }>()
 
 const description = ref<string>('')
+const hasChanges = ref(false)
 watchEffect(() => {
 	description.value = props.modelValue.description
+	hasChanges.value = false
 })
 
 const saved = ref(false)
@@ -79,6 +81,15 @@ onMounted(() => {
 })
 
 async function saveWithDelay() {
+	if (description.value === props.modelValue.description) {
+		hasChanges.value = false
+		if (changeTimeout.value !== null) {
+			clearTimeout(changeTimeout.value)
+		}
+		return
+	}
+
+	hasChanges.value = true
 	if (changeTimeout.value !== null) {
 		clearTimeout(changeTimeout.value)
 	}
@@ -99,6 +110,11 @@ onBeforeUnmount(async () => {
 onBeforeRouteLeave(() => save())
 
 async function save() {
+	if (!hasChanges.value) {
+		return
+	}
+
+	hasChanges.value = false
 	if (changeTimeout.value !== null) {
 		clearTimeout(changeTimeout.value)
 	}
@@ -121,6 +137,7 @@ async function save() {
 		if (error?.response?.status === 404) {
 			return
 		}
+		hasChanges.value = true
 		// Re-throw other errors
 		throw error
 	} finally {
