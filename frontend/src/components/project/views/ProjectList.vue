@@ -96,7 +96,7 @@
 
 
 <script setup lang="ts">
-import {ref, computed, nextTick, onMounted, onBeforeUnmount, watch} from 'vue'
+import {ref, computed, nextTick, onMounted, onBeforeUnmount, watch, toRef} from 'vue'
 import draggable from 'zhyswan-vuedraggable'
 
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
@@ -113,7 +113,6 @@ import {PERMISSIONS as Permissions} from '@/constants/permissions'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 import type {ITask} from '@/modelTypes/ITask'
 import {isSavedFilter, useSavedFilter} from '@/services/savedFilter'
-import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 
 import {useBaseStore} from '@/stores/base'
 
@@ -123,10 +122,12 @@ import TaskPositionService from '@/services/taskPosition'
 import TaskPositionModel from '@/models/taskPosition'
 
 const props = defineProps<{
-	isLoadingProject: boolean,
-	projectId: IProject['id'],
-	viewId: IProjectView['id'],
+        isLoadingProject: boolean,
+        projectId: IProject['id'],
+        viewId: IProjectView['id'],
 }>()
+
+const projectId = toRef(props, 'projectId')
 
 defineOptions({name: 'List'})
 
@@ -143,10 +144,10 @@ const {
 	params,
 	sortByParam,
 } = useTaskList(
-	() => props.projectId,
+	() => projectId.value,
 	() => props.viewId,
 	{position: 'asc'},
-	() => props.projectId === -1
+	() => projectId.value === -1
 		? null
 		: 'subtasks',
 )
@@ -154,14 +155,14 @@ const {
 const taskPositionService = ref(new TaskPositionService())
 
 // Saved filter composable for accessing filter data
-const {filter: savedFilter} = useSavedFilter(() => props.projectId)
+const _savedFilter = useSavedFilter(() => projectId.value < 0 ? projectId.value : undefined).filter
 
 const tasks = ref<ITask[]>([])
 watch(
 	allTasks,
 	() => {
 		tasks.value = [...allTasks.value]
-		if (props.projectId < 0) {
+		if (projectId.value < 0) {
 			return
 		}
 		tasks.value = tasks.value.filter(t => {
@@ -219,31 +220,9 @@ function updateTaskList(task: ITask) {
 }
 
 function updateTasks(updatedTask: ITask) {
-	if (props.projectId < 0) {
-		const originalTask = allTasks.value.find(t => t.id === updatedTask.id)
-		const isRecurringTask = originalTask && (originalTask.repeatAfter.amount > 0 || originalTask.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH)
-		
-		const filterContainsDateFields = project.value && isSavedFilter(project.value) && 
-			project.value.title &&
-			(savedFilter.value.filters?.filter?.includes('due_date') || 
-			 savedFilter.value.filters?.filter?.includes('start_date') || 
-			 savedFilter.value.filters?.filter?.includes('end_date'))
-
-		
-		if (isRecurringTask && filterContainsDateFields) {
-			// In the case of a filter, we'll reload the filter in the background to avoid tasks which do 
-			// not match the filter show up here
-			loadTasks(false)
-			return
-		}
-		
-		// For other updates in saved filters, just update the task in place
-		for (const t in allTasks.value) {
-			if (allTasks.value[t].id === updatedTask.id) {
-				allTasks.value[t] = updatedTask
-				break
-			}
-		}
+	if (projectId.value < 0) {
+		// Reload tasks to keep saved filter results in sync
+		loadTasks(false)
 		return
 	}
 
