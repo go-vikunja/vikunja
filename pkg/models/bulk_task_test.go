@@ -117,31 +117,21 @@ func TestBulkTask_Update(t *testing.T) {
 		assert.NotZero(t, bt.Tasks[0].DoneAt)
 		assert.NotZero(t, bt.Tasks[1].DoneAt)
 	})
-}
 
-func TestBulkTaskDoneAtOverride(t *testing.T) {
-	u := &user.User{ID: 1}
+	t.Run("don't update done_at when bulk marking tasks done", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
 
-	db.LoadAndAssertFixtures(t)
-	s := db.NewSession()
-	defer s.Close()
+		userProvidedTime := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
+		bt := &BulkTask{
+			TaskIDs: []int64{1, 3},
+			Fields:  []string{"done", "done_at"},
+			Values:  &Task{Done: true, DoneAt: userProvidedTime},
+		}
 
-	userProvidedTime := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
-	bt := &BulkTask{
-		TaskIDs: []int64{1, 3},
-		Fields:  []string{"done", "done_at"},
-		Values:  &Task{Done: true, DoneAt: userProvidedTime},
-	}
-
-	err := bt.Update(s, u)
-	require.NoError(t, err)
-	require.NoError(t, s.Commit())
-
-	require.Len(t, bt.Tasks, 2)
-	assert.True(t, bt.Tasks[0].Done)
-	assert.True(t, bt.Tasks[1].Done)
-	assert.NotEqual(t, userProvidedTime, bt.Tasks[0].DoneAt)
-	assert.NotEqual(t, userProvidedTime, bt.Tasks[1].DoneAt)
-	assert.WithinDuration(t, time.Now(), bt.Tasks[0].DoneAt, time.Second*2)
-	assert.WithinDuration(t, time.Now(), bt.Tasks[1].DoneAt, time.Second*2)
+		err := bt.Update(s, u)
+		require.Error(t, err)
+		assert.IsType(t, ErrInvalidTaskColumn{}, err)
+	})
 }
