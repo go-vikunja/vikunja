@@ -12,6 +12,7 @@
 					v-model="params"
 					:view-id="viewId"
 					:project-id="projectId"
+					@update:modelValue="updateFilters"
 				/>
 			</div>
 		</template>
@@ -277,6 +278,7 @@
 
 <script setup lang="ts">
 import {computed, nextTick, ref, watch, toRef} from 'vue'
+import {useRouteQuery} from '@vueuse/router'
 import {useI18n} from 'vue-i18n'
 import draggable from 'zhyswan-vuedraggable'
 import {klona} from 'klona/lite'
@@ -374,13 +376,24 @@ const collapsedBuckets = ref<CollapsedBuckets>({})
 const taskUpdating = ref<{ [id: ITask['id']]: boolean }>({})
 const oneTaskUpdating = ref(false)
 
-const params = ref<TaskFilterParams>({
+// URL-synchronized filter parameters
+const filter = useRouteQuery('filter')
+const s = useRouteQuery('s')
+
+// Computed params that includes URL values
+const params = computed<TaskFilterParams>(() => ({
 	sort_by: [],
 	order_by: [],
-	filter: '',
+	filter: filter.value ?? '',
 	filter_include_nulls: false,
-	s: '',
-})
+	s: s.value ?? '',
+}))
+
+// Bidirectional sync between FilterPopup and URL
+function updateFilters(newParams: TaskFilterParams) {
+	filter.value = newParams.filter || undefined
+	s.value = newParams.s || undefined
+}
 
 const getTaskDraggableTaskComponentData = computed(() => (bucket: IBucket) => {
 	return {
