@@ -20,7 +20,7 @@ describe('Filter Persistence Across Views', () => {
 	}
 
 	beforeEach(() => {
-		createProjects(1)
+		createProjects()
 		TaskFactory.create(5, {
 			id: '{increment}',
 			project_id: 1,
