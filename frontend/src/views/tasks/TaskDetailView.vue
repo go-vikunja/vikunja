@@ -14,7 +14,7 @@
 			<BaseButton
 				v-if="!isModal || isMobile"
 				class="back-button mbs-2"
-				:to="projectRoute"
+				@click="router.options.history.state?.back?.includes('/projects/') ? router.back() : router.push(projectRoute)"
 			>
 				<Icon icon="arrow-left" />
 				{{ $t('task.detail.back') }}
