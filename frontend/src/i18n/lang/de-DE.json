@@ -588,7 +588,11 @@
 		"authenticating": "Authentifizierung …",
 		"passwordRequired": "Dieses geteilte Projekt benötigt ein Passwort. Bitte gebe es unten ein:",
 		"error": "Es ist ein Fehler aufgetreten.",
-		"invalidPassword": "Das Passwort ist ungültig."
+		"invalidPassword": "Das Passwort ist ungültig.",
+		"accessDenied": "Zugriff verweigert. Bitte überprüfe deine Berechtigungen und versuche es nochmal.",
+		"serverError": "Es ist ein Serverfehler aufgetreten. Bitte versuche es später erneut.",
+		"projectLoadError": "Fehler beim Laden der Projektinformationen.",
+		"retry": "Erneut versuchen"
 	},
 	"navigation": {
 		"overview": "Übersicht",
@@ -813,6 +817,7 @@
 			"updateSuccess": "Die Aufgabe wurde erfolgreich gespeichert.",
 			"deleteSuccess": "Die Aufgabe wurde erfolgreich gelöscht.",
 			"belongsToProject": "Diese Aufgabe gehört zum Projekt „{project}“",
+			"back": "Zurück zum Projekt",
 			"due": "Fällig {at}",
 			"closePopup": "Popup schließen",
 			"organization": "Organisation",

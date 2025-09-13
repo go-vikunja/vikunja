@@ -588,7 +588,11 @@
 		"authenticating": "Kimlik doğrulama yapılıyor…",
 		"passwordRequired": "Bu paylaşılan proje bir şifre gerektiriyor. Lütfen aşağıya girin:",
 		"error": "Bir hata oluştu.",
-		"invalidPassword": "Şifre geçersiz."
+		"invalidPassword": "Şifre geçersiz.",
+		"accessDenied": "Erişim reddedildi. Lütfen izinlerinizi kontrol edin ve tekrar deneyin.",
+		"serverError": "Sunucu hatası oluştu. Lütfen daha sonra tekrar deneyin.",
+		"projectLoadError": "Proje bilgileri yüklenemedi.",
+		"retry": "Tekrar dene"
 	},
 	"navigation": {
 		"overview": "Genel Bakış",
@@ -813,6 +817,7 @@
 			"updateSuccess": "Görev başarıyla kaydedildi.",
 			"deleteSuccess": "Görev başarıyla silindi.",
 			"belongsToProject": "Bu görev '{project}' projesine aittir",
+			"back": "Projeye geri dön",
 			"due": "{at} tarihinde bitiyor",
 			"closePopup": "Açılır pencereyi kapat",
 			"organization": "Organizasyon",

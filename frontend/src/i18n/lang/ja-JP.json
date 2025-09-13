@@ -67,7 +67,8 @@
 			"noAccountYet": "まだアカウントをお持ちでないですか？",
 			"alreadyHaveAnAccount": "すでにアカウントをお持ちですか？",
 			"remember": "ログインしたままにする",
-			"registrationDisabled": "新規登録は無効化されています。"
+			"registrationDisabled": "新規登録は無効化されています。",
+			"passwordResetTokenMissing": "パスワードリセットトークンがありません。"
 		},
 		"settings": {
 			"title": "設定",
@@ -91,6 +92,8 @@
 				"discoverableByName": "他のユーザーが名前で検索したときチームやプロジェクトのメンバーとして追加できるようにする",
 				"discoverableByEmail": "他のユーザーがメールアドレスで検索したときチームやプロジェクトのメンバーとして追加できるようにする",
 				"playSoundWhenDone": "タスクを完了したとき音を鳴らす",
+				"allowIconChanges": "特定の期間中に特別なロゴを表示",
+				"defaultTaskRelationType": "デフォルトのタスクの関係タイプ",
 				"weekStart": "週の始まり",
 				"weekStartSunday": "日曜日",
 				"weekStartMonday": "月曜日",
@@ -100,7 +103,25 @@
 				"timezone": "タイムゾーン",
 				"overdueTasksRemindersTime": "期限切れタスクのリマインダー送信時間",
 				"filterUsedOnOverview": "概要ページの絞り込み条件",
+				"minimumPriority": "表示タスク優先度の最小値",
+				"dateDisplay": "日付表示形式",
+				"dateDisplayOptions": {
+					"relative": "相対値 (例: 3 days ago)",
+					"mm-dd-yyyy": "MM-DD-YYYY",
+					"dd-mm-yyyy": "DD-MM-YYYY",
+					"yyyy-mm-dd": "YYYY-MM-DD",
+					"mm/dd/yyyy": "MM/DD/YYYY",
+					"dd/mm/yyyy": "DD/MM/YYYY",
+					"yyyy/mm/dd": "YYYY/MM/DD"
+				},
 				"externalUserNameChange": "名前はログインプロバイダー（{provider}）で管理されています。名前を変更する場合はそちらで行ってください。"
+			},
+			"sections": {
+				"personalInformation": "あなたの情報",
+				"taskAndNotifications": "プロジェクトとタスク",
+				"privacy": "プライバシー設定",
+				"localization": "ローカライズ",
+				"appearance": "外観と動作"
 			},
 			"totp": {
 				"title": "2要素認証",
@@ -139,6 +160,7 @@
 				"setSuccess": "プロフィール画像を設定しました。"
 			},
 			"quickAddMagic": {
+				"title": "クイック追加マジック",
 				"disabled": "無効",
 				"todoist": "Todoist",
 				"vikunja": "Vikunja"
@@ -847,6 +869,7 @@
 			"invalidAmount": "0以上を入力してください。"
 		},
 		"quickAddMagic": {
+			"title": "クイック追加マジック",
 			"label1": "ラベルを付けるには、ラベル名の前に {prefix} を入力します。",
 			"dateAndTime": "日付と時刻"
 		}
