@@ -93,6 +93,7 @@
 				"discoverableByEmail": "Permitir que outros utilizadores me adicionem como membro a equipas ou projetos quando pesquisem pelos meu endereço de e-mail completo",
 				"playSoundWhenDone": "Tocar um som quando marcar tarefas como concluídas",
 				"allowIconChanges": "Mostrar logótipos especiais durante determinados períodos",
+				"defaultTaskRelationType": "Tipo de relação padrão da tarefa",
 				"weekStart": "A semana começa com",
 				"weekStartSunday": "Domingo",
 				"weekStartMonday": "Segunda-Feira",
@@ -335,6 +336,12 @@
 				"removeSuccess": "{sharable} foi removido com sucesso de {type}.",
 				"addedSuccess": "{type} foi adicionado com sucesso.",
 				"updatedSuccess": "{type} foi adicionado com sucesso."
+			},
+			"permission": {
+				"title": "Permissão",
+				"read": "Apenas leitura",
+				"readWrite": "Leitura e escrita",
+				"admin": "Admin"
 			},
 			"attributes": {
 				"link": "Link",
@@ -581,7 +588,11 @@
 		"authenticating": "A autenticar…",
 		"passwordRequired": "Este projeto partilhado requer uma palavra-passe. Por favor, introduz-a abaixo:",
 		"error": "Ocorreu um erro.",
-		"invalidPassword": "A palavra-passe é inválida."
+		"invalidPassword": "A palavra-passe é inválida.",
+		"accessDenied": "Acesso negado. Por favor, verifica as tuas permissões e tenta novamente.",
+		"serverError": "Ocorreu um erro no servidor. Por favor, tenta novamente mais tarde.",
+		"projectLoadError": "Falha ao carregar informações do projeto.",
+		"retry": "Repetir"
 	},
 	"navigation": {
 		"overview": "Vista geral",
@@ -806,6 +817,7 @@
 			"updateSuccess": "A tarefa foi salva com sucesso.",
 			"deleteSuccess": "A tarefa foi eliminada com sucesso.",
 			"belongsToProject": "Esta tarefa pertence ao projeto '{project}'",
+			"back": "Volta ao projeto",
 			"due": "Vence {at}",
 			"closePopup": "Fechar janela",
 			"organization": "Organização",
