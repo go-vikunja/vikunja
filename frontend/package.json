@@ -89,7 +89,7 @@
     "is-touch-device": "1.0.1",
     "klona": "2.0.6",
     "lowlight": "3.3.0",
-    "marked": "16.2.1",
+    "marked": "16.3.0",
     "pinia": "3.0.3",
     "register-service-worker": "1.7.2",
     "sortablejs": "1.15.6",
