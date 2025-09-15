@@ -31,7 +31,7 @@ require (
 	github.com/dustinkirkland/golang-petname v0.0.0-20240422154211-76c06c4bde6b
 	github.com/gabriel-vasile/mimetype v1.4.10
 	github.com/ganigeorgiev/fexpr v0.5.0
-	github.com/getsentry/sentry-go v0.35.2
+	github.com/getsentry/sentry-go v0.35.3
 	github.com/getsentry/sentry-go/echo v0.35.2
 	github.com/go-ldap/ldap/v3 v3.4.11
 	github.com/go-sql-driver/mysql v1.9.3
