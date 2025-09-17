@@ -906,7 +906,11 @@ func reloadEventData(s *xorm.Session, event map[string]interface{}, projectID in
 	}
 
 	if _, has := event["project"]; has && doerID != 0 {
-		project := &Project{ID: projectID}
+		var project *Project
+		project, err = GetProjectSimpleByID(s, projectID)
+		if err != nil && !IsErrProjectDoesNotExist(err) {
+			return
+		}
 		err = project.ReadOne(s, &user.User{ID: doerID})
 		if err != nil && !IsErrProjectDoesNotExist(err) {
 			return
