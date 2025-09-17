@@ -1,1 +1,10 @@
-{}
+{
+	"time": {
+		"since_years": "%[1]d 年",
+		"since_weeks": "%[1]d 週間",
+		"since_days": "%[1]d 日",
+		"since_hours": "%[1]d 時間",
+		"since_minutes": "%[1]d 分",
+		"list_last_separator": ", "
+	}
+}

@@ -157,7 +157,9 @@
 				"upload": "アップロード",
 				"uploadAvatar": "画像のアップロード",
 				"statusUpdateSuccess": "プロフィール画像を更新しました。",
-				"setSuccess": "プロフィール画像を設定しました。"
+				"setSuccess": "プロフィール画像を設定しました。",
+				"ldap": "プロフィール画像は組織のディレクトリサービス (LDAP) から自動的に同期されます。変更方法については組織のIT部門にお問い合わせください。",
+				"openid": "プロフィール画像はログインプロバイダー ({provider}) から自動同期されます。変更するにはログインプロバイダーから行ってください。"
 			},
 			"quickAddMagic": {
 				"title": "クイック追加マジック",
@@ -225,7 +227,9 @@
 			"descriptionPasswordRequired": "続行するにはパスワードを入力してください:",
 			"request": "Vikunjaデータのリクエスト",
 			"success": "Vikunjaデータのリクエストに成功しました！ダウンロードの準備が整い次第、メールでお知らせします。",
-			"downloadTitle": "エクスポートされたVikunjaデータのダウンロード"
+			"downloadTitle": "エクスポートされたVikunjaデータのダウンロード",
+			"ready": "エクスポートの準備が完了しました。{0} までダウンロードできます。",
+			"requestNew": "新しいエクスポートをリクエスト"
 		}
 	},
 	"project": {
@@ -245,6 +249,7 @@
 		"unfavorite": "このプロジェクトをお気に入りから削除",
 		"openSettingsMenu": "プロジェクト設定メニューを開く",
 		"description": "プロジェクトの説明",
+		"favoriteDescription": "このプロジェクトにはお気に入りに追加されたタスクがすべて含まれています。",
 		"create": {
 			"header": "新しいプロジェクトの作成",
 			"titlePlaceholder": "プロジェクト名を入力…",
@@ -283,6 +288,7 @@
 		"duplicate": {
 			"title": "プロジェクトの複製",
 			"label": "複製",
+			"text": "複製されたプロジェクトを配置する親のプロジェクトを選択してください:",
 			"success": "プロジェクトは正常に複製されました。"
 		},
 		"edit": {
@@ -293,7 +299,7 @@
 			"identifier": "プロジェクトID",
 			"identifierPlaceholder": "プロジェクトIDを入力…",
 			"description": "説明",
-			"descriptionPlaceholder": "このプロジェクトに関する説明を記入します。'/' でオプションを表示します…",
+			"descriptionPlaceholder": "このプロジェクトに関する説明を記入します。'/' でオプションを表示…",
 			"color": "色",
 			"success": "プロジェクトは正常に更新されました。"
 		},
@@ -331,6 +337,12 @@
 				"addedSuccess": "{type} は正常に追加されました。",
 				"updatedSuccess": "{type} は正常に追加されました。"
 			},
+			"permission": {
+				"title": "権限",
+				"read": "読み取り専用",
+				"readWrite": "読み取りと書き込み",
+				"admin": "管理者"
+			},
 			"attributes": {
 				"link": "リンク",
 				"delete": "削除"
@@ -354,7 +366,22 @@
 			"month": "月",
 			"day": "日",
 			"hour": "時間",
-			"range": "期間"
+			"range": "期間",
+			"chartLabel": "プロジェクトガントチャート",
+			"taskBarsForRow": "行 {rowId} のタスクバー",
+			"taskBarLabel": "タスク: {task}。{startDate} から {endDate} まで。{dateType}。クリックして編集、ドラッグして移動。",
+			"scheduledDates": "予定日",
+			"estimatedDates": "推定日",
+			"resizeStartDate": "タスク「{task}」の開始日を変更",
+			"resizeEndDate": "タスク「{task}」の終了日を変更",
+			"timelineHeader": "月と日付のタイムラインのヘッダー",
+			"monthsRow": "月の行",
+			"daysRow": "日の行",
+			"monthLabel": "月: {month}",
+			"dayLabel": "日: {date} ({weekday})",
+			"dayLabelToday": "今日: {date} ({weekday})",
+			"taskAriaLabel": "タスク: {task}",
+			"taskAriaLabelById": "タスク {id}"
 		},
 		"table": {
 			"title": "テーブル",
@@ -396,6 +423,7 @@
 			"targetUrl": "ターゲットURL",
 			"targetUrlInvalid": "有効なURLを入力してください。",
 			"events": "イベント",
+			"eventsHint": "このWebhookで受信する (現在のプロジェクト内での) イベントを選択してください。",
 			"mustSelectEvents": "イベントを少なくとも1つ選択する必要があります。",
 			"delete": "Webhookの削除",
 			"deleteText": "このWebhookを削除して本当によろしいですか？このWebhookのターゲットURLにはイベントは送信されなくなります。",
@@ -413,21 +441,29 @@
 			"bucketConfigMode": "バケット設定モード",
 			"bucketConfig": "バケット設定",
 			"bucketConfigManual": "手動",
+			"filter": "絞り込み",
 			"create": "ビューの作成",
 			"createSuccess": "ビューは正常に作成されました。",
 			"titleRequired": "ビュー名を入力してください。",
 			"delete": "ビューの削除",
+			"deleteText": "このビューを削除して本当によろしいですか？このビューを使ってこのプロジェクトのタスクを表示することができなくなります。この操作はタスクを削除しません。この操作は元に戻せません！",
 			"deleteSuccess": "ビューは正常に削除されました。",
+			"onlyAdminsCanEdit": "プロジェクト管理者のみビューを編集できます。",
 			"updateSuccess": "ビューは正常に更新されました。"
 		}
 	},
 	"filters": {
 		"title": "絞り込み",
 		"clear": "絞り込みの解除",
+		"showResults": "結果を表示",
+		"noResults": "該当なし",
+		"fromView": "現在のビューに絞り込み条件が設定されています:",
+		"fromViewBoth": "ここで入力した内容と組み合わせて使用されます。",
 		"attributes": {
 			"title": "絞り込み条件名",
 			"titlePlaceholder": "絞り込み条件名を入力…",
 			"description": "説明",
+			"descriptionPlaceholder": "絞り込み条件に関する説明を記入します。'/' でオプションを表示…",
 			"includeNulls": "値が設定されていないタスクを含める",
 			"requireAll": "すべての条件に一致するタスクのみ表示",
 			"showDoneTasks": "完了したタスクを表示",
@@ -455,8 +491,18 @@
 			"success": "絞り込み条件は正常に保存されました。"
 		},
 		"query": {
+			"title": "クエリ",
+			"placeholder": "検索クエリまたは絞り込み条件を入力…",
 			"help": {
+				"intro": "タスクを絞り込むのにSQLのようなクエリを使用できます。使用できるフィールドは次のとおりです:",
+				"link": "これはどのように動作しますか？",
+				"canUseDatemath": "日付式を使用して相対日付を設定できます。詳細はクエリ内の日付値をクリックしてください。",
 				"fields": {
+					"done": "タスクが完了しているかどうか",
+					"priority": "タスクの優先度 (1-5)",
+					"percentDone": "タスクの進捗状況 (0-100)",
+					"dueDate": "タスクの期日",
+					"startDate": "タスクの開始日",
 					"endDate": "タスクの終了日"
 				}
 			}
@@ -531,6 +577,7 @@
 		"previous": "前へ",
 		"next": "次へ",
 		"poweredBy": "Powered by Vikunja",
+		"info": "詳細",
 		"create": "作成",
 		"doit": "続行",
 		"saving": "保存中…",
@@ -705,6 +752,7 @@
 			"updateSuccess": "タスクは正常に保存されました。",
 			"deleteSuccess": "タスクは正常に削除されました。",
 			"belongsToProject": "このタスクはプロジェクト「{project}」に含まれています。",
+			"back": "プロジェクトに戻る",
 			"due": "期限: {at}",
 			"closePopup": "閉じる",
 			"organization": "組織",
@@ -1011,6 +1059,7 @@
 		"1015": "このユーザーはすでにTOTPが有効になっています。",
 		"1016": "このユーザーはTOTPが有効ではありません。",
 		"1017": "無効なTOTP認証コードです。",
+		"1018": "ユーザーのプロフィール画像のタイプが無効です。",
 		"3001": "そのプロジェクトは存在しません。",
 		"3006": "その共有プロジェクトは存在しません。",
 		"3008": "このプロジェクトはアーカイブ済みのため読み取り専用です。またプロジェクトに関連するタスクも同様です。",
@@ -1028,7 +1077,9 @@
 	},
 	"about": {
 		"title": "Vikunjaについて",
-		"version": "バージョン: {version}"
+		"version": "バージョン: {version}",
+		"frontendVersion": "フロントエンドバージョン: {version}",
+		"apiVersion": "API バージョン: {version}"
 	},
 	"time": {
 		"units": {
