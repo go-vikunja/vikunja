@@ -1013,14 +1013,6 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 		return err
 	}
 
-	err = events.Dispatch(&ProjectUpdatedEvent{
-		Project: project,
-		Doer:    auth,
-	})
-	if err != nil {
-		return err
-	}
-
 	l, err := GetProjectSimpleByID(s, project.ID)
 	if err != nil {
 		return err
@@ -1028,7 +1020,15 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 
 	*project = *l
 	err = project.ReadOne(s, auth)
-	return
+	if err != nil {
+		return err
+	}
+
+	err = events.Dispatch(&ProjectUpdatedEvent{
+		Project: project,
+		Doer:    auth,
+	})
+	return err
 }
 
 func recalculateProjectPositions(s *xorm.Session, parentProjectID int64) (err error) {
