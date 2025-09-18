@@ -1,4 +1,47 @@
 {
+	"notifications": {
+		"greeting": "こんにちは、%[1]sさん",
+		"email_confirm": {
+			"subject": "%[1]sさん、Vikunjaでメールアドレスの登録を完了してください",
+			"subject_new": "%[1]s + Vikunja = <3",
+			"welcome": "Vikunjaへようこそ！",
+			"confirm": "メールアドレスの登録を完了するには、以下のリンクをクリックしてください:"
+		},
+		"password": {
+			"changed": {
+				"subject": "Vikunjaのパスワードを変更しました",
+				"success": "アカウントのパスワードが変更されました。",
+				"warning": "もしこれがあなたの操作ではない場合、アカウントが侵害された可能性があります。サーバー管理者にお問い合わせください。"
+			},
+			"reset": {
+				"subject": "Vikunja パスワード再設定",
+				"instructions": "パスワードを再設定するには、以下のリンクをクリックしてください:",
+				"valid_duration": "このリンクは24時間有効です。"
+			}
+		},
+		"totp": {
+			"invalid": {
+				"subject": "誰かがあなたのVikunjaアカウントにログインしようとしましたが失敗しました"
+			}
+		},
+		"common": {
+			"have_nice_day": "よい一日を！",
+			"copy_url": "上のボタンが機能しない場合は、以下のURLをコピーし、ブラウザのアドレスバーに貼り付けてください:",
+			"actions": {
+				"open_task": "タスクを開く",
+				"open_vikunja": "Vikunjaを開く",
+				"open_project": "プロジェクトを開く",
+				"open_team": "チームを開く",
+				"download": "ダウンロード",
+				"reset_password": "パスワードの再設定",
+				"go_to_settings": "設定に移動",
+				"confirm_email": "メールアドレスの確認",
+				"abort_deletion": "削除を中止",
+				"confirm_account_deletion": "アカウント削除を確定",
+				"change_notification_settings_link": "通知設定は [こちら](%[1]s) で変更できます。"
+			}
+		}
+	},
 	"time": {
 		"since_years": "%[1]d 年",
 		"since_weeks": "%[1]d 週間",
