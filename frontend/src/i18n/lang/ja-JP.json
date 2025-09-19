@@ -397,7 +397,7 @@
 			"doneBucketSavedSuccess": "完了バケットは正常に保存されました。",
 			"defaultBucket": "デフォルトのバケット",
 			"defaultBucketHint": "バケットを指定せずにタスクを作成すると、このバケットに自動的に追加されます。",
-			"defaultBucketSavedSuccess": "デフォルト バケットは正常に保存されました。",
+			"defaultBucketSavedSuccess": "デフォルトのバケットは正常に保存されました。",
 			"deleteLast": "最後のバケットを削除することはできません。",
 			"addTaskPlaceholder": "新しいタスク名を入力…",
 			"addTask": "タスクの追加",
@@ -406,7 +406,7 @@
 			"addBucketPlaceholder": "新しいバケット名を入力…",
 			"deleteHeaderBucket": "バケットの削除",
 			"deleteBucketText1": "このバケットを削除して本当によろしいですか？",
-			"deleteBucketText2": "タスクは削除されずにデフォルト バケットに移動します。",
+			"deleteBucketText2": "タスクは削除されずデフォルトのバケットに移動します。",
 			"deleteBucketSuccess": "バケットは正常に削除されました。",
 			"bucketTitleSavedSuccess": "バケットのタイトルは正常に保存されました。",
 			"bucketLimitSavedSuccess": "バケットの上限は正常に保存されました。",
@@ -620,6 +620,8 @@
 		"welcomeBack": "おかえりなさい",
 		"custom": "カスタム",
 		"id": "ID",
+		"created": "作成日時",
+		"createdBy": "{0} によって作成",
 		"actions": "アクション",
 		"cannotBeUndone": "この操作は元に戻せません！",
 		"avatarOfUser": "{user} のプロフィール画像"
@@ -787,8 +789,8 @@
 			"move": "別のプロジェクトにタスクを移動",
 			"done": "タスクを完了",
 			"undone": "未完了に戻す",
-			"created": "{1} によって {0} に作成",
-			"updated": "{0} に更新",
+			"created": "{1} によって{0}に作成",
+			"updated": "{0}に更新",
 			"doneAt": "完了 {0}",
 			"updateSuccess": "タスクは正常に保存されました。",
 			"deleteSuccess": "タスクは正常に削除されました。",
@@ -826,7 +828,8 @@
 		"attributes": {
 			"assignees": "担当",
 			"color": "色",
-			"createdBy": "作成者:",
+			"created": "作成日",
+			"createdBy": "作成者",
 			"description": "説明",
 			"done": "完了",
 			"dueDate": "期日",
@@ -839,7 +842,8 @@
 			"repeat": "繰り返し間隔",
 			"startDate": "開始日",
 			"title": "タスク名",
-			"doneAt": "完了日時: "
+			"updated": "更新日",
+			"doneAt": "完了日"
 		},
 		"subscription": {
 			"subscribedTaskThroughParentProject": "現在プロジェクトを通して購読しているため、ここでこのタスクの購読を解除することはできません。",
@@ -856,7 +860,7 @@
 		},
 		"attachment": {
 			"title": "添付ファイル",
-			"createdBy": "{1}によって{0}に作成",
+			"createdBy": "{1} によって{0}に作成",
 			"downloadTooltip": "添付ファイルをダウンロード",
 			"upload": "添付ファイルのアップロード",
 			"drop": "ここにアップロードするファイルをドロップ",
@@ -1039,6 +1043,12 @@
 			"labels": "ラベルに移動",
 			"teams": "チームに移動",
 			"projects": "プロジェクトに移動"
+		},
+		"list": {
+			"title": "タスクリスト"
+		},
+		"gantt": {
+			"title": "ガントチャート"
 		}
 	},
 	"update": {
