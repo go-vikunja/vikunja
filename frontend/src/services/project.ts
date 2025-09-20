@@ -26,17 +26,25 @@ export default class ProjectService extends AbstractService<IProject> {
 				return taskService.beforeUpdate(task)
 			})
 		}
-		
+
 		if(typeof model.hexColor !== 'undefined') {
 			model.hexColor = colorFromHex(model.hexColor)
 		}
-		
-		return model
+
+		// Remove subscription field when updating a project to avoid invalid entity type errors
+		const {subscription, ...projectData} = model
+		return projectData as IProject
 	}
 
 	beforeCreate(project: IProject) {
 		project.hexColor = colorFromHex(project.hexColor)
 		// Remove subscription field when creating a project to avoid invalid entity type errors
+		const {subscription, ...projectData} = project
+		return projectData as IProject
+	}
+
+	beforeDelete(project: IProject) {
+		// Remove subscription field when deleting a project to avoid invalid entity type errors
 		const {subscription, ...projectData} = project
 		return projectData as IProject
 	}
