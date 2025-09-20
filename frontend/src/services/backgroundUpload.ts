@@ -2,7 +2,6 @@ import AbstractService from './abstractService'
 import ProjectModel from '@/models/project'
 
 import type { IProject } from '@/modelTypes/IProject'
-import type { IFile } from '@/modelTypes/IFile'
 
 export default class BackgroundUploadService extends AbstractService {
 	constructor() {

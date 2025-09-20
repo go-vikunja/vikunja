@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {onBeforeMount, ref} from 'vue'
+import {onBeforeMount, ref, toRaw} from 'vue'
 
 import type {IProjectView} from '@/modelTypes/IProjectView'
 import type {IFilters} from '@/modelTypes/ISavedFilter'
@@ -26,7 +26,7 @@ const emit = defineEmits<{
 	'cancel': [],
 }>()
 
-const view = ref<IProjectView>({...props.modelValue})
+const view = ref<IProjectView>({...toRaw(props).modelValue})
 
 const labelStore = useLabelStore()
 const projectStore = useProjectStore()

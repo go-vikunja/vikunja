@@ -45,11 +45,11 @@ export default class TaskCollectionService extends AbstractService<ITask | IBuck
 		return super.getReplacedRoute(path, pathparams)
 	}
 
-	modelFactory(data: any): ITask | IBucket {
+	modelFactory(data: Partial<ITask | IBucket>): ITask | IBucket {
 		// FIXME: There must be a better way for this…
-		if (typeof data.project_view_id !== 'undefined') {
-			return new BucketModel(data)
+		if (typeof (data as any).project_view_id !== 'undefined') {
+			return new BucketModel(data as Partial<IBucket>)
 		}
-		return new TaskModel(data)
+		return new TaskModel(data as Partial<ITask>)
 	}
 }

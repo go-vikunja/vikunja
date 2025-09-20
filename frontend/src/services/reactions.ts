@@ -17,12 +17,12 @@ export default class ReactionService extends AbstractService<IReaction> {
 		return new ReactionModel(data)
 	}
 
-	modelGetAllFactory(data: Partial<IReactionPerEntity>): any {
-		const result: any = {}
+	modelGetAllFactory(data: Partial<IReactionPerEntity & { maxPermission?: unknown }>): IReactionPerEntity & { maxPermission?: unknown } {
+		const result: IReactionPerEntity & { maxPermission?: unknown } = {}
 
 		Object.keys(data).forEach(reaction => {
 			if (reaction !== 'maxPermission') {
-				result[reaction] = data[reaction]?.map((u: any) => new UserModel(u)) || []
+				result[reaction] = data[reaction]?.map((u) => new UserModel(u)) || []
 			}
 		})
 

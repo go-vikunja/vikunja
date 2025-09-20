@@ -289,7 +289,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 		allTasksLoadedForBucket.value[bucketId] = true
 	}
 
-	async function loadBucketsForProject(projectId: IProject['id'], viewId: IProjectView['id'], params: any) {
+	async function loadBucketsForProject(projectId: IProject['id'], viewId: IProjectView['id'], params: TaskFilterParams) {
 		const cancel = setModuleLoading(setIsLoading)
 
 		// Clear everything to prevent having old buckets in the project if loading the buckets from this project takes a few moments
@@ -297,7 +297,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 
 		const taskCollectionService = new TaskCollectionService()
 		try {
-			const result = await taskCollectionService.getAll({projectId, viewId} as any, {
+			const result = await taskCollectionService.getAll({projectId, viewId}, {
 				...params,
 				per_page: TASKS_PER_BUCKET,
 			})
@@ -344,7 +344,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 
 		const taskService = new TaskCollectionService()
 		try {
-			const result = await taskService.getAll({projectId, viewId} as any, params, page)
+			const result = await taskService.getAll({projectId, viewId}, params, page)
 			// Filter to only get tasks, not buckets
 			const tasks = result.filter((item): item is ITask =>
 				!('project_view_id' in item) && !('projectViewId' in item),
@@ -374,7 +374,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 		}
 	}
 
-	async function deleteBucket({bucket, params}: { bucket: IBucket, params: any }) {
+	async function deleteBucket({bucket, params}: { bucket: IBucket, params: TaskFilterParams }) {
 		const cancel = setModuleLoading(setIsLoading)
 
 		const bucketService = new BucketService()

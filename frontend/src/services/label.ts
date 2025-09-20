@@ -14,7 +14,7 @@ export default class LabelService extends AbstractService<ILabel> {
 		})
 	}
 
-	processModel(label: any) {
+	processModel(label: ILabel) {
 		label.created = new Date(label.created).toISOString()
 		label.updated = new Date(label.updated).toISOString()
 		label.hexColor = colorFromHex(label.hexColor)
@@ -25,11 +25,11 @@ export default class LabelService extends AbstractService<ILabel> {
 		return new LabelModel(data)
 	}
 
-	beforeUpdate(label: any) {
+	beforeUpdate(label: ILabel) {
 		return this.processModel(label)
 	}
 
-	beforeCreate(label: any) {
+	beforeCreate(label: ILabel) {
 		return this.processModel(label)
 	}
 }

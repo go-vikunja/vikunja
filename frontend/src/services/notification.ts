@@ -14,16 +14,16 @@ export default class NotificationService extends AbstractService<INotification> 
 		return new NotificationModel(data)
 	}
 
-	beforeUpdate(model: INotification) {
+	beforeUpdate(model: INotification): INotification {
 		if (!model) {
 			return model
 		}
 
 		// Create a copy to avoid mutating the original model
 		const processedModel = {...model}
-		processedModel.created = new Date(model.created).toISOString() as any
+		processedModel.created = new Date(model.created)
 		if (model.readAt) {
-			processedModel.readAt = new Date(model.readAt).toISOString() as any
+			processedModel.readAt = new Date(model.readAt)
 		}
 		return processedModel
 	}

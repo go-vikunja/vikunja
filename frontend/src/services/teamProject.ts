@@ -1,7 +1,6 @@
 import AbstractService from './abstractService'
 import TeamProjectModel from '@/models/teamProject'
 import type {ITeamProject} from '@/modelTypes/ITeamProject'
-import TeamModel from '@/models/team'
 
 export default class TeamProjectService extends AbstractService<ITeamProject> {
 	constructor() {

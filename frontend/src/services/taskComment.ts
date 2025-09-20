@@ -28,7 +28,7 @@ export default class TaskCommentService extends AbstractService<ITaskComment> {
 		// We can't convert emojis to skane case, hence we add them back again
 		transformed.reactions = {}
 		Object.keys(model.reactions || {}).forEach(reaction => {
-			transformed.reactions[reaction] = model.reactions?.[reaction]?.map((u: any) => objectToSnakeCase(u)) || []
+			transformed.reactions[reaction] = model.reactions?.[reaction]?.map((u) => objectToSnakeCase(u)) || []
 		})
 		
 		console.log()

@@ -18,7 +18,7 @@ export default async function setupSentry(app: App, router: Router) {
 		],
 		tracesSampleRate: 1.0,
 		beforeSend(event, hint) {
-			const originalException = hint.originalException as any
+			const originalException = hint.originalException as Error & { code?: number; message?: string }
 
 			if ((typeof originalException?.code !== 'undefined' &&
 				typeof originalException?.message !== 'undefined')

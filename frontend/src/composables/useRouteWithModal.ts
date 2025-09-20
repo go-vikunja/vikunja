@@ -1,4 +1,4 @@
-import {computed, defineAsyncComponent, h, shallowRef, type VNode, watchEffect} from 'vue'
+import {computed, defineAsyncComponent, h, shallowRef, type Component, type VNode, watchEffect} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
@@ -55,7 +55,7 @@ export function useRouteWithModal() {
 		let component = route.matched[0]?.components?.default
 
 		if (typeof component === 'function') {
-			component = defineAsyncComponent(component as () => Promise<any>)
+			component = defineAsyncComponent(component as () => Promise<Component>)
 		}
 
 		if (!component) {

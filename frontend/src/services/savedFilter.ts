@@ -37,7 +37,7 @@ export function getSavedFilterIdFromProjectId(projectId: IProject['id']) {
 	return filterId
 }
 
-export function isSavedFilter(project: any): boolean {
+export function isSavedFilter(project: { id?: number } | null | undefined): boolean {
 	return getSavedFilterIdFromProjectId(project?.id || 0) > 0
 }
 

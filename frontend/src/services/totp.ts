@@ -19,11 +19,11 @@ export default class TotpService extends AbstractService<ITotp> {
 		return this.post(`${this.urlPrefix}/enroll`, {} as ITotp)
 	}
 
-	enable(model: any) {
+	enable(model: { passcode: string }) {
 		return this.post(`${this.urlPrefix}/enable`, model)
 	}
 
-	disable(model: any) {
+	disable(model: { password: string }) {
 		return this.post(`${this.urlPrefix}/disable`, model)
 	}
 

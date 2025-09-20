@@ -22,7 +22,7 @@ export default class ProjectService extends AbstractService<IProject> {
 	beforeUpdate(model: IProject) {
 		if(typeof model.tasks !== 'undefined') {
 			const taskService = new TaskService()
-			model.tasks = model.tasks.map((task: any) => {
+			model.tasks = model.tasks.map((task) => {
 				return taskService.beforeUpdate(task)
 			})
 		}

@@ -1,4 +1,5 @@
 import {defineSetupVue3} from '@histoire/plugin-vue'
+import type {Component} from 'vue'
 import {i18n} from './i18n'
 
 // import './histoire.css' // Import global CSS
@@ -22,7 +23,7 @@ export const setupVue3 = defineSetupVue3(({ app }) => {
 	app.directive('cy', cypress)
 
 	app.component('Icon', FontAwesomeIcon)
-	app.component('XButton', XButton as any)
+	app.component('XButton', XButton as Component)
 	app.component('Modal', Modal)
 	app.component('Card', Card)
 })

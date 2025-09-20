@@ -169,7 +169,7 @@ export const useAuthStore = defineStore('auth', () => {
 	}
 
 	// Logs a user in with a set of credentials.
-	async function login(credentials: any) {
+	async function login(credentials: { username: string; password: string; totpPasscode?: string }) {
 		const HTTP = HTTPFactory()
 		setIsLoading(true)
 
@@ -183,10 +183,12 @@ export const useAuthStore = defineStore('auth', () => {
 
 			// Tell others the user is authenticated
 			await checkAuth()
-		} catch (e: any) {
+		} catch (e: unknown) {
 			if (
-				e?.response &&
-				e?.response?.data?.code === 1017 &&
+				e && typeof e === 'object' && 'response' in e &&
+				e.response && typeof e.response === 'object' && 'data' in e.response &&
+				e.response.data && typeof e.response.data === 'object' && 'code' in e.response.data &&
+				e.response.data.code === 1017 &&
 				!credentials.totpPasscode
 			) {
 				setNeedsTotpPasscode(true)
@@ -202,7 +204,7 @@ export const useAuthStore = defineStore('auth', () => {
 	 * Registers a new user and logs them in.
 	 * Not sure if this is the right place to put the logic in, maybe a separate js component would be better suited. 
 	 */
-	async function register(credentials: any, language: string|null = null) {
+	async function register(credentials: { username: string; email: string; password: string }, language: string|null = null) {
 		const HTTP = HTTPFactory()
 		setIsLoading(true)
 		
@@ -216,12 +218,18 @@ export const useAuthStore = defineStore('auth', () => {
 				language,
 			})
 			return login(credentials)
-		} catch (e: any) {
-			if (e.response?.data?.code === 2002 && e.response?.data?.invalid_fields[0]?.startsWith('language:')) {
+		} catch (e: unknown) {
+			if (e && typeof e === 'object' && 'response' in e &&
+				e.response && typeof e.response === 'object' && 'data' in e.response &&
+				e.response.data && typeof e.response.data === 'object' && 'code' in e.response.data &&
+				e.response.data.code === 2002 && 'invalid_fields' in e.response.data &&
+				Array.isArray(e.response.data.invalid_fields) && e.response.data.invalid_fields[0]?.startsWith('language:')) {
 				return register(credentials, 'en')
 			}
 			
-			if (e.response?.data?.message) {
+			if (e && typeof e === 'object' && 'response' in e &&
+				e.response && typeof e.response === 'object' && 'data' in e.response &&
+				e.response.data && typeof e.response.data === 'object' && 'message' in e.response.data) {
 				throw e.response.data
 			}
 

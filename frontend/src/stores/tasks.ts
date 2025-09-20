@@ -39,8 +39,8 @@ interface MatchedAssignee extends IUser {
 }
 
 // IDEA: maybe use a small fuzzy search here to prevent errors
-function findPropertyByValue(object: any, key: string, value: any, fuzzy = false) {
-	return Object.values(object).find((l: any) => {
+function findPropertyByValue(object: Record<string, any>, key: string, value: string | number, fuzzy = false) {
+	return Object.values(object).find((l: Record<string, any>) => {
 		if (fuzzy) {
 			return l[key]?.toLowerCase().includes(value.toLowerCase())
 		}
@@ -92,7 +92,7 @@ async function findAssignees(parsedTaskAssignees: string[], projectId: number): 
 
 	const userService = new ProjectUserService()
 	const assignees = parsedTaskAssignees.map(async a => {
-		const users = (await userService.getAll({projectId} as any, {s: a}))
+		const users = (await userService.getAll({projectId}, {s: a}))
 			.map(u => ({
 				...u,
 				match: a,
@@ -138,8 +138,8 @@ export const useTaskStore = defineStore('task', () => {
 
 		const cancel = setModuleLoading(setIsLoading)
 		try {
-			const model: any = {}
-			let taskCollectionService: any = new TaskService()
+			const model: Record<string, unknown> = {}
+			let taskCollectionService: TaskService | TaskCollectionService = new TaskService()
 			if (projectId !== null) {
 				model.projectId = projectId
 				taskCollectionService = new TaskCollectionService()
