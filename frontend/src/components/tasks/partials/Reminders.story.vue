@@ -14,7 +14,7 @@ const newReminder = ref({reminder: null, relativePeriod: 0, relativeTo: null, ma
 <template>
 	<Story>
 		<Variant title="Default">
-			<reminders :modelValue="task" />
+			<reminders :model-value="task" />
 		</Variant>
 		<Variant title="Reminder Detail with fixed date">
 			<ReminderDetail v-model="reminderNow" />

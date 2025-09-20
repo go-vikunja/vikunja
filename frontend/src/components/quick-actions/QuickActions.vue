@@ -225,7 +225,7 @@ const foundLabels = computed(() => {
 // FIXME: use fuzzysearch
 const foundCommands = computed(() => availableCmds.value
 	.filter((a) => a.title.toLowerCase().includes(query.value.toLowerCase()))
-	.map(cmd => ({...cmd, type: ACTION_TYPE.CMD} as DoAction<Command>))
+	.map(cmd => ({...cmd, type: ACTION_TYPE.CMD} as DoAction<Command>)),
 )
 
 type ResultItem = DoAction<ITask> | DoAction<IProject> | DoAction<ILabel> | DoAction<ITeam> | DoAction<Command>

@@ -44,7 +44,6 @@ import {success} from '@/message'
 import {useTaskStore} from '@/stores/tasks'
 
 import type {IUser} from '@/modelTypes/IUser'
-import type {IAbstract} from '@/modelTypes/IAbstract'
 import {getDisplayName} from '@/models/user'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 

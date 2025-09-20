@@ -18,7 +18,7 @@ export function useRouteWithModal() {
 		// Ensure name is not null for type compatibility
 		return {
 			...resolved,
-			name: resolved.name || 'default'
+			name: resolved.name || 'default',
 		}
 	})
 

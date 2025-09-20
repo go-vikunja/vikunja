@@ -51,7 +51,7 @@ function formatSortOrder(sortBy: SortBy, params: TaskFilterParams) {
 		sortKeys.push('id')
 	}
 	params.sort_by = sortKeys.filter(key =>
-		['start_date', 'end_date', 'due_date', 'done', 'id', 'position', 'title'].includes(key)
+		['start_date', 'end_date', 'due_date', 'done', 'id', 'position', 'title'].includes(key),
 	) as ('start_date' | 'end_date' | 'due_date' | 'done' | 'id' | 'position' | 'title')[]
 	params.order_by = sortKeys.map(s => sortBy[s as keyof SortBy]).filter(Boolean) as ('asc' | 'desc')[]
 
@@ -130,7 +130,7 @@ export function useTaskList(
 			const result = await taskCollectionService.getAll(...getAllTasksParams.value)
 			// Filter out buckets, only keep tasks
 			tasks.value = result.filter((item): item is ITask =>
-				!('project_view_id' in item) && !('projectViewId' in item)
+				!('project_view_id' in item) && !('projectViewId' in item),
 			)
 		} catch (e) {
 			error(e)

@@ -11,8 +11,9 @@
 			class="show-tasks-options"
 		>
 			<DatepickerWithRange
-			:model-value="{ dateFrom: props.dateFrom || '', dateTo: props.dateTo || '' }"
-			@update:modelValue="setDate">
+				:model-value="{ dateFrom: props.dateFrom || '', dateTo: props.dateTo || '' }"
+				@update:modelValue="setDate"
+			>
 				<template #trigger="{toggle}">
 					<XButton
 						variant="primary"

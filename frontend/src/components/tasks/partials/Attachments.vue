@@ -269,7 +269,7 @@ const attachmentImageBlobUrl = ref<string | null>(null)
 async function viewOrDownload(attachment: IAttachment) {
 	if (canPreview(attachment)) {
 		const result = await attachmentService.getAttachmentBlobUrl(attachment)
-	attachmentImageBlobUrl.value = typeof result === 'string' ? result : null
+		attachmentImageBlobUrl.value = typeof result === 'string' ? result : null
 	} else {
 		downloadAttachment(attachment)
 	}

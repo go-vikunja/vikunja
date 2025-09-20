@@ -319,8 +319,8 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 					>
 						<FancyCheckbox
 							:model-value="newTokenPermissionsGroup[group] ?? false"
-							@update:modelValue="checked => { newTokenPermissionsGroup[group] = checked; selectPermissionGroup(group, checked); }"
 							class="mie-2 is-capitalized has-text-weight-bold"
+							@update:modelValue="checked => { newTokenPermissionsGroup[group] = checked; selectPermissionGroup(group, checked); }"
 						>
 							{{ formatPermissionTitle(group) }}
 						</FancyCheckbox>
@@ -332,8 +332,8 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 					>
 						<FancyCheckbox
 							:model-value="(newTokenPermissions[group] && newTokenPermissions[group][route]) ?? false"
-							@update:modelValue="checked => { if (newTokenPermissions[group]) { newTokenPermissions[group][route] = checked; } toggleGroupPermissionsFromChild(group, checked); }"
 							class="mis-4 mie-2 is-capitalized"
+							@update:modelValue="checked => { if (newTokenPermissions[group]) { newTokenPermissions[group][route] = checked; } toggleGroupPermissionsFromChild(group, checked); }"
 						>
 							{{ formatPermissionTitle(String(route)) }}
 						</FancyCheckbox>

@@ -112,7 +112,7 @@
 							label="username"
 							@search="findUser"
 							@select="(user: Record<string, unknown>) => newMember = user as unknown as IUser"
-							@update:model-value="(value: Record<string, any> | null) => newMember = value as unknown as IUser"
+							@update:modelValue="(value: Record<string, any> | null) => newMember = value as unknown as IUser"
 						>
 							<template #searchResult="{option: user}">
 								<User

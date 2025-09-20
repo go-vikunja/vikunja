@@ -164,8 +164,8 @@ async function addTask() {
 					filter: `project_id = ${projectId}`,
 				})
 				if (projectId) {
-				projectIndices.set(projectId, newestTask[0]?.index || 0)
-			}
+					projectIndices.set(projectId, newestTask[0]?.index || 0)
+				}
 			}
 		}
 	}

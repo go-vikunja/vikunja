@@ -202,7 +202,7 @@ function validateSelectedEvents() {
 						:key="event"
 						:model-value="newWebhookEvents[event] || false"
 						class="available-events-check"
-						@update:model-value="(value: boolean) => { newWebhookEvents[event] = value; validateSelectedEvents(); }"
+						@update:modelValue="(value: boolean) => { newWebhookEvents[event] = value; validateSelectedEvents(); }"
 					>
 						{{ event }}
 					</FancyCheckbox>

@@ -303,7 +303,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 			})
 			// Filter to only get buckets
 			const newBuckets = result.filter((item): item is IBucket =>
-				'project_view_id' in item || 'projectViewId' in item
+				'project_view_id' in item || 'projectViewId' in item,
 			)
 			setBuckets(newBuckets)
 			setProjectId(projectId)
@@ -347,7 +347,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 			const result = await taskService.getAll({projectId, viewId} as any, params, page)
 			// Filter to only get tasks, not buckets
 			const tasks = result.filter((item): item is ITask =>
-				!('project_view_id' in item) && !('projectViewId' in item)
+				!('project_view_id' in item) && !('projectViewId' in item),
 			)
 			addTasksToBucket(tasks, bucketId)
 			setTasksLoadedForBucketPage({bucketId, page})
