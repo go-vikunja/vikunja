@@ -125,6 +125,12 @@ export function useTaskList(
 		if(resetBeforeLoad) {
 			tasks.value = []
 		}
+
+		// Don't attempt to load tasks if projectId is not valid
+		if (!projectId.value || projectId.value <= 0) {
+			return tasks.value
+		}
+
 		try {
 			const result = await taskCollectionService.getAll(...getAllTasksParams.value)
 			// Filter out buckets, only keep tasks
