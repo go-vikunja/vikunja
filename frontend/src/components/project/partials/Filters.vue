@@ -72,6 +72,7 @@ import {
 } from '@/helpers/filters'
 import FilterInputDocs from '@/components/input/filter/FilterInputDocs.vue'
 import FilterInput from '@/components/input/filter/FilterInput.vue'
+import {getRouteParamAsNumber} from '@/helpers/utils'
 
 const props = withDefaults(defineProps<{
 	modelValue: TaskFilterParams,
@@ -97,7 +98,7 @@ const emit = defineEmits<{
 const route = useRoute()
 const projectId = computed(() => {
 	if (typeof route.name === 'string' && route.name.startsWith('project.')) {
-		return Number(route.params.projectId)
+		return getRouteParamAsNumber(route.params.projectId)
 	}
 
 	return undefined

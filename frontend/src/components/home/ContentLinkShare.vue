@@ -66,6 +66,7 @@ import PoweredByLink from './PoweredByLink.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import Message from '@/components/misc/Message.vue'
 import {PROJECT_VIEW_KINDS} from '@/modelTypes/IProjectView'
+import {getRouteParamAsNumber} from '@/helpers/utils'
 
 const baseStore = useBaseStore()
 const projectStore = useProjectStore()
@@ -92,8 +93,8 @@ async function ensureProjectLoaded() {
 		projectLoadError.value = false
 		
 		// Load project if not already loaded
-		const projectId = Number(route.params.projectId)
-		if (!currentProject.value || currentProject.value.id !== projectId) {
+		const projectId = getRouteParamAsNumber(route.params.projectId)
+		if (projectId && (!currentProject.value || currentProject.value.id !== projectId)) {
 			await projectStore.loadProject(projectId)
 		}
 	} catch (e) {

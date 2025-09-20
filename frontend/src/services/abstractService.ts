@@ -183,6 +183,14 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 	 */
 	getReplacedRoute(path : string, pathparams : Record<string, unknown>) : string {
 		const replacements = this.getRouteReplacements(path, pathparams)
+
+		// Validate that all parameters are properly defined
+		for (const [parameter, value] of Object.entries(replacements)) {
+			if (value === undefined || value === null || value === 'undefined' || value === 'null' || (typeof value === 'number' && isNaN(value))) {
+				throw new Error(`Route parameter ${parameter} is invalid: ${value}. Path: ${path}`)
+			}
+		}
+
 		return Object.entries(replacements).reduce(
 			(result, [parameter, value]) => result.replace(parameter, value as string),
 			path,

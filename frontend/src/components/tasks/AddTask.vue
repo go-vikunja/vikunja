@@ -146,7 +146,10 @@ async function addTask() {
 
 	let currentProjectId = authStore.settings.defaultProjectId
 	if (typeof router.currentRoute.value.params.projectId !== 'undefined') {
-		currentProjectId = Number(router.currentRoute.value.params.projectId)
+		const routeProjectId = Number(router.currentRoute.value.params.projectId)
+		if (!isNaN(routeProjectId) && routeProjectId > 0) {
+			currentProjectId = routeProjectId
+		}
 	}
 
 	// Create a map of project indices before creating tasks

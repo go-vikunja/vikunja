@@ -128,6 +128,7 @@ import type {IProject} from '@/modelTypes/IProject'
 
 import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'
 import {useTitle} from '@/composables/useTitle'
+import {getRouteParamAsNumber} from '@/helpers/utils'
 
 import CreateEdit from '@/components/misc/CreateEdit.vue'
 import {success} from '@/message'
@@ -206,7 +207,11 @@ async function setBackground(backgroundId: string) {
 		id: Number(backgroundId),
 	})
 	// Add projectId for route replacement
-	;(backgroundModel as BackgroundImageModel & {projectId: number}).projectId = Number(route.params.projectId)
+	const projectId = getRouteParamAsNumber(route.params.projectId)
+	if (!projectId) {
+		throw new Error('Project ID is required')
+	}
+	;(backgroundModel as BackgroundImageModel & {projectId: number}).projectId = projectId
 	await backgroundService.update(backgroundModel)
 	// After setting background, we need to refetch the updated project
 	if (currentProject.value) {
@@ -226,8 +231,12 @@ async function uploadBackground() {
 	if (!file) {
 		return
 	}
+	const projectId = getRouteParamAsNumber(route.params.projectId)
+	if (!projectId) {
+		throw new Error('Project ID is required')
+	}
 	const project = await backgroundUploadService.value.uploadBackground(
-		Number(route.params.projectId),
+		projectId,
 		file,
 	)
 	await baseStore.handleSetCurrentProject({project: project as IProject, forceUpdate: true})
