@@ -623,7 +623,7 @@ async function addImage(event: MouseEvent) {
 		return
 	}
 
-	const url = await inputPrompt(event.target.getBoundingClientRect())
+	const url = await inputPrompt((event.target as HTMLElement).getBoundingClientRect())
 
 	if (url) {
 		editor.value?.chain().focus().setImage({src: url}).run()
@@ -631,8 +631,8 @@ async function addImage(event: MouseEvent) {
 	}
 }
 
-function setLink(event) {
-	setLinkInEditor(event.target.getBoundingClientRect(), editor.value)
+function setLink(event: MouseEvent) {
+	setLinkInEditor((event.target as HTMLElement).getBoundingClientRect(), editor.value)
 }
 
 onMounted(async () => {
@@ -659,16 +659,16 @@ function setModeAndValue(value: string) {
 
 // See https://github.com/github/hotkey/discussions/85#discussioncomment-5214660
 function setFocusToEditor(event: KeyboardEvent) {
-	if (event.target.shadowRoot) {
+	if ((event.target as HTMLElement)?.shadowRoot) {
 		return
 	}
 
 	const hotkeyString = eventToHotkeyString(event)
 	if (!hotkeyString) return
 	if (hotkeyString !== props.editShortcut ||
-		event.target.tagName.toLowerCase() === 'input' ||
-		event.target.tagName.toLowerCase() === 'textarea' ||
-		event.target.contentEditable === 'true') {
+		(event.target as HTMLElement).tagName.toLowerCase() === 'input' ||
+		(event.target as HTMLElement).tagName.toLowerCase() === 'textarea' ||
+		(event.target as HTMLElement).contentEditable === 'true') {
 		return
 	}
 

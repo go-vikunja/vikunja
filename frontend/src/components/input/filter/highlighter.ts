@@ -159,8 +159,8 @@ function decorateDocument(doc: Node) {
 
 		if (value && value.trim()) {
 			// Calculate the actual position of the value by finding where it starts after the operator
-			const fieldLength = field.length
-			const operatorIndex = fullMatch.indexOf(operator, fieldLength)
+			const fieldLength = field?.length || 0
+			const operatorIndex = fullMatch.indexOf(operator || '', fieldLength)
 			const operatorEnd = operatorIndex + operator.length
 			const valueIndex = fullMatch.indexOf(value, operatorEnd)
 

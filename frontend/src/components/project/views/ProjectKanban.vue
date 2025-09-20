@@ -155,7 +155,7 @@
 									tag="ul"
 									:item-key="(task: ITask) => `bucket${bucket.id}-task${task.id}`"
 									:component-data="getTaskDraggableTaskComponentData(bucket)"
-									@update:modelValue="(tasks) => updateTasks(bucket.id, tasks)"
+									@update:modelValue="(tasks: ITask[]) => updateTasks(bucket.id, tasks)"
 									@start="() => dragstart(bucket)"
 									@end="updateTaskPosition"
 								>
@@ -496,6 +496,7 @@ async function updateTaskPosition(e) {
 	const bucketIndex = parseInt(e.to.dataset.bucketIndex)
 
 	const newBucket = buckets.value[bucketIndex]
+	if (!newBucket) return
 
 	// HACK:
 	// this is a hacky workaround for a known problem of vue.draggable.next when using the footer slot
@@ -506,17 +507,20 @@ async function updateTaskPosition(e) {
 	// The newIndex of the event doesn't count in the elements of the footer slot.
 	// This is why in case the length of the tasks is identical with the newIndex
 	// we have to remove 1 to get the correct index.
-	const newTaskIndex = newBucket.tasks.length === e.newIndex
+	const newTaskIndex = newBucket?.tasks.length === e.newIndex
 		? e.newIndex - 1
 		: e.newIndex
 
 	const task = newBucket.tasks[newTaskIndex]
-	const oldBucket = buckets.value.find(b => b.id === task.bucketId)
-	const taskBefore = newBucket.tasks[newTaskIndex - 1] ?? null
-	const taskAfter = newBucket.tasks[newTaskIndex + 1] ?? null
-	taskUpdating.value[task.id] = true
+	if (!task) return
+	const oldBucket = buckets.value.find(b => b.id === task?.bucketId)
+	const taskBefore = newBucket?.tasks[newTaskIndex - 1] ?? null
+	const taskAfter = newBucket?.tasks[newTaskIndex + 1] ?? null
+	taskUpdating.value[task?.id] = true
 
+	if (!task) return
 	const newTask = klona(task) // cloning the task to avoid pinia store manipulation
+	if (!newTask) return
 	newTask.bucketId = newBucket.id
 	const position = calculateItemPosition(
 		taskBefore !== null ? taskBefore.position : null,
@@ -526,16 +530,18 @@ async function updateTaskPosition(e) {
 	let bucketHasChanged = false
 	if (
 		oldBucket !== undefined && // This shouldn't actually be `undefined`, but let's play it safe.
-		newBucket.id !== oldBucket.id
+		newBucket?.id !== oldBucket.id
 	) {
 		kanbanStore.setBucketById({
 			...oldBucket,
 			count: oldBucket.count - 1,
 		})
-		kanbanStore.setBucketById({
-			...newBucket,
-			count: newBucket.count + 1,
-		})
+		if (newBucket) {
+			kanbanStore.setBucketById({
+				...newBucket,
+				count: newBucket.count + 1,
+			})
+		}
 		bucketHasChanged = true
 	}
 
@@ -543,20 +549,20 @@ async function updateTaskPosition(e) {
 		const newPosition = new TaskPositionModel({
 			position,
 			projectViewId: props.viewId,
-			taskId: newTask.id,
+			taskId: newTask?.id,
 		})
 		await taskPositionService.value.update(newPosition)
-		newTask.position = position
+		if (newTask) newTask.position = position
 		
 		if(bucketHasChanged) {
 			const updatedTaskBucket = await taskBucketService.value.update(new TaskBucketModel({
-				taskId: newTask.id,
-				bucketId: newTask.bucketId,
+				taskId: newTask?.id,
+				bucketId: newTask?.bucketId,
 				projectViewId: props.viewId,
-				projectId: project.value.id,
+				projectId: project.value?.id,
 			}))
-			Object.assign(newTask, updatedTaskBucket.task)
-			newTask.bucketId = updatedTaskBucket.bucketId
+			if (newTask && updatedTaskBucket.task) Object.assign(newTask, updatedTaskBucket.task)
+			if (newTask) newTask.bucketId = updatedTaskBucket.bucketId
 			if (updatedTaskBucket.bucketId !== newTask.bucketId) {
 				kanbanStore.moveTaskToBucket(newTask, updatedTaskBucket.bucketId)
 			}
@@ -649,7 +655,7 @@ async function deleteBucket() {
 		await kanbanStore.deleteBucket({
 			bucket: new BucketModel({
 				id: bucketToDelete.value,
-				projectId: project.value.id,
+				projectId: project.value?.id,
 				projectViewId: props.viewId,
 			}),
 			params: params.value,

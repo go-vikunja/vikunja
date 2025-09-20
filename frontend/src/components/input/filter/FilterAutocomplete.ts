@@ -264,7 +264,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 					const operator = match[0].match(new RegExp(FILTER_OPERATORS_REGEX))?.[0] || ''
 					if (operator === 'in' || operator === '?=') {
 						const keywords = keyword.split(',')
-						search = keywords[keywords.length - 1].trim()
+						search = keywords?.[keywords.length - 1]?.trim() || ''
 					}
 
 					// Check if this expression is complete
@@ -277,8 +277,8 @@ export default Extension.create<FilterAutocompleteOptions>({
 						keyword,
 						search,
 						operator,
-						startPos: match.index + prefix.length,
-						endPos: match.index + prefix.length + keyword.length,
+						startPos: (match.index || 0) + (prefix?.length || 0),
+						endPos: (match.index || 0) + (prefix?.length || 0) + keyword.length,
 						isComplete,
 					}
 
@@ -327,7 +327,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 						items,
 						command: (item: AutocompleteItem) => {
 							// Handle selection
-							const newValue = item.fieldType === 'assignees' ? item.item.username : item.item.title
+							const newValue = item.fieldType === 'assignees' ? (item.item as any).username : (item.item as any).title
 							const {from} = view.state.selection
 							const context = autocompleteContext
 							const operator = context.operator
@@ -359,7 +359,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 							)
 							// Position cursor after the inserted text
 							const newPos = replaceFrom + insertValue.length
-							tr.setSelection(view.state.selection.constructor.near(tr.doc.resolve(newPos)))
+							tr.setSelection((view.state.selection.constructor as any).near(tr.doc.resolve(newPos)))
 							view.dispatch(tr)
 							
 							// Update selection tracking

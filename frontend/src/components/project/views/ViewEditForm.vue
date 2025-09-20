@@ -2,7 +2,7 @@
 import {onBeforeMount, ref} from 'vue'
 
 import type {IProjectView} from '@/modelTypes/IProjectView'
-import type {IFilters} from '@/modelTypes/ISavedFilter'
+import type {IFilters, IFilter} from '@/modelTypes/ISavedFilter'
 
 import {hasFilterQuery, transformFilterStringForApi, transformFilterStringFromApi} from '@/helpers/filters'
 import {useLabelStore} from '@/stores/labels'

@@ -45,7 +45,7 @@ async function addReaction(value: string) {
 		if (typeof model.value[reaction.value] === 'undefined') {
 			model.value[reaction.value] = [authStore.info as IUser]
 		} else {
-			model.value[reaction.value].push(authStore.info as IUser)
+			model.value?.[reaction.value]?.push(authStore.info as IUser)
 		}
 	}
 }
@@ -59,12 +59,12 @@ async function removeReaction(value: string) {
 	await reactionService.delete(reaction)
 	showEmojiPicker.value = false
 	
-	if (model.value && model.value[reaction.value] && authStore.info) {
-		const userIndex = model.value[reaction.value].findIndex(u => u.id === authStore.info?.id)
+	if (model.value?.[reaction.value] && authStore.info) {
+		const userIndex = model.value?.[reaction.value]?.findIndex(u => u.id === authStore.info?.id) ?? -1
 		if (userIndex !== -1) {
-			model.value[reaction.value].splice(userIndex, 1)
+			model.value?.[reaction.value]?.splice(userIndex, 1)
 		}
-		if(model.value[reaction.value].length === 0) {
+		if(model.value?.[reaction.value]?.length === 0) {
 			delete model.value[reaction.value]
 		}
 	}

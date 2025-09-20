@@ -52,7 +52,7 @@
 								class="has-text-start"
 								@click="() => to(n, index)()"
 							>
-								{{ n.toText(userInfo) }}
+								{{ (n as NotificationModel).toText?.(userInfo) || 'Notification' }}
 							</BaseButton>
 						</div>
 						<span
@@ -94,6 +94,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import User from '@/components/misc/User.vue'
 import { NOTIFICATION_NAMES as names, type INotification} from '@/modelTypes/INotification'
+import NotificationModel from '@/models/notification'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {formatDateLong, formatDisplayDate} from '@/helpers/time/formatDate'
 import {getDisplayName} from '@/models/user'

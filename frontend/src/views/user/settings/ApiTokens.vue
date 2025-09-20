@@ -18,7 +18,7 @@ const service = new ApiTokenService()
 const tokens = ref<IApiToken[]>([])
 const apiDocsUrl = window.API_URL + '/docs'
 const showCreateForm = ref(false)
-const availableRoutes = ref(null)
+const availableRoutes = ref<Record<string, any> | null>(null)
 const newToken = ref<IApiToken>(new ApiTokenModel())
 const newTokenExpiry = ref<string | number>(30)
 const newTokenExpiryCustom = ref(new Date())
@@ -67,17 +67,18 @@ function resetPermissions() {
 	Object.entries(availableRoutes.value).forEach(entry => {
 		const [group, routes] = entry
 		newTokenPermissions.value[group] = {}
-		Object.keys(routes).forEach(r => {
+		Object.keys(routes as Record<string, any>).forEach(r => {
 			newTokenPermissions.value[group][r] = false
 		})
 	})
 }
 
 async function deleteToken() {
+	if (!tokenToDelete.value) return
 	await service.delete(tokenToDelete.value)
 	showDeleteModal.value = false
-	const index = tokens.value.findIndex(el => el.id === tokenToDelete.value.id)
-	tokenToDelete.value = null
+	const index = tokens.value.findIndex(el => el.id === tokenToDelete.value?.id)
+	tokenToDelete.value = undefined
 	if (index === -1) {
 		return
 	}
@@ -93,8 +94,8 @@ async function createToken() {
 	let hasPermissions = false
 
 	newToken.value.permissions = {}
-	Object.entries(newTokenPermissions.value).forEach(([key, ps]) => {
-		const all = Object.entries(ps)
+	Object.entries(newTokenPermissions.value as Record<string, any>).forEach(([key, ps]) => {
+		const all = Object.entries(ps as Record<string, any>)
 			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			.filter(([_, v]) => v)
 			.map(p => p[0])
@@ -128,13 +129,14 @@ async function createToken() {
 }
 
 function formatPermissionTitle(title: string): string {
-	return title.replaceAll('_', ' ')
+	return title.replace(/_/g, ' ')
 }
 
 function selectPermissionGroup(group: string, checked: boolean) {
+	if (!availableRoutes.value) return
 	Object.entries(availableRoutes.value[group]).forEach(entry => {
 		const [key] = entry
-		newTokenPermissions.value[group][key] = checked
+		newTokenPermissions.value[group as string][key] = checked
 	})
 }
 
@@ -142,9 +144,10 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 	if (checked) {
 		// Check if all permissions of that group are checked and check the "select all" checkbox in that case
 		let allChecked = true
+		if (!availableRoutes.value) return
 		Object.entries(availableRoutes.value[group]).forEach(entry => {
 			const [key] = entry
-			if (!newTokenPermissions.value[group][key]) {
+			if (!newTokenPermissions.value[group as string][key]) {
 				allChecked = false
 			}
 		})

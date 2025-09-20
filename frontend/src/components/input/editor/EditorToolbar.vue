@@ -381,8 +381,8 @@ function toggleTableMode() {
 	tableMode.value = !tableMode.value
 }
 
-function setLink(event) {
-	setLinkInEditor(event.target.getBoundingClientRect(), props.editor)
+function setLink(event: MouseEvent) {
+	setLinkInEditor((event.target as HTMLElement).getBoundingClientRect(), props.editor)
 }
 </script>
 

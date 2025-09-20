@@ -63,18 +63,13 @@ export interface ButtonProps {
 }
 
 const props = withDefaults(defineProps<ButtonProps>(), {
-	variant: 'primary' as ButtonTypes,
-	icon: undefined,
-	iconColor: undefined,
+	variant: 'primary',
 	loading: false,
 	disabled: false,
 	shadow: true,
 	wrap: true,
-	type: undefined,
-	to: undefined,
-	href: undefined,
 	openExternalInNewTab: true,
-})
+} as Partial<ButtonProps>)
 
 defineOptions({name: 'XButton'})
 
