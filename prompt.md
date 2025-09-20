@@ -2,6 +2,8 @@ Your job is to fix all typescript issues in the Vikunja frontend.
 
 You have access to the full vikunja repo including API and frontend. The frontend is located in the frontend/ subdirectory.
 
+Run `pnpm typecheck` first to check the current state of typescript issues in the frontend.
+
 Use the .agent/ directory as a scratchpad for your work. Store long term plans and todo lists there.
 
 After every batch of changes, run the unit tests with `pnpm test:unit` and end-to-end tests with `pnpm test:e2e` in the frontend directory.

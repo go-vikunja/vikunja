@@ -21,7 +21,7 @@ type StateType = 'unfocused' | 'focused'
 const selectedIndex = ref(-1)
 const state = ref<StateType>('unfocused')
 const val = ref<string>('')
-const model = defineModel<string>()
+const model = defineModel<T>()
 
 const suggestionScrollerRef = ref<HTMLElement | null>(null)
 const containerRef = ref<HTMLElement | null>(null)
@@ -30,14 +30,15 @@ const editorRef = ref<HTMLTextAreaElement | null>(null)
 watch(
 	() => model.value,
 	newValue => {
-		val.value = newValue
+		val.value = String(newValue ?? '')
 	},
 )
 
 function updateSuggestionScroll() {
 	nextTick(() => {
 		const scroller = suggestionScrollerRef.value
-		const selectedItem = scroller?.querySelector('.selected')
+		if (!scroller) return
+		const selectedItem = scroller.querySelector('.selected') as HTMLElement
 		scroller.scrollTop = selectedItem ? selectedItem.offsetTop : 0
 	})
 }
@@ -53,7 +54,7 @@ function onFocusField() {
 	setState('focused')
 }
 
-function onKeydown(e) {
+function onKeydown(e: KeyboardEvent) {
 	switch (e.keyCode || e.which) {
 		case ESCAPE:
 			e.preventDefault()
@@ -116,9 +117,9 @@ function onSelectValue(value: T) {
 	setState('unfocused')
 }
 
-function onUpdateField(e) {
+function onUpdateField(e: Event) {
 	setState('focused')
-	model.value = e.currentTarget.value
+	model.value = (e.currentTarget as HTMLInputElement).value as any
 }
 </script>
 
@@ -160,7 +161,7 @@ function onUpdateField(e) {
 				>
 					<button
 						v-for="(item, index) in options"
-						:key="item"
+						:key="index"
 						:ref="(el: Element | ComponentPublicInstance | null) => setResultRefs(el, index)"
 						class="item"
 						:class="{ selected: index === selectedIndex }"

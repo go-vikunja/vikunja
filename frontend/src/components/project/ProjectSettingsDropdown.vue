@@ -140,7 +140,7 @@ import {useAuthStore} from '@/stores/auth'
 import {PERMISSIONS} from '@/constants/permissions'
 
 const props = defineProps<{
-	project: IProject
+	project: Readonly<IProject>
 }>()
 
 const projectStore = useProjectStore()

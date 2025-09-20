@@ -248,8 +248,8 @@ const searchResultsVisible = computed(() => {
 })
 
 const creatableAvailable = computed(() => {
-	const hasResult = filteredSearchResults.value.some((elem) => elementInResults(elem, props.label, query.value as string))
-	const hasQueryAlreadyAdded = Array.isArray(internalValue.value) && internalValue.value.some(elem => elementInResults(elem, props.label, query.value))
+	const hasResult = filteredSearchResults.value.some((elem: any) => elementInResults(elem, props.label, query.value as string))
+	const hasQueryAlreadyAdded = Array.isArray(internalValue.value) && internalValue.value.some((elem: any) => elementInResults(elem, props.label, query.value))
 
 	return props.creatable
 		&& query.value !== ''
