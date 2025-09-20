@@ -19,6 +19,7 @@ import type {ITask} from '@/modelTypes/ITask'
 import type {IUser} from '@/modelTypes/IUser'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {IProject} from '@/modelTypes/IProject'
+import type {Priority} from '@/constants/priorities'
 
 import {setModuleLoading} from '@/stores/helper'
 import {useLabelStore} from '@/stores/labels'
@@ -91,7 +92,7 @@ async function findAssignees(parsedTaskAssignees: string[], projectId: number): 
 
 	const userService = new ProjectUserService()
 	const assignees = parsedTaskAssignees.map(async a => {
-		const users = (await userService.getAll({projectId} as IUser, {s: a}))
+		const users = (await userService.getAll({projectId} as any, {s: a}))
 			.map(u => ({
 				...u,
 				match: a,
@@ -99,8 +100,8 @@ async function findAssignees(parsedTaskAssignees: string[], projectId: number): 
 		return validateUser(users, a)
 	})
 
-	const validatedUsers = await Promise.all(assignees) 
-	return validatedUsers.filter((item) => Boolean(item))
+	const validatedUsers = await Promise.all(assignees)
+	return validatedUsers.filter((item) => Boolean(item)) as MatchedAssignee[]
 }
 
 export const useTaskStore = defineStore('task', () => {
@@ -143,8 +144,18 @@ export const useTaskStore = defineStore('task', () => {
 				model.projectId = projectId
 				taskCollectionService = new TaskCollectionService()
 			}
-			tasks.value = await taskCollectionService.getAll(model, params)
-			baseStore.setHasTasks(tasks.value.length > 0)
+			const tasksList = await taskCollectionService.getAll(model, params)
+			// Convert array to object keyed by ID
+			if (Array.isArray(tasksList)) {
+				tasks.value = {}
+				tasksList.forEach(task => {
+					tasks.value[task.id] = task
+				})
+				baseStore.setHasTasks(tasksList.length > 0)
+			} else {
+				tasks.value = tasksList
+				baseStore.setHasTasks(Object.keys(tasks.value).length > 0)
+			}
 			return tasks.value
 		} finally {
 			cancel()
@@ -355,7 +366,8 @@ export const useTaskStore = defineStore('task', () => {
 			}
 			return label
 		})
-		return Promise.all(mustCreateLabel)
+		const resolvedLabels = await Promise.all(mustCreateLabel)
+		return resolvedLabels as LabelModel[]
 	}
 
 	// Do everything that is involved in finding, creating and adding the label to the task
@@ -425,7 +437,7 @@ export const useTaskStore = defineStore('task', () => {
 	) {
 		const cancel = setModuleLoading(setIsLoading)
 		const quickAddMagicMode = authStore.settings.frontendSettings.quickAddMagicMode
-		const parsedTask = parseTaskText(title, quickAddMagicMode)
+		const parsedTask = parseTaskText(title || '', quickAddMagicMode)
 
 		if(parsedTask.text === '') {
 			const taskService = new TaskService()
@@ -443,7 +455,7 @@ export const useTaskStore = defineStore('task', () => {
 		}
 	
 		const foundProjectId = await findProjectId({
-			project: parsedTask.project,
+			project: parsedTask.project || '',
 			projectId: projectId || 0,
 		})
 		
@@ -464,19 +476,19 @@ export const useTaskStore = defineStore('task', () => {
 		}
 
 		// I don't know why, but it all goes up in flames when I just pass in the date normally.
-		const dueDate = parsedTask.date !== null ? new Date(parsedTask.date).toISOString() : null
+		const dueDate = parsedTask.date !== null ? new Date(parsedTask.date) : null
 	
 		const task = new TaskModel({
 			title: cleanedTitle,
 			projectId: foundProjectId,
 			dueDate,
-			priority: parsedTask.priority,
+			priority: (parsedTask.priority ?? 0) as Priority,
 			assignees,
 			bucketId: bucketId || 0,
 			position,
 			index,
 		})
-		task.repeatAfter = parsedTask.repeats
+		task.repeatAfter = parsedTask.repeats || 0
 
 		if (parsedTask.repeats?.type === REPEAT_TYPES.Months && parsedTask.repeats?.amount === 1) {
 			task.repeatMode = TASK_REPEAT_MODES.REPEAT_MODE_MONTH

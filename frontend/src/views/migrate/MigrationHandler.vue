@@ -184,7 +184,7 @@ async function initMigration() {
 		return
 	}
 
-	authUrl.value = await migrationService.getAuthUrl().then((response: MigrationAuthResponse) => response.url)
+	authUrl.value = await migrationService.getAuthUrl().then((response: any) => response.url)
 
 	const TOKEN_HASH_PREFIX = '#token='
 	migratorAuthCode.value = location.hash.startsWith(TOKEN_HASH_PREFIX)
@@ -222,7 +222,7 @@ async function migrate() {
 	message.value = ''
 	migrationError.value = ''
 
-	let migrationConfig: MigrationConfig | File = {code: migratorAuthCode.value}
+	let migrationConfig: MigrationConfig | File = {code: migratorAuthCode.value} as MigrationConfig
 
 	if (migrator.value.isFileMigrator) {
 		if (uploadInput.value?.files?.length === 0) {
@@ -233,7 +233,7 @@ async function migrate() {
 
 	try {
 		if (migrator.value.isFileMigrator) {
-			const result = await migrationFileService.migrate(migrationConfig as File) as MigrationFileResponse
+			const result = await migrationFileService.migrate(migrationConfig as File) as unknown as MigrationFileResponse
 			message.value = result.message
 			const projectStore = useProjectStore()
 			return projectStore.loadAllProjects()

@@ -230,7 +230,9 @@ export const useProjectStore = defineStore('project', () => {
 	}
 	
 	function setProjectView(view: IProjectView) {
-		const views = [...projects.value[view.projectId].views]
+		const project = projects.value[view.projectId]
+		if (!project) return
+		const views = [...project.views]
 		const viewPos = views.findIndex(v => v.id === view.id)
 
 		if (viewPos !== -1) {
@@ -239,8 +241,7 @@ export const useProjectStore = defineStore('project', () => {
 			views.push(view)
 		}
 		views.sort((a, b) => a.position - b.position)
-		
-		const project = projects.value[view.projectId]
+
 		if (project) {
 			setProject({
 				...project,
@@ -346,11 +347,10 @@ export function useProject(projectId: MaybeRefOrGetter<IProject['id']>) {
 		const duplicate = await projectDuplicateService.create(projectDuplicate)
 		if (duplicate.duplicatedProject) {
 			duplicate.duplicatedProject.maxPermission = PERMISSIONS.ADMIN
+			projectStore.setProject(duplicate.duplicatedProject)
+			success({message: t('project.duplicate.success')})
+			router.push({name: 'project.index', params: {projectId: duplicate.duplicatedProject.id}})
 		}
-
-		projectStore.setProject(duplicate.duplicatedProject)
-		success({message: t('project.duplicate.success')})
-		router.push({name: 'project.index', params: {projectId: duplicate.duplicatedProject.id}})
 	}
 
 	return {

@@ -81,7 +81,7 @@ const parentProject = ref<IProject | null>(null)
 
 watch(
 	() => props.parentProjectId,
-	() => parentProject.value = projectStore.projects[props.parentProjectId],
+	() => parentProject.value = projectStore.projects[props.parentProjectId!] || null,
 	{immediate: true},
 )
 
@@ -93,7 +93,7 @@ async function createNewProject() {
 	showError.value = false
 
 	if (parentProject.value) {
-		project.parentProjectId = parentProject.value.id
+		project.parentProjectId = parentProject.value?.id
 	}
 
 	await projectStore.createProject(project)
