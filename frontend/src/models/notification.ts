@@ -55,6 +55,7 @@ export default class NotificationModel extends AbstractModel<INotification> impl
 					if ('doer' in this.notification && 'project' in this.notification) {
 						this.notification = {
 							doer: new UserModel(this.notification.doer),
+							task: new TaskModel(), // Required by interface
 							project: new ProjectModel(this.notification.project),
 						}
 					}
@@ -64,7 +65,7 @@ export default class NotificationModel extends AbstractModel<INotification> impl
 						this.notification = {
 							doer: new UserModel(this.notification.doer),
 							member: new UserModel(this.notification.member),
-							team: new TeamModel(this.notification.team),
+							team: new TeamModel({...this.notification.team, createdBy: this.notification.team.createdBy || new UserModel()}),
 						}
 					}
 					break
@@ -97,24 +98,24 @@ export default class NotificationModel extends AbstractModel<INotification> impl
 
 		switch (this.name) {
 			case NOTIFICATION_NAMES.TASK_COMMENT:
-				if ('task' in this.notification) {
-					return `commented on ${this.notification.task.getTextIdentifier()}`
+				if ('task' in this.notification && this.notification.task) {
+					return `commented on ${(this.notification.task as any).getTextIdentifier()}`
 				}
 				break
 			case NOTIFICATION_NAMES.TASK_ASSIGNED:
-				if ('assignee' in this.notification && 'task' in this.notification) {
+				if ('assignee' in this.notification && 'task' in this.notification && this.notification.task) {
 					who = `${getDisplayName(this.notification.assignee)}`
 
 					if (user !== null && user.id === this.notification.assignee.id) {
 						who = 'you'
 					}
 
-					return `assigned ${who} to ${this.notification.task.getTextIdentifier()}`
+					return `assigned ${who} to ${(this.notification.task as any).getTextIdentifier()}`
 				}
 				break
 			case NOTIFICATION_NAMES.TASK_DELETED:
-				if ('task' in this.notification) {
-					return `deleted ${this.notification.task.getTextIdentifier()}`
+				if ('task' in this.notification && this.notification.task) {
+					return `deleted ${(this.notification.task as any).getTextIdentifier()}`
 				}
 				break
 			case NOTIFICATION_NAMES.PROJECT_CREATED:
@@ -134,13 +135,13 @@ export default class NotificationModel extends AbstractModel<INotification> impl
 				}
 				break
 			case NOTIFICATION_NAMES.TASK_REMINDER:
-				if ('task' in this.notification && 'project' in this.notification) {
-					return `Reminder for ${this.notification.task.getTextIdentifier()} ${this.notification.task.title} (${this.notification.project.title})`
+				if ('task' in this.notification && 'project' in this.notification && this.notification.task) {
+					return `Reminder for ${(this.notification.task as any).getTextIdentifier()} ${this.notification.task.title} (${this.notification.project.title})`
 				}
 				break
 			case NOTIFICATION_NAMES.TASK_MENTIONED:
-				if ('doer' in this.notification && 'task' in this.notification) {
-					return `${getDisplayName(this.notification.doer)} mentioned you on ${this.notification.task.getTextIdentifier()}`
+				if ('doer' in this.notification && 'task' in this.notification && this.notification.task) {
+					return `${getDisplayName(this.notification.doer)} mentioned you on ${(this.notification.task as any).getTextIdentifier()}`
 				}
 				break
 		}

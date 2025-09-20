@@ -1,6 +1,6 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
 
-import {ParsedTaskText, parseTaskText, PrefixMode} from './parseTaskText'
+import {parseTaskText, PrefixMode, type ParsedTaskText} from './parseTaskText'
 import {parseDate} from '../helpers/time/parseDate'
 import {calculateDayInterval} from '../helpers/time/calculateDayInterval'
 import {PRIORITIES} from '@/constants/priorities'
@@ -528,7 +528,7 @@ describe('Parse Task Text', () => {
 						return
 					}
 
-					expect(`${date?.getFullYear()}-${date?.getMonth() + 1}-${date?.getDate()}`).toBe(cases[c])
+					expect(date ? `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}` : null).toBe(cases[c])
 					expect(text.trim()).toBe('Lorem Ipsum')
 				}
 				
@@ -584,7 +584,7 @@ describe('Parse Task Text', () => {
 						return
 					}
 
-					expect(`${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}`).toBe(cases[c])
+					expect(date ? `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}` : null).toBe(cases[c])
 				})
 			}
 

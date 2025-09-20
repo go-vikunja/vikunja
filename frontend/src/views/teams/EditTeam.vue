@@ -4,7 +4,7 @@
 		:class="{ 'is-loading': teamService.loading }"
 	>
 		<Card
-			v-if="userIsAdmin && !team.oidcId"
+			v-if="userIsAdmin && !team?.oidcId"
 			class="is-fullwidth"
 			:title="title"
 		>
@@ -17,7 +17,7 @@
 					<div class="control">
 						<input
 							id="teamtext"
-							v-model="team.name"
+							v-model="team!.name"
 							v-focus
 							:class="{ disabled: teamMemberService.loading }"
 							:disabled="teamMemberService.loading || undefined"
@@ -28,7 +28,7 @@
 					</div>
 				</div>
 				<p
-					v-if="showErrorTeamnameRequired && team.name === ''"
+					v-if="showErrorTeamnameRequired && team?.name === ''"
 					class="help is-danger"
 				>
 					{{ $t('team.attributes.nameRequired') }}
@@ -46,7 +46,7 @@
 						:class="{ 'is-loading': teamService.loading }"
 					>
 						<FancyCheckbox
-							v-model="team.isPublic"
+							v-model="team!.isPublic"
 							:disabled="teamMemberService.loading || undefined"
 							:class="{ 'disabled': teamService.loading }"
 						>
@@ -62,7 +62,7 @@
 					<div class="control">
 						<Editor
 							id="teamdescription"
-							v-model="team.description"
+							v-model="team!.description"
 							:class="{ disabled: teamService.loading }"
 							:disabled="teamService.loading"
 							:placeholder="$t('team.attributes.descriptionPlaceholder')"
@@ -98,7 +98,7 @@
 			:padding="false"
 		>
 			<form
-				v-if="userIsAdmin && !team.oidcId"
+				v-if="userIsAdmin && !team?.oidcId"
 				class="p-4"
 				@submit.prevent="addUser"
 			>
@@ -350,9 +350,10 @@ async function deleteTeam() {
 async function deleteMember() {
 	try {
 		await teamMemberService.value.delete({
+			...memberToDelete.value!,
 			teamId: teamId.value,
 			username: memberToDelete.value?.username ?? '',
-		})
+		} as ITeamMember)
 		success({message: t('team.edit.deleteUser.success')})
 		await loadTeam()
 	} finally {
@@ -366,10 +367,16 @@ async function addUser() {
 		showMustSelectUserError.value = true
 		return
 	}
-	await teamMemberService.value.create({
+	const newMemberData = {
+		...newMember.value!,
 		teamId: teamId.value,
 		username: newMember.value?.username ?? '',
-	})
+		id: newMember.value?.id ?? 0,
+		email: newMember.value?.email ?? '',
+		name: newMember.value?.name ?? '',
+		admin: false,
+	} as ITeamMember
+	await teamMemberService.value.create(newMemberData)
 	newMember.value = undefined
 	await loadTeam()
 	success({message: t('team.edit.userAddedSuccess')})
@@ -380,10 +387,12 @@ async function toggleUserType(member: ITeamMember) {
 	member.admin = !member.admin
 	member.teamId = teamId.value
 	const r = await teamMemberService.value.update(member)
-	if (team.value) {
+	if (team.value && team.value.members) {
 		for (const tm in team.value.members) {
-			if (team.value.members[tm].id === member.id) {
-				team.value.members[tm].admin = r.admin
+			if (team.value.members[tm]?.id === member.id) {
+				if (team.value.members[tm]) {
+					team.value.members[tm]!.admin = r.admin
+				}
 				break
 			}
 		}
@@ -408,9 +417,10 @@ async function findUser(query: string) {
 async function leave() {
 	try {
 		await teamMemberService.value.delete({
+			...userInfo.value,
 			teamId: teamId.value,
 			username: userInfo.value.username,
-		})
+		} as ITeamMember)
 		success({message: t('team.edit.leave.success')})
 		await router.push({name: 'home'})
 	} finally {

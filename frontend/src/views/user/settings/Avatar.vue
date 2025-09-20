@@ -112,7 +112,7 @@ const loading = ref(false)
 const avatarProvider = ref('')
 
 async function avatarStatus() {
-	const result = await avatarService.get(new AvatarModel())
+	const result = await avatarService.get(new AvatarModel({}))
 	const currentProvider = result?.avatarProvider || ''
 	avatarProvider.value = currentProvider
 }

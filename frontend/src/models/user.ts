@@ -13,7 +13,7 @@ export async function fetchAvatarBlobUrl(user: IUser, size = 50) {
 	if (!user || !user.username) {
 		return ''
 	}
-	const key = `${user.username}-${size}`
+	const key = `${user.username as string}-${size}`
 	
 	// Return cached URL if available
 	if (avatarCache.has(key)) {
@@ -22,7 +22,7 @@ export async function fetchAvatarBlobUrl(user: IUser, size = 50) {
 	
 	// If there's already a pending request for this avatar, wait for it
 	if (pendingRequests.has(key)) {
-		return await pendingRequests.get(key) as string
+		return await (pendingRequests.get(key)!) as string
 	}
 	
 	invalidateAvatarCache(user)
@@ -80,19 +80,19 @@ export default class UserModel extends AbstractModel<IUser> implements IUser {
 	exp = 0
 	type: AuthType = AUTH_TYPES.UNKNOWN
 
-	created: Date
-	updated: Date
-	settings: IUserSettings
+	created: Date = new Date()
+	updated: Date = new Date()
+	settings: IUserSettings = new UserSettingsModel()
 
-	isLocalUser: boolean
-	deletionScheduledAt: null
+	isLocalUser: boolean = false
+	deletionScheduledAt: string | null = null
 
 	constructor(data: Partial<IUser> = {}) {
 		super()
 		this.assignData(data)
 
-		this.created = new Date(this.created)
-		this.updated = new Date(this.updated)
+		this.created = this.created ? new Date(this.created) : new Date()
+		this.updated = this.updated ? new Date(this.updated) : new Date()
 
 		this.settings = new UserSettingsModel(this.settings || {})
 	}
