@@ -27,7 +27,7 @@ export function parseSubtasksViaIndention(taskTitles: string, prefixMode: Prefix
 	
 	const spaceOnFirstLine = /^(\t| )+/
 	const spaces = spaceOnFirstLine.exec(titles[0])
-	if (spaces !== null) {
+	if (spaces !== null && spaces[0]) {
 		let spacesToCut = spaces[0].length
 		titles = titles.map(title => {
 			const spacesOnThisLine = spaceOnFirstLine.exec(title)
@@ -64,16 +64,23 @@ export function parseSubtasksViaIndention(taskTitles: string, prefixMode: Prefix
 			let pi = 1
 			let parentSpaces = 0
 			do {
-				task.parent = cleanupTitle(titles[index - pi])
+				const parentIndex = index - pi
+				if (parentIndex < 0) {
+					// No valid parent found, break out of loop
+					break
+				}
+				task.parent = titles[parentIndex] ? cleanupTitle(titles[parentIndex]) : null
 				pi++
-				const parentMatched = spaceRegex.exec(task.parent)
+				const parentMatched = task.parent ? spaceRegex.exec(task.parent) : null
 				parentSpaces = parentMatched ? parentMatched[0].length : 0
-			} while (parentSpaces >= matchedSpaces)
+			} while (parentSpaces >= matchedSpaces && index - pi >= 0)
 			task.title = cleanupTitle(task.title.replace(spaceRegex, ''))
-			task.parent = task.parent.replace(spaceRegex, '')
-			if (task.project === null) {
-				// This allows to specify a project once for the parent task and inherit it to all subtasks
-				task.project = getProjectFromPrefix(task.parent, prefixMode)
+			if (task.parent) {
+				task.parent = task.parent.replace(spaceRegex, '')
+				if (task.project === null) {
+					// This allows to specify a project once for the parent task and inherit it to all subtasks
+					task.project = getProjectFromPrefix(task.parent, prefixMode)
+				}
 			}
 		}
 

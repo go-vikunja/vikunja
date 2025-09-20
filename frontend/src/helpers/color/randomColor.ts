@@ -16,5 +16,5 @@ const COLORS = [
 ]
 
 export function getRandomColorHex(): string {
-	return COLORS[Math.floor(Math.random() * COLORS.length)]
+	return COLORS[Math.floor(Math.random() * COLORS.length)] || COLORS[0]
 }

@@ -77,7 +77,7 @@ export const FILTER_OPERATORS_REGEX = '('+FILTER_OPERATORS.map(op => {
 }).join('|')+')'
 
 export function hasFilterQuery(filter: string): boolean {
-	return FILTER_OPERATORS.find(o => filter.includes(o)) || false
+	return FILTER_OPERATORS.some(o => filter.includes(o))
 }
 
 export function getFilterFieldRegexPattern(field: string): RegExp {
@@ -121,7 +121,7 @@ export function transformFilterStringForApi(
 				}
 
 				let keywords = [keyword.trim()]
-				if (isMultiValueOperator(operator)) {
+				if (operator && isMultiValueOperator(operator)) {
 					keywords = keyword.trim().split(',').map(k => trimQuotes(k))
 				}
 
@@ -131,7 +131,7 @@ export function transformFilterStringForApi(
 				keywords.forEach(k => {
 					let id = resolver(k)
 					if (id === null && k.includes('\\')) {
-						id = resolver(k.replaceAll('\\', ''))
+						id = resolver(k.replace(/\\/g, ''))
 					}
 					if (id === null) {
 						transformedKeywords.push(k)
@@ -142,13 +142,13 @@ export function transformFilterStringForApi(
 				})
 				
 				// Join the transformed keywords back together
-				if (isMultiValueOperator(operator)) {
+				if (operator && isMultiValueOperator(operator)) {
 					replaced = transformedKeywords.join(', ')
 				} else {
 					replaced = transformedKeywords[0] || keyword
 				}
 
-				replaced = replaced.replaceAll('"', '').replaceAll('\'', '')
+				replaced = replaced.replace(/"/g, '').replace(/'/g, '')
 
 				// Reconstruct the entire match with the replaced value
 				let reconstructedMatch
@@ -209,7 +209,7 @@ export function transformFilterStringFromApi(
 
 	// Transform all attributes from snake case
 	AVAILABLE_FILTER_FIELDS.forEach(f => {
-		filter = filter.replaceAll(snakeCase(f), f)
+		filter = filter.replace(new RegExp(snakeCase(f), 'g'), f)
 	})
 
 	// Function to transform fields to their titles
@@ -227,7 +227,7 @@ export function transformFilterStringFromApi(
 				const keyword = quotedContent || unquotedContent
 				if (keyword) {
 					let keywords = [keyword.trim()]
-					if (isMultiValueOperator(operator)) {
+					if (operator && isMultiValueOperator(operator)) {
 						keywords = keyword.trim().split(',').map(k => {
 							let trimmed = k.trim()
 							// Strip quotes from individual values in multi-value scenarios
