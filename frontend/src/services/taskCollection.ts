@@ -41,7 +41,7 @@ export default class TaskCollectionService extends AbstractService<ITask | IBuck
 	getReplacedRoute(path: string, pathparams: Record<string, unknown>): string {
 		if (!pathparams.viewId) {
 			// Validate that projectId is defined and not null/undefined before building URL
-			if (!pathparams.projectId || pathparams.projectId === 'undefined' || pathparams.projectId === 'null') {
+			if (!pathparams.projectId || pathparams.projectId === 'undefined' || pathparams.projectId === 'null' || pathparams.projectId === null) {
 				throw new Error('Project ID is required but was undefined or null')
 			}
 			return super.getReplacedRoute('/projects/{projectId}/tasks', pathparams)

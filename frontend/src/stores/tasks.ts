@@ -194,7 +194,7 @@ export const useTaskStore = defineStore('task', () => {
 				maxPermission: 0,
 			} as ITask
 
-			if (projectId !== null) {
+			if (projectId !== null && projectId !== 0) {
 				model.projectId = projectId
 				taskCollectionService = new TaskCollectionService()
 			}
