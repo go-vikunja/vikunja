@@ -139,12 +139,12 @@
 
 			<RouterLink
 				v-if="showProjectSeparately"
-				v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
+				v-tooltip="$t('task.detail.belongsToProject', {project: project?.title || ''})"
 				:to="{ name: 'project.index', params: { projectId: task.projectId } }"
 				class="task-project"
 				@click.stop
 			>
-				{{ project.title }}
+				{{ project?.title }}
 			</RouterLink>
 
 			<BaseButton
@@ -169,7 +169,7 @@
 				<template v-if="getTaskById(subtask.id)">
 					<single-task-in-project
 						:key="subtask.id"
-						:the-task="getTaskById(subtask.id)"
+						:the-task="getTaskById(subtask.id)!"
 						:disabled="disabled"
 						:can-mark-as-done="canMarkAsDone"
 						:all-tasks="allTasks"
@@ -243,7 +243,7 @@ function getTaskById(taskId: number): ITask | undefined {
 const {t} = useI18n({useScope: 'global'})
 
 const taskService = shallowReactive(new TaskService())
-const task = ref<ITask>(new TaskModel())
+const task = ref<ITask>(new TaskModel() as unknown as ITask)
 
 const isRepeating = computed(() => {
 	const repeatAfter = task.value.repeatAfter
@@ -301,7 +301,7 @@ onMounted(updateDueDate)
 
 watch(() => task.value.dueDate, updateDueDate)
 
-let oldTask
+let oldTask: ITask
 
 async function markAsDone(checked: boolean, wasReverted: boolean = false) {
 	const updateFunc = async () => {
@@ -360,7 +360,7 @@ const taskRoot = ref<HTMLElement | null>(null)
 const taskLinkRef = ref<HTMLElement | null>(null)
 
 function hasTextSelected() {
-	const isTextSelected = window.getSelection().toString()
+	const isTextSelected = window.getSelection()?.toString() || ''
 	return !(typeof isTextSelected === 'undefined' || isTextSelected === '' || isTextSelected === '\n')
 }
 
@@ -372,7 +372,7 @@ function openTaskDetail(event: MouseEvent | KeyboardEvent) {
 		}
 	}
 
-	taskLinkRef.value?.$el.click()
+	taskLinkRef.value?.click()
 }
 
 defineExpose({

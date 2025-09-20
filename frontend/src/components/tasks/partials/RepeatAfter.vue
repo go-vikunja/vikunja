@@ -117,7 +117,7 @@ const emit = defineEmits<{
 
 const {t} = useI18n({useScope: 'global'})
 
-const task = ref<ITask>(new TaskModel())
+const task = ref<ITask>(new TaskModel() as unknown as ITask)
 const repeatAfter = reactive({
 	amount: 0,
 	type: '',

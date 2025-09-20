@@ -3,10 +3,11 @@ import reminders from './Reminders.vue'
 import {ref} from 'vue'
 import ReminderDetail from '@/components/tasks/partials/ReminderDetail.vue'
 import TaskModel from '@/models/task'
+import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 
 const task = ref(new TaskModel())
 const reminderNow = ref({reminder: new Date(), relativePeriod: 0, relativeTo: null, maxPermission: null } )
-const relativeReminder = ref({reminder: null, relativePeriod: 1, relativeTo: 'due_date', maxPermission: null } )
+const relativeReminder = ref({reminder: null, relativePeriod: 1, relativeTo: REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE, maxPermission: null } )
 const newReminder = ref({reminder: null, relativePeriod: 0, relativeTo: null, maxPermission: null })
 </script>
 
