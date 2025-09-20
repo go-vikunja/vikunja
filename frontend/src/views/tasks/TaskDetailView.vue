@@ -429,7 +429,7 @@
 							entity="task"
 							:entity-id="task.id"
 							:model-value="task.subscription"
-							@update:modelValue="sub => task.subscription = sub"
+							@update:modelValue="(sub: any) => task.subscription = sub"
 						/>
 						<XButton
 							v-shortcut="'s'"
@@ -721,7 +721,7 @@ onBeforeRouteLeave(async () => {
 	}
 
 	if (project.value) {
-		await baseStore.handleSetCurrentProjectIfNotSet(project.value)
+		await baseStore.handleSetCurrentProjectIfNotSet(project.value as any)
 	}
 })
 
@@ -749,7 +749,7 @@ const canWrite = computed(() => (
 ))
 
 const color = computed(() => {
-	const color = task.value.getHexColor
+	const color = typeof task.value.getHexColor === 'function'
 		? task.value.getHexColor()
 		: undefined
 
@@ -791,11 +791,11 @@ watch(
 			if (project.value) {
 				const projectValue = project.value
 				if (!Array.isArray(projectValue.tasks)) {
-					const mutableProject = {...projectValue, tasks: []}
+					const mutableProject = {...projectValue, tasks: []} as any
 					await baseStore.handleSetCurrentProjectIfNotSet(mutableProject)
 				}
 			}
-		} catch (e) {
+		} catch (e: any) {
 			if (e?.response?.status === 404) {
 				taskNotFound.value = true
 				router.replace({name: 'not-found'})
@@ -856,7 +856,7 @@ function setActiveFields() {
 	activeFields.priority = task.value.priority !== PRIORITIES.UNSET
 	activeFields.relatedTasks = Object.keys(task.value.relatedTasks).length > 0
 	activeFields.reminders = task.value.reminders.length > 0
-	activeFields.repeatAfter = task.value.repeatAfter?.amount > 0 || task.value.repeatMode !== TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
+	activeFields.repeatAfter = (typeof task.value.repeatAfter === 'object' && task.value.repeatAfter?.amount > 0) || task.value.repeatMode !== TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
 	activeFields.startDate = task.value.startDate !== null
 }
 
@@ -877,7 +877,7 @@ const activeFieldElements: { [id in FieldType]: HTMLElement | null } = reactive(
 })
 
 function setFieldRef(name: string, e: any) {
-	activeFieldElements[name] = unrefElement(e)
+	(activeFieldElements as any)[name] = unrefElement(e)
 }
 
 function setFieldActive(fieldName: keyof typeof activeFields) {
@@ -972,10 +972,10 @@ async function toggleFavorite() {
 	Object.assign(task.value, newTask)
 }
 
-async function setPriority(priority: Priority) {
+async function setPriority(priority: number) {
 	const newTask: ITask = {
 		...task.value,
-		priority,
+		priority: priority as Priority,
 	}
 
 	return saveTask(newTask)
@@ -991,7 +991,9 @@ async function setPercentDone(percentDone: number) {
 }
 
 async function removeRepeatAfter() {
-	task.value.repeatAfter.amount = 0
+	if (typeof task.value.repeatAfter === 'object' && task.value.repeatAfter) {
+		task.value.repeatAfter.amount = 0
+	}
 	task.value.repeatMode = TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
 	await saveTask()
 }
