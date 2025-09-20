@@ -44,7 +44,7 @@
 				</div>
 			</div>
 			<span
-				v-if="task.dueDate > 0"
+				v-if="task.dueDate && task.dueDate.getTime() > 0"
 				v-tooltip="formatDateLong(task.dueDate)"
 				:class="{'overdue': isOverdue}"
 				class="due-date"
@@ -93,7 +93,7 @@
 					<Icon icon="align-left" />
 				</span>
 				<span
-					v-if="task.repeatAfter.amount > 0"
+					v-if="task.repeatAfter && typeof task.repeatAfter === 'object' && 'amount' in task.repeatAfter && task.repeatAfter.amount > 0"
 					class="icon"
 				>
 					<Icon icon="history" />
@@ -159,7 +159,7 @@ const projectTitle = computed(() => {
 	return project?.title
 })
 
-const showTaskPosition = computed(() => window.DEBUG_TASK_POSITION)
+const showTaskPosition = computed(() => (window as any).DEBUG_TASK_POSITION)
 
 const {now} = useGlobalNow()
 const isOverdue = computed(() => (
@@ -170,7 +170,7 @@ const isOverdue = computed(() => (
 ))
 
 async function toggleTaskDone(task: ITask) {
-	const isRecurringTask = task.repeatAfter.amount > 0 || task.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH
+	const isRecurringTask = (task.repeatAfter && typeof task.repeatAfter === 'object' && 'amount' in task.repeatAfter && task.repeatAfter.amount > 0) || task.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH
 	const wasBeingMarkedDone = !task.done
 	
 	loadingInternal.value = true
@@ -215,7 +215,7 @@ async function maybeDownloadCoverImage() {
 	}
 
 	const attachmentService = new AttachmentService()
-	coverImageBlobUrl.value = await attachmentService.getBlobUrl(attachment, PREVIEW_SIZE.LG)
+	coverImageBlobUrl.value = await attachmentService.getBlobUrl(attachment, PREVIEW_SIZE.LG) as string
 }
 
 watch(
