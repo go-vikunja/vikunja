@@ -91,7 +91,7 @@ export const parseDate = (text: string, now: Date = new Date()): dateParseResult
 		}
 
 		return {
-			newText: replaceAll(text, parsed.foundText, ''),
+			newText: replaceAll(text, parsed.foundText || '', ''),
 			date: parsed.date,
 		}
 	}
@@ -113,15 +113,15 @@ const addTimeToDate = (text: string, date: Date, previousMatch: string | null): 
 	const matcher = new RegExp(timeRegex, 'ig')
 	const results = matcher.exec(text)
 
-	if (results !== null) {
+	if (results !== null && results[2]) {
 		const time = results[2]
 		const parts = time.split(':')
-		let hours = parseInt(parts[0])
+		let hours = parseInt(parts[0] || '0')
 		let minutes = 0
 		if (time.endsWith('pm')) {
 			hours += 12
 		}
-		if (parts.length > 1) {
+		if (parts.length > 1 && parts[1]) {
 			minutes = parseInt(parts[1])
 		}
 
@@ -158,7 +158,7 @@ export const getDateFromText = (text: string, now: Date = new Date()) => {
 			let tmp_year = year
 
 			if (tmp_year === undefined) {
-				tmp_year = year ?? now.getFullYear()
+				tmp_year = now.getFullYear().toString()
 				containsYear = false
 			}
 
@@ -167,7 +167,7 @@ export const getDateFromText = (text: string, now: Date = new Date()) => {
 			result = !isNaN(new Date(result).getTime()) ? result : null
 			
 			if(result !== null){
-				foundText = found
+				foundText = found || ''
 				break
 			}
 		}
@@ -223,19 +223,19 @@ export const getDateFromTextIn = (text: string, now: Date = new Date()) => {
 	switch (parts[2]) {
 		case 'hours':
 		case 'hour':
-			date.setHours(date.getHours() + parseInt(parts[1]))
+			date.setHours(date.getHours() + parseInt(parts[1] || '0'))
 			break
 		case 'days':
 		case 'day':
-			date.setDate(date.getDate() + parseInt(parts[1]))
+			date.setDate(date.getDate() + parseInt(parts[1] || '0'))
 			break
 		case 'weeks':
 		case 'week':
-			date.setDate(date.getDate() + parseInt(parts[1]) * 7)
+			date.setDate(date.getDate() + parseInt(parts[1] || '0') * 7)
 			break
 		case 'months':
 		case 'month':
-			date.setMonth(date.getMonth() + parseInt(parts[1]))
+			date.setMonth(date.getMonth() + parseInt(parts[1] || '0'))
 			break
 	}
 
@@ -297,9 +297,9 @@ const getDateFromWeekday = (text: string, date: Date = new Date()): dateFoundRes
 	const distance: number = (day + 7 - currentDay) % 7
 	date.setDate(date.getDate() + distance)
 
-	// This a space at the end of the found text to not break parsing suffix strings like "at 14:00" in cases where the 
+	// This a space at the end of the found text to not break parsing suffix strings like "at 14:00" in cases where the
 	// matched string comes with a space at the end (last part of the regex).
-	let foundText = results[0]
+	let foundText = results[0] || ''
 	if (foundText.endsWith(' ')) {
 		foundText = foundText.slice(0, foundText.length - 1)
 	}

@@ -1,20 +1,22 @@
 import {i18n} from '@/i18n'
 import {notify} from '@kyvg/vue3-notification'
 
-export function getErrorText(r): string {
+export function getErrorText(r: any): string {
 	const data = r?.reason?.response?.data || r?.response?.data
 
 	if (data?.code) {
 		const path = `error.${data.code}`
-		let message = i18n.global.t(path)
+		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+		// @ts-ignore: Complex vue-i18n type inference issue
+		const translatedMessage: string = String(i18n.global.t(path))
 
 		if (data?.code && data?.message && (data.code === 4016 || data.code === 4017 || data.code === 4018 || data.code === 4019 || data.code === 4024)) {
-			message += '\n' + data.message
+			return translatedMessage + '\n' + data.message
 		}
 
 		// If message and path are equal no translation exists for that error code
-		if (path !== message) {
-			return message
+		if (path !== translatedMessage) {
+			return translatedMessage
 		}
 	}
 	
@@ -32,22 +34,22 @@ export interface Action {
 	callback: () => void,
 }
 
-export function error(e, actions: Action[] = []) {
+export function error(e: any, actions: Action[] = []) {
 	notify({
 		type: 'error',
-		title: i18n.global.t('error.error'),
-		text: [getErrorText(e)],
-		actions: actions,
+		// @ts-ignore: Complex vue-i18n type inference issue
+		title: String(i18n.global.t('error.error')),
+		text: getErrorText(e),
+		data: { actions },
 	})
 }
 
-export function success(e, actions: Action[] = []) {
+export function success(e: any, actions: Action[] = []) {
 	notify({
 		type: 'success',
-		title: i18n.global.t('error.success'),
-		text: [getErrorText(e)],
-		data: {
-			actions: actions,
-		},
+		// @ts-ignore: Complex vue-i18n type inference issue
+		title: String(i18n.global.t('error.success')),
+		text: getErrorText(e),
+		data: { actions },
 	})
 }

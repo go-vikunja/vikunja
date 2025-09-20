@@ -26,7 +26,7 @@ export function parseSubtasksViaIndention(taskTitles: string, prefixMode: Prefix
 	}
 	
 	const spaceOnFirstLine = /^(\t| )+/
-	const spaces = spaceOnFirstLine.exec(titles[0])
+	const spaces = spaceOnFirstLine.exec(titles[0] || '')
 	if (spaces !== null && spaces[0]) {
 		let spacesToCut = spaces[0].length
 		titles = titles.map(title => {
