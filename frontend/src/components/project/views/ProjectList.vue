@@ -66,21 +66,23 @@
 						@end="saveTaskPosition"
 					>
 						<template #item="{element: t, index}">
-							<SingleTaskInProject
-								:ref="(el: any) => setTaskRef(el as InstanceType<typeof SingleTaskInProject> | null, index)"
-								:show-list-color="false"
-								:disabled="!canDragTasks"
-								:can-mark-as-done="canWrite || isPseudoProject"
-								:the-task="t"
-								:all-tasks="allTasks"
-								@taskUpdated="updateTasks"
-							>
-								<template v-if="canDragTasks">
-									<span class="icon handle">
-										<Icon icon="grip-lines" />
-									</span>
-								</template>
-							</SingleTaskInProject>
+							<li>
+								<SingleTaskInProject
+									:ref="(el: any) => setTaskRef(el as InstanceType<typeof SingleTaskInProject> | null, index)"
+									:show-list-color="false"
+									:disabled="!canDragTasks"
+									:can-mark-as-done="canWrite || isPseudoProject"
+									:the-task="t"
+									:all-tasks="allTasks"
+									@taskUpdated="updateTasks"
+								>
+									<template v-if="canDragTasks">
+										<span class="icon handle">
+											<Icon icon="grip-lines" />
+										</span>
+									</template>
+								</SingleTaskInProject>
+							</li>
 						</template>
 					</draggable>
 
@@ -335,6 +337,10 @@ onBeforeUnmount(() => {
 <style lang="scss" scoped>
 .tasks {
 	padding: .5rem;
+
+	li {
+		list-style: none;
+	}
 }
 
 .task-ghost {
