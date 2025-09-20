@@ -2,6 +2,7 @@
 	<CreateEdit
 		:title="$t('project.create.header')"
 		:primary-disabled="project.title === ''"
+		:has-primary-action="true"
 		@create="createNewProject()"
 	>
 		<div class="field">
