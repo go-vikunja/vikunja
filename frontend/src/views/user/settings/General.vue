@@ -532,18 +532,18 @@ watch(
 
 const projectStore = useProjectStore()
 const defaultProject = computed({
-	get: () => settings.value.defaultProjectId ? projectStore.projects[settings.value.defaultProjectId] as any : null,
+	get: () => settings.value.defaultProjectId ? projectStore.projects[settings.value.defaultProjectId] : null,
 	set(l) {
 		settings.value.defaultProjectId = l ? l.id : DEFAULT_PROJECT_ID
 	},
 })
 const filterUsedInOverview = computed({
-	get: () => settings.value.frontendSettings.filterIdUsedOnOverview ? projectStore.projects[settings.value.frontendSettings.filterIdUsedOnOverview] as any : null,
+	get: () => settings.value.frontendSettings.filterIdUsedOnOverview ? projectStore.projects[settings.value.frontendSettings.filterIdUsedOnOverview] : null,
 	set(l) {
 		settings.value.frontendSettings.filterIdUsedOnOverview = l ? l.id : null
 	},
 })
-const hasFilters = computed(() => typeof (projectStore.projectsArray as any).find((p: any) => isSavedFilter(p)) !== 'undefined')
+const hasFilters = computed(() => typeof projectStore.projectsArray.find((p) => isSavedFilter(p)) !== 'undefined')
 const loading = computed(() => authStore.isLoadingGeneralSettings)
 
 async function updateSettings() {

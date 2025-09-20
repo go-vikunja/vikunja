@@ -84,6 +84,7 @@ import 'vue-advanced-cropper/dist/style.css'
 
 import AvatarService from '@/services/avatar'
 import AvatarModel from '@/models/avatar'
+import type {AvatarProvider} from '@/modelTypes/IAvatar'
 import {useTitle} from '@/composables/useTitle'
 import {success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
@@ -109,7 +110,7 @@ const avatarService = shallowReactive(new AvatarService())
 const loading = ref(false)
 
 
-const avatarProvider = ref('')
+const avatarProvider = ref<AvatarProvider>('default')
 
 async function avatarStatus() {
 	const result = await avatarService.get(new AvatarModel({}))
@@ -121,7 +122,7 @@ avatarStatus()
 
 
 async function updateAvatarStatus() {
-	await avatarService.update(new AvatarModel({avatarProvider: avatarProvider.value as any}))
+	await avatarService.update(new AvatarModel({avatarProvider: avatarProvider.value}))
 	success({message: t('user.settings.avatar.statusUpdateSuccess')})
 	authStore.reloadAvatar()
 }

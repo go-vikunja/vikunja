@@ -18,12 +18,12 @@ const service = new ApiTokenService()
 const tokens = ref<IApiToken[]>([])
 const apiDocsUrl = window.API_URL + '/docs'
 const showCreateForm = ref(false)
-const availableRoutes = ref<Record<string, any> | null>(null)
+const availableRoutes = ref<Record<string, Record<string, string[]>> | null>(null)
 const newToken = ref<IApiToken>(new ApiTokenModel())
 const newTokenExpiry = ref<string | number>(30)
 const newTokenExpiryCustom = ref(new Date())
-const newTokenPermissions = ref<Record<string, any>>({})
-const newTokenPermissionsGroup = ref<Record<string, any>>({})
+const newTokenPermissions = ref<Record<string, Record<string, boolean>>>({})
+const newTokenPermissionsGroup = ref<Record<string, boolean>>({})
 const newTokenTitleValid = ref(true)
 const newTokenPermissionValid = ref(true)
 const apiTokenTitle = ref()
@@ -50,7 +50,7 @@ onMounted(async () => {
 	tokens.value = await service.getAll()
 	const allRoutes = await service.getAvailableRoutes()
 
-	const routesAvailable: Record<string, any> = {}
+	const routesAvailable: Record<string, Record<string, string[]>> = {}
 	const keys = Object.keys(allRoutes)
 	keys.sort((a, b) => (a === 'other' ? 1 : b === 'other' ? -1 : 0))
 	keys.forEach(key => {
@@ -67,7 +67,7 @@ function resetPermissions() {
 	Object.entries(availableRoutes.value || {}).forEach(entry => {
 		const [group, routes] = entry
 		newTokenPermissions.value[group] = {}
-		Object.keys(routes as Record<string, any>).forEach(r => {
+		Object.keys(routes).forEach(r => {
 			newTokenPermissions.value[group][r] = false
 		})
 	})
@@ -94,8 +94,8 @@ async function createToken() {
 	let hasPermissions = false
 
 	newToken.value.permissions = {}
-	Object.entries(newTokenPermissions.value as Record<string, any>).forEach(([key, ps]) => {
-		const all = Object.entries(ps as Record<string, any>)
+	Object.entries(newTokenPermissions.value).forEach(([key, ps]) => {
+		const all = Object.entries(ps)
 			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			.filter(([_, v]) => v)
 			.map(p => p[0])
