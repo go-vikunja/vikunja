@@ -1,7 +1,14 @@
 # TypeScript Fixes Summary - Vikunja Frontend
 
 ## Current TypeCheck Status (September 20, 2025)
-Found ~70+ TypeScript errors that need to be fixed across multiple categories.
+**SIGNIFICANT PROGRESS MADE:** Reduced from ~168 TypeScript errors to 150 errors
+
+### Recent Fixes (Latest Session)
+- **Stores**: Fixed major issues in tasks.ts, projects.ts, labels.test.ts
+- **Service Worker**: Added complete type declarations for workbox globals
+- **Migration Handler**: Fixed type conversion and parameter issues
+- **TaskDetailView**: Resolved complex priority, subscription, and readonly/mutable conflicts
+- **Project Views**: Fixed simple null safety issues
 
 ## Work Completed
 

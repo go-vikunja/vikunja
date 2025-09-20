@@ -141,16 +141,19 @@ const userAuthenticated = computed(() => authStore.authenticated)
 const loading = computed(() => taskStore.isLoading || taskCollectionService.value.loading)
 
 interface dateStrings {
-	dateFrom: string,
-	dateTo: string,
+	dateFrom: string | Date,
+	dateTo: string | Date,
 }
 
 function setDate(dates: dateStrings) {
+	const dateFromStr = dates.dateFrom instanceof Date ? dates.dateFrom.toISOString().split('T')[0] : dates.dateFrom
+	const dateToStr = dates.dateTo instanceof Date ? dates.dateTo.toISOString().split('T')[0] : dates.dateTo
+
 	router.push({
 		name: route.name as string,
 		query: {
-			from: dates.dateFrom ?? props.dateFrom,
-			to: dates.dateTo ?? props.dateTo,
+			from: dateFromStr ?? props.dateFrom,
+			to: dateToStr ?? props.dateTo,
 			showOverdue: props.showOverdue ? 'true' : 'false',
 			showNulls: props.showNulls ? 'true' : 'false',
 		},

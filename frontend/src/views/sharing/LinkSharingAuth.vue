@@ -131,7 +131,7 @@ function useAuth() {
 			baseStore.setLogoVisible(logoVisible)
 
 			return redirectToProject(projectId)
-		} catch (e) {
+		} catch (e: any) {
 			if (e?.response?.data?.code === 13001) {
 				authenticateWithPassword.value = true
 				return

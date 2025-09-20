@@ -90,6 +90,7 @@ function ganttFiltersToApiParams(filters: GanttFilters): TaskFilterParams {
 		order_by: ['asc', 'asc', 'desc'],
 		filter: 'start_date >= "' + isoToKebabDate(filters.dateFrom) + '" && start_date <= "' + isoToKebabDate(filters.dateTo) + '"',
 		filter_include_nulls: filters.showTasksWithoutDates,
+		s: '',
 	}
 }
 
