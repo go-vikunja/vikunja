@@ -42,7 +42,7 @@
 		<XButton
 			class="button mbs-4"
 			:to="{name:'user.settings.data-export'}"
-			variant="tertary"
+			variant="tertiary"
 		>
 			{{ $t('user.export.requestNew') }}
 		</XButton>

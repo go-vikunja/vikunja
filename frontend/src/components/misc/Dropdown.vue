@@ -44,9 +44,11 @@ import type {IconProp} from '@fortawesome/fontawesome-svg-core'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
-withDefaults(defineProps<{
+interface DropdownProps {
 	triggerIcon?: IconProp
-}>(), {
+}
+
+withDefaults(defineProps<DropdownProps>(), {
 	triggerIcon: 'ellipsis-h',
 })
 

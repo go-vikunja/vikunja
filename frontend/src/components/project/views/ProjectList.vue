@@ -8,7 +8,7 @@
 		<template #header>
 			<div class="filter-container">
 				<FilterPopup
-					v-if="!isSavedFilter(project)"
+					v-if="project && !isSavedFilter(project)"
 					v-model="params"
 					:view-id="viewId"
 					:project-id="projectId"
@@ -28,7 +28,7 @@
 					class="has-overflow"
 				>
 					<AddTask
-						v-if="!project.isArchived && canWrite"
+						v-if="project && !project.isArchived && canWrite"
 						ref="addTaskRef"
 						class="list-view__add-task d-print-none"
 						:default-position="firstNewPosition"
@@ -38,7 +38,7 @@
 					<Nothing v-if="ctaVisible && tasks.length === 0 && !loading">
 						{{ $t('project.list.empty') }}
 						<ButtonLink
-							v-if="project.id > 0 && canWrite"
+							v-if="project && project.id > 0 && canWrite"
 							@click="focusNewTaskInput()"
 						>
 							{{ $t('project.list.newTaskCta') }}
@@ -67,7 +67,7 @@
 					>
 						<template #item="{element: t, index}">
 							<SingleTaskInProject
-								:ref="(el) => setTaskRef(el, index)"
+								:ref="(el: any) => setTaskRef(el as InstanceType<typeof SingleTaskInProject> | null, index)"
 								:show-list-color="false"
 								:disabled="!canDragTasks"
 								:can-mark-as-done="canWrite || isPseudoProject"
@@ -146,7 +146,7 @@ const {
 } = useTaskList(
 	() => projectId.value,
 	() => props.viewId,
-	{position: 'asc'},
+	{index: 'asc'},
 	() => projectId.value === -1
 		? null
 		: 'subtasks',
@@ -155,7 +155,9 @@ const {
 const taskPositionService = ref(new TaskPositionService())
 
 // Saved filter composable for accessing filter data
-const _savedFilter = useSavedFilter(() => projectId.value < 0 ? projectId.value : undefined).filter
+const _savedFilter = useSavedFilter(
+	projectId.value !== undefined && projectId.value < 0 ? () => projectId.value! : undefined
+).filter
 
 const tasks = ref<ITask[]>([])
 watch(
@@ -176,7 +178,7 @@ const isAlphabeticalSorting = computed(() => {
 })
 
 const firstNewPosition = computed(() => {
-	if (tasks.value.length === 0) {
+	if (tasks.value.length === 0 || !tasks.value[0]) {
 		return 0
 	}
 
@@ -187,7 +189,7 @@ const baseStore = useBaseStore()
 const project = computed(() => baseStore.currentProject)
 
 const canWrite = computed(() => {
-	return project.value.maxPermission > Permissions.READ && project.value.id > 0
+	return project.value && project.value.maxPermission && project.value.maxPermission > Permissions.READ && project.value.id > 0
 })
 
 const isPseudoProject = computed(() => (project.value && isSavedFilter(project.value)) || project.value?.id === -1)
@@ -220,24 +222,26 @@ function updateTaskList(task: ITask) {
 }
 
 function updateTasks(updatedTask: ITask) {
-	if (projectId.value < 0) {
+	if (projectId.value !== undefined && projectId.value < 0) {
 		// Reload tasks to keep saved filter results in sync
 		loadTasks(false)
 		return
 	}
 
 	for (const t in tasks.value) {
-		if (tasks.value[t].id === updatedTask.id) {
+		if (tasks.value[t] && tasks.value[t].id === updatedTask.id) {
 			tasks.value[t] = updatedTask
 			break
 		}
 	}
 }
 
-async function saveTaskPosition(e) {
+async function saveTaskPosition(e: any) {
 	drag.value = false
 
 	const task = tasks.value[e.newIndex]
+	if (!task) return
+
 	const taskBefore = tasks.value[e.newIndex - 1] ?? null
 	const taskAfter = tasks.value[e.newIndex + 1] ?? null
 
