@@ -55,7 +55,7 @@ export function useRouteWithModal() {
 		let component = route.matched[0]?.components?.default
 
 		if (typeof component === 'function') {
-			component = defineAsyncComponent(component)
+			component = defineAsyncComponent(component as any)
 		}
 
 		if (!component) {
@@ -77,10 +77,11 @@ export function useRouteWithModal() {
 			? routeMatch.exec(historyState.value.back)
 			: null
 		if (match !== null && baseStore.currentProject) {
-			let viewId: string | number = match[1]
+			let viewId: string | number = match[1] || ''
 
-			if (!viewId) {
-				viewId = projectStore.projects[baseStore.currentProject?.id].views[0]?.id
+			if (!viewId && baseStore.currentProject?.id) {
+				const defaultView = projectStore.projects[baseStore.currentProject.id]?.views?.[0]
+				viewId = defaultView?.id || 0
 			}
 
 			const newRoute = {

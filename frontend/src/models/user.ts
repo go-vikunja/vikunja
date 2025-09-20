@@ -70,6 +70,9 @@ export function getDisplayName(user: IUser) {
 }
 
 export default class UserModel extends AbstractModel<IUser> implements IUser {
+	// Index signature to make class compatible with Record<string, unknown>
+	[key: string]: unknown
+
 	id = 0
 	email = ''
 	username = ''

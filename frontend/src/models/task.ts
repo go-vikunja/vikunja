@@ -58,6 +58,9 @@ export function getTaskIdentifier(task: ITask | null | undefined): string {
 }
 
 export default class TaskModel extends AbstractModel<ITask> implements ITask {
+	// Index signature to make class compatible with Record<string, unknown>
+	[key: string]: unknown
+
 	id = 0
 	title = ''
 	description = ''

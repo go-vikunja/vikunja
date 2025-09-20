@@ -73,7 +73,7 @@ export function useRouteFilters<CurrentFilters extends Filters>(
 	}
 
 	return {
-		filters,
+		filters: filters as Ref<CurrentFilters>,
 		hasDefaultFilters,
 		setDefaultFilters,
 	}
