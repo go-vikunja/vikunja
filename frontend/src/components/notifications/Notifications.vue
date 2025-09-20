@@ -165,18 +165,24 @@ function to(n: INotification, index: number) {
 		case names.TASK_REMINDER:
 		case names.TASK_MENTIONED:
 			to.name = 'task.detail'
-			to.params.id = n.notification.task.id
+			if ('task' in n.notification && n.notification.task) {
+				to.params.id = n.notification.task.id
+			}
 			break
 		case names.TASK_DELETED:
 			// Nothing
 			break
 		case names.PROJECT_CREATED:
 			to.name = 'task.index'
-			to.params.projectId = n.notification.project.id
+			if ('project' in n.notification && n.notification.project) {
+				to.params.projectId = n.notification.project.id
+			}
 			break
 		case names.TEAM_MEMBER_ADDED:
 			to.name = 'teams.edit'
-			to.params.id = n.notification.team.id
+			if ('team' in n.notification && n.notification.team) {
+				to.params.id = n.notification.team.id
+			}
 			break
 	}
 

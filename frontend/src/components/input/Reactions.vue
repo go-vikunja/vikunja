@@ -98,7 +98,9 @@ const emojiPickerRef = ref<{ $el?: HTMLElement } | HTMLElement | null>(null)
 function hideEmojiPicker(e: MouseEvent) {
 	if (showEmojiPicker.value && emojiPickerRef.value) {
 		const element = (emojiPickerRef.value && typeof emojiPickerRef.value === 'object' && '$el' in emojiPickerRef.value) ? emojiPickerRef.value.$el : emojiPickerRef.value as HTMLElement
-		closeWhenClickedOutside(e, element, () => showEmojiPicker.value = false)
+		if (element) {
+			closeWhenClickedOutside(e, element, () => showEmojiPicker.value = false)
+		}
 	}
 }
 

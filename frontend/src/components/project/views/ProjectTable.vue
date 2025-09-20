@@ -379,7 +379,7 @@ function setActiveColumnsSortParam() {
 	sortByParam.value = Object.keys(sortBy.value)
 		.filter(prop => (activeColumns.value as Record<string, boolean>)[camelCase(prop)])
 		.reduce((obj: Record<string, string>, key) => {
-			obj[key] = sortBy.value[key]
+			obj[key] = (sortBy.value as any)[key]
 			return obj
 		}, {})
 }

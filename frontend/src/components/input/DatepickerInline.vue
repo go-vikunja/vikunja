@@ -151,15 +151,15 @@ const flatPickrDate = computed({
 
 onMounted(() => {
 	const inputs = flatPickrRef.value?.$el.parentNode?.querySelectorAll('.numInputWrapper > input.numInput')
-	inputs?.forEach((i: HTMLInputElement) => {
-		i.addEventListener('input', handleFlatpickrInput)
+	inputs?.forEach((i: Element) => {
+		(i as HTMLInputElement).addEventListener('input', handleFlatpickrInput)
 	})
 })
 
 onBeforeUnmount(() => {
 	const inputs = flatPickrRef.value?.$el.parentNode?.querySelectorAll('.numInputWrapper > input.numInput')
-	inputs?.forEach((i: HTMLInputElement) => {
-		i.removeEventListener('input', handleFlatpickrInput)
+	inputs?.forEach((i: Element) => {
+		(i as HTMLInputElement).removeEventListener('input', handleFlatpickrInput)
 	})
 })
 

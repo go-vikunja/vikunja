@@ -632,7 +632,9 @@ async function addImage(event: MouseEvent) {
 }
 
 function setLink(event: MouseEvent) {
-	setLinkInEditor((event.target as HTMLElement).getBoundingClientRect(), editor.value)
+	if (editor.value) {
+		setLinkInEditor((event.target as HTMLElement).getBoundingClientRect(), editor.value)
+	}
 }
 
 onMounted(async () => {

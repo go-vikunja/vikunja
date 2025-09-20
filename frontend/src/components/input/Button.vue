@@ -4,23 +4,23 @@
 		:class="[
 			variantClass,
 			{
-				'is-loading': loading,
-				'has-no-shadow': !shadow || variant === 'tertiary',
+				'is-loading': props.loading,
+				'has-no-shadow': hasNoShadow,
 			}
 		]"
-		:disabled="disabled || loading"
+		:disabled="props.disabled || props.loading"
 		:style="{
-			'--button-white-space': wrap ? 'break-spaces' : 'nowrap',
+			'--button-white-space': buttonWhiteSpace,
 		}"
-		:type="buttonType"
+		:type="props.type"
 		:to="props.to"
 		:href="props.href"
-		:open-external-in-new-tab="openExternalInNewTab"
+		:open-external-in-new-tab="props.openExternalInNewTab"
 	>
 		<template v-if="props.icon">
 			<Icon
 				v-if="!$slots.default"
-				:icon="props.icon"
+				:icon="props.icon as any"
 				:style="{color: props.iconColor}"
 			/>
 			<span
@@ -28,7 +28,7 @@
 				class="icon is-small"
 			>
 				<Icon
-					:icon="props.icon"
+					:icon="props.icon as any"
 					:style="{color: props.iconColor}"
 				/>
 			</span>
@@ -42,26 +42,32 @@
 <script setup lang="ts">
 import {computed} from 'vue'
 import BaseButton from '@/components/base/BaseButton.vue'
-import type {IconProp} from '@fortawesome/fontawesome-svg-core'
 import type {RouteLocationRaw} from 'vue-router'
 
 type ButtonTypes = 'primary' | 'secondary' | 'tertiary'
+type SimpleIconProp = string | string[] | object
 
-interface ButtonProps {
+const props = withDefaults(defineProps<{
 	variant?: ButtonTypes
-	icon?: IconProp
+	icon?: SimpleIconProp
 	iconColor?: string
 	loading?: boolean
 	disabled?: boolean
 	shadow?: boolean
 	wrap?: boolean
 	type?: 'button' | 'submit'
-	to?: RouteLocationRaw
+	to?: RouteLocationRaw | undefined
 	href?: string
 	openExternalInNewTab?: boolean
-}
-
-const props = defineProps<ButtonProps>()
+}>(), {
+	variant: 'primary',
+	loading: false,
+	disabled: false,
+	shadow: true,
+	wrap: true,
+	type: 'button',
+	openExternalInNewTab: true,
+})
 
 const VARIANT_CLASS_MAP = {
 	primary: 'is-primary',
@@ -69,18 +75,11 @@ const VARIANT_CLASS_MAP = {
 	tertiary: 'is-text is-inverted underline-none',
 } as const
 
-// Provide defaults with explicit typing
-const variant = computed((): ButtonTypes => (props.variant ?? 'primary') as ButtonTypes)
-const loading = computed((): boolean => props.loading ?? false)
-const disabled = computed((): boolean => props.disabled ?? false)
-const shadow = computed((): boolean => props.shadow ?? true)
-const wrap = computed((): boolean => props.wrap ?? true)
-const openExternalInNewTab = computed((): boolean => props.openExternalInNewTab ?? true)
-const buttonType = computed((): 'button' | 'submit' => props.type ?? 'button')
-
 defineOptions({name: 'XButton'})
 
-const variantClass = computed(() => VARIANT_CLASS_MAP[variant.value])
+const variantClass = computed(() => VARIANT_CLASS_MAP[props.variant])
+const hasNoShadow = computed(() => !props.shadow || props.variant === 'tertiary')
+const buttonWhiteSpace = computed(() => props.wrap ? 'break-spaces' : 'nowrap')
 </script>
 
 <style lang="scss" scoped>

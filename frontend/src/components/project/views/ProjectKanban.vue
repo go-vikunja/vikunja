@@ -495,7 +495,7 @@ async function updateTaskPosition(e: SortableEvent) {
 	// While we could just pass the bucket index in through the function call, this would not give us the
 	// new bucket id when a task has been moved between buckets, only the new bucket. Using the data-bucket-id
 	// of the drop target works all the time.
-	const bucketIndex = parseInt(e.to.dataset.bucketIndex)
+	const bucketIndex = parseInt(e.to.dataset.bucketIndex!)
 
 	const newBucket = buckets.value[bucketIndex]
 	if (!newBucket) return
@@ -512,6 +512,8 @@ async function updateTaskPosition(e: SortableEvent) {
 	const newTaskIndex = newBucket?.tasks.length === e.newIndex
 		? e.newIndex - 1
 		: e.newIndex
+
+	if (newTaskIndex === undefined || newTaskIndex < 0) return
 
 	const task = newBucket.tasks[newTaskIndex]
 	if (!task) return

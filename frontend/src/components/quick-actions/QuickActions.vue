@@ -167,7 +167,7 @@ const selectedCmd = ref<Command | null>(null)
 const foundTasks = ref<DoAction<ITask>[]>([])
 const taskService = shallowReactive(new TaskService())
 
-const foundTeams = ref<ITeam[]>([])
+const foundTeams = ref<DoAction<ITeam>[]>([])
 const teamService = shallowReactive(new TeamService())
 
 const active = computed(() => baseStore.quickActionsActive)
@@ -188,6 +188,7 @@ const foundProjects = computed(() => {
 	if (project !== null) {
 		return projectStore.searchProjectAndFilter(project ?? text)
 			.filter(p => Boolean(p))
+			.map(p => ({...p, type: ACTION_TYPE.PROJECT} as DoAction<IProject>))
 	}
 
 	if (labels.length > 0 || assignees.length > 0) {
@@ -198,10 +199,12 @@ const foundProjects = computed(() => {
 		const history = getHistory()
 		return history.map((p) => projectStore.projects[p.id])
 			.filter(p => Boolean(p))
+			.map(p => ({...p, type: ACTION_TYPE.PROJECT} as DoAction<IProject>))
 	}
 
 	return projectStore.searchProjectAndFilter(project ?? text)
 		.filter(p => Boolean(p))
+		.map(p => ({...p, type: ACTION_TYPE.PROJECT} as DoAction<IProject>))
 })
 
 const foundLabels = computed(() => {
@@ -212,15 +215,18 @@ const foundLabels = computed(() => {
 
 	if (labels.length > 0) {
 		return labelStore.filterLabelsByQuery([], labels[0] || '')
+			.map(label => ({...label, type: ACTION_TYPE.LABELS} as DoAction<ILabel>))
 	}
 
 	return labelStore.filterLabelsByQuery([], text)
+		.map(label => ({...label, type: ACTION_TYPE.LABELS} as DoAction<ILabel>))
 })
 
 // FIXME: use fuzzysearch
-const foundCommands = computed(() => availableCmds.value.filter((a) =>
-	a.title.toLowerCase().includes(query.value.toLowerCase()),
-))
+const foundCommands = computed(() => availableCmds.value
+	.filter((a) => a.title.toLowerCase().includes(query.value.toLowerCase()))
+	.map(cmd => ({...cmd, type: ACTION_TYPE.CMD} as DoAction<Command>))
+)
 
 type ResultItem = DoAction<ITask> | DoAction<IProject> | DoAction<ILabel> | DoAction<ITeam> | DoAction<Command>
 
@@ -445,8 +451,8 @@ function searchTeams() {
 		)
 		const teamsResult = await Promise.all(teamSearchPromises)
 		foundTeams.value = teamsResult.flat().map((team) => {
-			(team as any).title = team.name
-			return team
+			const teamWithTitle = {...team, title: team.name, type: ACTION_TYPE.TEAM} as DoAction<ITeam>
+			return teamWithTitle
 		})
 	}, 150)
 }
@@ -487,10 +493,11 @@ async function doAction(type: ACTION_TYPE, item: ResultItem) {
 			searchInput.value?.focus()
 			break
 		case ACTION_TYPE.LABELS:
-			if (/\s/.test(item.title)) {
-				query.value = '*"' + item.title + '"'
+			const labelItem = item as DoAction<ILabel>
+			if (labelItem.title && /\s/.test(labelItem.title)) {
+				query.value = '*"' + labelItem.title + '"'
 			} else {
-				query.value = '*' + item.title
+				query.value = '*' + (labelItem.title || '')
 			}
 			searchInput.value?.focus()
 			searchTasks()

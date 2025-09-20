@@ -188,7 +188,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 							let assigneeSuggestions: SuggestionItem[] = []
 							try {
 								if (this.options.projectId) {
-									const users = await projectUserService.getAll({maxPermission: null} as Partial<IUser>, {s: autocompleteContext.search, projectId: this.options.projectId}) as IUser[]
+									const users = await projectUserService.getAll({maxPermission: null} as any, {s: autocompleteContext.search, projectId: this.options.projectId}) as IUser[]
 									assigneeSuggestions = users.map((user): SuggestionItem => ({
 										id: user.id,
 										username: user.username,
