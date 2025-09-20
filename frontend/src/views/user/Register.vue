@@ -73,9 +73,9 @@
 					for="password"
 				>{{ $t('user.auth.password') }}</label>
 				<Password
+					v-model="credentials.password"
 					:validate-initially="validatePasswordInitially"
 					@submit="submit"
-					@update:modelValue="v => credentials.password = v"
 				/>
 			</div>
 
@@ -123,6 +123,7 @@ import {useI18n} from 'vue-i18n'
 import router from '@/router'
 import Message from '@/components/misc/Message.vue'
 import {isEmail} from '@/helpers/isEmail'
+import {getErrorText} from '@/message'
 import Password from '@/components/input/Password.vue'
 
 import {useAuthStore} from '@/stores/auth'
@@ -199,8 +200,8 @@ async function submit() {
 
 	try {
 		await authStore.register(toRaw(credentials))
-	} catch (e) {
-		errorMessage.value = e?.message
+	} catch (e: any) {
+		errorMessage.value = e?.message || getErrorText(e)
 	}
 }
 </script>

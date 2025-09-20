@@ -67,6 +67,7 @@ import {ref, shallowReactive} from 'vue'
 
 import PasswordResetModel from '@/models/passwordReset'
 import PasswordResetService from '@/services/passwordReset'
+import {getErrorText} from '@/message'
 import Message from '@/components/misc/Message.vue'
 
 const passwordResetService = shallowReactive(new PasswordResetService())
@@ -79,8 +80,8 @@ async function requestPasswordReset() {
 	try {
 		await passwordResetService.requestResetPassword(passwordReset.value)
 		isSuccess.value = true
-	} catch (e) {
-		errorMsg.value = e.response.data.message
+	} catch (e: any) {
+		errorMsg.value = e.response?.data?.message || getErrorText(e)
 	}
 }
 </script>

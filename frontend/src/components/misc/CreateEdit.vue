@@ -63,7 +63,7 @@ interface CreateEditProps {
 	loading?: boolean
 }
 
-withDefaults(defineProps<CreateEditProps>(), {
+const props = withDefaults(defineProps<CreateEditProps>(), {
 	primaryLabel: '',
 	primaryIcon: 'plus',
 	primaryDisabled: false,
@@ -71,7 +71,7 @@ withDefaults(defineProps<CreateEditProps>(), {
 	tertiary: '',
 	wide: false,
 	loading: false,
-})
+}) as CreateEditProps
 
 const emit = defineEmits<{
 	'create': [event: MouseEvent],

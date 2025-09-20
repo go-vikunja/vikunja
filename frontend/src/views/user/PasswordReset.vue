@@ -31,8 +31,8 @@
 					for="password"
 				>{{ $t('user.auth.password') }}</label>
 				<Password
+					v-model="credentials.password"
 					@submit="resetPassword"
-					@update:modelValue="v => credentials.password = v"
 				/>
 			</div>
 
@@ -57,6 +57,7 @@ import {useI18n} from 'vue-i18n'
 
 import PasswordResetModel from '@/models/passwordReset'
 import PasswordResetService from '@/services/passwordReset'
+import {getErrorText} from '@/message'
 import Message from '@/components/misc/Message.vue'
 import Password from '@/components/input/Password.vue'
 
@@ -86,10 +87,10 @@ async function resetPassword() {
 
 	const passwordReset = new PasswordResetModel({newPassword: credentials.password, token: token})
 	try {
-		const {message} = await passwordResetService.resetPassword(passwordReset)
-		successMessage.value = message
-	} catch (e) {
-		errorMsg.value = e.response.data.message
+		const result = await passwordResetService.resetPassword(passwordReset)
+		successMessage.value = (result as any).message || t('user.auth.passwordResetSuccessful')
+	} catch (e: any) {
+		errorMsg.value = e.response?.data?.message || getErrorText(e)
 	}
 }
 </script>

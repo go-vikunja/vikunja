@@ -12,7 +12,7 @@
 		:style="{
 			'--button-white-space': wrap ? 'break-spaces' : 'nowrap',
 		}"
-		:type="props.type"
+		:type="buttonType"
 		:to="props.to"
 		:href="props.href"
 		:open-external-in-new-tab="openExternalInNewTab"
@@ -67,7 +67,7 @@ interface ButtonProps {
 	openExternalInNewTab?: boolean
 }
 
-const props = defineProps<ButtonProps>()
+const props = defineProps<ButtonProps>() as ButtonProps
 
 // Provide defaults with explicit typing
 const variant = computed((): ButtonTypes => (props.variant ?? 'primary') as ButtonTypes)
@@ -76,6 +76,7 @@ const disabled = computed((): boolean => props.disabled ?? false)
 const shadow = computed((): boolean => props.shadow ?? true)
 const wrap = computed((): boolean => props.wrap ?? true)
 const openExternalInNewTab = computed((): boolean => props.openExternalInNewTab ?? true)
+const buttonType = computed((): 'button' | 'submit' => props.type ?? 'button')
 
 defineOptions({name: 'XButton'})
 
