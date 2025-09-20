@@ -14,7 +14,7 @@
 			<BaseButton
 				v-if="!isModal || isMobile"
 				class="back-button mbs-2"
-				@click="router.options.history.state?.back?.includes('/projects/') ? router.back() : router.push(projectRoute)"
+				@click="(typeof router.options.history.state?.back === 'string' && router.options.history.state?.back?.includes('/projects/')) ? router.back() : router.push(projectRoute)"
 			>
 				<Icon icon="arrow-left" />
 				{{ $t('task.detail.back') }}
@@ -32,11 +32,11 @@
 				class="subtitle"
 			>
 				<template
-					v-for="p in projectStore.getAncestors(project)"
+					v-for="p in projectStore.getAncestors(project as IProject)"
 					:key="p.id"
 				>
 					<a
-						v-if="router.options.history.state?.back?.includes('/projects/'+p.id+'/') || false"
+						v-if="(typeof router.options.history.state?.back === 'string' && router.options.history.state?.back?.includes('/projects/'+p.id+'/')) || false"
 						v-shortcut="p.id === project?.id ? 'u' : ''"
 						@click="router.back()"
 					>
@@ -759,8 +759,10 @@ const color = computed(() => {
 const isModal = computed(() => Boolean(props.backdropView))
 const isMobile = useMediaQuery('(max-width: 1024px)')
 
-function attachmentUpload(file: File, onSuccess?: (url: string) => void) {
-	return uploadFile(props.taskId, file, onSuccess)
+async function attachmentUpload(file: File, onSuccess: (url: string) => void): Promise<string> {
+	await uploadFile(props.taskId, file, onSuccess)
+	// The actual URL will be called via onSuccess, returning a placeholder
+	return `placeholder-${file.name}`
 }
 
 const heading = ref<HTMLElement | null>(null)
@@ -966,7 +968,7 @@ async function toggleFavorite() {
 	Object.assign(task.value, newTask)
 }
 
-async function setPriority(priority: Priority) {
+async function setPriority(priority: number) {
 	const newTask: ITask = {
 		...task.value,
 		priority,
