@@ -22,13 +22,13 @@
 								v-if="shareType === 'user'"
 								:avatar-size="24"
 								:show-username="true"
-								:user="result"
+								:user="result as IUser"
 							/>
 							<span 
 								v-else
 								class="search-result"
 							>
-								{{ result.name }}
+								{{ (result as ITeam).name }}
 							</span>
 						</template>
 					</Multiselect>

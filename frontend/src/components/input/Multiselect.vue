@@ -91,7 +91,7 @@
 						</slot>
 					</span>
 					<span class="hint-text">
-						{{ selectPlaceholder }}
+						{{ selectPlaceholderText }}
 					</span>
 				</BaseButton>
 
@@ -115,7 +115,7 @@
 						</slot>
 					</span>
 					<span class="hint-text">
-						{{ createPlaceholder }}
+						{{ createPlaceholderText }}
 					</span>
 				</BaseButton>
 			</div>
@@ -123,7 +123,7 @@
 	</div>
 </template>
 
-<script setup lang="ts" generic="T extends Record<string, any>">
+<script setup lang="ts">
 import {computed, onBeforeUnmount, onMounted, ref, toRefs, watch, type ComponentPublicInstance} from 'vue'
 import {useI18n} from 'vue-i18n'
 
@@ -135,6 +135,9 @@ import CustomTransition from '@/components/misc/CustomTransition.vue'
 defineOptions({
 	name: 'Multiselect',
 })
+
+// Define the type for multiselect items - covers most use cases
+type T = Record<string, any>
 
 const props = withDefaults(defineProps<{
 	/** The object with the value, updated every time an entry is selected */
@@ -177,8 +180,8 @@ const props = withDefaults(defineProps<{
 	searchResults: () => [],
 	label: '',
 	creatable: false,
-	createPlaceholder: () => useI18n().t('input.multiselect.createPlaceholder'),
-	selectPlaceholder: () => useI18n().t('input.multiselect.selectPlaceholder'),
+	createPlaceholder: '',
+	selectPlaceholder: '',
 	multiple: false,
 	inline: false,
 	showEmpty: false,
@@ -209,6 +212,22 @@ const emit = defineEmits<{
 	 */
 	'remove': [value: T],
 }>()
+
+const {t} = useI18n()
+
+const createPlaceholderText = computed(() => {
+	if (props.createPlaceholder && props.createPlaceholder !== '') {
+		return props.createPlaceholder
+	}
+	return t('input.multiselect.createPlaceholder')
+})
+
+const selectPlaceholderText = computed(() => {
+	if (props.selectPlaceholder && props.selectPlaceholder !== '') {
+		return props.selectPlaceholder
+	}
+	return t('input.multiselect.selectPlaceholder')
+})
 
 function elementInResults(elem: string | T, label: string, query: string): boolean {
 	// Don't make create available if we have an exact match in our search results.
@@ -295,7 +314,7 @@ function search() {
 	localLoading.value = true
 
 	searchTimeout.value = setTimeout(() => {
-		emit('search', query.value)
+		emit('search', query.value as string)
 		setTimeout(() => {
 			localLoading.value = false
 		}, 100) // The duration of the loading timeout of the services
@@ -327,12 +346,14 @@ function select(object: T | null) {
 			internalValue.value = []
 		}
 
-		internalValue.value.push(object)
+		if (Array.isArray(internalValue.value) && object !== null) {
+			internalValue.value.push(object)
+		}
 	} else {
 		internalValue.value = object
 	}
 
-	emit('update:modelValue', internalValue.value)
+	emit('update:modelValue', internalValue.value as T | T[] | null)
 	emit('select', object as T)
 	setSelectedObject(object)
 	if (props.closeAfterSelect && filteredSearchResults.value.length > 0 && !creatableAvailable.value) {
@@ -341,7 +362,7 @@ function select(object: T | null) {
 }
 
 function setSelectedObject(object: string | T | null | undefined, resetOnly = false) {
-	internalValue.value = object
+	internalValue.value = object as string | T | T[] | null
 
 	// We assume we're getting an array when multiple is enabled and can therefore leave the query
 	// value etc as it is
@@ -396,14 +417,17 @@ function create() {
 		return
 	}
 
-	emit('create', query.value)
+	emit('create', query.value as string)
 	setSelectedObject(query.value, true)
 	closeSearchResults()
 }
 
 function createOrSelectOnEnter() {
 	if (!creatableAvailable.value && searchResults.value.length === 1) {
-		select(searchResults.value[0])
+		const firstResult = searchResults.value[0]
+		if (firstResult) {
+			select(firstResult)
+		}
 		return
 	}
 
@@ -421,20 +445,30 @@ function createOrSelectOnEnter() {
 }
 
 function remove(item: T) {
-	for (const ind in internalValue.value) {
-		if (internalValue.value[ind] === item) {
-			internalValue.value.splice(ind, 1)
-			break
+	if (Array.isArray(internalValue.value)) {
+		for (const ind in internalValue.value) {
+			if (internalValue.value[ind] === item) {
+				internalValue.value.splice(parseInt(ind), 1)
+				break
+			}
 		}
 	}
 
-	emit('update:modelValue', internalValue.value)
+	emit('update:modelValue', internalValue.value as T | T[] | null)
 	emit('remove', item)
 }
 
 function focus() {
 	searchInput.value?.focus()
 }
+
+defineExpose({
+	focus,
+})
+
+// Workaround for TypeScript issue with generic script setup components
+// This helps TypeScript understand the exported component type
+const __MULTISELECT_COMPONENT__ = {} as any
 </script>
 
 <style lang="scss" scoped>

@@ -19,6 +19,7 @@
     "importHelpers": true,
     "sourceMap": true,
     "strictNullChecks": true,
+    "skipLibCheck": true,
     
     "paths": {
       "@/*": ["./src/*"]

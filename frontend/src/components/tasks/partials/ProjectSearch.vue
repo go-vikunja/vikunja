@@ -2,22 +2,22 @@
 	<Multiselect
 		class="control is-expanded"
 		:placeholder="$t('project.search')"
-		:search-results="foundProjects as unknown as Record<string, unknown>[]"
+		:search-results="foundProjects as Record<string, any>[]"
 		label="title"
 		:select-placeholder="$t('project.searchSelect')"
-		:model-value="project as unknown as Record<string, unknown>"
-		@update:modelValue="(value: Record<string, unknown> | Record<string, unknown>[] | null) => value && Object.assign(project, value as unknown as IProject)"
-		@select="(value: Record<string, unknown>) => select(value as unknown as IProject)"
+		:model-value="project as Record<string, any>"
+		@update:modelValue="(value: Record<string, any> | Record<string, any>[] | null) => value && !Array.isArray(value) && Object.assign(project, value as IProject)"
+		@select="(value: Record<string, any>) => select(value as IProject)"
 		@search="findProjects"
 	>
 		<template #searchResult="{option}">
 			<span
-				v-if="projectStore.getAncestors(option as unknown as IProject).length > 1"
+				v-if="projectStore.getAncestors(option as IProject).length > 1"
 				class="has-text-grey"
 			>
-				{{ projectStore.getAncestors(option as unknown as IProject).filter(p => p.id !== (option as unknown as IProject).id).map(p => getProjectTitle(p)).join(' &gt; ') }} &gt;
+				{{ projectStore.getAncestors(option as IProject).filter(p => p.id !== (option as IProject).id).map(p => getProjectTitle(p)).join(' &gt; ') }} &gt;
 			</span>
-			{{ getProjectTitle(option as unknown as IProject) }}
+			{{ getProjectTitle(option as IProject) }}
 		</template>
 	</Multiselect>
 </template>

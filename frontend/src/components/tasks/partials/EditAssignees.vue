@@ -11,11 +11,11 @@
 		:select-placeholder="$t('task.assignee.selectPlaceholder')"
 		:autocomplete-enabled="false"
 		@search="findUser"
-		@select="addAssignee"
+		@select="(user) => addAssignee(user as IUser)"
 	>
 		<template #items="{items}">
 			<AssigneeList
-				:assignees="items"
+				:assignees="items as IUser[]"
 				:disabled="disabled"
 				can-remove
 				@remove="removeAssignee"
