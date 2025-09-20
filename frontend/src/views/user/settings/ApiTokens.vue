@@ -68,7 +68,9 @@ function resetPermissions() {
 		const [group, routes] = entry
 		newTokenPermissions.value[group] = {}
 		Object.keys(routes).forEach(r => {
-			newTokenPermissions.value[group][r] = false
+			if (newTokenPermissions.value[group]) {
+				newTokenPermissions.value[group][r] = false
+			}
 		})
 	})
 }
@@ -133,10 +135,13 @@ function formatPermissionTitle(title: string): string {
 }
 
 function selectPermissionGroup(group: string, checked: boolean) {
-	if (!availableRoutes.value) return
+	if (!availableRoutes.value || !availableRoutes.value[group]) return
 	Object.entries(availableRoutes.value[group]).forEach(entry => {
 		const [key] = entry
-		newTokenPermissions.value[group as string][key] = checked
+		const groupPermissions = newTokenPermissions.value[group as string]
+		if (groupPermissions) {
+			groupPermissions[key] = checked
+		}
 	})
 }
 
@@ -144,10 +149,11 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 	if (checked) {
 		// Check if all permissions of that group are checked and check the "select all" checkbox in that case
 		let allChecked = true
-		if (!availableRoutes.value) return
+		if (!availableRoutes.value || !availableRoutes.value[group]) return
 		Object.entries(availableRoutes.value[group]).forEach(entry => {
 			const [key] = entry
-			if (!newTokenPermissions.value[group as string][key]) {
+			const groupPermissions = newTokenPermissions.value[group as string]
+			if (!groupPermissions || !groupPermissions[key]) {
 				allChecked = false
 			}
 		})
@@ -312,9 +318,9 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 						v-if="Object.keys(routes).length >= 1"
 					>
 						<FancyCheckbox
-							v-model="newTokenPermissionsGroup[group]"
+							:model-value="newTokenPermissionsGroup[group] ?? false"
+							@update:modelValue="checked => { newTokenPermissionsGroup[group] = checked; selectPermissionGroup(group, checked); }"
 							class="mie-2 is-capitalized has-text-weight-bold"
-							@update:modelValue="checked => selectPermissionGroup(group, checked)"
 						>
 							{{ formatPermissionTitle(group) }}
 						</FancyCheckbox>
@@ -325,9 +331,9 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 						:key="group+'-'+route"
 					>
 						<FancyCheckbox
-							v-model="newTokenPermissions[group][route]"
+							:model-value="(newTokenPermissions[group] && newTokenPermissions[group][route]) ?? false"
+							@update:modelValue="checked => { if (newTokenPermissions[group]) { newTokenPermissions[group][route] = checked; } toggleGroupPermissionsFromChild(group, checked); }"
 							class="mis-4 mie-2 is-capitalized"
-							@update:modelValue="checked => toggleGroupPermissionsFromChild(group, checked)"
 						>
 							{{ formatPermissionTitle(String(route)) }}
 						</FancyCheckbox>

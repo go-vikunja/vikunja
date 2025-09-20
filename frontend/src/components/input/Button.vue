@@ -4,23 +4,23 @@
 		:class="[
 			variantClass,
 			{
-				'is-loading': props.loading,
+				'is-loading': getLoading(),
 				'has-no-shadow': hasNoShadow,
 			}
 		]"
-		:disabled="props.disabled || props.loading"
+		:disabled="getDisabled() || getLoading()"
 		:style="{
 			'--button-white-space': buttonWhiteSpace,
 		}"
-		:type="props.type"
+		:type="getType()"
 		:to="props.to"
 		:href="props.href"
-		:open-external-in-new-tab="props.openExternalInNewTab"
+		:open-external-in-new-tab="getOpenExternalInNewTab()"
 	>
 		<template v-if="props.icon">
 			<Icon
 				v-if="!$slots.default"
-				:icon="props.icon"
+				:icon="props.icon as IconProp"
 				:style="{color: props.iconColor}"
 			/>
 			<span
@@ -28,7 +28,7 @@
 				class="icon is-small"
 			>
 				<Icon
-					:icon="props.icon"
+					:icon="props.icon as IconProp"
 					:style="{color: props.iconColor}"
 				/>
 			</span>
@@ -43,35 +43,36 @@
 import {computed} from 'vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import type {RouteLocationRaw} from 'vue-router'
+import type {IconProp} from '@fortawesome/fontawesome-svg-core'
 
 type ButtonTypes = 'primary' | 'secondary' | 'tertiary'
-type SimpleIconProp = string | string[] | object
+// Simpler icon type to avoid complex union type issues
+type SimpleIconType = IconProp | string | string[] | Record<string, unknown>
 
-const props = withDefaults(defineProps<{
+interface ButtonProps {
 	variant?: ButtonTypes
-	icon?: SimpleIconProp
+	icon?: SimpleIconType
 	iconColor?: string
 	loading?: boolean
 	disabled?: boolean
 	shadow?: boolean
 	wrap?: boolean
 	type?: 'button' | 'submit'
-	to?: RouteLocationRaw | undefined
+	to?: RouteLocationRaw
 	href?: string
 	openExternalInNewTab?: boolean
-}>(), {
-	variant: 'primary',
-	icon: undefined,
-	iconColor: undefined,
-	loading: false,
-	disabled: false,
-	shadow: true,
-	wrap: true,
-	type: 'button',
-	to: undefined,
-	href: undefined,
-	openExternalInNewTab: true,
-})
+}
+
+const props = defineProps<ButtonProps>()
+
+// Handle defaults
+const getVariant = () => props.variant ?? 'primary'
+const getLoading = () => props.loading ?? false
+const getDisabled = () => props.disabled ?? false
+const getShadow = () => props.shadow ?? true
+const getWrap = () => props.wrap ?? true
+const getType = () => props.type ?? 'button'
+const getOpenExternalInNewTab = () => props.openExternalInNewTab ?? true
 
 const VARIANT_CLASS_MAP = {
 	primary: 'is-primary',
@@ -81,9 +82,9 @@ const VARIANT_CLASS_MAP = {
 
 defineOptions({name: 'XButton'})
 
-const variantClass = computed(() => VARIANT_CLASS_MAP[props.variant])
-const hasNoShadow = computed(() => !props.shadow || props.variant === 'tertiary')
-const buttonWhiteSpace = computed(() => props.wrap ? 'break-spaces' : 'nowrap')
+const variantClass = computed(() => VARIANT_CLASS_MAP[getVariant()])
+const hasNoShadow = computed(() => !getShadow() || getVariant() === 'tertiary')
+const buttonWhiteSpace = computed(() => getWrap() ? 'break-spaces' : 'nowrap')
 </script>
 
 <style lang="scss" scoped>

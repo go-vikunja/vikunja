@@ -532,13 +532,13 @@ watch(
 
 const projectStore = useProjectStore()
 const defaultProject = computed({
-	get: () => settings.value.defaultProjectId ? projectStore.projects[settings.value.defaultProjectId] : null,
+	get: () => settings.value.defaultProjectId ? projectStore.projects[settings.value.defaultProjectId] as any : null,
 	set(l) {
 		settings.value.defaultProjectId = l ? l.id : DEFAULT_PROJECT_ID
 	},
 })
 const filterUsedInOverview = computed({
-	get: () => settings.value.frontendSettings.filterIdUsedOnOverview ? projectStore.projects[settings.value.frontendSettings.filterIdUsedOnOverview] : null,
+	get: () => settings.value.frontendSettings.filterIdUsedOnOverview ? projectStore.projects[settings.value.frontendSettings.filterIdUsedOnOverview] as any : null,
 	set(l) {
 		settings.value.frontendSettings.filterIdUsedOnOverview = l ? l.id : null
 	},
