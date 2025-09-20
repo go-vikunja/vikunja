@@ -145,7 +145,8 @@ export const useKanbanStore = defineStore('kanban', () => {
 			}
 
 			for (const t in currentBucket.tasks) {
-				if (currentBucket.tasks[t].id === task.id) {
+				const taskAtIndex = currentBucket.tasks[t]
+				if (taskAtIndex && taskAtIndex.id === task.id) {
 					const bucket = buckets.value[b]
 					if (!bucket) {
 						return
@@ -171,8 +172,12 @@ export const useKanbanStore = defineStore('kanban', () => {
 		if (view.defaultBucketId) {
 			return view.defaultBucketId
 		}
-		
-		return buckets.value[0]?.id
+
+		const firstBucket = buckets.value[0]
+		if (!firstBucket) {
+			throw new Error('No buckets available')
+		}
+		return firstBucket.id
 	}
 	
 	function ensureTaskIsInCorrectBucket(task: ITask) {
@@ -183,9 +188,10 @@ export const useKanbanStore = defineStore('kanban', () => {
 		const {bucketIndex} = getTaskIndicesById(buckets.value, task.id)
 		if (bucketIndex === null) return
 		const currentTaskBucket = buckets.value[bucketIndex]
-		
-		const currentView: IProjectView = baseStore.currentProject?.views.find(v => v.id === baseStore.currentProjectViewId)
-		if(typeof currentView === 'undefined') return
+		if (!currentTaskBucket) return
+
+		const currentView = baseStore.currentProject?.views.find(v => v.id === baseStore.currentProjectViewId)
+		if(!currentView) return
 		
 		// If the task is done, make sure it is in the done bucket
 		if (task.done && currentView.doneBucketId !== 0 && currentTaskBucket.id !== currentView.doneBucketId) {
@@ -194,7 +200,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 
 		// If the task is not done but was in the done bucket before, move it to the default bucket
 		if(!task.done && currentView.doneBucketId !== 0 && currentTaskBucket.id === currentView.doneBucketId) {
-			const defaultBucketId = getDefaultBucketId(currentView)
+			const defaultBucketId = getDefaultBucketId(currentView as IProjectView)
 			moveTaskToBucket(task, defaultBucketId)
 		}
 		
@@ -216,9 +222,12 @@ export const useKanbanStore = defineStore('kanban', () => {
 	function addTaskToBucket(task: ITask) {
 		const bucketIndex = findIndexById(buckets.value, task.bucketId)
 		const oldBucket = buckets.value[bucketIndex]
+		if (!oldBucket || bucketIndex === -1) {
+			return
+		}
 		const newBucket = {
 			...oldBucket,
-			count: (oldBucket?.count || 0) + 1,
+			count: (oldBucket.count || 0) + 1,
 			tasks: [
 				task,
 				...oldBucket.tasks,
@@ -230,6 +239,9 @@ export const useKanbanStore = defineStore('kanban', () => {
 	function addTasksToBucket(tasks: ITask[], bucketId: IBucket['id']) {
 		const bucketIndex = findIndexById(buckets.value, bucketId)
 		const oldBucket = buckets.value[bucketIndex]
+		if (!oldBucket || bucketIndex === -1) {
+			return
+		}
 		const newBucket = {
 			...oldBucket,
 			tasks: [
