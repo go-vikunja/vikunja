@@ -238,8 +238,8 @@ async function submit() {
 	try {
 		await authStore.login(credentials)
 		authStore.setNeedsTotpPasscode(false)
-	} catch (e: any) {
-		if (e.response?.data.code === 1017 && !credentials.totpPasscode) {
+	} catch (e: unknown) {
+		if (e && typeof e === 'object' && 'response' in e && e.response && typeof e.response === 'object' && 'data' in e.response && e.response.data && typeof e.response.data === 'object' && 'code' in e.response.data && e.response.data.code === 1017 && !credentials.totpPasscode) {
 			return
 		}
 

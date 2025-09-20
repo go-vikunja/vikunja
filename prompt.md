@@ -6,7 +6,7 @@ Run `pnpm typecheck` first to check the current state of typescript issues in th
 
 Use the .agent/ directory as a scratchpad for your work. Store long term plans and todo lists there.
 
-After every batch of changes, run the linter with `pnpm lint`, unit tests with `pnpm test:unit` and end-to-end tests with `pnpm test:e2e` in the frontend directory.
+After every batch of changes, run the linter with `pnpm lint:fix`, unit tests with `pnpm test:unit` and end-to-end tests with `pnpm test:e2e` in the frontend directory.
 
 Make sure the tests still pass after you did your modifications. If they don't pass, fix the issues and make them pass again.
 
