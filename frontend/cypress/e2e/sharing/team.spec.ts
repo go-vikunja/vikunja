@@ -15,6 +15,7 @@ describe('Team', () => {
 
         cy.get('a.button')
             .contains('Create a team')
+            .should('be.visible')
             .click()
 		cy.url()
 			.should('contain', '/teams/new')

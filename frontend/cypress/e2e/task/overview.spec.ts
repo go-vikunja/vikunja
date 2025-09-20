@@ -42,7 +42,10 @@ describe('Home Page Task Overview', () => {
 		const {tasks} = seedTasks(taskCount)
 
 		cy.visit('/')
+		cy.get('[data-cy="showTasks"] .card')
+			.should('exist')
 		cy.get('[data-cy="showTasks"] .card .task')
+			.should('have.length.greaterThan', 0)
 			.each(([task], index) => {
 				expect(task.innerText).to.contain(tasks[index].title)
 			})
@@ -55,7 +58,10 @@ describe('Home Page Task Overview', () => {
 		const {tasks} = seedTasks(taskCount, oldDate)
 
 		cy.visit('/')
+		cy.get('[data-cy="showTasks"] .card')
+			.should('exist')
 		cy.get('[data-cy="showTasks"] .card .task')
+			.should('have.length.greaterThan', 0)
 			.each(([task], index) => {
 				expect(task.innerText).to.contain(tasks[index].title)
 			})

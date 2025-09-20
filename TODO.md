@@ -85,3 +85,28 @@ The E2E tests were also previously failing because API requests were being made 
 - ✅ Core issue with task list rendering should now be resolved
 
 **Major progress made - the viewKind conversion fix should resolve the most critical DOM rendering issues affecting multiple test specs.**
+
+## Latest Fixes (September 20, 2025 - 6:50 PM)
+
+### Table View E2E Test Improvements
+**Problem**: Table view tests were timing out - tasks not appearing in table despite table element being found.
+
+**Analysis**: The issue was likely related to:
+1. Race conditions between task creation and page visit
+2. Missing API request synchronization in tests
+3. Potential task loading issues in table view component
+
+**Solutions Applied**:
+1. **Explicit Project ID**: Added explicit `project_id: 1` to TaskFactory.create() calls (though factory defaults to this already)
+2. **API Request Interception**: Added `cy.intercept()` for `/projects/1/views/3/tasks**` API calls
+3. **Wait for API Response**: Added `cy.wait('@loadTasks')` to ensure tasks are loaded before assertions
+
+**Files Modified**:
+- `cypress/e2e/project/project-view-table.spec.ts`: Enhanced all 3 test cases with proper API synchronization
+
+**Expected Impact**: Should resolve timing issues where:
+- Table element exists but tasks don't appear
+- Tests timeout waiting for task content
+- Race conditions between seeding and API calls
+
+This follows the same pattern used in other working E2E tests like kanban and list views.
