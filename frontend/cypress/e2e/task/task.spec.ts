@@ -112,6 +112,7 @@ describe('Task', () => {
 	it('Inserts new tasks at the top of the project', () => {
 		TaskFactory.create(1)
 
+		cy.intercept('PUT', '**/projects/1/views/*/tasks').as('createTask')
 		cy.visit('/projects/1/1')
 		cy.get('.project-is-empty-notice')
 			.should('not.exist')
@@ -121,7 +122,7 @@ describe('Task', () => {
 			.contains('Add')
 			.click()
 
-		cy.wait(1000) // Wait for the request
+		cy.wait('@createTask')
 		cy.get('.tasks .task .tasktext')
 			.first()
 			.should('contain', 'New Task')

@@ -94,6 +94,7 @@ describe('Project View Kanban', () => {
 	})
 
 	it('Can create a new bucket', () => {
+		cy.intercept('PUT', '**/projects/1/buckets').as('createBucket')
 		cy.visit('/projects/1/4')
 
 		cy.get('.kanban .bucket.new-bucket .button')
@@ -101,7 +102,7 @@ describe('Project View Kanban', () => {
 		cy.get('.kanban .bucket.new-bucket input.input')
 			.type('New Bucket{enter}')
 
-		cy.wait(1000) // Wait for the request to finish
+		cy.wait('@createBucket')
 		cy.get('.kanban .bucket .title')
 			.contains('New Bucket')
 			.should('exist')

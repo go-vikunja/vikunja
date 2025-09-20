@@ -35,7 +35,7 @@ describe('Log out', () => {
 
 		logout()
 
-		cy.wait(1000) // This makes re-loading of the project and associated entities (and the resulting error) visible
+		cy.wait(500) // This makes re-loading of the project and associated entities (and the resulting error) visible
 		
 		cy.url()
 			.should('contain', '/login')
