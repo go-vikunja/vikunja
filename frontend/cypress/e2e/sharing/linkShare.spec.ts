@@ -27,14 +27,21 @@ describe('Link shares', () => {
 
 		cy.visit(`/share/${share.hash}/auth`)
 
+		// Wait for redirect to complete
+		cy.url().should('contain', `/projects/${project.id}/1#share-auth-token=${share.hash}`)
+
+		// Wait for project title to load
 		cy.get('h1.title')
 			.should('contain', project.title)
+
+		// Verify it's a read-only share (no task input)
 		cy.get('input.input[placeholder="Add a task…"]')
 			.should('not.exist')
+
+		// Wait for tasks container to be visible and contain the task
 		cy.get('.tasks')
-			.should('contain', tasks[0].title)
-		
-		cy.url().should('contain', `/projects/${project.id}/1#share-auth-token=${share.hash}`)
+			.should('be.visible')
+			.and('contain', tasks[0].title)
 	})
 
 	it('Should work when directly viewing a project with share hash present', () => {
@@ -42,12 +49,18 @@ describe('Link shares', () => {
 
 		cy.visit(`/projects/${project.id}/1#share-auth-token=${share.hash}`)
 
+		// Wait for project title to load
 		cy.get('h1.title')
 			.should('contain', project.title)
+
+		// Verify it's a read-only share (no task input)
 		cy.get('input.input[placeholder="Add a task…"]')
 			.should('not.exist')
+
+		// Wait for tasks container to be visible and contain the task
 		cy.get('.tasks')
-			.should('contain', tasks[0].title)
+			.should('be.visible')
+			.and('contain', tasks[0].title)
 	})
 	
 	it('Should work when directly viewing a task with share hash present', () => {
