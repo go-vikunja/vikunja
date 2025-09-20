@@ -1,4 +1,5 @@
 import {EditorState, Plugin, PluginKey, Transaction} from '@tiptap/pm/state'
+import type {Node as ProseMirrorNode} from '@tiptap/pm/model'
 import {Decoration, DecorationSet} from '@tiptap/pm/view'
 import {
 	AVAILABLE_FILTER_FIELDS,
@@ -245,12 +246,12 @@ function decorateDocument(doc: Node) {
 }
 
 // Helper function to find the position in the document for a given text index
-function findPosForIndex(doc: any, index: number): number | null {
+function findPosForIndex(doc: ProseMirrorNode, index: number): number | null {
 	let pos = 0
 	let found = false
 	let textIndex = 0
 
-	doc.descendants((node: any, nodePos: number) => {
+	doc.descendants((node: ProseMirrorNode, nodePos: number) => {
 		if (found) return false
 
 		if (node.isText && node.text) {

@@ -2,6 +2,7 @@ import {Extension} from '@tiptap/core'
 import {Plugin, PluginKey} from '@tiptap/pm/state'
 import {VueRenderer} from '@tiptap/vue-3'
 import type { EditorView } from '@tiptap/pm/view'
+import { TextSelection } from '@tiptap/pm/state'
 import {computePosition, flip, shift, offset, autoUpdate} from '@floating-ui/dom'
 
 import FilterCommandsList from './FilterCommandsList.vue'
@@ -49,8 +50,10 @@ export type AutocompleteField = 'labels' | 'assignees' | 'projects'
 export interface AutocompleteItem {
 	id: number | string
 	title: string
-	item: ILabel | IUser | IProject
+	description: string
+	item: SuggestionItem
 	fieldType: AutocompleteField
+	context: AutocompleteContext
 }
 
 export default Extension.create<FilterAutocompleteOptions>({
@@ -185,7 +188,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 							let assigneeSuggestions: SuggestionItem[] = []
 							try {
 								if (this.options.projectId) {
-									const users = await projectUserService.getAll({maxPermission: null} as any, {s: autocompleteContext.search, projectId: this.options.projectId}) as IUser[]
+									const users = await projectUserService.getAll({maxPermission: null} as Partial<IUser>, {s: autocompleteContext.search, projectId: this.options.projectId}) as IUser[]
 									assigneeSuggestions = users.map((user): SuggestionItem => ({
 										id: user.id,
 										username: user.username,
@@ -345,7 +348,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 						items,
 						command: (item: AutocompleteItem) => {
 							// Handle selection
-							const newValue = item.fieldType === 'assignees' ? (item.item as any).username : (item.item as any).title
+							const newValue = item.fieldType === 'assignees' ? item.item.username : item.item.title
 							const {from} = view.state.selection
 							const context = autocompleteContext
 							const operator = context.operator
@@ -377,7 +380,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 							)
 							// Position cursor after the inserted text
 							const newPos = replaceFrom + insertValue.length
-							tr.setSelection((view.state.selection.constructor as any).near(tr.doc.resolve(newPos)))
+							tr.setSelection(TextSelection.near(tr.doc.resolve(newPos)))
 							view.dispatch(tr)
 							
 							// Update selection tracking

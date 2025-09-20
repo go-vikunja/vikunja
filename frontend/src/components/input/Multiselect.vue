@@ -135,10 +135,6 @@ import CustomTransition from '@/components/misc/CustomTransition.vue'
 // Define the type for multiselect items - covers most use cases
 type T = Record<string, any>
 
-defineOptions({
-	name: 'Multiselect',
-})
-
 const props = withDefaults(defineProps<{
 	/** The object with the value, updated every time an entry is selected */
 	modelValue: T | T[] | null,
@@ -212,6 +208,10 @@ const emit = defineEmits<{
 	 */
 	'remove': [value: T],
 }>()
+
+defineOptions({
+	name: 'Multiselect',
+})
 
 const {t} = useI18n()
 
@@ -380,7 +380,7 @@ function setSelectedObject(object: string | T | null | undefined, resetOnly = fa
 		return
 	}
 
-	query.value = props.label !== '' ? (object as Record<string, any>)[props.label] : object
+	query.value = props.label !== '' ? (object as T)[props.label] : object
 }
 
 const results = ref<(Element | ComponentPublicInstance)[]>([])

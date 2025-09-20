@@ -4,6 +4,13 @@ import {computePosition, flip, shift, offset, autoUpdate} from '@floating-ui/dom
 
 import CommandsList from './CommandsList.vue'
 
+interface SuggestionProps {
+	editor: Editor
+	range: Range
+	command: (item: { title: string; command: (args: {editor: Editor, range: Range}) => void }) => void
+	clientRect?: (() => DOMRect) | null
+}
+
 export default function suggestionSetup(t: (key: string) => string) {
 	return {
 		items: ({query}: { query: string }) => {
@@ -173,7 +180,7 @@ export default function suggestionSetup(t: (key: string) => string) {
 			}
 
 			return {
-				onStart: (props: any) => {
+				onStart: (props: SuggestionProps) => {
 					component = new VueRenderer(CommandsList, {
 						// using vue 2:
 						// parent: this,
