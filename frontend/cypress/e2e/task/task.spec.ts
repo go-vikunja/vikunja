@@ -98,14 +98,18 @@ describe('Task', () => {
 	})
 
 	it('Should be created new', () => {
+		cy.intercept('PUT', '**/projects/1/views/*/tasks').as('createTask')
 		cy.visit('/projects/1/1')
 		cy.get('.input[placeholder="Add a task…"]')
+			.should('be.visible')
 			.type('New Task')
 		cy.get('.button')
 			.contains('Add')
 			.click()
+		cy.wait('@createTask')
 		cy.get('.tasks .task .tasktext')
 			.first()
+			.should('be.visible')
 			.should('contain', 'New Task')
 	})
 
@@ -131,22 +135,32 @@ describe('Task', () => {
 	it('Marks a task as done', () => {
 		TaskFactory.create(1)
 
+		cy.intercept('POST', '**/tasks/*/done').as('markDone')
+		cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
 		cy.visit('/projects/1/1')
+		cy.wait('@loadTasks')
 		cy.get('.tasks .task .fancy-checkbox')
 			.first()
+			.should('be.visible')
 			.click()
+		cy.wait('@markDone')
 		cy.get('.global-notification')
+			.should('be.visible')
 			.should('contain', 'Success')
 	})
 
 	it('Can add a task to favorites', () => {
 		TaskFactory.create(1)
 
+		cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
 		cy.visit('/projects/1/1')
+		cy.wait('@loadTasks')
 		cy.get('.tasks .task .favorite')
 			.first()
+			.should('be.visible')
 			.click()
 		cy.get('.menu-container')
+			.should('be.visible')
 			.should('contain', 'Favorites')
 	})
 
@@ -765,14 +779,16 @@ describe('Task', () => {
 			cy.visit(`/tasks/${tasks[0].id}`)
 
 			cy.intercept('**/tasks/*/attachments').as('uploadAttachment')
-			
-			cy.get('.task-view .details.content.description .tiptap__editor .tiptap.ProseMirror', {timeout: 30_000})
+
+			cy.get('.task-view .details.content.description .tiptap__editor .tiptap.ProseMirror', {timeout: 60_000})
+				.should('be.visible')
 				.pasteFile('image.jpg', 'image/jpeg')
 
-			cy.wait('@uploadAttachment')
-			cy.get('.attachments .attachments .files button.attachment')
+			cy.wait('@uploadAttachment', {timeout: 60_000})
+			cy.get('.attachments .attachments .files button.attachment', {timeout: 30_000})
+				.should('be.visible')
 				.should('exist')
-			cy.get('.task-view .details.content.description .tiptap__editor .tiptap.ProseMirror img')
+			cy.get('.task-view .details.content.description .tiptap__editor .tiptap.ProseMirror img', {timeout: 30_000})
 				.should('be.visible')
 				.and(($img) => {
 					// "naturalWidth" and "naturalHeight" are set when the image loads

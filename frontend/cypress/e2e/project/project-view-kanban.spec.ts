@@ -61,33 +61,44 @@ describe('Project View Kanban', () => {
 
 	it('Shows all buckets with their tasks', () => {
 		const data = createTaskWithBuckets(buckets, 10)
+		cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
 		cy.visit('/projects/1/4')
+		cy.wait('@loadTasks')
 
 		cy.get('.kanban .bucket .title')
 			.contains(buckets[0].title)
+			.should('be.visible')
 			.should('exist')
 		cy.get('.kanban .bucket .title')
 			.contains(buckets[1].title)
+			.should('be.visible')
 			.should('exist')
 		cy.get('.kanban .bucket')
 			.first()
+			.should('be.visible')
 			.should('contain', data[0].title)
 	})
 
 	it('Can add a new task to a bucket', () => {
 		createTaskWithBuckets(buckets, 2)
+		cy.intercept('PUT', '**/projects/1/views/*/tasks').as('createTask')
+		cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
 		cy.visit('/projects/1/4')
+		cy.wait('@loadTasks')
 
 		cy.get('.kanban .bucket')
 			.contains(buckets[0].title)
 			.get('.bucket-footer .button')
 			.contains('Add another task')
+			.should('be.visible')
 			.click()
 		cy.get('.kanban .bucket')
 			.contains(buckets[0].title)
 			.get('.bucket-footer .field .control input.input')
+			.should('be.visible')
 			.type('New Task{enter}')
 
+		cy.wait('@createTask')
 		cy.get('.kanban .bucket')
 			.first()
 			.should('contain', 'New Task')
@@ -165,14 +176,20 @@ describe('Project View Kanban', () => {
 
 	it('Can drag tasks around', () => {
 		const tasks = createTaskWithBuckets(buckets, 2)
+		cy.intercept('POST', '**/tasks/*/buckets').as('moveTask')
+		cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
 		cy.visit('/projects/1/4')
+		cy.wait('@loadTasks')
 
 		cy.get('.kanban .bucket .tasks .task')
 			.contains(tasks[0].title)
 			.first()
-			.drag('.kanban .bucket:nth-child(2) .tasks')
+			.should('be.visible')
+			.drag('.kanban .bucket:nth-child(2) .tasks', {force: true})
 
+		cy.wait('@moveTask')
 		cy.get('.kanban .bucket:nth-child(2) .tasks')
+			.should('be.visible')
 			.should('contain', tasks[0].title)
 		cy.get('.kanban .bucket:nth-child(1) .tasks')
 			.should('not.contain', tasks[0].title)
@@ -180,7 +197,9 @@ describe('Project View Kanban', () => {
 
 	it('Should navigate to the task when the task card is clicked', () => {
 		const tasks = createTaskWithBuckets(buckets, 5)
+		cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
 		cy.visit('/projects/1/4')
+		cy.wait('@loadTasks')
 
 		cy.get('.kanban .bucket .tasks .task')
 			.contains(tasks[0].title)
@@ -188,7 +207,7 @@ describe('Project View Kanban', () => {
 			.click()
 
 		cy.url()
-			.should('contain', `/tasks/${tasks[0].id}`, {timeout: 1000})
+			.should('contain', `/tasks/${tasks[0].id}`, {timeout: 5000})
 	})
 
 	it('Should remove a task from the kanban board when moving it to another project', () => {

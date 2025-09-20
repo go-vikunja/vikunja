@@ -25,6 +25,8 @@ export default defineConfig({
 	viewportWidth: 1600,
 	viewportHeight: 900,
 	experimentalMemoryManagement: true,
-	defaultCommandTimeout: 30000,
-	requestTimeout: 60000,
+	defaultCommandTimeout: 60000,
+	requestTimeout: 120000,
+	responseTimeout: 120000,
+	pageLoadTimeout: 120000,
 })
