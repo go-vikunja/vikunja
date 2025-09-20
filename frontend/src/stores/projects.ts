@@ -213,7 +213,7 @@ export const useProjectStore = defineStore('project', () => {
 		let page = 1
 		try {
 			do {
-				const newProjects = await projectService.getAll({}, {is_archived: true, expand: 'permissions'}, page) as IProject[]
+				const newProjects = await projectService.getAll(undefined, {is_archived: true, expand: 'permissions'}, page) as IProject[]
 				loadedProjects.push(...newProjects)
 				page++
 			} while (page <= projectService.totalPages)
@@ -240,16 +240,22 @@ export const useProjectStore = defineStore('project', () => {
 		}
 		views.sort((a, b) => a.position - b.position)
 		
-		setProject({
-			...projects.value[view.projectId],
-			views,
-		})
+		const project = projects.value[view.projectId]
+		if (project) {
+			setProject({
+				...project,
+				views,
+			})
+		}
 	}
 	
 	function removeProjectView(projectId: IProject['id'], viewId: IProjectView['id']) {
 		const project = projects.value[projectId]
+		if (!project) {
+			return
+		}
 		const updatedViews = project.views.filter(v => v.id !== viewId)
-	
+
 		setProject({
 			...project,
 			views: updatedViews,
@@ -265,7 +271,7 @@ export const useProjectStore = defineStore('project', () => {
 
 		try {
 			const projectService = new ProjectService()
-			const loadedProject = await projectService.get({id: projectId})
+			const loadedProject = await projectService.get({id: projectId} as IProject)
 			setProject(loadedProject)
 			return loadedProject
 		} catch (e) {

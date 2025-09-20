@@ -400,7 +400,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 		if (bucketIndex === -1) {
 			throw new Error('Bucket not found')
 		}
-		const oldBucket = klona(buckets.value[bucketIndex])
+		const oldBucket = klona(buckets.value[bucketIndex]) as IBucket
 
 		const updatedBucket: IBucket = {
 			...oldBucket,
