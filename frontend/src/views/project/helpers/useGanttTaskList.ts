@@ -3,6 +3,7 @@ import {klona} from 'klona/lite'
 
 import type {Filters} from '@/composables/useRouteFilters'
 import type {ITask, ITaskPartialWithId} from '@/modelTypes/ITask'
+import type {IUser} from '@/modelTypes/IUser'
 
 import TaskCollectionService, {type TaskFilterParams} from '@/services/taskCollection'
 import TaskService from '@/services/task'

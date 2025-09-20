@@ -878,7 +878,8 @@ const activeFieldElements: { [id in FieldType]: HTMLElement | null } = reactive(
 
 function setFieldRef(name: string, e: Element | ComponentPublicInstance | null) {
 	if (name in activeFieldElements) {
-		const element = unrefElement(e)
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const element = unrefElement(e as any)
 		activeFieldElements[name as FieldType] = (element as HTMLElement) || null
 	}
 }

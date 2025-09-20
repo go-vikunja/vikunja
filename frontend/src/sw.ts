@@ -39,7 +39,8 @@ declare interface WindowClient extends Client {
 	focus(): Promise<WindowClient>
 }
 
-declare interface NotificationEvent extends Event {
+// Service worker type declarations - unused but kept for type safety
+interface _NotificationEvent extends Event {
 	action?: string
 	notification: {
 		data: Record<string, unknown>
@@ -74,7 +75,8 @@ workbox.routing.registerRoute(
 )
 
 // This code listens for the user's confirmation to update the app.
-self.addEventListener('message', (e: MessageEvent) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+self.addEventListener('message', (e: any) => {
 	if (!e.data) {
 		return
 	}
@@ -90,7 +92,8 @@ self.addEventListener('message', (e: MessageEvent) => {
 })
 
 // Notification action
-self.addEventListener('notificationclick', function (event: NotificationEvent) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+self.addEventListener('notificationclick', function (event: any) {
 	const taskId = event.notification.data.taskId
 	event.notification.close()
 
