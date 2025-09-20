@@ -80,7 +80,7 @@ describe('Home Page Task Overview', () => {
 			due_date: new Date().toISOString(),
 		}, false)
 
-		cy.intercept(Cypress.env('API_URL') + `/projects/${tasks[0].project_id}/views/1/tasks**`).as('loadTasks')
+		cy.intercept(`**/projects/${tasks[0].project_id}/views/*/tasks**`).as('loadTasks')
 		cy.visit(`/projects/${tasks[0].project_id}/1`)
 		cy.wait('@loadTasks')
 		cy.get('.tasks .task')
@@ -98,7 +98,7 @@ describe('Home Page Task Overview', () => {
 
 		cy.visit('/')
 
-		cy.intercept(Cypress.env('API_URL') + `/projects/${tasks[0].project_id}/views/1/tasks**`).as('loadTasks')
+		cy.intercept(`**/projects/${tasks[0].project_id}/views/*/tasks**`).as('loadTasks')
 		cy.visit(`/projects/${tasks[0].project_id}/1`)
 		cy.wait('@loadTasks')
 		cy.get('.task-add textarea')

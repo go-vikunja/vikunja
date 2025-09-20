@@ -12,7 +12,7 @@ describe('Project View Table', () => {
 			project_id: 1,
 		})
 
-		cy.intercept(Cypress.env('API_URL') + '/projects/1/views/3/tasks**').as('loadTasks')
+		cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
 		cy.visit('/projects/1/3')
 		cy.wait('@loadTasks', {timeout: 30000})
 
@@ -31,7 +31,7 @@ describe('Project View Table', () => {
 			project_id: 1,
 		})
 
-		cy.intercept(Cypress.env('API_URL') + '/projects/1/views/3/tasks**').as('loadTasks')
+		cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
 		cy.visit('/projects/1/3')
 		cy.wait('@loadTasks', {timeout: 30000})
 
@@ -75,7 +75,7 @@ describe('Project View Table', () => {
 			project_id: 1,
 		})
 
-		cy.intercept(Cypress.env('API_URL') + '/projects/1/views/3/tasks**').as('loadTasks')
+		cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
 		cy.visit('/projects/1/3')
 		cy.wait('@loadTasks', {timeout: 30000})
 

@@ -285,7 +285,7 @@ describe('Project View Kanban', () => {
 	})
 
 	it('Should show a task description icon if the task has a description', () => {
-		cy.intercept(Cypress.env('API_URL') + '/projects/1/views/*/tasks**').as('loadTasks')
+		cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
 		const {task, view} = createSingleTaskInBucket(1, {
 			description: 'Lorem Ipsum',
 		})
@@ -298,7 +298,7 @@ describe('Project View Kanban', () => {
 	})
 
 	it('Should not show a task description icon if the task has an empty description', () => {
-		cy.intercept(Cypress.env('API_URL') + '/projects/1/views/*/tasks**').as('loadTasks')
+		cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
 		const {task, view} = createSingleTaskInBucket(1, {
 			description: '',
 		})
@@ -311,7 +311,7 @@ describe('Project View Kanban', () => {
 	})
 
 	it('Should not show a task description icon if the task has a description containing only an empty p tag', () => {
-		cy.intercept(Cypress.env('API_URL') + '/projects/1/views/*/tasks**').as('loadTasks')
+		cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
 		const {task, view} = createSingleTaskInBucket(1, {
 			description: '<p></p>',
 		})
