@@ -2,7 +2,7 @@
 import {onBeforeMount, ref} from 'vue'
 
 import type {IProjectView} from '@/modelTypes/IProjectView'
-import type {IFilters, IFilter} from '@/modelTypes/ISavedFilter'
+import type {IFilters} from '@/modelTypes/ISavedFilter'
 
 import {hasFilterQuery, transformFilterStringForApi, transformFilterStringFromApi} from '@/helpers/filters'
 import {useLabelStore} from '@/stores/labels'
@@ -26,13 +26,13 @@ const emit = defineEmits<{
 	'cancel': [],
 }>()
 
-const view = ref<IProjectView>()
+const view = ref<IProjectView>(props.modelValue)
 
 const labelStore = useLabelStore()
 const projectStore = useProjectStore()
 
 onBeforeMount(() => {
-	const transformFilterFromApi = (filterInput: IFilters): IFilter => {
+	const transformFilterFromApi = (filterInput: IFilters): IFilters => {
 		const filterString = transformFilterStringFromApi(
 			filterInput.filter,
 			labelId => labelStore.getLabelById(labelId)?.title || null,
@@ -42,6 +42,9 @@ onBeforeMount(() => {
 		const filter: IFilters = {
 			filter: '',
 			s: '',
+			sort_by: [],
+			order_by: [],
+			filter_include_nulls: false,
 		}
 		if (hasFilterQuery(filterString)) {
 			filter.filter = filterString
@@ -62,10 +65,10 @@ onBeforeMount(() => {
 
 	const transformed = {
 		...props.modelValue,
-		filter: transformFilterFromApi(props.modelValue.filter),
+		filter: transformFilterFromApi(props.modelValue.filter) || { filter: '', s: '', sort_by: [], order_by: [], filter_include_nulls: false },
 		bucketConfiguration: props.modelValue.bucketConfiguration.map(bc => ({
 			title: bc.title,
-			filter: transformFilterFromApi(bc.filter),
+			filter: transformFilterFromApi(bc.filter) || { filter: '', s: '', sort_by: [], order_by: [], filter_include_nulls: false },
 		})),
 	}
 
@@ -84,7 +87,13 @@ function save() {
 				return found?.id || null
 			},
 		)
-		const filter: IFilters = {}
+		const filter: IFilters = {
+			filter: '',
+			s: '',
+			sort_by: [],
+			order_by: [],
+			filter_include_nulls: false,
+		}
 		if (hasFilterQuery(filterString)) {
 			filter.filter = filterString
 		} else {
