@@ -24,7 +24,7 @@
 							v-for="(value, text) in DATE_RANGES"
 							:key="text"
 							:class="{'is-active': from === value[0] && to === value[1]}"
-							@click="setDateRange(value)"
+							@click="setDateRange([...value])"
 						>
 							{{ $t(`input.datepickerRange.ranges.${text}`) }}
 						</BaseButton>
@@ -136,7 +136,7 @@ const flatPickerConfig = computed(() => ({
 	dateFormat: 'Y-m-d H:i',
 	enableTime: false,
 	wrap: true,
-	mode: 'range',
+	mode: 'range' as const,
 	locale: useFlatpickrLanguage().value,
 }))
 
@@ -150,8 +150,8 @@ const to = ref('')
 watch(
 	() => props.modelValue,
 	newValue => {
-		from.value = newValue.dateFrom
-		to.value = newValue.dateTo
+		from.value = typeof newValue.dateFrom === 'string' ? newValue.dateFrom : newValue.dateFrom.toISOString()
+		to.value = typeof newValue.dateTo === 'string' ? newValue.dateTo : newValue.dateTo.toISOString()
 		// Only set the date back to flatpickr when it's an actual date.
 		// Otherwise flatpickr runs in an endless loop and slows down the browser.
 		const dateFrom = parseDateOrString(from.value, false)
@@ -164,8 +164,8 @@ watch(
 
 function emitChanged() {
 	const args = {
-		dateFrom: from.value === '' ? null : from.value,
-		dateTo: to.value === '' ? null : to.value,
+		dateFrom: from.value || '',
+		dateTo: to.value || '',
 	}
 	emit('update:modelValue', args)
 }
@@ -192,7 +192,7 @@ watch(
 watch(() => from.value, emitChanged)
 watch(() => to.value, emitChanged)
 
-function setDateRange(range: string[] | null) {
+function setDateRange(range: readonly string[] | null) {
 	if (range === null) {
 		from.value = ''
 		to.value = ''
@@ -200,8 +200,8 @@ function setDateRange(range: string[] | null) {
 		return
 	}
 
-	from.value = range[0]
-	to.value = range[1]
+	from.value = range[0] || ''
+	to.value = range[1] || ''
 }
 
 const customRangeActive = computed<boolean>(() => {

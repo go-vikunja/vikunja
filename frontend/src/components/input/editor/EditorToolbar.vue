@@ -8,7 +8,7 @@
 				@click="editor.chain().focus().toggleHeading({ level: 1 }).run()"
 			>
 				<span class="icon">
-					<Icon :icon="['fa', 'fa-header']" />
+					<Icon :icon="['fas', 'heading']" />
 					<span
 						class="icon__lower-text"
 						aria-hidden="true"
@@ -23,7 +23,7 @@
 				@click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
 			>
 				<span class="icon">
-					<Icon :icon="['fa', 'fa-header']" />
+					<Icon :icon="['fas', 'heading']" />
 					<span
 						class="icon__lower-text"
 						aria-hidden="true"
@@ -38,7 +38,7 @@
 				@click="editor.chain().focus().toggleHeading({ level: 3 }).run()"
 			>
 				<span class="icon">
-					<Icon :icon="['fa', 'fa-header']" />
+					<Icon :icon="['fas', 'heading']" />
 					<span
 						class="icon__lower-text"
 						aria-hidden="true"
@@ -56,7 +56,7 @@
 				@click="editor.chain().focus().toggleBold().run()"
 			>
 				<span class="icon">
-					<Icon :icon="['fa', 'fa-bold']" />
+					<Icon :icon="['fas', 'bold']" />
 				</span>
 				<span class="is-sr-only">{{ $t('input.editor.bold') }}</span>
 			</BaseButton>
@@ -67,7 +67,7 @@
 				@click="editor.chain().focus().toggleItalic().run()"
 			>
 				<span class="icon">
-					<Icon :icon="['fa', 'fa-italic']" />
+					<Icon :icon="['fas', 'italic']" />
 				</span>
 				<span class="is-sr-only">{{ $t('input.editor.italic') }}</span>
 			</BaseButton>
@@ -78,7 +78,7 @@
 				@click="editor.chain().focus().toggleUnderline().run()"
 			>
 				<span class="icon">
-					<Icon :icon="['fa', 'fa-underline']" />
+					<Icon :icon="['fas', 'underline']" />
 				</span>
 				<span class="is-sr-only">{{ $t('input.editor.underline') }}</span>
 			</BaseButton>
@@ -89,7 +89,7 @@
 				@click="editor.chain().focus().toggleStrike().run()"
 			>
 				<span class="icon">
-					<Icon :icon="['fa', 'fa-strikethrough']" />
+					<Icon :icon="['fas', 'strikethrough']" />
 				</span>
 				<span class="is-sr-only">{{ $t('input.editor.strikethrough') }}</span>
 			</BaseButton>
@@ -103,7 +103,7 @@
 				@click="editor.chain().focus().toggleCodeBlock().run()"
 			>
 				<span class="icon">
-					<Icon :icon="['fa', 'fa-code']" />
+					<Icon :icon="['fas', 'code']" />
 				</span>
 				<span class="is-sr-only">{{ $t('input.editor.code') }}</span>
 			</BaseButton>
@@ -114,7 +114,7 @@
 				@click="editor.chain().focus().toggleBlockquote().run()"
 			>
 				<span class="icon">
-					<Icon :icon="['fa', 'fa-quote-right']" />
+					<Icon :icon="['fas', 'quote-right']" />
 				</span>
 				<span class="is-sr-only">{{ $t('input.editor.quote') }}</span>
 			</BaseButton>
@@ -128,7 +128,7 @@
 				@click="editor.chain().focus().toggleBulletList().run()"
 			>
 				<span class="icon">
-					<Icon :icon="['fa', 'fa-list-ul']" />
+					<Icon :icon="['fas', 'list-ul']" />
 				</span>
 				<span class="is-sr-only">{{ $t('input.editor.bulletList') }}</span>
 			</BaseButton>
@@ -139,7 +139,7 @@
 				@click="editor.chain().focus().toggleOrderedList().run()"
 			>
 				<span class="icon">
-					<Icon :icon="['fa', 'fa-list-ol']" />
+					<Icon :icon="['fas', 'list-ol']" />
 				</span>
 				<span class="is-sr-only">{{ $t('input.editor.orderedList') }}</span>
 			</BaseButton>
@@ -150,7 +150,7 @@
 				@click="editor.chain().focus().toggleTaskList().run()"
 			>
 				<span class="icon">
-					<Icon icon="fa-list-check" />
+					<Icon icon="list-check" />
 				</span>
 				<span class="is-sr-only">{{ $t('input.editor.taskList') }}</span>
 			</BaseButton>
@@ -160,10 +160,10 @@
 			<BaseButton
 				v-tooltip="$t('input.editor.image')"
 				class="editor-toolbar__button"
-				@click="e => emit('imageUploadClicked', e)"
+				@click="(e: MouseEvent) => emit('imageUploadClicked', e)"
 			>
 				<span class="icon">
-					<Icon icon="fa-image" />
+					<Icon icon="image" />
 				</span>
 				<span class="is-sr-only">{{ $t('input.editor.image') }}</span>
 			</BaseButton>
@@ -178,7 +178,7 @@
 				@click="setLink"
 			>
 				<span class="icon">
-					<Icon :icon="['fa', 'fa-link']" />
+					<Icon :icon="['fas', 'link']" />
 				</span>
 				<span class="is-sr-only">{{ $t('input.editor.link') }}</span>
 			</BaseButton>
@@ -190,7 +190,7 @@
 				@click="editor.chain().focus().setParagraph().run()"
 			>
 				<span class="icon">
-					<Icon :icon="['fa', 'fa-paragraph']" />
+					<Icon :icon="['fas', 'paragraph']" />
 				</span>
 				<span class="is-sr-only">{{ $t('input.editor.text') }}</span>
 			</BaseButton>
@@ -201,7 +201,7 @@
 				@click="editor.chain().focus().setHorizontalRule().run()"
 			>
 				<span class="icon">
-					<Icon :icon="['fa', 'fa-ruler-horizontal']" />
+					<Icon :icon="['fas', 'ruler-horizontal']" />
 				</span>
 				<span class="is-sr-only">{{ $t('input.editor.horizontalRule') }}</span>
 			</BaseButton>
@@ -214,7 +214,7 @@
 				@click="editor.chain().focus().undo().run()"
 			>
 				<span class="icon">
-					<Icon :icon="['fa', 'fa-undo']" />
+					<Icon :icon="['fas', 'undo']" />
 				</span>
 				<span class="is-sr-only">{{ $t('input.editor.undo') }}</span>
 			</BaseButton>
@@ -224,7 +224,7 @@
 				@click="editor.chain().focus().redo().run()"
 			>
 				<span class="icon">
-					<Icon :icon="['fa', 'fa-redo']" />
+					<Icon :icon="['fas', 'redo']" />
 				</span>
 				<span class="is-sr-only">{{ $t('input.editor.redo') }}</span>
 			</BaseButton>
@@ -239,7 +239,7 @@
 				@click="toggleTableMode"
 			>
 				<span class="icon">
-					<Icon :icon="['fa', 'fa-table']" />
+					<Icon :icon="['fas', 'table']" />
 				</span>
 				<span class="is-sr-only">{{ $t('input.editor.table.title') }}</span>
 			</BaseButton>
@@ -381,8 +381,8 @@ function toggleTableMode() {
 	tableMode.value = !tableMode.value
 }
 
-function setLink(event) {
-	setLinkInEditor(event.target.getBoundingClientRect(), props.editor)
+function setLink(event: MouseEvent) {
+	setLinkInEditor((event.target as HTMLElement).getBoundingClientRect(), props.editor)
 }
 </script>
 

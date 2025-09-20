@@ -1,6 +1,6 @@
-import {SECONDS_A_HOUR} from '@/constants/date'
+import {SECONDS_A_HOUR, SECONDS_A_DAY, SECONDS_A_WEEK, SECONDS_A_MONTH, SECONDS_A_YEAR} from '@/constants/date'
 import { REPEAT_TYPES, type IRepeatAfter } from '@/types/IRepeatAfter'
-import { nativeEnum, number, object, preprocess } from 'zod'
+import { z } from 'zod'
 
 /**
  * Parses `repeatAfterSeconds` into a usable js object.
@@ -23,18 +23,18 @@ export function parseRepeatAfter(repeatAfterSeconds: number): IRepeatAfter {
 	return repeatAfter
 }
 
-export const RepeatsSchema = preprocess(
+export const RepeatsSchema = z.preprocess(
 	(repeats: unknown) => {
 		// Parses the "repeat after x seconds" from the task into a usable js object inside the task.
-	
+
 		if (typeof repeats !== 'number') {
 			return repeats
 		}
-	
+
 		return parseRepeatAfter(repeats)
 	},
-	object({
-		type: nativeEnum(REPEAT_TYPES),
-		amount: number().int(),
+	z.object({
+		type: z.nativeEnum(REPEAT_TYPES),
+		amount: z.number().int(),
 	}),
 )

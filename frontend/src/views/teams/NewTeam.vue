@@ -2,6 +2,7 @@
 	<CreateEdit
 		:title="title"
 		:primary-disabled="team.name === ''"
+		:has-primary-action="true"
 		@create="newTeam()"
 	>
 		<div class="field">

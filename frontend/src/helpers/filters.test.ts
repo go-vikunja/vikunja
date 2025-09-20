@@ -5,7 +5,7 @@ const nullTitleToIdResolver = (title: string) => null
 const nullIdToTitleResolver = (id: number) => null
 describe('Filter Transformation', () => {
 
-	const fieldCases = {
+	const fieldCases: Record<string, string> = {
 		'done': 'done',
 		'priority': 'priority',
 		'percentDone': 'percent_done',
@@ -368,7 +368,7 @@ describe('Filter Transformation', () => {
 	describe('To API', () => {
 		for (const c in fieldCases) {
 			it('should transform all filter params for ' + c + ' to snake_case', () => {
-				const transformed = transformFilterStringFromApi(fieldCases[c] + ' = ipsum', nullTitleToIdResolver, nullTitleToIdResolver)
+				const transformed = transformFilterStringFromApi(fieldCases[c] + ' = ipsum', nullIdToTitleResolver, nullIdToTitleResolver)
 
 				expect(transformed).toBe(c + ' = ipsum')
 			})

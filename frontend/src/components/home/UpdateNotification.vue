@@ -23,7 +23,7 @@ import {useBaseStore} from '@/stores/base'
 const baseStore = useBaseStore()
 
 const updateAvailable = computed(() => baseStore.updateAvailable)
-const registration = ref(null)
+const registration = ref<ServiceWorkerRegistration | null>(null)
 const refreshing = ref(false)
 
 document.addEventListener('swUpdated', showRefreshUI, {once: true})
@@ -38,7 +38,7 @@ navigator?.serviceWorker?.addEventListener(
 
 function showRefreshUI(e: Event) {
 	console.log('recieved refresh event', e)
-	registration.value = e.detail
+	registration.value = (e as CustomEvent).detail
 	baseStore.setUpdateAvailable(true)
 }
 

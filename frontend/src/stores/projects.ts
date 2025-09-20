@@ -213,7 +213,7 @@ export const useProjectStore = defineStore('project', () => {
 		let page = 1
 		try {
 			do {
-				const newProjects = await projectService.getAll({}, {is_archived: true, expand: 'permissions'}, page) as IProject[]
+				const newProjects = await projectService.getAll(undefined, {is_archived: true, expand: 'permissions'}, page) as IProject[]
 				loadedProjects.push(...newProjects)
 				page++
 			} while (page <= projectService.totalPages)
@@ -230,7 +230,9 @@ export const useProjectStore = defineStore('project', () => {
 	}
 	
 	function setProjectView(view: IProjectView) {
-		const views = [...projects.value[view.projectId].views]
+		const project = projects.value[view.projectId]
+		if (!project) return
+		const views = [...project.views]
 		const viewPos = views.findIndex(v => v.id === view.id)
 
 		if (viewPos !== -1) {
@@ -239,17 +241,22 @@ export const useProjectStore = defineStore('project', () => {
 			views.push(view)
 		}
 		views.sort((a, b) => a.position - b.position)
-		
-		setProject({
-			...projects.value[view.projectId],
-			views,
-		})
+
+		if (project) {
+			setProject({
+				...project,
+				views,
+			})
+		}
 	}
 	
 	function removeProjectView(projectId: IProject['id'], viewId: IProjectView['id']) {
 		const project = projects.value[projectId]
+		if (!project) {
+			return
+		}
 		const updatedViews = project.views.filter(v => v.id !== viewId)
-	
+
 		setProject({
 			...project,
 			views: updatedViews,
@@ -265,7 +272,7 @@ export const useProjectStore = defineStore('project', () => {
 
 		try {
 			const projectService = new ProjectService()
-			const loadedProject = await projectService.get({id: projectId})
+			const loadedProject = await projectService.get({id: projectId} as IProject)
 			setProject(loadedProject)
 			return loadedProject
 		} catch (e) {
@@ -340,11 +347,10 @@ export function useProject(projectId: MaybeRefOrGetter<IProject['id']>) {
 		const duplicate = await projectDuplicateService.create(projectDuplicate)
 		if (duplicate.duplicatedProject) {
 			duplicate.duplicatedProject.maxPermission = PERMISSIONS.ADMIN
+			projectStore.setProject(duplicate.duplicatedProject)
+			success({message: t('project.duplicate.success')})
+			router.push({name: 'project.index', params: {projectId: duplicate.duplicatedProject.id}})
 		}
-
-		projectStore.setProject(duplicate.duplicatedProject)
-		success({message: t('project.duplicate.success')})
-		router.push({name: 'project.index', params: {projectId: duplicate.duplicatedProject.id}})
 	}
 
 	return {

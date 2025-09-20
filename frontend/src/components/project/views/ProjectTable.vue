@@ -185,7 +185,7 @@
 									:key="t.id"
 								>
 									<td v-if="activeColumns.index">
-										<RouterLink :to="taskDetailRoutes[t.id]">
+										<RouterLink :to="taskDetailRoutes[t.id] || { name: 'task.detail', params: { id: t.id } }">
 											<template v-if="t.identifier === ''">
 												#{{ t.index }}
 											</template>
@@ -201,7 +201,7 @@
 										/>
 									</td>
 									<td v-if="activeColumns.title">
-										<RouterLink :to="taskDetailRoutes[t.id]">
+										<RouterLink :to="taskDetailRoutes[t.id] || { name: 'task.detail', params: { id: t.id } }">
 											{{ t.title }}
 										</RouterLink>
 									</td>
@@ -226,22 +226,22 @@
 									</td>
 									<DateTableCell
 										v-if="activeColumns.dueDate"
-										:date="t.dueDate"
+										:date="t.dueDate || undefined"
 									/>
 									<DateTableCell
 										v-if="activeColumns.startDate"
-										:date="t.startDate"
+										:date="t.startDate || undefined"
 									/>
 									<DateTableCell
 										v-if="activeColumns.endDate"
-										:date="t.endDate"
+										:date="t.endDate || undefined"
 									/>
 									<td v-if="activeColumns.percentDone">
 										{{ t.percentDone * 100 }}%
 									</td>
 									<DateTableCell
 										v-if="activeColumns.doneAt"
-										:date="t.doneAt"
+										:date="t.doneAt || undefined"
 									/>
 									<DateTableCell
 										v-if="activeColumns.created"
@@ -377,9 +377,9 @@ function sort(property: keyof SortBy, event?: MouseEvent) {
 
 function setActiveColumnsSortParam() {
 	sortByParam.value = Object.keys(sortBy.value)
-		.filter(prop => activeColumns.value[camelCase(prop)])
-		.reduce((obj, key) => {
-			obj[key] = sortBy.value[key]
+		.filter(prop => (activeColumns.value as Record<string, boolean>)[camelCase(prop)])
+		.reduce((obj: Record<string, string>, key) => {
+			obj[key] = sortBy.value[key as keyof SortBy] || ''
 			return obj
 		}, {})
 }

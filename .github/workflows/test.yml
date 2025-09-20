@@ -270,7 +270,6 @@ jobs:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
       - uses: ./.github/actions/setup-frontend
       - name: Typecheck
-        continue-on-error: true
         working-directory: frontend
         run: pnpm typecheck
 

@@ -117,7 +117,7 @@ const emit = defineEmits<{
 
 const {t} = useI18n({useScope: 'global'})
 
-const task = ref<ITask>(new TaskModel())
+const task = ref<ITask>(new TaskModel() as unknown as ITask)
 const repeatAfter = reactive({
 	amount: 0,
 	type: '',
@@ -125,7 +125,10 @@ const repeatAfter = reactive({
 
 watch(
 	() => props.modelValue,
-	(value: ITask) => {
+	(value: ITask | undefined) => {
+		if (!value) {
+			return
+		}
 		task.value = value
 		if (typeof value.repeatAfter !== 'undefined') {
 			Object.assign(repeatAfter, value.repeatAfter)

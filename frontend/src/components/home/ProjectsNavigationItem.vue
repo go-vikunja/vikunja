@@ -15,7 +15,7 @@
 				/>
 			</BaseButton>
 			<span
-				v-if="canEditOrder && project.id > 0 && project.maxPermission > PERMISSIONS.READ"
+				v-if="canEditOrder && project.id > 0 && project.maxPermission && project.maxPermission > PERMISSIONS.READ"
 				class="icon menu-item-icon handle drag-handle-standalone"
 				@mousedown.stop
 				@click.stop.prevent
@@ -48,7 +48,7 @@
 				<span class="project-menu-title">{{ getProjectTitle(project) }}</span>
 			</BaseButton>
 			<BaseButton
-				v-if="project.id > 0 && project.maxPermission > PERMISSIONS.READ"
+				v-if="project.id > 0 && project.maxPermission && project.maxPermission > PERMISSIONS.READ"
 				class="favorite"
 				:class="{'is-favorite': project.isFavorite}"
 				@click="projectStore.toggleProjectFavorite(project)"
@@ -57,7 +57,7 @@
 				<Icon :icon="project.isFavorite ? 'star' : ['far', 'star']" />
 			</BaseButton>
 			<ProjectSettingsDropdown
-				v-if="project.maxPermission > PERMISSIONS.READ"
+				v-if="project.maxPermission && project.maxPermission > PERMISSIONS.READ"
 				class="menu-list-dropdown"
 				:project="project"
 			>
@@ -100,7 +100,7 @@ import ProjectsNavigation from '@/components/home/ProjectsNavigation.vue'
 import {PERMISSIONS} from '@/constants/permissions'
 
 const props = defineProps<{
-	project: IProject,
+	project: Readonly<IProject>,
 	isLoading?: boolean,
 	canCollapse?: boolean,
 	canEditOrder?: boolean,

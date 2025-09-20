@@ -35,9 +35,9 @@ export function useProjectBackground(project: MaybeRefOrGetter<IProject | null>)
 			backgroundLoading.value = true
 
 			try {
-				const blurHashPromise = getBlobFromBlurHash(blurHash).then((blurHash) => {
+				const blurHashPromise = blurHash ? getBlobFromBlurHash(blurHash).then((blurHash) => {
 					blurHashUrl.value = blurHash ? window.URL.createObjectURL(blurHash) : ''
-				})
+				}) : Promise.resolve()
 
 				const projectService = new ProjectService()
 				const backgroundPromise = projectService.background(projectValue).then((result) => {

@@ -39,7 +39,7 @@ const displayName = computed(() => getDisplayName(props.user))
 const avatarSrc = ref('')
 
 async function loadAvatar() {
-	avatarSrc.value = await fetchAvatarBlobUrl(props.user, props.avatarSize)
+	avatarSrc.value = (await fetchAvatarBlobUrl(props.user, props.avatarSize)) as string
 }
 
 watch(() => [props.user, props.avatarSize], loadAvatar, { immediate: true })

@@ -35,7 +35,7 @@
     "lint:fix": "pnpm run lint --fix",
     "lint:styles": "stylelint 'src/**/*.{css,scss,vue}'",
     "lint:styles:fix": "pnpm run lint:styles --fix",
-    "test:e2e": "start-server-and-test preview http://127.0.0.1:4173 'cypress run --e2e --browser chrome'",
+    "test:e2e": "start-server-and-test preview http://127.0.0.1:4173 'cypress run --e2e --browser electron'",
     "test:e2e-nix": "CYPRESS_RUN_BINARY=`which Cypress` start-server-and-test preview http://127.0.0.1:4173 'cypress run --e2e --browser chromium'",
     "test:e2e-record-test": "start-server-and-test preview:test http://127.0.0.1:4173 'cypress run --e2e --browser chrome --record'",
     "test:e2e-dev-dev": "start-server-and-test preview:dev http://127.0.0.1:4173 'cypress open --e2e'",
@@ -102,7 +102,8 @@
     "vue-router": "4.5.1",
     "vuemoji-picker": "0.3.2",
     "workbox-precaching": "7.3.0",
-    "zhyswan-vuedraggable": "4.1.3"
+    "zhyswan-vuedraggable": "4.1.3",
+    "zod": "^4.1.9"
   },
   "devDependencies": {
     "@4tw/cypress-drag-drop": "2.3.0",

@@ -9,15 +9,16 @@ import type {IUser} from '@/modelTypes/IUser'
 export default class BucketModel extends AbstractModel<IBucket> implements IBucket {
 	id = 0
 	title = ''
-	projectId = ''
+	projectId = 0
 	limit = 0
 	tasks: ITask[] = []
 	position = 0
 	count = 0
-	
-	createdBy: IUser = null
-	created: Date = null
-	updated: Date = null
+	projectViewId = 0
+
+	createdBy: IUser = {} as IUser
+	created: Date = new Date()
+	updated: Date = new Date()
 
 	constructor(data: Partial<IBucket>) {
 		super()

@@ -73,9 +73,9 @@
 					for="password"
 				>{{ $t('user.auth.password') }}</label>
 				<Password
+					v-model="credentials.password"
 					:validate-initially="validatePasswordInitially"
 					@submit="submit"
-					@update:modelValue="v => credentials.password = v"
 				/>
 			</div>
 
@@ -119,10 +119,12 @@
 import {useDebounceFn} from '@vueuse/core'
 import {computed, onBeforeMount, reactive, ref, toRaw} from 'vue'
 import {useI18n} from 'vue-i18n'
+import {AxiosError} from 'axios'
 
 import router from '@/router'
 import Message from '@/components/misc/Message.vue'
 import {isEmail} from '@/helpers/isEmail'
+import {getErrorText} from '@/message'
 import Password from '@/components/input/Password.vue'
 
 import {useAuthStore} from '@/stores/auth'
@@ -199,8 +201,8 @@ async function submit() {
 
 	try {
 		await authStore.register(toRaw(credentials))
-	} catch (e) {
-		errorMessage.value = e?.message
+	} catch (e: unknown) {
+		errorMessage.value = (e instanceof AxiosError ? e.response?.data?.message : (e as Error)?.message) || getErrorText(e)
 	}
 }
 </script>

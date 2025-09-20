@@ -11,11 +11,11 @@
 		:select-placeholder="$t('task.assignee.selectPlaceholder')"
 		:autocomplete-enabled="false"
 		@search="findUser"
-		@select="addAssignee"
+		@select="(user) => addAssignee(user as IUser)"
 	>
 		<template #items="{items}">
 			<AssigneeList
-				:assignees="items"
+				:assignees="items as IUser[]"
 				:disabled="disabled"
 				can-remove
 				@remove="removeAssignee"
@@ -25,7 +25,7 @@
 			<User
 				:avatar-size="24"
 				:show-username="true"
-				:user="user"
+				:user="user as unknown as IUser"
 			/>
 		</template>
 	</Multiselect>
@@ -71,7 +71,7 @@ let isAdding = false
 watch(
 	() => props.modelValue,
 	(value) => {
-		assignees.value = value
+		assignees.value = value || []
 	},
 	{
 		immediate: true,
@@ -99,16 +99,17 @@ async function removeAssignee(user: IUser) {
 	await taskStore.removeAssignee({user: user, taskId: props.taskId})
 
 	// Remove the assignee from the project
-	for (const a in assignees.value) {
-		if (assignees.value[a].id === user.id) {
-			assignees.value.splice(a, 1)
+	if (assignees.value) {
+		const index = assignees.value.findIndex(a => a.id === user.id)
+		if (index !== -1) {
+			assignees.value.splice(index, 1)
 		}
 	}
 	success({message: t('task.assignee.unassignSuccess')})
 }
 
 async function findUser(query: string) {
-	const response = await projectUserService.getAll({projectId: props.projectId}, {s: query}) as IUser[]
+	const response = await projectUserService.getAll({projectId: props.projectId} as unknown as IUser, {s: query}) as IUser[]
 
 	// Filter the results to not include users who are already assigned
 	foundUsers.value = response

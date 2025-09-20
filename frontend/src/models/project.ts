@@ -14,21 +14,21 @@ export default class ProjectModel extends AbstractModel<IProject> implements IPr
 	id = 0
 	title = ''
 	description = ''
-	owner: IUser = UserModel
+	owner: IUser = new UserModel()
 	tasks: ITask[] = []
 	isArchived = false
 	hexColor = ''
 	identifier = ''
 	backgroundInformation: unknown | null = null
 	isFavorite = false
-	subscription: ISubscription = null
+	subscription: ISubscription = new SubscriptionModel()
 	position = 0
 	backgroundBlurHash = ''
 	parentProjectId = 0
 	views: IProjectView[] = []
-	
-	created: Date = null
-	updated: Date = null
+
+	created: Date = new Date()
+	updated: Date = new Date()
 
 	constructor(data: Partial<IProject> = {}) {
 		super()
@@ -48,10 +48,10 @@ export default class ProjectModel extends AbstractModel<IProject> implements IPr
 		if (typeof this.subscription !== 'undefined' && this.subscription !== null) {
 			this.subscription = new SubscriptionModel(this.subscription)
 		}
-		
+
 		this.views = this.views.map(v => new ProjectViewModel(v))
-		
-		this.created = new Date(this.created)
-		this.updated = new Date(this.updated)
+
+		this.created = this.created ? new Date(this.created) : new Date()
+		this.updated = this.updated ? new Date(this.updated) : new Date()
 	}
 }

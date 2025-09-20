@@ -5,7 +5,7 @@ const DOWNLOAD_NAME = 'vikunja-export.zip'
 
 export default class DataExportService extends AbstractService {
 	request(password: string) {
-		return this.post('/user/export/request', {password})
+		return this.post('/user/export/request', {password, maxPermission: null})
 	}
 
 	status() {

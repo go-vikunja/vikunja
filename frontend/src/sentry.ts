@@ -5,7 +5,6 @@ import {AxiosError} from 'axios'
 
 export default async function setupSentry(app: App, router: Router) {
 	const Sentry = await import('@sentry/vue')
-	const {Integrations} = await import('@sentry/tracing')
 
 	Sentry.init({
 		app,
@@ -13,17 +12,17 @@ export default async function setupSentry(app: App, router: Router) {
 		release: import.meta.env.VITE_PLUGIN_SENTRY_CONFIG.release,
 		dist: import.meta.env.VITE_PLUGIN_SENTRY_CONFIG.dist,
 		integrations: [
-			new Integrations.BrowserTracing({
-				routingInstrumentation: Sentry.vueRouterInstrumentation(router),
-				tracingOrigins: ['localhost', /^\//],
+			Sentry.browserTracingIntegration({
+				router,
 			}),
 		],
 		tracesSampleRate: 1.0,
 		beforeSend(event, hint) {
+			const originalException = hint.originalException as Error & { code?: number; message?: string }
 
-			if ((typeof hint.originalException?.code !== 'undefined' && 
-				typeof hint.originalException?.message !== 'undefined')
-			|| hint.originalException instanceof AxiosError) {
+			if ((typeof originalException?.code !== 'undefined' &&
+				typeof originalException?.message !== 'undefined')
+			|| originalException instanceof AxiosError) {
 				return null
 			}
 

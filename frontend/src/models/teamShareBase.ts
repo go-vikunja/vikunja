@@ -12,14 +12,14 @@ export default class TeamShareBaseModel extends AbstractModel<ITeamShareBase> im
 	teamId: ITeam['id'] = 0
 	permission: Permission = PERMISSIONS.READ
 
-	created: Date = null
-	updated: Date = null
+	created: Date = new Date()
+	updated: Date = new Date()
 
 	constructor(data: Partial<ITeamShareBase>) {
 		super()
 		this.assignData(data)
 
-		this.created = new Date(this.created)
-		this.updated = new Date(this.updated)
+		this.created = this.created ? new Date(this.created) : new Date()
+		this.updated = this.updated ? new Date(this.updated) : new Date()
 	}
 }

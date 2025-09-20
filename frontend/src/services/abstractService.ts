@@ -2,7 +2,6 @@ import {AuthenticatedHTTPFactory} from '@/helpers/fetcher'
 import type {Method} from 'axios'
 
 import {objectToSnakeCase} from '@/helpers/case'
-import AbstractModel from '@/models/abstractModel'
 import type {IAbstract} from '@/modelTypes/IAbstract'
 import type {Permission} from '@/constants/permissions'
 
@@ -30,11 +29,11 @@ function prepareParams(params: Record<string, unknown | unknown[]>) {
 
 	for (const p in params) {
 		if (Array.isArray(params[p])) {
-			params[p] = params[p].map(convertObject)
+			params[p] = (params[p] as unknown[]).map((item: unknown) => convertObject(item as Record<string, unknown>))
 			continue
 		}
 
-		params[p] = convertObject(params[p])
+		params[p] = convertObject(params[p] as Record<string, unknown>)
 	}
 
 	return objectToSnakeCase(params)
@@ -161,7 +160,9 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 		pattern = new RegExp(pattern instanceof RegExp ? pattern.source : pattern, 'g')
 
 		for (let parameter; (parameter = pattern.exec(route)) !== null;) {
-			replace$$1[parameter[0]] = parameters[parameter[1]]
+			if (parameter[1]) {
+				replace$$1[parameter[0]] = parameters[parameter[1]]
+			}
 		}
 
 		return replace$$1
@@ -182,6 +183,14 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 	 */
 	getReplacedRoute(path : string, pathparams : Record<string, unknown>) : string {
 		const replacements = this.getRouteReplacements(path, pathparams)
+
+		// Validate that all parameters are properly defined
+		for (const [parameter, value] of Object.entries(replacements)) {
+			if (value === undefined || value === null || value === 'undefined' || value === 'null' || (typeof value === 'number' && isNaN(value))) {
+				throw new Error(`Route parameter ${parameter} is invalid: ${value}. Path: ${path}`)
+			}
+		}
+
 		return Object.entries(replacements).reduce(
 			(result, [parameter, value]) => result.replace(parameter, value as string),
 			path,
@@ -301,11 +310,13 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 	 * This is a more abstract implementation which only does a get request.
 	 * Services which need more flexibility can use this.
 	 */
-	async getM(url : string, model : Model = new AbstractModel({}), params: Record<string, unknown> = {}) {
+	async getM(url : string, model? : Model, params: Record<string, unknown> = {}) {
 		const cancel = this.setLoading()
 
-		model = this.beforeGet(model)
-		const finalUrl = this.getReplacedRoute(url, model)
+		if (model) {
+			model = this.beforeGet(model)
+		}
+		const finalUrl = this.getReplacedRoute(url, model || {} as Model)
 
 		try {
 			const response = await this.http.get(finalUrl, {params: prepareParams(params)})
@@ -317,24 +328,24 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 		}
 	}
 
-	async getBlobUrl(url : string, method : Method = 'GET', data = {}) {
+	async getBlobUrl(url : string, method : Method = 'GET', data = {}): Promise<string> {
 		const response = await this.http({
 			url,
 			method,
 			responseType: 'blob',
 			data,
 		})
-		
+
 		// Handle SVG blobs specially - convert to data URL for better browser compatibility
 		if (response.data.type === 'image/svg+xml') {
-			return new Promise((resolve, reject) => {
+			return new Promise<string>((resolve, reject) => {
 				const reader = new FileReader()
 				reader.onload = () => resolve(reader.result as string)
 				reader.onerror = reject
 				reader.readAsDataURL(response.data)
 			})
 		}
-		
+
 		return window.URL.createObjectURL(new Blob([response.data]))
 	}
 
@@ -345,16 +356,18 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 	 * @param params Optional query parameters
 	 * @param page The page to get
 	 */
-	async getAll(model : Model = new AbstractModel({}), params = {}, page = 1): Promise<Model[]> {
+	async getAll(model? : Model, params = {}, page = 1): Promise<Model[]> {
 		if (this.paths.getAll === '') {
 			throw new Error('This model is not able to get data.')
 		}
 
-		params.page = page
+		(params as Record<string, unknown>).page = page
 
 		const cancel = this.setLoading()
-		model = this.beforeGet(model)
-		const finalUrl = this.getReplacedRoute(this.paths.getAll, model)
+		if (model) {
+			model = this.beforeGet(model)
+		}
+		const finalUrl = this.getReplacedRoute(this.paths.getAll, model || {} as Model)
 
 		try {
 			const response = await this.http.get(finalUrl, {params: prepareParams(params)})
@@ -373,7 +386,7 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 
 	/**
 	 * Performs a put request to the url specified before
-	 * @returns {Promise<any | never>}
+	 * @returns {Promise<Model | never>}
 	 */
 	async create(model : Model) {
 		if (this.paths.create === '') {
@@ -438,7 +451,7 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 		const finalUrl = this.getReplacedRoute(this.paths.delete, model)
 
 		try {
-			const {data} = await this.http.delete(finalUrl, model)
+			const {data} = await this.http.delete(finalUrl, {data: model})
 			return data
 		} finally {
 			cancel()
@@ -476,7 +489,7 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 				{
 					headers: {
 						'Content-Type':
-							'multipart/form-data; boundary=' + formData._boundary,
+							'multipart/form-data; boundary=' + (formData as FormData & {_boundary: string})._boundary,
 					},
 					// fix upload issue after upgrading to axios to 1.0.0
 					// see: https://github.com/axios/axios/issues/4885#issuecomment-1222419132

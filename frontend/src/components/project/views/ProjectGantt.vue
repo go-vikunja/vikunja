@@ -103,7 +103,7 @@ const props = defineProps<{
 
 
 const baseStore = useBaseStore()
-const canWrite = computed(() => baseStore.currentProject?.maxPermission > PERMISSIONS.READ)
+const canWrite = computed(() => (baseStore.currentProject?.maxPermission ?? 0) > PERMISSIONS.READ)
 
 const {route, viewId} = toRefs(props)
 const {
@@ -130,8 +130,8 @@ async function addGanttTask(title: ITask['title']) {
 	return await addTask({
 		title,
 		projectId: filters.value.projectId,
-		startDate: defaultTaskStartDate,
-		endDate: defaultTaskEndDate,
+		startDate: new Date(defaultTaskStartDate),
+		endDate: new Date(defaultTaskEndDate),
 	})
 }
 

@@ -38,8 +38,8 @@
 					</RouterLink>
 
 					<ColorBubble
-						v-if="task.hexColor !== ''"
-						:color="getHexColor(task.hexColor)"
+						v-if="task.hexColor !== '' && getHexColor(task.hexColor)"
+						:color="getHexColor(task.hexColor)!"
 						class="mie-1"
 					/>
 	
@@ -74,17 +74,17 @@
 				/>
 
 				<Popup
-					v-if="+new Date(task.dueDate) > 0"
+					v-if="task.dueDate && +new Date(task.dueDate) > 0"
 				>
 					<template #trigger="{toggle, isOpen}">
 						<BaseButton
-							v-tooltip="formatDateLong(task.dueDate)"
+							v-tooltip="task.dueDate ? formatDateLong(task.dueDate) : ''"
 							class="dueDate"
 							@click.prevent.stop="toggle()"
-						>	
+						>
 							<time
-								:datetime="formatISO(task.dueDate)"
-								:class="{'overdue': task.dueDate <= new Date() && !task.done}"
+								:datetime="task.dueDate ? formatISO(task.dueDate) : ''"
+								:class="{'overdue': task.dueDate && task.dueDate <= new Date() && !task.done}"
 								class="is-italic"
 								:aria-expanded="isOpen ? 'true' : 'false'"
 							>
@@ -139,12 +139,12 @@
 
 			<RouterLink
 				v-if="showProjectSeparately"
-				v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
+				v-tooltip="$t('task.detail.belongsToProject', {project: project?.title || ''})"
 				:to="{ name: 'project.index', params: { projectId: task.projectId } }"
 				class="task-project"
 				@click.stop
 			>
-				{{ project.title }}
+				{{ project?.title }}
 			</RouterLink>
 
 			<BaseButton
@@ -169,7 +169,7 @@
 				<template v-if="getTaskById(subtask.id)">
 					<single-task-in-project
 						:key="subtask.id"
-						:the-task="getTaskById(subtask.id)"
+						:the-task="getTaskById(subtask.id)!"
 						:disabled="disabled"
 						:can-mark-as-done="canMarkAsDone"
 						:all-tasks="allTasks"
@@ -234,7 +234,7 @@ const emit = defineEmits<{
 
 function getTaskById(taskId: number): ITask | undefined {
 	if (typeof props.allTasks === 'undefined' || props.allTasks.length === 0) {
-		return null
+		return undefined
 	}
 
 	return props.allTasks.find(t => t.id === taskId)
@@ -243,9 +243,13 @@ function getTaskById(taskId: number): ITask | undefined {
 const {t} = useI18n({useScope: 'global'})
 
 const taskService = shallowReactive(new TaskService())
-const task = ref<ITask>(new TaskModel())
+const task = ref<ITask>(new TaskModel() as unknown as ITask)
 
-const isRepeating = computed(() => task.value.repeatAfter.amount > 0 || (task.value.repeatAfter.amount === 0 && task.value.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH))
+const isRepeating = computed(() => {
+	const repeatAfter = task.value.repeatAfter
+	const amount = typeof repeatAfter === 'number' ? repeatAfter : repeatAfter.amount
+	return amount > 0 || (amount === 0 && task.value.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH)
+})
 
 watch(
 	() => props.theTask,
@@ -263,9 +267,9 @@ const projectStore = useProjectStore()
 const taskStore = useTaskStore()
 
 const project = computed(() => projectStore.projects[task.value.projectId])
-const projectColor = computed(() => project.value ? project.value?.hexColor : '')
+const projectColor = computed(() => project.value?.hexColor || '')
 
-const showProjectSeparately = computed(() => !props.showProject && currentProject.value?.id !== task.value.projectId && project.value)
+const showProjectSeparately = computed(() => !props.showProject && currentProject.value?.id !== task.value.projectId && !!project.value)
 
 const currentProject = computed(() => {
 	return typeof baseStore.currentProject === 'undefined' ? {
@@ -297,7 +301,7 @@ onMounted(updateDueDate)
 
 watch(() => task.value.dueDate, updateDueDate)
 
-let oldTask
+let oldTask: ITask
 
 async function markAsDone(checked: boolean, wasReverted: boolean = false) {
 	const updateFunc = async () => {
@@ -347,11 +351,16 @@ async function toggleFavorite() {
 	emit('taskUpdated', task.value)
 }
 
+function deferTaskUpdate(updatedTask: ITask) {
+	task.value = updatedTask
+	emit('taskUpdated', updatedTask)
+}
+
 const taskRoot = ref<HTMLElement | null>(null)
 const taskLinkRef = ref<HTMLElement | null>(null)
 
 function hasTextSelected() {
-	const isTextSelected = window.getSelection().toString()
+	const isTextSelected = window.getSelection()?.toString() || ''
 	return !(typeof isTextSelected === 'undefined' || isTextSelected === '' || isTextSelected === '\n')
 }
 
@@ -363,7 +372,7 @@ function openTaskDetail(event: MouseEvent | KeyboardEvent) {
 		}
 	}
 
-	taskLinkRef.value?.$el.click()
+	taskLinkRef.value?.click()
 }
 
 defineExpose({

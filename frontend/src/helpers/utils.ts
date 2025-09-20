@@ -28,3 +28,20 @@ export function omitBy(obj: Record<string, unknown>, check: (value: unknown) => 
 		Object.entries(obj).filter(([, value]) => !check(value)),
 	)
 }
+
+// Route parameter utilities for type safety
+export function getRouteParamAsString(param: string | string[] | undefined): string | undefined {
+	if (Array.isArray(param)) {
+		return param[0]
+	}
+	return param
+}
+
+export function getRouteParamAsNumber(param: string | string[] | undefined): number | undefined {
+	const stringParam = getRouteParamAsString(param)
+	if (!stringParam) {
+		return undefined
+	}
+	const num = parseInt(stringParam, 10)
+	return isNaN(num) ? undefined : num
+}

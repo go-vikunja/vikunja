@@ -55,7 +55,7 @@ function createPagination(totalPages: number, currentPage: number) {
 			(i + 1) < totalPages &&
 			((i + 1) > currentPage + 1 || (i + 1) < currentPage - 1)
 		) {
-			if (pages[i - 1] && !pages[i - 1].isEllipsis) {
+			if (pages[i - 1] && !pages[i - 1]?.isEllipsis) {
 				pages.push({
 					number: 0,
 					isEllipsis: true,

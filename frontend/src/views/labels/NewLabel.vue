@@ -2,6 +2,7 @@
 	<CreateEdit
 		:title="$t('label.create.title')"
 		:primary-disabled="label.title === ''"
+		:has-primary-action="true"
 		@create="newLabel()"
 	>
 		<div class="field">

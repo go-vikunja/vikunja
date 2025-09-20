@@ -8,15 +8,15 @@ export default class SubscriptionModel extends AbstractModel<ISubscription> impl
 	id = 0
 	entity = ''
 	entityId = 0
-	user: IUser = {}
+	user: IUser = new UserModel()
 
-	created: Date = null
+	created: Date = new Date()
 
-	constructor(data : Partial<ISubscription>) {
+	constructor(data : Partial<ISubscription> = {}) {
 		super()
 		this.assignData(data)
 
-		this.created = new Date(this.created)
+		this.created = this.created ? new Date(this.created) : new Date()
 		this.user = new UserModel(this.user)
 	}
 }

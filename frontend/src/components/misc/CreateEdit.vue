@@ -52,24 +52,18 @@
 <script setup lang="ts">
 import type {IconProp} from '@fortawesome/fontawesome-svg-core'
 
-withDefaults(defineProps<{
-	title: string,
-	primaryLabel?: string,
-	primaryIcon?: IconProp,
-	primaryDisabled?: boolean,
-	hasPrimaryAction?: boolean,
-	tertiary?: string,
-	wide?: boolean,
+interface CreateEditProps {
+	title: string
+	primaryLabel?: string
+	primaryIcon?: IconProp
+	primaryDisabled?: boolean
+	hasPrimaryAction?: boolean
+	tertiary?: string
+	wide?: boolean
 	loading?: boolean
-}>(), {
-	primaryLabel: '',
-	primaryIcon: 'plus',
-	primaryDisabled: false,
-	hasPrimaryAction: true,
-	tertiary: '',
-	wide: false,
-	loading: false,
-})
+}
+
+defineProps<CreateEditProps>()
 
 const emit = defineEmits<{
 	'create': [event: MouseEvent],

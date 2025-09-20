@@ -12,7 +12,7 @@ const {add, remove, update, search} = createNewIndexer('labels', ['title', 'desc
 
 async function getAllLabels(page = 1): Promise<ILabel[]> {
 	const labelService = new LabelService()
-	const labels  = await labelService.getAll({}, {}, page) as ILabel[]
+	const labels  = await labelService.getAll(undefined, {}, page) as ILabel[]
 	if (page < labelService.totalPages) {
 		const nextLabels = await getAllLabels(page + 1)
 		return labels.concat(nextLabels)

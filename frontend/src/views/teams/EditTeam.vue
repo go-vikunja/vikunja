@@ -4,7 +4,7 @@
 		:class="{ 'is-loading': teamService.loading }"
 	>
 		<Card
-			v-if="userIsAdmin && !team.oidcId"
+			v-if="userIsAdmin && !team?.oidcId"
 			class="is-fullwidth"
 			:title="title"
 		>
@@ -17,7 +17,7 @@
 					<div class="control">
 						<input
 							id="teamtext"
-							v-model="team.name"
+							v-model="team!.name"
 							v-focus
 							:class="{ disabled: teamMemberService.loading }"
 							:disabled="teamMemberService.loading || undefined"
@@ -28,7 +28,7 @@
 					</div>
 				</div>
 				<p
-					v-if="showErrorTeamnameRequired && team.name === ''"
+					v-if="showErrorTeamnameRequired && team?.name === ''"
 					class="help is-danger"
 				>
 					{{ $t('team.attributes.nameRequired') }}
@@ -46,7 +46,7 @@
 						:class="{ 'is-loading': teamService.loading }"
 					>
 						<FancyCheckbox
-							v-model="team.isPublic"
+							v-model="team!.isPublic"
 							:disabled="teamMemberService.loading || undefined"
 							:class="{ 'disabled': teamService.loading }"
 						>
@@ -62,7 +62,7 @@
 					<div class="control">
 						<Editor
 							id="teamdescription"
-							v-model="team.description"
+							v-model="team!.description"
 							:class="{ disabled: teamService.loading }"
 							:disabled="teamService.loading"
 							:placeholder="$t('team.attributes.descriptionPlaceholder')"
@@ -98,24 +98,26 @@
 			:padding="false"
 		>
 			<form
-				v-if="userIsAdmin && !team.oidcId"
+				v-if="userIsAdmin && !team?.oidcId"
 				class="p-4"
 				@submit.prevent="addUser"
 			>
 				<div class="field has-addons">
 					<div class="control is-expanded">
 						<Multiselect
-							v-model="newMember"
+							:model-value="newMemberValue"
 							:loading="userService.loading"
 							:placeholder="$t('team.edit.search')"
-							:search-results="foundUsers"
+							:search-results="foundUsers as unknown as Record<string, unknown>[]"
 							label="username"
 							@search="findUser"
+							@select="(user: Record<string, unknown>) => newMember = user as unknown as IUser"
+							@update:modelValue="(value: Record<string, unknown> | Record<string, unknown>[] | null) => newMember = Array.isArray(value) ? value[0] as unknown as IUser : value as unknown as IUser"
 						>
 							<template #searchResult="{option: user}">
 								<User
 									:avatar-size="24"
-									:user="user"
+									:user="user as unknown as IUser"
 									class="m-0"
 								/>
 							</template>
@@ -151,7 +153,7 @@
 							/>
 						</td>
 						<td>
-							<template v-if="m.id === userInfo.id">
+							<template v-if="m.id === userInfo?.id">
 								<b class="is-success">You</b>
 							</template>
 						</td>
@@ -174,7 +176,7 @@
 							class="actions"
 						>
 							<XButton
-								v-if="m.id !== userInfo.id"
+								v-if="m.id !== userInfo?.id"
 								:loading="teamMemberService.loading"
 								class="mie-2"
 								@click="() => toggleUserType(m)"
@@ -182,7 +184,7 @@
 								{{ m.admin ? $t('team.edit.makeMember') : $t('team.edit.makeAdmin') }}
 							</XButton>
 							<XButton
-								v-if="m.id !== userInfo.id"
+								v-if="m.id !== userInfo?.id"
 								:loading="teamMemberService.loading"
 								class="is-danger"
 								icon="trash-alt"
@@ -316,10 +318,12 @@ const showMustSelectUserError = ref(false)
 
 const title = ref('')
 
+const newMemberValue = computed(() => newMember.value as Record<string, unknown> | null)
+
 loadTeam()
 
 async function loadTeam() {
-	team.value = await teamService.value.get({id: teamId.value})
+	team.value = await teamService.value.get({id: teamId.value} as ITeam)
 	title.value = t('team.edit.title', {team: team.value?.name})
 	useTitle(() => title.value)
 }
@@ -331,12 +335,16 @@ async function save() {
 	}
 	showErrorTeamnameRequired.value = false
 
-	team.value = await teamService.value.update(team.value)
+	if (team.value) {
+		team.value = await teamService.value.update(team.value)
+	}
 	success({message: t('team.edit.success')})
 }
 
 async function deleteTeam() {
-	await teamService.value.delete(team.value)
+	if (team.value) {
+		await teamService.value.delete(team.value)
+	}
 	success({message: t('team.edit.delete.success')})
 	router.push({name: 'teams.index'})
 }
@@ -344,9 +352,10 @@ async function deleteTeam() {
 async function deleteMember() {
 	try {
 		await teamMemberService.value.delete({
+			...memberToDelete.value!,
 			teamId: teamId.value,
-			username: memberToDelete.value.username,
-		})
+			username: memberToDelete.value?.username ?? '',
+		} as ITeamMember)
 		success({message: t('team.edit.deleteUser.success')})
 		await loadTeam()
 	} finally {
@@ -360,11 +369,17 @@ async function addUser() {
 		showMustSelectUserError.value = true
 		return
 	}
-	await teamMemberService.value.create({
+	const newMemberData = {
+		...newMember.value!,
 		teamId: teamId.value,
-		username: newMember.value.username,
-	})
-	newMember.value = null
+		username: newMember.value?.username ?? '',
+		id: newMember.value?.id ?? 0,
+		email: newMember.value?.email ?? '',
+		name: newMember.value?.name ?? '',
+		admin: false,
+	} as ITeamMember
+	await teamMemberService.value.create(newMemberData)
+	newMember.value = undefined
 	await loadTeam()
 	success({message: t('team.edit.userAddedSuccess')})
 }
@@ -374,10 +389,14 @@ async function toggleUserType(member: ITeamMember) {
 	member.admin = !member.admin
 	member.teamId = teamId.value
 	const r = await teamMemberService.value.update(member)
-	for (const tm in team.value.members) {
-		if (team.value.members[tm].id === member.id) {
-			team.value.members[tm].admin = r.admin
-			break
+	if (team.value && team.value.members) {
+		for (const tm in team.value.members) {
+			if (team.value.members[tm]?.id === member.id) {
+				if (team.value.members[tm]) {
+					team.value.members[tm]!.admin = r.admin
+				}
+				break
+			}
 		}
 	}
 	success({
@@ -393,16 +412,21 @@ async function findUser(query: string) {
 		return
 	}
 
-	const users = await userService.value.getAll({}, {s: query})
-	foundUsers.value = users.filter((u: IUser) => u.id !== userInfo.value.id)
+	const users = await userService.value.getAll({} as IUser, {s: query})
+	foundUsers.value = users.filter((u: IUser) => u.id !== userInfo.value?.id)
 }
 
 async function leave() {
+	if (!userInfo.value) {
+		return
+	}
+
 	try {
 		await teamMemberService.value.delete({
+			...userInfo.value,
 			teamId: teamId.value,
 			username: userInfo.value.username,
-		})
+		} as ITeamMember)
 		success({message: t('team.edit.leave.success')})
 		await router.push({name: 'home'})
 	} finally {

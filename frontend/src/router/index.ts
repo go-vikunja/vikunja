@@ -8,6 +8,7 @@ import {getNextWeekDate} from '@/helpers/time/getNextWeekDate'
 import {LINK_SHARE_HASH_PREFIX} from '@/constants/linkShareHash'
 
 import {useAuthStore} from '@/stores/auth'
+import {getRouteParamAsNumber} from '@/helpers/utils'
 
 import Login from '@/views/user/Login.vue'
 import Register from '@/views/user/Register.vue'
@@ -32,8 +33,8 @@ const router = createRouter({
 
 		// Otherwise just scroll to the top
 		return {
-			'inset-inline-start': 0,
-			'inset-block-start': 0,
+			left: 0,
+			top: 0,
 		}
 	},
 	routes: [
@@ -170,7 +171,7 @@ const router = createRouter({
 			path: '/tasks/:id',
 			name: 'task.detail',
 			component: () => import('@/views/tasks/TaskDetailView.vue'),
-			props: route => ({ taskId: Number(route.params.id as string) }),
+			props: route => ({ taskId: getRouteParamAsNumber(route.params.id) }),
 		},
 		{
 			path: '/tasks/by/upcoming',
@@ -213,7 +214,7 @@ const router = createRouter({
 			path: '/projects/:parentProjectId/new',
 			name: 'project.createFromParent',
 			component: () => import('@/views/project/NewProject.vue'),
-			props: route => ({ parentProjectId: Number(route.params.parentProjectId as string) }),
+			props: route => ({ parentProjectId: getRouteParamAsNumber(route.params.parentProjectId) }),
 			meta: {
 				showAsModal: true,
 			},
@@ -222,7 +223,7 @@ const router = createRouter({
 			path: '/projects/:projectId/settings/edit',
 			name: 'project.settings.edit',
 			component: () => import('@/views/project/settings/ProjectSettingsEdit.vue'),
-			props: route => ({ projectId: Number(route.params.projectId as string) }),
+			props: route => ({ projectId: getRouteParamAsNumber(route.params.projectId) }),
 			meta: {
 				showAsModal: true,
 			},
@@ -282,7 +283,7 @@ const router = createRouter({
 			meta: {
 				showAsModal: true,
 			},
-			props: route => ({ projectId: Number(route.params.projectId as string) }),
+			props: route => ({ projectId: getRouteParamAsNumber(route.params.projectId) }),
 		},
 		{
 			path: '/projects/:projectId/settings/edit',
@@ -291,7 +292,7 @@ const router = createRouter({
 			meta: {
 				showAsModal: true,
 			},
-			props: route => ({ projectId: Number(route.params.projectId as string) }),
+			props: route => ({ projectId: getRouteParamAsNumber(route.params.projectId) }),
 		},
 		{
 			path: '/projects/:projectId/settings/delete',
@@ -300,7 +301,7 @@ const router = createRouter({
 			meta: {
 				showAsModal: true,
 			},
-			props: route => ({ projectId: Number(route.params.projectId as string) }),
+			props: route => ({ projectId: getRouteParamAsNumber(route.params.projectId) }),
 		},
 		{
 			path: '/projects/:projectId/info',
@@ -309,13 +310,14 @@ const router = createRouter({
 			meta: {
 				showAsModal: true,
 			},
-			props: route => ({ projectId: Number(route.params.projectId as string) }),
+			props: route => ({ projectId: getRouteParamAsNumber(route.params.projectId) }),
 		},
 		{
 			path: '/projects/:projectId',
 			name: 'project.index',
 			redirect(to) {
-				const viewId = getProjectViewId(Number(to.params.projectId as string))
+				const projectId = getRouteParamAsNumber(to.params.projectId)
+				const viewId = projectId ? getProjectViewId(projectId) : null
 
 				if (viewId) {
 					console.debug('Replaced list view with', viewId)
@@ -324,7 +326,7 @@ const router = createRouter({
 				return {
 					name: 'project.view',
 					params: {
-						projectId: parseInt(to.params.projectId as string),
+						projectId: projectId || 0,
 						viewId: viewId ?? 0,
 					},
 				}
@@ -334,9 +336,9 @@ const router = createRouter({
 			path: '/projects/:projectId/:viewId',
 			name: 'project.view',
 			component: () => import('@/views/project/ProjectView.vue'),
-			props: route => ({ 
-				projectId: parseInt(route.params.projectId as string),
-				viewId: route.params.viewId ? parseInt(route.params.viewId as string): undefined,
+			props: route => ({
+				projectId: getRouteParamAsNumber(route.params.projectId),
+				viewId: getRouteParamAsNumber(route.params.viewId),
 			}),
 		},
 		{
@@ -391,7 +393,7 @@ const router = createRouter({
 	],
 })
 
-export async function getAuthForRoute(to: RouteLocation, authStore) {
+export async function getAuthForRoute(to: RouteLocation, authStore: ReturnType<typeof useAuthStore>) {
 	if (authStore.authUser || authStore.authLinkShare) {
 		return
 	}

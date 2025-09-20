@@ -1,10 +1,9 @@
 import AbstractService from '@/services/abstractService'
 import type {IAbstract} from '@/modelTypes/IAbstract'
 import ReactionModel from '@/models/reaction'
-import type {IReactionPerEntity} from '@/modelTypes/IReaction'
-import UserModel from '@/models/user'
+import type {IReaction} from '@/modelTypes/IReaction'
 
-export default class ReactionService extends AbstractService {
+export default class ReactionService extends AbstractService<IReaction> {
 	constructor() {
 		super({
 			getAll: '{kind}/{id}/reactions',
@@ -17,16 +16,13 @@ export default class ReactionService extends AbstractService {
 		return new ReactionModel(data)
 	}
 
-	modelGetAllFactory(data: Partial<IReactionPerEntity>): Partial<IReactionPerEntity> {
-		Object.keys(data).forEach(reaction => {
-			data[reaction] = data[reaction]?.map(u => new UserModel(u))
-		})
-
-		return data
+	modelGetAllFactory(data: Partial<IReaction>): IReaction {
+		return this.modelFactory(data)
 	}
 
-	async delete(model: IAbstract) {
+	async delete(model: IReaction) {
 		const finalUrl = this.getReplacedRoute(this.paths.delete, model)
-		return super.post(finalUrl, model)
+		const response = await super.post(finalUrl, model)
+		return this.modelFactory(response)
 	}
 }

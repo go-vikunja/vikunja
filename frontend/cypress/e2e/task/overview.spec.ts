@@ -42,7 +42,10 @@ describe('Home Page Task Overview', () => {
 		const {tasks} = seedTasks(taskCount)
 
 		cy.visit('/')
+		cy.get('[data-cy="showTasks"] .card')
+			.should('exist')
 		cy.get('[data-cy="showTasks"] .card .task')
+			.should('have.length.greaterThan', 0)
 			.each(([task], index) => {
 				expect(task.innerText).to.contain(tasks[index].title)
 			})
@@ -55,7 +58,10 @@ describe('Home Page Task Overview', () => {
 		const {tasks} = seedTasks(taskCount, oldDate)
 
 		cy.visit('/')
+		cy.get('[data-cy="showTasks"] .card')
+			.should('exist')
 		cy.get('[data-cy="showTasks"] .card .task')
+			.should('have.length.greaterThan', 0)
 			.each(([task], index) => {
 				expect(task.innerText).to.contain(tasks[index].title)
 			})
@@ -70,6 +76,7 @@ describe('Home Page Task Overview', () => {
 		TaskFactory.create(1, {
 			id: 999,
 			title: newTaskTitle,
+			project_id: tasks[0].project_id,
 			due_date: new Date().toISOString(),
 		}, false)
 		
@@ -99,11 +106,12 @@ describe('Home Page Task Overview', () => {
 	})
 	
 	it('Should show a new task without a date at the bottom when there are < 50 tasks', () => {
-		seedTasks(40)
+		const {tasks} = seedTasks(40)
 		const newTaskTitle = 'New Task'
 		TaskFactory.create(1, {
 			id: 999,
 			title: newTaskTitle,
+			project_id: tasks[0].project_id,
 		}, false)
 
 		cy.visit('/')

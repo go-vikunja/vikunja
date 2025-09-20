@@ -5,7 +5,7 @@
 			:disabled="disabled || undefined"
 			@click.stop="toggleDatePopup"
 		>
-			{{ date === null ? chooseDateLabel : formatDisplayDate(date) }}
+			{{ date === null ? chooseDateLabel : formatDisplayDate(date!) }}
 		</SimpleButton>
 
 		<CustomTransition name="fade">
@@ -62,7 +62,7 @@ const emit = defineEmits<{
 	'closeOnChange': [value: boolean],
 }>()
 
-const date = ref<Date | null>()
+const date = ref<Date | null>(null)
 const show = ref(false)
 const changed = ref(false)
 
@@ -81,7 +81,7 @@ function setDateValue(dateString: string | Date | null) {
 		date.value = null
 		return
 	}
-	date.value = createDateFromString(dateString)
+	date.value = createDateFromString(dateString!)
 }
 
 function updateData() {
@@ -99,7 +99,7 @@ function toggleDatePopup() {
 
 const datepickerPopup = ref<HTMLElement | null>(null)
 function hideDatePopup(e: MouseEvent) {
-	if (show.value) {
+	if (show.value && datepickerPopup.value) {
 		closeWhenClickedOutside(e, datepickerPopup.value, close)
 	}
 }

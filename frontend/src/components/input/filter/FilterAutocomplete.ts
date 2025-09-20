@@ -2,6 +2,7 @@ import {Extension} from '@tiptap/core'
 import {Plugin, PluginKey} from '@tiptap/pm/state'
 import {VueRenderer} from '@tiptap/vue-3'
 import type { EditorView } from '@tiptap/pm/view'
+import { TextSelection } from '@tiptap/pm/state'
 import {computePosition, flip, shift, offset, autoUpdate} from '@floating-ui/dom'
 
 import FilterCommandsList from './FilterCommandsList.vue'
@@ -49,8 +50,10 @@ export type AutocompleteField = 'labels' | 'assignees' | 'projects'
 export interface AutocompleteItem {
 	id: number | string
 	title: string
-	item: ILabel | IUser | IProject
+	description: string
+	item: SuggestionItem
 	fieldType: AutocompleteField
+	context: AutocompleteContext
 }
 
 export default Extension.create<FilterAutocompleteOptions>({
@@ -167,7 +170,11 @@ export default Extension.create<FilterAutocompleteOptions>({
 		const fetchSuggestions = async (autocompleteContext: AutocompleteContext, fieldType: AutocompleteField): Promise<SuggestionItem[]> => {
 			try {
 				if (fieldType === 'labels') {
-					return labelStore.filterLabelsByQuery([], autocompleteContext.search)
+					const labels = labelStore.filterLabelsByQuery([], autocompleteContext.search)
+					return labels.filter((label): label is ILabel => label !== undefined).map((label): SuggestionItem => ({
+						id: label.id,
+						title: label.title,
+					}))
 				}
 
 				if (fieldType === 'assignees') {
@@ -181,9 +188,19 @@ export default Extension.create<FilterAutocompleteOptions>({
 							let assigneeSuggestions: SuggestionItem[] = []
 							try {
 								if (this.options.projectId) {
-									assigneeSuggestions = await projectUserService.getAll({projectId: this.options.projectId}, {s: autocompleteContext.search})
+									const users = await projectUserService.getAll(undefined, {s: autocompleteContext.search, projectId: this.options.projectId}) as IUser[]
+									assigneeSuggestions = users.map((user): SuggestionItem => ({
+										id: user.id,
+										username: user.username,
+										name: user.name,
+									}))
 								} else {
-									assigneeSuggestions = await userService.getAll({}, {s: autocompleteContext.search})
+									const users = await userService.getAll(undefined, {s: autocompleteContext.search}) as IUser[]
+									assigneeSuggestions = users.map((user): SuggestionItem => ({
+										id: user.id,
+										username: user.username,
+										name: user.name,
+									}))
 								}
 								// For assignees, show suggestions even with empty search, but limit if we have many
 								if (autocompleteContext.search === '' && assigneeSuggestions.length > 10) {
@@ -199,7 +216,11 @@ export default Extension.create<FilterAutocompleteOptions>({
 				}
 				
 				if (fieldType === 'projects' && !this.options.projectId) {
-					return projectStore.searchProject(autocompleteContext.search)
+					const projects = projectStore.searchProject(autocompleteContext.search)
+					return projects.filter((project): project is IProject => project !== undefined).map((project): SuggestionItem => ({
+						id: project.id,
+						title: project.title,
+					}))
 				}
 			} catch (error) {
 				console.error('Error fetching suggestions:', error)
@@ -258,13 +279,13 @@ export default Extension.create<FilterAutocompleteOptions>({
 				const match = pattern.exec(textUpToCursor)
 
 				if (match) {
-					const [, prefix, , , keyword = ''] = match
+					const [, prefix = '', , , keyword = ''] = match
 
 					let search = keyword.trim()
 					const operator = match[0].match(new RegExp(FILTER_OPERATORS_REGEX))?.[0] || ''
 					if (operator === 'in' || operator === '?=') {
 						const keywords = keyword.split(',')
-						search = keywords[keywords.length - 1].trim()
+						search = keywords?.[keywords.length - 1]?.trim() || ''
 					}
 
 					// Check if this expression is complete
@@ -277,8 +298,8 @@ export default Extension.create<FilterAutocompleteOptions>({
 						keyword,
 						search,
 						operator,
-						startPos: match.index + prefix.length,
-						endPos: match.index + prefix.length + keyword.length,
+						startPos: (match.index || 0) + (prefix?.length || 0),
+						endPos: (match.index || 0) + (prefix?.length || 0) + keyword.length,
 						isComplete,
 					}
 
@@ -343,7 +364,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 								const currentKeywordIndex = keywords.length - 1
 								
 								// If we're not adding the first item, add comma prefix
-								if (currentKeywordIndex > 0 && keywords[currentKeywordIndex].trim() === context.search.trim()) {
+								if (currentKeywordIndex > 0 && keywords[currentKeywordIndex]?.trim() === context.search.trim()) {
 									// We're replacing the last incomplete keyword
 									insertValue = newValue ?? ''
 								} else {
@@ -359,7 +380,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 							)
 							// Position cursor after the inserted text
 							const newPos = replaceFrom + insertValue.length
-							tr.setSelection(view.state.selection.constructor.near(tr.doc.resolve(newPos)))
+							tr.setSelection(TextSelection.near(tr.doc.resolve(newPos)))
 							view.dispatch(tr)
 							
 							// Update selection tracking

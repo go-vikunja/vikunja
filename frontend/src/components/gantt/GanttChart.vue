@@ -30,7 +30,7 @@
 				@update:focused="handleFocusChange"
 				@enterPressed="handleEnterPressed"
 			>
-				<template #default="{ focusedRow, focusedCell }">
+				<template #default="{ focusedRow, focusedCell }: { focusedRow: string | null | undefined, focusedCell: number | null }">
 					<div class="gantt-rows">
 						<GanttRow
 							v-for="(rowId, index) in ganttRows"
@@ -40,7 +40,7 @@
 						>
 							<div class="gantt-row-content">
 								<GanttRowBars
-									:bars="ganttBars[index]"
+									:bars="ganttBars[index] || []"
 									:total-width="totalWidth"
 									:date-from-date="dateFromDate"
 									:date-to-date="dateToDate"
@@ -48,7 +48,7 @@
 									:is-dragging="isDragging"
 									:is-resizing="isResizing"
 									:drag-state="dragState"
-									:focused-row="focusedRow"
+									:focused-row="focusedRow || null"
 									:focused-cell="focusedCell"
 									:row-id="rowId"
 									@barPointerDown="handleBarPointerDown"
@@ -155,8 +155,8 @@ function getRoundedDate(value: string | Date | undefined, fallback: Date, isStar
 }
 
 function transformTaskToGanttBar(t: ITask): GanttBarModel {
-	const startDate = getRoundedDate(t.startDate, props.defaultTaskStartDate, true)
-	const endDate = getRoundedDate(t.endDate, props.defaultTaskEndDate, false)
+	const startDate = getRoundedDate(t.startDate || undefined, new Date(props.defaultTaskStartDate), true)
+	const endDate = getRoundedDate(t.endDate || undefined, new Date(props.defaultTaskEndDate), false)
 
 	const taskColor = getHexColor(t.hexColor)
 
@@ -188,8 +188,8 @@ watch(
 				return false
 			}
 
-			const taskStart = getRoundedDate(task.startDate, props.defaultTaskStartDate, true)
-			const taskEnd = getRoundedDate(task.endDate, props.defaultTaskEndDate, false)
+			const taskStart = getRoundedDate(task.startDate || undefined, new Date(props.defaultTaskStartDate), true)
+			const taskEnd = getRoundedDate(task.endDate || undefined, new Date(props.defaultTaskEndDate), false)
 
 			// Task is visible if it overlaps with the current date range
 			return taskStart <= dateToDate.value

@@ -5,13 +5,13 @@ import type {IUser} from '@/modelTypes/IUser'
 import type {ITask} from '@/modelTypes/ITask'
 
 export default class TaskAssigneeModel extends AbstractModel<ITaskAssignee> implements ITaskAssignee {
-	created: Date = null
+	created: Date = new Date()
 	userId: IUser['id'] = 0
 	taskId: ITask['id'] = 0
 
-	constructor(data: Partial<ITaskAssignee>) {
+	constructor(data: Partial<ITaskAssignee> = {}) {
 		super()
 		this.assignData(data)
-		this.created = new Date(this.created)
+		this.created = this.created ? new Date(this.created) : new Date()
 	}
 }

@@ -14,16 +14,16 @@ export function canPreview(attachment: IAttachment): boolean {
 export default class AttachmentModel extends AbstractModel<IAttachment> implements IAttachment {
 	id = 0
 	taskId = 0
-	createdBy: IUser = UserModel
-	file: IFile = FileModel
-	created: Date = null
+	createdBy: IUser = new UserModel()
+	file: IFile = new FileModel()
+	created: Date = new Date()
 
-	constructor(data: Partial<IAttachment>) {
+	constructor(data: Partial<IAttachment> = {}) {
 		super()
 		this.assignData(data)
 
 		this.createdBy = new UserModel(this.createdBy)
 		this.file = new FileModel(this.file)
-		this.created = new Date(this.created)
+		this.created = this.created ? new Date(this.created) : new Date()
 	}
 }

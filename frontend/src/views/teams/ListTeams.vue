@@ -45,13 +45,14 @@ import { useI18n } from 'vue-i18n'
 
 import TeamService from '@/services/team'
 import { useTitle } from '@/composables/useTitle'
+import type {ITeam} from '@/modelTypes/ITeam'
 
 const { t } = useI18n({useScope: 'global'})
 useTitle(() => t('team.title'))
 
-const teams = ref([])
+const teams = ref<ITeam[]>([])
 const teamService = shallowReactive(new TeamService())
-teamService.getAll().then((result) => {
+teamService.getAll().then((result: ITeam[]) => {
 	teams.value = result
 })
 </script>

@@ -19,6 +19,9 @@ import type {ITask} from '@/modelTypes/ITask'
 import type {IUser} from '@/modelTypes/IUser'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {IProject} from '@/modelTypes/IProject'
+import type {IBucket} from '@/modelTypes/IBucket'
+import type {ISubscription} from '@/modelTypes/ISubscription'
+import type {Priority} from '@/constants/priorities'
 
 import {setModuleLoading} from '@/stores/helper'
 import {useLabelStore} from '@/stores/labels'
@@ -38,13 +41,15 @@ interface MatchedAssignee extends IUser {
 }
 
 // IDEA: maybe use a small fuzzy search here to prevent errors
-function findPropertyByValue(object, key, value, fuzzy = false) {
-	return Object.values(object).find(l => {
+function findPropertyByValue(array: Record<string, unknown>[], key: string, value: string | number, fuzzy = false) {
+	return array.find((l: Record<string, unknown>) => {
 		if (fuzzy) {
-			return l[key]?.toLowerCase().includes(value.toLowerCase())
+			const prop = l[key]
+			return typeof prop === 'string' && prop.toLowerCase().includes(String(value).toLowerCase())
 		}
-	
-		return l[key]?.toLowerCase() === value.toLowerCase()
+
+		const prop = l[key]
+		return typeof prop === 'string' && prop.toLowerCase() === String(value).toLowerCase()
 	})
 }
 
@@ -60,7 +65,7 @@ function validateUser(
 			findPropertyByValue(users, 'email', query, true)
 		)
 	}
-	
+
 	return (
 		findPropertyByValue(users, 'username', query) ||
 		findPropertyByValue(users, 'name', query) ||
@@ -91,7 +96,21 @@ async function findAssignees(parsedTaskAssignees: string[], projectId: number): 
 
 	const userService = new ProjectUserService()
 	const assignees = parsedTaskAssignees.map(async a => {
-		const users = (await userService.getAll({projectId}, {s: a}))
+		const users = (await userService.getAll({
+			id: 0,
+			email: '',
+			username: '',
+			name: '',
+			projectId,
+			exp: 0,
+			type: 0,
+			created: new Date(),
+			updated: new Date(),
+			settings: {},
+			isLocalUser: false,
+			deletionScheduledAt: null,
+			maxPermission: 0,
+		} as unknown as IUser, {s: a}))
 			.map(u => ({
 				...u,
 				match: a,
@@ -99,8 +118,8 @@ async function findAssignees(parsedTaskAssignees: string[], projectId: number): 
 		return validateUser(users, a)
 	})
 
-	const validatedUsers = await Promise.all(assignees) 
-	return validatedUsers.filter((item) => Boolean(item))
+	const validatedUsers = await Promise.all(assignees)
+	return validatedUsers.filter((item) => Boolean(item)) as MatchedAssignee[]
 }
 
 export const useTaskStore = defineStore('task', () => {
@@ -137,14 +156,64 @@ export const useTaskStore = defineStore('task', () => {
 
 		const cancel = setModuleLoading(setIsLoading)
 		try {
-			const model = {}
-			let taskCollectionService = new TaskService()
-			if (projectId !== null) {
+			let taskCollectionService: TaskService | TaskCollectionService = new TaskService()
+			const model: ITask | IBucket = {
+				id: 0,
+				title: '',
+				description: '',
+				done: false,
+				doneAt: null,
+				priority: 0,
+				labels: [],
+				assignees: [],
+				dueDate: null,
+				startDate: null,
+				endDate: null,
+				repeatAfter: 0,
+				repeatFromCurrentDate: false,
+				repeatMode: 0,
+				reminders: [],
+				parentTaskId: 0,
+				hexColor: '',
+				percentDone: 0,
+				relatedTasks: {},
+				attachments: [],
+				coverImageAttachmentId: null,
+				identifier: '',
+				index: 0,
+				isFavorite: false,
+				subscription: {} as ISubscription,
+				position: 0,
+				reactions: {},
+				comments: [],
+				createdBy: {} as IUser,
+				created: new Date(),
+				updated: new Date(),
+				projectId: 0,
+				bucketId: 0,
+				maxPermission: 0,
+			} as ITask
+
+			if (projectId !== null && projectId !== 0) {
 				model.projectId = projectId
 				taskCollectionService = new TaskCollectionService()
 			}
-			tasks.value = await taskCollectionService.getAll(model, params)
-			baseStore.setHasTasks(tasks.value.length > 0)
+			const tasksList = await taskCollectionService.getAll(model, params)
+			// Convert array to object keyed by ID
+			if (Array.isArray(tasksList)) {
+				tasks.value = {}
+				tasksList.forEach(task => {
+					// Only process tasks, not buckets
+					if ('title' in task && 'done' in task) {
+						tasks.value[task.id] = task as ITask
+					}
+				})
+				baseStore.setHasTasks(tasksList.length > 0)
+			} else {
+				// This should not happen since getAll returns an array
+				tasks.value = {}
+				baseStore.setHasTasks(false)
+			}
 			return tasks.value
 		} finally {
 			cancel()
@@ -355,7 +424,8 @@ export const useTaskStore = defineStore('task', () => {
 			}
 			return label
 		})
-		return Promise.all(mustCreateLabel)
+		const resolvedLabels = await Promise.all(mustCreateLabel)
+		return resolvedLabels as LabelModel[]
 	}
 
 	// Do everything that is involved in finding, creating and adding the label to the task
@@ -425,7 +495,7 @@ export const useTaskStore = defineStore('task', () => {
 	) {
 		const cancel = setModuleLoading(setIsLoading)
 		const quickAddMagicMode = authStore.settings.frontendSettings.quickAddMagicMode
-		const parsedTask = parseTaskText(title, quickAddMagicMode)
+		const parsedTask = parseTaskText(title || '', quickAddMagicMode)
 
 		if(parsedTask.text === '') {
 			const taskService = new TaskService()
@@ -443,7 +513,7 @@ export const useTaskStore = defineStore('task', () => {
 		}
 	
 		const foundProjectId = await findProjectId({
-			project: parsedTask.project,
+			project: parsedTask.project || '',
 			projectId: projectId || 0,
 		})
 		
@@ -464,19 +534,19 @@ export const useTaskStore = defineStore('task', () => {
 		}
 
 		// I don't know why, but it all goes up in flames when I just pass in the date normally.
-		const dueDate = parsedTask.date !== null ? new Date(parsedTask.date).toISOString() : null
+		const dueDate = parsedTask.date !== null ? new Date(parsedTask.date) : null
 	
 		const task = new TaskModel({
 			title: cleanedTitle,
 			projectId: foundProjectId,
 			dueDate,
-			priority: parsedTask.priority,
+			priority: (parsedTask.priority ?? 0) as Priority,
 			assignees,
 			bucketId: bucketId || 0,
 			position,
 			index,
 		})
-		task.repeatAfter = parsedTask.repeats
+		task.repeatAfter = parsedTask.repeats || 0
 
 		if (parsedTask.repeats?.type === REPEAT_TYPES.Months && parsedTask.repeats?.amount === 1) {
 			task.repeatMode = TASK_REPEAT_MODES.REPEAT_MODE_MONTH

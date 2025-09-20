@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {onBeforeMount, ref} from 'vue'
+import {onBeforeMount, ref, toRaw} from 'vue'
 
 import type {IProjectView} from '@/modelTypes/IProjectView'
 import type {IFilters} from '@/modelTypes/ISavedFilter'
@@ -26,13 +26,13 @@ const emit = defineEmits<{
 	'cancel': [],
 }>()
 
-const view = ref<IProjectView>()
+const view = ref<IProjectView>({...toRaw(props).modelValue})
 
 const labelStore = useLabelStore()
 const projectStore = useProjectStore()
 
 onBeforeMount(() => {
-	const transformFilterFromApi = (filterInput: IFilters): IFilter => {
+	const transformFilterFromApi = (filterInput: IFilters): IFilters => {
 		const filterString = transformFilterStringFromApi(
 			filterInput.filter,
 			labelId => labelStore.getLabelById(labelId)?.title || null,
@@ -42,6 +42,9 @@ onBeforeMount(() => {
 		const filter: IFilters = {
 			filter: '',
 			s: '',
+			sort_by: [],
+			order_by: [],
+			filter_include_nulls: false,
 		}
 		if (hasFilterQuery(filterString)) {
 			filter.filter = filterString
@@ -60,9 +63,11 @@ onBeforeMount(() => {
 		return filter
 	}
 
+	const defaultFilter: IFilters = { filter: '', s: '', sort_by: [], order_by: [], filter_include_nulls: false }
+
 	const transformed = {
 		...props.modelValue,
-		filter: transformFilterFromApi(props.modelValue.filter),
+		filter: props.modelValue.filter ? transformFilterFromApi(props.modelValue.filter) : defaultFilter,
 		bucketConfiguration: props.modelValue.bucketConfiguration.map(bc => ({
 			title: bc.title,
 			filter: transformFilterFromApi(bc.filter),
@@ -84,7 +89,13 @@ function save() {
 				return found?.id || null
 			},
 		)
-		const filter: IFilters = {}
+		const filter: IFilters = {
+			filter: '',
+			s: '',
+			sort_by: [],
+			order_by: [],
+			filter_include_nulls: false,
+		}
 		if (hasFilterQuery(filterString)) {
 			filter.filter = filterString
 		} else {
@@ -96,8 +107,8 @@ function save() {
 
 	emit('update:modelValue', {
 		...view.value,
-		filter: transformFilterForApi(view.value?.filter?.filter || ''),
-		bucketConfiguration: view.value?.bucketConfiguration.map(bc => ({
+		filter: transformFilterForApi(view.value.filter?.filter || ''),
+		bucketConfiguration: view.value.bucketConfiguration.map(bc => ({
 			title: bc.title,
 			filter: transformFilterForApi(bc.filter?.filter || ''),
 		})),
@@ -184,7 +195,7 @@ function handleBubbleSave() {
 		</label>
 		<FilterInput
 			id="filter"
-			v-model="view.filter.filter"
+			v-model="view.filter!.filter"
 			:project-id="view.projectId"
 			class="mbe-1"
 		/>
@@ -258,7 +269,7 @@ function handleBubbleSave() {
 							<div class="control">
 								<input
 									:id="'bucket_'+index+'_title'"
-									v-model="view.bucketConfiguration[index].title"
+									v-model="view.bucketConfiguration[index]!.title"
 									class="input"
 									:placeholder="$t('project.share.links.namePlaceholder')"
 								>
@@ -266,7 +277,7 @@ function handleBubbleSave() {
 						</div>
 
 						<FilterInput
-							v-model="view.bucketConfiguration[index].filter.filter"
+							v-model="view.bucketConfiguration[index]!.filter.filter"
 							:project-id="view.projectId"
 							:input-label="$t('project.views.filter')"
 							class="mbe-2"
@@ -281,7 +292,7 @@ function handleBubbleSave() {
 					<XButton
 						variant="secondary"
 						icon="plus"
-						@click="() => view.bucketConfiguration.push({title: '', filter: {filter: ''}})"
+						@click="() => view.bucketConfiguration.push({title: '', filter: { filter: '', s: '', sort_by: [], order_by: [], filter_include_nulls: false }})"
 					>
 						{{ $t('project.kanban.addBucket') }}
 					</XButton>

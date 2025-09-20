@@ -162,7 +162,7 @@
 									<XButton
 										v-tooltip="$t('misc.copy')"
 										:shadow="false"
-										@click="copy(shareLinks[s.id])"
+										@click="copy(shareLinks[s.id] ?? '')"
 									>
 										<span class="icon">
 											<Icon icon="paste" />
@@ -226,6 +226,7 @@ import LinkShareModel from '@/models/linkShare'
 
 import type {ILinkShare} from '@/modelTypes/ILinkShare'
 import type {IProject} from '@/modelTypes/IProject'
+import type {IUser} from '@/modelTypes/IUser'
 
 import LinkShareService from '@/services/linkShare'
 
@@ -255,7 +256,7 @@ const showNewForm = ref(false)
 
 const projectStore = useProjectStore()
 
-const availableViews = computed<IProjectView[]>(() => projectStore.projects[props.projectId]?.views || [])
+const availableViews = computed(() => (projectStore.projects[props.projectId]?.views || []) as IProjectView[])
 const copy = useCopyToClipboard()
 watch(
 	() => props.projectId,
@@ -272,10 +273,10 @@ async function load(projectId: IProject['id']) {
 		return
 	}
 
-	linkShares.value = await linkShareService.getAll({projectId})
+	linkShares.value = await linkShareService.getAll(new LinkShareModel({projectId}))
 }
 
-type SelectedViewMapper = Record<IProject['id'], IProjectView['id']>
+type SelectedViewMapper = Record<IProject['id'], IProjectView['id'] | null>
 
 const selectedViews = ref<SelectedViewMapper>({})
 
@@ -286,7 +287,7 @@ watch(() => ([linkShares.value, availableViews.value]), ([newLinkShares, newProj
 	}
 
 	newLinkShares.forEach((linkShare) => {
-		selectedViews.value[linkShare.id] = newProjectViews.length > 0 ? newProjectViews[0].id : null
+		selectedViews.value[linkShare.id] = newProjectViews.length > 0 ? (newProjectViews[0]?.id ?? null) : null
 	})
 }, {
 	immediate:true,
@@ -312,10 +313,19 @@ async function add(projectId: IProject['id']) {
 
 async function remove(projectId: IProject['id']) {
 	try {
-		await linkShareService.delete(new LinkShareModel({
+		const linkShareToDelete = new LinkShareModel({
 			id: linkIdToDelete.value,
 			projectId,
-		}))
+			hash: '',
+			permission: PERMISSIONS.READ,
+			sharedBy: {} as IUser,
+			sharingType: 0,
+			name: '',
+			password: '',
+			created: new Date(),
+			updated: new Date(),
+		})
+		await linkShareService.delete(linkShareToDelete)
 		success({message: t('project.share.links.deleteSuccess')})
 		await load(projectId)
 	} finally {

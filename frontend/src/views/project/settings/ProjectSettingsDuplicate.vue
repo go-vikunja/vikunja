@@ -4,6 +4,7 @@
 		primary-icon="paste"
 		:primary-label="$t('project.duplicate.label')"
 		:loading="isLoading"
+		:has-primary-action="true"
 		@primary="duplicate"
 	>
 		<p>{{ $t('project.duplicate.text') }}</p>
@@ -23,6 +24,7 @@ import {success} from '@/message'
 import {useTitle} from '@/composables/useTitle'
 import {useProject, useProjectStore} from '@/stores/projects'
 import type {IProject} from '@/modelTypes/IProject'
+import {getRouteParamAsNumber} from '@/helpers/utils'
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => t('project.duplicate.title'))
@@ -30,13 +32,17 @@ useTitle(() => t('project.duplicate.title'))
 const route = useRoute()
 const projectStore = useProjectStore()
 
-const {project, isLoading, duplicateProject} = useProject(route.params.projectId)
+const projectId = getRouteParamAsNumber(route.params.projectId) ?? 0
+const {project, isLoading, duplicateProject} = useProject(projectId)
 
-const parentProject = ref<IProject | null>(null)
+const parentProject = ref<IProject | undefined>()
 watch(
 	() => project.parentProjectId,
 	parentProjectId => {
-		parentProject.value = projectStore.projects[parentProjectId]
+		if (parentProjectId) {
+			const foundProject = projectStore.projects[parentProjectId]
+			parentProject.value = foundProject ? {...foundProject} as IProject : undefined
+		}
 	},
 	{immediate: true},
 )

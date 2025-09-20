@@ -42,7 +42,7 @@ describe('filter labels', () => {
 		const labels = store.filterLabelsByQuery([], 'label2')
 
 		expect(labels).toHaveLength(1)
-		expect(labels[0].title).toBe('label2')
+		expect(labels[0]?.title).toBe('label2')
 	})
 	it('should not return found but hidden labels', () => {
 		const store = setupStore()

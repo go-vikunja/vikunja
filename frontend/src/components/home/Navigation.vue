@@ -83,7 +83,7 @@
 				class="menu"
 			>
 				<ProjectsNavigation
-					:model-value="favoriteProjects" 
+					:model-value="favoriteProjects as any"
 					:can-edit-order="false"
 					:can-collapse="false"
 				/>
@@ -94,7 +94,7 @@
 				class="menu"
 			>
 				<ProjectsNavigation
-					:model-value="savedFilterProjects"
+					:model-value="savedFilterProjects as any"
 					:can-edit-order="false"
 					:can-collapse="false"
 				/>
@@ -102,7 +102,7 @@
 
 			<nav class="menu">
 				<ProjectsNavigation
-					:model-value="projects"
+					:model-value="projects as any"
 					:can-edit-order="true"
 					:can-collapse="true"
 				/>

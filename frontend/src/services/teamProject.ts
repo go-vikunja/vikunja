@@ -1,7 +1,6 @@
 import AbstractService from './abstractService'
 import TeamProjectModel from '@/models/teamProject'
 import type {ITeamProject} from '@/modelTypes/ITeamProject'
-import TeamModel from '@/models/team'
 
 export default class TeamProjectService extends AbstractService<ITeamProject> {
 	constructor() {
@@ -13,11 +12,11 @@ export default class TeamProjectService extends AbstractService<ITeamProject> {
 		})
 	}
 
-	modelFactory(data) {
+	modelFactory(data: Partial<ITeamProject>) {
 		return new TeamProjectModel(data)
 	}
 
-	modelGetAllFactory(data) {
-		return new TeamModel(data)
+	modelGetAllFactory(data: Partial<ITeamProject>) {
+		return new TeamProjectModel(data)
 	}
 }

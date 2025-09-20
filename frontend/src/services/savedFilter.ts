@@ -37,7 +37,7 @@ export function getSavedFilterIdFromProjectId(projectId: IProject['id']) {
 	return filterId
 }
 
-export function isSavedFilter(project: IProject | undefined | null) {
+export function isSavedFilter(project: { id?: number } | null | undefined): boolean {
 	return getSavedFilterIdFromProjectId(project?.id || 0) > 0
 }
 
@@ -51,7 +51,7 @@ export default class SavedFilterService extends AbstractService<ISavedFilter> {
 		})
 	}
 
-	modelFactory(data) {
+	modelFactory(data: Partial<ISavedFilter>) {
 		return new SavedFilterModel(data)
 	}
 }

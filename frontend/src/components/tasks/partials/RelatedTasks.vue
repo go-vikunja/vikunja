@@ -232,7 +232,7 @@ const relatedTasks = ref<ITask['relatedTasks']>({})
 
 const newTaskRelation: TaskRelation = reactive({
 	kind: authStore.settings.frontendSettings.defaultTaskRelationType as IRelationKind,
-	task: new TaskModel(),
+	task: new TaskModel() as unknown as ITask,
 })
 
 watch(
@@ -251,7 +251,7 @@ const foundTasks = ref<ITask[]>([])
 
 async function findTasks(newQuery: string) {
 	query.value = newQuery
-	const result = await taskService.getAll({}, {
+	const result = await taskService.getAll(new TaskModel(), {
 		s: newQuery,
 		sort_by: 'done',
 	})
@@ -319,7 +319,7 @@ async function addTaskRelation() {
 		...(relatedTasks.value[newTaskRelation.kind] || []),
 		newTaskRelation.task,
 	]
-	newTaskRelation.task = new TaskModel()
+	newTaskRelation.task = new TaskModel() as unknown as ITask
 	newTaskRelation.kind = authStore.settings.frontendSettings.defaultTaskRelationType as IRelationKind
 	saved.value = true
 	showNewRelationForm.value = false
@@ -362,7 +362,7 @@ async function removeTaskRelation() {
 }
 
 async function createAndRelateTask(title: string) {
-	const newTask = await taskService.create(new TaskModel({title, projectId: props.projectId}))
+	const newTask = await taskService.create(new TaskModel({title, projectId: props.projectId}) as unknown as ITask)
 	newTaskRelation.task = newTask
 	await addTaskRelation()
 }

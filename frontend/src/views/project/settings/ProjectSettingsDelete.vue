@@ -40,6 +40,8 @@ import {success} from '@/message'
 import Loading from '@/components/misc/Loading.vue'
 import {useProjectStore} from '@/stores/projects'
 import TaskService from '@/services/task'
+import {getRouteParamAsString} from '@/helpers/utils'
+import type {IProject} from '@/modelTypes/IProject'
 
 const {t} = useI18n({useScope: 'global'})
 const projectStore = useProjectStore()
@@ -48,23 +50,29 @@ const router = useRouter()
 
 const totalTasks = ref<number | null>(null)
 
-const project = computed(() => projectStore.projects[route.params.projectId])
+const projectId = computed(() => {
+	const id = getRouteParamAsString(route.params.projectId)
+	return id ? parseInt(id, 10) : null
+})
+
+const project = computed(() => projectId.value ? projectStore.projects[projectId.value] : undefined)
 const projectIdsToDelete = ref<number[]>([])
 
 watchEffect(
 	async () => {
-		if (!route.params.projectId) {
+		const currentProjectId = projectId.value
+		if (!currentProjectId) {
 			return
 		}
 
 		projectIdsToDelete.value = projectStore
-			.getChildProjects(parseInt(route.params.projectId))
+			.getChildProjects(currentProjectId)
 			.map(p => p.id)
 
-		projectIdsToDelete.value.push(parseInt(route.params.projectId))
+		projectIdsToDelete.value.push(currentProjectId)
 
 		const taskService = new TaskService()
-		await taskService.getAll({}, {filter: `project in ${projectIdsToDelete.value.join(',')}`})
+		await taskService.getAll(undefined, {filter: `project in ${projectIdsToDelete.value.join(',')}`})
 		totalTasks.value = taskService.totalPages * taskService.resultCount
 	},
 )
@@ -84,11 +92,12 @@ const deleteNotice = computed(() => {
 })
 
 async function deleteProject() {
-	if (!project.value) {
+	const projectToDelete = project.value
+	if (!projectToDelete) {
 		return
 	}
 
-	await projectStore.deleteProject(project.value)
+	await projectStore.deleteProject(projectToDelete as IProject)
 	success({message: t('project.delete.success')})
 	router.push({name: 'home'})
 }
