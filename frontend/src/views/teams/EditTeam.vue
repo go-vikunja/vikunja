@@ -410,11 +410,15 @@ async function findUser(query: string) {
 		return
 	}
 
-	const users = await userService.value.getAll({}, {s: query})
+	const users = await userService.value.getAll({} as IUser, {s: query})
 	foundUsers.value = users.filter((u: IUser) => u.id !== userInfo.value?.id)
 }
 
 async function leave() {
+	if (!userInfo.value) {
+		return
+	}
+
 	try {
 		await teamMemberService.value.delete({
 			...userInfo.value,

@@ -7,6 +7,7 @@ import TaskCollectionService, {
 	type TaskFilterParams,
 } from '@/services/taskCollection'
 import type {ITask} from '@/modelTypes/ITask'
+import type {IBucket} from '@/modelTypes/IBucket'
 import {error} from '@/message'
 import type {IProject} from '@/modelTypes/IProject'
 import {useAuthStore} from '@/stores/auth'
@@ -126,7 +127,11 @@ export function useTaskList(
 			tasks.value = []
 		}
 		try {
-			tasks.value = await taskCollectionService.getAll(...getAllTasksParams.value)
+			const result = await taskCollectionService.getAll(...getAllTasksParams.value)
+			// Filter out buckets, only keep tasks
+			tasks.value = result.filter((item): item is ITask =>
+				!('project_view_id' in item) && !('projectViewId' in item)
+			)
 		} catch (e) {
 			error(e)
 		}

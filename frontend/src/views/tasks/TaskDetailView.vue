@@ -681,7 +681,7 @@ const taskTitle = computed(() => task.value.title)
 useTitle(taskTitle)
 
 // See https://github.com/github/hotkey/discussions/85#discussioncomment-5214660
-function saveTaskViaHotkey(event) {
+function saveTaskViaHotkey(event: KeyboardEvent) {
 	const hotkeyString = eventToHotkeyString(event)
 	if (!hotkeyString) return
 	if (hotkeyString !== 'Control+s' && hotkeyString !== 'Meta+s') return
@@ -782,14 +782,18 @@ watch(
 		}
 
 		try {
-			const loaded = await taskService.get({id}, {expand: ['reactions', 'comments']})
+			const loaded = await taskService.get({id: id} as ITask, {expand: ['reactions', 'comments']})
 			Object.assign(task.value, loaded)
 			attachmentStore.set(task.value.attachments)
 			taskColor.value = task.value.hexColor
 			setActiveFields()
 
 			if (project.value) {
-				await baseStore.handleSetCurrentProjectIfNotSet(project.value)
+				const projectValue = project.value
+				if (!Array.isArray(projectValue.tasks)) {
+					const mutableProject = {...projectValue, tasks: []}
+					await baseStore.handleSetCurrentProjectIfNotSet(mutableProject)
+				}
 			}
 		} catch (e) {
 			if (e?.response?.status === 404) {
@@ -872,7 +876,7 @@ const activeFieldElements: { [id in FieldType]: HTMLElement | null } = reactive(
 	startDate: null,
 })
 
-function setFieldRef(name, e) {
+function setFieldRef(name: string, e: any) {
 	activeFieldElements[name] = unrefElement(e)
 }
 
@@ -968,7 +972,7 @@ async function toggleFavorite() {
 	Object.assign(task.value, newTask)
 }
 
-async function setPriority(priority: number) {
+async function setPriority(priority: Priority) {
 	const newTask: ITask = {
 		...task.value,
 		priority,
@@ -997,10 +1001,13 @@ function setRelatedTasksActive() {
 
 	// If the related tasks are already available, show the form again
 	const el = activeFieldElements['relatedTasks']
-	for (const child in el?.children) {
-		if (el?.children[child]?.id === 'showRelatedTasksFormButton') {
-			el?.children[child]?.click()
-			break
+	if (el?.children) {
+		for (let i = 0; i < el.children.length; i++) {
+			const child = el.children[i] as HTMLElement
+			if (child.id === 'showRelatedTasksFormButton') {
+				child.click()
+				break
+			}
 		}
 	}
 }

@@ -1,44 +1,37 @@
-# TypeScript Errors Analysis
+# TypeScript Errors Analysis - Vikunja Frontend
 
-## Summary
-There are numerous TypeScript errors across the frontend codebase. Based on the typecheck output, the main categories are:
+## Categories of Errors Found
 
-## Error Categories
+### 1. Kanban Store Issues (`src/stores/kanban.ts`)
+- Type mismatch between `ITask` and `IBucket` arrays
+- Undefined index type errors
+- Parameter type issues (implicit `any`)
+- Argument type mismatches
 
-### 1. Configuration/Build Issues
-- `vite.config.ts(29,31)`: Cannot find name 'ImportMetaEnv'
-- Missing type definition for 'vite-plugin-sentry/client'
+### 2. Task List Composable (`src/composables/useTaskList.ts`)
+- Type `(ITask | IBucket)[]` not assignable to `ITask[]`
 
-### 2. Type Definition Issues
-- Multiple instances of missing type imports (Ref, etc.)
-- Parameter type annotations missing (implicit 'any' types)
+### 3. Component Type Issues
+- **TaskDetailView.vue**: Many issues with readonly vs mutable types, missing properties, implicit `any` parameters
+- **EditTeam.vue**: `IUser | undefined` type issues, missing properties
+- **Avatar.vue**: `Blob | null` not assignable to `IAvatar`
+- **DataExportDownload.vue**: Property access on `never` type
 
-### 3. Null/Undefined Safety
-- Many `possibly 'undefined'` and `possibly 'null'` errors
-- Missing null checks throughout the codebase
+### 4. General Patterns
+- Readonly/immutable types being assigned to mutable types
+- Null/undefined handling issues
+- Missing required properties when creating objects
+- Implicit `any` parameter types
+- Type union issues where specific types are expected
 
-### 4. Type Mismatches
-- Argument type mismatches (string vs number, etc.)
-- Property access on potentially null objects
-- Interface property mismatches
+## Priority Areas to Fix
 
-### 5. Vue/Component Specific
-- Transition hooks type issues in Expandable.vue
-- Story component parameter types
-- Template context issues
+1. **High Priority - Core Store Issues**: Kanban store has fundamental type issues
+2. **Medium Priority - Component Issues**: Various component type safety issues
+3. **Low Priority - Parameter Types**: Implicit `any` parameter types
 
-### 6. Model/Interface Mismatches
-- Properties missing from interfaces
-- Readonly vs mutable type conflicts
-- API response types not matching expected interfaces
-
-## High-Priority Fixes Needed
-
-1. **Import fixes**: Add missing type imports
-2. **Null safety**: Add proper null checks and optional chaining
-3. **Type annotations**: Add explicit types for parameters and variables
-4. **Interface updates**: Update interfaces to match actual data structures
-5. **Configuration**: Fix build configuration issues
-
-## Approach
-Fix issues systematically by file/component, starting with the most critical errors that prevent compilation.
+## Strategy
+- Fix core type definitions first
+- Handle null/undefined cases properly
+- Add explicit typing where implicit `any` occurs
+- Ensure proper type guards for union types

@@ -140,9 +140,11 @@ async function uploadAvatar() {
 
 	try {
 		const blob = await new Promise<Blob | null>(resolve => canvas.toBlob((blob: Blob | null) => resolve(blob)))
-		await avatarService.create(blob)
-		success({message: t('user.settings.avatar.setSuccess')})
-		authStore.reloadAvatar()
+		if (blob) {
+			await avatarService.create(blob)
+			success({message: t('user.settings.avatar.setSuccess')})
+			authStore.reloadAvatar()
+		}
 	} finally {
 		loading.value = false
 		isCropAvatar.value = false
