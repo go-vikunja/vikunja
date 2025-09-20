@@ -20,7 +20,7 @@
 		<template v-if="props.icon">
 			<Icon
 				v-if="!$slots.default"
-				:icon="props.icon as any"
+				:icon="props.icon"
 				:style="{color: props.iconColor}"
 			/>
 			<span
@@ -28,7 +28,7 @@
 				class="icon is-small"
 			>
 				<Icon
-					:icon="props.icon as any"
+					:icon="props.icon"
 					:style="{color: props.iconColor}"
 				/>
 			</span>
@@ -61,11 +61,15 @@ const props = withDefaults(defineProps<{
 	openExternalInNewTab?: boolean
 }>(), {
 	variant: 'primary',
+	icon: undefined,
+	iconColor: undefined,
 	loading: false,
 	disabled: false,
 	shadow: true,
 	wrap: true,
 	type: 'button',
+	to: undefined,
+	href: undefined,
 	openExternalInNewTab: true,
 })
 
