@@ -107,7 +107,7 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 
 		this.id = Number(this.id)
 		this.title = this.title?.trim()
-		this.doneAt = parseDateOrNull(this.doneAt as any)
+		this.doneAt = parseDateOrNull(this.doneAt as string | Date)
 
 		this.labels = this.labels
 			.map(l => new LabelModel(l))
@@ -118,9 +118,9 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 			return new UserModel(a)
 		})
 
-		this.dueDate = parseDateOrNull(this.dueDate as any)
-		this.startDate = parseDateOrNull(this.startDate as any)
-		this.endDate = parseDateOrNull(this.endDate as any)
+		this.dueDate = parseDateOrNull(this.dueDate as string | Date)
+		this.startDate = parseDateOrNull(this.startDate as string | Date)
+		this.endDate = parseDateOrNull(this.endDate as string | Date)
 
 		// Parse the repeat after into something usable
 		this.repeatAfter = parseRepeatAfter(this.repeatAfter as number)
@@ -165,8 +165,11 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 
 		// We can't convert emojis to camel case, hence we do this manually
 		this.reactions = {}
-		Object.keys((data as any).reactions || {}).forEach(reaction => {
-			this.reactions[reaction] = (data as any).reactions[reaction].map((u: any) => new UserModel(u))
+		const dataWithReactions = data as ITask & { reactions?: Record<string, IUser[]> }
+		Object.keys(dataWithReactions.reactions || {}).forEach(reaction => {
+			if (dataWithReactions.reactions && dataWithReactions.reactions[reaction]) {
+				this.reactions[reaction] = dataWithReactions.reactions[reaction].map((u: IUser) => new UserModel(u))
+			}
 		})
 	}
 

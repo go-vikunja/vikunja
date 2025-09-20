@@ -36,6 +36,7 @@ export default class AttachmentService extends AbstractService<IAttachment> {
 		return new AttachmentModel(data)
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	modelCreateFactory(data: any) {
 		// Success contains the uploaded attachments
 		data.success = (data.success === null ? [] : data.success).map((a: any) => {

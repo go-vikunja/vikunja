@@ -2,7 +2,6 @@ import {AuthenticatedHTTPFactory} from '@/helpers/fetcher'
 import type {Method} from 'axios'
 
 import {objectToSnakeCase} from '@/helpers/case'
-import AbstractModel from '@/models/abstractModel'
 import type {IAbstract} from '@/modelTypes/IAbstract'
 import type {Permission} from '@/constants/permissions'
 
@@ -354,7 +353,7 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 			throw new Error('This model is not able to get data.')
 		}
 
-		(params as any).page = page
+		(params as Record<string, unknown>).page = page
 
 		const cancel = this.setLoading()
 		if (model) {
@@ -379,7 +378,7 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 
 	/**
 	 * Performs a put request to the url specified before
-	 * @returns {Promise<any | never>}
+	 * @returns {Promise<Model | never>}
 	 */
 	async create(model : Model) {
 		if (this.paths.create === '') {
@@ -482,7 +481,7 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 				{
 					headers: {
 						'Content-Type':
-							'multipart/form-data; boundary=' + (formData as any)._boundary,
+							'multipart/form-data; boundary=' + (formData as FormData & {_boundary: string})._boundary,
 					},
 					// fix upload issue after upgrading to axios to 1.0.0
 					// see: https://github.com/axios/axios/issues/4885#issuecomment-1222419132

@@ -8,6 +8,7 @@ import TeamModel from '@/models/team'
 
 import {NOTIFICATION_NAMES, type INotification} from '@/modelTypes/INotification'
 import type { IUser } from '@/modelTypes/IUser'
+import type { ITask } from '@/modelTypes/ITask'
 
 export default class NotificationModel extends AbstractModel<INotification> implements INotification {
 	id = 0
@@ -90,7 +91,7 @@ export default class NotificationModel extends AbstractModel<INotification> impl
 		}
 
 		this.created = this.created ? new Date(this.created) : new Date()
-		this.readAt = parseDateOrNull(this.readAt as any)
+		this.readAt = parseDateOrNull(this.readAt as string | Date)
 	}
 
 	toText(user: IUser | null = null) {
@@ -99,7 +100,8 @@ export default class NotificationModel extends AbstractModel<INotification> impl
 		switch (this.name) {
 			case NOTIFICATION_NAMES.TASK_COMMENT:
 				if ('task' in this.notification && this.notification.task) {
-					return `commented on ${(this.notification.task as any).getTextIdentifier()}`
+					const task = this.notification.task as ITask & {getTextIdentifier(): string}
+					return `commented on ${task.getTextIdentifier()}`
 				}
 				break
 			case NOTIFICATION_NAMES.TASK_ASSIGNED:
@@ -110,12 +112,14 @@ export default class NotificationModel extends AbstractModel<INotification> impl
 						who = 'you'
 					}
 
-					return `assigned ${who} to ${(this.notification.task as any).getTextIdentifier()}`
+					const task = this.notification.task as ITask & {getTextIdentifier(): string}
+					return `assigned ${who} to ${task.getTextIdentifier()}`
 				}
 				break
 			case NOTIFICATION_NAMES.TASK_DELETED:
 				if ('task' in this.notification && this.notification.task) {
-					return `deleted ${(this.notification.task as any).getTextIdentifier()}`
+					const task = this.notification.task as ITask & {getTextIdentifier(): string}
+					return `deleted ${task.getTextIdentifier()}`
 				}
 				break
 			case NOTIFICATION_NAMES.PROJECT_CREATED:
@@ -136,12 +140,14 @@ export default class NotificationModel extends AbstractModel<INotification> impl
 				break
 			case NOTIFICATION_NAMES.TASK_REMINDER:
 				if ('task' in this.notification && 'project' in this.notification && this.notification.task) {
-					return `Reminder for ${(this.notification.task as any).getTextIdentifier()} ${this.notification.task.title} (${this.notification.project.title})`
+					const task = this.notification.task as ITask & {getTextIdentifier(): string}
+					return `Reminder for ${task.getTextIdentifier()} ${task.title} (${this.notification.project.title})`
 				}
 				break
 			case NOTIFICATION_NAMES.TASK_MENTIONED:
 				if ('doer' in this.notification && 'task' in this.notification && this.notification.task) {
-					return `${getDisplayName(this.notification.doer)} mentioned you on ${(this.notification.task as any).getTextIdentifier()}`
+					const task = this.notification.task as ITask & {getTextIdentifier(): string}
+					return `${getDisplayName(this.notification.doer)} mentioned you on ${task.getTextIdentifier()}`
 				}
 				break
 		}

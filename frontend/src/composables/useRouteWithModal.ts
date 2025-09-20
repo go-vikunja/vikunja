@@ -55,7 +55,7 @@ export function useRouteWithModal() {
 		let component = route.matched[0]?.components?.default
 
 		if (typeof component === 'function') {
-			component = defineAsyncComponent(component as any)
+			component = defineAsyncComponent(component as () => Promise<any>)
 		}
 
 		if (!component) {
