@@ -24,10 +24,32 @@ export default class ProjectViewModel extends AbstractModel<IProjectView> implem
 	created: Date = new Date()
 	updated: Date = new Date()
 
-	constructor(data: Partial<IProjectView>) {
+	constructor(data: Partial<IProjectView> | Record<string, unknown>) {
 		super()
 		this.assignData(data)
-		
+
+		// Convert numeric view_kind from API to string values for frontend
+		const rawData = data as Record<string, unknown>
+		if (typeof data.viewKind === 'number' || typeof rawData.view_kind === 'number') {
+			const numericViewKind = data.viewKind || rawData.view_kind as number
+			switch (numericViewKind) {
+				case 0:
+					this.viewKind = 'list'
+					break
+				case 1:
+					this.viewKind = 'gantt'
+					break
+				case 2:
+					this.viewKind = 'table'
+					break
+				case 3:
+					this.viewKind = 'kanban'
+					break
+				default:
+					this.viewKind = 'list'
+			}
+		}
+
 		if (!this.bucketConfiguration) {
 			this.bucketConfiguration = []
 		}
