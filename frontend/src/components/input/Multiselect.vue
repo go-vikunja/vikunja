@@ -133,7 +133,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 
 // Define the type for multiselect items - covers most use cases
-type T = Record<string, any>
+type T = Record<string, unknown>
 
 const props = withDefaults(defineProps<{
 	/** The object with the value, updated every time an entry is selected */

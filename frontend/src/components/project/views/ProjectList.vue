@@ -236,7 +236,7 @@ function updateTasks(updatedTask: ITask) {
 	}
 }
 
-async function saveTaskPosition(e: any) {
+async function saveTaskPosition(e: { moved: { element: ITask; newIndex: number; oldIndex: number } }) {
 	drag.value = false
 
 	const task = tasks.value[e.newIndex]

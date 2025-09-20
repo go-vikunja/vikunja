@@ -159,7 +159,7 @@ const projectTitle = computed(() => {
 	return project?.title
 })
 
-const showTaskPosition = computed(() => (window as any).DEBUG_TASK_POSITION)
+const showTaskPosition = computed(() => (window as typeof window & { DEBUG_TASK_POSITION?: boolean }).DEBUG_TASK_POSITION)
 
 const {now} = useGlobalNow()
 const isOverdue = computed(() => (

@@ -337,7 +337,7 @@ async function loadComments(taskId: ITask['id']) {
 		}
 	}
 
-	const taskCommentSearch = { taskId, id: 0, comment: '', author: {} as any, reactions: [], created: new Date(), updated: new Date() } as any
+	const taskCommentSearch = new TaskCommentModel({ taskId })
 	comments.value = await taskCommentService.getAll(taskCommentSearch, {}, currentPage.value)
 }
 

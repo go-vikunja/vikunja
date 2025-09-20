@@ -134,7 +134,7 @@ async function save() {
 		}, 2000)
 	} catch (error) {
 		// If the task was deleted (404), silently skip saving
-		if ((error as any)?.response?.status === 404) {
+		if (error && typeof error === 'object' && 'response' in error && error.response && typeof error.response === 'object' && 'status' in error.response && error.response.status === 404) {
 			return
 		}
 		hasChanges.value = true
