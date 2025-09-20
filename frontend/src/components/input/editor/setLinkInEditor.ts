@@ -1,6 +1,6 @@
 import inputPrompt from '@/helpers/inputPrompt'
 
-export async function setLinkInEditor(pos, editor) {
+export async function setLinkInEditor(pos: any, editor: any) {
 	const previousUrl = editor?.getAttributes('link').href || ''
 	const url = await inputPrompt(pos, previousUrl)
 

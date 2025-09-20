@@ -24,74 +24,71 @@
 	</div>
 </template>
 
-<script lang="ts">
-/* eslint-disable vue/component-api-style */
-export default {
-	props: {
-		items: {
-			type: Array,
-			required: true,
-		},
+<script setup lang="ts">
+import {ref, watch} from 'vue'
+import type {IconProp} from '@fortawesome/fontawesome-svg-core'
 
-		command: {
-			type: Function,
-			required: true,
-		},
-	},
-
-	data() {
-		return {
-			selectedIndex: 0,
-		}
-	},
-
-	watch: {
-		items() {
-			this.selectedIndex = 0
-		},
-	},
-
-	methods: {
-		onKeyDown({event}) {
-			if (event.key === 'ArrowUp') {
-				this.upHandler()
-				return true
-			}
-
-			if (event.key === 'ArrowDown') {
-				this.downHandler()
-				return true
-			}
-
-			if (event.key === 'Enter') {
-				this.enterHandler()
-				return true
-			}
-
-			return false
-		},
-
-		upHandler() {
-			this.selectedIndex = ((this.selectedIndex + this.items.length) - 1) % this.items.length
-		},
-
-		downHandler() {
-			this.selectedIndex = (this.selectedIndex + 1) % this.items.length
-		},
-
-		enterHandler() {
-			this.selectItem(this.selectedIndex)
-		},
-
-		selectItem(index) {
-			const item = this.items[index]
-
-			if (item) {
-				this.command(item)
-			}
-		},
-	},
+interface CommandItem {
+	icon: IconProp
+	title: string
+	description: string
 }
+
+interface Props {
+	items: CommandItem[]
+	command: (item: CommandItem) => void
+}
+
+const props = defineProps<Props>()
+
+const selectedIndex = ref(0)
+
+watch(() => props.items, () => {
+	selectedIndex.value = 0
+})
+
+function onKeyDown({event}: {event: KeyboardEvent}): boolean {
+	if (event.key === 'ArrowUp') {
+		upHandler()
+		return true
+	}
+
+	if (event.key === 'ArrowDown') {
+		downHandler()
+		return true
+	}
+
+	if (event.key === 'Enter') {
+		enterHandler()
+		return true
+	}
+
+	return false
+}
+
+function upHandler() {
+	selectedIndex.value = ((selectedIndex.value + props.items.length) - 1) % props.items.length
+}
+
+function downHandler() {
+	selectedIndex.value = (selectedIndex.value + 1) % props.items.length
+}
+
+function enterHandler() {
+	selectItem(selectedIndex.value)
+}
+
+function selectItem(index: number) {
+	const item = props.items[index]
+
+	if (item) {
+		props.command(item)
+	}
+}
+
+defineExpose({
+	onKeyDown
+})
 </script>
 
 <style lang="scss" scoped>

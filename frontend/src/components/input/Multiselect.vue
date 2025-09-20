@@ -248,8 +248,8 @@ const searchResultsVisible = computed(() => {
 })
 
 const creatableAvailable = computed(() => {
-	const hasResult = filteredSearchResults.value.some((elem: any) => elementInResults(elem, props.label, query.value as string))
-	const hasQueryAlreadyAdded = Array.isArray(internalValue.value) && internalValue.value.some((elem: any) => elementInResults(elem, props.label, query.value))
+	const hasResult = filteredSearchResults.value.some((elem: T) => elementInResults(elem, props.label, query.value as string))
+	const hasQueryAlreadyAdded = Array.isArray(internalValue.value) && internalValue.value.some((elem: T) => elementInResults(elem, props.label, query.value as string))
 
 	return props.creatable
 		&& query.value !== ''
@@ -259,7 +259,7 @@ const creatableAvailable = computed(() => {
 const filteredSearchResults = computed(() => {
 	const currentInternal = internalValue.value
 	if (props.multiple && currentInternal !== null && Array.isArray(currentInternal)) {
-		return searchResults.value.filter((item) => !currentInternal.some(e => e === item))
+		return searchResults.value.filter((item: T) => !currentInternal.some(e => e === item))
 	}
 
 	return searchResults.value
@@ -302,7 +302,7 @@ function search() {
 const multiselectRoot = ref<HTMLElement | null>(null)
 
 function hideSearchResultsHandler(e: MouseEvent) {
-	closeWhenClickedOutside(e, multiselectRoot.value, closeSearchResults)
+	closeWhenClickedOutside(e, multiselectRoot.value as HTMLElement, closeSearchResults)
 }
 
 function closeSearchResults() {
@@ -329,7 +329,7 @@ function select(object: T | null) {
 	}
 
 	emit('update:modelValue', internalValue.value)
-	emit('select', object)
+	emit('select', object as T)
 	setSelectedObject(object)
 	if (props.closeAfterSelect && filteredSearchResults.value.length > 0 && !creatableAvailable.value) {
 		closeSearchResults()
@@ -355,7 +355,7 @@ function setSelectedObject(object: string | T | null | undefined, resetOnly = fa
 		return
 	}
 
-	query.value = props.label !== '' ? object[props.label] : object
+	query.value = props.label !== '' ? (object as Record<string, any>)[props.label] : object
 }
 
 const results = ref<(Element | ComponentPublicInstance)[]>([])
@@ -375,7 +375,7 @@ function preSelect(index: number) {
 	}
 
 	const elems = results.value[index]
-	if (typeof elems === 'undefined' || elems.length === 0) {
+	if (typeof elems === 'undefined' || (elems as any)?.length === 0) {
 		return
 	}
 
@@ -384,7 +384,7 @@ function preSelect(index: number) {
 		return
 	}
 
-	elems.focus()
+	(elems as HTMLElement).focus()
 }
 
 function create() {
@@ -405,7 +405,7 @@ function createOrSelectOnEnter() {
 
 	if (!creatableAvailable.value) {
 		// Check if there's an exact match for our search term
-		const exactMatch = filteredSearchResults.value.find((elem) => elementInResults(elem, props.label, query.value as string))
+		const exactMatch = filteredSearchResults.value.find((elem: T) => elementInResults(elem, props.label, query.value as string))
 		if (exactMatch) {
 			select(exactMatch)
 		}

@@ -48,7 +48,7 @@ const VARIANT_CLASS_MAP = {
 
 export type ButtonTypes = keyof typeof VARIANT_CLASS_MAP
 
-export interface ButtonProps extends /* @vue-ignore */ BaseButtonProps {
+export interface ButtonProps {
 	variant?: ButtonTypes
 	icon?: IconProp
 	iconColor?: string
@@ -56,17 +56,24 @@ export interface ButtonProps extends /* @vue-ignore */ BaseButtonProps {
 	disabled?: boolean
 	shadow?: boolean
 	wrap?: boolean
+	type?: BaseButtonProps['type']
+	to?: BaseButtonProps['to']
+	href?: BaseButtonProps['href']
+	openExternalInNewTab?: BaseButtonProps['openExternalInNewTab']
 }
 
-// @ts-ignore: Complex union type from BaseButtonProps inheritance
 const props = withDefaults(defineProps<ButtonProps>(), {
-	variant: 'primary',
+	variant: 'primary' as ButtonTypes,
 	icon: undefined,
 	iconColor: undefined,
 	loading: false,
 	disabled: false,
 	shadow: true,
 	wrap: true,
+	type: undefined,
+	to: undefined,
+	href: undefined,
+	openExternalInNewTab: true,
 })
 
 defineOptions({name: 'XButton'})
