@@ -51,6 +51,12 @@ export default class TaskService extends AbstractService<ITask> {
 		// Ensure that projectId is an int
 		model.projectId = Number(model.projectId)
 
+		// Remove invalid subscription if it's empty/uninitialized
+		if (model.subscription && (!model.subscription.entity || model.subscription.entityId === 0)) {
+			// @ts-expect-error - we need to remove the subscription property completely for creation
+			delete model.subscription
+		}
+
 		// Convert dates into an iso string
 		model.dueDate = parseDate(model.dueDate)
 		model.startDate = parseDate(model.startDate)
