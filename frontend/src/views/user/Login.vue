@@ -214,12 +214,12 @@ async function submit() {
 	// To work around this, we're manually getting the values here instead of relying on vue bindings.
 	// For more info, see https://kolaente.dev/vikunja/frontend/issues/78
 	const credentials: {
-		username: string | undefined
+		username: string
 		password: string
 		longToken: boolean
 		totpPasscode?: string
 	} = {
-		username: usernameRef.value?.value,
+		username: usernameRef.value?.value || '',
 		password: password.value,
 		longToken: rememberMe.value,
 	}

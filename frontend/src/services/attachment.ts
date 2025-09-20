@@ -36,12 +36,14 @@ export default class AttachmentService extends AbstractService<IAttachment> {
 		return new AttachmentModel(data)
 	}
 
-	modelCreateFactory(data: { success: IAttachment[] | null; [key: string]: unknown }) {
+	modelCreateFactory(data: { success: IAttachment[] | null; [key: string]: unknown }): IAttachment {
 		// Success contains the uploaded attachments
-		data.success = (data.success === null ? [] : data.success).map((a: IAttachment) => {
+		const processedAttachments = (data.success === null ? [] : data.success).map((a: IAttachment) => {
 			return this.modelFactory(a)
 		})
-		return data
+
+		// Return the first attachment or create empty one if none
+		return processedAttachments.length > 0 && processedAttachments[0] ? processedAttachments[0] : this.modelFactory({})
 	}
 
 	getAttachmentBlobUrl(model: IAttachment, size?: PREVIEW_SIZE) {

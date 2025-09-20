@@ -12,6 +12,7 @@ import {setModuleLoading} from '@/stores/helper'
 import type {ITask} from '@/modelTypes/ITask'
 import type {IProject} from '@/modelTypes/IProject'
 import type {IBucket} from '@/modelTypes/IBucket'
+import type {IUser} from '@/modelTypes/IUser'
 import {useAuthStore} from '@/stores/auth'
 import type {IProjectView} from '@/modelTypes/IProjectView'
 import {useBaseStore} from '@/stores/base'
@@ -297,7 +298,20 @@ export const useKanbanStore = defineStore('kanban', () => {
 
 		const taskCollectionService = new TaskCollectionService()
 		try {
-			const result = await taskCollectionService.getAll({projectId, viewId}, {
+			const result = await taskCollectionService.getAll({
+				projectId,
+				projectViewId: viewId,
+				id: 0,
+				title: '',
+				limit: 0,
+				tasks: [],
+				position: 0,
+				count: 0,
+				createdBy: {} as IUser,
+				created: new Date(),
+				updated: new Date(),
+				maxPermission: 0,
+			} as IBucket, {
 				...params,
 				per_page: TASKS_PER_BUCKET,
 			})
@@ -344,7 +358,20 @@ export const useKanbanStore = defineStore('kanban', () => {
 
 		const taskService = new TaskCollectionService()
 		try {
-			const result = await taskService.getAll({projectId, viewId}, params, page)
+			const result = await taskService.getAll({
+				projectId,
+				projectViewId: viewId,
+				id: 0,
+				title: '',
+				limit: 0,
+				tasks: [],
+				position: 0,
+				count: 0,
+				createdBy: {} as IUser,
+				created: new Date(),
+				updated: new Date(),
+				maxPermission: 0,
+			} as IBucket, params, page)
 			// Filter to only get tasks, not buckets
 			const tasks = result.filter((item): item is ITask =>
 				!('project_view_id' in item) && !('projectViewId' in item),

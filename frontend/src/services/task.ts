@@ -8,9 +8,9 @@ import {colorFromHex} from '@/helpers/color/colorFromHex'
 import {SECONDS_A_DAY, SECONDS_A_HOUR, SECONDS_A_WEEK} from '@/constants/date'
 import {objectToSnakeCase} from '@/helpers/case'
 
-const parseDate = (date: Date | string | null | undefined): string | null => {
+const parseDate = (date: Date | string | null | undefined): Date | null => {
 	if (date) {
-		return new Date(date).toISOString()
+		return new Date(date)
 	}
 
 	return null
@@ -56,26 +56,33 @@ export default class TaskService extends AbstractService<ITask> {
 		model.startDate = parseDate(model.startDate)
 		model.endDate = parseDate(model.endDate)
 		model.doneAt = parseDate(model.doneAt)
-		model.created = new Date(model.created).toISOString()
-		model.updated = new Date(model.updated).toISOString()
+		// Ensure dates are Date objects
+		if (typeof model.created === 'string') {
+			model.created = new Date(model.created)
+		}
+		if (typeof model.updated === 'string') {
+			model.updated = new Date(model.updated)
+		}
 
 		model.reminderDates = null
 		// remove all nulls, these would create empty reminders
 		for (const index in model.reminders) {
 			if (model.reminders[index] === null) {
-				model.reminders.splice(index, 1)
+				model.reminders.splice(Number(index), 1)
 			}
 		}
-		// Make normal timestamps from js dates
+		// Ensure reminder dates are Date objects
 		if (model.reminders.length > 0) {
 			model.reminders.forEach((r) => {
-				r.reminder = new Date(r.reminder).toISOString()
+				if (r.reminder && typeof r.reminder === 'string') {
+					r.reminder = new Date(r.reminder)
+				}
 			})
 		}
 
 		// Make the repeating amount to seconds
 		let repeatAfterSeconds = 0
-		if (model.repeatAfter !== null && (model.repeatAfter.amount !== null || model.repeatAfter.amount !== 0)) {
+		if (model.repeatAfter !== null && typeof model.repeatAfter === 'object' && 'amount' in model.repeatAfter && (model.repeatAfter.amount !== null || model.repeatAfter.amount !== 0)) {
 			switch (model.repeatAfter.type) {
 				case 'hours':
 					repeatAfterSeconds = model.repeatAfter.amount * SECONDS_A_HOUR
@@ -109,7 +116,7 @@ export default class TaskService extends AbstractService<ITask> {
 		}
 
 		// Preprocess all labels
-		if (model.labels.length > 0) {
+		if (model.labels && model.labels.length > 0) {
 			const labelService = new LabelService()
 			model.labels = model.labels.map((l) => labelService.processModel(l))
 		}
@@ -119,7 +126,10 @@ export default class TaskService extends AbstractService<ITask> {
 		// We can't convert emojis to skane case, hence we add them back again
 		transformed.reactions = {}
 		Object.keys(updatedModel.reactions || {}).forEach(reaction => {
-			transformed.reactions[reaction] = updatedModel.reactions[reaction].map((u) => objectToSnakeCase(u))
+			const reactionData = updatedModel.reactions?.[reaction]
+			if (reactionData) {
+				transformed.reactions[reaction] = reactionData.map((u) => objectToSnakeCase(u))
+			}
 		})
 
 		return transformed as ITask

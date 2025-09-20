@@ -19,6 +19,8 @@ import type {ITask} from '@/modelTypes/ITask'
 import type {IUser} from '@/modelTypes/IUser'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {IProject} from '@/modelTypes/IProject'
+import type {IBucket} from '@/modelTypes/IBucket'
+import type {ISubscription} from '@/modelTypes/ISubscription'
 import type {Priority} from '@/constants/priorities'
 
 import {setModuleLoading} from '@/stores/helper'
@@ -42,10 +44,10 @@ interface MatchedAssignee extends IUser {
 function findPropertyByValue(object: Record<string, any>, key: string, value: string | number, fuzzy = false) {
 	return Object.values(object).find((l: Record<string, any>) => {
 		if (fuzzy) {
-			return l[key]?.toLowerCase().includes(value.toLowerCase())
+			return l[key]?.toLowerCase().includes(String(value).toLowerCase())
 		}
 
-		return l[key]?.toLowerCase() === value.toLowerCase()
+		return l[key]?.toLowerCase() === String(value).toLowerCase()
 	})
 }
 
@@ -56,22 +58,22 @@ function validateUser(
 ) {
 	if (users.length === 1) {
 		return (
-			findPropertyByValue(users, 'username', query, true) ||
-			findPropertyByValue(users, 'name', query, true) ||
-			findPropertyByValue(users, 'email', query, true)
+			findPropertyByValue(users as any, 'username', query, true) ||
+			findPropertyByValue(users as any, 'name', query, true) ||
+			findPropertyByValue(users as any, 'email', query, true)
 		)
 	}
-	
+
 	return (
-		findPropertyByValue(users, 'username', query) ||
-		findPropertyByValue(users, 'name', query) ||
-		findPropertyByValue(users, 'email', query)
+		findPropertyByValue(users as any, 'username', query) ||
+		findPropertyByValue(users as any, 'name', query) ||
+		findPropertyByValue(users as any, 'email', query)
 	)
 }
 
 // Check if the label exists
 function validateLabel(labels: ILabel[], label: string) {
-	return findPropertyByValue(labels, 'title', label)
+	return findPropertyByValue(labels as any, 'title', label)
 }
 
 async function addLabelToTask(task: ITask, label: ILabel) {
@@ -92,7 +94,21 @@ async function findAssignees(parsedTaskAssignees: string[], projectId: number): 
 
 	const userService = new ProjectUserService()
 	const assignees = parsedTaskAssignees.map(async a => {
-		const users = (await userService.getAll({projectId}, {s: a}))
+		const users = (await userService.getAll({
+			id: 0,
+			email: '',
+			username: '',
+			name: '',
+			projectId,
+			exp: 0,
+			type: 0,
+			created: new Date(),
+			updated: new Date(),
+			settings: {},
+			isLocalUser: false,
+			deletionScheduledAt: null,
+			maxPermission: 0,
+		} as unknown as IUser, {s: a}))
 			.map(u => ({
 				...u,
 				match: a,
@@ -138,8 +154,44 @@ export const useTaskStore = defineStore('task', () => {
 
 		const cancel = setModuleLoading(setIsLoading)
 		try {
-			const model: Record<string, unknown> = {}
 			let taskCollectionService: TaskService | TaskCollectionService = new TaskService()
+			const model: ITask | IBucket = {
+				id: 0,
+				title: '',
+				description: '',
+				done: false,
+				doneAt: null,
+				priority: 0,
+				labels: [],
+				assignees: [],
+				dueDate: null,
+				startDate: null,
+				endDate: null,
+				repeatAfter: 0,
+				repeatFromCurrentDate: false,
+				repeatMode: 0,
+				reminders: [],
+				parentTaskId: 0,
+				hexColor: '',
+				percentDone: 0,
+				relatedTasks: {},
+				attachments: [],
+				coverImageAttachmentId: null,
+				identifier: '',
+				index: 0,
+				isFavorite: false,
+				subscription: {} as ISubscription,
+				position: 0,
+				reactions: {},
+				comments: [],
+				createdBy: {} as IUser,
+				created: new Date(),
+				updated: new Date(),
+				projectId: 0,
+				bucketId: 0,
+				maxPermission: 0,
+			} as ITask
+
 			if (projectId !== null) {
 				model.projectId = projectId
 				taskCollectionService = new TaskCollectionService()
@@ -149,12 +201,16 @@ export const useTaskStore = defineStore('task', () => {
 			if (Array.isArray(tasksList)) {
 				tasks.value = {}
 				tasksList.forEach(task => {
-					tasks.value[task.id] = task
+					// Only process tasks, not buckets
+					if ('title' in task && 'done' in task) {
+						tasks.value[task.id] = task as ITask
+					}
 				})
 				baseStore.setHasTasks(tasksList.length > 0)
 			} else {
-				tasks.value = tasksList
-				baseStore.setHasTasks(Object.keys(tasks.value).length > 0)
+				// This should not happen since getAll returns an array
+				tasks.value = {}
+				baseStore.setHasTasks(false)
 			}
 			return tasks.value
 		} finally {

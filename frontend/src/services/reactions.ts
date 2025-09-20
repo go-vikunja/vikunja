@@ -1,8 +1,7 @@
 import AbstractService from '@/services/abstractService'
 import type {IAbstract} from '@/modelTypes/IAbstract'
 import ReactionModel from '@/models/reaction'
-import type {IReactionPerEntity, IReaction} from '@/modelTypes/IReaction'
-import UserModel from '@/models/user'
+import type {IReaction} from '@/modelTypes/IReaction'
 
 export default class ReactionService extends AbstractService<IReaction> {
 	constructor() {
@@ -17,25 +16,13 @@ export default class ReactionService extends AbstractService<IReaction> {
 		return new ReactionModel(data)
 	}
 
-	modelGetAllFactory(data: Partial<IReactionPerEntity & { maxPermission?: unknown }>): IReactionPerEntity & { maxPermission?: unknown } {
-		const result: IReactionPerEntity & { maxPermission?: unknown } = {}
-
-		Object.keys(data).forEach(reaction => {
-			if (reaction !== 'maxPermission') {
-				result[reaction] = data[reaction]?.map((u) => new UserModel(u)) || []
-			}
-		})
-
-		// Preserve maxPermission if it exists
-		if ('maxPermission' in data) {
-			result.maxPermission = data.maxPermission
-		}
-
-		return result
+	modelGetAllFactory(data: Partial<IReaction>): IReaction {
+		return this.modelFactory(data)
 	}
 
 	async delete(model: IReaction) {
 		const finalUrl = this.getReplacedRoute(this.paths.delete, model)
-		return super.post(finalUrl, model)
+		const response = await super.post(finalUrl, model)
+		return this.modelFactory(response)
 	}
 }

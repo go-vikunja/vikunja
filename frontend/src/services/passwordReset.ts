@@ -3,6 +3,11 @@ import PasswordResetModel from '@/models/passwordReset'
 import type {IPasswordReset} from '@/modelTypes/IPasswordReset'
 
 interface PasswordResetPaths {
+	create: string
+	get: string
+	getAll: string
+	update: string
+	delete: string
 	reset: string
 	requestReset: string
 }
@@ -13,6 +18,11 @@ export default class PasswordResetService extends AbstractService<IPasswordReset
 	constructor() {
 		super({})
 		this.paths = {
+			create: '',
+			get: '',
+			getAll: '',
+			update: '',
+			delete: '',
 			reset: '/user/password/reset',
 			requestReset: '/user/password/token',
 		}
