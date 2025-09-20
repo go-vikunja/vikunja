@@ -2,6 +2,7 @@
 	<CreateEdit
 		:title="$t('filters.edit.title')"
 		:primary-label="$t('misc.save')"
+		:has-primary-action="true"
 		:tertiary="$t('misc.delete')"
 		@primary="saveFilterWithValidation"
 		@tertiary="$router.push({ name: 'filter.settings.delete', params: { id: projectId } })"

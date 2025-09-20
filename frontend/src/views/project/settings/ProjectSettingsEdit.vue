@@ -2,6 +2,7 @@
 	<CreateEdit
 		:title="$t('project.edit.header')"
 		:primary-label="$t('misc.save')"
+		:has-primary-action="true"
 		:tertiary="project.maxPermission === PERMISSIONS.ADMIN ? $t('misc.delete') : undefined"
 		@primary="save"
 		@tertiary="$router.push({ name: 'project.settings.delete', params: { id: projectId } })"

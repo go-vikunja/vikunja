@@ -4,6 +4,7 @@
 		primary-icon="paste"
 		:primary-label="$t('project.duplicate.label')"
 		:loading="isLoading"
+		:has-primary-action="true"
 		@primary="duplicate"
 	>
 		<p>{{ $t('project.duplicate.text') }}</p>

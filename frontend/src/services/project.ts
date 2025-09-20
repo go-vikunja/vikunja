@@ -36,7 +36,9 @@ export default class ProjectService extends AbstractService<IProject> {
 
 	beforeCreate(project: IProject) {
 		project.hexColor = colorFromHex(project.hexColor)
-		return project
+		// Remove subscription field when creating a project to avoid invalid entity type errors
+		const {subscription, ...projectData} = project
+		return projectData as IProject
 	}
 
 	async background(project: Pick<IProject, 'id' | 'backgroundInformation'>) {
