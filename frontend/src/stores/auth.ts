@@ -1,5 +1,6 @@
 import {computed, readonly, ref} from 'vue'
 import {acceptHMRUpdate, defineStore} from 'pinia'
+import {AxiosError} from 'axios'
 
 import {AuthenticatedHTTPFactory, HTTPFactory} from '@/helpers/fetcher'
 import {getBrowserLanguage, i18n, setLanguage} from '@/i18n'
@@ -354,15 +355,15 @@ export const useAuthStore = defineStore('auth', () => {
 
 			return newUser
 		} catch (e: unknown) {
-			if((e?.response?.status >= 400 && e?.response?.status < 500) ||
-				e?.response?.data?.message === 'missing, malformed, expired or otherwise invalid token provided') {
+			if(e instanceof AxiosError && ((e.response?.status && e.response.status >= 400 && e.response.status < 500) ||
+				e.response?.data?.message === 'missing, malformed, expired or otherwise invalid token provided')) {
 				await logout()
 				return
 			}
 
 			const cause: {e: unknown, message?: string} = {e}
 
-			if (typeof e?.response?.data?.message !== 'undefined') {
+			if (e instanceof AxiosError && typeof e.response?.data?.message !== 'undefined') {
 				cause.message = e.response.data.message
 			}
 			
@@ -383,7 +384,8 @@ export const useAuthStore = defineStore('auth', () => {
 				await HTTPFactory().post('user/confirm', {token: emailVerifyToken})
 				return true
 			} catch(e: unknown) {
-				throw new Error(e?.response?.data?.message || 'Unknown error')
+				const message = e instanceof AxiosError ? e.response?.data?.message : undefined
+				throw new Error(message || 'Unknown error')
 			} finally {
 				localStorage.removeItem('emailConfirmToken')
 				stopLoading()
@@ -451,7 +453,7 @@ export const useAuthStore = defineStore('auth', () => {
 			} catch (e: unknown) {
 				// Don't logout on network errors as the user would then get logged out if they don't have
 				// internet for a short period of time - such as when the laptop is still reconnecting
-				if (e?.request?.status) {
+				if (e instanceof AxiosError && e.request?.status) {
 					await logout()
 				}
 			}

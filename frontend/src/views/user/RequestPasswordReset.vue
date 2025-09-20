@@ -64,6 +64,7 @@
 
 <script setup lang="ts">
 import {ref, shallowReactive} from 'vue'
+import {AxiosError} from 'axios'
 
 import PasswordResetModel from '@/models/passwordReset'
 import PasswordResetService from '@/services/passwordReset'
@@ -81,7 +82,7 @@ async function requestPasswordReset() {
 		await passwordResetService.requestResetPassword(passwordReset.value)
 		isSuccess.value = true
 	} catch (e: unknown) {
-		errorMsg.value = e.response?.data?.message || getErrorText(e)
+		errorMsg.value = (e instanceof AxiosError ? e.response?.data?.message : undefined) || getErrorText(e)
 	}
 }
 </script>

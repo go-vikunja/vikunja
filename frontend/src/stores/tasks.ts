@@ -41,13 +41,15 @@ interface MatchedAssignee extends IUser {
 }
 
 // IDEA: maybe use a small fuzzy search here to prevent errors
-function findPropertyByValue(object: Record<string, unknown>, key: string, value: string | number, fuzzy = false) {
-	return Object.values(object).find((l: Record<string, unknown>) => {
+function findPropertyByValue(array: Record<string, unknown>[], key: string, value: string | number, fuzzy = false) {
+	return array.find((l: Record<string, unknown>) => {
 		if (fuzzy) {
-			return l[key]?.toLowerCase().includes(String(value).toLowerCase())
+			const prop = l[key]
+			return typeof prop === 'string' && prop.toLowerCase().includes(String(value).toLowerCase())
 		}
 
-		return l[key]?.toLowerCase() === String(value).toLowerCase()
+		const prop = l[key]
+		return typeof prop === 'string' && prop.toLowerCase() === String(value).toLowerCase()
 	})
 }
 
@@ -58,22 +60,22 @@ function validateUser(
 ) {
 	if (users.length === 1) {
 		return (
-			findPropertyByValue(users as Record<string, unknown>, 'username', query, true) ||
-			findPropertyByValue(users as Record<string, unknown>, 'name', query, true) ||
-			findPropertyByValue(users as Record<string, unknown>, 'email', query, true)
+			findPropertyByValue(users, 'username', query, true) ||
+			findPropertyByValue(users, 'name', query, true) ||
+			findPropertyByValue(users, 'email', query, true)
 		)
 	}
 
 	return (
-		findPropertyByValue(users as Record<string, unknown>, 'username', query) ||
-		findPropertyByValue(users as Record<string, unknown>, 'name', query) ||
-		findPropertyByValue(users as Record<string, unknown>, 'email', query)
+		findPropertyByValue(users, 'username', query) ||
+		findPropertyByValue(users, 'name', query) ||
+		findPropertyByValue(users, 'email', query)
 	)
 }
 
 // Check if the label exists
 function validateLabel(labels: ILabel[], label: string) {
-	return findPropertyByValue(labels as Record<string, unknown>, 'title', label)
+	return findPropertyByValue(labels, 'title', label)
 }
 
 async function addLabelToTask(task: ITask, label: ILabel) {

@@ -77,8 +77,8 @@ async function authenticateWithCode() {
 
 	try {
 		await authStore.openIdAuth({
-			provider: route.params.provider,
-			code: route.query.code,
+			provider: Array.isArray(route.params.provider) ? (route.params.provider[0] || '') : (route.params.provider || ''),
+			code: Array.isArray(route.query.code) ? (route.query.code[0] || '') : (route.query.code || ''),
 		})
 		redirectIfSaved()
 	} catch(e) {

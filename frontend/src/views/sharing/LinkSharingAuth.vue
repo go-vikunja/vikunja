@@ -47,6 +47,7 @@ import {ref, computed} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import {useTitle} from '@vueuse/core'
+import {AxiosError} from 'axios'
 
 import Message from '@/components/misc/Message.vue'
 import {LINK_SHARE_HASH_PREFIX} from '@/constants/linkShareHash'
@@ -122,7 +123,7 @@ function useAuth() {
 
 		try {
 			const {project_id: projectId} = await authStore.linkShareAuth({
-				hash: route.params.share,
+				hash: Array.isArray(route.params.share) ? (route.params.share[0] || '') : (route.params.share || ''),
 				password: password.value,
 			})
 			const logoVisible = route.query.logoVisible
@@ -132,20 +133,20 @@ function useAuth() {
 
 			return redirectToProject(projectId)
 		} catch (e: unknown) {
-			if (e?.response?.data?.code === 13001) {
+			if (e instanceof AxiosError && e.response?.data?.code === 13001) {
 				authenticateWithPassword.value = true
 				return
 			}
 
 			// Handle generic 403 errors that might occur after initial auth
-			if (e?.response?.status === 403 && !e?.response?.data?.code) {
+			if (e instanceof AxiosError && e.response?.status === 403 && !e.response?.data?.code) {
 				errorMessage.value = t('sharing.accessDenied')
 				authenticateWithPassword.value = false
 				return
 			}
-			
+
 			// Handle network/server errors
-			if (e?.response?.status >= 500 || !e?.response) {
+			if (e instanceof AxiosError && (e.response?.status && e.response.status >= 500 || !e.response)) {
 				errorMessage.value = t('sharing.serverError')
 				authenticateWithPassword.value = false
 				return
@@ -156,10 +157,10 @@ function useAuth() {
 
 			// TODO: Put this logic in a global errorMessage handler method which checks all auth codes
 			let err = t('sharing.error')
-			if (e?.response?.data?.message) {
+			if (e instanceof AxiosError && e.response?.data?.message) {
 				err = e.response.data.message
 			}
-			if (e?.response?.data?.code === 13002) {
+			if (e instanceof AxiosError && e.response?.data?.code === 13002) {
 				err = t('sharing.invalidPassword')
 			}
 			errorMessage.value = err

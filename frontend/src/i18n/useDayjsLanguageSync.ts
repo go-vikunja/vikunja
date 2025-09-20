@@ -61,7 +61,7 @@ export const DAYJS_LANGUAGE_IMPORTS = {
 	'tr-tr': () => import('dayjs/locale/tr'),
 	'fi-fi': () => import('dayjs/locale/fi'),
 	'he-il': () => import('dayjs/locale/he'),
-} as unknown as Record<SupportedLocale, () => Promise<any>>
+} as unknown as Record<SupportedLocale, () => Promise<ILocale>>
 
 export async function loadDayJsLocale(language: SupportedLocale) {
 	if (language === 'en') {

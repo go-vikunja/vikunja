@@ -596,7 +596,7 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted, onBeforeUnmount} from 'vue'
+import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted, onBeforeUnmount, type ComponentPublicInstance} from 'vue'
 import {useRouter, type RouteLocation, onBeforeRouteLeave} from 'vue-router'
 import {storeToRefs} from 'pinia'
 import {useI18n} from 'vue-i18n'
@@ -876,7 +876,7 @@ const activeFieldElements: { [id in FieldType]: HTMLElement | null } = reactive(
 	startDate: null,
 })
 
-function setFieldRef(name: string, e: HTMLElement | null) {
+function setFieldRef(name: string, e: Element | ComponentPublicInstance | null) {
 	if (name in activeFieldElements) {
 		const element = unrefElement(e)
 		activeFieldElements[name as FieldType] = (element as HTMLElement) || null

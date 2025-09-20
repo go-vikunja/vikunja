@@ -54,6 +54,7 @@
 import {ref, reactive} from 'vue'
 import {useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
+import {AxiosError} from 'axios'
 
 import PasswordResetModel from '@/models/passwordReset'
 import PasswordResetService from '@/services/passwordReset'
@@ -90,7 +91,7 @@ async function resetPassword() {
 		const result = await passwordResetService.resetPassword(passwordReset)
 		successMessage.value = (result as {message?: string}).message || t('user.auth.passwordResetSuccessful')
 	} catch (e: unknown) {
-		errorMsg.value = e.response?.data?.message || getErrorText(e)
+		errorMsg.value = (e instanceof AxiosError ? e.response?.data?.message : undefined) || getErrorText(e)
 	}
 }
 </script>

@@ -119,6 +119,7 @@
 import {useDebounceFn} from '@vueuse/core'
 import {computed, onBeforeMount, reactive, ref, toRaw} from 'vue'
 import {useI18n} from 'vue-i18n'
+import {AxiosError} from 'axios'
 
 import router from '@/router'
 import Message from '@/components/misc/Message.vue'
@@ -201,7 +202,7 @@ async function submit() {
 	try {
 		await authStore.register(toRaw(credentials))
 	} catch (e: unknown) {
-		errorMessage.value = e?.message || getErrorText(e)
+		errorMessage.value = (e instanceof AxiosError ? e.response?.data?.message : (e as Error)?.message) || getErrorText(e)
 	}
 }
 </script>

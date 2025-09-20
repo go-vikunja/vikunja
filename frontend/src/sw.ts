@@ -30,6 +30,23 @@ declare const clients: {
 	openWindow: (url: string) => Promise<WindowClient | null>
 }
 
+declare interface Client {
+	id: string
+	url: string
+}
+
+declare interface WindowClient extends Client {
+	focus(): Promise<WindowClient>
+}
+
+declare interface NotificationEvent extends Event {
+	action?: string
+	notification: {
+		data: Record<string, unknown>
+		close(): void
+	}
+}
+
 declare function importScripts(...urls: string[]): void
 
 const fullBaseUrl = getFullBaseUrl()
@@ -57,7 +74,7 @@ workbox.routing.registerRoute(
 )
 
 // This code listens for the user's confirmation to update the app.
-self.addEventListener('message', (e) => {
+self.addEventListener('message', (e: MessageEvent) => {
 	if (!e.data) {
 		return
 	}
@@ -73,7 +90,7 @@ self.addEventListener('message', (e) => {
 })
 
 // Notification action
-self.addEventListener('notificationclick', function (event) {
+self.addEventListener('notificationclick', function (event: NotificationEvent) {
 	const taskId = event.notification.data.taskId
 	event.notification.close()
 
