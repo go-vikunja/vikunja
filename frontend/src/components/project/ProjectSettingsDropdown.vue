@@ -158,7 +158,7 @@ function setSubscriptionInStore(sub: ISubscription | null) {
 		...props.project,
 		subscription: sub,
 	}
-	projectStore.setProject(updatedProject)
+	projectStore.setProject(updatedProject as IProject)
 }
 
 const authStore = useAuthStore()

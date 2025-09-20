@@ -69,13 +69,13 @@ interface ButtonProps {
 
 const props = defineProps<ButtonProps>()
 
-// Provide defaults
-const variant = computed(() => props.variant ?? 'primary')
-const loading = computed(() => props.loading ?? false)
-const disabled = computed(() => props.disabled ?? false)
-const shadow = computed(() => props.shadow ?? true)
-const wrap = computed(() => props.wrap ?? true)
-const openExternalInNewTab = computed(() => props.openExternalInNewTab ?? true)
+// Provide defaults with explicit typing
+const variant = computed((): ButtonTypes => (props.variant ?? 'primary') as ButtonTypes)
+const loading = computed((): boolean => props.loading ?? false)
+const disabled = computed((): boolean => props.disabled ?? false)
+const shadow = computed((): boolean => props.shadow ?? true)
+const wrap = computed((): boolean => props.wrap ?? true)
+const openExternalInNewTab = computed((): boolean => props.openExternalInNewTab ?? true)
 
 defineOptions({name: 'XButton'})
 

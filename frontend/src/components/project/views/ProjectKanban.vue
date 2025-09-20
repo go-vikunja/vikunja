@@ -311,6 +311,7 @@ import {success} from '@/message'
 import {useProjectStore} from '@/stores/projects'
 import type {TaskFilterParams} from '@/services/taskCollection'
 import type {IProjectView} from '@/modelTypes/IProjectView'
+import type {IProject} from '@/modelTypes/IProject'
 import TaskPositionService from '@/services/taskPosition'
 import TaskPositionModel from '@/models/taskPosition'
 import {i18n} from '@/i18n'
@@ -348,7 +349,7 @@ const taskPositionService = ref(new TaskPositionService())
 const taskBucketService = ref(new TaskBucketService())
 
 // Saved filter composable for accessing filter data
-const savedFilter = useSavedFilter(() => projectId.value < 0 ? projectId.value : undefined).filter
+const savedFilter = useSavedFilter(() => projectId.value < 0 ? projectId.value : 0).filter
 
 const taskContainerRefs = ref<{ [id: IBucket['id']]: HTMLElement }>({})
 const bucketLimitInputRef = ref<HTMLInputElement | null>(null)
@@ -389,8 +390,8 @@ const params = ref<TaskFilterParams>({
 })
 
 watch([filter, s], ([filterValue, sValue]) => {
-	params.value.filter = filterValue ?? ''
-	params.value.s = sValue ?? ''
+	params.value.filter = Array.isArray(filterValue) ? filterValue[0] ?? '' : filterValue ?? ''
+	params.value.s = Array.isArray(sValue) ? sValue[0] ?? '' : sValue ?? ''
 }, { immediate: true })
 
 function updateFilters(newParams: TaskFilterParams) {
@@ -423,9 +424,9 @@ const bucketDraggableComponentData = computed(() => ({
 		{'dragging-disabled': !canWrite.value},
 	],
 }))
-const project = computed(() => projectId.value ? projectStore.projects[projectId.value] : null)
-const view = computed(() => project.value?.views.find(v => v.id === props.viewId) as IProjectView || null)
-const canWrite = computed(() => baseStore.currentProject?.maxPermission > Permissions.READ && view.value.bucketConfigurationMode === 'manual')
+const project = computed(() => projectId.value ? (projectStore.projects[projectId.value] as IProject) : null)
+const view = computed(() => project.value?.views.find((v: any) => v.id === props.viewId) as IProjectView || null)
+const canWrite = computed(() => (baseStore.currentProject?.maxPermission ?? 0) > Permissions.READ && view.value.bucketConfigurationMode === 'manual')
 const canCreateTasks = computed(() => canWrite.value && projectId.value > 0)
 const buckets = computed(() => kanbanStore.buckets)
 const loading = computed(() => kanbanStore.isLoading)

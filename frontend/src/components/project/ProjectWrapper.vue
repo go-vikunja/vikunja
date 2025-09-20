@@ -7,7 +7,7 @@
 		}"
 	>
 		<h1 class="project-title-print">
-			{{ getProjectTitle(currentProject) }}
+			{{ getProjectTitle(currentProject as any) }}
 		</h1>
 
 		<div
@@ -80,7 +80,7 @@ const currentProject = computed(() => {
 		maxPermission: null,
 	} : baseStore.currentProject
 })
-useTitle(() => currentProject.value?.id ? getProjectTitle(currentProject.value) : '')
+useTitle(() => currentProject.value?.id ? getProjectTitle(currentProject.value as any) : '')
 
 const views = computed(() => projectStore.projects[props.projectId]?.views)
 
