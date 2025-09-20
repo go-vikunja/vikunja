@@ -19,7 +19,7 @@ export default class ApiTokenService extends AbstractService<IApiToken> {
 		}
 	}
 	
-	modelFactory(data: Partial<IApiToken>) {
+	modelFactory(data: Partial<IApiToken>): IApiToken {
 		return new ApiTokenModel(data)
 	}
 	

@@ -22,8 +22,8 @@ const availableRoutes = ref<Record<string, any> | null>(null)
 const newToken = ref<IApiToken>(new ApiTokenModel())
 const newTokenExpiry = ref<string | number>(30)
 const newTokenExpiryCustom = ref(new Date())
-const newTokenPermissions = ref({})
-const newTokenPermissionsGroup = ref({})
+const newTokenPermissions = ref<Record<string, any>>({})
+const newTokenPermissionsGroup = ref<Record<string, any>>({})
 const newTokenTitleValid = ref(true)
 const newTokenPermissionValid = ref(true)
 const apiTokenTitle = ref()
@@ -50,7 +50,7 @@ onMounted(async () => {
 	tokens.value = await service.getAll()
 	const allRoutes = await service.getAvailableRoutes()
 
-	const routesAvailable = {}
+	const routesAvailable: Record<string, any> = {}
 	const keys = Object.keys(allRoutes)
 	keys.sort((a, b) => (a === 'other' ? 1 : b === 'other' ? -1 : 0))
 	keys.forEach(key => {
@@ -64,7 +64,7 @@ onMounted(async () => {
 
 function resetPermissions() {
 	newTokenPermissions.value = {}
-	Object.entries(availableRoutes.value).forEach(entry => {
+	Object.entries(availableRoutes.value || {}).forEach(entry => {
 		const [group, routes] = entry
 		newTokenPermissions.value[group] = {}
 		Object.keys(routes as Record<string, any>).forEach(r => {
@@ -204,7 +204,7 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 						v-for="(v, p) in tk.permissions"
 						:key="'permission-' + p"
 					>
-						<strong>{{ formatPermissionTitle(p) }}:</strong>
+						<strong>{{ formatPermissionTitle(String(p)) }}:</strong>
 						{{ v.map(formatPermissionTitle).join(', ') }}
 						<br>
 					</template>
