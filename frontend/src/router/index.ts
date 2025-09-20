@@ -32,8 +32,8 @@ const router = createRouter({
 
 		// Otherwise just scroll to the top
 		return {
-			'inset-inline-start': 0,
-			'inset-block-start': 0,
+			left: 0,
+			top: 0,
 		}
 	},
 	routes: [
@@ -391,7 +391,7 @@ const router = createRouter({
 	],
 })
 
-export async function getAuthForRoute(to: RouteLocation, authStore) {
+export async function getAuthForRoute(to: RouteLocation, authStore: ReturnType<typeof useAuthStore>) {
 	if (authStore.authUser || authStore.authLinkShare) {
 		return
 	}
