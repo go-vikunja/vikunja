@@ -274,7 +274,7 @@ const CustomImage = Image.extend({
 					const attachment = new AttachmentModel({taskId: taskId, id: attachmentId})
 
 					const attachmentService = new AttachmentService()
-					loadedAttachments.value[cacheKey] = await attachmentService.getBlobUrl(attachment) as string
+					loadedAttachments.value[cacheKey] = await attachmentService.getAttachmentBlobUrl(attachment) as string
 				}
 
 				(img as HTMLImageElement).src = loadedAttachments.value[cacheKey]

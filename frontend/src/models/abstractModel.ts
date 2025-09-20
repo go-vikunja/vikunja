@@ -4,6 +4,8 @@ import type {Permission} from '@/constants/permissions'
 import type {IAbstract} from '@/modelTypes/IAbstract'
 
 export default abstract class AbstractModel<Model extends IAbstract = IAbstract> implements IAbstract {
+	[key: string]: unknown
+
 	/**
 	 * The max permission the user has on this object, as returned by the x-max-permission header from the api.
 	 */

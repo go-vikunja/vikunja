@@ -15,11 +15,11 @@ export default class BackgroundUnsplashService extends AbstractService<IBackgrou
 		return new BackgroundImageModel(data)
 	}
 
-	modelUpdateFactory(data) {
+	modelUpdateFactory(data: any) {
 		return new ProjectModel(data)
 	}
 
-	async thumb(model) {
+	async thumb(model: any) {
 		const response = await this.http({
 			url: `/backgrounds/unsplash/images/${model.id}/thumb`,
 			method: 'GET',

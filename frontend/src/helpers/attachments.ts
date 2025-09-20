@@ -23,7 +23,7 @@ export async function uploadFiles(
 	onSuccess?: (attachmentUrl: string) => void,
 ) {
 	const attachmentModel = new AttachmentModel({taskId})
-	const response = await attachmentService.create(attachmentModel, files) as unknown as AttachmentUploadResponse
+	const response = await attachmentService.createAttachments(attachmentModel, files) as unknown as AttachmentUploadResponse
 	console.debug(`Uploaded attachments for task ${taskId}, response was`, response)
 
 	response.success?.map((attachment: IAttachment) => {

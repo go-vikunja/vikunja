@@ -36,25 +36,25 @@ export default class AttachmentService extends AbstractService<IAttachment> {
 		return new AttachmentModel(data)
 	}
 
-	modelCreateFactory(data) {
+	modelCreateFactory(data: any) {
 		// Success contains the uploaded attachments
-		data.success = (data.success === null ? [] : data.success).map(a => {
+		data.success = (data.success === null ? [] : data.success).map((a: any) => {
 			return this.modelFactory(a)
 		})
 		return data
 	}
 
-	getBlobUrl(model: IAttachment, size?: PREVIEW_SIZE) {
+	getAttachmentBlobUrl(model: IAttachment, size?: PREVIEW_SIZE) {
 		let mainUrl = '/tasks/' + model.taskId + '/attachments/' + model.id
 		if (size !== undefined) {
 			mainUrl += `?preview_size=${size}`
 		}
 
-		return AbstractService.prototype.getBlobUrl.call(this, mainUrl)
+		return super.getBlobUrl(mainUrl)
 	}
 
 	async download(model: IAttachment) {
-		const url = await this.getBlobUrl(model)
+		const url = await this.getAttachmentBlobUrl(model)
 		return downloadBlob(url, model.file.name)
 	}
 
@@ -63,11 +63,14 @@ export default class AttachmentService extends AbstractService<IAttachment> {
 	 * @param files
 	 * @returns {Promise<any|never>}
 	 */
-	create(model: IAttachment, files: File[] | FileList) {
+	createAttachments(model: IAttachment, files: File[] | FileList) {
 		const data = new FormData()
 		for (let i = 0; i < files.length; i++) {
-			// TODO: Validation of file size
-			data.append('files', new Blob([files[i]]), files[i].name)
+			const file = files[i]
+			if (file) {
+				// TODO: Validation of file size
+				data.append('files', new Blob([file]), file.name)
+			}
 		}
 
 		return this.uploadFormData(

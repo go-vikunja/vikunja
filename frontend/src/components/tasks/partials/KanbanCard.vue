@@ -215,7 +215,7 @@ async function maybeDownloadCoverImage() {
 	}
 
 	const attachmentService = new AttachmentService()
-	coverImageBlobUrl.value = await attachmentService.getBlobUrl(attachment, PREVIEW_SIZE.LG) as string
+	coverImageBlobUrl.value = await attachmentService.getAttachmentBlobUrl(attachment, PREVIEW_SIZE.LG) as string
 }
 
 watch(

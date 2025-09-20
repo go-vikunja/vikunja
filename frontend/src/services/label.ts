@@ -14,22 +14,22 @@ export default class LabelService extends AbstractService<ILabel> {
 		})
 	}
 
-	processModel(label) {
+	processModel(label: any) {
 		label.created = new Date(label.created).toISOString()
 		label.updated = new Date(label.updated).toISOString()
 		label.hexColor = colorFromHex(label.hexColor)
 		return label
 	}
 
-	modelFactory(data) {
+	modelFactory(data: Partial<ILabel>) {
 		return new LabelModel(data)
 	}
 
-	beforeUpdate(label) {
+	beforeUpdate(label: any) {
 		return this.processModel(label)
 	}
 
-	beforeCreate(label) {
+	beforeCreate(label: any) {
 		return this.processModel(label)
 	}
 }
