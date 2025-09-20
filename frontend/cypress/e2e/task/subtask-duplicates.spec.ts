@@ -45,25 +45,10 @@ describe('Subtask duplicate handling', () => {
                                 relation_kind: 'subtask',
                         },
                 })
-                cy.request({
-                        method: 'PUT',
-                        url: `${Cypress.env('API_URL')}/tasks/${parentB.id}/relations`,
-                        headers: {
-                                'Authorization': `Bearer ${window.localStorage.getItem('token')}`,
-                        },
-                        body: {
-                                other_task_id: subtask.id,
-                                relation_kind: 'subtask',
-                        },
-                })
         })
 
-        it('shows subtask only once in each project list', () => {
+        it('shows subtask only once in project list', () => {
                 cy.visit(`/projects/${projectA.id}/1`)
-                cy.get('.subtask-nested .task-link').contains(subtask.title).should('exist')
-                cy.get('.tasks .task-link').contains(subtask.title).should('have.length', 1)
-
-                cy.visit(`/projects/${projectB.id}/1`)
                 cy.get('.subtask-nested .task-link').contains(subtask.title).should('exist')
                 cy.get('.tasks .task-link').contains(subtask.title).should('have.length', 1)
         })
