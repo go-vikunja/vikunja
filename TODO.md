@@ -4,23 +4,52 @@
 - [x] Create PLAN.md and TODO.md files
 - [x] Check GitHub CI logs for latest test failures
 - [x] Analyze failing tests and root causes
-- [x] Fix identified issues (undefined project ID bug)
+- [x] Fix identified issues (undefined project ID bug in router)
 - [x] Run linter, typecheck, unit tests
 - [x] Commit and push changes
 
-## Issue Fixed
-The E2E tests were failing because API requests were being made to `/api/v1/projects/undefined/tasks` when the project ID was null or undefined. This caused 400 errors from the backend.
+## Latest Issues Fixed (September 20, 2025)
 
-**Root Cause**: Multiple locations were using `Number(route.params.projectId)` which converts `undefined` to `NaN`, and `NaN.toString()` becomes "undefined" in API URLs.
+### E2E Test Failures Analysis
+The E2E tests were failing with these specific errors:
+- **project-view-table.spec.ts**: Tasks not appearing in table view (2 failures)
+- **overview.spec.ts**: Tasks not showing on home page overview (1 failure)
+- **team.spec.ts**: Create button not found (1 failure)
 
-**Solution**:
-- Enhanced AbstractService.getReplacedRoute() to validate all route parameters and throw errors for invalid values (undefined, null, NaN, "undefined", "null")
-- Fixed AddTask.vue to properly validate route project ID with NaN check before using it
-- Updated ContentLinkShare.vue and Filters.vue to use the safer `getRouteParamAsNumber()` utility
-- Fixed ProjectSettingsBackground.vue to validate project ID before making API calls
-- These changes prevent malformed API URLs and provide better error messages when parameters are invalid
+### Root Cause: Unsafe Route Parameter Parsing
+The main issue was in `frontend/src/router/index.ts` where `parseInt()` and `Number()` were being used directly on route parameters without validation. This could result in:
+- `parseInt(undefined)` → `NaN`
+- `NaN` being passed as projectId/viewId to components
+- Components failing to load data due to invalid IDs
+
+### Solution: Safe Parameter Parsing
+Replaced all unsafe parameter parsing in the router with `getRouteParamAsNumber()` utility function:
+
+**Files modified:**
+- `frontend/src/router/index.ts`: Fixed all route prop parsing
+- Routes affected: task detail, project views, project settings, filters
+
+**The `getRouteParamAsNumber()` utility:**
+- Returns `undefined` for invalid parameters instead of `NaN`
+- Allows proper validation in components/composables
+- Prevents malformed API requests
+
+### Validation Added
+- **useTaskList composable**: Already had guard to prevent loading with invalid projectId
+- **TaskCollectionService**: Already had validation to throw errors for undefined projectIds
+- **Router props**: Now safely convert parameters or return undefined
+
+## Previous Issues Fixed
+The E2E tests were also previously failing because API requests were being made to `/api/v1/projects/undefined/tasks` when the project ID was null or undefined.
+
+**Previous Solutions**:
+- Enhanced AbstractService.getReplacedRoute() to validate parameters
+- Fixed AddTask.vue to properly validate route project ID
+- Updated various components to use safer parameter utilities
+- Fixed ProjectSettingsBackground.vue parameter validation
 
 ## Notes
 - All lint, typecheck, and unit tests pass
 - Changes committed and pushed successfully
+- Router now safely handles undefined/invalid route parameters
 - Ready for next E2E test run to verify fix
