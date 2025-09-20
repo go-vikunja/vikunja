@@ -721,7 +721,7 @@ onBeforeRouteLeave(async () => {
 	}
 
 	if (project.value) {
-		await baseStore.handleSetCurrentProjectIfNotSet(project.value as any)
+		await baseStore.handleSetCurrentProjectIfNotSet(project.value)
 	}
 })
 
@@ -791,12 +791,12 @@ watch(
 			if (project.value) {
 				const projectValue = project.value
 				if (!Array.isArray(projectValue.tasks)) {
-					const mutableProject = {...projectValue, tasks: []} as any
+					const mutableProject = {...projectValue, tasks: []} as IProject
 					await baseStore.handleSetCurrentProjectIfNotSet(mutableProject)
 				}
 			}
-		} catch (e: any) {
-			if (e?.response?.status === 404) {
+		} catch (e: unknown) {
+			if (e && typeof e === 'object' && 'response' in e && e.response && typeof e.response === 'object' && 'status' in e.response && e.response.status === 404) {
 				taskNotFound.value = true
 				router.replace({name: 'not-found'})
 				return
@@ -876,8 +876,10 @@ const activeFieldElements: { [id in FieldType]: HTMLElement | null } = reactive(
 	startDate: null,
 })
 
-function setFieldRef(name: string, e: any) {
-	(activeFieldElements as any)[name] = unrefElement(e)
+function setFieldRef(name: string, e: Element | null) {
+	if (name in activeFieldElements) {
+		activeFieldElements[name as FieldType] = unrefElement(e)
+	}
 }
 
 function setFieldActive(fieldName: keyof typeof activeFields) {

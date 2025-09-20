@@ -276,7 +276,7 @@ if (props.shareType === 'user') {
 load()
 
 async function load() {
-	sharables.value = await stuffService.getAll(stuffModel as any) as SharableItem[]
+	sharables.value = await stuffService.getAll(stuffModel) as SharableItem[]
 	sharables.value.forEach((sharable) =>
 		selectedPermission.value[sharable.id] = sharable.permission,
 	)
@@ -289,7 +289,7 @@ async function deleteSharable() {
 		(stuffModel as ITeamProject).teamId = (sharable.value as ITeam).id || 0
 	}
 
-	await stuffService.delete(stuffModel as any)
+	await stuffService.delete(stuffModel)
 	showDeleteModal.value = false
 	for (const i in sharables.value) {
 		if (
@@ -322,7 +322,7 @@ async function add(admin?: boolean) {
 		(stuffModel as ITeamProject).teamId = (sharable.value as ITeam).id || 0
 	}
 
-	await stuffService.create(stuffModel as any)
+	await stuffService.create(stuffModel)
 	success({message: t('project.share.userTeam.addedSuccess', {type: shareTypeName.value})})
 	await load()
 }
@@ -344,7 +344,7 @@ async function toggleType(sharable: SharableItem) {
 		(stuffModel as ITeamProject).teamId = (sharable as unknown as ITeam).id || 0
 	}
 
-	const r = await stuffService.update(stuffModel as any)
+	const r = await stuffService.update(stuffModel)
 	for (const i in sharables.value) {
 		if (
 			((sharables.value[i] as IUserProject).username ===
@@ -373,9 +373,9 @@ async function find(query: string) {
 	// Include public teams here if we are sharing with teams and its enabled in the config
 	let results = []
 	if (props.shareType === 'team' && configStore.publicTeamsEnabled) {
-		results = await searchService.getAll({} as any, {s: query, includePublic: true})
+		results = await searchService.getAll({}, {s: query, includePublic: true})
 	} else {
-		results = await searchService.getAll({} as any, {s: query})
+		results = await searchService.getAll({}, {s: query})
 	}
 
 	found.value = results
