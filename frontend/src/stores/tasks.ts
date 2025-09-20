@@ -41,8 +41,8 @@ interface MatchedAssignee extends IUser {
 }
 
 // IDEA: maybe use a small fuzzy search here to prevent errors
-function findPropertyByValue(object: Record<string, any>, key: string, value: string | number, fuzzy = false) {
-	return Object.values(object).find((l: Record<string, any>) => {
+function findPropertyByValue(object: Record<string, unknown>, key: string, value: string | number, fuzzy = false) {
+	return Object.values(object).find((l: Record<string, unknown>) => {
 		if (fuzzy) {
 			return l[key]?.toLowerCase().includes(String(value).toLowerCase())
 		}
@@ -58,22 +58,22 @@ function validateUser(
 ) {
 	if (users.length === 1) {
 		return (
-			findPropertyByValue(users as any, 'username', query, true) ||
-			findPropertyByValue(users as any, 'name', query, true) ||
-			findPropertyByValue(users as any, 'email', query, true)
+			findPropertyByValue(users as Record<string, unknown>, 'username', query, true) ||
+			findPropertyByValue(users as Record<string, unknown>, 'name', query, true) ||
+			findPropertyByValue(users as Record<string, unknown>, 'email', query, true)
 		)
 	}
 
 	return (
-		findPropertyByValue(users as any, 'username', query) ||
-		findPropertyByValue(users as any, 'name', query) ||
-		findPropertyByValue(users as any, 'email', query)
+		findPropertyByValue(users as Record<string, unknown>, 'username', query) ||
+		findPropertyByValue(users as Record<string, unknown>, 'name', query) ||
+		findPropertyByValue(users as Record<string, unknown>, 'email', query)
 	)
 }
 
 // Check if the label exists
 function validateLabel(labels: ILabel[], label: string) {
-	return findPropertyByValue(labels as any, 'title', label)
+	return findPropertyByValue(labels as Record<string, unknown>, 'title', label)
 }
 
 async function addLabelToTask(task: ITask, label: ILabel) {

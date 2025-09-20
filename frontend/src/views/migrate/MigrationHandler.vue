@@ -181,7 +181,7 @@ async function initMigration() {
 		return
 	}
 
-	authUrl.value = await migrationService.getAuthUrl().then((response: any) => response.url)
+	authUrl.value = await migrationService.getAuthUrl().then((response: {url: string}) => response.url)
 
 	const TOKEN_HASH_PREFIX = '#token='
 	migratorAuthCode.value = location.hash.startsWith(TOKEN_HASH_PREFIX)

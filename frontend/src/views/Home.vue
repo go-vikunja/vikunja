@@ -80,7 +80,7 @@ const projectHistory = computed(() => {
 
 const tasksLoaded = ref(false)
 
-const deletionScheduledAt = computed(() => parseDateOrNull(authStore.info?.deletionScheduledAt as any))
+const deletionScheduledAt = computed(() => parseDateOrNull(authStore.info?.deletionScheduledAt as string))
 
 // This is to reload the tasks list after adding a new task through the global task add.
 // FIXME: Should use pinia (somehow?)

@@ -3,21 +3,21 @@ import {getFullBaseUrl} from './helpers/getFullBaseUrl'
 declare let self: ServiceWorkerGlobalScope & {
 	__WB_MANIFEST: string[]
 	__precacheManifest: string[]
-	addEventListener: (type: string, listener: (event: any) => void) => void
+	addEventListener: (type: string, listener: (event: Event) => void) => void
 	skipWaiting: () => Promise<void>
 }
 
 declare const workbox: {
-	setConfig: (config: any) => void
+	setConfig: (config: Record<string, unknown>) => void
 	routing: {
-		registerRoute: (route: any, strategy: any) => void
+		registerRoute: (route: unknown, strategy: unknown) => void
 	}
 	strategies: {
-		StaleWhileRevalidate: new () => any
-		NetworkOnly: new () => any
+		StaleWhileRevalidate: new () => unknown
+		NetworkOnly: new () => unknown
 	}
 	precaching: {
-		precacheAndRoute: (manifest: any, options?: any) => void
+		precacheAndRoute: (manifest: unknown, options?: unknown) => void
 	}
 	core: {
 		skipWaiting: () => void
@@ -27,7 +27,7 @@ declare const workbox: {
 
 declare const clients: {
 	claim: () => Promise<void>
-	openWindow: (url: string) => Promise<any>
+	openWindow: (url: string) => Promise<WindowClient | null>
 }
 
 declare function importScripts(...urls: string[]): void
@@ -86,6 +86,6 @@ self.addEventListener('notificationclick', function (event) {
 
 workbox.core.clientsClaim()
 // The precaching code provided by Workbox.
-self.__precacheManifest = ([] as any[]).concat(self.__precacheManifest || [])
+self.__precacheManifest = ([] as string[]).concat(self.__precacheManifest || [])
 workbox.precaching.precacheAndRoute(self.__precacheManifest, {})
 

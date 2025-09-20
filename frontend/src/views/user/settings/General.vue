@@ -362,6 +362,7 @@ import {useTitle} from '@/composables/useTitle'
 import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
 import type {IUserSettings} from '@/modelTypes/IUserSettings'
+import type {IProject} from '@/modelTypes/IProject'
 import {isSavedFilter} from '@/services/savedFilter'
 import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/modelTypes/IProjectView'
 import {PRIORITIES} from '@/constants/priorities'
@@ -532,13 +533,13 @@ watch(
 
 const projectStore = useProjectStore()
 const defaultProject = computed({
-	get: () => settings.value.defaultProjectId ? projectStore.projects[settings.value.defaultProjectId] as any : null,
+	get: () => settings.value.defaultProjectId ? projectStore.projects[settings.value.defaultProjectId] as IProject : null,
 	set(l) {
 		settings.value.defaultProjectId = l ? l.id : DEFAULT_PROJECT_ID
 	},
 })
 const filterUsedInOverview = computed({
-	get: () => settings.value.frontendSettings.filterIdUsedOnOverview ? projectStore.projects[settings.value.frontendSettings.filterIdUsedOnOverview] as any : null,
+	get: () => settings.value.frontendSettings.filterIdUsedOnOverview ? projectStore.projects[settings.value.frontendSettings.filterIdUsedOnOverview] as IProject : null,
 	set(l) {
 		settings.value.frontendSettings.filterIdUsedOnOverview = l ? l.id : null
 	},

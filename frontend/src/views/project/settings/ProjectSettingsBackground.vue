@@ -206,7 +206,7 @@ async function setBackground(backgroundId: string) {
 		id: Number(backgroundId),
 	})
 	// Add projectId for route replacement
-	;(backgroundModel as any).projectId = Number(route.params.projectId)
+	;(backgroundModel as BackgroundImageModel & {projectId: number}).projectId = Number(route.params.projectId)
 	await backgroundService.update(backgroundModel)
 	// After setting background, we need to refetch the updated project
 	if (currentProject.value) {

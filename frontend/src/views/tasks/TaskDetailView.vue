@@ -876,7 +876,7 @@ const activeFieldElements: { [id in FieldType]: HTMLElement | null } = reactive(
 	startDate: null,
 })
 
-function setFieldRef(name: string, e: any) {
+function setFieldRef(name: string, e: HTMLElement | null) {
 	if (name in activeFieldElements) {
 		const element = unrefElement(e)
 		activeFieldElements[name as FieldType] = (element as HTMLElement) || null

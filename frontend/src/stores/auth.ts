@@ -239,7 +239,7 @@ export const useAuthStore = defineStore('auth', () => {
 		}
 	}
 
-	async function openIdAuth({provider, code}: {provider: any, code: any}) {
+	async function openIdAuth({provider, code}: {provider: string, code: string}) {
 		const HTTP = HTTPFactory()
 		setIsLoading(true)
 		setLoggedInVia(null)
@@ -269,7 +269,7 @@ export const useAuthStore = defineStore('auth', () => {
 		}
 	}
 
-	async function linkShareAuth({hash, password}: {hash: any, password: any}) {
+	async function linkShareAuth({hash, password}: {hash: string, password: string}) {
 		const HTTP = HTTPFactory()
 		const response = await HTTP.post('/shares/' + hash + '/auth', {
 			password: password,
@@ -353,14 +353,14 @@ export const useAuthStore = defineStore('auth', () => {
 			updateLastUserRefresh()
 
 			return newUser
-		} catch (e: any) {
+		} catch (e: unknown) {
 			if((e?.response?.status >= 400 && e?.response?.status < 500) ||
 				e?.response?.data?.message === 'missing, malformed, expired or otherwise invalid token provided') {
 				await logout()
 				return
 			}
-			
-			const cause: {e: any, message?: string} = {e}
+
+			const cause: {e: unknown, message?: string} = {e}
 
 			if (typeof e?.response?.data?.message !== 'undefined') {
 				cause.message = e.response.data.message
@@ -382,7 +382,7 @@ export const useAuthStore = defineStore('auth', () => {
 			try {
 				await HTTPFactory().post('user/confirm', {token: emailVerifyToken})
 				return true
-			} catch(e: any) {
+			} catch(e: unknown) {
 				throw new Error(e?.response?.data?.message || 'Unknown error')
 			} finally {
 				localStorage.removeItem('emailConfirmToken')
@@ -426,7 +426,7 @@ export const useAuthStore = defineStore('auth', () => {
 			if (showMessage) {
 				success({message: i18n.global.t('user.settings.general.savedSuccess')})
 			}
-		} catch (e: any) {
+		} catch (e: unknown) {
 			error(e)
 		} finally {
 			cancel()
@@ -448,7 +448,7 @@ export const useAuthStore = defineStore('auth', () => {
 			try {
 				await refreshToken(!isLinkShareAuth.value)
 				await checkAuth()
-			} catch (e: any) {
+			} catch (e: unknown) {
 				// Don't logout on network errors as the user would then get logged out if they don't have
 				// internet for a short period of time - such as when the laptop is still reconnecting
 				if (e?.request?.status) {

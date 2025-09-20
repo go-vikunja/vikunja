@@ -88,8 +88,8 @@ async function resetPassword() {
 	const passwordReset = new PasswordResetModel({newPassword: credentials.password, token: token})
 	try {
 		const result = await passwordResetService.resetPassword(passwordReset)
-		successMessage.value = (result as any).message || t('user.auth.passwordResetSuccessful')
-	} catch (e: any) {
+		successMessage.value = (result as {message?: string}).message || t('user.auth.passwordResetSuccessful')
+	} catch (e: unknown) {
 		errorMsg.value = e.response?.data?.message || getErrorText(e)
 	}
 }

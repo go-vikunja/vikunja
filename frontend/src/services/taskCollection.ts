@@ -47,7 +47,7 @@ export default class TaskCollectionService extends AbstractService<ITask | IBuck
 
 	modelFactory(data: Partial<ITask | IBucket>): ITask | IBucket {
 		// FIXME: There must be a better way for this…
-		if (typeof (data as any).project_view_id !== 'undefined') {
+		if (typeof (data as Partial<IBucket>).project_view_id !== 'undefined') {
 			return new BucketModel(data as Partial<IBucket>)
 		}
 		return new TaskModel(data as Partial<ITask>)

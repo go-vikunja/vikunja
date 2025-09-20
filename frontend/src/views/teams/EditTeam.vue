@@ -105,14 +105,14 @@
 				<div class="field has-addons">
 					<div class="control is-expanded">
 						<Multiselect
-							:model-value="newMember as Record<string, any> | null"
+							:model-value="newMemberValue"
 							:loading="userService.loading"
 							:placeholder="$t('team.edit.search')"
 							:search-results="foundUsers as unknown as Record<string, unknown>[]"
 							label="username"
 							@search="findUser"
 							@select="(user: Record<string, unknown>) => newMember = user as unknown as IUser"
-							@update:modelValue="(value: Record<string, any> | null) => newMember = value as unknown as IUser"
+							@update:modelValue="(value: Record<string, unknown> | null) => newMember = value as unknown as IUser"
 						>
 							<template #searchResult="{option: user}">
 								<User
@@ -317,6 +317,8 @@ const showErrorTeamnameRequired = ref(false)
 const showMustSelectUserError = ref(false)
 
 const title = ref('')
+
+const newMemberValue = computed(() => newMember.value as Record<string, unknown> | null)
 
 loadTeam()
 
