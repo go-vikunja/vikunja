@@ -4,11 +4,11 @@
 		@submit="archiveProject()"
 	>
 		<template #header>
-			<span>{{ project.isArchived ? $t('project.archive.unarchive') : $t('project.archive.archive') }}</span>
+			<span>{{ project?.isArchived ? $t('project.archive.unarchive') : $t('project.archive.archive') }}</span>
 		</template>
-		
+
 		<template #text>
-			<p>{{ project.isArchived ? $t('project.archive.unarchiveText') : $t('project.archive.archiveText') }}</p>
+			<p>{{ project?.isArchived ? $t('project.archive.unarchiveText') : $t('project.archive.archiveText') }}</p>
 		</template>
 	</Modal>
 </template>
@@ -23,6 +23,7 @@ import {useTitle} from '@/composables/useTitle'
 
 import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
+import type {IProject} from '@/modelTypes/IProject'
 
 defineOptions({name: 'ProjectSettingArchive'})
 
@@ -31,13 +32,20 @@ const projectStore = useProjectStore()
 const router = useRouter()
 const route = useRoute()
 
-const project = computed(() => projectStore.projects[route.params.projectId])
-useTitle(() => t('project.archive.title', {project: project.value.title}))
+const project = computed(() => {
+	const projectId = Array.isArray(route.params.projectId) ? route.params.projectId[0] : route.params.projectId
+	return projectId ? projectStore.projects[Number(projectId)] : null
+})
+useTitle(() => t('project.archive.title', {project: project.value?.title || ''}))
 
 async function archiveProject() {
+	if (!project.value) {
+		return
+	}
+
 	try {
 		const newProject = await projectStore.updateProject({
-			...project.value,
+			...project.value as IProject,
 			isArchived: !project.value.isArchived,
 		})
 		useBaseStore().setCurrentProject(newProject)

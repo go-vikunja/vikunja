@@ -55,7 +55,7 @@
 						<BaseButton
 							v-if="backgroundThumbs[im.id]"
 							class="image-search__image-button"
-							@click="setBackground(im.id)"
+							@click="setBackground(String(im.id))"
 						>
 							<img
 								class="image-search__image"
@@ -122,7 +122,9 @@ import {useConfigStore} from '@/stores/config'
 import BackgroundUnsplashService from '@/services/backgroundUnsplash'
 import BackgroundUploadService from '@/services/backgroundUpload'
 import ProjectService from '@/services/project'
-import type BackgroundImageModel from '@/models/backgroundImage'
+import BackgroundImageModel from '@/models/backgroundImage'
+import type {IBackgroundImage} from '@/modelTypes/IBackgroundImage'
+import type {IProject} from '@/modelTypes/IProject'
 
 import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'
 import {useTitle} from '@/composables/useTitle'
@@ -143,7 +145,7 @@ useTitle(() => t('project.background.title'))
 
 const backgroundService = shallowReactive(new BackgroundUnsplashService())
 const backgroundSearchTerm = ref('')
-const backgroundSearchResult = ref([])
+const backgroundSearchResult = ref<IBackgroundImage[]>([])
 const backgroundThumbs = ref<Record<string, string>>({})
 const backgroundBlurHashes = ref<Record<string, string>>({})
 const currentPage = ref(1)
@@ -159,7 +161,7 @@ const configStore = useConfigStore()
 const unsplashBackgroundEnabled = computed(() => configStore.enabledBackgroundProviders.includes('unsplash'))
 const uploadBackgroundEnabled = computed(() => configStore.enabledBackgroundProviders.includes('upload'))
 const currentProject = computed(() => baseStore.currentProject)
-const hasBackground = computed(() => !!currentProject.value.backgroundInformation)
+const hasBackground = computed(() => !!currentProject.value?.backgroundInformation)
 
 // Show the default collection of backgrounds
 newBackgroundSearch()
@@ -176,12 +178,15 @@ function newBackgroundSearch() {
 
 async function searchBackgrounds(page = 1) {
 	currentPage.value = page
-	const result = await backgroundService.getAll({}, {s: backgroundSearchTerm.value, p: page})
+	const backgroundModel = new BackgroundImageModel()
+	const result = await backgroundService.getAll(backgroundModel, {s: backgroundSearchTerm.value, p: page})
 	backgroundSearchResult.value = backgroundSearchResult.value.concat(result)
-	result.forEach((background: BackgroundImageModel) => {
+	result.forEach((background: IBackgroundImage) => {
 		getBlobFromBlurHash(background.blurHash)
 			.then((b) => {
-				backgroundBlurHashes.value[background.id] = window.URL.createObjectURL(b)
+				if (b) {
+					backgroundBlurHashes.value[background.id] = window.URL.createObjectURL(b)
+				}
 			})
 
 		backgroundService.thumb(background).then(b => {
@@ -197,34 +202,46 @@ async function setBackground(backgroundId: string) {
 		return
 	}
 
-	const project = await backgroundService.update({
-		id: backgroundId,
-		projectId: route.params.projectId,
+	const backgroundModel = new BackgroundImageModel({
+		id: Number(backgroundId),
 	})
-	await baseStore.handleSetCurrentProject({project, forceUpdate: true})
-	projectStore.setProject(project)
+	// Add projectId for route replacement
+	;(backgroundModel as any).projectId = Number(route.params.projectId)
+	const backgroundResponse = await backgroundService.update(backgroundModel)
+	// After setting background, we need to refetch the updated project
+	if (currentProject.value) {
+		const updatedProject = await projectService.value.get(currentProject.value as IProject)
+		await baseStore.handleSetCurrentProject({project: updatedProject as IProject, forceUpdate: true})
+		projectStore.setProject(updatedProject as IProject)
+	}
 	success({message: t('project.background.success')})
 }
 
 const backgroundUploadInput = ref<HTMLInputElement | null>(null)
 async function uploadBackground() {
-	if (backgroundUploadInput.value?.files?.length === 0) {
+	if (!backgroundUploadInput.value?.files || backgroundUploadInput.value.files.length === 0) {
 		return
 	}
-
-	const project = await backgroundUploadService.value.create(
-		route.params.projectId,
-		backgroundUploadInput.value?.files[0],
+	const file = backgroundUploadInput.value.files[0]
+	if (!file) {
+		return
+	}
+	const project = await backgroundUploadService.value.uploadBackground(
+		Number(route.params.projectId),
+		file,
 	)
-	await baseStore.handleSetCurrentProject({project, forceUpdate: true})
-	projectStore.setProject(project)
+	await baseStore.handleSetCurrentProject({project: project as IProject, forceUpdate: true})
+	projectStore.setProject(project as IProject)
 	success({message: t('project.background.success')})
 }
 
 async function removeBackground() {
-	const project = await projectService.value.removeBackground(currentProject.value)
-	await baseStore.handleSetCurrentProject({project, forceUpdate: true})
-	projectStore.setProject(project)
+	if (!currentProject.value) {
+		return
+	}
+	const project = await projectService.value.removeBackground(currentProject.value as IProject)
+	await baseStore.handleSetCurrentProject({project: project as IProject, forceUpdate: true})
+	projectStore.setProject(project as IProject)
 	success({message: t('project.background.removeSuccess')})
 	router.back()
 }
