@@ -37,7 +37,7 @@ function getSentryConfig(env: Record<string, string>): ViteSentryPluginOptions {
 		cleanSourcemapsAfterUpload: true,
 		legacyErrorHandlingMode: true,
 		deploy: {
-			env: env.MODE,
+			env: env.MODE || 'production',
 		},
 		setCommits: {
 			auto: true,
