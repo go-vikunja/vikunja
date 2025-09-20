@@ -326,7 +326,7 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 							class="mis-4 mie-2 is-capitalized"
 							@update:modelValue="checked => toggleGroupPermissionsFromChild(group, checked)"
 						>
-							{{ formatPermissionTitle(route) }}
+							{{ formatPermissionTitle(String(route)) }}
 						</FancyCheckbox>
 						<br>
 					</template>
@@ -368,7 +368,7 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 
 			<template #text>
 				<p>
-					{{ $t('user.settings.apiTokens.delete.text1', {token: tokenToDelete.title}) }}<br>
+					{{ $t('user.settings.apiTokens.delete.text1', {token: tokenToDelete?.title || ''}) }}<br>
 					{{ $t('user.settings.apiTokens.delete.text2') }}
 				</p>
 			</template>

@@ -74,7 +74,7 @@
 			v-if="newToken"
 			class="mbe-4"
 		>
-			{{ $t('user.settings.caldav.tokenCreated', {token: newToken.token}) }}<br>
+			{{ $t('user.settings.caldav.tokenCreated', {token: newToken.id}) }}<br>
 			{{ $t('user.settings.caldav.wontSeeItAgain') }}
 		</Message>
 
@@ -109,6 +109,7 @@ import {success} from '@/message'
 import BaseButton from '@/components/base/BaseButton.vue'
 import Message from '@/components/misc/Message.vue'
 import CaldavTokenService from '@/services/caldavToken'
+import CaldavTokenModel from '@/models/caldavToken'
 import { formatDateShort } from '@/helpers/time/formatDate'
 import type {ICaldavToken} from '@/modelTypes/ICaldavToken'
 import {useConfigStore} from '@/stores/config'
@@ -128,7 +129,7 @@ service.getAll().then((result: ICaldavToken[]) => {
 
 const newToken = ref<ICaldavToken>()
 async function createToken() {
-	newToken.value = await service.create({}) as ICaldavToken
+	newToken.value = await service.create(new CaldavTokenModel({})) as ICaldavToken
 	tokens.value.push(newToken.value)
 }
 

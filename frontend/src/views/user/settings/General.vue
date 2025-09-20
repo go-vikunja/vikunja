@@ -27,7 +27,7 @@
 					v-if="isExternalUser"
 					class="help"
 				>
-					{{ $t('user.settings.general.externalUserNameChange', {provider: authStore.info.authProvider}) }}
+					{{ $t('user.settings.general.externalUserNameChange', {provider: authStore.info?.name || 'external provider'}) }}
 				</p>
 			</div>
 			<div class="field">
@@ -342,7 +342,7 @@
 
 
 <script setup lang="ts">
-import {computed, watch, ref, onBeforeMount} from 'vue'
+import {computed, watch, ref, onBeforeMount, type Ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 import isEqual from 'fast-deep-equal'
 
@@ -457,7 +457,7 @@ function useAvailableTimezones(settingsRef: Ref<IUserSettings>) {
 			if (r.data) {
 				// Transform timezones into objects with value/label pairs
 				availableTimezones.value = r.data
-					.sort((a, b) => a.localeCompare(b))
+					.sort((a: string, b: string) => a.localeCompare(b))
 					.map((tz: string) => ({
 						value: tz,
 						label: tz.replace(/_/g, ' '),
@@ -516,7 +516,7 @@ const availableLanguageOptions = ref(
 		.sort((a, b) => a.title.localeCompare(b.title)),
 )
 
-const isExternalUser = computed(() => !authStore.info.isLocalUser)
+const isExternalUser = computed(() => authStore.info ? !authStore.info.isLocalUser : false)
 
 watch(
 	() => authStore.settings,
@@ -532,23 +532,24 @@ watch(
 
 const projectStore = useProjectStore()
 const defaultProject = computed({
-	get: () => projectStore.projects[settings.value.defaultProjectId],
+	get: () => settings.value.defaultProjectId ? projectStore.projects[settings.value.defaultProjectId] : null,
 	set(l) {
 		settings.value.defaultProjectId = l ? l.id : DEFAULT_PROJECT_ID
 	},
 })
 const filterUsedInOverview = computed({
-	get: () => projectStore.projects[settings.value.frontendSettings.filterIdUsedOnOverview],
+	get: () => settings.value.frontendSettings.filterIdUsedOnOverview ? projectStore.projects[settings.value.frontendSettings.filterIdUsedOnOverview] : null,
 	set(l) {
 		settings.value.frontendSettings.filterIdUsedOnOverview = l ? l.id : null
 	},
 })
-const hasFilters = computed(() => typeof projectStore.projectsArray.find(p => isSavedFilter(p)) !== 'undefined')
+const hasFilters = computed(() => typeof (projectStore.projectsArray as any).find((p: any) => isSavedFilter(p)) !== 'undefined')
 const loading = computed(() => authStore.isLoadingGeneralSettings)
 
 async function updateSettings() {
 	await authStore.saveUserSettings({
 		settings: {...settings.value},
+		showMessage: true,
 	})
 	initialSettings.value = JSON.parse(JSON.stringify(settings.value))
 	isDirty.value = false

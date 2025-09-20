@@ -82,10 +82,12 @@ async function saveProjectPosition(e: SortableEvent) {
 	// To work around that we're explicitly checking that case here and decrease the index.
 	const newIndex = e.newIndex === projectsActive.length ? e.newIndex - 1 : e.newIndex
 
-	const projectId = parseInt(e.item.dataset.projectId)
+	const projectId = parseInt(e.item.dataset.projectId!)
 	const project = projectStore.projects[projectId]
 
-	const parentProjectId = e.to.parentNode.dataset.projectId ? parseInt(e.to.parentNode.dataset.projectId) : 0
+	if (!project) return
+
+	const parentProjectId = e.to.parentNode && 'dataset' in e.to.parentNode && (e.to.parentNode as any).dataset.projectId ? parseInt((e.to.parentNode as any).dataset.projectId) : 0
 	const projectBefore = projectsActive[newIndex - 1] ?? null
 	const projectAfter = projectsActive[newIndex + 1] ?? null
 	projectUpdating.value[project.id] = true
@@ -99,9 +101,10 @@ async function saveProjectPosition(e: SortableEvent) {
 		// create a copy of the project in order to not violate pinia manipulation
 		await projectStore.updateProject({
 			...project,
+			id: project.id,
 			position,
 			parentProjectId,
-		})
+		} as IProject)
 		emit('update:modelValue', availableProjects.value)
 	} finally {
 		projectUpdating.value[project.id] = false

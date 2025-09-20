@@ -27,8 +27,8 @@
 				</BaseButton>
 			</Message>
 			<BaseButton
-				v-if="!projectLoadError && currentProject"
-				:to="getProjectRoute()"
+				v-if="!projectLoadError && currentProject && getProjectRoute()"
+				:to="getProjectRoute()!"
 				variant="text"
 				class="project-title-button"
 				:class="{'m-0': !logoVisible}"

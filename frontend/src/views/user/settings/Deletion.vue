@@ -135,7 +135,7 @@ const authStore = useAuthStore()
 const configStore = useConfigStore()
 
 const userDeletionEnabled = computed(() => configStore.userDeletionEnabled)
-const deletionScheduledAt = computed(() => parseDateOrNull(authStore.info?.deletionScheduledAt))
+const deletionScheduledAt = computed(() => authStore.info?.deletionScheduledAt ? parseDateOrNull(authStore.info.deletionScheduledAt) : null)
 
 const isLocalUser = computed(() => authStore.info?.isLocalUser)
 

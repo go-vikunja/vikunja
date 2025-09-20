@@ -5,7 +5,7 @@
 		</Message>
 
 		<Message v-else-if="avatarProvider === 'openid'">
-			{{ $t('user.settings.avatar.openid', {provider: authStore.info.authProvider}) }}
+			{{ $t('user.settings.avatar.openid', {provider: authStore.info?.name || 'OpenID'}) }}
 		</Message>
 
 		<template v-else>
@@ -112,7 +112,7 @@ const loading = ref(false)
 const avatarProvider = ref('')
 
 async function avatarStatus() {
-	const {avatarProvider: currentProvider} = await avatarService.get({})
+	const {avatarProvider: currentProvider} = await avatarService.get(new AvatarModel())
 	avatarProvider.value = currentProvider
 }
 
@@ -120,7 +120,7 @@ avatarStatus()
 
 
 async function updateAvatarStatus() {
-	await avatarService.update(new AvatarModel({avatarProvider: avatarProvider.value}))
+	await avatarService.update(new AvatarModel({avatarProvider: avatarProvider.value as any}))
 	success({message: t('user.settings.avatar.statusUpdateSuccess')})
 	authStore.reloadAvatar()
 }
@@ -138,7 +138,7 @@ async function uploadAvatar() {
 	}
 
 	try {
-		const blob = await new Promise(resolve => canvas.toBlob(blob => resolve(blob)))
+		const blob = await new Promise<Blob | null>(resolve => canvas.toBlob((blob: Blob | null) => resolve(blob)))
 		await avatarService.create(blob)
 		success({message: t('user.settings.avatar.setSuccess')})
 		authStore.reloadAvatar()
@@ -161,7 +161,7 @@ function cropAvatar() {
 	loading.value = true
 	const reader = new FileReader()
 	reader.onload = e => {
-		avatarToCrop.value = e.target.result
+		avatarToCrop.value = e.target?.result
 		isCropAvatar.value = true
 	}
 	reader.onloadend = () => loading.value = false

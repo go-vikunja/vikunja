@@ -11,9 +11,15 @@ export function useRouteWithModal() {
 	const projectStore = useProjectStore()
 
 	const routeWithModal = computed(() => {
-		return backdropView.value
+		const resolved = backdropView.value
 			? router.resolve(backdropView.value)
 			: route
+
+		// Ensure name is not null for type compatibility
+		return {
+			...resolved,
+			name: resolved.name || 'default'
+		}
 	})
 
 	const currentModal = shallowRef<VNode>()
