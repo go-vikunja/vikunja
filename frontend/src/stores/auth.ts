@@ -360,7 +360,7 @@ export const useAuthStore = defineStore('auth', () => {
 			
 			console.error('Error refreshing user info:', e)
 			
-			throw new Error('Error while refreshing user info:', {cause})
+			throw new Error('Error while refreshing user info: ' + JSON.stringify(cause))
 		}
 	}
 

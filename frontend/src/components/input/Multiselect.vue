@@ -132,6 +132,10 @@ import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import BaseButton from '@/components/base/BaseButton.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 
+defineOptions({
+	name: 'Multiselect',
+})
+
 const props = withDefaults(defineProps<{
 	/** The object with the value, updated every time an entry is selected */
 	modelValue: T | T[] | null,
