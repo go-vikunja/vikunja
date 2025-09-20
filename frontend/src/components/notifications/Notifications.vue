@@ -145,16 +145,18 @@ async function loadNotifications() {
 	allNotifications.value = await notificationService.getAll()
 }
 
-function hidePopup(e) {
+function hidePopup(e: MouseEvent) {
 	if (showNotifications.value) {
-		closeWhenClickedOutside(e, popup.value, () => showNotifications.value = false)
+		if (popup.value) {
+			closeWhenClickedOutside(e, popup.value, () => showNotifications.value = false)
+		}
 	}
 }
 
-function to(n, index) {
+function to(n: any, index: number) {
 	const to = {
 		name: '',
-		params: {},
+		params: {} as Record<string, any>,
 	}
 
 	switch (n.name) {

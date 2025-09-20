@@ -7,7 +7,7 @@ import {eventToHotkeyString} from '@github/hotkey'
 const baseStore = useBaseStore()
 
 // See https://github.com/github/hotkey/discussions/85#discussioncomment-5214660
-function openQuickActionsViaHotkey(event) {
+function openQuickActionsViaHotkey(event: KeyboardEvent) {
 	const hotkeyString = eventToHotkeyString(event)
 	if (!hotkeyString) return
 	if (hotkeyString !== 'Control+k' && hotkeyString !== 'Meta+k') return

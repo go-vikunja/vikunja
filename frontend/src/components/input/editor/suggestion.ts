@@ -219,7 +219,7 @@ export default function suggestionSetup(t: (key: string) => string) {
 					cleanupFloating = autoUpdate(virtualReference, popupElement, updatePosition)
 				},
 
-				onUpdate(props) {
+				onUpdate(props: { clientRect?: () => DOMRect }) {
 					component.updateProps(props)
 
 					if (!props.clientRect || !popupElement) {
@@ -231,7 +231,7 @@ export default function suggestionSetup(t: (key: string) => string) {
 					virtualReference.getBoundingClientRect = () => rect
 				},
 
-				onKeyDown(props) {
+				onKeyDown(props: { event: KeyboardEvent }) {
 					if (props.event.key === 'Escape') {
 						if (popupElement) {
 							popupElement.style.display = 'none'

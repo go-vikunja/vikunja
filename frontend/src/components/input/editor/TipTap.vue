@@ -687,14 +687,17 @@ function focusIfEditing() {
 	}
 }
 
-function clickTasklistCheckbox(event) {
+function clickTasklistCheckbox(event: Event) {
 	event.stopImmediatePropagation()
 
-	if (event.target.localName !== 'p') {
+	const target = event.target as HTMLElement
+	if (target.localName !== 'p') {
 		return
 	}
 
-	event.target.parentNode.parentNode.firstChild.click()
+	const parentElement = target.parentNode?.parentNode as HTMLElement
+	const firstChild = parentElement?.firstChild as HTMLElement
+	firstChild?.click()
 }
 
 watch(

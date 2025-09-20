@@ -85,7 +85,7 @@ const DateClickHandler = Extension.create({
 const editor = useEditor({
 	extensions: [
 		StarterKit.configure({
-			history: false, // We'll handle history ourselves
+			// History is handled by default
 		}),
 		Placeholder.configure({
 			placeholder: t('filters.query.placeholder'),
@@ -163,9 +163,10 @@ function setEditorContentFromModelValue(newValue: string | undefined) {
 function updateDateInQuery(newDate: string | Date | null) {
 	if (!editor.value || !newDate) return
 
-	const dateStr = typeof newDate === 'string' ? newDate : newDate.toISOString().split('T')[0]
+	const dateStr: string = typeof newDate === 'string' ? newDate : (newDate?.toISOString().split('T')[0] ?? '')
 	const currentText = editor.value.getText()
-	const newText = currentText.replace(currentOldDatepickerValue.value, dateStr)
+	const oldValue = currentOldDatepickerValue.value || ''
+	const newText = currentText.replace(oldValue, dateStr)
 	currentOldDatepickerValue.value = dateStr
 
 	editor.value.commands.setContent(newText, {

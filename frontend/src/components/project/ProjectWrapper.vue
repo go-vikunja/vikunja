@@ -12,20 +12,20 @@
 
 		<div
 			class="switch-view-container d-print-none"
-			:class="{'is-justify-content-flex-end': views.length === 1}"
+			:class="{'is-justify-content-flex-end': (views?.length || 0) === 1}"
 		>
 			<div
-				v-if="views.length > 1"
+				v-if="(views?.length || 0) > 1"
 				class="switch-view"
 			>
 				<BaseButton
-					v-for="view in views"
+					v-for="view in views || []"
 					:key="view.id"
 					class="switch-view-button"
 					:class="{'is-active': view.id === viewId}"
 					:to="{ name: 'project.view', params: { projectId, viewId: view.id } }"
 				>
-					{{ getViewTitle(view) }}
+					{{ getViewTitle(view as any) }}
 				</BaseButton>
 			</div>
 			<slot name="header" />
@@ -72,7 +72,7 @@ const {t} = useI18n()
 const baseStore = useBaseStore()
 const projectStore = useProjectStore()
 
-const currentProject = computed<IProject>(() => {
+const currentProject = computed(() => {
 	return typeof baseStore.currentProject === 'undefined' ? {
 		id: 0,
 		title: '',

@@ -152,7 +152,7 @@ watchEffect(() => {
 const configStore = useConfigStore()
 const backgroundsEnabled = computed(() => configStore.enabledBackgroundProviders?.length > 0)
 
-function setSubscriptionInStore(sub: ISubscription) {
+function setSubscriptionInStore(sub: ISubscription | null) {
 	subscription.value = sub
 	const updatedProject = {
 		...props.project,
