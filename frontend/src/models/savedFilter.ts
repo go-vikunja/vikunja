@@ -17,9 +17,9 @@ export default class SavedFilterModel extends AbstractModel<ISavedFilter> implem
 		s: '',
 	}
 
-	owner: IUser = {}
-	created: Date = null
-	updated: Date = null
+	owner: IUser = new UserModel()
+	created: Date = new Date()
+	updated: Date = new Date()
 
 	constructor(data: Partial<ISavedFilter> = {}) {
 		super()
@@ -29,9 +29,9 @@ export default class SavedFilterModel extends AbstractModel<ISavedFilter> implem
 
 		// Filters are in snake_case for the API - this makes it consistent with the way filter params are used with one-off filters.
 		// Should probably be camelCase everywhere, but that's a task for another day.
-		this.filters = objectToSnakeCase(this.filters)
+		this.filters = objectToSnakeCase(this.filters) as ISavedFilter['filters']
 
-		this.created = new Date(this.created)
-		this.updated = new Date(this.updated)
+		this.created = this.created ? new Date(this.created) : new Date()
+		this.updated = this.updated ? new Date(this.updated) : new Date()
 	}
 }

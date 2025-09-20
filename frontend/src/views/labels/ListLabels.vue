@@ -32,12 +32,12 @@
 				<span
 					v-for="label in labelStore.labelsArray"
 					:key="label.id"
-					:class="{'disabled': userInfo.id !== label.createdBy.id}"
+					:class="{'disabled': userInfo?.id !== label.createdBy.id}"
 					:style="getLabelStyles(label)"
 					class="tag"
 				>
 					<span
-						v-if="userInfo.id !== label.createdBy.id"
+						v-if="userInfo?.id !== label.createdBy.id"
 						v-tooltip.bottom="$t('label.edit.forbidden')"
 					>
 						{{ label.title }}
@@ -50,7 +50,7 @@
 						{{ label.title }}
 					</BaseButton>
 					<BaseButton
-						v-if="userInfo.id === label.createdBy.id"
+						v-if="userInfo?.id === label.createdBy.id"
 						class="delete is-small"
 						@click="showDeleteDialoge(label)"
 					/>
@@ -185,16 +185,16 @@ function editLabelSubmit() {
 }
 
 function editLabel(label: ILabel) {
-	if (label.createdBy.id !== userInfo.value.id) {
+	if (label.createdBy.id !== userInfo.value?.id) {
 		return
 	}
 	// Duplicating the label to make sure it does not look like changes take effect immediatly as the label 
 	// object passed to this function here still has a reference to the store.
 	labelEditLabel.value = new LabelModel({
 		...label,
-		// The model does not support passing dates into it directly so we need to convert them first				
-		created: +label.created,
-		updated: +label.updated,
+		// The model does not support passing dates into it directly so we need to convert them first
+		created: label.created?.toISOString(),
+		updated: label.updated?.toISOString(),
 	})
 	isLabelEdit.value = true
 

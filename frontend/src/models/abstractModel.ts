@@ -12,10 +12,10 @@ export default abstract class AbstractModel<Model extends IAbstract = IAbstract>
 	/**
 	* Takes an object and merges its data with the default data of this model.
 	*/
-	assignData(data: Partial<Model>) {
-		data = objectToCamelCase(data)
+	assignData(data: Record<string, any>) {
+		const camelCasedData = objectToCamelCase(data)
 
 		// Put all data in our model while overriding those with a value of null or undefined with their defaults
-		Object.assign(this, omitBy(data, isNil))
+		Object.assign(this, omitBy(camelCasedData, isNil))
 	}
 }

@@ -7,6 +7,7 @@ import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {IProject} from '@/modelTypes/IProject'
 import type {ISubscription} from '@/modelTypes/ISubscription'
 import type {IBucket} from '@/modelTypes/IBucket'
+import type {ITaskComment} from '@/modelTypes/ITaskComment'
 
 import type {IRepeatAfter} from '@/types/IRepeatAfter'
 import type {IRelationKind} from '@/types/IRelationKind'
@@ -70,9 +71,9 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 	labels: ILabel[] = []
 	assignees: IUser[] = []
 
-	dueDate: Date | null = 0
-	startDate: Date | null = 0
-	endDate: Date | null = 0
+	dueDate: Date | null = null
+	startDate: Date | null = null
+	endDate: Date | null = null
 	repeatAfter: number | IRepeatAfter = 0
 	repeatFromCurrentDate = false
 	repeatMode: IRepeatMode = TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
@@ -82,20 +83,20 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 	percentDone = 0
 	relatedTasks:  Partial<Record<IRelationKind, ITask[]>> = {}
 	attachments: IAttachment[] = []
-	coverImageAttachmentId: IAttachment['id'] = null
+	coverImageAttachmentId: IAttachment['id'] = 0
 	identifier = ''
 	index = 0
 	isFavorite = false
-	subscription: ISubscription = null
+	subscription: ISubscription = new SubscriptionModel()
 
 	position = 0
-	
-	reactions = {}
-	comments = []
 
-	createdBy: IUser = UserModel
-	created: Date = null
-	updated: Date = null
+	reactions: Record<string, IUser[]> = {}
+	comments: ITaskComment[] = []
+
+	createdBy: IUser = new UserModel()
+	created: Date = new Date()
+	updated: Date = new Date()
 
 	projectId: IProject['id'] = 0
 	bucketId: IBucket['id'] = 0
@@ -106,7 +107,7 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 
 		this.id = Number(this.id)
 		this.title = this.title?.trim()
-		this.doneAt = parseDateOrNull(this.doneAt)
+		this.doneAt = parseDateOrNull(this.doneAt as any)
 
 		this.labels = this.labels
 			.map(l => new LabelModel(l))
@@ -117,9 +118,9 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 			return new UserModel(a)
 		})
 
-		this.dueDate = parseDateOrNull(this.dueDate)
-		this.startDate = parseDateOrNull(this.startDate)
-		this.endDate = parseDateOrNull(this.endDate)
+		this.dueDate = parseDateOrNull(this.dueDate as any)
+		this.startDate = parseDateOrNull(this.startDate as any)
+		this.endDate = parseDateOrNull(this.endDate as any)
 
 		// Parse the repeat after into something usable
 		this.repeatAfter = parseRepeatAfter(this.repeatAfter as number)
@@ -132,9 +133,12 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 
 		// Convert all subtasks to task models
 		Object.keys(this.relatedTasks).forEach(relationKind => {
-			this.relatedTasks[relationKind] = this.relatedTasks[relationKind].map(t => {
-				return new TaskModel(t)
-			})
+			const relationKey = relationKind as IRelationKind
+			if (this.relatedTasks[relationKey]) {
+				this.relatedTasks[relationKey] = this.relatedTasks[relationKey]!.map(t => {
+					return new TaskModel(t)
+				})
+			}
 		})
 
 		// Make all attachments to attachment models
@@ -150,8 +154,8 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 		}
 
 		this.createdBy = new UserModel(this.createdBy)
-		this.created = new Date(this.created)
-		this.updated = new Date(this.updated)
+		this.created = this.created ? new Date(this.created) : new Date()
+		this.updated = this.updated ? new Date(this.updated) : new Date()
 
 		this.projectId = Number(this.projectId)
 
@@ -161,8 +165,8 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 
 		// We can't convert emojis to camel case, hence we do this manually
 		this.reactions = {}
-		Object.keys(data.reactions || {}).forEach(reaction => {
-			this.reactions[reaction] = data.reactions[reaction].map(u => new UserModel(u))
+		Object.keys((data as any).reactions || {}).forEach(reaction => {
+			this.reactions[reaction] = (data as any).reactions[reaction].map((u: any) => new UserModel(u))
 		})
 	}
 
