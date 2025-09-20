@@ -70,17 +70,19 @@ describe('Home Page Task Overview', () => {
 	it('Should show a new task with a very soon due date at the top', () => {
 		const {tasks} = seedTasks(49)
 		const newTaskTitle = 'New Task'
-		
+
 		cy.visit('/')
-		
+
 		TaskFactory.create(1, {
 			id: 999,
 			title: newTaskTitle,
 			project_id: tasks[0].project_id,
 			due_date: new Date().toISOString(),
 		}, false)
-		
+
+		cy.intercept(Cypress.env('API_URL') + `/projects/${tasks[0].project_id}/views/1/tasks**`).as('loadTasks')
 		cy.visit(`/projects/${tasks[0].project_id}/1`)
+		cy.wait('@loadTasks')
 		cy.get('.tasks .task')
 			.should('contain.text', newTaskTitle)
 		cy.visit('/')
@@ -96,7 +98,9 @@ describe('Home Page Task Overview', () => {
 
 		cy.visit('/')
 
+		cy.intercept(Cypress.env('API_URL') + `/projects/${tasks[0].project_id}/views/1/tasks**`).as('loadTasks')
 		cy.visit(`/projects/${tasks[0].project_id}/1`)
+		cy.wait('@loadTasks')
 		cy.get('.task-add textarea')
 			.type(newTaskTitle+'{enter}')
 		cy.visit('/')
