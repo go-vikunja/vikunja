@@ -488,7 +488,7 @@ function updateTasks(bucketId: IBucket['id'], tasks: IBucket['tasks']) {
 	})
 }
 
-async function updateTaskPosition(e) {
+async function updateTaskPosition(e: any) {
 	drag.value = false
 
 	// While we could just pass the bucket index in through the function call, this would not give us the
@@ -600,7 +600,7 @@ function toggleShowNewTaskInput(bucketId: IBucket['id']) {
 }
 
 async function addTaskToBucket(bucketId: IBucket['id']) {
-	if (newTaskText.value === '') {
+	if (newTaskText.value === '' || !project.value) {
 		newTaskError.value[bucketId] = true
 		return
 	}
@@ -630,7 +630,7 @@ function scrollTaskContainerToTop(bucketId: IBucket['id']) {
 }
 
 async function createNewBucket() {
-	if (newBucketTitle.value === '') {
+	if (newBucketTitle.value === '' || !project.value) {
 		return
 	}
 
@@ -652,11 +652,13 @@ function deleteBucketModal(bucketId: IBucket['id']) {
 }
 
 async function deleteBucket() {
+	if (!project.value) return
+
 	try {
 		await kanbanStore.deleteBucket({
 			bucket: new BucketModel({
 				id: bucketToDelete.value,
-				projectId: project.value?.id,
+				projectId: project.value.id,
 				projectViewId: props.viewId,
 			}),
 			params: params.value,
@@ -719,6 +721,8 @@ function updateBucketPosition(e: { newIndex: number }) {
 	dragBucket.value = false
 
 	const bucket = buckets.value[e.newIndex]
+	if (!bucket) return
+
 	const bucketBefore = buckets.value[e.newIndex - 1] ?? null
 	const bucketAfter = buckets.value[e.newIndex + 1] ?? null
 
@@ -758,7 +762,7 @@ async function setBucketLimit(bucketId: IBucket['id'], now: boolean = false) {
 		return saveBucketLimit(bucketId, limit)
 	}
 
-	setBucketLimitCancel.value = setTimeout(saveBucketLimit, 2500, bucketId, limit)
+	setBucketLimitCancel.value = setTimeout(saveBucketLimit, 2500, bucketId, limit) as unknown as number
 }
 
 function shouldAcceptDrop(bucket: IBucket) {
@@ -778,7 +782,9 @@ function dragstart(bucket: IBucket) {
 }
 
 async function toggleDefaultBucket(bucket: IBucket) {
-	const defaultBucketId = view.value?.defaultBucketId === bucket.id
+	if (!project.value || !view.value) return
+
+	const defaultBucketId = view.value.defaultBucketId === bucket.id
 		? 0
 		: bucket.id
 
@@ -788,7 +794,7 @@ async function toggleDefaultBucket(bucket: IBucket) {
 		defaultBucketId,
 	}))
 
-	const views = project.value.views.map(v => v.id === view.value?.id ? updatedView : v)
+	const views = project.value.views.map(v => v.id === view.value.id ? updatedView : v)
 	const updatedProject = {
 		...project.value,
 		views,
@@ -800,34 +806,38 @@ async function toggleDefaultBucket(bucket: IBucket) {
 }
 
 async function toggleDoneBucket(bucket: IBucket) {
-	const doneBucketId = view.value?.doneBucketId === bucket.id
+	if (!project.value || !view.value) return
+
+	const doneBucketId = view.value.doneBucketId === bucket.id
 		? 0
 		: bucket.id
-	
+
 	const projectViewService = new ProjectViewService()
 	const updatedView = await projectViewService.update(new ProjectViewModel({
 		...view.value,
 		doneBucketId,
 	}))
-	
-	const views = project.value.views.map(v => v.id === view.value?.id ? updatedView : v)
+
+	const views = project.value.views.map(v => v.id === view.value.id ? updatedView : v)
 	const updatedProject = {
 		...project.value,
 		views,
 	}
-	
+
 	projectStore.setProject(updatedProject)
 	
 	success({message: t('project.kanban.doneBucketSavedSuccess')})
 }
 
 function collapseBucket(bucket: IBucket) {
+	if (!project.value) return
+
 	collapsedBuckets.value[bucket.id] = true
 	saveCollapsedBucketState(project.value.id, collapsedBuckets.value)
 }
 
 function unCollapseBucket(bucket: IBucket) {
-	if (!collapsedBuckets.value[bucket.id]) {
+	if (!collapsedBuckets.value[bucket.id] || !project.value) {
 		return
 	}
 
