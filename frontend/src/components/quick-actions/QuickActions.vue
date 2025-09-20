@@ -71,11 +71,11 @@
 							@keyup.prevent.esc="searchInput?.focus()"
 						>
 							<template v-if="r.type === ACTION_TYPE.LABELS">
-								<XLabel :label="i as any" />
+								<XLabel :label="i as DoAction<ILabel>" />
 							</template>
 							<template v-else-if="r.type === ACTION_TYPE.TASK">
 								<SingleTaskInlineReadonly
-									:task="i as any"
+									:task="i as DoAction<ITask>"
 									:show-project="true"
 								/>
 							</template>
@@ -126,7 +126,7 @@ import {success} from '@/message'
 import type {ITeam} from '@/modelTypes/ITeam'
 import type {ITask} from '@/modelTypes/ITask'
 import type {IProject} from '@/modelTypes/IProject'
-import type {IAbstract} from '@/modelTypes/IAbstract'
+import type {ILabel} from '@/modelTypes/ILabel'
 import {isSavedFilter} from '@/services/savedFilter'
 
 const {t} = useI18n({useScope: 'global'})
@@ -222,10 +222,12 @@ const foundCommands = computed(() => availableCmds.value.filter((a) =>
 	a.title.toLowerCase().includes(query.value.toLowerCase()),
 ))
 
+type ResultItem = DoAction<ITask> | DoAction<IProject> | DoAction<ILabel> | DoAction<ITeam> | DoAction<Command>
+
 interface Result {
 	type: ACTION_TYPE
 	title: string
-	items: any[]
+	items: ResultItem[]
 }
 
 const results = computed<Result[]>(() => {
@@ -413,7 +415,7 @@ function searchTasks() {
 	taskSearchTimeout.value = setTimeout(async () => {
 		const r = await taskService.getAll(new TaskModel(), params) as ITask[]
 		foundTasks.value = r.map((t) => {
-			(t as any).type = ACTION_TYPE.TASK
+			(t as DoAction<ITask>).type = ACTION_TYPE.TASK
 			return t as DoAction<ITask>
 		})
 	}, 150)
@@ -456,7 +458,7 @@ function search() {
 
 const searchInput = ref<HTMLElement | null>(null)
 
-async function doAction(type: ACTION_TYPE, item: any) {
+async function doAction(type: ACTION_TYPE, item: ResultItem) {
 	switch (type) {
 		case ACTION_TYPE.PROJECT:
 			closeQuickActions()
