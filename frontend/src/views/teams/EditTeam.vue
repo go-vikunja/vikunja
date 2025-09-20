@@ -108,14 +108,15 @@
 							v-model="newMember"
 							:loading="userService.loading"
 							:placeholder="$t('team.edit.search')"
-							:search-results="foundUsers"
+							:search-results="foundUsers as unknown as Record<string, unknown>[]"
 							label="username"
 							@search="findUser"
+							@select="(user: Record<string, unknown>) => newMember = user as unknown as IUser"
 						>
 							<template #searchResult="{option: user}">
 								<User
 									:avatar-size="24"
-									:user="user"
+									:user="user as unknown as IUser"
 									class="m-0"
 								/>
 							</template>
@@ -151,7 +152,7 @@
 							/>
 						</td>
 						<td>
-							<template v-if="m.id === userInfo.id">
+							<template v-if="m.id === userInfo?.id">
 								<b class="is-success">You</b>
 							</template>
 						</td>
@@ -174,7 +175,7 @@
 							class="actions"
 						>
 							<XButton
-								v-if="m.id !== userInfo.id"
+								v-if="m.id !== userInfo?.id"
 								:loading="teamMemberService.loading"
 								class="mie-2"
 								@click="() => toggleUserType(m)"
@@ -182,7 +183,7 @@
 								{{ m.admin ? $t('team.edit.makeMember') : $t('team.edit.makeAdmin') }}
 							</XButton>
 							<XButton
-								v-if="m.id !== userInfo.id"
+								v-if="m.id !== userInfo?.id"
 								:loading="teamMemberService.loading"
 								class="is-danger"
 								icon="trash-alt"
@@ -282,6 +283,7 @@ import {useConfigStore} from '@/stores/config'
 import type {ITeam} from '@/modelTypes/ITeam'
 import type {IUser} from '@/modelTypes/IUser'
 import type {ITeamMember} from '@/modelTypes/ITeamMember'
+import type {IAbstract} from '@/modelTypes/IAbstract'
 
 const authStore = useAuthStore()
 const configStore = useConfigStore()
@@ -319,7 +321,7 @@ const title = ref('')
 loadTeam()
 
 async function loadTeam() {
-	team.value = await teamService.value.get({id: teamId.value})
+	team.value = await teamService.value.get({id: teamId.value} as ITeam)
 	title.value = t('team.edit.title', {team: team.value?.name})
 	useTitle(() => title.value)
 }
@@ -331,12 +333,16 @@ async function save() {
 	}
 	showErrorTeamnameRequired.value = false
 
-	team.value = await teamService.value.update(team.value)
+	if (team.value) {
+		team.value = await teamService.value.update(team.value)
+	}
 	success({message: t('team.edit.success')})
 }
 
 async function deleteTeam() {
-	await teamService.value.delete(team.value)
+	if (team.value) {
+		await teamService.value.delete(team.value)
+	}
 	success({message: t('team.edit.delete.success')})
 	router.push({name: 'teams.index'})
 }
@@ -345,7 +351,7 @@ async function deleteMember() {
 	try {
 		await teamMemberService.value.delete({
 			teamId: teamId.value,
-			username: memberToDelete.value.username,
+			username: memberToDelete.value?.username ?? '',
 		})
 		success({message: t('team.edit.deleteUser.success')})
 		await loadTeam()
@@ -362,9 +368,9 @@ async function addUser() {
 	}
 	await teamMemberService.value.create({
 		teamId: teamId.value,
-		username: newMember.value.username,
+		username: newMember.value?.username ?? '',
 	})
-	newMember.value = null
+	newMember.value = undefined
 	await loadTeam()
 	success({message: t('team.edit.userAddedSuccess')})
 }
@@ -374,10 +380,12 @@ async function toggleUserType(member: ITeamMember) {
 	member.admin = !member.admin
 	member.teamId = teamId.value
 	const r = await teamMemberService.value.update(member)
-	for (const tm in team.value.members) {
-		if (team.value.members[tm].id === member.id) {
-			team.value.members[tm].admin = r.admin
-			break
+	if (team.value) {
+		for (const tm in team.value.members) {
+			if (team.value.members[tm].id === member.id) {
+				team.value.members[tm].admin = r.admin
+				break
+			}
 		}
 	}
 	success({
@@ -394,7 +402,7 @@ async function findUser(query: string) {
 	}
 
 	const users = await userService.value.getAll({}, {s: query})
-	foundUsers.value = users.filter((u: IUser) => u.id !== userInfo.value.id)
+	foundUsers.value = users.filter((u: IUser) => u.id !== userInfo.value?.id)
 }
 
 async function leave() {

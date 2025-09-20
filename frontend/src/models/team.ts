@@ -28,7 +28,7 @@ export default class TeamModel extends AbstractModel<ITeam> implements ITeam {
 		this.members = this.members.map(m => {
 			return new TeamMemberModel(m)
 		})
-		this.createdBy = new UserModel(this.createdBy)
+		this.createdBy = this.createdBy ? new UserModel(this.createdBy) : null
 
 		this.created = new Date(this.created)
 		this.updated = new Date(this.updated)
