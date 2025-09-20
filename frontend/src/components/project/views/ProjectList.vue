@@ -86,6 +86,12 @@
 						</template>
 					</draggable>
 
+					<!-- Always render a .tasks container, even when empty, for test consistency -->
+					<ul
+						v-else
+						class="tasks"
+					/>
+
 					<Pagination
 						:total-pages="totalPages"
 						:current-page="currentPage"
