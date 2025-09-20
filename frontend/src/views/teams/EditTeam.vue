@@ -105,13 +105,14 @@
 				<div class="field has-addons">
 					<div class="control is-expanded">
 						<Multiselect
-							v-model="newMember"
+							:model-value="newMember as Record<string, any> | null"
 							:loading="userService.loading"
 							:placeholder="$t('team.edit.search')"
 							:search-results="foundUsers as unknown as Record<string, unknown>[]"
 							label="username"
 							@search="findUser"
 							@select="(user: Record<string, unknown>) => newMember = user as unknown as IUser"
+							@update:model-value="(value: Record<string, any> | null) => newMember = value as unknown as IUser"
 						>
 							<template #searchResult="{option: user}">
 								<User

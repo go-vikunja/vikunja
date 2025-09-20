@@ -141,7 +141,7 @@ async function uploadAvatar() {
 	try {
 		const blob = await new Promise<Blob | null>(resolve => canvas.toBlob((blob: Blob | null) => resolve(blob)))
 		if (blob) {
-			await avatarService.create(blob)
+			await avatarService.uploadAvatar(blob)
 			success({message: t('user.settings.avatar.setSuccess')})
 			authStore.reloadAvatar()
 		}

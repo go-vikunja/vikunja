@@ -20,6 +20,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import {success} from '@/message'
 import {isValidHttpUrl} from '@/helpers/isValidHttpUrl'
+import {getRouteParamAsNumber} from '@/helpers/utils'
 
 defineOptions({name: 'ProjectSettingWebhooks'})
 
@@ -39,10 +40,7 @@ async function loadProject(projectId: number) {
 }
 
 const route = useRoute()
-const projectId = computed(() => route.params.projectId !== undefined
-	? parseInt(route.params.projectId as string)
-	: undefined,
-)
+const projectId = computed(() => getRouteParamAsNumber(route.params.projectId))
 
 watchEffect(() => projectId.value !== undefined && loadProject(projectId.value))
 
@@ -51,7 +49,10 @@ const webhookService = new WebhookService()
 const availableEvents = ref<string[]>()
 
 async function loadWebhooks() {
-	webhooks.value = await webhookService.getAll({projectId: project.value.id})
+	if (!project.value) {
+		return
+	}
+	webhooks.value = await webhookService.getAll(new WebhookModel({projectId: project.value.id}))
 	availableEvents.value = await webhookService.getAvailableEvents()
 }
 
@@ -59,17 +60,20 @@ const showDeleteModal = ref(false)
 const webhookIdToDelete = ref<number>()
 
 async function deleteWebhook() {
-	await webhookService.delete({
+	if (!webhookIdToDelete.value || !project.value) {
+		return
+	}
+	await webhookService.delete(new WebhookModel({
 		id: webhookIdToDelete.value,
 		projectId: project.value.id,
-	})
+	}))
 	showDeleteModal.value = false
 	success({message: t('project.webhooks.deleteSuccess')})
 	await loadWebhooks()
 }
 
 const newWebhook = ref(new WebhookModel())
-const newWebhookEvents = ref({})
+const newWebhookEvents = ref<Record<string, boolean>>({})
 
 async function create() {
 
@@ -86,6 +90,9 @@ async function create() {
 		return
 	}
 
+	if (!project.value || !webhooks.value) {
+		return
+	}
 	newWebhook.value.projectId = project.value.id
 	const created = await webhookService.create(newWebhook.value)
 	webhooks.value.push(created)
@@ -122,7 +129,7 @@ function validateSelectedEvents() {
 		:wide="true"
 	>
 		<XButton
-			v-if="!(webhooks?.length === 0 || showNewForm)"
+			v-if="webhooks && !(webhooks.length === 0 || showNewForm)"
 			icon="plus"
 			class="mbe-4"
 			@click="showNewForm = true"
@@ -131,7 +138,7 @@ function validateSelectedEvents() {
 		</XButton>
 
 		<div
-			v-if="webhooks?.length === 0 || showNewForm"
+			v-if="!webhooks || webhooks.length === 0 || showNewForm"
 			class="p-4"
 		>
 			<div class="field">
@@ -193,9 +200,9 @@ function validateSelectedEvents() {
 					<FancyCheckbox
 						v-for="event in availableEvents"
 						:key="event"
-						v-model="newWebhookEvents[event]"
+						:model-value="newWebhookEvents[event] || false"
 						class="available-events-check"
-						@update:modelValue="validateSelectedEvents"
+						@update:model-value="(value: boolean) => { newWebhookEvents[event] = value; validateSelectedEvents(); }"
 					>
 						{{ event }}
 					</FancyCheckbox>
@@ -216,7 +223,7 @@ function validateSelectedEvents() {
 		</div>
 
 		<table
-			v-if="webhooks?.length > 0"
+			v-if="webhooks && webhooks.length > 0"
 			class="table has-actions is-striped is-hoverable is-fullwidth"
 		>
 			<thead>
