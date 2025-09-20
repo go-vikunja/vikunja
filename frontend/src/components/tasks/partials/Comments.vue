@@ -143,7 +143,7 @@
 						width="48"
 					>
 					<figcaption class="is-sr-only">
-						{{ $t('misc.avatarOfUser', {user: getDisplayName(authStore.info)}) }}
+						{{ $t('misc.avatarOfUser', {user: authStore.info ? getDisplayName(authStore.info) : ''}) }}
 					</figcaption>
 				</figure>
 				<div class="media-content">
@@ -263,7 +263,7 @@ function avatarFor(u: IUser, size: number) {
 	const key = `${u.id}-${size}`
 	const cached = avatarCache.get(key)
 	if (!cached) {
-		fetchAvatarBlobUrl(u, size).then(url => avatarCache.set(key, url))
+		fetchAvatarBlobUrl(u, size).then((url: unknown) => avatarCache.set(key, url as string))
 	}
 
 	return avatarCache.get(key) || ''
@@ -273,10 +273,10 @@ watch(() => authStore.info, async (nu) => {
 	if (!nu) {
 		return
 	}
-	userAvatar.value = await fetchAvatarBlobUrl(nu, 48)
+	userAvatar.value = (await fetchAvatarBlobUrl(nu, 48)) as string
 }, {immediate: true})
 
-const currentUserId = computed(() => authStore.info.id)
+const currentUserId = computed(() => authStore.info?.id)
 const enabled = computed(() => configStore.taskCommentsEnabled)
 const actions = computed(() => {
 	if (!props.canWrite) {
@@ -304,7 +304,7 @@ async function attachmentUpload(files: File[] | FileList): (Promise<string[]>) {
 
 	const uploadPromises: Promise<string>[] = []
 
-	files.forEach((file: File) => {
+	Array.from(files).forEach((file: File) => {
 		const promise = new Promise<string>((resolve) => {
 			uploadFile(props.taskId, file, (uploadedFileUrl: string) => resolve(uploadedFileUrl))
 		})
@@ -337,7 +337,8 @@ async function loadComments(taskId: ITask['id']) {
 		}
 	}
 
-	comments.value = await taskCommentService.getAll({taskId}, {}, currentPage.value)
+	const taskCommentSearch = { taskId, id: 0, comment: '', author: {} as any, reactions: [], created: new Date(), updated: new Date() } as any
+	comments.value = await taskCommentService.getAll(taskCommentSearch, {}, currentPage.value)
 }
 
 async function changePage(page: number) {
@@ -421,9 +422,11 @@ async function editComment() {
 	commentEdit.taskId = props.taskId
 	try {
 		const comment = await taskCommentService.update(commentEdit)
-		for (const c in comments.value) {
-			if (comments.value[c].id === commentEdit.id) {
-				comments.value[c] = comment
+		if (comments.value) {
+			for (const c in comments.value) {
+				if (comments.value && comments.value[c] && comments.value[c].id === commentEdit.id) {
+					comments.value[c] = comment
+				}
 			}
 		}
 		saved.value = commentEdit.id

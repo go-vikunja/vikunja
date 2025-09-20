@@ -67,7 +67,7 @@ interface ButtonProps {
 	openExternalInNewTab?: boolean
 }
 
-const props = defineProps<ButtonProps>() as ButtonProps
+const props = defineProps<ButtonProps>() as any
 
 // Provide defaults with explicit typing
 const variant = computed((): ButtonTypes => (props.variant ?? 'primary') as ButtonTypes)

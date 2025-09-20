@@ -48,9 +48,9 @@ interface DropdownProps {
 	triggerIcon?: IconProp
 }
 
-const props = withDefaults(defineProps<DropdownProps>(), {
+const props = withDefaults(defineProps<DropdownProps>() as any, {
 	triggerIcon: 'ellipsis-h',
-}) as DropdownProps
+})
 
 const emit = defineEmits<{
 	'close': [event: PointerEvent]

@@ -12,6 +12,6 @@ import {formatISO, formatDateLong, formatDisplayDate} from '@/helpers/time/forma
 withDefaults(defineProps<{
 	date?: Date
 }>(), {
-	date: 0,
+	date: undefined,
 })
 </script>

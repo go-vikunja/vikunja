@@ -63,7 +63,7 @@ interface CreateEditProps {
 	loading?: boolean
 }
 
-const props = withDefaults(defineProps<CreateEditProps>(), {
+const props = withDefaults(defineProps<CreateEditProps>() as any, {
 	primaryLabel: '',
 	primaryIcon: 'plus',
 	primaryDisabled: false,
