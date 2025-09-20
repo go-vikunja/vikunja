@@ -63,12 +63,14 @@ onBeforeMount(() => {
 		return filter
 	}
 
+	const defaultFilter: IFilters = { filter: '', s: '', sort_by: [], order_by: [], filter_include_nulls: false }
+
 	const transformed = {
 		...props.modelValue,
-		filter: transformFilterFromApi(props.modelValue.filter) || { filter: '', s: '', sort_by: [], order_by: [], filter_include_nulls: false },
+		filter: props.modelValue.filter ? transformFilterFromApi(props.modelValue.filter) : defaultFilter,
 		bucketConfiguration: props.modelValue.bucketConfiguration.map(bc => ({
 			title: bc.title,
-			filter: transformFilterFromApi(bc.filter) || { filter: '', s: '', sort_by: [], order_by: [], filter_include_nulls: false },
+			filter: transformFilterFromApi(bc.filter),
 		})),
 	}
 
@@ -105,8 +107,8 @@ function save() {
 
 	emit('update:modelValue', {
 		...view.value,
-		filter: transformFilterForApi(view.value?.filter?.filter || ''),
-		bucketConfiguration: view.value?.bucketConfiguration.map(bc => ({
+		filter: transformFilterForApi(view.value.filter?.filter || ''),
+		bucketConfiguration: view.value.bucketConfiguration.map(bc => ({
 			title: bc.title,
 			filter: transformFilterForApi(bc.filter?.filter || ''),
 		})),
@@ -193,7 +195,7 @@ function handleBubbleSave() {
 		</label>
 		<FilterInput
 			id="filter"
-			v-model="view.filter.filter"
+			v-model="view.filter!.filter"
 			:project-id="view.projectId"
 			class="mbe-1"
 		/>
@@ -267,7 +269,7 @@ function handleBubbleSave() {
 							<div class="control">
 								<input
 									:id="'bucket_'+index+'_title'"
-									v-model="view.bucketConfiguration[index].title"
+									v-model="view.bucketConfiguration[index]!.title"
 									class="input"
 									:placeholder="$t('project.share.links.namePlaceholder')"
 								>
@@ -275,7 +277,7 @@ function handleBubbleSave() {
 						</div>
 
 						<FilterInput
-							v-model="view.bucketConfiguration[index].filter.filter"
+							v-model="view.bucketConfiguration[index]!.filter.filter"
 							:project-id="view.projectId"
 							:input-label="$t('project.views.filter')"
 							class="mbe-2"
@@ -290,7 +292,7 @@ function handleBubbleSave() {
 					<XButton
 						variant="secondary"
 						icon="plus"
-						@click="() => view.bucketConfiguration.push({title: '', filter: {filter: ''}})"
+						@click="() => view.bucketConfiguration.push({title: '', filter: { filter: '', s: '', sort_by: [], order_by: [], filter_include_nulls: false }})"
 					>
 						{{ $t('project.kanban.addBucket') }}
 					</XButton>

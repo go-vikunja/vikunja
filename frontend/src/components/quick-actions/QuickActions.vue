@@ -61,32 +61,32 @@
 						<BaseButton
 							v-for="(i, key) in r.items"
 							:key="key"
-							:ref="(el: Element | ComponentPublicInstance | null) => setResultRefs(el, k, key)"
+							:ref="(el: Element | ComponentPublicInstance | null) => setResultRefs(el, k, Number(key))"
 							class="result-item-button"
-							:class="{'is-strikethrough': (i as DoAction<ITask>)?.done}"
-							@keydown.up.prevent="select(k, key - 1)"
-							@keydown.down.prevent="select(k, key + 1)"
+							:class="{'is-strikethrough': r.type === ACTION_TYPE.TASK && (i as DoAction<ITask>)?.done}"
+							@keydown.up.prevent="select(k, Number(key) - 1)"
+							@keydown.down.prevent="select(k, Number(key) + 1)"
 							@click.prevent.stop="doAction(r.type, i)"
 							@keyup.prevent.enter="doAction(r.type, i)"
 							@keyup.prevent.esc="searchInput?.focus()"
 						>
 							<template v-if="r.type === ACTION_TYPE.LABELS">
-								<XLabel :label="i" />
+								<XLabel :label="i as any" />
 							</template>
 							<template v-else-if="r.type === ACTION_TYPE.TASK">
 								<SingleTaskInlineReadonly
-									:task="i"
+									:task="i as any"
 									:show-project="true"
 								/>
 							</template>
 							<template v-else>
 								<span
-									v-if="i.id < -1"
+									v-if="i && 'id' in i && (i as any).id < -1"
 									class="saved-filter-icon icon"
 								>
 									<Icon icon="filter" />
 								</span>
-								{{ i.title }}
+								{{ i && 'title' in i ? (i as any).title : '' }}
 							</template>
 						</BaseButton>
 					</div>
@@ -106,6 +106,7 @@ import TeamService from '@/services/team'
 
 import TeamModel from '@/models/team'
 import ProjectModel from '@/models/project'
+import TaskModel from '@/models/task'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import QuickAddMagic from '@/components/tasks/partials/QuickAddMagic.vue'
@@ -210,7 +211,7 @@ const foundLabels = computed(() => {
 	}
 
 	if (labels.length > 0) {
-		return labelStore.filterLabelsByQuery([], labels[0])
+		return labelStore.filterLabelsByQuery([], labels[0] || '')
 	}
 
 	return labelStore.filterLabelsByQuery([], text)
@@ -224,7 +225,7 @@ const foundCommands = computed(() => availableCmds.value.filter((a) =>
 interface Result {
 	type: ACTION_TYPE
 	title: string
-	items: DoAction<IAbstract>
+	items: any[]
 }
 
 const results = computed<Result[]>(() => {
@@ -294,7 +295,7 @@ const commands = computed<{ [key in COMMAND_TYPE]: Command }>(() => ({
 const placeholder = computed(() => selectedCmd.value?.placeholder || t('quickActions.placeholder'))
 
 const currentProject = computed(() => {
-	if (Object.keys(baseStore.currentProject).length === 0 || isSavedFilter(baseStore.currentProject)) {
+	if (!baseStore.currentProject || Object.keys(baseStore.currentProject).length === 0 || isSavedFilter(baseStore.currentProject)) {
 		return null
 	}
 	
@@ -314,7 +315,7 @@ const hintText = computed(() => {
 	}
 	const prefixes =
 		PREFIXES[authStore.settings.frontendSettings.quickAddMagicMode] ?? PREFIXES[PrefixMode.Default]
-	return t('quickActions.hint', prefixes)
+	return t('quickActions.hint', prefixes as unknown as Record<string, unknown>)
 })
 
 const availableCmds = computed(() => {
@@ -410,10 +411,10 @@ function searchTasks() {
 	}
 
 	taskSearchTimeout.value = setTimeout(async () => {
-		const r = await taskService.getAll({}, params) as DoAction<ITask>[]
+		const r = await taskService.getAll(new TaskModel(), params) as ITask[]
 		foundTasks.value = r.map((t) => {
-			t.type = ACTION_TYPE.TASK
-			return t
+			(t as any).type = ACTION_TYPE.TASK
+			return t as DoAction<ITask>
 		})
 	}, 150)
 }
@@ -438,11 +439,11 @@ function searchTeams() {
 	const {assignees} = parsedQuery.value
 	teamSearchTimeout.value = setTimeout(async () => {
 		const teamSearchPromises = assignees.map((t) =>
-			teamService.getAll({}, {s: t}),
+			teamService.getAll(new TeamModel() as ITeam, {s: t}),
 		)
 		const teamsResult = await Promise.all(teamSearchPromises)
 		foundTeams.value = teamsResult.flat().map((team) => {
-			team.title = team.name
+			(team as any).title = team.name
 			return team
 		})
 	}, 150)
@@ -455,7 +456,7 @@ function search() {
 
 const searchInput = ref<HTMLElement | null>(null)
 
-async function doAction(type: ACTION_TYPE, item: DoAction) {
+async function doAction(type: ACTION_TYPE, item: any) {
 	switch (type) {
 		case ACTION_TYPE.PROJECT:
 			closeQuickActions()
@@ -496,9 +497,11 @@ async function doAction(type: ACTION_TYPE, item: DoAction) {
 }
 
 async function doCmd() {
-	if (results.value.length === 1 && results.value[0].items.length === 1) {
+	if (results.value.length === 1 && results.value[0]?.items?.length === 1) {
 		const result = results.value[0]
-		doAction(result.type, result.items[0])
+		if (result?.items?.[0]) {
+			doAction(result.type, result.items[0])
+		}
 		return
 	}
 
@@ -534,7 +537,7 @@ async function newProject() {
 
 async function newTeam() {
 	const newTeam = new TeamModel({name: query.value})
-	const team = await teamService.create(newTeam)
+	const team = await teamService.create(newTeam as ITeam)
 	await router.push({
 		name: 'teams.edit',
 		params: {id: team.id},
@@ -560,11 +563,11 @@ function select(parentIndex: number, index: number) {
 	}
 	if (index < 0) {
 		parentIndex--
-		index = results.value[parentIndex].items.length - 1
+		index = (results.value[parentIndex]?.items?.length ?? 1) - 1
 	}
-	let elems = resultRefs.value[parentIndex][index]
-	if (results.value[parentIndex].items.length === index) {
-		elems = resultRefs.value[parentIndex + 1] ? resultRefs.value[parentIndex + 1][0] : undefined
+	let elems = resultRefs.value[parentIndex]?.[index]
+	if (results.value[parentIndex]?.items?.length === index) {
+		elems = resultRefs.value[parentIndex + 1] ? resultRefs.value[parentIndex + 1]?.[0] : undefined
 	}
 	if (
 		typeof elems === 'undefined'
