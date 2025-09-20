@@ -281,6 +281,7 @@ import {computed, nextTick, ref, watch, toRef} from 'vue'
 import {useRouteQuery} from '@vueuse/router'
 import {useI18n} from 'vue-i18n'
 import draggable from 'zhyswan-vuedraggable'
+import type {SortableEvent} from 'sortablejs'
 import {klona} from 'klona/lite'
 
 import {PERMISSIONS as Permissions} from '@/constants/permissions'
@@ -425,7 +426,7 @@ const bucketDraggableComponentData = computed(() => ({
 	],
 }))
 const project = computed(() => projectId.value ? (projectStore.projects[projectId.value] as IProject) : null)
-const view = computed(() => project.value?.views.find((v: any) => v.id === props.viewId) as IProjectView || null)
+const view = computed(() => project.value?.views.find((v: IProjectView) => v.id === props.viewId) as IProjectView || null)
 const canWrite = computed(() => (baseStore.currentProject?.maxPermission ?? 0) > Permissions.READ && view.value.bucketConfigurationMode === 'manual')
 const canCreateTasks = computed(() => canWrite.value && projectId.value > 0)
 const buckets = computed(() => kanbanStore.buckets)
@@ -488,7 +489,7 @@ function updateTasks(bucketId: IBucket['id'], tasks: IBucket['tasks']) {
 	})
 }
 
-async function updateTaskPosition(e: any) {
+async function updateTaskPosition(e: SortableEvent) {
 	drag.value = false
 
 	// While we could just pass the bucket index in through the function call, this would not give us the

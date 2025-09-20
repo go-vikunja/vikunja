@@ -153,10 +153,10 @@ function hidePopup(e: MouseEvent) {
 	}
 }
 
-function to(n: any, index: number) {
+function to(n: INotification, index: number) {
 	const to = {
 		name: '',
-		params: {} as Record<string, any>,
+		params: {} as Record<string, string | number>,
 	}
 
 	switch (n.name) {

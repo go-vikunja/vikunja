@@ -48,7 +48,7 @@ interface DropdownProps {
 	triggerIcon?: IconProp
 }
 
-const props = defineProps<DropdownProps>() as any
+defineProps<DropdownProps>()
 
 const emit = defineEmits<{
 	'close': [event: PointerEvent]

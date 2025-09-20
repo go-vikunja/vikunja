@@ -63,16 +63,7 @@ interface CreateEditProps {
 	loading?: boolean
 }
 
-const props = defineProps<{
-	title: string
-	primaryLabel?: string
-	primaryIcon?: IconProp
-	primaryDisabled?: boolean
-	hasPrimaryAction?: boolean
-	tertiary?: string
-	wide?: boolean
-	loading?: boolean
-}>() as any
+defineProps<CreateEditProps>()
 
 const emit = defineEmits<{
 	'create': [event: MouseEvent],
