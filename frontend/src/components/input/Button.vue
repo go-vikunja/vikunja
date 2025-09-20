@@ -45,12 +45,6 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import type {IconProp} from '@fortawesome/fontawesome-svg-core'
 import type {RouteLocationRaw} from 'vue-router'
 
-const VARIANT_CLASS_MAP = {
-	primary: 'is-primary',
-	secondary: 'is-outlined',
-	tertiary: 'is-text is-inverted underline-none',
-} as const
-
 type ButtonTypes = 'primary' | 'secondary' | 'tertiary'
 
 interface ButtonProps {
@@ -67,7 +61,13 @@ interface ButtonProps {
 	openExternalInNewTab?: boolean
 }
 
-const props = defineProps<ButtonProps>() as any
+const props = defineProps<ButtonProps>()
+
+const VARIANT_CLASS_MAP = {
+	primary: 'is-primary',
+	secondary: 'is-outlined',
+	tertiary: 'is-text is-inverted underline-none',
+} as const
 
 // Provide defaults with explicit typing
 const variant = computed((): ButtonTypes => (props.variant ?? 'primary') as ButtonTypes)

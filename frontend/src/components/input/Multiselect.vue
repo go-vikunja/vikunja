@@ -132,12 +132,12 @@ import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import BaseButton from '@/components/base/BaseButton.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 
+// Define the type for multiselect items - covers most use cases
+type T = Record<string, any>
+
 defineOptions({
 	name: 'Multiselect',
 })
-
-// Define the type for multiselect items - covers most use cases
-type T = Record<string, any>
 
 const props = withDefaults(defineProps<{
 	/** The object with the value, updated every time an entry is selected */
@@ -400,7 +400,7 @@ function preSelect(index: number) {
 	}
 
 	const elems = results.value[index]
-	if (typeof elems === 'undefined' || (elems as any)?.length === 0) {
+	if (typeof elems === 'undefined' || (Array.isArray(elems) && elems.length === 0)) {
 		return
 	}
 
@@ -466,9 +466,7 @@ defineExpose({
 	focus,
 })
 
-// Workaround for TypeScript issue with generic script setup components
-// This helps TypeScript understand the exported component type
-const __MULTISELECT_COMPONENT__ = {} as any
+// Component setup complete
 </script>
 
 <style lang="scss" scoped>

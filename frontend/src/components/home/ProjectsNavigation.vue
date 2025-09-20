@@ -87,7 +87,7 @@ async function saveProjectPosition(e: SortableEvent) {
 
 	if (!project) return
 
-	const parentProjectId = e.to.parentNode && 'dataset' in e.to.parentNode && (e.to.parentNode as any).dataset.projectId ? parseInt((e.to.parentNode as any).dataset.projectId) : 0
+	const parentProjectId = e.to.parentNode && 'dataset' in e.to.parentNode && (e.to.parentNode as HTMLElement).dataset.projectId ? parseInt((e.to.parentNode as HTMLElement).dataset.projectId) : 0
 	const projectBefore = projectsActive[newIndex - 1] ?? null
 	const projectAfter = projectsActive[newIndex + 1] ?? null
 	projectUpdating.value[project.id] = true

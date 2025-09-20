@@ -104,7 +104,7 @@ watch(
 	{immediate: true},
 )
 
-const flatPickrRef = ref<HTMLElement | null>(null)
+const flatPickrRef = ref<{ $el: HTMLElement } | null>(null)
 const flatPickerConfig = computed(() => ({
 	altFormat: t('date.altFormatLong'),
 	altInput: true,
@@ -150,14 +150,14 @@ const flatPickrDate = computed({
 })
 
 onMounted(() => {
-	const inputs = (flatPickrRef.value as any)?.$el.parentNode.querySelectorAll('.numInputWrapper > input.numInput')
+	const inputs = flatPickrRef.value?.$el.parentNode?.querySelectorAll('.numInputWrapper > input.numInput')
 	inputs?.forEach((i: HTMLInputElement) => {
 		i.addEventListener('input', handleFlatpickrInput)
 	})
 })
 
 onBeforeUnmount(() => {
-	const inputs = (flatPickrRef.value as any)?.$el.parentNode.querySelectorAll('.numInputWrapper > input.numInput')
+	const inputs = flatPickrRef.value?.$el.parentNode?.querySelectorAll('.numInputWrapper > input.numInput')
 	inputs?.forEach((i: HTMLInputElement) => {
 		i.removeEventListener('input', handleFlatpickrInput)
 	})

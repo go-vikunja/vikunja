@@ -1,6 +1,7 @@
+import type {Editor} from '@tiptap/core'
 import inputPrompt from '@/helpers/inputPrompt'
 
-export async function setLinkInEditor(pos: any, editor: any) {
+export async function setLinkInEditor(pos: { x: number, y: number }, editor: Editor) {
 	const previousUrl = editor?.getAttributes('link').href || ''
 	const url = await inputPrompt(pos, previousUrl)
 

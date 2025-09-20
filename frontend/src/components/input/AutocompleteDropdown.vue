@@ -119,7 +119,7 @@ function onSelectValue(value: T) {
 
 function onUpdateField(e: Event) {
 	setState('focused')
-	model.value = (e.currentTarget as HTMLInputElement).value as any
+	model.value = (e.currentTarget as HTMLInputElement).value as T
 }
 </script>
 

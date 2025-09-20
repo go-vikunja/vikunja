@@ -87,7 +87,7 @@ function selectItem(index: number) {
 }
 
 defineExpose({
-	onKeyDown
+	onKeyDown,
 })
 </script>
 

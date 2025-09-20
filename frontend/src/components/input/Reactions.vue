@@ -93,11 +93,11 @@ function getReactionTooltip(users: IUser[], value: string) {
 }
 
 const showEmojiPicker = ref(false)
-const emojiPickerRef = ref<HTMLElement | null>(null)
+const emojiPickerRef = ref<{ $el?: HTMLElement } | HTMLElement | null>(null)
 
 function hideEmojiPicker(e: MouseEvent) {
 	if (showEmojiPicker.value && emojiPickerRef.value) {
-		const element = (emojiPickerRef.value as any)?.$el || emojiPickerRef.value
+		const element = (emojiPickerRef.value && typeof emojiPickerRef.value === 'object' && '$el' in emojiPickerRef.value) ? emojiPickerRef.value.$el : emojiPickerRef.value as HTMLElement
 		closeWhenClickedOutside(e, element, () => showEmojiPicker.value = false)
 	}
 }
@@ -105,13 +105,13 @@ function hideEmojiPicker(e: MouseEvent) {
 onMounted(() => document.addEventListener('click', hideEmojiPicker))
 onBeforeUnmount(() => document.removeEventListener('click', hideEmojiPicker))
 
-const emojiPickerButtonRef = ref<HTMLElement | null>(null)
+const emojiPickerButtonRef = ref<{ $el?: HTMLElement } | HTMLElement | null>(null)
 const reactionContainerRef = ref<HTMLElement | null>(null)
 const emojiPickerPosition = ref()
 
 function toggleEmojiPicker() {
 	if (!showEmojiPicker.value) {
-		const buttonEl = (emojiPickerButtonRef.value as any)?.$el || emojiPickerButtonRef.value
+		const buttonEl = (emojiPickerButtonRef.value && typeof emojiPickerButtonRef.value === 'object' && '$el' in emojiPickerButtonRef.value) ? emojiPickerButtonRef.value.$el : emojiPickerButtonRef.value as HTMLElement
 		const rect = buttonEl?.getBoundingClientRect()
 		const container = reactionContainerRef.value?.getBoundingClientRect()
 		const left = rect && container ? rect.left - container.left + rect.width : 0
