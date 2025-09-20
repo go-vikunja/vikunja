@@ -47,6 +47,7 @@ import {useTitle} from '@/composables/useTitle'
 import {useStorage} from '@vueuse/core'
 
 import {useProjectStore} from '@/stores/projects'
+import type {IProject} from '@/modelTypes/IProject'
 
 const {t} = useI18n()
 const projectStore = useProjectStore()
@@ -57,8 +58,8 @@ const showArchived = useStorage('showArchived', false)
 const loading = computed(() => projectStore.isLoading)
 const projects = computed(() => {
 	return showArchived.value
-		? projectStore.projectsArray
-		: projectStore.projectsArray.filter(({isArchived}) => !isArchived)
+		? projectStore.projectsArray as IProject[]
+		: projectStore.projectsArray.filter(({isArchived}) => !isArchived) as IProject[]
 })
 </script>
 

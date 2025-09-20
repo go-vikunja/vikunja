@@ -10,7 +10,9 @@
 			v-if="!showAll"
 			class="show-tasks-options"
 		>
-			<DatepickerWithRange @update:modelValue="setDate">
+			<DatepickerWithRange
+			:model-value="{ dateFrom: props.dateFrom || '', dateTo: props.dateTo || '' }"
+			@update:modelValue="setDate">
 				<template #trigger="{toggle}">
 					<XButton
 						variant="primary"
@@ -101,7 +103,7 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-	'tasksLoaded': true,
+	'tasksLoaded': [value: boolean],
 }>()
 
 const authStore = useAuthStore()
@@ -132,8 +134,8 @@ const pageTitle = computed(() => {
 	return showAll.value
 		? t('task.show.titleCurrent')
 		: t('task.show.fromuntil', {
-			from: formatDate(props.dateFrom, 'LL'),
-			until: formatDate(props.dateTo, 'LL'),
+			from: formatDate(props.dateFrom || new Date(), 'LL'),
+			until: formatDate(props.dateTo || new Date(), 'LL'),
 		})
 })
 const hasTasks = computed(() => tasks.value && tasks.value.length > 0)
@@ -149,11 +151,14 @@ function setDate(dates: dateStrings) {
 	const dateFromStr = dates.dateFrom instanceof Date ? dates.dateFrom.toISOString().split('T')[0] : dates.dateFrom
 	const dateToStr = dates.dateTo instanceof Date ? dates.dateTo.toISOString().split('T')[0] : dates.dateTo
 
+	const fromQuery = dateFromStr ?? (props.dateFrom instanceof Date ? props.dateFrom.toISOString().split('T')[0] : props.dateFrom)
+	const toQuery = dateToStr ?? (props.dateTo instanceof Date ? props.dateTo.toISOString().split('T')[0] : props.dateTo)
+
 	router.push({
 		name: route.name as string,
 		query: {
-			from: dateFromStr ?? props.dateFrom,
-			to: dateToStr ?? props.dateTo,
+			from: fromQuery,
+			to: toQuery,
 			showOverdue: props.showOverdue ? 'true' : 'false',
 			showNulls: props.showNulls ? 'true' : 'false',
 		},
@@ -215,18 +220,20 @@ async function loadPendingTasks(from: Date|string, to: Date|string) {
 		projectId = filterId
 	}
 
-	tasks.value = await taskStore.loadTasks(params, projectId)
+	const loadedTasks = await taskStore.loadTasks(params, projectId)
+	tasks.value = Array.isArray(loadedTasks) ? loadedTasks : Object.values(loadedTasks)
 	emit('tasksLoaded', true)
 }
 
 // FIXME: this modification should happen in the store
 function updateTasks(updatedTask: ITask) {
-	for (const t in tasks.value) {
-		if (tasks.value[t].id === updatedTask.id) {
-			tasks.value[t] = updatedTask
+	for (let i = 0; i < tasks.value.length; i++) {
+		const task = tasks.value[i]
+		if (task && task.id === updatedTask.id) {
+			tasks.value[i] = updatedTask
 			// Move the task to the end of the done tasks if it is now done
 			if (updatedTask.done) {
-				tasks.value.splice(t, 1)
+				tasks.value.splice(i, 1)
 				tasks.value.push(updatedTask)
 			}
 			break
@@ -234,7 +241,7 @@ function updateTasks(updatedTask: ITask) {
 	}
 }
 
-watchEffect(() => loadPendingTasks(props.dateFrom, props.dateTo))
+watchEffect(() => loadPendingTasks(props.dateFrom || new Date(), props.dateTo || new Date()))
 watchEffect(() => setTitle(pageTitle.value))
 </script>
 

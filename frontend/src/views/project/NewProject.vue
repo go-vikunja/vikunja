@@ -77,11 +77,11 @@ const showError = ref(false)
 const project = reactive(new ProjectModel())
 const projectService = shallowReactive(new ProjectService())
 const projectStore = useProjectStore()
-const parentProject = ref<IProject | null>(null)
+const parentProject = ref<IProject | undefined>(undefined)
 
 watch(
 	() => props.parentProjectId,
-	() => parentProject.value = projectStore.projects[props.parentProjectId!] || null,
+	() => parentProject.value = (projectStore.projects[props.parentProjectId!] as IProject) || undefined,
 	{immediate: true},
 )
 
