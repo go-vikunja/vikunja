@@ -4,7 +4,7 @@ import {reactive} from 'vue'
 import {createRouter, createMemoryHistory} from 'vue-router'
 import BaseButton from './BaseButton.vue'
 
-function setupApp({ app }) {
+function setupApp({ app }: { app: any }) {
 	// Router mock
 	app.use(createRouter({
 		history: createMemoryHistory(),

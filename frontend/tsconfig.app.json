@@ -24,8 +24,7 @@
       "@/*": ["./src/*"]
     },
     "types": [
-      // https://github.com/ikenfin/vite-plugin-sentry#typescript
-      "vite-plugin-sentry/client"
+      // "vite-plugin-sentry/client" // Temporarily disabled due to missing types
     ],
   }
 }
