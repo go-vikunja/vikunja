@@ -16,7 +16,7 @@
 				@click="toggleOpen"
 			>
 				<Icon
-					:icon="triggerIcon"
+					:icon="triggerIcon || 'ellipsis-h'"
 					class="icon"
 				/>
 			</BaseButton>
@@ -48,9 +48,7 @@ interface DropdownProps {
 	triggerIcon?: IconProp
 }
 
-const props = withDefaults(defineProps<DropdownProps>() as any, {
-	triggerIcon: 'ellipsis-h',
-})
+const props = defineProps<DropdownProps>() as any
 
 const emit = defineEmits<{
 	'close': [event: PointerEvent]
