@@ -38,8 +38,8 @@
 					</RouterLink>
 
 					<ColorBubble
-						v-if="task.hexColor !== ''"
-						:color="getHexColor(task.hexColor)"
+						v-if="task.hexColor !== '' && getHexColor(task.hexColor)"
+						:color="getHexColor(task.hexColor)!"
 						class="mie-1"
 					/>
 	
@@ -74,17 +74,17 @@
 				/>
 
 				<Popup
-					v-if="+new Date(task.dueDate) > 0"
+					v-if="task.dueDate && +new Date(task.dueDate) > 0"
 				>
 					<template #trigger="{toggle, isOpen}">
 						<BaseButton
-							v-tooltip="formatDateLong(task.dueDate)"
+							v-tooltip="task.dueDate ? formatDateLong(task.dueDate) : ''"
 							class="dueDate"
 							@click.prevent.stop="toggle()"
-						>	
+						>
 							<time
-								:datetime="formatISO(task.dueDate)"
-								:class="{'overdue': task.dueDate <= new Date() && !task.done}"
+								:datetime="task.dueDate ? formatISO(task.dueDate) : ''"
+								:class="{'overdue': task.dueDate && task.dueDate <= new Date() && !task.done}"
 								class="is-italic"
 								:aria-expanded="isOpen ? 'true' : 'false'"
 							>
@@ -234,7 +234,7 @@ const emit = defineEmits<{
 
 function getTaskById(taskId: number): ITask | undefined {
 	if (typeof props.allTasks === 'undefined' || props.allTasks.length === 0) {
-		return null
+		return undefined
 	}
 
 	return props.allTasks.find(t => t.id === taskId)
@@ -245,7 +245,11 @@ const {t} = useI18n({useScope: 'global'})
 const taskService = shallowReactive(new TaskService())
 const task = ref<ITask>(new TaskModel())
 
-const isRepeating = computed(() => task.value.repeatAfter.amount > 0 || (task.value.repeatAfter.amount === 0 && task.value.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH))
+const isRepeating = computed(() => {
+	const repeatAfter = task.value.repeatAfter
+	const amount = typeof repeatAfter === 'number' ? repeatAfter : repeatAfter.amount
+	return amount > 0 || (amount === 0 && task.value.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH)
+})
 
 watch(
 	() => props.theTask,
@@ -263,9 +267,9 @@ const projectStore = useProjectStore()
 const taskStore = useTaskStore()
 
 const project = computed(() => projectStore.projects[task.value.projectId])
-const projectColor = computed(() => project.value ? project.value?.hexColor : '')
+const projectColor = computed(() => project.value?.hexColor || '')
 
-const showProjectSeparately = computed(() => !props.showProject && currentProject.value?.id !== task.value.projectId && project.value)
+const showProjectSeparately = computed(() => !props.showProject && currentProject.value?.id !== task.value.projectId && !!project.value)
 
 const currentProject = computed(() => {
 	return typeof baseStore.currentProject === 'undefined' ? {
@@ -345,6 +349,11 @@ function undoDone(checked: boolean) {
 async function toggleFavorite() {
 	task.value = await taskStore.toggleFavorite(task.value)
 	emit('taskUpdated', task.value)
+}
+
+function deferTaskUpdate(updatedTask: ITask) {
+	task.value = updatedTask
+	emit('taskUpdated', updatedTask)
 }
 
 const taskRoot = ref<HTMLElement | null>(null)

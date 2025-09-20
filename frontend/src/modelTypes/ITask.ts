@@ -46,7 +46,7 @@ export interface ITask extends IAbstract {
 	subscription: ISubscription
 
 	position: number
-	
+
 	reactions: IReactionPerEntity
 	comments: ITaskComment[]
 
@@ -56,6 +56,9 @@ export interface ITask extends IAbstract {
 
 	projectId: IProject['id'] // Meta, only used when creating a new task
 	bucketId: IBucket['id']
+
+	// Index signature to make interface compatible with Record<string, unknown>
+	[key: string]: unknown
 }
 
 export type ITaskPartialWithId = PartialWithId<ITask>

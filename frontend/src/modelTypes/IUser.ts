@@ -23,4 +23,7 @@ export interface IUser extends IAbstract {
 
 	isLocalUser: boolean
 	deletionScheduledAt: string | Date | null
+
+	// Index signature to make interface compatible with Record<string, unknown>
+	[key: string]: unknown
 }
