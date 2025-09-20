@@ -44,6 +44,10 @@ describe('Subtask duplicate handling', () => {
                                 other_task_id: subtask.id,
                                 relation_kind: 'subtask',
                         },
+                        failOnStatusCode: false,
+                }).then((response) => {
+                        // Accept both success (201) and conflict (409) - conflict means relation already exists
+                        expect([201, 409]).to.include(response.status)
                 })
         })
 
