@@ -138,9 +138,6 @@ import {useTitle} from '@/composables/useTitle'
 import {useProjectStore} from '@/stores/projects'
 import {getErrorText} from '@/message'
 
-interface MigrationAuthResponse {
-	url: string
-}
 
 interface MigrationStatusResponse {
 	started_at?: string

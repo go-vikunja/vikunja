@@ -7,7 +7,6 @@ import TaskCollectionService, {
 	type TaskFilterParams,
 } from '@/services/taskCollection'
 import type {ITask} from '@/modelTypes/ITask'
-import type {IBucket} from '@/modelTypes/IBucket'
 import {error} from '@/message'
 import type {IProject} from '@/modelTypes/IProject'
 import {useAuthStore} from '@/stores/auth'

@@ -492,7 +492,7 @@ async function doAction(type: ACTION_TYPE, item: ResultItem) {
 			selectedCmd.value = item as DoAction<Command>
 			searchInput.value?.focus()
 			break
-		case ACTION_TYPE.LABELS:
+		case ACTION_TYPE.LABELS: {
 			const labelItem = item as DoAction<ILabel>
 			if (labelItem.title && /\s/.test(labelItem.title)) {
 				query.value = '*"' + labelItem.title + '"'
@@ -502,6 +502,7 @@ async function doAction(type: ACTION_TYPE, item: ResultItem) {
 			searchInput.value?.focus()
 			searchTasks()
 			break
+		}
 	}
 }
 

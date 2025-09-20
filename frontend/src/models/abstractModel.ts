@@ -3,7 +3,7 @@ import {omitBy, isNil} from '@/helpers/utils'
 import type {Permission} from '@/constants/permissions'
 import type {IAbstract} from '@/modelTypes/IAbstract'
 
-export default abstract class AbstractModel<Model extends IAbstract = IAbstract> implements IAbstract {
+export default abstract class AbstractModel<_Model extends IAbstract = IAbstract> implements IAbstract {
 	[key: string]: unknown
 
 	/**

@@ -26,7 +26,7 @@ const emit = defineEmits<{
 	'cancel': [],
 }>()
 
-const view = ref<IProjectView>(props.modelValue)
+const view = ref<IProjectView>({...props.modelValue})
 
 const labelStore = useLabelStore()
 const projectStore = useProjectStore()

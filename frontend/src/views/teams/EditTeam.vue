@@ -284,7 +284,6 @@ import {useConfigStore} from '@/stores/config'
 import type {ITeam} from '@/modelTypes/ITeam'
 import type {IUser} from '@/modelTypes/IUser'
 import type {ITeamMember} from '@/modelTypes/ITeamMember'
-import type {IAbstract} from '@/modelTypes/IAbstract'
 
 const authStore = useAuthStore()
 const configStore = useConfigStore()

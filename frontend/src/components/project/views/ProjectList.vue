@@ -156,7 +156,7 @@ const taskPositionService = ref(new TaskPositionService())
 
 // Saved filter composable for accessing filter data
 const _savedFilter = useSavedFilter(
-	projectId.value !== undefined && projectId.value < 0 ? () => projectId.value! : undefined,
+	computed(() => projectId.value !== undefined && projectId.value < 0 ? projectId.value : undefined),
 ).filter
 
 const tasks = ref<ITask[]>([])
