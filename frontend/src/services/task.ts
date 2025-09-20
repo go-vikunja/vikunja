@@ -8,7 +8,7 @@ import {colorFromHex} from '@/helpers/color/colorFromHex'
 import {SECONDS_A_DAY, SECONDS_A_HOUR, SECONDS_A_WEEK} from '@/constants/date'
 import {objectToSnakeCase} from '@/helpers/case'
 
-const parseDate = date => {
+const parseDate = (date: any) => {
 	if (date) {
 		return new Date(date).toISOString()
 	}
@@ -27,15 +27,15 @@ export default class TaskService extends AbstractService<ITask> {
 		})
 	}
 
-	modelFactory(data) {
+	modelFactory(data: Partial<ITask>) {
 		return new TaskModel(data)
 	}
 
-	beforeUpdate(model) {
+	beforeUpdate(model: ITask) {
 		return this.processModel(model)
 	}
 
-	beforeCreate(model) {
+	beforeCreate(model: ITask) {
 		return this.processModel(model)
 	}
 
@@ -43,7 +43,7 @@ export default class TaskService extends AbstractService<ITask> {
 		return false
 	}
 
-	processModel(updatedModel) {
+	processModel(updatedModel: any) {
 		const model = {...updatedModel}
 
 		model.title = model.title?.trim()
@@ -68,7 +68,7 @@ export default class TaskService extends AbstractService<ITask> {
 		}
 		// Make normal timestamps from js dates
 		if (model.reminders.length > 0) {
-			model.reminders.forEach(r => {
+			model.reminders.forEach((r: any) => {
 				r.reminder = new Date(r.reminder).toISOString()
 			})
 		}
@@ -94,7 +94,7 @@ export default class TaskService extends AbstractService<ITask> {
 
 		// Do the same for all related tasks
 		Object.keys(model.relatedTasks).forEach(relationKind => {
-			model.relatedTasks[relationKind] = model.relatedTasks[relationKind].map(t => {
+			model.relatedTasks[relationKind] = model.relatedTasks[relationKind].map((t: any) => {
 				return this.processModel(t)
 			})
 		})
@@ -102,7 +102,7 @@ export default class TaskService extends AbstractService<ITask> {
 		// Process all attachments to prevent parsing errors
 		if (model.attachments.length > 0) {
 			const attachmentService = new AttachmentService()
-			model.attachments.map(a => {
+			model.attachments.map((a: any) => {
 				return attachmentService.processModel(a)
 			})
 		}
@@ -110,7 +110,7 @@ export default class TaskService extends AbstractService<ITask> {
 		// Preprocess all labels
 		if (model.labels.length > 0) {
 			const labelService = new LabelService()
-			model.labels = model.labels.map(l => labelService.processModel(l))
+			model.labels = model.labels.map((l: any) => labelService.processModel(l))
 		}
 
 		const transformed = objectToSnakeCase(model)
@@ -118,7 +118,7 @@ export default class TaskService extends AbstractService<ITask> {
 		// We can't convert emojis to skane case, hence we add them back again
 		transformed.reactions = {}
 		Object.keys(updatedModel.reactions || {}).forEach(reaction => {
-			transformed.reactions[reaction] = updatedModel.reactions[reaction].map(u => objectToSnakeCase(u))
+			transformed.reactions[reaction] = updatedModel.reactions[reaction].map((u: any) => objectToSnakeCase(u))
 		})
 
 		return transformed as ITask

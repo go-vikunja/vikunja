@@ -41,7 +41,10 @@ function redirectToSpecifiedProvider() {
 				|| redirectToProviderValue === 'true'
 				|| redirectToProviderValue === '1')
  		) {
-			redirectToProvider(auth.openidConnect.providers[0])
+			const firstProvider = auth.openidConnect.providers[0]
+			if (firstProvider) {
+				redirectToProvider(firstProvider)
+			}
 		}
 
 		// let's try to find the provider to logon to !
@@ -125,16 +128,19 @@ export const useAuthStore = defineStore('auth', () => {
 	}
 	
 	function loadSettings(newSettings: IUserSettings) {
+		const defaultFrontendSettings = {
+			playSoundWhenDone: true,
+			quickAddMagicMode: PrefixMode.Default,
+			colorSchema: 'auto',
+			allowIconChanges: true,
+			dateDisplay: DATE_DISPLAY.RELATIVE,
+			defaultTaskRelationType: RELATION_KIND.RELATED,
+		}
+
 		settings.value = new UserSettingsModel({
 			...newSettings,
 			frontendSettings: {
-				// Need to set default settings here in case the user does not have any saved in the api already
-				playSoundWhenDone: true,
-				quickAddMagicMode: PrefixMode.Default,
-				colorSchema: 'auto',
-				allowIconChanges: true,
-				dateDisplay: DATE_DISPLAY.RELATIVE,
-				defaultTaskRelationType: RELATION_KIND.RELATED,
+				...defaultFrontendSettings,
 				...newSettings.frontendSettings,
 			},
 		})
@@ -163,7 +169,7 @@ export const useAuthStore = defineStore('auth', () => {
 	}
 
 	// Logs a user in with a set of credentials.
-	async function login(credentials) {
+	async function login(credentials: any) {
 		const HTTP = HTTPFactory()
 		setIsLoading(true)
 
@@ -177,10 +183,10 @@ export const useAuthStore = defineStore('auth', () => {
 
 			// Tell others the user is authenticated
 			await checkAuth()
-		} catch (e) {
+		} catch (e: any) {
 			if (
-				e.response &&
-				e.response.data.code === 1017 &&
+				e?.response &&
+				e?.response?.data?.code === 1017 &&
 				!credentials.totpPasscode
 			) {
 				setNeedsTotpPasscode(true)
@@ -196,7 +202,7 @@ export const useAuthStore = defineStore('auth', () => {
 	 * Registers a new user and logs them in.
 	 * Not sure if this is the right place to put the logic in, maybe a separate js component would be better suited. 
 	 */
-	async function register(credentials, language: string|null = null) {
+	async function register(credentials: any, language: string|null = null) {
 		const HTTP = HTTPFactory()
 		setIsLoading(true)
 		
@@ -210,7 +216,7 @@ export const useAuthStore = defineStore('auth', () => {
 				language,
 			})
 			return login(credentials)
-		} catch (e) {
+		} catch (e: any) {
 			if (e.response?.data?.code === 2002 && e.response?.data?.invalid_fields[0]?.startsWith('language:')) {
 				return register(credentials, 'en')
 			}
@@ -225,12 +231,15 @@ export const useAuthStore = defineStore('auth', () => {
 		}
 	}
 
-	async function openIdAuth({provider, code}) {
+	async function openIdAuth({provider, code}: {provider: any, code: any}) {
 		const HTTP = HTTPFactory()
 		setIsLoading(true)
 		setLoggedInVia(null)
 
-		const fullProvider: IProvider = configStore.auth.openidConnect.providers.find((p: IProvider) => p.key === provider)
+		const fullProvider: IProvider | undefined = configStore.auth.openidConnect.providers.find((p: IProvider) => p.key === provider)
+		if (!fullProvider) {
+			throw new Error(`Provider ${provider} not found`)
+		}
 
 		const data = {
 			code: code,
@@ -252,7 +261,7 @@ export const useAuthStore = defineStore('auth', () => {
 		}
 	}
 
-	async function linkShareAuth({hash, password}) {
+	async function linkShareAuth({hash, password}: {hash: any, password: any}) {
 		const HTTP = HTTPFactory()
 		const response = await HTTP.post('/shares/' + hash + '/auth', {
 			password: password,
@@ -281,8 +290,11 @@ export const useAuthStore = defineStore('auth', () => {
 		let isAuthenticated = false
 		if (jwt) {
 			try {
-				const base64 = jwt
-					.split('.')[1]
+				const jwtParts = jwt.split('.')
+				if (jwtParts.length < 2) {
+					throw new Error('Invalid JWT format')
+				}
+				const base64 = jwtParts[1]
 					.replace(/-/g, '+')
 					.replace(/_/g, '/')
 				const info = new UserModel(JSON.parse(atob(base64)))
@@ -333,7 +345,7 @@ export const useAuthStore = defineStore('auth', () => {
 			updateLastUserRefresh()
 
 			return newUser
-		} catch (e) {
+		} catch (e: any) {
 			if((e?.response?.status >= 400 && e?.response?.status < 500) ||
 				e?.response?.data?.message === 'missing, malformed, expired or otherwise invalid token provided') {
 				await logout()
@@ -404,7 +416,7 @@ export const useAuthStore = defineStore('auth', () => {
 			if (showMessage) {
 				success({message: i18n.global.t('user.settings.general.savedSuccess')})
 			}
-		} catch (e) {
+		} catch (e: any) {
 			error(e)
 		} finally {
 			cancel()
@@ -426,7 +438,7 @@ export const useAuthStore = defineStore('auth', () => {
 			try {
 				await refreshToken(!isLinkShareAuth.value)
 				await checkAuth()
-			} catch (e) {
+			} catch (e: any) {
 				// Don't logout on network errors as the user would then get logged out if they don't have
 				// internet for a short period of time - such as when the laptop is still reconnecting
 				if (e?.request?.status) {

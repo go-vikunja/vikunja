@@ -10,21 +10,25 @@ export default class NotificationService extends AbstractService<INotification> 
 		})
 	}
 
-	modelFactory(data) {
+	modelFactory(data: Partial<INotification>) {
 		return new NotificationModel(data)
 	}
 
-	beforeUpdate(model) {
+	beforeUpdate(model: INotification) {
 		if (!model) {
 			return model
 		}
-		
-		model.created = new Date(model.created).toISOString()
-		model.readAt = new Date(model.readAt).toISOString()
-		return model
+
+		// Create a copy to avoid mutating the original model
+		const processedModel = {...model}
+		processedModel.created = new Date(model.created).toISOString() as any
+		if (model.readAt) {
+			processedModel.readAt = new Date(model.readAt).toISOString() as any
+		}
+		return processedModel
 	}
 	
 	async markAllRead() {
-		return this.post('/notifications', false)
+		return this.post('/notifications', {} as INotification)
 	}
 }

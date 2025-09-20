@@ -113,7 +113,7 @@
 <script lang="ts">
 export default {
 	beforeRouteEnter(to) {
-		if (MIGRATORS[to.params.service as string] === undefined) {
+		if (MIGRATORS[to.params.service as keyof typeof MIGRATORS] === undefined) {
 			return {name: 'not-found'}
 		}
 	},
@@ -138,6 +138,19 @@ import {useTitle} from '@/composables/useTitle'
 import {useProjectStore} from '@/stores/projects'
 import {getErrorText} from '@/message'
 
+interface MigrationAuthResponse {
+	url: string
+}
+
+interface MigrationStatusResponse {
+	started_at?: string
+	finished_at?: string
+}
+
+interface MigrationFileResponse {
+	message: string
+}
+
 const props = defineProps<{
 	service: string,
 	code?: string,
@@ -157,7 +170,7 @@ const migratorAuthCode = ref('')
 const migrationJustStarted = ref(false)
 const migrationError = ref('')
 
-const migrator = computed<Migrator>(() => MIGRATORS[props.service])
+const migrator = computed<Migrator>(() => MIGRATORS[props.service as keyof typeof MIGRATORS])
 
 // eslint-disable-next-line vue/no-ref-object-reactivity-loss
 const migrationService = shallowReactive(new AbstractMigrationService(migrator.value.id))
@@ -171,7 +184,7 @@ async function initMigration() {
 		return
 	}
 
-	authUrl.value = await migrationService.getAuthUrl().then(({url}) => url)
+	authUrl.value = await migrationService.getAuthUrl().then((response: MigrationAuthResponse) => response.url)
 
 	const TOKEN_HASH_PREFIX = '#token='
 	migratorAuthCode.value = location.hash.startsWith(TOKEN_HASH_PREFIX)
@@ -181,7 +194,7 @@ async function initMigration() {
 	if (!migratorAuthCode.value) {
 		return
 	}
-	const {started_at, finished_at} = await migrationService.getStatus()
+	const {started_at, finished_at} = await migrationService.getStatus() as MigrationStatusResponse
 	if (started_at) {
 		lastMigrationStartedAt.value = parseDateOrNull(started_at)
 	}
@@ -220,7 +233,7 @@ async function migrate() {
 
 	try {
 		if (migrator.value.isFileMigrator) {
-			const result = await migrationFileService.migrate(migrationConfig as File)
+			const result = await migrationFileService.migrate(migrationConfig as File) as MigrationFileResponse
 			message.value = result.message
 			const projectStore = useProjectStore()
 			return projectStore.loadAllProjects()
@@ -228,7 +241,7 @@ async function migrate() {
 		
 		await migrationService.migrate(migrationConfig as MigrationConfig)
 		migrationJustStarted.value = true
-	} catch (e) {
+	} catch (e: unknown) {
 		migrationError.value = getErrorText(e)
 	} finally {
 		isMigrating.value = false

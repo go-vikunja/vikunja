@@ -44,7 +44,7 @@ export default class TaskCollectionService extends AbstractService<ITask> {
 		return super.getReplacedRoute(path, pathparams)
 	}
 
-	modelFactory(data) {
+	modelFactory(data: any) {
 		// FIXME: There must be a better way for this…
 		if (typeof data.project_view_id !== 'undefined') {
 			return new BucketModel(data)

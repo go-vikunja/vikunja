@@ -1,7 +1,6 @@
 <template>
 	<CreateEdit
 		:title="$t('filters.edit.title')"
-		primary-icon=""
 		:primary-label="$t('misc.save')"
 		:tertiary="$t('misc.delete')"
 		@primary="saveFilterWithValidation"

@@ -110,7 +110,7 @@ async function removeAssignee(user: IUser) {
 }
 
 async function findUser(query: string) {
-	const response = await projectUserService.getAll({projectId: props.projectId, maxPermission: null} as IAbstract, {s: query}) as IUser[]
+	const response = await projectUserService.getAll({projectId: props.projectId} as unknown as IUser, {s: query}) as IUser[]
 
 	// Filter the results to not include users who are already assigned
 	foundUsers.value = response

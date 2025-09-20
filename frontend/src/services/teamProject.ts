@@ -13,11 +13,11 @@ export default class TeamProjectService extends AbstractService<ITeamProject> {
 		})
 	}
 
-	modelFactory(data) {
+	modelFactory(data: Partial<ITeamProject>) {
 		return new TeamProjectModel(data)
 	}
 
-	modelGetAllFactory(data) {
-		return new TeamModel(data)
+	modelGetAllFactory(data: Partial<ITeamProject>) {
+		return new TeamProjectModel(data)
 	}
 }

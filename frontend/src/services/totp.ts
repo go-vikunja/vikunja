@@ -11,19 +11,19 @@ export default class TotpService extends AbstractService<ITotp> {
 		this.paths.get = this.urlPrefix
 	}
 
-	modelFactory(data) {
+	modelFactory(data: Partial<ITotp>) {
 		return new TotpModel(data)
 	}
 
 	enroll() {
-		return this.post(`${this.urlPrefix}/enroll`, {})
+		return this.post(`${this.urlPrefix}/enroll`, {} as ITotp)
 	}
 
-	enable(model) {
+	enable(model: any) {
 		return this.post(`${this.urlPrefix}/enable`, model)
 	}
 
-	disable(model) {
+	disable(model: any) {
 		return this.post(`${this.urlPrefix}/disable`, model)
 	}
 

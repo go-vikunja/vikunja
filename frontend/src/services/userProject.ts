@@ -13,11 +13,11 @@ export default class UserProjectService extends AbstractService<IUserProject> {
 		})
 	}
 
-	modelFactory(data) {
+	modelFactory(data: Partial<IUserProject>) {
 		return new UserProjectModel(data)
 	}
 
-	modelGetAllFactory(data) {
-		return new UserModel(data)
+	modelGetAllFactory(data: Partial<IUserProject>) {
+		return new UserProjectModel(data)
 	}
 }

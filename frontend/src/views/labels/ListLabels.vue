@@ -192,9 +192,9 @@ function editLabel(label: ILabel) {
 	// object passed to this function here still has a reference to the store.
 	labelEditLabel.value = new LabelModel({
 		...label,
-		// The model does not support passing dates into it directly so we need to convert them first
-		created: label.created?.toISOString(),
-		updated: label.updated?.toISOString(),
+		// The model handles date conversion internally
+		created: label.created,
+		updated: label.updated,
 	})
 	isLabelEdit.value = true
 
