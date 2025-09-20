@@ -156,7 +156,7 @@ const taskPositionService = ref(new TaskPositionService())
 
 // Saved filter composable for accessing filter data
 const _savedFilter = useSavedFilter(
-	computed(() => projectId.value !== undefined && projectId.value < 0 ? projectId.value : undefined),
+	() => (projectId.value !== undefined && projectId.value < 0) ? projectId.value : 0,
 ).filter
 
 const tasks = ref<ITask[]>([])
@@ -239,11 +239,11 @@ function updateTasks(updatedTask: ITask) {
 async function saveTaskPosition(e: { moved: { element: ITask; newIndex: number; oldIndex: number } }) {
 	drag.value = false
 
-	const task = tasks.value[e.newIndex]
+	const task = tasks.value[e.moved.newIndex]
 	if (!task) return
 
-	const taskBefore = tasks.value[e.newIndex - 1] ?? null
-	const taskAfter = tasks.value[e.newIndex + 1] ?? null
+	const taskBefore = tasks.value[e.moved.newIndex - 1] ?? null
+	const taskAfter = tasks.value[e.moved.newIndex + 1] ?? null
 
 	const position = calculateItemPosition(taskBefore !== null ? taskBefore.position : null, taskAfter !== null ? taskAfter.position : null)
 
@@ -252,7 +252,7 @@ async function saveTaskPosition(e: { moved: { element: ITask; newIndex: number; 
 		projectViewId: props.viewId,
 		taskId: task.id,
 	}))
-	tasks.value[e.newIndex] = {
+	tasks.value[e.moved.newIndex] = {
 		...task,
 		position,
 	}

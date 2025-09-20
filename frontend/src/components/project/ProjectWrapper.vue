@@ -80,7 +80,7 @@ const currentProject = computed(() => {
 		maxPermission: null,
 	} : baseStore.currentProject
 })
-useTitle(() => currentProject.value?.id ? getProjectTitle(currentProject.value) : '')
+useTitle(() => currentProject.value?.id ? getProjectTitle(currentProject.value as Readonly<IProject>) : '')
 
 const views = computed(() => projectStore.projects[props.projectId]?.views)
 

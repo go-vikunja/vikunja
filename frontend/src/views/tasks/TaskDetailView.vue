@@ -721,7 +721,7 @@ onBeforeRouteLeave(async () => {
 	}
 
 	if (project.value) {
-		await baseStore.handleSetCurrentProjectIfNotSet(project.value)
+		await baseStore.handleSetCurrentProjectIfNotSet(project.value as IProject)
 	}
 })
 
@@ -791,7 +791,7 @@ watch(
 			if (project.value) {
 				const projectValue = project.value
 				if (!Array.isArray(projectValue.tasks)) {
-					const mutableProject = {...projectValue, tasks: []} as IProject
+					const mutableProject = {...projectValue, tasks: [], views: [...(projectValue.views || [])]} as unknown as IProject
 					await baseStore.handleSetCurrentProjectIfNotSet(mutableProject)
 				}
 			}
@@ -876,9 +876,10 @@ const activeFieldElements: { [id in FieldType]: HTMLElement | null } = reactive(
 	startDate: null,
 })
 
-function setFieldRef(name: string, e: Element | null) {
+function setFieldRef(name: string, e: unknown) {
 	if (name in activeFieldElements) {
-		activeFieldElements[name as FieldType] = unrefElement(e)
+		const element = unrefElement(e)
+		activeFieldElements[name as FieldType] = (element as HTMLElement) || null
 	}
 }
 

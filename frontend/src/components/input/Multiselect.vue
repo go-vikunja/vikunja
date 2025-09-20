@@ -252,7 +252,7 @@ const {modelValue, searchResults} = toRefs(props)
 
 watch(
 	modelValue,
-	(value) => setSelectedObject(value),
+	(value) => setSelectedObject(value as string | T | null | undefined),
 	{
 		immediate: true,
 		deep: true,
@@ -380,7 +380,7 @@ function setSelectedObject(object: string | T | null | undefined, resetOnly = fa
 		return
 	}
 
-	query.value = props.label !== '' ? (object as T)[props.label] : object
+	query.value = props.label !== '' ? (object as T)[props.label] as string | T : object
 }
 
 const results = ref<(Element | ComponentPublicInstance)[]>([])

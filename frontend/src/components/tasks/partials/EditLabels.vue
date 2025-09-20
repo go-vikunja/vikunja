@@ -17,7 +17,7 @@
 	>
 		<template #tag="{item: label}">
 			<span
-				:style="getLabelStyles(label)"
+				:style="getLabelStyles(label as unknown as ILabel)"
 				class="tag"
 			>
 				<span>{{ label.title }}</span>
@@ -25,7 +25,7 @@
 					v-if="!disabled"
 					v-cy="'taskDetail.removeLabel'"
 					class="delete is-small"
-					@click="removeLabel(label)"
+					@click="removeLabel(label as unknown as ILabel)"
 				/>
 			</span>
 		</template>
