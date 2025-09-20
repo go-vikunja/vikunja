@@ -134,7 +134,7 @@ async function save() {
 		}, 2000)
 	} catch (error) {
 		// If the task was deleted (404), silently skip saving
-		if (error?.response?.status === 404) {
+		if ((error as any)?.response?.status === 404) {
 			return
 		}
 		hasChanges.value = true
@@ -148,7 +148,7 @@ async function save() {
 async function uploadCallback(files: File[] | FileList): Promise<string[]> {
 	const uploadPromises: Promise<string>[] = []
 
-	files.forEach((file: File) => {
+	Array.from(files).forEach((file: File) => {
 		const promise = new Promise<string>((resolve) => {
 			props.attachmentUpload(file, (uploadedFileUrl: string) => resolve(uploadedFileUrl))
 		})
