@@ -4,7 +4,7 @@ import type { Permission } from '@/constants/permissions'
 
 export type MigrationConfig = {
 	code: string
-	maxPermission?: Permission | null
+	maxPermission: Permission | null
 }
 
 // This service builds on top of the abstract service and basically just hides away method names.

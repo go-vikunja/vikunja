@@ -291,7 +291,7 @@ export const useAuthStore = defineStore('auth', () => {
 		if (jwt) {
 			try {
 				const jwtParts = jwt.split('.')
-				if (jwtParts.length < 2) {
+				if (jwtParts.length < 2 || !jwtParts[1]) {
 					throw new Error('Invalid JWT format')
 				}
 				const base64 = jwtParts[1]
@@ -352,8 +352,8 @@ export const useAuthStore = defineStore('auth', () => {
 				return
 			}
 			
-			const cause = {e}
-			
+			const cause: {e: any, message?: string} = {e}
+
 			if (typeof e?.response?.data?.message !== 'undefined') {
 				cause.message = e.response.data.message
 			}
@@ -374,8 +374,8 @@ export const useAuthStore = defineStore('auth', () => {
 			try {
 				await HTTPFactory().post('user/confirm', {token: emailVerifyToken})
 				return true
-			} catch(e) {
-				throw new Error(e.response.data.message)
+			} catch(e: any) {
+				throw new Error(e?.response?.data?.message || 'Unknown error')
 			} finally {
 				localStorage.removeItem('emailConfirmToken')
 				stopLoading()
@@ -405,10 +405,12 @@ export const useAuthStore = defineStore('auth', () => {
 			}
 			const updateSettingsPromise = userSettingsService.update(settingsUpdate)
 			setUserSettings(settingsUpdate)
-			await setLanguage(settings.language)
+			if (settings.language) {
+				await setLanguage(settings.language)
+			}
 			await updateSettingsPromise
 			if (oldName !== undefined && oldName !== settingsUpdate.name) {
-				const {avatarProvider} = await (new AvatarService()).get({})
+				const {avatarProvider} = await (new AvatarService()).getM('/user/settings/avatar')
 				if (avatarProvider === 'initials') {
 					await reloadAvatar()
 				}

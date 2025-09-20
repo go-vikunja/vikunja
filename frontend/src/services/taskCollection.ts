@@ -2,6 +2,7 @@ import AbstractService from '@/services/abstractService'
 import TaskModel from '@/models/task'
 
 import type {ITask} from '@/modelTypes/ITask'
+import type {IBucket} from '@/modelTypes/IBucket'
 import BucketModel from '@/models/bucket'
 
 export type ExpandTaskFilterParam = 'subtasks' | 'buckets' | 'reactions' | null
@@ -29,7 +30,7 @@ export function getDefaultTaskFilterParams(): TaskFilterParams {
 	}
 }
 
-export default class TaskCollectionService extends AbstractService<ITask> {
+export default class TaskCollectionService extends AbstractService<ITask | IBucket> {
 	constructor() {
 		super({
 			getAll: '/projects/{projectId}/views/{viewId}/tasks',
@@ -44,7 +45,7 @@ export default class TaskCollectionService extends AbstractService<ITask> {
 		return super.getReplacedRoute(path, pathparams)
 	}
 
-	modelFactory(data: any) {
+	modelFactory(data: any): ITask | IBucket {
 		// FIXME: There must be a better way for this…
 		if (typeof data.project_view_id !== 'undefined') {
 			return new BucketModel(data)
