@@ -43,7 +43,9 @@ describe('Project View List', () => {
 			id: '{increment}',
 			project_id: 1,
 		})
+		cy.intercept(Cypress.env('API_URL') + '/projects/1/views/1/tasks**').as('loadTasks')
 		cy.visit('/projects/1/1')
+		cy.wait('@loadTasks')
 
 		cy.get('.tasks .task .tasktext')
 			.contains(tasks[0].title)
@@ -79,7 +81,9 @@ describe('Project View List', () => {
 		TaskFactory.create(10, {
 			project_id: projects[0].id,
 		})
+		cy.intercept(Cypress.env('API_URL') + `/projects/${projects[0].id}/views/1/tasks**`).as('loadTasks')
 		cy.visit(`/projects/${projects[0].id}/`)
+		cy.wait('@loadTasks')
 
 		cy.get('.menu-list li .list-menu-link .color-bubble')
 			.should('have.css', 'background-color', 'rgb(0, 219, 96)')
@@ -93,7 +97,9 @@ describe('Project View List', () => {
 			title: i => `task${i}`,
 			project_id: 1,
 		})
+		cy.intercept(Cypress.env('API_URL') + '/projects/1/views/1/tasks**').as('loadTasks')
 		cy.visit('/projects/1/1')
+		cy.wait('@loadTasks')
 
 		cy.get('.tasks')
 			.should('contain', tasks[20].title)
