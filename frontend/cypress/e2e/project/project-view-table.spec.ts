@@ -8,7 +8,9 @@ describe('Project View Table', () => {
 	prepareProjects()
 
 	it('Should show a table with tasks', () => {
-		const tasks = TaskFactory.create(1)
+		const tasks = TaskFactory.create(1, {
+			project_id: 1,
+		})
 		cy.visit('/projects/1/3')
 
 		cy.get('.project-table table.table')
@@ -18,7 +20,9 @@ describe('Project View Table', () => {
 	})
 
 	it('Should have working column switches', () => {
-		TaskFactory.create(1)
+		TaskFactory.create(1, {
+			project_id: 1,
+		})
 		cy.visit('/projects/1/3')
 
 		cy.get('.project-table .filter-container .button')
