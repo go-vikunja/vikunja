@@ -11,7 +11,10 @@ describe('Project View Table', () => {
 		const tasks = TaskFactory.create(1, {
 			project_id: 1,
 		})
+
+		cy.intercept(Cypress.env('API_URL') + '/projects/1/views/3/tasks**').as('loadTasks')
 		cy.visit('/projects/1/3')
+		cy.wait('@loadTasks')
 
 		cy.get('.project-table table.table')
 			.should('exist')
@@ -48,7 +51,10 @@ describe('Project View Table', () => {
 			id: '{increment}',
 			project_id: 1,
 		})
+
+		cy.intercept(Cypress.env('API_URL') + '/projects/1/views/3/tasks**').as('loadTasks')
 		cy.visit('/projects/1/3')
+		cy.wait('@loadTasks')
 
 		cy.get('.project-table table.table')
 			.contains(tasks[0].title)
