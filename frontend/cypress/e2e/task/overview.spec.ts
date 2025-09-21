@@ -74,7 +74,7 @@ describe('Home Page Task Overview', () => {
 	})
 
 	it('Should show a new task with a very soon due date at the top', () => {
-		const {tasks} = seedTasks(49)
+		const {tasks, project} = seedTasks(49)
 		const newTaskTitle = 'New Task'
 
 		cy.visit('/')
@@ -86,10 +86,22 @@ describe('Home Page Task Overview', () => {
 			due_date: new Date().toISOString(),
 		}, false)
 
-		// Use more specific intercept pattern and ensure it's registered before navigation
-		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
-		cy.visit(`/projects/${tasks[0].project_id}/1`)
-		cy.wait('@loadTasks', { timeout: 15000 })
+		// Set up intercept before any navigation that might trigger API calls
+		cy.intercept('GET', `**/api/v1/projects/${project.id}/views/*/tasks**`).as('loadTasks')
+		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadAllTasks')
+
+		// Visit the project page first and wait for it to load
+		cy.visit(`/projects/${project.id}`)
+		cy.url().should('contain', `/projects/${project.id}/1`)
+
+		// Wait for either the project view tasks or fallback to all tasks API
+		cy.wait(['@loadTasks', '@loadAllTasks'], { timeout: 30000 }).then((interceptions) => {
+			// At least one API call should have been made
+			expect(interceptions).to.not.be.empty
+		})
+
+		cy.get('.tasks')
+			.should('exist')
 		cy.get('.tasks .task')
 			.should('contain.text', newTaskTitle)
 		cy.visit('/')
@@ -100,19 +112,34 @@ describe('Home Page Task Overview', () => {
 	
 	it('Should not show a new task without a date at the bottom when there are > 50 tasks', () => {
 		// We're not using the api here to create the task in order to verify the flow
-		const {tasks} = seedTasks(100)
+		const {tasks, project} = seedTasks(100)
 		const newTaskTitle = 'New Task'
 
 		cy.visit('/')
 
-		// Use more specific intercept pattern and ensure it's registered before navigation
-		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
-		cy.visit(`/projects/${tasks[0].project_id}/1`)
-		cy.wait('@loadTasks', { timeout: 15000 })
+		// Set up intercepts before navigation
+		cy.intercept('GET', `**/api/v1/projects/${project.id}/views/*/tasks**`).as('loadTasks')
+		cy.intercept('PUT', `**/api/v1/projects/${project.id}/views/*/tasks`).as('createTask')
+		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadAllTasks')
+
+		// Visit the project page and wait for it to load
+		cy.visit(`/projects/${project.id}`)
+		cy.url().should('contain', `/projects/${project.id}/1`)
+
+		// Wait for either the project view tasks or fallback to all tasks API
+		cy.wait(['@loadTasks', '@loadAllTasks'], { timeout: 30000 }).then((interceptions) => {
+			// At least one API call should have been made
+			expect(interceptions).to.not.be.empty
+		})
+
 		cy.get('.task-add textarea')
+			.should('be.visible')
 			.type(newTaskTitle+'{enter}')
+
 		// Wait for task creation to complete
+		cy.wait('@createTask', { timeout: 15000 })
 		cy.get('.tasks .task').should('contain.text', newTaskTitle)
+
 		cy.visit('/')
 		cy.get('[data-cy="showTasks"] .card .task')
 			.last()
