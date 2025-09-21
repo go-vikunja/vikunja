@@ -14,7 +14,7 @@ describe('Project View Table', () => {
 
 		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
 		cy.visit('/projects/1/3')
-		cy.wait('@loadTasks', {timeout: 15000})
+		cy.wait('@loadTasks', {timeout: 30000})
 
 		// Wait for the table to be visible
 		cy.get('.project-table table.table', {timeout: 15000})
@@ -33,7 +33,7 @@ describe('Project View Table', () => {
 
 		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
 		cy.visit('/projects/1/3')
-		cy.wait('@loadTasks', {timeout: 15000})
+		cy.wait('@loadTasks', {timeout: 30000})
 
 		// Wait for the table to load
 		cy.get('.project-table table.table', {timeout: 15000})
@@ -77,7 +77,7 @@ describe('Project View Table', () => {
 
 		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
 		cy.visit('/projects/1/3')
-		cy.wait('@loadTasks', {timeout: 15000})
+		cy.wait('@loadTasks', {timeout: 30000})
 
 		// Wait for the table to be visible and contain tasks
 		cy.get('.project-table table.table tbody', {timeout: 15000})

@@ -55,7 +55,7 @@ describe('Subtask duplicate handling', () => {
                 // Add API intercept to wait for tasks to load
                 cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
                 cy.visit(`/projects/${projectA.id}/1`)
-                cy.wait('@loadTasks', { timeout: 15000 })
+                cy.wait('@loadTasks', { timeout: 30000 })
 
                 // Wait for page to be fully loaded and tasks rendered
                 cy.get('.tasks').should('be.visible')

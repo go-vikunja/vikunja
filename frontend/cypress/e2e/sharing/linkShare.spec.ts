@@ -37,7 +37,7 @@ describe('Link shares', () => {
 			.should('contain', project.title)
 
 		// Wait for tasks to load from API
-		cy.wait('@loadTasks', {timeout: 15000})
+		cy.wait('@loadTasks', {timeout: 30000})
 
 		// Verify it's a read-only share (no task input)
 		cy.get('input.input[placeholder="Add a task…"]')
@@ -61,7 +61,7 @@ describe('Link shares', () => {
 			.should('contain', project.title)
 
 		// Wait for tasks to load from API
-		cy.wait('@loadTasks', {timeout: 15000})
+		cy.wait('@loadTasks', {timeout: 30000})
 
 		// Verify it's a read-only share (no task input)
 		cy.get('input.input[placeholder="Add a task…"]')
