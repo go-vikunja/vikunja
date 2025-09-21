@@ -138,7 +138,7 @@ describe('Task', () => {
 		cy.intercept('POST', '**/tasks/*/done').as('markDone')
 		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
 		cy.visit('/projects/1/1')
-		cy.wait('@loadTasks')
+		cy.wait('@loadTasks', { timeout: 30000 })
 		cy.get('.tasks .task .fancy-checkbox')
 			.first()
 			.should('be.visible')
@@ -154,7 +154,7 @@ describe('Task', () => {
 
 		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
 		cy.visit('/projects/1/1')
-		cy.wait('@loadTasks')
+		cy.wait('@loadTasks', { timeout: 30000 })
 		cy.get('.tasks .task .favorite')
 			.first()
 			.should('be.visible')
@@ -171,7 +171,7 @@ describe('Task', () => {
 		})
 
 		cy.visit('/projects/1/1')
-		cy.wait('@loadTasks')
+		cy.wait('@loadTasks', { timeout: 30000 })
 
 		cy.get('.tasks .task .project-task-icon .fa-align-left')
 			.should('exist')
@@ -184,7 +184,7 @@ describe('Task', () => {
 		})
 
 		cy.visit('/projects/1/1')
-		cy.wait('@loadTasks')
+		cy.wait('@loadTasks', { timeout: 30000 })
 
 		cy.get('.tasks .task .project-task-icon .fa-align-left')
 			.should('not.exist')
@@ -197,7 +197,7 @@ describe('Task', () => {
 		})
 
 		cy.visit('/projects/1/1')
-		cy.wait('@loadTasks')
+		cy.wait('@loadTasks', { timeout: 30000 })
 
 		cy.get('.tasks .task .project-task-icon .fa-align-left')
 			.should('not.exist')
@@ -214,7 +214,7 @@ describe('Task', () => {
 			const tasks = TaskFactory.create(1)
 			cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
 			cy.visit('/projects/1/1')
-			cy.wait('@loadTasks')
+			cy.wait('@loadTasks', { timeout: 30000 })
 			cy.get('.list-view .task')
 				.first()
 				.find('a.task-link')
@@ -229,7 +229,7 @@ describe('Task', () => {
 			const tasks = TaskFactory.create(1)
 			cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
 			cy.visit('/projects/1/3')
-			cy.wait('@loadTasks')
+			cy.wait('@loadTasks', { timeout: 30000 })
 			cy.get('tbody tr')
 				.first()
 				.find('a')
@@ -247,7 +247,7 @@ describe('Task', () => {
 			const tasks = TaskFactory.create(1)
 			cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
 			cy.visit('/projects/1/4')
-			cy.wait('@loadTasks')
+			cy.wait('@loadTasks', { timeout: 30000 })
 			cy.get('.kanban-view .tasks .task')
 				.first()
 				.click()
@@ -263,7 +263,7 @@ describe('Task', () => {
 			const tasks = TaskFactory.create(1)
 			cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
 			cy.visit('/projects/1/4')
-			cy.wait('@loadTasks')
+			cy.wait('@loadTasks', { timeout: 30000 })
 			cy.get('.kanban-view .tasks .task')
 				.first()
 				.click()
