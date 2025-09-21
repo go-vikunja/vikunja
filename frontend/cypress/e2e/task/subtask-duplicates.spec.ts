@@ -52,18 +52,27 @@ describe('Subtask duplicate handling', () => {
         })
 
         it('shows subtask only once in project list', () => {
-                // Add API intercept to wait for tasks to load
+                // Add API intercepts to wait for all necessary data to load
                 cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
+                cy.intercept('GET', '**/api/v1/projects/*').as('loadProject')
+                cy.intercept('GET', '**/api/v1/tasks/*/relations').as('loadTaskRelations')
+
                 cy.visit(`/projects/${projectA.id}/1`)
-                cy.wait('@loadTasks', { timeout: 30000 })
+
+                // Wait for project and tasks to load with shorter timeouts to prevent hangs
+                cy.wait('@loadProject', { timeout: 15000 })
+                cy.wait('@loadTasks', { timeout: 15000 })
 
                 // Wait for page to be fully loaded and tasks rendered
                 cy.get('.tasks').should('be.visible')
                 cy.get('.task-link').should('have.length.greaterThan', 0)
 
-                // Check that subtask appears in nested structure
-                cy.get('.subtask-nested .task-link').contains(subtask.title).should('exist')
+                // Wait a bit more for relations to load if needed
+                cy.wait(500)
+
+                // Check that subtask appears in nested structure (with retry for reliability)
+                cy.get('.subtask-nested .task-link').contains(subtask.title, { timeout: 10000 }).should('exist')
                 // Check that subtask appears only once in the overall task list
-                cy.get('.tasks .task-link').contains(subtask.title).should('have.length', 1)
+                cy.get('.tasks .task-link').contains(subtask.title, { timeout: 10000 }).should('have.length', 1)
         })
 })

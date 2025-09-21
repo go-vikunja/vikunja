@@ -89,15 +89,19 @@ describe('Home Page Task Overview', () => {
 		// Set up intercept before any navigation that might trigger API calls
 		cy.intercept('GET', `**/api/v1/projects/${project.id}/views/*/tasks**`).as('loadTasks')
 		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadAllTasks')
+		cy.intercept('GET', '**/api/v1/projects/*').as('loadProject')
 
 		// Visit the project page first and wait for it to load
 		cy.visit(`/projects/${project.id}`)
 		cy.url().should('contain', `/projects/${project.id}/1`)
 
-		// Wait for either the project view tasks or fallback to all tasks API
-		cy.wait(['@loadTasks', '@loadAllTasks'], { timeout: 30000 }).then((interceptions) => {
-			// At least one API call should have been made
-			expect(interceptions).to.not.be.empty
+		// Wait for project to load first, then tasks
+		cy.wait('@loadProject', { timeout: 15000 }).then(() => {
+			// Then wait for either the project view tasks or fallback to all tasks API
+			cy.wait(['@loadTasks', '@loadAllTasks'], { timeout: 15000 }).then((interceptions) => {
+				// At least one API call should have been made
+				expect(interceptions).to.not.be.empty
+			})
 		})
 
 		cy.get('.tasks')
@@ -121,23 +125,27 @@ describe('Home Page Task Overview', () => {
 		cy.intercept('GET', `**/api/v1/projects/${project.id}/views/*/tasks**`).as('loadTasks')
 		cy.intercept('PUT', `**/api/v1/projects/${project.id}/views/*/tasks`).as('createTask')
 		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadAllTasks')
+		cy.intercept('GET', '**/api/v1/projects/*').as('loadProject')
 
 		// Visit the project page and wait for it to load
 		cy.visit(`/projects/${project.id}`)
 		cy.url().should('contain', `/projects/${project.id}/1`)
 
-		// Wait for either the project view tasks or fallback to all tasks API
-		cy.wait(['@loadTasks', '@loadAllTasks'], { timeout: 30000 }).then((interceptions) => {
-			// At least one API call should have been made
-			expect(interceptions).to.not.be.empty
+		// Wait for project to load first, then tasks with shorter timeouts to prevent hangs
+		cy.wait('@loadProject', { timeout: 15000 }).then(() => {
+			// Then wait for either the project view tasks or fallback to all tasks API
+			cy.wait(['@loadTasks', '@loadAllTasks'], { timeout: 15000 }).then((interceptions) => {
+				// At least one API call should have been made
+				expect(interceptions).to.not.be.empty
+			})
 		})
 
 		cy.get('.task-add textarea')
 			.should('be.visible')
 			.type(newTaskTitle+'{enter}')
 
-		// Wait for task creation to complete
-		cy.wait('@createTask', { timeout: 30000 })
+		// Wait for task creation to complete with shorter timeout to prevent hangs
+		cy.wait('@createTask', { timeout: 15000 })
 		cy.get('.tasks .task').should('contain.text', newTaskTitle)
 
 		cy.visit('/')

@@ -50,8 +50,8 @@ describe('Project View List', () => {
 
 		cy.visit('/projects/1/1')
 
-		// Wait for either the project view tasks or fallback to all tasks API
-		cy.wait(['@loadTasks', '@loadAllTasks'], { timeout: 30000 }).then((interceptions) => {
+		// Wait for either the project view tasks or fallback to all tasks API with shorter timeout
+		cy.wait(['@loadTasks', '@loadAllTasks'], { timeout: 15000 }).then((interceptions) => {
 			// At least one API call should have been made
 			expect(interceptions).to.not.be.empty
 		})
@@ -97,8 +97,8 @@ describe('Project View List', () => {
 
 		cy.visit(`/projects/${projects[0].id}/`)
 
-		// Wait for either the project view tasks or fallback to all tasks API
-		cy.wait(['@loadTasks', '@loadAllTasks'], { timeout: 30000 }).then((interceptions) => {
+		// Wait for either the project view tasks or fallback to all tasks API with shorter timeout
+		cy.wait(['@loadTasks', '@loadAllTasks'], { timeout: 15000 }).then((interceptions) => {
 			// At least one API call should have been made
 			expect(interceptions).to.not.be.empty
 		})
@@ -122,8 +122,8 @@ describe('Project View List', () => {
 
 		cy.visit('/projects/1/1')
 
-		// Wait for either the project view tasks or fallback to all tasks API
-		cy.wait(['@loadTasks', '@loadAllTasks'], { timeout: 30000 }).then((interceptions) => {
+		// Wait for either the project view tasks or fallback to all tasks API with shorter timeout
+		cy.wait(['@loadTasks', '@loadAllTasks'], { timeout: 15000 }).then((interceptions) => {
 			// At least one API call should have been made
 			expect(interceptions).to.not.be.empty
 		})
