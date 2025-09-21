@@ -53,7 +53,10 @@ describe('Subtask duplicate handling', () => {
 
         it('shows subtask only once in project list', () => {
                 // Add API intercepts to wait for all necessary data to load
+                // Set up comprehensive API intercepts for all possible task loading endpoints
                 cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
+                cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
+                cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
                 cy.intercept('GET', '**/api/v1/projects/*').as('loadProject')
                 cy.intercept('GET', '**/api/v1/tasks/*/relations').as('loadTaskRelations')
 

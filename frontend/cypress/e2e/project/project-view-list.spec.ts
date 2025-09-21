@@ -44,7 +44,10 @@ describe('Project View List', () => {
 			project_id: 1,
 		})
 
-		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
+		// Set up comprehensive API intercepts for all possible task loading endpoints
+		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
 		cy.visit('/projects/1/1')
 		cy.wait('@loadTasks', {timeout: 30000})
 
@@ -83,7 +86,10 @@ describe('Project View List', () => {
 			project_id: projects[0].id,
 		})
 
-		cy.intercept('GET', `**/api/v1/projects/${projects[0].id}/views/*/tasks**`).as('loadTasks')
+		// Set up comprehensive API intercepts for all possible task loading endpoints
+		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
 		cy.visit(`/projects/${projects[0].id}/`)
 		cy.wait('@loadTasks', {timeout: 30000})
 
@@ -100,7 +106,10 @@ describe('Project View List', () => {
 			project_id: 1,
 		})
 
-		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
+		// Set up comprehensive API intercepts for all possible task loading endpoints
+		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
 		cy.visit('/projects/1/1')
 		cy.wait('@loadTasks', {timeout: 30000})
 
