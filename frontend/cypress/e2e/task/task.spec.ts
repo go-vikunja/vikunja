@@ -147,6 +147,8 @@ describe('Task', () => {
 		cy.intercept('GET', /\/api\/v1\/(projects\/\d+(\/views\/\d+)?\/tasks|tasks\/all)/).as('loadTasks')
 		cy.visit('/projects/1/1')
 		cy.wait('@loadTasks', { timeout: 30000 })
+		// Wait for loading state to complete
+		cy.get('.is-loading', {timeout: 30000}).should('not.exist')
 		cy.get('.tasks .task .fancy-checkbox')
 			.first()
 			.should('be.visible')
@@ -236,6 +238,8 @@ describe('Task', () => {
 			cy.intercept('GET', /\/api\/v1\/(projects\/\d+(\/views\/\d+)?\/tasks|tasks\/all)/).as('loadTasks')
 			cy.visit('/projects/1/1')
 			cy.wait('@loadTasks', { timeout: 30000 })
+			// Wait for loading state to complete
+			cy.get('.is-loading', {timeout: 30000}).should('not.exist')
 			cy.get('.list-view .task')
 				.first()
 				.find('a.task-link')
@@ -252,6 +256,8 @@ describe('Task', () => {
 			cy.intercept('GET', /\/api\/v1\/(projects\/\d+(\/views\/\d+)?\/tasks|tasks\/all)/).as('loadTasks')
 			cy.visit('/projects/1/3')
 			cy.wait('@loadTasks', { timeout: 30000 })
+			// Wait for loading state to complete
+			cy.get('.is-loading', {timeout: 30000}).should('not.exist')
 			cy.get('tbody tr')
 				.first()
 				.find('a')
@@ -271,6 +277,8 @@ describe('Task', () => {
 			cy.intercept('GET', /\/api\/v1\/(projects\/\d+(\/views\/\d+)?\/tasks|tasks\/all)/).as('loadTasks')
 			cy.visit('/projects/1/4')
 			cy.wait('@loadTasks', { timeout: 30000 })
+			// Wait for loading state to complete
+			cy.get('.is-loading', {timeout: 30000}).should('not.exist')
 			cy.get('.kanban-view .tasks .task')
 				.first()
 				.click()
@@ -288,6 +296,8 @@ describe('Task', () => {
 			cy.intercept('GET', /\/api\/v1\/(projects\/\d+(\/views\/\d+)?\/tasks|tasks\/all)/).as('loadTasks')
 			cy.visit('/projects/1/4')
 			cy.wait('@loadTasks', { timeout: 30000 })
+			// Wait for loading state to complete
+			cy.get('.is-loading', {timeout: 30000}).should('not.exist')
 			cy.get('.kanban-view .tasks .task')
 				.first()
 				.click()
