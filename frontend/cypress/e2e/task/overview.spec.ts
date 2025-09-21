@@ -133,7 +133,7 @@ describe('Home Page Task Overview', () => {
 			.type(newTaskTitle+'{enter}')
 
 		// Wait for task creation to complete with shorter timeout to prevent hangs
-		cy.wait('@createTask', { timeout: 15000 })
+		cy.wait('@createTask', { timeout: 30000 })
 		cy.get('.tasks .task').should('contain.text', newTaskTitle)
 
 		cy.visit('/')

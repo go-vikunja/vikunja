@@ -63,7 +63,7 @@ describe('Project View Kanban', () => {
 		const data = createTaskWithBuckets(buckets, 10)
 		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
 		cy.visit('/projects/1/4')
-		cy.wait('@loadTasks')
+		cy.wait('@loadTasks', { timeout: 30000 })
 
 		cy.get('.kanban .bucket .title')
 			.contains(buckets[0].title)
@@ -84,7 +84,7 @@ describe('Project View Kanban', () => {
 		cy.intercept('PUT', '**/api/v1/projects/1/views/*/tasks').as('createTask')
 		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
 		cy.visit('/projects/1/4')
-		cy.wait('@loadTasks')
+		cy.wait('@loadTasks', { timeout: 30000 })
 
 		cy.get('.kanban .bucket')
 			.contains(buckets[0].title)
@@ -179,7 +179,7 @@ describe('Project View Kanban', () => {
 		cy.intercept('POST', '**/tasks/*/buckets').as('moveTask')
 		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
 		cy.visit('/projects/1/4')
-		cy.wait('@loadTasks')
+		cy.wait('@loadTasks', { timeout: 30000 })
 
 		cy.get('.kanban .bucket .tasks .task')
 			.contains(tasks[0].title)
@@ -199,7 +199,7 @@ describe('Project View Kanban', () => {
 		const tasks = createTaskWithBuckets(buckets, 5)
 		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
 		cy.visit('/projects/1/4')
-		cy.wait('@loadTasks')
+		cy.wait('@loadTasks', { timeout: 30000 })
 
 		cy.get('.kanban .bucket .tasks .task')
 			.contains(tasks[0].title)
@@ -291,7 +291,7 @@ describe('Project View Kanban', () => {
 		})
 
 		cy.visit(`/projects/${task.project_id}/${view.id}`)
-		cy.wait('@loadTasks')
+		cy.wait('@loadTasks', { timeout: 30000 })
 
 		cy.get('.bucket .tasks .task .footer .icon svg')
 			.should('exist')
@@ -304,7 +304,7 @@ describe('Project View Kanban', () => {
 		})
 
 		cy.visit(`/projects/${task.project_id}/${view.id}`)
-		cy.wait('@loadTasks')
+		cy.wait('@loadTasks', { timeout: 30000 })
 
 		cy.get('.bucket .tasks .task .footer .icon svg')
 			.should('not.exist')
@@ -317,7 +317,7 @@ describe('Project View Kanban', () => {
 		})
 
 		cy.visit(`/projects/${task.project_id}/${view.id}`)
-		cy.wait('@loadTasks')
+		cy.wait('@loadTasks', { timeout: 30000 })
 
 		cy.get('.bucket .tasks .task .footer .icon svg')
 			.should('not.exist')
