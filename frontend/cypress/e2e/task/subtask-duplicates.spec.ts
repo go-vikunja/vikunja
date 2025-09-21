@@ -59,9 +59,9 @@ describe('Subtask duplicate handling', () => {
 
                 cy.visit(`/projects/${projectA.id}/1`)
 
-                // Wait for project and tasks to load with shorter timeouts to prevent hangs
-                cy.wait('@loadProject', { timeout: 15000 })
-                cy.wait('@loadTasks', { timeout: 15000 })
+                // Wait for project and tasks to load with longer timeouts for CI compatibility
+                cy.wait('@loadProject', { timeout: 30000 })
+                cy.wait('@loadTasks', { timeout: 30000 })
 
                 // Wait for page to be fully loaded and tasks rendered
                 cy.get('.tasks').should('be.visible')

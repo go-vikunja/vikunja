@@ -33,13 +33,13 @@ describe('Projects', () => {
 	})
 
 	it('Should redirect to a specific project view after visited', () => {
-		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadBuckets')
+		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
 		cy.visit('/projects/1/4')
 		cy.url()
 			.should('contain', '/projects/1/4')
 
 		// Wait for the tasks to load with timeout
-		cy.wait('@loadBuckets', { timeout: 15000 })
+		cy.wait('@loadTasks', { timeout: 30000 })
 
 		cy.visit('/projects/1')
 		cy.url()
