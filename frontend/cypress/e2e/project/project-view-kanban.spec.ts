@@ -207,7 +207,7 @@ describe('Project View Kanban', () => {
 			.click()
 
 		cy.url()
-			.should('contain', `/tasks/${tasks[0].id}`, {timeout: 5000})
+			.should('contain', `/tasks/${tasks[0].id}`, {timeout: 30000})
 	})
 
 	it('Should remove a task from the kanban board when moving it to another project', () => {

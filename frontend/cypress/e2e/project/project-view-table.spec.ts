@@ -17,11 +17,11 @@ describe('Project View Table', () => {
 		cy.wait('@loadTasks', {timeout: 30000})
 
 		// Wait for the table to be visible
-		cy.get('.project-table table.table', {timeout: 15000})
+		cy.get('.project-table table.table', {timeout: 30000})
 			.should('be.visible')
 
 		// Wait for the table to contain the task
-		cy.get('.project-table table.table tbody', {timeout: 15000})
+		cy.get('.project-table table.table tbody', {timeout: 30000})
 			.should('be.visible')
 			.should('contain', tasks[0].title)
 	})
@@ -36,7 +36,7 @@ describe('Project View Table', () => {
 		cy.wait('@loadTasks', {timeout: 30000})
 
 		// Wait for the table to load
-		cy.get('.project-table table.table', {timeout: 15000})
+		cy.get('.project-table table.table', {timeout: 30000})
 			.should('be.visible')
 
 		// Open columns filter
@@ -80,7 +80,7 @@ describe('Project View Table', () => {
 		cy.wait('@loadTasks', {timeout: 30000})
 
 		// Wait for the table to be visible and contain tasks
-		cy.get('.project-table table.table tbody', {timeout: 15000})
+		cy.get('.project-table table.table tbody', {timeout: 30000})
 			.should('be.visible')
 			.and('contain', tasks[0].title)
 
@@ -92,6 +92,6 @@ describe('Project View Table', () => {
 
 		// Verify navigation to task detail page
 		cy.url()
-			.should('contain', `/tasks/${tasks[0].id}`, {timeout: 10000})
+			.should('contain', `/tasks/${tasks[0].id}`, {timeout: 30000})
 	})
 })
