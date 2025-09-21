@@ -87,10 +87,8 @@ describe('Home Page Task Overview', () => {
 		}, false)
 
 		// Set up intercept before any navigation that might trigger API calls
-		// Set up comprehensive API intercepts for all possible task loading endpoints
-		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
-		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
-		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
+		// Set up comprehensive API intercept for all possible task loading endpoints
+		cy.intercept('GET', /\/api\/v1\/(projects\/\d+(\/views\/\d+)?\/tasks|tasks\/all)/).as('loadTasks')
 		cy.intercept('GET', '**/api/v1/projects/*').as('loadProject')
 
 		// Visit the project page first and wait for it to load
@@ -119,10 +117,8 @@ describe('Home Page Task Overview', () => {
 		cy.visit('/')
 
 		// Set up intercepts before navigation
-		// Set up comprehensive API intercepts for all possible task loading endpoints
-		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
-		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
-		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
+		// Set up comprehensive API intercept for all possible task loading endpoints
+		cy.intercept('GET', /\/api\/v1\/(projects\/\d+(\/views\/\d+)?\/tasks|tasks\/all)/).as('loadTasks')
 		cy.intercept('PUT', `**/api/v1/projects/${project.id}/views/*/tasks`).as('createTask')
 		cy.intercept('GET', '**/api/v1/projects/*').as('loadProject')
 
