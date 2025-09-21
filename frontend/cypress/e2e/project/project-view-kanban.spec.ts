@@ -61,7 +61,10 @@ describe('Project View Kanban', () => {
 
 	it('Shows all buckets with their tasks', () => {
 		const data = createTaskWithBuckets(buckets, 10)
-		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
+		// Set up comprehensive API intercepts for all possible task loading endpoints
+		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
 		cy.visit('/projects/1/4')
 		cy.wait('@loadTasks', { timeout: 30000 })
 
@@ -82,7 +85,10 @@ describe('Project View Kanban', () => {
 	it('Can add a new task to a bucket', () => {
 		createTaskWithBuckets(buckets, 2)
 		cy.intercept('PUT', '**/api/v1/projects/1/views/*/tasks').as('createTask')
-		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
+		// Set up comprehensive API intercepts for all possible task loading endpoints
+		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
 		cy.visit('/projects/1/4')
 		cy.wait('@loadTasks', { timeout: 30000 })
 
@@ -177,7 +183,10 @@ describe('Project View Kanban', () => {
 	it('Can drag tasks around', () => {
 		const tasks = createTaskWithBuckets(buckets, 2)
 		cy.intercept('POST', '**/tasks/*/buckets').as('moveTask')
-		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
+		// Set up comprehensive API intercepts for all possible task loading endpoints
+		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
 		cy.visit('/projects/1/4')
 		cy.wait('@loadTasks', { timeout: 30000 })
 
@@ -197,7 +206,10 @@ describe('Project View Kanban', () => {
 
 	it('Should navigate to the task when the task card is clicked', () => {
 		const tasks = createTaskWithBuckets(buckets, 5)
-		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
+		// Set up comprehensive API intercepts for all possible task loading endpoints
+		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
 		cy.visit('/projects/1/4')
 		cy.wait('@loadTasks', { timeout: 30000 })
 
@@ -285,7 +297,10 @@ describe('Project View Kanban', () => {
 	})
 
 	it('Should show a task description icon if the task has a description', () => {
-		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
+		// Set up comprehensive API intercepts for all possible task loading endpoints
+		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
 		const {task, view} = createSingleTaskInBucket(1, {
 			description: 'Lorem Ipsum',
 		})
@@ -298,7 +313,10 @@ describe('Project View Kanban', () => {
 	})
 
 	it('Should not show a task description icon if the task has an empty description', () => {
-		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
+		// Set up comprehensive API intercepts for all possible task loading endpoints
+		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
 		const {task, view} = createSingleTaskInBucket(1, {
 			description: '',
 		})
@@ -311,7 +329,10 @@ describe('Project View Kanban', () => {
 	})
 
 	it('Should not show a task description icon if the task has a description containing only an empty p tag', () => {
-		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
+		// Set up comprehensive API intercepts for all possible task loading endpoints
+		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
 		const {task, view} = createSingleTaskInBucket(1, {
 			description: '<p></p>',
 		})
