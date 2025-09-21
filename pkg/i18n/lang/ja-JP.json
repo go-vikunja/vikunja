@@ -43,6 +43,15 @@
 		"task": {
 			"comment": {
 				"subject": "Re: %[1]s"
+			},
+			"overdue": {
+				"subject": "タスク「%[1]」(%[2]s) は期限を過ぎました",
+				"message": "タスク「%[1]」(%[2]s) は期限を%[3]s過ぎましたが、まだ完了していません。",
+				"multiple_subject": "期限切れタスク",
+				"multiple_message": "以下の期限切れタスクがあります:",
+				"overdue_since": "%[1]s",
+				"overdue_now": "たった今",
+				"overdue": "%[1]s過ぎました"
 			}
 		},
 		"common": {
