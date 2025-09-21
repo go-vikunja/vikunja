@@ -20,6 +20,10 @@ describe('Filter Persistence Across Views', () => {
 	}
 
 	beforeEach(() => {
+		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
+
 		createProjects()
 		TaskFactory.create(5, {
 			id: '{increment}',
@@ -27,6 +31,7 @@ describe('Filter Persistence Across Views', () => {
 			title: 'Test Task {increment}'
 		})
 		cy.visit('/projects/1/1')
+		cy.wait('@loadTasks', {timeout: 30000})
 	})
 
 	it('should persist filters in List view after page refresh', () => {
@@ -41,6 +46,7 @@ describe('Filter Persistence Across Views', () => {
 
 	it('should persist filters in Table view after page refresh', () => {
 		cy.visit('/projects/1/3')
+		cy.wait('@loadTasks', {timeout: 30000})
 
 		openAndSetFilters()
 
@@ -53,6 +59,7 @@ describe('Filter Persistence Across Views', () => {
 
 	it('should persist filters in Kanban view after page refresh', () => {
 		cy.visit('/projects/1/4')
+		cy.wait('@loadTasks', {timeout: 30000})
 
 		openAndSetFilters()
 
@@ -66,6 +73,7 @@ describe('Filter Persistence Across Views', () => {
 	it('should handle URL sharing with filters', () => {
 		// Visit URL with pre-existing filter parameters
 		cy.visit('/projects/1/4?filter=done%3Dtrue&s=Test')
+		cy.wait('@loadTasks', {timeout: 30000})
 		
 		// Verify URL parameters are preserved
 		cy.url().should('include', 'filter=done%3Dtrue')
@@ -73,6 +81,7 @@ describe('Filter Persistence Across Views', () => {
 		
 		// Switch views and verify parameters persist
 		cy.visit('/projects/1/3?filter=done%3Dtrue&s=Test')
+		cy.wait('@loadTasks', {timeout: 30000})
 		cy.url().should('include', 'filter=done%3Dtrue')
 		cy.url().should('include', 's=Test')
 	})

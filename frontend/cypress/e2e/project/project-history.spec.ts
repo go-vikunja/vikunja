@@ -9,6 +9,9 @@ describe('Project History', () => {
 	prepareProjects()
 	
 	it('should show a project history on the home page', () => {
+		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
 		cy.intercept(Cypress.env('API_URL') + '/projects*').as('loadProjectArray')
 		cy.intercept(Cypress.env('API_URL') + '/projects/*').as('loadProject')
 		
@@ -26,18 +29,25 @@ describe('Project History', () => {
 
 		cy.visit(`/projects/${projects[0].id}/${projects[0].id}`)
 		cy.wait('@loadProject')
+		cy.wait('@loadTasks', {timeout: 30000})
 		cy.visit(`/projects/${projects[1].id}/${projects[1].id}`)
 		cy.wait('@loadProject')
+		cy.wait('@loadTasks', {timeout: 30000})
 		cy.visit(`/projects/${projects[2].id}/${projects[2].id}`)
 		cy.wait('@loadProject')
+		cy.wait('@loadTasks', {timeout: 30000})
 		cy.visit(`/projects/${projects[3].id}/${projects[3].id}`)
 		cy.wait('@loadProject')
+		cy.wait('@loadTasks', {timeout: 30000})
 		cy.visit(`/projects/${projects[4].id}/${projects[4].id}`)
 		cy.wait('@loadProject')
+		cy.wait('@loadTasks', {timeout: 30000})
 		cy.visit(`/projects/${projects[5].id}/${projects[5].id}`)
 		cy.wait('@loadProject')
+		cy.wait('@loadTasks', {timeout: 30000})
 		cy.visit(`/projects/${projects[6].id}/${projects[6].id}`)
 		cy.wait('@loadProject')
+		cy.wait('@loadTasks', {timeout: 30000})
 
 		// cy.visit('/')
 		// Not using cy.visit here to work around the redirect issue fixed in #1337
