@@ -100,8 +100,11 @@ describe('Task', () => {
 	it('Should be created new', () => {
 		cy.intercept('PUT', '**/api/v1/projects/1/views/*/tasks').as('createTask')
 		cy.visit('/projects/1/1')
+		// Wait for loading state to complete
+		cy.get('.is-loading', {timeout: 30000}).should('not.exist')
 		cy.get('.input[placeholder="Add a task…"]')
 			.should('be.visible')
+			.should('not.have.css', 'pointer-events', 'none')
 			.type('New Task')
 		cy.get('.button')
 			.contains('Add')
@@ -118,9 +121,13 @@ describe('Task', () => {
 
 		cy.intercept('PUT', '**/api/v1/projects/1/views/*/tasks').as('createTask')
 		cy.visit('/projects/1/1')
+		// Wait for loading state to complete
+		cy.get('.is-loading', {timeout: 30000}).should('not.exist')
 		cy.get('.project-is-empty-notice')
 			.should('not.exist')
 		cy.get('.input[placeholder="Add a task…"]')
+			.should('be.visible')
+			.should('not.have.css', 'pointer-events', 'none')
 			.type('New Task')
 		cy.get('.button')
 			.contains('Add')

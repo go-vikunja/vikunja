@@ -28,13 +28,18 @@
 - [x] **Unit Tests**: 690/690 passing (`pnpm test:unit`)
 - [x] **Git**: Two clean commits with conventional messages pushed
 
-## 🔄 Current Status
+## 🔄 Current Status - NEW SESSION (September 21, 2025)
 
-### CI Run #17889600751 (In Progress - New Fix)
-- **Started**: 05:37 UTC
-- **Changes**: Enhanced API intercepts for remaining E2E failures
-- **Expected**: Further reduction in E2E failures
-- **Target**: Addressing the remaining ~41 failures from previous run
+### CI Run #17890346776 (Latest Analysis)
+- **Status**: Still failing with different root cause
+- **New Issue**: Elements with `pointer-events: none` due to loading states
+- **Error Pattern**: `cy.type()` fails because elements inherit `pointer-events: none` from `is-loading loader-container`
+- **Container Failures**: 1:7, 2:7, 3:16, 4:11 failures
+
+### Backend API Error
+- **Error**: "Subscription entity type is unknown [EntityType: 0]" - HTTP 400
+- **Impact**: DELETE /api/v1/tasks/1 operations failing
+- **Context**: This appears to be a backend issue, not frontend E2E issue
 
 ### Previous CI Run #17889256906 (Completed)
 - **Result**: 41 failures (6+17+11+7) - down from 42 baseline
@@ -59,7 +64,19 @@
 - **Goal**: Zero "loadTasks" related timeouts
 - **Requirement**: All linting/typecheck/unit tests pass
 
-## 📋 Recent Fixes Applied (Current Session)
+## 🚨 CURRENT PRIORITY FIXES NEEDED
+
+### Immediate Actions Required:
+1. **Fix Loading State Issues** - Add proper waits for `is-loading` class removal
+2. **Fix Backend API Error** - Investigate "EntityType: 0" subscription error
+3. **Improve Test Reliability** - Better waits for interactive elements
+
+### Specific Failing Tests (Container 3 - 16 failures):
+- **Task Creation**: "Should be created new" - cannot type in textarea due to loading state
+- **Task Insertion**: "Inserts new tasks at the top of the project" - same issue
+- Multiple other task interaction tests blocked by loading states
+
+## 📋 Previous Fixes Applied (Earlier Sessions)
 
 ### Latest Changes (Commit: 6bc535b9b)
 - **Enhanced API Intercepts**: Added comprehensive patterns to linkShare.spec.ts
