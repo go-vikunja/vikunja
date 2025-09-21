@@ -25,10 +25,11 @@ describe('Link shares', () => {
 	it('Can view a link share', () => {
 		const {share, project, tasks} = prepareLinkShare()
 
-		// Set up comprehensive API intercepts for all possible task loading endpoints
+		// Set up comprehensive API intercepts for all possible task loading endpoints BEFORE navigation
 		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
 		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
 		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
+
 		cy.visit(`/share/${share.hash}/auth`)
 
 		// Wait for redirect to complete
@@ -55,10 +56,11 @@ describe('Link shares', () => {
 	it('Should work when directly viewing a project with share hash present', () => {
 		const {share, project, tasks} = prepareLinkShare()
 
-		// Set up comprehensive API intercepts for all possible task loading endpoints
+		// Set up comprehensive API intercepts for all possible task loading endpoints BEFORE navigation
 		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
 		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
 		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
+
 		cy.visit(`/projects/${project.id}/1#share-auth-token=${share.hash}`)
 
 		// Wait for project title to load
