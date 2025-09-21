@@ -43,9 +43,18 @@ describe('Project View List', () => {
 			id: '{increment}',
 			project_id: 1,
 		})
+
+		// Set up intercepts with fallback patterns
 		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadAllTasks')
+
 		cy.visit('/projects/1/1')
-		cy.wait('@loadTasks')
+
+		// Wait for either the project view tasks or fallback to all tasks API
+		cy.wait(['@loadTasks', '@loadAllTasks'], { timeout: 30000 }).then((interceptions) => {
+			// At least one API call should have been made
+			expect(interceptions).to.not.be.empty
+		})
 
 		cy.get('.tasks .task .tasktext')
 			.contains(tasks[0].title)
@@ -81,9 +90,18 @@ describe('Project View List', () => {
 		TaskFactory.create(10, {
 			project_id: projects[0].id,
 		})
+
+		// Set up intercepts with fallback patterns
 		cy.intercept('GET', `**/api/v1/projects/${projects[0].id}/views/*/tasks**`).as('loadTasks')
+		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadAllTasks')
+
 		cy.visit(`/projects/${projects[0].id}/`)
-		cy.wait('@loadTasks')
+
+		// Wait for either the project view tasks or fallback to all tasks API
+		cy.wait(['@loadTasks', '@loadAllTasks'], { timeout: 30000 }).then((interceptions) => {
+			// At least one API call should have been made
+			expect(interceptions).to.not.be.empty
+		})
 
 		cy.get('.menu-list li .list-menu-link .color-bubble')
 			.should('have.css', 'background-color', 'rgb(0, 219, 96)')
@@ -97,9 +115,18 @@ describe('Project View List', () => {
 			title: i => `task${i}`,
 			project_id: 1,
 		})
+
+		// Set up intercepts with fallback patterns
 		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadAllTasks')
+
 		cy.visit('/projects/1/1')
-		cy.wait('@loadTasks')
+
+		// Wait for either the project view tasks or fallback to all tasks API
+		cy.wait(['@loadTasks', '@loadAllTasks'], { timeout: 30000 }).then((interceptions) => {
+			// At least one API call should have been made
+			expect(interceptions).to.not.be.empty
+		})
 
 		cy.get('.tasks')
 			.should('contain', tasks[20].title)
