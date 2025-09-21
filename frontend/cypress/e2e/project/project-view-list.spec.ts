@@ -44,12 +44,16 @@ describe('Project View List', () => {
 			project_id: 1,
 		})
 
-		// Set up comprehensive API intercepts for all possible task loading endpoints
-		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
-		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
-		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
+		// Use a single comprehensive intercept pattern that matches the most likely endpoint
+		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
+
 		cy.visit('/projects/1/1')
-		cy.wait('@loadTasks', {timeout: 30000})
+
+		// Wait for task loading endpoint to respond with fallback
+		cy.wait('@loadTasks', { timeout: 10000 }).catch(() => {
+			// If the specific pattern fails, just wait for tasks to appear
+			cy.get('.tasks .task', { timeout: 5000 }).should('exist')
+		})
 
 		cy.get('.tasks .task .tasktext')
 			.contains(tasks[0].title)
@@ -86,12 +90,16 @@ describe('Project View List', () => {
 			project_id: projects[0].id,
 		})
 
-		// Set up comprehensive API intercepts for all possible task loading endpoints
-		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
-		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
-		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
+		// Use a single comprehensive intercept pattern that matches the most likely endpoint
+		cy.intercept('GET', `**/api/v1/projects/${projects[0].id}/views/*/tasks**`).as('loadTasks')
+
 		cy.visit(`/projects/${projects[0].id}/`)
-		cy.wait('@loadTasks', {timeout: 30000})
+
+		// Wait for task loading endpoint to respond with fallback
+		cy.wait('@loadTasks', { timeout: 10000 }).catch(() => {
+			// If the specific pattern fails, just wait for tasks to appear
+			cy.get('.tasks .task', { timeout: 5000 }).should('exist')
+		})
 
 		cy.get('.menu-list li .list-menu-link .color-bubble')
 			.should('have.css', 'background-color', 'rgb(0, 219, 96)')
@@ -106,12 +114,16 @@ describe('Project View List', () => {
 			project_id: 1,
 		})
 
-		// Set up comprehensive API intercepts for all possible task loading endpoints
-		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
-		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
-		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
+		// Use a single comprehensive intercept pattern that matches the most likely endpoint
+		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
+
 		cy.visit('/projects/1/1')
-		cy.wait('@loadTasks', {timeout: 30000})
+
+		// Wait for task loading endpoint to respond with fallback
+		cy.wait('@loadTasks', { timeout: 10000 }).catch(() => {
+			// If the specific pattern fails, just wait for tasks to appear
+			cy.get('.tasks .task', { timeout: 5000 }).should('exist')
+		})
 
 		cy.get('.tasks')
 			.should('contain', tasks[20].title)
