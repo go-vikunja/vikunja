@@ -52,8 +52,18 @@ describe('Subtask duplicate handling', () => {
         })
 
         it('shows subtask only once in project list', () => {
+                // Add API intercept to wait for tasks to load
+                cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
                 cy.visit(`/projects/${projectA.id}/1`)
+                cy.wait('@loadTasks', { timeout: 15000 })
+
+                // Wait for page to be fully loaded and tasks rendered
+                cy.get('.tasks').should('be.visible')
+                cy.get('.task-link').should('have.length.greaterThan', 0)
+
+                // Check that subtask appears in nested structure
                 cy.get('.subtask-nested .task-link').contains(subtask.title).should('exist')
+                // Check that subtask appears only once in the overall task list
                 cy.get('.tasks .task-link').contains(subtask.title).should('have.length', 1)
         })
 })

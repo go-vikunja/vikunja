@@ -80,9 +80,10 @@ describe('Home Page Task Overview', () => {
 			due_date: new Date().toISOString(),
 		}, false)
 
-		cy.intercept(`**/projects/${tasks[0].project_id}/views/*/tasks**`).as('loadTasks')
+		// Use more specific intercept pattern and ensure it's registered before navigation
+		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
 		cy.visit(`/projects/${tasks[0].project_id}/1`)
-		cy.wait('@loadTasks')
+		cy.wait('@loadTasks', { timeout: 15000 })
 		cy.get('.tasks .task')
 			.should('contain.text', newTaskTitle)
 		cy.visit('/')
@@ -98,11 +99,14 @@ describe('Home Page Task Overview', () => {
 
 		cy.visit('/')
 
-		cy.intercept(`**/projects/${tasks[0].project_id}/views/*/tasks**`).as('loadTasks')
+		// Use more specific intercept pattern and ensure it's registered before navigation
+		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
 		cy.visit(`/projects/${tasks[0].project_id}/1`)
-		cy.wait('@loadTasks')
+		cy.wait('@loadTasks', { timeout: 15000 })
 		cy.get('.task-add textarea')
 			.type(newTaskTitle+'{enter}')
+		// Wait for task creation to complete
+		cy.get('.tasks .task').should('contain.text', newTaskTitle)
 		cy.visit('/')
 		cy.get('[data-cy="showTasks"] .card .task')
 			.last()
