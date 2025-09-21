@@ -136,10 +136,8 @@ describe('Task', () => {
 		TaskFactory.create(1)
 
 		cy.intercept('POST', '**/tasks/*/done').as('markDone')
-		// Set up comprehensive API intercepts for all possible task loading endpoints
-		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
-		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
-		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
+		// Set up comprehensive API intercept for all possible task loading endpoints
+		cy.intercept('GET', /\/api\/v1\/(projects\/\d+(\/views\/\d+)?\/tasks|tasks\/all)/).as('loadTasks')
 		cy.visit('/projects/1/1')
 		cy.wait('@loadTasks', { timeout: 30000 })
 		cy.get('.tasks .task .fancy-checkbox')
@@ -155,10 +153,8 @@ describe('Task', () => {
 	it('Can add a task to favorites', () => {
 		TaskFactory.create(1)
 
-		// Set up comprehensive API intercepts for all possible task loading endpoints
-		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
-		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
-		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
+		// Set up comprehensive API intercept for all possible task loading endpoints
+		cy.intercept('GET', /\/api\/v1\/(projects\/\d+(\/views\/\d+)?\/tasks|tasks\/all)/).as('loadTasks')
 		cy.visit('/projects/1/1')
 		cy.wait('@loadTasks', { timeout: 30000 })
 		cy.get('.tasks .task .favorite')
@@ -171,10 +167,8 @@ describe('Task', () => {
 	})
 
 	it('Should show a task description icon if the task has a description', () => {
-		// Set up comprehensive API intercepts for all possible task loading endpoints
-		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
-		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
-		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
+		// Set up comprehensive API intercept for all possible task loading endpoints
+		cy.intercept('GET', /\/api\/v1\/(projects\/\d+(\/views\/\d+)?\/tasks|tasks\/all)/).as('loadTasks')
 		TaskFactory.create(1, {
 			description: 'Lorem Ipsum',
 		})
@@ -187,10 +181,8 @@ describe('Task', () => {
 	})
 
 	it('Should not show a task description icon if the task has an empty description', () => {
-		// Set up comprehensive API intercepts for all possible task loading endpoints
-		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
-		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
-		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
+		// Set up comprehensive API intercept for all possible task loading endpoints
+		cy.intercept('GET', /\/api\/v1\/(projects\/\d+(\/views\/\d+)?\/tasks|tasks\/all)/).as('loadTasks')
 		TaskFactory.create(1, {
 			description: '',
 		})
@@ -203,10 +195,8 @@ describe('Task', () => {
 	})
 
 	it('Should not show a task description icon if the task has a description containing only an empty p tag', () => {
-		// Set up comprehensive API intercepts for all possible task loading endpoints
-		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
-		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
-		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
+		// Set up comprehensive API intercept for all possible task loading endpoints
+		cy.intercept('GET', /\/api\/v1\/(projects\/\d+(\/views\/\d+)?\/tasks|tasks\/all)/).as('loadTasks')
 		TaskFactory.create(1, {
 			description: '<p></p>',
 		})
@@ -227,10 +217,8 @@ describe('Task', () => {
 		
 		it('provides back navigation to the project in the list view', () => {
 			const tasks = TaskFactory.create(1)
-			// Set up comprehensive API intercepts for all possible task loading endpoints
-		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
-		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
-		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
+			// Set up comprehensive API intercept for all possible task loading endpoints
+			cy.intercept('GET', /\/api\/v1\/(projects\/\d+(\/views\/\d+)?\/tasks|tasks\/all)/).as('loadTasks')
 			cy.visit('/projects/1/1')
 			cy.wait('@loadTasks', { timeout: 30000 })
 			cy.get('.list-view .task')
@@ -245,10 +233,8 @@ describe('Task', () => {
 
 		it('provides back navigation to the project in the table view', () => {
 			const tasks = TaskFactory.create(1)
-			// Set up comprehensive API intercepts for all possible task loading endpoints
-		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
-		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
-		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
+			// Set up comprehensive API intercept for all possible task loading endpoints
+			cy.intercept('GET', /\/api\/v1\/(projects\/\d+(\/views\/\d+)?\/tasks|tasks\/all)/).as('loadTasks')
 			cy.visit('/projects/1/3')
 			cy.wait('@loadTasks', { timeout: 30000 })
 			cy.get('tbody tr')
@@ -266,10 +252,8 @@ describe('Task', () => {
 			cy.viewport('iphone-8')
 
 			const tasks = TaskFactory.create(1)
-			// Set up comprehensive API intercepts for all possible task loading endpoints
-		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
-		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
-		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
+			// Set up comprehensive API intercept for all possible task loading endpoints
+			cy.intercept('GET', /\/api\/v1\/(projects\/\d+(\/views\/\d+)?\/tasks|tasks\/all)/).as('loadTasks')
 			cy.visit('/projects/1/4')
 			cy.wait('@loadTasks', { timeout: 30000 })
 			cy.get('.kanban-view .tasks .task')
@@ -285,10 +269,8 @@ describe('Task', () => {
 			cy.viewport('macbook-15')
 
 			const tasks = TaskFactory.create(1)
-			// Set up comprehensive API intercepts for all possible task loading endpoints
-		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
-		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
-		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
+			// Set up comprehensive API intercept for all possible task loading endpoints
+			cy.intercept('GET', /\/api\/v1\/(projects\/\d+(\/views\/\d+)?\/tasks|tasks\/all)/).as('loadTasks')
 			cy.visit('/projects/1/4')
 			cy.wait('@loadTasks', { timeout: 30000 })
 			cy.get('.kanban-view .tasks .task')
