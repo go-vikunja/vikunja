@@ -14,7 +14,7 @@
 			<BaseButton
 				v-if="!isModal || isMobile"
 				class="back-button mbs-2"
-				@click="router.options.history.state?.back?.includes('/projects/') ? router.back() : router.push(projectRoute)"
+				@click="(typeof router.options.history.state?.back === 'string' && router.options.history.state?.back?.includes('/projects/')) ? router.back() : router.push(projectRoute)"
 			>
 				<Icon icon="arrow-left" />
 				{{ $t('task.detail.back') }}
@@ -32,11 +32,11 @@
 				class="subtitle"
 			>
 				<template
-					v-for="p in projectStore.getAncestors(project)"
+					v-for="p in projectStore.getAncestors(project as IProject)"
 					:key="p.id"
 				>
 					<a
-						v-if="router.options.history.state?.back?.includes('/projects/'+p.id+'/') || false"
+						v-if="(typeof router.options.history.state?.back === 'string' && router.options.history.state?.back?.includes('/projects/'+p.id+'/')) || false"
 						v-shortcut="p.id === project?.id ? 'u' : ''"
 						@click="router.back()"
 					>
@@ -429,7 +429,7 @@
 							entity="task"
 							:entity-id="task.id"
 							:model-value="task.subscription"
-							@update:modelValue="sub => task.subscription = sub"
+							@update:modelValue="(sub: any) => task.subscription = sub"
 						/>
 						<XButton
 							v-shortcut="'s'"
@@ -596,7 +596,7 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted, onBeforeUnmount} from 'vue'
+import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted, onBeforeUnmount, type ComponentPublicInstance} from 'vue'
 import {useRouter, type RouteLocation, onBeforeRouteLeave} from 'vue-router'
 import {storeToRefs} from 'pinia'
 import {useI18n} from 'vue-i18n'
@@ -681,7 +681,7 @@ const taskTitle = computed(() => task.value.title)
 useTitle(taskTitle)
 
 // See https://github.com/github/hotkey/discussions/85#discussioncomment-5214660
-function saveTaskViaHotkey(event) {
+function saveTaskViaHotkey(event: KeyboardEvent) {
 	const hotkeyString = eventToHotkeyString(event)
 	if (!hotkeyString) return
 	if (hotkeyString !== 'Control+s' && hotkeyString !== 'Meta+s') return
@@ -721,7 +721,7 @@ onBeforeRouteLeave(async () => {
 	}
 
 	if (project.value) {
-		await baseStore.handleSetCurrentProjectIfNotSet(project.value)
+		await baseStore.handleSetCurrentProjectIfNotSet(project.value as IProject)
 	}
 })
 
@@ -749,7 +749,7 @@ const canWrite = computed(() => (
 ))
 
 const color = computed(() => {
-	const color = task.value.getHexColor
+	const color = typeof task.value.getHexColor === 'function'
 		? task.value.getHexColor()
 		: undefined
 
@@ -759,8 +759,10 @@ const color = computed(() => {
 const isModal = computed(() => Boolean(props.backdropView))
 const isMobile = useMediaQuery('(max-width: 1024px)')
 
-function attachmentUpload(file: File, onSuccess?: (url: string) => void) {
-	return uploadFile(props.taskId, file, onSuccess)
+async function attachmentUpload(file: File, onSuccess: (url: string) => void): Promise<string> {
+	await uploadFile(props.taskId, file, onSuccess)
+	// The actual URL will be called via onSuccess, returning a placeholder
+	return `placeholder-${file.name}`
 }
 
 const heading = ref<HTMLElement | null>(null)
@@ -780,17 +782,21 @@ watch(
 		}
 
 		try {
-			const loaded = await taskService.get({id}, {expand: ['reactions', 'comments']})
+			const loaded = await taskService.get({id: id} as ITask, {expand: ['reactions', 'comments']})
 			Object.assign(task.value, loaded)
 			attachmentStore.set(task.value.attachments)
 			taskColor.value = task.value.hexColor
 			setActiveFields()
 
 			if (project.value) {
-				await baseStore.handleSetCurrentProjectIfNotSet(project.value)
+				const projectValue = project.value
+				if (!Array.isArray(projectValue.tasks)) {
+					const mutableProject = {...projectValue, tasks: [], views: [...(projectValue.views || [])]} as unknown as IProject
+					await baseStore.handleSetCurrentProjectIfNotSet(mutableProject)
+				}
 			}
-		} catch (e) {
-			if (e?.response?.status === 404) {
+		} catch (e: unknown) {
+			if (e && typeof e === 'object' && 'response' in e && e.response && typeof e.response === 'object' && 'status' in e.response && e.response.status === 404) {
 				taskNotFound.value = true
 				router.replace({name: 'not-found'})
 				return
@@ -850,7 +856,7 @@ function setActiveFields() {
 	activeFields.priority = task.value.priority !== PRIORITIES.UNSET
 	activeFields.relatedTasks = Object.keys(task.value.relatedTasks).length > 0
 	activeFields.reminders = task.value.reminders.length > 0
-	activeFields.repeatAfter = task.value.repeatAfter?.amount > 0 || task.value.repeatMode !== TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
+	activeFields.repeatAfter = (typeof task.value.repeatAfter === 'object' && task.value.repeatAfter?.amount > 0) || task.value.repeatMode !== TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
 	activeFields.startDate = task.value.startDate !== null
 }
 
@@ -870,8 +876,12 @@ const activeFieldElements: { [id in FieldType]: HTMLElement | null } = reactive(
 	startDate: null,
 })
 
-function setFieldRef(name, e) {
-	activeFieldElements[name] = unrefElement(e)
+function setFieldRef(name: string, e: Element | ComponentPublicInstance | null) {
+	if (name in activeFieldElements) {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const element = unrefElement(e as any)
+		activeFieldElements[name as FieldType] = (element as HTMLElement) || null
+	}
 }
 
 function setFieldActive(fieldName: keyof typeof activeFields) {
@@ -966,10 +976,10 @@ async function toggleFavorite() {
 	Object.assign(task.value, newTask)
 }
 
-async function setPriority(priority: Priority) {
+async function setPriority(priority: number) {
 	const newTask: ITask = {
 		...task.value,
-		priority,
+		priority: priority as Priority,
 	}
 
 	return saveTask(newTask)
@@ -985,7 +995,9 @@ async function setPercentDone(percentDone: number) {
 }
 
 async function removeRepeatAfter() {
-	task.value.repeatAfter.amount = 0
+	if (typeof task.value.repeatAfter === 'object' && task.value.repeatAfter) {
+		task.value.repeatAfter.amount = 0
+	}
 	task.value.repeatMode = TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
 	await saveTask()
 }
@@ -995,10 +1007,13 @@ function setRelatedTasksActive() {
 
 	// If the related tasks are already available, show the form again
 	const el = activeFieldElements['relatedTasks']
-	for (const child in el?.children) {
-		if (el?.children[child]?.id === 'showRelatedTasksFormButton') {
-			el?.children[child]?.click()
-			break
+	if (el?.children) {
+		for (let i = 0; i < el.children.length; i++) {
+			const child = el.children[i] as HTMLElement
+			if (child.id === 'showRelatedTasksFormButton') {
+				child.click()
+				break
+			}
 		}
 	}
 }

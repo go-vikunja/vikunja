@@ -50,7 +50,13 @@ const emit = defineEmits<{
 
 const projectStore = useProjectStore()
 
-const value = ref<TaskFilterParams>({})
+const value = ref<TaskFilterParams>({
+	sort_by: ['position', 'id'],
+	order_by: ['asc', 'desc'],
+	filter: '',
+	filter_include_nulls: false,
+	s: '',
+})
 const filtersRef = ref()
 
 watch(

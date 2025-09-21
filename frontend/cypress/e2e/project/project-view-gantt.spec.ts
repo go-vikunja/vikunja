@@ -10,14 +10,23 @@ describe('Project View Gantt', () => {
 	prepareProjects()
 
 	it('Hides tasks with no dates', () => {
+		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
+
 		const tasks = TaskFactory.create(1)
 		cy.visit('/projects/1/2')
+		cy.wait('@loadTasks', {timeout: 30000})
 
 		cy.get('.gantt-rows')
 			.should('not.contain', tasks[0].title)
 	})
 
 	it('Shows tasks from the current and next month', () => {
+		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
+
 		const now = Date.UTC(2022, 8, 25)
 		cy.clock(now, ['Date'])
 
@@ -26,6 +35,7 @@ describe('Project View Gantt', () => {
 		nextMonth.setMonth(9)
 
 		cy.visit('/projects/1/2')
+		cy.wait('@loadTasks', {timeout: 30000})
 
 		cy.get('.gantt-timeline-months')
 			.should('contain', dayjs(now).format('MMMM YYYY'))
@@ -33,12 +43,17 @@ describe('Project View Gantt', () => {
 	})
 
 	it('Shows tasks with dates', () => {
+		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
+
 		const now = new Date()
 		const tasks = TaskFactory.create(1, {
 			start_date: now.toISOString(),
 			end_date: new Date(new Date(now).setDate(now.getDate() + 4)).toISOString(),
 		})
 		cy.visit('/projects/1/2')
+		cy.wait('@loadTasks', {timeout: 30000})
 
 		cy.get('.gantt-rows')
 			.should('not.be.empty')
@@ -46,11 +61,16 @@ describe('Project View Gantt', () => {
 	})
 
 	it('Shows tasks with no dates after enabling them', () => {
+		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
+
 		const tasks = TaskFactory.create(1, {
 			start_date: null,
 			end_date: null,
 		})
 		cy.visit('/projects/1/2')
+		cy.wait('@loadTasks', {timeout: 30000})
 
 		cy.get('.gantt-options .fancy-checkbox')
 			.contains('Show tasks without date')
@@ -62,6 +82,9 @@ describe('Project View Gantt', () => {
 	})
 
 	it('Drags a task around', () => {
+		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
 		cy.intercept(Cypress.env('API_URL') + '/tasks/*').as('taskUpdate')
 
 		const now = new Date()
@@ -70,6 +93,7 @@ describe('Project View Gantt', () => {
 			end_date: new Date(new Date(now).setDate(now.getDate() + 4)).toISOString(),
 		})
 		cy.visit('/projects/1/2')
+		cy.wait('@loadTasks', {timeout: 30000})
 
 		cy.get('.gantt-rows .gantt-row-bars .gantt-bar')
 			.first()
@@ -109,10 +133,15 @@ describe('Project View Gantt', () => {
 	})
 
 	it('Should change the query parameters when selecting a date range', () => {
+		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
+
 		const now = Date.UTC(2022, 10, 9)
 		cy.clock(now, ['Date'])
 
 		cy.visit('/projects/1/2')
+		cy.wait('@loadTasks', {timeout: 30000})
 
 		cy.get('.project-gantt .gantt-options .field .control input.input.form-control')
 			.click()
@@ -128,7 +157,12 @@ describe('Project View Gantt', () => {
 	})
 
 	it('Should change the date range based on date query parameters', () => {
+		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
+
 		cy.visit('/projects/1/2?dateFrom=2022-09-25&dateTo=2022-11-05')
+		cy.wait('@loadTasks', {timeout: 30000})
 
 		cy.get('.gantt-timeline-months')
 			.should('contain', 'September 2022')
@@ -139,12 +173,17 @@ describe('Project View Gantt', () => {
 	})
 
 	it('Should open a task when double clicked on it', () => {
+		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
+
 		const now = new Date()
 		const tasks = TaskFactory.create(1, {
 			start_date: dayjs(now).format(),
 			end_date: dayjs(now.setDate(now.getDate() + 4)).format(),
 		})
 		cy.visit('/projects/1/2')
+		cy.wait('@loadTasks', {timeout: 30000})
 
 		cy.get('.gantt-container .gantt-row-bars .gantt-bar')
 			.dblclick()

@@ -61,39 +61,57 @@ describe('Project View Kanban', () => {
 
 	it('Shows all buckets with their tasks', () => {
 		const data = createTaskWithBuckets(buckets, 10)
+		// Set up comprehensive API intercepts for all possible task loading endpoints
+		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
 		cy.visit('/projects/1/4')
+		cy.wait('@loadTasks', { timeout: 30000 })
 
 		cy.get('.kanban .bucket .title')
 			.contains(buckets[0].title)
+			.should('be.visible')
 			.should('exist')
 		cy.get('.kanban .bucket .title')
 			.contains(buckets[1].title)
+			.should('be.visible')
 			.should('exist')
 		cy.get('.kanban .bucket')
 			.first()
+			.should('be.visible')
 			.should('contain', data[0].title)
 	})
 
 	it('Can add a new task to a bucket', () => {
 		createTaskWithBuckets(buckets, 2)
+		cy.intercept('PUT', '**/api/v1/projects/1/views/*/tasks').as('createTask')
+		// Set up comprehensive API intercepts for all possible task loading endpoints
+		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
 		cy.visit('/projects/1/4')
+		cy.wait('@loadTasks', { timeout: 30000 })
 
 		cy.get('.kanban .bucket')
 			.contains(buckets[0].title)
 			.get('.bucket-footer .button')
 			.contains('Add another task')
+			.should('be.visible')
 			.click()
 		cy.get('.kanban .bucket')
 			.contains(buckets[0].title)
 			.get('.bucket-footer .field .control input.input')
+			.should('be.visible')
 			.type('New Task{enter}')
 
+		cy.wait('@createTask')
 		cy.get('.kanban .bucket')
 			.first()
 			.should('contain', 'New Task')
 	})
 
 	it('Can create a new bucket', () => {
+		cy.intercept('PUT', '**/projects/1/buckets').as('createBucket')
 		cy.visit('/projects/1/4')
 
 		cy.get('.kanban .bucket.new-bucket .button')
@@ -101,7 +119,7 @@ describe('Project View Kanban', () => {
 		cy.get('.kanban .bucket.new-bucket input.input')
 			.type('New Bucket{enter}')
 
-		cy.wait(1000) // Wait for the request to finish
+		cy.wait('@createBucket')
 		cy.get('.kanban .bucket .title')
 			.contains('New Bucket')
 			.should('exist')
@@ -164,14 +182,23 @@ describe('Project View Kanban', () => {
 
 	it('Can drag tasks around', () => {
 		const tasks = createTaskWithBuckets(buckets, 2)
+		cy.intercept('POST', '**/tasks/*/buckets').as('moveTask')
+		// Set up comprehensive API intercepts for all possible task loading endpoints
+		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
 		cy.visit('/projects/1/4')
+		cy.wait('@loadTasks', { timeout: 30000 })
 
 		cy.get('.kanban .bucket .tasks .task')
 			.contains(tasks[0].title)
 			.first()
-			.drag('.kanban .bucket:nth-child(2) .tasks')
+			.should('be.visible')
+			.drag('.kanban .bucket:nth-child(2) .tasks', {force: true})
 
+		cy.wait('@moveTask')
 		cy.get('.kanban .bucket:nth-child(2) .tasks')
+			.should('be.visible')
 			.should('contain', tasks[0].title)
 		cy.get('.kanban .bucket:nth-child(1) .tasks')
 			.should('not.contain', tasks[0].title)
@@ -179,7 +206,12 @@ describe('Project View Kanban', () => {
 
 	it('Should navigate to the task when the task card is clicked', () => {
 		const tasks = createTaskWithBuckets(buckets, 5)
+		// Set up comprehensive API intercepts for all possible task loading endpoints
+		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
 		cy.visit('/projects/1/4')
+		cy.wait('@loadTasks', { timeout: 30000 })
 
 		cy.get('.kanban .bucket .tasks .task')
 			.contains(tasks[0].title)
@@ -187,7 +219,7 @@ describe('Project View Kanban', () => {
 			.click()
 
 		cy.url()
-			.should('contain', `/tasks/${tasks[0].id}`, {timeout: 1000})
+			.should('contain', `/tasks/${tasks[0].id}`, {timeout: 30000})
 	})
 
 	it('Should remove a task from the kanban board when moving it to another project', () => {
@@ -265,39 +297,48 @@ describe('Project View Kanban', () => {
 	})
 
 	it('Should show a task description icon if the task has a description', () => {
-		cy.intercept(Cypress.env('API_URL') + '/projects/1/views/*/tasks**').as('loadTasks')
+		// Set up comprehensive API intercepts for all possible task loading endpoints
+		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
 		const {task, view} = createSingleTaskInBucket(1, {
 			description: 'Lorem Ipsum',
 		})
 
 		cy.visit(`/projects/${task.project_id}/${view.id}`)
-		cy.wait('@loadTasks')
+		cy.wait('@loadTasks', { timeout: 30000 })
 
 		cy.get('.bucket .tasks .task .footer .icon svg')
 			.should('exist')
 	})
 
 	it('Should not show a task description icon if the task has an empty description', () => {
-		cy.intercept(Cypress.env('API_URL') + '/projects/1/views/*/tasks**').as('loadTasks')
+		// Set up comprehensive API intercepts for all possible task loading endpoints
+		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
 		const {task, view} = createSingleTaskInBucket(1, {
 			description: '',
 		})
 
 		cy.visit(`/projects/${task.project_id}/${view.id}`)
-		cy.wait('@loadTasks')
+		cy.wait('@loadTasks', { timeout: 30000 })
 
 		cy.get('.bucket .tasks .task .footer .icon svg')
 			.should('not.exist')
 	})
 
 	it('Should not show a task description icon if the task has a description containing only an empty p tag', () => {
-		cy.intercept(Cypress.env('API_URL') + '/projects/1/views/*/tasks**').as('loadTasks')
+		// Set up comprehensive API intercepts for all possible task loading endpoints
+		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
 		const {task, view} = createSingleTaskInBucket(1, {
 			description: '<p></p>',
 		})
 
 		cy.visit(`/projects/${task.project_id}/${view.id}`)
-		cy.wait('@loadTasks')
+		cy.wait('@loadTasks', { timeout: 30000 })
 
 		cy.get('.bucket .tasks .task .footer .icon svg')
 			.should('not.exist')

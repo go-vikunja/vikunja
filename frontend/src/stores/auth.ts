@@ -1,5 +1,6 @@
 import {computed, readonly, ref} from 'vue'
 import {acceptHMRUpdate, defineStore} from 'pinia'
+import {AxiosError} from 'axios'
 
 import {AuthenticatedHTTPFactory, HTTPFactory} from '@/helpers/fetcher'
 import {getBrowserLanguage, i18n, setLanguage} from '@/i18n'
@@ -41,7 +42,10 @@ function redirectToSpecifiedProvider() {
 				|| redirectToProviderValue === 'true'
 				|| redirectToProviderValue === '1')
  		) {
-			redirectToProvider(auth.openidConnect.providers[0])
+			const firstProvider = auth.openidConnect.providers[0]
+			if (firstProvider) {
+				redirectToProvider(firstProvider)
+			}
 		}
 
 		// let's try to find the provider to logon to !
@@ -125,16 +129,19 @@ export const useAuthStore = defineStore('auth', () => {
 	}
 	
 	function loadSettings(newSettings: IUserSettings) {
+		const defaultFrontendSettings = {
+			playSoundWhenDone: true,
+			quickAddMagicMode: PrefixMode.Default,
+			colorSchema: 'auto',
+			allowIconChanges: true,
+			dateDisplay: DATE_DISPLAY.RELATIVE,
+			defaultTaskRelationType: RELATION_KIND.RELATED,
+		}
+
 		settings.value = new UserSettingsModel({
 			...newSettings,
 			frontendSettings: {
-				// Need to set default settings here in case the user does not have any saved in the api already
-				playSoundWhenDone: true,
-				quickAddMagicMode: PrefixMode.Default,
-				colorSchema: 'auto',
-				allowIconChanges: true,
-				dateDisplay: DATE_DISPLAY.RELATIVE,
-				defaultTaskRelationType: RELATION_KIND.RELATED,
+				...defaultFrontendSettings,
 				...newSettings.frontendSettings,
 			},
 		})
@@ -163,7 +170,7 @@ export const useAuthStore = defineStore('auth', () => {
 	}
 
 	// Logs a user in with a set of credentials.
-	async function login(credentials) {
+	async function login(credentials: { username: string; password: string; totpPasscode?: string }) {
 		const HTTP = HTTPFactory()
 		setIsLoading(true)
 
@@ -177,9 +184,11 @@ export const useAuthStore = defineStore('auth', () => {
 
 			// Tell others the user is authenticated
 			await checkAuth()
-		} catch (e) {
+		} catch (e: unknown) {
 			if (
-				e.response &&
+				e && typeof e === 'object' && 'response' in e &&
+				e.response && typeof e.response === 'object' && 'data' in e.response &&
+				e.response.data && typeof e.response.data === 'object' && 'code' in e.response.data &&
 				e.response.data.code === 1017 &&
 				!credentials.totpPasscode
 			) {
@@ -196,7 +205,7 @@ export const useAuthStore = defineStore('auth', () => {
 	 * Registers a new user and logs them in.
 	 * Not sure if this is the right place to put the logic in, maybe a separate js component would be better suited. 
 	 */
-	async function register(credentials, language: string|null = null) {
+	async function register(credentials: { username: string; email: string; password: string }, language: string|null = null) {
 		const HTTP = HTTPFactory()
 		setIsLoading(true)
 		
@@ -210,12 +219,18 @@ export const useAuthStore = defineStore('auth', () => {
 				language,
 			})
 			return login(credentials)
-		} catch (e) {
-			if (e.response?.data?.code === 2002 && e.response?.data?.invalid_fields[0]?.startsWith('language:')) {
+		} catch (e: unknown) {
+			if (e && typeof e === 'object' && 'response' in e &&
+				e.response && typeof e.response === 'object' && 'data' in e.response &&
+				e.response.data && typeof e.response.data === 'object' && 'code' in e.response.data &&
+				e.response.data.code === 2002 && 'invalid_fields' in e.response.data &&
+				Array.isArray(e.response.data.invalid_fields) && e.response.data.invalid_fields[0]?.startsWith('language:')) {
 				return register(credentials, 'en')
 			}
 			
-			if (e.response?.data?.message) {
+			if (e && typeof e === 'object' && 'response' in e &&
+				e.response && typeof e.response === 'object' && 'data' in e.response &&
+				e.response.data && typeof e.response.data === 'object' && 'message' in e.response.data) {
 				throw e.response.data
 			}
 
@@ -225,12 +240,15 @@ export const useAuthStore = defineStore('auth', () => {
 		}
 	}
 
-	async function openIdAuth({provider, code}) {
+	async function openIdAuth({provider, code}: {provider: string, code: string}) {
 		const HTTP = HTTPFactory()
 		setIsLoading(true)
 		setLoggedInVia(null)
 
-		const fullProvider: IProvider = configStore.auth.openidConnect.providers.find((p: IProvider) => p.key === provider)
+		const fullProvider: IProvider | undefined = configStore.auth.openidConnect.providers.find((p: IProvider) => p.key === provider)
+		if (!fullProvider) {
+			throw new Error(`Provider ${provider} not found`)
+		}
 
 		const data = {
 			code: code,
@@ -252,7 +270,7 @@ export const useAuthStore = defineStore('auth', () => {
 		}
 	}
 
-	async function linkShareAuth({hash, password}) {
+	async function linkShareAuth({hash, password}: {hash: string, password: string}) {
 		const HTTP = HTTPFactory()
 		const response = await HTTP.post('/shares/' + hash + '/auth', {
 			password: password,
@@ -281,8 +299,11 @@ export const useAuthStore = defineStore('auth', () => {
 		let isAuthenticated = false
 		if (jwt) {
 			try {
-				const base64 = jwt
-					.split('.')[1]
+				const jwtParts = jwt.split('.')
+				if (jwtParts.length < 2 || !jwtParts[1]) {
+					throw new Error('Invalid JWT format')
+				}
+				const base64 = jwtParts[1]
 					.replace(/-/g, '+')
 					.replace(/_/g, '/')
 				const info = new UserModel(JSON.parse(atob(base64)))
@@ -333,22 +354,22 @@ export const useAuthStore = defineStore('auth', () => {
 			updateLastUserRefresh()
 
 			return newUser
-		} catch (e) {
-			if((e?.response?.status >= 400 && e?.response?.status < 500) ||
-				e?.response?.data?.message === 'missing, malformed, expired or otherwise invalid token provided') {
+		} catch (e: unknown) {
+			if(e instanceof AxiosError && ((e.response?.status && e.response.status >= 400 && e.response.status < 500) ||
+				e.response?.data?.message === 'missing, malformed, expired or otherwise invalid token provided')) {
 				await logout()
 				return
 			}
-			
-			const cause = {e}
-			
-			if (typeof e?.response?.data?.message !== 'undefined') {
+
+			const cause: {e: unknown, message?: string} = {e}
+
+			if (e instanceof AxiosError && typeof e.response?.data?.message !== 'undefined') {
 				cause.message = e.response.data.message
 			}
 			
 			console.error('Error refreshing user info:', e)
 			
-			throw new Error('Error while refreshing user info:', {cause})
+			throw new Error('Error while refreshing user info: ' + JSON.stringify(cause))
 		}
 	}
 
@@ -362,8 +383,9 @@ export const useAuthStore = defineStore('auth', () => {
 			try {
 				await HTTPFactory().post('user/confirm', {token: emailVerifyToken})
 				return true
-			} catch(e) {
-				throw new Error(e.response.data.message)
+			} catch(e: unknown) {
+				const message = e instanceof AxiosError ? e.response?.data?.message : undefined
+				throw new Error(message || 'Unknown error')
 			} finally {
 				localStorage.removeItem('emailConfirmToken')
 				stopLoading()
@@ -393,10 +415,12 @@ export const useAuthStore = defineStore('auth', () => {
 			}
 			const updateSettingsPromise = userSettingsService.update(settingsUpdate)
 			setUserSettings(settingsUpdate)
-			await setLanguage(settings.language)
+			if (settings.language) {
+				await setLanguage(settings.language)
+			}
 			await updateSettingsPromise
 			if (oldName !== undefined && oldName !== settingsUpdate.name) {
-				const {avatarProvider} = await (new AvatarService()).get({})
+				const {avatarProvider} = await (new AvatarService()).getM('/user/settings/avatar')
 				if (avatarProvider === 'initials') {
 					await reloadAvatar()
 				}
@@ -404,7 +428,7 @@ export const useAuthStore = defineStore('auth', () => {
 			if (showMessage) {
 				success({message: i18n.global.t('user.settings.general.savedSuccess')})
 			}
-		} catch (e) {
+		} catch (e: unknown) {
 			error(e)
 		} finally {
 			cancel()
@@ -426,10 +450,10 @@ export const useAuthStore = defineStore('auth', () => {
 			try {
 				await refreshToken(!isLinkShareAuth.value)
 				await checkAuth()
-			} catch (e) {
+			} catch (e: unknown) {
 				// Don't logout on network errors as the user would then get logged out if they don't have
 				// internet for a short period of time - such as when the laptop is still reconnecting
-				if (e?.request?.status) {
+				if (e instanceof AxiosError && e.request?.status) {
 					await logout()
 				}
 			}

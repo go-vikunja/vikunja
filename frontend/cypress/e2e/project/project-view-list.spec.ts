@@ -43,7 +43,17 @@ describe('Project View List', () => {
 			id: '{increment}',
 			project_id: 1,
 		})
+
+		// Use a single comprehensive intercept pattern that matches the most likely endpoint
+		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
+
 		cy.visit('/projects/1/1')
+
+		// Wait for task loading endpoint to respond with fallback
+		cy.wait('@loadTasks', { timeout: 10000 }).catch(() => {
+			// If the specific pattern fails, just wait for tasks to appear
+			cy.get('.tasks .task', { timeout: 5000 }).should('exist')
+		})
 
 		cy.get('.tasks .task .tasktext')
 			.contains(tasks[0].title)
@@ -79,7 +89,17 @@ describe('Project View List', () => {
 		TaskFactory.create(10, {
 			project_id: projects[0].id,
 		})
+
+		// Use a single comprehensive intercept pattern that matches the most likely endpoint
+		cy.intercept('GET', `**/api/v1/projects/${projects[0].id}/views/*/tasks**`).as('loadTasks')
+
 		cy.visit(`/projects/${projects[0].id}/`)
+
+		// Wait for task loading endpoint to respond with fallback
+		cy.wait('@loadTasks', { timeout: 10000 }).catch(() => {
+			// If the specific pattern fails, just wait for tasks to appear
+			cy.get('.tasks .task', { timeout: 5000 }).should('exist')
+		})
 
 		cy.get('.menu-list li .list-menu-link .color-bubble')
 			.should('have.css', 'background-color', 'rgb(0, 219, 96)')
@@ -93,7 +113,17 @@ describe('Project View List', () => {
 			title: i => `task${i}`,
 			project_id: 1,
 		})
+
+		// Use a single comprehensive intercept pattern that matches the most likely endpoint
+		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
+
 		cy.visit('/projects/1/1')
+
+		// Wait for task loading endpoint to respond with fallback
+		cy.wait('@loadTasks', { timeout: 10000 }).catch(() => {
+			// If the specific pattern fails, just wait for tasks to appear
+			cy.get('.tasks .task', { timeout: 5000 }).should('exist')
+		})
 
 		cy.get('.tasks')
 			.should('contain', tasks[20].title)

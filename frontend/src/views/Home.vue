@@ -57,6 +57,7 @@ import {getHistory} from '@/modules/projectHistory'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {formatDateSince, formatDisplayDate} from '@/helpers/time/formatDate'
 import {useDaytimeSalutation} from '@/composables/useDaytimeSalutation'
+import type {IProject} from '@/modelTypes/IProject'
 
 import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
@@ -67,19 +68,19 @@ const authStore = useAuthStore()
 const projectStore = useProjectStore()
 
 const projectHistory = computed(() => {
-	// If we don't check this, it tries to load the project background right after logging out	
+	// If we don't check this, it tries to load the project background right after logging out
 	if(!authStore.authenticated) {
 		return []
 	}
-	
+
 	return getHistory()
 		.map(l => projectStore.projects[l.id])
-		.filter(l => Boolean(l))
+		.filter(l => Boolean(l)) as IProject[]
 })
 
 const tasksLoaded = ref(false)
 
-const deletionScheduledAt = computed(() => parseDateOrNull(authStore.info?.deletionScheduledAt))
+const deletionScheduledAt = computed(() => parseDateOrNull(authStore.info?.deletionScheduledAt as string))
 
 // This is to reload the tasks list after adding a new task through the global task add.
 // FIXME: Should use pinia (somehow?)

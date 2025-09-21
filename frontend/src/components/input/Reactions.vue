@@ -41,10 +41,12 @@ async function addReaction(value: string) {
 		model.value = {}
 	}
 
-	if (typeof model.value[reaction.value] === 'undefined') {
-		model.value[reaction.value] = [authStore.info]
-	} else {
-		model.value[reaction.value].push(authStore.info)
+	if (model.value && authStore.info) {
+		if (typeof model.value[reaction.value] === 'undefined') {
+			model.value[reaction.value] = [authStore.info as IUser]
+		} else {
+			model.value?.[reaction.value]?.push(authStore.info as IUser)
+		}
 	}
 }
 
@@ -57,12 +59,14 @@ async function removeReaction(value: string) {
 	await reactionService.delete(reaction)
 	showEmojiPicker.value = false
 	
-	const userIndex = model.value[reaction.value].findIndex(u => u.id === authStore.info?.id)
-	if (userIndex !== -1) {
-		model.value[reaction.value].splice(userIndex, 1)
-	}
-	if(model.value[reaction.value].length === 0) {
-		delete model.value[reaction.value]
+	if (model.value?.[reaction.value] && authStore.info) {
+		const userIndex = model.value?.[reaction.value]?.findIndex(u => u.id === authStore.info?.id) ?? -1
+		if (userIndex !== -1) {
+			model.value?.[reaction.value]?.splice(userIndex, 1)
+		}
+		if(model.value?.[reaction.value]?.length === 0) {
+			delete model.value[reaction.value]
+		}
 	}
 }
 
@@ -89,26 +93,30 @@ function getReactionTooltip(users: IUser[], value: string) {
 }
 
 const showEmojiPicker = ref(false)
-const emojiPickerRef = ref<HTMLElement | null>(null)
+const emojiPickerRef = ref<{ $el?: HTMLElement } | HTMLElement | null>(null)
 
 function hideEmojiPicker(e: MouseEvent) {
-	if (showEmojiPicker.value) {
-		closeWhenClickedOutside(e, emojiPickerRef.value.$el, () => showEmojiPicker.value = false)
+	if (showEmojiPicker.value && emojiPickerRef.value) {
+		const element = (emojiPickerRef.value && typeof emojiPickerRef.value === 'object' && '$el' in emojiPickerRef.value) ? emojiPickerRef.value.$el : emojiPickerRef.value as HTMLElement
+		if (element) {
+			closeWhenClickedOutside(e, element, () => showEmojiPicker.value = false)
+		}
 	}
 }
 
 onMounted(() => document.addEventListener('click', hideEmojiPicker))
 onBeforeUnmount(() => document.removeEventListener('click', hideEmojiPicker))
 
-const emojiPickerButtonRef = ref<HTMLElement | null>(null)
+const emojiPickerButtonRef = ref<{ $el?: HTMLElement } | HTMLElement | null>(null)
 const reactionContainerRef = ref<HTMLElement | null>(null)
 const emojiPickerPosition = ref()
 
 function toggleEmojiPicker() {
 	if (!showEmojiPicker.value) {
-		const rect = emojiPickerButtonRef.value?.$el.getBoundingClientRect()
+		const buttonEl = (emojiPickerButtonRef.value && typeof emojiPickerButtonRef.value === 'object' && '$el' in emojiPickerButtonRef.value) ? emojiPickerButtonRef.value.$el : emojiPickerButtonRef.value as HTMLElement
+		const rect = buttonEl?.getBoundingClientRect()
 		const container = reactionContainerRef.value?.getBoundingClientRect()
-		const left = rect.left - container.left + rect.width
+		const left = rect && container ? rect.left - container.left + rect.width : 0
 
 		emojiPickerPosition.value = {
 			'inset-inline-start': left === 0 ? undefined : left,
@@ -119,7 +127,10 @@ function toggleEmojiPicker() {
 }
 
 function hasCurrentUserReactedWithEmoji(value: string): boolean {
-	const user = model.value[value].find(u => u.id === authStore.info.id)
+	if (!model.value || !model.value[value] || !authStore.info) {
+		return false
+	}
+	const user = model.value[value].find(u => u.id === authStore.info?.id)
 	return typeof user !== 'undefined'
 }
 
@@ -140,11 +151,11 @@ async function toggleReaction(value: string) {
 		<BaseButton
 			v-for="(users, value) in (model as IReactionPerEntity)"
 			:key="'button' + value"
-			v-tooltip="getReactionTooltip(users, value)"
+			v-tooltip="getReactionTooltip(users, String(value))"
 			class="reaction-button"
-			:class="{'current-user-has-reacted': hasCurrentUserReactedWithEmoji(value)}"
+			:class="{'current-user-has-reacted': hasCurrentUserReactedWithEmoji(String(value))}"
 			:disabled
-			@click="toggleReaction(value)"
+			@click="toggleReaction(String(value))"
 		>
 			{{ value }} {{ users.length }}
 		</BaseButton>

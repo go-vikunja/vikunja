@@ -8,14 +8,14 @@ export default class UserShareBaseModel extends AbstractModel<IUserShareBase> im
 	username: IUser['username'] = ''
 	permission: Permission = PERMISSIONS.READ
 
-	created: Date = null
-	updated: Date = null
+	created: Date = new Date()
+	updated: Date = new Date()
 
 	constructor(data: Partial<IUserShareBase>) {
 		super()
 		this.assignData(data)
 	
-		this.created = new Date(this.created)
-		this.updated = new Date(this.updated)
+		this.created = this.created ? new Date(this.created) : new Date()
+		this.updated = this.updated ? new Date(this.updated) : new Date()
 	}
 }

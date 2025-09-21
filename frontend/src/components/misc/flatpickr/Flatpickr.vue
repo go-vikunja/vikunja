@@ -148,7 +148,9 @@ onMounted(() => {
 		: root.value
 
 	// Init flatpickr
-	fp.value = flatpickr(element, safeConfig.value)
+	if (element) {
+		fp.value = flatpickr(element, safeConfig.value)
+	}
 })
 onBeforeUnmount(() => fp.value?.destroy())
 
@@ -211,7 +213,9 @@ watch(
 		if (!root.value || newValue === nullify(root.value.value)) return
 		// Make sure we have a flatpickr instance and
 		// notify flatpickr instance that there is a change in value
-		fp.value?.setDate(newValue, true)
+		if (newValue !== null) {
+			fp.value?.setDate(newValue, true)
+		}
 	},
 	{deep: true},
 )

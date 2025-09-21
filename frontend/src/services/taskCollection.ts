@@ -2,6 +2,7 @@ import AbstractService from '@/services/abstractService'
 import TaskModel from '@/models/task'
 
 import type {ITask} from '@/modelTypes/ITask'
+import type {IBucket} from '@/modelTypes/IBucket'
 import BucketModel from '@/models/bucket'
 
 export type ExpandTaskFilterParam = 'subtasks' | 'buckets' | 'reactions' | null
@@ -29,7 +30,7 @@ export function getDefaultTaskFilterParams(): TaskFilterParams {
 	}
 }
 
-export default class TaskCollectionService extends AbstractService<ITask> {
+export default class TaskCollectionService extends AbstractService<ITask | IBucket> {
 	constructor() {
 		super({
 			getAll: '/projects/{projectId}/views/{viewId}/tasks',
@@ -39,16 +40,20 @@ export default class TaskCollectionService extends AbstractService<ITask> {
 
 	getReplacedRoute(path: string, pathparams: Record<string, unknown>): string {
 		if (!pathparams.viewId) {
+			// Validate that projectId is defined and not null/undefined before building URL
+			if (!pathparams.projectId || pathparams.projectId === 'undefined' || pathparams.projectId === 'null' || pathparams.projectId === null) {
+				throw new Error('Project ID is required but was undefined or null')
+			}
 			return super.getReplacedRoute('/projects/{projectId}/tasks', pathparams)
 		}
 		return super.getReplacedRoute(path, pathparams)
 	}
 
-	modelFactory(data) {
+	modelFactory(data: Partial<ITask | IBucket>): ITask | IBucket {
 		// FIXME: There must be a better way for this…
-		if (typeof data.project_view_id !== 'undefined') {
-			return new BucketModel(data)
+		if (typeof (data as Partial<IBucket>).project_view_id !== 'undefined') {
+			return new BucketModel(data as Partial<IBucket>)
 		}
-		return new TaskModel(data)
+		return new TaskModel(data as Partial<ITask>)
 	}
 }

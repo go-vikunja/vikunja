@@ -42,7 +42,7 @@
 		<XButton
 			class="button mbs-4"
 			:to="{name:'user.settings.data-export'}"
-			variant="tertary"
+			variant="tertiary"
 		>
 			{{ $t('user.export.requestNew') }}
 		</XButton>
@@ -57,7 +57,7 @@ import {useAuthStore} from '@/stores/auth'
 const dataExportService = reactive(new DataExportService())
 const password = ref('')
 const errPasswordRequired = ref(false)
-const passwordInput = ref(null)
+const passwordInput = ref<HTMLInputElement | null>(null)
 
 const authStore = useAuthStore()
 const isLocalUser = computed(() => authStore.info?.isLocalUser)
@@ -65,7 +65,7 @@ const isLocalUser = computed(() => authStore.info?.isLocalUser)
 function download() {
 	if (password.value === '' && isLocalUser.value) {
 		errPasswordRequired.value = true
-		passwordInput.value.focus()
+		passwordInput.value?.focus()
 		return
 	}
 

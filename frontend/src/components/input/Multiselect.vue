@@ -91,7 +91,7 @@
 						</slot>
 					</span>
 					<span class="hint-text">
-						{{ selectPlaceholder }}
+						{{ selectPlaceholderText }}
 					</span>
 				</BaseButton>
 
@@ -115,7 +115,7 @@
 						</slot>
 					</span>
 					<span class="hint-text">
-						{{ createPlaceholder }}
+						{{ createPlaceholderText }}
 					</span>
 				</BaseButton>
 			</div>
@@ -123,7 +123,7 @@
 	</div>
 </template>
 
-<script setup lang="ts" generic="T extends Record<string, unknown>">
+<script setup lang="ts">
 import {computed, onBeforeUnmount, onMounted, ref, toRefs, watch, type ComponentPublicInstance} from 'vue'
 import {useI18n} from 'vue-i18n'
 
@@ -131,6 +131,9 @@ import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
+
+// Define the type for multiselect items - covers most use cases
+type T = Record<string, unknown>
 
 const props = withDefaults(defineProps<{
 	/** The object with the value, updated every time an entry is selected */
@@ -173,8 +176,8 @@ const props = withDefaults(defineProps<{
 	searchResults: () => [],
 	label: '',
 	creatable: false,
-	createPlaceholder: () => useI18n().t('input.multiselect.createPlaceholder'),
-	selectPlaceholder: () => useI18n().t('input.multiselect.selectPlaceholder'),
+	createPlaceholder: '',
+	selectPlaceholder: '',
 	multiple: false,
 	inline: false,
 	showEmpty: false,
@@ -206,6 +209,26 @@ const emit = defineEmits<{
 	'remove': [value: T],
 }>()
 
+defineOptions({
+	name: 'Multiselect',
+})
+
+const {t} = useI18n()
+
+const createPlaceholderText = computed(() => {
+	if (props.createPlaceholder && props.createPlaceholder !== '') {
+		return props.createPlaceholder
+	}
+	return t('input.multiselect.createPlaceholder')
+})
+
+const selectPlaceholderText = computed(() => {
+	if (props.selectPlaceholder && props.selectPlaceholder !== '') {
+		return props.selectPlaceholder
+	}
+	return t('input.multiselect.selectPlaceholder')
+})
+
 function elementInResults(elem: string | T, label: string, query: string): boolean {
 	// Don't make create available if we have an exact match in our search results.
 	if (label !== '') {
@@ -229,7 +252,7 @@ const {modelValue, searchResults} = toRefs(props)
 
 watch(
 	modelValue,
-	(value) => setSelectedObject(value),
+	(value) => setSelectedObject(value as string | T | null | undefined),
 	{
 		immediate: true,
 		deep: true,
@@ -248,8 +271,8 @@ const searchResultsVisible = computed(() => {
 })
 
 const creatableAvailable = computed(() => {
-	const hasResult = filteredSearchResults.value.some((elem) => elementInResults(elem, props.label, query.value as string))
-	const hasQueryAlreadyAdded = Array.isArray(internalValue.value) && internalValue.value.some(elem => elementInResults(elem, props.label, query.value))
+	const hasResult = filteredSearchResults.value.some((elem: T) => elementInResults(elem, props.label, query.value as string))
+	const hasQueryAlreadyAdded = Array.isArray(internalValue.value) && internalValue.value.some((elem: T) => elementInResults(elem, props.label, query.value as string))
 
 	return props.creatable
 		&& query.value !== ''
@@ -259,7 +282,7 @@ const creatableAvailable = computed(() => {
 const filteredSearchResults = computed(() => {
 	const currentInternal = internalValue.value
 	if (props.multiple && currentInternal !== null && Array.isArray(currentInternal)) {
-		return searchResults.value.filter((item) => !currentInternal.some(e => e === item))
+		return searchResults.value.filter((item: T) => !currentInternal.some(e => e === item))
 	}
 
 	return searchResults.value
@@ -291,7 +314,7 @@ function search() {
 	localLoading.value = true
 
 	searchTimeout.value = setTimeout(() => {
-		emit('search', query.value)
+		emit('search', query.value as string)
 		setTimeout(() => {
 			localLoading.value = false
 		}, 100) // The duration of the loading timeout of the services
@@ -302,7 +325,7 @@ function search() {
 const multiselectRoot = ref<HTMLElement | null>(null)
 
 function hideSearchResultsHandler(e: MouseEvent) {
-	closeWhenClickedOutside(e, multiselectRoot.value, closeSearchResults)
+	closeWhenClickedOutside(e, multiselectRoot.value as HTMLElement, closeSearchResults)
 }
 
 function closeSearchResults() {
@@ -323,13 +346,15 @@ function select(object: T | null) {
 			internalValue.value = []
 		}
 
-		internalValue.value.push(object)
+		if (Array.isArray(internalValue.value) && object !== null) {
+			internalValue.value.push(object)
+		}
 	} else {
 		internalValue.value = object
 	}
 
-	emit('update:modelValue', internalValue.value)
-	emit('select', object)
+	emit('update:modelValue', internalValue.value as T | T[] | null)
+	emit('select', object as T)
 	setSelectedObject(object)
 	if (props.closeAfterSelect && filteredSearchResults.value.length > 0 && !creatableAvailable.value) {
 		closeSearchResults()
@@ -337,7 +362,7 @@ function select(object: T | null) {
 }
 
 function setSelectedObject(object: string | T | null | undefined, resetOnly = false) {
-	internalValue.value = object
+	internalValue.value = object as string | T | T[] | null
 
 	// We assume we're getting an array when multiple is enabled and can therefore leave the query
 	// value etc as it is
@@ -355,7 +380,7 @@ function setSelectedObject(object: string | T | null | undefined, resetOnly = fa
 		return
 	}
 
-	query.value = props.label !== '' ? object[props.label] : object
+	query.value = props.label !== '' ? (object as T)[props.label] as string | T : object
 }
 
 const results = ref<(Element | ComponentPublicInstance)[]>([])
@@ -375,7 +400,7 @@ function preSelect(index: number) {
 	}
 
 	const elems = results.value[index]
-	if (typeof elems === 'undefined' || elems.length === 0) {
+	if (typeof elems === 'undefined' || (Array.isArray(elems) && elems.length === 0)) {
 		return
 	}
 
@@ -384,7 +409,7 @@ function preSelect(index: number) {
 		return
 	}
 
-	elems.focus()
+	(elems as HTMLElement).focus()
 }
 
 function create() {
@@ -392,20 +417,23 @@ function create() {
 		return
 	}
 
-	emit('create', query.value)
+	emit('create', query.value as string)
 	setSelectedObject(query.value, true)
 	closeSearchResults()
 }
 
 function createOrSelectOnEnter() {
 	if (!creatableAvailable.value && searchResults.value.length === 1) {
-		select(searchResults.value[0])
+		const firstResult = searchResults.value[0]
+		if (firstResult) {
+			select(firstResult)
+		}
 		return
 	}
 
 	if (!creatableAvailable.value) {
 		// Check if there's an exact match for our search term
-		const exactMatch = filteredSearchResults.value.find((elem) => elementInResults(elem, props.label, query.value as string))
+		const exactMatch = filteredSearchResults.value.find((elem: T) => elementInResults(elem, props.label, query.value as string))
 		if (exactMatch) {
 			select(exactMatch)
 		}
@@ -417,20 +445,28 @@ function createOrSelectOnEnter() {
 }
 
 function remove(item: T) {
-	for (const ind in internalValue.value) {
-		if (internalValue.value[ind] === item) {
-			internalValue.value.splice(ind, 1)
-			break
+	if (Array.isArray(internalValue.value)) {
+		for (const ind in internalValue.value) {
+			if (internalValue.value[ind] === item) {
+				internalValue.value.splice(parseInt(ind), 1)
+				break
+			}
 		}
 	}
 
-	emit('update:modelValue', internalValue.value)
+	emit('update:modelValue', internalValue.value as T | T[] | null)
 	emit('remove', item)
 }
 
 function focus() {
 	searchInput.value?.focus()
 }
+
+defineExpose({
+	focus,
+})
+
+// Component setup complete
 </script>
 
 <style lang="scss" scoped>

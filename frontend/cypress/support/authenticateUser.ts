@@ -32,7 +32,7 @@ export function createFakeUserAndLogin() {
 	})
 
 	beforeEach(() => {
-		login(user, true)
+		login(user, false)
 	})
 
 	return user

@@ -1,6 +1,6 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
 
-import {ParsedTaskText, parseTaskText, PrefixMode} from './parseTaskText'
+import {parseTaskText, PrefixMode, type ParsedTaskText} from './parseTaskText'
 import {parseDate} from '../helpers/time/parseDate'
 import {calculateDayInterval} from '../helpers/time/calculateDayInterval'
 import {PRIORITIES} from '@/constants/priorities'
@@ -403,7 +403,9 @@ describe('Parse Task Text', () => {
 						const result = parseTaskText(`Lorem Ipsum ${p}${d}`)
 
 						const next = new Date()
-						const distance = (days[d] + 7 - next.getDay()) % 7
+						const dayValue = days[d as keyof typeof days]
+						if (dayValue === undefined) return
+						const distance = (dayValue + 7 - next.getDay()) % 7
 						next.setDate(next.getDate() + distance)
 
 						expect(result.text).toBe('Lorem Ipsum')
@@ -415,7 +417,9 @@ describe('Parse Task Text', () => {
 						const result = parseTaskText(`${p}${d} Lorem Ipsum`)
 
 						const next = new Date()
-						const distance = (days[d] + 7 - next.getDay()) % 7
+						const dayValue = days[d as keyof typeof days]
+						if (dayValue === undefined) return
+						const distance = (dayValue + 7 - next.getDay()) % 7
 						next.setDate(next.getDate() + distance)
 
 						expect(result.text).toBe('Lorem Ipsum')
@@ -528,7 +532,7 @@ describe('Parse Task Text', () => {
 						return
 					}
 
-					expect(`${date?.getFullYear()}-${date?.getMonth() + 1}-${date?.getDate()}`).toBe(cases[c])
+					expect(date ? `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}` : null).toBe(cases[c])
 					expect(text.trim()).toBe('Lorem Ipsum')
 				}
 				
@@ -584,21 +588,23 @@ describe('Parse Task Text', () => {
 						return
 					}
 
-					expect(`${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}`).toBe(cases[c])
+					expect(date ? `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}` : null).toBe(cases[c])
 				})
 			}
 
 			it('should replace the text in title case', () => {
 				const {date, newText} = parseDate('Some task Mar 8th', now)
 
-				expect(`${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}`).toBe('2021-3-8 12:0')
+				expect(date).not.toBeNull()
+				expect(`${date!.getFullYear()}-${date!.getMonth() + 1}-${date!.getDate()} ${date!.getHours()}:${date!.getMinutes()}`).toBe('2021-3-8 12:0')
 				expect(newText).toBe('Some task')
 			})
 
 			it('should replace the text in lowercase', () => {
 				const {date, newText} = parseDate('Some task mar 8th', now)
 
-				expect(`${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}`).toBe('2021-3-8 12:0')
+				expect(date).not.toBeNull()
+				expect(`${date!.getFullYear()}-${date!.getMonth() + 1}-${date!.getDate()} ${date!.getHours()}:${date!.getMinutes()}`).toBe('2021-3-8 12:0')
 				expect(newText).toBe('Some task')
 			})
 		})
@@ -702,10 +708,11 @@ describe('Parse Task Text', () => {
 	describe('Priority', () => {
 		for (const p in PRIORITIES) {
 			it(`should parse priority ${p}`, () => {
-				const result = parseTaskText(`Lorem Ipsum !${PRIORITIES[p]}`)
+				const priority = PRIORITIES[p as keyof typeof PRIORITIES]
+				const result = parseTaskText(`Lorem Ipsum !${priority}`)
 
 				expect(result.text).toBe('Lorem Ipsum')
-				expect(result.priority).toBe(PRIORITIES[p])
+				expect(result.priority).toBe(priority)
 			})
 		}
 		it('should not parse an invalid priority', () => {
@@ -824,20 +831,22 @@ describe('Parse Task Text', () => {
 		} as Record<string, IRepeatAfter>
 
 		for (const c in cases) {
-			it(`should parse ${c} as recurring date every ${cases[c].amount} ${cases[c].type}`, () => {
+			const caseData = cases[c]
+			if (!caseData) continue
+			it(`should parse ${c} as recurring date every ${caseData.amount} ${caseData.type}`, () => {
 				const result = parseTaskText(`Lorem Ipsum ${c}`)
 
 				expect(result.text).toBe('Lorem Ipsum')
-				expect(result?.repeats?.type).toBe(cases[c].type)
-				expect(result?.repeats?.amount).toBe(cases[c].amount)
+				expect(result?.repeats?.type).toBe(caseData.type)
+				expect(result?.repeats?.amount).toBe(caseData.amount)
 			})
-		 	
-			it(`should parse ${c} as recurring date every ${cases[c].amount} ${cases[c].type} at 11:42`, () => {
+
+			it(`should parse ${c} as recurring date every ${caseData.amount} ${caseData.type} at 11:42`, () => {
 				const result = parseTaskText(`Lorem Ipsum ${c} at 11:42`)
 
 				expect(result.text).toBe('Lorem Ipsum')
-				expect(result?.repeats?.type).toBe(cases[c].type)
-				expect(result?.repeats?.amount).toBe(cases[c].amount)
+				expect(result?.repeats?.type).toBe(caseData.type)
+				expect(result?.repeats?.amount).toBe(caseData.amount)
 				const now = new Date()
 				expect(`${result?.date?.getFullYear()}-${result?.date?.getMonth()}-${result?.date?.getDate()}`).toBe(`${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`)
 				expect(`${result?.date?.getHours()}:${result?.date?.getMinutes()}`).toBe('11:42')

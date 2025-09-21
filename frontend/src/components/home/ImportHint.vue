@@ -4,6 +4,7 @@ import { useConfigStore } from '@/stores/config'
 import { useBaseStore } from '@/stores/base'
 import { useTaskStore } from '@/stores/tasks'
 import TaskService from '@/services/task'
+import TaskModel from '@/models/task'
 
 const configStore = useConfigStore()
 const baseStore = useBaseStore()
@@ -27,7 +28,7 @@ onMounted(async () => {
 	}
 
 	const taskService = new TaskService()
-	const tasks = await taskService.getAll({}, {per_page: 1})
+	const tasks = await taskService.getAll(new TaskModel(), {per_page: 1})
 	show.value = tasks.length === 0
 })
 </script>

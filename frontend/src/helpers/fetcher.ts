@@ -19,10 +19,8 @@ export function AuthenticatedHTTPFactory() {
 	const instance = HTTPFactory()
 
 	instance.interceptors.request.use((config) => {
-		config.headers = {
-			...config.headers,
-			'Content-Type': 'application/json',
-		}
+		// Set Content-Type header
+		config.headers['Content-Type'] = 'application/json'
 
 		// Set the default auth header if we have a token
 		const token = getToken()

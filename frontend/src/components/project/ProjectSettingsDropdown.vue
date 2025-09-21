@@ -140,7 +140,7 @@ import {useAuthStore} from '@/stores/auth'
 import {PERMISSIONS} from '@/constants/permissions'
 
 const props = defineProps<{
-	project: IProject
+	project: Readonly<IProject>
 }>()
 
 const projectStore = useProjectStore()
@@ -152,13 +152,13 @@ watchEffect(() => {
 const configStore = useConfigStore()
 const backgroundsEnabled = computed(() => configStore.enabledBackgroundProviders?.length > 0)
 
-function setSubscriptionInStore(sub: ISubscription) {
+function setSubscriptionInStore(sub: ISubscription | null) {
 	subscription.value = sub
 	const updatedProject = {
 		...props.project,
 		subscription: sub,
 	}
-	projectStore.setProject(updatedProject)
+	projectStore.setProject(updatedProject as IProject)
 }
 
 const authStore = useAuthStore()

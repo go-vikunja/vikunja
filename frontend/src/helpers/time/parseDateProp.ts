@@ -12,14 +12,14 @@ export function parseDateProp(kebabDate: DateKebab | undefined): string | undefi
 		const [year, month, date] = dateValues.map(val => Number(val))
 		const dateValuesAreValid = (
 			!Number.isNaN(year) &&
-			monthString.length >= 1 && monthString.length <= 2 &&
+			monthString && monthString.length >= 1 && monthString.length <= 2 &&
 			!Number.isNaN(month) &&
-			month >= 1 && month <= 12 &&
-			dateString.length >= 1 && dateString.length <= 31 &&
+			month && month >= 1 && month <= 12 &&
+			dateString && dateString.length >= 1 && dateString.length <= 31 &&
 			!Number.isNaN(date) &&
-			date >= 1 && date <= 31
+			date && date >= 1 && date <= 31
 		)
-		if (!dateValuesAreValid) {
+		if (!dateValuesAreValid || !month || !date || year === undefined) {
 			throw new Error('Invalid date values')
 		}
 		return new Date(year, month - 1, date).toISOString() as DateISO

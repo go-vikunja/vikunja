@@ -33,11 +33,17 @@ describe('Projects', () => {
 	})
 
 	it('Should redirect to a specific project view after visited', () => {
-		cy.intercept(Cypress.env('API_URL') + '/projects/*/views/*/tasks**').as('loadBuckets')
+		// Set up comprehensive API intercepts for all possible task loading endpoints
+		cy.intercept('GET', '**/api/v1/projects/*/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadTasks')
 		cy.visit('/projects/1/4')
 		cy.url()
 			.should('contain', '/projects/1/4')
-		cy.wait('@loadBuckets')
+
+		// Wait for the tasks to load with timeout
+		cy.wait('@loadTasks', { timeout: 30000 })
+
 		cy.visit('/projects/1')
 		cy.url()
 			.should('contain', '/projects/1/4')

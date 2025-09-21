@@ -4,7 +4,7 @@
 		:loading="loading"
 		:placeholder="$t('task.label.placeholder')"
 		:multiple="true"
-		:search-results="foundLabels"
+		:search-results="foundLabels as unknown as Record<string, unknown>[]"
 		label="title"
 		:creatable="creatable"
 		:create-placeholder="$t('task.label.createPlaceholder')"
@@ -12,12 +12,12 @@
 		:close-after-select="false"
 		:disabled="disabled"
 		@search="findLabel"
-		@select="addLabel"
+		@select="(value: Record<string, unknown>) => addLabel(value as unknown as ILabel)"
 		@create="createAndAddLabel"
 	>
 		<template #tag="{item: label}">
 			<span
-				:style="getLabelStyles(label)"
+				:style="getLabelStyles(label as unknown as ILabel)"
 				class="tag"
 			>
 				<span>{{ label.title }}</span>
@@ -25,7 +25,7 @@
 					v-if="!disabled"
 					v-cy="'taskDetail.removeLabel'"
 					class="delete is-small"
-					@click="removeLabel(label)"
+					@click="removeLabel(label as unknown as ILabel)"
 				/>
 			</span>
 		</template>
@@ -38,10 +38,10 @@
 			</span>
 			<span
 				v-else
-				:style="getLabelStyles(option)"
+				:style="getLabelStyles(option as unknown as ILabel)"
 				class="tag search-result"
 			>
-				<span>{{ option.title }}</span>
+				<span>{{ (option as unknown as ILabel).title }}</span>
 			</span>
 		</template>
 	</Multiselect>
@@ -87,7 +87,7 @@ const query = ref('')
 watch(
 	() => props.modelValue,
 	(value) => {
-		labels.value = Array.from(new Map(value.map(label => [label.id, label])).values())
+		labels.value = value ? Array.from(new Map(value.map(label => [label.id, label])).values()) : []
 	},
 	{
 		immediate: true,
@@ -124,9 +124,10 @@ async function removeLabel(label: ILabel) {
 		await taskStore.removeLabel({label, taskId: props.taskId})
 	}
 
-	for (const l in labels.value) {
-		if (labels.value[l].id === label.id) {
-			labels.value.splice(l, 1) // FIXME: l should be index
+	if (labels.value) {
+		const index = labels.value.findIndex(l => l.id === label.id)
+		if (index !== -1) {
+			labels.value.splice(index, 1)
 		}
 	}
 	emit('update:modelValue', labels.value)

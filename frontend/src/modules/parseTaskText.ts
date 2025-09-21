@@ -99,7 +99,9 @@ const getItemsFromPrefix = (text: string, prefix: string): string[] => {
 	const itemParts = text.split(' ' + prefix)
 	if (text.startsWith(prefix)) {
 		const firstItem = text.split(prefix)[1]
-		itemParts.unshift(firstItem)
+		if (firstItem) {
+			itemParts.unshift(firstItem)
+		}
 	}
 
 	itemParts.forEach((p, index) => {
@@ -122,7 +124,7 @@ const getItemsFromPrefix = (text: string, prefix: string): string[] => {
 			itemText = p.split(' ')[0]
 		}
 
-		if (itemText !== '') {
+		if (itemText && itemText !== '') {
 			items.push(itemText)
 		}
 	})
@@ -136,7 +138,7 @@ export const getProjectFromPrefix = (text: string, prefixMode: PrefixMode): stri
 		return null
 	}
 	const projects: string[] = getItemsFromPrefix(text, projectPrefix)
-	return projects.length > 0 ? projects[0] : null
+	return projects.length > 0 ? projects[0] ?? null : null
 }
 
 export const getLabelsFromPrefix = (text: string, prefixMode: PrefixMode): string[] | null => {

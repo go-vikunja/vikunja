@@ -53,9 +53,9 @@ const checklistCircleDone = computed(() => {
 
 const {t} = useI18n({useScope: 'global'})
 const label = computed(() => {
-	return checklist.value.total === checklist.value.checked 
-		? t('task.checklistAllDone', checklist.value)
-		: t('task.checklistTotal', checklist.value)
+	return checklist.value.total === checklist.value.checked
+		? t('task.checklistAllDone', checklist.value as unknown as Record<string, unknown>)
+		: t('task.checklistTotal', checklist.value as unknown as Record<string, unknown>)
 })
 </script>
 

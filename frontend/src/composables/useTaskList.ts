@@ -36,12 +36,12 @@ const SORT_BY_DEFAULT: SortBy = {
 // This makes sure an id sort order is always sorted last.
 // When tasks would be sorted first by id and then by whatever else was specified, the id sort takes
 // precedence over everything else, making any other sort columns pretty useless.
-function formatSortOrder(sortBy, params) {
+function formatSortOrder(sortBy: SortBy, params: TaskFilterParams) {
 	let hasIdFilter = false
 	const sortKeys = Object.keys(sortBy)
-	for (const s of sortKeys) {
-		if (s === 'id') {
-			sortKeys.splice(s, 1)
+	for (let i = 0; i < sortKeys.length; i++) {
+		if (sortKeys[i] === 'id') {
+			sortKeys.splice(i, 1)
 			hasIdFilter = true
 			break
 		}
@@ -49,8 +49,10 @@ function formatSortOrder(sortBy, params) {
 	if (hasIdFilter) {
 		sortKeys.push('id')
 	}
-	params.sort_by = sortKeys
-	params.order_by = sortKeys.map(s => sortBy[s])
+	params.sort_by = sortKeys.filter(key =>
+		['start_date', 'end_date', 'due_date', 'done', 'id', 'position', 'title'].includes(key),
+	) as ('start_date' | 'end_date' | 'due_date' | 'done' | 'id' | 'position' | 'title')[]
+	params.order_by = sortKeys.map(s => sortBy[s as keyof SortBy]).filter(Boolean) as ('asc' | 'desc')[]
 
 	return params
 }
@@ -74,8 +76,8 @@ export function useTaskList(
 	const filter = useRouteQuery('filter')
 	const s = useRouteQuery('s')
 
-	watch(filter, v => { params.value.filter = v ?? '' }, { immediate: true })
-	watch(s, v => { params.value.s = v ?? '' }, { immediate: true })
+	watch(filter, v => { params.value.filter = Array.isArray(v) ? v[0] ?? '' : v ?? '' }, { immediate: true })
+	watch(s, v => { params.value.s = Array.isArray(v) ? v[0] ?? '' : v ?? '' }, { immediate: true })
 
 	watch(() => params.value.filter, v => { filter.value = v || undefined })
 	watch(() => params.value.s, v => { s.value = v || undefined })
@@ -102,17 +104,16 @@ export function useTaskList(
 	
 	const getAllTasksParams = computed(() => {
 		return [
-			{
-				projectId: projectId.value,
-				viewId: projectViewId.value,
-			},
+			undefined as ITask | undefined,
 			{
 				...allParams.value,
 				filter_timezone: authStore.settings.timezone,
 				expand: expandGetter(),
+				projectId: projectId.value,
+				viewId: projectViewId.value,
 			},
 			page.value,
-		]
+		] as const
 	})
 
 	const taskCollectionService = shallowReactive(new TaskCollectionService())
@@ -124,8 +125,18 @@ export function useTaskList(
 		if(resetBeforeLoad) {
 			tasks.value = []
 		}
+
+		// Don't attempt to load tasks if projectId is not valid
+		if (!projectId.value || projectId.value <= 0) {
+			return tasks.value
+		}
+
 		try {
-			tasks.value = await taskCollectionService.getAll(...getAllTasksParams.value)
+			const result = await taskCollectionService.getAll(...getAllTasksParams.value)
+			// Filter out buckets, only keep tasks
+			tasks.value = result.filter((item): item is ITask =>
+				!('project_view_id' in item) && !('projectViewId' in item),
+			)
 		} catch (e) {
 			error(e)
 		}

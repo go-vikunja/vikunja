@@ -35,8 +35,9 @@ export function getProjectViewId(projectId: IProject['id']): number {
 	}
 
 	const projectViewSettings = JSON.parse(projectViewSettingsString) as ProjectViewSettings
-	if (isNaN(projectViewSettings[projectId])) {
+	const viewId = projectViewSettings[projectId]
+	if (viewId === undefined || isNaN(viewId)) {
 		return 0
 	}
-	return projectViewSettings[projectId]
+	return viewId
 }

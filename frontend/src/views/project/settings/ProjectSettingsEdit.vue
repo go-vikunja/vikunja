@@ -1,8 +1,8 @@
 <template>
 	<CreateEdit
 		:title="$t('project.edit.header')"
-		primary-icon=""
 		:primary-label="$t('misc.save')"
+		:has-primary-action="true"
 		:tertiary="project.maxPermission === PERMISSIONS.ADMIN ? $t('misc.delete') : undefined"
 		@primary="save"
 		@tertiary="$router.push({ name: 'project.settings.delete', params: { id: projectId } })"
@@ -115,12 +115,13 @@ const {t} = useI18n({useScope: 'global'})
 
 const {project, save: saveProject, isLoading} = useProject(() => props.projectId)
 
-const parentProject = ref<IProject | null>(null)
+const parentProject = ref<IProject | undefined>()
 watch(
 	() => project.parentProjectId,
 	parentProjectId => {
 		if (parentProjectId) {
-			parentProject.value = projectStore.projects[parentProjectId]
+			const foundProject = projectStore.projects[parentProjectId]
+			parentProject.value = foundProject ? {...foundProject} as IProject : undefined
 		}
 	},
 	{immediate: true},

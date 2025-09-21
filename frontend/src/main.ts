@@ -1,4 +1,4 @@
-import {createApp} from 'vue'
+import {createApp, type Component} from 'vue'
 
 import pinia from './pinia'
 import router from './router'
@@ -62,7 +62,7 @@ setLanguage(browserLanguage).then(() => {
 	app.directive('cy', cypress)
 
 	app.component('Icon', FontAwesomeIcon)
-	app.component('XButton', Button)
+	app.component('XButton', Button as Component)
 	app.component('Modal', Modal)
 	app.component('Card', Card)
 

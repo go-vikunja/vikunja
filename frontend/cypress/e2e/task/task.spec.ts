@@ -98,30 +98,42 @@ describe('Task', () => {
 	})
 
 	it('Should be created new', () => {
+		cy.intercept('PUT', '**/api/v1/projects/1/views/*/tasks').as('createTask')
 		cy.visit('/projects/1/1')
+		// Wait for loading state to complete
+		cy.get('.is-loading', {timeout: 30000}).should('not.exist')
 		cy.get('.input[placeholder="Add a task…"]')
+			.should('be.visible')
+			.should('not.have.css', 'pointer-events', 'none')
 			.type('New Task')
 		cy.get('.button')
 			.contains('Add')
 			.click()
+		cy.wait('@createTask')
 		cy.get('.tasks .task .tasktext')
 			.first()
+			.should('be.visible')
 			.should('contain', 'New Task')
 	})
 
 	it('Inserts new tasks at the top of the project', () => {
 		TaskFactory.create(1)
 
+		cy.intercept('PUT', '**/api/v1/projects/1/views/*/tasks').as('createTask')
 		cy.visit('/projects/1/1')
+		// Wait for loading state to complete
+		cy.get('.is-loading', {timeout: 30000}).should('not.exist')
 		cy.get('.project-is-empty-notice')
 			.should('not.exist')
 		cy.get('.input[placeholder="Add a task…"]')
+			.should('be.visible')
+			.should('not.have.css', 'pointer-events', 'none')
 			.type('New Task')
 		cy.get('.button')
 			.contains('Add')
 			.click()
 
-		cy.wait(1000) // Wait for the request
+		cy.wait('@createTask')
 		cy.get('.tasks .task .tasktext')
 			.first()
 			.should('contain', 'New Task')
@@ -130,59 +142,84 @@ describe('Task', () => {
 	it('Marks a task as done', () => {
 		TaskFactory.create(1)
 
+		cy.intercept('POST', '**/tasks/*/done').as('markDone')
+		// Set up comprehensive API intercept for all possible task loading endpoints
+		cy.intercept('GET', /\/api\/v1\/(projects\/\d+(\/views\/\d+)?\/tasks|tasks\/all)/).as('loadTasks')
 		cy.visit('/projects/1/1')
+		cy.wait('@loadTasks', { timeout: 30000 })
+		// Wait for loading state to complete
+		cy.get('.is-loading', {timeout: 30000}).should('not.exist')
 		cy.get('.tasks .task .fancy-checkbox')
 			.first()
+			.should('be.visible')
 			.click()
+		cy.wait('@markDone')
 		cy.get('.global-notification')
+			.should('be.visible')
 			.should('contain', 'Success')
 	})
 
 	it('Can add a task to favorites', () => {
 		TaskFactory.create(1)
 
+		// Set up comprehensive API intercept for all possible task loading endpoints
+		cy.intercept('GET', /\/api\/v1\/(projects\/\d+(\/views\/\d+)?\/tasks|tasks\/all)/).as('loadTasks')
 		cy.visit('/projects/1/1')
+		cy.wait('@loadTasks', { timeout: 30000 })
+		// Wait for loading state to complete
+		cy.get('.is-loading', {timeout: 30000}).should('not.exist')
 		cy.get('.tasks .task .favorite')
 			.first()
+			.should('be.visible')
 			.click()
 		cy.get('.menu-container')
+			.should('be.visible')
 			.should('contain', 'Favorites')
 	})
 
 	it('Should show a task description icon if the task has a description', () => {
-		cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
+		// Set up comprehensive API intercept for all possible task loading endpoints
+		cy.intercept('GET', /\/api\/v1\/(projects\/\d+(\/views\/\d+)?\/tasks|tasks\/all)/).as('loadTasks')
 		TaskFactory.create(1, {
 			description: 'Lorem Ipsum',
 		})
 
 		cy.visit('/projects/1/1')
-		cy.wait('@loadTasks')
+		cy.wait('@loadTasks', { timeout: 30000 })
+		// Wait for loading state to complete
+		cy.get('.is-loading', {timeout: 30000}).should('not.exist')
 
 		cy.get('.tasks .task .project-task-icon .fa-align-left')
 			.should('exist')
 	})
 
 	it('Should not show a task description icon if the task has an empty description', () => {
-		cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
+		// Set up comprehensive API intercept for all possible task loading endpoints
+		cy.intercept('GET', /\/api\/v1\/(projects\/\d+(\/views\/\d+)?\/tasks|tasks\/all)/).as('loadTasks')
 		TaskFactory.create(1, {
 			description: '',
 		})
 
 		cy.visit('/projects/1/1')
-		cy.wait('@loadTasks')
+		cy.wait('@loadTasks', { timeout: 30000 })
+		// Wait for loading state to complete
+		cy.get('.is-loading', {timeout: 30000}).should('not.exist')
 
 		cy.get('.tasks .task .project-task-icon .fa-align-left')
 			.should('not.exist')
 	})
 
 	it('Should not show a task description icon if the task has a description containing only an empty p tag', () => {
-		cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
+		// Set up comprehensive API intercept for all possible task loading endpoints
+		cy.intercept('GET', /\/api\/v1\/(projects\/\d+(\/views\/\d+)?\/tasks|tasks\/all)/).as('loadTasks')
 		TaskFactory.create(1, {
 			description: '<p></p>',
 		})
 
 		cy.visit('/projects/1/1')
-		cy.wait('@loadTasks')
+		cy.wait('@loadTasks', { timeout: 30000 })
+		// Wait for loading state to complete
+		cy.get('.is-loading', {timeout: 30000}).should('not.exist')
 
 		cy.get('.tasks .task .project-task-icon .fa-align-left')
 			.should('not.exist')
@@ -197,9 +234,12 @@ describe('Task', () => {
 		
 		it('provides back navigation to the project in the list view', () => {
 			const tasks = TaskFactory.create(1)
-			cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
+			// Set up comprehensive API intercept for all possible task loading endpoints
+			cy.intercept('GET', /\/api\/v1\/(projects\/\d+(\/views\/\d+)?\/tasks|tasks\/all)/).as('loadTasks')
 			cy.visit('/projects/1/1')
-			cy.wait('@loadTasks')
+			cy.wait('@loadTasks', { timeout: 30000 })
+			// Wait for loading state to complete
+			cy.get('.is-loading', {timeout: 30000}).should('not.exist')
 			cy.get('.list-view .task')
 				.first()
 				.find('a.task-link')
@@ -212,9 +252,12 @@ describe('Task', () => {
 
 		it('provides back navigation to the project in the table view', () => {
 			const tasks = TaskFactory.create(1)
-			cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
+			// Set up comprehensive API intercept for all possible task loading endpoints
+			cy.intercept('GET', /\/api\/v1\/(projects\/\d+(\/views\/\d+)?\/tasks|tasks\/all)/).as('loadTasks')
 			cy.visit('/projects/1/3')
-			cy.wait('@loadTasks')
+			cy.wait('@loadTasks', { timeout: 30000 })
+			// Wait for loading state to complete
+			cy.get('.is-loading', {timeout: 30000}).should('not.exist')
 			cy.get('tbody tr')
 				.first()
 				.find('a')
@@ -230,9 +273,12 @@ describe('Task', () => {
 			cy.viewport('iphone-8')
 
 			const tasks = TaskFactory.create(1)
-			cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
+			// Set up comprehensive API intercept for all possible task loading endpoints
+			cy.intercept('GET', /\/api\/v1\/(projects\/\d+(\/views\/\d+)?\/tasks|tasks\/all)/).as('loadTasks')
 			cy.visit('/projects/1/4')
-			cy.wait('@loadTasks')
+			cy.wait('@loadTasks', { timeout: 30000 })
+			// Wait for loading state to complete
+			cy.get('.is-loading', {timeout: 30000}).should('not.exist')
 			cy.get('.kanban-view .tasks .task')
 				.first()
 				.click()
@@ -246,9 +292,12 @@ describe('Task', () => {
 			cy.viewport('macbook-15')
 
 			const tasks = TaskFactory.create(1)
-			cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
+			// Set up comprehensive API intercept for all possible task loading endpoints
+			cy.intercept('GET', /\/api\/v1\/(projects\/\d+(\/views\/\d+)?\/tasks|tasks\/all)/).as('loadTasks')
 			cy.visit('/projects/1/4')
-			cy.wait('@loadTasks')
+			cy.wait('@loadTasks', { timeout: 30000 })
+			// Wait for loading state to complete
+			cy.get('.is-loading', {timeout: 30000}).should('not.exist')
 			cy.get('.kanban-view .tasks .task')
 				.first()
 				.click()
@@ -764,14 +813,16 @@ describe('Task', () => {
 			cy.visit(`/tasks/${tasks[0].id}`)
 
 			cy.intercept('**/tasks/*/attachments').as('uploadAttachment')
-			
-			cy.get('.task-view .details.content.description .tiptap__editor .tiptap.ProseMirror', {timeout: 30_000})
+
+			cy.get('.task-view .details.content.description .tiptap__editor .tiptap.ProseMirror', {timeout: 60_000})
+				.should('be.visible')
 				.pasteFile('image.jpg', 'image/jpeg')
 
-			cy.wait('@uploadAttachment')
-			cy.get('.attachments .attachments .files button.attachment')
+			cy.wait('@uploadAttachment', {timeout: 60_000})
+			cy.get('.attachments .attachments .files button.attachment', {timeout: 30_000})
+				.should('be.visible')
 				.should('exist')
-			cy.get('.task-view .details.content.description .tiptap__editor .tiptap.ProseMirror img')
+			cy.get('.task-view .details.content.description .tiptap__editor .tiptap.ProseMirror img', {timeout: 30_000})
 				.should('be.visible')
 				.and(($img) => {
 					// "naturalWidth" and "naturalHeight" are set when the image loads

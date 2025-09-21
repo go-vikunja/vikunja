@@ -26,7 +26,7 @@ const PREFIXED_SCSS_STYLES = `@use "sass:math";
 /*
 ** Configure sentry plugin
 */
-function getSentryConfig(env: ImportMetaEnv): ViteSentryPluginOptions {
+function getSentryConfig(env: Record<string, string>): ViteSentryPluginOptions {
 	return {
 		skipEnvironmentCheck: true,
 
@@ -37,7 +37,7 @@ function getSentryConfig(env: ImportMetaEnv): ViteSentryPluginOptions {
 		cleanSourcemapsAfterUpload: true,
 		legacyErrorHandlingMode: true,
 		deploy: {
-			env: env.MODE,
+			env: env.MODE || 'production',
 		},
 		setCommits: {
 			auto: true,

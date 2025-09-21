@@ -28,6 +28,7 @@ export default class UserSettingsModel extends AbstractModel<IUserSettings> impl
 		minimumPriority: PRIORITIES.MEDIUM,
 		dateDisplay: DATE_DISPLAY.RELATIVE,
 		defaultTaskRelationType: RELATION_KIND.RELATED,
+		filterIdUsedOnOverview: 0,
 	}
 	extraSettingsLinks = {}
 

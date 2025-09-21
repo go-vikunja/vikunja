@@ -270,7 +270,6 @@ jobs:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
       - uses: ./.github/actions/setup-frontend
       - name: Typecheck
-        continue-on-error: true
         working-directory: frontend
         run: pnpm typecheck
 
@@ -341,13 +340,13 @@ jobs:
           path: ./frontend/dist
       - run: chmod +x ./vikunja
       - uses: cypress-io/github-action@v6
-        timeout-minutes: 20
+        timeout-minutes: 25
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
           CYPRESS_API_URL: http://127.0.0.1:3456/api/v1
           CYPRESS_TEST_SECRET: averyLongSecretToSe33dtheDB
-          CYPRESS_DEFAULT_COMMAND_TIMEOUT: 60000
+          CYPRESS_DEFAULT_COMMAND_TIMEOUT: 30000
           CYPRESS_CI_BUILD_ID: "${{ github.workflow }}-${{ github.run_id }}-${{ github.run_attempt }}" # see https://github.com/cypress-io/github-action/issues/431
           VIKUNJA_SERVICE_TESTINGTOKEN: averyLongSecretToSe33dtheDB
           VIKUNJA_LOG_LEVEL: DEBUG

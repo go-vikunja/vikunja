@@ -15,28 +15,38 @@ export default class ProjectService extends AbstractService<IProject> {
 		})
 	}
 
-	modelFactory(data) {
+	modelFactory(data: Partial<IProject>) {
 		return new ProjectModel(data)
 	}
 
-	beforeUpdate(model) {
+	beforeUpdate(model: IProject) {
 		if(typeof model.tasks !== 'undefined') {
 			const taskService = new TaskService()
-			model.tasks = model.tasks.map(task => {
+			model.tasks = model.tasks.map((task) => {
 				return taskService.beforeUpdate(task)
 			})
 		}
-		
+
 		if(typeof model.hexColor !== 'undefined') {
 			model.hexColor = colorFromHex(model.hexColor)
 		}
-		
-		return model
+
+		// Remove subscription field when updating a project to avoid invalid entity type errors
+		const {subscription, ...projectData} = model
+		return projectData as IProject
 	}
 
-	beforeCreate(project) {
+	beforeCreate(project: IProject) {
 		project.hexColor = colorFromHex(project.hexColor)
-		return project
+		// Remove subscription field when creating a project to avoid invalid entity type errors
+		const {subscription, ...projectData} = project
+		return projectData as IProject
+	}
+
+	beforeDelete(project: IProject) {
+		// Remove subscription field when deleting a project to avoid invalid entity type errors
+		const {subscription, ...projectData} = project
+		return projectData as IProject
 	}
 
 	async background(project: Pick<IProject, 'id' | 'backgroundInformation'>) {

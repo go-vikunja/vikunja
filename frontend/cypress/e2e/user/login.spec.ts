@@ -3,15 +3,24 @@ import {ProjectFactory} from '../../factories/project'
 
 const testAndAssertFailed = fixture => {
 	cy.intercept(Cypress.env('API_URL') + '/login*').as('login')
-	
+
 	cy.visit('/login')
-	cy.get('input[id=username]').type(fixture.username)
-	cy.get('input[id=password]').type(fixture.password)
-	cy.get('.button').contains('Login').click()
+	cy.get('input[id=username]')
+		.should('be.visible')
+		.type(fixture.username)
+	cy.get('input[id=password]')
+		.should('be.visible')
+		.type(fixture.password)
+	cy.get('.button')
+		.contains('Login')
+		.should('be.visible')
+		.click()
 
 	cy.wait('@login')
 	cy.url().should('include', '/')
-	cy.get('div.message.danger').contains('Wrong username or password.')
+	cy.get('div.message.danger')
+		.should('be.visible')
+		.contains('Wrong username or password.')
 }
 
 const credentials = {
@@ -20,9 +29,18 @@ const credentials = {
 }
 
 function login() {
-	cy.get('input[id=username]').type(credentials.username)
-	cy.get('input[id=password]').type(credentials.password)
-	cy.get('.button').contains('Login').click()
+	cy.intercept(Cypress.env('API_URL') + '/login*').as('loginSuccess')
+	cy.get('input[id=username]')
+		.should('be.visible')
+		.type(credentials.username)
+	cy.get('input[id=password]')
+		.should('be.visible')
+		.type(credentials.password)
+	cy.get('.button')
+		.contains('Login')
+		.should('be.visible')
+		.click()
+	cy.wait('@loginSuccess')
 	cy.url().should('include', '/')
 }
 
@@ -35,7 +53,9 @@ context('Login', () => {
 		cy.visit('/login')
 		login()
 		cy.clock(1625656161057) // 13:00
-		cy.get('h2').should('contain', `Hi ${credentials.username}!`)
+		cy.get('h2')
+			.should('be.visible')
+			.should('contain', `Hi ${credentials.username}!`)
 	})
 
 	it('Should fail with a bad password', () => {

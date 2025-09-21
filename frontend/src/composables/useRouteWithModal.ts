@@ -1,4 +1,4 @@
-import {computed, defineAsyncComponent, h, shallowRef, type VNode, watchEffect} from 'vue'
+import {computed, defineAsyncComponent, h, shallowRef, type Component, type VNode, watchEffect} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
@@ -11,9 +11,15 @@ export function useRouteWithModal() {
 	const projectStore = useProjectStore()
 
 	const routeWithModal = computed(() => {
-		return backdropView.value
+		const resolved = backdropView.value
 			? router.resolve(backdropView.value)
 			: route
+
+		// Ensure name is not null for type compatibility
+		return {
+			...resolved,
+			name: resolved.name || 'default',
+		}
 	})
 
 	const currentModal = shallowRef<VNode>()
@@ -49,7 +55,7 @@ export function useRouteWithModal() {
 		let component = route.matched[0]?.components?.default
 
 		if (typeof component === 'function') {
-			component = defineAsyncComponent(component)
+			component = defineAsyncComponent(component as () => Promise<Component>)
 		}
 
 		if (!component) {
@@ -71,10 +77,11 @@ export function useRouteWithModal() {
 			? routeMatch.exec(historyState.value.back)
 			: null
 		if (match !== null && baseStore.currentProject) {
-			let viewId: string | number = match[1]
+			let viewId: string | number = match[1] || ''
 
-			if (!viewId) {
-				viewId = projectStore.projects[baseStore.currentProject?.id].views[0]?.id
+			if (!viewId && baseStore.currentProject?.id) {
+				const defaultView = projectStore.projects[baseStore.currentProject.id]?.views?.[0]
+				viewId = defaultView?.id || 0
 			}
 
 			const newRoute = {

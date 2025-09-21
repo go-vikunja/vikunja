@@ -213,8 +213,13 @@ async function submit() {
 	// Some browsers prevent Vue bindings from working with autofilled values.
 	// To work around this, we're manually getting the values here instead of relying on vue bindings.
 	// For more info, see https://kolaente.dev/vikunja/frontend/issues/78
-	const credentials = {
-		username: usernameRef.value?.value,
+	const credentials: {
+		username: string
+		password: string
+		longToken: boolean
+		totpPasscode?: string
+	} = {
+		username: usernameRef.value?.value || '',
 		password: password.value,
 		longToken: rememberMe.value,
 	}
@@ -233,8 +238,8 @@ async function submit() {
 	try {
 		await authStore.login(credentials)
 		authStore.setNeedsTotpPasscode(false)
-	} catch (e) {
-		if (e.response?.data.code === 1017 && !credentials.totpPasscode) {
+	} catch (e: unknown) {
+		if (e && typeof e === 'object' && 'response' in e && e.response && typeof e.response === 'object' && 'data' in e.response && e.response.data && typeof e.response.data === 'object' && 'code' in e.response.data && e.response.data.code === 1017 && !credentials.totpPasscode) {
 			return
 		}
 

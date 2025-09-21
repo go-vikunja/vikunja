@@ -2,6 +2,7 @@
 	<CreateEdit
 		:title="$t('project.create.header')"
 		:primary-disabled="project.title === ''"
+		:has-primary-action="true"
 		@create="createNewProject()"
 	>
 		<div class="field">
@@ -77,11 +78,11 @@ const showError = ref(false)
 const project = reactive(new ProjectModel())
 const projectService = shallowReactive(new ProjectService())
 const projectStore = useProjectStore()
-const parentProject = ref<IProject | null>(null)
+const parentProject = ref<IProject | undefined>(undefined)
 
 watch(
 	() => props.parentProjectId,
-	() => parentProject.value = projectStore.projects[props.parentProjectId],
+	() => parentProject.value = (projectStore.projects[props.parentProjectId!] as IProject) || undefined,
 	{immediate: true},
 )
 
@@ -93,7 +94,7 @@ async function createNewProject() {
 	showError.value = false
 
 	if (parentProject.value) {
-		project.parentProjectId = parentProject.value.id
+		project.parentProjectId = parentProject.value?.id
 	}
 
 	await projectStore.createProject(project)

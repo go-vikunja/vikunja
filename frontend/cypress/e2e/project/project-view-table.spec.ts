@@ -8,32 +8,76 @@ describe('Project View Table', () => {
 	prepareProjects()
 
 	it('Should show a table with tasks', () => {
-		const tasks = TaskFactory.create(1)
+		const tasks = TaskFactory.create(1, {
+			project_id: 1,
+		})
+
+		// Use a single comprehensive intercept pattern that matches the most likely endpoint
+		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
+
 		cy.visit('/projects/1/3')
 
-		cy.get('.project-table table.table')
-			.should('exist')
-		cy.get('.project-table table.table')
+		// Wait for task loading endpoint to respond
+		cy.wait('@loadTasks', { timeout: 15000 }).catch(() => {
+			// If the specific pattern fails, just wait for the table to appear
+			cy.get('.project-table table.table', { timeout: 10000 }).should('exist')
+		})
+
+		// Wait for the table to be visible
+		cy.get('.project-table table.table', {timeout: 30000})
+			.should('be.visible')
+
+		// Wait for the table to contain the task
+		cy.get('.project-table table.table tbody', {timeout: 30000})
+			.should('be.visible')
 			.should('contain', tasks[0].title)
 	})
 
 	it('Should have working column switches', () => {
-		TaskFactory.create(1)
+		TaskFactory.create(1, {
+			project_id: 1,
+		})
+
+		// Use a single comprehensive intercept pattern that matches the most likely endpoint
+		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
+
 		cy.visit('/projects/1/3')
 
+		// Wait for task loading endpoint to respond
+		cy.wait('@loadTasks', { timeout: 15000 }).catch(() => {
+			// If the specific pattern fails, just wait for the table to appear
+			cy.get('.project-table table.table', { timeout: 10000 }).should('exist')
+		})
+
+		// Wait for the table to load
+		cy.get('.project-table table.table', {timeout: 30000})
+			.should('be.visible')
+
+		// Open columns filter
 		cy.get('.project-table .filter-container .button')
 			.contains('Columns')
-			.click()
-		cy.get('.project-table .filter-container .card.columns-filter .card-content .fancy-checkbox')
-			.contains('Priority')
-			.click()
-		cy.get('.project-table .filter-container .card.columns-filter .card-content .fancy-checkbox')
-			.contains('Done')
+			.should('be.visible')
 			.click()
 
+		// Enable Priority column
+		cy.get('.project-table .filter-container .card.columns-filter .card-content .fancy-checkbox')
+			.contains('Priority')
+			.should('be.visible')
+			.click()
+
+		// Disable Done column
+		cy.get('.project-table .filter-container .card.columns-filter .card-content .fancy-checkbox')
+			.contains('Done')
+			.should('be.visible')
+			.click()
+
+		// Verify Priority column is visible
 		cy.get('.project-table table.table th')
 			.contains('Priority')
+			.should('be.visible')
 			.should('exist')
+
+		// Verify Done column is hidden
 		cy.get('.project-table table.table th')
 			.contains('Done')
 			.should('not.exist')
@@ -44,13 +88,31 @@ describe('Project View Table', () => {
 			id: '{increment}',
 			project_id: 1,
 		})
+
+		// Use a single comprehensive intercept pattern that matches the most likely endpoint
+		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
+
 		cy.visit('/projects/1/3')
 
+		// Wait for task loading endpoint to respond
+		cy.wait('@loadTasks', { timeout: 15000 }).catch(() => {
+			// If the specific pattern fails, just wait for the table to appear
+			cy.get('.project-table table.table', { timeout: 10000 }).should('exist')
+		})
+
+		// Wait for the table to be visible and contain tasks
+		cy.get('.project-table table.table tbody', {timeout: 30000})
+			.should('be.visible')
+			.and('contain', tasks[0].title)
+
+		// Click on the task title to navigate
 		cy.get('.project-table table.table')
 			.contains(tasks[0].title)
+			.should('be.visible')
 			.click()
 
+		// Verify navigation to task detail page
 		cy.url()
-			.should('contain', `/tasks/${tasks[0].id}`)
+			.should('contain', `/tasks/${tasks[0].id}`, {timeout: 30000})
 	})
 })

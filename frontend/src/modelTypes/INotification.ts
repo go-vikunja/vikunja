@@ -19,31 +19,31 @@ interface Notification {
 	doer: IUser
 }
 
-interface NotificationTaskComment extends Notification {
+export interface NotificationTaskComment extends Notification {
 	task: ITask
 	comment: ITaskComment
 }
 
-interface NotificationTask extends Notification {
+export interface NotificationTask extends Notification {
 	task: ITask
 }
 
-interface NotificationAssigned extends Notification {
+export interface NotificationAssigned extends Notification {
 	task: ITask
 	assignee: IUser
 }
 
-interface NotificationCreated extends Notification {
+export interface NotificationCreated extends Notification {
 	task: ITask
 	project: IProject
 }
 
-interface NotificationTaskReminder extends Notification {
+export interface NotificationTaskReminder extends Notification {
 	task: ITask
 	project: IProject
 }
 
-interface NotificationMemberAdded extends Notification {
+export interface NotificationMemberAdded extends Notification {
 	member: IUser
 	team: ITeam
 }

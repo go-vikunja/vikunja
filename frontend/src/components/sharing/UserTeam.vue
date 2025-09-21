@@ -22,13 +22,13 @@
 								v-if="shareType === 'user'"
 								:avatar-size="24"
 								:show-username="true"
-								:user="result"
+								:user="result as IUser"
 							/>
 							<span 
 								v-else
 								class="search-result"
 							>
-								{{ result.name }}
+								{{ (result as ITeam).name }}
 							</span>
 						</template>
 					</Multiselect>
@@ -51,9 +51,9 @@
 					:key="s.id"
 				>
 					<template v-if="shareType === 'user'">
-						<td>{{ getDisplayName(s) }}</td>
+						<td>{{ getDisplayName(s as unknown as IUser) }}</td>
 						<td>
-							<template v-if="s.id === userInfo.id">
+							<template v-if="userInfo && s.id === userInfo.id">
 								<b class="is-success">{{ $t('project.share.userTeam.you') }}</b>
 							</template>
 						</td>
@@ -63,10 +63,10 @@
 							<RouterLink
 								:to="{
 									name: 'teams.edit',
-									params: { id: s.id },
+									params: { id: (s as ITeamProject).id as string | number },
 								}"
 							>
-								{{ s.name }}
+								{{ (s as ITeamProject).name }}
 							</RouterLink>
 						</td>
 					</template>
@@ -125,7 +125,7 @@
 							icon="trash-alt"
 							@click="
 								() => {
-									sharable = s
+									sharable = s as unknown as IUser | ITeam
 									showDeleteModal = true
 								}
 							"
@@ -178,7 +178,7 @@ import TeamModel from '@/models/team'
 import type {ITeam} from '@/modelTypes/ITeam'
 
 
-import {PERMISSIONS} from '@/constants/permissions'
+import {PERMISSIONS, type Permission} from '@/constants/permissions'
 import Multiselect from '@/components/input/Multiselect.vue'
 import Nothing from '@/components/misc/Nothing.vue'
 import {success} from '@/message'
@@ -209,11 +209,13 @@ let searchService: UserService | TeamService
 let sharable: Ref<IUser | ITeam>
 
 const searchLabel = ref('')
-const selectedPermission = ref({})
+const selectedPermission = ref<Record<number, Permission>>({})
 
+
+type SharableItem = (IUserProject | ITeamProject) & {id: number}
 
 // This holds either teams or users who this namepace or project is shared with
-const sharables = ref([])
+const sharables = ref<SharableItem[]>([])
 const showDeleteModal = ref(false)
 
 const authStore = useAuthStore()
@@ -247,7 +249,7 @@ const sharableName = computed(() => {
 
 if (props.shareType === 'user') {
 	searchService = shallowReactive(new UserService())
-	sharable = ref(new UserModel())
+	sharable = ref<IUser | ITeam>(new UserModel())
 	searchLabel.value = 'username'
 
 	if (props.type === 'project') {
@@ -258,7 +260,7 @@ if (props.shareType === 'user') {
 	}
 } else if (props.shareType === 'team') {
 	searchService = new TeamService()
-	sharable = ref(new TeamModel())
+	sharable = ref<IUser | ITeam>(new TeamModel())
 	searchLabel.value = 'name'
 
 	if (props.type === 'project') {
@@ -274,27 +276,35 @@ if (props.shareType === 'user') {
 load()
 
 async function load() {
-	sharables.value = await stuffService.getAll(stuffModel)
-	sharables.value.forEach(({id, permission}) =>
-		selectedPermission.value[id] = permission,
+	if (props.shareType === 'user') {
+		sharables.value = await (stuffService as UserProjectService).getAll(stuffModel as IUserProject) as SharableItem[]
+	} else if (props.shareType === 'team') {
+		sharables.value = await (stuffService as TeamProjectService).getAll(stuffModel as ITeamProject) as SharableItem[]
+	}
+	sharables.value.forEach((sharable) =>
+		selectedPermission.value[sharable.id] = sharable.permission,
 	)
 }
 
 async function deleteSharable() {
 	if (props.shareType === 'user') {
-		stuffModel.username = sharable.value.username
+		(stuffModel as IUserProject).username = (sharable.value as IUser).username || ''
 	} else if (props.shareType === 'team') {
-		stuffModel.teamId = sharable.value.id
+		(stuffModel as ITeamProject).teamId = (sharable.value as ITeam).id || 0
 	}
 
-	await stuffService.delete(stuffModel)
+	if (props.shareType === 'user') {
+		await (stuffService as UserProjectService).delete(stuffModel as IUserProject)
+	} else if (props.shareType === 'team') {
+		await (stuffService as TeamProjectService).delete(stuffModel as ITeamProject)
+	}
 	showDeleteModal.value = false
 	for (const i in sharables.value) {
 		if (
-			(sharables.value[i].username === stuffModel.username && props.shareType === 'user') ||
-			(sharables.value[i].id === stuffModel.teamId && props.shareType === 'team')
+			((sharables.value[i] as IUserProject).username === (stuffModel as IUserProject).username && props.shareType === 'user') ||
+			((sharables.value[i] as ITeamProject).teamId === (stuffModel as ITeamProject).teamId && props.shareType === 'team')
 		) {
-			sharables.value.splice(i, 1)
+			sharables.value.splice(parseInt(i), 1)
 		}
 	}
 	success({
@@ -305,8 +315,8 @@ async function deleteSharable() {
 	})
 }
 
-async function add(admin) {
-	if (admin === null) {
+async function add(admin?: boolean) {
+	if (admin === null || admin === undefined) {
 		admin = false
 	}
 	stuffModel.permission = PERMISSIONS.READ
@@ -315,50 +325,62 @@ async function add(admin) {
 	}
 
 	if (props.shareType === 'user') {
-		stuffModel.username = sharable.value.username
+		(stuffModel as IUserProject).username = (sharable.value as IUser).username || ''
 	} else if (props.shareType === 'team') {
-		stuffModel.teamId = sharable.value.id
+		(stuffModel as ITeamProject).teamId = (sharable.value as ITeam).id || 0
 	}
 
-	await stuffService.create(stuffModel)
+	if (props.shareType === 'user') {
+		await (stuffService as UserProjectService).create(stuffModel as IUserProject)
+	} else if (props.shareType === 'team') {
+		await (stuffService as TeamProjectService).create(stuffModel as ITeamProject)
+	}
 	success({message: t('project.share.userTeam.addedSuccess', {type: shareTypeName.value})})
 	await load()
 }
 
-async function toggleType(sharable) {
+async function toggleType(sharable: SharableItem) {
+	const sharableId = sharable.id
 	if (
-		selectedPermission.value[sharable.id] !== PERMISSIONS.ADMIN &&
-		selectedPermission.value[sharable.id] !== PERMISSIONS.READ &&
-		selectedPermission.value[sharable.id] !== PERMISSIONS.READ_WRITE
+		selectedPermission.value[sharableId] !== PERMISSIONS.ADMIN &&
+		selectedPermission.value[sharableId] !== PERMISSIONS.READ &&
+		selectedPermission.value[sharableId] !== PERMISSIONS.READ_WRITE
 	) {
-		selectedPermission.value[sharable.id] = PERMISSIONS.READ
+		selectedPermission.value[sharableId] = PERMISSIONS.READ
 	}
-	stuffModel.permission = selectedPermission.value[sharable.id]
+	stuffModel.permission = selectedPermission.value[sharableId]
 
 	if (props.shareType === 'user') {
-		stuffModel.username = sharable.username
+		(stuffModel as IUserProject).username = (sharable as unknown as IUser).username || ''
 	} else if (props.shareType === 'team') {
-		stuffModel.teamId = sharable.id
+		(stuffModel as ITeamProject).teamId = (sharable as unknown as ITeam).id || 0
 	}
 
-	const r = await stuffService.update(stuffModel)
+	let r
+	if (props.shareType === 'user') {
+		r = await (stuffService as UserProjectService).update(stuffModel as IUserProject)
+	} else if (props.shareType === 'team') {
+		r = await (stuffService as TeamProjectService).update(stuffModel as ITeamProject)
+	}
 	for (const i in sharables.value) {
 		if (
-			(sharables.value[i].username ===
-				stuffModel.username &&
+			((sharables.value[i] as IUserProject).username ===
+				(stuffModel as IUserProject).username &&
 				props.shareType === 'user') ||
-			(sharables.value[i].id === stuffModel.teamId &&
+			((sharables.value[i] as ITeamProject).teamId === (stuffModel as ITeamProject).teamId &&
 				props.shareType === 'team')
 		) {
-			sharables.value[i].permission = r.permission
+			if (r && sharables.value[i]) {
+				sharables.value[i].permission = r.permission
+			}
 		}
 	}
 	success({message: t('project.share.userTeam.updatedSuccess', {type: shareTypeName.value})})
 }
 
-const found = ref([])
+const found = ref<(IUser | ITeam)[]>([])
 
-const currentUserId = computed(() => authStore.info.id)
+const currentUserId = computed(() => authStore.info?.id)
 async function find(query: string) {
 	if (query === '') {
 		found.value = []
@@ -368,9 +390,11 @@ async function find(query: string) {
 	// Include public teams here if we are sharing with teams and its enabled in the config
 	let results = []
 	if (props.shareType === 'team' && configStore.publicTeamsEnabled) {
-		results = await searchService.getAll({}, {s: query, includePublic: true})
+		results = await (searchService as TeamService).getAll(undefined, {s: query, includePublic: true})
+	} else if (props.shareType === 'team') {
+		results = await (searchService as TeamService).getAll(undefined, {s: query})
 	} else {
-		results = await searchService.getAll({}, {s: query})
+		results = await (searchService as UserService).getAll(undefined, {s: query})
 	}
 
 	found.value = results
@@ -378,8 +402,8 @@ async function find(query: string) {
 			if(props.shareType === 'user' && m.id === currentUserId.value) {
 				return false
 			}
-			
-			return typeof sharables.value.find(s => s.id === m.id) === 'undefined'
+
+			return typeof sharables.value.find((s) => s.id === m.id) === 'undefined'
 		})
 }
 </script>

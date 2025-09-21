@@ -16,7 +16,7 @@
 				@click="toggleOpen"
 			>
 				<Icon
-					:icon="triggerIcon"
+					:icon="triggerIcon || 'ellipsis-h'"
 					class="icon"
 				/>
 			</BaseButton>
@@ -44,11 +44,11 @@ import type {IconProp} from '@fortawesome/fontawesome-svg-core'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
-withDefaults(defineProps<{
+interface DropdownProps {
 	triggerIcon?: IconProp
-}>(), {
-	triggerIcon: 'ellipsis-h',
-})
+}
+
+defineProps<DropdownProps>()
 
 const emit = defineEmits<{
 	'close': [event: PointerEvent]

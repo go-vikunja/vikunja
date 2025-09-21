@@ -1,4 +1,5 @@
 import {EditorState, Plugin, PluginKey, Transaction} from '@tiptap/pm/state'
+import type {Node as ProseMirrorNode} from '@tiptap/pm/model'
 import {Decoration, DecorationSet} from '@tiptap/pm/view'
 import {
 	AVAILABLE_FILTER_FIELDS,
@@ -122,7 +123,7 @@ function decorateDocument(doc: Node) {
 			}
 
 			// Check if this is a multi-value operator and the value contains commas
-			const isMultiValueOperator = ['in', '?=', 'not in', '?!='].includes(operator)
+			const isMultiValueOperator = ['in', '?=', 'not in', '?!='].includes(operator || '')
 			if (isMultiValueOperator && labelValue.includes(',')) {
 				// Split by commas and create decorations for each individual label
 				const labels = labelValue.split(',').map(l => l.trim()).filter(l => l.length > 0)
@@ -153,15 +154,15 @@ function decorateDocument(doc: Node) {
 	while ((match = fieldValueRegex.exec(text)) !== null) {
 		const [fullMatch, field, operator, value] = match
 
-		if (LABEL_FIELDS.includes(field) || DATE_FIELDS.includes(field)) {
+		if (LABEL_FIELDS.includes(field || '') || DATE_FIELDS.includes(field || '')) {
 			continue
 		}
 
 		if (value && value.trim()) {
 			// Calculate the actual position of the value by finding where it starts after the operator
-			const fieldLength = field.length
-			const operatorIndex = fullMatch.indexOf(operator, fieldLength)
-			const operatorEnd = operatorIndex + operator.length
+			const fieldLength = field?.length || 0
+			const operatorIndex = fullMatch.indexOf(operator || '', fieldLength)
+			const operatorEnd = operatorIndex + (operator?.length || 0)
 			const valueIndex = fullMatch.indexOf(value, operatorEnd)
 
 			const valueStart = match.index + valueIndex
@@ -245,18 +246,17 @@ function decorateDocument(doc: Node) {
 }
 
 // Helper function to find the position in the document for a given text index
-function findPosForIndex(doc: {
-	descendants: (fn: (node: { isText: boolean, text: string }, nodePos: number) => boolean | void) => void
-}, index: number): number | null {
+function findPosForIndex(doc: ProseMirrorNode, index: number): number | null {
 	let pos = 0
 	let found = false
 	let textIndex = 0
 
-	doc.descendants((node: { isText: boolean, text: string }, nodePos: number) => {
+	doc.descendants((node: ProseMirrorNode, nodePos: number) => {
 		if (found) return false
 
-		if (node.isText) {
-			const endIndex = textIndex + node.text.length
+		if (node.isText && node.text) {
+			const text = node.text || ''
+			const endIndex = textIndex + text.length
 
 			if (textIndex <= index && index <= endIndex) {
 				pos = nodePos + (index - textIndex)

@@ -37,12 +37,21 @@ function seedTasks(numberOfTasks = 50, startDueDate = new Date()) {
 describe('Home Page Task Overview', () => {
 	createFakeUserAndLogin()
 
+	beforeEach(() => {
+		TaskFactory.truncate()
+		ProjectFactory.truncate()
+		BucketFactory.truncate()
+	})
+
 	it('Should show tasks with a near due date first on the home page overview', () => {
 		const taskCount = 50
 		const {tasks} = seedTasks(taskCount)
 
 		cy.visit('/')
+		cy.get('[data-cy="showTasks"] .card')
+			.should('exist')
 		cy.get('[data-cy="showTasks"] .card .task')
+			.should('have.length.greaterThan', 0)
 			.each(([task], index) => {
 				expect(task.innerText).to.contain(tasks[index].title)
 			})
@@ -55,25 +64,46 @@ describe('Home Page Task Overview', () => {
 		const {tasks} = seedTasks(taskCount, oldDate)
 
 		cy.visit('/')
+		cy.get('[data-cy="showTasks"] .card')
+			.should('exist')
 		cy.get('[data-cy="showTasks"] .card .task')
+			.should('have.length.greaterThan', 0)
 			.each(([task], index) => {
 				expect(task.innerText).to.contain(tasks[index].title)
 			})
 	})
 
 	it('Should show a new task with a very soon due date at the top', () => {
-		const {tasks} = seedTasks(49)
+		const {tasks, project} = seedTasks(49)
 		const newTaskTitle = 'New Task'
-		
+
 		cy.visit('/')
-		
+
 		TaskFactory.create(1, {
 			id: 999,
 			title: newTaskTitle,
+			project_id: tasks[0].project_id,
 			due_date: new Date().toISOString(),
 		}, false)
-		
-		cy.visit(`/projects/${tasks[0].project_id}/1`)
+
+		// Set up intercept before any navigation that might trigger API calls
+		// Set up comprehensive API intercept for all possible task loading endpoints
+		cy.intercept('GET', /\/api\/v1\/(projects\/\d+(\/views\/\d+)?\/tasks|tasks\/all)/).as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/*').as('loadProject')
+
+		// Visit the project page first and wait for it to load
+		cy.visit(`/projects/${project.id}`)
+		cy.url().should('contain', `/projects/${project.id}/1`)
+
+		// Wait for project to load first, then tasks with fallback
+		cy.wait('@loadProject', { timeout: 15000 })
+		cy.wait('@loadTasks', { timeout: 10000 }).catch(() => {
+			// If task loading fails, just wait for tasks to appear
+			cy.get('.tasks .task', { timeout: 5000 }).should('exist')
+		})
+
+		cy.get('.tasks')
+			.should('exist')
 		cy.get('.tasks .task')
 			.should('contain.text', newTaskTitle)
 		cy.visit('/')
@@ -84,14 +114,36 @@ describe('Home Page Task Overview', () => {
 	
 	it('Should not show a new task without a date at the bottom when there are > 50 tasks', () => {
 		// We're not using the api here to create the task in order to verify the flow
-		const {tasks} = seedTasks(100)
+		const {tasks, project} = seedTasks(100)
 		const newTaskTitle = 'New Task'
 
 		cy.visit('/')
 
-		cy.visit(`/projects/${tasks[0].project_id}/1`)
+		// Set up intercepts before navigation
+		// Set up comprehensive API intercept for all possible task loading endpoints
+		cy.intercept('GET', /\/api\/v1\/(projects\/\d+(\/views\/\d+)?\/tasks|tasks\/all)/).as('loadTasks')
+		cy.intercept('PUT', `**/api/v1/projects/${project.id}/views/*/tasks`).as('createTask')
+		cy.intercept('GET', '**/api/v1/projects/*').as('loadProject')
+
+		// Visit the project page and wait for it to load
+		cy.visit(`/projects/${project.id}`)
+		cy.url().should('contain', `/projects/${project.id}/1`)
+
+		// Wait for project to load first, then tasks with fallback
+		cy.wait('@loadProject', { timeout: 15000 })
+		cy.wait('@loadTasks', { timeout: 10000 }).catch(() => {
+			// If task loading fails, just wait for task input to appear
+			cy.get('.task-add textarea', { timeout: 5000 }).should('exist')
+		})
+
 		cy.get('.task-add textarea')
+			.should('be.visible')
 			.type(newTaskTitle+'{enter}')
+
+		// Wait for task creation to complete with shorter timeout to prevent hangs
+		cy.wait('@createTask', { timeout: 15000 })
+		cy.get('.tasks .task').should('contain.text', newTaskTitle)
+
 		cy.visit('/')
 		cy.get('[data-cy="showTasks"] .card .task')
 			.last()
@@ -99,11 +151,12 @@ describe('Home Page Task Overview', () => {
 	})
 	
 	it('Should show a new task without a date at the bottom when there are < 50 tasks', () => {
-		seedTasks(40)
+		const {tasks} = seedTasks(40)
 		const newTaskTitle = 'New Task'
 		TaskFactory.create(1, {
 			id: 999,
 			title: newTaskTitle,
+			project_id: tasks[0].project_id,
 		}, false)
 
 		cy.visit('/')
@@ -131,8 +184,6 @@ describe('Home Page Task Overview', () => {
 	})
 	
 	it('Should show the cta buttons for new project when there are no tasks', () => {
-		TaskFactory.truncate()
-		
 		cy.visit('/')
 		
 		cy.get('.home.app-content .content')

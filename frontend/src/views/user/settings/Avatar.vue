@@ -5,7 +5,7 @@
 		</Message>
 
 		<Message v-else-if="avatarProvider === 'openid'">
-			{{ $t('user.settings.avatar.openid', {provider: authStore.info.authProvider}) }}
+			{{ $t('user.settings.avatar.openid', {provider: authStore.info?.name || 'OpenID'}) }}
 		</Message>
 
 		<template v-else>
@@ -84,6 +84,7 @@ import 'vue-advanced-cropper/dist/style.css'
 
 import AvatarService from '@/services/avatar'
 import AvatarModel from '@/models/avatar'
+import type {AvatarProvider} from '@/modelTypes/IAvatar'
 import {useTitle} from '@/composables/useTitle'
 import {success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
@@ -109,10 +110,11 @@ const avatarService = shallowReactive(new AvatarService())
 const loading = ref(false)
 
 
-const avatarProvider = ref('')
+const avatarProvider = ref<AvatarProvider>('default')
 
 async function avatarStatus() {
-	const {avatarProvider: currentProvider} = await avatarService.get({})
+	const result = await avatarService.get(new AvatarModel({}))
+	const currentProvider = result?.avatarProvider || ''
 	avatarProvider.value = currentProvider
 }
 
@@ -138,10 +140,12 @@ async function uploadAvatar() {
 	}
 
 	try {
-		const blob = await new Promise(resolve => canvas.toBlob(blob => resolve(blob)))
-		await avatarService.create(blob)
-		success({message: t('user.settings.avatar.setSuccess')})
-		authStore.reloadAvatar()
+		const blob = await new Promise<Blob | null>(resolve => canvas.toBlob((blob: Blob | null) => resolve(blob)))
+		if (blob) {
+			await avatarService.uploadAvatar(blob)
+			success({message: t('user.settings.avatar.setSuccess')})
+			authStore.reloadAvatar()
+		}
 	} finally {
 		loading.value = false
 		isCropAvatar.value = false
@@ -161,7 +165,7 @@ function cropAvatar() {
 	loading.value = true
 	const reader = new FileReader()
 	reader.onload = e => {
-		avatarToCrop.value = e.target.result
+		avatarToCrop.value = e.target?.result
 		isCropAvatar.value = true
 	}
 	reader.onloadend = () => loading.value = false

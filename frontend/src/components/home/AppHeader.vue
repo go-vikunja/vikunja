@@ -22,7 +22,7 @@
 			class="project-title-wrapper"
 		>
 			<h1 class="project-title">
-				{{ currentProject.title === '' ? $t('misc.loading') : getProjectTitle(currentProject) }}
+				{{ currentProject.title === '' ? $t('misc.loading') : getProjectTitle(currentProject as any) }}
 			</h1>
 
 			<BaseButton
@@ -37,7 +37,7 @@
 			<ProjectSettingsDropdown
 				v-if="canWriteCurrentProject && currentProject.id !== -1"
 				class="project-title-dropdown"
-				:project="currentProject"
+				:project="currentProject as any"
 			>
 				<template #trigger="{ toggleOpen }">
 					<BaseButton
@@ -137,7 +137,7 @@ import { useAuthStore } from '@/stores/auth'
 const baseStore = useBaseStore()
 const currentProject = computed(() => baseStore.currentProject)
 const background = computed(() => baseStore.background)
-const canWriteCurrentProject = computed(() => baseStore.currentProject?.maxPermission > Permissions.READ)
+const canWriteCurrentProject = computed(() => baseStore.currentProject?.maxPermission && baseStore.currentProject.maxPermission > Permissions.READ)
 const menuActive = computed(() => baseStore.menuActive)
 
 const authStore = useAuthStore()

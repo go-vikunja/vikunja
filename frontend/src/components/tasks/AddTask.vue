@@ -146,7 +146,10 @@ async function addTask() {
 
 	let currentProjectId = authStore.settings.defaultProjectId
 	if (typeof router.currentRoute.value.params.projectId !== 'undefined') {
-		currentProjectId = Number(router.currentRoute.value.params.projectId)
+		const routeProjectId = Number(router.currentRoute.value.params.projectId)
+		if (!isNaN(routeProjectId) && routeProjectId > 0) {
+			currentProjectId = routeProjectId
+		}
 	}
 
 	// Create a map of project indices before creating tasks
@@ -156,14 +159,16 @@ async function addTask() {
 				? await taskStore.findProjectId({project, projectId: 0})
 				: currentProjectId
 
-			if (!projectIndices.has(projectId)) {
+			if (projectId && !projectIndices.has(projectId)) {
 				const newestTask = await taskCollectionService.getAll(new TaskModel({}), {
 					sort_by: ['id'],
 					order_by: ['desc'],
 					per_page: 1,
 					filter: `project_id = ${projectId}`,
 				})
-				projectIndices.set(projectId, newestTask[0]?.index || 0)
+				if (projectId) {
+					projectIndices.set(projectId, newestTask[0]?.index || 0)
+				}
 			}
 		}
 	}
@@ -181,8 +186,8 @@ async function addTask() {
 		// Calculate new index for this task per project
 		let taskIndex: number | undefined
 		if (tasksToCreate.length > 1) {
-			const lastIndex = projectIndices.get(projectId)
-			taskIndex = lastIndex + index + 1
+			const lastIndex = projectIndices.get(projectId || 0)
+			taskIndex = (lastIndex ?? 0) + index + 1
 		}
 
 		const task = await taskStore.createNewTask({
@@ -212,7 +217,7 @@ async function addTask() {
 				return
 			}
 
-			const createdParentTask = createdTasks[t.parent]
+			const createdParentTask = t.parent ? createdTasks[t.parent] : undefined
 			if (typeof createdTask === 'undefined' || typeof createdParentTask === 'undefined') {
 				return
 			}
@@ -253,9 +258,9 @@ async function addTask() {
 		Object.values(createdTasks).forEach(task => {
 			emit('taskAdded', task)
 		})
-	} catch (e) {
+	} catch (e: unknown) {
 		newTaskTitle.value = taskTitleBackup
-		if (e?.message === 'NO_PROJECT') {
+		if (e && typeof e === 'object' && 'message' in e && e.message === 'NO_PROJECT') {
 			errorMessage.value = t('project.create.addProjectRequired')
 			return
 		}

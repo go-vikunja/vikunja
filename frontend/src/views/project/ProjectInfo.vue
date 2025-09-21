@@ -44,7 +44,7 @@ const htmlDescription = computed(() => {
 		return ''
 	}
 	
-	if (project.value.id === -1) {
+	if (project.value?.id === -1) {
 		return t('project.favoriteDescription')
 	}
 
