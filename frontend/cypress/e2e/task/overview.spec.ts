@@ -88,7 +88,6 @@ describe('Home Page Task Overview', () => {
 
 		// Set up intercept before any navigation that might trigger API calls
 		cy.intercept('GET', `**/api/v1/projects/${project.id}/views/*/tasks**`).as('loadTasks')
-		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadAllTasks')
 		cy.intercept('GET', '**/api/v1/projects/*').as('loadProject')
 
 		// Visit the project page first and wait for it to load
@@ -96,13 +95,8 @@ describe('Home Page Task Overview', () => {
 		cy.url().should('contain', `/projects/${project.id}/1`)
 
 		// Wait for project to load first, then tasks
-		cy.wait('@loadProject', { timeout: 15000 })
-
-		// Wait for either the project view tasks OR the all tasks API (not both)
-		cy.wait('@loadTasks', { timeout: 10000 }).catch(() => {
-			// If loadTasks fails, try loadAllTasks as fallback
-			cy.wait('@loadAllTasks', { timeout: 10000 })
-		})
+		cy.wait('@loadProject', { timeout: 30000 })
+		cy.wait('@loadTasks', {timeout: 30000})
 
 		cy.get('.tasks')
 			.should('exist')
@@ -124,21 +118,15 @@ describe('Home Page Task Overview', () => {
 		// Set up intercepts before navigation
 		cy.intercept('GET', `**/api/v1/projects/${project.id}/views/*/tasks**`).as('loadTasks')
 		cy.intercept('PUT', `**/api/v1/projects/${project.id}/views/*/tasks`).as('createTask')
-		cy.intercept('GET', '**/api/v1/tasks/all**').as('loadAllTasks')
 		cy.intercept('GET', '**/api/v1/projects/*').as('loadProject')
 
 		// Visit the project page and wait for it to load
 		cy.visit(`/projects/${project.id}`)
 		cy.url().should('contain', `/projects/${project.id}/1`)
 
-		// Wait for project to load first, then tasks with shorter timeouts to prevent hangs
-		cy.wait('@loadProject', { timeout: 15000 })
-
-		// Wait for either the project view tasks OR the all tasks API (not both)
-		cy.wait('@loadTasks', { timeout: 10000 }).catch(() => {
-			// If loadTasks fails, try loadAllTasks as fallback
-			cy.wait('@loadAllTasks', { timeout: 10000 })
-		})
+		// Wait for project to load first, then tasks
+		cy.wait('@loadProject', { timeout: 30000 })
+		cy.wait('@loadTasks', {timeout: 30000})
 
 		cy.get('.task-add textarea')
 			.should('be.visible')
