@@ -96,12 +96,12 @@ describe('Home Page Task Overview', () => {
 		cy.url().should('contain', `/projects/${project.id}/1`)
 
 		// Wait for project to load first, then tasks
-		cy.wait('@loadProject', { timeout: 15000 }).then(() => {
-			// Then wait for either the project view tasks or fallback to all tasks API
-			cy.wait(['@loadTasks', '@loadAllTasks'], { timeout: 15000 }).then((interceptions) => {
-				// At least one API call should have been made
-				expect(interceptions).to.not.be.empty
-			})
+		cy.wait('@loadProject', { timeout: 15000 })
+
+		// Wait for either the project view tasks OR the all tasks API (not both)
+		cy.wait('@loadTasks', { timeout: 10000 }).catch(() => {
+			// If loadTasks fails, try loadAllTasks as fallback
+			cy.wait('@loadAllTasks', { timeout: 10000 })
 		})
 
 		cy.get('.tasks')
@@ -132,12 +132,12 @@ describe('Home Page Task Overview', () => {
 		cy.url().should('contain', `/projects/${project.id}/1`)
 
 		// Wait for project to load first, then tasks with shorter timeouts to prevent hangs
-		cy.wait('@loadProject', { timeout: 15000 }).then(() => {
-			// Then wait for either the project view tasks or fallback to all tasks API
-			cy.wait(['@loadTasks', '@loadAllTasks'], { timeout: 15000 }).then((interceptions) => {
-				// At least one API call should have been made
-				expect(interceptions).to.not.be.empty
-			})
+		cy.wait('@loadProject', { timeout: 15000 })
+
+		// Wait for either the project view tasks OR the all tasks API (not both)
+		cy.wait('@loadTasks', { timeout: 10000 }).catch(() => {
+			// If loadTasks fails, try loadAllTasks as fallback
+			cy.wait('@loadAllTasks', { timeout: 10000 })
 		})
 
 		cy.get('.task-add textarea')

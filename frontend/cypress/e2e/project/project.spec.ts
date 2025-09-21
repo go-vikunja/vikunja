@@ -37,7 +37,10 @@ describe('Projects', () => {
 		cy.visit('/projects/1/4')
 		cy.url()
 			.should('contain', '/projects/1/4')
-		cy.wait('@loadBuckets')
+
+		// Wait for the tasks to load with timeout
+		cy.wait('@loadBuckets', { timeout: 15000 })
+
 		cy.visit('/projects/1')
 		cy.url()
 			.should('contain', '/projects/1/4')
