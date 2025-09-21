@@ -164,6 +164,8 @@ describe('Task', () => {
 		cy.intercept('GET', /\/api\/v1\/(projects\/\d+(\/views\/\d+)?\/tasks|tasks\/all)/).as('loadTasks')
 		cy.visit('/projects/1/1')
 		cy.wait('@loadTasks', { timeout: 30000 })
+		// Wait for loading state to complete
+		cy.get('.is-loading', {timeout: 30000}).should('not.exist')
 		cy.get('.tasks .task .favorite')
 			.first()
 			.should('be.visible')
@@ -182,6 +184,8 @@ describe('Task', () => {
 
 		cy.visit('/projects/1/1')
 		cy.wait('@loadTasks', { timeout: 30000 })
+		// Wait for loading state to complete
+		cy.get('.is-loading', {timeout: 30000}).should('not.exist')
 
 		cy.get('.tasks .task .project-task-icon .fa-align-left')
 			.should('exist')
@@ -196,6 +200,8 @@ describe('Task', () => {
 
 		cy.visit('/projects/1/1')
 		cy.wait('@loadTasks', { timeout: 30000 })
+		// Wait for loading state to complete
+		cy.get('.is-loading', {timeout: 30000}).should('not.exist')
 
 		cy.get('.tasks .task .project-task-icon .fa-align-left')
 			.should('not.exist')
@@ -210,6 +216,8 @@ describe('Task', () => {
 
 		cy.visit('/projects/1/1')
 		cy.wait('@loadTasks', { timeout: 30000 })
+		// Wait for loading state to complete
+		cy.get('.is-loading', {timeout: 30000}).should('not.exist')
 
 		cy.get('.tasks .task .project-task-icon .fa-align-left')
 			.should('not.exist')
