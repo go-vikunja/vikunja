@@ -98,7 +98,7 @@ describe('Task', () => {
 	})
 
 	it('Should be created new', () => {
-		cy.intercept('PUT', '**/projects/1/views/*/tasks').as('createTask')
+		cy.intercept('PUT', '**/api/v1/projects/1/views/*/tasks').as('createTask')
 		cy.visit('/projects/1/1')
 		cy.get('.input[placeholder="Add a task…"]')
 			.should('be.visible')
@@ -116,7 +116,7 @@ describe('Task', () => {
 	it('Inserts new tasks at the top of the project', () => {
 		TaskFactory.create(1)
 
-		cy.intercept('PUT', '**/projects/1/views/*/tasks').as('createTask')
+		cy.intercept('PUT', '**/api/v1/projects/1/views/*/tasks').as('createTask')
 		cy.visit('/projects/1/1')
 		cy.get('.project-is-empty-notice')
 			.should('not.exist')
@@ -136,7 +136,7 @@ describe('Task', () => {
 		TaskFactory.create(1)
 
 		cy.intercept('POST', '**/tasks/*/done').as('markDone')
-		cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
 		cy.visit('/projects/1/1')
 		cy.wait('@loadTasks')
 		cy.get('.tasks .task .fancy-checkbox')
@@ -152,7 +152,7 @@ describe('Task', () => {
 	it('Can add a task to favorites', () => {
 		TaskFactory.create(1)
 
-		cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
 		cy.visit('/projects/1/1')
 		cy.wait('@loadTasks')
 		cy.get('.tasks .task .favorite')
@@ -165,7 +165,7 @@ describe('Task', () => {
 	})
 
 	it('Should show a task description icon if the task has a description', () => {
-		cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
 		TaskFactory.create(1, {
 			description: 'Lorem Ipsum',
 		})
@@ -178,7 +178,7 @@ describe('Task', () => {
 	})
 
 	it('Should not show a task description icon if the task has an empty description', () => {
-		cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
 		TaskFactory.create(1, {
 			description: '',
 		})
@@ -191,7 +191,7 @@ describe('Task', () => {
 	})
 
 	it('Should not show a task description icon if the task has a description containing only an empty p tag', () => {
-		cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
 		TaskFactory.create(1, {
 			description: '<p></p>',
 		})
@@ -212,7 +212,7 @@ describe('Task', () => {
 		
 		it('provides back navigation to the project in the list view', () => {
 			const tasks = TaskFactory.create(1)
-			cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
+			cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
 			cy.visit('/projects/1/1')
 			cy.wait('@loadTasks')
 			cy.get('.list-view .task')
@@ -227,7 +227,7 @@ describe('Task', () => {
 
 		it('provides back navigation to the project in the table view', () => {
 			const tasks = TaskFactory.create(1)
-			cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
+			cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
 			cy.visit('/projects/1/3')
 			cy.wait('@loadTasks')
 			cy.get('tbody tr')
@@ -245,7 +245,7 @@ describe('Task', () => {
 			cy.viewport('iphone-8')
 
 			const tasks = TaskFactory.create(1)
-			cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
+			cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
 			cy.visit('/projects/1/4')
 			cy.wait('@loadTasks')
 			cy.get('.kanban-view .tasks .task')
@@ -261,7 +261,7 @@ describe('Task', () => {
 			cy.viewport('macbook-15')
 
 			const tasks = TaskFactory.create(1)
-			cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
+			cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
 			cy.visit('/projects/1/4')
 			cy.wait('@loadTasks')
 			cy.get('.kanban-view .tasks .task')

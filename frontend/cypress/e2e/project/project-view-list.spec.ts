@@ -43,7 +43,7 @@ describe('Project View List', () => {
 			id: '{increment}',
 			project_id: 1,
 		})
-		cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
 		cy.visit('/projects/1/1')
 		cy.wait('@loadTasks')
 
@@ -81,7 +81,7 @@ describe('Project View List', () => {
 		TaskFactory.create(10, {
 			project_id: projects[0].id,
 		})
-		cy.intercept(`**/projects/${projects[0].id}/views/*/tasks**`).as('loadTasks')
+		cy.intercept('GET', `**/api/v1/projects/${projects[0].id}/views/*/tasks**`).as('loadTasks')
 		cy.visit(`/projects/${projects[0].id}/`)
 		cy.wait('@loadTasks')
 
@@ -97,7 +97,7 @@ describe('Project View List', () => {
 			title: i => `task${i}`,
 			project_id: 1,
 		})
-		cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
 		cy.visit('/projects/1/1')
 		cy.wait('@loadTasks')
 

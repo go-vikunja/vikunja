@@ -12,16 +12,16 @@ describe('Project View Table', () => {
 			project_id: 1,
 		})
 
-		cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
 		cy.visit('/projects/1/3')
-		cy.wait('@loadTasks', {timeout: 30000})
+		cy.wait('@loadTasks', {timeout: 15000})
 
 		// Wait for the table to be visible
-		cy.get('.project-table table.table', {timeout: 30000})
+		cy.get('.project-table table.table', {timeout: 15000})
 			.should('be.visible')
 
 		// Wait for the table to contain the task
-		cy.get('.project-table table.table tbody', {timeout: 30000})
+		cy.get('.project-table table.table tbody', {timeout: 15000})
 			.should('be.visible')
 			.should('contain', tasks[0].title)
 	})
@@ -31,12 +31,12 @@ describe('Project View Table', () => {
 			project_id: 1,
 		})
 
-		cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
 		cy.visit('/projects/1/3')
-		cy.wait('@loadTasks', {timeout: 30000})
+		cy.wait('@loadTasks', {timeout: 15000})
 
 		// Wait for the table to load
-		cy.get('.project-table table.table', {timeout: 30000})
+		cy.get('.project-table table.table', {timeout: 15000})
 			.should('be.visible')
 
 		// Open columns filter
@@ -75,12 +75,12 @@ describe('Project View Table', () => {
 			project_id: 1,
 		})
 
-		cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
+		cy.intercept('GET', '**/api/v1/projects/1/views/*/tasks**').as('loadTasks')
 		cy.visit('/projects/1/3')
-		cy.wait('@loadTasks', {timeout: 30000})
+		cy.wait('@loadTasks', {timeout: 15000})
 
 		// Wait for the table to be visible and contain tasks
-		cy.get('.project-table table.table tbody', {timeout: 30000})
+		cy.get('.project-table table.table tbody', {timeout: 15000})
 			.should('be.visible')
 			.and('contain', tasks[0].title)
 

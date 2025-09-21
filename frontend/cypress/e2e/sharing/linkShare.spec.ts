@@ -25,7 +25,7 @@ describe('Link shares', () => {
 	it('Can view a link share', () => {
 		const {share, project, tasks} = prepareLinkShare()
 
-		cy.intercept(`**/projects/${project.id}/views/*/tasks**`).as('loadTasks')
+		cy.intercept('GET', `**/api/v1/projects/${project.id}/views/*/tasks**`).as('loadTasks')
 		cy.visit(`/share/${share.hash}/auth`)
 
 		// Wait for redirect to complete
@@ -37,7 +37,7 @@ describe('Link shares', () => {
 			.should('contain', project.title)
 
 		// Wait for tasks to load from API
-		cy.wait('@loadTasks', {timeout: 30000})
+		cy.wait('@loadTasks', {timeout: 15000})
 
 		// Verify it's a read-only share (no task input)
 		cy.get('input.input[placeholder="Add a task…"]')
@@ -52,7 +52,7 @@ describe('Link shares', () => {
 	it('Should work when directly viewing a project with share hash present', () => {
 		const {share, project, tasks} = prepareLinkShare()
 
-		cy.intercept(`**/projects/${project.id}/views/*/tasks**`).as('loadTasks')
+		cy.intercept('GET', `**/api/v1/projects/${project.id}/views/*/tasks**`).as('loadTasks')
 		cy.visit(`/projects/${project.id}/1#share-auth-token=${share.hash}`)
 
 		// Wait for project title to load
@@ -61,7 +61,7 @@ describe('Link shares', () => {
 			.should('contain', project.title)
 
 		// Wait for tasks to load from API
-		cy.wait('@loadTasks', {timeout: 30000})
+		cy.wait('@loadTasks', {timeout: 15000})
 
 		// Verify it's a read-only share (no task input)
 		cy.get('input.input[placeholder="Add a task…"]')

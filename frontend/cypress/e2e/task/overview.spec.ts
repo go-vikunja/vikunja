@@ -37,6 +37,12 @@ function seedTasks(numberOfTasks = 50, startDueDate = new Date()) {
 describe('Home Page Task Overview', () => {
 	createFakeUserAndLogin()
 
+	beforeEach(() => {
+		TaskFactory.truncate()
+		ProjectFactory.truncate()
+		BucketFactory.truncate()
+	})
+
 	it('Should show tasks with a near due date first on the home page overview', () => {
 		const taskCount = 50
 		const {tasks} = seedTasks(taskCount)
@@ -147,8 +153,6 @@ describe('Home Page Task Overview', () => {
 	})
 	
 	it('Should show the cta buttons for new project when there are no tasks', () => {
-		TaskFactory.truncate()
-		
 		cy.visit('/')
 		
 		cy.get('.home.app-content .content')
