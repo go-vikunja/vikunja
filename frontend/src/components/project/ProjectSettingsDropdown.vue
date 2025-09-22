@@ -145,7 +145,7 @@ const props = withDefaults(defineProps<{
 	project: IProject
 	simple?: boolean
 }>(), {
-	simple: false
+	simple: false,
 })
 
 const projectStore = useProjectStore()
