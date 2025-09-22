@@ -49,6 +49,9 @@ function onKeyDown(e: KeyboardEvent) {
 	if (focusedRowIndex.value === null || focusedCellIndex.value === null) return
 
 	if (e.key === 'Enter') {
+		if (e.isComposing) {
+			return
+		}
 		e.preventDefault()
 		emit('enterPressed', { row: focusedRow.value!, cell: focusedCellIndex.value })
 		return
