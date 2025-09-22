@@ -7,8 +7,6 @@ on:
 jobs:
   comment-on-issue-closure:
     runs-on: ubuntu-latest
-    # Only run if the issue was closed by a commit (not manually)
-    if: ${{ github.event.issue.closed_by.type == 'Bot' || github.event.issue.closed_by.login != null }}
     steps:
       - name: Check if issue was closed by commit
         id: check-commit
