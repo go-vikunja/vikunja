@@ -233,6 +233,10 @@ export default function suggestionSetup(t) {
 
 				onKeyDown(props) {
 					if (props.event.key === 'Escape') {
+						if (props.event.isComposing) {
+							return false
+						}
+
 						if (popupElement) {
 							popupElement.style.display = 'none'
 						}
