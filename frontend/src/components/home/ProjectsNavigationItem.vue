@@ -60,6 +60,7 @@
 				v-if="project.maxPermission > PERMISSIONS.READ"
 				class="menu-list-dropdown"
 				:project="project"
+				:simple="true"
 			>
 				<template #trigger="{toggleOpen}">
 					<BaseButton

@@ -26,7 +26,9 @@
 			<div
 				v-if="initialMount || open"
 				v-show="open"
+				ref="dropdownMenu"
 				class="dropdown-menu"
+				:style="dropdownMenuStyle"
 			>
 				<div class="dropdown-content">
 					<slot :close="close" />
@@ -37,8 +39,9 @@
 </template>
 
 <script setup lang="ts">
-import {ref} from 'vue'
+import {ref, nextTick, watch, computed} from 'vue'
 import {onClickOutside} from '@vueuse/core'
+import {computePosition, autoPlacement, offset, shift} from '@floating-ui/dom'
 import type {IconProp} from '@fortawesome/fontawesome-svg-core'
 
 import CustomTransition from '@/components/misc/CustomTransition.vue'
@@ -63,19 +66,53 @@ defineSlots<{
 	'default': () => void
 }>()
 
-
 const initialMount = ref(false)
 const open = ref(false)
+const dropdown = ref<HTMLElement>()
+const dropdownMenu = ref<HTMLElement>()
+const dropdownPosition = ref({x: 0, y: 0})
 
 function close() {
 	open.value = false
 }
 
+async function updatePosition() {
+	if (!dropdown.value || !dropdownMenu.value) {
+		return
+	}
+
+	await nextTick()
+
+	const {x, y} = await computePosition(dropdown.value, dropdownMenu.value, {
+		placement: 'bottom-end',
+		middleware: [
+			offset(4),
+			autoPlacement({
+				allowedPlacements: ['bottom-end', 'top-end', 'bottom-start', 'top-start'],
+				padding: 8,
+			}),
+			shift({padding: 8}),
+		],
+	})
+
+	dropdownPosition.value = {x, y}
+}
+
+const dropdownMenuStyle = computed(() => ({
+	left: `${dropdownPosition.value.x}px`,
+	top: `${dropdownPosition.value.y}px`,
+}))
+
 function toggleOpen() {
 	open.value = !open.value
 }
 
-const dropdown = ref()
+watch(open, (isOpen) => {
+	if (isOpen) {
+		updatePosition()
+	}
+})
+
 onClickOutside(dropdown, (e) => {
 	if (!open.value) {
 		return
@@ -93,13 +130,9 @@ onClickOutside(dropdown, (e) => {
 
 .dropdown-menu {
 	min-inline-size: 12rem;
-	padding-block-start: 4px;
-	position: absolute;
-	inset-block-start: 100%;
+	position: fixed;
 	z-index: 20;
 	display: block;
-	inset-inline-start: auto;
-	inset-inline-end: 0;
 }
 
 .dropdown-content {
