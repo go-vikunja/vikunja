@@ -1,5 +1,6 @@
 <template>
 	<CreateEdit
+		v-model:loading="loadingModel"
 		:title="$t('project.edit.header')"
 		primary-icon=""
 		:primary-label="$t('misc.save')"
@@ -84,7 +85,7 @@
 </template>
 
 <script setup lang="ts">
-import {watch, ref} from 'vue'
+import {computed, ref, watch} from 'vue'
 import {useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
@@ -116,6 +117,14 @@ const {t} = useI18n({useScope: 'global'})
 const {project, save: saveProject, isLoading} = useProject(() => props.projectId)
 
 const parentProject = ref<IProject | null>(null)
+const isSaving = ref(false)
+
+const loadingModel = computed({
+	get: () => isSaving.value || isLoading.value,
+	set(value: boolean) {
+		isSaving.value = value
+	},
+})
 watch(
 	() => project.parentProjectId,
 	parentProjectId => {
@@ -129,9 +138,19 @@ watch(
 useTitle(() => project?.title ? t('project.edit.title', {project: project.title}) : '')
 
 async function save() {
-	project.parentProjectId = parentProject.value?.id ?? project.parentProjectId
-	await saveProject()
-	await useBaseStore().handleSetCurrentProject({project})
-	router.back()
+	if (isSaving.value) {
+		return
+	}
+
+	isSaving.value = true
+
+	try {
+		project.parentProjectId = parentProject.value?.id ?? project.parentProjectId
+		await saveProject()
+		await useBaseStore().handleSetCurrentProject({project})
+		router.back()
+	} finally {
+		isSaving.value = false
+	}
 }
 </script>
