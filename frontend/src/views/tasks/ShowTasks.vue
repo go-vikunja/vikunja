@@ -69,7 +69,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watchEffect} from 'vue'
+import {computed, ref, watchEffect, shallowReactive} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
@@ -114,7 +114,7 @@ const {t} = useI18n({useScope: 'global'})
 
 const tasks = ref<ITask[]>([])
 const showNothingToDo = ref<boolean>(false)
-const taskCollectionService = ref(new TaskCollectionService())
+const taskCollectionService = shallowReactive(new TaskCollectionService())
 
 setTimeout(() => showNothingToDo.value = true, 100)
 
@@ -138,7 +138,7 @@ const pageTitle = computed(() => {
 })
 const hasTasks = computed(() => tasks.value && tasks.value.length > 0)
 const userAuthenticated = computed(() => authStore.authenticated)
-const loading = computed(() => taskStore.isLoading || taskCollectionService.value.loading)
+const loading = computed(() => taskStore.isLoading || taskCollectionService.loading)
 
 interface dateStrings {
 	dateFrom: string,

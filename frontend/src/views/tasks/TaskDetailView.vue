@@ -914,7 +914,7 @@ async function saveTask(
 		currentTask.endDate = currentTask.dueDate
 	}
 
-	const updatedTask = await taskStore.update(currentTask) // TODO: markraw ?
+	const updatedTask = await taskStore.update(currentTask)
 	Object.assign(task.value, updatedTask)
 	setActiveFields()
 
