@@ -60,7 +60,6 @@ withDefaults(defineProps<{
 	hasPrimaryAction?: boolean,
 	tertiary?: string,
 	wide?: boolean,
-	loading?: boolean
 }>(), {
 	primaryLabel: '',
 	primaryIcon: 'plus',
@@ -68,7 +67,6 @@ withDefaults(defineProps<{
 	hasPrimaryAction: true,
 	tertiary: '',
 	wide: false,
-	loading: false,
 })
 
 const emit = defineEmits<{
@@ -76,6 +74,8 @@ const emit = defineEmits<{
 	'primary': [event: MouseEvent],
 	'tertiary': [event: MouseEvent]
 }>()
+
+const loading = defineModel<boolean>('loading', {default: false})
 
 function primary(event: MouseEvent) {
 	emit('create', event)

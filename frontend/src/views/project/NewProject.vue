@@ -1,5 +1,6 @@
 <template>
 	<CreateEdit
+		v-model:loading="isLoading"
 		:title="$t('project.create.header')"
 		:primary-disabled="project.title === ''"
 		@create="createNewProject()"
@@ -10,13 +11,13 @@
 				for="projectTitle"
 			>{{ $t('project.title') }}</label>
 			<div
-				:class="{ 'is-loading': projectService.loading }"
+				:class="{ 'is-loading': isCreating }"
 				class="control"
 			>
 				<input
 					v-model="project.title"
 					v-focus
-					:class="{ disabled: projectService.loading }"
+					:class="{ disabled: isCreating }"
 					class="input"
 					:placeholder="$t('project.create.titlePlaceholder')"
 					type="text"
@@ -51,10 +52,9 @@
 </template>
 
 <script setup lang="ts">
-import {ref, reactive, shallowReactive, watch} from 'vue'
+import {computed, reactive, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 
-import ProjectService from '@/services/project'
 import ProjectModel from '@/models/project'
 import CreateEdit from '@/components/misc/CreateEdit.vue'
 import ColorPicker from '@/components/input/ColorPicker.vue'
@@ -75,9 +75,10 @@ useTitle(() => t('project.create.header'))
 
 const showError = ref(false)
 const project = reactive(new ProjectModel())
-const projectService = shallowReactive(new ProjectService())
 const projectStore = useProjectStore()
 const parentProject = ref<IProject | null>(null)
+const isLoading = ref(false)
+const isCreating = computed(() => isLoading.value || projectStore.isLoading.value)
 
 watch(
 	() => props.parentProjectId,
@@ -90,13 +91,24 @@ async function createNewProject() {
 		showError.value = true
 		return
 	}
+
+	if (isLoading.value) {
+		return
+	}
+
 	showError.value = false
+	isLoading.value = true
 
 	if (parentProject.value) {
 		project.parentProjectId = parentProject.value.id
 	}
 
-	await projectStore.createProject(project)
-	success({message: t('project.create.createdSuccess')})
+	try {
+		await projectStore.createProject(project)
+		success({message: t('project.create.createdSuccess')})
+	} catch (error) {
+		isLoading.value = false
+		throw error
+	}
 }
 </script>
