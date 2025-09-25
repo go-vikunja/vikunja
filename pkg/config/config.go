@@ -580,6 +580,18 @@ func InitConfig() {
 		log.Warningf("Failed to set config from environment variables: %s", err.Error())
 	}
 
+	// ───────────────────────────────────────────────────────────────────
+	// Keep SQLite’s database.path in sync with service.rootpath
+	// ───────────────────────────────────────────────────────────────────
+	if DatabaseType.GetString() == "sqlite" {
+		// original default was binary-dir/vikunja.db
+		original := filepath.Join(getBinaryDirLocation(), "vikunja.db")
+		if DatabasePath.GetString() == original {
+			// if the user only overrode service.rootpath, move the DB under rootpath
+			DatabasePath.Set(filepath.Join(ServiceRootpath.GetString(), "vikunja.db"))
+		}
+	}
+
 	readConfigValuesFromFiles()
 
 	if RateLimitStore.GetString() == "keyvalue" {
