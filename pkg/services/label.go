@@ -91,18 +91,25 @@ func (lp *LabelPermissions) ReadAll() (bool, error) {
 	return true, nil
 }
 
-func (ls *LabelService) GetAll(s *xorm.Session, u *user.User) ([]*models.Label, error) {
+func (ls *LabelService) GetAll(s *xorm.Session, u *user.User, search string, page int, perPage int) (interface{}, int, int64, error) {
 	can, err := ls.Can(s, nil, u).ReadAll()
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
 	if !can {
-		return nil, ErrAccessDenied
+		return nil, 0, 0, ErrAccessDenied
 	}
 
-	labels := make([]*models.Label, 0)
-	err = s.Where("created_by_id = ?", u.ID).Find(&labels)
-	return labels, err
+	// Use the same logic as the original model-based approach
+	return models.GetLabelsByTaskIDs(s, &models.LabelByTaskIDsOptions{
+		Search:              []string{search},
+		User:                u,
+		Page:                page,
+		PerPage:             perPage,
+		GetUnusedLabels:     true,
+		GroupByLabelIDsOnly: true,
+		GetForUser:          true,
+	})
 }
 
 func (ls *LabelService) Update(s *xorm.Session, label *models.Label, u *user.User) error {

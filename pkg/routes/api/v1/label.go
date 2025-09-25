@@ -47,10 +47,32 @@ func RegisterLabels(a *echo.Group) {
 
 // getAllLabelsLogic handles retrieving all labels for a user
 func getAllLabelsLogic(s *xorm.Session, u *user.User, c echo.Context) error {
+	// Extract query parameters for search and pagination
+	search := c.QueryParam("s")
+	page, err := strconv.Atoi(c.QueryParam("page"))
+	if err != nil {
+		page = 0
+	}
+	perPage, err := strconv.Atoi(c.QueryParam("per_page"))
+	if err != nil {
+		perPage = 50 // Default items per page
+	}
+
 	labelService := services.NewLabelService(s.Engine())
-	labels, err := labelService.GetAll(s, u)
+	labelsWithTaskID, _, _, err := labelService.GetAll(s, u, search, page, perPage)
 	if err != nil {
 		return err
+	}
+
+	// Convert from []*LabelWithTaskID to []*Label for response
+	labelsSlice, ok := labelsWithTaskID.([]*models.LabelWithTaskID)
+	if !ok {
+		return echo.NewHTTPError(http.StatusInternalServerError, "unexpected type returned from GetAll")
+	}
+
+	labels := make([]*models.Label, len(labelsSlice))
+	for i, labelWithTaskID := range labelsSlice {
+		labels[i] = &labelWithTaskID.Label
 	}
 
 	return c.JSON(http.StatusOK, labels)
