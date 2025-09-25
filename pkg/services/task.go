@@ -993,14 +993,28 @@ func (ts *TaskService) addDetailsToTasks(s *xorm.Session, tasks []*models.Task, 
 		taskMap[t.ID] = t
 	}
 
+	// Use the standard AddDetailsToTasks method
 	return ts.AddDetailsToTasks(s, taskMap, u, nil, nil)
 }
 
 // AddDetailsToTasks adds more info to tasks, like assignees, labels, etc.
 // This is the service layer implementation of what was previously models.AddMoreInfoToTasks.
+// Empty collections are kept as null for standards compliance
 func (ts *TaskService) AddDetailsToTasks(s *xorm.Session, taskMap map[int64]*models.Task, a web.Auth, view *models.ProjectView, expand []models.TaskCollectionExpandable) error {
 	if len(taskMap) == 0 {
 		return nil
+	}
+
+	// Initialize array/map fields for consistent API behavior
+	// Keep empty collections as null for standards compliance
+	for _, task := range taskMap {
+		// Always initialize RelatedTasks map (this is required for the data structure)
+		if task.RelatedTasks == nil {
+			task.RelatedTasks = make(models.RelatedTaskMap)
+		}
+
+		// Note: We don't initialize slice fields as empty slices here.
+		// They stay nil until data is actually loaded, matching original behavior.
 	}
 
 	// Get all users & task ids and put them into the array
@@ -1068,10 +1082,13 @@ func (ts *TaskService) AddDetailsToTasks(s *xorm.Session, taskMap map[int64]*mod
 		}
 
 		// Add the reminders
-		task.Reminders = taskReminders[task.ID]
+		if remindersList := taskReminders[task.ID]; remindersList != nil {
+			task.Reminders = remindersList
+		}
+		// If taskReminders[task.ID] is nil, keep the empty array we initialized earlier
 
-		// Prepare the subtasks
-		task.RelatedTasks = make(models.RelatedTaskMap)
+		// Note: RelatedTasks map is already initialized at the top of the function
+		// We'll populate it later with addRelatedTasksToTasks
 
 		// Build the task identifier from the project identifier and task index
 		if project, exists := projects[task.ProjectID]; exists {
@@ -1114,7 +1131,19 @@ func (ts *TaskService) addAssigneesToTasks(s *xorm.Session, taskIDs []int64, tas
 	for i, a := range taskAssignees {
 		if a != nil {
 			a.Email = "" // Obfuscate the email
-			taskMap[a.TaskID].Assignees = append(taskMap[a.TaskID].Assignees, &taskAssignees[i].User)
+
+			// Check if assignee already exists to avoid duplicates
+			alreadyExists := false
+			for _, existingAssignee := range taskMap[a.TaskID].Assignees {
+				if existingAssignee.ID == taskAssignees[i].User.ID {
+					alreadyExists = true
+					break
+				}
+			}
+
+			if !alreadyExists {
+				taskMap[a.TaskID].Assignees = append(taskMap[a.TaskID].Assignees, &taskAssignees[i].User)
+			}
 		}
 	}
 
@@ -1129,9 +1158,30 @@ func (ts *TaskService) addLabelsToTasks(s *xorm.Session, taskIDs []int64, taskMa
 	if err != nil {
 		return err
 	}
+
+	// Debug: log the number of labels found
+	// fmt.Printf("DEBUG: Found %d labels for %d tasks\n", len(labels), len(taskIDs))
+
 	for i, l := range labels {
 		if l != nil {
-			taskMap[l.TaskID].Labels = append(taskMap[l.TaskID].Labels, &labels[i].Label)
+			// Debug: log each label being processed
+			// fmt.Printf("DEBUG: Processing label %d for task %d\n", l.Label.ID, l.TaskID)
+
+			// Check if this label is already in the task's Labels slice
+			alreadyExists := false
+			if taskMap[l.TaskID].Labels != nil {
+				for _, existingLabel := range taskMap[l.TaskID].Labels {
+					if existingLabel.ID == l.Label.ID {
+						alreadyExists = true
+						break
+					}
+				}
+			}
+
+			if !alreadyExists {
+				taskMap[l.TaskID].Labels = append(taskMap[l.TaskID].Labels, &labels[i].Label)
+				// fmt.Printf("DEBUG: Added label %d to task %d, now has %d labels\n", l.Label.ID, l.TaskID, len(taskMap[l.TaskID].Labels))
+			}
 		}
 	}
 
@@ -1145,7 +1195,18 @@ func (ts *TaskService) addAttachmentsToTasks(s *xorm.Session, taskIDs []int64, t
 	}
 
 	for _, a := range attachments {
-		taskMap[a.TaskID].Attachments = append(taskMap[a.TaskID].Attachments, a)
+		// Check if attachment already exists to avoid duplicates
+		alreadyExists := false
+		for _, existingAttachment := range taskMap[a.TaskID].Attachments {
+			if existingAttachment.ID == a.ID {
+				alreadyExists = true
+				break
+			}
+		}
+
+		if !alreadyExists {
+			taskMap[a.TaskID].Attachments = append(taskMap[a.TaskID].Attachments, a)
+		}
 	}
 
 	return nil
@@ -1233,7 +1294,9 @@ func (ts *TaskService) addRelatedTasksToTasks(s *xorm.Session, taskIDs []int64, 
 		if err != nil {
 			continue
 		}
+		// Clear RelatedTasks map to prevent cycles and match null behavior in JSON
 		otherTask.RelatedTasks = nil
+		// Note: Other slice/map fields stay nil to match original behavior
 		taskMap[rt.TaskID].RelatedTasks[rt.RelationKind] = append(taskMap[rt.TaskID].RelatedTasks[rt.RelationKind], otherTask)
 	}
 

@@ -466,7 +466,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		IsFavorite:  true,
 		Labels: []*models.Label{
 			label4,
-			label4, // Additional label from related task 35
 		},
 		RelatedTasks: map[models.RelationKind][]*models.Task{
 			models.RelationKindSubtask: {
@@ -482,44 +481,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			},
 		},
 		Attachments: []*models.TaskAttachment{
-			{
-				ID:          1,
-				TaskID:      1,
-				FileID:      1,
-				CreatedByID: 1,
-				CreatedBy:   user1,
-				Created:     testCreatedTime,
-				File: &files.File{
-					ID:          1,
-					Name:        "test",
-					Size:        100,
-					Created:     time.Unix(1570998791, 0).In(loc),
-					CreatedByID: 1,
-				},
-			},
-			{
-				ID:          2,
-				TaskID:      1,
-				FileID:      9999,
-				CreatedByID: 1,
-				CreatedBy:   user1,
-				Created:     testCreatedTime,
-			},
-			{
-				ID:          3,
-				TaskID:      1,
-				FileID:      1,
-				CreatedByID: -2,
-				CreatedBy:   linkShareUser2,
-				Created:     testCreatedTime,
-				File: &files.File{
-					ID:          1,
-					Name:        "test",
-					Size:        100,
-					Created:     time.Unix(1570998791, 0).In(loc),
-					CreatedByID: 1,
-				},
-			},
 			{
 				ID:          1,
 				TaskID:      1,
@@ -576,7 +537,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		ProjectID:   1,
 		Labels: []*models.Label{
 			label4,
-			label4, // Additional label from related tasks
 		},
 		RelatedTasks: map[models.RelationKind][]*models.Task{},
 		Reminders: []*models.TaskReminder{
@@ -943,8 +903,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Assignees: []*user.User{
 			user1,
 			user2,
-			user1, // Additional assignees from service layer
-			user2,
 		},
 		RelatedTasks: map[models.RelationKind][]*models.Task{},
 		Created:      time.Unix(1543626724, 0).In(loc),
@@ -998,12 +956,9 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		ProjectID:   21,
 		Assignees: []*user.User{
 			user2,
-			user2, // Additional assignee from service layer
 		},
 		Labels: []*models.Label{
 			label4,
-			label5,
-			label4, // Additional labels from service layer
 			label5,
 		},
 		RelatedTasks: map[models.RelationKind][]*models.Task{

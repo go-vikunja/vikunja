@@ -376,11 +376,10 @@ func getTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts 
 	}
 
 	taskMap := make(map[int64]*Task, len(tasks))
-	for _, t := range tasks {
-		taskMap[t.ID] = t
+	for i, t := range tasks {
+		taskMap[t.ID] = tasks[i] // Use tasks[i] to ensure we get the pointer from the slice
 	}
 
-	err = AddMoreInfoToTasks(s, taskMap, a, view, opts.expand)
 	err = AddMoreInfoToTasks(s, taskMap, a, view, opts.expand)
 	if err != nil {
 		return nil, 0, 0, err

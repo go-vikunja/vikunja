@@ -106,7 +106,17 @@ func (ls *LabelService) GetAll(s *xorm.Session, u *user.User) ([]*models.Label, 
 }
 
 func (ls *LabelService) Update(s *xorm.Session, label *models.Label, u *user.User) error {
-	can, err := ls.Can(s, label, u).Write()
+	// Load the existing label to get the CreatedByID for permission checking
+	existingLabel := &models.Label{ID: label.ID}
+	exists, err := s.Get(existingLabel)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return ErrAccessDenied
+	}
+
+	can, err := ls.Can(s, existingLabel, u).Write()
 	if err != nil {
 		return err
 	}
