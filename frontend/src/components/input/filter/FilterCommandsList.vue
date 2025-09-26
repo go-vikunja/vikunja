@@ -78,6 +78,9 @@ function onKeyDown({event}: { event: KeyboardEvent }) {
 	}
 
 	if (event.key === 'Enter') {
+		if (event.isComposing) {
+			return false
+		}
 		event.preventDefault()
 		event.stopPropagation()
 		enterHandler()
