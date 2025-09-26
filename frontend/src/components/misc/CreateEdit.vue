@@ -9,7 +9,7 @@
 			:shadow="false"
 			:padding="false"
 			class="has-text-start"
-			:loading="loading"
+			:loading="currentLoading"
 			:show-close="true"
 			@close="$router.back()"
 		>
@@ -37,8 +37,9 @@
 						v-if="hasPrimaryAction"
 						variant="primary"
 						:icon="primaryIcon"
-						:disabled="primaryDisabled || loading"
+						:disabled="isBusy"
 						class="mis-2"
+						:loading="currentLoading"
 						@click.prevent.stop="primary"
 					>
 						{{ primaryLabel || $t('misc.create') }}
@@ -52,7 +53,9 @@
 <script setup lang="ts">
 import type {IconProp} from '@fortawesome/fontawesome-svg-core'
 
-withDefaults(defineProps<{
+import {computed, ref, toRef, watch} from 'vue'
+
+const props = withDefaults(defineProps<{
 	title: string,
 	primaryLabel?: string,
 	primaryIcon?: IconProp,
@@ -60,7 +63,7 @@ withDefaults(defineProps<{
 	hasPrimaryAction?: boolean,
 	tertiary?: string,
 	wide?: boolean,
-	loading?: boolean
+	loading?: boolean,
 }>(), {
 	primaryLabel: '',
 	primaryIcon: 'plus',
@@ -68,16 +71,41 @@ withDefaults(defineProps<{
 	hasPrimaryAction: true,
 	tertiary: '',
 	wide: false,
-	loading: false,
 })
 
 const emit = defineEmits<{
 	'create': [event: MouseEvent],
 	'primary': [event: MouseEvent],
-	'tertiary': [event: MouseEvent]
+	'tertiary': [event: MouseEvent],
+	'update:loading': [value: boolean],
 }>()
 
+const loadingProp = toRef(props, 'loading')
+const currentLoading = ref(false)
+
+watch(
+	loadingProp,
+	(value) => {
+		if (value !== undefined) {
+			currentLoading.value = value
+		}
+	},
+	{immediate: true},
+)
+
+const isBusy = computed(() => props.primaryDisabled || currentLoading.value)
+
+function setLoading(value: boolean) {
+	currentLoading.value = value
+	emit('update:loading', value)
+}
+
 function primary(event: MouseEvent) {
+	if (isBusy.value) {
+		return
+	}
+
+	setLoading(true)
 	emit('create', event)
 	emit('primary', event)
 }
