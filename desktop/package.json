@@ -5,7 +5,7 @@
   "main": "main.js",
   "repository": "https://code.vikunja.io/desktop",
   "license": "GPL-3.0-or-later",
-  "packageManager": "pnpm@10.17.0",
+  "packageManager": "pnpm@10.17.1",
   "author": {
     "email": "maintainers@vikunja.io",
     "name": "Vikunja Team"
