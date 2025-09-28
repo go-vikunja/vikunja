@@ -113,14 +113,19 @@ describe('Project View Kanban', () => {
 		cy.get('.kanban .bucket .bucket-header .dropdown.options .dropdown-trigger')
 			.first()
 			.click()
-		cy.get('.kanban .bucket .bucket-header .dropdown.options .dropdown-menu .dropdown-item')
+
+		cy.get('.kanban .bucket .dropdown-item')
 			.contains('Limit: Not Set')
+			.should('be.visible')
 			.click()
-		cy.get('.kanban .bucket .bucket-header .dropdown.options .dropdown-menu .field input.input')
-			.first()
+
+		cy.get('.kanban .bucket .dropdown-menu .field input.input')
+			.should('be.visible')
 			.type('3')
+
 		cy.get('[data-cy="setBucketLimit"]')
 			.first()
+			.should('be.visible')
 			.click()
 
 		cy.get('.kanban .bucket .bucket-header span.limit')
