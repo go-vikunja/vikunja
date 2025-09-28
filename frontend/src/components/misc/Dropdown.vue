@@ -85,6 +85,7 @@ async function updatePosition() {
 
 	const {x, y} = await computePosition(dropdown.value, dropdownMenu.value, {
 		placement: 'bottom-end',
+		strategy: 'absolute',
 		middleware: [
 			offset(4),
 			autoPlacement({
