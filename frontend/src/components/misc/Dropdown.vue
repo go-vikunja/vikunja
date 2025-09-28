@@ -131,7 +131,7 @@ onClickOutside(dropdown, (e) => {
 
 .dropdown-menu {
 	min-inline-size: 12rem;
-	position: fixed;
+	position: absolute;
 	z-index: 20;
 	display: block;
 }
