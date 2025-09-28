@@ -587,7 +587,11 @@
 		"authenticating": "Authenticeren…",
 		"passwordRequired": "Dit gedeelde project vereist een wachtwoord. Voer het hieronder in:",
 		"error": "Er is een fout opgetreden.",
-		"invalidPassword": "Het wachtwoord is ongeldig."
+		"invalidPassword": "Het wachtwoord is ongeldig.",
+		"accessDenied": "Toegang geweigerd. Controleer je machtigingen en probeer opnieuw.",
+		"serverError": "Serverfout opgetreden. Probeer het later nog eens.",
+		"projectLoadError": "Laden van projectinformatie mislukt.",
+		"retry": "Opnieuw"
 	},
 	"navigation": {
 		"overview": "Overzicht",
@@ -812,6 +816,7 @@
 			"updateSuccess": "De taak is succesvol opgeslagen.",
 			"deleteSuccess": "De taak is succesvol verwijderd.",
 			"belongsToProject": "Deze taak hoort bij project '{project}'",
+			"back": "Terug naar project",
 			"due": "Vervalt {at}",
 			"closePopup": "Popup sluiten",
 			"organization": "Organisatie",
