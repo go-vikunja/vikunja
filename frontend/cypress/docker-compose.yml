@@ -1,6 +1,6 @@
 services:
   dex:
-    image: ghcr.io/go-vikunja/dex-testing:main@sha256:5713289406450f9bf1f387a6818c0dc19c330f7eb121185168e2a347fe0758e3
+    image: ghcr.io/go-vikunja/dex-testing:main@sha256:e3749042425121410a6a562395c17413d4bc32bb9c99e03bd0298d92ca3445f0
     ports:
       - 5556:5556
   cypress:
