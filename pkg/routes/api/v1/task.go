@@ -20,6 +20,7 @@ import (
 	"math"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/services"
@@ -76,8 +77,23 @@ func getTaskLogic(s *xorm.Session, u *user.User, c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid task ID").SetInternal(err)
 	}
 
+	// Parse expand parameters from query string
+	expand := []models.TaskCollectionExpandable{}
+	expandParam := c.QueryParam("expand")
+	if expandParam != "" {
+		expandValues := strings.Split(expandParam, ",")
+		for _, expandValue := range expandValues {
+			expandValue = strings.TrimSpace(expandValue)
+			expandable := models.TaskCollectionExpandable(expandValue)
+			if err := expandable.Validate(); err != nil {
+				return echo.NewHTTPError(http.StatusBadRequest, "Invalid expand parameter: "+expandValue).SetInternal(err)
+			}
+			expand = append(expand, expandable)
+		}
+	}
+
 	taskService := services.NewTaskService(s.Engine())
-	task, err := taskService.GetByID(s, taskID, u)
+	task, err := taskService.GetByIDWithExpansion(s, taskID, u, expand)
 	if err != nil {
 		return err
 	}

@@ -737,6 +737,47 @@ func (ts *TaskService) GetByID(s *xorm.Session, taskID int64, u *user.User) (*mo
 	return task, nil
 }
 
+// GetByIDWithExpansion gets a single task by its ID with support for expansion parameters
+func (ts *TaskService) GetByIDWithExpansion(s *xorm.Session, taskID int64, u *user.User, expand []models.TaskCollectionExpandable) (*models.Task, error) {
+	// Use a simple model function to get the raw data
+	task := new(models.Task)
+	has, err := s.ID(taskID).Get(task)
+	if err != nil {
+		return nil, err
+	}
+	if !has {
+		return nil, models.ErrTaskDoesNotExist{ID: taskID}
+	}
+
+	// Permission Check: The TaskService asks the ProjectService for a decision.
+	projectService := NewProjectService(ts.DB)
+	can, err := projectService.HasPermission(s, task.ProjectID, u, models.PermissionRead)
+	if err != nil {
+		return nil, fmt.Errorf("checking project read permission: %w", err)
+	}
+	if !can {
+		return nil, ErrAccessDenied
+	}
+
+	// Add details to the task with expansion support
+	taskMap := map[int64]*models.Task{task.ID: task}
+	err = ts.AddDetailsToTasks(s, taskMap, u, nil, expand)
+	if err != nil {
+		return nil, err
+	}
+
+	// Load subscription data for single task requests (matches original behavior)
+	subscription, err := models.GetSubscriptionForUser(s, models.SubscriptionEntityTask, task.ID, u)
+	if err != nil && !models.IsErrProjectDoesNotExist(err) {
+		return nil, err
+	}
+	if subscription != nil {
+		task.Subscription = &subscription.Subscription
+	}
+
+	return task, nil
+}
+
 // GetAllByProject gets all tasks for a project with pagination and filtering
 func (ts *TaskService) GetAllByProject(s *xorm.Session, projectID int64, u *user.User, page int, perPage int, search string) ([]*models.Task, int, int64, error) {
 	// Permission Check: Use ProjectService for proper inter-service communication
@@ -1103,6 +1144,19 @@ func (ts *TaskService) AddDetailsToTasks(s *xorm.Session, taskMap map[int64]*mod
 		if taskFavorites != nil {
 			task.IsFavorite = taskFavorites[task.ID]
 		}
+	}
+
+	// Handle expansion parameters using the original models.AddMoreInfoToTasks function
+	// This ensures complete compatibility with the original system
+	if expand != nil && len(expand) > 0 {
+		// The models.AddMoreInfoToTasks function handles all expansion logic
+		// We just need to call it with our current taskMap and parameters
+		err = models.AddMoreInfoToTasks(s, taskMap, a, view, expand)
+		if err != nil {
+			return err
+		}
+		// Return early since AddMoreInfoToTasks handles everything including related tasks
+		return nil
 	}
 
 	// Add related tasks
