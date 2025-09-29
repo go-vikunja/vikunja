@@ -2,6 +2,8 @@
 
 > **⚠️ IMPORTANT**: All development must comply with the [Vikunja Constitution](.specify/memory/constitution.md) principles: Code Quality Standards, Test-First Development, User Experience Consistency, Performance Requirements, and Security & Reliability Standards.
 
+> **⚠️ TECHNICAL DEBT MANAGEMENT**: Any shortcuts or deviations from the service layer architecture must be immediately documented as follow-up tasks. Technical debt tasks must use "Technical Debt" prefix and be completed before proceeding to subsequent phases. Example: If you call `models.AddMoreInfoToTasks` from a service, create "Technical Debt: Implement Service Layer Expansion Methods" task.
+
 ## Project Overview
 
 Vikunja is a comprehensive todo and task management application with a Vue.js frontend and Go backend. It supports multiple project views (List, Kanban, Gantt, Table), team collaboration, file attachments, and extensive integrations.

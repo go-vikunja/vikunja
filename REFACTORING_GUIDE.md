@@ -23,6 +23,15 @@ Once your plan is approved, you must use it as your active checklist. The follow
 2. **Update on Change:** If you encounter a problem, you must first state the problem and then **use your tool to update the plan** before proceeding.  
 3. **Final Report:** Before submitting your work, you must provide a final summary of the plan, marking each step as complete (✅).
 
+### **Technical Debt Management**
+
+Any shortcut or deviation from the service layer architecture must be immediately documented as technical debt:
+
+1. **Document Immediately:** Create follow-up tasks with clear descriptions of the shortcuts taken
+2. **Label Technical Debt:** Use "Technical Debt" prefix in task titles for easy identification  
+3. **Block Next Phase:** Technical debt tasks must be completed before moving to subsequent phases
+4. **Example:** If you call `models.AddMoreInfoToTasks` from a service instead of implementing proper service methods, create tasks like "Technical Debt: Implement Service Layer Expansion Methods"
+
 ### **Running Tests: The Pre-Flight Checklist**
 
 You must follow these steps **every time** you need to run tests to avoid common environment failures.
