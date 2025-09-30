@@ -63,6 +63,8 @@ func initFixtures(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	// File fixtures
 	InitTestFileFixtures(t)
+	err := config.SetMaxFileSizeMBytesFromString("20MB")
+	require.NoError(t, err)
 }
 
 // InitTestFileFixtures initializes file fixtures
