@@ -458,7 +458,6 @@ func GetTasksByUIDs(s *xorm.Session, uids []string, a web.Auth) (tasks []*Task, 
 	}
 
 	err = AddMoreInfoToTasks(s, taskMap, a, nil, nil)
-	err = AddMoreInfoToTasks(s, taskMap, a, nil, nil)
 	return
 }
 

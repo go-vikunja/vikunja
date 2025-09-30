@@ -525,7 +525,9 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	}
 	var task1WithReaction = &models.Task{}
 	*task1WithReaction = *task1
-	task1WithReaction.Reactions = models.ReactionMap(nil)
+	task1WithReaction.Reactions = models.ReactionMap{
+		"👋": []*user.User{user1},
+	}
 	task2 := &models.Task{
 		ID:          2,
 		Title:       "task #2 done",

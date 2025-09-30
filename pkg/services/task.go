@@ -670,15 +670,21 @@ func convertSortParamsToOrderStrings(sortParams []*sortParam) []string {
 
 // TaskService represents a service for managing tasks.
 type TaskService struct {
-	DB              *xorm.Engine
-	FavoriteService *FavoriteService
+	DB               *xorm.Engine
+	FavoriteService  *FavoriteService
+	KanbanService    *KanbanService
+	ReactionsService *ReactionsService
+	CommentService   *CommentService
 }
 
 // NewTaskService creates a new TaskService.
 func NewTaskService(db *xorm.Engine) *TaskService {
 	return &TaskService{
-		DB:              db,
-		FavoriteService: NewFavoriteService(db),
+		DB:               db,
+		FavoriteService:  NewFavoriteService(db),
+		KanbanService:    NewKanbanService(db),
+		ReactionsService: NewReactionsService(db),
+		CommentService:   NewCommentService(db),
 	}
 }
 
@@ -1146,17 +1152,27 @@ func (ts *TaskService) AddDetailsToTasks(s *xorm.Session, taskMap map[int64]*mod
 		}
 	}
 
-	// Handle expansion parameters using the original models.AddMoreInfoToTasks function
-	// This ensures complete compatibility with the original system
+	// Handle expansion parameters using proper service layer methods
 	if expand != nil && len(expand) > 0 {
-		// The models.AddMoreInfoToTasks function handles all expansion logic
-		// We just need to call it with our current taskMap and parameters
-		err = models.AddMoreInfoToTasks(s, taskMap, a, view, expand)
-		if err != nil {
-			return err
+		for _, expandable := range expand {
+			switch expandable {
+			case models.TaskCollectionExpandBuckets:
+				err = ts.addBucketsToTasks(s, a, taskIDs, taskMap)
+				if err != nil {
+					return err
+				}
+			case models.TaskCollectionExpandReactions:
+				err = ts.addReactionsToTasks(s, taskIDs, taskMap)
+				if err != nil {
+					return err
+				}
+			case models.TaskCollectionExpandComments:
+				err = ts.addCommentsToTasks(s, taskIDs, taskMap)
+				if err != nil {
+					return err
+				}
+			}
 		}
-		// Return early since AddMoreInfoToTasks handles everything including related tasks
-		return nil
 	}
 
 	// Add related tasks
@@ -1638,4 +1654,36 @@ func (ts *TaskService) applySortingToQuery(query *xorm.Session, sortParams []*so
 		}
 		query = query.OrderBy(orderBy)
 	}
+}
+
+// addBucketsToTasks adds bucket information to tasks using the KanbanService
+func (ts *TaskService) addBucketsToTasks(s *xorm.Session, a web.Auth, taskIDs []int64, taskMap map[int64]*models.Task) error {
+	if ts.KanbanService == nil {
+		return nil // Skip if KanbanService not available
+	}
+
+	u, err := models.GetUserOrLinkShareUser(s, a)
+	if err != nil {
+		return err
+	}
+
+	return ts.KanbanService.AddBucketsToTasks(s, taskIDs, taskMap, u)
+}
+
+// addReactionsToTasks adds reaction data to tasks using the ReactionsService
+func (ts *TaskService) addReactionsToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*models.Task) error {
+	if ts.ReactionsService == nil {
+		return nil // Skip if ReactionsService not available
+	}
+
+	return ts.ReactionsService.AddReactionsToTasks(s, taskIDs, taskMap)
+}
+
+// addCommentsToTasks adds comment data to tasks using the CommentService
+func (ts *TaskService) addCommentsToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*models.Task) error {
+	if ts.CommentService == nil {
+		return nil // Skip if CommentService not available
+	}
+
+	return ts.CommentService.AddCommentsToTasks(s, taskIDs, taskMap)
 }

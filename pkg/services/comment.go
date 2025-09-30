@@ -478,3 +478,31 @@ func InitCommentService() {
 		return NewCommentService(s.Engine()).GetAllForTask(s, taskID, u, search, page, perPage)
 	}
 }
+
+// AddCommentsToTasks adds comments to the provided task map for the given task IDs
+func (cs *CommentService) AddCommentsToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*models.Task) error {
+	if len(taskIDs) == 0 {
+		return nil
+	}
+
+	var comments []*models.TaskComment
+	err := s.In("task_id", taskIDs).Find(&comments)
+	if err != nil {
+		return err
+	}
+
+	// Group comments by task ID
+	commentMap := make(map[int64][]*models.TaskComment)
+	for _, comment := range comments {
+		commentMap[comment.TaskID] = append(commentMap[comment.TaskID], comment)
+	}
+
+	// Add comments to each task
+	for taskID, task := range taskMap {
+		if comments, exists := commentMap[taskID]; exists {
+			task.Comments = comments
+		}
+	}
+
+	return nil
+}
