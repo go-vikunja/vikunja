@@ -24,8 +24,8 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, onMounted, watch} from 'vue'
-import {useRoute, useRouter} from 'vue-router'
+import {computed, watch} from 'vue'
+import {useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import isTouchDevice from 'is-touch-device'
 
@@ -55,7 +55,6 @@ import {success} from '@/message'
 const authStore = useAuthStore()
 const baseStore = useBaseStore()
 
-const router = useRouter()
 const route = useRoute()
 
 useBodyClass('is-touch', isTouchDevice())
