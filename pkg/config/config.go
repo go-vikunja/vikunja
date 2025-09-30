@@ -626,7 +626,7 @@ func InitConfig() {
 	publicURL := strings.TrimSuffix(ServicePublicURL.GetString(), "/")
 	CorsOrigins.Set(append(CorsOrigins.GetStringSlice(), publicURL))
 
-	SetMaxFileSizeMBytesFromString(FilesMaxSize.GetString())
+	err = SetMaxFileSizeMBytesFromString(FilesMaxSize.GetString())
 	if err != nil {
 		log.Fatalf("Could not parse files.maxsize: %s", err)
 	}
@@ -653,5 +653,8 @@ func SetMaxFileSizeMBytesFromString(size string) error {
 }
 
 func GetMaxFileSizeInMBytes() uint64 {
+	if maxFileSizeInBytes == 0 {
+		return 20
+	}
 	return maxFileSizeInBytes
 }

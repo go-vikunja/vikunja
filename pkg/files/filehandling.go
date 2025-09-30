@@ -36,7 +36,6 @@ var fs afero.Fs
 var afs *afero.Afero
 
 func setDefaultConfig() {
-	config.SetMaxFileSizeMBytesFromString("32MB")
 	if !strings.HasPrefix(config.FilesBasePath.GetString(), "/") {
 		config.FilesBasePath.Set(filepath.Join(
 			config.ServiceRootpath.GetString(),
@@ -64,6 +63,8 @@ func initFixtures(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	// File fixtures
 	InitTestFileFixtures(t)
+	err := config.SetMaxFileSizeMBytesFromString("20MB")
+	require.NoError(t, err)
 }
 
 // InitTestFileFixtures initializes file fixtures
