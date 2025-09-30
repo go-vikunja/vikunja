@@ -626,13 +626,10 @@ func InitConfig() {
 	publicURL := strings.TrimSuffix(ServicePublicURL.GetString(), "/")
 	CorsOrigins.Set(append(CorsOrigins.GetStringSlice(), publicURL))
 
-	var maxSize datasize.ByteSize
-	err = maxSize.UnmarshalText([]byte(FilesMaxSize.GetString()))
+	SetMaxFileSizeMBytesFromString(FilesMaxSize.GetString())
 	if err != nil {
 		log.Fatalf("Could not parse files.maxsize: %s", err)
 	}
-
-	maxFileSizeInBytes = uint64(maxSize.MBytes())
 }
 
 func random(length int) (string, error) {
@@ -642,6 +639,17 @@ func random(length int) (string, error) {
 	}
 
 	return fmt.Sprintf("%X", b), nil
+}
+
+func SetMaxFileSizeMBytesFromString(size string) error {
+	var maxSize datasize.ByteSize
+	err := maxSize.UnmarshalText([]byte(size))
+	if err != nil {
+		return err
+	}
+
+	maxFileSizeInBytes = uint64(maxSize.MBytes())
+	return nil
 }
 
 func GetMaxFileSizeInMBytes() uint64 {
