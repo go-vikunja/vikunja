@@ -53,12 +53,15 @@ package routes
 
 import (
 	"errors"
+	"fmt"
 	"log/slog"
+	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
@@ -79,6 +82,7 @@ import (
 	"code.vikunja.io/api/pkg/version"
 	"code.vikunja.io/api/pkg/web/handler"
 
+	"github.com/c2h5oh/datasize"
 	"github.com/getsentry/sentry-go"
 	sentryecho "github.com/getsentry/sentry-go/echo"
 	"github.com/labstack/echo/v4"
@@ -135,6 +139,32 @@ func NewEcho() *echo.Echo {
 	// Validation
 	e.Validator = &CustomValidator{}
 
+	// Configure body limit based on file max size
+	var maxSize datasize.ByteSize
+	err := maxSize.UnmarshalText([]byte(config.FilesMaxSize.GetString()))
+	if err != nil {
+		log.Warningf("Failed to parse files.maxsize, using default 20MB body limit: %s", err)
+		maxSize = 20 * datasize.MB
+	}
+
+	// Set body limit to allow file uploads up to the configured size
+	// Add some overhead for multipart form data (headers, boundaries, etc.)
+	overhead := uint64(2 * datasize.MB.Bytes())
+	bodyLimitBytes := maxSize.Bytes() + overhead // Add 2MB overhead
+	e.Use(middleware.BodyLimit(fmt.Sprintf("%d", bodyLimitBytes)))
+
+	// Set up custom error handler for body limit exceeded when Sentry is not enabled
+	if !config.SentryEnabled.GetBool() {
+		e.HTTPErrorHandler = func(err error, c echo.Context) {
+			// Convert HTTP 413 errors to custom ErrFileIsTooLarge error
+			var herr *echo.HTTPError
+			if errors.As(err, &herr) && herr.Code == http.StatusRequestEntityTooLarge {
+				err = handler.HandleHTTPError(files.ErrFileIsTooLarge{})
+			}
+			e.DefaultHTTPErrorHandler(err, c)
+		}
+	}
+
 	return e
 }
 
@@ -157,8 +187,13 @@ func setupSentry(e *echo.Echo) {
 	}))
 
 	e.HTTPErrorHandler = func(err error, c echo.Context) {
-		// Only capture errors not already handled by echo
+		// Convert HTTP 413 errors to custom ErrFileIsTooLarge error
 		var herr *echo.HTTPError
+		if errors.As(err, &herr) && herr.Code == http.StatusRequestEntityTooLarge {
+			err = handler.HandleHTTPError(files.ErrFileIsTooLarge{})
+		}
+
+		// Only capture errors not already handled by echo
 		if errors.As(err, &herr) && herr.Code > 499 {
 			var errToReport = err
 			if herr.Internal == nil {
@@ -177,6 +212,7 @@ func setupSentry(e *echo.Echo) {
 			}
 			log.Debugf("Error '%s' sent to sentry", err.Error())
 		}
+
 		e.DefaultHTTPErrorHandler(err, c)
 	}
 }
