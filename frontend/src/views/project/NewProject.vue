@@ -1,5 +1,6 @@
 <template>
 	<CreateEdit
+		v-model:loading="isSubmitting"
 		:title="$t('project.create.header')"
 		:primary-disabled="project.title === ''"
 		@create="createNewProject()"
@@ -78,6 +79,7 @@ const project = reactive(new ProjectModel())
 const projectService = shallowReactive(new ProjectService())
 const projectStore = useProjectStore()
 const parentProject = ref<IProject | null>(null)
+const isSubmitting = ref(false)
 
 watch(
 	() => props.parentProjectId,
@@ -92,11 +94,21 @@ async function createNewProject() {
 	}
 	showError.value = false
 
+	if (isSubmitting.value) {
+		return
+	}
+
+	isSubmitting.value = true
+
 	if (parentProject.value) {
 		project.parentProjectId = parentProject.value.id
 	}
 
-	await projectStore.createProject(project)
-	success({message: t('project.create.createdSuccess')})
+	try {
+		await projectStore.createProject(project)
+		success({message: t('project.create.createdSuccess')})
+	} finally {
+		isSubmitting.value = false
+	}
 }
 </script>
