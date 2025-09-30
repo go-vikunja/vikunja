@@ -27,6 +27,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/modules/auth"
+	"code.vikunja.io/api/pkg/routes"
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
@@ -62,14 +63,21 @@ func TestTaskAttachmentUploadSize(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Set config BEFORE creating Echo instance
+			// Setup test environment first (this calls InitDefaultConfig)
+			_, err := setupTestEnv()
+			require.NoError(t, err)
+
+			// Now set the config AFTER setupTestEnv
 			oldMaxSize := config.FilesMaxSize.GetString()
 			config.FilesMaxSize.Set(tt.configMaxSize)
 			defer config.FilesMaxSize.Set(oldMaxSize)
 
-			// Setup Echo instance with updated config
-			e, err := setupTestEnv()
-			require.NoError(t, err)
+			// Re-initialize config to update maxFileSizeInBytes
+			config.InitConfig()
+
+			// Create Echo instance with the updated config
+			e := routes.NewEcho()
+			routes.RegisterRoutes(e)
 
 			// Initialize test file fixtures
 			files.InitTestFileFixtures(t)
