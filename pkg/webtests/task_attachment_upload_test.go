@@ -25,7 +25,6 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/routes"
 
@@ -78,9 +77,6 @@ func TestTaskAttachmentUploadSize(t *testing.T) {
 			// Create Echo instance with the updated config
 			e := routes.NewEcho()
 			routes.RegisterRoutes(e)
-
-			// Initialize test file fixtures
-			files.InitTestFileFixtures(t)
 
 			// Create multipart form data
 			body := &bytes.Buffer{}
