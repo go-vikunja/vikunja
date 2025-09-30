@@ -241,12 +241,14 @@ func Type() schemas.DBType {
 }
 
 func GetDialect() string {
-	dialect := config.DatabaseType.GetString()
-	if dialect == "sqlite" {
-		dialect = builder.SQLITE
+	switch config.DatabaseType.GetString() {
+	case "mysql":
+		return builder.MYSQL
+	case "postgres":
+		return builder.POSTGRES
+	default:
+		return builder.SQLITE
 	}
-
-	return dialect
 }
 
 func checkParadeDB(engine *xorm.Engine) {
