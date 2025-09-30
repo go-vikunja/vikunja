@@ -408,7 +408,18 @@ export async function getAuthForRoute(to: RouteLocation, authStore) {
 		return {name: 'user.login'}
 	}
 
-	// Check if the route the user wants to go to is a route which needs authentication. We use this to 
+	// Check if email confirmation token is in query params
+	const emailConfirmToken = to.query.userEmailConfirm as string | undefined
+	if (emailConfirmToken) {
+		// Save token to localStorage before redirecting
+		localStorage.setItem('emailConfirmToken', emailConfirmToken)
+		// Redirect to login page where it will be processed
+		if (to.name !== 'user.login') {
+			return {name: 'user.login'}
+		}
+	}
+
+	// Check if the route the user wants to go to is a route which needs authentication. We use this to
 	// redirect the user after successful login.
 	const isValidUserAppRoute = ![
 		'user.login',
@@ -429,7 +440,7 @@ export async function getAuthForRoute(to: RouteLocation, authStore) {
 	}
 	
 	if(localStorage.getItem('emailConfirmToken') !== null && to.name !== 'user.login') {
-		return {name: 'user.login'}
+		return {name: 'user.login', query: to.query}
 	}
 }
 
