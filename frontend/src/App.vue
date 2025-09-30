@@ -24,7 +24,7 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, watch} from 'vue'
+import {computed, onMounted, watch} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import isTouchDevice from 'is-touch-device'
@@ -75,17 +75,6 @@ watch(accountDeletionConfirm, async (accountDeletionConfirm) => {
 	await accountDeletionService.confirm(accountDeletionConfirm)
 	success({message: t('user.deletion.confirmSuccess')})
 	authStore.refreshUserInfo()
-}, { immediate: true })
-
-// setup email verification redirect
-const userEmailConfirm = computed(() => route.query?.userEmailConfirm as (string | undefined))
-watch(userEmailConfirm, (userEmailConfirm) => {
-	if (userEmailConfirm === undefined) {
-		return
-	}
-
-	localStorage.setItem('emailConfirmToken', userEmailConfirm)
-	router.push({name: 'user.login'})
 }, { immediate: true })
 
 setLanguage(authStore.settings.language)
