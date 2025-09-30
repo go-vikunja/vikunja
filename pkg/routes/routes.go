@@ -82,7 +82,6 @@ import (
 	"code.vikunja.io/api/pkg/version"
 	"code.vikunja.io/api/pkg/web/handler"
 
-	"github.com/c2h5oh/datasize"
 	"github.com/getsentry/sentry-go"
 	sentryecho "github.com/getsentry/sentry-go/echo"
 	"github.com/labstack/echo/v4"
@@ -139,19 +138,9 @@ func NewEcho() *echo.Echo {
 	// Validation
 	e.Validator = &CustomValidator{}
 
-	// Configure body limit based on file max size
-	var maxSize datasize.ByteSize
-	err := maxSize.UnmarshalText([]byte(config.FilesMaxSize.GetString()))
-	if err != nil {
-		log.Warningf("Failed to parse files.maxsize, using default 20MB body limit: %s", err)
-		maxSize = 20 * datasize.MB
-	}
-
 	// Set body limit to allow file uploads up to the configured size
 	// Add some overhead for multipart form data (headers, boundaries, etc.)
-	overhead := uint64(2 * datasize.MB.Bytes())
-	bodyLimitBytes := maxSize.Bytes() + overhead // Add 2MB overhead
-	e.Use(middleware.BodyLimit(fmt.Sprintf("%d", bodyLimitBytes)))
+	e.Use(middleware.BodyLimit(fmt.Sprintf("%dM", config.GetMaxFileSizeInMBytes()+2)))
 
 	// Set up custom error handler for body limit exceeded when Sentry is not enabled
 	if !config.SentryEnabled.GetBool() {
