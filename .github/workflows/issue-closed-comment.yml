@@ -55,7 +55,7 @@ jobs:
           script: |
             const issueNumber = context.payload.issue.number;
             const commitSha = '${{ steps.check-commit.outputs.commit_sha }}';
-            const commitMessage = '${{ steps.check-commit.outputs.commit_message }}';
+            const commitMessage = `${{ steps.check-commit.outputs.commit_message }}`;
             const commitUrl = '${{ steps.check-commit.outputs.commit_url }}';
 
             try {
