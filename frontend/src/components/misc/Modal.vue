@@ -102,6 +102,9 @@ watchEffect(() => {
 
 function onKeydown(e: KeyboardEvent) {
 	if (e.key === 'Escape') {
+		if (e.isComposing) {
+			return
+		}
  		emit('close')
 	}
 }

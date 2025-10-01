@@ -64,6 +64,9 @@ export default {
 			}
 
 			if (event.key === 'Enter') {
+				if (event.isComposing) {
+					return false
+				}
 				this.enterHandler()
 				return true
 			}
