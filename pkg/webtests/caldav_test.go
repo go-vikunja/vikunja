@@ -44,7 +44,6 @@ func TestCaldav(t *testing.T) {
 	t.Run("Import VTODO", func(t *testing.T) {
 		const vtodo = `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:List 36 for Caldav tests
 PRODID:-//Vikunja Todo App//EN
@@ -87,7 +86,6 @@ END:VCALENDAR`
 func TestCaldavSubtasks(t *testing.T) {
 	const vtodoHeader = `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:Project 36 for Caldav tests
 PRODID:-//Vikunja Todo App//EN
@@ -253,7 +251,6 @@ func TestCaldavSubtasksDifferentLists(t *testing.T) {
 	t.Run("Import Parent Task & Child Task Different Lists", func(t *testing.T) {
 		const vtodoParentTask = `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:Project 36 for Caldav tests
 PRODID:-//Vikunja Todo App//EN
@@ -268,7 +265,6 @@ END:VCALENDAR`
 
 		const vtodoChildTask = `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:Project 38 for Caldav tests
 PRODID:-//Vikunja Todo App//EN

@@ -2,6 +2,7 @@ import {createFakeUserAndLogin} from '../../support/authenticateUser'
 import {ProjectFactory} from '../../factories/project'
 import {TaskFactory} from '../../factories/task'
 import {ProjectViewFactory} from '../../factories/project_view'
+import {TaskRelationFactory} from '../../factories/task_relation'
 
 function createViews(projectId: number, projectViewId: number) {
         return ProjectViewFactory.create(1, {
@@ -20,10 +21,11 @@ describe('Subtask duplicate handling', () => {
         let parentB
         let subtask
 
-        beforeEach(() => {
-                ProjectFactory.truncate()
-                ProjectViewFactory.truncate()
-                TaskFactory.truncate()
+	beforeEach(() => {
+		ProjectFactory.truncate()
+		ProjectViewFactory.truncate()
+		TaskFactory.truncate()
+		TaskRelationFactory.truncate()
 
                 projectA = ProjectFactory.create(1, {id: 1, title: 'Project A'})[0]
                 createViews(projectA.id, 1)

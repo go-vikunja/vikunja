@@ -17,9 +17,7 @@
 package routes
 
 import (
-	"strings"
-
-	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 
 	"github.com/asaskevich/govalidator"
@@ -36,13 +34,13 @@ func init() {
 	// Custom validator for database TEXT fields that adapts to the database being used
 	govalidator.TagMap["dbtext"] = func(str string) bool {
 		// Get the current database dialect
-		dialect := strings.ToLower(config.DatabaseType.GetString())
+		dialect := db.GetDialect()
 
 		// Default limit for MySQL and unknown databases (65KB safely under TEXT limit)
 		maxLength := 65000
 
 		// For databases that support larger text fields
-		if dialect == "postgres" || dialect == "sqlite" || dialect == "sqlite3" {
+		if dialect == "postgres" || dialect == "sqlite3" {
 			maxLength = 1048576 // ~1MB limit for PostgreSQL and SQLite
 		}
 

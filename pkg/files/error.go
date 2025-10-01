@@ -16,7 +16,12 @@
 
 package files
 
-import "fmt"
+import (
+	"fmt"
+	"net/http"
+
+	"code.vikunja.io/api/pkg/web"
+)
 
 // ErrFileDoesNotExist defines an error where a file does not exist in the db
 type ErrFileDoesNotExist struct {
@@ -48,6 +53,18 @@ func (err ErrFileIsTooLarge) Error() string {
 func IsErrFileIsTooLarge(err error) bool {
 	_, ok := err.(ErrFileIsTooLarge)
 	return ok
+}
+
+// ErrCodeFileIsTooLarge holds the unique world-error code of this error
+const ErrCodeFileIsTooLarge = 4013
+
+// HTTPError holds the http error description
+func (err ErrFileIsTooLarge) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusRequestEntityTooLarge,
+		Code:     ErrCodeFileIsTooLarge,
+		Message:  "The uploaded file exceeds the maximum configured file size",
+	}
 }
 
 // ErrFileIsNotUnsplashFile defines an error where a file is not downloaded from unsplash.

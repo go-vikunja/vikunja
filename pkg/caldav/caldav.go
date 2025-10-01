@@ -126,11 +126,10 @@ func getRruleFromInterval(interval int64) (freq string, newInterval int64) {
 	}
 }
 
-// ParseTodos returns a caldav vcalendar string with todos
+// ParseTodos returns a caldav vcalendar string with todos.
 func ParseTodos(config *Config, todos []*Todo) (caldavtodos string) {
 	caldavtodos = `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:` + config.Name + `
 PRODID:-//` + config.ProdID + `//EN` + getCaldavColor(config.Color)

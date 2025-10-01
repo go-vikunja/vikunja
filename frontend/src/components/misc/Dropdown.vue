@@ -85,6 +85,7 @@ async function updatePosition() {
 
 	const {x, y} = await computePosition(dropdown.value, dropdownMenu.value, {
 		placement: 'bottom-end',
+		strategy: 'absolute',
 		middleware: [
 			offset(4),
 			autoPlacement({
@@ -130,7 +131,7 @@ onClickOutside(dropdown, (e) => {
 
 .dropdown-menu {
 	min-inline-size: 12rem;
-	position: fixed;
+	position: absolute;
 	z-index: 20;
 	display: block;
 }

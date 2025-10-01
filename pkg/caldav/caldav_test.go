@@ -57,7 +57,6 @@ Dolor sit amet`,
 			},
 			wantCaldavtasks: `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:test
 PRODID:-//RandomProdID which is not random//EN
@@ -97,7 +96,6 @@ END:VCALENDAR`,
 			},
 			wantCaldavtasks: `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:test
 PRODID:-//RandomProdID which is not random//EN
@@ -131,7 +129,6 @@ END:VCALENDAR`,
 			},
 			wantCaldavtasks: `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:test
 PRODID:-//RandomProdID which is not random//EN
@@ -165,7 +162,6 @@ END:VCALENDAR`,
 			},
 			wantCaldavtasks: `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:test
 PRODID:-//RandomProdID which is not random//EN
@@ -201,7 +197,6 @@ END:VCALENDAR`,
 			},
 			wantCaldavtasks: `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:test
 PRODID:-//RandomProdID which is not random//EN
@@ -236,7 +231,6 @@ END:VCALENDAR`,
 			},
 			wantCaldavtasks: `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:test
 PRODID:-//RandomProdID which is not random//EN
@@ -295,7 +289,6 @@ END:VCALENDAR`,
 			},
 			wantCaldavtasks: `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:test
 PRODID:-//RandomProdID which is not random//EN
@@ -360,7 +353,6 @@ END:VCALENDAR`,
 			},
 			wantCaldavtasks: `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:test
 PRODID:-//RandomProdID which is not random//EN
@@ -380,6 +372,7 @@ END:VCALENDAR`,
 		t.Run(tt.name, func(t *testing.T) {
 			gotCaldavtasks := ParseTodos(tt.args.config, tt.args.todos)
 			assert.Equal(t, tt.wantCaldavtasks, gotCaldavtasks)
+			assert.NotContains(t, gotCaldavtasks, "METHOD:")
 		})
 	}
 }

@@ -9,7 +9,7 @@
 		"welcomeDay": "こんにちは、{username}さん",
 		"welcomeEvening": "こんばんは、{username}さん",
 		"lastViewed": "最近の表示",
-		"addToHomeScreen": "ホーム画面に追加することで、よりすばやくアクセスでき操作性が向上します。",
+		"addToHomeScreen": "ホーム画面に追加すると、すぐにアクセスできて使いやすくなります。",
 		"goToOverview": "概要に移動",
 		"project": {
 			"importText": "他のサービスからVikunjaにプロジェクトやタスクをインポートします:",
@@ -162,7 +162,7 @@
 				"openid": "プロフィール画像はログインプロバイダー ({provider}) から自動同期されます。変更するにはログインプロバイダーから行ってください。"
 			},
 			"quickAddMagic": {
-				"title": "クイック追加マジック",
+				"title": "クイック追加",
 				"disabled": "無効",
 				"todoist": "Todoist",
 				"vikunja": "Vikunja"
@@ -195,7 +195,7 @@
 				"delete": {
 					"header": "トークンの削除",
 					"text1": "トークン \"{token}\" を削除してよろしいですか？",
-					"text2": "これにより、このトークンを使用しているアプリケーションやインテグレーションへのアクセスが取り消されます。この操作はもとに戻せません。"
+					"text2": "このトークンを使用して連携しているすべてのアプリケーションのアクセス権が失われます。この操作は元に戻せません。"
 				},
 				"attributes": {
 					"title": "トークン名",
@@ -207,7 +207,7 @@
 		},
 		"deletion": {
 			"title": "Vikunjaアカウントの削除",
-			"text1": "アカウントの削除は永久的なものであり、元に戻すことはできません。あなたのプロジェクト、タスク、それらに関連するすべてのものを削除します。",
+			"text1": "アカウント削除は恒久的なものであり、元に戻すことはできません。あなたのプロジェクト、タスク、それらに関連するすべてを削除します。",
 			"text2": "続行するにはパスワードを入力してください。詳しい案内の記載したメールを送信します。",
 			"text3": "続行するには以下のボタンを押してください。詳しい案内を記載したメールを送信します。",
 			"confirm": "アカウントの削除",
@@ -299,7 +299,7 @@
 			"identifier": "プロジェクトID",
 			"identifierPlaceholder": "プロジェクトIDを入力…",
 			"description": "説明",
-			"descriptionPlaceholder": "このプロジェクトに関する説明を記入します。'/' でオプションを表示…",
+			"descriptionPlaceholder": "このプロジェクトに関する説明を記入します。/ でオプションを表示…",
 			"color": "色",
 			"success": "プロジェクトは正常に更新されました。"
 		},
@@ -463,7 +463,7 @@
 			"title": "絞り込み条件名",
 			"titlePlaceholder": "絞り込み条件名を入力…",
 			"description": "説明",
-			"descriptionPlaceholder": "絞り込み条件に関する説明を記入します。'/' でオプションを表示…",
+			"descriptionPlaceholder": "絞り込み条件に関する説明を記入します。/ でオプションを表示…",
 			"includeNulls": "値が設定されていないタスクを含める",
 			"requireAll": "すべての条件に一致するタスクのみ表示",
 			"showDoneTasks": "完了したタスクを表示",
@@ -491,12 +491,12 @@
 			"success": "絞り込み条件は正常に保存されました。"
 		},
 		"query": {
-			"title": "クエリ",
-			"placeholder": "検索クエリまたは絞り込み条件を入力…",
+			"title": "検索条件",
+			"placeholder": "検索条件・絞り込み条件を入力…",
 			"help": {
-				"intro": "タスクを絞り込むのにSQLのようなクエリを使用できます。使用できるフィールドは次のとおりです:",
+				"intro": "SQLのような式を使ってタスクを絞り込むことができます。使用できる項目は以下のとおり:",
 				"link": "これはどのように動作しますか？",
-				"canUseDatemath": "日付式を使用して相対日付を設定できます。詳細はクエリ内の日付値をクリックしてください。",
+				"canUseDatemath": "日付計算を使用して相対日付検索も可能です。絞り込み条件内の日付をクリックすると日付計算の詳細を確認できます。",
 				"fields": {
 					"done": "タスクが完了しているかどうか",
 					"priority": "タスクの優先度 (1-5)",
@@ -513,7 +513,7 @@
 					"updated": "タスクの更新日時"
 				},
 				"operators": {
-					"intro": "絞り込みに使用できる演算子は次のとおりです:",
+					"intro": "絞り込み条件に使用できる演算子:",
 					"notEqual": "等しくない",
 					"equal": "等しい",
 					"greaterThan": "より大きい",
@@ -521,14 +521,22 @@
 					"lessThan": "より小さい",
 					"lessThanOrEqual": "以下",
 					"like": "パターンマッチ (ワイルドカード %)",
-					"in": "カンマ区切りリストに含まれる値にマッチ",
-					"notIn": "カンマ区切りリストに含まない値にマッチ"
+					"in": "カンマ区切りリスト内のいずれかに一致",
+					"notIn": "カンマ区切りリスト内のいずれにも一致しない"
 				},
 				"logicalOperators": {
-					"intro": "複数の条件を組み合わせるには、次の論理演算子を使用できます:",
-					"and": "AND 演算子、すべての条件が真ならば一致",
-					"or": "OR 演算子、いずれかの条件が真ならば一致",
-					"parentheses": "条件をグループ化する括弧"
+					"intro": "複数条件の組み合わせに使用できる論理演算子:",
+					"and": "AND 演算子 (すべての条件が成り立つ場合)",
+					"or": "OR 演算子 (いずれかの条件が成り立つ場合)",
+					"parentheses": "条件のグループ化"
+				},
+				"examples": {
+					"intro": "絞り込み条件の例:",
+					"priorityEqual": "優先度が4のタスク",
+					"dueDatePast": "期日が過ぎているタスク",
+					"undoneHighPriority": "未完了で優先度が3以上のタスク",
+					"assigneesIn": "担当者が「user1」または「user2」のタスク",
+					"priorityOneOrTwoPastDue": "優先度が1または2で期日が過ぎているタスク"
 				}
 			}
 		}
@@ -546,7 +554,9 @@
 		"alreadyMigrated2": "再びインポートすることも可能ですが、重複する可能性があります。インポートして本当によろしいですか？",
 		"confirm": "了解！インポート開始なのだ！",
 		"importUpload": "{name}からVikunjaにデータをインポートするには、以下のボタンをクリックしてファイルを選択してください。",
-		"upload": "ファイルのアップロード"
+		"upload": "ファイルのアップロード",
+		"migrationStartedWillReciveEmail": "{service}のリスト、タスク、メモ、リマインダー、ファイルをすべてVikunjaにインポートします。完了までしばらくお待ちください。メールでお知らせします。このウィンドウは閉じても構いません。",
+		"migrationInProgress": "現在移行中です。完了するまでしばらくお待ちください。"
 	},
 	"label": {
 		"title": "ラベル",
@@ -661,6 +671,7 @@
 			"unorderedList": "順序なしリスト",
 			"orderedList": "順序付きリスト",
 			"orderedListTooltip": "番号付きのリストを作成",
+			"cleanBlock": "ブロックのクリア",
 			"link": "リンク",
 			"image": "画像",
 			"imageTooltip": "コンピュータから画像をアップロード",
@@ -674,7 +685,7 @@
 			"taskListTooltip": "Todoリストでタスクを追跡",
 			"undo": "元に戻す",
 			"redo": "やり直す",
-			"placeholder": "テキストを入力するか「/」を押して選択肢から選ぶ…",
+			"placeholder": "テキストを入力するか、/ でオプションを表示…",
 			"table": {
 				"title": "テーブル",
 				"insert": "テーブルの挿入",
@@ -741,6 +752,17 @@
 			}
 		},
 		"datemathHelp": {
+			"canuse": "日付計算による絞り込みが可能です。",
+			"learnhow": "使用方法",
+			"title": "日付計算",
+			"intro": "相対日付を指定すると絞り込み条件を適用する際にVikunjaによって評価されます。",
+			"expression": "それぞれの日付計算式は基準日から始まります。この基準日には {0} か、{1} で区切られた複数の日付を使用できます。",
+			"similar": "{0} や {1} のような形式です。",
+			"add1Day": "1日加える",
+			"minus1Day": "1日減らす",
+			"roundDay": "最も近い日付に丸める",
+			"supportedUnits": "対応している単位",
+			"someExamples": "時間式の例",
 			"units": {
 				"seconds": "秒",
 				"minutes": "分",
@@ -879,7 +901,7 @@
 			"loading": "コメントを読み込み中…",
 			"edited": "{date} 編集",
 			"creating": "コメントを作成中…",
-			"placeholder": "コメントを追加します。'/' でオプションを表示します…",
+			"placeholder": "コメントを追加します。/ でオプションを表示…",
 			"comment": "コメント",
 			"delete": "コメントの削除",
 			"deleteText1": "このコメントを削除して本当によろしいですか？",
@@ -894,7 +916,7 @@
 			"1week": "1週間後"
 		},
 		"description": {
-			"placeholder": "説明を記入します。'/' でオプションを表示します…",
+			"placeholder": "タスクに関する説明を記入します。/ でオプションを表示…",
 			"empty": "説明文はありません。"
 		},
 		"assignee": {
@@ -938,10 +960,25 @@
 			"kinds": {
 				"subtask": "サブタスク",
 				"parenttask": "親タスク",
-				"related": "関連タスク"
+				"related": "関連タスク",
+				"duplicateof": "重複元",
+				"duplicates": "重複",
+				"blocking": "ブロック中",
+				"blocked": "ブロッカー",
+				"precedes": "先行",
+				"follows": "後続",
+				"copiedfrom": "コピー元",
+				"copiedto": "コピー先"
 			}
 		},
 		"reminder": {
+			"before": "{type}の{amount}{unit}前",
+			"after": "{type}の{amount}{unit}後",
+			"beforeShort": "前",
+			"afterShort": "後",
+			"onDueDate": "期日",
+			"onStartDate": "開始日",
+			"onEndDate": "終了日",
 			"custom": "カスタム",
 			"dateAndTime": "日付と時刻"
 		},
@@ -952,7 +989,6 @@
 			"mode": "繰り返しモード",
 			"monthly": "毎月",
 			"fromCurrentDate": "完了からの間隔",
-			"each": "隔",
 			"specifyAmount": "数字を入力…",
 			"hours": "時間ごと",
 			"days": "日ごと",
@@ -962,9 +998,29 @@
 			"invalidAmount": "0以上を入力してください。"
 		},
 		"quickAddMagic": {
-			"title": "クイック追加マジック",
+			"hint": "期日、担当者、その他の項目を追加するキーワードが使用できます。",
+			"title": "クイック追加",
+			"intro": "タスクを作成する際に特定のキーワードを使うことで項目を直接追加できます。よく使う項目とともにタスクをすぐ追加できます。",
+			"multiple": "複数使用できます。",
 			"label1": "ラベルを付けるには、ラベル名の前に {prefix} を入力します。",
-			"dateAndTime": "日付と時刻"
+			"label2": "Vikunja はそのラベルがすでに存在するか確認し、存在しなければ作成します。",
+			"label3": "空白を含む場合、ラベル名を \" \" または ' ' で囲みます。",
+			"label4": "例: {prefix}\"とある ラベル\"",
+			"priority1": "優先度を設定するには、{prefix} と 1〜5 の数字を入力します。",
+			"priority2": "数字が大きいほど優先度が高くなります。",
+			"assignees": "ユーザーを担当者として割り当てるには、ユーザー名の前に {prefix} を付けます。",
+			"project1": "プロジェクトを設定するには、プロジェクト名の前に {prefix} を付けます。",
+			"project2": "プロジェクトが存在しない場合はエラーになります。",
+			"project3": "空白を含む場合、プロジェクト名を \" \" または ' ' で囲みます。",
+			"project4": "例: {prefix}\"とある プロジェクト\"",
+			"dateAndTime": "日付と時刻",
+			"date": "日付は新しいタスクの期日として使用されます。以下の形式が利用可能です:",
+			"dateWeekday": "次に訪れるその曜日の日付",
+			"dateCurrentYear": "今年の日付",
+			"dateNth": "今月の{day}日",
+			"dateTime": "{time} または {timePM} を入力することで時刻も設定可能です。",
+			"repeats": "繰り返し",
+			"repeatsDescription": "一定間隔で繰り返すには {suffix} を入力します。amount には数字を入力します。省略して unit だけでも可能です。"
 		}
 	},
 	"team": {
@@ -989,10 +1045,20 @@
 			"delete": {
 				"header": "チームの削除",
 				"text1": "このチームと所属するチームメンバー全員を削除して本当によろしいですか？",
+				"text2": "すべてのチームメンバーが共有されているプロジェクトへのアクセス権を失います。この操作は元に戻せません！",
 				"success": "チームは正常に削除されました。"
 			},
 			"deleteUser": {
+				"header": "チームからユーザーを削除",
+				"text1": "チームからこのユーザーを削除して本当によろしいですか？",
+				"text2": "このユーザーはチーム内のプロジェクトへのアクセス権をすべて失います。この操作は元に戻せません！",
 				"success": "ユーザーは正常にチームから削除されました。"
+			},
+			"leave": {
+				"title": "チームから脱退",
+				"text1": "チームから脱退して本当によろしいですか？",
+				"text2": "チーム内のプロジェクトへのアクセス権をすべて失います。もし気が変わった場合、再度チーム管理者に追加してもらう必要があります。",
+				"success": "チームから脱退しました。"
 			}
 		},
 		"attributes": {
@@ -1000,8 +1066,11 @@
 			"namePlaceholder": "チーム名をここに入力…",
 			"nameRequired": "チーム名を入力してください。",
 			"description": "説明",
+			"descriptionPlaceholder": "このチームに関する説明を記入します。/ でオプションを表示…",
 			"admin": "管理者",
-			"member": "メンバー"
+			"member": "メンバー",
+			"isPublic": "公開チーム",
+			"isPublicDescription": "チームを公開します。有効にするとメンバー第三者がこのチームのプロジェクトを共有できます。"
 		}
 	},
 	"keyboardShortcuts": {
@@ -1011,6 +1080,7 @@
 		"currentPageOnly": "これらのショートカットはこのページで機能します。",
 		"somePagesOnly": "これらのショートカットは一部のページで動作します。",
 		"toggleMenu": "メニューの表示/非表示",
+		"quickSearch": "検索・クイックアクションバーを開く",
 		"then": " ",
 		"task": {
 			"title": "タスク",
@@ -1027,7 +1097,8 @@
 			"delete": "タスクを削除",
 			"priority": "タスクの優先度を設定",
 			"favorite": "タスクをお気に入りに追加/削除",
-			"openProject": "プロジェクトを開く"
+			"openProject": "プロジェクトを開く",
+			"save": "現在のタスクを保存"
 		},
 		"project": {
 			"title": "プロジェクト",
@@ -1045,10 +1116,19 @@
 			"projects": "プロジェクトに移動"
 		},
 		"list": {
-			"title": "タスクリスト"
+			"title": "タスクリスト",
+			"navigateDown": "次のタスクを強調表示",
+			"navigateUp": "前のタスクを強調表示",
+			"open": "強調表示されたタスクを開く"
 		},
 		"gantt": {
-			"title": "ガントチャート"
+			"title": "ガントチャート",
+			"moveTaskLeft": "タスクを早める",
+			"moveTaskRight": "タスクを遅らせる",
+			"expandTaskLeft": "タスク開始日を早める",
+			"expandTaskRight": "タスク終了日を遅らせる",
+			"shrinkTaskLeft": "タスク開始日を遅らせる",
+			"shrinkTaskRight": "タスク終了日を早める"
 		}
 	},
 	"update": {
@@ -1078,13 +1158,22 @@
 		"success": "\"{domain}\" に設置されたVikunjaを使用します。",
 		"urlRequired": "URLを入力してください。"
 	},
+	"loadingError": {
+		"failed": "読み込みに失敗しました。{0}してください。エラーが解消しない場合、{1}ください。",
+		"tryAgain": "再試行",
+		"contact": "お知らせ"
+	},
 	"notification": {
 		"title": "通知",
-		"none": "通知はありません。よい一日を！"
+		"none": "通知はありません。よい一日を！",
+		"explainer": "購読中のアクション、プロジェクト、タスクへの変更が発生すると、通知がここに表示されます。",
+		"markAllRead": "通知をすべて既読にする",
+		"markAllReadSuccess": "通知をすべて既読にしました。"
 	},
 	"quickActions": {
 		"commands": "コマンド",
 		"placeholder": "コマンドまたはキーワードを入力…",
+		"hint": "{project} を使うとプロジェクトを検索対象にできます。{project} または {label} (ラベル) を検索条件と組み合わせて使うとプロジェクト内のタスクやラベルの付いたタスクを検索できます。{assignee} を使うとチームを検索対象にできます。",
 		"tasks": "タスク",
 		"projects": "プロジェクト",
 		"teams": "チーム",
@@ -1103,6 +1192,12 @@
 	"date": {
 		"altFormatLong": "Y/n/j H:i",
 		"altFormatShort": "Y/n/j"
+	},
+	"reaction": {
+		"reactedWith": "{user}が{value}でリアクションしました",
+		"reactedWithAnd": "{users}, {lastUser}が{value}でリアクションしました",
+		"reactedWithAndMany": "{users}と他{num}名が{value}でリアクションしました",
+		"add": "リアクションを追加"
 	},
 	"error": {
 		"1001": "このユーザー名のユーザーは既に存在します。",

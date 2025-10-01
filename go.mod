@@ -44,7 +44,7 @@ require (
 	github.com/hhsnopek/etag v0.0.0-20171206181245-aea95f647346
 	github.com/huandu/go-clone/generic v1.7.3
 	github.com/iancoleman/strcase v0.3.0
-	github.com/jaswdr/faker/v2 v2.8.0
+	github.com/jaswdr/faker/v2 v2.8.1
 	github.com/jinzhu/copier v0.4.0
 	github.com/jszwedko/go-datemath v0.1.1-0.20230526204004-640a500621d6
 	github.com/labstack/echo-jwt/v4 v4.3.1
@@ -68,7 +68,7 @@ require (
 	github.com/tkuchiki/go-timezone v0.2.3
 	github.com/typesense/typesense-go/v2 v2.0.0
 	github.com/ulule/limiter/v3 v3.11.2
-	github.com/wneessen/go-mail v0.7.0
+	github.com/wneessen/go-mail v0.7.2
 	github.com/yuin/goldmark v1.7.13
 	golang.org/x/crypto v0.42.0
 	golang.org/x/image v0.31.0
@@ -175,4 +175,4 @@ replace github.com/labstack/echo/v4 => github.com/kolaente/echo/v4 v4.0.0-202501
 
 go 1.24.0
 
-toolchain go1.25.0
+toolchain go1.25.1

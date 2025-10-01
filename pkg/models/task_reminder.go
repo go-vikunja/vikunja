@@ -19,18 +19,16 @@ package models
 import (
 	"time"
 
-	"code.vikunja.io/api/pkg/utils"
-	"xorm.io/builder"
-
-	"code.vikunja.io/api/pkg/notifications"
-
-	"code.vikunja.io/api/pkg/db"
-	"xorm.io/xorm"
-
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/cron"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/utils"
+
+	"xorm.io/builder"
+	"xorm.io/xorm"
 )
 
 // ReminderRelation represents the date attribute of the task which a period based reminder relates to
@@ -227,8 +225,6 @@ func getTasksWithRemindersDueAndTheirUsers(s *xorm.Session, now time.Time) (remi
 				continue
 			}
 
-			seen[r.TaskID][u.User.ID] = true
-
 			if u.User.Timezone == "" {
 				u.User.Timezone = config.GetTimeZone().String()
 			}
@@ -245,6 +241,8 @@ func getTasksWithRemindersDueAndTheirUsers(s *xorm.Session, now time.Time) (remi
 
 			actualReminder := r.Reminder.In(tz)
 			if (actualReminder.After(now) && actualReminder.Before(now.Add(time.Minute))) || actualReminder.Equal(now) {
+				seen[r.TaskID][u.User.ID] = true
+
 				reminderNotifications = append(reminderNotifications, &ReminderDueNotification{
 					User:    u.User,
 					Task:    u.Task,

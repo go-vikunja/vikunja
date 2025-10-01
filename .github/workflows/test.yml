@@ -15,7 +15,7 @@ jobs:
           go-version: stable
       - name: Cache Mage
         id: cache-mage
-        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           key: ${{ runner.os }}-build-mage-${{ hashFiles('magefile.go') }}
           path: |
@@ -111,7 +111,7 @@ jobs:
         ports:
           - 3306:3306
       migration-smoke-db-postgres:
-        image: postgres:17@sha256:feff5b24fedd610975a1f5e743c51a4b360437f4dc3a11acf740dcd708f413f6
+        image: postgres:18@sha256:67a7c384da54fc55a3b5ad38e9853b76003603d12732c90af368b31bb1f2517f
         env:
           POSTGRES_PASSWORD: vikunjatest
           POSTGRES_DB: vikunjatest
@@ -120,7 +120,7 @@ jobs:
     steps:
       - name: Download Unstable
         run: |
-          wget https://dl.vikunja.io/api/unstable/vikunja-unstable-linux-amd64-full.zip -q -O vikunja-latest.zip
+          wget https://dl.vikunja.io/vikunja/unstable/vikunja-unstable-linux-amd64-full.zip -q -O vikunja-latest.zip
           unzip vikunja-latest.zip vikunja-unstable-linux-amd64
       - name: Download Vikunja Binary
         uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
@@ -187,14 +187,14 @@ jobs:
         ports:
           - 3306:3306
       db-postgres:
-        image: postgres:17@sha256:feff5b24fedd610975a1f5e743c51a4b360437f4dc3a11acf740dcd708f413f6
+        image: postgres:18@sha256:67a7c384da54fc55a3b5ad38e9853b76003603d12732c90af368b31bb1f2517f
         env:
           POSTGRES_PASSWORD: vikunjatest
           POSTGRES_DB: vikunjatest
         ports:
           - 5432:5432
       db-paradedb:
-        image: paradedb/paradedb:latest-pg17@sha256:e7771c3a447774af82223d0dd18523087bc62ef5f17cdebf2c888694e5655d4e
+        image: paradedb/paradedb:latest-pg17@sha256:7ba49d1b8bdc1460f50073c7d33b3306ddec0e9610b49e17a4d32e9a2c95c570
         env:
           POSTGRES_PASSWORD: vikunjatest
           POSTGRES_DB: vikunjatest
@@ -311,7 +311,7 @@ jobs:
       - frontend-build
     services:
       dex:
-        image: ghcr.io/go-vikunja/dex-testing:main@sha256:5713289406450f9bf1f387a6818c0dc19c330f7eb121185168e2a347fe0758e3
+        image: ghcr.io/go-vikunja/dex-testing:main@sha256:738f7db896824767a19c01af3d9137ea922762c23ee17b98b747c636d7faccd0
         ports:
           - 5556:5556
     strategy:
@@ -323,7 +323,7 @@ jobs:
       matrix:
         containers: [1, 2, 3, 4]
     container:
-      image: cypress/browsers:latest@sha256:34cbe5933a6a4b55e69a2d3fb48c0a13e0af38785cc8379dd2c51ee3e6d99a68
+      image: cypress/browsers:latest@sha256:79a28dd47913b1cca9fdd9d763f587b4660ee2c269d941c1903135399f4a9f20
       options: --user 1001
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
