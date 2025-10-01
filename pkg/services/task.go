@@ -18,6 +18,7 @@ package services
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -26,7 +27,9 @@ import (
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web"
+	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
 	"xorm.io/builder"
 	"xorm.io/xorm"
@@ -181,13 +184,19 @@ func getSortOrderFromString(s string) sortOrder {
 
 // getTaskFilterOptsFromCollection converts a TaskCollection to taskSearchOptions
 func (ts *TaskService) getTaskFilterOptsFromCollection(tf *models.TaskCollection, projectView *models.ProjectView) (opts *taskSearchOptions, err error) {
+	var finalSortBy []string
+	var finalOrderBy []string
+
 	if len(tf.SortByArr) > 0 {
-		tf.SortBy = append(tf.SortBy, tf.SortByArr...)
+		finalSortBy = tf.SortByArr
+		finalOrderBy = tf.OrderByArr
+	} else if len(tf.SortBy) > 0 {
+		finalSortBy = tf.SortBy
+		finalOrderBy = tf.OrderBy
 	}
 
-	if len(tf.OrderByArr) > 0 {
-		tf.OrderBy = append(tf.OrderBy, tf.OrderByArr...)
-	}
+	tf.SortBy = finalSortBy
+	tf.OrderBy = finalOrderBy
 
 	var sort = make([]*sortParam, 0, len(tf.SortBy))
 	for i, s := range tf.SortBy {
@@ -700,8 +709,8 @@ func InitTaskService() {
 		return NewTaskService(nil).getUsersOrLinkSharesFromIDs(s, ids)
 	}
 
-	models.TaskCreateFunc = func(s *xorm.Session, task *models.Task, u *user.User) error {
-		_, err := NewTaskService(s.Engine()).Create(s, task, u)
+	models.TaskCreateFunc = func(s *xorm.Session, task *models.Task, u *user.User, updateAssignees bool, setBucket bool) error {
+		_, err := NewTaskService(s.Engine()).CreateWithOptions(s, task, u, updateAssignees, setBucket, false)
 		return err
 	}
 
@@ -1557,49 +1566,480 @@ func (ts *TaskService) getUserID(share *models.LinkSharing) int64 {
 	return share.ID * -1
 }
 
-// Create creates a new task with proper permission checking and business logic.
-// This method provides the service layer interface for task creation.
-// Create creates a new task with permission checks.
+type taskCreationOptions struct {
+	skipPermissionCheck bool
+	updateAssignees     bool
+	setBucket           bool
+}
+
+// Create creates a new task with permission checks and full service-layer business logic.
 func (ts *TaskService) Create(s *xorm.Session, task *models.Task, u *user.User) (*models.Task, error) {
-	// Permission check: Use ProjectService for proper inter-service communication
-	projectService := NewProjectService(ts.DB)
-	canWrite, err := projectService.HasPermission(s, task.ProjectID, u, models.PermissionWrite)
-	if err != nil {
-		return nil, fmt.Errorf("checking project write permission: %w", err)
+	return ts.CreateWithOptions(s, task, u, true, true, false)
+}
+
+// CreateWithoutPermissionCheck creates a new task without performing permission checks.
+// This is intended for internal use where permissions have already been validated externally.
+func (ts *TaskService) CreateWithoutPermissionCheck(s *xorm.Session, task *models.Task, u *user.User) (*models.Task, error) {
+	return ts.CreateWithOptions(s, task, u, true, true, true)
+}
+
+// CreateWithOptions provides fine-grained control over task creation behavior while reusing
+// the core service-layer implementation. Callers can disable assignee updates or bucket placement
+// when duplicating tasks or performing specialized operations.
+func (ts *TaskService) CreateWithOptions(s *xorm.Session, task *models.Task, u *user.User, updateAssignees bool, setBucket bool, skipPermissionCheck bool) (*models.Task, error) {
+	opts := taskCreationOptions{
+		skipPermissionCheck: skipPermissionCheck,
+		updateAssignees:     updateAssignees,
+		setBucket:           setBucket,
 	}
-	if !canWrite {
+	return ts.createTask(s, task, u, opts)
+}
+
+// createTask contains the core business logic for task creation.
+func (ts *TaskService) createTask(s *xorm.Session, task *models.Task, actor *user.User, opts taskCreationOptions) (*models.Task, error) {
+	if task == nil {
+		return nil, fmt.Errorf("task must not be nil")
+	}
+	if actor == nil {
 		return nil, ErrAccessDenied
 	}
 
-	// Service layer implementation: Set up task creation fields properly
-	createdBy, err := models.GetUserOrLinkShareUser(s, u)
+	if task.Title == "" {
+		return nil, models.ErrTaskCannotBeEmpty{}
+	}
+
+	project, err := models.GetProjectSimpleByID(s, task.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+
+	if !opts.skipPermissionCheck {
+		projectService := NewProjectService(ts.DB)
+		canWrite, err := projectService.HasPermission(s, task.ProjectID, actor, models.PermissionWrite)
+		if err != nil {
+			return nil, fmt.Errorf("checking project write permission: %w", err)
+		}
+		if !canWrite {
+			return nil, ErrAccessDenied
+		}
+	}
+
+	createdBy, err := models.GetUserOrLinkShareUser(s, actor)
 	if err != nil {
 		return nil, err
 	}
 	task.CreatedByID = createdBy.ID
-	fmt.Printf("DEBUG: Setting CreatedByID to %d for new task\n", task.CreatedByID)
+	task.CreatedBy = createdBy
 
-	// For now, delegate to the model's Create method to avoid breaking other functionality
-	// The important fix is that we're ensuring CreatedByID is properly set above
-	err = task.Create(s, u)
-	if err != nil {
+	if task.UID == "" {
+		task.UID = uuid.NewString()
+	}
+
+	if err := ts.ensureTaskIndex(s, task); err != nil {
+		return nil, err
+	}
+
+	task.HexColor = utils.NormalizeHex(task.HexColor)
+
+	if _, err := s.Insert(task); err != nil {
+		return nil, err
+	}
+
+	var providedBucket *models.Bucket
+	if opts.setBucket && task.BucketID != 0 {
+		providedBucket, err = ts.KanbanService.getBucketByID(s, task.BucketID)
+		if err != nil {
+			return nil, err
+		}
+		if _, err = ts.KanbanService.checkBucketLimit(s, createdBy, task, providedBucket); err != nil {
+			return nil, err
+		}
+	}
+
+	if opts.setBucket {
+		if err := ts.assignTaskToViews(s, task, createdBy, providedBucket); err != nil {
+			return nil, err
+		}
+	}
+
+	if opts.updateAssignees {
+		if err := ts.syncTaskAssignees(s, task, task.Assignees, createdBy); err != nil {
+			return nil, err
+		}
+	}
+
+	if err := ts.syncTaskReminders(s, task); err != nil {
+		return nil, err
+	}
+
+	ts.setTaskIdentifier(task, project)
+
+	if task.IsFavorite {
+		if err := ts.FavoriteService.AddToFavorite(s, task.ID, createdBy, models.FavoriteKindTask); err != nil {
+			return nil, err
+		}
+	}
+
+	if err := events.Dispatch(&models.TaskCreatedEvent{Task: task, Doer: createdBy}); err != nil {
+		return nil, err
+	}
+
+	if err := ts.updateProjectLastUpdated(s, task.ProjectID); err != nil {
 		return nil, err
 	}
 
 	return task, nil
 }
 
-// CreateWithoutPermissionCheck creates a new task without permission checks.
-// This is intended for internal service use where permissions have already been verified.
-func (ts *TaskService) CreateWithoutPermissionCheck(s *xorm.Session, task *models.Task, u *user.User) (*models.Task, error) {
-	// For now, use the existing model method
-	// Later, we'll move all the business logic into this service method
-	err := task.Create(s, u)
+func (ts *TaskService) assignTaskToViews(s *xorm.Session, task *models.Task, auth web.Auth, providedBucket *models.Bucket) error {
+	views, err := ts.getViewsForProject(s, task.ProjectID)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return task, nil
+	positions := make([]*models.TaskPosition, 0, len(views))
+	taskBuckets := make([]*models.TaskBucket, 0, len(views))
+	moveToDone := false
+
+	for _, view := range views {
+		if view.ViewKind == models.ProjectViewKindKanban && view.BucketConfigurationMode == models.BucketConfigurationModeManual && !moveToDone {
+			bucketID := view.DoneBucketID
+			if !task.Done || view.DoneBucketID == 0 {
+				if providedBucket != nil && view.ID == providedBucket.ProjectViewID {
+					bucketID = providedBucket.ID
+				} else {
+					bucketID, err = ts.KanbanService.getDefaultBucketID(s, view)
+					if err != nil {
+						return err
+					}
+				}
+			}
+
+			if view.DoneBucketID != 0 && view.DoneBucketID == task.BucketID && !task.Done {
+				task.Done = true
+				if _, err = s.Where("id = ?", task.ID).Cols("done").Update(task); err != nil {
+					return err
+				}
+
+				if err = ts.moveTaskToDoneBuckets(s, task, auth, views); err != nil {
+					return err
+				}
+
+				moveToDone = true
+				continue
+			}
+
+			taskBuckets = append(taskBuckets, &models.TaskBucket{
+				BucketID:      bucketID,
+				TaskID:        task.ID,
+				ProjectViewID: view.ID,
+				ProjectID:     task.ProjectID,
+			})
+		}
+
+		position, err := ts.calculateNewPositionForTask(s, auth, task, view)
+		if err != nil {
+			return err
+		}
+		positions = append(positions, position)
+	}
+
+	if moveToDone {
+		taskBuckets = []*models.TaskBucket{}
+	}
+
+	if len(positions) > 0 {
+		if _, err = s.Insert(&positions); err != nil {
+			return err
+		}
+	}
+
+	if len(taskBuckets) > 0 {
+		if _, err = s.Insert(&taskBuckets); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (ts *TaskService) getViewsForProject(s *xorm.Session, projectID int64) ([]*models.ProjectView, error) {
+	views := make([]*models.ProjectView, 0)
+	err := s.Where("project_id = ?", projectID).OrderBy("position asc").Find(&views)
+	return views, err
+}
+
+func (ts *TaskService) calculateNewPositionForTask(s *xorm.Session, auth web.Auth, task *models.Task, view *models.ProjectView) (*models.TaskPosition, error) {
+	if task.Position == 0 {
+		lowestPosition := &models.TaskPosition{}
+		exists, err := s.Where("project_view_id = ?", view.ID).OrderBy("position asc").Get(lowestPosition)
+		if err != nil {
+			return nil, err
+		}
+		if exists {
+			if lowestPosition.Position == 0 {
+				if err = models.RecalculateTaskPositions(s, view, auth); err != nil {
+					return nil, err
+				}
+
+				lowestPosition = &models.TaskPosition{}
+				if _, err = s.Where("project_view_id = ?", view.ID).OrderBy("position asc").Get(lowestPosition); err != nil {
+					return nil, err
+				}
+			}
+
+			task.Position = lowestPosition.Position / 2
+		}
+	}
+
+	return &models.TaskPosition{
+		TaskID:        task.ID,
+		ProjectViewID: view.ID,
+		Position:      ts.calculateDefaultPosition(task.Index, task.Position),
+	}, nil
+}
+
+func (ts *TaskService) calculateDefaultPosition(entityID int64, position float64) float64 {
+	if position == 0 {
+		return float64(entityID) * 1000
+	}
+	return position
+}
+
+func (ts *TaskService) moveTaskToDoneBuckets(s *xorm.Session, task *models.Task, auth web.Auth, views []*models.ProjectView) error {
+	for _, view := range views {
+		currentTaskBucket := &models.TaskBucket{}
+		if _, err := s.Where("task_id = ? AND project_view_id = ?", task.ID, view.ID).Get(currentTaskBucket); err != nil {
+			return err
+		}
+
+		bucketID := currentTaskBucket.BucketID
+
+		if task.Done && view.DoneBucketID == 0 {
+			continue
+		}
+
+		if !task.Done && bucketID != view.DoneBucketID {
+			continue
+		}
+
+		if task.Done && view.DoneBucketID != 0 {
+			bucketID = view.DoneBucketID
+		}
+
+		if !task.Done && bucketID == view.DoneBucketID {
+			var err error
+			bucketID, err = ts.KanbanService.getDefaultBucketID(s, view)
+			if err != nil {
+				return err
+			}
+		}
+
+		tb := &models.TaskBucket{
+			BucketID:      bucketID,
+			TaskID:        task.ID,
+			ProjectViewID: view.ID,
+			ProjectID:     task.ProjectID,
+		}
+		if err := tb.Update(s, auth); err != nil {
+			return err
+		}
+
+		tp := models.TaskPosition{
+			TaskID:        task.ID,
+			ProjectViewID: view.ID,
+			Position:      ts.calculateDefaultPosition(task.Index, task.Position),
+		}
+		if err := tp.Update(s, auth); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (ts *TaskService) syncTaskAssignees(s *xorm.Session, task *models.Task, desiredAssignees []*user.User, createdBy web.Auth) error {
+	currentAssignees, err := ts.getRawTaskAssigneesForTask(s, task.ID)
+	if err != nil {
+		return err
+	}
+
+	currentAssigneeMap := make(map[int64]struct{}, len(currentAssignees))
+	for _, entry := range currentAssignees {
+		currentAssigneeMap[entry.User.ID] = struct{}{}
+	}
+
+	desiredAssigneeMap := make(map[int64]*user.User)
+	for _, assignee := range desiredAssignees {
+		if assignee == nil || assignee.ID == 0 {
+			continue
+		}
+		if _, exists := desiredAssigneeMap[assignee.ID]; !exists {
+			desiredAssigneeMap[assignee.ID] = assignee
+		}
+	}
+
+	// Delete assignees that are no longer desired
+	assigneesToDelete := make([]int64, 0)
+	for id := range currentAssigneeMap {
+		if _, keep := desiredAssigneeMap[id]; !keep {
+			assigneesToDelete = append(assigneesToDelete, id)
+		}
+	}
+
+	if len(assigneesToDelete) > 0 {
+		if _, err = s.In("user_id", assigneesToDelete).And("task_id = ?", task.ID).Delete(&models.TaskAssginee{}); err != nil {
+			return err
+		}
+	}
+
+	// Add new assignees
+	for id := range desiredAssigneeMap {
+		if _, already := currentAssigneeMap[id]; already {
+			continue
+		}
+
+		assignee := &models.TaskAssginee{TaskID: task.ID, UserID: id}
+		if err := assignee.Create(s, createdBy); err != nil {
+			if !models.IsErrUserAlreadyAssigned(err) {
+				return err
+			}
+		}
+	}
+
+	// Refresh assignee list on the task to include full user data
+	taskMap := map[int64]*models.Task{task.ID: task}
+	if err := ts.addAssigneesToTasks(s, []int64{task.ID}, taskMap); err != nil {
+		return err
+	}
+
+	if len(task.Assignees) == 0 {
+		task.Assignees = nil
+	}
+
+	return ts.updateProjectLastUpdated(s, task.ProjectID)
+}
+
+func (ts *TaskService) getRawTaskAssigneesForTask(s *xorm.Session, taskID int64) ([]*models.TaskAssigneeWithUser, error) {
+	assignees := make([]*models.TaskAssigneeWithUser, 0)
+	err := s.Table("task_assignees").
+		Select("task_assignees.task_id, users.*").
+		Join("INNER", "users", "task_assignees.user_id = users.id").
+		Where("task_assignees.task_id = ?", taskID).
+		Find(&assignees)
+	return assignees, err
+}
+
+func (ts *TaskService) syncTaskReminders(s *xorm.Session, task *models.Task) error {
+	if _, err := s.Where("task_id = ?", task.ID).Delete(&models.TaskReminder{}); err != nil {
+		return err
+	}
+
+	if err := ts.normalizeRelativeReminderDates(task); err != nil {
+		return err
+	}
+
+	reminderMap := make(map[int64]*models.TaskReminder, len(task.Reminders))
+	for _, reminder := range task.Reminders {
+		reminderMap[reminder.Reminder.UTC().Unix()] = reminder
+	}
+
+	task.Reminders = make([]*models.TaskReminder, 0, len(reminderMap))
+	for _, reminder := range reminderMap {
+		entry := &models.TaskReminder{
+			TaskID:         task.ID,
+			Reminder:       reminder.Reminder,
+			RelativePeriod: reminder.RelativePeriod,
+			RelativeTo:     reminder.RelativeTo,
+		}
+		if _, err := s.Insert(entry); err != nil {
+			return err
+		}
+		task.Reminders = append(task.Reminders, entry)
+	}
+
+	sort.Slice(task.Reminders, func(i, j int) bool {
+		return task.Reminders[i].Reminder.Before(task.Reminders[j].Reminder)
+	})
+
+	if len(task.Reminders) == 0 {
+		task.Reminders = nil
+	}
+
+	return ts.updateProjectLastUpdated(s, task.ProjectID)
+}
+
+func (ts *TaskService) normalizeRelativeReminderDates(task *models.Task) error {
+	for _, reminder := range task.Reminders {
+		relativeDuration := time.Duration(reminder.RelativePeriod) * time.Second
+		if reminder.RelativeTo != "" {
+			reminder.Reminder = time.Time{}
+		}
+
+		switch reminder.RelativeTo {
+		case models.ReminderRelationDueDate:
+			if !task.DueDate.IsZero() {
+				reminder.Reminder = task.DueDate.Add(relativeDuration)
+			}
+		case models.ReminderRelationStartDate:
+			if !task.StartDate.IsZero() {
+				reminder.Reminder = task.StartDate.Add(relativeDuration)
+			}
+		case models.ReminderRelationEndDate:
+			if !task.EndDate.IsZero() {
+				reminder.Reminder = task.EndDate.Add(relativeDuration)
+			}
+		default:
+			if reminder.RelativePeriod != 0 {
+				return models.ErrReminderRelativeToMissing{TaskID: task.ID}
+			}
+		}
+	}
+	return nil
+}
+
+func (ts *TaskService) ensureTaskIndex(s *xorm.Session, task *models.Task) error {
+	if task.Index == 0 {
+		nextIndex, err := ts.calculateNextTaskIndex(s, task.ProjectID)
+		if err != nil {
+			return err
+		}
+		task.Index = nextIndex
+		return nil
+	}
+
+	exists, err := s.Where("project_id = ? AND `index` = ?", task.ProjectID, task.Index).Exist(&models.Task{})
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return nil
+	}
+
+	nextIndex, err := ts.calculateNextTaskIndex(s, task.ProjectID)
+	if err != nil {
+		return err
+	}
+	task.Index = nextIndex
+	return nil
+}
+
+func (ts *TaskService) calculateNextTaskIndex(s *xorm.Session, projectID int64) (int64, error) {
+	latestTask := &models.Task{}
+	_, err := s.Where("project_id = ?", projectID).OrderBy("`index` desc").Get(latestTask)
+	if err != nil {
+		return 0, err
+	}
+
+	return latestTask.Index + 1, nil
+}
+
+func (ts *TaskService) setTaskIdentifier(task *models.Task, project *models.Project) {
+	if project == nil || project.Identifier == "" {
+		task.Identifier = "#" + strconv.FormatInt(task.Index, 10)
+		return
+	}
+
+	task.Identifier = project.Identifier + "-" + strconv.FormatInt(task.Index, 10)
 }
 
 // getRawFavoriteTasks gets favorite tasks with filtering and sorting

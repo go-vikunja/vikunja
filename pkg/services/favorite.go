@@ -33,6 +33,27 @@ func NewFavoriteService(db *xorm.Engine) *FavoriteService {
 	return &FavoriteService{DB: db}
 }
 
+// AddToFavorite creates a favorite entry for the given entity and auth context.
+// The caller is responsible for providing an active session when part of a larger transaction.
+func (fs *FavoriteService) AddToFavorite(s *xorm.Session, entityID int64, a web.Auth, kind models.FavoriteKind) error {
+	if a == nil {
+		return nil
+	}
+
+	u, err := user.GetFromAuth(a)
+	if err != nil {
+		// Only error GetFromAuth is if it's a link share and we want to ignore that
+		return nil
+	}
+
+	_, err = s.Insert(&models.Favorite{
+		EntityID: entityID,
+		UserID:   u.ID,
+		Kind:     kind,
+	})
+	return err
+}
+
 // GetForUserByType gets all favorites for a user by type.
 func (fs *FavoriteService) GetForUserByType(s *xorm.Session, u *user.User, kind models.FavoriteKind) ([]*models.Favorite, error) {
 	favorites := []*models.Favorite{}

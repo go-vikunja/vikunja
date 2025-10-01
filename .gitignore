@@ -5,6 +5,7 @@
 /api
 /server.log
 /vikunja_test
+/specs
 /frontend/.pnpm-store/
 tmp/
 config.yml

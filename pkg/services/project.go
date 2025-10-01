@@ -65,6 +65,24 @@ func NewProjectService(db *xorm.Engine) *ProjectService {
 
 // HasPermission checks if a user has a given permission on a project.
 func (p *ProjectService) HasPermission(s *xorm.Session, projectID int64, u *user.User, permission models.Permission) (bool, error) {
+	if u == nil {
+		return false, nil
+	}
+
+	if u.ID < 0 {
+		shareID := u.ID * -1
+		share, err := models.GetLinkShareByID(s, shareID)
+		if err != nil {
+			return false, err
+		}
+		if share == nil {
+			return false, nil
+		}
+		if share.ProjectID != projectID {
+			return false, nil
+		}
+		return share.Permission >= permission, nil
+	}
 	project, err := models.GetProjectSimpleByID(s, projectID)
 	if err != nil {
 		return false, err

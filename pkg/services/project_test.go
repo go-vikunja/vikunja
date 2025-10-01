@@ -85,6 +85,33 @@ func TestProject_GetByID(t *testing.T) {
 	})
 }
 
+func TestProjectService_HasPermission_LinkShare(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	service := &ProjectService{DB: db.GetEngine()}
+	linkShareUser := &user.User{ID: -2}
+
+	t.Run("write permission for shared project", func(t *testing.T) {
+		allowed, err := service.HasPermission(s, 2, linkShareUser, models.PermissionWrite)
+		require.NoError(t, err)
+		assert.True(t, allowed)
+	})
+
+	t.Run("denies higher permission levels", func(t *testing.T) {
+		allowed, err := service.HasPermission(s, 2, linkShareUser, models.PermissionAdmin)
+		require.NoError(t, err)
+		assert.False(t, allowed)
+	})
+
+	t.Run("denies access to unrelated projects", func(t *testing.T) {
+		allowed, err := service.HasPermission(s, 1, linkShareUser, models.PermissionRead)
+		require.NoError(t, err)
+		assert.False(t, allowed)
+	})
+}
+
 func TestProject_GetAllForUser(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()

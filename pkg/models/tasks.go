@@ -55,7 +55,9 @@ var AddBucketsToTasksFunc func(s *xorm.Session, taskIDs []int64, taskMap map[int
 
 // TaskCreateFunc is a function variable used to plug the service implementation into the models layer.
 // It allows the models layer to call the TaskService.Create method without introducing an import cycle.
-var TaskCreateFunc func(s *xorm.Session, task *Task, u *user.User) error
+// The boolean flags mirror the legacy createTask implementation to control whether assignees and buckets
+// should be updated during task creation.
+var TaskCreateFunc func(s *xorm.Session, task *Task, u *user.User, updateAssignees bool, setBucket bool) error
 
 // AddMoreInfoToTasks delegates to the service implementation via AddMoreInfoToTasksFunc.
 // @Deprecated: Use services.TaskService.AddDetailsToTasks instead. This remains for backward compatibility during the refactor.
@@ -853,10 +855,25 @@ func setNewTaskIndex(s *xorm.Session, t *Task) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/tasks [put]
 func (t *Task) Create(s *xorm.Session, a web.Auth) (err error) {
+	if TaskCreateFunc != nil {
+		creator, err := GetUserOrLinkShareUser(s, a)
+		if err != nil {
+			return err
+		}
+		return TaskCreateFunc(s, t, creator, true, true)
+	}
+
 	return createTask(s, t, a, true, true)
 }
 
 func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setBucket bool) (err error) {
+	if TaskCreateFunc != nil {
+		creator, err := GetUserOrLinkShareUser(s, a)
+		if err != nil {
+			return err
+		}
+		return TaskCreateFunc(s, t, creator, updateAssignees, setBucket)
+	}
 
 	t.ID = 0
 
