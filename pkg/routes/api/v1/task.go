@@ -79,11 +79,24 @@ func getTaskLogic(s *xorm.Session, u *user.User, c echo.Context) error {
 
 	// Parse expand parameters from query string
 	expand := []models.TaskCollectionExpandable{}
-	expandParam := c.QueryParam("expand")
-	if expandParam != "" {
-		expandValues := strings.Split(expandParam, ",")
-		for _, expandValue := range expandValues {
-			expandValue = strings.TrimSpace(expandValue)
+
+	// Handle both array-style (?expand[]=reactions&expand[]=comments) and comma-separated (?expand=reactions,comments)
+	var expandValues []string
+
+	// First try array-style parameters (what the frontend actually sends)
+	if arrayParams := c.Request().URL.Query()["expand[]"]; len(arrayParams) > 0 {
+		expandValues = arrayParams
+	} else {
+		// Fall back to comma-separated format for backwards compatibility
+		expandParam := c.QueryParam("expand")
+		if expandParam != "" {
+			expandValues = strings.Split(expandParam, ",")
+		}
+	}
+
+	for _, expandValue := range expandValues {
+		expandValue = strings.TrimSpace(expandValue)
+		if expandValue != "" {
 			expandable := models.TaskCollectionExpandable(expandValue)
 			if err := expandable.Validate(); err != nil {
 				return echo.NewHTTPError(http.StatusBadRequest, "Invalid expand parameter: "+expandValue).SetInternal(err)
@@ -93,9 +106,18 @@ func getTaskLogic(s *xorm.Session, u *user.User, c echo.Context) error {
 	}
 
 	taskService := services.NewTaskService(s.Engine())
-	task, err := taskService.GetByIDWithExpansion(s, taskID, u, expand)
+	task, maxPermission, err := taskService.GetByIDWithExpansion(s, taskID, u, expand)
 	if err != nil {
 		return err
+	}
+
+	responseHeaders := c.Response().Header()
+	responseHeaders.Set("x-max-permission", strconv.Itoa(maxPermission))
+	exposed := responseHeaders.Get("Access-Control-Expose-Headers")
+	if exposed == "" {
+		responseHeaders.Set("Access-Control-Expose-Headers", "x-max-permission")
+	} else if !strings.Contains(strings.ToLower(exposed), "x-max-permission") {
+		responseHeaders.Set("Access-Control-Expose-Headers", exposed+", x-max-permission")
 	}
 
 	return c.JSON(http.StatusOK, task)

@@ -31,6 +31,39 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func normalizeEmptyCollectionsToNil(tasks []*models.Task) {
+	for _, task := range tasks {
+		if task == nil {
+			continue
+		}
+
+		if len(task.Assignees) == 0 {
+			task.Assignees = nil
+		}
+		if len(task.Labels) == 0 {
+			task.Labels = nil
+		}
+		if len(task.Reminders) == 0 {
+			task.Reminders = nil
+		}
+		if len(task.Attachments) == 0 {
+			task.Attachments = nil
+		}
+		if len(task.Comments) == 0 {
+			task.Comments = nil
+		}
+		if len(task.Buckets) == 0 {
+			task.Buckets = nil
+		}
+		if len(task.RelatedTasks) == 0 {
+			task.RelatedTasks = nil
+		}
+		if len(task.Reactions) == 0 {
+			task.Reactions = nil
+		}
+	}
+}
+
 // func setupTime() {
 // 	var err error
 // 	loc, err := time.LoadLocation("GMT")
@@ -118,6 +151,45 @@ func TestTaskService_GetByID(t *testing.T) {
 	t.Run("should return an error for a non-existent task", func(t *testing.T) {
 		_, err := ts.GetByID(s, 9999, u)
 		assert.Error(t, err)
+	})
+}
+
+func TestTaskService_GetByIDWithExpansion_PopulatesRequiredFields(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	ts := NewTaskService(testEngine)
+	u := &user.User{ID: 1}
+
+	t.Run("populates fields for fixtures", func(t *testing.T) {
+		task, maxPermission, err := ts.GetByIDWithExpansion(s, 1, u, []models.TaskCollectionExpandable{models.TaskCollectionExpandComments, models.TaskCollectionExpandReactions})
+		require.NoError(t, err)
+		require.NotNil(t, task.CreatedBy, "expected CreatedBy to be populated")
+		assert.Equal(t, int64(1), task.CreatedBy.ID)
+		require.NotNil(t, task.RelatedTasks, "expected RelatedTasks map to be initialized")
+		assert.GreaterOrEqual(t, maxPermission, int(models.PermissionRead))
+	})
+
+	t.Run("falls back to project owner for legacy tasks", func(t *testing.T) {
+		legacyTask := &models.Task{
+			Title:       "legacy task",
+			ProjectID:   1,
+			CreatedByID: 0,
+			Index:       991,
+			Created:     time.Now(),
+			Updated:     time.Now(),
+		}
+		_, err := s.Insert(legacyTask)
+		require.NoError(t, err)
+
+		loaded, maxPermission, err := ts.GetByIDWithExpansion(s, legacyTask.ID, u, nil)
+		require.NoError(t, err)
+		require.NotNil(t, loaded.CreatedBy, "expected CreatedBy to be resolved for legacy task")
+		assert.Equal(t, int64(1), loaded.CreatedBy.ID)
+		assert.Equal(t, int64(1), loaded.CreatedByID)
+		assert.NotNil(t, loaded.RelatedTasks)
+		assert.GreaterOrEqual(t, maxPermission, int(models.PermissionRead))
 	})
 }
 
@@ -2007,6 +2079,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				t.Errorf("Test %s, Task.ReadAll() error = %v, wantErr %v", tt.name, err, tt.wantErr)
 				return
 			}
+			normalizeEmptyCollectionsToNil(tt.want)
+			normalizeEmptyCollectionsToNil(got)
 			if diff, equal := messagediff.PrettyDiff(tt.want, got); !equal {
 				gotTasks := got
 				if len(gotTasks) == 0 && len(tt.want) == 0 {

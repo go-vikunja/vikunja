@@ -744,44 +744,50 @@ func (ts *TaskService) GetByID(s *xorm.Session, taskID int64, u *user.User) (*mo
 }
 
 // GetByIDWithExpansion gets a single task by its ID with support for expansion parameters
-func (ts *TaskService) GetByIDWithExpansion(s *xorm.Session, taskID int64, u *user.User, expand []models.TaskCollectionExpandable) (*models.Task, error) {
-	// Use a simple model function to get the raw data
-	task := new(models.Task)
-	has, err := s.ID(taskID).Get(task)
+// and returns the maximum permission the user has on the task's project.
+func (ts *TaskService) GetByIDWithExpansion(s *xorm.Session, taskID int64, u *user.User, expand []models.TaskCollectionExpandable) (*models.Task, int, error) {
+	// Load the task with all fields at the service layer
+	task := &models.Task{}
+	exists, err := s.Where("id = ?", taskID).Get(task)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	if !has {
-		return nil, models.ErrTaskDoesNotExist{ID: taskID}
+	if !exists {
+		return nil, 0, models.ErrTaskDoesNotExist{ID: taskID}
 	}
 
 	// Permission Check: The TaskService asks the ProjectService for a decision.
 	projectService := NewProjectService(ts.DB)
-	can, err := projectService.HasPermission(s, task.ProjectID, u, models.PermissionRead)
+	permissionMap, err := projectService.checkPermissionsForProjects(s, u, []int64{task.ProjectID})
 	if err != nil {
-		return nil, fmt.Errorf("checking project read permission: %w", err)
+		return nil, 0, fmt.Errorf("checking project permissions: %w", err)
 	}
-	if !can {
-		return nil, ErrAccessDenied
+	permission, ok := permissionMap[task.ProjectID]
+	if !ok || permission == nil {
+		return nil, 0, ErrAccessDenied
+	}
+	maxPermission := permission.MaxPermission
+	if maxPermission < int(models.PermissionRead) {
+		return nil, 0, ErrAccessDenied
 	}
 
 	// Add details to the task with expansion support
 	taskMap := map[int64]*models.Task{task.ID: task}
 	err = ts.AddDetailsToTasks(s, taskMap, u, nil, expand)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	// Load subscription data for single task requests (matches original behavior)
 	subscription, err := models.GetSubscriptionForUser(s, models.SubscriptionEntityTask, task.ID, u)
 	if err != nil && !models.IsErrProjectDoesNotExist(err) {
-		return nil, err
+		return nil, 0, err
 	}
 	if subscription != nil {
 		task.Subscription = &subscription.Subscription
 	}
 
-	return task, nil
+	return task, maxPermission, nil
 }
 
 // GetAllByProject gets all tasks for a project with pagination and filtering
@@ -1055,48 +1061,41 @@ func (ts *TaskService) AddDetailsToTasks(s *xorm.Session, taskMap map[int64]*mod
 	// Initialize array/map fields for consistent API behavior
 	// Keep empty collections as null for standards compliance
 	for _, task := range taskMap {
-		// Always initialize RelatedTasks map (this is required for the data structure)
 		if task.RelatedTasks == nil {
 			task.RelatedTasks = make(models.RelatedTaskMap)
 		}
-
-		// Note: We don't initialize slice fields as empty slices here.
-		// They stay nil until data is actually loaded, matching original behavior.
 	}
 
-	// Get all users & task ids and put them into the array
-	var userIDs []int64
-	var taskIDs []int64
-	var projectIDs []int64
+	// Collect identifiers for batched lookups
+	taskIDs := make([]int64, 0, len(taskMap))
+	creatorIDSet := make(map[int64]struct{}, len(taskMap))
+	projectIDSet := make(map[int64]struct{}, len(taskMap))
 	for _, task := range taskMap {
 		taskIDs = append(taskIDs, task.ID)
 		if task.CreatedByID != 0 {
-			userIDs = append(userIDs, task.CreatedByID)
+			creatorIDSet[task.CreatedByID] = struct{}{}
 		}
-		projectIDs = append(projectIDs, task.ProjectID)
+		projectIDSet[task.ProjectID] = struct{}{}
+	}
+
+	// Convert project id set to slice for retrieval
+	projectIDs := make([]int64, 0, len(projectIDSet))
+	for id := range projectIDSet {
+		projectIDs = append(projectIDs, id)
 	}
 
 	// Add assignees
-	err := ts.addAssigneesToTasks(s, taskIDs, taskMap)
-	if err != nil {
+	if err := ts.addAssigneesToTasks(s, taskIDs, taskMap); err != nil {
 		return err
 	}
 
 	// Add labels
-	err = ts.addLabelsToTasks(s, taskIDs, taskMap)
-	if err != nil {
+	if err := ts.addLabelsToTasks(s, taskIDs, taskMap); err != nil {
 		return err
 	}
 
 	// Add attachments
-	err = ts.addAttachmentsToTasks(s, taskIDs, taskMap)
-	if err != nil {
-		return err
-	}
-
-	// Get users for CreatedBy field
-	users, err := ts.getUsersOrLinkSharesFromIDs(s, userIDs)
-	if err != nil {
+	if err := ts.addAttachmentsToTasks(s, taskIDs, taskMap); err != nil {
 		return err
 	}
 
@@ -1121,24 +1120,52 @@ func (ts *TaskService) AddDetailsToTasks(s *xorm.Session, taskMap map[int64]*mod
 		return err
 	}
 
+	// Determine fallback creator assignments for legacy tasks without CreatedByID
+	legacyCreators := make(map[int64]int64)
+	for _, task := range taskMap {
+		if task.CreatedByID != 0 {
+			continue
+		}
+		project := projects[task.ProjectID]
+		if project == nil || project.OwnerID == 0 {
+			continue
+		}
+		legacyCreators[task.ID] = project.OwnerID
+		if _, seen := creatorIDSet[project.OwnerID]; !seen {
+			creatorIDSet[project.OwnerID] = struct{}{}
+		}
+	}
+
+	// Resolve all required users (task creators + fallbacks)
+	userIDs := make([]int64, 0, len(creatorIDSet))
+	for id := range creatorIDSet {
+		userIDs = append(userIDs, id)
+	}
+
+	users := map[int64]*user.User{}
+	if len(userIDs) > 0 {
+		users, err = ts.getUsersOrLinkSharesFromIDs(s, userIDs)
+		if err != nil {
+			return err
+		}
+	}
+
 	// Add all objects to their tasks
 	for _, task := range taskMap {
-		// Make created by user objects
 		if createdBy, has := users[task.CreatedByID]; has {
 			task.CreatedBy = createdBy
+		} else if fallbackID, ok := legacyCreators[task.ID]; ok {
+			if fallbackUser, hasUser := users[fallbackID]; hasUser {
+				task.CreatedBy = fallbackUser
+				task.CreatedByID = fallbackID
+			}
 		}
 
-		// Add the reminders
 		if remindersList := taskReminders[task.ID]; remindersList != nil {
 			task.Reminders = remindersList
 		}
-		// If taskReminders[task.ID] is nil, keep the empty array we initialized earlier
 
-		// Note: RelatedTasks map is already initialized at the top of the function
-		// We'll populate it later with addRelatedTasksToTasks
-
-		// Build the task identifier from the project identifier and task index
-		if project, exists := projects[task.ProjectID]; exists {
+		if project, exists := projects[task.ProjectID]; exists && project != nil {
 			if project.Identifier == "" {
 				task.Identifier = "#" + strconv.FormatInt(task.Index, 10)
 			} else {
@@ -1146,7 +1173,6 @@ func (ts *TaskService) AddDetailsToTasks(s *xorm.Session, taskMap map[int64]*mod
 			}
 		}
 
-		// Set favorite status
 		if taskFavorites != nil {
 			task.IsFavorite = taskFavorites[task.ID]
 		}
@@ -1179,6 +1205,34 @@ func (ts *TaskService) AddDetailsToTasks(s *xorm.Session, taskMap map[int64]*mod
 	err = ts.addRelatedTasksToTasks(s, taskIDs, taskMap, a)
 	if err != nil {
 		return err
+	}
+
+	// Normalize slice fields to empty arrays so the frontend can safely iterate without null checks.
+	for _, task := range taskMap {
+		if task.Assignees == nil {
+			task.Assignees = []*user.User{}
+		}
+		if task.Labels == nil {
+			task.Labels = []*models.Label{}
+		}
+		if task.Attachments == nil {
+			task.Attachments = []*models.TaskAttachment{}
+		}
+		if task.Reminders == nil {
+			task.Reminders = []*models.TaskReminder{}
+		}
+		if task.Comments == nil {
+			task.Comments = []*models.TaskComment{}
+		}
+		if task.RelatedTasks == nil {
+			task.RelatedTasks = make(models.RelatedTaskMap)
+		}
+		if task.Buckets == nil {
+			task.Buckets = []*models.Bucket{}
+		}
+		if task.Reactions == nil {
+			task.Reactions = models.ReactionMap{}
+		}
 	}
 
 	return nil
@@ -1517,8 +1571,16 @@ func (ts *TaskService) Create(s *xorm.Session, task *models.Task, u *user.User) 
 		return nil, ErrAccessDenied
 	}
 
-	// For now, use the existing model method
-	// Later, we'll move all the business logic into this service method
+	// Service layer implementation: Set up task creation fields properly
+	createdBy, err := models.GetUserOrLinkShareUser(s, u)
+	if err != nil {
+		return nil, err
+	}
+	task.CreatedByID = createdBy.ID
+	fmt.Printf("DEBUG: Setting CreatedByID to %d for new task\n", task.CreatedByID)
+
+	// For now, delegate to the model's Create method to avoid breaking other functionality
+	// The important fix is that we're ensuring CreatedByID is properly set above
 	err = task.Create(s, u)
 	if err != nil {
 		return nil, err
@@ -1681,9 +1743,12 @@ func (ts *TaskService) addReactionsToTasks(s *xorm.Session, taskIDs []int64, tas
 
 // addCommentsToTasks adds comment data to tasks using the CommentService
 func (ts *TaskService) addCommentsToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*models.Task) error {
+	fmt.Printf("DEBUG: addCommentsToTasks called with taskIDs: %v\n", taskIDs)
 	if ts.CommentService == nil {
+		fmt.Printf("DEBUG: CommentService is nil, skipping comments\n")
 		return nil // Skip if CommentService not available
 	}
 
+	fmt.Printf("DEBUG: Calling CommentService.AddCommentsToTasks\n")
 	return ts.CommentService.AddCommentsToTasks(s, taskIDs, taskMap)
 }

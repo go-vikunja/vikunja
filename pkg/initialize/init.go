@@ -90,7 +90,14 @@ func FullInitWithoutAsync() {
 	InitEngines()
 
 	// Initialize service layer dependency injection
+	services.InitUserService()
+	services.InitSavedFilterService()
 	services.InitTaskService()
+	services.InitProjectService()
+	services.InitKanbanService()
+	services.InitCommentService()
+	services.InitAttachmentService()
+	services.InitProjectDuplicateService()
 
 	// Init Typesense
 	models.InitTypesense()
