@@ -2,6 +2,9 @@
 .idea/*/*
 .idea/httpRequests
 .history/
+/api
+/server.log
+/vikunja_test
 /frontend/.pnpm-store/
 tmp/
 config.yml
