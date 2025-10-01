@@ -42,10 +42,12 @@ func NewCommentService(db *xorm.Engine) *CommentService {
 // CommentPermissions represents permission checking for comments.
 // This implements the "Move Logic, Don't Expose It" principle by moving permission logic from models to services.
 type CommentPermissions struct {
-	s       *xorm.Session
-	comment *models.TaskComment
-	user    *user.User
-	cs      *CommentService
+	s              *xorm.Session
+	comment        *models.TaskComment
+	user           *user.User
+	cs             *CommentService
+	task           *models.Task
+	projectService *ProjectService
 }
 
 // Can returns a new CommentPermissions struct.
@@ -60,14 +62,52 @@ func (cp *CommentPermissions) Read() (bool, int, error) {
 		return false, 0, nil
 	}
 
-	// Check if user has read access to the task
-	task := &models.Task{ID: cp.comment.TaskID}
-	canRead, maxPermission, err := task.CanRead(cp.s, cp.user)
+	task, err := cp.getTask()
 	if err != nil {
 		return false, 0, err
 	}
 
-	return canRead, maxPermission, nil
+	projectService := cp.getProjectService()
+
+	if cp.user.ID < 0 {
+		shareID := cp.user.ID * -1
+		share, err := models.GetLinkShareByID(cp.s, shareID)
+		if err != nil {
+			if models.IsErrProjectShareDoesNotExist(err) {
+				return false, 0, nil
+			}
+			return false, 0, err
+		}
+		if share.ProjectID != task.ProjectID {
+			return false, 0, nil
+		}
+		if share.Permission < models.PermissionRead {
+			return false, int(share.Permission), nil
+		}
+		return true, int(share.Permission), nil
+	}
+
+	permissions, err := projectService.checkPermissionsForProjects(cp.s, cp.user, []int64{task.ProjectID})
+	if err != nil {
+		return false, 0, err
+	}
+
+	permission, ok := permissions[task.ProjectID]
+	if !ok {
+		return false, 0, nil
+	}
+
+	rawMax := int(permission.MaxPermission)
+	if rawMax == int(models.PermissionUnknown) {
+		return false, 0, nil
+	}
+
+	maxPermission := rawMax
+	if maxPermission < int(models.PermissionRead) {
+		return false, maxPermission, nil
+	}
+
+	return true, maxPermission, nil
 }
 
 // Create checks if the user can create a comment.
@@ -76,9 +116,13 @@ func (cp *CommentPermissions) Create() (bool, error) {
 		return false, nil
 	}
 
-	// User needs write access to the task to create comments
-	task := &models.Task{ID: cp.comment.TaskID}
-	return task.CanWrite(cp.s, cp.user)
+	task, err := cp.getTask()
+	if err != nil {
+		return false, err
+	}
+
+	projectService := cp.getProjectService()
+	return projectService.HasPermission(cp.s, task.ProjectID, cp.user, models.PermissionWrite)
 }
 
 // Update checks if the user can update the comment.
@@ -103,8 +147,13 @@ func (cp *CommentPermissions) Delete() (bool, error) {
 // This logic is moved from models.TaskComment.canUserModifyTaskComment.
 func (cp *CommentPermissions) canUserModifyTaskComment() (bool, error) {
 	// First check if user has write access to the task
-	task := &models.Task{ID: cp.comment.TaskID}
-	canWriteTask, err := task.CanWrite(cp.s, cp.user)
+	task, err := cp.getTask()
+	if err != nil {
+		return false, err
+	}
+
+	projectService := cp.getProjectService()
+	canWriteTask, err := projectService.HasPermission(cp.s, task.ProjectID, cp.user, models.PermissionWrite)
 	if err != nil {
 		return false, err
 	}
@@ -142,6 +191,38 @@ func (cp *CommentPermissions) getTaskCommentSimple(tc *models.TaskComment) error
 	}
 
 	return nil
+}
+
+func (cp *CommentPermissions) getTask() (*models.Task, error) {
+	if cp.comment == nil {
+		return nil, models.ErrTaskDoesNotExist{ID: 0}
+	}
+
+	if cp.task != nil {
+		return cp.task, nil
+	}
+
+	task, err := models.GetTaskSimple(cp.s, &models.Task{ID: cp.comment.TaskID})
+	if err != nil {
+		return nil, err
+	}
+
+	taskCopy := task
+	cp.task = &taskCopy
+	return cp.task, nil
+}
+
+func (cp *CommentPermissions) getProjectService() *ProjectService {
+	if cp.projectService != nil {
+		return cp.projectService
+	}
+
+	engine := cp.cs.DB
+	if engine == nil && cp.s != nil {
+		engine = cp.s.Engine()
+	}
+	cp.projectService = NewProjectService(engine)
+	return cp.projectService
 }
 
 // Create creates a new task comment.
