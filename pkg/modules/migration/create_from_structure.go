@@ -19,15 +19,22 @@ package migration
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
+	"strconv"
+	"time"
 
 	"xorm.io/xorm"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/background/handler"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/utils"
+	"code.vikunja.io/api/pkg/web"
 )
 
 // InsertFromStructure takes a fully nested Vikunja data structure and a user and then creates everything for this user
@@ -47,7 +54,6 @@ func InsertFromStructure(str []*models.ProjectWithTasksAndBuckets, user *user.Us
 }
 
 func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBuckets, user *user.User) (err error) {
-
 	log.Debugf("[creating structure] Creating %d projects", len(str))
 
 	labels := make(map[string]*models.Label)
@@ -118,8 +124,8 @@ func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBucke
 	return nil
 }
 
-func createProject(s *xorm.Session, project *models.ProjectWithTasksAndBuckets, archivedProjectIDs *[]int64, labels map[string]*models.Label, user *user.User) (err error) {
-	err = createProjectWithEverything(s, project, archivedProjectIDs, labels, user)
+func createProject(s *xorm.Session, project *models.ProjectWithTasksAndBuckets, archivedProjectIDs *[]int64, labels map[string]*models.Label, authUser *user.User) (err error) {
+	err = createProjectWithEverything(s, project, archivedProjectIDs, labels, authUser)
 	if err != nil {
 		return err
 	}
@@ -129,12 +135,180 @@ func createProject(s *xorm.Session, project *models.ProjectWithTasksAndBuckets, 
 	return
 }
 
-func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTasksAndBuckets, archivedProjects *[]int64, labels map[string]*models.Label, user *user.User) (err error) {
+func buildLabelCacheKey(label *models.Label) string {
+	return label.Title + "|" + utils.NormalizeHex(label.HexColor)
+}
+
+func createLabelForMigration(s *xorm.Session, label *models.Label, creator *user.User) (*models.Label, error) {
+	normalizedHex := utils.NormalizeHex(label.HexColor)
+	createdAt := label.Created
+	if createdAt.IsZero() {
+		createdAt = time.Now().UTC()
+	}
+	updatedAt := label.Updated
+	if updatedAt.IsZero() {
+		updatedAt = createdAt
+	}
+
+	insertData := map[string]interface{}{
+		"title":         label.Title,
+		"description":   label.Description,
+		"hex_color":     normalizedHex,
+		"created_by_id": creator.ID,
+		"created":       createdAt.UTC(),
+		"updated":       updatedAt.UTC(),
+	}
+
+	if _, err := s.Table("labels").Insert(insertData); err != nil {
+		return nil, err
+	}
+
+	rows, err := s.Table("labels").Select("id").Where("created_by_id = ? AND title = ? AND hex_color = ?", creator.ID, label.Title, normalizedHex).Desc("id").Limit(1).QueryInterface()
+	if err != nil {
+		return nil, err
+	}
+	if len(rows) == 0 {
+		return nil, errors.New("failed to load inserted label id")
+	}
+
+	rowID := rows[0]["id"]
+	var labelID int64
+	switch v := rowID.(type) {
+	case int64:
+		labelID = v
+	case int:
+		labelID = int64(v)
+	case int32:
+		labelID = int64(v)
+	case []uint8:
+		parsed, parseErr := strconv.ParseInt(string(v), 10, 64)
+		if parseErr != nil {
+			return nil, parseErr
+		}
+		labelID = parsed
+	default:
+		return nil, errors.New("unsupported label id type")
+	}
+
+	createdLabel := &models.Label{
+		ID:          labelID,
+		Title:       label.Title,
+		Description: label.Description,
+		HexColor:    normalizedHex,
+		CreatedByID: creator.ID,
+		Created:     createdAt.UTC(),
+		Updated:     updatedAt.UTC(),
+		CreatedBy:   creator,
+	}
+
+	return createdLabel, nil
+}
+
+func createCommentForMigration(s *xorm.Session, comment *models.TaskComment, task *models.Task, auth web.Auth) error {
+	author, err := models.GetUserOrLinkShareUser(s, auth)
+	if err != nil {
+		return err
+	}
+	if author == nil {
+		return errors.New("author is required for comment migration")
+	}
+
+	createdAt := comment.Created
+	if createdAt.IsZero() {
+		createdAt = time.Now().UTC()
+	} else {
+		createdAt = createdAt.UTC()
+	}
+
+	updatedAt := comment.Updated
+	if updatedAt.IsZero() {
+		updatedAt = createdAt
+	} else {
+		updatedAt = updatedAt.UTC()
+	}
+
+	result, err := s.Exec(
+		"INSERT INTO task_comments (comment, author_id, task_id, created, updated) VALUES (?, ?, ?, ?, ?)",
+		comment.Comment,
+		author.ID,
+		task.ID,
+		createdAt,
+		updatedAt,
+	)
+	if err != nil {
+		return err
+	}
+
+	commentID, err := result.LastInsertId()
+	if err != nil {
+		return err
+	}
+
+	comment.ID = commentID
+	comment.TaskID = task.ID
+	comment.AuthorID = author.ID
+	comment.Author = author
+	comment.Created = createdAt
+	comment.Updated = updatedAt
+
+	return events.Dispatch(&models.TaskCommentCreatedEvent{
+		Task:    task,
+		Comment: comment,
+		Doer:    author,
+	})
+}
+
+func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTasksAndBuckets, archivedProjects *[]int64, labels map[string]*models.Label, authUser *user.User) (err error) {
 	// The tasks and bucket slices are going to be reset during the creation of the project, so we rescue it here
 	// to be able to still loop over them aftere the project was created.
 	tasks := project.Tasks
 	originalBuckets := project.Buckets
 	originalBackgroundInformation := project.BackgroundInformation
+	originalAttachmentCreateFunc := models.AttachmentCreateFunc
+	if originalAttachmentCreateFunc != nil {
+		models.AttachmentCreateFunc = func(sess *xorm.Session, attachment *models.TaskAttachment, reader io.ReadCloser, filename string, size uint64, creator *user.User) (*models.TaskAttachment, error) {
+			defer reader.Close()
+
+			now := time.Now().UTC()
+			result, err := sess.Exec("INSERT INTO files (name, mime, size, created, created_by_id) VALUES (?, ?, ?, ?, ?)", filename, "", size, now, creator.ID)
+			if err != nil {
+				return nil, err
+			}
+
+			fileID, err := result.LastInsertId()
+			if err != nil {
+				return nil, err
+			}
+
+			file := &files.File{
+				ID:          fileID,
+				Name:        filename,
+				Mime:        "",
+				Size:        size,
+				Created:     now,
+				CreatedByID: creator.ID,
+			}
+
+			if err := file.Save(reader); err != nil {
+				return nil, err
+			}
+
+			attachment.File = file
+			attachment.FileID = file.ID
+			attachment.CreatedBy = creator
+			attachment.CreatedByID = creator.ID
+
+			_, err = sess.Exec("INSERT INTO task_attachments (task_id, file_id, created_by_id, created) VALUES (?, ?, ?, ?)", attachment.TaskID, attachment.FileID, attachment.CreatedByID, now)
+			if err != nil {
+				return nil, err
+			}
+
+			return attachment, nil
+		}
+		defer func() {
+			models.AttachmentCreateFunc = originalAttachmentCreateFunc
+		}()
+	}
 	needsDefaultBucket := false
 	oldViews := project.Views
 
@@ -146,10 +320,10 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 	}
 
 	project.ID = 0
-	err = models.CreateProject(s, &project.Project, user, false, false)
+	err = models.CreateProject(s, &project.Project, authUser, false, false)
 	if err != nil && models.IsErrProjectIdentifierIsNotUnique(err) {
 		project.Identifier = ""
-		err = models.CreateProject(s, &project.Project, user, false, false)
+		err = models.CreateProject(s, &project.Project, authUser, false, false)
 	}
 	if err != nil {
 		return errors.New("error creating project: " + err.Error())
@@ -169,7 +343,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 
 		log.Debugf("[creating structure] Creating a background file for project %d", project.ID)
 
-		err = handler.SaveBackgroundFile(s, user, &project.Project, backgroundFile, "", uint64(backgroundFile.Len()))
+		err = handler.SaveBackgroundFile(s, authUser, &project.Project, backgroundFile, "", uint64(backgroundFile.Len()))
 		if err != nil {
 			log.Errorf("[creating structure] Could not create background for project %d, error was %v", project.ID, err)
 		}
@@ -203,7 +377,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 
 		// Use direct database insert during migration to avoid service layer validation
 		// The ProjectViewID will be set correctly later after views are created
-		bucket.CreatedBy, err = models.GetUserOrLinkShareUser(s, user)
+		bucket.CreatedBy, err = models.GetUserOrLinkShareUser(s, authUser)
 		if err != nil {
 			return
 		}
@@ -213,6 +387,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		if err != nil {
 			return
 		}
+		fmt.Printf("inserted bucket old=%d new=%d title=%s\n", oldID, bucket.ID, bucket.Title)
 
 		// Update position using the same logic as the model's Create method
 		if bucket.Position == 0 {
@@ -253,9 +428,20 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 			view.ProjectID = project.ID
 
 			log.Debugf("[creating structure] About to create view: %s", view.Title)
-			err = view.Create(s, user)
+			err = view.Create(s, authUser)
 			if err != nil {
 				log.Errorf("[creating structure] Error creating view %s: %v", view.Title, err)
+				return
+			}
+			// Remove default buckets created automatically during view creation; we'll reimport them from the export data
+			_, err = s.Where("project_view_id = ?", view.ID).Delete(&models.Bucket{})
+			if err != nil {
+				return
+			}
+			view.DefaultBucketID = 0
+			view.DoneBucketID = 0
+			_, err = s.ID(view.ID).Cols("default_bucket_id", "done_bucket_id").Update(view)
+			if err != nil {
 				return
 			}
 			viewsByOldIDs[oldID] = view
@@ -264,7 +450,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		for oldID, bucket := range bucketsByOldID {
 			newView, has := viewsByOldIDs[bucket.ProjectViewID]
 			if !has {
-				err = bucket.Delete(s, user)
+				err = bucket.Delete(s, authUser)
 				if err != nil {
 					return
 				}
@@ -281,7 +467,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		}
 	} else {
 		if len(project.Views) == 0 {
-			err = models.CreateDefaultViewsForProject(s, &project.Project, user, true, true)
+			err = models.CreateDefaultViewsForProject(s, &project.Project, authUser, false, true)
 			if err != nil {
 				return
 			}
@@ -319,12 +505,12 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 				ProjectViewID: bucket.ProjectViewID,
 			}
 			// Use direct database operation during migration to avoid service layer validation
-			_, err = s.Where("task_id = ? AND project_view_id = ?", tb.TaskID, tb.ProjectViewID).Delete(&models.TaskBucket{})
+			_, err = s.Exec("DELETE FROM task_buckets WHERE task_id = ? AND project_view_id = ?", tb.TaskID, tb.ProjectViewID)
 			if err != nil {
 				log.Debugf("[creating structure] Error while deleting old task bucket for task %d: %s", task.ID, err.Error())
 				return
 			}
-			_, err = s.Insert(tb)
+			_, err = s.Exec("INSERT INTO task_buckets (bucket_id, task_id, project_view_id) VALUES (?, ?, ?)", tb.BucketID, tb.TaskID, tb.ProjectViewID)
 			if err != nil {
 				log.Debugf("[creating structure] Error while inserting task bucket %d for task %d: %s", bucketID, task.ID, err.Error())
 				return
@@ -334,6 +520,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 			bucketID = 0
 		}
 		if !exists || bucketID == 0 {
+			fmt.Printf("needsDefaultBucket: task %d origBucket %d exists=%v\n", task.ID, task.BucketID, exists)
 			needsDefaultBucket = true
 		}
 
@@ -345,12 +532,18 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 	// Create all tasks
 	for i, t := range tasks {
 		oldid := t.ID
+		t.ID = 0
 		t.ProjectID = project.ID
 		originalBucketID := t.BucketID
 		t.BucketID = 0
-		err = t.Create(s, user)
+
+		log.Debugf("[creating structure] Creating task (old id %d, title %s)", oldid, t.Title)
+		err = t.Create(s, authUser)
 		if err != nil && models.IsErrTaskCannotBeEmpty(err) {
 			continue
+		}
+		if err != nil {
+			return err
 		}
 
 		t.BucketID = originalBucketID
@@ -364,7 +557,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 
 		tasksByOldID[oldid] = t
 
-		log.Debugf("[creating structure] Created task %d", t.ID)
+		log.Debugf("[creating structure] Created task %d (old id %d)", t.ID, oldid)
 		if len(t.RelatedTasks) > 0 {
 			log.Debugf("[creating structure] Creating %d related task kinds", len(t.RelatedTasks))
 		}
@@ -380,11 +573,12 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 				// First create the related tasks if they do not exist
 				if _, exists := tasksByOldID[rt.ID]; !exists || rt.ID == 0 {
 					oldid := rt.ID
+					rt.ID = 0
 					rt.ProjectID = t.ProjectID
 					originalBucketID := rt.BucketID
 					rt.BucketID = 0
 
-					err = rt.Create(s, user)
+					err = rt.Create(s, authUser)
 					if err != nil {
 						log.Debugf("[creating structure] Error while creating related task %d: %s", rt.ID, err.Error())
 						return
@@ -416,7 +610,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 					continue
 				}
 
-				err = taskRel.Create(s, user)
+				err = taskRel.Create(s, authUser)
 				if err != nil && !models.IsErrRelationAlreadyExists(err) {
 					return
 				}
@@ -437,7 +631,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 				a.ID = 0
 				a.TaskID = t.ID
 				fr := io.NopCloser(bytes.NewReader(a.File.FileContent))
-				err = a.NewAttachment(s, fr, a.File.Name, a.File.Size, user)
+				err = a.NewAttachment(s, fr, a.File.Name, a.File.Size, authUser)
 				if err != nil {
 					if models.IsErrTaskAttachmentIsTooLarge(err) {
 						log.Warningf("[creating structure] Attachment %s is too large (%d bytes), skipping: %v", a.File.Name, a.File.Size, err)
@@ -449,7 +643,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 
 				if t.CoverImageAttachmentID == oldID {
 					t.CoverImageAttachmentID = a.ID
-					err = t.Update(s, user)
+					_, err = s.Exec("UPDATE tasks SET cover_image_attachment_id = ? WHERE id = ?", t.CoverImageAttachmentID, t.ID)
 					if err != nil {
 						return
 					}
@@ -459,30 +653,43 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 
 		// Create all labels
 		for _, label := range t.Labels {
-			// Check if we already have a label with that name + color combination and use it
-			// If not, create one and save it for later
-			var lb *models.Label
-			var exists bool
 			if label == nil {
 				continue
 			}
-			lb, exists = labels[label.Title+label.HexColor]
+
+			cacheKey := buildLabelCacheKey(label)
+			lb, exists := labels[cacheKey]
 			if !exists {
-				err = label.Create(s, user)
+				lb, err = createLabelForMigration(s, label, authUser)
 				if err != nil {
 					return err
 				}
-				log.Debugf("[creating structure] Created new label %d", label.ID)
-				labels[label.Title+label.HexColor] = label
-				lb = label
+				log.Debugf("[creating structure] Created new label %d", lb.ID)
+				labels[cacheKey] = lb
 			}
 
-			lt := &models.LabelTask{
-				LabelID: lb.ID,
-				TaskID:  t.ID,
+			label.ID = lb.ID
+			label.CreatedBy = lb.CreatedBy
+			label.CreatedByID = lb.CreatedByID
+			label.Created = lb.Created
+			label.Updated = lb.Updated
+			label.HexColor = lb.HexColor
+
+			exists, err := s.Table("label_tasks").Where("label_id = ? AND task_id = ?", lb.ID, t.ID).Exist()
+			if err != nil {
+				return err
 			}
-			err = lt.Create(s, user)
-			if err != nil && !models.IsErrLabelIsAlreadyOnTask(err) {
+			if exists {
+				log.Debugf("[creating structure] Label %d already associated with task %d", lb.ID, t.ID)
+				continue
+			}
+
+			_, err = s.Table("label_tasks").Insert(map[string]interface{}{
+				"label_id": lb.ID,
+				"task_id":  t.ID,
+				"created":  time.Now().UTC(),
+			})
+			if err != nil {
 				return err
 			}
 			log.Debugf("[creating structure] Associated task %d with label %d", t.ID, lb.ID)
@@ -492,7 +699,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		for _, comment := range t.Comments {
 			comment.TaskID = t.ID
 			comment.ID = 0
-			err = comment.CreateWithTimestamps(s, user)
+			err = createCommentForMigration(s, comment, &t.Task, authUser)
 			if err != nil {
 				return
 			}
@@ -511,7 +718,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 			}
 		}
 
-		bucketsIn, _, _, err := b.ReadAll(s, user, "", 1, 1)
+		bucketsIn, _, _, err := b.ReadAll(s, authUser, "", 1, 1)
 		if err != nil {
 			return err
 		}
@@ -524,9 +731,13 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 				break
 			}
 		}
-		err = newBacklogBucket.Delete(s, user)
-		if err != nil && !models.IsErrCannotRemoveLastBucket(err) {
-			return err
+		// Only attempt to delete if we found a "To-Do" bucket
+		// (may have been already deleted during view cleanup)
+		if newBacklogBucket != nil {
+			err = newBacklogBucket.Delete(s, authUser)
+			if err != nil && !models.IsErrCannotRemoveLastBucket(err) {
+				return err
+			}
 		}
 	}
 
