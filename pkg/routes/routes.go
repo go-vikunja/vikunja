@@ -571,15 +571,8 @@ func registerAPIRoutes(a *echo.Group) {
 		a.GET("/webhooks/events", apiv1.GetAvailableWebhookEvents)
 	}
 
-	// Reactions
-	reactionProvider := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.Reaction{}
-		},
-	}
-	a.GET("/:entitykind/:entityid/reactions", reactionProvider.ReadAllWeb)
-	a.POST("/:entitykind/:entityid/reactions/delete", reactionProvider.DeleteWeb)
-	a.PUT("/:entitykind/:entityid/reactions", reactionProvider.CreateWeb)
+	// Register the new declarative reaction routes
+	apiv1.RegisterReactions(a)
 
 	// Project views
 	projectViewProvider := &handler.WebHandler{

@@ -99,27 +99,78 @@ func (rs *ReactionsService) AddReactionsToTasks(s *xorm.Session, taskIDs []int64
 	return nil
 }
 
-// CreateReaction creates a new reaction for a task.
-func (rs *ReactionsService) CreateReaction(s *xorm.Session, reaction *models.Reaction, a web.Auth) error {
+// Create creates a new reaction for an entity (task or comment).
+// This method is idempotent - creating a duplicate reaction will not result in an error.
+func (rs *ReactionsService) Create(s *xorm.Session, reaction *models.Reaction, a web.Auth) error {
 	// Set the user who created the reaction
 	reaction.UserID = a.GetID()
-	reaction.EntityKind = models.ReactionKindTask
+
+	// Check if reaction already exists (idempotent behavior)
+	exists, err := s.Where("user_id = ? AND entity_id = ? AND entity_kind = ? AND value = ?",
+		reaction.UserID, reaction.EntityID, reaction.EntityKind, reaction.Value).
+		Exist(&models.Reaction{})
+	if err != nil {
+		return err
+	}
+
+	if exists {
+		return nil // Already exists, treat as success (idempotent)
+	}
+
+	// Reset ID to ensure new record
+	reaction.ID = 0
 
 	// Insert the reaction
-	_, err := s.Insert(reaction)
+	_, err = s.Insert(reaction)
 	return err
 }
 
-// DeleteReaction removes a reaction from a task.
-func (rs *ReactionsService) DeleteReaction(s *xorm.Session, entityID int64, userID int64, value string) error {
-	_, err := s.Where("entity_id = ? AND user_id = ? AND value = ? AND entity_kind = ?",
-		entityID, userID, value, models.ReactionKindTask).Delete(&models.Reaction{})
+// Delete removes a reaction from an entity.
+// Only the user who created the reaction can delete it.
+func (rs *ReactionsService) Delete(s *xorm.Session, entityID int64, userID int64, value string, entityKind models.ReactionKind) error {
+	_, err := s.Where("user_id = ? AND entity_id = ? AND entity_kind = ? AND value = ?",
+		userID, entityID, entityKind, value).
+		Delete(&models.Reaction{})
 	return err
 }
 
-// GetReactionsByTask retrieves all reactions for a specific task.
-func (rs *ReactionsService) GetReactionsByTask(s *xorm.Session, taskID int64) ([]*models.Reaction, error) {
+// GetAll retrieves all reactions for a specific entity, grouped by reaction value.
+// Returns a ReactionMap where keys are reaction values (emoji) and values are lists of users who reacted.
+func (rs *ReactionsService) GetAll(s *xorm.Session, entityID int64, entityKind models.ReactionKind) (models.ReactionMap, error) {
+	where := builder.And(
+		builder.Eq{"entity_kind": entityKind},
+		builder.Eq{"entity_id": entityID},
+	)
+
 	reactions := []*models.Reaction{}
-	err := s.Where("entity_id = ? AND entity_kind = ?", taskID, models.ReactionKindTask).Find(&reactions)
-	return reactions, err
+	err := s.Where(where).Find(&reactions)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(reactions) == 0 {
+		return models.ReactionMap{}, nil
+	}
+
+	// Get all users who made these reactions
+	cond := builder.
+		Select("user_id").
+		From("reactions").
+		Where(where)
+
+	users, err := user.GetUsersByCond(s, builder.In("id", cond))
+	if err != nil {
+		return nil, err
+	}
+
+	// Build reaction map
+	reactionMap := make(models.ReactionMap)
+	for _, reaction := range reactions {
+		if _, has := reactionMap[reaction.Value]; !has {
+			reactionMap[reaction.Value] = []*user.User{}
+		}
+		reactionMap[reaction.Value] = append(reactionMap[reaction.Value], users[reaction.UserID])
+	}
+
+	return reactionMap, nil
 }

@@ -1146,6 +1146,60 @@ func (err ErrInvalidReactionEntityKind) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrInvalidReactionValue represents an error where the reaction value is invalid
+type ErrInvalidReactionValue struct {
+	Value string
+}
+
+// IsErrInvalidReactionValue checks if an error is ErrInvalidReactionValue.
+func IsErrInvalidReactionValue(err error) bool {
+	_, ok := err.(ErrInvalidReactionValue)
+	return ok
+}
+
+func (err ErrInvalidReactionValue) Error() string {
+	return fmt.Sprintf("Reaction value '%s' is invalid", err.Value)
+}
+
+// ErrCodeInvalidReactionValue holds the unique world-error code of this error
+const ErrCodeInvalidReactionValue = 4026
+
+// HTTPError holds the http error description
+func (err ErrInvalidReactionValue) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidReactionValue,
+		Message:  "The reaction value is invalid. It must be between 1 and 20 characters.",
+	}
+}
+
+// ErrInvalidEntityID represents an error where the entity ID parameter is invalid
+type ErrInvalidEntityID struct {
+	ID string
+}
+
+// IsErrInvalidEntityID checks if an error is ErrInvalidEntityID.
+func IsErrInvalidEntityID(err error) bool {
+	_, ok := err.(ErrInvalidEntityID)
+	return ok
+}
+
+func (err ErrInvalidEntityID) Error() string {
+	return fmt.Sprintf("Entity ID '%s' is invalid", err.ID)
+}
+
+// ErrCodeInvalidEntityID holds the unique world-error code of this error
+const ErrCodeInvalidEntityID = 4027
+
+// HTTPError holds the http error description
+func (err ErrInvalidEntityID) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidEntityID,
+		Message:  "The entity ID is invalid.",
+	}
+}
+
 // ErrMustHaveProjectViewToSortByPosition represents an error where no project view id was supplied
 type ErrMustHaveProjectViewToSortByPosition struct{}
 
