@@ -24,23 +24,32 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/utils"
+	"code.vikunja.io/api/pkg/web"
 	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
 type LabelService struct {
-	DB *xorm.Engine
+	DB             *xorm.Engine
+	ProjectService *ProjectService
 }
 
 func NewLabelService(db *xorm.Engine) *LabelService {
-	return &LabelService{DB: db}
+	return &LabelService{
+		DB:             db,
+		ProjectService: NewProjectService(db),
+	}
 }
 
 func (ls *LabelService) Create(s *xorm.Session, label *models.Label, u *user.User) error {
 	if u == nil {
 		return ErrAccessDenied
 	}
+	label.ID = 0
+	label.HexColor = utils.NormalizeHex(label.HexColor)
 	label.CreatedByID = u.ID
+	label.CreatedBy = u
 	_, err := s.Insert(label)
 	return err
 }
@@ -277,4 +286,415 @@ func (ls *LabelService) Delete(s *xorm.Session, label *models.Label, u *user.Use
 
 	_, err = s.Delete(label)
 	return err
+}
+
+// GetLabelsByTaskIDsOptions is a struct to not clutter the function with too many optional parameters.
+type GetLabelsByTaskIDsOptions struct {
+	User                web.Auth
+	Search              []string
+	Page                int
+	PerPage             int
+	TaskIDs             []int64
+	GetUnusedLabels     bool
+	GroupByLabelIDsOnly bool
+	GetForUser          bool
+}
+
+// GetLabelsByTaskIDs is a helper function to get all labels for a set of tasks
+// Used when getting all labels for one task as well when getting all labels
+func (ls *LabelService) GetLabelsByTaskIDs(s *xorm.Session, opts *GetLabelsByTaskIDsOptions) (ls2 []*models.LabelWithTaskID, resultCount int, totalEntries int64, err error) {
+	linkShare, isLinkShareAuth := opts.User.(*models.LinkSharing)
+
+	// We still need the task ID when we want to get all labels for a task, but because of this, we get the same label
+	// multiple times when it is associated to more than one task.
+	// Because of this whole thing, we need this extra switch here to only group by Task IDs if needed.
+	var groupBy = "labels.id,label_tasks.task_id"
+	var selectStmt = "labels.*, label_tasks.task_id"
+	if opts.GroupByLabelIDsOnly {
+		groupBy = "labels.id"
+		selectStmt = "labels.*"
+	}
+
+	// Get all labels associated with these tasks
+	var labels []*models.LabelWithTaskID
+	cond := builder.And(builder.NotNull{"label_tasks.label_id"})
+	if len(opts.TaskIDs) > 0 && !opts.GetForUser {
+		cond = builder.And(builder.In("label_tasks.task_id", opts.TaskIDs), cond)
+	}
+	if opts.GetForUser {
+		var projectIDs []int64
+		if isLinkShareAuth {
+			projectIDs = []int64{linkShare.ProjectID}
+		} else {
+			fullUser, err := user.GetUserByID(s, opts.User.GetID())
+			if err != nil {
+				return nil, 0, 0, err
+			}
+			projects, _, err := models.GetAllProjectsForUser(s, fullUser.ID, &models.ProjectOptions{
+				User: &user.User{ID: opts.User.GetID()},
+			})
+			if err != nil {
+				return nil, 0, 0, err
+			}
+			projectIDs = make([]int64, 0, len(projects))
+			for _, project := range projects {
+				projectIDs = append(projectIDs, project.ID)
+			}
+		}
+
+		cond = builder.And(builder.In("label_tasks.task_id",
+			builder.
+				Select("id").
+				From("tasks").
+				Where(builder.In("project_id", projectIDs)),
+		), cond)
+	}
+	if opts.GetUnusedLabels && !isLinkShareAuth {
+		cond = builder.Or(cond, builder.Eq{"labels.created_by_id": opts.User.GetID()})
+	}
+
+	ids := []int64{}
+
+	for _, search := range opts.Search {
+		search = strings.Trim(search, " ")
+		if search == "" {
+			continue
+		}
+
+		vals := strings.Split(search, ",")
+		for _, val := range vals {
+			v, err := strconv.ParseInt(val, 10, 64)
+			if err != nil {
+				log.Debugf("Label search string part '%s' is not a number: %s", val, err)
+				continue
+			}
+			ids = append(ids, v)
+		}
+	}
+
+	if len(ids) > 0 {
+		cond = builder.And(cond, builder.In("labels.id", ids))
+	} else if len(opts.Search) > 0 {
+		var searchcond builder.Cond
+		for _, search := range opts.Search {
+			search = strings.Trim(search, " ")
+			if search == "" {
+				continue
+			}
+
+			searchcond = builder.Or(searchcond, db.ILIKE("labels.title", search))
+		}
+
+		cond = builder.And(cond, searchcond)
+	}
+
+	limit, start := getLimitFromPageIndex(opts.Page, opts.PerPage)
+
+	query := s.Table("labels").
+		Select(selectStmt).
+		Join("LEFT", "label_tasks", "label_tasks.label_id = labels.id").
+		Where(cond).
+		GroupBy(groupBy).
+		OrderBy("labels.id ASC")
+	if limit > 0 {
+		query = query.Limit(limit, start)
+	}
+	err = query.Find(&labels)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	if len(labels) == 0 {
+		return nil, 0, 0, nil
+	}
+
+	// Get all created by users
+	var userids []int64
+	for _, l := range labels {
+		userids = append(userids, l.CreatedByID)
+	}
+	users := make(map[int64]*user.User)
+	if len(userids) > 0 {
+		err = s.In("id", userids).Find(&users)
+		if err != nil {
+			return nil, 0, 0, err
+		}
+	}
+
+	// Obfuscate all user emails
+	for _, u := range users {
+		u.Email = ""
+	}
+
+	// Put it all together
+	for in, l := range labels {
+		if createdBy, has := users[l.CreatedByID]; has {
+			labels[in].CreatedBy = createdBy
+		}
+	}
+
+	// Get the total number of entries
+	totalEntries, err = s.Table("labels").
+		Select("count(DISTINCT labels.id)").
+		Join("LEFT", "label_tasks", "label_tasks.label_id = labels.id").
+		Where(cond).
+		Count(&models.Label{})
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	return labels, len(labels), totalEntries, err
+}
+
+// HasAccessToLabel checks if a user has access to a specific label
+func (ls *LabelService) HasAccessToLabel(s *xorm.Session, labelID int64, a web.Auth) (bool, error) {
+	if a == nil {
+		return false, nil
+	}
+
+	label := &models.Label{ID: labelID}
+	exists, err := s.Get(label)
+	if err != nil {
+		return false, err
+	}
+	if !exists {
+		return false, models.ErrLabelDoesNotExist{LabelID: labelID}
+	}
+
+	// Check if user created the label
+	if label.CreatedByID == a.GetID() {
+		return true, nil
+	}
+
+	// Check if label is associated with tasks in user's accessible projects
+	linkShare, isLinkShare := a.(*models.LinkSharing)
+
+	var projectIDs []int64
+	if isLinkShare {
+		projectIDs = []int64{linkShare.ProjectID}
+	} else {
+		fullUser, err := user.GetUserByID(s, a.GetID())
+		if err != nil {
+			return false, err
+		}
+		projects, _, err := models.GetAllProjectsForUser(s, fullUser.ID, &models.ProjectOptions{
+			User: &user.User{ID: a.GetID()},
+		})
+		if err != nil {
+			return false, err
+		}
+		projectIDs = make([]int64, 0, len(projects))
+		for _, project := range projects {
+			projectIDs = append(projectIDs, project.ID)
+		}
+	}
+
+	cond := builder.In("label_tasks.task_id",
+		builder.
+			Select("id").
+			From("tasks").
+			Where(builder.In("project_id", projectIDs)),
+	)
+
+	exists, err = s.Table("labels").
+		Select("label_tasks.*").
+		Join("LEFT", "label_tasks", "label_tasks.label_id = labels.id").
+		Where(cond).
+		And("labels.id = ?", labelID).
+		Exist(&models.LabelTask{})
+
+	return exists, err
+}
+
+// IsLabelOwner checks if the user is the owner of the label
+func (ls *LabelService) IsLabelOwner(s *xorm.Session, labelID int64, a web.Auth) (bool, error) {
+	if a == nil {
+		return false, nil
+	}
+
+	if _, is := a.(*models.LinkSharing); is {
+		return false, nil
+	}
+
+	label := &models.Label{ID: labelID}
+	exists, err := s.Get(label)
+	if err != nil {
+		return false, err
+	}
+	if !exists {
+		return false, models.ErrLabelDoesNotExist{LabelID: labelID}
+	}
+
+	return label.CreatedByID == a.GetID(), nil
+}
+
+// AddLabelToTask adds a label to a task
+func (ls *LabelService) AddLabelToTask(s *xorm.Session, labelID, taskID int64, a web.Auth) error {
+	// Check if the label exists and user has access
+	hasAccess, err := ls.HasAccessToLabel(s, labelID, a)
+	if err != nil {
+		return err
+	}
+	if !hasAccess {
+		u, _ := a.(*user.User)
+		if u != nil {
+			return models.ErrUserHasNoAccessToLabel{LabelID: labelID, UserID: u.ID}
+		}
+		return ErrAccessDenied
+	}
+
+	// Check if user can write to the task
+	task := &models.Task{ID: taskID}
+	exists, err := s.Get(task)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return models.ErrTaskDoesNotExist{ID: taskID}
+	}
+
+	canUpdate, err := task.CanUpdate(s, a)
+	if err != nil {
+		return err
+	}
+	if !canUpdate {
+		return ErrAccessDenied
+	}
+
+	// Check if the label is already added
+	exists, err = s.Exist(&models.LabelTask{LabelID: labelID, TaskID: taskID})
+	if err != nil {
+		return err
+	}
+	if exists {
+		return models.ErrLabelIsAlreadyOnTask{LabelID: labelID, TaskID: taskID}
+	}
+
+	// Add the label to the task
+	_, err = s.Insert(&models.LabelTask{LabelID: labelID, TaskID: taskID})
+	return err
+}
+
+// RemoveLabelFromTask removes a label from a task
+func (ls *LabelService) RemoveLabelFromTask(s *xorm.Session, labelID, taskID int64, a web.Auth) error {
+	// Check if user can write to the task
+	task := &models.Task{ID: taskID}
+	exists, err := s.Get(task)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return models.ErrTaskDoesNotExist{ID: taskID}
+	}
+
+	canUpdate, err := task.CanUpdate(s, a)
+	if err != nil {
+		return err
+	}
+	if !canUpdate {
+		return ErrAccessDenied
+	}
+
+	// Remove the label from the task
+	_, err = s.Delete(&models.LabelTask{LabelID: labelID, TaskID: taskID})
+	return err
+}
+
+// UpdateTaskLabels updates all labels on a task at once
+func (ls *LabelService) UpdateTaskLabels(s *xorm.Session, taskID int64, newLabels []*models.Label, a web.Auth) error {
+	// Get the task
+	task := &models.Task{ID: taskID}
+	exists, err := s.Get(task)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return models.ErrTaskDoesNotExist{ID: taskID}
+	}
+
+	// Check permissions
+	canUpdate, err := task.CanUpdate(s, a)
+	if err != nil {
+		return err
+	}
+	if !canUpdate {
+		return ErrAccessDenied
+	}
+
+	// Get current labels
+	currentLabels, _, _, err := ls.GetLabelsByTaskIDs(s, &GetLabelsByTaskIDsOptions{
+		TaskIDs: []int64{taskID},
+	})
+	if err != nil {
+		return err
+	}
+
+	// If we don't have any new labels, delete everything right away
+	if len(newLabels) == 0 && len(currentLabels) > 0 {
+		_, err = s.Where("task_id = ?", taskID).Delete(&models.LabelTask{})
+		return err
+	}
+
+	// If we didn't change anything (from 0 to zero) don't do anything
+	if len(newLabels) == 0 && len(currentLabels) == 0 {
+		return nil
+	}
+
+	// Make a hashmap of the new labels for easier comparison
+	newLabelsMap := make(map[int64]*models.Label, len(newLabels))
+	for _, newLabel := range newLabels {
+		newLabelsMap[newLabel.ID] = newLabel
+	}
+
+	// Get old labels to delete
+	var labelsToDelete []int64
+	oldLabelsMap := make(map[int64]*models.Label, len(currentLabels))
+	for _, oldLabel := range currentLabels {
+		oldLabelsMap[oldLabel.ID] = &oldLabel.Label
+		if newLabelsMap[oldLabel.ID] == nil {
+			labelsToDelete = append(labelsToDelete, oldLabel.ID)
+		}
+	}
+
+	// Delete all labels not passed
+	if len(labelsToDelete) > 0 {
+		_, err = s.In("label_id", labelsToDelete).
+			And("task_id = ?", taskID).
+			Delete(&models.LabelTask{})
+		if err != nil {
+			return err
+		}
+	}
+
+	// Loop through our labels and add new ones
+	for _, l := range newLabels {
+		// Check if the label is already added on the task
+		if oldLabelsMap[l.ID] != nil {
+			continue
+		}
+
+		// Check if the user has access to the label
+		hasAccess, err := ls.HasAccessToLabel(s, l.ID, a)
+		if err != nil {
+			return err
+		}
+		if !hasAccess {
+			u, _ := a.(*user.User)
+			if u != nil {
+				return models.ErrUserHasNoAccessToLabel{LabelID: l.ID, UserID: u.ID}
+			}
+			return ErrAccessDenied
+		}
+
+		// Insert it
+		_, err = s.Insert(&models.LabelTask{
+			LabelID: l.ID,
+			TaskID:  taskID,
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

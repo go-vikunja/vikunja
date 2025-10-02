@@ -470,7 +470,8 @@ func persistLabels(s *xorm.Session, a web.Auth, task *models.Task, labels []*mod
 	}
 
 	// Using readall ensures the current user has the permission to see the labels they provided via caldav.
-	existingLabels, _, _, err := models.GetLabelsByTaskIDs(s, &models.LabelByTaskIDsOptions{
+	labelService := services.NewLabelService(db.GetEngine())
+	existingLabels, _, _, err := labelService.GetLabelsByTaskIDs(s, &services.GetLabelsByTaskIDsOptions{
 		Search:              labelTitles,
 		User:                u,
 		GetForUser:          true,

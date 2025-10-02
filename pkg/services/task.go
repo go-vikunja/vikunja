@@ -1284,7 +1284,8 @@ func (ts *TaskService) addAssigneesToTasks(s *xorm.Session, taskIDs []int64, tas
 }
 
 func (ts *TaskService) addLabelsToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*models.Task) error {
-	labels, _, _, err := models.GetLabelsByTaskIDs(s, &models.LabelByTaskIDsOptions{
+	labelService := NewLabelService(ts.DB)
+	labels, _, _, err := labelService.GetLabelsByTaskIDs(s, &GetLabelsByTaskIDsOptions{
 		TaskIDs: taskIDs,
 		Page:    -1,
 	})
