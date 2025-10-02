@@ -14,30 +14,31 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package models
+package services
 
 import (
-	"regexp"
-	"strings"
-
+	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
-
+	"code.vikunja.io/api/pkg/web"
 	"xorm.io/xorm"
 )
 
-// FindMentionedUsersInText is a legacy function maintained for backward compatibility
-// New code should use services.UserMentionsService.FindMentionedUsersInText instead
-func FindMentionedUsersInText(s *xorm.Session, text string) (users map[int64]*user.User, err error) {
-	reg := regexp.MustCompile(`@\w+`)
-	matches := reg.FindAllString(text, -1)
-	if matches == nil {
-		return
-	}
+// InitializeDependencies wires up service layer dependencies with the models layer
+// This must be called during application initialization to enable service layer functionality
+func InitializeDependencies() {
+	// Initialize user mentions service
+	mentionsService := NewUserMentionsService()
 
-	usernames := []string{}
-	for _, match := range matches {
-		usernames = append(usernames, strings.TrimPrefix(match, "@"))
+	// Inject the service function into models to avoid import cycles
+	models.NotifyMentionedUsersFunc = func(
+		sess *xorm.Session,
+		subject interface {
+			CanRead(s *xorm.Session, a web.Auth) (bool, int, error)
+		},
+		text string,
+		notification notifications.NotificationWithSubject,
+	) (users map[int64]*user.User, err error) {
+		return mentionsService.NotifyMentionedUsers(sess, subject, text, notification)
 	}
-
-	return user.GetUsersByUsername(s, usernames, true)
 }

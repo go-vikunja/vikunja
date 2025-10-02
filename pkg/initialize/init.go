@@ -132,6 +132,9 @@ func FullInit() {
 	openid.CleanupSavedOpenIDProviders()
 	openid.RegisterEmptyOpenIDTeamCleanupCron()
 
+	// Initialize service layer dependencies
+	services.InitializeDependencies()
+
 	// Start processing events
 	go func() {
 		models.RegisterListeners()

@@ -30,11 +30,23 @@ import (
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/web"
 
 	"github.com/ThreeDotsLabs/watermill/message"
 	"xorm.io/builder"
 	"xorm.io/xorm"
 )
+
+// NotifyMentionedUsersFunc is a function variable that allows service layer injection
+// The service layer should set this to avoid import cycles
+var NotifyMentionedUsersFunc func(
+	sess *xorm.Session,
+	subject interface {
+		CanRead(s *xorm.Session, a web.Auth) (bool, int, error)
+	},
+	text string,
+	notification notifications.NotificationWithSubject,
+) (users map[int64]*user.User, err error)
 
 // RegisterListeners registers all event listeners
 func RegisterListeners() {
@@ -126,6 +138,16 @@ func (s *DecreaseTaskCounter) Handle(_ *message.Message) (err error) {
 }
 
 func notifyMentionedUsers(sess *xorm.Session, task *Task, text string, n notifications.NotificationWithSubject) (users map[int64]*user.User, err error) {
+	// Use injected service function if available (preferred for service layer architecture)
+	if NotifyMentionedUsersFunc != nil {
+		// Convert Task to the interface the function expects
+		subject := interface {
+			CanRead(s *xorm.Session, a web.Auth) (bool, int, error)
+		}(task)
+		return NotifyMentionedUsersFunc(sess, subject, text, n)
+	}
+
+	// Fallback to direct implementation (for backward compatibility)
 	users, err = FindMentionedUsersInText(sess, text)
 	if err != nil {
 		return
