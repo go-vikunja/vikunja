@@ -331,12 +331,14 @@ func registerAPIRoutes(a *echo.Group) {
 	// Avatar endpoint
 	a.GET("/avatar/:username", apiv1.GetAvatar)
 
+	// User list endpoint (search users)
+	a.GET("/users", apiv1.UserList)
+
 	// User stuff
 	u := a.Group("/user")
 
 	u.GET("", apiv1.UserShow)
 	u.POST("/password", apiv1.UserChangePassword)
-	u.GET("s", apiv1.UserList)
 	u.POST("/token", apiv1.RenewToken)
 	u.POST("/settings/email", apiv1.UpdateUserEmail)
 	u.GET("/settings/avatar", apiv1.GetUserAvatarProvider)

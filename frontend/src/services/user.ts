@@ -5,7 +5,7 @@ import type {IUser} from '@/modelTypes/IUser'
 export default class UserService extends AbstractService<IUser> {
 	constructor() {
 		super({
-			getAll: '/api/v1/users',
+			getAll: '/users',
 		})
 	}
 
