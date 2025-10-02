@@ -40,7 +40,7 @@ func TestAPITokenService_Create(t *testing.T) {
 		token := &models.APIToken{
 			Title: "Test Token",
 			APIPermissions: models.APIPermissions{
-				"tasks": []string{"read_all"},
+				"v1_tasks": []string{"read_one", "update"},
 			},
 			ExpiresAt: time.Now().Add(24 * time.Hour),
 		}
@@ -66,7 +66,7 @@ func TestAPITokenService_Create(t *testing.T) {
 		token := &models.APIToken{
 			Title: "Test Token",
 			APIPermissions: models.APIPermissions{
-				"tasks": []string{"read_all"},
+				"v1_tasks": []string{"read_one", "update"},
 			},
 			ExpiresAt: time.Now().Add(24 * time.Hour),
 		}
@@ -106,7 +106,7 @@ func TestAPITokenService_Create(t *testing.T) {
 			ID:    999, // Should be reset
 			Title: "Test Token",
 			APIPermissions: models.APIPermissions{
-				"tasks": []string{"read_all"},
+				"v1_tasks": []string{"read_one", "update"},
 			},
 			ExpiresAt: time.Now().Add(24 * time.Hour),
 		}
@@ -129,7 +129,7 @@ func TestAPITokenService_Get(t *testing.T) {
 		token, err := service.Get(s, 1, u)
 		require.NoError(t, err)
 		assert.Equal(t, int64(1), token.ID)
-		assert.Equal(t, "Token 1", token.Title)
+		assert.Equal(t, "test token 1", token.Title)
 		assert.Equal(t, int64(1), token.OwnerID)
 	})
 
@@ -208,12 +208,12 @@ func TestAPITokenService_GetAll(t *testing.T) {
 		service := NewAPITokenService(testEngine)
 		u := &user.User{ID: 1}
 
-		tokens, count, total, err := service.GetAll(s, u, "Token 1", 1, 50)
+		tokens, count, total, err := service.GetAll(s, u, "test token 1", 1, 50)
 		require.NoError(t, err)
 		assert.Len(t, tokens, 1)
 		assert.Equal(t, 1, count)
 		assert.Equal(t, int64(1), total)
-		assert.Equal(t, "Token 1", tokens[0].Title)
+		assert.Equal(t, "test token 1", tokens[0].Title)
 	})
 
 	t.Run("pagination", func(t *testing.T) {
