@@ -2016,6 +2016,60 @@ func (err *ErrInvalidAPITokenPermission) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrAPITokenDoesNotExist represents an error where an api token does not exist
+type ErrAPITokenDoesNotExist struct {
+	TokenID int64
+}
+
+// IsErrAPITokenDoesNotExist checks if an error is ErrAPITokenDoesNotExist.
+func IsErrAPITokenDoesNotExist(err error) bool {
+	_, ok := err.(ErrAPITokenDoesNotExist)
+	return ok
+}
+
+func (err ErrAPITokenDoesNotExist) Error() string {
+	return fmt.Sprintf("API token %d does not exist", err.TokenID)
+}
+
+// ErrCodeAPITokenDoesNotExist holds the unique world-error code of this error
+const ErrCodeAPITokenDoesNotExist = 14003
+
+// HTTPError holds the http error description
+func (err ErrAPITokenDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeAPITokenDoesNotExist,
+		Message:  "The API token does not exist.",
+	}
+}
+
+// ErrAPITokenExpired represents an error where an api token has expired
+type ErrAPITokenExpired struct {
+	Token *APIToken
+}
+
+// IsErrAPITokenExpired checks if an error is ErrAPITokenExpired.
+func IsErrAPITokenExpired(err error) bool {
+	_, ok := err.(ErrAPITokenExpired)
+	return ok
+}
+
+func (err ErrAPITokenExpired) Error() string {
+	return fmt.Sprintf("API token %d has expired", err.Token.ID)
+}
+
+// ErrCodeAPITokenExpired holds the unique world-error code of this error
+const ErrCodeAPITokenExpired = 14004
+
+// HTTPError holds the http error description
+func (err ErrAPITokenExpired) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusUnauthorized,
+		Code:     ErrCodeAPITokenExpired,
+		Message:  "The API token has expired.",
+	}
+}
+
 // OIDC errors
 const ErrCodeOpenIDError = 15001
 
