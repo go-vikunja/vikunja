@@ -509,14 +509,7 @@ func registerAPIRoutes(a *echo.Group) {
 	a.DELETE("/subscriptions/:entity/:entityID", subscriptionHandler.DeleteWeb)
 
 	// Notifications
-	notificationHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.DatabaseNotifications{}
-		},
-	}
-	a.GET("/notifications", notificationHandler.ReadAllWeb)
-	a.POST("/notifications/:notificationid", notificationHandler.UpdateWeb)
-	a.POST("/notifications", apiv1.MarkAllNotificationsAsRead)
+	apiv1.RegisterNotifications(a)
 
 	// Migrations
 	m := a.Group("/migration")

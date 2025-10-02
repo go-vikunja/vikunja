@@ -8,6 +8,8 @@
 /specs
 /frontend/.pnpm-store/
 coverage.out
+coverage_notifications.out
+vikunja-test
 tmp/
 config.yml
 config.yaml
