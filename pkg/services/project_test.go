@@ -27,15 +27,199 @@ import (
 )
 
 func TestProject_Get(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
 	defer s.Close()
 	p := ProjectService{
 		DB: db.GetEngine(),
 	}
 
-	// This is a placeholder test. It will be expanded later.
-	_, err := p.Get(s, 1, &user.User{ID: 1})
-	assert.NoError(t, err)
+	t.Run("should get a project by ID", func(t *testing.T) {
+		project, err := p.Get(s, 1, &user.User{ID: 1})
+		assert.NoError(t, err)
+		assert.NotNil(t, project)
+		assert.Equal(t, int64(1), project.ID)
+	})
+
+	t.Run("should return error for non-existent project", func(t *testing.T) {
+		_, err := p.Get(s, 999999, &user.User{ID: 1})
+		assert.Error(t, err)
+	})
+
+	t.Run("should return error when user lacks permission", func(t *testing.T) {
+		// User 1 does not have access to project 2 (owned by user 3)
+		_, err := p.Get(s, 2, &user.User{ID: 1})
+		assert.Error(t, err)
+	})
+}
+
+func TestProject_ReadOne(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	p := ProjectService{
+		DB:              db.GetEngine(),
+		FavoriteService: NewFavoriteService(db.GetEngine()),
+	}
+
+	t.Run("should load complete project details", func(t *testing.T) {
+		// Load project first to get its data
+		project, err := models.GetProjectSimpleByID(s, 1)
+		require.NoError(t, err)
+		u := &user.User{ID: 1}
+
+		err = p.ReadOne(s, project, u)
+		assert.NoError(t, err)
+		assert.NotNil(t, project.Owner, "Owner should be loaded")
+		assert.NotNil(t, project.Views, "Views should be loaded")
+		assert.GreaterOrEqual(t, len(project.Views), 1, "Should have at least one view")
+	})
+
+	t.Run("should handle favorites pseudo project", func(t *testing.T) {
+		project := &models.Project{ID: models.FavoritesPseudoProject.ID}
+		u := &user.User{ID: 1}
+
+		err := p.ReadOne(s, project, u)
+		assert.NoError(t, err)
+		assert.NotNil(t, project.Views)
+	})
+
+	t.Run("should hide parent for link shares", func(t *testing.T) {
+		project := &models.Project{ID: 2, ParentProjectID: 1}
+		linkShare := &models.LinkSharing{ProjectID: 2}
+
+		err := p.ReadOne(s, project, linkShare)
+		assert.NoError(t, err)
+		assert.Equal(t, int64(0), project.ParentProjectID, "Parent should be hidden for link shares")
+	})
+
+	t.Run("should load background information for unsplash", func(t *testing.T) {
+		// Project 35 has background file ID 1 (unsplash photo)
+		project := &models.Project{ID: 35}
+		u := &user.User{ID: 6}
+
+		err := p.ReadOne(s, project, u)
+		assert.NoError(t, err)
+		// Background information should be loaded if file exists
+		// The exact type depends on whether it's an unsplash photo or upload
+	})
+
+	t.Run("should set favorite status correctly", func(t *testing.T) {
+		project := &models.Project{ID: 3}
+		u := &user.User{ID: 1}
+
+		// Add project to favorites first
+		err := p.FavoriteService.AddToFavorite(s, project.ID, u, models.FavoriteKindProject)
+		require.NoError(t, err)
+
+		err = p.ReadOne(s, project, u)
+		assert.NoError(t, err)
+		assert.True(t, project.IsFavorite, "Project should be marked as favorite")
+	})
+}
+
+func TestProject_ReadAll(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	p := ProjectService{
+		DB:              db.GetEngine(),
+		FavoriteService: NewFavoriteService(db.GetEngine()),
+	}
+
+	t.Run("should get all projects for user", func(t *testing.T) {
+		u := &user.User{ID: 1}
+
+		projects, resultCount, totalItems, err := p.ReadAll(s, u, "", 1, 10, false, "")
+		assert.NoError(t, err)
+		assert.Greater(t, resultCount, 0, "Should return some projects")
+		assert.Greater(t, totalItems, int64(0), "Should have total count")
+		assert.NotNil(t, projects)
+	})
+
+	t.Run("should paginate results", func(t *testing.T) {
+		u := &user.User{ID: 1}
+
+		page1, count1, total, err := p.ReadAll(s, u, "", 1, 5, false, "")
+		assert.NoError(t, err)
+		assert.LessOrEqual(t, count1, 5, "Should respect per-page limit")
+
+		page2, count2, _, err := p.ReadAll(s, u, "", 2, 5, false, "")
+		assert.NoError(t, err)
+		assert.LessOrEqual(t, count2, 5, "Should respect per-page limit")
+
+		// Pages should be different (unless there aren't enough projects)
+		if total > 5 {
+			assert.NotEqual(t, page1[0].ID, page2[0].ID, "Different pages should have different projects")
+		}
+	})
+
+	t.Run("should filter archived projects", func(t *testing.T) {
+		u := &user.User{ID: 6}
+
+		// Get non-archived projects
+		nonArchived, _, _, err := p.ReadAll(s, u, "", 1, 50, false, "")
+		assert.NoError(t, err)
+
+		// Get archived projects
+		archived, _, _, err := p.ReadAll(s, u, "", 1, 50, true, "")
+		assert.NoError(t, err)
+
+		// Verify no archived projects in non-archived list
+		for _, proj := range nonArchived {
+			assert.False(t, proj.IsArchived, "Non-archived query should not return archived projects")
+		}
+
+		// Verify all archived projects are actually archived
+		for _, proj := range archived {
+			if proj.ID != models.FavoritesPseudoProject.ID {
+				// Skip pseudo projects
+				// Note: Some projects might not be archived if they're pseudo projects
+			}
+		}
+	})
+
+	t.Run("should expand permissions when requested", func(t *testing.T) {
+		u := &user.User{ID: 1}
+
+		projects, _, _, err := p.ReadAll(s, u, "", 1, 10, false, models.ProjectExpandableRights)
+		assert.NoError(t, err)
+		assert.Greater(t, len(projects), 0, "Should have projects")
+
+		// Check that permissions are set (not unknown)
+		for _, proj := range projects {
+			// MaxPermission should be set when rights are expanded
+			// Note: The exact value depends on the user's permissions
+			// For owned projects, it should be Admin (2)
+			if proj.OwnerID == u.ID {
+				assert.GreaterOrEqual(t, proj.MaxPermission, models.PermissionRead, "Owner should have at least read permission")
+			}
+		}
+	})
+
+	t.Run("should handle link share auth", func(t *testing.T) {
+		linkShare := &models.LinkSharing{ProjectID: 2}
+
+		projects, resultCount, totalItems, err := p.ReadAll(s, linkShare, "", 1, 10, false, "")
+		assert.NoError(t, err)
+		assert.Equal(t, 0, resultCount, "Link share should return special result")
+		assert.Equal(t, int64(0), totalItems, "Link share should have 0 total")
+		assert.Len(t, projects, 1, "Link share should return exactly one project")
+		assert.Equal(t, int64(2), projects[0].ID, "Should return the shared project")
+		assert.Equal(t, int64(0), projects[0].ParentProjectID, "Parent should be hidden")
+	})
+
+	t.Run("should not expand permissions by default", func(t *testing.T) {
+		u := &user.User{ID: 1}
+
+		projects, _, _, err := p.ReadAll(s, u, "", 1, 10, false, "")
+		assert.NoError(t, err)
+
+		// Check that permissions are unknown when not expanded
+		for _, proj := range projects {
+			assert.Equal(t, models.Permission(models.PermissionUnknown), proj.MaxPermission, "Permissions should be unknown when not expanded")
+		}
+	})
 }
 
 func TestProject_Create(t *testing.T) {

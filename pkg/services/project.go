@@ -110,9 +110,172 @@ func (p *ProjectService) HasPermission(s *xorm.Session, projectID int64, u *user
 	return perm.MaxPermission >= int(permission), nil
 }
 
-// Get gets a project by its ID.
+// Get gets a project by its ID with permission checking and full details.
+// This is an alias for GetByID for backwards compatibility.
 func (p *ProjectService) Get(s *xorm.Session, projectID int64, u *user.User) (*models.Project, error) {
-	return nil, nil
+	return p.GetByID(s, projectID, u)
+}
+
+// ReadOne retrieves a single project with complete details including owner, views, subscriptions, etc.
+// This is the service layer implementation of models.Project.ReadOne()
+func (p *ProjectService) ReadOne(s *xorm.Session, project *models.Project, a web.Auth) error {
+	// Handle special pseudo-projects
+	if project.ID == models.FavoritesPseudoProject.ID {
+		project.Views = models.FavoritesPseudoProject.Views
+		return nil
+	}
+
+	// Check for saved filters
+	filterID := models.GetSavedFilterIDFromProjectID(project.ID)
+	isFilter := filterID > 0
+	if isFilter {
+		sf, err := models.GetSavedFilterSimpleByID(s, filterID)
+		if err != nil {
+			return err
+		}
+		project.Title = sf.Title
+		project.Description = sf.Description
+		project.Created = sf.Created
+		project.Updated = sf.Updated
+		project.OwnerID = sf.OwnerID
+	}
+
+	// Hide parent project ID for link shares
+	_, isShareAuth := a.(*models.LinkSharing)
+	if isShareAuth {
+		project.ParentProjectID = 0
+	}
+
+	// Get project owner
+	owner, err := user.GetUserByID(s, project.OwnerID)
+	if user.IsErrUserDoesNotExist(err) {
+		project.Owner = nil
+	} else if err != nil {
+		return err
+	} else {
+		project.Owner = owner
+	}
+
+	// Check if the project is archived and set it to archived if it is not already archived individually
+	if !project.IsArchived && !isFilter {
+		err = project.CheckIsArchived(s)
+		if err != nil {
+			project.IsArchived = true
+		}
+	}
+
+	// Get any background information if there is one set
+	if project.BackgroundFileID != 0 {
+		// Unsplash image
+		project.BackgroundInformation, err = models.GetUnsplashPhotoByFileID(s, project.BackgroundFileID)
+		if err != nil && !files.IsErrFileIsNotUnsplashFile(err) {
+			return err
+		}
+
+		if err != nil && files.IsErrFileIsNotUnsplashFile(err) {
+			project.BackgroundInformation = &models.ProjectBackgroundType{Type: models.ProjectBackgroundUpload}
+		}
+	}
+
+	// Check if project is favorite
+	project.IsFavorite, err = p.FavoriteService.IsFavorite(s, project.ID, a, models.FavoriteKindProject)
+	if err != nil {
+		return err
+	}
+
+	// Get subscription
+	subs, err := models.GetSubscriptionForUser(s, models.SubscriptionEntityProject, project.ID, a)
+	if err != nil && models.IsErrProjectDoesNotExist(err) && isFilter {
+		return nil
+	}
+	if err != nil && !models.IsErrProjectDoesNotExist(err) {
+		return err
+	}
+	if subs != nil {
+		project.Subscription = &subs.Subscription
+	}
+
+	// Get views
+	project.Views, err = p.getViewsForProject(s, project.ID)
+	return err
+}
+
+// getViewsForProject retrieves all views for a project
+func (p *ProjectService) getViewsForProject(s *xorm.Session, projectID int64) (views []*models.ProjectView, err error) {
+	views = []*models.ProjectView{}
+	err = s.
+		Where("project_id = ?", projectID).
+		OrderBy("position asc").
+		Find(&views)
+	return
+}
+
+// ReadAll retrieves all projects for a user with filtering, pagination, and expansion support.
+// This is the service layer implementation of models.Project.ReadAll()
+func (p *ProjectService) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int, isArchived bool, expand models.ProjectExpandable) (projects []*models.Project, resultCount int, totalItems int64, err error) {
+	// Get raw projects
+	projects, resultCount, totalItems, err = p.getAllRawProjects(s, a, search, page, perPage, isArchived)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	// If it's a link share, just return the projects (which will contain only one)
+	_, isLinkShare := a.(*models.LinkSharing)
+	if isLinkShare {
+		return projects, resultCount, totalItems, nil
+	}
+
+	// Add project details (favorite state, among other things)
+	err = p.AddDetails(s, projects, a)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	// Expand permissions if requested
+	if expand == models.ProjectExpandableRights {
+		var doer *user.User
+		doer, err = user.GetFromAuth(a)
+		if err != nil {
+			return nil, 0, 0, err
+		}
+		err = models.AddMaxPermissionToProjects(s, projects, doer)
+		if err != nil {
+			return nil, 0, 0, err
+		}
+	} else {
+		for _, pr := range projects {
+			pr.MaxPermission = models.PermissionUnknown
+		}
+	}
+
+	return projects, resultCount, totalItems, err
+}
+
+// getAllRawProjects retrieves all projects for a user without adding details
+func (p *ProjectService) getAllRawProjects(s *xorm.Session, a web.Auth, search string, page int, perPage int, isArchived bool) (projects []*models.Project, resultCount int, totalItems int64, err error) {
+	// Check if we're dealing with a share auth
+	shareAuth, is := a.(*models.LinkSharing)
+	if is {
+		project, err := models.GetProjectSimpleByID(s, shareAuth.ProjectID)
+		if err != nil {
+			return nil, 0, 0, err
+		}
+		projects := []*models.Project{project}
+		err = p.AddDetails(s, projects, a)
+		if err == nil && len(projects) > 0 {
+			projects[0].ParentProjectID = 0
+		}
+		return projects, 0, 0, err
+	}
+
+	doer, err := user.GetFromAuth(a)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	// Get projects using the existing GetAllForUser method
+	projects, resultCount, totalItems, err = p.GetAllForUser(s, doer, search, page, perPage, isArchived)
+	return projects, resultCount, totalItems, err
 }
 
 // Update updates a project.

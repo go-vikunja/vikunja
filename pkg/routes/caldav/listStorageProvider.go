@@ -148,8 +148,9 @@ func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, withChildren
 	s := db.NewSession()
 	defer s.Close()
 
-	// Otherwise get all projects
-	theprojects, _, _, err := vcls.project.ReadAll(s, vcls.user, "", -1, 50)
+	// Use ProjectService instead of Project.ReadAll to follow service layer architecture
+	projectService := services.NewProjectService(db.GetEngine())
+	theprojects, _, _, err := projectService.ReadAll(s, vcls.user, "", -1, 50, false, "")
 	if err != nil {
 		_ = s.Rollback()
 		return nil, err
@@ -157,7 +158,7 @@ func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, withChildren
 	if err := s.Commit(); err != nil {
 		return nil, err
 	}
-	projects := theprojects.([]*models.Project)
+	projects := theprojects
 
 	var resources []data.Resource
 	for _, l := range projects {
@@ -670,7 +671,9 @@ func (vcls *VikunjaCaldavProjectStorage) getProjectRessource(isCollection bool) 
 		return
 	}
 
-	can, _, err := vcls.project.CanRead(s, vcls.user)
+	// Use ProjectService for permission checking
+	projectService := services.NewProjectService(db.GetEngine())
+	can, err := projectService.HasPermission(s, vcls.project.ID, vcls.user, models.PermissionRead)
 	if err != nil {
 		_ = s.Rollback()
 		return
@@ -680,7 +683,7 @@ func (vcls *VikunjaCaldavProjectStorage) getProjectRessource(isCollection bool) 
 		log.Errorf("User %v tried to access a caldav resource (Project %v) which they are not allowed to access", vcls.user.Username, vcls.project.ID)
 		return rr, models.ErrUserDoesNotHaveAccessToProject{ProjectID: vcls.project.ID, UserID: vcls.user.ID}
 	}
-	err = vcls.project.ReadOne(s, vcls.user)
+	err = projectService.ReadOne(s, &vcls.project.Project, vcls.user)
 	if err != nil {
 		_ = s.Rollback()
 		return
