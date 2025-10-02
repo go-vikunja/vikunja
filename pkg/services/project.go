@@ -55,12 +55,16 @@ func InitProjectService() {
 
 // ProjectService is a service for projects.
 type ProjectService struct {
-	DB *xorm.Engine
+	DB              *xorm.Engine
+	FavoriteService *FavoriteService
 }
 
 // NewProjectService creates a new ProjectService.
 func NewProjectService(db *xorm.Engine) *ProjectService {
-	return &ProjectService{DB: db}
+	return &ProjectService{
+		DB:              db,
+		FavoriteService: NewFavoriteService(db),
+	}
 }
 
 // HasPermission checks if a user has a given permission on a project.
@@ -163,18 +167,18 @@ func (p *ProjectService) Update(s *xorm.Session, project *models.Project, u *use
 		}
 	}
 
-	wasFavorite, err := models.IsFavorite(s, project.ID, u, models.FavoriteKindProject)
+	wasFavorite, err := p.FavoriteService.IsFavorite(s, project.ID, u, models.FavoriteKindProject)
 	if err != nil {
 		return nil, err
 	}
 	if project.IsFavorite && !wasFavorite {
-		if err := models.AddToFavorites(s, project.ID, u, models.FavoriteKindProject); err != nil {
+		if err := p.FavoriteService.AddToFavorite(s, project.ID, u, models.FavoriteKindProject); err != nil {
 			return nil, err
 		}
 	}
 
 	if !project.IsFavorite && wasFavorite {
-		if err := models.RemoveFromFavorite(s, project.ID, u, models.FavoriteKindProject); err != nil {
+		if err := p.FavoriteService.RemoveFromFavorite(s, project.ID, u, models.FavoriteKindProject); err != nil {
 			return nil, err
 		}
 	}
@@ -566,7 +570,7 @@ func (p *ProjectService) Create(s *xorm.Session, project *models.Project, u *use
 		return nil, err
 	}
 	if project.IsFavorite {
-		if err := models.AddToFavorites(s, project.ID, u, models.FavoriteKindProject); err != nil {
+		if err := p.FavoriteService.AddToFavorite(s, project.ID, u, models.FavoriteKindProject); err != nil {
 			return nil, err
 		}
 	}
@@ -890,7 +894,7 @@ func (p *ProjectService) Delete(s *xorm.Session, projectID int64, u *user.User) 
 	}
 
 	// Remove from favorites
-	err = models.RemoveFromFavorite(s, project.ID, u, models.FavoriteKindProject)
+	err = p.FavoriteService.RemoveFromFavorite(s, project.ID, u, models.FavoriteKindProject)
 	if err != nil {
 		return err
 	}

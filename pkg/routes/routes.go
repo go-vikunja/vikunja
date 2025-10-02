@@ -423,6 +423,22 @@ func registerAPIRoutes(a *echo.Group) {
 	}
 	a.POST("/tasks/:projecttask/assignees/bulk", bulkAssigneeHandler.CreateWeb)
 
+	labelTaskHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
+			return &models.LabelTask{}
+		},
+	}
+	a.PUT("/tasks/:projecttask/labels", labelTaskHandler.CreateWeb)
+	a.DELETE("/tasks/:projecttask/labels/:label", labelTaskHandler.DeleteWeb)
+	a.GET("/tasks/:projecttask/labels", labelTaskHandler.ReadAllWeb)
+
+	bulkLabelTaskHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
+			return &models.LabelTaskBulk{}
+		},
+	}
+	a.POST("/tasks/:projecttask/labels/bulk", bulkLabelTaskHandler.CreateWeb)
+
 	taskRelationHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
 			return &models.TaskRelation{}

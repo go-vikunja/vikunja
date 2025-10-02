@@ -17,8 +17,14 @@
 package services
 
 import (
+	"strconv"
+	"strings"
+
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
+	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
@@ -100,16 +106,141 @@ func (ls *LabelService) GetAll(s *xorm.Session, u *user.User, search string, pag
 		return nil, 0, 0, ErrAccessDenied
 	}
 
-	// Use the same logic as the original model-based approach
-	return models.GetLabelsByTaskIDs(s, &models.LabelByTaskIDsOptions{
-		Search:              []string{search},
-		User:                u,
-		Page:                page,
-		PerPage:             perPage,
-		GetUnusedLabels:     true,
-		GroupByLabelIDsOnly: true,
-		GetForUser:          true,
+	// Build the query conditions
+	// We group by label ID to avoid duplicate labels (same label on multiple tasks)
+	var groupBy = "labels.id"
+	var selectStmt = "labels.*"
+
+	// Get all labels associated with tasks the user has access to
+	var labels []*models.LabelWithTaskID
+	cond := builder.And(builder.NotNull{"label_tasks.label_id"})
+
+	// Get project IDs the user has access to
+	projects, err := ls.getProjectIDsForUser(s, u.ID)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	// Filter labels by tasks in accessible projects
+	cond = builder.And(builder.In("label_tasks.task_id",
+		builder.
+			Select("id").
+			From("tasks").
+			Where(builder.In("project_id", projects)),
+	), cond)
+
+	// Include unused labels created by the user
+	cond = builder.Or(cond, builder.Eq{"labels.created_by_id": u.ID})
+
+	// Handle search by IDs or text
+	ids := []int64{}
+	searchTerms := []string{search}
+
+	for _, searchTerm := range searchTerms {
+		searchTerm = strings.Trim(searchTerm, " ")
+		if searchTerm == "" {
+			continue
+		}
+
+		vals := strings.Split(searchTerm, ",")
+		for _, val := range vals {
+			v, err := strconv.ParseInt(val, 10, 64)
+			if err != nil {
+				log.Debugf("Label search string part '%s' is not a number: %s", val, err)
+				continue
+			}
+			ids = append(ids, v)
+		}
+	}
+
+	if len(ids) > 0 {
+		cond = builder.And(cond, builder.In("labels.id", ids))
+	} else if search != "" {
+		searchTerm := strings.Trim(search, " ")
+		if searchTerm != "" {
+			cond = builder.And(cond, db.ILIKE("labels.title", searchTerm))
+		}
+	}
+
+	// Apply pagination
+	limit, start := getLimitFromPageIndex(page, perPage)
+
+	query := s.Table("labels").
+		Select(selectStmt).
+		Join("LEFT", "label_tasks", "label_tasks.label_id = labels.id").
+		Where(cond).
+		GroupBy(groupBy).
+		OrderBy("labels.id ASC")
+	if limit > 0 {
+		query = query.Limit(limit, start)
+	}
+	err = query.Find(&labels)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	if len(labels) == 0 {
+		return nil, 0, 0, nil
+	}
+
+	// Get all created by users
+	var userids []int64
+	for _, l := range labels {
+		userids = append(userids, l.CreatedByID)
+	}
+	users := make(map[int64]*user.User)
+	if len(userids) > 0 {
+		err = s.In("id", userids).Find(&users)
+		if err != nil {
+			return nil, 0, 0, err
+		}
+	}
+
+	// Obfuscate all user emails
+	for _, u := range users {
+		u.Email = ""
+	}
+
+	// Put it all together
+	for in, l := range labels {
+		if createdBy, has := users[l.CreatedByID]; has {
+			labels[in].CreatedBy = createdBy
+		}
+	}
+
+	// Get the total number of entries
+	totalEntries, err := s.Table("labels").
+		Select("count(DISTINCT labels.id)").
+		Join("LEFT", "label_tasks", "label_tasks.label_id = labels.id").
+		Where(cond).
+		Count(&models.Label{})
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	return labels, len(labels), totalEntries, err
+}
+
+// Helper function to get project IDs for a user
+func (ls *LabelService) getProjectIDsForUser(s *xorm.Session, userID int64) ([]int64, error) {
+	fullUser, err := user.GetUserByID(s, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	projects, _, err := models.GetAllProjectsForUser(s, fullUser.ID, &models.ProjectOptions{
+		User: &user.User{ID: userID},
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	projectIDs := make([]int64, 0, len(projects))
+	for _, project := range projects {
+		projectIDs = append(projectIDs, project.ID)
+	}
+
+	return projectIDs, nil
 }
 
 func (ls *LabelService) Update(s *xorm.Session, label *models.Label, u *user.User) error {
