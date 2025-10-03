@@ -343,6 +343,7 @@ func TestNotificationsService_MarkAllNotificationsAsRead(t *testing.T) {
 
 func TestNotificationsService_Notify(t *testing.T) {
 	notifications.Fake()
+	defer notifications.Unfake()
 
 	t.Run("Send notification to user", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)

@@ -98,6 +98,9 @@ func TestUserMentionsService_FindMentionedUsersInText(t *testing.T) {
 }
 
 func TestUserMentionsService_NotifyMentionedUsers(t *testing.T) {
+	// Reload fixtures at function level to clear notification pollution from other tests
+	db.LoadAndAssertFixtures(t)
+
 	u := &user.User{ID: 1}
 
 	// Mock notification type for testing
@@ -328,6 +331,9 @@ func TestUserMentionsService_NotifyMentionedUsers(t *testing.T) {
 }
 
 func TestUserMentionsService_Integration(t *testing.T) {
+	// Reload fixtures at function level to clear notification pollution from other tests
+	db.LoadAndAssertFixtures(t)
+
 	t.Run("should integrate with task comment creation", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
