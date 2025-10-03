@@ -973,7 +973,7 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setB
 		return err
 	}
 
-	err = updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
+	err = UpdateProjectLastUpdated(s, &Project{ID: t.ProjectID})
 	return
 }
 
@@ -1325,7 +1325,7 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	return updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
+	return UpdateProjectLastUpdated(s, &Project{ID: t.ProjectID})
 }
 
 func (t *Task) moveTaskToDoneBuckets(s *xorm.Session, a web.Auth, views []*ProjectView) error {
@@ -1640,7 +1640,7 @@ func (t *Task) updateReminders(s *xorm.Session, task *Task) (err error) {
 		t.Reminders = nil
 	}
 
-	err = updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
+	err = UpdateProjectLastUpdated(s, &Project{ID: t.ProjectID})
 	return
 }
 
@@ -1746,7 +1746,7 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
-	err = updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
+	err = UpdateProjectLastUpdated(s, &Project{ID: t.ProjectID})
 	return
 }
 

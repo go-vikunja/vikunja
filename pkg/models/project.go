@@ -991,7 +991,9 @@ func (p *Project) Update(s *xorm.Session, a web.Auth) (err error) {
 	return UpdateProject(s, p, a, false)
 }
 
-func updateProjectLastUpdated(s *xorm.Session, project *Project) error {
+// UpdateProjectLastUpdated updates the 'updated' timestamp of a project.
+// This is used by services to maintain proper timestamps when project-related entities change.
+func UpdateProjectLastUpdated(s *xorm.Session, project *Project) error {
 	_, err := s.ID(project.ID).Cols("updated").Update(project)
 	return err
 }
@@ -1003,7 +1005,7 @@ func updateProjectByTaskID(s *xorm.Session, taskID int64) (err error) {
 		return err
 	}
 
-	return updateProjectLastUpdated(s, &Project{ID: task.ProjectID})
+	return UpdateProjectLastUpdated(s, &Project{ID: task.ProjectID})
 }
 
 // Create implements the create method of CRUDable

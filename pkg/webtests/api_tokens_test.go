@@ -54,14 +54,14 @@ func (s *APITokenTestSuite) TestValidToken() {
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/tasks/all", nil)
 	res := httptest.NewRecorder()
 	c := e.NewContext(req, res)
-	h := routes.SetupTokenMiddleware()(func(c echo.Context) error {
+	h := routes.SetupTokenMiddleware()(routes.CheckAPITokenError()(func(c echo.Context) error {
 		u, err := auth.GetAuthFromClaims(c)
 		if err != nil {
 			return c.String(http.StatusInternalServerError, err.Error())
 		}
 
 		return c.JSON(http.StatusOK, u)
-	})
+	}))
 
 	req.Header.Set(echo.HeaderAuthorization, "Bearer tk_2eef46f40ebab3304919ab2e7e39993f75f29d2e") // Token 1
 	s.Require().NoError(h(c))
@@ -75,9 +75,9 @@ func (s *APITokenTestSuite) TestInvalidToken() {
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/tasks/all", nil)
 	res := httptest.NewRecorder()
 	c := e.NewContext(req, res)
-	h := routes.SetupTokenMiddleware()(func(c echo.Context) error {
+	h := routes.SetupTokenMiddleware()(routes.CheckAPITokenError()(func(c echo.Context) error {
 		return c.String(http.StatusOK, "test")
-	})
+	}))
 
 	req.Header.Set(echo.HeaderAuthorization, "Bearer tk_loremipsumdolorsitamet")
 	s.Require().Error(h(c))
@@ -89,9 +89,9 @@ func (s *APITokenTestSuite) TestExpiredToken() {
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/tasks/all", nil)
 	res := httptest.NewRecorder()
 	c := e.NewContext(req, res)
-	h := routes.SetupTokenMiddleware()(func(c echo.Context) error {
+	h := routes.SetupTokenMiddleware()(routes.CheckAPITokenError()(func(c echo.Context) error {
 		return c.String(http.StatusOK, "test")
-	})
+	}))
 
 	req.Header.Set(echo.HeaderAuthorization, "Bearer tk_a5e6f92ddbad68f49ee2c63e52174db0235008c8") // Token 2
 	s.Require().Error(h(c))
@@ -103,9 +103,9 @@ func (s *APITokenTestSuite) TestValidTokenInvalidScope() {
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/projects", nil)
 	res := httptest.NewRecorder()
 	c := e.NewContext(req, res)
-	h := routes.SetupTokenMiddleware()(func(c echo.Context) error {
+	h := routes.SetupTokenMiddleware()(routes.CheckAPITokenError()(func(c echo.Context) error {
 		return c.String(http.StatusOK, "test")
-	})
+	}))
 
 	req.Header.Set(echo.HeaderAuthorization, "Bearer tk_2eef46f40ebab3304919ab2e7e39993f75f29d2e")
 	s.Require().Error(h(c))

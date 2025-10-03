@@ -75,7 +75,7 @@ type TeamWithPermission struct {
 func (tl *TeamProject) Create(s *xorm.Session, a web.Auth) (err error) {
 
 	// Check if the permissions are valid
-	if err = tl.Permission.isValid(); err != nil {
+	if err = tl.Permission.IsValid(); err != nil {
 		return
 	}
 
@@ -118,7 +118,7 @@ func (tl *TeamProject) Create(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	err = updateProjectLastUpdated(s, l)
+	err = UpdateProjectLastUpdated(s, l)
 	return
 }
 
@@ -162,7 +162,7 @@ func (tl *TeamProject) Delete(s *xorm.Session, _ web.Auth) (err error) {
 		return err
 	}
 
-	err = updateProjectLastUpdated(s, &Project{ID: tl.ProjectID})
+	err = UpdateProjectLastUpdated(s, &Project{ID: tl.ProjectID})
 	return
 }
 
@@ -250,7 +250,7 @@ func (tl *TeamProject) ReadAll(s *xorm.Session, a web.Auth, search string, page 
 func (tl *TeamProject) Update(s *xorm.Session, _ web.Auth) (err error) {
 
 	// Check if the permission is valid
-	if err := tl.Permission.isValid(); err != nil {
+	if err := tl.Permission.IsValid(); err != nil {
 		return err
 	}
 
@@ -262,6 +262,6 @@ func (tl *TeamProject) Update(s *xorm.Session, _ web.Auth) (err error) {
 		return err
 	}
 
-	err = updateProjectLastUpdated(s, &Project{ID: tl.ProjectID})
+	err = UpdateProjectLastUpdated(s, &Project{ID: tl.ProjectID})
 	return
 }

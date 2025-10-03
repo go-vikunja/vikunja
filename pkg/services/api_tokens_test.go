@@ -118,6 +118,7 @@ func TestAPITokenService_Create(t *testing.T) {
 }
 
 func TestAPITokenService_Get(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
 
 	t.Run("get own token", func(t *testing.T) {
 		s := db.NewSession()
@@ -170,6 +171,7 @@ func TestAPITokenService_Get(t *testing.T) {
 }
 
 func TestAPITokenService_GetAll(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
 
 	t.Run("get all tokens for user", func(t *testing.T) {
 		s := db.NewSession()
@@ -196,9 +198,10 @@ func TestAPITokenService_GetAll(t *testing.T) {
 
 		tokens, count, total, err := service.GetAll(s, u, "", 1, 50)
 		require.NoError(t, err)
-		assert.Len(t, tokens, 0)
-		assert.Equal(t, 0, count)
-		assert.Equal(t, int64(0), total)
+		assert.Len(t, tokens, 1) // User 2 has token 3
+		assert.Equal(t, 1, count)
+		assert.Equal(t, int64(1), total)
+		assert.Equal(t, int64(3), tokens[0].ID) // Should be token 3
 	})
 
 	t.Run("search tokens by title", func(t *testing.T) {
@@ -253,6 +256,7 @@ func TestAPITokenService_GetAll(t *testing.T) {
 }
 
 func TestAPITokenService_Delete(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
 
 	t.Run("delete own token", func(t *testing.T) {
 		s := db.NewSession()
@@ -307,6 +311,7 @@ func TestAPITokenService_Delete(t *testing.T) {
 }
 
 func TestAPITokenService_GetTokenFromTokenString(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
 
 	t.Run("valid token string", func(t *testing.T) {
 		s := db.NewSession()
@@ -317,7 +322,7 @@ func TestAPITokenService_GetTokenFromTokenString(t *testing.T) {
 		token, err := service.GetTokenFromTokenString(s, "tk_2eef46f40ebab3304919ab2e7e39993f75f29d2e")
 		require.NoError(t, err)
 		assert.Equal(t, int64(1), token.ID)
-		assert.Equal(t, "Token 1", token.Title)
+		assert.Equal(t, "test token 1", token.Title)
 	})
 
 	t.Run("invalid token string", func(t *testing.T) {
@@ -345,6 +350,7 @@ func TestAPITokenService_GetTokenFromTokenString(t *testing.T) {
 }
 
 func TestAPITokenService_ValidateToken(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
 
 	t.Run("validate valid token", func(t *testing.T) {
 		s := db.NewSession()
@@ -384,6 +390,7 @@ func TestAPITokenService_ValidateToken(t *testing.T) {
 }
 
 func TestAPITokenService_CanDelete(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
 
 	t.Run("can delete own token", func(t *testing.T) {
 		s := db.NewSession()

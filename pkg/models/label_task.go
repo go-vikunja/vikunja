@@ -403,7 +403,7 @@ func (t *Task) UpdateTaskLabels(s *xorm.Session, creator web.Auth, labels []*Lab
 		return
 	}
 
-	err = updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
+	err = UpdateProjectLastUpdated(s, &Project{ID: t.ProjectID})
 	return
 }
 

@@ -79,6 +79,12 @@ func SetupTests() {
 		log.Fatal(err)
 	}
 
+	// Actually load the fixtures into the database
+	err = db.LoadFixtures()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	// Start the pseudo mail queue
 	mail.StartMailDaemon()
 }

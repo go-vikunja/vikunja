@@ -230,6 +230,7 @@ func RegisterRoutes(e *echo.Echo) {
 func registerAPIRoutesV2(a *echo.Group) {
 	// ===== Routes with Authentication =====
 	a.Use(SetupTokenMiddleware())
+	a.Use(CheckAPITokenError())
 
 	// Rate limit
 	setupRateLimit(a, config.RateLimitKind.GetString())
@@ -314,6 +315,7 @@ func registerAPIRoutes(a *echo.Group) {
 
 	// ===== Routes with Authentication =====
 	a.Use(SetupTokenMiddleware())
+	a.Use(CheckAPITokenError())
 
 	// Rate limit
 	setupRateLimit(a, config.RateLimitKind.GetString())

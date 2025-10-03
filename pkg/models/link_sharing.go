@@ -163,7 +163,7 @@ func (share *LinkSharing) Create(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	// Fallback to original logic for backward compatibility
-	err = share.Permission.isValid()
+	err = share.Permission.IsValid()
 	if err != nil {
 		return
 	}

@@ -144,7 +144,7 @@ func (t *Task) updateTaskAssignees(s *xorm.Session, assignees []*user.User, doer
 
 	t.setTaskAssignees(assignees)
 
-	err = updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
+	err = UpdateProjectLastUpdated(s, &Project{ID: t.ProjectID})
 	return
 }
 
@@ -293,7 +293,7 @@ func (t *Task) addNewAssigneeByID(s *xorm.Session, newAssigneeID int64, project 
 		return err
 	}
 
-	err = updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
+	err = UpdateProjectLastUpdated(s, &Project{ID: t.ProjectID})
 	return
 }
 

@@ -78,7 +78,7 @@ type UserWithPermission struct {
 func (lu *ProjectUser) Create(s *xorm.Session, a web.Auth) (err error) {
 
 	// Check if the permission is valid
-	if err := lu.Permission.isValid(); err != nil {
+	if err := lu.Permission.IsValid(); err != nil {
 		return err
 	}
 
@@ -124,7 +124,7 @@ func (lu *ProjectUser) Create(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	err = updateProjectLastUpdated(s, l)
+	err = UpdateProjectLastUpdated(s, l)
 	return
 }
 
@@ -169,7 +169,7 @@ func (lu *ProjectUser) Delete(s *xorm.Session, _ web.Auth) (err error) {
 		return err
 	}
 
-	err = updateProjectLastUpdated(s, &Project{ID: lu.ProjectID})
+	err = UpdateProjectLastUpdated(s, &Project{ID: lu.ProjectID})
 	return
 }
 
@@ -256,7 +256,7 @@ func (pu *ProjectUser) Update(s *xorm.Session, _ web.Auth) (err error) {
 	}
 
 	// Check if the permission is valid
-	if err := pu.Permission.isValid(); err != nil {
+	if err := pu.Permission.IsValid(); err != nil {
 		return err
 	}
 
@@ -268,6 +268,6 @@ func (pu *ProjectUser) Update(s *xorm.Session, _ web.Auth) (err error) {
 		return err
 	}
 
-	err = updateProjectLastUpdated(s, &Project{ID: pu.ProjectID})
+	err = UpdateProjectLastUpdated(s, &Project{ID: pu.ProjectID})
 	return
 }

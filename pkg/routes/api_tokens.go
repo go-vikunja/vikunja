@@ -25,6 +25,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/services"
 	"code.vikunja.io/api/pkg/user"
 
 	echojwt "github.com/labstack/echo-jwt/v4"
@@ -54,7 +55,12 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 					}
 
 					err := checkAPITokenAndPutItInContext(s, c)
-					return err == nil
+					if err != nil {
+						// Set error in context for later handling, but still skip JWT processing
+						c.Set("api_token_error", err)
+					}
+					// ALWAYS skip JWT processing for API tokens, even if validation failed
+					return true
 				}
 			}
 
@@ -73,7 +79,11 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 func checkAPITokenAndPutItInContext(tokenHeaderValue string, c echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
-	token, err := models.GetTokenFromTokenString(s, strings.TrimPrefix(tokenHeaderValue, "Bearer "))
+
+	// Initialize service
+	tokenService := services.NewAPITokenService(db.GetEngine())
+
+	token, err := tokenService.GetTokenFromTokenString(s, strings.TrimPrefix(tokenHeaderValue, "Bearer "))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
 	}
@@ -97,4 +107,20 @@ func checkAPITokenAndPutItInContext(tokenHeaderValue string, c echo.Context) err
 	c.Set("api_user", u)
 
 	return nil
+}
+
+// CheckAPITokenError is a middleware that should run after SetupTokenMiddleware
+// It checks if an API token validation error was stored in context and returns it
+func CheckAPITokenError() echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			if err := c.Get("api_token_error"); err != nil {
+				if httpErr, ok := err.(*echo.HTTPError); ok {
+					return httpErr
+				}
+				return err.(error)
+			}
+			return next(c)
+		}
+	}
 }

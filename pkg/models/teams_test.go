@@ -274,13 +274,13 @@ func TestTeam_Delete(t *testing.T) {
 }
 
 func TestIsErrInvalidPermission(t *testing.T) {
-	require.NoError(t, PermissionAdmin.isValid())
-	require.NoError(t, PermissionRead.isValid())
-	require.NoError(t, PermissionWrite.isValid())
+	require.NoError(t, PermissionAdmin.IsValid())
+	require.NoError(t, PermissionRead.IsValid())
+	require.NoError(t, PermissionWrite.IsValid())
 
 	// Check invalid
 	var tr Permission = 938
-	err := tr.isValid()
+	err := tr.IsValid()
 	require.Error(t, err)
 	assert.True(t, IsErrInvalidPermission(err))
 }
