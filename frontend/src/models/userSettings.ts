@@ -14,7 +14,8 @@ export default class UserSettingsModel extends AbstractModel<IUserSettings> impl
 	discoverableByName = false
 	discoverableByEmail = false
 	overdueTasksRemindersEnabled = true
-	overdueTasksRemindersTime = undefined
+	todayTasksRemindersTime = undefined
+	todayTasksRemindersEnabled = false
 	defaultProjectId = undefined
 	weekStart = 0 as IUserSettings['weekStart']
 	timezone = ''
