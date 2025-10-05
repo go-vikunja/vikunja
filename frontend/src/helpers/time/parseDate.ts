@@ -109,7 +109,7 @@ const addTimeToDate = (text: string, date: Date, previousMatch: string | null): 
 		}
 	}
 
-	const timeRegex = ' (at|@) ([0-9][0-9]?(:[0-9][0-9]?)?( ?(a|p)m)?)'
+	const timeRegex = ' (at|@) ([0-9][0-9]?(:[0-9][0-9])?( ?(a|p)m)?)'
 	const matcher = new RegExp(timeRegex, 'ig')
 	const results = matcher.exec(text)
 
