@@ -460,16 +460,7 @@ func registerAPIRoutes(a *echo.Group) {
 	}
 
 	apiv1.RegisterProjectTeams(a)
-
-	projectUserHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.ProjectUser{}
-		},
-	}
-	a.GET("/projects/:project/users", projectUserHandler.ReadAllWeb)
-	a.PUT("/projects/:project/users", projectUserHandler.CreateWeb)
-	a.DELETE("/projects/:project/users/:user", projectUserHandler.DeleteWeb)
-	a.POST("/projects/:project/users/:user", projectUserHandler.UpdateWeb)
+	apiv1.RegisterProjectUsers(a)
 
 	apiv1.RegisterSavedFilters(a)
 
