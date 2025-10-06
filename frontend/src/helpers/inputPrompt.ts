@@ -53,6 +53,10 @@ export default function inputPrompt(pos: ClientRect, oldValue: string = ''): Pro
 				return
 			}
 
+			if (event.isComposing) {
+				return
+			}
+
 			const url = (event.target as HTMLInputElement).value
 
 			resolve(url)
