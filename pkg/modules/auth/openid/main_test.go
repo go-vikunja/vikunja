@@ -40,6 +40,7 @@ func TestMain(m *testing.M) {
 
 	// Initialize service dependency injection
 	services.InitTaskService()
+	services.InitializeDependencies()
 
 	os.Exit(m.Run())
 }

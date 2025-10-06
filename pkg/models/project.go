@@ -50,6 +50,34 @@ var SetArchiveStateForProjectDescendantsFunc func(s *xorm.Session, parentProject
 // This is used to break a circular dependency between the models and services packages.
 var AddProjectDetailsFunc func(s *xorm.Session, projects []*Project, a web.Auth) error
 
+// ProjectServiceProvider is a function type that returns a project service instance
+// This is used to avoid import cycles between models and services packages
+type ProjectServiceProvider func() interface {
+	ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int, isArchived bool, expand ProjectExpandable) (projects []*Project, resultCount int, totalItems int64, err error)
+	Create(s *xorm.Session, project *Project, u *user.User) (*Project, error)
+}
+
+// projectServiceProvider is the registered service provider function
+var projectServiceProvider ProjectServiceProvider
+
+// RegisterProjectService registers a service provider for project operations
+// This should be called during application initialization by the services package
+func RegisterProjectService(provider ProjectServiceProvider) {
+	projectServiceProvider = provider
+}
+
+// getProjectService returns the registered project service instance
+func getProjectService() interface {
+	ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int, isArchived bool, expand ProjectExpandable) (projects []*Project, resultCount int, totalItems int64, err error)
+	Create(s *xorm.Session, project *Project, u *user.User) (*Project, error)
+} {
+	if projectServiceProvider != nil {
+		return projectServiceProvider()
+	}
+	// This should never happen in production, only in tests that don't initialize the service
+	panic("ProjectService not registered - ensure services.InitializeDependencies() is called during startup")
+}
+
 // Project represents a project of tasks
 type Project struct {
 	// The unique, numeric id of this project.
@@ -189,46 +217,12 @@ var FavoritesPseudoProject = Project{
 // @Failure 403 {object} web.HTTPError "The user does not have access to the project"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects [get]
+// @Deprecated: Use services.ProjectService.ReadAll instead.
 func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
-	prs, resultCount, totalItems, err := GetAllRawProjects(s, a, search, page, perPage, p.IsArchived)
-	if err != nil {
-		return nil, 0, 0, err
-	}
-
-	_, is := a.(*LinkSharing)
-	if is {
-		// If we're dealing with a link share, we should just return the list of projects
-		// (which will contain only one) here because it would not do anything meaningful afterward.
-		return prs, resultCount, totalItems, nil
-	}
-
-	/////////////////
-	// Add project details (favorite state, among other things)
-	err = AddProjectDetails(s, prs, a)
-	if err != nil {
-		return
-	}
-
-	if p.Expand == ProjectExpandableRights {
-		var doer *user.User
-		doer, err = user.GetFromAuth(a)
-		if err != nil {
-			return
-		}
-		err = AddMaxPermissionToProjects(s, prs, doer)
-		if err != nil {
-			return
-		}
-	} else {
-		for _, pr := range prs {
-			pr.MaxPermission = PermissionUnknown
-		}
-	}
-
-	//////////////////////////
-	// Putting it all together
-
-	return prs, resultCount, totalItems, err
+	// DEPRECATED: Business logic moved to service layer
+	// This method now delegates to ProjectService.ReadAll
+	service := getProjectService()
+	return service.ReadAll(s, a, search, page, perPage, p.IsArchived, p.Expand)
 }
 
 func GetAllRawProjects(s *xorm.Session, a web.Auth, search string, page int, perPage int, isArchived bool) (projects []*Project, resultCount int, totalItems int64, err error) {
@@ -1010,31 +1004,26 @@ func updateProjectByTaskID(s *xorm.Session, taskID int64) (err error) {
 
 // Create implements the create method of CRUDable
 // @Deprecated: This creation logic has been moved to the service layer.
-// Use services.Project.Create instead of this model-level method.
+// Use services.ProjectService.Create instead of this model-level method.
 func (p *Project) Create(s *xorm.Session, a web.Auth) (err error) {
-	// Use dependency injection if service function is available
-	if ProjectCreateFunc != nil {
-		createdProject, err := ProjectCreateFunc(s, p, a)
-		if err != nil {
-			return err
-		}
-		// Copy the result back to this struct
-		*p = *createdProject
-		return nil
-	}
+	// DEPRECATED: Business logic moved to service layer
+	// This method now delegates to ProjectService.Create
+	service := getProjectService()
 
-	// Fallback to old logic if service function not available
-	err = CreateProject(s, p, a, true, true)
+	// Convert auth to user for service layer call
+	doer, err := user.GetFromAuth(a)
 	if err != nil {
-		return
+		return err
 	}
 
-	fullProject, err := GetProjectSimpleByID(s, p.ID)
+	createdProject, err := service.Create(s, p, doer)
 	if err != nil {
-		return
+		return err
 	}
 
-	return fullProject.ReadOne(s, a)
+	// Copy the result back to this struct
+	*p = *createdProject
+	return nil
 }
 
 func (p *Project) IsDefaultProject(s *xorm.Session) (is bool, err error) {

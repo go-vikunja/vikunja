@@ -42,6 +42,15 @@ func InitializeDependencies() {
 		return mentionsService.NotifyMentionedUsers(sess, subject, text, notification)
 	}
 
+	// Register ProjectService provider to avoid import cycles
+	models.RegisterProjectService(func() interface {
+		ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int, isArchived bool, expand models.ProjectExpandable) (projects []*models.Project, resultCount int, totalItems int64, err error)
+		Create(s *xorm.Session, project *models.Project, u *user.User) (*models.Project, error)
+	} {
+		// Return an adapter that bridges the interface
+		return &projectServiceAdapter{service: NewProjectService(nil)}
+	})
+
 	// Register ProjectTeamService provider to avoid import cycles
 	models.RegisterProjectTeamService(func() interface {
 		Create(s *xorm.Session, teamProject *models.TeamProject, doer web.Auth) error
@@ -52,6 +61,19 @@ func InitializeDependencies() {
 		// Return an adapter that bridges the interface mismatch
 		return &projectTeamServiceAdapter{service: NewProjectTeamService(nil)}
 	})
+}
+
+// projectServiceAdapter adapts ProjectService to the interface expected by models
+type projectServiceAdapter struct {
+	service *ProjectService
+}
+
+func (a *projectServiceAdapter) ReadAll(s *xorm.Session, auth web.Auth, search string, page int, perPage int, isArchived bool, expand models.ProjectExpandable) (projects []*models.Project, resultCount int, totalItems int64, err error) {
+	return a.service.ReadAll(s, auth, search, page, perPage, isArchived, expand)
+}
+
+func (a *projectServiceAdapter) Create(s *xorm.Session, project *models.Project, u *user.User) (*models.Project, error) {
+	return a.service.Create(s, project, u)
 }
 
 // projectTeamServiceAdapter adapts ProjectTeamService to the interface expected by models

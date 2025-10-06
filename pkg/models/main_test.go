@@ -179,6 +179,68 @@ func (m *mockProjectTeamService) Update(s *xorm.Session, teamProject *TeamProjec
 	return UpdateProjectLastUpdated(s, &Project{ID: teamProject.ProjectID})
 }
 
+// mockProjectService provides a test implementation that uses the original model logic
+// This prevents import cycles while allowing model tests to continue working
+type mockProjectService struct{}
+
+func (m *mockProjectService) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int, isArchived bool, expand ProjectExpandable) (projects []*Project, resultCount int, totalItems int64, err error) {
+	// Use the original GetAllRawProjects function
+	prs, resultCount, totalItems, err := GetAllRawProjects(s, a, search, page, perPage, isArchived)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	_, is := a.(*LinkSharing)
+	if is {
+		// If we're dealing with a link share, just return the projects
+		return prs, resultCount, totalItems, nil
+	}
+
+	// Add project details (favorite state, among other things)
+	err = AddProjectDetails(s, prs, a)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	if expand == ProjectExpandableRights {
+		var doer *user.User
+		doer, err = user.GetFromAuth(a)
+		if err != nil {
+			return nil, 0, 0, err
+		}
+		err = AddMaxPermissionToProjects(s, prs, doer)
+		if err != nil {
+			return nil, 0, 0, err
+		}
+	} else {
+		for _, pr := range prs {
+			pr.MaxPermission = PermissionUnknown
+		}
+	}
+
+	return prs, resultCount, totalItems, err
+}
+
+func (m *mockProjectService) Create(s *xorm.Session, project *Project, u *user.User) (*Project, error) {
+	// Use the original CreateProject function
+	err := CreateProject(s, project, u, true, true)
+	if err != nil {
+		return nil, err
+	}
+
+	fullProject, err := GetProjectSimpleByID(s, project.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	err = fullProject.ReadOne(s, u)
+	if err != nil {
+		return nil, err
+	}
+
+	return fullProject, nil
+}
+
 func setupTime() {
 	var err error
 	loc, err := time.LoadLocation("GMT")
@@ -220,6 +282,17 @@ func TestMain(m *testing.M) {
 	user.InitTests()
 
 	SetupTests()
+
+	// Register a mock ProjectService provider for model tests
+	// This avoids import cycle with services package
+	RegisterProjectService(func() interface {
+		ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int, isArchived bool, expand ProjectExpandable) (projects []*Project, resultCount int, totalItems int64, err error)
+		Create(s *xorm.Session, project *Project, u *user.User) (*Project, error)
+	} {
+		// Return a mock that delegates to the original model methods
+		// This preserves backward compatibility for model tests
+		return &mockProjectService{}
+	})
 
 	// Register a mock ProjectTeamService provider for model tests
 	// This avoids import cycle with services package
