@@ -459,15 +459,7 @@ func registerAPIRoutes(a *echo.Group) {
 		apiv1.RegisterComments(a)
 	}
 
-	projectTeamHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.TeamProject{}
-		},
-	}
-	a.GET("/projects/:project/teams", projectTeamHandler.ReadAllWeb)
-	a.PUT("/projects/:project/teams", projectTeamHandler.CreateWeb)
-	a.DELETE("/projects/:project/teams/:team", projectTeamHandler.DeleteWeb)
-	a.POST("/projects/:project/teams/:team", projectTeamHandler.UpdateWeb)
+	apiv1.RegisterProjectTeams(a)
 
 	projectUserHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
