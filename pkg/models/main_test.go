@@ -180,6 +180,167 @@ func (m *mockProjectTeamService) Update(s *xorm.Session, teamProject *TeamProjec
 	return UpdateProjectLastUpdated(s, &Project{ID: teamProject.ProjectID})
 }
 
+// mockProjectUserService provides a test implementation that uses the original model logic
+// This prevents import cycles while allowing model tests to continue working
+type mockProjectUserService struct{}
+
+func (m *mockProjectUserService) Create(s *xorm.Session, projectUser *ProjectUser, doer *user.User) error {
+	// Call the original model logic directly (before delegation was added)
+	// Check if the permission is valid
+	if err := projectUser.Permission.IsValid(); err != nil {
+		return err
+	}
+
+	// Check if the project exists
+	project, err := GetProjectSimpleByID(s, projectUser.ProjectID)
+	if err != nil {
+		return err
+	}
+
+	// Check if the user exists
+	targetUser, err := user.GetUserByUsername(s, projectUser.Username)
+	if err != nil {
+		return err
+	}
+	projectUser.UserID = targetUser.ID
+
+	// Check if the user already has access or is owner of that project
+	// We explicitly DON'T check for teams here
+	if project.OwnerID == projectUser.UserID {
+		return ErrUserAlreadyHasAccess{UserID: projectUser.UserID, ProjectID: projectUser.ProjectID}
+	}
+
+	exist, err := s.Where("project_id = ? AND user_id = ?", projectUser.ProjectID, projectUser.UserID).
+		Get(&ProjectUser{})
+	if err != nil {
+		return err
+	}
+	if exist {
+		return ErrUserAlreadyHasAccess{UserID: projectUser.UserID, ProjectID: projectUser.ProjectID}
+	}
+
+	// Insert the new project-user relation
+	projectUser.ID = 0
+	_, err = s.Insert(projectUser)
+	if err != nil {
+		return err
+	}
+
+	// Update project's last updated timestamp
+	return UpdateProjectLastUpdated(s, project)
+}
+
+func (m *mockProjectUserService) Delete(s *xorm.Session, projectUser *ProjectUser) error {
+	if projectUser.UserID == 0 {
+		// Check if the user exists
+		targetUser, err := user.GetUserByUsername(s, projectUser.Username)
+		if err != nil {
+			return err
+		}
+		projectUser.UserID = targetUser.ID
+	}
+
+	// Check if the user has access to the project
+	has, err := s.
+		Where("user_id = ? AND project_id = ?", projectUser.UserID, projectUser.ProjectID).
+		Get(&ProjectUser{})
+	if err != nil {
+		return err
+	}
+	if !has {
+		return ErrUserDoesNotHaveAccessToProject{ProjectID: projectUser.ProjectID, UserID: projectUser.UserID}
+	}
+
+	// Delete the project-user relation
+	_, err = s.
+		Where("user_id = ? AND project_id = ?", projectUser.UserID, projectUser.ProjectID).
+		Delete(&ProjectUser{})
+	if err != nil {
+		return err
+	}
+
+	// Update project's last updated timestamp
+	return UpdateProjectLastUpdated(s, &Project{ID: projectUser.ProjectID})
+}
+
+func (m *mockProjectUserService) GetAll(s *xorm.Session, projectID int64, doer *user.User, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
+	// Check if the user has access to the project
+	project := &Project{ID: projectID}
+	canRead, _, err := project.CanRead(s, doer)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+	if !canRead {
+		return nil, 0, 0, ErrNeedToHaveProjectReadAccess{UserID: doer.ID, ProjectID: projectID}
+	}
+
+	limit, start := getLimitFromPageIndex(page, perPage)
+
+	// Get all users with their permissions
+	all := []*UserWithPermission{}
+	query := s.
+		Select("users.*, users_projects.permission").
+		Join("INNER", "users_projects", "users_projects.user_id = users.id").
+		Where("users_projects.project_id = ?", projectID)
+
+	if search != "" {
+		query = query.Where("users.username LIKE ?", "%"+search+"%")
+	}
+
+	if limit > 0 {
+		query = query.Limit(limit, start)
+	}
+	err = query.Find(&all)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	// Obfuscate all user emails for privacy
+	for _, u := range all {
+		u.Email = ""
+	}
+
+	// Get total count
+	totalItems, err = s.
+		Join("INNER", "users_projects", "user_id = users.id").
+		Where("users_projects.project_id = ?", projectID).
+		Where("users.username LIKE ?", "%"+search+"%").
+		Count(&UserWithPermission{})
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	return all, len(all), totalItems, nil
+}
+
+func (m *mockProjectUserService) Update(s *xorm.Session, projectUser *ProjectUser) error {
+	if projectUser.UserID == 0 {
+		// Check if the user exists
+		targetUser, err := user.GetUserByUsername(s, projectUser.Username)
+		if err != nil {
+			return err
+		}
+		projectUser.UserID = targetUser.ID
+	}
+
+	// Check if the permission is valid
+	if err := projectUser.Permission.IsValid(); err != nil {
+		return err
+	}
+
+	// Update the permission
+	_, err := s.
+		Where("project_id = ? AND user_id = ?", projectUser.ProjectID, projectUser.UserID).
+		Cols("permission").
+		Update(projectUser)
+	if err != nil {
+		return err
+	}
+
+	// Update project's last updated timestamp
+	return UpdateProjectLastUpdated(s, &Project{ID: projectUser.ProjectID})
+}
+
 // mockProjectService provides a test implementation that uses direct logic
 // This prevents import cycles while allowing model tests to continue working
 // Updated to not call model helper functions per T011A-PART2 requirements
@@ -708,6 +869,19 @@ func TestMain(m *testing.M) {
 		// Return a mock that delegates to the original model methods
 		// This preserves backward compatibility for model tests
 		return &mockProjectTeamService{}
+	})
+
+	// Register a mock ProjectUserService provider for model tests
+	// This avoids import cycle with services package
+	RegisterProjectUserService(func() interface {
+		Create(s *xorm.Session, projectUser *ProjectUser, doer *user.User) error
+		Delete(s *xorm.Session, projectUser *ProjectUser) error
+		GetAll(s *xorm.Session, projectID int64, doer *user.User, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error)
+		Update(s *xorm.Session, projectUser *ProjectUser) error
+	} {
+		// Return a mock that delegates to the original model methods
+		// This preserves backward compatibility for model tests
+		return &mockProjectUserService{}
 	})
 
 	// Set up a mock for the GetUsersOrLinkSharesFromIDsFunc for model tests,

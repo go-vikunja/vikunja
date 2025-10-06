@@ -63,6 +63,17 @@ func InitializeDependencies() {
 		// Return an adapter that bridges the interface mismatch
 		return &projectTeamServiceAdapter{service: NewProjectTeamService(nil)}
 	})
+
+	// Register ProjectUserService provider to avoid import cycles
+	models.RegisterProjectUserService(func() interface {
+		Create(s *xorm.Session, projectUser *models.ProjectUser, doer *user.User) error
+		Delete(s *xorm.Session, projectUser *models.ProjectUser) error
+		GetAll(s *xorm.Session, projectID int64, doer *user.User, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error)
+		Update(s *xorm.Session, projectUser *models.ProjectUser) error
+	} {
+		// Return an adapter that bridges the interface mismatch
+		return &projectUserServiceAdapter{service: NewProjectUserService(nil)}
+	})
 }
 
 // projectServiceAdapter adapts ProjectService to the interface expected by models
@@ -107,4 +118,27 @@ func (a *projectTeamServiceAdapter) GetAll(s *xorm.Session, projectID int64, doe
 
 func (a *projectTeamServiceAdapter) Update(s *xorm.Session, teamProject *models.TeamProject) error {
 	return a.service.Update(s, teamProject)
+}
+
+// projectUserServiceAdapter adapts ProjectUserService to the interface expected by models
+type projectUserServiceAdapter struct {
+	service *ProjectUserService
+}
+
+func (a *projectUserServiceAdapter) Create(s *xorm.Session, projectUser *models.ProjectUser, doer *user.User) error {
+	return a.service.Create(s, projectUser, doer)
+}
+
+func (a *projectUserServiceAdapter) Delete(s *xorm.Session, projectUser *models.ProjectUser) error {
+	return a.service.Delete(s, projectUser)
+}
+
+func (a *projectUserServiceAdapter) GetAll(s *xorm.Session, projectID int64, doer *user.User, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
+	// Call service layer directly - no conversion needed
+	users, rc, ti, err := a.service.GetAll(s, projectID, doer, search, page, perPage)
+	return users, rc, ti, err
+}
+
+func (a *projectUserServiceAdapter) Update(s *xorm.Session, projectUser *models.ProjectUser) error {
+	return a.service.Update(s, projectUser)
 }

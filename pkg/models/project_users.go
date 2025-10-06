@@ -19,8 +19,6 @@ package models
 import (
 	"time"
 
-	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
@@ -60,6 +58,38 @@ type UserWithPermission struct {
 	Permission Permission `json:"permission"`
 }
 
+// ProjectUserServiceProvider is a function type that returns a project user service instance
+// This is used to avoid import cycles between models and services packages
+type ProjectUserServiceProvider func() interface {
+	Create(s *xorm.Session, projectUser *ProjectUser, doer *user.User) error
+	Delete(s *xorm.Session, projectUser *ProjectUser) error
+	GetAll(s *xorm.Session, projectID int64, doer *user.User, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error)
+	Update(s *xorm.Session, projectUser *ProjectUser) error
+}
+
+// projectUserServiceProvider is the registered service provider function
+var projectUserServiceProvider ProjectUserServiceProvider
+
+// RegisterProjectUserService registers a service provider for project user operations
+// This should be called during application initialization by the services package
+func RegisterProjectUserService(provider ProjectUserServiceProvider) {
+	projectUserServiceProvider = provider
+}
+
+// getProjectUserService returns the registered project user service instance
+func getProjectUserService() interface {
+	Create(s *xorm.Session, projectUser *ProjectUser, doer *user.User) error
+	Delete(s *xorm.Session, projectUser *ProjectUser) error
+	GetAll(s *xorm.Session, projectID int64, doer *user.User, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error)
+	Update(s *xorm.Session, projectUser *ProjectUser) error
+} {
+	if projectUserServiceProvider != nil {
+		return projectUserServiceProvider()
+	}
+	// This should never happen in production, only in tests that don't initialize the service
+	panic("ProjectUserService not registered - ensure services.InitializeDependencies() is called during startup")
+}
+
 // Create creates a new project <-> user relation
 // @Summary Add a user to a project
 // @Description Gives a user access to a project.
@@ -75,57 +105,22 @@ type UserWithPermission struct {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the project"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/users [put]
+// @Deprecated: Use services.ProjectUserService.Create instead.
 func (lu *ProjectUser) Create(s *xorm.Session, a web.Auth) (err error) {
+	// DEPRECATED: Business logic moved to service layer
+	// This method now delegates to ProjectUserService.Create
+	service := getProjectUserService()
 
-	// Check if the permission is valid
-	if err := lu.Permission.IsValid(); err != nil {
-		return err
+	// Convert web.Auth to *user.User (supports both regular users and link shares)
+	var doer *user.User
+	if a != nil {
+		doer, err = GetUserOrLinkShareUser(s, a)
+		if err != nil {
+			return err
+		}
 	}
 
-	// Check if the project exists
-	l, err := GetProjectSimpleByID(s, lu.ProjectID)
-	if err != nil {
-		return
-	}
-
-	// Check if the user exists
-	u, err := user.GetUserByUsername(s, lu.Username)
-	if err != nil {
-		return err
-	}
-	lu.UserID = u.ID
-
-	// Check if the user already has access or is owner of that project
-	// We explicitly DONT check for teams here
-	if l.OwnerID == lu.UserID {
-		return ErrUserAlreadyHasAccess{UserID: lu.UserID, ProjectID: lu.ProjectID}
-	}
-
-	exist, err := s.Where("project_id = ? AND user_id = ?", lu.ProjectID, lu.UserID).Get(&ProjectUser{})
-	if err != nil {
-		return
-	}
-	if exist {
-		return ErrUserAlreadyHasAccess{UserID: lu.UserID, ProjectID: lu.ProjectID}
-	}
-
-	lu.ID = 0
-	_, err = s.Insert(lu)
-	if err != nil {
-		return err
-	}
-
-	err = events.Dispatch(&ProjectSharedWithUserEvent{
-		Project: l,
-		User:    u,
-		Doer:    a,
-	})
-	if err != nil {
-		return err
-	}
-
-	err = UpdateProjectLastUpdated(s, l)
-	return
+	return service.Create(s, lu, doer)
 }
 
 // Delete deletes a project <-> user relation
@@ -141,36 +136,12 @@ func (lu *ProjectUser) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "user or project does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{projectID}/users/{userID} [delete]
+// @Deprecated: Use services.ProjectUserService.Delete instead.
 func (lu *ProjectUser) Delete(s *xorm.Session, _ web.Auth) (err error) {
-	if lu.UserID == 0 {
-		// Check if the user exists
-		u, err := user.GetUserByUsername(s, lu.Username)
-		if err != nil {
-			return err
-		}
-		lu.UserID = u.ID
-	}
-
-	// Check if the user has access to the project
-	has, err := s.
-		Where("user_id = ? AND project_id = ?", lu.UserID, lu.ProjectID).
-		Get(&ProjectUser{})
-	if err != nil {
-		return
-	}
-	if !has {
-		return ErrUserDoesNotHaveAccessToProject{ProjectID: lu.ProjectID, UserID: lu.UserID}
-	}
-
-	_, err = s.
-		Where("user_id = ? AND project_id = ?", lu.UserID, lu.ProjectID).
-		Delete(&ProjectUser{})
-	if err != nil {
-		return err
-	}
-
-	err = UpdateProjectLastUpdated(s, &Project{ID: lu.ProjectID})
-	return
+	// DEPRECATED: Business logic moved to service layer
+	// This method now delegates to ProjectUserService.Delete
+	service := getProjectUserService()
+	return service.Delete(s, lu)
 }
 
 // ReadAll gets all users who have access to a project
@@ -188,46 +159,22 @@ func (lu *ProjectUser) Delete(s *xorm.Session, _ web.Auth) (err error) {
 // @Failure 403 {object} web.HTTPError "No permission to see the project."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/users [get]
+// @Deprecated: Use services.ProjectUserService.GetAll instead.
 func (lu *ProjectUser) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
-	// Check if the user has access to the project
-	l := &Project{ID: lu.ProjectID}
-	canRead, _, err := l.CanRead(s, a)
-	if err != nil {
-		return nil, 0, 0, err
-	}
-	if !canRead {
-		return nil, 0, 0, ErrNeedToHaveProjectReadAccess{UserID: a.GetID(), ProjectID: lu.ProjectID}
-	}
+	// DEPRECATED: Business logic moved to service layer
+	// This method now delegates to ProjectUserService.GetAll
+	service := getProjectUserService()
 
-	limit, start := getLimitFromPageIndex(page, perPage)
-
-	// Get all users
-	all := []*UserWithPermission{}
-	query := s.
-		Select("users.*, users_projects.permission").
-		Join("INNER", "users_projects", "users_projects.user_id = users.id").
-		Where("users_projects.project_id = ?", lu.ProjectID).
-		Where(db.ILIKE("users.username", search))
-	if limit > 0 {
-		query = query.Limit(limit, start)
-	}
-	err = query.Find(&all)
-	if err != nil {
-		return nil, 0, 0, err
+	// Convert web.Auth to *user.User (supports both regular users and link shares)
+	var doer *user.User
+	if a != nil {
+		doer, err = GetUserOrLinkShareUser(s, a)
+		if err != nil {
+			return nil, 0, 0, err
+		}
 	}
 
-	// Obfuscate all user emails
-	for _, u := range all {
-		u.Email = ""
-	}
-
-	numberOfTotalItems, err = s.
-		Join("INNER", "users_projects", "user_id = users.id").
-		Where("users_projects.project_id = ?", lu.ProjectID).
-		Where("users.username LIKE ?", "%"+search+"%").
-		Count(&UserWithPermission{})
-
-	return all, len(all), numberOfTotalItems, err
+	return service.GetAll(s, lu.ProjectID, doer, search, page, perPage)
 }
 
 // Update updates a user <-> project relation
@@ -245,29 +192,10 @@ func (lu *ProjectUser) ReadAll(s *xorm.Session, a web.Auth, search string, page 
 // @Failure 404 {object} web.HTTPError "User or project does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{projectID}/users/{userID} [post]
+// @Deprecated: Use services.ProjectUserService.Update instead.
 func (pu *ProjectUser) Update(s *xorm.Session, _ web.Auth) (err error) {
-	if pu.UserID == 0 {
-		// Check if the user exists
-		u, err := user.GetUserByUsername(s, pu.Username)
-		if err != nil {
-			return err
-		}
-		pu.UserID = u.ID
-	}
-
-	// Check if the permission is valid
-	if err := pu.Permission.IsValid(); err != nil {
-		return err
-	}
-
-	_, err = s.
-		Where("project_id = ? AND user_id = ?", pu.ProjectID, pu.UserID).
-		Cols("permission").
-		Update(pu)
-	if err != nil {
-		return err
-	}
-
-	err = UpdateProjectLastUpdated(s, &Project{ID: pu.ProjectID})
-	return
+	// DEPRECATED: Business logic moved to service layer
+	// This method now delegates to ProjectUserService.Update
+	service := getProjectUserService()
+	return service.Update(s, pu)
 }
