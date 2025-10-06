@@ -33,7 +33,7 @@ require (
 	github.com/ganigeorgiev/fexpr v0.5.0
 	github.com/getsentry/sentry-go v0.35.3
 	github.com/getsentry/sentry-go/echo v0.35.3
-	github.com/go-ldap/ldap/v3 v3.4.11
+	github.com/go-ldap/ldap/v3 v3.4.12
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/go-testfixtures/testfixtures/v3 v3.18.0
 	github.com/gocarina/gocsv v0.0.0-20231116093920-b87c2d0e983a
