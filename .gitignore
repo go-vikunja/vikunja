@@ -9,6 +9,7 @@
 /frontend/.pnpm-store/
 coverage.out
 coverage_notifications.out
+coverage_project_teams.out
 vikunja-test
 tmp/
 config.yml

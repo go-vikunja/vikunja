@@ -19,8 +19,6 @@ package models
 import (
 	"time"
 
-	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/web"
 
 	"xorm.io/xorm"
@@ -57,6 +55,38 @@ type TeamWithPermission struct {
 	Permission Permission `json:"permission"`
 }
 
+// ProjectTeamServiceProvider is a function type that returns a project team service instance
+// This is used to avoid import cycles between models and services packages
+type ProjectTeamServiceProvider func() interface {
+	Create(s *xorm.Session, teamProject *TeamProject, doer web.Auth) error
+	Delete(s *xorm.Session, teamProject *TeamProject) error
+	GetAll(s *xorm.Session, projectID int64, doer web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error)
+	Update(s *xorm.Session, teamProject *TeamProject) error
+}
+
+// projectTeamServiceProvider is the registered service provider function
+var projectTeamServiceProvider ProjectTeamServiceProvider
+
+// RegisterProjectTeamService registers a service provider for project team operations
+// This should be called during application initialization by the services package
+func RegisterProjectTeamService(provider ProjectTeamServiceProvider) {
+	projectTeamServiceProvider = provider
+}
+
+// getProjectTeamService returns the registered project team service instance
+func getProjectTeamService() interface {
+	Create(s *xorm.Session, teamProject *TeamProject, doer web.Auth) error
+	Delete(s *xorm.Session, teamProject *TeamProject) error
+	GetAll(s *xorm.Session, projectID int64, doer web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error)
+	Update(s *xorm.Session, teamProject *TeamProject) error
+} {
+	if projectTeamServiceProvider != nil {
+		return projectTeamServiceProvider()
+	}
+	// This should never happen in production, only in tests that don't initialize the service
+	panic("ProjectTeamService not registered - ensure services.InitializeDependencies() is called during startup")
+}
+
 // Create creates a new team <-> project relation
 // @Summary Add a team to a project
 // @Description Gives a team access to a project.
@@ -72,54 +102,13 @@ type TeamWithPermission struct {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the project"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/teams [put]
+// @Deprecated: Use services.ProjectTeamService.Create instead.
 func (tl *TeamProject) Create(s *xorm.Session, a web.Auth) (err error) {
-
-	// Check if the permissions are valid
-	if err = tl.Permission.IsValid(); err != nil {
-		return
-	}
-
-	// Check if the team exists
-	team, err := GetTeamByID(s, tl.TeamID)
-	if err != nil {
-		return err
-	}
-
-	// Check if the project exists
-	l, err := GetProjectSimpleByID(s, tl.ProjectID)
-	if err != nil {
-		return err
-	}
-
-	// Check if the team is already on the project
-	exists, err := s.Where("team_id = ?", tl.TeamID).
-		And("project_id = ?", tl.ProjectID).
-		Get(&TeamProject{})
-	if err != nil {
-		return
-	}
-	if exists {
-		return ErrTeamAlreadyHasAccess{tl.TeamID, tl.ProjectID}
-	}
-
-	// Insert the new team
-	tl.ID = 0
-	_, err = s.Insert(tl)
-	if err != nil {
-		return err
-	}
-
-	err = events.Dispatch(&ProjectSharedWithTeamEvent{
-		Project: l,
-		Team:    team,
-		Doer:    a,
-	})
-	if err != nil {
-		return err
-	}
-
-	err = UpdateProjectLastUpdated(s, l)
-	return
+	// DEPRECATED: Business logic moved to service layer
+	// This method now delegates to ProjectTeamService.Create
+	// Direct imports avoided to prevent cycles - get service from registry or instantiate
+	service := getProjectTeamService()
+	return service.Create(s, tl, a)
 }
 
 // Delete deletes a team <-> project relation based on the project & team id
@@ -135,35 +124,12 @@ func (tl *TeamProject) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "Team or project does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{projectID}/teams/{teamID} [delete]
+// @Deprecated: Use services.ProjectTeamService.Delete instead.
 func (tl *TeamProject) Delete(s *xorm.Session, _ web.Auth) (err error) {
-
-	// Check if the team exists
-	_, err = GetTeamByID(s, tl.TeamID)
-	if err != nil {
-		return
-	}
-
-	// Check if the team has access to the project
-	has, err := s.
-		Where("team_id = ? AND project_id = ?", tl.TeamID, tl.ProjectID).
-		Get(&TeamProject{})
-	if err != nil {
-		return
-	}
-	if !has {
-		return ErrTeamDoesNotHaveAccessToProject{TeamID: tl.TeamID, ProjectID: tl.ProjectID}
-	}
-
-	// Delete the relation
-	_, err = s.Where("team_id = ?", tl.TeamID).
-		And("project_id = ?", tl.ProjectID).
-		Delete(&TeamProject{})
-	if err != nil {
-		return err
-	}
-
-	err = UpdateProjectLastUpdated(s, &Project{ID: tl.ProjectID})
-	return
+	// DEPRECATED: Business logic moved to service layer
+	// This method now delegates to ProjectTeamService.Delete
+	service := getProjectTeamService()
+	return service.Delete(s, tl)
 }
 
 // ReadAll implements the method to read all teams of a project
@@ -181,55 +147,12 @@ func (tl *TeamProject) Delete(s *xorm.Session, _ web.Auth) (err error) {
 // @Failure 403 {object} web.HTTPError "No permission to see the project."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/teams [get]
+// @Deprecated: Use services.ProjectTeamService.GetAll instead.
 func (tl *TeamProject) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
-	// Check if the user can read the project
-	l := &Project{ID: tl.ProjectID}
-	canRead, _, err := l.CanRead(s, a)
-	if err != nil {
-		return nil, 0, 0, err
-	}
-	if !canRead {
-		return nil, 0, 0, ErrNeedToHaveProjectReadAccess{ProjectID: tl.ProjectID, UserID: a.GetID()}
-	}
-
-	limit, start := getLimitFromPageIndex(page, perPage)
-
-	// Get the teams
-	all := []*TeamWithPermission{}
-	query := s.
-		Table("teams").
-		Join("INNER", "team_projects", "team_id = teams.id").
-		Where("team_projects.project_id = ?", tl.ProjectID).
-		Where(db.ILIKE("teams.name", search))
-	if limit > 0 {
-		query = query.Limit(limit, start)
-	}
-	err = query.Find(&all)
-	if err != nil {
-		return nil, 0, 0, err
-	}
-
-	teams := []*Team{}
-	for i := range all {
-		teams = append(teams, &all[i].Team)
-	}
-
-	err = addMoreInfoToTeams(s, teams)
-	if err != nil {
-		return
-	}
-
-	totalItems, err = s.
-		Table("teams").
-		Join("INNER", "team_projects", "team_id = teams.id").
-		Where("team_projects.project_id = ?", tl.ProjectID).
-		Where("teams.name LIKE ?", "%"+search+"%").
-		Count(&TeamWithPermission{})
-	if err != nil {
-		return nil, 0, 0, err
-	}
-
-	return all, len(all), totalItems, err
+	// DEPRECATED: Business logic moved to service layer
+	// This method now delegates to ProjectTeamService.GetAll
+	service := getProjectTeamService()
+	return service.GetAll(s, tl.ProjectID, a, search, page, perPage)
 }
 
 // Update updates a team <-> project relation
@@ -247,21 +170,10 @@ func (tl *TeamProject) ReadAll(s *xorm.Session, a web.Auth, search string, page 
 // @Failure 404 {object} web.HTTPError "Team or project does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{projectID}/teams/{teamID} [post]
+// @Deprecated: Use services.ProjectTeamService.Update instead.
 func (tl *TeamProject) Update(s *xorm.Session, _ web.Auth) (err error) {
-
-	// Check if the permission is valid
-	if err := tl.Permission.IsValid(); err != nil {
-		return err
-	}
-
-	_, err = s.
-		Where("project_id = ? AND team_id = ?", tl.ProjectID, tl.TeamID).
-		Cols("permission").
-		Update(tl)
-	if err != nil {
-		return err
-	}
-
-	err = UpdateProjectLastUpdated(s, &Project{ID: tl.ProjectID})
-	return
+	// DEPRECATED: Business logic moved to service layer
+	// This method now delegates to ProjectTeamService.Update
+	service := getProjectTeamService()
+	return service.Update(s, tl)
 }

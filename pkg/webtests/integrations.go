@@ -38,6 +38,7 @@ import (
 	"code.vikunja.io/api/pkg/routes"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/api/pkg/routes/caldav"
+	"code.vikunja.io/api/pkg/services"
 	"code.vikunja.io/api/pkg/testutil"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
@@ -90,6 +91,9 @@ func setupTestEnv() (e *echo.Echo, err error) {
 	testutil.Init()
 	events.Fake()
 	keyvalue.InitStorage()
+
+	// Initialize service layer dependencies (required for model delegation)
+	services.InitializeDependencies()
 
 	err = db.LoadFixtures()
 	if err != nil {

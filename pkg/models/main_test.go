@@ -32,6 +32,153 @@ import (
 	"xorm.io/xorm"
 )
 
+// mockProjectTeamService provides a test implementation that uses the original model logic
+// This prevents import cycles while allowing model tests to continue working
+type mockProjectTeamService struct{}
+
+func (m *mockProjectTeamService) Create(s *xorm.Session, teamProject *TeamProject, doer web.Auth) error {
+	// Call the original model logic directly (before delegation was added)
+	// Check if the permissions are valid
+	if err := teamProject.Permission.IsValid(); err != nil {
+		return err
+	}
+
+	// Check if the team exists
+	_, err := GetTeamByID(s, teamProject.TeamID)
+	if err != nil {
+		return err
+	}
+
+	// Check if the project exists
+	l, err := GetProjectSimpleByID(s, teamProject.ProjectID)
+	if err != nil {
+		return err
+	}
+
+	// Check if the team is already on the project
+	exists, err := s.Where("team_id = ?", teamProject.TeamID).
+		And("project_id = ?", teamProject.ProjectID).
+		Get(&TeamProject{})
+	if err != nil {
+		return err
+	}
+	if exists {
+		return ErrTeamAlreadyHasAccess{teamProject.TeamID, teamProject.ProjectID}
+	}
+
+	// Insert the new team
+	teamProject.ID = 0
+	_, err = s.Insert(teamProject)
+	if err != nil {
+		return err
+	}
+
+	// Note: Skipping event dispatch and UpdateProjectLastUpdated in test mock
+	// to keep it simple and avoid additional dependencies
+	return UpdateProjectLastUpdated(s, l)
+}
+
+func (m *mockProjectTeamService) Delete(s *xorm.Session, teamProject *TeamProject) error {
+	// Check if the team exists
+	_, err := GetTeamByID(s, teamProject.TeamID)
+	if err != nil {
+		return err
+	}
+
+	// Check if the team has access to the project
+	has, err := s.
+		Where("team_id = ? AND project_id = ?", teamProject.TeamID, teamProject.ProjectID).
+		Get(&TeamProject{})
+	if err != nil {
+		return err
+	}
+	if !has {
+		return ErrTeamDoesNotHaveAccessToProject{TeamID: teamProject.TeamID, ProjectID: teamProject.ProjectID}
+	}
+
+	// Delete the relation
+	_, err = s.Where("team_id = ?", teamProject.TeamID).
+		And("project_id = ?", teamProject.ProjectID).
+		Delete(&TeamProject{})
+	if err != nil {
+		return err
+	}
+
+	return UpdateProjectLastUpdated(s, &Project{ID: teamProject.ProjectID})
+}
+
+func (m *mockProjectTeamService) GetAll(s *xorm.Session, projectID int64, doer web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
+	// Check if the user can read the project
+	l := &Project{ID: projectID}
+	canRead, _, err := l.CanRead(s, doer)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+	if !canRead {
+		return nil, 0, 0, ErrNeedToHaveProjectReadAccess{ProjectID: projectID, UserID: doer.GetID()}
+	}
+
+	limit, start := getLimitFromPageIndex(page, perPage)
+
+	// Get the teams
+	all := []*TeamWithPermission{}
+	query := s.
+		Table("teams").
+		Join("INNER", "team_projects", "team_id = teams.id").
+		Where("team_projects.project_id = ?", projectID)
+
+	if search != "" {
+		query = query.Where("teams.name LIKE ?", "%"+search+"%")
+	}
+
+	if limit > 0 {
+		query = query.Limit(limit, start)
+	}
+	err = query.Find(&all)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	teams := []*Team{}
+	for i := range all {
+		teams = append(teams, &all[i].Team)
+	}
+
+	err = AddMoreInfoToTeams(s, teams)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	totalItems, err = s.
+		Table("teams").
+		Join("INNER", "team_projects", "team_id = teams.id").
+		Where("team_projects.project_id = ?", projectID).
+		Where("teams.name LIKE ?", "%"+search+"%").
+		Count(&TeamWithPermission{})
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	return all, len(all), totalItems, err
+}
+
+func (m *mockProjectTeamService) Update(s *xorm.Session, teamProject *TeamProject) error {
+	// Check if the permission is valid
+	if err := teamProject.Permission.IsValid(); err != nil {
+		return err
+	}
+
+	_, err := s.
+		Where("project_id = ? AND team_id = ?", teamProject.ProjectID, teamProject.TeamID).
+		Cols("permission").
+		Update(teamProject)
+	if err != nil {
+		return err
+	}
+
+	return UpdateProjectLastUpdated(s, &Project{ID: teamProject.ProjectID})
+}
+
 func setupTime() {
 	var err error
 	loc, err := time.LoadLocation("GMT")
@@ -73,6 +220,19 @@ func TestMain(m *testing.M) {
 	user.InitTests()
 
 	SetupTests()
+
+	// Register a mock ProjectTeamService provider for model tests
+	// This avoids import cycle with services package
+	RegisterProjectTeamService(func() interface {
+		Create(s *xorm.Session, teamProject *TeamProject, doer web.Auth) error
+		Delete(s *xorm.Session, teamProject *TeamProject) error
+		GetAll(s *xorm.Session, projectID int64, doer web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error)
+		Update(s *xorm.Session, teamProject *TeamProject) error
+	} {
+		// Return a mock that delegates to the original model methods
+		// This preserves backward compatibility for model tests
+		return &mockProjectTeamService{}
+	})
 
 	// Set up a mock for the GetUsersOrLinkSharesFromIDsFunc for model tests,
 	// as they should not depend on the services package.

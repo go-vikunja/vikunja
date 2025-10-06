@@ -41,4 +41,38 @@ func InitializeDependencies() {
 	) (users map[int64]*user.User, err error) {
 		return mentionsService.NotifyMentionedUsers(sess, subject, text, notification)
 	}
+
+	// Register ProjectTeamService provider to avoid import cycles
+	models.RegisterProjectTeamService(func() interface {
+		Create(s *xorm.Session, teamProject *models.TeamProject, doer web.Auth) error
+		Delete(s *xorm.Session, teamProject *models.TeamProject) error
+		GetAll(s *xorm.Session, projectID int64, doer web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error)
+		Update(s *xorm.Session, teamProject *models.TeamProject) error
+	} {
+		// Return an adapter that bridges the interface mismatch
+		return &projectTeamServiceAdapter{service: NewProjectTeamService(nil)}
+	})
+}
+
+// projectTeamServiceAdapter adapts ProjectTeamService to the interface expected by models
+type projectTeamServiceAdapter struct {
+	service *ProjectTeamService
+}
+
+func (a *projectTeamServiceAdapter) Create(s *xorm.Session, teamProject *models.TeamProject, doer web.Auth) error {
+	return a.service.Create(s, teamProject, doer)
+}
+
+func (a *projectTeamServiceAdapter) Delete(s *xorm.Session, teamProject *models.TeamProject) error {
+	return a.service.Delete(s, teamProject)
+}
+
+func (a *projectTeamServiceAdapter) GetAll(s *xorm.Session, projectID int64, doer web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
+	// Call service layer directly - no conversion needed
+	teams, rc, ti, err := a.service.GetAll(s, projectID, doer, search, page, perPage)
+	return teams, rc, ti, err
+}
+
+func (a *projectTeamServiceAdapter) Update(s *xorm.Session, teamProject *models.TeamProject) error {
+	return a.service.Update(s, teamProject)
 }

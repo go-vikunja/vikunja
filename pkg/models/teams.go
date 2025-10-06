@@ -120,7 +120,7 @@ func GetTeamByID(s *xorm.Session, id int64) (team *Team, err error) {
 	}
 
 	teamSlice := []*Team{&t}
-	err = addMoreInfoToTeams(s, teamSlice)
+	err = AddMoreInfoToTeams(s, teamSlice)
 	if err != nil {
 		return
 	}
@@ -130,7 +130,8 @@ func GetTeamByID(s *xorm.Session, id int64) (team *Team, err error) {
 	return
 }
 
-func addMoreInfoToTeams(s *xorm.Session, teams []*Team) (err error) {
+// AddMoreInfoToTeams adds more info (members, created_by) to teams
+func AddMoreInfoToTeams(s *xorm.Session, teams []*Team) (err error) {
 
 	if len(teams) == 0 {
 		return nil
@@ -285,7 +286,7 @@ func (t *Team) ReadAll(s *xorm.Session, a web.Auth, search string, page int, per
 		return nil, 0, 0, err
 	}
 
-	err = addMoreInfoToTeams(s, all)
+	err = AddMoreInfoToTeams(s, all)
 	if err != nil {
 		return nil, 0, 0, err
 	}
