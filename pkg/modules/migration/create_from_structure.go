@@ -32,6 +32,7 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/background/handler"
+	"code.vikunja.io/api/pkg/services"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web"
@@ -320,13 +321,51 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 	}
 
 	project.ID = 0
-	err = models.CreateProject(s, &project.Project, authUser, false, false)
+
+	// Use ProjectService.Create instead of models.CreateProject to comply with service layer architecture
+	// The service will create default views which we'll delete since the migration imports its own views
+	projectService := services.NewProjectService(db.GetEngine())
+	createdProject, err := projectService.Create(s, &project.Project, authUser)
 	if err != nil && models.IsErrProjectIdentifierIsNotUnique(err) {
 		project.Identifier = ""
-		err = models.CreateProject(s, &project.Project, authUser, false, false)
+		createdProject, err = projectService.Create(s, &project.Project, authUser)
 	}
 	if err != nil {
 		return errors.New("error creating project: " + err.Error())
+	}
+
+	// Copy the created project data back to our project struct
+	project.Project = *createdProject
+
+	// Delete auto-created default views since migration will import its own views from the export data
+	// This maintains the same behavior as the old CreateProject(s, project, auth, false, false) call
+
+	// First, get all the view IDs to delete their associated buckets
+	var views []*models.ProjectView
+	err = s.Where("project_id = ?", project.ID).Find(&views)
+	if err != nil {
+		// Ignore errors if table doesn't exist (e.g., in some test scenarios)
+		log.Debugf("[creating structure] Could not find views (table might not exist): %v", err)
+	} else if len(views) > 0 {
+		viewIDs := make([]int64, len(views))
+		for i, v := range views {
+			viewIDs[i] = v.ID
+		}
+
+		// Delete buckets associated with these views
+		_, err = s.In("project_view_id", viewIDs).Delete(&models.Bucket{})
+		if err != nil {
+			log.Debugf("[creating structure] Could not delete buckets: %v", err)
+		}
+
+		// Now delete the views themselves
+		_, err = s.Where("project_id = ?", project.ID).Delete(&models.ProjectView{})
+		if err != nil {
+			log.Debugf("[creating structure] Could not delete views: %v", err)
+		}
+
+		// Clear the project.Views slice to reflect the database state
+		project.Views = nil
 	}
 
 	if wasArchived {
@@ -354,6 +393,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 	log.Debugf("[creating structure] About to create buckets")
 	// Create all buckets
 	bucketsByOldID := make(map[int64]*models.Bucket) // old bucket id is the key
+	bucketOldViewIDs := make(map[int64]int64)        // maps new bucket ID to its original view ID
 	if len(project.Buckets) > 0 {
 		log.Debugf("[creating structure] Creating %d buckets", len(project.Buckets))
 	}
@@ -364,6 +404,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		}
 
 		oldID := bucket.ID
+		oldViewID := bucket.ProjectViewID
 		log.Debugf("[creating structure] Creating bucket with original ProjectViewID: %d", bucket.ProjectViewID)
 
 		// Reset invalid ProjectViewIDs to 0 during migration
@@ -399,6 +440,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		}
 
 		bucketsByOldID[oldID] = bucket
+		bucketOldViewIDs[bucket.ID] = oldViewID // Save the mapping of new bucket ID to old view ID
 		log.Debugf("[creating structure] Created bucket %d, old ID was %d", bucket.ID, oldID)
 	}
 
@@ -448,8 +490,11 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		}
 
 		for oldID, bucket := range bucketsByOldID {
-			newView, has := viewsByOldIDs[bucket.ProjectViewID]
+			oldViewID := bucketOldViewIDs[bucket.ID] // Get the original view ID we saved
+			log.Debugf("[creating structure] Bucket %d (old ID %d) had original view ID %d", bucket.ID, oldID, oldViewID)
+			newView, has := viewsByOldIDs[oldViewID]
 			if !has {
+				log.Debugf("[creating structure] No view found for old view ID %d, deleting bucket %d", oldViewID, bucket.ID)
 				err = bucket.Delete(s, authUser)
 				if err != nil {
 					return
@@ -458,6 +503,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 				continue
 			}
 
+			log.Debugf("[creating structure] Mapping bucket %d view from old ID %d to new ID %d", bucket.ID, oldViewID, newView.ID)
 			bucket.ProjectViewID = newView.ID
 			// Use direct database update during migration to avoid service layer validation
 			_, err = s.Where("id = ?", bucket.ID).Cols("project_view_id").Update(bucket)

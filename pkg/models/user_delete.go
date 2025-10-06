@@ -141,10 +141,12 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 			// Child projects are deleted by p.Delete
 			continue
 		}
-		err = p.Delete(s, u)
-		// If the user is the owner of the default project it will be deleted, if they are not the owner
-		// we can ignore the error as the project was shared in that case.
-		if err != nil && !IsErrCannotDeleteDefaultProject(err) {
+
+		// Use DeleteForce to allow deletion of default projects when deleting the user
+		// This ensures default projects are properly cleaned up when the user is deleted
+		service := getProjectService()
+		err = service.DeleteForce(s, p.ID, u)
+		if err != nil {
 			return err
 		}
 	}

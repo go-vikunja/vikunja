@@ -83,12 +83,53 @@ func (pd *ProjectDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 	// Set the owner to the current user
 	pd.Project.OwnerID = doer.GetID()
 	pd.Project.Title += " - duplicate"
-	err = CreateProject(s, pd.Project, doer, false, false)
+
+	// Use ProjectService instead of deprecated CreateProject function
+	// Note: This still needs proper service layer refactoring (see T022)
+	doerUser, err := GetUserOrLinkShareUser(s, doer)
+	if err != nil {
+		return err
+	}
+
+	projectService := getProjectService()
+	createdProject, err := projectService.Create(s, pd.Project, doerUser)
 	if err != nil {
 		// If there is no available unique project identifier, just reset it.
 		if IsErrProjectIdentifierIsNotUnique(err) {
 			pd.Project.Identifier = ""
+			createdProject, err = projectService.Create(s, pd.Project, doerUser)
+			if err != nil {
+				return err
+			}
 		} else {
+			return err
+		}
+	}
+
+	// Copy the created project data back
+	*pd.Project = *createdProject
+
+	// Delete auto-created default views since duplication will create its own views from the source project
+	// This maintains the same behavior as the old CreateProject(s, project, doer, false, false) call
+
+	// First, get all the view IDs to delete their associated buckets
+	var views []*ProjectView
+	err = s.Where("project_id = ?", pd.Project.ID).Find(&views)
+	if err == nil && len(views) > 0 {
+		viewIDs := make([]int64, len(views))
+		for i, v := range views {
+			viewIDs[i] = v.ID
+		}
+
+		// Delete buckets associated with these views
+		_, err = s.In("project_view_id", viewIDs).Delete(&Bucket{})
+		if err != nil {
+			return err
+		}
+
+		// Now delete the views themselves
+		_, err = s.Where("project_id = ?", pd.Project.ID).Delete(&ProjectView{})
+		if err != nil {
 			return err
 		}
 	}

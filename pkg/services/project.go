@@ -958,26 +958,26 @@ Transaction Safety:
 This method should be called within a database transaction to ensure
 atomicity. If any step fails, the entire operation should be rolled back.
 */
-func (p *ProjectService) Delete(s *xorm.Session, projectID int64, u *user.User) error {
+func (p *ProjectService) Delete(s *xorm.Session, projectID int64, a web.Auth) error {
 	// Load the project
 	project, err := models.GetProjectSimpleByID(s, projectID)
 	if err != nil {
 		return err
 	}
 
-	// Check if this is a default project FIRST (more specific error condition)
+	// Check if this is a default project
 	isDefaultProject, err := project.IsDefaultProject(s)
 	if err != nil {
 		return err
 	}
 
-	// Only owners can delete their default project
-	if isDefaultProject && project.OwnerID != u.ID {
+	// No one can delete a default project (not even the owner)
+	if isDefaultProject {
 		return &models.ErrCannotDeleteDefaultProject{ProjectID: project.ID}
 	}
 
 	// Permission check - implement the same logic as CanDelete but directly in service
-	canDelete, err := p.checkDeletePermission(s, project, u)
+	canDelete, err := p.checkDeletePermission(s, project, a)
 	if err != nil {
 		return err
 	}
@@ -994,10 +994,9 @@ func (p *ProjectService) Delete(s *xorm.Session, projectID int64, u *user.User) 
 	}
 
 	// Delete each task individually to ensure proper cleanup
-	// Note: This calls the model's Delete method which still uses web.Auth
-	// We pass the user as web.Auth since user.User implements web.Auth interface
+	// Note: This calls the model's Delete method which uses web.Auth
 	for _, task := range tasks {
-		err = task.Delete(s, u)
+		err = task.Delete(s, a)
 		if err != nil {
 			return err
 		}
@@ -1057,9 +1056,159 @@ func (p *ProjectService) Delete(s *xorm.Session, projectID int64, u *user.User) 
 	}
 
 	// Remove from favorites
-	err = p.FavoriteService.RemoveFromFavorite(s, project.ID, u, models.FavoriteKindProject)
+	// Extract user for favorite service (link shares don't have favorites)
+	doer, err := models.GetUserOrLinkShareUser(s, a)
+	if err == nil {
+		err = p.FavoriteService.RemoveFromFavorite(s, project.ID, doer, models.FavoriteKindProject)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Delete link sharing
+	_, err = s.Where("project_id = ?", project.ID).Delete(&models.LinkSharing{})
 	if err != nil {
 		return err
+	}
+
+	// Delete project users
+	_, err = s.Where("project_id = ?", project.ID).Delete(&models.ProjectUser{})
+	if err != nil {
+		return err
+	}
+
+	// Delete team projects
+	_, err = s.Where("project_id = ?", project.ID).Delete(&models.TeamProject{})
+	if err != nil {
+		return err
+	}
+
+	// Delete the project itself
+	_, err = s.ID(project.ID).Delete(&models.Project{})
+	if err != nil {
+		return err
+	}
+
+	// Dispatch project deleted event with the user
+	// For link shares, we use a proxy user
+	eventDoer, err := models.GetUserOrLinkShareUser(s, a)
+	if err != nil {
+		// If we can't get a user (shouldn't happen), use a system user placeholder
+		eventDoer = &user.User{ID: 0}
+	}
+	err = events.Dispatch(&models.ProjectDeletedEvent{
+		Project: project,
+		Doer:    eventDoer,
+	})
+	if err != nil {
+		return err
+	}
+
+	// Delete child projects recursively
+	childProjects := []*models.Project{}
+	err = s.Where("parent_project_id = ?", project.ID).Find(&childProjects)
+	if err != nil {
+		return err
+	}
+
+	for _, child := range childProjects {
+		err = p.Delete(s, child.ID, a)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// DeleteForce deletes a project, bypassing the default project protection
+// This should ONLY be used when deleting a user and their default project needs to be cleaned up
+func (p *ProjectService) DeleteForce(s *xorm.Session, projectID int64, a web.Auth) error {
+	// Load the project
+	project, err := models.GetProjectSimpleByID(s, projectID)
+	if err != nil {
+		return err
+	}
+
+	// Check if this is a default project
+	isDefaultProject, err := project.IsDefaultProject(s)
+	if err != nil {
+		return err
+	}
+
+	// Permission check - still enforce permissions even when forcing
+	canDelete, err := p.checkDeletePermission(s, project, a)
+	if err != nil {
+		return err
+	}
+	if !canDelete {
+		return models.ErrGenericForbidden{}
+	}
+
+	// If we're deleting a default project, remove it as default for all users first
+	if isDefaultProject {
+		_, err = s.Where("default_project_id = ?", project.ID).
+			Cols("default_project_id").
+			Update(&user.User{DefaultProjectID: 0})
+		if err != nil {
+			return err
+		}
+	}
+
+	// Now perform the actual deletion using the same logic as Delete
+	// Delete all tasks on that project
+	tasks := []*models.Task{}
+	err = s.Where("project_id = ?", project.ID).Find(&tasks)
+	if err != nil {
+		return err
+	}
+
+	for _, task := range tasks {
+		err = task.Delete(s, a)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Delete background file if exists
+	if project.BackgroundFileID != 0 {
+		_, err := s.Where("id = ?", project.BackgroundFileID).Delete(&files.File{})
+		if err != nil {
+			return err
+		}
+	}
+
+	// Delete all views and their buckets
+	views := []*models.ProjectView{}
+	err = s.Where("project_id = ?", project.ID).Find(&views)
+	if err != nil {
+		return err
+	}
+
+	viewIDs := []int64{}
+	for _, v := range views {
+		viewIDs = append(viewIDs, v.ID)
+	}
+
+	if len(viewIDs) > 0 {
+		_, err = s.In("project_view_id", viewIDs).Delete(&models.Bucket{})
+		if err != nil {
+			return err
+		}
+
+		_, err = s.In("id", viewIDs).Delete(&models.ProjectView{})
+		if err != nil {
+			return err
+		}
+	}
+
+	// Remove from favorites
+	doer, err := models.GetUserOrLinkShareUser(s, a)
+	if err == nil {
+		err = p.FavoriteService.RemoveFromFavorite(s, project.ID, doer, models.FavoriteKindProject)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Delete link sharing
@@ -1087,9 +1236,13 @@ func (p *ProjectService) Delete(s *xorm.Session, projectID int64, u *user.User) 
 	}
 
 	// Dispatch project deleted event
+	eventDoer, err := user.GetFromAuth(a)
+	if err != nil {
+		eventDoer = &user.User{ID: 0}
+	}
 	err = events.Dispatch(&models.ProjectDeletedEvent{
 		Project: project,
-		Doer:    u,
+		Doer:    eventDoer,
 	})
 	if err != nil {
 		return err
@@ -1103,7 +1256,7 @@ func (p *ProjectService) Delete(s *xorm.Session, projectID int64, u *user.User) 
 	}
 
 	for _, child := range childProjects {
-		err = p.Delete(s, child.ID, u)
+		err = p.DeleteForce(s, child.ID, a)
 		if err != nil {
 			return err
 		}
@@ -1114,10 +1267,23 @@ func (p *ProjectService) Delete(s *xorm.Session, projectID int64, u *user.User) 
 
 // checkDeletePermission implements the permission checking logic directly in the service layer
 // This replaces the need to call project.CanDelete() from the model layer
-func (p *ProjectService) checkDeletePermission(s *xorm.Session, project *models.Project, u *user.User) (bool, error) {
+func (p *ProjectService) checkDeletePermission(s *xorm.Session, project *models.Project, a web.Auth) (bool, error) {
 	// The favorite project can't be deleted
 	if project.ID == models.FavoritesPseudoProject.ID {
 		return false, nil
+	}
+
+	// Check if the auth is a link share
+	shareAuth, is := a.(*models.LinkSharing)
+	if is {
+		// Link shares can only delete if they have admin permission and it's their project
+		return project.ID == shareAuth.ProjectID && shareAuth.Permission == models.PermissionAdmin, nil
+	}
+
+	// Get the user from auth
+	u, err := user.GetFromAuth(a)
+	if err != nil {
+		return false, err
 	}
 
 	// Check if the user is the owner (owners are always admins)

@@ -55,6 +55,8 @@ var AddProjectDetailsFunc func(s *xorm.Session, projects []*Project, a web.Auth)
 type ProjectServiceProvider func() interface {
 	ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int, isArchived bool, expand ProjectExpandable) (projects []*Project, resultCount int, totalItems int64, err error)
 	Create(s *xorm.Session, project *Project, u *user.User) (*Project, error)
+	Delete(s *xorm.Session, projectID int64, a web.Auth) error
+	DeleteForce(s *xorm.Session, projectID int64, a web.Auth) error // DeleteForce allows deleting default projects (used for user deletion)
 }
 
 // projectServiceProvider is the registered service provider function
@@ -70,6 +72,8 @@ func RegisterProjectService(provider ProjectServiceProvider) {
 func getProjectService() interface {
 	ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int, isArchived bool, expand ProjectExpandable) (projects []*Project, resultCount int, totalItems int64, err error)
 	Create(s *xorm.Session, project *Project, u *user.User) (*Project, error)
+	Delete(s *xorm.Session, projectID int64, a web.Auth) error
+	DeleteForce(s *xorm.Session, projectID int64, a web.Auth) error
 } {
 	if projectServiceProvider != nil {
 		return projectServiceProvider()
@@ -800,59 +804,6 @@ func (p *Project) validate(s *xorm.Session, project *Project) (err error) {
 	return nil
 }
 
-// @Deprecated: This creation logic has been moved to the service layer.
-// Use services.Project.Create instead of this model-level function.
-func CreateProject(s *xorm.Session, project *Project, auth web.Auth, createBacklogBucket bool, createDefaultViews bool) (err error) {
-	err = project.CheckIsArchived(s)
-	if err != nil {
-		return err
-	}
-
-	doer, err := user.GetFromAuth(auth)
-	if err != nil {
-		return err
-	}
-
-	project.ID = 0
-	project.OwnerID = doer.ID
-	project.Owner = doer
-
-	err = project.validate(s, project)
-	if err != nil {
-		return
-	}
-
-	project.HexColor = utils.NormalizeHex(project.HexColor)
-
-	_, err = s.Insert(project)
-	if err != nil {
-		return
-	}
-
-	project.Position = calculateDefaultPosition(project.ID, project.Position)
-	_, err = s.Where("id = ?", project.ID).Update(project)
-	if err != nil {
-		return
-	}
-	if project.IsFavorite {
-		if err := AddToFavorites(s, project.ID, auth, FavoriteKindProject); err != nil {
-			return err
-		}
-	}
-
-	if createDefaultViews {
-		err = CreateDefaultViewsForProject(s, project, auth, createBacklogBucket, true)
-		if err != nil {
-			return
-		}
-	}
-
-	return events.Dispatch(&ProjectCreatedEvent{
-		Project: project,
-		Doer:    doer,
-	})
-}
-
 // CreateNewProjectForUser creates a new inbox project for a user. To prevent import cycles, we can't do that
 // directly in the user.Create function.
 func CreateNewProjectForUser(s *xorm.Session, u *user.User) (err error) {
@@ -1047,118 +998,9 @@ func (p *Project) IsDefaultProject(s *xorm.Session) (is bool, err error) {
 // Deprecated: This logic has been moved to services.ProjectService.Delete.
 // This method will be removed in a future version once all callers have been updated.
 func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
-
-	isDefaultProject, err := p.IsDefaultProject(s)
-	if err != nil {
-		return err
-	}
-	// Owners should be allowed to delete the default project
-	if isDefaultProject && p.OwnerID != a.GetID() {
-		return &ErrCannotDeleteDefaultProject{ProjectID: p.ID}
-	}
-
-	// Delete all tasks on that project
-	// Using the loop to make sure all related entities to all tasks are properly deleted as well.
-	tasks, _, _, err := getRawTasksForProjects(s, []*Project{p}, a, &taskSearchOptions{})
-	if err != nil {
-		return
-	}
-
-	for _, task := range tasks {
-		err = task.Delete(s, a)
-		if err != nil {
-			return err
-		}
-	}
-
-	fullProject, err := GetProjectSimpleByID(s, p.ID)
-	if err != nil {
-		return
-	}
-
-	err = fullProject.DeleteBackgroundFileIfExists()
-	if err != nil {
-		return
-	}
-
-	// If we're deleting a default project, remove it as default
-	if isDefaultProject {
-		_, err = s.Where("default_project_id = ?", p.ID).
-			Cols("default_project_id").
-			Update(&user.User{DefaultProjectID: 0})
-		if err != nil {
-			return
-		}
-	}
-
-	// Delete related project entities
-	views, err := getViewsForProject(s, p.ID)
-	if err != nil {
-		return
-	}
-	viewIDs := []int64{}
-	for _, v := range views {
-		viewIDs = append(viewIDs, v.ID)
-	}
-
-	_, err = s.In("project_view_id", viewIDs).Delete(&Bucket{})
-	if err != nil {
-		return
-	}
-
-	_, err = s.In("id", viewIDs).Delete(&ProjectView{})
-	if err != nil {
-		return
-	}
-
-	err = RemoveFromFavorite(s, p.ID, a, FavoriteKindProject)
-	if err != nil {
-		return
-	}
-
-	_, err = s.Where("project_id = ?", p.ID).Delete(&LinkSharing{})
-	if err != nil {
-		return
-	}
-
-	_, err = s.Where("project_id = ?", p.ID).Delete(&ProjectUser{})
-	if err != nil {
-		return
-	}
-
-	_, err = s.Where("project_id = ?", p.ID).Delete(&TeamProject{})
-	if err != nil {
-		return
-	}
-
-	// Delete the project
-	_, err = s.ID(p.ID).Delete(&Project{})
-	if err != nil {
-		return
-	}
-
-	err = events.Dispatch(&ProjectDeletedEvent{
-		Project: fullProject,
-		Doer:    a,
-	})
-	if err != nil {
-		return
-	}
-
-	childProjects := []*Project{}
-	err = s.Where("parent_project_id = ?", fullProject.ID).Find(&childProjects)
-	if err != nil {
-		return
-	}
-
-	for _, child := range childProjects {
-		err = child.Delete(s, a)
-		if err != nil {
-			return
-		}
-	}
-
-	return
+	// Delegate to service layer - all business logic moved there
+	service := getProjectService()
+	return service.Delete(s, p.ID, a)
 }
 
 // DeleteBackgroundFileIfExists deletes the list's background file from the db and the filesystem,

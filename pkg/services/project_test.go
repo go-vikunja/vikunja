@@ -381,21 +381,21 @@ func TestProject_Delete(t *testing.T) {
 		assert.True(t, models.IsErrCannotDeleteDefaultProject(err))
 	})
 
-	t.Run("should allow owner to delete their default project", func(t *testing.T) {
+	t.Run("should not allow owner to delete their default project via Delete", func(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		// Project 4 is the default project for user 3, so user 3 should be able to delete it
+		// Project 4 is the default project for user 3
+		// Owners should not be able to delete their default project via Delete
+		// They must use DeleteForce (which is called during user deletion)
 		err := p.Delete(s, 4, &user.User{ID: 3})
-		require.NoError(t, err)
+		assert.Error(t, err)
+		assert.True(t, models.IsErrCannotDeleteDefaultProject(err))
 
-		err = s.Commit()
-		require.NoError(t, err)
-
-		// Verify project is deleted
-		db.AssertMissing(t, "projects", map[string]interface{}{
+		// Project should still exist
+		db.AssertExists(t, "projects", map[string]interface{}{
 			"id": 4,
-		})
+		}, false)
 	})
 
 	t.Run("should delete project with background file", func(t *testing.T) {

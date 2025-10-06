@@ -46,6 +46,8 @@ func InitializeDependencies() {
 	models.RegisterProjectService(func() interface {
 		ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int, isArchived bool, expand models.ProjectExpandable) (projects []*models.Project, resultCount int, totalItems int64, err error)
 		Create(s *xorm.Session, project *models.Project, u *user.User) (*models.Project, error)
+		Delete(s *xorm.Session, projectID int64, a web.Auth) error
+		DeleteForce(s *xorm.Session, projectID int64, a web.Auth) error
 	} {
 		// Return an adapter that bridges the interface
 		return &projectServiceAdapter{service: NewProjectService(nil)}
@@ -74,6 +76,14 @@ func (a *projectServiceAdapter) ReadAll(s *xorm.Session, auth web.Auth, search s
 
 func (a *projectServiceAdapter) Create(s *xorm.Session, project *models.Project, u *user.User) (*models.Project, error) {
 	return a.service.Create(s, project, u)
+}
+
+func (a *projectServiceAdapter) Delete(s *xorm.Session, projectID int64, auth web.Auth) error {
+	return a.service.Delete(s, projectID, auth)
+}
+
+func (a *projectServiceAdapter) DeleteForce(s *xorm.Session, projectID int64, auth web.Auth) error {
+	return a.service.DeleteForce(s, projectID, auth)
 }
 
 // projectTeamServiceAdapter adapts ProjectTeamService to the interface expected by models

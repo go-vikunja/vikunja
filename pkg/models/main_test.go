@@ -28,6 +28,7 @@ import (
 	"code.vikunja.io/api/pkg/i18n"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web"
 	"xorm.io/xorm"
 )
@@ -179,35 +180,71 @@ func (m *mockProjectTeamService) Update(s *xorm.Session, teamProject *TeamProjec
 	return UpdateProjectLastUpdated(s, &Project{ID: teamProject.ProjectID})
 }
 
-// mockProjectService provides a test implementation that uses the original model logic
+// mockProjectService provides a test implementation that uses direct logic
 // This prevents import cycles while allowing model tests to continue working
+// Updated to not call model helper functions per T011A-PART2 requirements
 type mockProjectService struct{}
 
 func (m *mockProjectService) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int, isArchived bool, expand ProjectExpandable) (projects []*Project, resultCount int, totalItems int64, err error) {
-	// Use the original GetAllRawProjects function
-	prs, resultCount, totalItems, err := GetAllRawProjects(s, a, search, page, perPage, isArchived)
-	if err != nil {
-		return nil, 0, 0, err
-	}
+	// Replicate the core logic without calling model helpers
 
-	_, is := a.(*LinkSharing)
+	// Check if we're dealing with a share auth
+	shareAuth, is := a.(*LinkSharing)
 	if is {
-		// If we're dealing with a link share, just return the projects
-		return prs, resultCount, totalItems, nil
-	}
-
-	// Add project details (favorite state, among other things)
-	err = AddProjectDetails(s, prs, a)
-	if err != nil {
-		return nil, 0, 0, err
-	}
-
-	if expand == ProjectExpandableRights {
-		var doer *user.User
-		doer, err = user.GetFromAuth(a)
+		project, err := GetProjectSimpleByID(s, shareAuth.ProjectID)
 		if err != nil {
 			return nil, 0, 0, err
 		}
+		projects := []*Project{project}
+
+		// Add details manually for share auth
+		if AddProjectDetailsFunc != nil {
+			err = AddProjectDetailsFunc(s, projects, a)
+		}
+		if err == nil && len(projects) > 0 {
+			projects[0].ParentProjectID = 0
+		}
+		return projects, 0, 0, err
+	}
+
+	doer, err := user.GetFromAuth(a)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	// Get raw projects using the low-level function
+	prs, resultCount, totalItems, err := getRawProjectsForUser(
+		s,
+		&ProjectOptions{
+			Search:      search,
+			User:        doer,
+			Page:        page,
+			PerPage:     perPage,
+			GetArchived: isArchived,
+		})
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	// Add saved filters
+	savedFiltersProject, err := getSavedFilterProjects(s, doer, search)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+	if len(savedFiltersProject) > 0 {
+		prs = append(prs, savedFiltersProject...)
+	}
+
+	// Add project details using the function variable if set
+	if AddProjectDetailsFunc != nil {
+		err = AddProjectDetailsFunc(s, prs, a)
+		if err != nil {
+			return nil, 0, 0, err
+		}
+	}
+
+	// Handle permission expansion
+	if expand == ProjectExpandableRights {
 		err = AddMaxPermissionToProjects(s, prs, doer)
 		if err != nil {
 			return nil, 0, 0, err
@@ -222,12 +259,56 @@ func (m *mockProjectService) ReadAll(s *xorm.Session, a web.Auth, search string,
 }
 
 func (m *mockProjectService) Create(s *xorm.Session, project *Project, u *user.User) (*Project, error) {
-	// Use the original CreateProject function
-	err := CreateProject(s, project, u, true, true)
+	// Replicate the core logic without calling model helper CreateProject
+
+	err := project.CheckIsArchived(s)
 	if err != nil {
 		return nil, err
 	}
 
+	project.ID = 0
+	project.OwnerID = u.ID
+	project.Owner = u
+
+	err = project.validate(s, project)
+	if err != nil {
+		return nil, err
+	}
+
+	project.HexColor = utils.NormalizeHex(project.HexColor)
+
+	_, err = s.Insert(project)
+	if err != nil {
+		return nil, err
+	}
+
+	project.Position = calculateDefaultPosition(project.ID, project.Position)
+	_, err = s.Where("id = ?", project.ID).Update(project)
+	if err != nil {
+		return nil, err
+	}
+
+	if project.IsFavorite {
+		if err := AddToFavorites(s, project.ID, u, FavoriteKindProject); err != nil {
+			return nil, err
+		}
+	}
+
+	// Create default views for tests
+	err = CreateDefaultViewsForProject(s, project, u, true, true)
+	if err != nil {
+		return nil, err
+	}
+
+	err = events.Dispatch(&ProjectCreatedEvent{
+		Project: project,
+		Doer:    u,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Return full project with details
 	fullProject, err := GetProjectSimpleByID(s, project.ID)
 	if err != nil {
 		return nil, err
@@ -239,6 +320,326 @@ func (m *mockProjectService) Create(s *xorm.Session, project *Project, u *user.U
 	}
 
 	return fullProject, nil
+}
+
+func (m *mockProjectService) Delete(s *xorm.Session, projectID int64, a web.Auth) error {
+	// Replicate the core delete logic for tests
+
+	// Load the project
+	project, err := GetProjectSimpleByID(s, projectID)
+	if err != nil {
+		return err
+	}
+
+	// Check if this is a default project
+	isDefaultProject, err := project.IsDefaultProject(s)
+	if err != nil {
+		return err
+	}
+
+	// No one can delete a default project (not even the owner)
+	if isDefaultProject {
+		return &ErrCannotDeleteDefaultProject{ProjectID: project.ID}
+	}
+
+	// Permission check - simplified for tests
+	// Check if auth is a link share
+	shareAuth, isShare := a.(*LinkSharing)
+	if isShare {
+		// Link shares can only delete if they have admin permission and it's their project
+		if !(project.ID == shareAuth.ProjectID && shareAuth.Permission == PermissionAdmin) {
+			return ErrGenericForbidden{}
+		}
+	} else {
+		// Get user for regular auth
+		doerUser, err := GetUserOrLinkShareUser(s, a)
+		if err != nil {
+			return err
+		}
+
+		// Owner has full permissions
+		if project.OwnerID != doerUser.ID {
+			// For non-owners, check if they have admin rights
+			can, err := project.CanWrite(s, a)
+			if err != nil {
+				return err
+			}
+			if !can {
+				return ErrGenericForbidden{}
+			}
+		}
+	}
+
+	// Delete all tasks on that project
+	tasks := []*Task{}
+	err = s.Where("project_id = ?", project.ID).Find(&tasks)
+	if err != nil {
+		return err
+	}
+
+	// Get user for task deletion
+	u, err := user.GetFromAuth(a)
+	if err != nil {
+		return err
+	}
+
+	for _, task := range tasks {
+		err = task.Delete(s, u)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Delete background file if exists
+	if project.BackgroundFileID != 0 {
+		_, err := s.Where("id = ?", project.BackgroundFileID).Delete(&files.File{})
+		if err != nil {
+			return err
+		}
+	}
+
+	// Delete related project entities
+	views := []*ProjectView{}
+	err = s.Where("project_id = ?", project.ID).Find(&views)
+	if err != nil {
+		return err
+	}
+
+	viewIDs := []int64{}
+	for _, v := range views {
+		viewIDs = append(viewIDs, v.ID)
+	}
+
+	if len(viewIDs) > 0 {
+		// Delete buckets associated with these views
+		_, err = s.In("project_view_id", viewIDs).Delete(&Bucket{})
+		if err != nil {
+			return err
+		}
+
+		// Delete the views themselves
+		_, err = s.In("id", viewIDs).Delete(&ProjectView{})
+		if err != nil {
+			return err
+		}
+	}
+
+	// Remove from favorites
+	err = RemoveFromFavorite(s, project.ID, u, FavoriteKindProject)
+	if err != nil {
+		return err
+	}
+
+	// Delete link sharing
+	_, err = s.Where("project_id = ?", project.ID).Delete(&LinkSharing{})
+	if err != nil {
+		return err
+	}
+
+	// Delete project users
+	_, err = s.Where("project_id = ?", project.ID).Delete(&ProjectUser{})
+	if err != nil {
+		return err
+	}
+
+	// Delete team projects
+	_, err = s.Where("project_id = ?", project.ID).Delete(&TeamProject{})
+	if err != nil {
+		return err
+	}
+
+	// Delete the project itself
+	_, err = s.ID(project.ID).Delete(&Project{})
+	if err != nil {
+		return err
+	}
+
+	// Dispatch project deleted event
+	err = events.Dispatch(&ProjectDeletedEvent{
+		Project: project,
+		Doer:    u,
+	})
+	if err != nil {
+		return err
+	}
+
+	// Delete child projects recursively
+	childProjects := []*Project{}
+	err = s.Where("parent_project_id = ?", project.ID).Find(&childProjects)
+	if err != nil {
+		return err
+	}
+
+	for _, child := range childProjects {
+		err = m.Delete(s, child.ID, u)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *mockProjectService) DeleteForce(s *xorm.Session, projectID int64, a web.Auth) error {
+	// DeleteForce is the same as Delete but allows deleting default projects
+	// Load the project
+	project, err := GetProjectSimpleByID(s, projectID)
+	if err != nil {
+		return err
+	}
+
+	// Check if this is a default project
+	isDefaultProject, err := project.IsDefaultProject(s)
+	if err != nil {
+		return err
+	}
+
+	// If we're deleting a default project, remove it as default first
+	if isDefaultProject {
+		_, err = s.Where("default_project_id = ?", project.ID).
+			Cols("default_project_id").
+			Update(&user.User{DefaultProjectID: 0})
+		if err != nil {
+			return err
+		}
+	}
+
+	// Permission check - simplified for tests
+	// Check if auth is a link share
+	shareAuth, isShare := a.(*LinkSharing)
+	if isShare {
+		// Link shares can only delete if they have admin permission and it's their project
+		if !(project.ID == shareAuth.ProjectID && shareAuth.Permission == PermissionAdmin) {
+			return ErrGenericForbidden{}
+		}
+	} else {
+		// Get user for regular auth
+		doerUser, err := GetUserOrLinkShareUser(s, a)
+		if err != nil {
+			return err
+		}
+
+		// Owner has full permissions
+		if project.OwnerID != doerUser.ID {
+			// For non-owners, check if they have admin rights
+			can, err := project.CanWrite(s, a)
+			if err != nil {
+				return err
+			}
+			if !can {
+				return ErrGenericForbidden{}
+			}
+		}
+	}
+
+	// Delete all tasks on that project
+	tasks := []*Task{}
+	err = s.Where("project_id = ?", project.ID).Find(&tasks)
+	if err != nil {
+		return err
+	}
+
+	// Get user for task deletion
+	u, err := user.GetFromAuth(a)
+	if err != nil {
+		return err
+	}
+
+	for _, task := range tasks {
+		err = task.Delete(s, u)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Delete background file if exists
+	if project.BackgroundFileID != 0 {
+		_, err := s.Where("id = ?", project.BackgroundFileID).Delete(&files.File{})
+		if err != nil {
+			return err
+		}
+	}
+
+	// Delete related project entities
+	views := []*ProjectView{}
+	err = s.Where("project_id = ?", project.ID).Find(&views)
+	if err != nil {
+		return err
+	}
+
+	viewIDs := []int64{}
+	for _, v := range views {
+		viewIDs = append(viewIDs, v.ID)
+	}
+
+	if len(viewIDs) > 0 {
+		// Delete buckets associated with these views
+		_, err = s.In("project_view_id", viewIDs).Delete(&Bucket{})
+		if err != nil {
+			return err
+		}
+
+		// Delete the views themselves
+		_, err = s.In("id", viewIDs).Delete(&ProjectView{})
+		if err != nil {
+			return err
+		}
+	}
+
+	// Remove from favorites
+	err = RemoveFromFavorite(s, project.ID, u, FavoriteKindProject)
+	if err != nil {
+		return err
+	}
+
+	// Delete link sharing
+	_, err = s.Where("project_id = ?", project.ID).Delete(&LinkSharing{})
+	if err != nil {
+		return err
+	}
+
+	// Delete project users
+	_, err = s.Where("project_id = ?", project.ID).Delete(&ProjectUser{})
+	if err != nil {
+		return err
+	}
+
+	// Delete team projects
+	_, err = s.Where("project_id = ?", project.ID).Delete(&TeamProject{})
+	if err != nil {
+		return err
+	}
+
+	// Delete the project itself
+	_, err = s.ID(project.ID).Delete(&Project{})
+	if err != nil {
+		return err
+	}
+
+	// Dispatch project deleted event
+	err = events.Dispatch(&ProjectDeletedEvent{
+		Project: project,
+		Doer:    u,
+	})
+	if err != nil {
+		return err
+	}
+
+	// Delete child projects recursively
+	childProjects := []*Project{}
+	err = s.Where("parent_project_id = ?", project.ID).Find(&childProjects)
+	if err != nil {
+		return err
+	}
+
+	for _, child := range childProjects {
+		err = m.DeleteForce(s, child.ID, a)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func setupTime() {
@@ -288,6 +689,8 @@ func TestMain(m *testing.M) {
 	RegisterProjectService(func() interface {
 		ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int, isArchived bool, expand ProjectExpandable) (projects []*Project, resultCount int, totalItems int64, err error)
 		Create(s *xorm.Session, project *Project, u *user.User) (*Project, error)
+		Delete(s *xorm.Session, projectID int64, a web.Auth) error
+		DeleteForce(s *xorm.Session, projectID int64, a web.Auth) error
 	} {
 		// Return a mock that delegates to the original model methods
 		// This preserves backward compatibility for model tests
