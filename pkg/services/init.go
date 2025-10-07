@@ -106,6 +106,9 @@ func InitializeDependencies() {
 		// Return an adapter that bridges the interface
 		return &apiTokenServiceAdapter{service: NewAPITokenService(nil)}
 	})
+
+	// Register ReactionsService provider to avoid import cycles
+	models.RegisterReactionsService(&reactionsServiceAdapter{service: NewReactionsService(nil)})
 }
 
 // projectServiceAdapter adapts ProjectService to the interface expected by models
@@ -232,4 +235,21 @@ func (a *apiTokenServiceAdapter) GetAll(s *xorm.Session, u *user.User, search st
 
 func (a *apiTokenServiceAdapter) Delete(s *xorm.Session, id int64, u *user.User) error {
 	return a.service.Delete(s, id, u)
+}
+
+// reactionsServiceAdapter adapts ReactionsService to the interface expected by models
+type reactionsServiceAdapter struct {
+	service *ReactionsService
+}
+
+func (a *reactionsServiceAdapter) Create(s *xorm.Session, reaction *models.Reaction, auth web.Auth) error {
+	return a.service.Create(s, reaction, auth)
+}
+
+func (a *reactionsServiceAdapter) Delete(s *xorm.Session, entityID int64, userID int64, value string, entityKind models.ReactionKind) error {
+	return a.service.Delete(s, entityID, userID, value, entityKind)
+}
+
+func (a *reactionsServiceAdapter) GetAll(s *xorm.Session, entityID int64, entityKind models.ReactionKind) (models.ReactionMap, error) {
+	return a.service.GetAll(s, entityID, entityKind)
 }

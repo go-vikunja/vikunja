@@ -501,6 +501,85 @@ func (m *mockAPITokenService) Delete(s *xorm.Session, id int64, u *user.User) er
 	return err
 }
 
+// mockReactionsService provides a test implementation for reactions
+// This prevents import cycles while allowing model tests to continue working
+type mockReactionsService struct{}
+
+func (m *mockReactionsService) Create(s *xorm.Session, reaction *Reaction, a web.Auth) error {
+	reaction.UserID = a.GetID()
+
+	// Check if reaction already exists (idempotent behavior)
+	exists, err := s.Where("user_id = ? AND entity_id = ? AND entity_kind = ? AND value = ?",
+		reaction.UserID, reaction.EntityID, reaction.EntityKind, reaction.Value).
+		Exist(&Reaction{})
+	if err != nil {
+		return err
+	}
+
+	if exists {
+		return nil // Already exists, treat as success (idempotent)
+	}
+
+	// Reset ID to ensure new record
+	reaction.ID = 0
+
+	// Insert the reaction
+	_, err = s.Insert(reaction)
+	return err
+}
+
+func (m *mockReactionsService) Delete(s *xorm.Session, entityID int64, userID int64, value string, entityKind ReactionKind) error {
+	_, err := s.Where("user_id = ? AND entity_id = ? AND entity_kind = ? AND value = ?",
+		userID, entityID, entityKind, value).
+		Delete(&Reaction{})
+	return err
+}
+
+func (m *mockReactionsService) GetAll(s *xorm.Session, entityID int64, entityKind ReactionKind) (ReactionMap, error) {
+	// This would call getReactionsForEntityIDs but we can't since we're removing that function
+	// For tests, implement the logic directly
+	reactions := []*Reaction{}
+	err := s.Where("entity_id = ? AND entity_kind = ?", entityID, entityKind).Find(&reactions)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(reactions) == 0 {
+		return ReactionMap{}, nil
+	}
+
+	// Get all users who made these reactions
+	userIDs := make([]int64, 0, len(reactions))
+	for _, r := range reactions {
+		userIDs = append(userIDs, r.UserID)
+	}
+
+	users := make(map[int64]*user.User)
+	if len(userIDs) > 0 {
+		userList := []*user.User{}
+		err = s.In("id", userIDs).Find(&userList)
+		if err != nil {
+			return nil, err
+		}
+		for _, u := range userList {
+			users[u.ID] = u
+		}
+	}
+
+	// Build reaction map
+	reactionMap := make(ReactionMap)
+	for _, reaction := range reactions {
+		if _, has := reactionMap[reaction.Value]; !has {
+			reactionMap[reaction.Value] = []*user.User{}
+		}
+		if u, exists := users[reaction.UserID]; exists {
+			reactionMap[reaction.Value] = append(reactionMap[reaction.Value], u)
+		}
+	}
+
+	return reactionMap, nil
+}
+
 // mockProjectService provides a test implementation that uses direct logic
 // This prevents import cycles while allowing model tests to continue working
 // Updated to not call model helper functions per T011A-PART2 requirements
@@ -1081,6 +1160,10 @@ func TestMain(m *testing.M) {
 		// This preserves backward compatibility for model tests
 		return &mockAPITokenService{}
 	})
+
+	// Register a mock ReactionsService provider for model tests
+	// This avoids import cycle with services package
+	RegisterReactionsService(&mockReactionsService{})
 
 	// Set up a mock for the GetUsersOrLinkSharesFromIDsFunc for model tests,
 	// as they should not depend on the services package.
