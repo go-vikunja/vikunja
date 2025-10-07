@@ -140,3 +140,92 @@ func TestMain(m \*testing.M) {
     // ... rest of TestMain ...  
     os.Exit(m.Run())  
 }  
+
+## **5\. Testing Strategy for Refactored Components**
+
+After completing the service layer refactor (Phase 2.1-2.2), the testing strategy has been updated to eliminate duplication and focus on testing actual system behavior.
+
+### **DO NOT Test Deprecated Model Methods**
+
+- Model CRUD methods (Create, Update, Delete, ReadAll) are deprecated facades
+- They delegate to service layer with zero business logic
+- Testing them validates the mock, not the system
+- **These tests have been removed** from model test files
+
+### **Test at Service Layer Instead**
+
+- **Business logic tests** → `pkg/services/*_test.go`
+  - Test actual service implementations
+  - Comprehensive coverage of all business logic paths
+  - Integration with database using real transactions
+  
+- **Integration tests** → Service tests with `testutil.Init()`
+  - Full application context with dependency injection
+  - Real service interactions, not mocks
+  - End-to-end validation of business flows
+
+- **Route tests** → `pkg/routes/api/v1/*_test.go` (if needed)
+  - HTTP-level integration tests
+  - Request/response validation
+  - Authentication and permission flows
+
+### **Model Tests Should Only Cover**
+
+Model tests in `pkg/models/*_test.go` should be minimal and focused on:
+
+- **TableName() function** - Database table name mapping
+- **Struct field validation** - Pure data structure behavior (not database operations)
+- **Helper functions** - Temporarily kept until T-PERMISSIONS task
+  - Examples: `GetAPITokenByID`, `GetTokenFromTokenString`, `getLabelByIDSimple`
+  - These will be moved to service layer in T-PERMISSIONS
+- **Permission methods** - Temporarily kept until T-PERMISSIONS task
+  - Examples: `CanRead`, `CanUpdate`, `CanDelete`
+  - These will be moved to service layer in T-PERMISSIONS
+
+### **What Has Been Removed**
+
+The following have been removed from model tests to eliminate technical debt:
+
+- ✅ Mock services (`mockFavoriteService`, `mockLabelService`, `mockAPITokenService`, `mockReactionsService`, `mockProjectTeamService`, `mockProjectUserService`)
+- ✅ CRUD method tests (Create, Update, Delete, ReadAll tests for deprecated methods)
+- ✅ Business logic tests that duplicate service layer tests
+
+### **Benefits of This Approach**
+
+1. **No Mock Maintenance** - Service tests use real implementations
+2. **Faster Test Execution** - Fewer redundant tests
+3. **Better Coverage** - Tests validate actual system behavior, not scaffolding
+4. **Clear Separation** - Service tests for logic, model tests for structure
+5. **Easier Refactoring** - Change service implementation without breaking model tests
+
+### **Example: Before and After**
+
+**Before (Testing Mocks):**
+```go
+// pkg/models/label_test.go
+func TestLabel_Create(t *testing.T) {
+    // This tests mockLabelService.Create, not the real system
+    label := &Label{Title: "Test"}
+    err := label.Create(s, user)  // Calls mock, not real service
+    assert.NoError(t, err)
+}
+```
+
+**After (Testing Real Service):**
+```go
+// pkg/services/label_test.go
+func TestLabelService_Create(t *testing.T) {
+    // This tests actual LabelService implementation
+    service := NewLabelService(db)
+    label := &models.Label{Title: "Test"}
+    err := service.Create(s, label, user)  // Tests real business logic
+    assert.NoError(t, err)
+    // Can verify database state, events, etc.
+}
+```
+
+### **Migration Status**
+
+- ✅ **Phase 2.1-2.2 Complete** - All mock services removed, CRUD tests deleted
+- ⚠️ **T-PERMISSIONS Pending** - Helper and permission methods still in models
+- 📋 **Future** - After T-PERMISSIONS, models will be pure data structures with zero database operations

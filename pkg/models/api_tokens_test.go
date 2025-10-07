@@ -26,25 +26,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAPIToken_ReadAll(t *testing.T) {
-	u := &user.User{ID: 1}
-	token := &APIToken{}
-	s := db.NewSession()
-	defer s.Close()
-	db.LoadAndAssertFixtures(t)
-
-	// Checking if the user only sees their own tokens
-
-	result, count, total, err := token.ReadAll(s, u, "", 1, 50)
-	require.NoError(t, err)
-	tokens, is := result.([]*APIToken)
-	assert.Truef(t, is, "tokens are not of type []*APIToken")
-	assert.Len(t, tokens, 2)
-	assert.Len(t, tokens, count)
-	assert.Equal(t, int64(2), total)
-	assert.Equal(t, int64(1), tokens[0].ID)
-	assert.Equal(t, int64(2), tokens[1].ID)
-}
+// CRUD tests removed - covered by service layer tests in pkg/services/api_tokens_test.go
+// Model methods are deprecated facades that delegate to APITokenService
 
 func TestAPIToken_CanDelete(t *testing.T) {
 	t.Run("own token", func(t *testing.T) {
@@ -82,19 +65,7 @@ func TestAPIToken_CanDelete(t *testing.T) {
 	})
 }
 
-func TestAPIToken_Create(t *testing.T) {
-	t.Run("normal", func(t *testing.T) {
-		u := &user.User{ID: 1}
-		token := &APIToken{}
-		s := db.NewSession()
-		defer s.Close()
-		db.LoadAndAssertFixtures(t)
-
-		err := token.Create(s, u)
-		require.NoError(t, err)
-	})
-}
-
+// Helper function test - kept for now, will be refactored in T-PERMISSIONS
 func TestAPIToken_GetTokenFromTokenString(t *testing.T) {
 	t.Run("valid token", func(t *testing.T) {
 		s := db.NewSession()
