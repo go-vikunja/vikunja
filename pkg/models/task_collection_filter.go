@@ -89,9 +89,14 @@ func parseTimeFromUserInput(timeString string, loc *time.Location) (value time.T
 			return value, err
 		}
 		value = time.Date(year, time.Month(month), day, 0, 0, 0, 0, loc)
-		return value.In(config.GetTimeZone()), nil
 	}
-	return value.In(config.GetTimeZone()), err
+	value = value.In(config.GetTimeZone())
+	// Mysql/Mariadb does not support date values where the year < 1. To make this edge-case work,
+	// we're setting the year to 1 in that case. This must be done after timezone conversion.
+	if db.GetDialect() == builder.MYSQL && value.Year() < 1 {
+		value = value.AddDate(1-value.Year(), 0, 0)
+	}
+	return value, err
 }
 
 func parseFilterFromExpression(f fexpr.ExprGroup, loc *time.Location) (filter *taskFilter, err error) {
@@ -292,16 +297,16 @@ func getValueForField(field reflect.StructField, rawValue string, loc *time.Loca
 			t, err = datemath.Parse(rawValue)
 			if err == nil {
 				tt = t.Time(datemath.WithLocation(loc)).In(config.GetTimeZone())
+				// Mysql/Mariadb does not support date values where the year < 1. To make this edge-case work,
+				// we're setting the year to 1 in that case. This must be done after timezone conversion.
+				if db.GetDialect() == builder.MYSQL && tt.Year() < 1 {
+					tt = tt.AddDate(1-tt.Year(), 0, 0)
+				}
 			} else {
 				tt, err = parseTimeFromUserInput(rawValue, loc)
 			}
 			if err != nil {
 				return
-			}
-			// Mysql/Mariadb does not support date values where the year < 1. To make this edge-case work,
-			// we're setting the year to 1 in that case.
-			if db.GetDialect() == builder.MYSQL && tt.Year() < 1 {
-				tt = tt.AddDate(1-tt.Year(), 0, 0)
 			}
 			value = tt
 		}
