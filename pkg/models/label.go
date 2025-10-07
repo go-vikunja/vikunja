@@ -20,11 +20,41 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/utils"
 
 	"code.vikunja.io/api/pkg/web"
 	"xorm.io/xorm"
 )
+
+// LabelServiceProvider is a function type that returns a label service instance
+// This is used to avoid import cycles between models and services packages
+type LabelServiceProvider func() interface {
+	Create(s *xorm.Session, label *Label, u *user.User) error
+	Update(s *xorm.Session, label *Label, u *user.User) error
+	Delete(s *xorm.Session, label *Label, u *user.User) error
+	GetAll(s *xorm.Session, u *user.User, search string, page int, perPage int) (interface{}, int, int64, error)
+}
+
+// labelServiceProvider is the registered service provider function
+var labelServiceProvider LabelServiceProvider
+
+// RegisterLabelService registers a service provider for label operations
+// This should be called during application initialization by the services package
+func RegisterLabelService(provider LabelServiceProvider) {
+	labelServiceProvider = provider
+}
+
+// getLabelService returns the registered label service instance
+func getLabelService() interface {
+	Create(s *xorm.Session, label *Label, u *user.User) error
+	Update(s *xorm.Session, label *Label, u *user.User) error
+	Delete(s *xorm.Session, label *Label, u *user.User) error
+	GetAll(s *xorm.Session, u *user.User, search string, page int, perPage int) (interface{}, int, int64, error)
+} {
+	if labelServiceProvider == nil {
+		panic("LabelService not registered - did you forget to call services.InitializeDependencies()?")
+	}
+	return labelServiceProvider()
+}
 
 // Label represents a label
 type Label struct {
@@ -56,6 +86,7 @@ func (*Label) TableName() string {
 }
 
 // Create creates a new label
+// @Deprecated: This method is deprecated and will be removed in a future release. Use LabelService.Create instead.
 // @Summary Create a label
 // @Description Creates a new label.
 // @tags labels
@@ -72,17 +103,11 @@ func (l *Label) Create(s *xorm.Session, a web.Auth) (err error) {
 	if err != nil {
 		return
 	}
-
-	l.ID = 0
-	l.HexColor = utils.NormalizeHex(l.HexColor)
-	l.CreatedBy = u
-	l.CreatedByID = u.ID
-
-	_, err = s.Insert(l)
-	return
+	return getLabelService().Create(s, l, u)
 }
 
 // Update updates a label
+// @Deprecated: This method is deprecated and will be removed in a future release. Use LabelService.Update instead.
 // @Summary Update a label
 // @Description Update an existing label. The user needs to be the creator of the label to be able to do this.
 // @tags labels
@@ -98,26 +123,15 @@ func (l *Label) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /labels/{id} [put]
 func (l *Label) Update(s *xorm.Session, a web.Auth) (err error) {
-
-	l.HexColor = utils.NormalizeHex(l.HexColor)
-
-	_, err = s.
-		ID(l.ID).
-		Cols(
-			"title",
-			"description",
-			"hex_color",
-		).
-		Update(l)
+	u, err := user.GetFromAuth(a)
 	if err != nil {
 		return
 	}
-
-	err = l.ReadOne(s, a)
-	return
+	return getLabelService().Update(s, l, u)
 }
 
 // Delete deletes a label
+// @Deprecated: This method is deprecated and will be removed in a future release. Use LabelService.Delete instead.
 // @Summary Delete a label
 // @Description Delete an existing label. The user needs to be the creator of the label to be able to do this.
 // @tags labels
@@ -130,12 +144,16 @@ func (l *Label) Update(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "Label not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /labels/{id} [delete]
-func (l *Label) Delete(s *xorm.Session, _ web.Auth) (err error) {
-	_, err = s.ID(l.ID).Delete(&Label{})
-	return err
+func (l *Label) Delete(s *xorm.Session, a web.Auth) (err error) {
+	u, err := user.GetFromAuth(a)
+	if err != nil {
+		return
+	}
+	return getLabelService().Delete(s, l, u)
 }
 
 // ReadAll gets all labels a user can use
+// @Deprecated: This method is deprecated and will be removed in a future release. Use LabelService.GetAll instead.
 // @Summary Get all labels a user has access to
 // @Description Returns all labels which are either created by the user or associated with a task the user has at least read-access to.
 // @tags labels
@@ -149,15 +167,11 @@ func (l *Label) Delete(s *xorm.Session, _ web.Auth) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /labels [get]
 func (l *Label) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (ls interface{}, resultCount int, numberOfEntries int64, err error) {
-	return GetLabelsByTaskIDs(s, &LabelByTaskIDsOptions{
-		Search:              []string{search},
-		User:                a,
-		Page:                page,
-		PerPage:             perPage,
-		GetUnusedLabels:     true,
-		GroupByLabelIDsOnly: true,
-		GetForUser:          true,
-	})
+	u, err := user.GetFromAuth(a)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+	return getLabelService().GetAll(s, u, search, page, perPage)
 }
 
 // ReadOne gets one label

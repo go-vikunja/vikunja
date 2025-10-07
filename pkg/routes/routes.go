@@ -526,14 +526,7 @@ func registerAPIRoutes(a *echo.Group) {
 	}
 
 	// API Tokens
-	apiTokenProvider := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.APIToken{}
-		},
-	}
-	a.GET("/tokens", apiTokenProvider.ReadAllWeb)
-	a.PUT("/tokens", apiTokenProvider.CreateWeb)
-	a.DELETE("/tokens/:token", apiTokenProvider.DeleteWeb)
+	apiv1.RegisterAPITokens(a)
 
 	// Webhooks
 	if config.WebhooksEnabled.GetBool() {

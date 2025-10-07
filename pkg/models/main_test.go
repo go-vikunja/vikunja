@@ -415,6 +415,92 @@ func (m *mockFavoriteService) GetFavoritesMap(s *xorm.Session, entityIDs []int64
 	return favorites, nil
 }
 
+// mockLabelService provides a test implementation for label operations
+// This prevents import cycles while allowing model tests to continue working
+type mockLabelService struct{}
+
+func (m *mockLabelService) Create(s *xorm.Session, label *Label, u *user.User) error {
+	if u == nil {
+		return &ErrGenericForbidden{}
+	}
+	label.ID = 0
+	// Note: HexColor normalization happens in the service layer
+	label.CreatedByID = u.ID
+	label.CreatedBy = u
+	_, err := s.Insert(label)
+	return err
+}
+
+func (m *mockLabelService) Update(s *xorm.Session, label *Label, u *user.User) error {
+	// Simple implementation matching original model behavior
+	// Permission checks happen via CanUpdate, not here
+	_, err := s.
+		ID(label.ID).
+		Cols("title", "description", "hex_color").
+		Update(label)
+	if err != nil {
+		return err
+	}
+
+	// Reload the label (this will error if label doesn't exist)
+	err = label.ReadOne(s, u)
+	return err
+}
+
+func (m *mockLabelService) Delete(s *xorm.Session, label *Label, u *user.User) error {
+	// Simple implementation matching original model behavior
+	// Permission checks happen via CanDelete, not here
+	// XORM Delete doesn't error if label doesn't exist - just deletes 0 rows
+	_, err := s.ID(label.ID).Delete(&Label{})
+	return err
+}
+
+func (m *mockLabelService) GetAll(s *xorm.Session, u *user.User, search string, page int, perPage int) (interface{}, int, int64, error) {
+	if u == nil {
+		return nil, 0, 0, &ErrGenericForbidden{}
+	}
+
+	// Simplified implementation for tests - delegate to GetLabelsByTaskIDs
+	return GetLabelsByTaskIDs(s, &LabelByTaskIDsOptions{
+		Search:              []string{search},
+		User:                u,
+		Page:                page,
+		PerPage:             perPage,
+		GetUnusedLabels:     true,
+		GroupByLabelIDsOnly: true,
+		GetForUser:          true,
+	})
+}
+
+// mockAPITokenService provides a test implementation for API token operations
+// This prevents import cycles while allowing model tests to continue working
+type mockAPITokenService struct{}
+
+func (m *mockAPITokenService) Create(s *xorm.Session, token *APIToken, u *user.User) error {
+	// Simple implementation matching original model behavior
+	token.ID = 0
+	token.OwnerID = u.ID
+	// Token generation happens in service layer
+	_, err := s.Insert(token)
+	return err
+}
+
+func (m *mockAPITokenService) GetAll(s *xorm.Session, u *user.User, search string, page int, perPage int) ([]*APIToken, int, int64, error) {
+	// Simple implementation for tests
+	tokens := []*APIToken{}
+	err := s.Where("owner_id = ?", u.ID).Find(&tokens)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+	return tokens, len(tokens), int64(len(tokens)), nil
+}
+
+func (m *mockAPITokenService) Delete(s *xorm.Session, id int64, u *user.User) error {
+	// Simple implementation - XORM Delete doesn't error if token doesn't exist
+	_, err := s.Where("id = ? AND owner_id = ?", id, u.ID).Delete(&APIToken{})
+	return err
+}
+
 // mockProjectService provides a test implementation that uses direct logic
 // This prevents import cycles while allowing model tests to continue working
 // Updated to not call model helper functions per T011A-PART2 requirements
@@ -969,6 +1055,31 @@ func TestMain(m *testing.M) {
 		// Return a mock that delegates to the original model methods
 		// This preserves backward compatibility for model tests
 		return &mockFavoriteService{}
+	})
+
+	// Register a mock LabelService provider for model tests
+	// This avoids import cycle with services package
+	RegisterLabelService(func() interface {
+		Create(s *xorm.Session, label *Label, u *user.User) error
+		Update(s *xorm.Session, label *Label, u *user.User) error
+		Delete(s *xorm.Session, label *Label, u *user.User) error
+		GetAll(s *xorm.Session, u *user.User, search string, page int, perPage int) (interface{}, int, int64, error)
+	} {
+		// Return a mock that implements label business logic
+		// This preserves backward compatibility for model tests
+		return &mockLabelService{}
+	})
+
+	// Register a mock APITokenService provider for model tests
+	// This avoids import cycle with services package
+	RegisterAPITokenService(func() interface {
+		Create(s *xorm.Session, token *APIToken, u *user.User) error
+		GetAll(s *xorm.Session, u *user.User, search string, page int, perPage int) ([]*APIToken, int, int64, error)
+		Delete(s *xorm.Session, id int64, u *user.User) error
+	} {
+		// Return a mock that implements API token business logic
+		// This preserves backward compatibility for model tests
+		return &mockAPITokenService{}
 	})
 
 	// Set up a mock for the GetUsersOrLinkSharesFromIDsFunc for model tests,

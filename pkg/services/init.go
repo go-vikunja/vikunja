@@ -85,6 +85,27 @@ func InitializeDependencies() {
 		// Return an adapter that bridges the interface
 		return &favoriteServiceAdapter{service: NewFavoriteService(nil)}
 	})
+
+	// Register LabelService provider to avoid import cycles
+	models.RegisterLabelService(func() interface {
+		Create(s *xorm.Session, label *models.Label, u *user.User) error
+		Update(s *xorm.Session, label *models.Label, u *user.User) error
+		Delete(s *xorm.Session, label *models.Label, u *user.User) error
+		GetAll(s *xorm.Session, u *user.User, search string, page int, perPage int) (interface{}, int, int64, error)
+	} {
+		// Return an adapter that bridges the interface
+		return &labelServiceAdapter{service: NewLabelService(nil)}
+	})
+
+	// Register APITokenService provider to avoid import cycles
+	models.RegisterAPITokenService(func() interface {
+		Create(s *xorm.Session, token *models.APIToken, u *user.User) error
+		GetAll(s *xorm.Session, u *user.User, search string, page int, perPage int) ([]*models.APIToken, int, int64, error)
+		Delete(s *xorm.Session, id int64, u *user.User) error
+	} {
+		// Return an adapter that bridges the interface
+		return &apiTokenServiceAdapter{service: NewAPITokenService(nil)}
+	})
 }
 
 // projectServiceAdapter adapts ProjectService to the interface expected by models
@@ -173,4 +194,42 @@ func (a *favoriteServiceAdapter) IsFavorite(s *xorm.Session, entityID int64, aut
 
 func (a *favoriteServiceAdapter) GetFavoritesMap(s *xorm.Session, entityIDs []int64, auth web.Auth, kind models.FavoriteKind) (map[int64]bool, error) {
 	return a.service.GetFavoritesMap(s, entityIDs, auth, kind)
+}
+
+// labelServiceAdapter adapts LabelService to the interface expected by models
+type labelServiceAdapter struct {
+	service *LabelService
+}
+
+func (a *labelServiceAdapter) Create(s *xorm.Session, label *models.Label, u *user.User) error {
+	return a.service.Create(s, label, u)
+}
+
+func (a *labelServiceAdapter) Update(s *xorm.Session, label *models.Label, u *user.User) error {
+	return a.service.Update(s, label, u)
+}
+
+func (a *labelServiceAdapter) Delete(s *xorm.Session, label *models.Label, u *user.User) error {
+	return a.service.Delete(s, label, u)
+}
+
+func (a *labelServiceAdapter) GetAll(s *xorm.Session, u *user.User, search string, page int, perPage int) (interface{}, int, int64, error) {
+	return a.service.GetAll(s, u, search, page, perPage)
+}
+
+// apiTokenServiceAdapter adapts APITokenService to the interface expected by models
+type apiTokenServiceAdapter struct {
+	service *APITokenService
+}
+
+func (a *apiTokenServiceAdapter) Create(s *xorm.Session, token *models.APIToken, u *user.User) error {
+	return a.service.Create(s, token, u)
+}
+
+func (a *apiTokenServiceAdapter) GetAll(s *xorm.Session, u *user.User, search string, page int, perPage int) ([]*models.APIToken, int, int64, error) {
+	return a.service.GetAll(s, u, search, page, perPage)
+}
+
+func (a *apiTokenServiceAdapter) Delete(s *xorm.Session, id int64, u *user.User) error {
+	return a.service.Delete(s, id, u)
 }
