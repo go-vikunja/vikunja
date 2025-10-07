@@ -26,14 +26,16 @@ import "code.vikunja.io/api/pkg/services"
 // explicitly in TestMain functions that need dependency injection to work.
 //
 // The initialization order is carefully chosen to respect dependencies:
-// 1. UserService (foundational, used by others)
-// 2. SavedFilterService (depends on user service)
-// 3. TaskService (depends on user service)
-// 4. ProjectService (depends on user service)
-// 5. KanbanService (depends on user and task services)
-// 6. ProjectDuplicateService (depends on project and task services)
-// 7. AttachmentService (depends on user and task services)
+// 1. Service layer dependencies (model/service wiring via InitializeDependencies)
+// 2. UserService (foundational, used by others)
+// 3. SavedFilterService (depends on user service)
+// 4. TaskService (depends on user service)
+// 5. ProjectService (depends on user service)
+// 6. KanbanService (depends on user and task services)
+// 7. ProjectDuplicateService (depends on project and task services)
+// 8. AttachmentService (depends on user and task services)
 func Init() {
+	services.InitializeDependencies()
 	services.InitUserService()
 	services.InitSavedFilterService()
 	services.InitTaskService()

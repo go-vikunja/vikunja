@@ -341,6 +341,80 @@ func (m *mockProjectUserService) Update(s *xorm.Session, projectUser *ProjectUse
 	return UpdateProjectLastUpdated(s, &Project{ID: projectUser.ProjectID})
 }
 
+// mockFavoriteService provides a test implementation that uses the original model logic
+// This prevents import cycles while allowing model tests to continue working
+type mockFavoriteService struct{}
+
+func (m *mockFavoriteService) AddToFavorite(s *xorm.Session, entityID int64, a web.Auth, kind FavoriteKind) error {
+	u, err := user.GetFromAuth(a)
+	if err != nil {
+		// Only error GetFromAuth is if it's a link share and we want to ignore that
+		return nil
+	}
+
+	fav := &Favorite{
+		EntityID: entityID,
+		UserID:   u.ID,
+		Kind:     kind,
+	}
+
+	_, err = s.Insert(fav)
+	return err
+}
+
+func (m *mockFavoriteService) RemoveFromFavorite(s *xorm.Session, entityID int64, a web.Auth, kind FavoriteKind) error {
+	u, err := user.GetFromAuth(a)
+	if err != nil {
+		// Only error GetFromAuth is if it's a link share and we want to ignore that
+		return nil
+	}
+
+	_, err = s.
+		Where("entity_id = ? AND user_id = ? AND kind = ?", entityID, u.ID, kind).
+		Delete(&Favorite{})
+	return err
+}
+
+func (m *mockFavoriteService) IsFavorite(s *xorm.Session, entityID int64, a web.Auth, kind FavoriteKind) (bool, error) {
+	u, err := user.GetFromAuth(a)
+	if err != nil {
+		// Only error GetFromAuth is if it's a link share and we want to ignore that
+		return false, nil
+	}
+
+	return s.
+		Where("entity_id = ? AND user_id = ? AND kind = ?", entityID, u.ID, kind).
+		Exist(&Favorite{})
+}
+
+func (m *mockFavoriteService) GetFavoritesMap(s *xorm.Session, entityIDs []int64, a web.Auth, kind FavoriteKind) (map[int64]bool, error) {
+	favorites := make(map[int64]bool)
+	u, err := user.GetFromAuth(a)
+	if err != nil {
+		// Only error GetFromAuth is if it's a link share and we want to ignore that
+		return favorites, nil
+	}
+
+	if len(entityIDs) == 0 {
+		return favorites, nil
+	}
+
+	// Simple implementation: check each ID individually
+	for _, id := range entityIDs {
+		exists, err := s.
+			Where("entity_id = ? AND user_id = ? AND kind = ?", id, u.ID, kind).
+			Exist(&Favorite{})
+		if err != nil {
+			return nil, err
+		}
+		if exists {
+			favorites[id] = true
+		}
+	}
+
+	return favorites, nil
+}
+
 // mockProjectService provides a test implementation that uses direct logic
 // This prevents import cycles while allowing model tests to continue working
 // Updated to not call model helper functions per T011A-PART2 requirements
@@ -882,6 +956,19 @@ func TestMain(m *testing.M) {
 		// Return a mock that delegates to the original model methods
 		// This preserves backward compatibility for model tests
 		return &mockProjectUserService{}
+	})
+
+	// Register a mock FavoriteService provider for model tests
+	// This avoids import cycle with services package
+	RegisterFavoriteService(func() interface {
+		AddToFavorite(s *xorm.Session, entityID int64, a web.Auth, kind FavoriteKind) error
+		RemoveFromFavorite(s *xorm.Session, entityID int64, a web.Auth, kind FavoriteKind) error
+		IsFavorite(s *xorm.Session, entityID int64, a web.Auth, kind FavoriteKind) (bool, error)
+		GetFavoritesMap(s *xorm.Session, entityIDs []int64, a web.Auth, kind FavoriteKind) (map[int64]bool, error)
+	} {
+		// Return a mock that delegates to the original model methods
+		// This preserves backward compatibility for model tests
+		return &mockFavoriteService{}
 	})
 
 	// Set up a mock for the GetUsersOrLinkSharesFromIDsFunc for model tests,

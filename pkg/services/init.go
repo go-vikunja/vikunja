@@ -74,6 +74,17 @@ func InitializeDependencies() {
 		// Return an adapter that bridges the interface mismatch
 		return &projectUserServiceAdapter{service: NewProjectUserService(nil)}
 	})
+
+	// Register FavoriteService provider to avoid import cycles
+	models.RegisterFavoriteService(func() interface {
+		AddToFavorite(s *xorm.Session, entityID int64, a web.Auth, kind models.FavoriteKind) error
+		RemoveFromFavorite(s *xorm.Session, entityID int64, a web.Auth, kind models.FavoriteKind) error
+		IsFavorite(s *xorm.Session, entityID int64, a web.Auth, kind models.FavoriteKind) (bool, error)
+		GetFavoritesMap(s *xorm.Session, entityIDs []int64, a web.Auth, kind models.FavoriteKind) (map[int64]bool, error)
+	} {
+		// Return an adapter that bridges the interface
+		return &favoriteServiceAdapter{service: NewFavoriteService(nil)}
+	})
 }
 
 // projectServiceAdapter adapts ProjectService to the interface expected by models
@@ -141,4 +152,25 @@ func (a *projectUserServiceAdapter) GetAll(s *xorm.Session, projectID int64, doe
 
 func (a *projectUserServiceAdapter) Update(s *xorm.Session, projectUser *models.ProjectUser) error {
 	return a.service.Update(s, projectUser)
+}
+
+// favoriteServiceAdapter adapts FavoriteService to the interface expected by models
+type favoriteServiceAdapter struct {
+	service *FavoriteService
+}
+
+func (a *favoriteServiceAdapter) AddToFavorite(s *xorm.Session, entityID int64, auth web.Auth, kind models.FavoriteKind) error {
+	return a.service.AddToFavorite(s, entityID, auth, kind)
+}
+
+func (a *favoriteServiceAdapter) RemoveFromFavorite(s *xorm.Session, entityID int64, auth web.Auth, kind models.FavoriteKind) error {
+	return a.service.RemoveFromFavorite(s, entityID, auth, kind)
+}
+
+func (a *favoriteServiceAdapter) IsFavorite(s *xorm.Session, entityID int64, auth web.Auth, kind models.FavoriteKind) (bool, error) {
+	return a.service.IsFavorite(s, entityID, auth, kind)
+}
+
+func (a *favoriteServiceAdapter) GetFavoritesMap(s *xorm.Session, entityIDs []int64, auth web.Auth, kind models.FavoriteKind) (map[int64]bool, error) {
+	return a.service.GetFavoritesMap(s, entityIDs, auth, kind)
 }

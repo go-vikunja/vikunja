@@ -17,11 +17,40 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
-	"xorm.io/builder"
 	"xorm.io/xorm"
 )
+
+// FavoriteServiceProvider is a function type that returns a favorite service instance
+// This is used to avoid import cycles between models and services packages
+type FavoriteServiceProvider func() interface {
+	AddToFavorite(s *xorm.Session, entityID int64, a web.Auth, kind FavoriteKind) error
+	RemoveFromFavorite(s *xorm.Session, entityID int64, a web.Auth, kind FavoriteKind) error
+	IsFavorite(s *xorm.Session, entityID int64, a web.Auth, kind FavoriteKind) (bool, error)
+	GetFavoritesMap(s *xorm.Session, entityIDs []int64, a web.Auth, kind FavoriteKind) (map[int64]bool, error)
+}
+
+// favoriteServiceProvider is the registered service provider function
+var favoriteServiceProvider FavoriteServiceProvider
+
+// RegisterFavoriteService registers a service provider for favorite operations
+// This should be called during application initialization by the services package
+func RegisterFavoriteService(provider FavoriteServiceProvider) {
+	favoriteServiceProvider = provider
+}
+
+// getFavoriteService returns the registered favorite service instance
+func getFavoriteService() interface {
+	AddToFavorite(s *xorm.Session, entityID int64, a web.Auth, kind FavoriteKind) error
+	RemoveFromFavorite(s *xorm.Session, entityID int64, a web.Auth, kind FavoriteKind) error
+	IsFavorite(s *xorm.Session, entityID int64, a web.Auth, kind FavoriteKind) (bool, error)
+	GetFavoritesMap(s *xorm.Session, entityIDs []int64, a web.Auth, kind FavoriteKind) (map[int64]bool, error)
+} {
+	if favoriteServiceProvider == nil {
+		panic("FavoriteService not registered - did you forget to call services.InitializeDependencies()?")
+	}
+	return favoriteServiceProvider()
+}
 
 // FavoriteKind represents the kind of entities that can be marked as favorite
 type FavoriteKind int
@@ -44,67 +73,22 @@ func (t *Favorite) TableName() string {
 	return "favorites"
 }
 
+// @Deprecated: This function is deprecated and will be removed in a future release. Use FavoriteService.AddToFavorite instead.
 func AddToFavorites(s *xorm.Session, entityID int64, a web.Auth, kind FavoriteKind) error {
-	u, err := user.GetFromAuth(a)
-	if err != nil {
-		// Only error GetFromAuth is if it's a link share and we want to ignore that
-		return nil
-	}
-
-	fav := &Favorite{
-		EntityID: entityID,
-		UserID:   u.ID,
-		Kind:     kind,
-	}
-
-	_, err = s.Insert(fav)
-	return err
+	return getFavoriteService().AddToFavorite(s, entityID, a, kind)
 }
 
+// @Deprecated: This function is deprecated and will be removed in a future release. Use FavoriteService.RemoveFromFavorite instead.
 func RemoveFromFavorite(s *xorm.Session, entityID int64, a web.Auth, kind FavoriteKind) error {
-	u, err := user.GetFromAuth(a)
-	if err != nil {
-		// Only error GetFromAuth is if it's a link share and we want to ignore that
-		return nil
-	}
-
-	_, err = s.
-		Where("entity_id = ? AND user_id = ? AND kind = ?", entityID, u.ID, kind).
-		Delete(&Favorite{})
-	return err
+	return getFavoriteService().RemoveFromFavorite(s, entityID, a, kind)
 }
 
+// @Deprecated: This function is deprecated and will be removed in a future release. Use FavoriteService.IsFavorite instead.
 func IsFavorite(s *xorm.Session, entityID int64, a web.Auth, kind FavoriteKind) (is bool, err error) {
-	u, err := user.GetFromAuth(a)
-	if err != nil {
-		// Only error GetFromAuth is if it's a link share and we want to ignore that
-		return false, nil
-	}
-
-	return s.
-		Where("entity_id = ? AND user_id = ? AND kind = ?", entityID, u.ID, kind).
-		Exist(&Favorite{})
+	return getFavoriteService().IsFavorite(s, entityID, a, kind)
 }
 
-// @Deprecated: This function is deprecated and will be removed in a future release. Use FavoriteService.GetForUserByType instead.
+// @Deprecated: This function is deprecated and will be removed in a future release. Use FavoriteService.GetFavoritesMap instead.
 func getFavorites(s *xorm.Session, entityIDs []int64, a web.Auth, kind FavoriteKind) (favorites map[int64]bool, err error) {
-	favorites = make(map[int64]bool)
-	u, err := user.GetFromAuth(a)
-	if err != nil {
-		// Only error GetFromAuth is if it's a link share and we want to ignore that
-		return favorites, nil
-	}
-
-	favs := []*Favorite{}
-	err = s.Where(builder.And(
-		builder.Eq{"user_id": u.ID},
-		builder.Eq{"kind": kind},
-		builder.In("entity_id", entityIDs),
-	)).
-		Find(&favs)
-
-	for _, fav := range favs {
-		favorites[fav.EntityID] = true
-	}
-	return
+	return getFavoriteService().GetFavoritesMap(s, entityIDs, a, kind)
 }

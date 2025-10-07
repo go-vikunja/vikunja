@@ -53,6 +53,9 @@ func TestMain(m *testing.M) {
 	events.Fake()
 
 	// Initialize service dependency injection in the correct order
+	// First, wire up model/service dependencies
+	InitializeDependencies()
+	// Then initialize service instances
 	InitUserService()
 	InitSavedFilterService()
 	InitTaskService()
