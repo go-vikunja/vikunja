@@ -1200,6 +1200,33 @@ func (err ErrInvalidEntityID) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrInvalidTaskColumn represents an error where the provided task column is invalid
+type ErrInvalidTaskColumn struct {
+	Column string
+}
+
+// IsErrInvalidTaskColumn checks if an error is ErrInvalidTaskColumn.
+func IsErrInvalidTaskColumn(err error) bool {
+	_, ok := err.(ErrInvalidTaskColumn)
+	return ok
+}
+
+func (err ErrInvalidTaskColumn) Error() string {
+	return fmt.Sprintf("Task column %s is invalid", err.Column)
+}
+
+// ErrCodeInvalidTaskColumn holds the unique world-error code of this error
+const ErrCodeInvalidTaskColumn = 4028
+
+// HTTPError holds the http error description
+func (err ErrInvalidTaskColumn) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidTaskColumn,
+		Message:  fmt.Sprintf("The task field '%s' is invalid.", err.Column),
+	}
+}
+
 // ErrMustHaveProjectViewToSortByPosition represents an error where no project view id was supplied
 type ErrMustHaveProjectViewToSortByPosition struct{}
 

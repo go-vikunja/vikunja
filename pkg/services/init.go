@@ -112,6 +112,9 @@ func InitializeDependencies() {
 
 	// Register ProjectViewService provider to avoid import cycles
 	models.RegisterProjectViewService(&projectViewServiceAdapter{service: NewProjectViewService(nil)})
+
+	// Register TaskService provider to avoid import cycles
+	models.RegisterTaskService(&taskServiceAdapter{service: NewTaskService(nil)})
 }
 
 // projectServiceAdapter adapts ProjectService to the interface expected by models
@@ -288,4 +291,26 @@ func (a *projectViewServiceAdapter) GetByID(s *xorm.Session, id int64) (view *mo
 
 func (a *projectViewServiceAdapter) CreateDefaultViewsForProject(s *xorm.Session, project *models.Project, auth web.Auth, createBacklogBucket bool, createDefaultListFilter bool) error {
 	return a.service.CreateDefaultViewsForProject(s, project, auth, createBacklogBucket, createDefaultListFilter)
+}
+
+// taskServiceAdapter adapts TaskService to the interface expected by models
+type taskServiceAdapter struct {
+	service *TaskService
+}
+
+func (a *taskServiceAdapter) Create(s *xorm.Session, task *models.Task, u *user.User, updateAssignees bool, setBucket bool) error {
+	_, err := a.service.CreateWithOptions(s, task, u, updateAssignees, setBucket, false)
+	return err
+}
+
+func (a *taskServiceAdapter) Update(s *xorm.Session, task *models.Task, u *user.User) (*models.Task, error) {
+	return a.service.Update(s, task, u)
+}
+
+func (a *taskServiceAdapter) Delete(s *xorm.Session, task *models.Task, auth web.Auth) error {
+	return a.service.Delete(s, task, auth)
+}
+
+func (a *taskServiceAdapter) GetByID(s *xorm.Session, taskID int64, u *user.User) (*models.Task, error) {
+	return a.service.GetByID(s, taskID, u)
 }

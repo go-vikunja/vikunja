@@ -158,10 +158,10 @@ func (b *TaskBucket) Update(s *xorm.Session, a web.Auth) (err error) {
 	if view.DoneBucketID == b.BucketID {
 		doneChanged = true
 		task.Done = true
-		if task.isRepeating() {
+		if task.IsRepeating() {
 			oldTask := task
 			oldTask.Done = false
-			updateDone(oldTask, task)
+			UpdateDone(oldTask, task)
 			updateBucket = false
 			b.BucketID = oldTaskBucket.BucketID
 		}
@@ -191,7 +191,7 @@ func (b *TaskBucket) Update(s *xorm.Session, a web.Auth) (err error) {
 			return
 		}
 
-		err = task.updateReminders(s, task)
+		err = task.UpdateReminders(s, task)
 		if err != nil {
 			return err
 		}

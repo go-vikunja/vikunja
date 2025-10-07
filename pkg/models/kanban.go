@@ -183,7 +183,7 @@ func (b *Bucket) Delete(s *xorm.Session, a web.Auth) (err error) {
 		}
 	}
 
-	defaultBucketID, err := getDefaultBucketID(s, pv)
+	defaultBucketID, err := GetDefaultBucketID(s, pv)
 	if err != nil {
 		return err
 	}
@@ -221,7 +221,8 @@ func getBucketByID(s *xorm.Session, id int64) (*Bucket, error) {
 	return b, nil
 }
 
-func getDefaultBucketID(s *xorm.Session, view *ProjectView) (int64, error) {
+// GetDefaultBucketID returns the default bucket ID for a view
+func GetDefaultBucketID(s *xorm.Session, view *ProjectView) (int64, error) {
 	if GetDefaultBucketIDFunc != nil {
 		return GetDefaultBucketIDFunc(s, view)
 	}

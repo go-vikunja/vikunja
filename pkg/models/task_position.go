@@ -221,7 +221,8 @@ func getPositionsForView(s *xorm.Session, view *ProjectView) (positions []*TaskP
 	return
 }
 
-func calculateNewPositionForTask(s *xorm.Session, a web.Auth, t *Task, view *ProjectView) (*TaskPosition, error) {
+// CalculateNewPositionForTask calculates a new position for a task in a view
+func CalculateNewPositionForTask(s *xorm.Session, a web.Auth, t *Task, view *ProjectView) (*TaskPosition, error) {
 	if t.Position == 0 {
 		lowestPosition := &TaskPosition{}
 		exists, err := s.Where("project_view_id = ?", view.ID).

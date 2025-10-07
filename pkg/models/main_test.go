@@ -700,6 +700,46 @@ func (m *mockProjectViewService) CreateDefaultViewsForProject(s *xorm.Session, p
 	return nil
 }
 
+// mockTaskService provides a test implementation for task operations
+// This prevents import cycles while allowing model tests to continue working
+type mockTaskService struct{}
+
+func (m *mockTaskService) Create(s *xorm.Session, task *Task, u *user.User, updateAssignees bool, setBucket bool) error {
+	// Minimal implementation for model tests
+	// For proper task creation tests, use service layer tests
+	task.CreatedByID = u.ID
+	_, err := s.Insert(task)
+	return err
+}
+
+func (m *mockTaskService) Update(s *xorm.Session, task *Task, u *user.User) (*Task, error) {
+	// Basic update for model tests
+	// For proper task update tests, use service layer tests
+	cols := []string{"title", "description", "done", "due_date", "priority", "repeat_after", "start_date", "end_date", "hex_color", "percent_done"}
+	_, err := s.ID(task.ID).Cols(cols...).Update(task)
+	return task, err
+}
+
+func (m *mockTaskService) Delete(s *xorm.Session, task *Task, a web.Auth) error {
+	// Basic delete for model tests
+	// For proper task delete tests, use service layer tests
+	_, err := s.ID(task.ID).Delete(&Task{})
+	return err
+}
+
+func (m *mockTaskService) GetByID(s *xorm.Session, taskID int64, u *user.User) (*Task, error) {
+	// Simple implementation - just fetch the task without expansion
+	task := &Task{ID: taskID}
+	exists, err := s.Get(task)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, ErrTaskDoesNotExist{ID: taskID}
+	}
+	return task, nil
+}
+
 // mockProjectService provides a test implementation that uses direct logic
 // This prevents import cycles while allowing model tests to continue working
 // Updated to not call model helper functions per T011A-PART2 requirements
@@ -1296,6 +1336,10 @@ func TestMain(m *testing.M) {
 	// This avoids import cycle with services package
 	// Following T-CLEANUP pattern - will be removed in future cleanup tasks
 	RegisterProjectViewService(&mockProjectViewService{})
+
+	// Register a mock TaskService provider for model tests
+	// This avoids import cycle with services package
+	RegisterTaskService(&mockTaskService{})
 
 	// Set up a mock for the GetUsersOrLinkSharesFromIDsFunc for model tests,
 	// as they should not depend on the services package.

@@ -61,7 +61,8 @@ func getRawTaskAssigneesForTasks(s *xorm.Session, taskIDs []int64) (taskAssignee
 }
 
 // Create or update a bunch of task assignees
-func (t *Task) updateTaskAssignees(s *xorm.Session, assignees []*user.User, doer web.Auth) (err error) {
+// UpdateTaskAssignees updates the assignees for a task
+func (t *Task) UpdateTaskAssignees(s *xorm.Session, assignees []*user.User, doer web.Auth) (err error) {
 
 	// Load the current assignees
 	currentAssignees, err := getRawTaskAssigneesForTasks(s, []int64{t.ID})
@@ -385,6 +386,6 @@ func (ba *BulkAssignees) Create(s *xorm.Session, a web.Auth) (err error) {
 		task.Assignees = append(task.Assignees, &assignees[i].User)
 	}
 
-	err = task.updateTaskAssignees(s, ba.Assignees, a)
+	err = task.UpdateTaskAssignees(s, ba.Assignees, a)
 	return
 }

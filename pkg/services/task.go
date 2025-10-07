@@ -29,6 +29,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web"
+	"dario.cat/mergo"
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
 	"xorm.io/builder"
@@ -883,9 +884,28 @@ func (ts *TaskService) GetAllWithFilters(s *xorm.Session, collection *models.Tas
 	return tasks, resultCount, totalItems, nil
 }
 
-// Update updates a task.
+// Update updates a task with full business logic.
 func (ts *TaskService) Update(s *xorm.Session, task *models.Task, u *user.User) (*models.Task, error) {
-	can, err := ts.Can(s, task, u).Write()
+	updatedTask, err := ts.updateSingleTask(s, task, u, nil)
+	return updatedTask, err
+}
+
+// UpdateWithFields updates a task with only specific fields.
+func (ts *TaskService) UpdateWithFields(s *xorm.Session, task *models.Task, u *user.User, fields []string) (*models.Task, error) {
+	return ts.updateSingleTask(s, task, u, fields)
+}
+
+//nolint:gocyclo
+func (ts *TaskService) updateSingleTask(s *xorm.Session, t *models.Task, u *user.User, fields []string) (*models.Task, error) {
+	// Check if the task exists and get the old values FIRST (before permission check)
+	// This is necessary because t.ProjectID might be 0
+	ot, err := models.GetTaskByIDSimple(s, t.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Now check permissions using the old task (which has the correct ProjectID)
+	can, err := ts.Can(s, &ot, u).Write()
 	if err != nil {
 		return nil, err
 	}
@@ -893,13 +913,306 @@ func (ts *TaskService) Update(s *xorm.Session, task *models.Task, u *user.User) 
 		return nil, ErrAccessDenied
 	}
 
-	// The old logic used task.Update which did a lot of things.
-	// We need to replicate that logic here.
-	// For now, we'll just do a simple update.
-	if _, err := s.ID(task.ID).AllCols().Update(task); err != nil {
+	if t.ProjectID == 0 {
+		t.ProjectID = ot.ProjectID
+	}
+
+	// Get the stored reminders
+	reminders, err := models.GetRemindersForTasks(s, []int64{t.ID})
+	if err != nil {
 		return nil, err
 	}
-	return task, nil
+
+	// Old task has the stored reminders
+	ot.Reminders = reminders
+
+	// Update the assignees
+	// Pass the user as web.Auth for model methods that need it
+	if err := ot.UpdateTaskAssignees(s, t.Assignees, u); err != nil {
+		return nil, err
+	}
+
+	// All columns to update in a separate variable to be able to add to them
+	colsToUpdate := []string{
+		"title",
+		"description",
+		"done",
+		"due_date",
+		"repeat_after",
+		"priority",
+		"start_date",
+		"end_date",
+		"hex_color",
+		"percent_done",
+		"project_id",
+		"bucket_id",
+		"repeat_mode",
+		"cover_image_attachment_id",
+	}
+
+	// Validate fields if provided
+	if len(fields) > 0 {
+		allowed := map[string]bool{}
+		for _, c := range colsToUpdate {
+			allowed[c] = true
+		}
+		cols := []string{}
+		fieldSet := map[string]bool{}
+		for _, f := range fields {
+			if !allowed[f] {
+				return nil, models.ErrInvalidTaskColumn{Column: f}
+			}
+			cols = append(cols, f)
+			fieldSet[f] = true
+		}
+		colsToUpdate = cols
+
+		if !fieldSet["title"] {
+			t.Title = ot.Title
+		}
+		if !fieldSet["description"] {
+			t.Description = ot.Description
+		}
+		if !fieldSet["done"] {
+			t.Done = ot.Done
+			t.DoneAt = ot.DoneAt
+		}
+		if !fieldSet["due_date"] {
+			t.DueDate = ot.DueDate
+		}
+		if !fieldSet["repeat_after"] {
+			t.RepeatAfter = ot.RepeatAfter
+		}
+		if !fieldSet["priority"] {
+			t.Priority = ot.Priority
+		}
+		if !fieldSet["start_date"] {
+			t.StartDate = ot.StartDate
+		}
+		if !fieldSet["end_date"] {
+			t.EndDate = ot.EndDate
+		}
+		if !fieldSet["hex_color"] {
+			t.HexColor = ot.HexColor
+		}
+		if !fieldSet["percent_done"] {
+			t.PercentDone = ot.PercentDone
+		}
+		if !fieldSet["project_id"] {
+			t.ProjectID = ot.ProjectID
+		}
+		if !fieldSet["bucket_id"] {
+			t.BucketID = ot.BucketID
+		}
+		if !fieldSet["repeat_mode"] {
+			t.RepeatMode = ot.RepeatMode
+		}
+		if !fieldSet["cover_image_attachment_id"] {
+			t.CoverImageAttachmentID = ot.CoverImageAttachmentID
+		}
+	}
+
+	// If the task is being moved between projects, make sure to move the bucket + index as well
+	if t.ProjectID != 0 && ot.ProjectID != t.ProjectID {
+		t.Index, err = models.CalculateNextTaskIndex(s, t.ProjectID)
+		if err != nil {
+			return nil, err
+		}
+		t.BucketID = 0
+		colsToUpdate = append(colsToUpdate, "index")
+	}
+
+	views := []*models.ProjectView{}
+	if (!t.IsRepeating() && t.Done != ot.Done) || t.ProjectID != ot.ProjectID {
+		err = s.
+			Where("project_id = ? AND view_kind = ? AND bucket_configuration_mode = ?",
+				t.ProjectID, models.ProjectViewKindKanban, models.BucketConfigurationModeManual).
+			Find(&views)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// When a task was moved between projects, ensure it is in the correct bucket
+	if t.ProjectID != ot.ProjectID {
+		_, err = s.Where("task_id = ?", t.ID).Delete(&models.TaskBucket{})
+		if err != nil {
+			return nil, err
+		}
+		_, err = s.Where("task_id = ?", t.ID).Delete(&models.TaskPosition{})
+		if err != nil {
+			return nil, err
+		}
+
+		for _, view := range views {
+			var bucketID = view.DoneBucketID
+			if bucketID == 0 || !t.Done {
+				bucketID, err = models.GetDefaultBucketID(s, view)
+				if err != nil {
+					return nil, err
+				}
+			}
+
+			tb := &models.TaskBucket{
+				BucketID:      bucketID,
+				TaskID:        t.ID,
+				ProjectViewID: view.ID,
+				ProjectID:     t.ProjectID,
+			}
+			err = tb.Update(s, u)
+			if err != nil {
+				return nil, err
+			}
+
+			tp, err := models.CalculateNewPositionForTask(s, u, t, view)
+			if err != nil {
+				return nil, err
+			}
+
+			err = tp.Update(s, u)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	// When a task changed its done status, make sure it is in the correct bucket
+	if t.ProjectID == ot.ProjectID && !t.IsRepeating() && t.Done != ot.Done {
+		err = t.MoveTaskToDoneBuckets(s, u, views)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
+	models.UpdateDone(&ot, t)
+	colsToUpdate = append(colsToUpdate, "done_at")
+
+	// Update the reminders
+	if err := ot.UpdateReminders(s, t); err != nil {
+		return nil, err
+	}
+
+	// If a task attachment is being set as cover image, check if the attachment actually belongs to the task
+	if t.CoverImageAttachmentID != 0 {
+		is, err := s.Exist(&models.TaskAttachment{
+			TaskID: t.ID,
+			ID:     t.CoverImageAttachmentID,
+		})
+		if err != nil {
+			return nil, err
+		}
+		if !is {
+			return nil, &models.ErrAttachmentDoesNotBelongToTask{
+				AttachmentID: t.CoverImageAttachmentID,
+				TaskID:       t.ID,
+			}
+		}
+	}
+
+	// Handle favorite status changes
+	wasFavorite, err := ts.FavoriteService.IsFavorite(s, t.ID, u, models.FavoriteKindTask)
+	if err != nil {
+		return nil, err
+	}
+	if t.IsFavorite && !wasFavorite {
+		if err := ts.FavoriteService.AddToFavorite(s, t.ID, u, models.FavoriteKindTask); err != nil {
+			return nil, err
+		}
+	}
+
+	if !t.IsFavorite && wasFavorite {
+		if err := ts.FavoriteService.RemoveFromFavorite(s, t.ID, u, models.FavoriteKindTask); err != nil {
+			return nil, err
+		}
+	}
+
+	// Merge the old task with the new task
+	// mergo ignores nil values, so we need to handle them manually below
+	if err := mergo.Merge(&ot, t, mergo.WithOverride); err != nil {
+		return nil, err
+	}
+
+	t.HexColor = utils.NormalizeHex(t.HexColor)
+
+	// Mergo does ignore nil values. Because of that, we need to check all parameters and set the updated to
+	// nil/their nil value in the struct which is inserted.
+
+	// Done
+	if !t.Done {
+		ot.Done = false
+	}
+	// Priority
+	if t.Priority == 0 {
+		ot.Priority = 0
+	}
+	// Description
+	if t.Description == "" {
+		ot.Description = ""
+	}
+	// Due date
+	if t.DueDate.IsZero() {
+		ot.DueDate = time.Time{}
+	}
+	// Repeat after
+	if t.RepeatAfter == 0 {
+		ot.RepeatAfter = 0
+	}
+	// Start date
+	if t.StartDate.IsZero() {
+		ot.StartDate = time.Time{}
+	}
+	// End date
+	if t.EndDate.IsZero() {
+		ot.EndDate = time.Time{}
+	}
+	// Color
+	if t.HexColor == "" {
+		ot.HexColor = ""
+	}
+	// Percent Done
+	if t.PercentDone == 0 {
+		ot.PercentDone = 0
+	}
+	// Repeat from current date
+	if t.RepeatMode == models.TaskRepeatModeDefault {
+		ot.RepeatMode = models.TaskRepeatModeDefault
+	}
+	// Is Favorite
+	if !t.IsFavorite {
+		ot.IsFavorite = false
+	}
+	// Attachment cover image
+	if t.CoverImageAttachmentID == 0 {
+		ot.CoverImageAttachmentID = 0
+	}
+
+	_, err = s.ID(t.ID).
+		Cols(colsToUpdate...).
+		Update(ot)
+	*t = ot
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the task updated timestamp in a new struct - if we'd just try to put it into t which we already have, it
+	// would still contain the old updated date.
+	nt := &models.Task{}
+	_, err = s.ID(t.ID).Get(nt)
+	if err != nil {
+		return nil, err
+	}
+	t.Updated = nt.Updated
+
+	err = events.Dispatch(&models.TaskUpdatedEvent{
+		Task: t,
+		Doer: u,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return t, models.UpdateProjectLastUpdated(s, &models.Project{ID: t.ProjectID})
 }
 
 // Delete deletes a task.

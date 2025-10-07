@@ -83,10 +83,10 @@ func (bt *BulkTask) Update(s *xorm.Session, a web.Auth) (err error) {
 	for _, oldtask := range bt.Tasks {
 
 		// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
-		updateDone(oldtask, &bt.Task)
+		UpdateDone(oldtask, &bt.Task)
 
 		// Update the assignees
-		if err := oldtask.updateTaskAssignees(s, bt.Assignees, a); err != nil {
+		if err := oldtask.UpdateTaskAssignees(s, bt.Assignees, a); err != nil {
 			return err
 		}
 

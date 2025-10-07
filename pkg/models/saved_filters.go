@@ -288,7 +288,7 @@ func (sf *SavedFilter) Update(s *xorm.Session, auth web.Auth) error {
 			return err
 		}
 
-		bucketID, err := getDefaultBucketID(s, view)
+		bucketID, err := GetDefaultBucketID(s, view)
 		if err != nil {
 			return err
 		}
@@ -389,7 +389,7 @@ func addTaskToFilter(s *xorm.Session, filter *SavedFilter, view *ProjectView, fa
 		return nil, nil, err
 	}
 	if !taskHasBucketInView {
-		bucketID, err := getDefaultBucketID(s, view)
+		bucketID, err := GetDefaultBucketID(s, view)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -520,7 +520,7 @@ func RegisterAddTaskToFilterViewCron() {
 			// Collect new tasks to task_buckets and task_positions
 			for _, task := range tasks {
 				if _, exists := savedTaskBucketMap[task.ID]; !exists {
-					view.DefaultBucketID, err = getDefaultBucketID(s, view)
+					view.DefaultBucketID, err = GetDefaultBucketID(s, view)
 					if err != nil {
 						log.Errorf("%sError fetching default bucket for view %d: %s", logPrefix, view.ID, err)
 						continue
