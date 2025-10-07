@@ -22,7 +22,7 @@ jobs:
         with:
           version: latest
       - name: Setup Docker Builder
-        uses: useblacksmith/setup-docker-builder@18cdb72d11863d893251661972f9948b7b2e5f55 # v1
+        uses: useblacksmith/setup-docker-builder@667901886a7d8820ef0c8928d3a0a828e3c59e7c # v1
       - name: Docker meta version
         if: ${{ github.ref_type == 'tag' }}
         id: meta
