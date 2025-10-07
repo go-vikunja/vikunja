@@ -99,7 +99,7 @@ func (b *Bucket) Create(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
-	b.Position = calculateDefaultPosition(b.ID, b.Position)
+	b.Position = CalculateDefaultPosition(b.ID, b.Position)
 	_, err = s.Where("id = ?", b.ID).Update(b)
 	return
 }
@@ -253,8 +253,9 @@ func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, projects []*Pr
 	return []*Bucket{}, nil
 }
 
-// calculateDefaultPosition calculates the default position for a bucket
-func calculateDefaultPosition(id int64, position float64) float64 {
+// CalculateDefaultPosition calculates the default position for a bucket or similar entity.
+// This function is exported for use by the service layer.
+func CalculateDefaultPosition(id int64, position float64) float64 {
 	if position == 0 {
 		return float64(id) * 1000
 	}

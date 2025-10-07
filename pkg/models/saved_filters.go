@@ -147,7 +147,7 @@ func (sf *SavedFilter) Create(s *xorm.Session, auth web.Auth) (err error) {
 		return CreateSavedFilterFunc(s, sf, u)
 	}
 	// Legacy implementation
-	_, err = getTaskFiltersFromFilterString(sf.Filters.Filter, sf.Filters.FilterTimezone)
+	_, err = GetTaskFiltersFromFilterString(sf.Filters.Filter, sf.Filters.FilterTimezone)
 	if err != nil {
 		return
 	}
@@ -227,7 +227,7 @@ func (sf *SavedFilter) Update(s *xorm.Session, auth web.Auth) error {
 		sf.Filters = origFilter.Filters
 	}
 
-	_, err = getTaskFiltersFromFilterString(sf.Filters.Filter, sf.Filters.FilterTimezone)
+	_, err = GetTaskFiltersFromFilterString(sf.Filters.Filter, sf.Filters.FilterTimezone)
 	if err != nil {
 		return err
 	}
@@ -258,7 +258,7 @@ func (sf *SavedFilter) Update(s *xorm.Session, auth web.Auth) error {
 		return err
 	}
 
-	parsedFilters, err := getTaskFiltersFromFilterString(sf.Filters.Filter, sf.Filters.FilterTimezone)
+	parsedFilters, err := GetTaskFiltersFromFilterString(sf.Filters.Filter, sf.Filters.FilterTimezone)
 	if err != nil {
 		return err
 	}
@@ -358,7 +358,7 @@ func addTaskToFilter(s *xorm.Session, filter *SavedFilter, view *ProjectView, fa
 		filter.Filters.FilterTimezone = fallbackTimezone
 	}
 
-	parsedFilters, err := getTaskFiltersFromFilterString(filterString, filter.Filters.FilterTimezone)
+	parsedFilters, err := GetTaskFiltersFromFilterString(filterString, filter.Filters.FilterTimezone)
 	if err != nil {
 		log.Errorf("Could not parse filter string '%s' from view %d and saved filter %d: %v", filterString, view.ID, filter.ID, err)
 		return
@@ -413,7 +413,7 @@ func addTaskToFilter(s *xorm.Session, filter *SavedFilter, view *ProjectView, fa
 		taskPosition = &TaskPosition{
 			TaskID:        task.ID,
 			ProjectViewID: view.ID,
-			Position:      calculateDefaultPosition(task.Index, task.Position),
+			Position:      CalculateDefaultPosition(task.Index, task.Position),
 		}
 	}
 

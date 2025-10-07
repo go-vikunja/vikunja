@@ -164,7 +164,7 @@ func getTaskFilterOptsFromCollection(tf *TaskCollection, projectView *ProjectVie
 		opts.projectViewID = projectView.ID
 	}
 
-	opts.parsedFilters, err = getTaskFiltersFromFilterString(tf.Filter, tf.FilterTimezone)
+	opts.parsedFilters, err = GetTaskFiltersFromFilterString(tf.Filter, tf.FilterTimezone)
 	return opts, err
 }
 

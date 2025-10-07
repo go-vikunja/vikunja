@@ -147,7 +147,7 @@ func RecalculateTaskPositions(s *xorm.Session, view *ProjectView, a web.Auth) (e
 		opts.filterIncludeNulls = sf.Filters.FilterIncludeNulls
 		opts.filterTimezone = sf.Filters.FilterTimezone
 		opts.filter = sf.Filters.Filter
-		opts.parsedFilters, err = getTaskFiltersFromFilterString(opts.filter, opts.filterTimezone)
+		opts.parsedFilters, err = GetTaskFiltersFromFilterString(opts.filter, opts.filterTimezone)
 		if err != nil {
 			return err
 		}
@@ -253,7 +253,7 @@ func calculateNewPositionForTask(s *xorm.Session, a web.Auth, t *Task, view *Pro
 	return &TaskPosition{
 		TaskID:        t.ID,
 		ProjectViewID: view.ID,
-		Position:      calculateDefaultPosition(t.Index, t.Position),
+		Position:      CalculateDefaultPosition(t.Index, t.Position),
 	}, nil
 }
 

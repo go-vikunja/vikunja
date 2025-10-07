@@ -1376,7 +1376,7 @@ func (t *Task) moveTaskToDoneBuckets(s *xorm.Session, a web.Auth, views []*Proje
 		tp := TaskPosition{
 			TaskID:        t.ID,
 			ProjectViewID: view.ID,
-			Position:      calculateDefaultPosition(t.Index, t.Position),
+			Position:      CalculateDefaultPosition(t.Index, t.Position),
 		}
 		err = tp.Update(s, a)
 		if err != nil {

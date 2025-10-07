@@ -109,6 +109,9 @@ func InitializeDependencies() {
 
 	// Register ReactionsService provider to avoid import cycles
 	models.RegisterReactionsService(&reactionsServiceAdapter{service: NewReactionsService(nil)})
+
+	// Register ProjectViewService provider to avoid import cycles
+	models.RegisterProjectViewService(&projectViewServiceAdapter{service: NewProjectViewService(nil)})
 }
 
 // projectServiceAdapter adapts ProjectService to the interface expected by models
@@ -252,4 +255,37 @@ func (a *reactionsServiceAdapter) Delete(s *xorm.Session, entityID int64, userID
 
 func (a *reactionsServiceAdapter) GetAll(s *xorm.Session, entityID int64, entityKind models.ReactionKind) (models.ReactionMap, error) {
 	return a.service.GetAll(s, entityID, entityKind)
+}
+
+// projectViewServiceAdapter adapts ProjectViewService to the interface expected by models
+type projectViewServiceAdapter struct {
+	service *ProjectViewService
+}
+
+func (a *projectViewServiceAdapter) Create(s *xorm.Session, pv *models.ProjectView, auth web.Auth, createBacklogBucket bool, addExistingTasksToView bool) error {
+	return a.service.Create(s, pv, auth, createBacklogBucket, addExistingTasksToView)
+}
+
+func (a *projectViewServiceAdapter) Update(s *xorm.Session, pv *models.ProjectView) error {
+	return a.service.Update(s, pv)
+}
+
+func (a *projectViewServiceAdapter) Delete(s *xorm.Session, viewID int64, projectID int64) error {
+	return a.service.Delete(s, viewID, projectID)
+}
+
+func (a *projectViewServiceAdapter) GetAll(s *xorm.Session, projectID int64, auth web.Auth) (views []*models.ProjectView, totalCount int64, err error) {
+	return a.service.GetAll(s, projectID, auth)
+}
+
+func (a *projectViewServiceAdapter) GetByIDAndProject(s *xorm.Session, viewID, projectID int64) (view *models.ProjectView, err error) {
+	return a.service.GetByIDAndProject(s, viewID, projectID)
+}
+
+func (a *projectViewServiceAdapter) GetByID(s *xorm.Session, id int64) (view *models.ProjectView, err error) {
+	return a.service.GetByID(s, id)
+}
+
+func (a *projectViewServiceAdapter) CreateDefaultViewsForProject(s *xorm.Session, project *models.Project, auth web.Auth, createBacklogBucket bool, createDefaultListFilter bool) error {
+	return a.service.CreateDefaultViewsForProject(s, project, auth, createBacklogBucket, createDefaultListFilter)
 }

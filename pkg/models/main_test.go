@@ -682,7 +682,7 @@ func (m *mockProjectService) Create(s *xorm.Session, project *Project, u *user.U
 		return nil, err
 	}
 
-	project.Position = calculateDefaultPosition(project.ID, project.Position)
+	project.Position = CalculateDefaultPosition(project.ID, project.Position)
 	_, err = s.Where("id = ?", project.ID).Update(project)
 	if err != nil {
 		return nil, err
