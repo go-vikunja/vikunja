@@ -21,456 +21,17 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/events"
-	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"xorm.io/builder"
 )
 
-func TestTask_Create(t *testing.T) {
-	usr := &user.User{
-		ID:       1,
-		Username: "user1",
-		Email:    "user1@example.com",
-	}
-
-	// We only test creating a task here, the permissions are all well tested in the web tests.
-
-	t.Run("normal", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		task := &Task{
-			Title:       "Lorem",
-			Description: "Lorem Ipsum Dolor",
-			ProjectID:   1,
-		}
-		err := task.Create(s, usr)
-		require.NoError(t, err)
-		// Assert getting a uid
-		assert.NotEmpty(t, task.UID)
-		// Assert getting a new index
-		assert.NotEmpty(t, task.Index)
-		assert.Equal(t, int64(18), task.Index)
-		err = s.Commit()
-		require.NoError(t, err)
-
-		db.AssertExists(t, "tasks", map[string]interface{}{
-			"id":            task.ID,
-			"title":         "Lorem",
-			"description":   "Lorem Ipsum Dolor",
-			"project_id":    1,
-			"created_by_id": 1,
-		}, false)
-		db.AssertExists(t, "task_buckets", map[string]interface{}{
-			"task_id":   task.ID,
-			"bucket_id": 1,
-		}, false)
-
-		events.AssertDispatched(t, &TaskCreatedEvent{})
-	})
-	t.Run("with reminders", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		task := &Task{
-			Title:       "Lorem",
-			Description: "Lorem Ipsum Dolor",
-			ProjectID:   1,
-			DueDate:     time.Date(2023, time.March, 7, 22, 5, 0, 0, time.UTC),
-			StartDate:   time.Date(2023, time.March, 7, 22, 5, 10, 0, time.UTC),
-			EndDate:     time.Date(2023, time.March, 7, 22, 5, 20, 0, time.UTC),
-			Reminders: []*TaskReminder{
-				{
-					RelativeTo:     "due_date",
-					RelativePeriod: 1,
-				},
-				{
-					RelativeTo:     "start_date",
-					RelativePeriod: -2,
-				},
-				{
-					RelativeTo:     "end_date",
-					RelativePeriod: -1,
-				},
-				{
-					Reminder: time.Date(2023, time.March, 7, 23, 0, 0, 0, time.UTC),
-				},
-			}}
-		err := task.Create(s, usr)
-		require.NoError(t, err)
-		assert.Equal(t, time.Date(2023, time.March, 7, 22, 5, 1, 0, time.UTC), task.Reminders[0].Reminder)
-		assert.Equal(t, int64(1), task.Reminders[0].RelativePeriod)
-		assert.Equal(t, ReminderRelationDueDate, task.Reminders[0].RelativeTo)
-		assert.Equal(t, time.Date(2023, time.March, 7, 22, 5, 8, 0, time.UTC), task.Reminders[1].Reminder)
-		assert.Equal(t, ReminderRelationStartDate, task.Reminders[1].RelativeTo)
-		assert.Equal(t, time.Date(2023, time.March, 7, 22, 5, 19, 0, time.UTC), task.Reminders[2].Reminder)
-		assert.Equal(t, ReminderRelationEndDate, task.Reminders[2].RelativeTo)
-		assert.Equal(t, time.Date(2023, time.March, 7, 23, 0, 0, 0, time.UTC), task.Reminders[3].Reminder)
-		err = s.Commit()
-		require.NoError(t, err)
-	})
-	t.Run("empty title", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		task := &Task{
-			Title:       "",
-			Description: "Lorem Ipsum Dolor",
-			ProjectID:   1,
-		}
-		err := task.Create(s, usr)
-		require.Error(t, err)
-		assert.True(t, IsErrTaskCannotBeEmpty(err))
-	})
-	t.Run("nonexistant project", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		task := &Task{
-			Title:       "Test",
-			Description: "Lorem Ipsum Dolor",
-			ProjectID:   9999999,
-		}
-		err := task.Create(s, usr)
-		require.Error(t, err)
-		assert.True(t, IsErrProjectDoesNotExist(err))
-	})
-	t.Run("nonexistant user", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		nUser := &user.User{ID: 99999999}
-		task := &Task{
-			Title:       "Test",
-			Description: "Lorem Ipsum Dolor",
-			ProjectID:   1,
-		}
-		err := task.Create(s, nUser)
-		require.Error(t, err)
-		assert.True(t, user.IsErrUserDoesNotExist(err))
-	})
-	t.Run("default bucket different", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		task := &Task{
-			Title:       "Lorem",
-			Description: "Lorem Ipsum Dolor",
-			ProjectID:   6,
-		}
-		err := task.Create(s, usr)
-		require.NoError(t, err)
-		db.AssertExists(t, "task_buckets", map[string]interface{}{
-			"task_id":   task.ID,
-			"bucket_id": 22, // default bucket of project 6 but with a position of 2
-		}, false)
-	})
-}
-
-func TestTask_Update(t *testing.T) {
-	u := &user.User{ID: 1}
-
-	t.Run("normal", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		task := &Task{
-			ID:          1,
-			Title:       "test10000",
-			Description: "Lorem Ipsum Dolor",
-			ProjectID:   1,
-		}
-		err := task.Update(s, u)
-		require.NoError(t, err)
-		err = s.Commit()
-		require.NoError(t, err)
-
-		db.AssertExists(t, "tasks", map[string]interface{}{
-			"id":          1,
-			"title":       "test10000",
-			"description": "Lorem Ipsum Dolor",
-			"project_id":  1,
-		}, false)
-	})
-	t.Run("nonexistant task", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		task := &Task{
-			ID:          9999999,
-			Title:       "test10000",
-			Description: "Lorem Ipsum Dolor",
-			ProjectID:   1,
-		}
-		err := task.Update(s, u)
-		require.Error(t, err)
-		assert.True(t, IsErrTaskDoesNotExist(err))
-	})
-	t.Run("default bucket when moving a task between projects", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		task := &Task{
-			ID:        1,
-			ProjectID: 2,
-		}
-		err := task.Update(s, u)
-		require.NoError(t, err)
-		err = s.Commit()
-		require.NoError(t, err)
-
-		db.AssertExists(t, "task_buckets", map[string]interface{}{
-			"task_id": task.ID,
-			// bucket 40 is the default bucket on project 2
-			"bucket_id": 40,
-		}, false)
-	})
-	t.Run("marking a task as done should move it to the done bucket", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		task := &Task{
-			ID:   1,
-			Done: true,
-		}
-		err := task.Update(s, u)
-		require.NoError(t, err)
-		err = s.Commit()
-		require.NoError(t, err)
-		assert.True(t, task.Done)
-
-		db.AssertExists(t, "tasks", map[string]interface{}{
-			"id":   1,
-			"done": true,
-		}, false)
-		db.AssertExists(t, "task_buckets", map[string]interface{}{
-			"task_id":   1,
-			"bucket_id": 3,
-		}, false)
-	})
-	t.Run("move task to another project should use the default bucket", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		task := &Task{
-			ID:        1,
-			ProjectID: 2,
-		}
-		err := task.Update(s, u)
-		require.NoError(t, err)
-		err = s.Commit()
-		require.NoError(t, err)
-
-		db.AssertExists(t, "tasks", map[string]interface{}{
-			"id":         1,
-			"project_id": 2,
-		}, false)
-		db.AssertExists(t, "task_buckets", map[string]interface{}{
-			"task_id":   1,
-			"bucket_id": 40,
-		}, false)
-	})
-	t.Run("move done task to another project with a done bucket", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		task := &Task{
-			ID:        2,
-			Done:      true,
-			ProjectID: 2,
-		}
-		err := task.Update(s, u)
-		require.NoError(t, err)
-		err = s.Commit()
-		require.NoError(t, err)
-
-		db.AssertExists(t, "tasks", map[string]interface{}{
-			"id":         task.ID,
-			"project_id": 2,
-			"done":       true,
-		}, false)
-		db.AssertExists(t, "task_buckets", map[string]interface{}{
-			"task_id":   task.ID,
-			"bucket_id": 4, // 4 is the done bucket
-		}, false)
-	})
-	t.Run("repeating tasks should not be moved to the done bucket", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		task := &Task{
-			ID:          28,
-			Done:        true,
-			RepeatAfter: 3600,
-		}
-		err := task.Update(s, u)
-		require.NoError(t, err)
-		err = s.Commit()
-		require.NoError(t, err)
-		assert.False(t, task.Done)
-
-		db.AssertExists(t, "tasks", map[string]interface{}{
-			"id":   28,
-			"done": false,
-		}, false)
-		db.AssertExists(t, "task_buckets", map[string]interface{}{
-			"task_id":   28,
-			"bucket_id": 1,
-		}, false)
-	})
-	t.Run("moving a task between projects should give it a correct index", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		task := &Task{
-			ID:        12,
-			ProjectID: 2, // From project 1
-		}
-		err := task.Update(s, u)
-		require.NoError(t, err)
-		err = s.Commit()
-		require.NoError(t, err)
-		assert.Equal(t, int64(3), task.Index)
-	})
-
-	t.Run("reminders will be updated", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		task := &Task{
-			ID:        1,
-			ProjectID: 1,
-			Title:     "test",
-			DueDate:   time.Date(2023, time.March, 7, 22, 5, 0, 0, time.UTC),
-			StartDate: time.Date(2023, time.March, 7, 22, 5, 10, 0, time.UTC),
-			EndDate:   time.Date(2023, time.March, 7, 22, 5, 20, 0, time.UTC),
-			Reminders: []*TaskReminder{
-				{
-					RelativeTo:     "due_date",
-					RelativePeriod: 1,
-				},
-				{
-					RelativeTo:     "start_date",
-					RelativePeriod: -2,
-				},
-				{
-					RelativeTo:     "end_date",
-					RelativePeriod: -1,
-				},
-				{
-					Reminder: time.Date(2023, time.March, 7, 23, 0, 0, 0, time.UTC),
-				},
-			}}
-		err := task.Update(s, u)
-		require.NoError(t, err)
-		assert.Equal(t, time.Date(2023, time.March, 7, 22, 5, 1, 0, time.UTC), task.Reminders[0].Reminder)
-		assert.Equal(t, int64(1), task.Reminders[0].RelativePeriod)
-		assert.Equal(t, ReminderRelationDueDate, task.Reminders[0].RelativeTo)
-		assert.Equal(t, time.Date(2023, time.March, 7, 22, 5, 8, 0, time.UTC), task.Reminders[1].Reminder)
-		assert.Equal(t, ReminderRelationStartDate, task.Reminders[1].RelativeTo)
-		assert.Equal(t, time.Date(2023, time.March, 7, 22, 5, 19, 0, time.UTC), task.Reminders[2].Reminder)
-		assert.Equal(t, ReminderRelationEndDate, task.Reminders[2].RelativeTo)
-		assert.Equal(t, time.Date(2023, time.March, 7, 23, 0, 0, 0, time.UTC), task.Reminders[3].Reminder)
-		err = s.Commit()
-		require.NoError(t, err)
-		db.AssertCount(t, "task_reminders", builder.Eq{"task_id": 1}, 4)
-	})
-	t.Run("the same reminder multiple times should be saved once", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		task := &Task{
-			ID:    1,
-			Title: "test",
-			Reminders: []*TaskReminder{
-				{
-					Reminder: time.Unix(1674745156, 0),
-				},
-				{
-					Reminder: time.Unix(1674745156, 223),
-				},
-			},
-			ProjectID: 1,
-		}
-		err := task.Update(s, u)
-		require.NoError(t, err)
-		err = s.Commit()
-		require.NoError(t, err)
-		db.AssertCount(t, "task_reminders", builder.Eq{"task_id": 1}, 1)
-	})
-	t.Run("update relative reminder when start_date changes", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		// given task with start_date and relative reminder for start_date
-		taskBefore := &Task{
-			Title:     "test",
-			ProjectID: 1,
-			StartDate: time.Date(2022, time.March, 8, 8, 5, 20, 0, time.UTC),
-			Reminders: []*TaskReminder{
-				{
-					RelativeTo:     "start_date",
-					RelativePeriod: -60,
-				},
-			}}
-		err := taskBefore.Create(s, u)
-		require.NoError(t, err)
-		err = s.Commit()
-		require.NoError(t, err)
-		assert.Equal(t, time.Date(2022, time.March, 8, 8, 4, 20, 0, time.UTC), taskBefore.Reminders[0].Reminder)
-
-		// when start_date is modified
-		task := taskBefore
-		task.StartDate = time.Date(2023, time.March, 8, 8, 5, 0, 0, time.UTC)
-		err = task.Update(s, u)
-		require.NoError(t, err)
-
-		// then reminder time is updated
-		assert.Equal(t, time.Date(2023, time.March, 8, 8, 4, 0, 0, time.UTC), task.Reminders[0].Reminder)
-		err = s.Commit()
-		require.NoError(t, err)
-	})
-}
-
-func TestTask_Delete(t *testing.T) {
-	t.Run("normal", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		task := &Task{
-			ID: 1,
-		}
-		err := task.Delete(s, &user.User{ID: 1})
-		require.NoError(t, err)
-		err = s.Commit()
-		require.NoError(t, err)
-
-		db.AssertMissing(t, "tasks", map[string]interface{}{
-			"id": 1,
-		})
-	})
-}
+// ============================================================================
+// NOTE: Business logic tests for Task Create/Update/Delete have been migrated
+// to the service layer in pkg/services/task_business_logic_test.go as part of
+// T015B. The model layer now only contains thin delegators to the service layer.
+//
+// Only utility function tests remain here (TestUpdateDone).
+// ============================================================================
 
 func TestUpdateDone(t *testing.T) {
 	t.Run("marking a task as done", func(t *testing.T) {
@@ -480,7 +41,7 @@ func TestUpdateDone(t *testing.T) {
 
 		oldTask := &Task{Done: false}
 		newTask := &Task{Done: true}
-		updateDone(oldTask, newTask)
+		UpdateDone(oldTask, newTask)
 		assert.NotEqual(t, time.Time{}, newTask.DoneAt)
 	})
 	t.Run("unmarking a task as done", func(t *testing.T) {
@@ -490,7 +51,7 @@ func TestUpdateDone(t *testing.T) {
 
 		oldTask := &Task{Done: true}
 		newTask := &Task{Done: false}
-		updateDone(oldTask, newTask)
+		UpdateDone(oldTask, newTask)
 		assert.Equal(t, time.Time{}, newTask.DoneAt)
 	})
 	t.Run("no interval set, default repeat mode", func(t *testing.T) {
@@ -505,7 +66,7 @@ func TestUpdateDone(t *testing.T) {
 			Done:    true,
 			DueDate: dueDate,
 		}
-		updateDone(oldTask, newTask)
+		UpdateDone(oldTask, newTask)
 
 		assert.Equal(t, dueDate.Unix(), newTask.DueDate.Unix())
 		assert.True(t, newTask.Done)
@@ -520,7 +81,7 @@ func TestUpdateDone(t *testing.T) {
 			newTask := &Task{
 				Done: true,
 			}
-			updateDone(oldTask, newTask)
+			UpdateDone(oldTask, newTask)
 
 			var expected = time.Unix(1550008600, 0)
 			for time.Since(expected) > 0 {
@@ -540,7 +101,7 @@ func TestUpdateDone(t *testing.T) {
 				Done:    true,
 				DueDate: time.Unix(1543626724, 0),
 			}
-			updateDone(oldTask, newTask)
+			UpdateDone(oldTask, newTask)
 			assert.Equal(t, time.Unix(1543626724, 0), newTask.DueDate)
 			assert.False(t, newTask.Done)
 		})
@@ -560,7 +121,7 @@ func TestUpdateDone(t *testing.T) {
 			newTask := &Task{
 				Done: true,
 			}
-			updateDone(oldTask, newTask)
+			UpdateDone(oldTask, newTask)
 
 			var expected1 = time.Unix(1550008600, 0)
 			var expected2 = time.Unix(1555008600, 0)
@@ -585,7 +146,7 @@ func TestUpdateDone(t *testing.T) {
 			newTask := &Task{
 				Done: true,
 			}
-			updateDone(oldTask, newTask)
+			UpdateDone(oldTask, newTask)
 
 			var expected = time.Unix(1550008600, 0)
 			for time.Since(expected) > 0 {
@@ -604,7 +165,7 @@ func TestUpdateDone(t *testing.T) {
 			newTask := &Task{
 				Done: true,
 			}
-			updateDone(oldTask, newTask)
+			UpdateDone(oldTask, newTask)
 
 			var expected = time.Unix(1550008600, 0)
 			for time.Since(expected) > 0 {
@@ -623,7 +184,7 @@ func TestUpdateDone(t *testing.T) {
 			newTask := &Task{
 				Done: true,
 			}
-			updateDone(oldTask, newTask)
+			UpdateDone(oldTask, newTask)
 			expected := oldTask.DueDate.Add(time.Duration(oldTask.RepeatAfter) * time.Second)
 			assert.Equal(t, expected, newTask.DueDate)
 			assert.False(t, newTask.Done)
@@ -639,7 +200,7 @@ func TestUpdateDone(t *testing.T) {
 				newTask := &Task{
 					Done: true,
 				}
-				updateDone(oldTask, newTask)
+				UpdateDone(oldTask, newTask)
 
 				// Only comparing unix timestamps because time.Time use nanoseconds which can't ever possibly have the same value
 				assert.Equal(t, time.Now().Add(time.Duration(oldTask.RepeatAfter)*time.Second).Unix(), newTask.DueDate.Unix())
@@ -661,7 +222,7 @@ func TestUpdateDone(t *testing.T) {
 				newTask := &Task{
 					Done: true,
 				}
-				updateDone(oldTask, newTask)
+				UpdateDone(oldTask, newTask)
 
 				diff := oldTask.Reminders[1].Reminder.Sub(oldTask.Reminders[0].Reminder)
 
@@ -681,7 +242,7 @@ func TestUpdateDone(t *testing.T) {
 				newTask := &Task{
 					Done: true,
 				}
-				updateDone(oldTask, newTask)
+				UpdateDone(oldTask, newTask)
 
 				// Only comparing unix timestamps because time.Time use nanoseconds which can't ever possibly have the same value
 				assert.Equal(t, time.Now().Add(time.Duration(oldTask.RepeatAfter)*time.Second).Unix(), newTask.StartDate.Unix())
@@ -697,7 +258,7 @@ func TestUpdateDone(t *testing.T) {
 				newTask := &Task{
 					Done: true,
 				}
-				updateDone(oldTask, newTask)
+				UpdateDone(oldTask, newTask)
 
 				// Only comparing unix timestamps because time.Time use nanoseconds which can't ever possibly have the same value
 				assert.Equal(t, time.Now().Add(time.Duration(oldTask.RepeatAfter)*time.Second).Unix(), newTask.EndDate.Unix())
@@ -714,7 +275,7 @@ func TestUpdateDone(t *testing.T) {
 				newTask := &Task{
 					Done: true,
 				}
-				updateDone(oldTask, newTask)
+				UpdateDone(oldTask, newTask)
 
 				diff := oldTask.EndDate.Sub(oldTask.StartDate)
 
@@ -736,7 +297,7 @@ func TestUpdateDone(t *testing.T) {
 				}
 				oldDueDate := oldTask.DueDate
 
-				updateDone(oldTask, newTask)
+				UpdateDone(oldTask, newTask)
 
 				assert.True(t, newTask.DueDate.After(oldDueDate))
 				assert.NotEqual(t, oldDueDate.Month(), newTask.DueDate.Month())
@@ -762,7 +323,7 @@ func TestUpdateDone(t *testing.T) {
 					oldReminders[i] = r.Reminder
 				}
 
-				updateDone(oldTask, newTask)
+				UpdateDone(oldTask, newTask)
 
 				assert.Len(t, newTask.Reminders, len(oldReminders))
 				for i, r := range newTask.Reminders {
@@ -782,7 +343,7 @@ func TestUpdateDone(t *testing.T) {
 				}
 				oldStartDate := oldTask.StartDate
 
-				updateDone(oldTask, newTask)
+				UpdateDone(oldTask, newTask)
 
 				assert.True(t, newTask.StartDate.After(oldStartDate))
 				assert.NotEqual(t, oldStartDate.Month(), newTask.StartDate.Month())
@@ -799,7 +360,7 @@ func TestUpdateDone(t *testing.T) {
 				}
 				oldEndDate := oldTask.EndDate
 
-				updateDone(oldTask, newTask)
+				UpdateDone(oldTask, newTask)
 
 				assert.True(t, newTask.EndDate.After(oldEndDate))
 				assert.NotEqual(t, oldEndDate.Month(), newTask.EndDate.Month())
@@ -819,7 +380,7 @@ func TestUpdateDone(t *testing.T) {
 				oldEndDate := oldTask.EndDate
 				oldDiff := oldTask.EndDate.Sub(oldTask.StartDate)
 
-				updateDone(oldTask, newTask)
+				UpdateDone(oldTask, newTask)
 
 				assert.True(t, newTask.StartDate.After(oldStartDate))
 				assert.NotEqual(t, oldStartDate.Month(), newTask.StartDate.Month())
