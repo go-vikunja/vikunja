@@ -580,6 +580,126 @@ func (m *mockReactionsService) GetAll(s *xorm.Session, entityID int64, entityKin
 	return reactionMap, nil
 }
 
+// mockProjectViewService provides a test implementation for project views
+// This prevents import cycles while allowing model tests to continue working
+// Following T-CLEANUP pattern - this mock will be removed in future cleanup tasks
+type mockProjectViewService struct{}
+
+func (m *mockProjectViewService) Create(s *xorm.Session, pv *ProjectView, a web.Auth, createBacklogBucket bool, addExistingTasksToView bool) error {
+	// Simplified version - just validate and insert the view
+	if pv.Filter != nil && pv.Filter.Filter != "" {
+		_, err := GetTaskFiltersFromFilterString(pv.Filter.Filter, pv.Filter.FilterTimezone)
+		if err != nil {
+			return err
+		}
+	}
+	pv.ID = 0
+	_, err := s.Insert(pv)
+	return err
+}
+
+func (m *mockProjectViewService) Update(s *xorm.Session, pv *ProjectView) error {
+	if pv.Filter != nil && pv.Filter.Filter != "" {
+		_, err := GetTaskFiltersFromFilterString(pv.Filter.Filter, pv.Filter.FilterTimezone)
+		if err != nil {
+			return err
+		}
+	}
+	_, err := s.ID(pv.ID).Cols("title", "view_kind", "filter", "position", "bucket_configuration_mode", "bucket_configuration", "default_bucket_id", "done_bucket_id").Update(pv)
+	return err
+}
+
+func (m *mockProjectViewService) Delete(s *xorm.Session, viewID int64, projectID int64) error {
+	_, err := s.Where("id = ? AND project_id = ?", viewID, projectID).Delete(&ProjectView{})
+	return err
+}
+
+func (m *mockProjectViewService) GetAll(s *xorm.Session, projectID int64, a web.Auth) (views []*ProjectView, totalCount int64, err error) {
+	views = []*ProjectView{}
+	err = s.Where("project_id = ?", projectID).OrderBy("position asc").Find(&views)
+	if err != nil {
+		return nil, 0, err
+	}
+	totalCount, err = s.Where("project_id = ?", projectID).Count(&ProjectView{})
+	return views, totalCount, err
+}
+
+func (m *mockProjectViewService) GetByIDAndProject(s *xorm.Session, viewID, projectID int64) (view *ProjectView, err error) {
+	if projectID == FavoritesPseudoProjectID && viewID < 0 {
+		for _, v := range FavoritesPseudoProject.Views {
+			if v.ID == viewID {
+				return v, nil
+			}
+		}
+		return nil, &ErrProjectViewDoesNotExist{ProjectViewID: viewID}
+	}
+	view = &ProjectView{}
+	exists, err := s.Where("id = ? AND project_id = ?", viewID, projectID).NoAutoCondition().Get(view)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, &ErrProjectViewDoesNotExist{ProjectViewID: viewID}
+	}
+	return view, nil
+}
+
+func (m *mockProjectViewService) GetByID(s *xorm.Session, id int64) (view *ProjectView, err error) {
+	view = &ProjectView{}
+	exists, err := s.Where("id = ?", id).NoAutoCondition().Get(view)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, &ErrProjectViewDoesNotExist{ProjectViewID: id}
+	}
+	return view, nil
+}
+
+func (m *mockProjectViewService) CreateDefaultViewsForProject(s *xorm.Session, project *Project, a web.Auth, createBacklogBucket bool, createDefaultListFilter bool) error {
+	// Create the four default views
+	list := &ProjectView{ProjectID: project.ID, Title: "List", ViewKind: ProjectViewKindList, Position: 100}
+	if createDefaultListFilter {
+		list.Filter = &TaskCollection{FilterTimezone: "GMT"}
+	}
+
+	gantt := &ProjectView{ProjectID: project.ID, Title: "Gantt", ViewKind: ProjectViewKindGantt, Position: 200}
+	table := &ProjectView{ProjectID: project.ID, Title: "Table", ViewKind: ProjectViewKindTable, Position: 300}
+	kanban := &ProjectView{ProjectID: project.ID, Title: "Kanban", ViewKind: ProjectViewKindKanban, Position: 400, BucketConfigurationMode: BucketConfigurationModeManual}
+
+	for _, view := range []*ProjectView{list, gantt, table, kanban} {
+		_, err := s.Insert(view)
+		if err != nil {
+			return err
+		}
+
+		// Create default buckets for Kanban view
+		if view.ViewKind == ProjectViewKindKanban && createBacklogBucket {
+			buckets := []*Bucket{
+				{Title: "To-Do", ProjectViewID: view.ID, Position: 0},
+				{Title: "Doing", ProjectViewID: view.ID, Position: 1},
+				{Title: "Done", ProjectViewID: view.ID, Position: 2},
+			}
+			for _, bucket := range buckets {
+				_, err := s.Insert(bucket)
+				if err != nil {
+					return err
+				}
+			}
+
+			// Set default and done buckets
+			view.DefaultBucketID = buckets[0].ID
+			view.DoneBucketID = buckets[2].ID
+			_, err = s.ID(view.ID).Cols("default_bucket_id", "done_bucket_id").Update(view)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 // mockProjectService provides a test implementation that uses direct logic
 // This prevents import cycles while allowing model tests to continue working
 // Updated to not call model helper functions per T011A-PART2 requirements
@@ -659,9 +779,16 @@ func (m *mockProjectService) ReadAll(s *xorm.Session, a web.Auth, search string,
 }
 
 func (m *mockProjectService) Create(s *xorm.Session, project *Project, u *user.User) (*Project, error) {
+	// Validate that the user exists in the database
+	// This is crucial because the user might be a test stub or invalid reference
+	_, err := user.GetUserByID(s, u.ID)
+	if err != nil {
+		return nil, err
+	}
+
 	// Replicate the core logic without calling model helper CreateProject
 
-	err := project.CheckIsArchived(s)
+	err = project.CheckIsArchived(s)
 	if err != nil {
 		return nil, err
 	}
@@ -1164,6 +1291,11 @@ func TestMain(m *testing.M) {
 	// Register a mock ReactionsService provider for model tests
 	// This avoids import cycle with services package
 	RegisterReactionsService(&mockReactionsService{})
+
+	// Register a mock ProjectViewService provider for model tests
+	// This avoids import cycle with services package
+	// Following T-CLEANUP pattern - will be removed in future cleanup tasks
+	RegisterProjectViewService(&mockProjectViewService{})
 
 	// Set up a mock for the GetUsersOrLinkSharesFromIDsFunc for model tests,
 	// as they should not depend on the services package.

@@ -699,6 +699,13 @@ func (p *ProjectService) GetAllForUser(s *xorm.Session, u *user.User, search str
 
 // Create creates a new project.
 func (p *ProjectService) Create(s *xorm.Session, project *models.Project, u *user.User) (*models.Project, error) {
+	// Validate that the user exists in the database
+	// This is crucial because the user might be a test stub or invalid reference
+	_, err := user.GetUserByID(s, u.ID)
+	if err != nil {
+		return nil, err
+	}
+
 	if project.ParentProjectID != 0 {
 		// parent := &models.Project{ID: project.ParentProjectID}
 		// TODO: Move this to the service
@@ -715,7 +722,7 @@ func (p *ProjectService) Create(s *xorm.Session, project *models.Project, u *use
 	project.OwnerID = u.ID
 	project.Owner = u
 
-	err := p.validate(s, project)
+	err = p.validate(s, project)
 	if err != nil {
 		return nil, err
 	}

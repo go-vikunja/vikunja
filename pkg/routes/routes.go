@@ -545,17 +545,8 @@ func registerAPIRoutes(a *echo.Group) {
 	// Register the new declarative reaction routes
 	apiv1.RegisterReactions(a)
 
-	// Project views
-	projectViewProvider := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.ProjectView{}
-		},
-	}
-	a.GET("/projects/:project/views", projectViewProvider.ReadAllWeb)
-	a.GET("/projects/:project/views/:view", projectViewProvider.ReadOneWeb)
-	a.PUT("/projects/:project/views", projectViewProvider.CreateWeb)
-	a.DELETE("/projects/:project/views/:view", projectViewProvider.DeleteWeb)
-	a.POST("/projects/:project/views/:view", projectViewProvider.UpdateWeb)
+	// Register the new declarative project view routes
+	apiv1.RegisterProjectViews(a)
 
 	// Plugin routes
 	if config.PluginsEnabled.GetBool() {
