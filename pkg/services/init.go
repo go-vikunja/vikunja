@@ -118,6 +118,9 @@ func InitializeDependencies() {
 
 	// Register LabelTaskService provider to avoid import cycles
 	models.RegisterLabelTaskService(&labelTaskServiceAdapter{service: NewLabelService(nil)})
+
+	// Initialize KanbanService to wire up bucket-related model functions
+	InitKanbanService()
 }
 
 // projectServiceAdapter adapts ProjectService to the interface expected by models

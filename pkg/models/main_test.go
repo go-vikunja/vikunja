@@ -1588,6 +1588,289 @@ func TestMain(m *testing.M) {
 		return nil
 	}
 
+	// Initialize Kanban/Bucket function variables for model tests
+	// These provide the business logic implementation without importing services package
+	CreateBucketFunc = func(s *xorm.Session, bucket *Bucket, a web.Auth) error {
+		var err error
+		bucket.CreatedBy, err = GetUserOrLinkShareUser(s, a)
+		if err != nil {
+			return err
+		}
+		bucket.CreatedByID = bucket.CreatedBy.ID
+		bucket.ID = 0
+		_, err = s.Insert(bucket)
+		if err != nil {
+			return err
+		}
+		bucket.Position = CalculateDefaultPosition(bucket.ID, bucket.Position)
+		_, err = s.Where("id = ?", bucket.ID).Update(bucket)
+		return err
+	}
+
+	UpdateBucketFunc = func(s *xorm.Session, bucket *Bucket, a web.Auth) error {
+		_, err := s.
+			Where("id = ?", bucket.ID).
+			Cols("title", "limit", "position", "project_view_id").
+			Update(bucket)
+		return err
+	}
+
+	DeleteBucketFunc = func(s *xorm.Session, bucketID int64, projectID int64, a web.Auth) error {
+		// Get the bucket
+		bucket := &Bucket{ID: bucketID, ProjectID: projectID}
+		exists, err := s.Where("id = ?", bucketID).Get(bucket)
+		if err != nil {
+			return err
+		}
+		if !exists {
+			return ErrBucketDoesNotExist{BucketID: bucketID}
+		}
+
+		// Prevent removing the last bucket
+		total, err := s.Where("project_view_id = ?", bucket.ProjectViewID).Count(&Bucket{})
+		if err != nil {
+			return err
+		}
+		if total <= 1 {
+			return ErrCannotRemoveLastBucket{BucketID: bucket.ID, ProjectViewID: bucket.ProjectViewID}
+		}
+
+		// Get the project view
+		pv, err := GetProjectViewByIDAndProject(s, bucket.ProjectViewID, projectID)
+		if err != nil {
+			return err
+		}
+		var updateProjectView bool
+		if bucket.ID == pv.DefaultBucketID {
+			pv.DefaultBucketID = 0
+			updateProjectView = true
+		}
+		if bucket.ID == pv.DoneBucketID {
+			pv.DoneBucketID = 0
+			updateProjectView = true
+		}
+		if updateProjectView {
+			err = pv.Update(s, a)
+			if err != nil {
+				return err
+			}
+		}
+
+		defaultBucketID, err := GetDefaultBucketID(s, pv)
+		if err != nil {
+			return err
+		}
+
+		// Move tasks to default bucket
+		_, err = s.Where("bucket_id = ?", bucket.ID).Cols("bucket_id").Update(&TaskBucket{BucketID: defaultBucketID})
+		if err != nil {
+			return err
+		}
+
+		// Delete the bucket
+		_, err = s.Where("id = ?", bucket.ID).Delete(&Bucket{})
+		return err
+	}
+
+	GetAllBucketsFunc = func(s *xorm.Session, projectViewID int64, projectID int64, a web.Auth) ([]*Bucket, error) {
+		buckets := []*Bucket{}
+		err := s.Where("project_view_id = ?", projectViewID).OrderBy("position").Find(&buckets)
+		if err != nil {
+			return nil, err
+		}
+
+		// Get all users who created these buckets
+		userIDs := make([]int64, 0, len(buckets))
+		for _, bb := range buckets {
+			userIDs = append(userIDs, bb.CreatedByID)
+		}
+
+		// Get all users
+		users, err := GetUsersOrLinkSharesFromIDs(s, userIDs)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, bb := range buckets {
+			if createdBy, has := users[bb.CreatedByID]; has {
+				bb.CreatedBy = createdBy
+			}
+		}
+
+		return buckets, nil
+	}
+
+	MoveTaskToBucketFunc = func(s *xorm.Session, taskBucket *TaskBucket, a web.Auth) error {
+		// Get the old task bucket relation
+		oldTaskBucket := &TaskBucket{}
+		_, err := s.Where("task_id = ? AND project_view_id = ?", taskBucket.TaskID, taskBucket.ProjectViewID).Get(oldTaskBucket)
+		if err != nil {
+			return err
+		}
+
+		if oldTaskBucket.BucketID == taskBucket.BucketID {
+			return nil
+		}
+
+		view, err := GetProjectViewByIDAndProject(s, taskBucket.ProjectViewID, taskBucket.ProjectID)
+		if err != nil {
+			return err
+		}
+
+		bucket := &Bucket{}
+		exists, err := s.Where("id = ?", taskBucket.BucketID).Get(bucket)
+		if err != nil {
+			return err
+		}
+		if !exists {
+			return ErrBucketDoesNotExist{BucketID: taskBucket.BucketID}
+		}
+
+		if view.ID != bucket.ProjectViewID {
+			return ErrBucketDoesNotBelongToProjectView{ProjectViewID: view.ID, BucketID: bucket.ID}
+		}
+
+		task := &Task{ID: taskBucket.TaskID}
+		err = task.ReadOne(s, a)
+		if err != nil {
+			return err
+		}
+
+		// Check the bucket limit
+		if taskBucket.BucketID != 0 && taskBucket.BucketID != oldTaskBucket.BucketID {
+			taskCount, err := checkBucketLimit(s, a, task, bucket)
+			if err != nil {
+				return err
+			}
+			bucket.Count = taskCount
+		}
+
+		var updateBucket = true
+
+		// mark task done if moved into the done bucket
+		var doneChanged bool
+		if view.DoneBucketID == taskBucket.BucketID {
+			doneChanged = true
+			task.Done = true
+			if task.IsRepeating() {
+				oldTask := task
+				oldTask.Done = false
+				UpdateDone(oldTask, task)
+				updateBucket = false
+				taskBucket.BucketID = oldTaskBucket.BucketID
+			}
+		}
+
+		if oldTaskBucket.BucketID == view.DoneBucketID {
+			doneChanged = true
+			task.Done = false
+		}
+
+		if doneChanged {
+			if task.Done {
+				task.DoneAt = time.Now()
+			} else {
+				task.DoneAt = time.Time{}
+			}
+			_, err = s.Where("id = ?", task.ID).
+				Cols("done", "due_date", "start_date", "end_date", "done_at").
+				Update(task)
+			if err != nil {
+				return err
+			}
+
+			err = task.UpdateReminders(s, task)
+			if err != nil {
+				return err
+			}
+
+			// Since the done state of the task was changed, we need to move the task into all done buckets everywhere
+			if task.Done {
+				viewsWithDoneBucket := []*ProjectView{}
+				err = s.
+					Where("project_id = ? AND view_kind = ? AND bucket_configuration_mode = ? AND id != ? AND done_bucket_id != 0",
+						view.ProjectID, ProjectViewKindKanban, BucketConfigurationModeManual, view.ID).
+					Find(&viewsWithDoneBucket)
+				if err != nil {
+					return err
+				}
+				for _, v := range viewsWithDoneBucket {
+					newBucket := &TaskBucket{
+						TaskID:        task.ID,
+						ProjectViewID: v.ID,
+						BucketID:      v.DoneBucketID,
+					}
+					// Upsert the task bucket
+					count, err := s.Where("task_id = ? AND project_view_id = ?", newBucket.TaskID, newBucket.ProjectViewID).
+						Cols("bucket_id").
+						Update(newBucket)
+					if err != nil {
+						return err
+					}
+					if count == 0 {
+						_, err = s.Insert(newBucket)
+						if err != nil {
+							return err
+						}
+					}
+				}
+			}
+		}
+
+		if updateBucket {
+			// Upsert the task bucket
+			count, err := s.Where("task_id = ? AND project_view_id = ?", taskBucket.TaskID, taskBucket.ProjectViewID).
+				Cols("bucket_id").
+				Update(taskBucket)
+			if err != nil {
+				return err
+			}
+			if count == 0 {
+				_, err = s.Insert(taskBucket)
+				if err != nil {
+					return err
+				}
+			}
+			bucket.Count++
+		}
+
+		taskBucket.Task = task
+		taskBucket.Bucket = bucket
+
+		// Dispatch task updated event
+		doer, _ := user.GetFromAuth(a)
+		return events.Dispatch(&TaskUpdatedEvent{
+			Task: task,
+			Doer: doer,
+		})
+	}
+
+	GetBucketByIDFunc = func(s *xorm.Session, id int64) (*Bucket, error) {
+		b := &Bucket{}
+		exists, err := s.Where("id = ?", id).Get(b)
+		if err != nil {
+			return nil, err
+		}
+		if !exists {
+			return nil, ErrBucketDoesNotExist{BucketID: id}
+		}
+		return b, nil
+	}
+
+	GetDefaultBucketIDFunc = func(s *xorm.Session, view *ProjectView) (int64, error) {
+		if view.DefaultBucketID != 0 {
+			return view.DefaultBucketID, nil
+		}
+
+		bucket := &Bucket{}
+		_, err := s.Where("project_view_id = ?", view.ID).OrderBy("position asc").Get(bucket)
+		if err != nil {
+			return 0, err
+		}
+
+		return bucket.ID, nil
+	}
+
 	events.Fake()
 
 	os.Exit(m.Run())

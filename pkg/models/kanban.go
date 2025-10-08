@@ -81,167 +81,64 @@ func (b *Bucket) GetID() int64 {
 	return b.ID
 }
 
+// Create creates a new bucket.
+// @Deprecated: Use services.KanbanService.CreateBucket() instead
 func (b *Bucket) Create(s *xorm.Session, a web.Auth) (err error) {
-	if CreateBucketFunc != nil {
-		return CreateBucketFunc(s, b, a)
+	if CreateBucketFunc == nil {
+		panic("KanbanService not registered - call services.InitKanbanService() in test setup")
 	}
-
-	// Fallback to original implementation if function not wired
-	b.CreatedBy, err = GetUserOrLinkShareUser(s, a)
-	if err != nil {
-		return
-	}
-	b.CreatedByID = b.CreatedBy.ID
-
-	b.ID = 0
-	_, err = s.Insert(b)
-	if err != nil {
-		return
-	}
-
-	b.Position = CalculateDefaultPosition(b.ID, b.Position)
-	_, err = s.Where("id = ?", b.ID).Update(b)
-	return
+	return CreateBucketFunc(s, b, a)
 }
 
+// Update updates an existing bucket.
+// @Deprecated: Use services.KanbanService.UpdateBucket() instead
 func (b *Bucket) Update(s *xorm.Session, a web.Auth) (err error) {
-	if UpdateBucketFunc != nil {
-		return UpdateBucketFunc(s, b, a)
+	if UpdateBucketFunc == nil {
+		panic("KanbanService not registered - call services.InitKanbanService() in test setup")
 	}
-
-	// Fallback to original implementation if function not wired
-	_, err = s.
-		Where("id = ?", b.ID).
-		Cols(
-			"title",
-			"limit",
-			"position",
-			"project_view_id",
-		).
-		Update(b)
-	return
+	return UpdateBucketFunc(s, b, a)
 }
 
+// ReadAll returns all buckets for a project view.
+// @Deprecated: Use services.KanbanService.GetAllBuckets() instead
 func (b *Bucket) ReadAll(s *xorm.Session, a web.Auth, _ string, _ int, _ int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
-	if GetAllBucketsFunc != nil {
-		buckets, err := GetAllBucketsFunc(s, b.ProjectViewID, b.ProjectID, a)
-		if err != nil {
-			return nil, 0, 0, err
-		}
-		return buckets, len(buckets), int64(len(buckets)), nil
+	if GetAllBucketsFunc == nil {
+		panic("KanbanService not registered - call services.InitKanbanService() in test setup")
 	}
-
-	// Fallback implementation
-	buckets := []*Bucket{}
-	err = s.
-		Where("project_view_id = ?", b.ProjectViewID).
-		OrderBy("position").
-		Find(&buckets)
+	buckets, err := GetAllBucketsFunc(s, b.ProjectViewID, b.ProjectID, a)
 	if err != nil {
 		return nil, 0, 0, err
 	}
-
 	return buckets, len(buckets), int64(len(buckets)), nil
 }
 
+// Delete removes a bucket.
+// @Deprecated: Use services.KanbanService.DeleteBucket() instead
 func (b *Bucket) Delete(s *xorm.Session, a web.Auth) (err error) {
-	if DeleteBucketFunc != nil {
-		return DeleteBucketFunc(s, b.ID, b.ProjectID, a)
+	if DeleteBucketFunc == nil {
+		panic("KanbanService not registered - call services.InitKanbanService() in test setup")
 	}
-
-	// Fallback to original implementation if function not wired
-	// Prevent removing the last bucket
-	total, err := s.Where("project_view_id = ?", b.ProjectViewID).Count(&Bucket{})
-	if err != nil {
-		return
-	}
-	if total <= 1 {
-		return ErrCannotRemoveLastBucket{
-			BucketID:      b.ID,
-			ProjectViewID: b.ProjectViewID,
-		}
-	}
-
-	// Get the default bucket
-	pv, err := GetProjectViewByIDAndProject(s, b.ProjectViewID, b.ProjectID)
-	if err != nil {
-		return
-	}
-	var updateProjectView bool
-	if b.ID == pv.DefaultBucketID {
-		pv.DefaultBucketID = 0
-		updateProjectView = true
-	}
-	if b.ID == pv.DoneBucketID {
-		pv.DoneBucketID = 0
-		updateProjectView = true
-	}
-	if updateProjectView {
-		err = pv.Update(s, a)
-		if err != nil {
-			return
-		}
-	}
-
-	defaultBucketID, err := GetDefaultBucketID(s, pv)
-	if err != nil {
-		return err
-	}
-
-	// Remove all associations of tasks to that bucket
-	_, err = s.
-		Where("bucket_id = ?", b.ID).
-		Cols("bucket_id").
-		Update(&TaskBucket{BucketID: defaultBucketID})
-	if err != nil {
-		return
-	}
-
-	// Remove the bucket itself
-	_, err = s.Where("id = ?", b.ID).Delete(&Bucket{})
-	return
+	return DeleteBucketFunc(s, b.ID, b.ProjectID, a)
 }
 
 // Helper functions that use dependency inversion
 
+// getBucketByID gets a bucket by its ID.
+// @Deprecated: Use services.KanbanService.getBucketByID() instead
 func getBucketByID(s *xorm.Session, id int64) (*Bucket, error) {
-	if GetBucketByIDFunc != nil {
-		return GetBucketByIDFunc(s, id)
+	if GetBucketByIDFunc == nil {
+		panic("KanbanService not registered - call services.InitKanbanService() in test setup")
 	}
-
-	// Fallback implementation
-	b := &Bucket{}
-	exists, err := s.Where("id = ?", id).Get(b)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, ErrBucketDoesNotExist{BucketID: id}
-	}
-	return b, nil
+	return GetBucketByIDFunc(s, id)
 }
 
-// GetDefaultBucketID returns the default bucket ID for a view
+// GetDefaultBucketID returns the default bucket ID for a view.
+// @Deprecated: Use services.KanbanService.getDefaultBucketID() instead
 func GetDefaultBucketID(s *xorm.Session, view *ProjectView) (int64, error) {
-	if GetDefaultBucketIDFunc != nil {
-		return GetDefaultBucketIDFunc(s, view)
+	if GetDefaultBucketIDFunc == nil {
+		panic("KanbanService not registered - call services.InitKanbanService() in test setup")
 	}
-
-	// Fallback implementation
-	if view.DefaultBucketID != 0 {
-		return view.DefaultBucketID, nil
-	}
-
-	bucket := &Bucket{}
-	_, err := s.
-		Where("project_view_id = ?", view.ID).
-		OrderBy("position asc").
-		Get(bucket)
-	if err != nil {
-		return 0, err
-	}
-
-	return bucket.ID, nil
+	return GetDefaultBucketIDFunc(s, view)
 }
 
 func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, projects []*Project, opts *taskSearchOptions, a web.Auth) ([]*Bucket, error) {

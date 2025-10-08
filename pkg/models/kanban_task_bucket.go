@@ -17,11 +17,6 @@
 package models
 
 import (
-	"time"
-
-	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/events"
-	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 	"xorm.io/xorm"
 )
@@ -58,29 +53,12 @@ func (b *TaskBucket) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 	return bucket.canDoBucket(s, a)
 }
 
+// upsert inserts or updates a task bucket relation.
+// @Deprecated: Use services.KanbanService.upsertTaskBucket() instead - this is only for model backward compatibility
 func (b *TaskBucket) upsert(s *xorm.Session) (err error) {
-	count, err := s.Where("task_id = ? AND project_view_id = ?", b.TaskID, b.ProjectViewID).
-		Cols("bucket_id").
-		Update(b)
-	if err != nil {
-		return
-	}
-
-	if count == 0 {
-		_, err = s.Insert(b)
-		if err != nil {
-			// Check if this is a unique constraint violation for the task_buckets table
-			if db.IsUniqueConstraintError(err, "UQE_task_buckets_task_project_view") {
-				return ErrTaskAlreadyExistsInBucket{
-					TaskID:        b.TaskID,
-					ProjectViewID: b.ProjectViewID,
-				}
-			}
-			return
-		}
-	}
-
-	return
+	// This method is called by the Update method below which delegates to service layer
+	// The service layer will handle the actual upsert logic
+	panic("TaskBucket.upsert() should not be called directly - use services.KanbanService.MoveTaskToBucket() instead")
 }
 
 // Update is the handler to update a task bucket
@@ -98,142 +76,10 @@ func (b *TaskBucket) upsert(s *xorm.Session) (err error) {
 // @Failure 400 {object} web.HTTPError "Invalid task bucket object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/views/{view}/buckets/{bucket}/tasks [post]
+// @Deprecated: Use services.KanbanService.MoveTaskToBucket() instead
 func (b *TaskBucket) Update(s *xorm.Session, a web.Auth) (err error) {
-	if MoveTaskToBucketFunc != nil {
-		return MoveTaskToBucketFunc(s, b, a)
+	if MoveTaskToBucketFunc == nil {
+		panic("KanbanService not registered - call services.InitKanbanService() in test setup")
 	}
-
-	// Fallback to original implementation if function not wired
-	oldTaskBucket := &TaskBucket{}
-	_, err = s.
-		Where("task_id = ? AND project_view_id = ?", b.TaskID, b.ProjectViewID).
-		Get(oldTaskBucket)
-	if err != nil {
-		return
-	}
-
-	if oldTaskBucket.BucketID == b.BucketID {
-		// no need to do anything
-		return
-	}
-
-	view, err := GetProjectViewByIDAndProject(s, b.ProjectViewID, b.ProjectID)
-	if err != nil {
-		return err
-	}
-
-	bucket, err := getBucketByID(s, b.BucketID)
-	if err != nil {
-		return err
-	}
-
-	// If there is a bucket set, make sure they belong to the same project as the task
-	if view.ID != bucket.ProjectViewID {
-		return ErrBucketDoesNotBelongToProjectView{
-			ProjectViewID: view.ID,
-			BucketID:      bucket.ID,
-		}
-	}
-
-	task := &Task{ID: b.TaskID}
-	err = task.ReadOne(s, a)
-	if err != nil {
-		return err
-	}
-
-	// Check the bucket limit
-	// Only check the bucket limit if the task is being moved between buckets, allow reordering the task within a bucket
-	if b.BucketID != 0 && b.BucketID != oldTaskBucket.BucketID {
-		taskCount, err := checkBucketLimit(s, a, task, bucket)
-		if err != nil {
-			return err
-		}
-		bucket.Count = taskCount
-	}
-
-	var updateBucket = true
-
-	// mark task done if moved into the done bucket
-	var doneChanged bool
-	if view.DoneBucketID == b.BucketID {
-		doneChanged = true
-		task.Done = true
-		if task.IsRepeating() {
-			oldTask := task
-			oldTask.Done = false
-			UpdateDone(oldTask, task)
-			updateBucket = false
-			b.BucketID = oldTaskBucket.BucketID
-		}
-	}
-
-	if oldTaskBucket.BucketID == view.DoneBucketID {
-		doneChanged = true
-		task.Done = false
-	}
-
-	if doneChanged {
-		if task.Done {
-			task.DoneAt = time.Now()
-		} else {
-			task.DoneAt = time.Time{}
-		}
-		_, err = s.Where("id = ?", task.ID).
-			Cols(
-				"done",
-				"due_date",
-				"start_date",
-				"end_date",
-				"done_at",
-			).
-			Update(task)
-		if err != nil {
-			return
-		}
-
-		err = task.UpdateReminders(s, task)
-		if err != nil {
-			return err
-		}
-
-		// Since the done state of the task was changed, we need to move the task into all done buckets everywhere
-		if task.Done {
-			viewsWithDoneBucket := []*ProjectView{}
-			err = s.
-				Where("project_id = ? AND view_kind = ? AND bucket_configuration_mode = ? AND id != ? AND done_bucket_id != 0",
-					view.ProjectID, ProjectViewKindKanban, BucketConfigurationModeManual, view.ID).
-				Find(&viewsWithDoneBucket)
-			if err != nil {
-				return
-			}
-			for _, v := range viewsWithDoneBucket {
-				newBucket := &TaskBucket{
-					TaskID:        task.ID,
-					ProjectViewID: v.ID,
-					BucketID:      v.DoneBucketID,
-				}
-				err = newBucket.upsert(s)
-				if err != nil {
-					return
-				}
-			}
-		}
-	}
-
-	if updateBucket {
-		err = b.upsert(s)
-		if err != nil {
-			return
-		}
-		bucket.Count++
-	}
-
-	b.Task = task
-	b.Bucket = bucket
-
-	doer, _ := user.GetFromAuth(a)
-	return events.Dispatch(&TaskUpdatedEvent{
-		Task: task,
-		Doer: doer,
-	})
+	return MoveTaskToBucketFunc(s, b, a)
 }
