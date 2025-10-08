@@ -740,9 +740,9 @@ const visible = ref(false)
 const project = computed(() => projectStore.projects[task.value.projectId])
 
 const projectRoute = computed(() => ({
-        name: 'project.index',
-        params: {projectId: task.value.projectId},
-        hash: route.hash,
+	name: 'project.index',
+	params: {projectId: task.value.projectId},
+	hash: route.hash,
 }))
 
 const canWrite = computed(() => (
