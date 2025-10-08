@@ -773,3 +773,250 @@ func TestTaskService_Delete_WithCascade(t *testing.T) {
 		db.AssertMissing(t, "task_buckets", map[string]interface{}{"task_id": createdTask.ID})
 	})
 }
+
+// FI-004: Comprehensive Assignee Validation Tests
+func TestTaskService_Assignee_WithoutProjectAccess(t *testing.T) {
+	t.Run("assigning user without project access should fail gracefully", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		u := &user.User{ID: 1}
+		ts := NewTaskService(testEngine)
+
+		// User 5 does not have access to project 1 (owned by user 1)
+		// See fixtures: user5 only has access to project 5
+		task := &models.Task{
+			ID:        1,
+			ProjectID: 1,
+			Assignees: []*user.User{
+				{ID: 5}, // User 5 does NOT have access to project 1
+			},
+		}
+
+		updatedTask, err := ts.Update(s, task, u)
+
+		// Should return an error indicating user doesn't have access
+		assert.Error(t, err)
+		assert.Nil(t, updatedTask)
+		assert.Contains(t, err.Error(), "does not have access")
+	})
+
+	t.Run("creating task with assignee without project access should fail", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		u := &user.User{ID: 1}
+		ts := NewTaskService(testEngine)
+
+		// Try to create task with user 5 as assignee (who doesn't have project 1 access)
+		task := &models.Task{
+			Title:     "Task with Invalid Assignee",
+			ProjectID: 1,
+			Assignees: []*user.User{
+				{ID: 5}, // User 5 does NOT have access to project 1
+			},
+		}
+
+		createdTask, err := ts.CreateWithOptions(s, task, u, true, true, false)
+
+		// Should return an error
+		assert.Error(t, err)
+		assert.Nil(t, createdTask)
+		assert.Contains(t, err.Error(), "does not have access")
+	})
+}
+
+func TestTaskService_Assignee_BulkOperations(t *testing.T) {
+	t.Run("add multiple assignees at once", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		u := &user.User{ID: 3} // User 3 owns project 3
+		ts := NewTaskService(testEngine)
+
+		// User 1 and 2 both have access to project 3
+		// See fixtures: user 1 has permission 2, user 2 has permission 0 on project 3
+		task := &models.Task{
+			ID:        32, // Task 32 is in project 3 (owned by user 3)
+			ProjectID: 3,
+			Assignees: []*user.User{
+				{ID: 1}, // User 1 has access to project 3 (permission 2)
+				{ID: 2}, // User 2 has access to project 3 (permission 0)
+			},
+		}
+
+		updatedTask, err := ts.Update(s, task, u)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		// Verify both assignees were added
+		db.AssertExists(t, "task_assignees", map[string]interface{}{
+			"task_id": 32,
+			"user_id": 1,
+		}, false)
+		db.AssertExists(t, "task_assignees", map[string]interface{}{
+			"task_id": 32,
+			"user_id": 2,
+		}, false)
+
+		// Both users should be in the assignees list
+		assert.Equal(t, 2, len(updatedTask.Assignees))
+	})
+
+	t.Run("remove multiple assignees at once", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		u := &user.User{ID: 1}
+		ts := NewTaskService(testEngine)
+
+		// First add multiple assignees
+		task := &models.Task{
+			ID:        1,
+			ProjectID: 1,
+			Assignees: []*user.User{
+				{ID: 1},
+			},
+		}
+
+		_, err := ts.Update(s, task, u)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		// Now remove all assignees by passing empty array
+		s2 := db.NewSession()
+		defer s2.Close()
+
+		task.Assignees = []*user.User{}
+		updatedTask, err := ts.Update(s2, task, u)
+		require.NoError(t, err)
+		require.NoError(t, s2.Commit())
+
+		// Verify all assignees were removed
+		assert.Len(t, updatedTask.Assignees, 0)
+		db.AssertMissing(t, "task_assignees", map[string]interface{}{
+			"task_id": 1,
+		})
+	})
+}
+
+func TestTaskService_Assignee_PersistenceAcrossProjectMove(t *testing.T) {
+	t.Run("assignees should persist when task moves between projects", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		u := &user.User{ID: 1}
+		ts := NewTaskService(testEngine)
+
+		// Create task in project 1 with assignee
+		task := &models.Task{
+			Title:     "Task to Move",
+			ProjectID: 1,
+			Assignees: []*user.User{
+				{ID: 1},
+			},
+		}
+
+		createdTask, err := ts.CreateWithOptions(s, task, u, true, true, false)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		// Verify assignee exists
+		db.AssertExists(t, "task_assignees", map[string]interface{}{
+			"task_id": createdTask.ID,
+			"user_id": 1,
+		}, false)
+
+		// Move task to project 3 (user 1 has access to both project 1 and 3)
+		s2 := db.NewSession()
+		defer s2.Close()
+
+		createdTask.ProjectID = 3
+		movedTask, err := ts.Update(s2, createdTask, u)
+		require.NoError(t, err)
+		require.NoError(t, s2.Commit())
+
+		// Verify assignee still exists after move
+		assert.Len(t, movedTask.Assignees, 1)
+		db.AssertExists(t, "task_assignees", map[string]interface{}{
+			"task_id": createdTask.ID,
+			"user_id": 1,
+		}, false)
+	})
+}
+
+func TestTaskService_Assignee_ConcurrentUpdates(t *testing.T) {
+	t.Run("concurrent assignee updates should not create duplicates", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		u := &user.User{ID: 1}
+		ts := NewTaskService(testEngine)
+
+		// Create a task with assignees
+		s1 := db.NewSession()
+		defer s1.Close()
+
+		task := &models.Task{
+			Title:     "Concurrent Update Test",
+			ProjectID: 1,
+			Assignees: []*user.User{
+				{ID: 1},
+			},
+		}
+
+		createdTask, err := ts.CreateWithOptions(s1, task, u, true, true, false)
+		require.NoError(t, err)
+		require.NoError(t, s1.Commit())
+
+		// Simulate concurrent updates from two sessions
+		s2 := db.NewSession()
+		defer s2.Close()
+
+		s3 := db.NewSession()
+		defer s3.Close()
+
+		// Both sessions try to update the same task's assignees
+		task1 := &models.Task{
+			ID:        createdTask.ID,
+			ProjectID: 1,
+			Assignees: []*user.User{
+				{ID: 1},
+			},
+		}
+
+		task2 := &models.Task{
+			ID:        createdTask.ID,
+			ProjectID: 1,
+			Assignees: []*user.User{
+				{ID: 1},
+			},
+		}
+
+		// Update from session 2
+		_, err = ts.Update(s2, task1, u)
+		require.NoError(t, err)
+		require.NoError(t, s2.Commit())
+
+		// Update from session 3
+		_, err = ts.Update(s3, task2, u)
+		require.NoError(t, err)
+		require.NoError(t, s3.Commit())
+
+		// Verify no duplicate assignees were created
+		s4 := db.NewSession()
+		defer s4.Close()
+
+		var count int64
+		count, err = s4.Where("task_id = ? AND user_id = ?", createdTask.ID, 1).
+			Count(&models.TaskAssginee{})
+		require.NoError(t, err)
+
+		// Should only have one assignee record, not duplicates
+		assert.Equal(t, int64(1), count, "Should not create duplicate assignee records")
+	})
+}

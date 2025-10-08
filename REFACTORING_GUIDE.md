@@ -229,3 +229,191 @@ func TestLabelService_Create(t *testing.T) {
 - ✅ **Phase 2.1-2.2 Complete** - All mock services removed, CRUD tests deleted
 - ⚠️ **T-PERMISSIONS Pending** - Helper and permission methods still in models
 - 📋 **Future** - After T-PERMISSIONS, models will be pure data structures with zero database operations
+
+## **6. Security Enhancements in Service Layer**
+
+The service layer refactor introduced several important security improvements over the original model-based architecture. Understanding these improvements helps maintain consistent security patterns across the codebase.
+
+### **Permission Checks Before Existence Checks**
+
+**Security Issue in Model Layer:**
+The original model layer often checked if a resource exists before checking if the user has permission to access it. This creates an **information disclosure vulnerability** where unauthorized users can determine if a resource exists.
+
+**Example - Model Layer (Vulnerable):**
+```go
+// pkg/models/task.go (OLD PATTERN - DO NOT USE)
+func (t *Task) CanRead(s *xorm.Session, u *user.User) bool {
+    // Check if task exists
+    exists, _ := s.Where("id = ?", t.ID).Exist(&Task{})
+    if !exists {
+        return false  // Reveals that task doesn't exist
+    }
+    
+    // Then check permissions
+    return checkProjectPermission(s, t.ProjectID, u, PermissionRead)
+}
+```
+
+**Problem:** An attacker can probe task IDs and learn which tasks exist, even if they don't have access.
+
+**Service Layer (Secure):**
+```go
+// pkg/services/task.go (NEW PATTERN - SECURE)
+func (s *TaskService) Get(sess *xorm.Session, taskID int64, u *user.User) (*models.Task, error) {
+    // Get task first (without revealing if it exists)
+    task, err := getTaskByID(sess, taskID)
+    if err != nil {
+        // Don't reveal if it's "not found" vs "forbidden"
+        return nil, ErrGenericForbidden{}
+    }
+    
+    // Check permission BEFORE revealing existence
+    hasAccess, err := s.checkTaskPermission(sess, task, u, PermissionRead)
+    if err != nil || !hasAccess {
+        return nil, ErrGenericForbidden{}  // Same error for "doesn't exist" and "no permission"
+    }
+    
+    return task, nil
+}
+```
+
+**Key Improvement:** Unauthorized users receive `403 Forbidden` whether the task exists or not, preventing information leakage.
+
+### **Consistent Error Messages for Security**
+
+**Security Pattern:** Always return `ErrGenericForbidden` for both "resource doesn't exist" and "user lacks permission" scenarios. This prevents attackers from enumerating valid resource IDs.
+
+**Example - Consistent Error Handling:**
+```go
+// Service layer security pattern
+func (s *TaskService) Update(sess *xorm.Session, task *models.Task, u *user.User) (*models.Task, error) {
+    // Fetch task
+    existingTask, err := getTaskByID(sess, task.ID)
+    if err != nil {
+        return nil, ErrGenericForbidden{}  // Don't reveal "not found"
+    }
+    
+    // Check permission
+    canUpdate, err := s.checkTaskPermission(sess, existingTask, u, PermissionUpdate)
+    if err != nil || !canUpdate {
+        return nil, ErrGenericForbidden{}  // Same error for all unauthorized cases
+    }
+    
+    // Proceed with update...
+}
+```
+
+**Migration Note:** When refactoring model code to services, replace existence-revealing errors like `ErrTaskDoesNotExist` with `ErrGenericForbidden` when permission checks are involved.
+
+### **Link Share Permission Handling**
+
+**Security Enhancement:** The service layer properly validates link share tokens and their expiration before granting access.
+
+**Service Layer Pattern:**
+```go
+// pkg/services/task.go
+func (s *TaskService) getTaskWithLinkShare(sess *xorm.Session, taskID int64, linkShareToken string) (*models.Task, error) {
+    // Validate link share exists and is not expired
+    linkShare, err := s.LinkShareService.GetByToken(sess, linkShareToken)
+    if err != nil {
+        return nil, ErrGenericForbidden{}  // Invalid or expired token
+    }
+    
+    // Check that link share grants access to this specific task
+    if !linkShare.GrantsAccessTo(taskID) {
+        return nil, ErrGenericForbidden{}  // Token doesn't grant access to this resource
+    }
+    
+    // Fetch and return task
+    return getTaskByID(sess, taskID)
+}
+```
+
+**Key Improvements:**
+1. Token validation happens before database queries
+2. Expired tokens are rejected immediately
+3. Scope checking ensures tokens only grant intended access
+4. Consistent error responses prevent token enumeration
+
+### **Transaction Boundary Security**
+
+**Service Layer Advantage:** Services control transaction boundaries, ensuring atomic security operations.
+
+**Example - Secure Bulk Operations:**
+```go
+// pkg/services/task.go
+func (s *TaskService) BulkUpdate(sess *xorm.Session, updates *BulkUpdateRequest, u *user.User) error {
+    // Start transaction
+    err := sess.Begin()
+    if err != nil {
+        return err
+    }
+    defer sess.Rollback()
+    
+    // Check permissions for ALL tasks BEFORE making any changes
+    for _, taskID := range updates.TaskIDs {
+        task, err := getTaskByID(sess, taskID)
+        if err != nil {
+            return ErrGenericForbidden{}
+        }
+        
+        hasPermission, err := s.checkTaskPermission(sess, task, u, PermissionUpdate)
+        if err != nil || !hasPermission {
+            return ErrGenericForbidden{}  // Abort entire operation if any task unauthorized
+        }
+    }
+    
+    // All permission checks passed - now apply updates
+    for _, taskID := range updates.TaskIDs {
+        // Apply updates...
+    }
+    
+    return sess.Commit()
+}
+```
+
+**Security Benefit:** Permission failures roll back the entire operation - no partial updates that might leak information.
+
+### **Best Practices Summary**
+
+When implementing service layer methods:
+
+1. ✅ **Check permissions FIRST** - Before revealing resource existence
+2. ✅ **Use consistent errors** - `ErrGenericForbidden` for all unauthorized access
+3. ✅ **Validate tokens early** - Before expensive database operations
+4. ✅ **Control transactions** - Ensure atomic permission checks and updates
+5. ✅ **Avoid information leakage** - Don't distinguish between "not found" and "forbidden"
+6. ✅ **Document security decisions** - Explain why security checks are ordered as they are
+
+### **Testing Security Improvements**
+
+Service layer tests should verify security behavior:
+
+```go
+// pkg/services/task_test.go
+func TestTaskService_Get_Security(t *testing.T) {
+    t.Run("forbidden error for non-existent task", func(t *testing.T) {
+        // User tries to access non-existent task
+        task, err := taskService.Get(sess, 99999, user)
+        
+        assert.Nil(t, task)
+        assert.Error(t, err)
+        assert.IsType(t, ErrGenericForbidden{}, err)  // Should be forbidden, not "not found"
+    })
+    
+    t.Run("forbidden error for unauthorized access", func(t *testing.T) {
+        // User tries to access task in project they don't have access to
+        task, err := taskService.Get(sess, existingTaskID, unauthorizedUser)
+        
+        assert.Nil(t, task)
+        assert.Error(t, err)
+        assert.IsType(t, ErrGenericForbidden{}, err)  // Same error as non-existent
+    })
+}
+```
+
+**See Also:**
+- Phase 2 implementation examples in `pkg/services/task.go`, `pkg/services/project.go`
+- Security test examples in `pkg/services/task_business_logic_test.go`
+- Comprehensive security validation in `TestTaskService_Assignee_WithoutProjectAccess`
+
