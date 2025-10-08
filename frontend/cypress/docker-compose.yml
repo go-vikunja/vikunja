@@ -4,7 +4,7 @@ services:
     ports:
       - 5556:5556
   cypress:
-    image: cypress/browsers:latest@sha256:79a28dd47913b1cca9fdd9d763f587b4660ee2c269d941c1903135399f4a9f20
+    image: cypress/browsers:latest@sha256:1f1adf3bd11c79465abc22e1e29848695fdbbe82d468957103dc0f8ba00e0f8e
     volumes:
       - ..:/project
       - $HOME/.cache:/home/node/.cache/
