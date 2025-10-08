@@ -122,6 +122,9 @@ func InitializeDependencies() {
 	// Register BulkTaskService provider to avoid import cycles
 	models.RegisterBulkTaskService(&bulkTaskServiceAdapter{service: NewBulkTaskService(nil)})
 
+	// Register ProjectDuplicateService provider to avoid import cycles
+	models.RegisterProjectDuplicateService(&projectDuplicateServiceAdapter{service: NewProjectDuplicateService(nil)})
+
 	// Initialize KanbanService to wire up bucket-related model functions
 	InitKanbanService()
 }
@@ -371,4 +374,13 @@ func (a *bulkTaskServiceAdapter) CanUpdate(s *xorm.Session, taskIDs []int64, aut
 
 func (a *bulkTaskServiceAdapter) Update(s *xorm.Session, taskIDs []int64, taskUpdate *models.Task, assignees []*user.User, auth web.Auth) error {
 	return a.service.Update(s, taskIDs, taskUpdate, assignees, auth)
+}
+
+// projectDuplicateServiceAdapter adapts ProjectDuplicateService to the interface expected by models
+type projectDuplicateServiceAdapter struct {
+	service *ProjectDuplicateService
+}
+
+func (a *projectDuplicateServiceAdapter) Duplicate(s *xorm.Session, projectID int64, parentProjectID int64, u *user.User) (*models.Project, error) {
+	return a.service.Duplicate(s, projectID, parentProjectID, u)
 }

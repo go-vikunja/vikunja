@@ -37,6 +37,53 @@ import (
 // This prevents import cycles while allowing model tests to continue working
 type mockProjectTeamService struct{}
 
+// mockProjectDuplicateService provides a test implementation for project duplication
+// This prevents import cycles while allowing model tests to continue working
+type mockProjectDuplicateService struct{}
+
+func (m *mockProjectDuplicateService) Duplicate(s *xorm.Session, projectID int64, parentProjectID int64, u *user.User) (*Project, error) {
+	// Simple mock implementation for tests - delegates to old model logic
+	// This is what the old ProjectDuplicate.Create did before refactoring
+	pd := &ProjectDuplicate{
+		ProjectID:       projectID,
+		ParentProjectID: parentProjectID,
+	}
+
+	// Get the source project
+	sourceProject, err := GetProjectSimpleByID(s, projectID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create new project with duplicate suffix
+	pd.Project = &Project{
+		Title:           sourceProject.Title + " - duplicate",
+		Description:     sourceProject.Description,
+		ParentProjectID: parentProjectID,
+		OwnerID:         u.ID,
+		Position:        sourceProject.Position,
+		HexColor:        sourceProject.HexColor,
+	}
+
+	// Use getProjectService() to create the project (same as before)
+	projectService := getProjectService()
+	createdProject, err := projectService.Create(s, pd.Project, u)
+	if err != nil {
+		// If there is no available unique project identifier, reset it and try again
+		if IsErrProjectIdentifierIsNotUnique(err) {
+			pd.Project.Identifier = ""
+			createdProject, err = projectService.Create(s, pd.Project, u)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, err
+		}
+	}
+
+	return createdProject, nil
+}
+
 func (m *mockProjectTeamService) Create(s *xorm.Session, teamProject *TeamProject, doer web.Auth) error {
 	// Call the original model logic directly (before delegation was added)
 	// Check if the permissions are valid
@@ -1714,6 +1761,10 @@ func TestMain(m *testing.M) {
 	// Register a mock BulkTaskService provider for model tests
 	// This avoids import cycle with services package
 	RegisterBulkTaskService(&mockBulkTaskService{})
+
+	// Register a mock ProjectDuplicateService provider for model tests
+	// This avoids import cycle with services package
+	RegisterProjectDuplicateService(&mockProjectDuplicateService{})
 
 	// Set up a mock for the GetUsersOrLinkSharesFromIDsFunc for model tests,
 	// as they should not depend on the services package.
