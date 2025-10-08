@@ -119,7 +119,11 @@ const addTimeToDate = (text: string, date: Date, previousMatch: string | null): 
 		let hours = parseInt(parts[0])
 		let minutes = 0
 		if (time.toLowerCase().endsWith('pm')) {
-			hours += 12
+			if (hours !== 12) {
+				hours += 12
+			}
+		} else if (time.toLowerCase().endsWith('am') && hours === 12) {
+			hours = 0
 		}
 		if (parts.length > 1) {
 			minutes = parseInt(parts[1])
