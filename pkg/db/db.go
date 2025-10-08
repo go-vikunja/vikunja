@@ -306,31 +306,57 @@ func getUserDataDir() (string, error) {
 // isSystemDirectory checks if a path appears to be in a system directory
 // where users should not typically store application data
 func isSystemDirectory(path string) bool {
+	// Clean and normalize the path
 	path = filepath.Clean(path)
 	lowerPath := strings.ToLower(path)
 
 	// Windows system directories
 	if runtime.GOOS == "windows" {
-		systemDirs := []string{
-			"\\windows\\system32",
-			"\\windows\\syswow64",
-			"\\windows\\",
-			"c:\\windows\\",
+		// Convert to absolute path if possible for more accurate checking
+		absPath := lowerPath
+		if abs, err := filepath.Abs(path); err == nil {
+			absPath = strings.ToLower(filepath.Clean(abs))
 		}
-		for _, sysDir := range systemDirs {
-			if strings.Contains(lowerPath, strings.ToLower(sysDir)) {
+
+		// Check common Windows system directories using prefix matching
+		// This prevents false positives like C:\myapp\windows\data
+		windowsSystemPrefixes := []string{
+			"c:\\windows\\system32",
+			"c:\\windows\\syswow64",
+			"c:\\windows\\winsxs",
+			"c:\\windows\\servicing",
+		}
+
+		for _, prefix := range windowsSystemPrefixes {
+			if strings.HasPrefix(absPath, prefix) {
 				return true
 			}
 		}
+
+		// Also check for direct C:\Windows (not subdirectories like C:\myapp\windows)
+		// by ensuring it starts with the drive and windows directory
+		if absPath == "c:\\windows" || strings.HasPrefix(absPath, "c:\\windows\\") {
+			// Exclude some safe subdirectories under C:\Windows
+			safeDirs := []string{
+				"c:\\windows\\temp",
+			}
+			for _, safeDir := range safeDirs {
+				if strings.HasPrefix(absPath, safeDir) {
+					return false
+				}
+			}
+			return true
+		}
 	}
 
-	// Unix-like system directories
+	// Unix-like system directories - use prefix matching
 	systemDirs := []string{
 		"/bin", "/sbin", "/usr/bin", "/usr/sbin",
 		"/etc", "/sys", "/proc", "/dev",
 	}
 	for _, sysDir := range systemDirs {
-		if strings.HasPrefix(lowerPath, sysDir) {
+		// Ensure we match exact directory boundaries
+		if lowerPath == sysDir || strings.HasPrefix(lowerPath, sysDir+"/") {
 			return true
 		}
 	}

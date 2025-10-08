@@ -198,12 +198,43 @@ func TestIsSystemDirectory(t *testing.T) {
 func TestIsSystemDirectory_EdgeCases(t *testing.T) {
 	// Test paths that contain system directory names but aren't actually in them
 	if runtime.GOOS == "windows" {
+		// These should NOT be flagged as system directories
 		assert.False(t, isSystemDirectory("C:\\myapp\\windows\\data\\vikunja.db"),
 			"Should not match if 'windows' is part of a custom path")
+		assert.False(t, isSystemDirectory("D:\\windows\\vikunja.db"),
+			"Should not match Windows directory on non-C drive")
+		assert.False(t, isSystemDirectory("C:\\Users\\windows\\vikunja.db"),
+			"Should not match user directory named 'windows'")
+
+		// C:\Windows\Temp should be considered safe (excluded from system dirs)
+		assert.False(t, isSystemDirectory("C:\\Windows\\Temp\\vikunja.db"),
+			"C:\\Windows\\Temp should be excluded from system directories")
+
+		// These SHOULD be flagged as system directories
+		assert.True(t, isSystemDirectory("C:\\Windows\\vikunja.db"),
+			"Should match C:\\Windows root")
+		assert.True(t, isSystemDirectory("c:\\windows\\vikunja.db"),
+			"Should match C:\\Windows root (lowercase)")
+		assert.True(t, isSystemDirectory("C:\\Windows\\System32\\vikunja.db"),
+			"Should match C:\\Windows\\System32")
+		assert.True(t, isSystemDirectory("C:\\WINDOWS\\SYSTEM32\\vikunja.db"),
+			"Should match C:\\Windows\\System32 (uppercase)")
 	} else {
+		// Unix-like systems
+		// These should NOT be flagged
 		assert.False(t, isSystemDirectory("/home/bin/vikunja.db"),
 			"Should not match /home/bin (different from /bin)")
 		assert.False(t, isSystemDirectory("/opt/sbin/vikunja.db"),
 			"Should not match /opt/sbin (different from /sbin)")
+		assert.False(t, isSystemDirectory("/usr/local/bin/vikunja.db"),
+			"/usr/local/bin should be safe")
+		assert.False(t, isSystemDirectory("/binaries/vikunja.db"),
+			"Should not match /binaries (not exactly /bin)")
+
+		// These SHOULD be flagged
+		assert.True(t, isSystemDirectory("/bin/vikunja.db"),
+			"Should match /bin")
+		assert.True(t, isSystemDirectory("/etc/vikunja.db"),
+			"Should match /etc")
 	}
 }
