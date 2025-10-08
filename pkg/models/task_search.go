@@ -156,14 +156,14 @@ func getOrderByDBStatement(opts *taskSearchOptions) (orderby string, err error) 
 	return
 }
 
-func convertFiltersToDBFilterCond(rawFilters []*taskFilter, includeNulls bool) (filterCond builder.Cond, err error) {
+func ConvertFiltersToDBFilterCond(rawFilters []*taskFilter, includeNulls bool) (filterCond builder.Cond, err error) {
 
 	var dbFilters = make([]builder.Cond, 0, len(rawFilters))
 	// To still find tasks with nil values, we exclude 0s when comparing with >/< values.
 	for _, f := range rawFilters {
 
 		if nested, is := f.value.([]*taskFilter); is {
-			nestedDBFilters, err := convertFiltersToDBFilterCond(nested, includeNulls)
+			nestedDBFilters, err := ConvertFiltersToDBFilterCond(nested, includeNulls)
 			if err != nil {
 				return nil, err
 			}
@@ -271,7 +271,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 
 	joinTaskBuckets := hasBucketIDInParsedFilter(opts.parsedFilters)
 
-	filterCond, err := convertFiltersToDBFilterCond(opts.parsedFilters, opts.filterIncludeNulls)
+	filterCond, err := ConvertFiltersToDBFilterCond(opts.parsedFilters, opts.filterIncludeNulls)
 	if err != nil {
 		return nil, 0, err
 	}

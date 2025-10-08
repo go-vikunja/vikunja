@@ -119,6 +119,9 @@ func InitializeDependencies() {
 	// Register LabelTaskService provider to avoid import cycles
 	models.RegisterLabelTaskService(&labelTaskServiceAdapter{service: NewLabelService(nil)})
 
+	// Register BulkTaskService provider to avoid import cycles
+	models.RegisterBulkTaskService(&bulkTaskServiceAdapter{service: NewBulkTaskService(nil)})
+
 	// Initialize KanbanService to wire up bucket-related model functions
 	InitKanbanService()
 }
@@ -351,4 +354,21 @@ func (a *labelTaskServiceAdapter) GetLabelsByTaskIDs(s *xorm.Session, opts *mode
 		GetForUser:          opts.GetForUser,
 	}
 	return a.service.GetLabelsByTaskIDs(s, serviceOpts)
+}
+
+// bulkTaskServiceAdapter adapts BulkTaskService to the interface expected by models
+type bulkTaskServiceAdapter struct {
+	service *BulkTaskService
+}
+
+func (a *bulkTaskServiceAdapter) GetTasksByIDs(s *xorm.Session, taskIDs []int64) ([]*models.Task, error) {
+	return a.service.GetTasksByIDs(s, taskIDs)
+}
+
+func (a *bulkTaskServiceAdapter) CanUpdate(s *xorm.Session, taskIDs []int64, auth web.Auth) (bool, error) {
+	return a.service.CanUpdate(s, taskIDs, auth)
+}
+
+func (a *bulkTaskServiceAdapter) Update(s *xorm.Session, taskIDs []int64, taskUpdate *models.Task, assignees []*user.User, auth web.Auth) error {
+	return a.service.Update(s, taskIDs, taskUpdate, assignees, auth)
 }

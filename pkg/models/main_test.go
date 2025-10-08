@@ -740,6 +740,127 @@ func (m *mockTaskService) GetByID(s *xorm.Session, taskID int64, u *user.User) (
 	return task, nil
 }
 
+// mockBulkTaskService provides a test implementation for bulk task operations
+// This prevents import cycles while allowing model tests to continue working
+type mockBulkTaskService struct{}
+
+func (m *mockBulkTaskService) GetTasksByIDs(s *xorm.Session, taskIDs []int64) ([]*Task, error) {
+	// Validate all IDs are positive
+	for _, id := range taskIDs {
+		if id < 1 {
+			return nil, ErrTaskDoesNotExist{ID: id}
+		}
+	}
+
+	// Fetch tasks
+	tasks := []*Task{}
+	err := s.In("id", taskIDs).Find(&tasks)
+	if err != nil {
+		return nil, err
+	}
+
+	return tasks, nil
+}
+
+func (m *mockBulkTaskService) CanUpdate(s *xorm.Session, taskIDs []int64, a web.Auth) (bool, error) {
+	// Get the tasks
+	tasks, err := m.GetTasksByIDs(s, taskIDs)
+	if err != nil {
+		return false, err
+	}
+
+	if len(tasks) == 0 {
+		return false, ErrBulkTasksNeedAtLeastOne{}
+	}
+
+	// Check if all tasks are in the same project
+	firstProjectID := tasks[0].ProjectID
+	for _, t := range tasks {
+		if t.ProjectID != firstProjectID {
+			return false, ErrBulkTasksMustBeInSameProject{
+				ShouldBeID: firstProjectID,
+				IsID:       t.ProjectID,
+			}
+		}
+	}
+
+	// Check if user has write access to the project
+	project := &Project{ID: tasks[0].ProjectID}
+	return project.CanWrite(s, a)
+}
+
+func (m *mockBulkTaskService) Update(s *xorm.Session, taskIDs []int64, taskUpdate *Task, assignees []*user.User, a web.Auth) error {
+	// Get the tasks
+	tasks, err := m.GetTasksByIDs(s, taskIDs)
+	if err != nil {
+		return err
+	}
+
+	// NOTE: No validation here - CanUpdate should be called first by the handler
+	// The original model's Update method doesn't validate same-project constraint
+
+	// Update each task
+	for _, oldTask := range tasks {
+		// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
+		UpdateDone(oldTask, taskUpdate)
+
+		// Update the assignees
+		if err := oldTask.UpdateTaskAssignees(s, assignees, a); err != nil {
+			return err
+		}
+
+		// Merge the update into the old task using copier as a simple merge alternative
+		if taskUpdate.Title != "" {
+			oldTask.Title = taskUpdate.Title
+		}
+		if taskUpdate.Description != "" {
+			oldTask.Description = taskUpdate.Description
+		}
+		oldTask.Done = taskUpdate.Done
+		if !taskUpdate.DueDate.IsZero() {
+			oldTask.DueDate = taskUpdate.DueDate
+		}
+		if len(taskUpdate.Reminders) > 0 {
+			oldTask.Reminders = taskUpdate.Reminders
+		}
+		if taskUpdate.RepeatAfter != 0 {
+			oldTask.RepeatAfter = taskUpdate.RepeatAfter
+		}
+		if taskUpdate.Priority != 0 {
+			oldTask.Priority = taskUpdate.Priority
+		}
+		if !taskUpdate.StartDate.IsZero() {
+			oldTask.StartDate = taskUpdate.StartDate
+		}
+		if !taskUpdate.EndDate.IsZero() {
+			oldTask.EndDate = taskUpdate.EndDate
+		}
+
+		// And because a false is considered to be a null value, we need to explicitly check that case here.
+		if !taskUpdate.Done {
+			oldTask.Done = false
+		}
+
+		// Save the updated task
+		_, err = s.ID(oldTask.ID).
+			Cols("title",
+				"description",
+				"done",
+				"due_date",
+				"reminders",
+				"repeat_after",
+				"priority",
+				"start_date",
+				"end_date").
+			Update(oldTask)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // mockProjectService provides a test implementation that uses direct logic
 // This prevents import cycles while allowing model tests to continue working
 // Updated to not call model helper functions per T011A-PART2 requirements
@@ -1446,6 +1567,54 @@ func TestMain(m *testing.M) {
 
 	user.InitTests()
 
+	// Set up service initialization function to avoid import cycle
+	InitSavedFilterServiceFunc = func() {
+		// Inline implementation to avoid importing services package
+		CreateSavedFilterFunc = func(s *xorm.Session, sf *SavedFilter, u *user.User) error {
+			_, err := GetTaskFiltersFromFilterString(sf.Filters.Filter, sf.Filters.FilterTimezone)
+			if err != nil {
+				return err
+			}
+			sf.OwnerID = u.ID
+			sf.ID = 0
+			_, err = s.Insert(sf)
+			if err != nil {
+				return err
+			}
+			err = CreateDefaultViewsForProject(s, &Project{ID: GetProjectIDFromSavedFilterID(sf.ID)}, u, true, false)
+			return err
+		}
+		UpdateSavedFilterFunc = func(s *xorm.Session, sf *SavedFilter, u *user.User) error {
+			origFilter, err := GetSavedFilterSimpleByID(s, sf.ID)
+			if err != nil {
+				return err
+			}
+			if origFilter.OwnerID != u.ID {
+				return ErrGenericForbidden{}
+			}
+			if sf.Filters == nil {
+				sf.Filters = origFilter.Filters
+			}
+			_, err = GetTaskFiltersFromFilterString(sf.Filters.Filter, sf.Filters.FilterTimezone)
+			if err != nil {
+				return err
+			}
+			_, err = s.Where("id = ?", sf.ID).Cols("title", "description", "filters", "is_favorite").Update(sf)
+			return err
+		}
+		DeleteSavedFilterFunc = func(s *xorm.Session, filterID int64, u *user.User) error {
+			sf, err := GetSavedFilterSimpleByID(s, filterID)
+			if err != nil {
+				return err
+			}
+			if sf.OwnerID != u.ID {
+				return ErrGenericForbidden{}
+			}
+			_, err = s.Where("id = ?", filterID).Delete(&SavedFilter{})
+			return err
+		}
+	}
+
 	SetupTests()
 
 	// Register a mock ProjectService provider for model tests
@@ -1541,6 +1710,10 @@ func TestMain(m *testing.M) {
 	// Register a mock LabelTaskService provider for model tests
 	// This avoids import cycle with services package
 	RegisterLabelTaskService(&mockLabelTaskService{})
+
+	// Register a mock BulkTaskService provider for model tests
+	// This avoids import cycle with services package
+	RegisterBulkTaskService(&mockBulkTaskService{})
 
 	// Set up a mock for the GetUsersOrLinkSharesFromIDsFunc for model tests,
 	// as they should not depend on the services package.

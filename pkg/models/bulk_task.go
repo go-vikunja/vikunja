@@ -17,9 +17,9 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
-	"dario.cat/mergo"
 	"xorm.io/xorm"
 )
 
@@ -31,12 +31,28 @@ type BulkTask struct {
 	Task
 }
 
+// BulkTaskServiceProvider defines the interface for bulk task service operations
+type BulkTaskServiceProvider interface {
+	GetTasksByIDs(s *xorm.Session, taskIDs []int64) ([]*Task, error)
+	CanUpdate(s *xorm.Session, taskIDs []int64, a web.Auth) (bool, error)
+	Update(s *xorm.Session, taskIDs []int64, taskUpdate *Task, assignees []*user.User, a web.Auth) error
+}
+
+var bulkTaskService BulkTaskServiceProvider
+
+// RegisterBulkTaskService injects the service implementation into the models layer
+func RegisterBulkTaskService(service BulkTaskServiceProvider) {
+	bulkTaskService = service
+}
+
+// @Deprecated: Use BulkTaskService.GetTasksByIDs instead
 func (bt *BulkTask) checkIfTasksAreOnTheSameProject(s *xorm.Session) (err error) {
-	// Get the tasks
-	err = bt.GetTasksByIDs(s)
+	// Get the tasks - delegate to service
+	tasks, err := bulkTaskService.GetTasksByIDs(s, bt.IDs)
 	if err != nil {
 		return err
 	}
+	bt.Tasks = tasks
 
 	if len(bt.Tasks) == 0 {
 		return ErrBulkTasksNeedAtLeastOne{}
@@ -53,19 +69,13 @@ func (bt *BulkTask) checkIfTasksAreOnTheSameProject(s *xorm.Session) (err error)
 	return nil
 }
 
+// @Deprecated: Use BulkTaskService.CanUpdate instead
 // CanUpdate checks if a user is allowed to update a task
 func (bt *BulkTask) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
-
-	err := bt.checkIfTasksAreOnTheSameProject(s)
-	if err != nil {
-		return false, err
-	}
-
-	// A user can update an task if he has write acces to its project
-	l := &Project{ID: bt.Tasks[0].ProjectID}
-	return l.CanWrite(s, a)
+	return bulkTaskService.CanUpdate(s, bt.IDs, a)
 }
 
+// @Deprecated: Use BulkTaskService.Update instead
 // Update updates a bunch of tasks at once
 // @Summary Update a bunch of tasks at once
 // @Description Updates a bunch of tasks at once. This includes marking them as done. Note: although you could supply another ID, it will be ignored. Use task_ids instead.
@@ -80,43 +90,5 @@ func (bt *BulkTask) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/bulk [post]
 func (bt *BulkTask) Update(s *xorm.Session, a web.Auth) (err error) {
-	for _, oldtask := range bt.Tasks {
-
-		// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
-		UpdateDone(oldtask, &bt.Task)
-
-		// Update the assignees
-		if err := oldtask.UpdateTaskAssignees(s, bt.Assignees, a); err != nil {
-			return err
-		}
-
-		// For whatever reason, xorm dont detect if done is updated, so we need to update this every time by hand
-		// Which is why we merge the actual task struct with the one we got from the
-		// The user struct overrides values in the actual one.
-		if err := mergo.Merge(oldtask, &bt.Task, mergo.WithOverride); err != nil {
-			return err
-		}
-
-		// And because a false is considered to be a null value, we need to explicitly check that case here.
-		if !bt.Done {
-			oldtask.Done = false
-		}
-
-		_, err = s.ID(oldtask.ID).
-			Cols("title",
-				"description",
-				"done",
-				"due_date",
-				"reminders",
-				"repeat_after",
-				"priority",
-				"start_date",
-				"end_date").
-			Update(oldtask)
-		if err != nil {
-			return err
-		}
-	}
-
-	return
+	return bulkTaskService.Update(s, bt.IDs, &bt.Task, bt.Assignees, a)
 }

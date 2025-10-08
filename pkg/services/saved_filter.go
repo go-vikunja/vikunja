@@ -19,6 +19,7 @@ package services
 import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
+	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
@@ -100,38 +101,44 @@ func (sfs *SavedFilterService) GetAllForUser(s *xorm.Session, u *user.User, sear
 
 // Create creates a new saved filter.
 func (sfs *SavedFilterService) Create(s *xorm.Session, sf *models.SavedFilter, u *user.User) error {
-	// TODO: Move getTaskFiltersFromFilterString logic here
-	// _, err := models.getTaskFiltersFromFilterString(sf.Filters.Filter, sf.Filters.FilterTimezone)
-	// if err != nil {
-	// 	return err
-	// }
-
-	sf.OwnerID = u.ID
-	sf.ID = 0
-	_, err := s.Insert(sf)
+	// Validate filter string
+	_, err := models.GetTaskFiltersFromFilterString(sf.Filters.Filter, sf.Filters.FilterTimezone)
 	if err != nil {
 		return err
 	}
 
-	// TODO: Move CreateDefaultViewsForProject logic here
-	// err = models.CreateDefaultViewsForProject(s, &models.Project{ID: models.GetProjectIDFromSavedFilterID(sf.ID)}, u, true, false)
+	sf.OwnerID = u.ID
+	sf.ID = 0
+	_, err = s.Insert(sf)
+	if err != nil {
+		return err
+	}
+
+	// Create default views for this saved filter's pseudo-project
+	err = models.CreateDefaultViewsForProject(s, &models.Project{ID: models.GetProjectIDFromSavedFilterID(sf.ID)}, u, true, false)
 	return err
 }
 
 // Update updates a saved filter.
 func (sfs *SavedFilterService) Update(s *xorm.Session, sf *models.SavedFilter, u *user.User) error {
 	// Permission check
-	_, err := sfs.Get(s, sf.ID, u)
+	origFilter, err := sfs.Get(s, sf.ID, u)
 	if err != nil {
 		return err
 	}
 
-	// TODO: Move getTaskFiltersFromFilterString logic here
-	// _, err = models.getTaskFiltersFromFilterString(sf.Filters.Filter, sf.Filters.FilterTimezone)
-	// if err != nil {
-	// 	return err
-	// }
+	// If filters are not provided in update, preserve original
+	if sf.Filters == nil {
+		sf.Filters = origFilter.Filters
+	}
 
+	// Validate filter string
+	_, err = models.GetTaskFiltersFromFilterString(sf.Filters.Filter, sf.Filters.FilterTimezone)
+	if err != nil {
+		return err
+	}
+
+	// Update the saved filter record
 	_, err = s.
 		Where("id = ?", sf.ID).
 		Cols(
@@ -145,8 +152,79 @@ func (sfs *SavedFilterService) Update(s *xorm.Session, sf *models.SavedFilter, u
 		return err
 	}
 
-	// TODO: Move the kanban view synchronization logic here.
-	// This is a complex piece of logic that will be addressed in a separate step.
+	// Synchronize kanban views: Add all tasks which are not already in a bucket to the default bucket
+	kanbanFilterViews := []*models.ProjectView{}
+	err = s.Where(
+		"project_id = ? and view_kind = ? and bucket_configuration_mode = ?",
+		models.GetProjectIDFromSavedFilterID(sf.ID),
+		models.ProjectViewKindKanban,
+		models.BucketConfigurationModeManual,
+	).
+		Find(&kanbanFilterViews)
+	if err != nil || len(kanbanFilterViews) == 0 {
+		return err
+	}
+
+	parsedFilters, err := models.GetTaskFiltersFromFilterString(sf.Filters.Filter, sf.Filters.FilterTimezone)
+	if err != nil {
+		return err
+	}
+
+	filterCond, err := models.ConvertFiltersToDBFilterCond(parsedFilters, sf.Filters.FilterIncludeNulls)
+	if err != nil {
+		return err
+	}
+
+	taskBuckets := []*models.TaskBucket{}
+	taskPositions := []*models.TaskPosition{}
+
+	for _, view := range kanbanFilterViews {
+		// Fetch all tasks in the filter but not in task_bucket
+		// select * from tasks where id not in (select task_id from task_buckets where project_view_id = ?) and FILTER_COND
+		tasksToAdd := []*models.Task{}
+		err = s.Where(builder.And(
+			builder.NotIn("id",
+				builder.
+					Select("task_id").
+					From("task_buckets").
+					Where(builder.Eq{"project_view_id": view.ID})),
+			filterCond,
+		)).
+			Find(&tasksToAdd)
+		if err != nil {
+			return err
+		}
+
+		bucketID, err := models.GetDefaultBucketID(s, view)
+		if err != nil {
+			return err
+		}
+
+		for _, task := range tasksToAdd {
+			taskBuckets = append(taskBuckets, &models.TaskBucket{
+				TaskID:        task.ID,
+				BucketID:      bucketID,
+				ProjectViewID: view.ID,
+			})
+
+			taskPositions = append(taskPositions, &models.TaskPosition{
+				TaskID:        task.ID,
+				ProjectViewID: view.ID,
+				Position:      0,
+			})
+		}
+	}
+
+	if len(taskBuckets) > 0 && len(taskPositions) > 0 {
+		_, err = s.Insert(taskBuckets)
+		if err != nil {
+			return err
+		}
+		_, err = s.Insert(taskPositions)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
