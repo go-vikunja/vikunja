@@ -15,7 +15,7 @@ runs:
       run: |
         echo "CYPRESS_INSTALL_BINARY=0"       >> $GITHUB_ENV
         echo "PUPPETEER_SKIP_DOWNLOAD=true"   >> $GITHUB_ENV
-    - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4
+    - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4
       with:
         run_install: false
         package_json_file: frontend/package.json
