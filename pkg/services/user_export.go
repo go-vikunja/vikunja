@@ -333,7 +333,7 @@ func (ues *UserExportService) exportTaskAttachments(s *xorm.Session, wr *zip.Wri
 			log.Debugf("[User Data Export] File record %d is nil for attachment %d, skipping", ta.FileID, ta.ID)
 			continue
 		}
-		
+
 		err = ta.File.LoadFileByID()
 		if err != nil {
 			var pathError *fs.PathError
