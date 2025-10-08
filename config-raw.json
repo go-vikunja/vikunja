@@ -196,7 +196,7 @@
                 {
                     "key": "path",
                     "default_value": "./vikunja.db",
-                    "comment": "When using sqlite, this is the path where to store the data"
+                    "comment": "When using sqlite, this is the path where to store the database file. Can be an absolute path or relative path. \u003cbr/\u003e\nRelative paths are resolved as follows: \u003cbr/\u003e\n- If `service.rootpath` is explicitly configured (differs from the binary location), the database path is resolved relative to that directory. \u003cbr/\u003e\n- Otherwise, relative paths are resolved to a platform-specific user data directory to prevent database files from being created in system directories (like `C:\\Windows\\System32` on Windows when running as a service): \u003cbr/\u003e\n  - **Windows**: `%LOCALAPPDATA%\\Vikunja` (e.g., `C:\\Users\\username\\AppData\\Local\\Vikunja`) \u003cbr/\u003e\n  - **macOS**: `~/Library/Application Support/Vikunja` \u003cbr/\u003e\n  - **Linux**: `$XDG_DATA_HOME/vikunja` or `~/.local/share/vikunja` \u003cbr/\u003e\n**Recommendation**: Use an absolute path for production deployments, especially when running Vikunja as a Windows service, to have full control over the database location."
                 },
                 {
                     "key": "maxopenconnections",
