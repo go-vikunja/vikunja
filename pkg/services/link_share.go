@@ -55,6 +55,24 @@ func init() {
 		service := NewLinkShareService(s.Engine())
 		return service.Delete(s, shareID, u)
 	}
+	models.LinkShareGetByProjectIDWithOptionsFunc = func(s *xorm.Session, projectID int64, u *user.User, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
+		service := NewLinkShareService(s.Engine())
+		opts := GetByProjectIDOptions{
+			ProjectID: projectID,
+			Search:    search,
+			Page:      page,
+			PerPage:   perPage,
+		}
+		return service.GetByProjectIDWithOptions(s, opts, u)
+	}
+	models.LinkShareGetByIDsFunc = func(s *xorm.Session, ids []int64) (map[int64]*models.LinkSharing, error) {
+		service := NewLinkShareService(s.Engine())
+		return service.GetByIDs(s, ids)
+	}
+	models.LinkShareGetProjectByHashFunc = func(s *xorm.Session, hash string) (*models.Project, error) {
+		service := NewLinkShareService(s.Engine())
+		return service.GetProjectByShareHash(s, hash)
+	}
 }
 
 // LinkShareService handles all business logic for link sharing functionality
@@ -153,34 +171,93 @@ func (lss *LinkShareService) GetByHash(s *xorm.Session, hash string) (*models.Li
 	return share, nil
 }
 
+// GetByProjectIDOptions holds options for retrieving link shares
+type GetByProjectIDOptions struct {
+	ProjectID int64
+	Search    string
+	Page      int
+	PerPage   int
+}
+
 // GetByProjectID retrieves all link shares for a project that the user can read
 func (lss *LinkShareService) GetByProjectID(s *xorm.Session, projectID int64, u *user.User) ([]*models.LinkSharing, error) {
+	opts := GetByProjectIDOptions{
+		ProjectID: projectID,
+		Page:      1,
+		PerPage:   -1, // All results
+	}
+	shares, _, _, err := lss.GetByProjectIDWithOptions(s, opts, u)
+	return shares, err
+}
+
+// GetByProjectIDWithOptions retrieves all link shares for a project with search and pagination support
+func (lss *LinkShareService) GetByProjectIDWithOptions(s *xorm.Session, opts GetByProjectIDOptions, u *user.User) (shares []*models.LinkSharing, resultCount int, totalItems int64, err error) {
 	// Check if user can read link shares for this project
-	project, err := models.GetProjectSimpleByID(s, projectID)
+	project, err := models.GetProjectSimpleByID(s, opts.ProjectID)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
 
 	canRead, _, err := project.CanRead(s, u)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
 	if !canRead {
-		return nil, &models.ErrGenericForbidden{}
+		return nil, 0, 0, &models.ErrGenericForbidden{}
 	}
 
-	var shares []*models.LinkSharing
-	err = s.Where("project_id = ?", projectID).Find(&shares)
+	// Build query with search
+	query := s.Where("project_id = ?", opts.ProjectID)
+	if opts.Search != "" {
+		query = query.And("name LIKE ?", "%"+opts.Search+"%")
+	}
+
+	// Apply pagination
+	limit, start := lss.getLimitFromPageIndex(opts.Page, opts.PerPage)
+	if limit > 0 {
+		query = query.Limit(limit, start)
+	}
+
+	// Fetch shares
+	shares = []*models.LinkSharing{}
+	err = query.Find(&shares)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
 
-	// Clear passwords from all responses
+	// Load SharedBy users
+	var userIDs []int64
 	for _, share := range shares {
+		userIDs = append(userIDs, share.SharedByID)
+	}
+
+	users := make(map[int64]*user.User)
+	if len(userIDs) > 0 {
+		err = s.In("id", userIDs).Find(&users)
+		if err != nil {
+			return nil, 0, 0, err
+		}
+	}
+
+	// Populate SharedBy and clear passwords
+	for _, share := range shares {
+		if sharedBy, has := users[share.SharedByID]; has {
+			share.SharedBy = sharedBy
+		}
 		share.Password = ""
 	}
 
-	return shares, nil
+	// Get total count
+	countQuery := s.Where("project_id = ?", opts.ProjectID)
+	if opts.Search != "" {
+		countQuery = countQuery.And("name LIKE ?", "%"+opts.Search+"%")
+	}
+	totalItems, err = countQuery.Count(&models.LinkSharing{})
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	return shares, len(shares), totalItems, nil
 }
 
 // Update updates an existing link share
@@ -314,11 +391,22 @@ func (lss *LinkShareService) CanRead(s *xorm.Session, share *models.LinkSharing,
 		return false, 0, nil
 	}
 
-	project, err := models.GetProjectByShareHash(s, share.Hash)
+	project, err := lss.GetProjectByShareHash(s, share.Hash)
 	if err != nil {
 		return false, 0, err
 	}
 	return project.CanRead(s, a)
+}
+
+// GetProjectByShareHash returns a project by a link share hash
+func (lss *LinkShareService) GetProjectByShareHash(s *xorm.Session, hash string) (*models.Project, error) {
+	share, err := lss.GetByHash(s, hash)
+	if err != nil {
+		return nil, err
+	}
+
+	project, err := models.GetProjectSimpleByID(s, share.ProjectID)
+	return project, err
 }
 
 // validatePermission validates if a permission value is valid
@@ -434,4 +522,20 @@ func (lss *LinkShareService) GetUsersOrLinkSharesFromIDs(s *xorm.Session, ids []
 	}
 
 	return users, nil
+}
+
+// getLimitFromPageIndex calculates limit and start values for pagination
+func (lss *LinkShareService) getLimitFromPageIndex(page int, perPage int) (limit, start int) {
+	// Get everything when page index is -1 or 0 (= not set)
+	if page < 1 {
+		return 0, 0
+	}
+
+	limit = config.ServiceMaxItemsPerPage.GetInt()
+	if perPage > 0 {
+		limit = perPage
+	}
+
+	start = limit * (page - 1)
+	return
 }
