@@ -588,8 +588,6 @@ func TestTaskService_Create_WithLabels(t *testing.T) {
 	u := &user.User{ID: 1}
 
 	t.Run("create task with labels", func(t *testing.T) {
-		t.Skip("SERVICE GAP: TaskService.CreateWithOptions() does not yet support creating tasks with labels. Labels must be added after task creation via separate API endpoint. This is a known limitation documented in T015D.")
-
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
@@ -655,12 +653,84 @@ func TestTaskService_Update_Assignees(t *testing.T) {
 	})
 }
 
+func TestTaskService_Update_Labels(t *testing.T) {
+	u := &user.User{ID: 1}
+
+	t.Run("update task labels", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		ts := NewTaskService(testEngine)
+		task := &models.Task{
+			ID:        1,
+			ProjectID: 1,
+			Labels: []*models.Label{
+				{ID: 1}, // User 1 has access to label 1
+				{ID: 4}, // User 1 has access to label 4
+			},
+		}
+
+		updatedTask, err := ts.Update(s, task, u)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		// Verify labels were updated
+		db.AssertExists(t, "label_tasks", map[string]interface{}{
+			"task_id":  1,
+			"label_id": 1,
+		}, false)
+		db.AssertExists(t, "label_tasks", map[string]interface{}{
+			"task_id":  1,
+			"label_id": 4,
+		}, false)
+
+		// Verify the returned task includes updated labels
+		assert.Len(t, updatedTask.Labels, 2)
+	})
+
+	t.Run("remove labels from task", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// First add labels to task
+		ts := NewTaskService(testEngine)
+		task := &models.Task{
+			ID:        1,
+			ProjectID: 1,
+			Labels: []*models.Label{
+				{ID: 1},
+				{ID: 4},
+			},
+		}
+
+		_, err := ts.Update(s, task, u)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		// Now remove all labels
+		s2 := db.NewSession()
+		defer s2.Close()
+		task.Labels = []*models.Label{}
+		updatedTask, err := ts.Update(s2, task, u)
+		require.NoError(t, err)
+		require.NoError(t, s2.Commit())
+
+		// Verify labels were removed
+		db.AssertMissing(t, "label_tasks", map[string]interface{}{
+			"task_id": 1,
+		})
+
+		// Verify the returned task has no labels
+		assert.Len(t, updatedTask.Labels, 0)
+	})
+}
+
 func TestTaskService_Delete_WithCascade(t *testing.T) {
 	u := &user.User{ID: 1}
 
 	t.Run("delete task with cascade", func(t *testing.T) {
-		t.Skip("SERVICE GAP: Cannot test cascade delete with labels since TaskService.CreateWithOptions() does not support creating tasks with labels. Test would need to use separate label assignment API.")
-
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()

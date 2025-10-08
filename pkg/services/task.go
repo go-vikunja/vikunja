@@ -685,6 +685,7 @@ type TaskService struct {
 	KanbanService    *KanbanService
 	ReactionsService *ReactionsService
 	CommentService   *CommentService
+	LabelService     *LabelService
 }
 
 // NewTaskService creates a new TaskService.
@@ -695,6 +696,7 @@ func NewTaskService(db *xorm.Engine) *TaskService {
 		KanbanService:    NewKanbanService(db),
 		ReactionsService: NewReactionsService(db),
 		CommentService:   NewCommentService(db),
+		LabelService:     NewLabelService(db),
 	}
 }
 
@@ -930,6 +932,15 @@ func (ts *TaskService) updateSingleTask(s *xorm.Session, t *models.Task, u *user
 	// Pass the user as web.Auth for model methods that need it
 	if err := ot.UpdateTaskAssignees(s, t.Assignees, u); err != nil {
 		return nil, err
+	}
+
+	// Update the labels if provided
+	if t.Labels != nil {
+		if err := ts.syncTaskLabels(s, &ot, t.Labels, u); err != nil {
+			return nil, err
+		}
+		// Copy the updated labels back to the task being returned
+		t.Labels = ot.Labels
 	}
 
 	// All columns to update in a separate variable to be able to add to them
@@ -2098,6 +2109,13 @@ func (ts *TaskService) createTask(s *xorm.Session, task *models.Task, actor *use
 		}
 	}
 
+	// Sync labels if provided
+	if len(task.Labels) > 0 {
+		if err := ts.syncTaskLabels(s, task, task.Labels, createdBy); err != nil {
+			return nil, err
+		}
+	}
+
 	if err := ts.syncTaskReminders(s, task); err != nil {
 		return nil, err
 	}
@@ -2344,6 +2362,87 @@ func (ts *TaskService) syncTaskAssignees(s *xorm.Session, task *models.Task, des
 
 	if len(task.Assignees) == 0 {
 		task.Assignees = nil
+	}
+
+	return ts.updateProjectLastUpdated(s, task.ProjectID)
+}
+
+// syncTaskLabels synchronizes the task's labels with the desired state.
+// It adds new labels and removes labels that are no longer desired.
+func (ts *TaskService) syncTaskLabels(s *xorm.Session, task *models.Task, desiredLabels []*models.Label, createdBy web.Auth) error {
+	// Get current labels
+	currentLabelTasks := make([]*models.LabelTask, 0)
+	err := s.Where("task_id = ?", task.ID).Find(&currentLabelTasks)
+	if err != nil {
+		return err
+	}
+
+	currentLabelMap := make(map[int64]struct{}, len(currentLabelTasks))
+	for _, lt := range currentLabelTasks {
+		currentLabelMap[lt.LabelID] = struct{}{}
+	}
+
+	desiredLabelMap := make(map[int64]*models.Label)
+	for _, label := range desiredLabels {
+		if label == nil || label.ID == 0 {
+			continue
+		}
+		if _, exists := desiredLabelMap[label.ID]; !exists {
+			desiredLabelMap[label.ID] = label
+		}
+	}
+
+	// Delete labels that are no longer desired
+	labelsToDelete := make([]int64, 0)
+	for id := range currentLabelMap {
+		if _, keep := desiredLabelMap[id]; !keep {
+			labelsToDelete = append(labelsToDelete, id)
+		}
+	}
+
+	if len(labelsToDelete) > 0 {
+		if _, err = s.In("label_id", labelsToDelete).And("task_id = ?", task.ID).Delete(&models.LabelTask{}); err != nil {
+			return err
+		}
+	}
+
+	// Add new labels
+	for id := range desiredLabelMap {
+		if _, already := currentLabelMap[id]; already {
+			continue
+		}
+
+		// Validate that the user has access to the label using LabelService
+		hasAccess, err := ts.LabelService.HasAccessToLabel(s, id, createdBy)
+		if err != nil {
+			return err
+		}
+		if !hasAccess {
+			u, _ := createdBy.(*user.User)
+			if u != nil {
+				return models.ErrUserHasNoAccessToLabel{LabelID: id, UserID: u.ID}
+			}
+			return ErrAccessDenied
+		}
+
+		// Insert the label-task association
+		_, err = s.Insert(&models.LabelTask{
+			LabelID: id,
+			TaskID:  task.ID,
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	// Refresh label list on the task to include full label data
+	taskMap := map[int64]*models.Task{task.ID: task}
+	if err := ts.addLabelsToTasks(s, []int64{task.ID}, taskMap); err != nil {
+		return err
+	}
+
+	if len(task.Labels) == 0 {
+		task.Labels = nil
 	}
 
 	return ts.updateProjectLastUpdated(s, task.ProjectID)
