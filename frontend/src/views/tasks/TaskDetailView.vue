@@ -597,7 +597,7 @@
 
 <script lang="ts" setup>
 import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted, onBeforeUnmount} from 'vue'
-import {useRouter, type RouteLocation, onBeforeRouteLeave} from 'vue-router'
+import {useRouter, useRoute, type RouteLocation, onBeforeRouteLeave} from 'vue-router'
 import {storeToRefs} from 'pinia'
 import {useI18n} from 'vue-i18n'
 import {unrefElement, useMediaQuery} from '@vueuse/core'
@@ -665,6 +665,7 @@ defineEmits<{
 }>()
 
 const router = useRouter()
+const route = useRoute()
 const {t} = useI18n({useScope: 'global'})
 
 const projectStore = useProjectStore()
@@ -739,8 +740,9 @@ const visible = ref(false)
 const project = computed(() => projectStore.projects[task.value.projectId])
 
 const projectRoute = computed(() => ({
-	name: 'project.index',
-	params: {projectId: task.value.projectId},
+        name: 'project.index',
+        params: {projectId: task.value.projectId},
+        hash: route.hash,
 }))
 
 const canWrite = computed(() => (
