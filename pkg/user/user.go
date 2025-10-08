@@ -486,11 +486,20 @@ func GetUserFromClaims(claims jwt.MapClaims) (user *User, err error) {
 		return nil, err
 	}
 
+	// Extract issuer from isLocalUser claim
+	issuer := ""
+	if isLocal, exists := claims["isLocalUser"]; exists {
+		if isLocalBool, ok := isLocal.(bool); ok && isLocalBool {
+			issuer = IssuerLocal
+		}
+	}
+
 	return &User{
 		ID:       userID,
 		Email:    email,
 		Username: username,
 		Name:     name,
+		Issuer:   issuer,
 	}, nil
 }
 

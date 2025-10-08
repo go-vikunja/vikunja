@@ -161,3 +161,80 @@ func TestSavedFilterService_Delete(t *testing.T) {
 	assert.Error(t, err)
 	assert.True(t, models.IsErrSavedFilterDoesNotExist(err))
 }
+
+func TestSavedFilterService_UpdateInsertsNonZeroPosition(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	sfs := NewSavedFilterService(testEngine)
+	u := &user.User{ID: 1}
+
+	sf := &models.SavedFilter{
+		Title:   "posfilter",
+		Filters: &models.TaskCollection{Filter: "id = 1"},
+	}
+
+	err := sfs.Create(s, sf, u)
+	assert.NoError(t, err)
+
+	err = sfs.Update(s, sf, u)
+	assert.NoError(t, err)
+
+	// Verify that a project view was created
+	view := &models.ProjectView{}
+	exists, err := s.Where("project_id = ? AND view_kind = ?", models.GetProjectIDFromSavedFilterID(sf.ID), models.ProjectViewKindKanban).Get(view)
+	assert.NoError(t, err)
+	assert.True(t, exists)
+
+	// Verify that a task position was created with non-zero position
+	tp := &models.TaskPosition{}
+	exists, err = s.Where("project_view_id = ? AND task_id = ?", view.ID, 1).Get(tp)
+	assert.NoError(t, err)
+	assert.True(t, exists)
+	assert.NotZero(t, tp.Position)
+}
+
+func TestSavedFilterService_CalculatesNonZeroPositionForNewTasks(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	sfs := NewSavedFilterService(testEngine)
+	u := &user.User{ID: 1}
+
+	sf := &models.SavedFilter{
+		Title:   "cronfilter",
+		Filters: &models.TaskCollection{Filter: "due_date > '2018-01-01T00:00:00'"},
+	}
+
+	err := sfs.Create(s, sf, u)
+	assert.NoError(t, err)
+
+	// Get the project view created for this filter
+	view := &models.ProjectView{}
+	exists, err := s.Where("project_id = ? AND view_kind = ?", models.GetProjectIDFromSavedFilterID(sf.ID), models.ProjectViewKindKanban).Get(view)
+	assert.NoError(t, err)
+	assert.True(t, exists)
+
+	// Get a task that matches the filter
+	task := &models.Task{}
+	exists, err = s.Where("id = ?", 5).Get(task)
+	assert.NoError(t, err)
+	assert.True(t, exists)
+
+	// Insert a task position with zero position (simulating cron job)
+	tp := &models.TaskPosition{TaskID: task.ID, ProjectViewID: view.ID, Position: 0}
+	_, err = s.Insert(tp)
+	assert.NoError(t, err)
+
+	// Calculate new position (this is what the cron job does)
+	_, err = models.CalculateNewPositionForTask(s, u, task, view)
+	assert.NoError(t, err)
+
+	// Verify the position is now non-zero
+	exists, err = s.Where("project_view_id = ? AND task_id = ?", view.ID, task.ID).Get(tp)
+	assert.NoError(t, err)
+	assert.True(t, exists)
+	assert.NotZero(t, tp.Position)
+}
