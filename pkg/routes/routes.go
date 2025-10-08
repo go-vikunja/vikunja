@@ -398,43 +398,12 @@ func registerAPIRoutes(a *echo.Group) {
 	apiv1.RegisterTasks(a)
 	a.GET("/tasks/all", taskCollectionHandler.ReadAllWeb)
 
-	taskPositionHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.TaskPosition{}
-		},
-	}
-	a.POST("/tasks/:task/position", taskPositionHandler.UpdateWeb)
-
-	bulkTaskHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.BulkTask{}
-		},
-	}
-	a.POST("/tasks/bulk", bulkTaskHandler.UpdateWeb)
-
-	assigneeTaskHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.TaskAssginee{}
-		},
-	}
-	a.PUT("/tasks/:projecttask/assignees", assigneeTaskHandler.CreateWeb)
-	a.DELETE("/tasks/:projecttask/assignees/:user", assigneeTaskHandler.DeleteWeb)
-	a.GET("/tasks/:projecttask/assignees", assigneeTaskHandler.ReadAllWeb)
-
-	bulkAssigneeHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.BulkAssignees{}
-		},
-	}
-	a.POST("/tasks/:projecttask/assignees/bulk", bulkAssigneeHandler.CreateWeb)
-
-	taskRelationHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.TaskRelation{}
-		},
-	}
-	a.PUT("/tasks/:task/relations", taskRelationHandler.CreateWeb)
-	a.DELETE("/tasks/:task/relations/:relationKind/:otherTask", taskRelationHandler.DeleteWeb)
+	// Task-related routes (modern declarative pattern)
+	apiv1.RegisterTaskPositions(a)
+	apiv1.RegisterBulkTasks(a)
+	apiv1.RegisterTaskAssignees(a)
+	apiv1.RegisterBulkAssignees(a)
+	apiv1.RegisterTaskRelations(a)
 
 	if config.ServiceEnableTaskAttachments.GetBool() {
 		apiv1.RegisterAttachments(a)
