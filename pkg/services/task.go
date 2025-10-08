@@ -1717,14 +1717,8 @@ func (ts *TaskService) addLabelsToTasks(s *xorm.Session, taskIDs []int64, taskMa
 		return err
 	}
 
-	// Debug: log the number of labels found
-	// fmt.Printf("DEBUG: Found %d labels for %d tasks\n", len(labels), len(taskIDs))
-
 	for i, l := range labels {
 		if l != nil {
-			// Debug: log each label being processed
-			// fmt.Printf("DEBUG: Processing label %d for task %d\n", l.Label.ID, l.TaskID)
-
 			// Check if this label is already in the task's Labels slice
 			alreadyExists := false
 			if taskMap[l.TaskID].Labels != nil {
@@ -1738,7 +1732,6 @@ func (ts *TaskService) addLabelsToTasks(s *xorm.Session, taskIDs []int64, taskMa
 
 			if !alreadyExists {
 				taskMap[l.TaskID].Labels = append(taskMap[l.TaskID].Labels, &labels[i].Label)
-				// fmt.Printf("DEBUG: Added label %d to task %d, now has %d labels\n", l.Label.ID, l.TaskID, len(taskMap[l.TaskID].Labels))
 			}
 		}
 	}
