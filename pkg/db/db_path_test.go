@@ -196,45 +196,117 @@ func TestIsSystemDirectory(t *testing.T) {
 }
 
 func TestIsSystemDirectory_EdgeCases(t *testing.T) {
-	// Test paths that contain system directory names but aren't actually in them
 	if runtime.GOOS == "windows" {
-		// These should NOT be flagged as system directories
-		assert.False(t, isSystemDirectory("C:\\myapp\\windows\\data\\vikunja.db"),
-			"Should not match if 'windows' is part of a custom path")
-		assert.False(t, isSystemDirectory("D:\\windows\\vikunja.db"),
-			"Should not match Windows directory on non-C drive")
-		assert.False(t, isSystemDirectory("C:\\Users\\windows\\vikunja.db"),
-			"Should not match user directory named 'windows'")
+		t.Run("false positives - paths containing 'windows' but not system directories", func(t *testing.T) {
+			tests := []struct {
+				name string
+				path string
+			}{
+				{
+					name: "custom app with windows in path",
+					path: "C:\\myapp\\windows\\data\\vikunja.db",
+				},
+				{
+					name: "windows directory on non-C drive",
+					path: "D:\\windows\\vikunja.db",
+				},
+				{
+					name: "user directory named windows",
+					path: "C:\\Users\\windows\\vikunja.db",
+				},
+			}
 
-		// C:\Windows\Temp should be considered safe (excluded from system dirs)
-		assert.False(t, isSystemDirectory("C:\\Windows\\Temp\\vikunja.db"),
-			"C:\\Windows\\Temp should be excluded from system directories")
+			for _, tt := range tests {
+				t.Run(tt.name, func(t *testing.T) {
+					assert.False(t, isSystemDirectory(tt.path))
+				})
+			}
+		})
 
-		// These SHOULD be flagged as system directories
-		assert.True(t, isSystemDirectory("C:\\Windows\\vikunja.db"),
-			"Should match C:\\Windows root")
-		assert.True(t, isSystemDirectory("c:\\windows\\vikunja.db"),
-			"Should match C:\\Windows root (lowercase)")
-		assert.True(t, isSystemDirectory("C:\\Windows\\System32\\vikunja.db"),
-			"Should match C:\\Windows\\System32")
-		assert.True(t, isSystemDirectory("C:\\WINDOWS\\SYSTEM32\\vikunja.db"),
-			"Should match C:\\Windows\\System32 (uppercase)")
+		t.Run("safe Windows subdirectories", func(t *testing.T) {
+			assert.False(t, isSystemDirectory("C:\\Windows\\Temp\\vikunja.db"))
+		})
+
+		t.Run("actual Windows system directories", func(t *testing.T) {
+			tests := []struct {
+				name string
+				path string
+			}{
+				{
+					name: "Windows root",
+					path: "C:\\Windows\\vikunja.db",
+				},
+				{
+					name: "Windows root lowercase",
+					path: "c:\\windows\\vikunja.db",
+				},
+				{
+					name: "System32",
+					path: "C:\\Windows\\System32\\vikunja.db",
+				},
+				{
+					name: "System32 uppercase",
+					path: "C:\\WINDOWS\\SYSTEM32\\vikunja.db",
+				},
+			}
+
+			for _, tt := range tests {
+				t.Run(tt.name, func(t *testing.T) {
+					assert.True(t, isSystemDirectory(tt.path))
+				})
+			}
+		})
 	} else {
-		// Unix-like systems
-		// These should NOT be flagged
-		assert.False(t, isSystemDirectory("/home/bin/vikunja.db"),
-			"Should not match /home/bin (different from /bin)")
-		assert.False(t, isSystemDirectory("/opt/sbin/vikunja.db"),
-			"Should not match /opt/sbin (different from /sbin)")
-		assert.False(t, isSystemDirectory("/usr/local/bin/vikunja.db"),
-			"/usr/local/bin should be safe")
-		assert.False(t, isSystemDirectory("/binaries/vikunja.db"),
-			"Should not match /binaries (not exactly /bin)")
+		t.Run("false positives - paths containing system dir names", func(t *testing.T) {
+			tests := []struct {
+				name string
+				path string
+			}{
+				{
+					name: "/home/bin not same as /bin",
+					path: "/home/bin/vikunja.db",
+				},
+				{
+					name: "/opt/sbin not same as /sbin",
+					path: "/opt/sbin/vikunja.db",
+				},
+				{
+					name: "/usr/local/bin is safe",
+					path: "/usr/local/bin/vikunja.db",
+				},
+				{
+					name: "/binaries not same as /bin",
+					path: "/binaries/vikunja.db",
+				},
+			}
 
-		// These SHOULD be flagged
-		assert.True(t, isSystemDirectory("/bin/vikunja.db"),
-			"Should match /bin")
-		assert.True(t, isSystemDirectory("/etc/vikunja.db"),
-			"Should match /etc")
+			for _, tt := range tests {
+				t.Run(tt.name, func(t *testing.T) {
+					assert.False(t, isSystemDirectory(tt.path))
+				})
+			}
+		})
+
+		t.Run("actual Unix system directories", func(t *testing.T) {
+			tests := []struct {
+				name string
+				path string
+			}{
+				{
+					name: "/bin",
+					path: "/bin/vikunja.db",
+				},
+				{
+					name: "/etc",
+					path: "/etc/vikunja.db",
+				},
+			}
+
+			for _, tt := range tests {
+				t.Run(tt.name, func(t *testing.T) {
+					assert.True(t, isSystemDirectory(tt.path))
+				})
+			}
+		})
 	}
 }
