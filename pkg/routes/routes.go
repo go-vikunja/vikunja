@@ -418,34 +418,11 @@ func registerAPIRoutes(a *echo.Group) {
 
 	apiv1.RegisterSavedFilters(a)
 
-	teamHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.Team{}
-		},
-	}
-	a.GET("/teams", teamHandler.ReadAllWeb)
-	a.GET("/teams/:team", teamHandler.ReadOneWeb)
-	a.PUT("/teams", teamHandler.CreateWeb)
-	a.POST("/teams/:team", teamHandler.UpdateWeb)
-	a.DELETE("/teams/:team", teamHandler.DeleteWeb)
-
-	teamMemberHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.TeamMember{}
-		},
-	}
-	a.PUT("/teams/:team/members", teamMemberHandler.CreateWeb)
-	a.DELETE("/teams/:team/members/:user", teamMemberHandler.DeleteWeb)
-	a.POST("/teams/:team/members/:user/admin", teamMemberHandler.UpdateWeb)
+	// Team management routes
+	apiv1.RegisterTeams(a)
 
 	// Subscriptions
-	subscriptionHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.Subscription{}
-		},
-	}
-	a.PUT("/subscriptions/:entity/:entityID", subscriptionHandler.CreateWeb)
-	a.DELETE("/subscriptions/:entity/:entityID", subscriptionHandler.DeleteWeb)
+	apiv1.RegisterSubscriptions(a)
 
 	// Notifications
 	apiv1.RegisterNotifications(a)
@@ -484,16 +461,7 @@ func registerAPIRoutes(a *echo.Group) {
 
 	// Webhooks
 	if config.WebhooksEnabled.GetBool() {
-		webhookProvider := &handler.WebHandler{
-			EmptyStruct: func() handler.CObject {
-				return &models.Webhook{}
-			},
-		}
-		a.GET("/projects/:project/webhooks", webhookProvider.ReadAllWeb)
-		a.PUT("/projects/:project/webhooks", webhookProvider.CreateWeb)
-		a.DELETE("/projects/:project/webhooks/:webhook", webhookProvider.DeleteWeb)
-		a.POST("/projects/:project/webhooks/:webhook", webhookProvider.UpdateWeb)
-		a.GET("/webhooks/events", apiv1.GetAvailableWebhookEvents)
+		apiv1.RegisterWebhooks(a)
 	}
 
 	// Register the new declarative reaction routes
