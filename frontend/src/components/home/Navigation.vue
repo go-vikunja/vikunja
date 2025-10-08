@@ -164,8 +164,6 @@ const savedFilterProjects = computed(() => projectStore.savedFilterProjects)
 	overflow-y: auto;
 
 	[dir="rtl"] & {
-		inset-inline-start: auto;
-		inset-inline-end: 0;
 		transform: translateX(100%);
 	}
 
