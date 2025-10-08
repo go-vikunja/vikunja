@@ -16,10 +16,12 @@
 			variant="hint-modal"
 			@close="() => visible = false"
 		>
-			<Card
-				class="has-no-shadow"
-				:title="$t('task.quickAddMagic.title')"
-			>
+                       <Card
+                               class="has-no-shadow"
+                               :title="$t('task.quickAddMagic.title')"
+                               :show-close="true"
+                               @close="() => visible = false"
+                       >
 				<p>{{ $t('task.quickAddMagic.intro') }}</p>
 
 				<h3>{{ $t('task.attributes.labels') }}</h3>
