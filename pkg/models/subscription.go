@@ -88,6 +88,11 @@ func (st SubscriptionEntityType) validate() error {
 	return &ErrUnknownSubscriptionEntityType{EntityType: st}
 }
 
+// Validate is the exported version of validate for use by the service layer
+func (st SubscriptionEntityType) Validate() error {
+	return st.validate()
+}
+
 const (
 	entityProject = `project`
 	entityTask    = `task`
@@ -118,11 +123,28 @@ type SubscriptionWithUser struct {
 	User         *user.User `xorm:"extends" json:"user"`
 }
 
+// SubscriptionResolved is used for internal subscription hierarchy queries
+type SubscriptionResolved struct {
+	OriginalEntityID     int64
+	SubscriptionID       int64
+	SubscriptionWithUser `xorm:"extends"`
+}
+
 type subscriptionResolved struct {
 	OriginalEntityID     int64
 	SubscriptionID       int64
 	SubscriptionWithUser `xorm:"extends"`
 }
+
+// Function variables for service layer delegation
+var (
+	SubscriptionCreateFunc                func(s *xorm.Session, sub *Subscription, auth web.Auth) error
+	SubscriptionDeleteFunc                func(s *xorm.Session, entityType SubscriptionEntityType, entityID int64, auth web.Auth) error
+	SubscriptionGetForUserFunc            func(s *xorm.Session, entityType SubscriptionEntityType, entityID int64, auth web.Auth) (*SubscriptionWithUser, error)
+	SubscriptionGetForEntitiesFunc        func(s *xorm.Session, entityType SubscriptionEntityType, entityIDs []int64) (map[int64][]*SubscriptionWithUser, error)
+	SubscriptionGetForEntitiesAndUserFunc func(s *xorm.Session, entityType SubscriptionEntityType, entityIDs []int64, u *user.User) (map[int64][]*SubscriptionWithUser, error)
+	SubscriptionGetForEntityFunc          func(s *xorm.Session, entityType SubscriptionEntityType, entityID int64) ([]*SubscriptionWithUser, error)
+)
 
 // TableName gives us a better table name for the subscriptions table
 func (sb *Subscription) TableName() string {
@@ -144,7 +166,14 @@ func (sb *Subscription) TableName() string {
 // @Failure 412 {object} web.HTTPError "The subscription entity is invalid."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /subscriptions/{entity}/{entityID} [put]
+// @Deprecated Use service layer (SubscriptionService.Create) instead
 func (sb *Subscription) Create(s *xorm.Session, auth web.Auth) (err error) {
+	// Delegate to service layer if available
+	if SubscriptionCreateFunc != nil {
+		return SubscriptionCreateFunc(s, sb, auth)
+	}
+
+	// Fallback implementation for backward compatibility
 	// Permissions method already does the validation of the entity type, so we don't need to do that here
 
 	sb.ID = 0
@@ -180,7 +209,14 @@ func (sb *Subscription) Create(s *xorm.Session, auth web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "The subscription does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /subscriptions/{entity}/{entityID} [delete]
+// @Deprecated Use service layer (SubscriptionService.Delete) instead
 func (sb *Subscription) Delete(s *xorm.Session, auth web.Auth) (err error) {
+	// Delegate to service layer if available
+	if SubscriptionDeleteFunc != nil {
+		return SubscriptionDeleteFunc(s, sb.EntityType, sb.EntityID, auth)
+	}
+
+	// Fallback implementation for backward compatibility
 	sb.UserID = auth.GetID()
 
 	_, err = s.
@@ -189,7 +225,15 @@ func (sb *Subscription) Delete(s *xorm.Session, auth web.Auth) (err error) {
 	return
 }
 
+// GetSubscriptionForUser returns a subscription for a specific entity and user
+// @Deprecated Use service layer (SubscriptionService.GetForUser) instead
 func GetSubscriptionForUser(s *xorm.Session, entityType SubscriptionEntityType, entityID int64, a web.Auth) (subscription *SubscriptionWithUser, err error) {
+	// Delegate to service layer if available
+	if SubscriptionGetForUserFunc != nil {
+		return SubscriptionGetForUserFunc(s, entityType, entityID, a)
+	}
+
+	// Fallback implementation for backward compatibility
 	u, is := a.(*user.User)
 	if !is || u == nil {
 		return
@@ -204,15 +248,38 @@ func GetSubscriptionForUser(s *xorm.Session, entityType SubscriptionEntityType, 
 }
 
 // GetSubscriptionsForEntities returns a list of subscriptions to for an entity ID
+// @Deprecated Use service layer (SubscriptionService.GetForEntities) instead
 func GetSubscriptionsForEntities(s *xorm.Session, entityType SubscriptionEntityType, entityIDs []int64) (subscriptions map[int64][]*SubscriptionWithUser, err error) {
+	// Delegate to service layer if available
+	if SubscriptionGetForEntitiesFunc != nil {
+		return SubscriptionGetForEntitiesFunc(s, entityType, entityIDs)
+	}
+
+	// Fallback implementation for backward compatibility
 	return getSubscriptionsForEntitiesAndUser(s, entityType, entityIDs, nil, false)
 }
 
+// GetSubscriptionsForEntitiesAndUser returns subscriptions for entities filtered by user
+// @Deprecated Use service layer (SubscriptionService.GetForEntitiesAndUser) instead
 func GetSubscriptionsForEntitiesAndUser(s *xorm.Session, entityType SubscriptionEntityType, entityIDs []int64, u *user.User) (subscriptions map[int64][]*SubscriptionWithUser, err error) {
+	// Delegate to service layer if available
+	if SubscriptionGetForEntitiesAndUserFunc != nil {
+		return SubscriptionGetForEntitiesAndUserFunc(s, entityType, entityIDs, u)
+	}
+
+	// Fallback implementation for backward compatibility
 	return getSubscriptionsForEntitiesAndUser(s, entityType, entityIDs, u, true)
 }
 
+// GetSubscriptionsForEntity returns subscriptions for a single entity
+// @Deprecated Use service layer (SubscriptionService.GetForEntity) instead
 func GetSubscriptionsForEntity(s *xorm.Session, entityType SubscriptionEntityType, entityID int64) (subscriptions []*SubscriptionWithUser, err error) {
+	// Delegate to service layer if available
+	if SubscriptionGetForEntityFunc != nil {
+		return SubscriptionGetForEntityFunc(s, entityType, entityID)
+	}
+
+	// Fallback implementation for backward compatibility
 	subs, err := GetSubscriptionsForEntities(s, entityType, []int64{entityID})
 	if err != nil || len(subs[entityID]) == 0 {
 		return
