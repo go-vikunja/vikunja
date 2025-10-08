@@ -840,13 +840,40 @@ type WebhookPayload struct {
 }
 
 func getIDAsInt64(id interface{}) int64 {
+	if id == nil {
+		return 0
+	}
+
 	switch v := id.(type) {
 	case int64:
 		return v
 	case float64:
 		return int64(v)
+	case float32:
+		return int64(v)
+	case int:
+		return int64(v)
+	case int32:
+		return int64(v)
+	case json.Number:
+		if i, err := v.Int64(); err == nil {
+			return i
+		}
+		if f, err := v.Float64(); err == nil {
+			return int64(f)
+		}
+		return 0
+	case string:
+		if i, err := strconv.ParseInt(v, 10, 64); err == nil {
+			return i
+		}
+		if f, err := strconv.ParseFloat(v, 64); err == nil {
+			return int64(f)
+		}
+		return 0
+	default:
+		return 0
 	}
-	return id.(int64)
 }
 
 func getProjectIDFromAnyEvent(eventPayload map[string]interface{}) int64 {
@@ -869,38 +896,46 @@ func getProjectIDFromAnyEvent(eventPayload map[string]interface{}) int64 {
 
 func reloadEventData(s *xorm.Session, event map[string]interface{}, projectID int64) (eventWithData map[string]interface{}, doerID int64, err error) {
 	// Load event data again so that it is always populated in the webhook payload
-	if doer, has := event["doer"]; has {
-		d := doer.(map[string]interface{})
-		if rawDoerID, has := d["id"]; has {
-			doerID = getIDAsInt64(rawDoerID)
-			if doerID > 0 {
-				fullDoer, err := user.GetUserByID(s, doerID)
-				if err != nil && !user.IsErrUserDoesNotExist(err) {
-					return nil, 0, err
-				}
-				if err == nil {
-					event["doer"] = fullDoer
+	if doer, has := event["doer"]; has && doer != nil {
+		// doer can be null in incoming payloads, so guard the type assertion
+		d, ok := doer.(map[string]interface{})
+		if ok {
+			if rawDoerID, has := d["id"]; has && rawDoerID != nil {
+				doerID = getIDAsInt64(rawDoerID)
+				if doerID > 0 {
+					fullDoer, err := user.GetUserByID(s, doerID)
+					if err != nil && !user.IsErrUserDoesNotExist(err) {
+						return nil, 0, err
+					}
+					if err == nil {
+						event["doer"] = fullDoer
+					}
 				}
 			}
 		}
 	}
 
-	if task, has := event["task"]; has && doerID != 0 {
-		t := task.(map[string]interface{})
-		if taskID, has := t["id"]; has {
-			id := getIDAsInt64(taskID)
-			fullTask := Task{
-				ID: id,
-				Expand: []TaskCollectionExpandable{
-					TaskCollectionExpandBuckets,
-				},
-			}
-			err = fullTask.ReadOne(s, &user.User{ID: doerID})
-			if err != nil && !IsErrTaskDoesNotExist(err) {
-				return
-			}
-			if err == nil {
-				event["task"] = fullTask
+	if task, has := event["task"]; has && task != nil && doerID != 0 {
+		// guard the type assertion for task as well
+		t, ok := task.(map[string]interface{})
+		if ok {
+			if taskID, has := t["id"]; has && taskID != nil {
+				id := getIDAsInt64(taskID)
+				if id > 0 {
+					fullTask := Task{
+						ID: id,
+						Expand: []TaskCollectionExpandable{
+							TaskCollectionExpandBuckets,
+						},
+					}
+					err = fullTask.ReadOne(s, &user.User{ID: doerID})
+					if err != nil && !IsErrTaskDoesNotExist(err) {
+						return
+					}
+					if err == nil {
+						event["task"] = fullTask
+					}
+				}
 			}
 		}
 	}
