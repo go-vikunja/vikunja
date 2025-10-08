@@ -96,6 +96,10 @@ describe('Parse Task Text', () => {
 				'at 3am': '3:0',
 				'at 3:12 am': '3:12',
 				'at 3:12 pm': '15:12',
+				'at 3:12 AM': '3:12',
+				'at 3:12 PM': '15:12',
+				'at 3:12 Am': '3:12',
+				'at 3:12 Pm': '15:12',
 			} as const
 			
 			for (const c in cases) {
