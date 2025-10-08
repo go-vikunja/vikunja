@@ -125,6 +125,12 @@ func InitializeDependencies() {
 	// Register ProjectDuplicateService provider to avoid import cycles
 	models.RegisterProjectDuplicateService(&projectDuplicateServiceAdapter{service: NewProjectDuplicateService(nil)})
 
+	// Register UserExportService function for dependency injection
+	models.ExportUserDataFunc = func(s *xorm.Session, u *user.User) error {
+		service := NewUserExportService(nil)
+		return service.ExportUserData(s, u)
+	}
+
 	// Initialize KanbanService to wire up bucket-related model functions
 	InitKanbanService()
 }

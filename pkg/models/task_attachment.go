@@ -383,6 +383,11 @@ func (ta *TaskAttachment) Delete(s *xorm.Session, a web.Auth) error {
 	})
 }
 
+// GetTaskAttachmentsByTaskIDs retrieves task attachments by task IDs (exported for service layer)
+func GetTaskAttachmentsByTaskIDs(s *xorm.Session, taskIDs []int64) (attachments []*TaskAttachment, err error) {
+	return getTaskAttachmentsByTaskIDs(s, taskIDs)
+}
+
 func getTaskAttachmentsByTaskIDs(s *xorm.Session, taskIDs []int64) (attachments []*TaskAttachment, err error) {
 	attachments = []*TaskAttachment{}
 	err = s.

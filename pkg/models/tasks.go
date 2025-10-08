@@ -392,6 +392,11 @@ func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, op
 	return tasks, len(tasks), totalItems, err
 }
 
+// GetTasksForProjects retrieves tasks for projects (exported for service layer)
+func GetTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts *TaskSearchOptions, view *ProjectView) (tasks []*Task, resultCount int, totalItems int64, err error) {
+	return getTasksForProjects(s, projects, a, opts, view)
+}
+
 func getTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts *taskSearchOptions, view *ProjectView) (tasks []*Task, resultCount int, totalItems int64, err error) {
 	tasks, resultCount, totalItems, err = getRawTasksForProjects(s, projects, a, opts)
 	if err != nil {

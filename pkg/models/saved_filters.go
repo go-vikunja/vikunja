@@ -89,6 +89,11 @@ func GetProjectIDFromSavedFilterID(filterID int64) (projectID int64) {
 	return
 }
 
+// GetSavedFiltersForUser retrieves saved filters for a user (exported for service layer)
+func GetSavedFiltersForUser(s *xorm.Session, auth web.Auth, search string) (filters []*SavedFilter, err error) {
+	return getSavedFiltersForUser(s, auth, search)
+}
+
 func getSavedFiltersForUser(s *xorm.Session, auth web.Auth, search string) (filters []*SavedFilter, err error) {
 	// Link shares can't view or modify saved filters, therefore we can error out right away
 	if _, is := auth.(*LinkSharing); is {

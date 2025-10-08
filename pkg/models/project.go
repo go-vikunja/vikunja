@@ -592,6 +592,11 @@ SELECT COUNT(DISTINCT all_projects.id) FROM all_projects`, args...).
 }
 
 // Gets the projects with their children without any tasks
+// GetRawProjectsForUser retrieves raw projects for a user (exported for service layer)
+func GetRawProjectsForUser(s *xorm.Session, opts *ProjectOptions) (projects []*Project, resultCount int, totalItems int64, err error) {
+	return getRawProjectsForUser(s, opts)
+}
+
 func getRawProjectsForUser(s *xorm.Session, opts *ProjectOptions) (projects []*Project, resultCount int, totalItems int64, err error) {
 	fullUser, err := user.GetUserByID(s, opts.User.ID)
 	if err != nil {

@@ -125,7 +125,7 @@ func FullInit() {
 	models.RegisterReminderCron()
 	models.RegisterOverdueReminderCron()
 	models.RegisterUserDeletionCron()
-	models.RegisterOldExportCleanupCron()
+	services.RegisterOldExportCleanupCron()
 	models.RegisterAddTaskToFilterViewCron()
 	user.RegisterTokenCleanupCron()
 	user.RegisterDeletionNotificationCron()
