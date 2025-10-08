@@ -715,7 +715,7 @@ func (m *mockTaskService) Create(s *xorm.Session, task *Task, u *user.User, upda
 func (m *mockTaskService) Update(s *xorm.Session, task *Task, u *user.User) (*Task, error) {
 	// Basic update for model tests
 	// For proper task update tests, use service layer tests
-	cols := []string{"title", "description", "done", "due_date", "priority", "repeat_after", "start_date", "end_date", "hex_color", "percent_done"}
+	cols := []string{"title", "description", "done", "due_date", "priority", "repeat_after", "start_date", "end_date", "hex_color", "percent_done", "project_id"}
 	_, err := s.ID(task.ID).Cols(cols...).Update(task)
 	return task, err
 }

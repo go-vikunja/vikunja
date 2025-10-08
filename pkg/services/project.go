@@ -1001,9 +1001,14 @@ func (p *ProjectService) Delete(s *xorm.Session, projectID int64, a web.Auth) er
 	}
 
 	// Delete each task individually to ensure proper cleanup
-	// Note: This calls the model's Delete method which uses web.Auth
+	// NOTE: We use deleteWithoutPermissionCheck here because:
+	// 1. Permission checks have already been performed at the project level (line 990-997)
+	// 2. User has permission to delete the project, which includes all its tasks
+	// 3. Checking task permissions would fail when parent projects are being deleted in a hierarchy
+	//    because CheckIsArchived() recursively loads parent projects that may not exist yet
+	taskService := NewTaskService(s.Engine())
 	for _, task := range tasks {
-		err = task.Delete(s, a)
+		err = taskService.deleteWithoutPermissionCheck(s, task.ID, a)
 		if err != nil {
 			return err
 		}

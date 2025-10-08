@@ -1217,12 +1217,8 @@ func (ts *TaskService) updateSingleTask(s *xorm.Session, t *models.Task, u *user
 
 // Delete deletes a task.
 func (ts *TaskService) Delete(s *xorm.Session, task *models.Task, a web.Auth) error {
-	u, err := user.GetFromAuth(a)
-	if err != nil {
-		return err
-	}
-
-	can, err := ts.canWriteTask(s, task.ID, u)
+	// Check permissions using web.Auth to support both regular users and LinkSharing
+	can, err := ts.canWriteTaskWithAuth(s, task.ID, a)
 	if err != nil {
 		return err
 	}
@@ -1304,6 +1300,110 @@ func (ts *TaskService) Delete(s *xorm.Session, task *models.Task, a web.Auth) er
 
 	// Actually delete the task
 	_, err = s.ID(task.ID).Delete(&models.Task{})
+	if err != nil {
+		return err
+	}
+
+	doer, _ := user.GetFromAuth(a)
+	err = events.Dispatch(&models.TaskDeletedEvent{
+		Task: fullTask,
+		Doer: doer,
+	})
+	if err != nil {
+		return err
+	}
+
+	err = ts.updateProjectLastUpdated(s, t.ProjectID)
+	return err
+}
+
+// deleteWithoutPermissionCheck deletes a task without checking permissions.
+//
+// WARNING: This method bypasses ALL permission checks and should ONLY be called in specific,
+// well-controlled scenarios where permissions have already been verified at a higher level.
+//
+// Current valid usage:
+//   - ProjectService.Delete(): Permission checks are performed at the project level before
+//     cascading to child tasks. Checking permissions again on each task would fail because
+//     parent projects may be in the process of being deleted.
+//
+// SECURITY: This method is intentionally private (unexported) to prevent misuse outside
+// the services package. Any new usage must be carefully reviewed for security implications.
+func (ts *TaskService) deleteWithoutPermissionCheck(s *xorm.Session, taskID int64, a web.Auth) error {
+	t, err := models.GetTaskByIDSimple(s, taskID)
+	if err != nil {
+		return err
+	}
+
+	// duplicate the task for the event
+	fullTask := &models.Task{ID: taskID}
+	err = fullTask.ReadOne(s, a)
+	if err != nil {
+		return err
+	}
+
+	// Delete assignees
+	if _, err = s.Where("task_id = ?", taskID).Delete(&models.TaskAssginee{}); err != nil {
+		return err
+	}
+
+	// Delete Favorites using the service
+	err = ts.FavoriteService.RemoveFromFavorite(s, taskID, a, models.FavoriteKindTask)
+	if err != nil {
+		return err
+	}
+
+	// Delete label associations
+	_, err = s.Where("task_id = ?", taskID).Delete(&models.LabelTask{})
+	if err != nil {
+		return err
+	}
+
+	// Delete task attachments
+	attachments, err := ts.getTaskAttachmentsByTaskIDs(s, []int64{taskID})
+	if err != nil {
+		return err
+	}
+	for _, attachment := range attachments {
+		// Using the attachment delete method here because that takes care of removing all files properly
+		err = attachment.Delete(s, a)
+		if err != nil && !models.IsErrTaskAttachmentDoesNotExist(err) {
+			return err
+		}
+	}
+
+	// Delete all comments
+	_, err = s.Where("task_id = ?", taskID).Delete(&models.TaskComment{})
+	if err != nil {
+		return err
+	}
+
+	// Delete all relations
+	_, err = s.Where("task_id = ? OR other_task_id = ?", taskID, taskID).Delete(&models.TaskRelation{})
+	if err != nil {
+		return err
+	}
+
+	// Delete all reminders
+	_, err = s.Where("task_id = ?", taskID).Delete(&models.TaskReminder{})
+	if err != nil {
+		return err
+	}
+
+	// Delete all positions
+	_, err = s.Where("task_id = ?", taskID).Delete(&models.TaskPosition{})
+	if err != nil {
+		return err
+	}
+
+	// Delete all bucket relations
+	_, err = s.Where("task_id = ?", taskID).Delete(&models.TaskBucket{})
+	if err != nil {
+		return err
+	}
+
+	// Actually delete the task
+	_, err = s.ID(taskID).Delete(&models.Task{})
 	if err != nil {
 		return err
 	}
@@ -1762,6 +1862,22 @@ func (ts *TaskService) canWriteTask(s *xorm.Session, taskID int64, u *user.User)
 	// Check project permissions using ProjectService
 	projectService := NewProjectService(ts.DB)
 	return projectService.HasPermission(s, project.ID, u, models.PermissionWrite)
+}
+
+// canWriteTaskWithAuth checks if the auth object (User or LinkSharing) can write to a task
+// This version accepts web.Auth to support both regular users and LinkSharing authentication
+func (ts *TaskService) canWriteTaskWithAuth(s *xorm.Session, taskID int64, a web.Auth) (bool, error) {
+	task, err := models.GetTaskByIDSimple(s, taskID)
+	if err != nil {
+		if models.IsErrTaskDoesNotExist(err) {
+			return false, nil
+		}
+		return false, err
+	}
+
+	// Use the model's CanWrite which properly handles both User and LinkSharing auth
+	taskForPermCheck := &models.Task{ID: taskID, ProjectID: task.ProjectID}
+	return taskForPermCheck.CanWrite(s, a)
 }
 
 // getTaskAttachmentsByTaskIDs gets task attachments with full details
