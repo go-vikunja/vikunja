@@ -7,9 +7,7 @@
 /vikunja_test
 /specs
 /frontend/.pnpm-store/
-coverage.out
-coverage_notifications.out
-coverage_project_teams.out
+*.out
 vikunja-test
 tmp/
 config.yml
