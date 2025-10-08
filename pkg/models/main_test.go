@@ -1230,6 +1230,203 @@ func setupTime() {
 	testUpdatedTime = testUpdatedTime.In(loc)
 }
 
+// mockLabelTaskService provides a test implementation for label-task operations
+// This prevents import cycles while allowing model tests to continue working
+type mockLabelTaskService struct{}
+
+func (m *mockLabelTaskService) AddLabelToTask(s *xorm.Session, labelID, taskID int64, auth web.Auth) error {
+	// Check if the label is already added
+	exists, err := s.Exist(&LabelTask{LabelID: labelID, TaskID: taskID})
+	if err != nil {
+		return err
+	}
+	if exists {
+		return ErrLabelIsAlreadyOnTask{labelID, taskID}
+	}
+
+	// Create the label task with ID=0 to let the database auto-increment
+	lt := &LabelTask{ID: 0, LabelID: labelID, TaskID: taskID}
+	_, err = s.Insert(lt)
+	if err != nil {
+		return err
+	}
+
+	err = triggerTaskUpdatedEventForTaskID(s, auth, taskID)
+	if err != nil {
+		return err
+	}
+
+	return updateProjectByTaskID(s, taskID)
+}
+
+func (m *mockLabelTaskService) RemoveLabelFromTask(s *xorm.Session, labelID, taskID int64, auth web.Auth) error {
+	_, err := s.Delete(&LabelTask{LabelID: labelID, TaskID: taskID})
+	if err != nil {
+		return err
+	}
+
+	return triggerTaskUpdatedEventForTaskID(s, auth, taskID)
+}
+
+func (m *mockLabelTaskService) UpdateTaskLabels(s *xorm.Session, taskID int64, newLabels []*Label, auth web.Auth) error {
+	// Get current task with labels
+	task, err := GetTaskByIDSimple(s, taskID)
+	if err != nil {
+		return err
+	}
+
+	// Get current labels
+	currentLabels, _, _, err := m.GetLabelsByTaskIDs(s, &LabelByTaskIDsOptions{
+		TaskIDs: []int64{taskID},
+	})
+	if err != nil {
+		return err
+	}
+
+	task.Labels = make([]*Label, 0, len(currentLabels))
+	for i := range currentLabels {
+		task.Labels = append(task.Labels, &currentLabels[i].Label)
+	}
+
+	// If we don't have any new labels, delete everything right away
+	if len(newLabels) == 0 && len(task.Labels) > 0 {
+		_, err = s.Where("task_id = ?", taskID).Delete(LabelTask{})
+		return err
+	}
+
+	// If we didn't change anything (from 0 to zero) don't do anything
+	if len(newLabels) == 0 && len(task.Labels) == 0 {
+		return nil
+	}
+
+	// Make a hashmap of the new labels for easier comparison
+	newLabelsMap := make(map[int64]*Label, len(newLabels))
+	for _, newLabel := range newLabels {
+		newLabelsMap[newLabel.ID] = newLabel
+	}
+
+	// Get old labels to delete
+	var labelsToDelete []int64
+	oldLabels := make(map[int64]*Label, len(task.Labels))
+	for _, oldLabel := range task.Labels {
+		if newLabelsMap[oldLabel.ID] == nil {
+			// Label not in new list, mark for deletion
+			labelsToDelete = append(labelsToDelete, oldLabel.ID)
+		}
+		oldLabels[oldLabel.ID] = oldLabel
+	}
+
+	// Delete all labels not passed
+	if len(labelsToDelete) > 0 {
+		_, err = s.In("label_id", labelsToDelete).
+			And("task_id = ?", taskID).
+			Delete(LabelTask{})
+		if err != nil {
+			return err
+		}
+	}
+
+	// Loop through our labels and add them
+	for _, l := range newLabels {
+		// Check if the label is already added on the task and only add it if not
+		if oldLabels[l.ID] != nil {
+			continue
+		}
+
+		// Add the new label
+		label, err := getLabelByIDSimple(s, l.ID)
+		if err != nil {
+			return err
+		}
+
+		// Check if the user has the permissions to see the label he is about to add
+		hasAccessToLabel, _, err := label.hasAccessToLabel(s, auth)
+		if err != nil {
+			return err
+		}
+		if !hasAccessToLabel {
+			u, _ := auth.(*user.User)
+			return ErrUserHasNoAccessToLabel{LabelID: l.ID, UserID: u.ID}
+		}
+
+		// Insert it
+		_, err = s.Insert(&LabelTask{
+			LabelID: l.ID,
+			TaskID:  taskID,
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	err = triggerTaskUpdatedEventForTaskID(s, auth, taskID)
+	if err != nil {
+		return err
+	}
+
+	err = UpdateProjectLastUpdated(s, &Project{ID: task.ProjectID})
+	return err
+}
+
+func (m *mockLabelTaskService) GetLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) ([]*LabelWithTaskID, int, int64, error) {
+	// This is a simplified implementation for tests
+	// Check if the user has the permission to see the task (if single task)
+	if len(opts.TaskIDs) == 1 && opts.User != nil {
+		task := Task{ID: opts.TaskIDs[0]}
+		canRead, _, err := task.CanRead(s, opts.User)
+		if err != nil {
+			return nil, 0, 0, err
+		}
+		if !canRead {
+			return nil, 0, 0, ErrNoPermissionToSeeTask{opts.TaskIDs[0], opts.User.GetID()}
+		}
+	}
+
+	// Get labels for the task IDs
+	var labels []*LabelWithTaskID
+	query := s.Table("labels").
+		Select("labels.*, label_tasks.task_id").
+		Join("LEFT", "label_tasks", "label_tasks.label_id = labels.id").
+		In("label_tasks.task_id", opts.TaskIDs).
+		OrderBy("labels.id ASC")
+
+	if len(opts.Search) > 0 && opts.Search[0] != "" {
+		query = query.Where("labels.title LIKE ?", "%"+opts.Search[0]+"%")
+	}
+
+	err := query.Find(&labels)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	// Get all created by users
+	var userids []int64
+	for _, l := range labels {
+		userids = append(userids, l.CreatedByID)
+	}
+	users := make(map[int64]*user.User)
+	if len(userids) > 0 {
+		err = s.In("id", userids).Find(&users)
+		if err != nil {
+			return nil, 0, 0, err
+		}
+	}
+
+	// Obfuscate all user emails
+	for _, u := range users {
+		u.Email = ""
+	}
+
+	// Put it all together
+	for in, l := range labels {
+		if createdBy, has := users[l.CreatedByID]; has {
+			labels[in].CreatedBy = createdBy
+		}
+	}
+
+	return labels, len(labels), int64(len(labels)), nil
+}
+
 func TestMain(m *testing.M) {
 
 	setupTime()
@@ -1340,6 +1537,10 @@ func TestMain(m *testing.M) {
 	// Register a mock TaskService provider for model tests
 	// This avoids import cycle with services package
 	RegisterTaskService(&mockTaskService{})
+
+	// Register a mock LabelTaskService provider for model tests
+	// This avoids import cycle with services package
+	RegisterLabelTaskService(&mockLabelTaskService{})
 
 	// Set up a mock for the GetUsersOrLinkSharesFromIDsFunc for model tests,
 	// as they should not depend on the services package.

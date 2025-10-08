@@ -115,6 +115,9 @@ func InitializeDependencies() {
 
 	// Register TaskService provider to avoid import cycles
 	models.RegisterTaskService(&taskServiceAdapter{service: NewTaskService(nil)})
+
+	// Register LabelTaskService provider to avoid import cycles
+	models.RegisterLabelTaskService(&labelTaskServiceAdapter{service: NewLabelService(nil)})
 }
 
 // projectServiceAdapter adapts ProjectService to the interface expected by models
@@ -313,4 +316,36 @@ func (a *taskServiceAdapter) Delete(s *xorm.Session, task *models.Task, auth web
 
 func (a *taskServiceAdapter) GetByID(s *xorm.Session, taskID int64, u *user.User) (*models.Task, error) {
 	return a.service.GetByID(s, taskID, u)
+}
+
+// labelTaskServiceAdapter adapts LabelService to the interface expected by models for label-task operations
+type labelTaskServiceAdapter struct {
+	service *LabelService
+}
+
+func (a *labelTaskServiceAdapter) AddLabelToTask(s *xorm.Session, labelID, taskID int64, auth web.Auth) error {
+	return a.service.AddLabelToTask(s, labelID, taskID, auth)
+}
+
+func (a *labelTaskServiceAdapter) RemoveLabelFromTask(s *xorm.Session, labelID, taskID int64, auth web.Auth) error {
+	return a.service.RemoveLabelFromTask(s, labelID, taskID, auth)
+}
+
+func (a *labelTaskServiceAdapter) UpdateTaskLabels(s *xorm.Session, taskID int64, newLabels []*models.Label, auth web.Auth) error {
+	return a.service.UpdateTaskLabels(s, taskID, newLabels, auth)
+}
+
+func (a *labelTaskServiceAdapter) GetLabelsByTaskIDs(s *xorm.Session, opts *models.LabelByTaskIDsOptions) ([]*models.LabelWithTaskID, int, int64, error) {
+	// Convert from models.LabelByTaskIDsOptions to services.GetLabelsByTaskIDsOptions
+	serviceOpts := &GetLabelsByTaskIDsOptions{
+		User:                opts.User,
+		Search:              opts.Search,
+		Page:                opts.Page,
+		PerPage:             opts.PerPage,
+		TaskIDs:             opts.TaskIDs,
+		GetUnusedLabels:     opts.GetUnusedLabels,
+		GroupByLabelIDsOnly: opts.GroupByLabelIDsOnly,
+		GetForUser:          opts.GetForUser,
+	}
+	return a.service.GetLabelsByTaskIDs(s, serviceOpts)
 }

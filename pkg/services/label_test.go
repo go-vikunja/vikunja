@@ -421,6 +421,12 @@ func TestLabelService_AddLabelToTask(t *testing.T) {
 		err = ls.AddLabelToTask(s, newLabel.ID, 999999, u)
 		assert.Error(t, err)
 	})
+
+	t.Run("should not add non-existent label", func(t *testing.T) {
+		err := ls.AddLabelToTask(s, 999999, 1, u)
+		assert.Error(t, err)
+		assert.True(t, models.IsErrLabelDoesNotExist(err))
+	})
 }
 
 func TestLabelService_RemoveLabelFromTask(t *testing.T) {
