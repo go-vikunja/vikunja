@@ -1,4 +1,4 @@
-name: Comment on PR when issue is closed
+name: Comment on issue when it is closed automatically
 
 on:
   issues:
@@ -27,19 +27,24 @@ jobs:
             const closedEvent = events
               .filter(event => event.event === 'closed')
               .pop(); // Get the last (most recent) closed event
+            // Find the most recent "referenced" event
+            const referencedEvent = events
+              .filter(event => event.event === 'referenced')
+              .pop(); // Get the last (most recent) referenced event
 
-            if (closedEvent && closedEvent.commit_id) {
-              console.log(`✅ Issue #${issueNumber} was closed by commit: ${closedEvent.commit_id}`);
+            if (closedEvent && (closedEvent.commit_id || referencedEvent)) {
+              const commitId = closedEvent.commit_id ?? referencedEvent.commit_id
+              console.log(`✅ Issue #${issueNumber} was closed by commit: ${commitId}`);
               
               // Get commit details
               const { data: commit } = await github.rest.git.getCommit({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                commit_sha: closedEvent.commit_id
+                commit_sha: commitId
               });
               
               core.setOutput('closed_by_commit', 'true');
-              core.setOutput('commit_sha', closedEvent.commit_id);
+              core.setOutput('commit_sha', commitId);
               core.setOutput('commit_message', commit.message);
               core.setOutput('commit_url', closedEvent.commit_url);
             } else {
