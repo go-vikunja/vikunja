@@ -321,8 +321,8 @@ jobs:
       # https://github.com/cypress-io/github-action/issues/48
       fail-fast: false
       matrix:
-        # Only run parallel tests for upstream repo, single container for forks
-        containers: ${{ github.repository == 'go-vikunja/vikunja' && fromJSON('[1, 2, 3, 4]') || fromJSON('[1]') }}
+        # Only run parallel tests for non-fork PRs, single container for forks
+        containers: ${{ github.event.pull_request.head.repo.fork != true && fromJSON('[1, 2, 3, 4]') || fromJSON('[1]') }}
     container:
       image: cypress/browsers:latest@sha256:1f1adf3bd11c79465abc22e1e29848695fdbbe82d468957103dc0f8ba00e0f8e
       options: --user 1001
@@ -366,8 +366,8 @@ jobs:
           install: false
           working-directory: frontend
           browser: chrome
-          record: ${{ github.repository == 'go-vikunja/vikunja' }}
-          parallel: ${{ github.repository == 'go-vikunja/vikunja' }}
+          record: ${{ github.event.pull_request.head.repo.fork != true }}
+          parallel: ${{ github.event.pull_request.head.repo.fork != true }}
           start: |
             pnpm run preview:vikunja
             pnpm run preview
