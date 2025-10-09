@@ -68,58 +68,131 @@ type taskUser struct {
 
 const dbTimeFormat = `2006-01-02 15:04:05`
 
+//nolint:gocyclo
 func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64, cond builder.Cond) (taskUsers []*taskUser, err error) {
 	if len(taskIDs) == 0 {
 		return
 	}
 
-	// Get all creators of tasks
-	creators := make(map[int64]*user.User, len(taskIDs))
-	err = s.
-		Select("users.*").
-		Join("LEFT", "tasks", "tasks.created_by_id = users.id").
-		In("tasks.id", taskIDs).
-		Where(cond).
-		GroupBy("tasks.id, users.id, users.username, users.email, users.name, users.timezone").
-		Find(&creators)
-	if err != nil {
-		return
-	}
-
+	taskUsers = []*taskUser{}
 	taskMap := make(map[int64]*Task, len(taskIDs))
 	err = s.In("id", taskIDs).Find(&taskMap)
 	if err != nil {
 		return
 	}
 
+	projectIDs := []int64{}
 	for _, task := range taskMap {
-		u, exists := creators[task.CreatedByID]
-		if !exists {
-			continue
-		}
-
-		taskUsers = append(taskUsers, &taskUser{
-			Task: taskMap[task.ID],
-			User: u,
-		})
+		projectIDs = append(projectIDs, task.ProjectID)
+	}
+	projects := make(map[int64]*Project)
+	err = s.In("id", projectIDs).Find(&projects)
+	if err != nil {
+		return
 	}
 
-	var assignees []*TaskAssigneeWithUser
+	// user_id -> project_id -> has read access
+	userPermissionOnProject := make(map[int64]map[int64]bool)
+
+	seen := make(map[int64]map[int64]struct{})
+	appendUser := func(taskID int64, u *user.User) (err error) {
+		if u == nil {
+			return
+		}
+		task, hasTask := taskMap[taskID]
+		if !hasTask {
+			return
+		}
+		if seen[taskID] == nil {
+			seen[taskID] = make(map[int64]struct{})
+		}
+		if _, exists := seen[taskID][u.ID]; exists {
+			return
+		}
+		seen[taskID][u.ID] = struct{}{}
+
+		userProjects, has := userPermissionOnProject[u.ID]
+		if !has {
+			userPermissionOnProject[u.ID] = make(map[int64]bool)
+			userProjects = userPermissionOnProject[u.ID]
+		}
+		_, projectExists := userProjects[task.ProjectID]
+		if !projectExists {
+			p, exists := projects[task.ProjectID]
+			if !exists {
+				return
+			}
+
+			userProjects[task.ProjectID] = p.isOwner(u)
+
+			if !p.isOwner(u) {
+				userProjects[task.ProjectID], _, err = p.checkPermission(s, u, PermissionRead)
+				if err != nil {
+					return err
+				}
+			}
+		}
+
+		if !userProjects[task.ProjectID] {
+			return
+		}
+
+		taskUsers = append(taskUsers, &taskUser{Task: task, User: u})
+
+		return
+	}
+
+	type userWithTask struct {
+		TaskID    int64
+		user.User `xorm:"extends"`
+	}
+
+	conditions := []builder.Cond{
+		builder.In("tasks.id", taskIDs),
+	}
+	if cond != nil {
+		conditions = append(conditions, cond)
+	}
+
+	creators := []*userWithTask{}
+	err = s.Table("tasks").
+		Select("DISTINCT tasks.id AS task_id, users.id, users.name, users.username, users.email, users.email_reminders_enabled, users.overdue_tasks_reminders_enabled, users.overdue_tasks_reminders_time, users.language, users.timezone, users.created, users.updated").
+		Join("INNER", "users", "tasks.created_by_id = users.id").
+		Where(builder.And(conditions...)).
+		Find(&creators)
+	if err != nil {
+		return
+	}
+
+	for _, creator := range creators {
+		err = appendUser(creator.TaskID, &creator.User)
+		if err != nil {
+			return
+		}
+	}
+
+	assigneeConds := []builder.Cond{
+		builder.In("task_assignees.task_id", taskIDs),
+	}
+	if cond != nil {
+		assigneeConds = append(assigneeConds, cond)
+	}
+
+	assignees := []*TaskAssigneeWithUser{}
 	err = s.Table("task_assignees").
-		Select("task_id, users.*").
-		In("task_id", taskIDs).
+		Select("DISTINCT task_assignees.task_id, users.id, users.name, users.username, users.email, users.email_reminders_enabled, users.overdue_tasks_reminders_enabled, users.overdue_tasks_reminders_time, users.language, users.timezone, users.created, users.updated").
 		Join("INNER", "users", "task_assignees.user_id = users.id").
-		Where(cond).
+		Where(builder.And(assigneeConds...)).
 		Find(&assignees)
 	if err != nil {
 		return
 	}
 
 	for i := range assignees {
-		taskUsers = append(taskUsers, &taskUser{
-			Task: taskMap[assignees[i].TaskID],
-			User: &assignees[i].User,
-		})
+		err = appendUser(assignees[i].TaskID, &assignees[i].User)
+		if err != nil {
+			return
+		}
 	}
 
 	subscriptions, err := GetSubscriptionsForEntities(s, SubscriptionEntityTask, taskIDs)
@@ -134,10 +207,18 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64, cond builder.Cond) (
 		}
 	}
 
-	subscribers, err := user.GetUsersByCond(s, builder.And(
+	if len(subscriberIDs) == 0 {
+		return
+	}
+
+	subscriberCond := []builder.Cond{
 		builder.In("id", subscriberIDs),
-		cond,
-	))
+	}
+	if cond != nil {
+		subscriberCond = append(subscriberCond, cond)
+	}
+
+	subscribers, err := user.GetUsersByCond(s, builder.And(subscriberCond...))
 	if err != nil {
 		return nil, err
 	}
@@ -148,10 +229,10 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64, cond builder.Cond) (
 			if !has {
 				continue
 			}
-			taskUsers = append(taskUsers, &taskUser{
-				Task: taskMap[taskID],
-				User: u,
-			})
+			err = appendUser(taskID, u)
+			if err != nil {
+				return
+			}
 		}
 	}
 
