@@ -149,6 +149,27 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 		}
 	}
 
+	// Delete all related entities
+	relatedEntities := []struct {
+		column string
+		model  any
+	}{
+		{"user_id", &TaskAssginee{}},
+		{"user_id", &Subscription{}},
+		{"user_id", &TeamMember{}},
+		{"owner_id", &SavedFilter{}},
+		{"user_id", &Reaction{}},
+		{"user_id", &Favorite{}},
+		{"owner_id", &APIToken{}},
+	}
+
+	for _, entity := range relatedEntities {
+		_, err = s.Where(entity.column+" = ?", u.ID).Delete(entity.model)
+		if err != nil {
+			return err
+		}
+	}
+
 	_, err = s.Where("id = ?", u.ID).Delete(&user.User{})
 	if err != nil {
 		return err

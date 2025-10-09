@@ -71,4 +71,38 @@ func TestDeleteUser(t *testing.T) {
 		db.AssertMissing(t, "users", map[string]interface{}{"id": u.ID})
 		db.AssertMissing(t, "projects", map[string]interface{}{"id": 37}) // only user16 had access to this project, and it was their default
 	})
+	t.Run("cleans up task assignments and subscriptions", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		notifications.Fake()
+
+		task := &Task{
+			Title:       "user cleanup",
+			ProjectID:   19,
+			CreatedByID: 7,
+			Index:       4,
+		}
+		_, err := s.Insert(task)
+		require.NoError(t, err)
+
+		_, err = s.Insert(&TaskAssginee{TaskID: task.ID, UserID: 4})
+		require.NoError(t, err)
+
+		_, err = s.Insert(&Subscription{EntityType: SubscriptionEntityTask, EntityID: task.ID, UserID: 4})
+		require.NoError(t, err)
+
+		_, err = s.Insert(&Subscription{EntityType: SubscriptionEntityProject, EntityID: 19, UserID: 4})
+		require.NoError(t, err)
+
+		_, err = s.Insert(&TeamMember{TeamID: 9, UserID: 4})
+		require.NoError(t, err)
+
+		err = DeleteUser(s, &user.User{ID: 4})
+		require.NoError(t, err)
+
+		db.AssertMissing(t, "task_assignees", map[string]interface{}{"user_id": 4})
+		db.AssertMissing(t, "subscriptions", map[string]interface{}{"user_id": 4})
+		db.AssertMissing(t, "team_members", map[string]interface{}{"user_id": 4})
+	})
 }
