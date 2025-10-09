@@ -46,7 +46,7 @@ func TestGetUndoneOverDueTasks(t *testing.T) {
 		require.NoError(t, err)
 		uts, err := getUndoneOverdueTasks(s, now)
 		require.NoError(t, err)
-		assert.Len(t, uts, 1)
+		require.Len(t, uts, 1)
 		assert.Len(t, uts[1].tasks, 2)
 		// The tasks don't always have the same order, so we only check their presence, not their position.
 		var task5Present bool
@@ -73,4 +73,22 @@ func TestGetUndoneOverDueTasks(t *testing.T) {
 		require.NoError(t, err)
 		assert.Empty(t, tasks)
 	})
+}
+
+func TestGetTaskUsersForTasksPermissionFiltering(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	usersWithAccess, err := getTaskUsersForTasks(s, []int64{35}, nil)
+	require.NoError(t, err)
+
+	var hasAssignee bool
+	for _, tu := range usersWithAccess {
+		if tu.User.ID == 2 {
+			hasAssignee = true
+			break
+		}
+	}
+	assert.True(t, hasAssignee)
 }
