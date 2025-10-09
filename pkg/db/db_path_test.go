@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -85,32 +86,51 @@ func TestResolveDatabasePath(t *testing.T) {
 }
 
 func TestGetUserDataDir(t *testing.T) {
-	dataDir, err := getUserDataDir()
-	require.NoError(t, err)
-	assert.NotEmpty(t, dataDir)
 
-	// Verify the directory was created
-	info, err := os.Stat(dataDir)
-	require.NoError(t, err)
-	assert.True(t, info.IsDir())
+	test := func() string {
+		dataDir, err := getUserDataDir()
+		require.NoError(t, err)
+		assert.NotEmpty(t, dataDir)
+
+		// Verify the directory was created
+		info, err := os.Stat(dataDir)
+		require.NoError(t, err)
+		assert.True(t, info.IsDir())
+
+		return dataDir
+	}
 
 	// Verify platform-specific paths
 	switch runtime.GOOS {
 	case "windows":
+		dataDir := test()
 		assert.Contains(t, dataDir, "Vikunja")
 	case "darwin":
+		dataDir := test()
 		assert.Contains(t, dataDir, "Library")
 		assert.Contains(t, dataDir, "Application Support")
 		assert.Contains(t, dataDir, "Vikunja")
 	default:
-		// Linux or other Unix-like
-		home, _ := os.UserHomeDir()
-		xdgDataHome := os.Getenv("XDG_DATA_HOME")
-		if xdgDataHome != "" {
+		originalXDGDataHome := os.Getenv("XDG_DATA_HOME")
+		defer func() {
+			if originalXDGDataHome != "" {
+				os.Setenv("XDG_DATA_HOME", originalXDGDataHome)
+			} else {
+				os.Unsetenv("XDG_DATA_HOME")
+			}
+		}()
+
+		t.Run("with XDG_DATA_HOME", func(t *testing.T) {
+			os.Setenv("XDG_DATA_HOME", "/tmp")
+			dataDir := test()
+			assert.Contains(t, dataDir, filepath.Join("/tmp", "vikunja"))
+		})
+
+		t.Run("without XDG_DATA_HOME", func(t *testing.T) {
+			os.Unsetenv("XDG_DATA_HOME")
+			dataDir := test()
 			assert.Contains(t, dataDir, "vikunja")
-		} else {
-			assert.Contains(t, dataDir, filepath.Join(home, ".local", "share", "vikunja"))
-		}
+		})
 	}
 }
 
