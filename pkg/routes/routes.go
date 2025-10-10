@@ -169,7 +169,6 @@ func setupSentry(e *echo.Echo) {
 	}); err != nil {
 		log.Criticalf("Sentry init failed: %s", err)
 	}
-	defer sentry.Flush(5 * time.Second)
 
 	e.Use(sentryecho.New(sentryecho.Options{
 		Repanic: true,

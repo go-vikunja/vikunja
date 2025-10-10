@@ -212,6 +212,9 @@ const (
 
 	PluginsEnabled Key = `plugins.enabled`
 	PluginsDir     Key = `plugins.dir`
+    
+	// Shutdown timeout for graceful shutdown in seconds
+	ServiceShutdownTimeout Key = `service.shutdown_timeout`
 )
 
 var maxFileSizeInBytes uint64
@@ -345,6 +348,9 @@ func InitDefaultConfig() {
 	ServiceEnablePublicTeams.setDefault(false)
 	ServiceBcryptRounds.setDefault(11)
 	ServiceEnableOpenIDTeamUserOnlySearch.setDefault(false)
+
+	// Shutdown
+	ServiceShutdownTimeout.setDefault(30)
 
 	// Sentry
 	SentryDsn.setDefault("https://440eedc957d545a795c17bbaf477497c@o1047380.ingest.sentry.io/4504254983634944")
