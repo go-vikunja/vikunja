@@ -53,6 +53,7 @@ func RegisterListeners() {
 	events.RegisterListener((&TaskDeletedEvent{}).Name(), &SendTaskDeletedNotification{})
 	events.RegisterListener((&ProjectCreatedEvent{}).Name(), &SendProjectCreatedNotification{})
 	events.RegisterListener((&TeamMemberAddedEvent{}).Name(), &SendTeamMemberAddedNotification{})
+	events.RegisterListener((&TeamMemberRemovedEvent{}).Name(), &CleanupTaskAssignmentsAfterTeamRemoval{})
 	events.RegisterListener((&TaskCommentUpdatedEvent{}).Name(), &HandleTaskCommentEditMentions{})
 	events.RegisterListener((&TaskCreatedEvent{}).Name(), &HandleTaskCreateMentions{})
 	events.RegisterListener((&TaskUpdatedEvent{}).Name(), &HandleTaskUpdatedMentions{})
@@ -1070,6 +1071,43 @@ func (s *DecreaseTeamCounter) Name() string {
 // Handle is executed when the event DecreaseTeamCounter listens on is fired
 func (s *DecreaseTeamCounter) Handle(_ *message.Message) (err error) {
 	return keyvalue.DecrBy(metrics.TeamCountKey, 1)
+}
+
+// CleanupTaskAssignmentsAfterTeamRemoval represents a listener
+type CleanupTaskAssignmentsAfterTeamRemoval struct{}
+
+// Name defines the name of the listener
+func (l *CleanupTaskAssignmentsAfterTeamRemoval) Name() string {
+	return "task.assignees.cleanup.team_removal"
+}
+
+// Handle cleans up task assignments and subscriptions for members removed from teams
+func (l *CleanupTaskAssignmentsAfterTeamRemoval) Handle(msg *message.Message) (err error) {
+	event := &TeamMemberRemovedEvent{}
+	err = json.Unmarshal(msg.Payload, event)
+	if err != nil {
+		return err
+	}
+
+	s := db.NewSession()
+	defer s.Close()
+
+	if event == nil || event.Team == nil || event.Member == nil {
+		return nil
+	}
+
+	err = s.Begin()
+	if err != nil {
+		return err
+	}
+
+	err = cleanupTaskMembersAfterTeamRemoval(s, event.Team.ID, event.Member.ID)
+	if err != nil {
+		_ = s.Rollback()
+		return err
+	}
+
+	return s.Commit()
 }
 
 // SendTeamMemberAddedNotification  represents a listener
