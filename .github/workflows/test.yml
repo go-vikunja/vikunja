@@ -104,7 +104,7 @@ jobs:
           - mysql
     services:
       migration-smoke-db-mysql:
-        image: mariadb:12@sha256:03a03a6817bb9eaa21e5aed1b734d432ec3f80021f5a2de1795475f158217545
+        image: mariadb:12@sha256:5b6a1eac15b85b981a61afb89aea2a22bf76b5f58809d05f0bcc13ab6ec44cb8
         env:
           MYSQL_ROOT_PASSWORD: vikunjatest
           MYSQL_DATABASE: vikunjatest
@@ -180,7 +180,7 @@ jobs:
           - web
     services:
       db-mysql:
-        image: mariadb:12@sha256:03a03a6817bb9eaa21e5aed1b734d432ec3f80021f5a2de1795475f158217545
+        image: mariadb:12@sha256:5b6a1eac15b85b981a61afb89aea2a22bf76b5f58809d05f0bcc13ab6ec44cb8
         env:
           MYSQL_ROOT_PASSWORD: vikunjatest
           MYSQL_DATABASE: vikunjatest
