@@ -114,7 +114,7 @@
     "@tsconfig/node22": "22.0.2",
     "@types/codemirror": "5.60.16",
     "@types/is-touch-device": "1.0.3",
-    "@types/node": "22.18.8",
+    "@types/node": "22.18.9",
     "@types/sortablejs": "1.15.8",
     "@typescript-eslint/eslint-plugin": "8.46.0",
     "@typescript-eslint/parser": "8.46.0",
