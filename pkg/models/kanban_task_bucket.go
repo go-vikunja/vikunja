@@ -23,7 +23,6 @@ import (
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
-	"github.com/jinzhu/copier"
 	"xorm.io/xorm"
 )
 
@@ -158,13 +157,9 @@ func (b *TaskBucket) Update(s *xorm.Session, a web.Auth) (err error) {
 			doneChanged = true
 			task.Done = true
 			if task.isRepeating() {
-				oldTask := &Task{}
-				err = copier.Copy(oldTask, task)
-				if err != nil {
-					return err
-				}
+				oldTask := *task
 				oldTask.Done = false
-				updateDone(oldTask, task)
+				updateDone(&oldTask, task)
 				updateBucket = false
 				b.BucketID = oldTaskBucket.BucketID
 			}
