@@ -1,5 +1,6 @@
 <template>
 	<CreateEdit
+		v-model:loading="loadingModel"
 		:title="$t('label.create.title')"
 		:primary-disabled="label.title === ''"
 		@create="newLabel()"
@@ -66,6 +67,14 @@ onBeforeMount(() => label.value.hexColor = getRandomColorHex())
 
 const showError = ref(false)
 const loading = computed(() => labelStore.isLoading)
+const isSubmitting = ref(false)
+
+const loadingModel = computed({
+	get: () => isSubmitting.value || loading.value,
+	set(value: boolean) {
+		isSubmitting.value = value
+	},
+})
 
 async function newLabel() {
 	if (label.value.title === '') {
@@ -74,11 +83,21 @@ async function newLabel() {
 	}
 	showError.value = false
 
-	const newLabel = await labelStore.createLabel(label.value)
-	router.push({
-		name: 'labels.index',
-		params: {id: newLabel.id},
-	})
-	success({message: t('label.create.success')})
+	if (isSubmitting.value) {
+		return
+	}
+
+	isSubmitting.value = true
+
+	try {
+		const newLabel = await labelStore.createLabel(label.value)
+		router.push({
+			name: 'labels.index',
+			params: {id: newLabel.id},
+		})
+		success({message: t('label.create.success')})
+	} finally {
+		isSubmitting.value = false
+	}
 }
 </script>

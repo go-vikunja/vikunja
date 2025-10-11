@@ -1,8 +1,9 @@
 <template>
 	<CreateEdit
+		v-model:loading="loadingModel"
 		:title="title"
 		:primary-disabled="team.name === ''"
-		@create="newTeam()"
+		@create="createTeam()"
 	>
 		<div class="field">
 			<label
@@ -21,7 +22,7 @@
 					class="input"
 					:placeholder="$t('team.attributes.namePlaceholder')"
 					type="text"
-					@keyup.enter="newTeam"
+					@keyup.enter="createTeam"
 				>
 			</div>
 		</div>
@@ -55,7 +56,7 @@
 </template>
 
 <script setup lang="ts">
-import {reactive, ref, shallowReactive, computed} from 'vue'
+import {computed, reactive, ref, shallowReactive} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import TeamModel from '@/models/team'
@@ -80,21 +81,39 @@ const router = useRouter()
 const teamService = shallowReactive(new TeamService())
 const team = reactive(new TeamModel())
 const showError = ref(false)
+const isSubmitting = ref(false)
+
+const loadingModel = computed({
+	get: () => isSubmitting.value || teamService.loading,
+	set(value: boolean) {
+		isSubmitting.value = value
+	},
+})
 
 const configStore = useConfigStore()
 
-async function newTeam() {
+async function createTeam() {
 	if (team.name === '') {
 		showError.value = true
 		return
 	}
 	showError.value = false
 
-	const response = await teamService.create(team)
-	router.push({
-		name: 'teams.edit',
-		params: { id: response.id },
-	})
-	success({message: t('team.create.success') })
+	if (isSubmitting.value) {
+		return
+	}
+
+	isSubmitting.value = true
+
+	try {
+		const response = await teamService.create(team)
+		router.push({
+			name: 'teams.edit',
+			params: { id: response.id },
+		})
+		success({message: t('team.create.success') })
+	} finally {
+		isSubmitting.value = false
+	}
 }
 </script>
