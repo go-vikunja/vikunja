@@ -31,6 +31,7 @@ import (
 
 	"code.vikunja.io/api/pkg/log"
 
+	"github.com/c2h5oh/datasize"
 	"github.com/spf13/viper"
 )
 
@@ -212,6 +213,8 @@ const (
 	PluginsEnabled Key = `plugins.enabled`
 	PluginsDir     Key = `plugins.dir`
 )
+
+var maxFileSizeInBytes uint64
 
 // GetString returns a string config value
 func (k Key) GetString() string {
@@ -622,6 +625,11 @@ func InitConfig() {
 
 	publicURL := strings.TrimSuffix(ServicePublicURL.GetString(), "/")
 	CorsOrigins.Set(append(CorsOrigins.GetStringSlice(), publicURL))
+
+	err = SetMaxFileSizeMBytesFromString(FilesMaxSize.GetString())
+	if err != nil {
+		log.Fatalf("Could not parse files.maxsize: %s", err)
+	}
 }
 
 func random(length int) (string, error) {
@@ -631,4 +639,22 @@ func random(length int) (string, error) {
 	}
 
 	return fmt.Sprintf("%X", b), nil
+}
+
+func SetMaxFileSizeMBytesFromString(size string) error {
+	var maxSize datasize.ByteSize
+	err := maxSize.UnmarshalText([]byte(size))
+	if err != nil {
+		return err
+	}
+
+	maxFileSizeInBytes = uint64(maxSize.MBytes())
+	return nil
+}
+
+func GetMaxFileSizeInMBytes() uint64 {
+	if maxFileSizeInBytes == 0 {
+		return 20
+	}
+	return maxFileSizeInBytes
 }

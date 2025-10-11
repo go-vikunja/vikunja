@@ -88,7 +88,7 @@ func (tm *TeamMember) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Success 200 {object} models.Message "The user was successfully removed from the team."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams/{id}/members/{username} [delete]
-func (tm *TeamMember) Delete(s *xorm.Session, _ web.Auth) (err error) {
+func (tm *TeamMember) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	t, err := GetTeamByID(s, tm.TeamID)
 	if err != nil {
@@ -115,7 +115,21 @@ func (tm *TeamMember) Delete(s *xorm.Session, _ web.Auth) (err error) {
 	tm.UserID = user.ID
 
 	_, err = s.Where("team_id = ? AND user_id = ?", tm.TeamID, tm.UserID).Delete(&TeamMember{})
-	return
+	if err != nil {
+		return err
+	}
+
+	err = s.Commit()
+	if err != nil {
+		return err
+	}
+
+	doer, _ := user2.GetFromAuth(a)
+	return events.Dispatch(&TeamMemberRemovedEvent{
+		Team:   t,
+		Member: user,
+		Doer:   doer,
+	})
 }
 
 func (tm *TeamMember) MembershipExists(s *xorm.Session) (exists bool, err error) {

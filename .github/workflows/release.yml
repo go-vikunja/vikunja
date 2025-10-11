@@ -11,7 +11,7 @@ jobs:
         id: ghd
         uses: proudust/gh-describe@v2
       - name: Login to GHCR
-        uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_PASSWORD }}
@@ -21,6 +21,8 @@ jobs:
         uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3
         with:
           version: latest
+      - name: Setup Docker Builder
+        uses: useblacksmith/setup-docker-builder@78f41686563c732ccc097f7baac2f092f67538f0 # v1
       - name: Docker meta version
         if: ${{ github.ref_type == 'tag' }}
         id: meta
@@ -35,7 +37,7 @@ jobs:
             type=raw,value=latest
       - name: Build and push unstable
         if: ${{ github.ref_type != 'tag' }}
-        uses: useblacksmith/build-push-action@574eb0ee0b59c6a687ace24192f0727dfb65d6d7 # v1
+        uses: useblacksmith/build-push-action@30c71162f16ea2c27c3e21523255d209b8b538c1 # v2
         with:
           platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8
           push: true
@@ -44,7 +46,7 @@ jobs:
             RELEASE_VERSION=${{ steps.ghd.outputs.describe }}
       - name: Build and push version
         if: ${{ github.ref_type == 'tag' }}
-        uses: useblacksmith/build-push-action@574eb0ee0b59c6a687ace24192f0727dfb65d6d7 # v1
+        uses: useblacksmith/build-push-action@30c71162f16ea2c27c3e21523255d209b8b538c1 # v2
         with:
           platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8
           push: true
@@ -108,11 +110,11 @@ jobs:
       - name: Upload
         uses: kolaente/s3-action@41963184b524ccac734ea4d8c964ac74b5b1af89 # v1.2.1
         with:
-          s3-access-key-id: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
-          s3-secret-access-key: ${{ secrets.HETZNER_S3_SECRET_KEY }}
-          s3-endpoint: "https://fsn1.your-objectstorage.com"
-          s3-bucket: "vikunja"
-          s3-region: "fsn1"
+          s3-access-key-id: ${{ secrets.S3_ACCESS_KEY }}
+          s3-secret-access-key: ${{ secrets.S3_SECRET_KEY }}
+          s3-endpoint: ${{ secrets.S3_ENDPOINT }}
+          s3-bucket: ${{ secrets.S3_BUCKET }}
+          s3-region: ${{ secrets.S3_REGION }}
           target-path: /vikunja/${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}
           files: "dist/zip/*"
           strip-path-prefix: dist/zip/
@@ -173,11 +175,11 @@ jobs:
       - name: Upload
         uses: kolaente/s3-action@41963184b524ccac734ea4d8c964ac74b5b1af89 # v1.2.1
         with:
-          s3-access-key-id: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
-          s3-secret-access-key: ${{ secrets.HETZNER_S3_SECRET_KEY }}
-          s3-endpoint: "https://fsn1.your-objectstorage.com"
-          s3-bucket: "vikunja"
-          s3-region: "fsn1"
+          s3-access-key-id: ${{ secrets.S3_ACCESS_KEY }}
+          s3-secret-access-key: ${{ secrets.S3_SECRET_KEY }}
+          s3-endpoint: ${{ secrets.S3_ENDPOINT }}
+          s3-bucket: ${{ secrets.S3_BUCKET }}
+          s3-region: ${{ secrets.S3_REGION }}
           target-path: /vikunja/${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}
           files: "dist/os-packages/*"
           strip-path-prefix: dist/os-packages/
@@ -206,11 +208,11 @@ jobs:
       - name: Upload to S3
         uses: kolaente/s3-action@41963184b524ccac734ea4d8c964ac74b5b1af89 # v1.2.1
         with:
-          s3-access-key-id: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
-          s3-secret-access-key: ${{ secrets.HETZNER_S3_SECRET_KEY }}
-          s3-endpoint: "https://fsn1.your-objectstorage.com"
-          s3-bucket: "vikunja"
-          s3-region: "fsn1"
+          s3-access-key-id: ${{ secrets.S3_ACCESS_KEY }}
+          s3-secret-access-key: ${{ secrets.S3_SECRET_KEY }}
+          s3-endpoint: ${{ secrets.S3_ENDPOINT }}
+          s3-bucket: ${{ secrets.S3_BUCKET }}
+          s3-region: ${{ secrets.S3_REGION }}
           target-path: /vikunja/${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}
           files: "config.yml.sample"
 
@@ -229,7 +231,7 @@ jobs:
         id: ghd
         uses: proudust/gh-describe@v2
       - name: Install pnpm
-        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4
         with:
           package_json_file: desktop/package.json
       - name: Setup Node
@@ -256,11 +258,11 @@ jobs:
       - name: Upload to S3
         uses: kolaente/s3-action@41963184b524ccac734ea4d8c964ac74b5b1af89 # v1.2.1
         with:
-          s3-access-key-id: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
-          s3-secret-access-key: ${{ secrets.HETZNER_S3_SECRET_KEY }}
-          s3-endpoint: "https://fsn1.your-objectstorage.com"
-          s3-bucket: "vikunja"
-          s3-region: "fsn1"
+          s3-access-key-id: ${{ secrets.S3_ACCESS_KEY }}
+          s3-secret-access-key: ${{ secrets.S3_SECRET_KEY }}
+          s3-endpoint: ${{ secrets.S3_ENDPOINT }}
+          s3-bucket: ${{ secrets.S3_BUCKET }}
+          s3-region: ${{ secrets.S3_REGION }}
           files: "desktop/dist/Vikunja*"
           target-path: /desktop/${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}
           strip-path-prefix: desktop/dist/
@@ -333,44 +335,44 @@ jobs:
         uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
         with:
           name: vikunja_bin_packages
-      
+
       - name: Download OS Package rpm
         uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
         with:
           name: vikunja_os_package_rpm
-      
+
       - name: Download OS Package deb
         uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
         with:
           name: vikunja_os_package_deb
-      
+
       - name: Download OS Package apk
         uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
         with:
           name: vikunja_os_package_apk
-      
+
       - name: Download OS Package archlinux
         uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
         with:
           name: vikunja_os_package_archlinux
-      
+
       - name: Download Desktop Package Linux
         uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
         with:
           name: vikunja_desktop_packages_ubuntu-latest
-      
+
       - name: Download Desktop Package MacOS
         uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
         with:
           name: vikunja_desktop_packages_macos-latest
-      
+
       - name: Download Desktop Package Windows
         uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
         with:
           name: vikunja_desktop_packages_windows-latest
-      
+
       - name: Release
-        uses: softprops/action-gh-release@6cbd405e2c4e67a21c47fa9e383d020e4e28b836 # v2
+        uses: softprops/action-gh-release@6da8fa9354ddfdc4aeace5fc48d7f679b5214090 # v2
         if: github.ref_type == 'tag'
         with:
           draft: true

@@ -56,8 +56,8 @@
 										class="title input"
 										:contenteditable="(bucketTitleEditable && canWrite && !collapsedBuckets[bucket.id]) ? true : undefined"
 										:spellcheck="false"
-										@keydown.enter.prevent.stop="($event.target as HTMLElement).blur()"
-										@keydown.esc.prevent.stop="($event.target as HTMLElement).blur()"
+										@keydown.enter.prevent.stop="!$event.isComposing && ($event.target as HTMLElement).blur()"
+										@keydown.esc.prevent.stop="!$event.isComposing && ($event.target as HTMLElement).blur()"
 										@blur="saveBucketTitle(bucket.id, ($event.target as HTMLElement).textContent as string)"
 										@click="focusBucketTitle"
 									>

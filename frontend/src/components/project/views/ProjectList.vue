@@ -314,6 +314,9 @@ function handleListNavigation(e: KeyboardEvent) {
 	}
 
 	if (e.key === 'Enter') {
+		if (e.isComposing) {
+			return
+		}
 		e.preventDefault()
 		taskRefs.value[focusedIndex.value]?.click(e)
 	}

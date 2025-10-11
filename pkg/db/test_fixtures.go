@@ -49,13 +49,13 @@ func InitFixtures(tablenames ...string) (err error) {
 
 	loaderOptions := []func(loader *testfixtures.Loader) error{
 		testfixtures.Database(x.DB().DB),
-		testfixtures.Dialect(config.DatabaseType.GetString()),
+		testfixtures.Dialect(GetDialect()),
 		testfixtures.DangerousSkipTestDatabaseCheck(),
 		testfixtures.Location(config.GetTimeZone()),
 		testfiles,
 	}
 
-	if config.DatabaseType.GetString() == "postgres" {
+	if GetDialect() == "postgres" {
 		loaderOptions = append(loaderOptions, testfixtures.SkipResetSequences())
 	}
 

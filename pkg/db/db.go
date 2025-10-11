@@ -21,6 +21,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -187,12 +188,27 @@ func initPostgresEngine() (engine *xorm.Engine, err error) {
 func initSqliteEngine() (engine *xorm.Engine, err error) {
 	path := config.DatabasePath.GetString()
 
-	if path != "memory" && !filepath.IsAbs(path) {
-		path = filepath.Join(config.ServiceRootpath.GetString(), path)
-	}
-
 	if path == "memory" {
 		return xorm.NewEngine("sqlite3", "file::memory:?cache=shared")
+	}
+
+	// Resolve relative paths to a safe location instead of the current working directory
+	if !filepath.IsAbs(path) {
+		path = resolveDatabasePath(path)
+	}
+
+	// Convert to absolute path for logging
+	path, err = filepath.Abs(path)
+	if err != nil {
+		return nil, fmt.Errorf("could not resolve database path to absolute path: %w", err)
+	}
+
+	// Log the resolved database path
+	log.Infof("Using SQLite database at: %s", path)
+
+	// Warn if the database is in a potentially problematic location
+	if isSystemDirectory(path) {
+		log.Warningf("Database path (%s) appears to be in a system directory. This may cause issues. Please use an absolute path or configure the database path to a user data directory.", path)
 	}
 
 	// Try opening the db file to return a better error message if that does not work
@@ -211,6 +227,141 @@ func initSqliteEngine() (engine *xorm.Engine, err error) {
 	}
 
 	return xorm.NewEngine("sqlite3", path)
+}
+
+// resolveDatabasePath resolves a relative database path to an appropriate location
+// based on platform-specific conventions. This prevents SQLite databases from being
+// created in system directories (like C:\Windows\System32 on Windows) when Vikunja
+// runs as a service.
+func resolveDatabasePath(relativePath string) string {
+	// First, check if a rootpath is explicitly configured and use that
+	rootPath := config.ServiceRootpath.GetString()
+
+	// Determine if rootpath appears to be a user-configured value or a default
+	// If it looks like it was explicitly configured (not just the binary location),
+	// use it for backward compatibility
+	execPath, err := os.Executable()
+	if err == nil && rootPath != filepath.Dir(execPath) {
+		// rootpath was explicitly configured, use it
+		return filepath.Join(rootPath, relativePath)
+	}
+
+	// Otherwise, use a platform-appropriate user data directory
+	dataDir, err := getUserDataDir()
+	if err != nil {
+		// Fall back to rootpath if we can't determine user data dir
+		log.Warningf("Could not determine user data directory, falling back to rootpath: %v", err)
+		return filepath.Join(rootPath, relativePath)
+	}
+
+	return filepath.Join(dataDir, relativePath)
+}
+
+// getUserDataDir returns the platform-appropriate directory for application data
+func getUserDataDir() (string, error) {
+	var dataDir string
+
+	switch runtime.GOOS {
+	case "windows":
+		// On Windows, use %LOCALAPPDATA%\Vikunja
+		localAppData := os.Getenv("LOCALAPPDATA")
+		if localAppData == "" {
+			// Fallback to %USERPROFILE%\AppData\Local if LOCALAPPDATA is not set
+			userProfile := os.Getenv("USERPROFILE")
+			if userProfile == "" {
+				return "", fmt.Errorf("neither LOCALAPPDATA nor USERPROFILE environment variables are set")
+			}
+			localAppData = filepath.Join(userProfile, "AppData", "Local")
+		}
+		dataDir = filepath.Join(localAppData, "Vikunja")
+	case "darwin":
+		// On macOS, use ~/Library/Application Support/Vikunja
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", err
+		}
+		dataDir = filepath.Join(home, "Library", "Application Support", "Vikunja")
+	default:
+		// On Linux and other Unix-like systems, use XDG_DATA_HOME or ~/.local/share/vikunja
+		xdgDataHome := os.Getenv("XDG_DATA_HOME")
+		if xdgDataHome != "" {
+			dataDir = filepath.Join(xdgDataHome, "vikunja")
+		} else {
+			home, err := os.UserHomeDir()
+			if err != nil {
+				return "", err
+			}
+			dataDir = filepath.Join(home, ".local", "share", "vikunja")
+		}
+	}
+
+	// Ensure the directory exists
+	if err := os.MkdirAll(dataDir, 0o700); err != nil {
+		return "", fmt.Errorf("could not create data directory %s: %w", dataDir, err)
+	}
+
+	return dataDir, nil
+}
+
+// isSystemDirectory checks if a path appears to be in a system directory
+// where users should not typically store application data
+func isSystemDirectory(path string) bool {
+	// Clean and normalize the path
+	path = filepath.Clean(path)
+	lowerPath := strings.ToLower(path)
+
+	// Windows system directories
+	if runtime.GOOS == "windows" {
+		// Convert to absolute path if possible for more accurate checking
+		absPath := lowerPath
+		if abs, err := filepath.Abs(path); err == nil {
+			absPath = strings.ToLower(filepath.Clean(abs))
+		}
+
+		// Check common Windows system directories using prefix matching
+		// This prevents false positives like C:\myapp\windows\data
+		windowsSystemPrefixes := []string{
+			"c:\\windows\\system32",
+			"c:\\windows\\syswow64",
+			"c:\\windows\\winsxs",
+			"c:\\windows\\servicing",
+		}
+
+		for _, prefix := range windowsSystemPrefixes {
+			if strings.HasPrefix(absPath, prefix) {
+				return true
+			}
+		}
+
+		// Also check for direct C:\Windows (not subdirectories like C:\myapp\windows)
+		// by ensuring it starts with the drive and windows directory
+		if absPath == "c:\\windows" || strings.HasPrefix(absPath, "c:\\windows\\") {
+			// Exclude some safe subdirectories under C:\Windows
+			safeDirs := []string{
+				"c:\\windows\\temp",
+			}
+			for _, safeDir := range safeDirs {
+				if strings.HasPrefix(absPath, safeDir) {
+					return false
+				}
+			}
+			return true
+		}
+	}
+
+	// Unix-like system directories - use prefix matching
+	systemDirs := []string{
+		"/bin", "/sbin", "/usr/bin", "/usr/sbin",
+		"/etc", "/sys", "/proc", "/dev",
+	}
+	for _, sysDir := range systemDirs {
+		// Ensure we match exact directory boundaries
+		if lowerPath == sysDir || strings.HasPrefix(lowerPath, sysDir+"/") {
+			return true
+		}
+	}
+
+	return false
 }
 
 // WipeEverything wipes all tables and their data. Use with caution...
@@ -241,12 +392,14 @@ func Type() schemas.DBType {
 }
 
 func GetDialect() string {
-	dialect := config.DatabaseType.GetString()
-	if dialect == "sqlite" {
-		dialect = builder.SQLITE
+	switch config.DatabaseType.GetString() {
+	case "mysql":
+		return builder.MYSQL
+	case "postgres":
+		return builder.POSTGRES
+	default:
+		return builder.SQLITE
 	}
-
-	return dialect
 }
 
 func checkParadeDB(engine *xorm.Engine) {
