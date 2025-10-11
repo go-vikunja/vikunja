@@ -105,8 +105,8 @@ function primary(event: MouseEvent) {
 		return
 	}
 
-	setLoading(true)
 	emit('create', event)
 	emit('primary', event)
+	setLoading(true)
 }
 </script>
