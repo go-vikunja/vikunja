@@ -14,7 +14,7 @@
 			<BaseButton
 				v-if="!isModal || isMobile"
 				class="back-button mbs-2"
-				@click="lastProjectId ? router.back() : router.push(projectRoute)"
+				@click="lastProject ? router.back() : router.push(projectRoute)"
 			>
 				<Icon icon="arrow-left" />
 				{{ $t('task.detail.back') }}
@@ -691,6 +691,22 @@ function saveTaskViaHotkey(event) {
 	saveTask()
 }
 
+const lastProject = computed(() => {
+	const backRoute = router.options.history.state?.back
+	if (!backRoute || typeof backRoute !== 'string') {
+		return null
+	}
+
+	const projectMatch = backRoute.match(/\/projects\/(-?\d+)/)
+	if (!projectMatch || !projectMatch[1]) {
+		return null
+	}
+
+	const id = parseInt(projectMatch[1])
+
+	return projectStore.projects[id] ?? null
+})
+
 onMounted(() => {
 	document.addEventListener('keydown', saveTaskViaHotkey)
 })
@@ -704,14 +720,14 @@ onBeforeRouteLeave(async () => {
 		return
 	}
 
-	if (!project.value) {
+	if (!lastProject.value) {
 		await new Promise<void>((resolve) => {
 			const timeout = setTimeout(() => {
 				stop()
 				resolve()
 			}, 5000) // 5 second timeout
 			
-			const stop = watch(project, (p) => {
+			const stop = watch(lastProject, (p) => {
 				if (p) {
 					clearTimeout(timeout)
 					stop()
@@ -721,8 +737,8 @@ onBeforeRouteLeave(async () => {
 		})
 	}
 
-	if (project.value) {
-		await baseStore.handleSetCurrentProjectIfNotSet(project.value)
+	if (lastProject.value) {
+		await baseStore.handleSetCurrentProjectIfNotSet(lastProject.value)
 	}
 })
 
@@ -773,20 +789,6 @@ async function scrollToHeading() {
 
 const taskService = shallowReactive(new TaskService())
 
-const lastProjectId = computed(() => {
-	const backRoute = router.options.history.state?.back
-	if (!backRoute || typeof backRoute !== 'string') {
-		return null
-	}
-
-	const projectMatch = backRoute.match(/\/projects\/(-?\d+)/)
-	if (!projectMatch) {
-		return null
-	}
-
-	return parseInt(projectMatch[1])
-})
-
 // load task
 watch(
 	() => props.taskId,
@@ -806,11 +808,8 @@ watch(
 				return
 			}
 			
-			const lastProject =  projectStore.projects[lastProjectId.value] ?? false
-			console.log(lastProject)
-
-			if (lastProject) {
-				await baseStore.handleSetCurrentProjectIfNotSet(lastProject)
+			if (lastProject.value) {
+				await baseStore.handleSetCurrentProjectIfNotSet(lastProject.value)
 			}
 		} catch (e) {
 			if (e?.response?.status === 404) {
