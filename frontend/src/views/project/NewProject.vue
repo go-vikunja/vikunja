@@ -3,7 +3,7 @@
 		v-model:loading="isSubmitting"
 		:title="$t('project.create.header')"
 		:primary-disabled="project.title === ''"
-		@create="createNewProject()"
+		@create="createProject()"
 	>
 		<div class="field">
 			<label
@@ -22,7 +22,7 @@
 					:placeholder="$t('project.create.titlePlaceholder')"
 					type="text"
 					name="projectTitle"
-					@keyup.enter="createNewProject()"
+					@keyup.enter="createProject()"
 					@keyup.esc="$router.back()"
 				>
 			</div>
@@ -87,7 +87,7 @@ watch(
 	{immediate: true},
 )
 
-async function createNewProject() {
+async function createProject() {
 	if (project.title === '') {
 		showError.value = true
 		return

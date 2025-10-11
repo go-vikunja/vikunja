@@ -50,10 +50,6 @@ watch(
 )
 
 async function duplicate() {
-	if (isDuplicating.value) {
-		return
-	}
-
 	isDuplicating.value = true
 
 	try {

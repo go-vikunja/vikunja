@@ -3,7 +3,7 @@
 		v-model:loading="loadingModel"
 		:title="title"
 		:primary-disabled="team.name === ''"
-		@create="newTeam()"
+		@create="createTeam()"
 	>
 		<div class="field">
 			<label
@@ -22,7 +22,7 @@
 					class="input"
 					:placeholder="$t('team.attributes.namePlaceholder')"
 					type="text"
-					@keyup.enter="newTeam"
+					@keyup.enter="createTeam"
 				>
 			</div>
 		</div>
