@@ -14,7 +14,7 @@
 			<BaseButton
 				v-if="!isModal || isMobile"
 				class="back-button mbs-2"
-				@click="router.options.history.state?.back?.includes('/projects/') ? router.back() : router.push(projectRoute)"
+				@click="lastProjectId ? router.back() : router.push(projectRoute)"
 			>
 				<Icon icon="arrow-left" />
 				{{ $t('task.detail.back') }}
@@ -773,6 +773,20 @@ async function scrollToHeading() {
 
 const taskService = shallowReactive(new TaskService())
 
+const lastProjectId = computed(() => {
+	const backRoute = router.options.history.state?.back
+	if (!backRoute || typeof backRoute !== 'string') {
+		return null
+	}
+
+	const projectMatch = backRoute.match(/\/projects\/(-?\d+)/)
+	if (!projectMatch) {
+		return null
+	}
+
+	return parseInt(projectMatch[1])
+})
+
 // load task
 watch(
 	() => props.taskId,
@@ -788,8 +802,15 @@ watch(
 			taskColor.value = task.value.hexColor
 			setActiveFields()
 
-			if (project.value) {
-				await baseStore.handleSetCurrentProjectIfNotSet(project.value)
+			if (!lastProjectId.value) {
+				return
+			}
+			
+			const lastProject =  projectStore.projects[lastProjectId.value] ?? false
+			console.log(lastProject)
+
+			if (lastProject) {
+				await baseStore.handleSetCurrentProjectIfNotSet(lastProject)
 			}
 		} catch (e) {
 			if (e?.response?.status === 404) {
