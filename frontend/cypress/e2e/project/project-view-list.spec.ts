@@ -208,11 +208,11 @@ describe('Project View List', () => {
 		cy.get('.tasks').should('contain', lowPriorityTasks[0].title)
 
 		// Visit with filter parameter for priority >= 4
-		cy.visit('/projects/1/1?filter=priority%20%3E%3D%204')
+		cy.visit('/projects/1/1?filter=priority%20>=%204')
 
 		// URL should retain the filter parameter
 		cy.url()
-			.should('include', 'filter=priority%20%3E%3D%204')
+			.should('include', 'filter=priority')
 
 		// List should show high priority tasks
 		cy.get('.tasks')
@@ -250,11 +250,11 @@ describe('Project View List', () => {
 		const {matchingTask, nonMatchingTask1, nonMatchingTask2} = createTasksWithPriorityAndSearch()
 
 		// Visit with both filter and search parameters
-		cy.visit('/projects/1/1?filter=priority%20%3E%3D%205&s=meeting')
+		cy.visit('/projects/1/1?filter=priority%20>=%205&s=meeting')
 
 		// URL should retain both parameters
 		cy.url()
-			.should('include', 'filter=priority%20%3E%3D%205')
+			.should('include', 'filter=priority')
 			.and('include', 's=meeting')
 
 		// List should show only the matching task
