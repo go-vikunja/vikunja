@@ -804,10 +804,6 @@ watch(
 			taskColor.value = task.value.hexColor
 			setActiveFields()
 
-			if (!lastProjectId.value) {
-				return
-			}
-			
 			if (lastProject.value) {
 				await baseStore.handleSetCurrentProjectIfNotSet(lastProject.value)
 			}
