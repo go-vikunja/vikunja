@@ -62,6 +62,11 @@ describe('Project View Table', () => {
 	it('Should respect filter query parameter from URL', () => {
 		const {highPriorityTasks, lowPriorityTasks} = createTasksWithPriorities()
 
+		// First verify tasks exist without filter
+		cy.visit('/projects/1/3')
+		cy.get('.project-table table.table').should('contain', highPriorityTasks[0].title)
+		cy.get('.project-table table.table').should('contain', lowPriorityTasks[0].title)
+
 		// Visit with filter parameter for priority >= 4
 		cy.visit('/projects/1/3?filter=priority%20%3E%3D%204')
 
