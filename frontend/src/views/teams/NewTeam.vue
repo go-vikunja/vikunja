@@ -92,7 +92,7 @@ const loadingModel = computed({
 
 const configStore = useConfigStore()
 
-async function newTeam() {
+async function createTeam() {
 	if (team.name === '') {
 		showError.value = true
 		return
