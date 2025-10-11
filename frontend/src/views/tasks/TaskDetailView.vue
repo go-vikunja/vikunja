@@ -707,6 +707,8 @@ const lastProject = computed(() => {
 	return projectStore.projects[id] ?? null
 })
 
+const lastProjectOrTaskProject = computed(() => lastProject.value ?? project.value)
+
 onMounted(() => {
 	document.addEventListener('keydown', saveTaskViaHotkey)
 })
@@ -720,14 +722,14 @@ onBeforeRouteLeave(async () => {
 		return
 	}
 
-	if (!lastProject.value) {
+	if (!lastProjectOrTaskProject.value) {
 		await new Promise<void>((resolve) => {
 			const timeout = setTimeout(() => {
 				stop()
 				resolve()
 			}, 5000) // 5 second timeout
 			
-			const stop = watch(lastProject, (p) => {
+			const stop = watch(lastProjectOrTaskProject, (p) => {
 				if (p) {
 					clearTimeout(timeout)
 					stop()
@@ -737,8 +739,8 @@ onBeforeRouteLeave(async () => {
 		})
 	}
 
-	if (lastProject.value) {
-		await baseStore.handleSetCurrentProjectIfNotSet(lastProject.value)
+	if (lastProjectOrTaskProject.value) {
+		await baseStore.handleSetCurrentProjectIfNotSet(lastProjectOrTaskProject.value)
 	}
 })
 
