@@ -74,13 +74,17 @@ func getLinkShareLogic(s *xorm.Session, u *user.User, c echo.Context) error {
 	}
 
 	// Check if user can read this link share
-	canRead, _, err := linkShareService.CanRead(s, share, u)
+	canRead, maxPermission, err := linkShareService.CanRead(s, share, u)
 	if err != nil {
 		return err
 	}
 	if !canRead {
 		return echo.NewHTTPError(http.StatusForbidden, "Forbidden")
 	}
+
+	// Set max permission header for frontend compatibility
+	c.Response().Header().Set("x-max-permission", strconv.FormatInt(int64(maxPermission), 10))
+	c.Response().Header().Set("Access-Control-Expose-Headers", "x-max-permission")
 
 	return c.JSON(http.StatusOK, share)
 }

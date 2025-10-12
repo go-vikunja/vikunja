@@ -1499,6 +1499,14 @@ func (p *ProjectService) AddDetails(s *xorm.Session, projects []*models.Project,
 		}
 	}
 
+	// Add maxPermission to all projects
+	if u != nil {
+		err = models.AddMaxPermissionToProjects(s, projects, u)
+		if err != nil {
+			return err
+		}
+	}
+
 	if len(fileIDs) == 0 {
 		return
 	}

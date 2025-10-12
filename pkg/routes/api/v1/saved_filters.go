@@ -61,6 +61,10 @@ func GetSavedFilter(s *xorm.Session, u *user.User, c echo.Context) error {
 		return err
 	}
 
+	// Saved filters can only be accessed by their owner, so permission is always Admin
+	c.Response().Header().Set("x-max-permission", "2") // PermissionAdmin = 2
+	c.Response().Header().Set("Access-Control-Expose-Headers", "x-max-permission")
+
 	return c.JSON(http.StatusOK, filter)
 }
 

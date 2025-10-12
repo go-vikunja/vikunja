@@ -109,6 +109,18 @@ func getProjectView(s *xorm.Session, u *user.User, c echo.Context) error {
 		return err
 	}
 
+	// Project views inherit permissions from their parent project
+	// We need to get the project permission to set the header
+	projectService := services.NewProjectService(s.Engine())
+	project, err := projectService.GetByID(s, projectID, u)
+	if err != nil {
+		return err
+	}
+
+	// Set max permission header for frontend compatibility
+	c.Response().Header().Set("x-max-permission", strconv.FormatInt(int64(project.MaxPermission), 10))
+	c.Response().Header().Set("Access-Control-Expose-Headers", "x-max-permission")
+
 	return c.JSON(http.StatusOK, view)
 }
 

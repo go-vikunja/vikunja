@@ -106,6 +106,10 @@ func getProjectLogic(s *xorm.Session, u *user.User, c echo.Context) error {
 		return err
 	}
 
+	// Set max permission header for frontend compatibility
+	c.Response().Header().Set("x-max-permission", strconv.FormatInt(int64(project.MaxPermission), 10))
+	c.Response().Header().Set("Access-Control-Expose-Headers", "x-max-permission")
+
 	return c.JSON(http.StatusOK, project)
 }
 
