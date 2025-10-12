@@ -141,7 +141,21 @@ func TestTaskBucket_Update(t *testing.T) {
 			ProjectViewID: 4,
 			ProjectID:     1, // In actual web requests set via the url
 		}
-		err := tb.Update(s, u)
+
+		// Before running the TaskBucket Update we retrive the task and execute 
+		// an updateDone to obtain the task with updated start/end/due dates
+		// This way we can later match them with what happens after running TaskBucket Update
+		u := &user.User{ID: 1}
+		oldTask := &Task{ID: tb.TaskID}
+		err := oldTask.ReadOne(s, u)
+		require.NoError(t, err)
+		updatedTask := &Task{ID: tb.TaskID}
+		err = updatedTask.ReadOne(s, u)
+		require.NoError(t, err)
+		updatedTask.Done = true
+		updateDone(oldTask, updatedTask) // updatedTask now contains the updated dates
+
+		err = tb.Update(s, u)
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
@@ -156,6 +170,10 @@ func TestTaskBucket_Update(t *testing.T) {
 			"task_id":   1,
 			"bucket_id": 1,
 		}, false)
+		
+		assert.Equal(t, updatedTask.DueDate.Unix(), tb.Task.DueDate.Unix())
+		assert.Equal(t, updatedTask.StartDate.Unix(), tb.Task.StartDate.Unix())
+		assert.Equal(t, updatedTask.EndDate.Unix(), tb.Task.EndDate.Unix())
 	})
 
 	t.Run("keep done timestamp when moving task between projects", func(t *testing.T) {

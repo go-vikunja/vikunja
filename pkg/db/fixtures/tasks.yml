@@ -226,7 +226,7 @@
   updated: 2018-12-01 01:12:04
   start_date: 2018-11-30 22:25:24
 - id: 28
-  title: 'task #28 with repeat after'
+  title: 'task #28 with repeat after, start_date, end_date and due_date'
   done: false
   created_by_id: 1
   repeat_after: 3600
@@ -234,6 +234,9 @@
   index: 13
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
+  due_date: 2018-12-02 22:25:24
+  start_date: 2018-11-30 22:25:24
+  end_date: 2018-12-13 11:20:00
 - id: 29
   title: 'task #29 with parent task (1)'
   done: false

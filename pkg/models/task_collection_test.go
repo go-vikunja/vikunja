@@ -502,7 +502,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	}
 	task28 := &Task{
 		ID:           28,
-		Title:        "task #28 with repeat after",
+		Title:        "task #28 with repeat after, start_date, end_date and due_date",
 		Identifier:   "test1-13",
 		Index:        13,
 		CreatedByID:  1,
@@ -512,6 +512,9 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		RepeatAfter:  3600,
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
+		DueDate:	  time.Unix(1543789524, 0).In(loc),
+		StartDate:	  time.Unix(1543616724, 0).In(loc),
+		EndDate:	  time.Unix(1544700000, 0).In(loc),
 	}
 	task29 := &Task{
 		ID:          29,
@@ -832,6 +835,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task7,
 				task8,
 				task9,
+				task28,
 			},
 			wantErr: false,
 		},
@@ -844,6 +848,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			want: []*Task{
 				task8,
 				task9,
+				task28,
 			},
 			wantErr: false,
 		},
@@ -890,6 +895,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task7,
 				task8,
 				task9,
+				task28,
 			},
 			wantErr: false,
 		},
@@ -1500,6 +1506,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				// The only tasks with a due date
 				task6,
 				task5,
+				task28,
 				// The other ones don't have a due date
 				task39,
 				task35,
@@ -1508,7 +1515,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task31,
 				task30,
 				task29,
-				task28,
 				task27,
 				task26,
 				task25,
@@ -1550,6 +1556,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task7,
 				task6,
 				task5,
+				task28,
 			},
 		},
 		{
@@ -1563,6 +1570,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				a: &user.User{ID: 1},
 			},
 			want: []*Task{
+				task28,
 				task5,
 				task6,
 				task7,
@@ -1583,6 +1591,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			want: []*Task{
 				task6,
 				task5,
+				task28,
 				task7,
 				task8,
 				task9,
