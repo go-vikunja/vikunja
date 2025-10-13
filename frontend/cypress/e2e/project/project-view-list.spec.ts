@@ -185,8 +185,12 @@ describe('Project View List', () => {
 
 		cy.get('.tasks')
 			.should('contain', 'Parent Task')
+		cy.get('.tasks')
+			.should('contain', 'Subtask Same Project')
 
-		cy.get('ul.tasks > div')
-			.should('have.length', 2)
+		cy.get('ul.tasks > div > .single-task')
+			.should('exist')
+		cy.get('ul.tasks > div > .subtask-nested')
+			.should('exist')
 	})
 })
