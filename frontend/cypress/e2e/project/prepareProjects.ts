@@ -2,7 +2,7 @@ import {ProjectFactory} from '../../factories/project'
 import {TaskFactory} from '../../factories/task'
 import {ProjectViewFactory} from "../../factories/project_view";
 
-export function createDefaultViews(projectId, startViewId = 1) {
+export function createDefaultViews(projectId: number, startViewId = 1) {
 	const list = ProjectViewFactory.create(1, {
 		id: startViewId,
 		project_id: projectId,

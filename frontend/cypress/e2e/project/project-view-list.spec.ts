@@ -144,10 +144,8 @@ describe('Project View List', () => {
 			relation_kind: 'parenttask',
 		}, false)
 
-		// Visit Project B's List view
-		cy.visit(`/projects/${projects[1].id}`)
+		cy.visit(`/projects/${projects[1].id}/${projects[1].views[0].id}`)
 
-		// The subtask should be visible in Project B
 		cy.get('.tasks')
 			.should('contain', 'Subtask in Project B')
 	})
@@ -183,10 +181,8 @@ describe('Project View List', () => {
 			relation_kind: 'parenttask',
 		}, false)
 
-		// Visit the project's List view
-		cy.visit(`/projects/${projects[0].id}`)
+		cy.visit(`/projects/${projects[0].id}/${projects[0].views[0].id}`)
 
-		// Parent task should be visible
 		cy.get('.tasks')
 			.should('contain', 'Parent Task')
 
