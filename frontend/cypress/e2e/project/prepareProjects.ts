@@ -36,17 +36,19 @@ export function createDefaultViews(projectId: number, startViewId = 1, truncate:
 	]
 }
 
-export function createProjects(count = 1) {
+export function createProjects(count: number = 1, attachViews: boolean = false) {
 	const projects = ProjectFactory.create(count, {
 		title: i => count === 1 ? 'First Project' : `Project ${i + 1}`,
 	})
+
 	TaskFactory.truncate()
 	ProjectViewFactory.truncate()
 
-	let viewIdCounter = 1
 	for (let i = 0; i < projects.length; i++) {
-		projects[i].views = createDefaultViews(projects[i].id, viewIdCounter, false)
-		viewIdCounter += 4
+		const views = createDefaultViews(projects[i].id, i * 4, false)
+		if (attachViews) {
+			projects[i].views = views
+		}
 	}
 
 	return projects
