@@ -2,7 +2,10 @@ import {ProjectFactory} from '../../factories/project'
 import {TaskFactory} from '../../factories/task'
 import {ProjectViewFactory} from "../../factories/project_view";
 
-export function createDefaultViews(projectId: number, startViewId = 1) {
+export function createDefaultViews(projectId: number, startViewId = 1, truncate: boolean = true) {
+	if (truncate) {
+		ProjectViewFactory.truncate()
+	}
 	const list = ProjectViewFactory.create(1, {
 		id: startViewId,
 		project_id: projectId,
@@ -42,7 +45,7 @@ export function createProjects(count = 1) {
 
 	let viewIdCounter = 1
 	for (let i = 0; i < projects.length; i++) {
-		projects[i].views = createDefaultViews(projects[i].id, viewIdCounter)
+		projects[i].views = createDefaultViews(projects[i].id, viewIdCounter, false)
 		viewIdCounter += 4
 	}
 
