@@ -114,9 +114,7 @@ describe('Project View List', () => {
 	})
 
 	it('Should show cross-project subtasks in their own project List view', () => {
-		const projects = ProjectFactory.create(2, {
-			id: '{increment}',
-		})
+		const projects = ProjectFactory.create(2)
 
 		const tasks = [
 			TaskFactory.create(1, {
@@ -152,9 +150,7 @@ describe('Project View List', () => {
 	})
 
 	it('Should hide same-project subtasks under their parent', () => {
-		const projects = ProjectFactory.create(1, {
-			id: '{increment}',
-		})
+		const projects = ProjectFactory.create(1)
 
 		const tasks = [
 			TaskFactory.create(1, {
