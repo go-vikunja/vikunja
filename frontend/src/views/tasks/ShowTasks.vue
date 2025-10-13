@@ -11,20 +11,37 @@
 				v-if="showAll"
 				class="sort-container"
 			>
-				<XButton
-					variant="secondary"
-					:icon="sortBy === 'due_date' ? 'calendar' : 'exclamation'"
-					@click="toggleSortBy"
-				>
-					{{ $t('task.show.sortBy') }}: {{ sortBy === 'due_date' ? $t('task.attributes.dueDate') : $t('task.attributes.priority') }}
-				</XButton>
-				<XButton
-					variant="secondary"
-					:icon="sortOrder === 'asc' ? 'arrow-up' : 'arrow-down'"
+				<div class="select">
+					<select
+						:value="sortBy"
+						@change="setSortBy($event.target.value)"
+					>
+						<option value="due_date">
+							{{ $t('task.attributes.dueDate') }}
+						</option>
+						<option value="priority">
+							{{ $t('task.attributes.priority') }}
+						</option>
+						<option value="title">
+							{{ $t('task.attributes.title') }}
+						</option>
+						<option value="start_date">
+							{{ $t('task.attributes.startDate') }}
+						</option>
+						<option value="end_date">
+							{{ $t('task.attributes.endDate') }}
+						</option>
+						<option value="done">
+							{{ $t('task.attributes.done') }}
+						</option>
+					</select>
+				</div>
+				<button
+					class="button is-outlined"
 					@click="toggleSortOrder"
 				>
-					{{ sortOrder === 'asc' ? $t('misc.ascending') : $t('misc.descending') }}
-				</XButton>
+					<span>{{ sortOrder === 'asc' ? $t('misc.ascending') : $t('misc.descending') }}</span>
+				</button>
 			</div>
 		</div>
 		<div
@@ -203,13 +220,13 @@ function setShowNulls(show: boolean) {
 	})
 }
 
-function toggleSortBy() {
-	sortBy.value = sortBy.value === 'due_date' ? 'priority' : 'due_date'
+function setSortBy(sort: string) {
+	sortBy.value = sort
 	router.push({
 		name: route.name as string,
 		query: {
 			...route.query,
-			sortBy: sortBy.value,
+			sortBy: sort,
 		},
 	})
 }
@@ -289,6 +306,10 @@ watchEffect(() => setTitle(pageTitle.value))
 	justify-content: space-between;
 	align-items: center;
 	margin-block-end: 1rem;
+
+	.title {
+		margin-block-end: 0;
+	}
 }
 
 .show-tasks-options {
@@ -299,6 +320,7 @@ watchEffect(() => setTitle(pageTitle.value))
 .sort-container {
 	display: flex;
 	gap: 0.5rem;
+	align-items: center;
 }
 
 .llama-cool {
