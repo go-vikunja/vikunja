@@ -2,9 +2,10 @@ import {createFakeUserAndLogin} from '../../support/authenticateUser'
 
 import {UserProjectFactory} from '../../factories/users_project'
 import {TaskFactory} from '../../factories/task'
+import {TaskRelationFactory} from '../../factories/task_relation'
 import {UserFactory} from '../../factories/user'
 import {ProjectFactory} from '../../factories/project'
-import {prepareProjects} from './prepareProjects'
+import {prepareProjects, createProjects} from './prepareProjects'
 import {BucketFactory} from '../../factories/bucket'
 
 describe('Project View List', () => {
@@ -110,5 +111,86 @@ describe('Project View List', () => {
 			.should('contain', tasks[99].title)
 		cy.get('.tasks')
 			.should('not.contain', tasks[20].title)
+	})
+
+	it('Should show cross-project subtasks in their own project List view', () => {
+		const projects = createProjects(2)
+
+		const tasks = [
+			TaskFactory.create(1, {
+				id: 1,
+				title: 'Parent Task in Project A',
+				project_id: projects[0].id,
+			}, false)[0],
+			TaskFactory.create(1, {
+				id: 2,
+				title: 'Subtask in Project B',
+				project_id: projects[1].id,
+			}, false)[0],
+		]
+
+		// Make task 2 a subtask of task 1
+		TaskRelationFactory.truncate()
+		TaskRelationFactory.create(1, {
+			id: 1,
+			task_id: 2,
+			other_task_id: 1,
+			relation_kind: 'subtask',
+		}, false)
+		TaskRelationFactory.create(1, {
+			id: 2,
+			task_id: 1,
+			other_task_id: 2,
+			relation_kind: 'parenttask',
+		}, false)
+
+		cy.visit(`/projects/${projects[1].id}/${projects[1].views[0].id}`)
+
+		cy.get('.tasks')
+			.should('contain', 'Subtask in Project B')
+	})
+
+	it('Should show same-project subtasks under their parent', () => {
+		const projects = createProjects(1)
+
+		const tasks = [
+			TaskFactory.create(1, {
+				id: 1,
+				title: 'Parent Task',
+				project_id: projects[0].id,
+			}, false)[0],
+			TaskFactory.create(1, {
+				id: 2,
+				title: 'Subtask Same Project',
+				project_id: projects[0].id,
+			}, false)[0],
+		]
+
+		// Make task 2 a subtask of task 1
+		TaskRelationFactory.truncate()
+		TaskRelationFactory.create(1, {
+			id: 1,
+			task_id: 2,
+			other_task_id: 1,
+			relation_kind: 'subtask',
+		}, false)
+		TaskRelationFactory.create(1, {
+			id: 2,
+			task_id: 1,
+			other_task_id: 2,
+			relation_kind: 'parenttask',
+		}, false)
+
+		cy.visit(`/projects/${projects[0].id}/${projects[0].views[0].id}`)
+
+		cy.get('.tasks')
+			.should('contain', 'Parent Task')
+		cy.get('.tasks')
+			.should('contain', 'Subtask Same Project')
+
+		cy.get('ul.tasks > div > .single-task')
+			.should('exist')
+		cy.get('ul.tasks > div > .subtask-nested')
+			.should('exist')
 	})
 })
