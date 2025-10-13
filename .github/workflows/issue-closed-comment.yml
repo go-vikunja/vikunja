@@ -117,7 +117,7 @@ jobs:
                 ? `#${closingPR.number}`
                 : `[\`${commitSha.substring(0, 7)}\`](${commitUrl})`
               
-              const comment = `This issue has been fixed in ${closedRef}, please check with the next unstable build (should be ready for deployment in ~30min, also on [the demo](https://try.vikunja.io).`
+              const comment = `This issue has been fixed in ${closedRef}, please check with the next unstable build (should be ready for deployment in ~30min, also on [the demo](https://try.vikunja.io)).`
               
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
