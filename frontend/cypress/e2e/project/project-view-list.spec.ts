@@ -133,11 +133,13 @@ describe('Project View List', () => {
 		// Make task 2 a subtask of task 1
 		TaskRelationFactory.truncate()
 		TaskRelationFactory.create(1, {
+			id: 1,
 			task_id: 2,
 			other_task_id: 1,
 			relation_kind: 'subtask',
 		}, false)
 		TaskRelationFactory.create(1, {
+			id: 2,
 			task_id: 1,
 			other_task_id: 2,
 			relation_kind: 'parenttask',
@@ -171,11 +173,13 @@ describe('Project View List', () => {
 		// Make task 2 a subtask of task 1
 		TaskRelationFactory.truncate()
 		TaskRelationFactory.create(1, {
+			id: 1,
 			task_id: 2,
 			other_task_id: 1,
 			relation_kind: 'subtask',
 		}, false)
 		TaskRelationFactory.create(1, {
+			id: 2,
 			task_id: 1,
 			other_task_id: 2,
 			relation_kind: 'parenttask',
