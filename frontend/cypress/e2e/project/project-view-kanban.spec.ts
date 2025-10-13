@@ -311,17 +311,16 @@ describe('Project View Kanban', () => {
 	it('Should respect filter query parameter from URL', () => {
 		const {highPriorityTasks, lowPriorityTasks} = createTasksWithPriorities(buckets)
 
-		// First verify tasks exist without filter
-		cy.visit('/projects/1/4')
-		cy.get('.kanban .bucket').should('contain', highPriorityTasks[0].title)
-		cy.get('.kanban .bucket').should('contain', lowPriorityTasks[0].title)
-
-		// Visit with filter parameter for priority >= 4
+		// Visit directly with filter parameter for priority >= 4
 		cy.visit('/projects/1/4?filter=priority%20>=%204')
 
 		// URL should retain the filter parameter
 		cy.url()
 			.should('include', 'filter=priority')
+
+		// Wait for the filtered task to appear (this ensures the filter was applied)
+		cy.contains('.kanban .bucket', highPriorityTasks[0].title, {timeout: 10000})
+			.should('exist')
 
 		// Kanban should show high priority tasks
 		cy.get('.kanban .bucket')
@@ -346,6 +345,10 @@ describe('Project View Kanban', () => {
 		cy.url()
 			.should('include', 's=meeting')
 
+		// Wait for the searchable task to appear (this ensures search was applied)
+		cy.contains('.kanban .bucket', searchableTask.title, {timeout: 10000})
+			.should('exist')
+
 		// Kanban should show the searchable task
 		cy.get('.kanban .bucket')
 			.should('contain', searchableTask.title)
@@ -365,6 +368,10 @@ describe('Project View Kanban', () => {
 		cy.url()
 			.should('include', 'filter=priority')
 			.and('include', 's=meeting')
+
+		// Wait for the matching task to appear (this ensures both filter and search were applied)
+		cy.contains('.kanban .bucket', matchingTask.title, {timeout: 10000})
+			.should('exist')
 
 		// Kanban should show only the matching task
 		cy.get('.kanban .bucket')

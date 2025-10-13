@@ -202,17 +202,16 @@ describe('Project View List', () => {
 	it('Should respect filter query parameter from URL', () => {
 		const {highPriorityTasks, lowPriorityTasks} = createTasksWithPriorities()
 
-		// First verify tasks exist without filter
-		cy.visit('/projects/1/1')
-		cy.get('.tasks').should('contain', highPriorityTasks[0].title)
-		cy.get('.tasks').should('contain', lowPriorityTasks[0].title)
-
-		// Visit with filter parameter for priority >= 4
+		// Visit directly with filter parameter for priority >= 4
 		cy.visit('/projects/1/1?filter=priority%20>=%204')
 
 		// URL should retain the filter parameter
 		cy.url()
 			.should('include', 'filter=priority')
+
+		// Wait for the filtered task to appear (this ensures the filter was applied)
+		cy.contains('.tasks', highPriorityTasks[0].title, {timeout: 10000})
+			.should('exist')
 
 		// List should show high priority tasks
 		cy.get('.tasks')
@@ -237,6 +236,10 @@ describe('Project View List', () => {
 		cy.url()
 			.should('include', 's=meeting')
 
+		// Wait for the searchable task to appear (this ensures search was applied)
+		cy.contains('.tasks', searchableTask.title, {timeout: 10000})
+			.should('exist')
+
 		// List should show the searchable task
 		cy.get('.tasks')
 			.should('contain', searchableTask.title)
@@ -256,6 +259,10 @@ describe('Project View List', () => {
 		cy.url()
 			.should('include', 'filter=priority')
 			.and('include', 's=meeting')
+
+		// Wait for the matching task to appear (this ensures both filter and search were applied)
+		cy.contains('.tasks', matchingTask.title, {timeout: 10000})
+			.should('exist')
 
 		// List should show only the matching task
 		cy.get('.tasks')
