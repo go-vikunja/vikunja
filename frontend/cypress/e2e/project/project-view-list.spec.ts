@@ -2,6 +2,7 @@ import {createFakeUserAndLogin} from '../../support/authenticateUser'
 
 import {UserProjectFactory} from '../../factories/users_project'
 import {TaskFactory} from '../../factories/task'
+import {TaskRelationFactory} from '../../factories/task_relation'
 import {UserFactory} from '../../factories/user'
 import {ProjectFactory} from '../../factories/project'
 import {prepareProjects} from './prepareProjects'
@@ -110,5 +111,86 @@ describe('Project View List', () => {
 			.should('contain', tasks[99].title)
 		cy.get('.tasks')
 			.should('not.contain', tasks[20].title)
+	})
+
+	it('Should show cross-project subtasks in their own project List view', () => {
+		const projects = ProjectFactory.create(2, {
+			id: '{increment}',
+		})
+
+		const tasks = [
+			TaskFactory.create(1, {
+				id: 1,
+				title: 'Parent Task in Project A',
+				project_id: projects[0].id,
+			})[0],
+			TaskFactory.create(1, {
+				id: 2,
+				title: 'Subtask in Project B',
+				project_id: projects[1].id,
+			})[0],
+		]
+
+		// Make task 2 a subtask of task 1
+		TaskRelationFactory.create(1, {
+			task_id: 2,
+			other_task_id: 1,
+			relation_kind: 'subtask',
+		})
+		TaskRelationFactory.create(1, {
+			task_id: 1,
+			other_task_id: 2,
+			relation_kind: 'parenttask',
+		})
+
+		// Visit Project B's List view
+		cy.visit(`/projects/${projects[1].id}`)
+
+		// The subtask should be visible in Project B
+		cy.get('.tasks')
+			.should('contain', 'Subtask in Project B')
+	})
+
+	it('Should hide same-project subtasks under their parent', () => {
+		const projects = ProjectFactory.create(1, {
+			id: '{increment}',
+		})
+
+		const tasks = [
+			TaskFactory.create(1, {
+				id: 1,
+				title: 'Parent Task',
+				project_id: projects[0].id,
+			})[0],
+			TaskFactory.create(1, {
+				id: 2,
+				title: 'Subtask Same Project',
+				project_id: projects[0].id,
+			})[0],
+		]
+
+		// Make task 2 a subtask of task 1
+		TaskRelationFactory.create(1, {
+			task_id: 2,
+			other_task_id: 1,
+			relation_kind: 'subtask',
+		})
+		TaskRelationFactory.create(1, {
+			task_id: 1,
+			other_task_id: 2,
+			relation_kind: 'parenttask',
+		})
+
+		// Visit the project's List view
+		cy.visit(`/projects/${projects[0].id}`)
+
+		// Parent task should be visible
+		cy.get('.tasks')
+			.should('contain', 'Parent Task')
+
+		// Subtask should NOT be visible at top level
+		// (it's nested under parent, not shown as separate item)
+		cy.get('.tasks > li')
+			.should('have.length', 1)
 	})
 })
