@@ -40,7 +40,26 @@ export class Factory {
 			data.push(entry)
 		}
 
-		seed(this.table, data, truncate)
+		// Create a flattened copy of the data for seeding
+		// This removes nested objects/arrays that the backend can't handle
+		const flatData = data.map(item => {
+			const flatItem = {}
+			for (const key in item) {
+				const value = item[key]
+				// Only include primitive values (string, number, boolean, null, Date)
+				if (value === null || value === undefined ||
+					typeof value === 'string' ||
+					typeof value === 'number' ||
+					typeof value === 'boolean' ||
+					value instanceof Date) {
+					flatItem[key] = value
+				}
+				// Skip arrays, objects, and other complex types
+			}
+			return flatItem
+		})
+
+		seed(this.table, flatData, truncate)
 
 		return data
 	}
