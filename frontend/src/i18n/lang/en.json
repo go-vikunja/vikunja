@@ -634,7 +634,9 @@
     "createdBy": "Created by {0}",
     "actions": "Actions",
     "cannotBeUndone": "This cannot be undone!",
-    "avatarOfUser": "{user}'s profile image"
+    "avatarOfUser": "{user}'s profile image",
+    "ascending": "Ascending",
+    "descending": "Descending"
   },
   "input": {
     "resetColor": "Reset Color",
@@ -802,7 +804,8 @@
       "overdue": "Show overdue tasks",
       "fromuntil": "Tasks from {from} until {until}",
       "select": "Select a date range",
-      "noTasks": "Nothing to do — Have a nice day!"
+      "noTasks": "Nothing to do — Have a nice day!",
+      "sortBy": "Sort by"
     },
     "detail": {
       "chooseDueDate": "Click here to set a due date",

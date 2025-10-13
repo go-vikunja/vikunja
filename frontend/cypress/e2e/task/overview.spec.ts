@@ -148,4 +148,123 @@ describe('Home Page Task Overview', () => {
 			.should('not.contain.text', 'You can create a new project for your new tasks:')
 			.should('not.contain.text', 'Or import your projects and tasks from other services into Vikunja:')
 	})
+
+	it('Should show sort controls on the overview page', () => {
+		seedTasks()
+
+		cy.visit('/')
+
+		cy.get('.title-container .sort-container')
+			.should('exist')
+			.should('be.visible')
+		cy.get('.title-container .sort-container button')
+			.should('have.length', 2)
+	})
+
+	it('Should toggle between due date and priority sorting', () => {
+		const now = new Date()
+		const project = ProjectFactory.create()[0]
+		const views = createDefaultViews(project.id)
+		BucketFactory.create(1, {
+			project_view_id: views[3].id,
+		})
+
+		// Create tasks with different priorities and due dates
+		const tasks = [
+			{
+				id: 1,
+				project_id: project.id,
+				title: 'Low Priority Soon',
+				priority: 1,
+				due_date: new Date(now.getTime() + 86400000).toISOString(), // tomorrow
+				created: now.toISOString(),
+				updated: now.toISOString(),
+			},
+			{
+				id: 2,
+				project_id: project.id,
+				title: 'High Priority Later',
+				priority: 5,
+				due_date: new Date(now.getTime() + 172800000).toISOString(), // 2 days
+				created: now.toISOString(),
+				updated: now.toISOString(),
+			},
+		]
+		seed(TaskFactory.table, tasks)
+
+		cy.visit('/')
+
+		// Default: sorted by due date (ascending)
+		cy.get('[data-cy="showTasks"] .card .task')
+			.first()
+			.should('contain.text', 'Low Priority Soon')
+
+		// Click to sort by priority
+		cy.get('.title-container .sort-container button')
+			.first()
+			.click()
+
+		// Should now be sorted by priority (ascending, so low priority first)
+		cy.get('[data-cy="showTasks"] .card .task')
+			.first()
+			.should('contain.text', 'Low Priority Soon')
+	})
+
+	it('Should toggle between ascending and descending order', () => {
+		const taskCount = 3
+		const {tasks} = seedTasks(taskCount)
+
+		cy.visit('/')
+
+		// Default: ascending order (earliest due date first)
+		cy.get('[data-cy="showTasks"] .card .task')
+			.first()
+			.should('contain.text', tasks[0].title)
+
+		// Click to toggle to descending
+		cy.get('.title-container .sort-container button')
+			.last()
+			.click()
+
+		// Should now be in descending order (latest due date first)
+		cy.get('[data-cy="showTasks"] .card .task')
+			.first()
+			.should('contain.text', tasks[taskCount - 1].title)
+
+		// Click again to toggle back to ascending
+		cy.get('.title-container .sort-container button')
+			.last()
+			.click()
+
+		// Should be back to ascending order
+		cy.get('[data-cy="showTasks"] .card .task')
+			.first()
+			.should('contain.text', tasks[0].title)
+	})
+
+	it('Should persist sort preferences in URL', () => {
+		seedTasks()
+
+		cy.visit('/')
+
+		// Change to priority sorting
+		cy.get('.title-container .sort-container button')
+			.first()
+			.click()
+
+		cy.url().should('include', 'sortBy=priority')
+
+		// Change to descending order
+		cy.get('.title-container .sort-container button')
+			.last()
+			.click()
+
+		cy.url().should('include', 'sortOrder=desc')
+
+		// Refresh page and verify settings persist
+		cy.reload()
+
+		cy.url().should('include', 'sortBy=priority')
+		cy.url().should('include', 'sortOrder=desc')
+	})
 })

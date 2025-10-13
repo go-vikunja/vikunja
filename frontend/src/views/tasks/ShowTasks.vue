@@ -3,10 +3,31 @@
 		v-cy="'showTasks'"
 		class="is-max-width-desktop has-text-start"
 	>
-		<h3 class="mbe-2 title">
-			{{ pageTitle }}
-		</h3>
-		<p
+		<div class="title-container">
+			<h3 class="mbe-2 title">
+				{{ pageTitle }}
+			</h3>
+			<div
+				v-if="showAll"
+				class="sort-container"
+			>
+				<XButton
+					variant="secondary"
+					:icon="sortBy === 'due_date' ? 'calendar' : 'exclamation'"
+					@click="toggleSortBy"
+				>
+					{{ $t('task.show.sortBy') }}: {{ sortBy === 'due_date' ? $t('task.attributes.dueDate') : $t('task.attributes.priority') }}
+				</XButton>
+				<XButton
+					variant="secondary"
+					:icon="sortOrder === 'asc' ? 'arrow-up' : 'arrow-down'"
+					@click="toggleSortOrder"
+				>
+					{{ sortOrder === 'asc' ? $t('misc.ascending') : $t('misc.descending') }}
+				</XButton>
+			</div>
+		</div>
+		<div
 			v-if="!showAll"
 			class="show-tasks-options"
 		>
@@ -35,7 +56,7 @@
 			>
 				{{ $t('task.show.overdue') }}
 			</FancyCheckbox>
-		</p>
+		</div>
 		<template v-if="!loading && (!tasks || tasks.length === 0) && showNothingToDo">
 			<h3 class="has-text-centered mbs-6">
 				{{ $t('task.show.noTasks') }}
@@ -76,9 +97,11 @@ import {useI18n} from 'vue-i18n'
 import {formatDate} from '@/helpers/time/formatDate'
 import {setTitle} from '@/helpers/setTitle'
 
+import Card from '@/components/misc/Card.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import SingleTaskInProject from '@/components/tasks/partials/SingleTaskInProject.vue'
 import DatepickerWithRange from '@/components/date/DatepickerWithRange.vue'
+import XButton from '@/components/input/Button.vue'
 import {DATE_RANGES} from '@/components/date/dateRanges'
 import LlamaCool from '@/assets/llama-cool.svg?component'
 import type {ITask} from '@/modelTypes/ITask'
@@ -115,6 +138,9 @@ const {t} = useI18n({useScope: 'global'})
 const tasks = ref<ITask[]>([])
 const showNothingToDo = ref<boolean>(false)
 const taskCollectionService = ref(new TaskCollectionService())
+
+const sortBy = ref<string>((route.query.sortBy as string) || 'due_date')
+const sortOrder = ref<string>((route.query.sortOrder as string) || 'asc')
 
 setTimeout(() => showNothingToDo.value = true, 100)
 
@@ -177,6 +203,28 @@ function setShowNulls(show: boolean) {
 	})
 }
 
+function toggleSortBy() {
+	sortBy.value = sortBy.value === 'due_date' ? 'priority' : 'due_date'
+	router.push({
+		name: route.name as string,
+		query: {
+			...route.query,
+			sortBy: sortBy.value,
+		},
+	})
+}
+
+function toggleSortOrder() {
+	sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
+	router.push({
+		name: route.name as string,
+		query: {
+			...route.query,
+			sortOrder: sortOrder.value,
+		},
+	})
+}
+
 async function loadPendingTasks(from: Date|string, to: Date|string) {
 	// FIXME: HACK! This should never happen.
 	// Since this route is authentication only, users would get an error message if they access the page unauthenticated.
@@ -187,8 +235,8 @@ async function loadPendingTasks(from: Date|string, to: Date|string) {
 	}
 
 	const params: TaskFilterParams = {
-		sort_by: ['due_date', 'id'],
-		order_by: ['asc', 'desc'],
+		sort_by: [sortBy.value as TaskFilterParams['sort_by'][number], 'id'],
+		order_by: [sortOrder.value as TaskFilterParams['order_by'][number], 'desc'],
 		filter: 'done = false',
 		filter_include_nulls: props.showNulls,
 		s: '',
@@ -236,9 +284,21 @@ watchEffect(() => setTitle(pageTitle.value))
 </script>
 
 <style lang="scss" scoped>
+.title-container {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-block-end: 1rem;
+}
+
 .show-tasks-options {
 	display: flex;
 	flex-direction: column;
+}
+
+.sort-container {
+	display: flex;
+	gap: 0.5rem;
 }
 
 .llama-cool {
