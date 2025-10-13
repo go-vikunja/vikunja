@@ -5,7 +5,7 @@ import {TaskFactory} from '../../factories/task'
 import {TaskRelationFactory} from '../../factories/task_relation'
 import {UserFactory} from '../../factories/user'
 import {ProjectFactory} from '../../factories/project'
-import {prepareProjects} from './prepareProjects'
+import {prepareProjects, createProjects} from './prepareProjects'
 import {BucketFactory} from '../../factories/bucket'
 
 describe('Project View List', () => {
@@ -114,8 +114,7 @@ describe('Project View List', () => {
 	})
 
 	it('Should show cross-project subtasks in their own project List view', () => {
-		const projects = ProjectFactory.create(2)
-		TaskFactory.truncate()
+		const projects = createProjects(2)
 
 		const tasks = [
 			TaskFactory.create(1, {
@@ -153,9 +152,8 @@ describe('Project View List', () => {
 			.should('contain', 'Subtask in Project B')
 	})
 
-	it('Should hide same-project subtasks under their parent', () => {
-		const projects = ProjectFactory.create(1)
-		TaskFactory.truncate()
+	it('Should show same-project subtasks under their parent', () => {
+		const projects = createProjects(1)
 
 		const tasks = [
 			TaskFactory.create(1, {
@@ -192,9 +190,7 @@ describe('Project View List', () => {
 		cy.get('.tasks')
 			.should('contain', 'Parent Task')
 
-		// Subtask should NOT be visible at top level
-		// (it's nested under parent, not shown as separate item)
-		cy.get('.tasks > li')
-			.should('have.length', 1)
+		cy.get('ul.tasks > div')
+			.should('have.length', 2)
 	})
 })
