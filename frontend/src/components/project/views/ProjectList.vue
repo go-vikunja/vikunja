@@ -109,6 +109,7 @@ import Pagination from '@/components/misc/Pagination.vue'
 import {ALPHABETICAL_SORT} from '@/components/project/partials/Filters.vue'
 
 import {useTaskList} from '@/composables/useTaskList'
+import {shouldShowTaskInListView} from '@/composables/useTaskListFiltering'
 import {PERMISSIONS as Permissions} from '@/constants/permissions'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 import type {ITask} from '@/modelTypes/ITask'
@@ -165,9 +166,7 @@ watch(
 		if (projectId.value < 0) {
 			return
 		}
-		tasks.value = tasks.value.filter(t => {
-			return !((t.relatedTasks?.parenttask?.length ?? 0) > 0)
-		})
+		tasks.value = tasks.value.filter(t => shouldShowTaskInListView(t, allTasks.value))
 	},
 )
 
