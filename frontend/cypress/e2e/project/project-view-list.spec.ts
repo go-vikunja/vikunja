@@ -115,18 +115,20 @@ describe('Project View List', () => {
 
 	it('Should show cross-project subtasks in their own project List view', () => {
 		const projects = ProjectFactory.create(2)
+		TaskFactory.truncate()
 
+		TaskRelationFactory.truncate()
 		const tasks = [
 			TaskFactory.create(1, {
 				id: 1,
 				title: 'Parent Task in Project A',
 				project_id: projects[0].id,
-			})[0],
+			}, false)[0],
 			TaskFactory.create(1, {
 				id: 2,
 				title: 'Subtask in Project B',
 				project_id: projects[1].id,
-			})[0],
+			}, false)[0],
 		]
 
 		// Make task 2 a subtask of task 1
@@ -134,12 +136,12 @@ describe('Project View List', () => {
 			task_id: 2,
 			other_task_id: 1,
 			relation_kind: 'subtask',
-		})
+		}, false)
 		TaskRelationFactory.create(1, {
 			task_id: 1,
 			other_task_id: 2,
 			relation_kind: 'parenttask',
-		})
+		}, false)
 
 		// Visit Project B's List view
 		cy.visit(`/projects/${projects[1].id}`)
@@ -151,31 +153,33 @@ describe('Project View List', () => {
 
 	it('Should hide same-project subtasks under their parent', () => {
 		const projects = ProjectFactory.create(1)
+		TaskFactory.truncate()
 
 		const tasks = [
 			TaskFactory.create(1, {
 				id: 1,
 				title: 'Parent Task',
 				project_id: projects[0].id,
-			})[0],
+			}, false)[0],
 			TaskFactory.create(1, {
 				id: 2,
 				title: 'Subtask Same Project',
 				project_id: projects[0].id,
-			})[0],
+			}, false)[0],
 		]
 
 		// Make task 2 a subtask of task 1
+		TaskRelationFactory.truncate()
 		TaskRelationFactory.create(1, {
 			task_id: 2,
 			other_task_id: 1,
 			relation_kind: 'subtask',
-		})
+		}, false)
 		TaskRelationFactory.create(1, {
 			task_id: 1,
 			other_task_id: 2,
 			relation_kind: 'parenttask',
-		})
+		}, false)
 
 		// Visit the project's List view
 		cy.visit(`/projects/${projects[0].id}`)
