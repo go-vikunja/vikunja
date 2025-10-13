@@ -45,7 +45,7 @@ export function createProjects(count: number = 1, attachViews: boolean = false) 
 	ProjectViewFactory.truncate()
 
 	for (let i = 0; i < projects.length; i++) {
-		const views = createDefaultViews(projects[i].id, i * 4, false)
+		const views = createDefaultViews(projects[i].id, i * 4 + 1, false)
 		if (attachViews) {
 			projects[i].views = views
 		}
