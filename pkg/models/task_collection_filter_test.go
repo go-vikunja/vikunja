@@ -284,4 +284,31 @@ func TestParseFilter(t *testing.T) {
 			assert.Equal(t, 0, date.Year())
 		}
 	})
+	t.Run("project with parentheses", func(t *testing.T) {
+		result, err := getTaskFiltersFromFilterString("( project = 1 )", "UTC")
+
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		require.Len(t, result[0].value, 1)
+
+		firstSet := result[0].value.([]*taskFilter)
+		assert.Equal(t, "project_id", firstSet[0].field)
+		assert.Equal(t, taskFilterComparatorEquals, firstSet[0].comparator)
+		assert.Equal(t, int64(1), firstSet[0].value)
+	})
+	t.Run("project with OR in parentheses", func(t *testing.T) {
+		result, err := getTaskFiltersFromFilterString("( done = false || project = 1 )", "UTC")
+
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		require.Len(t, result[0].value, 2)
+
+		firstSet := result[0].value.([]*taskFilter)
+		assert.Equal(t, "done", firstSet[0].field)
+		assert.Equal(t, taskFilterComparatorEquals, firstSet[0].comparator)
+		assert.Equal(t, false, firstSet[0].value)
+		assert.Equal(t, "project_id", firstSet[1].field)
+		assert.Equal(t, taskFilterComparatorEquals, firstSet[1].comparator)
+		assert.Equal(t, int64(1), firstSet[1].value)
+	})
 }

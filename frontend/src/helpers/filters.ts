@@ -81,7 +81,7 @@ export function hasFilterQuery(filter: string): boolean {
 }
 
 export function getFilterFieldRegexPattern(field: string): RegExp {
-	return new RegExp('\\b(' + field + ')\\s*' + FILTER_OPERATORS_REGEX + '\\s*(?:(["\'])((?:\\\\.|(?!\\3)[^\\\\])*?)\\3|([^&|()<]+?))(?=\\s*(?:&&|\\||$))', 'g')
+	return new RegExp('\\b(' + field + ')\\s*' + FILTER_OPERATORS_REGEX + '\\s*(?:(["\'])((?:\\\\.|(?!\\3)[^\\\\])*?)\\3|([^&|()<]+?))(?=\\s*(?:&&|\\||\\)|$))', 'g')
 }
 
 export function transformFilterStringForApi(

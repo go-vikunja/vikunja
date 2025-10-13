@@ -187,6 +187,26 @@ describe('Filter Transformation', () => {
 
 			expect(transformed).toBe('project = 1')
 		})
+
+		it('should correctly resolve project in parentheses', () => {
+			const transformed = transformFilterStringForApi(
+				'( project = Filtertest )',
+				nullTitleToIdResolver,
+				(title: string) => title === 'Filtertest' ? 123 : null,
+			)
+
+			expect(transformed).toBe('( project = 123 )')
+		})
+
+		it('should correctly resolve project with OR in parentheses', () => {
+			const transformed = transformFilterStringForApi(
+				'( labels = label || project = Filtertest )',
+				(title: string) => title === 'label' ? 456 : null,
+				(title: string) => title === 'Filtertest' ? 123 : null,
+			)
+
+			expect(transformed).toBe('( labels = 456 || project = 123 )')
+		})
 	})
 
 	describe('Special Characters', () => {
