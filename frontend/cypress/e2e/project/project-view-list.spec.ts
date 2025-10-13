@@ -117,7 +117,6 @@ describe('Project View List', () => {
 		const projects = ProjectFactory.create(2)
 		TaskFactory.truncate()
 
-		TaskRelationFactory.truncate()
 		const tasks = [
 			TaskFactory.create(1, {
 				id: 1,
@@ -132,6 +131,7 @@ describe('Project View List', () => {
 		]
 
 		// Make task 2 a subtask of task 1
+		TaskRelationFactory.truncate()
 		TaskRelationFactory.create(1, {
 			task_id: 2,
 			other_task_id: 1,
