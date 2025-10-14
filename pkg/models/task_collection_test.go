@@ -512,9 +512,9 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		RepeatAfter:  3600,
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
-		DueDate:	  time.Unix(1543789524, 0).In(loc),
-		StartDate:	  time.Unix(1543616724, 0).In(loc),
-		EndDate:	  time.Unix(1544700000, 0).In(loc),
+		DueDate:      time.Unix(1543789524, 0).In(loc),
+		StartDate:    time.Unix(1543616724, 0).In(loc),
+		EndDate:      time.Unix(1544700000, 0).In(loc),
 	}
 	task29 := &Task{
 		ID:          29,

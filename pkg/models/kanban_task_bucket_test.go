@@ -142,7 +142,7 @@ func TestTaskBucket_Update(t *testing.T) {
 			ProjectID:     1, // In actual web requests set via the url
 		}
 
-		// Before running the TaskBucket Update we retrive the task and execute 
+		// Before running the TaskBucket Update we retrieve the task and execute
 		// an updateDone to obtain the task with updated start/end/due dates
 		// This way we can later match them with what happens after running TaskBucket Update
 		u := &user.User{ID: 1}
@@ -170,7 +170,7 @@ func TestTaskBucket_Update(t *testing.T) {
 			"task_id":   1,
 			"bucket_id": 1,
 		}, false)
-		
+
 		assert.Equal(t, updatedTask.DueDate.Unix(), tb.Task.DueDate.Unix())
 		assert.Equal(t, updatedTask.StartDate.Unix(), tb.Task.StartDate.Unix())
 		assert.Equal(t, updatedTask.EndDate.Unix(), tb.Task.EndDate.Unix())
