@@ -177,3 +177,40 @@ func (tl *TeamProject) Update(s *xorm.Session, _ web.Auth) (err error) {
 	service := getProjectTeamService()
 	return service.Update(s, tl)
 }
+
+// Permission delegation functions
+var (
+	TeamProjectCanCreateFunc func(s *xorm.Session, projectID int64, a web.Auth) (bool, error)
+	TeamProjectCanUpdateFunc func(s *xorm.Session, projectID int64, a web.Auth) (bool, error)
+	TeamProjectCanDeleteFunc func(s *xorm.Session, projectID int64, a web.Auth) (bool, error)
+	TeamProjectCanReadFunc   func(s *xorm.Session, projectID int64, a web.Auth) (bool, error)
+)
+
+func (tl *TeamProject) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	if TeamProjectCanCreateFunc != nil {
+		return TeamProjectCanCreateFunc(s, tl.ProjectID, a)
+	}
+	panic("TeamProjectCanCreateFunc not set")
+}
+
+func (tl *TeamProject) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	if TeamProjectCanDeleteFunc != nil {
+		return TeamProjectCanDeleteFunc(s, tl.ProjectID, a)
+	}
+	panic("TeamProjectCanDeleteFunc not set")
+}
+
+func (tl *TeamProject) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
+	if TeamProjectCanUpdateFunc != nil {
+		return TeamProjectCanUpdateFunc(s, tl.ProjectID, a)
+	}
+	panic("TeamProjectCanUpdateFunc not set")
+}
+
+func (tl *TeamProject) CanRead(s *xorm.Session, a web.Auth) (canRead bool, maxPermission int, err error) {
+	if TeamProjectCanReadFunc != nil {
+		canRead, err = TeamProjectCanReadFunc(s, tl.ProjectID, a)
+		return canRead, int(PermissionAdmin), err
+	}
+	panic("TeamProjectCanReadFunc not set")
+}

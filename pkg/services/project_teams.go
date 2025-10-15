@@ -24,18 +24,39 @@ import (
 	"xorm.io/xorm"
 )
 
+// InitProjectTeamService sets up dependency injection for project team-related model functions.
+// This function must be called during initialization to enable service layer delegation.
+func InitProjectTeamService() {
+	// Set up permission delegation (T-PERM-011)
+	models.TeamProjectCanCreateFunc = func(s *xorm.Session, projectID int64, a web.Auth) (bool, error) {
+		pts := NewProjectTeamService(s.Engine())
+		return pts.CanCreate(s, projectID, a)
+	}
+	models.TeamProjectCanUpdateFunc = func(s *xorm.Session, projectID int64, a web.Auth) (bool, error) {
+		pts := NewProjectTeamService(s.Engine())
+		return pts.CanUpdate(s, projectID, a)
+	}
+	models.TeamProjectCanDeleteFunc = func(s *xorm.Session, projectID int64, a web.Auth) (bool, error) {
+		pts := NewProjectTeamService(s.Engine())
+		return pts.CanDelete(s, projectID, a)
+	}
+	models.TeamProjectCanReadFunc = func(s *xorm.Session, projectID int64, a web.Auth) (bool, error) {
+		pts := NewProjectTeamService(s.Engine())
+		return pts.CanRead(s, projectID, a)
+	}
+}
+
 // ProjectTeamService handles all operations related to project-team permissions
 type ProjectTeamService struct {
-	DB             *xorm.Engine
-	ProjectService *ProjectService
+	DB       *xorm.Engine
+	Registry *ServiceRegistry
 }
 
 // NewProjectTeamService creates a new ProjectTeamService
+// Deprecated: Use ServiceRegistry.ProjectTeams() instead.
 func NewProjectTeamService(db *xorm.Engine) *ProjectTeamService {
-	return &ProjectTeamService{
-		DB:             db,
-		ProjectService: NewProjectService(db),
-	}
+	registry := NewServiceRegistry(db)
+	return registry.ProjectTeams()
 }
 
 // Create adds a team to a project with the specified permission level.
@@ -47,13 +68,13 @@ func (pts *ProjectTeamService) Create(s *xorm.Session, teamProject *models.TeamP
 	}
 
 	// Check if the team exists
-	team, err := models.GetTeamByID(s, teamProject.TeamID)
+	team, err := pts.Registry.Team().GetByID(s, teamProject.TeamID)
 	if err != nil {
 		return err
 	}
 
 	// Check if the project exists
-	project, err := models.GetProjectSimpleByID(s, teamProject.ProjectID)
+	project, err := pts.Registry.Project().GetByIDSimple(s, teamProject.ProjectID)
 	if err != nil {
 		return err
 	}
@@ -95,7 +116,7 @@ func (pts *ProjectTeamService) Create(s *xorm.Session, teamProject *models.TeamP
 // Returns error if the team doesn't have access to the project.
 func (pts *ProjectTeamService) Delete(s *xorm.Session, teamProject *models.TeamProject) error {
 	// Check if the team exists
-	_, err := models.GetTeamByID(s, teamProject.TeamID)
+	_, err := pts.Registry.Team().GetByID(s, teamProject.TeamID)
 	if err != nil {
 		return err
 	}
@@ -225,4 +246,50 @@ func (pts *ProjectTeamService) GetPermission(s *xorm.Session, projectID int64, t
 		return models.PermissionRead, nil
 	}
 	return tp.Permission, nil
+}
+
+// Permission Methods (T-PERM-011)
+
+// CanCreate checks if the user can create a team <-> project relation.
+// Requires admin permission on the project.
+// MIGRATION: Migrated from models.TeamProject.CanCreate
+func (pts *ProjectTeamService) CanCreate(s *xorm.Session, projectID int64, a web.Auth) (bool, error) {
+	// Link shares aren't allowed to do anything
+	if _, isLinkShare := a.(*models.LinkSharing); isLinkShare {
+		return false, nil
+	}
+
+	return pts.Registry.Project().IsAdmin(s, projectID, a)
+}
+
+// CanUpdate checks if the user can update a team <-> project relation.
+// Requires admin permission on the project.
+// MIGRATION: Migrated from models.TeamProject.CanUpdate
+func (pts *ProjectTeamService) CanUpdate(s *xorm.Session, projectID int64, a web.Auth) (bool, error) {
+	// Link shares aren't allowed to do anything
+	if _, isLinkShare := a.(*models.LinkSharing); isLinkShare {
+		return false, nil
+	}
+
+	return pts.Registry.Project().IsAdmin(s, projectID, a)
+}
+
+// CanDelete checks if the user can delete a team <-> project relation.
+// Requires admin permission on the project.
+// MIGRATION: Migrated from models.TeamProject.CanDelete
+func (pts *ProjectTeamService) CanDelete(s *xorm.Session, projectID int64, a web.Auth) (bool, error) {
+	// Link shares aren't allowed to do anything
+	if _, isLinkShare := a.(*models.LinkSharing); isLinkShare {
+		return false, nil
+	}
+
+	return pts.Registry.Project().IsAdmin(s, projectID, a)
+}
+
+// CanRead checks if the user can read team <-> project relations.
+// Requires read permission on the project.
+// MIGRATION: Migrated from models.TeamProject (implicit read check)
+func (pts *ProjectTeamService) CanRead(s *xorm.Session, projectID int64, a web.Auth) (bool, error) {
+	canRead, _, err := pts.Registry.Project().CanRead(s, projectID, a)
+	return canRead, err
 }

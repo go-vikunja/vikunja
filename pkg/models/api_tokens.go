@@ -18,7 +18,6 @@ package models
 
 import (
 	"crypto/sha256"
-	"crypto/subtle"
 	"encoding/hex"
 	"time"
 
@@ -34,6 +33,7 @@ import (
 type APITokenServiceProvider func() interface {
 	Create(s *xorm.Session, token *APIToken, u *user.User) error
 	GetAll(s *xorm.Session, u *user.User, search string, page int, perPage int) ([]*APIToken, int, int64, error)
+	GetByID(s *xorm.Session, id int64) (*APIToken, error)
 	Delete(s *xorm.Session, id int64, u *user.User) error
 }
 
@@ -50,6 +50,7 @@ func RegisterAPITokenService(provider APITokenServiceProvider) {
 func getAPITokenService() interface {
 	Create(s *xorm.Session, token *APIToken, u *user.User) error
 	GetAll(s *xorm.Session, u *user.User, search string, page int, perPage int) ([]*APIToken, int, int64, error)
+	GetByID(s *xorm.Session, id int64) (*APIToken, error)
 	Delete(s *xorm.Session, id int64, u *user.User) error
 } {
 	if apiTokenServiceProvider == nil {
@@ -89,13 +90,6 @@ const APITokenPrefix = `tk_`
 
 func (*APIToken) TableName() string {
 	return "api_tokens"
-}
-
-func GetAPITokenByID(s *xorm.Session, id int64) (token *APIToken, err error) {
-	token = &APIToken{}
-	_, err = s.Where("id = ?", id).
-		Get(token)
-	return
 }
 
 // Create creates a new token
@@ -166,24 +160,4 @@ func (t *APIToken) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 	return getAPITokenService().Delete(s, t.ID, u)
-}
-
-// GetTokenFromTokenString returns the full token object from the original token string.
-func GetTokenFromTokenString(s *xorm.Session, token string) (apiToken *APIToken, err error) {
-	lastEight := token[len(token)-8:]
-
-	tokens := []*APIToken{}
-	err = s.Where("token_last_eight = ?", lastEight).Find(&tokens)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, t := range tokens {
-		tempHash := HashToken(token, t.TokenSalt)
-		if subtle.ConstantTimeCompare([]byte(t.TokenHash), []byte(tempHash)) == 1 {
-			return t, nil
-		}
-	}
-
-	return nil, &ErrAPITokenInvalid{}
 }

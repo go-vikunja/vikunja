@@ -292,7 +292,7 @@ func (ts *TaskService) handleSavedFilter(s *xorm.Session, collection *models.Tas
 	}
 
 	// Load the saved filter
-	savedFilter, err := models.GetSavedFilterSimpleByID(s, savedFilterID)
+	savedFilter, err := ts.Registry.SavedFilter().GetByIDSimple(s, savedFilterID)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -336,7 +336,7 @@ func (ts *TaskService) processRegularCollection(s *xorm.Session, collection *mod
 	var err error
 
 	if collection.ProjectViewID != 0 {
-		view, err = models.GetProjectViewByIDAndProject(s, collection.ProjectViewID, collection.ProjectID)
+		view, err = ts.Registry.ProjectViews().GetByIDAndProject(s, collection.ProjectViewID, collection.ProjectID)
 		if err != nil {
 			return nil, 0, 0, err
 		}
@@ -412,7 +412,7 @@ func (ts *TaskService) processRegularCollection(s *xorm.Session, collection *mod
 	// Step 6: Handle LinkSharing authentication
 	shareAuth, is := a.(*models.LinkSharing)
 	if is {
-		project, err := models.GetProjectSimpleByID(s, shareAuth.ProjectID)
+		project, err := ts.Registry.Project().GetByIDSimple(s, shareAuth.ProjectID)
 		if err != nil {
 			return nil, 0, 0, err
 		}
@@ -680,24 +680,15 @@ func convertSortParamsToOrderStrings(sortParams []*sortParam) []string {
 
 // TaskService represents a service for managing tasks.
 type TaskService struct {
-	DB               *xorm.Engine
-	FavoriteService  *FavoriteService
-	KanbanService    *KanbanService
-	ReactionsService *ReactionsService
-	CommentService   *CommentService
-	LabelService     *LabelService
+	DB       *xorm.Engine
+	Registry *ServiceRegistry
 }
 
 // NewTaskService creates a new TaskService.
+// Deprecated: Use ServiceRegistry.Task() instead.
 func NewTaskService(db *xorm.Engine) *TaskService {
-	return &TaskService{
-		DB:               db,
-		FavoriteService:  NewFavoriteService(db),
-		KanbanService:    NewKanbanService(db),
-		ReactionsService: NewReactionsService(db),
-		CommentService:   NewCommentService(db),
-		LabelService:     NewLabelService(db),
-	}
+	registry := NewServiceRegistry(db)
+	return registry.Task()
 }
 
 // Wire models.AddMoreInfoToTasksFunc to the service implementation via dependency inversion
@@ -721,6 +712,112 @@ func InitTaskService() {
 	models.TaskCollectionReadAllFunc = func(s *xorm.Session, tf *models.TaskCollection, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
 		return NewTaskService(s.Engine()).GetAllWithFullFiltering(s, tf, a, search, page, perPage)
 	}
+
+	// Wire GetTaskByIDSimple to service layer (T-PERM-014A Phase 3)
+	models.GetTaskByIDSimpleFunc = func(s *xorm.Session, taskID int64) (*models.Task, error) {
+		ts := NewTaskService(s.Engine())
+		return ts.GetByIDSimple(s, taskID)
+	}
+
+	// Set up permission delegation (T-PERM-007)
+	models.CheckTaskReadFunc = func(s *xorm.Session, taskID int64, a web.Auth) (bool, int, error) {
+		ts := NewTaskService(s.Engine())
+		return ts.CanRead(s, taskID, a)
+	}
+	models.CheckTaskWriteFunc = func(s *xorm.Session, taskID int64, a web.Auth) (bool, error) {
+		ts := NewTaskService(s.Engine())
+		return ts.CanWrite(s, taskID, a)
+	}
+	models.CheckTaskUpdateFunc = func(s *xorm.Session, taskID int64, task *models.Task, a web.Auth) (bool, error) {
+		ts := NewTaskService(s.Engine())
+		return ts.CanUpdate(s, taskID, task, a)
+	}
+	models.CheckTaskDeleteFunc = func(s *xorm.Session, taskID int64, a web.Auth) (bool, error) {
+		ts := NewTaskService(s.Engine())
+		return ts.CanDelete(s, taskID, a)
+	}
+	models.CheckTaskCreateFunc = func(s *xorm.Session, task *models.Task, a web.Auth) (bool, error) {
+		ts := NewTaskService(s.Engine())
+		return ts.CanCreate(s, task, a)
+	}
+
+	// TaskAssignee permission delegation
+	// Note: No dedicated TaskAssignee service yet, so we use project permissions
+	models.CheckTaskAssigneeCreateFunc = func(s *xorm.Session, assignee *models.TaskAssginee, a web.Auth) (bool, error) {
+		project, err := models.GetProjectSimpleByTaskID(s, assignee.TaskID)
+		if err != nil {
+			return false, err
+		}
+		return project.CanUpdate(s, a)
+	}
+	models.CheckTaskAssigneeDeleteFunc = func(s *xorm.Session, assignee *models.TaskAssginee, a web.Auth) (bool, error) {
+		project, err := models.GetProjectSimpleByTaskID(s, assignee.TaskID)
+		if err != nil {
+			return false, err
+		}
+		return project.CanUpdate(s, a)
+	}
+
+	// TaskRelation permission delegation
+	// Note: No dedicated TaskRelation service yet, using task permission checks
+	models.CheckTaskRelationCreateFunc = func(s *xorm.Session, relation *models.TaskRelation, a web.Auth) (bool, error) {
+		// Check if the relation kind is valid
+		if !relation.RelationKind.IsValid() {
+			return false, models.ErrInvalidRelationKind{Kind: relation.RelationKind}
+		}
+
+		// Need write access to the base task and at least read access to the other task
+		baseTask := &models.Task{ID: relation.TaskID}
+		has, err := baseTask.CanUpdate(s, a)
+		if err != nil || !has {
+			return false, err
+		}
+
+		otherTask := &models.Task{ID: relation.OtherTaskID}
+		has, _, err = otherTask.CanRead(s, a)
+		if err != nil {
+			return false, err
+		}
+		return has, nil
+	}
+	models.CheckTaskRelationDeleteFunc = func(s *xorm.Session, relation *models.TaskRelation, a web.Auth) (bool, error) {
+		// A user can delete a relation if they can update the base task
+		baseTask := &models.Task{ID: relation.TaskID}
+		return baseTask.CanUpdate(s, a)
+	}
+}
+
+// GetByIDSimple retrieves a task by ID without permission checks or extra data
+// This is a simple lookup helper used by permission methods
+// MIGRATION: Added in T-PERM-004 (migrated from models.GetTaskByIDSimple)
+func (ts *TaskService) GetByIDSimple(s *xorm.Session, taskID int64) (*models.Task, error) {
+	if taskID < 1 {
+		return nil, models.ErrTaskDoesNotExist{ID: taskID}
+	}
+
+	task := &models.Task{}
+	exists, err := s.Where("id = ?", taskID).Get(task)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, models.ErrTaskDoesNotExist{ID: taskID}
+	}
+	return task, nil
+}
+
+// GetByIDs retrieves multiple tasks by their IDs without additional details
+func (ts *TaskService) GetByIDs(s *xorm.Session, ids []int64) ([]*models.Task, error) {
+	if len(ids) == 0 {
+		return []*models.Task{}, nil
+	}
+
+	tasks := []*models.Task{}
+	err := s.In("id", ids).Find(&tasks)
+	if err != nil {
+		return nil, err
+	}
+	return tasks, nil
 }
 
 // GetByID gets a single task by its ID, checking permissions.
@@ -901,10 +998,11 @@ func (ts *TaskService) UpdateWithFields(s *xorm.Session, task *models.Task, u *u
 func (ts *TaskService) updateSingleTask(s *xorm.Session, t *models.Task, u *user.User, fields []string) (*models.Task, error) {
 	// Check if the task exists and get the old values FIRST (before permission check)
 	// This is necessary because t.ProjectID might be 0
-	ot, err := models.GetTaskByIDSimple(s, t.ID)
+	otPtr, err := ts.GetByIDSimple(s, t.ID)
 	if err != nil {
 		return nil, err
 	}
+	ot := *otPtr
 
 	// Now check permissions using the old task (which has the correct ProjectID)
 	can, err := ts.Can(s, &ot, u).Write()
@@ -1122,18 +1220,18 @@ func (ts *TaskService) updateSingleTask(s *xorm.Session, t *models.Task, u *user
 	}
 
 	// Handle favorite status changes
-	wasFavorite, err := ts.FavoriteService.IsFavorite(s, t.ID, u, models.FavoriteKindTask)
+	wasFavorite, err := ts.Registry.Favorite().IsFavorite(s, t.ID, u, models.FavoriteKindTask)
 	if err != nil {
 		return nil, err
 	}
 	if t.IsFavorite && !wasFavorite {
-		if err := ts.FavoriteService.AddToFavorite(s, t.ID, u, models.FavoriteKindTask); err != nil {
+		if err := ts.Registry.Favorite().AddToFavorite(s, t.ID, u, models.FavoriteKindTask); err != nil {
 			return nil, err
 		}
 	}
 
 	if !t.IsFavorite && wasFavorite {
-		if err := ts.FavoriteService.RemoveFromFavorite(s, t.ID, u, models.FavoriteKindTask); err != nil {
+		if err := ts.Registry.Favorite().RemoveFromFavorite(s, t.ID, u, models.FavoriteKindTask); err != nil {
 			return nil, err
 		}
 	}
@@ -1237,10 +1335,11 @@ func (ts *TaskService) Delete(s *xorm.Session, task *models.Task, a web.Auth) er
 		return ErrAccessDenied
 	}
 
-	t, err := models.GetTaskByIDSimple(s, task.ID)
+	tPtr, err := ts.GetByIDSimple(s, task.ID)
 	if err != nil {
 		return err
 	}
+	t := *tPtr
 
 	// duplicate the task for the event
 	fullTask := &models.Task{ID: task.ID}
@@ -1255,7 +1354,7 @@ func (ts *TaskService) Delete(s *xorm.Session, task *models.Task, a web.Auth) er
 	}
 
 	// Delete Favorites using the service
-	err = ts.FavoriteService.RemoveFromFavorite(s, task.ID, a, models.FavoriteKindTask)
+	err = ts.Registry.Favorite().RemoveFromFavorite(s, task.ID, a, models.FavoriteKindTask)
 	if err != nil {
 		return err
 	}
@@ -1341,10 +1440,11 @@ func (ts *TaskService) Delete(s *xorm.Session, task *models.Task, a web.Auth) er
 // SECURITY: This method is intentionally private (unexported) to prevent misuse outside
 // the services package. Any new usage must be carefully reviewed for security implications.
 func (ts *TaskService) deleteWithoutPermissionCheck(s *xorm.Session, taskID int64, a web.Auth) error {
-	t, err := models.GetTaskByIDSimple(s, taskID)
+	tPtr, err := ts.GetByIDSimple(s, taskID)
 	if err != nil {
 		return err
 	}
+	t := *tPtr
 
 	// duplicate the task for the event
 	fullTask := &models.Task{ID: taskID}
@@ -1359,7 +1459,7 @@ func (ts *TaskService) deleteWithoutPermissionCheck(s *xorm.Session, taskID int6
 	}
 
 	// Delete Favorites using the service
-	err = ts.FavoriteService.RemoveFromFavorite(s, taskID, a, models.FavoriteKindTask)
+	err = ts.Registry.Favorite().RemoveFromFavorite(s, taskID, a, models.FavoriteKindTask)
 	if err != nil {
 		return err
 	}
@@ -1548,7 +1648,7 @@ func (ts *TaskService) AddDetailsToTasks(s *xorm.Session, taskMap map[int64]*mod
 	}
 
 	// Get all projects for identifiers
-	projects, err := models.GetProjectsMapByIDs(s, projectIDs)
+	projects, err := ts.Registry.Project().GetMapByIDs(s, projectIDs)
 	if err != nil {
 		return err
 	}
@@ -1674,6 +1774,13 @@ func (ts *TaskService) AddDetailsToTasks(s *xorm.Session, taskMap map[int64]*mod
 // Helper methods moved from models package
 
 func (ts *TaskService) addAssigneesToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*models.Task) error {
+	// Initialize empty Assignees slice for all tasks to ensure JSON returns [] instead of null
+	for _, task := range taskMap {
+		if task.Assignees == nil {
+			task.Assignees = []*user.User{}
+		}
+	}
+
 	taskAssignees := []*models.TaskAssigneeWithUser{}
 	err := s.Table("task_assignees").
 		Select("task_id, users.*").
@@ -1708,6 +1815,13 @@ func (ts *TaskService) addAssigneesToTasks(s *xorm.Session, taskIDs []int64, tas
 }
 
 func (ts *TaskService) addLabelsToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*models.Task) error {
+	// Initialize empty Labels slice for all tasks to ensure JSON returns [] instead of null
+	for _, task := range taskMap {
+		if task.Labels == nil {
+			task.Labels = []*models.Label{}
+		}
+	}
+
 	labelService := NewLabelService(ts.DB)
 	labels, _, _, err := labelService.GetLabelsByTaskIDs(s, &GetLabelsByTaskIDsOptions{
 		TaskIDs: taskIDs,
@@ -1740,6 +1854,13 @@ func (ts *TaskService) addLabelsToTasks(s *xorm.Session, taskIDs []int64, taskMa
 }
 
 func (ts *TaskService) addAttachmentsToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*models.Task) error {
+	// Initialize empty Attachments slice for all tasks to ensure JSON returns [] instead of null
+	for _, task := range taskMap {
+		if task.Attachments == nil {
+			task.Attachments = []*models.TaskAttachment{}
+		}
+	}
+
 	attachments, err := ts.getTaskAttachmentsByTaskIDs(s, taskIDs)
 	if err != nil {
 		return err
@@ -1871,13 +1992,14 @@ func (ts *TaskService) canWriteTask(s *xorm.Session, taskID int64, u *user.User)
 // canWriteTaskWithAuth checks if the auth object (User or LinkSharing) can write to a task
 // This version accepts web.Auth to support both regular users and LinkSharing authentication
 func (ts *TaskService) canWriteTaskWithAuth(s *xorm.Session, taskID int64, a web.Auth) (bool, error) {
-	task, err := models.GetTaskByIDSimple(s, taskID)
+	taskPtr, err := ts.GetByIDSimple(s, taskID)
 	if err != nil {
 		if models.IsErrTaskDoesNotExist(err) {
 			return false, nil
 		}
 		return false, err
 	}
+	task := *taskPtr
 
 	// Use the model's CanWrite which properly handles both User and LinkSharing auth
 	taskForPermCheck := &models.Task{ID: taskID, ProjectID: task.ProjectID}
@@ -1967,7 +2089,7 @@ func (ts *TaskService) getUsersOrLinkSharesFromIDs(s *xorm.Session, ids []int64)
 		return
 	}
 
-	shares, err := models.GetLinkSharesByIDs(s, linkShareIDs)
+	shares, err := ts.Registry.LinkShare().GetByIDs(s, linkShareIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -2042,7 +2164,7 @@ func (ts *TaskService) createTask(s *xorm.Session, task *models.Task, actor *use
 		return nil, models.ErrTaskCannotBeEmpty{}
 	}
 
-	project, err := models.GetProjectSimpleByID(s, task.ProjectID)
+	project, err := ts.Registry.Project().GetByIDSimple(s, task.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -2081,11 +2203,11 @@ func (ts *TaskService) createTask(s *xorm.Session, task *models.Task, actor *use
 
 	var providedBucket *models.Bucket
 	if opts.setBucket && task.BucketID != 0 {
-		providedBucket, err = ts.KanbanService.getBucketByID(s, task.BucketID)
+		providedBucket, err = ts.Registry.Kanban().GetBucketByID(s, task.BucketID)
 		if err != nil {
 			return nil, err
 		}
-		if _, err = ts.KanbanService.checkBucketLimit(s, createdBy, task, providedBucket); err != nil {
+		if _, err = ts.Registry.Kanban().checkBucketLimit(s, createdBy, task, providedBucket); err != nil {
 			return nil, err
 		}
 	}
@@ -2116,7 +2238,7 @@ func (ts *TaskService) createTask(s *xorm.Session, task *models.Task, actor *use
 	ts.setTaskIdentifier(task, project)
 
 	if task.IsFavorite {
-		if err := ts.FavoriteService.AddToFavorite(s, task.ID, createdBy, models.FavoriteKindTask); err != nil {
+		if err := ts.Registry.Favorite().AddToFavorite(s, task.ID, createdBy, models.FavoriteKindTask); err != nil {
 			return nil, err
 		}
 	}
@@ -2149,7 +2271,7 @@ func (ts *TaskService) assignTaskToViews(s *xorm.Session, task *models.Task, aut
 				if providedBucket != nil && view.ID == providedBucket.ProjectViewID {
 					bucketID = providedBucket.ID
 				} else {
-					bucketID, err = ts.KanbanService.getDefaultBucketID(s, view)
+					bucketID, err = ts.Registry.Kanban().getDefaultBucketID(s, view)
 					if err != nil {
 						return err
 					}
@@ -2270,7 +2392,7 @@ func (ts *TaskService) moveTaskToDoneBuckets(s *xorm.Session, task *models.Task,
 
 		if !task.Done && bucketID == view.DoneBucketID {
 			var err error
-			bucketID, err = ts.KanbanService.getDefaultBucketID(s, view)
+			bucketID, err = ts.Registry.Kanban().getDefaultBucketID(s, view)
 			if err != nil {
 				return err
 			}
@@ -2406,7 +2528,7 @@ func (ts *TaskService) syncTaskLabels(s *xorm.Session, task *models.Task, desire
 		}
 
 		// Validate that the user has access to the label using LabelService
-		hasAccess, err := ts.LabelService.HasAccessToLabel(s, id, createdBy)
+		hasAccess, err := ts.Registry.Label().HasAccessToLabel(s, id, createdBy)
 		if err != nil {
 			return err
 		}
@@ -2682,35 +2804,148 @@ func (ts *TaskService) applySortingToQuery(query *xorm.Session, sortParams []*so
 
 // addBucketsToTasks adds bucket information to tasks using the KanbanService
 func (ts *TaskService) addBucketsToTasks(s *xorm.Session, a web.Auth, taskIDs []int64, taskMap map[int64]*models.Task) error {
-	if ts.KanbanService == nil {
-		return nil // Skip if KanbanService not available
-	}
-
 	u, err := models.GetUserOrLinkShareUser(s, a)
 	if err != nil {
 		return err
 	}
 
-	return ts.KanbanService.AddBucketsToTasks(s, taskIDs, taskMap, u)
+	return ts.Registry.Kanban().AddBucketsToTasks(s, taskIDs, taskMap, u)
 }
 
 // addReactionsToTasks adds reaction data to tasks using the ReactionsService
 func (ts *TaskService) addReactionsToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*models.Task) error {
-	if ts.ReactionsService == nil {
-		return nil // Skip if ReactionsService not available
-	}
-
-	return ts.ReactionsService.AddReactionsToTasks(s, taskIDs, taskMap)
+	return ts.Registry.Reactions().AddReactionsToTasks(s, taskIDs, taskMap)
 }
 
 // addCommentsToTasks adds comment data to tasks using the CommentService
 func (ts *TaskService) addCommentsToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*models.Task) error {
 	fmt.Printf("DEBUG: addCommentsToTasks called with taskIDs: %v\n", taskIDs)
-	if ts.CommentService == nil {
-		fmt.Printf("DEBUG: CommentService is nil, skipping comments\n")
-		return nil // Skip if CommentService not available
+	fmt.Printf("DEBUG: Calling CommentService.AddCommentsToTasks\n")
+	return ts.Registry.Comment().AddCommentsToTasks(s, taskIDs, taskMap)
+}
+
+// ===== Permission Methods =====
+// Migrated from models layer as part of T-PERM-007
+// All task permissions delegate to project permissions since tasks belong to projects
+
+// CanRead checks if a user has read access to a task.
+// Returns (canRead, maxPermissionLevel, error).
+// MIGRATION: Migrated from models.Task.CanRead (T-PERM-007)
+func (ts *TaskService) CanRead(s *xorm.Session, taskID int64, a web.Auth) (bool, int, error) {
+	// Get task to find project
+	task, err := ts.GetByIDSimple(s, taskID)
+	if err != nil {
+		return false, 0, err
 	}
 
-	fmt.Printf("DEBUG: Calling CommentService.AddCommentsToTasks\n")
-	return ts.CommentService.AddCommentsToTasks(s, taskIDs, taskMap)
+	// Delegate to ProjectService
+	ps := NewProjectService(s.Engine())
+	return ps.CanRead(s, task.ProjectID, a)
+}
+
+// CanWrite checks if a user has write access to a task.
+// MIGRATION: Migrated from models.Task.CanWrite (T-PERM-007)
+func (ts *TaskService) CanWrite(s *xorm.Session, taskID int64, a web.Auth) (bool, error) {
+	return ts.canDoTask(s, taskID, nil, a)
+}
+
+// CanUpdate checks if a user can update a task.
+// MIGRATION: Migrated from models.Task.CanUpdate (T-PERM-007)
+func (ts *TaskService) CanUpdate(s *xorm.Session, taskID int64, task *models.Task, a web.Auth) (bool, error) {
+	return ts.canDoTask(s, taskID, task, a)
+}
+
+// CanDelete checks if a user can delete a task.
+// MIGRATION: Migrated from models.Task.CanDelete (T-PERM-007)
+func (ts *TaskService) CanDelete(s *xorm.Session, taskID int64, a web.Auth) (bool, error) {
+	return ts.canDoTask(s, taskID, nil, a)
+}
+
+// CanCreate checks if a user can create a task in the specified project.
+// MIGRATION: Migrated from models.Task.CanCreate (T-PERM-007)
+func (ts *TaskService) CanCreate(s *xorm.Session, task *models.Task, a web.Auth) (bool, error) {
+	// A user can create a task if they have write access to its project
+	ps := NewProjectService(s.Engine())
+	return ps.CanWrite(s, task.ProjectID, a)
+}
+
+// canDoTask is a helper function to check if a user can do operations on a task.
+// It handles the case where a task is being moved to a different project.
+// MIGRATION: Migrated from models.Task.canDoTask (T-PERM-007)
+func (ts *TaskService) canDoTask(s *xorm.Session, taskID int64, updatedTask *models.Task, a web.Auth) (bool, error) {
+	// Get the original task
+	originalTask, err := ts.GetByIDSimple(s, taskID)
+	if err != nil {
+		return false, err
+	}
+
+	ps := NewProjectService(s.Engine())
+
+	// Check if we're moving the task to a different project
+	// If so, verify permissions on the new project
+	if updatedTask != nil && updatedTask.ProjectID != 0 && updatedTask.ProjectID != originalTask.ProjectID {
+		canWriteToNewProject, err := ps.CanWrite(s, updatedTask.ProjectID, a)
+		if err != nil {
+			return false, err
+		}
+		if !canWriteToNewProject {
+			return false, models.ErrGenericForbidden{}
+		}
+	}
+
+	// A user can do a task if they have write access to its (original) project
+	return ps.CanWrite(s, originalTask.ProjectID, a)
+}
+
+// ===== Task Relation Permission Methods =====
+// Migrated from models layer as part of T-PERM-010
+
+// CanCreateAssignee checks if a user can add a new assignee to a task.
+// MIGRATION: Migrated from models.TaskAssginee.CanCreate (T-PERM-010)
+func (ts *TaskService) CanCreateAssignee(s *xorm.Session, taskID int64, a web.Auth) (bool, error) {
+	// User must be able to write to the task
+	return ts.CanWrite(s, taskID, a)
+}
+
+// CanDeleteAssignee checks if a user can delete an assignee from a task.
+// MIGRATION: Migrated from models.TaskAssginee.CanDelete (T-PERM-010)
+func (ts *TaskService) CanDeleteAssignee(s *xorm.Session, taskID int64, a web.Auth) (bool, error) {
+	// User must be able to write to the task
+	return ts.CanWrite(s, taskID, a)
+}
+
+// CanCreateRelation checks if a user can create a new relation between two tasks.
+// MIGRATION: Migrated from models.TaskRelation.CanCreate (T-PERM-010)
+func (ts *TaskService) CanCreateRelation(s *xorm.Session, taskID int64, otherTaskID int64, relationKind models.RelationKind, a web.Auth) (bool, error) {
+	// Check if the relation kind is valid
+	if !relationKind.IsValid() {
+		return false, models.ErrInvalidRelationKind{Kind: relationKind}
+	}
+
+	// Needs write access to the base task
+	canWrite, err := ts.CanUpdate(s, taskID, nil, a)
+	if err != nil || !canWrite {
+		return false, err
+	}
+
+	// And at least read access to the other task
+	canRead, _, err := ts.CanRead(s, otherTaskID, a)
+	if err != nil {
+		return false, err
+	}
+	return canRead, nil
+}
+
+// CanDeleteRelation checks if a user can delete a task relation.
+// MIGRATION: Migrated from models.TaskRelation.CanDelete (T-PERM-010)
+func (ts *TaskService) CanDeleteRelation(s *xorm.Session, taskID int64, a web.Auth) (bool, error) {
+	// A user can delete a relation if they can update the base task
+	return ts.CanUpdate(s, taskID, nil, a)
+}
+
+// CanUpdatePosition checks if a user can update a task's position.
+// MIGRATION: Migrated from models.TaskPosition.CanUpdate (T-PERM-010)
+func (ts *TaskService) CanUpdatePosition(s *xorm.Session, taskID int64, a web.Auth) (bool, error) {
+	// User must be able to update the task
+	return ts.CanUpdate(s, taskID, nil, a)
 }

@@ -29,7 +29,10 @@ func GetUserOrLinkShareUser(s *xorm.Session, a web.Auth) (uu *user.User, err err
 		// Negative user IDs represent link share principals in the service layer.
 		if u.ID < 0 {
 			shareID := u.ID * -1
-			l, err := GetLinkShareByID(s, shareID)
+			if LinkShareGetByIDFunc == nil {
+				return nil, ErrProjectShareDoesNotExist{ID: shareID}
+			}
+			l, err := LinkShareGetByIDFunc(s, shareID)
 			if err != nil {
 				return nil, err
 			}
@@ -47,7 +50,10 @@ func GetUserOrLinkShareUser(s *xorm.Session, a web.Auth) (uu *user.User, err err
 
 	// Case 2: The auth object is the legacy *LinkSharing instance
 	if ls, is := a.(*LinkSharing); is {
-		l, err := GetLinkShareByID(s, ls.ID)
+		if LinkShareGetByIDFunc == nil {
+			return nil, ErrProjectShareDoesNotExist{ID: ls.ID}
+		}
+		l, err := LinkShareGetByIDFunc(s, ls.ID)
 		if err != nil {
 			return nil, err
 		}

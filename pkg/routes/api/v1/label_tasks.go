@@ -45,7 +45,7 @@ func RegisterLabelTasks(a *echo.Group) {
 // @Produce json
 // @Security JWTKeyAuth
 // @Param projecttask path int true "Task ID"
-// @Param label body models.Label true "The label object with the label ID to add"
+// @Param label body models.LabelTask true "The label task relation object with the label ID to add"
 // @Success 201 {object} models.Label "The label was successfully added to the task."
 // @Failure 400 {object} web.HTTPError "Invalid task ID or label object"
 // @Failure 403 {object} web.HTTPError "The user does not have access to the task or label"
@@ -59,25 +59,25 @@ func addLabelToTaskLogic(s *xorm.Session, u *user.User, c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid task ID")
 	}
 
-	// Parse label from request body
-	var label models.Label
-	if err := c.Bind(&label); err != nil {
+	// Parse label task relation from request body
+	var labelTask models.LabelTask
+	if err := c.Bind(&labelTask); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid label object")
 	}
 
-	if label.ID == 0 {
+	if labelTask.LabelID == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Label ID is required")
 	}
 
 	// Add label to task via service
 	service := services.NewLabelService(s.Engine())
-	err = service.AddLabelToTask(s, label.ID, taskID, u)
+	err = service.AddLabelToTask(s, labelTask.LabelID, taskID, u)
 	if err != nil {
 		return err
 	}
 
 	// Return the added label
-	addedLabel, err := service.Get(s, label.ID, u)
+	addedLabel, err := service.Get(s, labelTask.LabelID, u)
 	if err != nil {
 		return err
 	}

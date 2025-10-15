@@ -27,16 +27,21 @@ import (
 	"xorm.io/xorm"
 )
 
+func init() {
+	InitCommentService()
+}
+
 // CommentService represents a service for managing task comments.
 type CommentService struct {
-	DB *xorm.Engine
+	DB       *xorm.Engine
+	Registry *ServiceRegistry
 }
 
 // NewCommentService creates a new CommentService.
+// Deprecated: Use ServiceRegistry.Comment() instead.
 func NewCommentService(db *xorm.Engine) *CommentService {
-	return &CommentService{
-		DB: db,
-	}
+	registry := NewServiceRegistry(db)
+	return registry.Comment()
 }
 
 // CommentPermissions represents permission checking for comments.
@@ -71,7 +76,7 @@ func (cp *CommentPermissions) Read() (bool, int, error) {
 
 	if cp.user.ID < 0 {
 		shareID := cp.user.ID * -1
-		share, err := models.GetLinkShareByID(cp.s, shareID)
+		share, err := cp.cs.Registry.LinkShare().GetByID(cp.s, shareID)
 		if err != nil {
 			if models.IsErrProjectShareDoesNotExist(err) {
 				return false, 0, nil
@@ -143,10 +148,63 @@ func (cp *CommentPermissions) Delete() (bool, error) {
 	return cp.canUserModifyTaskComment()
 }
 
+// ===== Comment Permission Methods =====
+// Migrated from models layer as part of T-PERM-010
+
+// CanRead checks if a user can read a task comment.
+// MIGRATION: Migrated from models.TaskComment.CanRead (T-PERM-010)
+func (cs *CommentService) CanRead(s *xorm.Session, taskID int64, a web.Auth) (bool, int, error) {
+	// User needs read access to the task
+	ts := NewTaskService(s.Engine())
+	return ts.CanRead(s, taskID, a)
+}
+
+// CanCreate checks if a user can create a task comment.
+// MIGRATION: Migrated from models.TaskComment.CanCreate (T-PERM-010)
+func (cs *CommentService) CanCreate(s *xorm.Session, taskID int64, a web.Auth) (bool, error) {
+	// User needs write access to the task
+	ts := NewTaskService(s.Engine())
+	return ts.CanWrite(s, taskID, a)
+}
+
+// CanUpdate checks if a user can update a task comment.
+// MIGRATION: Migrated from models.TaskComment.CanUpdate (T-PERM-010)
+func (cs *CommentService) CanUpdate(s *xorm.Session, commentID int64, taskID int64, a web.Auth) (bool, error) {
+	// Check if user has write access to the task
+	ts := NewTaskService(s.Engine())
+	canWrite, err := ts.CanWrite(s, taskID, a)
+	if err != nil {
+		return false, err
+	}
+	if !canWrite {
+		return false, nil
+	}
+
+	// Check if the user is the author of the comment
+	savedComment := &models.TaskComment{
+		ID:     commentID,
+		TaskID: taskID,
+	}
+	err = cs.getTaskCommentSimple(s, savedComment)
+	if err != nil {
+		return false, err
+	}
+
+	return a.GetID() == savedComment.AuthorID, nil
+}
+
+// CanDelete checks if a user can delete a task comment.
+// MIGRATION: Migrated from models.TaskComment.CanDelete (T-PERM-010)
+func (cs *CommentService) CanDelete(s *xorm.Session, commentID int64, taskID int64, a web.Auth) (bool, error) {
+	// Same logic as CanUpdate
+	return cs.CanUpdate(s, commentID, taskID, a)
+}
+
 // canUserModifyTaskComment checks if a user can modify (update/delete) a task comment.
 // This logic is moved from models.TaskComment.canUserModifyTaskComment.
 func (cp *CommentPermissions) canUserModifyTaskComment() (bool, error) {
 	// First check if user has write access to the task
+	// This must be done BEFORE checking if comment exists to match original error ordering
 	task, err := cp.getTask()
 	if err != nil {
 		return false, err
@@ -161,13 +219,17 @@ func (cp *CommentPermissions) canUserModifyTaskComment() (bool, error) {
 		return false, nil
 	}
 
-	// Then check if the user is the author of the comment
+	// Then check if the comment exists and if the user is the author
+	// This is checked AFTER task existence to ensure proper error code ordering
 	savedComment := &models.TaskComment{
 		ID:     cp.comment.ID,
 		TaskID: cp.comment.TaskID,
 	}
 	err = cp.getTaskCommentSimple(savedComment)
 	if err != nil {
+		// If comment doesn't exist, still check if task exists first by returning task error
+		// But since we already checked task exists above, this shouldn't happen
+		// Just return the comment error
 		return false, err
 	}
 
@@ -339,15 +401,8 @@ func (cs *CommentService) GetAllForTask(s *xorm.Session, taskID int64, u *user.U
 
 // Update updates an existing task comment.
 func (cs *CommentService) Update(s *xorm.Session, comment *models.TaskComment, u *user.User) (*models.TaskComment, error) {
-	// Get existing comment to verify it exists and get task ID
-	existing := &models.TaskComment{ID: comment.ID}
-	err := cs.getTaskCommentSimple(s, existing)
-	if err != nil {
-		return nil, err
-	}
-	comment.TaskID = existing.TaskID
-
-	// Check permissions
+	// Check permissions FIRST - this will check task existence before comment existence
+	// The permission check uses comment.TaskID which is set from URL binding
 	can, err := cs.Can(s, comment, u).Update()
 	if err != nil {
 		return nil, err
@@ -424,10 +479,11 @@ func (cs *CommentService) Delete(s *xorm.Session, commentID int64, u *user.User)
 	}
 
 	// Get the task for event
-	task, err := models.GetTaskByIDSimple(s, comment.TaskID)
+	taskPtr, err := cs.Registry.Task().GetByIDSimple(s, comment.TaskID)
 	if err != nil {
 		return err
 	}
+	task := *taskPtr
 
 	// Get author for event
 	comment.Author, err = user.GetUserByID(s, u.ID)
@@ -557,6 +613,100 @@ func InitCommentService() {
 			}
 		}
 		return NewCommentService(s.Engine()).GetAllForTask(s, taskID, u, search, page, perPage)
+	}
+
+	// Wire permission functions - T-PERM-010
+	models.CommentCanReadFunc = func(s *xorm.Session, taskID int64, a web.Auth) (bool, int, error) {
+		return NewCommentService(s.Engine()).CanRead(s, taskID, a)
+	}
+
+	models.CommentCanCreateFunc = func(s *xorm.Session, taskID int64, a web.Auth) (bool, error) {
+		return NewCommentService(s.Engine()).CanCreate(s, taskID, a)
+	}
+
+	models.CommentCanUpdateFunc = func(s *xorm.Session, commentID int64, taskID int64, a web.Auth) (bool, error) {
+		return NewCommentService(s.Engine()).CanUpdate(s, commentID, taskID, a)
+	}
+
+	models.CommentCanDeleteFunc = func(s *xorm.Session, commentID int64, taskID int64, a web.Auth) (bool, error) {
+		return NewCommentService(s.Engine()).CanDelete(s, commentID, taskID, a)
+	}
+
+	// Wire TaskComment permission delegation functions - T-PERM-014A-FIX
+	models.CheckTaskCommentReadFunc = func(s *xorm.Session, commentID int64, a web.Auth) (bool, int, error) {
+		cs := NewCommentService(s.Engine())
+		// Need to get comment to find taskID
+		comment := &models.TaskComment{ID: commentID}
+		err := cs.getTaskCommentSimple(s, comment)
+		if err != nil {
+			return false, 0, err
+		}
+		return cs.CanRead(s, comment.TaskID, a)
+	}
+
+	models.CheckTaskCommentWriteFunc = func(s *xorm.Session, commentID int64, a web.Auth) (bool, error) {
+		cs := NewCommentService(s.Engine())
+		comment := &models.TaskComment{ID: commentID}
+		err := cs.getTaskCommentSimple(s, comment)
+		if err != nil {
+			return false, err
+		}
+		// Write is same as Update for comments
+		return cs.CanUpdate(s, commentID, comment.TaskID, a)
+	}
+
+	models.CheckTaskCommentUpdateFunc = func(s *xorm.Session, comment *models.TaskComment, a web.Auth) (bool, error) {
+		cs := NewCommentService(s.Engine())
+		// Check if TaskID is provided from URL binding
+		if comment.TaskID != 0 {
+			// We have TaskID from URL, check if task exists first
+			_, err := models.GetTaskSimple(s, &models.Task{ID: comment.TaskID})
+			if err != nil {
+				return false, err // Will return ErrTaskDoesNotExist (4002) if task doesn't exist
+			}
+		}
+		// Now get the full comment to check permissions
+		fullComment := &models.TaskComment{ID: comment.ID}
+		err := cs.getTaskCommentSimple(s, fullComment)
+		if err != nil {
+			return false, err // Will return ErrTaskCommentDoesNotExist (4015) if comment doesn't exist
+		}
+		// Use taskID from full comment if not provided from URL
+		taskID := comment.TaskID
+		if taskID == 0 {
+			taskID = fullComment.TaskID
+		}
+		return cs.CanUpdate(s, comment.ID, taskID, a)
+	}
+
+	models.CheckTaskCommentDeleteFunc = func(s *xorm.Session, comment *models.TaskComment, a web.Auth) (bool, error) {
+		cs := NewCommentService(s.Engine())
+		// Check if TaskID is provided from URL binding
+		if comment.TaskID != 0 {
+			// We have TaskID from URL, check if task exists first
+			_, err := models.GetTaskSimple(s, &models.Task{ID: comment.TaskID})
+			if err != nil {
+				return false, err // Will return ErrTaskDoesNotExist (4002) if task doesn't exist
+			}
+		}
+		// Now get the full comment to check permissions
+		fullComment := &models.TaskComment{ID: comment.ID}
+		err := cs.getTaskCommentSimple(s, fullComment)
+		if err != nil {
+			return false, err // Will return ErrTaskCommentDoesNotExist (4015) if comment doesn't exist
+		}
+		// Use taskID from full comment if not provided from URL
+		taskID := comment.TaskID
+		if taskID == 0 {
+			taskID = fullComment.TaskID
+		}
+		return cs.CanDelete(s, comment.ID, taskID, a)
+	}
+
+	models.CheckTaskCommentCreateFunc = func(s *xorm.Session, comment *models.TaskComment, a web.Auth) (bool, error) {
+		cs := NewCommentService(s.Engine())
+		// CanCreate uses taskID directly from the comment object
+		return cs.CanCreate(s, comment.TaskID, a)
 	}
 }
 

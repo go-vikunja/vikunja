@@ -57,10 +57,8 @@ func TestProject_ReadOne(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
 	defer s.Close()
-	p := ProjectService{
-		DB:              db.GetEngine(),
-		FavoriteService: NewFavoriteService(db.GetEngine()),
-	}
+	registry := NewServiceRegistry(db.GetEngine())
+	p := registry.Project()
 
 	t.Run("should load complete project details", func(t *testing.T) {
 		// Load project first to get its data
@@ -109,7 +107,7 @@ func TestProject_ReadOne(t *testing.T) {
 		u := &user.User{ID: 1}
 
 		// Add project to favorites first
-		err := p.FavoriteService.AddToFavorite(s, project.ID, u, models.FavoriteKindProject)
+		err := p.Registry.Favorite().AddToFavorite(s, project.ID, u, models.FavoriteKindProject)
 		require.NoError(t, err)
 
 		err = p.ReadOne(s, project, u)
@@ -122,10 +120,8 @@ func TestProject_ReadAll(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
 	defer s.Close()
-	p := ProjectService{
-		DB:              db.GetEngine(),
-		FavoriteService: NewFavoriteService(db.GetEngine()),
-	}
+	registry := NewServiceRegistry(db.GetEngine())
+	p := registry.Project()
 
 	t.Run("should get all projects for user", func(t *testing.T) {
 		u := &user.User{ID: 1}
@@ -248,7 +244,8 @@ func TestProject_GetByID(t *testing.T) {
 	s := db.NewSession()
 	defer s.Close()
 
-	p := &ProjectService{DB: db.GetEngine()}
+	registry := NewServiceRegistry(db.GetEngine())
+	p := registry.Project()
 
 	t.Run("should get a project by its id", func(t *testing.T) {
 		proj, err := p.GetByID(s, 1, &user.User{ID: 1})
@@ -269,12 +266,92 @@ func TestProject_GetByID(t *testing.T) {
 	})
 }
 
+func TestProjectService_GetByIDSimple(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	registry := NewServiceRegistry(db.GetEngine())
+	p := registry.Project()
+
+	t.Run("Success", func(t *testing.T) {
+		project, err := p.GetByIDSimple(s, 1)
+		require.NoError(t, err)
+		require.NotNil(t, project)
+		assert.Equal(t, int64(1), project.ID)
+		assert.Equal(t, "Test1", project.Title)
+	})
+
+	t.Run("NotFound", func(t *testing.T) {
+		project, err := p.GetByIDSimple(s, 999999)
+		require.Error(t, err)
+		assert.Nil(t, project)
+		assert.True(t, models.IsErrProjectDoesNotExist(err))
+	})
+
+	t.Run("InvalidID", func(t *testing.T) {
+		project, err := p.GetByIDSimple(s, 0)
+		require.Error(t, err)
+		assert.Nil(t, project)
+		assert.True(t, models.IsErrProjectDoesNotExist(err))
+	})
+}
+
+func TestProjectService_GetByIDs(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	registry := NewServiceRegistry(db.GetEngine())
+	p := registry.Project()
+
+	t.Run("MultipleIDs", func(t *testing.T) {
+		projects, err := p.GetByIDs(s, []int64{1, 2, 3})
+		require.NoError(t, err)
+		assert.Len(t, projects, 3)
+	})
+
+	t.Run("EmptyIDs", func(t *testing.T) {
+		projects, err := p.GetByIDs(s, []int64{})
+		require.NoError(t, err)
+		assert.Len(t, projects, 0)
+		assert.NotNil(t, projects)
+	})
+}
+
+func TestProjectService_GetMapByIDs(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	registry := NewServiceRegistry(db.GetEngine())
+	p := registry.Project()
+
+	t.Run("MultipleIDs", func(t *testing.T) {
+		projects, err := p.GetMapByIDs(s, []int64{1, 2, 3})
+		require.NoError(t, err)
+		assert.Len(t, projects, 3)
+		assert.NotNil(t, projects[1])
+		assert.NotNil(t, projects[2])
+		assert.NotNil(t, projects[3])
+		assert.Equal(t, "Test1", projects[1].Title)
+	})
+
+	t.Run("EmptyIDs", func(t *testing.T) {
+		projects, err := p.GetMapByIDs(s, []int64{})
+		require.NoError(t, err)
+		assert.Len(t, projects, 0)
+		assert.NotNil(t, projects)
+	})
+}
+
 func TestProjectService_HasPermission_LinkShare(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
 	defer s.Close()
 
-	service := &ProjectService{DB: db.GetEngine()}
+	registry := NewServiceRegistry(db.GetEngine())
+	service := registry.Project()
 	linkShareUser := &user.User{ID: -2}
 
 	t.Run("write permission for shared project", func(t *testing.T) {
@@ -301,7 +378,8 @@ func TestProject_GetAllForUser(t *testing.T) {
 	s := db.NewSession()
 	defer s.Close()
 
-	p := &ProjectService{DB: db.GetEngine()}
+	registry := NewServiceRegistry(db.GetEngine())
+	p := registry.Project()
 
 	t.Run("should get all projects for a user", func(t *testing.T) {
 		projects, count, total, err := p.GetAllForUser(s, &user.User{ID: 1}, "", 1, 10, false)
@@ -338,7 +416,8 @@ func TestProject_GetAllForUser(t *testing.T) {
 func TestProject_Delete(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 
-	p := &ProjectService{DB: db.GetEngine()}
+	registry := NewServiceRegistry(db.GetEngine())
+	p := registry.Project()
 
 	t.Run("should delete a project successfully", func(t *testing.T) {
 		s := db.NewSession()
@@ -481,7 +560,8 @@ func TestProject_Update_ArchiveParentArchivesChild(t *testing.T) {
 	s := db.NewSession()
 	defer s.Close()
 
-	p := &ProjectService{DB: db.GetEngine()}
+	registry := NewServiceRegistry(db.GetEngine())
+	p := registry.Project()
 	actingUser := &user.User{ID: 6}
 
 	// First, let's load the existing project to get all its fields
@@ -512,4 +592,340 @@ func TestProject_Update_ArchiveParentArchivesChild(t *testing.T) {
 		"id":          12,
 		"is_archived": true,
 	}, false)
+}
+
+// ==================================================================================
+// Permission Method Tests (T-PERM-006)
+// ==================================================================================
+
+func TestProjectService_CanRead(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	ps := NewProjectService(db.GetEngine())
+
+	t.Run("Owner_CanRead", func(t *testing.T) {
+		u := &user.User{ID: 1} // Owner of project 1
+		canRead, maxRight, err := ps.CanRead(s, 1, u)
+
+		require.NoError(t, err)
+		assert.True(t, canRead)
+		assert.Equal(t, int(models.PermissionAdmin), maxRight)
+	})
+
+	t.Run("ReadUser_CanRead", func(t *testing.T) {
+		u := &user.User{ID: 1} // Has read permission (permission 0) on project 3
+		canRead, maxRight, err := ps.CanRead(s, 3, u)
+
+		require.NoError(t, err)
+		assert.True(t, canRead)
+		assert.GreaterOrEqual(t, maxRight, int(models.PermissionRead))
+	})
+
+	t.Run("NoPermission_CannotRead", func(t *testing.T) {
+		u := &user.User{ID: 13} // No permission on project 1
+		canRead, maxRight, err := ps.CanRead(s, 1, u)
+
+		require.NoError(t, err)
+		assert.False(t, canRead)
+		assert.Equal(t, 0, maxRight)
+	})
+
+	t.Run("FavoritesPseudoProject_AlwaysCanRead", func(t *testing.T) {
+		u := &user.User{ID: 1}
+		canRead, maxRight, err := ps.CanRead(s, models.FavoritesPseudoProject.ID, u)
+
+		require.NoError(t, err)
+		assert.True(t, canRead)
+		assert.Equal(t, int(models.PermissionRead), maxRight)
+	})
+
+	t.Run("LinkShare_CanRead", func(t *testing.T) {
+		shareAuth := &models.LinkSharing{
+			ProjectID:  1,
+			Permission: models.PermissionRead,
+		}
+		canRead, maxRight, err := ps.CanRead(s, 1, shareAuth)
+
+		require.NoError(t, err)
+		assert.True(t, canRead)
+		assert.Equal(t, int(models.PermissionRead), maxRight)
+	})
+
+	t.Run("LinkShare_WrongProject_CannotRead", func(t *testing.T) {
+		shareAuth := &models.LinkSharing{
+			ProjectID:  2,
+			Permission: models.PermissionRead,
+		}
+		canRead, maxRight, err := ps.CanRead(s, 1, shareAuth)
+
+		require.NoError(t, err)
+		assert.False(t, canRead)
+		assert.Equal(t, 0, maxRight)
+	})
+}
+
+func TestProjectService_CanWrite(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	ps := NewProjectService(db.GetEngine())
+
+	t.Run("Owner_CanWrite", func(t *testing.T) {
+		u := &user.User{ID: 1} // Owner of project 1
+		canWrite, err := ps.CanWrite(s, 1, u)
+
+		require.NoError(t, err)
+		assert.True(t, canWrite)
+	})
+
+	t.Run("WriteUser_CanWrite", func(t *testing.T) {
+		u := &user.User{ID: 1} // Has write permission (permission 1) on project 10
+		canWrite, err := ps.CanWrite(s, 10, u)
+
+		require.NoError(t, err)
+		assert.True(t, canWrite)
+	})
+
+	t.Run("ReadUser_CannotWrite", func(t *testing.T) {
+		u := &user.User{ID: 1} // Has only read permission (permission 0) on project 9
+		canWrite, err := ps.CanWrite(s, 9, u)
+
+		require.NoError(t, err)
+		assert.False(t, canWrite)
+	})
+
+	t.Run("NoPermission_CannotWrite", func(t *testing.T) {
+		u := &user.User{ID: 13} // No permission on project 1
+		canWrite, err := ps.CanWrite(s, 1, u)
+
+		require.NoError(t, err)
+		assert.False(t, canWrite)
+	})
+
+	t.Run("FavoritesPseudoProject_CannotWrite", func(t *testing.T) {
+		u := &user.User{ID: 1}
+		canWrite, err := ps.CanWrite(s, models.FavoritesPseudoProject.ID, u)
+
+		require.NoError(t, err)
+		assert.False(t, canWrite)
+	})
+
+	t.Run("LinkShare_WithWritePermission_CanWrite", func(t *testing.T) {
+		shareAuth := &models.LinkSharing{
+			ProjectID:  1,
+			Permission: models.PermissionWrite,
+		}
+		canWrite, err := ps.CanWrite(s, 1, shareAuth)
+
+		require.NoError(t, err)
+		assert.True(t, canWrite)
+	})
+}
+
+func TestProjectService_CanUpdate(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	ps := NewProjectService(db.GetEngine())
+
+	t.Run("Owner_CanUpdate", func(t *testing.T) {
+		u := &user.User{ID: 1} // Owner of project 1
+		project := &models.Project{ParentProjectID: 0}
+		canUpdate, err := ps.CanUpdate(s, 1, project, u)
+
+		require.NoError(t, err)
+		assert.True(t, canUpdate)
+	})
+
+	t.Run("WriteUser_CanUpdate", func(t *testing.T) {
+		u := &user.User{ID: 1} // Has write permission (permission 1) on project 10
+		project := &models.Project{ParentProjectID: 0}
+		canUpdate, err := ps.CanUpdate(s, 10, project, u)
+
+		require.NoError(t, err)
+		assert.True(t, canUpdate)
+	})
+
+	t.Run("ReadUser_CannotUpdate", func(t *testing.T) {
+		u := &user.User{ID: 1} // Has only read permission (permission 0) on project 9
+		project := &models.Project{ParentProjectID: 0}
+		canUpdate, err := ps.CanUpdate(s, 9, project, u)
+
+		require.NoError(t, err)
+		assert.False(t, canUpdate)
+	})
+
+	t.Run("MovingToNewParent_RequiresPermissionOnNewParent", func(t *testing.T) {
+		u := &user.User{ID: 1} // Owner of project 1 but not project 2
+		project := &models.Project{
+			ParentProjectID: 2, // Moving to parent 2
+		}
+		canUpdate, err := ps.CanUpdate(s, 1, project, u)
+
+		// Should fail because user doesn't have write permission on new parent (project 2)
+		assert.Error(t, err)
+		assert.True(t, models.IsErrGenericForbidden(err))
+		assert.False(t, canUpdate)
+	})
+
+	t.Run("FavoritesPseudoProject_CannotUpdate", func(t *testing.T) {
+		u := &user.User{ID: 1}
+		project := &models.Project{ParentProjectID: 0}
+		canUpdate, err := ps.CanUpdate(s, models.FavoritesPseudoProject.ID, project, u)
+
+		require.NoError(t, err)
+		assert.False(t, canUpdate)
+	})
+}
+
+func TestProjectService_CanDelete(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	ps := NewProjectService(db.GetEngine())
+
+	t.Run("Owner_CanDelete", func(t *testing.T) {
+		u := &user.User{ID: 1} // Owner of project 1
+		canDelete, err := ps.CanDelete(s, 1, u)
+
+		require.NoError(t, err)
+		assert.True(t, canDelete)
+	})
+
+	t.Run("AdminUser_CanDelete", func(t *testing.T) {
+		u := &user.User{ID: 1} // Has admin permission (permission 2) on project 11
+		canDelete, err := ps.CanDelete(s, 11, u)
+
+		require.NoError(t, err)
+		assert.True(t, canDelete)
+	})
+
+	t.Run("WriteUser_CannotDelete", func(t *testing.T) {
+		u := &user.User{ID: 1} // Has only write permission (permission 1) on project 10
+		canDelete, err := ps.CanDelete(s, 10, u)
+
+		require.NoError(t, err)
+		assert.False(t, canDelete)
+	})
+
+	t.Run("ReadUser_CannotDelete", func(t *testing.T) {
+		u := &user.User{ID: 1} // Has only read permission (permission 0) on project 9
+		canDelete, err := ps.CanDelete(s, 9, u)
+
+		require.NoError(t, err)
+		assert.False(t, canDelete)
+	})
+
+	t.Run("FavoritesPseudoProject_CannotDelete", func(t *testing.T) {
+		u := &user.User{ID: 1}
+		canDelete, err := ps.CanDelete(s, models.FavoritesPseudoProject.ID, u)
+
+		require.NoError(t, err)
+		assert.False(t, canDelete)
+	})
+}
+
+func TestProjectService_CanCreate(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	ps := NewProjectService(db.GetEngine())
+
+	t.Run("AuthenticatedUser_CanCreateTopLevelProject", func(t *testing.T) {
+		u := &user.User{ID: 1}
+		project := &models.Project{ParentProjectID: 0}
+		canCreate, err := ps.CanCreate(s, project, u)
+
+		require.NoError(t, err)
+		assert.True(t, canCreate)
+	})
+
+	t.Run("SubProject_RequiresWritePermissionOnParent", func(t *testing.T) {
+		u := &user.User{ID: 1} // Owner of project 1
+		project := &models.Project{ParentProjectID: 1}
+		canCreate, err := ps.CanCreate(s, project, u)
+
+		require.NoError(t, err)
+		assert.True(t, canCreate)
+	})
+
+	t.Run("SubProject_NoPermissionOnParent_CannotCreate", func(t *testing.T) {
+		u := &user.User{ID: 13} // No permission on project 1
+		project := &models.Project{ParentProjectID: 1}
+		canCreate, err := ps.CanCreate(s, project, u)
+
+		require.NoError(t, err)
+		assert.False(t, canCreate)
+	})
+
+	t.Run("LinkShare_CannotCreate", func(t *testing.T) {
+		shareAuth := &models.LinkSharing{
+			ProjectID:  1,
+			Permission: models.PermissionAdmin,
+		}
+		project := &models.Project{ParentProjectID: 0}
+		canCreate, err := ps.CanCreate(s, project, shareAuth)
+
+		require.NoError(t, err)
+		assert.False(t, canCreate)
+	})
+}
+
+func TestProjectService_IsAdmin(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	ps := NewProjectService(db.GetEngine())
+
+	t.Run("Owner_IsAdmin", func(t *testing.T) {
+		u := &user.User{ID: 1} // Owner of project 1
+		isAdmin, err := ps.IsAdmin(s, 1, u)
+
+		require.NoError(t, err)
+		assert.True(t, isAdmin)
+	})
+
+	t.Run("AdminUser_IsAdmin", func(t *testing.T) {
+		u := &user.User{ID: 1} // Has admin permission (permission 2) on project 11
+		isAdmin, err := ps.IsAdmin(s, 11, u)
+
+		require.NoError(t, err)
+		assert.True(t, isAdmin)
+	})
+
+	t.Run("WriteUser_NotAdmin", func(t *testing.T) {
+		u := &user.User{ID: 1} // Has only write permission (permission 1) on project 10
+		isAdmin, err := ps.IsAdmin(s, 10, u)
+
+		require.NoError(t, err)
+		assert.False(t, isAdmin)
+	})
+
+	t.Run("ReadUser_NotAdmin", func(t *testing.T) {
+		u := &user.User{ID: 1} // Has only read permission (permission 0) on project 9
+		isAdmin, err := ps.IsAdmin(s, 9, u)
+
+		require.NoError(t, err)
+		assert.False(t, isAdmin)
+	})
+
+	t.Run("LinkShare_WithAdminPermission_IsAdmin", func(t *testing.T) {
+		shareAuth := &models.LinkSharing{
+			ProjectID:  1,
+			Permission: models.PermissionAdmin,
+		}
+		isAdmin, err := ps.IsAdmin(s, 1, shareAuth)
+
+		require.NoError(t, err)
+		assert.True(t, isAdmin)
+	})
+
+	t.Run("FavoritesPseudoProject_NeverAdmin", func(t *testing.T) {
+		u := &user.User{ID: 1}
+		isAdmin, err := ps.IsAdmin(s, models.FavoritesPseudoProject.ID, u)
+
+		require.NoError(t, err)
+		assert.False(t, isAdmin)
+	})
 }

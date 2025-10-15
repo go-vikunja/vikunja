@@ -90,6 +90,29 @@ func TestLabelService_Get(t *testing.T) {
 	})
 }
 
+func TestLabelService_GetByID(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	ls := NewLabelService(testEngine)
+
+	t.Run("Success", func(t *testing.T) {
+		label, err := ls.GetByID(s, 1)
+		assert.NoError(t, err)
+		assert.NotNil(t, label)
+		assert.Equal(t, int64(1), label.ID)
+		assert.Equal(t, "Label #1", label.Title)
+	})
+
+	t.Run("NotFound", func(t *testing.T) {
+		label, err := ls.GetByID(s, 9999)
+		assert.Error(t, err)
+		assert.True(t, models.IsErrLabelDoesNotExist(err))
+		assert.Nil(t, label)
+	})
+}
+
 func TestLabelService_Delete(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()

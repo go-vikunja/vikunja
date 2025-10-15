@@ -148,6 +148,21 @@ func (ats *APITokenService) GetAll(s *xorm.Session, u *user.User, search string,
 	return tokens, len(tokens), totalCount, nil
 }
 
+// GetByID retrieves an API token by ID without permission checks
+// This is a simple lookup helper used by permission methods
+// MIGRATION: Added in T-PERM-004 (migrated from models.GetAPITokenByID)
+func (ats *APITokenService) GetByID(s *xorm.Session, id int64) (*models.APIToken, error) {
+	token := &models.APIToken{}
+	exists, err := s.Where("id = ?", id).Get(token)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, models.ErrAPITokenDoesNotExist{TokenID: id}
+	}
+	return token, nil
+}
+
 // Delete deletes an API token
 func (ats *APITokenService) Delete(s *xorm.Session, id int64, u *user.User) error {
 	if u == nil {

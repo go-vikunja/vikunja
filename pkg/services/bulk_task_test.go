@@ -32,7 +32,7 @@ func TestBulkTaskService_New(t *testing.T) {
 
 		assert.NotNil(t, service)
 		assert.IsType(t, &BulkTaskService{}, service)
-		assert.NotNil(t, service.TaskService)
+		assert.NotNil(t, service.Registry)
 	})
 }
 

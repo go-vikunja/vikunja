@@ -22,6 +22,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
+	"code.vikunja.io/api/pkg/web"
 	"xorm.io/xorm"
 )
 
@@ -29,20 +30,15 @@ import (
 // This service orchestrates the complex process of copying a project, including tasks,
 // attachments, labels, assignees, comments, relations, views, and permissions.
 type ProjectDuplicateService struct {
-	DB                *xorm.Engine
-	ProjectService    *ProjectService
-	TaskService       *TaskService
-	AttachmentService *AttachmentService
+	DB       *xorm.Engine
+	Registry *ServiceRegistry
 }
 
 // NewProjectDuplicateService creates a new ProjectDuplicateService.
+// Deprecated: Use ServiceRegistry.ProjectDuplicate() instead.
 func NewProjectDuplicateService(db *xorm.Engine) *ProjectDuplicateService {
-	return &ProjectDuplicateService{
-		DB:                db,
-		ProjectService:    NewProjectService(db),
-		TaskService:       NewTaskService(db),
-		AttachmentService: NewAttachmentService(db),
-	}
+	registry := NewServiceRegistry(db)
+	return registry.ProjectDuplicate()
 }
 
 // InitProjectDuplicateService sets up dependency injection for project duplication related model functions.
@@ -60,7 +56,7 @@ func InitProjectDuplicateService() {
 // project where the new project will be created.
 func (pds *ProjectDuplicateService) Duplicate(s *xorm.Session, projectID int64, parentProjectID int64, u *user.User) (*models.Project, error) {
 	// Permission checks: Read access to source project
-	canRead, err := pds.ProjectService.HasPermission(s, projectID, u, models.PermissionRead)
+	canRead, err := pds.Registry.Project().HasPermission(s, projectID, u, models.PermissionRead)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +66,7 @@ func (pds *ProjectDuplicateService) Duplicate(s *xorm.Session, projectID int64, 
 
 	// Permission checks: Write access to parent project (if specified)
 	if parentProjectID != 0 {
-		canCreate, err := pds.ProjectService.HasPermission(s, parentProjectID, u, models.PermissionWrite)
+		canCreate, err := pds.Registry.Project().HasPermission(s, parentProjectID, u, models.PermissionWrite)
 		if err != nil {
 			return nil, err
 		}
@@ -80,7 +76,7 @@ func (pds *ProjectDuplicateService) Duplicate(s *xorm.Session, projectID int64, 
 	}
 
 	// Get the source project
-	sourceProject, err := models.GetProjectSimpleByID(s, projectID)
+	sourceProject, err := pds.Registry.Project().GetByIDSimple(s, projectID)
 	if err != nil {
 		return nil, err
 	}
@@ -100,12 +96,12 @@ func (pds *ProjectDuplicateService) Duplicate(s *xorm.Session, projectID int64, 
 	}
 
 	// Create the project using ProjectService
-	createdProject, err := pds.ProjectService.Create(s, newProject, u)
+	createdProject, err := pds.Registry.Project().Create(s, newProject, u)
 	if err != nil {
 		// If there is no available unique project identifier, reset it and try again
 		if models.IsErrProjectIdentifierIsNotUnique(err) {
 			newProject.Identifier = ""
-			createdProject, err = pds.ProjectService.Create(s, newProject, u)
+			createdProject, err = pds.Registry.Project().Create(s, newProject, u)
 			if err != nil {
 				return nil, err
 			}
@@ -158,7 +154,7 @@ func (pds *ProjectDuplicateService) Duplicate(s *xorm.Session, projectID int64, 
 func (pds *ProjectDuplicateService) duplicateTasksAndRelatedData(s *xorm.Session, sourceProjectID int64, targetProjectID int64, u *user.User) (map[int64]int64, error) {
 	// Get all tasks from the source project using TaskService
 	// Use a large page size to get all tasks at once
-	tasks, _, _, err := pds.TaskService.GetAllByProject(s, sourceProjectID, u, 1, 999999, "")
+	tasks, _, _, err := pds.Registry.Task().GetAllByProject(s, sourceProjectID, u, 1, 999999, "")
 	if err != nil {
 		return nil, err
 	}
@@ -185,7 +181,7 @@ func (pds *ProjectDuplicateService) duplicateTasksAndRelatedData(s *xorm.Session
 
 		// Use TaskService.CreateWithoutPermissionCheck since we've already verified permissions
 		// at the beginning of the duplication process
-		createdTask, err := pds.TaskService.CreateWithoutPermissionCheck(s, t, u)
+		createdTask, err := pds.Registry.Task().CreateWithoutPermissionCheck(s, t, u)
 		if err != nil {
 			return nil, err
 		}
@@ -263,7 +259,7 @@ func (pds *ProjectDuplicateService) duplicateTaskAttachments(s *xorm.Session, ol
 		}
 
 		// Create new attachment with duplicated file using AttachmentService
-		createdAttachment, err := pds.AttachmentService.CreateWithoutPermissionCheck(s, attachment, attachment.File.File, attachment.File.Name, attachment.File.Size, u)
+		createdAttachment, err := pds.Registry.Attachment().CreateWithoutPermissionCheck(s, attachment, attachment.File.File, attachment.File.Name, attachment.File.Size, u)
 		if err != nil {
 			return err
 		}
@@ -318,7 +314,7 @@ func (pds *ProjectDuplicateService) duplicateTaskAssignees(s *xorm.Session, oldT
 
 		// Check if the user being assigned has access to the target project
 		assigneeUser := &user.User{ID: a.UserID}
-		canRead, err := pds.ProjectService.HasPermission(s, targetProjectID, assigneeUser, models.PermissionRead)
+		canRead, err := pds.Registry.Project().HasPermission(s, targetProjectID, assigneeUser, models.PermissionRead)
 		if err != nil {
 			return err
 		}
@@ -528,7 +524,7 @@ func (pds *ProjectDuplicateService) duplicateProjectViews(s *xorm.Session, sourc
 // duplicateProjectMetadata handles the duplication of project background, permissions, and shares.
 func (pds *ProjectDuplicateService) duplicateProjectMetadata(s *xorm.Session, sourceProjectID int64, targetProjectID int64, u *user.User) error {
 	// Get the target project to check if it has a background
-	targetProject, err := models.GetProjectSimpleByID(s, targetProjectID)
+	targetProject, err := pds.Registry.Project().GetByIDSimple(s, targetProjectID)
 	if err != nil {
 		return err
 	}
@@ -673,4 +669,41 @@ func (pds *ProjectDuplicateService) duplicateLinkShares(s *xorm.Session, sourceP
 
 	log.Debugf("Duplicated all link shares from project %d into %d", sourceProjectID, targetProjectID)
 	return nil
+}
+
+// CanCreate checks if a user can create a project duplicate
+// Requires read access to source project and create permission in general
+func (pds *ProjectDuplicateService) CanCreate(s *xorm.Session, projectID int64, parentProjectID int64, a web.Auth) (bool, error) {
+	// Link shares can't duplicate projects
+	if _, is := a.(*models.LinkSharing); is {
+		return false, nil
+	}
+
+	// Get user from auth
+	u, err := user.GetFromAuth(a)
+	if err != nil {
+		return false, err
+	}
+
+	// Check read access to source project
+	canRead, err := pds.Registry.Project().HasPermission(s, projectID, u, models.PermissionRead)
+	if err != nil {
+		return false, err
+	}
+	if !canRead {
+		return false, nil
+	}
+
+	// Check write access to parent project (if specified)
+	if parentProjectID != 0 {
+		canCreate, err := pds.Registry.Project().HasPermission(s, parentProjectID, u, models.PermissionWrite)
+		if err != nil {
+			return false, err
+		}
+		if !canCreate {
+			return false, nil
+		}
+	}
+
+	return true, nil
 }

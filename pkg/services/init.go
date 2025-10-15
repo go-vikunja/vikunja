@@ -48,6 +48,9 @@ func InitializeDependencies() {
 		Create(s *xorm.Session, project *models.Project, u *user.User) (*models.Project, error)
 		Delete(s *xorm.Session, projectID int64, a web.Auth) error
 		DeleteForce(s *xorm.Session, projectID int64, a web.Auth) error
+		GetByIDSimple(s *xorm.Session, projectID int64) (*models.Project, error)
+		GetByIDs(s *xorm.Session, projectIDs []int64) ([]*models.Project, error)
+		GetMapByIDs(s *xorm.Session, projectIDs []int64) (map[int64]*models.Project, error)
 	} {
 		// Return an adapter that bridges the interface
 		return &projectServiceAdapter{service: NewProjectService(nil)}
@@ -64,7 +67,7 @@ func InitializeDependencies() {
 		return &projectTeamServiceAdapter{service: NewProjectTeamService(nil)}
 	})
 
-	// Register ProjectUserService provider to avoid import cycles
+	// Register ProjectUsersService provider to avoid import cycles
 	models.RegisterProjectUserService(func() interface {
 		Create(s *xorm.Session, projectUser *models.ProjectUser, doer *user.User) error
 		Delete(s *xorm.Session, projectUser *models.ProjectUser) error
@@ -92,15 +95,20 @@ func InitializeDependencies() {
 		Update(s *xorm.Session, label *models.Label, u *user.User) error
 		Delete(s *xorm.Session, label *models.Label, u *user.User) error
 		GetAll(s *xorm.Session, u *user.User, search string, page int, perPage int) (interface{}, int, int64, error)
+		GetByID(s *xorm.Session, labelID int64) (*models.Label, error)
 	} {
 		// Return an adapter that bridges the interface
 		return &labelServiceAdapter{service: NewLabelService(nil)}
 	})
 
+	// Register TeamService provider to avoid import cycles
+	models.RegisterTeamService(&teamServiceAdapter{service: NewTeamService(nil)})
+
 	// Register APITokenService provider to avoid import cycles
 	models.RegisterAPITokenService(func() interface {
 		Create(s *xorm.Session, token *models.APIToken, u *user.User) error
 		GetAll(s *xorm.Session, u *user.User, search string, page int, perPage int) ([]*models.APIToken, int, int64, error)
+		GetByID(s *xorm.Session, id int64) (*models.APIToken, error)
 		Delete(s *xorm.Session, id int64, u *user.User) error
 	} {
 		// Return an adapter that bridges the interface
@@ -133,6 +141,11 @@ func InitializeDependencies() {
 
 	// Initialize KanbanService to wire up bucket-related model functions
 	InitKanbanService()
+
+	// Initialize PermissionService for permission delegation
+	// This enables models to delegate permission checks to the service layer
+	// NOTE: Permission methods will be migrated incrementally in Phase 4.1 tasks
+	InitPermissionService()
 }
 
 // projectServiceAdapter adapts ProjectService to the interface expected by models
@@ -154,6 +167,18 @@ func (a *projectServiceAdapter) Delete(s *xorm.Session, projectID int64, auth we
 
 func (a *projectServiceAdapter) DeleteForce(s *xorm.Session, projectID int64, auth web.Auth) error {
 	return a.service.DeleteForce(s, projectID, auth)
+}
+
+func (a *projectServiceAdapter) GetByIDSimple(s *xorm.Session, projectID int64) (*models.Project, error) {
+	return a.service.GetByIDSimple(s, projectID)
+}
+
+func (a *projectServiceAdapter) GetByIDs(s *xorm.Session, projectIDs []int64) ([]*models.Project, error) {
+	return a.service.GetByIDs(s, projectIDs)
+}
+
+func (a *projectServiceAdapter) GetMapByIDs(s *xorm.Session, projectIDs []int64) (map[int64]*models.Project, error) {
+	return a.service.GetMapByIDs(s, projectIDs)
 }
 
 // projectTeamServiceAdapter adapts ProjectTeamService to the interface expected by models
@@ -179,9 +204,9 @@ func (a *projectTeamServiceAdapter) Update(s *xorm.Session, teamProject *models.
 	return a.service.Update(s, teamProject)
 }
 
-// projectUserServiceAdapter adapts ProjectUserService to the interface expected by models
+// projectUserServiceAdapter adapts ProjectUsersService to the interface expected by models
 type projectUserServiceAdapter struct {
-	service *ProjectUserService
+	service *ProjectUsersService
 }
 
 func (a *projectUserServiceAdapter) Create(s *xorm.Session, projectUser *models.ProjectUser, doer *user.User) error {
@@ -244,6 +269,10 @@ func (a *labelServiceAdapter) GetAll(s *xorm.Session, u *user.User, search strin
 	return a.service.GetAll(s, u, search, page, perPage)
 }
 
+func (a *labelServiceAdapter) GetByID(s *xorm.Session, labelID int64) (*models.Label, error) {
+	return a.service.GetByID(s, labelID)
+}
+
 // apiTokenServiceAdapter adapts APITokenService to the interface expected by models
 type apiTokenServiceAdapter struct {
 	service *APITokenService
@@ -255,6 +284,10 @@ func (a *apiTokenServiceAdapter) Create(s *xorm.Session, token *models.APIToken,
 
 func (a *apiTokenServiceAdapter) GetAll(s *xorm.Session, u *user.User, search string, page int, perPage int) ([]*models.APIToken, int, int64, error) {
 	return a.service.GetAll(s, u, search, page, perPage)
+}
+
+func (a *apiTokenServiceAdapter) GetByID(s *xorm.Session, id int64) (*models.APIToken, error) {
+	return a.service.GetByID(s, id)
 }
 
 func (a *apiTokenServiceAdapter) Delete(s *xorm.Session, id int64, u *user.User) error {
@@ -276,6 +309,18 @@ func (a *reactionsServiceAdapter) Delete(s *xorm.Session, entityID int64, userID
 
 func (a *reactionsServiceAdapter) GetAll(s *xorm.Session, entityID int64, entityKind models.ReactionKind) (models.ReactionMap, error) {
 	return a.service.GetAll(s, entityID, entityKind)
+}
+
+func (a *reactionsServiceAdapter) CanRead(s *xorm.Session, entityID int64, entityKind models.ReactionKind, auth web.Auth) (bool, int, error) {
+	return a.service.CanRead(s, entityID, entityKind, auth)
+}
+
+func (a *reactionsServiceAdapter) CanCreate(s *xorm.Session, entityID int64, entityKind models.ReactionKind, auth web.Auth) (bool, error) {
+	return a.service.CanCreate(s, entityID, entityKind, auth)
+}
+
+func (a *reactionsServiceAdapter) CanDelete(s *xorm.Session, entityID int64, entityKind models.ReactionKind, auth web.Auth) (bool, error) {
+	return a.service.CanDelete(s, entityID, entityKind, auth)
 }
 
 // projectViewServiceAdapter adapts ProjectViewService to the interface expected by models
@@ -331,6 +376,35 @@ func (a *taskServiceAdapter) Delete(s *xorm.Session, task *models.Task, auth web
 
 func (a *taskServiceAdapter) GetByID(s *xorm.Session, taskID int64, u *user.User) (*models.Task, error) {
 	return a.service.GetByID(s, taskID, u)
+}
+
+func (a *taskServiceAdapter) GetByIDSimple(s *xorm.Session, taskID int64) (*models.Task, error) {
+	return a.service.GetByIDSimple(s, taskID)
+}
+
+func (a *taskServiceAdapter) GetByIDs(s *xorm.Session, ids []int64) ([]*models.Task, error) {
+	return a.service.GetByIDs(s, ids)
+}
+
+// Permission methods - T-PERM-010
+func (a *taskServiceAdapter) CanCreateAssignee(s *xorm.Session, taskID int64, auth web.Auth) (bool, error) {
+	return a.service.CanCreateAssignee(s, taskID, auth)
+}
+
+func (a *taskServiceAdapter) CanDeleteAssignee(s *xorm.Session, taskID int64, auth web.Auth) (bool, error) {
+	return a.service.CanDeleteAssignee(s, taskID, auth)
+}
+
+func (a *taskServiceAdapter) CanCreateRelation(s *xorm.Session, taskID int64, otherTaskID int64, relationKind models.RelationKind, auth web.Auth) (bool, error) {
+	return a.service.CanCreateRelation(s, taskID, otherTaskID, relationKind, auth)
+}
+
+func (a *taskServiceAdapter) CanDeleteRelation(s *xorm.Session, taskID int64, auth web.Auth) (bool, error) {
+	return a.service.CanDeleteRelation(s, taskID, auth)
+}
+
+func (a *taskServiceAdapter) CanUpdatePosition(s *xorm.Session, taskID int64, auth web.Auth) (bool, error) {
+	return a.service.CanUpdatePosition(s, taskID, auth)
 }
 
 // labelTaskServiceAdapter adapts LabelService to the interface expected by models for label-task operations
@@ -389,4 +463,69 @@ type projectDuplicateServiceAdapter struct {
 
 func (a *projectDuplicateServiceAdapter) Duplicate(s *xorm.Session, projectID int64, parentProjectID int64, u *user.User) (*models.Project, error) {
 	return a.service.Duplicate(s, projectID, parentProjectID, u)
+}
+
+func (a *projectDuplicateServiceAdapter) CanCreate(s *xorm.Session, projectID int64, parentProjectID int64, auth web.Auth) (bool, error) {
+	return a.service.CanCreate(s, projectID, parentProjectID, auth)
+}
+
+// teamServiceAdapter adapts TeamService to the interface expected by models
+type teamServiceAdapter struct {
+	service *TeamService
+}
+
+func (a *teamServiceAdapter) Create(s *xorm.Session, team *models.Team, doer *user.User, firstUserShouldBeAdmin bool) (*models.Team, error) {
+	return a.service.Create(s, team, doer, firstUserShouldBeAdmin)
+}
+
+func (a *teamServiceAdapter) GetByID(s *xorm.Session, teamID int64) (*models.Team, error) {
+	return a.service.GetByID(s, teamID)
+}
+
+func (a *teamServiceAdapter) GetAll(s *xorm.Session, auth web.Auth, search string, page int, perPage int, includePublic bool) (teams []*models.Team, resultCount int, totalItems int64, err error) {
+	return a.service.GetAll(s, auth, search, page, perPage, includePublic)
+}
+
+func (a *teamServiceAdapter) Update(s *xorm.Session, team *models.Team) (*models.Team, error) {
+	return a.service.Update(s, team)
+}
+
+func (a *teamServiceAdapter) Delete(s *xorm.Session, teamID int64, doer web.Auth) error {
+	return a.service.Delete(s, teamID, doer)
+}
+
+func (a *teamServiceAdapter) AddDetailsToTeams(s *xorm.Session, teams []*models.Team) error {
+	return a.service.AddDetailsToTeams(s, teams)
+}
+
+func (a *teamServiceAdapter) CanRead(s *xorm.Session, teamID int64, auth web.Auth) (bool, int, error) {
+	return a.service.CanRead(s, teamID, auth)
+}
+
+func (a *teamServiceAdapter) CanCreate(s *xorm.Session, auth web.Auth) (bool, error) {
+	return a.service.CanCreate(s, auth)
+}
+
+func (a *teamServiceAdapter) CanUpdate(s *xorm.Session, teamID int64, auth web.Auth) (bool, error) {
+	return a.service.CanUpdate(s, teamID, auth)
+}
+
+func (a *teamServiceAdapter) CanDelete(s *xorm.Session, teamID int64, auth web.Auth) (bool, error) {
+	return a.service.CanDelete(s, teamID, auth)
+}
+
+func (a *teamServiceAdapter) IsAdmin(s *xorm.Session, teamID int64, auth web.Auth) (bool, error) {
+	return a.service.IsAdmin(s, teamID, auth)
+}
+
+func (a *teamServiceAdapter) CanCreateTeamMember(s *xorm.Session, teamID int64, auth web.Auth) (bool, error) {
+	return a.service.CanCreateTeamMember(s, teamID, auth)
+}
+
+func (a *teamServiceAdapter) CanDeleteTeamMember(s *xorm.Session, teamID int64, username string, auth web.Auth) (bool, error) {
+	return a.service.CanDeleteTeamMember(s, teamID, username, auth)
+}
+
+func (a *teamServiceAdapter) CanUpdateTeamMember(s *xorm.Session, teamID int64, auth web.Auth) (bool, error) {
+	return a.service.CanUpdateTeamMember(s, teamID, auth)
 }

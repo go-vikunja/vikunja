@@ -27,6 +27,7 @@ import (
 // This interface allows models to call service layer methods without import cycles
 type ProjectDuplicateServiceProvider interface {
 	Duplicate(s *xorm.Session, projectID int64, parentProjectID int64, u *user.User) (*Project, error)
+	CanCreate(s *xorm.Session, projectID int64, parentProjectID int64, a web.Auth) (bool, error)
 }
 
 var projectDuplicateService ProjectDuplicateServiceProvider
@@ -59,22 +60,10 @@ type ProjectDuplicate struct {
 }
 
 // CanCreate checks if a user has the permission to duplicate a project
-// @Deprecated Use ProjectDuplicateService.Duplicate instead (permission checks are built-in)
+// @Deprecated Use ProjectDuplicateService.CanCreate instead
 func (pd *ProjectDuplicate) CanCreate(s *xorm.Session, a web.Auth) (canCreate bool, err error) {
-	// Project Exists + user has read access to project
-	pd.Project = &Project{ID: pd.ProjectID}
-	canRead, _, err := pd.Project.CanRead(s, a)
-	if err != nil || !canRead {
-		return canRead, err
-	}
-
-	if pd.ParentProjectID == 0 { // no parent project
-		return canRead, err
-	}
-
-	// Parent project exists + user has write access to it (-> can create new projects)
-	parent := &Project{ID: pd.ParentProjectID}
-	return parent.CanCreate(s, a)
+	service := getProjectDuplicateService()
+	return service.CanCreate(s, pd.ProjectID, pd.ParentProjectID, a)
 }
 
 // Create duplicates a project

@@ -34,6 +34,11 @@ import (
 )
 
 func init() {
+	InitLinkShareService()
+}
+
+// InitLinkShareService sets up dependency injection for link share operations
+func InitLinkShareService() {
 	// Wire dependency inversion for backward compatibility
 	models.LinkShareCreateFunc = func(s *xorm.Session, share *models.LinkSharing, u *user.User) error {
 		service := NewLinkShareService(s.Engine())
@@ -73,18 +78,49 @@ func init() {
 		service := NewLinkShareService(s.Engine())
 		return service.GetProjectByShareHash(s, hash)
 	}
+
+	// Set up link share permission delegation (T-PERM-009)
+	models.CheckLinkShareReadFunc = func(s *xorm.Session, shareID int64, a web.Auth) (bool, int, error) {
+		lss := NewLinkShareService(s.Engine())
+		share, err := lss.GetByID(s, shareID)
+		if err != nil {
+			return false, 0, err
+		}
+		return lss.CanRead(s, share, a)
+	}
+	models.CheckLinkShareUpdateFunc = func(s *xorm.Session, shareID int64, a web.Auth) (bool, error) {
+		lss := NewLinkShareService(s.Engine())
+		share, err := lss.GetByID(s, shareID)
+		if err != nil {
+			return false, err
+		}
+		return lss.CanUpdate(s, share, a)
+	}
+	models.CheckLinkShareDeleteFunc = func(s *xorm.Session, shareID int64, a web.Auth) (bool, error) {
+		lss := NewLinkShareService(s.Engine())
+		share, err := lss.GetByID(s, shareID)
+		if err != nil {
+			return false, err
+		}
+		return lss.CanDelete(s, share, a)
+	}
+	models.CheckLinkShareCreateFunc = func(s *xorm.Session, share *models.LinkSharing, a web.Auth) (bool, error) {
+		lss := NewLinkShareService(s.Engine())
+		return lss.CanCreate(s, share, a)
+	}
 }
 
 // LinkShareService handles all business logic for link sharing functionality
 type LinkShareService struct {
-	DB *xorm.Engine
+	DB       *xorm.Engine
+	Registry *ServiceRegistry
 }
 
 // NewLinkShareService creates a new instance of LinkShareService
+// Deprecated: Use ServiceRegistry.LinkShare() instead.
 func NewLinkShareService(engine *xorm.Engine) *LinkShareService {
-	return &LinkShareService{
-		DB: engine,
-	}
+	registry := NewServiceRegistry(engine)
+	return registry.LinkShare()
 }
 
 // Create creates a new link share
@@ -141,7 +177,9 @@ func (lss *LinkShareService) Create(s *xorm.Session, share *models.LinkSharing, 
 	return nil
 }
 
-// GetByID retrieves a link share by its ID
+// GetByID retrieves a link share by ID without permission checks
+// This is a simple lookup helper used by permission methods
+// MIGRATION: Exposed in T-PERM-004 (migrated from models.GetLinkShareByID)
 func (lss *LinkShareService) GetByID(s *xorm.Session, id int64) (*models.LinkSharing, error) {
 	share := &models.LinkSharing{}
 	exists, err := s.Where("id = ?", id).Get(share)
@@ -193,7 +231,7 @@ func (lss *LinkShareService) GetByProjectID(s *xorm.Session, projectID int64, u 
 // GetByProjectIDWithOptions retrieves all link shares for a project with search and pagination support
 func (lss *LinkShareService) GetByProjectIDWithOptions(s *xorm.Session, opts GetByProjectIDOptions, u *user.User) (shares []*models.LinkSharing, resultCount int, totalItems int64, err error) {
 	// Check if user can read link shares for this project
-	project, err := models.GetProjectSimpleByID(s, opts.ProjectID)
+	project, err := lss.Registry.Project().GetByIDSimple(s, opts.ProjectID)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -371,7 +409,7 @@ func (lss *LinkShareService) canDoLinkShare(s *xorm.Session, share *models.LinkS
 		return false, nil
 	}
 
-	project, err := models.GetProjectSimpleByID(s, share.ProjectID)
+	project, err := lss.Registry.Project().GetByIDSimple(s, share.ProjectID)
 	if err != nil {
 		return false, err
 	}
@@ -398,6 +436,21 @@ func (lss *LinkShareService) CanRead(s *xorm.Session, share *models.LinkSharing,
 	return project.CanRead(s, a)
 }
 
+// CanUpdate checks if a user can update a link share
+func (lss *LinkShareService) CanUpdate(s *xorm.Session, share *models.LinkSharing, a web.Auth) (bool, error) {
+	return lss.canDoLinkShare(s, share, a)
+}
+
+// CanDelete checks if a user can delete a link share
+func (lss *LinkShareService) CanDelete(s *xorm.Session, share *models.LinkSharing, a web.Auth) (bool, error) {
+	return lss.canDoLinkShare(s, share, a)
+}
+
+// CanCreate checks if a user can create a link share
+func (lss *LinkShareService) CanCreate(s *xorm.Session, share *models.LinkSharing, a web.Auth) (bool, error) {
+	return lss.canDoLinkShare(s, share, a)
+}
+
 // GetProjectByShareHash returns a project by a link share hash
 func (lss *LinkShareService) GetProjectByShareHash(s *xorm.Session, hash string) (*models.Project, error) {
 	share, err := lss.GetByHash(s, hash)
@@ -405,7 +458,7 @@ func (lss *LinkShareService) GetProjectByShareHash(s *xorm.Session, hash string)
 		return nil, err
 	}
 
-	project, err := models.GetProjectSimpleByID(s, share.ProjectID)
+	project, err := lss.Registry.Project().GetByIDSimple(s, share.ProjectID)
 	return project, err
 }
 

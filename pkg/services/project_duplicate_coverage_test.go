@@ -247,9 +247,7 @@ func TestProjectDuplicateService_DuplicateMetadata(t *testing.T) {
 	t.Run("should test basic project structure without file dependencies", func(t *testing.T) {
 		// Just verify that the service exists and basic structure works
 		assert.NotNil(t, pds)
-		assert.NotNil(t, pds.ProjectService)
-		assert.NotNil(t, pds.TaskService)
-		assert.NotNil(t, pds.AttachmentService)
+		assert.NotNil(t, pds.Registry)
 	})
 }
 
@@ -263,8 +261,8 @@ func TestProjectDuplicateService_DuplicateTaskRelations(t *testing.T) {
 
 	t.Run("should verify service structure for task duplication", func(t *testing.T) {
 		// Verify service dependencies are set up correctly
-		assert.NotNil(t, pds.TaskService)
-		assert.NotNil(t, pds.AttachmentService)
+		assert.NotNil(t, pds.Registry)
+		assert.NotNil(t, pds.Registry)
 	})
 }
 
@@ -280,7 +278,7 @@ func TestProjectDuplicateService_FullDuplication(t *testing.T) {
 		// Test that service can be created with proper dependencies
 		assert.NotNil(t, pds)
 		assert.NotNil(t, pds.DB)
-		assert.NotNil(t, pds.ProjectService)
+		assert.NotNil(t, pds.Registry)
 	})
 }
 

@@ -28,7 +28,8 @@ func TestUserService_GetUsersAndProxiesFromIDs(t *testing.T) {
 	s := db.NewSession()
 	defer s.Close()
 
-	us := &UserService{DB: db.GetEngine()}
+	registry := NewServiceRegistry(db.GetEngine())
+	us := registry.User()
 
 	t.Run("should get users and proxy users from a list of ids", func(t *testing.T) {
 		// User with ID 1 exists, Link Share with ID 1 exists and belongs to user 2

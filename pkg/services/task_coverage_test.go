@@ -179,11 +179,9 @@ func TestTaskService_AddBucketsToTasks(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		// Create service without KanbanService
-		taskService := &TaskService{
-			DB:            db.GetEngine(),
-			KanbanService: nil,
-		}
+		// Create service with registry (services are never nil with registry pattern)
+		registry := NewServiceRegistry(db.GetEngine())
+		taskService := registry.Task()
 
 		taskMap := make(map[int64]*models.Task)
 		u := &user.User{ID: 1}
@@ -225,11 +223,9 @@ func TestTaskService_AddReactionsToTasks(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		// Create service without ReactionsService
-		taskService := &TaskService{
-			DB:               db.GetEngine(),
-			ReactionsService: nil,
-		}
+		// Create service with registry (services are never nil with registry pattern)
+		registry := NewServiceRegistry(db.GetEngine())
+		taskService := registry.Task()
 
 		taskMap := make(map[int64]*models.Task)
 		err := taskService.addReactionsToTasks(s, []int64{1}, taskMap)
@@ -270,11 +266,9 @@ func TestTaskService_AddCommentsToTasks(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		// Create service without CommentService
-		taskService := &TaskService{
-			DB:             db.GetEngine(),
-			CommentService: nil,
-		}
+		// Create service with registry (services are never nil with registry pattern)
+		registry := NewServiceRegistry(db.GetEngine())
+		taskService := registry.Task()
 
 		taskMap := make(map[int64]*models.Task)
 		err := taskService.addCommentsToTasks(s, []int64{1}, taskMap)

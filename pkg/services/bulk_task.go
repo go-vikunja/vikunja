@@ -26,16 +26,15 @@ import (
 
 // BulkTaskService handles bulk task update operations
 type BulkTaskService struct {
-	DB          *xorm.Engine
-	TaskService *TaskService
+	DB       *xorm.Engine
+	Registry *ServiceRegistry
 }
 
 // NewBulkTaskService creates a new BulkTaskService
+// Deprecated: Use ServiceRegistry.BulkTask() instead.
 func NewBulkTaskService(db *xorm.Engine) *BulkTaskService {
-	return &BulkTaskService{
-		DB:          db,
-		TaskService: NewTaskService(db),
-	}
+	registry := NewServiceRegistry(db)
+	return registry.BulkTask()
 }
 
 // GetTasksByIDs retrieves tasks by their IDs

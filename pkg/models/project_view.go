@@ -165,6 +165,16 @@ func (pv *ProjectView) TableName() string {
 	return "project_views"
 }
 
+// Function variables for dependency injection (to avoid import cycles)
+var (
+	// GetProjectViewByIDFunc is a function that gets a project view by ID.
+	// It is used to avoid import cycles.
+	GetProjectViewByIDFunc func(*xorm.Session, int64) (*ProjectView, error)
+	// GetProjectViewByIDAndProjectFunc is a function that gets a project view by ID and project ID.
+	// It is used to avoid import cycles.
+	GetProjectViewByIDAndProjectFunc func(*xorm.Session, int64, int64) (*ProjectView, error)
+)
+
 // ProjectViewServiceProvider is the interface that must be implemented by a service providing project view functionality.
 // This enables dependency injection and allows the model layer to delegate to the service layer.
 type ProjectViewServiceProvider interface {
@@ -308,20 +318,6 @@ func (pv *ProjectView) Create(s *xorm.Session, a web.Auth) (err error) {
 func (pv *ProjectView) Update(s *xorm.Session, _ web.Auth) (err error) {
 	service := getProjectViewService()
 	return service.Update(s, pv)
-}
-
-// GetProjectViewByIDAndProject retrieves a project view by its ID and project ID.
-// @Deprecated Use ProjectViewService.GetByIDAndProject instead. This function only exists for backward compatibility.
-func GetProjectViewByIDAndProject(s *xorm.Session, viewID, projectID int64) (view *ProjectView, err error) {
-	service := getProjectViewService()
-	return service.GetByIDAndProject(s, viewID, projectID)
-}
-
-// GetProjectViewByID retrieves a project view by its ID.
-// @Deprecated Use ProjectViewService.GetByID instead. This function only exists for backward compatibility.
-func GetProjectViewByID(s *xorm.Session, id int64) (view *ProjectView, err error) {
-	service := getProjectViewService()
-	return service.GetByID(s, id)
 }
 
 // CreateDefaultViewsForProject creates the default views for a project.

@@ -17,9 +17,9 @@
 package services
 
 import (
+	"errors"
 	"testing"
 	"time"
-	"errors"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
@@ -96,7 +96,7 @@ func TestKanbanService_UpdateBucket(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Verify the update
-		updatedBucket, err := ks.getBucketByID(s, bucket.ID)
+		updatedBucket, err := ks.GetBucketByID(s, bucket.ID)
 		assert.NoError(t, err)
 		assert.Equal(t, "Updated Title", updatedBucket.Title)
 		assert.Equal(t, int64(5), updatedBucket.Limit)
@@ -151,7 +151,7 @@ func TestKanbanService_DeleteBucket(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Verify deletion
-		_, err = ks.getBucketByID(s, bucket1.ID)
+		_, err = ks.GetBucketByID(s, bucket1.ID)
 		assert.Error(t, err)
 		assert.IsType(t, models.ErrBucketDoesNotExist{}, err)
 	})
@@ -366,13 +366,13 @@ func TestKanbanService_HelperFunctions(t *testing.T) {
 		require.NoError(t, err)
 
 		// Get bucket by ID
-		retrievedBucket, err := ks.getBucketByID(s, bucket.ID)
+		retrievedBucket, err := ks.GetBucketByID(s, bucket.ID)
 		assert.NoError(t, err)
 		assert.Equal(t, bucket.ID, retrievedBucket.ID)
 		assert.Equal(t, "Test Bucket", retrievedBucket.Title)
 
 		// Test non-existent bucket
-		_, err = ks.getBucketByID(s, 99999)
+		_, err = ks.GetBucketByID(s, 99999)
 		assert.Error(t, err)
 		assert.IsType(t, models.ErrBucketDoesNotExist{}, err)
 	})

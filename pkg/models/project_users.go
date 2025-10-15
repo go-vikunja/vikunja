@@ -199,3 +199,40 @@ func (pu *ProjectUser) Update(s *xorm.Session, _ web.Auth) (err error) {
 	service := getProjectUserService()
 	return service.Update(s, pu)
 }
+
+// Permission delegation functions
+var (
+	ProjectUserCanCreateFunc func(s *xorm.Session, projectID int64, a web.Auth) (bool, error)
+	ProjectUserCanUpdateFunc func(s *xorm.Session, projectID int64, a web.Auth) (bool, error)
+	ProjectUserCanDeleteFunc func(s *xorm.Session, projectID int64, a web.Auth) (bool, error)
+	ProjectUserCanReadFunc   func(s *xorm.Session, projectID int64, a web.Auth) (bool, error)
+)
+
+func (lu *ProjectUser) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	if ProjectUserCanCreateFunc != nil {
+		return ProjectUserCanCreateFunc(s, lu.ProjectID, a)
+	}
+	panic("ProjectUserCanCreateFunc not set")
+}
+
+func (lu *ProjectUser) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	if ProjectUserCanDeleteFunc != nil {
+		return ProjectUserCanDeleteFunc(s, lu.ProjectID, a)
+	}
+	panic("ProjectUserCanDeleteFunc not set")
+}
+
+func (lu *ProjectUser) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
+	if ProjectUserCanUpdateFunc != nil {
+		return ProjectUserCanUpdateFunc(s, lu.ProjectID, a)
+	}
+	panic("ProjectUserCanUpdateFunc not set")
+}
+
+func (lu *ProjectUser) CanRead(s *xorm.Session, a web.Auth) (canRead bool, maxPermission int, err error) {
+	if ProjectUserCanReadFunc != nil {
+		canRead, err = ProjectUserCanReadFunc(s, lu.ProjectID, a)
+		return canRead, int(PermissionAdmin), err
+	}
+	panic("ProjectUserCanReadFunc not set")
+}

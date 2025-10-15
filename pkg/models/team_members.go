@@ -41,7 +41,10 @@ import (
 func (tm *TeamMember) Create(s *xorm.Session, a web.Auth) (err error) {
 
 	// Check if the team extst
-	team, err := GetTeamByID(s, tm.TeamID)
+	if teamService == nil {
+		return ErrTeamDoesNotExist{tm.TeamID}
+	}
+	team, err := teamService.GetByID(s, tm.TeamID)
 	if err != nil {
 		return err
 	}
@@ -90,7 +93,10 @@ func (tm *TeamMember) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Router /teams/{id}/members/{username} [delete]
 func (tm *TeamMember) Delete(s *xorm.Session, _ web.Auth) (err error) {
 
-	t, err := GetTeamByID(s, tm.TeamID)
+	if teamService == nil {
+		return ErrTeamDoesNotExist{tm.TeamID}
+	}
+	t, err := teamService.GetByID(s, tm.TeamID)
 	if err != nil {
 		return err
 	}

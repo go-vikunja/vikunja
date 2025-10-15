@@ -49,9 +49,13 @@ func (tp *TaskPosition) TableName() string {
 	return "task_positions"
 }
 
+// CanUpdate checks if a user can update a task position
+// DEPRECATED: Use TaskService.CanUpdatePosition instead (T-PERM-010)
 func (tp *TaskPosition) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
-	t := &Task{ID: tp.TaskID}
-	return t.CanUpdate(s, a)
+	if CheckTaskPositionUpdateFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckTaskPositionUpdateFunc(s, tp.TaskID, a)
 }
 
 // Update is the handler to update a task position
@@ -74,7 +78,10 @@ func (tp *TaskPosition) Update(s *xorm.Session, a web.Auth) (err error) {
 	var view *ProjectView
 	if tp.Position < 0.1 {
 		shouldRecalculate = true
-		view, err = GetProjectViewByID(s, tp.ProjectViewID)
+		if GetProjectViewByIDFunc == nil {
+			panic("ProjectViewService not initialized - ensure services.InitializeDependencies() is called")
+		}
+		view, err = GetProjectViewByIDFunc(s, tp.ProjectViewID)
 		if err != nil {
 			return err
 		}
@@ -139,7 +146,10 @@ func RecalculateTaskPositions(s *xorm.Session, view *ProjectView, a web.Auth) (e
 	if view.ProjectID < -1 {
 		tc.ProjectID = 0
 
-		sf, err := GetSavedFilterSimpleByID(s, GetSavedFilterIDFromProjectID(view.ProjectID))
+		if GetSavedFilterByIDFunc == nil {
+			panic("SavedFilterService not initialized - ensure services.InitializeDependencies() is called")
+		}
+		sf, err := GetSavedFilterByIDFunc(s, GetSavedFilterIDFromProjectID(view.ProjectID))
 		if err != nil {
 			return err
 		}

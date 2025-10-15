@@ -57,6 +57,9 @@ type ProjectServiceProvider func() interface {
 	Create(s *xorm.Session, project *Project, u *user.User) (*Project, error)
 	Delete(s *xorm.Session, projectID int64, a web.Auth) error
 	DeleteForce(s *xorm.Session, projectID int64, a web.Auth) error // DeleteForce allows deleting default projects (used for user deletion)
+	GetByIDSimple(s *xorm.Session, projectID int64) (*Project, error)
+	GetByIDs(s *xorm.Session, projectIDs []int64) ([]*Project, error)
+	GetMapByIDs(s *xorm.Session, projectIDs []int64) (map[int64]*Project, error)
 }
 
 // projectServiceProvider is the registered service provider function
@@ -74,6 +77,9 @@ func getProjectService() interface {
 	Create(s *xorm.Session, project *Project, u *user.User) (*Project, error)
 	Delete(s *xorm.Session, projectID int64, a web.Auth) error
 	DeleteForce(s *xorm.Session, projectID int64, a web.Auth) error
+	GetByIDSimple(s *xorm.Session, projectID int64) (*Project, error)
+	GetByIDs(s *xorm.Session, projectIDs []int64) ([]*Project, error)
+	GetMapByIDs(s *xorm.Session, projectIDs []int64) (map[int64]*Project, error)
 } {
 	if projectServiceProvider != nil {
 		return projectServiceProvider()
@@ -302,7 +308,10 @@ func (p *Project) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 	filterID := GetSavedFilterIDFromProjectID(p.ID)
 	isFilter := filterID > 0
 	if isFilter {
-		sf, err := GetSavedFilterSimpleByID(s, filterID)
+		if GetSavedFilterByIDFunc == nil {
+			panic("SavedFilterService not initialized - ensure services.InitializeDependencies() is called")
+		}
+		sf, err := GetSavedFilterByIDFunc(s, filterID)
 		if err != nil {
 			return err
 		}
@@ -311,6 +320,15 @@ func (p *Project) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 		p.Created = sf.Created
 		p.Updated = sf.Updated
 		p.OwnerID = sf.OwnerID
+	} else {
+		// Load basic project data from database if not a saved filter
+		// This is needed because CanRead in the new architecture delegates to service layer
+		// and doesn't populate the struct like the original did with *p = *originalProject
+		originalProject, err := GetProjectSimpleByID(s, p.ID)
+		if err != nil {
+			return err
+		}
+		*p = *originalProject
 	}
 
 	_, isShareAuth := a.(*LinkSharing)
@@ -365,17 +383,11 @@ func (p *Project) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 }
 
 // GetProjectSimpleByID gets a project with only the basic items, aka no tasks or user objects. Returns an error if the project does not exist.
+// DEPRECATED: Use ProjectService.GetByIDSimple() instead (models delegate to services as of T-PERM-004).
 func GetProjectSimpleByID(s *xorm.Session, projectID int64) (project *Project, err error) {
-	if projectID < 1 {
-		return nil, ErrProjectDoesNotExist{ID: projectID}
-	}
-
-	project, exists, err := getProjectSimple(s, builder.Eq{"id": projectID})
-	if !exists {
-		return nil, ErrProjectDoesNotExist{ID: projectID}
-	}
-
-	return
+	// Delegate to service layer via adapter
+	ps := getProjectService()
+	return ps.GetByIDSimple(s, projectID)
 }
 
 func getProjectSimple(s *xorm.Session, cond builder.Cond) (project *Project, exists bool, err error) {
@@ -432,26 +444,18 @@ func GetProjectsSimpleByTaskIDs(s *xorm.Session, taskIDs []int64) (ps []*Project
 }
 
 // GetProjectsMapByIDs returns a map of projects from a slice with project ids
+// GetProjectsMapByIDs returns a map of projects by their IDs
+// @Deprecated: Use services.ProjectService.GetMapByIDs instead
 func GetProjectsMapByIDs(s *xorm.Session, projectIDs []int64) (projects map[int64]*Project, err error) {
-	projects = make(map[int64]*Project, len(projectIDs))
-
-	if len(projectIDs) == 0 {
-		return
-	}
-
-	err = s.In("id", projectIDs).Find(&projects)
-	return
+	ps := getProjectService()
+	return ps.GetMapByIDs(s, projectIDs)
 }
 
+// GetProjectsByIDs returns a slice of projects by their IDs
+// @Deprecated: Use services.ProjectService.GetByIDs instead
 func GetProjectsByIDs(s *xorm.Session, projectIDs []int64) (projects []*Project, err error) {
-	projects = make([]*Project, 0, len(projectIDs))
-
-	if len(projectIDs) == 0 {
-		return
-	}
-
-	err = s.In("id", projectIDs).Find(&projects)
-	return
+	ps := getProjectService()
+	return ps.GetByIDs(s, projectIDs)
 }
 
 type ProjectOptions struct {
@@ -704,6 +708,91 @@ func AddMaxPermissionToProjects(s *xorm.Session, projects []*Project, u *user.Us
 	return
 }
 
+type projectPermission struct {
+	ID            int64      `xorm:"id"`
+	MaxPermission Permission `xorm:"max_permission"`
+}
+
+func checkPermissionsForProjects(s *xorm.Session, u *user.User, projectIDs []int64) (projectPermissionMap map[int64]*projectPermission, err error) {
+	projectPermissionMap = make(map[int64]*projectPermission)
+
+	if len(projectIDs) < 1 {
+		return
+	}
+
+	args := []interface{}{
+		u.ID,
+		u.ID,
+		u.ID,
+		u.ID,
+		u.ID,
+		u.ID,
+		u.ID,
+	}
+
+	// Use a slice first, then convert to map (XORM doesn't support Find() into maps directly)
+	var projectPermissions []*projectPermission
+	err = s.SQL(`
+WITH RECURSIVE
+    project_hierarchy AS (
+        -- Base case: Start with the specified projects
+        SELECT id,
+               parent_project_id,
+               0  AS level,
+               id AS original_project_id
+        FROM projects
+        WHERE id IN (`+utils.JoinInt64Slice(projectIDs, ", ")+`)
+
+        UNION ALL
+
+        -- Recursive case: Traverse up the hierarchy
+        SELECT p.id,
+               p.parent_project_id,
+               ph.level + 1,
+               ph.original_project_id
+        FROM projects p
+                 INNER JOIN project_hierarchy ph ON p.id = ph.parent_project_id),
+
+    project_permissions AS (SELECT ph.id,
+                                   ph.original_project_id,
+                                   CASE
+                                       WHEN p.owner_id = ? THEN 2
+                                       WHEN COALESCE(ul.permission, 0) > COALESCE(tl.permission, 0) THEN ul.permission
+                                       ELSE COALESCE(tl.permission, 0)
+                                       END AS project_permission,
+            CASE
+                WHEN p.owner_id = ? THEN 1  -- Direct project ownership
+                ELSE ph.level + 1  -- Derived from parent project
+            END AS priority
+                            FROM project_hierarchy ph
+                                LEFT JOIN projects p
+                            ON ph.id = p.id
+                                LEFT JOIN users_projects ul ON ul.project_id = ph.id AND ul.user_id = ?
+                                LEFT JOIN team_projects tl ON tl.project_id = ph.id
+                                LEFT JOIN team_members tm ON tm.team_id = tl.team_id AND tm.user_id = ?
+                            WHERE p.owner_id = ? OR ul.user_id = ? OR tm.user_id = ?)
+
+SELECT ph.original_project_id AS id,
+       COALESCE(MAX(pp.project_permission), -1) AS max_permission
+FROM project_hierarchy ph
+         LEFT JOIN (SELECT *,
+                           ROW_NUMBER() OVER (PARTITION BY original_project_id ORDER BY priority) AS rn
+                    FROM project_permissions) pp ON ph.id = pp.id AND pp.rn = 1
+GROUP BY ph.original_project_id`, args...).
+		Find(&projectPermissions)
+
+	if err != nil {
+		return
+	}
+
+	// Convert slice to map
+	for _, perm := range projectPermissions {
+		projectPermissionMap[perm.ID] = perm
+	}
+
+	return
+}
+
 // CheckIsArchived returns an ErrProjectIsArchived if the project or any of its parent projects is archived.
 func (p *Project) CheckIsArchived(s *xorm.Session) (err error) {
 	if p.ParentProjectID > 0 {
@@ -921,7 +1010,10 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 func (p *Project) Update(s *xorm.Session, a web.Auth) (err error) {
 	fid := GetSavedFilterIDFromProjectID(p.ID)
 	if fid > 0 {
-		f, err := GetSavedFilterSimpleByID(s, fid)
+		if GetSavedFilterByIDFunc == nil {
+			panic("SavedFilterService not initialized - ensure services.InitializeDependencies() is called")
+		}
+		f, err := GetSavedFilterByIDFunc(s, fid)
 		if err != nil {
 			return err
 		}
@@ -1039,4 +1131,55 @@ func SetProjectBackground(s *xorm.Session, projectID int64, background *files.Fi
 		Cols("background_file_id", "background_blur_hash").
 		Update(l)
 	return
+}
+
+// ===== Permission Methods =====
+// These methods delegate to the service layer via function pointers in permissions_delegation.go
+
+// CanDelete checks if the user can delete a project
+func (p *Project) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckProjectDeleteFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckProjectDeleteFunc(s, p.ID, a)
+}
+
+// CanUpdate checks if the user can update a project
+func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckProjectUpdateFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckProjectUpdateFunc(s, p.ID, p, a)
+}
+
+// CanCreate checks if the user can create a project
+func (p *Project) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckProjectCreateFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckProjectCreateFunc(s, p, a)
+}
+
+// CanRead checks if the user can read a project
+func (p *Project) CanRead(s *xorm.Session, a web.Auth) (canRead bool, maxPermission int, err error) {
+	if CheckProjectReadFunc == nil {
+		return false, 0, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckProjectReadFunc(s, p.ID, a)
+}
+
+// CanWrite checks if the user has write access to a project
+func (p *Project) CanWrite(s *xorm.Session, a web.Auth) (canWrite bool, err error) {
+	if CheckProjectWriteFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckProjectWriteFunc(s, p.ID, a)
+}
+
+// IsAdmin checks if the user is an admin of the project
+func (p *Project) IsAdmin(s *xorm.Session, a web.Auth) (isAdmin bool, err error) {
+	if CheckProjectIsAdminFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckProjectIsAdminFunc(s, p.ID, a)
 }

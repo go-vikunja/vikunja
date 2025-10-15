@@ -87,6 +87,11 @@ const query = ref('')
 watch(
 	() => props.modelValue,
 	(value) => {
+		// Handle null/undefined values from API
+		if (!value) {
+			labels.value = []
+			return
+		}
 		labels.value = Array.from(new Map(value.map(label => [label.id, label])).values())
 	},
 	{

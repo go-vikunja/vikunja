@@ -30,6 +30,33 @@ import (
 	"xorm.io/xorm"
 )
 
+// SavedFilterServiceProvider is a function type that returns a saved filter service instance
+// This is used to avoid import cycles between models and services packages
+type SavedFilterServiceProvider interface {
+	CanRead(s *xorm.Session, filterID int64, a web.Auth) (bool, int, error)
+	CanCreate(s *xorm.Session, a web.Auth) (bool, error)
+	CanUpdate(s *xorm.Session, filterID int64, a web.Auth) (bool, error)
+	CanDelete(s *xorm.Session, filterID int64, a web.Auth) (bool, error)
+}
+
+// savedFilterServiceProvider is the registered service provider
+var savedFilterServiceProvider SavedFilterServiceProvider
+
+// RegisterSavedFilterService registers a service provider for saved filter operations
+// This should be called during application initialization by the services package
+func RegisterSavedFilterService(provider SavedFilterServiceProvider) {
+	savedFilterServiceProvider = provider
+}
+
+// getSavedFilterService returns the registered saved filter service instance
+func getSavedFilterService() SavedFilterServiceProvider {
+	if savedFilterServiceProvider != nil {
+		return savedFilterServiceProvider
+	}
+	// This should never happen in production, only in tests that don't initialize the service
+	panic("SavedFilterService not registered - ensure services.InitializeDependencies() is called during startup")
+}
+
 // SavedFilter represents a saved bunch of filters
 type SavedFilter struct {
 	// The unique numeric id of this saved filter
@@ -130,6 +157,9 @@ var (
 	// DeleteSavedFilterFunc is a function that deletes a saved filter.
 	// It is used to avoid import cycles.
 	DeleteSavedFilterFunc func(*xorm.Session, int64, *user.User) error
+	// GetSavedFilterByIDFunc is a function that gets a saved filter by ID (simple lookup, no permission check).
+	// It is used to avoid import cycles.
+	GetSavedFilterByIDFunc func(*xorm.Session, int64) (*SavedFilter, error)
 )
 
 // Create creates a new saved filter
@@ -149,20 +179,6 @@ func (sf *SavedFilter) Create(s *xorm.Session, auth web.Auth) (err error) {
 		return err
 	}
 	return CreateSavedFilterFunc(s, sf, u)
-}
-
-func GetSavedFilterSimpleByID(s *xorm.Session, id int64) (sf *SavedFilter, err error) {
-	sf = &SavedFilter{}
-	exists, err := s.
-		Where("id = ?", id).
-		Get(sf)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, ErrSavedFilterDoesNotExist{SavedFilterID: id}
-	}
-	return
 }
 
 // ReadOne returns one saved filter

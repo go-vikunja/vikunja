@@ -379,38 +379,6 @@ func GetProjectByShareHash(s *xorm.Session, hash string) (project *Project, err 
 	return
 }
 
-// GetLinkShareByID returns a link share by its id.
-// @Deprecated: Use services.LinkShareService.GetByID instead.
-func GetLinkShareByID(s *xorm.Session, id int64) (share *LinkSharing, err error) {
-	if LinkShareGetByIDFunc != nil {
-		return LinkShareGetByIDFunc(s, id)
-	}
-
-	// Fallback to original logic for backward compatibility
-	share = &LinkSharing{}
-	has, err := s.Where("id = ?", id).Get(share)
-	if err != nil {
-		return
-	}
-	if !has {
-		return share, ErrProjectShareDoesNotExist{ID: id}
-	}
-	return
-}
-
-// GetLinkSharesByIDs returns all link shares from a slice of ids
-// @Deprecated: Use services.LinkShareService.GetByIDs instead.
-func GetLinkSharesByIDs(s *xorm.Session, ids []int64) (shares map[int64]*LinkSharing, err error) {
-	if LinkShareGetByIDsFunc != nil {
-		return LinkShareGetByIDsFunc(s, ids)
-	}
-
-	// Fallback to original logic for backward compatibility
-	shares = make(map[int64]*LinkSharing)
-	err = s.In("id", ids).Find(&shares)
-	return
-}
-
 // VerifyLinkSharePassword checks if a password of a link share matches a provided one.
 // @Deprecated: Use services.LinkShareService.VerifyPassword instead.
 func VerifyLinkSharePassword(share *LinkSharing, password string) (err error) {
@@ -427,4 +395,47 @@ func VerifyLinkSharePassword(share *LinkSharing, password string) (err error) {
 	}
 
 	return nil
+}
+
+// ===== Permission Methods =====
+// These methods delegate to the service layer via function pointers
+
+// CanRead checks if the user can read a link share
+func (l *LinkSharing) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
+	if CheckLinkShareReadFunc == nil {
+		return false, 0, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckLinkShareReadFunc(s, l.ID, a)
+}
+
+// CanWrite checks if the user can write to a link share
+func (l *LinkSharing) CanWrite(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckLinkShareWriteFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckLinkShareWriteFunc(s, l.ID, a)
+}
+
+// CanUpdate checks if the user can update a link share
+func (l *LinkSharing) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckLinkShareUpdateFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckLinkShareUpdateFunc(s, l.ID, a)
+}
+
+// CanDelete checks if the user can delete a link share
+func (l *LinkSharing) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckLinkShareDeleteFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckLinkShareDeleteFunc(s, l.ID, a)
+}
+
+// CanCreate checks if the user can create a link share
+func (l *LinkSharing) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckLinkShareCreateFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckLinkShareCreateFunc(s, l, a)
 }

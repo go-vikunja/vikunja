@@ -67,6 +67,24 @@ func getLabelTaskService() LabelTaskServiceProvider {
 	return labelTaskService
 }
 
+// CanCreate checks if a user can add a label to a task
+// Delegates to the service layer via function pointer
+func (lt *LabelTask) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckLabelTaskCreateFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckLabelTaskCreateFunc(s, lt, a)
+}
+
+// CanDelete checks if a user can delete a label from a task
+// Delegates to the service layer via function pointer
+func (lt *LabelTask) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckLabelTaskDeleteFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckLabelTaskDeleteFunc(s, lt, a)
+}
+
 // Delete deletes a label on a task
 // @Summary Remove a label from a task
 // @Description Remove a label from a task. The user needs to have write-access to the project to be able do this.
@@ -175,6 +193,16 @@ type LabelTaskBulk struct {
 
 	web.CRUDable    `json:"-"`
 	web.Permissions `json:"-"`
+}
+
+// CanCreate checks if a user can update labels on a task
+// This checks if the user can write to the task
+func (ltb *LabelTaskBulk) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	task, err := GetTaskByIDSimple(s, ltb.TaskID)
+	if err != nil {
+		return false, err
+	}
+	return task.CanUpdate(s, a)
 }
 
 // Create updates a bunch of labels on a task at once

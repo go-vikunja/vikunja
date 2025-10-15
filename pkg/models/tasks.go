@@ -50,6 +50,10 @@ const (
 var AddMoreInfoToTasksFunc func(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, view *ProjectView, expand []TaskCollectionExpandable) error
 var AddBucketsToTasksFunc func(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Task, a web.Auth) error
 
+// GetTaskByIDSimpleFunc is a function variable for getting a task by ID (simple lookup, no permissions).
+// It allows the models layer to call TaskService.GetByIDSimple without introducing an import cycle.
+var GetTaskByIDSimpleFunc func(s *xorm.Session, taskID int64) (*Task, error)
+
 // TaskCreateFunc is a function variable used to plug the service implementation into the models layer.
 // It allows the models layer to call the TaskService.Create method without introducing an import cycle.
 // The boolean flags mirror the legacy createTask implementation to control whether assignees and buckets
@@ -417,7 +421,17 @@ func getTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts 
 }
 
 // GetTaskByIDSimple returns a raw task without extra data by the task ID
+// @Deprecated: Use services.TaskService.GetByIDSimple instead
 func GetTaskByIDSimple(s *xorm.Session, taskID int64) (task Task, err error) {
+	if GetTaskByIDSimpleFunc != nil {
+		t, err := GetTaskByIDSimpleFunc(s, taskID)
+		if err != nil {
+			return Task{}, err
+		}
+		return *t, nil
+	}
+
+	// Fallback for cases where function pointer not wired
 	if taskID < 1 {
 		return Task{}, ErrTaskDoesNotExist{taskID}
 	}
@@ -799,7 +813,10 @@ The models layer now delegates to the service via AddMoreInfoToTasksFunc to avoi
 
 // Checks if adding a new task would exceed the bucket limit
 func checkBucketLimit(s *xorm.Session, a web.Auth, t *Task, bucket *Bucket) (taskCount int64, err error) {
-	view, err := GetProjectViewByID(s, bucket.ProjectViewID)
+	if GetProjectViewByIDFunc == nil {
+		panic("ProjectViewService not initialized - ensure services.InitializeDependencies() is called")
+	}
+	view, err := GetProjectViewByIDFunc(s, bucket.ProjectViewID)
 	if err != nil {
 		return 0, err
 	}
@@ -1389,4 +1406,53 @@ func triggerTaskUpdatedEventForTaskID(s *xorm.Session, auth web.Auth, taskID int
 		Doer: doer,
 	})
 	return err
+}
+
+// ===== Permission Methods =====
+// These methods delegate to the service layer via function pointers in permissions_delegation.go
+
+// CanDelete checks if the user can delete a task
+func (t *Task) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckTaskDeleteFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckTaskDeleteFunc(s, t.ID, a)
+}
+
+// CanUpdate determines if a user has the permission to update a project task
+func (t *Task) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckTaskUpdateFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckTaskUpdateFunc(s, t.ID, t, a)
+}
+
+// CanCreate determines if a user has the permission to create a project task
+func (t *Task) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckTaskCreateFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckTaskCreateFunc(s, t, a)
+}
+
+// CanRead determines if a user can read a task
+func (t *Task) CanRead(s *xorm.Session, a web.Auth) (canRead bool, maxPermission int, err error) {
+	if CheckTaskReadFunc == nil {
+		return false, 0, ErrPermissionDelegationNotInitialized{}
+	}
+	expand := t.Expand
+	canRead, maxPermission, err = CheckTaskReadFunc(s, t.ID, a)
+	if err == nil && canRead {
+		// Preserve expand field for backward compatibility
+		t.Expand = expand
+	}
+	return canRead, maxPermission, err
+}
+
+// CanWrite checks if a user has write access to a task
+func (t *Task) CanWrite(s *xorm.Session, a web.Auth) (canWrite bool, err error) {
+	if CheckTaskWriteFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckTaskWriteFunc(s, t.ID, a)
 }

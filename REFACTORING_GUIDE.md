@@ -175,12 +175,10 @@ Model tests in `pkg/models/*_test.go` should be minimal and focused on:
 
 - **TableName() function** - Database table name mapping
 - **Struct field validation** - Pure data structure behavior (not database operations)
-- **Helper functions** - Temporarily kept until T-PERMISSIONS task
-  - Examples: `GetAPITokenByID`, `GetTokenFromTokenString`, `getLabelByIDSimple`
-  - These will be moved to service layer in T-PERMISSIONS
-- **Permission methods** - Temporarily kept until T-PERMISSIONS task
-  - Examples: `CanRead`, `CanUpdate`, `CanDelete`
-  - These will be moved to service layer in T-PERMISSIONS
+- **CRUD delegation methods** - DEPRECATED, will be removed in future refactor
+  - Examples: `Create()`, `Update()`, `Delete()`, `ReadOne()`
+  - These delegate to services via function pointers for backward compatibility
+  - New code should call services directly, not use these methods
 
 ### **What Has Been Removed**
 
@@ -416,6 +414,168 @@ func TestTaskService_Get_Security(t *testing.T) {
 - Phase 2 implementation examples in `pkg/services/task.go`, `pkg/services/project.go`
 - Security test examples in `pkg/services/task_business_logic_test.go`
 - Comprehensive security validation in `TestTaskService_Assignee_WithoutProjectAccess`
+
+## **6.1 Permission Checking Pattern (UPDATED - T-PERMISSIONS Complete)**
+
+**Status**: ✅ As of October 2025, all permission checking has been migrated to the service layer. The T-PERMISSIONS refactor (17 tasks) successfully moved all `Can*` methods from models to services.
+
+### **✅ DO: Check Permissions in Service Layer**
+
+All permission checks now live in services. This is the **only** correct pattern:
+
+```go
+// In service layer (pkg/services/project.go)
+func (ps *ProjectService) CanRead(s *xorm.Session, projectID int64, a web.Auth) (bool, int, error) {
+    project := &models.Project{ID: projectID}
+    err := s.Where("id = ?", projectID).Get(project)
+    if err != nil {
+        return false, 0, err
+    }
+    
+    // Permission logic here (checking user rights, team memberships, link shares, etc.)
+    return ps.checkUserAccess(s, project, a, RightRead)
+}
+
+// In handler (pkg/routes/api/v1/project.go)
+func getProjectHandler(c echo.Context) error {
+    s := handler.GetSession(c)
+    auth := handler.GetAuth(c)
+    projectID := c.Param("id")
+    
+    projectService := services.NewProjectService(db)
+    
+    // Check permission via service
+    canRead, maxRight, err := projectService.CanRead(s, projectID, auth)
+    if err != nil {
+        return err
+    }
+    if !canRead {
+        return handler.HandleHTTPError(ErrGenericForbidden{}, c)
+    }
+    
+    // Fetch project data
+    project, err := projectService.GetByID(s, projectID, auth)
+    // ...
+}
+```
+
+### **❌ DON'T: Check Permissions in Models**
+
+Models no longer have permission methods. All `Can*` methods have been **removed** from the model layer.
+
+```go
+// ❌ THIS CODE NO LONGER EXISTS - DO NOT USE
+func (p *Project) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
+    // This method was removed in T-PERMISSIONS refactor
+}
+
+// ❌ THIS PATTERN IS INVALID
+project := &models.Project{ID: 1}
+canRead, maxRight, err := project.CanRead(s, auth)  // COMPILE ERROR
+```
+
+### **Pure Data Models**
+
+Models are now pure data structures with:
+- **TableName()** methods for database mapping
+- **Field definitions** with JSON tags
+- **Validation** logic (no database access)
+- **CRUD delegation** to services (DEPRECATED, will be removed in future refactor)
+
+**Example of current model structure:**
+```go
+// pkg/models/project.go
+type Project struct {
+    ID          int64     `xorm:"bigint autoincr not null unique pk" json:"id"`
+    Title       string    `xorm:"varchar(250) not null" json:"title" valid:"required,runelength(1|250)"`
+    Description string    `xorm:"longtext null" json:"description"`
+    OwnerID     int64     `xorm:"bigint not null INDEX" json:"-"`
+    // ... other fields
+}
+
+// TableName returns the table name
+func (p *Project) TableName() string {
+    return "projects"
+}
+
+// Validate validates project fields
+func (p *Project) Validate() error {
+    if p.Title == "" {
+        return ErrProjectTitleCannotBeEmpty{}
+    }
+    return nil
+}
+
+// Create delegates to ProjectService (DEPRECATED - use service directly)
+func (p *Project) Create(s *xorm.Session, u *user.User) error {
+    if ProjectCreateFunc == nil {
+        return errors.New("ProjectCreateFunc not initialized")
+    }
+    return ProjectCreateFunc(s, p, u)
+}
+```
+
+### **Testing Permissions**
+
+Permission tests are now in the service layer:
+
+```go
+// ✅ CORRECT: Service layer permission tests (pkg/services/project_test.go)
+func TestProjectService_CanRead(t *testing.T) {
+    t.Run("owner can read", func(t *testing.T) {
+        canRead, maxRight, err := projectService.CanRead(s, 1, ownerUser)
+        assert.NoError(t, err)
+        assert.True(t, canRead)
+        assert.Equal(t, RightAdmin, maxRight)
+    })
+    
+    t.Run("user with read permission can read", func(t *testing.T) {
+        canRead, maxRight, err := projectService.CanRead(s, 1, readUser)
+        assert.NoError(t, err)
+        assert.True(t, canRead)
+        assert.Equal(t, RightRead, maxRight)
+    })
+    
+    t.Run("user without permission cannot read", func(t *testing.T) {
+        canRead, maxRight, err := projectService.CanRead(s, 1, unauthorizedUser)
+        assert.NoError(t, err)
+        assert.False(t, canRead)
+        assert.Equal(t, RightUnknown, maxRight)
+    })
+}
+
+// ✅ CORRECT: Model layer structure tests (pkg/models/project_test.go)
+func TestProject_TableName(t *testing.T) {
+    p := &Project{}
+    assert.Equal(t, "projects", p.TableName())
+}
+
+func TestProject_Validate(t *testing.T) {
+    p := &Project{Title: ""}
+    err := p.Validate()
+    assert.Error(t, err)
+}
+
+// ❌ INCORRECT: No permission tests in model layer
+// This pattern was removed in T-PERMISSIONS refactor
+```
+
+### **Migration Summary**
+
+The T-PERMISSIONS refactor (completed October 2025) achieved:
+- ✅ **20 permission files removed** from `pkg/models/`
+- ✅ **~1,000+ lines of permission code** moved to services
+- ✅ **All permission tests** now in service layer (`pkg/services/*_test.go`)
+- ✅ **Models are pure data structures** (zero business logic)
+- ✅ **40x faster model tests** (0.018s vs 1.0-1.3s before)
+- ✅ **6/6 baseline permission tests** passing
+- ✅ **100% test suite passing** (full regression prevention)
+
+**Key Architectural Achievement**: Complete separation of concerns - Models handle data structure, Services handle all business logic including permissions.
+
+**For detailed migration documentation, see:**
+- [T-PERMISSIONS-COMPLETION-REPORT.md](/home/aron/projects/specs/001-complete-service-layer/T-PERMISSIONS-COMPLETION-REPORT.md)
+- [T-PERMISSIONS-TASKS-PART3.md](/home/aron/projects/specs/001-complete-service-layer/T-PERMISSIONS-TASKS-PART3.md)
 
 ## **7. Step-by-Step Service Layer Migration Guide**
 

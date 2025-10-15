@@ -27,6 +27,11 @@ import (
 )
 
 func init() {
+	InitSubscriptionService()
+}
+
+// InitSubscriptionService sets up dependency injection for subscription operations
+func InitSubscriptionService() {
 	// Wire dependency inversion for backward compatibility
 	models.SubscriptionCreateFunc = func(s *xorm.Session, sub *models.Subscription, auth web.Auth) error {
 		service := NewSubscriptionService(s.Engine())
@@ -51,6 +56,16 @@ func init() {
 	models.SubscriptionGetForEntityFunc = func(s *xorm.Session, entityType models.SubscriptionEntityType, entityID int64) ([]*models.SubscriptionWithUser, error) {
 		service := NewSubscriptionService(s.Engine())
 		return service.GetForEntity(s, entityType, entityID)
+	}
+
+	// Set up subscription permission delegation (T-PERM-009)
+	models.CheckSubscriptionCreateFunc = func(s *xorm.Session, subscription *models.Subscription, a web.Auth) (bool, error) {
+		ss := NewSubscriptionService(s.Engine())
+		return ss.CanCreate(s, subscription, a)
+	}
+	models.CheckSubscriptionDeleteFunc = func(s *xorm.Session, subscription *models.Subscription, a web.Auth) (bool, error) {
+		ss := NewSubscriptionService(s.Engine())
+		return ss.CanDelete(s, subscription, a)
 	}
 }
 
@@ -379,6 +394,11 @@ func (ss *SubscriptionService) canCreate(s *xorm.Session, sub *models.Subscripti
 	}
 }
 
+// CanCreate checks if a user can subscribe to an entity (public permission method)
+func (ss *SubscriptionService) CanCreate(s *xorm.Session, sub *models.Subscription, auth web.Auth) (bool, error) {
+	return ss.canCreate(s, sub, auth)
+}
+
 // canDelete checks if a user can delete a subscription
 func (ss *SubscriptionService) canDelete(s *xorm.Session, entityType models.SubscriptionEntityType, entityID int64, auth web.Auth) (bool, error) {
 	// Link shares cannot unsubscribe
@@ -396,4 +416,9 @@ func (ss *SubscriptionService) canDelete(s *xorm.Session, entityType models.Subs
 	}
 
 	return exists, nil
+}
+
+// CanDelete checks if a user can delete a subscription (public permission method)
+func (ss *SubscriptionService) CanDelete(s *xorm.Session, sub *models.Subscription, auth web.Auth) (bool, error) {
+	return ss.canDelete(s, sub.EntityType, sub.EntityID, auth)
 }

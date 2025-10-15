@@ -381,3 +381,100 @@ func TestDependencyInjection(t *testing.T) {
 		// but we can verify the functions are assigned
 	})
 }
+
+// ===== Attachment Permission Tests (T-PERM-010) =====
+
+func TestAttachmentService_CanRead(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	as := NewAttachmentService(db.GetEngine())
+
+	t.Run("UserWithTaskReadPermission_CanRead", func(t *testing.T) {
+		// User 1 can read task 1
+		u := &user.User{ID: 1}
+		can, maxRight, err := as.CanRead(s, 1, u)
+
+		require.NoError(t, err)
+		assert.True(t, can)
+		assert.Greater(t, maxRight, 0)
+	})
+
+	t.Run("UserWithoutTaskPermission_CannotRead", func(t *testing.T) {
+		// User 13 cannot read task 1
+		u := &user.User{ID: 13}
+		can, maxRight, err := as.CanRead(s, 1, u)
+
+		require.NoError(t, err)
+		assert.False(t, can)
+		assert.Equal(t, 0, maxRight)
+	})
+}
+
+func TestAttachmentService_CanCreate(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	as := NewAttachmentService(db.GetEngine())
+
+	t.Run("UserWithTaskWritePermission_CanCreate", func(t *testing.T) {
+		// User 1 can write to task 1
+		u := &user.User{ID: 1}
+		can, err := as.CanCreate(s, 1, u)
+
+		require.NoError(t, err)
+		assert.True(t, can)
+	})
+
+	t.Run("UserWithOnlyReadPermission_CannotCreate", func(t *testing.T) {
+		// User 1 has only read permission on project 6
+		u := &user.User{ID: 1}
+		can, err := as.CanCreate(s, 15, u) // Task 15 is in project 6
+
+		require.NoError(t, err)
+		assert.False(t, can)
+	})
+
+	t.Run("UserWithoutPermission_CannotCreate", func(t *testing.T) {
+		// User 13 has no permission on task 1
+		u := &user.User{ID: 13}
+		can, err := as.CanCreate(s, 1, u)
+
+		require.NoError(t, err)
+		assert.False(t, can)
+	})
+}
+
+func TestAttachmentService_CanDelete(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	as := NewAttachmentService(db.GetEngine())
+
+	t.Run("UserWithTaskWritePermission_CanDelete", func(t *testing.T) {
+		// User 1 can write to task 1
+		u := &user.User{ID: 1}
+		can, err := as.CanDelete(s, 1, u)
+
+		require.NoError(t, err)
+		assert.True(t, can)
+	})
+
+	t.Run("UserWithOnlyReadPermission_CannotDelete", func(t *testing.T) {
+		// User 1 has only read permission on project 6
+		u := &user.User{ID: 1}
+		can, err := as.CanDelete(s, 15, u)
+
+		require.NoError(t, err)
+		assert.False(t, can)
+	})
+
+	t.Run("UserWithoutPermission_CannotDelete", func(t *testing.T) {
+		// User 13 has no permission on task 1
+		u := &user.User{ID: 13}
+		can, err := as.CanDelete(s, 1, u)
+
+		require.NoError(t, err)
+		assert.False(t, can)
+	})
+}

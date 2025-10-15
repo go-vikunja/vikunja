@@ -21,33 +21,55 @@ import (
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/web"
 	"xorm.io/xorm"
 )
 
+// InitProjectUserService sets up dependency injection for project user-related model functions.
+// This function must be called during initialization to enable service layer delegation.
+func InitProjectUserService() {
+	// Set up permission delegation (T-PERM-011)
+	models.ProjectUserCanCreateFunc = func(s *xorm.Session, projectID int64, a web.Auth) (bool, error) {
+		pus := NewProjectUserService(s.Engine())
+		return pus.CanCreate(s, projectID, a)
+	}
+	models.ProjectUserCanUpdateFunc = func(s *xorm.Session, projectID int64, a web.Auth) (bool, error) {
+		pus := NewProjectUserService(s.Engine())
+		return pus.CanUpdate(s, projectID, a)
+	}
+	models.ProjectUserCanDeleteFunc = func(s *xorm.Session, projectID int64, a web.Auth) (bool, error) {
+		pus := NewProjectUserService(s.Engine())
+		return pus.CanDelete(s, projectID, a)
+	}
+	models.ProjectUserCanReadFunc = func(s *xorm.Session, projectID int64, a web.Auth) (bool, error) {
+		pus := NewProjectUserService(s.Engine())
+		return pus.CanRead(s, projectID, a)
+	}
+}
+
 // ProjectUserService handles all operations related to project-user permissions
-type ProjectUserService struct {
-	DB             *xorm.Engine
-	ProjectService *ProjectService
+type ProjectUsersService struct {
+	DB       *xorm.Engine
+	Registry *ServiceRegistry
 }
 
 // NewProjectUserService creates a new ProjectUserService
-func NewProjectUserService(db *xorm.Engine) *ProjectUserService {
-	return &ProjectUserService{
-		DB:             db,
-		ProjectService: NewProjectService(db),
-	}
+// Deprecated: Use ServiceRegistry.ProjectUsers() instead.
+func NewProjectUserService(db *xorm.Engine) *ProjectUsersService {
+	registry := NewServiceRegistry(db)
+	return registry.ProjectUsers()
 }
 
 // Create adds a user to a project with the specified permission level.
 // Returns error if the user already has access, is the owner, or permission is invalid.
-func (pus *ProjectUserService) Create(s *xorm.Session, projectUser *models.ProjectUser, doer *user.User) error {
+func (pus *ProjectUsersService) Create(s *xorm.Session, projectUser *models.ProjectUser, doer *user.User) error {
 	// Check if the permission is valid
 	if err := projectUser.Permission.IsValid(); err != nil {
 		return err
 	}
 
 	// Check if the project exists
-	project, err := models.GetProjectSimpleByID(s, projectUser.ProjectID)
+	project, err := pus.Registry.Project().GetByIDSimple(s, projectUser.ProjectID)
 	if err != nil {
 		return err
 	}
@@ -98,7 +120,7 @@ func (pus *ProjectUserService) Create(s *xorm.Session, projectUser *models.Proje
 
 // Delete removes a user's access to a project.
 // Returns error if the user doesn't have access to the project.
-func (pus *ProjectUserService) Delete(s *xorm.Session, projectUser *models.ProjectUser) error {
+func (pus *ProjectUsersService) Delete(s *xorm.Session, projectUser *models.ProjectUser) error {
 	if projectUser.UserID == 0 {
 		// Check if the user exists
 		targetUser, err := user.GetUserByUsername(s, projectUser.Username)
@@ -134,9 +156,9 @@ func (pus *ProjectUserService) Delete(s *xorm.Session, projectUser *models.Proje
 
 // GetAll retrieves all users who have access to a project with their permission levels.
 // Supports pagination and search by username.
-func (pus *ProjectUserService) GetAll(s *xorm.Session, projectID int64, doer *user.User, search string, page int, perPage int) (users []*models.UserWithPermission, resultCount int, totalItems int64, err error) {
+func (pus *ProjectUsersService) GetAll(s *xorm.Session, projectID int64, doer *user.User, search string, page int, perPage int) (users []*models.UserWithPermission, resultCount int, totalItems int64, err error) {
 	// Check if the user has access to the project
-	canRead, err := pus.ProjectService.HasPermission(s, projectID, doer, models.PermissionRead)
+	canRead, err := pus.Registry.Project().HasPermission(s, projectID, doer, models.PermissionRead)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -181,7 +203,7 @@ func (pus *ProjectUserService) GetAll(s *xorm.Session, projectID int64, doer *us
 
 // Update modifies the permission level of a user's access to a project.
 // Returns error if the permission is invalid or user doesn't have access.
-func (pus *ProjectUserService) Update(s *xorm.Session, projectUser *models.ProjectUser) error {
+func (pus *ProjectUsersService) Update(s *xorm.Session, projectUser *models.ProjectUser) error {
 	if projectUser.UserID == 0 {
 		// Check if the user exists
 		targetUser, err := user.GetUserByUsername(s, projectUser.Username)
@@ -212,7 +234,7 @@ func (pus *ProjectUserService) Update(s *xorm.Session, projectUser *models.Proje
 
 // HasAccess checks if a user has any level of access to a project.
 // Returns true if the user has direct access (not via teams).
-func (pus *ProjectUserService) HasAccess(s *xorm.Session, projectID int64, userID int64) (bool, error) {
+func (pus *ProjectUsersService) HasAccess(s *xorm.Session, projectID int64, userID int64) (bool, error) {
 	has, err := s.
 		Where("project_id = ? AND user_id = ?", projectID, userID).
 		Exist(&models.ProjectUser{})
@@ -221,7 +243,7 @@ func (pus *ProjectUserService) HasAccess(s *xorm.Session, projectID int64, userI
 
 // GetPermission retrieves the permission level a user has for a project.
 // Returns PermissionUnknown if the user doesn't have direct access.
-func (pus *ProjectUserService) GetPermission(s *xorm.Session, projectID int64, userID int64) (models.Permission, error) {
+func (pus *ProjectUsersService) GetPermission(s *xorm.Session, projectID int64, userID int64) (models.Permission, error) {
 	pu := &models.ProjectUser{}
 	has, err := s.
 		Where("project_id = ? AND user_id = ?", projectID, userID).
@@ -233,4 +255,50 @@ func (pus *ProjectUserService) GetPermission(s *xorm.Session, projectID int64, u
 		return models.PermissionUnknown, nil
 	}
 	return pu.Permission, nil
+}
+
+// Permission Methods (T-PERM-011)
+
+// CanCreate checks if the user can create a new user <-> project relation.
+// Requires admin permission on the project.
+// MIGRATION: Migrated from models.ProjectUser.CanCreate
+func (pus *ProjectUsersService) CanCreate(s *xorm.Session, projectID int64, a web.Auth) (bool, error) {
+	// Link shares aren't allowed to do anything
+	if _, isLinkShare := a.(*models.LinkSharing); isLinkShare {
+		return false, nil
+	}
+
+	return pus.Registry.Project().IsAdmin(s, projectID, a)
+}
+
+// CanUpdate checks if the user can update a user <-> project relation.
+// Requires admin permission on the project.
+// MIGRATION: Migrated from models.ProjectUser.CanUpdate
+func (pus *ProjectUsersService) CanUpdate(s *xorm.Session, projectID int64, a web.Auth) (bool, error) {
+	// Link shares aren't allowed to do anything
+	if _, isLinkShare := a.(*models.LinkSharing); isLinkShare {
+		return false, nil
+	}
+
+	return pus.Registry.Project().IsAdmin(s, projectID, a)
+}
+
+// CanDelete checks if the user can delete a user <-> project relation.
+// Requires admin permission on the project.
+// MIGRATION: Migrated from models.ProjectUser.CanDelete
+func (pus *ProjectUsersService) CanDelete(s *xorm.Session, projectID int64, a web.Auth) (bool, error) {
+	// Link shares aren't allowed to do anything
+	if _, isLinkShare := a.(*models.LinkSharing); isLinkShare {
+		return false, nil
+	}
+
+	return pus.Registry.Project().IsAdmin(s, projectID, a)
+}
+
+// CanRead checks if the user can read user <-> project relations.
+// Requires read permission on the project.
+// MIGRATION: Migrated from models.ProjectUser (implicit read check)
+func (pus *ProjectUsersService) CanRead(s *xorm.Session, projectID int64, a web.Auth) (bool, error) {
+	canRead, _, err := pus.Registry.Project().CanRead(s, projectID, a)
+	return canRead, err
 }

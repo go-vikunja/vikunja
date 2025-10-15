@@ -24,19 +24,21 @@ import (
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/web"
 	"xorm.io/xorm"
 )
 
 // AttachmentService represents a service for managing task attachments.
 type AttachmentService struct {
-	DB *xorm.Engine
+	DB       *xorm.Engine
+	Registry *ServiceRegistry
 }
 
 // NewAttachmentService creates a new AttachmentService.
+// Deprecated: Use ServiceRegistry.Attachment() instead.
 func NewAttachmentService(db *xorm.Engine) *AttachmentService {
-	return &AttachmentService{
-		DB: db,
-	}
+	registry := NewServiceRegistry(db)
+	return registry.Attachment()
 }
 
 // AttachmentPermissions represents permission checking for attachments.
@@ -72,10 +74,11 @@ func (ap *AttachmentPermissions) Create() (bool, error) {
 	}
 
 	// User needs write access to the task to create attachments
-	task, err := models.GetTaskByIDSimple(ap.s, ap.attachment.TaskID)
+	taskPtr, err := ap.as.Registry.Task().GetByIDSimple(ap.s, ap.attachment.TaskID)
 	if err != nil {
 		return false, err
 	}
+	task := *taskPtr
 	return task.CanCreate(ap.s, ap.user)
 }
 
@@ -88,6 +91,33 @@ func (ap *AttachmentPermissions) Delete() (bool, error) {
 	// User needs write access to the task to delete attachments
 	task := &models.Task{ID: ap.attachment.TaskID}
 	return task.CanWrite(ap.s, ap.user)
+}
+
+// ===== Attachment Permission Methods =====
+// Migrated from models layer as part of T-PERM-010
+
+// CanRead checks if a user can read/view a task attachment.
+// MIGRATION: Migrated from models.TaskAttachment.CanRead (T-PERM-010)
+func (as *AttachmentService) CanRead(s *xorm.Session, taskID int64, a web.Auth) (bool, int, error) {
+	// User needs read access to the task
+	ts := NewTaskService(s.Engine())
+	return ts.CanRead(s, taskID, a)
+}
+
+// CanCreate checks if a user can create a task attachment.
+// MIGRATION: Migrated from models.TaskAttachment.CanCreate (T-PERM-010)
+func (as *AttachmentService) CanCreate(s *xorm.Session, taskID int64, a web.Auth) (bool, error) {
+	// User needs write access to the task
+	ts := NewTaskService(s.Engine())
+	return ts.CanWrite(s, taskID, a)
+}
+
+// CanDelete checks if a user can delete a task attachment.
+// MIGRATION: Migrated from models.TaskAttachment.CanDelete (T-PERM-010)
+func (as *AttachmentService) CanDelete(s *xorm.Session, taskID int64, a web.Auth) (bool, error) {
+	// User needs write access to the task
+	ts := NewTaskService(s.Engine())
+	return ts.CanWrite(s, taskID, a)
 }
 
 // Create creates a new task attachment with file upload.
@@ -136,10 +166,11 @@ func (as *AttachmentService) Create(s *xorm.Session, attachment *models.TaskAtta
 	}
 
 	// Get the task for event dispatch
-	task, err := models.GetTaskByIDSimple(s, attachment.TaskID)
+	taskPtr, err := as.Registry.Task().GetByIDSimple(s, attachment.TaskID)
 	if err != nil {
 		return nil, err
 	}
+	task := *taskPtr
 
 	// Dispatch event
 	err = events.Dispatch(&models.TaskAttachmentCreatedEvent{
@@ -193,10 +224,11 @@ func (as *AttachmentService) CreateWithoutPermissionCheck(s *xorm.Session, attac
 	}
 
 	// Get the task for event dispatch
-	task, err := models.GetTaskByIDSimple(s, attachment.TaskID)
+	taskPtr, err := as.Registry.Task().GetByIDSimple(s, attachment.TaskID)
 	if err != nil {
 		return nil, err
 	}
+	task := *taskPtr
 
 	// Dispatch event
 	err = events.Dispatch(&models.TaskAttachmentCreatedEvent{
@@ -367,10 +399,11 @@ func (as *AttachmentService) Delete(s *xorm.Session, attachmentID int64, taskID 
 	}
 
 	// Get task and user for event dispatch
-	task, err := models.GetTaskByIDSimple(s, taskID)
+	taskPtr, err := as.Registry.Task().GetByIDSimple(s, taskID)
 	if err != nil {
 		return err
 	}
+	task := *taskPtr
 
 	doer, _ := user.GetFromAuth(u)
 
@@ -455,6 +488,19 @@ func init() {
 	models.AttachmentDeleteFunc = func(s *xorm.Session, attachmentID int64, taskID int64, u *user.User) error {
 		return NewAttachmentService(s.Engine()).Delete(s, attachmentID, taskID, u)
 	}
+
+	// Wire permission functions - T-PERM-010
+	models.AttachmentCanReadFunc = func(s *xorm.Session, taskID int64, a web.Auth) (bool, int, error) {
+		return NewAttachmentService(s.Engine()).CanRead(s, taskID, a)
+	}
+
+	models.AttachmentCanCreateFunc = func(s *xorm.Session, taskID int64, a web.Auth) (bool, error) {
+		return NewAttachmentService(s.Engine()).CanCreate(s, taskID, a)
+	}
+
+	models.AttachmentCanDeleteFunc = func(s *xorm.Session, taskID int64, a web.Auth) (bool, error) {
+		return NewAttachmentService(s.Engine()).CanDelete(s, taskID, a)
+	}
 }
 
 // InitAttachmentService sets up dependency injection for attachment-related model functions.
@@ -466,5 +512,18 @@ func InitAttachmentService() {
 
 	models.AttachmentDeleteFunc = func(s *xorm.Session, attachmentID int64, taskID int64, u *user.User) error {
 		return NewAttachmentService(s.Engine()).Delete(s, attachmentID, taskID, u)
+	}
+
+	// Wire permission functions - T-PERM-010
+	models.AttachmentCanReadFunc = func(s *xorm.Session, taskID int64, a web.Auth) (bool, int, error) {
+		return NewAttachmentService(s.Engine()).CanRead(s, taskID, a)
+	}
+
+	models.AttachmentCanCreateFunc = func(s *xorm.Session, taskID int64, a web.Auth) (bool, error) {
+		return NewAttachmentService(s.Engine()).CanCreate(s, taskID, a)
+	}
+
+	models.AttachmentCanDeleteFunc = func(s *xorm.Session, taskID int64, a web.Auth) (bool, error) {
+		return NewAttachmentService(s.Engine()).CanDelete(s, taskID, a)
 	}
 }

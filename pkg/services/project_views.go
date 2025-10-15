@@ -22,16 +22,49 @@ import (
 	"xorm.io/xorm"
 )
 
+// InitProjectViewService sets up dependency injection for project view-related model functions.
+// This function must be called during initialization to enable service layer delegation.
+func InitProjectViewService() {
+	// Set up permission delegation (T-PERM-011)
+	models.ProjectViewCanReadFunc = func(s *xorm.Session, projectID int64, a web.Auth) (bool, int, error) {
+		pvs := NewProjectViewService(s.Engine())
+		return pvs.CanRead(s, projectID, a)
+	}
+	models.ProjectViewCanCreateFunc = func(s *xorm.Session, projectID int64, a web.Auth) (bool, error) {
+		pvs := NewProjectViewService(s.Engine())
+		return pvs.CanCreate(s, projectID, a)
+	}
+	models.ProjectViewCanUpdateFunc = func(s *xorm.Session, projectID int64, a web.Auth) (bool, error) {
+		pvs := NewProjectViewService(s.Engine())
+		return pvs.CanUpdate(s, projectID, a)
+	}
+	models.ProjectViewCanDeleteFunc = func(s *xorm.Session, projectID int64, a web.Auth) (bool, error) {
+		pvs := NewProjectViewService(s.Engine())
+		return pvs.CanDelete(s, projectID, a)
+	}
+
+	// Set up helper function delegation (T-PERM-014A Phase 2)
+	models.GetProjectViewByIDFunc = func(s *xorm.Session, id int64) (*models.ProjectView, error) {
+		pvs := NewProjectViewService(s.Engine())
+		return pvs.GetByID(s, id)
+	}
+	models.GetProjectViewByIDAndProjectFunc = func(s *xorm.Session, viewID int64, projectID int64) (*models.ProjectView, error) {
+		pvs := NewProjectViewService(s.Engine())
+		return pvs.GetByIDAndProject(s, viewID, projectID)
+	}
+}
+
 // ProjectViewService represents a service for managing project views.
 type ProjectViewService struct {
-	DB *xorm.Engine
+	DB       *xorm.Engine
+	Registry *ServiceRegistry
 }
 
 // NewProjectViewService creates a new ProjectViewService.
+// Deprecated: Use ServiceRegistry.ProjectViews() instead.
 func NewProjectViewService(db *xorm.Engine) *ProjectViewService {
-	return &ProjectViewService{
-		DB: db,
-	}
+	registry := NewServiceRegistry(db)
+	return registry.ProjectViews()
 }
 
 // Create adds a new project view.
@@ -266,7 +299,9 @@ func (pvs *ProjectViewService) getViewsForProject(s *xorm.Session, projectID int
 	return
 }
 
-// GetByIDAndProject retrieves a single project view by ID and project ID.
+// GetByIDAndProject retrieves a project view by ID and project ID without permission checks
+// This is a simple lookup helper used by permission methods
+// MIGRATION: Exposed in T-PERM-004 (migrated from models.GetProjectViewByIDAndProject)
 func (pvs *ProjectViewService) GetByIDAndProject(s *xorm.Session, viewID, projectID int64) (view *models.ProjectView, err error) {
 	if projectID == models.FavoritesPseudoProjectID && viewID < 0 {
 		for _, v := range models.FavoritesPseudoProject.Views {
@@ -298,7 +333,9 @@ func (pvs *ProjectViewService) GetByIDAndProject(s *xorm.Session, viewID, projec
 	return
 }
 
-// GetByID retrieves a single project view by ID.
+// GetByID retrieves a project view by ID without permission checks
+// This is a simple lookup helper used by permission methods
+// MIGRATION: Exposed in T-PERM-004 (migrated from models.GetProjectViewByID)
 func (pvs *ProjectViewService) GetByID(s *xorm.Session, id int64) (view *models.ProjectView, err error) {
 	view = &models.ProjectView{}
 	exists, err := s.
@@ -378,4 +415,70 @@ func (pvs *ProjectViewService) CreateDefaultViewsForProject(s *xorm.Session, pro
 	}
 
 	return nil
+}
+
+// Permission Methods (T-PERM-011)
+
+// CanRead checks if the user can read a project view.
+// For saved filters, delegates to the saved filter's permission check.
+// Otherwise, checks if user can read the project.
+// MIGRATION: Migrated from models.ProjectView.CanRead
+func (pvs *ProjectViewService) CanRead(s *xorm.Session, projectID int64, a web.Auth) (bool, int, error) {
+	// Handle saved filters
+	filterID := models.GetSavedFilterIDFromProjectID(projectID)
+	if filterID > 0 {
+		sf := &models.SavedFilter{ID: filterID}
+		return sf.CanRead(s, a)
+	}
+
+	// Check project read permission
+	return pvs.Registry.Project().CanRead(s, projectID, a)
+}
+
+// CanCreate checks if the user can create a project view.
+// For saved filters, requires update permission on the saved filter.
+// Otherwise, requires admin permission on the project.
+// MIGRATION: Migrated from models.ProjectView.CanCreate
+func (pvs *ProjectViewService) CanCreate(s *xorm.Session, projectID int64, a web.Auth) (bool, error) {
+	// Handle saved filters
+	filterID := models.GetSavedFilterIDFromProjectID(projectID)
+	if filterID > 0 {
+		sf := &models.SavedFilter{ID: filterID}
+		return sf.CanUpdate(s, a)
+	}
+
+	// Require admin permission on project
+	return pvs.Registry.Project().IsAdmin(s, projectID, a)
+}
+
+// CanUpdate checks if the user can update a project view.
+// For saved filters, requires update permission on the saved filter.
+// Otherwise, requires admin permission on the project.
+// MIGRATION: Migrated from models.ProjectView.CanUpdate
+func (pvs *ProjectViewService) CanUpdate(s *xorm.Session, projectID int64, a web.Auth) (bool, error) {
+	// Handle saved filters
+	filterID := models.GetSavedFilterIDFromProjectID(projectID)
+	if filterID > 0 {
+		sf := &models.SavedFilter{ID: filterID}
+		return sf.CanUpdate(s, a)
+	}
+
+	// Require admin permission on project
+	return pvs.Registry.Project().IsAdmin(s, projectID, a)
+}
+
+// CanDelete checks if the user can delete a project view.
+// For saved filters, requires delete permission on the saved filter.
+// Otherwise, requires admin permission on the project.
+// MIGRATION: Migrated from models.ProjectView.CanDelete
+func (pvs *ProjectViewService) CanDelete(s *xorm.Session, projectID int64, a web.Auth) (bool, error) {
+	// Handle saved filters
+	filterID := models.GetSavedFilterIDFromProjectID(projectID)
+	if filterID > 0 {
+		sf := &models.SavedFilter{ID: filterID}
+		return sf.CanDelete(s, a)
+	}
+
+	// Require admin permission on project
+	return pvs.Registry.Project().IsAdmin(s, projectID, a)
 }

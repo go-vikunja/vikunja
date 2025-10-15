@@ -105,7 +105,7 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 		this.title = this.title?.trim()
 		this.doneAt = parseDateOrNull(this.doneAt)
 
-		this.labels = this.labels
+		this.labels = (this.labels || [])
 			.map(l => new LabelModel(l))
 			.sort((a, b) => a.title.localeCompare(b.title))
 

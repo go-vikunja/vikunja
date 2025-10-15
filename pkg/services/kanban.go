@@ -31,16 +31,15 @@ import (
 
 // KanbanService represents a service for managing kanban buckets and task-bucket relations.
 type KanbanService struct {
-	DB               *xorm.Engine
-	LinkShareService *LinkShareService
+	DB       *xorm.Engine
+	Registry *ServiceRegistry
 }
 
 // NewKanbanService creates a new KanbanService.
+// Deprecated: Use ServiceRegistry.Kanban() instead.
 func NewKanbanService(db *xorm.Engine) *KanbanService {
-	return &KanbanService{
-		DB:               db,
-		LinkShareService: NewLinkShareService(db),
-	}
+	registry := NewServiceRegistry(db)
+	return registry.Kanban()
 }
 
 // CreateBucket creates a new kanban bucket
@@ -49,7 +48,7 @@ func (ks *KanbanService) CreateBucket(s *xorm.Session, bucket *models.Bucket, u 
 	projectService := NewProjectService(ks.DB)
 
 	// Get the project view to find the project ID
-	pv, err := models.GetProjectViewByIDAndProject(s, bucket.ProjectViewID, bucket.ProjectID)
+	pv, err := ks.Registry.ProjectViews().GetByIDAndProject(s, bucket.ProjectViewID, bucket.ProjectID)
 	if err != nil {
 		return err
 	}
@@ -63,7 +62,7 @@ func (ks *KanbanService) CreateBucket(s *xorm.Session, bucket *models.Bucket, u 
 		if u.ID < 0 {
 			// For link shares, check permission directly
 			linkShareID := u.ID * -1 // Convert back to positive ID
-			linkShare, err := ks.LinkShareService.GetByID(s, linkShareID)
+			linkShare, err := ks.Registry.LinkShare().GetByID(s, linkShareID)
 			if err != nil {
 				return err
 			}
@@ -107,12 +106,12 @@ func (ks *KanbanService) UpdateBucket(s *xorm.Session, bucket *models.Bucket, u 
 	projectService := NewProjectService(ks.DB)
 
 	// Get the existing bucket to find the project
-	existingBucket, err := ks.getBucketByID(s, bucket.ID)
+	existingBucket, err := ks.GetBucketByID(s, bucket.ID)
 	if err != nil {
 		return err
 	}
 
-	pv, err := models.GetProjectViewByIDAndProject(s, existingBucket.ProjectViewID, bucket.ProjectID)
+	pv, err := ks.Registry.ProjectViews().GetByIDAndProject(s, existingBucket.ProjectViewID, bucket.ProjectID)
 	if err != nil {
 		return err
 	}
@@ -140,7 +139,7 @@ func (ks *KanbanService) UpdateBucket(s *xorm.Session, bucket *models.Bucket, u 
 // DeleteBucket removes a bucket, but no tasks
 func (ks *KanbanService) DeleteBucket(s *xorm.Session, bucketID int64, projectID int64, u *user.User) error {
 	// Get the bucket to delete
-	bucket, err := ks.getBucketByID(s, bucketID)
+	bucket, err := ks.GetBucketByID(s, bucketID)
 	if err != nil {
 		return err
 	}
@@ -148,7 +147,7 @@ func (ks *KanbanService) DeleteBucket(s *xorm.Session, bucketID int64, projectID
 	// Permission check: Use ProjectService for proper inter-service communication
 	projectService := NewProjectService(ks.DB)
 
-	pv, err := models.GetProjectViewByIDAndProject(s, bucket.ProjectViewID, projectID)
+	pv, err := ks.Registry.ProjectViews().GetByIDAndProject(s, bucket.ProjectViewID, projectID)
 	if err != nil {
 		return err
 	}
@@ -215,7 +214,7 @@ func (ks *KanbanService) GetAllBuckets(s *xorm.Session, projectViewID int64, pro
 	// Permission check: Use ProjectService for proper inter-service communication
 	projectService := NewProjectService(ks.DB)
 
-	view, err := models.GetProjectViewByIDAndProject(s, projectViewID, projectID)
+	view, err := ks.Registry.ProjectViews().GetByIDAndProject(s, projectViewID, projectID)
 	if err != nil {
 		return nil, err
 	}
@@ -275,13 +274,13 @@ func (ks *KanbanService) MoveTaskToBucket(s *xorm.Session, taskBucket *models.Ta
 	}
 
 	// Get the project view
-	view, err := models.GetProjectViewByIDAndProject(s, taskBucket.ProjectViewID, taskBucket.ProjectID)
+	view, err := ks.Registry.ProjectViews().GetByIDAndProject(s, taskBucket.ProjectViewID, taskBucket.ProjectID)
 	if err != nil {
 		return err
 	}
 
 	// Get the target bucket
-	bucket, err := ks.getBucketByID(s, taskBucket.BucketID)
+	bucket, err := ks.GetBucketByID(s, taskBucket.BucketID)
 	if err != nil {
 		return err
 	}
@@ -438,11 +437,15 @@ func (ks *KanbanService) AddBucketsToTasks(s *xorm.Session, taskIDs []int64, tas
 	}
 
 	for _, tb := range taskBuckets {
-		if taskMap[tb.TaskID].Buckets == nil {
-			taskMap[tb.TaskID].Buckets = []*models.Bucket{}
+		task, taskExists := taskMap[tb.TaskID]
+		if !taskExists {
+			continue
+		}
+		if task.Buckets == nil {
+			task.Buckets = []*models.Bucket{}
 		}
 		if bucket, exists := buckets[tb.BucketID]; exists {
-			taskMap[tb.TaskID].Buckets = append(taskMap[tb.TaskID].Buckets, bucket)
+			task.Buckets = append(task.Buckets, bucket)
 		}
 	}
 
@@ -452,7 +455,10 @@ func (ks *KanbanService) AddBucketsToTasks(s *xorm.Session, taskIDs []int64, tas
 // Helper functions moved from models
 
 // getBucketByID gets a bucket by its ID
-func (ks *KanbanService) getBucketByID(s *xorm.Session, id int64) (b *models.Bucket, err error) {
+// GetBucketByID retrieves a bucket by ID without permission checks
+// This is a simple lookup helper used by permission methods
+// MIGRATION: Made public in T-PERM-004 (migrated from models.getBucketByID)
+func (ks *KanbanService) GetBucketByID(s *xorm.Session, id int64) (b *models.Bucket, err error) {
 	b = &models.Bucket{}
 	exists, err := s.Where("id = ?", id).Get(b)
 	if err != nil {
@@ -462,6 +468,58 @@ func (ks *KanbanService) getBucketByID(s *xorm.Session, id int64) (b *models.Buc
 		return b, models.ErrBucketDoesNotExist{BucketID: id}
 	}
 	return
+}
+
+// CanCreate checks if a user can create a new bucket
+func (ks *KanbanService) CanCreate(s *xorm.Session, bucket *models.Bucket, a web.Auth) (bool, error) {
+	// Get the project view to find the project
+	pvs := NewProjectViewService(ks.DB)
+	pv, err := pvs.GetByIDAndProject(s, bucket.ProjectViewID, bucket.ProjectID)
+	if err != nil {
+		return false, err
+	}
+
+	// Check if user can update the project
+	ps := NewProjectService(ks.DB)
+	return ps.CanUpdate(s, pv.ProjectID, nil, a)
+}
+
+// CanUpdate checks if a user can update an existing bucket
+func (ks *KanbanService) CanUpdate(s *xorm.Session, bucketID int64, projectID int64, a web.Auth) (bool, error) {
+	return ks.canDoBucket(s, bucketID, projectID, a)
+}
+
+// CanDelete checks if a user can delete an existing bucket
+func (ks *KanbanService) CanDelete(s *xorm.Session, bucketID int64, projectID int64, a web.Auth) (bool, error) {
+	return ks.canDoBucket(s, bucketID, projectID, a)
+}
+
+// canDoBucket checks if the bucket exists and if the user has the permission to act on it
+func (ks *KanbanService) canDoBucket(s *xorm.Session, bucketID int64, projectID int64, a web.Auth) (bool, error) {
+	bb, err := ks.GetBucketByID(s, bucketID)
+	if err != nil {
+		return false, err
+	}
+
+	pvs := NewProjectViewService(ks.DB)
+	pv, err := pvs.GetByIDAndProject(s, bb.ProjectViewID, projectID)
+	if err != nil {
+		return false, err
+	}
+
+	// Check if user can update the project
+	ps := NewProjectService(ks.DB)
+	return ps.CanUpdate(s, pv.ProjectID, nil, a)
+}
+
+// CanUpdateTaskBucket checks if a user can move a task to a bucket
+func (ks *KanbanService) CanUpdateTaskBucket(s *xorm.Session, bucketID, projectID, projectViewID int64, a web.Auth) (bool, error) {
+	bucket := &models.Bucket{
+		ID:            bucketID,
+		ProjectID:     projectID,
+		ProjectViewID: projectViewID,
+	}
+	return ks.canDoBucket(s, bucket.ID, bucket.ProjectID, a)
 }
 
 // getDefaultBucketID gets the default bucket ID for a project view
@@ -518,7 +576,7 @@ func (ks *KanbanService) upsertTaskBucket(s *xorm.Session, taskBucket *models.Ta
 
 // checkBucketLimit checks if adding a task to a bucket would exceed its limit
 func (ks *KanbanService) checkBucketLimit(s *xorm.Session, u *user.User, t *models.Task, bucket *models.Bucket) (taskCount int64, err error) {
-	view, err := models.GetProjectViewByID(s, bucket.ProjectViewID)
+	view, err := ks.Registry.ProjectViews().GetByID(s, bucket.ProjectViewID)
 	if err != nil {
 		return 0, err
 	}
@@ -577,7 +635,7 @@ func (ks *KanbanService) updateTaskReminders(s *xorm.Session, task *models.Task)
 
 // getUsersOrLinkSharesFromIDs gets users or link shares from their IDs
 func (ks *KanbanService) getUsersOrLinkSharesFromIDs(s *xorm.Session, ids []int64) (users map[int64]*user.User, err error) {
-	return ks.LinkShareService.GetUsersOrLinkSharesFromIDs(s, ids)
+	return ks.Registry.LinkShare().GetUsersOrLinkSharesFromIDs(s, ids)
 }
 
 // getUserOrLinkShareUser converts a web.Auth to a *user.User, handling both regular users and link shares
@@ -705,11 +763,67 @@ func InitKanbanService() {
 	// Wire helper functions
 	models.GetBucketByIDFunc = func(s *xorm.Session, id int64) (*models.Bucket, error) {
 		ks := NewKanbanService(db.GetEngine())
-		return ks.getBucketByID(s, id)
+		return ks.GetBucketByID(s, id)
 	}
 
 	models.GetDefaultBucketIDFunc = func(s *xorm.Session, view *models.ProjectView) (int64, error) {
 		ks := NewKanbanService(db.GetEngine())
 		return ks.getDefaultBucketID(s, view)
+	}
+
+	// Set up bucket permission delegation (T-PERM-008)
+	models.CheckBucketCreateFunc = func(s *xorm.Session, bucket *models.Bucket, a web.Auth) (bool, error) {
+		ks := NewKanbanService(s.Engine())
+		return ks.CanCreate(s, bucket, a)
+	}
+	models.CheckBucketUpdateFunc = func(s *xorm.Session, bucket *models.Bucket, a web.Auth) (bool, error) {
+		// The bucket struct has ProjectID from URL binding (via param:"project" tag)
+		// If ProjectID is 0, we need to look it up via the bucket's view
+		ks := NewKanbanService(s.Engine())
+
+		var projectID int64
+		if bucket.ProjectID != 0 {
+			// Use the ProjectID from URL binding if available
+			projectID = bucket.ProjectID
+		} else {
+			// Load the bucket to get the view, then get project from view
+			existingBucket, err := ks.GetBucketByID(s, bucket.ID)
+			if err != nil {
+				return false, err
+			}
+			// Get the view to find the project
+			pv, err := ks.Registry.ProjectViews().GetByID(s, existingBucket.ProjectViewID)
+			if err != nil {
+				return false, err
+			}
+			projectID = pv.ProjectID
+		}
+
+		return ks.CanUpdate(s, bucket.ID, projectID, a)
+	}
+	models.CheckBucketDeleteFunc = func(s *xorm.Session, bucket *models.Bucket, a web.Auth) (bool, error) {
+		// The bucket struct has ProjectID from URL binding (via param:"project" tag)
+		// If ProjectID is 0, we need to look it up via the bucket's view
+		ks := NewKanbanService(s.Engine())
+
+		var projectID int64
+		if bucket.ProjectID != 0 {
+			// Use the ProjectID from URL binding if available
+			projectID = bucket.ProjectID
+		} else {
+			// Load the bucket to get the view, then get project from view
+			existingBucket, err := ks.GetBucketByID(s, bucket.ID)
+			if err != nil {
+				return false, err
+			}
+			// Get the view to find the project
+			pv, err := ks.Registry.ProjectViews().GetByID(s, existingBucket.ProjectViewID)
+			if err != nil {
+				return false, err
+			}
+			projectID = pv.ProjectID
+		}
+
+		return ks.CanDelete(s, bucket.ID, projectID, a)
 	}
 }

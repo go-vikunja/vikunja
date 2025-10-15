@@ -81,6 +81,32 @@ func (b *Bucket) GetID() int64 {
 	return b.ID
 }
 
+// CanCreate checks if a user can create a new bucket
+func (b *Bucket) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckBucketCreateFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckBucketCreateFunc(s, b, a)
+}
+
+// CanUpdate checks if a user can update an existing bucket
+func (b *Bucket) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckBucketUpdateFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	// Pass the whole bucket struct so the service can access b.ProjectID from URL binding
+	return CheckBucketUpdateFunc(s, b, a)
+}
+
+// CanDelete checks if a user can delete an existing bucket
+func (b *Bucket) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckBucketDeleteFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	// Pass the whole bucket struct so the service can access b.ProjectID from URL binding
+	return CheckBucketDeleteFunc(s, b, a)
+}
+
 // Create creates a new bucket.
 // @Deprecated: Use services.KanbanService.CreateBucket() instead
 func (b *Bucket) Create(s *xorm.Session, a web.Auth) (err error) {
@@ -122,15 +148,6 @@ func (b *Bucket) Delete(s *xorm.Session, a web.Auth) (err error) {
 }
 
 // Helper functions that use dependency inversion
-
-// getBucketByID gets a bucket by its ID.
-// @Deprecated: Use services.KanbanService.getBucketByID() instead
-func getBucketByID(s *xorm.Session, id int64) (*Bucket, error) {
-	if GetBucketByIDFunc == nil {
-		panic("KanbanService not registered - call services.InitKanbanService() in test setup")
-	}
-	return GetBucketByIDFunc(s, id)
-}
 
 // GetDefaultBucketID returns the default bucket ID for a view.
 // @Deprecated: Use services.KanbanService.getDefaultBucketID() instead

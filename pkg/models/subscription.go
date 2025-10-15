@@ -481,3 +481,22 @@ ORDER BY t.id, sh.user_id`,
 
 	return subscriptions, nil
 }
+
+// ===== Permission Methods =====
+// These methods delegate to the service layer via function pointers
+
+// CanCreate checks if the user can create a subscription
+func (sb *Subscription) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckSubscriptionCreateFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckSubscriptionCreateFunc(s, sb, a)
+}
+
+// CanDelete checks if the user can delete a subscription
+func (sb *Subscription) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckSubscriptionDeleteFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckSubscriptionDeleteFunc(s, sb, a)
+}

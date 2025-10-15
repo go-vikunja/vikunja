@@ -30,16 +30,47 @@ import (
 	"xorm.io/xorm"
 )
 
-type LabelService struct {
-	DB             *xorm.Engine
-	ProjectService *ProjectService
+// InitLabelService sets up dependency injection for label operations
+func InitLabelService() {
+	// Set up permission delegation (T-PERM-008)
+	models.CheckLabelReadFunc = func(s *xorm.Session, labelID int64, a web.Auth) (bool, int, error) {
+		ls := NewLabelService(s.Engine())
+		return ls.CanRead(s, labelID, a)
+	}
+	models.CheckLabelUpdateFunc = func(s *xorm.Session, labelID int64, a web.Auth) (bool, error) {
+		ls := NewLabelService(s.Engine())
+		return ls.CanUpdate(s, labelID, a)
+	}
+	models.CheckLabelDeleteFunc = func(s *xorm.Session, labelID int64, a web.Auth) (bool, error) {
+		ls := NewLabelService(s.Engine())
+		return ls.CanDelete(s, labelID, a)
+	}
+	models.CheckLabelCreateFunc = func(s *xorm.Session, label *models.Label, a web.Auth) (bool, error) {
+		ls := NewLabelService(s.Engine())
+		return ls.CanCreate(s, label, a)
+	}
+
+	// LabelTask permission delegation
+	models.CheckLabelTaskCreateFunc = func(s *xorm.Session, labelTask *models.LabelTask, a web.Auth) (bool, error) {
+		ls := NewLabelService(s.Engine())
+		return ls.CanCreateLabelTask(s, labelTask.LabelID, labelTask.TaskID, a)
+	}
+	models.CheckLabelTaskDeleteFunc = func(s *xorm.Session, labelTask *models.LabelTask, a web.Auth) (bool, error) {
+		ls := NewLabelService(s.Engine())
+		return ls.CanDeleteLabelTask(s, labelTask.LabelID, labelTask.TaskID, a)
+	}
 }
 
+type LabelService struct {
+	DB       *xorm.Engine
+	Registry *ServiceRegistry
+}
+
+// NewLabelService creates a new LabelService.
+// Deprecated: Use ServiceRegistry.Label() instead.
 func NewLabelService(db *xorm.Engine) *LabelService {
-	return &LabelService{
-		DB:             db,
-		ProjectService: NewProjectService(db),
-	}
+	registry := NewServiceRegistry(db)
+	return registry.Label()
 }
 
 func (ls *LabelService) Create(s *xorm.Session, label *models.Label, u *user.User) error {
@@ -72,6 +103,21 @@ func (ls *LabelService) Get(s *xorm.Session, id int64, u *user.User) (*models.La
 		return nil, ErrAccessDenied
 	}
 
+	return label, nil
+}
+
+// GetByID retrieves a label by ID without permission checks
+// This is a simple lookup helper used by permission methods
+// MIGRATION: Added in T-PERM-004 (migrated from models.getLabelByIDSimple)
+func (ls *LabelService) GetByID(s *xorm.Session, labelID int64) (*models.Label, error) {
+	label := &models.Label{ID: labelID}
+	exists, err := s.Get(label)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, models.ErrLabelDoesNotExist{LabelID: labelID}
+	}
 	return label, nil
 }
 
@@ -189,7 +235,7 @@ func (ls *LabelService) GetAll(s *xorm.Session, u *user.User, search string, pag
 	}
 
 	if len(labels) == 0 {
-		return nil, 0, 0, nil
+		return []*models.LabelWithTaskID{}, 0, 0, nil
 	}
 
 	// Get all created by users
@@ -405,7 +451,7 @@ func (ls *LabelService) GetLabelsByTaskIDs(s *xorm.Session, opts *GetLabelsByTas
 	}
 
 	if len(labels) == 0 {
-		return nil, 0, 0, nil
+		return []*models.LabelWithTaskID{}, 0, 0, nil
 	}
 
 	// Get all created by users
@@ -526,6 +572,112 @@ func (ls *LabelService) IsLabelOwner(s *xorm.Session, labelID int64, a web.Auth)
 	}
 
 	return label.CreatedByID == a.GetID(), nil
+}
+
+// CanRead checks if a user can read a label
+func (ls *LabelService) CanRead(s *xorm.Session, labelID int64, a web.Auth) (bool, int, error) {
+	hasAccess, err := ls.HasAccessToLabel(s, labelID, a)
+	if err != nil {
+		return false, 0, err
+	}
+
+	if !hasAccess {
+		return false, 0, nil
+	}
+
+	// Check the permission level based on task association
+	// Find a task associated with this label to determine max permission
+	labelTask := &models.LabelTask{}
+	exists, err := s.Table("label_tasks").
+		Where("label_id = ?", labelID).
+		Limit(1).
+		Get(labelTask)
+	if err != nil {
+		return false, 0, err
+	}
+
+	if exists && labelTask.TaskID > 0 {
+		// Get the task service to check task permissions
+		ts := NewTaskService(ls.DB)
+		_, maxPermission, err := ts.CanRead(s, labelTask.TaskID, a)
+		if err != nil {
+			return false, 0, err
+		}
+		return true, maxPermission, nil
+	}
+
+	// If user is the creator, they have write permission
+	isOwner, err := ls.IsLabelOwner(s, labelID, a)
+	if err != nil {
+		return false, 0, err
+	}
+	if isOwner {
+		return true, int(models.PermissionWrite), nil
+	}
+
+	// Default to read permission
+	return true, int(models.PermissionRead), nil
+}
+
+// CanUpdate checks if a user can update a label
+func (ls *LabelService) CanUpdate(s *xorm.Session, labelID int64, a web.Auth) (bool, error) {
+	// Only label owners can update
+	return ls.IsLabelOwner(s, labelID, a)
+}
+
+// CanDelete checks if a user can delete a label
+func (ls *LabelService) CanDelete(s *xorm.Session, labelID int64, a web.Auth) (bool, error) {
+	// Only label owners can delete
+	return ls.IsLabelOwner(s, labelID, a)
+}
+
+// CanCreate checks if a user can create a label
+func (ls *LabelService) CanCreate(s *xorm.Session, label *models.Label, a web.Auth) (bool, error) {
+	if _, is := a.(*models.LinkSharing); is {
+		return false, nil
+	}
+	return true, nil
+}
+
+// CanCreateLabelTask checks if a user can add a label to a task
+func (ls *LabelService) CanCreateLabelTask(s *xorm.Session, labelID, taskID int64, a web.Auth) (bool, error) {
+	// Check if user has access to the label
+	hasAccess, err := ls.HasAccessToLabel(s, labelID, a)
+	if err != nil {
+		return false, err
+	}
+	if !hasAccess {
+		return false, nil
+	}
+
+	// Check if user can write to the task
+	ts := NewTaskService(ls.DB)
+	canUpdate, err := ts.CanUpdate(s, taskID, nil, a)
+	if err != nil {
+		return false, err
+	}
+
+	return hasAccess && canUpdate, nil
+}
+
+// CanDeleteLabelTask checks if a user can delete a label from a task
+func (ls *LabelService) CanDeleteLabelTask(s *xorm.Session, labelID, taskID int64, a web.Auth) (bool, error) {
+	// Check if user can write to the task
+	ts := NewTaskService(ls.DB)
+	canUpdate, err := ts.CanUpdate(s, taskID, nil, a)
+	if err != nil {
+		return false, err
+	}
+	if !canUpdate {
+		return false, nil
+	}
+
+	// Check if the relation exists
+	exists, err := s.Exist(&models.LabelTask{LabelID: labelID, TaskID: taskID})
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
 }
 
 // AddLabelToTask adds a label to a task

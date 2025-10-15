@@ -117,6 +117,29 @@ func TestAPITokenService_Create(t *testing.T) {
 	})
 }
 
+func TestAPITokenService_GetByID(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	ats := NewAPITokenService(testEngine)
+
+	t.Run("Success", func(t *testing.T) {
+		token, err := ats.GetByID(s, 1)
+		require.NoError(t, err)
+		assert.NotNil(t, token)
+		assert.Equal(t, int64(1), token.ID)
+		assert.Equal(t, "test token 1", token.Title)
+	})
+
+	t.Run("NotFound", func(t *testing.T) {
+		token, err := ats.GetByID(s, 9999)
+		assert.Error(t, err)
+		assert.True(t, models.IsErrAPITokenDoesNotExist(err))
+		assert.Nil(t, token)
+	})
+}
+
 func TestAPITokenService_Get(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 

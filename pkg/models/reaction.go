@@ -32,6 +32,9 @@ type ReactionsServiceProvider interface {
 	Create(s *xorm.Session, reaction *Reaction, a web.Auth) error
 	Delete(s *xorm.Session, entityID int64, userID int64, value string, entityKind ReactionKind) error
 	GetAll(s *xorm.Session, entityID int64, entityKind ReactionKind) (ReactionMap, error)
+	CanRead(s *xorm.Session, entityID int64, entityKind ReactionKind, a web.Auth) (bool, int, error)
+	CanCreate(s *xorm.Session, entityID int64, entityKind ReactionKind, a web.Auth) (bool, error)
+	CanDelete(s *xorm.Session, entityID int64, entityKind ReactionKind, a web.Auth) (bool, error)
 }
 
 var reactionsServiceProvider ReactionsServiceProvider

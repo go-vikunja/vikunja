@@ -45,12 +45,15 @@ func (b *TaskBucket) TableName() string {
 }
 
 func (b *TaskBucket) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
-	bucket := Bucket{
-		ID:            b.BucketID,
-		ProjectID:     b.ProjectID,
-		ProjectViewID: b.ProjectViewID,
+	// DEPRECATED: Use KanbanService.CanUpdateTaskBucket instead
+	// This delegation will be removed in T-PERM-014
+	if CheckBucketUpdateFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
 	}
-	return bucket.canDoBucket(s, a)
+	// Load the bucket to get project info for permission check
+	bucket := &Bucket{ID: b.BucketID}
+	// Note: bucket.ProjectID will be 0 here, but the service will look it up via the view
+	return CheckBucketUpdateFunc(s, bucket, a)
 }
 
 // upsert inserts or updates a task bucket relation.

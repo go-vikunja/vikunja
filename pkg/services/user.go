@@ -26,18 +26,21 @@ import (
 
 // UserService is a service for users.
 type UserService struct {
-	DB *xorm.Engine
+	DB       *xorm.Engine
+	Registry *ServiceRegistry
 }
 
 func InitUserService() {
 	// InitUserService sets up dependency injection for user-related model functions.
 	// This function must be called during test initialization to ensure models can call services.
 	models.GetUsersOrLinkSharesFromIDsFunc = func(s *xorm.Session, ids []int64) (map[int64]*user.User, error) {
-		userService := &UserService{DB: s.Engine()}
+		registry := NewServiceRegistry(s.Engine())
+		userService := registry.User()
 		return userService.GetUsersAndProxiesFromIDs(s, ids)
 	}
 	models.NewUserProxyFromLinkShareFunc = func(share *models.LinkSharing) *user.User {
-		userService := &UserService{}
+		registry := NewServiceRegistry(nil)
+		userService := registry.User()
 		return userService.NewUserProxyFromLinkShare(share)
 	}
 }
@@ -89,7 +92,7 @@ func (us *UserService) GetUsersAndProxiesFromIDs(s *xorm.Session, ids []int64) (
 		return
 	}
 
-	shares, err := models.GetLinkSharesByIDs(s, linkShareIDs)
+	shares, err := us.Registry.LinkShare().GetByIDs(s, linkShareIDs)
 	if err != nil {
 		return nil, err
 	}

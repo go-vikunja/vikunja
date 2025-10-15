@@ -26,14 +26,15 @@ import (
 
 // ReactionsService represents a service for managing task reactions.
 type ReactionsService struct {
-	DB *xorm.Engine
+	DB       *xorm.Engine
+	Registry *ServiceRegistry
 }
 
 // NewReactionsService creates a new ReactionsService.
+// Deprecated: Use ServiceRegistry.Reactions() instead.
 func NewReactionsService(db *xorm.Engine) *ReactionsService {
-	return &ReactionsService{
-		DB: db,
-	}
+	registry := NewServiceRegistry(db)
+	return registry.Reactions()
 }
 
 // AddReactionsToTasks adds reaction data to a map of tasks.
@@ -173,4 +174,55 @@ func (rs *ReactionsService) GetAll(s *xorm.Session, entityID int64, entityKind m
 	}
 
 	return reactionMap, nil
+}
+
+// CanRead checks if a user can read a reaction
+func (rs *ReactionsService) CanRead(s *xorm.Session, entityID int64, entityKind models.ReactionKind, a web.Auth) (bool, int, error) {
+	task, err := rs.getTaskForReaction(s, entityID, entityKind)
+	if err != nil {
+		return false, 0, err
+	}
+	// Delegate to task permissions
+	return task.CanRead(s, a)
+}
+
+// CanCreate checks if a user can create a reaction on an entity
+func (rs *ReactionsService) CanCreate(s *xorm.Session, entityID int64, entityKind models.ReactionKind, a web.Auth) (bool, error) {
+	task, err := rs.getTaskForReaction(s, entityID, entityKind)
+	if err != nil {
+		return false, err
+	}
+	// Delegate to task permissions (need update permission to add reactions)
+	return task.CanUpdate(s, a)
+}
+
+// CanDelete checks if a user can delete a reaction
+func (rs *ReactionsService) CanDelete(s *xorm.Session, entityID int64, entityKind models.ReactionKind, a web.Auth) (bool, error) {
+	task, err := rs.getTaskForReaction(s, entityID, entityKind)
+	if err != nil {
+		return false, err
+	}
+	// Delegate to task permissions (need update permission to delete reactions)
+	return task.CanUpdate(s, a)
+}
+
+// getTaskForReaction retrieves the task associated with a reaction (either directly or via comment)
+func (rs *ReactionsService) getTaskForReaction(s *xorm.Session, entityID int64, entityKind models.ReactionKind) (*models.Task, error) {
+	task := &models.Task{ID: entityID}
+
+	if entityKind == models.ReactionKindComment {
+		// Get the comment to find the associated task
+		// We need to query the comment directly since GetByID requires a user
+		tc := &models.TaskComment{}
+		exists, err := s.Where("id = ?", entityID).Get(tc)
+		if err != nil {
+			return nil, err
+		}
+		if !exists {
+			return nil, models.ErrTaskCommentDoesNotExist{ID: entityID}
+		}
+		task.ID = tc.TaskID
+	}
+
+	return task, nil
 }

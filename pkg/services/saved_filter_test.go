@@ -62,6 +62,29 @@ func TestSavedFilterService_Get(t *testing.T) {
 	assert.Equal(t, u.ID, retrieved.Owner.ID)
 }
 
+func TestSavedFilterService_GetByIDSimple(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	sfs := NewSavedFilterService(testEngine)
+
+	t.Run("Success", func(t *testing.T) {
+		filter, err := sfs.GetByIDSimple(s, 1)
+		assert.NoError(t, err)
+		assert.NotNil(t, filter)
+		assert.Equal(t, int64(1), filter.ID)
+		assert.Equal(t, "testfilter1", filter.Title)
+	})
+
+	t.Run("NotFound", func(t *testing.T) {
+		filter, err := sfs.GetByIDSimple(s, 999999)
+		assert.Error(t, err)
+		assert.Nil(t, filter)
+		assert.True(t, models.IsErrSavedFilterDoesNotExist(err))
+	})
+}
+
 func TestSavedFilterService_GetAllForUser(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
@@ -237,4 +260,100 @@ func TestSavedFilterService_CalculatesNonZeroPositionForNewTasks(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, exists)
 	assert.NotZero(t, tp.Position)
+}
+
+func TestSavedFilterService_CanRead(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	sfs := NewSavedFilterService(testEngine)
+
+	t.Run("owner can read", func(t *testing.T) {
+		u := &user.User{ID: 1}
+		can, maxRight, err := sfs.CanRead(s, 1, u)
+		assert.NoError(t, err)
+		assert.True(t, can)
+		assert.Equal(t, int(models.PermissionAdmin), maxRight)
+	})
+
+	t.Run("non-owner cannot read", func(t *testing.T) {
+		u := &user.User{ID: 2}
+		can, _, err := sfs.CanRead(s, 1, u)
+		assert.NoError(t, err)
+		assert.False(t, can)
+	})
+
+	t.Run("link share cannot read", func(t *testing.T) {
+		ls := &models.LinkSharing{ID: 1}
+		can, _, err := sfs.CanRead(s, 1, ls)
+		assert.NoError(t, err)
+		assert.False(t, can)
+	})
+}
+
+func TestSavedFilterService_CanCreate(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	sfs := NewSavedFilterService(testEngine)
+
+	t.Run("regular user can create", func(t *testing.T) {
+		u := &user.User{ID: 1}
+		can, err := sfs.CanCreate(s, u)
+		assert.NoError(t, err)
+		assert.True(t, can)
+	})
+
+	t.Run("link share cannot create", func(t *testing.T) {
+		ls := &models.LinkSharing{ID: 1}
+		can, err := sfs.CanCreate(s, ls)
+		assert.NoError(t, err)
+		assert.False(t, can)
+	})
+}
+
+func TestSavedFilterService_CanUpdate(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	sfs := NewSavedFilterService(testEngine)
+
+	t.Run("owner can update", func(t *testing.T) {
+		u := &user.User{ID: 1}
+		can, err := sfs.CanUpdate(s, 1, u)
+		assert.NoError(t, err)
+		assert.True(t, can)
+	})
+
+	t.Run("non-owner cannot update", func(t *testing.T) {
+		u := &user.User{ID: 2}
+		can, err := sfs.CanUpdate(s, 1, u)
+		assert.NoError(t, err)
+		assert.False(t, can)
+	})
+}
+
+func TestSavedFilterService_CanDelete(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	sfs := NewSavedFilterService(testEngine)
+
+	t.Run("owner can delete", func(t *testing.T) {
+		u := &user.User{ID: 1}
+		can, err := sfs.CanDelete(s, 1, u)
+		assert.NoError(t, err)
+		assert.True(t, can)
+	})
+
+	t.Run("non-owner cannot delete", func(t *testing.T) {
+		u := &user.User{ID: 2}
+		can, err := sfs.CanDelete(s, 1, u)
+		assert.NoError(t, err)
+		assert.False(t, can)
+	})
 }

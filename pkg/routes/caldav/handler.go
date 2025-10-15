@@ -26,6 +26,7 @@ import (
 	"strings"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/services"
 
 	caldav2 "code.vikunja.io/api/pkg/caldav"
 	"code.vikunja.io/api/pkg/log"
@@ -193,17 +194,17 @@ func getProjectFromParam(c echo.Context) (project *models.ProjectWithTasksAndBuc
 	}
 
 	if intParam < models.FavoritesPseudoProjectID {
-		var sf *models.SavedFilter
-		sf, err = models.GetSavedFilterSimpleByID(s, models.GetSavedFilterIDFromProjectID(intParam))
+		sf, err := models.GetSavedFilterByIDFunc(s, models.GetSavedFilterIDFromProjectID(intParam))
 		if err != nil {
 			return nil, err
 		}
 
 		project = &models.ProjectWithTasksAndBuckets{Project: *sf.ToProject()}
-		return
+		return project, nil
 	}
 
-	p, err := models.GetProjectSimpleByID(s, intParam)
+	projectService := services.NewProjectService(db.GetEngine())
+	p, err := projectService.GetByIDSimple(s, intParam)
 	if err != nil {
 		return nil, err
 	}

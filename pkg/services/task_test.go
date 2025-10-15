@@ -128,6 +128,84 @@ func TestTaskService_Update(t *testing.T) {
 	})
 }
 
+func TestTaskService_GetByIDSimple(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	ts := NewTaskService(testEngine)
+
+	t.Run("Success", func(t *testing.T) {
+		task, err := ts.GetByIDSimple(s, 1)
+		require.NoError(t, err)
+		assert.NotNil(t, task)
+		assert.Equal(t, int64(1), task.ID)
+		assert.Equal(t, "task #1", task.Title)
+	})
+
+	t.Run("NotFound", func(t *testing.T) {
+		task, err := ts.GetByIDSimple(s, 9999)
+		assert.Error(t, err)
+		assert.True(t, models.IsErrTaskDoesNotExist(err))
+		assert.Nil(t, task)
+	})
+
+	t.Run("InvalidID", func(t *testing.T) {
+		task, err := ts.GetByIDSimple(s, 0)
+		assert.Error(t, err)
+		assert.True(t, models.IsErrTaskDoesNotExist(err))
+		assert.Nil(t, task)
+	})
+}
+
+func TestTaskService_GetByIDs(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	ts := NewTaskService(testEngine)
+
+	t.Run("MultipleIDs", func(t *testing.T) {
+		tasks, err := ts.GetByIDs(s, []int64{1, 2, 3})
+		require.NoError(t, err)
+		assert.Len(t, tasks, 3)
+		// Verify task IDs
+		taskIDs := make(map[int64]bool)
+		for _, task := range tasks {
+			taskIDs[task.ID] = true
+		}
+		assert.True(t, taskIDs[1])
+		assert.True(t, taskIDs[2])
+		assert.True(t, taskIDs[3])
+	})
+
+	t.Run("SingleID", func(t *testing.T) {
+		tasks, err := ts.GetByIDs(s, []int64{1})
+		require.NoError(t, err)
+		assert.Len(t, tasks, 1)
+		assert.Equal(t, int64(1), tasks[0].ID)
+	})
+
+	t.Run("EmptyIDs", func(t *testing.T) {
+		tasks, err := ts.GetByIDs(s, []int64{})
+		require.NoError(t, err)
+		assert.Len(t, tasks, 0)
+		assert.NotNil(t, tasks) // Should return empty slice, not nil
+	})
+
+	t.Run("NonExistentIDs", func(t *testing.T) {
+		tasks, err := ts.GetByIDs(s, []int64{9999, 8888})
+		require.NoError(t, err)
+		assert.Len(t, tasks, 0) // No tasks found, but no error
+	})
+
+	t.Run("MixedExistentAndNonExistent", func(t *testing.T) {
+		tasks, err := ts.GetByIDs(s, []int64{1, 9999, 2})
+		require.NoError(t, err)
+		assert.Len(t, tasks, 2) // Only existing tasks returned
+	})
+}
+
 func TestTaskService_GetByID(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
@@ -2213,4 +2291,3 @@ func TestTaskService_GetAllWithMultipleSortParameters(t *testing.T) {
 		})
 	}
 }
-

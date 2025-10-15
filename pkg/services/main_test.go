@@ -63,6 +63,7 @@ func TestMain(m *testing.M) {
 	InitKanbanService()
 	InitProjectDuplicateService()
 	InitAttachmentService()
+	InitCommentService() // T-PERM-011: Initialize comment service for tests
 
 	// Initialize testEngine for service tests
 	testEngine = db.GetEngine()

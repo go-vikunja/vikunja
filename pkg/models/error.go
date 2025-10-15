@@ -48,6 +48,31 @@ func (err ErrGenericForbidden) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusForbidden, Code: ErrorCodeGenericForbidden, Message: "You're not allowed to do this."}
 }
 
+// ErrPermissionDelegationNotInitialized represents an error when permission delegation functions are not initialized
+type ErrPermissionDelegationNotInitialized struct{}
+
+// IsErrPermissionDelegationNotInitialized checks if an error is a ErrPermissionDelegationNotInitialized.
+func IsErrPermissionDelegationNotInitialized(err error) bool {
+	_, ok := err.(ErrPermissionDelegationNotInitialized)
+	return ok
+}
+
+func (err ErrPermissionDelegationNotInitialized) Error() string {
+	return "Permission delegation not initialized - service layer initialization required"
+}
+
+// ErrorCodePermissionDelegationNotInitialized holds the unique world-error code of this error
+const ErrorCodePermissionDelegationNotInitialized = 0002
+
+// HTTPError holds the http error description
+func (err ErrPermissionDelegationNotInitialized) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusInternalServerError,
+		Code:     ErrorCodePermissionDelegationNotInitialized,
+		Message:  "Permission check delegation not initialized. Please contact the system administrator.",
+	}
+}
+
 // ===================
 // Empty things errors
 // ===================

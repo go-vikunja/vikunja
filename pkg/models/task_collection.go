@@ -292,7 +292,10 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 	// If the project id is < -1 this means we're dealing with a saved filter - in that case we get and populate the filter
 	// -1 is the favorites project which works as intended
 	if !tf.isSavedFilter && tf.ProjectID < -1 {
-		sf, err := GetSavedFilterSimpleByID(s, GetSavedFilterIDFromProjectID(tf.ProjectID))
+		if GetSavedFilterByIDFunc == nil {
+			panic("SavedFilterService not initialized - ensure services.InitializeDependencies() is called")
+		}
+		sf, err := GetSavedFilterByIDFunc(s, GetSavedFilterIDFromProjectID(tf.ProjectID))
 		if err != nil {
 			return nil, 0, 0, err
 		}
@@ -348,7 +351,10 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 	var view *ProjectView
 	var filteringForBucket bool
 	if tf.ProjectViewID != 0 {
-		view, err = GetProjectViewByIDAndProject(s, tf.ProjectViewID, tf.ProjectID)
+		if GetProjectViewByIDAndProjectFunc == nil {
+			panic("ProjectViewService not initialized - ensure services.InitializeDependencies() is called")
+		}
+		view, err = GetProjectViewByIDAndProjectFunc(s, tf.ProjectViewID, tf.ProjectID)
 		if err != nil {
 			return nil, 0, 0, err
 		}

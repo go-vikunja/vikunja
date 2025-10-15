@@ -50,8 +50,8 @@ func RegisterSubscriptions(a *echo.Group) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /subscriptions/{entity}/{entityID} [put]
 func createSubscriptionLogic(s *xorm.Session, u *user.User, c echo.Context) error {
-	// Parse entity type
-	entityType := c.Param("entity")
+	// Parse entity type from URL parameter
+	entityTypeStr := c.Param("entity")
 
 	// Parse entity ID
 	entityID, err := strconv.ParseInt(c.Param("entityID"), 10, 64)
@@ -59,10 +59,21 @@ func createSubscriptionLogic(s *xorm.Session, u *user.User, c echo.Context) erro
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid entity ID")
 	}
 
+	// Convert string entity type to enum
+	var entityType models.SubscriptionEntityType
+	switch entityTypeStr {
+	case "project":
+		entityType = models.SubscriptionEntityProject
+	case "task":
+		entityType = models.SubscriptionEntityTask
+	default:
+		return &models.ErrUnknownSubscriptionEntityType{EntityType: entityType}
+	}
+
 	// Create subscription object
 	subscription := &models.Subscription{
-		Entity:   entityType,
-		EntityID: entityID,
+		EntityType: entityType,
+		EntityID:   entityID,
 	}
 
 	// Use model's Create method (which delegates to service)

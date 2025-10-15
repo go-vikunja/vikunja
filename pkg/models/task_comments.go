@@ -59,6 +59,46 @@ var TaskCommentCreateFunc func(s *xorm.Session, comment *TaskComment, u *user.Us
 // TaskCommentUpdateFunc is the function variable for updating comments
 var TaskCommentUpdateFunc func(s *xorm.Session, comment *TaskComment, u *user.User) error
 
+// Permission functions - T-PERM-010
+var (
+	CommentCanReadFunc   func(s *xorm.Session, taskID int64, a web.Auth) (bool, int, error)
+	CommentCanCreateFunc func(s *xorm.Session, taskID int64, a web.Auth) (bool, error)
+	CommentCanUpdateFunc func(s *xorm.Session, commentID int64, taskID int64, a web.Auth) (bool, error)
+	CommentCanDeleteFunc func(s *xorm.Session, commentID int64, taskID int64, a web.Auth) (bool, error)
+)
+
+func getCommentService() CommentServiceProvider {
+	if CommentCanReadFunc == nil || CommentCanCreateFunc == nil || CommentCanUpdateFunc == nil || CommentCanDeleteFunc == nil {
+		panic("CommentService not initialized - call InitCommentService in test setup")
+	}
+	return commentServiceAdapter{}
+}
+
+type CommentServiceProvider interface {
+	CanRead(s *xorm.Session, taskID int64, a web.Auth) (bool, int, error)
+	CanCreate(s *xorm.Session, taskID int64, a web.Auth) (bool, error)
+	CanUpdate(s *xorm.Session, commentID int64, taskID int64, a web.Auth) (bool, error)
+	CanDelete(s *xorm.Session, commentID int64, taskID int64, a web.Auth) (bool, error)
+}
+
+type commentServiceAdapter struct{}
+
+func (c commentServiceAdapter) CanRead(s *xorm.Session, taskID int64, auth web.Auth) (bool, int, error) {
+	return CommentCanReadFunc(s, taskID, auth)
+}
+
+func (c commentServiceAdapter) CanCreate(s *xorm.Session, taskID int64, auth web.Auth) (bool, error) {
+	return CommentCanCreateFunc(s, taskID, auth)
+}
+
+func (c commentServiceAdapter) CanUpdate(s *xorm.Session, commentID int64, taskID int64, auth web.Auth) (bool, error) {
+	return CommentCanUpdateFunc(s, commentID, taskID, auth)
+}
+
+func (c commentServiceAdapter) CanDelete(s *xorm.Session, commentID int64, taskID int64, auth web.Auth) (bool, error) {
+	return CommentCanDeleteFunc(s, commentID, taskID, auth)
+}
+
 // TaskCommentDeleteFunc is the function variable for deleting comments
 var TaskCommentDeleteFunc func(s *xorm.Session, commentID int64, u *user.User) error
 
@@ -381,4 +421,47 @@ func getAllCommentsForTasksWithoutPermissionCheck(s *xorm.Session, taskIDs []int
 	}
 	numberOfTotalItems, err = totalItemsQuery.Count(&TaskCommentWithAuthor{})
 	return comments, len(comments), numberOfTotalItems, err
+}
+
+// ===== Permission Methods =====
+// These methods delegate to the service layer via function pointers
+
+// CanRead checks if the user can read a comment
+func (tc *TaskComment) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
+	if CheckTaskCommentReadFunc == nil {
+		return false, 0, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckTaskCommentReadFunc(s, tc.ID, a)
+}
+
+// CanWrite checks if the user can write to a comment
+func (tc *TaskComment) CanWrite(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckTaskCommentWriteFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckTaskCommentWriteFunc(s, tc.ID, a)
+}
+
+// CanUpdate checks if the user can update a comment
+func (tc *TaskComment) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckTaskCommentUpdateFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckTaskCommentUpdateFunc(s, tc, a)
+}
+
+// CanDelete checks if the user can delete a comment
+func (tc *TaskComment) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckTaskCommentDeleteFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckTaskCommentDeleteFunc(s, tc, a)
+}
+
+// CanCreate checks if the user can create a comment
+func (tc *TaskComment) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckTaskCommentCreateFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckTaskCommentCreateFunc(s, tc, a)
 }

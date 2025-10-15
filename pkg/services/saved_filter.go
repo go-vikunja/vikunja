@@ -19,6 +19,7 @@ package services
 import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/web"
 	"xorm.io/builder"
 	"xorm.io/xorm"
 )
@@ -38,6 +39,35 @@ func InitSavedFilterService() {
 		sfs := NewSavedFilterService(s.Engine())
 		return sfs.Delete(s, filterID, u)
 	}
+	models.GetSavedFilterByIDFunc = func(s *xorm.Session, id int64) (*models.SavedFilter, error) {
+		sfs := NewSavedFilterService(s.Engine())
+		return sfs.GetByIDSimple(s, id)
+	}
+	// Register permission delegation
+	models.RegisterSavedFilterService(&savedFilterServiceDelegator{})
+}
+
+// savedFilterServiceDelegator implements SavedFilterServiceProvider for dependency injection
+type savedFilterServiceDelegator struct{}
+
+func (d *savedFilterServiceDelegator) CanRead(s *xorm.Session, filterID int64, a web.Auth) (bool, int, error) {
+	sfs := NewSavedFilterService(s.Engine())
+	return sfs.CanRead(s, filterID, a)
+}
+
+func (d *savedFilterServiceDelegator) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	sfs := NewSavedFilterService(s.Engine())
+	return sfs.CanCreate(s, a)
+}
+
+func (d *savedFilterServiceDelegator) CanUpdate(s *xorm.Session, filterID int64, a web.Auth) (bool, error) {
+	sfs := NewSavedFilterService(s.Engine())
+	return sfs.CanUpdate(s, filterID, a)
+}
+
+func (d *savedFilterServiceDelegator) CanDelete(s *xorm.Session, filterID int64, a web.Auth) (bool, error) {
+	sfs := NewSavedFilterService(s.Engine())
+	return sfs.CanDelete(s, filterID, a)
 }
 
 // SavedFilterService represents a service for managing saved filters.
@@ -71,6 +101,23 @@ func (sfs *SavedFilterService) Get(s *xorm.Session, filterID int64, u *user.User
 	}
 
 	sf.Owner = u
+	return sf, nil
+}
+
+// GetByIDSimple gets a saved filter by its ID without permission checks.
+// MIGRATION: This is a simple lookup helper migrated from models layer (T-PERM-004).
+// No permission checks are performed - use Get() for permission-aware retrieval.
+func (sfs *SavedFilterService) GetByIDSimple(s *xorm.Session, id int64) (*models.SavedFilter, error) {
+	sf := &models.SavedFilter{}
+	exists, err := s.
+		Where("id = ?", id).
+		Get(sf)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, models.ErrSavedFilterDoesNotExist{SavedFilterID: id}
+	}
 	return sf, nil
 }
 
@@ -241,4 +288,50 @@ func (sfs *SavedFilterService) Delete(s *xorm.Session, filterID int64, u *user.U
 		Where("id = ?", filterID).
 		Delete(&models.SavedFilter{})
 	return err
+}
+
+// CanRead checks if a user has permission to read a saved filter
+func (sfs *SavedFilterService) CanRead(s *xorm.Session, filterID int64, a web.Auth) (bool, int, error) {
+	can, err := sfs.canDoFilter(s, filterID, a)
+	return can, int(models.PermissionAdmin), err
+}
+
+// CanCreate checks if a user has permission to create a saved filter
+func (sfs *SavedFilterService) CanCreate(_ *xorm.Session, a web.Auth) (bool, error) {
+	// Link shares can't create saved filters
+	if _, is := a.(*models.LinkSharing); is {
+		return false, nil
+	}
+	return true, nil
+}
+
+// CanUpdate checks if a user has permission to update a saved filter
+func (sfs *SavedFilterService) CanUpdate(s *xorm.Session, filterID int64, a web.Auth) (bool, error) {
+	return sfs.canDoFilter(s, filterID, a)
+}
+
+// CanDelete checks if a user has permission to delete a saved filter
+func (sfs *SavedFilterService) CanDelete(s *xorm.Session, filterID int64, a web.Auth) (bool, error) {
+	return sfs.canDoFilter(s, filterID, a)
+}
+
+// canDoFilter is a helper function to check saved filter permissions
+func (sfs *SavedFilterService) canDoFilter(s *xorm.Session, filterID int64, a web.Auth) (bool, error) {
+	// Link shares can't view or modify saved filters
+	if _, is := a.(*models.LinkSharing); is {
+		return false, nil
+	}
+
+	// Get the saved filter
+	sf := &models.SavedFilter{}
+	exists, err := s.Where("id = ?", filterID).Get(sf)
+	if err != nil {
+		return false, err
+	}
+	if !exists {
+		return false, nil
+	}
+
+	// Only owners are allowed to do something with a saved filter
+	return sf.OwnerID == a.GetID(), nil
 }

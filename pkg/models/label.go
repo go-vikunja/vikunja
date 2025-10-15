@@ -32,6 +32,7 @@ type LabelServiceProvider func() interface {
 	Update(s *xorm.Session, label *Label, u *user.User) error
 	Delete(s *xorm.Session, label *Label, u *user.User) error
 	GetAll(s *xorm.Session, u *user.User, search string, page int, perPage int) (interface{}, int, int64, error)
+	GetByID(s *xorm.Session, labelID int64) (*Label, error)
 }
 
 // labelServiceProvider is the registered service provider function
@@ -49,6 +50,7 @@ func getLabelService() interface {
 	Update(s *xorm.Session, label *Label, u *user.User) error
 	Delete(s *xorm.Session, label *Label, u *user.User) error
 	GetAll(s *xorm.Session, u *user.User, search string, page int, perPage int) (interface{}, int, int64, error)
+	GetByID(s *xorm.Session, labelID int64) (*Label, error)
 } {
 	if labelServiceProvider == nil {
 		panic("LabelService not registered - did you forget to call services.InitializeDependencies()?")
@@ -188,7 +190,8 @@ func (l *Label) ReadAll(s *xorm.Session, a web.Auth, search string, page int, pe
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /labels/{id} [get]
 func (l *Label) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
-	label, err := getLabelByIDSimple(s, l.ID)
+	ls := getLabelService()
+	label, err := ls.GetByID(s, l.ID)
 	if err != nil {
 		return
 	}
@@ -203,10 +206,6 @@ func (l *Label) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
 	return
 }
 
-func getLabelByIDSimple(s *xorm.Session, labelID int64) (*Label, error) {
-	return GetLabelSimple(s, &Label{ID: labelID})
-}
-
 func GetLabelSimple(s *xorm.Session, l *Label) (*Label, error) {
 	exists, err := s.Get(l)
 	if err != nil {
@@ -216,4 +215,47 @@ func GetLabelSimple(s *xorm.Session, l *Label) (*Label, error) {
 		return &Label{}, ErrLabelDoesNotExist{l.ID}
 	}
 	return l, err
+}
+
+// ===== Permission Methods =====
+// These methods delegate to the service layer via function pointers
+
+// CanRead checks if the user can read a label
+func (l *Label) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
+	if CheckLabelReadFunc == nil {
+		return false, 0, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckLabelReadFunc(s, l.ID, a)
+}
+
+// CanWrite checks if the user can write to a label
+func (l *Label) CanWrite(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckLabelWriteFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckLabelWriteFunc(s, l.ID, a)
+}
+
+// CanUpdate checks if the user can update a label
+func (l *Label) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckLabelUpdateFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckLabelUpdateFunc(s, l.ID, a)
+}
+
+// CanDelete checks if the user can delete a label
+func (l *Label) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckLabelDeleteFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckLabelDeleteFunc(s, l.ID, a)
+}
+
+// CanCreate checks if the user can create a label
+func (l *Label) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckLabelCreateFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckLabelCreateFunc(s, l, a)
 }

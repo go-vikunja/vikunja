@@ -21,6 +21,7 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -31,8 +32,7 @@ func TestProjectDuplicateService_NewProjectDuplicateService(t *testing.T) {
 
 	assert.NotNil(t, service)
 	assert.NotNil(t, service.DB)
-	assert.NotNil(t, service.ProjectService)
-	assert.NotNil(t, service.TaskService)
+	assert.NotNil(t, service.Registry)
 }
 
 func TestProjectDuplicateService_Duplicate(t *testing.T) {
@@ -180,5 +180,48 @@ func TestProjectDuplicateService_duplicateProjectMetadata(t *testing.T) {
 
 		// This should work since User 1 has access to both projects
 		assert.NoError(t, err)
+	})
+}
+
+func TestProjectDuplicateService_CanCreate(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	service := NewProjectDuplicateService(testEngine)
+
+	t.Run("owner with read access can duplicate", func(t *testing.T) {
+		u := &user.User{ID: 1} // Owner of project 1
+		can, err := service.CanCreate(s, 1, 0, u)
+		assert.NoError(t, err)
+		assert.True(t, can)
+	})
+
+	t.Run("user with read access can duplicate to parent they have write access to", func(t *testing.T) {
+		u := &user.User{ID: 6} // Has write access to project 7 and read to project 6
+		can, err := service.CanCreate(s, 6, 7, u)
+		assert.NoError(t, err)
+		assert.True(t, can)
+	})
+
+	t.Run("user without read access cannot duplicate", func(t *testing.T) {
+		u := &user.User{ID: 13} // No access to project 1
+		can, err := service.CanCreate(s, 1, 0, u)
+		assert.NoError(t, err)
+		assert.False(t, can)
+	})
+
+	t.Run("user cannot duplicate to parent they don't have write access to", func(t *testing.T) {
+		u := &user.User{ID: 3} // Has read-only access to project 1
+		can, err := service.CanCreate(s, 1, 2, u)
+		assert.NoError(t, err)
+		assert.False(t, can)
+	})
+
+	t.Run("link share cannot duplicate", func(t *testing.T) {
+		ls := &models.LinkSharing{ID: 1}
+		can, err := service.CanCreate(s, 1, 0, ls)
+		assert.NoError(t, err)
+		assert.False(t, can)
 	})
 }

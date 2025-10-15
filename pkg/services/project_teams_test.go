@@ -25,13 +25,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// testUserAuth implements web.Auth for testing
-type testUserAuth struct {
-	id int64
-}
-
-func (a *testUserAuth) GetID() int64 { return a.id }
-
 func TestProjectTeamService_Create(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 
@@ -46,7 +39,7 @@ func TestProjectTeamService_Create(t *testing.T) {
 			ProjectID:  1,
 			Permission: models.PermissionAdmin,
 		}
-		doer := &testUserAuth{id: 1}
+		doer := &user.User{ID: 1}
 
 		err := service.Create(s, tp, doer)
 		assert.NoError(t, err)
@@ -70,7 +63,7 @@ func TestProjectTeamService_Create(t *testing.T) {
 			ProjectID:  3, // team1 already has access to project 3
 			Permission: models.PermissionAdmin,
 		}
-		doer := &testUserAuth{id: 1}
+		doer := &user.User{ID: 1}
 
 		err := service.Create(s, tp, doer)
 		assert.Error(t, err)
@@ -86,7 +79,7 @@ func TestProjectTeamService_Create(t *testing.T) {
 			ProjectID:  1,
 			Permission: 500, // Invalid permission
 		}
-		doer := &testUserAuth{id: 1}
+		doer := &user.User{ID: 1}
 
 		err := service.Create(s, tp, doer)
 		assert.Error(t, err)
@@ -101,7 +94,7 @@ func TestProjectTeamService_Create(t *testing.T) {
 			TeamID:    9999,
 			ProjectID: 1,
 		}
-		doer := &testUserAuth{id: 1}
+		doer := &user.User{ID: 1}
 
 		err := service.Create(s, tp, doer)
 		assert.Error(t, err)
@@ -116,7 +109,7 @@ func TestProjectTeamService_Create(t *testing.T) {
 			TeamID:    1,
 			ProjectID: 9999,
 		}
-		doer := &testUserAuth{id: 1}
+		doer := &user.User{ID: 1}
 
 		err := service.Create(s, tp, doer)
 		assert.Error(t, err)
@@ -186,7 +179,8 @@ func TestProjectTeamService_GetAll(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		teams, count, total, err := service.GetAll(s, 3, &testUserAuth{id: 1}, "", 0, 50)
+		u := &user.User{ID: 1}
+		teams, count, total, err := service.GetAll(s, 3, u, "", 0, 50)
 		assert.NoError(t, err)
 		assert.Equal(t, 1, count, "Should have 1 team")
 		assert.Equal(t, int64(1), total, "Should have total count of 1")

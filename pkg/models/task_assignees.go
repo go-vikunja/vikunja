@@ -158,6 +158,22 @@ func (t *Task) setTaskAssignees(assignees []*user.User) {
 	t.Assignees = assignees
 }
 
+// CanCreate checks if a user can add a new assignee
+func (la *TaskAssginee) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckTaskAssigneeCreateFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckTaskAssigneeCreateFunc(s, la, a)
+}
+
+// CanDelete checks if a user can delete an assignee
+func (la *TaskAssginee) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckTaskAssigneeDeleteFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckTaskAssigneeDeleteFunc(s, la, a)
+}
+
 // Delete a task assignee
 // @Summary Delete an assignee
 // @Description Un-assign a user from a task.
@@ -358,6 +374,16 @@ type BulkAssignees struct {
 
 	web.CRUDable    `json:"-"`
 	web.Permissions `json:"-"`
+}
+
+// CanCreate checks if a user can bulk update assignees
+func (ba *BulkAssignees) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	// Check if the current user can edit the project
+	project, err := GetProjectSimpleByTaskID(s, ba.TaskID)
+	if err != nil {
+		return false, err
+	}
+	return project.CanUpdate(s, a)
 }
 
 // Create adds new assignees to a task

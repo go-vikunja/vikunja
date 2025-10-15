@@ -32,7 +32,8 @@ func TestProjectService_Update_ValidateTitle(t *testing.T) {
 	s := db.NewSession()
 	defer s.Close()
 
-	ps := &ProjectService{DB: db.GetEngine()}
+	registry := NewServiceRegistry(db.GetEngine())
+	ps := registry.Project()
 	u := &user.User{ID: 1}
 
 	t.Run("should reject empty title", func(t *testing.T) {

@@ -42,7 +42,39 @@ var (
 
 	// AttachmentDeleteFunc is the injected function for deleting attachments
 	AttachmentDeleteFunc func(s *xorm.Session, attachmentID int64, taskID int64, u *user.User) error
+
+	// Permission functions - T-PERM-010
+	AttachmentCanReadFunc   func(s *xorm.Session, taskID int64, a web.Auth) (bool, int, error)
+	AttachmentCanCreateFunc func(s *xorm.Session, taskID int64, a web.Auth) (bool, error)
+	AttachmentCanDeleteFunc func(s *xorm.Session, taskID int64, a web.Auth) (bool, error)
 )
+
+func getAttachmentService() AttachmentServiceProvider {
+	if AttachmentCanReadFunc == nil || AttachmentCanCreateFunc == nil || AttachmentCanDeleteFunc == nil {
+		panic("AttachmentService not initialized - call InitAttachmentService in test setup")
+	}
+	return attachmentServiceAdapter{}
+}
+
+type AttachmentServiceProvider interface {
+	CanRead(s *xorm.Session, taskID int64, a web.Auth) (bool, int, error)
+	CanCreate(s *xorm.Session, taskID int64, a web.Auth) (bool, error)
+	CanDelete(s *xorm.Session, taskID int64, a web.Auth) (bool, error)
+}
+
+type attachmentServiceAdapter struct{}
+
+func (a attachmentServiceAdapter) CanRead(s *xorm.Session, taskID int64, auth web.Auth) (bool, int, error) {
+	return AttachmentCanReadFunc(s, taskID, auth)
+}
+
+func (a attachmentServiceAdapter) CanCreate(s *xorm.Session, taskID int64, auth web.Auth) (bool, error) {
+	return AttachmentCanCreateFunc(s, taskID, auth)
+}
+
+func (a attachmentServiceAdapter) CanDelete(s *xorm.Session, taskID int64, auth web.Auth) (bool, error) {
+	return AttachmentCanDeleteFunc(s, taskID, auth)
+}
 
 // TaskAttachment is the definition of a task attachment
 type TaskAttachment struct {

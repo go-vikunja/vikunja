@@ -157,8 +157,8 @@ func TestTaskServiceBasicFunctionality(t *testing.T) {
 		t.Error("NewTaskService() returned nil")
 	}
 
-	if ts.FavoriteService == nil {
-		t.Error("TaskService.FavoriteService not initialized")
+	if ts.Registry == nil {
+		t.Error("TaskService.Registry not initialized")
 	}
 }
 

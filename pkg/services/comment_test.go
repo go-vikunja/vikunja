@@ -16,7 +16,8 @@ func TestCommentPermissions(t *testing.T) {
 	s := db.NewSession()
 	defer s.Close()
 
-	service := &CommentService{DB: db.GetEngine()}
+	registry := NewServiceRegistry(db.GetEngine())
+	service := registry.Comment()
 
 	t.Run("read returns max permission for project owner", func(t *testing.T) {
 		perms := service.Can(s, &models.TaskComment{TaskID: 1}, &user.User{ID: 1})
@@ -380,5 +381,136 @@ func TestCommentService_AddCommentsToTasks(t *testing.T) {
 
 		err := service.AddCommentsToTasks(s, taskIDs, taskMap)
 		require.NoError(t, err)
+	})
+}
+
+// ===== Comment Permission Tests (T-PERM-010) =====
+
+func TestCommentService_CanRead(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	cs := NewCommentService(db.GetEngine())
+
+	t.Run("UserWithTaskReadPermission_CanRead", func(t *testing.T) {
+		// User 1 can read task 1
+		u := &user.User{ID: 1}
+		can, maxRight, err := cs.CanRead(s, 1, u)
+
+		require.NoError(t, err)
+		assert.True(t, can)
+		assert.Greater(t, maxRight, 0)
+	})
+
+	t.Run("UserWithoutTaskPermission_CannotRead", func(t *testing.T) {
+		// User 13 cannot read task 1
+		u := &user.User{ID: 13}
+		can, maxRight, err := cs.CanRead(s, 1, u)
+
+		require.NoError(t, err)
+		assert.False(t, can)
+		assert.Equal(t, 0, maxRight)
+	})
+}
+
+func TestCommentService_CanCreate(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	cs := NewCommentService(db.GetEngine())
+
+	t.Run("UserWithTaskWritePermission_CanCreate", func(t *testing.T) {
+		// User 1 can write to task 1
+		u := &user.User{ID: 1}
+		can, err := cs.CanCreate(s, 1, u)
+
+		require.NoError(t, err)
+		assert.True(t, can)
+	})
+
+	t.Run("UserWithOnlyReadPermission_CannotCreate", func(t *testing.T) {
+		// User 1 has only read permission on project 6
+		u := &user.User{ID: 1}
+		can, err := cs.CanCreate(s, 15, u) // Task 15 is in project 6
+
+		require.NoError(t, err)
+		assert.False(t, can)
+	})
+
+	t.Run("UserWithoutPermission_CannotCreate", func(t *testing.T) {
+		// User 13 has no permission on task 1
+		u := &user.User{ID: 13}
+		can, err := cs.CanCreate(s, 1, u)
+
+		require.NoError(t, err)
+		assert.False(t, can)
+	})
+}
+
+func TestCommentService_CanUpdate(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	cs := NewCommentService(db.GetEngine())
+
+	t.Run("CommentAuthorWithTaskWritePermission_CanUpdate", func(t *testing.T) {
+		// User 1 is the author of comment 1 and has write permission on task 1
+		u := &user.User{ID: 1}
+		can, err := cs.CanUpdate(s, 1, 1, u)
+
+		require.NoError(t, err)
+		assert.True(t, can)
+	})
+
+	t.Run("NonAuthorWithTaskWritePermission_CannotUpdate", func(t *testing.T) {
+		// User 2 is not the author of comment 1 (even with write permission)
+		u := &user.User{ID: 2}
+		can, err := cs.CanUpdate(s, 1, 1, u)
+
+		require.NoError(t, err)
+		assert.False(t, can)
+	})
+
+	t.Run("UserWithoutTaskWritePermission_CannotUpdate", func(t *testing.T) {
+		// User 1 has only read permission on project 6
+		u := &user.User{ID: 1}
+		can, err := cs.CanUpdate(s, 2, 15, u) // Comment 2 on task 15 (project 6)
+
+		require.NoError(t, err)
+		assert.False(t, can)
+	})
+}
+
+func TestCommentService_CanDelete(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	cs := NewCommentService(db.GetEngine())
+
+	t.Run("CommentAuthorWithTaskWritePermission_CanDelete", func(t *testing.T) {
+		// User 1 is the author of comment 1 and has write permission on task 1
+		u := &user.User{ID: 1}
+		can, err := cs.CanDelete(s, 1, 1, u)
+
+		require.NoError(t, err)
+		assert.True(t, can)
+	})
+
+	t.Run("NonAuthorWithTaskWritePermission_CannotDelete", func(t *testing.T) {
+		// User 2 is not the author of comment 1
+		u := &user.User{ID: 2}
+		can, err := cs.CanDelete(s, 1, 1, u)
+
+		require.NoError(t, err)
+		assert.False(t, can)
+	})
+
+	t.Run("UserWithoutTaskWritePermission_CannotDelete", func(t *testing.T) {
+		// User 1 has only read permission on project 6
+		u := &user.User{ID: 1}
+		can, err := cs.CanDelete(s, 2, 15, u)
+
+		require.NoError(t, err)
+		assert.False(t, can)
 	})
 }
