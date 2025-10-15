@@ -252,8 +252,8 @@ importers:
         specifier: 10.5.0
         version: 10.5.0(@typescript-eslint/parser@8.46.1(eslint@9.37.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.37.0(jiti@2.4.2))(vue-eslint-parser@10.2.0(eslint@9.37.0(jiti@2.4.2)))
       happy-dom:
-        specifier: 20.0.0
-        version: 20.0.0
+        specifier: 20.0.2
+        version: 20.0.2
       histoire:
         specifier: 1.0.0-alpha.3
         version: 1.0.0-alpha.3(@types/node@22.18.10)(sass-embedded@1.93.2)(sass@1.93.2)(terser@5.31.6)(vite@7.1.9(@types/node@22.18.10)(jiti@2.4.2)(sass-embedded@1.93.2)(sass@1.93.2)(terser@5.31.6)(yaml@2.5.0))(yaml@2.5.0)
@@ -316,7 +316,7 @@ importers:
         version: 5.1.0(vue@3.5.22(typescript@5.9.3))
       vitest:
         specifier: 3.2.4
-        version: 3.2.4(@types/node@22.18.10)(happy-dom@20.0.0)(jiti@2.4.2)(jsdom@25.0.1)(sass-embedded@1.93.2)(sass@1.93.2)(terser@5.31.6)(yaml@2.5.0)
+        version: 3.2.4(@types/node@22.18.10)(happy-dom@20.0.2)(jiti@2.4.2)(jsdom@25.0.1)(sass-embedded@1.93.2)(sass@1.93.2)(terser@5.31.6)(yaml@2.5.0)
       vue-tsc:
         specifier: 3.1.1
         version: 3.1.1(typescript@5.9.3)
@@ -4064,8 +4064,8 @@ packages:
     resolution: {integrity: sha512-5v6yZd4JK3eMI3FqqCouswVqwugaA9r4dNZB1wwcmrD02QkV5H0y7XBQW8QwQqEaZY1pM9aqORSORhJRdNK44Q==}
     engines: {node: '>=6.0'}
 
-  happy-dom@20.0.0:
-    resolution: {integrity: sha512-GkWnwIFxVGCf2raNrxImLo397RdGhLapj5cT3R2PT7FwL62Ze1DROhzmYW7+J3p9105DYMVenEejEbnq5wA37w==}
+  happy-dom@20.0.2:
+    resolution: {integrity: sha512-pYOyu624+6HDbY+qkjILpQGnpvZOusItCk+rvF5/V+6NkcgTKnbOldpIy22tBnxoaLtlM9nXgoqAcW29/B7CIw==}
     engines: {node: '>=20.0.0'}
 
   hard-rejection@2.1.0:
@@ -11300,7 +11300,7 @@ snapshots:
       section-matter: 1.0.0
       strip-bom-string: 1.0.0
 
-  happy-dom@20.0.0:
+  happy-dom@20.0.2:
     dependencies:
       '@types/node': 20.19.0
       '@types/whatwg-mimetype': 3.0.2
@@ -14161,7 +14161,7 @@ snapshots:
       terser: 5.31.6
       yaml: 2.5.0
 
-  vitest@3.2.4(@types/node@22.18.10)(happy-dom@20.0.0)(jiti@2.4.2)(jsdom@25.0.1)(sass-embedded@1.93.2)(sass@1.93.2)(terser@5.31.6)(yaml@2.5.0):
+  vitest@3.2.4(@types/node@22.18.10)(happy-dom@20.0.2)(jiti@2.4.2)(jsdom@25.0.1)(sass-embedded@1.93.2)(sass@1.93.2)(terser@5.31.6)(yaml@2.5.0):
     dependencies:
       '@types/chai': 5.2.2
       '@vitest/expect': 3.2.4
@@ -14188,7 +14188,7 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 22.18.10
-      happy-dom: 20.0.0
+      happy-dom: 20.0.2
       jsdom: 25.0.1
     transitivePeerDependencies:
       - jiti
