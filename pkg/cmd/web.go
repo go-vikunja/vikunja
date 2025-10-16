@@ -22,6 +22,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"syscall"
 	"path/filepath"
 	"strings"
 	"time"
@@ -38,6 +39,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/acme/autocert"
+	"github.com/getsentry/sentry-go"
 )
 
 func init() {
@@ -150,17 +152,28 @@ var webCmd = &cobra.Command{
 			}
 		}()
 
-		// Wait for interrupt signal to gracefully shut down the server with
-		// a timeout of 10 seconds.
+		// Wait for interrupt or terminate signal to gracefully shut down the server.
 		quit := make(chan os.Signal, 1)
-		signal.Notify(quit, os.Interrupt)
+		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 		<-quit
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+
+		// Use configurable shutdown timeout (seconds). Default configured in config.InitDefaultConfig().
+		timeoutSeconds := config.ServiceShutdownTimeout.GetInt()
+		if timeoutSeconds <= 0 {
+			timeoutSeconds = 30
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutSeconds)*time.Second)
 		defer cancel()
 		log.Infof("Shutting down...")
 		if err := e.Shutdown(ctx); err != nil {
 			e.Logger.Fatal(err)
 		}
+
+		// Ensure Sentry flushes any pending events before exit if enabled
+		if config.SentryEnabled.GetBool() {
+			sentry.Flush(5 * time.Second)
+		}
+
 		cron.Stop()
 		plugins.Shutdown()
 	},
