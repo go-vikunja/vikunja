@@ -807,6 +807,18 @@
       "noTasks": "Nothing to do — Have a nice day!",
       "sortBy": "Sort by"
     },
+    "sort": {
+      "earliestFirst": "Earliest First",
+      "latestFirst": "Latest First",
+      "lowPriorityFirst": "Low Priority First",
+      "highPriorityFirst": "High Priority First",
+      "aToZ": "A to Z",
+      "zToA": "Z to A",
+      "undoneFirst": "Undone First",
+      "doneFirst": "Done First",
+      "firstToLast": "First to Last",
+      "lastToFirst": "Last to First"
+    },
     "detail": {
       "chooseDueDate": "Click here to set a due date",
       "chooseStartDate": "Click here to set a start date",
@@ -868,7 +880,8 @@
       "startDate": "Start Date",
       "title": "Title",
       "updated": "Updated",
-      "doneAt": "Done At"
+      "doneAt": "Done At",
+      "position": "Position"
     },
     "subscription": {
       "subscribedTaskThroughParentProject": "You can't unsubscribe here because you are subscribed to this task through its project.",

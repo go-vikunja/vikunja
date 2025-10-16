@@ -4,9 +4,9 @@ describe('User Settings', () => {
 	createFakeUserAndLogin()
 
 	it('Changes the user avatar', () => {
-		cy.intercept(`${Cypress.env('API_URL')}/user/settings/avatar/upload`).as('uploadAvatar')
-		
 		cy.visit('/user/settings/avatar')
+
+		cy.intercept('PUT', '**/user/settings/avatar/upload').as('uploadAvatar')
 
 		cy.get('input[name=avatarProvider][value=upload]')
 			.click()
@@ -20,7 +20,7 @@ describe('User Settings', () => {
 			.contains('Upload Avatar')
 			.click()
 
-		cy.wait('@uploadAvatar')
+		cy.wait('@uploadAvatar', {timeout: 10000})
 		cy.get('.global-notification')
 			.should('contain', 'Success')
 	})

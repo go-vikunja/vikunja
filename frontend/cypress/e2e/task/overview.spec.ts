@@ -149,19 +149,18 @@ describe('Home Page Task Overview', () => {
 			.should('not.contain.text', 'Or import your projects and tasks from other services into Vikunja:')
 	})
 
-	it('Should show sort controls on the overview page', () => {
+	it('Should show Filters button with sort controls on the overview page', () => {
 		seedTasks()
 
 		cy.visit('/')
 
-		cy.get('.title-container .sort-container')
+		cy.get('.title-container .filter-container button')
+			.contains('Filters')
 			.should('exist')
 			.should('be.visible')
-		cy.get('.title-container .sort-container button')
-			.should('have.length', 2)
 	})
 
-	it('Should toggle between due date and priority sorting', () => {
+	it('Should change sort field using filter modal', () => {
 		const now = new Date()
 		const project = ProjectFactory.create()[0]
 		const views = createDefaultViews(project.id)
@@ -176,95 +175,144 @@ describe('Home Page Task Overview', () => {
 				project_id: project.id,
 				title: 'Low Priority Soon',
 				priority: 1,
+				done: false,
 				due_date: new Date(now.getTime() + 86400000).toISOString(), // tomorrow
 				created: now.toISOString(),
 				updated: now.toISOString(),
+				created_by_id: 1,
 			},
 			{
 				id: 2,
 				project_id: project.id,
 				title: 'High Priority Later',
 				priority: 5,
+				done: false,
 				due_date: new Date(now.getTime() + 172800000).toISOString(), // 2 days
 				created: now.toISOString(),
 				updated: now.toISOString(),
+				created_by_id: 1,
 			},
 		]
 		seed(TaskFactory.table, tasks)
 
 		cy.visit('/')
 
-		// Default: sorted by due date (ascending)
+		// Default: sorted by due date (earliest first)
 		cy.get('[data-cy="showTasks"] .card .task')
 			.first()
 			.should('contain.text', 'Low Priority Soon')
 
-		// Click to sort by priority
-		cy.get('.title-container .sort-container button')
-			.first()
+		// Open filter modal and change to priority sorting
+		cy.get('.title-container .filter-container button')
+			.contains('Filters')
 			.click()
 
-		// Should now be sorted by priority (ascending, so low priority first)
+		cy.get('.filter-popup')
+			.should('be.visible')
+
+		cy.get('.filter-popup .select select')
+			.should('be.visible')
+			.select('priority')
+
+		cy.get('.filter-popup button')
+			.contains('Show results')
+			.click()
+
+		// Should now be sorted by priority (low priority first)
 		cy.get('[data-cy="showTasks"] .card .task')
 			.first()
 			.should('contain.text', 'Low Priority Soon')
 	})
 
-	it('Should toggle between ascending and descending order', () => {
+	it('Should toggle sort order with context-specific labels', () => {
 		const taskCount = 3
 		const {tasks} = seedTasks(taskCount)
 
 		cy.visit('/')
 
-		// Default: ascending order (earliest due date first)
-		cy.get('[data-cy="showTasks"] .card .task')
-			.first()
-			.should('contain.text', tasks[0].title)
-
-		// Click to toggle to descending
-		cy.get('.title-container .sort-container button')
-			.last()
+		// Open filter modal
+		cy.get('.title-container .filter-container button')
+			.contains('Filters')
 			.click()
 
-		// Should now be in descending order (latest due date first)
+		cy.get('.filter-popup')
+			.should('be.visible')
+
+		// Default: earliest first (ascending order for dates)
+		// Find the sort field and get its button
+		cy.get('.filter-popup .field')
+			.contains('label', 'Sort by')
+			.parent()
+			.find('.has-addons .button')
+			.should('contain.text', 'Earliest First')
+
+		// Click to toggle to descending (latest first)
+		cy.get('.filter-popup .field')
+			.contains('label', 'Sort by')
+			.parent()
+			.find('.has-addons .button')
+			.click()
+
+		cy.get('.filter-popup .field')
+			.contains('label', 'Sort by')
+			.parent()
+			.find('.has-addons .button')
+			.should('contain.text', 'Latest First')
+
+		cy.get('.filter-popup button')
+			.contains('Show results')
+			.click()
+
+		// Should show tasks in reverse order
 		cy.get('[data-cy="showTasks"] .card .task')
 			.first()
 			.should('contain.text', tasks[taskCount - 1].title)
 
-		// Click again to toggle back to ascending
-		cy.get('.title-container .sort-container button')
-			.last()
+		// Reopen modal and toggle back to ascending
+		cy.get('.title-container .filter-container button')
+			.contains('Filters')
 			.click()
 
-		// Should be back to ascending order
+		cy.get('.filter-popup')
+			.should('be.visible')
+
+		cy.get('.filter-popup .field')
+			.contains('label', 'Sort by')
+			.parent()
+			.find('.has-addons .button')
+			.should('contain.text', 'Latest First')
+			.click()
+
+		cy.get('.filter-popup .field')
+			.contains('label', 'Sort by')
+			.parent()
+			.find('.has-addons .button')
+			.should('contain.text', 'Earliest First')
+
+		cy.get('.filter-popup button')
+			.contains('Show results')
+			.click()
+
 		cy.get('[data-cy="showTasks"] .card .task')
 			.first()
 			.should('contain.text', tasks[0].title)
 	})
 
-	it('Should persist sort preferences in URL', () => {
+	it('Should not show position sort option in overview', () => {
 		seedTasks()
 
 		cy.visit('/')
 
-		// Change to priority sorting
-		cy.get('.title-container .sort-container button')
-			.first()
+		// Open filter modal
+		cy.get('.title-container .filter-container button')
+			.contains('Filters')
 			.click()
 
-		cy.url().should('include', 'sortBy=priority')
+		cy.get('.filter-popup')
+			.should('be.visible')
 
-		// Change to descending order
-		cy.get('.title-container .sort-container button')
-			.last()
-			.click()
-
-		cy.url().should('include', 'sortOrder=desc')
-
-		// Refresh page and verify settings persist
-		cy.reload()
-
-		cy.url().should('include', 'sortBy=priority')
-		cy.url().should('include', 'sortOrder=desc')
+		// Position option should not be present
+		cy.get('.filter-popup .select select option[value="position"]')
+			.should('not.exist')
 	})
 })

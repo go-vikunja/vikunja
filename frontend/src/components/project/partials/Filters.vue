@@ -31,6 +31,54 @@
 			</FancyCheckbox>
 		</div>
 
+		<div class="field">
+			<label class="label">{{ $t('task.show.sortBy') }}</label>
+			<div class="field has-addons">
+				<div class="control is-expanded">
+					<div class="select is-fullwidth">
+						<select
+							:value="sortField"
+							@change="setSortField($event.target.value)"
+						>
+							<option value="due_date">
+								{{ $t('task.attributes.dueDate') }}
+							</option>
+							<option value="priority">
+								{{ $t('task.attributes.priority') }}
+							</option>
+							<option value="title">
+								{{ $t('task.attributes.title') }}
+							</option>
+							<option value="start_date">
+								{{ $t('task.attributes.startDate') }}
+							</option>
+							<option value="end_date">
+								{{ $t('task.attributes.endDate') }}
+							</option>
+							<option value="done">
+								{{ $t('task.attributes.done') }}
+							</option>
+							<option
+								v-if="showPositionSort"
+								value="position"
+							>
+								{{ $t('task.attributes.position') }}
+							</option>
+						</select>
+					</div>
+				</div>
+				<div class="control">
+					<button
+						type="button"
+						class="button"
+						@click.prevent="toggleSortOrder"
+					>
+						{{ sortOrderLabel }}
+					</button>
+				</div>
+			</div>
+		</div>
+
 		<FilterInputDocs />
 
 		<template
@@ -61,6 +109,7 @@ export const ALPHABETICAL_SORT = 'title'
 
 <script setup lang="ts">
 import {computed, ref, watch} from 'vue'
+import {useI18n} from 'vue-i18n'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import {useRoute} from 'vue-router'
 import type {TaskFilterParams} from '@/services/taskCollection'
@@ -80,12 +129,14 @@ const props = withDefaults(defineProps<{
 	changeImmediately?: boolean,
 	filterFromView?: string,
 	showClose?: boolean,
+	showPositionSort?: boolean,
 }>(), {
 	hasTitle: false,
 	hasFooter: true,
 	changeImmediately: false,
 	filterFromView: undefined,
 	showClose: false,
+	showPositionSort: true,
 })
 
 const emit = defineEmits<{
@@ -93,6 +144,8 @@ const emit = defineEmits<{
 	'showResults': [],
 	'close': [],
 }>()
+
+const {t} = useI18n({useScope: 'global'})
 
 const route = useRoute()
 const projectId = computed(() => {
@@ -120,6 +173,69 @@ watch(
 		filterQuery.value = filter || s
 	},
 )
+
+// Local state for sorting that doesn't trigger immediate updates
+const localSortBy = ref<string>('')
+const localOrderBy = ref<string>('')
+
+const sortField = computed(() => localSortBy.value || params.value.sort_by?.[0] || 'due_date')
+const sortOrder = computed(() => localOrderBy.value || params.value.order_by?.[0] || 'asc')
+
+// Sync local state when params change from outside
+watch(
+	() => [params.value.sort_by?.[0], params.value.order_by?.[0]],
+	([sortBy, orderBy]) => {
+		localSortBy.value = sortBy || ''
+		localOrderBy.value = orderBy || ''
+	},
+	{immediate: true},
+)
+
+const sortOrderLabel = computed(() => {
+	const isAsc = sortOrder.value === 'asc'
+
+	switch (sortField.value) {
+		case 'due_date':
+		case 'start_date':
+		case 'end_date':
+			return isAsc ? t('task.sort.earliestFirst') : t('task.sort.latestFirst')
+		case 'priority':
+			return isAsc ? t('task.sort.lowPriorityFirst') : t('task.sort.highPriorityFirst')
+		case 'title':
+			return isAsc ? t('task.sort.aToZ') : t('task.sort.zToA')
+		case 'done':
+			return isAsc ? t('task.sort.undoneFirst') : t('task.sort.doneFirst')
+		case 'position':
+			return isAsc ? t('task.sort.firstToLast') : t('task.sort.lastToFirst')
+		default:
+			return isAsc ? t('misc.ascending') : t('misc.descending')
+	}
+})
+
+function setSortField(field: string) {
+	localSortBy.value = field
+	// Initialize order if not set
+	if (!localOrderBy.value) {
+		localOrderBy.value = 'asc'
+	}
+	// If changeImmediately is true, update params and emit right away
+	if (props.changeImmediately) {
+		params.value.sort_by = [field as TaskFilterParams['sort_by'][number], 'id']
+		if (!params.value.order_by || params.value.order_by.length === 0) {
+			params.value.order_by = ['asc', 'desc']
+		}
+		change('always')
+	}
+}
+
+function toggleSortOrder() {
+	localOrderBy.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
+	// If changeImmediately is true, update params and emit right away
+	if (props.changeImmediately) {
+		params.value.order_by = [localOrderBy.value as TaskFilterParams['order_by'][number], 'desc']
+		change('always')
+	}
+}
 
 const labelStore = useLabelStore()
 const projectStore = useProjectStore()
@@ -168,6 +284,14 @@ function change(event: 'blur' | 'modelValue' | 'always') {
 	// When the filter does not contain any filter tokens, assume a simple search and redirect the input
 	if (!hasFilterQuery(filter)) {
 		s = filter
+	}
+
+	// Apply local sort state to params before emitting
+	if (localSortBy.value) {
+		params.value.sort_by = [localSortBy.value as TaskFilterParams['sort_by'][number], 'id']
+	}
+	if (localOrderBy.value) {
+		params.value.order_by = [localOrderBy.value as TaskFilterParams['order_by'][number], 'desc']
 	}
 
 	const newParams = {

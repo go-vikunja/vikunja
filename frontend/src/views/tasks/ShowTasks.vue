@@ -7,41 +7,12 @@
 			<h3 class="mbe-2 title">
 				{{ pageTitle }}
 			</h3>
-			<div
-				v-if="showAll"
-				class="sort-container"
-			>
-				<div class="select">
-					<select
-						:value="sortBy"
-						@change="setSortBy($event.target.value)"
-					>
-						<option value="due_date">
-							{{ $t('task.attributes.dueDate') }}
-						</option>
-						<option value="priority">
-							{{ $t('task.attributes.priority') }}
-						</option>
-						<option value="title">
-							{{ $t('task.attributes.title') }}
-						</option>
-						<option value="start_date">
-							{{ $t('task.attributes.startDate') }}
-						</option>
-						<option value="end_date">
-							{{ $t('task.attributes.endDate') }}
-						</option>
-						<option value="done">
-							{{ $t('task.attributes.done') }}
-						</option>
-					</select>
-				</div>
-				<button
-					class="button is-outlined"
-					@click="toggleSortOrder"
-				>
-					<span>{{ sortOrder === 'asc' ? $t('misc.ascending') : $t('misc.descending') }}</span>
-				</button>
+			<div class="filter-container">
+				<FilterPopup
+					v-model="filterParams"
+					:show-position-sort="false"
+					@update:modelValue="applyFilters"
+				/>
 			</div>
 		</div>
 		<div
@@ -119,6 +90,7 @@ import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import SingleTaskInProject from '@/components/tasks/partials/SingleTaskInProject.vue'
 import DatepickerWithRange from '@/components/date/DatepickerWithRange.vue'
 import XButton from '@/components/input/Button.vue'
+import FilterPopup from '@/components/project/partials/FilterPopup.vue'
 import {DATE_RANGES} from '@/components/date/dateRanges'
 import LlamaCool from '@/assets/llama-cool.svg?component'
 import type {ITask} from '@/modelTypes/ITask'
@@ -156,8 +128,13 @@ const tasks = ref<ITask[]>([])
 const showNothingToDo = ref<boolean>(false)
 const taskCollectionService = ref(new TaskCollectionService())
 
-const sortBy = ref<string>((route.query.sortBy as string) || 'due_date')
-const sortOrder = ref<string>((route.query.sortOrder as string) || 'asc')
+const filterParams = ref<TaskFilterParams>({
+	sort_by: ['due_date', 'id'],
+	order_by: ['asc', 'desc'],
+	filter: '',
+	filter_include_nulls: false,
+	s: '',
+})
 
 setTimeout(() => showNothingToDo.value = true, 100)
 
@@ -220,26 +197,8 @@ function setShowNulls(show: boolean) {
 	})
 }
 
-function setSortBy(sort: string) {
-	sortBy.value = sort
-	router.push({
-		name: route.name as string,
-		query: {
-			...route.query,
-			sortBy: sort,
-		},
-	})
-}
-
-function toggleSortOrder() {
-	sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
-	router.push({
-		name: route.name as string,
-		query: {
-			...route.query,
-			sortOrder: sortOrder.value,
-		},
-	})
+function applyFilters() {
+	loadPendingTasks(props.dateFrom, props.dateTo)
 }
 
 async function loadPendingTasks(from: Date|string, to: Date|string) {
@@ -252,11 +211,9 @@ async function loadPendingTasks(from: Date|string, to: Date|string) {
 	}
 
 	const params: TaskFilterParams = {
-		sort_by: [sortBy.value as TaskFilterParams['sort_by'][number], 'id'],
-		order_by: [sortOrder.value as TaskFilterParams['order_by'][number], 'desc'],
+		...filterParams.value,
 		filter: 'done = false',
 		filter_include_nulls: props.showNulls,
-		s: '',
 	}
 
 	if (!showAll.value) {
@@ -315,12 +272,6 @@ watchEffect(() => setTitle(pageTitle.value))
 .show-tasks-options {
 	display: flex;
 	flex-direction: column;
-}
-
-.sort-container {
-	display: flex;
-	gap: 0.5rem;
-	align-items: center;
 }
 
 .llama-cool {

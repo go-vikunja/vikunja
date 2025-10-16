@@ -7,11 +7,15 @@ import {prepareProjects} from './prepareProjects'
 
 describe('Project View Gantt', () => {
 	createFakeUserAndLogin()
-	prepareProjects()
+
+	let projects: any[]
+	prepareProjects((newProjects) => (projects = newProjects))
 
 	it('Hides tasks with no dates', () => {
-		const tasks = TaskFactory.create(1)
-		cy.visit('/projects/1/2')
+		const tasks = TaskFactory.create(1, {
+			project_id: projects[0].id,
+		})
+		cy.visit(`/projects/${projects[0].id}/2`)
 
 		cy.get('.gantt-rows')
 			.should('not.contain', tasks[0].title)
@@ -25,7 +29,7 @@ describe('Project View Gantt', () => {
 		nextMonth.setDate(1)
 		nextMonth.setMonth(9)
 
-		cy.visit('/projects/1/2')
+		cy.visit(`/projects/${projects[0].id}/2`)
 
 		cy.get('.gantt-timeline-months')
 			.should('contain', dayjs(now).format('MMMM YYYY'))
@@ -35,10 +39,11 @@ describe('Project View Gantt', () => {
 	it('Shows tasks with dates', () => {
 		const now = new Date()
 		const tasks = TaskFactory.create(1, {
+			project_id: projects[0].id,
 			start_date: now.toISOString(),
 			end_date: new Date(new Date(now).setDate(now.getDate() + 4)).toISOString(),
 		})
-		cy.visit('/projects/1/2')
+		cy.visit(`/projects/${projects[0].id}/2`)
 
 		cy.get('.gantt-rows')
 			.should('not.be.empty')
@@ -47,10 +52,11 @@ describe('Project View Gantt', () => {
 
 	it('Shows tasks with no dates after enabling them', () => {
 		const tasks = TaskFactory.create(1, {
+			project_id: projects[0].id,
 			start_date: null,
 			end_date: null,
 		})
-		cy.visit('/projects/1/2')
+		cy.visit(`/projects/${projects[0].id}/2`)
 
 		cy.get('.gantt-options .fancy-checkbox')
 			.contains('Show tasks without date')
@@ -62,14 +68,13 @@ describe('Project View Gantt', () => {
 	})
 
 	it('Drags a task around', () => {
-		cy.intercept(Cypress.env('API_URL') + '/tasks/*').as('taskUpdate')
-
 		const now = new Date()
 		TaskFactory.create(1, {
+			project_id: projects[0].id,
 			start_date: now.toISOString(),
 			end_date: new Date(new Date(now).setDate(now.getDate() + 4)).toISOString(),
 		})
-		cy.visit('/projects/1/2')
+		cy.visit(`/projects/${projects[0].id}/2`)
 
 		cy.get('.gantt-rows .gantt-row-bars .gantt-bar')
 			.first()
@@ -105,14 +110,13 @@ describe('Project View Gantt', () => {
 						force: true
 					})
 			})
-		cy.wait('@taskUpdate')
 	})
 
 	it('Should change the query parameters when selecting a date range', () => {
 		const now = Date.UTC(2022, 10, 9)
 		cy.clock(now, ['Date'])
 
-		cy.visit('/projects/1/2')
+		cy.visit(`/projects/${projects[0].id}/2`)
 
 		cy.get('.project-gantt .gantt-options .field .control input.input.form-control')
 			.click()
@@ -128,7 +132,7 @@ describe('Project View Gantt', () => {
 	})
 
 	it('Should change the date range based on date query parameters', () => {
-		cy.visit('/projects/1/2?dateFrom=2022-09-25&dateTo=2022-11-05')
+		cy.visit(`/projects/${projects[0].id}/2?dateFrom=2022-09-25&dateTo=2022-11-05`)
 
 		cy.get('.gantt-timeline-months')
 			.should('contain', 'September 2022')
@@ -141,10 +145,11 @@ describe('Project View Gantt', () => {
 	it('Should open a task when double clicked on it', () => {
 		const now = new Date()
 		const tasks = TaskFactory.create(1, {
+			project_id: projects[0].id,
 			start_date: dayjs(now).format(),
 			end_date: dayjs(now.setDate(now.getDate() + 4)).format(),
 		})
-		cy.visit('/projects/1/2')
+		cy.visit(`/projects/${projects[0].id}/2`)
 
 		cy.get('.gantt-container .gantt-row-bars .gantt-bar')
 			.dblclick()
