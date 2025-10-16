@@ -291,6 +291,120 @@ func TestGetOrCreateUser(t *testing.T) {
 		assert.Equal(t, user.IssuerLocal, u.Issuer, "User should be a local one")
 		assert.Equal(t, 11, int(u.ID), "user id 11 expected")
 	})
+	t.Run("CrossOidcFallback: Should only match local users when disabled", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Create a user with a different OIDC issuer
+		existingUser, err := user.CreateUser(s, &user.User{
+			Username: "oidc_user",
+			Email:    "oidc_user@example.com",
+			Issuer:   "https://another.provider.com",
+			Subject:  "external123",
+			Status:   user.StatusActive,
+		})
+		require.NoError(t, err)
+
+		cl := &claims{
+			Email: "oidc_user@example.com",
+		}
+		provider := &Provider{
+			EmailFallback:     true,
+			CrossOidcFallback: false, // Disabled - should NOT match cross-OIDC users
+		}
+		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "newuser123"}
+
+		// Should create a new user instead of matching the existing OIDC user
+		u, err := getOrCreateUser(s, cl, provider, idToken)
+		require.NoError(t, err)
+		assert.NotEqual(t, existingUser.ID, u.ID, "Should create a new user, not match existing OIDC user")
+		assert.Equal(t, idToken.Issuer, u.Issuer, "New user should have the new issuer")
+		assert.Equal(t, idToken.Subject, u.Subject, "New user should have the new subject")
+	})
+	t.Run("CrossOidcFallback: Should match users from other OIDC providers when enabled", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Create a user with a different OIDC issuer
+		existingUser, err := user.CreateUser(s, &user.User{
+			Username: "cross_oidc_user",
+			Email:    "cross_oidc@example.com",
+			Issuer:   "https://provider-a.com",
+			Subject:  "subjectA123",
+			Status:   user.StatusActive,
+		})
+		require.NoError(t, err)
+
+		cl := &claims{
+			Email: "cross_oidc@example.com",
+		}
+		provider := &Provider{
+			EmailFallback:     true,
+			CrossOidcFallback: true, // Enabled - should match cross-OIDC users
+		}
+		idToken := &oidc.IDToken{Issuer: "https://provider-b.com", Subject: "subjectB456"}
+
+		// Should match the existing OIDC user from a different provider
+		u, err := getOrCreateUser(s, cl, provider, idToken)
+		require.NoError(t, err)
+		assert.Equal(t, existingUser.ID, u.ID, "Should match existing user from different OIDC provider")
+		assert.Equal(t, "cross_oidc@example.com", u.Email, "Email should match")
+		// Note: The existing user's issuer and subject should remain unchanged
+		assert.Equal(t, "https://provider-a.com", u.Issuer, "Original issuer should be preserved")
+		assert.Equal(t, "subjectA123", u.Subject, "Original subject should be preserved")
+	})
+	t.Run("CrossOidcFallback: Match by username across OIDC providers", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Create a user with a different OIDC issuer
+		existingUser, err := user.CreateUser(s, &user.User{
+			Username: "shared_username",
+			Email:    "user1@provider-a.com",
+			Issuer:   "https://provider-a.com",
+			Subject:  "shared_username",
+			Status:   user.StatusActive,
+		})
+		require.NoError(t, err)
+
+		cl := &claims{
+			Email: "user2@provider-b.com",
+		}
+		provider := &Provider{
+			UsernameFallback:  true,
+			CrossOidcFallback: true, // Enabled - should match by username across providers
+		}
+		idToken := &oidc.IDToken{Issuer: "https://provider-b.com", Subject: "shared_username"}
+
+		// Should match the existing user by username even from different provider
+		u, err := getOrCreateUser(s, cl, provider, idToken)
+		require.NoError(t, err)
+		assert.Equal(t, existingUser.ID, u.ID, "Should match existing user by username across providers")
+		assert.Equal(t, "shared_username", u.Username, "Username should match")
+	})
+	t.Run("CrossOidcFallback: Should still match local users when enabled", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		cl := &claims{
+			Email: "user11@example.com",
+		}
+		provider := &Provider{
+			EmailFallback:     true,
+			CrossOidcFallback: true, // Enabled - should still match local users
+		}
+		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "user11"}
+
+		u, err := getOrCreateUser(s, cl, provider, idToken)
+		require.NoError(t, err)
+		assert.Equal(t, cl.Email, u.Email, "Email should match")
+		assert.Equal(t, user.IssuerLocal, u.Issuer, "Should match local user")
+		assert.Equal(t, 11, int(u.ID), "Should match user id 11")
+	})
 }
 
 // TestMergeClaims tests the mergeClaims function with different configurations including forceUserInfo

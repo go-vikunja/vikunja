@@ -143,6 +143,7 @@ func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provid
 			"usernamefallback",
 			"forceuserinfo",
 			"requireavailability",
+			"crossoidcfallback",
 		},
 		requiredKeys...,
 	)
@@ -221,6 +222,17 @@ func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provid
 		}
 	}
 
+	var crossOidcFallback = false
+	crossOidcFallbackValue, exists := pi["crossoidcfallback"]
+	if exists {
+		crossOidcFallbackTypedValue, ok := crossOidcFallbackValue.(bool)
+		if ok {
+			crossOidcFallback = crossOidcFallbackTypedValue
+		} else {
+			log.Errorf("crossoidcfallback is not a boolean for provider %s, value: %v", key, crossOidcFallbackValue)
+		}
+	}
+
 	provider = &Provider{
 		Name:                name,
 		Key:                 key,
@@ -233,6 +245,7 @@ func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provid
 		UsernameFallback:    usernameFallback,
 		ForceUserInfo:       forceUserInfo,
 		RequireAvailability: requireAvailability,
+		CrossOidcFallback:   crossOidcFallback,
 	}
 
 	cl, is := pi["clientid"].(int)

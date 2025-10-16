@@ -722,6 +722,11 @@
                                             "key": "requireavailability",
                                             "default_value": "false",
                                             "comment": "This option requires the OpenID Connect provider to be available during Vikunja startup. When set to `true`, Vikunja will crash if it cannot connect to the provider during initialization, allowing container orchestrators like Kubernetes to handle the failure by restarting the application. This is useful in environments where you want to ensure all authentication providers are available before the application starts serving requests. Allowed value is either `true` or `false`."
+                                        },
+                                        {
+                                            "key": "crossoidcfallback",
+                                            "default_value": "false",
+                                            "comment": "This option allows an OIDC login to fallback to a different OIDC account that shares the same email or username, even when the issuer or subject differs (cross-provider / cross-account). Allowed values: `true` or `false`. This option only takes effect when `emailfallback` or `usernamefallback` is enabled.\nUse with caution: enabling this may allow a third-party provider to connect to *any* OIDC account that shares those identifiers, which can lead to account hijacking."
                                         }
                                     ]
                                 }

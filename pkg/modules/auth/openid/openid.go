@@ -63,6 +63,7 @@ type Provider struct {
 	UsernameFallback    bool   `json:"username_fallback"`
 	ForceUserInfo       bool   `json:"force_user_info"`
 	RequireAvailability bool   `json:"-"`
+	CrossOidcFallback   bool   `json:"cross_oidc_fallback"`
 	ClientSecret        string `json:"-"`
 	openIDProvider      *oidc.Provider
 	Oauth2Config        *oauth2.Config `json:"-"`
@@ -282,8 +283,10 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 
 		// try finding the user on fallback mappingproperties
 
-		searchUser := &user.User{
-			Issuer: user.IssuerLocal,
+		searchUser := &user.User{}
+		if !provider.CrossOidcFallback {
+			// Only restrict to local issuer if CrossOidcFallback is not enabled
+			searchUser.Issuer = user.IssuerLocal
 		}
 		if provider.UsernameFallback {
 			// Match oidc subject on username as each is unique identifier in its own referential
