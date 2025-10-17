@@ -1164,7 +1164,9 @@
     "none": "You don't have any notifications. Have a nice day!",
     "explainer": "Notifications will appear here when actions projects or tasks you subscribed to happen.",
     "markAllRead": "Mark all notifications as read",
-    "markAllReadSuccess": "Successfully marked all notifications as read."
+    "markAllReadSuccess": "Successfully marked all notifications as read.",
+    "clearRead": "Clear read notifications",
+    "clearReadSuccess": "Successfully cleared all read notifications."
   },
   "quickActions": {
     "commands": "Commands",

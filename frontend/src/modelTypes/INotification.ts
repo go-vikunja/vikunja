@@ -8,6 +8,7 @@ import type { IProject } from './IProject'
 export const NOTIFICATION_NAMES = {
 	'TASK_COMMENT': 'task.comment',
 	'TASK_ASSIGNED': 'task.assigned',
+	'TASK_CREATED': 'task.created',
 	'TASK_DELETED': 'task.deleted',
 	'TASK_REMINDER': 'task.reminder',
 	'PROJECT_CREATED': 'project.created',

@@ -62,6 +62,7 @@ func RegisterListeners() {
 	}
 	events.RegisterListener((&TaskCommentCreatedEvent{}).Name(), &SendTaskCommentNotification{})
 	events.RegisterListener((&TaskAssigneeCreatedEvent{}).Name(), &SendTaskAssignedNotification{})
+	events.RegisterListener((&TaskCreatedEvent{}).Name(), &SendTaskCreatedNotification{})
 	events.RegisterListener((&TaskDeletedEvent{}).Name(), &SendTaskDeletedNotification{})
 	events.RegisterListener((&ProjectCreatedEvent{}).Name(), &SendProjectCreatedNotification{})
 	events.RegisterListener((&TeamMemberAddedEvent{}).Name(), &SendTeamMemberAddedNotification{})
@@ -389,6 +390,61 @@ func (s *SendTaskDeletedNotification) Handle(msg *message.Message) (err error) {
 		err = notifications.Notify(subscriber.User, n)
 		if err != nil {
 			return
+		}
+	}
+
+	return nil
+}
+
+// SendTaskCreatedNotification represents a listener
+type SendTaskCreatedNotification struct {
+}
+
+// Name defines the name for the SendTaskCreatedNotification listener
+func (s *SendTaskCreatedNotification) Name() string {
+	return "task.created.notification.send"
+}
+
+// Handle is executed when the event SendTaskCreatedNotification listens on is fired
+func (s *SendTaskCreatedNotification) Handle(msg *message.Message) (err error) {
+	event := &TaskCreatedEvent{}
+	err = json.Unmarshal(msg.Payload, event)
+	if err != nil {
+		return err
+	}
+
+	sess := db.NewSession()
+	defer sess.Close()
+
+	// Get project to include in notification
+	project := &Project{ID: event.Task.ProjectID}
+	err = project.ReadOne(sess, &user.User{ID: event.Doer.ID})
+	if err != nil {
+		return err
+	}
+
+	// Get subscribers to the project (new tasks notify project subscribers)
+	subscribers, err := GetSubscriptionsForEntity(sess, SubscriptionEntityProject, event.Task.ProjectID)
+	if err != nil {
+		return err
+	}
+
+	log.Debugf("Sending task created notifications to %d subscribers for task %d in project %d", len(subscribers), event.Task.ID, event.Task.ProjectID)
+
+	for _, subscriber := range subscribers {
+		// Don't notify the person who created the task
+		if subscriber.UserID == event.Doer.ID {
+			continue
+		}
+
+		n := &TaskCreatedNotification{
+			Doer:    event.Doer,
+			Task:    event.Task,
+			Project: project,
+		}
+		err = notifications.Notify(subscriber.User, n)
+		if err != nil {
+			return err
 		}
 	}
 

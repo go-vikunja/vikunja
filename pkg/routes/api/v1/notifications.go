@@ -33,6 +33,8 @@ func RegisterNotifications(a *echo.Group) {
 	a.GET("/notifications", getNotifications)
 	a.POST("/notifications/:notificationid", markNotificationAsRead)
 	a.POST("/notifications", markAllNotificationsAsRead)
+	a.DELETE("/notifications/:notificationid", deleteNotification)
+	a.DELETE("/notifications", deleteAllReadNotifications)
 }
 
 // getNotifications returns all notifications for the authenticated user
@@ -214,4 +216,86 @@ func markAllNotificationsAsRead(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, models.Message{Message: "success"})
+}
+
+// deleteNotification deletes a single notification
+// @Summary Delete a notification
+// @Description Deletes a notification for the current user.
+// @tags notifications
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Param notificationid path int true "Notification ID"
+// @Success 200 {object} models.Message "The notification was deleted successfully."
+// @Failure 403 {object} models.Message "Link shares cannot have notifications or notification does not belong to user."
+// @Failure 404 {object} models.Message "Notification not found."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /notifications/{notificationid} [delete]
+func deleteNotification(c echo.Context) error {
+	s := db.NewSession()
+	defer s.Close()
+
+	a, err := auth.GetAuthFromClaims(c)
+	if err != nil {
+		return err
+	}
+
+	if _, is := a.(*models.LinkSharing); is {
+		return echo.ErrForbidden
+	}
+
+	// Parse notification ID
+	notificationID, err := strconv.ParseInt(c.Param("notificationid"), 10, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid notification ID")
+	}
+
+	service := services.NewNotificationsService(s)
+	err = service.DeleteNotification(notificationID, a.GetID())
+	if err != nil {
+		return err
+	}
+
+	if err := s.Commit(); err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, models.Message{Message: "Successfully deleted notification"})
+}
+
+// deleteAllReadNotifications deletes all read notifications for the current user
+// @Summary Delete all read notifications
+// @Description Deletes all read notifications for the current user.
+// @tags notifications
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Success 200 {object} models.Message "All read notifications were deleted successfully."
+// @Failure 403 {object} models.Message "Link shares cannot have notifications."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /notifications [delete]
+func deleteAllReadNotifications(c echo.Context) error {
+	s := db.NewSession()
+	defer s.Close()
+
+	a, err := auth.GetAuthFromClaims(c)
+	if err != nil {
+		return err
+	}
+
+	if _, is := a.(*models.LinkSharing); is {
+		return echo.ErrForbidden
+	}
+
+	service := services.NewNotificationsService(s)
+	err = service.DeleteAllReadNotifications(a.GetID())
+	if err != nil {
+		return err
+	}
+
+	if err := s.Commit(); err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, models.Message{Message: "Successfully deleted all read notifications"})
 }

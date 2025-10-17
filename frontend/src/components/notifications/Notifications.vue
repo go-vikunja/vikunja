@@ -63,14 +63,27 @@
 						</span>
 					</div>
 				</div>
-				<XButton
-					v-if="notifications.length > 0 && unreadNotifications > 0"
-					variant="tertiary"
-					class="mbs-2 is-fullwidth" 
-					@click="markAllRead"
+				<div
+					v-if="notifications.length > 0"
+					class="notification-actions"
 				>
-					{{ $t('notification.markAllRead') }}
-				</XButton>
+					<XButton
+						variant="tertiary"
+						class="is-fullwidth"
+						:disabled="unreadNotifications === 0"
+						@click="markAllRead"
+					>
+						{{ $t('notification.markAllRead') }}
+					</XButton>
+					<XButton
+						v-if="readNotifications > 0"
+						variant="tertiary"
+						class="is-fullwidth"
+						@click="clearRead"
+					>
+						{{ $t('notification.clearRead') }}
+					</XButton>
+				</div>
 				<p
 					v-if="notifications.length === 0"
 					class="nothing"
@@ -114,6 +127,9 @@ const popup = ref(null)
 
 const unreadNotifications = computed(() => {
 	return notifications.value.filter(n => n.readAt === null).length
+})
+const readNotifications = computed(() => {
+	return notifications.value.filter(n => n.readAt !== null).length
 })
 const notifications = computed(() => {
 	return allNotifications.value ? allNotifications.value.filter(n => n.name !== '') : []
@@ -159,6 +175,7 @@ function to(n, index) {
 	switch (n.name) {
 		case names.TASK_COMMENT:
 		case names.TASK_ASSIGNED:
+		case names.TASK_CREATED:
 		case names.TASK_REMINDER:
 		case names.TASK_MENTIONED:
 			to.name = 'task.detail'
@@ -194,6 +211,15 @@ async function markAllRead() {
 	success({message: t('notification.markAllReadSuccess')})
 	
 	notifications.value.forEach(n => n.readAt = new Date())
+}
+
+async function clearRead() {
+	const notificationService = new NotificationService()
+	await notificationService.deleteAllRead()
+	success({message: t('notification.clearReadSuccess')})
+	
+	// Remove all read notifications from the list
+	allNotifications.value = allNotifications.value.filter(n => n.readAt === null)
 }
 </script>
 
@@ -298,6 +324,14 @@ async function markAllRead() {
 			a {
 				color: var(--grey-800);
 			}
+		}
+
+		.notification-actions {
+			display: flex;
+			flex-direction: column;
+			gap: 0.5rem;
+			margin-block-start: 0.5rem;
+			padding: 0 0.5rem;
 		}
 
 		.nothing {

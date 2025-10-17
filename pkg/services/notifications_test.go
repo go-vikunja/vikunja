@@ -451,6 +451,243 @@ func TestNotificationsService_Notify(t *testing.T) {
 	})
 }
 
+func TestNotificationsService_DeleteNotification(t *testing.T) {
+	t.Run("Delete own notification", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		service := NewNotificationsService(s)
+		u := &user.User{ID: 1}
+
+		// Create a test notification
+		testNotif := &testNotification{name: "test.delete"}
+		err := service.Notify(u, testNotif)
+		require.NoError(t, err)
+		_ = s.Commit()
+
+		// Get the notification ID
+		s = db.NewSession()
+		defer s.Close()
+		service = NewNotificationsService(s)
+		notifs, _, _, err := service.GetNotificationsForUser(u.ID, 1, 0)
+		require.NoError(t, err)
+		require.Greater(t, len(notifs), 0, "should have created notification")
+		notifID := notifs[0].ID
+
+		// Delete the notification
+		err = service.DeleteNotification(notifID, u.ID)
+		require.NoError(t, err)
+		_ = s.Commit()
+
+		// Verify deletion
+		s = db.NewSession()
+		defer s.Close()
+		service = NewNotificationsService(s)
+		deleted := &notifications.DatabaseNotification{ID: notifID}
+		exists, err := s.Get(deleted)
+		require.NoError(t, err)
+		assert.False(t, exists, "notification should be deleted")
+	})
+
+	t.Run("Cannot delete other user's notification", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		service := NewNotificationsService(s)
+		u1 := &user.User{ID: 1}
+		u2 := &user.User{ID: 2}
+
+		// Create notification for user 1
+		testNotif := &testNotification{name: "test.delete.other"}
+		err := service.Notify(u1, testNotif)
+		require.NoError(t, err)
+		_ = s.Commit()
+
+		// Get the notification ID
+		s = db.NewSession()
+		defer s.Close()
+		service = NewNotificationsService(s)
+		notifs, _, _, err := service.GetNotificationsForUser(u1.ID, 1, 0)
+		require.NoError(t, err)
+		require.Greater(t, len(notifs), 0)
+		notifID := notifs[0].ID
+
+		// Try to delete as user 2 (should not delete)
+		err = service.DeleteNotification(notifID, u2.ID)
+		require.NoError(t, err) // No error, just doesn't delete
+		_ = s.Commit()
+
+		// Verify notification still exists
+		s = db.NewSession()
+		defer s.Close()
+		notif := &notifications.DatabaseNotification{ID: notifID}
+		exists, err := s.Get(notif)
+		require.NoError(t, err)
+		assert.True(t, exists, "notification should still exist (user 2 can't delete user 1's notification)")
+	})
+}
+
+func TestNotificationsService_DeleteAllReadNotifications(t *testing.T) {
+	t.Run("Delete all read notifications", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		service := NewNotificationsService(s)
+		u := &user.User{ID: 1}
+
+		// Create multiple notifications
+		for i := 0; i < 5; i++ {
+			testNotif := &testNotification{name: fmt.Sprintf("test.delete.read.%d", i)}
+			err := service.Notify(u, testNotif)
+			require.NoError(t, err)
+		}
+		_ = s.Commit()
+
+		// Mark first 3 as read
+		s = db.NewSession()
+		defer s.Close()
+		service = NewNotificationsService(s)
+		notifs, _, _, err := service.GetNotificationsForUser(u.ID, 5, 0)
+		require.NoError(t, err)
+		require.GreaterOrEqual(t, len(notifs), 5, "should have at least 5 notifications")
+
+		for i := 0; i < 3; i++ {
+			err = service.MarkNotificationAsRead(notifs[i], true)
+			require.NoError(t, err)
+		}
+		_ = s.Commit()
+
+		// Delete all read notifications
+		s = db.NewSession()
+		defer s.Close()
+		service = NewNotificationsService(s)
+		err = service.DeleteAllReadNotifications(u.ID)
+		require.NoError(t, err)
+		_ = s.Commit()
+
+		// Verify only unread notifications remain
+		s = db.NewSession()
+		defer s.Close()
+		service = NewNotificationsService(s)
+		remaining, _, _, err := service.GetNotificationsForUser(u.ID, 10, 0)
+		require.NoError(t, err)
+
+		// Count unread notifications
+		unreadCount := 0
+		for _, n := range remaining {
+			if n.ReadAt.IsZero() || n.ReadAt.Equal(time.Time{}) {
+				unreadCount++
+			}
+		}
+
+		assert.GreaterOrEqual(t, unreadCount, 2, "should have at least 2 unread notifications remaining")
+	})
+
+	t.Run("Delete all read notifications doesn't affect unread", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		service := NewNotificationsService(s)
+		u := &user.User{ID: 1}
+
+		// Create notifications
+		for i := 0; i < 3; i++ {
+			testNotif := &testNotification{name: fmt.Sprintf("test.delete.unread.%d", i)}
+			err := service.Notify(u, testNotif)
+			require.NoError(t, err)
+		}
+		_ = s.Commit()
+
+		// Get initial count
+		s = db.NewSession()
+		defer s.Close()
+		service = NewNotificationsService(s)
+		before, _, _, err := service.GetNotificationsForUser(u.ID, 10, 0)
+		require.NoError(t, err)
+		unreadBefore := 0
+		for _, n := range before {
+			if n.ReadAt.IsZero() || n.ReadAt.Equal(time.Time{}) {
+				unreadBefore++
+			}
+		}
+
+		// Delete all read (should not affect unread)
+		err = service.DeleteAllReadNotifications(u.ID)
+		require.NoError(t, err)
+		_ = s.Commit()
+
+		// Verify unread count unchanged
+		s = db.NewSession()
+		defer s.Close()
+		service = NewNotificationsService(s)
+		after, _, _, err := service.GetNotificationsForUser(u.ID, 10, 0)
+		require.NoError(t, err)
+		unreadAfter := 0
+		for _, n := range after {
+			if n.ReadAt.IsZero() || n.ReadAt.Equal(time.Time{}) {
+				unreadAfter++
+			}
+		}
+
+		assert.GreaterOrEqual(t, unreadAfter, 3, "should have at least 3 unread notifications (none should be deleted)")
+	})
+
+	t.Run("Delete all read notifications for different users", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		service := NewNotificationsService(s)
+		u1 := &user.User{ID: 1}
+		u2 := &user.User{ID: 2}
+
+		// Create and mark as read for user 1
+		testNotif1 := &testNotification{name: "test.delete.user1"}
+		err := service.Notify(u1, testNotif1)
+		require.NoError(t, err)
+
+		// Create and mark as read for user 2
+		testNotif2 := &testNotification{name: "test.delete.user2"}
+		err = service.Notify(u2, testNotif2)
+		require.NoError(t, err)
+		_ = s.Commit()
+
+		// Mark both as read
+		s = db.NewSession()
+		defer s.Close()
+		service = NewNotificationsService(s)
+		notifs1, _, _, _ := service.GetNotificationsForUser(u1.ID, 1, 0)
+		notifs2, _, _, _ := service.GetNotificationsForUser(u2.ID, 1, 0)
+		if len(notifs1) > 0 {
+			_ = service.MarkNotificationAsRead(notifs1[0], true)
+		}
+		if len(notifs2) > 0 {
+			_ = service.MarkNotificationAsRead(notifs2[0], true)
+		}
+		_ = s.Commit()
+
+		// Delete user 1's read notifications
+		s = db.NewSession()
+		defer s.Close()
+		service = NewNotificationsService(s)
+		err = service.DeleteAllReadNotifications(u1.ID)
+		require.NoError(t, err)
+		_ = s.Commit()
+
+		// Verify user 2's notifications still exist
+		s = db.NewSession()
+		defer s.Close()
+		service = NewNotificationsService(s)
+		u2Notifs, _, _, err := service.GetNotificationsForUser(u2.ID, 10, 0)
+		require.NoError(t, err)
+		assert.Greater(t, len(u2Notifs), 0, "user 2 should still have notifications")
+	})
+}
+
 // Test notification types
 
 type testNotification struct {

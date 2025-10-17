@@ -95,6 +95,22 @@ func (s *NotificationsService) MarkAllNotificationsAsRead(userID int64) (err err
 	return
 }
 
+// DeleteNotification deletes a single notification if it belongs to the user
+func (s *NotificationsService) DeleteNotification(notificationID, userID int64) (err error) {
+	_, err = s.Session.
+		Where("id = ? AND notifiable_id = ?", notificationID, userID).
+		Delete(&notifications.DatabaseNotification{})
+	return
+}
+
+// DeleteAllReadNotifications deletes all read notifications for a user
+func (s *NotificationsService) DeleteAllReadNotifications(userID int64) (err error) {
+	_, err = s.Session.
+		Where("notifiable_id = ? AND read_at IS NOT NULL AND read_at != ?", userID, time.Time{}).
+		Delete(&notifications.DatabaseNotification{})
+	return
+}
+
 // Notify sends a notification to a notifiable entity (usually a user)
 // This handles both email and database notifications
 func (s *NotificationsService) Notify(notifiable notifications.Notifiable, notification notifications.Notification) (err error) {
