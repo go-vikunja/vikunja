@@ -324,7 +324,7 @@ jobs:
         # Only run parallel tests for non-fork PRs, single container for forks
         containers: ${{ github.event.pull_request.head.repo.fork != true && fromJSON('[1, 2, 3, 4]') || fromJSON('[1]') }}
     container:
-      image: cypress/browsers:latest@sha256:1f1adf3bd11c79465abc22e1e29848695fdbbe82d468957103dc0f8ba00e0f8e
+      image: cypress/browsers:latest@sha256:f47e21d288e7c41c98a7ee1bd944805d4193e256806a0866add22479812bcd8a
       options: --user 1001
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
