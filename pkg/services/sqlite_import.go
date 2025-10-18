@@ -17,11 +17,18 @@
 package services
 
 import (
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"fmt"
+	"io"
 	"os"
+	"path/filepath"
+	"strconv"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
@@ -78,6 +85,9 @@ type ImportCounts struct {
 	Reactions          int64
 	APITokens          int64
 	Favorites          int64
+	Files              int64
+	FilesCopied        int64
+	FilesFailed        int64
 }
 
 // ImportOptions configures the import behavior
@@ -125,6 +135,9 @@ func (s *SQLiteImportService) ImportFromSQLite(opts ImportOptions) (*ImportRepor
 		if err := sess.Begin(); err != nil {
 			return report, fmt.Errorf("failed to start transaction: %w", err)
 		}
+		if !opts.Quiet {
+			log.Info("Transaction started")
+		}
 	}
 
 	// Import data in dependency order
@@ -135,47 +148,54 @@ func (s *SQLiteImportService) ImportFromSQLite(opts ImportOptions) (*ImportRepor
 		report.Counts.Users, importErr = s.importUsers(sess, sqliteDB, opts)
 	}
 
-	// 2. Import teams
+	// 2. Import file metadata (before attachments which reference files)
+	if importErr == nil {
+		var filesCount int64
+		filesCount, importErr = s.importFileMetadata(sess, sqliteDB, opts)
+		report.Counts.Files = filesCount
+	}
+
+	// 3. Import teams
 	if importErr == nil {
 		report.Counts.Teams, importErr = s.importTeams(sess, sqliteDB, opts)
 	}
 
-	// 3. Import team members
+	// 4. Import team members
 	if importErr == nil {
 		report.Counts.TeamMembers, importErr = s.importTeamMembers(sess, sqliteDB, opts)
 	}
 
-	// 4. Import projects
+	// 5. Import projects
 	if importErr == nil {
 		report.Counts.Projects, importErr = s.importProjects(sess, sqliteDB, opts)
 	}
 
-	// 5. Import tasks
+	// 6. Import tasks
 	if importErr == nil {
 		report.Counts.Tasks, importErr = s.importTasks(sess, sqliteDB, opts)
 	}
 
-	// 6. Import labels
+	// 7. Import labels
 	if importErr == nil {
 		report.Counts.Labels, importErr = s.importLabels(sess, sqliteDB, opts)
 	}
 
-	// 7. Import task-label associations
+	// 8. Import task-label associations
 	if importErr == nil {
 		report.Counts.TaskLabels, importErr = s.importTaskLabels(sess, sqliteDB, opts)
 	}
 
-	// 8. Import comments
+	// 9. Import comments
 	if importErr == nil {
 		report.Counts.Comments, importErr = s.importComments(sess, sqliteDB, opts)
 	}
 
-	// 9. Import attachments
+	// 10. Import attachments
 	if importErr == nil {
 		report.Counts.Attachments, importErr = s.importAttachments(sess, sqliteDB, opts)
 	}
 
-	// 10. Import buckets
+	// 11. Import buckets
 	if importErr == nil {
 		report.Counts.Buckets, importErr = s.importBuckets(sess, sqliteDB, opts)
 	}
@@ -229,10 +249,18 @@ func (s *SQLiteImportService) ImportFromSQLite(opts ImportOptions) (*ImportRepor
 	if importErr != nil {
 		report.Errors = append(report.Errors, importErr.Error())
 		if !opts.DryRun {
+			if !opts.Quiet {
+				log.Errorf("Import failed: %v", importErr)
+				log.Info("Rolling back transaction...")
+			}
 			if rollbackErr := sess.Rollback(); rollbackErr != nil {
 				log.Errorf("Failed to rollback transaction: %v", rollbackErr)
+				report.Errors = append(report.Errors, fmt.Sprintf("rollback failed: %v", rollbackErr))
+			} else {
+				if !opts.Quiet {
+					log.Info("Transaction rolled back successfully - database state unchanged")
+				}
 			}
-			log.Error("Import failed, transaction rolled back")
 		}
 		report.EndTime = time.Now()
 		report.Duration = report.EndTime.Sub(report.StartTime)
@@ -241,14 +269,21 @@ func (s *SQLiteImportService) ImportFromSQLite(opts ImportOptions) (*ImportRepor
 
 	// Commit transaction
 	if !opts.DryRun {
+		if !opts.Quiet {
+			log.Info("All data imported successfully, committing transaction...")
+		}
 		if err := sess.Commit(); err != nil {
 			report.Errors = append(report.Errors, fmt.Sprintf("commit failed: %v", err))
 			report.EndTime = time.Now()
 			report.Duration = report.EndTime.Sub(report.StartTime)
+			if !opts.Quiet {
+				log.Errorf("Transaction commit failed: %v", err)
+			}
 			return report, fmt.Errorf("failed to commit transaction: %w", err)
 		}
 		report.DatabaseImported = true
 		if !opts.Quiet {
+			log.Info("Transaction committed successfully")
 			log.Info("Database import completed successfully")
 		}
 	} else {
@@ -259,13 +294,17 @@ func (s *SQLiteImportService) ImportFromSQLite(opts ImportOptions) (*ImportRepor
 
 	// Import files (after database transaction)
 	if opts.FilesDir != "" && !opts.DryRun {
-		if err := s.importFiles(opts); err != nil {
+		copied, failed, err := s.importFiles(opts)
+		report.Counts.Files = copied + failed
+		report.Counts.FilesCopied = copied
+		report.Counts.FilesFailed = failed
+		if err != nil {
 			report.FilesError = err
 			report.Errors = append(report.Errors, fmt.Sprintf("files migration failed: %v", err))
 			if !opts.Quiet {
 				log.Warningf("Files failed to migrate: %v", err)
 			}
-		} else {
+		} else if copied > 0 {
 			report.FilesMigrated = true
 			if !opts.Quiet {
 				log.Info("Files migrated successfully")
@@ -282,8 +321,18 @@ func (s *SQLiteImportService) ImportFromSQLite(opts ImportOptions) (*ImportRepor
 
 // importUsers imports user data from SQLite
 func (s *SQLiteImportService) importUsers(sess *xorm.Session, sqliteDB *sql.DB, opts ImportOptions) (int64, error) {
+	// Count total users for progress reporting
+	total, err := countTableRows(sqliteDB, "users")
+	if err != nil {
+		return 0, fmt.Errorf("failed to count users: %w", err)
+	}
+
 	if !opts.Quiet {
-		log.Info("Importing users...")
+		if total > 0 {
+			log.Infof("Importing users... (0/%d)", total)
+		} else {
+			log.Info("Importing users...")
+		}
 	}
 
 	rows, err := sqliteDB.Query(`
@@ -346,8 +395,10 @@ func (s *SQLiteImportService) importUsers(sess *xorm.Session, sqliteDB *sql.DB, 
 		}
 		count++
 
-		if !opts.Quiet && count%100 == 0 {
-			log.Infof("Imported %d users...", count)
+		// Progress updates with total
+		if !opts.Quiet && total > 0 && count%100 == 0 {
+			percentage := (count * 100) / total
+			log.Infof("Importing users... %d/%d (%d%%)", count, total, percentage)
 		}
 	}
 
@@ -356,7 +407,7 @@ func (s *SQLiteImportService) importUsers(sess *xorm.Session, sqliteDB *sql.DB, 
 	}
 
 	if !opts.Quiet {
-		log.Infof("Imported %d users", count)
+		logProgress(count, total, "users", opts.Quiet)
 	}
 
 	return count, nil
@@ -468,8 +519,18 @@ func (s *SQLiteImportService) importTeamMembers(sess *xorm.Session, sqliteDB *sq
 
 // importProjects imports project data from SQLite
 func (s *SQLiteImportService) importProjects(sess *xorm.Session, sqliteDB *sql.DB, opts ImportOptions) (int64, error) {
+	// Count total projects for progress reporting
+	total, err := countTableRows(sqliteDB, "projects")
+	if err != nil {
+		return 0, fmt.Errorf("failed to count projects: %w", err)
+	}
+
 	if !opts.Quiet {
-		log.Info("Importing projects...")
+		if total > 0 {
+			log.Infof("Importing projects... (0/%d)", total)
+		} else {
+			log.Info("Importing projects...")
+		}
 	}
 
 	rows, err := sqliteDB.Query(`
@@ -527,8 +588,10 @@ func (s *SQLiteImportService) importProjects(sess *xorm.Session, sqliteDB *sql.D
 		}
 		count++
 
-		if !opts.Quiet && count%50 == 0 {
-			log.Infof("Imported %d projects...", count)
+		// Progress updates with total
+		if !opts.Quiet && total > 0 && count%50 == 0 {
+			percentage := (count * 100) / total
+			log.Infof("Importing projects... %d/%d (%d%%)", count, total, percentage)
 		}
 	}
 
@@ -537,7 +600,7 @@ func (s *SQLiteImportService) importProjects(sess *xorm.Session, sqliteDB *sql.D
 	}
 
 	if !opts.Quiet {
-		log.Infof("Imported %d projects", count)
+		logProgress(count, total, "projects", opts.Quiet)
 	}
 
 	return count, nil
@@ -545,8 +608,18 @@ func (s *SQLiteImportService) importProjects(sess *xorm.Session, sqliteDB *sql.D
 
 // importTasks imports task data from SQLite
 func (s *SQLiteImportService) importTasks(sess *xorm.Session, sqliteDB *sql.DB, opts ImportOptions) (int64, error) {
+	// Count total tasks for progress reporting
+	total, err := countTableRows(sqliteDB, "tasks")
+	if err != nil {
+		return 0, fmt.Errorf("failed to count tasks: %w", err)
+	}
+
 	if !opts.Quiet {
-		log.Info("Importing tasks...")
+		if total > 0 {
+			log.Infof("Importing tasks... (0/%d)", total)
+		} else {
+			log.Info("Importing tasks...")
+		}
 	}
 
 	rows, err := sqliteDB.Query(`
@@ -646,8 +719,10 @@ func (s *SQLiteImportService) importTasks(sess *xorm.Session, sqliteDB *sql.DB, 
 		}
 		count++
 
-		if !opts.Quiet && count%500 == 0 {
-			log.Infof("Imported %d tasks...", count)
+		// Progress updates with total
+		if !opts.Quiet && total > 0 && count%500 == 0 {
+			percentage := (count * 100) / total
+			log.Infof("Importing tasks... %d/%d (%d%%)", count, total, percentage)
 		}
 	}
 
@@ -656,7 +731,7 @@ func (s *SQLiteImportService) importTasks(sess *xorm.Session, sqliteDB *sql.DB, 
 	}
 
 	if !opts.Quiet {
-		log.Infof("Imported %d tasks", count)
+		logProgress(count, total, "tasks", opts.Quiet)
 	}
 
 	return count, nil
@@ -748,6 +823,73 @@ func (s *SQLiteImportService) importTaskLabels(sess *xorm.Session, sqliteDB *sql
 
 	if !opts.Quiet {
 		log.Infof("Imported %d task-label associations", count)
+	}
+
+	return count, nil
+}
+
+func (s *SQLiteImportService) importFileMetadata(sess *xorm.Session, sqliteDB *sql.DB, opts ImportOptions) (int64, error) {
+	if !opts.Quiet {
+		log.Info("Importing file metadata...")
+	}
+
+	// Check if files table exists
+	exists, err := tableExists(sqliteDB, "files")
+	if err != nil {
+		return 0, fmt.Errorf("failed to check if files table exists: %w", err)
+	}
+	if !exists {
+		if !opts.Quiet {
+			log.Info("Files table does not exist, skipping")
+		}
+		return 0, nil
+	}
+
+	rows, err := sqliteDB.Query(`
+		SELECT id, name, mime, size, created_by_id, created
+		FROM files
+		ORDER BY id
+	`)
+	if err != nil {
+		return 0, fmt.Errorf("failed to query files: %w", err)
+	}
+	defer rows.Close()
+
+	var count int64
+	for rows.Next() {
+		file := &files.File{}
+		var mime sql.NullString
+
+		err := rows.Scan(
+			&file.ID, &file.Name, &mime, &file.Size, &file.CreatedByID, &file.Created,
+		)
+		if err != nil {
+			return count, fmt.Errorf("failed to scan file row: %w", err)
+		}
+
+		// Handle nullable fields
+		if mime.Valid {
+			file.Mime = mime.String
+		}
+
+		if !opts.DryRun {
+			if _, err := sess.Insert(file); err != nil {
+				return count, fmt.Errorf("failed to insert file %d: %w", file.ID, err)
+			}
+		}
+		count++
+
+		if !opts.Quiet && count%100 == 0 {
+			log.Infof("Imported %d file records...", count)
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		return count, fmt.Errorf("error iterating files: %w", err)
+	}
+
+	if !opts.Quiet {
+		log.Infof("Imported %d file records", count)
 	}
 
 	return count, nil
@@ -1513,12 +1655,190 @@ func (s *SQLiteImportService) importFavorites(sess *xorm.Session, sqliteDB *sql.
 	return count, nil
 }
 
-func (s *SQLiteImportService) importFiles(opts ImportOptions) error {
-	if !opts.Quiet {
-		log.Info("File migration placeholder...")
+func (s *SQLiteImportService) importFiles(opts ImportOptions) (int64, int64, error) {
+	// If no files directory specified, skip file migration
+	if opts.FilesDir == "" {
+		if !opts.Quiet {
+			log.Info("No files directory specified, skipping file migration")
+		}
+		return 0, 0, nil
 	}
-	// TODO: Implement in T004 (SQLite Files Migration)
-	// This will copy files from source directory to target directory
-	// and update file paths in the database
+
+	// Validate source files directory exists
+	if _, err := os.Stat(opts.FilesDir); err != nil {
+		if os.IsNotExist(err) {
+			log.Warningf("Files directory does not exist: %s (continuing without files)", opts.FilesDir)
+			return 0, 0, nil
+		}
+		return 0, 0, fmt.Errorf("cannot access files directory: %w", err)
+	}
+
+	// Get target files directory from config
+	targetFilesDir := config.FilesBasePath.GetString()
+	if targetFilesDir == "" {
+		return 0, 0, fmt.Errorf("target files directory not configured (service.files.basepath)")
+	}
+
+	// Ensure target directory exists
+	if err := os.MkdirAll(targetFilesDir, 0755); err != nil {
+		return 0, 0, fmt.Errorf("failed to create target files directory: %w", err)
+	}
+
+	if !opts.Quiet {
+		log.Infof("Migrating files from %s to %s", opts.FilesDir, targetFilesDir)
+	}
+
+	// Get all file IDs from the database
+	var fileIDs []int64
+	err := s.DB.Table("files").Cols("id").Find(&fileIDs)
+	if err != nil {
+		return 0, 0, fmt.Errorf("failed to query file IDs: %w", err)
+	}
+
+	if len(fileIDs) == 0 {
+		if !opts.Quiet {
+			log.Info("No files to migrate")
+		}
+		return 0, 0, nil
+	}
+
+	if !opts.Quiet {
+		log.Infof("Found %d files to migrate", len(fileIDs))
+	}
+
+	var copied, failed int64
+	var errors []string
+
+	for _, fileID := range fileIDs {
+		// Source file path (stored by ID in source directory)
+		sourceFile := filepath.Join(opts.FilesDir, strconv.FormatInt(fileID, 10))
+
+		// Target file path (stored by ID in target directory)
+		targetFile := filepath.Join(targetFilesDir, strconv.FormatInt(fileID, 10))
+
+		// Check if source file exists
+		sourceInfo, err := os.Stat(sourceFile)
+		if err != nil {
+			if os.IsNotExist(err) {
+				log.Warningf("File %d: source file not found at %s (skipping)", fileID, sourceFile)
+				failed++
+				errors = append(errors, fmt.Sprintf("File %d: source file not found", fileID))
+				continue
+			}
+			log.Warningf("File %d: cannot access source file: %v (skipping)", fileID, err)
+			failed++
+			errors = append(errors, fmt.Sprintf("File %d: %v", fileID, err))
+			continue
+		}
+
+		// Check if target file already exists (avoid overwriting)
+		if _, err := os.Stat(targetFile); err == nil {
+			log.Debugf("File %d: target file already exists (skipping)", fileID)
+			copied++
+			continue
+		}
+
+		// Copy file with integrity verification
+		if err := copyFileWithVerification(sourceFile, targetFile, sourceInfo.Size()); err != nil {
+			log.Warningf("File %d: copy failed: %v (skipping)", fileID, err)
+			failed++
+			errors = append(errors, fmt.Sprintf("File %d: %v", fileID, err))
+
+			// Clean up partial file
+			_ = os.Remove(targetFile)
+			continue
+		}
+
+		copied++
+
+		if !opts.Quiet && copied%100 == 0 {
+			log.Infof("Progress: %d/%d files copied", copied, len(fileIDs))
+		}
+	}
+
+	if !opts.Quiet {
+		log.Infof("File migration complete: %d copied, %d failed", copied, failed)
+		if failed > 0 {
+			log.Warningf("Failed files will be reported in import summary")
+		}
+	}
+
+	return copied, failed, nil
+}
+
+// copyFileWithVerification copies a file and verifies its integrity using SHA-256 checksum
+func copyFileWithVerification(src, dst string, expectedSize int64) error {
+	// Open source file
+	sourceFile, err := os.Open(src)
+	if err != nil {
+		return fmt.Errorf("failed to open source: %w", err)
+	}
+	defer sourceFile.Close()
+
+	// Create target file
+	targetFile, err := os.Create(dst)
+	if err != nil {
+		return fmt.Errorf("failed to create target: %w", err)
+	}
+	defer targetFile.Close()
+
+	// Copy with checksum calculation
+	sourceHash := sha256.New()
+	targetHash := sha256.New()
+
+	// Use io.TeeReader to calculate source hash while copying
+	sourceReader := io.TeeReader(sourceFile, sourceHash)
+
+	// Copy to target and calculate target hash
+	targetWriter := io.MultiWriter(targetFile, targetHash)
+	written, err := io.Copy(targetWriter, sourceReader)
+	if err != nil {
+		return fmt.Errorf("copy failed: %w", err)
+	}
+
+	// Verify size
+	if written != expectedSize {
+		return fmt.Errorf("size mismatch: expected %d, got %d", expectedSize, written)
+	}
+
+	// Sync to disk
+	if err := targetFile.Sync(); err != nil {
+		return fmt.Errorf("failed to sync: %w", err)
+	}
+
+	// Verify checksums match
+	sourceChecksum := hex.EncodeToString(sourceHash.Sum(nil))
+	targetChecksum := hex.EncodeToString(targetHash.Sum(nil))
+
+	if sourceChecksum != targetChecksum {
+		return fmt.Errorf("checksum mismatch: source %s != target %s",
+			sourceChecksum[:16], targetChecksum[:16])
+	}
+
 	return nil
+}
+
+// countTableRows returns the number of rows in a table, or 0 if table doesn't exist
+func countTableRows(db *sql.DB, tableName string) (int64, error) {
+	var count int64
+	query := fmt.Sprintf("SELECT COUNT(*) FROM %s", tableName)
+	err := db.QueryRow(query).Scan(&count)
+	if err != nil {
+		// Table might not exist, return 0
+		return 0, nil
+	}
+	return count, nil
+}
+
+// logProgress logs progress in the format "Imported X/Y (Z%)"
+func logProgress(current, total int64, entityType string, quiet bool) {
+	if quiet {
+		return
+	}
+	if total > 0 {
+		percentage := (current * 100) / total
+		log.Infof("Imported %d/%d %s (%d%%)", current, total, entityType, percentage)
+	} else {
+		log.Infof("Imported %d %s", current, entityType)
+	}
 }

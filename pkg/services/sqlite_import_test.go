@@ -18,11 +18,14 @@ package services
 
 import (
 	"database/sql"
+	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"testing"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
@@ -144,14 +147,387 @@ func TestSQLiteImportService_BasicImport(t *testing.T) {
 
 // TestSQLiteImportService_TransactionRollback tests transaction rollback on error
 func TestSQLiteImportService_TransactionRollback(t *testing.T) {
-	t.Skip("TODO: Implement in T003 (Transaction Management)")
-	// This test will verify that database state is unchanged after a failed import
+	engine := getTestEngine()
+	registry := NewServiceRegistry(engine)
+	service := registry.SQLiteImport()
+
+	// Create a test database with unique IDs to avoid conflicts with other tests
+	tmpDB1 := createTestSQLiteDBForRollback(t, 5000) // Use high IDs (5000+)
+	defer os.Remove(tmpDB1)
+
+	// Get initial counts
+	var initialUserCount int64
+	_, err := engine.SQL("SELECT COUNT(*) FROM users").Get(&initialUserCount)
+	require.NoError(t, err)
+
+	// First import - should succeed
+	opts1 := ImportOptions{
+		SQLiteFile: tmpDB1,
+		DryRun:     false,
+		Quiet:      true,
+	}
+
+	report1, err := service.ImportFromSQLite(opts1)
+	require.NoError(t, err)
+	require.True(t, report1.Success)
+
+	// Get counts after first import
+	var countAfterFirst int64
+	_, err = engine.SQL("SELECT COUNT(*) FROM users").Get(&countAfterFirst)
+	require.NoError(t, err)
+	assert.Equal(t, initialUserCount+1, countAfterFirst, "Should have one more user after first import")
+
+	// Now try to import the same data again (will cause duplicate key violations)
+	tmpDB2 := createTestSQLiteDBForRollback(t, 5000) // Same IDs - will conflict
+	defer os.Remove(tmpDB2)
+
+	opts2 := ImportOptions{
+		SQLiteFile: tmpDB2,
+		DryRun:     false,
+		Quiet:      true,
+	}
+
+	// Import should fail due to duplicate key constraint violation
+	report2, err := service.ImportFromSQLite(opts2)
+	require.Error(t, err, "Import should fail due to duplicate key violation")
+	assert.False(t, report2.Success, "Import should not be successful")
+	assert.False(t, report2.DatabaseImported, "Database should not be marked as imported")
+
+	// Verify database state is unchanged (transaction rolled back)
+	var countAfterFailed int64
+	_, err = engine.SQL("SELECT COUNT(*) FROM users").Get(&countAfterFailed)
+	require.NoError(t, err)
+
+	assert.Equal(t, countAfterFirst, countAfterFailed, "User count should be unchanged after rollback")
+
+	// Verify the specific user from failed import wasn't duplicated
+	var count int64
+	count, err = engine.Where("username = ?", "testuser_rollback_5000").Count(&user.User{})
+	require.NoError(t, err)
+	assert.Equal(t, int64(1), count, "Should only have one instance of the test user (from first import)")
+
+	// Verify error is reported
+	assert.Greater(t, len(report2.Errors), 0, "Should have error messages")
+	assert.Contains(t, report2.Errors[0], "failed to insert", "Error should mention insert failure")
+	assert.Greater(t, report2.Duration, time.Duration(0), "Should have recorded duration")
+
+	// Cleanup - remove the test user
+	_, err = engine.Where("id = ?", 5000).Delete(&user.User{})
+	require.NoError(t, err)
+}
+
+// createTestSQLiteDBForRollback creates a test SQLite database with a specific ID range
+func createTestSQLiteDBForRollback(t *testing.T, baseID int) string {
+	tmpFile := createEmptySQLiteDB(t)
+
+	sqliteDB, err := sql.Open("sqlite3", tmpFile)
+	require.NoError(t, err)
+	defer sqliteDB.Close()
+
+	now := time.Now()
+
+	// Insert test user with specified ID
+	_, err = sqliteDB.Exec(`
+		INSERT INTO users (id, username, password, email, name, created, updated, status)
+		VALUES (?, ?, '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.', ?, 'Test Rollback User', ?, ?, 0)
+	`, baseID, fmt.Sprintf("testuser_rollback_%d", baseID), fmt.Sprintf("rollback_%d@example.com", baseID), now, now)
+	require.NoError(t, err)
+
+	return tmpFile
 }
 
 // TestSQLiteImportService_ProgressReporting tests progress reporting
 func TestSQLiteImportService_ProgressReporting(t *testing.T) {
-	t.Skip("TODO: Implement in T005 (Progress Reporting)")
-	// This test will verify that progress is reported correctly
+	// Setup
+	engine := getTestEngine()
+	registry := NewServiceRegistry(engine)
+	service := registry.SQLiteImport()
+
+	// Cleanup any existing data from previous tests
+	_, _ = engine.Exec("DELETE FROM users WHERE id >= 6000")
+	_, _ = engine.Exec("DELETE FROM projects WHERE id >= 6000")
+	_, _ = engine.Exec("DELETE FROM tasks WHERE id >= 6000")
+
+	// Create test SQLite database with enough records to trigger progress reporting
+	dbFile := createTestSQLiteDBForProgress(t)
+	defer os.Remove(dbFile)
+
+	// Capture log output
+	// Note: We can't easily capture log output in tests without modifying the logger,
+	// so we'll verify the import completes successfully with counts
+	opts := ImportOptions{
+		SQLiteFile: dbFile,
+		DryRun:     false,
+		Quiet:      false, // Enable progress reporting
+	}
+
+	report, err := service.ImportFromSQLite(opts)
+
+	// Verify import succeeded
+	assert.NoError(t, err)
+	assert.True(t, report.Success)
+	assert.True(t, report.DatabaseImported)
+
+	// Verify all entities were imported (progress was tracked)
+	assert.Equal(t, int64(150), report.Counts.Users, "Should import 150 users")
+	assert.Equal(t, int64(50), report.Counts.Projects, "Should import 50 projects")
+	assert.Equal(t, int64(600), report.Counts.Tasks, "Should import 600 tasks")
+
+	// Cleanup
+	_, _ = engine.Exec("DELETE FROM users WHERE id >= 6000")
+	_, _ = engine.Exec("DELETE FROM projects WHERE id >= 6000")
+	_, _ = engine.Exec("DELETE FROM tasks WHERE id >= 6000")
+}
+
+// createTestSQLiteDBForProgress creates a test database with enough records for progress reporting
+func createTestSQLiteDBForProgress(t *testing.T) string {
+	tmpFile := createEmptySQLiteDB(t)
+
+	db, err := sql.Open("sqlite3", tmpFile)
+	if err != nil {
+		t.Fatalf("Failed to open SQLite database: %v", err)
+	}
+	defer db.Close()
+
+	// Insert 150 users (will trigger progress at 100)
+	for i := 6000; i < 6150; i++ {
+		_, err = db.Exec(`
+			INSERT INTO users (id, username, password, email, name, created, updated, status)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+		`, i, fmt.Sprintf("user%d", i), "hashed", fmt.Sprintf("user%d@example.com", i),
+			fmt.Sprintf("User %d", i), time.Now(), time.Now(), 0)
+		if err != nil {
+			t.Fatalf("Failed to insert user: %v", err)
+		}
+	}
+
+	// Insert 50 projects (will trigger progress at 50)
+	for i := 6000; i < 6050; i++ {
+		_, err = db.Exec(`
+			INSERT INTO projects (id, title, description, owner_id, created, updated, is_archived)
+			VALUES (?, ?, ?, ?, ?, ?, ?)
+		`, i, fmt.Sprintf("Project %d", i), "Test project", 6000, time.Now(), time.Now(), false)
+		if err != nil {
+			t.Fatalf("Failed to insert project: %v", err)
+		}
+	}
+
+	// Insert 600 tasks (will trigger progress at 500)
+	for i := 6000; i < 6600; i++ {
+		projectID := 6000 + (i % 50) // Distribute tasks across projects
+		_, err = db.Exec(`
+			INSERT INTO tasks (id, title, description, done, created_by_id, project_id, created, updated, "index")
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+		`, i, fmt.Sprintf("Task %d", i), "Test task", false, 6000, projectID, time.Now(), time.Now(), i)
+		if err != nil {
+			t.Fatalf("Failed to insert task: %v", err)
+		}
+	}
+
+	return tmpFile
+}
+
+// TestSQLiteImportService_FilesMigration tests file migration functionality
+func TestSQLiteImportService_FilesMigration(t *testing.T) {
+	// Setup
+	engine := getTestEngine()
+	registry := NewServiceRegistry(engine)
+	service := registry.SQLiteImport()
+
+	// Cleanup any existing data from previous tests
+	_, _ = engine.Exec("DELETE FROM users WHERE id >= 1000")
+	_, _ = engine.Exec("DELETE FROM teams WHERE id >= 1000")
+	_, _ = engine.Exec("DELETE FROM projects WHERE id >= 1000")
+	_, _ = engine.Exec("DELETE FROM tasks WHERE id >= 1000")
+	_, _ = engine.Exec("DELETE FROM labels WHERE id >= 1000")
+	_, _ = engine.Exec("DELETE FROM files WHERE id IN (1, 2, 3)")
+
+	// Create test SQLite database with file records
+	sqliteFile := createTestSQLiteDBWithFiles(t)
+	defer os.Remove(sqliteFile)
+
+	// Create source files directory with test files
+	sourceFilesDir := filepath.Join(t.TempDir(), "source_files")
+	require.NoError(t, os.MkdirAll(sourceFilesDir, 0755))
+
+	// Create test files with known content
+	testFiles := map[int64]string{
+		1: "This is test file 1 content",
+		2: "Test file 2 with different content",
+		3: "Another test file with more text",
+	}
+
+	for fileID, content := range testFiles {
+		filePath := filepath.Join(sourceFilesDir, strconv.FormatInt(fileID, 10))
+		require.NoError(t, os.WriteFile(filePath, []byte(content), 0644))
+	}
+
+	// Create target files directory
+	targetFilesDir := filepath.Join(t.TempDir(), "target_files")
+	require.NoError(t, os.MkdirAll(targetFilesDir, 0755))
+
+	// Override config for testing
+	originalBasePath := config.FilesBasePath.GetString()
+	config.FilesBasePath.Set(targetFilesDir)
+	defer config.FilesBasePath.Set(originalBasePath)
+
+	// Import with files
+	report, err := service.ImportFromSQLite(ImportOptions{
+		SQLiteFile: sqliteFile,
+		FilesDir:   sourceFilesDir,
+		DryRun:     false,
+		Quiet:      true,
+	})
+
+	// Verify no error
+	require.NoError(t, err)
+	assert.True(t, report.Success)
+	assert.True(t, report.DatabaseImported)
+	assert.True(t, report.FilesMigrated)
+	assert.Nil(t, report.FilesError)
+
+	// Verify files were copied correctly
+	for fileID, expectedContent := range testFiles {
+		targetPath := filepath.Join(targetFilesDir, strconv.FormatInt(fileID, 10))
+
+		// Check file exists
+		assert.FileExists(t, targetPath, "File %d should exist", fileID)
+
+		// Check content matches
+		actualContent, err := os.ReadFile(targetPath)
+		require.NoError(t, err, "Should be able to read file %d", fileID)
+		assert.Equal(t, expectedContent, string(actualContent), "Content should match for file %d", fileID)
+	}
+
+	// Cleanup
+	_, _ = engine.Exec("DELETE FROM files WHERE id IN (1, 2, 3)")
+}
+
+// TestSQLiteImportService_FilesMigration_MissingFiles tests graceful handling of missing files
+func TestSQLiteImportService_FilesMigration_MissingFiles(t *testing.T) {
+	// Setup
+	engine := getTestEngine()
+	registry := NewServiceRegistry(engine)
+	service := registry.SQLiteImport()
+
+	// Cleanup any existing data from previous tests
+	_, _ = engine.Exec("DELETE FROM users WHERE id >= 1000")
+	_, _ = engine.Exec("DELETE FROM teams WHERE id >= 1000")
+	_, _ = engine.Exec("DELETE FROM projects WHERE id >= 1000")
+	_, _ = engine.Exec("DELETE FROM tasks WHERE id >= 1000")
+	_, _ = engine.Exec("DELETE FROM labels WHERE id >= 1000")
+	_, _ = engine.Exec("DELETE FROM files WHERE id IN (1, 2, 3)")
+
+	// Create test SQLite database with file records
+	sqliteFile := createTestSQLiteDBWithFiles(t)
+	defer os.Remove(sqliteFile)
+
+	// Create source files directory but don't create all files (simulate missing files)
+	sourceFilesDir := filepath.Join(t.TempDir(), "source_files_missing")
+	require.NoError(t, os.MkdirAll(sourceFilesDir, 0755))
+
+	// Only create file 1, leave files 2 and 3 missing
+	filePath := filepath.Join(sourceFilesDir, "1")
+	require.NoError(t, os.WriteFile(filePath, []byte("Test file 1"), 0644))
+
+	// Create target files directory
+	targetFilesDir := filepath.Join(t.TempDir(), "target_files_missing")
+	require.NoError(t, os.MkdirAll(targetFilesDir, 0755))
+
+	// Override config for testing
+	originalBasePath := config.FilesBasePath.GetString()
+	config.FilesBasePath.Set(targetFilesDir)
+	defer config.FilesBasePath.Set(originalBasePath)
+
+	// Import with missing files - should not fail
+	report, err := service.ImportFromSQLite(ImportOptions{
+		SQLiteFile: sqliteFile,
+		FilesDir:   sourceFilesDir,
+		DryRun:     false,
+		Quiet:      true,
+	})
+
+	// Verify no error - missing files should be reported but not block import
+	require.NoError(t, err)
+	assert.True(t, report.Success)
+	assert.True(t, report.DatabaseImported)
+
+	// Verify file 1 was copied
+	targetPath1 := filepath.Join(targetFilesDir, "1")
+	assert.FileExists(t, targetPath1, "File 1 should exist")
+
+	// Verify files 2 and 3 don't exist (they were missing)
+	targetPath2 := filepath.Join(targetFilesDir, "2")
+	targetPath3 := filepath.Join(targetFilesDir, "3")
+	assert.NoFileExists(t, targetPath2, "File 2 should not exist (was missing)")
+	assert.NoFileExists(t, targetPath3, "File 3 should not exist (was missing)")
+
+	// Cleanup
+	_, _ = engine.Exec("DELETE FROM files WHERE id IN (1, 2, 3)")
+}
+
+// TestSQLiteImportService_FilesMigration_NoFilesDir tests import without files directory
+func TestSQLiteImportService_FilesMigration_NoFilesDir(t *testing.T) {
+	// Setup
+	engine := getTestEngine()
+	registry := NewServiceRegistry(engine)
+	service := registry.SQLiteImport()
+
+	// Cleanup any existing data from previous tests
+	_, _ = engine.Exec("DELETE FROM users WHERE id >= 1000")
+	_, _ = engine.Exec("DELETE FROM teams WHERE id >= 1000")
+	_, _ = engine.Exec("DELETE FROM projects WHERE id >= 1000")
+	_, _ = engine.Exec("DELETE FROM tasks WHERE id >= 1000")
+	_, _ = engine.Exec("DELETE FROM labels WHERE id >= 1000")
+	_, _ = engine.Exec("DELETE FROM files WHERE id IN (1, 2, 3)")
+
+	// Create test SQLite database
+	sqliteFile := createTestSQLiteDBWithFiles(t)
+	defer os.Remove(sqliteFile)
+
+	// Import without files directory - should succeed, just skip files
+	report, err := service.ImportFromSQLite(ImportOptions{
+		SQLiteFile: sqliteFile,
+		FilesDir:   "", // No files directory
+		DryRun:     false,
+		Quiet:      true,
+	})
+
+	// Verify success
+	require.NoError(t, err)
+	assert.True(t, report.Success)
+	assert.True(t, report.DatabaseImported)
+	// FilesMigrated should be false since no files dir was provided
+	assert.False(t, report.FilesMigrated)
+
+	// Cleanup
+	_, _ = engine.Exec("DELETE FROM files WHERE id IN (1, 2, 3)")
+}
+
+// Helper functions
+
+// createTestSQLiteDBWithFiles creates a test SQLite database with file records
+func createTestSQLiteDBWithFiles(t *testing.T) string {
+	// Use the existing helper to create a full test database
+	tmpFile := createTestSQLiteDB(t)
+
+	sqliteDB, err := sql.Open("sqlite3", tmpFile)
+	require.NoError(t, err)
+	defer sqliteDB.Close()
+
+	now := time.Now().Unix()
+
+	// Insert test file records (using user ID 1000 from createTestSQLiteDB)
+	_, err = sqliteDB.Exec(`
+		INSERT INTO files (id, name, mime, size, created_by_id, created)
+		VALUES 
+			(1, 'test_file_1.txt', 'text/plain', 28, 1000, ?),
+			(2, 'test_file_2.txt', 'text/plain', 35, 1000, ?),
+			(3, 'test_file_3.txt', 'text/plain', 36, 1000, ?)
+	`, now, now, now)
+	require.NoError(t, err)
+
+	return tmpFile
 }
 
 // Helper functions
@@ -261,6 +637,15 @@ func createEmptySQLiteDB(t *testing.T) string {
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			task_id INTEGER NOT NULL,
 			label_id INTEGER NOT NULL,
+			created DATETIME NOT NULL
+		);
+
+		CREATE TABLE files (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT NOT NULL,
+			mime TEXT,
+			size INTEGER NOT NULL,
+			created_by_id INTEGER NOT NULL,
 			created DATETIME NOT NULL
 		);
 	`
