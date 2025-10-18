@@ -226,16 +226,15 @@ func convertFiltersToDBFilterCond(rawFilters []*taskFilter, includeNulls bool) (
 	}
 
 	if len(dbFilters) > 0 {
-		if len(dbFilters) == 1 {
-			filterCond = dbFilters[0]
-		} else {
-			for i, f := range dbFilters {
+		filterCond = dbFilters[0]
+		if len(dbFilters) >= 1 {
+			for i := range dbFilters {
 				if len(dbFilters) > i+1 {
 					switch rawFilters[i+1].join {
 					case filterConcatOr:
-						filterCond = builder.Or(filterCond, f, dbFilters[i+1])
+						filterCond = builder.Or(filterCond, dbFilters[i+1])
 					case filterConcatAnd:
-						filterCond = builder.And(filterCond, f, dbFilters[i+1])
+						filterCond = builder.And(filterCond, dbFilters[i+1])
 					}
 				}
 			}
