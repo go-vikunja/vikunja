@@ -90,13 +90,71 @@ Claude: I'll add that task to the Website Redesign project.
 ## n8n AI Agent
 
 ### Prerequisites
-- n8n instance running (cloud or self-hosted)
-- Vikunja MCP Server running
-- HTTP Request node capability in n8n
+- n8n instance running (version with AI Agent support)
+- Vikunja MCP Server running and accessible
+- n8n AI Agent and Tool MCP nodes
 
-### Setup Method 1: HTTP Requests (Recommended for n8n)
+### Setup with MCP Tool Node (Recommended)
 
-Since n8n doesn't natively support MCP protocol, we'll use HTTP endpoints:
+n8n has native MCP support through the [Tool MCP node](https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.toolmcp/).
+
+#### Step-by-Step Setup:
+
+1. **Create a new workflow in n8n**
+
+2. **Add an AI Agent node** (requires n8n AI features)
+   - This is the LangChain AI Agent that orchestrates tool usage
+
+3. **Add a Tool MCP sub-node** to your AI Agent
+   - Click "Add Tool" → Select "Tool MCP"
+
+4. **Configure MCP Connection:**
+
+**For Docker deployment:**
+```json
+{
+  "command": "docker",
+  "args": [
+    "exec", "-i", "vikunja-mcp-server",
+    "node", "/app/dist/index.js"
+  ],
+  "env": {
+    "VIKUNJA_API_TOKEN": "your-vikunja-token-here"
+  }
+}
+```
+
+**For local/systemd deployment:**
+```json
+{
+  "command": "node",
+  "args": ["/path/to/mcp-server/dist/index.js"],
+  "env": {
+    "VIKUNJA_API_URL": "http://localhost:3456",
+    "VIKUNJA_API_TOKEN": "your-vikunja-token-here"
+  }
+}
+```
+
+5. **Test the connection:**
+   - The Tool MCP node will automatically discover all 21 Vikunja tools
+   - Your AI agent can now use them based on natural language prompts
+
+#### Example Workflow:
+
+```
+Trigger (Webhook/Schedule)
+  ↓
+AI Agent (with Tool MCP sub-node)
+  → Prompt: "Create a task in project 1 called 'Review PR' due tomorrow"
+  → AI uses create_task tool automatically
+  ↓
+Output task details
+```
+
+### Alternative: HTTP Requests (For workflows without AI Agent)
+
+If you need direct tool calls without an AI agent:
 
 1. **Create HTTP Request Node:**
    - Method: POST
@@ -121,33 +179,7 @@ Since n8n doesn't natively support MCP protocol, we'll use HTTP endpoints:
 ```
 
 3. **Available Tools:**
-   - `create_project` - Create new projects
-   - `create_task` - Create tasks
-   - `update_task` - Update existing tasks
-   - `complete_task` - Mark tasks complete
-   - `search_tasks` - Search and filter tasks
-   - `bulk_update_tasks` - Update multiple tasks
-   - See [API.md](./API.md) for complete list
-
-### Setup Method 2: MCP over stdio (Advanced)
-
-For n8n self-hosted with custom nodes:
-
-1. **Create Custom MCP Node** (requires n8n community node development)
-2. **Use Execute Command node:**
-
-```javascript
-// n8n Execute Command Node
-const { spawn } = require('child_process');
-
-const mcp = spawn('node', ['/path/to/mcp-server/dist/index.js'], {
-  env: {
-    VIKUNJA_API_URL: 'http://localhost:3456',
-    VIKUNJA_API_TOKEN: 'your-token'
-  }
-});
-
-// Send MCP request over stdio
+   - All 21 MCP tools - see [API.md](./API.md) for complete reference
 const request = {
   jsonrpc: '2.0',
   id: 1,

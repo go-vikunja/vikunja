@@ -71,21 +71,23 @@ Edit `~/.config/Claude/claude_desktop_config.json`:
 
 #### n8n
 
-Use the HTTP Request node:
+Use the [MCP Tool node](https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.toolmcp/) in your AI Agent workflow:
 
-```json
-{
-  "url": "http://localhost:3457/tools/execute",
-  "method": "POST",
-  "body": {
-    "tool": "create_task",
-    "arguments": {
-      "project_id": 1,
-      "title": "Task from n8n"
-    }
-  }
-}
-```
+1. Add an **AI Agent** node to your workflow
+2. Add a **Tool MCP** sub-node
+3. Configure the MCP connection:
+   ```json
+   {
+     "command": "docker",
+     "args": ["exec", "-i", "vikunja-mcp-server", "node", "/app/dist/index.js"],
+     "env": {
+       "VIKUNJA_API_TOKEN": "your-vikunja-token"
+     }
+   }
+   ```
+4. The AI agent can now use all 21 Vikunja tools automatically
+
+See [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md#n8n) for detailed setup instructions.
 
 ### 3. Test It!
 
