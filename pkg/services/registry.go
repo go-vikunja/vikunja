@@ -61,6 +61,7 @@ type ServiceRegistry struct {
 	projectViews *ProjectViewService
 	reactions    *ReactionsService
 	savedFilter  *SavedFilterService
+	sqliteImport *SQLiteImportService
 	subscription *SubscriptionService
 	task         *TaskService
 	team         *TeamService
@@ -411,6 +412,24 @@ func (r *ServiceRegistry) SavedFilter() *SavedFilterService {
 		}
 	}
 	return r.savedFilter
+}
+
+// SQLiteImport returns the SQLiteImportService instance (thread-safe lazy init).
+func (r *ServiceRegistry) SQLiteImport() *SQLiteImportService {
+	r.mu.RLock()
+	if r.sqliteImport != nil {
+		defer r.mu.RUnlock()
+		return r.sqliteImport
+	}
+	r.mu.RUnlock()
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if r.sqliteImport == nil {
+		r.sqliteImport = NewSQLiteImportService(r.db, r)
+	}
+	return r.sqliteImport
 }
 
 // Subscription returns the SubscriptionService instance (thread-safe lazy init).
