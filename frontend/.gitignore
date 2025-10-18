@@ -18,6 +18,7 @@ coverage
 .vite/
 
 # Test files
+cypress/downloads
 cypress/screenshots
 cypress/videos
 

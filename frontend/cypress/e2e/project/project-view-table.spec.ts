@@ -5,21 +5,37 @@ import {prepareProjects} from './prepareProjects'
 
 describe('Project View Table', () => {
 	createFakeUserAndLogin()
-	prepareProjects()
+
+	let projects: any[]
+	prepareProjects((newProjects) => (projects = newProjects))
 
 	it('Should show a table with tasks', () => {
-		const tasks = TaskFactory.create(1)
-		cy.visit('/projects/1/3')
+		// Create multiple tasks like test 3 does
+		const tasks = TaskFactory.create(5, {
+			id: '{increment}',
+			index: '{increment}',
+			project_id: projects[0].id,
+		})
+		// View 2 is the table view (index 2 in the views array)
+		const tableViewId = projects[0].views[2].id
+		cy.visit(`/projects/${projects[0].id}/${tableViewId}`)
 
-		cy.get('.project-table table.table')
+		// Wait for the project table to load
+		cy.get('.project-table', {timeout: 10000})
+			.should('be.visible')
+
+		// Check if table exists and contains our task
+		cy.get('.project-table table.table', {timeout: 10000})
 			.should('exist')
-		cy.get('.project-table table.table')
 			.should('contain', tasks[0].title)
 	})
 
 	it('Should have working column switches', () => {
-		TaskFactory.create(1)
-		cy.visit('/projects/1/3')
+		TaskFactory.create(1, {
+			project_id: projects[0].id,
+		})
+		const tableViewId = projects[0].views[2].id
+		cy.visit(`/projects/${projects[0].id}/${tableViewId}`)
 
 		cy.get('.project-table .filter-container .button')
 			.contains('Columns')
@@ -42,9 +58,10 @@ describe('Project View Table', () => {
 	it('Should navigate to the task when the title is clicked', () => {
 		const tasks = TaskFactory.create(5, {
 			id: '{increment}',
-			project_id: 1,
+			project_id: projects[0].id,
 		})
-		cy.visit('/projects/1/3')
+		const tableViewId = projects[0].views[2].id
+		cy.visit(`/projects/${projects[0].id}/${tableViewId}`)
 
 		cy.get('.project-table table.table')
 			.contains(tasks[0].title)

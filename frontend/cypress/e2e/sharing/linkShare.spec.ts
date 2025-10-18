@@ -34,7 +34,9 @@ describe('Link shares', () => {
 		cy.get('.tasks')
 			.should('contain', tasks[0].title)
 		
-		cy.url().should('contain', `/projects/${project.id}/1#share-auth-token=${share.hash}`)
+		// Check URL contains the project path and share hash (allowing query params like ?page=1)
+		cy.url().should('contain', `/projects/${project.id}/1`)
+		cy.url().should('contain', `#share-auth-token=${share.hash}`)
 	})
 
 	it('Should work when directly viewing a project with share hash present', () => {

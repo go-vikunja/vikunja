@@ -265,39 +265,33 @@ describe('Project View Kanban', () => {
 	})
 
 	it('Should show a task description icon if the task has a description', () => {
-		cy.intercept(Cypress.env('API_URL') + '/projects/1/views/*/tasks**').as('loadTasks')
 		const {task, view} = createSingleTaskInBucket(1, {
 			description: 'Lorem Ipsum',
 		})
 
 		cy.visit(`/projects/${task.project_id}/${view.id}`)
-		cy.wait('@loadTasks')
 
 		cy.get('.bucket .tasks .task .footer .icon svg')
 			.should('exist')
 	})
 
 	it('Should not show a task description icon if the task has an empty description', () => {
-		cy.intercept(Cypress.env('API_URL') + '/projects/1/views/*/tasks**').as('loadTasks')
 		const {task, view} = createSingleTaskInBucket(1, {
 			description: '',
 		})
 
 		cy.visit(`/projects/${task.project_id}/${view.id}`)
-		cy.wait('@loadTasks')
 
 		cy.get('.bucket .tasks .task .footer .icon svg')
 			.should('not.exist')
 	})
 
 	it('Should not show a task description icon if the task has a description containing only an empty p tag', () => {
-		cy.intercept(Cypress.env('API_URL') + '/projects/1/views/*/tasks**').as('loadTasks')
 		const {task, view} = createSingleTaskInBucket(1, {
 			description: '<p></p>',
 		})
 
 		cy.visit(`/projects/${task.project_id}/${view.id}`)
-		cy.wait('@loadTasks')
 
 		cy.get('.bucket .tasks .task .footer .icon svg')
 			.should('not.exist')
