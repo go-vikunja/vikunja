@@ -1,139 +1,82 @@
-# Vikunja MCP Server# Vikunja MCP Server
+# Vikunja MCP Server
 
+> Model Context Protocol (MCP) server for Vikunja task management, enabling AI agents to interact with Vikunja through a standardized protocol.
 
-
-> Model Context Protocol (MCP) server providing AI agents with full access to Vikunja task management.Model Context Protocol (MCP) server for Vikunja task management, enabling AI agents to interact with Vikunja through a standardized protocol.
-
-
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)## Features
-
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Tests](https://img.shields.io/badge/tests-193%2F196%20passing-brightgreen)](./tests)
+[![Coverage](https://img.shields.io/badge/coverage-98.5%25-brightgreen)](./tests)
 
-[![Coverage](https://img.shields.io/badge/coverage-98.5%25-brightgreen)](./tests)- **Native MCP Integration**: Full MCP v1.0+ protocol support
+## What is This?
 
-- **Resource Exposure**: Projects, tasks, labels, teams, and more
+The Vikunja MCP Server enables AI agents (like Claude Desktop, n8n, custom scripts) to interact with [Vikunja](https://vikunja.io) through the [Model Context Protocol](https://modelcontextprotocol.io).
 
-## What is This?- **Tool Operations**: Create, update, delete operations for all entities
-
-- **Rate Limiting**: Per-token rate limiting with Redis backend
-
-The Vikunja MCP Server enables AI agents (like Claude Desktop, n8n, custom scripts) to interact with [Vikunja](https://vikunja.io) through the [Model Context Protocol](https://modelcontextprotocol.io).- **Authentication**: Vikunja API token-based authentication
-
-- **Performance**: <200ms p95 latency for tool calls
-
-**Key Features:**- **Scalability**: Stateless design for horizontal scaling
-
+**Key Features:**
 - 🤖 **21 MCP Tools** - Complete CRUD for projects, tasks, labels, and more
-
-- 🔐 **Secure** - Token-based authentication with rate limiting## Installation
-
+- 🔐 **Secure** - Token-based authentication with rate limiting
 - 🚀 **Fast** - <200ms p95 latency, stateless for horizontal scaling
+- 📦 **Easy Deploy** - Docker Compose or standalone
+- 📚 **Well Documented** - API reference, examples, and integration guides
 
-- 📦 **Easy Deploy** - Docker Compose or standalone```bash
+## Features
 
-- 📚 **Well Documented** - API reference, examples, and integration guidesnpm install
-
-```
+- **Native MCP Integration**: Full MCP v1.0+ protocol support
+- **Resource Exposure**: Projects, tasks, labels, teams, and more
+- **Tool Operations**: Create, update, delete operations for all entities
+- **Rate Limiting**: Per-token rate limiting with Redis backend
+- **Authentication**: Vikunja API token-based authentication
+- **Performance**: <200ms p95 latency for tool calls
+- **Scalability**: Stateless design for horizontal scaling
 
 ## Quick Start
 
-## Configuration
-
 ### 1. Deploy with Docker (2 minutes)
 
-Create a `.env` file:
-
 ```bash
+# Clone or download the MCP server
+cd /path/to/vikunja-mcp-server
 
-# Clone or download the MCP server```env
+# Configure environment
+cp .env.example .env
+nano .env  # Set your Vikunja URL and token
 
-cd /path/to/vikunja-mcp-serverVIKUNJA_API_URL=http://localhost:3456
-
-MCP_PORT=3457
-
-# Configure environmentREDIS_HOST=localhost
-
-cp .env.example .envREDIS_PORT=6379
-
-nano .env  # Set your Vikunja URL and tokenREDIS_PASSWORD=
-
-RATE_LIMIT_DEFAULT=100
-
-# Start servicesRATE_LIMIT_BURST=120
-
-docker-compose up -dLOG_LEVEL=info
-
-```
+# Start services
+docker-compose up -d
 
 # Verify
-
-curl http://localhost:3457/health## Development
-
+curl http://localhost:3457/health
 ```
 
-```bash
-
-### 2. Configure Your AI Agent# Run in development mode with hot reload
-
-npm run dev
+### 2. Configure Your AI Agent
 
 #### Claude Desktop
 
-# Build for production
-
-Edit `~/.config/Claude/claude_desktop_config.json`:npm run build
-
-
-
-```json# Run tests
-
-{npm test
-
-  "mcpServers": {
-
-    "vikunja": {# Run tests with coverage
-
-      "command": "docker",npm run test:coverage
-
-      "args": [
-
-        "exec", "-i", "vikunja-mcp-server",# Lint code
-
-        "node", "/app/dist/index.js"npm run lint
-
-      ],
-
-      "env": {# Format code
-
-        "VIKUNJA_API_TOKEN": "your-vikunja-token"npm run format
-
-      }```
-
-    }
-
-  }## Architecture
-
-}
-
-``````
-
-AI Agent → MCP Server → Vikunja API v1 → Service Layer → Database
-
-#### n8n              ↓
-
-        Resources/Tools
-
-Use the HTTP Request node:```
+Edit `~/.config/Claude/claude_desktop_config.json`:
 
 ```json
+{
+  "mcpServers": {
+    "vikunja": {
+      "command": "docker",
+      "args": [
+        "exec", "-i", "vikunja-mcp-server",
+        "node", "/app/dist/index.js"
+      ],
+      "env": {
+        "VIKUNJA_API_TOKEN": "your-vikunja-token"
+      }
+    }
+  }
+}
+```
 
-{## License
+#### n8n
 
+Use the HTTP Request node:
+
+```json
+{
   "url": "http://localhost:3457/tools/execute",
-
-  "method": "POST",MIT
-
+  "method": "POST",
   "body": {
     "tool": "create_task",
     "arguments": {
@@ -166,6 +109,12 @@ curl -X POST http://localhost:3457/tools/execute \
       "token": "your-vikunja-token"
     }
   }'
+```
+
+## Installation
+
+```bash
+npm install
 ```
 
 ## Available Tools
@@ -211,7 +160,20 @@ curl -X POST http://localhost:3457/tools/execute \
 
 ## Configuration
 
-Create a `.env` file or set environment variables:
+Create a `.env` file:
+
+```env
+VIKUNJA_API_URL=http://localhost:3456
+MCP_PORT=3457
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=
+RATE_LIMIT_DEFAULT=100
+RATE_LIMIT_BURST=120
+LOG_LEVEL=info
+```
+
+Or set environment variables:
 
 ```bash
 # Required
@@ -252,10 +214,10 @@ npm run test:coverage
 # Build
 npm run build
 
-# Run in development mode
+# Run in development mode with hot reload
 npm run dev
 
-# Lint
+# Lint code
 npm run lint
 
 # Format code
@@ -304,6 +266,14 @@ vikunja-mcp-server/
 │  Vikunja API    │
 │  (Port 3456)    │
 └─────────────────┘
+```
+
+Alternative view:
+
+```
+AI Agent → MCP Server → Vikunja API v1 → Service Layer → Database
+              ↓
+        Resources/Tools
 ```
 
 ## Use Cases
@@ -387,6 +357,8 @@ Contributions welcome! Please:
 2. Maintain coverage: `npm run test:coverage` (>90%)
 3. Follow style guide: `npm run lint`
 4. Update docs as needed
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 
 ## License
 
