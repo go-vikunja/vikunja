@@ -131,15 +131,28 @@
 
 **Goal**: Validate all fixes from initial deployment testing before proceeding to Phase 4.
 
-**Context**: During manual testing of Phase 1-3, six critical issues were discovered and fixed:
+**Context**: During manual testing of Phase 1-3, eight critical issues were discovered and fixed:
 1. Node.js version incompatibility (18.20.8 → 22.18.0 for Vite 7.1.10)
 2. Repository URL using upstream instead of aroige fork (missing mcp-server/)
 3. MCP build using pnpm instead of npm (package-lock.json vs pnpm-lock.yaml mismatch)
 4. Service generation double-prefixing service_type ("vikunja-backend-blue" → "backend")
 5. Frontend URL auto-detection not configured (backend advertising 127.0.0.1:3456)
 6. Nginx configuration issues (API proxy double-slash, WebSocket path, upgrade mapping)
+7. User registration disabled (missing VIKUNJA_SERVICE_ENABLEREGISTRATION)
+8. Database configuration hardcoded to SQLite (PostgreSQL/MySQL configuration not passed to service generation)
 
 **Independent Test**: Execute clean deployment from scratch using fixed scripts, verify all components start correctly with proper service names and API auto-detection working.
+
+### Database Configuration Review (Pre-Testing)
+
+- [ ] T042R0 [CODE] Review and fix database configuration environment variables for all database types (sqlite/postgresql/mysql)
+  - Verify `generate_systemd_unit()` function signature accepts database parameters
+  - Verify main script passes DATABASE_* variables to service generation
+  - Verify SQLite configuration sets VIKUNJA_DATABASE_PATH correctly
+  - Verify PostgreSQL/MySQL configuration sets HOST, PORT, DATABASE, USER, PASSWORD correctly
+  - Verify default ports set correctly (PostgreSQL: 5432, MySQL: 3306)
+  - Add database configuration validation in config validation section
+  - Document expected environment variables for each database type
 
 ### Regression Test Tasks
 
@@ -154,7 +167,17 @@
 - [ ] T042R9 [TEST] Verify user registration is enabled (VIKUNJA_SERVICE_ENABLEREGISTRATION=true in backend service)
 - [ ] T042R10 [TEST] Verify health checks pass for all components (backend, frontend, MCP server)
 - [ ] T042R11 [TEST] Verify user can successfully register a new account via /register endpoint
-- [ ] T042R12 [TEST] Document any remaining issues in specs/004-proxmox-deployment/research.md Section 6.2
+- [ ] T042R12 [TEST] Verify VIKUNJA_SERVICE_PUBLICURL is set (not the non-existent VIKUNJA_SERVICE_FRONTENDURL)
+- [ ] T042R13 [TEST] Verify VIKUNJA_SERVICE_ROOTPATH set to /opt/vikunja in backend service
+- [ ] T042R14 [TEST] Verify VIKUNJA_DATABASE_TYPE=sqlite and VIKUNJA_DATABASE_PATH=/opt/vikunja/vikunja.db
+- [ ] T042R15 [TEST] Verify database file created at correct location /opt/vikunja/vikunja.db
+- [ ] T042R16 [TEST] Verify /api/v1/info returns correct frontendUrl matching deployment domain/IP
+- [ ] T042R17 [TEST] Verify database configuration passed correctly to systemd service (all DB types)
+- [ ] T042R18 [TEST] Test SQLite deployment: verify VIKUNJA_DATABASE_TYPE=sqlite and VIKUNJA_DATABASE_PATH set
+- [ ] T042R19 [TEST] Test PostgreSQL deployment: verify all VIKUNJA_DATABASE_* environment variables set correctly
+- [ ] T042R20 [TEST] Test MySQL deployment: verify all VIKUNJA_DATABASE_* environment variables set correctly with port 3306
+- [ ] T042R21 [TEST] Verify default database ports applied correctly (PostgreSQL: 5432, MySQL: 3306) when not explicitly provided
+- [ ] T042R22 [TEST] Document any remaining issues in specs/004-proxmox-deployment/research.md Section 6.x
 
 **Checkpoint**: All Phase 1-3 fixes validated via clean deployment. No regression issues found. Ready for Phase 4 implementation.
 

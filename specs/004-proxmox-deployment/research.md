@@ -654,6 +654,123 @@ nginx -v      # nginx/1.22.x
 
 **Impact**: Without this setting, users cannot register accounts via the web interface.
 
+### 6.8 Critical Configuration Variables Missing/Incorrect
+
+**Finding**: Multiple critical configuration issues discovered:
+1. Using non-existent `VIKUNJA_SERVICE_FRONTENDURL` instead of `VIKUNJA_SERVICE_PUBLICURL`
+2. Missing `VIKUNJA_SERVICE_ROOTPATH` (binary location)
+3. Missing database configuration (`VIKUNJA_DATABASE_TYPE`, `VIKUNJA_DATABASE_PATH`)
+
+**Root Cause**:
+1. **FrontendURL**: `pkg/routes/api/v1/info.go:92` shows `FrontendURL: config.ServicePublicURL.GetString()`
+   - There is NO `ServiceFrontendURL` config key in Vikunja
+   - Correct env var: `VIKUNJA_SERVICE_PUBLICURL` (maps to `service.publicurl`)
+   - We invented a variable name that doesn't exist
+
+2. **RootPath**: Binary needs working directory for assets, logs, config lookup
+   - Config: `service.rootpath` → env: `VIKUNJA_SERVICE_ROOTPATH`
+   - Default: `<rootpath>` (needs explicit setting)
+   - Used by binary to find assets and config files
+
+3. **Database**: SQLite needs explicit path to avoid current-directory issues
+   - Config: `database.type` → env: `VIKUNJA_DATABASE_TYPE` (default: "sqlite")
+   - Config: `database.path` → env: `VIKUNJA_DATABASE_PATH` (default: "./vikunja.db")
+   - Relative path `./vikunja.db` depends on launch directory (unreliable)
+
+**Solution**:
+Set correct environment variables in backend systemd service:
+```bash
+Environment="VIKUNJA_SERVICE_PUBLICURL=http://192.168.50.64/"
+Environment="VIKUNJA_SERVICE_INTERFACE=:3456"
+Environment="VIKUNJA_SERVICE_ROOTPATH=/opt/vikunja"
+Environment="VIKUNJA_SERVICE_ENABLEREGISTRATION=true"
+Environment="VIKUNJA_DATABASE_TYPE=sqlite"
+Environment="VIKUNJA_DATABASE_PATH=/opt/vikunja/vikunja.db"
+```
+
+**Key Details**:
+- `PUBLICURL` must have trailing slash (config auto-adds if missing, line 589 of config.go)
+- `ROOTPATH` tells binary where it lives (for asset loading)
+- Database path should be absolute to prevent issues
+
+**Impact**: 
+- Without PUBLICURL: Frontend gets wrong API URL (was getting 127.0.0.1)
+- Without ROOTPATH: Binary may not find assets or config files
+- Without DATABASE_PATH: SQLite database created in unpredictable location
+
+### 6.9 Database Configuration Not Passed to Service Generation
+
+**Finding**: Main script collects database configuration for PostgreSQL/MySQL but doesn't pass it to systemd service generation. Service always gets SQLite configuration hardcoded.
+
+**Root Cause**:
+1. `generate_systemd_unit()` function signature only accepted 6 parameters (up to frontend_url)
+2. Database configuration hardcoded in service template:
+   ```bash
+   Environment="VIKUNJA_DATABASE_TYPE=sqlite"
+   Environment="VIKUNJA_DATABASE_PATH=${working_dir}/vikunja.db"
+   ```
+3. Main script calls `generate_systemd_unit()` without passing `DATABASE_*` variables
+4. PostgreSQL/MySQL deployments would fail to connect to database
+
+**Solution**:
+1. **Extended function signature** to accept database parameters:
+   ```bash
+   generate_systemd_unit ct_id service_type color port working_dir frontend_url \
+       db_type db_host db_port db_name db_user db_pass
+   ```
+
+2. **Conditional environment variable generation**:
+   - SQLite: Set `VIKUNJA_DATABASE_PATH=${working_dir}/vikunja.db`
+   - PostgreSQL/MySQL: Set HOST, PORT, DATABASE, USER, PASSWORD
+
+3. **Updated main script** to pass database configuration:
+   ```bash
+   generate_systemd_unit "$CONTAINER_ID" "backend" "blue" \
+       "$BACKEND_PORT_BLUE" "$WORKING_DIR" "$frontend_url" \
+       "$DATABASE_TYPE" "$DATABASE_HOST" "$DATABASE_PORT" \
+       "$DATABASE_NAME" "$DATABASE_USER" "$DATABASE_PASS"
+   ```
+
+4. **Default port assignment** in validation section:
+   - PostgreSQL: 5432 (if not provided)
+   - MySQL: 3306 (if not provided)
+
+**Environment Variables by Database Type**:
+
+**SQLite**:
+```bash
+VIKUNJA_DATABASE_TYPE=sqlite
+VIKUNJA_DATABASE_PATH=/opt/vikunja/vikunja.db
+```
+
+**PostgreSQL**:
+```bash
+VIKUNJA_DATABASE_TYPE=postgresql
+VIKUNJA_DATABASE_HOST=db.example.com
+VIKUNJA_DATABASE_PORT=5432
+VIKUNJA_DATABASE_DATABASE=vikunja
+VIKUNJA_DATABASE_USER=vikunja_user
+VIKUNJA_DATABASE_PASSWORD=secure_password
+```
+
+**MySQL**:
+```bash
+VIKUNJA_DATABASE_TYPE=mysql
+VIKUNJA_DATABASE_HOST=db.example.com
+VIKUNJA_DATABASE_PORT=3306
+VIKUNJA_DATABASE_DATABASE=vikunja
+VIKUNJA_DATABASE_USER=vikunja_user
+VIKUNJA_DATABASE_PASSWORD=secure_password
+```
+
+**Impact**: Without this fix, PostgreSQL/MySQL deployments would always try to use SQLite, causing database connection failures and data loss.
+
+**Files Modified**:
+- `deploy/proxmox/lib/service-setup.sh` (lines 20-60)
+- `deploy/proxmox/vikunja-install-main.sh` (lines 360-385, 630-650)
+
+**Verification**: T042R0 (pre-testing code review), T042R17-T042R21 (database configuration tests)
+
 ---
 
 ## Next Steps

@@ -18,7 +18,7 @@ readonly VIKUNJA_SERVICE_SETUP_LIB_LOADED=1
 # ============================================================================
 
 # Generate systemd unit file for backend service
-# Usage: generate_systemd_unit ct_id service_type color port working_dir frontend_url
+# Usage: generate_systemd_unit ct_id service_type color port working_dir frontend_url db_type db_host db_port db_name db_user db_pass
 # Returns: 0 on success, 1 on failure
 generate_systemd_unit() {
     local ct_id="$1"
@@ -27,6 +27,12 @@ generate_systemd_unit() {
     local port="${4:-${BACKEND_BLUE_PORT:-3456}}"
     local working_dir="${5:-/opt/vikunja}"
     local frontend_url="${6:-http://localhost}"
+    local db_type="${7:-sqlite}"
+    local db_host="${8:-}"
+    local db_port="${9:-}"
+    local db_name="${10:-vikunja}"
+    local db_user="${11:-}"
+    local db_pass="${12:-}"
     
     # Construct full service name from type and color
     local service_name="vikunja-${service_type}-${color}"
@@ -52,8 +58,31 @@ Environment="VIKUNJA_SERVICE_PUBLICURL=${frontend_url}/"
 Environment="VIKUNJA_SERVICE_INTERFACE=:${port}"
 Environment="VIKUNJA_SERVICE_ROOTPATH=${working_dir}"
 Environment="VIKUNJA_SERVICE_ENABLEREGISTRATION=true"
-Environment="VIKUNJA_DATABASE_TYPE=sqlite"
+Environment="VIKUNJA_DATABASE_TYPE=${db_type}"
+EOF
+)
+        # Add database-specific environment variables
+        if [[ "$db_type" == "sqlite" ]]; then
+            unit_content+=$(cat <<EOF
+
 Environment="VIKUNJA_DATABASE_PATH=${working_dir}/vikunja.db"
+EOF
+)
+        else
+            # PostgreSQL or MySQL configuration
+            unit_content+=$(cat <<EOF
+
+Environment="VIKUNJA_DATABASE_HOST=${db_host}"
+Environment="VIKUNJA_DATABASE_PORT=${db_port}"
+Environment="VIKUNJA_DATABASE_DATABASE=${db_name}"
+Environment="VIKUNJA_DATABASE_USER=${db_user}"
+Environment="VIKUNJA_DATABASE_PASSWORD=${db_pass}"
+EOF
+)
+        fi
+        
+        unit_content+=$(cat <<EOF
+
 Restart=always
 RestartSec=10
 

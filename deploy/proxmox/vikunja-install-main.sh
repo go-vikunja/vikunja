@@ -374,6 +374,16 @@ validate_configuration() {
                 log_error "Database password is required for ${DATABASE_TYPE}"
                 validation_failed=true
             fi
+            # Set default port if not provided
+            if [[ -z "$DATABASE_PORT" ]]; then
+                if [[ "$DATABASE_TYPE" == "postgresql" ]]; then
+                    DATABASE_PORT=5432
+                    log_info "Using default PostgreSQL port: ${DATABASE_PORT}"
+                else
+                    DATABASE_PORT=3306
+                    log_info "Using default MySQL port: ${DATABASE_PORT}"
+                fi
+            fi
             if ! validate_port "$DATABASE_PORT"; then
                 log_error "Invalid database port: ${DATABASE_PORT}"
                 validation_failed=true
@@ -628,7 +638,9 @@ deploy_vikunja() {
     
     # Generate and start backend service (blue)
     if ! generate_systemd_unit "$CONTAINER_ID" "backend" "blue" \
-        "$BACKEND_PORT_BLUE" "$WORKING_DIR" "$frontend_url"; then
+        "$BACKEND_PORT_BLUE" "$WORKING_DIR" "$frontend_url" \
+        "$DATABASE_TYPE" "$DATABASE_HOST" "$DATABASE_PORT" \
+        "$DATABASE_NAME" "$DATABASE_USER" "$DATABASE_PASS"; then
         progress_fail "Failed to generate backend service"
         return 1
     fi
@@ -644,8 +656,10 @@ deploy_vikunja() {
     fi
     
     # Generate and start MCP service (blue)
+    # Note: MCP service doesn't need database config, pass empty values
     if ! generate_systemd_unit "$CONTAINER_ID" "mcp" "blue" \
-        "$MCP_PORT_BLUE" "$WORKING_DIR" "$frontend_url"; then
+        "$MCP_PORT_BLUE" "$WORKING_DIR" "$frontend_url" \
+        "" "" "" "" "" ""; then
         progress_fail "Failed to generate MCP service"
         return 1
     fi
