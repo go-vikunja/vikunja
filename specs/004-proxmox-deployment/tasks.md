@@ -131,7 +131,7 @@
 
 **Goal**: Validate all fixes from initial deployment testing before proceeding to Phase 4.
 
-**Context**: During manual testing of Phase 1-3, eight critical issues were discovered and fixed:
+**Context**: During manual testing of Phase 1-3, nine critical issues were discovered and fixed:
 1. Node.js version incompatibility (18.20.8 → 22.18.0 for Vite 7.1.10)
 2. Repository URL using upstream instead of aroige fork (missing mcp-server/)
 3. MCP build using pnpm instead of npm (package-lock.json vs pnpm-lock.yaml mismatch)
@@ -140,6 +140,7 @@
 6. Nginx configuration issues (API proxy double-slash, WebSocket path, upgrade mapping)
 7. User registration disabled (missing VIKUNJA_SERVICE_ENABLEREGISTRATION)
 8. Database configuration hardcoded to SQLite (PostgreSQL/MySQL configuration not passed to service generation)
+9. Service enable/start functions failing despite systemctl success (tee pipe error handling)
 
 **Independent Test**: Execute clean deployment from scratch using fixed scripts, verify all components start correctly with proper service names and API auto-detection working.
 

@@ -134,10 +134,19 @@ enable_service() {
     log_debug "Enabling service: ${service_name}"
     
     # Reload systemd
-    pct_exec "$ct_id" systemctl daemon-reload 2>&1 | tee >(log_debug) || return 1
+    local output
+    if ! output=$(pct_exec "$ct_id" systemctl daemon-reload 2>&1); then
+        log_error "Failed to reload systemd: ${output}"
+        return 1
+    fi
+    [[ -n "$output" ]] && log_debug "$output"
     
     # Enable service
-    pct_exec "$ct_id" systemctl enable "$service_name" 2>&1 | tee >(log_debug) || return 1
+    if ! output=$(pct_exec "$ct_id" systemctl enable "$service_name" 2>&1); then
+        log_error "Failed to enable service: ${output}"
+        return 1
+    fi
+    [[ -n "$output" ]] && log_debug "$output"
     
     log_success "Service enabled: ${service_name}"
     return 0
@@ -153,12 +162,17 @@ start_service() {
     log_info "Starting service: ${service_name}"
     
     # Start service
-    if ! pct_exec "$ct_id" systemctl start "$service_name" 2>&1 | tee >(log_debug); then
+    local output
+    if ! output=$(pct_exec "$ct_id" systemctl start "$service_name" 2>&1); then
         log_error "Failed to start service: ${service_name}"
+        [[ -n "$output" ]] && log_error "$output"
         # Show service status for debugging
-        pct_exec "$ct_id" systemctl status "$service_name" 2>&1 | tee >(log_debug)
+        local status_output
+        status_output=$(pct_exec "$ct_id" systemctl status "$service_name" 2>&1 || true)
+        [[ -n "$status_output" ]] && log_debug "$status_output"
         return 1
     fi
+    [[ -n "$output" ]] && log_debug "$output"
     
     # Wait for service to be active
     local max_wait=30
@@ -185,10 +199,13 @@ stop_service() {
     
     log_info "Stopping service: ${service_name}"
     
-    if ! pct_exec "$ct_id" systemctl stop "$service_name" 2>&1 | tee >(log_debug); then
+    local output
+    if ! output=$(pct_exec "$ct_id" systemctl stop "$service_name" 2>&1); then
         log_warn "Failed to stop service: ${service_name}"
+        [[ -n "$output" ]] && log_debug "$output"
         return 1
     fi
+    [[ -n "$output" ]] && log_debug "$output"
     
     log_success "Service stopped: ${service_name}"
     return 0
@@ -203,10 +220,13 @@ restart_service() {
     
     log_info "Restarting service: ${service_name}"
     
-    if ! pct_exec "$ct_id" systemctl restart "$service_name" 2>&1 | tee >(log_debug); then
+    local output
+    if ! output=$(pct_exec "$ct_id" systemctl restart "$service_name" 2>&1); then
         log_error "Failed to restart service: ${service_name}"
+        [[ -n "$output" ]] && log_error "$output"
         return 1
     fi
+    [[ -n "$output" ]] && log_debug "$output"
     
     log_success "Service restarted: ${service_name}"
     return 0

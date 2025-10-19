@@ -771,6 +771,53 @@ VIKUNJA_DATABASE_PASSWORD=secure_password
 
 **Verification**: T042R0 (pre-testing code review), T042R17-T042R21 (database configuration tests)
 
+### 6.10 Service Enable/Start Functions Fail on Success
+
+**Finding**: The `enable_service` function reports failure even though `systemctl enable` succeeds and creates the symlink. Service file is correct but deployment stops at "Failed to enable backend service".
+
+**Root Cause**:
+The `tee >(log_debug)` process substitution in the service management functions was causing false failures:
+```bash
+pct_exec "$ct_id" systemctl enable "$service_name" 2>&1 | tee >(log_debug) || return 1
+```
+
+Even though `systemctl enable` succeeded (symlink created), the pipe with `tee >(log_debug)` was returning non-zero exit code, causing the function to return failure.
+
+**Evidence**:
+```
+✓ Unit file created: /etc/systemd/system/vikunja-backend-blue.service
+Created symlink /etc/systemd/system/multi-user.target.wants/vikunja-backend-blue.service → ...
+✗ Failed to enable backend service
+```
+
+The symlink message proves systemctl succeeded, but the function reported failure.
+
+**Solution**:
+Replaced piped output handling with command substitution and proper error checking:
+```bash
+# Before (BROKEN):
+pct_exec "$ct_id" systemctl enable "$service_name" 2>&1 | tee >(log_debug) || return 1
+
+# After (FIXED):
+local output
+if ! output=$(pct_exec "$ct_id" systemctl enable "$service_name" 2>&1); then
+    log_error "Failed to enable service: ${output}"
+    return 1
+fi
+[[ -n "$output" ]] && log_debug "$output"
+```
+
+**Functions Fixed**:
+- `enable_service()` - daemon-reload and enable operations
+- `start_service()` - start operation and status checking
+- `stop_service()` - stop operation
+- `restart_service()` - restart operation
+
+**Files Modified**:
+- `deploy/proxmox/lib/service-setup.sh` (lines 128-220)
+
+**Impact**: Without this fix, deployment always fails at service enable step even though services are actually enabled correctly.
+
 ---
 
 ## Next Steps
