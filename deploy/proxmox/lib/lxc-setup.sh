@@ -905,26 +905,29 @@ build_mcp() {
         return 1
     fi
     
-    # Run pnpm install and build with timeout
+    # Run npm install and build with timeout
     log_debug "Installing MCP dependencies..."
     
-    local install_cmd="pct exec ${ct_id} -- bash -c 'cd ${source_dir}/mcp-server && pnpm install --frozen-lockfile'"
+    # Note: mcp-server uses package-lock.json (npm), not pnpm-lock.yaml
+    # Use 'npm ci' for clean install with lockfile
+    local install_cmd="pct exec ${ct_id} -- bash -c 'cd ${source_dir}/mcp-server && npm ci'"
     
     if ! safe_timeout 300 bash -c "${install_cmd}" 2>&1; then
         log_error "MCP dependency installation failed or timed out"
         log_error "Check logs in container: pct enter ${ct_id}"
-        log_error "Then run: cd ${source_dir}/mcp-server && pnpm install"
+        log_error "Then run: cd ${source_dir}/mcp-server && npm ci"
         return 1
     fi
     
     log_debug "Building MCP server..."
     
-    local build_cmd="pct exec ${ct_id} -- bash -c 'cd ${source_dir}/mcp-server && pnpm build'"
+    # Use npm run build (consistent with npm ci above)
+    local build_cmd="pct exec ${ct_id} -- bash -c 'cd ${source_dir}/mcp-server && npm run build'"
     
     if ! safe_timeout 300 bash -c "${build_cmd}" 2>&1; then
         log_error "MCP build failed or timed out"
         log_error "Check logs in container: pct enter ${ct_id}"
-        log_error "Then run: cd ${source_dir}/mcp-server && pnpm build"
+        log_error "Then run: cd ${source_dir}/mcp-server && npm run build"
         return 1
     fi
     
