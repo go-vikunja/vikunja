@@ -334,9 +334,48 @@ setup_postgresql() {
     
     log_info "Setting up PostgreSQL connection to ${host}:${port}"
     
-    # Test connection
+    # First, test if we can connect to PostgreSQL server (using postgres database)
+    log_debug "Testing PostgreSQL server connectivity..."
+    if ! pct_exec "$ct_id" bash -c \
+        "PGPASSWORD='${password}' psql -h ${host} -p ${port} -U ${user} -d postgres -c 'SELECT 1'" \
+        >/dev/null 2>&1; then
+        log_error "Failed to connect to PostgreSQL server at ${host}:${port}"
+        log_error "Please check:"
+        log_error "  1. PostgreSQL server is running: systemctl status postgresql"
+        log_error "  2. Server allows connections from container IP (pg_hba.conf)"
+        log_error "  3. Credentials are correct (user: ${user})"
+        log_error "  4. Network connectivity: ping ${host}"
+        return 1
+    fi
+    
+    log_debug "PostgreSQL server connectivity OK"
+    
+    # Check if database exists, create if it doesn't
+    log_debug "Checking if database '${dbname}' exists..."
+    if ! pct_exec "$ct_id" bash -c \
+        "PGPASSWORD='${password}' psql -h ${host} -p ${port} -U ${user} -d postgres -lqt | cut -d \\| -f 1 | grep -qw ${dbname}" \
+        >/dev/null 2>&1; then
+        
+        log_info "Database '${dbname}' does not exist, creating..."
+        
+        if ! pct_exec "$ct_id" bash -c \
+            "PGPASSWORD='${password}' psql -h ${host} -p ${port} -U ${user} -d postgres -c 'CREATE DATABASE ${dbname};'" \
+            2>&1; then
+            log_error "Failed to create database '${dbname}'"
+            log_error "You may need to create it manually:"
+            log_error "  psql -U postgres -c 'CREATE DATABASE ${dbname};'"
+            log_error "  psql -U postgres -c 'GRANT ALL PRIVILEGES ON DATABASE ${dbname} TO ${user};'"
+            return 1
+        fi
+        
+        log_success "Database '${dbname}' created"
+    else
+        log_debug "Database '${dbname}' already exists"
+    fi
+    
+    # Test final connection to the vikunja database
     if ! test_db_connection "$ct_id" "postgresql" "$host" "$port" "$dbname" "$user" "$password"; then
-        log_error "Failed to connect to PostgreSQL database"
+        log_error "Failed to connect to database '${dbname}'"
         return 1
     fi
     
@@ -379,24 +418,39 @@ test_db_connection() {
     local user="${6:-${DB_USER:-vikunja}}"
     local password="${7:-${DB_PASSWORD:-vikunja}}"
     
-    log_debug "Testing ${type} connection to ${host}:${port}"
+    log_debug "Testing ${type} connection to ${host}:${port}/${dbname}"
+    
+    local test_output
+    local exit_code
     
     case "$type" in
         postgresql)
-            pct_exec "$ct_id" bash -c \
+            test_output=$(pct_exec "$ct_id" bash -c \
                 "PGPASSWORD='${password}' psql -h ${host} -p ${port} -U ${user} -d ${dbname} -c 'SELECT 1'" \
-                >/dev/null 2>&1
+                2>&1)
+            exit_code=$?
             ;;
         mysql)
-            pct_exec "$ct_id" bash -c \
+            test_output=$(pct_exec "$ct_id" bash -c \
                 "mysql -h ${host} -P ${port} -u ${user} -p'${password}' ${dbname} -e 'SELECT 1'" \
-                >/dev/null 2>&1
+                2>&1)
+            exit_code=$?
             ;;
         *)
             log_error "Unknown database type: ${type}"
             return 1
             ;;
     esac
+    
+    if [[ $exit_code -ne 0 ]]; then
+        log_debug "Connection test failed with output:"
+        echo "$test_output" | while IFS= read -r line; do
+            log_debug "  $line"
+        done
+        return 1
+    fi
+    
+    return 0
     
     return $?
 }
