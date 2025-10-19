@@ -624,13 +624,17 @@ apt-get install -y \
 wget https://go.dev/dl/go1.21.5.linux-amd64.tar.gz
 tar -C /usr/local -xzf go1.21.5.linux-amd64.tar.gz
 
-# Node.js installation (for MCP server)
-curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+# Node.js installation (for frontend build and MCP server)
+# Note: Updated to Node.js 22 to match Vikunja frontend requirements
+# - Frontend .nvmrc specifies: 22.18.0
+# - Vite 7.1.10 requires: Node.js 20.19+ or 22.12+
+# - Node.js 22 LTS until April 2027 (vs Node.js 18 EOL April 2025)
+curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
 apt-get install -y nodejs
 
 # Verify installations
 go version    # go1.21.5
-node --version  # v18.x
+node --version  # v22.x
 nginx -v      # nginx/1.22.x
 ```
 

@@ -552,7 +552,8 @@ deploy_vikunja() {
     
     # Step 6: Setup Node.js runtime
     progress_start "[6/10] Installing Node.js runtime..."
-    if ! setup_nodejs "$CONTAINER_ID"; then
+    # Install Node.js 22 (required for Vite 7.x frontend build)
+    if ! setup_nodejs "$CONTAINER_ID" 22; then
         progress_fail "Failed to install Node.js"
         return 1
     fi

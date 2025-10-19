@@ -395,7 +395,11 @@ setup_go() {
 # Returns: 0 on success, 1 on failure
 setup_nodejs() {
     local ct_id="$1"
-    local node_version="${2:-18}"
+    # Default to Node.js 22 to match Vikunja requirements:
+    # - Frontend .nvmrc: 22.18.0
+    # - Vite 7.1.10 requires: Node.js 20.19+ or 22.12+
+    # - Node.js 22 LTS until April 2027 (better than 18, EOL April 2025)
+    local node_version="${2:-22}"
     
     log_info "Installing Node.js ${node_version}"
     

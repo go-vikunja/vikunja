@@ -48,7 +48,7 @@ Tests the complete deployment workflow with SQLite database:
 3. ✅ Container creation (LXC provisioning)
 4. ✅ Network configuration (IP, gateway, nameserver)
 5. ✅ Dependency installation (system packages)
-6. ✅ Runtime setup (Go 1.21.5, Node.js 18)
+6. ✅ Runtime setup (Go 1.21.5, Node.js 22)
 7. ✅ Repository cloning (backend, frontend, MCP)
 8. ✅ SQLite database setup
 9. ✅ Application builds (backend, frontend, MCP)
