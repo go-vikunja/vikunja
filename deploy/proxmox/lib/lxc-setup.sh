@@ -22,6 +22,8 @@ create_container() {
     local disk_gb="${5:-${RESOURCES_DISK:-10}}"
     
     log_info "Creating LXC container ${ct_id}"
+    log_debug "Template: ${template}"
+    log_debug "Cores: ${cores}, Memory: ${memory_mb}MB, Disk: ${disk_gb}GB"
     
     # Check if container already exists
     if pct_exists "$ct_id"; then
@@ -29,8 +31,40 @@ create_container() {
         return 1
     fi
     
-    # Build pct create options
+    # Verify template exists
+    if [[ ! "$template" =~ ^(local|local-lvm|local-zfs): ]]; then
+        log_debug "Checking if template file exists: ${template}"
+        if ! [[ -f "${template}" ]]; then
+            log_error "Template not found: ${template}"
+            log_error "Available templates:"
+            pveam available | grep debian || true
+            log_error ""
+            log_error "Download template with: pveam download local debian-12-standard_12.2-1_amd64.tar.zst"
+            return 1
+        fi
+    fi
+    
+    # Detect storage for rootfs
     local storage="local-lvm"
+    
+    # Check if local-lvm exists, fallback to other storage
+    if ! pvesm status | grep -q "^local-lvm"; then
+        log_debug "local-lvm not found, detecting alternative storage..."
+        
+        # Try to find any LVM-thin, ZFS, or directory storage
+        storage=$(pvesm status | awk 'NR>1 && ($2=="lvmthin" || $2=="zfspool" || $2=="dir") {print $1; exit}')
+        
+        if [[ -z "$storage" ]]; then
+            log_error "No suitable storage found for container rootfs"
+            log_error "Available storage:"
+            pvesm status
+            return 1
+        fi
+        
+        log_debug "Using storage: ${storage}"
+    fi
+    
+    # Build pct create options
     local -a opts=(
         --hostname "vikunja-${ct_id}"
         --cores "$cores"
@@ -42,9 +76,25 @@ create_container() {
         --start 0
     )
     
-    # Create container
-    if ! pct_create "$ct_id" "$template" "${opts[@]}"; then
-        log_error "Failed to create container"
+    log_debug "Creating container with: pct create ${ct_id} ${template} ${opts[*]}"
+    
+    # Create container with detailed error output
+    local create_output
+    if ! create_output=$(pct create "$ct_id" "$template" "${opts[@]}" 2>&1); then
+        log_error "Failed to create container ${ct_id}"
+        log_error "Error output:"
+        echo "$create_output" | while IFS= read -r line; do
+            log_error "  ${line}"
+        done
+        
+        # Provide helpful troubleshooting
+        log_error ""
+        log_error "Troubleshooting:"
+        log_error "1. Check template exists: ls -lh /var/lib/vz/template/cache/"
+        log_error "2. Check storage status: pvesm status"
+        log_error "3. Check disk space: df -h"
+        log_error "4. Try manual creation: pct create ${ct_id} ${template} ${opts[*]}"
+        
         return 1
     fi
     

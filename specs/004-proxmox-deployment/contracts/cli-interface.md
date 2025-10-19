@@ -68,17 +68,49 @@ All scripts support:
 
 ## 1. vikunja-install.sh
 
-**Purpose**: Initial deployment of Vikunja to Proxmox LXC container
+**Purpose**: Initial deployment of Vikunja to Proxmox LXC container (Bootstrap script)
 
 **Execution**: Runs on Proxmox host as root
+
+**Architecture**: This script uses a three-stage bootstrap pattern:
+1. **Bootstrap Stage**: User runs curl command, executes lightweight bootstrap script
+2. **Download Stage**: Bootstrap downloads all required files (main installer, libraries, templates) to `/tmp/vikunja-installer-<PID>/`
+3. **Execute Stage**: Bootstrap launches `vikunja-install-main.sh` with all dependencies available
+
+This pattern enables single-command installation while maintaining modular code architecture.
 
 ### Synopsis
 
 ```bash
+# Recommended: One-line curl installation
 bash <(curl -fsSL https://raw.githubusercontent.com/go-vikunja/vikunja/main/deploy/proxmox/vikunja-install.sh)
 
-# Or with options
-vikunja-install.sh [OPTIONS]
+# With environment variable customization (for custom branches/forks)
+export VIKUNJA_GITHUB_OWNER="yourname"
+export VIKUNJA_GITHUB_REPO="vikunja"
+export VIKUNJA_GITHUB_BRANCH="feature-branch"
+bash <(curl -fsSL https://raw.githubusercontent.com/${VIKUNJA_GITHUB_OWNER}/${VIKUNJA_GITHUB_REPO}/${VIKUNJA_GITHUB_BRANCH}/deploy/proxmox/vikunja-install.sh)
+
+# Alternative: Local installation (skips bootstrap, requires git clone)
+git clone https://github.com/aroige/vikunja.git
+cd vikunja/deploy/proxmox
+./vikunja-install-main.sh [OPTIONS]
+```
+
+### Environment Variables (Bootstrap Customization)
+
+The bootstrap script respects these environment variables:
+
+```bash
+VIKUNJA_GITHUB_OWNER    # GitHub repository owner (default: aroige)
+VIKUNJA_GITHUB_REPO     # GitHub repository name (default: vikunja)
+VIKUNJA_GITHUB_BRANCH   # Git branch to install from (default: main)
+```
+
+**Use Case**: Install from a development branch or custom fork:
+```bash
+export VIKUNJA_GITHUB_BRANCH="004-proxmox-deployment"
+bash <(curl -fsSL https://raw.githubusercontent.com/aroige/vikunja/${VIKUNJA_GITHUB_BRANCH}/deploy/proxmox/vikunja-install.sh)
 ```
 
 ### Options

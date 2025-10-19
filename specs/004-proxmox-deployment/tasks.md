@@ -117,11 +117,11 @@
 
 **Independent Test**: Execute curl command from quickstart.md on fresh Proxmox node, verify bootstrap downloads all files and launches installer.
 
-- [ ] T042E6 [DOC] Update ARCHITECTURE.md (when created) with bootstrap downloader pattern explanation in deploy/proxmox/docs/
-- [ ] T042E7 [DOC] Add troubleshooting section for bootstrap download failures in TROUBLESHOOTING.md in deploy/proxmox/docs/
-- [ ] T042E8 [TEST] Test curl-based installation from branch URL: bash <(curl -fsSL https://raw.githubusercontent.com/aroige/vikunja/004-proxmox-deployment/deploy/proxmox/vikunja-install.sh)
-- [ ] T042E9 [TEST] Validate all library files and templates are downloaded correctly in /tmp/vikunja-installer-*
-- [ ] T042E10 [DOC] Update contracts/cli-interface.md with bootstrap architecture notes if needed in specs/004-proxmox-deployment/
+- [X] T042E6 [DOC] Update ARCHITECTURE.md (when created) with bootstrap downloader pattern explanation in deploy/proxmox/docs/
+- [X] T042E7 [DOC] Add troubleshooting section for bootstrap download failures in TROUBLESHOOTING.md in deploy/proxmox/docs/
+- [X] T042E8 [TEST] Test curl-based installation from branch URL: bash <(curl -fsSL https://raw.githubusercontent.com/aroige/vikunja/004-proxmox-deployment/deploy/proxmox/vikunja-install.sh)
+- [X] T042E9 [TEST] Validate all library files and templates are downloaded correctly in /tmp/vikunja-installer-*
+- [X] T042E10 [DOC] Update contracts/cli-interface.md with bootstrap architecture notes if needed in specs/004-proxmox-deployment/
 
 **Checkpoint**: Bootstrap architecture validated and documented. Ready for Phase 4 implementation.
 
