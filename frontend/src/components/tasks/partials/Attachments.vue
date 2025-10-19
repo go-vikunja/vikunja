@@ -126,7 +126,7 @@
 		<Teleport to="body">
 			<div
 				v-if="editEnabled"
-				:class="{hidden: !isOverDropZone}"
+				:class="{hidden: !showDropzone}"
 				class="dropzone"
 			>
 				<div class="drop-hint">
@@ -172,7 +172,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, shallowReactive, computed} from 'vue'
+import {ref, shallowReactive, computed, watch} from 'vue'
 import {useDropZone} from '@vueuse/core'
 
 import User from '@/components/misc/User.vue'
@@ -215,13 +215,83 @@ const attachments = computed(() => attachmentStore.attachments)
 
 const loading = computed(() => attachmentService.loading || taskStore.isLoading)
 
-function onDrop(files: File[] | null) {
-	if (files && files.length !== 0) {
-		uploadFilesToTask(files)
+const isDraggingFiles = ref(false)
+const isDragOverEditor = ref(false)
+
+const EDITOR_SELECTOR = '.tiptap, .tiptap__editor, [contenteditable]'
+
+function eventTargetsEditor(event: DragEvent): boolean {
+	const target = event.target
+	if (target instanceof HTMLElement && target.closest(EDITOR_SELECTOR)) {
+		return true
 	}
+
+	if (typeof event.composedPath === 'function') {
+		return event.composedPath().some(element => element instanceof HTMLElement && element.matches(EDITOR_SELECTOR))
+	}
+
+	return false
 }
 
-const {isOverDropZone} = useDropZone(document, onDrop)
+function resetDragState() {
+	isDraggingFiles.value = false
+	isDragOverEditor.value = false
+}
+
+const dropTarget = computed(() => (props.editEnabled && typeof document !== 'undefined' ? document : null))
+
+const {isOverDropZone} = useDropZone(dropTarget, {
+	dataTypes: ['Files'],
+	onEnter(_, event) {
+		if (!props.editEnabled) {
+			return
+		}
+
+		isDraggingFiles.value = true
+		isDragOverEditor.value = eventTargetsEditor(event)
+	},
+	onOver(_, event) {
+		if (!props.editEnabled) {
+			return
+		}
+
+		isDragOverEditor.value = eventTargetsEditor(event)
+	},
+	onLeave(_, event) {
+		if (!props.editEnabled) {
+			return
+		}
+
+		if (!isOverDropZone.value) {
+			resetDragState()
+			return
+		}
+
+		isDragOverEditor.value = eventTargetsEditor(event)
+	},
+	onDrop(files, event) {
+		if (!props.editEnabled) {
+			return
+		}
+
+		const dropOverEditor = eventTargetsEditor(event)
+		resetDragState()
+
+		if (dropOverEditor || !files || files.length === 0) {
+			return
+		}
+
+		uploadFilesToTask(files)
+	},
+})
+
+watch(() => props.editEnabled, enabled => {
+	if (!enabled) {
+		resetDragState()
+	}
+})
+
+const showDropzone = computed(() => props.editEnabled && isDraggingFiles.value && !isDragOverEditor.value)
 
 function downloadAttachment(attachment: IAttachment) {
 	attachmentService.download(attachment)
