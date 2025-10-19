@@ -48,7 +48,8 @@ DISK_GB="20"
 
 # Derived configuration
 BRIDGE="vmbr0"
-TEMPLATE="local:vztmpl/debian-12-standard_12.2-1_amd64.tar.zst"
+# Auto-detect available Debian 12 template (will be set in pre-flight checks)
+TEMPLATE=""
 REPO_URL="https://github.com/go-vikunja/vikunja.git"
 REPO_BRANCH="main"
 WORKING_DIR="/opt/vikunja"
@@ -447,6 +448,27 @@ preflight_checks() {
     if ! check_proxmox; then
         error "This script must be run on a Proxmox VE host" 3
     fi
+    
+    # Detect available Debian 12 template
+    log_debug "Detecting available Debian 12 template..."
+    local template_file
+    template_file=$(ls -1 /var/lib/vz/template/cache/debian-12-standard*.tar.* 2>/dev/null | head -1)
+    
+    if [[ -z "$template_file" ]]; then
+        log_error "No Debian 12 template found in /var/lib/vz/template/cache/"
+        log_error ""
+        log_error "Download a Debian 12 template with:"
+        log_error "  pveam update"
+        log_error "  pveam available | grep debian-12"
+        log_error "  pveam download local debian-12-standard_12.7-1_amd64.tar.zst"
+        error "Debian 12 template not found" 3
+    fi
+    
+    # Convert full path to Proxmox storage format
+    local template_name
+    template_name=$(basename "$template_file")
+    TEMPLATE="local:vztmpl/${template_name}"
+    log_debug "Using template: ${TEMPLATE}"
     
     # Check if lock exists
     if check_lock "$INSTANCE_ID"; then

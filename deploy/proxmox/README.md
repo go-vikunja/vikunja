@@ -20,8 +20,15 @@ This deployment system provides single-command installation, zero-downtime updat
 **Prerequisites**: Proxmox VE 7.0+, root access, 2 CPU cores, 4GB RAM, 20GB disk available
 
 **Install Vikunja** (one command):
+
+**Stable version (once merged):**
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/aroige/vikunja/main/deploy/proxmox/vikunja-install.sh)
+```
+
+**Development/testing version (current branch):**
+```bash
+VIKUNJA_GITHUB_BRANCH="004-proxmox-deployment" bash <(curl -fsSL https://raw.githubusercontent.com/aroige/vikunja/004-proxmox-deployment/deploy/proxmox/vikunja-install.sh)
 ```
 
 **See the [Quickstart Guide](../../specs/004-proxmox-deployment/quickstart.md) for complete setup instructions.**

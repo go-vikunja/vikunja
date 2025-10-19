@@ -23,8 +23,20 @@ Before starting, ensure you have:
 
 SSH into your Proxmox host and run:
 
+**For stable release (once merged to main):**
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/aroige/vikunja/main/deploy/proxmox/vikunja-install.sh)
+```
+
+**For development/testing (branch 004-proxmox-deployment):**
+```bash
+export VIKUNJA_GITHUB_BRANCH="004-proxmox-deployment"
+bash <(curl -fsSL https://raw.githubusercontent.com/aroige/vikunja/${VIKUNJA_GITHUB_BRANCH}/deploy/proxmox/vikunja-install.sh)
+```
+
+Or as a one-liner:
+```bash
+VIKUNJA_GITHUB_BRANCH="004-proxmox-deployment" bash <(curl -fsSL https://raw.githubusercontent.com/aroige/vikunja/004-proxmox-deployment/deploy/proxmox/vikunja-install.sh)
 ```
 
 Follow the interactive prompts. Installation completes in 5-10 minutes.
