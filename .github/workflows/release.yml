@@ -21,8 +21,6 @@ jobs:
         uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3
         with:
           version: latest
-      - name: Setup Docker Builder
-        uses: useblacksmith/setup-docker-builder@78f41686563c732ccc097f7baac2f092f67538f0 # v1
       - name: Docker meta version
         if: ${{ github.ref_type == 'tag' }}
         id: meta
@@ -37,21 +35,25 @@ jobs:
             type=raw,value=latest
       - name: Build and push unstable
         if: ${{ github.ref_type != 'tag' }}
-        uses: useblacksmith/build-push-action@30c71162f16ea2c27c3e21523255d209b8b538c1 # v2
+        uses: docker/build-push-action@v6
         with:
           platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8
           push: true
           tags: vikunja/vikunja:unstable
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           build-args: |
             RELEASE_VERSION=${{ steps.ghd.outputs.describe }}
       - name: Build and push version
         if: ${{ github.ref_type == 'tag' }}
-        uses: useblacksmith/build-push-action@30c71162f16ea2c27c3e21523255d209b8b538c1 # v2
+        uses: docker/build-push-action@v6
         with:
           platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           build-args: |
             RELEASE_VERSION=${{ steps.ghd.outputs.describe }}
 
