@@ -50,7 +50,7 @@ DISK_GB="20"
 BRIDGE="vmbr0"
 # Auto-detect available Debian 12 template (will be set in pre-flight checks)
 TEMPLATE=""
-REPO_URL="https://github.com/go-vikunja/vikunja.git"
+REPO_URL="https://github.com/aroige/vikunja.git"
 REPO_BRANCH="main"
 WORKING_DIR="/opt/vikunja"
 

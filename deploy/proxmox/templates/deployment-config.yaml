@@ -52,7 +52,7 @@ services:
     ssl_key: "/etc/ssl/private/vikunja.key"
 
 git:
-  repository: "https://github.com/go-vikunja/vikunja.git"
+  repository: "https://github.com/aroige/vikunja.git"
   branch: "main"
   deployed_commit: ""
 
