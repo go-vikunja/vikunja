@@ -220,7 +220,11 @@ const isDragOverEditor = ref(false)
 
 const EDITOR_SELECTOR = '.tiptap, .tiptap__editor, [contenteditable]'
 
-function eventTargetsEditor(event: DragEvent): boolean {
+function eventTargetsEditor(event: Event | null | undefined): boolean {
+	if (!event) {
+		return false
+	}
+
 	const target = event.target
 	if (target instanceof HTMLElement && target.closest(EDITOR_SELECTOR)) {
 		return true
@@ -242,7 +246,7 @@ const dropTarget = computed(() => (props.editEnabled && typeof document !== 'und
 
 const {isOverDropZone} = useDropZone(dropTarget, {
 	dataTypes: ['Files'],
-	onEnter(_, event) {
+	onEnter(event) {
 		if (!props.editEnabled) {
 			return
 		}
@@ -250,14 +254,14 @@ const {isOverDropZone} = useDropZone(dropTarget, {
 		isDraggingFiles.value = true
 		isDragOverEditor.value = eventTargetsEditor(event)
 	},
-	onOver(_, event) {
+	onOver(event) {
 		if (!props.editEnabled) {
 			return
 		}
 
 		isDragOverEditor.value = eventTargetsEditor(event)
 	},
-	onLeave(_, event) {
+	onLeave(event) {
 		if (!props.editEnabled) {
 			return
 		}
