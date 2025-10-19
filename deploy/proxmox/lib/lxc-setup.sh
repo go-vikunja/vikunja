@@ -160,16 +160,54 @@ install_dependencies() {
     pct_exec "$ct_id" apt-get update 2>&1 || return 1
     
     # Install required packages
+    # Note: Using default-mysql-client for Debian 12+ compatibility
     local packages=(
         "git" "curl" "wget" "build-essential"
         "ca-certificates" "gnupg" "lsb-release"
-        "nginx" "sqlite3" "postgresql-client" "mysql-client"
+        "nginx" "sqlite3" "postgresql-client" "default-mysql-client"
         "sudo" "systemd" "procps"
     )
     
     pct_exec "$ct_id" apt-get install -y "${packages[@]}" 2>&1 || return 1
     
     log_success "System dependencies installed"
+    return 0
+}
+
+# Setup SSH access and root password in container
+# Usage: setup_ssh_access ct_id [root_password]
+# Returns: 0 on success, 1 on failure
+setup_ssh_access() {
+    local ct_id="$1"
+    local root_password="${2:-}"
+    
+    log_info "Configuring SSH access"
+    
+    # Install openssh-server if not already installed
+    pct_exec "$ct_id" bash -c "
+        if ! dpkg -l | grep -q openssh-server; then
+            apt-get install -y openssh-server
+        fi
+    " 2>&1 || return 1
+    
+    # Set root password if provided
+    if [[ -n "$root_password" ]]; then
+        log_debug "Setting root password"
+        pct_exec "$ct_id" bash -c "echo 'root:${root_password}' | chpasswd" || return 1
+        
+        # Enable password authentication for SSH
+        pct_exec "$ct_id" bash -c "
+            sed -i 's/^#*PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+            sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+            systemctl restart sshd
+        " 2>&1 || return 1
+        
+        log_success "SSH access configured with password authentication"
+    else
+        log_debug "No password provided, SSH password authentication disabled"
+        log_info "Access container with: pct enter ${ct_id}"
+    fi
+    
     return 0
 }
 
