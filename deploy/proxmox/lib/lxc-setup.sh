@@ -452,9 +452,11 @@ clone_repository() {
     
     # Clone repository with timeout
     log_debug "Cloning from ${repo_url}..."
-    if ! safe_timeout 300 pct_exec "$ct_id" \
-        git clone --depth 1 --branch "$branch" "$repo_url" "$target_dir" \
-        2>&1; then
+    
+    # Note: We use bash -c because timeout can't call shell functions directly
+    local clone_cmd="pct exec ${ct_id} -- git clone --depth 1 --branch ${branch} ${repo_url} ${target_dir}"
+    
+    if ! safe_timeout 300 bash -c "${clone_cmd}" 2>&1; then
         log_error "Failed to clone repository (timeout or network error)"
         log_error "Check network connectivity in container: pct enter ${ct_id}"
         log_error "Then run: git clone --branch ${branch} ${repo_url} ${target_dir}"
@@ -806,12 +808,10 @@ build_backend() {
     
     # Run mage build with timeout
     log_debug "Running mage build (timeout: 10 minutes)..."
-    if ! safe_timeout 600 pct_exec "$ct_id" bash -c "
-        cd ${source_dir} && \
-        export PATH=\$PATH:/usr/local/go/bin:/root/go/bin && \
-        export GOPATH=/root/go && \
-        mage build
-    " 2>&1; then
+    
+    local build_cmd="pct exec ${ct_id} -- bash -c 'cd ${source_dir} && export PATH=\$PATH:/usr/local/go/bin:/root/go/bin && export GOPATH=/root/go && mage build'"
+    
+    if ! safe_timeout 600 bash -c "${build_cmd}" 2>&1; then
         log_error "Backend build failed or timed out"
         log_error "Check build logs in container: pct enter ${ct_id}"
         log_error "Then run: cd ${source_dir} && mage build"
@@ -850,10 +850,10 @@ build_frontend() {
     
     # Run pnpm install and build with timeout
     log_debug "Installing frontend dependencies..."
-    if ! safe_timeout 600 pct_exec "$ct_id" bash -c "
-        cd ${source_dir}/frontend && \
-        pnpm install --frozen-lockfile
-    " 2>&1; then
+    
+    local install_cmd="pct exec ${ct_id} -- bash -c 'cd ${source_dir}/frontend && pnpm install --frozen-lockfile'"
+    
+    if ! safe_timeout 600 bash -c "${install_cmd}" 2>&1; then
         log_error "Frontend dependency installation failed or timed out"
         log_error "Check logs in container: pct enter ${ct_id}"
         log_error "Then run: cd ${source_dir}/frontend && pnpm install"
@@ -861,10 +861,10 @@ build_frontend() {
     fi
     
     log_debug "Building frontend..."
-    if ! safe_timeout 600 pct_exec "$ct_id" bash -c "
-        cd ${source_dir}/frontend && \
-        pnpm build
-    " 2>&1; then
+    
+    local build_cmd="pct exec ${ct_id} -- bash -c 'cd ${source_dir}/frontend && pnpm build'"
+    
+    if ! safe_timeout 600 bash -c "${build_cmd}" 2>&1; then
         log_error "Frontend build failed or timed out"
         log_error "Check logs in container: pct enter ${ct_id}"
         log_error "Then run: cd ${source_dir}/frontend && pnpm build"
@@ -903,10 +903,10 @@ build_mcp() {
     
     # Run pnpm install and build with timeout
     log_debug "Installing MCP dependencies..."
-    if ! safe_timeout 300 pct_exec "$ct_id" bash -c "
-        cd ${source_dir}/mcp-server && \
-        pnpm install --frozen-lockfile
-    " 2>&1; then
+    
+    local install_cmd="pct exec ${ct_id} -- bash -c 'cd ${source_dir}/mcp-server && pnpm install --frozen-lockfile'"
+    
+    if ! safe_timeout 300 bash -c "${install_cmd}" 2>&1; then
         log_error "MCP dependency installation failed or timed out"
         log_error "Check logs in container: pct enter ${ct_id}"
         log_error "Then run: cd ${source_dir}/mcp-server && pnpm install"
@@ -914,10 +914,10 @@ build_mcp() {
     fi
     
     log_debug "Building MCP server..."
-    if ! safe_timeout 300 pct_exec "$ct_id" bash -c "
-        cd ${source_dir}/mcp-server && \
-        pnpm build
-    " 2>&1; then
+    
+    local build_cmd="pct exec ${ct_id} -- bash -c 'cd ${source_dir}/mcp-server && pnpm build'"
+    
+    if ! safe_timeout 300 bash -c "${build_cmd}" 2>&1; then
         log_error "MCP build failed or timed out"
         log_error "Check logs in container: pct enter ${ct_id}"
         log_error "Then run: cd ${source_dir}/mcp-server && pnpm build"
