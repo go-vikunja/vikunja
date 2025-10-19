@@ -24,6 +24,26 @@ set -euo pipefail
 # Common and proxmox-api functions are sourced by main script before this library
 
 # ============================================================================
+# Helper Functions
+# ============================================================================
+
+# Safe timeout wrapper - uses timeout if available, otherwise no timeout
+# Usage: safe_timeout seconds command [args...]
+# Returns: Command exit code
+safe_timeout() {
+    local timeout_seconds="$1"
+    shift
+    
+    # Check if timeout command is available
+    if command -v timeout >/dev/null 2>&1; then
+        timeout "$timeout_seconds" "$@"
+    else
+        log_warning "timeout command not available, running without timeout protection"
+        "$@"
+    fi
+}
+
+# ============================================================================
 # Input Validation Functions
 # ============================================================================
 
@@ -432,7 +452,7 @@ clone_repository() {
     
     # Clone repository with timeout
     log_debug "Cloning from ${repo_url}..."
-    if ! timeout 300 pct_exec "$ct_id" \
+    if ! safe_timeout 300 pct_exec "$ct_id" \
         git clone --depth 1 --branch "$branch" "$repo_url" "$target_dir" \
         2>&1; then
         log_error "Failed to clone repository (timeout or network error)"
@@ -724,6 +744,35 @@ test_db_connection() {
 # Build Functions (T027)
 # ============================================================================
 
+# Check if container has sufficient disk space
+# Usage: check_disk_space ct_id required_mb [path]
+# Returns: 0 if sufficient, 1 if insufficient
+check_disk_space() {
+    local ct_id="$1"
+    local required_mb="$2"
+    local check_path="${3:-/}"
+    
+    log_debug "Checking disk space in container ${ct_id} (path: ${check_path}, required: ${required_mb}MB)"
+    
+    # Get available space in MB
+    local available_mb
+    available_mb=$(pct_exec "$ct_id" df -BM "$check_path" | awk 'NR==2 {print $4}' | sed 's/M//')
+    
+    if [[ "$available_mb" -lt "$required_mb" ]]; then
+        log_error "Insufficient disk space in container"
+        log_error "  Path: ${check_path}"
+        log_error "  Available: ${available_mb}MB"
+        log_error "  Required: ${required_mb}MB"
+        log_error "  Shortage: $((required_mb - available_mb))MB"
+        log_error ""
+        log_error "Increase container disk size or free up space"
+        return 1
+    fi
+    
+    log_debug "Disk space check passed: ${available_mb}MB available (${required_mb}MB required)"
+    return 0
+}
+
 # Build Vikunja backend
 # Usage: build_backend ct_id source_dir
 # Returns: 0 on success, 1 on failure
@@ -736,6 +785,11 @@ build_backend() {
     # Verify source directory exists
     if ! pct_exec "$ct_id" test -d "${source_dir}"; then
         log_error "Source directory not found: ${source_dir}"
+        return 1
+    fi
+    
+    # Check disk space (need ~2GB for Go build cache + binary)
+    if ! check_disk_space "$ct_id" 2048 "$source_dir"; then
         return 1
     fi
     
@@ -752,7 +806,7 @@ build_backend() {
     
     # Run mage build with timeout
     log_debug "Running mage build (timeout: 10 minutes)..."
-    if ! timeout 600 pct_exec "$ct_id" bash -c "
+    if ! safe_timeout 600 pct_exec "$ct_id" bash -c "
         cd ${source_dir} && \
         export PATH=\$PATH:/usr/local/go/bin:/root/go/bin && \
         export GOPATH=/root/go && \
@@ -789,9 +843,14 @@ build_frontend() {
         return 1
     fi
     
+    # Check disk space (need ~3GB for node_modules + build)
+    if ! check_disk_space "$ct_id" 3072 "${source_dir}/frontend"; then
+        return 1
+    fi
+    
     # Run pnpm install and build with timeout
     log_debug "Installing frontend dependencies..."
-    if ! timeout 600 pct_exec "$ct_id" bash -c "
+    if ! safe_timeout 600 pct_exec "$ct_id" bash -c "
         cd ${source_dir}/frontend && \
         pnpm install --frozen-lockfile
     " 2>&1; then
@@ -802,7 +861,7 @@ build_frontend() {
     fi
     
     log_debug "Building frontend..."
-    if ! timeout 600 pct_exec "$ct_id" bash -c "
+    if ! safe_timeout 600 pct_exec "$ct_id" bash -c "
         cd ${source_dir}/frontend && \
         pnpm build
     " 2>&1; then
@@ -837,9 +896,14 @@ build_mcp() {
         return 1
     fi
     
+    # Check disk space (need ~1GB for node_modules + build)
+    if ! check_disk_space "$ct_id" 1024 "${source_dir}/mcp-server"; then
+        return 1
+    fi
+    
     # Run pnpm install and build with timeout
     log_debug "Installing MCP dependencies..."
-    if ! timeout 300 pct_exec "$ct_id" bash -c "
+    if ! safe_timeout 300 pct_exec "$ct_id" bash -c "
         cd ${source_dir}/mcp-server && \
         pnpm install --frozen-lockfile
     " 2>&1; then
@@ -850,7 +914,7 @@ build_mcp() {
     fi
     
     log_debug "Building MCP server..."
-    if ! timeout 300 pct_exec "$ct_id" bash -c "
+    if ! safe_timeout 300 pct_exec "$ct_id" bash -c "
         cd ${source_dir}/mcp-server && \
         pnpm build
     " 2>&1; then
