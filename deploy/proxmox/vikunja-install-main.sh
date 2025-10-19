@@ -617,9 +617,18 @@ deploy_vikunja() {
     # Step 10: Configure services
     progress_start "[10/10] Configuring services..."
     
+    # Construct frontend URL from IP or domain
+    local frontend_url
+    if [[ -n "$DOMAIN" ]]; then
+        frontend_url="http://${DOMAIN}"
+    else
+        # Extract IP without CIDR notation
+        frontend_url="http://${IP_ADDRESS%/*}"
+    fi
+    
     # Generate and start backend service (blue)
-    if ! generate_systemd_unit "$CONTAINER_ID" "vikunja-backend-blue" "blue" \
-        "$BACKEND_PORT_BLUE" "$WORKING_DIR"; then
+    if ! generate_systemd_unit "$CONTAINER_ID" "backend" "blue" \
+        "$BACKEND_PORT_BLUE" "$WORKING_DIR" "$frontend_url"; then
         progress_fail "Failed to generate backend service"
         return 1
     fi
@@ -635,8 +644,8 @@ deploy_vikunja() {
     fi
     
     # Generate and start MCP service (blue)
-    if ! generate_systemd_unit "$CONTAINER_ID" "vikunja-mcp-blue" "blue" \
-        "$MCP_PORT_BLUE" "$WORKING_DIR"; then
+    if ! generate_systemd_unit "$CONTAINER_ID" "mcp" "blue" \
+        "$MCP_PORT_BLUE" "$WORKING_DIR" "$frontend_url"; then
         progress_fail "Failed to generate MCP service"
         return 1
     fi

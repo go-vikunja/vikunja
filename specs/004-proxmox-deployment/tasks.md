@@ -127,6 +127,39 @@
 
 ---
 
+## Phase 3.9: Regression Testing for Phase 1-3 Fixes
+
+**Goal**: Validate all fixes from initial deployment testing before proceeding to Phase 4.
+
+**Context**: During manual testing of Phase 1-3, six critical issues were discovered and fixed:
+1. Node.js version incompatibility (18.20.8 → 22.18.0 for Vite 7.1.10)
+2. Repository URL using upstream instead of aroige fork (missing mcp-server/)
+3. MCP build using pnpm instead of npm (package-lock.json vs pnpm-lock.yaml mismatch)
+4. Service generation double-prefixing service_type ("vikunja-backend-blue" → "backend")
+5. Frontend URL auto-detection not configured (backend advertising 127.0.0.1:3456)
+6. Nginx configuration issues (API proxy double-slash, WebSocket path, upgrade mapping)
+
+**Independent Test**: Execute clean deployment from scratch using fixed scripts, verify all components start correctly with proper service names and API auto-detection working.
+
+### Regression Test Tasks
+
+- [ ] T042R1 [TEST] Execute clean deployment test on fresh LXC container using fixed vikunja-install-main.sh
+- [ ] T042R2 [TEST] Verify Node.js 22 installation and Vite frontend build completes successfully
+- [ ] T042R3 [TEST] Verify mcp-server/ directory exists and MCP server builds with `npm ci`
+- [ ] T042R4 [TEST] Verify systemd services created with correct names (vikunja-backend-blue.service, not vikunja-backend-blue-blue.service)
+- [ ] T042R5 [TEST] Verify backend VIKUNJA_SERVICE_FRONTENDURL set to http://<IP>:80 or http://<domain>:80
+- [ ] T042R6 [TEST] Verify nginx configuration has correct API proxy (`location /api` without trailing slash)
+- [ ] T042R7 [TEST] Verify WebSocket path is `/api/v1/ws` and upgrade mapping directive present
+- [ ] T042R8 [TEST] Verify frontend loads and connects to API without manual URL configuration (window.API_URL should auto-detect)
+- [ ] T042R9 [TEST] Verify user registration is enabled (VIKUNJA_SERVICE_ENABLEREGISTRATION=true in backend service)
+- [ ] T042R10 [TEST] Verify health checks pass for all components (backend, frontend, MCP server)
+- [ ] T042R11 [TEST] Verify user can successfully register a new account via /register endpoint
+- [ ] T042R12 [TEST] Document any remaining issues in specs/004-proxmox-deployment/research.md Section 6.2
+
+**Checkpoint**: All Phase 1-3 fixes validated via clean deployment. No regression issues found. Ready for Phase 4 implementation.
+
+---
+
 ## Phase 4: User Story 2 - Seamless Updates from Main Branch (Priority: P1)
 
 **Goal**: Enable zero-downtime updates via blue-green deployment with automatic rollback on failures. Updates complete in <5 minutes with <5 seconds downtime.

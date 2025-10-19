@@ -638,6 +638,22 @@ node --version  # v22.x
 nginx -v      # nginx/1.22.x
 ```
 
+### 6.7 User Registration Configuration
+
+**Finding**: The `/api/v1/register` endpoint returns 404 (Unauthorized) when `VIKUNJA_SERVICE_ENABLEREGISTRATION` is not explicitly set.
+
+**Root Cause**: 
+- Backend checks `config.ServiceEnableRegistration.GetBool()` in `pkg/routes/api/v1/user_register.go:51`
+- Returns `echo.ErrNotFound` if false
+- Default value in `config-raw.json` is `"true"`, but environment variable must be set explicitly
+
+**Solution**:
+- Add `Environment="VIKUNJA_SERVICE_ENABLEREGISTRATION=true"` to backend systemd service
+- This enables new user registration for fresh deployments
+- Can be changed to `false` in production environments after initial admin setup
+
+**Impact**: Without this setting, users cannot register accounts via the web interface.
+
 ---
 
 ## Next Steps

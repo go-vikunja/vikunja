@@ -18,7 +18,7 @@ readonly VIKUNJA_SERVICE_SETUP_LIB_LOADED=1
 # ============================================================================
 
 # Generate systemd unit file for backend service
-# Usage: generate_systemd_unit ct_id service_name color [port] [working_dir]
+# Usage: generate_systemd_unit ct_id service_type color port working_dir frontend_url
 # Returns: 0 on success, 1 on failure
 generate_systemd_unit() {
     local ct_id="$1"
@@ -26,6 +26,7 @@ generate_systemd_unit() {
     local color="$3"
     local port="${4:-${BACKEND_BLUE_PORT:-3456}}"
     local working_dir="${5:-/opt/vikunja}"
+    local frontend_url="${6:-http://localhost}"
     
     # Construct full service name from type and color
     local service_name="vikunja-${service_type}-${color}"
@@ -47,8 +48,12 @@ Type=simple
 User=root
 WorkingDirectory=${working_dir}
 ExecStart=${working_dir}/vikunja
-Environment="VIKUNJA_SERVICE_FRONTENDURL=http://localhost:${port}"
+Environment="VIKUNJA_SERVICE_PUBLICURL=${frontend_url}/"
 Environment="VIKUNJA_SERVICE_INTERFACE=:${port}"
+Environment="VIKUNJA_SERVICE_ROOTPATH=${working_dir}"
+Environment="VIKUNJA_SERVICE_ENABLEREGISTRATION=true"
+Environment="VIKUNJA_DATABASE_TYPE=sqlite"
+Environment="VIKUNJA_DATABASE_PATH=${working_dir}/vikunja.db"
 Restart=always
 RestartSec=10
 

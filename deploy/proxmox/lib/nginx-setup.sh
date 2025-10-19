@@ -42,6 +42,12 @@ generate_nginx_config() {
     local nginx_config
     if [[ "$use_ssl" == "true" ]]; then
         nginx_config=$(cat <<'EOF'
+# WebSocket upgrade mapping
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    '' close;
+}
+
 # Redirect HTTP to HTTPS
 server {
     listen 80;
@@ -67,8 +73,8 @@ server {
         try_files $uri $uri/ /index.html;
     }
     
-    # API backend proxy
-    location /api/ {
+    # API backend proxy (without trailing slash)
+    location /api {
         proxy_pass http://localhost:BACKEND_PORT_PLACEHOLDER;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -76,19 +82,26 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
     
-    # WebSocket support for real-time updates
-    location /api/v1/websocket {
+    # WebSocket support (correct path: /api/v1/ws)
+    location /api/v1/ws {
         proxy_pass http://localhost:BACKEND_PORT_PLACEHOLDER;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
+        proxy_set_header Connection $connection_upgrade;
         proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
     }
 }
 EOF
 )
     else
         nginx_config=$(cat <<'EOF'
+# WebSocket upgrade mapping
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    '' close;
+}
+
 server {
     listen 80;
     server_name DOMAIN_PLACEHOLDER;
@@ -101,8 +114,8 @@ server {
         try_files $uri $uri/ /index.html;
     }
     
-    # API backend proxy
-    location /api/ {
+    # API backend proxy (without trailing slash to avoid double /api)
+    location /api {
         proxy_pass http://localhost:BACKEND_PORT_PLACEHOLDER;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -110,13 +123,14 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
     
-    # WebSocket support
-    location /api/v1/websocket {
+    # WebSocket support (correct path: /api/v1/ws)
+    location /api/v1/ws {
         proxy_pass http://localhost:BACKEND_PORT_PLACEHOLDER;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
+        proxy_set_header Connection $connection_upgrade;
         proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
     }
 }
 EOF
