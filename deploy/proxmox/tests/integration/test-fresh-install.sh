@@ -175,7 +175,8 @@ test_prerequisites() {
     assert_file_exists "$PROJECT_ROOT/lib/common.sh" "Common library exists"
     assert_file_exists "$PROJECT_ROOT/lib/proxmox-api.sh" "Proxmox API library exists"
     assert_file_exists "$PROJECT_ROOT/lib/lxc-setup.sh" "LXC setup library exists"
-    assert_file_exists "$PROJECT_ROOT/vikunja-install.sh" "Main install script exists"
+    assert_file_exists "$PROJECT_ROOT/vikunja-install.sh" "Bootstrap install script exists"
+    assert_file_exists "$PROJECT_ROOT/vikunja-install-main.sh" "Main install script exists"
 }
 
 test_config_loading() {

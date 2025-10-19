@@ -5,12 +5,7 @@
 
 set -euo pipefail
 
-# Source common functions
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=./common.sh
-source "${SCRIPT_DIR}/common.sh"
-# shellcheck source=./proxmox-api.sh
-source "${SCRIPT_DIR}/proxmox-api.sh"
+# Common and proxmox-api functions are sourced by main script before this library
 
 # ============================================================================
 # LXC Container Creation Functions (T024)

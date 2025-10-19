@@ -11,10 +11,7 @@ if [[ -n "${VIKUNJA_PROXMOX_API_LIB_LOADED:-}" ]]; then
 fi
 readonly VIKUNJA_PROXMOX_API_LIB_LOADED=1
 
-# Source common functions
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=./common.sh
-source "${SCRIPT_DIR}/common.sh"
+# Common functions are sourced by main script before this library
 
 # ============================================================================
 # Proxmox Container (pct) Wrapper Functions

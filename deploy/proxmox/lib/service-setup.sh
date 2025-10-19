@@ -11,12 +11,7 @@ if [[ -n "${VIKUNJA_SERVICE_SETUP_LIB_LOADED:-}" ]]; then
 fi
 readonly VIKUNJA_SERVICE_SETUP_LIB_LOADED=1
 
-# Source common functions
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=./common.sh
-source "${SCRIPT_DIR}/common.sh"
-# shellcheck source=./proxmox-api.sh
-source "${SCRIPT_DIR}/proxmox-api.sh"
+# Common and proxmox-api functions are sourced by main script before this library
 
 # ============================================================================
 # Systemd Service Creation Functions (T028)
