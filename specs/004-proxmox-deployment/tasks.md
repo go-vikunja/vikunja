@@ -140,7 +140,7 @@
 6. Nginx configuration issues (API proxy double-slash, WebSocket path, upgrade mapping)
 7. User registration disabled (missing VIKUNJA_SERVICE_ENABLEREGISTRATION)
 8. Database configuration hardcoded to SQLite (PostgreSQL/MySQL configuration not passed to service generation)
-9. Service enable/start functions failing despite systemctl success (tee pipe error handling)
+9. Service enable/start/nginx reload functions failing despite success (tee pipe error handling in all pct_exec calls)
 
 **Independent Test**: Execute clean deployment from scratch using fixed scripts, verify all components start correctly with proper service names and API auto-detection working.
 

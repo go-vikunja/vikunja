@@ -267,10 +267,13 @@ graceful_restart_backend() {
     log_info "Gracefully restarting backend: ${service_name}"
     
     # Send SIGTERM and wait for graceful shutdown
-    if ! pct_exec "$ct_id" systemctl reload-or-restart "$service_name" 2>&1 | tee >(log_debug); then
+    local output
+    if ! output=$(pct_exec "$ct_id" systemctl reload-or-restart "$service_name" 2>&1); then
         log_error "Failed to gracefully restart backend"
+        [[ -n "$output" ]] && log_error "$output"
         return 1
     fi
+    [[ -n "$output" ]] && log_debug "$output"
     
     # Wait for service to be active
     sleep 5
@@ -293,10 +296,13 @@ graceful_restart_mcp() {
     log_info "Gracefully restarting MCP: ${service_name}"
     
     # MCP server handles SIGTERM for graceful shutdown
-    if ! pct_exec "$ct_id" systemctl reload-or-restart "$service_name" 2>&1 | tee >(log_debug); then
+    local output
+    if ! output=$(pct_exec "$ct_id" systemctl reload-or-restart "$service_name" 2>&1); then
         log_error "Failed to gracefully restart MCP"
+        [[ -n "$output" ]] && log_error "$output"
         return 1
     fi
+    [[ -n "$output" ]] && log_debug "$output"
     
     # Wait for service to be active
     sleep 3
@@ -318,16 +324,21 @@ reload_nginx_config() {
     log_info "Reloading nginx configuration"
     
     # Test configuration first
-    if ! pct_exec "$ct_id" nginx -t 2>&1 | tee >(log_debug); then
+    local output
+    if ! output=$(pct_exec "$ct_id" nginx -t 2>&1); then
         log_error "Nginx configuration test failed"
+        [[ -n "$output" ]] && log_error "$output"
         return 1
     fi
+    [[ -n "$output" ]] && log_debug "$output"
     
     # Reload nginx
-    if ! pct_exec "$ct_id" systemctl reload nginx 2>&1 | tee >(log_debug); then
+    if ! output=$(pct_exec "$ct_id" systemctl reload nginx 2>&1); then
         log_error "Failed to reload nginx"
+        [[ -n "$output" ]] && log_error "$output"
         return 1
     fi
+    [[ -n "$output" ]] && log_debug "$output"
     
     log_success "Nginx configuration reloaded"
     return 0

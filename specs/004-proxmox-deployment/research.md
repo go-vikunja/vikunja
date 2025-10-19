@@ -807,16 +807,25 @@ fi
 [[ -n "$output" ]] && log_debug "$output"
 ```
 
-**Functions Fixed**:
+**Functions Fixed** (complete list):
 - `enable_service()` - daemon-reload and enable operations
 - `start_service()` - start operation and status checking
 - `stop_service()` - stop operation
 - `restart_service()` - restart operation
+- `graceful_restart_backend()` - graceful backend restart
+- `graceful_restart_mcp()` - graceful MCP restart
+- `reload_nginx_config()` - nginx config reload (duplicate of reload_nginx)
+- `reload_nginx()` - nginx configuration test and reload
+- `enable_site()` - nginx site symlink creation
+- `update_nginx_upstream()` - nginx configuration update
 
 **Files Modified**:
-- `deploy/proxmox/lib/service-setup.sh` (lines 128-220)
+- `deploy/proxmox/lib/service-setup.sh` (10 function fixes)
+- `deploy/proxmox/lib/nginx-setup.sh` (4 function fixes)
 
-**Impact**: Without this fix, deployment always fails at service enable step even though services are actually enabled correctly.
+**Note**: The proxmox-api.sh file still has `tee >(log_debug)` calls but these are for `pct` commands run on the Proxmox host (not inside containers), which may behave differently. We'll monitor if they cause issues.
+
+**Impact**: Without this fix, deployment fails at multiple steps (service enable, service start, nginx reload) even though the actual systemctl/nginx operations succeed.
 
 ---
 

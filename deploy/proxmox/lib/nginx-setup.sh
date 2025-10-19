@@ -166,8 +166,13 @@ enable_site() {
     pct_exec "$ct_id" rm -f /etc/nginx/sites-enabled/default 2>/dev/null || true
     
     # Enable vikunja site
-    pct_exec "$ct_id" ln -sf /etc/nginx/sites-available/vikunja /etc/nginx/sites-enabled/vikunja \
-        2>&1 | tee >(log_debug) || return 1
+    local output
+    if ! output=$(pct_exec "$ct_id" ln -sf /etc/nginx/sites-available/vikunja /etc/nginx/sites-enabled/vikunja 2>&1); then
+        log_error "Failed to enable site"
+        [[ -n "$output" ]] && log_error "$output"
+        return 1
+    fi
+    [[ -n "$output" ]] && log_debug "$output"
     
     log_success "Site enabled"
     return 0
@@ -182,16 +187,21 @@ reload_nginx() {
     log_info "Reloading nginx"
     
     # Test configuration
-    if ! pct_exec "$ct_id" nginx -t 2>&1 | tee >(log_debug); then
+    local output
+    if ! output=$(pct_exec "$ct_id" nginx -t 2>&1); then
         log_error "Nginx configuration test failed"
+        [[ -n "$output" ]] && log_error "$output"
         return 1
     fi
+    [[ -n "$output" ]] && log_debug "$output"
     
     # Reload nginx
-    if ! pct_exec "$ct_id" systemctl reload nginx 2>&1 | tee >(log_debug); then
+    if ! output=$(pct_exec "$ct_id" systemctl reload nginx 2>&1); then
         log_error "Failed to reload nginx"
+        [[ -n "$output" ]] && log_error "$output"
         return 1
     fi
+    [[ -n "$output" ]] && log_debug "$output"
     
     log_success "Nginx reloaded"
     return 0
@@ -220,8 +230,14 @@ update_nginx_upstream() {
     log_info "Updating nginx upstream to ${active_color} (port ${active_port})"
     
     # Update backend port in configuration
-    pct_exec "$ct_id" sed -i "s/proxy_pass http:\/\/localhost:[0-9]\+/proxy_pass http:\/\/localhost:${active_port}/" \
-        /etc/nginx/sites-available/vikunja 2>&1 | tee >(log_debug) || return 1
+    local output
+    if ! output=$(pct_exec "$ct_id" sed -i "s/proxy_pass http:\/\/localhost:[0-9]\+/proxy_pass http:\/\/localhost:${active_port}/" \
+        /etc/nginx/sites-available/vikunja 2>&1); then
+        log_error "Failed to update nginx configuration"
+        [[ -n "$output" ]] && log_error "$output"
+        return 1
+    fi
+    [[ -n "$output" ]] && log_debug "$output"
     
     # Test and reload
     if ! test_nginx_config "$ct_id"; then
