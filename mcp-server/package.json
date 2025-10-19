@@ -1,0 +1,53 @@
+{
+  "name": "vikunja-mcp",
+  "version": "1.0.0",
+  "description": "Model Context Protocol (MCP) server for Vikunja task management",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
+    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\""
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "vikunja",
+    "ai-agent",
+    "task-management"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "express": "^4.18.2",
+    "axios": "^1.6.2",
+    "zod": "^3.22.4",
+    "ioredis": "^5.3.2",
+    "rate-limiter-flexible": "^5.0.0",
+    "winston": "^3.11.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "@types/node": "^20.10.5",
+    "@types/express": "^4.17.21",
+    "vitest": "^1.0.4",
+    "@vitest/coverage-v8": "^1.0.4",
+    "supertest": "^6.3.3",
+    "@types/supertest": "^6.0.2",
+    "eslint": "^8.56.0",
+    "@typescript-eslint/parser": "^6.15.0",
+    "@typescript-eslint/eslint-plugin": "^6.15.0",
+    "prettier": "^3.1.1",
+    "tsx": "^4.7.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

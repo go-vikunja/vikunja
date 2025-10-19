@@ -27,6 +27,7 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
+	"code.vikunja.io/api/pkg/testutil"
 	"code.vikunja.io/api/pkg/user"
 )
 
@@ -42,6 +43,9 @@ func TestMain(m *testing.M) {
 
 	// Initialize logger for tests
 	log.InitLogger()
+
+	// Initialize service dependency injection explicitly
+	testutil.Init()
 
 	// Some tests use the file engine, so we'll need to initialize that
 	files.InitTests()

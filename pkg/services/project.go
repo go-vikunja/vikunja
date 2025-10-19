@@ -17,6 +17,7 @@
 package services
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"strconv"
@@ -29,31 +30,346 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
+	"code.vikunja.io/api/pkg/web"
 	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
-func init() {
+// InitProjectService sets up dependency injection for project-related model functions.
+// This function must be called during test initialization to ensure models can call services.
+func InitProjectService() {
 	// Set up dependency injection for models to use service layer functions
-	models.ProjectUpdateFunc = func(s *xorm.Session, project *models.Project, u *user.User) (*models.Project, error) {
-		projectService := &Project{DB: s.Engine()}
-		return projectService.Update(s, project, u)
+	models.ProjectCreateFunc = func(s *xorm.Session, project *models.Project, a web.Auth) (*models.Project, error) {
+		projectService := &ProjectService{DB: s.Engine()}
+		u, err := user.GetFromAuth(a)
+		if err != nil {
+			return nil, err
+		}
+		return projectService.Create(s, project, u)
 	}
 	models.SetArchiveStateForProjectDescendantsFunc = SetArchiveStateForProjectDescendants
+	models.AddProjectDetailsFunc = func(s *xorm.Session, projects []*models.Project, a web.Auth) error {
+		ps := NewProjectService(s.Engine())
+		return ps.AddDetails(s, projects, a)
+	}
+
+	// Set up permission delegation (T-PERM-006)
+	models.CheckProjectReadFunc = func(s *xorm.Session, projectID int64, a web.Auth) (bool, int, error) {
+		ps := NewProjectService(s.Engine())
+		return ps.CanRead(s, projectID, a)
+	}
+	models.CheckProjectWriteFunc = func(s *xorm.Session, projectID int64, a web.Auth) (bool, error) {
+		ps := NewProjectService(s.Engine())
+		return ps.CanWrite(s, projectID, a)
+	}
+	models.CheckProjectUpdateFunc = func(s *xorm.Session, projectID int64, project *models.Project, a web.Auth) (bool, error) {
+		ps := NewProjectService(s.Engine())
+		return ps.CanUpdate(s, projectID, project, a)
+	}
+	models.CheckProjectDeleteFunc = func(s *xorm.Session, projectID int64, a web.Auth) (bool, error) {
+		ps := NewProjectService(s.Engine())
+		return ps.CanDelete(s, projectID, a)
+	}
+	models.CheckProjectCreateFunc = func(s *xorm.Session, project *models.Project, a web.Auth) (bool, error) {
+		ps := NewProjectService(s.Engine())
+		return ps.CanCreate(s, project, a)
+	}
+	models.CheckProjectIsAdminFunc = func(s *xorm.Session, projectID int64, a web.Auth) (bool, error) {
+		ps := NewProjectService(s.Engine())
+		return ps.IsAdmin(s, projectID, a)
+	}
 }
 
-// Project is a service for projects.
-type Project struct {
-	DB *xorm.Engine
+// ProjectService is a service for projects.
+type ProjectService struct {
+	DB       *xorm.Engine
+	Registry *ServiceRegistry
 }
 
-// Get gets a project by its ID.
-func (p *Project) Get(s *xorm.Session, projectID int64, u *user.User) (*models.Project, error) {
-	return nil, nil
+// NewProjectService creates a new ProjectService.
+// Deprecated: Use ServiceRegistry.Project() instead.
+func NewProjectService(db *xorm.Engine) *ProjectService {
+	registry := NewServiceRegistry(db)
+	return registry.Project()
+}
+
+// HasPermission checks if a user has a given permission on a project.
+func (p *ProjectService) HasPermission(s *xorm.Session, projectID int64, u *user.User, permission models.Permission) (bool, error) {
+	if u == nil {
+		return false, nil
+	}
+
+	if u.ID < 0 {
+		shareID := u.ID * -1
+		share, err := p.Registry.LinkShare().GetByID(s, shareID)
+		if err != nil {
+			return false, err
+		}
+		if share == nil {
+			return false, nil
+		}
+		if share.ProjectID != projectID {
+			return false, nil
+		}
+		return share.Permission >= permission, nil
+	}
+	project, err := p.GetByIDSimple(s, projectID)
+	if err != nil {
+		return false, err
+	}
+	// The owner of a project always has all permissions.
+	if project.OwnerID == u.ID {
+		return true, nil
+	}
+
+	// We need to check the database for permissions.
+	projectPermissions, err := p.checkPermissionsForProjects(s, u, []int64{projectID})
+	if err != nil {
+		return false, err
+	}
+
+	perm, ok := projectPermissions[projectID]
+	if !ok {
+		return false, nil
+	}
+
+	return perm.MaxPermission >= int(permission), nil
+}
+
+// GetByIDSimple gets a project with only the basic items (no tasks or user objects).
+// Returns an error if the project does not exist.
+// MIGRATION: This is a simple lookup helper migrated from models layer (T-PERM-004).
+// No permission checks are performed - use GetByID() for permission-aware retrieval.
+func (p *ProjectService) GetByIDSimple(s *xorm.Session, projectID int64) (*models.Project, error) {
+	if projectID < 1 {
+		return nil, models.ErrProjectDoesNotExist{ID: projectID}
+	}
+
+	project := &models.Project{}
+	exists, err := s.
+		Where("id = ?", projectID).
+		OrderBy("position").
+		Get(project)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, models.ErrProjectDoesNotExist{ID: projectID}
+	}
+
+	return project, nil
+}
+
+// GetByIDs retrieves multiple projects by their IDs without permission checks or additional details.
+// Returns an empty slice if no IDs are provided.
+// MIGRATION: This is a batch lookup helper migrated from models layer (T-PERM-005).
+func (p *ProjectService) GetByIDs(s *xorm.Session, projectIDs []int64) ([]*models.Project, error) {
+	if len(projectIDs) == 0 {
+		return []*models.Project{}, nil
+	}
+
+	projects := make([]*models.Project, 0, len(projectIDs))
+	err := s.In("id", projectIDs).Find(&projects)
+	if err != nil {
+		return nil, err
+	}
+	return projects, nil
+}
+
+// GetMapByIDs retrieves multiple projects by their IDs and returns them as a map keyed by project ID.
+// Returns an empty map if no IDs are provided.
+// MIGRATION: This is a batch lookup helper migrated from models layer (T-PERM-005).
+func (p *ProjectService) GetMapByIDs(s *xorm.Session, projectIDs []int64) (map[int64]*models.Project, error) {
+	if len(projectIDs) == 0 {
+		return make(map[int64]*models.Project), nil
+	}
+
+	projects := make(map[int64]*models.Project, len(projectIDs))
+	err := s.In("id", projectIDs).Find(&projects)
+	if err != nil {
+		return nil, err
+	}
+	return projects, nil
+}
+
+// Get gets a project by its ID with permission checking and full details.
+// This is an alias for GetByID for backwards compatibility.
+func (p *ProjectService) Get(s *xorm.Session, projectID int64, u *user.User) (*models.Project, error) {
+	return p.GetByID(s, projectID, u)
+}
+
+// ReadOne retrieves a single project with complete details including owner, views, subscriptions, etc.
+// This is the service layer implementation of models.Project.ReadOne()
+func (p *ProjectService) ReadOne(s *xorm.Session, project *models.Project, a web.Auth) error {
+	// Handle special pseudo-projects
+	if project.ID == models.FavoritesPseudoProject.ID {
+		project.Views = models.FavoritesPseudoProject.Views
+		return nil
+	}
+
+	// Check for saved filters
+	filterID := models.GetSavedFilterIDFromProjectID(project.ID)
+	isFilter := filterID > 0
+	if isFilter {
+		sf, err := p.Registry.SavedFilter().GetByIDSimple(s, filterID)
+		if err != nil {
+			return err
+		}
+		project.Title = sf.Title
+		project.Description = sf.Description
+		project.Created = sf.Created
+		project.Updated = sf.Updated
+		project.OwnerID = sf.OwnerID
+	} else {
+		// Load basic project data from database if not a saved filter
+		// This matches the original pattern where CanRead did: *p = *originalProject
+		originalProject, err := p.GetByIDSimple(s, project.ID)
+		if err != nil {
+			return err
+		}
+		*project = *originalProject
+	}
+
+	// Hide parent project ID for link shares
+	_, isShareAuth := a.(*models.LinkSharing)
+	if isShareAuth {
+		project.ParentProjectID = 0
+	}
+
+	// Get project owner
+	owner, err := user.GetUserByID(s, project.OwnerID)
+	if user.IsErrUserDoesNotExist(err) {
+		project.Owner = nil
+	} else if err != nil {
+		return err
+	} else {
+		project.Owner = owner
+	}
+
+	// Check if the project is archived and set it to archived if it is not already archived individually
+	if !project.IsArchived && !isFilter {
+		err = project.CheckIsArchived(s)
+		if err != nil {
+			project.IsArchived = true
+		}
+	}
+
+	// Get any background information if there is one set
+	if project.BackgroundFileID != 0 {
+		// Unsplash image
+		project.BackgroundInformation, err = models.GetUnsplashPhotoByFileID(s, project.BackgroundFileID)
+		if err != nil && !files.IsErrFileIsNotUnsplashFile(err) {
+			return err
+		}
+
+		if err != nil && files.IsErrFileIsNotUnsplashFile(err) {
+			project.BackgroundInformation = &models.ProjectBackgroundType{Type: models.ProjectBackgroundUpload}
+		}
+	}
+
+	// Check if project is favorite
+	project.IsFavorite, err = p.Registry.Favorite().IsFavorite(s, project.ID, a, models.FavoriteKindProject)
+	if err != nil {
+		return err
+	}
+
+	// Get subscription
+	subs, err := models.GetSubscriptionForUser(s, models.SubscriptionEntityProject, project.ID, a)
+	if err != nil && models.IsErrProjectDoesNotExist(err) && isFilter {
+		return nil
+	}
+	if err != nil && !models.IsErrProjectDoesNotExist(err) {
+		return err
+	}
+	if subs != nil {
+		project.Subscription = &subs.Subscription
+	}
+
+	// Get views
+	project.Views, err = p.getViewsForProject(s, project.ID)
+	return err
+}
+
+// getViewsForProject retrieves all views for a project
+func (p *ProjectService) getViewsForProject(s *xorm.Session, projectID int64) (views []*models.ProjectView, err error) {
+	views = []*models.ProjectView{}
+	err = s.
+		Where("project_id = ?", projectID).
+		OrderBy("position asc").
+		Find(&views)
+	return
+}
+
+// ReadAll retrieves all projects for a user with filtering, pagination, and expansion support.
+// This is the service layer implementation of models.Project.ReadAll()
+func (p *ProjectService) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int, isArchived bool, expand models.ProjectExpandable) (projects []*models.Project, resultCount int, totalItems int64, err error) {
+	// Get raw projects
+	projects, resultCount, totalItems, err = p.getAllRawProjects(s, a, search, page, perPage, isArchived)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	// If it's a link share, just return the projects (which will contain only one)
+	_, isLinkShare := a.(*models.LinkSharing)
+	if isLinkShare {
+		return projects, resultCount, totalItems, nil
+	}
+
+	// Add project details (favorite state, among other things)
+	err = p.AddDetails(s, projects, a)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	// Expand permissions if requested
+	if expand == models.ProjectExpandableRights {
+		var doer *user.User
+		doer, err = user.GetFromAuth(a)
+		if err != nil {
+			return nil, 0, 0, err
+		}
+		err = models.AddMaxPermissionToProjects(s, projects, doer)
+		if err != nil {
+			return nil, 0, 0, err
+		}
+	} else {
+		for _, pr := range projects {
+			pr.MaxPermission = models.PermissionUnknown
+		}
+	}
+
+	return projects, resultCount, totalItems, err
+}
+
+// getAllRawProjects retrieves all projects for a user without adding details
+func (p *ProjectService) getAllRawProjects(s *xorm.Session, a web.Auth, search string, page int, perPage int, isArchived bool) (projects []*models.Project, resultCount int, totalItems int64, err error) {
+	// Check if we're dealing with a share auth
+	shareAuth, is := a.(*models.LinkSharing)
+	if is {
+		project, err := p.GetByIDSimple(s, shareAuth.ProjectID)
+		if err != nil {
+			return nil, 0, 0, err
+		}
+		projects := []*models.Project{project}
+		err = p.AddDetails(s, projects, a)
+		if err == nil && len(projects) > 0 {
+			projects[0].ParentProjectID = 0
+		}
+		return projects, 0, 0, err
+	}
+
+	doer, err := user.GetFromAuth(a)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	// Get projects using the existing GetAllForUser method
+	projects, resultCount, totalItems, err = p.GetAllForUser(s, doer, search, page, perPage, isArchived)
+	return projects, resultCount, totalItems, err
 }
 
 // Update updates a project.
-func (p *Project) Update(s *xorm.Session, project *models.Project, u *user.User) (*models.Project, error) {
+func (p *ProjectService) Update(s *xorm.Session, project *models.Project, u *user.User) (*models.Project, error) {
 	// Permission check
 	can, err := project.CanUpdate(s, u)
 	if err != nil {
@@ -104,18 +420,18 @@ func (p *Project) Update(s *xorm.Session, project *models.Project, u *user.User)
 		}
 	}
 
-	wasFavorite, err := models.IsFavorite(s, project.ID, u, models.FavoriteKindProject)
+	wasFavorite, err := p.Registry.Favorite().IsFavorite(s, project.ID, u, models.FavoriteKindProject)
 	if err != nil {
 		return nil, err
 	}
 	if project.IsFavorite && !wasFavorite {
-		if err := models.AddToFavorites(s, project.ID, u, models.FavoriteKindProject); err != nil {
+		if err := p.Registry.Favorite().AddToFavorite(s, project.ID, u, models.FavoriteKindProject); err != nil {
 			return nil, err
 		}
 	}
 
 	if !project.IsFavorite && wasFavorite {
-		if err := models.RemoveFromFavorite(s, project.ID, u, models.FavoriteKindProject); err != nil {
+		if err := p.Registry.Favorite().RemoveFromFavorite(s, project.ID, u, models.FavoriteKindProject); err != nil {
 			return nil, err
 		}
 	}
@@ -138,7 +454,7 @@ func (p *Project) Update(s *xorm.Session, project *models.Project, u *user.User)
 		return nil, err
 	}
 
-	l, err := models.GetProjectSimpleByID(s, project.ID)
+	l, err := p.GetByIDSimple(s, project.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -214,8 +530,8 @@ SELECT id FROM descendant_ids`,
 }
 
 // GetByID gets a project by its ID.
-func (p *Project) GetByID(s *xorm.Session, projectID int64, u *user.User) (*models.Project, error) {
-	project, err := models.GetProjectSimpleByID(s, projectID)
+func (p *ProjectService) GetByID(s *xorm.Session, projectID int64, u *user.User) (*models.Project, error) {
+	project, err := p.GetByIDSimple(s, projectID)
 	if err != nil {
 		return nil, err
 	}
@@ -260,7 +576,7 @@ func getLimitFromPageIndex(page int, perPage int) (limit int, start int) {
 	return perPage, start
 }
 
-func (p *Project) getUserProjectsStatement(userID int64, search string, getArchived bool) *builder.Builder {
+func (p *ProjectService) getUserProjectsStatement(userID int64, search string, getArchived bool) *builder.Builder {
 	dialect := db.GetDialect()
 
 	conds := []builder.Cond{
@@ -331,7 +647,7 @@ func (p *Project) getUserProjectsStatement(userID int64, search string, getArchi
 		GroupBy("l.id")
 }
 
-func (p *Project) getAllProjectsForUserInternal(s *xorm.Session, userID int64, search string, page int, perPage int, isArchived bool) (projects []*models.Project, totalCount int64, err error) {
+func (p *ProjectService) getAllProjectsForUserInternal(s *xorm.Session, userID int64, search string, page int, perPage int, isArchived bool) (projects []*models.Project, totalCount int64, err error) {
 	limit, start := getLimitFromPageIndex(page, perPage)
 	query := p.getUserProjectsStatement(userID, search, isArchived)
 
@@ -388,7 +704,7 @@ SELECT COUNT(DISTINCT all_projects.id) FROM all_projects`, args...).
 	return currentProjects, totalCount, err
 }
 
-func (p *Project) getSavedFiltersForUser(s *xorm.Session, u *user.User, search string) (fs []*models.SavedFilter, err error) {
+func (p *ProjectService) getSavedFiltersForUser(s *xorm.Session, u *user.User, search string) (fs []*models.SavedFilter, err error) {
 	var cond builder.Cond = builder.Eq{"owner_id": u.ID}
 	if search != "" {
 		cond = builder.And(cond, db.MultiFieldSearch([]string{"title", "description"}, search))
@@ -397,7 +713,7 @@ func (p *Project) getSavedFiltersForUser(s *xorm.Session, u *user.User, search s
 	return
 }
 
-func (p *Project) getSavedFilterProjects(s *xorm.Session, doer *user.User, search string) (savedFiltersProjects []*models.Project, err error) {
+func (p *ProjectService) getSavedFilterProjects(s *xorm.Session, doer *user.User, search string) (savedFiltersProjects []*models.Project, err error) {
 	savedFilters, err := p.getSavedFiltersForUser(s, doer, search)
 	if err != nil {
 		return
@@ -417,7 +733,7 @@ func (p *Project) getSavedFilterProjects(s *xorm.Session, doer *user.User, searc
 }
 
 // GetAllForUser returns all projects for a user
-func (p *Project) GetAllForUser(s *xorm.Session, u *user.User, search string, page int, perPage int, isArchived bool) (projects []*models.Project, resultCount int, totalItems int64, err error) {
+func (p *ProjectService) GetAllForUser(s *xorm.Session, u *user.User, search string, page int, perPage int, isArchived bool) (projects []*models.Project, resultCount int, totalItems int64, err error) {
 	projects, totalItems, err = p.getAllProjectsForUserInternal(s, u.ID, search, page, perPage, isArchived)
 	if err != nil {
 		return nil, 0, 0, err
@@ -460,7 +776,7 @@ func (p *Project) GetAllForUser(s *xorm.Session, u *user.User, search string, pa
 	// Add project details (favorite state, among other things)
 	err = models.AddProjectDetails(s, projects, u)
 	if err != nil {
-		return
+		return nil, 0, 0, err
 	}
 
 	err = models.AddMaxPermissionToProjects(s, projects, u)
@@ -472,7 +788,14 @@ func (p *Project) GetAllForUser(s *xorm.Session, u *user.User, search string, pa
 }
 
 // Create creates a new project.
-func (p *Project) Create(s *xorm.Session, project *models.Project, u *user.User) (*models.Project, error) {
+func (p *ProjectService) Create(s *xorm.Session, project *models.Project, u *user.User) (*models.Project, error) {
+	// Validate that the user exists in the database
+	// This is crucial because the user might be a test stub or invalid reference
+	_, err := user.GetUserByID(s, u.ID)
+	if err != nil {
+		return nil, err
+	}
+
 	if project.ParentProjectID != 0 {
 		// parent := &models.Project{ID: project.ParentProjectID}
 		// TODO: Move this to the service
@@ -489,7 +812,7 @@ func (p *Project) Create(s *xorm.Session, project *models.Project, u *user.User)
 	project.OwnerID = u.ID
 	project.Owner = u
 
-	err := p.validate(s, project)
+	err = p.validate(s, project)
 	if err != nil {
 		return nil, err
 	}
@@ -507,7 +830,7 @@ func (p *Project) Create(s *xorm.Session, project *models.Project, u *user.User)
 		return nil, err
 	}
 	if project.IsFavorite {
-		if err := models.AddToFavorites(s, project.ID, u, models.FavoriteKindProject); err != nil {
+		if err := p.Registry.Favorite().AddToFavorite(s, project.ID, u, models.FavoriteKindProject); err != nil {
 			return nil, err
 		}
 	}
@@ -525,15 +848,21 @@ func (p *Project) Create(s *xorm.Session, project *models.Project, u *user.User)
 		return nil, err
 	}
 
-	fullProject, err := models.GetProjectSimpleByID(s, project.ID)
+	fullProject, err := p.GetByIDSimple(s, project.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	return fullProject, err
+	// Load full project details including owner, views, etc.
+	err = fullProject.ReadOne(s, u)
+	if err != nil {
+		return nil, err
+	}
+
+	return fullProject, nil
 }
 
-func (p *Project) validate(s *xorm.Session, project *models.Project) (err error) {
+func (p *ProjectService) validate(s *xorm.Session, project *models.Project) (err error) {
 	if project.Title == "" {
 		return &models.ErrProjectTitleCannotBeEmpty{}
 	}
@@ -726,26 +1055,26 @@ Transaction Safety:
 This method should be called within a database transaction to ensure
 atomicity. If any step fails, the entire operation should be rolled back.
 */
-func (p *Project) Delete(s *xorm.Session, projectID int64, u *user.User) error {
+func (p *ProjectService) Delete(s *xorm.Session, projectID int64, a web.Auth) error {
 	// Load the project
-	project, err := models.GetProjectSimpleByID(s, projectID)
+	project, err := p.GetByIDSimple(s, projectID)
 	if err != nil {
 		return err
 	}
 
-	// Check if this is a default project FIRST (more specific error condition)
+	// Check if this is a default project
 	isDefaultProject, err := project.IsDefaultProject(s)
 	if err != nil {
 		return err
 	}
 
-	// Only owners can delete their default project
-	if isDefaultProject && project.OwnerID != u.ID {
+	// No one can delete a default project (not even the owner)
+	if isDefaultProject {
 		return &models.ErrCannotDeleteDefaultProject{ProjectID: project.ID}
 	}
 
 	// Permission check - implement the same logic as CanDelete but directly in service
-	canDelete, err := p.checkDeletePermission(s, project, u)
+	canDelete, err := p.checkDeletePermission(s, project, a)
 	if err != nil {
 		return err
 	}
@@ -762,10 +1091,14 @@ func (p *Project) Delete(s *xorm.Session, projectID int64, u *user.User) error {
 	}
 
 	// Delete each task individually to ensure proper cleanup
-	// Note: This calls the model's Delete method which still uses web.Auth
-	// We pass the user as web.Auth since user.User implements web.Auth interface
+	// NOTE: We use deleteWithoutPermissionCheck here because:
+	// 1. Permission checks have already been performed at the project level (line 990-997)
+	// 2. User has permission to delete the project, which includes all its tasks
+	// 3. Checking task permissions would fail when parent projects are being deleted in a hierarchy
+	//    because CheckIsArchived() recursively loads parent projects that may not exist yet
+	taskService := NewTaskService(s.Engine())
 	for _, task := range tasks {
-		err = task.Delete(s, u)
+		err = taskService.deleteWithoutPermissionCheck(s, task.ID, a)
 		if err != nil {
 			return err
 		}
@@ -825,9 +1158,159 @@ func (p *Project) Delete(s *xorm.Session, projectID int64, u *user.User) error {
 	}
 
 	// Remove from favorites
-	err = models.RemoveFromFavorite(s, project.ID, u, models.FavoriteKindProject)
+	// Extract user for favorite service (link shares don't have favorites)
+	doer, err := models.GetUserOrLinkShareUser(s, a)
+	if err == nil {
+		err = p.Registry.Favorite().RemoveFromFavorite(s, project.ID, doer, models.FavoriteKindProject)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Delete link sharing
+	_, err = s.Where("project_id = ?", project.ID).Delete(&models.LinkSharing{})
 	if err != nil {
 		return err
+	}
+
+	// Delete project users
+	_, err = s.Where("project_id = ?", project.ID).Delete(&models.ProjectUser{})
+	if err != nil {
+		return err
+	}
+
+	// Delete team projects
+	_, err = s.Where("project_id = ?", project.ID).Delete(&models.TeamProject{})
+	if err != nil {
+		return err
+	}
+
+	// Delete the project itself
+	_, err = s.ID(project.ID).Delete(&models.Project{})
+	if err != nil {
+		return err
+	}
+
+	// Dispatch project deleted event with the user
+	// For link shares, we use a proxy user
+	eventDoer, err := models.GetUserOrLinkShareUser(s, a)
+	if err != nil {
+		// If we can't get a user (shouldn't happen), use a system user placeholder
+		eventDoer = &user.User{ID: 0}
+	}
+	err = events.Dispatch(&models.ProjectDeletedEvent{
+		Project: project,
+		Doer:    eventDoer,
+	})
+	if err != nil {
+		return err
+	}
+
+	// Delete child projects recursively
+	childProjects := []*models.Project{}
+	err = s.Where("parent_project_id = ?", project.ID).Find(&childProjects)
+	if err != nil {
+		return err
+	}
+
+	for _, child := range childProjects {
+		err = p.Delete(s, child.ID, a)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// DeleteForce deletes a project, bypassing the default project protection
+// This should ONLY be used when deleting a user and their default project needs to be cleaned up
+func (p *ProjectService) DeleteForce(s *xorm.Session, projectID int64, a web.Auth) error {
+	// Load the project
+	project, err := p.GetByIDSimple(s, projectID)
+	if err != nil {
+		return err
+	}
+
+	// Check if this is a default project
+	isDefaultProject, err := project.IsDefaultProject(s)
+	if err != nil {
+		return err
+	}
+
+	// Permission check - still enforce permissions even when forcing
+	canDelete, err := p.checkDeletePermission(s, project, a)
+	if err != nil {
+		return err
+	}
+	if !canDelete {
+		return models.ErrGenericForbidden{}
+	}
+
+	// If we're deleting a default project, remove it as default for all users first
+	if isDefaultProject {
+		_, err = s.Where("default_project_id = ?", project.ID).
+			Cols("default_project_id").
+			Update(&user.User{DefaultProjectID: 0})
+		if err != nil {
+			return err
+		}
+	}
+
+	// Now perform the actual deletion using the same logic as Delete
+	// Delete all tasks on that project
+	tasks := []*models.Task{}
+	err = s.Where("project_id = ?", project.ID).Find(&tasks)
+	if err != nil {
+		return err
+	}
+
+	for _, task := range tasks {
+		err = task.Delete(s, a)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Delete background file if exists
+	if project.BackgroundFileID != 0 {
+		_, err := s.Where("id = ?", project.BackgroundFileID).Delete(&files.File{})
+		if err != nil {
+			return err
+		}
+	}
+
+	// Delete all views and their buckets
+	views := []*models.ProjectView{}
+	err = s.Where("project_id = ?", project.ID).Find(&views)
+	if err != nil {
+		return err
+	}
+
+	viewIDs := []int64{}
+	for _, v := range views {
+		viewIDs = append(viewIDs, v.ID)
+	}
+
+	if len(viewIDs) > 0 {
+		_, err = s.In("project_view_id", viewIDs).Delete(&models.Bucket{})
+		if err != nil {
+			return err
+		}
+
+		_, err = s.In("id", viewIDs).Delete(&models.ProjectView{})
+		if err != nil {
+			return err
+		}
+	}
+
+	// Remove from favorites
+	doer, err := models.GetUserOrLinkShareUser(s, a)
+	if err == nil {
+		err = p.Registry.Favorite().RemoveFromFavorite(s, project.ID, doer, models.FavoriteKindProject)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Delete link sharing
@@ -855,9 +1338,13 @@ func (p *Project) Delete(s *xorm.Session, projectID int64, u *user.User) error {
 	}
 
 	// Dispatch project deleted event
+	eventDoer, err := user.GetFromAuth(a)
+	if err != nil {
+		eventDoer = &user.User{ID: 0}
+	}
 	err = events.Dispatch(&models.ProjectDeletedEvent{
 		Project: project,
-		Doer:    u,
+		Doer:    eventDoer,
 	})
 	if err != nil {
 		return err
@@ -871,7 +1358,7 @@ func (p *Project) Delete(s *xorm.Session, projectID int64, u *user.User) error {
 	}
 
 	for _, child := range childProjects {
-		err = p.Delete(s, child.ID, u)
+		err = p.DeleteForce(s, child.ID, a)
 		if err != nil {
 			return err
 		}
@@ -882,10 +1369,23 @@ func (p *Project) Delete(s *xorm.Session, projectID int64, u *user.User) error {
 
 // checkDeletePermission implements the permission checking logic directly in the service layer
 // This replaces the need to call project.CanDelete() from the model layer
-func (p *Project) checkDeletePermission(s *xorm.Session, project *models.Project, u *user.User) (bool, error) {
+func (p *ProjectService) checkDeletePermission(s *xorm.Session, project *models.Project, a web.Auth) (bool, error) {
 	// The favorite project can't be deleted
 	if project.ID == models.FavoritesPseudoProject.ID {
 		return false, nil
+	}
+
+	// Check if the auth is a link share
+	shareAuth, is := a.(*models.LinkSharing)
+	if is {
+		// Link shares can only delete if they have admin permission and it's their project
+		return project.ID == shareAuth.ProjectID && shareAuth.Permission == models.PermissionAdmin, nil
+	}
+
+	// Get the user from auth
+	u, err := user.GetFromAuth(a)
+	if err != nil {
+		return false, err
 	}
 
 	// Check if the user is the owner (owners are always admins)
@@ -910,7 +1410,7 @@ func (p *Project) checkDeletePermission(s *xorm.Session, project *models.Project
 
 // checkPermissionsForProjects implements the same permission checking logic as the model layer
 // This is extracted from pkg/models/project_permissions.go to avoid circular dependencies
-func (p *Project) checkPermissionsForProjects(s *xorm.Session, u *user.User, projectIDs []int64) (map[int64]*projectPermission, error) {
+func (p *ProjectService) checkPermissionsForProjects(s *xorm.Session, u *user.User, projectIDs []int64) (map[int64]*projectPermission, error) {
 	projectPermissionMap := make(map[int64]*projectPermission)
 
 	if len(projectIDs) < 1 {
@@ -988,4 +1488,395 @@ GROUP BY ph.original_project_id`, args...).
 type projectPermission struct {
 	ID            int64 `xorm:"id"`
 	MaxPermission int   `xorm:"max_permission"`
+}
+
+// AddDetails adds all details to a slice of projects.
+func (p *ProjectService) AddDetails(s *xorm.Session, projects []*models.Project, a web.Auth) (err error) {
+	if len(projects) == 0 {
+		return
+	}
+
+	var ownerIDs []int64
+	var projectIDs []int64
+	var fileIDs []int64
+	for _, p := range projects {
+		ownerIDs = append(ownerIDs, p.OwnerID)
+		projectIDs = append(projectIDs, p.ID)
+		fileIDs = append(fileIDs, p.BackgroundFileID)
+	}
+
+	owners, err := user.GetUsersByIDs(s, ownerIDs)
+	if err != nil {
+		return err
+	}
+
+	u, err := user.GetFromAuth(a)
+	if err != nil {
+		// Only error GetFromAuth is if it's a link share and we want to ignore that
+		u = nil
+	}
+
+	var favs map[int64]bool
+	if u != nil {
+		favService := NewFavoriteService(p.DB)
+		favoriteSl, err := favService.GetForUserByType(s, u, models.FavoriteKindProject)
+		if err != nil {
+			return err
+		}
+		favs = make(map[int64]bool, len(favoriteSl))
+		for _, fav := range favoriteSl {
+			favs[fav.EntityID] = true
+		}
+	}
+
+	var subscriptions = make(map[int64][]*models.Subscription)
+	if u != nil {
+		subscriptionsWithUser, err := models.GetSubscriptionsForEntitiesAndUser(s, models.SubscriptionEntityProject, projectIDs, u)
+		if err != nil {
+			log.Errorf("An error occurred while getting project subscriptions for a project: %s", err.Error())
+		}
+		if err == nil {
+			for pID, subs := range subscriptionsWithUser {
+				for _, sub := range subs {
+					if _, has := subscriptions[pID]; !has {
+						subscriptions[pID] = []*models.Subscription{}
+					}
+					subscriptions[pID] = append(subscriptions[pID], &sub.Subscription)
+				}
+			}
+		}
+	}
+
+	views := []*models.ProjectView{}
+	err = s.
+		In("project_id", projectIDs).
+		OrderBy("position asc").
+		Find(&views)
+	if err != nil {
+		return
+	}
+
+	viewMap := make(map[int64][]*models.ProjectView)
+	for _, v := range views {
+		if _, has := viewMap[v.ProjectID]; !has {
+			viewMap[v.ProjectID] = []*models.ProjectView{}
+		}
+
+		viewMap[v.ProjectID] = append(viewMap[v.ProjectID], v)
+	}
+
+	for _, p := range projects {
+		if o, exists := owners[p.OwnerID]; exists {
+			p.Owner = o
+		}
+		if p.BackgroundFileID != 0 {
+			p.BackgroundInformation = &models.ProjectBackgroundType{Type: models.ProjectBackgroundUpload}
+		}
+
+		// Don't override the favorite state if it was already set from before (favorite saved filters do this)
+		if p.IsFavorite {
+			continue
+		}
+		p.IsFavorite = favs[p.ID]
+
+		if subscription, exists := subscriptions[p.ID]; exists && len(subscription) > 0 {
+			p.Subscription = subscription[0]
+		}
+
+		vs, has := viewMap[p.ID]
+		if has {
+			p.Views = vs
+		}
+	}
+
+	// Add maxPermission to all projects
+	if u != nil {
+		err = models.AddMaxPermissionToProjects(s, projects, u)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(fileIDs) == 0 {
+		return
+	}
+
+	// Unsplash background file info
+	us := []*models.UnsplashPhoto{}
+	err = s.In("file_id", fileIDs).Find(&us)
+	if err != nil {
+		return
+	}
+	unsplashPhotos := make(map[int64]*models.UnsplashPhoto, len(us))
+	for _, u := range us {
+		unsplashPhotos[u.FileID] = u
+	}
+
+	// Build it all into the projects slice
+	for _, l := range projects {
+		// Only override the file info if we have info for unsplash backgrounds
+		if _, exists := unsplashPhotos[l.BackgroundFileID]; exists {
+			l.BackgroundInformation = unsplashPhotos[l.BackgroundFileID]
+		}
+	}
+
+	return
+}
+
+// CreateInboxProjectForUser creates a new inbox project for a user during registration.
+// This replaces the model-layer CreateNewProjectForUser function to follow service architecture.
+func (ps *ProjectService) CreateInboxProjectForUser(s *xorm.Session, u *user.User) error {
+	p := &models.Project{
+		Title: "Inbox",
+	}
+
+	createdProject, err := ps.Create(s, p, u)
+	if err != nil {
+		return err
+	}
+
+	// Set as default project if user doesn't have one
+	if u.DefaultProjectID != 0 {
+		return nil
+	}
+
+	u.DefaultProjectID = createdProject.ID
+	_, err = user.UpdateUser(s, u, false)
+	return err
+}
+
+// ==================================================================================
+// Permission Methods (migrated from models layer - T-PERM-006)
+// ==================================================================================
+
+// CanRead checks if a user has read access to a project.
+// Returns (canRead, maxPermissionLevel, error).
+// MIGRATION: Migrated from models.Project.CanRead (T-PERM-006)
+func (p *ProjectService) CanRead(s *xorm.Session, projectID int64, a web.Auth) (bool, int, error) {
+	// Handle favorites pseudo-project
+	if projectID == models.FavoritesPseudoProject.ID {
+		_, err := user.GetFromAuth(a)
+		if err != nil {
+			return false, 0, err
+		}
+		return true, int(models.PermissionRead), nil
+	}
+
+	// Handle saved filter projects
+	if models.GetSavedFilterIDFromProjectID(projectID) > 0 {
+		sf := &models.SavedFilter{ID: models.GetSavedFilterIDFromProjectID(projectID)}
+		return sf.CanRead(s, a)
+	}
+
+	// Load the project
+	project, err := p.GetByIDSimple(s, projectID)
+	if err != nil {
+		return false, 0, err
+	}
+
+	// Check if we're dealing with a link share auth
+	shareAuth, ok := a.(*models.LinkSharing)
+	if ok {
+		hasAccess := project.ID == shareAuth.ProjectID &&
+			(shareAuth.Permission == models.PermissionRead ||
+				shareAuth.Permission == models.PermissionWrite ||
+				shareAuth.Permission == models.PermissionAdmin)
+		return hasAccess, int(shareAuth.Permission), nil
+	}
+
+	// Get user and check permissions
+	u, err := user.GetFromAuth(a)
+	if err != nil {
+		return false, 0, err
+	}
+
+	// Owner check
+	if project.OwnerID == u.ID {
+		return true, int(models.PermissionAdmin), nil
+	}
+
+	// Check database permissions
+	projectPermissions, err := p.checkPermissionsForProjects(s, u, []int64{projectID})
+	if err != nil {
+		return false, 0, err
+	}
+
+	perm, exists := projectPermissions[projectID]
+	if !exists || perm.MaxPermission < int(models.PermissionRead) {
+		return false, 0, nil
+	}
+
+	return true, perm.MaxPermission, nil
+}
+
+// CanWrite checks if a user has write access to a project.
+// Returns (canWrite, error). If the project is archived, returns the ErrProjectIsArchived error.
+// MIGRATION: Migrated from models.Project.CanWrite (T-PERM-006)
+func (p *ProjectService) CanWrite(s *xorm.Session, projectID int64, a web.Auth) (bool, error) {
+	// The favorite project can't be edited
+	if projectID == models.FavoritesPseudoProject.ID {
+		return false, nil
+	}
+
+	// Get the project
+	project, err := p.GetByIDSimple(s, projectID)
+	if err != nil {
+		return false, err
+	}
+
+	// Check if archived
+	errIsArchived := project.CheckIsArchived(s)
+
+	// Check if we're dealing with a link share auth
+	shareAuth, ok := a.(*models.LinkSharing)
+	if ok {
+		canWrite := project.ID == shareAuth.ProjectID &&
+			(shareAuth.Permission == models.PermissionWrite || shareAuth.Permission == models.PermissionAdmin)
+		return canWrite, errIsArchived
+	}
+
+	// Get user
+	u, err := user.GetFromAuth(a)
+	if err != nil {
+		return false, err
+	}
+
+	// Owner check
+	if project.OwnerID == u.ID {
+		return true, errIsArchived
+	}
+
+	// Check database permissions
+	projectPermissions, err := p.checkPermissionsForProjects(s, u, []int64{projectID})
+	if err != nil {
+		return false, err
+	}
+
+	perm, exists := projectPermissions[projectID]
+	if !exists || perm.MaxPermission < int(models.PermissionWrite) {
+		return false, errIsArchived
+	}
+
+	return true, errIsArchived
+}
+
+// CanUpdate checks if the user can update a project.
+// Includes special handling for moving projects between parents and unarchiving.
+// MIGRATION: Migrated from models.Project.CanUpdate (T-PERM-006)
+func (p *ProjectService) CanUpdate(s *xorm.Session, projectID int64, project *models.Project, a web.Auth) (bool, error) {
+	// The favorite project can't be edited
+	if projectID == models.FavoritesPseudoProject.ID {
+		return false, nil
+	}
+
+	// Handle saved filters
+	fid := models.GetSavedFilterIDFromProjectID(projectID)
+	if fid > 0 {
+		sf, err := p.Registry.SavedFilter().GetByIDSimple(s, fid)
+		if err != nil {
+			return false, err
+		}
+		return sf.CanUpdate(s, a)
+	}
+
+	// Get the original project
+	originalProject, err := p.GetByIDSimple(s, projectID)
+	if err != nil {
+		return false, err
+	}
+
+	// Check if we're moving the project to a different parent
+	// If so, verify permissions on the new parent
+	if project != nil && project.ParentProjectID != 0 && project.ParentProjectID != originalProject.ParentProjectID {
+		canWriteToNewParent, err := p.CanWrite(s, project.ParentProjectID, a)
+		if err != nil {
+			return false, err
+		}
+		if !canWriteToNewParent {
+			return false, models.ErrGenericForbidden{}
+		}
+	}
+
+	// Check if user can write to this project
+	canUpdate, err := p.CanWrite(s, projectID, a)
+
+	// If the project is archived and the user tries to un-archive it, allow it
+	var archivedErr models.ErrProjectIsArchived
+	if errors.As(err, &archivedErr) && project != nil && !project.IsArchived && archivedErr.ProjectID == projectID {
+		err = nil
+	}
+
+	return canUpdate, err
+}
+
+// CanDelete checks if the user can delete a project.
+// Requires admin permission on the project.
+// MIGRATION: Migrated from models.Project.CanDelete (T-PERM-006)
+func (p *ProjectService) CanDelete(s *xorm.Session, projectID int64, a web.Auth) (bool, error) {
+	return p.IsAdmin(s, projectID, a)
+}
+
+// CanCreate checks if the user can create a project.
+// If creating a sub-project, requires write permission on the parent.
+// MIGRATION: Migrated from models.Project.CanCreate (T-PERM-006)
+func (p *ProjectService) CanCreate(s *xorm.Session, project *models.Project, a web.Auth) (bool, error) {
+	// If creating a sub-project, check parent permissions
+	if project.ParentProjectID != 0 {
+		return p.CanWrite(s, project.ParentProjectID, a)
+	}
+
+	// Link share users cannot create top-level projects
+	_, isLinkShare := a.(*models.LinkSharing)
+	if isLinkShare {
+		return false, nil
+	}
+
+	// All authenticated users can create top-level projects
+	return true, nil
+}
+
+// IsAdmin checks if the user has admin permissions on the project.
+// Returns true if the user is the owner or has explicit admin permission.
+// MIGRATION: Migrated from models.Project.IsAdmin (T-PERM-006)
+func (p *ProjectService) IsAdmin(s *xorm.Session, projectID int64, a web.Auth) (bool, error) {
+	// The favorite project can't be edited
+	if projectID == models.FavoritesPseudoProject.ID {
+		return false, nil
+	}
+
+	// Get the project
+	project, err := p.GetByIDSimple(s, projectID)
+	if err != nil {
+		return false, err
+	}
+
+	// Check if we're dealing with a link share auth
+	shareAuth, ok := a.(*models.LinkSharing)
+	if ok {
+		return project.ID == shareAuth.ProjectID && shareAuth.Permission == models.PermissionAdmin, nil
+	}
+
+	// Get user
+	u, err := user.GetFromAuth(a)
+	if err != nil {
+		return false, err
+	}
+
+	// Owner is always admin
+	if project.OwnerID == u.ID {
+		return true, nil
+	}
+
+	// Check database permissions
+	projectPermissions, err := p.checkPermissionsForProjects(s, u, []int64{projectID})
+	if err != nil {
+		return false, err
+	}
+
+	perm, exists := projectPermissions[projectID]
+	if !exists {
+		return false, nil
+	}
+
+	return perm.MaxPermission >= int(models.PermissionAdmin), nil
 }

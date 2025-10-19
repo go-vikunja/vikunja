@@ -114,12 +114,17 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import DatemathHelp from '@/components/date/DatemathHelp.vue'
 import {useFlatpickrLanguage} from '@/helpers/useFlatpickrLanguage'
 
-const props = defineProps<{
-	modelValue: {
+const props = withDefaults(defineProps<{
+	modelValue?: {
 		dateFrom: Date | string,
 		dateTo: Date | string,
 	},
-}>()
+}>(), {
+	modelValue: () => ({
+		dateFrom: '',
+		dateTo: '',
+	}),
+})
 
 const emit = defineEmits<{
 	'update:modelValue': [value: {
@@ -150,8 +155,11 @@ const to = ref('')
 watch(
 	() => props.modelValue,
 	newValue => {
-		from.value = newValue.dateFrom
-		to.value = newValue.dateTo
+		if (!newValue) {
+			return
+		}
+		from.value = String(newValue.dateFrom || '')
+		to.value = String(newValue.dateTo || '')
 		// Only set the date back to flatpickr when it's an actual date.
 		// Otherwise flatpickr runs in an endless loop and slows down the browser.
 		const dateFrom = parseDateOrString(from.value, false)
@@ -160,6 +168,7 @@ watch(
 			flatpickrRange.value = `${from.value} to ${to.value}`
 		}
 	},
+	{immediate: true},
 )
 
 function emitChanged() {

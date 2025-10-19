@@ -24,6 +24,10 @@ import (
 	"code.vikunja.io/api/pkg/notifications"
 )
 
+// InitSavedFilterServiceFunc is a function to initialize the saved filter service.
+// It's defined here to avoid import cycles with the services package.
+var InitSavedFilterServiceFunc func()
+
 // SetupTests takes care of seting up the db, fixtures etc.
 // This is an extra function to be able to call the fixtures setup from the web tests.
 func SetupTests() {
@@ -52,6 +56,7 @@ func SetupTests() {
 		"label_tasks",
 		"labels",
 		"link_shares",
+		"notifications",
 		"projects",
 		"task_assignees",
 		"task_attachments",
@@ -65,18 +70,29 @@ func SetupTests() {
 		"users",
 		"user_tokens",
 		"users_projects",
+		"project_views",
 		"buckets",
 		"saved_filters",
 		"subscriptions",
 		"favorites",
 		"api_tokens",
 		"reactions",
-		"project_views",
 		"task_positions",
 		"task_buckets",
 	)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	// Actually load the fixtures into the database
+	err = db.LoadFixtures()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Initialize service dependencies if the function is set
+	if InitSavedFilterServiceFunc != nil {
+		InitSavedFilterServiceFunc()
 	}
 
 	// Start the pseudo mail queue

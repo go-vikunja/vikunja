@@ -76,7 +76,41 @@ func getRouteGroupName(path string) (finalName string, filteredParts []string) {
 	}
 }
 
+// CollectRoute explicitly registers a route and its permission scope with our API token system.
+// This function replaces the complex logic in getRouteDetail() with explicit permission registration.
+// It directly stores the provided permission scope without any "guessing" or "magic" detection.
+func CollectRoute(method, path, permissionScope string) {
+	routeGroupName, _ := getRouteGroupName(path)
+	apiVersion := getRouteAPIVersion(path)
+	
+	if apiVersion == "" {
+		// No api version, no tokens
+		return
+	}
+
+	// Skip routes that should not be available for API tokens
+	if routeGroupName == "tokenTest" ||
+		routeGroupName == "subscriptions" ||
+		routeGroupName == "tokens" ||
+		routeGroupName == "*" ||
+		strings.HasPrefix(routeGroupName, "user_") {
+		return
+	}
+
+	ensureAPITokenRoutesGroup(apiVersion, routeGroupName)
+	routeDetail := &RouteDetail{
+		Path:   path,
+		Method: method,
+	}
+	apiTokenRoutes[apiVersion][routeGroupName][permissionScope] = routeDetail
+}
+
+// getRouteDetail attempts to guess the permission scope for a route based on patterns.
+// @Deprecated: This function uses fragile "magic" detection and should be replaced
+// with explicit permission declarations using CollectRoute(). New routes should use
+// the declarative APIRoute pattern instead of relying on this function.
 func getRouteDetail(route echo.Route) (method string, detail *RouteDetail) {
+	// Handle old WebHandler pattern
 	if strings.Contains(route.Name, "CreateWeb") {
 		return "create", &RouteDetail{
 			Path:   route.Path,
@@ -108,6 +142,82 @@ func getRouteDetail(route echo.Route) (method string, detail *RouteDetail) {
 		}
 	}
 
+	// Handle new service layer handler pattern (used by WithDBAndUser wrapper)
+	if strings.Contains(route.Name, "createProject") || strings.Contains(route.Name, "createBucket") || strings.Contains(route.Name, "CreateProject") {
+		return "create", &RouteDetail{
+			Path:   route.Path,
+			Method: route.Method,
+		}
+	}
+	if strings.Contains(route.Name, "getProject") && !strings.Contains(route.Name, "getAll") && !strings.Contains(route.Name, "Tasks") {
+		return "read_one", &RouteDetail{
+			Path:   route.Path,
+			Method: route.Method,
+		}
+	}
+	if strings.Contains(route.Name, "getAllProjects") || strings.Contains(route.Name, "getAllBuckets") {
+		return "read_all", &RouteDetail{
+			Path:   route.Path,
+			Method: route.Method,
+		}
+	}
+
+	// Handle wrapped service layer functions - identify by path pattern
+	if route.Method == "GET" {
+		if route.Path == "/api/v1/projects" || route.Path == "/api/v1/buckets" {
+			return "read_all", &RouteDetail{
+				Path:   route.Path,
+				Method: route.Method,
+			}
+		}
+		if strings.Contains(route.Path, "/api/v1/projects/") || strings.Contains(route.Path, "/api/v1/buckets/") {
+			log.Debugf("Matched path pattern for read_one: %s %s", route.Method, route.Path)
+			return "read_one", &RouteDetail{
+				Path:   route.Path,
+				Method: route.Method,
+			}
+		}
+	}
+	if route.Method == "PUT" {
+		if route.Path == "/api/v1/projects" || route.Path == "/api/v1/buckets" {
+			log.Debugf("Matched path pattern for create: %s %s", route.Method, route.Path)
+			return "create", &RouteDetail{
+				Path:   route.Path,
+				Method: route.Method,
+			}
+		}
+	}
+	if route.Method == "POST" {
+		if strings.Contains(route.Path, "/api/v1/projects/") || strings.Contains(route.Path, "/api/v1/buckets/") {
+			log.Debugf("Matched path pattern for update: %s %s", route.Method, route.Path)
+			return "update", &RouteDetail{
+				Path:   route.Path,
+				Method: route.Method,
+			}
+		}
+	}
+	if route.Method == "DELETE" {
+		if strings.Contains(route.Path, "/api/v1/projects/") || strings.Contains(route.Path, "/api/v1/buckets/") {
+			log.Debugf("Matched path pattern for delete: %s %s", route.Method, route.Path)
+			return "delete", &RouteDetail{
+				Path:   route.Path,
+				Method: route.Method,
+			}
+		}
+	}
+	if strings.Contains(route.Name, "updateProject") || strings.Contains(route.Name, "updateBucket") {
+		return "update", &RouteDetail{
+			Path:   route.Path,
+			Method: route.Method,
+		}
+	}
+	if strings.Contains(route.Name, "deleteProject") || strings.Contains(route.Name, "deleteBucket") {
+		return "delete", &RouteDetail{
+			Path:   route.Path,
+			Method: route.Method,
+		}
+	}
+
 	return "", &RouteDetail{
 		Path:   route.Path,
 		Method: route.Method,
@@ -121,6 +231,11 @@ func ensureAPITokenRoutesGroup(version, group string) {
 	if _, has := apiTokenRoutes[version][group]; !has {
 		apiTokenRoutes[version][group] = make(APITokenRoute)
 	}
+}
+
+// GetAPITokenRoutes returns the current API token routes for debugging
+func GetAPITokenRoutes() map[string]map[string]APITokenRoute {
+	return apiTokenRoutes
 }
 
 // CollectRoutesForAPITokenUsage gets called for every added APITokenRoute and builds a list of all routes we can use for the api tokens.
@@ -185,7 +300,18 @@ func CollectRoutesForAPITokenUsage(route echo.Route, middlewares []echo.Middlewa
 	}
 
 	if !strings.Contains(route.Name, "(*WebHandler)") && !strings.Contains(route.Name, "Attachment") {
-		routeDetail := &RouteDetail{
+		// First try to get proper permission from getRouteDetail
+		method, routeDetail := getRouteDetail(route)
+
+		if method != "" {
+			// Found a matching permission, use it
+			ensureAPITokenRoutesGroup(apiVersion, routeGroupName)
+			apiTokenRoutes[apiVersion][routeGroupName][method] = routeDetail
+			return
+		}
+
+		// Fall back to the original logic for routes that don't match
+		routeDetail = &RouteDetail{
 			Path:   route.Path,
 			Method: route.Method,
 		}

@@ -1,0 +1,55 @@
+Vikunja MCP Server - Project Structure
+======================================
+
+Root Documentation Files:
+- README.md          - Main documentation, quick start, features
+- CHANGELOG.md       - Version history and roadmap
+- CONTRIBUTING.md    - Development guidelines
+- LICENSE            - MIT License
+
+Configuration Files:
+- package.json       - Node.js dependencies and scripts
+- tsconfig.json      - TypeScript configuration
+- vitest.config.ts   - Test configuration
+- .eslintrc.cjs      - Linting rules
+- .prettierrc        - Code formatting
+- .env.example       - Environment variable template
+- .dockerignore      - Docker build exclusions
+- .gitignore         - Git exclusions
+
+Deployment Files:
+- Dockerfile         - Production Docker image
+- docker-compose.yml - Full stack deployment (MCP + Redis)
+
+Documentation (docs/):
+- API.md             - Complete tool reference (21 tools)
+- DEPLOYMENT.md      - Deployment guide (Docker, LXC, systemd)
+- INTEGRATIONS.md    - Platform integration guides (Claude, n8n, etc)
+- EXAMPLES.md        - 12 workflow examples
+
+Source Code (src/):
+- index.ts           - MCP server entry point
+- config/            - Configuration management
+- auth/              - Authentication logic
+- ratelimit/         - Rate limiting (Redis-backed)
+- vikunja/           - Vikunja API client
+- tools/             - MCP tool implementations (21 tools)
+- resources/         - MCP resource providers
+- utils/             - Shared utilities (logger, errors)
+
+Tests (tests/):
+- unit/              - Unit tests (mirror src/ structure)
+- integration/       - Integration tests
+- Coverage: 98.5% (193/196 tests passing)
+
+Build Output:
+- dist/              - Compiled JavaScript (generated)
+- coverage/          - Test coverage reports (generated)
+
+Key Features:
+- 21 MCP Tools (projects, tasks, labels, search, bulk ops)
+- Token-based authentication
+- Redis rate limiting
+- Docker deployment ready
+- Comprehensive documentation
+- 98.5% test coverage

@@ -1,0 +1,32 @@
+{
+	"folders": [
+		{
+			"name": "vikunja",
+			"path": "../.."
+		}
+	],
+	"settings": {
+		"go.testEnvVars": {
+			"VIKUNJA_SERVICE_ROOTPATH": "${workspaceRoot}"
+		},
+		"editor.formatOnSave": false,
+		"editor.codeActionsOnSave": {
+			"source.fixAll": "explicit"
+		},
+		"eslint.format.enable": true,
+		"[javascript]": {
+			"editor.defaultFormatter": "vscode.typescript-language-features"
+		},
+		"eslint.validate": [
+			"javascript",
+			"javascriptreact",
+			"vue"
+		],
+		"i18n-ally.localesPaths": [
+			"frontend/src/i18n/lang"
+		],
+		"i18n-ally.sortKeys": true,
+		"i18n-ally.keepFulfilled": true,
+		"i18n-ally.keystyle": "nested"
+	}
+}

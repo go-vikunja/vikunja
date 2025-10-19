@@ -75,7 +75,6 @@ import (
 	vikunja_file "code.vikunja.io/api/pkg/modules/migration/vikunja-file"
 	"code.vikunja.io/api/pkg/plugins"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
-	apiv1project "code.vikunja.io/api/pkg/routes/api/v1/project"
 	apiv2 "code.vikunja.io/api/pkg/routes/api/v2"
 	"code.vikunja.io/api/pkg/routes/caldav"
 	"code.vikunja.io/api/pkg/version"
@@ -231,6 +230,7 @@ func RegisterRoutes(e *echo.Echo) {
 func registerAPIRoutesV2(a *echo.Group) {
 	// ===== Routes with Authentication =====
 	a.Use(SetupTokenMiddleware())
+	a.Use(CheckAPITokenError())
 
 	// Rate limit
 	setupRateLimit(a, config.RateLimitKind.GetString())
@@ -315,6 +315,7 @@ func registerAPIRoutes(a *echo.Group) {
 
 	// ===== Routes with Authentication =====
 	a.Use(SetupTokenMiddleware())
+	a.Use(CheckAPITokenError())
 
 	// Rate limit
 	setupRateLimit(a, config.RateLimitKind.GetString())
@@ -323,6 +324,8 @@ func registerAPIRoutes(a *echo.Group) {
 	setupMetricsMiddleware(a)
 
 	apiv1.RegisterLabels(a)
+	apiv1.RegisterLabelTasks(a)
+	apiv1.RegisterKanbanRoutes(a)
 
 	a.GET("/token/test", apiv1.TestToken)
 	a.POST("/token/test", apiv1.CheckToken)
@@ -331,12 +334,14 @@ func registerAPIRoutes(a *echo.Group) {
 	// Avatar endpoint
 	a.GET("/avatar/:username", apiv1.GetAvatar)
 
+	// User list endpoint (search users)
+	a.GET("/users", apiv1.UserList)
+
 	// User stuff
 	u := a.Group("/user")
 
 	u.GET("", apiv1.UserShow)
 	u.POST("/password", apiv1.UserChangePassword)
-	u.GET("s", apiv1.UserList)
 	u.POST("/token", apiv1.RenewToken)
 	u.POST("/settings/email", apiv1.UpdateUserEmail)
 	u.GET("/settings/avatar", apiv1.GetUserAvatarProvider)
@@ -366,28 +371,13 @@ func registerAPIRoutes(a *echo.Group) {
 		u.POST("/deletion/cancel", apiv1.UserCancelDeletion)
 	}
 
-	projectHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.Project{}
-		},
-	}
-	a.GET("/projects", projectHandler.ReadAllWeb)
-	a.GET("/projects/:project", projectHandler.ReadOneWeb)
-	a.POST("/projects/:project", apiv1project.UpdateProject)
-	a.DELETE("/projects/:project", apiv1project.DeleteProject)
-	a.PUT("/projects", apiv1project.CreateProject)
+	// Project routes - using new consolidated handler
+	apiv1.RegisterProjects(a)
 	a.GET("/projects/:project/projectusers", apiv1.ListUsersForProject)
 
 	if config.ServiceEnableLinkSharing.GetBool() {
-		projectSharingHandler := &handler.WebHandler{
-			EmptyStruct: func() handler.CObject {
-				return &models.LinkSharing{}
-			},
-		}
-		a.PUT("/projects/:project/shares", projectSharingHandler.CreateWeb)
-		a.GET("/projects/:project/shares", projectSharingHandler.ReadAllWeb)
-		a.GET("/projects/:project/shares/:share", projectSharingHandler.ReadOneWeb)
-		a.DELETE("/projects/:project/shares/:share", projectSharingHandler.DeleteWeb)
+		// Link share routes - using new service-based handler
+		apiv1.RegisterLinkShares(a)
 	}
 
 	taskCollectionHandler := &handler.WebHandler{
@@ -396,17 +386,6 @@ func registerAPIRoutes(a *echo.Group) {
 		},
 	}
 	a.GET("/projects/:project/views/:view/tasks", taskCollectionHandler.ReadAllWeb)
-	a.GET("/projects/:project/tasks", taskCollectionHandler.ReadAllWeb)
-
-	kanbanBucketHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.Bucket{}
-		},
-	}
-	a.GET("/projects/:project/views/:view/buckets", kanbanBucketHandler.ReadAllWeb)
-	a.PUT("/projects/:project/views/:view/buckets", kanbanBucketHandler.CreateWeb)
-	a.POST("/projects/:project/views/:view/buckets/:bucket", kanbanBucketHandler.UpdateWeb)
-	a.DELETE("/projects/:project/views/:view/buckets/:bucket", kanbanBucketHandler.DeleteWeb)
 
 	projectDuplicateHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
@@ -415,148 +394,38 @@ func registerAPIRoutes(a *echo.Group) {
 	}
 	a.PUT("/projects/:projectid/duplicate", projectDuplicateHandler.CreateWeb)
 
-	taskHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.Task{}
-		},
-	}
-	a.PUT("/projects/:project/tasks", taskHandler.CreateWeb)
-	a.GET("/tasks/:projecttask", taskHandler.ReadOneWeb)
+	// Register the new declarative task routes
+	apiv1.RegisterTasks(a)
 	a.GET("/tasks/all", taskCollectionHandler.ReadAllWeb)
-	a.DELETE("/tasks/:projecttask", taskHandler.DeleteWeb)
-	a.POST("/tasks/:projecttask", taskHandler.UpdateWeb)
 
-	taskPositionHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.TaskPosition{}
-		},
-	}
-	a.POST("/tasks/:task/position", taskPositionHandler.UpdateWeb)
-
-	bulkTaskHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.BulkTask{}
-		},
-	}
-	a.POST("/tasks/bulk", bulkTaskHandler.UpdateWeb)
-
-	assigneeTaskHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.TaskAssginee{}
-		},
-	}
-	a.PUT("/tasks/:projecttask/assignees", assigneeTaskHandler.CreateWeb)
-	a.DELETE("/tasks/:projecttask/assignees/:user", assigneeTaskHandler.DeleteWeb)
-	a.GET("/tasks/:projecttask/assignees", assigneeTaskHandler.ReadAllWeb)
-
-	bulkAssigneeHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.BulkAssignees{}
-		},
-	}
-	a.POST("/tasks/:projecttask/assignees/bulk", bulkAssigneeHandler.CreateWeb)
-
-	taskRelationHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.TaskRelation{}
-		},
-	}
-	a.PUT("/tasks/:task/relations", taskRelationHandler.CreateWeb)
-	a.DELETE("/tasks/:task/relations/:relationKind/:otherTask", taskRelationHandler.DeleteWeb)
+	// Task-related routes (modern declarative pattern)
+	apiv1.RegisterTaskPositions(a)
+	apiv1.RegisterBulkTasks(a)
+	apiv1.RegisterTaskAssignees(a)
+	apiv1.RegisterBulkAssignees(a)
+	apiv1.RegisterTaskRelations(a)
 
 	if config.ServiceEnableTaskAttachments.GetBool() {
-		taskAttachmentHandler := &handler.WebHandler{
-			EmptyStruct: func() handler.CObject {
-				return &models.TaskAttachment{}
-			},
-		}
-		a.GET("/tasks/:task/attachments", taskAttachmentHandler.ReadAllWeb)
-		a.DELETE("/tasks/:task/attachments/:attachment", taskAttachmentHandler.DeleteWeb)
-		a.PUT("/tasks/:task/attachments", apiv1.UploadTaskAttachment)
-		a.GET("/tasks/:task/attachments/:attachment", apiv1.GetTaskAttachment)
+		apiv1.RegisterAttachments(a)
 	}
 
 	if config.ServiceEnableTaskComments.GetBool() {
-		taskCommentHandler := &handler.WebHandler{
-			EmptyStruct: func() handler.CObject {
-				return &models.TaskComment{}
-			},
-		}
-		a.GET("/tasks/:task/comments", taskCommentHandler.ReadAllWeb)
-		a.PUT("/tasks/:task/comments", taskCommentHandler.CreateWeb)
-		a.DELETE("/tasks/:task/comments/:commentid", taskCommentHandler.DeleteWeb)
-		a.POST("/tasks/:task/comments/:commentid", taskCommentHandler.UpdateWeb)
-		a.GET("/tasks/:task/comments/:commentid", taskCommentHandler.ReadOneWeb)
+		apiv1.RegisterComments(a)
 	}
 
-	projectTeamHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.TeamProject{}
-		},
-	}
-	a.GET("/projects/:project/teams", projectTeamHandler.ReadAllWeb)
-	a.PUT("/projects/:project/teams", projectTeamHandler.CreateWeb)
-	a.DELETE("/projects/:project/teams/:team", projectTeamHandler.DeleteWeb)
-	a.POST("/projects/:project/teams/:team", projectTeamHandler.UpdateWeb)
+	apiv1.RegisterProjectTeams(a)
+	apiv1.RegisterProjectUsers(a)
 
-	projectUserHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.ProjectUser{}
-		},
-	}
-	a.GET("/projects/:project/users", projectUserHandler.ReadAllWeb)
-	a.PUT("/projects/:project/users", projectUserHandler.CreateWeb)
-	a.DELETE("/projects/:project/users/:user", projectUserHandler.DeleteWeb)
-	a.POST("/projects/:project/users/:user", projectUserHandler.UpdateWeb)
+	apiv1.RegisterSavedFilters(a)
 
-	savedFiltersHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.SavedFilter{}
-		},
-	}
-	a.GET("/filters/:filter", savedFiltersHandler.ReadOneWeb)
-	a.PUT("/filters", savedFiltersHandler.CreateWeb)
-	a.DELETE("/filters/:filter", savedFiltersHandler.DeleteWeb)
-	a.POST("/filters/:filter", savedFiltersHandler.UpdateWeb)
-
-	teamHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.Team{}
-		},
-	}
-	a.GET("/teams", teamHandler.ReadAllWeb)
-	a.GET("/teams/:team", teamHandler.ReadOneWeb)
-	a.PUT("/teams", teamHandler.CreateWeb)
-	a.POST("/teams/:team", teamHandler.UpdateWeb)
-	a.DELETE("/teams/:team", teamHandler.DeleteWeb)
-
-	teamMemberHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.TeamMember{}
-		},
-	}
-	a.PUT("/teams/:team/members", teamMemberHandler.CreateWeb)
-	a.DELETE("/teams/:team/members/:user", teamMemberHandler.DeleteWeb)
-	a.POST("/teams/:team/members/:user/admin", teamMemberHandler.UpdateWeb)
+	// Team management routes
+	apiv1.RegisterTeams(a)
 
 	// Subscriptions
-	subscriptionHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.Subscription{}
-		},
-	}
-	a.PUT("/subscriptions/:entity/:entityID", subscriptionHandler.CreateWeb)
-	a.DELETE("/subscriptions/:entity/:entityID", subscriptionHandler.DeleteWeb)
+	apiv1.RegisterSubscriptions(a)
 
 	// Notifications
-	notificationHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.DatabaseNotifications{}
-		},
-	}
-	a.GET("/notifications", notificationHandler.ReadAllWeb)
-	a.POST("/notifications/:notificationid", notificationHandler.UpdateWeb)
-	a.POST("/notifications", apiv1.MarkAllNotificationsAsRead)
+	apiv1.RegisterNotifications(a)
 
 	// Migrations
 	m := a.Group("/migration")
@@ -588,58 +457,18 @@ func registerAPIRoutes(a *echo.Group) {
 	}
 
 	// API Tokens
-	apiTokenProvider := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.APIToken{}
-		},
-	}
-	a.GET("/tokens", apiTokenProvider.ReadAllWeb)
-	a.PUT("/tokens", apiTokenProvider.CreateWeb)
-	a.DELETE("/tokens/:token", apiTokenProvider.DeleteWeb)
+	apiv1.RegisterAPITokens(a)
 
 	// Webhooks
 	if config.WebhooksEnabled.GetBool() {
-		webhookProvider := &handler.WebHandler{
-			EmptyStruct: func() handler.CObject {
-				return &models.Webhook{}
-			},
-		}
-		a.GET("/projects/:project/webhooks", webhookProvider.ReadAllWeb)
-		a.PUT("/projects/:project/webhooks", webhookProvider.CreateWeb)
-		a.DELETE("/projects/:project/webhooks/:webhook", webhookProvider.DeleteWeb)
-		a.POST("/projects/:project/webhooks/:webhook", webhookProvider.UpdateWeb)
-		a.GET("/webhooks/events", apiv1.GetAvailableWebhookEvents)
+		apiv1.RegisterWebhooks(a)
 	}
 
-	// Reactions
-	reactionProvider := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.Reaction{}
-		},
-	}
-	a.GET("/:entitykind/:entityid/reactions", reactionProvider.ReadAllWeb)
-	a.POST("/:entitykind/:entityid/reactions/delete", reactionProvider.DeleteWeb)
-	a.PUT("/:entitykind/:entityid/reactions", reactionProvider.CreateWeb)
+	// Register the new declarative reaction routes
+	apiv1.RegisterReactions(a)
 
-	// Project views
-	projectViewProvider := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.ProjectView{}
-		},
-	}
-	a.GET("/projects/:project/views", projectViewProvider.ReadAllWeb)
-	a.GET("/projects/:project/views/:view", projectViewProvider.ReadOneWeb)
-	a.PUT("/projects/:project/views", projectViewProvider.CreateWeb)
-	a.DELETE("/projects/:project/views/:view", projectViewProvider.DeleteWeb)
-	a.POST("/projects/:project/views/:view", projectViewProvider.UpdateWeb)
-
-	// Kanban Task Bucket Relation
-	taskBucketProvider := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.TaskBucket{}
-		},
-	}
-	a.POST("/projects/:project/views/:view/buckets/:bucket/tasks", taskBucketProvider.UpdateWeb)
+	// Register the new declarative project view routes
+	apiv1.RegisterProjectViews(a)
 
 	// Plugin routes
 	if config.PluginsEnabled.GetBool() {

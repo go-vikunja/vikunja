@@ -324,7 +324,7 @@ func DeleteProject(c echo.Context) error {
 	}
 
 	// Use the new Project service Delete method
-	projectService := &services.Project{}
+	projectService := services.NewProjectService(s.Engine())
 	if err := projectService.Delete(s, projectID, u); err != nil {
 		return handler.HandleHTTPError(err)
 	}
@@ -336,7 +336,54 @@ func DeleteProject(c echo.Context) error {
 	return c.NoContent(http.StatusNoContent)
 }
 
-// DuplicateProject is a stub handler
+// DuplicateProject duplicates a project and all its related data
+// @Summary Duplicate an existing project
+// @Description Copies the project, tasks, files, kanban data, assignees, comments, attachments, labels, relations, backgrounds, user/team permissions and link shares from one project to a new one. The user needs read access in the project and write access in the parent of the new project.
+// @Tags project
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Param id path int true "The project ID to duplicate"
+// @Param project body models.ProjectDuplicateRequest true "The target parent project which should hold the copied project."
+// @Success 201 {object} models.Project "The created project."
+// @Failure 400 {object} web.HTTPError "Invalid project duplicate request provided."
+// @Failure 403 {object} web.HTTPError "The user does not have access to the project or its parent."
+// @Failure 500 {object} web.HTTPError "Internal error"
+// @Router /api/v2/projects/{id}/duplicate [post]
 func DuplicateProject(c echo.Context) error {
-	return c.String(http.StatusNotImplemented, "Not Implemented")
+	s := db.NewSession()
+	defer s.Close()
+
+	// Get project ID from path
+	projectIDStr := c.Param("id")
+	projectID, err := strconv.ParseInt(projectIDStr, 10, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid project ID").SetInternal(err)
+	}
+
+	// Parse request body for parent project ID
+	var req models.ProjectDuplicate
+	if err := c.Bind(&req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body").SetInternal(err)
+	}
+
+	// Get user from context
+	u, err := user.GetCurrentUser(c)
+	if err != nil {
+		return handler.HandleHTTPError(err)
+	}
+
+	// Use the ProjectDuplicateService
+	service := services.NewProjectDuplicateService(db.GetEngine())
+	duplicatedProject, err := service.Duplicate(s, projectID, req.ParentProjectID, u)
+	if err != nil {
+		_ = s.Rollback()
+		return handler.HandleHTTPError(err)
+	}
+
+	if err := s.Commit(); err != nil {
+		return handler.HandleHTTPError(err)
+	}
+
+	return c.JSON(http.StatusCreated, duplicatedProject)
 }

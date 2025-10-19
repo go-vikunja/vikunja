@@ -30,11 +30,23 @@ import (
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/web"
 
 	"github.com/ThreeDotsLabs/watermill/message"
 	"xorm.io/builder"
 	"xorm.io/xorm"
 )
+
+// NotifyMentionedUsersFunc is a function variable that allows service layer injection
+// The service layer should set this to avoid import cycles
+var NotifyMentionedUsersFunc func(
+	sess *xorm.Session,
+	subject interface {
+		CanRead(s *xorm.Session, a web.Auth) (bool, int, error)
+	},
+	text string,
+	notification notifications.NotificationWithSubject,
+) (users map[int64]*user.User, err error)
 
 // RegisterListeners registers all event listeners
 func RegisterListeners() {
@@ -50,6 +62,7 @@ func RegisterListeners() {
 	}
 	events.RegisterListener((&TaskCommentCreatedEvent{}).Name(), &SendTaskCommentNotification{})
 	events.RegisterListener((&TaskAssigneeCreatedEvent{}).Name(), &SendTaskAssignedNotification{})
+	events.RegisterListener((&TaskCreatedEvent{}).Name(), &SendTaskCreatedNotification{})
 	events.RegisterListener((&TaskDeletedEvent{}).Name(), &SendTaskDeletedNotification{})
 	events.RegisterListener((&ProjectCreatedEvent{}).Name(), &SendProjectCreatedNotification{})
 	events.RegisterListener((&TeamMemberAddedEvent{}).Name(), &SendTeamMemberAddedNotification{})
@@ -126,6 +139,16 @@ func (s *DecreaseTaskCounter) Handle(_ *message.Message) (err error) {
 }
 
 func notifyMentionedUsers(sess *xorm.Session, task *Task, text string, n notifications.NotificationWithSubject) (users map[int64]*user.User, err error) {
+	// Use injected service function if available (preferred for service layer architecture)
+	if NotifyMentionedUsersFunc != nil {
+		// Convert Task to the interface the function expects
+		subject := interface {
+			CanRead(s *xorm.Session, a web.Auth) (bool, int, error)
+		}(task)
+		return NotifyMentionedUsersFunc(sess, subject, text, n)
+	}
+
+	// Fallback to direct implementation (for backward compatibility)
 	users, err = FindMentionedUsersInText(sess, text)
 	if err != nil {
 		return
@@ -367,6 +390,61 @@ func (s *SendTaskDeletedNotification) Handle(msg *message.Message) (err error) {
 		err = notifications.Notify(subscriber.User, n)
 		if err != nil {
 			return
+		}
+	}
+
+	return nil
+}
+
+// SendTaskCreatedNotification represents a listener
+type SendTaskCreatedNotification struct {
+}
+
+// Name defines the name for the SendTaskCreatedNotification listener
+func (s *SendTaskCreatedNotification) Name() string {
+	return "task.created.notification.send"
+}
+
+// Handle is executed when the event SendTaskCreatedNotification listens on is fired
+func (s *SendTaskCreatedNotification) Handle(msg *message.Message) (err error) {
+	event := &TaskCreatedEvent{}
+	err = json.Unmarshal(msg.Payload, event)
+	if err != nil {
+		return err
+	}
+
+	sess := db.NewSession()
+	defer sess.Close()
+
+	// Get project to include in notification
+	project := &Project{ID: event.Task.ProjectID}
+	err = project.ReadOne(sess, &user.User{ID: event.Doer.ID})
+	if err != nil {
+		return err
+	}
+
+	// Get subscribers to the project (new tasks notify project subscribers)
+	subscribers, err := GetSubscriptionsForEntity(sess, SubscriptionEntityProject, event.Task.ProjectID)
+	if err != nil {
+		return err
+	}
+
+	log.Debugf("Sending task created notifications to %d subscribers for task %d in project %d", len(subscribers), event.Task.ID, event.Task.ProjectID)
+
+	for _, subscriber := range subscribers {
+		// Don't notify the person who created the task
+		if subscriber.UserID == event.Doer.ID {
+			continue
+		}
+
+		n := &TaskCreatedNotification{
+			Doer:    event.Doer,
+			Task:    event.Task,
+			Project: project,
+		}
+		err = notifications.Notify(subscriber.User, n)
+		if err != nil {
+			return err
 		}
 	}
 

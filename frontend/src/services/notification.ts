@@ -7,6 +7,7 @@ export default class NotificationService extends AbstractService<INotification> 
 		super({
 			getAll: '/notifications',
 			update: '/notifications/{id}',
+			delete: '/notifications/{id}',
 		})
 	}
 
@@ -26,5 +27,15 @@ export default class NotificationService extends AbstractService<INotification> 
 	
 	async markAllRead() {
 		return this.post('/notifications', false)
+	}
+
+	async deleteAllRead() {
+		const cancel = this.setLoading()
+		try {
+			const response = await this.http.delete(this.getFullUrl('/notifications'))
+			return response.data
+		} finally {
+			cancel()
+		}
 	}
 }

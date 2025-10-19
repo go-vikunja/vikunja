@@ -36,7 +36,9 @@ const (
 	PermissionAdmin
 )
 
-func (r Permission) isValid() error {
+// IsValid checks if the permission level is one of the valid values.
+// Valid permissions are: PermissionRead, PermissionWrite, PermissionAdmin.
+func (r Permission) IsValid() error {
 	if r != PermissionAdmin && r != PermissionRead && r != PermissionWrite {
 		return ErrInvalidPermission{r}
 	}

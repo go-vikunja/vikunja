@@ -18,18 +18,46 @@ package models
 
 import (
 	"crypto/sha256"
-	"crypto/subtle"
 	"encoding/hex"
 	"time"
 
-	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/utils"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
 	"golang.org/x/crypto/pbkdf2"
-	"xorm.io/builder"
 	"xorm.io/xorm"
 )
+
+// APITokenServiceProvider is a function type that returns an API token service instance
+// This is used to avoid import cycles between models and services packages
+type APITokenServiceProvider func() interface {
+	Create(s *xorm.Session, token *APIToken, u *user.User) error
+	GetAll(s *xorm.Session, u *user.User, search string, page int, perPage int) ([]*APIToken, int, int64, error)
+	GetByID(s *xorm.Session, id int64) (*APIToken, error)
+	Delete(s *xorm.Session, id int64, u *user.User) error
+}
+
+// apiTokenServiceProvider is the registered service provider function
+var apiTokenServiceProvider APITokenServiceProvider
+
+// RegisterAPITokenService registers a service provider for API token operations
+// This should be called during application initialization by the services package
+func RegisterAPITokenService(provider APITokenServiceProvider) {
+	apiTokenServiceProvider = provider
+}
+
+// getAPITokenService returns the registered API token service instance
+func getAPITokenService() interface {
+	Create(s *xorm.Session, token *APIToken, u *user.User) error
+	GetAll(s *xorm.Session, u *user.User, search string, page int, perPage int) ([]*APIToken, int, int64, error)
+	GetByID(s *xorm.Session, id int64) (*APIToken, error)
+	Delete(s *xorm.Session, id int64, u *user.User) error
+} {
+	if apiTokenServiceProvider == nil {
+		panic("APITokenService not registered - did you forget to call services.InitializeDependencies()?")
+	}
+	return apiTokenServiceProvider()
+}
 
 type APIPermissions map[string][]string
 
@@ -64,14 +92,8 @@ func (*APIToken) TableName() string {
 	return "api_tokens"
 }
 
-func GetAPITokenByID(s *xorm.Session, id int64) (token *APIToken, err error) {
-	token = &APIToken{}
-	_, err = s.Where("id = ?", id).
-		Get(token)
-	return
-}
-
 // Create creates a new token
+// @Deprecated: This method is deprecated and will be removed in a future release. Use APITokenService.Create instead.
 // @Summary Create a new api token
 // @Description Create a new api token to use on behalf of the user creating it.
 // @tags api
@@ -84,36 +106,11 @@ func GetAPITokenByID(s *xorm.Session, id int64) (token *APIToken, err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tokens [put]
 func (t *APIToken) Create(s *xorm.Session, a web.Auth) (err error) {
-	t.ID = 0
-
-	salt, err := utils.CryptoRandomString(10)
+	u, err := user.GetFromAuth(a)
 	if err != nil {
-		return err
+		return
 	}
-	token, err := utils.CryptoRandomBytes(20)
-	if err != nil {
-		return err
-	}
-	t.TokenSalt = salt
-	t.Token = APITokenPrefix + hex.EncodeToString(token)
-	t.TokenHash = HashToken(t.Token, t.TokenSalt)
-	t.TokenLastEight = t.Token[len(t.Token)-8:]
-
-	t.OwnerID = a.GetID()
-
-	// This check broke the tests... not sure if we need it?
-	// if len(t.APIPermissions) == 0 {
-	// 	return &ErrInvalidAPITokenPermission{
-	// 		Group: "permissions",
-	// 	}
-	// }
-
-	if err := PermissionsAreValid(t.APIPermissions); err != nil {
-		return err
-	}
-
-	_, err = s.Insert(t)
-	return err
+	return getAPITokenService().Create(s, t, u)
 }
 
 func HashToken(token, salt string) string {
@@ -122,6 +119,7 @@ func HashToken(token, salt string) string {
 }
 
 // ReadAll returns all api tokens the current user has created
+// @Deprecated: This method is deprecated and will be removed in a future release. Use APITokenService.GetAll instead.
 // @Summary Get all api tokens of the current user
 // @Description Returns all api tokens the current user has created.
 // @tags api
@@ -135,31 +133,16 @@ func HashToken(token, salt string) string {
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /tokens [get]
 func (t *APIToken) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
-
-	tokens := []*APIToken{}
-
-	var where builder.Cond = builder.Eq{"owner_id": a.GetID()}
-
-	if search != "" {
-		where = builder.And(
-			where,
-			db.ILIKE("api_tokens.title", search),
-		)
-	}
-
-	err = s.
-		Where(where).
-		Limit(getLimitFromPageIndex(page, perPage)).
-		Find(&tokens)
+	u, err := user.GetFromAuth(a)
 	if err != nil {
 		return nil, 0, 0, err
 	}
-
-	totalCount, err := s.Where(where).Count(&APIToken{})
-	return tokens, len(tokens), totalCount, err
+	tokens, rc, total, err := getAPITokenService().GetAll(s, u, search, page, perPage)
+	return tokens, rc, total, err
 }
 
 // Delete deletes a token
+// @Deprecated: This method is deprecated and will be removed in a future release. Use APITokenService.Delete instead.
 // @Summary Deletes an existing api token
 // @Description Delete any of the user's api tokens.
 // @tags api
@@ -172,26 +155,9 @@ func (t *APIToken) ReadAll(s *xorm.Session, a web.Auth, search string, page int,
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tokens/{tokenID} [delete]
 func (t *APIToken) Delete(s *xorm.Session, a web.Auth) (err error) {
-	_, err = s.Where("id = ? AND owner_id = ?", t.ID, a.GetID()).Delete(&APIToken{})
-	return err
-}
-
-// GetTokenFromTokenString returns the full token object from the original token string.
-func GetTokenFromTokenString(s *xorm.Session, token string) (apiToken *APIToken, err error) {
-	lastEight := token[len(token)-8:]
-
-	tokens := []*APIToken{}
-	err = s.Where("token_last_eight = ?", lastEight).Find(&tokens)
+	u, err := user.GetFromAuth(a)
 	if err != nil {
-		return nil, err
+		return
 	}
-
-	for _, t := range tokens {
-		tempHash := HashToken(token, t.TokenSalt)
-		if subtle.ConstantTimeCompare([]byte(t.TokenHash), []byte(tempHash)) == 1 {
-			return t, nil
-		}
-	}
-
-	return nil, &ErrAPITokenInvalid{}
+	return getAPITokenService().Delete(s, t.ID, u)
 }

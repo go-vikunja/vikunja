@@ -48,6 +48,31 @@ func (err ErrGenericForbidden) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusForbidden, Code: ErrorCodeGenericForbidden, Message: "You're not allowed to do this."}
 }
 
+// ErrPermissionDelegationNotInitialized represents an error when permission delegation functions are not initialized
+type ErrPermissionDelegationNotInitialized struct{}
+
+// IsErrPermissionDelegationNotInitialized checks if an error is a ErrPermissionDelegationNotInitialized.
+func IsErrPermissionDelegationNotInitialized(err error) bool {
+	_, ok := err.(ErrPermissionDelegationNotInitialized)
+	return ok
+}
+
+func (err ErrPermissionDelegationNotInitialized) Error() string {
+	return "Permission delegation not initialized - service layer initialization required"
+}
+
+// ErrorCodePermissionDelegationNotInitialized holds the unique world-error code of this error
+const ErrorCodePermissionDelegationNotInitialized = 0002
+
+// HTTPError holds the http error description
+func (err ErrPermissionDelegationNotInitialized) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusInternalServerError,
+		Code:     ErrorCodePermissionDelegationNotInitialized,
+		Message:  "Permission check delegation not initialized. Please contact the system administrator.",
+	}
+}
+
 // ===================
 // Empty things errors
 // ===================
@@ -817,7 +842,7 @@ func (err ErrInvalidSortParam) HTTPError() web.HTTPError {
 
 // ErrInvalidSortOrder represents an error where the provided sort order is invalid
 type ErrInvalidSortOrder struct {
-	OrderBy sortOrder
+	OrderBy SortOrder
 }
 
 // IsErrInvalidSortOrder checks if an error is ErrInvalidSortOrder.
@@ -1143,6 +1168,87 @@ func (err ErrInvalidReactionEntityKind) HTTPError() web.HTTPError {
 		HTTPCode: http.StatusBadRequest,
 		Code:     ErrCodeInvalidReactionEntityKind,
 		Message:  fmt.Sprintf("The reaction kind '%s' is invalid.", err.Kind),
+	}
+}
+
+// ErrInvalidReactionValue represents an error where the reaction value is invalid
+type ErrInvalidReactionValue struct {
+	Value string
+}
+
+// IsErrInvalidReactionValue checks if an error is ErrInvalidReactionValue.
+func IsErrInvalidReactionValue(err error) bool {
+	_, ok := err.(ErrInvalidReactionValue)
+	return ok
+}
+
+func (err ErrInvalidReactionValue) Error() string {
+	return fmt.Sprintf("Reaction value '%s' is invalid", err.Value)
+}
+
+// ErrCodeInvalidReactionValue holds the unique world-error code of this error
+const ErrCodeInvalidReactionValue = 4026
+
+// HTTPError holds the http error description
+func (err ErrInvalidReactionValue) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidReactionValue,
+		Message:  "The reaction value is invalid. It must be between 1 and 20 characters.",
+	}
+}
+
+// ErrInvalidEntityID represents an error where the entity ID parameter is invalid
+type ErrInvalidEntityID struct {
+	ID string
+}
+
+// IsErrInvalidEntityID checks if an error is ErrInvalidEntityID.
+func IsErrInvalidEntityID(err error) bool {
+	_, ok := err.(ErrInvalidEntityID)
+	return ok
+}
+
+func (err ErrInvalidEntityID) Error() string {
+	return fmt.Sprintf("Entity ID '%s' is invalid", err.ID)
+}
+
+// ErrCodeInvalidEntityID holds the unique world-error code of this error
+const ErrCodeInvalidEntityID = 4027
+
+// HTTPError holds the http error description
+func (err ErrInvalidEntityID) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidEntityID,
+		Message:  "The entity ID is invalid.",
+	}
+}
+
+// ErrInvalidTaskColumn represents an error where the provided task column is invalid
+type ErrInvalidTaskColumn struct {
+	Column string
+}
+
+// IsErrInvalidTaskColumn checks if an error is ErrInvalidTaskColumn.
+func IsErrInvalidTaskColumn(err error) bool {
+	_, ok := err.(ErrInvalidTaskColumn)
+	return ok
+}
+
+func (err ErrInvalidTaskColumn) Error() string {
+	return fmt.Sprintf("Task column %s is invalid", err.Column)
+}
+
+// ErrCodeInvalidTaskColumn holds the unique world-error code of this error
+const ErrCodeInvalidTaskColumn = 4028
+
+// HTTPError holds the http error description
+func (err ErrInvalidTaskColumn) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidTaskColumn,
+		Message:  fmt.Sprintf("The task field '%s' is invalid.", err.Column),
 	}
 }
 
@@ -2013,6 +2119,60 @@ func (err *ErrInvalidAPITokenPermission) HTTPError() web.HTTPError {
 		HTTPCode: http.StatusBadRequest,
 		Code:     ErrCodeInvalidAPITokenPermission,
 		Message:  fmt.Sprintf("The permission %s of group %s is invalid.", err.Permission, err.Group),
+	}
+}
+
+// ErrAPITokenDoesNotExist represents an error where an api token does not exist
+type ErrAPITokenDoesNotExist struct {
+	TokenID int64
+}
+
+// IsErrAPITokenDoesNotExist checks if an error is ErrAPITokenDoesNotExist.
+func IsErrAPITokenDoesNotExist(err error) bool {
+	_, ok := err.(ErrAPITokenDoesNotExist)
+	return ok
+}
+
+func (err ErrAPITokenDoesNotExist) Error() string {
+	return fmt.Sprintf("API token %d does not exist", err.TokenID)
+}
+
+// ErrCodeAPITokenDoesNotExist holds the unique world-error code of this error
+const ErrCodeAPITokenDoesNotExist = 14003
+
+// HTTPError holds the http error description
+func (err ErrAPITokenDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeAPITokenDoesNotExist,
+		Message:  "The API token does not exist.",
+	}
+}
+
+// ErrAPITokenExpired represents an error where an api token has expired
+type ErrAPITokenExpired struct {
+	Token *APIToken
+}
+
+// IsErrAPITokenExpired checks if an error is ErrAPITokenExpired.
+func IsErrAPITokenExpired(err error) bool {
+	_, ok := err.(ErrAPITokenExpired)
+	return ok
+}
+
+func (err ErrAPITokenExpired) Error() string {
+	return fmt.Sprintf("API token %d has expired", err.Token.ID)
+}
+
+// ErrCodeAPITokenExpired holds the unique world-error code of this error
+const ErrCodeAPITokenExpired = 14004
+
+// HTTPError holds the http error description
+func (err ErrAPITokenExpired) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusUnauthorized,
+		Code:     ErrCodeAPITokenExpired,
+		Message:  "The API token has expired.",
 	}
 }
 

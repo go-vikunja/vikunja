@@ -29,6 +29,42 @@ import (
 	"xorm.io/xorm"
 )
 
+// TeamServiceProvider defines the interface for team service operations
+// This allows the model layer to delegate to the service layer without import cycles
+type TeamServiceProvider interface {
+	Create(s *xorm.Session, team *Team, doer *user.User, firstUserShouldBeAdmin bool) (*Team, error)
+	GetByID(s *xorm.Session, teamID int64) (*Team, error)
+	GetAll(s *xorm.Session, auth web.Auth, search string, page int, perPage int, includePublic bool) (teams []*Team, resultCount int, totalItems int64, err error)
+	Update(s *xorm.Session, team *Team) (*Team, error)
+	Delete(s *xorm.Session, teamID int64, doer web.Auth) error
+	AddDetailsToTeams(s *xorm.Session, teams []*Team) error
+	// Permission methods
+	CanRead(s *xorm.Session, teamID int64, auth web.Auth) (bool, int, error)
+	CanCreate(s *xorm.Session, a web.Auth) (bool, error)
+	CanUpdate(s *xorm.Session, teamID int64, auth web.Auth) (bool, error)
+	CanDelete(s *xorm.Session, teamID int64, auth web.Auth) (bool, error)
+	IsAdmin(s *xorm.Session, teamID int64, auth web.Auth) (bool, error)
+	// Team member permission methods
+	CanCreateTeamMember(s *xorm.Session, teamID int64, a web.Auth) (bool, error)
+	CanDeleteTeamMember(s *xorm.Session, teamID int64, username string, a web.Auth) (bool, error)
+	CanUpdateTeamMember(s *xorm.Session, teamID int64, a web.Auth) (bool, error)
+}
+
+var teamService TeamServiceProvider
+
+// RegisterTeamService registers the team service for use by the model layer
+func RegisterTeamService(service TeamServiceProvider) {
+	teamService = service
+}
+
+// getTeamService returns the registered team service
+func getTeamService() TeamServiceProvider {
+	if teamService == nil {
+		panic("TeamService not registered. Call RegisterTeamService during initialization.")
+	}
+	return teamService
+}
+
 // Team holds a team object
 type Team struct {
 	// The unique, numeric id of this team.
@@ -101,37 +137,14 @@ type TeamUser struct {
 	TeamID int64 `json:"-"`
 }
 
-// GetTeamByID gets a team by its ID
-func GetTeamByID(s *xorm.Session, id int64) (team *Team, err error) {
-	if id < 1 {
-		return team, ErrTeamDoesNotExist{id}
+// AddMoreInfoToTeams adds more info (members, created_by) to teams
+// @Deprecated: Use services.TeamService.AddDetailsToTeams instead
+func AddMoreInfoToTeams(s *xorm.Session, teams []*Team) (err error) {
+	if teamService != nil {
+		return teamService.AddDetailsToTeams(s, teams)
 	}
 
-	t := Team{}
-
-	exists, err := s.
-		Where("id = ?", id).
-		Get(&t)
-	if err != nil {
-		return
-	}
-	if !exists {
-		return &t, ErrTeamDoesNotExist{id}
-	}
-
-	teamSlice := []*Team{&t}
-	err = addMoreInfoToTeams(s, teamSlice)
-	if err != nil {
-		return
-	}
-
-	team = &t
-
-	return
-}
-
-func addMoreInfoToTeams(s *xorm.Session, teams []*Team) (err error) {
-
+	// Fallback implementation for tests or migration code
 	if len(teams) == 0 {
 		return nil
 	}
@@ -231,12 +244,18 @@ func (t *Team) CreateNewTeam(s *xorm.Session, a web.Auth, firstUserShouldBeAdmin
 // @Failure 403 {object} web.HTTPError "The user does not have access to the team"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams/{id} [get]
+// @Deprecated: Use services.TeamService.GetByID instead
 func (t *Team) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
-	team, err := GetTeamByID(s, t.ID)
-	if team != nil {
-		*t = *team
+	if teamService == nil {
+		return ErrTeamDoesNotExist{t.ID}
 	}
-	return
+
+	team, err := teamService.GetByID(s, t.ID)
+	if err != nil {
+		return err
+	}
+	*t = *team
+	return nil
 }
 
 // ReadAll gets all teams the user is part of
@@ -252,7 +271,14 @@ func (t *Team) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
 // @Success 200 {array} models.Team "The teams."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams [get]
+// @Deprecated: Use services.TeamService.GetAll instead
 func (t *Team) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
+	if teamService != nil {
+		teams, count, total, err := teamService.GetAll(s, a, search, page, perPage, t.IncludePublic)
+		return teams, count, total, err
+	}
+
+	// Fallback implementation
 	if _, is := a.(*LinkSharing); is {
 		return nil, 0, 0, ErrGenericForbidden{}
 	}
@@ -285,7 +311,7 @@ func (t *Team) ReadAll(s *xorm.Session, a web.Auth, search string, page int, per
 		return nil, 0, 0, err
 	}
 
-	err = addMoreInfoToTeams(s, all)
+	err = AddMoreInfoToTeams(s, all)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -311,8 +337,23 @@ func (t *Team) ReadAll(s *xorm.Session, a web.Auth, search string, page int, per
 // @Failure 400 {object} web.HTTPError "Invalid team object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams [put]
+// @Deprecated: Use services.TeamService.Create instead
 func (t *Team) Create(s *xorm.Session, a web.Auth) (err error) {
+	doer, err := user.GetFromAuth(a)
+	if err != nil {
+		return err
+	}
 
+	if teamService != nil {
+		created, err := teamService.Create(s, t, doer, true)
+		if err != nil {
+			return err
+		}
+		*t = *created
+		return nil
+	}
+
+	// Fallback implementation
 	err = t.CreateNewTeam(s, a, true)
 	if err != nil {
 		return err
@@ -332,8 +373,13 @@ func (t *Team) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 400 {object} web.HTTPError "Invalid team object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams/{id} [delete]
+// @Deprecated: Use services.TeamService.Delete instead
 func (t *Team) Delete(s *xorm.Session, a web.Auth) (err error) {
+	if teamService != nil {
+		return teamService.Delete(s, t.ID, a)
+	}
 
+	// Fallback implementation
 	// Delete the team
 	_, err = s.ID(t.ID).Delete(&Team{})
 	if err != nil {
@@ -371,28 +417,58 @@ func (t *Team) Delete(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 400 {object} web.HTTPError "Invalid team object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams/{id} [post]
+// @Deprecated: Use services.TeamService.Update instead
 func (t *Team) Update(s *xorm.Session, _ web.Auth) (err error) {
-	// Check if we have a name
-	if t.Name == "" {
-		return ErrTeamNameCannotBeEmpty{}
+	if teamService != nil {
+		updated, err := teamService.Update(s, t)
+		if err != nil {
+			return err
+		}
+		*t = *updated
+		return nil
 	}
 
-	// Check if the team exists
-	_, err = GetTeamByID(s, t.ID)
-	if err != nil {
-		return
-	}
+	// Fallback implementation
+	return ErrTeamDoesNotExist{t.ID}
+}
 
-	_, err = s.ID(t.ID).UseBool("is_public").Update(t)
-	if err != nil {
-		return
-	}
+// ===== Permission Methods =====
+// These methods delegate to the service layer via function pointers
 
-	// Get the newly updated team
-	team, err := GetTeamByID(s, t.ID)
-	if team != nil {
-		*t = *team
+// CanRead checks if the user can read a team
+func (t *Team) CanRead(s *xorm.Session, a web.Auth) (canRead bool, maxPermission int, err error) {
+	if CheckTeamReadFunc == nil {
+		return false, 0, ErrPermissionDelegationNotInitialized{}
 	}
+	return CheckTeamReadFunc(s, t.ID, a)
+}
 
-	return
+// CanCreate checks if the user can create a team
+func (t *Team) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckTeamCreateFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckTeamCreateFunc(s, t, a)
+}
+
+// CanUpdate checks if the user can update a team
+func (t *Team) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckTeamUpdateFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckTeamUpdateFunc(s, t.ID, a)
+}
+
+// CanDelete checks if the user can delete a team
+func (t *Team) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckTeamDeleteFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckTeamDeleteFunc(s, t.ID, a)
+}
+
+// IsAdmin checks if the user is an admin of the team
+func (t *Team) IsAdmin(s *xorm.Session, a web.Auth) (isAdmin bool, err error) {
+	ts := getTeamService()
+	return ts.IsAdmin(s, t.ID, a)
 }

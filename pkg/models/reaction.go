@@ -26,6 +26,32 @@ import (
 	"code.vikunja.io/api/pkg/user"
 )
 
+// ReactionsServiceProvider defines the interface for the ReactionsService
+// This allows the model layer to delegate to the service layer without creating import cycles
+type ReactionsServiceProvider interface {
+	Create(s *xorm.Session, reaction *Reaction, a web.Auth) error
+	Delete(s *xorm.Session, entityID int64, userID int64, value string, entityKind ReactionKind) error
+	GetAll(s *xorm.Session, entityID int64, entityKind ReactionKind) (ReactionMap, error)
+	CanRead(s *xorm.Session, entityID int64, entityKind ReactionKind, a web.Auth) (bool, int, error)
+	CanCreate(s *xorm.Session, entityID int64, entityKind ReactionKind, a web.Auth) (bool, error)
+	CanDelete(s *xorm.Session, entityID int64, entityKind ReactionKind, a web.Auth) (bool, error)
+}
+
+var reactionsServiceProvider ReactionsServiceProvider
+
+// RegisterReactionsService registers the ReactionsService for use by model methods
+func RegisterReactionsService(provider ReactionsServiceProvider) {
+	reactionsServiceProvider = provider
+}
+
+// getReactionsService returns the registered ReactionsService
+func getReactionsService() ReactionsServiceProvider {
+	if reactionsServiceProvider == nil {
+		panic("ReactionsService not registered. Call RegisterReactionsService during initialization.")
+	}
+	return reactionsServiceProvider
+}
+
 type ReactionKind int
 
 const (
@@ -64,6 +90,7 @@ func (*Reaction) TableName() string {
 type ReactionMap map[string][]*user.User
 
 // ReadAll gets all reactions for an entity
+// @Deprecated Use ReactionsService.GetAll instead
 // @Summary Get all reactions for an entity
 // @Description Returns all reactions for an entity
 // @tags task
@@ -77,7 +104,6 @@ type ReactionMap map[string][]*user.User
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /{kind}/{id}/reactions [get]
 func (r *Reaction) ReadAll(s *xorm.Session, a web.Auth, _ string, _ int, _ int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
-
 	can, _, err := r.CanRead(s, a)
 	if err != nil {
 		return nil, 0, 0, err
@@ -86,12 +112,20 @@ func (r *Reaction) ReadAll(s *xorm.Session, a web.Auth, _ string, _ int, _ int) 
 		return nil, 0, 0, ErrGenericForbidden{}
 	}
 
-	reactions, err := getReactionsForEntityIDs(s, r.EntityKind, []int64{r.EntityID})
+	// Delegate to service layer
+	service := getReactionsService()
+	reactionMap, err := service.GetAll(s, r.EntityID, r.EntityKind)
 	if err != nil {
-		return
+		return nil, 0, 0, err
 	}
 
-	return reactions[r.EntityID], len(reactions[r.EntityID]), int64(len(reactions[r.EntityID])), nil
+	// Convert ReactionMap to slice for counting
+	var reactions []*user.User
+	for _, users := range reactionMap {
+		reactions = append(reactions, users...)
+	}
+
+	return reactionMap, len(reactions), int64(len(reactions)), nil
 }
 
 func getReactionsForEntityIDs(s *xorm.Session, entityKind ReactionKind, entityIDs []int64) (reactionsWithTasks map[int64]ReactionMap, err error) {
@@ -138,6 +172,7 @@ func getReactionsForEntityIDs(s *xorm.Session, entityKind ReactionKind, entityID
 }
 
 // Delete removes the user's own reaction
+// @Deprecated Use ReactionsService.Delete instead
 // @Summary Removes the user's reaction
 // @Description Removes the reaction of that user on that entity.
 // @tags task
@@ -152,14 +187,13 @@ func getReactionsForEntityIDs(s *xorm.Session, entityKind ReactionKind, entityID
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /{kind}/{id}/reactions/delete [post]
 func (r *Reaction) Delete(s *xorm.Session, a web.Auth) (err error) {
-	r.UserID = a.GetID()
-
-	_, err = s.Where("user_id = ? AND entity_id = ? AND entity_kind = ? AND value = ?", r.UserID, r.EntityID, r.EntityKind, r.Value).
-		Delete(&Reaction{})
-	return
+	// Delegate to service layer
+	service := getReactionsService()
+	return service.Delete(s, r.EntityID, a.GetID(), r.Value, r.EntityKind)
 }
 
 // Create adds a new reaction to an entity
+// @Deprecated Use ReactionsService.Create instead
 // @Summary Add a reaction to an entity
 // @Description Add a reaction to an entity. Will do nothing if the reaction already exists.
 // @tags task
@@ -174,19 +208,7 @@ func (r *Reaction) Delete(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /{kind}/{id}/reactions [put]
 func (r *Reaction) Create(s *xorm.Session, a web.Auth) (err error) {
-	r.UserID = a.GetID()
-
-	exists, err := s.Where("user_id = ? AND entity_id = ? AND entity_kind = ? AND value = ?", r.UserID, r.EntityID, r.EntityKind, r.Value).
-		Exist(&Reaction{})
-	if err != nil {
-		return err
-	}
-
-	if exists {
-		return
-	}
-
-	r.ID = 0
-	_, err = s.Insert(r)
-	return
+	// Delegate to service layer
+	service := getReactionsService()
+	return service.Create(s, r, a)
 }

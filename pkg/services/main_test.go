@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/i18n"
@@ -51,5 +52,44 @@ func TestMain(m *testing.M) {
 	models.SetupTests()
 	events.Fake()
 
+	// Initialize service dependency injection in the correct order
+	// First, wire up model/service dependencies
+	InitializeDependencies()
+	// Then initialize service instances
+	InitUserService()
+	InitSavedFilterService()
+	InitTaskService()
+	InitProjectService()
+	InitKanbanService()
+	InitProjectDuplicateService()
+	InitAttachmentService()
+	InitCommentService() // T-PERM-011: Initialize comment service for tests
+
+	// Initialize testEngine for service tests
+	testEngine = db.GetEngine()
+
+	// Register API routes for permission validation in tests
+	// This populates the apiTokenRoutes map needed for PermissionsAreValid()
+	registerTestAPIRoutes()
+
 	os.Exit(m.Run())
+}
+
+// registerTestAPIRoutes manually registers API routes for testing
+// This is needed because tests don't start the web server, but API token
+// permission validation requires the apiTokenRoutes map to be populated
+func registerTestAPIRoutes() {
+	// Register v1 task routes
+	models.CollectRoute("PUT", "/api/v1/projects/:project/tasks", "create")
+	models.CollectRoute("GET", "/api/v1/tasks/:taskid", "read_one")
+	models.CollectRoute("POST", "/api/v1/tasks/:taskid", "update")
+	models.CollectRoute("DELETE", "/api/v1/tasks/:taskid", "delete")
+
+	// Register other commonly used routes for API token tests
+	// Add more as needed for comprehensive test coverage
+	models.CollectRoute("GET", "/api/v1/projects", "read_all")
+	models.CollectRoute("PUT", "/api/v1/projects", "create")
+	models.CollectRoute("GET", "/api/v1/projects/:project", "read_one")
+	models.CollectRoute("POST", "/api/v1/projects/:project", "update")
+	models.CollectRoute("DELETE", "/api/v1/projects/:project", "delete")
 }

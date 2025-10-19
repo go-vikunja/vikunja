@@ -44,6 +44,33 @@ import (
 
 var webhookClient *http.Client
 
+// WebhookServiceProvider is a function type that returns a webhook service instance
+// This is used to avoid import cycles between models and services packages
+type WebhookServiceProvider interface {
+	CanRead(s *xorm.Session, projectID int64, a web.Auth) (bool, int, error)
+	CanCreate(s *xorm.Session, projectID int64, a web.Auth) (bool, error)
+	CanUpdate(s *xorm.Session, projectID int64, a web.Auth) (bool, error)
+	CanDelete(s *xorm.Session, projectID int64, a web.Auth) (bool, error)
+}
+
+// webhookServiceProvider is the registered service provider
+var webhookServiceProvider WebhookServiceProvider
+
+// RegisterWebhookService registers a service provider for webhook operations
+// This should be called during application initialization by the services package
+func RegisterWebhookService(provider WebhookServiceProvider) {
+	webhookServiceProvider = provider
+}
+
+// getWebhookService returns the registered webhook service instance
+func getWebhookService() WebhookServiceProvider {
+	if webhookServiceProvider != nil {
+		return webhookServiceProvider
+	}
+	// This should never happen in production, only in tests that don't initialize the service
+	panic("WebhookService not registered - ensure services.InitializeDependencies() is called during startup")
+}
+
 type Webhook struct {
 	// The generated ID of this webhook target
 	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"webhook"`

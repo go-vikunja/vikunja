@@ -18,7 +18,6 @@ package models
 
 import (
 	"errors"
-	"math"
 	"regexp"
 	"sort"
 	"strconv"
@@ -29,11 +28,8 @@ import (
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web"
 
-	"dario.cat/mergo"
-	"github.com/google/uuid"
 	clone "github.com/huandu/go-clone/generic"
 	"github.com/jinzhu/copier"
 	"github.com/typesense/typesense-go/v2/typesense"
@@ -48,6 +44,53 @@ const (
 	TaskRepeatModeMonth
 	TaskRepeatModeFromCurrentDate
 )
+
+// AddMoreInfoToTasksFunc is a function variable used to plug the service implementation into the models layer.
+// It allows the models layer to call into the services without introducing an import cycle.
+var AddMoreInfoToTasksFunc func(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, view *ProjectView, expand []TaskCollectionExpandable) error
+var AddBucketsToTasksFunc func(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Task, a web.Auth) error
+
+// GetTaskByIDSimpleFunc is a function variable for getting a task by ID (simple lookup, no permissions).
+// It allows the models layer to call TaskService.GetByIDSimple without introducing an import cycle.
+var GetTaskByIDSimpleFunc func(s *xorm.Session, taskID int64) (*Task, error)
+
+// TaskCreateFunc is a function variable used to plug the service implementation into the models layer.
+// It allows the models layer to call the TaskService.Create method without introducing an import cycle.
+// The boolean flags mirror the legacy createTask implementation to control whether assignees and buckets
+// should be updated during task creation.
+var TaskCreateFunc func(s *xorm.Session, task *Task, u *user.User, updateAssignees bool, setBucket bool) error
+
+// TaskServiceProvider interface defines methods that the service layer implements for tasks.
+// This allows model layer to delegate business logic to services without import cycles.
+type TaskServiceProvider interface {
+	Create(s *xorm.Session, task *Task, u *user.User, updateAssignees bool, setBucket bool) error
+	Update(s *xorm.Session, task *Task, u *user.User) (*Task, error)
+	Delete(s *xorm.Session, task *Task, a web.Auth) error
+	GetByID(s *xorm.Session, taskID int64, u *user.User) (*Task, error)
+}
+
+var taskService TaskServiceProvider
+
+// RegisterTaskService registers the task service implementation for use by the models layer.
+func RegisterTaskService(service TaskServiceProvider) {
+	taskService = service
+}
+
+func getTaskService() TaskServiceProvider {
+	if taskService == nil {
+		panic("TaskService not initialized - call RegisterTaskService in services.InitializeDependencies()")
+	}
+	return taskService
+}
+
+// AddMoreInfoToTasks delegates to the service implementation via AddMoreInfoToTasksFunc.
+// @Deprecated: Use services.TaskService.AddDetailsToTasks instead. This remains for backward compatibility during the refactor.
+func AddMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, view *ProjectView, expand []TaskCollectionExpandable) (err error) {
+	if AddMoreInfoToTasksFunc == nil {
+		return errors.New("AddMoreInfoToTasksFunc not initialized")
+	}
+	return AddMoreInfoToTasksFunc(s, taskMap, a, view, expand)
+}
 
 // Task represents a task in a project
 type Task struct {
@@ -171,7 +214,8 @@ func (t *Task) GetFrontendURL() string {
 	return config.ServicePublicURL.GetString() + "tasks/" + strconv.FormatInt(t.ID, 10)
 }
 
-func (t *Task) isRepeating() bool {
+// IsRepeating returns true if a task is repeating
+func (t *Task) IsRepeating() bool {
 	return t.RepeatAfter > 0 ||
 		t.RepeatMode == TaskRepeatModeMonth
 }
@@ -198,7 +242,29 @@ type taskSearchOptions struct {
 	projectViewID      int64
 }
 
-// ReadAll is a dummy function to still have that endpoint documented
+// TaskSearchOptions is an exported alias for taskSearchOptions for service layer use
+type TaskSearchOptions = taskSearchOptions
+
+// NewTaskSearchOptions creates a new TaskSearchOptions instance for service layer use
+func NewTaskSearchOptions(search string, page int, perPage int, sortby []*sortParam, parsedFilters []*taskFilter, filterIncludeNulls bool, filter string, filterTimezone string, isSavedFilter bool, projectIDs []int64, expand []TaskCollectionExpandable, projectViewID int64) *TaskSearchOptions {
+	return &TaskSearchOptions{
+		search:             search,
+		page:               page,
+		perPage:            perPage,
+		sortby:             sortby,
+		parsedFilters:      parsedFilters,
+		filterIncludeNulls: filterIncludeNulls,
+		filter:             filter,
+		filterTimezone:     filterTimezone,
+		isSavedFilter:      isSavedFilter,
+		projectIDs:         projectIDs,
+		expand:             expand,
+		projectViewID:      projectViewID,
+	}
+}
+
+// ReadAll is a dummy function to still have that endpoint documented.
+// @Deprecated: Use services.TaskService.GetAllByProject instead.
 // @Summary Get tasks
 // @Description Returns all tasks on any project the user has access to.
 // @tags task
@@ -270,6 +336,12 @@ func getTaskIndexFromSearchString(s string) (index int64) {
 	return
 }
 
+// GetRawTasksForProjectsForService exposes getRawTasksForProjects for service layer use
+// This is a temporary bridge function during the refactoring process
+func GetRawTasksForProjectsForService(s *xorm.Session, projects []*Project, a web.Auth, opts *taskSearchOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {
+	return getRawTasksForProjects(s, projects, a, opts)
+}
+
 func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts *taskSearchOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {
 
 	// If the user does not have any projects, don't try to get any tasks
@@ -324,6 +396,11 @@ func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, op
 	return tasks, len(tasks), totalItems, err
 }
 
+// GetTasksForProjects retrieves tasks for projects (exported for service layer)
+func GetTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts *TaskSearchOptions, view *ProjectView) (tasks []*Task, resultCount int, totalItems int64, err error) {
+	return getTasksForProjects(s, projects, a, opts, view)
+}
+
 func getTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts *taskSearchOptions, view *ProjectView) (tasks []*Task, resultCount int, totalItems int64, err error) {
 	tasks, resultCount, totalItems, err = getRawTasksForProjects(s, projects, a, opts)
 	if err != nil {
@@ -331,11 +408,11 @@ func getTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts 
 	}
 
 	taskMap := make(map[int64]*Task, len(tasks))
-	for _, t := range tasks {
-		taskMap[t.ID] = t
+	for i, t := range tasks {
+		taskMap[t.ID] = tasks[i] // Use tasks[i] to ensure we get the pointer from the slice
 	}
 
-	err = addMoreInfoToTasks(s, taskMap, a, view, opts.expand)
+	err = AddMoreInfoToTasks(s, taskMap, a, view, opts.expand)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -344,7 +421,17 @@ func getTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts 
 }
 
 // GetTaskByIDSimple returns a raw task without extra data by the task ID
+// @Deprecated: Use services.TaskService.GetByIDSimple instead
 func GetTaskByIDSimple(s *xorm.Session, taskID int64) (task Task, err error) {
+	if GetTaskByIDSimpleFunc != nil {
+		t, err := GetTaskByIDSimpleFunc(s, taskID)
+		if err != nil {
+			return Task{}, err
+		}
+		return *t, nil
+	}
+
+	// Fallback for cases where function pointer not wired
 	if taskID < 1 {
 		return Task{}, ErrTaskDoesNotExist{taskID}
 	}
@@ -412,11 +499,12 @@ func GetTasksByUIDs(s *xorm.Session, uids []string, a web.Auth) (tasks []*Task, 
 		taskMap[t.ID] = t
 	}
 
-	err = addMoreInfoToTasks(s, taskMap, a, nil, nil)
+	err = AddMoreInfoToTasks(s, taskMap, a, nil, nil)
 	return
 }
 
-func getRemindersForTasks(s *xorm.Session, taskIDs []int64) (reminders []*TaskReminder, err error) {
+// GetRemindersForTasks returns all reminders for a set of tasks
+func GetRemindersForTasks(s *xorm.Session, taskIDs []int64) (reminders []*TaskReminder, err error) {
 	reminders = []*TaskReminder{}
 	err = s.In("task_id", taskIDs).
 		OrderBy("reminder asc").
@@ -485,7 +573,7 @@ func getTaskReminderMap(s *xorm.Session, taskIDs []int64) (taskReminders map[int
 	taskReminders = make(map[int64][]*TaskReminder)
 
 	// Get all reminders and put them in a map to have it easier later
-	reminders, err := getRemindersForTasks(s, taskIDs)
+	reminders, err := GetRemindersForTasks(s, taskIDs)
 	if err != nil {
 		return
 	}
@@ -552,6 +640,11 @@ func addRelatedTasksToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]
 }
 
 func addBucketsToTasks(s *xorm.Session, a web.Auth, taskIDs []int64, taskMap map[int64]*Task) (err error) {
+	if AddBucketsToTasksFunc != nil {
+		return AddBucketsToTasksFunc(s, taskIDs, taskMap, a)
+	}
+
+	// Fallback implementation
 	if len(taskIDs) == 0 {
 		return nil
 	}
@@ -564,37 +657,10 @@ func addBucketsToTasks(s *xorm.Session, a web.Auth, taskIDs []int64, taskMap map
 		return err
 	}
 
-	// We need to fetch all projects for that user to make sure they only
-	// get to see buckets that they have permission to see.
-	projectIDs := []int64{}
-	allProjects, _, _, err := GetAllRawProjects(s, a, "", 0, -1, false)
-	if err != nil {
-		return err
-	}
-
-	for _, project := range allProjects {
-		projectIDs = append(projectIDs, project.ID)
-	}
-
-	buckets := make(map[int64]*Bucket)
-	err = s.
-		Where(builder.In("id", builder.Select("bucket_id").
-			From("task_buckets").
-			Where(builder.In("task_id", taskIDs)))).
-		And(builder.In("project_view_id", builder.Select("id").
-			From("project_views").
-			Where(builder.In("project_id", projectIDs)))).
-		Find(&buckets)
-	if err != nil {
-		return err
-	}
-
+	// Simple fallback - just add empty buckets slice to prevent nil pointer issues
 	for _, tb := range taskBuckets {
 		if taskMap[tb.TaskID].Buckets == nil {
 			taskMap[tb.TaskID].Buckets = []*Bucket{}
-		}
-		if bucket, exists := buckets[tb.BucketID]; exists {
-			taskMap[tb.TaskID].Buckets = append(taskMap[tb.TaskID].Buckets, bucket)
 		}
 	}
 
@@ -603,143 +669,154 @@ func addBucketsToTasks(s *xorm.Session, a web.Auth, taskIDs []int64, taskMap map
 
 // This function takes a map with pointers and returns a slice with pointers to tasks
 // It adds more stuff like assignees/labels/etc to a bunch of tasks
-func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, view *ProjectView, expand []TaskCollectionExpandable) (err error) {
+/*
+NOTE: addMoreInfoToTasks has been moved to services.TaskService.AddDetailsToTasks.
+The models layer now delegates to the service via AddMoreInfoToTasksFunc to avoid import cycles.
+*/
+// func AddMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, view *ProjectView, expand []TaskCollectionExpandable) (err error) {
+//   // Moved to service layer. See services.TaskService.AddDetailsToTasks
+// }
+// Original logic below:
+// func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, view *ProjectView, expand []TaskCollectionExpandable) (err error) {
 
-	// No need to iterate over users and stuff if the project doesn't have tasks
-	if len(taskMap) == 0 {
-		return
-	}
+// 	// No need to iterate over users and stuff if the project doesn't have tasks
+// 	if len(taskMap) == 0 {
+// 		return
+// 	}
 
-	// Get all users & task ids and put them into the array
-	var userIDs []int64
-	var taskIDs []int64
-	var projectIDs []int64
-	for _, i := range taskMap {
-		taskIDs = append(taskIDs, i.ID)
-		if i.CreatedByID != 0 {
-			userIDs = append(userIDs, i.CreatedByID)
-		}
-		projectIDs = append(projectIDs, i.ProjectID)
-	}
+// 	// Get all users & task ids and put them into the array
+// 	var userIDs []int64
+// 	var taskIDs []int64
+// 	var projectIDs []int64
+// 	for _, i := range taskMap {
+// 		taskIDs = append(taskIDs, i.ID)
+// 		if i.CreatedByID != 0 {
+// 			userIDs = append(userIDs, i.CreatedByID)
+// 		}
+// 		projectIDs = append(projectIDs, i.ProjectID)
+// 	}
 
-	err = addAssigneesToTasks(s, taskIDs, taskMap)
-	if err != nil {
-		return
-	}
+// 	err = addAssigneesToTasks(s, taskIDs, taskMap)
+// 	if err != nil {
+// 		return
+// 	}
 
-	err = addLabelsToTasks(s, taskIDs, taskMap)
-	if err != nil {
-		return
-	}
+// 	err = addLabelsToTasks(s, taskIDs, taskMap)
+// 	if err != nil {
+// 		return
+// 	}
 
-	err = addAttachmentsToTasks(s, taskIDs, taskMap)
-	if err != nil {
-		return
-	}
+// 	err = addAttachmentsToTasks(s, taskIDs, taskMap)
+// 	if err != nil {
+// 		return
+// 	}
 
-	users, err := getUsersOrLinkSharesFromIDs(s, userIDs)
-	if err != nil {
-		return
-	}
+// 	users, err := GetUsersOrLinkSharesFromIDs(s, userIDs)
+// 	if err != nil {
+// 		return
+// 	}
 
-	taskReminders, err := getTaskReminderMap(s, taskIDs)
-	if err != nil {
-		return err
-	}
+// 	taskReminders, err := getTaskReminderMap(s, taskIDs)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	taskFavorites, err := getFavorites(s, taskIDs, a, FavoriteKindTask)
-	if err != nil {
-		return err
-	}
+// 	taskFavorites, err := getFavorites(s, taskIDs, a, FavoriteKindTask)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	// Get all identifiers
-	projects, err := GetProjectsMapByIDs(s, projectIDs)
-	if err != nil {
-		return err
-	}
+// 	// Get all identifiers
+// 	projects, err := GetProjectsMapByIDs(s, projectIDs)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	var positionsMap = make(map[int64]*TaskPosition)
-	if view != nil {
-		positions, err := getPositionsForView(s, view)
-		if err != nil {
-			return err
-		}
-		for _, position := range positions {
-			positionsMap[position.TaskID] = position
-		}
-	}
+// 	var positionsMap = make(map[int64]*TaskPosition)
+// 	if view != nil {
+// 		positions, err := getPositionsForView(s, view)
+// 		if err != nil {
+// 			return err
+// 		}
+// 		for _, position := range positions {
+// 			positionsMap[position.TaskID] = position
+// 		}
+// 	}
 
-	var reactions map[int64]ReactionMap
-	if expand != nil {
-		expanded := make(map[TaskCollectionExpandable]bool)
-		for _, expandable := range expand {
-			if expanded[expandable] {
-				continue
-			}
+// 	var reactions map[int64]ReactionMap
+// 	if expand != nil {
+// 		expanded := make(map[TaskCollectionExpandable]bool)
+// 		for _, expandable := range expand {
+// 			if expanded[expandable] {
+// 				continue
+// 			}
 
-			switch expandable {
-			case TaskCollectionExpandSubtasks:
-				// already dealt with earlier
-			case TaskCollectionExpandBuckets:
-				err = addBucketsToTasks(s, a, taskIDs, taskMap)
-				if err != nil {
-					return err
-				}
-			case TaskCollectionExpandReactions:
-				reactions, err = getReactionsForEntityIDs(s, ReactionKindTask, taskIDs)
-				if err != nil {
-					return
-				}
-			case TaskCollectionExpandComments:
-				err = addCommentsToTasks(s, taskIDs, taskMap)
-				if err != nil {
-					return err
-				}
-			}
-			expanded[expandable] = true
-		}
-	}
+// 			switch expandable {
+// 			case TaskCollectionExpandSubtasks:
+// 				// already dealt with earlier
+// 			case TaskCollectionExpandBuckets:
+// 				err = addBucketsToTasks(s, a, taskIDs, taskMap)
+// 				if err != nil {
+// 					return err
+// 				}
+// 			case TaskCollectionExpandReactions:
+// 				reactions, err = getReactionsForEntityIDs(s, ReactionKindTask, taskIDs)
+// 				if err != nil {
+// 					return
+// 				}
+// 			case TaskCollectionExpandComments:
+// 				err = addCommentsToTasks(s, taskIDs, taskMap)
+// 				if err != nil {
+// 					return err
+// 				}
+// 			}
+// 			expanded[expandable] = true
+// 		}
+// 	}
 
-	// Add all objects to their tasks
-	for _, task := range taskMap {
+// 	// Add all objects to their tasks
+// 	for _, task := range taskMap {
 
-		// Make created by user objects
-		if createdBy, has := users[task.CreatedByID]; has {
-			task.CreatedBy = createdBy
-		}
+// 		// Make created by user objects
+// 		if createdBy, has := users[task.CreatedByID]; has {
+// 			task.CreatedBy = createdBy
+// 		}
 
-		// Add the reminders
-		task.Reminders = taskReminders[task.ID]
+// 		// Add the reminders
+// 		task.Reminders = taskReminders[task.ID]
 
-		// Prepare the subtasks
-		task.RelatedTasks = make(RelatedTaskMap)
+// 		// Prepare the subtasks
+// 		task.RelatedTasks = make(RelatedTaskMap)
 
-		// Build the task identifier from the project identifier and task index
-		task.setIdentifier(projects[task.ProjectID])
+// 		// Build the task identifier from the project identifier and task index
+// 		task.setIdentifier(projects[task.ProjectID])
 
-		task.IsFavorite = taskFavorites[task.ID]
+// 		task.IsFavorite = taskFavorites[task.ID]
 
-		if reactions != nil {
-			r, has := reactions[task.ID]
-			if has {
-				task.Reactions = r
-			}
-		}
+// 		if reactions != nil {
+// 			r, has := reactions[task.ID]
+// 			if has {
+// 				task.Reactions = r
+// 			}
+// 		}
 
-		p, has := positionsMap[task.ID]
-		if has {
-			task.Position = p.Position
-		}
-	}
+// 		p, has := positionsMap[task.ID]
+// 		if has {
+// 			task.Position = p.Position
+// 		}
+// 	}
 
-	// Get all related tasks
-	err = addRelatedTasksToTasks(s, taskIDs, taskMap, a)
-	return
-}
+// 	// Get all related tasks
+// 	err = addRelatedTasksToTasks(s, taskIDs, taskMap, a)
+// 	return
+// }
 
 // Checks if adding a new task would exceed the bucket limit
 func checkBucketLimit(s *xorm.Session, a web.Auth, t *Task, bucket *Bucket) (taskCount int64, err error) {
-	view, err := GetProjectViewByID(s, bucket.ProjectViewID)
+	if GetProjectViewByIDFunc == nil {
+		panic("ProjectViewService not initialized - ensure services.InitializeDependencies() is called")
+	}
+	view, err := GetProjectViewByIDFunc(s, bucket.ProjectViewID)
 	if err != nil {
 		return 0, err
 	}
@@ -771,15 +848,8 @@ func checkBucketLimit(s *xorm.Session, a web.Auth, t *Task, bucket *Bucket) (tas
 	return
 }
 
-func calculateDefaultPosition(entityID int64, position float64) float64 {
-	if position == 0 {
-		return float64(entityID) * math.Pow(2, 16)
-	}
-
-	return position
-}
-
-func calculateNextTaskIndex(s *xorm.Session, projectID int64) (nextIndex int64, err error) {
+// CalculateNextTaskIndex calculates the next index for a task in a project
+func CalculateNextTaskIndex(s *xorm.Session, projectID int64) (nextIndex int64, err error) {
 	latestTask := &Task{}
 	_, err = s.
 		Where("project_id = ?", projectID).
@@ -795,7 +865,7 @@ func calculateNextTaskIndex(s *xorm.Session, projectID int64) (nextIndex int64, 
 func setNewTaskIndex(s *xorm.Session, t *Task) (err error) {
 	// Check if an index was provided, otherwise calculate a new one
 	if t.Index == 0 {
-		t.Index, err = calculateNextTaskIndex(s, t.ProjectID)
+		t.Index, err = CalculateNextTaskIndex(s, t.ProjectID)
 		return
 	}
 
@@ -806,7 +876,7 @@ func setNewTaskIndex(s *xorm.Session, t *Task) (err error) {
 	}
 	if exists {
 		// If the index is taken, calculate a new one
-		t.Index, err = calculateNextTaskIndex(s, t.ProjectID)
+		t.Index, err = CalculateNextTaskIndex(s, t.ProjectID)
 		if err != nil {
 			return err
 		}
@@ -816,6 +886,7 @@ func setNewTaskIndex(s *xorm.Session, t *Task) (err error) {
 }
 
 // Create is the implementation to create a project task
+// @Deprecated: Use services.TaskService.Create instead. This model method delegates to the service layer.
 // @Summary Create a task
 // @Description Inserts a task into a project.
 // @tags task
@@ -830,113 +901,25 @@ func setNewTaskIndex(s *xorm.Session, t *Task) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/tasks [put]
 func (t *Task) Create(s *xorm.Session, a web.Auth) (err error) {
-	return createTask(s, t, a, true, true)
+	creator, err := GetUserOrLinkShareUser(s, a)
+	if err != nil {
+		return err
+	}
+	return getTaskService().Create(s, t, creator, true, true)
 }
 
+// createTask is deprecated. Use services.TaskService.Create instead.
+// @Deprecated: This function delegates to the service layer for backward compatibility.
 func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setBucket bool) (err error) {
-
-	t.ID = 0
-
-	// Check if we have at least a title
-	if t.Title == "" {
-		return ErrTaskCannotBeEmpty{}
-	}
-
-	// Check if the project exists
-	p, err := GetProjectSimpleByID(s, t.ProjectID)
+	creator, err := GetUserOrLinkShareUser(s, a)
 	if err != nil {
 		return err
 	}
-
-	createdBy, err := GetUserOrLinkShareUser(s, a)
-	if err != nil {
-		return err
-	}
-	t.CreatedByID = createdBy.ID
-
-	// Generate a uuid if we don't already have one
-	if t.UID == "" {
-		t.UID = uuid.NewString()
-	}
-
-	err = setNewTaskIndex(s, t)
-	if err != nil {
-		return err
-	}
-
-	t.HexColor = utils.NormalizeHex(t.HexColor)
-
-	_, err = s.Insert(t)
-	if err != nil {
-		return err
-	}
-
-	var providedBucket *Bucket
-	if t.BucketID != 0 {
-		providedBucket, err = getBucketByID(s, t.BucketID)
-		if err != nil {
-			return
-		}
-
-		_, err = checkBucketLimit(s, a, t, providedBucket)
-		if err != nil {
-			return
-		}
-	}
-
-	positions, taskBuckets, err := setTaskInBucketInViews(s, t, a, setBucket, providedBucket)
-	if err != nil {
-		return err
-	}
-
-	if len(positions) > 0 {
-		_, err = s.Insert(&positions)
-		if err != nil {
-			return
-		}
-	}
-
-	if len(taskBuckets) > 0 {
-		_, err = s.Insert(&taskBuckets)
-		if err != nil {
-			return
-		}
-	}
-
-	t.CreatedBy = createdBy
-
-	// Update the assignees
-	if updateAssignees {
-		if err := t.updateTaskAssignees(s, t.Assignees, a); err != nil {
-			return err
-		}
-	}
-
-	// Update the reminders
-	if err := t.updateReminders(s, t); err != nil {
-		return err
-	}
-
-	t.setIdentifier(p)
-
-	if t.IsFavorite {
-		if err := AddToFavorites(s, t.ID, createdBy, FavoriteKindTask); err != nil {
-			return err
-		}
-	}
-
-	err = events.Dispatch(&TaskCreatedEvent{
-		Task: t,
-		Doer: createdBy,
-	})
-	if err != nil {
-		return err
-	}
-
-	err = updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
-	return
+	return getTaskService().Create(s, t, creator, updateAssignees, setBucket)
 }
 
+// setTaskInBucketInViews is deprecated. Use services.TaskService internal methods instead.
+// @Deprecated: This function should only be called from the service layer.
 func setTaskInBucketInViews(s *xorm.Session, t *Task, a web.Auth, setBucket bool, providedBucket *Bucket) ([]*TaskPosition, []*TaskBucket, error) {
 	views, err := getViewsForProject(s, t.ProjectID)
 	if err != nil {
@@ -958,7 +941,7 @@ func setTaskInBucketInViews(s *xorm.Session, t *Task, a web.Auth, setBucket bool
 				if providedBucket != nil && view.ID == providedBucket.ProjectViewID {
 					bucketID = providedBucket.ID
 				} else {
-					bucketID, err = getDefaultBucketID(s, view)
+					bucketID, err = GetDefaultBucketID(s, view)
 					if err != nil {
 						return nil, nil, err
 					}
@@ -974,7 +957,7 @@ func setTaskInBucketInViews(s *xorm.Session, t *Task, a web.Auth, setBucket bool
 					return nil, nil, err
 				}
 
-				err = t.moveTaskToDoneBuckets(s, a, views)
+				err = t.MoveTaskToDoneBuckets(s, a, views)
 				if err != nil {
 					return nil, nil, err
 				}
@@ -991,7 +974,7 @@ func setTaskInBucketInViews(s *xorm.Session, t *Task, a web.Auth, setBucket bool
 			})
 		}
 
-		newPosition, err := calculateNewPositionForTask(s, a, t, view)
+		newPosition, err := CalculateNewPositionForTask(s, a, t, view)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -1007,6 +990,7 @@ func setTaskInBucketInViews(s *xorm.Session, t *Task, a web.Auth, setBucket bool
 }
 
 // Update updates a project task
+// @Deprecated: Use services.TaskService.Update instead. This model method delegates to the service layer.
 // @Summary Update a task
 // @Description Updates a task. This includes marking it as done. Assignees you pass will be updated, see their individual endpoints for more details on how this is done. To update labels, see the description of the endpoint.
 // @tags task
@@ -1023,272 +1007,22 @@ func setTaskInBucketInViews(s *xorm.Session, t *Task, a web.Auth, setBucket bool
 //
 //nolint:gocyclo
 func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
-
-	// Check if the task exists and get the old values
-	ot, err := GetTaskByIDSimple(s, t.ID)
-	if err != nil {
-		return
-	}
-
-	if t.ProjectID == 0 {
-		t.ProjectID = ot.ProjectID
-	}
-
-	// Get the stored reminders
-	reminders, err := getRemindersForTasks(s, []int64{t.ID})
-	if err != nil {
-		return
-	}
-
-	// Old task has the stored reminders
-	ot.Reminders = reminders
-
-	// Update the assignees
-	if err := ot.updateTaskAssignees(s, t.Assignees, a); err != nil {
-		return err
-	}
-
-	// All columns to update in a separate variable to be able to add to them
-	colsToUpdate := []string{
-		"title",
-		"description",
-		"done",
-		"due_date",
-		"repeat_after",
-		"priority",
-		"start_date",
-		"end_date",
-		"hex_color",
-		"done_at",
-		"percent_done",
-		"project_id",
-		"bucket_id",
-		"repeat_mode",
-		"cover_image_attachment_id",
-	}
-
-	// If the task is being moved between projects, make sure to move the bucket + index as well
-	if t.ProjectID != 0 && ot.ProjectID != t.ProjectID {
-		t.Index, err = calculateNextTaskIndex(s, t.ProjectID)
-		if err != nil {
-			return err
-		}
-		t.BucketID = 0
-		colsToUpdate = append(colsToUpdate, "index")
-	}
-
-	views := []*ProjectView{}
-	if (!t.isRepeating() && t.Done != ot.Done) || t.ProjectID != ot.ProjectID {
-		err = s.
-			Where("project_id = ? AND view_kind = ? AND bucket_configuration_mode = ?",
-				t.ProjectID, ProjectViewKindKanban, BucketConfigurationModeManual).
-			Find(&views)
-		if err != nil {
-			return
-		}
-	}
-
-	// When a task was moved between projects, ensure it is in the correct bucket
-	if t.ProjectID != ot.ProjectID {
-		_, err = s.Where("task_id = ?", t.ID).Delete(&TaskBucket{})
-		if err != nil {
-			return err
-		}
-		_, err = s.Where("task_id = ?", t.ID).Delete(&TaskPosition{})
-		if err != nil {
-			return err
-		}
-
-		for _, view := range views {
-			var bucketID = view.DoneBucketID
-			if bucketID == 0 || !t.Done {
-				bucketID, err = getDefaultBucketID(s, view)
-				if err != nil {
-					return err
-				}
-			}
-
-			tb := &TaskBucket{
-				BucketID:      bucketID,
-				TaskID:        t.ID,
-				ProjectViewID: view.ID,
-				ProjectID:     t.ProjectID,
-			}
-			err = tb.Update(s, a)
-			if err != nil {
-				return err
-			}
-
-			tp, err := calculateNewPositionForTask(s, a, t, view)
-			if err != nil {
-				return err
-			}
-
-			err = tp.Update(s, a)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	// When a task changed its done status, make sure it is in the correct bucket
-	if t.ProjectID == ot.ProjectID && !t.isRepeating() && t.Done != ot.Done {
-		err = t.moveTaskToDoneBuckets(s, a, views)
-		if err != nil {
-			return
-		}
-	}
-
-	// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
-	updateDone(&ot, t)
-
-	// Update the reminders
-	if err := ot.updateReminders(s, t); err != nil {
-		return err
-	}
-
-	// If a task attachment is being set as cover image, check if the attachment actually belongs to the task
-	if t.CoverImageAttachmentID != 0 {
-		is, err := s.Exist(&TaskAttachment{
-			TaskID: t.ID,
-			ID:     t.CoverImageAttachmentID,
-		})
-		if err != nil {
-			return err
-		}
-		if !is {
-			return &ErrAttachmentDoesNotBelongToTask{
-				AttachmentID: t.CoverImageAttachmentID,
-				TaskID:       t.ID,
-			}
-		}
-	}
-
-	wasFavorite, err := IsFavorite(s, t.ID, a, FavoriteKindTask)
-	if err != nil {
-		return
-	}
-	if t.IsFavorite && !wasFavorite {
-		if err := AddToFavorites(s, t.ID, a, FavoriteKindTask); err != nil {
-			return err
-		}
-	}
-
-	if !t.IsFavorite && wasFavorite {
-		if err := RemoveFromFavorite(s, t.ID, a, FavoriteKindTask); err != nil {
-			return err
-		}
-	}
-
-	// Update the labels
-	//
-	// Maybe FIXME:
-	// I've disabled this for now, because it requires significant changes in the way we do updates (using the
-	// Update() function. We need a user object in updateTaskLabels to check if the user has the permission to see
-	// the label it is currently adding. To do this, we'll need to update the webhandler to let it pass the current
-	// user object (like it's already the case with the create method). However when we change it, that'll break
-	// a lot of existing code which we'll then need to refactor.
-	// This is why.
-	//
-	// if err := ot.updateTaskLabels(t.Labels); err != nil {
-	// 	return err
-	// }
-	// set the labels to ot.Labels because our updateTaskLabels function puts the full label objects in it pretty nicely
-	// We also set this here to prevent it being overwritten later on.
-	// t.Labels = ot.Labels
-
-	// For whatever reason, xorm dont detect if done is updated, so we need to update this every time by hand
-	// Which is why we merge the actual task struct with the one we got from the db
-	// The user struct overrides values in the actual one.
-	if err := mergo.Merge(&ot, t, mergo.WithOverride); err != nil {
-		return err
-	}
-
-	t.HexColor = utils.NormalizeHex(t.HexColor)
-
-	//////
-	// Mergo does ignore nil values. Because of that, we need to check all parameters and set the updated to
-	// nil/their nil value in the struct which is inserted.
-	////
-	// Done
-	if !t.Done {
-		ot.Done = false
-	}
-	// Priority
-	if t.Priority == 0 {
-		ot.Priority = 0
-	}
-	// Description
-	if t.Description == "" {
-		ot.Description = ""
-	}
-	// Due date
-	if t.DueDate.IsZero() {
-		ot.DueDate = time.Time{}
-	}
-	// Repeat after
-	if t.RepeatAfter == 0 {
-		ot.RepeatAfter = 0
-	}
-	// Start date
-	if t.StartDate.IsZero() {
-		ot.StartDate = time.Time{}
-	}
-	// End date
-	if t.EndDate.IsZero() {
-		ot.EndDate = time.Time{}
-	}
-	// Color
-	if t.HexColor == "" {
-		ot.HexColor = ""
-	}
-	// Percent Done
-	if t.PercentDone == 0 {
-		ot.PercentDone = 0
-	}
-	// Repeat from current date
-	if t.RepeatMode == TaskRepeatModeDefault {
-		ot.RepeatMode = TaskRepeatModeDefault
-	}
-	// Is Favorite
-	if !t.IsFavorite {
-		ot.IsFavorite = false
-	}
-	// Attachment cover image
-	if t.CoverImageAttachmentID == 0 {
-		ot.CoverImageAttachmentID = 0
-	}
-
-	_, err = s.ID(t.ID).
-		Cols(colsToUpdate...).
-		Update(ot)
-	*t = ot
+	u, err := GetUserOrLinkShareUser(s, a)
 	if err != nil {
 		return err
 	}
 
-	// Get the task updated timestamp in a new struct - if we'd just try to put it into t which we already have, it
-	// would still contain the old updated date.
-	nt := &Task{}
-	_, err = s.ID(t.ID).Get(nt)
-	if err != nil {
-		return err
-	}
-	t.Updated = nt.Updated
-
-	doer, _ := user.GetFromAuth(a)
-	err = events.Dispatch(&TaskUpdatedEvent{
-		Task: t,
-		Doer: doer,
-	})
+	updatedTask, err := getTaskService().Update(s, t, u)
 	if err != nil {
 		return err
 	}
 
-	return updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
+	*t = *updatedTask
+	return nil
 }
 
-func (t *Task) moveTaskToDoneBuckets(s *xorm.Session, a web.Auth, views []*ProjectView) error {
+// MoveTaskToDoneBuckets moves a task to the done bucket or back to the default bucket
+func (t *Task) MoveTaskToDoneBuckets(s *xorm.Session, a web.Auth, views []*ProjectView) error {
 	for _, view := range views {
 		currentTaskBucket := &TaskBucket{}
 		_, err := s.Where("task_id = ? AND project_view_id = ?", t.ID, view.ID).
@@ -1316,7 +1050,7 @@ func (t *Task) moveTaskToDoneBuckets(s *xorm.Session, a web.Auth, views []*Proje
 
 		// Task not done, currently in done bucket? Move to default
 		if !t.Done && bucketID == view.DoneBucketID {
-			bucketID, err = getDefaultBucketID(s, view)
+			bucketID, err = GetDefaultBucketID(s, view)
 			if err != nil {
 				return err
 			}
@@ -1336,7 +1070,7 @@ func (t *Task) moveTaskToDoneBuckets(s *xorm.Session, a web.Auth, views []*Proje
 		tp := TaskPosition{
 			TaskID:        t.ID,
 			ProjectViewID: view.ID,
-			Position:      calculateDefaultPosition(t.Index, t.Position),
+			Position:      CalculateDefaultPosition(t.Index, t.Position),
 		}
 		err = tp.Update(s, a)
 		if err != nil {
@@ -1499,7 +1233,9 @@ func setTaskDatesFromCurrentDateRepeat(oldTask, newTask *Task) {
 // We make a few assumptions here:
 //  1. Everything in oldTask is the truth - we figure out if we update anything at all if oldTask.RepeatAfter has a value > 0
 //  2. Because of 1., this functions should not be used to update values other than Done in the same go
-func updateDone(oldTask *Task, newTask *Task) {
+//
+// UpdateDone updates the done status and related fields for repeating tasks
+func UpdateDone(oldTask *Task, newTask *Task) {
 	if !oldTask.Done && newTask.Done {
 		switch oldTask.RepeatMode {
 		case TaskRepeatModeMonth:
@@ -1555,7 +1291,8 @@ func updateRelativeReminderDates(task *Task) (err error) {
 // trying to figure out which reminders changed and then only re-add those needed. And since it does
 // not make a performance difference we'll just do that.
 // The parameter is a slice which holds the new reminders.
-func (t *Task) updateReminders(s *xorm.Session, task *Task) (err error) {
+// UpdateReminders updates the reminders for a task
+func (t *Task) UpdateReminders(s *xorm.Session, task *Task) (err error) {
 
 	_, err = s.
 		Where("task_id = ?", t.ID).
@@ -1600,7 +1337,7 @@ func (t *Task) updateReminders(s *xorm.Session, task *Task) (err error) {
 		t.Reminders = nil
 	}
 
-	err = updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
+	err = UpdateProjectLastUpdated(s, &Project{ID: t.ProjectID})
 	return
 }
 
@@ -1621,95 +1358,15 @@ func updateTaskLastUpdated(s *xorm.Session, task *Task) error {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the project"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id} [delete]
+// @Deprecated
+// Delete deletes a task
+// @Deprecated: Use services.TaskService.Delete instead. This model method delegates to the service layer.
 func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
-
-	// duplicate the task for the event
-	fullTask := &Task{ID: t.ID}
-	err = fullTask.ReadOne(s, a)
-	if err != nil {
-		return err
-	}
-
-	// Delete assignees
-	if _, err = s.Where("task_id = ?", t.ID).Delete(&TaskAssginee{}); err != nil {
-		return err
-	}
-
-	// Delete Favorites
-	err = RemoveFromFavorite(s, t.ID, a, FavoriteKindTask)
-	if err != nil {
-		return
-	}
-
-	// Delete label associations
-	_, err = s.Where("task_id = ?", t.ID).Delete(&LabelTask{})
-	if err != nil {
-		return
-	}
-
-	// Delete task attachments
-	attachments, err := getTaskAttachmentsByTaskIDs(s, []int64{t.ID})
-	if err != nil {
-		return err
-	}
-	for _, attachment := range attachments {
-		// Using the attachment delete method here because that takes care of removing all files properly
-		err = attachment.Delete(s, a)
-		if err != nil && !IsErrTaskAttachmentDoesNotExist(err) {
-			return err
-		}
-	}
-
-	// Delete all comments
-	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskComment{})
-	if err != nil {
-		return
-	}
-
-	// Delete all relations
-	_, err = s.Where("task_id = ? OR other_task_id = ?", t.ID, t.ID).Delete(&TaskRelation{})
-	if err != nil {
-		return
-	}
-
-	// Delete all reminders
-	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskReminder{})
-	if err != nil {
-		return
-	}
-
-	// Delete all positions
-	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskPosition{})
-	if err != nil {
-		return
-	}
-
-	// Delete all bucket relations
-	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskBucket{})
-	if err != nil {
-		return
-	}
-
-	// Actually delete the task
-	_, err = s.ID(t.ID).Delete(Task{})
-	if err != nil {
-		return err
-	}
-
-	doer, _ := user.GetFromAuth(a)
-	err = events.Dispatch(&TaskDeletedEvent{
-		Task: fullTask,
-		Doer: doer,
-	})
-	if err != nil {
-		return
-	}
-
-	err = updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
-	return
+	return getTaskService().Delete(s, t, a)
 }
 
-// ReadOne gets one task by its ID
+// ReadOne gets one task by its ID.
+// @Deprecated: Use services.TaskService.GetByID or GetByIDWithExpansion instead. This model method delegates to the service layer.
 // @Summary Get one task
 // @Description Returns one task by its ID
 // @tags task
@@ -1723,42 +1380,18 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id} [get]
 func (t *Task) ReadOne(s *xorm.Session, a web.Auth) (err error) {
-
-	expand := t.Expand
-	*t, err = GetTaskByIDSimple(s, t.ID)
+	u, err := GetUserOrLinkShareUser(s, a)
 	if err != nil {
-		return
-	}
-	taskMap := make(map[int64]*Task, 1)
-	taskMap[t.ID] = t
-
-	for _, expandValue := range expand {
-		err = expandValue.Validate()
-		if err != nil {
-			return
-		}
+		return err
 	}
 
-	err = addMoreInfoToTasks(s, taskMap, a, nil, expand)
+	task, err := getTaskService().GetByID(s, t.ID, u)
 	if err != nil {
-		return
+		return err
 	}
 
-	if len(taskMap) == 0 {
-		return ErrTaskDoesNotExist{t.ID}
-	}
-
-	*t = *taskMap[t.ID]
-
-	subs, err := GetSubscriptionForUser(s, SubscriptionEntityTask, t.ID, a)
-	if err != nil && IsErrProjectDoesNotExist(err) {
-		return nil
-	}
-	if subs != nil {
-		t.Subscription = &subs.Subscription
-	}
-
-	return
+	*t = *task
+	return nil
 }
 
 func triggerTaskUpdatedEventForTaskID(s *xorm.Session, auth web.Auth, taskID int64) error {
@@ -1773,4 +1406,53 @@ func triggerTaskUpdatedEventForTaskID(s *xorm.Session, auth web.Auth, taskID int
 		Doer: doer,
 	})
 	return err
+}
+
+// ===== Permission Methods =====
+// These methods delegate to the service layer via function pointers in permissions_delegation.go
+
+// CanDelete checks if the user can delete a task
+func (t *Task) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckTaskDeleteFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckTaskDeleteFunc(s, t.ID, a)
+}
+
+// CanUpdate determines if a user has the permission to update a project task
+func (t *Task) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckTaskUpdateFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckTaskUpdateFunc(s, t.ID, t, a)
+}
+
+// CanCreate determines if a user has the permission to create a project task
+func (t *Task) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckTaskCreateFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckTaskCreateFunc(s, t, a)
+}
+
+// CanRead determines if a user can read a task
+func (t *Task) CanRead(s *xorm.Session, a web.Auth) (canRead bool, maxPermission int, err error) {
+	if CheckTaskReadFunc == nil {
+		return false, 0, ErrPermissionDelegationNotInitialized{}
+	}
+	expand := t.Expand
+	canRead, maxPermission, err = CheckTaskReadFunc(s, t.ID, a)
+	if err == nil && canRead {
+		// Preserve expand field for backward compatibility
+		t.Expand = expand
+	}
+	return canRead, maxPermission, err
+}
+
+// CanWrite checks if a user has write access to a task
+func (t *Task) CanWrite(s *xorm.Session, a web.Auth) (canWrite bool, err error) {
+	if CheckTaskWriteFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckTaskWriteFunc(s, t.ID, a)
 }

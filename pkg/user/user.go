@@ -446,6 +446,24 @@ func GetCurrentUser(c echo.Context) (user *User, err error) {
 	}
 
 	claims := jwtinf.Claims.(jwt.MapClaims)
+
+	// Check if this is a link share
+	if typ, exists := claims["type"]; exists {
+		if typeInt, ok := typ.(float64); ok && int(typeInt) == 2 { // AuthTypeLinkShare = 2
+			// For link shares, extract the link share info from claims
+			linkShareID, _ := getClaimAsInt(claims, "id")
+			linkShareName, _ := getClaimAsString(claims, "name")
+			if linkShareName == "" {
+				linkShareName = "Link Share"
+			}
+			return &User{
+				ID:       linkShareID * -1, // Negative ID for link shares
+				Name:     linkShareName,
+				Username: "link-share-" + strconv.FormatInt(linkShareID, 10),
+			}, nil
+		}
+	}
+
 	return GetUserFromClaims(claims)
 }
 
@@ -468,11 +486,20 @@ func GetUserFromClaims(claims jwt.MapClaims) (user *User, err error) {
 		return nil, err
 	}
 
+	// Extract issuer from isLocalUser claim
+	issuer := ""
+	if isLocal, exists := claims["isLocalUser"]; exists {
+		if isLocalBool, ok := isLocal.(bool); ok && isLocalBool {
+			issuer = IssuerLocal
+		}
+	}
+
 	return &User{
 		ID:       userID,
 		Email:    email,
 		Username: username,
 		Name:     name,
+		Issuer:   issuer,
 	}, nil
 }
 

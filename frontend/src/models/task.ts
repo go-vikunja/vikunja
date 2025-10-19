@@ -105,7 +105,7 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 		this.title = this.title?.trim()
 		this.doneAt = parseDateOrNull(this.doneAt)
 
-		this.labels = this.labels
+		this.labels = (this.labels || [])
 			.map(l => new LabelModel(l))
 			.sort((a, b) => a.title.localeCompare(b.title))
 
@@ -151,8 +151,10 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 		this.updated = new Date(this.updated)
 
 		this.projectId = Number(this.projectId)
-		
-		this.comments = this.comments.map(c => new TaskCommentModel(c))
+
+		// If we would use the camel cased value here, it would lose the reactions - emojis can't be camel cased.
+		// The comments will be camel cased anyway in the constructor of the task comment model.
+		this.comments = (data.comments || []).map(c => new TaskCommentModel(c))
 
 		// We can't convert emojis to camel case, hence we do this manually
 		this.reactions = {}

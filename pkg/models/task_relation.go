@@ -77,6 +77,12 @@ func (rk RelationKind) isValid() bool {
 		rk == RelationKindCopiedTo
 }
 
+// IsValid checks if a relation kind is valid (public wrapper for service layer).
+// MIGRATION: Added for T-PERM-010 to allow service layer validation
+func (rk RelationKind) IsValid() bool {
+	return rk.isValid()
+}
+
 // TaskRelation represents a kind of relation between two tasks
 type TaskRelation struct {
 	// The unique, numeric id of this relation.
@@ -184,6 +190,22 @@ func checkTaskRelationCycle(s *xorm.Session, relation *TaskRelation, otherTaskID
 	delete(currentPath, relation.TaskID)
 
 	return nil
+}
+
+// CanCreate checks if a user can create a new relation between two tasks
+func (rel *TaskRelation) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckTaskRelationCreateFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckTaskRelationCreateFunc(s, rel, a)
+}
+
+// CanDelete checks if a user can delete a task relation
+func (rel *TaskRelation) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckTaskRelationDeleteFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckTaskRelationDeleteFunc(s, rel, a)
 }
 
 // Create creates a new task relation

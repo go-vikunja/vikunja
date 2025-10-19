@@ -30,6 +30,33 @@ import (
 	"xorm.io/xorm"
 )
 
+// SavedFilterServiceProvider is a function type that returns a saved filter service instance
+// This is used to avoid import cycles between models and services packages
+type SavedFilterServiceProvider interface {
+	CanRead(s *xorm.Session, filterID int64, a web.Auth) (bool, int, error)
+	CanCreate(s *xorm.Session, a web.Auth) (bool, error)
+	CanUpdate(s *xorm.Session, filterID int64, a web.Auth) (bool, error)
+	CanDelete(s *xorm.Session, filterID int64, a web.Auth) (bool, error)
+}
+
+// savedFilterServiceProvider is the registered service provider
+var savedFilterServiceProvider SavedFilterServiceProvider
+
+// RegisterSavedFilterService registers a service provider for saved filter operations
+// This should be called during application initialization by the services package
+func RegisterSavedFilterService(provider SavedFilterServiceProvider) {
+	savedFilterServiceProvider = provider
+}
+
+// getSavedFilterService returns the registered saved filter service instance
+func getSavedFilterService() SavedFilterServiceProvider {
+	if savedFilterServiceProvider != nil {
+		return savedFilterServiceProvider
+	}
+	// This should never happen in production, only in tests that don't initialize the service
+	panic("SavedFilterService not registered - ensure services.InitializeDependencies() is called during startup")
+}
+
 // SavedFilter represents a saved bunch of filters
 type SavedFilter struct {
 	// The unique numeric id of this saved filter
@@ -80,13 +107,18 @@ func GetSavedFilterIDFromProjectID(projectID int64) (filterID int64) {
 	return
 }
 
-func getProjectIDFromSavedFilterID(filterID int64) (projectID int64) {
+func GetProjectIDFromSavedFilterID(filterID int64) (projectID int64) {
 	projectID = filterID*-1 - 1
 	// ProjectIDs from saved filters are always negative
 	if projectID > 0 {
 		projectID = 0
 	}
 	return
+}
+
+// GetSavedFiltersForUser retrieves saved filters for a user (exported for service layer)
+func GetSavedFiltersForUser(s *xorm.Session, auth web.Auth, search string) (filters []*SavedFilter, err error) {
+	return getSavedFiltersForUser(s, auth, search)
 }
 
 func getSavedFiltersForUser(s *xorm.Session, auth web.Auth, search string) (filters []*SavedFilter, err error) {
@@ -105,7 +137,7 @@ func getSavedFiltersForUser(s *xorm.Session, auth web.Auth, search string) (filt
 
 func (sf *SavedFilter) ToProject() *Project {
 	return &Project{
-		ID:          getProjectIDFromSavedFilterID(sf.ID),
+		ID:          GetProjectIDFromSavedFilterID(sf.ID),
 		Title:       sf.Title,
 		Description: sf.Description,
 		IsFavorite:  sf.IsFavorite,
@@ -114,6 +146,21 @@ func (sf *SavedFilter) ToProject() *Project {
 		Owner:       sf.Owner,
 	}
 }
+
+var (
+	// CreateSavedFilterFunc is a function that creates a saved filter.
+	// It is used to avoid import cycles.
+	CreateSavedFilterFunc func(*xorm.Session, *SavedFilter, *user.User) error
+	// UpdateSavedFilterFunc is a function that updates a saved filter.
+	// It is used to avoid import cycles.
+	UpdateSavedFilterFunc func(*xorm.Session, *SavedFilter, *user.User) error
+	// DeleteSavedFilterFunc is a function that deletes a saved filter.
+	// It is used to avoid import cycles.
+	DeleteSavedFilterFunc func(*xorm.Session, int64, *user.User) error
+	// GetSavedFilterByIDFunc is a function that gets a saved filter by ID (simple lookup, no permission check).
+	// It is used to avoid import cycles.
+	GetSavedFilterByIDFunc func(*xorm.Session, int64) (*SavedFilter, error)
+)
 
 // Create creates a new saved filter
 // @Summary Creates a new saved filter
@@ -127,34 +174,11 @@ func (sf *SavedFilter) ToProject() *Project {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /filters [put]
 func (sf *SavedFilter) Create(s *xorm.Session, auth web.Auth) (err error) {
-	_, err = getTaskFiltersFromFilterString(sf.Filters.Filter, sf.Filters.FilterTimezone)
+	u, err := user.GetFromAuth(auth)
 	if err != nil {
-		return
+		return err
 	}
-
-	sf.OwnerID = auth.GetID()
-	sf.ID = 0
-	_, err = s.Insert(sf)
-	if err != nil {
-		return
-	}
-
-	err = CreateDefaultViewsForProject(s, &Project{ID: getProjectIDFromSavedFilterID(sf.ID)}, auth, true, false)
-	return err
-}
-
-func GetSavedFilterSimpleByID(s *xorm.Session, id int64) (sf *SavedFilter, err error) {
-	sf = &SavedFilter{}
-	exists, err := s.
-		Where("id = ?", id).
-		Get(sf)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, ErrSavedFilterDoesNotExist{SavedFilterID: id}
-	}
-	return
+	return CreateSavedFilterFunc(s, sf, u)
 }
 
 // ReadOne returns one saved filter
@@ -189,109 +213,12 @@ func (sf *SavedFilter) ReadOne(s *xorm.Session, _ web.Auth) error {
 // @Failure 404 {object} web.HTTPError "The saved filter does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /filters/{id} [post]
-func (sf *SavedFilter) Update(s *xorm.Session, _ web.Auth) error {
-	origFilter, err := GetSavedFilterSimpleByID(s, sf.ID)
+func (sf *SavedFilter) Update(s *xorm.Session, auth web.Auth) error {
+	u, err := user.GetFromAuth(auth)
 	if err != nil {
 		return err
 	}
-
-	if sf.Filters == nil {
-		sf.Filters = origFilter.Filters
-	}
-
-	_, err = getTaskFiltersFromFilterString(sf.Filters.Filter, sf.Filters.FilterTimezone)
-	if err != nil {
-		return err
-	}
-
-	_, err = s.
-		Where("id = ?", sf.ID).
-		Cols(
-			"title",
-			"description",
-			"filters",
-			"is_favorite",
-		).
-		Update(sf)
-	if err != nil {
-		return err
-	}
-
-	// Add all tasks which are not already in a bucket to the default bucket
-	kanbanFilterViews := []*ProjectView{}
-	err = s.Where(
-		"project_id = ? and view_kind = ? and bucket_configuration_mode = ?",
-		getProjectIDFromSavedFilterID(sf.ID),
-		ProjectViewKindKanban,
-		BucketConfigurationModeManual,
-	).
-		Find(&kanbanFilterViews)
-	if err != nil || len(kanbanFilterViews) == 0 {
-		return err
-	}
-
-	parsedFilters, err := getTaskFiltersFromFilterString(sf.Filters.Filter, sf.Filters.FilterTimezone)
-	if err != nil {
-		return err
-	}
-
-	filterCond, err := convertFiltersToDBFilterCond(parsedFilters, sf.Filters.FilterIncludeNulls)
-	if err != nil {
-		return err
-	}
-
-	taskBuckets := []*TaskBucket{}
-	taskPositions := []*TaskPosition{}
-
-	for _, view := range kanbanFilterViews {
-		// Fetch all tasks in the filter but not in task_bucket
-		// select * from tasks where id not in (select task_id from task_buckets where project_view_id = ?) and FILTER_COND
-		tasksToAdd := []*Task{}
-		err = s.Where(builder.And(
-			builder.NotIn("id",
-				builder.
-					Select("task_id").
-					From("task_buckets").
-					Where(builder.Eq{"project_view_id": view.ID})),
-			filterCond,
-		)).
-			Find(&tasksToAdd)
-		if err != nil {
-			return err
-		}
-
-		bucketID, err := getDefaultBucketID(s, view)
-		if err != nil {
-			return err
-		}
-
-		for _, task := range tasksToAdd {
-			taskBuckets = append(taskBuckets, &TaskBucket{
-				TaskID:        task.ID,
-				BucketID:      bucketID,
-				ProjectViewID: view.ID,
-			})
-
-			taskPositions = append(taskPositions, &TaskPosition{
-				TaskID:        task.ID,
-				ProjectViewID: view.ID,
-				Position:      0,
-			})
-		}
-	}
-
-	if len(taskBuckets) > 0 && len(taskPositions) > 0 {
-		_, err = s.Insert(taskBuckets)
-		if err != nil {
-			return err
-		}
-		_, err = s.Insert(taskPositions)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return UpdateSavedFilterFunc(s, sf, u)
 }
 
 // Delete removes a saved filter
@@ -307,11 +234,12 @@ func (sf *SavedFilter) Update(s *xorm.Session, _ web.Auth) error {
 // @Failure 404 {object} web.HTTPError "The saved filter does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /filters/{id} [delete]
-func (sf *SavedFilter) Delete(s *xorm.Session, _ web.Auth) error {
-	_, err := s.
-		Where("id = ?", sf.ID).
-		Delete(sf)
-	return err
+func (sf *SavedFilter) Delete(s *xorm.Session, auth web.Auth) error {
+	u, err := user.GetFromAuth(auth)
+	if err != nil {
+		return err
+	}
+	return DeleteSavedFilterFunc(s, sf.ID, u)
 }
 
 func addTaskToFilter(s *xorm.Session, filter *SavedFilter, view *ProjectView, fallbackTimezone string, task *Task) (taskBucket *TaskBucket, taskPosition *TaskPosition, err error) {
@@ -322,13 +250,13 @@ func addTaskToFilter(s *xorm.Session, filter *SavedFilter, view *ProjectView, fa
 		filter.Filters.FilterTimezone = fallbackTimezone
 	}
 
-	parsedFilters, err := getTaskFiltersFromFilterString(filterString, filter.Filters.FilterTimezone)
+	parsedFilters, err := GetTaskFiltersFromFilterString(filterString, filter.Filters.FilterTimezone)
 	if err != nil {
 		log.Errorf("Could not parse filter string '%s' from view %d and saved filter %d: %v", filterString, view.ID, filter.ID, err)
 		return
 	}
 
-	filterCond, err := convertFiltersToDBFilterCond(parsedFilters, filter.Filters.FilterIncludeNulls)
+	filterCond, err := ConvertFiltersToDBFilterCond(parsedFilters, filter.Filters.FilterIncludeNulls)
 	if err != nil {
 		log.Errorf("Could not convert filter string '%s' from view %d and saved filter %d to db conditions: %v", filterString, view.ID, filter.ID, err)
 		return
@@ -353,7 +281,7 @@ func addTaskToFilter(s *xorm.Session, filter *SavedFilter, view *ProjectView, fa
 		return nil, nil, err
 	}
 	if !taskHasBucketInView {
-		bucketID, err := getDefaultBucketID(s, view)
+		bucketID, err := GetDefaultBucketID(s, view)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -377,7 +305,7 @@ func addTaskToFilter(s *xorm.Session, filter *SavedFilter, view *ProjectView, fa
 		taskPosition = &TaskPosition{
 			TaskID:        task.ID,
 			ProjectViewID: view.ID,
-			Position:      calculateDefaultPosition(task.Index, task.Position),
+			Position:      CalculateDefaultPosition(task.Index, task.Position),
 		}
 	}
 
@@ -410,7 +338,7 @@ func RegisterAddTaskToFilterViewCron() {
 
 		filterProjectIDs := []int64{}
 		for _, f := range filters {
-			filterProjectIDs = append(filterProjectIDs, getProjectIDFromSavedFilterID(f.ID))
+			filterProjectIDs = append(filterProjectIDs, GetProjectIDFromSavedFilterID(f.ID))
 		}
 
 		kanbanFilterViews := []*ProjectView{}
@@ -484,7 +412,7 @@ func RegisterAddTaskToFilterViewCron() {
 			// Collect new tasks to task_buckets and task_positions
 			for _, task := range tasks {
 				if _, exists := savedTaskBucketMap[task.ID]; !exists {
-					view.DefaultBucketID, err = getDefaultBucketID(s, view)
+					view.DefaultBucketID, err = GetDefaultBucketID(s, view)
 					if err != nil {
 						log.Errorf("%sError fetching default bucket for view %d: %s", logPrefix, view.ID, err)
 						continue

@@ -29,21 +29,50 @@ import (
 	"xorm.io/xorm"
 )
 
+// LabelRoutes defines all label API routes with their explicit permission scopes.
+// This replaces the old implicit permission detection with explicit declarations.
+var LabelRoutes = []APIRoute{
+	{Method: "GET", Path: "/labels", Handler: handler.WithDBAndUser(getAllLabelsLogic, false), PermissionScope: "read_all"},
+	{Method: "POST", Path: "/labels", Handler: handler.WithDBAndUser(createLabelLogic, true), PermissionScope: "create"},
+	{Method: "PUT", Path: "/labels", Handler: handler.WithDBAndUser(createLabelLogic, true), PermissionScope: "create"}, // Frontend compatibility: PUT for creation
+	{Method: "GET", Path: "/labels/:id", Handler: handler.WithDBAndUser(getLabelLogic, false), PermissionScope: "read_one"},
+	{Method: "PUT", Path: "/labels/:id", Handler: handler.WithDBAndUser(updateLabelLogic, true), PermissionScope: "update"},
+	{Method: "DELETE", Path: "/labels/:id", Handler: handler.WithDBAndUser(deleteLabelLogic, true), PermissionScope: "delete"},
+}
+
 // RegisterLabels registers all label routes
 func RegisterLabels(a *echo.Group) {
-	a.GET("/labels", handler.WithDBAndUser(getAllLabelsLogic, false))
-	a.POST("/labels", handler.WithDBAndUser(createLabelLogic, true))
-	a.GET("/labels/:id", handler.WithDBAndUser(getLabelLogic, false))
-	a.PUT("/labels/:id", handler.WithDBAndUser(updateLabelLogic, true))
-	a.DELETE("/labels/:id", handler.WithDBAndUser(deleteLabelLogic, true))
+	registerRoutes(a, LabelRoutes)
 }
 
 // getAllLabelsLogic handles retrieving all labels for a user
 func getAllLabelsLogic(s *xorm.Session, u *user.User, c echo.Context) error {
+	// Extract query parameters for search and pagination
+	search := c.QueryParam("s")
+	page, err := strconv.Atoi(c.QueryParam("page"))
+	if err != nil {
+		page = 0
+	}
+	perPage, err := strconv.Atoi(c.QueryParam("per_page"))
+	if err != nil {
+		perPage = 50 // Default items per page
+	}
+
 	labelService := services.NewLabelService(s.Engine())
-	labels, err := labelService.GetAll(s, u)
+	labelsWithTaskID, _, _, err := labelService.GetAll(s, u, search, page, perPage)
 	if err != nil {
 		return err
+	}
+
+	// Convert from []*LabelWithTaskID to []*Label for response
+	labelsSlice, ok := labelsWithTaskID.([]*models.LabelWithTaskID)
+	if !ok {
+		return echo.NewHTTPError(http.StatusInternalServerError, "unexpected type returned from GetAll")
+	}
+
+	labels := make([]*models.Label, len(labelsSlice))
+	for i, labelWithTaskID := range labelsSlice {
+		labels[i] = &labelWithTaskID.Label
 	}
 
 	return c.JSON(http.StatusOK, labels)

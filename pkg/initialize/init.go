@@ -35,6 +35,7 @@ import (
 	migrationHandler "code.vikunja.io/api/pkg/modules/migration/handler"
 	"code.vikunja.io/api/pkg/plugins"
 	"code.vikunja.io/api/pkg/red"
+	"code.vikunja.io/api/pkg/services"
 	"code.vikunja.io/api/pkg/user"
 )
 
@@ -88,6 +89,16 @@ func FullInitWithoutAsync() {
 	// Set Engine
 	InitEngines()
 
+	// Initialize service layer dependency injection
+	services.InitUserService()
+	services.InitSavedFilterService()
+	services.InitTaskService()
+	services.InitProjectService()
+	services.InitKanbanService()
+	services.InitCommentService()
+	services.InitAttachmentService()
+	services.InitProjectDuplicateService()
+
 	// Init Typesense
 	models.InitTypesense()
 
@@ -114,12 +125,15 @@ func FullInit() {
 	models.RegisterReminderCron()
 	models.RegisterOverdueReminderCron()
 	models.RegisterUserDeletionCron()
-	models.RegisterOldExportCleanupCron()
+	services.RegisterOldExportCleanupCron()
 	models.RegisterAddTaskToFilterViewCron()
 	user.RegisterTokenCleanupCron()
 	user.RegisterDeletionNotificationCron()
 	openid.CleanupSavedOpenIDProviders()
 	openid.RegisterEmptyOpenIDTeamCleanupCron()
+
+	// Initialize service layer dependencies
+	services.InitializeDependencies()
 
 	// Start processing events
 	go func() {

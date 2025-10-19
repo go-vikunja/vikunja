@@ -61,7 +61,8 @@ func getRawTaskAssigneesForTasks(s *xorm.Session, taskIDs []int64) (taskAssignee
 }
 
 // Create or update a bunch of task assignees
-func (t *Task) updateTaskAssignees(s *xorm.Session, assignees []*user.User, doer web.Auth) (err error) {
+// UpdateTaskAssignees updates the assignees for a task
+func (t *Task) UpdateTaskAssignees(s *xorm.Session, assignees []*user.User, doer web.Auth) (err error) {
 
 	// Load the current assignees
 	currentAssignees, err := getRawTaskAssigneesForTasks(s, []int64{t.ID})
@@ -144,7 +145,7 @@ func (t *Task) updateTaskAssignees(s *xorm.Session, assignees []*user.User, doer
 
 	t.setTaskAssignees(assignees)
 
-	err = updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
+	err = UpdateProjectLastUpdated(s, &Project{ID: t.ProjectID})
 	return
 }
 
@@ -155,6 +156,22 @@ func (t *Task) setTaskAssignees(assignees []*user.User) {
 		return
 	}
 	t.Assignees = assignees
+}
+
+// CanCreate checks if a user can add a new assignee
+func (la *TaskAssginee) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckTaskAssigneeCreateFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckTaskAssigneeCreateFunc(s, la, a)
+}
+
+// CanDelete checks if a user can delete an assignee
+func (la *TaskAssginee) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	if CheckTaskAssigneeDeleteFunc == nil {
+		return false, ErrPermissionDelegationNotInitialized{}
+	}
+	return CheckTaskAssigneeDeleteFunc(s, la, a)
 }
 
 // Delete a task assignee
@@ -293,7 +310,7 @@ func (t *Task) addNewAssigneeByID(s *xorm.Session, newAssigneeID int64, project 
 		return err
 	}
 
-	err = updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
+	err = UpdateProjectLastUpdated(s, &Project{ID: t.ProjectID})
 	return
 }
 
@@ -359,6 +376,16 @@ type BulkAssignees struct {
 	web.Permissions `json:"-"`
 }
 
+// CanCreate checks if a user can bulk update assignees
+func (ba *BulkAssignees) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	// Check if the current user can edit the project
+	project, err := GetProjectSimpleByTaskID(s, ba.TaskID)
+	if err != nil {
+		return false, err
+	}
+	return project.CanUpdate(s, a)
+}
+
 // Create adds new assignees to a task
 // @Summary Add multiple new assignees to a task
 // @Description Adds multiple new assignees to a task. The assignee needs to have access to the project, the doer must be able to edit this task. Every user not in the project will be unassigned from the task, pass an empty array to unassign everyone.
@@ -385,6 +412,6 @@ func (ba *BulkAssignees) Create(s *xorm.Session, a web.Auth) (err error) {
 		task.Assignees = append(task.Assignees, &assignees[i].User)
 	}
 
-	err = task.updateTaskAssignees(s, ba.Assignees, a)
+	err = task.UpdateTaskAssignees(s, ba.Assignees, a)
 	return
 }

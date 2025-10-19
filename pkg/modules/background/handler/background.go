@@ -42,6 +42,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/background"
 	"code.vikunja.io/api/pkg/modules/background/unsplash"
 	"code.vikunja.io/api/pkg/modules/background/upload"
+	"code.vikunja.io/api/pkg/services"
 	"code.vikunja.io/api/pkg/web"
 	"code.vikunja.io/api/pkg/web/handler"
 
@@ -126,7 +127,8 @@ func (bp *BackgroundProvider) setBackgroundPreparations(s *xorm.Session, c echo.
 		return project, auth, models.ErrGenericForbidden{}
 	}
 	// Load the project
-	project, err = models.GetProjectSimpleByID(s, project.ID)
+	projectService := services.NewProjectService(db.GetEngine())
+	project, err = projectService.GetByIDSimple(s, project.ID)
 	return
 }
 

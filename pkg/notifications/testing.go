@@ -32,6 +32,12 @@ func Fake() {
 	sentTestNotifications = nil
 }
 
+// Unfake disables test mode and clears test notifications
+func Unfake() {
+	isUnderTest = false
+	sentTestNotifications = nil
+}
+
 // AssertSent asserts a notification has been sent
 func AssertSent(t *testing.T, n Notification) {
 	var found bool

@@ -50,6 +50,14 @@ type HTTPError struct {
 	Message  string `json:"message"`
 }
 
+func (h *HTTPError) Error() string {
+	return h.Message
+}
+
+func (h *HTTPError) HTTPError() HTTPError {
+	return *h
+}
+
 type HTTPErrorWithDetails struct {
 	HTTPError
 	Details interface{} `json:"details"`

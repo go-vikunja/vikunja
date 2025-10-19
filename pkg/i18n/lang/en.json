@@ -85,6 +85,10 @@
                 "subject": "\"%[1]s\" (%[2]s) has been deleted",
                 "message": "%[1]s has deleted the task \"%[2]s\" (%[3]s)"
             },
+            "created": {
+                "subject": "New task \"%[1]s\" in %[2]s",
+                "message": "%[1]s created a new task \"%[2]s\" in %[3]s"
+            },
             "mentioned": {
                 "subject_new": "%[1]s mentioned you in a new task \"%[2]s\"",
                 "subject": "%[1]s mentioned you in a task \"%[2]s\"",

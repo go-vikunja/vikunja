@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  # Redis for rate limiting
+  redis:
+    image: redis:7-alpine
+    container_name: vikunja-mcp-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  # Vikunja MCP Server
+  mcp-server:
+    build: .
+    container_name: vikunja-mcp-server
+    restart: unless-stopped
+    ports:
+      - "3457:3457"
+    environment:
+      # Vikunja API connection
+      VIKUNJA_API_URL: ${VIKUNJA_API_URL:-http://host.docker.internal:3456}
+      
+      # MCP Server configuration
+      MCP_PORT: ${MCP_PORT:-3457}
+      
+      # Redis connection
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      
+      # Rate limiting
+      RATE_LIMIT_DEFAULT: ${RATE_LIMIT_DEFAULT:-100}
+      RATE_LIMIT_BURST: ${RATE_LIMIT_BURST:-120}
+      RATE_LIMIT_ADMIN_BYPASS: ${RATE_LIMIT_ADMIN_BYPASS:-false}
+      
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      LOG_FORMAT: ${LOG_FORMAT:-json}
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3457/health', (r) => { process.exit(r.statusCode === 200 ? 0 : 1); })"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  redis-data:
+    driver: local
+
+networks:
+  default:
+    name: vikunja-mcp-network

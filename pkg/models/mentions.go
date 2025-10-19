@@ -25,6 +25,8 @@ import (
 	"xorm.io/xorm"
 )
 
+// FindMentionedUsersInText is a legacy function maintained for backward compatibility
+// New code should use services.UserMentionsService.FindMentionedUsersInText instead
 func FindMentionedUsersInText(s *xorm.Session, text string) (users map[int64]*user.User, err error) {
 	reg := regexp.MustCompile(`@\w+`)
 	matches := reg.FindAllString(text, -1)

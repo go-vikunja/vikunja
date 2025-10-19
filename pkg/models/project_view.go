@@ -165,6 +165,48 @@ func (pv *ProjectView) TableName() string {
 	return "project_views"
 }
 
+// Function variables for dependency injection (to avoid import cycles)
+var (
+	// GetProjectViewByIDFunc is a function that gets a project view by ID.
+	// It is used to avoid import cycles.
+	GetProjectViewByIDFunc func(*xorm.Session, int64) (*ProjectView, error)
+	// GetProjectViewByIDAndProjectFunc is a function that gets a project view by ID and project ID.
+	// It is used to avoid import cycles.
+	GetProjectViewByIDAndProjectFunc func(*xorm.Session, int64, int64) (*ProjectView, error)
+)
+
+// ProjectViewServiceProvider is the interface that must be implemented by a service providing project view functionality.
+// This enables dependency injection and allows the model layer to delegate to the service layer.
+type ProjectViewServiceProvider interface {
+	Create(s *xorm.Session, pv *ProjectView, a web.Auth, createBacklogBucket bool, addExistingTasksToView bool) error
+	Update(s *xorm.Session, pv *ProjectView) error
+	Delete(s *xorm.Session, viewID int64, projectID int64) error
+	GetAll(s *xorm.Session, projectID int64, a web.Auth) (views []*ProjectView, totalCount int64, err error)
+	GetByIDAndProject(s *xorm.Session, viewID, projectID int64) (view *ProjectView, err error)
+	GetByID(s *xorm.Session, id int64) (view *ProjectView, err error)
+	CreateDefaultViewsForProject(s *xorm.Session, project *Project, a web.Auth, createBacklogBucket bool, createDefaultListFilter bool) error
+}
+
+var projectViewService ProjectViewServiceProvider
+
+// RegisterProjectViewService registers the service implementation for project views.
+// This should be called during application initialization.
+func RegisterProjectViewService(service ProjectViewServiceProvider) {
+	projectViewService = service
+}
+
+// getProjectViewService retrieves the registered project view service.
+// Panics if no service has been registered (indicates missing initialization).
+func getProjectViewService() ProjectViewServiceProvider {
+	if projectViewService == nil {
+		panic("ProjectViewService not registered. Call RegisterProjectViewService during initialization.")
+	}
+	return projectViewService
+}
+
+// getViewsForProject retrieves all views for a project.
+// This is a simple database query helper used by other models (Project, Task).
+// Note: This is NOT business logic - it's a pure database query with no validation or processing.
 func getViewsForProject(s *xorm.Session, projectID int64) (views []*ProjectView, err error) {
 	views = []*ProjectView{}
 	err = s.
@@ -185,30 +227,14 @@ func getViewsForProject(s *xorm.Session, projectID int64) (views []*ProjectView,
 // @Success 200 {array} models.ProjectView "The project views"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/views [get]
+// @Deprecated Use ProjectViewService.GetAll instead. This method only exists for backward compatibility.
 func (pv *ProjectView) ReadAll(s *xorm.Session, a web.Auth, _ string, _ int, _ int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
-
-	pp := &Project{ID: pv.ProjectID}
-	can, _, err := pp.CanRead(s, a)
+	service := getProjectViewService()
+	views, totalCount, err := service.GetAll(s, pv.ProjectID, a)
 	if err != nil {
 		return nil, 0, 0, err
 	}
-	if !can {
-		return nil, 0, 0, ErrGenericForbidden{}
-	}
-
-	projectViews, err := getViewsForProject(s, pv.ProjectID)
-	if err != nil {
-		return nil, 0, 0, err
-	}
-
-	totalCount, err := s.
-		Where("project_id = ?", pv.ProjectID).
-		Count(&ProjectView{})
-	if err != nil {
-		return
-	}
-
-	return projectViews, len(projectViews), totalCount, nil
+	return views, len(views), totalCount, nil
 }
 
 // ReadOne implements the CRUD method to get one project view
@@ -224,8 +250,10 @@ func (pv *ProjectView) ReadAll(s *xorm.Session, a web.Auth, _ string, _ int, _ i
 // @Failure 403 {object} web.HTTPError "The user does not have access to this project view"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/views/{id} [get]
+// @Deprecated Use ProjectViewService.GetByIDAndProject instead. This method only exists for backward compatibility.
 func (pv *ProjectView) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
-	view, err := GetProjectViewByIDAndProject(s, pv.ID, pv.ProjectID)
+	service := getProjectViewService()
+	view, err := service.GetByIDAndProject(s, pv.ID, pv.ProjectID)
 	if err != nil {
 		return err
 	}
@@ -247,21 +275,10 @@ func (pv *ProjectView) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the project view"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/views/{id} [delete]
+// @Deprecated Use ProjectViewService.Delete instead. This method only exists for backward compatibility.
 func (pv *ProjectView) Delete(s *xorm.Session, _ web.Auth) (err error) {
-	_, err = s.
-		Where("id = ? AND project_id = ?", pv.ID, pv.ProjectID).
-		Delete(&ProjectView{})
-	if err != nil {
-		return
-	}
-
-	_, err = s.Where("project_view_id = ?", pv.ID).Delete(&TaskBucket{})
-	if err != nil {
-		return
-	}
-
-	_, err = s.Where("project_view_id = ?", pv.ID).Delete(&TaskPosition{})
-	return
+	service := getProjectViewService()
+	return service.Delete(s, pv.ID, pv.ProjectID)
 }
 
 // Create adds a new project view
@@ -277,116 +294,10 @@ func (pv *ProjectView) Delete(s *xorm.Session, _ web.Auth) (err error) {
 // @Failure 403 {object} web.HTTPError "The user does not have access to create a project view"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/views [put]
+// @Deprecated Use ProjectViewService.Create instead. This method only exists for backward compatibility.
 func (pv *ProjectView) Create(s *xorm.Session, a web.Auth) (err error) {
-	return createProjectView(s, pv, a, true, true)
-}
-
-func createProjectView(s *xorm.Session, p *ProjectView, a web.Auth, createBacklogBucket bool, addExistingTasksToView bool) (err error) {
-	if p.Filter != nil && p.Filter.Filter != "" {
-		_, err = getTaskFiltersFromFilterString(p.Filter.Filter, p.Filter.FilterTimezone)
-		if err != nil {
-			return
-		}
-	}
-
-	if p.BucketConfigurationMode == BucketConfigurationModeFilter {
-		for _, configuration := range p.BucketConfiguration {
-			if configuration.Filter != nil && configuration.Filter.Filter != "" {
-				_, err = getTaskFiltersFromFilterString(configuration.Filter.Filter, configuration.Filter.FilterTimezone)
-				if err != nil {
-					return
-				}
-			}
-		}
-	}
-
-	p.ID = 0
-	_, err = s.Insert(p)
-	if err != nil {
-		return
-	}
-
-	if p.ViewKind == ProjectViewKindKanban && createBacklogBucket && p.BucketConfigurationMode == BucketConfigurationModeManual {
-		// Create default buckets for kanban view
-		backlog := &Bucket{
-			ProjectViewID: p.ID,
-			Title:         "To-Do",
-			Position:      100,
-		}
-		err = backlog.Create(s, a)
-		if err != nil {
-			return
-		}
-
-		doing := &Bucket{
-			ProjectViewID: p.ID,
-			Title:         "Doing",
-			Position:      200,
-		}
-		err = doing.Create(s, a)
-		if err != nil {
-			return
-		}
-
-		done := &Bucket{
-			ProjectViewID: p.ID,
-			Title:         "Done",
-			Position:      300,
-		}
-		err = done.Create(s, a)
-		if err != nil {
-			return
-		}
-
-		// Set Backlog as default bucket and Done as done bucket
-		p.DefaultBucketID = backlog.ID
-		p.DoneBucketID = done.ID
-		_, err = s.ID(p.ID).Cols("default_bucket_id", "done_bucket_id").Update(p)
-		if err != nil {
-			return
-		}
-
-		// Move all tasks into the new bucket when the project already has tasks
-		if addExistingTasksToView {
-			err = addTasksToView(s, a, p, backlog)
-			if err != nil {
-				return
-			}
-		}
-	}
-
-	if addExistingTasksToView {
-		return RecalculateTaskPositions(s, p, a)
-	}
-
-	return
-}
-
-func addTasksToView(s *xorm.Session, a web.Auth, pv *ProjectView, b *Bucket) (err error) {
-	c := &TaskCollection{
-		ProjectID: pv.ProjectID,
-	}
-	ts, _, _, err := c.ReadAll(s, a, "", 0, -1)
-	if err != nil {
-		return err
-	}
-	tasks := ts.([]*Task)
-
-	if len(tasks) == 0 {
-		return nil
-	}
-
-	taskBuckets := []*TaskBucket{}
-	for _, task := range tasks {
-		taskBuckets = append(taskBuckets, &TaskBucket{
-			TaskID:        task.ID,
-			BucketID:      b.ID,
-			ProjectViewID: pv.ID,
-		})
-	}
-
-	_, err = s.Insert(&taskBuckets)
-	return err
+	service := getProjectViewService()
+	return service.Create(s, pv, a, true, true)
 }
 
 // Update is the handler to update a project view
@@ -403,143 +314,22 @@ func addTasksToView(s *xorm.Session, a web.Auth, pv *ProjectView, b *Bucket) (er
 // @Failure 400 {object} web.HTTPError "Invalid project view object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/views/{id} [post]
+// @Deprecated Use ProjectViewService.Update instead. This method only exists for backward compatibility.
 func (pv *ProjectView) Update(s *xorm.Session, _ web.Auth) (err error) {
-	if pv.Filter != nil && pv.Filter.Filter != "" {
-		_, err = getTaskFiltersFromFilterString(pv.Filter.Filter, pv.Filter.FilterTimezone)
-		if err != nil {
-			return
-		}
-	}
-
-	// Check if the project view exists
-	_, err = GetProjectViewByIDAndProject(s, pv.ID, pv.ProjectID)
-	if err != nil {
-		return
-	}
-
-	_, err = s.
-		ID(pv.ID).
-		Cols(
-			"title",
-			"view_kind",
-			"filter",
-			"position",
-			"bucket_configuration_mode",
-			"bucket_configuration",
-			"default_bucket_id",
-			"done_bucket_id",
-		).
-		Update(pv)
-	return
+	service := getProjectViewService()
+	return service.Update(s, pv)
 }
 
-func GetProjectViewByIDAndProject(s *xorm.Session, viewID, projectID int64) (view *ProjectView, err error) {
-	if projectID == FavoritesPseudoProjectID && viewID < 0 {
-		for _, v := range FavoritesPseudoProject.Views {
-			if v.ID == viewID {
-				return v, nil
-			}
-		}
-
-		return nil, &ErrProjectViewDoesNotExist{
-			ProjectViewID: viewID,
-		}
-	}
-
-	view = &ProjectView{}
-	exists, err := s.
-		Where("id = ? AND project_id = ?", viewID, projectID).
-		NoAutoCondition().
-		Get(view)
-	if err != nil {
-		return nil, err
-	}
-
-	if !exists {
-		return nil, &ErrProjectViewDoesNotExist{
-			ProjectViewID: viewID,
-		}
-	}
-
-	return
-}
-
-func GetProjectViewByID(s *xorm.Session, id int64) (view *ProjectView, err error) {
-	view = &ProjectView{}
-	exists, err := s.
-		Where("id = ?", id).
-		NoAutoCondition().
-		Get(view)
-	if err != nil {
-		return nil, err
-	}
-
-	if !exists {
-		return nil, &ErrProjectViewDoesNotExist{
-			ProjectViewID: id,
-		}
-	}
-
-	return
-}
-
+// CreateDefaultViewsForProject creates the default views for a project.
+// @Deprecated Use ProjectViewService.CreateDefaultViewsForProject instead. This function only exists for backward compatibility.
 func CreateDefaultViewsForProject(s *xorm.Session, project *Project, a web.Auth, createBacklogBucket bool, createDefaultListFilter bool) (err error) {
-	list := &ProjectView{
-		ProjectID: project.ID,
-		Title:     "List",
-		ViewKind:  ProjectViewKindList,
-		Position:  100,
-	}
-	if createDefaultListFilter {
-		list.Filter = &TaskCollection{
-			Filter: "done = false",
-		}
-	}
-	err = createProjectView(s, list, a, createBacklogBucket, true)
-	if err != nil {
-		return
-	}
+	service := getProjectViewService()
+	return service.CreateDefaultViewsForProject(s, project, a, createBacklogBucket, createDefaultListFilter)
+}
 
-	gantt := &ProjectView{
-		ProjectID: project.ID,
-		Title:     "Gantt",
-		ViewKind:  ProjectViewKindGantt,
-		Position:  200,
-	}
-	err = createProjectView(s, gantt, a, createBacklogBucket, true)
-	if err != nil {
-		return
-	}
-
-	table := &ProjectView{
-		ProjectID: project.ID,
-		Title:     "Table",
-		ViewKind:  ProjectViewKindTable,
-		Position:  300,
-	}
-	err = createProjectView(s, table, a, createBacklogBucket, true)
-	if err != nil {
-		return
-	}
-
-	kanban := &ProjectView{
-		ProjectID:               project.ID,
-		Title:                   "Kanban",
-		ViewKind:                ProjectViewKindKanban,
-		Position:                400,
-		BucketConfigurationMode: BucketConfigurationModeManual,
-	}
-	err = createProjectView(s, kanban, a, createBacklogBucket, true)
-	if err != nil {
-		return
-	}
-
-	project.Views = []*ProjectView{
-		list,
-		gantt,
-		table,
-		kanban,
-	}
-
-	return
+// createProjectView is a deprecated helper function.
+// @Deprecated Use ProjectViewService.Create instead. This function only exists for backward compatibility.
+func createProjectView(s *xorm.Session, p *ProjectView, a web.Auth, createBacklogBucket bool, addExistingTasksToView bool) (err error) {
+	service := getProjectViewService()
+	return service.Create(s, p, a, createBacklogBucket, addExistingTasksToView)
 }

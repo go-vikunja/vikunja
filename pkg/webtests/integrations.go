@@ -38,6 +38,8 @@ import (
 	"code.vikunja.io/api/pkg/routes"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/api/pkg/routes/caldav"
+	"code.vikunja.io/api/pkg/services"
+	"code.vikunja.io/api/pkg/testutil"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 	"code.vikunja.io/api/pkg/web/handler"
@@ -55,18 +57,21 @@ var (
 		Username: "user1",
 		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		Email:    "user1@example.com",
+		Issuer:   "local",
 	}
 	testuser2 = user.User{
 		ID:       2,
 		Username: "user2",
 		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		Email:    "user2@example.com",
+		Issuer:   "local",
 	}
 	testuser15 = user.User{
 		ID:       15,
 		Username: "user15",
 		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		Email:    "user15@example.com",
+		Issuer:   "local",
 	}
 )
 
@@ -86,8 +91,12 @@ func setupTestEnv() (e *echo.Echo, err error) {
 	files.InitTests()
 	user.InitTests()
 	models.SetupTests()
+	testutil.Init()
 	events.Fake()
 	keyvalue.InitStorage()
+
+	// Initialize service layer dependencies (required for model delegation)
+	services.InitializeDependencies()
 
 	err = db.LoadFixtures()
 	if err != nil {

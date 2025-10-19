@@ -1,5 +1,9 @@
 # AGENT Instructions
 
+> **⚠️ IMPORTANT**: All development must comply with the [Vikunja Constitution](.specify/memory/constitution.md) principles: Code Quality Standards, Test-First Development, User Experience Consistency, Performance Requirements, and Security & Reliability Standards.
+
+> **⚠️ TECHNICAL DEBT MANAGEMENT**: Any shortcuts or deviations from the service layer architecture must be immediately documented as follow-up tasks. Technical debt tasks must use "Technical Debt" prefix and be completed before proceeding to subsequent phases. Example: If you call `models.AddMoreInfoToTasks` from a service, create "Technical Debt: Implement Service Layer Expansion Methods" task.
+
 ## Project Overview
 
 Vikunja is a comprehensive todo and task management application with a Vue.js frontend and Go backend. It supports multiple project views (List, Kanban, Gantt, Table), team collaboration, file attachments, and extensive integrations.
@@ -66,10 +70,22 @@ You only need to run the lint for the backend when changing backend code, and th
 The Go backend follows a layered architecture with clear separation of concerns:
 
 **Core Layers:**
-- **Models** (`pkg/models/`) - Domain entities with business logic and CRUD operations
-- **Services** (`pkg/services/`) - Business logic layer handling complex operations
-- **Routes** (`pkg/routes/`) - HTTP API endpoints and routing configuration
+- **Models** (`pkg/models/`) - Domain entities with CRUD operations (transitioning to "Pantry" layer)
+- **Services** (`pkg/services/`) - Business logic layer handling complex operations ("Chef" layer)
+- **Routes** (`pkg/routes/`) - HTTP API endpoints and routing configuration ("Waiter" layer)
 - **Web** (`pkg/web/`) - Generic CRUD handlers and web framework abstractions
+
+**Current Architecture Transition:**
+The codebase is undergoing a service-layer refactor following the "Chef, Waiter, Pantry" pattern:
+- **Chef (Services)**: Business logic and orchestration
+- **Waiter (Handlers)**: HTTP request/response handling and routing
+- **Pantry (Models)**: Data access and persistence only
+
+**Service Layer Features:**
+- Service classes for all business logic (see `pkg/services/`)
+- Dependency inversion for backward compatibility with models
+- Test-driven development with comprehensive service test coverage
+- Declarative routing patterns in handlers
 
 **Key Patterns:**
 - **Generic CRUD**: Models implement `CRUDable` interface for standardized database operations
@@ -114,12 +130,20 @@ Modern Vue 3 composition API application with TypeScript:
 
 ### Adding New Features
 
-**Backend Changes:**
-1. Create/modify models in `pkg/models/` with proper CRUD and Permissions interfaces as required
-2. Add database migration if needed: `mage dev:make-migration <StructName>`
-3. Create/update services in `pkg/services/` for complex business logic
-4. Add API routes in `pkg/routes/api/v1/` following existing patterns
-5. Update Swagger annotations
+**Backend Changes (Service-Layer Architecture):**
+1. **Test-First Development**: Write comprehensive service tests in `pkg/services/` that initially fail
+2. **Service Implementation**: Create service layer with all business logic in `pkg/services/`
+3. **Model Layer**: Create/modify models in `pkg/models/` as "Pantry" (data access only)
+4. **Dependency Inversion**: Set up backward compatibility using function variables in models
+5. **Handler Layer**: Create declarative routes in `pkg/routes/api/v1/` that call services
+6. **Database Migration**: Add migration if needed: `mage dev:make-migration <StructName>`
+7. **Validation**: Ensure all tests pass and functional parity is maintained
+
+**Architecture Guidelines:**
+- Follow "Chef, Waiter, Pantry" pattern strictly
+- Move ALL business logic from models to services
+- Use dependency inversion for smooth transition
+- Maintain 90%+ test coverage for service layer
 
 **Frontend Changes:**
 1. Create TypeScript interfaces in `src/modelTypes/` matching backend models

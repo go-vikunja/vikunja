@@ -157,6 +157,32 @@ func (n *TaskDeletedNotification) Name() string {
 	return "task.deleted"
 }
 
+// TaskCreatedNotification represents a TaskCreatedNotification notification
+type TaskCreatedNotification struct {
+	Doer    *user.User `json:"doer"`
+	Task    *Task      `json:"task"`
+	Project *Project   `json:"project"`
+}
+
+// ToMail returns the mail notification for TaskCreatedNotification
+func (n *TaskCreatedNotification) ToMail(lang string) *notifications.Mail {
+	return notifications.NewMail().
+		From(n.Doer.GetNameAndFromEmail()).
+		Subject(i18n.T(lang, "notifications.task.created.subject", n.Task.Title, n.Project.Title)).
+		Line(i18n.T(lang, "notifications.task.created.message", n.Doer.GetName(), n.Task.Title, n.Project.Title)).
+		Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL())
+}
+
+// ToDB returns the TaskCreatedNotification notification in a format which can be saved in the db
+func (n *TaskCreatedNotification) ToDB() interface{} {
+	return n
+}
+
+// Name returns the name of the notification
+func (n *TaskCreatedNotification) Name() string {
+	return "task.created"
+}
+
 // ProjectCreatedNotification represents a ProjectCreatedNotification notification
 type ProjectCreatedNotification struct {
 	Doer    *user.User `json:"doer"`

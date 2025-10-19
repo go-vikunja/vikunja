@@ -154,7 +154,9 @@ func parseFilterFromExpression(f fexpr.ExprGroup, loc *time.Location) (filter *t
 	return filter, nil
 }
 
-func getTaskFiltersFromFilterString(filter string, filterTimezone string) (filters []*taskFilter, err error) {
+// GetTaskFiltersFromFilterString parses a filter string into a list of filter objects.
+// This function is exported for use by the service layer.
+func GetTaskFiltersFromFilterString(filter string, filterTimezone string) (filters []*taskFilter, err error) {
 
 	if filter == "" {
 		return

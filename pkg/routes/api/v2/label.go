@@ -82,10 +82,32 @@ func GetAllLabels(c echo.Context) error {
 		return handler.HandleHTTPError(err)
 	}
 
+	// Extract query parameters for search and pagination
+	search := c.QueryParam("s")
+	page, err := strconv.Atoi(c.QueryParam("page"))
+	if err != nil {
+		page = 0
+	}
+	perPage, err := strconv.Atoi(c.QueryParam("per_page"))
+	if err != nil {
+		perPage = 50 // Default items per page
+	}
+
 	labelService := services.NewLabelService(s.Engine())
-	labels, err := labelService.GetAll(s, u)
+	labelsWithTaskID, _, _, err := labelService.GetAll(s, u, search, page, perPage)
 	if err != nil {
 		return handler.HandleHTTPError(err)
+	}
+
+	// Convert from []*LabelWithTaskID to []*Label
+	labelsSlice, ok := labelsWithTaskID.([]*models.LabelWithTaskID)
+	if !ok {
+		return handler.HandleHTTPError(fmt.Errorf("unexpected type returned from GetAll"))
+	}
+
+	labels := make([]*models.Label, len(labelsSlice))
+	for i, labelWithTaskID := range labelsSlice {
+		labels[i] = &labelWithTaskID.Label
 	}
 
 	return c.JSON(http.StatusOK, labelsResponse(labels))
