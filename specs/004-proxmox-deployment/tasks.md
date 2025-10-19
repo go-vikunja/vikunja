@@ -90,16 +90,40 @@
 
 ### Main Installation Script for User Story 1
 
-- [X] T035 [US1] Create vikunja-install.sh main script with argument parsing and help text in deploy/proxmox/
-- [X] T036 [US1] Implement interactive prompts section (instance ID, container ID, database type, network config, resources) in deploy/proxmox/vikunja-install.sh
-- [X] T037 [US1] Implement configuration validation section in deploy/proxmox/vikunja-install.sh
-- [X] T038 [US1] Implement pre-flight checks (resources, ports, DNS) in deploy/proxmox/vikunja-install.sh
-- [X] T039 [US1] Implement deployment orchestration (container creation → provisioning → build → services → health check) in deploy/proxmox/vikunja-install.sh
-- [X] T040 [US1] Implement post-deployment summary and next steps output in deploy/proxmox/vikunja-install.sh
-- [X] T041 [US1] Implement cleanup on failure logic in deploy/proxmox/vikunja-install.sh
-- [X] T042 [US1] Add exit code handling and error messages with remediation steps in deploy/proxmox/vikunja-install.sh
+- [X] T035 [US1] Create vikunja-install-main.sh main script with argument parsing and help text in deploy/proxmox/
+- [X] T036 [US1] Implement interactive prompts section (instance ID, container ID, database type, network config, resources) in deploy/proxmox/vikunja-install-main.sh
+- [X] T037 [US1] Implement configuration validation section in deploy/proxmox/vikunja-install-main.sh
+- [X] T038 [US1] Implement pre-flight checks (resources, ports, DNS) in deploy/proxmox/vikunja-install-main.sh
+- [X] T039 [US1] Implement deployment orchestration (container creation → provisioning → build → services → health check) in deploy/proxmox/vikunja-install-main.sh
+- [X] T040 [US1] Implement post-deployment summary and next steps output in deploy/proxmox/vikunja-install-main.sh
+- [X] T041 [US1] Implement cleanup on failure logic in deploy/proxmox/vikunja-install-main.sh
+- [X] T042 [US1] Add exit code handling and error messages with remediation steps in deploy/proxmox/vikunja-install-main.sh
 
-**Checkpoint**: User Story 1 complete - can deploy Vikunja to Proxmox with single command. Run integration tests to verify.
+### Bootstrap Architecture Implementation
+
+- [X] T042E1 [US1] Create vikunja-install-bootstrap.sh that downloads full installer package in deploy/proxmox/
+- [X] T042E2 [US1] Rename vikunja-install.sh to vikunja-install-main.sh in deploy/proxmox/
+- [X] T042E3 [US1] Copy bootstrap to vikunja-install.sh as curl-able entry point in deploy/proxmox/
+- [X] T042E4 [US1] Update quickstart.md Option 2 to use git clone pattern in specs/004-proxmox-deployment/
+- [X] T042E5 [US1] Update README.md Architecture section with bootstrap explanation in deploy/proxmox/
+
+**Checkpoint**: User Story 1 complete - can deploy Vikunja to Proxmox with single curl command. Run integration tests to verify.
+
+---
+
+## Phase 3.5: Documentation Updates (Post-Bootstrap)
+
+**Goal**: Update all documentation to reflect bootstrap architecture and validate curl-based installation works.
+
+**Independent Test**: Execute curl command from quickstart.md on fresh Proxmox node, verify bootstrap downloads all files and launches installer.
+
+- [ ] T042E6 [DOC] Update ARCHITECTURE.md (when created) with bootstrap downloader pattern explanation in deploy/proxmox/docs/
+- [ ] T042E7 [DOC] Add troubleshooting section for bootstrap download failures in TROUBLESHOOTING.md in deploy/proxmox/docs/
+- [ ] T042E8 [TEST] Test curl-based installation from branch URL: bash <(curl -fsSL https://raw.githubusercontent.com/aroige/vikunja/004-proxmox-deployment/deploy/proxmox/vikunja-install.sh)
+- [ ] T042E9 [TEST] Validate all library files and templates are downloaded correctly in /tmp/vikunja-installer-*
+- [ ] T042E10 [DOC] Update contracts/cli-interface.md with bootstrap architecture notes if needed in specs/004-proxmox-deployment/
+
+**Checkpoint**: Bootstrap architecture validated and documented. Ready for Phase 4 implementation.
 
 ---
 
@@ -254,9 +278,9 @@
 
 **Goal**: Handle edge cases and error scenarios identified in spec.md.
 
-- [ ] T107 [P] Implement network connectivity loss detection and recovery in deploy/proxmox/vikunja-install.sh
-- [ ] T108 [P] Implement port conflict detection and resolution in deploy/proxmox/lib/common.sh
-- [ ] T109 [P] Implement deployment cancellation handling (Ctrl+C cleanup) in deploy/proxmox/vikunja-install.sh
+- [ ] T107 [P] Implement network connectivity loss detection and recovery in deploy/proxmox/vikunja-install-main.sh
+- [ ] T108 [P] Implement port conflict detection and resolution in deploy/proxmox/lib/proxmox-api.sh
+- [ ] T109 [P] Implement deployment cancellation handling (Ctrl+C cleanup) in deploy/proxmox/vikunja-install-main.sh
 - [ ] T110 [P] Implement disk space monitoring during operations in deploy/proxmox/lib/common.sh
 - [ ] T111 [P] Implement multiple instance conflict avoidance in deploy/proxmox/lib/proxmox-api.sh
 - [ ] T112 [P] Implement active upload detection before service restart in deploy/proxmox/vikunja-update.sh

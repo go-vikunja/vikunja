@@ -64,17 +64,48 @@ vikunja-manage.sh list          # List all instances
 ## Architecture
 
 This deployment system uses:
+- **Bootstrap Installer**: Single-command curl-based installation that downloads all required components
 - **LXC Containers**: Lightweight, secure unprivileged containers on Proxmox
 - **Blue-Green Deployment**: Zero-downtime updates with automatic rollback
 - **Systemd Services**: vikunja-backend.service, vikunja-mcp.service
 - **Nginx Reverse Proxy**: SSL termination, upstream switching for blue-green
 - **State Management**: YAML configuration, lock files, version tracking
 
+### How the Bootstrap Installer Works
+
+The single-command installation uses a three-stage bootstrap pattern:
+
+1. **Stage 1 (Bootstrap)**: You run the curl command, which executes a lightweight bootstrap script
+2. **Stage 2 (Download)**: The bootstrap downloads all required files (main installer, libraries, templates) to a temporary directory (`/tmp/vikunja-installer-<PID>`)
+3. **Stage 3 (Execute)**: The bootstrap launches the full installer with all dependencies available locally
+
+This pattern enables single-command installation while maintaining modular code architecture. It matches industry-standard patterns used by Docker, Kubernetes, and other infrastructure tools.
+
+**Advanced Usage**: You can customize the installation source using environment variables:
+
+```bash
+# Install from a specific branch or fork
+export VIKUNJA_GITHUB_OWNER="yourname"
+export VIKUNJA_GITHUB_REPO="vikunja"
+export VIKUNJA_GITHUB_BRANCH="feature-branch"
+
+bash <(curl -fsSL https://raw.githubusercontent.com/${VIKUNJA_GITHUB_OWNER}/${VIKUNJA_GITHUB_REPO}/${VIKUNJA_GITHUB_BRANCH}/deploy/proxmox/vikunja-install.sh)
+```
+
+**Local Installation**: If you prefer to run the installer from a local git clone:
+
+```bash
+git clone https://github.com/aroige/vikunja.git
+cd vikunja/deploy/proxmox
+./vikunja-install-main.sh
+```
+
 ## Project Structure
 
 ```
 deploy/proxmox/
-├── vikunja-install.sh           # Main installation script
+├── vikunja-install.sh           # Bootstrap installer (curl-able entry point)
+├── vikunja-install-main.sh      # Main installation script (downloaded by bootstrap)
 ├── vikunja-update.sh            # Update script
 ├── vikunja-manage.sh            # Management commands
 ├── lib/                         # Shared library functions
@@ -128,6 +159,33 @@ deploy/proxmox/
 - **Health Checks**: <10 seconds
 - **Backups**: <5 minutes (for 10k tasks + 1GB attachments)
 - **Rollback**: <2 minutes
+
+## Troubleshooting
+
+### Bootstrap Installation Issues
+
+**Problem**: Download fails with "Failed to download" error
+
+**Solutions**:
+- Verify internet connectivity on the Proxmox host
+- Check firewall rules allow HTTPS (port 443) to raw.githubusercontent.com
+- Ensure curl is installed: `apt-get install -y curl`
+- Try with explicit branch: Set `VIKUNJA_GITHUB_BRANCH` environment variable
+
+**Problem**: "This script must be run as root" error
+
+**Solution**: Run with sudo or as root user: `sudo bash <(curl -fsSL ...)`
+
+**Problem**: "This script must be run on a Proxmox VE host" error
+
+**Solution**: This installer only works on Proxmox VE hosts. For other platforms, see the main Vikunja documentation.
+
+### General Issues
+
+For more troubleshooting guidance, see:
+- [Troubleshooting Guide](docs/TROUBLESHOOTING.md) (coming soon)
+- [Vikunja Documentation](https://vikunja.io/docs)
+- [GitHub Issues](https://github.com/go-vikunja/vikunja/issues)
 
 ## Support & Contributing
 

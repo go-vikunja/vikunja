@@ -29,13 +29,15 @@ bash <(curl -fsSL https://raw.githubusercontent.com/aroige/vikunja/main/deploy/p
 
 Follow the interactive prompts. Installation completes in 5-10 minutes.
 
-### Option 2: Download and Run
+### Option 2: Clone Repository and Run
 
 ```bash
-wget https://raw.githubusercontent.com/aroige/vikunja/main/deploy/proxmox/vikunja-install.sh
-chmod +x vikunja-install.sh
-./vikunja-install.sh
+git clone https://github.com/aroige/vikunja.git
+cd vikunja/deploy/proxmox
+./vikunja-install-main.sh
 ```
+
+> **Note**: The installer requires multiple library files. For single-command installation, use Option 1 above.
 
 ---
 
