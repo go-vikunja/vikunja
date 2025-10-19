@@ -7,7 +7,7 @@
         "source.fixAll": "explicit"
     },
     "eslint.format.enable": true,
-    "[javascript]": {
+        "[javascript]": {
         "editor.defaultFormatter": "vscode.typescript-language-features"
     },
     "[typescript]": {
@@ -28,7 +28,19 @@
     "i18n-ally.localesPaths": [
         "frontend/src/i18n/lang"
     ],
-    "i18n-ally.sortKeys": true,
+        "i18n-ally.sortKeys": true,
     "i18n-ally.keepFulfilled": true,
-    "i18n-ally.keystyle": "nested"
+    "i18n-ally.keystyle": "nested",
+
+    "chat.promptFilesRecommendations": {
+        "speckit.constitution": true,
+        "speckit.specify": true,
+        "speckit.plan": true,
+        "speckit.tasks": true,
+        "speckit.implement": true
+    },
+    "chat.tools.terminal.autoApprove": {
+        ".specify/scripts/bash/": true,
+        ".specify/scripts/powershell/": true
+    }
 }
