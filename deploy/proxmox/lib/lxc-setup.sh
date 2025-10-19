@@ -1,11 +1,72 @@
 #!/usr/bin/env bash
 # Vikunja Proxmox Deployment - LXC Setup and Provisioning Functions
-# Provides: Container creation, provisioning, database setup, build functions
+# 
+# This library provides comprehensive functions for:
+#   - Container creation and configuration (create_container, configure_network)
+#   - System provisioning (install_dependencies, setup_go, setup_nodejs)
+#   - Database setup (setup_postgresql, setup_mysql, setup_sqlite)
+#   - Repository management (clone_repository, check_for_updates, pull_latest)
+#   - Build operations (build_backend, build_frontend, build_mcp)
+#   - Input validation and error handling
+#
+# All functions follow consistent patterns:
+#   - Parameter validation at start
+#   - Detailed logging (debug, info, warning, error, success)
+#   - Comprehensive error handling with helpful troubleshooting messages
+#   - Graceful handling of idempotent operations
+#   - Timeout protection for long-running operations
+#
 # Required by: vikunja-install.sh, vikunja-update.sh
+# Dependencies: lib/common.sh, lib/proxmox-api.sh (sourced by main script)
 
 set -euo pipefail
 
 # Common and proxmox-api functions are sourced by main script before this library
+
+# ============================================================================
+# Input Validation Functions
+# ============================================================================
+
+# Validate container ID format
+# Usage: validate_ct_id ct_id
+# Returns: 0 if valid, 1 if invalid
+validate_ct_id() {
+    local ct_id="$1"
+    
+    if [[ ! "$ct_id" =~ ^[0-9]+$ ]]; then
+        log_error "Invalid container ID: ${ct_id} (must be numeric)"
+        return 1
+    fi
+    
+    if [[ "$ct_id" -lt 100 ]] || [[ "$ct_id" -gt 999999999 ]]; then
+        log_error "Invalid container ID: ${ct_id} (must be between 100 and 999999999)"
+        return 1
+    fi
+    
+    return 0
+}
+
+# Validate network configuration
+# Usage: validate_network_config ip_cidr gateway
+# Returns: 0 if valid, 1 if invalid
+validate_network_config() {
+    local ip_cidr="$1"
+    local gateway="$2"
+    
+    # Basic CIDR validation
+    if [[ ! "$ip_cidr" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/[0-9]+$ ]]; then
+        log_error "Invalid IP CIDR format: ${ip_cidr} (expected: x.x.x.x/xx)"
+        return 1
+    fi
+    
+    # Basic gateway validation
+    if [[ ! "$gateway" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        log_error "Invalid gateway format: ${gateway} (expected: x.x.x.x)"
+        return 1
+    fi
+    
+    return 0
+}
 
 # ============================================================================
 # LXC Container Creation Functions (T024)
@@ -20,6 +81,11 @@ create_container() {
     local cores="${3:-${RESOURCES_CORES:-2}}"
     local memory_mb="${4:-${RESOURCES_MEMORY:-2048}}"
     local disk_gb="${5:-${RESOURCES_DISK:-10}}"
+    
+    # Validate container ID
+    if ! validate_ct_id "$ct_id"; then
+        return 1
+    fi
     
     log_info "Creating LXC container ${ct_id}"
     log_debug "Template: ${template}"
@@ -111,6 +177,15 @@ configure_network() {
     local ip_cidr="${3:-${NETWORK_IP:-192.168.1.100/24}}"
     local gateway="${4:-${NETWORK_GATEWAY:-192.168.1.1}}"
     
+    # Validate inputs
+    if ! validate_ct_id "$ct_id"; then
+        return 1
+    fi
+    
+    if ! validate_network_config "$ip_cidr" "$gateway"; then
+        return 1
+    fi
+    
     log_info "Configuring network for container ${ct_id}"
     
     # Set network configuration
@@ -148,6 +223,29 @@ allocate_resources() {
 # Container Provisioning Functions (T025)
 # ============================================================================
 
+# Wait for container to be ready
+# Usage: wait_for_container ct_id [timeout_seconds]
+# Returns: 0 if ready, 1 if timeout
+wait_for_container() {
+    local ct_id="$1"
+    local timeout="${2:-60}"
+    local elapsed=0
+    
+    log_debug "Waiting for container ${ct_id} to be ready (timeout: ${timeout}s)..."
+    
+    while [[ $elapsed -lt $timeout ]]; do
+        if pct_exec "$ct_id" test -f /bin/bash 2>/dev/null; then
+            log_debug "Container is ready"
+            return 0
+        fi
+        sleep 2
+        elapsed=$((elapsed + 2))
+    done
+    
+    log_error "Container did not become ready within ${timeout} seconds"
+    return 1
+}
+
 # Install system dependencies in container
 # Usage: install_dependencies ct_id
 # Returns: 0 on success, 1 on failure
@@ -156,11 +254,31 @@ install_dependencies() {
     
     log_info "Installing system dependencies"
     
-    # Update package lists
-    pct_exec "$ct_id" apt-get update 2>&1 || return 1
+    # Wait for container to be ready
+    if ! wait_for_container "$ct_id" 60; then
+        return 1
+    fi
+    
+    # Update package lists with retries
+    log_debug "Updating package lists..."
+    local retry_count=0
+    while [[ $retry_count -lt 3 ]]; do
+        if pct_exec "$ct_id" apt-get update 2>&1; then
+            break
+        fi
+        retry_count=$((retry_count + 1))
+        log_warning "apt-get update failed (attempt ${retry_count}/3), retrying..."
+        sleep 5
+    done
+    
+    if [[ $retry_count -eq 3 ]]; then
+        log_error "Failed to update package lists after 3 attempts"
+        return 1
+    fi
     
     # Install required packages
     # Note: Using default-mysql-client for Debian 12+ compatibility
+    log_debug "Installing required packages..."
     local packages=(
         "git" "curl" "wget" "build-essential"
         "ca-certificates" "gnupg" "lsb-release"
@@ -168,7 +286,15 @@ install_dependencies() {
         "sudo" "systemd" "procps"
     )
     
-    pct_exec "$ct_id" apt-get install -y "${packages[@]}" 2>&1 || return 1
+    # Use DEBIAN_FRONTEND=noninteractive to avoid prompts
+    if ! pct_exec "$ct_id" bash -c \
+        "DEBIAN_FRONTEND=noninteractive apt-get install -y ${packages[*]}" \
+        2>&1; then
+        log_error "Failed to install system dependencies"
+        log_error "You can try manually with: pct enter ${ct_id}"
+        log_error "Then run: apt-get install -y ${packages[*]}"
+        return 1
+    fi
     
     log_success "System dependencies installed"
     return 0
@@ -281,9 +407,39 @@ clone_repository() {
     
     log_info "Cloning Vikunja repository (branch: ${branch})"
     
-    # Clone repository
-    pct_exec "$ct_id" git clone --depth 1 --branch "$branch" "$repo_url" "$target_dir" \
-        2>&1 || return 1
+    # Check if directory already exists
+    if pct_exec "$ct_id" test -d "$target_dir"; then
+        log_warning "Directory ${target_dir} already exists"
+        
+        # Check if it's a git repository
+        if pct_exec "$ct_id" test -d "${target_dir}/.git"; then
+            log_debug "Existing git repository found, pulling latest changes..."
+            if ! pct_exec "$ct_id" git -C "$target_dir" pull 2>&1; then
+                log_error "Failed to update existing repository"
+                return 1
+            fi
+            local commit
+            commit=$(pct_exec "$ct_id" git -C "$target_dir" rev-parse --short HEAD)
+            log_success "Repository updated (commit: ${commit})"
+            echo "$commit"
+            return 0
+        else
+            log_error "Directory exists but is not a git repository"
+            log_error "Remove it manually: pct exec ${ct_id} -- rm -rf ${target_dir}"
+            return 1
+        fi
+    fi
+    
+    # Clone repository with timeout
+    log_debug "Cloning from ${repo_url}..."
+    if ! timeout 300 pct_exec "$ct_id" \
+        git clone --depth 1 --branch "$branch" "$repo_url" "$target_dir" \
+        2>&1; then
+        log_error "Failed to clone repository (timeout or network error)"
+        log_error "Check network connectivity in container: pct enter ${ct_id}"
+        log_error "Then run: git clone --branch ${branch} ${repo_url} ${target_dir}"
+        return 1
+    fi
     
     # Get commit hash
     local commit
@@ -358,19 +514,62 @@ setup_postgresql() {
         
         log_info "Database '${dbname}' does not exist, creating..."
         
-        if ! pct_exec "$ct_id" bash -c \
+        local create_output
+        create_output=$(pct_exec "$ct_id" bash -c \
             "PGPASSWORD='${password}' psql -h ${host} -p ${port} -U ${user} -d postgres -c 'CREATE DATABASE ${dbname};'" \
-            2>&1; then
+            2>&1)
+        local create_exit=$?
+        
+        # Check if creation failed (but ignore "already exists" error)
+        if [[ $create_exit -ne 0 ]] && ! echo "$create_output" | grep -qi "already exists"; then
             log_error "Failed to create database '${dbname}'"
+            log_error "Error output:"
+            echo "$create_output" | while IFS= read -r line; do
+                log_error "  $line"
+            done
+            log_error ""
             log_error "You may need to create it manually:"
             log_error "  psql -U postgres -c 'CREATE DATABASE ${dbname};'"
             log_error "  psql -U postgres -c 'GRANT ALL PRIVILEGES ON DATABASE ${dbname} TO ${user};'"
             return 1
         fi
         
-        log_success "Database '${dbname}' created"
+        if echo "$create_output" | grep -qi "already exists"; then
+            log_debug "Database '${dbname}' already exists (concurrent creation or race condition)"
+        else
+            log_success "Database '${dbname}' created"
+        fi
     else
         log_debug "Database '${dbname}' already exists"
+    fi
+    
+    # Grant all privileges on database to user
+    log_debug "Granting all privileges on database '${dbname}' to user '${user}'..."
+    local grant_output
+    grant_output=$(pct_exec "$ct_id" bash -c \
+        "PGPASSWORD='${password}' psql -h ${host} -p ${port} -U ${user} -d postgres -c 'GRANT ALL PRIVILEGES ON DATABASE ${dbname} TO ${user};'" \
+        2>&1)
+    local grant_exit=$?
+    
+    if [[ $grant_exit -ne 0 ]]; then
+        log_warning "Failed to grant database privileges (this may be OK if user already has permissions)"
+        log_debug "Grant output: $grant_output"
+    else
+        log_debug "Database privileges granted successfully"
+    fi
+    
+    # Grant schema permissions (required for PostgreSQL 15+)
+    log_debug "Granting schema privileges on '${dbname}'..."
+    grant_output=$(pct_exec "$ct_id" bash -c \
+        "PGPASSWORD='${password}' psql -h ${host} -p ${port} -U ${user} -d ${dbname} -c 'GRANT ALL ON SCHEMA public TO ${user};'" \
+        2>&1)
+    grant_exit=$?
+    
+    if [[ $grant_exit -ne 0 ]]; then
+        log_warning "Failed to grant schema privileges (this may be OK if user already has permissions)"
+        log_debug "Grant output: $grant_output"
+    else
+        log_debug "Schema privileges granted successfully"
     fi
     
     # Test final connection to the vikunja database
@@ -388,17 +587,85 @@ setup_postgresql() {
 # Returns: 0 on success, 1 on failure
 setup_mysql() {
     local ct_id="$1"
-    local host="$2"
-    local port="$3"
-    local dbname="$4"
-    local user="$5"
-    local password="$6"
+    local host="${2:-${DB_HOST:-localhost}}"
+    local port="${3:-${DB_PORT:-3306}}"
+    local dbname="${4:-${DB_NAME:-vikunja}}"
+    local user="${5:-${DB_USER:-vikunja}}"
+    local password="${6:-${DB_PASSWORD:-vikunja}}"
     
     log_info "Setting up MySQL connection to ${host}:${port}"
     
-    # Test connection
+    # First, test if we can connect to MySQL server (using mysql database)
+    log_debug "Testing MySQL server connectivity..."
+    if ! pct_exec "$ct_id" bash -c \
+        "mysql -h ${host} -P ${port} -u ${user} -p'${password}' -e 'SELECT 1'" \
+        >/dev/null 2>&1; then
+        log_error "Failed to connect to MySQL server at ${host}:${port}"
+        log_error "Please check:"
+        log_error "  1. MySQL server is running: systemctl status mysql"
+        log_error "  2. Server allows connections from container IP"
+        log_error "  3. Credentials are correct (user: ${user})"
+        log_error "  4. Network connectivity: ping ${host}"
+        return 1
+    fi
+    
+    log_debug "MySQL server connectivity OK"
+    
+    # Check if database exists, create if it doesn't
+    log_debug "Checking if database '${dbname}' exists..."
+    if ! pct_exec "$ct_id" bash -c \
+        "mysql -h ${host} -P ${port} -u ${user} -p'${password}' -e 'USE ${dbname}'" \
+        >/dev/null 2>&1; then
+        
+        log_info "Database '${dbname}' does not exist, creating..."
+        
+        local create_output
+        create_output=$(pct_exec "$ct_id" bash -c \
+            "mysql -h ${host} -P ${port} -u ${user} -p'${password}' -e 'CREATE DATABASE ${dbname} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;'" \
+            2>&1)
+        local create_exit=$?
+        
+        # Check if creation failed (but ignore "database exists" error)
+        if [[ $create_exit -ne 0 ]] && ! echo "$create_output" | grep -qi "database exists"; then
+            log_error "Failed to create database '${dbname}'"
+            log_error "Error output:"
+            echo "$create_output" | while IFS= read -r line; do
+                log_error "  $line"
+            done
+            log_error ""
+            log_error "You may need to create it manually:"
+            log_error "  mysql -u root -p -e \"CREATE DATABASE ${dbname};\""
+            log_error "  mysql -u root -p -e \"GRANT ALL PRIVILEGES ON ${dbname}.* TO '${user}'@'%';\""
+            return 1
+        fi
+        
+        if echo "$create_output" | grep -qi "database exists"; then
+            log_debug "Database '${dbname}' already exists (concurrent creation or race condition)"
+        else
+            log_success "Database '${dbname}' created"
+        fi
+    else
+        log_debug "Database '${dbname}' already exists"
+    fi
+    
+    # Grant all privileges on database to user
+    log_debug "Granting all privileges on database '${dbname}' to user '${user}'..."
+    local grant_output
+    grant_output=$(pct_exec "$ct_id" bash -c \
+        "mysql -h ${host} -P ${port} -u ${user} -p'${password}' -e 'GRANT ALL PRIVILEGES ON ${dbname}.* TO '\''${user}'\''@'\''%'\''; FLUSH PRIVILEGES;'" \
+        2>&1)
+    local grant_exit=$?
+    
+    if [[ $grant_exit -ne 0 ]]; then
+        log_warning "Failed to grant privileges (this may be OK if user already has permissions)"
+        log_debug "Grant output: $grant_output"
+    else
+        log_debug "Privileges granted successfully"
+    fi
+    
+    # Test final connection to the vikunja database
     if ! test_db_connection "$ct_id" "mysql" "$host" "$port" "$dbname" "$user" "$password"; then
-        log_error "Failed to connect to MySQL database"
+        log_error "Failed to connect to database '${dbname}'"
         return 1
     fi
     
@@ -451,8 +718,6 @@ test_db_connection() {
     fi
     
     return 0
-    
-    return $?
 }
 
 # ============================================================================
@@ -466,16 +731,38 @@ build_backend() {
     local ct_id="$1"
     local source_dir="$2"
     
-    log_info "Building Vikunja backend"
+    log_info "Building Vikunja backend (this may take several minutes)"
     
-    # Run mage build
-    pct_exec "$ct_id" bash -c "
+    # Verify source directory exists
+    if ! pct_exec "$ct_id" test -d "${source_dir}"; then
+        log_error "Source directory not found: ${source_dir}"
+        return 1
+    fi
+    
+    # Install mage and build
+    log_debug "Installing mage build tool..."
+    if ! pct_exec "$ct_id" bash -c "
+        export PATH=\$PATH:/usr/local/go/bin
+        export GOPATH=/root/go
+        go install github.com/magefile/mage@latest
+    " 2>&1; then
+        log_error "Failed to install mage"
+        return 1
+    fi
+    
+    # Run mage build with timeout
+    log_debug "Running mage build (timeout: 10 minutes)..."
+    if ! timeout 600 pct_exec "$ct_id" bash -c "
         cd ${source_dir} && \
-        export PATH=\$PATH:/usr/local/go/bin && \
+        export PATH=\$PATH:/usr/local/go/bin:/root/go/bin && \
         export GOPATH=/root/go && \
-        go install github.com/magefile/mage@latest && \
-        /root/go/bin/mage build
-    " 2>&1 || return 1
+        mage build
+    " 2>&1; then
+        log_error "Backend build failed or timed out"
+        log_error "Check build logs in container: pct enter ${ct_id}"
+        log_error "Then run: cd ${source_dir} && mage build"
+        return 1
+    fi
     
     # Verify binary was created
     if ! pct_exec "$ct_id" test -f "${source_dir}/vikunja"; then
@@ -494,14 +781,36 @@ build_frontend() {
     local ct_id="$1"
     local source_dir="$2"
     
-    log_info "Building Vikunja frontend"
+    log_info "Building Vikunja frontend (this may take several minutes)"
     
-    # Run pnpm build
-    pct_exec "$ct_id" bash -c "
+    # Verify frontend directory exists
+    if ! pct_exec "$ct_id" test -d "${source_dir}/frontend"; then
+        log_error "Frontend directory not found: ${source_dir}/frontend"
+        return 1
+    fi
+    
+    # Run pnpm install and build with timeout
+    log_debug "Installing frontend dependencies..."
+    if ! timeout 600 pct_exec "$ct_id" bash -c "
         cd ${source_dir}/frontend && \
-        pnpm install --frozen-lockfile && \
+        pnpm install --frozen-lockfile
+    " 2>&1; then
+        log_error "Frontend dependency installation failed or timed out"
+        log_error "Check logs in container: pct enter ${ct_id}"
+        log_error "Then run: cd ${source_dir}/frontend && pnpm install"
+        return 1
+    fi
+    
+    log_debug "Building frontend..."
+    if ! timeout 600 pct_exec "$ct_id" bash -c "
+        cd ${source_dir}/frontend && \
         pnpm build
-    " 2>&1 || return 1
+    " 2>&1; then
+        log_error "Frontend build failed or timed out"
+        log_error "Check logs in container: pct enter ${ct_id}"
+        log_error "Then run: cd ${source_dir}/frontend && pnpm build"
+        return 1
+    fi
     
     # Verify dist directory was created
     if ! pct_exec "$ct_id" test -d "${source_dir}/frontend/dist"; then
@@ -520,14 +829,36 @@ build_mcp() {
     local ct_id="$1"
     local source_dir="$2"
     
-    log_info "Building MCP server"
+    log_info "Building MCP server (this may take a few minutes)"
     
-    # Run pnpm build
-    pct_exec "$ct_id" bash -c "
+    # Verify MCP directory exists
+    if ! pct_exec "$ct_id" test -d "${source_dir}/mcp-server"; then
+        log_error "MCP server directory not found: ${source_dir}/mcp-server"
+        return 1
+    fi
+    
+    # Run pnpm install and build with timeout
+    log_debug "Installing MCP dependencies..."
+    if ! timeout 300 pct_exec "$ct_id" bash -c "
         cd ${source_dir}/mcp-server && \
-        pnpm install --frozen-lockfile && \
+        pnpm install --frozen-lockfile
+    " 2>&1; then
+        log_error "MCP dependency installation failed or timed out"
+        log_error "Check logs in container: pct enter ${ct_id}"
+        log_error "Then run: cd ${source_dir}/mcp-server && pnpm install"
+        return 1
+    fi
+    
+    log_debug "Building MCP server..."
+    if ! timeout 300 pct_exec "$ct_id" bash -c "
+        cd ${source_dir}/mcp-server && \
         pnpm build
-    " 2>&1 || return 1
+    " 2>&1; then
+        log_error "MCP build failed or timed out"
+        log_error "Check logs in container: pct enter ${ct_id}"
+        log_error "Then run: cd ${source_dir}/mcp-server && pnpm build"
+        return 1
+    fi
     
     # Verify dist directory was created
     if ! pct_exec "$ct_id" test -d "${source_dir}/mcp-server/dist"; then
