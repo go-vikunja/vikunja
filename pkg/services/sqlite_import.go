@@ -628,11 +628,10 @@ func (s *SQLiteImportService) importTasks(sess *xorm.Session, sqliteDB *sql.DB, 
 
 	rows, err := sqliteDB.Query(`
 		SELECT id, title, description, done, done_at, due_date, 
-		       created_by_id, project_id, repeat_after, repeat_mode,
+		       project_id, repeat_after, repeat_mode,
 		       priority, start_date, end_date, hex_color, 
-		       percent_done, identifier, "index", uid, cover_image_attachment_id,
-		       created, updated, bucket_id, position,
-		       reminder_dates
+		       percent_done, "index", uid, cover_image_attachment_id,
+		       created, updated, created_by_id
 		FROM tasks
 		ORDER BY id
 	`)
@@ -653,20 +652,16 @@ func (s *SQLiteImportService) importTasks(sess *xorm.Session, sqliteDB *sql.DB, 
 		var endDate sql.NullTime
 		var hexColor sql.NullString
 		var percentDone sql.NullFloat64
-		var identifier sql.NullString
 		var uid sql.NullString
-		var bucketID sql.NullInt64
-		var position sql.NullFloat64
 		var coverImageAttachmentID sql.NullInt64
-		var reminderDates sql.NullString
 
 		err := rows.Scan(
 			&task.ID, &task.Title, &task.Description, &task.Done, &doneAt,
-			&dueDate, &task.CreatedByID, &task.ProjectID, &repeatAfter,
+			&dueDate, &task.ProjectID, &repeatAfter,
 			&repeatMode, &priority, &startDate, &endDate,
-			&hexColor, &percentDone, &identifier, &task.Index,
+			&hexColor, &percentDone, &task.Index,
 			&uid, &coverImageAttachmentID, &task.Created, &task.Updated,
-			&bucketID, &position, &reminderDates,
+			&task.CreatedByID,
 		)
 		if err != nil {
 			return count, fmt.Errorf("failed to scan task row: %w", err)
@@ -700,17 +695,8 @@ func (s *SQLiteImportService) importTasks(sess *xorm.Session, sqliteDB *sql.DB, 
 		if percentDone.Valid {
 			task.PercentDone = percentDone.Float64
 		}
-		if identifier.Valid {
-			task.Identifier = identifier.String
-		}
 		if uid.Valid {
 			task.UID = uid.String
-		}
-		if bucketID.Valid {
-			task.BucketID = bucketID.Int64
-		}
-		if position.Valid {
-			task.Position = position.Float64
 		}
 		if coverImageAttachmentID.Valid {
 			task.CoverImageAttachmentID = coverImageAttachmentID.Int64
