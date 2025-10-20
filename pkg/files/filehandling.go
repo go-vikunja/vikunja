@@ -57,8 +57,17 @@ func initS3FileHandler() {
 	accessKey := config.FilesS3AccessKey.GetString()
 	secretKey := config.FilesS3SecretKey.GetString()
 
-	if endpoint == "" || bucket == "" || accessKey == "" || secretKey == "" {
-		log.Fatal("S3 configuration incomplete. Please set files.s3.endpoint, files.s3.bucket, files.s3.accesskey, and files.s3.secretkey")
+	if endpoint == "" {
+		log.Fatal("S3 endpoint is not configured. Please set files.s3.endpoint")
+	}
+	if bucket == "" {
+		log.Fatal("S3 bucket is not configured. Please set files.s3.bucket")
+	}
+	if accessKey == "" {
+		log.Fatal("S3 access key is not configured. Please set files.s3.accesskey")
+	}
+	if secretKey == "" {
+		log.Fatal("S3 secret key is not configured. Please set files.s3.secretkey")
 	}
 
 	// Create AWS session for afero-s3
