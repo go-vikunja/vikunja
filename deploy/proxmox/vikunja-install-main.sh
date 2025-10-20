@@ -833,13 +833,13 @@ deploy_vikunja() {
     
     progress_complete "[10/10] Services configured"
     
-    # Step 11: Install management scripts into container
+    # Step 11: Install management scripts into container for future updates
     log_info "Installing management scripts into container..."
     
     # Create deployment directory in container
-    pct_exec "$CONTAINER_ID" "mkdir -p /opt/vikunja-deploy/lib /opt/vikunja-deploy/templates"
+    pct_exec "$CONTAINER_ID" bash -c "mkdir -p /opt/vikunja-deploy/lib /opt/vikunja-deploy/templates"
     
-    # Copy scripts from current directory into container
+    # Copy all scripts from bootstrap temp directory into container
     pct push "$CONTAINER_ID" "${SCRIPT_DIR}/vikunja-update.sh" "/opt/vikunja-deploy/vikunja-update.sh"
     pct push "$CONTAINER_ID" "${SCRIPT_DIR}/lib/common.sh" "/opt/vikunja-deploy/lib/common.sh"
     pct push "$CONTAINER_ID" "${SCRIPT_DIR}/lib/proxmox-api.sh" "/opt/vikunja-deploy/lib/proxmox-api.sh"
@@ -851,18 +851,17 @@ deploy_vikunja() {
     pct push "$CONTAINER_ID" "${SCRIPT_DIR}/lib/backup-restore.sh" "/opt/vikunja-deploy/lib/backup-restore.sh"
     
     # Copy templates
-    for template in "${SCRIPT_DIR}"/templates/*; do
+    for template in "${SCRIPT_DIR}"/templates/*.{service,conf,sh,yaml} 2>/dev/null; do
         if [[ -f "$template" ]]; then
             pct push "$CONTAINER_ID" "$template" "/opt/vikunja-deploy/templates/$(basename "$template")"
         fi
     done
     
     # Make scripts executable in container
-    pct_exec "$CONTAINER_ID" "chmod +x /opt/vikunja-deploy/vikunja-update.sh"
-    pct_exec "$CONTAINER_ID" "chmod +x /opt/vikunja-deploy/lib/*.sh"
+    pct_exec "$CONTAINER_ID" bash -c "chmod +x /opt/vikunja-deploy/vikunja-update.sh /opt/vikunja-deploy/lib/*.sh"
     
-    # Create symlink for easy access
-    pct_exec "$CONTAINER_ID" "ln -sf /opt/vikunja-deploy/vikunja-update.sh /usr/local/bin/vikunja-update"
+    # Create convenience symlink
+    pct_exec "$CONTAINER_ID" bash -c "ln -sf /opt/vikunja-deploy/vikunja-update.sh /usr/local/bin/vikunja-update"
     
     log_success "Management scripts installed in container"
     
@@ -900,7 +899,7 @@ save_deployment_state() {
     local config_yaml="/etc/vikunja/deploy-config.yaml"
     
     # Create config directory in container
-    pct_exec "$CONTAINER_ID" "mkdir -p /etc/vikunja"
+    pct_exec "$CONTAINER_ID" bash -c "mkdir -p /etc/vikunja"
     
     # Generate YAML configuration
     local config_content="# Vikunja Deployment Configuration
@@ -943,12 +942,12 @@ paths:
   repo_branch: \"${REPO_BRANCH}\"
 "
     
-    # Write config to container
-    echo "$config_content" | pct_exec "$CONTAINER_ID" "cat > $config_yaml"
+    # Write config to container using heredoc
+    pct_exec "$CONTAINER_ID" bash -c "cat > $config_yaml" <<< "$config_content"
     
     log_debug "Configuration saved to container: $config_yaml"
     
-    # Also save minimal config on host for reference (optional)
+    # Also save minimal state on host for reference (optional)
     set_state "$INSTANCE_ID" "container_id" "$CONTAINER_ID"
     set_state "$INSTANCE_ID" "status" "running"
     set_state "$INSTANCE_ID" "deployed_version" "$commit"
