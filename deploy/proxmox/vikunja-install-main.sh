@@ -850,12 +850,14 @@ deploy_vikunja() {
     pct push "$CONTAINER_ID" "${SCRIPT_DIR}/lib/blue-green.sh" "/opt/vikunja-deploy/lib/blue-green.sh"
     pct push "$CONTAINER_ID" "${SCRIPT_DIR}/lib/backup-restore.sh" "/opt/vikunja-deploy/lib/backup-restore.sh"
     
-    # Copy templates
-    for template in "${SCRIPT_DIR}"/templates/*.{service,conf,sh,yaml} 2>/dev/null; do
+    # Copy templates (suppress errors if files don't match pattern)
+    shopt -s nullglob
+    for template in "${SCRIPT_DIR}"/templates/*.service "${SCRIPT_DIR}"/templates/*.conf "${SCRIPT_DIR}"/templates/*.sh "${SCRIPT_DIR}"/templates/*.yaml; do
         if [[ -f "$template" ]]; then
             pct push "$CONTAINER_ID" "$template" "/opt/vikunja-deploy/templates/$(basename "$template")"
         fi
     done
+    shopt -u nullglob
     
     # Make scripts executable in container
     pct_exec "$CONTAINER_ID" bash -c "chmod +x /opt/vikunja-deploy/vikunja-update.sh /opt/vikunja-deploy/lib/*.sh"

@@ -519,8 +519,29 @@ func (s *SQLiteImportService) importTeamMembers(sess *xorm.Session, sqliteDB *sq
 
 // importProjects imports project data from SQLite
 func (s *SQLiteImportService) importProjects(sess *xorm.Session, sqliteDB *sql.DB, opts ImportOptions) (int64, error) {
+	// Check which table name exists (old: lists, new: projects)
+	tableName := "projects"
+	exists, err := tableExists(sqliteDB, tableName)
+	if err != nil {
+		return 0, fmt.Errorf("failed to check if %s table exists: %w", tableName, err)
+	}
+	if !exists {
+		// Try old table name
+		tableName = "lists"
+		exists, err = tableExists(sqliteDB, tableName)
+		if err != nil {
+			return 0, fmt.Errorf("failed to check if %s table exists: %w", tableName, err)
+		}
+		if !exists {
+			if !opts.Quiet {
+				log.Info("No projects table found, skipping")
+			}
+			return 0, nil
+		}
+	}
+
 	// Count total projects for progress reporting
-	total, err := countTableRows(sqliteDB, "projects")
+	total, err := countTableRows(sqliteDB, tableName)
 	if err != nil {
 		return 0, fmt.Errorf("failed to count projects: %w", err)
 	}
@@ -533,15 +554,30 @@ func (s *SQLiteImportService) importProjects(sess *xorm.Session, sqliteDB *sql.D
 		}
 	}
 
-	rows, err := sqliteDB.Query(`
-		SELECT id, title, description, owner_id, identifier, 
-		       hex_color, is_archived, background_file_id, background_blur_hash,
-		       created, updated, parent_project_id, position
-		FROM projects
-		ORDER BY id
-	`)
+	// Build query with actual table name
+	// Note: Old "lists" table uses "list_id" for parent, new "projects" uses "parent_project_id"
+	var query string
+	if tableName == "lists" {
+		query = `
+			SELECT id, title, description, owner_id, identifier, 
+			       hex_color, is_archived, background_file_id, background_blur_hash,
+			       created, updated, parent_list_id, position
+			FROM lists
+			ORDER BY id
+		`
+	} else {
+		query = `
+			SELECT id, title, description, owner_id, identifier, 
+			       hex_color, is_archived, background_file_id, background_blur_hash,
+			       created, updated, parent_project_id, position
+			FROM projects
+			ORDER BY id
+		`
+	}
+
+	rows, err := sqliteDB.Query(query)
 	if err != nil {
-		return 0, fmt.Errorf("failed to query projects: %w", err)
+		return 0, fmt.Errorf("failed to query projects from %s: %w", tableName, err)
 	}
 	defer rows.Close()
 
@@ -781,13 +817,36 @@ func (s *SQLiteImportService) importTaskLabels(sess *xorm.Session, sqliteDB *sql
 		log.Info("Importing task-label associations...")
 	}
 
-	rows, err := sqliteDB.Query(`
-		SELECT id, task_id, label_id, created
-		FROM task_labels
-		ORDER BY id
-	`)
+	// Check which table name exists (old: task_labels, new: label_tasks)
+	tableName := "label_tasks"
+	exists, err := tableExists(sqliteDB, tableName)
 	if err != nil {
-		return 0, fmt.Errorf("failed to query task labels: %w", err)
+		return 0, fmt.Errorf("failed to check if %s table exists: %w", tableName, err)
+	}
+	if !exists {
+		// Try old table name
+		tableName = "task_labels"
+		exists, err = tableExists(sqliteDB, tableName)
+		if err != nil {
+			return 0, fmt.Errorf("failed to check if %s table exists: %w", tableName, err)
+		}
+		if !exists {
+			if !opts.Quiet {
+				log.Info("No task-label association table found, skipping")
+			}
+			return 0, nil
+		}
+	}
+
+	query := fmt.Sprintf(`
+		SELECT id, task_id, label_id, created
+		FROM %s
+		ORDER BY id
+	`, tableName)
+
+	rows, err := sqliteDB.Query(query)
+	if err != nil {
+		return 0, fmt.Errorf("failed to query task labels from %s: %w", tableName, err)
 	}
 	defer rows.Close()
 
@@ -1321,26 +1380,37 @@ func (s *SQLiteImportService) importLinkShares(sess *xorm.Session, sqliteDB *sql
 		log.Info("Importing link shares...")
 	}
 
-	// Check if table exists
-	exists, err := tableExists(sqliteDB, "link_shares")
+	// Check which table name exists (old: link_sharing, new: link_shares)
+	tableName := "link_shares"
+	exists, err := tableExists(sqliteDB, tableName)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("failed to check if %s table exists: %w", tableName, err)
 	}
 	if !exists {
-		if !opts.Quiet {
-			log.Info("Table link_shares does not exist, skipping")
+		// Try old table name
+		tableName = "link_sharing"
+		exists, err = tableExists(sqliteDB, tableName)
+		if err != nil {
+			return 0, fmt.Errorf("failed to check if %s table exists: %w", tableName, err)
 		}
-		return 0, nil
+		if !exists {
+			if !opts.Quiet {
+				log.Info("No link shares table found, skipping")
+			}
+			return 0, nil
+		}
 	}
 
-	rows, err := sqliteDB.Query(`
+	query := fmt.Sprintf(`
 		SELECT id, hash, name, project_id, permission, sharing_type, 
 		       password, shared_by_id, created, updated
-		FROM link_shares
+		FROM %s
 		ORDER BY id
-	`)
+	`, tableName)
+
+	rows, err := sqliteDB.Query(query)
 	if err != nil {
-		return 0, fmt.Errorf("failed to query link shares: %w", err)
+		return 0, fmt.Errorf("failed to query link shares from %s: %w", tableName, err)
 	}
 	defer rows.Close()
 
