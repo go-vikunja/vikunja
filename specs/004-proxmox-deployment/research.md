@@ -827,6 +827,78 @@ fi
 
 **Impact**: Without this fix, deployment fails at multiple steps (service enable, service start, nginx reload) even though the actual systemctl/nginx operations succeed.
 
+### 6.11 Database Type Name Mismatch (postgresql vs postgres)
+
+**Finding**: Backend fails to start with error "Unknown database type postgresql".
+
+**Root Cause**:
+Vikunja expects database type to be `"postgres"` but deployment script uses `"postgresql"` everywhere.
+
+**Evidence**:
+```
+time=2025-10-19T20:51:46.035Z level=ERROR msg="Unknown database type postgresql"
+```
+
+**Valid Vikunja database types** (from config-raw.json):
+- `sqlite`
+- `postgres` (NOT "postgresql")
+- `mysql`
+
+**Solution**:
+Changed all references from `"postgresql"` to `"postgres"` in:
+- Help text and documentation
+- Interactive prompts
+- Validation logic
+- Database setup case statements
+
+**Files Modified**:
+- `deploy/proxmox/vikunja-install-main.sh` (7 instances changed)
+
+**Impact**: Without this fix, PostgreSQL deployments fail immediately with "Unknown database type" error.
+
+### 6.11 Nginx Server Name - External Reverse Proxy Support
+
+**Finding**: When users deploy with an external reverse proxy (e.g., Traefik, Nginx Proxy Manager on Proxmox host), the nginx configuration only responds to the domain name in `server_name`, not the container IP. External proxies typically forward to `http://<container-ip>` while preserving the original `Host` header.
+
+**Root Cause**:
+- Nginx configuration: `server_name todo.vkm.mine.nu;`
+- External proxy sends: `Host: todo.vkm.mine.nu` → `http://192.168.50.64`
+- Nginx needs to accept both the domain AND the IP address to work with external proxies
+
+**Test Case**:
+```bash
+# Direct IP access works (no Host header constraint)
+curl http://192.168.50.64  # ✅ Serves Vikunja
+
+# Domain via external proxy fails (nginx rejects Host header mismatch)
+curl -H "Host: todo.vkm.mine.nu" http://192.168.50.64  # ❌ Would fail without fix
+```
+
+**Solution**:
+Updated `generate_nginx_config()` in `deploy/proxmox/lib/nginx-setup.sh`:
+1. Accept optional `container_ip` parameter (7th argument)
+2. Build `server_name` directive with both domain and IP: `server_name todo.vkm.mine.nu 192.168.50.64;`
+3. Strip CIDR notation from IP if present (e.g., `192.168.50.64/24` → `192.168.50.64`)
+4. **Add `default_server` directive** to `listen 80` and `listen 443` - nginx will respond to ANY request on these ports, regardless of Host header
+
+Updated call in `deploy/proxmox/vikunja-install-main.sh`:
+```bash
+generate_nginx_config "$CONTAINER_ID" "$DOMAIN" "$BACKEND_PORT_BLUE" \
+    "${WORKING_DIR}/frontend/dist" "" "" "$IP_ADDRESS"
+```
+
+**Why `default_server` is needed**:
+- External reverse proxies (HAProxy, Traefik, Nginx Proxy Manager) may not preserve Host headers
+- HAProxy on pfSense forwards HTTPS→HTTP without explicit Host header configuration
+- `default_server` makes nginx respond to ANY request hitting port 80/443, eliminating Host header requirements
+- Without it, nginx rejects requests that don't match `server_name` exactly
+
+**Impact**: 
+- Users with external reverse proxies (common in Proxmox/homelab setups) can now access Vikunja via domain
+- Works with HAProxy, Traefik, and other proxies without Host header configuration
+- Direct IP access continues to work
+- No impact on SSL/direct domain deployments
+
 ---
 
 ## Next Steps

@@ -18,7 +18,7 @@ readonly VIKUNJA_NGINX_SETUP_LIB_LOADED=1
 # ============================================================================
 
 # Generate nginx configuration for Vikunja
-# Usage: generate_nginx_config ct_id domain backend_port frontend_dir ssl_cert ssl_key
+# Usage: generate_nginx_config ct_id domain backend_port frontend_dir ssl_cert ssl_key container_ip
 # Returns: 0 on success, 1 on failure
 generate_nginx_config() {
     local ct_id="$1"
@@ -27,8 +27,18 @@ generate_nginx_config() {
     local frontend_dir="${4:-/opt/vikunja/frontend/dist}"
     local ssl_cert="${5:-}"
     local ssl_key="${6:-}"
+    local container_ip="${7:-}"
     
     log_info "Generating nginx configuration for ${domain}"
+    
+    # Build server_name directive (domain + IP if provided)
+    local server_name="$domain"
+    if [[ -n "$container_ip" ]]; then
+        # Strip CIDR notation if present
+        local ip_only="${container_ip%/*}"
+        server_name="$domain $ip_only"
+        log_debug "Server will respond to: ${server_name}"
+    fi
     
     local config_file="/etc/nginx/sites-available/vikunja"
     local use_ssl="false"
@@ -57,7 +67,7 @@ server {
 
 # HTTPS server
 server {
-    listen 443 ssl http2;
+    listen 443 ssl http2 default_server;
     server_name DOMAIN_PLACEHOLDER;
     
     ssl_certificate SSL_CERT_PLACEHOLDER;
@@ -103,7 +113,7 @@ map $http_upgrade $connection_upgrade {
 }
 
 server {
-    listen 80;
+    listen 80 default_server;
     server_name DOMAIN_PLACEHOLDER;
     
     client_max_body_size 20M;
@@ -138,7 +148,7 @@ EOF
     fi
     
     # Replace placeholders
-    nginx_config="${nginx_config//DOMAIN_PLACEHOLDER/$domain}"
+    nginx_config="${nginx_config//DOMAIN_PLACEHOLDER/$server_name}"
     nginx_config="${nginx_config//BACKEND_PORT_PLACEHOLDER/$backend_port}"
     nginx_config="${nginx_config//FRONTEND_DIR_PLACEHOLDER/$frontend_dir}"
     nginx_config="${nginx_config//SSL_CERT_PLACEHOLDER/$ssl_cert}"

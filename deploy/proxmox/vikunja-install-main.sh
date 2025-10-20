@@ -42,6 +42,7 @@ DOMAIN=""
 IP_ADDRESS=""
 GATEWAY=""
 ADMIN_EMAIL=""
+USE_HTTPS="false"
 CPU_CORES="2"
 MEMORY_MB="4096"
 DISK_GB="20"
@@ -85,13 +86,14 @@ OPTIONS:
 CONFIGURATION OPTIONS:
     --instance-id ID        Instance identifier (default: vikunja-main)
     --container-id ID       LXC container ID (100-999, default: auto)
-    --database TYPE         Database type: sqlite|postgresql|mysql (default: sqlite)
-    --db-host HOST          Database host (required for postgresql/mysql)
+    --database TYPE         Database type: sqlite|postgres|mysql (default: sqlite)
+    --db-host HOST          Database host (required for postgres/mysql)
     --db-port PORT          Database port (default: 5432 for pg, 3306 for mysql)
     --db-name NAME          Database name (default: vikunja)
     --db-user USER          Database username
     --db-pass PASS          Database password
     --domain DOMAIN         Domain name (e.g., vikunja.example.com)
+    --https                 Use HTTPS URLs (for external reverse proxy setups)
     --ip-address IP/CIDR    IP address with CIDR (e.g., 192.168.1.100/24)
     --gateway IP            Gateway IP address
     --email EMAIL           Administrator email
@@ -109,7 +111,7 @@ EXAMPLES:
        --gateway 192.168.1.1 --email admin@example.com
     
     # Non-interactive installation with PostgreSQL
-    $0 --non-interactive --instance-id prod --database postgresql \\
+    $0 --non-interactive --instance-id prod --database postgres \\
        --db-host 192.168.1.50 --db-port 5432 --db-name vikunja \\
        --db-user vikunja --db-pass secret --domain vikunja.example.com \\
        --ip-address 192.168.1.100/24 --gateway 192.168.1.1 \\
@@ -194,6 +196,10 @@ parse_arguments() {
                 ADMIN_EMAIL="$2"
                 shift 2
                 ;;
+            --https)
+                USE_HTTPS="true"
+                shift
+                ;;
             --cpu-cores)
                 CPU_CORES="$2"
                 shift 2
@@ -248,9 +254,9 @@ prompt_configuration() {
     echo "  2) PostgreSQL (recommended for production)"
     echo "  3) MySQL"
     read -p "Select database type [1]: " db_choice
-    case "${db_choice:-1}" in
+    case "$db_choice" in
         1) DATABASE_TYPE="sqlite" ;;
-        2) DATABASE_TYPE="postgresql" ;;
+        2) DATABASE_TYPE="postgres" ;;
         3) DATABASE_TYPE="mysql" ;;
         *) DATABASE_TYPE="sqlite" ;;
     esac
@@ -259,7 +265,7 @@ prompt_configuration() {
     if [[ "$DATABASE_TYPE" != "sqlite" ]]; then
         read -p "Database host: " DATABASE_HOST
         
-        if [[ "$DATABASE_TYPE" == "postgresql" ]]; then
+        if [[ "$DATABASE_TYPE" == "postgres" ]]; then
             read -p "Database port [5432]: " input
             DATABASE_PORT="${input:-5432}"
         else
@@ -278,6 +284,21 @@ prompt_configuration() {
     # Network configuration
     echo ""
     read -p "Domain name (e.g., vikunja.example.com): " DOMAIN
+    
+    # Ask about HTTPS if domain is provided
+    if [[ -n "$DOMAIN" ]]; then
+        echo ""
+        echo "HTTPS Configuration:"
+        echo "  If you're using an external reverse proxy with SSL/TLS (e.g., Caddy, Traefik),"
+        echo "  or will configure Let's Encrypt, answer 'yes' here."
+        read -p "Will you access Vikunja via HTTPS? [y/N]: " use_https
+        if [[ "$use_https" =~ ^[Yy] ]]; then
+            USE_HTTPS="true"
+        else
+            USE_HTTPS="false"
+        fi
+    fi
+    
     read -p "IP address with CIDR (e.g., 192.168.1.100/24): " IP_ADDRESS
     read -p "Gateway IP: " GATEWAY
     
@@ -361,7 +382,7 @@ validate_configuration() {
         sqlite)
             # SQLite requires no external connection
             ;;
-        postgresql|mysql)
+        postgres|mysql)
             if [[ -z "$DATABASE_HOST" ]]; then
                 log_error "Database host is required for ${DATABASE_TYPE}"
                 validation_failed=true
@@ -376,7 +397,7 @@ validate_configuration() {
             fi
             # Set default port if not provided
             if [[ -z "$DATABASE_PORT" ]]; then
-                if [[ "$DATABASE_TYPE" == "postgresql" ]]; then
+                if [[ "$DATABASE_TYPE" == "postgres" ]]; then
                     DATABASE_PORT=5432
                     log_info "Using default PostgreSQL port: ${DATABASE_PORT}"
                 else
@@ -587,7 +608,7 @@ deploy_vikunja() {
                 return 1
             fi
             ;;
-        postgresql)
+        postgres)
             if ! setup_postgresql "$CONTAINER_ID" "$DATABASE_HOST" "$DATABASE_PORT" \
                 "$DATABASE_NAME" "$DATABASE_USER" "$DATABASE_PASS"; then
                 progress_fail "Failed to setup PostgreSQL"
@@ -629,10 +650,15 @@ deploy_vikunja() {
     
     # Construct frontend URL from IP or domain
     local frontend_url
+    local protocol="http"
+    if [[ "$USE_HTTPS" == "true" ]]; then
+        protocol="https"
+    fi
+    
     if [[ -n "$DOMAIN" ]]; then
-        frontend_url="http://${DOMAIN}"
+        frontend_url="${protocol}://${DOMAIN}"
     else
-        # Extract IP without CIDR notation
+        # Extract IP without CIDR notation (IPs are always http)
         frontend_url="http://${IP_ADDRESS%/*}"
     fi
     
@@ -676,7 +702,7 @@ deploy_vikunja() {
     
     # Configure nginx
     if ! generate_nginx_config "$CONTAINER_ID" "$DOMAIN" "$BACKEND_PORT_BLUE" \
-        "${WORKING_DIR}/frontend/dist"; then
+        "${WORKING_DIR}/frontend/dist" "" "" "$IP_ADDRESS"; then
         progress_fail "Failed to generate nginx config"
         return 1
     fi

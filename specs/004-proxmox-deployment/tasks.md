@@ -131,7 +131,7 @@
 
 **Goal**: Validate all fixes from initial deployment testing before proceeding to Phase 4.
 
-**Context**: During manual testing of Phase 1-3, nine critical issues were discovered and fixed:
+**Context**: During manual testing of Phase 1-3, ten critical issues were discovered and fixed:
 1. Node.js version incompatibility (18.20.8 → 22.18.0 for Vite 7.1.10)
 2. Repository URL using upstream instead of aroige fork (missing mcp-server/)
 3. MCP build using pnpm instead of npm (package-lock.json vs pnpm-lock.yaml mismatch)
@@ -141,6 +141,7 @@
 7. User registration disabled (missing VIKUNJA_SERVICE_ENABLEREGISTRATION)
 8. Database configuration hardcoded to SQLite (PostgreSQL/MySQL configuration not passed to service generation)
 9. Service enable/start/nginx reload functions failing despite success (tee pipe error handling in all pct_exec calls)
+10. Database type name mismatch ("postgresql" used instead of "postgres" that Vikunja expects)
 
 **Independent Test**: Execute clean deployment from scratch using fixed scripts, verify all components start correctly with proper service names and API auto-detection working.
 
@@ -178,7 +179,22 @@
 - [ ] T042R19 [TEST] Test PostgreSQL deployment: verify all VIKUNJA_DATABASE_* environment variables set correctly
 - [ ] T042R20 [TEST] Test MySQL deployment: verify all VIKUNJA_DATABASE_* environment variables set correctly with port 3306
 - [ ] T042R21 [TEST] Verify default database ports applied correctly (PostgreSQL: 5432, MySQL: 3306) when not explicitly provided
-- [ ] T042R22 [TEST] Document any remaining issues in specs/004-proxmox-deployment/research.md Section 6.x
+- [ ] T042R22 [TEST] Verify nginx server_name includes both domain and container IP for external reverse proxy support
+- [ ] T042R23 [TEST] Document any remaining issues in specs/004-proxmox-deployment/research.md Section 6.x
+
+**Fixes Applied During Regression Testing** (12 total):
+1. **Node.js Version** - Changed default from 18 to 22 (Vite 7.1.10 requirement)
+2. **Repository URL** - Fixed to use aroige/vikunja.git (includes mcp-server/)
+3. **MCP Build Tool** - Changed from pnpm to npm (package-lock.json present)
+4. **Service Naming** - Fixed double-prefixing ("vikunja-backend-blue-blue" → "vikunja-backend-blue")
+5. **Frontend URL Config** - Corrected to VIKUNJA_SERVICE_PUBLICURL (not FRONTENDURL)
+6. **Nginx Proxy Config** - Fixed /api trailing slash, WebSocket path, upgrade headers
+7. **User Registration** - Added VIKUNJA_SERVICE_ENABLEREGISTRATION=true to backend service
+8. **Database Config Passing** - Extended service generation to accept database parameters
+9. **Process Substitution Failures** - Replaced `| tee >(log_debug)` with command substitution pattern (14 functions)
+10. **Database Type Naming** - Changed "postgresql" to "postgres" (Vikunja's expected value)
+11. **Nginx External Proxy** - Added container IP to server_name for external reverse proxy support
+12. **HTTPS Protocol Detection** - Added USE_HTTPS flag and --https option for external SSL/TLS setups (backend now advertises correct protocol in VIKUNJA_SERVICE_PUBLICURL)
 
 **Checkpoint**: All Phase 1-3 fixes validated via clean deployment. No regression issues found. Ready for Phase 4 implementation.
 
