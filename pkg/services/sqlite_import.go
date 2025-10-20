@@ -535,7 +535,7 @@ func (s *SQLiteImportService) importProjects(sess *xorm.Session, sqliteDB *sql.D
 
 	rows, err := sqliteDB.Query(`
 		SELECT id, title, description, owner_id, identifier, 
-		       hex_color, is_archived, background_information,
+		       hex_color, is_archived, background_file_id, background_blur_hash,
 		       created, updated, parent_project_id, position
 		FROM projects
 		ORDER BY id
@@ -552,12 +552,13 @@ func (s *SQLiteImportService) importProjects(sess *xorm.Session, sqliteDB *sql.D
 		var position sql.NullFloat64
 		var identifier sql.NullString
 		var hexColor sql.NullString
-		var backgroundInformation sql.NullString
+		var backgroundFileID sql.NullInt64
+		var backgroundBlurHash sql.NullString
 
 		err := rows.Scan(
 			&project.ID, &project.Title, &project.Description, &project.OwnerID,
 			&identifier, &hexColor, &project.IsArchived,
-			&backgroundInformation, &project.Created, &project.Updated,
+			&backgroundFileID, &backgroundBlurHash, &project.Created, &project.Updated,
 			&parentProjectID, &position,
 		)
 		if err != nil {
@@ -577,8 +578,11 @@ func (s *SQLiteImportService) importProjects(sess *xorm.Session, sqliteDB *sql.D
 		if hexColor.Valid {
 			project.HexColor = hexColor.String
 		}
-		if backgroundInformation.Valid {
-			project.BackgroundInformation = backgroundInformation.String
+		if backgroundFileID.Valid {
+			project.BackgroundFileID = backgroundFileID.Int64
+		}
+		if backgroundBlurHash.Valid {
+			project.BackgroundBlurHash = backgroundBlurHash.String
 		}
 
 		if !opts.DryRun {

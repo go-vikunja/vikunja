@@ -1,0 +1,33 @@
+[Unit]
+Description=Vikunja MCP Server ({COLOR})
+Documentation=https://vikunja.io/docs
+After=network.target vikunja-backend-{COLOR}.service
+Wants=vikunja-backend-{COLOR}.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory={WORKING_DIR}/mcp-server
+ExecStart=/usr/bin/node {WORKING_DIR}/mcp-server/dist/index.js
+
+# Environment variables
+Environment="NODE_ENV=production"
+Environment="PORT={PORT}"
+Environment="VIKUNJA_URL=http://localhost:{BACKEND_PORT}"
+
+# Restart configuration
+Restart=always
+RestartSec=10
+StartLimitInterval=0
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=vikunja-mcp-{COLOR}
+
+[Install]
+WantedBy=multi-user.target

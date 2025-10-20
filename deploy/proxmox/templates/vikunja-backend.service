@@ -1,0 +1,39 @@
+[Unit]
+Description=Vikunja Backend Service ({COLOR})
+Documentation=https://vikunja.io/docs
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory={WORKING_DIR}
+ExecStart={WORKING_DIR}/vikunja
+
+# Environment variables
+Environment="VIKUNJA_SERVICE_INTERFACE=:{PORT}"
+Environment="VIKUNJA_SERVICE_FRONTENDURL=http://localhost:{PORT}"
+Environment="VIKUNJA_DATABASE_TYPE={DB_TYPE}"
+Environment="VIKUNJA_DATABASE_PATH={DB_PATH}"
+Environment="VIKUNJA_DATABASE_HOST={DB_HOST}"
+Environment="VIKUNJA_DATABASE_PORT={DB_PORT}"
+Environment="VIKUNJA_DATABASE_DATABASE={DB_NAME}"
+Environment="VIKUNJA_DATABASE_USER={DB_USER}"
+Environment="VIKUNJA_DATABASE_PASSWORD={DB_PASS}"
+Environment="VIKUNJA_SERVICE_ROOTPATH=/opt/vikunja"
+
+# Restart configuration
+Restart=always
+RestartSec=10
+StartLimitInterval=0
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=vikunja-backend-{COLOR}
+
+[Install]
+WantedBy=multi-user.target

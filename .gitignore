@@ -2,10 +2,11 @@
 .idea/*/*
 .idea/httpRequests
 .history/
+.github/
+.specify/
 /api
 /server.log
 /vikunja_test
-/specs
 /frontend/.pnpm-store/
 *.out
 vikunja-test
@@ -21,7 +22,6 @@ Run
 dist/
 cover.*
 /vikunja
-Test_*
 bin/
 secrets
 *.deb
@@ -55,4 +55,10 @@ devenv.local.nix
 /.claude/
 PLAN.md
 /.crush/
+
+# Deployment temporary files
+deploy/proxmox/*.lock
+deploy/proxmox/*.log
+deploy/proxmox/tests/*.db
+deploy/proxmox/tests/*.log
 

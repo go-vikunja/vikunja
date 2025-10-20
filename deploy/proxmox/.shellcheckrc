@@ -1,0 +1,17 @@
+# ShellCheck configuration for Vikunja Proxmox Deployment Scripts
+# Documentation: https://github.com/koalaman/shellcheck/wiki/Directive
+
+# Disable warnings for external sources (we validate them separately)
+disable=SC1090,SC1091
+
+# Disable warning about unused variables starting with underscore
+disable=SC2034
+
+# Enable checking of sourced files in the same directory
+source-path=SCRIPTDIR
+
+# Set shell dialect to bash
+shell=bash
+
+# Require Bash 4.0+ features
+enable=all
