@@ -110,6 +110,7 @@ EOF
     
     local files=(
         "vikunja-install-main.sh"
+        "vikunja-update.sh"
     )
     
     for file in "${files[@]}"; do
@@ -130,6 +131,8 @@ EOF
         "lib/service-setup.sh"
         "lib/nginx-setup.sh"
         "lib/health-check.sh"
+        "lib/blue-green.sh"
+        "lib/backup-restore.sh"
     )
     
     for file in "${lib_files[@]}"; do
@@ -164,6 +167,7 @@ EOF
     
     # Make installer executable
     chmod +x "${INSTALL_DIR}/vikunja-install-main.sh"
+    chmod +x "${INSTALL_DIR}/vikunja-update.sh"
     
     # Execute the real installer
     log_info "Launching main installer..."

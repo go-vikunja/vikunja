@@ -1051,4 +1051,84 @@ checkout_commit() {
     return 0
 }
 
+# ============================================================================
+# Database Migration Functions (User Story 2 - Updates)
+# ============================================================================
+
+# run_migrations - Execute Vikunja database migrations
+# Usage: run_migrations ct_id db_type db_config
+# Returns: 0 on success, 1 on failure
+run_migrations() {
+    local ct_id="$1"
+    local db_type="$2"
+    local db_config="$3"
+    
+    if [[ -z "$ct_id" || -z "$db_type" ]]; then
+        log_error "run_migrations: Missing required arguments"
+        return 1
+    fi
+    
+    log_info "Running database migrations..."
+    
+    local vikunja_binary="/opt/vikunja/vikunja"
+    
+    # Verify vikunja binary exists
+    if ! pct_exec "$ct_id" "test -f $vikunja_binary"; then
+        log_error "Vikunja binary not found: $vikunja_binary"
+        return 1
+    fi
+    
+    # Run migrations using Vikunja's built-in migrate command
+    log_debug "Executing: $vikunja_binary migrate"
+    
+    if ! pct_exec "$ct_id" "cd /opt/vikunja && $vikunja_binary migrate"; then
+        log_error "Database migration failed"
+        return 1
+    fi
+    
+    log_success "Database migrations completed"
+    return 0
+}
+
+# check_migration_status - Verify migration table status
+# Usage: check_migration_status ct_id db_type db_config
+# Returns: 0 on success, prints migration count to stdout
+check_migration_status() {
+    local ct_id="$1"
+    local db_type="$2"
+    local db_config="$3"
+    
+    if [[ -z "$ct_id" || -z "$db_type" ]]; then
+        log_error "check_migration_status: Missing required arguments"
+        return 1
+    fi
+    
+    log_debug "Checking migration status..."
+    
+    local migration_count=0
+    
+    case "$db_type" in
+        sqlite)
+            local db_path="$db_config"
+            migration_count=$(pct_exec "$ct_id" "sqlite3 $db_path 'SELECT COUNT(*) FROM migration;' 2>/dev/null" || echo "0")
+            ;;
+        postgresql|postgres)
+            IFS=':' read -r db_host db_port db_name db_user db_password <<< "$db_config"
+            migration_count=$(pct_exec "$ct_id" "PGPASSWORD='$db_password' psql -h $db_host -p $db_port -U $db_user -d $db_name -t -c 'SELECT COUNT(*) FROM migration;' 2>/dev/null" | tr -d '[:space:]' || echo "0")
+            ;;
+        mysql)
+            IFS=':' read -r db_host db_port db_name db_user db_password <<< "$db_config"
+            migration_count=$(pct_exec "$ct_id" "mysql -h $db_host -P $db_port -u $db_user -p'$db_password' -D $db_name -sN -e 'SELECT COUNT(*) FROM migration;' 2>/dev/null" || echo "0")
+            ;;
+        *)
+            log_error "Unsupported database type: $db_type"
+            return 1
+            ;;
+    esac
+    
+    echo "$migration_count"
+    log_debug "Applied migrations: $migration_count"
+    return 0
+}
+
 log_debug "LXC setup library loaded"

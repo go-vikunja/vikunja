@@ -166,21 +166,21 @@
 - [x] T042R6 [TEST] Verify nginx configuration has correct API proxy (`location /api` without trailing slash)
 - [x] T042R7 [TEST] Verify WebSocket path is `/api/v1/ws` and upgrade mapping directive present
 - [ ] T042R8 [TEST] Verify frontend loads and connects to API without manual URL configuration (window.API_URL should auto-detect)
-- [ ] T042R9 [TEST] Verify user registration is enabled (VIKUNJA_SERVICE_ENABLEREGISTRATION=true in backend service)
+- [x] T042R9 [TEST] Verify user registration is enabled (VIKUNJA_SERVICE_ENABLEREGISTRATION=true in backend service)
 - [ ] T042R10 [TEST] Verify health checks pass for all components (backend, frontend, MCP server)
-- [ ] T042R11 [TEST] Verify user can successfully register a new account via /register endpoint
-- [ ] T042R12 [TEST] Verify VIKUNJA_SERVICE_PUBLICURL is set (not the non-existent VIKUNJA_SERVICE_FRONTENDURL)
-- [ ] T042R13 [TEST] Verify VIKUNJA_SERVICE_ROOTPATH set to /opt/vikunja in backend service
-- [ ] T042R14 [TEST] Verify VIKUNJA_DATABASE_TYPE=sqlite and VIKUNJA_DATABASE_PATH=/opt/vikunja/vikunja.db
-- [ ] T042R15 [TEST] Verify database file created at correct location /opt/vikunja/vikunja.db
-- [ ] T042R16 [TEST] Verify /api/v1/info returns correct frontendUrl matching deployment domain/IP
-- [ ] T042R17 [TEST] Verify database configuration passed correctly to systemd service (all DB types)
+- [x] T042R11 [TEST] Verify user can successfully register a new account via /register endpoint
+- [x] T042R12 [TEST] Verify VIKUNJA_SERVICE_PUBLICURL is set (not the non-existent VIKUNJA_SERVICE_FRONTENDURL)
+- [x] T042R13 [TEST] Verify VIKUNJA_SERVICE_ROOTPATH set to /opt/vikunja in backend service
+- [x] T042R14 [TEST] Verify VIKUNJA_DATABASE_TYPE=sqlite and VIKUNJA_DATABASE_PATH=/opt/vikunja/vikunja.db
+- [x] T042R15 [TEST] Verify database file created at correct location /opt/vikunja/vikunja.db
+- [x] T042R16 [TEST] Verify /api/v1/info returns correct frontendUrl matching deployment domain/IP
+- [x] T042R17 [TEST] Verify database configuration passed correctly to systemd service (all DB types)
 - [ ] T042R18 [TEST] Test SQLite deployment: verify VIKUNJA_DATABASE_TYPE=sqlite and VIKUNJA_DATABASE_PATH set
 - [ ] T042R19 [TEST] Test PostgreSQL deployment: verify all VIKUNJA_DATABASE_* environment variables set correctly
 - [ ] T042R20 [TEST] Test MySQL deployment: verify all VIKUNJA_DATABASE_* environment variables set correctly with port 3306
-- [ ] T042R21 [TEST] Verify default database ports applied correctly (PostgreSQL: 5432, MySQL: 3306) when not explicitly provided
-- [ ] T042R22 [TEST] Verify nginx server_name includes both domain and container IP for external reverse proxy support
-- [ ] T042R23 [TEST] Document any remaining issues in specs/004-proxmox-deployment/research.md Section 6.x
+- [x] T042R21 [TEST] Verify default database ports applied correctly (PostgreSQL: 5432, MySQL: 3306) when not explicitly provided
+- [x] T042R22 [TEST] Verify nginx server_name includes both domain and container IP for external reverse proxy support
+- [x] T042R23 [TEST] Document any remaining issues in specs/004-proxmox-deployment/research.md Section 6.x
 
 **Fixes Applied During Regression Testing** (13 total):
 1. **Node.js Version** - Changed default from 18 to 22 (Vite 7.1.10 requirement)
@@ -209,31 +209,31 @@
 
 ### Integration Tests for User Story 2
 
-- [ ] T043 [P] [US2] Create test-update-cycle.sh integration test in deploy/proxmox/tests/integration/ for successful update scenario
-- [ ] T044 [P] [US2] Create test-rollback.sh integration test in deploy/proxmox/tests/integration/ for automatic rollback on failure
-- [ ] T045 [P] [US2] Create test-migration.sh integration test in deploy/proxmox/tests/integration/ for database migration execution
-- [ ] T046 [P] [US2] Create test-concurrent-update.sh integration test in deploy/proxmox/tests/integration/ for lock mechanism validation
+- [X] T043 [P] [US2] Create test-update-cycle.sh integration test in deploy/proxmox/tests/integration/ for successful update scenario
+- [X] T044 [P] [US2] Create test-rollback.sh integration test in deploy/proxmox/tests/integration/ for automatic rollback on failure
+- [X] T045 [P] [US2] Create test-migration.sh integration test in deploy/proxmox/tests/integration/ for database migration execution
+- [X] T046 [P] [US2] Create test-concurrent-update.sh integration test in deploy/proxmox/tests/integration/ for lock mechanism validation
 
 ### Library Functions for User Story 2
 
-- [ ] T047 [P] [US2] Implement blue-green deployment functions (determine_inactive_color, start_on_inactive_port, switch_traffic, stop_old_deployment) in deploy/proxmox/lib/blue-green.sh
-- [ ] T048 [P] [US2] Implement git operations functions (check_for_updates, pull_latest, get_commit_hash, checkout_commit) in deploy/proxmox/lib/lxc-setup.sh
-- [ ] T049 [P] [US2] Implement backup functions (create_pre_migration_backup, verify_backup_integrity, cleanup_old_backups) in deploy/proxmox/lib/backup-restore.sh
-- [ ] T050 [US2] Implement migration execution functions (run_migrations, check_migration_status, restore_from_backup) in deploy/proxmox/lib/lxc-setup.sh
-- [ ] T051 [US2] Implement rollback functions (rollback_to_blue, rollback_to_green, cleanup_failed_deployment) in deploy/proxmox/lib/blue-green.sh
-- [ ] T052 [P] [US2] Implement nginx upstream switching functions (update_nginx_upstream, test_nginx_config) in deploy/proxmox/lib/nginx-setup.sh
-- [ ] T053 [P] [US2] Implement health check validation functions (wait_for_healthy, retry_with_timeout, full_health_check) in deploy/proxmox/lib/health-check.sh
+- [X] T047 [P] [US2] Implement blue-green deployment functions (determine_inactive_color, start_on_inactive_port, switch_traffic, stop_old_deployment) in deploy/proxmox/lib/blue-green.sh
+- [X] T048 [P] [US2] Implement git operations functions (check_for_updates, pull_latest, get_commit_hash, checkout_commit) in deploy/proxmox/lib/lxc-setup.sh
+- [X] T049 [P] [US2] Implement backup functions (create_pre_migration_backup, verify_backup_integrity, cleanup_old_backups) in deploy/proxmox/lib/backup-restore.sh
+- [X] T050 [US2] Implement migration execution functions (run_migrations, check_migration_status, restore_from_backup) in deploy/proxmox/lib/lxc-setup.sh
+- [X] T051 [US2] Implement rollback functions (rollback_to_blue, rollback_to_green, cleanup_failed_deployment) in deploy/proxmox/lib/blue-green.sh
+- [X] T052 [P] [US2] Implement nginx upstream switching functions (update_nginx_upstream, test_nginx_config) in deploy/proxmox/lib/nginx-setup.sh
+- [X] T053 [P] [US2] Implement health check validation functions (wait_for_healthy, retry_with_timeout, full_health_check) in deploy/proxmox/lib/health-check.sh
 
 ### Main Update Script for User Story 2
 
-- [ ] T054 [US2] Create vikunja-update.sh main script with argument parsing in deploy/proxmox/
-- [ ] T055 [US2] Implement update detection logic (check git for new commits, show changes) in deploy/proxmox/vikunja-update.sh
-- [ ] T056 [US2] Implement pre-update backup creation in deploy/proxmox/vikunja-update.sh
-- [ ] T057 [US2] Implement blue-green update orchestration (determine color → pull → build → migrate → start inactive → health check → switch → stop old) in deploy/proxmox/vikunja-update.sh
-- [ ] T058 [US2] Implement automatic rollback on health check failure in deploy/proxmox/vikunja-update.sh
-- [ ] T059 [US2] Implement version mismatch detection and prevention in deploy/proxmox/vikunja-update.sh
-- [ ] T060 [US2] Implement concurrent update prevention (lock checking) in deploy/proxmox/vikunja-update.sh
-- [ ] T061 [US2] Implement update summary output (time, downtime, versions, rollback availability) in deploy/proxmox/vikunja-update.sh
+- [X] T054 [US2] Create vikunja-update.sh main script with argument parsing in deploy/proxmox/ + make sure bootstrap downloads this file
+- [X] T055 [US2] Implement update detection logic (check git for new commits, show changes) in deploy/proxmox/vikunja-update.sh
+- [X] T056 [US2] Implement pre-update backup creation in deploy/proxmox/vikunja-update.sh
+- [X] T057 [US2] Implement blue-green update orchestration (determine color → pull → build → migrate → start inactive → health check → switch → stop old) in deploy/proxmox/vikunja-update.sh
+- [X] T058 [US2] Implement automatic rollback on health check failure in deploy/proxmox/vikunja-update.sh
+- [X] T059 [US2] Implement version mismatch detection and prevention in deploy/proxmox/vikunja-update.sh
+- [X] T060 [US2] Implement concurrent update prevention (lock checking) in deploy/proxmox/vikunja-update.sh
+- [X] T061 [US2] Implement update summary output (time, downtime, versions, rollback availability) in deploy/proxmox/vikunja-update.sh
 
 **Checkpoint**: User Story 2 complete - can update deployments with zero downtime and automatic rollback. Run integration tests to verify.
 
@@ -260,7 +260,7 @@
 
 ### Management Command Implementation for User Story 3
 
-- [ ] T069 [US3] Create vikunja-manage.sh main script with subcommand routing in deploy/proxmox/
+- [ ] T069 [US3] Create vikunja-manage.sh main script with subcommand routing in deploy/proxmox/ + make sure bootstrap downloads this file
 - [ ] T070 [US3] Implement reconfigure subcommand with interactive mode in deploy/proxmox/vikunja-manage.sh
 - [ ] T071 [US3] Implement configuration validation before applying changes in deploy/proxmox/vikunja-manage.sh
 - [ ] T072 [US3] Implement selective configuration update logic in deploy/proxmox/vikunja-manage.sh
