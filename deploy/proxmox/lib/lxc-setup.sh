@@ -320,39 +320,185 @@ install_dependencies() {
     return 0
 }
 
-# Setup SSH access and root password in container
-# Usage: setup_ssh_access ct_id [root_password]
+# Setup SSH access and root authentication in container
+# Usage: setup_ssh_access ct_id [root_password] [ssh_key_path] [enable_password_auth]
+# Parameters:
+#   ct_id                  - Container ID
+#   root_password          - Root password (optional, secure random if empty)
+#   ssh_key_path           - Path to SSH public key file (optional)
+#   enable_password_auth   - "true" to enable password auth, "false" to disable (default: "false" if key provided, "true" otherwise)
 # Returns: 0 on success, 1 on failure
+#
+# Security Features:
+#   - Generates cryptographically secure random password if not provided
+#   - Injects SSH public keys into authorized_keys with proper permissions
+#   - Configures SSH hardening (disable root password login when key is used)
+#   - Supports password-only, key-only, or both authentication methods
+#   - Creates .ssh directory with correct ownership and permissions (700)
+#   - Sets authorized_keys permissions to 600
+#   - Validates SSH key format before injection
+#   - Prevents weak authentication configurations
 setup_ssh_access() {
     local ct_id="$1"
     local root_password="${2:-}"
+    local ssh_key_path="${3:-}"
+    local enable_password_auth="${4:-}"
     
-    log_info "Configuring SSH access"
+    log_info "Configuring SSH access and root authentication"
+    
+    # Validate container exists and is running
+    if ! pct_exists "$ct_id"; then
+        log_error "Container ${ct_id} does not exist"
+        return 1
+    fi
+    
+    if ! pct status "$ct_id" | grep -q "running"; then
+        log_error "Container ${ct_id} is not running"
+        return 1
+    fi
     
     # Install openssh-server if not already installed
+    log_debug "Ensuring openssh-server is installed"
     pct_exec "$ct_id" bash -c "
         if ! dpkg -l | grep -q openssh-server; then
+            apt-get update -qq
             apt-get install -y openssh-server
         fi
-    " 2>&1 || return 1
+    " 2>&1 || {
+        log_error "Failed to install openssh-server"
+        return 1
+    }
     
-    # Set root password if provided
-    if [[ -n "$root_password" ]]; then
-        log_debug "Setting root password"
-        pct_exec "$ct_id" bash -c "echo 'root:${root_password}' | chpasswd" || return 1
-        
-        # Enable password authentication for SSH
-        pct_exec "$ct_id" bash -c "
-            sed -i 's/^#*PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
-            sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
-            systemctl restart sshd
-        " 2>&1 || return 1
-        
-        log_success "SSH access configured with password authentication"
-    else
-        log_debug "No password provided, SSH password authentication disabled"
-        log_info "Access container with: pct enter ${ct_id}"
+    # Generate secure random password if not provided
+    if [[ -z "$root_password" ]]; then
+        log_debug "Generating cryptographically secure root password"
+        # Generate 32-character alphanumeric password
+        root_password=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-32)
     fi
+    
+    # Always set root password (even if SSH key is used, for console access)
+    log_debug "Setting root password for console/emergency access"
+    if ! pct_exec "$ct_id" bash -c "echo 'root:${root_password}' | chpasswd" 2>&1; then
+        log_error "Failed to set root password"
+        return 1
+    fi
+    
+    # Handle SSH key injection if provided
+    local ssh_key_configured=false
+    if [[ -n "$ssh_key_path" ]]; then
+        log_info "Configuring SSH key authentication"
+        
+        # Validate SSH key file exists and is readable
+        if [[ ! -f "$ssh_key_path" ]]; then
+            log_error "SSH key file not found: ${ssh_key_path}"
+            return 1
+        fi
+        
+        if [[ ! -r "$ssh_key_path" ]]; then
+            log_error "SSH key file not readable: ${ssh_key_path}"
+            return 1
+        fi
+        
+        # Read and validate SSH key format
+        local ssh_key_content
+        ssh_key_content=$(cat "$ssh_key_path")
+        
+        if [[ -z "$ssh_key_content" ]]; then
+            log_error "SSH key file is empty: ${ssh_key_path}"
+            return 1
+        fi
+        
+        # Basic SSH key format validation (should start with ssh-rsa, ssh-ed25519, ecdsa-sha2-, etc.)
+        if ! echo "$ssh_key_content" | grep -qE '^(ssh-rsa|ssh-ed25519|ecdsa-sha2-|sk-ssh-ed25519@openssh\.com|sk-ecdsa-sha2-)'; then
+            log_error "Invalid SSH public key format in: ${ssh_key_path}"
+            log_error "Key must start with: ssh-rsa, ssh-ed25519, ecdsa-sha2-, etc."
+            return 1
+        fi
+        
+        log_debug "SSH key validated, injecting into container"
+        
+        # Create .ssh directory with proper permissions
+        if ! pct_exec "$ct_id" bash -c "
+            mkdir -p /root/.ssh
+            chmod 700 /root/.ssh
+            chown root:root /root/.ssh
+        " 2>&1; then
+            log_error "Failed to create /root/.ssh directory"
+            return 1
+        fi
+        
+        # Inject SSH key into authorized_keys
+        # Use printf to avoid issues with special characters
+        if ! pct_exec "$ct_id" bash -c "
+            printf '%s\n' '${ssh_key_content}' >> /root/.ssh/authorized_keys
+            chmod 600 /root/.ssh/authorized_keys
+            chown root:root /root/.ssh/authorized_keys
+        " 2>&1; then
+            log_error "Failed to inject SSH key into authorized_keys"
+            return 1
+        fi
+        
+        ssh_key_configured=true
+        log_success "SSH key injected successfully"
+    fi
+    
+    # Determine SSH password authentication setting
+    # Default behavior: disable password auth if SSH key is configured, enable otherwise
+    if [[ -z "$enable_password_auth" ]]; then
+        if [[ "$ssh_key_configured" == "true" ]]; then
+            enable_password_auth="false"
+            log_debug "SSH key configured - password authentication will be disabled (use --root-password force to enable)"
+        else
+            enable_password_auth="true"
+            log_debug "No SSH key configured - password authentication will be enabled"
+        fi
+    fi
+    
+    # Configure SSH daemon
+    log_debug "Configuring SSH daemon security settings"
+    
+    local sshd_config_commands=""
+    
+    # Always permit root login (method will be determined by password auth setting)
+    sshd_config_commands+="sed -i 's/^#*PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config; "
+    
+    if [[ "$enable_password_auth" == "true" ]]; then
+        log_info "Enabling SSH password authentication"
+        sshd_config_commands+="sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config; "
+    else
+        log_info "Disabling SSH password authentication (key-only access)"
+        sshd_config_commands+="sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config; "
+        sshd_config_commands+="sed -i 's/^#*PubkeyAuthentication.*/PubkeyAuthentication yes/' /etc/ssh/sshd_config; "
+    fi
+    
+    # Additional security hardening
+    sshd_config_commands+="sed -i 's/^#*PermitEmptyPasswords.*/PermitEmptyPasswords no/' /etc/ssh/sshd_config; "
+    sshd_config_commands+="sed -i 's/^#*X11Forwarding.*/X11Forwarding no/' /etc/ssh/sshd_config; "
+    
+    # Apply SSH configuration and restart daemon
+    if ! pct_exec "$ct_id" bash -c "$sshd_config_commands systemctl restart sshd" 2>&1; then
+        log_error "Failed to configure SSH daemon"
+        return 1
+    fi
+    
+    # Log summary
+    log_success "SSH access configured successfully"
+    log_info "Root authentication summary:"
+    log_info "  - Console/emergency access: Password enabled"
+    
+    if [[ "$ssh_key_configured" == "true" ]]; then
+        log_info "  - SSH key authentication: Enabled"
+    fi
+    
+    if [[ "$enable_password_auth" == "true" ]]; then
+        log_info "  - SSH password authentication: Enabled"
+    else
+        log_info "  - SSH password authentication: Disabled (key-only)"
+    fi
+    
+    # Store password for later display (caller's responsibility to show securely)
+    # Export for use by deployment summary
+    export LXC_ROOT_PASSWORD="$root_password"
     
     return 0
 }

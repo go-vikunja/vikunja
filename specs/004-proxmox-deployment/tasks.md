@@ -201,6 +201,38 @@
 
 ---
 
+## Phase 3.95: Root Access Configuration Feature (Enhancement)
+
+**Goal**: Add professional root access configuration to LXC containers with support for password, SSH key, or both authentication methods.
+
+**Context**: As part of professional Proxmox deployment tooling, administrators need flexible and secure root access to LXC containers. This feature provides interactive and CLI-based configuration for password authentication, SSH key injection, or both, with security hardening and best practices.
+
+**Independent Test**: Deploy container with each authentication method (password-only, key-only, both), verify SSH access works as configured, verify console access always available via `pct enter`.
+
+### Feature Implementation Tasks
+
+- [X] T042R24 [FEATURE] Enhance setup_ssh_access() function in lib/lxc-setup.sh with SSH key injection, authorized_keys management, and SSH daemon hardening
+- [X] T042R25 [FEATURE] Add ROOT_PASSWORD, ROOT_SSH_KEY_PATH, ENABLE_ROOT_PASSWORD_AUTH global variables to vikunja-install-main.sh
+- [X] T042R26 [FEATURE] Add --root-password, --root-ssh-key, --enable-root-password, --disable-root-password CLI options to vikunja-install-main.sh
+- [X] T042R27 [FEATURE] Add interactive root access configuration prompts (4 modes: password, key, both, auto) to prompt_configuration() in vikunja-install-main.sh
+- [X] T042R28 [FEATURE] Integrate setup_ssh_access() call into deployment orchestration (step 3.5) in deploy_vikunja() function
+- [X] T042R29 [FEATURE] Update show_deployment_summary() to display root access configuration, SSH command, and root password (if generated)
+- [X] T042R30 [FEATURE] Add root_access section to deployment-config.yaml template with ssh_enabled, password_auth, key_auth tracking
+- [X] T042R31 [DOC] Add comprehensive "Root Access Configuration" section to deploy/proxmox/README.md with security best practices
+
+### Security Features Implemented
+
+- ✅ **Cryptographically secure random password generation** using OpenSSL (32 characters)
+- ✅ **SSH public key validation** (supports ssh-rsa, ssh-ed25519, ecdsa-sha2-, FIDO/U2F keys)
+- ✅ **Proper permission management** (700 for .ssh, 600 for authorized_keys, root:root ownership)
+- ✅ **SSH daemon hardening** (disables password auth when keys used, disables empty passwords, disables X11 forwarding)
+- ✅ **Console access preservation** (root password always set for emergency access)
+- ✅ **Flexible authentication modes** (password-only, key-only, both, or auto-generated)
+
+**Checkpoint**: Root access configuration feature complete and documented. Ready for testing and Phase 4 implementation.
+
+---
+
 ## Phase 4: User Story 2 - Seamless Updates from Main Branch (Priority: P1)
 
 **Goal**: Enable zero-downtime updates via blue-green deployment with automatic rollback on failures. Updates complete in <5 minutes with <5 seconds downtime.

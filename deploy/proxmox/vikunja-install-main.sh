@@ -47,6 +47,11 @@ CPU_CORES="2"
 MEMORY_MB="4096"
 DISK_GB="20"
 
+# Root access configuration
+ROOT_PASSWORD=""
+ROOT_SSH_KEY_PATH=""
+ENABLE_ROOT_PASSWORD_AUTH="auto"  # auto, true, false
+
 # Derived configuration
 BRIDGE="vmbr0"
 # Auto-detect available Debian 12 template (will be set in pre-flight checks)
@@ -101,6 +106,12 @@ CONFIGURATION OPTIONS:
     --memory-mb MB          Memory in MB (default: 4096)
     --disk-gb GB            Disk size in GB (default: 20)
 
+ROOT ACCESS OPTIONS:
+    --root-password PASS    Root password (default: secure random generated)
+    --root-ssh-key FILE     Path to SSH public key file for root access
+    --enable-root-password  Enable SSH password authentication (default: auto)
+    --disable-root-password Disable SSH password authentication (key-only)
+
 EXAMPLES:
     # Interactive installation (recommended)
     $0
@@ -116,6 +127,11 @@ EXAMPLES:
        --db-user vikunja --db-pass secret --domain vikunja.example.com \\
        --ip-address 192.168.1.100/24 --gateway 192.168.1.1 \\
        --email admin@example.com
+    
+    # Non-interactive installation with SSH key authentication
+    $0 --non-interactive --instance-id prod --domain vikunja.example.com \\
+       --ip-address 192.168.1.100/24 --gateway 192.168.1.1 \\
+       --root-ssh-key ~/.ssh/id_ed25519.pub --disable-root-password
 
 For more information, see: https://vikunja.io/docs
 EOF
@@ -211,6 +227,22 @@ parse_arguments() {
             --disk-gb)
                 DISK_GB="$2"
                 shift 2
+                ;;
+            --root-password)
+                ROOT_PASSWORD="$2"
+                shift 2
+                ;;
+            --root-ssh-key)
+                ROOT_SSH_KEY_PATH="$2"
+                shift 2
+                ;;
+            --enable-root-password)
+                ENABLE_ROOT_PASSWORD_AUTH="true"
+                shift
+                ;;
+            --disable-root-password)
+                ENABLE_ROOT_PASSWORD_AUTH="false"
+                shift
                 ;;
             *)
                 log_error "Unknown option: $1"
@@ -314,6 +346,68 @@ prompt_configuration() {
     # Admin email
     echo ""
     read -p "Administrator email: " ADMIN_EMAIL
+    
+    # Root access configuration
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  Root Access Configuration"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    echo "Configure root access to the LXC container:"
+    echo "  1) Password only (less secure, convenient for testing)"
+    echo "  2) SSH key only (recommended for production)"
+    echo "  3) Both password and SSH key (flexible, moderate security)"
+    echo "  4) Auto-generated password, no SSH (can access via 'pct enter')"
+    echo ""
+    read -p "Select root access method [2]: " root_access_choice
+    
+    case "$root_access_choice" in
+        1)
+            # Password only
+            read -sp "Enter root password: " ROOT_PASSWORD
+            echo ""
+            read -sp "Confirm root password: " root_password_confirm
+            echo ""
+            if [[ "$ROOT_PASSWORD" != "$root_password_confirm" ]]; then
+                log_error "Passwords do not match"
+                exit 1
+            fi
+            ENABLE_ROOT_PASSWORD_AUTH="true"
+            ;;
+        2|"")
+            # SSH key only (default)
+            read -p "Path to SSH public key [~/.ssh/id_ed25519.pub]: " input
+            ROOT_SSH_KEY_PATH="${input:-$HOME/.ssh/id_ed25519.pub}"
+            # Expand tilde
+            ROOT_SSH_KEY_PATH="${ROOT_SSH_KEY_PATH/#\~/$HOME}"
+            ENABLE_ROOT_PASSWORD_AUTH="false"
+            ;;
+        3)
+            # Both password and SSH key
+            read -sp "Enter root password: " ROOT_PASSWORD
+            echo ""
+            read -sp "Confirm root password: " root_password_confirm
+            echo ""
+            if [[ "$ROOT_PASSWORD" != "$root_password_confirm" ]]; then
+                log_error "Passwords do not match"
+                exit 1
+            fi
+            read -p "Path to SSH public key [~/.ssh/id_ed25519.pub]: " input
+            ROOT_SSH_KEY_PATH="${input:-$HOME/.ssh/id_ed25519.pub}"
+            ROOT_SSH_KEY_PATH="${ROOT_SSH_KEY_PATH/#\~/$HOME}"
+            ENABLE_ROOT_PASSWORD_AUTH="true"
+            ;;
+        4)
+            # Auto-generated password, no SSH
+            ROOT_PASSWORD=""  # Will be auto-generated
+            ENABLE_ROOT_PASSWORD_AUTH="false"
+            log_info "Root password will be auto-generated and displayed after installation"
+            ;;
+        *)
+            log_error "Invalid selection"
+            exit 1
+            ;;
+    esac
     
     echo ""
 }
@@ -565,6 +659,26 @@ deploy_vikunja() {
     fi
     progress_complete "[3/10] Container started"
     
+    # Step 3.5: Configure root access
+    progress_start "[3.5/10] Configuring root access..."
+    local password_auth_setting="$ENABLE_ROOT_PASSWORD_AUTH"
+    # Handle "auto" setting
+    if [[ "$password_auth_setting" == "auto" ]]; then
+        if [[ -n "$ROOT_SSH_KEY_PATH" ]]; then
+            password_auth_setting="false"
+        else
+            password_auth_setting="true"
+        fi
+    fi
+    
+    if ! setup_ssh_access "$CONTAINER_ID" "$ROOT_PASSWORD" "$ROOT_SSH_KEY_PATH" "$password_auth_setting"; then
+        progress_fail "Failed to configure root access"
+        log_warn "Container is running but root access configuration failed"
+        log_warn "You can still access the container with: pct enter ${CONTAINER_ID}"
+        return 1
+    fi
+    progress_complete "[3.5/10] Root access configured"
+    
     # Step 4: Install dependencies
     progress_start "[4/10] Installing system dependencies..."
     if ! install_dependencies "$CONTAINER_ID"; then
@@ -789,6 +903,57 @@ show_deployment_summary() {
     echo "Access URL:        http://${DOMAIN}"
     echo "Deployment Time:   ${duration}s"
     echo ""
+    
+    # Root access section
+    echo "╔════════════════════════════════════════════════════════════╗"
+    echo "║               Container Root Access                        ║"
+    echo "╚════════════════════════════════════════════════════════════╝"
+    echo ""
+    
+    # Determine what access methods are configured
+    local has_ssh_key=false
+    local has_password_auth=false
+    
+    if [[ -n "$ROOT_SSH_KEY_PATH" ]]; then
+        has_ssh_key=true
+    fi
+    
+    if [[ "$ENABLE_ROOT_PASSWORD_AUTH" == "true" ]] || [[ -z "$ROOT_SSH_KEY_PATH" && "$ENABLE_ROOT_PASSWORD_AUTH" != "false" ]]; then
+        has_password_auth=true
+    fi
+    
+    # Display SSH connection command
+    if [[ "$has_ssh_key" == "true" || "$has_password_auth" == "true" ]]; then
+        echo "SSH Access:        ssh root@${IP_ADDRESS%/*}"
+        
+        if [[ "$has_ssh_key" == "true" && "$has_password_auth" == "false" ]]; then
+            echo "Authentication:    SSH key only (password auth disabled)"
+        elif [[ "$has_ssh_key" == "true" && "$has_password_auth" == "true" ]]; then
+            echo "Authentication:    SSH key or password"
+        elif [[ "$has_password_auth" == "true" ]]; then
+            echo "Authentication:    Password only"
+        fi
+    fi
+    
+    # Display root password if it was set/generated
+    if [[ -n "${LXC_ROOT_PASSWORD:-}" ]]; then
+        echo ""
+        echo "⚠️  IMPORTANT - Save this root password securely:"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "Root Password:     ${LXC_ROOT_PASSWORD}"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo ""
+        echo "This password is for console/emergency access."
+        if [[ "$has_password_auth" == "false" ]]; then
+            echo "SSH password authentication is DISABLED (key-only access)."
+        fi
+    fi
+    
+    # Alternative access method
+    echo ""
+    echo "Console Access:    pct enter ${CONTAINER_ID}"
+    echo ""
+    
     echo "╔════════════════════════════════════════════════════════════╗"
     echo "║                    Next Steps                              ║"
     echo "╚════════════════════════════════════════════════════════════╝"

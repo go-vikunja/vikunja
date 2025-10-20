@@ -63,3 +63,10 @@ backup:
 
 admin:
   email: "admin@example.com"
+
+root_access:
+  ssh_enabled: true
+  password_authentication: false
+  ssh_key_authentication: true
+  last_configured: "2025-10-19T12:00:00Z"
+
