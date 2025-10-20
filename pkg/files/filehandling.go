@@ -41,7 +41,7 @@ import (
 var fs afero.Fs
 var afs *afero.Afero
 
-func setDefaultConfig() {
+func setDefaultLocalConfig() {
 	if !strings.HasPrefix(config.FilesBasePath.GetString(), "/") {
 		config.FilesBasePath.Set(filepath.Join(
 			config.ServiceRootpath.GetString(),
@@ -86,7 +86,7 @@ func initS3FileHandler() error {
 	// Initialize S3 filesystem using afero-s3
 	fs = s3.NewFs(bucket, sess)
 	afs = &afero.Afero{Fs: fs}
-	
+
 	return nil
 }
 
@@ -94,6 +94,8 @@ func initS3FileHandler() error {
 func initLocalFileHandler() error {
 	fs = afero.NewOsFs()
 	afs = &afero.Afero{Fs: fs}
+	setDefaultLocalConfig()
+
 	return nil
 }
 
@@ -115,7 +117,6 @@ func InitFileHandler() error {
 		return err
 	}
 
-	setDefaultConfig()
 	return nil
 }
 
@@ -123,7 +124,7 @@ func InitFileHandler() error {
 func InitTestFileHandler() {
 	fs = afero.NewMemMapFs()
 	afs = &afero.Afero{Fs: fs}
-	setDefaultConfig()
+	setDefaultLocalConfig()
 }
 
 func initFixtures(t *testing.T) {
