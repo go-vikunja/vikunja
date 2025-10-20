@@ -604,7 +604,6 @@ func createEmptySQLiteDB(t *testing.T) string {
 			done INTEGER DEFAULT 0,
 			done_at DATETIME,
 			due_date DATETIME,
-			created_by_id INTEGER NOT NULL,
 			project_id INTEGER NOT NULL,
 			repeat_after INTEGER,
 			repeat_mode INTEGER DEFAULT 0,
@@ -613,15 +612,12 @@ func createEmptySQLiteDB(t *testing.T) string {
 			end_date DATETIME,
 			hex_color TEXT,
 			percent_done REAL,
-			identifier TEXT,
 			"index" INTEGER DEFAULT 0,
 			uid TEXT,
-			cover_image_attachment_id INTEGER,
+			cover_image_attachment_id INTEGER DEFAULT 0,
 			created DATETIME NOT NULL,
 			updated DATETIME NOT NULL,
-			bucket_id INTEGER,
-			position REAL,
-			reminder_dates TEXT
+			created_by_id INTEGER NOT NULL
 		);
 
 		CREATE TABLE labels (
