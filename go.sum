@@ -172,6 +172,8 @@ github.com/gocarina/gocsv v0.0.0-20231116093920-b87c2d0e983a/go.mod h1:5YoVOkjYA
 github.com/goccy/go-json v0.8.1/go.mod h1:6MelG93GURQebXPDq3khkgXZkazVtN9CRI+MGFi0w8I=
 github.com/goccy/go-json v0.10.2 h1:CrxCmQqYDkv1z7lO7Wbh2HN93uovUHgrECaO5ZrCXAU=
 github.com/goccy/go-json v0.10.2/go.mod h1:6MelG93GURQebXPDq3khkgXZkazVtN9CRI+MGFi0w8I=
+github.com/goccy/go-json v0.10.5 h1:Fq85nIqj+gXn/S5ahsiTlK3TmC85qgirsdTP/+DeaC4=
+github.com/goccy/go-json v0.10.5/go.mod h1:oq7eo15ShAhp70Anwd5lgX2pLfOS3QCiwU/PULtXL6M=
 github.com/goccy/go-yaml v1.18.0 h1:8W7wMFS12Pcas7KU+VVkaiCng+kG8QiFeFwzFb+rwuw=
 github.com/goccy/go-yaml v1.18.0/go.mod h1:XBurs7gK8ATbW4ZPGKgcbrY1Br56PdM69F7LkFRi1kA=
 github.com/gofrs/uuid v4.0.0+incompatible/go.mod h1:b2aQJv3Z4Fp6yNu3cdSllBxTCLRxnplIgP/c0N/04lM=
@@ -853,3 +855,5 @@ xorm.io/builder v0.3.13/go.mod h1:aUW0S9eb9VCaPohFCH3j7czOx1PMW3i1HrSzbLYGBSE=
 xorm.io/xorm v1.3.3/go.mod h1:qFJGFoVYbbIdnz2vaL5OxSQ2raleMpyRRalnq3n9OJo=
 xorm.io/xorm v1.3.10 h1:yR83hTT4mKIPyA/lvWFTzS35xjLwkiYnwdw0Qupeh0o=
 xorm.io/xorm v1.3.10/go.mod h1:Lo7hmsFF0F0GbDE7ubX5ZKa+eCf0eCuiJAUG3oI5cxQ=
+xorm.io/xorm v1.3.11 h1:i4tlVUASogb0ZZFJHA7dZqoRU2pUpUsutnNdaOlFyMI=
+xorm.io/xorm v1.3.11/go.mod h1:cs0ePc8O4a0jD78cNvD+0VFwhqotTvLQZv372QsDw7Q=
