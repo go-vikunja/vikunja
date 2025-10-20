@@ -147,7 +147,7 @@
 
 ### Database Configuration Review (Pre-Testing)
 
-- [ ] T042R0 [CODE] Review and fix database configuration environment variables for all database types (sqlite/postgresql/mysql)
+- [x] T042R0 [CODE] Review and fix database configuration environment variables for all database types (sqlite/postgresql/mysql)
   - Verify `generate_systemd_unit()` function signature accepts database parameters
   - Verify main script passes DATABASE_* variables to service generation
   - Verify SQLite configuration sets VIKUNJA_DATABASE_PATH correctly
@@ -158,13 +158,13 @@
 
 ### Regression Test Tasks
 
-- [ ] T042R1 [TEST] Execute clean deployment test on fresh LXC container using fixed vikunja-install-main.sh
-- [ ] T042R2 [TEST] Verify Node.js 22 installation and Vite frontend build completes successfully
-- [ ] T042R3 [TEST] Verify mcp-server/ directory exists and MCP server builds with `npm ci`
-- [ ] T042R4 [TEST] Verify systemd services created with correct names (vikunja-backend-blue.service, not vikunja-backend-blue-blue.service)
-- [ ] T042R5 [TEST] Verify backend VIKUNJA_SERVICE_FRONTENDURL set to http://<IP>:80 or http://<domain>:80
-- [ ] T042R6 [TEST] Verify nginx configuration has correct API proxy (`location /api` without trailing slash)
-- [ ] T042R7 [TEST] Verify WebSocket path is `/api/v1/ws` and upgrade mapping directive present
+- [x] T042R1 [TEST] Execute clean deployment test on fresh LXC container using fixed vikunja-install-main.sh
+- [x] T042R2 [TEST] Verify Node.js 22 installation and Vite frontend build completes successfully
+- [x] T042R3 [TEST] Verify mcp-server/ directory exists and MCP server builds with `npm ci`
+- [x] T042R4 [TEST] Verify systemd services created with correct names (vikunja-backend-blue.service, not vikunja-backend-blue-blue.service)
+- [x] T042R5 [TEST] Verify backend VIKUNJA_SERVICE_FRONTENDURL set to http://<IP>:80 or http://<domain>:80
+- [x] T042R6 [TEST] Verify nginx configuration has correct API proxy (`location /api` without trailing slash)
+- [x] T042R7 [TEST] Verify WebSocket path is `/api/v1/ws` and upgrade mapping directive present
 - [ ] T042R8 [TEST] Verify frontend loads and connects to API without manual URL configuration (window.API_URL should auto-detect)
 - [ ] T042R9 [TEST] Verify user registration is enabled (VIKUNJA_SERVICE_ENABLEREGISTRATION=true in backend service)
 - [ ] T042R10 [TEST] Verify health checks pass for all components (backend, frontend, MCP server)
@@ -182,7 +182,7 @@
 - [ ] T042R22 [TEST] Verify nginx server_name includes both domain and container IP for external reverse proxy support
 - [ ] T042R23 [TEST] Document any remaining issues in specs/004-proxmox-deployment/research.md Section 6.x
 
-**Fixes Applied During Regression Testing** (12 total):
+**Fixes Applied During Regression Testing** (13 total):
 1. **Node.js Version** - Changed default from 18 to 22 (Vite 7.1.10 requirement)
 2. **Repository URL** - Fixed to use aroige/vikunja.git (includes mcp-server/)
 3. **MCP Build Tool** - Changed from pnpm to npm (package-lock.json present)
@@ -195,6 +195,7 @@
 10. **Database Type Naming** - Changed "postgresql" to "postgres" (Vikunja's expected value)
 11. **Nginx External Proxy** - Added container IP to server_name for external reverse proxy support
 12. **HTTPS Protocol Detection** - Added USE_HTTPS flag and --https option for external SSL/TLS setups (backend now advertises correct protocol in VIKUNJA_SERVICE_PUBLICURL)
+13. **Frontend API Auto-Detection** - Injected api-detect.js script into built frontend to automatically set localStorage API_URL to window.location.origin (prevents manual URL entry prompt)
 
 **Checkpoint**: All Phase 1-3 fixes validated via clean deployment. No regression issues found. Ready for Phase 4 implementation.
 

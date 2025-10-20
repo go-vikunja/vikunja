@@ -881,6 +881,37 @@ build_frontend() {
         return 1
     fi
     
+    # Inject API URL auto-detection into frontend
+    log_debug "Injecting API URL auto-detection into frontend..."
+    
+    # Create a small JavaScript file for API URL auto-detection
+    local api_detect_js="// Auto-detect API URL for same-origin deployments
+if (!localStorage.getItem('API_URL')) {
+    localStorage.setItem('API_URL', window.location.origin);
+}"
+    
+    # Write the auto-detection script to a file in the dist directory
+    local result
+    result=$(pct_exec "$ct_id" bash -c "cat > ${source_dir}/frontend/dist/api-detect.js <<'EOF'
+${api_detect_js}
+EOF
+" 2>&1)
+    
+    if [[ $? -eq 0 ]]; then
+        # Inject script tag into index.html before any other scripts
+        pct_exec "$ct_id" bash -c "cd ${source_dir}/frontend/dist && \
+            sed -i 's|<head>|<head><script src=\"/api-detect.js\"></script>|' index.html" 2>&1
+        
+        if [[ $? -eq 0 ]]; then
+            log_debug "API URL auto-detection injected successfully"
+        else
+            log_warning "Failed to inject script tag into index.html"
+        fi
+    else
+        log_warning "Failed to create API URL auto-detection script"
+        log_debug "Error: ${result}"
+    fi
+    
     log_success "Frontend built successfully"
     return 0
 }
