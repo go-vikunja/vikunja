@@ -110,7 +110,10 @@ func Restore(filename string) error {
 	// Init the configFile again since the restored configuration is most likely different from the one before
 	initialize.LightInit()
 	initialize.InitEngines()
-	files.InitFileHandler()
+	err = files.InitFileHandler()
+	if err != nil {
+		return fmt.Errorf("could not init file handler: %w", err)
+	}
 
 	///////
 	// Restore the db

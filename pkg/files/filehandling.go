@@ -17,6 +17,8 @@
 package files
 
 import (
+	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -49,7 +51,7 @@ func setDefaultConfig() {
 }
 
 // initS3FileHandler initializes the S3 file backend
-func initS3FileHandler() {
+func initS3FileHandler() error {
 	// Get S3 configuration
 	endpoint := config.FilesS3Endpoint.GetString()
 	bucket := config.FilesS3Bucket.GetString()
@@ -58,16 +60,16 @@ func initS3FileHandler() {
 	secretKey := config.FilesS3SecretKey.GetString()
 
 	if endpoint == "" {
-		log.Fatal("S3 endpoint is not configured. Please set files.s3.endpoint")
+		return errors.New("S3 endpoint is not configured. Please set files.s3.endpoint")
 	}
 	if bucket == "" {
-		log.Fatal("S3 bucket is not configured. Please set files.s3.bucket")
+		return errors.New("S3 bucket is not configured. Please set files.s3.bucket")
 	}
 	if accessKey == "" {
-		log.Fatal("S3 access key is not configured. Please set files.s3.accesskey")
+		return errors.New("S3 access key is not configured. Please set files.s3.accesskey")
 	}
 	if secretKey == "" {
-		log.Fatal("S3 secret key is not configured. Please set files.s3.secretkey")
+		return errors.New("S3 secret key is not configured. Please set files.s3.secretkey")
 	}
 
 	// Create AWS session for afero-s3
@@ -78,34 +80,43 @@ func initS3FileHandler() {
 		S3ForcePathStyle: aws.Bool(config.FilesS3UsePathStyle.GetBool()),
 	})
 	if err != nil {
-		log.Fatalf("Failed to create AWS session: %v", err)
+		return fmt.Errorf("failed to create AWS session: %w", err)
 	}
 
 	// Initialize S3 filesystem using afero-s3
 	fs = s3.NewFs(bucket, sess)
 	afs = &afero.Afero{Fs: fs}
+	
+	return nil
 }
 
 // initLocalFileHandler initializes the local filesystem backend
-func initLocalFileHandler() {
+func initLocalFileHandler() error {
 	fs = afero.NewOsFs()
 	afs = &afero.Afero{Fs: fs}
+	return nil
 }
 
 // InitFileHandler creates a new file handler for the file backend we want to use
-func InitFileHandler() {
+func InitFileHandler() error {
 	fileType := config.FilesType.GetString()
 
+	var err error
 	switch fileType {
 	case "s3":
-		initS3FileHandler()
+		err = initS3FileHandler()
 	case "local":
-		initLocalFileHandler()
+		err = initLocalFileHandler()
 	default:
-		initLocalFileHandler()
+		err = initLocalFileHandler()
+	}
+
+	if err != nil {
+		return err
 	}
 
 	setDefaultConfig()
+	return nil
 }
 
 // InitTestFileHandler initializes a new memory file system for testing

@@ -43,28 +43,69 @@ func TestInitFileHandler_S3Configuration(t *testing.T) {
 		config.FilesS3SecretKey.Set(originalSecretKey)
 	}()
 
-	// Test with S3 configuration
-	config.FilesType.Set("s3")
-	config.FilesS3Endpoint.Set("https://s3.amazonaws.com")
-	config.FilesS3Bucket.Set("test-bucket")
-	config.FilesS3Region.Set("us-east-1")
-	config.FilesS3AccessKey.Set("test-access-key")
-	config.FilesS3SecretKey.Set("test-secret-key")
+	t.Run("valid S3 configuration", func(t *testing.T) {
+		config.FilesType.Set("s3")
+		config.FilesS3Endpoint.Set("https://s3.amazonaws.com")
+		config.FilesS3Bucket.Set("test-bucket")
+		config.FilesS3Region.Set("us-east-1")
+		config.FilesS3AccessKey.Set("test-access-key")
+		config.FilesS3SecretKey.Set("test-secret-key")
 
-	// This should not panic with valid configuration
-	assert.NotPanics(t, func() {
-		InitFileHandler()
+		// This should not return an error with valid configuration
+		err := InitFileHandler()
+		assert.NoError(t, err)
 	})
 
-	// Test with missing S3 configuration
-	config.FilesS3Endpoint.Set("")
-	config.FilesS3Bucket.Set("")
-	config.FilesS3AccessKey.Set("")
-	config.FilesS3SecretKey.Set("")
+	t.Run("missing S3 endpoint", func(t *testing.T) {
+		config.FilesType.Set("s3")
+		config.FilesS3Endpoint.Set("")
+		config.FilesS3Bucket.Set("test-bucket")
+		config.FilesS3AccessKey.Set("test-access-key")
+		config.FilesS3SecretKey.Set("test-secret-key")
 
-	// This should panic with missing configuration
-	assert.Panics(t, func() {
-		InitFileHandler()
+		// This should return an error for missing endpoint
+		err := InitFileHandler()
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "endpoint")
+	})
+
+	t.Run("missing S3 bucket", func(t *testing.T) {
+		config.FilesType.Set("s3")
+		config.FilesS3Endpoint.Set("https://s3.amazonaws.com")
+		config.FilesS3Bucket.Set("")
+		config.FilesS3AccessKey.Set("test-access-key")
+		config.FilesS3SecretKey.Set("test-secret-key")
+
+		// This should return an error for missing bucket
+		err := InitFileHandler()
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "bucket")
+	})
+
+	t.Run("missing S3 access key", func(t *testing.T) {
+		config.FilesType.Set("s3")
+		config.FilesS3Endpoint.Set("https://s3.amazonaws.com")
+		config.FilesS3Bucket.Set("test-bucket")
+		config.FilesS3AccessKey.Set("")
+		config.FilesS3SecretKey.Set("test-secret-key")
+
+		// This should return an error for missing access key
+		err := InitFileHandler()
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "access key")
+	})
+
+	t.Run("missing S3 secret key", func(t *testing.T) {
+		config.FilesType.Set("s3")
+		config.FilesS3Endpoint.Set("https://s3.amazonaws.com")
+		config.FilesS3Bucket.Set("test-bucket")
+		config.FilesS3AccessKey.Set("test-access-key")
+		config.FilesS3SecretKey.Set("")
+
+		// This should return an error for missing secret key
+		err := InitFileHandler()
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "secret key")
 	})
 }
 
@@ -80,10 +121,9 @@ func TestInitFileHandler_LocalFilesystem(t *testing.T) {
 	// Test with local filesystem
 	config.FilesType.Set("local")
 
-	// This should not panic
-	assert.NotPanics(t, func() {
-		InitFileHandler()
-	})
+	// This should not return an error
+	err := InitFileHandler()
+	assert.NoError(t, err)
 
 	// Verify that afs is initialized
 	assert.NotNil(t, afs)
