@@ -42,6 +42,93 @@ source "${SCRIPT_DIR}/lib/health-check.sh"
 source "${SCRIPT_DIR}/lib/service-setup.sh"
 
 #===============================================================================
+# Self-Update Function
+#===============================================================================
+
+# Update deployment scripts from GitHub
+# Returns: 0 if updated/current, 1 if failed
+update_deployment_scripts() {
+    local github_owner="${VIKUNJA_GITHUB_OWNER:-aroige}"
+    local github_repo="${VIKUNJA_GITHUB_REPO:-vikunja}"
+    local github_branch="${VIKUNJA_GITHUB_BRANCH:-main}"
+    local base_url="https://raw.githubusercontent.com/${github_owner}/${github_repo}/${github_branch}/deploy/proxmox"
+    local deploy_dir="/opt/vikunja-deploy"
+    local temp_dir="/tmp/vikunja-deploy-update-$$"
+    
+    log_debug "Checking for deployment script updates..."
+    log_debug "Source: ${github_owner}/${github_repo}@${github_branch}"
+    
+    # Create temp directory
+    mkdir -p "${temp_dir}/lib" "${temp_dir}/templates"
+    
+    # Download current version of update script
+    if ! curl -fsSL "${base_url}/vikunja-update.sh" -o "${temp_dir}/vikunja-update.sh"; then
+        log_debug "Failed to download update script"
+        rm -rf "$temp_dir"
+        return 1
+    fi
+    
+    # Check if there are differences
+    if [[ -f "${deploy_dir}/vikunja-update.sh" ]]; then
+        if diff -q "${deploy_dir}/vikunja-update.sh" "${temp_dir}/vikunja-update.sh" >/dev/null 2>&1; then
+            log_debug "Deployment scripts are current"
+            rm -rf "$temp_dir"
+            return 0
+        fi
+    fi
+    
+    log_info "Downloading latest deployment scripts..."
+    
+    # Download all library files
+    local lib_files=(
+        "lib/common.sh"
+        "lib/proxmox-api.sh"
+        "lib/lxc-setup.sh"
+        "lib/service-setup.sh"
+        "lib/nginx-setup.sh"
+        "lib/health-check.sh"
+        "lib/blue-green.sh"
+        "lib/backup-restore.sh"
+    )
+    
+    for file in "${lib_files[@]}"; do
+        if ! curl -fsSL "${base_url}/${file}" -o "${temp_dir}/${file}"; then
+            log_warn "Failed to download ${file}"
+        fi
+    done
+    
+    # Download templates
+    local template_files=(
+        "templates/deployment-config.yaml"
+        "templates/vikunja-backend.service"
+        "templates/vikunja-mcp.service"
+        "templates/nginx-vikunja.conf"
+        "templates/health-check.sh"
+    )
+    
+    for file in "${template_files[@]}"; do
+        if ! curl -fsSL "${base_url}/${file}" -o "${temp_dir}/${file}"; then
+            log_debug "Failed to download ${file} (may not exist)"
+        fi
+    done
+    
+    # Backup current scripts
+    if [[ -d "${deploy_dir}" ]]; then
+        cp -r "${deploy_dir}" "${deploy_dir}.backup-$(date +%s)"
+    fi
+    
+    # Install new scripts
+    cp -r "${temp_dir}"/* "${deploy_dir}/"
+    chmod +x "${deploy_dir}/vikunja-update.sh"
+    chmod +x "${deploy_dir}"/lib/*.sh 2>/dev/null || true
+    
+    rm -rf "$temp_dir"
+    
+    log_success "Deployment scripts updated"
+    return 0
+}
+
+#===============================================================================
 # Configuration
 #===============================================================================
 
@@ -207,25 +294,78 @@ main() {
     update_start=$(date +%s)
     
     log_info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    log_info "Vikunja Update: $INSTANCE_ID"
+    log_info "Vikunja Update"
     log_info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    
+    #---------------------------------------------------------------------------
+    # Step 0: Detect execution environment and self-update deployment scripts
+    #---------------------------------------------------------------------------
+    
+    log_info "[0/9] Detecting execution environment..."
+    
+    # Detect if running inside container or on Proxmox host
+    local running_in_container=false
+    if [[ -f "/.dockerenv" ]] || grep -q "lxc" /proc/1/cgroup 2>/dev/null; then
+        running_in_container=true
+        log_info "Running inside LXC container"
+        
+        # When in container, we can self-update deployment scripts
+        log_info "Checking for deployment script updates..."
+        
+        if update_deployment_scripts; then
+            log_success "Deployment scripts are up to date"
+        else
+            log_warn "Failed to update deployment scripts, continuing with current version"
+        fi
+        
+        # Instance ID defaults to container hostname if not provided
+        if [[ -z "$INSTANCE_ID" ]]; then
+            INSTANCE_ID=$(hostname)
+            log_info "Using instance ID: $INSTANCE_ID"
+        fi
+    else
+        running_in_container=false
+        log_info "Running on Proxmox host"
+        
+        # Verify we have pct command
+        if ! command -v pct &>/dev/null; then
+            log_error "Not running on Proxmox VE and not in container"
+            log_error "This script must run either:"
+            log_error "  1. Inside the Vikunja LXC container, or"
+            log_error "  2. On the Proxmox VE host"
+            exit 1
+        fi
+        
+        # Instance ID is required when running from host
+        if [[ -z "$INSTANCE_ID" ]]; then
+            log_error "Instance ID is required when running from Proxmox host"
+            log_error "Usage: $SCRIPT_NAME <instance-id>"
+            exit 2
+        fi
+    fi
+    
+    # Check if running as root
+    if [[ $EUID -ne 0 ]]; then
+        log_error "Must run as root"
+        exit 1
+    fi
     
     #---------------------------------------------------------------------------
     # Step 1: Pre-flight Checks
     #---------------------------------------------------------------------------
     
-    log_info "[1/8] Pre-flight checks..."
+    log_info "[1/9] Pre-flight checks..."
     
-    # Check if running on Proxmox
-    if ! command -v pct &>/dev/null; then
-        log_error "Not running on Proxmox VE - pct command not found"
-        exit 1
-    fi
-    
-    # Check if running as root
-    if [[ $EUID -ne 0 ]]; then
-        log_error "Must run as root on Proxmox host"
-        exit 1
+    # Load configuration based on execution environment
+    local container_id
+    if [[ "$running_in_container" == true ]]; then
+        # When in container, container_id is self
+        container_id=$(hostname | grep -oE '[0-9]+$' || echo "self")
+        # Config is local
+        local config_file="/etc/vikunja/deploy-config.yaml"
+    else
+        # When on host, load from host config
+        local config_file="/etc/vikunja-deploy/${INSTANCE_ID}/config.yaml"
     fi
     
     # Check if instance exists

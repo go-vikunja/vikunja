@@ -833,6 +833,39 @@ deploy_vikunja() {
     
     progress_complete "[10/10] Services configured"
     
+    # Step 11: Install management scripts into container
+    log_info "Installing management scripts into container..."
+    
+    # Create deployment directory in container
+    pct_exec "$CONTAINER_ID" "mkdir -p /opt/vikunja-deploy/lib /opt/vikunja-deploy/templates"
+    
+    # Copy scripts from current directory into container
+    pct push "$CONTAINER_ID" "${SCRIPT_DIR}/vikunja-update.sh" "/opt/vikunja-deploy/vikunja-update.sh"
+    pct push "$CONTAINER_ID" "${SCRIPT_DIR}/lib/common.sh" "/opt/vikunja-deploy/lib/common.sh"
+    pct push "$CONTAINER_ID" "${SCRIPT_DIR}/lib/proxmox-api.sh" "/opt/vikunja-deploy/lib/proxmox-api.sh"
+    pct push "$CONTAINER_ID" "${SCRIPT_DIR}/lib/lxc-setup.sh" "/opt/vikunja-deploy/lib/lxc-setup.sh"
+    pct push "$CONTAINER_ID" "${SCRIPT_DIR}/lib/service-setup.sh" "/opt/vikunja-deploy/lib/service-setup.sh"
+    pct push "$CONTAINER_ID" "${SCRIPT_DIR}/lib/nginx-setup.sh" "/opt/vikunja-deploy/lib/nginx-setup.sh"
+    pct push "$CONTAINER_ID" "${SCRIPT_DIR}/lib/health-check.sh" "/opt/vikunja-deploy/lib/health-check.sh"
+    pct push "$CONTAINER_ID" "${SCRIPT_DIR}/lib/blue-green.sh" "/opt/vikunja-deploy/lib/blue-green.sh"
+    pct push "$CONTAINER_ID" "${SCRIPT_DIR}/lib/backup-restore.sh" "/opt/vikunja-deploy/lib/backup-restore.sh"
+    
+    # Copy templates
+    for template in "${SCRIPT_DIR}"/templates/*; do
+        if [[ -f "$template" ]]; then
+            pct push "$CONTAINER_ID" "$template" "/opt/vikunja-deploy/templates/$(basename "$template")"
+        fi
+    done
+    
+    # Make scripts executable in container
+    pct_exec "$CONTAINER_ID" "chmod +x /opt/vikunja-deploy/vikunja-update.sh"
+    pct_exec "$CONTAINER_ID" "chmod +x /opt/vikunja-deploy/lib/*.sh"
+    
+    # Create symlink for easy access
+    pct_exec "$CONTAINER_ID" "ln -sf /opt/vikunja-deploy/vikunja-update.sh /usr/local/bin/vikunja-update"
+    
+    log_success "Management scripts installed in container"
+    
     # Wait for services to become healthy
     log_info "Waiting for services to become healthy..."
     if ! wait_for_healthy "$CONTAINER_ID" "backend" "$BACKEND_PORT_BLUE" 60; then
@@ -863,20 +896,62 @@ save_deployment_state() {
     
     log_debug "Saving deployment state"
     
-    # Update state
+    # Save configuration inside the container (for portability)
+    local config_yaml="/etc/vikunja/deploy-config.yaml"
+    
+    # Create config directory in container
+    pct_exec "$CONTAINER_ID" "mkdir -p /etc/vikunja"
+    
+    # Generate YAML configuration
+    local config_content="# Vikunja Deployment Configuration
+# Auto-generated during installation
+# Do not edit manually
+
+deployment:
+  instance_id: \"${INSTANCE_ID}\"
+  container_id: \"${CONTAINER_ID}\"
+  deployed_at: \"$(date -Iseconds)\"
+  deployed_version: \"${commit}\"
+
+database:
+  type: \"${DATABASE_TYPE}\"
+  host: \"${DATABASE_HOST}\"
+  port: \"${DATABASE_PORT}\"
+  name: \"${DATABASE_NAME}\"
+  user: \"${DATABASE_USER}\"
+
+network:
+  domain: \"${DOMAIN}\"
+  ip_address: \"${IP_ADDRESS}\"
+  use_https: ${USE_HTTPS}
+
+resources:
+  cpu_cores: \"${CPU_CORES}\"
+  memory_mb: \"${MEMORY_MB}\"
+  disk_gb: \"${DISK_GB}\"
+
+services:
+  active_color: \"${ACTIVE_COLOR}\"
+  backend_port_blue: ${BACKEND_PORT_BLUE}
+  backend_port_green: ${BACKEND_PORT_GREEN}
+  mcp_port_blue: ${MCP_PORT_BLUE}
+  mcp_port_green: ${MCP_PORT_GREEN}
+
+paths:
+  working_dir: \"${WORKING_DIR}\"
+  repo_url: \"${REPO_URL}\"
+  repo_branch: \"${REPO_BRANCH}\"
+"
+    
+    # Write config to container
+    echo "$config_content" | pct_exec "$CONTAINER_ID" "cat > $config_yaml"
+    
+    log_debug "Configuration saved to container: $config_yaml"
+    
+    # Also save minimal config on host for reference (optional)
     set_state "$INSTANCE_ID" "container_id" "$CONTAINER_ID"
     set_state "$INSTANCE_ID" "status" "running"
-    set_state "$INSTANCE_ID" "active_color" "$ACTIVE_COLOR"
-    update_deployed_version "$INSTANCE_ID" "$commit"
-    
-    # Save configuration (would be YAML in production)
-    local config_data="instance_id=${INSTANCE_ID}
-container_id=${CONTAINER_ID}
-database_type=${DATABASE_TYPE}
-domain=${DOMAIN}
-ip_address=${IP_ADDRESS}
-"
-    save_config "$INSTANCE_ID" "$config_data"
+    set_state "$INSTANCE_ID" "deployed_version" "$commit"
 }
 
 # ============================================================================
@@ -964,9 +1039,14 @@ show_deployment_summary() {
     echo "4. Configure SSL/TLS certificates for production use"
     echo ""
     echo "Management commands:"
-    echo "  ./vikunja-manage.sh status      # Check deployment status"
-    echo "  ./vikunja-update.sh             # Update to latest version"
-    echo "  ./vikunja-manage.sh backup      # Create backup"
+    echo "  SSH into container:  ssh root@${IP_ADDRESS%/*}"
+    echo "  Or from host:        pct enter ${CONTAINER_ID}"
+    echo ""
+    echo "  Inside container, run:"
+    echo "    vikunja-update              # Update Vikunja and deployment scripts"
+    echo "    vikunja-update --help       # See all options"
+    echo ""
+    echo "  Scripts location:    /opt/vikunja-deploy/"
     echo ""
     echo "For more information: https://vikunja.io/docs"
     echo ""

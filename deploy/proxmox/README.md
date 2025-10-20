@@ -35,30 +35,61 @@ VIKUNJA_GITHUB_BRANCH="004-proxmox-deployment" bash <(curl -fsSL https://raw.git
 
 ## Commands
 
-### Installation
+### Installation (Run from Proxmox Host)
 ```bash
-vikunja-install.sh              # Interactive installation
-vikunja-install.sh --help       # Show all options
+# One-command installation - no persistent files left on host
+bash <(curl -fsSL https://raw.githubusercontent.com/aroige/vikunja/main/deploy/proxmox/vikunja-install.sh)
+
+# For development/testing, specify branch:
+VIKUNJA_GITHUB_BRANCH="004-proxmox-deployment" bash <(curl -fsSL https://raw.githubusercontent.com/aroige/vikunja/004-proxmox-deployment/deploy/proxmox/vikunja-install.sh)
 ```
 
-### Updates
+### Updates (Run Inside Container)
+
+**Primary method** - SSH into the container:
 ```bash
-vikunja-update.sh               # Update to latest main branch
-vikunja-update.sh --check       # Check for updates without installing
+# SSH into container
+ssh root@<container-ip>
+
+# Run update (updates both Vikunja and deployment scripts)
+vikunja-update              # Update to latest main branch
+vikunja-update --help       # Show all options
 ```
 
-### Management
+**Alternative method** - From Proxmox host:
 ```bash
-vikunja-manage.sh status        # Show deployment status
-vikunja-manage.sh reconfigure   # Change configuration
-vikunja-manage.sh backup        # Create backup
-vikunja-manage.sh restore       # Restore from backup
-vikunja-manage.sh logs          # View logs
-vikunja-manage.sh restart       # Restart services
-vikunja-manage.sh stop          # Stop services
-vikunja-manage.sh start         # Start services
-vikunja-manage.sh uninstall     # Remove deployment
-vikunja-manage.sh list          # List all instances
+# Find container ID
+pct list | grep vikunja
+
+# Enter container console
+pct enter <container-id>
+
+# Then run update
+vikunja-update
+```
+
+**Quick trigger from host** (without entering container):
+```bash
+pct exec <container-id> /opt/vikunja-deploy/vikunja-update.sh
+```
+
+### Management (Coming Soon)
+The following commands will be available inside the container:
+```bash
+vikunja-manage status           # Show deployment status
+vikunja-manage reconfigure      # Change configuration  
+vikunja-manage backup           # Create backup
+vikunja-manage restore          # Restore from backup
+vikunja-manage logs             # View logs
+vikunja-manage restart          # Restart services
+```
+
+**Note**: Management commands are planned but not yet implemented. Currently, you can use systemd commands directly:
+```bash
+# Inside container
+systemctl status vikunja-backend-blue
+systemctl restart vikunja-backend-blue
+journalctl -u vikunja-backend-blue -f
 ```
 
 ## Documentation
@@ -70,23 +101,42 @@ vikunja-manage.sh list          # List all instances
 
 ## Architecture
 
-This deployment system uses:
-- **Bootstrap Installer**: Single-command curl-based installation that downloads all required components
+This deployment system uses a **container-centric self-sufficient pattern** with **zero host footprint**:
+
+### Key Design Principles
+
+- **Container is fully portable**: Everything needed lives inside the container at `/opt/vikunja-deploy/`
+- **Zero host pollution**: Bootstrap downloads to `/tmp` and cleans up automatically
+- **Self-updating scripts**: Update script pulls latest version of deployment tools before updating Vikunja
+- **Configuration travels with container**: All config stored in container at `/etc/vikunja/deploy-config.yaml`
+- **Migration-friendly**: Container can be migrated between Proxmox hosts without losing management capability
+
+### Components
+
+- **Bootstrap Installer**: Temporary single-command installation (no persistent files on host)
 - **LXC Containers**: Lightweight, secure unprivileged containers on Proxmox
 - **Blue-Green Deployment**: Zero-downtime updates with automatic rollback
-- **Systemd Services**: vikunja-backend.service, vikunja-mcp.service
-- **Nginx Reverse Proxy**: SSL termination, upstream switching for blue-green
-- **State Management**: YAML configuration, lock files, version tracking
+- **Systemd Services**: vikunja-backend.service, vikunja-mcp.service (inside container)
+- **Nginx Reverse Proxy**: SSL termination, upstream switching for blue-green (inside container)
+- **Management Scripts**: Deployment and update tools (inside container at `/opt/vikunja-deploy/`)
+- **Configuration**: YAML deployment config (inside container at `/etc/vikunja/deploy-config.yaml`)
 
-### How the Bootstrap Installer Works
+### How It Works
 
-The single-command installation uses a three-stage bootstrap pattern:
+**Installation (from Proxmox host):**
+1. **Bootstrap**: Run curl command - downloads installer to `/tmp` on Proxmox host
+2. **Container Creation**: Creates LXC container and provisions it
+3. **Script Installation**: Copies all management scripts **into the container** at `/opt/vikunja-deploy/`
+4. **Cleanup**: Bootstrap temp files removed from host
 
-1. **Stage 1 (Bootstrap)**: You run the curl command, which executes a lightweight bootstrap script
-2. **Stage 2 (Download)**: The bootstrap downloads all required files (main installer, libraries, templates) to a temporary directory (`/tmp/vikunja-installer-<PID>`)
-3. **Stage 3 (Execute)**: The bootstrap launches the full installer with all dependencies available locally
+**Updates (from inside container):**
+1. **Self-Update**: Update script first updates itself from GitHub
+2. **Vikunja Update**: Then updates Vikunja application code
+3. **Blue-Green Deploy**: Zero-downtime deployment with health checks
 
-This pattern enables single-command installation while maintaining modular code architecture. It matches industry-standard patterns used by Docker, Kubernetes, and other infrastructure tools.
+**Result:** Container is self-contained and portable. No permanent files on Proxmox host. Can be migrated freely between hosts.
+
+This architecture enables true portability while maintaining the convenience of single-command deployment.
 
 **Advanced Usage**: You can customize the installation source using environment variables:
 
@@ -285,6 +335,43 @@ Navigate to container → Console
 - **Rollback**: <2 minutes
 
 ## Troubleshooting
+
+### Update Workflow Issues
+
+**Problem**: "Command not found: vikunja-update"
+
+**Solution**: The update script runs **inside the container**, not on the Proxmox host. Make sure you've SSH'd into the container or used `pct enter <container-id>`. The command is available at `/usr/local/bin/vikunja-update` inside the container.
+
+**Problem**: How do I access my container to run updates?
+
+**Solutions**:
+```bash
+# Method 1: SSH (recommended)
+ssh root@<container-ip>
+
+# Method 2: Console access from Proxmox host
+pct enter <container-id>
+
+# Method 3: Direct command execution from Proxmox host
+pct exec <container-id> /opt/vikunja-deploy/vikunja-update.sh
+```
+
+**Problem**: Where are the deployment scripts stored?
+
+**Answer**: All deployment scripts are stored **inside the LXC container** at:
+- Scripts: `/opt/vikunja-deploy/` (inside container)
+- Configuration: `/etc/vikunja/deploy-config.yaml` (inside container)
+- Shortcuts: `/usr/local/bin/vikunja-*` (inside container)
+
+**Nothing is stored permanently on the Proxmox host** - this makes the container fully portable and migration-friendly.
+
+**Problem**: I migrated my container to another Proxmox host, can I still update it?
+
+**Solution**: Yes! Since all scripts and configuration are inside the container, it remains fully functional after migration. Just SSH into the container and run `vikunja-update` as usual.
+
+**Problem**: How do I update the deployment scripts themselves?
+
+**Answer**: The update script automatically self-updates before updating Vikunja. It pulls the latest version of deployment scripts from GitHub, so you're always using the current tooling.
 
 ### Bootstrap Installation Issues
 

@@ -14,7 +14,7 @@ readonly GITHUB_REPO="${VIKUNJA_GITHUB_REPO:-vikunja}"
 readonly GITHUB_BRANCH="${VIKUNJA_GITHUB_BRANCH:-main}"
 readonly BASE_URL="https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/deploy/proxmox"
 
-# Installation directory
+# Installation directory (temporary for download)
 readonly INSTALL_DIR="/tmp/vikunja-installer-$$"
 
 # Color codes for output
