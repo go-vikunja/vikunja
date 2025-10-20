@@ -29,9 +29,9 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/aws"             //nolint:staticcheck // afero-s3 still requires aws-sdk-go v1
+	"github.com/aws/aws-sdk-go/aws/credentials" //nolint:staticcheck // afero-s3 still requires aws-sdk-go v1
+	"github.com/aws/aws-sdk-go/aws/session"     //nolint:staticcheck // afero-s3 still requires aws-sdk-go v1
 	s3 "github.com/fclairamb/afero-s3"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
@@ -91,12 +91,10 @@ func initS3FileHandler() error {
 }
 
 // initLocalFileHandler initializes the local filesystem backend
-func initLocalFileHandler() error {
+func initLocalFileHandler() {
 	fs = afero.NewOsFs()
 	afs = &afero.Afero{Fs: fs}
 	setDefaultLocalConfig()
-
-	return nil
 }
 
 // InitFileHandler creates a new file handler for the file backend we want to use
@@ -108,9 +106,9 @@ func InitFileHandler() error {
 	case "s3":
 		err = initS3FileHandler()
 	case "local":
-		err = initLocalFileHandler()
+		initLocalFileHandler()
 	default:
-		err = initLocalFileHandler()
+		initLocalFileHandler()
 	}
 
 	if err != nil {

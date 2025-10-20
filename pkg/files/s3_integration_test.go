@@ -22,6 +22,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestInitFileHandler_S3Configuration(t *testing.T) {
@@ -65,7 +66,7 @@ func TestInitFileHandler_S3Configuration(t *testing.T) {
 
 		// This should return an error for missing endpoint
 		err := InitFileHandler()
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Contains(t, err.Error(), "endpoint")
 	})
 
@@ -78,7 +79,7 @@ func TestInitFileHandler_S3Configuration(t *testing.T) {
 
 		// This should return an error for missing bucket
 		err := InitFileHandler()
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Contains(t, err.Error(), "bucket")
 	})
 
@@ -91,7 +92,7 @@ func TestInitFileHandler_S3Configuration(t *testing.T) {
 
 		// This should return an error for missing access key
 		err := InitFileHandler()
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Contains(t, err.Error(), "access key")
 	})
 
@@ -104,7 +105,7 @@ func TestInitFileHandler_S3Configuration(t *testing.T) {
 
 		// This should return an error for missing secret key
 		err := InitFileHandler()
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Contains(t, err.Error(), "secret key")
 	})
 }
@@ -123,7 +124,7 @@ func TestInitFileHandler_LocalFilesystem(t *testing.T) {
 
 	// This should not return an error
 	err := InitFileHandler()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Verify that afs is initialized
 	assert.NotNil(t, afs)
