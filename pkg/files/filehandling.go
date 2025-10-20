@@ -75,7 +75,7 @@ func initS3FileHandler() {
 		Region:           aws.String(region),
 		Credentials:      credentials.NewStaticCredentials(accessKey, secretKey, ""),
 		Endpoint:         aws.String(endpoint),
-		S3ForcePathStyle: aws.Bool(true), // Required for some S3-compatible services
+		S3ForcePathStyle: aws.Bool(config.FilesS3UsePathStyle.GetBool()),
 	})
 	if err != nil {
 		log.Fatalf("Failed to create AWS session: %v", err)
