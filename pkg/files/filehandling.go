@@ -27,6 +27,10 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	s3 "github.com/fclairamb/afero-s3"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 )
@@ -46,8 +50,38 @@ func setDefaultConfig() {
 
 // InitFileHandler creates a new file handler for the file backend we want to use
 func InitFileHandler() {
-	fs = afero.NewOsFs()
-	afs = &afero.Afero{Fs: fs}
+	fileType := config.FilesType.GetString()
+
+	if fileType == "s3" {
+		// Get S3 configuration
+		endpoint := config.FilesS3Endpoint.GetString()
+		bucket := config.FilesS3Bucket.GetString()
+		region := config.FilesS3Region.GetString()
+		accessKey := config.FilesS3AccessKey.GetString()
+		secretKey := config.FilesS3SecretKey.GetString()
+
+		if endpoint == "" || bucket == "" || accessKey == "" || secretKey == "" {
+			log.Fatal("S3 configuration incomplete. Please set files.s3.endpoint, files.s3.bucket, files.s3.accesskey, and files.s3.secretkey")
+		}
+
+		// Create AWS session for afero-s3
+		sess, err := session.NewSession(&aws.Config{
+			Region:           aws.String(region),
+			Credentials:      credentials.NewStaticCredentials(accessKey, secretKey, ""),
+			Endpoint:         aws.String(endpoint),
+			S3ForcePathStyle: aws.Bool(true), // Required for some S3-compatible services
+		})
+		if err != nil {
+			log.Fatalf("Failed to create AWS session: %v", err)
+		}
+
+		// Initialize S3 filesystem using afero-s3
+		fs = s3.NewFs(bucket, sess)
+		afs = &afero.Afero{Fs: fs}
+	} else {
+		fs = afero.NewOsFs()
+		afs = &afero.Afero{Fs: fs}
+	}
 	setDefaultConfig()
 }
 
