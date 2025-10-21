@@ -19,6 +19,7 @@ This guide helps you diagnose and resolve issues with the Vikunja Proxmox deploy
 - [Health Check Failures](#health-check-failures)
 - [Performance Issues](#performance-issues)
 - [Backup and Restore Issues](#backup-and-restore-issues)
+- [Database Import/Export Configuration Issues](#database-importexport-configuration-issues)
 
 ---
 
@@ -934,6 +935,213 @@ rm /opt/vikunja-<instance>/backups/vikunja-backup-*.tar.gz
   # For SQLite:
   cp database/vikunja.db /opt/vikunja-<instance>/data/
   ```
+
+---
+
+## Database Import/Export Configuration Issues
+
+### Issue: Import Shows Success but Database Tables Are Empty
+
+**Symptom**:
+```bash
+./vikunja import-db --sqlite-file=old-vikunja.db
+[INFO] No config file found, using default or config from environment variables
+[INFO] Successfully imported 483 entities
+[INFO] Transaction committed successfully
+
+# But PostgreSQL tables remain empty!
+psql -U vikunja -d vikunja -c "SELECT COUNT(*) FROM users;"
+# Returns: 0
+```
+
+**Root Cause**:
+Vikunja's `import-db` command requires proper configuration to know which database to use. Without configuration, it defaults to SQLite in the current directory, creating a new `vikunja.db` file instead of importing to your PostgreSQL/MySQL database.
+
+**Solutions**:
+
+#### Option 1: Create config.yml (Recommended for Manual Operations)
+
+Create `/opt/vikunja/config.yml`:
+
+```yaml
+service:
+  timezone: UTC
+
+database:
+  # For PostgreSQL
+  type: postgres
+  host: localhost
+  database: vikunja
+  user: vikunja
+  password: your_secure_password
+  port: 5432
+  
+  # For MySQL
+  # type: mysql
+  # host: localhost
+  # database: vikunja
+  # user: vikunja
+  # password: your_secure_password
+  # port: 3306
+  
+  # For SQLite
+  # type: sqlite
+  # path: /opt/vikunja/vikunja.db
+```
+
+Then run the import:
+```bash
+cd /opt/vikunja
+./vikunja import-db --sqlite-file=./tmp/vikunja.db
+```
+
+#### Option 2: Use Environment Variables (Recommended for Automated Scripts)
+
+Set environment variables before running import:
+
+```bash
+# For PostgreSQL
+export VIKUNJA_DATABASE_TYPE=postgres
+export VIKUNJA_DATABASE_HOST=localhost
+export VIKUNJA_DATABASE_DATABASE=vikunja
+export VIKUNJA_DATABASE_USER=vikunja
+export VIKUNJA_DATABASE_PASSWORD=your_secure_password
+export VIKUNJA_DATABASE_PORT=5432
+
+# Run import with env vars
+./vikunja import-db --sqlite-file=./tmp/vikunja.db
+```
+
+#### Option 3: Use Enhanced Import Function
+
+The deployment scripts provide an enhanced import function with automatic validation:
+
+```bash
+# Inside container or via vikunja-manage.sh
+source /opt/vikunja-deploy/lib/backup-restore.sh
+import_sqlite_database <container_id> /path/to/sqlite.db
+
+# This will:
+# 1. Detect existing configuration
+# 2. Prompt for database settings if missing
+# 3. Show what database will be used
+# 4. Confirm before importing
+# 5. Verify import succeeded
+```
+
+**Verification**:
+
+After import, verify data is in the correct database:
+
+```bash
+# For PostgreSQL
+psql -h localhost -U vikunja -d vikunja -c "
+  SELECT 
+    (SELECT COUNT(*) FROM users) as users,
+    (SELECT COUNT(*) FROM tasks) as tasks,
+    (SELECT COUNT(*) FROM projects) as projects;
+"
+
+# For MySQL
+mysql -h localhost -u vikunja -p vikunja -e "
+  SELECT 
+    (SELECT COUNT(*) FROM users) as users,
+    (SELECT COUNT(*) FROM tasks) as tasks,
+    (SELECT COUNT(*) FROM projects) as projects;
+"
+
+# For SQLite
+sqlite3 /opt/vikunja/vikunja.db "
+  SELECT 
+    (SELECT COUNT(*) FROM users) as users,
+    (SELECT COUNT(*) FROM tasks) as tasks,
+    (SELECT COUNT(*) FROM projects) as projects;
+"
+```
+
+### Issue: "No config file found" Warning During Operations
+
+**Symptom**:
+Every Vikunja command shows:
+```
+[INFO] No config file found, using default or config from environment variables
+```
+
+**Diagnosis**:
+Vikunja looks for config files in these locations (in order):
+1. `./config.yml` (current directory)
+2. `/opt/vikunja/config.yml`
+3. `/etc/vikunja/config.yml`
+4. `~/.config/vikunja/config.yml`
+5. Environment variables (`VIKUNJA_*`)
+
+**Solutions**:
+
+**Check Which Configuration Is Being Used**:
+```bash
+# Run health check to see current config
+./vikunja health
+
+# Check for config files
+find /opt/vikunja /etc/vikunja /root/.config -name "config.yml" 2>/dev/null
+
+# Check systemd service for environment variables
+systemctl cat vikunja-api-blue | grep Environment
+```
+
+**Create Persistent Configuration**:
+
+1. **For systemd services** (automatic with deployment scripts):
+   - Configuration is set via `Environment=` in service files
+   - Located at `/etc/systemd/system/vikunja-api-{blue,green}.service`
+   - No config.yml needed
+
+2. **For manual operations** (recommended):
+   - Create `/opt/vikunja/config.yml` (see Option 1 above)
+   - Or set env vars in your shell profile
+
+**Detection with Update Script**:
+
+The `vikunja-update.sh` script now automatically detects configuration issues:
+
+```bash
+# Update script will:
+# 1. Check for config file or environment variables
+# 2. Prompt for configuration if missing
+# 3. Offer to create config.yml or show env var commands
+# 4. Validate database connection before operations
+
+./vikunja-update.sh <instance-id>
+```
+
+### Issue: Import/Export Uses Wrong Database
+
+**Symptom**:
+- Import appears successful but data goes to SQLite instead of PostgreSQL
+- Export backs up empty SQLite file instead of production PostgreSQL
+
+**Prevention**:
+
+Always verify configuration before import/export:
+
+```bash
+# 1. Check current database type
+./vikunja health | grep -i database
+
+# 2. For systemd-managed services, check service config
+systemctl show vikunja-api-blue -p Environment
+
+# 3. Verify you can connect to target database
+# PostgreSQL:
+PGPASSWORD='password' psql -h localhost -U vikunja -d vikunja -c "SELECT version();"
+
+# MySQL:
+mysql -h localhost -u vikunja -p'password' vikunja -e "SELECT version();"
+
+# 4. Run import with explicit confirmation
+./vikunja import-db --sqlite-file=source.db
+# Script will now prompt and show target database before proceeding
+```
 
 ---
 
