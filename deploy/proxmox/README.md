@@ -92,6 +92,29 @@ systemctl restart vikunja-backend-blue
 journalctl -u vikunja-backend-blue -f
 ```
 
+### Troubleshooting Tools (Inside Container)
+
+**Configuration Validator** - Detect and diagnose configuration issues:
+```bash
+# Check Vikunja database configuration
+vikunja-config-check
+
+# Output shows:
+# - Config file locations checked
+# - Environment variables detected
+# - Systemd service configuration
+# - Database type and connection details
+# - Recommendations for missing config
+```
+
+This tool is especially useful when:
+- Import/export operations use the wrong database
+- Seeing "No config file found" warnings
+- Verifying configuration after installation or changes
+- Troubleshooting database connection issues
+
+See the [Database Configuration Troubleshooting Guide](docs/TROUBLESHOOTING.md#database-importexport-configuration-issues) for detailed examples.
+
 ## Documentation
 
 - **[Quickstart Guide](../../specs/004-proxmox-deployment/quickstart.md)** - Complete setup instructions

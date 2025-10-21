@@ -493,11 +493,138 @@ restore_mysql() {
     return 0
 }
 
+#===============================================================================
+# import_sqlite_database
+#
+# Import SQLite database into target database (with configuration validation)
+#
+# Arguments:
+#   $1 - Container ID
+#   $2 - SQLite file path
+#   $3 - Vikunja binary path (optional, default: /opt/vikunja/vikunja)
+#
+# Returns:
+#   0 on success
+#   1 on error
+#===============================================================================
+import_sqlite_database() {
+    local container_id="$1"
+    local sqlite_file="$2"
+    local vikunja_bin="${3:-/opt/vikunja/vikunja}"
+    
+    if [[ -z "$container_id" || -z "$sqlite_file" ]]; then
+        log_error "import_sqlite_database: Missing required arguments"
+        return 1
+    fi
+    
+    log_info "Preparing to import SQLite database..."
+    
+    # Verify source file exists
+    if ! pct_exec "$container_id" test -f "$sqlite_file"; then
+        log_error "SQLite file not found: $sqlite_file"
+        return 1
+    fi
+    
+    # Validate Vikunja configuration before import
+    log_info "Validating Vikunja configuration..."
+    if ! validate_operation_config "$container_id" "import"; then
+        log_error "Configuration validation failed"
+        log_error ""
+        log_error "Without proper configuration, the import command will:"
+        log_error "  1. Use default SQLite database in current directory"
+        log_error "  2. Create vikunja.db in /opt/vikunja/ instead of using PostgreSQL"
+        log_error "  3. Appear to succeed but data will be in wrong database"
+        log_error ""
+        echo -n "Continue anyway? (y/N): " >&2
+        read -r response
+        if [[ ! "$response" =~ ^[Yy] ]]; then
+            log_warn "Import cancelled by user"
+            return 1
+        fi
+    fi
+    
+    # Show what database will be used
+    log_info ""
+    log_info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    log_info "Import Configuration Summary"
+    log_info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    
+    # Detect configuration
+    local db_type=""
+    if pct_exec "$container_id" test -f /opt/vikunja/config.yml; then
+        db_type=$(pct_exec "$container_id" grep -A5 '^database:' /opt/vikunja/config.yml | grep -oP 'type:\s*\K\S+' 2>/dev/null || echo "unknown")
+        log_info "Config source: /opt/vikunja/config.yml"
+    elif pct_exec "$container_id" test -f /etc/vikunja/config.yml; then
+        db_type=$(pct_exec "$container_id" grep -A5 '^database:' /etc/vikunja/config.yml | grep -oP 'type:\s*\K\S+' 2>/dev/null || echo "unknown")
+        log_info "Config source: /etc/vikunja/config.yml"
+    elif pct_exec "$container_id" bash -c '[[ -n "${VIKUNJA_DATABASE_TYPE:-}" ]]' 2>/dev/null; then
+        db_type=$(pct_exec "$container_id" bash -c 'echo "${VIKUNJA_DATABASE_TYPE}"' 2>/dev/null || echo "unknown")
+        log_info "Config source: Environment variables"
+    else
+        db_type="sqlite (DEFAULT - NO CONFIG FOUND)"
+        log_warn "Config source: NONE - Using defaults!"
+    fi
+    
+    log_info "Target database: $db_type"
+    log_info "Source file: $sqlite_file"
+    log_info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    log_info ""
+    
+    # Confirm before proceeding
+    echo -n "Proceed with import? (y/N): " >&2
+    read -r response
+    if [[ ! "$response" =~ ^[Yy] ]]; then
+        log_warn "Import cancelled by user"
+        return 1
+    fi
+    
+    # Run import
+    log_info "Running import command..."
+    log_debug "Command: $vikunja_bin import-db --sqlite-file=$sqlite_file"
+    
+    if ! pct_exec "$container_id" "$vikunja_bin" import-db --sqlite-file="$sqlite_file"; then
+        log_error "Import command failed"
+        return 1
+    fi
+    
+    log_success "Import completed"
+    
+    # Verify data was imported to correct database
+    log_info ""
+    log_info "Verifying import..."
+    
+    case "$db_type" in
+        postgres*|postgresql*)
+            # Check PostgreSQL for data
+            log_info "Checking PostgreSQL tables..."
+            # This would need database credentials, skipping detailed check
+            log_warn "Manual verification recommended: Check that PostgreSQL tables contain data"
+            ;;
+        mysql*)
+            log_info "Checking MySQL tables..."
+            log_warn "Manual verification recommended: Check that MySQL tables contain data"
+            ;;
+        sqlite*)
+            # Check if SQLite file was modified
+            log_info "Checking SQLite database..."
+            local target_db="${4:-/opt/vikunja/vikunja.db}"
+            if pct_exec "$container_id" test -f "$target_db"; then
+                log_success "SQLite database exists at $target_db"
+            else
+                log_warn "SQLite database not found at expected location"
+            fi
+            ;;
+    esac
+    
+    return 0
+}
+
 # Export functions
 export -f create_pre_migration_backup
 export -f verify_backup_integrity
 export -f cleanup_old_backups
 export -f restore_from_backup
+export -f import_sqlite_database
 export -f backup_sqlite
 export -f backup_postgresql
 export -f backup_mysql
