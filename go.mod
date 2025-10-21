@@ -25,7 +25,7 @@ require (
 	github.com/bbrks/go-blurhash v1.1.1
 	github.com/c2h5oh/datasize v0.0.0-20231215233829-aa82cc1e6500
 	github.com/coreos/go-oidc/v3 v3.16.0
-	github.com/cweill/gotests v1.6.0
+	github.com/cweill/gotests v1.8.0
 	github.com/d4l3k/messagediff v1.2.1
 	github.com/disintegration/imaging v1.6.2
 	github.com/dustinkirkland/golang-petname v0.0.0-20240422154211-76c06c4bde6b
@@ -159,10 +159,10 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
-	golang.org/x/mod v0.28.0 // indirect
-	golang.org/x/net v0.45.0 // indirect
+	golang.org/x/mod v0.29.0 // indirect
+	golang.org/x/net v0.46.0 // indirect
 	golang.org/x/time v0.12.0 // indirect
-	golang.org/x/tools v0.37.0 // indirect
+	golang.org/x/tools v0.38.0 // indirect
 	google.golang.org/protobuf v1.36.8 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
