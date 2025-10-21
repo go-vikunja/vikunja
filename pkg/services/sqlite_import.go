@@ -1401,12 +1401,54 @@ func (s *SQLiteImportService) importLinkShares(sess *xorm.Session, sqliteDB *sql
 		}
 	}
 
+	// Check which columns exist (old: "right" and "list_id", new: "permission" and "project_id")
+	// Query the schema to determine column names
+	var hasRight bool
+	var hasListID bool
+
+	schemaRows, err := sqliteDB.Query(fmt.Sprintf("PRAGMA table_info(%s)", tableName))
+	if err != nil {
+		return 0, fmt.Errorf("failed to get schema for %s: %w", tableName, err)
+	}
+	defer schemaRows.Close()
+
+	for schemaRows.Next() {
+		var cid int
+		var name string
+		var colType string
+		var notNull int
+		var dfltValue sql.NullString
+		var pk int
+
+		if err := schemaRows.Scan(&cid, &name, &colType, &notNull, &dfltValue, &pk); err != nil {
+			return 0, fmt.Errorf("failed to scan schema: %w", err)
+		}
+
+		if name == "right" {
+			hasRight = true
+		}
+		if name == "list_id" {
+			hasListID = true
+		}
+	}
+
+	// Build query based on available columns
+	permissionCol := "permission"
+	if hasRight {
+		permissionCol = "\"right\""
+	}
+
+	projectIDCol := "project_id"
+	if hasListID {
+		projectIDCol = "list_id"
+	}
+
 	query := fmt.Sprintf(`
-		SELECT id, hash, name, project_id, permission, sharing_type, 
+		SELECT id, hash, name, %s, %s, sharing_type, 
 		       password, shared_by_id, created, updated
 		FROM %s
 		ORDER BY id
-	`, tableName)
+	`, projectIDCol, permissionCol, tableName)
 
 	rows, err := sqliteDB.Query(query)
 	if err != nil {
