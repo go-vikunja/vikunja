@@ -159,16 +159,16 @@ REPO_PATH="/opt/vikunja"
 
 show_help() {
     cat << EOF
-${BOLD}Vikunja Update Script${RESET}
+${COLOR_BOLD:-}Vikunja Update Script${COLOR_RESET:-}
 Zero-downtime updates using blue-green deployment
 
-${BOLD}USAGE:${RESET}
-    $SCRIPT_NAME [OPTIONS] <instance-id>
+${COLOR_BOLD:-}USAGE:${COLOR_RESET:-}
+    $SCRIPT_NAME [OPTIONS] [instance-id]
 
-${BOLD}ARGUMENTS:${RESET}
-    <instance-id>           Instance to update (required)
+${COLOR_BOLD:-}ARGUMENTS:${COLOR_RESET:-}
+    <instance-id>           Instance to update (optional when running in container)
 
-${BOLD}OPTIONS:${RESET}
+${COLOR_BOLD:-}OPTIONS:${COLOR_RESET:-}
     --git-branch <BRANCH>   Git branch to update from (default: main)
     --git-commit <HASH>     Specific commit to deploy (default: latest)
     --force                 Force update even if no new commits
@@ -182,20 +182,23 @@ ${BOLD}OPTIONS:${RESET}
     -d, --debug             Debug output
     --version               Show version
 
-${BOLD}EXAMPLES:${RESET}
-    # Update to latest main branch
-    $SCRIPT_NAME vikunja-main
+${COLOR_BOLD:-}EXAMPLES:${COLOR_RESET:-}
+    # When running inside container (no instance-id needed)
+    vikunja-update
 
     # Update to specific branch
-    $SCRIPT_NAME --git-branch develop vikunja-main
+    vikunja-update --git-branch develop
     
     # Update to specific commit
-    $SCRIPT_NAME --git-commit abc123def vikunja-main
+    vikunja-update --git-commit abc123def
     
     # Force update even if no changes
-    $SCRIPT_NAME --force vikunja-main
+    vikunja-update --force
 
-${BOLD}EXIT CODES:${RESET}
+    # When running from Proxmox host (instance-id required)
+    vikunja-update vikunja-main
+
+${COLOR_BOLD:-}EXIT CODES:${COLOR_RESET:-}
     0   - Update successful
     1   - General error
     2   - Invalid arguments
@@ -206,7 +209,7 @@ ${BOLD}EXIT CODES:${RESET}
     12  - Rollback failed (manual intervention needed)
     20  - No updates available
 
-${BOLD}DOCUMENTATION:${RESET}
+${COLOR_BOLD:-}DOCUMENTATION:${COLOR_RESET:-}
     See: deploy/proxmox/docs/README.md
 
 EOF
@@ -279,12 +282,8 @@ parse_arguments() {
         esac
     done
     
-    # Validate required arguments
-    if [[ -z "$INSTANCE_ID" ]]; then
-        log_error "Instance ID is required"
-        show_help
-        exit 2
-    fi
+    # Instance ID validation will happen in main() after detecting environment
+    # (required on host, optional in container)
 }
 
 #===============================================================================
@@ -313,7 +312,12 @@ main() {
     
     # Detect if running inside container or on Proxmox host
     local running_in_container=false
-    if [[ -f "/.dockerenv" ]] || grep -q "lxc" /proc/1/cgroup 2>/dev/null; then
+    
+    # Check multiple indicators for LXC container
+    if [[ -f "/.dockerenv" ]] || \
+       grep -qa "lxc" /proc/1/cgroup 2>/dev/null || \
+       grep -qa "container=lxc" /proc/1/environ 2>/dev/null || \
+       [[ -d /opt/vikunja ]] && [[ -d /opt/vikunja-deploy ]] && ! command -v pct &>/dev/null; then
         running_in_container=true
         log_info "Running inside LXC container"
         
