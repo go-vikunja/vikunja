@@ -7,7 +7,6 @@ import { Authenticator } from './auth/authenticator.js';
 import { RateLimiter } from './ratelimit/limiter.js';
 import { VikunjaClient } from './vikunja/client.js';
 import { VikunjaMCPServer } from './server.js';
-import { createSSEServerTransport } from './transports/index.js';
 
 /**
  * Application state
@@ -93,23 +92,84 @@ async function initializeApp(): Promise<AppState> {
   });
 
   // SSE endpoint for MCP over HTTP
-  const sseHandler = createSSEServerTransport('/sse', authenticator, rateLimiter);
+  // Store active SSE transports by session ID
+  const activeSessions = new Map();
   
   // GET /sse - Client opens SSE connection to receive messages
   httpServer.get('/sse', async (req, res) => {
-    const transport = await sseHandler(req, res);
-    if (transport) {
+    try {
+      // Extract and validate token from Authorization header or query parameter
+      const authHeader = req.headers.authorization;
+      const queryToken = req.query['token'] as string | undefined;
+      
+      let token: string | undefined;
+      
+      if (authHeader?.startsWith('Bearer ')) {
+        token = authHeader.slice(7);
+      } else if (queryToken) {
+        token = queryToken;
+      }
+      
+      if (!token) {
+        logger.warn('SSE connection rejected: missing token');
+        res.status(401).json({ error: 'Authorization required' });
+        return;
+      }
+
+      // Authenticate token
+      const userContext = await authenticator.validateToken(token);
+
+      // Check rate limit
+      await rateLimiter.checkLimit(token);
+
+      logger.info('SSE connection established', { userId: userContext.userId });
+
+      // Create SSE transport
+      const transport = new (await import('@modelcontextprotocol/sdk/server/sse.js')).SSEServerTransport('/sse', res);
+      
+      // Store transport by session ID
+      const sessionId = transport.sessionId;
+      activeSessions.set(sessionId, { transport, userContext });
+      
+      // Clean up on close
+      transport.onclose = () => {
+        activeSessions.delete(sessionId);
+        logger.info('SSE connection closed', { sessionId, userId: userContext.userId });
+      };
+
       // Connect the MCP server to this transport
       await mcpServer.getServer().connect(transport);
+    } catch (error) {
+      logger.error('SSE GET error', { error: error instanceof Error ? error.message : String(error) });
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Internal server error' });
+      }
     }
   });
   
   // POST /sse - Client sends messages to server
   httpServer.post('/sse', async (req, res) => {
-    const transport = await sseHandler(req, res);
-    if (transport) {
-      // Connect the MCP server to this transport
-      await mcpServer.getServer().connect(transport);
+    try {
+      const sessionId = req.query['sessionId'] as string | undefined;
+      
+      if (!sessionId) {
+        res.status(400).json({ error: 'sessionId required' });
+        return;
+      }
+
+      const session = activeSessions.get(sessionId);
+      if (!session) {
+        res.status(404).json({ error: 'Session not found' });
+        return;
+      }
+
+      // Handle the POST message with the existing transport
+      await session.transport.handlePostMessage(req, res, undefined);
+    } catch (error) {
+      logger.error('SSE POST error', { error: error instanceof Error ? error.message : String(error) });
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Internal server error' });
+      }
     }
   });
 
