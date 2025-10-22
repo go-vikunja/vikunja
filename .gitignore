@@ -10,6 +10,7 @@
 /frontend/.pnpm-store/
 *.out
 vikunja-test
+export_user_test.zip
 tmp/
 config.yml
 config.yaml

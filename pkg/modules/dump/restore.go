@@ -45,7 +45,7 @@ import (
 const maxConfigSize = 5 * 1024 * 1024 // 5 MB, should be largely enough
 
 // Restore takes a zip file name and restores it
-func Restore(filename string) error {
+func Restore(filename string, force bool) error {
 
 	r, err := zip.OpenReader(filename)
 	if err != nil {
@@ -94,7 +94,7 @@ func Restore(filename string) error {
 
 	///////
 	// Check if we're restoring to the same version as the dump
-	err = checkVikunjaVersion(versionFile)
+	err = checkVikunjaVersion(versionFile, force)
 	if err != nil {
 		return err
 	}
@@ -387,7 +387,7 @@ func restoreConfig(configFile, dotEnvFile *zip.File) error {
 	return nil
 }
 
-func checkVikunjaVersion(versionFile *zip.File) error {
+func checkVikunjaVersion(versionFile *zip.File, force bool) error {
 	if versionFile == nil {
 		return fmt.Errorf("dump does not contain VERSION file, refusing to continue")
 	}
@@ -404,19 +404,27 @@ func checkVikunjaVersion(versionFile *zip.File) error {
 	versionString := bufVersion.String()
 	if versionString == "dev" && vversion.Version == "dev" {
 		log.Debugf("Importing from dev version")
-	} else {
-		dumpedVersion, err := version.NewVersion(bufVersion.String())
-		if err != nil {
-			return err
-		}
-		currentVersion, err := version.NewVersion(vversion.Version)
-		if err != nil {
-			return err
-		}
+		return nil
+	}
 
-		if !dumpedVersion.Equal(currentVersion) {
-			return fmt.Errorf("export was created with version %s but this is %s - please make sure you are running the same Vikunja version before restoring", dumpedVersion, currentVersion)
-		}
+	// Skip version check if force flag is set
+	if force {
+		log.Warning("Skipping version check due to --force flag")
+		log.Warningf("Dump version: %s, Current version: %s", versionString, vversion.Version)
+		return nil
+	}
+
+	dumpedVersion, err := version.NewVersion(bufVersion.String())
+	if err != nil {
+		return err
+	}
+	currentVersion, err := version.NewVersion(vversion.Version)
+	if err != nil {
+		return err
+	}
+
+	if !dumpedVersion.Equal(currentVersion) {
+		return fmt.Errorf("export was created with version %s but this is %s - please make sure you are running the same Vikunja version before restoring (use --force to skip this check)", dumpedVersion, currentVersion)
 	}
 
 	return nil
