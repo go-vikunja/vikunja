@@ -164,7 +164,8 @@ async function initializeApp(): Promise<AppState> {
       }
 
       // Handle the POST message with the existing transport
-      await session.transport.handlePostMessage(req, res, undefined);
+      // Pass req.body since express.json() middleware already parsed it
+      await session.transport.handlePostMessage(req, res, req.body);
     } catch (error) {
       logger.error('SSE POST error', { error: error instanceof Error ? error.message : String(error) });
       if (!res.headersSent) {
