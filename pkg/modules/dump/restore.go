@@ -223,6 +223,17 @@ func convertFieldValue(fieldName string, value interface{}, isFloat bool) (inter
 
 	// Handle JSON fields (non-float)
 	switch v := value.(type) {
+	case nil:
+		// Already nil, return as-is
+		return nil, nil
+	case map[string]interface{}, []interface{}:
+		// Already parsed as JSON object/array from unmarshalFileToJSON
+		// Re-marshal to json.RawMessage for XORM
+		marshaled, err := json.Marshal(v)
+		if err != nil {
+			return nil, fmt.Errorf("could not marshal JSON field '%s': %w", fieldName, err)
+		}
+		return json.RawMessage(marshaled), nil
 	case string:
 		// Check if the string is "null" (case insensitive) and return nil for SQL NULL
 		if strings.ToLower(v) == "null" {
@@ -297,6 +308,28 @@ func restoreTableData(tables map[string]*zip.File) error {
 		if fields, hasJSONFields := jsonFields[table]; hasJSONFields {
 			if err := processFields(fields, false); err != nil {
 				return err
+			}
+		}
+
+		// Special handling for project_views.filter migration (20241118123644)
+		// Old dumps have filter as plain string "done = false"
+		// New format needs JSON: {"filter": "done = false"}
+		if table == "project_views" {
+			for i := range content {
+				if filterVal, hasFilter := content[i]["filter"]; hasFilter {
+					// Check if it's a string (old format)
+					if filterStr, isString := filterVal.(string); isString && filterStr != "" {
+						// Convert to new JSON format
+						newFilter := map[string]interface{}{
+							"filter": filterStr,
+						}
+						marshaled, err := json.Marshal(newFilter)
+						if err != nil {
+							return fmt.Errorf("could not convert filter to new format: %w", err)
+						}
+						content[i]["filter"] = json.RawMessage(marshaled)
+					}
+				}
 			}
 		}
 

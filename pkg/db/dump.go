@@ -18,6 +18,7 @@ package db
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"code.vikunja.io/api/pkg/log"
@@ -72,19 +73,129 @@ func Restore(table string, contents []map[string]interface{}) (err error) {
 	}
 
 	for _, content := range contents {
-		for colName, value := range content {
-			// Date fields might get restored as 0001-01-01 from null dates. This can have unintended side-effects like
-			// users being scheduled for deletion after a restore.
-			// To avoid this, we set these dates to nil so that they'll end up as null in the db.
-			col := metaForCurrentTable.GetColumn(colName)
-			strVal, is := value.(string)
-			if is && col.SQLType.IsTime() && (strVal == "" || strings.HasPrefix(strVal, "0001-")) {
-				content[colName] = nil
-			}
-		}
+		// For all tables, use XORM Insert() with proper type conversion
+		if false {
+			// Build column names and placeholders
+			cols := make([]string, 0, len(content))
+			placeholders := make([]string, 0, len(content))
+			values := make([]interface{}, 0, len(content))
+			i := 1
 
-		if _, err := x.Table(table).Insert(content); err != nil {
-			return err
+			for colName, value := range content {
+				col := metaForCurrentTable.GetColumn(colName)
+				if col == nil {
+					log.Debugf("Skipping unknown column '%s' in table '%s'", colName, table)
+					continue
+				}
+
+				// Skip nil JSON columns - they'll use database default (NULL)
+				if value == nil && col.SQLType.Name == "JSON" {
+					log.Debugf("Skipping nil JSON column '%s' in table '%s'", colName, table)
+					continue
+				}
+
+				cols = append(cols, colName)
+
+				// Handle JSON columns specially
+				if rawMsg, ok := value.(json.RawMessage); ok {
+					// Pass as []byte without cast - pq driver should handle json.RawMessage
+					placeholders = append(placeholders, fmt.Sprintf("$%d", i))
+					values = append(values, []byte(rawMsg))
+				} else if byteVal, ok := value.([]byte); ok && col.SQLType.Name == "JSON" {
+					placeholders = append(placeholders, fmt.Sprintf("$%d", i))
+					values = append(values, byteVal)
+				} else {
+					// Handle date/time fields
+					strVal, is := value.(string)
+					if is && col.SQLType.IsTime() {
+						if strVal == "" || strings.HasPrefix(strVal, "0001-") {
+							value = nil
+						}
+						// If it's a non-null time string, keep it as string - PostgreSQL will parse it
+					}
+
+					// Handle other types - convert float64 to appropriate type
+					if floatVal, ok := value.(float64); ok {
+						// Check if column is boolean type
+						if strings.ToUpper(col.SQLType.Name) == "BOOL" || strings.ToUpper(col.SQLType.Name) == "BOOLEAN" {
+							value = floatVal != 0
+						} else if col.SQLType.IsNumeric() && !strings.Contains(strings.ToUpper(col.SQLType.Name), "FLOAT") && !strings.Contains(strings.ToUpper(col.SQLType.Name), "DOUBLE") {
+							// Check if column is integer type
+							value = int64(floatVal)
+						}
+					}
+
+					placeholders = append(placeholders, fmt.Sprintf("$%d", i))
+					values = append(values, value)
+				}
+				i++
+			}
+
+			if len(cols) > 0 {
+				sql := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",
+					table,
+					strings.Join(cols, ", "),
+					strings.Join(placeholders, ", "))
+
+				// Debug: log final parameter types before execution
+				if table == "project_views" {
+					log.Infof("DEBUG: Final values array for %s:", table)
+					for idx, v := range values {
+						if byteVal, ok := v.([]byte); ok {
+							log.Infof("  [%d] (%s) []byte: %s", idx, cols[idx], string(byteVal))
+						} else {
+							log.Infof("  [%d] (%s) %T: %v", idx, cols[idx], v, v)
+						}
+					}
+					log.Infof("DEBUG: SQL: %s", sql)
+				}
+
+				// Use prepared statement for better parameter handling
+				stmt, err := x.DB().DB.Prepare(sql)
+				if err != nil {
+					log.Errorf("Failed to prepare statement for %s. SQL: %s, Error: %v", table, sql, err)
+					return err
+				}
+				defer stmt.Close()
+
+				_, err = stmt.Exec(values...)
+				if err != nil {
+					log.Errorf("Failed to insert into %s. SQL: %s, Error: %v", table, sql, err)
+					return err
+				}
+			}
+		} else {
+			// Original logic for non-JSON tables
+			for colName, value := range content {
+				col := metaForCurrentTable.GetColumn(colName)
+				if col == nil {
+					log.Debugf("Skipping unknown column '%s' in table '%s'", colName, table)
+					delete(content, colName)
+					continue
+				}
+
+				// Convert json.RawMessage to []byte for PostgreSQL JSON columns
+				// PostgreSQL driver needs JSON as bytes, not as interface{}
+				if rawMsg, ok := value.(json.RawMessage); ok {
+					content[colName] = []byte(rawMsg)
+					continue
+				}
+
+				// Handle empty string for JSON columns - convert to NULL
+				strVal, is := value.(string)
+				if is && col.SQLType.Name == "JSON" && strVal == "" {
+					content[colName] = nil
+					continue
+				}
+
+				if is && col.SQLType.IsTime() && (strVal == "" || strings.HasPrefix(strVal, "0001-")) {
+					content[colName] = nil
+				}
+			}
+
+			if _, err := x.Table(table).Insert(content); err != nil {
+				return err
+			}
 		}
 	}
 
