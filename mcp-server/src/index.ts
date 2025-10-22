@@ -94,7 +94,7 @@ async function initializeApp(): Promise<AppState> {
 
   // SSE endpoint for MCP over HTTP
   const sseHandler = createSSEServerTransport('/sse', authenticator, rateLimiter);
-  httpServer.post('/sse', async (req, res) => {
+  httpServer.get('/sse', async (req, res) => {
     const transport = await sseHandler(req, res);
     if (transport) {
       // Connect the MCP server to this transport
@@ -107,7 +107,7 @@ async function initializeApp(): Promise<AppState> {
   await new Promise<void>((resolve) => {
     httpServer.listen(port, () => {
       logger.info(`HTTP server listening on port ${port}`);
-      logger.info(`SSE endpoint available at POST http://localhost:${port}/sse`);
+      logger.info(`SSE endpoint available at GET http://localhost:${port}/sse`);
       resolve();
     });
   });
