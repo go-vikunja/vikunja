@@ -16,18 +16,26 @@ export function createSSEServerTransport(
     const sessionId = `sse-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
 
     try {
-      // Extract and validate token
+      // Extract and validate token from Authorization header or query parameter
       const authHeader = req.headers.authorization;
-      if (!authHeader?.startsWith('Bearer ')) {
-        logger.warn('SSE connection rejected: missing or invalid authorization header', {
+      const queryToken = req.query['token'] as string | undefined;
+      
+      let token: string | undefined;
+      
+      if (authHeader?.startsWith('Bearer ')) {
+        token = authHeader.slice(7); // Remove 'Bearer ' prefix
+      } else if (queryToken) {
+        token = queryToken;
+      }
+      
+      if (!token) {
+        logger.warn('SSE connection rejected: missing token', {
           sessionId,
           ip: req.ip,
         });
-        res.status(401).json({ error: 'Authorization header required' });
+        res.status(401).json({ error: 'Authorization required (Bearer token or ?token= parameter)' });
         return null;
       }
-
-      const token = authHeader.slice(7); // Remove 'Bearer ' prefix
 
       // Authenticate token
       const userContext = await authenticator.validateToken(token);
