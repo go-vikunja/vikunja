@@ -7,6 +7,7 @@ import { Authenticator } from './auth/authenticator.js';
 import { RateLimiter } from './ratelimit/limiter.js';
 import { VikunjaClient } from './vikunja/client.js';
 import { VikunjaMCPServer } from './server.js';
+import { createSSEServerTransport } from './transports/index.js';
 
 /**
  * Application state
@@ -91,11 +92,22 @@ async function initializeApp(): Promise<AppState> {
     });
   });
 
+  // SSE endpoint for MCP over HTTP
+  const sseHandler = createSSEServerTransport('/sse', authenticator, rateLimiter);
+  httpServer.post('/sse', async (req, res) => {
+    const transport = await sseHandler(req, res);
+    if (transport) {
+      // Connect the MCP server to this transport
+      await mcpServer.getServer().connect(transport);
+    }
+  });
+
   // Start HTTP server
   const port = config.port;
   await new Promise<void>((resolve) => {
     httpServer.listen(port, () => {
       logger.info(`HTTP server listening on port ${port}`);
+      logger.info(`SSE endpoint available at POST http://localhost:${port}/sse`);
       resolve();
     });
   });
