@@ -4,6 +4,7 @@ This guide covers deploying the Vikunja MCP Server in various environments.
 
 ## Table of Contents
 - [Authentication Overview](#authentication-overview)
+- [HTTP Transport](#http-transport)
 - [Quick Start (Docker)](#quick-start-docker)
 - [Production Deployment](#production-deployment)
 - [Proxmox LXC Container](#proxmox-lxc-container)
@@ -79,6 +80,259 @@ Then reload and restart:
 ```bash
 systemctl daemon-reload
 systemctl restart vikunja-mcp-blue
+```
+
+---
+
+## HTTP Transport
+
+The MCP server supports two transport mechanisms for connecting AI agents and automation tools:
+
+### Transport Types
+
+1. **Stdio Transport** (Default) - Traditional stdin/stdout communication
+   - **Best for:** Claude Desktop, direct process spawning
+   - **Pros:** Simple, secure (no network exposure), low overhead
+   - **Cons:** One client per process, requires subprocess management
+
+2. **HTTP/SSE Transport** - Server-Sent Events over HTTP
+   - **Best for:** n8n workflows, Python MCP SDK clients, web-based AI agents
+   - **Pros:** Multiple concurrent clients, network-accessible, RESTful architecture
+   - **Cons:** Requires port exposure, network security considerations
+
+### Configuration
+
+Set the transport type using environment variables:
+
+```bash
+# Stdio Transport (default) - no additional configuration needed
+TRANSPORT_TYPE=stdio
+
+# HTTP/SSE Transport - requires MCP port configuration
+TRANSPORT_TYPE=http
+MCP_PORT=3010  # Port for HTTP/SSE endpoint (required for HTTP)
+
+# Optional: CORS configuration for browser-based clients
+CORS_ENABLED=true
+CORS_ALLOWED_ORIGINS=https://app.example.com,https://n8n.example.com
+```
+
+### HTTP/SSE Endpoint
+
+When configured with `TRANSPORT_TYPE=http`, the MCP server exposes:
+
+**Endpoint:** `POST /sse`
+
+**Authentication:** Vikunja API token (two methods)
+1. **Authorization header (recommended):**
+   ```http
+   POST /sse HTTP/1.1
+   Host: mcp.example.com:3010
+   Authorization: Bearer YOUR_VIKUNJA_API_TOKEN
+   ```
+
+2. **Query parameter (fallback):**
+   ```http
+   POST /sse?token=YOUR_VIKUNJA_API_TOKEN HTTP/1.1
+   Host: mcp.example.com:3010
+   ```
+
+**Response:** Server-Sent Events (SSE) stream with JSON-RPC 2.0 messages
+
+### Client Examples
+
+#### n8n Workflow
+
+```javascript
+// In n8n HTTP Request node:
+{
+  "method": "POST",
+  "url": "http://mcp.example.com:3010/sse",
+  "headers": {
+    "Authorization": "Bearer {{$node[\"Get Vikunja Token\"].json[\"token\"]}}"
+  },
+  "options": {
+    "responseType": "stream"
+  }
+}
+
+// Handle SSE events in subsequent nodes
+// Each event contains MCP protocol messages
+```
+
+#### Python MCP SDK
+
+```python
+from mcp import ClientSession, StdioServerParameters
+from mcp.client.sse import sse_client
+import httpx
+
+async def connect_to_mcp():
+    vikunja_token = "your-vikunja-api-token"
+    
+    # Create SSE client with authentication
+    async with httpx.AsyncClient() as http_client:
+        async with sse_client(
+            http_client=http_client,
+            url="http://mcp.example.com:3010/sse",
+            headers={"Authorization": f"Bearer {vikunja_token}"}
+        ) as (read, write):
+            async with ClientSession(read, write) as session:
+                # Initialize MCP session
+                await session.initialize()
+                
+                # List available tools
+                tools = await session.list_tools()
+                print(f"Available tools: {tools}")
+                
+                # Execute create_task tool
+                result = await session.call_tool(
+                    "vikunja_create_task",
+                    {
+                        "title": "Task from Python",
+                        "project_id": 1
+                    }
+                )
+                print(f"Task created: {result}")
+
+# Run the async function
+import asyncio
+asyncio.run(connect_to_mcp())
+```
+
+#### curl (Manual Testing)
+
+```bash
+# Test connection (expect 401 without token)
+curl -N -X POST http://mcp.example.com:3010/sse
+
+# Establish authenticated SSE connection
+curl -N -X POST \
+  -H "Authorization: Bearer YOUR_VIKUNJA_API_TOKEN" \
+  http://mcp.example.com:3010/sse
+
+# Expected SSE stream output:
+# event: connected
+# data: {"connectionId":"550e8400-e29b-41d4-a716-446655440000","userId":1}
+#
+# (connection stays open for MCP messages)
+```
+
+### Proxmox Deployment with HTTP Transport
+
+The automated Proxmox deployment configures HTTP transport by default (see [Proxmox LXC Container](#proxmox-lxc-container) section).
+
+**Ports:**
+- **Blue environment:** 3010 (MCP HTTP), 3456 (Vikunja API), 80/443 (Vikunja Frontend)
+- **Green environment:** 3011 (MCP HTTP), 3456 (Vikunja API), 80/443 (Vikunja Frontend)
+
+**Health Check:**
+```bash
+# MCP HTTP endpoint (expect 401 - proves server running)
+curl -i http://mcp.example.com:3010/sse
+
+# With valid token (expect SSE stream)
+curl -N -H "Authorization: Bearer YOUR_TOKEN" http://mcp.example.com:3010/sse
+```
+
+**Systemd service automatically sets:**
+```ini
+Environment="TRANSPORT_TYPE=http"
+Environment="MCP_PORT=3010"  # or 3011 for green
+```
+
+### Troubleshooting HTTP Transport
+
+#### Connection Refused
+```bash
+# Check if MCP server is running
+systemctl status vikunja-mcp-blue
+
+# Verify port is listening
+ss -tulpn | grep 3010
+
+# Check firewall rules
+ufw status | grep 3010
+```
+
+#### 401 Unauthorized
+```bash
+# Test token validity directly with Vikunja API
+curl -H "Authorization: Bearer YOUR_TOKEN" \
+  http://vikunja.example.com/api/v1/user
+
+# Check MCP server logs for auth errors
+journalctl -u vikunja-mcp-blue -n 50 --no-pager
+```
+
+#### SSE Connection Drops
+```bash
+# Check for network/proxy timeouts (SSE connections are long-lived)
+# Configure reverse proxy timeout: proxy_read_timeout 3600s;
+
+# Monitor active SSE connections
+ss -tn | grep 3010 | wc -l
+
+# Check server logs for connection close events
+journalctl -u vikunja-mcp-blue -f | grep "SSE connection"
+```
+
+#### CORS Errors (Browser Clients)
+```bash
+# Enable CORS in MCP server environment
+Environment="CORS_ENABLED=true"
+Environment="CORS_ALLOWED_ORIGINS=https://your-app.com"
+
+# Restart service
+systemctl restart vikunja-mcp-blue
+```
+
+### Security Considerations
+
+1. **Network Exposure:** HTTP transport exposes MCP server on the network
+   - Use firewall rules to restrict access (e.g., only from n8n server IP)
+   - Consider VPN or private network for sensitive deployments
+
+2. **Authentication:** Per-request token validation ensures security
+   - Tokens are validated on every SSE connection establishment
+   - User context is cached for 5 minutes (Redis)
+   - Token rotation is supported (no server restart needed)
+
+3. **HTTPS/TLS:** For production deployments
+   - Use reverse proxy (nginx, Caddy) with TLS termination
+   - Let's Encrypt certificates recommended
+   - Example nginx config:
+     ```nginx
+     server {
+         listen 443 ssl http2;
+         server_name mcp.example.com;
+         
+         ssl_certificate /etc/letsencrypt/live/mcp.example.com/fullchain.pem;
+         ssl_certificate_key /etc/letsencrypt/live/mcp.example.com/privkey.pem;
+         
+         location /sse {
+             proxy_pass http://127.0.0.1:3010;
+             proxy_http_version 1.1;
+             proxy_set_header Connection "";
+             proxy_buffering off;
+             proxy_cache off;
+             proxy_read_timeout 86400s;  # 24-hour SSE connection
+         }
+     }
+     ```
+
+4. **Rate Limiting:** Consider implementing rate limits at reverse proxy level
+   - Protect against connection flooding
+   - Example nginx: `limit_req_zone $binary_remote_addr zone=mcp:10m rate=10r/s;`
+
+---
+
+## Quick Start (Docker)
+
+The fastest way to get started is with Docker Compose.
+
+### Prerequisites
+````
 ```
 
 ---

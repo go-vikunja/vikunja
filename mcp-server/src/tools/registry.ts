@@ -300,7 +300,7 @@ export class ToolRegistry {
       const stringType: Record<string, unknown> = { type: 'string' };
       
       // Check for regex validation (for hex colors, etc.)
-      const checks = (type as z.ZodString)._def.checks;
+      const checks = (type)._def.checks;
       if (checks) {
         for (const check of checks) {
           if (check.kind === 'regex') {
@@ -319,7 +319,7 @@ export class ToolRegistry {
     if (type instanceof z.ZodNumber) {
       const numberType: Record<string, unknown> = { type: 'number' };
       
-      const checks = (type as z.ZodNumber)._def.checks;
+      const checks = (type)._def.checks;
       if (checks) {
         for (const check of checks) {
           if (check.kind === 'min') {

@@ -114,6 +114,8 @@ Type=simple
 User=root
 WorkingDirectory=${working_dir}/mcp-server
 ExecStart=/usr/bin/node ${working_dir}/mcp-server/dist/index.js
+# Use HTTP transport for remote client access (n8n, Python scripts)
+Environment="TRANSPORT_TYPE=http"
 Environment="MCP_PORT=${port}"
 Environment="VIKUNJA_API_URL=${backend_url}"
 Environment="REDIS_HOST=localhost"

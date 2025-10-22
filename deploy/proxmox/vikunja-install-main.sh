@@ -814,6 +814,28 @@ deploy_vikunja() {
         return 1
     fi
     
+    # Health check for MCP HTTP transport
+    log_info "Waiting for MCP HTTP server to be ready..."
+    local mcp_ready=false
+    local mcp_attempts=0
+    local max_mcp_attempts=30
+    
+    while [[ $mcp_attempts -lt $max_mcp_attempts ]]; do
+        if pct_exec "$CONTAINER_ID" bash -c "curl -f -s -o /dev/null http://localhost:${MCP_PORT_BLUE}/sse 2>&1 | grep -q '401\\|Unauthorized' || curl -f -s -I http://localhost:${MCP_PORT_BLUE}/sse >/dev/null 2>&1"; then
+            mcp_ready=true
+            break
+        fi
+        sleep 1
+        ((mcp_attempts++))
+    done
+    
+    if [[ "$mcp_ready" == "false" ]]; then
+        progress_fail "MCP HTTP server failed to start (timeout after ${max_mcp_attempts}s)"
+        return 1
+    fi
+    
+    log_success "MCP HTTP server is ready on port ${MCP_PORT_BLUE}"
+    
     # Configure nginx
     if ! generate_nginx_config "$CONTAINER_ID" "$DOMAIN" "$BACKEND_PORT_BLUE" \
         "${WORKING_DIR}/frontend/dist" "" "" "$IP_ADDRESS"; then
@@ -978,6 +1000,35 @@ show_deployment_summary() {
     echo ""
     echo "Access URL:        http://${DOMAIN}"
     echo "Deployment Time:   ${duration}s"
+    echo ""
+    
+    # MCP HTTP Transport section
+    echo "╔════════════════════════════════════════════════════════════╗"
+    echo "║            MCP Server HTTP Transport                       ║"
+    echo "╚════════════════════════════════════════════════════════════╝"
+    echo ""
+    echo "MCP HTTP URL:      http://${IP_ADDRESS%/*}:${MCP_PORT_BLUE}"
+    echo "Transport:         HTTP/SSE (Server-Sent Events)"
+    echo ""
+    echo "Connection Examples:"
+    echo ""
+    echo "1. n8n workflow:"
+    echo "   POST http://${IP_ADDRESS%/*}:${MCP_PORT_BLUE}/sse"
+    echo "   Header: Authorization: Bearer YOUR_VIKUNJA_API_TOKEN"
+    echo ""
+    echo "2. Python MCP SDK:"
+    echo "   from mcp import ClientSession, SSEServerTransport"
+    echo "   async with ClientSession("
+    echo "       SSEServerTransport("
+    echo "           url='http://${IP_ADDRESS%/*}:${MCP_PORT_BLUE}/sse',"
+    echo "           headers={'Authorization': 'Bearer YOUR_TOKEN'}"
+    echo "       )"
+    echo "   ) as session:"
+    echo "       # Use MCP tools here"
+    echo ""
+    echo "3. Quick test with curl:"
+    echo "   curl -H 'Authorization: Bearer YOUR_TOKEN' \\"
+    echo "        -X POST http://${IP_ADDRESS%/*}:${MCP_PORT_BLUE}/sse"
     echo ""
     
     # Root access section

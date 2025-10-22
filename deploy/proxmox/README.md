@@ -212,6 +212,169 @@ deploy/proxmox/
     └── DEVELOPMENT.md           # Development guide
 ```
 
+## MCP HTTP Transport
+
+The MCP (Model Context Protocol) server is automatically configured with **HTTP/SSE transport** to enable network-accessible AI agent connectivity.
+
+### Automatic Configuration
+
+The deployment automatically sets up:
+- **Blue environment:** MCP HTTP server on port **3010**
+- **Green environment:** MCP HTTP server on port **3011**
+- **Transport type:** HTTP with Server-Sent Events (SSE)
+- **Authentication:** Per-request Vikunja API token validation
+
+### Connecting to MCP Server
+
+After deployment, you can connect AI agents and automation tools using the HTTP/SSE endpoint:
+
+**n8n Workflow Example:**
+```javascript
+// HTTP Request node configuration
+{
+  "method": "POST",
+  "url": "http://YOUR_CONTAINER_IP:3010/sse",
+  "headers": {
+    "Authorization": "Bearer YOUR_VIKUNJA_API_TOKEN"
+  }
+}
+```
+
+**Python MCP SDK Example:**
+```python
+from mcp.client.sse import sse_client
+import httpx
+
+async with httpx.AsyncClient() as http_client:
+    async with sse_client(
+        http_client=http_client,
+        url="http://YOUR_CONTAINER_IP:3010/sse",
+        headers={"Authorization": "Bearer YOUR_VIKUNJA_API_TOKEN"}
+    ) as (read, write):
+        # Use MCP client session
+        pass
+```
+
+**curl Test:**
+```bash
+# Test connectivity (expect 401 without token - proves server is running)
+curl -i http://YOUR_CONTAINER_IP:3010/sse
+
+# Establish authenticated SSE connection
+curl -N -H "Authorization: Bearer YOUR_TOKEN" \
+  http://YOUR_CONTAINER_IP:3010/sse
+```
+
+### Health Check
+
+The deployment summary shows the MCP HTTP endpoint status:
+
+```bash
+# Expected output after installation:
+✅ MCP Server (HTTP): http://YOUR_CONTAINER_IP:3010/sse
+```
+
+**Manual health check:**
+```bash
+# From Proxmox host or network client
+curl -i http://YOUR_CONTAINER_IP:3010/sse
+
+# Expected response: HTTP/1.1 401 Unauthorized (proves server is running)
+```
+
+### Troubleshooting
+
+**MCP server not responding:**
+```bash
+# Check systemd service status
+pct exec <container-id> systemctl status vikunja-mcp-blue
+
+# Check if port is listening
+pct exec <container-id> ss -tulpn | grep 3010
+
+# View MCP server logs
+pct exec <container-id> journalctl -u vikunja-mcp-blue -n 50
+```
+
+**401 Unauthorized on valid token:**
+```bash
+# Verify token works with Vikunja API directly
+curl -H "Authorization: Bearer YOUR_TOKEN" \
+  http://YOUR_CONTAINER_IP:8080/api/v1/user
+
+# Check MCP auth logs
+pct exec <container-id> journalctl -u vikunja-mcp-blue | grep "SSE authentication"
+```
+
+### Network Access Control
+
+**Important:** The MCP HTTP server is exposed on the container's IP address. Consider:
+
+1. **Firewall rules:** Restrict access to trusted IPs
+   ```bash
+   # Inside container
+   ufw allow from TRUSTED_IP_ADDRESS to any port 3010
+   ufw deny 3010
+   ```
+
+2. **Reverse proxy with TLS:** For production deployments
+   - Configure nginx or Caddy to proxy `/mcp` to port 3010
+   - Enable HTTPS with Let's Encrypt certificates
+   - Add rate limiting and connection throttling
+
+3. **VPN or private network:** For maximum security
+   - Deploy container on private network segment
+   - Require VPN connection for MCP access
+
+### Blue-Green Deployment
+
+During zero-downtime updates:
+- **Active environment** (blue on 3010) continues serving requests
+- **New environment** (green on 3011) is deployed and tested
+- **Traffic switch** happens only after health checks pass
+- **Old environment** is kept for 5-minute rollback window
+
+See [mcp-server/docs/DEPLOYMENT.md](../../mcp-server/docs/DEPLOYMENT.md) for comprehensive HTTP transport documentation.
+
+## Root Access Configuration
+
+The installer provides flexible root access configuration for the LXC container with professional security features:
+
+### Interactive Mode
+
+During installation, you'll be prompted to choose root access method:
+
+1. **Password only** - Simple password authentication (less secure, convenient for testing)
+2. **SSH key only** - Key-based authentication (recommended for production) ⭐
+3. **Both password and SSH key** - Flexible access with moderate security
+4. **Auto-generated password, no SSH** - Random password generated, access via `pct enter`
+
+### Non-Interactive Mode (CLI Options)
+
+```bash
+# SSH key authentication (recommended for production)
+vikunja-install.sh --non-interactive \
+  --root-ssh-key ~/.ssh/id_ed25519.pub \
+  --disable-root-password \
+  --domain vikunja.example.com \
+  --ip-address 192.168.1.100/24 \
+  --gateway 192.168.1.1
+
+# Password-only authentication
+vikunja-install.sh --non-interactive \
+  --root-password "SecurePassword123!" \
+  --enable-root-password \
+  --domain vikunja.example.com \
+  --ip-address 192.168.1.100/24 \
+  --gateway 192.168.1.1
+
+# Both password and SSH key
+vikunja-install.sh --non-interactive \
+  --root-password "SecurePassword123!" \
+  --root-ssh-key ~/.ssh/id_rsa.pub \
+````
+```
+
 ## Root Access Configuration
 
 The installer provides flexible root access configuration for the LXC container with professional security features:
@@ -341,7 +504,11 @@ Navigate to container → Console
 - 4GB RAM (minimum)
 - 20GB disk space (minimum)
 - Unique container ID (100-999)
-- Available ports: 8080 (backend), 3456 (MCP), 80/443 (nginx)
+- Available ports: 
+  - 8080 (Vikunja API backend)
+  - 3010 (MCP HTTP/SSE - blue environment)
+  - 3011 (MCP HTTP/SSE - green environment)
+  - 80/443 (nginx frontend)
 
 **External** (optional):
 - PostgreSQL or MySQL server (if not using SQLite)
