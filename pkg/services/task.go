@@ -310,7 +310,7 @@ func (ts *TaskService) handleSavedFilter(s *xorm.Session, collection *models.Tas
 		OrderBy:            collection.OrderBy,
 		SortByArr:          collection.SortByArr,
 		OrderByArr:         collection.OrderByArr,
-		ProjectViewID:      collection.ProjectViewID,
+		ProjectViewID:      0, // Will handle view separately
 		Expand:             collection.Expand,
 	}
 
@@ -324,8 +324,54 @@ func (ts *TaskService) handleSavedFilter(s *xorm.Session, collection *models.Tas
 		}
 	}
 
-	// Process the merged collection normally
-	return ts.processRegularCollection(s, mergedCollection, a, search, page, perPage)
+	// If there's a view ID, fetch the view using the ORIGINAL project ID (the negative one)
+	// because views are associated with the saved filter's virtual project ID
+	var view *models.ProjectView
+	if collection.ProjectViewID != 0 {
+		var viewErr error
+		view, viewErr = ts.Registry.ProjectViews().GetByIDAndProject(s, collection.ProjectViewID, collection.ProjectID)
+		if viewErr != nil {
+			return nil, 0, 0, viewErr
+		}
+
+		// Apply view filters to the merged collection
+		if view.Filter != nil {
+			if view.Filter.Filter != "" {
+				if mergedCollection.Filter != "" {
+					mergedCollection.Filter = "(" + mergedCollection.Filter + ") && (" + view.Filter.Filter + ")"
+				} else {
+					mergedCollection.Filter = view.Filter.Filter
+				}
+			}
+
+			if view.Filter.FilterTimezone != "" {
+				mergedCollection.FilterTimezone = view.Filter.FilterTimezone
+			}
+
+			if view.Filter.FilterIncludeNulls {
+				mergedCollection.FilterIncludeNulls = view.Filter.FilterIncludeNulls
+			}
+
+			if view.Filter.Search != "" {
+				search = view.Filter.Search
+			}
+		}
+	}
+
+	// Convert collection parameters to search options
+	opts, err := ts.getTaskFilterOptsFromCollection(mergedCollection, view)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	// Get projects the user has access to
+	projects, err := ts.getRelevantProjectsFromCollection(s, a, mergedCollection)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	// Get tasks with the saved filter applied
+	return ts.getTasksForProjects(s, projects, a, opts, view)
 }
 
 // processRegularCollection handles the standard project collection processing

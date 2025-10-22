@@ -259,7 +259,7 @@ func restoreTableData(tables map[string]*zip.File) error {
 	jsonFields := map[string][]string{
 		"api_tokens":    {"permissions"},
 		"notifications": {"notification"},
-		"project_views": {"filter", "bucket_configuration"},
+		"project_views": {"bucket_configuration"}, // Note: 'filter' handled separately below
 		"saved_filters": {"filters"},
 		"users":         {"frontend_settings"},
 	}
@@ -311,23 +311,61 @@ func restoreTableData(tables map[string]*zip.File) error {
 			}
 		}
 
-		// Special handling for project_views.filter migration (20241118123644)
-		// Old dumps have filter as plain string "done = false"
-		// New format needs JSON: {"filter": "done = false"}
+		// Special handling for project_views.filter column
+		// Old dumps have filter as plain text string like "done = false"
+		// The column is JSON type (even before migration 20241118123644)
+		// XORM marshals string fields to JSON as quoted strings: "done = false"
+		// Migration 20241118123644 will read these and convert to {"filter":"done = false"}
 		if table == "project_views" {
 			for i := range content {
-				if filterVal, hasFilter := content[i]["filter"]; hasFilter {
-					// Check if it's a string (old format)
+				if filterVal, hasFilter := content[i]["filter"]; hasFilter && filterVal != nil {
 					if filterStr, isString := filterVal.(string); isString && filterStr != "" {
-						// Convert to new JSON format
-						newFilter := map[string]interface{}{
-							"filter": filterStr,
-						}
-						marshaled, err := json.Marshal(newFilter)
+						// Marshal the string to JSON (adds quotes)
+						// "done = false" becomes JSON: "done = false"
+						marshaled, err := json.Marshal(filterStr)
 						if err != nil {
-							return fmt.Errorf("could not convert filter to new format: %w", err)
+							return fmt.Errorf("could not marshal filter to JSON string: %w", err)
 						}
 						content[i]["filter"] = json.RawMessage(marshaled)
+					}
+				}
+			}
+		}
+
+		// Special handling for project_views.bucket_configuration column
+		// Old dumps have bucket configurations with filter as plain text strings
+		// Need to convert those to the new format: {"filter": "text"}
+		if table == "project_views" {
+			for i := range content {
+				if bucketConfigVal, hasBucketConfig := content[i]["bucket_configuration"]; hasBucketConfig && bucketConfigVal != nil {
+					// bucket_configuration is already json.RawMessage from processFields above
+					if rawMsg, isRawMessage := bucketConfigVal.(json.RawMessage); isRawMessage && len(rawMsg) > 0 {
+						// Try to unmarshal as array of bucket configs
+						var buckets []map[string]interface{}
+						if err := json.Unmarshal(rawMsg, &buckets); err == nil {
+							// Check each bucket for a filter field
+							modified := false
+							for j := range buckets {
+								if filterVal, hasFilter := buckets[j]["filter"]; hasFilter && filterVal != nil {
+									// Check if filter is a plain string (old format)
+									if filterStr, isString := filterVal.(string); isString && filterStr != "" {
+										// Convert to new format: {"filter": "text"}
+										buckets[j]["filter"] = map[string]interface{}{
+											"filter": filterStr,
+										}
+										modified = true
+									}
+								}
+							}
+							// Re-marshal if we modified anything
+							if modified {
+								newBucketConfig, err := json.Marshal(buckets)
+								if err != nil {
+									return fmt.Errorf("could not marshal modified bucket_configuration: %w", err)
+								}
+								content[i]["bucket_configuration"] = json.RawMessage(newBucketConfig)
+							}
+						}
 					}
 				}
 			}
