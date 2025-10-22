@@ -79,11 +79,15 @@ export class VikunjaMCPServer {
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       logger.debug('Handling tools/call request', { tool: request.params.name });
       
-      // Get user context from the request
-      // In MCP, authentication is typically done during initialization
-      // For now, we'll use a default context - this should be enhanced later
-      const connectionId = 'default'; // TODO: Extract from request metadata
-      const userContext = this.getUserContext(connectionId);
+      // Get user context
+      // Try http-session first (for HTTP/SSE transport), then default (for stdio)
+      let connectionId = 'http-session';
+      let userContext = this.getUserContext(connectionId);
+      
+      if (!userContext) {
+        connectionId = 'default';
+        userContext = this.getUserContext(connectionId);
+      }
       
       if (!userContext) {
         logger.error('No user context found for connection', { connectionId });

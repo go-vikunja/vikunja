@@ -134,11 +134,17 @@ async function initializeApp(): Promise<AppState> {
       // Clean up on close
       transport.onclose = () => {
         activeSessions.delete(sessionId);
+        mcpServer.removeUserContext(sessionId);
         logger.info('SSE connection closed', { sessionId, userId: userContext.userId });
       };
 
       // Connect the MCP server to this transport
       await mcpServer.getServer().connect(transport);
+      
+      // Set user context for this session
+      // Use 'http-session' as a shared context for HTTP connections
+      // TODO: Implement per-session context when MCP SDK supports request metadata
+      mcpServer.setUserContext('http-session', userContext);
     } catch (error) {
       logger.error('SSE GET error', { error: error instanceof Error ? error.message : String(error) });
       if (!res.headersSent) {
