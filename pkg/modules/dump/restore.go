@@ -238,15 +238,16 @@ func convertFieldValue(fieldName string, value interface{}, isFloat bool) (inter
 			// If it's a CorruptInputError, treat the string as raw data
 			decoded = []byte(v)
 		}
-		
-		// Parse the JSON string into an interface{} so XORM can properly handle it
-		// This is necessary for PostgreSQL which expects actual JSON types, not strings
+
+		// Validate that it's valid JSON and return as json.RawMessage
+		// This is necessary for PostgreSQL which expects JSON types to be valid JSON
 		var jsonValue interface{}
 		if err := json.Unmarshal(decoded, &jsonValue); err != nil {
 			// If parsing fails, return the string as-is (might be a plain string field)
 			return string(decoded), nil
 		}
-		return jsonValue, nil
+		// Return as json.RawMessage so XORM can handle it properly for JSON columns
+		return json.RawMessage(decoded), nil
 	default:
 		return nil, fmt.Errorf("expected string for JSON field '%s', got %T", fieldName, v)
 	}
