@@ -242,6 +242,29 @@ func (sf *SavedFilter) Delete(s *xorm.Session, auth web.Auth) error {
 	return DeleteSavedFilterFunc(s, sf.ID, u)
 }
 
+// ===== Permission Methods =====
+// These methods delegate to the service layer via the service provider
+
+// CanRead checks if a user can read this saved filter
+func (sf *SavedFilter) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
+	return getSavedFilterService().CanRead(s, sf.ID, a)
+}
+
+// CanUpdate checks if a user can update this saved filter
+func (sf *SavedFilter) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
+	return getSavedFilterService().CanUpdate(s, sf.ID, a)
+}
+
+// CanDelete checks if a user can delete this saved filter
+func (sf *SavedFilter) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	return getSavedFilterService().CanDelete(s, sf.ID, a)
+}
+
+// CanCreate checks if a user can create saved filters
+func (sf *SavedFilter) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	return getSavedFilterService().CanCreate(s, a)
+}
+
 func addTaskToFilter(s *xorm.Session, filter *SavedFilter, view *ProjectView, fallbackTimezone string, task *Task) (taskBucket *TaskBucket, taskPosition *TaskPosition, err error) {
 
 	filterString := filter.Filters.Filter

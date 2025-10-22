@@ -531,6 +531,23 @@ SELECT id FROM descendant_ids`,
 
 // GetByID gets a project by its ID.
 func (p *ProjectService) GetByID(s *xorm.Session, projectID int64, u *user.User) (*models.Project, error) {
+	// Handle saved filter projects (negative IDs)
+	filterID := models.GetSavedFilterIDFromProjectID(projectID)
+	if filterID > 0 {
+		// This is a saved filter masquerading as a project
+		savedFilterService := NewSavedFilterService(s.Engine())
+		filter, err := savedFilterService.Get(s, filterID, u)
+		if err != nil {
+			return nil, err
+		}
+		// Convert SavedFilter to Project representation and add details (views, etc.)
+		project := filter.ToProject()
+		if err := models.AddProjectDetails(s, []*models.Project{project}, u); err != nil {
+			return nil, err
+		}
+		return project, nil
+	}
+
 	project, err := p.GetByIDSimple(s, projectID)
 	if err != nil {
 		return nil, err
@@ -1663,9 +1680,13 @@ func (p *ProjectService) CanRead(s *xorm.Session, projectID int64, a web.Auth) (
 	}
 
 	// Handle saved filter projects
-	if models.GetSavedFilterIDFromProjectID(projectID) > 0 {
-		sf := &models.SavedFilter{ID: models.GetSavedFilterIDFromProjectID(projectID)}
-		return sf.CanRead(s, a)
+	filterID := models.GetSavedFilterIDFromProjectID(projectID)
+	if filterID > 0 {
+		log.Debugf("ProjectService.CanRead: Detected saved filter, projectID=%d, filterID=%d", projectID, filterID)
+		sf := &models.SavedFilter{ID: filterID}
+		canRead, maxRight, err := sf.CanRead(s, a)
+		log.Debugf("ProjectService.CanRead: SavedFilter.CanRead returned canRead=%v, maxRight=%d, err=%v", canRead, maxRight, err)
+		return canRead, maxRight, err
 	}
 
 	// Load the project

@@ -21,6 +21,7 @@ import (
 	"strconv"
 	"strings"
 
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
@@ -289,9 +290,12 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 	// Fallback to original implementation if function not injected
 	// This ensures compatibility during the transition
 
+	log.Debugf("TaskCollection.ReadAll: START - tf.isSavedFilter=%v, tf.ProjectID=%d, tf.ProjectViewID=%d", tf.isSavedFilter, tf.ProjectID, tf.ProjectViewID)
+
 	// If the project id is < -1 this means we're dealing with a saved filter - in that case we get and populate the filter
 	// -1 is the favorites project which works as intended
 	if !tf.isSavedFilter && tf.ProjectID < -1 {
+		log.Debugf("TaskCollection.ReadAll: Entering saved filter block")
 		if GetSavedFilterByIDFunc == nil {
 			panic("SavedFilterService not initialized - ensure services.InitializeDependencies() is called")
 		}
@@ -337,6 +341,8 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		tc.ProjectID = tf.ProjectID
 		tc.isSavedFilter = true
 
+		log.Debugf("TaskCollection.ReadAll: After savedfilter setup - tc.ProjectID=%d, tc.ProjectViewID=%d, tc.isSavedFilter=%v", tc.ProjectID, tc.ProjectViewID, tc.isSavedFilter)
+
 		if tf.Filter != "" {
 			if tc.Filter != "" {
 				tc.Filter = "(" + tf.Filter + ") && (" + tc.Filter + ")"
@@ -351,6 +357,7 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 	var view *ProjectView
 	var filteringForBucket bool
 	if tf.ProjectViewID != 0 {
+		log.Debugf("TaskCollection.ReadAll: Fetching view for tf.ProjectViewID=%d, tf.ProjectID=%d, tf.isSavedFilter=%v", tf.ProjectViewID, tf.ProjectID, tf.isSavedFilter)
 		if GetProjectViewByIDAndProjectFunc == nil {
 			panic("ProjectViewService not initialized - ensure services.InitializeDependencies() is called")
 		}

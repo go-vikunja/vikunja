@@ -17,6 +17,7 @@
 package services
 
 import (
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/web"
 	"xorm.io/xorm"
@@ -303,6 +304,8 @@ func (pvs *ProjectViewService) getViewsForProject(s *xorm.Session, projectID int
 // This is a simple lookup helper used by permission methods
 // MIGRATION: Exposed in T-PERM-004 (migrated from models.GetProjectViewByIDAndProject)
 func (pvs *ProjectViewService) GetByIDAndProject(s *xorm.Session, viewID, projectID int64) (view *models.ProjectView, err error) {
+	log.Debugf("GetByIDAndProject: viewID=%d, projectID=%d", viewID, projectID)
+
 	if projectID == models.FavoritesPseudoProjectID && viewID < 0 {
 		for _, v := range models.FavoritesPseudoProject.Views {
 			if v.ID == viewID {
@@ -321,8 +324,11 @@ func (pvs *ProjectViewService) GetByIDAndProject(s *xorm.Session, viewID, projec
 		NoAutoCondition().
 		Get(view)
 	if err != nil {
+		log.Errorf("GetByIDAndProject: query error: %v", err)
 		return nil, err
 	}
+
+	log.Debugf("GetByIDAndProject: exists=%v, view=%+v", exists, view)
 
 	if !exists {
 		return nil, &models.ErrProjectViewDoesNotExist{

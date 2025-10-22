@@ -26,6 +26,7 @@ import (
 	vconfig "code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 
 	"github.com/labstack/echo/v4"
@@ -49,6 +50,12 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid model provided. Error was: %s", he.Message)).SetInternal(err)
 		}
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid model provided.").SetInternal(err)
+	}
+
+	// Debug: log bound values
+	if tc, ok := currentStruct.(*models.TaskCollection); ok {
+		log.Debugf("ReadAllWeb: Bound TaskCollection - ProjectID=%d, ProjectViewID=%d, URL params: project=%s, view=%s",
+			tc.ProjectID, tc.ProjectViewID, ctx.Param("project"), ctx.Param("view"))
 	}
 
 	// Pagination
