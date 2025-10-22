@@ -260,6 +260,14 @@ func restoreTableData(tables map[string]*zip.File) error {
 		"task_positions": {"position"},
 	}
 
+	// Column renames - maps old column names to new ones
+	// Migration 20250813093602 renamed 'right' to 'permission' in multiple tables
+	columnRenames := map[string]map[string]string{
+		"link_shares":    {"right": "permission"},
+		"users_projects": {"right": "permission"},
+		"team_projects":  {"right": "permission"},
+	}
+
 	// Restore all db data
 	for table, d := range tables {
 		content, err := unmarshalFileToJSON(d)
@@ -296,6 +304,18 @@ func restoreTableData(tables map[string]*zip.File) error {
 		if fields, hasDoubleFields := floatFields[table]; hasDoubleFields {
 			if err := processFields(fields, true); err != nil {
 				return err
+			}
+		}
+
+		// Rename columns if needed (for backwards compatibility with older dumps)
+		if renames, hasRenames := columnRenames[table]; hasRenames {
+			for i := range content {
+				for oldName, newName := range renames {
+					if value, hasOldColumn := content[i][oldName]; hasOldColumn {
+						content[i][newName] = value
+						delete(content[i], oldName)
+					}
+				}
 			}
 		}
 
