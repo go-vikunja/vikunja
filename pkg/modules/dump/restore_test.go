@@ -18,6 +18,7 @@ package dump
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -70,20 +71,20 @@ func TestConvertFieldValue(t *testing.T) {
 			encoded := base64.StdEncoding.EncodeToString([]byte(jsonData))
 			result, err := convertFieldValue("permissions", encoded, false)
 			require.NoError(t, err)
-			// Result should be a map, not a string
-			resultMap, ok := result.(map[string]interface{})
-			require.True(t, ok, "result should be a map")
-			assert.Equal(t, "value", resultMap["key"])
+			// Result should be json.RawMessage
+			rawMsg, ok := result.(json.RawMessage)
+			require.True(t, ok, "result should be json.RawMessage")
+			assert.JSONEq(t, jsonData, string(rawMsg))
 		})
 
 		t.Run("should handle non-base64 string and parse JSON", func(t *testing.T) {
 			jsonData := `{"key": "value"}`
 			result, err := convertFieldValue("permissions", jsonData, false)
 			require.NoError(t, err)
-			// Result should be a map, not a string
-			resultMap, ok := result.(map[string]interface{})
-			require.True(t, ok, "result should be a map")
-			assert.Equal(t, "value", resultMap["key"])
+			// Result should be json.RawMessage
+			rawMsg, ok := result.(json.RawMessage)
+			require.True(t, ok, "result should be json.RawMessage")
+			assert.JSONEq(t, jsonData, string(rawMsg))
 		})
 
 		t.Run("should return nil for 'null' string", func(t *testing.T) {
