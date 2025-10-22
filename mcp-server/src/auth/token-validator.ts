@@ -99,6 +99,12 @@ export class TokenValidator {
 			});
 
 			const userData = response.data;
+			
+			// Validate required fields
+			if (!userData || !userData.id || !userData.username) {
+				throw new AuthenticationError('Invalid API response: missing required user data', { code: 'INVALID_RESPONSE' });
+			}
+			
 			const userContext: UserContext = {
 				userId: userData.id,
 				username: userData.username,
@@ -125,6 +131,12 @@ export class TokenValidator {
 			}
 
 			logError(error as Error, { context: 'token-validation', tokenHash });
+			
+			// Re-throw AuthenticationError as-is
+			if (error instanceof AuthenticationError) {
+				throw error;
+			}
+			
 			throw new AuthenticationError('Token validation failed', { code: 'VALIDATION_ERROR' });
 		}
 	}

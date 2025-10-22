@@ -43,6 +43,10 @@ export class SessionManager {
 	private sessions = new Map<string, Session>();
 	private sessionsByToken = new Map<string, Set<string>>();
 	private cleanupInterval: NodeJS.Timeout | null = null;
+	private metrics = {
+		totalCreated: 0,
+		totalTerminated: 0,
+	};
 
 	constructor() {
 		this.startCleanupInterval();
@@ -80,7 +84,11 @@ export class SessionManager {
 		}
 		this.sessionsByToken.get(token)!.add(sessionId);
 
-		logHttpTransport('session_created', sessionId, {
+		// Update metrics
+		this.metrics.totalCreated++;
+
+		logHttpTransport('session_created', {
+			sessionId,
 			transport,
 			userId: userContext.userId,
 			username: userContext.username,
@@ -133,7 +141,8 @@ export class SessionManager {
 		}
 
 		session.state = 'orphaned';
-		logHttpTransport('disconnect', sessionId, {
+		logHttpTransport('disconnect', {
+			sessionId,
 			transport: session.transport,
 			duration: Date.now() - session.createdAt.getTime(),
 		});
@@ -162,7 +171,11 @@ export class SessionManager {
 		// Remove from sessions map
 		this.sessions.delete(sessionId);
 
-		logHttpTransport('session_cleanup', sessionId, {
+		// Update metrics
+		this.metrics.totalTerminated++;
+
+		logHttpTransport('session_cleanup', {
+			sessionId,
 			transport: session.transport,
 			duration: Date.now() - session.createdAt.getTime(),
 		});
@@ -241,7 +254,7 @@ export class SessionManager {
 		}
 
 		if (cleanedCount > 0) {
-			logHttpTransport('session_cleanup', undefined, {
+			logHttpTransport('session_cleanup', {
 				cleanedSessions: cleanedCount,
 				remainingSessions: this.sessions.size,
 			});
@@ -262,7 +275,7 @@ export class SessionManager {
 			}
 		}, intervalMs);
 
-		logHttpTransport('session_created', undefined, {
+		logHttpTransport('session_created', {
 			message: 'Session cleanup interval started',
 			intervalSeconds: config.session.cleanupIntervalSeconds,
 		});
@@ -290,9 +303,24 @@ export class SessionManager {
 			this.terminateSession(sessionId);
 		}
 
-		logHttpTransport('session_cleanup', undefined, {
+		logHttpTransport('session_cleanup', {
 			message: 'Session manager shutdown complete',
 		});
+	}
+
+	/**
+	 * Get session metrics
+	 */
+	getMetrics(): {
+		activeSessions: number;
+		totalCreated: number;
+		totalTerminated: number;
+	} {
+		return {
+			activeSessions: this.sessions.size,
+			totalCreated: this.metrics.totalCreated,
+			totalTerminated: this.metrics.totalTerminated,
+		};
 	}
 }
 

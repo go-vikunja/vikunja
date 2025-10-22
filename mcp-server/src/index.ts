@@ -7,6 +7,9 @@ import { Authenticator } from './auth/authenticator.js';
 import { RateLimiter } from './ratelimit/limiter.js';
 import { VikunjaClient } from './vikunja/client.js';
 import { VikunjaMCPServer } from './server.js';
+import { HTTPStreamableTransport } from './transports/http/http-streamable.js';
+import { TokenValidator } from './auth/token-validator.js';
+import { SessionManager } from './transports/http/session-manager.js';
 
 /**
  * Application state
@@ -18,6 +21,9 @@ interface AppState {
   rateLimiter: RateLimiter;
   mcpServer: VikunjaMCPServer;
   httpServer: Express;
+  tokenValidator: TokenValidator;
+  sessionManager: SessionManager;
+  httpStreamableTransport?: HTTPStreamableTransport;
   startTime: number;
 }
 
@@ -45,6 +51,12 @@ async function initializeApp(): Promise<AppState> {
 
   // Create authenticator
   const authenticator = new Authenticator();
+
+  // Create token validator (for HTTP transport)
+  const tokenValidator = new TokenValidator();
+
+  // Create session manager (for HTTP transport)
+  const sessionManager = new SessionManager();
 
   // Create rate limiter
   const rateLimiter = new RateLimiter(redis);
@@ -90,6 +102,25 @@ async function initializeApp(): Promise<AppState> {
       vikunjaApiUrl: config.vikunjaApiUrl,
     });
   });
+
+  // HTTP Streamable transport endpoint (POST /mcp) - Primary recommended transport
+  let httpStreamableTransport: HTTPStreamableTransport | undefined;
+  if (config.httpTransport.enabled) {
+    httpStreamableTransport = new HTTPStreamableTransport({
+      mcpServer,
+      sessionManager,
+      tokenValidator,
+      rateLimiter,
+    });
+
+    // Capture transport in const to avoid non-null assertion
+    const transport = httpStreamableTransport;
+    httpServer.post('/mcp', (req, res) => {
+      void transport.handleRequest(req, res);
+    });
+
+    logger.info('HTTP Streamable transport endpoint registered at POST /mcp');
+  }
 
   // SSE endpoint for MCP over HTTP
   // Store active SSE transports by session ID
@@ -217,6 +248,9 @@ async function initializeApp(): Promise<AppState> {
     rateLimiter,
     mcpServer,
     httpServer,
+    tokenValidator,
+    sessionManager,
+    ...(httpStreamableTransport ? { httpStreamableTransport } : {}),
     startTime: Date.now(),
   };
 }
@@ -232,6 +266,14 @@ async function shutdown(): Promise<void> {
   }
 
   try {
+    // Stop HTTP Streamable transport
+    if (appState.httpStreamableTransport) {
+      await appState.httpStreamableTransport.close();
+    }
+
+    // Stop session cleanup
+    await appState.sessionManager.shutdown();
+
     // Stop MCP server
     await appState.mcpServer.stop();
 

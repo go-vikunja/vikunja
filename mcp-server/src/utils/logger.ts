@@ -115,13 +115,24 @@ export function logToolCall(
  * Log HTTP transport events
  */
 export function logHttpTransport(
-  event: 'connection' | 'disconnect' | 'error' | 'session_created' | 'session_cleanup',
-  sessionId?: string,
+  event:
+    | 'connection'
+    | 'disconnect'
+    | 'error'
+    | 'session_created'
+    | 'session_cleanup'
+    | 'session_activity_updated'
+    | 'session_expired'
+    | 'rate_limit_exceeded'
+    | 'mcp_session_initialized'
+    | 'mcp_session_closed'
+    | 'request_handled'
+    | 'transport_creating'
+    | 'transport_connected',
   context?: Record<string, unknown>
 ): void {
   logger.info(`HTTP Transport: ${event}`, {
     event,
-    sessionId,
     transport: 'http',
     ...context,
   });
@@ -131,7 +142,12 @@ export function logHttpTransport(
  * Log authentication events
  */
 export function logAuth(
-  event: 'token_validated' | 'token_cached' | 'auth_failed' | 'token_expired',
+  event:
+    | 'token_validated'
+    | 'token_cached'
+    | 'auth_failed'
+    | 'token_expired'
+    | 'authentication_failed',
   tokenHash?: string,
   context?: Record<string, unknown>
 ): void {
