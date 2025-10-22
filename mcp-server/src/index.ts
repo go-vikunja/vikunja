@@ -180,19 +180,35 @@ async function initializeApp(): Promise<AppState> {
     }
   });
 
-  // Start HTTP server
-  const port = config.port;
-  await new Promise<void>((resolve) => {
-    httpServer.listen(port, () => {
-      logger.info(`HTTP server listening on port ${port}`);
-      logger.info(`SSE endpoint available at GET/POST http://localhost:${port}/sse`);
-      resolve();
+  // Start HTTP server if HTTP transport is enabled
+  if (config.httpTransport.enabled) {
+    const port = config.httpTransport.port;
+    await new Promise<void>((resolve) => {
+      httpServer.listen(port, config.httpTransport.host, () => {
+        logger.info(`HTTP server listening on ${config.httpTransport.host}:${port}`);
+        logger.info(`SSE endpoint available at GET/POST http://${config.httpTransport.host}:${port}/sse`);
+        logger.info('HTTP transport mode enabled - stdio transport disabled');
+        resolve();
+      });
     });
-  });
+  } else {
+    // Start HTTP server on legacy port for health checks only (no SSE endpoints)
+    const port = config.port;
+    await new Promise<void>((resolve) => {
+      httpServer.listen(port, () => {
+        logger.info(`HTTP server listening on port ${port} (health checks only)`);
+        resolve();
+      });
+    });
+  }
 
-  // Start MCP server (stdio transport)
-  logger.info('Starting MCP server');
-  await mcpServer.start();
+  // Start MCP server (stdio transport) only if HTTP transport is disabled
+  if (!config.httpTransport.enabled) {
+    logger.info('Starting MCP server in stdio mode');
+    await mcpServer.start();
+  } else {
+    logger.info('Stdio transport disabled (HTTP transport mode)');
+  }
 
   return {
     redis,
@@ -255,9 +271,11 @@ process.on('unhandledRejection', handleError);
 initializeApp()
   .then((state) => {
     appState = state;
+    const mode = config.httpTransport.enabled ? 'HTTP' : 'stdio';
     logger.info('Vikunja MCP Server started successfully', {
       version: '1.0.0',
-      port: config.port,
+      mode,
+      port: config.httpTransport.enabled ? config.httpTransport.port : config.port,
     });
   })
   .catch((error: Error) => {
