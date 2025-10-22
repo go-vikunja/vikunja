@@ -65,19 +65,25 @@ func TestConvertFieldValue(t *testing.T) {
 	})
 
 	t.Run("JSON field conversions", func(t *testing.T) {
-		t.Run("should decode base64 string", func(t *testing.T) {
+		t.Run("should decode base64 string and parse JSON", func(t *testing.T) {
 			jsonData := `{"key": "value"}`
 			encoded := base64.StdEncoding.EncodeToString([]byte(jsonData))
 			result, err := convertFieldValue("permissions", encoded, false)
 			require.NoError(t, err)
-			assert.JSONEq(t, jsonData, result.(string))
+			// Result should be a map, not a string
+			resultMap, ok := result.(map[string]interface{})
+			require.True(t, ok, "result should be a map")
+			assert.Equal(t, "value", resultMap["key"])
 		})
 
-		t.Run("should handle non-base64 string", func(t *testing.T) {
+		t.Run("should handle non-base64 string and parse JSON", func(t *testing.T) {
 			jsonData := `{"key": "value"}`
 			result, err := convertFieldValue("permissions", jsonData, false)
 			require.NoError(t, err)
-			assert.JSONEq(t, jsonData, result.(string))
+			// Result should be a map, not a string
+			resultMap, ok := result.(map[string]interface{})
+			require.True(t, ok, "result should be a map")
+			assert.Equal(t, "value", resultMap["key"])
 		})
 
 		t.Run("should return nil for 'null' string", func(t *testing.T) {
