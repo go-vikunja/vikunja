@@ -1,354 +1,776 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, vi } from 'vitest';
+import type { Server } from 'node:http';
+import express, { type Express } from 'express';
+import supertest from 'supertest';
+import { VikunjaClient } from '../../src/vikunja/client.js';
+import { VikunjaMCPServer } from '../../src/server.js';
+import { HTTPStreamableTransport } from '../../src/transports/http/http-streamable.js';
+import { TokenValidator } from '../../src/auth/token-validator.js';
+import { SessionManager } from '../../src/transports/http/session-manager.js';
+import { RateLimiter } from '../../src/ratelimit/limiter.js';
+import { Authenticator } from '../../src/auth/authenticator.js';
+import type { UserContext as ServerUserContext } from '../../src/auth/types.js';
+import type { UserContext as TokenUserContext } from '../../src/auth/token-validator.js';
 
 /**
- * HTTP Transport Integration Tests (TDD - Written FIRST for T017)
+ * REGRESSION FOUND: There are two different UserContext types!
+ * - auth/types.ts: has 'token' field, no 'permissions' or 'validatedAt'
+ * - auth/token-validator.ts: has 'permissions' and 'validatedAt', no 'token'
  * 
- * These tests define end-to-end behavior of the HTTP transport:
- * 1. Full connection flow: authenticate → initialize → list tools → call tool
- * 2. Tool listing returns all available Vikunja tools
- * 3. Tool execution works with real Vikunja API calls
- * 4. Session persistence across multiple requests
- * 5. Rate limiting enforcement across requests
- * 6. Graceful error handling and cleanup
- * 
- * Note: These are integration tests that will require a running HTTP server
- * and mock Vikunja API. Implementation pending T018-T025.
+ * This needs to be unified in a future task. For now, we'll create a combined type.
  */
-describe('HTTP Transport Integration - Expected End-to-End Behavior', () => {
-  describe('Connection Lifecycle', () => {
-    it('should define full connection flow steps', () => {
-      const connectionFlow = [
-        '1. Client sends POST /mcp with Authorization header',
-        '2. Server validates token against Vikunja API',
-        '3. Server creates session and returns session ID',
-        '4. Client sends initialize request',
-        '5. Server returns capabilities and server info',
-        '6. Connection is established',
-      ];
+type CombinedUserContext = ServerUserContext & TokenUserContext;
 
-      expect(connectionFlow).toHaveLength(6);
-      expect(connectionFlow[0]).toContain('Authorization header');
-      expect(connectionFlow[5]).toContain('established');
-    });
+/**
+ * Integration Tests for HTTP Transport (T028b)
+ * 
+ * These tests verify the complete end-to-end flow of the HTTP transport:
+ * - Real Express server with all middleware
+ * - Actual MCP protocol message exchange
+ * - Tool listing and execution
+ * - Session management across requests
+ * - Error handling and recovery
+ * 
+ * Unlike unit tests, these tests use the real server stack (with mocked external dependencies).
+ */
 
-    it('should define tool listing flow', () => {
-      const toolListingFlow = [
-        '1. Client sends tools/list request',
-        '2. Server returns list of available tools',
-        '3. Each tool has name, description, inputSchema',
-      ];
+// Mock ioredis before any imports
+vi.mock('ioredis', () => {
+	const mockRedis = {
+		get: vi.fn().mockResolvedValue(null),
+		set: vi.fn().mockResolvedValue('OK'),
+		setex: vi.fn().mockResolvedValue('OK'),
+		del: vi.fn().mockResolvedValue(1),
+		expire: vi.fn().mockResolvedValue(1),
+		ttl: vi.fn().mockResolvedValue(300),
+		exists: vi.fn().mockResolvedValue(0),
+		incr: vi.fn().mockResolvedValue(1),
+		ping: vi.fn().mockResolvedValue('PONG'),
+		quit: vi.fn().mockResolvedValue('OK'),
+		disconnect: vi.fn(),
+		on: vi.fn(),
+	};
 
-      expect(toolListingFlow).toHaveLength(3);
-    });
+	return {
+		default: vi.fn(() => mockRedis),
+	};
+});
 
-    it('should define tool execution flow', () => {
-      const toolExecutionFlow = [
-        '1. Client sends tools/call request with tool name and arguments',
-        '2. Server validates arguments against tool inputSchema',
-        '3. Server calls Vikunja API with user token',
-        '4. Server returns tool result',
-      ];
+// Mock axios for Vikunja API calls
+vi.mock('axios', () => {
+	const mockAxios = {
+		create: vi.fn(() => mockAxios),
+		get: vi.fn(),
+		post: vi.fn(),
+		put: vi.fn(),
+		delete: vi.fn(),
+		interceptors: {
+			request: {
+				use: vi.fn(),
+				eject: vi.fn(),
+			},
+			response: {
+				use: vi.fn(),
+				eject: vi.fn(),
+			},
+		},
+	};
+	return { default: mockAxios };
+});
 
-      expect(toolExecutionFlow).toHaveLength(4);
-    });
-  });
+describe('HTTP Transport End-to-End Integration Tests', () => {
+	let app: Express;
+	let server: Server;
+	let transport: HTTPStreamableTransport;
+	let tokenValidator: TokenValidator;
+	let sessionManager: SessionManager;
+	let rateLimiter: RateLimiter;
+	let mcpServer: VikunjaMCPServer;
 
-  describe('Expected Tool Availability', () => {
-    it('should plan to expose task management tools', () => {
-      const expectedTools = [
-        'get_tasks',
-        'create_task',
-        'update_task',
-        'delete_task',
-        'get_projects',
-        'create_project',
-        // Add more as needed
-      ];
+	const mockUserContext: CombinedUserContext = {
+		userId: 1,
+		username: 'testuser',
+		email: 'test@example.com',
+		token: 'valid-test-token',
+		permissions: ['task:read', 'task:write', 'project:read', 'project:write'],
+		validatedAt: new Date(),
+	};
 
-      expect(expectedTools).toContain('get_tasks');
-      expect(expectedTools).toContain('create_task');
-      expect(expectedTools.length).toBeGreaterThan(0);
-    });
+	/**
+	 * Setup test server with all components
+	 */
+	beforeAll(async () => {
+		// Create dependencies
+		const authenticator = new Authenticator();
+		const vikunjaClient = new VikunjaClient();
 
-    it('should plan for tool schemas to match Vikunja API', () => {
-      const getTasksSchema = {
-        type: 'object',
-        properties: {
-          project_id: {
-            type: 'number',
-            description: 'ID of the project to get tasks from',
-          },
-          filter: {
-            type: 'string',
-            description: 'Filter tasks by name or description',
-          },
-        },
-      };
+		// Mock Vikunja API responses via generic HTTP methods
+		vi.spyOn(vikunjaClient, 'get').mockImplementation(async (path: string) => {
+			if (path.includes('/tasks')) {
+				return [
+					{ id: 1, title: 'Test Task 1', done: false, project_id: 1 },
+					{ id: 2, title: 'Test Task 2', done: true, project_id: 1 },
+				] as any;
+			}
+			if (path.includes('/user')) {
+				return {
+					id: mockUserContext.userId,
+					username: mockUserContext.username,
+					email: mockUserContext.email,
+				} as any;
+			}
+			return {} as any;
+		});
 
-      expect(getTasksSchema.properties.project_id).toBeDefined();
-      expect(getTasksSchema.properties.project_id.type).toBe('number');
-    });
-  });
+		vi.spyOn(vikunjaClient, 'post').mockImplementation(async (path: string, data: any) => {
+			if (path.includes('/tasks')) {
+				return {
+					id: 3,
+					title: data?.title || 'New Task',
+					done: false,
+					project_id: data?.project_id || 1,
+				} as any;
+			}
+			return {} as any;
+		});
 
-  describe('Session Persistence', () => {
-    it('should plan to reuse session across multiple requests', () => {
-      const scenario = {
-        request1: { method: 'initialize', sessionCreated: true },
-        request2: { method: 'tools/list', sessionReused: true },
-        request3: { method: 'tools/call', sessionReused: true },
-      };
+		// Create real components
+		tokenValidator = new TokenValidator();
+		sessionManager = new SessionManager();
 
-      expect(scenario.request1.sessionCreated).toBe(true);
-      expect(scenario.request2.sessionReused).toBe(true);
-      expect(scenario.request3.sessionReused).toBe(true);
-    });
+		// Create rate limiter with mocked Redis
+		const { default: Redis } = await import('ioredis');
+		const redis = new Redis();
+		rateLimiter = new RateLimiter({
+			get: redis.get.bind(redis),
+			set: redis.set.bind(redis),
+			setex: redis.setex.bind(redis),
+			del: redis.del.bind(redis),
+			expire: redis.expire.bind(redis),
+			ttl: redis.ttl.bind(redis),
+			exists: redis.exists.bind(redis),
+			incr: redis.incr.bind(redis),
+			ping: redis.ping.bind(redis),
+		} as any);
 
-    it('should plan to update session activity on each request', () => {
-      const sessionUpdates = {
-        initialActivity: new Date('2025-10-22T10:00:00Z'),
-        afterToolList: new Date('2025-10-22T10:01:00Z'),
-        afterToolCall: new Date('2025-10-22T10:02:00Z'),
-      };
+		// Create MCP server
+		mcpServer = new VikunjaMCPServer(authenticator, rateLimiter, vikunjaClient);
 
-      expect(sessionUpdates.afterToolList.getTime()).toBeGreaterThan(
-        sessionUpdates.initialActivity.getTime()
-      );
-      expect(sessionUpdates.afterToolCall.getTime()).toBeGreaterThan(
-        sessionUpdates.afterToolList.getTime()
-      );
-    });
-  });
+		// Create HTTP transport
+		transport = new HTTPStreamableTransport({
+			mcpServer,
+			sessionManager,
+			tokenValidator,
+			rateLimiter,
+		});
 
-  describe('Rate Limiting Enforcement', () => {
-    it('should plan to track requests per token', () => {
-      const rateLimitConfig = {
-        maxRequests: 100,
-        windowSeconds: 900, // 15 minutes
-        perToken: true,
-      };
+		// Create Express app
+		app = express();
+		app.use(express.json());
 
-      expect(rateLimitConfig.maxRequests).toBe(100);
-      expect(rateLimitConfig.windowSeconds).toBe(900);
-      expect(rateLimitConfig.perToken).toBe(true);
-    });
+		// Mount MCP endpoint
+		app.post('/mcp', (req, res) => {
+			void transport.handleRequest(req, res);
+		});
 
-    it('should plan to return 429 when limit exceeded', () => {
-      const scenario = {
-        request1: { allowed: true, remaining: 99 },
-        request2: { allowed: true, remaining: 98 },
-        // ... 98 more requests ...
-        request101: { allowed: false, status: 429 },
-      };
+		// Start server
+		await new Promise<void>((resolve) => {
+			server = app.listen(0, () => {
+				resolve();
+			});
+		});
+	});
 
-      expect(scenario.request1.allowed).toBe(true);
-      expect(scenario.request101.status).toBe(429);
-    });
+	afterAll(async () => {
+		if (server) {
+			await new Promise<void>((resolve) => {
+				server.close(() => resolve());
+			});
+		}
+		if (transport) {
+			await transport.close();
+		}
+	});
 
-    it('should plan to include retry information in 429 response', () => {
-      const errorResponse = {
-        error: {
-          code: -32003,
-          message: 'Rate limit exceeded',
-          data: {
-            retryAfter: 600, // seconds
-            limit: 100,
-            window: 900,
-          },
-        },
-      };
+	/**
+	 * Helper to create supertest request with required MCP headers
+	 * Note: HTTP Streamable protocol always returns SSE format, not plain JSON
+	 */
+	const mcpRequest = () => supertest(app)
+		.post('/mcp')
+		.set('Accept', 'application/json, text/event-stream')
+		.set('Content-Type', 'application/json');
 
-      expect(errorResponse.error.data.retryAfter).toBeDefined();
-      expect(errorResponse.error.data.limit).toBe(100);
-    });
-  });
+	/**
+	 * Parse SSE (Server-Sent Events) response from MCP HTTP Streamable transport
+	 * The SDK always returns responses in SSE format: "event: message\ndata: {...}\n\n"
+	 * This is per the MCP HTTP Streamable protocol specification.
+	 */
+	const parseSSEResponse = (response: supertest.Response) => {
+		const text = response.text;
+		const lines = text.split('\n');
+		const dataLines = lines.filter(line => line.startsWith('data: '));
+		if (dataLines.length === 0) {
+			throw new Error('No SSE data found in response');
+		}
+		const jsonStr = dataLines[0].substring(6); // Remove "data: " prefix
+		return JSON.parse(jsonStr);
+	};
 
-  describe('Error Handling and Recovery', () => {
-    it('should plan for graceful Vikunja API failure handling', () => {
-      const errorScenarios = [
-        { vikunjStatus: 500, mcpStatus: 500, message: 'Vikunja API unavailable' },
-        { vikunjStatus: 404, mcpStatus: 200, jsonRpcError: true },
-        { vikunjStatus: 403, mcpStatus: 200, jsonRpcError: true },
-      ];
+	beforeEach(() => {
+		// Mock token validation to return valid user context
+		vi.spyOn(tokenValidator, 'validateToken').mockResolvedValue(mockUserContext);
 
-      expect(errorScenarios[0]!.mcpStatus).toBe(500);
-      expect(errorScenarios[1]!.jsonRpcError).toBe(true);
-    });
+		// Mock rate limiter to allow requests
+		vi.spyOn(rateLimiter, 'checkLimit').mockResolvedValue(undefined);
+	});
 
-    it('should plan for network timeout handling', () => {
-      const timeoutConfig = {
-        vikunjApiTimeout: 30000, // 30 seconds
-        gracefulError: true,
-      };
+	afterEach(() => {
+		vi.clearAllMocks();
+	});
 
-      expect(timeoutConfig.vikunjApiTimeout).toBeGreaterThan(0);
-      expect(timeoutConfig.gracefulError).toBe(true);
-    });
+	describe('MCP Protocol Connection Flow', () => {
+		it('should complete full initialization handshake', async () => {
+			const response = await mcpRequest()
+				.set('Authorization', 'Bearer valid-token')
+				.send({
+					jsonrpc: '2.0',
+					id: 1,
+					method: 'initialize',
+					params: {
+						protocolVersion: '2024-11-05',
+						clientInfo: {
+							name: 'test-client',
+							version: '1.0.0',
+						},
+						capabilities: {},
+					},
+				});
 
-    it('should plan for session cleanup on disconnect', () => {
-      const cleanupSteps = [
-        '1. Detect client disconnect',
-        '2. Mark session as orphaned',
-        '3. Wait 60 seconds for reconnection',
-        '4. Terminate session and free resources',
-      ];
+			expect(response.status).toBe(200);
+			expect(response.headers['content-type']).toBe('text/event-stream');
+			
+			const body = parseSSEResponse(response);
+			expect(body).toHaveProperty('jsonrpc', '2.0');
+			expect(body).toHaveProperty('id', 1);
+			expect(body).toHaveProperty('result');
 
-      expect(cleanupSteps).toHaveLength(4);
-      expect(cleanupSteps[3]).toContain('Terminate session');
-    });
-  });
+			const result = body.result;
+			expect(result).toHaveProperty('protocolVersion', '2024-11-05');
+			expect(result).toHaveProperty('serverInfo');
+			expect(result.serverInfo).toMatchObject({
+				name: 'vikunja-mcp',
+				version: '1.0.0',
+			});
+			expect(result).toHaveProperty('capabilities');
+		});
 
-  describe('Tool Execution with Vikunja API', () => {
-    it('should plan to forward user token to Vikunja API', () => {
-      const toolCallScenario = {
-        clientRequest: {
-          method: 'tools/call',
-          params: {
-            name: 'get_tasks',
-            arguments: { project_id: 1 },
-          },
-        },
-        vikunjApiCall: {
-          endpoint: '/tasks',
-          headers: {
-            Authorization: 'Bearer user-token-from-session',
-          },
-          params: { project: 1 },
-        },
-      };
+		it('should return session ID in response headers', async () => {
+			const response = await mcpRequest()
+				.set('Authorization', 'Bearer valid-token')
+				.send({
+					jsonrpc: '2.0',
+					id: 1,
+					method: 'initialize',
+					params: {
+						protocolVersion: '2024-11-05',
+						clientInfo: { name: 'test', version: '1.0.0' },
+						capabilities: {},
+					},
+				});
 
-      expect(toolCallScenario.vikunjApiCall.headers.Authorization).toContain('Bearer');
-    });
+			expect(response.status).toBe(200);
+			expect(response.headers['x-session-id']).toBeDefined();
+			expect(typeof response.headers['x-session-id']).toBe('string');
+			expect(response.headers['x-session-id'].length).toBeGreaterThan(0);
+		});
 
-    it('should plan to transform Vikunja responses to MCP format', () => {
-      const vikunjResponse = [
-        { id: 1, title: 'Task 1', done: false },
-        { id: 2, title: 'Task 2', done: true },
-      ];
+		it('should accept initialized notification', async () => {
+			// First initialize
+			const initResponse = await mcpRequest()
+				.set('Authorization', 'Bearer valid-token')
+				.send({
+					jsonrpc: '2.0',
+					id: 1,
+					method: 'initialize',
+					params: {
+						protocolVersion: '2024-11-05',
+						clientInfo: { name: 'test', version: '1.0.0' },
+						capabilities: {},
+					},
+				});
 
-      const mcpResponse = {
-        jsonrpc: '2.0',
-        id: 1,
-        result: {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(vikunjResponse, null, 2),
-            },
-          ],
-        },
-      };
+			const sessionId = initResponse.headers['x-session-id'] as string;
 
-      expect(mcpResponse.result.content[0]!.type).toBe('text');
-      expect(mcpResponse.result.content[0]!.text).toContain('Task 1');
-    });
-  });
+			// Then send initialized notification
+			const notificationResponse = await mcpRequest()
+				.set('Authorization', 'Bearer valid-token')
+				.set('X-Session-ID', sessionId)
+				.send({
+					jsonrpc: '2.0',
+					method: 'notifications/initialized',
+					params: {},
+				});
 
-  describe('Performance Requirements', () => {
-    it('should plan for connection establishment under 2 seconds', () => {
-      const performanceTarget = {
-        connectionTime: 2000, // ms
-        tokenValidation: 100, // ms (cached)
-        sessionCreation: 50, // ms
-      };
+			// Notifications don't return responses, but should be accepted
+			expect(notificationResponse.status).toBe(200);
+		});
+	});
 
-      expect(performanceTarget.connectionTime).toBeLessThanOrEqual(2000);
-    });
+	describe('Tool Listing', () => {
+		it('should return complete list of available tools', async () => {
+			// Initialize session first
+			const initResponse = await mcpRequest()
+				.set('Authorization', 'Bearer valid-token')
+				.send({
+					jsonrpc: '2.0',
+					id: 1,
+					method: 'initialize',
+					params: {
+						protocolVersion: '2024-11-05',
+						clientInfo: { name: 'test', version: '1.0.0' },
+						capabilities: {},
+					},
+				});
 
-    it('should plan for tool execution under 500ms overhead', () => {
-      const overheadTarget = {
-        authOverhead: 50, // ms (cached token)
-        sessionLookup: 10, // ms (in-memory)
-        rateLimitCheck: 20, // ms (Redis)
-        totalOverhead: 100, // ms
-        maxOverhead: 500, // ms
-      };
+			const sessionId = initResponse.headers['x-session-id'] as string;
 
-      expect(overheadTarget.totalOverhead).toBeLessThan(overheadTarget.maxOverhead);
-    });
-  });
+			// List tools
+			const toolsResponse = await mcpRequest()
+				.set('Authorization', 'Bearer valid-token')
+				.set('X-Session-ID', sessionId)
+				.send({
+					jsonrpc: '2.0',
+					id: 2,
+					method: 'tools/list',
+					params: {},
+				});
 
-  describe('Concurrent Client Support', () => {
-    it('should plan to support 50 concurrent sessions', () => {
-      const concurrencyTarget = {
-        maxSessions: 50,
-        memoryPerSession: 10240, // 10KB
-        totalMemory: 512000, // ~500KB
-      };
+			expect(toolsResponse.status).toBe(200);
+			expect(toolsResponse.body).toHaveProperty('result');
+			expect(toolsResponse.body.result).toHaveProperty('tools');
 
-      expect(concurrencyTarget.maxSessions).toBe(50);
-      expect(concurrencyTarget.totalMemory).toBeLessThan(1024 * 1024); // < 1MB
-    });
+			const tools = toolsResponse.body.result.tools;
+			expect(Array.isArray(tools)).toBe(true);
+			expect(tools.length).toBeGreaterThan(0);
 
-    it('should plan for per-token isolation in rate limiting', () => {
-      const isolationScenario = {
-        token1Requests: 100, // At limit
-        token2Requests: 5, // Well under limit
-        token1Blocked: true,
-        token2Allowed: true,
-      };
+			// Verify expected tools are present
+			const toolNames = tools.map((t: any) => t.name);
+			expect(toolNames).toContain('create_task');
+			expect(toolNames).toContain('update_task');
+			expect(toolNames).toContain('delete_task');
+			expect(toolNames).toContain('create_project');
+			expect(toolNames).toContain('update_project');
+		});
 
-      expect(isolationScenario.token1Blocked).toBe(true);
-      expect(isolationScenario.token2Allowed).toBe(true);
-    });
-  });
+		it('should include tool schemas in tool list', async () => {
+			// Initialize and get session
+			const initResponse = await mcpRequest()
+				.set('Authorization', 'Bearer valid-token')
+				.send({
+					jsonrpc: '2.0',
+					id: 1,
+					method: 'initialize',
+					params: {
+						protocolVersion: '2024-11-05',
+						clientInfo: { name: 'test', version: '1.0.0' },
+						capabilities: {},
+					},
+				});
 
-  describe('Security Validation', () => {
-    it('should plan to reject requests without authentication', () => {
-      const noAuthRequest = {
-        headers: {
-          // No Authorization header
-        },
-        expectedStatus: 401,
-      };
+			const sessionId = initResponse.headers['x-session-id'] as string;
 
-      expect(noAuthRequest.expectedStatus).toBe(401);
-    });
+			// List tools
+			const toolsResponse = await mcpRequest()
+				.set('Authorization', 'Bearer valid-token')
+				.set('X-Session-ID', sessionId)
+				.send({
+					jsonrpc: '2.0',
+					id: 2,
+					method: 'tools/list',
+					params: {},
+				});
 
-    it('should plan to validate token on every request', () => {
-      const securityFlow = {
-        cacheEnabled: true,
-        cacheTTL: 300, // 5 minutes
-        validateAfterExpiry: true,
-      };
+			const tools = toolsResponse.body.result.tools;
+			const createTaskTool = tools.find((t: any) => t.name === 'create_task');
 
-      expect(securityFlow.cacheEnabled).toBe(true);
-      expect(securityFlow.validateAfterExpiry).toBe(true);
-    });
+			expect(createTaskTool).toBeDefined();
+			expect(createTaskTool).toHaveProperty('name', 'create_task');
+			expect(createTaskTool).toHaveProperty('description');
+			expect(createTaskTool).toHaveProperty('inputSchema');
+			expect(createTaskTool.inputSchema).toHaveProperty('type', 'object');
+			expect(createTaskTool.inputSchema).toHaveProperty('properties');
+		});
+	});
 
-    it('should plan to enforce Vikunja permissions', () => {
-      const permissionScenario = {
-        userPermissions: ['task:read'], // No write permission
-        toolCall: 'create_task',
-        expectedOutcome: 'Vikunja API returns 403',
-        mcpResponse: 'JSON-RPC error with Vikunja error message',
-      };
+	describe('Tool Execution', () => {
+		it('should execute tool with valid arguments', async () => {
+			// Initialize and get session
+			const initResponse = await mcpRequest()
+				.set('Authorization', 'Bearer valid-token')
+				.send({
+					jsonrpc: '2.0',
+					id: 1,
+					method: 'initialize',
+					params: {
+						protocolVersion: '2024-11-05',
+						clientInfo: { name: 'test', version: '1.0.0' },
+						capabilities: {},
+					},
+				});
 
-      expect(permissionScenario.userPermissions).not.toContain('task:write');
-      expect(permissionScenario.expectedOutcome).toContain('403');
-    });
-  });
+			const sessionId = initResponse.headers['x-session-id'] as string;
 
-  describe('Monitoring and Observability', () => {
-    it('should plan to log all authentication attempts', () => {
-      const logEvents = [
-        { event: 'token_validation_start', level: 'debug' },
-        { event: 'token_validation_success', level: 'info' },
-        { event: 'token_validation_failure', level: 'warn' },
-      ];
+			// Set user context in MCP server for this session
+			mcpServer.setUserContext('http-session', mockUserContext);
 
-      expect(logEvents.every((e) => e.event && e.level)).toBe(true);
-    });
+			// Call get_tasks tool
+			const toolResponse = await mcpRequest()
+				.set('Authorization', 'Bearer valid-token')
+				.set('X-Session-ID', sessionId)
+				.send({
+					jsonrpc: '2.0',
+					id: 3,
+					method: 'tools/call',
+					params: {
+						name: 'get_tasks',
+						arguments: {
+							project_id: 1,
+						},
+					},
+				});
 
-    it('should plan to track session metrics', () => {
-      const metrics = {
-        activeSessions: 15,
-        totalCreated: 42,
-        totalTerminated: 27,
-        averageLifetime: 900, // 15 minutes in seconds
-      };
+			expect(toolResponse.status).toBe(200);
+			expect(toolResponse.body).toHaveProperty('result');
+			expect(toolResponse.body.result).toHaveProperty('content');
+			expect(Array.isArray(toolResponse.body.result.content)).toBe(true);
+			expect(toolResponse.body.result.content[0]).toHaveProperty('type', 'text');
 
-      expect(metrics.activeSessions).toBeGreaterThan(0);
-      expect(metrics.totalCreated).toBeGreaterThan(metrics.totalTerminated);
-    });
-  });
+			// Verify response contains task data
+			const resultText = toolResponse.body.result.content[0].text;
+			expect(resultText).toContain('Test Task 1');
+			expect(resultText).toContain('Test Task 2');
+		});
+
+		it('should reject tool call without user context', async () => {
+			// Initialize session
+			const initResponse = await mcpRequest()
+				.set('Authorization', 'Bearer valid-token')
+				.send({
+					jsonrpc: '2.0',
+					id: 1,
+					method: 'initialize',
+					params: {
+						protocolVersion: '2024-11-05',
+						clientInfo: { name: 'test', version: '1.0.0' },
+						capabilities: {},
+					},
+				});
+
+			const sessionId = initResponse.headers['x-session-id'] as string;
+
+			// DON'T set user context - simulate unauthorized state
+
+			// Try to call tool
+			const toolResponse = await mcpRequest()
+				.set('Authorization', 'Bearer valid-token')
+				.set('X-Session-ID', sessionId)
+				.send({
+					jsonrpc: '2.0',
+					id: 3,
+					method: 'tools/call',
+					params: {
+						name: 'get_tasks',
+						arguments: { project_id: 1 },
+					},
+				});
+
+			// Should return error
+			expect(toolResponse.status).toBe(200); // JSON-RPC errors are 200
+			expect(toolResponse.body).toHaveProperty('error');
+			expect(toolResponse.body.error.message).toContain('Unauthorized');
+		});
+
+		it('should validate tool arguments against schema', async () => {
+			// Initialize session
+			const initResponse = await mcpRequest()
+				.set('Authorization', 'Bearer valid-token')
+				.send({
+					jsonrpc: '2.0',
+					id: 1,
+					method: 'initialize',
+					params: {
+						protocolVersion: '2024-11-05',
+						clientInfo: { name: 'test', version: '1.0.0' },
+						capabilities: {},
+					},
+				});
+
+			const sessionId = initResponse.headers['x-session-id'] as string;
+			mcpServer.setUserContext('http-session', mockUserContext);
+
+			// Call tool with invalid arguments (missing required field)
+			const toolResponse = await mcpRequest()
+				.set('Authorization', 'Bearer valid-token')
+				.set('X-Session-ID', sessionId)
+				.send({
+					jsonrpc: '2.0',
+					id: 3,
+					method: 'tools/call',
+					params: {
+						name: 'create_task',
+						arguments: {
+							// Missing required 'title' field
+							project_id: 1,
+						},
+					},
+				});
+
+			// Should return validation error
+			expect(toolResponse.status).toBe(200);
+			expect(toolResponse.body).toHaveProperty('error');
+			expect(toolResponse.body.error.message).toMatch(/invalid|required|title/i);
+		});
+	});
+
+	describe('Session Persistence', () => {
+		it('should maintain session across multiple requests', async () => {
+			// Initialize and get session ID
+			const initResponse = await mcpRequest()
+				.set('Authorization', 'Bearer valid-token')
+				.send({
+					jsonrpc: '2.0',
+					id: 1,
+					method: 'initialize',
+					params: {
+						protocolVersion: '2024-11-05',
+						clientInfo: { name: 'test', version: '1.0.0' },
+						capabilities: {},
+					},
+				});
+
+			const sessionId = initResponse.headers['x-session-id'] as string;
+
+			// Make second request with same session ID
+			const request2 = await mcpRequest()
+				.set('Authorization', 'Bearer valid-token')
+				.set('X-Session-ID', sessionId)
+				.send({
+					jsonrpc: '2.0',
+					id: 2,
+					method: 'tools/list',
+					params: {},
+				});
+
+			expect(request2.status).toBe(200);
+			expect(request2.headers['x-session-id']).toBe(sessionId);
+
+			// Make third request with same session ID
+			const request3 = await mcpRequest()
+				.set('Authorization', 'Bearer valid-token')
+				.set('X-Session-ID', sessionId)
+				.send({
+					jsonrpc: '2.0',
+					id: 3,
+					method: 'ping',
+					params: {},
+				});
+
+			expect(request3.status).toBe(200);
+			expect(request3.headers['x-session-id']).toBe(sessionId);
+		});
+
+		it('should track session activity on each request', async () => {
+			// Initialize session
+			const initResponse = await mcpRequest()
+				.set('Authorization', 'Bearer valid-token')
+				.send({
+					jsonrpc: '2.0',
+					id: 1,
+					method: 'initialize',
+					params: {
+						protocolVersion: '2024-11-05',
+						clientInfo: { name: 'test', version: '1.0.0' },
+						capabilities: {},
+					},
+				});
+
+			const sessionId = initResponse.headers['x-session-id'] as string;
+			const session1 = sessionManager.getSession(sessionId);
+			expect(session1).toBeDefined();
+			const activity1 = session1!.lastActivity;
+
+			// Wait a bit
+			await new Promise((resolve) => setTimeout(resolve, 10));
+
+			// Make another request
+			await mcpRequest()
+				.set('Authorization', 'Bearer valid-token')
+				.set('X-Session-ID', sessionId)
+				.send({
+					jsonrpc: '2.0',
+					id: 2,
+					method: 'tools/list',
+					params: {},
+				});
+
+			const session2 = sessionManager.getSession(sessionId);
+			expect(session2).toBeDefined();
+			const activity2 = session2!.lastActivity;
+
+			// Activity should have been updated
+			expect(activity2.getTime()).toBeGreaterThan(activity1.getTime());
+		});
+
+		it('should create new session if provided session ID is invalid', async () => {
+			const response = await mcpRequest()
+				.set('Authorization', 'Bearer valid-token')
+				.set('X-Session-ID', 'invalid-session-id-12345')
+				.send({
+					jsonrpc: '2.0',
+					id: 1,
+					method: 'initialize',
+					params: {
+						protocolVersion: '2024-11-05',
+						clientInfo: { name: 'test', version: '1.0.0' },
+						capabilities: {},
+					},
+				});
+
+			expect(response.status).toBe(200);
+
+			const newSessionId = response.headers['x-session-id'] as string;
+			expect(newSessionId).toBeDefined();
+			expect(newSessionId).not.toBe('invalid-session-id-12345');
+
+			// Verify new session was created
+			const session = sessionManager.getSession(newSessionId);
+			expect(session).toBeDefined();
+		});
+	});
+
+	describe('Error Handling', () => {
+		it('should handle Vikunja API errors gracefully', async () => {
+			// Mock Vikunja client to throw error
+			const vikunjaClient = (mcpServer as any).toolRegistry.vikunjaClient;
+			vi.spyOn(vikunjaClient, 'getTasks').mockRejectedValue(
+				new Error('Vikunja API connection failed')
+			);
+
+			// Initialize session
+			const initResponse = await mcpRequest()
+				.set('Authorization', 'Bearer valid-token')
+				.send({
+					jsonrpc: '2.0',
+					id: 1,
+					method: 'initialize',
+					params: {
+						protocolVersion: '2024-11-05',
+						clientInfo: { name: 'test', version: '1.0.0' },
+						capabilities: {},
+					},
+				});
+
+			const sessionId = initResponse.headers['x-session-id'] as string;
+			mcpServer.setUserContext('http-session', mockUserContext);
+
+			// Try to call tool
+			const toolResponse = await mcpRequest()
+				.set('Authorization', 'Bearer valid-token')
+				.set('X-Session-ID', sessionId)
+				.send({
+					jsonrpc: '2.0',
+					id: 3,
+					method: 'tools/call',
+					params: {
+						name: 'get_tasks',
+						arguments: { project_id: 1 },
+					},
+				});
+
+			// Should return error response
+			expect(toolResponse.status).toBe(200);
+			expect(toolResponse.body).toHaveProperty('error');
+			expect(toolResponse.body.error.message).toContain('Vikunja API');
+		});
+
+		it('should handle invalid JSON-RPC requests', async () => {
+			const response = await mcpRequest()
+				.set('Authorization', 'Bearer valid-token')
+				.send({
+					// Missing jsonrpc field
+					id: 1,
+					method: 'initialize',
+				});
+
+			// Should handle gracefully
+			expect([400, 401, 500]).toContain(response.status);
+		});
+
+		it('should handle unknown tool names', async () => {
+			// Initialize session
+			const initResponse = await mcpRequest()
+				.set('Authorization', 'Bearer valid-token')
+				.send({
+					jsonrpc: '2.0',
+					id: 1,
+					method: 'initialize',
+					params: {
+						protocolVersion: '2024-11-05',
+						clientInfo: { name: 'test', version: '1.0.0' },
+						capabilities: {},
+					},
+				});
+
+			const sessionId = initResponse.headers['x-session-id'] as string;
+			mcpServer.setUserContext('http-session', mockUserContext);
+
+			// Call non-existent tool
+			const toolResponse = await mcpRequest()
+				.set('Authorization', 'Bearer valid-token')
+				.set('X-Session-ID', sessionId)
+				.send({
+					jsonrpc: '2.0',
+					id: 3,
+					method: 'tools/call',
+					params: {
+						name: 'nonexistent_tool',
+						arguments: {},
+					},
+				});
+
+			expect(toolResponse.status).toBe(200);
+			expect(toolResponse.body).toHaveProperty('error');
+			expect(toolResponse.body.error.message).toMatch(/not found|unknown/i);
+		});
+	});
+
+	describe('Rate Limiting Integration', () => {
+		it('should enforce rate limits across requests', async () => {
+			// Mock rate limiter to reject requests
+			const rateLimitError = new Error('Rate limit exceeded');
+			rateLimitError.name = 'RateLimitError';
+			vi.spyOn(rateLimiter, 'checkLimit').mockRejectedValue(rateLimitError);
+
+			const response = await mcpRequest()
+				.set('Authorization', 'Bearer valid-token')
+				.send({
+					jsonrpc: '2.0',
+					id: 1,
+					method: 'initialize',
+					params: {
+						protocolVersion: '2024-11-05',
+						clientInfo: { name: 'test', version: '1.0.0' },
+						capabilities: {},
+					},
+				});
+
+			expect(response.status).toBe(429);
+			const body = parseSSEResponse(response);
+			expect(body).toHaveProperty('error');
+			expect(body.error.code).toBe(-32003);
+			expect(body.error.message).toContain('Rate limit');
+			expect(body.error.data).toHaveProperty('retryAfter');
+		});
+	});
 });

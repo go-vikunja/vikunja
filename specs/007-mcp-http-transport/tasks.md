@@ -83,7 +83,44 @@
 - [X] T026b [US1] Implement full HTTP integration tests with supertest ✅ **COMPLETE** - Comprehensive HTTP integration tests: protocol compliance (4 tests), authentication flow (4 tests), session management (3 tests), rate limiting (2 tests), error handling (3 tests)
 - [X] T027 [US1] Verify tests pass: Run mcp-server/tests/auth/token-validator.test.ts ✅ **PASS** - 19/19 tests passed (fixed hanging test with ioredis mock + added required field validation)
 - [X] T028 [US1] Verify tests pass: Run mcp-server/tests/integration/http-transport.test.ts ✅ **PASS** - 24/24 tests passed
-- [ ] T028b [US1] Implement full end-to-end integration tests (rewrite http-transport.test.ts to test real server, tool execution, connection flow)
+- [ ] T028b [US1] Implement full end-to-end integration tests (rewrite http-transport.test.ts to test real server, tool execution, connection flow) 🔄 **IN PROGRESS**
+  - ✅ Created comprehensive test file with 15 integration tests (774 lines)
+  - ✅ Real Express server setup with all middleware (beforeAll hook)
+  - ✅ Mocked external dependencies (ioredis, axios)
+  - ✅ Discovered SSE response format requirement (HTTP Streamable protocol always returns SSE)
+  - ✅ Implemented parseSSEResponse() helper to parse SSE format
+  - ✅ 5/15 tests passing (33%): initialization handshake, session ID headers, session tracking, session creation, invalid JSON-RPC
+  - ⚠️ 10/15 tests failing: Need to fix remaining test issues
+- [ ] T028c [US1] Fix remaining 10 failing integration tests in http-transport.test.ts
+  - **Current status**: 5/15 passing, 10/15 failing
+  - **Passing tests**:
+    1. ✅ should complete full initialization handshake
+    2. ✅ should return session ID in response headers
+    3. ✅ should track session activity on each request
+    4. ✅ should create new session if provided session ID is invalid
+    5. ✅ should handle invalid JSON-RPC requests
+  - **Failing tests** (need fixes):
+    1. ❌ should accept initialized notification
+    2. ❌ should return complete list of available tools
+    3. ❌ should include tool schemas in tool list
+    4. ❌ should execute tool with valid arguments
+    5. ❌ should reject tool call without user context
+    6. ❌ should validate tool arguments against schema
+    7. ❌ should maintain session across multiple requests
+    8. ❌ should handle Vikunja API errors gracefully (spyOn error)
+    9. ❌ should handle unknown tool names (expects 200 but gets 400)
+    10. ❌ should enforce rate limits across requests (no SSE data in 429 response)
+  - **Issues to resolve**:
+    - Some tests need proper tool mocking (Vikunja API responses)
+    - Rate limit test may need different SSE handling for error responses
+    - Tool execution tests need session context and mock data
+    - Notification tests may need different message flow
+- [ ] T028d [US1] Fix regression:
+  - **REGRESSION FOUND**: Two conflicting UserContext types exist:
+    - `auth/types.ts`: has 'token' field, no 'permissions' or 'validatedAt'
+    - `auth/token-validator.ts`: has 'permissions' and 'validatedAt', no 'token'
+  - **Status**: Documented in tests with CombinedUserContext workaround
+  - **Future work**: Unify UserContext types across codebase
 
 **Checkpoint**: HTTP Streamable transport fully functional - clients can connect, authenticate, list tools, execute tools
 
