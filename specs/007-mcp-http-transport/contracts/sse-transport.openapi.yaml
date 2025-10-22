@@ -1,0 +1,370 @@
+openapi: 3.1.0
+info:
+  title: Vikunja MCP Server - SSE Transport (Deprecated)
+  description: |
+    Server-Sent Events (SSE) transport API for Model Context Protocol (MCP).
+    
+    ⚠️ **DEPRECATED**: This transport is deprecated in favor of HTTP Streamable.
+    Use HTTP Streamable for new integrations. SSE support will be removed in v2.0.
+    
+    **Why Deprecated**: 
+    - EventSource API limitations (no custom headers)
+    - Requires query parameter authentication (less secure)
+    - Two-endpoint complexity (GET for events, POST for messages)
+    - Being phased out by MCP client tools (n8n, etc.)
+    
+    **Authentication**: Token in query parameter (EventSource limitation)
+    
+    **Rate Limiting**: 100 requests per 15 minutes per token
+  version: 1.1.0
+  contact:
+    name: Vikunja MCP Server
+    url: https://github.com/go-vikunja/vikunja
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3010
+    description: Local development
+  - url: http://192.168.50.64:3010
+    description: Proxmox LXC deployment
+  - url: https://vikunja.example.com/mcp
+    description: Production (behind reverse proxy with TLS)
+
+paths:
+  /sse:
+    get:
+      summary: SSE Event Stream (Server → Client)
+      description: |
+        Establishes Server-Sent Events stream for server-to-client messages.
+        
+        ⚠️ **DEPRECATED**: Use HTTP Streamable transport instead.
+        
+        **Flow**:
+        1. Client opens EventSource connection with token in query param
+        2. Server validates token and creates session
+        3. Server sends session_id in initial event
+        4. Server streams MCP messages as SSE events
+        5. Client uses session_id for POST /sse requests
+        
+        **Session Management**: Server generates session ID on first connection.
+        Client must use this session ID for all POST requests.
+      operationId: sseStream
+      deprecated: true
+      tags:
+        - SSE Transport (Deprecated)
+      parameters:
+        - name: token
+          in: query
+          required: true
+          description: |
+            Vikunja API token for authentication.
+            
+            ⚠️ Security Warning: Token visible in URL/logs. Use HTTPS in production.
+          schema:
+            type: string
+            minLength: 20
+          example: "tk_1234567890abcdef"
+      responses:
+        '200':
+          description: SSE event stream established
+          headers:
+            Content-Type:
+              description: Server-Sent Events stream
+              schema:
+                type: string
+                enum: [text/event-stream]
+            Cache-Control:
+              description: Disable caching for stream
+              schema:
+                type: string
+                enum: [no-cache]
+            Connection:
+              description: Keep connection alive
+              schema:
+                type: string
+                enum: [keep-alive]
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: SSE events (text stream)
+              examples:
+                sessionCreated:
+                  summary: Session created event
+                  value: |
+                    event: session
+                    data: {"session_id":"550e8400-e29b-41d4-a716-446655440000"}
+                    
+                mcpMessage:
+                  summary: MCP protocol message
+                  value: |
+                    event: message
+                    data: {"jsonrpc":"2.0","id":1,"result":{"tools":[...]}}
+                    
+                error:
+                  summary: Error event
+                  value: |
+                    event: error
+                    data: {"error":{"code":-32001,"message":"Authentication failed"}}
+                    
+        '401':
+          description: Authentication failed (invalid token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: -32001
+                  message: "Authentication failed"
+                  data:
+                    reason: "Invalid token parameter"
+        '429':
+          description: Rate limit exceeded
+          headers:
+            Retry-After:
+              description: Seconds until rate limit resets
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Send MCP Message (Client → Server)
+      description: |
+        Send JSON-RPC messages from client to server.
+        
+        ⚠️ **DEPRECATED**: Use HTTP Streamable transport instead.
+        
+        **Flow**:
+        1. Client must have active SSE connection (GET /sse)
+        2. Client sends POST with session_id and MCP message
+        3. Server validates session and token
+        4. Server processes message and streams response via SSE
+        
+        **Session Validation**: Session ID must match active SSE connection.
+      operationId: sseMessage
+      deprecated: true
+      tags:
+        - SSE Transport (Deprecated)
+      parameters:
+        - name: token
+          in: query
+          required: true
+          description: Vikunja API token (must match SSE connection token)
+          schema:
+            type: string
+            minLength: 20
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SseMessageRequest'
+            examples:
+              listTools:
+                summary: List available tools
+                value:
+                  session_id: "550e8400-e29b-41d4-a716-446655440000"
+                  message:
+                    jsonrpc: "2.0"
+                    id: 1
+                    method: "tools/list"
+                    params: {}
+              callTool:
+                summary: Call a tool
+                value:
+                  session_id: "550e8400-e29b-41d4-a716-446655440000"
+                  message:
+                    jsonrpc: "2.0"
+                    id: 2
+                    method: "tools/call"
+                    params:
+                      name: "get_tasks"
+                      arguments:
+                        project_id: 1
+      responses:
+        '202':
+          description: |
+            Message accepted for processing.
+            
+            Response will be streamed via SSE connection.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accepted:
+                    type: boolean
+                    enum: [true]
+                  session_id:
+                    type: string
+                    format: uuid
+                example:
+                  accepted: true
+                  session_id: "550e8400-e29b-41d4-a716-446655440000"
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: -32003
+                  message: "Session not found"
+                  data:
+                    session_id: "invalid-session-id"
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    SseMessageRequest:
+      type: object
+      required:
+        - session_id
+        - message
+      properties:
+        session_id:
+          type: string
+          format: uuid
+          description: Session ID from SSE connection
+        message:
+          $ref: '#/components/schemas/JsonRpcRequest'
+      example:
+        session_id: "550e8400-e29b-41d4-a716-446655440000"
+        message:
+          jsonrpc: "2.0"
+          id: 1
+          method: "tools/list"
+          params: {}
+
+    JsonRpcRequest:
+      type: object
+      required:
+        - jsonrpc
+        - method
+      properties:
+        jsonrpc:
+          type: string
+          enum: ["2.0"]
+        id:
+          oneOf:
+            - type: string
+            - type: number
+            - type: "null"
+        method:
+          type: string
+          examples:
+            - "initialize"
+            - "tools/list"
+            - "tools/call"
+        params:
+          type: object
+          additionalProperties: true
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: integer
+              description: |
+                Error codes:
+                - -32001: Authentication failed
+                - -32002: Rate limit exceeded
+                - -32003: Session not found
+                - -32700: Parse error
+                - -32600: Invalid request
+            message:
+              type: string
+            data:
+              type: object
+              additionalProperties: true
+      example:
+        error:
+          code: -32001
+          message: "Authentication failed"
+          data:
+            reason: "Invalid token"
+
+    SseEvent:
+      type: object
+      description: |
+        SSE event format (text/event-stream).
+        
+        **Format**:
+        ```
+        event: <event_type>
+        data: <json_payload>
+        
+        ```
+        
+        Note: Empty line terminates event.
+      properties:
+        event:
+          type: string
+          enum: [session, message, error, ping]
+          description: Event type
+        data:
+          type: object
+          description: Event payload (JSON string in actual stream)
+          additionalProperties: true
+      examples:
+        - event: "session"
+          data:
+            session_id: "550e8400-e29b-41d4-a716-446655440000"
+        - event: "message"
+          data:
+            jsonrpc: "2.0"
+            id: 1
+            result: {}
+        - event: "error"
+          data:
+            error:
+              code: -32001
+              message: "Authentication failed"
+
+tags:
+  - name: SSE Transport (Deprecated)
+    description: |
+      ⚠️ DEPRECATED: Server-Sent Events transport.
+      
+      Use HTTP Streamable transport for new integrations.
+      
+      **Migration Path**:
+      1. Update client to use POST /mcp (HTTP Streamable)
+      2. Remove GET /sse and POST /sse calls
+      3. Use Bearer header instead of query parameter
+      
+      **Removal Timeline**:
+      - v1.x: SSE supported with deprecation warnings
+      - v2.0: SSE removed
+
+x-deprecation:
+  reason: "EventSource API limitations, security concerns with query param auth"
+  replacedBy: "HTTP Streamable transport (POST /mcp)"
+  removalVersion: "2.0.0"
+  migrationGuide: "See /docs/migration/sse-to-http-streamable.md"

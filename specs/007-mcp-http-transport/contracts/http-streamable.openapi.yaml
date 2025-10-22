@@ -1,0 +1,402 @@
+openapi: 3.1.0
+info:
+  title: Vikunja MCP Server - HTTP Streamable Transport
+  description: |
+    HTTP Streamable transport API for Model Context Protocol (MCP) server.
+    
+    This is the recommended modern transport for MCP clients. Uses HTTP POST
+    with streaming NDJSON responses for bidirectional communication.
+    
+    **Authentication**: Bearer token in Authorization header (Vikunja API token)
+    
+    **Rate Limiting**: 100 requests per 15 minutes per token
+    
+    **MCP Protocol**: Complies with Model Context Protocol specification v1.0
+  version: 1.1.0
+  contact:
+    name: Vikunja MCP Server
+    url: https://github.com/go-vikunja/vikunja
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3010
+    description: Local development
+  - url: http://192.168.50.64:3010
+    description: Proxmox LXC deployment
+  - url: https://vikunja.example.com/mcp
+    description: Production (behind reverse proxy with TLS)
+
+security:
+  - BearerAuth: []
+
+paths:
+  /mcp:
+    post:
+      summary: MCP Protocol Endpoint (HTTP Streamable)
+      description: |
+        Send MCP JSON-RPC 2.0 messages and receive streaming responses.
+        
+        **Flow**:
+        1. Client sends POST with JSON-RPC request in body
+        2. Server validates authentication and rate limits
+        3. Server processes MCP request
+        4. Server streams NDJSON responses (can be multiple)
+        5. Connection kept alive for streaming
+        
+        **Response Format**: Newline-delimited JSON (NDJSON)
+        Each line is a complete JSON-RPC 2.0 message.
+      operationId: mcpProtocol
+      tags:
+        - MCP Protocol
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JsonRpcRequest'
+            examples:
+              listTools:
+                summary: List available tools
+                value:
+                  jsonrpc: "2.0"
+                  id: 1
+                  method: "tools/list"
+                  params: {}
+              callTool:
+                summary: Call a tool
+                value:
+                  jsonrpc: "2.0"
+                  id: 2
+                  method: "tools/call"
+                  params:
+                    name: "get_tasks"
+                    arguments:
+                      project_id: 1
+              initialize:
+                summary: Initialize connection
+                value:
+                  jsonrpc: "2.0"
+                  id: 0
+                  method: "initialize"
+                  params:
+                    protocolVersion: "1.0"
+                    clientInfo:
+                      name: "n8n"
+                      version: "1.0.0"
+      responses:
+        '200':
+          description: MCP protocol response (streaming)
+          headers:
+            Content-Type:
+              description: NDJSON stream
+              schema:
+                type: string
+                enum: [application/x-ndjson]
+          content:
+            application/x-ndjson:
+              schema:
+                $ref: '#/components/schemas/JsonRpcResponse'
+              examples:
+                successResponse:
+                  summary: Successful tool call
+                  value: |
+                    {"jsonrpc":"2.0","id":1,"result":{"tools":[{"name":"get_tasks","description":"Get tasks from a project"}]}}
+                errorResponse:
+                  summary: Error response
+                  value: |
+                    {"jsonrpc":"2.0","id":1,"error":{"code":-32602,"message":"Invalid params"}}
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /health:
+    get:
+      summary: Health Check
+      description: |
+        Check server health and dependency status.
+        
+        Returns 200 OK if healthy, 503 Service Unavailable if unhealthy.
+      operationId: healthCheck
+      tags:
+        - Monitoring
+      security: []  # No authentication required
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: "healthy"
+                timestamp: "2025-10-22T10:30:00Z"
+                version: "1.1.0"
+                uptime: 3600
+                checks:
+                  redis:
+                    status: "healthy"
+                    latency: 5
+                  vikunja_api:
+                    status: "healthy"
+                    latency: 120
+                sessions:
+                  active: 12
+                  total_created: 145
+        '503':
+          description: Server is unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: "unhealthy"
+                timestamp: "2025-10-22T10:30:00Z"
+                checks:
+                  vikunja_api:
+                    status: "unhealthy"
+                    error: "Connection refused"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: |
+        Vikunja API token for authentication.
+        
+        **Example**: `Authorization: Bearer tk_1234567890abcdef`
+        
+        Tokens are obtained from Vikunja user settings.
+
+  schemas:
+    JsonRpcRequest:
+      type: object
+      required:
+        - jsonrpc
+        - method
+      properties:
+        jsonrpc:
+          type: string
+          enum: ["2.0"]
+          description: JSON-RPC version
+        id:
+          oneOf:
+            - type: string
+            - type: number
+            - type: "null"
+          description: Request identifier (can be null for notifications)
+        method:
+          type: string
+          description: MCP method name
+          examples:
+            - "initialize"
+            - "tools/list"
+            - "tools/call"
+            - "resources/list"
+            - "resources/read"
+        params:
+          type: object
+          description: Method parameters
+          additionalProperties: true
+      example:
+        jsonrpc: "2.0"
+        id: 1
+        method: "tools/list"
+        params: {}
+
+    JsonRpcResponse:
+      type: object
+      required:
+        - jsonrpc
+        - id
+      properties:
+        jsonrpc:
+          type: string
+          enum: ["2.0"]
+        id:
+          oneOf:
+            - type: string
+            - type: number
+            - type: "null"
+        result:
+          type: object
+          description: Success result (present if no error)
+          additionalProperties: true
+        error:
+          $ref: '#/components/schemas/JsonRpcError'
+          description: Error object (present if failed)
+      example:
+        jsonrpc: "2.0"
+        id: 1
+        result:
+          tools:
+            - name: "get_tasks"
+              description: "Get tasks from a project"
+              inputSchema:
+                type: "object"
+                properties:
+                  project_id:
+                    type: "number"
+
+    JsonRpcError:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          description: |
+            Error code (JSON-RPC standard + custom):
+            - -32700: Parse error
+            - -32600: Invalid request
+            - -32601: Method not found
+            - -32602: Invalid params
+            - -32603: Internal error
+            - -32001: Authentication failed
+            - -32002: Rate limit exceeded
+            - -32003: Session not found
+        message:
+          type: string
+          description: Human-readable error message
+        data:
+          type: object
+          description: Additional error information
+          additionalProperties: true
+      example:
+        code: -32001
+        message: "Authentication failed"
+        data:
+          reason: "Invalid token"
+
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - timestamp
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+          description: Overall server health status
+        timestamp:
+          type: string
+          format: date-time
+          description: Health check timestamp (ISO 8601)
+        version:
+          type: string
+          description: Server version
+          example: "1.1.0"
+        uptime:
+          type: integer
+          description: Server uptime in seconds
+          example: 3600
+        checks:
+          type: object
+          description: Individual component health checks
+          properties:
+            redis:
+              $ref: '#/components/schemas/ComponentHealth'
+            vikunja_api:
+              $ref: '#/components/schemas/ComponentHealth'
+          additionalProperties:
+            $ref: '#/components/schemas/ComponentHealth'
+        sessions:
+          type: object
+          description: Active session statistics
+          properties:
+            active:
+              type: integer
+              description: Number of active sessions
+              example: 12
+            total_created:
+              type: integer
+              description: Total sessions created since startup
+              example: 145
+
+    ComponentHealth:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        latency:
+          type: integer
+          description: Response latency in milliseconds
+          example: 5
+        error:
+          type: string
+          description: Error message if unhealthy
+          example: "Connection refused"
+
+  responses:
+    Unauthorized:
+      description: Authentication failed
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                $ref: '#/components/schemas/JsonRpcError'
+            example:
+              error:
+                code: -32001
+                message: "Authentication failed"
+                data:
+                  reason: "Invalid or missing Bearer token"
+
+    RateLimitExceeded:
+      description: Rate limit exceeded
+      headers:
+        Retry-After:
+          description: Seconds until rate limit resets
+          schema:
+            type: integer
+            example: 123
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                $ref: '#/components/schemas/JsonRpcError'
+            example:
+              error:
+                code: -32002
+                message: "Rate limit exceeded"
+                data:
+                  retryAfter: 123
+                  limit: 100
+                  window: 900
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                $ref: '#/components/schemas/JsonRpcError'
+            example:
+              error:
+                code: -32603
+                message: "Internal error"
+                data:
+                  details: "Failed to process request"
+
+tags:
+  - name: MCP Protocol
+    description: Model Context Protocol operations
+  - name: Monitoring
+    description: Health checks and monitoring
