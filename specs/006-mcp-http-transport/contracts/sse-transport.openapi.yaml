@@ -1,0 +1,260 @@
+openapi: 3.1.0
+info:
+  title: Vikunja MCP Server - HTTP/SSE Transport API
+  version: 1.0.0
+  description: |
+    HTTP transport for Model Context Protocol (MCP) server enabling remote client connectivity.
+    
+    This API provides Server-Sent Events (SSE) based transport for MCP protocol messages.
+    Clients establish persistent connections via HTTP POST and exchange MCP messages over SSE.
+    
+    **Authentication**: Per-request Vikunja API token validation (no server-level shared tokens).
+    
+    **Use Cases**: n8n workflows, Python MCP SDK clients, external automation tools.
+    
+  contact:
+    name: Vikunja MCP Server
+    url: https://vikunja.io
+
+servers:
+  - url: http://localhost:3010
+    description: Blue environment (default)
+  - url: http://localhost:3011
+    description: Green environment (blue-green deployment)
+
+paths:
+  /sse:
+    post:
+      summary: Establish SSE Connection
+      description: |
+        Establishes a Server-Sent Events (SSE) connection for MCP protocol communication.
+        
+        **Flow**:
+        1. Client sends POST request with authentication token
+        2. Server validates token against Vikunja backend
+        3. Server establishes SSE stream and returns 200 OK
+        4. Client and server exchange MCP protocol messages over SSE
+        5. Connection remains open until client closes or server shuts down
+        
+        **Authentication**:
+        - Token passed via `Authorization: Bearer <token>` header (preferred)
+        - Token passed via `?token=<token>` query parameter (fallback)
+        - Token validated with 5-minute cache for performance
+        
+        **MCP Protocol**:
+        - Messages follow MCP specification format
+        - Tools, resources, and prompts available over SSE transport
+        - Identical functionality to stdio transport
+        
+      operationId: establishSSEConnection
+      tags:
+        - MCP Transport
+      
+      security:
+        - bearerAuth: []
+        - queryToken: []
+      
+      parameters:
+        - name: token
+          in: query
+          description: Vikunja API token (alternative to Authorization header)
+          required: false
+          schema:
+            type: string
+            format: jwt
+            example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJ1c2VyIiwiZXhwIjoxNjQwOTk1MjAwfQ.signature"
+      
+      responses:
+        '200':
+          description: |
+            SSE connection established successfully. 
+            
+            Response uses `text/event-stream` content type and remains open for bidirectional communication.
+            Server sends periodic keep-alive events to maintain connection.
+            
+          headers:
+            Content-Type:
+              schema:
+                type: string
+                enum: [text/event-stream]
+              description: SSE content type
+            Cache-Control:
+              schema:
+                type: string
+                enum: [no-cache]
+              description: Disable caching for SSE stream
+            Connection:
+              schema:
+                type: string
+                enum: [keep-alive]
+              description: Keep connection open
+          
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: SSE event stream with MCP protocol messages
+              
+              examples:
+                connectionEstablished:
+                  summary: Initial connection event
+                  value: |
+                    event: connected
+                    data: {"connectionId": "123e4567-e89b-12d3-a456-426614174000", "protocolVersion": "2024-11-05"}
+                    
+                mcpToolResponse:
+                  summary: MCP tool execution result
+                  value: |
+                    event: message
+                    data: {"jsonrpc": "2.0", "id": 1, "result": {"content": [{"type": "text", "text": "Task created successfully"}]}}
+                    
+                serverShutdown:
+                  summary: Graceful shutdown event
+                  value: |
+                    event: close
+                    data: {"reason": "server shutdown"}
+                    
+        
+        '401':
+          description: |
+            Authentication failed.
+            
+            **Causes**:
+            - Missing authentication token
+            - Invalid or expired token
+            - Token validation failed against Vikunja backend
+            
+            **Client Action**: Obtain fresh Vikunja API token and retry.
+            
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingToken:
+                  summary: No token provided
+                  value:
+                    error: "Unauthorized"
+                    message: "Missing authentication token"
+                invalidToken:
+                  summary: Invalid token
+                  value:
+                    error: "Unauthorized"
+                    message: "Invalid or expired token"
+        
+        '503':
+          description: |
+            Service unavailable.
+            
+            **Causes**:
+            - Server is shutting down
+            - Too many concurrent connections (>50)
+            - Backend dependencies unavailable (Redis, Vikunja API)
+            
+            **Client Action**: Retry with exponential backoff.
+            
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                shutdownInProgress:
+                  summary: Server shutting down
+                  value:
+                    error: "Service Unavailable"
+                    message: "Server is shutting down, please retry"
+                tooManyConnections:
+                  summary: Connection limit reached
+                  value:
+                    error: "Service Unavailable"
+                    message: "Too many concurrent connections, please retry later"
+
+  /health:
+    get:
+      summary: Health Check
+      description: |
+        Operational health check for monitoring.
+        
+        **Purpose**: Verify MCP server is running and accepting connections.
+        
+        **Usage**: Called by deployment scripts, monitoring systems, load balancers.
+        
+        **Note**: This endpoint is on the health check Express server (port 3457),
+        separate from SSE transport server (ports 3010/3011).
+        
+      operationId: healthCheck
+      tags:
+        - Monitoring
+      
+      responses:
+        '200':
+          description: Server is healthy and accepting connections
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [ok]
+                  timestamp:
+                    type: string
+                    format: date-time
+                  transport:
+                    type: string
+                    enum: [stdio, http]
+                    description: Active transport type
+                example:
+                  status: "ok"
+                  timestamp: "2025-10-22T10:30:00Z"
+                  transport: "http"
+        
+        '503':
+          description: Server is unhealthy or shutting down
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Service Unavailable"
+                message: "Server is shutting down"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Vikunja API token in Authorization header (preferred method)
+    
+    queryToken:
+      type: apiKey
+      in: query
+      name: token
+      description: Vikunja API token in query parameter (fallback method)
+  
+  schemas:
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error category (Unauthorized, Service Unavailable, etc.)
+          example: "Unauthorized"
+        message:
+          type: string
+          description: Human-readable error description
+          example: "Invalid or expired token"
+        details:
+          type: object
+          description: Additional error context (optional, sanitized for security)
+          additionalProperties: true
+
+tags:
+  - name: MCP Transport
+    description: Server-Sent Events (SSE) transport for MCP protocol
+  - name: Monitoring
+    description: Health checks and operational status

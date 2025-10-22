@@ -20,12 +20,85 @@ The Vikunja MCP Server enables AI agents (like Claude Desktop, n8n, custom scrip
 ## Features
 
 - **Native MCP Integration**: Full MCP v1.0+ protocol support
+- **Dual Transport Support**: Stdio (default) for process spawning, HTTP/SSE for network clients
 - **Resource Exposure**: Projects, tasks, labels, teams, and more
 - **Tool Operations**: Create, update, delete operations for all entities
 - **Rate Limiting**: Per-token rate limiting with Redis backend
 - **Authentication**: Vikunja API token-based authentication
 - **Performance**: <200ms p95 latency for tool calls
 - **Scalability**: Stateless design for horizontal scaling
+
+## Transport Configuration
+
+The MCP server supports two transport mechanisms:
+
+### Stdio Transport (Default)
+
+**Best for:** Claude Desktop, direct subprocess spawning
+
+```bash
+# No additional configuration needed
+TRANSPORT_TYPE=stdio  # Default if omitted
+```
+
+**Usage:**
+```json
+{
+  "mcpServers": {
+    "vikunja": {
+      "command": "node",
+      "args": ["/path/to/dist/index.js"],
+      "env": {
+        "VIKUNJA_API_URL": "http://localhost:3456",
+        "VIKUNJA_API_TOKEN": "your-token"
+      }
+    }
+  }
+}
+```
+
+### HTTP/SSE Transport
+
+**Best for:** n8n workflows, Python MCP SDK clients, web-based AI agents
+
+```bash
+# Enable HTTP transport
+TRANSPORT_TYPE=http
+MCP_PORT=3010  # Required for HTTP transport
+
+# Optional: CORS for browser clients
+CORS_ENABLED=true
+CORS_ALLOWED_ORIGINS=https://n8n.example.com,https://app.example.com
+```
+
+**Usage (n8n example):**
+```javascript
+// HTTP Request node
+{
+  "method": "POST",
+  "url": "http://localhost:3010/sse",
+  "headers": {
+    "Authorization": "Bearer YOUR_VIKUNJA_TOKEN"
+  }
+}
+```
+
+**Usage (Python MCP SDK):**
+```python
+from mcp.client.sse import sse_client
+import httpx
+
+async with httpx.AsyncClient() as http_client:
+    async with sse_client(
+        http_client=http_client,
+        url="http://localhost:3010/sse",
+        headers={"Authorization": "Bearer YOUR_TOKEN"}
+    ) as (read, write):
+        # Use MCP client session
+        pass
+```
+
+See [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) for comprehensive transport configuration.
 
 ## Quick Start
 

@@ -1,16 +1,20 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import {
   ListToolsRequestSchema,
   CallToolRequestSchema,
   type InitializeResult,
 } from '@modelcontextprotocol/sdk/types.js';
+import type { Server as HttpServer } from 'http';
 import type { Authenticator } from './auth/authenticator.js';
 import type { UserContext } from './auth/types.js';
 import type { RateLimiter } from './ratelimit/limiter.js';
 import type { VikunjaClient } from './vikunja/client.js';
 import { ToolRegistry } from './tools/registry.js';
 import { logger } from './utils/logger.js';
+import { config } from './config/index.js';
+import { createTransport } from './transport/factory.js';
+import { createHttpTransportApp } from './transport/http.js';
+import { SSEConnectionManager } from './transport/types.js';
 
 /**
  * Initialize request parameters
@@ -33,6 +37,8 @@ export class VikunjaMCPServer {
   private readonly authenticator: Authenticator;
   private readonly userContexts: Map<string, UserContext>;
   private readonly toolRegistry: ToolRegistry;
+  private readonly connectionManager: SSEConnectionManager;
+  private httpServer: HttpServer | null = null;
 
   constructor(
     authenticator: Authenticator,
@@ -41,6 +47,7 @@ export class VikunjaMCPServer {
   ) {
     this.authenticator = authenticator;
     this.userContexts = new Map();
+    this.connectionManager = new SSEConnectionManager();
 
     // Initialize tool registry with client and rate limiter
     this.toolRegistry = new ToolRegistry(vikunjaClient, rateLimiter);
@@ -182,13 +189,53 @@ export class VikunjaMCPServer {
   }
 
   /**
-   * Start the MCP server with stdio transport
+   * Start the MCP server with configured transport
    */
   async start(): Promise<void> {
-    logger.info('Starting MCP server');
-    const transport = new StdioServerTransport();
-    await this.server.connect(transport);
-    logger.info('MCP server started and connected via stdio');
+    logger.info('Starting MCP server', { transportType: config.transportType });
+
+    if (config.transportType === 'stdio') {
+      // Stdio transport: direct connection
+      const transport = createTransport(config);
+      await this.server.connect(transport);
+      logger.info('MCP server started with stdio transport');
+    } else if (config.transportType === 'http') {
+      // HTTP transport: start Express server
+      this.startHttpTransport();
+    } else {
+      const exhaustiveCheck: never = config.transportType;
+      throw new Error(`Unsupported transport type: ${String(exhaustiveCheck)}`);
+    }
+  }
+
+  /**
+   * Start HTTP transport server
+   */
+  private startHttpTransport(): void {
+    if (typeof config.mcpPort !== 'number' || config.mcpPort === 0) {
+      throw new Error('MCP_PORT is required for HTTP transport');
+    }
+
+    // Create Express app with SSE endpoint
+    const app = createHttpTransportApp(
+      this.authenticator,
+      this.server,
+      this.connectionManager
+    );
+
+    // Start HTTP server
+    this.httpServer = app.listen(config.mcpPort, () => {
+      logger.info('MCP HTTP transport server started', {
+        port: config.mcpPort,
+        endpoint: `/sse`,
+      });
+    });
+
+    // Handle server errors
+    this.httpServer.on('error', (error: Error) => {
+      logger.error('HTTP server error', { error: error.message });
+      throw error;
+    });
   }
 
   /**
@@ -196,6 +243,31 @@ export class VikunjaMCPServer {
    */
   async stop(): Promise<void> {
     logger.info('Stopping MCP server');
+
+    // Close all SSE connections gracefully
+    if (this.connectionManager !== null) {
+      await this.connectionManager.closeAll();
+      logger.info('All SSE connections closed');
+    }
+
+    // Close HTTP server if running
+    if (this.httpServer !== null) {
+      await new Promise<void>((resolve, reject) => {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        this.httpServer!.close((err) => {
+          if (err !== null && err !== undefined) {
+            logger.error('Error closing HTTP server', { error: err.message });
+            reject(err);
+          } else {
+            logger.info('HTTP server closed');
+            resolve();
+          }
+        });
+      });
+      this.httpServer = null;
+    }
+
+    // Close MCP server
     await this.server.close();
     logger.info('MCP server stopped');
   }

@@ -1,11 +1,42 @@
 import { z } from 'zod';
 
 /**
+ * Transport type enumeration
+ */
+export const TransportType = z.enum(['stdio', 'http']);
+export type TransportType = z.infer<typeof TransportType>;
+
+/**
  * Configuration schema validation
  */
 const ConfigSchema = z.object({
   vikunjaApiUrl: z.string().url(),
   port: z.number().int().positive().default(3457),
+  
+  /**
+   * MCP transport type
+   * - stdio: Standard input/output (default, for subprocess communication)
+   * - http: HTTP with Server-Sent Events (for remote clients)
+   */
+  transportType: TransportType.default('stdio'),
+  
+  /**
+   * MCP server port (required for HTTP transport)
+   * Blue environment: 3010
+   * Green environment: 3011
+   */
+  mcpPort: z.number().int().positive().optional(),
+  
+  /**
+   * CORS configuration for HTTP transport
+   */
+  cors: z
+    .object({
+      enabled: z.boolean().default(false),
+      allowedOrigins: z.array(z.string().url()).default([]),
+    })
+    .optional(),
+  
   redis: z.object({
     host: z.string().default('localhost'),
     port: z.number().int().positive().default(6379),
@@ -36,6 +67,16 @@ function loadConfig(): Config {
   const rawConfig = {
     vikunjaApiUrl: process.env['VIKUNJA_API_URL'] ?? 'http://localhost:3456',
     port: process.env['MCP_PORT'] ? parseInt(process.env['MCP_PORT'], 10) : 3457,
+    transportType: (process.env['TRANSPORT_TYPE'] ?? 'stdio') as 'stdio' | 'http',
+    mcpPort: process.env['MCP_PORT'] ? parseInt(process.env['MCP_PORT'], 10) : undefined,
+    cors: process.env['CORS_ENABLED']
+      ? {
+          enabled: process.env['CORS_ENABLED'] === 'true',
+          allowedOrigins: process.env['CORS_ALLOWED_ORIGINS']
+            ? process.env['CORS_ALLOWED_ORIGINS'].split(',').map((url) => url.trim())
+            : [],
+        }
+      : undefined,
     redis: {
       host: process.env['REDIS_HOST'] ?? 'localhost',
       port: process.env['REDIS_PORT'] ? parseInt(process.env['REDIS_PORT'], 10) : 6379,
@@ -61,7 +102,31 @@ function loadConfig(): Config {
     },
   };
 
-  return ConfigSchema.parse(rawConfig);
+  const parsed = ConfigSchema.parse(rawConfig);
+  
+  // Validate transport-specific configuration
+  validateTransportConfig(parsed);
+  
+  return parsed;
+}
+
+/**
+ * Validate configuration with cross-field constraints
+ */
+export function validateTransportConfig(config: Config): void {
+  // Require mcpPort when using HTTP transport
+  if (config.transportType === 'http' && (typeof config.mcpPort !== 'number' || config.mcpPort === 0)) {
+    throw new Error(
+      'Configuration error: MCP_PORT is required when TRANSPORT_TYPE=http'
+    );
+  }
+
+  // Warn if CORS enabled without allowed origins
+  if (config.cors?.enabled === true && config.cors.allowedOrigins.length === 0) {
+    console.warn(
+      'Warning: CORS enabled but no allowed origins configured. All origins will be denied.'
+    );
+  }
 }
 
 /**

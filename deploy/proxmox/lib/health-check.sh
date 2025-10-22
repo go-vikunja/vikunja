@@ -37,7 +37,8 @@ check_component_health() {
     
     # Check MCP server
     if ! check_mcp_health "$ct_id" "$mcp_port"; then
-        log_warn "MCP health check failed (non-critical)"
+        log_warn "MCP HTTP transport health check failed - SSE endpoint not responding (non-critical)"
+        log_warn "This may indicate MCP server startup issues or HTTP transport misconfiguration"
     fi
     
     # Check frontend (via nginx)
@@ -88,9 +89,16 @@ check_mcp_health() {
     
     log_debug "Checking MCP server health on port ${port}"
     
-    # Check if port is listening
+    # Check HTTP transport endpoint (should return 401 Unauthorized when accessed without token)
+    # This confirms the HTTP server is running and accepting requests
+    if pct_exec "$ct_id" bash -c "curl -f -s -I http://localhost:${port}/sse 2>&1 | grep -q '401\\|Unauthorized'"; then
+        log_debug "MCP HTTP transport is healthy (returned 401 as expected)"
+        return 0
+    fi
+    
+    # Fallback: check if port is listening
     if pct_exec "$ct_id" ss -tuln | grep -q ":${port} "; then
-        log_debug "MCP server is listening"
+        log_debug "MCP server port is listening"
         return 0
     fi
     
