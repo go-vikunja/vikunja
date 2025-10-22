@@ -1,4 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
+import { Agent as HttpAgent } from 'http';
+import { Agent as HttpsAgent } from 'https';
 import { config } from '../config/index.js';
 import { logger } from '../utils/logger.js';
 import { mapVikunjaError } from '../utils/errors.js';
@@ -43,8 +45,8 @@ export class VikunjaClient {
         'Content-Type': 'application/json',
       },
       // Enable connection pooling
-      httpAgent: { keepAlive: true },
-      httpsAgent: { keepAlive: true },
+      httpAgent: new HttpAgent({ keepAlive: true }),
+      httpsAgent: new HttpsAgent({ keepAlive: true }),
     });
 
     // Request interceptor for logging
