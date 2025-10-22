@@ -3,11 +3,83 @@
 This guide covers deploying the Vikunja MCP Server in various environments.
 
 ## Table of Contents
+- [Authentication Overview](#authentication-overview)
 - [Quick Start (Docker)](#quick-start-docker)
 - [Production Deployment](#production-deployment)
 - [Proxmox LXC Container](#proxmox-lxc-container)
 - [Systemd Service](#systemd-service)
 - [Monitoring & Maintenance](#monitoring--maintenance)
+
+---
+
+## Authentication Overview
+
+The Vikunja MCP Server supports two authentication methods:
+
+### Method 1: Per-Request Token (Recommended)
+
+**Best for:** Claude Desktop, n8n, and other AI agents where each user has their own Vikunja API token.
+
+The AI agent passes the Vikunja API token with each MCP request via environment variables. This is the **preferred and most secure method** as it allows:
+- Multiple users with different permissions
+- Token rotation without server restart
+- Fine-grained access control per user
+
+**Configuration (Claude Desktop example):**
+```json
+{
+  "mcpServers": {
+    "vikunja": {
+      "command": "node",
+      "args": ["/path/to/vikunja-mcp-server/dist/index.js"],
+      "env": {
+        "VIKUNJA_API_URL": "http://localhost:3456",
+        "VIKUNJA_API_TOKEN": "your-personal-vikunja-token-here",
+        "MCP_PORT": "3457",
+        "REDIS_HOST": "localhost",
+        "REDIS_PORT": "6379"
+      }
+    }
+  }
+}
+```
+
+The MCP server validates the token on each request and caches user information for 5 minutes.
+
+### Method 2: Server-Level Token
+
+**Best for:** Single-user deployments, testing, or when all requests should use the same Vikunja account.
+
+⚠️ **Note:** The current Proxmox deployment scripts use this method by default since they run as a system service. All MCP requests will use the same Vikunja account.
+
+**When MCP server is deployed as a systemd service:**
+- The server runs continuously without per-request tokens
+- All API requests are made **unauthenticated** unless you configure a default token
+- Client applications must either:
+  1. Pass their own `VIKUNJA_API_TOKEN` when invoking the MCP server, OR
+  2. Use a shared token configured in the systemd service environment
+
+**Important:** The systemd service configuration in Proxmox deployments does NOT currently set a default `VIKUNJA_API_TOKEN`. You must configure your MCP clients (Claude Desktop, n8n, etc.) to pass the token via environment variables (Method 1 above).
+
+### Why No Default Token in Systemd Service?
+
+The deployment intentionally omits `VIKUNJA_API_TOKEN` from the systemd service to:
+1. **Prevent unprotected access** - No default token means no unauthenticated requests succeed
+2. **Support multi-user scenarios** - Each client can use their own token
+3. **Security best practice** - Tokens should not be stored in system service files
+
+**To add a default token** (single-user deployments only):
+
+Edit `/etc/systemd/system/vikunja-mcp-blue.service` and add:
+```ini
+Environment="VIKUNJA_API_TOKEN=your-shared-token-here"
+```
+
+Then reload and restart:
+```bash
+systemctl daemon-reload
+systemctl restart vikunja-mcp-blue
+```
 
 ---
 
@@ -139,7 +211,70 @@ LOG_FORMAT=json
 
 For Proxmox environments, deploy as a lightweight LXC container.
 
-### Create LXC Container
+### Automated Deployment (Recommended)
+
+The Vikunja project includes automated Proxmox deployment scripts that handle complete installation including the MCP server:
+
+```bash
+# Clone the Vikunja repository
+git clone https://github.com/aroige/vikunja.git
+cd vikunja/deploy/proxmox
+
+# Run the automated deployment
+./vikunja-install.sh
+```
+
+The automated script will:
+- Create and configure an LXC container
+- Install Vikunja backend and frontend
+- Install Node.js 22 and Redis
+- Build and deploy the MCP server
+- Configure systemd services with blue-green deployment support
+- Set up Nginx reverse proxy
+
+**Important - MCP Authentication After Automated Deployment:**
+
+The automated deployment configures the MCP server systemd service with:
+```ini
+Environment="VIKUNJA_API_URL=http://127.0.0.1:3456"
+Environment="REDIS_HOST=localhost"
+Environment="REDIS_PORT=6379"
+Environment="MCP_PORT=8456"  # Blue deployment, Green uses 8457
+```
+
+**Note:** `VIKUNJA_API_TOKEN` is intentionally NOT set in the systemd service. This means:
+1. You must configure your MCP clients (Claude Desktop, n8n, etc.) to pass the token via their configuration
+2. Each client can use different tokens for multi-user access
+3. To set a shared default token, edit `/etc/systemd/system/vikunja-mcp-blue.service` and add `Environment="VIKUNJA_API_TOKEN=your-token"`
+
+**Connecting to the Deployed MCP Server:**
+
+After deployment, configure your AI agent client to connect. Example for Claude Desktop:
+
+```json
+{
+  "mcpServers": {
+    "vikunja": {
+      "command": "ssh",
+      "args": [
+        "root@<container-ip>",
+        "node", "/opt/vikunja/mcp-server/dist/index.js"
+      ],
+      "env": {
+        "VIKUNJA_API_URL": "http://127.0.0.1:3456",
+        "VIKUNJA_API_TOKEN": "your-personal-vikunja-token",
+        "MCP_PORT": "8456",
+        "REDIS_HOST": "localhost",
+        "REDIS_PORT": "6379"
+      }
+    }
+  }
+}
+```
+
+### Manual Deployment
+
+If you prefer manual deployment:
 
 1. **Create Debian 12 container:**
    ```bash
@@ -169,26 +304,23 @@ For Proxmox environments, deploy as a lightweight LXC container.
 # Update system
 apt update && apt upgrade -y
 
-# Install Node.js 20 LTS
-curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+# Install Node.js 20 LTS (or 22+ for latest)
+curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
 apt install -y nodejs
 
-# Install Redis (or use external Redis)
-apt install -y redis-server
+# Install Redis (required for rate limiting)
+apt install -y redis-server redis-tools
 
 # Install Git
 apt install -y git
 
-# Create MCP user
-useradd -r -m -s /bin/bash vikunja-mcp
+# Verify Redis is running
+systemctl status redis-server
 ```
 
 ### Deploy MCP Server
 
 ```bash
-# Switch to MCP user
-su - vikunja-mcp
-
 # Clone/copy project
 cd /opt
 git clone <your-repo> vikunja-mcp-server
@@ -200,31 +332,49 @@ npm ci --only=production
 # Build TypeScript
 npm run build
 
-# Create config directory
-sudo mkdir -p /etc/vikunja-mcp
-sudo chown vikunja-mcp:vikunja-mcp /etc/vikunja-mcp
-
-# Create environment file
-nano /etc/vikunja-mcp/config.env
-```
-
-Add configuration:
-```env
-VIKUNJA_API_URL=http://192.168.1.100:3456
-VIKUNJA_API_TOKEN=your-token-here
-MCP_PORT=3457
-REDIS_HOST=localhost
-REDIS_PORT=6379
-RATE_LIMIT_DEFAULT=100
-RATE_LIMIT_BURST=120
-LOG_LEVEL=info
+# Verify build succeeded
+ls -la dist/index.js
 ```
 
 ---
 
 ## Systemd Service
 
-### Create Service File
+### Automated Deployment Service File
+
+The Proxmox automated deployment creates a systemd service like this:
+
+```ini
+[Unit]
+Description=Vikunja MCP Server (blue)
+After=network.target redis-server.service
+Wants=redis-server.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/vikunja/mcp-server
+ExecStart=/usr/bin/node /opt/vikunja/mcp-server/dist/index.js
+Environment="MCP_PORT=8456"
+Environment="VIKUNJA_API_URL=http://127.0.0.1:3456"
+Environment="REDIS_HOST=localhost"
+Environment="REDIS_PORT=6379"
+Environment="RATE_LIMIT_DEFAULT=100"
+Environment="RATE_LIMIT_BURST=120"
+Environment="LOG_LEVEL=info"
+Environment="LOG_FORMAT=json"
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+```
+
+**Note:** The service does NOT include `VIKUNJA_API_TOKEN`. See [Authentication Overview](#authentication-overview) for details.
+
+### Manual Service File Creation
+
+For manual deployments with a dedicated user:
 
 ```bash
 sudo nano /etc/systemd/system/vikunja-mcp.service
@@ -234,16 +384,25 @@ Add configuration:
 ```ini
 [Unit]
 Description=Vikunja MCP Server
-After=network.target redis.service
-Wants=redis.service
+After=network.target redis-server.service
+Wants=redis-server.service
 
 [Service]
 Type=simple
 User=vikunja-mcp
 Group=vikunja-mcp
 WorkingDirectory=/opt/vikunja-mcp-server
-EnvironmentFile=/etc/vikunja-mcp/config.env
 ExecStart=/usr/bin/node /opt/vikunja-mcp-server/dist/index.js
+Environment="MCP_PORT=3457"
+Environment="VIKUNJA_API_URL=http://localhost:3456"
+Environment="REDIS_HOST=localhost"
+Environment="REDIS_PORT=6379"
+Environment="RATE_LIMIT_DEFAULT=100"
+Environment="RATE_LIMIT_BURST=120"
+Environment="LOG_LEVEL=info"
+Environment="LOG_FORMAT=json"
+# Optional: Add default token for single-user deployments
+# Environment="VIKUNJA_API_TOKEN=your-shared-token-here"
 Restart=always
 RestartSec=10
 StandardOutput=journal

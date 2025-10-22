@@ -303,6 +303,7 @@ install_dependencies() {
         "git" "curl" "wget" "build-essential"
         "ca-certificates" "gnupg" "lsb-release"
         "nginx" "sqlite3" "postgresql-client" "default-mysql-client"
+        "redis-server" "redis-tools"
         "sudo" "systemd" "procps"
     )
     

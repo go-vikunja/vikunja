@@ -91,17 +91,37 @@ WantedBy=multi-user.target
 EOF
 )
     elif [[ "$service_type" == "mcp" ]]; then
+        # Determine backend port (blue or green based on the MCP color)
+        # MCP blue connects to backend blue, MCP green connects to backend green
+        local backend_port
+        if [[ "$color" == "blue" ]]; then
+            backend_port="${BACKEND_BLUE_PORT:-3456}"
+        else
+            backend_port="${BACKEND_GREEN_PORT:-3457}"
+        fi
+        
+        # Construct backend URL (assumes backend is on localhost)
+        local backend_url="http://127.0.0.1:${backend_port}"
+        
         unit_content=$(cat <<EOF
 [Unit]
 Description=Vikunja MCP Server (${color})
-After=network.target
+After=network.target redis-server.service
+Wants=redis-server.service
 
 [Service]
 Type=simple
 User=root
 WorkingDirectory=${working_dir}/mcp-server
 ExecStart=/usr/bin/node ${working_dir}/mcp-server/dist/index.js
-Environment="PORT=${port}"
+Environment="MCP_PORT=${port}"
+Environment="VIKUNJA_API_URL=${backend_url}"
+Environment="REDIS_HOST=localhost"
+Environment="REDIS_PORT=6379"
+Environment="RATE_LIMIT_DEFAULT=100"
+Environment="RATE_LIMIT_BURST=120"
+Environment="LOG_LEVEL=info"
+Environment="LOG_FORMAT=json"
 Restart=always
 RestartSec=10
 
