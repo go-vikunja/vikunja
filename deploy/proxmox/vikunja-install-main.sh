@@ -63,8 +63,8 @@ WORKING_DIR="/opt/vikunja"
 # Ports (blue-green deployment)
 BACKEND_PORT_BLUE=3456
 BACKEND_PORT_GREEN=3457
-MCP_PORT_BLUE=8456
-MCP_PORT_GREEN=8457
+MCP_PORT_BLUE=3010
+MCP_PORT_GREEN=3011
 ACTIVE_COLOR="blue"
 
 # Flags
@@ -879,6 +879,13 @@ deploy_vikunja() {
         return 1
     fi
     
+    # Wait for MCP HTTP server to become healthy (T038)
+    log_info "Waiting for MCP HTTP server to become healthy..."
+    if ! wait_for_healthy "$CONTAINER_ID" "mcp" "$MCP_PORT_BLUE" 30; then
+        log_error "MCP HTTP server did not become healthy"
+        return 1
+    fi
+    
     # Save configuration and state
     save_deployment_state "$commit"
     
@@ -978,6 +985,28 @@ show_deployment_summary() {
     echo ""
     echo "Access URL:        http://${DOMAIN}"
     echo "Deployment Time:   ${duration}s"
+    echo ""
+    
+    # MCP HTTP Transport section
+    echo "╔════════════════════════════════════════════════════════════╗"
+    echo "║              MCP Server HTTP Transport                     ║"
+    echo "╚════════════════════════════════════════════════════════════╝"
+    echo ""
+    echo "MCP HTTP Endpoint: http://${IP_ADDRESS%/*}:3010/sse"
+    echo "Transport Type:    HTTP with Server-Sent Events (SSE)"
+    echo "Authentication:    Vikunja API token required"
+    echo ""
+    echo "Example connections:"
+    echo "  n8n:             POST http://${IP_ADDRESS%/*}:3010/sse"
+    echo "                   Header: Authorization: Bearer YOUR_TOKEN"
+    echo ""
+    echo "  Python SDK:      from mcp.client.sse import sse_client"
+    echo "                   url=\"http://${IP_ADDRESS%/*}:3010/sse\""
+    echo ""
+    echo "  curl test:       curl -N -H \"Authorization: Bearer TOKEN\" \\"
+    echo "                   http://${IP_ADDRESS%/*}:3010/sse"
+    echo ""
+    echo "See mcp-server/docs/DEPLOYMENT.md for detailed examples"
     echo ""
     
     # Root access section
