@@ -55,8 +55,7 @@ describe('Authenticator', () => {
       
       const result = await authenticator.validateToken('valid-token');
       
-      expect(mockClient.setToken).toHaveBeenCalledWith('valid-token');
-      expect(mockClient.get).toHaveBeenCalledWith('/api/v1/user');
+      expect(mockClient.get).toHaveBeenCalledWith('/api/v1/user', undefined, 'valid-token');
       expect(result).toMatchObject({
         userId: 123,
         username: 'testuser',
