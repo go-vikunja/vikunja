@@ -121,6 +121,7 @@ async function initializeApp(): Promise<AppState> {
       sessionManager,
       tokenValidator,
       rateLimiter,
+      enableJsonResponse: config.httpTransport.enableJsonResponse,
     });
 
     // Add timeout middleware to MCP endpoint (30 seconds)
@@ -132,7 +133,9 @@ async function initializeApp(): Promise<AppState> {
       void streamableTransport.handleRequest(req, res);
     });
 
-    logger.info('HTTP Streamable transport endpoint registered at POST /mcp (30s timeout)');
+    logger.info('HTTP Streamable transport endpoint registered at POST /mcp (30s timeout)', {
+      enableJsonResponse: config.httpTransport.enableJsonResponse,
+    });
 
     // Initialize SSE transport (deprecated, for backward compatibility)
     sseTransport = new SSETransport({

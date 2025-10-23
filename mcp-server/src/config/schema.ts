@@ -7,6 +7,7 @@ export const HttpTransportConfigSchema = z.object({
 	enabled: z.boolean().default(false),
 	port: z.number().int().positive().default(3458),
 	host: z.string().default('0.0.0.0'),
+	enableJsonResponse: z.boolean().default(false),
 });
 
 /**

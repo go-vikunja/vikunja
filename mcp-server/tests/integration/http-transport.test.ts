@@ -778,4 +778,155 @@ describe('HTTP Transport End-to-End Integration Tests', () => {
 			expect(response.body.error.data).toHaveProperty('retryAfter');
 		});
 	});
+
+	describe('JSON Response Mode', () => {
+		let jsonTransport: HTTPStreamableTransport;
+		let jsonApp: Express;
+
+		beforeAll(async () => {
+			// Create a separate transport with JSON response mode enabled
+			jsonTransport = new HTTPStreamableTransport({
+				mcpServer,
+				sessionManager,
+				tokenValidator,
+				rateLimiter,
+				enableJsonResponse: true,
+			});
+
+			// Create separate Express app for JSON mode
+			jsonApp = express();
+			jsonApp.use(express.json());
+			jsonApp.post('/mcp', (req, res) => {
+				void jsonTransport.handleRequest(req, res);
+			});
+
+			await new Promise<void>((resolve) => {
+				jsonApp.listen(0, () => resolve());
+			});
+		});
+
+		afterAll(async () => {
+			await jsonTransport.close();
+		});
+
+		it('should accept requests without Accept header', async () => {
+			const response = await supertest(jsonApp)
+				.post('/mcp')
+				.set('Authorization', 'Bearer valid-token')
+				.set('Content-Type', 'application/json')
+				// Note: No Accept header set
+				.send({
+					jsonrpc: '2.0',
+					id: 1,
+					method: 'initialize',
+					params: {
+						protocolVersion: '2024-11-05',
+						clientInfo: { name: 'test-json-client', version: '1.0.0' },
+						capabilities: {},
+					},
+				})
+				.expect(200);
+
+			// Response should be plain JSON, not SSE
+			expect(response.headers['content-type']).toMatch(/application\/json/);
+			expect(response.body).toHaveProperty('jsonrpc', '2.0');
+			expect(response.body).toHaveProperty('id', 1);
+			expect(response.body).toHaveProperty('result');
+		});
+
+		it('should work with n8n-style requests (no Accept header)', async () => {
+			// First initialize
+			const initResponse = await supertest(jsonApp)
+				.post('/mcp')
+				.set('Authorization', 'Bearer valid-token')
+				.set('Content-Type', 'application/json')
+				.send({
+					jsonrpc: '2.0',
+					id: 1,
+					method: 'initialize',
+					params: {
+						protocolVersion: '2024-11-05',
+						clientInfo: { name: 'n8n-client', version: '1.0.0' },
+						capabilities: {},
+					},
+				})
+				.expect(200);
+
+			const sessionId = initResponse.headers['mcp-session-id'];
+
+			// Then call tools/list without Accept header (simulating n8n)
+			const response = await supertest(jsonApp)
+				.post('/mcp')
+				.set('Authorization', 'Bearer valid-token')
+				.set('Content-Type', 'application/json')
+				.set('Mcp-Session-Id', sessionId)
+				// Simulate n8n MCP client node behavior - no Accept header
+				.send({
+					jsonrpc: '2.0',
+					id: 2,
+					method: 'tools/list',
+				})
+				.expect(200);
+
+			expect(response.headers['content-type']).toMatch(/application\/json/);
+			expect(response.body).toHaveProperty('result');
+			expect(response.body.result).toHaveProperty('tools');
+			expect(Array.isArray(response.body.result.tools)).toBe(true);
+		});
+
+		it('should still require authentication in JSON mode', async () => {
+			const response = await supertest(jsonApp)
+				.post('/mcp')
+				.set('Content-Type', 'application/json')
+				// No Authorization header
+				.send({
+					jsonrpc: '2.0',
+					id: 1,
+					method: 'tools/list',
+				})
+				.expect(401);
+
+			expect(response.body).toHaveProperty('error');
+			expect(response.body.error.code).toBe(-32001);
+		});
+
+		it('should maintain session across JSON requests', async () => {
+			// First request - initialize
+			const initResponse = await supertest(jsonApp)
+				.post('/mcp')
+				.set('Authorization', 'Bearer valid-token')
+				.set('Content-Type', 'application/json')
+				.send({
+					jsonrpc: '2.0',
+					id: 1,
+					method: 'initialize',
+					params: {
+						protocolVersion: '2024-11-05',
+						clientInfo: { name: 'test', version: '1.0.0' },
+						capabilities: {},
+					},
+				})
+				.expect(200);
+
+			// Extract session ID from response headers
+			const sessionId = initResponse.headers['mcp-session-id'];
+			expect(sessionId).toBeDefined();
+
+			// Second request - use session
+			const toolsResponse = await supertest(jsonApp)
+				.post('/mcp')
+				.set('Authorization', 'Bearer valid-token')
+				.set('Content-Type', 'application/json')
+				.set('Mcp-Session-Id', sessionId)
+				.send({
+					jsonrpc: '2.0',
+					id: 2,
+					method: 'tools/list',
+				})
+				.expect(200);
+
+			expect(toolsResponse.body).toHaveProperty('result');
+			expect(toolsResponse.body.result).toHaveProperty('tools');
+		});
+	});
 });
