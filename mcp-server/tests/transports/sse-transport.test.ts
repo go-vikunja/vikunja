@@ -160,6 +160,14 @@ describe('SSE Transport Tests', () => {
 		app = express();
 		app.use(express.json());
 
+		// Setup persistent mocks BEFORE creating SSE transport
+		// T038: Use persistent spies that won't be cleared
+		const tokenValidatorSpy = vi.spyOn(tokenValidator, 'validateToken');
+		tokenValidatorSpy.mockResolvedValue(mockUserContext);
+		
+		const rateLimiterSpy = vi.spyOn(rateLimiter, 'checkLimit');
+		rateLimiterSpy.mockResolvedValue(undefined);
+
 		// Import and setup SSE transport (will fail until T030 is implemented)
 		try {
 			const { SSETransport } = await import('../../src/transports/http/sse-transport.js');
@@ -182,9 +190,6 @@ describe('SSE Transport Tests', () => {
 		await new Promise<void>((resolve) => {
 			server = app.listen(0, () => resolve());
 		});
-
-		// Mock token validation
-		vi.spyOn(tokenValidator, 'validateToken').mockResolvedValue(mockUserContext);
 	});
 
 	afterAll(async () => {
@@ -194,7 +199,14 @@ describe('SSE Transport Tests', () => {
 	});
 
 	beforeEach(() => {
-		vi.clearAllMocks();
+		// T038: Don't use vi.clearAllMocks() - it breaks our persistent mocks
+		// Instead, just reset call history while preserving mock implementations
+		vi.mocked(tokenValidator.validateToken).mockClear();
+		vi.mocked(rateLimiter.checkLimit).mockClear();
+		
+		// Ensure mocks still return correct values
+		vi.mocked(tokenValidator.validateToken).mockResolvedValue(mockUserContext);
+		vi.mocked(rateLimiter.checkLimit).mockResolvedValue(undefined);
 	});
 
 	describe('SSE Event Stream (GET /sse)', () => {

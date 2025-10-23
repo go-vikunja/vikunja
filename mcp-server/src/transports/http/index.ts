@@ -5,8 +5,9 @@
  * for the MCP protocol.
  */
 
-// Legacy SSE transport
-export { createSSEServerTransport } from './sse-transport.js';
+// SSE transport (deprecated)
+export { SSETransport } from './sse-transport.js';
+export type { SSETransportConfig } from './sse-transport.js';
 
 // HTTP Streamable transport (recommended)
 export { HTTPStreamableTransport } from './http-streamable.js';
@@ -26,6 +27,7 @@ export type {
 } from './session-manager.js';
 
 // Re-export everything for convenience
+export * from './sse-transport.js';
 export * from './http-streamable.js';
 export * from './health-check.js';
 export * from './session-manager.js';
