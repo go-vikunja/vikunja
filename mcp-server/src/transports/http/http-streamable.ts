@@ -17,6 +17,7 @@ export interface HTTPStreamableTransportConfig {
 	sessionManager: SessionManager;
 	tokenValidator: TokenValidator;
 	rateLimiter: RateLimiter;
+	enableJsonResponse?: boolean;
 }
 
 /**
@@ -41,6 +42,7 @@ export class HTTPStreamableTransport {
 	private readonly sessionManager: SessionManager;
 	private readonly tokenValidator: TokenValidator;
 	private readonly rateLimiter: RateLimiter;
+	private readonly enableJsonResponse: boolean;
 	private readonly transports = new Map<string, StreamableHTTPServerTransport>();
 
 	constructor(config: HTTPStreamableTransportConfig) {
@@ -48,6 +50,7 @@ export class HTTPStreamableTransport {
 		this.sessionManager = config.sessionManager;
 		this.tokenValidator = config.tokenValidator;
 		this.rateLimiter = config.rateLimiter;
+		this.enableJsonResponse = config.enableJsonResponse ?? false;
 	}
 
 	/**
@@ -86,6 +89,13 @@ export class HTTPStreamableTransport {
 		let sessionId: string | undefined;
 		
 		try {
+			// 0. If JSON response mode is enabled, inject Accept header to bypass SDK validation
+			// The MCP SDK requires Accept: application/json, text/event-stream, but n8n and other
+			// clients can't customize this header. When enableJsonResponse is true, we inject it.
+			if (this.enableJsonResponse && (!req.headers.accept || !req.headers.accept.includes('text/event-stream'))) {
+				req.headers.accept = 'application/json, text/event-stream';
+			}
+
 			// 1. Extract token
 			const token = this.extractBearerToken(req);
 			if (!token) {
@@ -197,10 +207,12 @@ export class HTTPStreamableTransport {
 				logHttpTransport('transport_creating', {
 					sessionId,
 					userId: userContext.userId,
+					enableJsonResponse: this.enableJsonResponse,
 				});
 				
 				transport = new StreamableHTTPServerTransport({
 					sessionIdGenerator: () => sessionId!,
+					enableJsonResponse: this.enableJsonResponse,
 					onsessioninitialized: async (sid: string) => {
 						logHttpTransport('mcp_session_initialized', { sessionId: sid });
 						// Store user context in shared MCP server for this session

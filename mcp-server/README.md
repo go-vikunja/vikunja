@@ -26,6 +26,7 @@ The Vikunja MCP Server enables AI agents (like Claude Desktop, n8n, custom scrip
 - **Authentication**: Vikunja API token-based authentication
 - **Performance**: <200ms p95 latency for tool calls
 - **Scalability**: Stateless design for horizontal scaling
+- **JSON Response Mode**: Optional mode for clients that can't customize Accept headers (e.g., n8n)
 
 ## Quick Start
 
@@ -71,6 +72,8 @@ Edit `~/.config/Claude/claude_desktop_config.json`:
 
 #### n8n
 
+> **Note**: n8n requires JSON response mode to be enabled. Set `MCP_HTTP_JSON_RESPONSE=true` in your environment variables.
+
 Use the [MCP Tool node](https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.toolmcp/) in your AI Agent workflow:
 
 1. Add an **AI Agent** node to your workflow
@@ -81,7 +84,8 @@ Use the [MCP Tool node](https://docs.n8n.io/integrations/builtin/cluster-nodes/s
      "command": "docker",
      "args": ["exec", "-i", "vikunja-mcp-server", "node", "/app/dist/index.js"],
      "env": {
-       "VIKUNJA_API_TOKEN": "your-vikunja-token"
+       "VIKUNJA_API_TOKEN": "your-vikunja-token",
+       "MCP_HTTP_JSON_RESPONSE": "true"
      }
    }
    ```

@@ -12,6 +12,7 @@ function loadConfig(): Config {
 			enabled: process.env['MCP_HTTP_ENABLED'] === 'true',
 			port: process.env['MCP_HTTP_PORT'] ? parseInt(process.env['MCP_HTTP_PORT'], 10) : 3458,
 			host: process.env['MCP_HTTP_HOST'] ?? '0.0.0.0',
+			enableJsonResponse: process.env['MCP_HTTP_JSON_RESPONSE'] === 'true',
 		},
 		redis: {
 			host: process.env['REDIS_HOST'] ?? 'localhost',

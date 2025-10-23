@@ -98,6 +98,17 @@ Claude: I'll add that task to the Website Redesign project.
 
 n8n has native MCP support through the [Tool MCP node](https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.toolmcp/).
 
+#### Important: Enable JSON Response Mode
+
+The n8n MCP client node cannot customize HTTP Accept headers, which are normally required by the MCP protocol. To use the Vikunja MCP Server with n8n, you must enable JSON response mode:
+
+**Add to your `.env` file or environment variables:**
+```bash
+MCP_HTTP_JSON_RESPONSE=true
+```
+
+This bypasses the Accept header requirement and returns plain JSON responses instead of SSE streams, making it compatible with n8n and other clients that don't support custom headers.
+
 #### Step-by-Step Setup:
 
 1. **Create a new workflow in n8n**
