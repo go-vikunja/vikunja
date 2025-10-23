@@ -5,6 +5,7 @@ import type { SessionManager } from './session-manager.js';
 import type { TokenValidator } from '../../auth/token-validator.js';
 import type { RateLimiter } from '../../ratelimit/limiter.js';
 import { logHttpTransport, logAuth, logError, logger } from '../../utils/logger.js';
+import { validateSSEMessage } from '../../utils/request-validation.js';
 
 /**
  * SSE Transport configuration
@@ -369,47 +370,28 @@ export class SSETransport {
 				return;
 			}
 
-			// 2. Validate request body structure
-			if (!req.body || typeof req.body !== 'object') {
+			// 2. Validate request body structure with Zod schema
+			// Protects against malformed JSON, oversized payloads, and injection attacks
+			const validationResult = validateSSEMessage(req.body);
+			if (!validationResult.success) {
 				res.status(400).json({
+					...validationResult.error,
 					error: {
-						code: -32600,
-						message: 'Invalid Request: Body must be JSON object',
+						...validationResult.error.error,
 						data: {
+							...validationResult.error.error.data,
 							deprecation: 'SSE transport is deprecated. Use HTTP Streamable instead.',
 						},
 					},
 				});
-				return;
-			}
-
-			const { session_id, message } = req.body;
-
-			if (!session_id || typeof session_id !== 'string') {
-				res.status(400).json({
-					error: {
-						code: -32600,
-						message: 'Invalid Request: session_id field required',
-						data: {
-							deprecation: 'SSE transport is deprecated. Use HTTP Streamable instead.',
-						},
-					},
+				logError(new Error('SSE message validation failed'), {
+					event: 'sse_validation_failed',
+					token: token ? token.substring(0, 8) : undefined,
 				});
 				return;
 			}
 
-			if (!message || typeof message !== 'object') {
-				res.status(400).json({
-					error: {
-						code: -32600,
-						message: 'Invalid Request: message field required (JSON-RPC message)',
-						data: {
-							deprecation: 'SSE transport is deprecated. Use HTTP Streamable instead.',
-						},
-					},
-				});
-				return;
-			}
+			const { session_id, message } = validationResult.data;
 
 			// 3. Validate session exists
 			const session = this.sessionManager.getSession(session_id);

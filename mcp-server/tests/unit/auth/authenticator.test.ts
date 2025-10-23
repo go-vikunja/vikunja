@@ -57,12 +57,14 @@ describe('Authenticator', () => {
       
       expect(mockClient.setToken).toHaveBeenCalledWith('valid-token');
       expect(mockClient.get).toHaveBeenCalledWith('/api/v1/user');
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         userId: 123,
         username: 'testuser',
         email: 'test@example.com',
         token: 'valid-token',
+        permissions: expect.arrayContaining(['read', 'write']),
       });
+      expect(result.validatedAt).toBeInstanceOf(Date);
     });
 
     it('should cache valid tokens', async () => {

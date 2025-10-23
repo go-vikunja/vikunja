@@ -3,6 +3,7 @@ import express, { type Express } from 'express';
 import { config } from './config/index.js';
 import { logger } from './utils/logger.js';
 import { RedisStorage } from './ratelimit/storage.js';
+import { RedisConnectionManager } from './utils/redis-connection.js';
 import { Authenticator } from './auth/authenticator.js';
 import { RateLimiter } from './ratelimit/limiter.js';
 import { VikunjaClient } from './vikunja/client.js';
@@ -11,6 +12,7 @@ import { HTTPStreamableTransport } from './transports/http/http-streamable.js';
 import { SSETransport } from './transports/http/sse-transport.js';
 import { TokenValidator } from './auth/token-validator.js';
 import { SessionManager } from './transports/http/session-manager.js';
+import { timeoutMiddleware, haltOnTimeout } from './utils/timeout-middleware.js';
 
 /**
  * Application state
@@ -37,11 +39,14 @@ let appState: AppState | null = null;
 async function initializeApp(): Promise<AppState> {
   logger.info('Initializing Vikunja MCP Server');
 
-  // Connect to Redis
-  logger.info('Connecting to Redis', {
+  // Initialize shared Redis connection
+  logger.info('Initializing shared Redis connection', {
     host: config.redis.host,
     port: config.redis.port,
   });
+  await RedisConnectionManager.getConnection();
+
+  // Create Redis storage (uses shared connection)
   const redis = new RedisStorage();
   await redis.connect();
 
@@ -118,13 +123,16 @@ async function initializeApp(): Promise<AppState> {
       rateLimiter,
     });
 
+    // Add timeout middleware to MCP endpoint (30 seconds)
+    const timeout30s = timeoutMiddleware({ timeoutMs: 30000 });
+
     // Capture transport in const to avoid non-null assertion
     const streamableTransport = httpStreamableTransport;
-    httpServer.post('/mcp', (req, res) => {
+    httpServer.post('/mcp', timeout30s, haltOnTimeout, (req, res) => {
       void streamableTransport.handleRequest(req, res);
     });
 
-    logger.info('HTTP Streamable transport endpoint registered at POST /mcp');
+    logger.info('HTTP Streamable transport endpoint registered at POST /mcp (30s timeout)');
 
     // Initialize SSE transport (deprecated, for backward compatibility)
     sseTransport = new SSETransport({
@@ -138,13 +146,13 @@ async function initializeApp(): Promise<AppState> {
     // Capture transport in const to avoid non-null assertion
     const sse = sseTransport;
     
-    // GET /sse - Client opens SSE connection to receive messages
-    httpServer.get('/sse', (req, res) => {
+    // GET /sse - Client opens SSE connection to receive messages (longer timeout for streaming)
+    httpServer.get('/sse', timeoutMiddleware({ timeoutMs: 300000 }), haltOnTimeout, (req, res) => {
       void sse.handleStream(req, res);
     });
     
-    // POST /sse - Client sends messages to server
-    httpServer.post('/sse', (req, res) => {
+    // POST /sse - Client sends messages to server (30 second timeout)
+    httpServer.post('/sse', timeout30s, haltOnTimeout, (req, res) => {
       void sse.handleMessage(req, res);
     });
 
@@ -223,8 +231,11 @@ async function shutdown(): Promise<void> {
     // Stop MCP server
     await appState.mcpServer.stop();
 
-    // Disconnect from Redis
+    // Disconnect from Redis storage
     await appState.redis.disconnect();
+
+    // Disconnect shared Redis connection
+    await RedisConnectionManager.disconnect();
 
     logger.info('Shutdown complete');
   } catch (error) {

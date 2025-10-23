@@ -2,7 +2,8 @@ import type { Request, Response } from 'express';
 import { config } from '../../config/index.js';
 import type { SessionManager } from './session-manager.js';
 import axios from 'axios';
-import Redis from 'ioredis';
+import type Redis from 'ioredis';
+import { getRedisConnection } from '../../utils/redis-connection.js';
 import { logError } from '../../utils/logger.js';
 
 /**
@@ -61,6 +62,7 @@ export class HealthCheckHandler {
 	private readonly sessionManager: SessionManager;
 	private readonly startTime: number;
 	private redis: Redis | null = null;
+	private redisInitialized = false;
 
 	constructor(config: HealthCheckConfig) {
 		this.sessionManager = config.sessionManager;
@@ -73,37 +75,20 @@ export class HealthCheckHandler {
 	}
 
 	/**
-	 * Initialize Redis connection for health checks
+	 * Initialize Redis connection for health checks using shared connection
 	 */
-	private initializeRedis(): void {
-		try {
-			const redisUrl = config.redis.url;
-			if (redisUrl) {
-				this.redis = new Redis(redisUrl);
-			} else if (config.redis.host && config.redis.port) {
-				const options: {
-					host: string;
-					port: number;
-					password?: string;
-				} = {
-					host: config.redis.host,
-					port: config.redis.port,
-				};
-				if (config.redis.password) {
-					options.password = config.redis.password;
-				}
-				this.redis = new Redis(options);
-			}
+	private async initializeRedis(): Promise<void> {
+		if (this.redisInitialized) {
+			return;
+		}
 
-			if (this.redis) {
-				this.redis.on('error', (error) => {
-					logError(error, { context: 'health-check-redis' });
-					this.redis = null;
-				});
-			}
+		try {
+			this.redis = await getRedisConnection();
+			this.redisInitialized = true;
 		} catch (error) {
 			logError(error as Error, { context: 'health-check-redis-init' });
 			this.redis = null;
+			this.redisInitialized = false;
 		}
 	}
 
@@ -111,6 +96,11 @@ export class HealthCheckHandler {
 	 * Check Redis connectivity
 	 */
 	private async checkRedis(): Promise<ComponentHealth> {
+		// Ensure Redis is initialized
+		if (!this.redisInitialized) {
+			await this.initializeRedis();
+		}
+
 		if (!this.redis) {
 			return {
 				status: 'degraded',
@@ -241,10 +231,11 @@ export class HealthCheckHandler {
 
 	/**
 	 * Clean up resources
+	 * Note: Redis connection is managed by RedisConnectionManager singleton
 	 */
 	async close(): Promise<void> {
-		if (this.redis) {
-			await this.redis.quit();
-		}
+		// Redis connection is shared and managed by RedisConnectionManager
+		// Just clear our reference
+		this.redis = null;
 	}
 }
