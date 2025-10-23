@@ -55,8 +55,8 @@ function loadConfig(): Config {
 		llm: process.env['LLM_PROVIDER']
 			? {
 					provider: process.env['LLM_PROVIDER'] as 'openai' | 'anthropic' | 'ollama',
-					apiKey: process.env['LLM_API_KEY'],
-					endpoint: process.env['LLM_ENDPOINT'],
+					apiKey: process.env['LLM_API_KEY'] || undefined,
+					endpoint: process.env['LLM_ENDPOINT'] || undefined,
 			  }
 			: undefined,
 		logging: {
