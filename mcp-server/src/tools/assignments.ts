@@ -71,13 +71,11 @@ export class AssignmentTools {
       // Rate limiting check
       await this.rateLimiter.checkLimit(userContext.token);
 
-      // Set auth token
-      this.client.setToken(userContext.token);
-
-      // Assign user to task
+      // Assign user to task with token passed directly
       const task = await this.client.put<VikunjaTask>(
         `/api/v1/tasks/${input.task_id}/assignees`,
-        { user_id: input.user_id }
+        { user_id: input.user_id },
+        userContext.token
       );
 
       logger.info('User assigned to task', {
@@ -112,12 +110,10 @@ export class AssignmentTools {
       // Rate limiting check
       await this.rateLimiter.checkLimit(userContext.token);
 
-      // Set auth token
-      this.client.setToken(userContext.token);
-
-      // Unassign user from task
+      // Unassign user from task with token passed directly
       const task = await this.client.delete<VikunjaTask>(
-        `/api/v1/tasks/${input.task_id}/assignees/${input.user_id}`
+        `/api/v1/tasks/${input.task_id}/assignees/${input.user_id}`,
+        userContext.token
       );
 
       logger.info('User unassigned from task', {
@@ -155,13 +151,11 @@ export class AssignmentTools {
       // Rate limiting check
       await this.rateLimiter.checkLimit(userContext.token);
 
-      // Set auth token
-      this.client.setToken(userContext.token);
-
-      // Add label to task
+      // Add label to task with token passed directly
       const task = await this.client.put<VikunjaTask>(
         `/api/v1/tasks/${input.task_id}/labels`,
-        { label_id: input.label_id }
+        { label_id: input.label_id },
+        userContext.token
       );
 
       logger.info('Label added to task', {
@@ -196,12 +190,10 @@ export class AssignmentTools {
       // Rate limiting check
       await this.rateLimiter.checkLimit(userContext.token);
 
-      // Set auth token
-      this.client.setToken(userContext.token);
-
-      // Remove label from task
+      // Remove label from task with token passed directly
       const task = await this.client.delete<VikunjaTask>(
-        `/api/v1/tasks/${input.task_id}/labels/${input.label_id}`
+        `/api/v1/tasks/${input.task_id}/labels/${input.label_id}`,
+        userContext.token
       );
 
       logger.info('Label removed from task', {
@@ -239,11 +231,12 @@ export class AssignmentTools {
       // Rate limiting check
       await this.rateLimiter.checkLimit(userContext.token);
 
-      // Set auth token
-      this.client.setToken(userContext.token);
-
-      // Create label
-      const label = await this.client.put<VikunjaLabel>('/api/v1/labels', input);
+      // Create label with token passed directly
+      const label = await this.client.put<VikunjaLabel>(
+        '/api/v1/labels',
+        input,
+        userContext.token
+      );
 
       logger.info('Label created', {
         labelId: label.id,
