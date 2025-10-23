@@ -75,9 +75,6 @@ export class SearchTools {
       // Rate limiting check
       await this.rateLimiter.checkLimit(userContext.token);
 
-      // Set auth token
-      this.client.setToken(userContext.token);
-
       // Build query parameters
       const params: Record<string, unknown> = {
         s: input.query,
@@ -92,8 +89,12 @@ export class SearchTools {
         params['filter_value'] = input.filter_priority;
       }
 
-      // Search tasks
-      const tasks = await this.client.get<VikunjaTask[]>('/api/v1/tasks/all', params);
+      // Search tasks with token passed directly
+      const tasks = await this.client.get<VikunjaTask[]>(
+        '/api/v1/tasks/all',
+        params,
+        userContext.token
+      );
 
       // Apply additional filters if needed
       let filteredTasks = tasks;
@@ -147,9 +148,6 @@ export class SearchTools {
       // Rate limiting check
       await this.rateLimiter.checkLimit(userContext.token);
 
-      // Set auth token
-      this.client.setToken(userContext.token);
-
       // Build query parameters
       const params: Record<string, unknown> = {
         s: input.query,
@@ -160,8 +158,12 @@ export class SearchTools {
         params['is_archived'] = input.filter_archived;
       }
 
-      // Search projects
-      const projects = await this.client.get<VikunjaProject[]>('/api/v1/projects', params);
+      // Search projects with token passed directly
+      const projects = await this.client.get<VikunjaProject[]>(
+        '/api/v1/projects',
+        params,
+        userContext.token
+      );
 
       logger.info('Projects searched', {
         query: input.query,
@@ -198,9 +200,6 @@ export class SearchTools {
       // Rate limiting check
       await this.rateLimiter.checkLimit(userContext.token);
 
-      // Set auth token
-      this.client.setToken(userContext.token);
-
       // Build query parameters
       const params: Record<string, unknown> = {
         page: input.page,
@@ -216,8 +215,12 @@ export class SearchTools {
         params['filter_value'] = input.filter_priority;
       }
 
-      // Get user's tasks
-      const tasks = await this.client.get<VikunjaTask[]>('/api/v1/tasks/all', params);
+      // Get user's tasks with token passed directly
+      const tasks = await this.client.get<VikunjaTask[]>(
+        '/api/v1/tasks/all',
+        params,
+        userContext.token
+      );
 
       logger.info('User tasks retrieved', {
         tasksCount: tasks.length,
@@ -253,9 +256,6 @@ export class SearchTools {
       // Rate limiting check
       await this.rateLimiter.checkLimit(userContext.token);
 
-      // Set auth token
-      this.client.setToken(userContext.token);
-
       // Build query parameters
       const params: Record<string, unknown> = {
         page: input.page,
@@ -269,10 +269,11 @@ export class SearchTools {
         params['filter_value'] = input.filter_priority;
       }
 
-      // Get project tasks
+      // Get project tasks with token passed directly
       const tasks = await this.client.get<VikunjaTask[]>(
         `/api/v1/projects/${input.project_id}/tasks`,
-        params
+        params,
+        userContext.token
       );
 
       logger.info('Project tasks retrieved', {

@@ -33,9 +33,8 @@ export class Authenticator {
     // Call Vikunja API to validate token
     try {
       const client = new VikunjaClient();
-      client.setToken(token);
 
-      const user = await client.get<VikunjaUser>('/api/v1/user');
+      const user = await client.get<VikunjaUser>('/api/v1/user', undefined, token);
 
       const userContext: UserContext = {
         userId: user.id,

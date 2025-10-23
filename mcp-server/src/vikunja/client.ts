@@ -35,7 +35,6 @@ function sleep(ms: number): Promise<void> {
  */
 export class VikunjaClient {
   private readonly axios: AxiosInstance;
-  private token: string | null = null;
 
   constructor() {
     this.axios = axios.create({
@@ -80,19 +79,20 @@ export class VikunjaClient {
   }
 
   /**
-   * Set authentication token
+   * Set authentication token (deprecated - use token parameter in API methods instead)
+   * @deprecated This method causes race conditions in concurrent requests. Pass token to each API method instead.
    */
-  setToken(token: string): void {
-    this.token = token;
+  setToken(_token: string): void {
+    logger.warn('setToken() is deprecated and should not be used. Pass token to API methods instead.');
   }
 
   /**
    * Get request config with auth header
    */
-  private getConfig(config?: AxiosRequestConfig): AxiosRequestConfig {
+  private getConfig(token?: string, config?: AxiosRequestConfig): AxiosRequestConfig {
     const headers: Record<string, string> = {};
-    if (this.token) {
-      headers['Authorization'] = `Bearer ${this.token}`;
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
     return { ...config, headers };
   }
@@ -139,36 +139,36 @@ export class VikunjaClient {
   /**
    * GET request
    */
-  async get<T>(path: string, params?: Record<string, unknown>): Promise<T> {
+  async get<T>(path: string, params?: Record<string, unknown>, token?: string): Promise<T> {
     return this.requestWithRetries(() =>
-      this.axios.get<T>(path, this.getConfig({ params }))
+      this.axios.get<T>(path, this.getConfig(token, { params }))
     );
   }
 
   /**
    * POST request
    */
-  async post<T>(path: string, data?: unknown): Promise<T> {
+  async post<T>(path: string, data?: unknown, token?: string): Promise<T> {
     return this.requestWithRetries(() =>
-      this.axios.post<T>(path, data, this.getConfig())
+      this.axios.post<T>(path, data, this.getConfig(token))
     );
   }
 
   /**
    * PUT request
    */
-  async put<T>(path: string, data?: unknown): Promise<T> {
+  async put<T>(path: string, data?: unknown, token?: string): Promise<T> {
     return this.requestWithRetries(() =>
-      this.axios.put<T>(path, data, this.getConfig())
+      this.axios.put<T>(path, data, this.getConfig(token))
     );
   }
 
   /**
    * DELETE request
    */
-  async delete<T>(path: string): Promise<T> {
+  async delete<T>(path: string, token?: string): Promise<T> {
     return this.requestWithRetries(() =>
-      this.axios.delete<T>(path, this.getConfig())
+      this.axios.delete<T>(path, this.getConfig(token))
     );
   }
 }

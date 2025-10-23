@@ -68,11 +68,12 @@ export class ProjectTools {
       // Rate limiting check
       await this.rateLimiter.checkLimit(userContext.token);
 
-      // Set auth token
-      this.client.setToken(userContext.token);
-
-      // Create project
-      const project = await this.client.post<VikunjaProject>('/api/v1/projects', input);
+      // Create project with token passed directly
+      const project = await this.client.post<VikunjaProject>(
+        '/api/v1/projects',
+        input,
+        userContext.token
+      );
 
       logger.info('Project created', {
         projectId: project.id,
@@ -105,16 +106,14 @@ export class ProjectTools {
       // Rate limiting check
       await this.rateLimiter.checkLimit(userContext.token);
 
-      // Set auth token
-      this.client.setToken(userContext.token);
-
       // Extract ID and update data
       const { id, ...updateData } = input;
 
-      // Update project
+      // Update project with token passed directly
       const project = await this.client.put<VikunjaProject>(
         `/api/v1/projects/${id}`,
-        updateData
+        updateData,
+        userContext.token
       );
 
       logger.info('Project updated', {
@@ -148,11 +147,8 @@ export class ProjectTools {
       // Rate limiting check
       await this.rateLimiter.checkLimit(userContext.token);
 
-      // Set auth token
-      this.client.setToken(userContext.token);
-
-      // Delete project
-      await this.client.delete(`/api/v1/projects/${input.id}`);
+      // Delete project with token passed directly
+      await this.client.delete(`/api/v1/projects/${input.id}`, userContext.token);
 
       logger.info('Project deleted', {
         projectId: input.id,
@@ -184,13 +180,12 @@ export class ProjectTools {
       // Rate limiting check
       await this.rateLimiter.checkLimit(userContext.token);
 
-      // Set auth token
-      this.client.setToken(userContext.token);
-
-      // Archive/unarchive project
-      const project = await this.client.put<VikunjaProject>(`/api/v1/projects/${input.id}`, {
-        is_archived: input.archived,
-      });
+      // Archive/unarchive project with token passed directly
+      const project = await this.client.put<VikunjaProject>(
+        `/api/v1/projects/${input.id}`,
+        { is_archived: input.archived },
+        userContext.token
+      );
 
       logger.info('Project archive status changed', {
         projectId: project.id,
