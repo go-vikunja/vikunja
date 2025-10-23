@@ -272,7 +272,8 @@ export class SSETransport {
 				// So we DON'T call transport.start() separately
 				await this.mcpServer.getServer().connect(transport);
 				// Set user context using the SDK's session ID
-				this.mcpServer.setUserContext(transportSessionId, userContext);
+				// Explicitly include the token to ensure it's available for API calls
+				this.mcpServer.setUserContext(transportSessionId, { ...userContext, token, email: userContext.email || '' });
 				
 				// T040: Send custom session event AFTER SDK initialization
 				// The SDK's start() (called by connect()) sets up headers and begins streaming
