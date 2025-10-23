@@ -37,6 +37,7 @@ describe('RateLimiter', () => {
       zcard: vi.fn().mockResolvedValue(0),
       zadd: vi.fn().mockResolvedValue(undefined),
       set: vi.fn().mockResolvedValue(undefined),
+      expire: vi.fn().mockResolvedValue(undefined),
     };
     
     // Create limiter without resetting modules (keep the mocked config)
@@ -109,9 +110,8 @@ describe('RateLimiter', () => {
       
       await limiter.checkLimit('test-token');
       
-      expect(mockStorage.set).toHaveBeenCalledWith(
+      expect(mockStorage.expire).toHaveBeenCalledWith(
         'ratelimit:test-token',
-        '1',
         expect.any(Number) // TTL in seconds
       );
     });

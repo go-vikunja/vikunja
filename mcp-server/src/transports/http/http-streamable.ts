@@ -7,6 +7,7 @@ import type { TokenValidator } from '../../auth/token-validator.js';
 import type { RateLimiter } from '../../ratelimit/limiter.js';
 import { logHttpTransport, logAuth, logError } from '../../utils/logger.js';
 import { runInContext } from '../../utils/request-context.js';
+import { validateJsonRpcRequest } from '../../utils/request-validation.js';
 
 /**
  * HTTP Streamable Transport configuration
@@ -241,12 +242,25 @@ export class HTTPStreamableTransport {
 
 			// Note: SDK automatically manages 'Mcp-Session-Id' header - no need to set it manually
 
-			// 7. Convert Express req/res to Node.js IncomingMessage/ServerResponse
+			// 7. Validate request body before SDK processing
+			// Protects against malformed JSON, oversized payloads, and injection attacks
+			const validationResult = validateJsonRpcRequest(req.body);
+			if (!validationResult.success) {
+				res.status(400).json(validationResult.error);
+				logError(new Error('Request validation failed'), {
+					event: 'http_streamable_validation_failed',
+					sessionId,
+					userId: userContext.userId,
+				});
+				return;
+			}
+
+			// 8. Convert Express req/res to Node.js IncomingMessage/ServerResponse
 			// Express Request extends IncomingMessage, Response extends ServerResponse
 			const nodeReq = req as unknown as IncomingMessage;
 			const nodeRes = res as unknown as ServerResponse;
 
-			// 8. Delegate to MCP SDK transport
+			// 9. Delegate to MCP SDK transport
 			// Wrap in request context so server handlers can access session ID
 			try {
 				await runInContext(
@@ -256,7 +270,7 @@ export class HTTPStreamableTransport {
 						username: userContext.username 
 					},
 					async () => {
-						await transport.handleRequest(nodeReq, nodeRes, req.body);
+						await transport.handleRequest(nodeReq, nodeRes, validationResult.data);
 					}
 				);
 				

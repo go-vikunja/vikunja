@@ -15,6 +15,25 @@ Environment="NODE_ENV=production"
 Environment="PORT={PORT}"
 Environment="VIKUNJA_URL=http://localhost:{BACKEND_PORT}"
 
+# HTTP Transport Configuration (disabled by default for stdio mode)
+Environment="MCP_HTTP_ENABLED={MCP_HTTP_ENABLED}"
+Environment="MCP_HTTP_PORT={MCP_HTTP_PORT}"
+Environment="MCP_HTTP_HOST={MCP_HTTP_HOST}"
+
+# Redis Configuration (required when HTTP transport enabled)
+Environment="REDIS_URL={REDIS_URL}"
+
+# Authentication Configuration
+Environment="AUTH_TOKEN_CACHE_TTL={AUTH_TOKEN_CACHE_TTL}"
+
+# Rate Limiting Configuration
+Environment="RATE_LIMIT_POINTS={RATE_LIMIT_POINTS}"
+Environment="RATE_LIMIT_DURATION={RATE_LIMIT_DURATION}"
+
+# Session Management Configuration
+Environment="SESSION_IDLE_TIMEOUT={SESSION_IDLE_TIMEOUT}"
+Environment="SESSION_CLEANUP_INTERVAL={SESSION_CLEANUP_INTERVAL}"
+
 # Restart configuration
 Restart=always
 RestartSec=10

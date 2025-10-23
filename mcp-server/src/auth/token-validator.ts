@@ -1,61 +1,42 @@
-import Redis from 'ioredis';
+import type Redis from 'ioredis';
 import crypto from 'crypto';
 import axios from 'axios';
 import { config } from '../config/index.js';
 import { AuthenticationError } from '../utils/errors.js';
 import { logAuth, logError } from '../utils/logger.js';
+import { getRedisConnection } from '../utils/redis-connection.js';
 import type { UserContext } from './types.js';
 
 /**
  * Token validator with Redis caching
+ * Uses shared Redis connection from RedisConnectionManager
  */
 export class TokenValidator {
 	private redis: Redis | null = null;
 	private inMemoryCache = new Map<string, { context: UserContext; expiresAt: number }>();
+	private redisInitialized = false;
 
 	constructor() {
 		this.initializeRedis();
 	}
 
 	/**
-	 * Initialize Redis connection
+	 * Initialize Redis connection using shared connection manager
 	 */
-	private initializeRedis(): void {
-		if (!config.auth.tokenCacheEnabled) {
+	private async initializeRedis(): Promise<void> {
+		if (!config.auth.tokenCacheEnabled || this.redisInitialized) {
 			return;
 		}
 
 		try {
-			const redisUrl = config.redis.url;
-			if (redisUrl) {
-				this.redis = new Redis(redisUrl);
-			} else {
-				const options: {
-					host: string;
-					port: number;
-					password?: string;
-				} = {
-					host: config.redis.host,
-					port: config.redis.port,
-				};
-				if (config.redis.password) {
-					options.password = config.redis.password;
-				}
-				this.redis = new Redis(options);
-			}
-
-			this.redis.on('error', (error) => {
-				logError(error, { context: 'redis-connection', component: 'TokenValidator' });
-				// Fallback to in-memory cache
-				this.redis = null;
-			});
-
-			this.redis.on('connect', () => {
-				logAuth('token_cached', undefined, { message: 'Redis connected for token caching' });
-			});
+			this.redis = await getRedisConnection();
+			this.redisInitialized = true;
+			logAuth('token_cached', undefined, { message: 'Using shared Redis connection for token caching' });
 		} catch (error) {
 			logError(error as Error, { context: 'redis-initialization', component: 'TokenValidator' });
+			// Fallback to in-memory cache
 			this.redis = null;
+			this.redisInitialized = false;
 		}
 	}
 
@@ -70,6 +51,11 @@ export class TokenValidator {
 	 * Validate token against Vikunja API
 	 */
 	async validateToken(token: string): Promise<UserContext> {
+		// Ensure Redis is initialized (async operation)
+		if (!this.redisInitialized && config.auth.tokenCacheEnabled) {
+			await this.initializeRedis();
+		}
+
 		const tokenHash = this.hashToken(token);
 
 		// Check cache first
@@ -214,11 +200,11 @@ export class TokenValidator {
 
 	/**
 	 * Clean up resources
+	 * Note: Redis connection is managed by RedisConnectionManager singleton
 	 */
 	async close(): Promise<void> {
-		if (this.redis) {
-			await this.redis.quit();
-		}
+		// Only clear in-memory cache
+		// Redis connection is shared and managed by RedisConnectionManager
 		this.inMemoryCache.clear();
 	}
 }

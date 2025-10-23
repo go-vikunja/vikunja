@@ -1,10 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { RedisStorage } from '../../../src/ratelimit/storage.js';
-import Redis from 'ioredis';
 import { InternalError } from '../../../src/utils/errors.js';
+import { getRedisConnection } from '../../../src/utils/redis-connection.js';
 
-// Mock ioredis
-vi.mock('ioredis');
+// Mock redis-connection module
+vi.mock('../../../src/utils/redis-connection.js', () => ({
+  getRedisConnection: vi.fn(),
+}));
 
 // Mock config
 vi.mock('../../../src/config/index.js', () => ({
@@ -45,11 +47,11 @@ describe('RedisStorage', () => {
       zcard: vi.fn(),
       ping: vi.fn(),
       quit: vi.fn(),
-      once: vi.fn(),
+      expire: vi.fn(),
     };
     
-    // Mock Redis constructor
-    vi.mocked(Redis).mockImplementation(() => mockRedisInstance as any);
+    // Mock getRedisConnection to return our mock instance
+    vi.mocked(getRedisConnection).mockResolvedValue(mockRedisInstance as any);
     
     storage = new RedisStorage();
   });
@@ -60,92 +62,47 @@ describe('RedisStorage', () => {
 
   describe('connect', () => {
     it('should connect to Redis successfully', async () => {
-      // Simulate successful connection
-      mockRedisInstance.once.mockImplementation((event: string, callback: any) => {
-        if (event === 'ready') {
-          setTimeout(() => callback(), 0);
-        }
-      });
-      
       await storage.connect();
       
-      expect(Redis).toHaveBeenCalledWith(
-        expect.objectContaining({
-          host: 'localhost',
-          port: 6379,
-        })
-      );
+      expect(getRedisConnection).toHaveBeenCalled();
     });
 
     it('should retry connection on failure', async () => {
-      let attemptCount = 0;
+      // Mock getRedisConnection to fail
+      vi.mocked(getRedisConnection).mockRejectedValue(new Error('Connection failed'));
       
-      // Mock Redis constructor to fail first 2 times, succeed on 3rd
-      vi.mocked(Redis).mockImplementation(() => {
-        attemptCount++;
-        const instance = { ...mockRedisInstance };
-        
-        instance.once = vi.fn((event: string, callback: any) => {
-          if (event === 'error' && attemptCount < 3) {
-            setTimeout(() => callback(new Error('Connection failed')), 0);
-          } else if (event === 'ready' && attemptCount >= 3) {
-            setTimeout(() => callback(), 0);
-          }
-        });
-        
-        return instance as any;
-      });
-      
-      await storage.connect();
-      
-      expect(attemptCount).toBeGreaterThanOrEqual(3);
+      // RedisStorage wraps the error in an InternalError
+      const newStorage = new RedisStorage();
+      await expect(newStorage.connect()).rejects.toThrow(InternalError);
+      await expect(newStorage.connect()).rejects.toThrow('Failed to connect to Redis for rate limiting');
     });
 
     it('should throw error after max retries', async () => {
-      // Create new mock instance that immediately fails on construction
-      vi.mocked(Redis).mockImplementation(() => {
-        const failingInstance = { ...mockRedisInstance };
-        failingInstance.once = vi.fn((event: string, callback: any) => {
-          if (event === 'error') {
-            // Fail immediately without setTimeout
-            callback(new Error('Connection failed'));
-          }
-        });
-        return failingInstance as any;
-      });
+      // Mock getRedisConnection to always fail
+      vi.mocked(getRedisConnection).mockRejectedValue(new Error('Connection failed'));
       
       const newStorage = new RedisStorage();
       
       await expect(newStorage.connect()).rejects.toThrow(InternalError);
-    }, 15000); // Increase timeout for retry logic with delays
+    });
   });
 
   describe('disconnect', () => {
     it('should disconnect from Redis', async () => {
       // First connect
-      mockRedisInstance.once.mockImplementation((event: string, callback: any) => {
-        if (event === 'ready') {
-          setTimeout(() => callback(), 0);
-        }
-      });
       await storage.connect();
       
-      // Then disconnect
-      mockRedisInstance.quit.mockResolvedValue('OK');
+      // Then disconnect - should just clear reference, not call quit on shared connection
       await storage.disconnect();
       
-      expect(mockRedisInstance.quit).toHaveBeenCalled();
+      // Verify quit was NOT called (connection is shared)
+      expect(mockRedisInstance.quit).not.toHaveBeenCalled();
     });
   });
 
   describe('Basic operations', () => {
     beforeEach(async () => {
       // Connect before each test
-      mockRedisInstance.once.mockImplementation((event: string, callback: any) => {
-        if (event === 'ready') {
-          setTimeout(() => callback(), 0);
-        }
-      });
       await storage.connect();
     });
 
@@ -231,11 +188,6 @@ describe('RedisStorage', () => {
   describe('isHealthy', () => {
     it('should return true when Redis is healthy', async () => {
       // Connect first
-      mockRedisInstance.once.mockImplementation((event: string, callback: any) => {
-        if (event === 'ready') {
-          setTimeout(() => callback(), 0);
-        }
-      });
       await storage.connect();
       
       mockRedisInstance.ping.mockResolvedValue('PONG');
@@ -254,11 +206,6 @@ describe('RedisStorage', () => {
 
     it('should return false when ping fails', async () => {
       // Connect first
-      mockRedisInstance.once.mockImplementation((event: string, callback: any) => {
-        if (event === 'ready') {
-          setTimeout(() => callback(), 0);
-        }
-      });
       await storage.connect();
       
       mockRedisInstance.ping.mockRejectedValue(new Error('Connection lost'));

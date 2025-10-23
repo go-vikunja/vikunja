@@ -72,9 +72,10 @@ export class RateLimiter {
     // Add current request
     await this.storage.zadd(key, now, `${now}-${Math.random()}`);
 
-    // Set expiry on the key (cleanup)
+    // Set expiry on the sorted set key (cleanup)
+    // This prevents Redis memory leak by ensuring stale keys are removed
     const ttl = Math.ceil(this.windowMs / 1000);
-    await this.storage.set(key, '1', ttl);
+    await this.storage.expire(key, ttl);
 
     logger.debug('Rate limit check passed', {
       token: token.substring(0, 8),

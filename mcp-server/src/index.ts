@@ -3,13 +3,16 @@ import express, { type Express } from 'express';
 import { config } from './config/index.js';
 import { logger } from './utils/logger.js';
 import { RedisStorage } from './ratelimit/storage.js';
+import { RedisConnectionManager } from './utils/redis-connection.js';
 import { Authenticator } from './auth/authenticator.js';
 import { RateLimiter } from './ratelimit/limiter.js';
 import { VikunjaClient } from './vikunja/client.js';
 import { VikunjaMCPServer } from './server.js';
 import { HTTPStreamableTransport } from './transports/http/http-streamable.js';
+import { SSETransport } from './transports/http/sse-transport.js';
 import { TokenValidator } from './auth/token-validator.js';
 import { SessionManager } from './transports/http/session-manager.js';
+import { timeoutMiddleware, haltOnTimeout } from './utils/timeout-middleware.js';
 
 /**
  * Application state
@@ -24,6 +27,7 @@ interface AppState {
   tokenValidator: TokenValidator;
   sessionManager: SessionManager;
   httpStreamableTransport?: HTTPStreamableTransport;
+  sseTransport?: SSETransport;
   startTime: number;
 }
 
@@ -35,11 +39,14 @@ let appState: AppState | null = null;
 async function initializeApp(): Promise<AppState> {
   logger.info('Initializing Vikunja MCP Server');
 
-  // Connect to Redis
-  logger.info('Connecting to Redis', {
+  // Initialize shared Redis connection
+  logger.info('Initializing shared Redis connection', {
     host: config.redis.host,
     port: config.redis.port,
   });
+  await RedisConnectionManager.getConnection();
+
+  // Create Redis storage (uses shared connection)
   const redis = new RedisStorage();
   await redis.connect();
 
@@ -105,7 +112,10 @@ async function initializeApp(): Promise<AppState> {
 
   // HTTP Streamable transport endpoint (POST /mcp) - Primary recommended transport
   let httpStreamableTransport: HTTPStreamableTransport | undefined;
+  let sseTransport: SSETransport | undefined;
+  
   if (config.httpTransport.enabled) {
+    // Initialize HTTP Streamable transport (recommended)
     httpStreamableTransport = new HTTPStreamableTransport({
       mcpServer,
       sessionManager,
@@ -113,103 +123,41 @@ async function initializeApp(): Promise<AppState> {
       rateLimiter,
     });
 
+    // Add timeout middleware to MCP endpoint (30 seconds)
+    const timeout30s = timeoutMiddleware({ timeoutMs: 30000 });
+
     // Capture transport in const to avoid non-null assertion
-    const transport = httpStreamableTransport;
-    httpServer.post('/mcp', (req, res) => {
-      void transport.handleRequest(req, res);
+    const streamableTransport = httpStreamableTransport;
+    httpServer.post('/mcp', timeout30s, haltOnTimeout, (req, res) => {
+      void streamableTransport.handleRequest(req, res);
     });
 
-    logger.info('HTTP Streamable transport endpoint registered at POST /mcp');
+    logger.info('HTTP Streamable transport endpoint registered at POST /mcp (30s timeout)');
+
+    // Initialize SSE transport (deprecated, for backward compatibility)
+    sseTransport = new SSETransport({
+      mcpServer,
+      sessionManager,
+      tokenValidator,
+      rateLimiter,
+      postEndpoint: '/sse',
+    });
+
+    // Capture transport in const to avoid non-null assertion
+    const sse = sseTransport;
+    
+    // GET /sse - Client opens SSE connection to receive messages (longer timeout for streaming)
+    httpServer.get('/sse', timeoutMiddleware({ timeoutMs: 300000 }), haltOnTimeout, (req, res) => {
+      void sse.handleStream(req, res);
+    });
+    
+    // POST /sse - Client sends messages to server (30 second timeout)
+    httpServer.post('/sse', timeout30s, haltOnTimeout, (req, res) => {
+      void sse.handleMessage(req, res);
+    });
+
+    logger.info('SSE transport endpoints registered at GET/POST /sse (DEPRECATED)');
   }
-
-  // SSE endpoint for MCP over HTTP
-  // Store active SSE transports by session ID
-  const activeSessions = new Map();
-  
-  // GET /sse - Client opens SSE connection to receive messages
-  httpServer.get('/sse', async (req, res) => {
-    try {
-      // Extract and validate token from Authorization header or query parameter
-      const authHeader = req.headers.authorization;
-      const queryToken = req.query['token'] as string | undefined;
-      
-      let token: string | undefined;
-      
-      if (authHeader?.startsWith('Bearer ')) {
-        token = authHeader.slice(7);
-      } else if (queryToken) {
-        token = queryToken;
-      }
-      
-      if (!token) {
-        logger.warn('SSE connection rejected: missing token');
-        res.status(401).json({ error: 'Authorization required' });
-        return;
-      }
-
-      // Authenticate token
-      const userContext = await authenticator.validateToken(token);
-
-      // Check rate limit
-      await rateLimiter.checkLimit(token);
-
-      logger.info('SSE connection established', { userId: userContext.userId });
-
-      // Create SSE transport
-      const transport = new (await import('@modelcontextprotocol/sdk/server/sse.js')).SSEServerTransport('/sse', res);
-      
-      // Store transport by session ID
-      const sessionId = transport.sessionId;
-      activeSessions.set(sessionId, { transport, userContext });
-      
-      // Clean up on close
-      transport.onclose = () => {
-        activeSessions.delete(sessionId);
-        mcpServer.removeUserContext(sessionId);
-        logger.info('SSE connection closed', { sessionId, userId: userContext.userId });
-      };
-
-      // Connect the MCP server to this transport
-      await mcpServer.getServer().connect(transport);
-      
-      // Set user context for this session
-      // Use 'http-session' as a shared context for HTTP connections
-      // TODO: Implement per-session context when MCP SDK supports request metadata
-      mcpServer.setUserContext('http-session', userContext);
-    } catch (error) {
-      logger.error('SSE GET error', { error: error instanceof Error ? error.message : String(error) });
-      if (!res.headersSent) {
-        res.status(500).json({ error: 'Internal server error' });
-      }
-    }
-  });
-  
-  // POST /sse - Client sends messages to server
-  httpServer.post('/sse', async (req, res) => {
-    try {
-      const sessionId = req.query['sessionId'] as string | undefined;
-      
-      if (!sessionId) {
-        res.status(400).json({ error: 'sessionId required' });
-        return;
-      }
-
-      const session = activeSessions.get(sessionId);
-      if (!session) {
-        res.status(404).json({ error: 'Session not found' });
-        return;
-      }
-
-      // Handle the POST message with the existing transport
-      // Pass req.body since express.json() middleware already parsed it
-      await session.transport.handlePostMessage(req, res, req.body);
-    } catch (error) {
-      logger.error('SSE POST error', { error: error instanceof Error ? error.message : String(error) });
-      if (!res.headersSent) {
-        res.status(500).json({ error: 'Internal server error' });
-      }
-    }
-  });
 
   // Start HTTP server if HTTP transport is enabled
   if (config.httpTransport.enabled) {
@@ -251,6 +199,7 @@ async function initializeApp(): Promise<AppState> {
     tokenValidator,
     sessionManager,
     ...(httpStreamableTransport ? { httpStreamableTransport } : {}),
+    ...(sseTransport ? { sseTransport } : {}),
     startTime: Date.now(),
   };
 }
@@ -271,14 +220,22 @@ async function shutdown(): Promise<void> {
       await appState.httpStreamableTransport.close();
     }
 
+    // Stop SSE transport
+    if (appState.sseTransport) {
+      await appState.sseTransport.closeAll();
+    }
+
     // Stop session cleanup
     await appState.sessionManager.shutdown();
 
     // Stop MCP server
     await appState.mcpServer.stop();
 
-    // Disconnect from Redis
+    // Disconnect from Redis storage
     await appState.redis.disconnect();
+
+    // Disconnect shared Redis connection
+    await RedisConnectionManager.disconnect();
 
     logger.info('Shutdown complete');
   } catch (error) {
