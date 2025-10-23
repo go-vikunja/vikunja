@@ -11,6 +11,7 @@ import type { RateLimiter } from './ratelimit/limiter.js';
 import type { VikunjaClient } from './vikunja/client.js';
 import { ToolRegistry } from './tools/registry.js';
 import { logger } from './utils/logger.js';
+import { getRequestContext } from './utils/request-context.js';
 
 /**
  * Initialize request parameters
@@ -79,18 +80,30 @@ export class VikunjaMCPServer {
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       logger.debug('Handling tools/call request', { tool: request.params.name });
       
-      // Get user context
-      // Try http-session first (for HTTP/SSE transport), then default (for stdio)
-      let connectionId = 'http-session';
-      let userContext = this.getUserContext(connectionId);
+      // Get user context using request context (AsyncLocalStorage)
+      const context = getRequestContext();
+      let userContext: UserContext | undefined;
       
-      if (!userContext) {
-        connectionId = 'default';
-        userContext = this.getUserContext(connectionId);
+      if (context?.sessionId) {
+        // HTTP/SSE transport: use session ID from AsyncLocalStorage
+        userContext = this.getUserContext(context.sessionId);
+        logger.debug('Looking up user context via request context', { 
+          sessionId: context.sessionId,
+          found: !!userContext,
+        });
+      } else {
+        // Stdio transport: use 'default' connection ID
+        userContext = this.getUserContext('default');
+        logger.debug('Looking up user context via default connection', { 
+          found: !!userContext,
+        });
       }
       
       if (!userContext) {
-        logger.error('No user context found for connection', { connectionId });
+        logger.error('No user context found for connection', { 
+          sessionId: context?.sessionId,
+          hasContext: !!context,
+        });
         throw new Error('Unauthorized: No user context found');
       }
 

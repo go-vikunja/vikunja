@@ -110,3 +110,67 @@ export function logToolCall(
     userId,
   });
 }
+
+/**
+ * Log HTTP transport events
+ */
+export function logHttpTransport(
+  event:
+    | 'connection'
+    | 'disconnect'
+    | 'error'
+    | 'session_created'
+    | 'session_cleanup'
+    | 'session_activity_updated'
+    | 'session_expired'
+    | 'rate_limit_exceeded'
+    | 'mcp_session_initialized'
+    | 'mcp_session_closed'
+    | 'request_handled'
+    | 'transport_creating'
+    | 'transport_connected',
+  context?: Record<string, unknown>
+): void {
+  logger.info(`HTTP Transport: ${event}`, {
+    event,
+    transport: 'http',
+    ...context,
+  });
+}
+
+/**
+ * Log authentication events
+ */
+export function logAuth(
+  event:
+    | 'token_validated'
+    | 'token_cached'
+    | 'auth_failed'
+    | 'token_expired'
+    | 'authentication_failed',
+  tokenHash?: string,
+  context?: Record<string, unknown>
+): void {
+  logger.info(`Auth: ${event}`, {
+    event,
+    tokenHash,
+    auth: true,
+    ...context,
+  });
+}
+
+/**
+ * Log rate limiting events
+ */
+export function logRateLimit(
+  event: 'limit_exceeded' | 'limit_reset' | 'limit_warning',
+  tokenHash?: string,
+  context?: Record<string, unknown>
+): void {
+  logger.warn(`Rate Limit: ${event}`, {
+    event,
+    tokenHash,
+    rateLimit: true,
+    ...context,
+  });
+}
