@@ -103,6 +103,25 @@ EOF
         # Construct backend URL (assumes backend is on localhost)
         local backend_url="http://127.0.0.1:${backend_port}"
         
+        # HTTP Transport Configuration (disabled by default for stdio mode)
+        local mcp_http_enabled="${MCP_HTTP_ENABLED:-false}"
+        local mcp_http_port="${MCP_HTTP_PORT:-3100}"
+        local mcp_http_host="${MCP_HTTP_HOST:-127.0.0.1}"
+        
+        # Redis Configuration
+        local redis_url="${REDIS_URL:-redis://localhost:6379}"
+        
+        # Authentication Configuration
+        local auth_token_cache_ttl="${AUTH_TOKEN_CACHE_TTL:-300}"
+        
+        # Rate Limiting Configuration
+        local rate_limit_points="${RATE_LIMIT_POINTS:-100}"
+        local rate_limit_duration="${RATE_LIMIT_DURATION:-900}"
+        
+        # Session Management Configuration
+        local session_idle_timeout="${SESSION_IDLE_TIMEOUT:-1800}"
+        local session_cleanup_interval="${SESSION_CLEANUP_INTERVAL:-300}"
+        
         unit_content=$(cat <<EOF
 [Unit]
 Description=Vikunja MCP Server (${color})
@@ -116,6 +135,27 @@ WorkingDirectory=${working_dir}/mcp-server
 ExecStart=/usr/bin/node ${working_dir}/mcp-server/dist/index.js
 Environment="MCP_PORT=${port}"
 Environment="VIKUNJA_API_URL=${backend_url}"
+
+# HTTP Transport Configuration (disabled by default for stdio mode)
+Environment="MCP_HTTP_ENABLED=${mcp_http_enabled}"
+Environment="MCP_HTTP_PORT=${mcp_http_port}"
+Environment="MCP_HTTP_HOST=${mcp_http_host}"
+
+# Redis Configuration (required when HTTP transport enabled)
+Environment="REDIS_URL=${redis_url}"
+
+# Authentication Configuration
+Environment="AUTH_TOKEN_CACHE_TTL=${auth_token_cache_ttl}"
+
+# Rate Limiting Configuration
+Environment="RATE_LIMIT_POINTS=${rate_limit_points}"
+Environment="RATE_LIMIT_DURATION=${rate_limit_duration}"
+
+# Session Management Configuration
+Environment="SESSION_IDLE_TIMEOUT=${session_idle_timeout}"
+Environment="SESSION_CLEANUP_INTERVAL=${session_cleanup_interval}"
+
+# Legacy Configuration
 Environment="REDIS_HOST=localhost"
 Environment="REDIS_PORT=6379"
 Environment="RATE_LIMIT_DEFAULT=100"

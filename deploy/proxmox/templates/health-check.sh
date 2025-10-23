@@ -8,6 +8,8 @@ set -euo pipefail
 # Configuration
 BACKEND_PORT="${BACKEND_PORT:-3456}"
 MCP_PORT="${MCP_PORT:-8456}"
+MCP_HTTP_PORT="${MCP_HTTP_PORT:-3100}"
+MCP_HTTP_ENABLED="${MCP_HTTP_ENABLED:-false}"
 FRONTEND_PORT="${FRONTEND_PORT:-80}"
 
 # Colors
@@ -35,10 +37,32 @@ check_backend() {
 
 check_mcp() {
     if ss -tuln | grep -q ":${MCP_PORT} "; then
-        echo -e "${GREEN}✓${NC} MCP Server (port ${MCP_PORT}): Healthy"
+        echo -e "${GREEN}✓${NC} MCP Server stdio (port ${MCP_PORT}): Healthy"
         return 0
     else
-        echo -e "${YELLOW}⚠${NC} MCP Server (port ${MCP_PORT}): Not running"
+        echo -e "${YELLOW}⚠${NC} MCP Server stdio (port ${MCP_PORT}): Not running"
+        return 1
+    fi
+}
+
+check_mcp_http() {
+    # Only check if HTTP transport is enabled
+    if [[ "${MCP_HTTP_ENABLED}" != "true" ]]; then
+        echo -e "${YELLOW}⊝${NC} MCP HTTP Transport (port ${MCP_HTTP_PORT}): Disabled"
+        return 0  # Not an error if disabled
+    fi
+    
+    if curl -sf "http://localhost:${MCP_HTTP_PORT}/health" >/dev/null 2>&1; then
+        echo -e "${GREEN}✓${NC} MCP HTTP Transport (port ${MCP_HTTP_PORT}): Healthy"
+        
+        # Get session count if available
+        local session_info=$(curl -sf "http://localhost:${MCP_HTTP_PORT}/health" 2>/dev/null | grep -oP '"active":\s*\K\d+' || echo "")
+        if [[ -n "$session_info" ]]; then
+            echo -e "  └─ Active sessions: ${session_info}"
+        fi
+        return 0
+    else
+        echo -e "${RED}✗${NC} MCP HTTP Transport (port ${MCP_HTTP_PORT}): Unhealthy"
         return 1
     fi
 }
@@ -78,9 +102,16 @@ main() {
     fi
     
     if ! check_mcp; then
-        # MCP is non-critical
+        # MCP stdio is non-critical
         if [[ $exit_code -eq $EXIT_OK ]]; then
             exit_code=$EXIT_WARNING
+        fi
+    fi
+    
+    if ! check_mcp_http; then
+        # MCP HTTP is critical if enabled
+        if [[ "${MCP_HTTP_ENABLED}" == "true" ]]; then
+            exit_code=$EXIT_CRITICAL
         fi
     fi
     
