@@ -77,6 +77,8 @@ describe('Search Tools', () => {
       username: 'testuser',
       email: 'test@example.com',
       token: 'test-token',
+      permissions: [],
+      validatedAt: new Date(),
     };
   });
 
@@ -97,7 +99,7 @@ describe('Search Tools', () => {
       expect(mockClient.get).toHaveBeenCalledWith('/api/v1/tasks/all', {
         s: 'test',
         page: 1,
-      });
+      }, 'test-token');
     });
 
     it('should apply label filters', async () => {
@@ -146,7 +148,7 @@ describe('Search Tools', () => {
       expect(mockClient.get).toHaveBeenCalledWith('/api/v1/projects', {
         s: 'test',
         page: 1,
-      });
+      }, 'test-token');
     });
 
     it('should apply archive filter', async () => {
@@ -165,7 +167,8 @@ describe('Search Tools', () => {
         '/api/v1/projects',
         expect.objectContaining({
           is_archived: true,
-        })
+        }),
+        'test-token'
       );
     });
   });
@@ -186,8 +189,9 @@ describe('Search Tools', () => {
         '/api/v1/tasks/all',
         expect.objectContaining({
           filter_by: 'assignees',
-          filter_value: 1,
-        })
+          filter_value: userContext.userId,
+        }),
+        'test-token'
       );
     });
 
@@ -217,7 +221,7 @@ describe('Search Tools', () => {
       expect(result.tasks).toHaveLength(1);
       expect(mockClient.get).toHaveBeenCalledWith('/api/v1/projects/1/tasks', {
         page: 1,
-      });
+      }, 'test-token');
     });
 
     it('should apply priority filter', async () => {
@@ -237,7 +241,8 @@ describe('Search Tools', () => {
         expect.objectContaining({
           filter_by: 'priority',
           filter_value: 5,
-        })
+        }),
+        'test-token'
       );
     });
   });

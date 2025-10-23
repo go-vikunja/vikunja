@@ -210,14 +210,16 @@ export class HTTPStreamableTransport {
 					enableJsonResponse: this.enableJsonResponse,
 				});
 				
+				// CRITICAL: Set user context BEFORE creating transport to avoid race condition
+				// The onsessioninitialized callback may be called async, but tools might execute immediately
+				this.mcpServer.setUserContext(sessionId, { ...userContext, token, email: userContext.email || '' });
+				
 				transport = new StreamableHTTPServerTransport({
 					sessionIdGenerator: () => sessionId!,
 					enableJsonResponse: this.enableJsonResponse,
 					onsessioninitialized: async (sid: string) => {
 						logHttpTransport('mcp_session_initialized', { sessionId: sid });
-						// Store user context in shared MCP server for this session
-						// Add token to userContext for auth/types.UserContext compatibility
-						this.mcpServer.setUserContext(sid, { ...userContext, token, email: userContext.email || '' });
+						// User context already set above to avoid race condition
 					},
 					onsessionclosed: async (sid: string) => {
 						logHttpTransport('mcp_session_closed', { sessionId: sid });

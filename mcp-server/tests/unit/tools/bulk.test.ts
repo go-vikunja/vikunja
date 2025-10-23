@@ -58,6 +58,8 @@ describe('Bulk Tools', () => {
       username: 'testuser',
       email: 'test@example.com',
       token: 'test-token',
+      permissions: [],
+      validatedAt: new Date(),
     };
   });
 
@@ -140,7 +142,8 @@ describe('Bulk Tools', () => {
 
       expect(result.success).toBe(true);
       expect(result.successCount).toBe(2);
-      expect(mockClient.post).toHaveBeenCalledWith('/api/v1/tasks/1', { done: true });
+      expect(mockClient.post).toHaveBeenCalledWith('/api/v1/tasks/1', { done: true }, 'test-token');
+      expect(mockClient.post).toHaveBeenCalledWith('/api/v1/tasks/2', { done: true }, 'test-token');
     });
 
     it('should validate input with Zod schema', () => {
@@ -168,7 +171,10 @@ describe('Bulk Tools', () => {
       expect(result.successCount).toBe(2);
       expect(mockClient.put).toHaveBeenCalledWith('/api/v1/tasks/1/assignees', {
         user_id: 5,
-      });
+      }, 'test-token');
+      expect(mockClient.put).toHaveBeenCalledWith('/api/v1/tasks/2/assignees', {
+        user_id: 5,
+      }, 'test-token');
     });
   });
 
@@ -187,7 +193,10 @@ describe('Bulk Tools', () => {
       expect(result.successCount).toBe(2);
       expect(mockClient.put).toHaveBeenCalledWith('/api/v1/tasks/1/labels', {
         label_id: 3,
-      });
+      }, 'test-token');
+      expect(mockClient.put).toHaveBeenCalledWith('/api/v1/tasks/2/labels', {
+        label_id: 3,
+      }, 'test-token');
     });
   });
 });
