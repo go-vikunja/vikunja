@@ -6,6 +6,7 @@ import type { SessionManager } from './session-manager.js';
 import type { TokenValidator } from '../../auth/token-validator.js';
 import type { RateLimiter } from '../../ratelimit/limiter.js';
 import { logHttpTransport, logAuth, logError } from '../../utils/logger.js';
+import { runInContext } from '../../utils/request-context.js';
 
 /**
  * HTTP Streamable Transport configuration
@@ -148,7 +149,8 @@ export class HTTPStreamableTransport {
 			}
 
 			// 4. Get or create session
-			sessionId = req.headers['x-session-id'] as string | undefined;
+			// Note: SDK uses 'mcp-session-id' header (lowercase in Express)
+			sessionId = req.headers['mcp-session-id'] as string | undefined;
 			let session;
 
 			if (sessionId) {
@@ -237,8 +239,7 @@ export class HTTPStreamableTransport {
 				this.mcpServer.setUserContext(sessionId, { ...userContext, token, email: userContext.email || '' });
 			}
 
-			// 6. Set session ID in response headers
-			res.setHeader('X-Session-ID', sessionId);
+			// Note: SDK automatically manages 'Mcp-Session-Id' header - no need to set it manually
 
 			// 7. Convert Express req/res to Node.js IncomingMessage/ServerResponse
 			// Express Request extends IncomingMessage, Response extends ServerResponse
@@ -246,8 +247,18 @@ export class HTTPStreamableTransport {
 			const nodeRes = res as unknown as ServerResponse;
 
 			// 8. Delegate to MCP SDK transport
+			// Wrap in request context so server handlers can access session ID
 			try {
-				await transport.handleRequest(nodeReq, nodeRes, req.body);
+				await runInContext(
+					{ 
+						sessionId, 
+						userId: userContext.userId, 
+						username: userContext.username 
+					},
+					async () => {
+						await transport.handleRequest(nodeReq, nodeRes, req.body);
+					}
+				);
 				
 				const duration = Date.now() - startTime;
 				logHttpTransport('request_handled', {

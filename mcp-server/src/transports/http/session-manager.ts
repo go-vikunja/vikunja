@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { config } from '../../config/index.js';
-import type { UserContext } from '../../auth/token-validator.js';
+import type { UserContext } from '../../auth/types.js';
 import { logHttpTransport, logError } from '../../utils/logger.js';
 
 /**

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { TokenValidator, UserContext } from '../../../src/auth/token-validator.js';
+import { TokenValidator } from '../../../src/auth/token-validator.js';
+import type { UserContext } from '../../../src/auth/types.js';
 import { AuthenticationError } from '../../../src/utils/errors.js';
 import axios from 'axios';
 

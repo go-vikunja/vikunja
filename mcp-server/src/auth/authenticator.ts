@@ -42,6 +42,8 @@ export class Authenticator {
         username: user.username,
         email: user.email,
         token,
+        permissions: ['read', 'write'], // Vikunja doesn't expose granular permissions via API
+        validatedAt: new Date(),
       };
 
       // Cache the result

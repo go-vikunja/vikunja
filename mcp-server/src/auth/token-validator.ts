@@ -4,18 +4,7 @@ import axios from 'axios';
 import { config } from '../config/index.js';
 import { AuthenticationError } from '../utils/errors.js';
 import { logAuth, logError } from '../utils/logger.js';
-
-/**
- * User context after successful token validation
- */
-export interface UserContext {
-	userId: number;
-	username: string;
-	email?: string;
-	permissions: string[];
-	tokenScopes?: string[];
-	validatedAt: Date;
-}
+import type { UserContext } from './types.js';
 
 /**
  * Token validator with Redis caching
@@ -108,7 +97,8 @@ export class TokenValidator {
 			const userContext: UserContext = {
 				userId: userData.id,
 				username: userData.username,
-				email: userData.email,
+				email: userData.email || '',
+				token, // Include the validated token
 				permissions: ['read', 'write'], // Vikunja doesn't expose granular permissions via API
 				validatedAt: new Date(),
 			};

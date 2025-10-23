@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { TokenValidator } from './token-validator.js';
-import type { UserContext } from './token-validator.js';
+import type { UserContext } from './types.js';
 import { AuthenticationError } from '../utils/errors.js';
 import { logAuth } from '../utils/logger.js';
 

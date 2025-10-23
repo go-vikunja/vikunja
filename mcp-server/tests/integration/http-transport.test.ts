@@ -9,17 +9,7 @@ import { TokenValidator } from '../../src/auth/token-validator.js';
 import { SessionManager } from '../../src/transports/http/session-manager.js';
 import { RateLimiter } from '../../src/ratelimit/limiter.js';
 import { Authenticator } from '../../src/auth/authenticator.js';
-import type { UserContext as ServerUserContext } from '../../src/auth/types.js';
-import type { UserContext as TokenUserContext } from '../../src/auth/token-validator.js';
-
-/**
- * REGRESSION FOUND: There are two different UserContext types!
- * - auth/types.ts: has 'token' field, no 'permissions' or 'validatedAt'
- * - auth/token-validator.ts: has 'permissions' and 'validatedAt', no 'token'
- * 
- * This needs to be unified in a future task. For now, we'll create a combined type.
- */
-type CombinedUserContext = ServerUserContext & TokenUserContext;
+import type { UserContext } from '../../src/auth/types.js';
 
 /**
  * Integration Tests for HTTP Transport (T028b)
@@ -86,8 +76,9 @@ describe('HTTP Transport End-to-End Integration Tests', () => {
 	let sessionManager: SessionManager;
 	let rateLimiter: RateLimiter;
 	let mcpServer: VikunjaMCPServer;
+	let vikunjaClient: VikunjaClient; // Make available to tests
 
-	const mockUserContext: CombinedUserContext = {
+	const mockUserContext: UserContext = {
 		userId: 1,
 		username: 'testuser',
 		email: 'test@example.com',
@@ -102,7 +93,7 @@ describe('HTTP Transport End-to-End Integration Tests', () => {
 	beforeAll(async () => {
 		// Create dependencies
 		const authenticator = new Authenticator();
-		const vikunjaClient = new VikunjaClient();
+		vikunjaClient = new VikunjaClient(); // Assign to test variable
 
 		// Mock Vikunja API responses via generic HTTP methods
 		vi.spyOn(vikunjaClient, 'get').mockImplementation(async (path: string) => {
@@ -280,9 +271,9 @@ describe('HTTP Transport End-to-End Integration Tests', () => {
 				});
 
 			expect(response.status).toBe(200);
-			expect(response.headers['x-session-id']).toBeDefined();
-			expect(typeof response.headers['x-session-id']).toBe('string');
-			expect(response.headers['x-session-id'].length).toBeGreaterThan(0);
+			expect(response.headers['mcp-session-id']).toBeDefined();
+			expect(typeof response.headers['mcp-session-id']).toBe('string');
+			expect(response.headers['mcp-session-id'].length).toBeGreaterThan(0);
 		});
 
 		it('should accept initialized notification', async () => {
@@ -300,20 +291,30 @@ describe('HTTP Transport End-to-End Integration Tests', () => {
 					},
 				});
 
-			const sessionId = initResponse.headers['x-session-id'] as string;
+			const sessionId = initResponse.headers['mcp-session-id'] as string;
 
 			// Then send initialized notification
 			const notificationResponse = await mcpRequest()
 				.set('Authorization', 'Bearer valid-token')
-				.set('X-Session-ID', sessionId)
+				.set('Mcp-Session-Id', sessionId)
 				.send({
 					jsonrpc: '2.0',
 					method: 'notifications/initialized',
 					params: {},
 				});
 
-			// Notifications don't return responses, but should be accepted
-			expect(notificationResponse.status).toBe(200);
+			// Debug what we got
+			if (notificationResponse.status !== 202) {
+				console.log('Notification response:', {
+					status: notificationResponse.status,
+					body: notificationResponse.body,
+					text: notificationResponse.text,
+					headers: notificationResponse.headers,
+				});
+			}
+
+			// Notifications return 202 Accepted (no response body)
+			expect(notificationResponse.status).toBe(202);
 		});
 	});
 
@@ -333,12 +334,12 @@ describe('HTTP Transport End-to-End Integration Tests', () => {
 					},
 				});
 
-			const sessionId = initResponse.headers['x-session-id'] as string;
+			const sessionId = initResponse.headers['mcp-session-id'] as string;
 
 			// List tools
 			const toolsResponse = await mcpRequest()
 				.set('Authorization', 'Bearer valid-token')
-				.set('X-Session-ID', sessionId)
+				.set('Mcp-Session-Id', sessionId)
 				.send({
 					jsonrpc: '2.0',
 					id: 2,
@@ -347,10 +348,13 @@ describe('HTTP Transport End-to-End Integration Tests', () => {
 				});
 
 			expect(toolsResponse.status).toBe(200);
-			expect(toolsResponse.body).toHaveProperty('result');
-			expect(toolsResponse.body.result).toHaveProperty('tools');
+			
+			// Parse SSE response
+			const body = parseSSEResponse(toolsResponse);
+			expect(body).toHaveProperty('result');
+			expect(body.result).toHaveProperty('tools');
 
-			const tools = toolsResponse.body.result.tools;
+			const tools = body.result.tools;
 			expect(Array.isArray(tools)).toBe(true);
 			expect(tools.length).toBeGreaterThan(0);
 
@@ -378,12 +382,12 @@ describe('HTTP Transport End-to-End Integration Tests', () => {
 					},
 				});
 
-			const sessionId = initResponse.headers['x-session-id'] as string;
+			const sessionId = initResponse.headers['mcp-session-id'] as string;
 
 			// List tools
 			const toolsResponse = await mcpRequest()
 				.set('Authorization', 'Bearer valid-token')
-				.set('X-Session-ID', sessionId)
+				.set('Mcp-Session-Id', sessionId)
 				.send({
 					jsonrpc: '2.0',
 					id: 2,
@@ -391,7 +395,9 @@ describe('HTTP Transport End-to-End Integration Tests', () => {
 					params: {},
 				});
 
-			const tools = toolsResponse.body.result.tools;
+			// Parse SSE response
+			const body = parseSSEResponse(toolsResponse);
+			const tools = body.result.tools;
 			const createTaskTool = tools.find((t: any) => t.name === 'create_task');
 
 			expect(createTaskTool).toBeDefined();
@@ -419,21 +425,20 @@ describe('HTTP Transport End-to-End Integration Tests', () => {
 					},
 				});
 
-			const sessionId = initResponse.headers['x-session-id'] as string;
+			const sessionId = initResponse.headers['mcp-session-id'] as string;
 
-			// Set user context in MCP server for this session
-			mcpServer.setUserContext('http-session', mockUserContext);
+			// User context is automatically set via onsessioninitialized callback
 
-			// Call get_tasks tool
+			// Call get_project_tasks tool
 			const toolResponse = await mcpRequest()
 				.set('Authorization', 'Bearer valid-token')
-				.set('X-Session-ID', sessionId)
+				.set('Mcp-Session-Id', sessionId)
 				.send({
 					jsonrpc: '2.0',
 					id: 3,
 					method: 'tools/call',
 					params: {
-						name: 'get_tasks',
+						name: 'get_project_tasks',
 						arguments: {
 							project_id: 1,
 						},
@@ -441,54 +446,44 @@ describe('HTTP Transport End-to-End Integration Tests', () => {
 				});
 
 			expect(toolResponse.status).toBe(200);
-			expect(toolResponse.body).toHaveProperty('result');
-			expect(toolResponse.body.result).toHaveProperty('content');
-			expect(Array.isArray(toolResponse.body.result.content)).toBe(true);
-			expect(toolResponse.body.result.content[0]).toHaveProperty('type', 'text');
+			
+			// Parse SSE response
+			const body = parseSSEResponse(toolResponse);
+			
+			// Debug on failure
+			if (!body.result) {
+				console.log('Tool execution failed:', JSON.stringify(body, null, 2));
+			}
+			
+			expect(body).toHaveProperty('result');
+			expect(body.result).toHaveProperty('content');
+			expect(Array.isArray(body.result.content)).toBe(true);
+			expect(body.result.content[0]).toHaveProperty('type', 'text');
 
 			// Verify response contains task data
-			const resultText = toolResponse.body.result.content[0].text;
+			const resultText = body.result.content[0].text;
 			expect(resultText).toContain('Test Task 1');
 			expect(resultText).toContain('Test Task 2');
 		});
 
-		it('should reject tool call without user context', async () => {
-			// Initialize session
-			const initResponse = await mcpRequest()
-				.set('Authorization', 'Bearer valid-token')
+		it('should reject tool call without authentication', async () => {
+			// Try to call tool without any authentication
+			const toolResponse = await mcpRequest()
+				// No Authorization header
 				.send({
 					jsonrpc: '2.0',
 					id: 1,
-					method: 'initialize',
-					params: {
-						protocolVersion: '2024-11-05',
-						clientInfo: { name: 'test', version: '1.0.0' },
-						capabilities: {},
-					},
-				});
-
-			const sessionId = initResponse.headers['x-session-id'] as string;
-
-			// DON'T set user context - simulate unauthorized state
-
-			// Try to call tool
-			const toolResponse = await mcpRequest()
-				.set('Authorization', 'Bearer valid-token')
-				.set('X-Session-ID', sessionId)
-				.send({
-					jsonrpc: '2.0',
-					id: 3,
 					method: 'tools/call',
 					params: {
-						name: 'get_tasks',
+						name: 'get_project_tasks',
 						arguments: { project_id: 1 },
 					},
 				});
 
-			// Should return error
-			expect(toolResponse.status).toBe(200); // JSON-RPC errors are 200
+			// Should return 401 Unauthorized
+			expect(toolResponse.status).toBe(401);
 			expect(toolResponse.body).toHaveProperty('error');
-			expect(toolResponse.body.error.message).toContain('Unauthorized');
+			expect(toolResponse.body.error.message).toContain('Authentication required');
 		});
 
 		it('should validate tool arguments against schema', async () => {
@@ -506,13 +501,12 @@ describe('HTTP Transport End-to-End Integration Tests', () => {
 					},
 				});
 
-			const sessionId = initResponse.headers['x-session-id'] as string;
-			mcpServer.setUserContext('http-session', mockUserContext);
+			const sessionId = initResponse.headers['mcp-session-id'] as string;
 
 			// Call tool with invalid arguments (missing required field)
 			const toolResponse = await mcpRequest()
 				.set('Authorization', 'Bearer valid-token')
-				.set('X-Session-ID', sessionId)
+				.set('Mcp-Session-Id', sessionId)
 				.send({
 					jsonrpc: '2.0',
 					id: 3,
@@ -528,8 +522,11 @@ describe('HTTP Transport End-to-End Integration Tests', () => {
 
 			// Should return validation error
 			expect(toolResponse.status).toBe(200);
-			expect(toolResponse.body).toHaveProperty('error');
-			expect(toolResponse.body.error.message).toMatch(/invalid|required|title/i);
+			
+			// Parse SSE response
+			const body = parseSSEResponse(toolResponse);
+			expect(body).toHaveProperty('error');
+			expect(body.error.message).toMatch(/invalid|required|title/i);
 		});
 	});
 
@@ -549,12 +546,12 @@ describe('HTTP Transport End-to-End Integration Tests', () => {
 					},
 				});
 
-			const sessionId = initResponse.headers['x-session-id'] as string;
+			const sessionId = initResponse.headers['mcp-session-id'] as string;
 
 			// Make second request with same session ID
 			const request2 = await mcpRequest()
 				.set('Authorization', 'Bearer valid-token')
-				.set('X-Session-ID', sessionId)
+				.set('Mcp-Session-Id', sessionId)
 				.send({
 					jsonrpc: '2.0',
 					id: 2,
@@ -563,12 +560,12 @@ describe('HTTP Transport End-to-End Integration Tests', () => {
 				});
 
 			expect(request2.status).toBe(200);
-			expect(request2.headers['x-session-id']).toBe(sessionId);
+			expect(request2.headers['mcp-session-id']).toBe(sessionId);
 
 			// Make third request with same session ID
 			const request3 = await mcpRequest()
 				.set('Authorization', 'Bearer valid-token')
-				.set('X-Session-ID', sessionId)
+				.set('Mcp-Session-Id', sessionId)
 				.send({
 					jsonrpc: '2.0',
 					id: 3,
@@ -577,7 +574,7 @@ describe('HTTP Transport End-to-End Integration Tests', () => {
 				});
 
 			expect(request3.status).toBe(200);
-			expect(request3.headers['x-session-id']).toBe(sessionId);
+			expect(request3.headers['mcp-session-id']).toBe(sessionId);
 		});
 
 		it('should track session activity on each request', async () => {
@@ -595,7 +592,7 @@ describe('HTTP Transport End-to-End Integration Tests', () => {
 					},
 				});
 
-			const sessionId = initResponse.headers['x-session-id'] as string;
+			const sessionId = initResponse.headers['mcp-session-id'] as string;
 			const session1 = sessionManager.getSession(sessionId);
 			expect(session1).toBeDefined();
 			const activity1 = session1!.lastActivity;
@@ -606,7 +603,7 @@ describe('HTTP Transport End-to-End Integration Tests', () => {
 			// Make another request
 			await mcpRequest()
 				.set('Authorization', 'Bearer valid-token')
-				.set('X-Session-ID', sessionId)
+				.set('Mcp-Session-Id', sessionId)
 				.send({
 					jsonrpc: '2.0',
 					id: 2,
@@ -625,7 +622,7 @@ describe('HTTP Transport End-to-End Integration Tests', () => {
 		it('should create new session if provided session ID is invalid', async () => {
 			const response = await mcpRequest()
 				.set('Authorization', 'Bearer valid-token')
-				.set('X-Session-ID', 'invalid-session-id-12345')
+				.set('Mcp-Session-Id', 'invalid-session-id-12345')
 				.send({
 					jsonrpc: '2.0',
 					id: 1,
@@ -639,7 +636,7 @@ describe('HTTP Transport End-to-End Integration Tests', () => {
 
 			expect(response.status).toBe(200);
 
-			const newSessionId = response.headers['x-session-id'] as string;
+			const newSessionId = response.headers['mcp-session-id'] as string;
 			expect(newSessionId).toBeDefined();
 			expect(newSessionId).not.toBe('invalid-session-id-12345');
 
@@ -651,9 +648,8 @@ describe('HTTP Transport End-to-End Integration Tests', () => {
 
 	describe('Error Handling', () => {
 		it('should handle Vikunja API errors gracefully', async () => {
-			// Mock Vikunja client to throw error
-			const vikunjaClient = (mcpServer as any).toolRegistry.vikunjaClient;
-			vi.spyOn(vikunjaClient, 'getTasks').mockRejectedValue(
+			// Mock Vikunja client get method to throw error
+			vi.spyOn(vikunjaClient, 'get').mockRejectedValue(
 				new Error('Vikunja API connection failed')
 			);
 
@@ -671,27 +667,34 @@ describe('HTTP Transport End-to-End Integration Tests', () => {
 					},
 				});
 
-			const sessionId = initResponse.headers['x-session-id'] as string;
-			mcpServer.setUserContext('http-session', mockUserContext);
+			const sessionId = initResponse.headers['mcp-session-id'] as string;
 
 			// Try to call tool
 			const toolResponse = await mcpRequest()
 				.set('Authorization', 'Bearer valid-token')
-				.set('X-Session-ID', sessionId)
+				.set('Mcp-Session-Id', sessionId)
 				.send({
 					jsonrpc: '2.0',
 					id: 3,
 					method: 'tools/call',
 					params: {
-						name: 'get_tasks',
+						name: 'get_project_tasks',
 						arguments: { project_id: 1 },
 					},
 				});
 
-			// Should return error response
+			// Tool errors are returned as successful responses with error details in the result
 			expect(toolResponse.status).toBe(200);
-			expect(toolResponse.body).toHaveProperty('error');
-			expect(toolResponse.body.error.message).toContain('Vikunja API');
+			
+			// Parse SSE response
+			const body = parseSSEResponse(toolResponse);
+			expect(body).toHaveProperty('result');
+			expect(body.result).toHaveProperty('content');
+			
+			// Parse the result text which contains the tool output
+			const resultText = JSON.parse(body.result.content[0].text);
+			expect(resultText.success).toBe(false);
+			expect(resultText.message).toContain('Failed to get project tasks');
 		});
 
 		it('should handle invalid JSON-RPC requests', async () => {
@@ -722,13 +725,12 @@ describe('HTTP Transport End-to-End Integration Tests', () => {
 					},
 				});
 
-			const sessionId = initResponse.headers['x-session-id'] as string;
-			mcpServer.setUserContext('http-session', mockUserContext);
+			const sessionId = initResponse.headers['mcp-session-id'] as string;
 
 			// Call non-existent tool
 			const toolResponse = await mcpRequest()
 				.set('Authorization', 'Bearer valid-token')
-				.set('X-Session-ID', sessionId)
+				.set('Mcp-Session-Id', sessionId)
 				.send({
 					jsonrpc: '2.0',
 					id: 3,
@@ -740,8 +742,11 @@ describe('HTTP Transport End-to-End Integration Tests', () => {
 				});
 
 			expect(toolResponse.status).toBe(200);
-			expect(toolResponse.body).toHaveProperty('error');
-			expect(toolResponse.body.error.message).toMatch(/not found|unknown/i);
+			
+			// Parse SSE response
+			const body = parseSSEResponse(toolResponse);
+			expect(body).toHaveProperty('error');
+			expect(body.error.message).toMatch(/not found|unknown/i);
 		});
 	});
 
@@ -766,11 +771,11 @@ describe('HTTP Transport End-to-End Integration Tests', () => {
 				});
 
 			expect(response.status).toBe(429);
-			const body = parseSSEResponse(response);
-			expect(body).toHaveProperty('error');
-			expect(body.error.code).toBe(-32003);
-			expect(body.error.message).toContain('Rate limit');
-			expect(body.error.data).toHaveProperty('retryAfter');
+			// Rate limit responses return JSON, not SSE
+			expect(response.body).toHaveProperty('error');
+			expect(response.body.error.code).toBe(-32003);
+			expect(response.body.error.message).toContain('Rate limit');
+			expect(response.body.error.data).toHaveProperty('retryAfter');
 		});
 	});
 });
