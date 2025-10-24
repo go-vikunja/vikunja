@@ -996,7 +996,7 @@ show_deployment_summary() {
     # Determine MCP HTTP transport status
     local mcp_http_enabled="${MCP_HTTP_ENABLED:-false}"
     local mcp_http_port="${MCP_HTTP_PORT:-3100}"
-    local mcp_http_host="${MCP_HTTP_HOST:-127.0.0.1}"
+    local mcp_http_host="${MCP_HTTP_HOST:-0.0.0.0}"
     
     if [[ "$mcp_http_enabled" == "true" ]]; then
         echo "Status:            ✅ ENABLED"

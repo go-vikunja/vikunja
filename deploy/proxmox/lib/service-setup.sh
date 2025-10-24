@@ -106,7 +106,7 @@ EOF
         # HTTP Transport Configuration (disabled by default for stdio mode)
         local mcp_http_enabled="${MCP_HTTP_ENABLED:-false}"
         local mcp_http_port="${MCP_HTTP_PORT:-3100}"
-        local mcp_http_host="${MCP_HTTP_HOST:-127.0.0.1}"
+        local mcp_http_host="${MCP_HTTP_HOST:-0.0.0.0}"
         
         # Redis Configuration
         local redis_url="${REDIS_URL:-redis://localhost:6379}"
