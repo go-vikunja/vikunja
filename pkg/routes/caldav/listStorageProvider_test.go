@@ -38,7 +38,6 @@ func TestSubTask_Create(t *testing.T) {
 		Email:    "user15@example.com",
 	}
 
-
 	//
 	// Create a subtask
 	//

@@ -32,13 +32,31 @@ type APIRoute struct {
 
 // registerRoutes takes a slice of APIRoute structs and registers them with both the Echo router
 // and our token permission system. This replaces the old "magic" permission detection.
+// This is the v1-specific wrapper that calls RegisterRoutes with "v1" version.
 func registerRoutes(a *echo.Group, routes []APIRoute) {
-	for _, route := range routes {
-		// 1. Register the route with the Echo web server
-		a.Add(route.Method, route.Path, route.Handler)
+	RegisterRoutes(a, routes, "v1")
+}
 
-		// 2. Explicitly register the route and its permission scope
-		//    with our API token system. This replaces the old "magic".
-		models.CollectRoute(route.Method, route.Path, route.PermissionScope)
+// RegisterRoutes is the exported version that can be used by both v1 and v2 routes.
+// It takes a slice of APIRoute structs and registers them with both the Echo router
+// and our token permission system with the specified API version.
+func RegisterRoutes(a *echo.Group, routes []APIRoute, version string) {
+	// Build the API prefix based on the version (e.g., "/api/v1" or "/api/v2")
+	apiPrefix := "/api/" + version
+
+	for _, route := range routes {
+		// Build the full path by combining API prefix with route path
+		fullPath := apiPrefix + route.Path
+
+		// 1. FIRST: Explicitly register the route and its permission scope
+		//    with our API token system using the FULL path (with /api/{version} prefix).
+		//    This must happen BEFORE a.Add() so that the OnAddRouteHandler
+		//    check can see it already exists.
+		models.CollectRoute(route.Method, fullPath, route.PermissionScope)
+
+		// 2. THEN: Register the route with the Echo web server
+		//    This triggers OnAddRouteHandler, but our explicit registration
+		//    will be detected and the legacy system will skip it.
+		a.Add(route.Method, route.Path, route.Handler)
 	}
 }

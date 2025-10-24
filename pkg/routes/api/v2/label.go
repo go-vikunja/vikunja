@@ -24,6 +24,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
+	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/api/pkg/services"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web/handler"
@@ -31,14 +32,43 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// LabelRoutes defines all v2 label API routes with explicit permission scopes
+var LabelRoutes = []apiv1.APIRoute{
+	{
+		Method:          "GET",
+		Path:            "/labels",
+		Handler:         GetAllLabels,
+		PermissionScope: "read_all",
+	},
+	{
+		Method:          "POST",
+		Path:            "/labels",
+		Handler:         CreateLabel,
+		PermissionScope: "create",
+	},
+	{
+		Method:          "GET",
+		Path:            "/labels/:id",
+		Handler:         GetLabel,
+		PermissionScope: "read_one",
+	},
+	{
+		Method:          "PUT",
+		Path:            "/labels/:id",
+		Handler:         UpdateLabel,
+		PermissionScope: "update",
+	},
+	{
+		Method:          "DELETE",
+		Path:            "/labels/:id",
+		Handler:         DeleteLabel,
+		PermissionScope: "delete",
+	},
+}
+
 // RegisterLabels registers all label routes
 func RegisterLabels(a *echo.Group) {
-	labels := a.Group("/labels")
-	labels.GET("", GetAllLabels)
-	labels.POST("", CreateLabel)
-	labels.GET("/:id", GetLabel)
-	labels.PUT("/:id", UpdateLabel)
-	labels.DELETE("/:id", DeleteLabel)
+	apiv1.RegisterRoutes(a, LabelRoutes, "v2")
 }
 
 type LabelResponse struct {

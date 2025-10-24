@@ -220,3 +220,115 @@ func (s *APITokenTestSuite) TestInvalidScope() {
 	s.Require().Error(err)
 	s.Assert().Equal(http.StatusBadRequest, res.Code)
 }
+
+// TestGetRoutesEndpointCompleteness verifies GET /routes returns complete permission scopes
+// for v1_tasks including create, read_one, update, and delete operations.
+// This test ensures the fix for missing CRUD permissions is working correctly.
+func (s *APITokenTestSuite) TestGetRoutesEndpointCompleteness() {
+	res, err := s.th.Request(s.T(), http.MethodGet, "/api/v1/routes", nil)
+	s.Require().NoError(err)
+	s.Assert().Equal(http.StatusOK, res.Code)
+
+	var routes map[string]map[string]models.RouteDetail
+	err = json.NewDecoder(res.Body).Decode(&routes)
+	s.Require().NoError(err)
+
+	// Verify v1_tasks exists in the response
+	v1Tasks, exists := routes["v1_tasks"]
+	s.Require().True(exists, "v1_tasks should exist in routes response")
+
+	// Verify all 4 CRUD permissions are present for v1_tasks
+	requiredPermissions := []string{"create", "read_one", "update", "delete"}
+	for _, perm := range requiredPermissions {
+		route, exists := v1Tasks[perm]
+		s.Assert().True(exists, "v1_tasks should have '%s' permission", perm)
+		s.Assert().NotEmpty(route.Path, "v1_tasks.%s should have a path", perm)
+		s.Assert().NotEmpty(route.Method, "v1_tasks.%s should have a method", perm)
+	}
+
+	// Verify the specific route details for v1_tasks
+	s.Assert().Equal("PUT", v1Tasks["create"].Method)
+	s.Assert().Contains(v1Tasks["create"].Path, "/projects")
+	s.Assert().Contains(v1Tasks["create"].Path, "/tasks")
+
+	s.Assert().Equal("GET", v1Tasks["read_one"].Method)
+	s.Assert().Contains(v1Tasks["read_one"].Path, "/tasks")
+
+	s.Assert().Equal("POST", v1Tasks["update"].Method)
+	s.Assert().Contains(v1Tasks["update"].Path, "/tasks")
+
+	s.Assert().Equal("DELETE", v1Tasks["delete"].Method)
+	s.Assert().Contains(v1Tasks["delete"].Path, "/tasks")
+}
+
+// TestGetRoutesEndpointStructure verifies the response structure from GET /routes
+// matches the expected APITokenRoutesResponse schema with proper nesting:
+// version_groupname -> permission_scope -> RouteDetail
+func (s *APITokenTestSuite) TestGetRoutesEndpointStructure() {
+	res, err := s.th.Request(s.T(), http.MethodGet, "/api/v1/routes", nil)
+	s.Require().NoError(err)
+	s.Assert().Equal(http.StatusOK, res.Code)
+
+	var routes map[string]map[string]models.RouteDetail
+	err = json.NewDecoder(res.Body).Decode(&routes)
+	s.Require().NoError(err)
+
+	// Verify the response is not empty
+	s.Assert().NotEmpty(routes, "Routes response should not be empty")
+
+	// Verify that keys follow the pattern: version_groupname (e.g., "v1_tasks", "v2_projects")
+	for key, group := range routes {
+		// Key should contain version prefix (v1_, v2_, etc.)
+		// Allow hyphens for migration routes like "vikunja-file"
+		s.Assert().Regexp(`^v\d+_[a-z_-]+$`, key, "Route key '%s' should match pattern 'v{version}_{groupname}'", key)
+
+		// Skip validation for empty groups - these are routes that haven't been converted
+		// to the declarative pattern yet. This is acceptable for now.
+		if len(group) == 0 {
+			continue
+		}
+
+		// Verify each permission has proper RouteDetail structure
+		for permName, detail := range group {
+			s.Assert().NotEmpty(permName, "Permission name should not be empty in group '%s'", key)
+			s.Assert().NotEmpty(detail.Path, "Path should not be empty for permission '%s' in group '%s'", permName, key)
+			s.Assert().NotEmpty(detail.Method, "Method should not be empty for permission '%s' in group '%s'", permName, key)
+
+			// Verify method is a valid HTTP method
+			validMethods := []string{"GET", "POST", "PUT", "DELETE", "PATCH"}
+			s.Assert().Contains(validMethods, detail.Method, "Method '%s' should be a valid HTTP method for permission '%s' in group '%s'", detail.Method, permName, key)
+
+			// Verify path starts with /api
+			s.Assert().True(strings.HasPrefix(detail.Path, "/api/"), "Path '%s' should start with '/api/' for permission '%s' in group '%s'", detail.Path, permName, key)
+		}
+	}
+
+	// Verify specific expected route groups exist with non-empty permissions
+	// (at minimum v1_tasks and v1_projects should have complete permissions after the fix)
+	requiredGroups := map[string]int{
+		"v1_tasks":    4, // create, read_one, update, delete
+		"v1_projects": 5, // create, read_all, read_one, update, delete (+ read_all for tasks)
+	}
+	for expectedGroup, minPerms := range requiredGroups {
+		group, exists := routes[expectedGroup]
+		s.Assert().True(exists, "Expected route group '%s' should exist in response", expectedGroup)
+		s.Assert().GreaterOrEqual(len(group), minPerms, "Route group '%s' should have at least %d permissions", expectedGroup, minPerms)
+	}
+}
+
+// T037: Test that v2 API token can access v2 endpoints
+func (s *APITokenTestSuite) TestV2APITokenAuthentication() {
+	expiresAt := time.Now().Add(30 * 24 * time.Hour).UTC().Format("2006-01-02T15:04:05.000Z")
+	payload := `{"max_permission":null, "id":0, "title":"test-v2-token", "token":"", "permissions":{"v2_tasks":["read_all"]},"expires_at":"` + expiresAt + `","created":"1970-01-01T00:00:00.000Z","updated":null}`
+	token := s.createToken(payload)
+
+	// Verify the token was created successfully
+	s.Assert().NotEmpty(token.Token, "Token should be created with v2_tasks permissions")
+	s.Assert().Contains(token.APIPermissions, "v2_tasks", "Token should have v2_tasks in permissions")
+
+	// Use the token to access a v2 endpoint
+	s.th.token = token.Token
+	res, err := s.th.Request(s.T(), http.MethodGet, "/api/v2/tasks", nil)
+	s.Require().NoError(err)
+	s.Assert().Equal(http.StatusOK, res.Code, "Token with v2_tasks permissions should be able to access GET /api/v2/tasks")
+}

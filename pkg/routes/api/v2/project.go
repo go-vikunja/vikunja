@@ -25,6 +25,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
+	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/api/pkg/services"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web/handler"
@@ -32,17 +33,56 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// ProjectRoutes defines all v2 project API routes with explicit permission scopes
+var ProjectRoutes = []apiv1.APIRoute{
+	{
+		Method:          "GET",
+		Path:            "/projects",
+		Handler:         GetAllProjects,
+		PermissionScope: "read_all",
+	},
+	{
+		Method:          "POST",
+		Path:            "/projects",
+		Handler:         CreateProject,
+		PermissionScope: "create",
+	},
+	{
+		Method:          "GET",
+		Path:            "/projects/:id",
+		Handler:         GetProject,
+		PermissionScope: "read_one",
+	},
+	{
+		Method:          "PUT",
+		Path:            "/projects/:id",
+		Handler:         UpdateProject,
+		PermissionScope: "update",
+	},
+	{
+		Method:          "DELETE",
+		Path:            "/projects/:id",
+		Handler:         DeleteProject,
+		PermissionScope: "delete",
+	},
+	{
+		Method:          "POST",
+		Path:            "/projects/:id/duplicate",
+		Handler:         DuplicateProject,
+		PermissionScope: "create", // Duplicating creates a new project
+	},
+}
+
 // RegisterProjects registers all project routes
 func RegisterProjects(a *echo.Group) {
-	projects := a.Group("/projects")
-	projects.GET("", GetAllProjects)
-	projects.POST("", CreateProject)
-	projects.GET("/:id", GetProject)
-	projects.PUT("/:id", UpdateProject)
-	projects.DELETE("/:id", DeleteProject)
-	projects.POST("/:id/duplicate", DuplicateProject)
+	// Register main project routes with explicit permissions
+	apiv1.RegisterRoutes(a, ProjectRoutes, "v2")
 
-	// Project Users
+	// Register sub-resource routes (users, teams, tasks) separately
+	// These need special handling as they're nested under /projects/:id
+	projects := a.Group("/projects")
+
+	// Project Users - these will use the legacy registration for now
 	projectUsersHandler := &ProjectUsers{}
 	projectUsersGroup := projects.Group("/:id/users")
 	projectUsersGroup.GET("", projectUsersHandler.Get)
@@ -50,7 +90,7 @@ func RegisterProjects(a *echo.Group) {
 	projectUsersGroup.PUT("/:userid", projectUsersHandler.Put)
 	projectUsersGroup.DELETE("/:userid", projectUsersHandler.Delete)
 
-	// Project Teams
+	// Project Teams - these will use the legacy registration for now
 	projectTeamsHandler := &ProjectTeams{}
 	projectTeams := projects.Group("/:id/teams")
 	projectTeams.GET("", projectTeamsHandler.Get)
@@ -58,7 +98,7 @@ func RegisterProjects(a *echo.Group) {
 	projectTeams.PUT("/:teamid", projectTeamsHandler.Put)
 	projectTeams.DELETE("/:teamid", projectTeamsHandler.Delete)
 
-	// Project Tasks
+	// Project Tasks - these will use the legacy registration for now
 	projects.GET("/:id/tasks", GetProjectTasks)
 	projects.POST("/:id/tasks", CreateProjectTask)
 }
