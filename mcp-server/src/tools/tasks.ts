@@ -79,13 +79,11 @@ export class TaskTools {
       // Rate limiting check
       await this.rateLimiter.checkLimit(userContext.token);
 
-      // Set auth token
-      this.client.setToken(userContext.token);
-
-      // Create task
+      // Create task with token passed directly
       const task = await this.client.put<VikunjaTask>(
         `/api/v1/projects/${input.project_id}`,
-        input
+        input,
+        userContext.token
       );
 
       logger.info('Task created', {
@@ -121,14 +119,15 @@ export class TaskTools {
       // Rate limiting check
       await this.rateLimiter.checkLimit(userContext.token);
 
-      // Set auth token
-      this.client.setToken(userContext.token);
-
       // Extract ID and update data
       const { id, ...updateData } = input;
 
-      // Update task
-      const task = await this.client.post<VikunjaTask>(`/api/v1/tasks/${id}`, updateData);
+      // Update task with token passed directly
+      const task = await this.client.post<VikunjaTask>(
+        `/api/v1/tasks/${id}`,
+        updateData,
+        userContext.token
+      );
 
       logger.info('Task updated', {
         taskId: task.id,
@@ -162,13 +161,12 @@ export class TaskTools {
       // Rate limiting check
       await this.rateLimiter.checkLimit(userContext.token);
 
-      // Set auth token
-      this.client.setToken(userContext.token);
-
-      // Complete task
-      const task = await this.client.post<VikunjaTask>(`/api/v1/tasks/${input.id}`, {
-        done: true,
-      });
+      // Complete task with token passed directly
+      const task = await this.client.post<VikunjaTask>(
+        `/api/v1/tasks/${input.id}`,
+        { done: true },
+        userContext.token
+      );
 
       logger.info('Task completed', {
         taskId: task.id,
@@ -202,11 +200,8 @@ export class TaskTools {
       // Rate limiting check
       await this.rateLimiter.checkLimit(userContext.token);
 
-      // Set auth token
-      this.client.setToken(userContext.token);
-
-      // Delete task
-      await this.client.delete(`/api/v1/tasks/${input.id}`);
+      // Delete task with token passed directly
+      await this.client.delete(`/api/v1/tasks/${input.id}`, userContext.token);
 
       logger.info('Task deleted', {
         taskId: input.id,
@@ -239,13 +234,12 @@ export class TaskTools {
       // Rate limiting check
       await this.rateLimiter.checkLimit(userContext.token);
 
-      // Set auth token
-      this.client.setToken(userContext.token);
-
-      // Move task (update project_id)
-      const task = await this.client.post<VikunjaTask>(`/api/v1/tasks/${input.id}`, {
-        project_id: input.project_id,
-      });
+      // Move task (update project_id) with token passed directly
+      const task = await this.client.post<VikunjaTask>(
+        `/api/v1/tasks/${input.id}`,
+        { project_id: input.project_id },
+        userContext.token
+      );
 
       logger.info('Task moved', {
         taskId: task.id,

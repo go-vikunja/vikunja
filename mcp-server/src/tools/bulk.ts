@@ -84,18 +84,16 @@ export class BulkTools {
       // Rate limiting check
       await this.rateLimiter.checkLimit(userContext.token);
 
-      // Set auth token
-      this.client.setToken(userContext.token);
-
       const successTasks: VikunjaTask[] = [];
       const errors: BulkOperationError[] = [];
 
-      // Process each task
+      // Process each task with token passed directly
       for (const taskId of input.task_ids) {
         try {
           const task = await this.client.post<VikunjaTask>(
             `/api/v1/tasks/${taskId}`,
-            input.update_data
+            input.update_data,
+            userContext.token
           );
           successTasks.push(task);
         } catch (error) {
@@ -146,18 +144,17 @@ export class BulkTools {
       // Rate limiting check
       await this.rateLimiter.checkLimit(userContext.token);
 
-      // Set auth token
-      this.client.setToken(userContext.token);
-
       const successTasks: VikunjaTask[] = [];
       const errors: BulkOperationError[] = [];
 
-      // Process each task
+      // Process each task with token passed directly
       for (const taskId of input.task_ids) {
         try {
-          const task = await this.client.post<VikunjaTask>(`/api/v1/tasks/${taskId}`, {
-            done: true,
-          });
+          const task = await this.client.post<VikunjaTask>(
+            `/api/v1/tasks/${taskId}`,
+            { done: true },
+            userContext.token
+          );
           successTasks.push(task);
         } catch (error) {
           errors.push({
@@ -207,18 +204,16 @@ export class BulkTools {
       // Rate limiting check
       await this.rateLimiter.checkLimit(userContext.token);
 
-      // Set auth token
-      this.client.setToken(userContext.token);
-
       const successTasks: VikunjaTask[] = [];
       const errors: BulkOperationError[] = [];
 
-      // Process each task
+      // Process each task with token passed directly
       for (const taskId of input.task_ids) {
         try {
           const task = await this.client.put<VikunjaTask>(
             `/api/v1/tasks/${taskId}/assignees`,
-            { user_id: input.user_id }
+            { user_id: input.user_id },
+            userContext.token
           );
           successTasks.push(task);
         } catch (error) {
@@ -270,18 +265,17 @@ export class BulkTools {
       // Rate limiting check
       await this.rateLimiter.checkLimit(userContext.token);
 
-      // Set auth token
-      this.client.setToken(userContext.token);
-
       const successTasks: VikunjaTask[] = [];
       const errors: BulkOperationError[] = [];
 
-      // Process each task
+      // Process each task with token passed directly
       for (const taskId of input.task_ids) {
         try {
-          const task = await this.client.put<VikunjaTask>(`/api/v1/tasks/${taskId}/labels`, {
-            label_id: input.label_id,
-          });
+          const task = await this.client.put<VikunjaTask>(
+            `/api/v1/tasks/${taskId}/labels`,
+            { label_id: input.label_id },
+            userContext.token
+          );
           successTasks.push(task);
         } catch (error) {
           errors.push({

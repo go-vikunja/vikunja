@@ -68,6 +68,8 @@ describe('Assignment Tools', () => {
       username: 'testuser',
       email: 'test@example.com',
       token: 'test-token',
+      permissions: [],
+      validatedAt: new Date(),
     };
   });
 
@@ -86,7 +88,7 @@ describe('Assignment Tools', () => {
       expect(result.message).toContain('assigned to task');
       expect(mockClient.put).toHaveBeenCalledWith('/api/v1/tasks/1/assignees', {
         user_id: 2,
-      });
+      }, 'test-token');
     });
 
     it('should validate input with Zod schema', () => {
@@ -113,7 +115,7 @@ describe('Assignment Tools', () => {
 
       expect(result.success).toBe(true);
       expect(result.message).toContain('removed from task');
-      expect(mockClient.delete).toHaveBeenCalledWith('/api/v1/tasks/1/assignees/2');
+      expect(mockClient.delete).toHaveBeenCalledWith('/api/v1/tasks/1/assignees/2', 'test-token');
     });
   });
 
@@ -132,7 +134,7 @@ describe('Assignment Tools', () => {
       expect(result.message).toContain('added to task');
       expect(mockClient.put).toHaveBeenCalledWith('/api/v1/tasks/1/labels', {
         label_id: 1,
-      });
+      }, 'test-token');
     });
 
     it('should validate input with Zod schema', () => {
@@ -159,7 +161,7 @@ describe('Assignment Tools', () => {
 
       expect(result.success).toBe(true);
       expect(result.message).toContain('removed from task');
-      expect(mockClient.delete).toHaveBeenCalledWith('/api/v1/tasks/1/labels/1');
+      expect(mockClient.delete).toHaveBeenCalledWith('/api/v1/tasks/1/labels/1', 'test-token');
     });
   });
 
@@ -178,7 +180,7 @@ describe('Assignment Tools', () => {
       expect(result.success).toBe(true);
       expect(result.message).toContain('created successfully');
       expect(result.label).toEqual(mockLabel);
-      expect(mockClient.put).toHaveBeenCalledWith('/api/v1/labels', input);
+      expect(mockClient.put).toHaveBeenCalledWith('/api/v1/labels', input, 'test-token');
     });
 
     it('should validate input with Zod schema', () => {

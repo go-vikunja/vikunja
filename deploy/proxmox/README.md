@@ -348,6 +348,252 @@ Navigate to container → Console
 - Domain name with DNS configured
 - SSL certificate (can use self-signed)
 
+## MCP HTTP Transport
+
+The Vikunja MCP Server supports **remote client connections** via HTTP transport, enabling integration with AI workflow tools like n8n, Claude Desktop, and other MCP clients over the network.
+
+### Features
+
+- **HTTP Streamable Protocol**: Modern bidirectional HTTP protocol (primary)
+- **SSE Transport**: Server-Sent Events for backward compatibility (deprecated)
+- **Token-Based Authentication**: Vikunja API tokens for secure access
+- **Rate Limiting**: Prevent abuse with configurable per-token limits (100 req/15min default)
+- **Session Management**: Automatic cleanup of idle/expired sessions
+- **Health Monitoring**: `/health` endpoint for monitoring and load balancing
+
+### Configuration
+
+**Environment Variables** (configured via systemd service):
+
+```bash
+# HTTP Transport (disabled by default for stdio mode)
+MCP_HTTP_ENABLED=false          # Enable HTTP transport (true/false)
+MCP_HTTP_PORT=3100              # HTTP server port
+MCP_HTTP_HOST=127.0.0.1         # Bind address (use 0.0.0.0 for network access)
+
+# Redis (required when HTTP transport enabled)
+REDIS_URL=redis://localhost:6379
+
+# Authentication
+AUTH_TOKEN_CACHE_TTL=300        # Token cache TTL in seconds (5 minutes)
+
+# Rate Limiting
+RATE_LIMIT_POINTS=100           # Max requests per window
+RATE_LIMIT_DURATION=900         # Window duration in seconds (15 minutes)
+
+# Session Management
+SESSION_IDLE_TIMEOUT=1800       # Session timeout in seconds (30 minutes)
+SESSION_CLEANUP_INTERVAL=300    # Cleanup interval in seconds (5 minutes)
+```
+
+### Enabling HTTP Transport
+
+**Default Installation**: HTTP transport is **disabled** by default. The MCP server runs in stdio mode for local Claude Desktop integration.
+
+**To Enable HTTP Transport**:
+
+1. **Edit the deployment configuration** (inside container):
+   ```bash
+   vim /etc/vikunja/deploy-config.yaml
+   ```
+   
+   Add or update:
+   ```yaml
+   mcp_http_enabled: "true"
+   mcp_http_port: 3100
+   mcp_http_host: "0.0.0.0"  # Use 0.0.0.0 for network access
+   redis_url: "redis://localhost:6379"
+   ```
+
+2. **Regenerate and restart the service**:
+   ```bash
+   # Regenerate systemd unit with new config
+   vikunja-manage reconfigure
+
+   # Or manually restart
+   systemctl daemon-reload
+   systemctl restart vikunja-mcp-blue
+   ```
+
+3. **Verify HTTP transport is running**:
+   ```bash
+   curl http://localhost:3100/health
+   ```
+   
+   Expected response:
+   ```json
+   {
+     "status": "healthy",
+     "timestamp": "2025-10-23T16:00:00.000Z",
+     "uptime": 12345,
+     "checks": {
+       "vikunja": { "status": "healthy" },
+       "redis": { "status": "healthy" }
+     },
+     "sessions": {
+       "active": 0,
+       "total": 0
+     }
+   }
+   ```
+
+### Client Connection Examples
+
+**n8n MCP Integration**:
+```json
+{
+  "mcpServers": {
+    "vikunja": {
+      "url": "http://vikunja-server:3100/mcp",
+      "transport": "http-streamable",
+      "headers": {
+        "Authorization": "Bearer your-vikunja-api-token"
+      }
+    }
+  }
+}
+```
+
+**Claude Desktop** (HTTP mode):
+```json
+{
+  "mcpServers": {
+    "vikunja": {
+      "url": "http://vikunja-server:3100/mcp",
+      "transport": "http-streamable",
+      "auth": {
+        "type": "bearer",
+        "token": "your-vikunja-api-token"
+      }
+    }
+  }
+}
+```
+
+**SSE Transport** (deprecated, for backward compatibility):
+```json
+{
+  "mcpServers": {
+    "vikunja": {
+      "url": "http://vikunja-server:3100/sse",
+      "transport": "sse",
+      "token": "your-vikunja-api-token"
+    }
+  }
+}
+```
+
+### Security Considerations
+
+1. **Network Access**: By default, `MCP_HTTP_HOST=127.0.0.1` (local only). Use `0.0.0.0` for network access.
+
+2. **Reverse Proxy**: For production, use nginx/Caddy with HTTPS:
+   ```nginx
+   location /mcp {
+       proxy_pass http://localhost:3100;
+       proxy_http_version 1.1;
+       proxy_set_header Connection "";
+       proxy_buffering off;
+   }
+   ```
+
+3. **Firewall**: Ensure port 3100 is **not exposed** to the internet unless behind a reverse proxy with HTTPS.
+
+4. **Token Security**: Use dedicated API tokens with minimal required permissions.
+
+5. **Rate Limiting**: Configured per-token to prevent abuse (100 requests per 15 minutes default).
+
+### Testing HTTP Transport
+
+**Health Check**:
+```bash
+curl http://localhost:3100/health
+```
+
+**List Available Tools** (requires authentication):
+```bash
+curl -X POST http://localhost:3100/mcp \
+  -H "Authorization: Bearer your-vikunja-api-token" \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'
+```
+
+**Expected Response**:
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "tools": [
+      {"name": "get_project_tasks", "description": "Get tasks for a project", ...},
+      {"name": "create_task", "description": "Create a new task", ...},
+      ...
+    ]
+  },
+  "id": 1
+}
+```
+
+### Monitoring
+
+**Check Active Sessions**:
+```bash
+curl http://localhost:3100/health | jq '.sessions'
+```
+
+**View Logs**:
+```bash
+journalctl -u vikunja-mcp-blue -f
+```
+
+**Redis Connection**:
+```bash
+redis-cli ping  # Should return "PONG"
+redis-cli info clients
+```
+
+### Troubleshooting
+
+**Problem**: "Connection refused" on port 3100
+
+**Solutions**:
+- Verify `MCP_HTTP_ENABLED=true` in service config
+- Check service status: `systemctl status vikunja-mcp-blue`
+- View logs: `journalctl -u vikunja-mcp-blue`
+- Verify port binding: `netstat -tlnp | grep 3100`
+
+**Problem**: "Redis connection failed"
+
+**Solutions**:
+- Check Redis is running: `systemctl status redis-server`
+- Verify Redis port: `redis-cli ping`
+- Check REDIS_URL in service config
+
+**Problem**: "Unauthorized" errors
+
+**Solutions**:
+- Verify Vikunja API token is valid
+- Check token has required permissions in Vikunja UI
+- Verify token is sent in `Authorization: Bearer <token>` header
+
+**Problem**: Rate limit errors (429)
+
+**Solutions**:
+- Check `RATE_LIMIT_POINTS` and `RATE_LIMIT_DURATION` configuration
+- View rate limit info in 429 response headers (`Retry-After`)
+- Monitor requests per token in logs
+
+### Ports Summary
+
+| Port | Service | Default Binding | Purpose |
+|------|---------|-----------------|---------|
+| 8080 | Vikunja Backend | 127.0.0.1 | API + Web UI |
+| 3456 | MCP Server (stdio) | N/A | Local Claude Desktop |
+| 3100 | MCP Server (HTTP) | 127.0.0.1 | Remote MCP clients |
+| 6379 | Redis | 127.0.0.1 | Session/token cache |
+| 80/443 | Nginx | 0.0.0.0 | Reverse proxy |
+
+**Note**: HTTP transport is **opt-in**. The default installation uses stdio mode for local Claude Desktop integration.
+
 ## Performance Targets
 
 - **Initial Deployment**: <10 minutes

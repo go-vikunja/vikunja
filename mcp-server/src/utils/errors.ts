@@ -68,6 +68,16 @@ export class RateLimitError extends MCPError {
 }
 
 /**
+ * Session error (code: -32000)
+ */
+export class SessionError extends MCPError {
+  constructor(message = 'Session error', data?: Record<string, unknown>) {
+    super(message, -32000, data);
+    this.name = 'SessionError';
+  }
+}
+
+/**
  * Internal error (code: -32603)
  */
 export class InternalError extends MCPError {

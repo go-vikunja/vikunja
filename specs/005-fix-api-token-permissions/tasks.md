@@ -1,6 +1,6 @@
 # Tasks: Fix API Token Permissions System
 
-**Input**: Design documents from `/specs/007-fix-api-token-permissions/`
+**Input**: Design documents from `/specs/005-fix-api-token-permissions/`
 **Prerequisites**: plan.md, spec.md, research.md, data-model.md, contracts/, quickstart.md
 
 **Tests**: Test-First Development (TDD) - Tests are included as this is a bug fix requiring validation

@@ -33,15 +33,16 @@ export class Authenticator {
     // Call Vikunja API to validate token
     try {
       const client = new VikunjaClient();
-      client.setToken(token);
 
-      const user = await client.get<VikunjaUser>('/api/v1/user');
+      const user = await client.get<VikunjaUser>('/api/v1/user', undefined, token);
 
       const userContext: UserContext = {
         userId: user.id,
         username: user.username,
         email: user.email,
         token,
+        permissions: ['read', 'write'], // Vikunja doesn't expose granular permissions via API
+        validatedAt: new Date(),
       };
 
       // Cache the result

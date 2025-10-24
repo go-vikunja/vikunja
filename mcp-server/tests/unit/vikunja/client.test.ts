@@ -66,21 +66,20 @@ describe('VikunjaClient', () => {
 
   describe('GET requests', () => {
     it('should make GET request with authentication token', async () => {
-      const mockData = { id: 1, name: 'Test Project' };
-      mockAxiosInstance.get.mockResolvedValue({ data: mockData });
-      
-      client.setToken('test-token');
-      const result = await client.get('/api/v1/projects/1');
+      const mockResponse = { data: { id: 1, title: 'Test Project' } };
+      mockAxiosInstance.get.mockResolvedValue(mockResponse);
+
+      const result = await client.get('/api/v1/projects/1', undefined, 'test-token');
       
       expect(mockAxiosInstance.get).toHaveBeenCalledWith(
         '/api/v1/projects/1',
         expect.objectContaining({
-          headers: {
+          headers: expect.objectContaining({
             Authorization: 'Bearer test-token',
-          },
+          }),
         })
       );
-      expect(result).toEqual(mockData);
+      expect(result).toEqual(mockResponse.data);
     });
 
     it('should make GET request with query params', async () => {
@@ -111,22 +110,21 @@ describe('VikunjaClient', () => {
   describe('POST requests', () => {
     it('should make POST request with data', async () => {
       const postData = { title: 'New Project' };
-      const mockResponse = { id: 5, title: 'New Project' };
-      mockAxiosInstance.post.mockResolvedValue({ data: mockResponse });
-      
-      client.setToken('test-token');
-      const result = await client.post('/api/v1/projects', postData);
+      const mockResponse = { data: { id: 1, ...postData } };
+      mockAxiosInstance.post.mockResolvedValue(mockResponse);
+
+      const result = await client.post('/api/v1/projects', postData, 'test-token');
       
       expect(mockAxiosInstance.post).toHaveBeenCalledWith(
         '/api/v1/projects',
         postData,
         expect.objectContaining({
-          headers: {
+          headers: expect.objectContaining({
             Authorization: 'Bearer test-token',
-          },
+          }),
         })
       );
-      expect(result).toEqual(mockResponse);
+      expect(result).toEqual(mockResponse.data);
     });
   });
 
@@ -224,38 +222,37 @@ describe('VikunjaClient', () => {
   describe('PUT requests', () => {
     it('should make PUT request with data', async () => {
       const updateData = { title: 'Updated Project' };
-      const mockResponse = { id: 1, title: 'Updated Project' };
-      mockAxiosInstance.put.mockResolvedValue({ data: mockResponse });
-      
-      client.setToken('test-token');
-      const result = await client.put('/api/v1/projects/1', updateData);
+      const mockResponse = { data: { id: 1, ...updateData } };
+      mockAxiosInstance.put.mockResolvedValue(mockResponse);
+
+      const result = await client.put('/api/v1/projects/1', updateData, 'test-token');
       
       expect(mockAxiosInstance.put).toHaveBeenCalledWith(
         '/api/v1/projects/1',
         updateData,
         expect.objectContaining({
-          headers: {
+          headers: expect.objectContaining({
             Authorization: 'Bearer test-token',
-          },
+          }),
         })
       );
-      expect(result).toEqual(mockResponse);
+      expect(result).toEqual(mockResponse.data);
     });
   });
 
   describe('DELETE requests', () => {
     it('should make DELETE request', async () => {
-      mockAxiosInstance.delete.mockResolvedValue({ data: {} });
-      
-      client.setToken('test-token');
-      await client.delete('/api/v1/projects/1');
+      const mockResponse = { data: { success: true } };
+      mockAxiosInstance.delete.mockResolvedValue(mockResponse);
+
+      await client.delete('/api/v1/projects/1', 'test-token');
       
       expect(mockAxiosInstance.delete).toHaveBeenCalledWith(
         '/api/v1/projects/1',
         expect.objectContaining({
-          headers: {
+          headers: expect.objectContaining({
             Authorization: 'Bearer test-token',
-          },
+          }),
         })
       );
     });

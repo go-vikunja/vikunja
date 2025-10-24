@@ -1,0 +1,210 @@
+import type Redis from 'ioredis';
+import crypto from 'crypto';
+import axios from 'axios';
+import { config } from '../config/index.js';
+import { AuthenticationError } from '../utils/errors.js';
+import { logAuth, logError } from '../utils/logger.js';
+import { getRedisConnection } from '../utils/redis-connection.js';
+import type { UserContext } from './types.js';
+
+/**
+ * Token validator with Redis caching
+ * Uses shared Redis connection from RedisConnectionManager
+ */
+export class TokenValidator {
+	private redis: Redis | null = null;
+	private inMemoryCache = new Map<string, { context: UserContext; expiresAt: number }>();
+	private redisInitialized = false;
+
+	constructor() {
+		this.initializeRedis();
+	}
+
+	/**
+	 * Initialize Redis connection using shared connection manager
+	 */
+	private async initializeRedis(): Promise<void> {
+		if (!config.auth.tokenCacheEnabled || this.redisInitialized) {
+			return;
+		}
+
+		try {
+			this.redis = await getRedisConnection();
+			this.redisInitialized = true;
+			logAuth('token_cached', undefined, { message: 'Using shared Redis connection for token caching' });
+		} catch (error) {
+			logError(error as Error, { context: 'redis-initialization', component: 'TokenValidator' });
+			// Fallback to in-memory cache
+			this.redis = null;
+			this.redisInitialized = false;
+		}
+	}
+
+	/**
+	 * Hash token for secure storage
+	 */
+	private hashToken(token: string): string {
+		return crypto.createHash('sha256').update(token).digest('hex');
+	}
+
+	/**
+	 * Validate token against Vikunja API
+	 */
+	async validateToken(token: string): Promise<UserContext> {
+		// Ensure Redis is initialized (async operation)
+		if (!this.redisInitialized && config.auth.tokenCacheEnabled) {
+			await this.initializeRedis();
+		}
+
+		const tokenHash = this.hashToken(token);
+
+		// Check cache first
+		const cached = await this.getCachedContext(tokenHash);
+		if (cached) {
+			logAuth('token_cached', tokenHash, { userId: cached.userId });
+			return cached;
+		}
+
+		// Validate against Vikunja API
+		try {
+			const response = await axios.get(`${config.vikunjaApiUrl}/api/v1/user`, {
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+			});
+
+			const userData = response.data;
+			
+			// Validate required fields
+			if (!userData || !userData.id || !userData.username) {
+				throw new AuthenticationError('Invalid API response: missing required user data', { code: 'INVALID_RESPONSE' });
+			}
+			
+			const userContext: UserContext = {
+				userId: userData.id,
+				username: userData.username,
+				email: userData.email || '',
+				token, // Include the validated token
+				permissions: ['read', 'write'], // Vikunja doesn't expose granular permissions via API
+				validatedAt: new Date(),
+			};
+
+			// Cache the result
+			await this.cacheContext(tokenHash, userContext);
+
+			logAuth('token_validated', tokenHash, { userId: userContext.userId });
+			return userContext;
+		} catch (error) {
+			if (axios.isAxiosError(error)) {
+				if (error.response?.status === 401) {
+					logAuth('auth_failed', tokenHash, { reason: 'invalid_token' });
+					throw new AuthenticationError('Invalid or expired token', { code: 'INVALID_TOKEN' });
+				}
+				if (error.response?.status === 403) {
+					logAuth('auth_failed', tokenHash, { reason: 'forbidden' });
+					throw new AuthenticationError('Access forbidden', { code: 'FORBIDDEN' });
+				}
+			}
+
+			logError(error as Error, { context: 'token-validation', tokenHash });
+			
+			// Re-throw AuthenticationError as-is
+			if (error instanceof AuthenticationError) {
+				throw error;
+			}
+			
+			throw new AuthenticationError('Token validation failed', { code: 'VALIDATION_ERROR' });
+		}
+	}
+
+	/**
+	 * Get cached user context
+	 */
+	private async getCachedContext(tokenHash: string): Promise<UserContext | null> {
+		// Try Redis first
+		if (this.redis) {
+			try {
+				const cached = await this.redis.get(`auth:token:${tokenHash}`);
+				if (cached) {
+					const parsed = JSON.parse(cached);
+					return {
+						...parsed,
+						validatedAt: new Date(parsed.validatedAt),
+					};
+				}
+			} catch (error) {
+				logError(error as Error, { context: 'redis-get', tokenHash });
+				// Fall through to in-memory cache
+			}
+		}
+
+		// Try in-memory cache
+		const inMemory = this.inMemoryCache.get(tokenHash);
+		if (inMemory && inMemory.expiresAt > Date.now()) {
+			return inMemory.context;
+		}
+
+		// Clean up expired in-memory entries
+		if (inMemory && inMemory.expiresAt <= Date.now()) {
+			this.inMemoryCache.delete(tokenHash);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Cache user context
+	 */
+	private async cacheContext(tokenHash: string, context: UserContext): Promise<void> {
+		const ttl = config.auth.tokenCacheTtl;
+
+		// Cache in Redis
+		if (this.redis) {
+			try {
+				await this.redis.setex(
+					`auth:token:${tokenHash}`,
+					ttl,
+					JSON.stringify(context)
+				);
+			} catch (error) {
+				logError(error as Error, { context: 'redis-set', tokenHash });
+				// Fall through to in-memory cache
+			}
+		}
+
+		// Always cache in memory as fallback
+		this.inMemoryCache.set(tokenHash, {
+			context,
+			expiresAt: Date.now() + ttl * 1000,
+		});
+	}
+
+	/**
+	 * Invalidate cached token
+	 */
+	async invalidateToken(token: string): Promise<void> {
+		const tokenHash = this.hashToken(token);
+
+		// Remove from Redis
+		if (this.redis) {
+			try {
+				await this.redis.del(`auth:token:${tokenHash}`);
+			} catch (error) {
+				logError(error as Error, { context: 'redis-del', tokenHash });
+			}
+		}
+
+		// Remove from in-memory cache
+		this.inMemoryCache.delete(tokenHash);
+	}
+
+	/**
+	 * Clean up resources
+	 * Note: Redis connection is managed by RedisConnectionManager singleton
+	 */
+	async close(): Promise<void> {
+		// Only clear in-memory cache
+		// Redis connection is shared and managed by RedisConnectionManager
+		this.inMemoryCache.clear();
+	}
+}

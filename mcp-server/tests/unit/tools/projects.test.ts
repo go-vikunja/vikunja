@@ -50,6 +50,8 @@ describe('Project Tools', () => {
       username: 'testuser',
       email: 'test@example.com',
       token: 'test-token',
+      permissions: [],
+      validatedAt: new Date(),
     };
   });
 
@@ -68,8 +70,7 @@ describe('Project Tools', () => {
       expect(result.message).toContain('created successfully');
       expect(result.project).toEqual(mockProject);
       expect(mockRateLimiter.checkLimit).toHaveBeenCalledWith('test-token');
-      expect(mockClient.setToken).toHaveBeenCalledWith('test-token');
-      expect(mockClient.post).toHaveBeenCalledWith('/api/v1/projects', input);
+      expect(mockClient.post).toHaveBeenCalledWith('/api/v1/projects', input, 'test-token');
     });
 
     it('should validate input with Zod schema', () => {
@@ -127,7 +128,7 @@ describe('Project Tools', () => {
       expect(result.project).toEqual(mockProject);
       expect(mockClient.put).toHaveBeenCalledWith('/api/v1/projects/1', {
         title: 'Updated Project',
-      });
+      }, 'test-token');
     });
 
     it('should validate input with Zod schema', () => {
@@ -167,7 +168,7 @@ describe('Project Tools', () => {
 
       expect(result.success).toBe(true);
       expect(result.message).toContain('deleted successfully');
-      expect(mockClient.delete).toHaveBeenCalledWith('/api/v1/projects/1');
+      expect(mockClient.delete).toHaveBeenCalledWith('/api/v1/projects/1', 'test-token');
     });
 
     it('should handle delete errors', async () => {
@@ -202,7 +203,7 @@ describe('Project Tools', () => {
       expect(result.message).toContain('archived successfully');
       expect(mockClient.put).toHaveBeenCalledWith('/api/v1/projects/1', {
         is_archived: true,
-      });
+      }, 'test-token');
     });
 
     it('should unarchive a project successfully', async () => {

@@ -1,7 +1,7 @@
 # Quick Start: Fix API Token Permissions System
 
 **Feature**: Fix API Token Permissions System  
-**Branch**: `007-fix-api-token-permissions`  
+**Branch**: `005-fix-api-token-permissions`  
 **Date**: October 23, 2025
 
 ## Problem Statement
@@ -357,7 +357,7 @@ Fixes API tokens unable to create/update/delete tasks despite having
 'all permissions' selected. The issue was incomplete route registration
 where explicit CollectRoute calls were being overridden by legacy detection.
 
-Refs: specs/007-fix-api-token-permissions/spec.md"
+Refs: specs/005-fix-api-token-permissions/spec.md"
 ```
 
 ---
