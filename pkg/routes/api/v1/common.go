@@ -28,6 +28,9 @@ type APIRoute struct {
 	Path            string
 	Handler         echo.HandlerFunc
 	PermissionScope string
+	// AdminOnly indicates that this route requires an admin-level API token.
+	// Standard tokens will be denied access even if they have the correct permission scope.
+	AdminOnly bool
 }
 
 // registerRoutes takes a slice of APIRoute structs and registers them with both the Echo router
@@ -52,7 +55,7 @@ func RegisterRoutes(a *echo.Group, routes []APIRoute, version string) {
 		//    with our API token system using the FULL path (with /api/{version} prefix).
 		//    This must happen BEFORE a.Add() so that the OnAddRouteHandler
 		//    check can see it already exists.
-		models.CollectRoute(route.Method, fullPath, route.PermissionScope)
+		models.CollectRoute(route.Method, fullPath, route.PermissionScope, route.AdminOnly)
 
 		// 2. THEN: Register the route with the Echo web server
 		//    This triggers OnAddRouteHandler, but our explicit registration

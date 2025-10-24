@@ -26,9 +26,27 @@ import (
 	"xorm.io/xorm"
 )
 
+// BulkTaskRoutes defines all bulk task API routes with their explicit permission scopes.
+// This enables API tokens to be scoped for bulk task operations.
+// Note: Uses 'bulk_update' scope instead of 'update' to avoid conflicting with single-task update route.
+var BulkTaskRoutes = []APIRoute{
+	{Method: "POST", Path: "/tasks/bulk", Handler: handler.WithDBAndUser(bulkUpdateTasksLogic, true), PermissionScope: "bulk_update"},
+}
+
 // RegisterBulkTasks registers the bulk task update route
 func RegisterBulkTasks(a *echo.Group) {
-	a.POST("/tasks/bulk", handler.WithDBAndUser(bulkUpdateTasksLogic, true))
+	registerRoutes(a, BulkTaskRoutes)
+
+	// Bulk routes are registered in a separate group (tasks_bulk),
+	// but permission checking strips _bulk suffix. Copy bulk route registration
+	// to base tasks group so CanDoAPIRoute() can find it.
+	routes := models.GetAPITokenRoutes()
+	if routes["v1"]["tasks"] == nil {
+		routes["v1"]["tasks"] = make(models.APITokenRoute)
+	}
+	if bulkRoute, ok := routes["v1"]["tasks_bulk"]["bulk_update"]; ok {
+		routes["v1"]["tasks"]["bulk_update"] = bulkRoute
+	}
 }
 
 // bulkUpdateTasksLogic updates multiple tasks at once.

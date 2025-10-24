@@ -27,11 +27,27 @@ import (
 	"xorm.io/xorm"
 )
 
+// TaskAssigneeRoutes defines all task assignee API routes with their explicit permission scopes.
+// This enables API tokens to be scoped for task assignee operations.
+var TaskAssigneeRoutes = []APIRoute{
+	{Method: "GET", Path: "/tasks/:projecttask/assignees", Handler: handler.WithDBAndUser(getTaskAssigneesLogic, false), PermissionScope: "read_all"},
+	{Method: "PUT", Path: "/tasks/:projecttask/assignees", Handler: handler.WithDBAndUser(addAssigneeLogic, true), PermissionScope: "create"},
+	{Method: "DELETE", Path: "/tasks/:projecttask/assignees/:user", Handler: handler.WithDBAndUser(removeAssigneeLogic, true), PermissionScope: "delete"},
+	{Method: "POST", Path: "/tasks/:projecttask/assignees/bulk", Handler: handler.WithDBAndUser(bulkAssigneeLogic, true), PermissionScope: "update"},
+}
+
 // RegisterTaskAssignees registers all task assignee routes
 func RegisterTaskAssignees(a *echo.Group) {
-	a.PUT("/tasks/:projecttask/assignees", handler.WithDBAndUser(addAssigneeLogic, true))
-	a.DELETE("/tasks/:projecttask/assignees/:user", handler.WithDBAndUser(removeAssigneeLogic, true))
-	a.GET("/tasks/:projecttask/assignees", handler.WithDBAndUser(getTaskAssigneesLogic, false))
+	registerRoutes(a, TaskAssigneeRoutes)
+
+	// Note: Bulk endpoints with /bulk suffix auto-register to a separate route group
+	// (tasks_assignees_bulk), but the permission validation system in CanDoAPIRoute()
+	// strips the _bulk suffix when checking permissions. To ensure path matching works,
+	// we copy the bulk route registration to the main group after registration.
+	routes := models.GetAPITokenRoutes()
+	if bulkRoute, ok := routes["v1"]["tasks_assignees_bulk"]["update"]; ok {
+		routes["v1"]["tasks_assignees"]["update"] = bulkRoute
+	}
 }
 
 // addAssigneeLogic adds a user as an assignee to a task.

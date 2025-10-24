@@ -224,6 +224,7 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 			<tr>
 				<th>{{ $t('misc.id') }}</th>
 				<th>{{ $t('user.settings.apiTokens.attributes.title') }}</th>
+				<th>{{ $t('user.settings.apiTokens.attributes.tokenLevel') }}</th>
 				<th>{{ $t('user.settings.apiTokens.attributes.permissions') }}</th>
 				<th>{{ $t('user.settings.apiTokens.attributes.expiresAt') }}</th>
 				<th>{{ $t('misc.created') }}</th>
@@ -237,6 +238,20 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 			>
 				<td>{{ tk.id }}</td>
 				<td>{{ tk.title }}</td>
+				<td>
+					<span
+						v-if="tk.tokenLevel === 'admin'"
+						class="tag is-warning"
+					>
+						{{ $t('user.settings.apiTokens.tokenLevel.admin') }}
+					</span>
+					<span
+						v-else
+						class="tag"
+					>
+						{{ $t('user.settings.apiTokens.tokenLevel.standard') }}
+					</span>
+				</td>
 				<td class="is-capitalized">
 					<template
 						v-for="(v, p) in tk.permissions"
@@ -297,6 +312,39 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 				>
 					{{ $t('user.settings.apiTokens.titleRequired') }}
 				</p>
+			</div>
+
+			<!-- Token Level -->
+			<div class="field">
+				<label class="label">{{ $t('user.settings.apiTokens.attributes.tokenLevel') }}</label>
+				<p class="mb-2">
+					{{ $t('user.settings.apiTokens.tokenLevel.explanation') }}
+				</p>
+				<div class="control">
+					<label class="radio">
+						<input
+							v-model="newToken.tokenLevel"
+							type="radio"
+							value="standard"
+						>
+						{{ $t('user.settings.apiTokens.tokenLevel.standard') }}
+					</label>
+					<label class="radio">
+						<input
+							v-model="newToken.tokenLevel"
+							type="radio"
+							value="admin"
+						>
+						{{ $t('user.settings.apiTokens.tokenLevel.admin') }}
+					</label>
+				</div>
+				<Message
+					v-if="newToken.tokenLevel === 'admin'"
+					variant="warning"
+					class="mt-2"
+				>
+					{{ $t('user.settings.apiTokens.tokenLevel.adminWarning') }}
+				</Message>
 			</div>
 
 			<!-- Expiry -->

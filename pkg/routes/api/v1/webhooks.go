@@ -27,12 +27,45 @@ import (
 	"xorm.io/xorm"
 )
 
+// WebhookRoutes defines all webhook-related API routes
+// All webhook routes require admin-level API tokens due to security risks
+// (webhooks can send data to external endpoints)
+var WebhookRoutes = []APIRoute{
+	{
+		Method:          http.MethodGet,
+		Path:            "/projects/:project/webhooks",
+		Handler:         handler.WithDBAndUser(getAllWebhooksLogic, false),
+		PermissionScope: "read_all",
+		AdminOnly:       true,
+	},
+	{
+		Method:          http.MethodPut,
+		Path:            "/projects/:project/webhooks",
+		Handler:         handler.WithDBAndUser(createWebhookLogic, true),
+		PermissionScope: "create",
+		AdminOnly:       true,
+	},
+	{
+		Method:          http.MethodPost,
+		Path:            "/projects/:project/webhooks/:webhook",
+		Handler:         handler.WithDBAndUser(updateWebhookLogic, true),
+		PermissionScope: "update",
+		AdminOnly:       true,
+	},
+	{
+		Method:          http.MethodDelete,
+		Path:            "/projects/:project/webhooks/:webhook",
+		Handler:         handler.WithDBAndUser(deleteWebhookLogic, true),
+		PermissionScope: "delete",
+		AdminOnly:       true,
+	},
+}
+
 // RegisterWebhooks registers all webhook routes
 func RegisterWebhooks(a *echo.Group) {
-	a.GET("/projects/:project/webhooks", handler.WithDBAndUser(getAllWebhooksLogic, false))
-	a.PUT("/projects/:project/webhooks", handler.WithDBAndUser(createWebhookLogic, true))
-	a.DELETE("/projects/:project/webhooks/:webhook", handler.WithDBAndUser(deleteWebhookLogic, true))
-	a.POST("/projects/:project/webhooks/:webhook", handler.WithDBAndUser(updateWebhookLogic, true))
+	registerRoutes(a, WebhookRoutes)
+
+	// GET /webhooks/events does not require authentication, so register it separately
 	a.GET("/webhooks/events", GetAvailableWebhookEvents)
 }
 

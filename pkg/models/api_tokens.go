@@ -61,6 +61,16 @@ func getAPITokenService() interface {
 
 type APIPermissions map[string][]string
 
+// APITokenLevel represents the privilege level of an API token
+type APITokenLevel string
+
+const (
+	// APITokenLevelStandard is the default token level with access to standard operations
+	APITokenLevelStandard APITokenLevel = "standard"
+	// APITokenLevelAdmin is an elevated token level with access to sensitive operations like webhooks and team management
+	APITokenLevelAdmin APITokenLevel = "admin"
+)
+
 type APIToken struct {
 	// The unique, numeric id of this api key.
 	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"token"`
@@ -72,6 +82,8 @@ type APIToken struct {
 	TokenSalt      string `xorm:"not null" json:"-"`
 	TokenHash      string `xorm:"not null unique" json:"-"`
 	TokenLastEight string `xorm:"not null index varchar(8)" json:"-"`
+	// The privilege level of this token. Can be "standard" or "admin". Admin tokens can access sensitive operations like webhooks and team management.
+	TokenLevel APITokenLevel `xorm:"varchar(20) not null default 'standard' index" json:"token_level" valid:"in(standard|admin)"`
 	// The permissions this token has. Possible values are available via the /routes endpoint and consist of the keys of the list from that endpoint. For example, if the token should be able to read all tasks as well as update existing tasks, you should add `{"tasks":["read_all","update"]}`.
 	APIPermissions APIPermissions `xorm:"json not null permissions" json:"permissions" valid:"required"`
 	// The date when this key expires.

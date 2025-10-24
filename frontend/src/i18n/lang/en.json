@@ -200,8 +200,15 @@
         "attributes": {
           "title": "Title",
           "titlePlaceholder": "Enter a title you will recognize later",
+          "tokenLevel": "Token Level",
           "expiresAt": "Expires at",
           "permissions": "Permissions"
+        },
+        "tokenLevel": {
+          "standard": "Standard",
+          "admin": "Admin",
+          "explanation": "Standard tokens can access most operations. Admin tokens can additionally manage webhooks and teams.",
+          "adminWarning": "Admin tokens have elevated privileges including webhook and team management. Use with caution."
         }
       }
     },

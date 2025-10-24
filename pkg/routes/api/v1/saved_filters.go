@@ -28,13 +28,19 @@ import (
 	"xorm.io/xorm"
 )
 
+// SavedFilterRoutes defines all saved filter API routes with their explicit permission scopes.
+// This enables API tokens to be scoped for saved filter management operations.
+var SavedFilterRoutes = []APIRoute{
+	{Method: "GET", Path: "/filters", Handler: handler.WithDBAndUser(GetAllSavedFilters, true), PermissionScope: "read_all"},
+	{Method: "GET", Path: "/filters/:filter", Handler: handler.WithDBAndUser(GetSavedFilter, true), PermissionScope: "read_one"},
+	{Method: "PUT", Path: "/filters", Handler: handler.WithDBAndUser(CreateSavedFilter, true), PermissionScope: "create"},
+	{Method: "POST", Path: "/filters/:filter", Handler: handler.WithDBAndUser(UpdateSavedFilter, true), PermissionScope: "update"},
+	{Method: "DELETE", Path: "/filters/:filter", Handler: handler.WithDBAndUser(DeleteSavedFilter, true), PermissionScope: "delete"},
+}
+
 // RegisterSavedFilters registers the saved filter routes.
 func RegisterSavedFilters(a *echo.Group) {
-	a.GET("/filters", handler.WithDBAndUser(GetAllSavedFilters, true))
-	a.GET("/filters/:filter", handler.WithDBAndUser(GetSavedFilter, true))
-	a.PUT("/filters", handler.WithDBAndUser(CreateSavedFilter, true))
-	a.POST("/filters/:filter", handler.WithDBAndUser(UpdateSavedFilter, true))
-	a.DELETE("/filters/:filter", handler.WithDBAndUser(DeleteSavedFilter, true))
+	registerRoutes(a, SavedFilterRoutes)
 }
 
 func GetAllSavedFilters(s *xorm.Session, u *user.User, c echo.Context) error {

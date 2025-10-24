@@ -402,7 +402,6 @@ func registerAPIRoutes(a *echo.Group) {
 	apiv1.RegisterTaskPositions(a)
 	apiv1.RegisterBulkTasks(a)
 	apiv1.RegisterTaskAssignees(a)
-	apiv1.RegisterBulkAssignees(a)
 	apiv1.RegisterTaskRelations(a)
 
 	if config.ServiceEnableTaskAttachments.GetBool() {

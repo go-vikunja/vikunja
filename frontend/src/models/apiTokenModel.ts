@@ -1,10 +1,11 @@
 import AbstractModel from '@/models/abstractModel'
-import type {IApiToken} from '@/modelTypes/IApiToken'
+import type {IApiToken, ApiTokenLevel} from '@/modelTypes/IApiToken'
 
 export default class ApiTokenModel extends AbstractModel<IApiToken> {
 	id = 0
 	title = ''
 	token = ''
+	tokenLevel: ApiTokenLevel = 'standard'
 	permissions = null
 	expiresAt: Date = null
 	created: Date = null

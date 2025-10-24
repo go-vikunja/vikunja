@@ -27,16 +27,91 @@ import (
 	"xorm.io/xorm"
 )
 
+// TeamRoutes defines all team management API routes
+// All team routes require admin-level API tokens because team membership
+// affects permissions across multiple projects
+var TeamRoutes = []APIRoute{
+	{
+		Method:          http.MethodGet,
+		Path:            "/teams",
+		Handler:         handler.WithDBAndUser(getAllTeamsLogic, false),
+		PermissionScope: "read_all",
+		AdminOnly:       true,
+	},
+	{
+		Method:          http.MethodGet,
+		Path:            "/teams/:team",
+		Handler:         handler.WithDBAndUser(getTeamLogic, false),
+		PermissionScope: "read_one",
+		AdminOnly:       true,
+	},
+	{
+		Method:          http.MethodPut,
+		Path:            "/teams",
+		Handler:         handler.WithDBAndUser(createTeamLogic, true),
+		PermissionScope: "create",
+		AdminOnly:       true,
+	},
+	{
+		Method:          http.MethodPost,
+		Path:            "/teams/:team",
+		Handler:         handler.WithDBAndUser(updateTeamLogic, true),
+		PermissionScope: "update",
+		AdminOnly:       true,
+	},
+	{
+		Method:          http.MethodDelete,
+		Path:            "/teams/:team",
+		Handler:         handler.WithDBAndUser(deleteTeamLogic, true),
+		PermissionScope: "delete",
+		AdminOnly:       true,
+	},
+	{
+		Method:          http.MethodPut,
+		Path:            "/teams/:team/members",
+		Handler:         handler.WithDBAndUser(addTeamMemberLogic, true),
+		PermissionScope: "add_member",
+		AdminOnly:       true,
+	},
+	{
+		Method:          http.MethodDelete,
+		Path:            "/teams/:team/members/:user",
+		Handler:         handler.WithDBAndUser(removeTeamMemberLogic, true),
+		PermissionScope: "remove_member",
+		AdminOnly:       true,
+	},
+	{
+		Method:          http.MethodPost,
+		Path:            "/teams/:team/members/:user/admin",
+		Handler:         handler.WithDBAndUser(updateTeamMemberLogic, true),
+		PermissionScope: "update_member",
+		AdminOnly:       true,
+	},
+}
+
 // RegisterTeams registers all team management routes
 func RegisterTeams(a *echo.Group) {
-	a.GET("/teams", handler.WithDBAndUser(getAllTeamsLogic, false))
-	a.GET("/teams/:team", handler.WithDBAndUser(getTeamLogic, false))
-	a.PUT("/teams", handler.WithDBAndUser(createTeamLogic, true))
-	a.POST("/teams/:team", handler.WithDBAndUser(updateTeamLogic, true))
-	a.DELETE("/teams/:team", handler.WithDBAndUser(deleteTeamLogic, true))
-	a.PUT("/teams/:team/members", handler.WithDBAndUser(addTeamMemberLogic, true))
-	a.DELETE("/teams/:team/members/:user", handler.WithDBAndUser(removeTeamMemberLogic, true))
-	a.POST("/teams/:team/members/:user/admin", handler.WithDBAndUser(updateTeamMemberLogic, true))
+	registerRoutes(a, TeamRoutes)
+
+	// Team member routes create teams_members group, but permission
+	// checking expects them in teams group. Copy routes to teams group.
+	routes := models.GetAPITokenRoutes()
+	// Ensure teams group exists
+	if routes["v1"]["teams"] == nil {
+		routes["v1"]["teams"] = make(models.APITokenRoute)
+	}
+	// Copy from teams_members
+	if memberRoutes, ok := routes["v1"]["teams_members"]; ok {
+		for scope, route := range memberRoutes {
+			routes["v1"]["teams"][scope] = route
+		}
+	}
+	// Copy from teams_members_admin (for update_member route)
+	if memberAdminRoutes, ok := routes["v1"]["teams_members_admin"]; ok {
+		for scope, route := range memberAdminRoutes {
+			routes["v1"]["teams"][scope] = route
+		}
+	}
 }
 
 // getAllTeamsLogic retrieves all teams the user has access to.

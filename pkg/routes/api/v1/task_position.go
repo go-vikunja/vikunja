@@ -27,9 +27,15 @@ import (
 	"xorm.io/xorm"
 )
 
+// TaskPositionRoutes defines all task position API routes with their explicit permission scopes.
+// This enables API tokens to be scoped for task position operations.
+var TaskPositionRoutes = []APIRoute{
+	{Method: "POST", Path: "/tasks/:task/position", Handler: handler.WithDBAndUser(updateTaskPositionLogic, true), PermissionScope: "update"},
+}
+
 // RegisterTaskPositions registers the task position route
 func RegisterTaskPositions(a *echo.Group) {
-	a.POST("/tasks/:task/position", handler.WithDBAndUser(updateTaskPositionLogic, true))
+	registerRoutes(a, TaskPositionRoutes)
 }
 
 // updateTaskPositionLogic updates the position of a task within a project view.
