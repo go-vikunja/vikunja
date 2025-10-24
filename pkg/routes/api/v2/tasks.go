@@ -24,12 +24,23 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
+	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/api/pkg/web/handler"
 	"github.com/labstack/echo/v4"
 )
 
+// TaskRoutes defines all v2 task API routes with explicit permission scopes
+var TaskRoutes = []apiv1.APIRoute{
+	{
+		Method:          "GET",
+		Path:            "/tasks",
+		Handler:         GetTasks,
+		PermissionScope: "read_all",
+	},
+}
+
 func RegisterTasks(a *echo.Group) {
-	a.GET("/tasks", GetTasks)
+	apiv1.RegisterRoutes(a, TaskRoutes, "v2")
 }
 
 // GetTasks serves a list of tasks.

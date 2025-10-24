@@ -26,8 +26,8 @@ import (
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/testutil"
+	"code.vikunja.io/api/pkg/user"
 )
 
 // TestMain is the main test function used to bootstrap the test env

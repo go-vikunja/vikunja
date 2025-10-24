@@ -82,7 +82,7 @@ func getRouteGroupName(path string) (finalName string, filteredParts []string) {
 func CollectRoute(method, path, permissionScope string) {
 	routeGroupName, _ := getRouteGroupName(path)
 	apiVersion := getRouteAPIVersion(path)
-	
+
 	if apiVersion == "" {
 		// No api version, no tokens
 		return
@@ -103,6 +103,9 @@ func CollectRoute(method, path, permissionScope string) {
 		Method: method,
 	}
 	apiTokenRoutes[apiVersion][routeGroupName][permissionScope] = routeDetail
+
+	// T015: Add debug logging to track successful explicit registrations
+	log.Debugf("[routes] Explicitly registered %s %s → %s_%s.%s", method, path, apiVersion, routeGroupName, permissionScope)
 }
 
 // getRouteDetail attempts to guess the permission scope for a route based on patterns.
@@ -300,6 +303,20 @@ func CollectRoutesForAPITokenUsage(route echo.Route, middlewares []echo.Middlewa
 	}
 
 	if !strings.Contains(route.Name, "(*WebHandler)") && !strings.Contains(route.Name, "Attachment") {
+		// T014: Skip routes that have already been explicitly registered via CollectRoute
+		// This prevents the legacy detection system from overriding explicit permissions
+		ensureAPITokenRoutesGroup(apiVersion, routeGroupName)
+		if routeGroupExists := apiTokenRoutes[apiVersion][routeGroupName]; routeGroupExists != nil {
+			// Check if ANY permission already exists for this exact path and method
+			// If so, skip processing - explicit registration takes precedence
+			for _, routeDetail := range routeGroupExists {
+				if routeDetail != nil && routeDetail.Path == route.Path && routeDetail.Method == route.Method {
+					log.Debugf("[routes] Skipping legacy detection for %s %s - already explicitly registered", route.Method, route.Path)
+					return
+				}
+			}
+		}
+
 		// First try to get proper permission from getRouteDetail
 		method, routeDetail := getRouteDetail(route)
 
@@ -470,7 +487,13 @@ func CanDoAPIRoute(c echo.Context, token *APIToken) (can bool) {
 		}
 	}
 
-	log.Debugf("[auth] Token %d tried to use route %s which requires permission %s but has only %v", token.ID, path, route, token.APIPermissions)
+	// T016: Enhanced logging to show available scopes when token lacks permission
+	availableScopes := []string{}
+	for scope := range routes {
+		availableScopes = append(availableScopes, scope)
+	}
+	log.Debugf("[auth] Token %d tried to use route %s %s which requires permission from %s_%s but token has %v (available: %v)",
+		token.ID, c.Request().Method, path, apiVersion, routeGroupName, token.APIPermissions, availableScopes)
 
 	return false
 }

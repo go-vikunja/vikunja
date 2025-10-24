@@ -1,0 +1,280 @@
+openapi: 3.0.3
+info:
+  title: Vikunja API Token Routes Endpoint
+  description: |
+    This contract defines the GET /routes endpoint that returns available API routes
+    for token permission selection. This fix ensures the endpoint returns COMPLETE
+    permission scopes including create, update, and delete operations that were
+    missing due to incomplete route registration.
+  version: 1.0.0
+  contact:
+    name: Vikunja Contributors
+    url: https://vikunja.io
+
+servers:
+  - url: https://api.vikunja.io/api/v1
+    description: Production server
+  - url: http://localhost:3456/api/v1
+    description: Local development server
+
+paths:
+  /routes:
+    get:
+      summary: Get available API routes for token permissions
+      description: |
+        Returns a nested map of all API routes that can be used with API token permissions.
+        The structure is: version → route group → permission scope → route details.
+        
+        This endpoint is used by the frontend to display available permissions when
+        creating or editing API tokens. After this fix, it will include ALL CRUD
+        operations (create, update, delete, read_one, read_all) for properly
+        registered route groups like tasks.
+        
+        **Fixed Behavior**: 
+        - v1_tasks now includes: create, update, delete, read_one
+        - v2_tasks includes: read_all (and others as they are registered)
+        - All route groups return complete permission scopes
+        
+      operationId: getAvailableAPIRoutesForToken
+      tags:
+        - api
+        - tokens
+      security:
+        - JWTKeyAuth: []
+      responses:
+        '200':
+          description: Successful response with available routes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APITokenRoutesResponse'
+              examples:
+                complete_v1_tasks:
+                  summary: Complete v1 tasks routes (after fix)
+                  value:
+                    v1:
+                      tasks:
+                        create:
+                          path: /api/v1/projects/:project/tasks
+                          method: PUT
+                        read_one:
+                          path: /api/v1/tasks/:taskid
+                          method: GET
+                        update:
+                          path: /api/v1/tasks/:taskid
+                          method: POST
+                        delete:
+                          path: /api/v1/tasks/:taskid
+                          method: DELETE
+                      projects:
+                        create:
+                          path: /api/v1/projects
+                          method: PUT
+                        read_all:
+                          path: /api/v1/projects
+                          method: GET
+                        read_one:
+                          path: /api/v1/projects/:project
+                          method: GET
+                        update:
+                          path: /api/v1/projects/:project
+                          method: POST
+                        delete:
+                          path: /api/v1/projects/:project
+                          method: DELETE
+                v2_routes:
+                  summary: V2 API routes
+                  value:
+                    v2:
+                      tasks:
+                        read_all:
+                          path: /api/v2/tasks
+                          method: GET
+                      projects:
+                        read_all:
+                          path: /api/v2/projects
+                          method: GET
+                        create:
+                          path: /api/v2/projects
+                          method: POST
+        '401':
+          description: Unauthorized - User not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+
+components:
+  securitySchemes:
+    JWTKeyAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from /login endpoint
+
+  schemas:
+    APITokenRoutesResponse:
+      type: object
+      description: |
+        Nested map structure: version → route group → permission scope → route details.
+        Keys at each level are dynamic based on registered routes.
+      additionalProperties:
+        type: object
+        description: API version (e.g., "v1", "v2")
+        additionalProperties:
+          type: object
+          description: Route group name (e.g., "tasks", "projects", "labels")
+          additionalProperties:
+            $ref: '#/components/schemas/RouteDetail'
+      example:
+        v1:
+          tasks:
+            create:
+              path: /api/v1/projects/:project/tasks
+              method: PUT
+            read_one:
+              path: /api/v1/tasks/:taskid
+              method: GET
+            update:
+              path: /api/v1/tasks/:taskid
+              method: POST
+            delete:
+              path: /api/v1/tasks/:taskid
+              method: DELETE
+
+    RouteDetail:
+      type: object
+      required:
+        - path
+        - method
+      properties:
+        path:
+          type: string
+          description: HTTP path pattern with Echo-style parameters (e.g., :taskid, :project)
+          example: /api/v1/tasks/:taskid
+        method:
+          type: string
+          enum: [GET, POST, PUT, DELETE, PATCH]
+          description: HTTP method for this route
+          example: POST
+      example:
+        path: /api/v1/tasks/:taskid
+        method: POST
+
+    HTTPError:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          description: Human-readable error message
+          example: Unauthorized
+
+    Message:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          description: Human-readable message
+          example: Internal server error
+
+  examples:
+    CompleteV1Routes:
+      summary: Complete v1 routes after fix
+      description: |
+        This example shows what GET /routes returns after the fix is applied.
+        Note that v1_tasks includes all CRUD operations.
+      value:
+        v1:
+          tasks:
+            create:
+              path: /api/v1/projects/:project/tasks
+              method: PUT
+            read_one:
+              path: /api/v1/tasks/:taskid
+              method: GET
+            update:
+              path: /api/v1/tasks/:taskid
+              method: POST
+            delete:
+              path: /api/v1/tasks/:taskid
+              method: DELETE
+          projects:
+            create:
+              path: /api/v1/projects
+              method: PUT
+            read_all:
+              path: /api/v1/projects
+              method: GET
+            read_one:
+              path: /api/v1/projects/:project
+              method: GET
+            update:
+              path: /api/v1/projects/:project
+              method: POST
+            delete:
+              path: /api/v1/projects/:project
+              method: DELETE
+          labels:
+            create:
+              path: /api/v1/labels
+              method: PUT
+            read_all:
+              path: /api/v1/labels
+              method: GET
+            read_one:
+              path: /api/v1/labels/:label
+              method: GET
+            update:
+              path: /api/v1/labels/:label
+              method: POST
+            delete:
+              path: /api/v1/labels/:label
+              method: DELETE
+          labels_tasks:
+            create:
+              path: /api/v1/tasks/:taskid/labels
+              method: PUT
+            read_all:
+              path: /api/v1/tasks/:taskid/labels
+              method: GET
+            delete:
+              path: /api/v1/tasks/:taskid/labels/:label
+              method: DELETE
+
+    IncompleteRoutesBeforeFix:
+      summary: Incomplete routes before fix (BUG)
+      description: |
+        This example shows the BROKEN state before the fix.
+        Notice v1_tasks is missing create, update, delete permissions.
+      value:
+        v1:
+          tasks:
+            read_one:
+              path: /api/v1/tasks/:taskid
+              method: GET
+          projects:
+            create:
+              path: /api/v1/projects
+              method: PUT
+            read_all:
+              path: /api/v1/projects
+              method: GET
+            read_one:
+              path: /api/v1/projects/:project
+              method: GET
+            update:
+              path: /api/v1/projects/:project
+              method: POST
+            delete:
+              path: /api/v1/projects/:project
+              method: DELETE

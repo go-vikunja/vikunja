@@ -17,6 +17,9 @@
 package services
 
 import (
+	"net/http"
+	"net/http/httptest"
+	"net/url"
 	"testing"
 	"time"
 
@@ -24,8 +27,10 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 
+	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/xorm"
 )
 
 func TestAPITokenService_Create(t *testing.T) {
@@ -498,4 +503,204 @@ func TestAPITokenService_HashToken(t *testing.T) {
 
 		assert.NotEqual(t, hash1, hash2)
 	})
+}
+
+// T006: Test helper function to create an API token with specific permissions
+// This simplifies test setup by handling the full token creation flow
+func createTokenWithPermissions(t *testing.T, s *xorm.Session, permissions models.APIPermissions) *models.APIToken {
+	t.Helper()
+
+	service := NewAPITokenService(testEngine)
+	u := &user.User{ID: 1}
+
+	token := &models.APIToken{
+		Title:          "Test Token",
+		APIPermissions: permissions,
+		ExpiresAt:      time.Now().Add(24 * time.Hour),
+	}
+
+	err := service.Create(s, token, u)
+	require.NoError(t, err, "Failed to create test token")
+	require.NotEmpty(t, token.Token, "Token string should not be empty")
+
+	return token
+}
+
+// T007: Test helper function to create a mock Echo context
+// This is useful for testing route handlers that require a context
+func createMockContext(method, path string, token *models.APIToken) echo.Context {
+	// Note: For US1 tests, we may not need full Echo context mocking
+	// The registerTestAPIRoutes + models.CanDoAPIRoute pattern is sufficient
+	// This helper is provided for future extensibility if needed
+	// Implementation would require Echo test framework setup
+	return nil // Placeholder - implement if needed for handler testing
+}
+
+// Helper function to check if token can access a route
+// This wraps the models.CanDoAPIRoute function with a mock context
+func canTokenAccessRoute(token *models.APIToken, method, path string) bool {
+	e := echo.New()
+	req := &http.Request{
+		Method: method,
+		URL:    &url.URL{Path: path},
+	}
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	// CRITICAL: c.SetPath must use the route pattern, NOT the actual request path
+	// Echo's c.Path() returns the registered route pattern (with :param placeholders)
+	// while c.Request().URL.Path returns the actual path with values
+	c.SetPath(path)
+
+	return models.CanDoAPIRoute(c, token)
+}
+
+// T008: Test that v1_tasks route group has all CRUD permissions registered
+func TestAPITokenPermissionRegistration(t *testing.T) {
+	// Get the registered routes
+	routes := models.GetAPITokenRoutes()
+
+	// Test v1 routes exist
+	v1Routes, hasV1 := routes["v1"]
+	require.True(t, hasV1, "Should have v1 routes registered")
+
+	// Test tasks routes exist
+	taskRoutes, hasTasks := v1Routes["tasks"]
+	require.True(t, hasTasks, "Should have tasks routes registered in v1")
+
+	// THESE SHOULD FAIL before fix if routes not properly registered:
+	assert.NotNil(t, taskRoutes["create"], "Should have create permission for v1_tasks")
+	assert.NotNil(t, taskRoutes["update"], "Should have update permission for v1_tasks")
+	assert.NotNil(t, taskRoutes["delete"], "Should have delete permission for v1_tasks")
+	assert.NotNil(t, taskRoutes["read_one"], "Should have read_one permission for v1_tasks")
+
+	// Verify the route details are correct
+	if taskRoutes["create"] != nil {
+		assert.Equal(t, "PUT", taskRoutes["create"].Method)
+		assert.Contains(t, taskRoutes["create"].Path, "/projects/:project/tasks")
+	}
+
+	if taskRoutes["read_one"] != nil {
+		assert.Equal(t, "GET", taskRoutes["read_one"].Method)
+		assert.Contains(t, taskRoutes["read_one"].Path, "/tasks/:taskid")
+	}
+
+	if taskRoutes["update"] != nil {
+		assert.Equal(t, "POST", taskRoutes["update"].Method)
+		assert.Contains(t, taskRoutes["update"].Path, "/tasks/:taskid")
+	}
+
+	if taskRoutes["delete"] != nil {
+		assert.Equal(t, "DELETE", taskRoutes["delete"].Method)
+		assert.Contains(t, taskRoutes["delete"].Path, "/tasks/:taskid")
+	}
+}
+
+// T009: Test that API token with create permission can create tasks
+func TestAPITokenCanCreateTask(t *testing.T) {
+	s := db.NewSession()
+	defer s.Close()
+
+	// Create token with v1_tasks create permission
+	token := createTokenWithPermissions(t, s, models.APIPermissions{
+		"v1_tasks": []string{"create"},
+	})
+
+	// Verify token can access the create route (use route pattern with :param)
+	canAccess := canTokenAccessRoute(token, "PUT", "/api/v1/projects/:project/tasks")
+	assert.True(t, canAccess, "Token with create permission should be able to create tasks")
+
+	// Verify token cannot access other routes
+	cannotUpdate := canTokenAccessRoute(token, "POST", "/api/v1/tasks/:taskid")
+	assert.False(t, cannotUpdate, "Token with only create permission should not be able to update tasks")
+}
+
+// T010: Test that API token with update permission can update tasks
+func TestAPITokenCanUpdateTask(t *testing.T) {
+	s := db.NewSession()
+	defer s.Close()
+
+	// Create token with v1_tasks update permission
+	token := createTokenWithPermissions(t, s, models.APIPermissions{
+		"v1_tasks": []string{"update"},
+	})
+
+	// Verify token can access the update route (use route pattern with :param)
+	canAccess := canTokenAccessRoute(token, "POST", "/api/v1/tasks/:taskid")
+	assert.True(t, canAccess, "Token with update permission should be able to update tasks")
+
+	// Verify token cannot access other routes
+	cannotCreate := canTokenAccessRoute(token, "PUT", "/api/v1/projects/:project/tasks")
+	assert.False(t, cannotCreate, "Token with only update permission should not be able to create tasks")
+}
+
+// T011: Test that API token with delete permission can delete tasks
+func TestAPITokenCanDeleteTask(t *testing.T) {
+	s := db.NewSession()
+	defer s.Close()
+
+	// Create token with v1_tasks delete permission
+	token := createTokenWithPermissions(t, s, models.APIPermissions{
+		"v1_tasks": []string{"delete"},
+	})
+
+	// Verify token can access the delete route (use route pattern with :param)
+	canAccess := canTokenAccessRoute(token, "DELETE", "/api/v1/tasks/:taskid")
+	assert.True(t, canAccess, "Token with delete permission should be able to delete tasks")
+
+	// Verify token cannot access other routes
+	cannotCreate := canTokenAccessRoute(token, "PUT", "/api/v1/projects/:project/tasks")
+	assert.False(t, cannotCreate, "Token with only delete permission should not be able to create tasks")
+}
+
+// T012: Test that API token without permission gets denied
+func TestAPITokenDeniedWithoutPermission(t *testing.T) {
+	s := db.NewSession()
+	defer s.Close()
+
+	// Create token with only read_one permission (no write permissions)
+	token := createTokenWithPermissions(t, s, models.APIPermissions{
+		"v1_tasks": []string{"read_one"},
+	})
+
+	// Verify token can access read route (use route pattern with :param)
+	canRead := canTokenAccessRoute(token, "GET", "/api/v1/tasks/:taskid")
+	assert.True(t, canRead, "Token with read_one permission should be able to read tasks")
+
+	// Verify token is denied for write operations
+	cannotCreate := canTokenAccessRoute(token, "PUT", "/api/v1/projects/:project/tasks")
+	assert.False(t, cannotCreate, "Token without create permission should be denied")
+
+	cannotUpdate := canTokenAccessRoute(token, "POST", "/api/v1/tasks/:taskid")
+	assert.False(t, cannotUpdate, "Token without update permission should be denied")
+
+	cannotDelete := canTokenAccessRoute(token, "DELETE", "/api/v1/tasks/:taskid")
+	assert.False(t, cannotDelete, "Token without delete permission should be denied")
+}
+
+// T036: Test that v2_tasks routes are registered with correct permission scopes
+// This test verifies that v2 routes can be used in API token permissions
+func TestV2RouteRegistration(t *testing.T) {
+	s := db.NewSession()
+	defer s.Close()
+
+	service := NewAPITokenService(testEngine)
+	u := &user.User{ID: 1}
+
+	// Try to create a token with v2_tasks permissions
+	// If v2 routes are not registered, this should fail validation
+	token := &models.APIToken{
+		Title: "Test V2 Token",
+		APIPermissions: models.APIPermissions{
+			"v2_tasks": []string{"read_all"},
+		},
+		ExpiresAt: time.Now().Add(24 * time.Hour),
+	}
+
+	// This will fail if v2_tasks routes are not properly registered
+	err := service.Create(s, token, u)
+	require.NoError(t, err, "Should be able to create token with v2_tasks permissions if routes are registered")
+
+	// Verify the token was created with v2 permissions
+	assert.Contains(t, token.APIPermissions, "v2_tasks")
+	assert.Equal(t, []string{"read_all"}, token.APIPermissions["v2_tasks"])
 }

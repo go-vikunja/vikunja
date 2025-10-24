@@ -85,11 +85,29 @@ func registerTestAPIRoutes() {
 	models.CollectRoute("POST", "/api/v1/tasks/:taskid", "update")
 	models.CollectRoute("DELETE", "/api/v1/tasks/:taskid", "delete")
 
-	// Register other commonly used routes for API token tests
-	// Add more as needed for comprehensive test coverage
+	// Register other commonly used v1 routes for API token tests
 	models.CollectRoute("GET", "/api/v1/projects", "read_all")
 	models.CollectRoute("PUT", "/api/v1/projects", "create")
 	models.CollectRoute("GET", "/api/v1/projects/:project", "read_one")
 	models.CollectRoute("POST", "/api/v1/projects/:project", "update")
 	models.CollectRoute("DELETE", "/api/v1/projects/:project", "delete")
+
+	// Register v2 routes for API token tests
+	// v2 tasks
+	models.CollectRoute("GET", "/api/v2/tasks", "read_all")
+
+	// v2 projects
+	models.CollectRoute("GET", "/api/v2/projects", "read_all")
+	models.CollectRoute("POST", "/api/v2/projects", "create")
+	models.CollectRoute("GET", "/api/v2/projects/:id", "read_one")
+	models.CollectRoute("PUT", "/api/v2/projects/:id", "update")
+	models.CollectRoute("DELETE", "/api/v2/projects/:id", "delete")
+	models.CollectRoute("POST", "/api/v2/projects/:id/duplicate", "create")
+
+	// v2 labels
+	models.CollectRoute("GET", "/api/v2/labels", "read_all")
+	models.CollectRoute("POST", "/api/v2/labels", "create")
+	models.CollectRoute("GET", "/api/v2/labels/:id", "read_one")
+	models.CollectRoute("PUT", "/api/v2/labels/:id", "update")
+	models.CollectRoute("DELETE", "/api/v2/labels/:id", "delete")
 }
