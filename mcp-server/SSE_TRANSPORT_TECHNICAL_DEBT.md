@@ -1,7 +1,7 @@
 # SSE Transport Technical Debt
 
 **Date**: 2025-10-23  
-**Feature**: 007-mcp-http-transport Phase 4 (User Story 2)  
+**Feature**: 006-mcp-http-transport Phase 4 (User Story 2)  
 **Status**: Core implementation complete, 11/28 tests passing (39% - up from 32%)
 
 ## Summary
@@ -202,7 +202,7 @@ curl -X POST http://localhost:3000/sse?token=YOUR_TOKEN \
 - **MCP Specification**: https://spec.modelcontextprotocol.io/
 - **SDK Repository**: https://github.com/modelcontextprotocol/typescript-sdk
 - **SSE Spec**: https://html.spec.whatwg.org/multipage/server-sent-events.html
-- **Feature Spec**: `/home/aron/projects/vikunja/specs/007-mcp-http-transport/`
+- **Feature Spec**: `/home/aron/projects/vikunja/specs/006-mcp-http-transport/`
 - **Test File**: `/home/aron/projects/vikunja/mcp-server/tests/transports/sse-transport.test.ts`
 
 ## Acceptance Criteria for Resolution

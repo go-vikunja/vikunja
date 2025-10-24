@@ -1,6 +1,6 @@
 # Feature Specification: HTTP Transport for MCP Server
 
-**Feature Branch**: `007-mcp-http-transport`  
+**Feature Branch**: `006-mcp-http-transport`  
 **Created**: October 22, 2025  
 **Status**: Draft  
 **Input**: User description: "HTTP transport layer for Vikunja MCP Server to enable remote client connections via SSE and HTTP Streamable protocols"

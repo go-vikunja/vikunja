@@ -1,8 +1,8 @@
 # Tasks: HTTP Transport for MCP Server
 
 **Feature**: HTTP Transport for Vikunja MCP Server  
-**Branch**: `007-mcp-http-transport`  
-**Input**: Design documents from `/specs/007-mcp-http-transport/`  
+**Branch**: `006-mcp-http-transport`  
+**Input**: Design documents from `/specs/006-mcp-http-transport/`  
 **Prerequisites**: plan.md, spec.md, research.md, data-model.md, contracts/
 
 **Tests**: TDD approach - tests written FIRST before implementation per Constitution requirement
@@ -656,10 +656,10 @@
 - [ ] T072 [P] Update mcp-server/CHANGELOG.md with v1.1.0 entry (HTTP Streamable, SSE, authentication, rate limiting, session management)
 - [ ] T073 [P] Create mcp-server/docs/migration-sse-to-http-streamable.md migration guide
 - [ ] T074 [P] Create example client configurations in mcp-server/examples/ (n8n-config.json, claude-desktop-config.json, custom-client.ts)
-- [ ] T075 [P] Add OpenAPI spec files to mcp-server/docs/api/ (copy from specs/007-mcp-http-transport/contracts/)
+- [ ] T075 [P] Add OpenAPI spec files to mcp-server/docs/api/ (copy from specs/006-mcp-http-transport/contracts/)
 - [ ] T076 Run full test suite with coverage: pnpm test:coverage (verify 80%+ coverage for HTTP transport code)
 - [ ] T077 Run linting: pnpm lint:fix (ensure code quality)
-- [ ] T078 Validate deployment: Follow specs/007-mcp-http-transport/quickstart.md on clean Proxmox LXC
+- [ ] T078 Validate deployment: Follow specs/006-mcp-http-transport/quickstart.md on clean Proxmox LXC
 - [ ] T079 [P] Add Prometheus metrics endpoint /metrics (optional enhancement from plan)
 - [ ] T080 Manual integration test with n8n (connect, list tools, execute get_tasks)
 - [ ] T081 Manual integration test with Claude Desktop (configure, test in conversation)

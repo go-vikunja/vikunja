@@ -706,7 +706,7 @@ REDIS_URL=redis://localhost:6379
 
 **Need help?** 
 - Documentation: `/opt/vikunja/mcp-server/README.md`
-- API Reference: `/opt/vikunja/specs/007-mcp-http-transport/contracts/`
+- API Reference: `/opt/vikunja/specs/006-mcp-http-transport/contracts/`
 - Logs: `journalctl -u vikunja-mcp -f`
 
 **Enjoy using Vikunja MCP Server! 🚀**
