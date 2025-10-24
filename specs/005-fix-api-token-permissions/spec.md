@@ -1,6 +1,6 @@
 # Feature Specification: Fix API Token Permissions System
 
-**Feature Branch**: `007-fix-api-token-permissions`  
+**Feature Branch**: `005-fix-api-token-permissions`  
 **Created**: October 23, 2025  
 **Status**: Draft  
 **Input**: User description: "Fix API token permissions system to ensure all v1 and v2 API routes are properly registered with their permission scopes for token-based authentication"
