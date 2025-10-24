@@ -22,15 +22,14 @@ import (
 
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/web/handler"
 	"github.com/labstack/echo/v4"
 	"xorm.io/xorm"
 )
 
-// RegisterBulkAssignees registers the bulk assignee route
-func RegisterBulkAssignees(a *echo.Group) {
-	a.POST("/tasks/:projecttask/assignees/bulk", handler.WithDBAndUser(bulkAssigneeLogic, true))
-}
+// Note: The RegisterBulkAssignees function has been consolidated into
+// RegisterTaskAssignees in task_assignee.go as part of the declarative
+// route registration pattern (Task T067). All task assignee routes,
+// including the bulk endpoint, are now registered through TaskAssigneeRoutes.
 
 // bulkAssigneeLogic assigns or removes multiple users from a task at once.
 //

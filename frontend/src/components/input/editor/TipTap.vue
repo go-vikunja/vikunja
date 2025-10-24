@@ -182,8 +182,6 @@ import inputPrompt from '@/helpers/inputPrompt'
 import {setLinkInEditor} from '@/components/input/editor/setLinkInEditor'
 import {useConfigStore} from '@/stores/config'
 
-const configStore = useConfigStore()
-
 const props = withDefaults(defineProps<{
 	modelValue: string,
 	uploadCallback?: UploadCallback,
@@ -204,6 +202,8 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits(['update:modelValue', 'save'])
+
+const configStore = useConfigStore()
 
 const tiptapInstanceRef = ref<HTMLInputElement | null>(null)
 

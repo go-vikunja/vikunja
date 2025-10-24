@@ -41,8 +41,9 @@ func init() {
 type APITokenRoute map[string]*RouteDetail
 
 type RouteDetail struct {
-	Path   string `json:"path"`
-	Method string `json:"method"`
+	Path      string `json:"path"`
+	Method    string `json:"method"`
+	AdminOnly bool   `json:"admin_only"`
 }
 
 func getRouteAPIVersion(path string) string {
@@ -79,7 +80,8 @@ func getRouteGroupName(path string) (finalName string, filteredParts []string) {
 // CollectRoute explicitly registers a route and its permission scope with our API token system.
 // This function replaces the complex logic in getRouteDetail() with explicit permission registration.
 // It directly stores the provided permission scope without any "guessing" or "magic" detection.
-func CollectRoute(method, path, permissionScope string) {
+// The adminOnly parameter indicates whether this route requires an admin-level API token.
+func CollectRoute(method, path, permissionScope string, adminOnly ...bool) {
 	routeGroupName, _ := getRouteGroupName(path)
 	apiVersion := getRouteAPIVersion(path)
 
@@ -97,15 +99,26 @@ func CollectRoute(method, path, permissionScope string) {
 		return
 	}
 
+	// Extract adminOnly flag (defaults to false if not provided)
+	requiresAdmin := false
+	if len(adminOnly) > 0 {
+		requiresAdmin = adminOnly[0]
+	}
+
 	ensureAPITokenRoutesGroup(apiVersion, routeGroupName)
 	routeDetail := &RouteDetail{
-		Path:   path,
-		Method: method,
+		Path:      path,
+		Method:    method,
+		AdminOnly: requiresAdmin,
 	}
 	apiTokenRoutes[apiVersion][routeGroupName][permissionScope] = routeDetail
 
 	// T015: Add debug logging to track successful explicit registrations
-	log.Debugf("[routes] Explicitly registered %s %s → %s_%s.%s", method, path, apiVersion, routeGroupName, permissionScope)
+	adminFlag := ""
+	if requiresAdmin {
+		adminFlag = " [ADMIN-ONLY]"
+	}
+	log.Debugf("[routes] Explicitly registered %s %s → %s_%s.%s%s", method, path, apiVersion, routeGroupName, permissionScope, adminFlag)
 }
 
 // getRouteDetail attempts to guess the permission scope for a route based on patterns.
@@ -403,11 +416,11 @@ func CollectRoutesForAPITokenUsage(route echo.Route, middlewares []echo.Middlewa
 
 // GetAvailableAPIRoutesForToken returns a list of all API routes which are available for token usage.
 // @Summary Get a list of all token api routes
-// @Description Returns a list of all API routes which are available to use with an api token, not a user login.
+// @Description Returns a list of all API routes which are available to use with an api token, not a user login. Each route includes an admin_only flag indicating whether it requires an admin-level token.
 // @tags api
 // @Produce json
 // @Security JWTKeyAuth
-// @Success 200 {array} models.APITokenRoute "The list of all routes."
+// @Success 200 {array} models.APITokenRoute "The list of all routes with their permission scopes and admin_only flags."
 // @Router /routes [get]
 func GetAvailableAPIRoutesForToken(c echo.Context) error {
 	// We merge all versions into one map to make it easier for the frontend
@@ -433,7 +446,9 @@ func CanDoAPIRoute(c echo.Context, token *APIToken) (can bool) {
 	routeGroupName, routeParts := getRouteGroupName(path)
 	apiVersion := getRouteAPIVersion(path)
 
+	// Strip common suffixes for backward compatibility and logical grouping
 	routeGroupName = strings.TrimSuffix(routeGroupName, "_bulk")
+	routeGroupName = strings.TrimSuffix(routeGroupName, "_tasks")
 
 	if routeGroupName == "user" ||
 		routeGroupName == "users" ||
@@ -476,6 +491,13 @@ func CanDoAPIRoute(c echo.Context, token *APIToken) (can bool) {
 	pathWithoutPrefix := apiPrefixRegex.ReplaceAllString(path, "")
 	for _, p := range group {
 		if route == "" && routes[p] != nil {
+			// Check if this is an admin-only route and the token is not admin level
+			if routes[p].AdminOnly && token.TokenLevel != APITokenLevelAdmin {
+				log.Debugf("[auth] Token %d tried to access admin-only route %s %s but token level is '%s' (requires 'admin')",
+					token.ID, c.Request().Method, path, token.TokenLevel)
+				return false
+			}
+
 			// We only check the path without the version prefix, because the version is already checked.
 			routePathWithoutPrefix := apiPrefixRegex.ReplaceAllString(routes[p].Path, "")
 			if routePathWithoutPrefix == pathWithoutPrefix && routes[p].Method == c.Request().Method {
@@ -483,6 +505,12 @@ func CanDoAPIRoute(c echo.Context, token *APIToken) (can bool) {
 			}
 		}
 		if route != "" && p == route {
+			// Check if this is an admin-only route and the token is not admin level
+			if routes[p] != nil && routes[p].AdminOnly && token.TokenLevel != APITokenLevelAdmin {
+				log.Debugf("[auth] Token %d tried to access admin-only route %s %s but token level is '%s' (requires 'admin')",
+					token.ID, c.Request().Method, path, token.TokenLevel)
+				return false
+			}
 			return true
 		}
 	}

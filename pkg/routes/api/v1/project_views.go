@@ -28,13 +28,19 @@ import (
 	"xorm.io/xorm"
 )
 
+// ProjectViewRoutes defines all project view API routes with their explicit permission scopes.
+// This enables API tokens to be scoped for project view management operations.
+var ProjectViewRoutes = []APIRoute{
+	{Method: "GET", Path: "/projects/:project/views", Handler: handler.WithDBAndUser(getAllProjectViews, false), PermissionScope: "read_all"},
+	{Method: "GET", Path: "/projects/:project/views/:view", Handler: handler.WithDBAndUser(getProjectView, false), PermissionScope: "read_one"},
+	{Method: "PUT", Path: "/projects/:project/views", Handler: handler.WithDBAndUser(createProjectView, true), PermissionScope: "create"},
+	{Method: "POST", Path: "/projects/:project/views/:view", Handler: handler.WithDBAndUser(updateProjectView, true), PermissionScope: "update"},
+	{Method: "DELETE", Path: "/projects/:project/views/:view", Handler: handler.WithDBAndUser(deleteProjectView, true), PermissionScope: "delete"},
+}
+
 // RegisterProjectViews registers all project view routes
 func RegisterProjectViews(a *echo.Group) {
-	a.GET("/projects/:project/views", handler.WithDBAndUser(getAllProjectViews, false))
-	a.GET("/projects/:project/views/:view", handler.WithDBAndUser(getProjectView, false))
-	a.PUT("/projects/:project/views", handler.WithDBAndUser(createProjectView, true))
-	a.POST("/projects/:project/views/:view", handler.WithDBAndUser(updateProjectView, true))
-	a.DELETE("/projects/:project/views/:view", handler.WithDBAndUser(deleteProjectView, true))
+	registerRoutes(a, ProjectViewRoutes)
 }
 
 // getAllProjectViews gets all project views for a project

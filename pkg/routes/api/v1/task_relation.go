@@ -27,10 +27,16 @@ import (
 	"xorm.io/xorm"
 )
 
+// TaskRelationRoutes defines all task relation API routes with their explicit permission scopes.
+// This enables API tokens to be scoped for task relation operations.
+var TaskRelationRoutes = []APIRoute{
+	{Method: "PUT", Path: "/tasks/:task/relations", Handler: handler.WithDBAndUser(createTaskRelationLogic, true), PermissionScope: "create"},
+	{Method: "DELETE", Path: "/tasks/:task/relations/:relationKind/:otherTask", Handler: handler.WithDBAndUser(deleteTaskRelationLogic, true), PermissionScope: "delete"},
+}
+
 // RegisterTaskRelations registers all task relation routes
 func RegisterTaskRelations(a *echo.Group) {
-	a.PUT("/tasks/:task/relations", handler.WithDBAndUser(createTaskRelationLogic, true))
-	a.DELETE("/tasks/:task/relations/:relationKind/:otherTask", handler.WithDBAndUser(deleteTaskRelationLogic, true))
+	registerRoutes(a, TaskRelationRoutes)
 }
 
 // createTaskRelationLogic creates a new relation between two tasks.

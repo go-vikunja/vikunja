@@ -322,7 +322,7 @@ After each user story:
 - User Story 2 (P1): 11 tasks (complete - MVP UI verification)
 - User Story 3 (P2): 10 tasks (complete - Future consistency)
 - User Story 4 (P1): 9 tasks ⏭️ **SKIPPED** (Backward compatibility not needed)
-- Polish: 11 tasks (remaining)
+- Polish: 11 tasks (complete)
 
 **Parallel Opportunities**: 25 tasks marked [P] can run in parallel within their phase
 
@@ -331,6 +331,28 @@ After each user story:
 **Estimated Time**:
 - MVP: 2-3 hours ✅ COMPLETE
 - Full Feature (with US3): 4-5 hours ✅ COMPLETE
-- With thorough testing: 6-8 hours (Polish phase remaining)
+- Polish phase: 6-8 hours ✅ COMPLETE
 
 **Risk Level**: Low (defensive changes, comprehensive tests, backward compatible)
+
+---
+
+## Follow-Up Work
+
+**See**: `FOLLOWUP_TASKS.md` for detailed analysis of 10 additional route groups requiring conversion to declarative pattern
+
+**Priority Groups**:
+- **Phase 1 (HIGH)**: Task-related operations (T066-T070)
+  - Label-Task Relations, Task Assignees, Task Relations, Task Position, Task Bulk
+  - Impact: Users cannot scope API tokens for these common task operations
+  - Timeline: 2-3 days
+
+- **Phase 2 (MEDIUM)**: Project management (T071-T073)
+  - Kanban/Buckets, Project Views, Saved Filters
+  - Timeline: 2-3 days
+
+- **Phase 3 (LOW)**: Security review required (T074-T075)
+  - Webhooks, Team Management
+  - Timeline: TBD (requires design decision)
+
+**Total Additional Work**: ~10 route groups, 40+ endpoints missing permission registration

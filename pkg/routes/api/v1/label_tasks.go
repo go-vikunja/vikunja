@@ -28,12 +28,27 @@ import (
 	"xorm.io/xorm"
 )
 
+// LabelTaskRoutes defines all label-task API routes with their explicit permission scopes.
+// This enables API tokens to be scoped for label-task operations.
+var LabelTaskRoutes = []APIRoute{
+	{Method: "GET", Path: "/tasks/:projecttask/labels", Handler: handler.WithDBAndUser(getTaskLabelsLogic, false), PermissionScope: "read_all"},
+	{Method: "PUT", Path: "/tasks/:projecttask/labels", Handler: handler.WithDBAndUser(addLabelToTaskLogic, true), PermissionScope: "create"},
+	{Method: "DELETE", Path: "/tasks/:projecttask/labels/:label", Handler: handler.WithDBAndUser(removeLabelFromTaskLogic, true), PermissionScope: "delete"},
+	{Method: "POST", Path: "/tasks/:projecttask/labels/bulk", Handler: handler.WithDBAndUser(updateTaskLabelsLogic, true), PermissionScope: "update"},
+}
+
 // RegisterLabelTasks registers all label-task routes
 func RegisterLabelTasks(a *echo.Group) {
-	a.PUT("/tasks/:projecttask/labels", handler.WithDBAndUser(addLabelToTaskLogic, true))
-	a.DELETE("/tasks/:projecttask/labels/:label", handler.WithDBAndUser(removeLabelFromTaskLogic, true))
-	a.GET("/tasks/:projecttask/labels", handler.WithDBAndUser(getTaskLabelsLogic, false))
-	a.POST("/tasks/:projecttask/labels/bulk", handler.WithDBAndUser(updateTaskLabelsLogic, true))
+	registerRoutes(a, LabelTaskRoutes)
+
+	// Note: Bulk endpoints with /bulk suffix auto-register to a separate route group
+	// (tasks_labels_bulk), but the permission validation system in CanDoAPIRoute()
+	// strips the _bulk suffix when checking permissions. To ensure path matching works,
+	// we copy the bulk route registration to the main group after registration.
+	routes := models.GetAPITokenRoutes()
+	if bulkRoute, ok := routes["v1"]["tasks_labels_bulk"]["update"]; ok {
+		routes["v1"]["tasks_labels"]["update"] = bulkRoute
+	}
 }
 
 // addLabelToTaskLogic adds a single label to a task.

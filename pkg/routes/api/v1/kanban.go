@@ -29,13 +29,31 @@ import (
 	"xorm.io/xorm"
 )
 
+// KanbanRoutes defines all Kanban/bucket API routes with their explicit permission scopes.
+// This enables API tokens to be scoped for Kanban board management operations.
+var KanbanRoutes = []APIRoute{
+	{Method: "GET", Path: "/projects/:project/views/:view/buckets", Handler: handler.WithDBAndUser(getAllBuckets, false), PermissionScope: "read_all"},
+	{Method: "PUT", Path: "/projects/:project/views/:view/buckets", Handler: handler.WithDBAndUser(createBucket, true), PermissionScope: "create"},
+	{Method: "POST", Path: "/projects/:project/views/:view/buckets/:bucket", Handler: handler.WithDBAndUser(updateBucket, true), PermissionScope: "update"},
+	{Method: "DELETE", Path: "/projects/:project/views/:view/buckets/:bucket", Handler: handler.WithDBAndUser(deleteBucket, true), PermissionScope: "delete"},
+	{Method: "POST", Path: "/projects/:project/views/:view/buckets/:bucket/tasks", Handler: handler.WithDBAndUser(moveTaskToBucket, true), PermissionScope: "move_task"},
+}
+
 // RegisterKanbanRoutes registers all Kanban routes
 func RegisterKanbanRoutes(a *echo.Group) {
-	a.GET("/projects/:project/views/:view/buckets", handler.WithDBAndUser(getAllBuckets, false))
-	a.PUT("/projects/:project/views/:view/buckets", handler.WithDBAndUser(createBucket, true))
-	a.POST("/projects/:project/views/:view/buckets/:bucket", handler.WithDBAndUser(updateBucket, true))
-	a.DELETE("/projects/:project/views/:view/buckets/:bucket", handler.WithDBAndUser(deleteBucket, true))
-	a.POST("/projects/:project/views/:view/buckets/:bucket/tasks", handler.WithDBAndUser(moveTaskToBucket, true))
+	registerRoutes(a, KanbanRoutes)
+
+	// Move task route creates separate projects_views_buckets_tasks group due to /tasks suffix,
+	// but we want it in projects_views_buckets for logical grouping with other bucket operations
+	routes := models.GetAPITokenRoutes()
+	if tasksGroup, ok := routes["v1"]["projects_views_buckets_tasks"]; ok {
+		if moveRoute, ok := tasksGroup["move_task"]; ok {
+			if routes["v1"]["projects_views_buckets"] == nil {
+				routes["v1"]["projects_views_buckets"] = make(models.APITokenRoute)
+			}
+			routes["v1"]["projects_views_buckets"]["move_task"] = moveRoute
+		}
+	}
 }
 
 // getAllBuckets gets all buckets for a project view

@@ -52,6 +52,16 @@ func (ats *APITokenService) Create(s *xorm.Session, token *models.APIToken, u *u
 	// Reset ID to ensure we create a new token
 	token.ID = 0
 
+	// Set default token level if not specified
+	if token.TokenLevel == "" {
+		token.TokenLevel = models.APITokenLevelStandard
+	}
+
+	// Validate token level
+	if token.TokenLevel != models.APITokenLevelStandard && token.TokenLevel != models.APITokenLevelAdmin {
+		return &models.ErrInvalidData{Message: "token_level must be either 'standard' or 'admin'"}
+	}
+
 	// Generate cryptographically secure salt
 	salt, err := utils.CryptoRandomString(10)
 	if err != nil {

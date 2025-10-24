@@ -438,6 +438,128 @@ Before considering this fix complete, verify:
 
 ---
 
+## Admin-Level Tokens (Phase 3 Enhancement)
+
+### Overview
+
+Some operations require elevated privileges beyond standard API token capabilities. Admin-level tokens provide access to sensitive operations like webhook management and team administration.
+
+### Token Levels
+
+**Standard Token** (default):
+- Access to regular operations: tasks, projects, labels, comments, attachments, etc.
+- Cannot access webhooks or team management
+- Suitable for most integrations and automation
+
+**Admin Token**:
+- All standard token capabilities
+- **Plus**: Webhook management (create, read, update, delete webhooks)
+- **Plus**: Team management (create teams, manage members)
+- Requires explicit admin level selection during token creation
+- Recommended only for trusted integrations
+
+### Creating Admin Tokens
+
+**Via UI** (frontend must be updated with T076):
+1. Navigate to Settings → API Tokens
+2. Click "Create a token"
+3. Enter token title
+4. **Select token level**: Choose "Admin" (shows security warning)
+5. Select permissions (must include webhook/team permissions for admin operations)
+6. Click "Create token"
+
+**Via API**:
+```bash
+curl -X PUT http://localhost:3456/api/v1/tokens \
+  -H "Authorization: Bearer <YOUR_JWT_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Admin Integration Token",
+    "token_level": "admin",
+    "permissions": {
+      "v1_projects_webhooks": ["read_all", "create", "update", "delete"],
+      "v1_teams": ["read_all", "create", "update", "delete", "add_member"]
+    },
+    "expires_at": "2026-01-01T00:00:00Z"
+  }'
+```
+
+### Admin-Only Routes
+
+The following routes **require admin-level tokens**:
+
+**Webhooks** (`v1_projects_webhooks`):
+- `GET /api/v1/projects/:project/webhooks` - List webhooks
+- `PUT /api/v1/projects/:project/webhooks` - Create webhook
+- `POST /api/v1/projects/:project/webhooks/:webhook` - Update webhook
+- `DELETE /api/v1/projects/:project/webhooks/:webhook` - Delete webhook
+
+**Teams** (`v1_teams`):
+- `GET /api/v1/teams` - List all teams
+- `GET /api/v1/teams/:team` - Get team details
+- `PUT /api/v1/teams` - Create team
+- `POST /api/v1/teams/:team` - Update team
+- `DELETE /api/v1/teams/:team` - Delete team
+- `PUT /api/v1/teams/:team/members` - Add team member
+- `DELETE /api/v1/teams/:team/members/:user` - Remove team member
+- `POST /api/v1/teams/:team/members/:user/admin` - Update member role
+
+### Security Considerations
+
+**Why admin tokens?**
+- Webhooks can send data to external endpoints (potential data leaks)
+- Team membership affects permissions across multiple projects
+- Separation of concerns: not all integrations need these capabilities
+
+**Best practices**:
+1. **Use standard tokens by default** - Only create admin tokens when absolutely necessary
+2. **Minimize admin token permissions** - Only grant webhook/team permissions if needed
+3. **Short expiration times** - Admin tokens should have shorter lifespans
+4. **Audit regularly** - Review admin token usage in logs
+5. **Secure storage** - Store admin tokens with extra protection (secrets managers)
+6. **Rotate frequently** - Replace admin tokens periodically
+
+**Checking route requirements**:
+```bash
+# Get routes with admin_only flag
+curl -X GET http://localhost:3456/api/v1/routes \
+  -H "Authorization: Bearer <YOUR_JWT_TOKEN>" | jq '
+  .[] | to_entries[] | select(.value.admin_only == true) | {
+    route: .key,
+    admin_only: .value.admin_only,
+    path: .value.path,
+    method: .value.method
+  }'
+```
+
+### Example: Webhook Integration
+
+**Standard token attempt** (will fail):
+```bash
+# This FAILS even with correct permissions
+curl -X GET http://localhost:3456/api/v1/projects/1/webhooks \
+  -H "Authorization: Bearer tk_standard_token_here"
+
+# Response: 401 Unauthorized
+```
+
+**Admin token** (succeeds):
+```bash
+# This WORKS with admin level + permissions
+curl -X GET http://localhost:3456/api/v1/projects/1/webhooks \
+  -H "Authorization: Bearer tk_admin_token_here"
+
+# Response: [{"id": 1, "url": "https://...", ...}]
+```
+
+### Backward Compatibility
+
+- **Existing tokens**: All tokens created before admin-level feature default to `standard` level
+- **No breaking changes**: Standard tokens continue to work for all non-admin routes
+- **Opt-in**: Admin level must be explicitly selected, never automatic
+
+---
+
 ## Next Steps
 
 After this fix is complete:

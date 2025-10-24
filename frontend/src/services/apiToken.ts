@@ -14,6 +14,7 @@ export default class ApiTokenService extends AbstractService<IApiToken> {
 	processModel(model: IApiToken) {
 		return {
 			...model,
+			token_level: model.tokenLevel,
 			expiresAt: new Date(model.expiresAt).toISOString(),
 			created: new Date(model.created).toISOString(),
 		}
