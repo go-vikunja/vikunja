@@ -947,6 +947,25 @@ func (ts *TaskService) GetByIDWithExpansion(s *xorm.Session, taskID int64, u *us
 
 // GetAllByProject gets all tasks for a project with pagination and filtering
 func (ts *TaskService) GetAllByProject(s *xorm.Session, projectID int64, u *user.User, page int, perPage int, search string) ([]*models.Task, int, int64, error) {
+	// Handle saved filters (negative project IDs)
+	if projectID < 0 {
+		// Create a TaskCollection to use the existing saved filter handling
+		collection := &models.TaskCollection{
+			ProjectID: projectID,
+			Search:    search,
+		}
+		result, resultCount, totalItems, err := ts.GetAllWithFullFiltering(s, collection, u, search, page, perPage)
+		if err != nil {
+			return nil, 0, 0, err
+		}
+		// Convert result to []*models.Task
+		if tasks, ok := result.([]*models.Task); ok {
+			return tasks, resultCount, totalItems, nil
+		}
+		// If not a simple task array, return empty (shouldn't happen for saved filters)
+		return []*models.Task{}, 0, 0, nil
+	}
+
 	// Permission Check: Use ProjectService for proper inter-service communication
 	projectService := NewProjectService(ts.DB)
 	canRead, err := projectService.HasPermission(s, projectID, u, models.PermissionRead)
