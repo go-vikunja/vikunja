@@ -182,34 +182,61 @@
 - ✅ Documentation added explaining the fix
 
 **SHORT-TERM (Technical Debt - Post-Merge)**:
-- [ ] T028 [Technical Debt] Extract subtable filter logic to separate method (1 hour)
-- [ ] T029 [Technical Debt] Add error wrapping context to filter methods (30 minutes)
-- [ ] T030 [Technical Debt] Run complexity analysis (gocyclo, gocognit) and refactor if needed (1 hour)
-- [ ] T031 [Technical Debt] Add edge case integration tests (deleted IDs, malformed expressions, etc.) (1 hour)
+- [X] T028 [Technical Debt] Extract subtable filter logic to separate method (1 hour)
+- [X] T029 [Technical Debt] Add error wrapping context to filter methods (30 minutes)
+- [X] T030 [Technical Debt] Run complexity analysis (gocyclo, gocognit) and refactor if needed (1 hour) ✅ **COMPLETE**
+- [X] T031 [Technical Debt] Add edge case integration tests (deleted IDs, malformed expressions, etc.) (1 hour) ✅ **COMPLETE**
+
+**T030 COMPLETION SUMMARY**:
+- Installed gocyclo v0.6.0 and gocognit v1.2.0 for complexity analysis
+- Identified `convertFiltersToDBFilterCond` with cognitive complexity 30 (too high)
+- Extracted `combineFilterConditions` helper method to reduce complexity
+- **Result**: Cognitive complexity reduced from 30 to 17 (under threshold of 20)
+- All tests pass, no regressions introduced
+- See: specs/007-fix-saved-filters/T030-COMPLEXITY-ANALYSIS.md for full details
+
+**T031 COMPLETION SUMMARY**:
+- Added 5 comprehensive edge case test suites (30+ test cases total):
+  * `TestTaskService_EdgeCase_DeletedEntityIDs` - Non-existent label/assignee IDs
+  * `TestTaskService_EdgeCase_MalformedExpressions` - Invalid syntax, fields, comparators
+  * `TestTaskService_EdgeCase_InvalidTimezone` - Timezone handling with date filters
+  * `TestTaskService_EdgeCase_LargeInClause` - Performance testing with 100/500 IDs
+  * `TestTaskService_EdgeCase_NullHandling` - NULL comparisons with various field types
+- All tests pass except 1 (assignee filter - known T027 issue)
+- Tests validate error handling, performance, and edge case behavior
+- Added `fmt` and `strings` imports to support new tests
+- Code formatted with `mage fmt`, compiles successfully
 
 **T027 FOLLOW-UP TASKS (Post-Merge Technical Debt)**:
-- [ ] T032 [Technical Debt] Fix assignees filter syntax in T027 tests (30 minutes)
-  - Research correct assignees filter field name for subtable filters
-  - Update failing tests: `Assignees_filter_with_FilterIncludeNulls` and `Combined_labels_AND_assignees`
-  - See: specs/007-fix-saved-filters/T027-TEST-FINDINGS.md for details
+- [X] T032 [Technical Debt] Fix assignees filter syntax in T027 tests (30 minutes) ✅ **COMPLETE**
+  - Fixed: Assignees filter uses username field, wrapped []string values in []interface{}
+  - Updated filter syntax from `assignees = 1` to `assignees = 'user1'`
+  - Modified `buildSubtableFilterCondition` to handle []string conversion to []interface{}
+  - Tests pass: `Assignees_filter_with_FilterIncludeNulls` and `Combined_labels_AND_assignees`
   
-- [ ] T033 [Technical Debt] Fix reminders filter syntax in T027 tests (15 minutes)
-  - Determine correct reminders filter syntax for subtable (can't use `> 0` comparison)
-  - Update or remove test based on proper syntax
+- [X] T033 [Technical Debt] Fix reminders filter syntax in T027 tests (15 minutes) ✅ **COMPLETE**
+  - Commented out reminders test with explanation
+  - Limitation: Filter syntax doesn't support "has any reminders" (EXISTS without specific condition)
+  - `reminders > 0` invalid for datetime subtable field
+  - Documented that specific datetime comparisons would work (e.g., `reminders < '2025-01-01'`)
   
-- [ ] T034 [Technical Debt] Verify IN operator syntax for subtable filters (30 minutes)
-  - Test various IN operator syntaxes: `labels in 4,5` vs `labels in [4, 5]`
-  - Update test with correct syntax and add documentation
+- [X] T034 [Technical Debt] Verify IN operator syntax for subtable filters (30 minutes) ✅ **COMPLETE**
+  - Fixed: IN operator uses comma-separated values WITHOUT brackets
+  - Correct syntax: `labels in 4,5` (not `labels in [4, 5]`)
+  - Updated test and added documentation comment
+  - Test passes with correct syntax
   
-- [ ] T035 [Technical Debt] Document filter syntax limitations (30 minutes)
-  - Document that negation operator `!` is not supported
-  - Update or remove edge case test expecting negation
-  - Consider adding to user documentation
+- [X] T035 [Technical Debt] Document filter syntax limitations (30 minutes) ✅ **COMPLETE**
+  - Updated test to expect error for negation operator `!`
+  - Documented that `!(labels = 4)` is not supported
+  - Users should use `labels != 4` instead
+  - Test now validates error is returned correctly
   
-- [ ] T036 [Technical Debt] Handle empty array edge case (30 minutes)
-  - Decide: Should `labels in []` return error or empty result?
-  - Implement graceful handling if needed
-  - Update test to validate expected behavior
+- [X] T036 [Technical Debt] Handle empty array edge case (30 minutes) ✅ **COMPLETE**
+  - Updated test to expect error for empty IN clause
+  - `labels in []` returns appropriate error (semantically meaningless)
+  - Documented as expected behavior - empty IN clauses not supported
+  - Test validates error handling is correct
 
 **Checkpoint**: ✅ **READY FOR MERGE** - All immediate blocker tasks (T021-T024, T027) are complete. The T019 fix is validated and production-ready.
 

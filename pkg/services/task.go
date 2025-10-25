@@ -749,7 +749,7 @@ func (ts *TaskService) getFilterCond(f *taskFilter, includeNulls bool) (cond bui
 	case taskFilterComparatorLike:
 		val, is := f.value.(string)
 		if !is {
-			return nil, &models.ErrInvalidTaskFilterValue{Field: field, Value: f.value}
+			return nil, fmt.Errorf("building LIKE filter for field '%s': %w", field, &models.ErrInvalidTaskFilterValue{Field: field, Value: f.value})
 		}
 		cond = &builder.Like{field, "%" + val + "%"}
 	case taskFilterComparatorIn:
@@ -768,6 +768,88 @@ func (ts *TaskService) getFilterCond(f *taskFilter, includeNulls bool) (cond bui
 	return
 }
 
+// buildSubtableFilterCondition builds a database condition for a subtable filter (labels, assignees, etc.)
+// Subtable filters use EXISTS subqueries to handle many-to-many relationships without duplicating results.
+func (ts *TaskService) buildSubtableFilterCondition(f *taskFilter, params subTableFilter, includeNulls bool) (builder.Cond, error) {
+	// Skip assignees with LIKE operator (not supported)
+	if f.field == "assignees" && f.comparator == taskFilterComparatorLike {
+		return nil, nil // Signal to skip this filter
+	}
+
+	// Convert strict comparators (=, !=, in, not in) to IN for subtable queries
+	comparator := f.comparator
+	_, isStrict := strictComparators[f.comparator]
+	if isStrict {
+		comparator = taskFilterComparatorIn
+
+		// For IN operator, the value must be a slice
+		// If we're converting from = or !=, wrap the single value in a slice
+		// Special handling for assignees: models layer returns []string, convert to []interface{}
+		if f.comparator == taskFilterComparatorEquals || f.comparator == taskFilterComparatorNotEquals {
+			switch v := f.value.(type) {
+			case []string:
+				// Assignees filter: models layer already parsed it as []string
+				// Convert to []interface{} for XORM builder.In()
+				valueSlice := make([]interface{}, len(v))
+				for i, str := range v {
+					valueSlice[i] = str
+				}
+				f.value = valueSlice
+			case []interface{}:
+				// Already a slice, keep as-is (from IN operator parsing)
+				// No action needed
+			default:
+				// Single value, wrap in slice
+				f.value = []interface{}{f.value}
+			}
+		}
+	}
+
+	// Build filter condition for the subtable field
+	filter, err := ts.getFilterCond(&taskFilter{
+		field:      params.FilterableField,
+		value:      f.value,
+		comparator: comparator,
+		isNumeric:  f.isNumeric,
+	}, false) // includeNulls=false for subquery
+	if err != nil {
+		return nil, fmt.Errorf("building subtable filter condition for field '%s': %w", f.field, err)
+	}
+
+	// Create EXISTS subquery
+	filterSubQuery := params.toBaseSubQuery().And(filter)
+
+	// Use NOT EXISTS for negation operators
+	if f.comparator == taskFilterComparatorNotEquals || f.comparator == taskFilterComparatorNotIn {
+		filter = builder.NotExists(filterSubQuery)
+	} else {
+		filter = builder.Exists(filterSubQuery)
+	}
+
+	// Add NULL check if requested (tasks with no entries in subtable)
+	if includeNulls && params.AllowNullCheck {
+		filter = builder.Or(filter, builder.NotExists(params.toBaseSubQuery()))
+	}
+
+	return filter, nil
+}
+
+// buildRegularFilterCondition builds a database condition for a regular task field (not a subtable)
+func (ts *TaskService) buildRegularFilterCondition(f *taskFilter, includeNulls bool) (builder.Cond, error) {
+	// Prefix with table name
+	if f.field == taskPropertyBucketID {
+		f.field = "task_buckets.`bucket_id`"
+	} else {
+		f.field = "tasks.`" + f.field + "`"
+	}
+
+	filter, err := ts.getFilterCond(f, includeNulls)
+	if err != nil {
+		return nil, fmt.Errorf("building regular filter condition for field '%s': %w", f.field, err)
+	}
+	return filter, nil
+}
+
 // convertFiltersToDBFilterCond converts parsed filter expressions into database query conditions
 func (ts *TaskService) convertFiltersToDBFilterCond(rawFilters []*taskFilter, includeNulls bool) (filterCond builder.Cond, err error) {
 	var dbFilters = make([]builder.Cond, 0, len(rawFilters))
@@ -778,109 +860,65 @@ func (ts *TaskService) convertFiltersToDBFilterCond(rawFilters []*taskFilter, in
 		if nested, is := f.value.([]*taskFilter); is {
 			nestedDBFilters, err := ts.convertFiltersToDBFilterCond(nested, includeNulls)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("converting nested filters: %w", err)
 			}
 			dbFilters = append(dbFilters, nestedDBFilters)
 			continue
 		}
 
+		var filter builder.Cond
+
 		// Check if this is a subtable filter (labels, assignees, reminders, etc.)
-		subTableFilterParams, ok := subTableFilters[f.field]
-		if ok {
-			// Skip assignees with LIKE operator (not supported)
-			if f.field == "assignees" && f.comparator == taskFilterComparatorLike {
+		if subTableFilterParams, ok := subTableFilters[f.field]; ok {
+			filter, err = ts.buildSubtableFilterCondition(f, subTableFilterParams, includeNulls)
+			if err != nil {
+				return nil, fmt.Errorf("processing subtable filter for field '%s': %w", f.field, err)
+			}
+			// Skip filter if buildSubtableFilterCondition returned nil (e.g., unsupported assignees LIKE)
+			if filter == nil {
 				continue
 			}
-
-			// Convert strict comparators (=, !=, in, not in) to IN for subtable queries
-			comparator := f.comparator
-			_, isStrict := strictComparators[f.comparator]
-			if isStrict {
-				comparator = taskFilterComparatorIn
-
-				// For IN operator, the value must be a slice
-				// If we're converting from = or !=, wrap the single value in a slice
-				if f.comparator == taskFilterComparatorEquals || f.comparator == taskFilterComparatorNotEquals {
-					// Preserve the value type when wrapping in slice
-					switch v := f.value.(type) {
-					case int64:
-						f.value = []int64{v}
-					case string:
-						f.value = []string{v}
-					case bool:
-						f.value = []bool{v}
-					case float64:
-						f.value = []float64{v}
-					default:
-						f.value = []interface{}{f.value}
-					}
-				}
-			}
-
-			// Build filter condition for the subtable field
-			filter, err := ts.getFilterCond(&taskFilter{
-				field:      subTableFilterParams.FilterableField,
-				value:      f.value,
-				comparator: comparator,
-				isNumeric:  f.isNumeric,
-			}, false) // includeNulls=false for subquery
-			if err != nil {
-				return nil, err
-			}
-
-			// Create EXISTS subquery
-			filterSubQuery := subTableFilterParams.toBaseSubQuery().And(filter)
-
-			// Use NOT EXISTS for negation operators
-			if f.comparator == taskFilterComparatorNotEquals || f.comparator == taskFilterComparatorNotIn {
-				filter = builder.NotExists(filterSubQuery)
-			} else {
-				filter = builder.Exists(filterSubQuery)
-			}
-
-			// Add NULL check if requested (tasks with no entries in subtable)
-			if includeNulls && subTableFilterParams.AllowNullCheck {
-				filter = builder.Or(filter, builder.NotExists(subTableFilterParams.toBaseSubQuery()))
-			}
-
-			dbFilters = append(dbFilters, filter)
-			continue
-		}
-
-		// Regular field filter - prefix with table name
-		if f.field == taskPropertyBucketID {
-			f.field = "task_buckets.`bucket_id`"
 		} else {
-			f.field = "tasks.`" + f.field + "`"
+			// Regular field filter
+			filter, err = ts.buildRegularFilterCondition(f, includeNulls)
+			if err != nil {
+				return nil, fmt.Errorf("processing regular filter for field '%s': %w", f.field, err)
+			}
 		}
 
-		filter, err := ts.getFilterCond(f, includeNulls)
-		if err != nil {
-			return nil, err
-		}
 		dbFilters = append(dbFilters, filter)
 	}
 
 	// Combine filters based on their concatenator (AND/OR)
-	if len(dbFilters) > 0 {
-		if len(dbFilters) == 1 {
-			filterCond = dbFilters[0]
-		} else {
-			for i, f := range dbFilters {
-				if len(dbFilters) > i+1 {
-					concat := rawFilters[i+1].concatenator
-					switch concat {
-					case taskFilterConcatOr:
-						filterCond = builder.Or(filterCond, f, dbFilters[i+1])
-					case taskFilterConcatAnd:
-						filterCond = builder.And(filterCond, f, dbFilters[i+1])
-					}
-				}
+	filterCond = ts.combineFilterConditions(dbFilters, rawFilters)
+
+	return filterCond, nil
+}
+
+// combineFilterConditions combines multiple filter conditions using their concatenators (AND/OR)
+func (ts *TaskService) combineFilterConditions(dbFilters []builder.Cond, rawFilters []*taskFilter) builder.Cond {
+	if len(dbFilters) == 0 {
+		return nil
+	}
+
+	if len(dbFilters) == 1 {
+		return dbFilters[0]
+	}
+
+	var filterCond builder.Cond
+	for i, f := range dbFilters {
+		if len(dbFilters) > i+1 {
+			concat := rawFilters[i+1].concatenator
+			switch concat {
+			case taskFilterConcatOr:
+				filterCond = builder.Or(filterCond, f, dbFilters[i+1])
+			case taskFilterConcatAnd:
+				filterCond = builder.And(filterCond, f, dbFilters[i+1])
 			}
 		}
 	}
 
-	return filterCond, nil
+	return filterCond
 }
 
 // getRelevantProjectsFromCollection determines which projects are relevant for the collection
