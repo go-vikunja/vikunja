@@ -332,10 +332,17 @@ func (ts *TaskService) handleSavedFilter(s *xorm.Session, collection *models.Tas
 	// because views are associated with the saved filter's virtual project ID
 	var view *models.ProjectView
 	if collection.ProjectViewID != 0 {
+		log.Debugf("handleSavedFilter: Fetching view ID=%d for project ID=%d", collection.ProjectViewID, collection.ProjectID)
 		var viewErr error
 		view, viewErr = ts.Registry.ProjectViews().GetByIDAndProject(s, collection.ProjectViewID, collection.ProjectID)
 		if viewErr != nil {
 			return nil, 0, 0, viewErr
+		}
+
+		log.Debugf("handleSavedFilter: View loaded - view.Filter=%v", view.Filter)
+		if view.Filter != nil {
+			log.Debugf("handleSavedFilter: View filter details - Filter=%q, FilterTimezone=%q, FilterIncludeNulls=%v",
+				view.Filter.Filter, view.Filter.FilterTimezone, view.Filter.FilterIncludeNulls)
 		}
 
 		// Apply view filters to the merged collection
@@ -347,6 +354,7 @@ func (ts *TaskService) handleSavedFilter(s *xorm.Session, collection *models.Tas
 					mergedCollection.Filter = view.Filter.Filter
 				}
 			}
+			// Note: We don't apply an empty view filter - it would override the saved filter
 
 			if view.Filter.FilterTimezone != "" {
 				mergedCollection.FilterTimezone = view.Filter.FilterTimezone
