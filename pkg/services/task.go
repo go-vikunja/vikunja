@@ -25,7 +25,6 @@ import (
 
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
-	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
@@ -315,8 +314,15 @@ func (ts *TaskService) handleSavedFilter(s *xorm.Session, collection *models.Tas
 		Expand:             collection.Expand,
 	}
 
-	log.Debugf("handleSavedFilter: savedFilterID=%d, savedFilter.Filter=%q, mergedCollection.Filter=%q, collection.Filter=%q",
-		savedFilterID, savedFilterCollection.Filter, mergedCollection.Filter, collection.Filter)
+	// If there's an incoming filter from the URL, combine it with the saved filter
+	// (This allows users to add additional filters on top of the saved filter)
+	if collection.Filter != "" {
+		if mergedCollection.Filter != "" {
+			mergedCollection.Filter = "(" + collection.Filter + ") && (" + mergedCollection.Filter + ")"
+		} else {
+			mergedCollection.Filter = collection.Filter
+		}
+	}
 
 	// If the saved filter has sort order, use it (unless overridden by current collection)
 	if len(collection.SortBy) == 0 && len(collection.SortByArr) == 0 {
@@ -332,17 +338,10 @@ func (ts *TaskService) handleSavedFilter(s *xorm.Session, collection *models.Tas
 	// because views are associated with the saved filter's virtual project ID
 	var view *models.ProjectView
 	if collection.ProjectViewID != 0 {
-		log.Debugf("handleSavedFilter: Fetching view ID=%d for project ID=%d", collection.ProjectViewID, collection.ProjectID)
 		var viewErr error
 		view, viewErr = ts.Registry.ProjectViews().GetByIDAndProject(s, collection.ProjectViewID, collection.ProjectID)
 		if viewErr != nil {
 			return nil, 0, 0, viewErr
-		}
-
-		log.Debugf("handleSavedFilter: View loaded - view.Filter=%v", view.Filter)
-		if view.Filter != nil {
-			log.Debugf("handleSavedFilter: View filter details - Filter=%q, FilterTimezone=%q, FilterIncludeNulls=%v",
-				view.Filter.Filter, view.Filter.FilterTimezone, view.Filter.FilterIncludeNulls)
 		}
 
 		// Apply view filters to the merged collection
