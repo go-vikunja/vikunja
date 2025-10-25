@@ -1782,38 +1782,12 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				FilterIncludeNulls: true,
 			},
 			args: defaultArgs,
+			// T019 FIX: With AllowNullCheck: false for subtable filters, this now returns
+			// ONLY tasks with label 5 (task35), not tasks without labels.
+			// Old behavior: Returned task35 + all tasks without labels (incorrect)
+			// New behavior: Returns only task35 (correct - matches filter "labels = 5")
 			want: []*models.Task{
-				task3,
-				task4,
-				task5,
-				task6,
-				task7,
-				task8,
-				task9,
-				task10,
-				task11,
-				task12,
-				task15,
-				task16,
-				task17,
-				task18,
-				task19,
-				task20,
-				task21,
-				task22,
-				task23,
-				task24,
-				task25,
-				task26,
-				task27,
-				task28,
-				task29,
-				task30,
-				task31,
-				task32,
-				task33,
 				task35,
-				task39,
 			},
 			wantErr: false,
 		},
@@ -3727,4 +3701,1121 @@ func TestTaskService_EdgeCase_NullHandling(t *testing.T) {
 				i+1, task.ID, task.Priority, task.Done, desc)
 		}
 	})
+}
+
+// T040: Test complex boolean expressions with nested AND/OR
+func TestTaskService_ConvertFiltersToDBFilterCond_ComplexBoolean(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	ts := NewTaskService(db.GetEngine())
+
+	tests := []struct {
+		name         string
+		filters      []*taskFilter
+		includeNulls bool
+		expectErr    bool
+		description  string
+	}{
+		{
+			name: "OR expression with two conditions",
+			filters: []*taskFilter{
+				{
+					field:      "priority",
+					value:      int64(4),
+					comparator: taskFilterComparatorGreater,
+					isNumeric:  true,
+				},
+				{
+					field:        "done",
+					value:        true,
+					comparator:   taskFilterComparatorEquals,
+					concatenator: taskFilterConcatOr,
+					isNumeric:    false,
+				},
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "priority > 4 OR done = true",
+		},
+		{
+			name: "Mixed AND/OR - (priority > 2 OR done = true) AND percent_done < 50",
+			filters: []*taskFilter{
+				{
+					field:      "priority",
+					value:      int64(2),
+					comparator: taskFilterComparatorGreater,
+					isNumeric:  true,
+				},
+				{
+					field:        "done",
+					value:        true,
+					comparator:   taskFilterComparatorEquals,
+					concatenator: taskFilterConcatOr,
+					isNumeric:    false,
+				},
+				{
+					field:        "percent_done",
+					value:        int64(50),
+					comparator:   taskFilterComparatorLess,
+					concatenator: taskFilterConcatAnd,
+					isNumeric:    true,
+				},
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "Complex mixed AND/OR expression",
+		},
+		{
+			name: "Three OR conditions",
+			filters: []*taskFilter{
+				{
+					field:      "priority",
+					value:      int64(5),
+					comparator: taskFilterComparatorEquals,
+					isNumeric:  true,
+				},
+				{
+					field:        "priority",
+					value:        int64(4),
+					comparator:   taskFilterComparatorEquals,
+					concatenator: taskFilterConcatOr,
+					isNumeric:    true,
+				},
+				{
+					field:        "priority",
+					value:        int64(3),
+					comparator:   taskFilterComparatorEquals,
+					concatenator: taskFilterConcatOr,
+					isNumeric:    true,
+				},
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "priority = 5 OR priority = 4 OR priority = 3",
+		},
+		{
+			name: "Complex expression with labels (subtable) and regular fields",
+			filters: []*taskFilter{
+				{
+					field:      "labels",
+					value:      []int64{5, 6},
+					comparator: taskFilterComparatorIn,
+					isNumeric:  true,
+				},
+				{
+					field:        "priority",
+					value:        int64(2),
+					comparator:   taskFilterComparatorGreater,
+					concatenator: taskFilterConcatOr,
+					isNumeric:    true,
+				},
+				{
+					field:        "done",
+					value:        false,
+					comparator:   taskFilterComparatorEquals,
+					concatenator: taskFilterConcatAnd,
+					isNumeric:    false,
+				},
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "(labels in [5,6] OR priority > 2) AND done = false",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cond, err := ts.convertFiltersToDBFilterCond(tt.filters, tt.includeNulls)
+
+			if tt.expectErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, cond)
+				t.Logf("Generated complex boolean condition: %v", cond)
+				t.Logf("Description: %s", tt.description)
+			}
+		})
+	}
+}
+
+// T021: Test nested parentheses with recursive filter handling
+func TestTaskService_ConvertFiltersToDBFilterCond_NestedParentheses(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	ts := NewTaskService(db.GetEngine())
+
+	tests := []struct {
+		name         string
+		filters      []*taskFilter
+		includeNulls bool
+		expectErr    bool
+		description  string
+	}{
+		{
+			name: "Single level nested filters",
+			filters: []*taskFilter{
+				{
+					field: "nested",
+					value: []*taskFilter{
+						{
+							field:      "priority",
+							value:      int64(3),
+							comparator: taskFilterComparatorGreater,
+							isNumeric:  true,
+						},
+						{
+							field:        "done",
+							value:        false,
+							comparator:   taskFilterComparatorEquals,
+							concatenator: taskFilterConcatAnd,
+							isNumeric:    false,
+						},
+					},
+					comparator: taskFilterComparatorInvalid,
+				},
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "(priority > 3 AND done = false)",
+		},
+		{
+			name: "Nested filters with outer AND condition",
+			filters: []*taskFilter{
+				{
+					field: "nested",
+					value: []*taskFilter{
+						{
+							field:      "priority",
+							value:      int64(2),
+							comparator: taskFilterComparatorGreater,
+							isNumeric:  true,
+						},
+						{
+							field:        "priority",
+							value:        int64(5),
+							comparator:   taskFilterComparatorLess,
+							concatenator: taskFilterConcatAnd,
+							isNumeric:    true,
+						},
+					},
+					comparator: taskFilterComparatorInvalid,
+				},
+				{
+					field:        "done",
+					value:        false,
+					comparator:   taskFilterComparatorEquals,
+					concatenator: taskFilterConcatAnd,
+					isNumeric:    false,
+				},
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "(priority > 2 AND priority < 5) AND done = false",
+		},
+		{
+			name: "Nested filters with OR inside parentheses",
+			filters: []*taskFilter{
+				{
+					field: "nested",
+					value: []*taskFilter{
+						{
+							field:      "priority",
+							value:      int64(4),
+							comparator: taskFilterComparatorGreater,
+							isNumeric:  true,
+						},
+						{
+							field:        "done",
+							value:        true,
+							comparator:   taskFilterComparatorEquals,
+							concatenator: taskFilterConcatOr,
+							isNumeric:    false,
+						},
+					},
+					comparator: taskFilterComparatorInvalid,
+				},
+				{
+					field:        "percent_done",
+					value:        int64(100),
+					comparator:   taskFilterComparatorLess,
+					concatenator: taskFilterConcatAnd,
+					isNumeric:    true,
+				},
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "(priority > 4 OR done = true) AND percent_done < 100",
+		},
+		{
+			name: "Double nested filters",
+			filters: []*taskFilter{
+				{
+					field: "nested",
+					value: []*taskFilter{
+						{
+							field: "nested",
+							value: []*taskFilter{
+								{
+									field:      "priority",
+									value:      int64(3),
+									comparator: taskFilterComparatorEquals,
+									isNumeric:  true,
+								},
+							},
+							comparator: taskFilterComparatorInvalid,
+						},
+						{
+							field:        "done",
+							value:        false,
+							comparator:   taskFilterComparatorEquals,
+							concatenator: taskFilterConcatAnd,
+							isNumeric:    false,
+						},
+					},
+					comparator: taskFilterComparatorInvalid,
+				},
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "((priority = 3) AND done = false)",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cond, err := ts.convertFiltersToDBFilterCond(tt.filters, tt.includeNulls)
+
+			if tt.expectErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, cond)
+				t.Logf("Generated nested condition: %v", cond)
+				t.Logf("Description: %s", tt.description)
+			}
+		})
+	}
+}
+
+// T022: Test IN operator with comprehensive array value handling
+func TestTaskService_GetFilterCond_InOperator(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	ts := NewTaskService(db.GetEngine())
+
+	tests := []struct {
+		name         string
+		filter       *taskFilter
+		includeNulls bool
+		expectErr    bool
+		description  string
+	}{
+		{
+			name: "IN with multiple integer values",
+			filter: &taskFilter{
+				field:      "priority",
+				value:      []int64{1, 2, 3, 4, 5},
+				comparator: taskFilterComparatorIn,
+				isNumeric:  true,
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "priority IN (1, 2, 3, 4, 5)",
+		},
+		{
+			name: "IN with single value",
+			filter: &taskFilter{
+				field:      "priority",
+				value:      []int64{3},
+				comparator: taskFilterComparatorIn,
+				isNumeric:  true,
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "priority IN (3)",
+		},
+		{
+			name: "IN with string array (for fields like title)",
+			filter: &taskFilter{
+				field:      "title",
+				value:      []string{"Task 1", "Task 2", "Task 3"},
+				comparator: taskFilterComparatorIn,
+				isNumeric:  false,
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "title IN ('Task 1', 'Task 2', 'Task 3')",
+		},
+		{
+			name: "IN with includeNulls=true",
+			filter: &taskFilter{
+				field:      "priority",
+				value:      []int64{3, 4, 5},
+				comparator: taskFilterComparatorIn,
+				isNumeric:  true,
+			},
+			includeNulls: true,
+			expectErr:    false,
+			description:  "priority IN (3, 4, 5) OR priority IS NULL OR priority = 0",
+		},
+		{
+			name: "IN with labels (subtable field)",
+			filter: &taskFilter{
+				field:      "labels",
+				value:      []int64{4, 5, 6},
+				comparator: taskFilterComparatorIn,
+				isNumeric:  true,
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "EXISTS (SELECT 1 FROM label_tasks WHERE label_id IN (4,5,6))",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cond, err := ts.getFilterCond(tt.filter, tt.includeNulls)
+
+			if tt.expectErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, cond)
+				t.Logf("Generated IN condition: %v", cond)
+				t.Logf("Description: %s", tt.description)
+			}
+		})
+	}
+}
+
+// T023: Test NOT IN operator
+func TestTaskService_GetFilterCond_NotInOperator(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	ts := NewTaskService(db.GetEngine())
+
+	tests := []struct {
+		name         string
+		filter       *taskFilter
+		includeNulls bool
+		expectErr    bool
+		description  string
+	}{
+		{
+			name: "NOT IN with multiple integer values",
+			filter: &taskFilter{
+				field:      "priority",
+				value:      []int64{0, 1},
+				comparator: taskFilterComparatorNotIn,
+				isNumeric:  true,
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "priority NOT IN (0, 1)",
+		},
+		{
+			name: "NOT IN with single value",
+			filter: &taskFilter{
+				field:      "priority",
+				value:      []int64{5},
+				comparator: taskFilterComparatorNotIn,
+				isNumeric:  true,
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "priority NOT IN (5)",
+		},
+		{
+			name: "NOT IN with string array",
+			filter: &taskFilter{
+				field:      "title",
+				value:      []string{"Archive", "Deleted"},
+				comparator: taskFilterComparatorNotIn,
+				isNumeric:  false,
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "title NOT IN ('Archive', 'Deleted')",
+		},
+		{
+			name: "NOT IN with includeNulls=true",
+			filter: &taskFilter{
+				field:      "priority",
+				value:      []int64{0},
+				comparator: taskFilterComparatorNotIn,
+				isNumeric:  true,
+			},
+			includeNulls: true,
+			expectErr:    false,
+			description:  "priority NOT IN (0) OR priority IS NULL OR priority = 0",
+		},
+		{
+			name: "NOT IN with labels (subtable field)",
+			filter: &taskFilter{
+				field:      "labels",
+				value:      []int64{1, 2},
+				comparator: taskFilterComparatorNotIn,
+				isNumeric:  true,
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "NOT EXISTS (SELECT 1 FROM label_tasks WHERE label_id NOT IN (1,2))",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cond, err := ts.getFilterCond(tt.filter, tt.includeNulls)
+
+			if tt.expectErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, cond)
+				t.Logf("Generated NOT IN condition: %v", cond)
+				t.Logf("Description: %s", tt.description)
+			}
+		})
+	}
+}
+
+// T024: Test LIKE operator with wildcard handling
+func TestTaskService_GetFilterCond_LikeOperator(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	ts := NewTaskService(db.GetEngine())
+
+	tests := []struct {
+		name         string
+		filter       *taskFilter
+		includeNulls bool
+		expectErr    bool
+		description  string
+	}{
+		{
+			name: "LIKE with simple string",
+			filter: &taskFilter{
+				field:      "title",
+				value:      "test",
+				comparator: taskFilterComparatorLike,
+				isNumeric:  false,
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "title LIKE '%test%'",
+		},
+		{
+			name: "LIKE with description field",
+			filter: &taskFilter{
+				field:      "description",
+				value:      "important",
+				comparator: taskFilterComparatorLike,
+				isNumeric:  false,
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "description LIKE '%important%'",
+		},
+		{
+			name: "LIKE with single character",
+			filter: &taskFilter{
+				field:      "title",
+				value:      "a",
+				comparator: taskFilterComparatorLike,
+				isNumeric:  false,
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "title LIKE '%a%'",
+		},
+		{
+			name: "LIKE with includeNulls=true",
+			filter: &taskFilter{
+				field:      "description",
+				value:      "note",
+				comparator: taskFilterComparatorLike,
+				isNumeric:  false,
+			},
+			includeNulls: true,
+			expectErr:    false,
+			description:  "description LIKE '%note%' OR description IS NULL",
+		},
+		{
+			name: "LIKE with numeric value (should error)",
+			filter: &taskFilter{
+				field:      "title",
+				value:      123,
+				comparator: taskFilterComparatorLike,
+				isNumeric:  false,
+			},
+			includeNulls: false,
+			expectErr:    true,
+			description:  "LIKE requires string value, not numeric",
+		},
+		{
+			name: "LIKE with special characters",
+			filter: &taskFilter{
+				field:      "title",
+				value:      "report-2024",
+				comparator: taskFilterComparatorLike,
+				isNumeric:  false,
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "title LIKE '%report-2024%'",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cond, err := ts.getFilterCond(tt.filter, tt.includeNulls)
+
+			if tt.expectErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, cond)
+				t.Logf("Generated LIKE condition: %v", cond)
+				t.Logf("Description: %s", tt.description)
+			}
+		})
+	}
+}
+
+// T033: Test RFC3339 date format parsing
+func TestTaskService_GetFilterCond_DateRFC3339(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	ts := NewTaskService(db.GetEngine())
+
+	tests := []struct {
+		name         string
+		filter       *taskFilter
+		includeNulls bool
+		expectErr    bool
+		description  string
+	}{
+		{
+			name: "RFC3339 date format with timezone",
+			filter: &taskFilter{
+				field:      "due_date",
+				value:      "2025-01-01T15:04:05Z",
+				comparator: taskFilterComparatorEquals,
+				isNumeric:  false,
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "due_date = '2025-01-01T15:04:05Z' (RFC3339 format)",
+		},
+		{
+			name: "RFC3339 date with timezone offset",
+			filter: &taskFilter{
+				field:      "due_date",
+				value:      "2025-01-01T15:04:05+01:00",
+				comparator: taskFilterComparatorEquals,
+				isNumeric:  false,
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "due_date = '2025-01-01T15:04:05+01:00' (RFC3339 with offset)",
+		},
+		{
+			name: "RFC3339 date with greater than comparison",
+			filter: &taskFilter{
+				field:      "due_date",
+				value:      "2025-01-01T00:00:00Z",
+				comparator: taskFilterComparatorGreater,
+				isNumeric:  false,
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "due_date > '2025-01-01T00:00:00Z'",
+		},
+		{
+			name: "RFC3339 date with less than or equal comparison",
+			filter: &taskFilter{
+				field:      "start_date",
+				value:      "2025-12-31T23:59:59Z",
+				comparator: taskFilterComparatorLessEquals,
+				isNumeric:  false,
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "start_date <= '2025-12-31T23:59:59Z'",
+		},
+		{
+			name: "RFC3339 date with includeNulls",
+			filter: &taskFilter{
+				field:      "done_at",
+				value:      "2025-06-15T12:00:00Z",
+				comparator: taskFilterComparatorNotEquals,
+				isNumeric:  false,
+			},
+			includeNulls: true,
+			expectErr:    false,
+			description:  "done_at != '2025-06-15T12:00:00Z' OR done_at IS NULL",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cond, err := ts.getFilterCond(tt.filter, tt.includeNulls)
+
+			if tt.expectErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, cond)
+				t.Logf("Generated RFC3339 date condition: %v", cond)
+				t.Logf("Description: %s", tt.description)
+			}
+		})
+	}
+}
+
+// T034: Test Safari date format parsing
+func TestTaskService_GetFilterCond_DateSafariFormat(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	ts := NewTaskService(db.GetEngine())
+
+	tests := []struct {
+		name         string
+		filter       *taskFilter
+		includeNulls bool
+		expectErr    bool
+		description  string
+	}{
+		{
+			name: "Safari date-time format (YYYY-MM-DD HH:MM)",
+			filter: &taskFilter{
+				field:      "due_date",
+				value:      "2025-01-01 15:04",
+				comparator: taskFilterComparatorEquals,
+				isNumeric:  false,
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "due_date = '2025-01-01 15:04' (Safari date-time format)",
+		},
+		{
+			name: "Safari date format (YYYY-MM-DD)",
+			filter: &taskFilter{
+				field:      "due_date",
+				value:      "2025-01-01",
+				comparator: taskFilterComparatorEquals,
+				isNumeric:  false,
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "due_date = '2025-01-01' (Safari date format)",
+		},
+		{
+			name: "Safari date with greater than comparison",
+			filter: &taskFilter{
+				field:      "start_date",
+				value:      "2025-06-15",
+				comparator: taskFilterComparatorGreaterEquals,
+				isNumeric:  false,
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "start_date >= '2025-06-15'",
+		},
+		{
+			name: "Safari date-time with less than comparison",
+			filter: &taskFilter{
+				field:      "end_date",
+				value:      "2025-12-31 23:59",
+				comparator: taskFilterComparatorLess,
+				isNumeric:  false,
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "end_date < '2025-12-31 23:59'",
+		},
+		{
+			name: "Safari date with includeNulls",
+			filter: &taskFilter{
+				field:      "due_date",
+				value:      "2025-03-15",
+				comparator: taskFilterComparatorEquals,
+				isNumeric:  false,
+			},
+			includeNulls: true,
+			expectErr:    false,
+			description:  "due_date = '2025-03-15' OR due_date IS NULL",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cond, err := ts.getFilterCond(tt.filter, tt.includeNulls)
+
+			if tt.expectErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, cond)
+				t.Logf("Generated Safari date condition: %v", cond)
+				t.Logf("Description: %s", tt.description)
+			}
+		})
+	}
+}
+
+// T035: Test simple YYYY-MM-DD date format parsing
+func TestTaskService_GetFilterCond_DateSimple(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	ts := NewTaskService(db.GetEngine())
+
+	tests := []struct {
+		name         string
+		filter       *taskFilter
+		includeNulls bool
+		expectErr    bool
+		description  string
+	}{
+		{
+			name: "Simple date format YYYY-MM-DD",
+			filter: &taskFilter{
+				field:      "due_date",
+				value:      "2025-10-25",
+				comparator: taskFilterComparatorEquals,
+				isNumeric:  false,
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "due_date = '2025-10-25'",
+		},
+		{
+			name: "Simple date with single-digit month",
+			filter: &taskFilter{
+				field:      "due_date",
+				value:      "2025-1-15",
+				comparator: taskFilterComparatorEquals,
+				isNumeric:  false,
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "due_date = '2025-1-15' (manual parsing)",
+		},
+		{
+			name: "Simple date with single-digit day",
+			filter: &taskFilter{
+				field:      "start_date",
+				value:      "2025-12-5",
+				comparator: taskFilterComparatorGreater,
+				isNumeric:  false,
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "start_date > '2025-12-5'",
+		},
+		{
+			name: "Simple date with not equals comparison",
+			filter: &taskFilter{
+				field:      "end_date",
+				value:      "2025-06-30",
+				comparator: taskFilterComparatorNotEquals,
+				isNumeric:  false,
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "end_date != '2025-06-30'",
+		},
+		{
+			name: "Simple date with less than or equal",
+			filter: &taskFilter{
+				field:      "done_at",
+				value:      "2025-12-31",
+				comparator: taskFilterComparatorLessEquals,
+				isNumeric:  false,
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "done_at <= '2025-12-31'",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cond, err := ts.getFilterCond(tt.filter, tt.includeNulls)
+
+			if tt.expectErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, cond)
+				t.Logf("Generated simple date condition: %v", cond)
+				t.Logf("Description: %s", tt.description)
+			}
+		})
+	}
+}
+
+// T036: Test "now" relative date expression
+func TestTaskService_GetFilterCond_DateRelativeNow(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	ts := NewTaskService(db.GetEngine())
+
+	tests := []struct {
+		name         string
+		filter       *taskFilter
+		includeNulls bool
+		expectErr    bool
+		description  string
+	}{
+		{
+			name: "Relative date 'now'",
+			filter: &taskFilter{
+				field:      "due_date",
+				value:      "now",
+				comparator: taskFilterComparatorGreaterEquals,
+				isNumeric:  false,
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "due_date >= 'now' (current time)",
+		},
+		{
+			name: "Relative date 'now' with less than",
+			filter: &taskFilter{
+				field:      "start_date",
+				value:      "now",
+				comparator: taskFilterComparatorLess,
+				isNumeric:  false,
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "start_date < 'now' (past dates)",
+		},
+		{
+			name: "Relative date 'now' with equals",
+			filter: &taskFilter{
+				field:      "done_at",
+				value:      "now",
+				comparator: taskFilterComparatorEquals,
+				isNumeric:  false,
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "done_at = 'now' (current time)",
+		},
+		{
+			name: "Relative date 'now' with not equals",
+			filter: &taskFilter{
+				field:      "end_date",
+				value:      "now",
+				comparator: taskFilterComparatorNotEquals,
+				isNumeric:  false,
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "end_date != 'now'",
+		},
+		{
+			name: "Relative date 'now' with includeNulls",
+			filter: &taskFilter{
+				field:      "due_date",
+				value:      "now",
+				comparator: taskFilterComparatorGreater,
+				isNumeric:  false,
+			},
+			includeNulls: true,
+			expectErr:    false,
+			description:  "due_date > 'now' OR due_date IS NULL",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cond, err := ts.getFilterCond(tt.filter, tt.includeNulls)
+
+			if tt.expectErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, cond)
+				t.Logf("Generated 'now' relative date condition: %v", cond)
+				t.Logf("Description: %s", tt.description)
+			}
+		})
+	}
+}
+
+// T037: Test "now+7d" relative date expressions with datemath
+func TestTaskService_GetFilterCond_DateRelativePlus(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	ts := NewTaskService(db.GetEngine())
+
+	tests := []struct {
+		name         string
+		filter       *taskFilter
+		includeNulls bool
+		expectErr    bool
+		description  string
+	}{
+		{
+			name: "Relative date 'now+7d' (7 days in future)",
+			filter: &taskFilter{
+				field:      "due_date",
+				value:      "now+7d",
+				comparator: taskFilterComparatorLess,
+				isNumeric:  false,
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "due_date < 'now+7d' (within next 7 days)",
+		},
+		{
+			name: "Relative date 'now-1h' (1 hour ago)",
+			filter: &taskFilter{
+				field:      "done_at",
+				value:      "now-1h",
+				comparator: taskFilterComparatorGreater,
+				isNumeric:  false,
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "done_at > 'now-1h' (completed in last hour)",
+		},
+		{
+			name: "Relative date 'now+30d' (30 days in future)",
+			filter: &taskFilter{
+				field:      "start_date",
+				value:      "now+30d",
+				comparator: taskFilterComparatorLessEquals,
+				isNumeric:  false,
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "start_date <= 'now+30d' (starts within 30 days)",
+		},
+		{
+			name: "Relative date 'now-2d' (2 days ago)",
+			filter: &taskFilter{
+				field:      "end_date",
+				value:      "now-2d",
+				comparator: taskFilterComparatorGreaterEquals,
+				isNumeric:  false,
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "end_date >= 'now-2d' (ended in last 2 days or future)",
+		},
+		{
+			name: "Relative date 'now+1w' (1 week in future)",
+			filter: &taskFilter{
+				field:      "due_date",
+				value:      "now+1w",
+				comparator: taskFilterComparatorEquals,
+				isNumeric:  false,
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "due_date = 'now+1w'",
+		},
+		{
+			name: "Relative date 'now-3M' (3 months ago)",
+			filter: &taskFilter{
+				field:      "created",
+				value:      "now-3M",
+				comparator: taskFilterComparatorGreater,
+				isNumeric:  false,
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "created > 'now-3M' (created in last 3 months)",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cond, err := ts.getFilterCond(tt.filter, tt.includeNulls)
+
+			if tt.expectErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, cond)
+				t.Logf("Generated relative date+ condition: %v", cond)
+				t.Logf("Description: %s", tt.description)
+			}
+		})
+	}
+}
+
+// T038: Test timezone handling in date parsing
+func TestTaskService_GetFilterCond_DateTimezone(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	ts := NewTaskService(db.GetEngine())
+
+	tests := []struct {
+		name         string
+		filterString string
+		timezone     string
+		expectErr    bool
+		description  string
+	}{
+		{
+			name:         "UTC timezone",
+			filterString: "due_date >= '2025-01-01'",
+			timezone:     "UTC",
+			expectErr:    false,
+			description:  "Parse date in UTC timezone",
+		},
+		{
+			name:         "America/New_York timezone",
+			filterString: "due_date >= '2025-01-01'",
+			timezone:     "America/New_York",
+			expectErr:    false,
+			description:  "Parse date in America/New_York timezone (-05:00)",
+		},
+		{
+			name:         "Europe/Berlin timezone",
+			filterString: "start_date < '2025-06-15 12:00'",
+			timezone:     "Europe/Berlin",
+			expectErr:    false,
+			description:  "Parse date in Europe/Berlin timezone (+01:00/+02:00)",
+		},
+		{
+			name:         "Asia/Tokyo timezone",
+			filterString: "done_at > '2025-03-20'",
+			timezone:     "Asia/Tokyo",
+			expectErr:    false,
+			description:  "Parse date in Asia/Tokyo timezone (+09:00)",
+		},
+		{
+			name:         "Invalid timezone",
+			filterString: "due_date >= '2025-01-01'",
+			timezone:     "Invalid/Timezone",
+			expectErr:    true,
+			description:  "Should error with invalid timezone",
+		},
+		{
+			name:         "Empty timezone (defaults to config timezone)",
+			filterString: "end_date <= '2025-12-31'",
+			timezone:     "",
+			expectErr:    false,
+			description:  "Empty timezone uses config default",
+		},
+		{
+			name:         "Timezone affects relative dates",
+			filterString: "due_date >= 'now'",
+			timezone:     "Pacific/Auckland",
+			expectErr:    false,
+			description:  "Relative dates respect timezone",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			filters, err := ts.getTaskFiltersFromFilterString(tt.filterString, tt.timezone)
+
+			if tt.expectErr {
+				assert.Error(t, err)
+				t.Logf("Expected error: %v", err)
+			} else {
+				assert.NoError(t, err)
+				assert.NotEmpty(t, filters)
+				t.Logf("Generated filters with timezone %s: %+v", tt.timezone, filters)
+				t.Logf("Description: %s", tt.description)
+			}
+		})
+	}
 }

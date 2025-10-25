@@ -126,6 +126,8 @@ const (
 	// Task filter concatenators
 	taskFilterConcatAnd taskFilterConcatinator = "and"
 	taskFilterConcatOr  taskFilterConcatinator = "or"
+
+	taskFilterComparatorInvalid taskFilterComparator = "invalid"
 )
 
 // subTableFilter defines how to query related tables (labels, assignees, etc.) via EXISTS subqueries
