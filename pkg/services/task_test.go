@@ -4819,3 +4819,324 @@ func TestTaskService_GetFilterCond_DateTimezone(t *testing.T) {
 		})
 	}
 }
+
+// T045: Test for invalid field names
+// User Story 4: Filter Field Validation
+// Goal: Users receive clear error messages for invalid field names
+func TestTaskService_GetFilterCond_InvalidField(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	ts := NewTaskService(db.GetEngine())
+
+	tests := []struct {
+		name        string
+		filterField string
+		expectError bool
+		description string
+	}{
+		{
+			name:        "Nonexistent field name",
+			filterField: "nonexistent_field",
+			expectError: true,
+			description: "Should return ErrInvalidTaskField for unknown field",
+		},
+		{
+			name:        "Typo in field name",
+			filterField: "tile", // Should be "title"
+			expectError: true,
+			description: "Should return ErrInvalidTaskField for misspelled field",
+		},
+		{
+			name:        "Invalid special characters",
+			filterField: "title$$$",
+			expectError: true,
+			description: "Should return ErrInvalidTaskField for field with special characters",
+		},
+		{
+			name:        "Empty field name",
+			filterField: "",
+			expectError: true,
+			description: "Should return ErrInvalidTaskField for empty field",
+		},
+		{
+			name:        "SQL injection attempt",
+			filterField: "title; DROP TABLE tasks--",
+			expectError: true,
+			description: "Should return ErrInvalidTaskField for malicious field name",
+		},
+		{
+			name:        "Valid field: title",
+			filterField: "title",
+			expectError: false,
+			description: "Should NOT error for valid field",
+		},
+		{
+			name:        "Valid field: priority",
+			filterField: "priority",
+			expectError: false,
+			description: "Should NOT error for valid field",
+		},
+		{
+			name:        "Valid field: labels (subtable)",
+			filterField: "labels",
+			expectError: false,
+			description: "Should NOT error for valid subtable field",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Try to create a filter with the field name
+			filter := &taskFilter{
+				field:      tt.filterField,
+				value:      "test_value",
+				comparator: taskFilterComparatorEquals,
+			}
+
+			// Validate the field
+			err := ts.validateTaskField(tt.filterField)
+
+			if tt.expectError {
+				assert.Error(t, err, "Expected error for invalid field: %s", tt.filterField)
+				assert.True(t, models.IsErrInvalidTaskField(err), "Expected ErrInvalidTaskField, got: %v", err)
+				t.Logf("✓ Correctly rejected invalid field '%s': %v", tt.filterField, err)
+			} else {
+				assert.NoError(t, err, "Should not error for valid field: %s", tt.filterField)
+
+				// If valid, also verify getFilterCond works
+				_, err := ts.getFilterCond(filter, false)
+				assert.NoError(t, err, "getFilterCond should work for valid field: %s", tt.filterField)
+				t.Logf("✓ Correctly accepted valid field '%s'", tt.filterField)
+			}
+
+			t.Logf("Description: %s", tt.description)
+		})
+	}
+}
+
+// T046: Test for invalid comparators
+// User Story 4: Filter Field Validation
+// Goal: Users receive clear error messages for invalid operators
+func TestTaskService_GetFilterCond_InvalidComparator(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	ts := NewTaskService(db.GetEngine())
+
+	tests := []struct {
+		name        string
+		comparator  taskFilterComparator
+		expectError bool
+		description string
+	}{
+		{
+			name:        "Invalid comparator: empty string",
+			comparator:  "",
+			expectError: true,
+			description: "Should return error for empty comparator",
+		},
+		{
+			name:        "Invalid comparator: random text",
+			comparator:  "random",
+			expectError: true,
+			description: "Should return error for non-existent comparator",
+		},
+		{
+			name:        "Invalid comparator: misspelled",
+			comparator:  "eqals", // Should be "equals"
+			expectError: true,
+			description: "Should return error for misspelled comparator",
+		},
+		{
+			name:        "Invalid comparator: SQL operator",
+			comparator:  "IS NULL",
+			expectError: true,
+			description: "Should return error for raw SQL syntax",
+		},
+		{
+			name:        "Valid comparator: equals",
+			comparator:  taskFilterComparatorEquals,
+			expectError: false,
+			description: "Should NOT error for valid comparator",
+		},
+		{
+			name:        "Valid comparator: greater",
+			comparator:  taskFilterComparatorGreater,
+			expectError: false,
+			description: "Should NOT error for valid comparator",
+		},
+		{
+			name:        "Valid comparator: like",
+			comparator:  taskFilterComparatorLike,
+			expectError: false,
+			description: "Should NOT error for valid comparator",
+		},
+		{
+			name:        "Valid comparator: in",
+			comparator:  taskFilterComparatorIn,
+			expectError: false,
+			description: "Should NOT error for valid comparator",
+		},
+		{
+			name:        "Valid comparator: not in",
+			comparator:  taskFilterComparatorNotIn,
+			expectError: false,
+			description: "Should NOT error for valid comparator",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Validate the comparator
+			err := ts.validateTaskFieldComparator(tt.comparator)
+
+			if tt.expectError {
+				assert.Error(t, err, "Expected error for invalid comparator: %s", tt.comparator)
+				// Note: Current implementation returns generic error, not typed error
+				// T049-T052 will verify proper error types are used
+				t.Logf("✓ Correctly rejected invalid comparator '%s': %v", tt.comparator, err)
+			} else {
+				assert.NoError(t, err, "Should not error for valid comparator: %s", tt.comparator)
+
+				// If valid, also verify getFilterCond works
+				filter := &taskFilter{
+					field:      "priority",
+					value:      3,
+					comparator: tt.comparator,
+				}
+
+				// For LIKE operator, use string value
+				if tt.comparator == taskFilterComparatorLike {
+					filter.value = "test"
+				}
+
+				_, err := ts.getFilterCond(filter, false)
+				assert.NoError(t, err, "getFilterCond should work for valid comparator: %s", tt.comparator)
+				t.Logf("✓ Correctly accepted valid comparator '%s'", tt.comparator)
+			}
+
+			t.Logf("Description: %s", tt.description)
+		})
+	}
+}
+
+// T047: Test for type mismatches
+// User Story 4: Filter Field Validation
+// Goal: Users receive clear error messages for value type incompatibility
+func TestTaskService_GetFilterCond_TypeMismatch(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	ts := NewTaskService(db.GetEngine())
+
+	tests := []struct {
+		name        string
+		field       string
+		value       interface{}
+		comparator  taskFilterComparator
+		expectError bool
+		description string
+	}{
+		{
+			name:        "LIKE operator with non-string value",
+			field:       "title",
+			value:       12345, // Should be string for LIKE
+			comparator:  taskFilterComparatorLike,
+			expectError: true,
+			description: "Should return error when LIKE operator used with integer value",
+		},
+		{
+			name:        "LIKE operator with boolean value",
+			field:       "title",
+			value:       true, // Should be string for LIKE
+			comparator:  taskFilterComparatorLike,
+			expectError: true,
+			description: "Should return error when LIKE operator used with boolean value",
+		},
+		{
+			name:        "LIKE operator with slice value",
+			field:       "title",
+			value:       []int{1, 2, 3}, // Should be string for LIKE
+			comparator:  taskFilterComparatorLike,
+			expectError: true,
+			description: "Should return error when LIKE operator used with slice value",
+		},
+		{
+			name:        "Valid LIKE with string value",
+			field:       "title",
+			value:       "test task",
+			comparator:  taskFilterComparatorLike,
+			expectError: false,
+			description: "Should NOT error for valid string value with LIKE",
+		},
+		{
+			name:        "Valid equals with integer value",
+			field:       "priority",
+			value:       3,
+			comparator:  taskFilterComparatorEquals,
+			expectError: false,
+			description: "Should NOT error for valid integer value with equals",
+		},
+		{
+			name:        "Valid greater than with integer value",
+			field:       "priority",
+			value:       2,
+			comparator:  taskFilterComparatorGreater,
+			expectError: false,
+			description: "Should NOT error for valid integer value with greater than",
+		},
+		{
+			name:        "Valid IN with slice value",
+			field:       "priority",
+			value:       []interface{}{1, 2, 3},
+			comparator:  taskFilterComparatorIn,
+			expectError: false,
+			description: "Should NOT error for valid slice value with IN",
+		},
+		{
+			name:        "Valid equals with string value",
+			field:       "title",
+			value:       "test",
+			comparator:  taskFilterComparatorEquals,
+			expectError: false,
+			description: "Should NOT error for valid string value with equals",
+		},
+		{
+			name:        "Valid equals with boolean value",
+			field:       "done",
+			value:       true,
+			comparator:  taskFilterComparatorEquals,
+			expectError: false,
+			description: "Should NOT error for valid boolean value with equals",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			filter := &taskFilter{
+				field:      tt.field,
+				value:      tt.value,
+				comparator: tt.comparator,
+			}
+
+			// Try to build filter condition
+			_, err := ts.getFilterCond(filter, false)
+
+			if tt.expectError {
+				assert.Error(t, err, "Expected error for type mismatch: %s with value %v", tt.field, tt.value)
+				t.Logf("✓ Correctly rejected type mismatch for field '%s' with value %v (%T): %v",
+					tt.field, tt.value, tt.value, err)
+			} else {
+				assert.NoError(t, err, "Should not error for valid type: %s with value %v", tt.field, tt.value)
+				t.Logf("✓ Correctly accepted valid type for field '%s' with value %v (%T)",
+					tt.field, tt.value, tt.value)
+			}
+
+			t.Logf("Description: %s", tt.description)
+		})
+	}
+}
