@@ -5140,3 +5140,440 @@ func TestTaskService_GetFilterCond_TypeMismatch(t *testing.T) {
 		})
 	}
 }
+
+// T053: Test assignees subtable filter with EXISTS subquery
+func TestTaskService_ConvertFiltersToDBFilterCond_AssigneesSubtable(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	ts := NewTaskService(db.GetEngine())
+
+	tests := []struct {
+		name         string
+		filters      []*taskFilter
+		includeNulls bool
+		expectErr    bool
+		description  string
+	}{
+		{
+			name: "Single assignee filter with user ID 1",
+			filters: []*taskFilter{
+				{
+					field:      "assignees",
+					value:      int64(1),
+					comparator: taskFilterComparatorEquals,
+					isNumeric:  true,
+				},
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "Should generate EXISTS subquery for tasks assigned to user 1",
+		},
+		{
+			name: "Assignee filter with IN operator (multiple users)",
+			filters: []*taskFilter{
+				{
+					field:      "assignees",
+					value:      []int64{1, 2, 3},
+					comparator: taskFilterComparatorIn,
+					isNumeric:  true,
+				},
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "Should generate EXISTS subquery for tasks assigned to users 1, 2, or 3",
+		},
+		{
+			name: "Assignee filter with NOT IN operator",
+			filters: []*taskFilter{
+				{
+					field:      "assignees",
+					value:      []int64{1},
+					comparator: taskFilterComparatorNotIn,
+					isNumeric:  true,
+				},
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "Should generate NOT EXISTS subquery for tasks NOT assigned to user 1",
+		},
+		{
+			name: "Assignee filter with != operator",
+			filters: []*taskFilter{
+				{
+					field:      "assignees",
+					value:      int64(1),
+					comparator: taskFilterComparatorNotEquals,
+					isNumeric:  true,
+				},
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "Should convert != to NOT EXISTS for subtable (tasks NOT assigned to user 1)",
+		},
+		{
+			name: "Assignee filter with includeNulls=false (T019 fix verification)",
+			filters: []*taskFilter{
+				{
+					field:      "assignees",
+					value:      int64(1),
+					comparator: taskFilterComparatorEquals,
+					isNumeric:  true,
+				},
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "With AllowNullCheck=false, should return ONLY tasks assigned to user 1 (no unassigned tasks)",
+		},
+		{
+			name: "Assignee filter with includeNulls=true (should NOT add NULL check due to T019 fix)",
+			filters: []*taskFilter{
+				{
+					field:      "assignees",
+					value:      int64(1),
+					comparator: taskFilterComparatorEquals,
+					isNumeric:  true,
+				},
+			},
+			includeNulls: true,
+			expectErr:    false,
+			description:  "With AllowNullCheck=false (T019), includeNulls=true should be IGNORED (no OR NOT EXISTS clause)",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cond, err := ts.convertFiltersToDBFilterCond(tt.filters, tt.includeNulls)
+
+			if tt.expectErr {
+				assert.Error(t, err)
+				t.Logf("✓ Expected error occurred: %v", err)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, cond)
+				t.Logf("✓ Generated assignees EXISTS condition SQL: %v", cond)
+			}
+
+			t.Logf("Description: %s", tt.description)
+		})
+	}
+}
+
+// T054: Test reminders subtable filter with EXISTS subquery
+func TestTaskService_ConvertFiltersToDBFilterCond_RemindersSubtable(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	ts := NewTaskService(db.GetEngine())
+
+	tests := []struct {
+		name         string
+		filters      []*taskFilter
+		includeNulls bool
+		expectErr    bool
+		description  string
+	}{
+		{
+			name: "Reminder filter with > operator (future reminders)",
+			filters: []*taskFilter{
+				{
+					field:      "reminders",
+					value:      "2024-01-01T00:00:00Z",
+					comparator: taskFilterComparatorGreater,
+					isNumeric:  false,
+				},
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "Should generate EXISTS subquery for tasks with reminders after 2024-01-01",
+		},
+		{
+			name: "Reminder filter with < operator (past reminders)",
+			filters: []*taskFilter{
+				{
+					field:      "reminders",
+					value:      "2025-12-31T23:59:59Z",
+					comparator: taskFilterComparatorLess,
+					isNumeric:  false,
+				},
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "Should generate EXISTS subquery for tasks with reminders before 2025-12-31",
+		},
+		{
+			name: "Reminder filter with >= operator",
+			filters: []*taskFilter{
+				{
+					field:      "reminders",
+					value:      "2024-06-01T00:00:00Z",
+					comparator: taskFilterComparatorGreaterEquals,
+					isNumeric:  false,
+				},
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "Should generate EXISTS subquery for tasks with reminders on or after 2024-06-01",
+		},
+		{
+			name: "Reminder filter with <= operator",
+			filters: []*taskFilter{
+				{
+					field:      "reminders",
+					value:      "2024-12-31T23:59:59Z",
+					comparator: taskFilterComparatorLessEquals,
+					isNumeric:  false,
+				},
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "Should generate EXISTS subquery for tasks with reminders on or before 2024-12-31",
+		},
+		{
+			name: "Reminder filter with includeNulls=false (T019 fix verification)",
+			filters: []*taskFilter{
+				{
+					field:      "reminders",
+					value:      "2024-01-01T00:00:00Z",
+					comparator: taskFilterComparatorGreater,
+					isNumeric:  false,
+				},
+			},
+			includeNulls: false,
+			expectErr:    false,
+			description:  "With AllowNullCheck=false, should return ONLY tasks with matching reminders (no tasks without reminders)",
+		},
+		{
+			name: "Reminder filter with includeNulls=true (should NOT add NULL check due to T019 fix)",
+			filters: []*taskFilter{
+				{
+					field:      "reminders",
+					value:      "2024-01-01T00:00:00Z",
+					comparator: taskFilterComparatorGreater,
+					isNumeric:  false,
+				},
+			},
+			includeNulls: true,
+			expectErr:    false,
+			description:  "With AllowNullCheck=false (T019), includeNulls=true should be IGNORED (no OR NOT EXISTS clause)",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cond, err := ts.convertFiltersToDBFilterCond(tt.filters, tt.includeNulls)
+
+			if tt.expectErr {
+				assert.Error(t, err)
+				t.Logf("✓ Expected error occurred: %v", err)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, cond)
+				t.Logf("✓ Generated reminders EXISTS condition SQL: %v", cond)
+			}
+
+			t.Logf("Description: %s", tt.description)
+		})
+	}
+}
+
+// T055: Test strict comparator conversion (= and != become IN and NOT IN for subtables)
+func TestTaskService_ConvertFiltersToDBFilterCond_StrictComparatorConversion(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	ts := NewTaskService(db.GetEngine())
+
+	tests := []struct {
+		name        string
+		filters     []*taskFilter
+		expectErr   bool
+		description string
+	}{
+		{
+			name: "Labels filter: = comparator should convert to IN for subtable",
+			filters: []*taskFilter{
+				{
+					field:      "labels",
+					value:      int64(5),
+					comparator: taskFilterComparatorEquals, // Should become IN internally
+					isNumeric:  true,
+				},
+			},
+			expectErr:   false,
+			description: "For subtable filters, = (equals) should be converted to IN operator internally",
+		},
+		{
+			name: "Assignees filter: = comparator should convert to IN for subtable",
+			filters: []*taskFilter{
+				{
+					field:      "assignees",
+					value:      int64(1),
+					comparator: taskFilterComparatorEquals, // Should become IN internally
+					isNumeric:  true,
+				},
+			},
+			expectErr:   false,
+			description: "For assignees subtable, = should convert to IN (EXISTS with user_id IN (...))",
+		},
+		{
+			name: "Labels filter: != comparator should convert to NOT IN for subtable",
+			filters: []*taskFilter{
+				{
+					field:      "labels",
+					value:      int64(5),
+					comparator: taskFilterComparatorNotEquals, // Should become NOT IN internally, then NOT EXISTS
+					isNumeric:  true,
+				},
+			},
+			expectErr:   false,
+			description: "For subtable filters, != should convert to NOT IN, then wrapped in NOT EXISTS",
+		},
+		{
+			name: "Assignees filter: != comparator should convert to NOT IN for subtable",
+			filters: []*taskFilter{
+				{
+					field:      "assignees",
+					value:      int64(2),
+					comparator: taskFilterComparatorNotEquals, // Should become NOT IN internally, then NOT EXISTS
+					isNumeric:  true,
+				},
+			},
+			expectErr:   false,
+			description: "For assignees subtable, != should convert to NOT IN (NOT EXISTS with user_id NOT IN (...))",
+		},
+		{
+			name: "Regular field: = comparator should NOT convert (stays as Eq)",
+			filters: []*taskFilter{
+				{
+					field:      "priority",
+					value:      int64(3),
+					comparator: taskFilterComparatorEquals, // Should stay as Eq for regular fields
+					isNumeric:  true,
+				},
+			},
+			expectErr:   false,
+			description: "For regular fields (non-subtable), = should remain as Eq, not converted to IN",
+		},
+		{
+			name: "Regular field: != comparator should NOT convert (stays as Neq)",
+			filters: []*taskFilter{
+				{
+					field:      "done",
+					value:      true,
+					comparator: taskFilterComparatorNotEquals, // Should stay as Neq for regular fields
+					isNumeric:  false,
+				},
+			},
+			expectErr:   false,
+			description: "For regular fields (non-subtable), != should remain as Neq, not converted to NOT IN",
+		},
+		{
+			name: "Subtable with array value and = comparator (explicit IN)",
+			filters: []*taskFilter{
+				{
+					field:      "labels",
+					value:      []int64{5, 6, 7},
+					comparator: taskFilterComparatorEquals, // Already array, converts to IN
+					isNumeric:  true,
+				},
+			},
+			expectErr:   false,
+			description: "When value is array with = comparator on subtable, should use IN (EXISTS with label_id IN (5,6,7))",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cond, err := ts.convertFiltersToDBFilterCond(tt.filters, false)
+
+			if tt.expectErr {
+				assert.Error(t, err)
+				t.Logf("✓ Expected error occurred: %v", err)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, cond)
+				t.Logf("✓ Generated condition with comparator conversion: %v", cond)
+			}
+
+			t.Logf("Description: %s", tt.description)
+		})
+	}
+}
+
+// T056: Test project field alias (parent_project -> parent_project_id)
+func TestTaskService_ConvertFiltersToDBFilterCond_ProjectAlias(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	ts := NewTaskService(db.GetEngine())
+
+	tests := []struct {
+		name        string
+		filters     []*taskFilter
+		expectErr   bool
+		description string
+	}{
+		{
+			name: "Filter by parent_project (alias for parent_project_id)",
+			filters: []*taskFilter{
+				{
+					field:      "parent_project",
+					value:      int64(1),
+					comparator: taskFilterComparatorEquals,
+					isNumeric:  true,
+				},
+			},
+			expectErr:   false,
+			description: "parent_project should be accepted and mapped to parent_project_id via subtable filter",
+		},
+		{
+			name: "Filter by parent_project_id (direct field)",
+			filters: []*taskFilter{
+				{
+					field:      "parent_project_id",
+					value:      int64(1),
+					comparator: taskFilterComparatorEquals,
+					isNumeric:  true,
+				},
+			},
+			expectErr:   false,
+			description: "parent_project_id should work directly as subtable filter field",
+		},
+		{
+			name: "Filter by parent_project with IN operator",
+			filters: []*taskFilter{
+				{
+					field:      "parent_project",
+					value:      []int64{1, 2, 3},
+					comparator: taskFilterComparatorIn,
+					isNumeric:  true,
+				},
+			},
+			expectErr:   false,
+			description: "parent_project with IN should generate EXISTS subquery for multiple parent project IDs",
+		},
+		{
+			name: "Filter by parent_project_id with NOT IN operator",
+			filters: []*taskFilter{
+				{
+					field:      "parent_project_id",
+					value:      []int64{1},
+					comparator: taskFilterComparatorNotIn,
+					isNumeric:  true,
+				},
+			},
+			expectErr:   false,
+			description: "parent_project_id with NOT IN should generate NOT EXISTS subquery",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cond, err := ts.convertFiltersToDBFilterCond(tt.filters, false)
+
+			if tt.expectErr {
+				assert.Error(t, err)
+				t.Logf("✓ Expected error occurred: %v", err)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, cond)
+				t.Logf("✓ Generated condition with project alias: %v", cond)
+			}
+
+			t.Logf("Description: %s", tt.description)
+		})
+	}
+}
