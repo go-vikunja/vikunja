@@ -199,10 +199,31 @@ func getProjectTasksLogic(s *xorm.Session, u *user.User, c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid per_page number").SetInternal(err)
 	}
 
+	// Create TaskCollection to bind all query parameters (especially filter parameters for saved filters)
+	collection := &models.TaskCollection{
+		ProjectID: projectID,
+		Search:    c.QueryParam("s"),
+	}
+
+	// Bind all query parameters from the request (sort_by[], order_by[], filter, filter_include_nulls, etc.)
+	if err := c.Bind(collection); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid query parameters").SetInternal(err)
+	}
+
+	// Ensure ProjectID is set correctly (Bind might override it)
+	collection.ProjectID = projectID
+
 	taskService := services.NewTaskService(s.Engine())
-	tasks, resultCount, totalItems, err := taskService.GetAllByProject(s, projectID, u, page, perPage, c.QueryParam("s"))
+	result, resultCount, totalItems, err := taskService.GetAllWithFullFiltering(s, collection, u, c.QueryParam("s"), page, perPage)
 	if err != nil {
 		return err
+	}
+
+	// Convert result to tasks array
+	tasks, ok := result.([]*models.Task)
+	if !ok {
+		// Handle case where result might be buckets or other types
+		return echo.NewHTTPError(http.StatusInternalServerError, "Unexpected result type")
 	}
 
 	var numberOfPages = math.Ceil(float64(totalItems) / float64(perPage))
