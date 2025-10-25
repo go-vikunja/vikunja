@@ -1417,14 +1417,28 @@ func (ts *TaskService) getTasksForProjects(s *xorm.Session, projects []*models.P
 		return nil, 0, 0, err
 	}
 
-	// Build complete query in one go
-	baseQuery := s.Table("tasks").Where(whereCond)
-
-	// Add JOINs for position or bucket_id sorting
+	// Determine if we need DISTINCT with additional fields for sorting by position
+	// This prevents duplicate results when LEFT JOINing task_positions or task_buckets
+	var distinct = "tasks.*"
+	var hasSortByPosition = false
 	for _, param := range opts.sortby {
 		if param.sortBy == "position" {
-			baseQuery = baseQuery.Join("LEFT", "task_positions", "task_positions.task_id = tasks.id AND task_positions.project_view_id = ?", param.projectViewID)
+			distinct += ", task_positions.position"
+			hasSortByPosition = true
 			break
+		}
+	}
+
+	// Build complete query in one go
+	baseQuery := s.Table("tasks").Where(whereCond).Distinct(distinct)
+
+	// Add JOINs for position or bucket_id sorting
+	if hasSortByPosition {
+		for _, param := range opts.sortby {
+			if param.sortBy == "position" {
+				baseQuery = baseQuery.Join("LEFT", "task_positions", "task_positions.task_id = tasks.id AND task_positions.project_view_id = ?", param.projectViewID)
+				break
+			}
 		}
 	}
 
