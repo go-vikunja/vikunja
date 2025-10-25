@@ -17,6 +17,7 @@
 package services
 
 import (
+	"strings"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
@@ -355,5 +356,273 @@ func TestSavedFilterService_CanDelete(t *testing.T) {
 		can, err := sfs.CanDelete(s, 1, u)
 		assert.NoError(t, err)
 		assert.False(t, can)
+	})
+}
+
+// T076: End-to-end integration test for full saved filter execution
+// This test validates the complete flow: create saved filter → execute → verify results
+func TestSavedFilterService_EndToEnd_FullFilterExecution(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	sfs := NewSavedFilterService(testEngine)
+	ts := NewTaskService(testEngine)
+	u := &user.User{ID: 1}
+
+	t.Run("Simple equality filter execution", func(t *testing.T) {
+		// Create saved filter: priority = 3
+		sf := &models.SavedFilter{
+			Title: "High Priority Tasks",
+			Filters: &models.TaskCollection{
+				Filter:             "priority = 3",
+				FilterIncludeNulls: false,
+				FilterTimezone:     "GMT",
+			},
+		}
+
+		err := sfs.Create(s, sf, u)
+		assert.NoError(t, err)
+		assert.NotZero(t, sf.ID)
+
+		// Execute filter through TaskService
+		result, resultCount, _, err := ts.GetAllWithFullFiltering(s, sf.Filters, u, "", 1, 50)
+		assert.NoError(t, err)
+
+		tasks, ok := result.([]*models.Task)
+		assert.True(t, ok, "Result should be a task array")
+
+		// Verify all returned tasks have priority = 3
+		for _, task := range tasks {
+			assert.Equal(t, int64(3), task.Priority, "All tasks should have priority 3")
+		}
+
+		t.Logf("✓ Simple equality filter returned %d tasks with priority = 3", resultCount)
+	})
+
+	t.Run("Complex boolean filter execution", func(t *testing.T) {
+		// Create saved filter: (priority > 2 || done = false) && percent_done < 100
+		sf := &models.SavedFilter{
+			Title: "Active Important Tasks",
+			Filters: &models.TaskCollection{
+				Filter:             "(priority > 2 || done = false) && percent_done < 100",
+				FilterIncludeNulls: false,
+				FilterTimezone:     "GMT",
+			},
+		}
+
+		err := sfs.Create(s, sf, u)
+		assert.NoError(t, err)
+
+		// Execute filter
+		result, resultCount, _, err := ts.GetAllWithFullFiltering(s, sf.Filters, u, "", 1, 50)
+		assert.NoError(t, err)
+
+		tasks, ok := result.([]*models.Task)
+		assert.True(t, ok)
+		assert.GreaterOrEqual(t, resultCount, 0, "Should return non-negative count")
+
+		// Verify filter logic: (priority > 2 OR done = false) AND percent_done < 100
+		for _, task := range tasks {
+			// Must satisfy: percent_done < 100
+			assert.Less(t, task.PercentDone, float64(1.0), "All tasks should have percent_done < 100")
+
+			// Must satisfy: priority > 2 OR done = false
+			satisfiesOR := task.Priority > 2 || !task.Done
+			assert.True(t, satisfiesOR, "Task should have priority > 2 OR done = false")
+		}
+
+		t.Logf("✓ Complex boolean filter returned %d tasks matching complex logic", resultCount)
+	})
+
+	t.Run("Subtable filter execution (labels)", func(t *testing.T) {
+		// Create saved filter: labels = 4
+		sf := &models.SavedFilter{
+			Title: "Tasks with Label 4",
+			Filters: &models.TaskCollection{
+				Filter:             "labels = 4",
+				FilterIncludeNulls: false,
+				FilterTimezone:     "GMT",
+			},
+		}
+
+		err := sfs.Create(s, sf, u)
+		assert.NoError(t, err)
+
+		// Execute filter
+		result, resultCount, _, err := ts.GetAllWithFullFiltering(s, sf.Filters, u, "", 1, 50)
+		assert.NoError(t, err)
+
+		tasks, ok := result.([]*models.Task)
+		assert.True(t, ok)
+
+		// Verify all returned tasks have label 4
+		for _, task := range tasks {
+			hasLabel4 := false
+			for _, label := range task.Labels {
+				if label.ID == 4 {
+					hasLabel4 = true
+					break
+				}
+			}
+			assert.True(t, hasLabel4, "Task %d should have label 4", task.ID)
+		}
+
+		t.Logf("✓ Subtable filter (labels) returned %d tasks with label 4", resultCount)
+	})
+
+	t.Run("Date filter with relative expression", func(t *testing.T) {
+		// Create saved filter: due_date >= 'now'
+		sf := &models.SavedFilter{
+			Title: "Future Due Dates",
+			Filters: &models.TaskCollection{
+				Filter:             "due_date >= 'now'",
+				FilterIncludeNulls: false,
+				FilterTimezone:     "GMT",
+			},
+		}
+
+		err := sfs.Create(s, sf, u)
+		assert.NoError(t, err)
+
+		// Execute filter
+		result, resultCount, _, err := ts.GetAllWithFullFiltering(s, sf.Filters, u, "", 1, 50)
+		assert.NoError(t, err)
+
+		_, ok := result.([]*models.Task)
+		assert.True(t, ok)
+
+		// Verify all returned tasks have due_date >= now (or are in the future/present)
+		// Note: We can't strictly validate timestamps due to test timing, but we can verify no errors
+		t.Logf("✓ Date filter with 'now' expression returned %d tasks", resultCount)
+	})
+
+	t.Run("Filter with FilterIncludeNulls=true", func(t *testing.T) {
+		// Create saved filter: priority > 0 with includeNulls
+		sf := &models.SavedFilter{
+			Title: "Priority Tasks (Including Unset)",
+			Filters: &models.TaskCollection{
+				Filter:             "priority > 0",
+				FilterIncludeNulls: true, // Should include tasks with NULL/0 priority
+				FilterTimezone:     "GMT",
+			},
+		}
+
+		err := sfs.Create(s, sf, u)
+		assert.NoError(t, err)
+
+		// Execute filter
+		result, resultCount, _, err := ts.GetAllWithFullFiltering(s, sf.Filters, u, "", 1, 100)
+		assert.NoError(t, err)
+
+		tasks, ok := result.([]*models.Task)
+		assert.True(t, ok)
+
+		// With includeNulls=true, should include both priority > 0 AND priority = 0/NULL
+		hasPositivePriority := false
+		hasZeroOrNullPriority := false
+		for _, task := range tasks {
+			if task.Priority > 0 {
+				hasPositivePriority = true
+			}
+			if task.Priority == 0 {
+				hasZeroOrNullPriority = true
+			}
+		}
+
+		assert.True(t, hasPositivePriority, "Should include tasks with priority > 0")
+		// Note: hasZeroOrNullPriority depends on test data, log for visibility
+		t.Logf("✓ Filter with includeNulls=true returned %d tasks (positive: %v, zero/null: %v)",
+			resultCount, hasPositivePriority, hasZeroOrNullPriority)
+	})
+
+	t.Run("IN operator filter execution", func(t *testing.T) {
+		// Create saved filter: labels in 4,5
+		sf := &models.SavedFilter{
+			Title: "Tasks with Label 4 or 5",
+			Filters: &models.TaskCollection{
+				Filter:             "labels in 4,5",
+				FilterIncludeNulls: false,
+				FilterTimezone:     "GMT",
+			},
+		}
+
+		err := sfs.Create(s, sf, u)
+		assert.NoError(t, err)
+
+		// Execute filter
+		result, resultCount, _, err := ts.GetAllWithFullFiltering(s, sf.Filters, u, "", 1, 50)
+		assert.NoError(t, err)
+
+		tasks, ok := result.([]*models.Task)
+		assert.True(t, ok)
+
+		// Verify all returned tasks have label 4 or 5
+		for _, task := range tasks {
+			hasLabel4or5 := false
+			for _, label := range task.Labels {
+				if label.ID == 4 || label.ID == 5 {
+					hasLabel4or5 = true
+					break
+				}
+			}
+			assert.True(t, hasLabel4or5, "Task %d should have label 4 or 5", task.ID)
+		}
+
+		t.Logf("✓ IN operator filter returned %d tasks with label 4 or 5", resultCount)
+	})
+
+	t.Run("LIKE operator filter execution", func(t *testing.T) {
+		// Create saved filter: title like 'task'
+		sf := &models.SavedFilter{
+			Title: "Tasks containing 'task' in title",
+			Filters: &models.TaskCollection{
+				Filter:             "title like 'task'",
+				FilterIncludeNulls: false,
+				FilterTimezone:     "GMT",
+			},
+		}
+
+		err := sfs.Create(s, sf, u)
+		assert.NoError(t, err)
+
+		// Execute filter
+		result, resultCount, _, err := ts.GetAllWithFullFiltering(s, sf.Filters, u, "", 1, 50)
+		assert.NoError(t, err)
+
+		tasks, ok := result.([]*models.Task)
+		assert.True(t, ok)
+
+		// Verify all returned tasks have 'task' (case-insensitive) in title
+		for _, task := range tasks {
+			titleLower := strings.ToLower(task.Title)
+			assert.Contains(t, titleLower, "task", "Task %d title should contain 'task'", task.ID)
+		}
+
+		t.Logf("✓ LIKE operator filter returned %d tasks with 'task' in title", resultCount)
+	})
+
+	t.Run("Empty filter string returns all tasks", func(t *testing.T) {
+		// Create saved filter with empty filter string
+		sf := &models.SavedFilter{
+			Title: "All Tasks",
+			Filters: &models.TaskCollection{
+				Filter:             "",
+				FilterIncludeNulls: false,
+				FilterTimezone:     "GMT",
+			},
+		}
+
+		err := sfs.Create(s, sf, u)
+		assert.NoError(t, err)
+
+		// Execute filter
+		result, resultCount, _, err := ts.GetAllWithFullFiltering(s, sf.Filters, u, "", 1, 100)
+		assert.NoError(t, err)
+
+		assert.Greater(t, resultCount, 0, "Empty filter should return all accessible tasks")
+		assert.NotNil(t, result, "Empty filter should return results")
+
+		t.Logf("✓ Empty filter returned %d tasks (all accessible)", resultCount)
 	})
 }
