@@ -1019,13 +1019,13 @@ func TestBulkTaskPermissionRegistration(t *testing.T) {
 	bulkRoutes, hasBulk := v1Routes["tasks_bulk"]
 	require.True(t, hasBulk, "Should have tasks_bulk routes registered in v1")
 
-	// Verify all expected permissions exist
-	assert.NotNil(t, bulkRoutes["update"], "Should have update permission for v1_tasks_bulk")
+	// Verify all expected permissions exist (uses 'bulk_update' to avoid conflicts with single-task update)
+	assert.NotNil(t, bulkRoutes["bulk_update"], "Should have bulk_update permission for v1_tasks_bulk")
 
 	// Verify the route details are correct
-	if bulkRoutes["update"] != nil {
-		assert.Equal(t, "POST", bulkRoutes["update"].Method)
-		assert.Contains(t, bulkRoutes["update"].Path, "/tasks/bulk")
+	if bulkRoutes["bulk_update"] != nil {
+		assert.Equal(t, "POST", bulkRoutes["bulk_update"].Method)
+		assert.Contains(t, bulkRoutes["bulk_update"].Path, "/tasks/bulk")
 	}
 }
 
