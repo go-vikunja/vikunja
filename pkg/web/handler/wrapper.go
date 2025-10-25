@@ -17,6 +17,8 @@
 package handler
 
 import (
+	"errors"
+
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v4"
@@ -47,7 +49,8 @@ func WithDBAndUser(handlerFunc HandlerFunc, needsTransaction bool) echo.HandlerF
 		err = handlerFunc(s, u, c)
 		if err != nil {
 			// If it's already an echo.HTTPError, return it directly
-			if httpErr, ok := err.(*echo.HTTPError); ok {
+			httpErr := &echo.HTTPError{}
+			if errors.As(err, &httpErr) {
 				return httpErr
 			}
 			return HandleHTTPError(err)
@@ -79,7 +82,8 @@ func WithDB(handlerFunc func(s *xorm.Session, c echo.Context) error, needsTransa
 		err := handlerFunc(s, c)
 		if err != nil {
 			// If it's already an echo.HTTPError, return it directly
-			if httpErr, ok := err.(*echo.HTTPError); ok {
+			httpErr := &echo.HTTPError{}
+			if errors.As(err, &httpErr) {
 				return httpErr
 			}
 			return HandleHTTPError(err)

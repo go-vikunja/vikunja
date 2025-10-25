@@ -73,7 +73,7 @@ func TestUserExportService_ExportUserData(t *testing.T) {
 		require.NoError(t, err)
 		require.True(t, has, "Export file should exist in database")
 		assert.Equal(t, "application/zip", exportFile.Mime)
-		assert.Greater(t, exportFile.Size, uint64(0), "Export file should have size")
+		assert.Positive(t, exportFile.Size, "Export file should have size")
 
 		// Note: Physical file validation skipped in test environment as files may not persist
 	})
@@ -180,7 +180,7 @@ func TestUserExportService_exportProjectsAndTasks(t *testing.T) {
 		// Export projects and tasks
 		taskIDs, err := ues.exportProjectsAndTasks(s, u, dumpWriter)
 		require.NoError(t, err)
-		assert.Greater(t, len(taskIDs), 0, "Should return some task IDs")
+		assert.NotEmpty(t, taskIDs, "Should return some task IDs")
 
 		// Verify data.json was written
 		dumpWriter.Close()
@@ -212,7 +212,7 @@ func TestUserExportService_exportProjectsAndTasks(t *testing.T) {
 		err = json.Unmarshal(data, &projects)
 		require.NoError(t, err)
 
-		assert.Greater(t, len(projects), 0, "Should have exported some projects")
+		assert.NotEmpty(t, projects, "Should have exported some projects")
 
 		// Verify project structure
 		foundProjectWithTasks := false

@@ -20,6 +20,7 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -463,7 +464,7 @@ func (s *SQLiteImportService) importTeams(sess *xorm.Session, sqliteDB *sql.DB, 
 func tableExists(db *sql.DB, tableName string) (bool, error) {
 	var name string
 	err := db.QueryRow("SELECT name FROM sqlite_master WHERE type='table' AND name=?", tableName).Scan(&name)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return false, nil
 	} else if err != nil {
 		return false, fmt.Errorf("failed to check for table %s: %w", tableName, err)

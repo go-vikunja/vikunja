@@ -66,7 +66,7 @@ func (s *APITokenTestSuite) TestValidToken() {
 	req.Header.Set(echo.HeaderAuthorization, "Bearer tk_2eef46f40ebab3304919ab2e7e39993f75f29d2e") // Token 1
 	s.Require().NoError(h(c))
 	// check if the request handlers "see" the request as if it came directly from that user
-	s.Assert().Contains(res.Body.String(), `"username":"user1"`)
+	s.Contains(res.Body.String(), `"username":"user1"`)
 }
 
 func (s *APITokenTestSuite) TestInvalidToken() {
@@ -146,13 +146,13 @@ func (s *APITokenTestSuite) TestNonExistingRoute() {
 
 	err = h(c)
 	s.Require().NoError(err)
-	s.Assert().Equal(404, c.Response().Status)
+	s.Equal(404, c.Response().Status)
 }
 
 func (s *APITokenTestSuite) createToken(permissions string) models.APIToken {
 	res, err := s.th.Request(s.T(), http.MethodPut, "/api/v1/tokens", strings.NewReader(permissions))
 	s.Require().NoError(err)
-	s.Assert().Equal(http.StatusCreated, res.Code)
+	s.Equal(http.StatusCreated, res.Code)
 
 	var createdToken models.APIToken
 	err = json.NewDecoder(res.Body).Decode(&createdToken)
@@ -168,7 +168,7 @@ func (s *APITokenTestSuite) TestV1TokenV1Route() {
 	s.th.token = token.Token
 	res, err := s.th.Request(s.T(), http.MethodGet, "/api/v1/projects", nil)
 	s.Require().NoError(err)
-	s.Assert().Equal(http.StatusOK, res.Code)
+	s.Equal(http.StatusOK, res.Code)
 }
 
 func (s *APITokenTestSuite) TestV1TokenV2Route() {
@@ -188,7 +188,7 @@ func (s *APITokenTestSuite) TestV2TokenV2Route() {
 	s.th.token = token.Token
 	res, err := s.th.Request(s.T(), http.MethodGet, "/api/v2/projects", nil)
 	s.Require().NoError(err)
-	s.Assert().Equal(http.StatusOK, res.Code)
+	s.Equal(http.StatusOK, res.Code)
 }
 
 func (s *APITokenTestSuite) TestV2TokenV1Route() {
@@ -208,17 +208,17 @@ func (s *APITokenTestSuite) TestV1V2TokenV1V2Routes() {
 
 	res, err := s.th.Request(s.T(), http.MethodGet, "/api/v1/projects", nil)
 	s.Require().NoError(err)
-	s.Assert().Equal(http.StatusOK, res.Code)
+	s.Equal(http.StatusOK, res.Code)
 
 	res, err = s.th.Request(s.T(), http.MethodGet, "/api/v2/projects", nil)
 	s.Require().NoError(err)
-	s.Assert().Equal(http.StatusOK, res.Code)
+	s.Equal(http.StatusOK, res.Code)
 }
 
 func (s *APITokenTestSuite) TestInvalidScope() {
 	res, err := s.th.Request(s.T(), http.MethodPut, "/api/v1/tokens", strings.NewReader(`{"title":"test-token", "api_permissions": {"v3_projects": ["read_all"]}}`))
 	s.Require().Error(err)
-	s.Assert().Equal(http.StatusBadRequest, res.Code)
+	s.Equal(http.StatusBadRequest, res.Code)
 }
 
 // TestGetRoutesEndpointCompleteness verifies GET /routes returns complete permission scopes
@@ -227,7 +227,7 @@ func (s *APITokenTestSuite) TestInvalidScope() {
 func (s *APITokenTestSuite) TestGetRoutesEndpointCompleteness() {
 	res, err := s.th.Request(s.T(), http.MethodGet, "/api/v1/routes", nil)
 	s.Require().NoError(err)
-	s.Assert().Equal(http.StatusOK, res.Code)
+	s.Equal(http.StatusOK, res.Code)
 
 	var routes map[string]map[string]models.RouteDetail
 	err = json.NewDecoder(res.Body).Decode(&routes)
@@ -241,24 +241,24 @@ func (s *APITokenTestSuite) TestGetRoutesEndpointCompleteness() {
 	requiredPermissions := []string{"create", "read_one", "update", "delete"}
 	for _, perm := range requiredPermissions {
 		route, exists := v1Tasks[perm]
-		s.Assert().True(exists, "v1_tasks should have '%s' permission", perm)
-		s.Assert().NotEmpty(route.Path, "v1_tasks.%s should have a path", perm)
-		s.Assert().NotEmpty(route.Method, "v1_tasks.%s should have a method", perm)
+		s.True(exists, "v1_tasks should have '%s' permission", perm)
+		s.NotEmpty(route.Path, "v1_tasks.%s should have a path", perm)
+		s.NotEmpty(route.Method, "v1_tasks.%s should have a method", perm)
 	}
 
 	// Verify the specific route details for v1_tasks
-	s.Assert().Equal("PUT", v1Tasks["create"].Method)
-	s.Assert().Contains(v1Tasks["create"].Path, "/projects")
-	s.Assert().Contains(v1Tasks["create"].Path, "/tasks")
+	s.Equal("PUT", v1Tasks["create"].Method)
+	s.Contains(v1Tasks["create"].Path, "/projects")
+	s.Contains(v1Tasks["create"].Path, "/tasks")
 
-	s.Assert().Equal("GET", v1Tasks["read_one"].Method)
-	s.Assert().Contains(v1Tasks["read_one"].Path, "/tasks")
+	s.Equal("GET", v1Tasks["read_one"].Method)
+	s.Contains(v1Tasks["read_one"].Path, "/tasks")
 
-	s.Assert().Equal("POST", v1Tasks["update"].Method)
-	s.Assert().Contains(v1Tasks["update"].Path, "/tasks")
+	s.Equal("POST", v1Tasks["update"].Method)
+	s.Contains(v1Tasks["update"].Path, "/tasks")
 
-	s.Assert().Equal("DELETE", v1Tasks["delete"].Method)
-	s.Assert().Contains(v1Tasks["delete"].Path, "/tasks")
+	s.Equal("DELETE", v1Tasks["delete"].Method)
+	s.Contains(v1Tasks["delete"].Path, "/tasks")
 }
 
 // TestGetRoutesEndpointStructure verifies the response structure from GET /routes
@@ -267,20 +267,20 @@ func (s *APITokenTestSuite) TestGetRoutesEndpointCompleteness() {
 func (s *APITokenTestSuite) TestGetRoutesEndpointStructure() {
 	res, err := s.th.Request(s.T(), http.MethodGet, "/api/v1/routes", nil)
 	s.Require().NoError(err)
-	s.Assert().Equal(http.StatusOK, res.Code)
+	s.Equal(http.StatusOK, res.Code)
 
 	var routes map[string]map[string]models.RouteDetail
 	err = json.NewDecoder(res.Body).Decode(&routes)
 	s.Require().NoError(err)
 
 	// Verify the response is not empty
-	s.Assert().NotEmpty(routes, "Routes response should not be empty")
+	s.NotEmpty(routes, "Routes response should not be empty")
 
 	// Verify that keys follow the pattern: version_groupname (e.g., "v1_tasks", "v2_projects")
 	for key, group := range routes {
 		// Key should contain version prefix (v1_, v2_, etc.)
 		// Allow hyphens for migration routes like "vikunja-file"
-		s.Assert().Regexp(`^v\d+_[a-z_-]+$`, key, "Route key '%s' should match pattern 'v{version}_{groupname}'", key)
+		s.Regexp(`^v\d+_[a-z_-]+$`, key, "Route key '%s' should match pattern 'v{version}_{groupname}'", key)
 
 		// Skip validation for empty groups - these are routes that haven't been converted
 		// to the declarative pattern yet. This is acceptable for now.
@@ -290,16 +290,16 @@ func (s *APITokenTestSuite) TestGetRoutesEndpointStructure() {
 
 		// Verify each permission has proper RouteDetail structure
 		for permName, detail := range group {
-			s.Assert().NotEmpty(permName, "Permission name should not be empty in group '%s'", key)
-			s.Assert().NotEmpty(detail.Path, "Path should not be empty for permission '%s' in group '%s'", permName, key)
-			s.Assert().NotEmpty(detail.Method, "Method should not be empty for permission '%s' in group '%s'", permName, key)
+			s.NotEmpty(permName, "Permission name should not be empty in group '%s'", key)
+			s.NotEmpty(detail.Path, "Path should not be empty for permission '%s' in group '%s'", permName, key)
+			s.NotEmpty(detail.Method, "Method should not be empty for permission '%s' in group '%s'", permName, key)
 
 			// Verify method is a valid HTTP method
 			validMethods := []string{"GET", "POST", "PUT", "DELETE", "PATCH"}
-			s.Assert().Contains(validMethods, detail.Method, "Method '%s' should be a valid HTTP method for permission '%s' in group '%s'", detail.Method, permName, key)
+			s.Contains(validMethods, detail.Method, "Method '%s' should be a valid HTTP method for permission '%s' in group '%s'", detail.Method, permName, key)
 
 			// Verify path starts with /api
-			s.Assert().True(strings.HasPrefix(detail.Path, "/api/"), "Path '%s' should start with '/api/' for permission '%s' in group '%s'", detail.Path, permName, key)
+			s.True(strings.HasPrefix(detail.Path, "/api/"), "Path '%s' should start with '/api/' for permission '%s' in group '%s'", detail.Path, permName, key)
 		}
 	}
 
@@ -311,8 +311,8 @@ func (s *APITokenTestSuite) TestGetRoutesEndpointStructure() {
 	}
 	for expectedGroup, minPerms := range requiredGroups {
 		group, exists := routes[expectedGroup]
-		s.Assert().True(exists, "Expected route group '%s' should exist in response", expectedGroup)
-		s.Assert().GreaterOrEqual(len(group), minPerms, "Route group '%s' should have at least %d permissions", expectedGroup, minPerms)
+		s.True(exists, "Expected route group '%s' should exist in response", expectedGroup)
+		s.GreaterOrEqual(len(group), minPerms, "Route group '%s' should have at least %d permissions", expectedGroup, minPerms)
 	}
 }
 
@@ -323,12 +323,12 @@ func (s *APITokenTestSuite) TestV2APITokenAuthentication() {
 	token := s.createToken(payload)
 
 	// Verify the token was created successfully
-	s.Assert().NotEmpty(token.Token, "Token should be created with v2_tasks permissions")
-	s.Assert().Contains(token.APIPermissions, "v2_tasks", "Token should have v2_tasks in permissions")
+	s.NotEmpty(token.Token, "Token should be created with v2_tasks permissions")
+	s.Contains(token.APIPermissions, "v2_tasks", "Token should have v2_tasks in permissions")
 
 	// Use the token to access a v2 endpoint
 	s.th.token = token.Token
 	res, err := s.th.Request(s.T(), http.MethodGet, "/api/v2/tasks", nil)
 	s.Require().NoError(err)
-	s.Assert().Equal(http.StatusOK, res.Code, "Token with v2_tasks permissions should be able to access GET /api/v2/tasks")
+	s.Equal(http.StatusOK, res.Code, "Token with v2_tasks permissions should be able to access GET /api/v2/tasks")
 }

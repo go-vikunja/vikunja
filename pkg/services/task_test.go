@@ -191,14 +191,14 @@ func TestTaskService_GetByIDs(t *testing.T) {
 	t.Run("EmptyIDs", func(t *testing.T) {
 		tasks, err := ts.GetByIDs(s, []int64{})
 		require.NoError(t, err)
-		assert.Len(t, tasks, 0)
+		assert.Empty(t, tasks)
 		assert.NotNil(t, tasks) // Should return empty slice, not nil
 	})
 
 	t.Run("NonExistentIDs", func(t *testing.T) {
 		tasks, err := ts.GetByIDs(s, []int64{9999, 8888})
 		require.NoError(t, err)
-		assert.Len(t, tasks, 0) // No tasks found, but no error
+		assert.Empty(t, tasks) // No tasks found, but no error
 	})
 
 	t.Run("MixedExistentAndNonExistent", func(t *testing.T) {
@@ -2694,7 +2694,7 @@ func TestTaskService_SavedFilter_Integration(t *testing.T) {
 		}
 
 		// Should return at least 1 task (fixtures have tasks with label 4)
-		assert.Greater(t, resultCount, 0, "Should return at least one task matching the filter")
+		assert.Positive(t, resultCount, "Should return at least one task matching the filter")
 	})
 }
 
@@ -2790,7 +2790,7 @@ func TestTaskService_SavedFilter_WithView_T019(t *testing.T) {
 				assert.True(t, hasLabel4, "Task %d should have label 4", task.ID)
 			}
 
-			assert.Greater(t, resultCount, 0, "Should return at least one filtered task")
+			assert.Positive(t, resultCount, "Should return at least one filtered task")
 		})
 
 		// Step 5: Get all tasks WITH the view ID (reproducing T019 bug)
@@ -2864,7 +2864,7 @@ func TestTaskService_SavedFilter_WithView_T019(t *testing.T) {
 				assert.True(t, hasLabel4, "Task %d should have label 4 (filter: labels = 4)", task.ID)
 			}
 
-			assert.Greater(t, resultCount, 0, "Should return at least one filtered task")
+			assert.Positive(t, resultCount, "Should return at least one filtered task")
 		})
 	})
 }
@@ -3223,7 +3223,7 @@ func TestTaskService_SavedFilter_WithFilterIncludeNulls_True_Integration(t *test
 		}
 
 		// Should return filtered results, not all tasks
-		assert.Greater(t, resultCount, 0, "Should return at least one filtered task")
+		assert.Positive(t, resultCount, "Should return at least one filtered task")
 
 		// Verify we're not returning ALL tasks (which would be the bug)
 		// Get total task count to compare
@@ -3408,7 +3408,7 @@ func TestTaskService_EdgeCase_MalformedExpressions(t *testing.T) {
 		t.Logf("Returned %d tasks with empty filter", resultCount)
 
 		// Should return all accessible tasks (no filter applied)
-		assert.Greater(t, resultCount, 0, "Empty filter should return tasks")
+		assert.Positive(t, resultCount, "Empty filter should return tasks")
 		assert.NotNil(t, result, "Empty filter should return result")
 	})
 

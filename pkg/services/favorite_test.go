@@ -1,5 +1,5 @@
 // Vikunja is a to-do list application to facilitate your life.
-// Copyright 2p018-present Vikunja and contributors. All rights reserved.
+// Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -198,7 +198,7 @@ func TestFavoriteService_GetForUserByType(t *testing.T) {
 		u := &user.User{ID: 99} // User with no favorites
 		favorites, err := fs.GetForUserByType(s, u, models.FavoriteKindProject)
 		assert.NoError(t, err)
-		assert.Len(t, favorites, 0)
+		assert.Empty(t, favorites)
 	})
 }
 

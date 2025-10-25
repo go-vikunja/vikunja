@@ -1,3 +1,19 @@
+// Vikunja is a to-do list application to facilitate your life.
+// Copyright 2018-present Vikunja and contributors. All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 package services
 
 import (
@@ -219,8 +235,8 @@ func TestCommentService_GetAllForTask(t *testing.T) {
 		comments, count, total, err := service.GetAllForTask(s, 1, u, "", 0, 0)
 		require.NoError(t, err)
 		assert.NotNil(t, comments)
-		assert.Greater(t, count, 0)
-		assert.Greater(t, total, int64(0))
+		assert.Positive(t, count)
+		assert.Positive(t, total)
 	})
 
 	t.Run("fails when user has no permission", func(t *testing.T) {
@@ -249,7 +265,7 @@ func TestCommentService_GetAllForTask(t *testing.T) {
 		require.NoError(t, err)
 		assert.NotNil(t, comments)
 		assert.LessOrEqual(t, count, 5)
-		assert.Greater(t, total, int64(0))
+		assert.Positive(t, total)
 	})
 }
 
@@ -399,7 +415,7 @@ func TestCommentService_CanRead(t *testing.T) {
 
 		require.NoError(t, err)
 		assert.True(t, can)
-		assert.Greater(t, maxRight, 0)
+		assert.Positive(t, maxRight)
 	})
 
 	t.Run("UserWithoutTaskPermission_CannotRead", func(t *testing.T) {

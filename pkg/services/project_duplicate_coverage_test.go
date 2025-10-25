@@ -95,7 +95,7 @@ func TestProjectDuplicateService_DuplicateUserPermissions(t *testing.T) {
 		err = s.Where("project_id = ?", duplicated.ID).Find(&duplicatedPerms)
 		require.NoError(t, err)
 
-		assert.Equal(t, len(originalPerms), len(duplicatedPerms), "Should have same number of user permissions")
+		assert.Len(t, duplicatedPerms, len(originalPerms), "Should have same number of user permissions")
 	})
 
 	t.Run("should handle projects with no user permissions", func(t *testing.T) {
@@ -142,7 +142,7 @@ func TestProjectDuplicateService_DuplicateTeamPermissions(t *testing.T) {
 		err = s.Where("project_id = ?", duplicated.ID).Find(&duplicatedTeams)
 		require.NoError(t, err)
 
-		assert.Equal(t, len(originalTeams), len(duplicatedTeams), "Should have same number of team permissions")
+		assert.Len(t, duplicatedTeams, len(originalTeams), "Should have same number of team permissions")
 	})
 
 	t.Run("should handle projects with no team permissions", func(t *testing.T) {
@@ -188,7 +188,7 @@ func TestProjectDuplicateService_DuplicateLinkShares(t *testing.T) {
 		err = s.Where("project_id = ?", duplicated.ID).Find(&duplicatedShares)
 		require.NoError(t, err)
 
-		assert.Equal(t, len(originalShares), len(duplicatedShares), "Should have same number of link shares")
+		assert.Len(t, duplicatedShares, len(originalShares), "Should have same number of link shares")
 		if len(duplicatedShares) > 0 {
 			assert.NotEqual(t, originalHash, duplicatedShares[0].Hash, "Hash should be different")
 			assert.NotEmpty(t, duplicatedShares[0].Hash, "Hash should not be empty")

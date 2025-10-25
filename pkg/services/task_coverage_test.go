@@ -1,5 +1,5 @@
 // Vikunja is a to-do list application to facilitate your life.
-// Copyright 2018-2021 Vikunja and contributors. All rights reserved.
+// Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -391,7 +391,7 @@ func TestTaskService_GetRawFavoriteTasks(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotEmpty(t, tasks)
 		assert.Equal(t, len(tasks), resultCount)
-		assert.Greater(t, totalItems, int64(0))
+		assert.Positive(t, totalItems)
 	})
 
 	t.Run("should apply pagination to favorite tasks", func(t *testing.T) {
@@ -412,7 +412,7 @@ func TestTaskService_GetRawFavoriteTasks(t *testing.T) {
 		tasks, resultCount, totalItems, err := taskService.getRawFavoriteTasks(s, favoriteTaskIDs, opts)
 		assert.NoError(t, err)
 		assert.LessOrEqual(t, resultCount, 1)
-		assert.Greater(t, totalItems, int64(0))
+		assert.Positive(t, totalItems)
 
 		// Verify pagination worked - should get max 1 task
 		assert.LessOrEqual(t, len(tasks), 1)
@@ -480,7 +480,7 @@ func TestTaskService_GetRawFavoriteTasks(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotEmpty(t, tasks)
 		assert.Equal(t, len(tasks), resultCount)
-		assert.Greater(t, totalItems, int64(0))
+		assert.Positive(t, totalItems)
 	})
 }
 
@@ -504,7 +504,7 @@ func TestTaskService_BuildAndExecuteTaskQuery(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotEmpty(t, tasks)
 		assert.Equal(t, len(tasks), resultCount)
-		assert.Greater(t, totalItems, int64(0))
+		assert.Positive(t, totalItems)
 	})
 
 	t.Run("should filter by multiple projects", func(t *testing.T) {
@@ -525,7 +525,7 @@ func TestTaskService_BuildAndExecuteTaskQuery(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotEmpty(t, tasks)
 		assert.Equal(t, len(tasks), resultCount)
-		assert.Greater(t, totalItems, int64(0))
+		assert.Positive(t, totalItems)
 	})
 
 	t.Run("should apply search filter", func(t *testing.T) {
@@ -568,7 +568,7 @@ func TestTaskService_BuildAndExecuteTaskQuery(t *testing.T) {
 		tasks, resultCount, totalItems, err := taskService.buildAndExecuteTaskQuery(s, opts)
 		assert.NoError(t, err)
 		assert.LessOrEqual(t, resultCount, 2)
-		assert.Greater(t, totalItems, int64(0))
+		assert.Positive(t, totalItems)
 
 		// Verify we got at most 2 tasks
 		assert.LessOrEqual(t, len(tasks), 2)
@@ -633,7 +633,7 @@ func TestTaskService_BuildAndExecuteTaskQuery(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotEmpty(t, tasks)
 		assert.Equal(t, len(tasks), resultCount)
-		assert.Greater(t, totalItems, int64(0))
+		assert.Positive(t, totalItems)
 	})
 
 	t.Run("should handle empty project IDs", func(t *testing.T) {

@@ -53,8 +53,8 @@ func TestNotificationsService_GetNotificationsForUser(t *testing.T) {
 		// Get first page
 		notifs, resultCount, total, err := service.GetNotificationsForUser(u.ID, 10, 0)
 		require.NoError(t, err)
-		assert.Greater(t, total, int64(0), "should have notifications")
-		assert.Equal(t, resultCount, len(notifs))
+		assert.Positive(t, total, "should have notifications")
+		assert.Len(t, notifs, resultCount)
 		assert.LessOrEqual(t, resultCount, 10)
 		assert.Equal(t, int64(15), total, "should have 15 total notifications")
 	})
@@ -83,8 +83,8 @@ func TestNotificationsService_GetNotificationsForUser(t *testing.T) {
 		// Get second page
 		notifs, resultCount, total, err := service.GetNotificationsForUser(u.ID, 5, 5)
 		require.NoError(t, err)
-		assert.Greater(t, total, int64(0))
-		assert.Equal(t, resultCount, len(notifs))
+		assert.Positive(t, total)
+		assert.Len(t, notifs, resultCount)
 		assert.Equal(t, 5, resultCount, "should have 5 notifications on second page")
 	})
 
@@ -132,7 +132,7 @@ func TestNotificationsService_GetNotificationsForNameAndUser(t *testing.T) {
 		notifs, err := service.GetNotificationsForNameAndUser(u.ID, "test.event", subjectID)
 		require.NoError(t, err)
 		assert.NotEmpty(t, notifs, "should have notifications for event and subject")
-		assert.Equal(t, 1, len(notifs), "should have exactly 1 notification")
+		assert.Len(t, notifs, 1, "should have exactly 1 notification")
 		assert.Equal(t, "test.event", notifs[0].Name)
 		assert.Equal(t, subjectID, notifs[0].SubjectID)
 	})
@@ -472,7 +472,7 @@ func TestNotificationsService_DeleteNotification(t *testing.T) {
 		service = NewNotificationsService(s)
 		notifs, _, _, err := service.GetNotificationsForUser(u.ID, 1, 0)
 		require.NoError(t, err)
-		require.Greater(t, len(notifs), 0, "should have created notification")
+		require.NotEmpty(t, notifs, "should have created notification")
 		notifID := notifs[0].ID
 
 		// Delete the notification
@@ -511,7 +511,7 @@ func TestNotificationsService_DeleteNotification(t *testing.T) {
 		service = NewNotificationsService(s)
 		notifs, _, _, err := service.GetNotificationsForUser(u1.ID, 1, 0)
 		require.NoError(t, err)
-		require.Greater(t, len(notifs), 0)
+		require.NotEmpty(t, notifs)
 		notifID := notifs[0].ID
 
 		// Try to delete as user 2 (should not delete)
@@ -684,7 +684,7 @@ func TestNotificationsService_DeleteAllReadNotifications(t *testing.T) {
 		service = NewNotificationsService(s)
 		u2Notifs, _, _, err := service.GetNotificationsForUser(u2.ID, 10, 0)
 		require.NoError(t, err)
-		assert.Greater(t, len(u2Notifs), 0, "user 2 should still have notifications")
+		assert.NotEmpty(t, u2Notifs, "user 2 should still have notifications")
 	})
 }
 

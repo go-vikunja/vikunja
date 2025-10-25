@@ -83,7 +83,7 @@ func (pu *ProjectUsers) Get(c echo.Context) error {
 		usersResponse[i] = &ProjectUserResponse{
 			UserWithPermission: u,
 			Links: &ProjectUserLinks{
-				Self:    fmt.Sprintf("/api/v2/users/%d", u.User.ID),
+				Self:    fmt.Sprintf("/api/v2/users/%d", u.ID),
 				Project: fmt.Sprintf("/api/v2/projects/%d", projectID),
 			},
 		}

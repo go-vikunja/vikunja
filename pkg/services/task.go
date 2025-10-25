@@ -2723,7 +2723,7 @@ func (ts *TaskService) addAssigneesToTasks(s *xorm.Session, taskIDs []int64, tas
 			// Check if assignee already exists to avoid duplicates
 			alreadyExists := false
 			for _, existingAssignee := range taskMap[a.TaskID].Assignees {
-				if existingAssignee.ID == taskAssignees[i].User.ID {
+				if existingAssignee.ID == taskAssignees[i].ID {
 					alreadyExists = true
 					break
 				}
@@ -2761,7 +2761,7 @@ func (ts *TaskService) addLabelsToTasks(s *xorm.Session, taskIDs []int64, taskMa
 			alreadyExists := false
 			if taskMap[l.TaskID].Labels != nil {
 				for _, existingLabel := range taskMap[l.TaskID].Labels {
-					if existingLabel.ID == l.Label.ID {
+					if existingLabel.ID == l.ID {
 						alreadyExists = true
 						break
 					}
@@ -3352,7 +3352,7 @@ func (ts *TaskService) syncTaskAssignees(s *xorm.Session, task *models.Task, des
 
 	currentAssigneeMap := make(map[int64]struct{}, len(currentAssignees))
 	for _, entry := range currentAssignees {
-		currentAssigneeMap[entry.User.ID] = struct{}{}
+		currentAssigneeMap[entry.ID] = struct{}{}
 	}
 
 	desiredAssigneeMap := make(map[int64]*user.User)

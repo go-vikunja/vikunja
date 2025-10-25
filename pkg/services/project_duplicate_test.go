@@ -137,7 +137,7 @@ func TestProjectDuplicateService_duplicateTasksAndRelatedData(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, taskIDMap)
 		// Project 1 has multiple tasks, so the map should not be empty
-		assert.Greater(t, len(taskIDMap), 0)
+		assert.NotEmpty(t, taskIDMap)
 	})
 }
 

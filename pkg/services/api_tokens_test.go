@@ -54,7 +54,7 @@ func TestAPITokenService_Create(t *testing.T) {
 		require.NoError(t, err)
 		assert.NotZero(t, token.ID)
 		assert.NotEmpty(t, token.Token)
-		assert.True(t, len(token.Token) > 8)
+		assert.Greater(t, len(token.Token), 8)
 		assert.NotEmpty(t, token.TokenSalt)
 		assert.NotEmpty(t, token.TokenHash)
 		assert.NotEmpty(t, token.TokenLastEight)

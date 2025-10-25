@@ -590,7 +590,7 @@ func (m *mockProjectService) Delete(s *xorm.Session, projectID int64, a web.Auth
 	shareAuth, isShare := a.(*LinkSharing)
 	if isShare {
 		// Link shares can only delete if they have admin permission and it's their project
-		if !(project.ID == shareAuth.ProjectID && shareAuth.Permission == PermissionAdmin) {
+		if project.ID != shareAuth.ProjectID || shareAuth.Permission != PermissionAdmin {
 			return ErrGenericForbidden{}
 		}
 	} else {
@@ -752,7 +752,7 @@ func (m *mockProjectService) DeleteForce(s *xorm.Session, projectID int64, a web
 	shareAuth, isShare := a.(*LinkSharing)
 	if isShare {
 		// Link shares can only delete if they have admin permission and it's their project
-		if !(project.ID == shareAuth.ProjectID && shareAuth.Permission == PermissionAdmin) {
+		if project.ID != shareAuth.ProjectID || shareAuth.Permission != PermissionAdmin {
 			return ErrGenericForbidden{}
 		}
 	} else {

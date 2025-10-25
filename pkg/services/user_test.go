@@ -56,7 +56,7 @@ func TestUserService_GetUsersAndProxiesFromIDs(t *testing.T) {
 		users, err := us.GetUsersAndProxiesFromIDs(s, ids)
 		assert.NoError(t, err)
 		assert.NotNil(t, users)
-		assert.Len(t, users, 0)
+		assert.Empty(t, users)
 	})
 
 	t.Run("should handle non-existing users and link shares gracefully", func(t *testing.T) {
@@ -64,6 +64,6 @@ func TestUserService_GetUsersAndProxiesFromIDs(t *testing.T) {
 		users, err := us.GetUsersAndProxiesFromIDs(s, ids)
 		assert.NoError(t, err)
 		assert.NotNil(t, users)
-		assert.Len(t, users, 0)
+		assert.Empty(t, users)
 	})
 }

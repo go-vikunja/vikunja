@@ -147,9 +147,9 @@ func TestTeamService_GetAll(t *testing.T) {
 		doer := &user.User{ID: 1}
 		teams, count, total, err := service.GetAll(s, doer, "", 1, 50, false)
 		require.NoError(t, err)
-		assert.Greater(t, len(teams), 0)
+		assert.NotEmpty(t, teams)
 		assert.Equal(t, len(teams), count)
-		assert.Greater(t, total, int64(0))
+		assert.Positive(t, total)
 	})
 
 	t.Run("Search by name", func(t *testing.T) {
@@ -160,7 +160,7 @@ func TestTeamService_GetAll(t *testing.T) {
 		doer := &user.User{ID: 1}
 		teams, count, _, err := service.GetAll(s, doer, "testteam1", 1, 50, false)
 		require.NoError(t, err)
-		assert.Greater(t, count, 0)
+		assert.Positive(t, count)
 		for _, team := range teams {
 			assert.Contains(t, team.Name, "testteam1")
 		}
@@ -175,7 +175,7 @@ func TestTeamService_GetAll(t *testing.T) {
 		teams, count, total, err := service.GetAll(s, doer, "", 1, 2, false)
 		require.NoError(t, err)
 		assert.LessOrEqual(t, count, 2)
-		assert.Greater(t, total, int64(0))
+		assert.Positive(t, total)
 		_ = teams
 	})
 
@@ -286,7 +286,7 @@ func TestTeamService_Delete(t *testing.T) {
 		// Verify members exist before delete
 		var countBefore int64
 		countBefore, _ = s.Where("team_id = ?", 2).Count(&models.TeamMember{})
-		assert.Greater(t, countBefore, int64(0))
+		assert.Positive(t, countBefore)
 
 		err := service.Delete(s, 2, doer)
 		require.NoError(t, err)
@@ -342,7 +342,7 @@ func TestTeamService_CanRead(t *testing.T) {
 		can, maxPerm, err := service.CanRead(s, 1, doer)
 		require.NoError(t, err)
 		assert.True(t, can)
-		assert.Greater(t, maxPerm, 0)
+		assert.Positive(t, maxPerm)
 	})
 
 	t.Run("Admin has admin permissions", func(t *testing.T) {
@@ -578,7 +578,7 @@ func TestTeamService_GetTeamsByIDs(t *testing.T) {
 
 		teams, err := service.GetTeamsByIDs(s, []int64{})
 		require.NoError(t, err)
-		assert.Len(t, teams, 0)
+		assert.Empty(t, teams)
 	})
 
 	t.Run("Partial matches", func(t *testing.T) {
@@ -796,7 +796,7 @@ func TestTeamService_GetMembers(t *testing.T) {
 
 		members, resultCount, total, err := service.GetMembers(s, 1, "", 1, 50)
 		assert.NoError(t, err)
-		assert.Greater(t, resultCount, 0)
+		assert.Positive(t, resultCount)
 		assert.Equal(t, int64(resultCount), total)
 		assert.Len(t, members, resultCount)
 	})

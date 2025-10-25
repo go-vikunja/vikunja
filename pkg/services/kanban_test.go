@@ -17,7 +17,6 @@
 package services
 
 import (
-	"errors"
 	"testing"
 	"time"
 
@@ -215,7 +214,7 @@ func TestKanbanService_GetAllBuckets(t *testing.T) {
 		buckets, err := ks.GetAllBuckets(s, 1, 1, u)
 		assert.Error(t, err)
 		assert.Nil(t, buckets)
-		assert.True(t, errors.Is(err, ErrAccessDenied))
+		assert.ErrorIs(t, err, ErrAccessDenied)
 	})
 }
 
@@ -277,7 +276,7 @@ func TestKanbanService_MoveTaskToBucket(t *testing.T) {
 		u := &user.User{ID: 1}
 		buckets, err := ks.GetAllBuckets(s, 1, 1, u)
 		require.NoError(t, err)
-		require.Greater(t, len(buckets), 0, "Need at least one bucket in fixtures")
+		require.NotEmpty(t, buckets, "Need at least one bucket in fixtures")
 
 		taskBucket := &models.TaskBucket{
 			TaskID:        1,
@@ -332,7 +331,7 @@ func TestKanbanService_AddBucketsToTasks(t *testing.T) {
 
 		// The test should check that buckets were added, but the exact bucket might vary
 		// due to fixtures, so let's just check that buckets exist
-		assert.Greater(t, len(task.Buckets), 0, "Task should have at least one bucket")
+		assert.NotEmpty(t, task.Buckets, "Task should have at least one bucket")
 	})
 
 	t.Run("empty task IDs", func(t *testing.T) {

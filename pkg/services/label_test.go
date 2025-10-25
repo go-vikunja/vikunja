@@ -17,7 +17,6 @@
 package services
 
 import (
-	"errors"
 	"strings"
 	"testing"
 
@@ -86,7 +85,7 @@ func TestLabelService_Get(t *testing.T) {
 		otherUser := &user.User{ID: 2}
 		_, err := ls.Get(s, 1, otherUser)
 		assert.Error(t, err)
-		assert.True(t, errors.Is(err, ErrAccessDenied))
+		assert.ErrorIs(t, err, ErrAccessDenied)
 	})
 }
 
@@ -140,7 +139,7 @@ func TestLabelService_Delete(t *testing.T) {
 		labelToDelete := &models.Label{ID: 1, CreatedByID: 1}
 		err := ls.Delete(s, labelToDelete, otherUser)
 		assert.Error(t, err)
-		assert.True(t, errors.Is(err, ErrAccessDenied))
+		assert.ErrorIs(t, err, ErrAccessDenied)
 	})
 }
 
@@ -207,7 +206,7 @@ func TestLabelService_Update(t *testing.T) {
 		}
 		err := ls.Update(s, labelToUpdate, otherUser)
 		assert.Error(t, err)
-		assert.True(t, errors.Is(err, ErrAccessDenied))
+		assert.ErrorIs(t, err, ErrAccessDenied)
 	})
 }
 
@@ -224,7 +223,7 @@ func TestLabelService_GetLabelsByTaskIDs(t *testing.T) {
 			TaskIDs: []int64{1},
 		})
 		assert.NoError(t, err)
-		assert.Greater(t, count, 0)
+		assert.Positive(t, count)
 		assert.Equal(t, int64(count), total)
 		assert.NotNil(t, labels)
 	})
@@ -264,7 +263,7 @@ func TestLabelService_GetLabelsByTaskIDs(t *testing.T) {
 			GetUnusedLabels: true,
 		})
 		assert.NoError(t, err)
-		assert.Greater(t, count, 0)
+		assert.Positive(t, count)
 
 		// Check if our unused label is in the results
 		found := false

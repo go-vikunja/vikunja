@@ -37,7 +37,7 @@ func TestProjectViewService_CanRead(t *testing.T) {
 		canRead, maxRight, err := pvs.CanRead(s, 1, u)
 		require.NoError(t, err)
 		assert.True(t, canRead)
-		assert.Greater(t, maxRight, 0)
+		assert.Positive(t, maxRight)
 	})
 
 	t.Run("user without access cannot read project views", func(t *testing.T) {

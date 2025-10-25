@@ -454,7 +454,7 @@ func TestSubscriptionService_GetForEntitiesAndUser(t *testing.T) {
 		require.NoError(t, err)
 		assert.NotNil(t, subs)
 		// User 2 has no subscription to project 12
-		assert.Len(t, subs[12], 0)
+		assert.Empty(t, subs[12])
 	})
 }
 

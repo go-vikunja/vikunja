@@ -50,7 +50,7 @@ func TestBulkTaskService_GetTasksByIDs(t *testing.T) {
 		tasks, err := service.GetTasksByIDs(s, taskIDs)
 		require.NoError(t, err)
 		assert.NotNil(t, tasks)
-		assert.Equal(t, 2, len(tasks))
+		assert.Len(t, tasks, 2)
 	})
 
 	t.Run("fails with invalid task ID", func(t *testing.T) {
@@ -75,7 +75,7 @@ func TestBulkTaskService_GetTasksByIDs(t *testing.T) {
 		tasks, err := service.GetTasksByIDs(s, taskIDs)
 		require.NoError(t, err)
 		assert.NotNil(t, tasks)
-		assert.Equal(t, 0, len(tasks))
+		assert.Empty(t, tasks)
 	})
 
 	t.Run("handles empty task ID list", func(t *testing.T) {
@@ -84,7 +84,7 @@ func TestBulkTaskService_GetTasksByIDs(t *testing.T) {
 		tasks, err := service.GetTasksByIDs(s, taskIDs)
 		require.NoError(t, err)
 		assert.NotNil(t, tasks)
-		assert.Equal(t, 0, len(tasks))
+		assert.Empty(t, tasks)
 	})
 }
 

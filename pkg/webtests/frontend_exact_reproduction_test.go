@@ -53,7 +53,8 @@ func TestFrontendExactCalls(t *testing.T) {
 
 			t.Logf("Task %s - Status: %d", taskID, rec.Code)
 
-			if rec.Code == 200 {
+			switch rec.Code {
+			case 200:
 				var task models.Task
 				err = json.Unmarshal(rec.Body.Bytes(), &task)
 				require.NoError(t, err, "Task %s should return valid JSON", taskID)
@@ -74,11 +75,11 @@ func TestFrontendExactCalls(t *testing.T) {
 				assert.NotNil(t, task.Reactions, "Task %s reactions should not be nil", taskID)
 				assert.NotNil(t, task.CreatedBy, "Task %s created_by should not be nil", taskID)
 				assert.NotEmpty(t, task.Identifier, "Task %s identifier should not be empty", taskID)
-			} else if rec.Code == 403 {
+			case 403:
 				t.Logf("Task %s - Forbidden (expected for some tasks)", taskID)
-			} else if rec.Code == 404 {
+			case 404:
 				t.Logf("Task %s - Not Found (task doesn't exist)", taskID)
-			} else {
+			default:
 				t.Errorf("Task %s - Unexpected status: %d, Body: %s", taskID, rec.Code, rec.Body.String())
 			}
 		})

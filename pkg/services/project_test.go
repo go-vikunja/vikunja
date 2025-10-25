@@ -128,8 +128,8 @@ func TestProject_ReadAll(t *testing.T) {
 
 		projects, resultCount, totalItems, err := p.ReadAll(s, u, "", 1, 10, false, "")
 		assert.NoError(t, err)
-		assert.Greater(t, resultCount, 0, "Should return some projects")
-		assert.Greater(t, totalItems, int64(0), "Should have total count")
+		assert.Positive(t, resultCount, "Should return some projects")
+		assert.Positive(t, totalItems, "Should have total count")
 		assert.NotNil(t, projects)
 	})
 
@@ -180,7 +180,7 @@ func TestProject_ReadAll(t *testing.T) {
 
 		projects, _, _, err := p.ReadAll(s, u, "", 1, 10, false, models.ProjectExpandableRights)
 		assert.NoError(t, err)
-		assert.Greater(t, len(projects), 0, "Should have projects")
+		assert.NotEmpty(t, projects, "Should have projects")
 
 		// Check that permissions are set (not unknown)
 		for _, proj := range projects {
@@ -314,7 +314,7 @@ func TestProjectService_GetByIDs(t *testing.T) {
 	t.Run("EmptyIDs", func(t *testing.T) {
 		projects, err := p.GetByIDs(s, []int64{})
 		require.NoError(t, err)
-		assert.Len(t, projects, 0)
+		assert.Empty(t, projects)
 		assert.NotNil(t, projects)
 	})
 }
@@ -340,7 +340,7 @@ func TestProjectService_GetMapByIDs(t *testing.T) {
 	t.Run("EmptyIDs", func(t *testing.T) {
 		projects, err := p.GetMapByIDs(s, []int64{})
 		require.NoError(t, err)
-		assert.Len(t, projects, 0)
+		assert.Empty(t, projects)
 		assert.NotNil(t, projects)
 	})
 }

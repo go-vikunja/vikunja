@@ -620,7 +620,7 @@ func TestSavedFilterService_EndToEnd_FullFilterExecution(t *testing.T) {
 		result, resultCount, _, err := ts.GetAllWithFullFiltering(s, sf.Filters, u, "", 1, 100)
 		assert.NoError(t, err)
 
-		assert.Greater(t, resultCount, 0, "Empty filter should return all accessible tasks")
+		assert.Positive(t, resultCount, "Empty filter should return all accessible tasks")
 		assert.NotNil(t, result, "Empty filter should return results")
 
 		t.Logf("✓ Empty filter returned %d tasks (all accessible)", resultCount)

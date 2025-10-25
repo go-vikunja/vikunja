@@ -134,7 +134,7 @@ func TestLinkShareService_GetByID(t *testing.T) {
 		assert.Equal(t, int64(1), share.ID)
 		assert.Equal(t, int64(1), share.ProjectID)
 		// Password should be cleared
-		assert.Equal(t, "", share.Password)
+		assert.Empty(t, share.Password)
 	})
 
 	t.Run("NotFound", func(t *testing.T) {
@@ -161,21 +161,21 @@ func TestLinkShareService_GetByIDs(t *testing.T) {
 		assert.NotNil(t, shares[1])
 		assert.NotNil(t, shares[2])
 		// Passwords should be cleared
-		assert.Equal(t, "", shares[1].Password)
-		assert.Equal(t, "", shares[2].Password)
+		assert.Empty(t, shares[1].Password)
+		assert.Empty(t, shares[2].Password)
 	})
 
 	t.Run("EmptyIDs", func(t *testing.T) {
 		shares, err := service.GetByIDs(s, []int64{})
 		require.NoError(t, err)
-		assert.Len(t, shares, 0)
+		assert.Empty(t, shares)
 		assert.NotNil(t, shares)
 	})
 
 	t.Run("NonExistentIDs", func(t *testing.T) {
 		shares, err := service.GetByIDs(s, []int64{9999, 8888})
 		require.NoError(t, err)
-		assert.Len(t, shares, 0)
+		assert.Empty(t, shares)
 	})
 }
 

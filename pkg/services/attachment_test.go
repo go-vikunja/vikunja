@@ -52,7 +52,7 @@ func TestAttachmentPermissions_Read(t *testing.T) {
 		canRead, maxPerm, err := service.Can(s, attachment, u).Read()
 		require.NoError(t, err)
 		assert.True(t, canRead)
-		assert.Greater(t, maxPerm, 0)
+		assert.Positive(t, maxPerm)
 	})
 
 	t.Run("denies user without task permission", func(t *testing.T) {
@@ -194,8 +194,8 @@ func TestAttachmentService_GetAllForTask(t *testing.T) {
 		attachments, count, total, err := service.GetAllForTask(s, 1, u, 0, 0)
 		require.NoError(t, err)
 		assert.NotNil(t, attachments)
-		assert.Greater(t, count, 0)
-		assert.Greater(t, total, int64(0))
+		assert.Positive(t, count)
+		assert.Positive(t, total)
 	})
 
 	t.Run("fails when user has no permission", func(t *testing.T) {
@@ -213,7 +213,7 @@ func TestAttachmentService_GetAllForTask(t *testing.T) {
 		require.NoError(t, err)
 		assert.NotNil(t, attachments)
 		assert.LessOrEqual(t, count, 2)
-		assert.Greater(t, total, int64(0))
+		assert.Positive(t, total)
 	})
 
 	t.Run("handles task with no attachments", func(t *testing.T) {
@@ -397,7 +397,7 @@ func TestAttachmentService_CanRead(t *testing.T) {
 
 		require.NoError(t, err)
 		assert.True(t, can)
-		assert.Greater(t, maxRight, 0)
+		assert.Positive(t, maxRight)
 	})
 
 	t.Run("UserWithoutTaskPermission_CannotRead", func(t *testing.T) {

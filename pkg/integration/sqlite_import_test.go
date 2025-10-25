@@ -482,7 +482,7 @@ func verifyFiles(t *testing.T, engine *xorm.Engine, sourceFilesDir string) {
 		var fileExists bool
 		_, err := engine.SQL("SELECT 1 FROM files WHERE id = ?", i).Get(&fileExists)
 		require.NoError(t, err)
-		assert.True(t, fileExists, fmt.Sprintf("File %d should exist in database", i))
+		assert.True(t, fileExists, "File %d should exist in database", i)
 
 		// Check if physical file exists
 		targetPath := filepath.Join(targetFilesDir, fmt.Sprintf("%d", i))
@@ -502,7 +502,7 @@ func verifyFiles(t *testing.T, engine *xorm.Engine, sourceFilesDir string) {
 		targetContent, err := os.ReadFile(targetPath)
 		require.NoError(t, err)
 
-		assert.Equal(t, sourceContent, targetContent, fmt.Sprintf("File %d content should match", i))
+		assert.Equal(t, sourceContent, targetContent, "File %d content should match", i)
 	}
 
 	t.Log("File verification successful")

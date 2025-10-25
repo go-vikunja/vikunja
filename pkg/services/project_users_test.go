@@ -194,8 +194,8 @@ func TestProjectUserService_GetAll(t *testing.T) {
 	t.Run("get all users for project", func(t *testing.T) {
 		users, count, total, err := service.GetAll(s, 3, &user.User{ID: 1}, "", 0, 50)
 		assert.NoError(t, err)
-		assert.Greater(t, count, 0, "Should have users")
-		assert.Greater(t, total, int64(0), "Should have total count")
+		assert.Positive(t, count, "Should have users")
+		assert.Positive(t, total, "Should have total count")
 		assert.NotNil(t, users)
 
 		// Check that emails are obfuscated
@@ -231,7 +231,7 @@ func TestProjectUserService_GetAll(t *testing.T) {
 		}
 
 		if count > 0 {
-			assert.Greater(t, total, int64(0), "Should have total when results found")
+			assert.Positive(t, total, "Should have total when results found")
 		}
 	})
 

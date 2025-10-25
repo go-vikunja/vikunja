@@ -82,7 +82,7 @@ func (pt *ProjectTeams) Get(c echo.Context) error {
 		teamsResponse[i] = &ProjectTeamResponse{
 			TeamWithPermission: t,
 			Links: &ProjectTeamLinks{
-				Self:    fmt.Sprintf("/api/v2/teams/%d", t.Team.ID),
+				Self:    fmt.Sprintf("/api/v2/teams/%d", t.ID),
 				Project: fmt.Sprintf("/api/v2/projects/%d", projectID),
 			},
 		}

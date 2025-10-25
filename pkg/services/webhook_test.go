@@ -37,7 +37,7 @@ func TestWebhookService_CanRead(t *testing.T) {
 		can, maxRight, err := ws.CanRead(s, 1, u)
 		assert.NoError(t, err)
 		assert.True(t, can)
-		assert.Greater(t, maxRight, 0)
+		assert.Positive(t, maxRight)
 	})
 
 	t.Run("user without access cannot read webhooks", func(t *testing.T) {

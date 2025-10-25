@@ -68,7 +68,7 @@ func TestTaskService_Create_SetsServiceLayerBehavior(t *testing.T) {
 
 	assert.NotEmpty(t, createdTask.UID)
 	assert.NotEmpty(t, createdTask.Identifier)
-	assert.True(t, createdTask.ID > 0)
+	assert.Positive(t, createdTask.ID)
 	assert.NotZero(t, createdTask.Index)
 
 	require.NotNil(t, createdTask.Assignees)

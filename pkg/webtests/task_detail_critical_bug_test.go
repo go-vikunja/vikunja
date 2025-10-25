@@ -225,6 +225,6 @@ func TestTaskDetailView_CompareWithTaskCollection(t *testing.T) {
 	// Both should have the same level of enrichment
 	assert.Equal(t, collectionTask.CreatedBy != nil, detailTask.CreatedBy != nil, "CreatedBy enrichment should match")
 	assert.Equal(t, collectionTask.Identifier, detailTask.Identifier, "Identifier should match")
-	assert.Equal(t, len(collectionTask.Assignees), len(detailTask.Assignees), "Assignees count should match")
-	assert.Equal(t, len(collectionTask.Labels), len(detailTask.Labels), "Labels count should match")
+	assert.Len(t, detailTask.Assignees, len(collectionTask.Assignees), "Assignees count should match")
+	assert.Len(t, detailTask.Labels, len(collectionTask.Labels), "Labels count should match")
 }

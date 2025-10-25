@@ -723,7 +723,7 @@ func TestTaskService_Update_Labels(t *testing.T) {
 		})
 
 		// Verify the returned task has no labels
-		assert.Len(t, updatedTask.Labels, 0)
+		assert.Empty(t, updatedTask.Labels)
 	})
 }
 
@@ -863,7 +863,7 @@ func TestTaskService_Assignee_BulkOperations(t *testing.T) {
 		}, false)
 
 		// Both users should be in the assignees list
-		assert.Equal(t, 2, len(updatedTask.Assignees))
+		assert.Len(t, updatedTask.Assignees, 2)
 	})
 
 	t.Run("remove multiple assignees at once", func(t *testing.T) {
@@ -897,7 +897,7 @@ func TestTaskService_Assignee_BulkOperations(t *testing.T) {
 		require.NoError(t, s2.Commit())
 
 		// Verify all assignees were removed
-		assert.Len(t, updatedTask.Assignees, 0)
+		assert.Empty(t, updatedTask.Assignees)
 		db.AssertMissing(t, "task_assignees", map[string]interface{}{
 			"task_id": 1,
 		})

@@ -140,7 +140,7 @@ func TestProjectService_CreateInboxProjectForUser(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Verify inbox project was created
-		assert.Greater(t, newUser.DefaultProjectID, int64(0), "Default project ID should be set")
+		assert.Positive(t, newUser.DefaultProjectID, "Default project ID should be set")
 
 		// Verify project exists and has correct title
 		project, err := models.GetProjectSimpleByID(s, newUser.DefaultProjectID)
@@ -162,7 +162,7 @@ func TestProjectService_CreateInboxProjectForUser(t *testing.T) {
 		// Create inbox for this user (sets default)
 		err = ps.CreateInboxProjectForUser(s, testUser)
 		require.NoError(t, err)
-		require.Greater(t, testUser.DefaultProjectID, int64(0), "User should have a default project")
+		require.Positive(t, testUser.DefaultProjectID, "User should have a default project")
 
 		originalDefaultID := testUser.DefaultProjectID
 
@@ -198,7 +198,7 @@ func TestProjectService_DeleteForce(t *testing.T) {
 		// Create inbox project for user
 		err = ps.CreateInboxProjectForUser(s, newUser)
 		require.NoError(t, err)
-		require.Greater(t, newUser.DefaultProjectID, int64(0))
+		require.Positive(t, newUser.DefaultProjectID)
 
 		defaultProjectID := newUser.DefaultProjectID
 
