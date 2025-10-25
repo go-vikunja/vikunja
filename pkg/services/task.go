@@ -25,6 +25,7 @@ import (
 
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
@@ -313,6 +314,9 @@ func (ts *TaskService) handleSavedFilter(s *xorm.Session, collection *models.Tas
 		ProjectViewID:      0, // Will handle view separately
 		Expand:             collection.Expand,
 	}
+
+	log.Debugf("handleSavedFilter: savedFilterID=%d, savedFilter.Filter=%q, mergedCollection.Filter=%q, collection.Filter=%q",
+		savedFilterID, savedFilterCollection.Filter, mergedCollection.Filter, collection.Filter)
 
 	// If the saved filter has sort order, use it (unless overridden by current collection)
 	if len(collection.SortBy) == 0 && len(collection.SortByArr) == 0 {

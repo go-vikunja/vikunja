@@ -1,5 +1,4 @@
 import {ref, shallowReactive, watch, computed, type ComputedGetter} from 'vue'
-import {useRoute, useRouter} from 'vue-router'
 import {useRouteQuery} from '@vueuse/router'
 
 import TaskCollectionService, {
@@ -72,6 +71,18 @@ export function useTaskList(
 	const params = ref<TaskFilterParams>({...getDefaultTaskFilterParams()})
 	
 	const page = useRouteQuery('page', '1', { transform: Number })
+	const filter = useRouteQuery('filter')
+	const s = useRouteQuery('s')
+
+	watch(filter, v => { 
+		params.value.filter = (Array.isArray(v) ? v[0] : v) ?? ''
+	}, { immediate: true })
+	watch(s, v => { 
+		params.value.s = (Array.isArray(v) ? v[0] : v) ?? ''
+	}, { immediate: true })
+
+	watch(() => params.value.filter, v => { filter.value = v || undefined })
+	watch(() => params.value.s, v => { s.value = v || undefined })
 
 	const sortBy = ref({ ...sortByDefault })
 	
@@ -82,26 +93,36 @@ export function useTaskList(
 	})
 	
 	watch(
-		() => allParams.value,
-		() => {
-			// When parameters change, the page should always be the first
-			page.value = 1
+		[params, sortBy, page],
+		([, , newPage], [, , oldPage]) => {
+			if (newPage === oldPage) {
+				page.value = 1
+			}
 		},
+		{deep: true},
 	)
 	
 	const authStore = useAuthStore()
 	
 	const getAllTasksParams = computed(() => {
+		const requestParams = {
+			...allParams.value,
+			filter_timezone: authStore.settings.timezone,
+			expand: expandGetter(),
+		}
+		
+		// For saved filters (negative project IDs), don't send an empty filter parameter
+		// The backend will use the saved filter's own filter string
+		if (projectId.value < 0 && requestParams.filter === '') {
+			delete requestParams.filter
+		}
+		
 		return [
 			{
 				projectId: projectId.value,
 				viewId: projectViewId.value,
 			},
-			{
-				...allParams.value,
-				filter_timezone: authStore.settings.timezone,
-				expand: expandGetter(),
-			},
+			requestParams,
 			page.value,
 		]
 	})
@@ -122,41 +143,6 @@ export function useTaskList(
 		}
 		return tasks.value
 	}
-
-	const route = useRoute()
-	watch(() => route.query, (query) => {
-		const { 
-			page: pageQueryValue,
-			s,
-			filter,
-		} = query
-		if (s !== undefined) {
-			params.value.s = s as string
-		}
-		if (pageQueryValue !== undefined) {
-			page.value = Number(pageQueryValue)
-		}
-		if (filter !== undefined) {
-			params.value.filter = filter
-		}
-	}, { immediate: true })
-
-	const router = useRouter()
-	watch(
-		() => [page.value, params.value.filter, params.value.s],
-		() => {
-			router.replace({
-				name: route.name,
-				params: route.params,
-				query: {
-					page: page.value,
-					filter: params.value.filter || undefined,
-					s: params.value.s || undefined,
-				},
-			})
-		},
-		{ deep: true },
-	)
 
 	// Only listen for query path changes
 	watch(() => JSON.stringify(getAllTasksParams.value), (newParams, oldParams) => {
