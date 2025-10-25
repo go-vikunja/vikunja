@@ -312,7 +312,7 @@ func (th *testHelper) Login(t *testing.T, user *user.User) {
 	th.token = loginResponse["token"]
 }
 
-func (th *testHelper) Request(t *testing.T, method, path string, payload io.Reader) (*httptest.ResponseRecorder, error) {
+func (th *testHelper) Request(_ *testing.T, method, path string, payload io.Reader) (*httptest.ResponseRecorder, error) {
 	req := httptest.NewRequest(method, path, payload)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	if th.token != "" {

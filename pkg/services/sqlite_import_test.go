@@ -1228,7 +1228,7 @@ func createTestDBWithTransformations(t *testing.T) string {
 }
 
 // cleanupTestData removes test data after tests
-func cleanupTestData(t *testing.T, engine *xorm.Engine) {
+func cleanupTestData(_ *testing.T, engine *xorm.Engine) {
 	// Delete in reverse dependency order - wider range to catch all test IDs
 	_, _ = engine.Exec("DELETE FROM favorites WHERE id >= 7000")
 	_, _ = engine.Exec("DELETE FROM api_tokens WHERE id >= 7000")

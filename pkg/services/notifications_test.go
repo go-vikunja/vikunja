@@ -694,7 +694,7 @@ type testNotification struct {
 	name string
 }
 
-func (t *testNotification) ToMail(lang string) *notifications.Mail {
+func (t *testNotification) ToMail(_ string) *notifications.Mail {
 	return notifications.NewMail().
 		Subject("Test notification").
 		Line("This is a test notification")
@@ -721,7 +721,7 @@ type testNotificationNoMail struct {
 	name string
 }
 
-func (t *testNotificationNoMail) ToMail(lang string) *notifications.Mail {
+func (t *testNotificationNoMail) ToMail(_ string) *notifications.Mail {
 	return nil
 }
 
@@ -737,7 +737,7 @@ type testNotificationNoDB struct {
 	name string
 }
 
-func (t *testNotificationNoDB) ToMail(lang string) *notifications.Mail {
+func (t *testNotificationNoDB) ToMail(_ string) *notifications.Mail {
 	return notifications.NewMail().
 		Subject("Test notification").
 		Line("This is a test notification")

@@ -397,7 +397,7 @@ func TestProject_GetAllForUser(t *testing.T) {
 		assert.Len(t, projects, 10)
 	})
 
-	t.Run("should get all projects for a user with search", func(t *testing.T) {
+	t.Run("should get all projects for a user with search", func(_ *testing.T) {
 		// TODO: This test is flaky, the search does not seem to work correctly.
 		// projects, count, total, err := p.GetAllForUser(s, &user.User{ID: 1}, "Test10", 1, 10, false)
 		// assert.NoError(t, err)

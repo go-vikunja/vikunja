@@ -383,7 +383,7 @@ func (p *Project) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 }
 
 // GetProjectSimpleByID gets a project with only the basic items, aka no tasks or user objects. Returns an error if the project does not exist.
-// DEPRECATED: Use ProjectService.GetByIDSimple() instead (models delegate to services as of T-PERM-004).
+// Deprecated: Use ProjectService.GetByIDSimple() instead (models delegate to services as of T-PERM-004).
 func GetProjectSimpleByID(s *xorm.Session, projectID int64) (project *Project, err error) {
 	// Delegate to service layer via adapter
 	ps := getProjectService()

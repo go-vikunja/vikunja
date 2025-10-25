@@ -528,7 +528,7 @@ func createTokenWithPermissions(t *testing.T, s *xorm.Session, permissions model
 
 // T007: Test helper function to create a mock Echo context
 // This is useful for testing route handlers that require a context
-func createMockContext(method, path string, token *models.APIToken) echo.Context {
+func createMockContext(_ string, path string, token *models.APIToken) echo.Context {
 	// Note: For US1 tests, we may not need full Echo context mocking
 	// The registerTestAPIRoutes + models.CanDoAPIRoute pattern is sufficient
 	// This helper is provided for future extensibility if needed

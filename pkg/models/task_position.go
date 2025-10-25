@@ -50,7 +50,7 @@ func (tp *TaskPosition) TableName() string {
 }
 
 // CanUpdate checks if a user can update a task position
-// DEPRECATED: Use TaskService.CanUpdatePosition instead (T-PERM-010)
+// Deprecated: Use TaskService.CanUpdatePosition instead (T-PERM-010)
 func (tp *TaskPosition) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 	if CheckTaskPositionUpdateFunc == nil {
 		return false, ErrPermissionDelegationNotInitialized{}

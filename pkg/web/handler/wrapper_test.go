@@ -66,7 +66,7 @@ func TestWithDBAndUser(t *testing.T) {
 	})
 
 	t.Run("should handle transaction commit for write operations", func(t *testing.T) {
-		testHandler := func(s *xorm.Session, u *user.User, c echo.Context) error {
+		testHandler := func(_ *xorm.Session, _ *user.User, c echo.Context) error {
 			// Simulate a write operation
 			return c.JSON(http.StatusCreated, map[string]string{"status": "created"})
 		}

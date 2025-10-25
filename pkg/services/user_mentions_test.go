@@ -381,7 +381,7 @@ type mockNotificationSubject struct {
 	accessibleUsers  map[int64]bool
 }
 
-func (m *mockNotificationSubject) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
+func (m *mockNotificationSubject) CanRead(_ *xorm.Session, a web.Auth) (bool, int, error) {
 	// Extract user ID from auth
 	u, ok := a.(*user.User)
 	if !ok {
